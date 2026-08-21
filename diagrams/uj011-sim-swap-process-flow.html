@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="spec-hash" content="sha256:f094efb01f7fc4af45f6e25b671b50d2bc85e3d68b88ae726bfad14eb7dd73da">
+  <meta name="generated-at" content="2026-08-21T06:43:35.894Z">
+  <meta name="diagram-version" content="2.3">
+  <title>UJ-011: SIM Swap - Process Flow</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" integrity="sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/" crossorigin="anonymous"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #020617; min-height: 100vh; padding: 2rem; color: white; }
+    .container { width: 1600px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-start; }
+    .header-content { flex: 1; }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    .pulse-dot { width: 12px; height: 12px; background: #a78bfa; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+    .subtitle { color: #94a3b8; font-size: 0.875rem; margin-left: 1.75rem; }
+    .diagram-container { overflow-x: auto; width: 100%; }
+    svg { width: 1600px; height: auto; display: block; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 2rem; }
+    .card { background: #080e20; border-radius: 0.75rem; border: 1px solid #1e293b; padding: 1.25rem; }
+    .card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.cyan { background: #22d3ee; } .card-dot.emerald { background: #34d399; } .card-dot.violet { background: #a78bfa; }
+    .card-dot.amber { background: #fbbf24; } .card-dot.rose { background: #fb7185; } .card-dot.slate { background: #94a3b8; }
+    .card h3 { font-size: 0.875rem; font-weight: 600; }
+    .card ul { list-style: none; color: #94a3b8; font-size: 0.75rem; }
+    .card li { margin-bottom: 0.375rem; }
+    .io-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .io-table th, .io-table td { border: 1px solid rgba(71, 85, 105, 0.4); padding: 0.625rem 0.75rem; text-align: left; vertical-align: top; line-height: 1.5; }
+    .io-table thead th { background: #151e30; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem; }
+    .io-table tbody th { background: #11192b; color: white; font-weight: 700; white-space: nowrap; }
+    .io-table td { color: #cbd5e1; }
+    .io-table .io-col-step { width: 64px; }
+    .io-table td.io-in { border-left: 2px solid #34d399; }
+    .io-table td.io-out { border-left: 2px solid #22d3ee; }
+    .io-table td.io-ex { color: #a78bfa; white-space: nowrap; }
+    .io-table td.io-mean { color: #94a3b8; }
+    .footer { text-align: center; margin-top: 1.5rem; color: #475569; font-size: 0.75rem; }
+    /* Export menu (r7). The trigger is a labelled button, not an ellipsis glyph: an unlabelled
+     * ellipsis gives no clue that export lives behind it, so the feature went unfound. The
+     * popover is a light surface deliberately — it is chrome, and reads as sitting above the
+     * dark canvas rather than as another dark panel competing with the diagram. */
+    .toolbar { display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center; position: relative; }
+    .export-btn { background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; font-family: inherit; font-size: 0.8125rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; transition: background 0.15s, box-shadow 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+    .export-btn:hover { background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+    .export-menu { display: none; position: absolute; top: calc(100% + 0.5rem); right: 0; z-index: 40; min-width: 13rem; padding: 0.375rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.625rem; box-shadow: 0 10px 24px rgba(0,0,0,0.55); }
+    .export-menu.open { display: block; }
+    .export-item { display: flex; align-items: baseline; justify-content: space-between; gap: 1.5rem; width: 100%; background: transparent; border: none; border-radius: 0.375rem; padding: 0.5rem 0.75rem; font-family: inherit; font-size: 0.8125rem; color: #0f172a; cursor: pointer; text-align: left; transition: background 0.12s; }
+    .export-item:hover { background: #e8edf5; }
+    .export-fmt { font-weight: 600; letter-spacing: 0.02em; }
+    .export-hint { color: #64748b; font-size: 0.6875rem; white-space: nowrap; }
+    .export-sep { height: 1px; margin: 0.25rem 0.5rem; background: #e2e8f0; }
+    .export-btn:focus-visible, .export-item:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; }
+    @media (max-width: 768px) { .header { flex-direction: column; gap: 1rem; } }
+    @media print { body { background: #020617; padding: 1rem; } .toolbar { display: none !important; } }
+    /* --- interactivity layer (§11.3) --- */
+    /* Filter toolbar (r6).
+     *
+     * The problem it fixes: the chips previously used the same vocabulary as the nodes and the
+     * legend — a rounded outline with a small coloured dot — so a row of CONTROLS read as a
+     * third kind of swatch. Nothing signalled it was interactive, and it competed with the
+     * diagram for attention instead of sitting above it.
+     *
+     * The fix is to stop borrowing that vocabulary. Controls now get their own surface: a
+     * raised, bordered bar that visually detaches from the canvas, an accent rule to anchor it,
+     * and a SOLID fill on the active chip — an unmistakably UI treatment, since nothing else in
+     * a diagram is ever filled with its own accent colour at full opacity. */
+    .pf-filters { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem; align-items: center;
+      background: #0d1425; border: 1px solid #263349; border-left: 3px solid #a78bfa;
+      border-radius: 0.5rem; padding: 0.55rem 0.75rem; box-shadow: 0 1px 3px rgba(2, 6, 23, 0.5); }
+    .pf-filters-label { color: #cbd5e1; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; margin-right: 0.55rem; display: inline-flex; align-items: center; gap: 0.4rem; }
+    .pf-filters-label::before { content: ''; width: 11px; height: 11px; flex: 0 0 11px;
+      /* Funnel glyph, drawn rather than an emoji: it must render identically everywhere. */
+      background: #a78bfa; clip-path: polygon(0 0, 100% 0, 62% 45%, 62% 100%, 38% 100%, 38% 45%); }
+    /* v2 redesign: pill-shaped (999px radius, was 0.375rem — a barely-rounded rect that read
+       as a static label), bigger padding/min-height for a real tap target (was 0.3rem/0.7rem,
+       under the ~32px accessibility guideline), and a stronger active state (ring + scale) so
+       the selected/unselected distinction doesn't rely on colour alone. */
+    .pf-chip { background: #1a2337; border: 1.5px solid #3b4a63; color: #cbd5e1; padding: 0.5rem 1rem;
+      border-radius: 999px; font-family: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 0.45rem; line-height: 1.2; min-height: 2rem;
+      transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s; }
+    .pf-chip:hover { background: #24304a; border-color: #64748b; color: white; }
+    .pf-chip:active { transform: scale(0.96); }
+    .pf-chip:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    /* Selected: the chip fills with its own accent, sits a hair taller with a visible ring, and
+       the dot becomes a filled check-like mark. High contrast, unambiguous, and impossible to
+       confuse with a legend swatch — legend marks are outlines on the bare ground. */
+    .pf-chip[aria-pressed="true"] { background: currentColor; border-color: currentColor;
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.28); transform: scale(1.03); }
+    .pf-chip[aria-pressed="true"]:hover { transform: scale(1.03); }
+    .pf-chip[aria-pressed="true"] .pf-chip-label { color: #0b1120; font-weight: 700; }
+    .pf-chip[aria-pressed="true"] .pf-chip-dot { background: #0b1120; opacity: 0.65; }
+    .pf-chip-label { color: inherit; }
+    .pf-chip-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: 0 0 8px; }
+    .pf-node { cursor: pointer; }
+    .pf-node:hover { filter: brightness(1.32); }
+    .pf-node:focus { outline: none; }
+    .pf-node:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 3px; border-radius: 4px; }
+    .pf-node, .pf-edge { transition: opacity 0.2s ease; }
+    .pf-node.is-dim, .pf-edge.is-dim { opacity: 0.14; pointer-events: none; }
+    .pf-node.is-sel > rect, .pf-node.is-sel > circle, .pf-node.is-sel > g > rect { stroke-width: 3; }
+    /* The drawer floats as an overlay — position: fixed with no body padding. Opening/closing
+       the drawer does not affect layout of the diagram or any page content. */
+    .pf-drawer { position: fixed; top: 0; right: 0; height: 100vh; width: var(--pf-drawer-w, 400px); background: #0b1220; border-left: 1px solid #1e293b; box-shadow: -12px 0 32px #020617; transform: translateX(101%); transition: transform 0.25s ease; z-index: 40; display: flex; }
+    .pf-drawer.is-open { transform: none; }
+    .pf-drawer-handle { width: 6px; flex: 0 0 6px; cursor: ew-resize; background: transparent; border-right: 1px solid #1e293b; }
+    .pf-drawer-handle:hover, .pf-drawer-handle:focus-visible { background: #423c6c; outline: none; }
+    .pf-drawer-body { flex: 1; overflow-y: auto; padding: 1.25rem; min-width: 0; }
+    .pf-drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.75rem; }
+    .pf-badge { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.2rem 0.5rem; border-radius: 0.25rem; border: 1px solid currentColor; white-space: nowrap; }
+    .pf-drawer-close { background: transparent; border: none; color: #475569; font-size: 1.5rem; line-height: 1; cursor: pointer; padding: 0 0.25rem; }
+    .pf-drawer-close:hover { color: white; }
+    .pf-drawer-close:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    .pf-drawer h2 { font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; word-break: break-word; }
+    .pf-drawer-role { color: #94a3b8; font-size: 0.75rem; margin-bottom: 1rem; word-break: break-word; }
+    .pf-drawer-sections { display: flex; flex-direction: column; gap: 1rem; }
+    .pf-sec { margin-top: 0; border-top: none; padding-top: 0; }
+    .pf-sec h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; margin-bottom: 0.5rem; margin-top: 0; }
+    .pf-drawer-meaning { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0 0 0.5rem 0; }
+    .pf-drawer-example { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0; }
+    .pf-drawer-desc { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0 0 0.5rem 0; }
+    .pf-sec ul { list-style: none; margin: 0; padding: 0; }
+    .pf-sec li { color: #cbd5e1; font-size: 0.75rem; margin-bottom: 0.3rem; line-height: 1.5; }
+    .pf-sec { margin-top: 1rem; border-top: 1px solid #1e293b; padding-top: 0.75rem; }
+    .pf-sec h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; margin-bottom: 0.5rem; }
+    .pf-sec ul { list-style: none; }
+    .pf-sec li { color: #cbd5e1; font-size: 0.75rem; margin-bottom: 0.4rem; line-height: 1.5; word-break: break-word; }
+    .pf-sec .pf-empty { color: #475569; font-style: italic; }
+    .pf-link { background: none; border: none; color: #a78bfa; font-family: inherit; font-size: 0.75rem; cursor: pointer; padding: 0; text-align: left; text-decoration: underline; text-underline-offset: 2px; }
+    .pf-link:hover { color: #c4b5fd; }
+    .pf-link:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    .pf-payload { color: #94a3b8; }
+    @media (prefers-reduced-motion: reduce) {
+      .pulse-dot { animation: none; }
+      body, .pf-drawer, .pf-node, .pf-edge { transition: none; }
+    }
+    @media print { .pf-drawer, .pf-filters { display: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="container" id="report-container">
+    <div class="header">
+      <div class="header-content">
+        <div class="header-row">
+          <div class="pulse-dot"></div>
+          <h1>UJ-011: SIM Swap</h1>
+        </div>
+        <p class="subtitle">Agent-initiated SIM replacement from account lookup through order approval and completion</p>
+      </div>
+      <div class="toolbar">
+        <button class="export-btn" id="exportBtn" onclick="toggleExport(event)" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu" aria-label="Export options">Export</button>
+        <div class="export-menu" id="exportMenu" role="menu" aria-labelledby="exportBtn">
+          <button role="menuitem" class="export-item" onclick="downloadSVG(this)"><span class="export-fmt">SVG</span><span class="export-hint">vector · editing</span></button>
+          <button role="menuitem" class="export-item" onclick="downloadJPG(this)"><span class="export-fmt">JPG</span><span class="export-hint">image · sharing</span></button>
+          <button role="menuitem" class="export-item" onclick="downloadPDF(this)"><span class="export-fmt">PDF</span><span class="export-hint">document</span></button>
+          <div class="export-sep" role="separator"></div>
+          <button role="menuitem" class="export-item" onclick="downloadPNG(this)"><span class="export-fmt">PNG</span><span class="export-hint">image · slides</span></button>
+          <button role="menuitem" class="export-item" onclick="copyAsImage(this)"><span class="export-fmt">Copy</span><span class="export-hint">to clipboard</span></button>
+        </div>
+      </div>
+    </div>
+    <div class="pf-filters" role="group" aria-label="Filter diagram by node type">
+        <span class="pf-filters-label">Filter</span>
+        <button class="pf-chip" data-filter="all" aria-pressed="true" style="color:#a78bfa"><span class="pf-chip-dot"></span><span class="pf-chip-label">All</span></button>
+        <button class="pf-chip" data-filter="manual" aria-pressed="false" style="color:#34d399"><span class="pf-chip-dot"></span><span class="pf-chip-label">Manual</span></button>
+        <button class="pf-chip" data-filter="automated" aria-pressed="false" style="color:#a78bfa"><span class="pf-chip-dot"></span><span class="pf-chip-label">Automated</span></button>
+        <button class="pf-chip" data-filter="decision" aria-pressed="false" style="color:#fb7185"><span class="pf-chip-dot"></span><span class="pf-chip-label">Decision</span></button>
+        <button class="pf-chip" data-filter="terminal" aria-pressed="false" style="color:#22d3ee"><span class="pf-chip-dot"></span><span class="pf-chip-label">Start / End</span></button>
+        <button class="pf-chip" data-filter="reject" aria-pressed="false" style="color:#fb7185"><span class="pf-chip-dot"></span><span class="pf-chip-label">Rejected</span></button>
+      </div>
+    <div class="diagram-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="35.92 -29 1430.88 797.49" role="group" aria-label="UJ-011: SIM Swap diagram. 15 nodes; each is focusable for details.">
+<defs>
+<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/></marker>
+<marker id="arrowhead-emerald" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#34d399"/></marker>
+<marker id="arrowhead-violet" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa"/></marker>
+<marker id="arrowhead-amber" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24"/></marker>
+<marker id="arrowhead-rose" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fb7185"/></marker>
+<marker id="arrowhead-slate" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/></marker>
+<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="1.5"/></pattern>
+</defs>
+<line x1="258" y1="70" x2="318" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="start1" data-to="lookup"/>
+<line x1="478" y1="70" x2="550" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="lookup" data-to="msisdn-entry"/>
+<rect x="491.4" y="47.2" width="45.2" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="514" y="57" fill="#94a3b8" font-size="10" text-anchor="middle">MSISDN</text>
+<line x1="710" y1="70" x2="881" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="msisdn-entry" data-to="verify-id"/>
+<rect x="723.3" y="47.2" width="144.4" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="795.5" y="57" fill="#94a3b8" font-size="10" text-anchor="middle">account context loaded</text>
+<line x1="1041" y1="70" x2="1162" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="verify-id" data-to="get-pin-puk"/>
+<rect x="1054.1" y="47.2" width="94.8" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="1101.5" y="57" fill="#94a3b8" font-size="10" text-anchor="middle">QID + bank doc</text>
+<path d="M 1242 113.5 L 1242 155 L 96.91673887931483 155 L 96.91673887931483 312 L 116.91673887931483 312" stroke="#94a3b8" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="get-pin-puk" data-to="attach-form"/>
+<rect x="1250" y="123.7" width="133.8" height="22" rx="11" fill="#0d1425" stroke="#94a3b8" stroke-width="1.5" opacity="0.95"/>
+<text x="1258" y="137.5" fill="#e2e8f0" font-size="10" font-weight="700">Continue to Row 2 →</text>
+<line x1="276.91673887931483" y1="312" x2="379.91673887931483" y2="312" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="attach-form" data-to="submit-order"/>
+<rect x="290.32" y="289.2" width="76.2" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="328.41673887931483" y="299" fill="#94a3b8" font-size="10" text-anchor="middle">signed form</text>
+<line x1="539.9167388793148" y1="312" x2="654.9167388793148" y2="312" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="submit-order" data-to="not-fdo"/>
+<rect x="553.12" y="289.2" width="88.6" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="597.4167388793148" y="299" fill="#94a3b8" font-size="10" text-anchor="middle">order created</text>
+<line x1="814.9167388793148" y1="312" x2="991.9167388793148" y2="312" stroke="#a78bfa" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-violet)" class="pf-edge" data-from="not-fdo" data-to="queue-assign"/>
+<rect x="828.12" y="289.2" width="150.6" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="903.4167388793148" y="299" fill="#94a3b8" font-size="10" text-anchor="middle">same-day execution only</text>
+<line x1="1151.9167388793148" y1="312" x2="1266.9167388793148" y2="312" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="queue-assign" data-to="approve-decision"/>
+<rect x="1165.12" y="289.2" width="88.6" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="1209.4167388793148" y="299" fill="#94a3b8" font-size="10" text-anchor="middle">task assigned</text>
+<path d="M 1315 360.0832611206853 L 1315 394.0832611206853 L 1287 394.0832611206853 L 1287 428.0832611206853 L 228.17409819219546 428.0832611206853 L 228.17409819219546 548.1665222413704 L 248.17409819219546 548.1665222413704" stroke="#94a3b8" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="approve-decision" data-to="approve-comments"/>
+<rect x="1323" y="370.28" width="133.8" height="22" rx="11" fill="#0d1425" stroke="#94a3b8" stroke-width="1.5" opacity="0.95"/>
+<text x="1331" y="384.0832611206853" fill="#e2e8f0" font-size="10" font-weight="700">Continue to Row 3 →</text>
+<line x1="408.17409819219546" y1="548.1665222413704" x2="511.17409819219546" y2="548.1665222413704" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="approve-comments" data-to="end12"/>
+<rect x="421.57" y="525.37" width="76.2" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="459.67409819219546" y="535.1665222413704" fill="#94a3b8" font-size="10" text-anchor="middle">task closed</text>
+<line x1="851.1740981921955" y1="548.1665222413704" x2="947.1740981921955" y2="548.1665222413704" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="reject-comments" data-to="drop-validation"/>
+<rect x="864.17" y="525.37" width="70" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="899.1740981921955" y="535.1665222413704" fill="#94a3b8" font-size="10" text-anchor="middle">drop order</text>
+<line x1="1051.8259018078045" y1="548.1665222413704" x2="1111.8259018078045" y2="548.1665222413704" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="drop-validation" data-to="end15"/>
+<rect x="1068.53" y="525.37" width="26.6" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="1081.8259018078045" y="535.1665222413704" fill="#fb7185" font-size="10" font-weight="600" text-anchor="middle">Yes</text>
+<path d="M 1315 360.0832611206852 L 1315 394.0832611206853 L 771.1740981921955 394.0832611206853 L 771.1740981921955 508.16652224137044" stroke="#fb7185" stroke-width="2.25" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="approve-decision" data-to="reject-comments"/>
+<rect x="1319" y="367.28" width="45.2" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="1323" y="377.0832611206852" fill="#fb7185" font-size="10" font-weight="600">Reject</text>
+<line x1="999.5" y1="600.4924240491749" x2="999.5" y2="656.4924240491749" stroke="#fb7185" stroke-width="2.25" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="drop-validation" data-to="drop-validation-no"/>
+<rect x="1003.5" y="612.69" width="20.4" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="1007.5" y="622.4924240491749" fill="#fb7185" font-size="10" font-weight="600">No</text>
+<g class="pf-node" data-id="drop-validation-no" data-type="reject" tabindex="0" role="button" aria-label="Terminal: Complete">
+<rect x="918" y="656.4924240491749" width="163" height="40" rx="20" fill="#041829" stroke="#fb7185" stroke-width="1.5"/>
+<text x="999.5" y="680.4924240491749" fill="white" font-size="10" font-weight="600" text-anchor="middle">System error: blocked</text>
+</g>
+<path d="M 734.9167388793148 352 L 734.9167388793148 386 L 1071.9167388793148 386 L 1071.9167388793148 355.5" stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-dasharray="5,4" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="not-fdo" data-to="queue-assign"/>
+<rect x="787.82" y="389.2" width="231.2" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="903.4167388793148" y="399" fill="#94a3b8" font-size="10" font-weight="600" text-anchor="middle">immediate submission (no scheduling)</text>
+<path d="M 999.5 600.4924240491749 L 999.5 652.4924240491749 L 771.1740981921955 652.4924240491749 L 771.1740981921955 588.1665222413704" stroke="#fb7185" stroke-width="2.25" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="drop-validation" data-to="reject-comments"/>
+<rect x="769.74" y="655.69" width="231.2" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="885.3370490960978" y="665.4924240491749" fill="#fb7185" font-size="10" font-weight="600" text-anchor="middle">No Access: unauthorized drop blocked</text>
+<g class="pf-node" data-id="start1" data-type="terminal" tabindex="0" role="button" aria-label="Terminal: Start">
+<rect x="158" y="50" width="100" height="40" rx="20" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="208" y="74" fill="white" font-size="10" font-weight="600" text-anchor="middle">Start</text>
+</g>
+<g class="pf-node" data-id="lookup" data-type="manual" tabindex="0" role="button" aria-label="Look Up Account, Agent. Open details.">
+<text x="478" y="7" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Agent</text>
+<rect x="318" y="30" width="160" height="80" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,2"/>
+<text x="398" y="53.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Look Up Account</text>
+<text x="398" y="70.5" fill="#94a3b8" font-size="10" text-anchor="middle">Global Search icon, or</text>
+<text x="398" y="82.5" fill="#94a3b8" font-size="10" text-anchor="middle">Account 360 Installed</text>
+<text x="398" y="94.5" fill="#94a3b8" font-size="10" text-anchor="middle">Assets panel</text>
+<circle cx="318" cy="25" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="318" y="29" fill="white" font-size="8" font-weight="600" text-anchor="middle">1</text>
+</g>
+<g class="pf-node" data-id="msisdn-entry" data-type="manual" tabindex="0" role="button" aria-label="Enter MSISDN, Click Go, Agent. Open details.">
+<text x="710" y="7" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Agent</text>
+<rect x="550" y="26.5" width="160" height="87" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="630" y="47.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Enter MSISDN, Click Go</text>
+<text x="630" y="64.5" fill="#94a3b8" font-size="10" text-anchor="middle">Global Search MSISDN</text>
+<text x="630" y="76.5" fill="#94a3b8" font-size="10" text-anchor="middle">Entry view</text>
+<text x="630" y="88.5" fill="#94a3b8" font-size="10" text-anchor="middle">Check user ID/AM Code</text>
+<text x="630" y="100.5" fill="#94a3b8" font-size="10" text-anchor="middle">(#55)</text>
+<circle cx="550" cy="21.5" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="550" y="25.5" fill="white" font-size="8" font-weight="600" text-anchor="middle">2</text>
+</g>
+<g class="pf-node" data-id="verify-id" data-type="manual" tabindex="0" role="button" aria-label="Verify Identity &amp; Contact, Agent. Open details.">
+<text x="1041" y="7" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Agent</text>
+<rect x="881" y="19" width="160" height="102" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="961" y="40" fill="white" font-size="10" font-weight="600" text-anchor="middle">Verify Identity &amp;</text>
+<text x="961" y="55" fill="white" font-size="10" font-weight="600" text-anchor="middle">Contact</text>
+<text x="961" y="72" fill="#94a3b8" font-size="10" text-anchor="middle">Contact Verification /</text>
+<text x="961" y="84" fill="#94a3b8" font-size="10" text-anchor="middle">QID &amp; Bank</text>
+<text x="961" y="96" fill="#94a3b8" font-size="10" text-anchor="middle">Upload screen, click</text>
+<text x="961" y="108" fill="#94a3b8" font-size="10" text-anchor="middle">Continue</text>
+<circle cx="881" cy="14" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="881" y="18" fill="white" font-size="8" font-weight="600" text-anchor="middle">3</text>
+</g>
+<g class="pf-node" data-id="get-pin-puk" data-type="manual" tabindex="0" role="button" aria-label="Get PIN/PUK, Agent. Open details.">
+<text x="1322" y="7" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Agent</text>
+<rect x="1162" y="26.5" width="160" height="87" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="1242" y="47.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Get PIN/PUK</text>
+<text x="1242" y="64.5" fill="#94a3b8" font-size="10" text-anchor="middle">SIM Serial Number Entry</text>
+<text x="1242" y="76.5" fill="#94a3b8" font-size="10" text-anchor="middle">screen</text>
+<text x="1242" y="88.5" fill="#94a3b8" font-size="10" text-anchor="middle">SIM Swap Reason is a</text>
+<text x="1242" y="100.5" fill="#94a3b8" font-size="10" text-anchor="middle">required field</text>
+<circle cx="1162" cy="21.5" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="1162" y="25.5" fill="white" font-size="8" font-weight="600" text-anchor="middle">4</text>
+</g>
+<g class="pf-node" data-id="attach-form" data-type="manual" tabindex="0" role="button" aria-label="Attach SIM Swap Form, Agent. Open details.">
+<text x="276.91673887931483" y="256.5" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Agent</text>
+<rect x="116.91673887931483" y="272" width="160" height="80" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="196.91673887931483" y="295.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Attach SIM Swap Form</text>
+<text x="196.91673887931483" y="312.5" fill="#94a3b8" font-size="10" text-anchor="middle">SIM Swap Form</text>
+<text x="196.91673887931483" y="324.5" fill="#94a3b8" font-size="10" text-anchor="middle">Attachment screen</text>
+<text x="196.91673887931483" y="336.5" fill="#94a3b8" font-size="10" text-anchor="middle">click Continue</text>
+<circle cx="116.91673887931483" cy="267" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="116.91673887931483" y="271" fill="white" font-size="8" font-weight="600" text-anchor="middle">5</text>
+</g>
+<g class="pf-node" data-id="submit-order" data-type="manual" tabindex="0" role="button" aria-label="Submit Order, Agent. Open details.">
+<text x="539.9167388793148" y="256.5" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Agent</text>
+<rect x="379.91673887931483" y="268.5" width="160" height="87" rx="8" fill="#042325" stroke="#34d399" stroke-width="2.5"/>
+<text x="459.91673887931483" y="289.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Submit Order</text>
+<text x="459.91673887931483" y="306.5" fill="#94a3b8" font-size="10" text-anchor="middle">Add comments, click</text>
+<text x="459.91673887931483" y="318.5" fill="#94a3b8" font-size="10" text-anchor="middle">Save and Finish</text>
+<text x="459.91673887931483" y="330.5" fill="#94a3b8" font-size="10" text-anchor="middle">Access: Manager</text>
+<text x="459.91673887931483" y="342.5" fill="#94a3b8" font-size="10" text-anchor="middle">Approval Required</text>
+<circle cx="379.91673887931483" cy="263.5" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="379.91673887931483" y="267.5" fill="white" font-size="8" font-weight="600" text-anchor="middle">6</text>
+<circle cx="539.9167388793148" cy="263.5" r="12" fill="#1e293b" stroke="#854d0e" stroke-width="1.5"/>
+<polygon points="539.92,256.50 541.90,261.52 546.92,263.50 541.90,265.48 539.92,270.50 537.94,265.48 532.92,263.50 537.94,261.52" fill="#fde047" stroke="#854d0e" stroke-width="1.5"/>
+</g>
+<g class="pf-node" data-id="not-fdo" data-type="automated" tabindex="0" role="button" aria-label="FDO Eligibility Check, System. Open details.">
+<text x="814.9167388793148" y="256.5" fill="#a78bfa" font-size="10" font-weight="600" text-anchor="end">System</text>
+<rect x="654.9167388793148" y="272" width="160" height="80" rx="8" fill="#200f49" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="734.9167388793148" y="295.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">FDO Eligibility Check</text>
+<text x="734.9167388793148" y="312.5" fill="#94a3b8" font-size="10" text-anchor="middle">SIM Swap is NOT a</text>
+<text x="734.9167388793148" y="324.5" fill="#94a3b8" font-size="10" text-anchor="middle">supported</text>
+<text x="734.9167388793148" y="336.5" fill="#94a3b8" font-size="10" text-anchor="middle">Future Dated Order type</text>
+<circle cx="654.9167388793148" cy="267" r="12" fill="#1e293b" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="654.9167388793148" y="271" fill="white" font-size="8" font-weight="600" text-anchor="middle">7</text>
+</g>
+<g class="pf-node" data-id="queue-assign" data-type="manual" tabindex="0" role="button" aria-label="Assign Approval Task, Approver/Queue Agent. Open details.">
+<text x="1151.9167388793148" y="256.5" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Approver/Queue Agent</text>
+<rect x="991.9167388793148" y="268.5" width="160" height="87" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="1071.9167388793148" y="289.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Assign Approval Task</text>
+<text x="1071.9167388793148" y="306.5" fill="#94a3b8" font-size="10" text-anchor="middle">SIM Swap Queue -&gt; Order</text>
+<text x="1071.9167388793148" y="318.5" fill="#94a3b8" font-size="10" text-anchor="middle">tasks tab</text>
+<text x="1071.9167388793148" y="330.5" fill="#94a3b8" font-size="10" text-anchor="middle">Select order, click</text>
+<text x="1071.9167388793148" y="342.5" fill="#94a3b8" font-size="10" text-anchor="middle">Assign to Me</text>
+<circle cx="991.9167388793148" cy="263.5" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="991.9167388793148" y="267.5" fill="white" font-size="8" font-weight="600" text-anchor="middle">8</text>
+</g>
+<g class="pf-node" data-id="approve-decision" data-type="decision" tabindex="0" role="button" aria-label="Decision: Approve the Task?">
+<g transform="translate(1315, 312)">
+  <rect x="-34" y="-34" width="68" height="68" rx="4" transform="rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="0" y="-3.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Approve</text>
+  <text x="0" y="11.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">the Task?</text>
+</g>
+</g>
+<g class="pf-node" data-id="approve-comments" data-type="manual" tabindex="0" role="button" aria-label="Add Approval Comments, Approver. Open details.">
+<text x="408.17409819219546" y="496.16652224137044" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Approver</text>
+<rect x="248.17409819219546" y="508.16652224137044" width="160" height="80" rx="8" fill="#042325" stroke="#34d399" stroke-width="2.5"/>
+<text x="328.17409819219546" y="537.6665222413704" fill="white" font-size="10" font-weight="600" text-anchor="middle">Add Approval Comments</text>
+<text x="328.17409819219546" y="554.6665222413704" fill="#94a3b8" font-size="10" text-anchor="middle">Approve Comments pop-up</text>
+<text x="328.17409819219546" y="566.6665222413704" fill="#94a3b8" font-size="10" text-anchor="middle">Add comments, Submit</text>
+<circle cx="248.17409819219546" cy="503.16652224137044" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="248.17409819219546" y="507.16652224137044" fill="white" font-size="8" font-weight="600" text-anchor="middle">9</text>
+<circle cx="408.17409819219546" cy="503.16652224137044" r="12" fill="#1e293b" stroke="#854d0e" stroke-width="1.5"/>
+<polygon points="408.17,496.17 410.15,501.19 415.17,503.17 410.15,505.15 408.17,510.17 406.19,505.15 401.17,503.17 406.19,501.19" fill="#fde047" stroke="#854d0e" stroke-width="1.5"/>
+</g>
+<g class="pf-node" data-id="end12" data-type="terminal" tabindex="0" role="button" aria-label="Terminal: Complete">
+<rect x="511.17409819219546" y="528.1665222413704" width="120" height="40" rx="20" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="571.1740981921955" y="552.1665222413704" fill="white" font-size="10" font-weight="600" text-anchor="middle">Complete</text>
+</g>
+<g class="pf-node" data-id="reject-comments" data-type="manual" tabindex="0" role="button" aria-label="Reject the Task, Approver. Open details.">
+<text x="851.1740981921955" y="496.16652224137044" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Approver</text>
+<rect x="691.1740981921955" y="508.16652224137044" width="160" height="80" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="771.1740981921955" y="531.6665222413704" fill="white" font-size="10" font-weight="600" text-anchor="middle">Reject the Task</text>
+<text x="771.1740981921955" y="548.6665222413704" fill="#94a3b8" font-size="10" text-anchor="middle">Rejection Reason pop-up</text>
+<text x="771.1740981921955" y="560.6665222413704" fill="#94a3b8" font-size="10" text-anchor="middle">Add comments, click</text>
+<text x="771.1740981921955" y="572.6665222413704" fill="#94a3b8" font-size="10" text-anchor="middle">Drop Order</text>
+<circle cx="691.1740981921955" cy="503.16652224137044" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="691.1740981921955" y="507.16652224137044" fill="white" font-size="8" font-weight="600" text-anchor="middle">10</text>
+</g>
+<g class="pf-node" data-id="drop-validation" data-type="decision" tabindex="0" role="button" aria-label="Decision: Order went through Approval first?">
+<g transform="translate(999.5, 548.1665222413704)">
+  <rect x="-37" y="-37" width="74" height="74" rx="4" transform="rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="0" y="-11" fill="white" font-size="10" font-weight="600" text-anchor="middle">Order went</text>
+  <text x="0" y="4" fill="white" font-size="10" font-weight="600" text-anchor="middle">through</text>
+  <text x="0" y="19" fill="white" font-size="10" font-weight="600" text-anchor="middle">Approval</text>
+</g>
+</g>
+<g class="pf-node" data-id="end15" data-type="terminal" tabindex="0" role="button" aria-label="Terminal: Complete">
+<rect x="1111.8259018078045" y="528.1665222413704" width="120" height="40" rx="20" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="1171.8259018078045" y="552.1665222413704" fill="white" font-size="10" font-weight="600" text-anchor="middle">Complete</text>
+</g>
+<text x="118" y="73" fill="#94a3b8" font-size="10" font-weight="700" text-anchor="end">ROW 1</text>
+<text x="76.91673887931483" y="315" fill="#94a3b8" font-size="10" font-weight="700" text-anchor="end">ROW 2</text>
+<text x="208.17409819219546" y="551.1665222413704" fill="#94a3b8" font-size="10" font-weight="700" text-anchor="end">ROW 3</text>
+<rect x="238.60000000000014" y="735.4924240491749" width="16" height="10" rx="2" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="260.60000000000014" y="744.4924240491749" fill="#94a3b8" font-size="10">Manual / Human-in-loop</text>
+<rect x="423.0000000000001" y="735.4924240491749" width="16" height="10" rx="2" fill="#200f49" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="445.0000000000001" y="744.4924240491749" fill="#94a3b8" font-size="10">Automated</text>
+<rect x="526.8000000000001" y="735.4924240491749" width="16" height="10" rx="5" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="548.8000000000001" y="744.4924240491749" fill="#94a3b8" font-size="10">Start / End</text>
+<rect x="643.0000000000001" y="735.4924240491749" width="16" height="10" rx="5" fill="#041829" stroke="#fb7185" stroke-width="1.5"/>
+<text x="665.0000000000001" y="744.4924240491749" fill="#94a3b8" font-size="10">Rejected / negative end</text>
+<rect x="-5" y="-5" width="10" height="10" transform="translate(841.6000000000001, 740.4924240491749) rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+<text x="855.6000000000001" y="744.4924240491749" fill="#94a3b8" font-size="10">Decision</text>
+<line x1="931.2000000000002" y1="740.4924240491749" x2="947.2000000000002" y2="740.4924240491749" stroke="#fb7185" stroke-width="2.25" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)"/>
+<text x="953.2000000000002" y="744.4924240491749" fill="#94a3b8" font-size="10">Exception path</text>
+<line x1="1066.0000000000002" y1="740.4924240491749" x2="1082.0000000000002" y2="740.4924240491749" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrowhead-slate)"/>
+<text x="1088.0000000000002" y="744.4924240491749" fill="#94a3b8" font-size="10">Loop-back</text>
+<line x1="1169.8000000000002" y1="740.4924240491749" x2="1185.8000000000002" y2="740.4924240491749" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)"/>
+<text x="1191.8000000000002" y="744.4924240491749" fill="#94a3b8" font-size="10">Row wrap</text>
+</svg>
+    </div>
+
+    
+
+        <div class="cards">
+      <div class="card">
+        <div class="card-header"><div class="card-dot violet"></div><h3>Input → Output Transformation</h3></div>
+        <table class="io-table">
+          <thead><tr><th class="io-col-step"></th><th>Input</th><th>Output</th><th>Example</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Step 1</th><td class="io-in">MSISDN / customer identifier, QID, bank document</td><td class="io-out">Verified contact record with identity documents attached</td><td class="io-ex">MSISDN entry → Verified contact record</td><td class="io-mean">Agent looks up the account and verifies identity via QID and bank document upload before proceeding with the swap.</td></tr>
+            <tr><th scope="row">Step 2</th><td class="io-in">New physical SIM serial number, SIM Swap Reason, attached swap form</td><td class="io-out">Submitted SIM Swap order pending manager approval</td><td class="io-ex">New SIM serial + reason → Order submitted</td><td class="io-mean">Agent captures the new SIM's PIN/PUK data and reason, attaches the signed form, then submits the order into the approval queue (Manager Approval Required).</td></tr>
+            <tr><th scope="row">Step 3</th><td class="io-in">Order type = SIM Swap</td><td class="io-out">Same-day execution only, no FDO scheduling</td><td class="io-ex">SIM Swap order → not FDO-eligible</td><td class="io-mean">System confirms SIM Swap is excluded from the Future Dated Order eligibility list, forcing immediate execution.</td></tr>
+            <tr><th scope="row">Step 4</th><td class="io-in">Assigned approval task, comments</td><td class="io-out">Order Completed or Order Dropped (Cancelled)</td><td class="io-ex">Assign to Me → Approve/Reject decision</td><td class="io-mean">An approver assigns themselves the task and either approves (order completes) or rejects with comments (order is dropped).</td></tr>
+            <tr><th scope="row">Step 5</th><td class="io-in">Drop Order attempt</td><td class="io-out">System-blocked error if approval step was bypassed</td><td class="io-ex">Unauthorized drop attempt → validation error</td><td class="io-mean">System enforces that only orders which passed through Approval may be dropped, blocking any attempt to drop an order without approval.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+<p class="footer">guided-journeys-sim-swap-sim-swap-tablet-desktop-vanilla-ord-8923a493 | open-ui-desktop-agent-360-cti-view-8b495725 | guided-journeys-vanilla-views-modifications-future-dated-ord-640e50be</p>
+  </div>
+  <aside class="pf-drawer" id="pfDrawer" role="dialog" aria-labelledby="pfDrawerTitle" aria-hidden="true">
+    <div class="pf-drawer-handle" id="pfHandle" role="separator" aria-orientation="vertical" aria-label="Resize detail panel. Use left and right arrow keys." tabindex="0"></div>
+    <div class="pf-drawer-body">
+      <div class="pf-drawer-head">
+        <span class="pf-badge" id="pfBadge"></span>
+        <button class="pf-drawer-close" id="pfClose" aria-label="Close detail panel">&times;</button>
+      </div>
+      <h2 id="pfDrawerTitle"></h2>
+      <p class="pf-drawer-role" id="pfRole"></p>
+      <div class="pf-drawer-sections">
+        <div class="pf-sec">
+          <h3>Meaning</h3>
+          <p id="pfMeaning" class="pf-drawer-meaning"></p>
+        </div>
+        <div class="pf-sec">
+          <h3>Input/Inbound</h3>
+          <p id="pfInDesc" class="pf-drawer-desc"></p>
+          <ul id="pfIn"></ul>
+        </div>
+        <div class="pf-sec">
+          <h3>Output/Outbound</h3>
+          <p id="pfOutDesc" class="pf-drawer-desc"></p>
+          <ul id="pfOut"></ul>
+        </div>
+        <div class="pf-sec">
+          <h3>Example</h3>
+          <p id="pfExample" class="pf-drawer-example"></p>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <script>
+    const SLUG = "uj011-sim-swap-process-flow";
+    /* Export bounds are measured, not assumed (§11.1).
+     *
+     * The container's own rect is NOT the diagram's extent: the SVG has a min-width, so on a
+     * narrow viewport it is wider than its container and .diagram-container scrolls. Capturing
+     * the container rect then silently crops whatever overflowed — the right-hand nodes and the
+     * legend — and the exported PNG differs from what the page shows. So walk every descendant
+     * and take the true union, which also covers anything that overflows upward or downward. */
+    function captureBounds() {
+      const el = document.getElementById('report-container');
+      const c = el.getBoundingClientRect();
+      let l = c.left, t = c.top, r = c.right, b = c.bottom;
+      for (const n of el.querySelectorAll('*')) {
+        if (n.classList && (n.classList.contains('toolbar') || n.classList.contains('pf-drawer') || n.classList.contains('pf-filters'))) continue;
+        const q = n.getBoundingClientRect();
+        if (!q.width && !q.height) continue;
+        if (q.left < l) l = q.left;
+        if (q.top < t) t = q.top;
+        if (q.right > r) r = q.right;
+        if (q.bottom > b) b = q.bottom;
+      }
+      return { left: l, top: t, width: r - l, height: b - t };
+    }
+
+    async function capture() {
+      pfResetView();
+      await new Promise(r => setTimeout(r, 300));
+      const el = document.getElementById('report-container');
+      // A scrolled diagram must be captured whole: reset the scroll so html2canvas sees the
+      // full width, then restore it so the user's view is untouched.
+      const dc = document.querySelector('.diagram-container');
+      const sx = dc ? dc.scrollLeft : 0;
+      if (dc) dc.scrollLeft = 0;
+      const wasOverflow = dc ? dc.style.overflowX : '';
+      if (dc) dc.style.overflowX = 'visible';
+      await new Promise(r => requestAnimationFrame(r));
+
+      const r = captureBounds();
+      const pad = 32;
+      try {
+        return await html2canvas(document.body, { backgroundColor: '#020617', scale: 2, useCORS: true, ignoreElements: (e) => e.classList && (e.classList.contains('toolbar') || e.classList.contains('pf-drawer') || e.classList.contains('pf-filters')), x: r.left + window.scrollX - pad, y: r.top + window.scrollY - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
+      } finally {
+        if (dc) { dc.style.overflowX = wasOverflow; dc.scrollLeft = sx; }
+      }
+    }
+    async function copyAsImage(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        exportStatus('✓ Copied', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    async function downloadPNG(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const link = document.createElement('a'); link.download = SLUG + '.png'; link.href = canvas.toDataURL('image/png'); link.click();
+        exportStatus('✓ PNG', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    /* The menu closes on outside click, on Escape, and after a format is chosen — a popover
+     * that stays open behind the download it just started reads as though nothing happened. */
+    function setExportOpen(open) {
+      document.getElementById('exportMenu').classList.toggle('open', open);
+      document.getElementById('exportBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    function toggleExport(ev) {
+      ev.stopPropagation();
+      setExportOpen(!document.getElementById('exportMenu').classList.contains('open'));
+    }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.toolbar')) setExportOpen(false);
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && document.getElementById('exportMenu').classList.contains('open')) {
+        setExportOpen(false); document.getElementById('exportBtn').focus();
+      }
+    });
+
+    /* Status is shown on the trigger, not on the menu item: the menu closes on choose, so a
+     * message written into the item would vanish with it. */
+    function exportStatus(msg, revert) {
+      const b = document.getElementById('exportBtn');
+      if (revert === undefined) { b.textContent = msg; return; }
+      b.textContent = msg;
+      setTimeout(() => b.textContent = 'Export', revert);
+    }
+
+    /* SVG export is a real vector serialisation, not a raster (§11.1 r7).
+     *
+     * The live <svg> inherits its font from the page stylesheet, which does NOT travel with a
+     * detached clone — open the file standalone and every label reflows in a fallback face,
+     * shifting off the geometry the generator computed. So the clone gets the font stack and
+     * the canvas ground written onto it explicitly. Nothing else is restyled: all colours are
+     * already presentation attributes on the elements themselves. */
+    function downloadSVG(btn) {
+      try {
+        const src = document.querySelector('.diagram-container svg');
+        const clone = src.cloneNode(true);
+        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        const vb = (src.getAttribute('viewBox') || '').split(/[s,]+/).map(Number);
+        if (vb.length === 4) { clone.setAttribute('width', vb[2]); clone.setAttribute('height', vb[3]); }
+        clone.removeAttribute('style');
+        clone.setAttribute('style', 'background:' + "#020617");
+        const st = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+        st.textContent = 'text{font-family:' + getComputedStyle(src).fontFamily.replace(/"/g, "'") + '}';
+        clone.insertBefore(st, clone.firstChild);
+        const blob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a'); link.download = SLUG + '.svg'; link.href = url; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setExportOpen(false); exportStatus('✓ SVG', 2000);
+      } catch (e) { setExportOpen(false); exportStatus('✗ Failed', 2000); }
+    }
+
+    /* JPEG has no alpha, so an un-flattened canvas renders transparent pixels BLACK — which
+     * on this palette is invisible damage rather than an obvious bug. Composite onto the
+     * canvas ground first. */
+    async function downloadJPG(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const flat = document.createElement('canvas');
+        flat.width = canvas.width; flat.height = canvas.height;
+        const g = flat.getContext('2d');
+        g.fillStyle = "#020617";
+        g.fillRect(0, 0, flat.width, flat.height);
+        g.drawImage(canvas, 0, 0);
+        const link = document.createElement('a'); link.download = SLUG + '.jpg';
+        link.href = flat.toDataURL('image/jpeg', 0.92); link.click();
+        exportStatus('✓ JPG', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    async function downloadPDF(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const orientation = canvas.width > canvas.height ? 'landscape' : 'portrait';
+        const pdf = new jsPDF({ orientation, unit: 'px', format: [canvas.width, canvas.height], hotfixes: ['px_scaling'] });
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save(SLUG + '.pdf');
+        exportStatus('✓ PDF', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    /* --- interactivity layer (§11.3) --- */
+    const PF_NODES = [{"id":"drop-validation-no","type":"reject","num":"","title":"System error: blocked","role":"","desc":[]},{"id":"start1","type":"terminal","num":"","title":"Start","role":"","desc":[]},{"id":"lookup","type":"manual","num":"1","title":"Look Up Account","role":"Agent","desc":["Global Search icon, or","Account 360 Installed Assets panel"],"meaning":"Agent locates the customer's account and asset (MSISDN) before starting the swap, via Global Search or the Account 360/Installed Assets panel.","inputDesc":"Customer identifier (MSISDN, QID, or account name)","outputDesc":"Account and installed-asset record located","example":"Installed Assets panel: Postpaid Business Employee Plan Promotion, Phone Number 97472501217","milestone":false},{"id":"msisdn-entry","type":"manual","num":"2","title":"Enter MSISDN, Click Go","role":"Agent","desc":["Global Search MSISDN Entry view","Check user ID/AM Code (#55)"],"meaning":"Agent enters the MSISDN into Global Search and clicks Go to load account context for the swap.","inputDesc":"MSISDN","outputDesc":"Account context loaded, SIM Swap option available","example":"Enter MSISDN and click Go [G_PassportSimSwapAgent360#11]","milestone":false},{"id":"verify-id","type":"manual","num":"3","title":"Verify Identity & Contact","role":"Agent","desc":["Contact Verification / QID & Bank","Upload screen, click Continue"],"meaning":"Agent verifies customer contact details and uploads QID front and bank document as identity evidence for the swap.","inputDesc":"Customer QID (front), bank document","outputDesc":"Verified contact record with attached identity documents","example":"Verify contact details, upload QID front & Bank, click Continue [G_PassportSimSwapAgent360#12]","milestone":false},{"id":"get-pin-puk","type":"manual","num":"4","title":"Get PIN/PUK","role":"Agent","desc":["SIM Serial Number Entry screen","SIM Swap Reason is a required field"],"meaning":"Agent captures the new physical SIM's serial number and selects the mandatory SIM Swap Reason, generating the PIN/PUK for the new SIM (ACT-010, Task #51).","inputDesc":"New SIM card serial number, SIM Swap Reason (required)","outputDesc":"PIN/PUK generated and associated with new SIM serial","example":"New SIM serial capture; SIM Swap Reason is a required selected field [G_PassportSimSwapAgent360#13]","milestone":false},{"id":"attach-form","type":"manual","num":"5","title":"Attach SIM Swap Form","role":"Agent","desc":["SIM Swap Form Attachment screen","click Continue"],"meaning":"Agent attaches the completed SIM Swap request form to the order before submission.","inputDesc":"Completed SIM Swap request form (scanned/uploaded)","outputDesc":"Form attached to order","example":"Attach SIM Swap Form, click Continue [G_PassportSimSwapAgent360#14]","milestone":false},{"id":"submit-order","type":"manual","num":"6","title":"Submit Order","role":"Agent","desc":["Add comments, click Save and Finish","Access: Manager Approval Required"],"meaning":"Agent finalizes and submits the SIM Swap order, which is gated by Manager Approval Required and routes to the SIM Swap Approval Queue.","inputDesc":"Completed order (identity, SIM serial, attached form)","outputDesc":"Order submitted to SIM Swap Approval Queue, pending manager approval","example":"Add comments, click Save and Finish [G_PassportSimSwapAgent360#15]","milestone":true},{"id":"not-fdo","type":"automated","num":"7","title":"FDO Eligibility Check","role":"System","desc":["SIM Swap is NOT a supported","Future Dated Order type"],"meaning":"System enforces that SIM Swap cannot be scheduled as a Future Dated Order — it must be submitted and executed same-day, unlike other order types on the FDO eligibility list.","inputDesc":"Order type = SIM Swap","outputDesc":"FDO scheduling option withheld; order proceeds as immediate/same-day","example":"SIM Swap confirmed as NOT a supported FDO order type [G_PassportSimSwapAgent360#51]","milestone":false},{"id":"queue-assign","type":"manual","num":"8","title":"Assign Approval Task","role":"Approver/Queue Agent","desc":["SIM Swap Queue -> Order tasks tab","Select order, click Assign to Me"],"meaning":"An approver/queue agent picks the order from the SIM Swap Queue (sorted by Created Date or Order Number) and self-assigns the approval task, gating who can act on it.","inputDesc":"Unassigned order in SIM Swap Approval Queue","outputDesc":"Order task assigned to a specific approver","example":"Assignment step gates who can act on the approval task [G_PassportSimSwapAgent360#21]","milestone":false},{"id":"approve-decision","type":"decision","num":"","title":"Approve the Task?","role":"","desc":[],"meaning":"Approver opens the Order ID Detail screen and decides to Approve or Reject the SIM Swap task, per the Order Detail / Task Actions view."},{"id":"approve-comments","type":"manual","num":"9","title":"Add Approval Comments","role":"Approver","desc":["Approve Comments pop-up","Add comments, Submit"],"meaning":"Approver records comments in the Approve Comments pop-up and submits, closing the task and moving the order to Completed.","inputDesc":"Approval decision + comments","outputDesc":"Task closed, order status Completed","example":"On Submit, task closes and Order is Completed [source: SIM Swap Approval Open UI Desktop section]","milestone":true},{"id":"end12","type":"terminal","num":"","title":"Complete","role":"","desc":[]},{"id":"reject-comments","type":"manual","num":"10","title":"Reject the Task","role":"Approver","desc":["Rejection Reason pop-up","Add comments, click Drop Order"],"meaning":"Approver rejects the task; the Rejection Reason pop-up requires comments before the order can be dropped as cancelled.","inputDesc":"Rejection reason / comments","outputDesc":"Order dropped as cancelled","example":"Add comments, click Drop Order [G_PassportSimSwapAgent360#26]","milestone":false},{"id":"drop-validation","type":"decision","num":"","title":"Order went through Approval","role":"","desc":[],"meaning":"System validates that a Drop Order action was reached via the approval flow; attempting to drop an order without going through Approval is blocked with a system error, per the documented 'If without Order Approval Any user try to Drop the Order the below error will appear' rule."},{"id":"end15","type":"terminal","num":"","title":"Complete","role":"","desc":[]}];
+    const PF_EDGES = [{"from":"start1","to":"lookup","label":"","style":"flow"},{"from":"lookup","to":"msisdn-entry","label":"MSISDN","style":"flow"},{"from":"msisdn-entry","to":"verify-id","label":"account context loaded","style":"flow"},{"from":"verify-id","to":"get-pin-puk","label":"QID + bank doc","style":"flow"},{"from":"get-pin-puk","to":"attach-form","label":"Continue to Row 2 →","style":"wrap"},{"from":"attach-form","to":"submit-order","label":"signed form","style":"flow"},{"from":"submit-order","to":"not-fdo","label":"order created","style":"flow"},{"from":"not-fdo","to":"queue-assign","label":"same-day execution only","style":"flow"},{"from":"queue-assign","to":"approve-decision","label":"task assigned","style":"flow"},{"from":"approve-decision","to":"approve-comments","label":"Continue to Row 3 →","style":"wrap"},{"from":"approve-comments","to":"end12","label":"task closed","style":"flow"},{"from":"reject-comments","to":"drop-validation","label":"drop order","style":"flow"},{"from":"drop-validation","to":"end15","label":"","style":"flow"},{"from":"approve-decision","to":"reject-comments","label":"Reject","style":"exception"},{"from":"drop-validation","to":"drop-validation-no","label":"No","style":"exception"},{"from":"not-fdo","to":"queue-assign","label":"immediate submission (no scheduling)","style":"plain"},{"from":"drop-validation","to":"reject-comments","label":"No Access: unauthorized drop blocked","style":"exception"}];
+    const PF_TYPE_LABEL = {"manual":"Manual","automated":"Automated","integration":"Integration","decision":"Decision","terminal":"Start / End","reject":"Rejected"};
+    const PF_TYPE_ACCENT = {"manual":"#34d399","automated":"#a78bfa","integration":"#fbbf24","decision":"#fb7185","terminal":"#22d3ee","reject":"#fb7185"};
+    const pfById = Object.fromEntries(PF_NODES.filter(n => n.id).map(n => [n.id, n]));
+    const pfDrawer = document.getElementById('pfDrawer');
+    let pfSelected = null;
+
+    const pfNodeEls = () => Array.from(document.querySelectorAll('.pf-node'));
+    const pfEdgeEls = () => Array.from(document.querySelectorAll('.pf-edge'));
+
+    function pfLabelFor(id) {
+      const n = pfById[id];
+      if (!n) return id || 'unknown';
+      return n.title || n.id;
+    }
+    function pfLi(html) { const li = document.createElement('li'); li.innerHTML = html; return li; }
+    function pfFill(ul, items, emptyText) {
+      ul.textContent = '';
+      if (!items.length) { ul.appendChild(pfLi('<span class="pf-empty">' + emptyText + '</span>')); return; }
+      items.forEach(i => ul.appendChild(i));
+    }
+    function pfEdgeItem(otherId, e, dir) {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.className = 'pf-link';
+      btn.type = 'button';
+      btn.textContent = (dir === 'in' ? '← ' : '→ ') + pfLabelFor(otherId);
+      btn.addEventListener('click', () => pfOpen(otherId));
+      li.appendChild(btn);
+      const meta = [];
+      if (e.label) meta.push(e.label);
+      if (e.style && e.style !== 'flow') meta.push(e.style);
+      if (meta.length) {
+        const span = document.createElement('span');
+        span.className = 'pf-payload';
+        span.textContent = '  ·  ' + meta.join(' · ');
+        li.appendChild(span);
+      }
+      return li;
+    }
+
+    function pfOpen(id) {
+      const n = pfById[id];
+      if (!n) return;
+      pfSelected = id;
+      const badge = document.getElementById('pfBadge');
+      badge.textContent = PF_TYPE_LABEL[n.type] || n.type;
+      badge.style.color = PF_TYPE_ACCENT[n.type] || '#94a3b8';
+      document.getElementById('pfDrawerTitle').textContent = (n.num ? n.num + '. ' : '') + (n.title || n.id);
+      document.getElementById('pfRole').textContent = n.role || '';
+      document.getElementById('pfMeaning').textContent = n.meaning || (n.desc && n.desc[0]) || 'No meaning defined.';
+      document.getElementById('pfInDesc').textContent = n.inputDesc || '';
+      document.getElementById('pfOutDesc').textContent = n.outputDesc || '';
+      document.getElementById('pfExample').textContent = n.example || 'No example provided.';
+      pfFill(document.getElementById('pfIn'),
+        PF_EDGES.filter(e => e.to === id).map(e => pfEdgeItem(e.from, e, 'in')),
+        'Nothing flows into this node.');
+      pfFill(document.getElementById('pfOut'),
+        PF_EDGES.filter(e => e.from === id).map(e => pfEdgeItem(e.to, e, 'out')),
+        'Nothing flows out of this node.');
+      pfDrawer.classList.add('is-open');
+      document.body.classList.add('pf-open');
+      pfDrawer.setAttribute('aria-hidden', 'false');
+      pfNodeEls().forEach(el => el.classList.toggle('is-sel', el.dataset.id === id));
+      document.getElementById('pfClose').focus();
+    }
+
+    function pfClose() {
+      pfDrawer.classList.remove('is-open');
+      document.body.classList.remove('pf-open');
+      pfDrawer.setAttribute('aria-hidden', 'true');
+      pfNodeEls().forEach(el => el.classList.remove('is-sel'));
+      if (pfSelected) {
+        const el = pfNodeEls().find(e => e.dataset.id === pfSelected);
+        if (el) el.focus();
+      }
+      pfSelected = null;
+    }
+
+    function pfApplyFilter(type) {
+      const all = type === 'all';
+      pfNodeEls().forEach(el => el.classList.toggle('is-dim', !all && el.dataset.type !== type));
+      const visible = new Set(PF_NODES.filter(n => all || n.type === type).map(n => n.id));
+      pfEdgeEls().forEach(el => {
+        const on = all || (visible.has(el.dataset.from) && visible.has(el.dataset.to));
+        el.classList.toggle('is-dim', !on);
+      });
+      document.querySelectorAll('.pf-chip').forEach(c =>
+        c.setAttribute('aria-pressed', String(c.dataset.filter === type)));
+    }
+    // Exports must always show the whole diagram — a filtered PNG silently loses
+    // nodes and reads as the complete picture, which is worse than no filter at all.
+    // Closing the drawer first also restores the page width the capture is measured from.
+    function pfResetView() { pfApplyFilter('all'); if (pfSelected) pfClose(); }
+
+    pfNodeEls().forEach(el => {
+      el.addEventListener('click', () => pfOpen(el.dataset.id));
+      el.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); pfOpen(el.dataset.id); }
+      });
+    });
+    document.querySelectorAll('.pf-chip').forEach(c =>
+      c.addEventListener('click', () => pfApplyFilter(c.dataset.filter)));
+    document.getElementById('pfClose').addEventListener('click', pfClose);
+    document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && pfSelected) pfClose(); });
+
+    /* Drawer resize — pointer drag plus arrow keys, clamped so the panel can never
+       swallow the diagram or shrink below a readable measure. */
+    (function () {
+      const handle = document.getElementById('pfHandle');
+      const MIN = 320, MAX = 760;
+      const setW = w => document.documentElement.style.setProperty('--pf-drawer-w', Math.min(MAX, Math.max(MIN, w)) + 'px');
+      let dragging = false;
+      handle.addEventListener('pointerdown', ev => { dragging = true; handle.setPointerCapture(ev.pointerId); ev.preventDefault(); });
+      handle.addEventListener('pointermove', ev => { if (dragging) setW(window.innerWidth - ev.clientX); });
+      handle.addEventListener('pointerup', ev => { dragging = false; handle.releasePointerCapture(ev.pointerId); });
+      handle.addEventListener('keydown', ev => {
+        const cur = pfDrawer.getBoundingClientRect().width;
+        if (ev.key === 'ArrowLeft') { setW(cur + 24); ev.preventDefault(); }
+        if (ev.key === 'ArrowRight') { setW(cur - 24); ev.preventDefault(); }
+      });
+    })();
+  </script>
+</body>
+</html>

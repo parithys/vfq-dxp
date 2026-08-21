@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="spec-hash" content="sha256:b1f9105de551b7a81450a1fd27068cb23629f2fc7570dbf5aeee856acd9603a6">
+  <meta name="generated-at" content="2026-08-21T06:28:31.111Z">
+  <meta name="diagram-version" content="2.3">
+  <title>UJ-001: Create Lead - Process Flow</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" integrity="sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/" crossorigin="anonymous"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #020617; min-height: 100vh; padding: 2rem; color: white; }
+    .container { width: 1600px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-start; }
+    .header-content { flex: 1; }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    .pulse-dot { width: 12px; height: 12px; background: #a78bfa; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+    .subtitle { color: #94a3b8; font-size: 0.875rem; margin-left: 1.75rem; }
+    .diagram-container { overflow-x: auto; width: 100%; }
+    svg { width: 1600px; height: auto; display: block; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 2rem; }
+    .card { background: #080e20; border-radius: 0.75rem; border: 1px solid #1e293b; padding: 1.25rem; }
+    .card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.cyan { background: #22d3ee; } .card-dot.emerald { background: #34d399; } .card-dot.violet { background: #a78bfa; }
+    .card-dot.amber { background: #fbbf24; } .card-dot.rose { background: #fb7185; } .card-dot.slate { background: #94a3b8; }
+    .card h3 { font-size: 0.875rem; font-weight: 600; }
+    .card ul { list-style: none; color: #94a3b8; font-size: 0.75rem; }
+    .card li { margin-bottom: 0.375rem; }
+    .io-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .io-table th, .io-table td { border: 1px solid rgba(71, 85, 105, 0.4); padding: 0.625rem 0.75rem; text-align: left; vertical-align: top; line-height: 1.5; }
+    .io-table thead th { background: #151e30; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem; }
+    .io-table tbody th { background: #11192b; color: white; font-weight: 700; white-space: nowrap; }
+    .io-table td { color: #cbd5e1; }
+    .io-table .io-col-step { width: 64px; }
+    .io-table td.io-in { border-left: 2px solid #34d399; }
+    .io-table td.io-out { border-left: 2px solid #22d3ee; }
+    .io-table td.io-ex { color: #a78bfa; white-space: nowrap; }
+    .io-table td.io-mean { color: #94a3b8; }
+    .footer { text-align: center; margin-top: 1.5rem; color: #475569; font-size: 0.75rem; }
+    /* Export menu (r7). The trigger is a labelled button, not an ellipsis glyph: an unlabelled
+     * ellipsis gives no clue that export lives behind it, so the feature went unfound. The
+     * popover is a light surface deliberately — it is chrome, and reads as sitting above the
+     * dark canvas rather than as another dark panel competing with the diagram. */
+    .toolbar { display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center; position: relative; }
+    .export-btn { background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; font-family: inherit; font-size: 0.8125rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; transition: background 0.15s, box-shadow 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+    .export-btn:hover { background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+    .export-menu { display: none; position: absolute; top: calc(100% + 0.5rem); right: 0; z-index: 40; min-width: 13rem; padding: 0.375rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.625rem; box-shadow: 0 10px 24px rgba(0,0,0,0.55); }
+    .export-menu.open { display: block; }
+    .export-item { display: flex; align-items: baseline; justify-content: space-between; gap: 1.5rem; width: 100%; background: transparent; border: none; border-radius: 0.375rem; padding: 0.5rem 0.75rem; font-family: inherit; font-size: 0.8125rem; color: #0f172a; cursor: pointer; text-align: left; transition: background 0.12s; }
+    .export-item:hover { background: #e8edf5; }
+    .export-fmt { font-weight: 600; letter-spacing: 0.02em; }
+    .export-hint { color: #64748b; font-size: 0.6875rem; white-space: nowrap; }
+    .export-sep { height: 1px; margin: 0.25rem 0.5rem; background: #e2e8f0; }
+    .export-btn:focus-visible, .export-item:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; }
+    @media (max-width: 768px) { .header { flex-direction: column; gap: 1rem; } }
+    @media print { body { background: #020617; padding: 1rem; } .toolbar { display: none !important; } }
+    /* --- interactivity layer (§11.3) --- */
+    /* Filter toolbar (r6).
+     *
+     * The problem it fixes: the chips previously used the same vocabulary as the nodes and the
+     * legend — a rounded outline with a small coloured dot — so a row of CONTROLS read as a
+     * third kind of swatch. Nothing signalled it was interactive, and it competed with the
+     * diagram for attention instead of sitting above it.
+     *
+     * The fix is to stop borrowing that vocabulary. Controls now get their own surface: a
+     * raised, bordered bar that visually detaches from the canvas, an accent rule to anchor it,
+     * and a SOLID fill on the active chip — an unmistakably UI treatment, since nothing else in
+     * a diagram is ever filled with its own accent colour at full opacity. */
+    .pf-filters { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem; align-items: center;
+      background: #0d1425; border: 1px solid #263349; border-left: 3px solid #a78bfa;
+      border-radius: 0.5rem; padding: 0.55rem 0.75rem; box-shadow: 0 1px 3px rgba(2, 6, 23, 0.5); }
+    .pf-filters-label { color: #cbd5e1; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; margin-right: 0.55rem; display: inline-flex; align-items: center; gap: 0.4rem; }
+    .pf-filters-label::before { content: ''; width: 11px; height: 11px; flex: 0 0 11px;
+      /* Funnel glyph, drawn rather than an emoji: it must render identically everywhere. */
+      background: #a78bfa; clip-path: polygon(0 0, 100% 0, 62% 45%, 62% 100%, 38% 100%, 38% 45%); }
+    /* v2 redesign: pill-shaped (999px radius, was 0.375rem — a barely-rounded rect that read
+       as a static label), bigger padding/min-height for a real tap target (was 0.3rem/0.7rem,
+       under the ~32px accessibility guideline), and a stronger active state (ring + scale) so
+       the selected/unselected distinction doesn't rely on colour alone. */
+    .pf-chip { background: #1a2337; border: 1.5px solid #3b4a63; color: #cbd5e1; padding: 0.5rem 1rem;
+      border-radius: 999px; font-family: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 0.45rem; line-height: 1.2; min-height: 2rem;
+      transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s; }
+    .pf-chip:hover { background: #24304a; border-color: #64748b; color: white; }
+    .pf-chip:active { transform: scale(0.96); }
+    .pf-chip:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    /* Selected: the chip fills with its own accent, sits a hair taller with a visible ring, and
+       the dot becomes a filled check-like mark. High contrast, unambiguous, and impossible to
+       confuse with a legend swatch — legend marks are outlines on the bare ground. */
+    .pf-chip[aria-pressed="true"] { background: currentColor; border-color: currentColor;
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.28); transform: scale(1.03); }
+    .pf-chip[aria-pressed="true"]:hover { transform: scale(1.03); }
+    .pf-chip[aria-pressed="true"] .pf-chip-label { color: #0b1120; font-weight: 700; }
+    .pf-chip[aria-pressed="true"] .pf-chip-dot { background: #0b1120; opacity: 0.65; }
+    .pf-chip-label { color: inherit; }
+    .pf-chip-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: 0 0 8px; }
+    .pf-node { cursor: pointer; }
+    .pf-node:hover { filter: brightness(1.32); }
+    .pf-node:focus { outline: none; }
+    .pf-node:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 3px; border-radius: 4px; }
+    .pf-node, .pf-edge { transition: opacity 0.2s ease; }
+    .pf-node.is-dim, .pf-edge.is-dim { opacity: 0.14; pointer-events: none; }
+    .pf-node.is-sel > rect, .pf-node.is-sel > circle, .pf-node.is-sel > g > rect { stroke-width: 3; }
+    /* The drawer floats as an overlay — position: fixed with no body padding. Opening/closing
+       the drawer does not affect layout of the diagram or any page content. */
+    .pf-drawer { position: fixed; top: 0; right: 0; height: 100vh; width: var(--pf-drawer-w, 400px); background: #0b1220; border-left: 1px solid #1e293b; box-shadow: -12px 0 32px #020617; transform: translateX(101%); transition: transform 0.25s ease; z-index: 40; display: flex; }
+    .pf-drawer.is-open { transform: none; }
+    .pf-drawer-handle { width: 6px; flex: 0 0 6px; cursor: ew-resize; background: transparent; border-right: 1px solid #1e293b; }
+    .pf-drawer-handle:hover, .pf-drawer-handle:focus-visible { background: #423c6c; outline: none; }
+    .pf-drawer-body { flex: 1; overflow-y: auto; padding: 1.25rem; min-width: 0; }
+    .pf-drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.75rem; }
+    .pf-badge { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.2rem 0.5rem; border-radius: 0.25rem; border: 1px solid currentColor; white-space: nowrap; }
+    .pf-drawer-close { background: transparent; border: none; color: #475569; font-size: 1.5rem; line-height: 1; cursor: pointer; padding: 0 0.25rem; }
+    .pf-drawer-close:hover { color: white; }
+    .pf-drawer-close:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    .pf-drawer h2 { font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; word-break: break-word; }
+    .pf-drawer-role { color: #94a3b8; font-size: 0.75rem; margin-bottom: 1rem; word-break: break-word; }
+    .pf-drawer-sections { display: flex; flex-direction: column; gap: 1rem; }
+    .pf-sec { margin-top: 0; border-top: none; padding-top: 0; }
+    .pf-sec h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; margin-bottom: 0.5rem; margin-top: 0; }
+    .pf-drawer-meaning { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0 0 0.5rem 0; }
+    .pf-drawer-example { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0; }
+    .pf-drawer-desc { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0 0 0.5rem 0; }
+    .pf-sec ul { list-style: none; margin: 0; padding: 0; }
+    .pf-sec li { color: #cbd5e1; font-size: 0.75rem; margin-bottom: 0.3rem; line-height: 1.5; }
+    .pf-sec { margin-top: 1rem; border-top: 1px solid #1e293b; padding-top: 0.75rem; }
+    .pf-sec h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; margin-bottom: 0.5rem; }
+    .pf-sec ul { list-style: none; }
+    .pf-sec li { color: #cbd5e1; font-size: 0.75rem; margin-bottom: 0.4rem; line-height: 1.5; word-break: break-word; }
+    .pf-sec .pf-empty { color: #475569; font-style: italic; }
+    .pf-link { background: none; border: none; color: #a78bfa; font-family: inherit; font-size: 0.75rem; cursor: pointer; padding: 0; text-align: left; text-decoration: underline; text-underline-offset: 2px; }
+    .pf-link:hover { color: #c4b5fd; }
+    .pf-link:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    .pf-payload { color: #94a3b8; }
+    @media (prefers-reduced-motion: reduce) {
+      .pulse-dot { animation: none; }
+      body, .pf-drawer, .pf-node, .pf-edge { transition: none; }
+    }
+    @media print { .pf-drawer, .pf-filters { display: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="container" id="report-container">
+    <div class="header">
+      <div class="header-content">
+        <div class="header-row">
+          <div class="pulse-dot"></div>
+          <h1>UJ-001: Create Lead</h1>
+        </div>
+        <p class="subtitle">Sales/Retail Agent captures a lead from the tablet Create a Lead form through to a verified lead record on the contact</p>
+      </div>
+      <div class="toolbar">
+        <button class="export-btn" id="exportBtn" onclick="toggleExport(event)" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu" aria-label="Export options">Export</button>
+        <div class="export-menu" id="exportMenu" role="menu" aria-labelledby="exportBtn">
+          <button role="menuitem" class="export-item" onclick="downloadSVG(this)"><span class="export-fmt">SVG</span><span class="export-hint">vector · editing</span></button>
+          <button role="menuitem" class="export-item" onclick="downloadJPG(this)"><span class="export-fmt">JPG</span><span class="export-hint">image · sharing</span></button>
+          <button role="menuitem" class="export-item" onclick="downloadPDF(this)"><span class="export-fmt">PDF</span><span class="export-hint">document</span></button>
+          <div class="export-sep" role="separator"></div>
+          <button role="menuitem" class="export-item" onclick="downloadPNG(this)"><span class="export-fmt">PNG</span><span class="export-hint">image · slides</span></button>
+          <button role="menuitem" class="export-item" onclick="copyAsImage(this)"><span class="export-fmt">Copy</span><span class="export-hint">to clipboard</span></button>
+        </div>
+      </div>
+    </div>
+    <div class="pf-filters" role="group" aria-label="Filter diagram by node type">
+        <span class="pf-filters-label">Filter</span>
+        <button class="pf-chip" data-filter="all" aria-pressed="true" style="color:#a78bfa"><span class="pf-chip-dot"></span><span class="pf-chip-label">All</span></button>
+        <button class="pf-chip" data-filter="manual" aria-pressed="false" style="color:#34d399"><span class="pf-chip-dot"></span><span class="pf-chip-label">Manual</span></button>
+        <button class="pf-chip" data-filter="automated" aria-pressed="false" style="color:#a78bfa"><span class="pf-chip-dot"></span><span class="pf-chip-label">Automated</span></button>
+        <button class="pf-chip" data-filter="terminal" aria-pressed="false" style="color:#22d3ee"><span class="pf-chip-dot"></span><span class="pf-chip-label">Start / End</span></button>
+      </div>
+    <div class="diagram-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="68 -23 1334.8 667" role="group" aria-label="UJ-001: Create Lead diagram. 12 nodes; each is focusable for details.">
+<defs>
+<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/></marker>
+<marker id="arrowhead-emerald" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#34d399"/></marker>
+<marker id="arrowhead-violet" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa"/></marker>
+<marker id="arrowhead-amber" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24"/></marker>
+<marker id="arrowhead-rose" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fb7185"/></marker>
+<marker id="arrowhead-slate" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/></marker>
+<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="1.5"/></pattern>
+</defs>
+<line x1="249" y1="70" x2="309" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="start1" data-to="view-empty-leads"/>
+<line x1="469" y1="70" x2="627" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="view-empty-leads" data-to="enter-mobile"/>
+<rect x="482" y="47.2" width="132" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="548" y="57" fill="#94a3b8" font-size="10" text-anchor="middle">New Lead form opened</text>
+<line x1="787" y1="70" x2="902" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="enter-mobile" data-to="select-service"/>
+<rect x="800.2" y="47.2" width="88.6" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="844.5" y="57" fill="#94a3b8" font-size="10" text-anchor="middle">mobile number</text>
+<line x1="1062" y1="70" x2="1171" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="select-service" data-to="fixed-presales"/>
+<rect x="1075.3" y="47.2" width="82.4" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="1116.5" y="57" fill="#94a3b8" font-size="10" text-anchor="middle">service type</text>
+<path d="M 1251 115 L 1251 149 L 200 149 L 200 300 L 220 300" stroke="#94a3b8" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="fixed-presales" data-to="preferred-time"/>
+<rect x="1259" y="125.2" width="133.8" height="22" rx="11" fill="#0d1425" stroke="#94a3b8" stroke-width="1.5" opacity="0.95"/>
+<text x="1267" y="139" fill="#e2e8f0" font-size="10" font-weight="700">Continue to Row 2 →</text>
+<line x1="380" y1="300" x2="532" y2="300" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="preferred-time" data-to="enter-address"/>
+<rect x="393.1" y="277.2" width="125.8" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="456" y="287" fill="#94a3b8" font-size="10" text-anchor="middle">preferred date/time</text>
+<line x1="692" y1="300" x2="819" y2="300" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="enter-address" data-to="submit-lead"/>
+<rect x="705" y="277.2" width="101" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="755.5" y="287" fill="#94a3b8" font-size="10" text-anchor="middle">address details</text>
+<line x1="979" y1="300" x2="1100" y2="300" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="submit-lead" data-to="match-contact"/>
+<rect x="992.1" y="277.2" width="94.8" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="1039.5" y="287" fill="#94a3b8" font-size="10" text-anchor="middle">lead submitted</text>
+<path d="M 1180 343.5 L 1180 377.5 L 360 377.5 L 360 527 L 380 527" stroke="#94a3b8" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="match-contact" data-to="view-lead-details"/>
+<rect x="1188" y="353.7" width="133.8" height="22" rx="11" fill="#0d1425" stroke="#94a3b8" stroke-width="1.5" opacity="0.95"/>
+<text x="1196" y="367.5" fill="#e2e8f0" font-size="10" font-weight="700">Continue to Row 3 →</text>
+<line x1="540" y1="527" x2="705" y2="527" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="view-lead-details" data-to="verify-lead-on-contact"/>
+<rect x="553.4" y="504.2" width="138.2" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="622.5" y="514" fill="#94a3b8" font-size="10" text-anchor="middle">lead detail confirmed</text>
+<line x1="865" y1="527" x2="980" y2="527" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="verify-lead-on-contact" data-to="end12"/>
+<rect x="878.2" y="504.2" width="88.6" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="922.5" y="514" fill="#94a3b8" font-size="10" text-anchor="middle">lead verified</text>
+<g class="pf-node" data-id="start1" data-type="terminal" tabindex="0" role="button" aria-label="Terminal: Start">
+<rect x="149" y="50" width="100" height="40" rx="20" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="199" y="74" fill="white" font-size="10" font-weight="600" text-anchor="middle">Start</text>
+</g>
+<g class="pf-node" data-id="view-empty-leads" data-type="manual" tabindex="0" role="button" aria-label="Open Contact Leads Tab, Sales Agent. Open details.">
+<text x="469" y="13" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Sales Agent</text>
+<rect x="309" y="26.5" width="160" height="87" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="389" y="47.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Open Contact Leads Tab</text>
+<text x="389" y="64.5" fill="#94a3b8" font-size="10" text-anchor="middle">Contact record - Leads</text>
+<text x="389" y="76.5" fill="#94a3b8" font-size="10" text-anchor="middle">sub-tab</text>
+<text x="389" y="88.5" fill="#94a3b8" font-size="10" text-anchor="middle">shows empty lead list</text>
+<text x="389" y="100.5" fill="#94a3b8" font-size="10" text-anchor="middle">pre-creation</text>
+<circle cx="309" cy="21.5" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="309" y="25.5" fill="white" font-size="8" font-weight="600" text-anchor="middle">1</text>
+</g>
+<g class="pf-node" data-id="enter-mobile" data-type="manual" tabindex="0" role="button" aria-label="Enter Mobile Number, Retail Agent (Hemanth Kumar). Open details.">
+<text x="787" y="13" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Retail Agent (Hemanth Kumar)</text>
+<rect x="627" y="26.5" width="160" height="87" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="707" y="47.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Enter Mobile Number</text>
+<text x="707" y="64.5" fill="#94a3b8" font-size="10" text-anchor="middle">New Lead Tablet -</text>
+<text x="707" y="76.5" fill="#94a3b8" font-size="10" text-anchor="middle">Create a Lead form</text>
+<text x="707" y="88.5" fill="#94a3b8" font-size="10" text-anchor="middle">capture customer mobile</text>
+<text x="707" y="100.5" fill="#94a3b8" font-size="10" text-anchor="middle">number</text>
+<circle cx="627" cy="21.5" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="627" y="25.5" fill="white" font-size="8" font-weight="600" text-anchor="middle">2</text>
+</g>
+<g class="pf-node" data-id="select-service" data-type="manual" tabindex="0" role="button" aria-label="Select Service Needed, Sales Agent / Retail Agent. Open details.">
+<text x="1062" y="13" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Sales Agent / Retail Agent</text>
+<rect x="902" y="26.5" width="160" height="87" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="982" y="47.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Select Service Needed</text>
+<text x="982" y="64.5" fill="#94a3b8" font-size="10" text-anchor="middle">Choose Home, Postpaid,</text>
+<text x="982" y="76.5" fill="#94a3b8" font-size="10" text-anchor="middle">Plan upgrades,</text>
+<text x="982" y="88.5" fill="#94a3b8" font-size="10" text-anchor="middle">or Fixed - drives</text>
+<text x="982" y="100.5" fill="#94a3b8" font-size="10" text-anchor="middle">conditional fields</text>
+<circle cx="902" cy="21.5" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="902" y="25.5" fill="white" font-size="8" font-weight="600" text-anchor="middle">3</text>
+</g>
+<g class="pf-node" data-id="fixed-presales" data-type="manual" tabindex="0" role="button" aria-label="Set Fixed Pre-sales Flag, Retail Agent. Open details.">
+<text x="1331" y="13" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Retail Agent</text>
+<rect x="1171" y="25" width="160" height="90" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="1251" y="46" fill="white" font-size="10" font-weight="600" text-anchor="middle">Set Fixed Pre-sales</text>
+<text x="1251" y="61" fill="white" font-size="10" font-weight="600" text-anchor="middle">Flag</text>
+<text x="1251" y="78" fill="#94a3b8" font-size="10" text-anchor="middle">Conditional field shown</text>
+<text x="1251" y="90" fill="#94a3b8" font-size="10" text-anchor="middle">only when</text>
+<text x="1251" y="102" fill="#94a3b8" font-size="10" text-anchor="middle">service = Fixed/Home</text>
+<circle cx="1171" cy="20" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="1171" y="24" fill="white" font-size="8" font-weight="600" text-anchor="middle">4</text>
+</g>
+<g class="pf-node" data-id="preferred-time" data-type="manual" tabindex="0" role="button" aria-label="Set Preferred Time, Retail Agent. Open details.">
+<text x="380" y="244.5" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Retail Agent</text>
+<rect x="220" y="260" width="160" height="80" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="300" y="283.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Set Preferred Time</text>
+<text x="300" y="300.5" fill="#94a3b8" font-size="10" text-anchor="middle">Date/time picker</text>
+<text x="300" y="312.5" fill="#94a3b8" font-size="10" text-anchor="middle">triggered by</text>
+<text x="300" y="324.5" fill="#94a3b8" font-size="10" text-anchor="middle">Fixed Pre-sales = Yes</text>
+<circle cx="220" cy="255" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="220" y="259" fill="white" font-size="8" font-weight="600" text-anchor="middle">5</text>
+</g>
+<g class="pf-node" data-id="enter-address" data-type="manual" tabindex="0" role="button" aria-label="Enter Address, Sales Agent / Retail Agent. Open details.">
+<text x="692" y="244.5" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Sales Agent / Retail Agent</text>
+<rect x="532" y="256.5" width="160" height="87" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="612" y="277.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Enter Address</text>
+<text x="612" y="294.5" fill="#94a3b8" font-size="10" text-anchor="middle">Address captured on the</text>
+<text x="612" y="306.5" fill="#94a3b8" font-size="10" text-anchor="middle">form;</text>
+<text x="612" y="318.5" fill="#94a3b8" font-size="10" text-anchor="middle">system auto-formats on</text>
+<text x="612" y="330.5" fill="#94a3b8" font-size="10" text-anchor="middle">save</text>
+<circle cx="532" cy="251.5" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="532" y="255.5" fill="white" font-size="8" font-weight="600" text-anchor="middle">6</text>
+</g>
+<g class="pf-node" data-id="submit-lead" data-type="manual" tabindex="0" role="button" aria-label="Submit Create Lead, Sales Agent / Retail Agent. Open details.">
+<text x="979" y="244.5" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Sales Agent / Retail Agent</text>
+<rect x="819" y="260" width="160" height="80" rx="8" fill="#042325" stroke="#34d399" stroke-width="2.5"/>
+<text x="899" y="289.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Submit Create Lead</text>
+<text x="899" y="306.5" fill="#94a3b8" font-size="10" text-anchor="middle">Complete form and click</text>
+<text x="899" y="318.5" fill="#94a3b8" font-size="10" text-anchor="middle">Create Lead button</text>
+<circle cx="819" cy="255" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="819" y="259" fill="white" font-size="8" font-weight="600" text-anchor="middle">7</text>
+<circle cx="979" cy="255" r="12" fill="#1e293b" stroke="#854d0e" stroke-width="1.5"/>
+<polygon points="979.00,248.00 980.98,253.02 986.00,255.00 980.98,256.98 979.00,262.00 977.02,256.98 972.00,255.00 977.02,253.02" fill="#fde047" stroke="#854d0e" stroke-width="1.5"/>
+</g>
+<g class="pf-node" data-id="match-contact" data-type="automated" tabindex="0" role="button" aria-label="Match Lead to Contact, System. Open details.">
+<text x="1260" y="244.5" fill="#a78bfa" font-size="10" font-weight="600" text-anchor="end">System</text>
+<rect x="1100" y="256.5" width="160" height="87" rx="8" fill="#200f49" stroke="#a78bfa" stroke-width="2.5"/>
+<text x="1180" y="277.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Match Lead to Contact</text>
+<text x="1180" y="294.5" fill="#94a3b8" font-size="10" text-anchor="middle">Matches lead to</text>
+<text x="1180" y="306.5" fill="#94a3b8" font-size="10" text-anchor="middle">existing contact by</text>
+<text x="1180" y="318.5" fill="#94a3b8" font-size="10" text-anchor="middle">mobile number, not new</text>
+<text x="1180" y="330.5" fill="#94a3b8" font-size="10" text-anchor="middle">contact</text>
+<circle cx="1100" cy="251.5" r="12" fill="#1e293b" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="1100" y="255.5" fill="white" font-size="8" font-weight="600" text-anchor="middle">8</text>
+<circle cx="1260" cy="251.5" r="12" fill="#1e293b" stroke="#854d0e" stroke-width="1.5"/>
+<polygon points="1260.00,244.50 1261.98,249.52 1267.00,251.50 1261.98,253.48 1260.00,258.50 1258.02,253.48 1253.00,251.50 1258.02,249.52" fill="#fde047" stroke="#854d0e" stroke-width="1.5"/>
+</g>
+<g class="pf-node" data-id="view-lead-details" data-type="manual" tabindex="0" role="button" aria-label="View Created Lead, Sales Agent / Retail Agent. Open details.">
+<text x="540" y="470" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Sales Agent / Retail Agent</text>
+<rect x="380" y="483.5" width="160" height="87" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="460" y="504.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">View Created Lead</text>
+<text x="460" y="521.5" fill="#94a3b8" font-size="10" text-anchor="middle">Lead Details View;</text>
+<text x="460" y="533.5" fill="#94a3b8" font-size="10" text-anchor="middle">Reject and Validate</text>
+<text x="460" y="545.5" fill="#94a3b8" font-size="10" text-anchor="middle">buttons present at</text>
+<text x="460" y="557.5" fill="#94a3b8" font-size="10" text-anchor="middle">creation stage</text>
+<circle cx="380" cy="478.5" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="380" y="482.5" fill="white" font-size="8" font-weight="600" text-anchor="middle">9</text>
+</g>
+<g class="pf-node" data-id="verify-lead-on-contact" data-type="manual" tabindex="0" role="button" aria-label="Verify Lead Under Contact, Sales Agent / Retail Agent. Open details.">
+<text x="865" y="470" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Sales Agent / Retail Agent</text>
+<rect x="705" y="482" width="160" height="90" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="785" y="503" fill="white" font-size="10" font-weight="600" text-anchor="middle">Verify Lead Under</text>
+<text x="785" y="518" fill="white" font-size="10" font-weight="600" text-anchor="middle">Contact</text>
+<text x="785" y="535" fill="#94a3b8" font-size="10" text-anchor="middle">Contact Leads sub-tab</text>
+<text x="785" y="547" fill="#94a3b8" font-size="10" text-anchor="middle">now shows</text>
+<text x="785" y="559" fill="#94a3b8" font-size="10" text-anchor="middle">the new lead attached</text>
+<circle cx="705" cy="477" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="705" y="481" fill="white" font-size="8" font-weight="600" text-anchor="middle">10</text>
+</g>
+<g class="pf-node" data-id="end12" data-type="terminal" tabindex="0" role="button" aria-label="Terminal: Complete">
+<rect x="980" y="507" width="120" height="40" rx="20" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="1040" y="531" fill="white" font-size="10" font-weight="600" text-anchor="middle">Complete</text>
+</g>
+<text x="109" y="73" fill="#94a3b8" font-size="10" font-weight="700" text-anchor="end">ROW 1</text>
+<text x="180" y="303" fill="#94a3b8" font-size="10" font-weight="700" text-anchor="end">ROW 2</text>
+<text x="340" y="530" fill="#94a3b8" font-size="10" font-weight="700" text-anchor="end">ROW 3</text>
+<rect x="502" y="611" width="16" height="10" rx="2" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="524" y="620" fill="#94a3b8" font-size="10">Manual / Human-in-loop</text>
+<rect x="686.4" y="611" width="16" height="10" rx="2" fill="#200f49" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="708.4" y="620" fill="#94a3b8" font-size="10">Automated</text>
+<rect x="790.1999999999999" y="611" width="16" height="10" rx="5" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="812.1999999999999" y="620" fill="#94a3b8" font-size="10">Start / End</text>
+<line x1="906.4" y1="616" x2="922.4" y2="616" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)"/>
+<text x="928.4" y="620" fill="#94a3b8" font-size="10">Row wrap</text>
+</svg>
+    </div>
+
+    
+
+        <div class="cards">
+      <div class="card">
+        <div class="card-header"><div class="card-dot violet"></div><h3>Input → Output Transformation</h3></div>
+        <table class="io-table">
+          <thead><tr><th class="io-col-step"></th><th>Input</th><th>Output</th><th>Example</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Step 1</th><td class="io-in">Contact record, empty Leads sub-tab</td><td class="io-out">New Lead Tablet - Create a Lead form opened</td><td class="io-ex">Contact record → New Lead Tablet - Create a Lead form opened</td><td class="io-mean">Agent opens the lead creation form from a contact confirmed to have no existing lead.</td></tr>
+            <tr><th scope="row">Step 2</th><td class="io-in">Mobile number, Service Needed selection</td><td class="io-out">Form populated with base fields and conditional fields (Fixed Pre-sales, Preferred Time)</td><td class="io-ex">Mobile number → Form populated with base fields and conditional fields (Fixed Pre-sales</td><td class="io-mean">Core identifying and service-type fields drive which conditional fields the form reveals next.</td></tr>
+            <tr><th scope="row">Step 3</th><td class="io-in">Address, completed form fields</td><td class="io-out">Submitted lead record</td><td class="io-ex">Address → Submitted lead record</td><td class="io-mean">Agent finishes the form with address details and submits it via the Create Lead button.</td></tr>
+            <tr><th scope="row">Step 4</th><td class="io-in">Submitted lead, mobile number</td><td class="io-out">Lead matched and attached to existing contact</td><td class="io-ex">Submitted lead → Lead matched and attached to existing contact</td><td class="io-mean">The system links the lead to the matching contact by mobile number instead of creating a duplicate.</td></tr>
+            <tr><th scope="row">Step 5</th><td class="io-in">Created lead record</td><td class="io-out">Verified lead visible in Lead Details View and Contact Leads sub-tab</td><td class="io-ex">Created lead record → Verified lead visible in Lead Details View and Contact Leads sub-tab</td><td class="io-mean">Agent confirms the lead was created correctly and now appears on the contact.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+<p class="footer">Guided Journey docs: lead-creation-fixed-0cfca63c, lead-creation-mobile-08523753, lead-creation-lead-edit-53663c45, tablet-lead-creation-wit-0e35d62b</p>
+  </div>
+  <aside class="pf-drawer" id="pfDrawer" role="dialog" aria-labelledby="pfDrawerTitle" aria-hidden="true">
+    <div class="pf-drawer-handle" id="pfHandle" role="separator" aria-orientation="vertical" aria-label="Resize detail panel. Use left and right arrow keys." tabindex="0"></div>
+    <div class="pf-drawer-body">
+      <div class="pf-drawer-head">
+        <span class="pf-badge" id="pfBadge"></span>
+        <button class="pf-drawer-close" id="pfClose" aria-label="Close detail panel">&times;</button>
+      </div>
+      <h2 id="pfDrawerTitle"></h2>
+      <p class="pf-drawer-role" id="pfRole"></p>
+      <div class="pf-drawer-sections">
+        <div class="pf-sec">
+          <h3>Meaning</h3>
+          <p id="pfMeaning" class="pf-drawer-meaning"></p>
+        </div>
+        <div class="pf-sec">
+          <h3>Input/Inbound</h3>
+          <p id="pfInDesc" class="pf-drawer-desc"></p>
+          <ul id="pfIn"></ul>
+        </div>
+        <div class="pf-sec">
+          <h3>Output/Outbound</h3>
+          <p id="pfOutDesc" class="pf-drawer-desc"></p>
+          <ul id="pfOut"></ul>
+        </div>
+        <div class="pf-sec">
+          <h3>Example</h3>
+          <p id="pfExample" class="pf-drawer-example"></p>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <script>
+    const SLUG = "uj001-create-lead-process-flow";
+    /* Export bounds are measured, not assumed (§11.1).
+     *
+     * The container's own rect is NOT the diagram's extent: the SVG has a min-width, so on a
+     * narrow viewport it is wider than its container and .diagram-container scrolls. Capturing
+     * the container rect then silently crops whatever overflowed — the right-hand nodes and the
+     * legend — and the exported PNG differs from what the page shows. So walk every descendant
+     * and take the true union, which also covers anything that overflows upward or downward. */
+    function captureBounds() {
+      const el = document.getElementById('report-container');
+      const c = el.getBoundingClientRect();
+      let l = c.left, t = c.top, r = c.right, b = c.bottom;
+      for (const n of el.querySelectorAll('*')) {
+        if (n.classList && (n.classList.contains('toolbar') || n.classList.contains('pf-drawer') || n.classList.contains('pf-filters'))) continue;
+        const q = n.getBoundingClientRect();
+        if (!q.width && !q.height) continue;
+        if (q.left < l) l = q.left;
+        if (q.top < t) t = q.top;
+        if (q.right > r) r = q.right;
+        if (q.bottom > b) b = q.bottom;
+      }
+      return { left: l, top: t, width: r - l, height: b - t };
+    }
+
+    async function capture() {
+      pfResetView();
+      await new Promise(r => setTimeout(r, 300));
+      const el = document.getElementById('report-container');
+      // A scrolled diagram must be captured whole: reset the scroll so html2canvas sees the
+      // full width, then restore it so the user's view is untouched.
+      const dc = document.querySelector('.diagram-container');
+      const sx = dc ? dc.scrollLeft : 0;
+      if (dc) dc.scrollLeft = 0;
+      const wasOverflow = dc ? dc.style.overflowX : '';
+      if (dc) dc.style.overflowX = 'visible';
+      await new Promise(r => requestAnimationFrame(r));
+
+      const r = captureBounds();
+      const pad = 32;
+      try {
+        return await html2canvas(document.body, { backgroundColor: '#020617', scale: 2, useCORS: true, ignoreElements: (e) => e.classList && (e.classList.contains('toolbar') || e.classList.contains('pf-drawer') || e.classList.contains('pf-filters')), x: r.left + window.scrollX - pad, y: r.top + window.scrollY - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
+      } finally {
+        if (dc) { dc.style.overflowX = wasOverflow; dc.scrollLeft = sx; }
+      }
+    }
+    async function copyAsImage(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        exportStatus('✓ Copied', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    async function downloadPNG(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const link = document.createElement('a'); link.download = SLUG + '.png'; link.href = canvas.toDataURL('image/png'); link.click();
+        exportStatus('✓ PNG', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    /* The menu closes on outside click, on Escape, and after a format is chosen — a popover
+     * that stays open behind the download it just started reads as though nothing happened. */
+    function setExportOpen(open) {
+      document.getElementById('exportMenu').classList.toggle('open', open);
+      document.getElementById('exportBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    function toggleExport(ev) {
+      ev.stopPropagation();
+      setExportOpen(!document.getElementById('exportMenu').classList.contains('open'));
+    }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.toolbar')) setExportOpen(false);
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && document.getElementById('exportMenu').classList.contains('open')) {
+        setExportOpen(false); document.getElementById('exportBtn').focus();
+      }
+    });
+
+    /* Status is shown on the trigger, not on the menu item: the menu closes on choose, so a
+     * message written into the item would vanish with it. */
+    function exportStatus(msg, revert) {
+      const b = document.getElementById('exportBtn');
+      if (revert === undefined) { b.textContent = msg; return; }
+      b.textContent = msg;
+      setTimeout(() => b.textContent = 'Export', revert);
+    }
+
+    /* SVG export is a real vector serialisation, not a raster (§11.1 r7).
+     *
+     * The live <svg> inherits its font from the page stylesheet, which does NOT travel with a
+     * detached clone — open the file standalone and every label reflows in a fallback face,
+     * shifting off the geometry the generator computed. So the clone gets the font stack and
+     * the canvas ground written onto it explicitly. Nothing else is restyled: all colours are
+     * already presentation attributes on the elements themselves. */
+    function downloadSVG(btn) {
+      try {
+        const src = document.querySelector('.diagram-container svg');
+        const clone = src.cloneNode(true);
+        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        const vb = (src.getAttribute('viewBox') || '').split(/[s,]+/).map(Number);
+        if (vb.length === 4) { clone.setAttribute('width', vb[2]); clone.setAttribute('height', vb[3]); }
+        clone.removeAttribute('style');
+        clone.setAttribute('style', 'background:' + "#020617");
+        const st = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+        st.textContent = 'text{font-family:' + getComputedStyle(src).fontFamily.replace(/"/g, "'") + '}';
+        clone.insertBefore(st, clone.firstChild);
+        const blob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a'); link.download = SLUG + '.svg'; link.href = url; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setExportOpen(false); exportStatus('✓ SVG', 2000);
+      } catch (e) { setExportOpen(false); exportStatus('✗ Failed', 2000); }
+    }
+
+    /* JPEG has no alpha, so an un-flattened canvas renders transparent pixels BLACK — which
+     * on this palette is invisible damage rather than an obvious bug. Composite onto the
+     * canvas ground first. */
+    async function downloadJPG(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const flat = document.createElement('canvas');
+        flat.width = canvas.width; flat.height = canvas.height;
+        const g = flat.getContext('2d');
+        g.fillStyle = "#020617";
+        g.fillRect(0, 0, flat.width, flat.height);
+        g.drawImage(canvas, 0, 0);
+        const link = document.createElement('a'); link.download = SLUG + '.jpg';
+        link.href = flat.toDataURL('image/jpeg', 0.92); link.click();
+        exportStatus('✓ JPG', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    async function downloadPDF(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const orientation = canvas.width > canvas.height ? 'landscape' : 'portrait';
+        const pdf = new jsPDF({ orientation, unit: 'px', format: [canvas.width, canvas.height], hotfixes: ['px_scaling'] });
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save(SLUG + '.pdf');
+        exportStatus('✓ PDF', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    /* --- interactivity layer (§11.3) --- */
+    const PF_NODES = [{"id":"start1","type":"terminal","num":"","title":"Start","role":"","desc":[]},{"id":"view-empty-leads","type":"manual","num":"1","title":"Open Contact Leads Tab","role":"Sales Agent","desc":["Contact record - Leads sub-tab","shows empty lead list pre-creation"],"meaning":"Agent confirms the contact has no existing lead before starting a new one.","inputDesc":"Existing contact record","outputDesc":"Empty Leads sub-tab view, confirming no prior lead","example":"Contact record - Leads sub-tab: empty lead list before creation [F_Lead#28]","milestone":false},{"id":"enter-mobile","type":"manual","num":"2","title":"Enter Mobile Number","role":"Retail Agent (Hemanth Kumar)","desc":["New Lead Tablet - Create a Lead form","capture customer mobile number"],"meaning":"Mobile number is the key field the system later uses to match the lead to a contact.","inputDesc":"Customer mobile number","outputDesc":"Mobile number populated on the Create a Lead form","example":"Enter Mobile Number on New Lead Tablet form [F_Lead#15]","milestone":false},{"id":"select-service","type":"manual","num":"3","title":"Select Service Needed","role":"Sales Agent / Retail Agent","desc":["Choose Home, Postpaid, Plan upgrades,","or Fixed - drives conditional fields"],"meaning":"Service Needed selection determines which conditional fields appear next on the form.","inputDesc":"Service Needed field on Create a Lead form","outputDesc":"Selected service type (e.g. Home, Postpaid, Plan upgrades)","example":"Select Service Needed = Home [F_Lead#3]; = Postpaid [F_Lead#16]; = Plan upgrades [F_Lead#29]","milestone":false},{"id":"fixed-presales","type":"manual","num":"4","title":"Set Fixed Pre-sales Flag","role":"Retail Agent","desc":["Conditional field shown only when","service = Fixed/Home"],"meaning":"A conditional field that appears only for the Fixed/Home service path, gating the next step.","inputDesc":"Service Needed = Home/Fixed","outputDesc":"Fixed Pre-sales flag set to Yes","example":"Set Fixed Pre-sales = Yes on Create a Lead form - Fixed Pre-sales field [F_Lead#49]","milestone":false},{"id":"preferred-time","type":"manual","num":"5","title":"Set Preferred Time","role":"Retail Agent","desc":["Date/time picker triggered by","Fixed Pre-sales = Yes"],"meaning":"Captures the customer's preferred appointment slot, triggered only by the Fixed Pre-sales flag.","inputDesc":"Fixed Pre-sales = Yes","outputDesc":"Preferred Time value set","example":"Set Preferred Time date/time on Create a Lead form - Preferred Time picker [F_Lead#50]","milestone":false},{"id":"enter-address","type":"manual","num":"6","title":"Enter Address","role":"Sales Agent / Retail Agent","desc":["Address captured on the form;","system auto-formats on save"],"meaning":"Address is entered as free-form input and the system reformats it automatically once the lead is created.","inputDesc":"Customer address details","outputDesc":"Address fields populated on the Create a Lead form","example":"Enter address and submit Create Lead [F_Lead#51]","milestone":false},{"id":"submit-lead","type":"manual","num":"7","title":"Submit Create Lead","role":"Sales Agent / Retail Agent","desc":["Complete form and click","Create Lead button"],"meaning":"The agent submits the completed form, triggering lead record creation.","inputDesc":"Completed Create a Lead form (service, mobile, address, conditional fields)","outputDesc":"New lead record created in the system","example":"Complete form and click Create Lead button [F_Lead#4]; Submit lead via Create Lead button [F_Lead#17]","milestone":true},{"id":"match-contact","type":"automated","num":"8","title":"Match Lead to Contact","role":"System","desc":["Matches lead to existing contact by","mobile number, not new contact"],"meaning":"The system links the new lead to an existing contact using the mobile number rather than creating a duplicate contact.","inputDesc":"New lead record with mobile number","outputDesc":"Lead associated with matched contact record","example":"System matches lead to existing contact by mobile number rather than creating new contact [F_Lead#52]","milestone":true},{"id":"view-lead-details","type":"manual","num":"9","title":"View Created Lead","role":"Sales Agent / Retail Agent","desc":["Lead Details View; Reject and Validate","buttons present at creation stage"],"meaning":"Agent reviews the newly created lead record, including its auto-formatted address tab.","inputDesc":"Newly created lead record","outputDesc":"Lead Details View with address tab, Reject/Validate actions available","example":"View created lead record; Reject and Validate buttons present even at creation stage [F_Lead#5]; View auto-formatted address [F_Lead#6]","milestone":false},{"id":"verify-lead-on-contact","type":"manual","num":"10","title":"Verify Lead Under Contact","role":"Sales Agent / Retail Agent","desc":["Contact Leads sub-tab now shows","the new lead attached"],"meaning":"Agent confirms the lead now appears under the contact's Leads sub-tab, closing the loop from the empty-list check at the start.","inputDesc":"Contact record with newly attached lead","outputDesc":"Lead visible in Contact - Leads sub-tab","example":"Verify lead appears under contact (TAMER ABDELHALIM) Leads sub-tab [F_Lead#34, F_Lead#54]","milestone":false},{"id":"end12","type":"terminal","num":"","title":"Complete","role":"","desc":[]}];
+    const PF_EDGES = [{"from":"start1","to":"view-empty-leads","label":"","style":"flow"},{"from":"view-empty-leads","to":"enter-mobile","label":"New Lead form opened","style":"flow"},{"from":"enter-mobile","to":"select-service","label":"mobile number","style":"flow"},{"from":"select-service","to":"fixed-presales","label":"service type","style":"flow"},{"from":"fixed-presales","to":"preferred-time","label":"Continue to Row 2 →","style":"wrap"},{"from":"preferred-time","to":"enter-address","label":"preferred date/time","style":"flow"},{"from":"enter-address","to":"submit-lead","label":"address details","style":"flow"},{"from":"submit-lead","to":"match-contact","label":"lead submitted","style":"flow"},{"from":"match-contact","to":"view-lead-details","label":"Continue to Row 3 →","style":"wrap"},{"from":"view-lead-details","to":"verify-lead-on-contact","label":"lead detail confirmed","style":"flow"},{"from":"verify-lead-on-contact","to":"end12","label":"lead verified","style":"flow"}];
+    const PF_TYPE_LABEL = {"manual":"Manual","automated":"Automated","integration":"Integration","decision":"Decision","terminal":"Start / End","reject":"Rejected"};
+    const PF_TYPE_ACCENT = {"manual":"#34d399","automated":"#a78bfa","integration":"#fbbf24","decision":"#fb7185","terminal":"#22d3ee","reject":"#fb7185"};
+    const pfById = Object.fromEntries(PF_NODES.filter(n => n.id).map(n => [n.id, n]));
+    const pfDrawer = document.getElementById('pfDrawer');
+    let pfSelected = null;
+
+    const pfNodeEls = () => Array.from(document.querySelectorAll('.pf-node'));
+    const pfEdgeEls = () => Array.from(document.querySelectorAll('.pf-edge'));
+
+    function pfLabelFor(id) {
+      const n = pfById[id];
+      if (!n) return id || 'unknown';
+      return n.title || n.id;
+    }
+    function pfLi(html) { const li = document.createElement('li'); li.innerHTML = html; return li; }
+    function pfFill(ul, items, emptyText) {
+      ul.textContent = '';
+      if (!items.length) { ul.appendChild(pfLi('<span class="pf-empty">' + emptyText + '</span>')); return; }
+      items.forEach(i => ul.appendChild(i));
+    }
+    function pfEdgeItem(otherId, e, dir) {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.className = 'pf-link';
+      btn.type = 'button';
+      btn.textContent = (dir === 'in' ? '← ' : '→ ') + pfLabelFor(otherId);
+      btn.addEventListener('click', () => pfOpen(otherId));
+      li.appendChild(btn);
+      const meta = [];
+      if (e.label) meta.push(e.label);
+      if (e.style && e.style !== 'flow') meta.push(e.style);
+      if (meta.length) {
+        const span = document.createElement('span');
+        span.className = 'pf-payload';
+        span.textContent = '  ·  ' + meta.join(' · ');
+        li.appendChild(span);
+      }
+      return li;
+    }
+
+    function pfOpen(id) {
+      const n = pfById[id];
+      if (!n) return;
+      pfSelected = id;
+      const badge = document.getElementById('pfBadge');
+      badge.textContent = PF_TYPE_LABEL[n.type] || n.type;
+      badge.style.color = PF_TYPE_ACCENT[n.type] || '#94a3b8';
+      document.getElementById('pfDrawerTitle').textContent = (n.num ? n.num + '. ' : '') + (n.title || n.id);
+      document.getElementById('pfRole').textContent = n.role || '';
+      document.getElementById('pfMeaning').textContent = n.meaning || (n.desc && n.desc[0]) || 'No meaning defined.';
+      document.getElementById('pfInDesc').textContent = n.inputDesc || '';
+      document.getElementById('pfOutDesc').textContent = n.outputDesc || '';
+      document.getElementById('pfExample').textContent = n.example || 'No example provided.';
+      pfFill(document.getElementById('pfIn'),
+        PF_EDGES.filter(e => e.to === id).map(e => pfEdgeItem(e.from, e, 'in')),
+        'Nothing flows into this node.');
+      pfFill(document.getElementById('pfOut'),
+        PF_EDGES.filter(e => e.from === id).map(e => pfEdgeItem(e.to, e, 'out')),
+        'Nothing flows out of this node.');
+      pfDrawer.classList.add('is-open');
+      document.body.classList.add('pf-open');
+      pfDrawer.setAttribute('aria-hidden', 'false');
+      pfNodeEls().forEach(el => el.classList.toggle('is-sel', el.dataset.id === id));
+      document.getElementById('pfClose').focus();
+    }
+
+    function pfClose() {
+      pfDrawer.classList.remove('is-open');
+      document.body.classList.remove('pf-open');
+      pfDrawer.setAttribute('aria-hidden', 'true');
+      pfNodeEls().forEach(el => el.classList.remove('is-sel'));
+      if (pfSelected) {
+        const el = pfNodeEls().find(e => e.dataset.id === pfSelected);
+        if (el) el.focus();
+      }
+      pfSelected = null;
+    }
+
+    function pfApplyFilter(type) {
+      const all = type === 'all';
+      pfNodeEls().forEach(el => el.classList.toggle('is-dim', !all && el.dataset.type !== type));
+      const visible = new Set(PF_NODES.filter(n => all || n.type === type).map(n => n.id));
+      pfEdgeEls().forEach(el => {
+        const on = all || (visible.has(el.dataset.from) && visible.has(el.dataset.to));
+        el.classList.toggle('is-dim', !on);
+      });
+      document.querySelectorAll('.pf-chip').forEach(c =>
+        c.setAttribute('aria-pressed', String(c.dataset.filter === type)));
+    }
+    // Exports must always show the whole diagram — a filtered PNG silently loses
+    // nodes and reads as the complete picture, which is worse than no filter at all.
+    // Closing the drawer first also restores the page width the capture is measured from.
+    function pfResetView() { pfApplyFilter('all'); if (pfSelected) pfClose(); }
+
+    pfNodeEls().forEach(el => {
+      el.addEventListener('click', () => pfOpen(el.dataset.id));
+      el.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); pfOpen(el.dataset.id); }
+      });
+    });
+    document.querySelectorAll('.pf-chip').forEach(c =>
+      c.addEventListener('click', () => pfApplyFilter(c.dataset.filter)));
+    document.getElementById('pfClose').addEventListener('click', pfClose);
+    document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && pfSelected) pfClose(); });
+
+    /* Drawer resize — pointer drag plus arrow keys, clamped so the panel can never
+       swallow the diagram or shrink below a readable measure. */
+    (function () {
+      const handle = document.getElementById('pfHandle');
+      const MIN = 320, MAX = 760;
+      const setW = w => document.documentElement.style.setProperty('--pf-drawer-w', Math.min(MAX, Math.max(MIN, w)) + 'px');
+      let dragging = false;
+      handle.addEventListener('pointerdown', ev => { dragging = true; handle.setPointerCapture(ev.pointerId); ev.preventDefault(); });
+      handle.addEventListener('pointermove', ev => { if (dragging) setW(window.innerWidth - ev.clientX); });
+      handle.addEventListener('pointerup', ev => { dragging = false; handle.releasePointerCapture(ev.pointerId); });
+      handle.addEventListener('keydown', ev => {
+        const cur = pfDrawer.getBoundingClientRect().width;
+        if (ev.key === 'ArrowLeft') { setW(cur + 24); ev.preventDefault(); }
+        if (ev.key === 'ArrowRight') { setW(cur - 24); ev.preventDefault(); }
+      });
+    })();
+  </script>
+</body>
+</html>

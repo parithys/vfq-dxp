@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="spec-hash" content="sha256:b43391efdacea8451604f8520ec0450eb35b8b2da7c100ee48e1faecc8b6c956">
+  <meta name="generated-at" content="2026-08-21T06:43:11.386Z">
+  <meta name="diagram-version" content="2.3">
+  <title>UJ-007: MNP Prepaid - Process Flow</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" integrity="sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/" crossorigin="anonymous"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #020617; min-height: 100vh; padding: 2rem; color: white; }
+    .container { width: 1600px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-start; }
+    .header-content { flex: 1; }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    .pulse-dot { width: 12px; height: 12px; background: #a78bfa; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+    .subtitle { color: #94a3b8; font-size: 0.875rem; margin-left: 1.75rem; }
+    .diagram-container { overflow-x: auto; width: 100%; }
+    svg { width: 1600px; height: auto; display: block; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 2rem; }
+    .card { background: #080e20; border-radius: 0.75rem; border: 1px solid #1e293b; padding: 1.25rem; }
+    .card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.cyan { background: #22d3ee; } .card-dot.emerald { background: #34d399; } .card-dot.violet { background: #a78bfa; }
+    .card-dot.amber { background: #fbbf24; } .card-dot.rose { background: #fb7185; } .card-dot.slate { background: #94a3b8; }
+    .card h3 { font-size: 0.875rem; font-weight: 600; }
+    .card ul { list-style: none; color: #94a3b8; font-size: 0.75rem; }
+    .card li { margin-bottom: 0.375rem; }
+    .io-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .io-table th, .io-table td { border: 1px solid rgba(71, 85, 105, 0.4); padding: 0.625rem 0.75rem; text-align: left; vertical-align: top; line-height: 1.5; }
+    .io-table thead th { background: #151e30; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem; }
+    .io-table tbody th { background: #11192b; color: white; font-weight: 700; white-space: nowrap; }
+    .io-table td { color: #cbd5e1; }
+    .io-table .io-col-step { width: 64px; }
+    .io-table td.io-in { border-left: 2px solid #34d399; }
+    .io-table td.io-out { border-left: 2px solid #22d3ee; }
+    .io-table td.io-ex { color: #a78bfa; white-space: nowrap; }
+    .io-table td.io-mean { color: #94a3b8; }
+    .footer { text-align: center; margin-top: 1.5rem; color: #475569; font-size: 0.75rem; }
+    /* Export menu (r7). The trigger is a labelled button, not an ellipsis glyph: an unlabelled
+     * ellipsis gives no clue that export lives behind it, so the feature went unfound. The
+     * popover is a light surface deliberately — it is chrome, and reads as sitting above the
+     * dark canvas rather than as another dark panel competing with the diagram. */
+    .toolbar { display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center; position: relative; }
+    .export-btn { background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; font-family: inherit; font-size: 0.8125rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; transition: background 0.15s, box-shadow 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+    .export-btn:hover { background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+    .export-menu { display: none; position: absolute; top: calc(100% + 0.5rem); right: 0; z-index: 40; min-width: 13rem; padding: 0.375rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.625rem; box-shadow: 0 10px 24px rgba(0,0,0,0.55); }
+    .export-menu.open { display: block; }
+    .export-item { display: flex; align-items: baseline; justify-content: space-between; gap: 1.5rem; width: 100%; background: transparent; border: none; border-radius: 0.375rem; padding: 0.5rem 0.75rem; font-family: inherit; font-size: 0.8125rem; color: #0f172a; cursor: pointer; text-align: left; transition: background 0.12s; }
+    .export-item:hover { background: #e8edf5; }
+    .export-fmt { font-weight: 600; letter-spacing: 0.02em; }
+    .export-hint { color: #64748b; font-size: 0.6875rem; white-space: nowrap; }
+    .export-sep { height: 1px; margin: 0.25rem 0.5rem; background: #e2e8f0; }
+    .export-btn:focus-visible, .export-item:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; }
+    @media (max-width: 768px) { .header { flex-direction: column; gap: 1rem; } }
+    @media print { body { background: #020617; padding: 1rem; } .toolbar { display: none !important; } }
+    /* --- interactivity layer (§11.3) --- */
+    /* Filter toolbar (r6).
+     *
+     * The problem it fixes: the chips previously used the same vocabulary as the nodes and the
+     * legend — a rounded outline with a small coloured dot — so a row of CONTROLS read as a
+     * third kind of swatch. Nothing signalled it was interactive, and it competed with the
+     * diagram for attention instead of sitting above it.
+     *
+     * The fix is to stop borrowing that vocabulary. Controls now get their own surface: a
+     * raised, bordered bar that visually detaches from the canvas, an accent rule to anchor it,
+     * and a SOLID fill on the active chip — an unmistakably UI treatment, since nothing else in
+     * a diagram is ever filled with its own accent colour at full opacity. */
+    .pf-filters { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem; align-items: center;
+      background: #0d1425; border: 1px solid #263349; border-left: 3px solid #a78bfa;
+      border-radius: 0.5rem; padding: 0.55rem 0.75rem; box-shadow: 0 1px 3px rgba(2, 6, 23, 0.5); }
+    .pf-filters-label { color: #cbd5e1; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; margin-right: 0.55rem; display: inline-flex; align-items: center; gap: 0.4rem; }
+    .pf-filters-label::before { content: ''; width: 11px; height: 11px; flex: 0 0 11px;
+      /* Funnel glyph, drawn rather than an emoji: it must render identically everywhere. */
+      background: #a78bfa; clip-path: polygon(0 0, 100% 0, 62% 45%, 62% 100%, 38% 100%, 38% 45%); }
+    /* v2 redesign: pill-shaped (999px radius, was 0.375rem — a barely-rounded rect that read
+       as a static label), bigger padding/min-height for a real tap target (was 0.3rem/0.7rem,
+       under the ~32px accessibility guideline), and a stronger active state (ring + scale) so
+       the selected/unselected distinction doesn't rely on colour alone. */
+    .pf-chip { background: #1a2337; border: 1.5px solid #3b4a63; color: #cbd5e1; padding: 0.5rem 1rem;
+      border-radius: 999px; font-family: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 0.45rem; line-height: 1.2; min-height: 2rem;
+      transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s; }
+    .pf-chip:hover { background: #24304a; border-color: #64748b; color: white; }
+    .pf-chip:active { transform: scale(0.96); }
+    .pf-chip:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    /* Selected: the chip fills with its own accent, sits a hair taller with a visible ring, and
+       the dot becomes a filled check-like mark. High contrast, unambiguous, and impossible to
+       confuse with a legend swatch — legend marks are outlines on the bare ground. */
+    .pf-chip[aria-pressed="true"] { background: currentColor; border-color: currentColor;
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.28); transform: scale(1.03); }
+    .pf-chip[aria-pressed="true"]:hover { transform: scale(1.03); }
+    .pf-chip[aria-pressed="true"] .pf-chip-label { color: #0b1120; font-weight: 700; }
+    .pf-chip[aria-pressed="true"] .pf-chip-dot { background: #0b1120; opacity: 0.65; }
+    .pf-chip-label { color: inherit; }
+    .pf-chip-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: 0 0 8px; }
+    .pf-node { cursor: pointer; }
+    .pf-node:hover { filter: brightness(1.32); }
+    .pf-node:focus { outline: none; }
+    .pf-node:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 3px; border-radius: 4px; }
+    .pf-node, .pf-edge { transition: opacity 0.2s ease; }
+    .pf-node.is-dim, .pf-edge.is-dim { opacity: 0.14; pointer-events: none; }
+    .pf-node.is-sel > rect, .pf-node.is-sel > circle, .pf-node.is-sel > g > rect { stroke-width: 3; }
+    /* The drawer floats as an overlay — position: fixed with no body padding. Opening/closing
+       the drawer does not affect layout of the diagram or any page content. */
+    .pf-drawer { position: fixed; top: 0; right: 0; height: 100vh; width: var(--pf-drawer-w, 400px); background: #0b1220; border-left: 1px solid #1e293b; box-shadow: -12px 0 32px #020617; transform: translateX(101%); transition: transform 0.25s ease; z-index: 40; display: flex; }
+    .pf-drawer.is-open { transform: none; }
+    .pf-drawer-handle { width: 6px; flex: 0 0 6px; cursor: ew-resize; background: transparent; border-right: 1px solid #1e293b; }
+    .pf-drawer-handle:hover, .pf-drawer-handle:focus-visible { background: #423c6c; outline: none; }
+    .pf-drawer-body { flex: 1; overflow-y: auto; padding: 1.25rem; min-width: 0; }
+    .pf-drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.75rem; }
+    .pf-badge { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.2rem 0.5rem; border-radius: 0.25rem; border: 1px solid currentColor; white-space: nowrap; }
+    .pf-drawer-close { background: transparent; border: none; color: #475569; font-size: 1.5rem; line-height: 1; cursor: pointer; padding: 0 0.25rem; }
+    .pf-drawer-close:hover { color: white; }
+    .pf-drawer-close:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    .pf-drawer h2 { font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; word-break: break-word; }
+    .pf-drawer-role { color: #94a3b8; font-size: 0.75rem; margin-bottom: 1rem; word-break: break-word; }
+    .pf-drawer-sections { display: flex; flex-direction: column; gap: 1rem; }
+    .pf-sec { margin-top: 0; border-top: none; padding-top: 0; }
+    .pf-sec h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; margin-bottom: 0.5rem; margin-top: 0; }
+    .pf-drawer-meaning { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0 0 0.5rem 0; }
+    .pf-drawer-example { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0; }
+    .pf-drawer-desc { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0 0 0.5rem 0; }
+    .pf-sec ul { list-style: none; margin: 0; padding: 0; }
+    .pf-sec li { color: #cbd5e1; font-size: 0.75rem; margin-bottom: 0.3rem; line-height: 1.5; }
+    .pf-sec { margin-top: 1rem; border-top: 1px solid #1e293b; padding-top: 0.75rem; }
+    .pf-sec h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; margin-bottom: 0.5rem; }
+    .pf-sec ul { list-style: none; }
+    .pf-sec li { color: #cbd5e1; font-size: 0.75rem; margin-bottom: 0.4rem; line-height: 1.5; word-break: break-word; }
+    .pf-sec .pf-empty { color: #475569; font-style: italic; }
+    .pf-link { background: none; border: none; color: #a78bfa; font-family: inherit; font-size: 0.75rem; cursor: pointer; padding: 0; text-align: left; text-decoration: underline; text-underline-offset: 2px; }
+    .pf-link:hover { color: #c4b5fd; }
+    .pf-link:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    .pf-payload { color: #94a3b8; }
+    @media (prefers-reduced-motion: reduce) {
+      .pulse-dot { animation: none; }
+      body, .pf-drawer, .pf-node, .pf-edge { transition: none; }
+    }
+    @media print { .pf-drawer, .pf-filters { display: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="container" id="report-container">
+    <div class="header">
+      <div class="header-content">
+        <div class="header-row">
+          <div class="pulse-dot"></div>
+          <h1>UJ-007: MNP Prepaid</h1>
+        </div>
+        <p class="subtitle">Porting a customer's mobile number from a donor operator into a new Vodafone Prepaid subscription — Open UI Tablet Guided Journey</p>
+      </div>
+      <div class="toolbar">
+        <button class="export-btn" id="exportBtn" onclick="toggleExport(event)" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu" aria-label="Export options">Export</button>
+        <div class="export-menu" id="exportMenu" role="menu" aria-labelledby="exportBtn">
+          <button role="menuitem" class="export-item" onclick="downloadSVG(this)"><span class="export-fmt">SVG</span><span class="export-hint">vector · editing</span></button>
+          <button role="menuitem" class="export-item" onclick="downloadJPG(this)"><span class="export-fmt">JPG</span><span class="export-hint">image · sharing</span></button>
+          <button role="menuitem" class="export-item" onclick="downloadPDF(this)"><span class="export-fmt">PDF</span><span class="export-hint">document</span></button>
+          <div class="export-sep" role="separator"></div>
+          <button role="menuitem" class="export-item" onclick="downloadPNG(this)"><span class="export-fmt">PNG</span><span class="export-hint">image · slides</span></button>
+          <button role="menuitem" class="export-item" onclick="copyAsImage(this)"><span class="export-fmt">Copy</span><span class="export-hint">to clipboard</span></button>
+        </div>
+      </div>
+    </div>
+    <div class="pf-filters" role="group" aria-label="Filter diagram by node type">
+        <span class="pf-filters-label">Filter</span>
+        <button class="pf-chip" data-filter="all" aria-pressed="true" style="color:#a78bfa"><span class="pf-chip-dot"></span><span class="pf-chip-label">All</span></button>
+        <button class="pf-chip" data-filter="manual" aria-pressed="false" style="color:#34d399"><span class="pf-chip-dot"></span><span class="pf-chip-label">Manual</span></button>
+        <button class="pf-chip" data-filter="automated" aria-pressed="false" style="color:#a78bfa"><span class="pf-chip-dot"></span><span class="pf-chip-label">Automated</span></button>
+        <button class="pf-chip" data-filter="terminal" aria-pressed="false" style="color:#22d3ee"><span class="pf-chip-dot"></span><span class="pf-chip-label">Start / End</span></button>
+      </div>
+    <div class="diagram-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -23 1474.8 865" role="group" aria-label="UJ-007: MNP Prepaid diagram. 16 nodes; each is focusable for details.">
+<defs>
+<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/></marker>
+<marker id="arrowhead-emerald" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#34d399"/></marker>
+<marker id="arrowhead-violet" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa"/></marker>
+<marker id="arrowhead-amber" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24"/></marker>
+<marker id="arrowhead-rose" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fb7185"/></marker>
+<marker id="arrowhead-slate" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/></marker>
+<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="1.5"/></pattern>
+</defs>
+<line x1="246" y1="70" x2="306" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="start1" data-to="launch"/>
+<line x1="466" y1="70" x2="593" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="launch" data-to="moi"/>
+<rect x="479" y="47.2" width="101" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="529.5" y="57" fill="#94a3b8" font-size="10" text-anchor="middle">process started</text>
+<line x1="753" y1="70" x2="899" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="moi" data-to="confirm-contact"/>
+<rect x="766.2" y="47.2" width="119.6" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="826" y="57" fill="#94a3b8" font-size="10" text-anchor="middle">identity confirmed</text>
+<line x1="1059" y1="70" x2="1174" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="confirm-contact" data-to="sim-number"/>
+<rect x="1072.2" y="47.2" width="88.6" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="1116.5" y="57" fill="#94a3b8" font-size="10" text-anchor="middle">contact saved</text>
+<path d="M 1254 110 L 1254 149 L 59 149 L 59 300 L 79 300" stroke="#94a3b8" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="sim-number" data-to="plan"/>
+<rect x="1262" y="120.2" width="133.8" height="22" rx="11" fill="#0d1425" stroke="#94a3b8" stroke-width="1.5" opacity="0.95"/>
+<text x="1270" y="134" fill="#e2e8f0" font-size="10" font-weight="700">Continue to Row 2 →</text>
+<line x1="239" y1="300" x2="360" y2="300" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="plan" data-to="donor-details"/>
+<rect x="252.1" y="277.2" width="94.8" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="299.5" y="287" fill="#94a3b8" font-size="10" text-anchor="middle">plan confirmed</text>
+<line x1="520" y1="300" x2="660" y2="300" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="donor-details" data-to="mnp-sign"/>
+<rect x="533.3" y="277.2" width="113.4" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="590" y="287" fill="#94a3b8" font-size="10" text-anchor="middle">MNP T&amp;C generated</text>
+<line x1="820" y1="300" x2="947" y2="300" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="mnp-sign" data-to="donor-attach"/>
+<rect x="833" y="277.2" width="101" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="883.5" y="287" fill="#94a3b8" font-size="10" text-anchor="middle">MNP form signed</text>
+<line x1="1107" y1="300" x2="1241" y2="300" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="donor-attach" data-to="billing-profile"/>
+<rect x="1120.4" y="277.2" width="107.2" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="1174" y="287" fill="#94a3b8" font-size="10" text-anchor="middle">donor step saved</text>
+<path d="M 1321 345 L 1321 379 L 59.5 379 L 59.5 530 L 79.5 530" stroke="#94a3b8" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="billing-profile" data-to="caf-sign"/>
+<rect x="1329" y="355.2" width="133.8" height="22" rx="11" fill="#0d1425" stroke="#94a3b8" stroke-width="1.5" opacity="0.95"/>
+<text x="1337" y="369" fill="#e2e8f0" font-size="10" font-weight="700">Continue to Row 3 →</text>
+<line x1="239.5" y1="530" x2="335.5" y2="530" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="caf-sign" data-to="caf-complete"/>
+<rect x="252.5" y="507.2" width="70" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="287.5" y="517" fill="#94a3b8" font-size="10" text-anchor="middle">CAF signed</text>
+<line x1="495.5" y1="530" x2="678.5" y2="530" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="caf-complete" data-to="activity"/>
+<rect x="508.6" y="507.2" width="156.8" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="587" y="517" fill="#94a3b8" font-size="10" text-anchor="middle">instruction acknowledged</text>
+<line x1="838.5" y1="530" x2="965.5" y2="530" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="activity" data-to="create-account"/>
+<rect x="851.5" y="507.2" width="101" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="902" y="517" fill="#94a3b8" font-size="10" text-anchor="middle">order submitted</text>
+<line x1="1125.5" y1="530" x2="1240.5" y2="530" stroke="#a78bfa" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-violet)" class="pf-edge" data-from="create-account" data-to="order-review"/>
+<rect x="1138.7" y="507.2" width="88.6" height="14" rx="7" fill="#020617" opacity="0.85"/><text x="1183" y="517" fill="#94a3b8" font-size="10" text-anchor="middle">order created</text>
+<path d="M 1320.5 570 L 1320.5 604 L 660 604 L 660 750 L 680 750" stroke="#94a3b8" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="order-review" data-to="end16"/>
+<rect x="1328.5" y="580.2" width="133.8" height="22" rx="11" fill="#0d1425" stroke="#94a3b8" stroke-width="1.5" opacity="0.95"/>
+<text x="1336.5" y="594" fill="#e2e8f0" font-size="10" font-weight="700">Continue to Row 4 →</text>
+<g class="pf-node" data-id="start1" data-type="terminal" tabindex="0" role="button" aria-label="Terminal: Start">
+<rect x="146" y="50" width="100" height="40" rx="20" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="196" y="74" fill="white" font-size="10" font-weight="600" text-anchor="middle">Start</text>
+</g>
+<g class="pf-node" data-id="launch" data-type="manual" tabindex="0" role="button" aria-label="Launch MNP Prepaid Journey, Sales Agent. Open details.">
+<text x="466" y="13" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Sales Agent</text>
+<rect x="306" y="25" width="160" height="90" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,2"/>
+<text x="386" y="46" fill="white" font-size="10" font-weight="600" text-anchor="middle">Launch MNP Prepaid</text>
+<text x="386" y="61" fill="white" font-size="10" font-weight="600" text-anchor="middle">Journey</text>
+<text x="386" y="78" fill="#94a3b8" font-size="10" text-anchor="middle">Click MNP Tablet tile,</text>
+<text x="386" y="90" fill="#94a3b8" font-size="10" text-anchor="middle">select Switch as</text>
+<text x="386" y="102" fill="#94a3b8" font-size="10" text-anchor="middle">Prepaid</text>
+<circle cx="306" cy="20" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="306" y="24" fill="white" font-size="8" font-weight="600" text-anchor="middle">1</text>
+</g>
+<g class="pf-node" data-id="moi" data-type="manual" tabindex="0" role="button" aria-label="MOI Validation (Contact Step), Sales Agent. Open details.">
+<text x="753" y="13" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Sales Agent</text>
+<rect x="593" y="25" width="160" height="90" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,2"/>
+<text x="673" y="46" fill="white" font-size="10" font-weight="600" text-anchor="middle">MOI Validation (Contact</text>
+<text x="673" y="61" fill="white" font-size="10" font-weight="600" text-anchor="middle">Step)</text>
+<text x="673" y="78" fill="#94a3b8" font-size="10" text-anchor="middle">Scan/enter Qatari ID or</text>
+<text x="673" y="90" fill="#94a3b8" font-size="10" text-anchor="middle">Passport, confirm</text>
+<text x="673" y="102" fill="#94a3b8" font-size="10" text-anchor="middle">details</text>
+<circle cx="593" cy="20" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="593" y="24" fill="white" font-size="8" font-weight="600" text-anchor="middle">2</text>
+</g>
+<g class="pf-node" data-id="confirm-contact" data-type="manual" tabindex="0" role="button" aria-label="Confirm Contact Details, Sales Agent. Open details.">
+<text x="1059" y="13" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Sales Agent</text>
+<rect x="899" y="30" width="160" height="80" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,2"/>
+<text x="979" y="53.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Confirm Contact Details</text>
+<text x="979" y="70.5" fill="#94a3b8" font-size="10" text-anchor="middle">Review pre-filled</text>
+<text x="979" y="82.5" fill="#94a3b8" font-size="10" text-anchor="middle">fields,</text>
+<text x="979" y="94.5" fill="#94a3b8" font-size="10" text-anchor="middle">click Continue</text>
+<circle cx="899" cy="25" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="899" y="29" fill="white" font-size="8" font-weight="600" text-anchor="middle">3</text>
+</g>
+<g class="pf-node" data-id="sim-number" data-type="manual" tabindex="0" role="button" aria-label="SIM Serial Capture &amp; Number Reservation, Sales Agent. Open details.">
+<text x="1334" y="13" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Sales Agent</text>
+<rect x="1174" y="30" width="160" height="80" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,2"/>
+<text x="1254" y="52" fill="white" font-size="10" font-weight="600" text-anchor="middle">SIM Serial Capture &amp;</text>
+<text x="1254" y="67" fill="white" font-size="10" font-weight="600" text-anchor="middle">Number Reservation</text>
+<text x="1254" y="84" fill="#94a3b8" font-size="10" text-anchor="middle">Scan SIM serial;</text>
+<text x="1254" y="96" fill="#94a3b8" font-size="10" text-anchor="middle">system reserves number</text>
+<circle cx="1174" cy="25" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="1174" y="29" fill="white" font-size="8" font-weight="600" text-anchor="middle">4</text>
+</g>
+<g class="pf-node" data-id="plan" data-type="manual" tabindex="0" role="button" aria-label="Select Plan, Sales Agent. Open details.">
+<text x="239" y="243" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Sales Agent</text>
+<rect x="79" y="260" width="160" height="80" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,2"/>
+<text x="159" y="289.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Select Plan</text>
+<text x="159" y="306.5" fill="#94a3b8" font-size="10" text-anchor="middle">Confirm Prepaid Red</text>
+<text x="159" y="318.5" fill="#94a3b8" font-size="10" text-anchor="middle">Promotion bundle</text>
+<circle cx="79" cy="255" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="79" y="259" fill="white" font-size="8" font-weight="600" text-anchor="middle">5</text>
+</g>
+<g class="pf-node" data-id="donor-details" data-type="manual" tabindex="0" role="button" aria-label="Capture Donor / Port-In Details, Sales Agent. Open details.">
+<text x="520" y="243" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Sales Agent</text>
+<rect x="360" y="255" width="160" height="90" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,2"/>
+<text x="440" y="276" fill="white" font-size="10" font-weight="600" text-anchor="middle">Capture Donor / Port-In</text>
+<text x="440" y="291" fill="white" font-size="10" font-weight="600" text-anchor="middle">Details</text>
+<text x="440" y="308" fill="#94a3b8" font-size="10" text-anchor="middle">Enter donor operator,</text>
+<text x="440" y="320" fill="#94a3b8" font-size="10" text-anchor="middle">port-in number, donor</text>
+<text x="440" y="332" fill="#94a3b8" font-size="10" text-anchor="middle">ID</text>
+<circle cx="360" cy="250" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="360" y="254" fill="white" font-size="8" font-weight="600" text-anchor="middle">6</text>
+</g>
+<g class="pf-node" data-id="mnp-sign" data-type="manual" tabindex="0" role="button" aria-label="Sign MNP Application Form, Applicant (via Sales Agent). Open details.">
+<text x="820" y="243" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Applicant (via Sales Agent)</text>
+<rect x="660" y="260" width="160" height="80" rx="8" fill="#042325" stroke="#34d399" stroke-width="2.5"/>
+<text x="740" y="282" fill="white" font-size="10" font-weight="600" text-anchor="middle">Sign MNP Application</text>
+<text x="740" y="297" fill="white" font-size="10" font-weight="600" text-anchor="middle">Form</text>
+<text x="740" y="314" fill="#94a3b8" font-size="10" text-anchor="middle">Review bilingual T&amp;C,</text>
+<text x="740" y="326" fill="#94a3b8" font-size="10" text-anchor="middle">draw signature, Done</text>
+<circle cx="660" cy="255" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="660" y="259" fill="white" font-size="8" font-weight="600" text-anchor="middle">7</text>
+<circle cx="820" cy="255" r="12" fill="#1e293b" stroke="#854d0e" stroke-width="1.5"/>
+<polygon points="820.00,248.00 821.98,253.02 827.00,255.00 821.98,256.98 820.00,262.00 818.02,256.98 813.00,255.00 818.02,253.02" fill="#fde047" stroke="#854d0e" stroke-width="1.5"/>
+</g>
+<g class="pf-node" data-id="donor-attach" data-type="manual" tabindex="0" role="button" aria-label="Confirm Donor Attachment, Sales Agent. Open details.">
+<text x="1107" y="243" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Sales Agent</text>
+<rect x="947" y="260" width="160" height="80" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,2"/>
+<text x="1027" y="282" fill="white" font-size="10" font-weight="600" text-anchor="middle">Confirm Donor</text>
+<text x="1027" y="297" fill="white" font-size="10" font-weight="600" text-anchor="middle">Attachment</text>
+<text x="1027" y="314" fill="#94a3b8" font-size="10" text-anchor="middle">Verify signed MNP T&amp;C</text>
+<text x="1027" y="326" fill="#94a3b8" font-size="10" text-anchor="middle">tile, click Continue</text>
+<circle cx="947" cy="255" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="947" y="259" fill="white" font-size="8" font-weight="600" text-anchor="middle">8</text>
+</g>
+<g class="pf-node" data-id="billing-profile" data-type="manual" tabindex="0" role="button" aria-label="Create Billing Profile (CAF), Applicant / Sales Agent. Open details.">
+<text x="1401" y="243" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Applicant / Sales Agent</text>
+<rect x="1241" y="255" width="160" height="90" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,2"/>
+<text x="1321" y="276" fill="white" font-size="10" font-weight="600" text-anchor="middle">Create Billing Profile</text>
+<text x="1321" y="291" fill="white" font-size="10" font-weight="600" text-anchor="middle">(CAF)</text>
+<text x="1321" y="308" fill="#94a3b8" font-size="10" text-anchor="middle">Prepaid Customer</text>
+<text x="1321" y="320" fill="#94a3b8" font-size="10" text-anchor="middle">Application Form</text>
+<text x="1321" y="332" fill="#94a3b8" font-size="10" text-anchor="middle">generated</text>
+<circle cx="1241" cy="250" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="1241" y="254" fill="white" font-size="8" font-weight="600" text-anchor="middle">9</text>
+</g>
+<g class="pf-node" data-id="caf-sign" data-type="manual" tabindex="0" role="button" aria-label="Sign CAF, Applicant (via Sales Agent). Open details.">
+<text x="239.5" y="478" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Applicant (via Sales Agent)</text>
+<rect x="79.5" y="490" width="160" height="80" rx="8" fill="#042325" stroke="#34d399" stroke-width="2.5"/>
+<text x="159.5" y="519.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Sign CAF</text>
+<text x="159.5" y="536.5" fill="#94a3b8" font-size="10" text-anchor="middle">Draw signature on CAF,</text>
+<text x="159.5" y="548.5" fill="#94a3b8" font-size="10" text-anchor="middle">click Done</text>
+<circle cx="79.5" cy="485" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="79.5" y="489" fill="white" font-size="8" font-weight="600" text-anchor="middle">10</text>
+<circle cx="239.5" cy="485" r="12" fill="#1e293b" stroke="#854d0e" stroke-width="1.5"/>
+<polygon points="239.50,478.00 241.48,483.02 246.50,485.00 241.48,486.98 239.50,492.00 237.52,486.98 232.50,485.00 237.52,483.02" fill="#fde047" stroke="#854d0e" stroke-width="1.5"/>
+</g>
+<g class="pf-node" data-id="caf-complete" data-type="manual" tabindex="0" role="button" aria-label="Acknowledge SMS-Switch Instruction, Sales Agent. Open details.">
+<text x="495.5" y="478" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Sales Agent</text>
+<rect x="335.5" y="490" width="160" height="80" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,2"/>
+<text x="415.5" y="512" fill="white" font-size="10" font-weight="600" text-anchor="middle">Acknowledge SMS-Switch</text>
+<text x="415.5" y="527" fill="white" font-size="10" font-weight="600" text-anchor="middle">Instruction</text>
+<text x="415.5" y="544" fill="#94a3b8" font-size="10" text-anchor="middle">CAF popup: advise</text>
+<text x="415.5" y="556" fill="#94a3b8" font-size="10" text-anchor="middle">customer to SMS 151</text>
+<circle cx="335.5" cy="485" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="335.5" y="489" fill="white" font-size="8" font-weight="600" text-anchor="middle">11</text>
+</g>
+<g class="pf-node" data-id="activity" data-type="manual" tabindex="0" role="button" aria-label="Log Activity Comment &amp; Finish, Sales Agent. Open details.">
+<text x="838.5" y="478" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Sales Agent</text>
+<rect x="678.5" y="490" width="160" height="80" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,2"/>
+<text x="758.5" y="512" fill="white" font-size="10" font-weight="600" text-anchor="middle">Log Activity Comment &amp;</text>
+<text x="758.5" y="527" fill="white" font-size="10" font-weight="600" text-anchor="middle">Finish</text>
+<text x="758.5" y="544" fill="#94a3b8" font-size="10" text-anchor="middle">Enter comment,</text>
+<text x="758.5" y="556" fill="#94a3b8" font-size="10" text-anchor="middle">Save and Finish</text>
+<circle cx="678.5" cy="485" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="678.5" y="489" fill="white" font-size="8" font-weight="600" text-anchor="middle">12</text>
+</g>
+<g class="pf-node" data-id="create-account" data-type="automated" tabindex="0" role="button" aria-label="Create Account &amp; Order, System. Open details.">
+<text x="1125.5" y="478" fill="#a78bfa" font-size="10" font-weight="600" text-anchor="end">System</text>
+<rect x="965.5" y="490" width="160" height="80" rx="8" fill="#200f49" stroke="#a78bfa" stroke-width="2.5"/>
+<text x="1045.5" y="519.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Create Account &amp; Order</text>
+<text x="1045.5" y="536.5" fill="#94a3b8" font-size="10" text-anchor="middle">System creates account,</text>
+<text x="1045.5" y="548.5" fill="#94a3b8" font-size="10" text-anchor="middle">generates order number</text>
+<circle cx="965.5" cy="485" r="12" fill="#1e293b" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="965.5" y="489" fill="white" font-size="8" font-weight="600" text-anchor="middle">13</text>
+<circle cx="1125.5" cy="485" r="12" fill="#1e293b" stroke="#854d0e" stroke-width="1.5"/>
+<polygon points="1125.50,478.00 1127.48,483.02 1132.50,485.00 1127.48,486.98 1125.50,492.00 1123.52,486.98 1118.50,485.00 1123.52,483.02" fill="#fde047" stroke="#854d0e" stroke-width="1.5"/>
+</g>
+<g class="pf-node" data-id="order-review" data-type="manual" tabindex="0" role="button" aria-label="Review &amp; Progress Order, Sales Agent / Fulfilment Team. Open details.">
+<text x="1400.5" y="478" fill="#34d399" font-size="10" font-weight="600" text-anchor="end">Sales Agent / Fulfilment Team</text>
+<rect x="1240.5" y="490" width="160" height="80" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="1320.5" y="513.5" fill="white" font-size="10" font-weight="600" text-anchor="middle">Review &amp; Progress Order</text>
+<text x="1320.5" y="530.5" fill="#94a3b8" font-size="10" text-anchor="middle">View order record;</text>
+<text x="1320.5" y="542.5" fill="#94a3b8" font-size="10" text-anchor="middle">Revise/ Verify/</text>
+<text x="1320.5" y="554.5" fill="#94a3b8" font-size="10" text-anchor="middle">Fulfill/ Submit</text>
+<circle cx="1240.5" cy="485" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="1240.5" y="489" fill="white" font-size="8" font-weight="600" text-anchor="middle">14</text>
+</g>
+<g class="pf-node" data-id="end16" data-type="terminal" tabindex="0" role="button" aria-label="Terminal: Complete">
+<rect x="680" y="730" width="120" height="40" rx="20" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="740" y="754" fill="white" font-size="10" font-weight="600" text-anchor="middle">Complete</text>
+</g>
+<text x="106" y="73" fill="#94a3b8" font-size="10" font-weight="700" text-anchor="end">ROW 1</text>
+<text x="39" y="303" fill="#94a3b8" font-size="10" font-weight="700" text-anchor="end">ROW 2</text>
+<text x="39.5" y="533" fill="#94a3b8" font-size="10" font-weight="700" text-anchor="end">ROW 3</text>
+<text x="640" y="753" fill="#94a3b8" font-size="10" font-weight="700" text-anchor="end">ROW 4</text>
+<rect x="502" y="809" width="16" height="10" rx="2" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="524" y="818" fill="#94a3b8" font-size="10">Manual / Human-in-loop</text>
+<rect x="686.4" y="809" width="16" height="10" rx="2" fill="#200f49" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="708.4" y="818" fill="#94a3b8" font-size="10">Automated</text>
+<rect x="790.1999999999999" y="809" width="16" height="10" rx="5" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="812.1999999999999" y="818" fill="#94a3b8" font-size="10">Start / End</text>
+<line x1="906.4" y1="814" x2="922.4" y2="814" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)"/>
+<text x="928.4" y="818" fill="#94a3b8" font-size="10">Row wrap</text>
+</svg>
+    </div>
+
+    
+
+        <div class="cards">
+      <div class="card">
+        <div class="card-header"><div class="card-dot violet"></div><h3>Input → Output Transformation</h3></div>
+        <table class="io-table">
+          <thead><tr><th class="io-col-step"></th><th>Input</th><th>Output</th><th>Example</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Step 1</th><td class="io-in">Qatari ID/Passport number scanned at Contact step</td><td class="io-out">MOI-validated, confirmed customer contact profile</td><td class="io-ex">Qatari ID/Passport number scanned at Contact step → MOI-validated</td><td class="io-mean">Identity lookup pre-fills and confirms the customer's profile before any porting data is captured.</td></tr>
+            <tr><th scope="row">Step 2</th><td class="io-in">SIM serial number + selected prepaid plan</td><td class="io-out">Reserved number/SIM pairing with Prepaid Red Promotion plan attached</td><td class="io-ex">SIM serial number + selected prepaid plan → Reserved number/SIM pairing with Prepaid Red Promotion plan attached</td><td class="io-mean">SIM scan triggers number reservation; agent then attaches the prepaid plan bundle to the reservation.</td></tr>
+            <tr><th scope="row">Step 3</th><td class="io-in">Donor operator, port-in number, donor ID details</td><td class="io-out">Signed Mobile Number Portability Application Form (MNP T&amp;C)</td><td class="io-ex">Donor operator → Signed Mobile Number Portability Application Form (MNP T&amp;C)</td><td class="io-mean">Donor/port-in data generates a dedicated bilingual MNP form, distinct from the CAF, signed by the applicant.</td></tr>
+            <tr><th scope="row">Step 4</th><td class="io-in">Signed MNP T&amp;C, confirmed number and SIM serial</td><td class="io-out">Signed Prepaid Customer Application Form (CAF)</td><td class="io-ex">Signed MNP T&amp;C → Signed Prepaid Customer Application Form (CAF)</td><td class="io-mean">A separate CAF is generated and signed to create the billing profile for the newly ported prepaid line.</td></tr>
+            <tr><th scope="row">Step 5</th><td class="io-in">Signed MNP T&amp;C + CAF, activity comment</td><td class="io-out">Created account and completed sales order (e.g. 1-23864057846)</td><td class="io-ex">Signed MNP T&amp;C + CAF → Created account and completed sales order (e.g. 1-23864057846)</td><td class="io-mean">Finishing the wizard creates the customer account and order, visible in My Sales Orders for further fulfilment actions.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+<p class="footer">Source: guided-journeys-mnp-prepaid-open-ui-tablet-mnp-prepaid-515ab9aa — Traceability Matrix UJ-007</p>
+  </div>
+  <aside class="pf-drawer" id="pfDrawer" role="dialog" aria-labelledby="pfDrawerTitle" aria-hidden="true">
+    <div class="pf-drawer-handle" id="pfHandle" role="separator" aria-orientation="vertical" aria-label="Resize detail panel. Use left and right arrow keys." tabindex="0"></div>
+    <div class="pf-drawer-body">
+      <div class="pf-drawer-head">
+        <span class="pf-badge" id="pfBadge"></span>
+        <button class="pf-drawer-close" id="pfClose" aria-label="Close detail panel">&times;</button>
+      </div>
+      <h2 id="pfDrawerTitle"></h2>
+      <p class="pf-drawer-role" id="pfRole"></p>
+      <div class="pf-drawer-sections">
+        <div class="pf-sec">
+          <h3>Meaning</h3>
+          <p id="pfMeaning" class="pf-drawer-meaning"></p>
+        </div>
+        <div class="pf-sec">
+          <h3>Input/Inbound</h3>
+          <p id="pfInDesc" class="pf-drawer-desc"></p>
+          <ul id="pfIn"></ul>
+        </div>
+        <div class="pf-sec">
+          <h3>Output/Outbound</h3>
+          <p id="pfOutDesc" class="pf-drawer-desc"></p>
+          <ul id="pfOut"></ul>
+        </div>
+        <div class="pf-sec">
+          <h3>Example</h3>
+          <p id="pfExample" class="pf-drawer-example"></p>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <script>
+    const SLUG = "uj007-mnp-prepaid-process-flow";
+    /* Export bounds are measured, not assumed (§11.1).
+     *
+     * The container's own rect is NOT the diagram's extent: the SVG has a min-width, so on a
+     * narrow viewport it is wider than its container and .diagram-container scrolls. Capturing
+     * the container rect then silently crops whatever overflowed — the right-hand nodes and the
+     * legend — and the exported PNG differs from what the page shows. So walk every descendant
+     * and take the true union, which also covers anything that overflows upward or downward. */
+    function captureBounds() {
+      const el = document.getElementById('report-container');
+      const c = el.getBoundingClientRect();
+      let l = c.left, t = c.top, r = c.right, b = c.bottom;
+      for (const n of el.querySelectorAll('*')) {
+        if (n.classList && (n.classList.contains('toolbar') || n.classList.contains('pf-drawer') || n.classList.contains('pf-filters'))) continue;
+        const q = n.getBoundingClientRect();
+        if (!q.width && !q.height) continue;
+        if (q.left < l) l = q.left;
+        if (q.top < t) t = q.top;
+        if (q.right > r) r = q.right;
+        if (q.bottom > b) b = q.bottom;
+      }
+      return { left: l, top: t, width: r - l, height: b - t };
+    }
+
+    async function capture() {
+      pfResetView();
+      await new Promise(r => setTimeout(r, 300));
+      const el = document.getElementById('report-container');
+      // A scrolled diagram must be captured whole: reset the scroll so html2canvas sees the
+      // full width, then restore it so the user's view is untouched.
+      const dc = document.querySelector('.diagram-container');
+      const sx = dc ? dc.scrollLeft : 0;
+      if (dc) dc.scrollLeft = 0;
+      const wasOverflow = dc ? dc.style.overflowX : '';
+      if (dc) dc.style.overflowX = 'visible';
+      await new Promise(r => requestAnimationFrame(r));
+
+      const r = captureBounds();
+      const pad = 32;
+      try {
+        return await html2canvas(document.body, { backgroundColor: '#020617', scale: 2, useCORS: true, ignoreElements: (e) => e.classList && (e.classList.contains('toolbar') || e.classList.contains('pf-drawer') || e.classList.contains('pf-filters')), x: r.left + window.scrollX - pad, y: r.top + window.scrollY - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
+      } finally {
+        if (dc) { dc.style.overflowX = wasOverflow; dc.scrollLeft = sx; }
+      }
+    }
+    async function copyAsImage(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        exportStatus('✓ Copied', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    async function downloadPNG(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const link = document.createElement('a'); link.download = SLUG + '.png'; link.href = canvas.toDataURL('image/png'); link.click();
+        exportStatus('✓ PNG', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    /* The menu closes on outside click, on Escape, and after a format is chosen — a popover
+     * that stays open behind the download it just started reads as though nothing happened. */
+    function setExportOpen(open) {
+      document.getElementById('exportMenu').classList.toggle('open', open);
+      document.getElementById('exportBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    function toggleExport(ev) {
+      ev.stopPropagation();
+      setExportOpen(!document.getElementById('exportMenu').classList.contains('open'));
+    }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.toolbar')) setExportOpen(false);
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && document.getElementById('exportMenu').classList.contains('open')) {
+        setExportOpen(false); document.getElementById('exportBtn').focus();
+      }
+    });
+
+    /* Status is shown on the trigger, not on the menu item: the menu closes on choose, so a
+     * message written into the item would vanish with it. */
+    function exportStatus(msg, revert) {
+      const b = document.getElementById('exportBtn');
+      if (revert === undefined) { b.textContent = msg; return; }
+      b.textContent = msg;
+      setTimeout(() => b.textContent = 'Export', revert);
+    }
+
+    /* SVG export is a real vector serialisation, not a raster (§11.1 r7).
+     *
+     * The live <svg> inherits its font from the page stylesheet, which does NOT travel with a
+     * detached clone — open the file standalone and every label reflows in a fallback face,
+     * shifting off the geometry the generator computed. So the clone gets the font stack and
+     * the canvas ground written onto it explicitly. Nothing else is restyled: all colours are
+     * already presentation attributes on the elements themselves. */
+    function downloadSVG(btn) {
+      try {
+        const src = document.querySelector('.diagram-container svg');
+        const clone = src.cloneNode(true);
+        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        const vb = (src.getAttribute('viewBox') || '').split(/[s,]+/).map(Number);
+        if (vb.length === 4) { clone.setAttribute('width', vb[2]); clone.setAttribute('height', vb[3]); }
+        clone.removeAttribute('style');
+        clone.setAttribute('style', 'background:' + "#020617");
+        const st = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+        st.textContent = 'text{font-family:' + getComputedStyle(src).fontFamily.replace(/"/g, "'") + '}';
+        clone.insertBefore(st, clone.firstChild);
+        const blob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a'); link.download = SLUG + '.svg'; link.href = url; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setExportOpen(false); exportStatus('✓ SVG', 2000);
+      } catch (e) { setExportOpen(false); exportStatus('✗ Failed', 2000); }
+    }
+
+    /* JPEG has no alpha, so an un-flattened canvas renders transparent pixels BLACK — which
+     * on this palette is invisible damage rather than an obvious bug. Composite onto the
+     * canvas ground first. */
+    async function downloadJPG(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const flat = document.createElement('canvas');
+        flat.width = canvas.width; flat.height = canvas.height;
+        const g = flat.getContext('2d');
+        g.fillStyle = "#020617";
+        g.fillRect(0, 0, flat.width, flat.height);
+        g.drawImage(canvas, 0, 0);
+        const link = document.createElement('a'); link.download = SLUG + '.jpg';
+        link.href = flat.toDataURL('image/jpeg', 0.92); link.click();
+        exportStatus('✓ JPG', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    async function downloadPDF(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const orientation = canvas.width > canvas.height ? 'landscape' : 'portrait';
+        const pdf = new jsPDF({ orientation, unit: 'px', format: [canvas.width, canvas.height], hotfixes: ['px_scaling'] });
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save(SLUG + '.pdf');
+        exportStatus('✓ PDF', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    /* --- interactivity layer (§11.3) --- */
+    const PF_NODES = [{"id":"start1","type":"terminal","num":"","title":"Start","role":"","desc":[]},{"id":"launch","type":"manual","num":"1","title":"Launch MNP Prepaid Journey","role":"Sales Agent","desc":["Click MNP Tablet tile,","select Switch as Prepaid"],"meaning":"Agent enters the MNP guided wizard from the tablet nav bar and chooses the Prepaid porting path.","inputDesc":"Tablet nav bar (Home, Mobile Postpaid, Sales Order, Passport to QID, MNP Tablet, Training, SIM Swap)","outputDesc":"MNP Prepaid wizard opened at Step 1 - Contact","example":"\"MNP Guided Process: Choose process\" screen with Switch as Postpaid / Switch as Prepaid buttons; Prepaid selected.","milestone":false},{"id":"moi","type":"manual","num":"2","title":"MOI Validation (Contact Step)","role":"Sales Agent","desc":["Scan/enter Qatari ID or","Passport, confirm details"],"meaning":"Agent captures the customer's ID number, triggering ministry-of-interior identity validation and pre-fill of contact fields.","inputDesc":"ID Type (Qatari ID/Passport) + ID Number, scanned or typed","outputDesc":"Pre-filled, green-checked contact profile confirmed by agent","example":"ID Number 27381804401 → banner \"MOI Validation completed, please confirm the contact details\"; fields Nationality Egyptian, First name KOURASHY, Last name ABDELGHANY auto-filled.","milestone":false},{"id":"confirm-contact","type":"manual","num":"3","title":"Confirm Contact Details","role":"Sales Agent","desc":["Review pre-filled fields,","click Continue"],"meaning":"Agent reviews the MOI-returned customer profile fields and confirms them before proceeding to SIM allocation.","inputDesc":"Pre-filled contact fields (ID expiry, nationality, gender, DOB, email, phone, ID front/back captures)","outputDesc":"\"1. Contact: KOURASHY ABDELGHANY 27381804401 — Saved!\"","example":"Header updates to show the contact step as Saved before Step 2 SIM Serial becomes active.","milestone":false},{"id":"sim-number","type":"manual","num":"4","title":"SIM Serial Capture & Number Reservation","role":"Sales Agent","desc":["Scan SIM serial;","system reserves number"],"meaning":"Agent enters the physical SIM's serial number, which the system validates and uses to reserve the new number/SIM pairing.","inputDesc":"SIM Serial number, scanned or typed","outputDesc":"SIM check + number reservation confirmation","example":"SIM Serial 8942702400000027026 → \"SIM Serial check and number reservation in progress. Please wait...\" while Step 3 Plan shows Pending.","milestone":false},{"id":"plan","type":"manual","num":"5","title":"Select Plan","role":"Sales Agent","desc":["Confirm Prepaid Red","Promotion bundle"],"meaning":"Agent confirms the prepaid plan bundle that will be attached to the ported number.","inputDesc":"Available prepaid plan options for the SIM/number just reserved","outputDesc":"Confirmed plan card added to the order","example":"\"Prepaid Red Promotion\" bundle: Mobile Voicemail, SIM Card, Red, Prepaid Welcome Add-on, Prepaid Credit Expiry, DOB Eligible — confirmed with green check.","milestone":false},{"id":"donor-details","type":"manual","num":"6","title":"Capture Donor / Port-In Details","role":"Sales Agent","desc":["Enter donor operator,","port-in number, donor ID"],"meaning":"Agent records the donor operator and porting-specific identifiers required to generate the MNP Application Form; a warning banner reminds the agent that inaccurate entry risks rejection of the port request, but no rejection branch is exercised in this walkthrough.","inputDesc":"Port-in Number, Donor ID Type/ID, Donor Operator, Subscription Type","outputDesc":"MNP T&C document generation triggered","example":"Port-in Number 97466000534, Donor Operator Qtel (read-only), Donor ID KJSH0934989 (Passport); warning \"Note: Make sure correct information is provided to avoid rejection of request.\"; status \"MNP T&C is generating. Please wait...\"","milestone":false},{"id":"mnp-sign","type":"manual","num":"7","title":"Sign MNP Application Form","role":"Applicant (via Sales Agent)","desc":["Review bilingual T&C,","draw signature, Done"],"meaning":"The customer signs the dedicated bilingual Mobile Number Portability Application Form on the tablet's signature pad — distinct from the later CAF signature — authorizing the port-in request.","inputDesc":"Generated \"Mobile Number Portability Application Form\" (استمارة طلب نقل رقم الهاتف الجوال) with applicant/donor/number details pre-filled","outputDesc":"Signed MNP T&C document attached to the order","example":"Sign Contract → signature pad → Done; document later stored as attachment \"1-AYO1KZX_signed\" (pdf, 3,296,506 bytes).","milestone":true},{"id":"donor-attach","type":"manual","num":"8","title":"Confirm Donor Attachment","role":"Sales Agent","desc":["Verify signed MNP T&C","tile, click Continue"],"meaning":"Agent confirms the signed MNP T&C now appears as a completed attachment before moving to the CAF step.","inputDesc":"Signed MNP T&C document","outputDesc":"Donor Attachment step marked Saved; CAF step activated","example":"Attachment tile \"MNP T&C\" with green check and document icon; Step 6 CAF changes from Pending to active.","milestone":false},{"id":"billing-profile","type":"manual","num":"9","title":"Create Billing Profile (CAF)","role":"Applicant / Sales Agent","desc":["Prepaid Customer","Application Form generated"],"meaning":"System generates the standard bilingual Prepaid Customer Application Form (CAF), pre-filled with the new Vodafone number, SIM serial, and applicant name, to create the billing profile for the ported line.","inputDesc":"Confirmed number (97466000534), SIM serial (8942702400000027026), applicant name","outputDesc":"Prepaid Customer Application Form ready for signature","example":"CAF field \"Valid Qatari ID/RP Number / Passport Number\" shows literal \"undefined\" — a known data-binding gap in this build, not a transcription error.","milestone":false},{"id":"caf-sign","type":"manual","num":"10","title":"Sign CAF","role":"Applicant (via Sales Agent)","desc":["Draw signature on CAF,","click Done"],"meaning":"Customer signs the Prepaid Customer Application Form, separately from the MNP Application Form signature, accepting Prepaid terms and conditions.","inputDesc":"Generated Prepaid Customer Application Form","outputDesc":"Signed CAF attached to the order","example":"Second \"Please Sign\" pad → Done; later stored as attachment \"1-AYO1KVQ_signed\" (pdf, 1,323,723 bytes).","milestone":true},{"id":"caf-complete","type":"manual","num":"11","title":"Acknowledge SMS-Switch Instruction","role":"Sales Agent","desc":["CAF popup: advise","customer to SMS 151"],"meaning":"Agent acknowledges an operational popup instructing them to tell the customer to trigger the port via SMS to short code 151.","inputDesc":"CAF completion popup","outputDesc":"Acknowledged instruction; CAF step marked Saved","example":"Popup \"Advise customer to send switch to 151 'SMS costs 1Dhs'\" with Ok button; shared/reused across MNP Prepaid and MNP Postpaid flows.","milestone":false},{"id":"activity","type":"manual","num":"12","title":"Log Activity Comment & Finish","role":"Sales Agent","desc":["Enter comment,","Save and Finish"],"meaning":"Agent records a free-text comment on the activity for other advisors' visibility, then finalizes the wizard.","inputDesc":"Free-text comment field","outputDesc":"Donor Details, Donor Attachment, and CAF steps all marked Saved","example":"Comment \"Testing\" entered (test/QA data, not a real customer comment) with guidance \"Please note down a comment regarding the actions performed.\"","milestone":false},{"id":"create-account","type":"automated","num":"13","title":"Create Account & Order","role":"System","desc":["System creates account,","generates order number"],"meaning":"Backend account-creation and billing-profile actions fire, generating the customer account and a completed sales order for the ported line.","inputDesc":"Confirmed contact, plan, donor details, signed MNP T&C and CAF","outputDesc":"New account + order number, order visible in My Sales Orders grid","example":"Confirmation modal \"MNP completed successfully. Order Number:- '1-23864057846'\" with Finish Process button; order Status: Open, Plan \"Prepaid Red Promotion\".","milestone":true},{"id":"order-review","type":"manual","num":"14","title":"Review & Progress Order","role":"Sales Agent / Fulfilment Team","desc":["View order record;","Revise/Verify/Fulfill/Submit"],"meaning":"Agent or fulfilment team views the created order in My Sales Orders and Order Attachments, and can take further order-management actions.","inputDesc":"Order record 1-23864057846, attached signed MNP T&C and CAF, ID front/back captures","outputDesc":"Order progressed via one of the available actions","example":"Order Attachments screen lists 3 files tagged \"DNO Verification\"; available action buttons Revise, Verify, Fulfill, Submit (Select Favorites and Get Status disabled).","milestone":false},{"id":"end16","type":"terminal","num":"","title":"Complete","role":"","desc":[]}];
+    const PF_EDGES = [{"from":"start1","to":"launch","label":"","style":"flow"},{"from":"launch","to":"moi","label":"process started","style":"flow"},{"from":"moi","to":"confirm-contact","label":"identity confirmed","style":"flow"},{"from":"confirm-contact","to":"sim-number","label":"contact saved","style":"flow"},{"from":"sim-number","to":"plan","label":"Continue to Row 2 →","style":"wrap"},{"from":"plan","to":"donor-details","label":"plan confirmed","style":"flow"},{"from":"donor-details","to":"mnp-sign","label":"MNP T&C generated","style":"flow"},{"from":"mnp-sign","to":"donor-attach","label":"MNP form signed","style":"flow"},{"from":"donor-attach","to":"billing-profile","label":"donor step saved","style":"flow"},{"from":"billing-profile","to":"caf-sign","label":"Continue to Row 3 →","style":"wrap"},{"from":"caf-sign","to":"caf-complete","label":"CAF signed","style":"flow"},{"from":"caf-complete","to":"activity","label":"instruction acknowledged","style":"flow"},{"from":"activity","to":"create-account","label":"order submitted","style":"flow"},{"from":"create-account","to":"order-review","label":"order created","style":"flow"},{"from":"order-review","to":"end16","label":"Continue to Row 4 →","style":"wrap"}];
+    const PF_TYPE_LABEL = {"manual":"Manual","automated":"Automated","integration":"Integration","decision":"Decision","terminal":"Start / End","reject":"Rejected"};
+    const PF_TYPE_ACCENT = {"manual":"#34d399","automated":"#a78bfa","integration":"#fbbf24","decision":"#fb7185","terminal":"#22d3ee","reject":"#fb7185"};
+    const pfById = Object.fromEntries(PF_NODES.filter(n => n.id).map(n => [n.id, n]));
+    const pfDrawer = document.getElementById('pfDrawer');
+    let pfSelected = null;
+
+    const pfNodeEls = () => Array.from(document.querySelectorAll('.pf-node'));
+    const pfEdgeEls = () => Array.from(document.querySelectorAll('.pf-edge'));
+
+    function pfLabelFor(id) {
+      const n = pfById[id];
+      if (!n) return id || 'unknown';
+      return n.title || n.id;
+    }
+    function pfLi(html) { const li = document.createElement('li'); li.innerHTML = html; return li; }
+    function pfFill(ul, items, emptyText) {
+      ul.textContent = '';
+      if (!items.length) { ul.appendChild(pfLi('<span class="pf-empty">' + emptyText + '</span>')); return; }
+      items.forEach(i => ul.appendChild(i));
+    }
+    function pfEdgeItem(otherId, e, dir) {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.className = 'pf-link';
+      btn.type = 'button';
+      btn.textContent = (dir === 'in' ? '← ' : '→ ') + pfLabelFor(otherId);
+      btn.addEventListener('click', () => pfOpen(otherId));
+      li.appendChild(btn);
+      const meta = [];
+      if (e.label) meta.push(e.label);
+      if (e.style && e.style !== 'flow') meta.push(e.style);
+      if (meta.length) {
+        const span = document.createElement('span');
+        span.className = 'pf-payload';
+        span.textContent = '  ·  ' + meta.join(' · ');
+        li.appendChild(span);
+      }
+      return li;
+    }
+
+    function pfOpen(id) {
+      const n = pfById[id];
+      if (!n) return;
+      pfSelected = id;
+      const badge = document.getElementById('pfBadge');
+      badge.textContent = PF_TYPE_LABEL[n.type] || n.type;
+      badge.style.color = PF_TYPE_ACCENT[n.type] || '#94a3b8';
+      document.getElementById('pfDrawerTitle').textContent = (n.num ? n.num + '. ' : '') + (n.title || n.id);
+      document.getElementById('pfRole').textContent = n.role || '';
+      document.getElementById('pfMeaning').textContent = n.meaning || (n.desc && n.desc[0]) || 'No meaning defined.';
+      document.getElementById('pfInDesc').textContent = n.inputDesc || '';
+      document.getElementById('pfOutDesc').textContent = n.outputDesc || '';
+      document.getElementById('pfExample').textContent = n.example || 'No example provided.';
+      pfFill(document.getElementById('pfIn'),
+        PF_EDGES.filter(e => e.to === id).map(e => pfEdgeItem(e.from, e, 'in')),
+        'Nothing flows into this node.');
+      pfFill(document.getElementById('pfOut'),
+        PF_EDGES.filter(e => e.from === id).map(e => pfEdgeItem(e.to, e, 'out')),
+        'Nothing flows out of this node.');
+      pfDrawer.classList.add('is-open');
+      document.body.classList.add('pf-open');
+      pfDrawer.setAttribute('aria-hidden', 'false');
+      pfNodeEls().forEach(el => el.classList.toggle('is-sel', el.dataset.id === id));
+      document.getElementById('pfClose').focus();
+    }
+
+    function pfClose() {
+      pfDrawer.classList.remove('is-open');
+      document.body.classList.remove('pf-open');
+      pfDrawer.setAttribute('aria-hidden', 'true');
+      pfNodeEls().forEach(el => el.classList.remove('is-sel'));
+      if (pfSelected) {
+        const el = pfNodeEls().find(e => e.dataset.id === pfSelected);
+        if (el) el.focus();
+      }
+      pfSelected = null;
+    }
+
+    function pfApplyFilter(type) {
+      const all = type === 'all';
+      pfNodeEls().forEach(el => el.classList.toggle('is-dim', !all && el.dataset.type !== type));
+      const visible = new Set(PF_NODES.filter(n => all || n.type === type).map(n => n.id));
+      pfEdgeEls().forEach(el => {
+        const on = all || (visible.has(el.dataset.from) && visible.has(el.dataset.to));
+        el.classList.toggle('is-dim', !on);
+      });
+      document.querySelectorAll('.pf-chip').forEach(c =>
+        c.setAttribute('aria-pressed', String(c.dataset.filter === type)));
+    }
+    // Exports must always show the whole diagram — a filtered PNG silently loses
+    // nodes and reads as the complete picture, which is worse than no filter at all.
+    // Closing the drawer first also restores the page width the capture is measured from.
+    function pfResetView() { pfApplyFilter('all'); if (pfSelected) pfClose(); }
+
+    pfNodeEls().forEach(el => {
+      el.addEventListener('click', () => pfOpen(el.dataset.id));
+      el.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); pfOpen(el.dataset.id); }
+      });
+    });
+    document.querySelectorAll('.pf-chip').forEach(c =>
+      c.addEventListener('click', () => pfApplyFilter(c.dataset.filter)));
+    document.getElementById('pfClose').addEventListener('click', pfClose);
+    document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && pfSelected) pfClose(); });
+
+    /* Drawer resize — pointer drag plus arrow keys, clamped so the panel can never
+       swallow the diagram or shrink below a readable measure. */
+    (function () {
+      const handle = document.getElementById('pfHandle');
+      const MIN = 320, MAX = 760;
+      const setW = w => document.documentElement.style.setProperty('--pf-drawer-w', Math.min(MAX, Math.max(MIN, w)) + 'px');
+      let dragging = false;
+      handle.addEventListener('pointerdown', ev => { dragging = true; handle.setPointerCapture(ev.pointerId); ev.preventDefault(); });
+      handle.addEventListener('pointermove', ev => { if (dragging) setW(window.innerWidth - ev.clientX); });
+      handle.addEventListener('pointerup', ev => { dragging = false; handle.releasePointerCapture(ev.pointerId); });
+      handle.addEventListener('keydown', ev => {
+        const cur = pfDrawer.getBoundingClientRect().width;
+        if (ev.key === 'ArrowLeft') { setW(cur + 24); ev.preventDefault(); }
+        if (ev.key === 'ArrowRight') { setW(cur - 24); ev.preventDefault(); }
+      });
+    })();
+  </script>
+</body>
+</html>
