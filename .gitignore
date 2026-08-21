@@ -1,0 +1,7 @@
+# Source document corpus — large binaries, kept out of git except where explicitly noted below
+/data/*
+!/data/CRM_Journeys_Final_Updated_with_Type.xlsx
+
+# Local session/tooling state
+.claude/
+.DS_Store
