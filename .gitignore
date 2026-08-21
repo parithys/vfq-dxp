@@ -1,6 +1,7 @@
 # Source document corpus — large binaries, kept out of git except where explicitly noted below
 /data/*
 !/data/CRM_Journeys_Final_Updated_with_Type.xlsx
+!/data/Vodafone_Requirement_Hierarchy_Traceability_Template.xlsx
 
 # Local session/tooling state
 .claude/
