@@ -127,7 +127,9 @@ export function NewFixedLineWizard() {
             orderId,
             orderType: 'New Fixed Line Activation',
             orderSubType: contact.isB2B2C ? 'B2B2C' : 'Consumer',
-            status: 'Complete',
+            // B2B2C orders route to manager approval per UJ-081/UJ-082 (New Postpaid/FWA/Fixed
+            // Line B2B2C "With Approval" variants) — see order-management's OrderApprovalQueue.
+            status: contact.isB2B2C ? 'Submitted for Approval' : 'Complete',
             customerName: contact.moiResult?.name,
             addressId: values.addressId,
             productId: values.productId,
@@ -144,7 +146,12 @@ export function NewFixedLineWizard() {
             cluster: appointment.cluster,
             channel: 'Retail Store',
           });
-          pushToast('success', `Fixed Line order ${orderId} submitted — appointment booked for ${appointment.date} (${appointment.timeSlot}).`);
+          pushToast(
+            'success',
+            contact.isB2B2C
+              ? `Fixed Line order ${orderId} submitted for manager approval (B2B2C) — appointment booked for ${appointment.date} (${appointment.timeSlot}).`
+              : `Fixed Line order ${orderId} submitted — appointment booked for ${appointment.date} (${appointment.timeSlot}).`
+          );
           navigate('/fixed-line-fibre');
         }}
         onAbandon={() => navigate('/fixed-line-fibre')}

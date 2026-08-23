@@ -55,11 +55,11 @@
   },
   {
     "routeId": "RT-SCR-007",
-    "path": "/fixed-line-fibre/account-creation-screen",
+    "path": "/enterprise-iot-b2b/account-creation-screen",
     "screenId": "SCR-007",
     "screenName": "Account Creation Screen",
     "screenType": "Screen",
-    "module": "Fixed Line / Fibre",
+    "module": "Enterprise / IoT / B2B",
     "personaAccess": "Fulfilment Agent"
   },
   {
@@ -1081,65 +1081,65 @@
   },
   {
     "routeId": "RT-SCR-121",
-    "path": "/fixed-line-fibre/mnp-wizard-step-contact",
+    "path": "/mnp-fnp-porting/mnp-wizard-step-contact",
     "screenId": "SCR-121",
     "screenName": "MNP wizard step: Contact",
     "screenType": "Wizard",
-    "module": "Fixed Line / Fibre",
+    "module": "MNP / FNP Porting",
     "personaAccess": ""
   },
   {
     "routeId": "RT-SCR-122",
-    "path": "/fwa-5g-home/mnp-wizard-step-address",
+    "path": "/mnp-fnp-porting/mnp-wizard-step-address",
     "screenId": "SCR-122",
     "screenName": "MNP wizard step: Address",
     "screenType": "Wizard",
-    "module": "FWA / 5G Home",
+    "module": "MNP / FNP Porting",
     "personaAccess": "Retail Sales Agent"
   },
   {
     "routeId": "RT-SCR-123",
-    "path": "/fwa-5g-home/mnp-wizard-step-billing",
+    "path": "/mnp-fnp-porting/mnp-wizard-step-billing",
     "screenId": "SCR-123",
     "screenName": "MNP wizard step: Billing",
     "screenType": "Wizard",
-    "module": "FWA / 5G Home",
+    "module": "MNP / FNP Porting",
     "personaAccess": "Retail Sales Agent"
   },
   {
     "routeId": "RT-SCR-124",
-    "path": "/fwa-5g-home/mnp-wizard-step-sim-serial",
+    "path": "/mnp-fnp-porting/mnp-wizard-step-sim-serial",
     "screenId": "SCR-124",
     "screenName": "MNP wizard step: SIM Serial",
     "screenType": "Wizard",
-    "module": "FWA / 5G Home",
+    "module": "MNP / FNP Porting",
     "personaAccess": "Retail Sales Agent"
   },
   {
     "routeId": "RT-SCR-125",
-    "path": "/pre-to-post-migration/mnp-wizard-step-plan-plan-selection-grid",
+    "path": "/mnp-fnp-porting/mnp-wizard-step-plan-plan-selection-grid",
     "screenId": "SCR-125",
     "screenName": "MNP wizard step: Plan (plan selection grid)",
     "screenType": "Wizard",
-    "module": "Pre-to-Post Migration",
+    "module": "MNP / FNP Porting",
     "personaAccess": "Retail Sales Agent"
   },
   {
     "routeId": "RT-SCR-126",
-    "path": "/pre-to-post-migration/mnp-wizard-step-donor-details",
+    "path": "/mnp-fnp-porting/mnp-wizard-step-donor-details",
     "screenId": "SCR-126",
     "screenName": "MNP wizard step: Donor Details",
     "screenType": "Wizard",
-    "module": "Pre-to-Post Migration",
+    "module": "MNP / FNP Porting",
     "personaAccess": "Retail Sales Agent"
   },
   {
     "routeId": "RT-SCR-127",
-    "path": "/pre-to-post-migration/mnp-wizard-step-donor-attachment",
+    "path": "/mnp-fnp-porting/mnp-wizard-step-donor-attachment",
     "screenId": "SCR-127",
     "screenName": "MNP wizard step: Donor Attachment",
     "screenType": "Wizard",
-    "module": "Pre-to-Post Migration",
+    "module": "MNP / FNP Porting",
     "personaAccess": "Retail Sales Agent"
   },
   {
@@ -1153,11 +1153,11 @@
   },
   {
     "routeId": "RT-SCR-129",
-    "path": "/pre-to-post-migration/mnp-wizard-step-caf",
+    "path": "/mnp-fnp-porting/mnp-wizard-step-caf",
     "screenId": "SCR-129",
     "screenName": "MNP wizard step: CAF",
     "screenType": "Wizard",
-    "module": "Pre-to-Post Migration",
+    "module": "MNP / FNP Porting",
     "personaAccess": "Retail Sales Agent"
   },
   {
@@ -1180,29 +1180,29 @@
   },
   {
     "routeId": "RT-SCR-132",
-    "path": "/mobile-postpaid/order-line-items-line-item-attributes-grid-mnp",
+    "path": "/mnp-fnp-porting/order-line-items-line-item-attributes-grid-mnp",
     "screenId": "SCR-132",
     "screenName": "Order Line Items / Line Item Attributes grid (MNP)",
     "screenType": "Screen",
-    "module": "Mobile Postpaid",
+    "module": "MNP / FNP Porting",
     "personaAccess": "Retail Sales Agent"
   },
   {
     "routeId": "RT-SCR-133",
-    "path": "/mobile-postpaid/mnp-wizard-step-addon-discount",
+    "path": "/mnp-fnp-porting/mnp-wizard-step-addon-discount",
     "screenId": "SCR-133",
     "screenName": "MNP wizard step: Addon & Discount",
     "screenType": "Wizard",
-    "module": "Mobile Postpaid",
+    "module": "MNP / FNP Porting",
     "personaAccess": "Retail Sales Agent"
   },
   {
     "routeId": "RT-SCR-134",
-    "path": "/pre-to-post-migration/mnp-wizard-step-activity-comments",
+    "path": "/mnp-fnp-porting/mnp-wizard-step-activity-comments",
     "screenId": "SCR-134",
     "screenName": "MNP wizard step: Activity (Comments)",
     "screenType": "Wizard",
-    "module": "Pre-to-Post Migration",
+    "module": "MNP / FNP Porting",
     "personaAccess": "Retail Sales Agent"
   },
   {

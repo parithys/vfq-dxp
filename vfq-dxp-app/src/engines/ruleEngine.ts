@@ -79,6 +79,18 @@ const ruleImplementations: Record<string, RuleImplementation> = {
       `Mandatory: No with a "Skip Address" option — but confirm with COPS & Digital / Customer Data Management before treating this as final.`,
   }),
 
+  // Enterprise account credit limit requires Business Finance approval — FLD-028,
+  // UJ-004 Enterprise Account Creation: "enterprise has no default credit limit
+  // and requires business finance approval." Unlike the two conflict stubs
+  // above, this isn't contradictory evidence — it's a single, unambiguous rule —
+  // so it's a real hard gate, not an advisory.
+  'BR-ENTERPRISE-CREDIT-LIMIT-APPROVAL': (ctx) => {
+    const { approved } = ctx as { approved: boolean };
+    return approved
+      ? { pass: true }
+      : { pass: false, message: 'Enterprise accounts have no default credit limit — Business Finance approval is required before this account can be created.' };
+  },
+
   // Fibre 12-month lock-in disconnection fee calculation (BR-001).
   'BR-001': (ctx) => {
     const { monthsCompleted } = ctx as { monthsCompleted: number };

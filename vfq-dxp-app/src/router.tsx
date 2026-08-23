@@ -10,6 +10,10 @@ import './modules/mobile-prepaid/screens';
 import './modules/fixed-line-fibre/screens';
 import './modules/fwa-5g-home/screens';
 import './modules/mobile-postpaid/screens';
+import './modules/enterprise-iot-b2b/screens';
+import './modules/order-management/screens';
+import './modules/mnp-fnp-porting/screens';
+import './modules/identity-customer-management/screens';
 
 // Generated from config/routes.json's module list (16) + config/routes.json's
 // 213 individual screen paths, per folder-structure.md's "Route generation" note.

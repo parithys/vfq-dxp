@@ -162,7 +162,9 @@ export function NewPostpaidWizard() {
             orderId,
             orderType: 'New Postpaid Activation',
             orderSubType: contact.isB2B2C ? 'B2B2C' : 'Consumer',
-            status: 'Complete',
+            // B2B2C orders route to manager approval per UJ-081 "New Postpaid, B2B2C,
+            // With Approval" — see order-management's OrderApprovalQueue.
+            status: contact.isB2B2C ? 'Submitted for Approval' : 'Complete',
             customerName: contact.moiResult?.name,
             productId: values.productId,
             billLimitQAR: values.billLimit,
@@ -171,7 +173,12 @@ export function NewPostpaidWizard() {
             createdBy: 'AGENT-KARTHIKK',
             sourceChannel: 'Desktop',
           });
-          pushToast('success', `Postpaid order ${orderId} submitted — MSISDN ${values.msisdn}, payment confirmed via WinCash.`);
+          pushToast(
+            'success',
+            contact.isB2B2C
+              ? `Postpaid order ${orderId} submitted for manager approval (B2B2C) — MSISDN ${values.msisdn}.`
+              : `Postpaid order ${orderId} submitted — MSISDN ${values.msisdn}, payment confirmed via WinCash.`
+          );
           navigate('/mobile-postpaid');
         }}
         onAbandon={() => navigate('/mobile-postpaid')}

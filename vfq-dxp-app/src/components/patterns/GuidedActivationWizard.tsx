@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useWorkflowStore } from '../../stores/workflowStore';
 import { Button } from '../primitives/Button';
@@ -16,7 +17,7 @@ interface GuidedActivationWizardProps {
   wizardId: string;
   title: string;
   steps: WizardStep[];
-  onSubmit: (values: Record<string, unknown>) => void;
+  onSubmit: (values: Record<string, unknown>) => void | Promise<void>;
   onAbandon?: () => void;
 }
 
@@ -29,6 +30,13 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
   const setStep = useWorkflowStore((s) => s.setStep);
   const setFieldValue = useWorkflowStore((s) => s.setFieldValue);
   const clearDraft = useWorkflowStore((s) => s.clearDraft);
+  // Guards against duplicate order submission: onSubmit is async (mock CRUD +
+  // navigation) but goNext used to fire-and-forget it without disabling the
+  // button, so a second click landing before the first submission's own
+  // async work committed would re-read the same not-yet-cleared draft and
+  // create a byte-identical second order. Confirmed live: a rapid double
+  // click on "Save & Finish" produced two orders with the same ID and fields.
+  const [submitting, setSubmitting] = useState(false);
 
   const activeSteps = steps.filter((s) => !s.skip?.(draft.values));
   const currentIndex = Math.min(draft.currentStep, activeSteps.length - 1);
@@ -37,12 +45,18 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
 
   const setValue = (field: string, value: unknown) => setFieldValue(wizardId, field, value);
 
-  const goNext = () => {
+  const goNext = async () => {
     if (currentIndex < activeSteps.length - 1) {
       setStep(wizardId, currentIndex + 1);
-    } else {
-      onSubmit(draft.values);
+      return;
+    }
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await onSubmit(draft.values);
       clearDraft(wizardId);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -93,8 +107,8 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
                         </Button>
                       )}
                     </div>
-                    <Button variant="primary-rect" onClick={goNext} disabled={!canProceed}>
-                      {currentIndex === activeSteps.length - 1 ? 'Save & Finish' : 'Continue'}
+                    <Button variant="primary-rect" onClick={goNext} disabled={!canProceed || submitting}>
+                      {submitting ? 'Submitting…' : currentIndex === activeSteps.length - 1 ? 'Save & Finish' : 'Continue'}
                     </Button>
                   </div>
                 </div>
