@@ -2398,6 +2398,8 @@ Every item cites its source document slug(s) and evidence quote(s); open `.knowl
 
 ## Contact Center Security Verification (5 fields)
 
+**⚠ Confidence caveat (added 2026-08-23, Phase 2 review — applies to FLD-131 through FLD-135 below):** these 5 fields, plus BR-079 and VAL-201..205, all derive from a single source (`business-workshop-day5-session-1-postpaid-service-20260701-0-a55f2808`) that only decoded 29 of 186 recorded minutes (85% data loss, tool-flagged "AUDIO DAMAGED"). A separate Phase 1.5 pass found this security-question model has zero corroboration anywhere else in the 83-document corpus. Re-scored 53/100 (Medium-Low). Validate with Vodafone Qatar stakeholders before treating as agreed. See `business-rules.md` BR-079 and `VFQ_Phase1.5_Action7_Source_Confidence_Handling_Policy.md`.
+
 ### FLD-131: Security Question - QID
 `Explicit` · confidence: `medium`
 

@@ -8,7 +8,7 @@ Missing Requirements / Screens / Journeys / Rules / Personas, identified by (1) 
 
 ## 1. Journey Catalog Coverage (165-row master list vs. 111 synthesized journeys)
 
-165 catalog rows checked — **132 did not match** a synthesized journey, 33 did.
+165 catalog rows checked — **133 did not match** a synthesized journey, 32 did.
 
 **This number needs the Type breakdown to be meaningful** — the master catalog itself classifies each row as User Journey / Workflow-Task / View / Action / Access-Permission, and this blueprint's `journeys.md` only targeted the User-Journey-shaped, step-by-step material:
 
@@ -16,15 +16,16 @@ Missing Requirements / Screens / Journeys / Rules / Personas, identified by (1) 
 |---|---|---|---|
 | Access/Permission | 0 | 2 | 2 |
 | Action | 1 | 27 | 28 |
-| User Journey | 10 | 1 | 11 |
+| User Journey | 9 | 2 | 11 |
 | View | 0 | 29 | 29 |
 | Workflow/Task | 22 | 73 | 95 |
 
-**The headline finding is reassuring, not alarming:** only **1 of the catalog's 11 "User Journey"-type rows** has no corresponding synthesized journey (10/11 are covered). The bulk of the 132 unmatched rows (131) are lower-granularity **Workflow/Task, View, Action, and Access/Permission** rows — administrative operations, read-only views, single-step actions, and role-based access controls that Stage A's journey extraction was never targeting (Views belong in `screens.md`, Access/Permission belongs in `rbac-matrix.md`, and Actions/Workflow-Tasks are largely the kind of back-office operations this corpus's workshops discuss in less step-by-step detail than the guided-journey screenshots).
+**Corrected 2026-08-23** (Phase 2 review against a separate Phase 1.5 pass on this same catalogue): the original claim here was "10/11 matched, 1 gap" — independently re-verified against the 11 catalogue rows tagged `Type = User Journey` and found to undercount by one. Catalogue row **#12 "New IOT Tablet"** (Sales category) also has no plausible corresponding entry in `journeys.md` — the only IoT-related journey is UJ-006 "Enterprise/IoT Order-to-Billing Flow," which is a generic B2B enterprise order flow (actors: Account Manager, EBU PM, Fulfilment, ETS, EBU, SBN), not the retail/tablet-channel IoT device activation the catalogue row describes. Corrected finding: **9 of the catalog's 11 "User Journey"-type rows** have a corresponding synthesized journey (2 gaps, not 1). The bulk of the 133 unmatched rows (131) remain lower-granularity **Workflow/Task, View, Action, and Access/Permission** rows — administrative operations, read-only views, single-step actions, and role-based access controls that Stage A's journey extraction was never targeting (Views belong in `screens.md`, Access/Permission belongs in `rbac-matrix.md`, and Actions/Workflow-Tasks are largely the kind of back-office operations this corpus's workshops discuss in less step-by-step detail than the guided-journey screenshots).
 
-### The one true User-Journey-type gap
+### The two true User-Journey-type gaps
 
 - **Create Upgrade TT** (catalog row #3): Creating a ticket specifically to track plan upgrades is not directly represented; UJ-029 covers Plan Change itself and UJ-022 covers general trouble ticket creation, but no journey specifically addresses an 'Upgrade TT' for tracking - GAP.
+- **New IOT Tablet** (catalog row #12, added 2026-08-23): Retail/tablet-channel activation of an IoT device connection is not directly represented; UJ-006 (Enterprise/IoT Order-to-Billing Flow) is the closest match but covers a different-shaped B2B enterprise order journey (account manager/EBU PM/fulfilment actors), not a tablet-channel retail activation flow - GAP.
 
 ### Workflow/Task, View, Action & Access/Permission rows with no corresponding blueprint entry (scope candidates for a future extraction pass, not journey-catalog defects)
 

@@ -1098,6 +1098,8 @@ Every item below cites the exact source document slug(s) and evidence quote(s) i
 ## UJ-106: J017: Customer 360 (J017)
 `Explicit` · confidence: `medium`
 
+**⚠ Confidence caveat (added 2026-08-23, Phase 2 review):** the source deck itself self-labels this content "(only topics needs to be provided)" — i.e. a discussion topic list, not a finished spec — and its accompanying UI mockups are explicitly labeled "Mock CTA" (wireframe placeholders, not evidenced screen behavior). A separate Phase 1.5 pass independently re-scored this source at 65/100 (Medium band) with disposition "directional/illustrative only" for the J017 portion specifically (the J011 portion of the same deck, by contrast, is reliable — see UJ-104 above, corroborated by a formal BRSD). Treat the workflow steps below as an aggregation-scope sketch, not a settled requirement, until a formal Customer 360 spec exists in the corpus. See `VFQ_Phase1.5_Action7_Source_Confidence_Handling_Policy.md`.
+
 - **Actors:** Customer, Agent (DXP), Assisted Care Agent
 - **Preconditions:** A query is raised to the Assisted Care Agent
 - **Workflow steps (summary):** Query to Assisted Care Agent -> search for customer by Customer No/Contact No/MSISDN -> aggregate customer data across CDR/Usage View, Billing Profile Management, Bill Viewing & Download, Payment Processing & View, Real-Time Balance & Usage Fetch, Network Status Check, Unbilled & Billing Balance View, Ticket History, Order History -> agent retrieves bill info, CDR info, network status, customer/order details, payment/billing details.
@@ -1109,20 +1111,24 @@ Every item below cites the exact source document slug(s) and evidence quote(s) i
 ## UJ-107: J023: Mobile Service Suspension (J023)
 `Explicit` · confidence: `medium`
 
+**⚠ Confidence caveat (added 2026-08-23, Phase 2 review):** this journey's sole source (`vfq-stack-modernization-br-29jun-updatev1-0-af309fe2`) was independently re-verified in a separate Phase 1.5 pass and scored 50/100 (Medium-Low, "Validation-only") — see `VFQ_Phase1.5_Action7_Source_Confidence_Handling_Policy.md`. Two specific problems: (1) "Launch X" (the system this journey cites as the source of "minimum services"/plan data) appears nowhere else in the 83-document corpus and is unexplained; (2) the retail-channel framing below ("Customer requests suspension via Email, Phone, or Retail Counter") directly **conflicts** with `business-workshop-day2-session-2-postpaid-service-20260628-1-bf394204` (High confidence), which states manual suspension was redesigned to be explicitly **"not a retail journey"** — restricted to specific back-office roles, run as a ticket-driven process via Taurus (see PERSONA-021). Treat the retail-channel intake claim below as unresolved pending stakeholder confirmation, not as an agreed requirement — see `conflict-report.md` Conflict 3.
+
 - **Actors:** Customer, Agent (in DXP)
-- **Preconditions:** Customer requests suspension via Email, Phone, or Retail Counter; current unbilled balance must be cleared (Pending Bill condition)
-- **Workflow steps (summary):** Request suspension -> identify subscriber -> search by MSISDN/Account -> fetch customer & billing details -> validate customer and suspend eligibility -> agent changes plan to Park Plan (minimum services fetched from Launch X) -> send communication to customer -> ticket creation and approval -> capture suspension payment via WinCash -> submit order -> end.
+- **Preconditions:** Customer requests suspension via Email, Phone, or Retail Counter [UNVERIFIED — see caveat above, conflicts with PERSONA-021's back-office-only sourcing]; current unbilled balance must be cleared (Pending Bill condition)
+- **Workflow steps (summary):** Request suspension -> identify subscriber -> search by MSISDN/Account -> fetch customer & billing details -> validate customer and suspend eligibility -> agent changes plan to Park Plan (minimum services fetched from "Launch X" [unexplained system, unverified]) -> send communication to customer -> ticket creation and approval -> capture suspension payment via WinCash -> submit order -> end.
 - **Success conditions:** Order submitted and service suspended, plan changed to Park Plan
 - **Exit conditions:** Process ends at "end" node after order submission; no explicit failure path captured
 - **Sources:**
-  - [`business-process-day29jun-updatev1-0-af309fe2`](../.knowledge/docs/business-process-day29jun-updatev1-0-af309fe2.md): “"J023: Mobile Service Suspension" ... request service suspension (via Email, Phone, or Retail Counter) -> identify subscriber -> search (MSISDN/Account) -> fetch customer & billing details -> validate customer and suspend eligibility -> agent changes current plan to "Park Plan" ... -> send communication to customer -> ticket creation and approval needed -> capture payment for suspension, collected in WinCash -> submit the order -> end.”
+  - [`vfq-stack-modernization-br-29jun-updatev1-0-af309fe2`](../.knowledge/docs/vfq-stack-modernization-br-29jun-updatev1-0-af309fe2.md): “"J023: Mobile Service Suspension" ... request service suspension (via Email, Phone, or Retail Counter) -> identify subscriber -> search (MSISDN/Account) -> fetch customer & billing details -> validate customer and suspend eligibility -> agent changes current plan to "Park Plan" ... -> send communication to customer -> ticket creation and approval needed -> capture payment for suspension, collected in WinCash -> submit the order -> end.” *(slug corrected 2026-08-23 — was previously mis-cited as `business-process-day29jun-updatev1-0-af309fe2`, a non-existent slug)*
 
 ## UJ-108: J024: Mobile Service Resume (J024)
 `Explicit` · confidence: `medium`
 
+**⚠ Confidence caveat (added 2026-08-23, Phase 2 review):** same source and same issue as UJ-107 above — score 50/100 (Medium-Low), "Launch X" unexplained, retail-channel framing conflicts with the High-confidence Day2-Session2 workshop. See `conflict-report.md` Conflict 3.
+
 - **Actors:** Customer, Agent (in DXP)
-- **Preconditions:** Customer requests resume via Email, Phone, or Retail Counter; customer currently on a Park Plan (suspended)
-- **Workflow steps (summary):** Request resume -> identify subscriber -> search by MSISDN/Account -> fetch customer & billing details -> validate customer and resume eligibility -> agent changes Park Plan back to Base Plan (fetched from Launch X) -> send communication to customer -> ticket creation and approval -> capture resume payment via WinCash -> submit order -> end.
+- **Preconditions:** Customer requests resume via Email, Phone, or Retail Counter [UNVERIFIED — see UJ-107 caveat]; customer currently on a Park Plan (suspended)
+- **Workflow steps (summary):** Request resume -> identify subscriber -> search by MSISDN/Account -> fetch customer & billing details -> validate customer and resume eligibility -> agent changes Park Plan back to Base Plan (fetched from "Launch X" [unexplained system, unverified]) -> send communication to customer -> ticket creation and approval -> capture resume payment via WinCash -> submit order -> end.
 - **Success conditions:** Order submitted, plan reverted to Base Plan, which would be billed
 - **Exit conditions:** Process ends at "end" node after order submission; no explicit failure path captured
 - **Sources:**

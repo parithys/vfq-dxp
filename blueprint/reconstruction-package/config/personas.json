@@ -129,7 +129,7 @@
     "id": "PERSONA-015",
     "name": "Customer (Consumer/Enterprise/B2B2C End User)",
     "type": "End customer / subscriber",
-    "responsibilities": "Signs subscription acceptance form and CAF/contracts; sends consent SMS for MNP (switch to 151); clears outstanding dues; requests Home Move/TON; pays final bill within 30 days post-port-in; provides identity documents/QID; reviews and signs CAF via signature pad; initiates MNP port-out via SMS to NPass; enters own parameters for self-serve instant activation (standard customers only); may be linked to sponsoring employer for B2B2C; requests service suspension/resume via Email, Phone, or Retail Counter",
+    "responsibilities": "Signs subscription acceptance form and CAF/contracts; sends consent SMS for MNP (switch to 151); clears outstanding dues; requests Home Move/TON; pays final bill within 30 days post-port-in; provides identity documents/QID; reviews and signs CAF via signature pad; initiates MNP port-out via SMS to NPass; enters own parameters for self-serve instant activation (standard customers only); may be linked to sponsoring employer for B2B2C",
     "permissions": "Can view/edit/cancel FDO request before point of no return; must confirm MNP port via SMS",
     "restrictedFeatures": "Subject to disconnection/dunning ladder if unpaid; risk of suspension/blacklisting for offer abuse; non-standard customers cannot use self-serve, get a Lead instead",
     "confidence": "high"

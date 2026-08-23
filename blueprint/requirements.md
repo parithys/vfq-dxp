@@ -516,6 +516,8 @@ Every item below cites the exact source document slug(s) and evidence quote(s) i
 ### REQ-292: J017 Customer 360 Search by Customer No / Contact No / MSISDN
 `Explicit` · confidence: `medium`
 
+**⚠ Confidence caveat (added 2026-08-23, Phase 2 review, applies to REQ-292/293/294):** the source deck self-labels this content "(only topics needs to be provided)" — a discussion topic list, not a finished spec — with accompanying UI mockups explicitly marked "Mock CTA" (wireframe placeholders). Independently re-scored 65/100 (Medium) with disposition "directional/illustrative only" for this specific content in a separate Phase 1.5 pass. Treat REQ-292/293/294 as an aggregation-scope sketch, not settled requirements, until a formal Customer 360 spec exists. See `journeys.md` UJ-106 and `VFQ_Phase1.5_Action7_Source_Confidence_Handling_Policy.md`.
+
 - **Description:** The Customer 360 capability (J017) must allow an Assisted Care Agent to search for a customer using Customer Number, Contact Number, or MSISDN.
 - **Original requirement ID(s):** `J017`
 - **Sources:**
@@ -556,7 +558,9 @@ Every item below cites the exact source document slug(s) and evidence quote(s) i
 ### REQ-299: J023 Mobile Service Suspension Multi-Channel Request Intake
 `Explicit` · confidence: `medium`
 
-- **Description:** Mobile Service Suspension requests must be accepted through Email, Phone, or Retail Counter channels.
+**⚠ Confidence caveat (added 2026-08-23, Phase 2 review):** this requirement's sole source was independently re-scored 50/100 (Medium-Low, "Validation-only") in a separate Phase 1.5 pass, and its retail-channel framing **conflicts** with `business-workshop-day2-session-2-postpaid-service-20260628-1-bf394204` (High confidence), which states manual suspension is explicitly "not a retail journey" — back-office/role-restricted only. Do NOT treat this as an agreed requirement without stakeholder confirmation. See `conflict-report.md` Conflict 3.
+
+- **Description:** Mobile Service Suspension requests must be accepted through Email, Phone, or Retail Counter channels. [UNVERIFIED — see caveat above]
 - **Original requirement ID(s):** `J023`
 - **Sources:**
   - [`vfq-stack-modernization-br-29jun-updatev1-0-af309fe2`](../.knowledge/docs/vfq-stack-modernization-br-29jun-updatev1-0-af309fe2.md): “request service suspension (via Email, Phone, or Retail Counter)”
@@ -564,7 +568,9 @@ Every item below cites the exact source document slug(s) and evidence quote(s) i
 ### REQ-302: J024 Mobile Service Resume Multi-Channel Request Intake
 `Explicit` · confidence: `medium`
 
-- **Description:** Mobile Service Resume requests must be accepted through Email, Phone, or Retail Counter channels.
+**⚠ Confidence caveat (added 2026-08-23, Phase 2 review):** same issue as REQ-299 above. See `conflict-report.md` Conflict 3.
+
+- **Description:** Mobile Service Resume requests must be accepted through Email, Phone, or Retail Counter channels. [UNVERIFIED — see caveat above]
 - **Original requirement ID(s):** `J024`
 - **Sources:**
   - [`vfq-stack-modernization-br-29jun-updatev1-0-af309fe2`](../.knowledge/docs/vfq-stack-modernization-br-29jun-updatev1-0-af309fe2.md): “request service resume (via Email, Phone, or Retail Counter)”

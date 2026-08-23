@@ -526,6 +526,8 @@ Every item cites its source document slug(s) and evidence quote(s); open `.knowl
 - **Sources:**
   - [`business-workshop-day5-session-1-postpaid-service-20260701-0-a55f2808`](../.knowledge/docs/business-workshop-day5-session-1-postpaid-service-20260701-0-a55f2808.md): “for every transaction the QID must be scanned and attached to the customer account, with the agent visually matching the ID photo to the customer... required only when there is an actual account/service change”
 
+**⚠ Confidence caveat (added 2026-08-23, Phase 2 review — applies to VAL-201 through VAL-205 below):** derived from the same single, 85%-data-loss source as `field-inventory.md` FLD-131..135 and `business-rules.md` BR-079 — see BR-079's caveat for full detail. This security-question model has zero corroboration anywhere else in the corpus; re-scored 53/100 (Medium-Low). Validate before treating as agreed.
+
 ### VAL-201: Contact Center Security Verification - Security Question - QID
 `Explicit` · confidence: `medium`
 
@@ -2467,7 +2469,9 @@ Please Contact the System Administrator with Reference # 1-DAFQWTQ.(SBL-EXL-0015
 ### VAL-020: Security Question Mandatory Set (QID + Account/Holder Name)
 `Explicit` · confidence: `medium`
 
-- **Description:** QID and account/holder name are the two mandatory security questions; additional questions are asked flexibly depending on what the customer can answer.
+**⚠ Confidence caveat (added 2026-08-23, Phase 2 review):** duplicate of VAL-201 above (and BR-079) — same single, 85%-data-loss source, zero corroboration elsewhere in the corpus, re-scored 53/100 (Medium-Low). See BR-079's caveat.
+
+- **Description:** QID and account/holder name are the two mandatory security questions; additional questions are asked flexibly depending on what the customer can answer. [SINGLE-SOURCE, UNCORROBORATED]
 - **Source reference:** [BR-079]
 - **Sources:**
   - [`business-workshop-day5-session-1-postpaid-service-20260701-0-a55f2808`](../.knowledge/docs/business-workshop-day5-session-1-postpaid-service-20260701-0-a55f2808.md): “QID and account/holder name are the two mandatory questions; additional questions... asked flexibly depending on what the customer can answer”

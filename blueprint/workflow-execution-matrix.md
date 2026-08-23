@@ -8051,11 +8051,13 @@ Every item cites its source document slug(s) and evidence quote(s); open `.knowl
 
 ## (unmatched to a Stage A journey) Contact-Center Identity Verification (Phone Channel) (1 steps)
 
+**⚠ Confidence caveat (added 2026-08-23, Phase 2 review):** WF-175 below derives from the same single, 85%-data-loss source as `business-rules.md` BR-079 / `field-inventory.md` FLD-131..135 / `validation-catalogue.md` VAL-201..205 — this security-question model has zero corroboration anywhere else in the corpus, re-scored 53/100 (Medium-Low). (Note: this caveat does NOT apply to WF-155 above — the QID-scan/physical-presence rule it describes IS independently corroborated elsewhere, e.g. the Mobile Postpaid BRSD's KYC capability and the SIM Swap validation chain.)
+
 **WF-175** (step 1) `Explicit` · confidence: `medium`
 - **Actor:** Contact-center agent
 - **Input:** Caller's claimed identity
 - **Output:** Security question set posed
-- **Validation:** QID and account/holder name mandatory; additional questions (registered number, active add-on, email) asked flexibly
+- **Validation:** QID and account/holder name mandatory; additional questions (registered number, active add-on, email) asked flexibly [SINGLE-SOURCE, UNCORROBORATED — see caveat above]
 - **Business rule:** Lighter verification if calling from registered number
 - **Next step:** Agent interprets answer accuracy (not exact-match)
 - **Sources:**

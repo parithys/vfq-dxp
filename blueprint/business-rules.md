@@ -177,7 +177,9 @@ Every item below cites the exact source document slug(s) and evidence quote(s) i
 ### BR-079: Security Question Mandatory Set (QID + Account/Holder Name)
 `Explicit` · confidence: `medium`
 
-- **Description:** QID and account/holder name are the two mandatory security questions; additional questions are asked flexibly depending on what the customer can answer.
+**⚠ Confidence caveat (added 2026-08-23, Phase 2 review — this is the master note; FLD-131 through FLD-135, VAL-201 through VAL-205, and the corresponding workflow-execution-matrix entry all derive from this same rule and source):** the entire security-question verification model (this rule plus FLD-131..135 and VAL-201..205) is sourced to a single document, `business-workshop-day5-session-1-postpaid-service-20260701-0-a55f2808`, which only decoded 29 of its 186 recorded minutes (tool-flagged "AUDIO DAMAGED" in the source itself — an 85% data-loss event, not a normal partial transcript). More importantly: a full-corpus search in a separate Phase 1.5 pass found this security-question model — the document's own namesake topic — has **zero corroboration anywhere else in the 83-document corpus**. Independently re-scored 53/100 (Medium-Low, "Use with conditions"). Do not treat this rule (or the fields/validations derived from it) as an agreed requirement without validating it against Vodafone Qatar stakeholders — it is real, specific, internally consistent content, but single-source and unverified. See `VFQ_Phase1.5_Action7_Source_Confidence_Handling_Policy.md`.
+
+- **Description:** QID and account/holder name are the two mandatory security questions; additional questions are asked flexibly depending on what the customer can answer. [SINGLE-SOURCE, UNCORROBORATED — see caveat above]
 - **Sources:**
   - [`business-workshop-day5-session-1-postpaid-service-20260701-0-a55f2808`](../.knowledge/docs/business-workshop-day5-session-1-postpaid-service-20260701-0-a55f2808.md): “QID and account/holder name are the two mandatory questions; additional questions... asked flexibly depending on what the customer can answer”
 
@@ -2058,14 +2060,18 @@ Every item below cites the exact source document slug(s) and evidence quote(s) i
 ### BR-336: Park Plan Minimum Services Sourced from Launch X
 `Explicit` · confidence: `medium`
 
-- **Description:** When suspending service, the Park Plan's minimum services set is fetched from a system/module referred to as "Launch X".
+**⚠ Confidence caveat (added 2026-08-23, Phase 2 review):** "Launch X" appears nowhere else in the 83-document corpus and is otherwise unexplained; the source document itself was independently re-scored 50/100 (Medium-Low) in a separate Phase 1.5 pass. Treat "Launch X" as an unverified system name pending stakeholder confirmation — do not assume it names a real, specific integration point without checking with Vodafone Qatar. See `VFQ_Phase1.5_Action7_Source_Confidence_Handling_Policy.md`.
+
+- **Description:** When suspending service, the Park Plan's minimum services set is fetched from a system/module referred to as "Launch X" [unverified — see caveat above].
 - **Sources:**
   - [`vfq-stack-modernization-br-29jun-updatev1-0-af309fe2`](../.knowledge/docs/vfq-stack-modernization-br-29jun-updatev1-0-af309fe2.md): “agent changes current plan to "Park Plan" with minimum services (fetched from "Launch X")”
 
 ### BR-337: Base Plan Sourced from Launch X on Resume
 `Explicit` · confidence: `medium`
 
-- **Description:** When resuming service, the Base Plan to revert to is fetched from the "Launch X" system/module.
+**⚠ Confidence caveat (added 2026-08-23, Phase 2 review):** same issue as BR-336 above — "Launch X" is unverified, source document re-scored 50/100 (Medium-Low).
+
+- **Description:** When resuming service, the Base Plan to revert to is fetched from the "Launch X" system/module [unverified — see caveat above].
 - **Sources:**
   - [`vfq-stack-modernization-br-29jun-updatev1-0-af309fe2`](../.knowledge/docs/vfq-stack-modernization-br-29jun-updatev1-0-af309fe2.md): “agent changes current Park Plan back to Base Plan (fetched from "Launch X")”
 
