@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="spec-hash" content="sha256:5db337b65e15d8ffeb627352492dd6d6995c26ffd8e6a9d55db090db07b2b616">
+  <meta name="generated-at" content="2026-08-22T20:34:48.058Z">
+  <meta name="diagram-version" content="2.3">
+  <title>TON Trouble Ticket Approval - Process Flow</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" integrity="sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/" crossorigin="anonymous"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #020617; min-height: 100vh; padding: 2rem; color: white; }
+    .container { width: 1600px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-start; }
+    .header-content { flex: 1; }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    .pulse-dot { width: 12px; height: 12px; background: #a78bfa; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+    .subtitle { color: #94a3b8; font-size: 0.875rem; margin-left: 1.75rem; }
+    .diagram-container { overflow-x: auto; width: 100%; }
+    svg { width: 1600px; height: auto; display: block; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 2rem; }
+    .card { background: #080e20; border-radius: 0.75rem; border: 1px solid #1e293b; padding: 1.25rem; }
+    .card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.cyan { background: #22d3ee; } .card-dot.emerald { background: #34d399; } .card-dot.violet { background: #a78bfa; }
+    .card-dot.amber { background: #fbbf24; } .card-dot.rose { background: #fb7185; } .card-dot.slate { background: #94a3b8; }
+    .card h3 { font-size: 0.875rem; font-weight: 600; }
+    .card ul { list-style: none; color: #94a3b8; font-size: 0.75rem; }
+    .card li { margin-bottom: 0.375rem; }
+    .io-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .io-table th, .io-table td { border: 1px solid rgba(71, 85, 105, 0.4); padding: 0.625rem 0.75rem; text-align: left; vertical-align: top; line-height: 1.5; }
+    .io-table thead th { background: #151e30; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem; }
+    .io-table tbody th { background: #11192b; color: white; font-weight: 700; white-space: nowrap; }
+    .io-table td { color: #cbd5e1; }
+    .io-table .io-col-step { width: 64px; }
+    .io-table td.io-in { border-left: 2px solid #34d399; }
+    .io-table td.io-out { border-left: 2px solid #22d3ee; }
+    .io-table td.io-ex { color: #a78bfa; white-space: nowrap; }
+    .io-table td.io-mean { color: #94a3b8; }
+    .footer { text-align: center; margin-top: 1.5rem; color: #475569; font-size: 0.75rem; }
+    /* Export menu (r7). The trigger is a labelled button, not an ellipsis glyph: an unlabelled
+     * ellipsis gives no clue that export lives behind it, so the feature went unfound. The
+     * popover is a light surface deliberately — it is chrome, and reads as sitting above the
+     * dark canvas rather than as another dark panel competing with the diagram. */
+    .toolbar { display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center; position: relative; }
+    .export-btn { background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; font-family: inherit; font-size: 0.8125rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; transition: background 0.15s, box-shadow 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+    .export-btn:hover { background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+    .export-menu { display: none; position: absolute; top: calc(100% + 0.5rem); right: 0; z-index: 40; min-width: 13rem; padding: 0.375rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.625rem; box-shadow: 0 10px 24px rgba(0,0,0,0.55); }
+    .export-menu.open { display: block; }
+    .export-item { display: flex; align-items: baseline; justify-content: space-between; gap: 1.5rem; width: 100%; background: transparent; border: none; border-radius: 0.375rem; padding: 0.5rem 0.75rem; font-family: inherit; font-size: 0.8125rem; color: #0f172a; cursor: pointer; text-align: left; transition: background 0.12s; }
+    .export-item:hover { background: #e8edf5; }
+    .export-fmt { font-weight: 600; letter-spacing: 0.02em; }
+    .export-hint { color: #64748b; font-size: 0.6875rem; white-space: nowrap; }
+    .export-sep { height: 1px; margin: 0.25rem 0.5rem; background: #e2e8f0; }
+    .export-btn:focus-visible, .export-item:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; }
+    @media (max-width: 768px) { .header { flex-direction: column; gap: 1rem; } }
+    @media print { body { background: #020617; padding: 1rem; } .toolbar { display: none !important; } }
+    /* --- interactivity layer (§11.3) --- */
+    /* Filter toolbar (r6).
+     *
+     * The problem it fixes: the chips previously used the same vocabulary as the nodes and the
+     * legend — a rounded outline with a small coloured dot — so a row of CONTROLS read as a
+     * third kind of swatch. Nothing signalled it was interactive, and it competed with the
+     * diagram for attention instead of sitting above it.
+     *
+     * The fix is to stop borrowing that vocabulary. Controls now get their own surface: a
+     * raised, bordered bar that visually detaches from the canvas, an accent rule to anchor it,
+     * and a SOLID fill on the active chip — an unmistakably UI treatment, since nothing else in
+     * a diagram is ever filled with its own accent colour at full opacity. */
+    .pf-filters { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem; align-items: center;
+      background: #0d1425; border: 1px solid #263349; border-left: 3px solid #a78bfa;
+      border-radius: 0.5rem; padding: 0.55rem 0.75rem; box-shadow: 0 1px 3px rgba(2, 6, 23, 0.5); }
+    .pf-filters-label { color: #cbd5e1; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; margin-right: 0.55rem; display: inline-flex; align-items: center; gap: 0.4rem; }
+    .pf-filters-label::before { content: ''; width: 11px; height: 11px; flex: 0 0 11px;
+      /* Funnel glyph, drawn rather than an emoji: it must render identically everywhere. */
+      background: #a78bfa; clip-path: polygon(0 0, 100% 0, 62% 45%, 62% 100%, 38% 100%, 38% 45%); }
+    /* v2 redesign: pill-shaped (999px radius, was 0.375rem — a barely-rounded rect that read
+       as a static label), bigger padding/min-height for a real tap target (was 0.3rem/0.7rem,
+       under the ~32px accessibility guideline), and a stronger active state (ring + scale) so
+       the selected/unselected distinction doesn't rely on colour alone. */
+    .pf-chip { background: #1a2337; border: 1.5px solid #3b4a63; color: #cbd5e1; padding: 0.5rem 1rem;
+      border-radius: 999px; font-family: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 0.45rem; line-height: 1.2; min-height: 2rem;
+      transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s; }
+    .pf-chip:hover { background: #24304a; border-color: #64748b; color: white; }
+    .pf-chip:active { transform: scale(0.96); }
+    .pf-chip:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    /* Selected: the chip fills with its own accent, sits a hair taller with a visible ring, and
+       the dot becomes a filled check-like mark. High contrast, unambiguous, and impossible to
+       confuse with a legend swatch — legend marks are outlines on the bare ground. */
+    .pf-chip[aria-pressed="true"] { background: currentColor; border-color: currentColor;
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.28); transform: scale(1.03); }
+    .pf-chip[aria-pressed="true"]:hover { transform: scale(1.03); }
+    .pf-chip[aria-pressed="true"] .pf-chip-label { color: #0b1120; font-weight: 700; }
+    .pf-chip[aria-pressed="true"] .pf-chip-dot { background: #0b1120; opacity: 0.65; }
+    .pf-chip-label { color: inherit; }
+    .pf-chip-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: 0 0 8px; }
+    .pf-node { cursor: pointer; }
+    .pf-node:hover { filter: brightness(1.32); }
+    .pf-node:focus { outline: none; }
+    .pf-node:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 3px; border-radius: 4px; }
+    .pf-node, .pf-edge { transition: opacity 0.2s ease; }
+    .pf-node.is-dim, .pf-edge.is-dim { opacity: 0.14; pointer-events: none; }
+    .pf-node.is-sel > rect, .pf-node.is-sel > circle, .pf-node.is-sel > g > rect { stroke-width: 3; }
+    /* The drawer floats as an overlay — position: fixed with no body padding. Opening/closing
+       the drawer does not affect layout of the diagram or any page content. */
+    .pf-drawer { position: fixed; top: 0; right: 0; height: 100vh; width: var(--pf-drawer-w, 400px); background: #0b1220; border-left: 1px solid #1e293b; box-shadow: -12px 0 32px #020617; transform: translateX(101%); transition: transform 0.25s ease; z-index: 40; display: flex; }
+    .pf-drawer.is-open { transform: none; }
+    .pf-drawer-handle { width: 6px; flex: 0 0 6px; cursor: ew-resize; background: transparent; border-right: 1px solid #1e293b; }
+    .pf-drawer-handle:hover, .pf-drawer-handle:focus-visible { background: #423c6c; outline: none; }
+    .pf-drawer-body { flex: 1; overflow-y: auto; padding: 1.25rem; min-width: 0; }
+    .pf-drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.75rem; }
+    .pf-badge { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.2rem 0.5rem; border-radius: 0.25rem; border: 1px solid currentColor; white-space: nowrap; }
+    .pf-drawer-close { background: transparent; border: none; color: #475569; font-size: 1.5rem; line-height: 1; cursor: pointer; padding: 0 0.25rem; }
+    .pf-drawer-close:hover { color: white; }
+    .pf-drawer-close:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    .pf-drawer h2 { font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; word-break: break-word; }
+    .pf-drawer-role { color: #94a3b8; font-size: 0.75rem; margin-bottom: 1rem; word-break: break-word; }
+    .pf-drawer-sections { display: flex; flex-direction: column; gap: 1rem; }
+    .pf-sec { margin-top: 0; border-top: none; padding-top: 0; }
+    .pf-sec h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; margin-bottom: 0.5rem; margin-top: 0; }
+    .pf-drawer-meaning { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0 0 0.5rem 0; }
+    .pf-drawer-example { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0; }
+    .pf-drawer-desc { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0 0 0.5rem 0; }
+    .pf-sec ul { list-style: none; margin: 0; padding: 0; }
+    .pf-sec li { color: #cbd5e1; font-size: 0.75rem; margin-bottom: 0.3rem; line-height: 1.5; }
+    .pf-sec { margin-top: 1rem; border-top: 1px solid #1e293b; padding-top: 0.75rem; }
+    .pf-sec h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; margin-bottom: 0.5rem; }
+    .pf-sec ul { list-style: none; }
+    .pf-sec li { color: #cbd5e1; font-size: 0.75rem; margin-bottom: 0.4rem; line-height: 1.5; word-break: break-word; }
+    .pf-sec .pf-empty { color: #475569; font-style: italic; }
+    .pf-link { background: none; border: none; color: #a78bfa; font-family: inherit; font-size: 0.75rem; cursor: pointer; padding: 0; text-align: left; text-decoration: underline; text-underline-offset: 2px; }
+    .pf-link:hover { color: #c4b5fd; }
+    .pf-link:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    .pf-payload { color: #94a3b8; }
+    @media (prefers-reduced-motion: reduce) {
+      .pulse-dot { animation: none; }
+      body, .pf-drawer, .pf-node, .pf-edge { transition: none; }
+    }
+    @media print { .pf-drawer, .pf-filters { display: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="container" id="report-container">
+    <div class="header">
+      <div class="header-content">
+        <div class="header-row">
+          <div class="pulse-dot"></div>
+          <h1>TON Trouble Ticket Approval</h1>
+        </div>
+        <p class="subtitle">Catalogue #89 — CDM-routed four-queue approval chain for Transfer of Ownership/Number tickets</p>
+      </div>
+      <div class="toolbar">
+        <button class="export-btn" id="exportBtn" onclick="toggleExport(event)" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu" aria-label="Export options">Export</button>
+        <div class="export-menu" id="exportMenu" role="menu" aria-labelledby="exportBtn">
+          <button role="menuitem" class="export-item" onclick="downloadSVG(this)"><span class="export-fmt">SVG</span><span class="export-hint">vector · editing</span></button>
+          <button role="menuitem" class="export-item" onclick="downloadJPG(this)"><span class="export-fmt">JPG</span><span class="export-hint">image · sharing</span></button>
+          <button role="menuitem" class="export-item" onclick="downloadPDF(this)"><span class="export-fmt">PDF</span><span class="export-hint">document</span></button>
+          <div class="export-sep" role="separator"></div>
+          <button role="menuitem" class="export-item" onclick="downloadPNG(this)"><span class="export-fmt">PNG</span><span class="export-hint">image · slides</span></button>
+          <button role="menuitem" class="export-item" onclick="copyAsImage(this)"><span class="export-fmt">Copy</span><span class="export-hint">to clipboard</span></button>
+        </div>
+      </div>
+    </div>
+    <div class="pf-filters" role="group" aria-label="Filter diagram by node type">
+        <span class="pf-filters-label">Filter</span>
+        <button class="pf-chip" data-filter="all" aria-pressed="true" style="color:#a78bfa"><span class="pf-chip-dot"></span><span class="pf-chip-label">All</span></button>
+        <button class="pf-chip" data-filter="manual" aria-pressed="false" style="color:#34d399"><span class="pf-chip-dot"></span><span class="pf-chip-label">Manual</span></button>
+        <button class="pf-chip" data-filter="automated" aria-pressed="false" style="color:#a78bfa"><span class="pf-chip-dot"></span><span class="pf-chip-label">Automated</span></button>
+        <button class="pf-chip" data-filter="decision" aria-pressed="false" style="color:#fb7185"><span class="pf-chip-dot"></span><span class="pf-chip-label">Decision</span></button>
+        <button class="pf-chip" data-filter="terminal" aria-pressed="false" style="color:#22d3ee"><span class="pf-chip-dot"></span><span class="pf-chip-label">Start / End</span></button>
+        <button class="pf-chip" data-filter="reject" aria-pressed="false" style="color:#fb7185"><span class="pf-chip-dot"></span><span class="pf-chip-label">Rejected</span></button>
+      </div>
+    <div class="diagram-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="-12.13 -41 1503.75 533.91" role="group" aria-label="TON Trouble Ticket Approval diagram. 11 nodes; each is focusable for details.">
+<defs>
+<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/></marker>
+<marker id="arrowhead-emerald" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#34d399"/></marker>
+<marker id="arrowhead-violet" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa"/></marker>
+<marker id="arrowhead-amber" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24"/></marker>
+<marker id="arrowhead-rose" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fb7185"/></marker>
+<marker id="arrowhead-slate" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/></marker>
+<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="1.5"/></pattern>
+</defs>
+<line x1="171.96699141100896" y1="70" x2="231.96699141100896" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="start1" data-to="managing_queue"/>
+<line x1="391.96699141100896" y1="70" x2="494.96699141100896" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="managing_queue" data-to="cdm_review"/>
+<rect x="405.37" y="46.42" width="76.2" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="443.46699141100896" y="57" fill="#94a3b8" font-size="11" text-anchor="middle">TON ticket</text>
+<line x1="654.966991411009" y1="70" x2="798.966991411009" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="cdm_review" data-to="cdm_approved"/>
+<rect x="668.41" y="46.42" width="117.12" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="726.966991411009" y="57" fill="#94a3b8" font-size="11" text-anchor="middle">validated ticket</text>
+<line x1="905.0330085889912" y1="70" x2="965.0330085889912" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="cdm_approved" data-to="nationality_route"/>
+<rect x="920.8" y="46.42" width="28.46" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="935.0330085889912" y="57" fill="#fb7185" font-size="11" font-weight="600" text-anchor="middle">Yes</text>
+<line x1="1125.0330085889912" y1="70" x2="1248.0330085889912" y2="70" stroke="#a78bfa" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-violet)" class="pf-edge" data-from="nationality_route" data-to="boq_qatq_review"/>
+<rect x="1138.2" y="46.42" width="96.66" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="1186.5330085889912" y="57" fill="#94a3b8" font-size="11" text-anchor="middle">routed ticket</text>
+<path d="M 1328.0330085889912 119.5 L 1328.0330085889912 201 L 212.58831175456856 201 L 212.58831175456856 336 L 232.58831175456856 336" stroke="#94a3b8" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="boq_qatq_review" data-to="boq_qatq_approved"/>
+<rect x="1336.03" y="128.92" width="145.58" height="23" rx="11.5" fill="#0d1425" stroke="#94a3b8" stroke-width="1.5" opacity="0.95"/>
+<text x="1344.0330085889912" y="143.5" fill="#e2e8f0" font-size="11" font-weight="700">Continue to Row 2 →</text>
+<line x1="334.41168824543144" y1="336" x2="394.41168824543144" y2="336" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="boq_qatq_approved" data-to="execute_transfer"/>
+<rect x="350.18" y="312.42" width="28.46" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="364.41168824543144" y="323" fill="#fb7185" font-size="11" font-weight="600" text-anchor="middle">Yes</text>
+<line x1="554.4116882454314" y1="336" x2="684.4116882454314" y2="336" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="execute_transfer" data-to="sim_swap"/>
+<rect x="567.67" y="312.42" width="103.48" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="619.4116882454314" y="323" fill="#94a3b8" font-size="11" text-anchor="middle">executed order</text>
+<line x1="844.4116882454314" y1="336" x2="947.4116882454314" y2="336" stroke="#a78bfa" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-violet)" class="pf-edge" data-from="sim_swap" data-to="end10"/>
+<rect x="857.81" y="312.42" width="76.2" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="895.9116882454314" y="323" fill="#94a3b8" font-size="11" text-anchor="middle">active SIM</text>
+<path d="M 852 123.03300858899107 L 852 157.03300858899107 L 494.96699141100896 157.03300858899107 L 494.96699141100896 70" stroke="#fb7185" stroke-width="2.25" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="cdm_approved" data-to="cdm_review"/>
+<rect x="856" y="129.45" width="21.64" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="860" y="140.03300858899107" fill="#fb7185" font-size="11" font-weight="600">No</text>
+<path d="M 283.5 386.91168824543144 L 283.5 420.91168824543144 L 1248.0330085889912 420.91168824543144 L 1248.0330085889912 70" stroke="#fb7185" stroke-width="2.25" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="boq_qatq_approved" data-to="boq_qatq_review"/>
+<rect x="287.5" y="393.33" width="21.64" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="291.5" y="403.91168824543144" fill="#fb7185" font-size="11" font-weight="600">No</text>
+<path d="M 574.966991411009 133 L 574.966991411009 167 L 311.96699141100896 167 L 311.96699141100896 125.5" stroke="#fb7185" stroke-width="2.25" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="cdm_review" data-to="managing_queue"/>
+<rect x="309.89" y="169.42" width="267.16" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="443.46699141100896" y="180" fill="#fb7185" font-size="11" font-weight="600" text-anchor="middle">missing attachments/documents → rework</text>
+<g class="pf-node" data-id="start1" data-type="terminal" tabindex="0" role="button" aria-label="Terminal: Start">
+<rect x="71.96699141100896" y="50" width="100" height="40" rx="20" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="121.96699141100896" y="74" fill="white" font-size="11" font-weight="600" text-anchor="middle">Start</text>
+</g>
+<g class="pf-node" data-id="managing_queue" data-type="manual" tabindex="0" role="button" aria-label="Managing Queue Intake, Managing Queue. Open details.">
+<text x="391.96699141100896" y="-5" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Managing Queue</text>
+<rect x="231.96699141100896" y="14.5" width="160" height="111" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="311.96699141100896" y="35.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">Managing Queue Intake</text>
+<text x="311.96699141100896" y="52.5" fill="#94a3b8" font-size="11" text-anchor="middle">Standing queue,</text>
+<text x="311.96699141100896" y="64.5" fill="#94a3b8" font-size="11" text-anchor="middle">auto-opened</text>
+<text x="311.96699141100896" y="76.5" fill="#94a3b8" font-size="11" text-anchor="middle">for 3+ years; entry</text>
+<text x="311.96699141100896" y="88.5" fill="#94a3b8" font-size="11" text-anchor="middle">point</text>
+<text x="311.96699141100896" y="100.5" fill="#94a3b8" font-size="11" text-anchor="middle">of the 4-queue TON</text>
+<text x="311.96699141100896" y="112.5" fill="#94a3b8" font-size="11" text-anchor="middle">chain</text>
+<circle cx="231.96699141100896" cy="9.5" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="231.96699141100896" y="13.5" fill="white" font-size="8" font-weight="600" text-anchor="middle">1</text>
+</g>
+<g class="pf-node" data-id="cdm_review" data-type="manual" tabindex="0" role="button" aria-label="CDM Business-Rule Review, CDM Team (Tisha/Krishna). Open details.">
+<text x="654.966991411009" y="-5" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">CDM Team (Tisha/Krishna)</text>
+<rect x="494.96699141100896" y="7" width="160" height="126" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="574.966991411009" y="28" fill="white" font-size="11" font-weight="600" text-anchor="middle">CDM Business-Rule</text>
+<text x="574.966991411009" y="43" fill="white" font-size="11" font-weight="600" text-anchor="middle">Review</text>
+<text x="574.966991411009" y="60" fill="#94a3b8" font-size="11" text-anchor="middle">Checks request</text>
+<text x="574.966991411009" y="72" fill="#94a3b8" font-size="11" text-anchor="middle">against</text>
+<text x="574.966991411009" y="84" fill="#94a3b8" font-size="11" text-anchor="middle">configured business</text>
+<text x="574.966991411009" y="96" fill="#94a3b8" font-size="11" text-anchor="middle">rules</text>
+<text x="574.966991411009" y="108" fill="#94a3b8" font-size="11" text-anchor="middle">before approving</text>
+<text x="574.966991411009" y="120" fill="#94a3b8" font-size="11" text-anchor="middle">execution</text>
+<circle cx="494.96699141100896" cy="2" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="494.96699141100896" y="6" fill="white" font-size="8" font-weight="600" text-anchor="middle">2</text>
+</g>
+<g class="pf-node" data-id="cdm_approved" data-type="decision" tabindex="0" role="button" aria-label="Decision: CDM Approves Ticket?">
+<g transform="translate(852, 70)">
+  <rect x="-37.5" y="-37.5" width="75" height="75" rx="4" transform="rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="0" y="-3.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">CDM Approves</text>
+  <text x="0" y="11.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">Ticket?</text>
+</g>
+</g>
+<g class="pf-node" data-id="nationality_route" data-type="automated" tabindex="0" role="button" aria-label="Route by Customer Nationality, Queueing Rule Engine. Open details.">
+<text x="1125.0330085889912" y="-5" fill="#a78bfa" font-size="11" font-weight="600" text-anchor="end">Queueing Rule Engine</text>
+<rect x="965.0330085889912" y="13" width="160" height="114" rx="8" fill="#200f49" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="1045.0330085889912" y="34" fill="white" font-size="11" font-weight="600" text-anchor="middle">Route by Customer</text>
+<text x="1045.0330085889912" y="49" fill="white" font-size="11" font-weight="600" text-anchor="middle">Nationality</text>
+<text x="1045.0330085889912" y="66" fill="#94a3b8" font-size="11" text-anchor="middle">Ticket assigned to</text>
+<text x="1045.0330085889912" y="78" fill="#94a3b8" font-size="11" text-anchor="middle">BOQ or</text>
+<text x="1045.0330085889912" y="90" fill="#94a3b8" font-size="11" text-anchor="middle">QATQ back-office</text>
+<text x="1045.0330085889912" y="102" fill="#94a3b8" font-size="11" text-anchor="middle">queue</text>
+<text x="1045.0330085889912" y="114" fill="#94a3b8" font-size="11" text-anchor="middle">based on nationality</text>
+<circle cx="965.0330085889912" cy="8" r="12" fill="#1e293b" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="965.0330085889912" y="12" fill="white" font-size="8" font-weight="600" text-anchor="middle">3</text>
+</g>
+<g class="pf-node" data-id="boq_qatq_review" data-type="manual" tabindex="0" role="button" aria-label="BOQ/QATQ Validation, BOQ / QATQ Back Office. Open details.">
+<text x="1408.0330085889912" y="-5" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">BOQ / QATQ Back Office</text>
+<rect x="1248.0330085889912" y="20.5" width="160" height="99" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="1328.0330085889912" y="41.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">BOQ/QATQ Validation</text>
+<text x="1328.0330085889912" y="58.5" fill="#94a3b8" font-size="11" text-anchor="middle">Back-office queue</text>
+<text x="1328.0330085889912" y="70.5" fill="#94a3b8" font-size="11" text-anchor="middle">validates</text>
+<text x="1328.0330085889912" y="82.5" fill="#94a3b8" font-size="11" text-anchor="middle">the ticket a second</text>
+<text x="1328.0330085889912" y="94.5" fill="#94a3b8" font-size="11" text-anchor="middle">time</text>
+<text x="1328.0330085889912" y="106.5" fill="#94a3b8" font-size="11" text-anchor="middle">before closing it</text>
+<circle cx="1248.0330085889912" cy="15.5" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="1248.0330085889912" y="19.5" fill="white" font-size="8" font-weight="600" text-anchor="middle">4</text>
+</g>
+<g class="pf-node" data-id="boq_qatq_approved" data-type="decision" tabindex="0" role="button" aria-label="Decision: BOQ/QATQ Approves &amp; Closes?">
+<g transform="translate(283.5, 336)">
+  <rect x="-36" y="-36" width="72" height="72" rx="4" transform="rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="0" y="-11" fill="white" font-size="11" font-weight="600" text-anchor="middle">BOQ/QATQ</text>
+  <text x="0" y="4" fill="white" font-size="11" font-weight="600" text-anchor="middle">Approves &amp;</text>
+  <text x="0" y="19" fill="white" font-size="11" font-weight="600" text-anchor="middle">Closes?</text>
+</g>
+</g>
+<g class="pf-node" data-id="execute_transfer" data-type="manual" tabindex="0" role="button" aria-label="Execute Number Transfer, Back Office Execution Team. Open details.">
+<text x="554.4116882454314" y="261" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Back Office Execution Team</text>
+<rect x="394.41168824543144" y="273" width="160" height="126" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="474.41168824543144" y="294" fill="white" font-size="11" font-weight="600" text-anchor="middle">Execute Number</text>
+<text x="474.41168824543144" y="309" fill="white" font-size="11" font-weight="600" text-anchor="middle">Transfer</text>
+<text x="474.41168824543144" y="326" fill="#94a3b8" font-size="11" text-anchor="middle">Update</text>
+<text x="474.41168824543144" y="338" fill="#94a3b8" font-size="11" text-anchor="middle">account/service</text>
+<text x="474.41168824543144" y="350" fill="#94a3b8" font-size="11" text-anchor="middle">account/profile to</text>
+<text x="474.41168824543144" y="362" fill="#94a3b8" font-size="11" text-anchor="middle">new</text>
+<text x="474.41168824543144" y="374" fill="#94a3b8" font-size="11" text-anchor="middle">customer; submit TON</text>
+<text x="474.41168824543144" y="386" fill="#94a3b8" font-size="11" text-anchor="middle">order</text>
+<circle cx="394.41168824543144" cy="268" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="394.41168824543144" y="272" fill="white" font-size="8" font-weight="600" text-anchor="middle">5</text>
+</g>
+<g class="pf-node" data-id="sim_swap" data-type="automated" tabindex="0" role="button" aria-label="SIM Swap on Success, SIM Provisioning. Open details.">
+<text x="844.4116882454314" y="261" fill="#a78bfa" font-size="11" font-weight="600" text-anchor="end">SIM Provisioning</text>
+<rect x="684.4116882454314" y="280.5" width="160" height="111" rx="8" fill="#200f49" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="764.4116882454314" y="301.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">SIM Swap on Success</text>
+<text x="764.4116882454314" y="318.5" fill="#94a3b8" font-size="11" text-anchor="middle">New SIM/eSIM</text>
+<text x="764.4116882454314" y="330.5" fill="#94a3b8" font-size="11" text-anchor="middle">activated</text>
+<text x="764.4116882454314" y="342.5" fill="#94a3b8" font-size="11" text-anchor="middle">only after TON</text>
+<text x="764.4116882454314" y="354.5" fill="#94a3b8" font-size="11" text-anchor="middle">succeeds;</text>
+<text x="764.4116882454314" y="366.5" fill="#94a3b8" font-size="11" text-anchor="middle">network password</text>
+<text x="764.4116882454314" y="378.5" fill="#94a3b8" font-size="11" text-anchor="middle">reset</text>
+<circle cx="684.4116882454314" cy="275.5" r="12" fill="#1e293b" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="684.4116882454314" y="279.5" fill="white" font-size="8" font-weight="600" text-anchor="middle">6</text>
+</g>
+<g class="pf-node" data-id="end10" data-type="terminal" tabindex="0" role="button" aria-label="Terminal: Complete">
+<rect x="947.4116882454314" y="316" width="120" height="40" rx="20" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="1007.4116882454314" y="340" fill="white" font-size="11" font-weight="600" text-anchor="middle">Complete</text>
+</g>
+<g class="pf-node" data-id="end11" data-type="reject" tabindex="0" role="button" aria-label="Terminal: Complete">
+<rect x="1127.4116882454314" y="316" width="120" height="40" rx="20" fill="#041829" stroke="#fb7185" stroke-width="1.5"/>
+<text x="1187.4116882454314" y="340" fill="white" font-size="11" font-weight="600" text-anchor="middle">Complete</text>
+</g>
+<text x="31.966991411008962" y="73" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="end">ROW 1</text>
+<text x="192.58831175456856" y="339" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="end">ROW 2</text>
+<rect x="261.05000000000007" y="459.91168824543144" width="16" height="10" rx="2" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="283.05000000000007" y="468.91168824543144" fill="#94a3b8" font-size="11">Manual / Human-in-loop</text>
+<rect x="459.09000000000003" y="459.91168824543144" width="16" height="10" rx="2" fill="#200f49" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="481.09000000000003" y="468.91168824543144" fill="#94a3b8" font-size="11">Automated</text>
+<rect x="568.47" y="459.91168824543144" width="16" height="10" rx="5" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="590.47" y="468.91168824543144" fill="#94a3b8" font-size="11">Start / End</text>
+<rect x="691.49" y="459.91168824543144" width="16" height="10" rx="5" fill="#041829" stroke="#fb7185" stroke-width="1.5"/>
+<text x="713.49" y="468.91168824543144" fill="#94a3b8" font-size="11">Rejected / negative end</text>
+<rect x="-5" y="-5" width="10" height="10" transform="translate(904.35, 464.91168824543144) rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+<text x="918.35" y="468.91168824543144" fill="#94a3b8" font-size="11">Decision</text>
+<line x1="998.9100000000001" y1="464.91168824543144" x2="1014.9100000000001" y2="464.91168824543144" stroke="#fb7185" stroke-width="2.25" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)"/>
+<text x="1020.9100000000001" y="468.91168824543144" fill="#94a3b8" font-size="11">Exception path</text>
+<line x1="1142.39" y1="464.91168824543144" x2="1158.39" y2="464.91168824543144" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)"/>
+<text x="1164.39" y="468.91168824543144" fill="#94a3b8" font-size="11">Row wrap</text>
+</svg>
+    </div>
+
+    
+
+    <p class="footer">VFQ CRM Journeys Catalogue #89 • Support / Workflow-Task • Source: Business Processes Day7 Session 2, Business Workshop Day7 Session 1, Business Workshop Day4 Session 2</p>
+  </div>
+  <aside class="pf-drawer" id="pfDrawer" role="dialog" aria-labelledby="pfDrawerTitle" aria-hidden="true">
+    <div class="pf-drawer-handle" id="pfHandle" role="separator" aria-orientation="vertical" aria-label="Resize detail panel. Use left and right arrow keys." tabindex="0"></div>
+    <div class="pf-drawer-body">
+      <div class="pf-drawer-head">
+        <span class="pf-badge" id="pfBadge"></span>
+        <button class="pf-drawer-close" id="pfClose" aria-label="Close detail panel">&times;</button>
+      </div>
+      <h2 id="pfDrawerTitle"></h2>
+      <p class="pf-drawer-role" id="pfRole"></p>
+      <div class="pf-drawer-sections">
+        <div class="pf-sec">
+          <h3>Meaning</h3>
+          <p id="pfMeaning" class="pf-drawer-meaning"></p>
+        </div>
+        <div class="pf-sec">
+          <h3>Input/Inbound</h3>
+          <p id="pfInDesc" class="pf-drawer-desc"></p>
+          <ul id="pfIn"></ul>
+        </div>
+        <div class="pf-sec">
+          <h3>Output/Outbound</h3>
+          <p id="pfOutDesc" class="pf-drawer-desc"></p>
+          <ul id="pfOut"></ul>
+        </div>
+        <div class="pf-sec">
+          <h3>Example</h3>
+          <p id="pfExample" class="pf-drawer-example"></p>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <script>
+    const SLUG = "cat089-ton-trouble-ticket-approval";
+    /* Export bounds are measured, not assumed (§11.1).
+     *
+     * The container's own rect is NOT the diagram's extent: the SVG has a min-width, so on a
+     * narrow viewport it is wider than its container and .diagram-container scrolls. Capturing
+     * the container rect then silently crops whatever overflowed — the right-hand nodes and the
+     * legend — and the exported PNG differs from what the page shows. So walk every descendant
+     * and take the true union, which also covers anything that overflows upward or downward. */
+    function captureBounds() {
+      const el = document.getElementById('report-container');
+      const c = el.getBoundingClientRect();
+      let l = c.left, t = c.top, r = c.right, b = c.bottom;
+      for (const n of el.querySelectorAll('*')) {
+        if (n.classList && (n.classList.contains('toolbar') || n.classList.contains('pf-drawer') || n.classList.contains('pf-filters'))) continue;
+        const q = n.getBoundingClientRect();
+        if (!q.width && !q.height) continue;
+        if (q.left < l) l = q.left;
+        if (q.top < t) t = q.top;
+        if (q.right > r) r = q.right;
+        if (q.bottom > b) b = q.bottom;
+      }
+      return { left: l, top: t, width: r - l, height: b - t };
+    }
+
+    async function capture() {
+      pfResetView();
+      await new Promise(r => setTimeout(r, 300));
+      const el = document.getElementById('report-container');
+      // A scrolled diagram must be captured whole: reset the scroll so html2canvas sees the
+      // full width, then restore it so the user's view is untouched.
+      const dc = document.querySelector('.diagram-container');
+      const sx = dc ? dc.scrollLeft : 0;
+      if (dc) dc.scrollLeft = 0;
+      const wasOverflow = dc ? dc.style.overflowX : '';
+      if (dc) dc.style.overflowX = 'visible';
+      await new Promise(r => requestAnimationFrame(r));
+
+      const r = captureBounds();
+      const pad = 32;
+      try {
+        return await html2canvas(document.body, { backgroundColor: '#020617', scale: 2, useCORS: true, ignoreElements: (e) => e.classList && (e.classList.contains('toolbar') || e.classList.contains('pf-drawer') || e.classList.contains('pf-filters')), x: r.left + window.scrollX - pad, y: r.top + window.scrollY - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
+      } finally {
+        if (dc) { dc.style.overflowX = wasOverflow; dc.scrollLeft = sx; }
+      }
+    }
+    async function copyAsImage(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        exportStatus('✓ Copied', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    async function downloadPNG(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const link = document.createElement('a'); link.download = SLUG + '.png'; link.href = canvas.toDataURL('image/png'); link.click();
+        exportStatus('✓ PNG', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    /* The menu closes on outside click, on Escape, and after a format is chosen — a popover
+     * that stays open behind the download it just started reads as though nothing happened. */
+    function setExportOpen(open) {
+      document.getElementById('exportMenu').classList.toggle('open', open);
+      document.getElementById('exportBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    function toggleExport(ev) {
+      ev.stopPropagation();
+      setExportOpen(!document.getElementById('exportMenu').classList.contains('open'));
+    }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.toolbar')) setExportOpen(false);
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && document.getElementById('exportMenu').classList.contains('open')) {
+        setExportOpen(false); document.getElementById('exportBtn').focus();
+      }
+    });
+
+    /* Status is shown on the trigger, not on the menu item: the menu closes on choose, so a
+     * message written into the item would vanish with it. */
+    function exportStatus(msg, revert) {
+      const b = document.getElementById('exportBtn');
+      if (revert === undefined) { b.textContent = msg; return; }
+      b.textContent = msg;
+      setTimeout(() => b.textContent = 'Export', revert);
+    }
+
+    /* SVG export is a real vector serialisation, not a raster (§11.1 r7).
+     *
+     * The live <svg> inherits its font from the page stylesheet, which does NOT travel with a
+     * detached clone — open the file standalone and every label reflows in a fallback face,
+     * shifting off the geometry the generator computed. So the clone gets the font stack and
+     * the canvas ground written onto it explicitly. Nothing else is restyled: all colours are
+     * already presentation attributes on the elements themselves. */
+    function downloadSVG(btn) {
+      try {
+        const src = document.querySelector('.diagram-container svg');
+        const clone = src.cloneNode(true);
+        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        const vb = (src.getAttribute('viewBox') || '').split(/[s,]+/).map(Number);
+        if (vb.length === 4) { clone.setAttribute('width', vb[2]); clone.setAttribute('height', vb[3]); }
+        clone.removeAttribute('style');
+        clone.setAttribute('style', 'background:' + "#020617");
+        const st = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+        st.textContent = 'text{font-family:' + getComputedStyle(src).fontFamily.replace(/"/g, "'") + '}';
+        clone.insertBefore(st, clone.firstChild);
+        const blob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a'); link.download = SLUG + '.svg'; link.href = url; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setExportOpen(false); exportStatus('✓ SVG', 2000);
+      } catch (e) { setExportOpen(false); exportStatus('✗ Failed', 2000); }
+    }
+
+    /* JPEG has no alpha, so an un-flattened canvas renders transparent pixels BLACK — which
+     * on this palette is invisible damage rather than an obvious bug. Composite onto the
+     * canvas ground first. */
+    async function downloadJPG(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const flat = document.createElement('canvas');
+        flat.width = canvas.width; flat.height = canvas.height;
+        const g = flat.getContext('2d');
+        g.fillStyle = "#020617";
+        g.fillRect(0, 0, flat.width, flat.height);
+        g.drawImage(canvas, 0, 0);
+        const link = document.createElement('a'); link.download = SLUG + '.jpg';
+        link.href = flat.toDataURL('image/jpeg', 0.92); link.click();
+        exportStatus('✓ JPG', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    async function downloadPDF(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const orientation = canvas.width > canvas.height ? 'landscape' : 'portrait';
+        const pdf = new jsPDF({ orientation, unit: 'px', format: [canvas.width, canvas.height], hotfixes: ['px_scaling'] });
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save(SLUG + '.pdf');
+        exportStatus('✓ PDF', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    /* --- interactivity layer (§11.3) --- */
+    const PF_NODES = [{"id":"start1","type":"terminal","num":"","title":"Start","role":"","desc":[]},{"id":"managing_queue","type":"manual","num":"1","title":"Managing Queue Intake","role":"Managing Queue","desc":["Standing queue, auto-opened","for 3+ years; entry point","of the 4-queue TON chain"],"meaning":"First stop for every TON ticket before CDM review; a routing hop, not an independent approval gate.","inputDesc":"TON ticket (CAF, TON form, QID/passport, star-number declaration if applicable)","outputDesc":"Ticket handed to CDM for business-rule review","example":"A prepaid TON ticket for a 500 Riyal number lands in the Managing queue after the retail agent submits it.","milestone":false},{"id":"cdm_review","type":"manual","num":"2","title":"CDM Business-Rule Review","role":"CDM Team (Tisha/Krishna)","desc":["Checks request against","configured business rules","before approving execution"],"meaning":"CDM (Customer Data Management) reviews the ticket as a guide; only after CDM approves does it proceed to the teams that execute the transfer.","inputDesc":"TON ticket + attachments (CAF on customer A, TON form, ID documents)","outputDesc":"CDM approval or rejection with SMS notice","example":"CDM checks the TON form is attached, QID/signature data matches, and the number is not a star number missing its declaration form.","milestone":false},{"id":"cdm_approved","type":"decision","num":"","title":"CDM Approves Ticket?","role":"","desc":[]},{"id":"nationality_route","type":"automated","num":"3","title":"Route by Customer Nationality","role":"Queueing Rule Engine","desc":["Ticket assigned to BOQ or","QATQ back-office queue","based on nationality"],"meaning":"An automated business rule assigns the ticket to one of two back-office queues depending on the customer's nationality (a known pain point: null/star-number pricing can mis-route tickets).","inputDesc":"CDM-approved ticket, customer nationality field","outputDesc":"Ticket assigned to BOQ or QATQ","example":"A Qatari-national customer's ticket routes to QATQ; a non-Qatari customer's routes to BOQ.","milestone":false},{"id":"boq_qatq_review","type":"manual","num":"4","title":"BOQ/QATQ Validation","role":"BOQ / QATQ Back Office","desc":["Back-office queue validates","the ticket a second time","before closing it"],"meaning":"The assigned back-office queue (BOQ or QATQ) performs its own validation pass; this is the final approval gate before execution.","inputDesc":"Routed ticket with CDM sign-off","outputDesc":"Ticket closed (approved) or rejected with SMS notice","example":"QATQ confirms the star-number declaration and commitment terms are correctly filed before closing the ticket.","milestone":false},{"id":"boq_qatq_approved","type":"decision","num":"","title":"BOQ/QATQ Approves & Closes?","role":"","desc":[]},{"id":"execute_transfer","type":"manual","num":"5","title":"Execute Number Transfer","role":"Back Office Execution Team","desc":["Update account/service","account/profile to new","customer; submit TON order"],"meaning":"Back office selects the ticket from the queue, changes account name/service account/profile on the existing customer's assets, updates order line items, and submits a single TON order under the new customer (no plan change).","inputDesc":"Fully approved TON ticket","outputDesc":"TON order submitted under new customer account","example":"Account, service account, and billing profile fields are re-pointed from Customer A to Customer B; order line items updated accordingly.","milestone":false},{"id":"sim_swap","type":"automated","num":"6","title":"SIM Swap on Success","role":"SIM Provisioning","desc":["New SIM/eSIM activated","only after TON succeeds;","network password reset"],"meaning":"SIM swap (mandatory in all cases, including eSIM-to-eSIM) takes effect only on TON success, preventing the old SIM from being deactivated prematurely.","inputDesc":"Confirmed successful TON order","outputDesc":"New SIM active for the new customer; old SIM deactivated","example":"If TON had been rejected at any stage, the old SIM would remain active with the original customer instead.","milestone":false},{"id":"end10","type":"terminal","num":"","title":"Complete","role":"","desc":[]},{"id":"end11","type":"reject","num":"","title":"Complete","role":"","desc":[]}];
+    const PF_EDGES = [{"from":"start1","to":"managing_queue","label":"","style":"flow"},{"from":"managing_queue","to":"cdm_review","label":"TON ticket","style":"flow"},{"from":"cdm_review","to":"cdm_approved","label":"validated ticket","style":"flow"},{"from":"cdm_approved","to":"nationality_route","label":"","style":"flow"},{"from":"nationality_route","to":"boq_qatq_review","label":"routed ticket","style":"flow"},{"from":"boq_qatq_review","to":"boq_qatq_approved","label":"Continue to Row 2 →","style":"wrap"},{"from":"boq_qatq_approved","to":"execute_transfer","label":"","style":"flow"},{"from":"execute_transfer","to":"sim_swap","label":"executed order","style":"flow"},{"from":"sim_swap","to":"end10","label":"active SIM","style":"flow"},{"from":"cdm_approved","to":"cdm_review","label":"No","style":"exception"},{"from":"boq_qatq_approved","to":"boq_qatq_review","label":"No","style":"exception"},{"from":"cdm_review","to":"managing_queue","label":"missing attachments/documents → rework","style":"exception"}];
+    const PF_TYPE_LABEL = {"manual":"Manual","automated":"Automated","integration":"Integration","decision":"Decision","terminal":"Start / End","reject":"Rejected"};
+    const PF_TYPE_ACCENT = {"manual":"#34d399","automated":"#a78bfa","integration":"#fbbf24","decision":"#fb7185","terminal":"#22d3ee","reject":"#fb7185"};
+    const pfById = Object.fromEntries(PF_NODES.filter(n => n.id).map(n => [n.id, n]));
+    const pfDrawer = document.getElementById('pfDrawer');
+    let pfSelected = null;
+
+    const pfNodeEls = () => Array.from(document.querySelectorAll('.pf-node'));
+    const pfEdgeEls = () => Array.from(document.querySelectorAll('.pf-edge'));
+
+    function pfLabelFor(id) {
+      const n = pfById[id];
+      if (!n) return id || 'unknown';
+      return n.title || n.id;
+    }
+    function pfLi(html) { const li = document.createElement('li'); li.innerHTML = html; return li; }
+    function pfFill(ul, items, emptyText) {
+      ul.textContent = '';
+      if (!items.length) { ul.appendChild(pfLi('<span class="pf-empty">' + emptyText + '</span>')); return; }
+      items.forEach(i => ul.appendChild(i));
+    }
+    function pfEdgeItem(otherId, e, dir) {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.className = 'pf-link';
+      btn.type = 'button';
+      btn.textContent = (dir === 'in' ? '← ' : '→ ') + pfLabelFor(otherId);
+      btn.addEventListener('click', () => pfOpen(otherId));
+      li.appendChild(btn);
+      const meta = [];
+      if (e.label) meta.push(e.label);
+      if (e.style && e.style !== 'flow') meta.push(e.style);
+      if (meta.length) {
+        const span = document.createElement('span');
+        span.className = 'pf-payload';
+        span.textContent = '  ·  ' + meta.join(' · ');
+        li.appendChild(span);
+      }
+      return li;
+    }
+
+    function pfOpen(id) {
+      const n = pfById[id];
+      if (!n) return;
+      pfSelected = id;
+      const badge = document.getElementById('pfBadge');
+      badge.textContent = PF_TYPE_LABEL[n.type] || n.type;
+      badge.style.color = PF_TYPE_ACCENT[n.type] || '#94a3b8';
+      document.getElementById('pfDrawerTitle').textContent = (n.num ? n.num + '. ' : '') + (n.title || n.id);
+      document.getElementById('pfRole').textContent = n.role || '';
+      document.getElementById('pfMeaning').textContent = n.meaning || (n.desc && n.desc[0]) || 'No meaning defined.';
+      document.getElementById('pfInDesc').textContent = n.inputDesc || '';
+      document.getElementById('pfOutDesc').textContent = n.outputDesc || '';
+      document.getElementById('pfExample').textContent = n.example || 'No example provided.';
+      pfFill(document.getElementById('pfIn'),
+        PF_EDGES.filter(e => e.to === id).map(e => pfEdgeItem(e.from, e, 'in')),
+        'Nothing flows into this node.');
+      pfFill(document.getElementById('pfOut'),
+        PF_EDGES.filter(e => e.from === id).map(e => pfEdgeItem(e.to, e, 'out')),
+        'Nothing flows out of this node.');
+      pfDrawer.classList.add('is-open');
+      document.body.classList.add('pf-open');
+      pfDrawer.setAttribute('aria-hidden', 'false');
+      pfNodeEls().forEach(el => el.classList.toggle('is-sel', el.dataset.id === id));
+      document.getElementById('pfClose').focus();
+    }
+
+    function pfClose() {
+      pfDrawer.classList.remove('is-open');
+      document.body.classList.remove('pf-open');
+      pfDrawer.setAttribute('aria-hidden', 'true');
+      pfNodeEls().forEach(el => el.classList.remove('is-sel'));
+      if (pfSelected) {
+        const el = pfNodeEls().find(e => e.dataset.id === pfSelected);
+        if (el) el.focus();
+      }
+      pfSelected = null;
+    }
+
+    function pfApplyFilter(type) {
+      const all = type === 'all';
+      pfNodeEls().forEach(el => el.classList.toggle('is-dim', !all && el.dataset.type !== type));
+      const visible = new Set(PF_NODES.filter(n => all || n.type === type).map(n => n.id));
+      pfEdgeEls().forEach(el => {
+        const on = all || (visible.has(el.dataset.from) && visible.has(el.dataset.to));
+        el.classList.toggle('is-dim', !on);
+      });
+      document.querySelectorAll('.pf-chip').forEach(c =>
+        c.setAttribute('aria-pressed', String(c.dataset.filter === type)));
+    }
+    // Exports must always show the whole diagram — a filtered PNG silently loses
+    // nodes and reads as the complete picture, which is worse than no filter at all.
+    // Closing the drawer first also restores the page width the capture is measured from.
+    function pfResetView() { pfApplyFilter('all'); if (pfSelected) pfClose(); }
+
+    pfNodeEls().forEach(el => {
+      el.addEventListener('click', () => pfOpen(el.dataset.id));
+      el.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); pfOpen(el.dataset.id); }
+      });
+    });
+    document.querySelectorAll('.pf-chip').forEach(c =>
+      c.addEventListener('click', () => pfApplyFilter(c.dataset.filter)));
+    document.getElementById('pfClose').addEventListener('click', pfClose);
+    document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && pfSelected) pfClose(); });
+
+    /* Drawer resize — pointer drag plus arrow keys, clamped so the panel can never
+       swallow the diagram or shrink below a readable measure. */
+    (function () {
+      const handle = document.getElementById('pfHandle');
+      const MIN = 320, MAX = 760;
+      const setW = w => document.documentElement.style.setProperty('--pf-drawer-w', Math.min(MAX, Math.max(MIN, w)) + 'px');
+      let dragging = false;
+      handle.addEventListener('pointerdown', ev => { dragging = true; handle.setPointerCapture(ev.pointerId); ev.preventDefault(); });
+      handle.addEventListener('pointermove', ev => { if (dragging) setW(window.innerWidth - ev.clientX); });
+      handle.addEventListener('pointerup', ev => { dragging = false; handle.releasePointerCapture(ev.pointerId); });
+      handle.addEventListener('keydown', ev => {
+        const cur = pfDrawer.getBoundingClientRect().width;
+        if (ev.key === 'ArrowLeft') { setW(cur + 24); ev.preventDefault(); }
+        if (ev.key === 'ArrowRight') { setW(cur - 24); ev.preventDefault(); }
+      });
+    })();
+  </script>
+</body>
+</html>

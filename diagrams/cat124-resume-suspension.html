@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="spec-hash" content="sha256:b9c73dd7f2f449021d6690f59deaaa3c4f541c8eec23692ccf7e49d221e2f156">
+  <meta name="generated-at" content="2026-08-22T20:34:48.300Z">
+  <meta name="diagram-version" content="2.3">
+  <title>Catalogue #124 — Resume Suspension - Process Flow</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" integrity="sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/" crossorigin="anonymous"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #020617; min-height: 100vh; padding: 2rem; color: white; }
+    .container { width: 1600px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-start; }
+    .header-content { flex: 1; }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    .pulse-dot { width: 12px; height: 12px; background: #a78bfa; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+    .subtitle { color: #94a3b8; font-size: 0.875rem; margin-left: 1.75rem; }
+    .diagram-container { overflow-x: auto; width: 100%; }
+    svg { width: 1600px; height: auto; display: block; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 2rem; }
+    .card { background: #080e20; border-radius: 0.75rem; border: 1px solid #1e293b; padding: 1.25rem; }
+    .card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.cyan { background: #22d3ee; } .card-dot.emerald { background: #34d399; } .card-dot.violet { background: #a78bfa; }
+    .card-dot.amber { background: #fbbf24; } .card-dot.rose { background: #fb7185; } .card-dot.slate { background: #94a3b8; }
+    .card h3 { font-size: 0.875rem; font-weight: 600; }
+    .card ul { list-style: none; color: #94a3b8; font-size: 0.75rem; }
+    .card li { margin-bottom: 0.375rem; }
+    .io-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .io-table th, .io-table td { border: 1px solid rgba(71, 85, 105, 0.4); padding: 0.625rem 0.75rem; text-align: left; vertical-align: top; line-height: 1.5; }
+    .io-table thead th { background: #151e30; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem; }
+    .io-table tbody th { background: #11192b; color: white; font-weight: 700; white-space: nowrap; }
+    .io-table td { color: #cbd5e1; }
+    .io-table .io-col-step { width: 64px; }
+    .io-table td.io-in { border-left: 2px solid #34d399; }
+    .io-table td.io-out { border-left: 2px solid #22d3ee; }
+    .io-table td.io-ex { color: #a78bfa; white-space: nowrap; }
+    .io-table td.io-mean { color: #94a3b8; }
+    .footer { text-align: center; margin-top: 1.5rem; color: #475569; font-size: 0.75rem; }
+    /* Export menu (r7). The trigger is a labelled button, not an ellipsis glyph: an unlabelled
+     * ellipsis gives no clue that export lives behind it, so the feature went unfound. The
+     * popover is a light surface deliberately — it is chrome, and reads as sitting above the
+     * dark canvas rather than as another dark panel competing with the diagram. */
+    .toolbar { display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center; position: relative; }
+    .export-btn { background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; font-family: inherit; font-size: 0.8125rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; transition: background 0.15s, box-shadow 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+    .export-btn:hover { background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+    .export-menu { display: none; position: absolute; top: calc(100% + 0.5rem); right: 0; z-index: 40; min-width: 13rem; padding: 0.375rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.625rem; box-shadow: 0 10px 24px rgba(0,0,0,0.55); }
+    .export-menu.open { display: block; }
+    .export-item { display: flex; align-items: baseline; justify-content: space-between; gap: 1.5rem; width: 100%; background: transparent; border: none; border-radius: 0.375rem; padding: 0.5rem 0.75rem; font-family: inherit; font-size: 0.8125rem; color: #0f172a; cursor: pointer; text-align: left; transition: background 0.12s; }
+    .export-item:hover { background: #e8edf5; }
+    .export-fmt { font-weight: 600; letter-spacing: 0.02em; }
+    .export-hint { color: #64748b; font-size: 0.6875rem; white-space: nowrap; }
+    .export-sep { height: 1px; margin: 0.25rem 0.5rem; background: #e2e8f0; }
+    .export-btn:focus-visible, .export-item:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; }
+    @media (max-width: 768px) { .header { flex-direction: column; gap: 1rem; } }
+    @media print { body { background: #020617; padding: 1rem; } .toolbar { display: none !important; } }
+    /* --- interactivity layer (§11.3) --- */
+    /* Filter toolbar (r6).
+     *
+     * The problem it fixes: the chips previously used the same vocabulary as the nodes and the
+     * legend — a rounded outline with a small coloured dot — so a row of CONTROLS read as a
+     * third kind of swatch. Nothing signalled it was interactive, and it competed with the
+     * diagram for attention instead of sitting above it.
+     *
+     * The fix is to stop borrowing that vocabulary. Controls now get their own surface: a
+     * raised, bordered bar that visually detaches from the canvas, an accent rule to anchor it,
+     * and a SOLID fill on the active chip — an unmistakably UI treatment, since nothing else in
+     * a diagram is ever filled with its own accent colour at full opacity. */
+    .pf-filters { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem; align-items: center;
+      background: #0d1425; border: 1px solid #263349; border-left: 3px solid #a78bfa;
+      border-radius: 0.5rem; padding: 0.55rem 0.75rem; box-shadow: 0 1px 3px rgba(2, 6, 23, 0.5); }
+    .pf-filters-label { color: #cbd5e1; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; margin-right: 0.55rem; display: inline-flex; align-items: center; gap: 0.4rem; }
+    .pf-filters-label::before { content: ''; width: 11px; height: 11px; flex: 0 0 11px;
+      /* Funnel glyph, drawn rather than an emoji: it must render identically everywhere. */
+      background: #a78bfa; clip-path: polygon(0 0, 100% 0, 62% 45%, 62% 100%, 38% 100%, 38% 45%); }
+    /* v2 redesign: pill-shaped (999px radius, was 0.375rem — a barely-rounded rect that read
+       as a static label), bigger padding/min-height for a real tap target (was 0.3rem/0.7rem,
+       under the ~32px accessibility guideline), and a stronger active state (ring + scale) so
+       the selected/unselected distinction doesn't rely on colour alone. */
+    .pf-chip { background: #1a2337; border: 1.5px solid #3b4a63; color: #cbd5e1; padding: 0.5rem 1rem;
+      border-radius: 999px; font-family: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 0.45rem; line-height: 1.2; min-height: 2rem;
+      transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s; }
+    .pf-chip:hover { background: #24304a; border-color: #64748b; color: white; }
+    .pf-chip:active { transform: scale(0.96); }
+    .pf-chip:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    /* Selected: the chip fills with its own accent, sits a hair taller with a visible ring, and
+       the dot becomes a filled check-like mark. High contrast, unambiguous, and impossible to
+       confuse with a legend swatch — legend marks are outlines on the bare ground. */
+    .pf-chip[aria-pressed="true"] { background: currentColor; border-color: currentColor;
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.28); transform: scale(1.03); }
+    .pf-chip[aria-pressed="true"]:hover { transform: scale(1.03); }
+    .pf-chip[aria-pressed="true"] .pf-chip-label { color: #0b1120; font-weight: 700; }
+    .pf-chip[aria-pressed="true"] .pf-chip-dot { background: #0b1120; opacity: 0.65; }
+    .pf-chip-label { color: inherit; }
+    .pf-chip-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: 0 0 8px; }
+    .pf-node { cursor: pointer; }
+    .pf-node:hover { filter: brightness(1.32); }
+    .pf-node:focus { outline: none; }
+    .pf-node:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 3px; border-radius: 4px; }
+    .pf-node, .pf-edge { transition: opacity 0.2s ease; }
+    .pf-node.is-dim, .pf-edge.is-dim { opacity: 0.14; pointer-events: none; }
+    .pf-node.is-sel > rect, .pf-node.is-sel > circle, .pf-node.is-sel > g > rect { stroke-width: 3; }
+    /* The drawer floats as an overlay — position: fixed with no body padding. Opening/closing
+       the drawer does not affect layout of the diagram or any page content. */
+    .pf-drawer { position: fixed; top: 0; right: 0; height: 100vh; width: var(--pf-drawer-w, 400px); background: #0b1220; border-left: 1px solid #1e293b; box-shadow: -12px 0 32px #020617; transform: translateX(101%); transition: transform 0.25s ease; z-index: 40; display: flex; }
+    .pf-drawer.is-open { transform: none; }
+    .pf-drawer-handle { width: 6px; flex: 0 0 6px; cursor: ew-resize; background: transparent; border-right: 1px solid #1e293b; }
+    .pf-drawer-handle:hover, .pf-drawer-handle:focus-visible { background: #423c6c; outline: none; }
+    .pf-drawer-body { flex: 1; overflow-y: auto; padding: 1.25rem; min-width: 0; }
+    .pf-drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.75rem; }
+    .pf-badge { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.2rem 0.5rem; border-radius: 0.25rem; border: 1px solid currentColor; white-space: nowrap; }
+    .pf-drawer-close { background: transparent; border: none; color: #475569; font-size: 1.5rem; line-height: 1; cursor: pointer; padding: 0 0.25rem; }
+    .pf-drawer-close:hover { color: white; }
+    .pf-drawer-close:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    .pf-drawer h2 { font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; word-break: break-word; }
+    .pf-drawer-role { color: #94a3b8; font-size: 0.75rem; margin-bottom: 1rem; word-break: break-word; }
+    .pf-drawer-sections { display: flex; flex-direction: column; gap: 1rem; }
+    .pf-sec { margin-top: 0; border-top: none; padding-top: 0; }
+    .pf-sec h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; margin-bottom: 0.5rem; margin-top: 0; }
+    .pf-drawer-meaning { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0 0 0.5rem 0; }
+    .pf-drawer-example { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0; }
+    .pf-drawer-desc { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0 0 0.5rem 0; }
+    .pf-sec ul { list-style: none; margin: 0; padding: 0; }
+    .pf-sec li { color: #cbd5e1; font-size: 0.75rem; margin-bottom: 0.3rem; line-height: 1.5; }
+    .pf-sec { margin-top: 1rem; border-top: 1px solid #1e293b; padding-top: 0.75rem; }
+    .pf-sec h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; margin-bottom: 0.5rem; }
+    .pf-sec ul { list-style: none; }
+    .pf-sec li { color: #cbd5e1; font-size: 0.75rem; margin-bottom: 0.4rem; line-height: 1.5; word-break: break-word; }
+    .pf-sec .pf-empty { color: #475569; font-style: italic; }
+    .pf-link { background: none; border: none; color: #a78bfa; font-family: inherit; font-size: 0.75rem; cursor: pointer; padding: 0; text-align: left; text-decoration: underline; text-underline-offset: 2px; }
+    .pf-link:hover { color: #c4b5fd; }
+    .pf-link:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    .pf-payload { color: #94a3b8; }
+    @media (prefers-reduced-motion: reduce) {
+      .pulse-dot { animation: none; }
+      body, .pf-drawer, .pf-node, .pf-edge { transition: none; }
+    }
+    @media print { .pf-drawer, .pf-filters { display: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="container" id="report-container">
+    <div class="header">
+      <div class="header-content">
+        <div class="header-row">
+          <div class="pulse-dot"></div>
+          <h1>Catalogue #124 — Resume Suspension</h1>
+        </div>
+        <p class="subtitle">Manage · Workflow/Task · reversal of PMN (&quot;Park My Number&quot;) manual suspension — Vanilla/Open UI desktop, back-office</p>
+      </div>
+      <div class="toolbar">
+        <button class="export-btn" id="exportBtn" onclick="toggleExport(event)" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu" aria-label="Export options">Export</button>
+        <div class="export-menu" id="exportMenu" role="menu" aria-labelledby="exportBtn">
+          <button role="menuitem" class="export-item" onclick="downloadSVG(this)"><span class="export-fmt">SVG</span><span class="export-hint">vector · editing</span></button>
+          <button role="menuitem" class="export-item" onclick="downloadJPG(this)"><span class="export-fmt">JPG</span><span class="export-hint">image · sharing</span></button>
+          <button role="menuitem" class="export-item" onclick="downloadPDF(this)"><span class="export-fmt">PDF</span><span class="export-hint">document</span></button>
+          <div class="export-sep" role="separator"></div>
+          <button role="menuitem" class="export-item" onclick="downloadPNG(this)"><span class="export-fmt">PNG</span><span class="export-hint">image · slides</span></button>
+          <button role="menuitem" class="export-item" onclick="copyAsImage(this)"><span class="export-fmt">Copy</span><span class="export-hint">to clipboard</span></button>
+        </div>
+      </div>
+    </div>
+    <div class="pf-filters" role="group" aria-label="Filter diagram by node type">
+        <span class="pf-filters-label">Filter</span>
+        <button class="pf-chip" data-filter="all" aria-pressed="true" style="color:#a78bfa"><span class="pf-chip-dot"></span><span class="pf-chip-label">All</span></button>
+        <button class="pf-chip" data-filter="manual" aria-pressed="false" style="color:#34d399"><span class="pf-chip-dot"></span><span class="pf-chip-label">Manual</span></button>
+        <button class="pf-chip" data-filter="decision" aria-pressed="false" style="color:#fb7185"><span class="pf-chip-dot"></span><span class="pf-chip-label">Decision</span></button>
+        <button class="pf-chip" data-filter="terminal" aria-pressed="false" style="color:#22d3ee"><span class="pf-chip-dot"></span><span class="pf-chip-label">Start / End</span></button>
+        <button class="pf-chip" data-filter="reject" aria-pressed="false" style="color:#fb7185"><span class="pf-chip-dot"></span><span class="pf-chip-label">Rejected</span></button>
+      </div>
+    <div class="diagram-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="45.46 -41 1388.57 504.5" role="group" aria-label="Catalogue #124 — Resume Suspension diagram. 10 nodes; each is focusable for details.">
+<defs>
+<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/></marker>
+<marker id="arrowhead-emerald" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#34d399"/></marker>
+<marker id="arrowhead-violet" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa"/></marker>
+<marker id="arrowhead-amber" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24"/></marker>
+<marker id="arrowhead-rose" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fb7185"/></marker>
+<marker id="arrowhead-slate" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/></marker>
+<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="1.5"/></pattern>
+</defs>
+<line x1="229.55530316557747" y1="70" x2="289.55530316557747" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="start1" data-to="ticket_intake"/>
+<line x1="449.55530316557747" y1="70" x2="572.5553031655775" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="ticket_intake" data-to="role_check"/>
+<rect x="462.73" y="46.42" width="96.66" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="511.05530316557747" y="57" fill="#94a3b8" font-size="11" text-anchor="middle">resume ticket</text>
+<line x1="687.1066017177982" y1="70" x2="747.1066017177982" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="role_check" data-to="locate_pmn_order"/>
+<rect x="702.88" y="46.42" width="28.46" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="717.1066017177982" y="57" fill="#fb7185" font-size="11" font-weight="600" text-anchor="middle">Yes</text>
+<line x1="907.1066017177982" y1="70" x2="1037.1066017177982" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="locate_pmn_order" data-to="pmn_found"/>
+<rect x="920.37" y="46.42" width="103.48" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="972.1066017177982" y="57" fill="#94a3b8" font-size="11" text-anchor="middle">account lookup</text>
+<line x1="1130.4446968344225" y1="70" x2="1190.4446968344225" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="pmn_found" data-to="create_modify_order"/>
+<rect x="1146.21" y="46.42" width="28.46" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="1160.4446968344225" y="57" fill="#fb7185" font-size="11" font-weight="600" text-anchor="middle">Yes</text>
+<path d="M 1270.4446968344225 133 L 1270.4446968344225 251.5 L 208 251.5 L 208 336 L 228 336" stroke="#94a3b8" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="create_modify_order" data-to="restore_plan"/>
+<rect x="1278.44" y="142.42" width="145.58" height="23" rx="11.5" fill="#0d1425" stroke="#94a3b8" stroke-width="1.5" opacity="0.95"/>
+<text x="1286.4446968344225" y="157" fill="#e2e8f0" font-size="11" font-weight="700">Continue to Row 2 →</text>
+<line x1="388" y1="336" x2="504" y2="336" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="restore_plan" data-to="restore_credit_limit"/>
+<rect x="401.08" y="312.42" width="89.84" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="446" y="323" fill="#94a3b8" font-size="11" text-anchor="middle">plan restore</text>
+<line x1="664" y1="336" x2="835" y2="336" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="restore_credit_limit" data-to="submit_order"/>
+<rect x="677.3" y="312.42" width="144.4" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="749.5" y="323" fill="#94a3b8" font-size="11" text-anchor="middle">credit limit restore</text>
+<line x1="995" y1="336" x2="1132" y2="336" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="submit_order" data-to="end10"/>
+<rect x="1008.35" y="312.42" width="110.3" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="1063.5" y="323" fill="#94a3b8" font-size="11" text-anchor="middle">submitted order</text>
+<line x1="629.8309524416878" y1="127.27564927611036" x2="629.8309524416878" y2="183.27564927611036" stroke="#fb7185" stroke-width="2.25" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="role_check" data-to="role_check-no"/>
+<rect x="633.83" y="138.7" width="21.64" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="637.8309524416878" y="149.27564927611036" fill="#fb7185" font-size="11" font-weight="600">No</text>
+<g class="pf-node" data-id="role_check-no" data-type="reject" tabindex="0" role="button" aria-label="Terminal: Complete">
+<rect x="507.8309524416878" y="183.27564927611036" width="244" height="40" rx="20" fill="#041829" stroke="#fb7185" stroke-width="1.5"/>
+<text x="629.8309524416878" y="207.27564927611036" fill="white" font-size="11" font-weight="600" text-anchor="middle">Rejected — Agent Not Authorized</text>
+</g>
+<line x1="1083.7756492761102" y1="116.66904755831214" x2="1083.7756492761102" y2="172.66904755831214" stroke="#fb7185" stroke-width="2.25" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="pmn_found" data-to="pmn_found-no"/>
+<rect x="1087.78" y="128.09" width="21.64" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="1091.7756492761102" y="138.66904755831214" fill="#fb7185" font-size="11" font-weight="600">No</text>
+<g class="pf-node" data-id="pmn_found-no" data-type="reject" tabindex="0" role="button" aria-label="Terminal: Complete">
+<rect x="944.7756492761102" y="172.66904755831214" width="278" height="40" rx="20" fill="#041829" stroke="#fb7185" stroke-width="1.5"/>
+<text x="1083.7756492761102" y="196.66904755831214" fill="white" font-size="11" font-weight="600" text-anchor="middle">Rejected — No Active PMN Order Found</text>
+</g>
+<g class="pf-node" data-id="start1" data-type="terminal" tabindex="0" role="button" aria-label="Terminal: Start">
+<rect x="129.55530316557747" y="50" width="100" height="40" rx="20" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="179.55530316557747" y="74" fill="white" font-size="11" font-weight="600" text-anchor="middle">Start</text>
+</g>
+<g class="pf-node" data-id="ticket_intake" data-type="manual" tabindex="0" role="button" aria-label="Receive Back-Office Ticket, Back-office Agent. Open details.">
+<text x="449.55530316557747" y="-5" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Back-office Agent</text>
+<rect x="289.55530316557747" y="7" width="160" height="126" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="369.55530316557747" y="28" fill="white" font-size="11" font-weight="600" text-anchor="middle">Receive Back-Office</text>
+<text x="369.55530316557747" y="43" fill="white" font-size="11" font-weight="600" text-anchor="middle">Ticket</text>
+<text x="369.55530316557747" y="60" fill="#94a3b8" font-size="11" text-anchor="middle">Requests lifting PMN</text>
+<text x="369.55530316557747" y="72" fill="#94a3b8" font-size="11" text-anchor="middle">suspension</text>
+<text x="369.55530316557747" y="84" fill="#94a3b8" font-size="11" text-anchor="middle">Account or MSISDN</text>
+<text x="369.55530316557747" y="96" fill="#94a3b8" font-size="11" text-anchor="middle">identified</text>
+<text x="369.55530316557747" y="108" fill="#94a3b8" font-size="11" text-anchor="middle">No self-service path</text>
+<text x="369.55530316557747" y="120" fill="#94a3b8" font-size="11" text-anchor="middle">exists</text>
+<circle cx="289.55530316557747" cy="2" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="289.55530316557747" y="6" fill="white" font-size="8" font-weight="600" text-anchor="middle">1</text>
+</g>
+<g class="pf-node" data-id="role_check" data-type="decision" tabindex="0" role="button" aria-label="Decision: Agent Role Authorized?">
+<g transform="translate(629.8309524416878, 70)">
+  <rect x="-40.5" y="-40.5" width="81" height="81" rx="4" transform="rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="0" y="-3.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">Agent Role</text>
+  <text x="0" y="11.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">Authorized?</text>
+</g>
+</g>
+<g class="pf-node" data-id="locate_pmn_order" data-type="manual" tabindex="0" role="button" aria-label="Locate Existing PMN Order, Back-office Agent. Open details.">
+<text x="907.1066017177982" y="-5" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Back-office Agent</text>
+<rect x="747.1066017177982" y="7" width="160" height="126" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="827.1066017177982" y="28" fill="white" font-size="11" font-weight="600" text-anchor="middle">Locate Existing PMN</text>
+<text x="827.1066017177982" y="43" fill="white" font-size="11" font-weight="600" text-anchor="middle">Order</text>
+<text x="827.1066017177982" y="60" fill="#94a3b8" font-size="11" text-anchor="middle">Search account for</text>
+<text x="827.1066017177982" y="72" fill="#94a3b8" font-size="11" text-anchor="middle">PMN order</text>
+<text x="827.1066017177982" y="84" fill="#94a3b8" font-size="11" text-anchor="middle">Confirm parked-plan</text>
+<text x="827.1066017177982" y="96" fill="#94a3b8" font-size="11" text-anchor="middle">state</text>
+<text x="827.1066017177982" y="108" fill="#94a3b8" font-size="11" text-anchor="middle">Inferred — not</text>
+<text x="827.1066017177982" y="120" fill="#94a3b8" font-size="11" text-anchor="middle">documented</text>
+<circle cx="747.1066017177982" cy="2" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="747.1066017177982" y="6" fill="white" font-size="8" font-weight="600" text-anchor="middle">2</text>
+</g>
+<g class="pf-node" data-id="pmn_found" data-type="decision" tabindex="0" role="button" aria-label="Decision: PMN Order Found?">
+<g transform="translate(1083.7756492761102, 70)">
+  <rect x="-33" y="-33" width="66" height="66" rx="4" transform="rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="0" y="-3.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">PMN Order</text>
+  <text x="0" y="11.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">Found?</text>
+</g>
+</g>
+<g class="pf-node" data-id="create_modify_order" data-type="manual" tabindex="0" role="button" aria-label="Create &amp; Customize Modify Order, Back-office Agent. Open details.">
+<text x="1350.4446968344225" y="-5" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Back-office Agent</text>
+<rect x="1190.4446968344225" y="7" width="160" height="126" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="1270.4446968344225" y="28" fill="white" font-size="11" font-weight="600" text-anchor="middle">Create &amp; Customize</text>
+<text x="1270.4446968344225" y="43" fill="white" font-size="11" font-weight="600" text-anchor="middle">Modify Order</text>
+<text x="1270.4446968344225" y="60" fill="#94a3b8" font-size="11" text-anchor="middle">Manually build a</text>
+<text x="1270.4446968344225" y="72" fill="#94a3b8" font-size="11" text-anchor="middle">Modify order</text>
+<text x="1270.4446968344225" y="84" fill="#94a3b8" font-size="11" text-anchor="middle">Customize to remove</text>
+<text x="1270.4446968344225" y="96" fill="#94a3b8" font-size="11" text-anchor="middle">PMN order</text>
+<text x="1270.4446968344225" y="108" fill="#94a3b8" font-size="11" text-anchor="middle">Vanilla/Open UI</text>
+<text x="1270.4446968344225" y="120" fill="#94a3b8" font-size="11" text-anchor="middle">desktop</text>
+<circle cx="1190.4446968344225" cy="2" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="1190.4446968344225" y="6" fill="white" font-size="8" font-weight="600" text-anchor="middle">3</text>
+</g>
+<g class="pf-node" data-id="restore_plan" data-type="manual" tabindex="0" role="button" aria-label="Restore Prior Plan, Back-office Agent. Open details.">
+<text x="388" y="268.5" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Back-office Agent</text>
+<rect x="228" y="280.5" width="160" height="111" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="308" y="301.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">Restore Prior Plan</text>
+<text x="308" y="318.5" fill="#94a3b8" font-size="11" text-anchor="middle">Reverse 35</text>
+<text x="308" y="330.5" fill="#94a3b8" font-size="11" text-anchor="middle">QAR/4-month plan</text>
+<text x="308" y="342.5" fill="#94a3b8" font-size="11" text-anchor="middle">Re-apply customer's</text>
+<text x="308" y="354.5" fill="#94a3b8" font-size="11" text-anchor="middle">normal plan</text>
+<text x="308" y="366.5" fill="#94a3b8" font-size="11" text-anchor="middle">Inferred — reverse of</text>
+<text x="308" y="378.5" fill="#94a3b8" font-size="11" text-anchor="middle">suspend step</text>
+<circle cx="228" cy="275.5" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="228" y="279.5" fill="white" font-size="8" font-weight="600" text-anchor="middle">4</text>
+</g>
+<g class="pf-node" data-id="restore_credit_limit" data-type="manual" tabindex="0" role="button" aria-label="Restore Credit Limit, Back-office Agent. Open details.">
+<text x="664" y="268.5" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Back-office Agent</text>
+<rect x="504" y="280.5" width="160" height="111" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="584" y="301.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">Restore Credit Limit</text>
+<text x="584" y="318.5" fill="#94a3b8" font-size="11" text-anchor="middle">Remove zero-limit</text>
+<text x="584" y="330.5" fill="#94a3b8" font-size="11" text-anchor="middle">rule</text>
+<text x="584" y="342.5" fill="#94a3b8" font-size="11" text-anchor="middle">Restore normal credit</text>
+<text x="584" y="354.5" fill="#94a3b8" font-size="11" text-anchor="middle">limit</text>
+<text x="584" y="366.5" fill="#94a3b8" font-size="11" text-anchor="middle">Inferred — reverse of</text>
+<text x="584" y="378.5" fill="#94a3b8" font-size="11" text-anchor="middle">park rule</text>
+<circle cx="504" cy="275.5" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="504" y="279.5" fill="white" font-size="8" font-weight="600" text-anchor="middle">5</text>
+</g>
+<g class="pf-node" data-id="submit_order" data-type="manual" tabindex="0" role="button" aria-label="Submit Modify Order, Back-office Agent. Open details.">
+<text x="995" y="268.5" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Back-office Agent</text>
+<rect x="835" y="280.5" width="160" height="111" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="915" y="301.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">Submit Modify Order</text>
+<text x="915" y="318.5" fill="#94a3b8" font-size="11" text-anchor="middle">Submitted via</text>
+<text x="915" y="330.5" fill="#94a3b8" font-size="11" text-anchor="middle">Vanilla/Open UI</text>
+<text x="915" y="342.5" fill="#94a3b8" font-size="11" text-anchor="middle">No approval-queue</text>
+<text x="915" y="354.5" fill="#94a3b8" font-size="11" text-anchor="middle">evidenced</text>
+<text x="915" y="366.5" fill="#94a3b8" font-size="11" text-anchor="middle">Same channel as PMN</text>
+<text x="915" y="378.5" fill="#94a3b8" font-size="11" text-anchor="middle">order</text>
+<circle cx="835" cy="275.5" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="835" y="279.5" fill="white" font-size="8" font-weight="600" text-anchor="middle">6</text>
+</g>
+<g class="pf-node" data-id="end10" data-type="terminal" tabindex="0" role="button" aria-label="Terminal: Complete">
+<rect x="1132" y="316" width="120" height="40" rx="20" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="1192" y="340" fill="white" font-size="11" font-weight="600" text-anchor="middle">Complete</text>
+</g>
+<text x="89.55530316557747" y="73" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="end">ROW 1</text>
+<text x="188" y="339" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="end">ROW 2</text>
+<rect x="387.48" y="430.5" width="16" height="10" rx="2" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="409.48" y="439.5" fill="#94a3b8" font-size="11">Manual / Human-in-loop</text>
+<rect x="585.52" y="430.5" width="16" height="10" rx="5" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="607.52" y="439.5" fill="#94a3b8" font-size="11">Start / End</text>
+<rect x="708.54" y="430.5" width="16" height="10" rx="5" fill="#041829" stroke="#fb7185" stroke-width="1.5"/>
+<text x="730.54" y="439.5" fill="#94a3b8" font-size="11">Rejected / negative end</text>
+<rect x="-5" y="-5" width="10" height="10" transform="translate(921.4, 435.5) rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+<text x="935.4" y="439.5" fill="#94a3b8" font-size="11">Decision</text>
+<line x1="1015.96" y1="435.5" x2="1031.96" y2="435.5" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)"/>
+<text x="1037.96" y="439.5" fill="#94a3b8" font-size="11">Row wrap</text>
+</svg>
+    </div>
+
+    
+
+    <p class="footer">Source: CRM_Journeys_Final_Updated_with_Type.xlsx row 124/117; Business Workshop Day2 Session2 (Postpaid Service), 01:14:44–01:24:34. Resume-specific steps are structurally inferred as the reversal of the documented PMN suspend mechanism — not independently walked through in source. Confidence 75/100.</p>
+  </div>
+  <aside class="pf-drawer" id="pfDrawer" role="dialog" aria-labelledby="pfDrawerTitle" aria-hidden="true">
+    <div class="pf-drawer-handle" id="pfHandle" role="separator" aria-orientation="vertical" aria-label="Resize detail panel. Use left and right arrow keys." tabindex="0"></div>
+    <div class="pf-drawer-body">
+      <div class="pf-drawer-head">
+        <span class="pf-badge" id="pfBadge"></span>
+        <button class="pf-drawer-close" id="pfClose" aria-label="Close detail panel">&times;</button>
+      </div>
+      <h2 id="pfDrawerTitle"></h2>
+      <p class="pf-drawer-role" id="pfRole"></p>
+      <div class="pf-drawer-sections">
+        <div class="pf-sec">
+          <h3>Meaning</h3>
+          <p id="pfMeaning" class="pf-drawer-meaning"></p>
+        </div>
+        <div class="pf-sec">
+          <h3>Input/Inbound</h3>
+          <p id="pfInDesc" class="pf-drawer-desc"></p>
+          <ul id="pfIn"></ul>
+        </div>
+        <div class="pf-sec">
+          <h3>Output/Outbound</h3>
+          <p id="pfOutDesc" class="pf-drawer-desc"></p>
+          <ul id="pfOut"></ul>
+        </div>
+        <div class="pf-sec">
+          <h3>Example</h3>
+          <p id="pfExample" class="pf-drawer-example"></p>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <script>
+    const SLUG = "cat124-resume-suspension";
+    /* Export bounds are measured, not assumed (§11.1).
+     *
+     * The container's own rect is NOT the diagram's extent: the SVG has a min-width, so on a
+     * narrow viewport it is wider than its container and .diagram-container scrolls. Capturing
+     * the container rect then silently crops whatever overflowed — the right-hand nodes and the
+     * legend — and the exported PNG differs from what the page shows. So walk every descendant
+     * and take the true union, which also covers anything that overflows upward or downward. */
+    function captureBounds() {
+      const el = document.getElementById('report-container');
+      const c = el.getBoundingClientRect();
+      let l = c.left, t = c.top, r = c.right, b = c.bottom;
+      for (const n of el.querySelectorAll('*')) {
+        if (n.classList && (n.classList.contains('toolbar') || n.classList.contains('pf-drawer') || n.classList.contains('pf-filters'))) continue;
+        const q = n.getBoundingClientRect();
+        if (!q.width && !q.height) continue;
+        if (q.left < l) l = q.left;
+        if (q.top < t) t = q.top;
+        if (q.right > r) r = q.right;
+        if (q.bottom > b) b = q.bottom;
+      }
+      return { left: l, top: t, width: r - l, height: b - t };
+    }
+
+    async function capture() {
+      pfResetView();
+      await new Promise(r => setTimeout(r, 300));
+      const el = document.getElementById('report-container');
+      // A scrolled diagram must be captured whole: reset the scroll so html2canvas sees the
+      // full width, then restore it so the user's view is untouched.
+      const dc = document.querySelector('.diagram-container');
+      const sx = dc ? dc.scrollLeft : 0;
+      if (dc) dc.scrollLeft = 0;
+      const wasOverflow = dc ? dc.style.overflowX : '';
+      if (dc) dc.style.overflowX = 'visible';
+      await new Promise(r => requestAnimationFrame(r));
+
+      const r = captureBounds();
+      const pad = 32;
+      try {
+        return await html2canvas(document.body, { backgroundColor: '#020617', scale: 2, useCORS: true, ignoreElements: (e) => e.classList && (e.classList.contains('toolbar') || e.classList.contains('pf-drawer') || e.classList.contains('pf-filters')), x: r.left + window.scrollX - pad, y: r.top + window.scrollY - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
+      } finally {
+        if (dc) { dc.style.overflowX = wasOverflow; dc.scrollLeft = sx; }
+      }
+    }
+    async function copyAsImage(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        exportStatus('✓ Copied', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    async function downloadPNG(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const link = document.createElement('a'); link.download = SLUG + '.png'; link.href = canvas.toDataURL('image/png'); link.click();
+        exportStatus('✓ PNG', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    /* The menu closes on outside click, on Escape, and after a format is chosen — a popover
+     * that stays open behind the download it just started reads as though nothing happened. */
+    function setExportOpen(open) {
+      document.getElementById('exportMenu').classList.toggle('open', open);
+      document.getElementById('exportBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    function toggleExport(ev) {
+      ev.stopPropagation();
+      setExportOpen(!document.getElementById('exportMenu').classList.contains('open'));
+    }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.toolbar')) setExportOpen(false);
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && document.getElementById('exportMenu').classList.contains('open')) {
+        setExportOpen(false); document.getElementById('exportBtn').focus();
+      }
+    });
+
+    /* Status is shown on the trigger, not on the menu item: the menu closes on choose, so a
+     * message written into the item would vanish with it. */
+    function exportStatus(msg, revert) {
+      const b = document.getElementById('exportBtn');
+      if (revert === undefined) { b.textContent = msg; return; }
+      b.textContent = msg;
+      setTimeout(() => b.textContent = 'Export', revert);
+    }
+
+    /* SVG export is a real vector serialisation, not a raster (§11.1 r7).
+     *
+     * The live <svg> inherits its font from the page stylesheet, which does NOT travel with a
+     * detached clone — open the file standalone and every label reflows in a fallback face,
+     * shifting off the geometry the generator computed. So the clone gets the font stack and
+     * the canvas ground written onto it explicitly. Nothing else is restyled: all colours are
+     * already presentation attributes on the elements themselves. */
+    function downloadSVG(btn) {
+      try {
+        const src = document.querySelector('.diagram-container svg');
+        const clone = src.cloneNode(true);
+        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        const vb = (src.getAttribute('viewBox') || '').split(/[s,]+/).map(Number);
+        if (vb.length === 4) { clone.setAttribute('width', vb[2]); clone.setAttribute('height', vb[3]); }
+        clone.removeAttribute('style');
+        clone.setAttribute('style', 'background:' + "#020617");
+        const st = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+        st.textContent = 'text{font-family:' + getComputedStyle(src).fontFamily.replace(/"/g, "'") + '}';
+        clone.insertBefore(st, clone.firstChild);
+        const blob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a'); link.download = SLUG + '.svg'; link.href = url; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setExportOpen(false); exportStatus('✓ SVG', 2000);
+      } catch (e) { setExportOpen(false); exportStatus('✗ Failed', 2000); }
+    }
+
+    /* JPEG has no alpha, so an un-flattened canvas renders transparent pixels BLACK — which
+     * on this palette is invisible damage rather than an obvious bug. Composite onto the
+     * canvas ground first. */
+    async function downloadJPG(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const flat = document.createElement('canvas');
+        flat.width = canvas.width; flat.height = canvas.height;
+        const g = flat.getContext('2d');
+        g.fillStyle = "#020617";
+        g.fillRect(0, 0, flat.width, flat.height);
+        g.drawImage(canvas, 0, 0);
+        const link = document.createElement('a'); link.download = SLUG + '.jpg';
+        link.href = flat.toDataURL('image/jpeg', 0.92); link.click();
+        exportStatus('✓ JPG', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    async function downloadPDF(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const orientation = canvas.width > canvas.height ? 'landscape' : 'portrait';
+        const pdf = new jsPDF({ orientation, unit: 'px', format: [canvas.width, canvas.height], hotfixes: ['px_scaling'] });
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save(SLUG + '.pdf');
+        exportStatus('✓ PDF', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    /* --- interactivity layer (§11.3) --- */
+    const PF_NODES = [{"id":"role_check-no","type":"reject","num":"","title":"Rejected — Agent Not Authorized","role":"","desc":[]},{"id":"pmn_found-no","type":"reject","num":"","title":"Rejected — No Active PMN Order Found","role":"","desc":[]},{"id":"start1","type":"terminal","num":"","title":"Start","role":"","desc":[]},{"id":"ticket_intake","type":"manual","num":"1","title":"Receive Back-Office Ticket","role":"Back-office Agent","desc":["Requests lifting PMN suspension","Account or MSISDN identified","No self-service path exists"],"meaning":"Manual suspension is governed as a back-office, ticket-driven process, not a retail journey (evidenced at 01:18:52); resume follows the same governance since automatic resumption has been discontinued (01:17:16/01:24:34).","inputDesc":"Customer/account request to lift PMN suspension","outputDesc":"Ticket logged against account/MSISDN","example":"Ticket #TCK-88213 raised: 'Resume service for MSISDN 974XXXXXXX, parked since 2026-04-15.'","milestone":false},{"id":"role_check","type":"decision","num":"","title":"Agent Role Authorized?","role":"","desc":[]},{"id":"locate_pmn_order","type":"manual","num":"2","title":"Locate Existing PMN Order","role":"Back-office Agent","desc":["Search account for PMN order","Confirm parked-plan state","Inferred — not documented"],"meaning":"INFERRED: before any reversal can be built, the agent must find the original PMN Modification order that put the number into the 35 QAR / 4-month upfront / zero-credit-limit parked state. Not walked through in any source — a necessary structural precondition.","inputDesc":"MSISDN / account identifier from ticket","outputDesc":"Located PMN Modification order record","example":"Order #ORD-55210 (PMN Suspension, catalogue #117) found active on the account, plan = 'Park My Number 35QR/4mo'.","milestone":false},{"id":"pmn_found","type":"decision","num":"","title":"PMN Order Found?","role":"","desc":[]},{"id":"create_modify_order","type":"manual","num":"3","title":"Create & Customize Modify Order","role":"Back-office Agent","desc":["Manually build a Modify order","Customize to remove PMN order","Vanilla/Open UI desktop"],"meaning":"EVIDENCED (catalogue #124 description, verbatim): 'Manually Removing the Suspension for the number which is Applied through PMN order by creating an Modify order and customizing it.' This is the one directly-evidenced resume-specific mechanism, though only at the order-type level, not field-by-field.","inputDesc":"Located PMN order + account details","outputDesc":"Draft Modify order customized to reverse PMN","example":"Agent opens Modify order screen on Vanilla desktop, selects the PMN line item, and customizes it for removal.","milestone":false},{"id":"restore_plan","type":"manual","num":"4","title":"Restore Prior Plan","role":"Back-office Agent","desc":["Reverse 35 QAR/4-month plan","Re-apply customer's normal plan","Inferred — reverse of suspend step"],"meaning":"INFERRED: structural reverse of the suspend-side action, where the customer was 'moved to a park my number plan with very limited benefits, losing their current plan' (01:20:38). No source confirms whether the prior plan is auto-restored or manually re-selected.","inputDesc":"Customer's pre-suspension plan reference","outputDesc":"Normal plan re-applied to the Modify order","example":"Plan reverted from 'Park My Number 35QR/4mo' back to 'Postpaid Red 150QR' plan.","milestone":false},{"id":"restore_credit_limit","type":"manual","num":"5","title":"Restore Credit Limit","role":"Back-office Agent","desc":["Remove zero-limit rule","Restore normal credit limit","Inferred — reverse of park rule"],"meaning":"INFERRED: reverses the evidenced rule that 'the credit limit will be set to zero while parked... no order can be made' (01:23:12/01:23:38). No source states whether this is a separate field update or bundled with plan restoration.","inputDesc":"Customer's normal credit limit value","outputDesc":"Credit limit restored to pre-suspension value","example":"Credit limit changed from 0 QAR back to 500 QAR standard limit.","milestone":false},{"id":"submit_order","type":"manual","num":"6","title":"Submit Modify Order","role":"Back-office Agent","desc":["Submitted via Vanilla/Open UI","No approval-queue evidenced","Same channel as PMN order"],"meaning":"EVIDENCED channel (row 117/124: 'Action through Vanilla (Open UI desktop)'). No approval-queue is documented for this journey anywhere in the corpus — absence is inferred from silence, not confirmed absence.","inputDesc":"Completed Modify order (plan + credit limit reversed)","outputDesc":"Order submitted for processing","example":"Modify order #ORD-55299 submitted; status moves to Processing.","milestone":false},{"id":"end10","type":"terminal","num":"","title":"Complete","role":"","desc":[]}];
+    const PF_EDGES = [{"from":"start1","to":"ticket_intake","label":"","style":"flow"},{"from":"ticket_intake","to":"role_check","label":"resume ticket","style":"flow"},{"from":"role_check","to":"locate_pmn_order","label":"","style":"flow"},{"from":"locate_pmn_order","to":"pmn_found","label":"account lookup","style":"flow"},{"from":"pmn_found","to":"create_modify_order","label":"","style":"flow"},{"from":"create_modify_order","to":"restore_plan","label":"Continue to Row 2 →","style":"wrap"},{"from":"restore_plan","to":"restore_credit_limit","label":"plan restore","style":"flow"},{"from":"restore_credit_limit","to":"submit_order","label":"credit limit restore","style":"flow"},{"from":"submit_order","to":"end10","label":"submitted order","style":"flow"},{"from":"role_check","to":"role_check-no","label":"No","style":"exception"},{"from":"pmn_found","to":"pmn_found-no","label":"No","style":"exception"}];
+    const PF_TYPE_LABEL = {"manual":"Manual","automated":"Automated","integration":"Integration","decision":"Decision","terminal":"Start / End","reject":"Rejected"};
+    const PF_TYPE_ACCENT = {"manual":"#34d399","automated":"#a78bfa","integration":"#fbbf24","decision":"#fb7185","terminal":"#22d3ee","reject":"#fb7185"};
+    const pfById = Object.fromEntries(PF_NODES.filter(n => n.id).map(n => [n.id, n]));
+    const pfDrawer = document.getElementById('pfDrawer');
+    let pfSelected = null;
+
+    const pfNodeEls = () => Array.from(document.querySelectorAll('.pf-node'));
+    const pfEdgeEls = () => Array.from(document.querySelectorAll('.pf-edge'));
+
+    function pfLabelFor(id) {
+      const n = pfById[id];
+      if (!n) return id || 'unknown';
+      return n.title || n.id;
+    }
+    function pfLi(html) { const li = document.createElement('li'); li.innerHTML = html; return li; }
+    function pfFill(ul, items, emptyText) {
+      ul.textContent = '';
+      if (!items.length) { ul.appendChild(pfLi('<span class="pf-empty">' + emptyText + '</span>')); return; }
+      items.forEach(i => ul.appendChild(i));
+    }
+    function pfEdgeItem(otherId, e, dir) {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.className = 'pf-link';
+      btn.type = 'button';
+      btn.textContent = (dir === 'in' ? '← ' : '→ ') + pfLabelFor(otherId);
+      btn.addEventListener('click', () => pfOpen(otherId));
+      li.appendChild(btn);
+      const meta = [];
+      if (e.label) meta.push(e.label);
+      if (e.style && e.style !== 'flow') meta.push(e.style);
+      if (meta.length) {
+        const span = document.createElement('span');
+        span.className = 'pf-payload';
+        span.textContent = '  ·  ' + meta.join(' · ');
+        li.appendChild(span);
+      }
+      return li;
+    }
+
+    function pfOpen(id) {
+      const n = pfById[id];
+      if (!n) return;
+      pfSelected = id;
+      const badge = document.getElementById('pfBadge');
+      badge.textContent = PF_TYPE_LABEL[n.type] || n.type;
+      badge.style.color = PF_TYPE_ACCENT[n.type] || '#94a3b8';
+      document.getElementById('pfDrawerTitle').textContent = (n.num ? n.num + '. ' : '') + (n.title || n.id);
+      document.getElementById('pfRole').textContent = n.role || '';
+      document.getElementById('pfMeaning').textContent = n.meaning || (n.desc && n.desc[0]) || 'No meaning defined.';
+      document.getElementById('pfInDesc').textContent = n.inputDesc || '';
+      document.getElementById('pfOutDesc').textContent = n.outputDesc || '';
+      document.getElementById('pfExample').textContent = n.example || 'No example provided.';
+      pfFill(document.getElementById('pfIn'),
+        PF_EDGES.filter(e => e.to === id).map(e => pfEdgeItem(e.from, e, 'in')),
+        'Nothing flows into this node.');
+      pfFill(document.getElementById('pfOut'),
+        PF_EDGES.filter(e => e.from === id).map(e => pfEdgeItem(e.to, e, 'out')),
+        'Nothing flows out of this node.');
+      pfDrawer.classList.add('is-open');
+      document.body.classList.add('pf-open');
+      pfDrawer.setAttribute('aria-hidden', 'false');
+      pfNodeEls().forEach(el => el.classList.toggle('is-sel', el.dataset.id === id));
+      document.getElementById('pfClose').focus();
+    }
+
+    function pfClose() {
+      pfDrawer.classList.remove('is-open');
+      document.body.classList.remove('pf-open');
+      pfDrawer.setAttribute('aria-hidden', 'true');
+      pfNodeEls().forEach(el => el.classList.remove('is-sel'));
+      if (pfSelected) {
+        const el = pfNodeEls().find(e => e.dataset.id === pfSelected);
+        if (el) el.focus();
+      }
+      pfSelected = null;
+    }
+
+    function pfApplyFilter(type) {
+      const all = type === 'all';
+      pfNodeEls().forEach(el => el.classList.toggle('is-dim', !all && el.dataset.type !== type));
+      const visible = new Set(PF_NODES.filter(n => all || n.type === type).map(n => n.id));
+      pfEdgeEls().forEach(el => {
+        const on = all || (visible.has(el.dataset.from) && visible.has(el.dataset.to));
+        el.classList.toggle('is-dim', !on);
+      });
+      document.querySelectorAll('.pf-chip').forEach(c =>
+        c.setAttribute('aria-pressed', String(c.dataset.filter === type)));
+    }
+    // Exports must always show the whole diagram — a filtered PNG silently loses
+    // nodes and reads as the complete picture, which is worse than no filter at all.
+    // Closing the drawer first also restores the page width the capture is measured from.
+    function pfResetView() { pfApplyFilter('all'); if (pfSelected) pfClose(); }
+
+    pfNodeEls().forEach(el => {
+      el.addEventListener('click', () => pfOpen(el.dataset.id));
+      el.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); pfOpen(el.dataset.id); }
+      });
+    });
+    document.querySelectorAll('.pf-chip').forEach(c =>
+      c.addEventListener('click', () => pfApplyFilter(c.dataset.filter)));
+    document.getElementById('pfClose').addEventListener('click', pfClose);
+    document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && pfSelected) pfClose(); });
+
+    /* Drawer resize — pointer drag plus arrow keys, clamped so the panel can never
+       swallow the diagram or shrink below a readable measure. */
+    (function () {
+      const handle = document.getElementById('pfHandle');
+      const MIN = 320, MAX = 760;
+      const setW = w => document.documentElement.style.setProperty('--pf-drawer-w', Math.min(MAX, Math.max(MIN, w)) + 'px');
+      let dragging = false;
+      handle.addEventListener('pointerdown', ev => { dragging = true; handle.setPointerCapture(ev.pointerId); ev.preventDefault(); });
+      handle.addEventListener('pointermove', ev => { if (dragging) setW(window.innerWidth - ev.clientX); });
+      handle.addEventListener('pointerup', ev => { dragging = false; handle.releasePointerCapture(ev.pointerId); });
+      handle.addEventListener('keydown', ev => {
+        const cur = pfDrawer.getBoundingClientRect().width;
+        if (ev.key === 'ArrowLeft') { setW(cur + 24); ev.preventDefault(); }
+        if (ev.key === 'ArrowRight') { setW(cur - 24); ev.preventDefault(); }
+      });
+    })();
+  </script>
+</body>
+</html>

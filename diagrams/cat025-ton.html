@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="spec-hash" content="sha256:3e70d440eddc7dc8a3e04c70a10038b1406d2338f0da3ddc8fb7ef84da7592c1">
+  <meta name="generated-at" content="2026-08-22T20:34:47.872Z">
+  <meta name="diagram-version" content="2.3">
+  <title>TON — Transfer of Ownership (End-to-End) - Process Flow</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" integrity="sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/" crossorigin="anonymous"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #020617; min-height: 100vh; padding: 2rem; color: white; }
+    .container { width: 1600px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-start; }
+    .header-content { flex: 1; }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    .pulse-dot { width: 12px; height: 12px; background: #a78bfa; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+    .subtitle { color: #94a3b8; font-size: 0.875rem; margin-left: 1.75rem; }
+    .diagram-container { overflow-x: auto; width: 100%; }
+    svg { width: 1600px; height: auto; display: block; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 2rem; }
+    .card { background: #080e20; border-radius: 0.75rem; border: 1px solid #1e293b; padding: 1.25rem; }
+    .card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.cyan { background: #22d3ee; } .card-dot.emerald { background: #34d399; } .card-dot.violet { background: #a78bfa; }
+    .card-dot.amber { background: #fbbf24; } .card-dot.rose { background: #fb7185; } .card-dot.slate { background: #94a3b8; }
+    .card h3 { font-size: 0.875rem; font-weight: 600; }
+    .card ul { list-style: none; color: #94a3b8; font-size: 0.75rem; }
+    .card li { margin-bottom: 0.375rem; }
+    .io-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .io-table th, .io-table td { border: 1px solid rgba(71, 85, 105, 0.4); padding: 0.625rem 0.75rem; text-align: left; vertical-align: top; line-height: 1.5; }
+    .io-table thead th { background: #151e30; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem; }
+    .io-table tbody th { background: #11192b; color: white; font-weight: 700; white-space: nowrap; }
+    .io-table td { color: #cbd5e1; }
+    .io-table .io-col-step { width: 64px; }
+    .io-table td.io-in { border-left: 2px solid #34d399; }
+    .io-table td.io-out { border-left: 2px solid #22d3ee; }
+    .io-table td.io-ex { color: #a78bfa; white-space: nowrap; }
+    .io-table td.io-mean { color: #94a3b8; }
+    .footer { text-align: center; margin-top: 1.5rem; color: #475569; font-size: 0.75rem; }
+    /* Export menu (r7). The trigger is a labelled button, not an ellipsis glyph: an unlabelled
+     * ellipsis gives no clue that export lives behind it, so the feature went unfound. The
+     * popover is a light surface deliberately — it is chrome, and reads as sitting above the
+     * dark canvas rather than as another dark panel competing with the diagram. */
+    .toolbar { display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center; position: relative; }
+    .export-btn { background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; font-family: inherit; font-size: 0.8125rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; transition: background 0.15s, box-shadow 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+    .export-btn:hover { background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+    .export-menu { display: none; position: absolute; top: calc(100% + 0.5rem); right: 0; z-index: 40; min-width: 13rem; padding: 0.375rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.625rem; box-shadow: 0 10px 24px rgba(0,0,0,0.55); }
+    .export-menu.open { display: block; }
+    .export-item { display: flex; align-items: baseline; justify-content: space-between; gap: 1.5rem; width: 100%; background: transparent; border: none; border-radius: 0.375rem; padding: 0.5rem 0.75rem; font-family: inherit; font-size: 0.8125rem; color: #0f172a; cursor: pointer; text-align: left; transition: background 0.12s; }
+    .export-item:hover { background: #e8edf5; }
+    .export-fmt { font-weight: 600; letter-spacing: 0.02em; }
+    .export-hint { color: #64748b; font-size: 0.6875rem; white-space: nowrap; }
+    .export-sep { height: 1px; margin: 0.25rem 0.5rem; background: #e2e8f0; }
+    .export-btn:focus-visible, .export-item:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; }
+    @media (max-width: 768px) { .header { flex-direction: column; gap: 1rem; } }
+    @media print { body { background: #020617; padding: 1rem; } .toolbar { display: none !important; } }
+    /* --- interactivity layer (§11.3) --- */
+    /* Filter toolbar (r6).
+     *
+     * The problem it fixes: the chips previously used the same vocabulary as the nodes and the
+     * legend — a rounded outline with a small coloured dot — so a row of CONTROLS read as a
+     * third kind of swatch. Nothing signalled it was interactive, and it competed with the
+     * diagram for attention instead of sitting above it.
+     *
+     * The fix is to stop borrowing that vocabulary. Controls now get their own surface: a
+     * raised, bordered bar that visually detaches from the canvas, an accent rule to anchor it,
+     * and a SOLID fill on the active chip — an unmistakably UI treatment, since nothing else in
+     * a diagram is ever filled with its own accent colour at full opacity. */
+    .pf-filters { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem; align-items: center;
+      background: #0d1425; border: 1px solid #263349; border-left: 3px solid #a78bfa;
+      border-radius: 0.5rem; padding: 0.55rem 0.75rem; box-shadow: 0 1px 3px rgba(2, 6, 23, 0.5); }
+    .pf-filters-label { color: #cbd5e1; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; margin-right: 0.55rem; display: inline-flex; align-items: center; gap: 0.4rem; }
+    .pf-filters-label::before { content: ''; width: 11px; height: 11px; flex: 0 0 11px;
+      /* Funnel glyph, drawn rather than an emoji: it must render identically everywhere. */
+      background: #a78bfa; clip-path: polygon(0 0, 100% 0, 62% 45%, 62% 100%, 38% 100%, 38% 45%); }
+    /* v2 redesign: pill-shaped (999px radius, was 0.375rem — a barely-rounded rect that read
+       as a static label), bigger padding/min-height for a real tap target (was 0.3rem/0.7rem,
+       under the ~32px accessibility guideline), and a stronger active state (ring + scale) so
+       the selected/unselected distinction doesn't rely on colour alone. */
+    .pf-chip { background: #1a2337; border: 1.5px solid #3b4a63; color: #cbd5e1; padding: 0.5rem 1rem;
+      border-radius: 999px; font-family: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 0.45rem; line-height: 1.2; min-height: 2rem;
+      transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s; }
+    .pf-chip:hover { background: #24304a; border-color: #64748b; color: white; }
+    .pf-chip:active { transform: scale(0.96); }
+    .pf-chip:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    /* Selected: the chip fills with its own accent, sits a hair taller with a visible ring, and
+       the dot becomes a filled check-like mark. High contrast, unambiguous, and impossible to
+       confuse with a legend swatch — legend marks are outlines on the bare ground. */
+    .pf-chip[aria-pressed="true"] { background: currentColor; border-color: currentColor;
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.28); transform: scale(1.03); }
+    .pf-chip[aria-pressed="true"]:hover { transform: scale(1.03); }
+    .pf-chip[aria-pressed="true"] .pf-chip-label { color: #0b1120; font-weight: 700; }
+    .pf-chip[aria-pressed="true"] .pf-chip-dot { background: #0b1120; opacity: 0.65; }
+    .pf-chip-label { color: inherit; }
+    .pf-chip-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: 0 0 8px; }
+    .pf-node { cursor: pointer; }
+    .pf-node:hover { filter: brightness(1.32); }
+    .pf-node:focus { outline: none; }
+    .pf-node:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 3px; border-radius: 4px; }
+    .pf-node, .pf-edge { transition: opacity 0.2s ease; }
+    .pf-node.is-dim, .pf-edge.is-dim { opacity: 0.14; pointer-events: none; }
+    .pf-node.is-sel > rect, .pf-node.is-sel > circle, .pf-node.is-sel > g > rect { stroke-width: 3; }
+    /* The drawer floats as an overlay — position: fixed with no body padding. Opening/closing
+       the drawer does not affect layout of the diagram or any page content. */
+    .pf-drawer { position: fixed; top: 0; right: 0; height: 100vh; width: var(--pf-drawer-w, 400px); background: #0b1220; border-left: 1px solid #1e293b; box-shadow: -12px 0 32px #020617; transform: translateX(101%); transition: transform 0.25s ease; z-index: 40; display: flex; }
+    .pf-drawer.is-open { transform: none; }
+    .pf-drawer-handle { width: 6px; flex: 0 0 6px; cursor: ew-resize; background: transparent; border-right: 1px solid #1e293b; }
+    .pf-drawer-handle:hover, .pf-drawer-handle:focus-visible { background: #423c6c; outline: none; }
+    .pf-drawer-body { flex: 1; overflow-y: auto; padding: 1.25rem; min-width: 0; }
+    .pf-drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.75rem; }
+    .pf-badge { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.2rem 0.5rem; border-radius: 0.25rem; border: 1px solid currentColor; white-space: nowrap; }
+    .pf-drawer-close { background: transparent; border: none; color: #475569; font-size: 1.5rem; line-height: 1; cursor: pointer; padding: 0 0.25rem; }
+    .pf-drawer-close:hover { color: white; }
+    .pf-drawer-close:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    .pf-drawer h2 { font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; word-break: break-word; }
+    .pf-drawer-role { color: #94a3b8; font-size: 0.75rem; margin-bottom: 1rem; word-break: break-word; }
+    .pf-drawer-sections { display: flex; flex-direction: column; gap: 1rem; }
+    .pf-sec { margin-top: 0; border-top: none; padding-top: 0; }
+    .pf-sec h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; margin-bottom: 0.5rem; margin-top: 0; }
+    .pf-drawer-meaning { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0 0 0.5rem 0; }
+    .pf-drawer-example { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0; }
+    .pf-drawer-desc { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0 0 0.5rem 0; }
+    .pf-sec ul { list-style: none; margin: 0; padding: 0; }
+    .pf-sec li { color: #cbd5e1; font-size: 0.75rem; margin-bottom: 0.3rem; line-height: 1.5; }
+    .pf-sec { margin-top: 1rem; border-top: 1px solid #1e293b; padding-top: 0.75rem; }
+    .pf-sec h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; margin-bottom: 0.5rem; }
+    .pf-sec ul { list-style: none; }
+    .pf-sec li { color: #cbd5e1; font-size: 0.75rem; margin-bottom: 0.4rem; line-height: 1.5; word-break: break-word; }
+    .pf-sec .pf-empty { color: #475569; font-style: italic; }
+    .pf-link { background: none; border: none; color: #a78bfa; font-family: inherit; font-size: 0.75rem; cursor: pointer; padding: 0; text-align: left; text-decoration: underline; text-underline-offset: 2px; }
+    .pf-link:hover { color: #c4b5fd; }
+    .pf-link:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    .pf-payload { color: #94a3b8; }
+    @media (prefers-reduced-motion: reduce) {
+      .pulse-dot { animation: none; }
+      body, .pf-drawer, .pf-node, .pf-edge { transition: none; }
+    }
+    @media print { .pf-drawer, .pf-filters { display: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="container" id="report-container">
+    <div class="header">
+      <div class="header-content">
+        <div class="header-row">
+          <div class="pulse-dot"></div>
+          <h1>TON — Transfer of Ownership (End-to-End)</h1>
+        </div>
+        <p class="subtitle">Catalogue #25 · Support · Workflow/Task · Retail / Chat / Digital-MVA channels · Four-queue CDM approval routing</p>
+      </div>
+      <div class="toolbar">
+        <button class="export-btn" id="exportBtn" onclick="toggleExport(event)" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu" aria-label="Export options">Export</button>
+        <div class="export-menu" id="exportMenu" role="menu" aria-labelledby="exportBtn">
+          <button role="menuitem" class="export-item" onclick="downloadSVG(this)"><span class="export-fmt">SVG</span><span class="export-hint">vector · editing</span></button>
+          <button role="menuitem" class="export-item" onclick="downloadJPG(this)"><span class="export-fmt">JPG</span><span class="export-hint">image · sharing</span></button>
+          <button role="menuitem" class="export-item" onclick="downloadPDF(this)"><span class="export-fmt">PDF</span><span class="export-hint">document</span></button>
+          <div class="export-sep" role="separator"></div>
+          <button role="menuitem" class="export-item" onclick="downloadPNG(this)"><span class="export-fmt">PNG</span><span class="export-hint">image · slides</span></button>
+          <button role="menuitem" class="export-item" onclick="copyAsImage(this)"><span class="export-fmt">Copy</span><span class="export-hint">to clipboard</span></button>
+        </div>
+      </div>
+    </div>
+    <div class="pf-filters" role="group" aria-label="Filter diagram by node type">
+        <span class="pf-filters-label">Filter</span>
+        <button class="pf-chip" data-filter="all" aria-pressed="true" style="color:#a78bfa"><span class="pf-chip-dot"></span><span class="pf-chip-label">All</span></button>
+        <button class="pf-chip" data-filter="manual" aria-pressed="false" style="color:#34d399"><span class="pf-chip-dot"></span><span class="pf-chip-label">Manual</span></button>
+        <button class="pf-chip" data-filter="automated" aria-pressed="false" style="color:#a78bfa"><span class="pf-chip-dot"></span><span class="pf-chip-label">Automated</span></button>
+        <button class="pf-chip" data-filter="integration" aria-pressed="false" style="color:#fbbf24"><span class="pf-chip-dot"></span><span class="pf-chip-label">Integration</span></button>
+        <button class="pf-chip" data-filter="decision" aria-pressed="false" style="color:#fb7185"><span class="pf-chip-dot"></span><span class="pf-chip-label">Decision</span></button>
+        <button class="pf-chip" data-filter="terminal" aria-pressed="false" style="color:#22d3ee"><span class="pf-chip-dot"></span><span class="pf-chip-label">Start / End</span></button>
+        <button class="pf-chip" data-filter="reject" aria-pressed="false" style="color:#fb7185"><span class="pf-chip-dot"></span><span class="pf-chip-label">Rejected</span></button>
+      </div>
+    <div class="diagram-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="5.87 -66.39 1591.83 2226.8" role="group" aria-label="TON — Transfer of Ownership (End-to-End) diagram. 33 nodes; each is focusable for details.">
+<defs>
+<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/></marker>
+<marker id="arrowhead-emerald" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#34d399"/></marker>
+<marker id="arrowhead-violet" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa"/></marker>
+<marker id="arrowhead-amber" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24"/></marker>
+<marker id="arrowhead-rose" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fb7185"/></marker>
+<marker id="arrowhead-slate" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/></marker>
+<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="1.5"/></pattern>
+</defs>
+<line x1="342.1644302003174" y1="70" x2="402.1644302003174" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="start1" data-to="channel_entry"/>
+<line x1="562.1644302003174" y1="70" x2="672.1644302003174" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="channel_entry" data-to="open_ticket_check"/>
+<rect x="575.65" y="46.42" width="83.02" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="617.1644302003174" y="57" fill="#94a3b8" font-size="11" text-anchor="middle">TON request</text>
+<line x1="848.9411254969543" y1="70" x2="908.9411254969543" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="open_ticket_check" data-to="ton_type"/>
+<rect x="868.12" y="46.42" width="21.64" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="878.9411254969543" y="57" fill="#fb7185" font-size="11" font-weight="600" text-anchor="middle">No</text>
+<line x1="1017.8355697996826" y1="70" x2="1077.8355697996826" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="ton_type" data-to="third_party_route"/>
+<rect x="982.46" y="46.42" width="130.76" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="1047.8355697996826" y="57" fill="#fb7185" font-size="11" font-weight="600" text-anchor="middle">BAU (both present)</text>
+<path d="M 1157.8355697996826 121 L 1157.8355697996826 226.38834764831844 L 187.00505063388334 226.38834764831844 L 187.00505063388334 386.7766952966369 L 207.00505063388334 386.7766952966369" stroke="#94a3b8" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="third_party_route" data-to="prereq_gate"/>
+<rect x="1165.84" y="130.42" width="145.58" height="23" rx="11.5" fill="#0d1425" stroke="#94a3b8" stroke-width="1.5" opacity="0.95"/>
+<text x="1173.8355697996826" y="145" fill="#e2e8f0" font-size="11" font-weight="700">Continue to Row 2 →</text>
+<line x1="367.00505063388334" y1="386.7766952966369" x2="517.0050506338833" y2="386.7766952966369" stroke="#a78bfa" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-violet)" class="pf-edge" data-from="prereq_gate" data-to="collections_check"/>
+<rect x="380.04" y="363.2" width="123.94" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="442.00505063388334" y="373.7766952966369" fill="#94a3b8" font-size="11" text-anchor="middle">eligibility check</text>
+<line x1="714.9949493661167" y1="386.7766952966369" x2="774.9949493661167" y2="386.7766952966369" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="collections_check" data-to="moi_age_check"/>
+<rect x="734.17" y="363.2" width="21.64" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="744.9949493661167" y="373.7766952966369" fill="#fb7185" font-size="11" font-weight="600" text-anchor="middle">No</text>
+<line x1="934.9949493661167" y1="386.7766952966369" x2="1112.9949493661165" y2="386.7766952966369" stroke="#fbbf24" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-amber)" class="pf-edge" data-from="moi_age_check" data-to="doc_validation_a"/>
+<rect x="948.38" y="363.2" width="151.22" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="1023.9949493661165" y="373.7766952966369" fill="#94a3b8" font-size="11" text-anchor="middle">MOI validation result</text>
+<path d="M 1192.9949493661165 431.7766952966369 L 1192.9949493661165 553.7716446627535 L 203.94007947642774 553.7716446627535 L 203.94007947642774 724.7665940288703 L 223.94007947642774 724.7665940288703" stroke="#94a3b8" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="doc_validation_a" data-to="doc_validation_b"/>
+<rect x="1200.99" y="441.2" width="145.58" height="23" rx="11.5" fill="#0d1425" stroke="#94a3b8" stroke-width="1.5" opacity="0.95"/>
+<text x="1208.9949493661165" y="455.7766952966369" fill="#e2e8f0" font-size="11" font-weight="700">Continue to Row 3 →</text>
+<line x1="383.94007947642774" y1="724.7665940288703" x2="588.9400794764277" y2="724.7665940288703" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="doc_validation_b" data-to="doc_collection"/>
+<rect x="397.19" y="701.19" width="178.5" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="486.44007947642774" y="711.7665940288703" fill="#94a3b8" font-size="11" text-anchor="middle">Party B validation packet</text>
+<line x1="748.9400794764277" y1="724.7665940288703" x2="864.9400794764277" y2="724.7665940288703" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="doc_collection" data-to="star_number_check"/>
+<rect x="762.02" y="701.19" width="89.84" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="806.9400794764277" y="711.7665940288703" fill="#94a3b8" font-size="11" text-anchor="middle">document set</text>
+<line x1="1036.0599205235721" y1="724.7665940288703" x2="1096.0599205235721" y2="724.7665940288703" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="star_number_check" data-to="star_pricing"/>
+<rect x="1051.83" y="701.19" width="28.46" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="1066.0599205235721" y="711.7665940288703" fill="#fb7185" font-size="11" font-weight="600" text-anchor="middle">Yes</text>
+<path d="M 1176.0599205235721 775.7665940288703 L 1176.0599205235721 878.3265145524425 L 103.72435072388964 878.3265145524425 L 103.72435072388964 1035.8864350760148 L 123.72435072388964 1035.8864350760148" stroke="#94a3b8" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="star_pricing" data-to="fee_payment"/>
+<rect x="1184.06" y="785.19" width="145.58" height="23" rx="11.5" fill="#0d1425" stroke="#94a3b8" stroke-width="1.5" opacity="0.95"/>
+<text x="1192.0599205235721" y="799.7665940288703" fill="#e2e8f0" font-size="11" font-weight="700">Continue to Row 4 →</text>
+<line x1="283.72435072388964" y1="1035.8864350760148" x2="420.72435072388964" y2="1035.8864350760148" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="fee_payment" data-to="prepaid_migration"/>
+<rect x="297.07" y="1012.31" width="110.3" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="352.22435072388964" y="1022.8864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">payment receipt</text>
+<line x1="580.7243507238896" y1="1035.8864350760148" x2="758.7243507238896" y2="1035.8864350760148" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="prepaid_migration" data-to="ticket_managing_queue"/>
+<rect x="594.11" y="1012.31" width="151.22" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="669.7243507238896" y="1022.8864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">prepaid-migrated line</text>
+<line x1="918.7243507238896" y1="1035.8864350760148" x2="1021.7243507238896" y2="1035.8864350760148" stroke="#a78bfa" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-violet)" class="pf-edge" data-from="ticket_managing_queue" data-to="null_price_check"/>
+<rect x="932.12" y="1012.31" width="76.2" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="970.2243507238896" y="1022.8864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">TON ticket</text>
+<line x1="1136.2756492761102" y1="1035.8864350760148" x2="1196.2756492761105" y2="1035.8864350760148" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="null_price_check" data-to="cdm_review"/>
+<rect x="1097.49" y="1012.31" width="137.58" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="1166.2756492761105" y="1022.8864350760148" fill="#fb7185" font-size="11" font-weight="600" text-anchor="middle">Yes — Forced to CDM</text>
+<path d="M 1276.2756492761105 1086.8864350760148 L 1276.2756492761105 1120.8864350760148 L 1334.3978246380552 1120.8864350760148 L 1334.3978246380552 1179.162084352125 L 120.3420997299811 1179.162084352125 L 120.3420997299811 1290.4377336282355 L 140.3420997299811 1290.4377336282355" stroke="#94a3b8" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="cdm_review" data-to="cdm_decision"/>
+<rect x="1284.28" y="1096.31" width="145.58" height="23" rx="11.5" fill="#0d1425" stroke="#94a3b8" stroke-width="1.5" opacity="0.95"/>
+<text x="1292.2756492761105" y="1110.8864350760148" fill="#e2e8f0" font-size="11" font-weight="700">Continue to Row 5 →</text>
+<line x1="240.75126265847086" y1="1290.4377336282355" x2="300.75126265847086" y2="1290.4377336282355" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="cdm_decision" data-to="reject_correction"/>
+<rect x="239.47" y="1266.86" width="62.56" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="270.75126265847086" y="1277.4377336282355" fill="#fb7185" font-size="11" font-weight="600" text-anchor="middle">Approved</text>
+<line x1="460.75126265847086" y1="1290.4377336282355" x2="604.7512626584709" y2="1290.4377336282355" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="reject_correction" data-to="nationality_route"/>
+<rect x="474.19" y="1266.86" width="117.12" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="532.7512626584709" y="1277.4377336282355" fill="#94a3b8" font-size="11" text-anchor="middle">rejection notice</text>
+<line x1="754.6579002700189" y1="1290.4377336282355" x2="814.6579002700189" y2="1290.4377336282355" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="nationality_route" data-to="qatq_review"/>
+<rect x="770.43" y="1266.86" width="28.46" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="784.6579002700189" y="1277.4377336282355" fill="#fb7185" font-size="11" font-weight="600" text-anchor="middle">BOQ</text>
+<line x1="974.6579002700189" y1="1290.4377336282355" x2="1179.657900270019" y2="1290.4377336282355" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="qatq_review" data-to="boq_review"/>
+<rect x="987.91" y="1266.86" width="178.5" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="1077.157900270019" y="1277.4377336282355" fill="#94a3b8" font-size="11" text-anchor="middle">validated &amp; closed ticket</text>
+<path d="M 1259.657900270019 1335.4377336282355 L 1259.657900270019 1433.3910524340097 L 69.96699141100896 1433.3910524340097 L 69.96699141100896 1580.3443712397836 L 89.96699141100896 1580.3443712397836" stroke="#94a3b8" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="boq_review" data-to="backoffice_execute"/>
+<rect x="1267.66" y="1344.86" width="145.58" height="23" rx="11.5" fill="#0d1425" stroke="#94a3b8" stroke-width="1.5" opacity="0.95"/>
+<text x="1275.657900270019" y="1359.4377336282355" fill="#e2e8f0" font-size="11" font-weight="700">Continue to Row 6 →</text>
+<line x1="249.96699141100896" y1="1580.3443712397836" x2="461.96699141100896" y2="1580.3443712397836" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="backoffice_execute" data-to="address_update"/>
+<rect x="263.31" y="1556.76" width="185.32" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="355.96699141100896" y="1567.3443712397836" fill="#94a3b8" font-size="11" text-anchor="middle">transferred account record</text>
+<line x1="621.966991411009" y1="1580.3443712397836" x2="806.966991411009" y2="1580.3443712397836" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="address_update" data-to="sim_swap"/>
+<rect x="635.45" y="1556.76" width="158.04" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="714.466991411009" y="1567.3443712397836" fill="#94a3b8" font-size="11" text-anchor="middle">updated address record</text>
+<line x1="966.966991411009" y1="1580.3443712397836" x2="1103.966991411009" y2="1580.3443712397836" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="sim_swap" data-to="end27"/>
+<rect x="980.32" y="1556.76" width="110.3" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="1035.466991411009" y="1567.3443712397836" fill="#94a3b8" font-size="11" text-anchor="middle">new/swapped SIM</text>
+<path d="M 1337.0000000000002 1633.3773798287746 L 1337.0000000000002 1667.3773798287746 L 1309.0000000000002 1667.3773798287746 L 1309.0000000000002 1701.3773798287748 L 119.5 1701.3773798287748 L 119.5 1826.4103884177657 L 139.5 1826.4103884177657" stroke="#94a3b8" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="fixed_5g_branch" data-to="fixed_validation"/>
+<rect x="1345" y="1642.8" width="145.58" height="23" rx="11.5" fill="#0d1425" stroke="#94a3b8" stroke-width="1.5" opacity="0.95"/>
+<text x="1353.0000000000002" y="1657.3773798287746" fill="#e2e8f0" font-size="11" font-weight="700">Continue to Row 7 →</text>
+<line x1="299.5" y1="1826.4103884177657" x2="518.5" y2="1826.4103884177657" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="fixed_validation" data-to="osn_removal"/>
+<rect x="312.93" y="1802.83" width="192.14" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="409" y="1813.4103884177657" fill="#94a3b8" font-size="11" text-anchor="middle">fixed TON validation packet</text>
+<line x1="678.5" y1="1826.4103884177657" x2="835.5" y2="1826.4103884177657" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="osn_removal" data-to="fixed_completion"/>
+<rect x="691.62" y="1802.83" width="130.76" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="757" y="1813.4103884177657" fill="#94a3b8" font-size="11" text-anchor="middle">OSN removal record</text>
+<line x1="995.5" y1="1826.4103884177657" x2="1220.5" y2="1826.4103884177657" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="fixed_completion" data-to="end32"/>
+<rect x="1008.52" y="1802.83" width="198.96" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="1108" y="1813.4103884177657" fill="#94a3b8" font-size="11" text-anchor="middle">re-provisioned fixed service</text>
+<path d="M 760.5527778486359 158.38834764831844 L 760.5527778486359 192.38834764831844 L 402.1644302003174 192.38834764831844 L 402.1644302003174 70" stroke="#fb7185" stroke-width="2.25" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="open_ticket_check" data-to="channel_entry"/>
+<rect x="764.55" y="164.81" width="28.46" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="768.5527778486359" y="175.38834764831844" fill="#fb7185" font-size="11" font-weight="600">Yes</text>
+<path d="M 963.3883476483185 124.44722215136417 L 963.3883476483185 158.44722215136417 L 1077.8355697996826 158.44722215136417 L 1077.8355697996826 70" stroke="#fb7185" stroke-width="2.25" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="ton_type" data-to="third_party_route"/>
+<rect x="967.39" y="130.87" width="226.24" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="971.3883476483185" y="141.44722215136417" fill="#fb7185" font-size="11" font-weight="600">COO / Third-party (cancelled ID)</text>
+<path d="M 616 485.77164466275354 L 616 519.7716446627535 L 207.00505063388334 519.7716446627535 L 207.00505063388334 386.7766952966369" stroke="#fb7185" stroke-width="2.25" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="collections_check" data-to="prereq_gate"/>
+<rect x="620" y="492.19" width="76.2" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="624" y="502.77164466275354" fill="#fb7185" font-size="11" font-weight="600">Yes — Hold</text>
+<path d="M 950.5 810.3265145524425 L 950.5 844.3265145524425 L 203.72435072388964 844.3265145524425 L 203.72435072388964 992.3864350760148" stroke="#fb7185" stroke-width="2.25" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="star_number_check" data-to="fee_payment"/>
+<rect x="954.5" y="816.75" width="21.64" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="958.5" y="827.3265145524425" fill="#fb7185" font-size="11" font-weight="600">No</text>
+<path d="M 1079 1093.162084352125 L 1079 1127.162084352125 L 1196.2756492761105 1127.162084352125 L 1196.2756492761105 1035.8864350760148" stroke="#fb7185" stroke-width="2.25" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="null_price_check" data-to="cdm_review"/>
+<rect x="1083" y="1099.58" width="137.58" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="1087" y="1110.162084352125" fill="#fb7185" font-size="11" font-weight="600">No — Normal Routing</text>
+<path d="M 190.54668119422598 1340.6423150924804 L 190.54668119422598 1374.6423150924804 L 300.75126265847086 1374.6423150924804 L 300.75126265847086 1290.4377336282355" stroke="#fb7185" stroke-width="2.25" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="cdm_decision" data-to="reject_correction"/>
+<rect x="194.55" y="1347.06" width="62.56" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="198.54668119422598" y="1357.6423150924804" fill="#fb7185" font-size="11" font-weight="600">Rejected</text>
+<path d="M 679.7045814642449 1365.3910524340095 L 679.7045814642449 1399.3910524340097 L 814.6579002700189 1399.3910524340097 L 814.6579002700189 1290.4377336282355" stroke="#fb7185" stroke-width="2.25" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="nationality_route" data-to="qatq_review"/>
+<rect x="683.7" y="1371.81" width="35.28" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="687.7045814642449" y="1382.3910524340095" fill="#fb7185" font-size="11" font-weight="600">QATQ</text>
+<path d="M 1337.0000000000002 1633.3773798287748 L 1337.0000000000002 1667.3773798287748 L 806.966991411009 1667.3773798287748 L 806.966991411009 1580.3443712397836" stroke="#fb7185" stroke-width="2.25" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="fixed_5g_branch" data-to="sim_swap"/>
+<rect x="1341" y="1639.8" width="246.7" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="1345.0000000000002" y="1650.3773798287748" fill="#fb7185" font-size="11" font-weight="600">No (Mobile — already handled above)</text>
+<path d="M 380.75126265847086 1333.9377336282355 L 380.75126265847086 1367.9377336282355 L 63.96699141100896 1367.9377336282355 L 63.96699141100896 297.7766952966369 L 1192.9949493661165 297.7766952966369 L 1192.9949493661165 341.7766952966369" stroke="#fb7185" stroke-width="2.25" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="reject_correction" data-to="doc_validation_a"/>
+<rect x="529" y="281.2" width="198.96" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="628.4809703885628" y="291.7766952966369" fill="#fb7185" font-size="11" font-weight="600" text-anchor="middle">resubmit corrected documents</text>
+<path d="M 1079 1093.162084352125 L 1079 1145.162084352125 L 1276.2756492761105 1145.162084352125 L 1276.2756492761105 1086.8864350760148" stroke="#fb7185" stroke-width="2.25" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="null_price_check" data-to="cdm_review"/>
+<rect x="1050.88" y="1147.58" width="253.52" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="1177.6378246380552" y="1158.162084352125" fill="#fb7185" font-size="11" font-weight="600" text-anchor="middle">unwarranted CDM routing (design gap)</text>
+<g class="pf-node" data-id="start1" data-type="terminal" tabindex="0" role="button" aria-label="Terminal: Start">
+<rect x="242.16443020031738" y="50" width="100" height="40" rx="20" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="292.1644302003174" y="74" fill="white" font-size="11" font-weight="600" text-anchor="middle">Start</text>
+</g>
+<g class="pf-node" data-id="channel_entry" data-type="manual" tabindex="0" role="button" aria-label="Receive TON Request, Retail Agent. Open details.">
+<text x="562.1644302003174" y="7" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Retail Agent</text>
+<rect x="402.1644302003174" y="26.5" width="160" height="87" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="482.1644302003174" y="47.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">Receive TON Request</text>
+<text x="482.1644302003174" y="64.5" fill="#94a3b8" font-size="11" text-anchor="middle">Retail / Chat /</text>
+<text x="482.1644302003174" y="76.5" fill="#94a3b8" font-size="11" text-anchor="middle">Digital-MVA</text>
+<text x="482.1644302003174" y="88.5" fill="#94a3b8" font-size="11" text-anchor="middle">Digital capped at</text>
+<text x="482.1644302003174" y="100.5" fill="#94a3b8" font-size="11" text-anchor="middle">5,000 QAR</text>
+<circle cx="402.1644302003174" cy="21.5" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="402.1644302003174" y="25.5" fill="white" font-size="8" font-weight="600" text-anchor="middle">1</text>
+</g>
+<g class="pf-node" data-id="open_ticket_check" data-type="decision" tabindex="0" role="button" aria-label="Decision: Existing Open TON Ticket on Account?">
+<g transform="translate(760.5527778486359, 70)">
+  <rect x="-62.5" y="-62.5" width="125" height="125" rx="4" transform="rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="0" y="-11" fill="white" font-size="11" font-weight="600" text-anchor="middle">Existing</text>
+  <text x="0" y="4" fill="white" font-size="11" font-weight="600" text-anchor="middle">Open TON</text>
+  <text x="0" y="19" fill="white" font-size="11" font-weight="600" text-anchor="middle">Ticket on Account?</text>
+</g>
+</g>
+<g class="pf-node" data-id="ton_type" data-type="decision" tabindex="0" role="button" aria-label="Decision: Which TON Type Applies?">
+<g transform="translate(963.3883476483185, 70)">
+  <rect x="-38.5" y="-38.5" width="77" height="77" rx="4" transform="rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="0" y="-11" fill="white" font-size="11" font-weight="600" text-anchor="middle">Which TON</text>
+  <text x="0" y="4" fill="white" font-size="11" font-weight="600" text-anchor="middle">Type</text>
+  <text x="0" y="19" fill="white" font-size="11" font-weight="600" text-anchor="middle">Applies?</text>
+</g>
+</g>
+<g class="pf-node" data-id="third_party_route" data-type="integration" tabindex="0" role="button" aria-label="Third-Party TON — Reactive Detection, MOI / BI Batch Job. Open details.">
+<text x="1237.8355697996826" y="7" fill="#fbbf24" font-size="11" font-weight="600" text-anchor="end">MOI / BI Batch Job</text>
+<rect x="1077.8355697996826" y="19" width="160" height="102" rx="8" fill="#251415" stroke="#fbbf24" stroke-width="1.5"/>
+<text x="1157.8355697996826" y="40" fill="white" font-size="11" font-weight="600" text-anchor="middle">Third-Party TON —</text>
+<text x="1157.8355697996826" y="55" fill="white" font-size="11" font-weight="600" text-anchor="middle">Reactive Detection</text>
+<text x="1157.8355697996826" y="72" fill="#94a3b8" font-size="11" text-anchor="middle">Monthly MOI file → BI</text>
+<text x="1157.8355697996826" y="84" fill="#94a3b8" font-size="11" text-anchor="middle">hold table</text>
+<text x="1157.8355697996826" y="96" fill="#94a3b8" font-size="11" text-anchor="middle">SMS invites SIM</text>
+<text x="1157.8355697996826" y="108" fill="#94a3b8" font-size="11" text-anchor="middle">holder to store</text>
+<circle cx="1077.8355697996826" cy="14" r="12" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5"/>
+<text x="1077.8355697996826" y="18" fill="white" font-size="8" font-weight="600" text-anchor="middle">2</text>
+</g>
+<g class="pf-node" data-id="prereq_gate" data-type="automated" tabindex="0" role="button" aria-label="TON Prerequisite Gate, System. Open details.">
+<text x="367.00505063388334" y="323.7766952966369" fill="#a78bfa" font-size="11" font-weight="600" text-anchor="end">System</text>
+<rect x="207.00505063388334" y="343.2766952966369" width="160" height="87" rx="8" fill="#200f49" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="287.00505063388334" y="364.2766952966369" fill="white" font-size="11" font-weight="600" text-anchor="middle">TON Prerequisite Gate</text>
+<text x="287.00505063388334" y="381.2766952966369" fill="#94a3b8" font-size="11" text-anchor="middle">Prepaid number; Party</text>
+<text x="287.00505063388334" y="393.2766952966369" fill="#94a3b8" font-size="11" text-anchor="middle">A QID clear</text>
+<text x="287.00505063388334" y="405.2766952966369" fill="#94a3b8" font-size="11" text-anchor="middle">No existing open TON</text>
+<text x="287.00505063388334" y="417.2766952966369" fill="#94a3b8" font-size="11" text-anchor="middle">ticket</text>
+<circle cx="207.00505063388334" cy="338.2766952966369" r="12" fill="#1e293b" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="207.00505063388334" y="342.2766952966369" fill="white" font-size="8" font-weight="600" text-anchor="middle">3</text>
+</g>
+<g class="pf-node" data-id="collections_check" data-type="decision" tabindex="0" role="button" aria-label="Decision: Party A or B in Collections / Unpaid DOI?">
+<g transform="translate(616, 386.7766952966369)">
+  <rect x="-70" y="-70" width="140" height="140" rx="4" transform="rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="0" y="-11" fill="white" font-size="11" font-weight="600" text-anchor="middle">Party A or B</text>
+  <text x="0" y="4" fill="white" font-size="11" font-weight="600" text-anchor="middle">in</text>
+  <text x="0" y="19" fill="white" font-size="11" font-weight="600" text-anchor="middle">Collections / Unpaid DOI?</text>
+</g>
+</g>
+<g class="pf-node" data-id="moi_age_check" data-type="integration" tabindex="0" role="button" aria-label="Age / MOI Validation (Party B), MOI Validation Service. Open details.">
+<text x="934.9949493661167" y="323.7766952966369" fill="#fbbf24" font-size="11" font-weight="600" text-anchor="end">MOI Validation Service</text>
+<rect x="774.9949493661167" y="335.7766952966369" width="160" height="102" rx="8" fill="#251415" stroke="#fbbf24" stroke-width="1.5"/>
+<text x="854.9949493661167" y="356.7766952966369" fill="white" font-size="11" font-weight="600" text-anchor="middle">Age / MOI Validation</text>
+<text x="854.9949493661167" y="371.7766952966369" fill="white" font-size="11" font-weight="600" text-anchor="middle">(Party B)</text>
+<text x="854.9949493661167" y="388.7766952966369" fill="#94a3b8" font-size="11" text-anchor="middle">Confirms Party B not</text>
+<text x="854.9949493661167" y="400.7766952966369" fill="#94a3b8" font-size="11" text-anchor="middle">a minor</text>
+<text x="854.9949493661167" y="412.7766952966369" fill="#94a3b8" font-size="11" text-anchor="middle">60-min MOI validity</text>
+<text x="854.9949493661167" y="424.7766952966369" fill="#94a3b8" font-size="11" text-anchor="middle">window</text>
+<circle cx="774.9949493661167" cy="330.7766952966369" r="12" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5"/>
+<text x="774.9949493661167" y="334.7766952966369" fill="white" font-size="8" font-weight="600" text-anchor="middle">4</text>
+</g>
+<g class="pf-node" data-id="doc_validation_a" data-type="manual" tabindex="0" role="button" aria-label="System + Document Validation — Party A, Retail Agent. Open details.">
+<text x="1272.9949493661165" y="323.7766952966369" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Retail Agent</text>
+<rect x="1112.9949493661165" y="341.7766952966369" width="160" height="90" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="1192.9949493661165" y="362.7766952966369" fill="white" font-size="11" font-weight="600" text-anchor="middle">System + Document</text>
+<text x="1192.9949493661165" y="377.7766952966369" fill="white" font-size="11" font-weight="600" text-anchor="middle">Validation — Party A</text>
+<text x="1192.9949493661165" y="394.7766952966369" fill="#94a3b8" font-size="11" text-anchor="middle">Signature match vs</text>
+<text x="1192.9949493661165" y="406.7766952966369" fill="#94a3b8" font-size="11" text-anchor="middle">QID</text>
+<text x="1192.9949493661165" y="418.7766952966369" fill="#94a3b8" font-size="11" text-anchor="middle">Blacklist check</text>
+<circle cx="1112.9949493661165" cy="336.7766952966369" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="1112.9949493661165" y="340.7766952966369" fill="white" font-size="8" font-weight="600" text-anchor="middle">5</text>
+</g>
+<g class="pf-node" data-id="doc_validation_b" data-type="manual" tabindex="0" role="button" aria-label="System + Document Validation — Party B, Retail / Back-Office Agent. Open details.">
+<text x="383.94007947642774" y="661.7665940288703" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Retail / Back-Office Agent</text>
+<rect x="223.94007947642774" y="673.7665940288703" width="160" height="102" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="303.94007947642774" y="694.7665940288703" fill="white" font-size="11" font-weight="600" text-anchor="middle">System + Document</text>
+<text x="303.94007947642774" y="709.7665940288703" fill="white" font-size="11" font-weight="600" text-anchor="middle">Validation — Party B</text>
+<text x="303.94007947642774" y="726.7665940288703" fill="#94a3b8" font-size="11" text-anchor="middle">QID/Diplomatic ID,</text>
+<text x="303.94007947642774" y="738.7665940288703" fill="#94a3b8" font-size="11" text-anchor="middle">OCR capture</text>
+<text x="303.94007947642774" y="750.7665940288703" fill="#94a3b8" font-size="11" text-anchor="middle">Back-office may</text>
+<text x="303.94007947642774" y="762.7665940288703" fill="#94a3b8" font-size="11" text-anchor="middle">bypass OCR</text>
+<circle cx="223.94007947642774" cy="668.7665940288703" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="223.94007947642774" y="672.7665940288703" fill="white" font-size="8" font-weight="600" text-anchor="middle">6</text>
+</g>
+<g class="pf-node" data-id="doc_collection" data-type="manual" tabindex="0" role="button" aria-label="Collect TON Documents, Retail Agent. Open details.">
+<text x="748.9400794764277" y="661.7665940288703" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Retail Agent</text>
+<rect x="588.9400794764277" y="681.2665940288703" width="160" height="87" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="668.9400794764277" y="702.2665940288703" fill="white" font-size="11" font-weight="600" text-anchor="middle">Collect TON Documents</text>
+<text x="668.9400794764277" y="719.2665940288703" fill="#94a3b8" font-size="11" text-anchor="middle">CAF, TON form, QID</text>
+<text x="668.9400794764277" y="731.2665940288703" fill="#94a3b8" font-size="11" text-anchor="middle">copies</text>
+<text x="668.9400794764277" y="743.2665940288703" fill="#94a3b8" font-size="11" text-anchor="middle">Star ≥1,500 QAR:</text>
+<text x="668.9400794764277" y="755.2665940288703" fill="#94a3b8" font-size="11" text-anchor="middle">declaration</text>
+<circle cx="588.9400794764277" cy="676.2665940288703" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="588.9400794764277" y="680.2665940288703" fill="white" font-size="8" font-weight="600" text-anchor="middle">7</text>
+</g>
+<g class="pf-node" data-id="star_number_check" data-type="decision" tabindex="0" role="button" aria-label="Decision: Is This a Star (Premium) Number?">
+<g transform="translate(950.5, 724.7665940288703)">
+  <rect x="-60.5" y="-60.5" width="121" height="121" rx="4" transform="rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="0" y="-11" fill="white" font-size="11" font-weight="600" text-anchor="middle">Is This a</text>
+  <text x="0" y="4" fill="white" font-size="11" font-weight="600" text-anchor="middle">Star</text>
+  <text x="0" y="19" fill="white" font-size="11" font-weight="600" text-anchor="middle">(Premium) Number?</text>
+</g>
+</g>
+<g class="pf-node" data-id="star_pricing" data-type="automated" tabindex="0" role="button" aria-label="Star-Number Pricing / Commitment Check, System. Open details.">
+<text x="1256.0599205235721" y="661.7665940288703" fill="#a78bfa" font-size="11" font-weight="600" text-anchor="end">System</text>
+<rect x="1096.0599205235721" y="673.7665940288703" width="160" height="102" rx="8" fill="#200f49" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="1176.0599205235721" y="694.7665940288703" fill="white" font-size="11" font-weight="600" text-anchor="middle">Star-Number Pricing /</text>
+<text x="1176.0599205235721" y="709.7665940288703" fill="white" font-size="11" font-weight="600" text-anchor="middle">Commitment Check</text>
+<text x="1176.0599205235721" y="726.7665940288703" fill="#94a3b8" font-size="11" text-anchor="middle">1-yr commitment</text>
+<text x="1176.0599205235721" y="738.7665940288703" fill="#94a3b8" font-size="11" text-anchor="middle">(scaled value)</text>
+<text x="1176.0599205235721" y="750.7665940288703" fill="#94a3b8" font-size="11" text-anchor="middle">or pay star value if</text>
+<text x="1176.0599205235721" y="762.7665940288703" fill="#94a3b8" font-size="11" text-anchor="middle">prepaid</text>
+<circle cx="1096.0599205235721" cy="668.7665940288703" r="12" fill="#1e293b" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="1096.0599205235721" y="672.7665940288703" fill="white" font-size="8" font-weight="600" text-anchor="middle">8</text>
+</g>
+<g class="pf-node" data-id="fee_payment" data-type="manual" tabindex="0" role="button" aria-label="TON Fee / Payment, Retail Agent. Open details.">
+<text x="283.72435072388964" y="972.8864350760148" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Retail Agent</text>
+<rect x="123.72435072388964" y="992.3864350760148" width="160" height="87" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="203.72435072388964" y="1013.3864350760148" fill="white" font-size="11" font-weight="600" text-anchor="middle">TON Fee / Payment</text>
+<text x="203.72435072388964" y="1030.3864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">BAU: 50 QAR cash,</text>
+<text x="203.72435072388964" y="1042.3864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">unbilled</text>
+<text x="203.72435072388964" y="1054.3864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">Star penalty: cash</text>
+<text x="203.72435072388964" y="1066.3864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">via WinCash</text>
+<circle cx="123.72435072388964" cy="987.3864350760148" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="123.72435072388964" y="991.3864350760148" fill="white" font-size="8" font-weight="600" text-anchor="middle">9</text>
+</g>
+<g class="pf-node" data-id="prepaid_migration" data-type="manual" tabindex="0" role="button" aria-label="Migrate to Prepaid (Legacy Workaround), Retail Agent. Open details.">
+<text x="580.7243507238896" y="972.8864350760148" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Retail Agent</text>
+<rect x="420.72435072388964" y="984.8864350760148" width="160" height="102" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="500.72435072388964" y="1005.8864350760148" fill="white" font-size="11" font-weight="600" text-anchor="middle">Migrate to Prepaid</text>
+<text x="500.72435072388964" y="1020.8864350760148" fill="white" font-size="11" font-weight="600" text-anchor="middle">(Legacy Workaround)</text>
+<text x="500.72435072388964" y="1037.8864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">As-is only,</text>
+<text x="500.72435072388964" y="1049.8864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">pre-ticket step</text>
+<text x="500.72435072388964" y="1061.8864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">Remove once real-time</text>
+<text x="500.72435072388964" y="1073.8864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">exists</text>
+<circle cx="420.72435072388964" cy="979.8864350760148" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="420.72435072388964" y="983.8864350760148" fill="white" font-size="8" font-weight="600" text-anchor="middle">10</text>
+</g>
+<g class="pf-node" data-id="ticket_managing_queue" data-type="automated" tabindex="0" role="button" aria-label="Ticket Auto-Opens — Managing Queue, System. Open details.">
+<text x="918.7243507238896" y="972.8864350760148" fill="#a78bfa" font-size="11" font-weight="600" text-anchor="end">System</text>
+<rect x="758.7243507238896" y="984.8864350760148" width="160" height="102" rx="8" fill="#200f49" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="838.7243507238896" y="1005.8864350760148" fill="white" font-size="11" font-weight="600" text-anchor="middle">Ticket Auto-Opens —</text>
+<text x="838.7243507238896" y="1020.8864350760148" fill="white" font-size="11" font-weight="600" text-anchor="middle">Managing Queue</text>
+<text x="838.7243507238896" y="1037.8864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">First of four</text>
+<text x="838.7243507238896" y="1049.8864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">sequential queues</text>
+<text x="838.7243507238896" y="1061.8864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">Auto-opened ~3 years</text>
+<text x="838.7243507238896" y="1073.8864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">in place</text>
+<circle cx="758.7243507238896" cy="979.8864350760148" r="12" fill="#1e293b" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="758.7243507238896" y="983.8864350760148" fill="white" font-size="8" font-weight="600" text-anchor="middle">11</text>
+</g>
+<g class="pf-node" data-id="null_price_check" data-type="decision" tabindex="0" role="button" aria-label="Decision: Number Price Null/Blank?">
+<g transform="translate(1079, 1035.8864350760148)">
+  <rect x="-40.5" y="-40.5" width="81" height="81" rx="4" transform="rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="0" y="-3.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">Number Price</text>
+  <text x="0" y="11.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">Null/Blank?</text>
+</g>
+</g>
+<g class="pf-node" data-id="cdm_review" data-type="manual" tabindex="0" role="button" aria-label="CDM Business-Rule Review, CDM Team (Customer Data Management). Open details.">
+<text x="1356.2756492761105" y="972.8864350760148" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">CDM Team (Customer Data Management)</text>
+<rect x="1196.2756492761105" y="984.8864350760148" width="160" height="102" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="1276.2756492761105" y="1005.8864350760148" fill="white" font-size="11" font-weight="600" text-anchor="middle">CDM Business-Rule</text>
+<text x="1276.2756492761105" y="1020.8864350760148" fill="white" font-size="11" font-weight="600" text-anchor="middle">Review</text>
+<text x="1276.2756492761105" y="1037.8864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">1 of 4 fraud-control</text>
+<text x="1276.2756492761105" y="1049.8864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">approvals</text>
+<text x="1276.2756492761105" y="1061.8864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">Reviews against</text>
+<text x="1276.2756492761105" y="1073.8864350760148" fill="#94a3b8" font-size="11" text-anchor="middle">configured rules</text>
+<circle cx="1196.2756492761105" cy="979.8864350760148" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="1196.2756492761105" y="983.8864350760148" fill="white" font-size="8" font-weight="600" text-anchor="middle">12</text>
+</g>
+<g class="pf-node" data-id="cdm_decision" data-type="decision" tabindex="0" role="button" aria-label="Decision: CDM Approves?">
+<g transform="translate(190.54668119422598, 1290.4377336282355)">
+  <rect x="-35.5" y="-35.5" width="71" height="71" rx="4" transform="rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="0" y="-3.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">CDM</text>
+  <text x="0" y="11.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">Approves?</text>
+</g>
+</g>
+<g class="pf-node" data-id="reject_correction" data-type="manual" tabindex="0" role="button" aria-label="Return for Correction, Retail / Back-Office Agent. Open details.">
+<text x="460.75126265847086" y="1233.4377336282355" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Retail / Back-Office Agent</text>
+<rect x="300.75126265847086" y="1246.9377336282355" width="160" height="87" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="380.75126265847086" y="1267.9377336282355" fill="white" font-size="11" font-weight="600" text-anchor="middle">Return for Correction</text>
+<text x="380.75126265847086" y="1284.9377336282355" fill="#94a3b8" font-size="11" text-anchor="middle">SMS notifies</text>
+<text x="380.75126265847086" y="1296.9377336282355" fill="#94a3b8" font-size="11" text-anchor="middle">agent/customer</text>
+<text x="380.75126265847086" y="1308.9377336282355" fill="#94a3b8" font-size="11" text-anchor="middle">Offline SMS is only</text>
+<text x="380.75126265847086" y="1320.9377336282355" fill="#94a3b8" font-size="11" text-anchor="middle">channel today</text>
+<circle cx="300.75126265847086" cy="1241.9377336282355" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="300.75126265847086" y="1245.9377336282355" fill="white" font-size="8" font-weight="600" text-anchor="middle">13</text>
+</g>
+<g class="pf-node" data-id="nationality_route" data-type="decision" tabindex="0" role="button" aria-label="Decision: Customer Nationality — BOQ or QATQ?">
+<g transform="translate(679.7045814642449, 1290.4377336282355)">
+  <rect x="-53" y="-53" width="106" height="106" rx="4" transform="rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="0" y="-11" fill="white" font-size="11" font-weight="600" text-anchor="middle">Customer</text>
+  <text x="0" y="4" fill="white" font-size="11" font-weight="600" text-anchor="middle">Nationality</text>
+  <text x="0" y="19" fill="white" font-size="11" font-weight="600" text-anchor="middle">— BOQ or QATQ?</text>
+</g>
+</g>
+<g class="pf-node" data-id="qatq_review" data-type="manual" tabindex="0" role="button" aria-label="QATQ Final Validation &amp; Closure, QATQ Back-Office. Open details.">
+<text x="974.6579002700189" y="1233.4377336282355" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">QATQ Back-Office</text>
+<rect x="814.6579002700189" y="1245.4377336282355" width="160" height="90" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="894.6579002700189" y="1266.4377336282355" fill="white" font-size="11" font-weight="600" text-anchor="middle">QATQ Final Validation</text>
+<text x="894.6579002700189" y="1281.4377336282355" fill="white" font-size="11" font-weight="600" text-anchor="middle">&amp; Closure</text>
+<text x="894.6579002700189" y="1298.4377336282355" fill="#94a3b8" font-size="11" text-anchor="middle">Final back-office</text>
+<text x="894.6579002700189" y="1310.4377336282355" fill="#94a3b8" font-size="11" text-anchor="middle">validation</text>
+<text x="894.6579002700189" y="1322.4377336282355" fill="#94a3b8" font-size="11" text-anchor="middle">Closes ticket</text>
+<circle cx="814.6579002700189" cy="1240.4377336282355" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="814.6579002700189" y="1244.4377336282355" fill="white" font-size="8" font-weight="600" text-anchor="middle">14</text>
+</g>
+<g class="pf-node" data-id="boq_review" data-type="manual" tabindex="0" role="button" aria-label="BOQ Final Validation &amp; Closure, BOQ Back-Office. Open details.">
+<text x="1339.657900270019" y="1233.4377336282355" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">BOQ Back-Office</text>
+<rect x="1179.657900270019" y="1245.4377336282355" width="160" height="90" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="1259.657900270019" y="1266.4377336282355" fill="white" font-size="11" font-weight="600" text-anchor="middle">BOQ Final Validation</text>
+<text x="1259.657900270019" y="1281.4377336282355" fill="white" font-size="11" font-weight="600" text-anchor="middle">&amp; Closure</text>
+<text x="1259.657900270019" y="1298.4377336282355" fill="#94a3b8" font-size="11" text-anchor="middle">Final back-office</text>
+<text x="1259.657900270019" y="1310.4377336282355" fill="#94a3b8" font-size="11" text-anchor="middle">validation</text>
+<text x="1259.657900270019" y="1322.4377336282355" fill="#94a3b8" font-size="11" text-anchor="middle">Closes ticket</text>
+<circle cx="1179.657900270019" cy="1240.4377336282355" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="1179.657900270019" y="1244.4377336282355" fill="white" font-size="8" font-weight="600" text-anchor="middle">15</text>
+</g>
+<g class="pf-node" data-id="backoffice_execute" data-type="manual" tabindex="0" role="button" aria-label="Execute Account Transfer, Back-Office / Fulfilment Agent. Open details.">
+<text x="249.96699141100896" y="1517.3443712397836" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Back-Office / Fulfilment Agent</text>
+<rect x="89.96699141100896" y="1529.3443712397836" width="160" height="102" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="169.96699141100896" y="1550.3443712397836" fill="white" font-size="11" font-weight="600" text-anchor="middle">Execute Account</text>
+<text x="169.96699141100896" y="1565.3443712397836" fill="white" font-size="11" font-weight="600" text-anchor="middle">Transfer</text>
+<text x="169.96699141100896" y="1582.3443712397836" fill="#94a3b8" font-size="11" text-anchor="middle">Renames</text>
+<text x="169.96699141100896" y="1594.3443712397836" fill="#94a3b8" font-size="11" text-anchor="middle">account/profile to B</text>
+<text x="169.96699141100896" y="1606.3443712397836" fill="#94a3b8" font-size="11" text-anchor="middle">Updates order line,</text>
+<text x="169.96699141100896" y="1618.3443712397836" fill="#94a3b8" font-size="11" text-anchor="middle">no plan change</text>
+<circle cx="89.96699141100896" cy="1524.3443712397836" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="89.96699141100896" y="1528.3443712397836" fill="white" font-size="8" font-weight="600" text-anchor="middle">16</text>
+</g>
+<g class="pf-node" data-id="address_update" data-type="manual" tabindex="0" role="button" aria-label="Update Address Association, Back-Office Agent. Open details.">
+<text x="621.966991411009" y="1517.3443712397836" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Back-Office Agent</text>
+<rect x="461.96699141100896" y="1529.3443712397836" width="160" height="102" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="541.966991411009" y="1550.3443712397836" fill="white" font-size="11" font-weight="600" text-anchor="middle">Update Address</text>
+<text x="541.966991411009" y="1565.3443712397836" fill="white" font-size="11" font-weight="600" text-anchor="middle">Association</text>
+<text x="541.966991411009" y="1582.3443712397836" fill="#94a3b8" font-size="11" text-anchor="middle">Replicates address to</text>
+<text x="541.966991411009" y="1594.3443712397836" fill="#94a3b8" font-size="11" text-anchor="middle">new account</text>
+<text x="541.966991411009" y="1606.3443712397836" fill="#94a3b8" font-size="11" text-anchor="middle">Known gap: agents</text>
+<text x="541.966991411009" y="1618.3443712397836" fill="#94a3b8" font-size="11" text-anchor="middle">often skip</text>
+<circle cx="461.96699141100896" cy="1524.3443712397836" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="461.96699141100896" y="1528.3443712397836" fill="white" font-size="8" font-weight="600" text-anchor="middle">17</text>
+</g>
+<g class="pf-node" data-id="sim_swap" data-type="manual" tabindex="0" role="button" aria-label="SIM Swap on TON Success, Retail / Back-Office Agent. Open details.">
+<text x="966.966991411009" y="1517.3443712397836" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Retail / Back-Office Agent</text>
+<rect x="806.966991411009" y="1529.3443712397836" width="160" height="102" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="886.966991411009" y="1550.3443712397836" fill="white" font-size="11" font-weight="600" text-anchor="middle">SIM Swap on TON</text>
+<text x="886.966991411009" y="1565.3443712397836" fill="white" font-size="11" font-weight="600" text-anchor="middle">Success</text>
+<text x="886.966991411009" y="1582.3443712397836" fill="#94a3b8" font-size="11" text-anchor="middle">eSIM-to-eSIM or</text>
+<text x="886.966991411009" y="1594.3443712397836" fill="#94a3b8" font-size="11" text-anchor="middle">physical SIM</text>
+<text x="886.966991411009" y="1606.3443712397836" fill="#94a3b8" font-size="11" text-anchor="middle">Effective on success,</text>
+<text x="886.966991411009" y="1618.3443712397836" fill="#94a3b8" font-size="11" text-anchor="middle">rollback if not</text>
+<circle cx="806.966991411009" cy="1524.3443712397836" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="806.966991411009" y="1528.3443712397836" fill="white" font-size="8" font-weight="600" text-anchor="middle">18</text>
+</g>
+<g class="pf-node" data-id="end27" data-type="terminal" tabindex="0" role="button" aria-label="Terminal: Complete">
+<rect x="1103.966991411009" y="1560.3443712397836" width="120" height="40" rx="20" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="1163.966991411009" y="1584.3443712397836" fill="white" font-size="11" font-weight="600" text-anchor="middle">Complete</text>
+</g>
+<g class="pf-node" data-id="fixed_5g_branch" data-type="decision" tabindex="0" role="button" aria-label="Decision: Fixed-Line / 5G TON?">
+<g transform="translate(1337.0000000000002, 1580.3443712397836)">
+  <rect x="-37.5" y="-37.5" width="75" height="75" rx="4" transform="rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="0" y="-3.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">Fixed-Line /</text>
+  <text x="0" y="11.5" fill="white" font-size="11" font-weight="600" text-anchor="middle">5G TON?</text>
+</g>
+</g>
+<g class="pf-node" data-id="fixed_validation" data-type="manual" tabindex="0" role="button" aria-label="Fixed/5G TON Validation, Retail Agent. Open details.">
+<text x="299.5" y="1763.4103884177657" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Retail Agent</text>
+<rect x="139.5" y="1775.4103884177657" width="160" height="102" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="219.5" y="1796.4103884177657" fill="white" font-size="11" font-weight="600" text-anchor="middle">Fixed/5G TON</text>
+<text x="219.5" y="1811.4103884177657" fill="white" font-size="11" font-weight="600" text-anchor="middle">Validation</text>
+<text x="219.5" y="1828.4103884177657" fill="#94a3b8" font-size="11" text-anchor="middle">QID, blacklist, bill</text>
+<text x="219.5" y="1840.4103884177657" fill="#94a3b8" font-size="11" text-anchor="middle">checks</text>
+<text x="219.5" y="1852.4103884177657" fill="#94a3b8" font-size="11" text-anchor="middle">SIM-locking chain not</text>
+<text x="219.5" y="1864.4103884177657" fill="#94a3b8" font-size="11" text-anchor="middle">applicable</text>
+<circle cx="139.5" cy="1770.4103884177657" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="139.5" y="1774.4103884177657" fill="white" font-size="8" font-weight="600" text-anchor="middle">19</text>
+</g>
+<g class="pf-node" data-id="osn_removal" data-type="manual" tabindex="0" role="button" aria-label="Remove OSN Add-On (Pre-Transfer), Retail Agent. Open details.">
+<text x="678.5" y="1763.4103884177657" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Retail Agent</text>
+<rect x="518.5" y="1775.4103884177657" width="160" height="102" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="598.5" y="1796.4103884177657" fill="white" font-size="11" font-weight="600" text-anchor="middle">Remove OSN Add-On</text>
+<text x="598.5" y="1811.4103884177657" fill="white" font-size="11" font-weight="600" text-anchor="middle">(Pre-Transfer)</text>
+<text x="598.5" y="1828.4103884177657" fill="#94a3b8" font-size="11" text-anchor="middle">Prevents discrepancy</text>
+<text x="598.5" y="1840.4103884177657" fill="#94a3b8" font-size="11" text-anchor="middle">for new owner</text>
+<text x="598.5" y="1852.4103884177657" fill="#94a3b8" font-size="11" text-anchor="middle">Re-added after</text>
+<text x="598.5" y="1864.4103884177657" fill="#94a3b8" font-size="11" text-anchor="middle">transfer</text>
+<circle cx="518.5" cy="1770.4103884177657" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="518.5" y="1774.4103884177657" fill="white" font-size="8" font-weight="600" text-anchor="middle">20</text>
+</g>
+<g class="pf-node" data-id="fixed_completion" data-type="manual" tabindex="0" role="button" aria-label="Re-Provision OSN/STB, Apply Spend Barring, Back-Office Agent. Open details.">
+<text x="995.5" y="1763.4103884177657" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Back-Office Agent</text>
+<rect x="835.5" y="1775.4103884177657" width="160" height="102" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="915.5" y="1796.4103884177657" fill="white" font-size="11" font-weight="600" text-anchor="middle">Re-Provision OSN/STB,</text>
+<text x="915.5" y="1811.4103884177657" fill="white" font-size="11" font-weight="600" text-anchor="middle">Apply Spend Barring</text>
+<text x="915.5" y="1828.4103884177657" fill="#94a3b8" font-size="11" text-anchor="middle">Re-adds OSN/STB under</text>
+<text x="915.5" y="1840.4103884177657" fill="#94a3b8" font-size="11" text-anchor="middle">new login</text>
+<text x="915.5" y="1852.4103884177657" fill="#94a3b8" font-size="11" text-anchor="middle">~3-day zero-spend</text>
+<text x="915.5" y="1864.4103884177657" fill="#94a3b8" font-size="11" text-anchor="middle">barring</text>
+<circle cx="835.5" cy="1770.4103884177657" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="835.5" y="1774.4103884177657" fill="white" font-size="8" font-weight="600" text-anchor="middle">21</text>
+</g>
+<g class="pf-node" data-id="end32" data-type="terminal" tabindex="0" role="button" aria-label="Terminal: Complete">
+<rect x="1220.5" y="1806.4103884177657" width="120" height="40" rx="20" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="1280.5" y="1830.4103884177657" fill="white" font-size="11" font-weight="600" text-anchor="middle">Complete</text>
+</g>
+<g class="pf-node" data-id="end33" data-type="reject" tabindex="0" role="button" aria-label="Terminal: Complete">
+<rect x="680" y="2048.4103884177657" width="120" height="40" rx="20" fill="#041829" stroke="#fb7185" stroke-width="1.5"/>
+<text x="740" y="2072.4103884177657" fill="white" font-size="11" font-weight="600" text-anchor="middle">Complete</text>
+</g>
+<text x="202.16443020031738" y="73" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="end">ROW 1</text>
+<text x="167.00505063388334" y="389.7766952966369" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="end">ROW 2</text>
+<text x="183.94007947642774" y="727.7665940288703" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="end">ROW 3</text>
+<text x="83.72435072388964" y="1038.8864350760148" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="end">ROW 4</text>
+<text x="100.3420997299811" y="1293.4377336282355" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="end">ROW 5</text>
+<text x="49.96699141100896" y="1583.3443712397836" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="end">ROW 6</text>
+<text x="99.5" y="1829.4103884177657" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="end">ROW 7</text>
+<text x="640" y="2071.4103884177657" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="end">ROW 8</text>
+<rect x="179.08000000000004" y="2127.4103884177657" width="16" height="10" rx="2" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="201.08000000000004" y="2136.4103884177657" fill="#94a3b8" font-size="11">Manual / Human-in-loop</text>
+<rect x="377.12" y="2127.4103884177657" width="16" height="10" rx="2" fill="#200f49" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="399.12" y="2136.4103884177657" fill="#94a3b8" font-size="11">Automated</text>
+<rect x="486.5" y="2127.4103884177657" width="16" height="10" rx="2" fill="#251415" stroke="#fbbf24" stroke-width="1.5"/>
+<text x="508.5" y="2136.4103884177657" fill="#94a3b8" font-size="11">Integration / API</text>
+<rect x="650.44" y="2127.4103884177657" width="16" height="10" rx="5" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="672.44" y="2136.4103884177657" fill="#94a3b8" font-size="11">Start / End</text>
+<rect x="773.46" y="2127.4103884177657" width="16" height="10" rx="5" fill="#041829" stroke="#fb7185" stroke-width="1.5"/>
+<text x="795.46" y="2136.4103884177657" fill="#94a3b8" font-size="11">Rejected / negative end</text>
+<rect x="-5" y="-5" width="10" height="10" transform="translate(986.32, 2132.4103884177657) rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+<text x="1000.32" y="2136.4103884177657" fill="#94a3b8" font-size="11">Decision</text>
+<line x1="1080.88" y1="2132.4103884177657" x2="1096.88" y2="2132.4103884177657" stroke="#fb7185" stroke-width="2.25" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)"/>
+<text x="1102.88" y="2136.4103884177657" fill="#94a3b8" font-size="11">Exception path</text>
+<line x1="1224.3600000000001" y1="2132.4103884177657" x2="1240.3600000000001" y2="2132.4103884177657" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)"/>
+<text x="1246.3600000000001" y="2136.4103884177657" fill="#94a3b8" font-size="11">Row wrap</text>
+</svg>
+    </div>
+
+    
+
+    <p class="footer">Sources: business-processes-day7-session-2-8709f98d · business-workshop-day7-session-1-e2799976 · business-workshop-day4-session-2-aa302f2d · order-validation-business-rules-45d0e9f0 — VFQ Stack Modernization discovery corpus</p>
+  </div>
+  <aside class="pf-drawer" id="pfDrawer" role="dialog" aria-labelledby="pfDrawerTitle" aria-hidden="true">
+    <div class="pf-drawer-handle" id="pfHandle" role="separator" aria-orientation="vertical" aria-label="Resize detail panel. Use left and right arrow keys." tabindex="0"></div>
+    <div class="pf-drawer-body">
+      <div class="pf-drawer-head">
+        <span class="pf-badge" id="pfBadge"></span>
+        <button class="pf-drawer-close" id="pfClose" aria-label="Close detail panel">&times;</button>
+      </div>
+      <h2 id="pfDrawerTitle"></h2>
+      <p class="pf-drawer-role" id="pfRole"></p>
+      <div class="pf-drawer-sections">
+        <div class="pf-sec">
+          <h3>Meaning</h3>
+          <p id="pfMeaning" class="pf-drawer-meaning"></p>
+        </div>
+        <div class="pf-sec">
+          <h3>Input/Inbound</h3>
+          <p id="pfInDesc" class="pf-drawer-desc"></p>
+          <ul id="pfIn"></ul>
+        </div>
+        <div class="pf-sec">
+          <h3>Output/Outbound</h3>
+          <p id="pfOutDesc" class="pf-drawer-desc"></p>
+          <ul id="pfOut"></ul>
+        </div>
+        <div class="pf-sec">
+          <h3>Example</h3>
+          <p id="pfExample" class="pf-drawer-example"></p>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <script>
+    const SLUG = "cat025-ton";
+    /* Export bounds are measured, not assumed (§11.1).
+     *
+     * The container's own rect is NOT the diagram's extent: the SVG has a min-width, so on a
+     * narrow viewport it is wider than its container and .diagram-container scrolls. Capturing
+     * the container rect then silently crops whatever overflowed — the right-hand nodes and the
+     * legend — and the exported PNG differs from what the page shows. So walk every descendant
+     * and take the true union, which also covers anything that overflows upward or downward. */
+    function captureBounds() {
+      const el = document.getElementById('report-container');
+      const c = el.getBoundingClientRect();
+      let l = c.left, t = c.top, r = c.right, b = c.bottom;
+      for (const n of el.querySelectorAll('*')) {
+        if (n.classList && (n.classList.contains('toolbar') || n.classList.contains('pf-drawer') || n.classList.contains('pf-filters'))) continue;
+        const q = n.getBoundingClientRect();
+        if (!q.width && !q.height) continue;
+        if (q.left < l) l = q.left;
+        if (q.top < t) t = q.top;
+        if (q.right > r) r = q.right;
+        if (q.bottom > b) b = q.bottom;
+      }
+      return { left: l, top: t, width: r - l, height: b - t };
+    }
+
+    async function capture() {
+      pfResetView();
+      await new Promise(r => setTimeout(r, 300));
+      const el = document.getElementById('report-container');
+      // A scrolled diagram must be captured whole: reset the scroll so html2canvas sees the
+      // full width, then restore it so the user's view is untouched.
+      const dc = document.querySelector('.diagram-container');
+      const sx = dc ? dc.scrollLeft : 0;
+      if (dc) dc.scrollLeft = 0;
+      const wasOverflow = dc ? dc.style.overflowX : '';
+      if (dc) dc.style.overflowX = 'visible';
+      await new Promise(r => requestAnimationFrame(r));
+
+      const r = captureBounds();
+      const pad = 32;
+      try {
+        return await html2canvas(document.body, { backgroundColor: '#020617', scale: 2, useCORS: true, ignoreElements: (e) => e.classList && (e.classList.contains('toolbar') || e.classList.contains('pf-drawer') || e.classList.contains('pf-filters')), x: r.left + window.scrollX - pad, y: r.top + window.scrollY - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
+      } finally {
+        if (dc) { dc.style.overflowX = wasOverflow; dc.scrollLeft = sx; }
+      }
+    }
+    async function copyAsImage(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        exportStatus('✓ Copied', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    async function downloadPNG(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const link = document.createElement('a'); link.download = SLUG + '.png'; link.href = canvas.toDataURL('image/png'); link.click();
+        exportStatus('✓ PNG', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    /* The menu closes on outside click, on Escape, and after a format is chosen — a popover
+     * that stays open behind the download it just started reads as though nothing happened. */
+    function setExportOpen(open) {
+      document.getElementById('exportMenu').classList.toggle('open', open);
+      document.getElementById('exportBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    function toggleExport(ev) {
+      ev.stopPropagation();
+      setExportOpen(!document.getElementById('exportMenu').classList.contains('open'));
+    }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.toolbar')) setExportOpen(false);
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && document.getElementById('exportMenu').classList.contains('open')) {
+        setExportOpen(false); document.getElementById('exportBtn').focus();
+      }
+    });
+
+    /* Status is shown on the trigger, not on the menu item: the menu closes on choose, so a
+     * message written into the item would vanish with it. */
+    function exportStatus(msg, revert) {
+      const b = document.getElementById('exportBtn');
+      if (revert === undefined) { b.textContent = msg; return; }
+      b.textContent = msg;
+      setTimeout(() => b.textContent = 'Export', revert);
+    }
+
+    /* SVG export is a real vector serialisation, not a raster (§11.1 r7).
+     *
+     * The live <svg> inherits its font from the page stylesheet, which does NOT travel with a
+     * detached clone — open the file standalone and every label reflows in a fallback face,
+     * shifting off the geometry the generator computed. So the clone gets the font stack and
+     * the canvas ground written onto it explicitly. Nothing else is restyled: all colours are
+     * already presentation attributes on the elements themselves. */
+    function downloadSVG(btn) {
+      try {
+        const src = document.querySelector('.diagram-container svg');
+        const clone = src.cloneNode(true);
+        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        const vb = (src.getAttribute('viewBox') || '').split(/[s,]+/).map(Number);
+        if (vb.length === 4) { clone.setAttribute('width', vb[2]); clone.setAttribute('height', vb[3]); }
+        clone.removeAttribute('style');
+        clone.setAttribute('style', 'background:' + "#020617");
+        const st = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+        st.textContent = 'text{font-family:' + getComputedStyle(src).fontFamily.replace(/"/g, "'") + '}';
+        clone.insertBefore(st, clone.firstChild);
+        const blob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a'); link.download = SLUG + '.svg'; link.href = url; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setExportOpen(false); exportStatus('✓ SVG', 2000);
+      } catch (e) { setExportOpen(false); exportStatus('✗ Failed', 2000); }
+    }
+
+    /* JPEG has no alpha, so an un-flattened canvas renders transparent pixels BLACK — which
+     * on this palette is invisible damage rather than an obvious bug. Composite onto the
+     * canvas ground first. */
+    async function downloadJPG(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const flat = document.createElement('canvas');
+        flat.width = canvas.width; flat.height = canvas.height;
+        const g = flat.getContext('2d');
+        g.fillStyle = "#020617";
+        g.fillRect(0, 0, flat.width, flat.height);
+        g.drawImage(canvas, 0, 0);
+        const link = document.createElement('a'); link.download = SLUG + '.jpg';
+        link.href = flat.toDataURL('image/jpeg', 0.92); link.click();
+        exportStatus('✓ JPG', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    async function downloadPDF(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const orientation = canvas.width > canvas.height ? 'landscape' : 'portrait';
+        const pdf = new jsPDF({ orientation, unit: 'px', format: [canvas.width, canvas.height], hotfixes: ['px_scaling'] });
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save(SLUG + '.pdf');
+        exportStatus('✓ PDF', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    /* --- interactivity layer (§11.3) --- */
+    const PF_NODES = [{"id":"start1","type":"terminal","num":"","title":"Start","role":"","desc":[]},{"id":"channel_entry","type":"manual","num":"1","title":"Receive TON Request","role":"Retail Agent","desc":["Retail / Chat / Digital-MVA","Digital capped at 5,000 QAR"],"meaning":"Customer (current owner, Party A) requests a number transfer; entry channel is retail store, chat, or self-service Digital/MVA.","inputDesc":"Customer verbal/digital request, MSISDN","outputDesc":"TON case opened against the account","example":"Party A visits a store and asks to transfer their number to Party B","milestone":false},{"id":"open_ticket_check","type":"decision","num":"","title":"Existing Open TON Ticket on Account?","role":"","desc":[]},{"id":"ton_type","type":"decision","num":"","title":"Which TON Type Applies?","role":"","desc":[]},{"id":"third_party_route","type":"integration","num":"2","title":"Third-Party TON — Reactive Detection","role":"MOI / BI Batch Job","desc":["Monthly MOI file → BI hold table","SMS invites SIM holder to store"],"meaning":"Third-party TON on a cancelled ID (original customer left country/deceased) is not caught proactively — detected only via a monthly MOI/BI batch process; COO (claim-of-ownership) cases are parked on hold ~2 years and not actively processed.","inputDesc":"MOI government ID-cancellation file","outputDesc":"SMS to eligible current SIM holder to bring SIM + SMS to store","example":"Original owner's QID cancelled after leaving Qatar; BI flags the MSISDN; SMS invites current user to a store","milestone":false},{"id":"prereq_gate","type":"automated","num":"3","title":"TON Prerequisite Gate","role":"System","desc":["Prepaid number; Party A QID clear","No existing open TON ticket"],"meaning":"Before the Initiate TON button can be used, the system checks the number is prepaid, Party A's QID is not blacklisted, and no open TON ticket already exists (button greyed out otherwise).","inputDesc":"MSISDN status, QID blacklist flag, open-ticket flag","outputDesc":"Pass/fail gate result","example":"Agent presses Initiate TON; system confirms prepaid status and clear blacklist","milestone":false},{"id":"collections_check","type":"decision","num":"","title":"Party A or B in Collections / Unpaid DOI?","role":"","desc":[]},{"id":"moi_age_check","type":"integration","num":"4","title":"Age / MOI Validation (Party B)","role":"MOI Validation Service","desc":["Confirms Party B not a minor","60-min MOI validity window"],"meaning":"Party B's date of birth is validated via MOI to confirm they are not a minor; a known 5-8 day MOI sync-lag risk exists for someone who just turned 18.","inputDesc":"Party B QID/Diplomatic ID","outputDesc":"MOI-validated DOB, pass/fail","example":"ORD_VALD_RULE_091 / ORD_VALD_RULE_092 — MOI validation mandatory, valid 60 minutes","milestone":false},{"id":"doc_validation_a","type":"manual","num":"5","title":"System + Document Validation — Party A","role":"Retail Agent","desc":["Signature match vs QID","Blacklist check"],"meaning":"Retail agent validates the current customer (Party A) separately: signature against QID, blacklist status — split explicitly from Party B's validation.","inputDesc":"Party A QID/passport/DCC, signature","outputDesc":"Validated Party A record","example":"Signature mismatch is a top rejection reason (~70% of cases affected by aged/PRO signatures)","milestone":false},{"id":"doc_validation_b","type":"manual","num":"6","title":"System + Document Validation — Party B","role":"Retail / Back-Office Agent","desc":["QID/Diplomatic ID, OCR capture","Back-office may bypass OCR"],"meaning":"New customer (Party B) documents captured and OCR'd; face-to-face store/tablet roles must go through OCR, fulfilment/back-office roles may bypass it (flagged as needing standardisation).","inputDesc":"Party B QID/Diplomatic ID","outputDesc":"OCR-captured, validated Party B record","example":"IDs without a signature require a physical thumbprint checked by a second person (segregation of duties)","milestone":false},{"id":"doc_collection","type":"manual","num":"7","title":"Collect TON Documents","role":"Retail Agent","desc":["CAF, TON form, QID copies","Star ≥1,500 QAR: declaration"],"meaning":"Customer application form, TON form, and ID copies for both parties are collected; star numbers ≥ QAR 1,500 additionally require a customer data restoration/declaration form with a fraud-reclaim clause.","inputDesc":"Party A/B IDs, signatures/thumbprints","outputDesc":"Attached document set (spans two account records)","example":"CAF stored under Party A's account, TON form under the ticket — agents attach manually today","milestone":false},{"id":"star_number_check","type":"decision","num":"","title":"Is This a Star (Premium) Number?","role":"","desc":[]},{"id":"star_pricing","type":"automated","num":"8","title":"Star-Number Pricing / Commitment Check","role":"System","desc":["1-yr commitment (scaled value)","or pay star value if prepaid"],"meaning":"Star numbers require either a one-year postpaid commitment scaled to value, or payment of the star number's value for prepaid; commitment restarts from month one regardless of prior customer's progress.","inputDesc":"Number value, sold price, approver ID (if under list price)","outputDesc":"Validated star-number price/commitment","example":"ORD_VALD_RULE_070/071/072/073 — sold price vs list price, non-null, non-negative, numeric format","milestone":false},{"id":"fee_payment","type":"manual","num":"9","title":"TON Fee / Payment","role":"Retail Agent","desc":["BAU: 50 QAR cash, unbilled","Star penalty: cash via WinCash"],"meaning":"Standard BAU/mutual TON carries a 50 QAR cash fee (receipt attached); star-number penalty is collected manually in cash via WinCash under a separate SKU. Payer (owner vs new customer) currently left to store discretion — unresolved.","inputDesc":"Fee amount, payment method","outputDesc":"Payment receipt attached to ticket","example":"50 QAR cash fee, receipt copy attached; migration-fee debit adjustment applied manually if overpaid","milestone":false},{"id":"prepaid_migration","type":"manual","num":"10","title":"Migrate to Prepaid (Legacy Workaround)","role":"Retail Agent","desc":["As-is only, pre-ticket step","Remove once real-time exists"],"meaning":"As-is process migrates the line to prepaid BEFORE raising the TON ticket, purely because back-office approval historically takes ~20 days manual validation — explicitly flagged as a workaround, not a genuine requirement.","inputDesc":"Postpaid line, TON in progress","outputDesc":"Line converted to prepaid pending TON","example":"Team target: remove this step once validations are automated in real time","milestone":false},{"id":"ticket_managing_queue","type":"automated","num":"11","title":"Ticket Auto-Opens — Managing Queue","role":"System","desc":["First of four sequential queues","Auto-opened ~3 years in place"],"meaning":"Once initiated, the TON ticket auto-opens into the Managing queue — the first of four queues in the fraud-control approval chain (Managing → CDM → BOQ/QATQ).","inputDesc":"Validated TON request, documents, payment","outputDesc":"Open ticket in Managing queue","example":"Ticket carries five visible activities: SMS, raising agent, approving agent, CDM validation, BOQ/QATQ closure","milestone":false},{"id":"null_price_check","type":"decision","num":"","title":"Number Price Null/Blank?","role":"","desc":[]},{"id":"cdm_review","type":"manual","num":"12","title":"CDM Business-Rule Review","role":"CDM Team (Customer Data Management)","desc":["1 of 4 fraud-control approvals","Reviews against configured rules"],"meaning":"CDM reviews and checks the request against business rules before anything executes. Deliberate fraud control, historically justified by an incident where a fraudster collected money from two people for the same number at different stores within an hour.","inputDesc":"TON ticket, business-rule set","outputDesc":"CDM approval or rejection","example":"Target-state: automate via rules (SAR number, contract minimum stay), limiting human approval to true exceptions","milestone":false},{"id":"cdm_decision","type":"decision","num":"","title":"CDM Approves?","role":"","desc":[]},{"id":"reject_correction","type":"manual","num":"13","title":"Return for Correction","role":"Retail / Back-Office Agent","desc":["SMS notifies agent/customer","Offline SMS is only channel today"],"meaning":"If CDM rejects, the ticket returns to the originating agent for correction; SMS is currently the only interaction channel for reject/follow-up communication.","inputDesc":"CDM rejection reason","outputDesc":"SMS notice, ticket returned","example":"Common causes: signature mismatch, QID digit error, missing attachment","milestone":false},{"id":"nationality_route","type":"decision","num":"","title":"Customer Nationality — BOQ or QATQ?","role":"","desc":[]},{"id":"qatq_review","type":"manual","num":"14","title":"QATQ Final Validation & Closure","role":"QATQ Back-Office","desc":["Final back-office validation","Closes ticket"],"meaning":"QATQ performs final validation and closes the ticket for the applicable nationality segment, mirroring BOQ's role.","inputDesc":"CDM-approved ticket","outputDesc":"Closed, validated ticket","example":"Routing between BOQ/QATQ is nationality-based per the transcript (exact partition not detailed in source)","milestone":false},{"id":"boq_review","type":"manual","num":"15","title":"BOQ Final Validation & Closure","role":"BOQ Back-Office","desc":["Final back-office validation","Closes ticket"],"meaning":"Back-Office Queue performs the final validation pass and closes the ticket ahead of account-transfer execution.","inputDesc":"CDM-approved ticket","outputDesc":"Closed, validated ticket","example":"Ticket activity log shows BOQ/QATQ validate-and-close as the final approval activity","milestone":false},{"id":"backoffice_execute","type":"manual","num":"16","title":"Execute Account Transfer","role":"Back-Office / Fulfilment Agent","desc":["Renames account/profile to B","Updates order line, no plan change"],"meaning":"Back-office agent selects the ticket from queue, changes account name/service-account name/account profile on Party A's assets to Party B, updates order line items, validates and submits.","inputDesc":"Closed/approved ticket, Party B details","outputDesc":"Order mapped to new customer account","example":"Single-order TON — no plan change bundled in","milestone":false},{"id":"address_update","type":"manual","num":"17","title":"Update Address Association","role":"Back-Office Agent","desc":["Replicates address to new account","Known gap: agents often skip"],"meaning":"New customer's address should be replicated/updated correctly since two different accounts are involved — flagged as a current gap since agents skip it today.","inputDesc":"Party B address details","outputDesc":"Address correctly associated to new account","example":"Two accounts involved (A and B); address must follow the number to the new account","milestone":false},{"id":"sim_swap","type":"manual","num":"18","title":"SIM Swap on TON Success","role":"Retail / Back-Office Agent","desc":["eSIM-to-eSIM or physical SIM","Effective on success, rollback if not"],"meaning":"SIM swap executes only upon TON success (mandatory-in-all-cases target state); if the ticket is rejected, the old SIM remains active with the original customer.","inputDesc":"New SIM/eSIM profile","outputDesc":"Active SIM/eSIM bound to new customer","example":"Migrating-to-prepaid cases issue a physical SIM; eSIM customers get eSIM-to-eSIM swap","milestone":false},{"id":"end27","type":"terminal","num":"","title":"Complete","role":"","desc":[]},{"id":"fixed_5g_branch","type":"decision","num":"","title":"Fixed-Line / 5G TON?","role":"","desc":[]},{"id":"fixed_validation","type":"manual","num":"19","title":"Fixed/5G TON Validation","role":"Retail Agent","desc":["QID, blacklist, bill checks","SIM-locking chain not applicable"],"meaning":"Customer requests fixed/5G TON in-store only; same validation set as mobile applies except the SIM-locking/postpaid-locking chain.","inputDesc":"Party A/B IDs, billing status","outputDesc":"Validated fixed TON request","example":"In-store only — no chat/digital channel for fixed TON","milestone":false},{"id":"osn_removal","type":"manual","num":"20","title":"Remove OSN Add-On (Pre-Transfer)","role":"Retail Agent","desc":["Prevents discrepancy for new owner","Re-added after transfer"],"meaning":"Retail agent removes the OSN add-on before raising the ticket to avoid a discrepancy when the new customer takes over; after transfer, OSN/STB/add-ons are re-added.","inputDesc":"Existing OSN subscription","outputDesc":"OSN temporarily removed","example":"Login/email re-registration required post-transfer since OSN is tied to login ID","milestone":false},{"id":"fixed_completion","type":"manual","num":"21","title":"Re-Provision OSN/STB, Apply Spend Barring","role":"Back-Office Agent","desc":["Re-adds OSN/STB under new login","~3-day zero-spend barring"],"meaning":"After account transfer, OSN/STB and add-ons are re-added under the new customer's login; a zero-spend barring window (~3 days) is proposed during transition since OSN charging continues.","inputDesc":"New account/login, STB details","outputDesc":"Re-provisioned fixed/5G service under new owner","example":"Bill-cycle-crossing requests are held/adjusted by the store (5-day SLA)","milestone":false},{"id":"end32","type":"terminal","num":"","title":"Complete","role":"","desc":[]},{"id":"end33","type":"reject","num":"","title":"Complete","role":"","desc":[]}];
+    const PF_EDGES = [{"from":"start1","to":"channel_entry","label":"","style":"flow"},{"from":"channel_entry","to":"open_ticket_check","label":"TON request","style":"flow"},{"from":"open_ticket_check","to":"ton_type","label":"","style":"flow"},{"from":"ton_type","to":"third_party_route","label":"","style":"flow"},{"from":"third_party_route","to":"prereq_gate","label":"Continue to Row 2 →","style":"wrap"},{"from":"prereq_gate","to":"collections_check","label":"eligibility check","style":"flow"},{"from":"collections_check","to":"moi_age_check","label":"","style":"flow"},{"from":"moi_age_check","to":"doc_validation_a","label":"MOI validation result","style":"flow"},{"from":"doc_validation_a","to":"doc_validation_b","label":"Continue to Row 3 →","style":"wrap"},{"from":"doc_validation_b","to":"doc_collection","label":"Party B validation packet","style":"flow"},{"from":"doc_collection","to":"star_number_check","label":"document set","style":"flow"},{"from":"star_number_check","to":"star_pricing","label":"","style":"flow"},{"from":"star_pricing","to":"fee_payment","label":"Continue to Row 4 →","style":"wrap"},{"from":"fee_payment","to":"prepaid_migration","label":"payment receipt","style":"flow"},{"from":"prepaid_migration","to":"ticket_managing_queue","label":"prepaid-migrated line","style":"flow"},{"from":"ticket_managing_queue","to":"null_price_check","label":"TON ticket","style":"flow"},{"from":"null_price_check","to":"cdm_review","label":"","style":"flow"},{"from":"cdm_review","to":"cdm_decision","label":"Continue to Row 5 →","style":"wrap"},{"from":"cdm_decision","to":"reject_correction","label":"","style":"flow"},{"from":"reject_correction","to":"nationality_route","label":"rejection notice","style":"flow"},{"from":"nationality_route","to":"qatq_review","label":"","style":"flow"},{"from":"qatq_review","to":"boq_review","label":"validated & closed ticket","style":"flow"},{"from":"boq_review","to":"backoffice_execute","label":"Continue to Row 6 →","style":"wrap"},{"from":"backoffice_execute","to":"address_update","label":"transferred account record","style":"flow"},{"from":"address_update","to":"sim_swap","label":"updated address record","style":"flow"},{"from":"sim_swap","to":"end27","label":"new/swapped SIM","style":"flow"},{"from":"fixed_5g_branch","to":"fixed_validation","label":"Continue to Row 7 →","style":"wrap"},{"from":"fixed_validation","to":"osn_removal","label":"fixed TON validation packet","style":"flow"},{"from":"osn_removal","to":"fixed_completion","label":"OSN removal record","style":"flow"},{"from":"fixed_completion","to":"end32","label":"re-provisioned fixed service","style":"flow"},{"from":"open_ticket_check","to":"channel_entry","label":"Yes","style":"exception"},{"from":"ton_type","to":"third_party_route","label":"COO / Third-party (cancelled ID)","style":"exception"},{"from":"collections_check","to":"prereq_gate","label":"Yes — Hold","style":"exception"},{"from":"star_number_check","to":"fee_payment","label":"No","style":"exception"},{"from":"null_price_check","to":"cdm_review","label":"No — Normal Routing","style":"exception"},{"from":"cdm_decision","to":"reject_correction","label":"Rejected","style":"exception"},{"from":"nationality_route","to":"qatq_review","label":"QATQ","style":"exception"},{"from":"fixed_5g_branch","to":"sim_swap","label":"No (Mobile — already handled above)","style":"exception"},{"from":"reject_correction","to":"doc_validation_a","label":"resubmit corrected documents","style":"exception"},{"from":"null_price_check","to":"cdm_review","label":"unwarranted CDM routing (design gap)","style":"exception"}];
+    const PF_TYPE_LABEL = {"manual":"Manual","automated":"Automated","integration":"Integration","decision":"Decision","terminal":"Start / End","reject":"Rejected"};
+    const PF_TYPE_ACCENT = {"manual":"#34d399","automated":"#a78bfa","integration":"#fbbf24","decision":"#fb7185","terminal":"#22d3ee","reject":"#fb7185"};
+    const pfById = Object.fromEntries(PF_NODES.filter(n => n.id).map(n => [n.id, n]));
+    const pfDrawer = document.getElementById('pfDrawer');
+    let pfSelected = null;
+
+    const pfNodeEls = () => Array.from(document.querySelectorAll('.pf-node'));
+    const pfEdgeEls = () => Array.from(document.querySelectorAll('.pf-edge'));
+
+    function pfLabelFor(id) {
+      const n = pfById[id];
+      if (!n) return id || 'unknown';
+      return n.title || n.id;
+    }
+    function pfLi(html) { const li = document.createElement('li'); li.innerHTML = html; return li; }
+    function pfFill(ul, items, emptyText) {
+      ul.textContent = '';
+      if (!items.length) { ul.appendChild(pfLi('<span class="pf-empty">' + emptyText + '</span>')); return; }
+      items.forEach(i => ul.appendChild(i));
+    }
+    function pfEdgeItem(otherId, e, dir) {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.className = 'pf-link';
+      btn.type = 'button';
+      btn.textContent = (dir === 'in' ? '← ' : '→ ') + pfLabelFor(otherId);
+      btn.addEventListener('click', () => pfOpen(otherId));
+      li.appendChild(btn);
+      const meta = [];
+      if (e.label) meta.push(e.label);
+      if (e.style && e.style !== 'flow') meta.push(e.style);
+      if (meta.length) {
+        const span = document.createElement('span');
+        span.className = 'pf-payload';
+        span.textContent = '  ·  ' + meta.join(' · ');
+        li.appendChild(span);
+      }
+      return li;
+    }
+
+    function pfOpen(id) {
+      const n = pfById[id];
+      if (!n) return;
+      pfSelected = id;
+      const badge = document.getElementById('pfBadge');
+      badge.textContent = PF_TYPE_LABEL[n.type] || n.type;
+      badge.style.color = PF_TYPE_ACCENT[n.type] || '#94a3b8';
+      document.getElementById('pfDrawerTitle').textContent = (n.num ? n.num + '. ' : '') + (n.title || n.id);
+      document.getElementById('pfRole').textContent = n.role || '';
+      document.getElementById('pfMeaning').textContent = n.meaning || (n.desc && n.desc[0]) || 'No meaning defined.';
+      document.getElementById('pfInDesc').textContent = n.inputDesc || '';
+      document.getElementById('pfOutDesc').textContent = n.outputDesc || '';
+      document.getElementById('pfExample').textContent = n.example || 'No example provided.';
+      pfFill(document.getElementById('pfIn'),
+        PF_EDGES.filter(e => e.to === id).map(e => pfEdgeItem(e.from, e, 'in')),
+        'Nothing flows into this node.');
+      pfFill(document.getElementById('pfOut'),
+        PF_EDGES.filter(e => e.from === id).map(e => pfEdgeItem(e.to, e, 'out')),
+        'Nothing flows out of this node.');
+      pfDrawer.classList.add('is-open');
+      document.body.classList.add('pf-open');
+      pfDrawer.setAttribute('aria-hidden', 'false');
+      pfNodeEls().forEach(el => el.classList.toggle('is-sel', el.dataset.id === id));
+      document.getElementById('pfClose').focus();
+    }
+
+    function pfClose() {
+      pfDrawer.classList.remove('is-open');
+      document.body.classList.remove('pf-open');
+      pfDrawer.setAttribute('aria-hidden', 'true');
+      pfNodeEls().forEach(el => el.classList.remove('is-sel'));
+      if (pfSelected) {
+        const el = pfNodeEls().find(e => e.dataset.id === pfSelected);
+        if (el) el.focus();
+      }
+      pfSelected = null;
+    }
+
+    function pfApplyFilter(type) {
+      const all = type === 'all';
+      pfNodeEls().forEach(el => el.classList.toggle('is-dim', !all && el.dataset.type !== type));
+      const visible = new Set(PF_NODES.filter(n => all || n.type === type).map(n => n.id));
+      pfEdgeEls().forEach(el => {
+        const on = all || (visible.has(el.dataset.from) && visible.has(el.dataset.to));
+        el.classList.toggle('is-dim', !on);
+      });
+      document.querySelectorAll('.pf-chip').forEach(c =>
+        c.setAttribute('aria-pressed', String(c.dataset.filter === type)));
+    }
+    // Exports must always show the whole diagram — a filtered PNG silently loses
+    // nodes and reads as the complete picture, which is worse than no filter at all.
+    // Closing the drawer first also restores the page width the capture is measured from.
+    function pfResetView() { pfApplyFilter('all'); if (pfSelected) pfClose(); }
+
+    pfNodeEls().forEach(el => {
+      el.addEventListener('click', () => pfOpen(el.dataset.id));
+      el.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); pfOpen(el.dataset.id); }
+      });
+    });
+    document.querySelectorAll('.pf-chip').forEach(c =>
+      c.addEventListener('click', () => pfApplyFilter(c.dataset.filter)));
+    document.getElementById('pfClose').addEventListener('click', pfClose);
+    document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && pfSelected) pfClose(); });
+
+    /* Drawer resize — pointer drag plus arrow keys, clamped so the panel can never
+       swallow the diagram or shrink below a readable measure. */
+    (function () {
+      const handle = document.getElementById('pfHandle');
+      const MIN = 320, MAX = 760;
+      const setW = w => document.documentElement.style.setProperty('--pf-drawer-w', Math.min(MAX, Math.max(MIN, w)) + 'px');
+      let dragging = false;
+      handle.addEventListener('pointerdown', ev => { dragging = true; handle.setPointerCapture(ev.pointerId); ev.preventDefault(); });
+      handle.addEventListener('pointermove', ev => { if (dragging) setW(window.innerWidth - ev.clientX); });
+      handle.addEventListener('pointerup', ev => { dragging = false; handle.releasePointerCapture(ev.pointerId); });
+      handle.addEventListener('keydown', ev => {
+        const cur = pfDrawer.getBoundingClientRect().width;
+        if (ev.key === 'ArrowLeft') { setW(cur + 24); ev.preventDefault(); }
+        if (ev.key === 'ArrowRight') { setW(cur - 24); ev.preventDefault(); }
+      });
+    })();
+  </script>
+</body>
+</html>

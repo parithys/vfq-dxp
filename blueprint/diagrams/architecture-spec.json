@@ -1,0 +1,753 @@
+{
+  "application": {
+    "name": "Vodafone Qatar DXP",
+    "tagline": "Front-end-only reconstruction of the Vodafone Qatar CRM/CVM Digital Experience Platform",
+    "repository": "local blueprint (blueprint/reconstruction-package/) \u2014 no live codebase exists yet",
+    "version": "Blueprint v1.0 (Stage D/E)"
+  },
+  "executive_summary": "The Vodafone Qatar DXP is a planned replacement for the legacy Siebel/ECR/VSA CRM stack, rebuilt here as a production-ready, front-end-only React application: no APIs, backend services, databases, or third-party integrations. Every workflow, business rule, validation, permission, calculation, approval, and state transition is simulated entirely in front-end logic.\n\nThe platform serves 66 evidenced personas (retail sales agents, fulfilment agents, managers/approvers, credit control, back office, and more) across 16 functional modules \u2014 Lead Management, Mobile Postpaid/Prepaid, Fixed Line/Fibre, FWA/5G Home, MNP/FNP Porting, Enterprise/IoT/B2B, Billing & Adjustments, Order Management, Identity & Customer Management, SIM & Number Management, Trouble Ticketing, Access/Roles/Approval Governance, CAF/Attachments & Forms, and Platform Governance \u2014 comprising 213 screens built from 111 end-to-end user journeys.\n\nThis document's two diagrams are synthesized from a 4-stage evidence-backed reconstruction blueprint (`blueprint/`), not from a scan of existing code \u2014 no implementation exists yet. The Technical Architecture diagram shows the recommended system shape (5 simulation engines standing in for what a real backend/auth-server/rules-engine would normally provide). The Information Architecture diagram shows the navigation hierarchy (16 modules \u2192 sub-modules \u2192 screens) and the core entity relationships underlying the domain model.",
+  "technology_overview": "No target tech stack is evidenced anywhere in the 83-document source corpus (the corpus's only UI evidence is screenshots of the legacy Siebel/Open UI system being replaced). Every technology below is therefore a recommended default from the Stage D architecture blueprint (`blueprint/reconstruction-package/docs/frontend-architecture.md`), not a confirmed fact \u2014 see `assumptions`.",
+  "technology_inventory": {
+    "languages": [
+      {
+        "name": "TypeScript",
+        "version": "5.x",
+        "purpose": "Primary application language \u2014 compile-time safety across the ~1,700 generated config/data records"
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "React",
+        "version": "18",
+        "purpose": "Component-based SPA UI"
+      },
+      {
+        "name": "React Router",
+        "version": "6",
+        "purpose": "Client-side routing (213 routes, one per catalogued screen)"
+      }
+    ],
+    "libraries": [
+      {
+        "name": "Zustand",
+        "version": "\u2014",
+        "purpose": "State management (one store per bounded context: persona, entity, workflow, notification, config)"
+      },
+      {
+        "name": "React Hook Form",
+        "version": "\u2014",
+        "purpose": "Schema-driven form handling for the 970-field inventory"
+      },
+      {
+        "name": "Tailwind CSS",
+        "version": "\u2014",
+        "purpose": "Utility styling; no design system was evidenced in the source corpus"
+      }
+    ],
+    "ai_ml": [],
+    "datastores": [
+      {
+        "name": "IndexedDB",
+        "version": "\u2014",
+        "purpose": "Mock Data Engine's persisted \u2018database\u2019 (customers, accounts, orders, etc.) \u2014 simulates a backend entirely client-side"
+      },
+      {
+        "name": "localStorage",
+        "version": "\u2014",
+        "purpose": "Persona selection + config persistence across reloads"
+      },
+      {
+        "name": "sessionStorage",
+        "version": "\u2014",
+        "purpose": "In-progress wizard/journey draft state (matches evidenced \u2018resume from last milestone\u2019 behavior)"
+      }
+    ],
+    "infrastructure": [
+      {
+        "name": "Vite",
+        "version": "5",
+        "purpose": "Build tool \u2014 static SPA bundle, no server runtime required"
+      }
+    ],
+    "third_party_services": [],
+    "dev_tooling": [
+      {
+        "name": "Vite dev server",
+        "version": "\u2014",
+        "purpose": "Local development / HMR"
+      }
+    ]
+  },
+  "technical_architecture": {
+    "narrative": "There is no backend by design (per the project's front-end-only constraint). Five simulation engines take the place of what a real backend/rules-engine/auth-server would normally provide, each reading from generated, evidence-backed configuration JSON rather than hardcoded logic: the Configuration Engine loads all config at boot; the Persona Engine simulates authentication/authorization by filtering navigation and screen/action visibility against the RBAC Matrix (145 evidenced entries); the Rule Engine evaluates the 346-entry Business Rule catalogue (eligibility, thresholds, calculations); the Validation Engine evaluates the 418-entry Validation catalogue at the field level; and the Mock Data Engine simulates CRUD persistence (with artificial latency and referential-integrity checks) against IndexedDB, standing in for a real database. Screen components (organized into 16 modules) compose a small set of shared UI patterns rather than being built bespoke \u2014 see `blueprint/reconstruction-package/docs/reusable-patterns.md`'s 18 evidence-backed patterns.",
+    "components": [
+      {
+        "name": "Screen Components (16 modules, 213 screens)",
+        "type": "frontend",
+        "technology": "React + TypeScript",
+        "responsibility": "Compose shared UI patterns into the catalogued screens; no bespoke business logic \u2014 delegates to the engines below"
+      },
+      {
+        "name": "Navigation / Router",
+        "type": "frontend",
+        "technology": "React Router v6",
+        "responsibility": "Client-side routing generated from routes.json; sidebar/breadcrumb navigation filtered by the active persona"
+      },
+      {
+        "name": "Persona Engine",
+        "type": "service",
+        "technology": "TypeScript module",
+        "responsibility": "Simulates authentication/authorization: tracks the active persona and filters visible routes/actions via the RBAC Matrix (no real login exists)"
+      },
+      {
+        "name": "Rule Engine",
+        "type": "service",
+        "technology": "TypeScript module + JSON rule catalogue",
+        "responsibility": "Evaluates business rules (eligibility, thresholds, calculations) from business-rules.json; falls back to a visible dev-mode warning for any rule without a registered implementation"
+      },
+      {
+        "name": "Validation Engine",
+        "type": "service",
+        "technology": "TypeScript module + React Hook Form resolvers",
+        "responsibility": "Evaluates field-level validation rules from validation-rules.json against the 970-entry Field Inventory"
+      },
+      {
+        "name": "Mock Data Engine",
+        "type": "service",
+        "technology": "TypeScript module",
+        "responsibility": "Simulates a backend: CRUD operations with artificial latency, referential-integrity checks, and entity lifecycle-state transitions, entirely in-browser"
+      },
+      {
+        "name": "Configuration Engine",
+        "type": "service",
+        "technology": "TypeScript module",
+        "responsibility": "Boot-time loader exposing typed accessors over all config/*.json \u2014 no screen imports config JSON directly"
+      },
+      {
+        "name": "Zustand Stores",
+        "type": "datastore",
+        "technology": "Zustand",
+        "responsibility": "In-memory application state, one store per bounded context (persona, entity, workflow, notification, config)"
+      },
+      {
+        "name": "Browser Persistence (IndexedDB / localStorage / sessionStorage)",
+        "type": "datastore",
+        "technology": "Web Storage APIs",
+        "responsibility": "Durability layer standing in for a real database \u2014 survives reloads within a session"
+      }
+    ],
+    "data_flows": [
+      {
+        "from": "Persona Engine",
+        "to": "Navigation / Router",
+        "protocol": "in-memory call",
+        "description": "Filters visible modules/routes/actions by the active persona's RBAC entries"
+      },
+      {
+        "from": "Screen Components",
+        "to": "Validation Engine",
+        "protocol": "in-memory call",
+        "description": "Resolves field-level validation rules per screen/field before submit"
+      },
+      {
+        "from": "Screen Components",
+        "to": "Rule Engine",
+        "protocol": "in-memory call",
+        "description": "Evaluates eligibility/threshold/calculation business rules (e.g. Bill Limit Agent Minimum) during a guided journey"
+      },
+      {
+        "from": "Screen Components",
+        "to": "Mock Data Engine",
+        "protocol": "in-memory async (simulated latency)",
+        "description": "CRUD reads/writes against the simulated backend (customers, accounts, orders, tickets, leads)"
+      },
+      {
+        "from": "Mock Data Engine",
+        "to": "Browser Persistence (IndexedDB)",
+        "protocol": "IndexedDB API",
+        "description": "Persists entity records; enforces evidenced lifecycle-state transitions (e.g. Billing Profile: good standing \u2192 overdue \u2192 in collection \u2192 blacklisted)"
+      },
+      {
+        "from": "Zustand Stores",
+        "to": "Browser Persistence (localStorage/sessionStorage)",
+        "protocol": "Web Storage API",
+        "description": "Persists active persona and in-progress wizard/journey draft state"
+      },
+      {
+        "from": "Configuration Engine",
+        "to": "Persona Engine",
+        "protocol": "in-memory call",
+        "description": "Supplies personas.json + rbac.json at boot"
+      },
+      {
+        "from": "Configuration Engine",
+        "to": "Rule Engine",
+        "protocol": "in-memory call",
+        "description": "Supplies business-rules.json at boot"
+      },
+      {
+        "from": "Configuration Engine",
+        "to": "Validation Engine",
+        "protocol": "in-memory call",
+        "description": "Supplies validation-rules.json at boot"
+      },
+      {
+        "from": "Configuration Engine",
+        "to": "Navigation / Router",
+        "protocol": "in-memory call",
+        "description": "Supplies routes.json + module-hierarchy.json at boot"
+      }
+    ],
+    "deployment": "Static single-page application, built with Vite, deployable to any static host or CDN (e.g. object storage + CDN) \u2014 no server runtime, container, or database is required at any environment tier. This is an architectural consequence of the project's explicit front-end-only constraint, not evidenced by the source corpus (which describes the legacy Siebel/ECR/VSA deployment, being replaced, not the new DXP's deployment target). CI/CD would be a standard static-build-and-deploy pipeline.",
+    "diagram_mermaid": "graph TD\n  subgraph Client[\"Client (Browser)\"]\n    UI[\"Screen Components<br/>(16 modules, 213 screens)\"]\n    NAV[\"Navigation / Router<br/>React Router v6\"]\n  end\n  subgraph Engines[\"Simulation Engines (replace backend)\"]\n    PE[\"Persona Engine<br/>(auth simulation)\"]\n    RE[\"Rule Engine<br/>346 business rules\"]\n    VE[\"Validation Engine<br/>418 validation rules\"]\n    MDE[\"Mock Data Engine<br/>(backend simulation)\"]\n    CE[\"Configuration Engine\"]\n  end\n  subgraph State[\"State & Persistence\"]\n    ZS[\"Zustand Stores\"]\n    IDB[(\"IndexedDB\")]\n    LS[(\"localStorage /<br/>sessionStorage\")]\n  end\n  subgraph Config[\"Generated Config (build-time)\"]\n    CFG[\"config/*.json<br/>routes, rbac, rules,<br/>validation, personas\"]\n  end\n\n  CFG -->|\"loads at boot\"| CE\n  CE -->|\"personas.json + rbac.json\"| PE\n  CE -->|\"business-rules.json\"| RE\n  CE -->|\"validation-rules.json\"| VE\n  CE -->|\"routes.json + module-hierarchy.json\"| NAV\n  PE -->|\"filters visible routes/actions\"| NAV\n  NAV --> UI\n  UI -->|\"validate field\"| VE\n  UI -->|\"evaluate rule\"| RE\n  UI -->|\"CRUD (simulated latency)\"| MDE\n  UI --> ZS\n  MDE -->|\"persist entities\"| IDB\n  ZS -->|\"persist persona/draft state\"| LS"
+  },
+  "information_architecture": {
+    "narrative": "The application's information architecture is Platform \u2192 Module \u2192 Sub-Module \u2192 Screen \u2192 Component \u2192 Action, derived from the 16-module hierarchy synthesized from 111 journeys, 308 requirements, and 83 entities (`blueprint/module-hierarchy.md`). Primary navigation is the 16 modules (sidebar, filtered by the active persona's RBAC entries); secondary navigation is a module's sub-modules and screens. Screen-to-module assignment (`blueprint/reconstruction-package/config/routes.json`) is a deterministic keyword match against each module's capability list \u2014 a strong starting point, not a confirmed final IA. Full screen-by-screen detail (213 entries) lives in `blueprint/screens.md`; this diagram shows the module/sub-module tier with representative screen counts rather than all 213 leaf nodes, which would not be legible in a single diagram. (The diagram below shows the Platform \u2192 Module tier only, for legibility; the Module \u2192 Sub-Module \u2192 Screen tier is detailed in the navigation table above and in full in `blueprint/module-hierarchy.md` and `blueprint/screens.md`.)",
+    "navigation": [
+      {
+        "label": "Lead Management",
+        "route": "/lead-management",
+        "description": "15 screens",
+        "children": [
+          {
+            "label": "Lead Creation & Qualification",
+            "route": "/lead-management/lead-creation",
+            "description": "Create/edit/reassign leads across 4 personas"
+          },
+          {
+            "label": "Cross Sales Conversion",
+            "route": "/lead-management/cross-sales",
+            "description": "Campaign offer acceptance \u2192 guided journey handoff"
+          }
+        ]
+      },
+      {
+        "label": "Mobile Postpaid",
+        "route": "/mobile-postpaid",
+        "description": "22 screens",
+        "children": [
+          {
+            "label": "New Postpaid Activation",
+            "route": "/mobile-postpaid/new-activation",
+            "description": "Guided wizard: Contact\u2192Plan\u2192Number\u2192SIM\u2192CAF"
+          },
+          {
+            "label": "Postpaid Service Management",
+            "route": "/mobile-postpaid/service-management",
+            "description": "Plan changes, add-ons, credit limit edits"
+          },
+          {
+            "label": "Device Installment",
+            "route": "/mobile-postpaid/device-installment",
+            "description": "DOI plan management"
+          }
+        ]
+      },
+      {
+        "label": "Mobile Prepaid",
+        "route": "/mobile-prepaid",
+        "description": "Fully Defined module (build-readiness.md)",
+        "children": [
+          {
+            "label": "Prepaid Activation",
+            "route": "/mobile-prepaid/activation",
+            "description": "New Prepaid guided wizard"
+          }
+        ]
+      },
+      {
+        "label": "Pre-to-Post Migration",
+        "route": "/pre-to-post-migration",
+        "description": "15 screens",
+        "children": [
+          {
+            "label": "Prepaid to Postpaid Conversion",
+            "route": "/pre-to-post-migration/pre-to-post",
+            "description": "Manual + Autobase (Unica-sourced) migration"
+          },
+          {
+            "label": "Postpaid to Prepaid Conversion",
+            "route": "/pre-to-post-migration/post-to-pre",
+            "description": "Reverse migration flow"
+          },
+          {
+            "label": "Connection Count Validation",
+            "route": "/pre-to-post-migration/connection-count",
+            "description": "Multi-connection eligibility checks"
+          }
+        ]
+      },
+      {
+        "label": "MNP / FNP Porting",
+        "route": "/mnp-fnp-porting",
+        "description": "17 screens",
+        "children": [
+          {
+            "label": "MNP Port-In",
+            "route": "/mnp-fnp-porting/mnp-port-in",
+            "description": "Mobile number port-in (postpaid/prepaid)"
+          },
+          {
+            "label": "FNP Port-In",
+            "route": "/mnp-fnp-porting/fnp-port-in",
+            "description": "Fixed number port-in"
+          },
+          {
+            "label": "Post-Port Billing",
+            "route": "/mnp-fnp-porting/post-port-billing",
+            "description": "Dunning ladder after port-in"
+          },
+          {
+            "label": "Port-Out Handling",
+            "route": "/mnp-fnp-porting/port-out",
+            "description": "Outbound porting"
+          }
+        ]
+      },
+      {
+        "label": "Fixed Line / Fibre",
+        "route": "/fixed-line-fibre",
+        "description": "49 screens \u2014 largest module",
+        "children": [
+          {
+            "label": "Fixed Line Activation",
+            "route": "/fixed-line-fibre/activation",
+            "description": "Triple Play, KID lookup, WFM appointment"
+          },
+          {
+            "label": "Digital Self-Service Fiber",
+            "route": "/fixed-line-fibre/digital-self-service",
+            "description": "Instant activation, eKYC"
+          },
+          {
+            "label": "Fixed Line Migration & Termination",
+            "route": "/fixed-line-fibre/migration-termination",
+            "description": ""
+          },
+          {
+            "label": "GigaHome / OSNtv Subscription",
+            "route": "/fixed-line-fibre/gigahome-osntv",
+            "description": "Subscription Acceptance Form flows"
+          },
+          {
+            "label": "Home Move",
+            "route": "/fixed-line-fibre/home-move",
+            "description": "Fixed-to-Fixed relocation"
+          }
+        ]
+      },
+      {
+        "label": "FWA / 5G Home",
+        "route": "/fwa-5g-home",
+        "description": "44 screens",
+        "children": [
+          {
+            "label": "FWA Indoor/Outdoor Activation",
+            "route": "/fwa-5g-home/activation",
+            "description": "Desktop Vanilla + Open UI variants"
+          },
+          {
+            "label": "FWA Tablet Channel",
+            "route": "/fwa-5g-home/tablet",
+            "description": "B2B2C, With/Without Approval variants"
+          },
+          {
+            "label": "CPE Configuration & Field Fulfilment",
+            "route": "/fwa-5g-home/cpe-fulfilment",
+            "description": "WFM/Oracle Field Service installation"
+          }
+        ]
+      },
+      {
+        "label": "Enterprise / IoT / B2B",
+        "route": "/enterprise-iot-b2b",
+        "description": "6 screens",
+        "children": [
+          {
+            "label": "Enterprise Account Management",
+            "route": "/enterprise-iot-b2b/account-management",
+            "description": "Parent/sub-account, choosers"
+          },
+          {
+            "label": "Bulk Operations",
+            "route": "/enterprise-iot-b2b/bulk-operations",
+            "description": "Bulk SMS, DAPN, PTT provisioning"
+          },
+          {
+            "label": "B2B2C Employer Association",
+            "route": "/enterprise-iot-b2b/b2b2c",
+            "description": "Employer-sponsored consumer plans"
+          }
+        ]
+      },
+      {
+        "label": "Billing & Adjustments",
+        "route": "/billing-adjustments",
+        "description": "3 screens \u2014 Missing readiness (zero linked journeys)",
+        "children": [
+          {
+            "label": "Billing Profile Management",
+            "route": "/billing-adjustments/billing-profile",
+            "description": ""
+          },
+          {
+            "label": "Bill Viewing & Simulation",
+            "route": "/billing-adjustments/bill-viewing",
+            "description": ""
+          },
+          {
+            "label": "Deposit & Credit Management",
+            "route": "/billing-adjustments/deposit-credit",
+            "description": ""
+          }
+        ]
+      },
+      {
+        "label": "Order Management",
+        "route": "/order-management",
+        "description": "15 screens",
+        "children": [
+          {
+            "label": "Order Approval Workflow",
+            "route": "/order-management/approval",
+            "description": "Approve / Reject-Correction / Reject-Drop"
+          },
+          {
+            "label": "Order Lifecycle & Status",
+            "route": "/order-management/lifecycle",
+            "description": ""
+          },
+          {
+            "label": "Future Dated Orders",
+            "route": "/order-management/future-dated",
+            "description": "30-day max, status model"
+          }
+        ]
+      },
+      {
+        "label": "Identity & Customer Management",
+        "route": "/identity-customer-management",
+        "description": "6 screens",
+        "children": [
+          {
+            "label": "Identity Validation",
+            "route": "/identity-customer-management/identity-validation",
+            "description": "QID/MOI validation"
+          },
+          {
+            "label": "Passport to QID Update",
+            "route": "/identity-customer-management/passport-to-qid",
+            "description": ""
+          },
+          {
+            "label": "Customer 360",
+            "route": "/identity-customer-management/customer-360",
+            "description": ""
+          }
+        ]
+      },
+      {
+        "label": "SIM & Number Management",
+        "route": "/sim-number-management",
+        "description": "7 screens",
+        "children": [
+          {
+            "label": "SIM Swap",
+            "route": "/sim-number-management/sim-swap",
+            "description": "OCR\u2192barcode\u2192MOI\u2192CBS chain"
+          },
+          {
+            "label": "Number Management",
+            "route": "/sim-number-management/number-management",
+            "description": ""
+          },
+          {
+            "label": "Transfer of Ownership / Number",
+            "route": "/sim-number-management/ton",
+            "description": ""
+          }
+        ]
+      },
+      {
+        "label": "Trouble Ticketing & Complaints",
+        "route": "/trouble-ticketing-complaints",
+        "description": "5 screens",
+        "children": [
+          {
+            "label": "Ticket Creation & Handling",
+            "route": "/trouble-ticketing-complaints/ticket-handling",
+            "description": ""
+          },
+          {
+            "label": "Disconnection",
+            "route": "/trouble-ticketing-complaints/disconnection",
+            "description": ""
+          }
+        ]
+      },
+      {
+        "label": "Access, Roles & Approval Governance",
+        "route": "/access-roles-approval-governance",
+        "description": "3 screens \u2014 High Risk readiness",
+        "children": [
+          {
+            "label": "Role-Based Access Control",
+            "route": "/access-roles-approval-governance/rbac",
+            "description": ""
+          }
+        ]
+      },
+      {
+        "label": "CAF, Attachments & Forms",
+        "route": "/caf-attachments-forms",
+        "description": "5 screens \u2014 Missing readiness (zero linked journeys)",
+        "children": [
+          {
+            "label": "CAF Lifecycle",
+            "route": "/caf-attachments-forms/caf-lifecycle",
+            "description": "Digital/Manual/Touch Screen signature"
+          }
+        ]
+      },
+      {
+        "label": "Platform Governance & Architecture",
+        "route": "/platform-governance-architecture",
+        "description": "1 screen \u2014 High Risk readiness",
+        "children": [
+          {
+            "label": "Delivery & Traceability Governance",
+            "route": "/platform-governance-architecture/governance",
+            "description": ""
+          }
+        ]
+      }
+    ],
+    "data_models": [
+      {
+        "entity": "Customer / Contact",
+        "description": "The person transacting (consumer or B2B2C sponsored employee). Corpus has two closely related legacy variants (ENT-023 Customer, ENT-037 Customer/Contact), merged here for clarity.",
+        "fields": [
+          {
+            "name": "qid / idNumber",
+            "type": "string",
+            "notes": "QID / Passport / GCC / Diplomatic ID"
+          },
+          {
+            "name": "name, dob, nationality",
+            "type": "string/date",
+            "notes": "MOI-validated fields"
+          },
+          {
+            "name": "moiValidationStatus",
+            "type": "enum",
+            "notes": ""
+          },
+          {
+            "name": "blacklisted",
+            "type": "boolean",
+            "notes": ""
+          }
+        ],
+        "relationships": "Owns one or more Accounts; linked to Employer for B2B2C; owned by a User as Lead Owner before conversion."
+      },
+      {
+        "entity": "Account",
+        "description": "Service/legal-entity container (ENT-024 Service Account).",
+        "fields": [
+          {
+            "name": "accountType",
+            "type": "enum",
+            "notes": "Consumer / Enterprise parent / Enterprise sub-account"
+          },
+          {
+            "name": "status",
+            "type": "enum",
+            "notes": ""
+          }
+        ],
+        "relationships": "Belongs to Customer; has one or more Billing Profiles; places Orders; may have a parent Account (enterprise hierarchy)."
+      },
+      {
+        "entity": "Billing Profile",
+        "description": "ENT-001 \u2014 drives billing, barring, and payment posting.",
+        "fields": [
+          {
+            "name": "billingCycle, billingType",
+            "type": "string/enum",
+            "notes": "PIA / Arrears / Hybrid"
+          },
+          {
+            "name": "creditLimit",
+            "type": "number",
+            "notes": "QAR"
+          },
+          {
+            "name": "collectionStatus",
+            "type": "enum",
+            "notes": "Good standing \u2192 Overdue \u2192 In collection \u2192 Blacklisted"
+          }
+        ],
+        "relationships": "Belongs to Account; referenced by Orders and Line Items."
+      },
+      {
+        "entity": "Order",
+        "description": "ENT-006 \u2014 the central transactional entity.",
+        "fields": [
+          {
+            "name": "orderType, orderSubType, status",
+            "type": "enum",
+            "notes": ""
+          },
+          {
+            "name": "approvalStatus, holdFlag/Reason",
+            "type": "enum/string",
+            "notes": ""
+          },
+          {
+            "name": "totalQAR, mrcTotalQAR, nrcTotalQAR",
+            "type": "number",
+            "notes": ""
+          }
+        ],
+        "relationships": "Belongs to Account; billed to a Billing Profile; contains Line Items; produces a CAF; may incur a Commitment/Penalty."
+      },
+      {
+        "entity": "Line Item",
+        "description": "ENT-039 \u2014 hierarchical parent/child structure under an Order.",
+        "fields": [
+          {
+            "name": "lineItemType",
+            "type": "enum",
+            "notes": ""
+          }
+        ],
+        "relationships": "Child of Order; references a Product; may provision a SIM, MSISDN, or CPE."
+      },
+      {
+        "entity": "Product / Plan / Promotion",
+        "description": "ENT-028 \u2014 bundled plan/discount/add-on, deliberately bundled into named promotions to prevent agent-side discount misuse.",
+        "fields": [
+          {
+            "name": "mrcQAR, lockInMonths",
+            "type": "number",
+            "notes": ""
+          }
+        ],
+        "relationships": "Referenced by Line Items; determines Addon & Discount eligibility."
+      },
+      {
+        "entity": "SIM",
+        "description": "ENT-026",
+        "fields": [
+          {
+            "name": "iccid, type, stockStatus",
+            "type": "string/enum",
+            "notes": "Physical / Printed eSIM / Virtual eSIM"
+          }
+        ],
+        "relationships": "Linked to CPE and Order; paired with an MSISDN; becomes part of an Installed Asset."
+      },
+      {
+        "entity": "MSISDN / Number",
+        "description": "ENT-015",
+        "fields": [
+          {
+            "name": "msisdn, category, status",
+            "type": "string/enum",
+            "notes": "Free / Star / Reserved; AVAILABLE / BLOCKED"
+          }
+        ],
+        "relationships": "Reserved to a Contact/Order; tied to Account/Service; subject to porting window after MNP port-in."
+      },
+      {
+        "entity": "CPE / ONT / Combo Box",
+        "description": "ENT-035 \u2014 Customer Premises Equipment for fixed/FWA.",
+        "fields": [
+          {
+            "name": "serial",
+            "type": "string",
+            "notes": ""
+          }
+        ],
+        "relationships": "Linked to SIM, Order, and a KID/Service Point."
+      },
+      {
+        "entity": "KID / Service Point",
+        "description": "ENT-032 \u2014 Kahramaa ID / Karama ID address record.",
+        "fields": [
+          {
+            "name": "kid",
+            "type": "string",
+            "notes": "One government KID may map to multiple Vodafone service points/VFIDs"
+          }
+        ],
+        "relationships": "Linked to Address, Contact, and installed CPE."
+      },
+      {
+        "entity": "CAF (Customer Application Form)",
+        "description": "ENT-025",
+        "fields": [
+          {
+            "name": "formId, signatureMethod",
+            "type": "string/enum",
+            "notes": "Digital / Manual / Touch Screen"
+          }
+        ],
+        "relationships": "Produced per Order; distinct Consumer vs. Enterprise/SME-SOHO sub-types."
+      },
+      {
+        "entity": "Trouble Ticket",
+        "description": "ENT-020",
+        "fields": [
+          {
+            "name": "status, category, hashtags",
+            "type": "enum/string[]",
+            "notes": "VFQA_TT_HASHTAGS / VFQA_TT_ACTUAL_ISSUE taxonomies"
+          }
+        ],
+        "relationships": "Linked to Account, Customer, MSISDN, Order; closure by Retention Team can auto-create a Disconnection Order."
+      },
+      {
+        "entity": "Employer / Company (B2B2C)",
+        "description": "ENT-047",
+        "fields": [
+          {
+            "name": "companyName",
+            "type": "string",
+            "notes": ""
+          }
+        ],
+        "relationships": "Sponsors a Contact/Account under B2B2C."
+      },
+      {
+        "entity": "Commitment / Penalty",
+        "description": "ENT-005 \u2014 calculated on-demand from guided journeys (e.g. Fibre lock-in disconnection fee).",
+        "fields": [
+          {
+            "name": "amountQAR",
+            "type": "number",
+            "notes": ""
+          }
+        ],
+        "relationships": "Calculated against an Order/Billing Profile at disconnection or plan-change time."
+      }
+    ],
+    "diagram_mermaid": "graph LR\n  ROOT[\"Vodafone Qatar DXP\"]\n  ROOT --> M1[\"Lead Management<br/>15 screens\"]\n  ROOT --> M2[\"Mobile Postpaid<br/>22 screens\"]\n  ROOT --> M3[\"Mobile Prepaid<br/>Fully Defined\"]\n  ROOT --> M4[\"Pre-to-Post Migration<br/>15 screens\"]\n  ROOT --> M5[\"MNP / FNP Porting<br/>17 screens\"]\n  ROOT --> M6[\"Fixed Line / Fibre<br/>49 screens\"]\n  ROOT --> M7[\"FWA / 5G Home<br/>44 screens\"]\n  ROOT --> M8[\"Enterprise / IoT / B2B<br/>6 screens\"]\n  ROOT --> M9[\"Billing & Adjustments<br/>Missing readiness\"]\n  ROOT --> M10[\"Order Management<br/>15 screens\"]\n  ROOT --> M11[\"Identity & Customer Mgmt<br/>6 screens\"]\n  ROOT --> M12[\"SIM & Number Mgmt<br/>7 screens\"]\n  ROOT --> M13[\"Trouble Ticketing<br/>5 screens\"]\n  ROOT --> M14[\"Access/Roles/Approval Gov.<br/>High Risk\"]\n  ROOT --> M15[\"CAF/Attachments/Forms<br/>Missing readiness\"]\n  ROOT --> M16[\"Platform Governance<br/>High Risk\"]"
+  },
+  "extra_diagrams": [
+    {
+      "title": "Entity Relationship Diagram (core domain entities)",
+      "narrative": "The full domain model has 83 entities (`blueprint/domain-model.md`); this diagram shows the 14 most-referenced entities (by module-hierarchy feature co-occurrence) with their evidenced relationships, kept to a legible node count per diagramming best practice. See `domain-model.md` for the remaining 69 entities (e.g. Commitment/Penalty sub-types, IMS Site/ZSB, Functional Cluster, Authorised Person/Chooser) and their full evidenced attributes.",
+      "mermaid": "erDiagram\n  CUSTOMER ||--o{ ACCOUNT : owns\n  ACCOUNT ||--o{ BILLING_PROFILE : has\n  ACCOUNT ||--o{ ORDER : places\n  ACCOUNT }o--o| EMPLOYER : \"B2B2C sponsored by\"\n  ACCOUNT ||--o{ TROUBLE_TICKET : raises\n  BILLING_PROFILE ||--o{ ORDER : bills\n  ORDER ||--o{ LINE_ITEM : contains\n  ORDER ||--o| CAF : produces\n  ORDER }o--o| COMMITMENT_PENALTY : \"may incur\"\n  LINE_ITEM }o--|| PRODUCT : references\n  LINE_ITEM }o--o| SIM : provisions\n  LINE_ITEM }o--o| MSISDN : assigns\n  LINE_ITEM }o--o| CPE : installs\n  SIM }o--|| MSISDN : \"paired with\"\n  CPE }o--|| KID_SERVICE_POINT : \"installed at\"\n  TROUBLE_TICKET }o--o| ORDER : \"may create (disconnection)\"\n  TROUBLE_TICKET }o--|| MSISDN : references"
+    }
+  ],
+  "assumptions": [
+    "No live codebase exists yet \u2014 both diagrams are synthesized from the Stage A-D evidence-backed reconstruction blueprint (`blueprint/`), not from static analysis of a repository. Treat this document as a design specification, not an as-built record.",
+    "The entire technology_inventory (React, TypeScript, Vite, Zustand, React Hook Form, Tailwind CSS) is a recommended default from `blueprint/reconstruction-package/docs/frontend-architecture.md` \u00a71 \u2014 no source document specifies a target tech stack.",
+    "Screen-to-module assignment in the Information Architecture navigation tree is a deterministic keyword match (`config/routes.json`), not a confirmed final IA \u2014 expect some screens to need manual re-bucketing.",
+    "The Entity Relationship Diagram shows 14 of 83 evidenced entities, curated for diagram legibility (8-20 node guidance) by module-hierarchy reference frequency \u2014 not the full domain model.",
+    "The 'Customer' node in the ERD merges two closely related legacy entity variants (ENT-023 Customer, ENT-037 Customer/Contact) found in the source corpus \u2014 see `domain-model.md` for the distinction.",
+    "Deployment description (static SPA, no server) is an architectural consequence of the explicit front-end-only project constraint, not evidenced by the source corpus, which only describes the legacy system being replaced."
+  ],
+  "confidence_notes": "High confidence on the module/screen/entity counts and relationships (all evidence-cited in blueprint/*.md, traceable to specific source documents). Low-to-no confidence on the specific technology choices and deployment target (Assumed defaults, explicitly flagged, since the source corpus contains no target-state technical specification \u2014 only legacy-system screenshots and business/functional requirements)."
+}

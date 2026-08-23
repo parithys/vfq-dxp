@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="spec-hash" content="sha256:28cdf46a551fc29bc97be8b35754688fe7c3e290f28da6e66666d68215675ad1">
+  <meta name="generated-at" content="2026-08-22T20:34:48.403Z">
+  <meta name="diagram-version" content="2.3">
+  <title>Catalogue #154 — Changing Bill Cycles - Process Flow</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" integrity="sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/" crossorigin="anonymous"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #020617; min-height: 100vh; padding: 2rem; color: white; }
+    .container { width: 1600px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-start; }
+    .header-content { flex: 1; }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    .pulse-dot { width: 12px; height: 12px; background: #a78bfa; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+    .subtitle { color: #94a3b8; font-size: 0.875rem; margin-left: 1.75rem; }
+    .diagram-container { overflow-x: auto; width: 100%; }
+    svg { width: 1600px; height: auto; display: block; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 2rem; }
+    .card { background: #080e20; border-radius: 0.75rem; border: 1px solid #1e293b; padding: 1.25rem; }
+    .card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.cyan { background: #22d3ee; } .card-dot.emerald { background: #34d399; } .card-dot.violet { background: #a78bfa; }
+    .card-dot.amber { background: #fbbf24; } .card-dot.rose { background: #fb7185; } .card-dot.slate { background: #94a3b8; }
+    .card h3 { font-size: 0.875rem; font-weight: 600; }
+    .card ul { list-style: none; color: #94a3b8; font-size: 0.75rem; }
+    .card li { margin-bottom: 0.375rem; }
+    .io-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .io-table th, .io-table td { border: 1px solid rgba(71, 85, 105, 0.4); padding: 0.625rem 0.75rem; text-align: left; vertical-align: top; line-height: 1.5; }
+    .io-table thead th { background: #151e30; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem; }
+    .io-table tbody th { background: #11192b; color: white; font-weight: 700; white-space: nowrap; }
+    .io-table td { color: #cbd5e1; }
+    .io-table .io-col-step { width: 64px; }
+    .io-table td.io-in { border-left: 2px solid #34d399; }
+    .io-table td.io-out { border-left: 2px solid #22d3ee; }
+    .io-table td.io-ex { color: #a78bfa; white-space: nowrap; }
+    .io-table td.io-mean { color: #94a3b8; }
+    .footer { text-align: center; margin-top: 1.5rem; color: #475569; font-size: 0.75rem; }
+    /* Export menu (r7). The trigger is a labelled button, not an ellipsis glyph: an unlabelled
+     * ellipsis gives no clue that export lives behind it, so the feature went unfound. The
+     * popover is a light surface deliberately — it is chrome, and reads as sitting above the
+     * dark canvas rather than as another dark panel competing with the diagram. */
+    .toolbar { display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center; position: relative; }
+    .export-btn { background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; font-family: inherit; font-size: 0.8125rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; transition: background 0.15s, box-shadow 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+    .export-btn:hover { background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+    .export-menu { display: none; position: absolute; top: calc(100% + 0.5rem); right: 0; z-index: 40; min-width: 13rem; padding: 0.375rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.625rem; box-shadow: 0 10px 24px rgba(0,0,0,0.55); }
+    .export-menu.open { display: block; }
+    .export-item { display: flex; align-items: baseline; justify-content: space-between; gap: 1.5rem; width: 100%; background: transparent; border: none; border-radius: 0.375rem; padding: 0.5rem 0.75rem; font-family: inherit; font-size: 0.8125rem; color: #0f172a; cursor: pointer; text-align: left; transition: background 0.12s; }
+    .export-item:hover { background: #e8edf5; }
+    .export-fmt { font-weight: 600; letter-spacing: 0.02em; }
+    .export-hint { color: #64748b; font-size: 0.6875rem; white-space: nowrap; }
+    .export-sep { height: 1px; margin: 0.25rem 0.5rem; background: #e2e8f0; }
+    .export-btn:focus-visible, .export-item:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; }
+    @media (max-width: 768px) { .header { flex-direction: column; gap: 1rem; } }
+    @media print { body { background: #020617; padding: 1rem; } .toolbar { display: none !important; } }
+    /* --- interactivity layer (§11.3) --- */
+    /* Filter toolbar (r6).
+     *
+     * The problem it fixes: the chips previously used the same vocabulary as the nodes and the
+     * legend — a rounded outline with a small coloured dot — so a row of CONTROLS read as a
+     * third kind of swatch. Nothing signalled it was interactive, and it competed with the
+     * diagram for attention instead of sitting above it.
+     *
+     * The fix is to stop borrowing that vocabulary. Controls now get their own surface: a
+     * raised, bordered bar that visually detaches from the canvas, an accent rule to anchor it,
+     * and a SOLID fill on the active chip — an unmistakably UI treatment, since nothing else in
+     * a diagram is ever filled with its own accent colour at full opacity. */
+    .pf-filters { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem; align-items: center;
+      background: #0d1425; border: 1px solid #263349; border-left: 3px solid #a78bfa;
+      border-radius: 0.5rem; padding: 0.55rem 0.75rem; box-shadow: 0 1px 3px rgba(2, 6, 23, 0.5); }
+    .pf-filters-label { color: #cbd5e1; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; margin-right: 0.55rem; display: inline-flex; align-items: center; gap: 0.4rem; }
+    .pf-filters-label::before { content: ''; width: 11px; height: 11px; flex: 0 0 11px;
+      /* Funnel glyph, drawn rather than an emoji: it must render identically everywhere. */
+      background: #a78bfa; clip-path: polygon(0 0, 100% 0, 62% 45%, 62% 100%, 38% 100%, 38% 45%); }
+    /* v2 redesign: pill-shaped (999px radius, was 0.375rem — a barely-rounded rect that read
+       as a static label), bigger padding/min-height for a real tap target (was 0.3rem/0.7rem,
+       under the ~32px accessibility guideline), and a stronger active state (ring + scale) so
+       the selected/unselected distinction doesn't rely on colour alone. */
+    .pf-chip { background: #1a2337; border: 1.5px solid #3b4a63; color: #cbd5e1; padding: 0.5rem 1rem;
+      border-radius: 999px; font-family: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 0.45rem; line-height: 1.2; min-height: 2rem;
+      transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s; }
+    .pf-chip:hover { background: #24304a; border-color: #64748b; color: white; }
+    .pf-chip:active { transform: scale(0.96); }
+    .pf-chip:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    /* Selected: the chip fills with its own accent, sits a hair taller with a visible ring, and
+       the dot becomes a filled check-like mark. High contrast, unambiguous, and impossible to
+       confuse with a legend swatch — legend marks are outlines on the bare ground. */
+    .pf-chip[aria-pressed="true"] { background: currentColor; border-color: currentColor;
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.28); transform: scale(1.03); }
+    .pf-chip[aria-pressed="true"]:hover { transform: scale(1.03); }
+    .pf-chip[aria-pressed="true"] .pf-chip-label { color: #0b1120; font-weight: 700; }
+    .pf-chip[aria-pressed="true"] .pf-chip-dot { background: #0b1120; opacity: 0.65; }
+    .pf-chip-label { color: inherit; }
+    .pf-chip-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: 0 0 8px; }
+    .pf-node { cursor: pointer; }
+    .pf-node:hover { filter: brightness(1.32); }
+    .pf-node:focus { outline: none; }
+    .pf-node:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 3px; border-radius: 4px; }
+    .pf-node, .pf-edge { transition: opacity 0.2s ease; }
+    .pf-node.is-dim, .pf-edge.is-dim { opacity: 0.14; pointer-events: none; }
+    .pf-node.is-sel > rect, .pf-node.is-sel > circle, .pf-node.is-sel > g > rect { stroke-width: 3; }
+    /* The drawer floats as an overlay — position: fixed with no body padding. Opening/closing
+       the drawer does not affect layout of the diagram or any page content. */
+    .pf-drawer { position: fixed; top: 0; right: 0; height: 100vh; width: var(--pf-drawer-w, 400px); background: #0b1220; border-left: 1px solid #1e293b; box-shadow: -12px 0 32px #020617; transform: translateX(101%); transition: transform 0.25s ease; z-index: 40; display: flex; }
+    .pf-drawer.is-open { transform: none; }
+    .pf-drawer-handle { width: 6px; flex: 0 0 6px; cursor: ew-resize; background: transparent; border-right: 1px solid #1e293b; }
+    .pf-drawer-handle:hover, .pf-drawer-handle:focus-visible { background: #423c6c; outline: none; }
+    .pf-drawer-body { flex: 1; overflow-y: auto; padding: 1.25rem; min-width: 0; }
+    .pf-drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.75rem; }
+    .pf-badge { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.2rem 0.5rem; border-radius: 0.25rem; border: 1px solid currentColor; white-space: nowrap; }
+    .pf-drawer-close { background: transparent; border: none; color: #475569; font-size: 1.5rem; line-height: 1; cursor: pointer; padding: 0 0.25rem; }
+    .pf-drawer-close:hover { color: white; }
+    .pf-drawer-close:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    .pf-drawer h2 { font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; word-break: break-word; }
+    .pf-drawer-role { color: #94a3b8; font-size: 0.75rem; margin-bottom: 1rem; word-break: break-word; }
+    .pf-drawer-sections { display: flex; flex-direction: column; gap: 1rem; }
+    .pf-sec { margin-top: 0; border-top: none; padding-top: 0; }
+    .pf-sec h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; margin-bottom: 0.5rem; margin-top: 0; }
+    .pf-drawer-meaning { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0 0 0.5rem 0; }
+    .pf-drawer-example { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0; }
+    .pf-drawer-desc { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; word-break: break-word; margin: 0 0 0.5rem 0; }
+    .pf-sec ul { list-style: none; margin: 0; padding: 0; }
+    .pf-sec li { color: #cbd5e1; font-size: 0.75rem; margin-bottom: 0.3rem; line-height: 1.5; }
+    .pf-sec { margin-top: 1rem; border-top: 1px solid #1e293b; padding-top: 0.75rem; }
+    .pf-sec h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; margin-bottom: 0.5rem; }
+    .pf-sec ul { list-style: none; }
+    .pf-sec li { color: #cbd5e1; font-size: 0.75rem; margin-bottom: 0.4rem; line-height: 1.5; word-break: break-word; }
+    .pf-sec .pf-empty { color: #475569; font-style: italic; }
+    .pf-link { background: none; border: none; color: #a78bfa; font-family: inherit; font-size: 0.75rem; cursor: pointer; padding: 0; text-align: left; text-decoration: underline; text-underline-offset: 2px; }
+    .pf-link:hover { color: #c4b5fd; }
+    .pf-link:focus-visible { outline: 2px solid #e2e8f0; outline-offset: 2px; }
+    .pf-payload { color: #94a3b8; }
+    @media (prefers-reduced-motion: reduce) {
+      .pulse-dot { animation: none; }
+      body, .pf-drawer, .pf-node, .pf-edge { transition: none; }
+    }
+    @media print { .pf-drawer, .pf-filters { display: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="container" id="report-container">
+    <div class="header">
+      <div class="header-content">
+        <div class="header-row">
+          <div class="pulse-dot"></div>
+          <h1>Catalogue #154 — Changing Bill Cycles</h1>
+        </div>
+        <p class="subtitle">Billing-team-restricted change to a customer's Bill Cycle date, gated by a configurable eligibility rule</p>
+      </div>
+      <div class="toolbar">
+        <button class="export-btn" id="exportBtn" onclick="toggleExport(event)" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu" aria-label="Export options">Export</button>
+        <div class="export-menu" id="exportMenu" role="menu" aria-labelledby="exportBtn">
+          <button role="menuitem" class="export-item" onclick="downloadSVG(this)"><span class="export-fmt">SVG</span><span class="export-hint">vector · editing</span></button>
+          <button role="menuitem" class="export-item" onclick="downloadJPG(this)"><span class="export-fmt">JPG</span><span class="export-hint">image · sharing</span></button>
+          <button role="menuitem" class="export-item" onclick="downloadPDF(this)"><span class="export-fmt">PDF</span><span class="export-hint">document</span></button>
+          <div class="export-sep" role="separator"></div>
+          <button role="menuitem" class="export-item" onclick="downloadPNG(this)"><span class="export-fmt">PNG</span><span class="export-hint">image · slides</span></button>
+          <button role="menuitem" class="export-item" onclick="copyAsImage(this)"><span class="export-fmt">Copy</span><span class="export-hint">to clipboard</span></button>
+        </div>
+      </div>
+    </div>
+    <div class="pf-filters" role="group" aria-label="Filter diagram by node type">
+        <span class="pf-filters-label">Filter</span>
+        <button class="pf-chip" data-filter="all" aria-pressed="true" style="color:#a78bfa"><span class="pf-chip-dot"></span><span class="pf-chip-label">All</span></button>
+        <button class="pf-chip" data-filter="manual" aria-pressed="false" style="color:#34d399"><span class="pf-chip-dot"></span><span class="pf-chip-label">Manual</span></button>
+        <button class="pf-chip" data-filter="automated" aria-pressed="false" style="color:#a78bfa"><span class="pf-chip-dot"></span><span class="pf-chip-label">Automated</span></button>
+        <button class="pf-chip" data-filter="decision" aria-pressed="false" style="color:#fb7185"><span class="pf-chip-dot"></span><span class="pf-chip-label">Decision</span></button>
+        <button class="pf-chip" data-filter="terminal" aria-pressed="false" style="color:#22d3ee"><span class="pf-chip-dot"></span><span class="pf-chip-label">Start / End</span></button>
+        <button class="pf-chip" data-filter="reject" aria-pressed="false" style="color:#fb7185"><span class="pf-chip-dot"></span><span class="pf-chip-label">Rejected</span></button>
+      </div>
+    <div class="diagram-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="63.95 -41 1351.59 758.91" role="group" aria-label="Catalogue #154 — Changing Bill Cycles diagram. 10 nodes; each is focusable for details.">
+<defs>
+<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/></marker>
+<marker id="arrowhead-emerald" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#34d399"/></marker>
+<marker id="arrowhead-violet" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa"/></marker>
+<marker id="arrowhead-amber" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24"/></marker>
+<marker id="arrowhead-rose" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fb7185"/></marker>
+<marker id="arrowhead-slate" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/></marker>
+<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="1.5"/></pattern>
+</defs>
+<line x1="332" y1="70" x2="392" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="start1" data-to="role_gate"/>
+<line x1="552" y1="70" x2="743" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="role_gate" data-to="open_bill_profile"/>
+<rect x="565.07" y="46.42" width="164.86" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="647.5" y="57" fill="#94a3b8" font-size="11" text-anchor="middle">Authorized user session</text>
+<line x1="903" y1="70" x2="1088" y2="70" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="open_bill_profile" data-to="select_new_cycle"/>
+<rect x="916.48" y="46.42" width="158.04" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="995.5" y="57" fill="#94a3b8" font-size="11" text-anchor="middle">Billing Profile record</text>
+<path d="M 1168 133 L 1168 167 L 128.04668119422593 167 L 128.04668119422593 336 L 148.04668119422593 336" stroke="#94a3b8" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="select_new_cycle" data-to="create_ticket"/>
+<rect x="1176" y="142.42" width="145.58" height="23" rx="11.5" fill="#0d1425" stroke="#94a3b8" stroke-width="1.5" opacity="0.95"/>
+<text x="1184" y="157" fill="#e2e8f0" font-size="11" font-weight="700">Continue to Row 2 →</text>
+<line x1="308.0466811942259" y1="336" x2="431.0466811942259" y2="336" stroke="#a78bfa" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-violet)" class="pf-edge" data-from="create_ticket" data-to="eligibility_check"/>
+<rect x="321.22" y="312.42" width="96.66" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="369.5466811942259" y="323" fill="#94a3b8" font-size="11" text-anchor="middle">Ticket record</text>
+<line x1="580.953318805774" y1="336" x2="640.953318805774" y2="336" stroke="#34d399" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="eligibility_check" data-to="apply_change"/>
+<rect x="596.72" y="312.42" width="28.46" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="610.953318805774" y="323" fill="#fb7185" font-size="11" font-weight="600" text-anchor="middle">Yes</text>
+<line x1="800.953318805774" y1="336" x2="991.953318805774" y2="336" stroke="#a78bfa" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-violet)" class="pf-edge" data-from="apply_change" data-to="end8"/>
+<rect x="814.02" y="312.42" width="164.86" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="896.453318805774" y="323" fill="#94a3b8" font-size="11" text-anchor="middle">Updated Billing Profile</text>
+<path d="M 1251.953318805774 399 L 1251.953318805774 478.9533188057741 L 660 478.9533188057741 L 660 625.9066376115481 L 680 625.9066376115481" stroke="#94a3b8" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="ticket_auto_resolved" data-to="end10"/>
+<rect x="1259.95" y="408.42" width="145.58" height="23" rx="11.5" fill="#0d1425" stroke="#94a3b8" stroke-width="1.5" opacity="0.95"/>
+<text x="1267.953318805774" y="423" fill="#e2e8f0" font-size="11" font-weight="700">Continue to Row 3 →</text>
+<path d="M 506 410.9533188057741 L 506 444.9533188057741 L 1171.953318805774 444.9533188057741 L 1171.953318805774 336" stroke="#fb7185" stroke-width="2.25" fill="none" stroke-dasharray="5,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="eligibility_check" data-to="ticket_auto_resolved"/>
+<rect x="510" y="417.37" width="21.64" height="15" rx="7.5" fill="#020617" opacity="0.85"/><text x="514" y="427.9533188057741" fill="#fb7185" font-size="11" font-weight="600">No</text>
+<g class="pf-node" data-id="start1" data-type="terminal" tabindex="0" role="button" aria-label="Terminal: Start">
+<rect x="232" y="50" width="100" height="40" rx="20" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="282" y="74" fill="white" font-size="11" font-weight="600" text-anchor="middle">Start</text>
+</g>
+<g class="pf-node" data-id="role_gate" data-type="manual" tabindex="0" role="button" aria-label="Confirm requester is Billing Team, Billing Team. Open details.">
+<text x="552" y="-5" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Billing Team</text>
+<rect x="392" y="13" width="160" height="114" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="472" y="34" fill="white" font-size="11" font-weight="600" text-anchor="middle">Confirm requester is</text>
+<text x="472" y="49" fill="white" font-size="11" font-weight="600" text-anchor="middle">Billing Team</text>
+<text x="472" y="66" fill="#94a3b8" font-size="11" text-anchor="middle">Restricted to Billing</text>
+<text x="472" y="78" fill="#94a3b8" font-size="11" text-anchor="middle">Team</text>
+<text x="472" y="90" fill="#94a3b8" font-size="11" text-anchor="middle">Per workshop decision</text>
+<text x="472" y="102" fill="#94a3b8" font-size="11" text-anchor="middle">Not a retail-agent</text>
+<text x="472" y="114" fill="#94a3b8" font-size="11" text-anchor="middle">action</text>
+<circle cx="392" cy="8" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="392" y="12" fill="white" font-size="8" font-weight="600" text-anchor="middle">1</text>
+</g>
+<g class="pf-node" data-id="open_bill_profile" data-type="manual" tabindex="0" role="button" aria-label="Open customer's Bill Profile, Billing Team. Open details.">
+<text x="903" y="-5" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Billing Team</text>
+<rect x="743" y="7" width="160" height="126" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="823" y="28" fill="white" font-size="11" font-weight="600" text-anchor="middle">Open customer's Bill</text>
+<text x="823" y="43" fill="white" font-size="11" font-weight="600" text-anchor="middle">Profile</text>
+<text x="823" y="60" fill="#94a3b8" font-size="11" text-anchor="middle">Open UI Desktop,</text>
+<text x="823" y="72" fill="#94a3b8" font-size="11" text-anchor="middle">Vanilla path</text>
+<text x="823" y="84" fill="#94a3b8" font-size="11" text-anchor="middle">No guided wizard</text>
+<text x="823" y="96" fill="#94a3b8" font-size="11" text-anchor="middle">exists</text>
+<text x="823" y="108" fill="#94a3b8" font-size="11" text-anchor="middle">Locates Billing</text>
+<text x="823" y="120" fill="#94a3b8" font-size="11" text-anchor="middle">Profile</text>
+<circle cx="743" cy="2" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="743" y="6" fill="white" font-size="8" font-weight="600" text-anchor="middle">2</text>
+</g>
+<g class="pf-node" data-id="select_new_cycle" data-type="manual" tabindex="0" role="button" aria-label="Select new Bill Cycle value, Billing Team. Open details.">
+<text x="1248" y="-5" fill="#34d399" font-size="11" font-weight="600" text-anchor="end">Billing Team</text>
+<rect x="1088" y="7" width="160" height="126" rx="8" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="1168" y="28" fill="white" font-size="11" font-weight="600" text-anchor="middle">Select new Bill Cycle</text>
+<text x="1168" y="43" fill="white" font-size="11" font-weight="600" text-anchor="middle">value</text>
+<text x="1168" y="60" fill="#94a3b8" font-size="11" text-anchor="middle">Change from 1st to</text>
+<text x="1168" y="72" fill="#94a3b8" font-size="11" text-anchor="middle">15th, or 15th to 1st</text>
+<text x="1168" y="84" fill="#94a3b8" font-size="11" text-anchor="middle">Per catalogue</text>
+<text x="1168" y="96" fill="#94a3b8" font-size="11" text-anchor="middle">description</text>
+<text x="1168" y="108" fill="#94a3b8" font-size="11" text-anchor="middle">Submitted for</text>
+<text x="1168" y="120" fill="#94a3b8" font-size="11" text-anchor="middle">eligibility check</text>
+<circle cx="1088" cy="2" r="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+<text x="1088" y="6" fill="white" font-size="8" font-weight="600" text-anchor="middle">3</text>
+</g>
+<g class="pf-node" data-id="create_ticket" data-type="automated" tabindex="0" role="button" aria-label="Create ticket for the request, CRM Ticketing Engine. Open details.">
+<text x="308.0466811942259" y="261" fill="#a78bfa" font-size="11" font-weight="600" text-anchor="end">CRM Ticketing Engine</text>
+<rect x="148.04668119422593" y="279" width="160" height="114" rx="8" fill="#200f49" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="228.04668119422593" y="300" fill="white" font-size="11" font-weight="600" text-anchor="middle">Create ticket for the</text>
+<text x="228.04668119422593" y="315" fill="white" font-size="11" font-weight="600" text-anchor="middle">request</text>
+<text x="228.04668119422593" y="332" fill="#94a3b8" font-size="11" text-anchor="middle">Ticket always created</text>
+<text x="228.04668119422593" y="344" fill="#94a3b8" font-size="11" text-anchor="middle">Even if change is</text>
+<text x="228.04668119422593" y="356" fill="#94a3b8" font-size="11" text-anchor="middle">later disallowed</text>
+<text x="228.04668119422593" y="368" fill="#94a3b8" font-size="11" text-anchor="middle">Precedes/accompanies</text>
+<text x="228.04668119422593" y="380" fill="#94a3b8" font-size="11" text-anchor="middle">eligibility check</text>
+<circle cx="148.04668119422593" cy="274" r="12" fill="#1e293b" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="148.04668119422593" y="278" fill="white" font-size="8" font-weight="600" text-anchor="middle">4</text>
+</g>
+<g class="pf-node" data-id="eligibility_check" data-type="decision" tabindex="0" role="button" aria-label="Decision: Eligible per configurable Business Rule?">
+<g transform="translate(506, 336)">
+  <rect x="-53" y="-53" width="106" height="106" rx="4" transform="rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="0" y="-11" fill="white" font-size="11" font-weight="600" text-anchor="middle">Eligible per</text>
+  <text x="0" y="4" fill="white" font-size="11" font-weight="600" text-anchor="middle">configurable</text>
+  <text x="0" y="19" fill="white" font-size="11" font-weight="600" text-anchor="middle">Business Rule?</text>
+</g>
+</g>
+<g class="pf-node" data-id="apply_change" data-type="automated" tabindex="0" role="button" aria-label="Apply Bill Cycle change, Billing System. Open details.">
+<text x="800.953318805774" y="261" fill="#a78bfa" font-size="11" font-weight="600" text-anchor="end">Billing System</text>
+<rect x="640.953318805774" y="273" width="160" height="126" rx="8" fill="#200f49" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="720.953318805774" y="294" fill="white" font-size="11" font-weight="600" text-anchor="middle">Apply Bill Cycle</text>
+<text x="720.953318805774" y="309" fill="white" font-size="11" font-weight="600" text-anchor="middle">change</text>
+<text x="720.953318805774" y="326" fill="#94a3b8" font-size="11" text-anchor="middle">Updates Billing</text>
+<text x="720.953318805774" y="338" fill="#94a3b8" font-size="11" text-anchor="middle">Profile</text>
+<text x="720.953318805774" y="350" fill="#94a3b8" font-size="11" text-anchor="middle">New cycle date takes</text>
+<text x="720.953318805774" y="362" fill="#94a3b8" font-size="11" text-anchor="middle">effect</text>
+<text x="720.953318805774" y="374" fill="#94a3b8" font-size="11" text-anchor="middle">Linked ticket closed</text>
+<text x="720.953318805774" y="386" fill="#94a3b8" font-size="11" text-anchor="middle">on success</text>
+<circle cx="640.953318805774" cy="268" r="12" fill="#1e293b" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="640.953318805774" y="272" fill="white" font-size="8" font-weight="600" text-anchor="middle">5</text>
+</g>
+<g class="pf-node" data-id="end8" data-type="terminal" tabindex="0" role="button" aria-label="Terminal: Complete">
+<rect x="991.953318805774" y="316" width="120" height="40" rx="20" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="1051.953318805774" y="340" fill="white" font-size="11" font-weight="600" text-anchor="middle">Complete</text>
+</g>
+<g class="pf-node" data-id="ticket_auto_resolved" data-type="automated" tabindex="0" role="button" aria-label="Auto-resolve ticket in real time, CRM Ticketing Engine. Open details.">
+<text x="1331.953318805774" y="261" fill="#a78bfa" font-size="11" font-weight="600" text-anchor="end">CRM Ticketing Engine</text>
+<rect x="1171.953318805774" y="273" width="160" height="126" rx="8" fill="#200f49" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="1251.953318805774" y="294" fill="white" font-size="11" font-weight="600" text-anchor="middle">Auto-resolve ticket</text>
+<text x="1251.953318805774" y="309" fill="white" font-size="11" font-weight="600" text-anchor="middle">in real time</text>
+<text x="1251.953318805774" y="326" fill="#94a3b8" font-size="11" text-anchor="middle">Change rejected as</text>
+<text x="1251.953318805774" y="338" fill="#94a3b8" font-size="11" text-anchor="middle">ineligible</text>
+<text x="1251.953318805774" y="350" fill="#94a3b8" font-size="11" text-anchor="middle">Ticket closed</text>
+<text x="1251.953318805774" y="362" fill="#94a3b8" font-size="11" text-anchor="middle">automatically</text>
+<text x="1251.953318805774" y="374" fill="#94a3b8" font-size="11" text-anchor="middle">No manual</text>
+<text x="1251.953318805774" y="386" fill="#94a3b8" font-size="11" text-anchor="middle">ticket-handling queue</text>
+<circle cx="1171.953318805774" cy="268" r="12" fill="#1e293b" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="1171.953318805774" y="272" fill="white" font-size="8" font-weight="600" text-anchor="middle">6</text>
+</g>
+<g class="pf-node" data-id="end10" data-type="reject" tabindex="0" role="button" aria-label="Terminal: Complete">
+<rect x="680" y="605.9066376115481" width="120" height="40" rx="20" fill="#041829" stroke="#fb7185" stroke-width="1.5"/>
+<text x="740" y="629.9066376115481" fill="white" font-size="11" font-weight="600" text-anchor="middle">Complete</text>
+</g>
+<text x="192" y="73" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="end">ROW 1</text>
+<text x="108.04668119422593" y="339" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="end">ROW 2</text>
+<text x="640" y="628.9066376115481" fill="#94a3b8" font-size="11" font-weight="700" text-anchor="end">ROW 3</text>
+<rect x="332.7900000000001" y="684.9066376115481" width="16" height="10" rx="2" fill="#042325" stroke="#34d399" stroke-width="1.5"/>
+<text x="354.7900000000001" y="693.9066376115481" fill="#94a3b8" font-size="11">Manual / Human-in-loop</text>
+<rect x="530.83" y="684.9066376115481" width="16" height="10" rx="2" fill="#200f49" stroke="#a78bfa" stroke-width="1.5"/>
+<text x="552.83" y="693.9066376115481" fill="#94a3b8" font-size="11">Automated</text>
+<rect x="640.21" y="684.9066376115481" width="16" height="10" rx="5" fill="#041829" stroke="#22d3ee" stroke-width="1.5"/>
+<text x="662.21" y="693.9066376115481" fill="#94a3b8" font-size="11">Start / End</text>
+<rect x="763.23" y="684.9066376115481" width="16" height="10" rx="5" fill="#041829" stroke="#fb7185" stroke-width="1.5"/>
+<text x="785.23" y="693.9066376115481" fill="#94a3b8" font-size="11">Rejected / negative end</text>
+<rect x="-5" y="-5" width="10" height="10" transform="translate(976.09, 689.9066376115481) rotate(45)" fill="#380b24" stroke="#fb7185" stroke-width="1.5"/>
+<text x="990.09" y="693.9066376115481" fill="#94a3b8" font-size="11">Decision</text>
+<line x1="1070.65" y1="689.9066376115481" x2="1086.65" y2="689.9066376115481" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)"/>
+<text x="1092.65" y="693.9066376115481" fill="#94a3b8" font-size="11">Row wrap</text>
+</svg>
+    </div>
+
+    
+
+    <p class="footer">Changing Bill Cycles (Catalogue #154)</p>
+  </div>
+  <aside class="pf-drawer" id="pfDrawer" role="dialog" aria-labelledby="pfDrawerTitle" aria-hidden="true">
+    <div class="pf-drawer-handle" id="pfHandle" role="separator" aria-orientation="vertical" aria-label="Resize detail panel. Use left and right arrow keys." tabindex="0"></div>
+    <div class="pf-drawer-body">
+      <div class="pf-drawer-head">
+        <span class="pf-badge" id="pfBadge"></span>
+        <button class="pf-drawer-close" id="pfClose" aria-label="Close detail panel">&times;</button>
+      </div>
+      <h2 id="pfDrawerTitle"></h2>
+      <p class="pf-drawer-role" id="pfRole"></p>
+      <div class="pf-drawer-sections">
+        <div class="pf-sec">
+          <h3>Meaning</h3>
+          <p id="pfMeaning" class="pf-drawer-meaning"></p>
+        </div>
+        <div class="pf-sec">
+          <h3>Input/Inbound</h3>
+          <p id="pfInDesc" class="pf-drawer-desc"></p>
+          <ul id="pfIn"></ul>
+        </div>
+        <div class="pf-sec">
+          <h3>Output/Outbound</h3>
+          <p id="pfOutDesc" class="pf-drawer-desc"></p>
+          <ul id="pfOut"></ul>
+        </div>
+        <div class="pf-sec">
+          <h3>Example</h3>
+          <p id="pfExample" class="pf-drawer-example"></p>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <script>
+    const SLUG = "cat154-changing-bill-cycles";
+    /* Export bounds are measured, not assumed (§11.1).
+     *
+     * The container's own rect is NOT the diagram's extent: the SVG has a min-width, so on a
+     * narrow viewport it is wider than its container and .diagram-container scrolls. Capturing
+     * the container rect then silently crops whatever overflowed — the right-hand nodes and the
+     * legend — and the exported PNG differs from what the page shows. So walk every descendant
+     * and take the true union, which also covers anything that overflows upward or downward. */
+    function captureBounds() {
+      const el = document.getElementById('report-container');
+      const c = el.getBoundingClientRect();
+      let l = c.left, t = c.top, r = c.right, b = c.bottom;
+      for (const n of el.querySelectorAll('*')) {
+        if (n.classList && (n.classList.contains('toolbar') || n.classList.contains('pf-drawer') || n.classList.contains('pf-filters'))) continue;
+        const q = n.getBoundingClientRect();
+        if (!q.width && !q.height) continue;
+        if (q.left < l) l = q.left;
+        if (q.top < t) t = q.top;
+        if (q.right > r) r = q.right;
+        if (q.bottom > b) b = q.bottom;
+      }
+      return { left: l, top: t, width: r - l, height: b - t };
+    }
+
+    async function capture() {
+      pfResetView();
+      await new Promise(r => setTimeout(r, 300));
+      const el = document.getElementById('report-container');
+      // A scrolled diagram must be captured whole: reset the scroll so html2canvas sees the
+      // full width, then restore it so the user's view is untouched.
+      const dc = document.querySelector('.diagram-container');
+      const sx = dc ? dc.scrollLeft : 0;
+      if (dc) dc.scrollLeft = 0;
+      const wasOverflow = dc ? dc.style.overflowX : '';
+      if (dc) dc.style.overflowX = 'visible';
+      await new Promise(r => requestAnimationFrame(r));
+
+      const r = captureBounds();
+      const pad = 32;
+      try {
+        return await html2canvas(document.body, { backgroundColor: '#020617', scale: 2, useCORS: true, ignoreElements: (e) => e.classList && (e.classList.contains('toolbar') || e.classList.contains('pf-drawer') || e.classList.contains('pf-filters')), x: r.left + window.scrollX - pad, y: r.top + window.scrollY - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
+      } finally {
+        if (dc) { dc.style.overflowX = wasOverflow; dc.scrollLeft = sx; }
+      }
+    }
+    async function copyAsImage(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        exportStatus('✓ Copied', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    async function downloadPNG(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const link = document.createElement('a'); link.download = SLUG + '.png'; link.href = canvas.toDataURL('image/png'); link.click();
+        exportStatus('✓ PNG', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    /* The menu closes on outside click, on Escape, and after a format is chosen — a popover
+     * that stays open behind the download it just started reads as though nothing happened. */
+    function setExportOpen(open) {
+      document.getElementById('exportMenu').classList.toggle('open', open);
+      document.getElementById('exportBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    function toggleExport(ev) {
+      ev.stopPropagation();
+      setExportOpen(!document.getElementById('exportMenu').classList.contains('open'));
+    }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.toolbar')) setExportOpen(false);
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && document.getElementById('exportMenu').classList.contains('open')) {
+        setExportOpen(false); document.getElementById('exportBtn').focus();
+      }
+    });
+
+    /* Status is shown on the trigger, not on the menu item: the menu closes on choose, so a
+     * message written into the item would vanish with it. */
+    function exportStatus(msg, revert) {
+      const b = document.getElementById('exportBtn');
+      if (revert === undefined) { b.textContent = msg; return; }
+      b.textContent = msg;
+      setTimeout(() => b.textContent = 'Export', revert);
+    }
+
+    /* SVG export is a real vector serialisation, not a raster (§11.1 r7).
+     *
+     * The live <svg> inherits its font from the page stylesheet, which does NOT travel with a
+     * detached clone — open the file standalone and every label reflows in a fallback face,
+     * shifting off the geometry the generator computed. So the clone gets the font stack and
+     * the canvas ground written onto it explicitly. Nothing else is restyled: all colours are
+     * already presentation attributes on the elements themselves. */
+    function downloadSVG(btn) {
+      try {
+        const src = document.querySelector('.diagram-container svg');
+        const clone = src.cloneNode(true);
+        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        const vb = (src.getAttribute('viewBox') || '').split(/[s,]+/).map(Number);
+        if (vb.length === 4) { clone.setAttribute('width', vb[2]); clone.setAttribute('height', vb[3]); }
+        clone.removeAttribute('style');
+        clone.setAttribute('style', 'background:' + "#020617");
+        const st = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+        st.textContent = 'text{font-family:' + getComputedStyle(src).fontFamily.replace(/"/g, "'") + '}';
+        clone.insertBefore(st, clone.firstChild);
+        const blob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a'); link.download = SLUG + '.svg'; link.href = url; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setExportOpen(false); exportStatus('✓ SVG', 2000);
+      } catch (e) { setExportOpen(false); exportStatus('✗ Failed', 2000); }
+    }
+
+    /* JPEG has no alpha, so an un-flattened canvas renders transparent pixels BLACK — which
+     * on this palette is invisible damage rather than an obvious bug. Composite onto the
+     * canvas ground first. */
+    async function downloadJPG(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const flat = document.createElement('canvas');
+        flat.width = canvas.width; flat.height = canvas.height;
+        const g = flat.getContext('2d');
+        g.fillStyle = "#020617";
+        g.fillRect(0, 0, flat.width, flat.height);
+        g.drawImage(canvas, 0, 0);
+        const link = document.createElement('a'); link.download = SLUG + '.jpg';
+        link.href = flat.toDataURL('image/jpeg', 0.92); link.click();
+        exportStatus('✓ JPG', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    async function downloadPDF(btn) {
+      setExportOpen(false); exportStatus('⏳ …');
+      try {
+        const canvas = await capture();
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const orientation = canvas.width > canvas.height ? 'landscape' : 'portrait';
+        const pdf = new jsPDF({ orientation, unit: 'px', format: [canvas.width, canvas.height], hotfixes: ['px_scaling'] });
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save(SLUG + '.pdf');
+        exportStatus('✓ PDF', 2000);
+      } catch (e) { exportStatus('✗ Failed', 2000); }
+    }
+    /* --- interactivity layer (§11.3) --- */
+    const PF_NODES = [{"id":"start1","type":"terminal","num":"","title":"Start","role":"","desc":[]},{"id":"role_gate","type":"manual","num":"1","title":"Confirm requester is Billing Team","role":"Billing Team","desc":["Restricted to Billing Team","Per workshop decision","Not a retail-agent action"],"meaning":"Only billing-team-role users may perform a bill cycle change — this is a role-gated back-office action, not a self-service or general retail-agent journey.","inputDesc":"User attempting to change a customer's bill cycle","outputDesc":"Confirmed billing-team authorization to proceed","example":"A billing-team user (not a retail sales agent) opens the request to change bill cycle","milestone":false},{"id":"open_bill_profile","type":"manual","num":"2","title":"Open customer's Bill Profile","role":"Billing Team","desc":["Open UI Desktop, Vanilla path","No guided wizard exists","Locates Billing Profile"],"meaning":"Billing team clicks into the customer's Billing Profile in Open UI Desktop (Vanilla action) — catalogue #154 has no dedicated guided-journey wizard.","inputDesc":"Customer/account identifier","outputDesc":"Billing Profile record open for edit (e.g. 'Postpaid, Bill Cycle 15')","example":"Billing Profile 1-DNIZ5EH shown as 'Postpaid, Bill Cycle 15' on the account","milestone":false},{"id":"select_new_cycle","type":"manual","num":"3","title":"Select new Bill Cycle value","role":"Billing Team","desc":["Change from 1st to 15th, or 15th to 1st","Per catalogue description","Submitted for eligibility check"],"meaning":"The user selects the target bill cycle date — the catalogue names only the two values in scope (1st and 15th).","inputDesc":"Current Bill Cycle value on the Billing Profile","outputDesc":"Requested new Bill Cycle value (1st or 15th)","example":"Change Bill Cycle from '15' to '1st' for the customer's Billing Profile","milestone":false},{"id":"create_ticket","type":"automated","num":"4","title":"Create ticket for the request","role":"CRM Ticketing Engine","desc":["Ticket always created","Even if change is later disallowed","Precedes/accompanies eligibility check"],"meaning":"A ticket is always created for a bill-cycle-change request, independent of whether the request is ultimately allowed — this is an explicit workshop decision, not incidental logging.","inputDesc":"Requested Bill Cycle change (current + target value)","outputDesc":"New ticket record linked to this change request","example":"Ticket auto-opened the moment a 1st→15th bill cycle change is requested","milestone":false},{"id":"eligibility_check","type":"decision","num":"","title":"Eligible per configurable Business Rule?","role":"","desc":[]},{"id":"apply_change","type":"automated","num":"5","title":"Apply Bill Cycle change","role":"Billing System","desc":["Updates Billing Profile","New cycle date takes effect","Linked ticket closed on success"],"meaning":"Eligible requests are applied to the Billing Profile — the Bill Cycle attribute is updated to the requested value.","inputDesc":"Eligibility-approved Bill Cycle change request","outputDesc":"Billing Profile updated with new Bill Cycle value","example":"Billing Profile now shows 'Postpaid, Bill Cycle 1' after the change is applied","milestone":false},{"id":"end8","type":"terminal","num":"","title":"Complete","role":"","desc":[]},{"id":"ticket_auto_resolved","type":"automated","num":"6","title":"Auto-resolve ticket in real time","role":"CRM Ticketing Engine","desc":["Change rejected as ineligible","Ticket closed automatically","No manual ticket-handling queue"],"meaning":"When the change is not allowed, the ticket created for it is auto-resolved in real time rather than left open for manual case handling — an explicit workshop decision.","inputDesc":"Ineligible Bill Cycle change request + its open ticket","outputDesc":"Ticket closed automatically; no further manual action required","example":"Request rejected by the eligibility rule; its ticket is closed within the same real-time transaction","milestone":false},{"id":"end10","type":"reject","num":"","title":"Complete","role":"","desc":[]}];
+    const PF_EDGES = [{"from":"start1","to":"role_gate","label":"","style":"flow"},{"from":"role_gate","to":"open_bill_profile","label":"Authorized user session","style":"flow"},{"from":"open_bill_profile","to":"select_new_cycle","label":"Billing Profile record","style":"flow"},{"from":"select_new_cycle","to":"create_ticket","label":"Continue to Row 2 →","style":"wrap"},{"from":"create_ticket","to":"eligibility_check","label":"Ticket record","style":"flow"},{"from":"eligibility_check","to":"apply_change","label":"","style":"flow"},{"from":"apply_change","to":"end8","label":"Updated Billing Profile","style":"flow"},{"from":"ticket_auto_resolved","to":"end10","label":"Continue to Row 3 →","style":"wrap"},{"from":"eligibility_check","to":"ticket_auto_resolved","label":"No","style":"exception"}];
+    const PF_TYPE_LABEL = {"manual":"Manual","automated":"Automated","integration":"Integration","decision":"Decision","terminal":"Start / End","reject":"Rejected"};
+    const PF_TYPE_ACCENT = {"manual":"#34d399","automated":"#a78bfa","integration":"#fbbf24","decision":"#fb7185","terminal":"#22d3ee","reject":"#fb7185"};
+    const pfById = Object.fromEntries(PF_NODES.filter(n => n.id).map(n => [n.id, n]));
+    const pfDrawer = document.getElementById('pfDrawer');
+    let pfSelected = null;
+
+    const pfNodeEls = () => Array.from(document.querySelectorAll('.pf-node'));
+    const pfEdgeEls = () => Array.from(document.querySelectorAll('.pf-edge'));
+
+    function pfLabelFor(id) {
+      const n = pfById[id];
+      if (!n) return id || 'unknown';
+      return n.title || n.id;
+    }
+    function pfLi(html) { const li = document.createElement('li'); li.innerHTML = html; return li; }
+    function pfFill(ul, items, emptyText) {
+      ul.textContent = '';
+      if (!items.length) { ul.appendChild(pfLi('<span class="pf-empty">' + emptyText + '</span>')); return; }
+      items.forEach(i => ul.appendChild(i));
+    }
+    function pfEdgeItem(otherId, e, dir) {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.className = 'pf-link';
+      btn.type = 'button';
+      btn.textContent = (dir === 'in' ? '← ' : '→ ') + pfLabelFor(otherId);
+      btn.addEventListener('click', () => pfOpen(otherId));
+      li.appendChild(btn);
+      const meta = [];
+      if (e.label) meta.push(e.label);
+      if (e.style && e.style !== 'flow') meta.push(e.style);
+      if (meta.length) {
+        const span = document.createElement('span');
+        span.className = 'pf-payload';
+        span.textContent = '  ·  ' + meta.join(' · ');
+        li.appendChild(span);
+      }
+      return li;
+    }
+
+    function pfOpen(id) {
+      const n = pfById[id];
+      if (!n) return;
+      pfSelected = id;
+      const badge = document.getElementById('pfBadge');
+      badge.textContent = PF_TYPE_LABEL[n.type] || n.type;
+      badge.style.color = PF_TYPE_ACCENT[n.type] || '#94a3b8';
+      document.getElementById('pfDrawerTitle').textContent = (n.num ? n.num + '. ' : '') + (n.title || n.id);
+      document.getElementById('pfRole').textContent = n.role || '';
+      document.getElementById('pfMeaning').textContent = n.meaning || (n.desc && n.desc[0]) || 'No meaning defined.';
+      document.getElementById('pfInDesc').textContent = n.inputDesc || '';
+      document.getElementById('pfOutDesc').textContent = n.outputDesc || '';
+      document.getElementById('pfExample').textContent = n.example || 'No example provided.';
+      pfFill(document.getElementById('pfIn'),
+        PF_EDGES.filter(e => e.to === id).map(e => pfEdgeItem(e.from, e, 'in')),
+        'Nothing flows into this node.');
+      pfFill(document.getElementById('pfOut'),
+        PF_EDGES.filter(e => e.from === id).map(e => pfEdgeItem(e.to, e, 'out')),
+        'Nothing flows out of this node.');
+      pfDrawer.classList.add('is-open');
+      document.body.classList.add('pf-open');
+      pfDrawer.setAttribute('aria-hidden', 'false');
+      pfNodeEls().forEach(el => el.classList.toggle('is-sel', el.dataset.id === id));
+      document.getElementById('pfClose').focus();
+    }
+
+    function pfClose() {
+      pfDrawer.classList.remove('is-open');
+      document.body.classList.remove('pf-open');
+      pfDrawer.setAttribute('aria-hidden', 'true');
+      pfNodeEls().forEach(el => el.classList.remove('is-sel'));
+      if (pfSelected) {
+        const el = pfNodeEls().find(e => e.dataset.id === pfSelected);
+        if (el) el.focus();
+      }
+      pfSelected = null;
+    }
+
+    function pfApplyFilter(type) {
+      const all = type === 'all';
+      pfNodeEls().forEach(el => el.classList.toggle('is-dim', !all && el.dataset.type !== type));
+      const visible = new Set(PF_NODES.filter(n => all || n.type === type).map(n => n.id));
+      pfEdgeEls().forEach(el => {
+        const on = all || (visible.has(el.dataset.from) && visible.has(el.dataset.to));
+        el.classList.toggle('is-dim', !on);
+      });
+      document.querySelectorAll('.pf-chip').forEach(c =>
+        c.setAttribute('aria-pressed', String(c.dataset.filter === type)));
+    }
+    // Exports must always show the whole diagram — a filtered PNG silently loses
+    // nodes and reads as the complete picture, which is worse than no filter at all.
+    // Closing the drawer first also restores the page width the capture is measured from.
+    function pfResetView() { pfApplyFilter('all'); if (pfSelected) pfClose(); }
+
+    pfNodeEls().forEach(el => {
+      el.addEventListener('click', () => pfOpen(el.dataset.id));
+      el.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); pfOpen(el.dataset.id); }
+      });
+    });
+    document.querySelectorAll('.pf-chip').forEach(c =>
+      c.addEventListener('click', () => pfApplyFilter(c.dataset.filter)));
+    document.getElementById('pfClose').addEventListener('click', pfClose);
+    document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && pfSelected) pfClose(); });
+
+    /* Drawer resize — pointer drag plus arrow keys, clamped so the panel can never
+       swallow the diagram or shrink below a readable measure. */
+    (function () {
+      const handle = document.getElementById('pfHandle');
+      const MIN = 320, MAX = 760;
+      const setW = w => document.documentElement.style.setProperty('--pf-drawer-w', Math.min(MAX, Math.max(MIN, w)) + 'px');
+      let dragging = false;
+      handle.addEventListener('pointerdown', ev => { dragging = true; handle.setPointerCapture(ev.pointerId); ev.preventDefault(); });
+      handle.addEventListener('pointermove', ev => { if (dragging) setW(window.innerWidth - ev.clientX); });
+      handle.addEventListener('pointerup', ev => { dragging = false; handle.releasePointerCapture(ev.pointerId); });
+      handle.addEventListener('keydown', ev => {
+        const cur = pfDrawer.getBoundingClientRect().width;
+        if (ev.key === 'ArrowLeft') { setW(cur + 24); ev.preventDefault(); }
+        if (ev.key === 'ArrowRight') { setW(cur - 24); ev.preventDefault(); }
+      });
+    })();
+  </script>
+</body>
+</html>
