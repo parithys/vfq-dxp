@@ -1,0 +1,24 @@
+[
+  {
+    "simSerial": "8974412009900123456",
+    "iccid": "8974412009900123456",
+    "type": "Physical",
+    "stockStatus": "Issued",
+    "swapStatus": "Original"
+  },
+  {
+    "simSerial": "8974412009900123999",
+    "iccid": "8974412009900123999",
+    "type": "Printed eSIM",
+    "stockStatus": "Issued",
+    "swapStatus": "Original"
+  },
+  {
+    "simSerial": "8974412009900129000",
+    "iccid": "8974412009900129000",
+    "type": "Physical",
+    "stockStatus": "Available",
+    "swapStatus": "Original",
+    "_note": "App-level demo addition (not in blueprint/reconstruction-package/mock-data) — the two originally-evidenced SIM records are both already Issued, leaving no available stock to demo a successful SIM-capture step end-to-end."
+  }
+]

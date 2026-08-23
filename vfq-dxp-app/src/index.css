@@ -1,0 +1,56 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+@theme inline {
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-active: var(--accent-active);
+  --color-accent-on: var(--accent-on);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-warm: var(--surface-warm);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warn: var(--warn);
+  --color-charcoal-panel: var(--charcoal-panel);
+  --color-light-neutral: var(--light-neutral);
+  --color-grey-disabled: var(--grey-disabled);
+
+  --font-sans: var(--font-body);
+
+  --radius-btn: var(--radius-button);
+  --radius-card: var(--radius-card);
+  --radius-pill: var(--radius-pill);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+
+  --shadow-raised: var(--elev-raised);
+  --shadow-ring: var(--elev-ring);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--fg);
+  background: var(--surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
