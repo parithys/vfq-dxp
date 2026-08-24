@@ -1,0 +1,43 @@
+/**
+ * Tooltip design tokens — hover-tooltip skill, adapted to this app's token
+ * scale. Colour is a dedicated dark-inverse pair (no existing app token for
+ * "inverse surface"); radius/spacing/typography repoint to tokens.css so the
+ * tooltip stays visually consistent with the rest of the design system.
+ * z-index is set above Modal's z-50 backdrop so tooltips on controls inside
+ * a dialog are never clipped.
+ */
+:root {
+  --tooltip-bg: #101725;
+  --tooltip-text: #ffffff;
+  --tooltip-shadow: var(--elev-raised);
+
+  --tooltip-radius: var(--radius-sm);
+  --tooltip-padding-y: 6px;
+  --tooltip-padding-x: 10px;
+
+  --tooltip-font-size: var(--fs-caption);
+  --tooltip-font-weight: 500;
+  --tooltip-line-height: 1.4;
+  --tooltip-font-family: var(--font-body);
+
+  --tooltip-offset: var(--space-2);
+  --tooltip-max-width: 240px;
+
+  --tooltip-show-delay: 400ms;
+  --tooltip-show-delay-grouped: 0ms;
+  --tooltip-group-window: 500ms;
+  --tooltip-hide-delay: 0ms;
+  --tooltip-transition-duration: 120ms;
+  --tooltip-transition-easing: cubic-bezier(0.16, 1, 0.3, 1);
+  --tooltip-transition-distance: 4px;
+
+  --tooltip-z-index: 9999;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --tooltip-transition-duration: 0ms;
+    --tooltip-transition-distance: 0px;
+    --tooltip-show-delay: 0ms;
+  }
+}

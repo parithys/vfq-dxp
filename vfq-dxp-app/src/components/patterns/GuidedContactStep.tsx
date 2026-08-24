@@ -1,5 +1,6 @@
 import { IdLookupStep } from './IdLookupStep';
 import { Input } from '../primitives/Input';
+import { PhoneNumberInput } from '../primitives/PhoneNumberInput';
 import { Select } from '../primitives/Select';
 
 interface MoiResult {
@@ -28,6 +29,18 @@ interface GuidedContactStepProps {
   showIptvToggle?: boolean;
 }
 
+// Single source of truth for "is this a valid Alt. phone #" — accepts an
+// optional +974/974 country-code prefix (a real Qatar mobile number is
+// naturally written that way) and requires an 8-digit local mobile number
+// (3/5/6/7 prefix) after it. Exported so every wizard's Contact step
+// isValid gate checks the exact same rule as the field's own inline error;
+// previously each wizard duplicated a stricter, out-of-sync regex
+// (`/^974\d{8}$/`, no "+" allowed) that silently blocked Continue even when
+// the field itself showed no error once "+" input was accepted.
+export function isValidAltPhone(raw: string | undefined): boolean {
+  return Boolean(raw && /^[3567]\d{7}$/.test(raw.replace(/^\+?974/, '')));
+}
+
 // Contact step shared across New Fixed Line (SCR-043, FLD-340–352) and New FWA
 // (SCR-078, FLD-430–450) — Pattern 1 describes the contact step as "near-identical
 // across every connection/activation journey regardless of product," and the two
@@ -50,12 +63,12 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true }: Gu
             value={value.email ?? ''}
             onChange={(e) => onChange({ ...value, email: e.target.value })}
           />
-          <Input
+          <PhoneNumberInput
             label="Alt. phone #"
             value={value.altPhone ?? ''}
-            placeholder="97455667766"
+            placeholder="+974 5566 7766"
             error={
-              value.altPhone && !/^974\d{8}$/.test(value.altPhone)
+              value.altPhone && !isValidAltPhone(value.altPhone)
                 ? 'This is a notification contact. Please enter a local mobile number.'
                 : undefined
             }

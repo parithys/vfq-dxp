@@ -13,7 +13,7 @@ export function Breadcrumbs() {
 
   return (
     <div className="flex items-center gap-2 px-6 py-3 text-[length:var(--fs-caption)] text-muted border-b border-border-soft">
-      <Link to="/" className="hover:text-fg">
+      <Link to="/" className="text-fg">
         Dashboard
       </Link>
       {module && (

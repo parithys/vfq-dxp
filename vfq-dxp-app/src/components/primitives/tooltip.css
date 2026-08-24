@@ -1,0 +1,71 @@
+/**
+ * Tooltip surface — hover-tooltip skill. Rendered via React portal
+ * (Tooltip.tsx), never nested inside the trigger's own DOM subtree, so it
+ * is never clipped by an ancestor `overflow` and floats above dropdowns/
+ * modals via --tooltip-z-index. Requires tooltip-tokens.css.
+ *
+ * No `.tooltip-trigger` chip class here on purpose — this app's icon
+ * buttons (topbar, sidebar) already have their own established visual
+ * style; the tooltip is layered on top of them, not a restyle.
+ */
+.tooltip-surface {
+  position: fixed;
+  z-index: var(--tooltip-z-index);
+  background: var(--tooltip-bg);
+  color: var(--tooltip-text);
+  border-radius: var(--tooltip-radius);
+  padding: var(--tooltip-padding-y) var(--tooltip-padding-x);
+  font-size: var(--tooltip-font-size);
+  font-weight: var(--tooltip-font-weight);
+  line-height: var(--tooltip-line-height);
+  font-family: var(--tooltip-font-family);
+  max-width: var(--tooltip-max-width);
+  box-shadow: var(--tooltip-shadow);
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  opacity: 0;
+  transform: translateY(0);
+  transition:
+    opacity var(--tooltip-transition-duration) var(--tooltip-transition-easing),
+    transform var(--tooltip-transition-duration) var(--tooltip-transition-easing);
+}
+
+.tooltip-surface--wrap {
+  white-space: normal;
+  text-overflow: initial;
+}
+
+.tooltip-surface[data-state='visible'] {
+  opacity: 1;
+}
+
+.tooltip-surface[data-placement='right'] {
+  transform: translateX(calc(-1 * var(--tooltip-transition-distance)));
+}
+.tooltip-surface[data-placement='right'][data-state='visible'] {
+  transform: translateX(0);
+}
+
+.tooltip-surface[data-placement='left'] {
+  transform: translateX(var(--tooltip-transition-distance));
+}
+.tooltip-surface[data-placement='left'][data-state='visible'] {
+  transform: translateX(0);
+}
+
+.tooltip-surface[data-placement='top'] {
+  transform: translateY(var(--tooltip-transition-distance));
+}
+.tooltip-surface[data-placement='top'][data-state='visible'] {
+  transform: translateY(0);
+}
+
+.tooltip-surface[data-placement='bottom'] {
+  transform: translateY(calc(-1 * var(--tooltip-transition-distance)));
+}
+.tooltip-surface[data-placement='bottom'][data-state='visible'] {
+  transform: translateY(0);
+}

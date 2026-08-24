@@ -14,6 +14,10 @@ interface AuthState {
   profile: AgentProfile | null;
   signIn: (staffId: string, profile: AgentProfile) => void;
   signOut: () => void;
+  /** Re-resolve the displayed identity (name/job title/team) when switching
+   * role from the profile menu, without a full sign-out/sign-in — staffId is
+   * unchanged since that's the logged-in user, not the active role. */
+  setProfile: (profile: AgentProfile) => void;
 }
 
 // Mocked SSO gate — no real backend, so "signing in" just flips this flag.
@@ -30,6 +34,7 @@ export const useAuthStore = create<AuthState>()(
       profile: null,
       signIn: (staffId, profile) => set({ isAuthenticated: true, staffId, profile }),
       signOut: () => set({ isAuthenticated: false, staffId: '', profile: null }),
+      setProfile: (profile) => set({ profile }),
     }),
     { name: 'vfq-auth-store' }
   )

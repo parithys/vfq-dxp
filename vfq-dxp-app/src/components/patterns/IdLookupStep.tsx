@@ -3,6 +3,7 @@ import { QidInput } from '../domain/QidInput';
 import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
 import * as mockDataEngine from '../../engines/mockDataEngine';
+import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
 
 interface MoiResult {
   name: string;
@@ -47,6 +48,8 @@ export function IdLookupStep({ value = {}, onChange }: IdLookupStepProps) {
 
   const searchAgain = () => onChange({ idNumber: undefined, moiResult: undefined });
 
+  const handleKeyDown = useEnterToSubmit(Boolean(value.idNumber) && !loading, runMoiValidation);
+
   if (value.moiResult) {
     return (
       <div className="space-y-3">
@@ -75,7 +78,7 @@ export function IdLookupStep({ value = {}, onChange }: IdLookupStepProps) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" onKeyDown={handleKeyDown}>
       <QidInput value={value.idNumber ?? ''} onChange={(idNumber) => onChange({ ...value, idNumber })} />
       {notFound && <p className="text-danger text-[length:var(--fs-caption)]">No MOI record found for this ID — try again.</p>}
       <Button variant="primary-rect" onClick={runMoiValidation} disabled={!value.idNumber || loading}>

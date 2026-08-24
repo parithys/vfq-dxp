@@ -112,7 +112,7 @@ export function SimSwapQueueScreen() {
       </div>
       <p className="text-fg-2 mb-6">MSISDN: {order.msisdn}</p>
 
-      <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)] rounded-[var(--radius-card)] border border-border-soft p-4 mb-6">
+      <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)] rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 mb-6">
         <div>
           <dt className="text-[length:var(--fs-caption)] text-muted">New SIM Serial</dt>
           <dd className="text-fg">{order.newSimSerialNumber ?? '—'}</dd>

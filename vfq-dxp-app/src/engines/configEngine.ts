@@ -17,6 +17,11 @@ interface ConfigData {
   domainSchema: DomainEntity[];
   moduleHierarchy: ModuleHierarchyEntry[];
   designTokens: Record<string, string>;
+  /** REQ-id -> evidenced screen ids, mechanically extracted from
+   * traceability-matrix.md's "Screens:" lines. Only 70 of 295 requirements
+   * cite a screen — see screenGrouping.ts for how this partial evidence is
+   * used (and where it falls back to a heuristic). */
+  reqToScreens: Record<string, string[]>;
 }
 
 let cache: ConfigData | null = null;
@@ -34,7 +39,7 @@ export async function loadConfig(): Promise<ConfigData> {
   if (cache) return cache;
   if (loading) return loading;
   loading = (async () => {
-    const [routes, personas, rbac, businessRules, validationRules, domainSchema, moduleHierarchy, designTokens] =
+    const [routes, personas, rbac, businessRules, validationRules, domainSchema, moduleHierarchy, designTokens, reqToScreens] =
       await Promise.all([
         fetchJson<Route[]>('/config/routes.json'),
         fetchJson<Persona[]>('/config/personas.json'),
@@ -44,8 +49,9 @@ export async function loadConfig(): Promise<ConfigData> {
         fetchJson<DomainEntity[]>('/config/domain-schema.json'),
         fetchJson<ModuleHierarchyEntry[]>('/config/module-hierarchy.json'),
         fetchJson<Record<string, string>>('/config/design-tokens.json'),
+        fetchJson<Record<string, string[]>>('/config/req-to-screens.json'),
       ]);
-    cache = { routes, personas, rbac, businessRules, validationRules, domainSchema, moduleHierarchy, designTokens };
+    cache = { routes, personas, rbac, businessRules, validationRules, domainSchema, moduleHierarchy, designTokens, reqToScreens };
     return cache;
   })();
   return loading;
@@ -105,6 +111,10 @@ export function getDomainEntity(entityId: string): DomainEntity | undefined {
 
 export function getDesignToken(name: string): string | undefined {
   return requireConfig().designTokens[name];
+}
+
+export function getReqToScreens(): Record<string, string[]> {
+  return requireConfig().reqToScreens;
 }
 
 export function isConfigLoaded(): boolean {

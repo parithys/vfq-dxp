@@ -3,7 +3,7 @@
     "moduleId": "MOD-lead-management",
     "module": "Lead Management",
     "moduleSlug": "lead-management",
-    "screenCount": 15,
+    "screenCount": 20,
     "subModules": [
       {
         "subModule": "Lead Creation & Qualification",
@@ -812,7 +812,7 @@
     "moduleId": "MOD-fwa-5g-home",
     "module": "FWA / 5G Home",
     "moduleSlug": "fwa-5g-home",
-    "screenCount": 44,
+    "screenCount": 41,
     "subModules": [
       {
         "subModule": "FWA Indoor/Outdoor Activation",
@@ -976,7 +976,7 @@
     "moduleId": "MOD-enterprise-iot-b2b",
     "module": "Enterprise / IoT / B2B",
     "moduleSlug": "enterprise-iot-b2b",
-    "screenCount": 6,
+    "screenCount": 7,
     "subModules": [
       {
         "subModule": "Enterprise Account Management",
@@ -1264,7 +1264,7 @@
     "moduleId": "MOD-order-management",
     "module": "Order Management",
     "moduleSlug": "order-management",
-    "screenCount": 15,
+    "screenCount": 13,
     "subModules": [
       {
         "subModule": "Order Approval Workflow",
@@ -1734,7 +1734,7 @@
     "moduleId": "MOD-access-roles-approval-governance",
     "module": "Access, Roles & Approval Governance",
     "moduleSlug": "access-roles-approval-governance",
-    "screenCount": 3,
+    "screenCount": 1,
     "subModules": [
       {
         "subModule": "Role-Based Access Control",
@@ -1790,7 +1790,7 @@
     "moduleId": "MOD-caf-attachments-forms",
     "module": "CAF, Attachments & Forms",
     "moduleSlug": "caf-attachments-forms",
-    "screenCount": 5,
+    "screenCount": 4,
     "subModules": [
       {
         "subModule": "CAF Lifecycle",

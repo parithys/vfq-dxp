@@ -77,7 +77,7 @@ export function TicketsDashboard() {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         {['Open', 'Resolved', 'Reopened', 'Closed'].map((status) => (
-          <div key={status} className="rounded-[var(--radius-card)] border border-border-soft p-4">
+          <div key={status} className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4">
             <div className="text-[length:var(--fs-caption)] text-muted">{status}</div>
             <div className="text-[length:var(--fs-h3)] text-fg font-medium">{counts[status] ?? 0}</div>
           </div>

@@ -5,7 +5,7 @@ import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCa
 import { ActivityCommentsStep } from '../../../components/patterns/ActivityCommentsStep';
 import { AppointmentBookingStep } from '../../../components/patterns/AppointmentBookingStep';
 import type { AppointmentBookingValue } from '../../../components/patterns/AppointmentBookingStep';
-import { GuidedContactStep } from '../../../components/patterns/GuidedContactStep';
+import { GuidedContactStep, isValidAltPhone } from '../../../components/patterns/GuidedContactStep';
 import type { GuidedContactValue } from '../../../components/patterns/GuidedContactStep';
 import { AddressSelectionStep } from '../../../components/patterns/AddressSelectionStep';
 import { ProductPlanStep } from '../../../components/patterns/ProductPlanStep';
@@ -42,7 +42,7 @@ export function NewFixedLineWizard() {
             ),
             isValid: (values) => {
               const c = values.contact as GuidedContactValue | undefined;
-              return Boolean(c?.moiResult && c?.email && c?.altPhone && /^974\d{8}$/.test(c.altPhone));
+              return Boolean(c?.moiResult && c?.email && isValidAltPhone(c?.altPhone));
             },
           },
           {

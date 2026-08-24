@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
-import { GuidedContactStep } from '../../../components/patterns/GuidedContactStep';
+import { GuidedContactStep, isValidAltPhone } from '../../../components/patterns/GuidedContactStep';
 import type { GuidedContactValue } from '../../../components/patterns/GuidedContactStep';
 import { AddressSelectionStep } from '../../../components/patterns/AddressSelectionStep';
 import { ProductPlanStep } from '../../../components/patterns/ProductPlanStep';
@@ -46,7 +46,7 @@ export function NewFwaWizard() {
             ),
             isValid: (values) => {
               const c = values.contact as GuidedContactValue | undefined;
-              return Boolean(c?.moiResult && c?.email && c?.altPhone && /^974\d{8}$/.test(c.altPhone));
+              return Boolean(c?.moiResult && c?.email && isValidAltPhone(c?.altPhone));
             },
           },
           {

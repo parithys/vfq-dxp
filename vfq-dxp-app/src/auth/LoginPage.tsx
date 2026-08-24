@@ -1,34 +1,13 @@
 import { useState } from 'react';
 import { Icon } from '../components/primitives/Icon';
+import { Select } from '../components/primitives/Select';
 import { VodafoneMark } from '../components/primitives/VodafoneMark';
+import { Tooltip } from '../components/primitives/Tooltip';
 import { useAuthStore } from '../stores/authStore';
-import type { AgentProfile } from '../stores/authStore';
 import { usePersonaStore } from '../stores/personaStore';
-import { getAllPersonas, getPersona } from '../engines/configEngine';
-import * as mockDataEngine from '../engines/mockDataEngine';
-
-interface UserAgentRecord {
-  userId: string;
-  firstName: string;
-  lastName: string;
-  jobTitle: string;
-  team: string;
-}
-
-// No real login/session directory exists in the mock data — the 3 seeded
-// users-agents.json records stand in for "who's signed in," matched by a
-// loose keyword against the selected persona's name/type. Falls back to the
-// first seeded agent (a Sales Agent) when nothing matches or no role is chosen.
-async function pickProfileForRole(personaId: string): Promise<AgentProfile> {
-  const agents = await mockDataEngine.list<UserAgentRecord>('users-agents');
-  const persona = getPersona(personaId);
-  const haystack = `${persona?.name ?? ''} ${persona?.type ?? ''}`.toLowerCase();
-  const match =
-    (haystack.includes('fulfilment') && agents.find((a) => a.team.toLowerCase().includes('fulfilment'))) ||
-    (/(manager|approver)/.test(haystack) && agents.find((a) => a.jobTitle.toLowerCase().includes('manager'))) ||
-    agents[0];
-  return { userId: match.userId, name: `${match.firstName} ${match.lastName}`, jobTitle: match.jobTitle, team: match.team };
-}
+import { getAllPersonas } from '../engines/configEngine';
+import { pickProfileForRole } from '../engines/agentProfileEngine';
+import { useEnterToSubmit } from '../hooks/useEnterToSubmit';
 
 const ICONS = {
   shield: 'M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z M9.5 12l1.8 1.8L15 10',
@@ -43,7 +22,6 @@ const ICONS = {
   eye: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
   eyeOff: 'M3 3l18 18 M10.6 10.6a3 3 0 0 0 4.2 4.2 M9.9 5.1A10.8 10.8 0 0 1 12 5c6 0 10 7 10 7a17.6 17.6 0 0 1-3.1 3.9 M6.2 6.2A17.7 17.7 0 0 0 2 12s4 7 10 7c1.4 0 2.7-.3 3.8-.8',
   helpCircle: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M9.2 9a2.8 2.8 0 1 1 3.9 2.6c-.9.4-1.4 1-1.4 2 M12 17h.01',
-  chevronDown: 'M6 9l6 6 6-6',
 };
 
 const METRICS = [
@@ -85,6 +63,8 @@ export function LoginPage() {
     signIn(staffId || 'VFQ-12345', profile);
   };
 
+  const handleFormKeyDown = useEnterToSubmit(!signingIn, handleSignIn);
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row" style={{ fontFamily: 'var(--font-body)' }}>
       {/* Left panel */}
@@ -102,7 +82,7 @@ export function LoginPage() {
             </p>
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-5" onKeyDown={handleFormKeyDown}>
             <div className="flex flex-col gap-1.5">
               <label className="text-[length:var(--fs-caption)] text-white/70">Staff ID</label>
               <input
@@ -113,22 +93,14 @@ export function LoginPage() {
               />
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[length:var(--fs-caption)] text-white/70">Role</label>
-              <div className="relative">
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="w-full appearance-none rounded-[var(--radius-sm)] border border-white/15 bg-white/5 pl-3 pr-9 py-2.5 text-white focus:outline-none focus-visible:border-accent [&>option]:text-fg"
-                >
-                  <option value="" className="text-muted">Select your role</option>
-                  {personas.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-                <Icon path={ICONS.chevronDown} className="w-4 h-4 text-white/50 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
-            </div>
+            <Select
+              dark
+              label="Role"
+              placeholder="Select your role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              options={personas.map((p) => ({ value: p.id, label: p.name }))}
+            />
 
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
@@ -145,14 +117,16 @@ export function LoginPage() {
                   placeholder="Enter your password"
                   className="w-full rounded-[var(--radius-sm)] border border-white/15 bg-white/5 px-3 py-2.5 pr-10 text-white placeholder:text-white/35 focus:outline-none focus-visible:border-accent"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
-                >
-                  <Icon path={showPassword ? ICONS.eyeOff : ICONS.eye} className="w-4.5 h-4.5" />
-                </button>
+                <Tooltip content={showPassword ? 'Hide password' : 'Show password'} placement="top">
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+                  >
+                    <Icon path={showPassword ? ICONS.eyeOff : ICONS.eye} className="w-4.5 h-4.5" />
+                  </button>
+                </Tooltip>
               </div>
             </div>
 

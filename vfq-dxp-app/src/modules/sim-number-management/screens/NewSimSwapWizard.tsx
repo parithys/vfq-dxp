@@ -69,7 +69,7 @@ export function NewSimSwapWizard({ msisdn, onDone }: NewSimSwapWizardProps) {
                   value={(values.qidImages as QidImageUploadValue) ?? {}}
                   onChange={(v) => setValue('qidImages', v)}
                 />
-                <div className="rounded-[var(--radius-card)] border border-border-soft p-4 flex items-center justify-between">
+                <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 flex items-center justify-between">
                   <span className="text-fg-2 text-[length:var(--fs-body)]">Bank Statement</span>
                   {bankStatementAttached ? (
                     <Badge variant="success">Attached</Badge>

@@ -108,7 +108,7 @@ export function EnterpriseAccountCreation() {
         />
 
         {creditLimit && (
-          <div className="rounded-[var(--radius-card)] border border-border-soft p-3">
+          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-3">
             <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg">
               <input type="checkbox" checked={financeApproved} onChange={(e) => setFinanceApproved(e.target.checked)} />
               Business Finance has approved this credit limit

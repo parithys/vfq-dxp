@@ -87,7 +87,7 @@ export function TicketDetail() {
         Customer: {ticket.customerId} · {ticket.category} · Owned by <Badge variant="outlined-red">{ticket.queue}</Badge>
       </p>
 
-      <div className="rounded-[var(--radius-card)] border border-border-soft p-4 mb-6">
+      <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 mb-6">
         <h2 className="text-fg font-medium mb-3">Public Notes</h2>
         <div className="space-y-2 mb-3">
           {notes.length === 0 && <p className="text-fg-2 text-[length:var(--fs-body)]">No public notes yet.</p>}

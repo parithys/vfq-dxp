@@ -93,7 +93,7 @@ export function BaseManagementWizard() {
                   value={values.billLimit as number | undefined}
                   onChange={(v, pass) => { setValue('billLimit', v); setValue('billLimitValid', pass); }}
                 />
-                <div className="rounded-[var(--radius-card)] border border-border-soft p-3">
+                <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-3">
                   <span className="text-fg">Credit Limit</span>
                   <div className="text-fg mt-1">QR 1000</div>
                 </div>

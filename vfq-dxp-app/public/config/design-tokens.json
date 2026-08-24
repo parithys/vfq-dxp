@@ -66,7 +66,7 @@
   "--radius-asymmetric": "0px 6px 0px 0px",
   "--radius-badge-pill": "32px",
   "--radius-button": "2px",
-  "--radius-card": "6px",
+  "--radius-card": "8px",
   "--radius-circle": "50%",
   "--radius-cta-pill": "60px",
   "--radius-glass-pill": "24px",

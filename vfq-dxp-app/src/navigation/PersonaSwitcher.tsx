@@ -4,8 +4,11 @@ import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
 import { useNotificationStore } from '../stores/notificationStore';
 import { getAllPersonas, getRbacForPersona } from '../engines/configEngine';
+import { pickProfileForRole } from '../engines/agentProfileEngine';
 import { Icon } from '../components/primitives/Icon';
 import { Select } from '../components/primitives/Select';
+import { Tooltip } from '../components/primitives/Tooltip';
+import { TooltipGroup } from '../components/primitives/TooltipContext';
 
 const ICONS = {
   moon: 'M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z',
@@ -23,7 +26,7 @@ const ICONS = {
 // control, not a real auth boundary); it's just relocated.
 export function PersonaSwitcher() {
   const { activePersonaId, setActivePersona } = usePersonaStore();
-  const { staffId, profile, signOut } = useAuthStore();
+  const { staffId, profile, signOut, setProfile } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const { history, markAllRead } = useNotificationStore();
   const personas = getAllPersonas();
@@ -48,30 +51,45 @@ export function PersonaSwitcher() {
 
   const initials = profile ? `${profile.name.split(' ')[0][0]}${profile.name.split(' ').slice(-1)[0][0]}` : '??';
 
+  // Switching role must fully swap the displayed identity too — not just the
+  // RBAC-driving personaId — otherwise the profile chip keeps showing the
+  // login-time agent even after picking a different role, which is what
+  // made this look like it required a sign-out/sign-in to take effect.
+  const handleRoleSwitch = async (personaId: string) => {
+    setActivePersona(personaId);
+    const newProfile = await pickProfileForRole(personaId);
+    setProfile(newProfile);
+  };
+
   return (
-    <div className="flex items-center gap-3 px-4 py-3 border-b border-border-soft bg-bg">
+    <div className="flex items-center gap-3 h-16 px-4 border-b border-border-soft bg-bg">
       <span className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted">
         {rbacCount > 0 ? `${rbacCount} evidenced RBAC entries` : 'No RBAC entries evidenced for this persona'}
       </span>
 
+      <TooltipGroup>
       <div ref={containerRef} className="ml-auto flex items-center gap-2">
-        <button
-          onClick={toggleTheme}
-          aria-label="Toggle theme"
-          className="w-9 h-9 rounded-[var(--radius-pill)] border border-border-soft flex items-center justify-center text-fg-2 hover:bg-surface"
-        >
-          <Icon path={theme === 'dark' ? ICONS.sun : ICONS.moon} className="w-4.5 h-4.5" />
-        </button>
+        <Tooltip content={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} placement="bottom">
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            className="w-9 h-9 rounded-[var(--radius-pill)] border border-border-soft flex items-center justify-center text-fg-2 hover:bg-surface"
+          >
+            <Icon path={theme === 'dark' ? ICONS.sun : ICONS.moon} className="w-4.5 h-4.5" />
+          </button>
+        </Tooltip>
 
         <div className="relative">
-          <button
-            onClick={() => toggle('notifications')}
-            aria-label="Notifications"
-            className="relative w-9 h-9 rounded-[var(--radius-pill)] border border-border-soft flex items-center justify-center text-fg-2 hover:bg-surface"
-          >
-            <Icon path={ICONS.bell} className="w-4.5 h-4.5" />
-            {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent" />}
-          </button>
+          <Tooltip content="Notifications" placement="bottom">
+            <button
+              onClick={() => toggle('notifications')}
+              aria-label="Notifications"
+              className="relative w-9 h-9 rounded-[var(--radius-pill)] border border-border-soft flex items-center justify-center text-fg-2 hover:bg-surface"
+            >
+              <Icon path={ICONS.bell} className="w-4.5 h-4.5" />
+              {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent" />}
+            </button>
+          </Tooltip>
           {open === 'notifications' && (
             <div className="absolute right-0 mt-2 w-80 rounded-[var(--radius-card)] border border-border-soft bg-bg shadow-raised z-50 max-h-96 overflow-y-auto">
               <p className="px-4 py-3 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted border-b border-border-soft">Notifications</p>
@@ -87,13 +105,15 @@ export function PersonaSwitcher() {
         </div>
 
         <div className="relative">
-          <button
-            onClick={() => toggle('help')}
-            aria-label="Help & support"
-            className="w-9 h-9 rounded-[var(--radius-pill)] border border-border-soft flex items-center justify-center text-fg-2 hover:bg-surface"
-          >
-            <Icon path={ICONS.help} className="w-4.5 h-4.5" />
-          </button>
+          <Tooltip content="Help & support" placement="bottom">
+            <button
+              onClick={() => toggle('help')}
+              aria-label="Help & support"
+              className="w-9 h-9 rounded-[var(--radius-pill)] border border-border-soft flex items-center justify-center text-fg-2 hover:bg-surface"
+            >
+              <Icon path={ICONS.help} className="w-4.5 h-4.5" />
+            </button>
+          </Tooltip>
           {open === 'help' && (
             <div className="absolute right-0 mt-2 w-72 rounded-[var(--radius-card)] border border-border-soft bg-bg shadow-raised z-50 p-4">
               <p className="text-fg font-medium mb-1">Help &amp; support</p>
@@ -108,7 +128,7 @@ export function PersonaSwitcher() {
           <button
             onClick={() => toggle('profile')}
             aria-label="User profile menu"
-            className="flex items-center gap-2 rounded-[var(--radius-pill)] border border-border-soft pl-1.5 pr-3 py-1.5 hover:bg-surface"
+            className="flex items-center gap-2 rounded-[var(--radius-pill)] pl-1.5 pr-3 py-1.5 hover:bg-surface"
           >
             <span className="w-7 h-7 rounded-full bg-accent text-white text-[length:var(--fs-caption)] font-semibold flex items-center justify-center">
               {initials}
@@ -131,7 +151,7 @@ export function PersonaSwitcher() {
                 <label className="text-[length:var(--fs-caption)] text-muted mb-1 block">Switch role</label>
                 <Select
                   value={activePersonaId}
-                  onChange={(e) => setActivePersona(e.target.value)}
+                  onChange={(e) => handleRoleSwitch(e.target.value)}
                   options={personas.map((p) => ({ value: p.id, label: p.name }))}
                 />
               </div>
@@ -146,6 +166,7 @@ export function PersonaSwitcher() {
           )}
         </div>
       </div>
+      </TooltipGroup>
     </div>
   );
 }

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "./tokens.css";
+@import "./components/primitives/tooltip-tokens.css";
+@import "./components/primitives/tooltip.css";
 
 @theme inline {
   --color-accent: var(--accent);

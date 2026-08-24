@@ -21,7 +21,7 @@ export function QidImageUpload({ value, onChange }: QidImageUploadProps) {
       {(['front', 'back'] as const).map((side) => {
         const scanned = side === 'front' ? value.frontScanned : value.backScanned;
         return (
-          <div key={side} className="rounded-[var(--radius-card)] border border-border-soft p-4 flex flex-col items-center gap-2">
+          <div key={side} className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 flex flex-col items-center gap-2">
             <span className="text-fg-2 text-[length:var(--fs-body)] capitalize">QID {side}</span>
             {scanned ? (
               <Badge variant="success">Scanned</Badge>

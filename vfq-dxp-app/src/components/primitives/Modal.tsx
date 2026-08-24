@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { Tooltip } from './Tooltip';
 
 interface ModalProps {
   open: boolean;
@@ -41,9 +42,11 @@ export function Modal({ open, onClose, title, children, footer }: ModalProps) {
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[length:var(--fs-h5)] font-medium text-fg">{title}</h2>
-          <button onClick={onClose} aria-label="Close" className="text-muted hover:text-fg text-xl leading-none">
-            ×
-          </button>
+          <Tooltip content="Close" placement="left">
+            <button onClick={onClose} aria-label="Close" className="text-muted hover:text-fg text-xl leading-none">
+              ×
+            </button>
+          </Tooltip>
         </div>
         <div>{children}</div>
         {footer && <div className="flex justify-end gap-2 mt-6">{footer}</div>}

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
 import { Input } from '../../../components/primitives/Input';
+import { PhoneNumberInput } from '../../../components/primitives/PhoneNumberInput';
 import { IdLookupStep } from '../../../components/patterns/IdLookupStep';
 import { QidImageUpload } from '../../../components/domain/QidImageUpload';
 import type { QidImageUploadValue } from '../../../components/domain/QidImageUpload';
@@ -46,10 +47,10 @@ export function PassportToQidWizard() {
             label: 'MSISDN & Passport',
             render: ({ values, setValue }) => (
               <div className="grid grid-cols-2 gap-4">
-                <Input
+                <PhoneNumberInput
                   label="MSISDN"
                   value={(values.msisdn as string) ?? ''}
-                  placeholder="+97433001001"
+                  placeholder="+974 3300 1001"
                   onChange={(e) => setValue('msisdn', e.target.value)}
                 />
                 <Input

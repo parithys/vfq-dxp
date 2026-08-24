@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllModules, getPersona } from '../engines/configEngine';
+import { MODULE_DESCRIPTIONS } from '../engines/moduleDescriptions';
 import { usePersonaStore } from '../stores/personaStore';
 import { useEntityStore } from '../stores/entityStore';
 import { Icon } from '../components/primitives/Icon';
@@ -14,28 +15,6 @@ const ICONS = {
   contacts: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M22 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75',
   search: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3',
   openArrow: 'M7 17L17 7 M7 7h10v10',
-};
-
-// One-line summaries for the module launcher cards — not sourced from the
-// evidence corpus (module-hierarchy.json has no description field), authored
-// from direct familiarity with each module's built-out scope this session.
-const MODULE_DESCRIPTIONS: Record<string, string> = {
-  'Lead Management': 'Consumer and enterprise lead capture, qualification and hand-off.',
-  'Mobile Postpaid': 'RED plan sales, guided journeys and line management.',
-  'Mobile Prepaid': 'SIM registration, bundles and recharge flows.',
-  'Pre-to-Post Migration': 'Prepaid to postpaid migration with eligibility checks.',
-  'MNP / FNP Porting': 'NPAS port-in and port-out orchestration.',
-  'Fixed Line / Fibre': 'Fibre feasibility, ordering and installation fulfilment.',
-  'FWA / 5G Home': 'Fixed wireless activation, CPE configuration and field fulfilment.',
-  'Enterprise / IoT / B2B': 'Enterprise accounts, IoT SIM estates and B2B contracts.',
-  'Billing & Adjustments': 'Invoice adjustments, credits and dispute handling.',
-  'Order Management': 'Order orchestration, amendments and fallout handling.',
-  'Identity & Customer Management': 'QID verification, customer 360 and consent records.',
-  'SIM & Number Management': 'SIM swap, number reservation and inventory.',
-  'Trouble Ticketing & Complaints': 'Fault reporting, escalations and complaint SLAs.',
-  'Access, Roles & Approval Governance': 'RBAC roles, approval matrices and audit evidence.',
-  'CAF, Attachments & Forms': 'CAF generation, digital signature and document vault.',
-  'Platform Governance & Architecture': 'Architecture decisions and platform standards.',
 };
 
 interface Ticket { status: string; }
@@ -121,12 +100,16 @@ export function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
         {kpis.map((kpi) => (
           <div key={kpi.label} className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
-            <span className="w-9 h-9 rounded-full bg-surface-warm text-accent flex items-center justify-center mb-4">
-              <Icon path={kpi.icon} className="w-4.5 h-4.5" />
-            </span>
-            <div className="text-[length:var(--fs-h3)] font-extrabold text-fg mb-1">{kpi.value}</div>
-            <div className="font-medium text-fg text-[length:var(--fs-body)]">{kpi.label}</div>
-            <div className="text-muted text-[length:var(--fs-caption)]">{kpi.sub}</div>
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <div className="font-medium text-fg text-[length:var(--fs-body)]">{kpi.label}</div>
+                <div className="text-muted text-[length:var(--fs-caption)]">{kpi.sub}</div>
+              </div>
+              <span className="w-9 h-9 rounded-full bg-surface-warm text-accent flex items-center justify-center shrink-0">
+                <Icon path={kpi.icon} className="w-4.5 h-4.5" />
+              </span>
+            </div>
+            <div className="text-[length:var(--fs-h3)] font-extrabold text-fg">{kpi.value}</div>
           </div>
         ))}
       </div>

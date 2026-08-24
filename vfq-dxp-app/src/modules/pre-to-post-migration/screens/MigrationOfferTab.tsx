@@ -64,7 +64,7 @@ export function MigrationOfferTab() {
         {migrationOffers.map((o) => {
           const status = dispositioned[o.offerId] ?? o.status;
           return (
-            <div key={o.offerId} className="rounded-[var(--radius-card)] border border-border-soft p-4">
+            <div key={o.offerId} className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-fg font-medium">{o.offerName}</span>
                 <Badge variant={STATUS_VARIANT[status] ?? 'filled-neutral'}>{status}</Badge>

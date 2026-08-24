@@ -19,7 +19,7 @@ interface DataTableProps<T> {
 // component-catalogue.md §1 — Assumed shape (no design-system analog).
 export function DataTable<T>({ columns, rows, rowKey, onRowClick, emptyMessage = 'No records.', loading }: DataTableProps<T>) {
   return (
-    <div className="overflow-x-auto rounded-[var(--radius-card)] border border-border-soft">
+    <div className="overflow-x-auto rounded-[var(--radius-card)] border border-border-soft bg-bg">
       <table className="w-full text-left text-[length:var(--fs-body)]">
         <thead className="bg-surface text-fg-2">
           <tr>
