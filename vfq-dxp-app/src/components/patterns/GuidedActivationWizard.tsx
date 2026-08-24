@@ -51,6 +51,8 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
 
   const activeSteps = steps.filter((s) => !s.skip?.(draft.values));
   const currentIndex = Math.min(draft.currentStep, activeSteps.length - 1);
+  // Falls back to currentStep for drafts persisted before maxStepReached existed.
+  const maxReached = Math.min(Math.max(draft.maxStepReached ?? draft.currentStep, currentIndex), activeSteps.length - 1);
   const currentStep = activeSteps[currentIndex];
   const canProceed = currentStep?.isValid ? currentStep.isValid(draft.values) : true;
 
@@ -87,6 +89,16 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
     if (currentIndex > 0) setStep(wizardId, currentIndex - 1);
   };
 
+  // Any step already reached this session (in either direction) stays
+  // reachable — jumping back to edit an earlier step must not strand the
+  // user; they can return to the furthest step, or any step in between,
+  // without re-walking Continue through steps whose data hasn't changed.
+  // Steps beyond maxReached stay unreachable so forward validation gating
+  // is still enforced.
+  const goToStep = (index: number) => {
+    if (index !== currentIndex && index <= maxReached) setStep(wizardId, index);
+  };
+
   const abandon = () => {
     clearDraft(wizardId);
     setConfirmingAbandon(false);
@@ -107,12 +119,29 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
         <ol className="w-72 shrink-0 rounded-[var(--radius-card)] border border-border-soft divide-y divide-border-soft bg-bg overflow-hidden">
           {activeSteps.map((step, i) => {
             const isActive = i === currentIndex;
-            const isDone = i < currentIndex;
+            const isDone = i < maxReached;
+            const isReachable = !isActive && i <= maxReached;
             return (
               <li
                 key={step.key}
                 aria-current={isActive ? 'step' : undefined}
-                className={`flex items-start gap-3 px-4 py-4 border-l-2 ${isActive ? 'bg-surface-warm border-l-accent' : 'border-l-transparent'}`}
+                role={isReachable ? 'button' : undefined}
+                tabIndex={isReachable ? 0 : undefined}
+                aria-label={isReachable ? `Go to ${step.label} step` : undefined}
+                onClick={isReachable ? () => goToStep(i) : undefined}
+                onKeyDown={
+                  isReachable
+                    ? (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          goToStep(i);
+                        }
+                      }
+                    : undefined
+                }
+                className={`flex items-start gap-3 px-4 py-4 border-l-2 ${isActive ? 'bg-surface-warm border-l-accent' : 'border-l-transparent'} ${
+                  isReachable ? 'cursor-pointer hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)]' : ''
+                }`}
               >
                 <span
                   className={`flex items-center justify-center w-7 h-7 rounded-[var(--radius-circle)] text-[length:var(--fs-caption)] font-medium shrink-0
