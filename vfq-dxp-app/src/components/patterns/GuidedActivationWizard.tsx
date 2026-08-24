@@ -8,6 +8,7 @@ import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
 
 const CHEVRON_LEFT = 'M15 18l-6-6 6-6';
 const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
+const CHECK = 'M20 6L9 17l-5-5';
 
 export interface WizardStep {
   key: string;
@@ -117,7 +118,7 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
                   className={`flex items-center justify-center w-7 h-7 rounded-[var(--radius-circle)] text-[length:var(--fs-caption)] font-medium shrink-0
                     ${isDone ? 'bg-success text-white' : isActive ? 'bg-accent text-accent-on' : 'bg-light-neutral text-muted'}`}
                 >
-                  {isDone ? '✓' : i + 1}
+                  {isDone ? <Icon path={CHECK} className="w-3.5 h-3.5" /> : i + 1}
                 </span>
                 <div className="min-w-0">
                   <div className={`truncate ${isActive ? 'text-fg font-semibold' : 'text-fg-2 font-medium'}`}>{step.label}</div>
@@ -131,19 +132,28 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
         </ol>
 
         <div className="flex-1 min-w-0 rounded-[var(--radius-card)] border border-border-soft bg-bg p-6" onKeyDown={handleStepKeyDown}>
-          <h2
-            ref={stepHeadingRef}
-            tabIndex={-1}
-            className="text-[length:var(--fs-h4)] font-bold text-fg mb-4 focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
-          >
-            {currentStep?.label}
-          </h2>
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <h2
+              ref={stepHeadingRef}
+              tabIndex={-1}
+              className="text-[length:var(--fs-h4)] font-bold text-fg focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+            >
+              {currentStep?.label}
+            </h2>
+            {/* Secondary/destructive action, deliberately understated (plain
+                text, no border/fill) and placed top-right so it doesn't
+                compete with the primary Continue action in the footer. */}
+            <button
+              type="button"
+              onClick={() => setConfirmingAbandon(true)}
+              className="shrink-0 text-[length:var(--fs-caption)] text-muted hover:text-danger transition-colors"
+            >
+              Abandon Order
+            </button>
+          </div>
           {currentStep?.render({ values: draft.values, setValue })}
           <div className="flex items-center justify-between mt-6 pt-6 border-t border-border-soft">
-            <div className="flex gap-2">
-              <Button variant="ghost-rect" onClick={() => setConfirmingAbandon(true)}>
-                Abandon Order
-              </Button>
+            <div>
               {currentIndex > 0 && (
                 <Button variant="ghost-rect" onClick={goBack}>
                   <Icon path={CHEVRON_LEFT} className="w-4 h-4" />

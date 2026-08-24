@@ -3,13 +3,14 @@ import { usePersonaStore } from '../stores/personaStore';
 import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
 import { useNotificationStore } from '../stores/notificationStore';
-import { getAllPersonas, getRbacForPersona } from '../engines/configEngine';
+import { getAllPersonas } from '../engines/configEngine';
 import { pickProfileForRole } from '../engines/agentProfileEngine';
 import { Icon } from '../components/primitives/Icon';
 import { Select } from '../components/primitives/Select';
 import { Tooltip } from '../components/primitives/Tooltip';
 import { TooltipGroup } from '../components/primitives/TooltipContext';
 import { useSidebarStore } from '../stores/sidebarStore';
+import { GlobalSearch } from './GlobalSearch';
 
 const ICONS = {
   moon: 'M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z',
@@ -39,7 +40,6 @@ export function PersonaSwitcher() {
   const markAllRead = useNotificationStore((s) => s.markAllRead);
   const toggleMobileOpen = useSidebarStore((s) => s.toggleMobileOpen);
   const personas = getAllPersonas();
-  const rbacCount = getRbacForPersona(activePersonaId).length;
   const unreadCount = history.filter((h) => !h.read).length;
 
   const [open, setOpen] = useState<'notifications' | 'help' | 'profile' | null>(null);
@@ -79,9 +79,7 @@ export function PersonaSwitcher() {
       >
         <Icon path={ICONS.menu} className="w-5 h-5" />
       </button>
-      <span className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted truncate">
-        {rbacCount > 0 ? `${rbacCount} evidenced RBAC entries` : 'No RBAC entries evidenced for this persona'}
-      </span>
+      <GlobalSearch />
 
       <TooltipGroup>
       <div ref={containerRef} className="ml-auto flex items-center gap-2">

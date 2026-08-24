@@ -71,7 +71,7 @@ export function IdLookupStep({ value = {}, onChange }: IdLookupStepProps) {
           </div>
         </div>
         <Button variant="ghost-rect" onClick={searchAgain}>
-          Search Again
+          Edit &amp; Search Again
         </Button>
       </div>
     );

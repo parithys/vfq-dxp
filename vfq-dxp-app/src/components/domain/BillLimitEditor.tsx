@@ -35,6 +35,11 @@ export function BillLimitEditor({ product, value, onChange }: BillLimitEditorPro
     setEditing(false);
   };
 
+  const step = (delta: number) => {
+    const current = Number(draft) || 0;
+    setDraft(String(Math.max(0, current + delta)));
+  };
+
   return (
     <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-3">
       <div className="flex items-center justify-between">
@@ -47,8 +52,14 @@ export function BillLimitEditor({ product, value, onChange }: BillLimitEditorPro
       </div>
       {editing ? (
         <div className="flex items-end gap-2 mt-2">
+          <Button variant="ghost-rect" compact className="h-[42px]" aria-label="Decrease by 50 QR" onClick={() => step(-50)}>
+            −50
+          </Button>
           <Input label={`QR (Agent Min ${agentMinimum})`} type="number" value={draft} onChange={(e) => setDraft(e.target.value)} />
-          <Button variant="primary-rect" onClick={apply}>
+          <Button variant="ghost-rect" compact className="h-[42px]" aria-label="Increase by 50 QR" onClick={() => step(50)}>
+            +50
+          </Button>
+          <Button variant="primary-rect" className="h-[42px]" onClick={apply}>
             Apply
           </Button>
         </div>
