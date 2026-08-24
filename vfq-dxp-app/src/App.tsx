@@ -9,9 +9,12 @@ import { PersonaSwitcher } from './navigation/PersonaSwitcher';
 import { AppRouter } from './router';
 import { ToastContainer } from './components/primitives/Toast';
 import { LoginPage } from './auth/LoginPage';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 export default function App() {
-  const { ready, error, boot } = useConfigStore();
+  const ready = useConfigStore((s) => s.ready);
+  const error = useConfigStore((s) => s.error);
+  const boot = useConfigStore((s) => s.boot);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const theme = useThemeStore((s) => s.theme);
 
@@ -48,7 +51,9 @@ export default function App() {
           <PersonaSwitcher />
           <Breadcrumbs />
           <main className="flex-1 overflow-y-auto bg-surface">
-            <AppRouter />
+            <ErrorBoundary>
+              <AppRouter />
+            </ErrorBoundary>
           </main>
         </div>
       </div>

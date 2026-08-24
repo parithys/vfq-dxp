@@ -44,6 +44,10 @@ export function Dashboard() {
   const simSwaps = (useEntityStore((s) => s.records['sim-swap-orders']) ?? []) as unknown as SimSwapOrder[];
   const customers = useEntityStore((s) => s.records.customers) ?? [];
   const bulkJobs = (useEntityStore((s) => s.records['bulk-activation-orders']) ?? []) as unknown as BulkJob[];
+  const loadingMap = useEntityStore((s) => s.loading);
+  const anyLoading = ['trouble-tickets', 'orders', 'leads', 'sim-swap-orders', 'customers', 'bulk-activation-orders'].some(
+    (k) => loadingMap[k as keyof typeof loadingMap]
+  );
 
   useEffect(() => {
     ['trouble-tickets', 'orders', 'leads', 'sim-swap-orders', 'customers', 'bulk-activation-orders'].forEach((k) =>
@@ -92,7 +96,7 @@ export function Dashboard() {
 
   return (
     <div className="p-8">
-      <h1 className="text-[length:var(--fs-h2)] font-medium text-fg mb-1">
+      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">
         Welcome back{persona ? `, ${persona.name.split('(')[0].trim()}` : ''}!
       </h1>
       <p className="text-fg-2 mb-8">Here's what's happening across the platform right now.</p>
@@ -109,7 +113,7 @@ export function Dashboard() {
                 <Icon path={kpi.icon} className="w-4.5 h-4.5" />
               </span>
             </div>
-            <div className="text-[length:var(--fs-h3)] font-extrabold text-fg">{kpi.value}</div>
+            <div className="text-[length:var(--fs-h3)] font-extrabold text-fg">{anyLoading ? '—' : kpi.value}</div>
           </div>
         ))}
       </div>

@@ -30,6 +30,7 @@ const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'filled-
 export function BulkJobsDashboard() {
   const jobs = (useEntityStore((s) => s.records['bulk-activation-orders']) ?? []) as unknown as BulkJob[];
   const loadKind = useEntityStore((s) => s.loadKind);
+  const loading = useEntityStore((s) => s.loading['bulk-activation-orders']);
 
   useEffect(() => {
     loadKind('bulk-activation-orders');
@@ -51,6 +52,7 @@ export function BulkJobsDashboard() {
         rows={jobs}
         rowKey={(r) => r.bulkOrderId}
         emptyMessage="No bulk jobs."
+        loading={loading}
       />
     </div>
   );

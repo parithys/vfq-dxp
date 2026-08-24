@@ -14,7 +14,8 @@ export function ActivityCommentsStep({ value, onChange }: ActivityCommentsStepPr
   return (
     <Textarea
       label="Comments"
-      placeholder="Please note down a comment regarding the actions performed."
+      helperText="Please note down a comment regarding the actions performed."
+      placeholder="Enter comments…"
       value={value}
       onChange={(e) => onChange(e.target.value)}
     />

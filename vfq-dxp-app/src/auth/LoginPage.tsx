@@ -5,6 +5,7 @@ import { VodafoneMark } from '../components/primitives/VodafoneMark';
 import { Tooltip } from '../components/primitives/Tooltip';
 import { useAuthStore } from '../stores/authStore';
 import { usePersonaStore } from '../stores/personaStore';
+import { useNotificationStore } from '../stores/notificationStore';
 import { getAllPersonas } from '../engines/configEngine';
 import { pickProfileForRole } from '../engines/agentProfileEngine';
 import { useEnterToSubmit } from '../hooks/useEnterToSubmit';
@@ -43,6 +44,7 @@ const METRICS = [
 export function LoginPage() {
   const signIn = useAuthStore((s) => s.signIn);
   const setActivePersona = usePersonaStore((s) => s.setActivePersona);
+  const pushToast = useNotificationStore((s) => s.pushToast);
   const personas = getAllPersonas();
 
   const [staffId, setStaffId] = useState('');
@@ -51,6 +53,7 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [language, setLanguage] = useState<'English' | 'العربية'>('English');
   const [signingIn, setSigningIn] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -66,7 +69,7 @@ export function LoginPage() {
   const handleFormKeyDown = useEnterToSubmit(!signingIn, handleSignIn);
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row" style={{ fontFamily: 'var(--font-body)' }}>
+    <div className="min-h-screen flex flex-col md:flex-row font-sans">
       {/* Left panel */}
       <div className="w-full md:w-[420px] shrink-0 bg-charcoal-panel text-white flex flex-col justify-between px-10 py-10">
         <div className="flex items-center gap-2">
@@ -84,8 +87,9 @@ export function LoginPage() {
 
           <div className="space-y-5" onKeyDown={handleFormKeyDown}>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[length:var(--fs-caption)] text-white/70">Staff ID</label>
+              <label htmlFor="staff-id" className="text-[length:var(--fs-caption)] text-white/70">Staff ID</label>
               <input
+                id="staff-id"
                 value={staffId}
                 onChange={(e) => setStaffId(e.target.value)}
                 placeholder="e.g. VFQ-12345"
@@ -104,13 +108,20 @@ export function LoginPage() {
 
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-[length:var(--fs-caption)] text-white/70">Password</label>
-                <button type="button" className="text-[length:var(--fs-caption)] text-white/70 underline underline-offset-2 hover:text-white">
+                <label htmlFor="login-password" className="text-[length:var(--fs-caption)] text-white/70">Password</label>
+                <button
+                  type="button"
+                  onClick={() =>
+                    pushToast('info', 'Password reset instructions would be sent to your registered email. (Demo — no real reset flow.)')
+                  }
+                  className="text-[length:var(--fs-caption)] text-white/70 underline underline-offset-2 hover:text-white"
+                >
                   Forgot password?
                 </button>
               </div>
               <div className="relative">
                 <input
+                  id="login-password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -156,10 +167,23 @@ export function LoginPage() {
                 </button>
               ))}
             </div>
-            <button className="flex items-center gap-1.5 text-[length:var(--fs-caption)] text-white/60 hover:text-white">
-              <Icon path={ICONS.helpCircle} className="w-4 h-4" />
-              Help &amp; support
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setHelpOpen((v) => !v)}
+                className="flex items-center gap-1.5 text-[length:var(--fs-caption)] text-white/60 hover:text-white"
+              >
+                <Icon path={ICONS.helpCircle} className="w-4 h-4" />
+                Help &amp; support
+              </button>
+              {helpOpen && (
+                <div className="absolute bottom-full right-0 mb-2 w-64 rounded-[var(--radius-card)] border border-white/15 bg-charcoal-panel shadow-raised z-50 p-4">
+                  <p className="text-white font-medium mb-1">Help &amp; support</p>
+                  <p className="text-white/70 text-[length:var(--fs-body)]">
+                    Contact the IT Service Desk at <span className="text-accent">servicedesk@vodafone.qa</span> or extension 4100 for platform issues.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
           <p className="text-[length:var(--fs-caption)] text-white/35">
             Vodafone Qatar W.L.L. · Authorised use only · VFQ-DXP v3.4.1
@@ -168,10 +192,7 @@ export function LoginPage() {
       </div>
 
       {/* Right panel */}
-      <div
-        className="flex-1 px-8 md:px-16 py-10 flex flex-col justify-between text-white"
-        style={{ background: 'linear-gradient(135deg, var(--accent) 0%, var(--deep-red) 100%)' }}
-      >
+      <div className="flex-1 px-8 md:px-16 py-10 flex flex-col justify-between text-white bg-[image:var(--gradient-brand-panel)]">
         <div>
           <div className="flex items-center gap-2 mb-4">
             <span className="w-1.5 h-1.5 rounded-full bg-white inline-block" />
@@ -179,7 +200,7 @@ export function LoginPage() {
               Today&rsquo;s store performance · {today}
             </span>
           </div>
-          <h1 className="text-[length:var(--fs-h1)] font-black leading-[1.02] mb-3">Operational overview</h1>
+          <h2 className="text-[length:var(--fs-h1)] font-black leading-[1.02] mb-3">Operational overview</h2>
           <p className="text-white/85 text-[length:var(--fs-lead)] max-w-xl">
             Real-time store and operations metrics. Review your team&rsquo;s performance before entering the portal.
           </p>

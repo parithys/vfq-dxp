@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { useState, type KeyboardEvent, type ReactNode } from 'react';
+import { Button } from './Button';
 
 export interface Column<T> {
   key: string;
@@ -13,54 +14,115 @@ interface DataTableProps<T> {
   onRowClick?: (row: T) => void;
   emptyMessage?: string;
   loading?: boolean;
+  pageSize?: number;
 }
 
 // Backs every list/grid screen (Lead lists, Order queues, Asset grids) per
 // component-catalogue.md §1 — Assumed shape (no design-system analog).
-export function DataTable<T>({ columns, rows, rowKey, onRowClick, emptyMessage = 'No records.', loading }: DataTableProps<T>) {
+export function DataTable<T>({
+  columns,
+  rows,
+  rowKey,
+  onRowClick,
+  emptyMessage = 'No records.',
+  loading,
+  pageSize = 50,
+}: DataTableProps<T>) {
+  const [page, setPage] = useState(0);
+  const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
+  const currentPage = Math.min(page, pageCount - 1);
+  const pagedRows = rows.slice(currentPage * pageSize, currentPage * pageSize + pageSize);
+  const showPager = rows.length > pageSize;
+
+  const handleRowKeyDown = (event: KeyboardEvent<HTMLTableRowElement>, row: T) => {
+    if (event.key === 'Enter') {
+      onRowClick?.(row);
+    } else if (event.key === ' ') {
+      event.preventDefault();
+      onRowClick?.(row);
+    }
+  };
+
   return (
-    <div className="overflow-x-auto rounded-[var(--radius-card)] border border-border-soft bg-bg">
-      <table className="w-full text-left text-[length:var(--fs-body)]">
-        <thead className="bg-surface text-fg-2">
-          <tr>
-            {columns.map((col) => (
-              <th key={col.key} className="px-4 py-2 font-medium text-[length:var(--fs-caption-upper)] uppercase tracking-wide">
-                {col.header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {loading && (
+    <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-[length:var(--fs-body)]">
+          <thead className="bg-surface text-fg-2">
             <tr>
-              <td colSpan={columns.length} className="px-4 py-6 text-center text-muted">
-                Loading…
-              </td>
+              {columns.map((col) => (
+                <th key={col.key} className="px-4 py-2 font-medium text-[length:var(--fs-caption-upper)] uppercase tracking-wide">
+                  {col.header}
+                </th>
+              ))}
             </tr>
-          )}
-          {!loading && rows.length === 0 && (
-            <tr>
-              <td colSpan={columns.length} className="px-4 py-6 text-center text-muted">
-                {emptyMessage}
-              </td>
-            </tr>
-          )}
-          {!loading &&
-            rows.map((row) => (
-              <tr
-                key={rowKey(row)}
-                onClick={() => onRowClick?.(row)}
-                className={`border-t border-border-soft ${onRowClick ? 'cursor-pointer hover:bg-surface' : ''}`}
-              >
-                {columns.map((col) => (
-                  <td key={col.key} className="px-4 py-2 text-fg">
-                    {col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key] ?? '—')}
-                  </td>
-                ))}
+          </thead>
+          <tbody>
+            {loading && (
+              <tr>
+                <td colSpan={columns.length} className="px-4 py-6 text-center text-muted">
+                  Loading…
+                </td>
               </tr>
-            ))}
-        </tbody>
-      </table>
+            )}
+            {!loading && rows.length === 0 && (
+              <tr>
+                <td colSpan={columns.length} className="px-4 py-6 text-center text-muted">
+                  {emptyMessage}
+                </td>
+              </tr>
+            )}
+            {!loading &&
+              pagedRows.map((row) => (
+                <tr
+                  key={rowKey(row)}
+                  onClick={() => onRowClick?.(row)}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  role={onRowClick ? 'button' : undefined}
+                  onKeyDown={onRowClick ? (event) => handleRowKeyDown(event, row) : undefined}
+                  className={`border-t border-border-soft ${onRowClick ? 'cursor-pointer hover:bg-surface' : ''}`}
+                >
+                  {columns.map((col) => {
+                    const value = (row as Record<string, unknown>)[col.key] ?? '—';
+                    return (
+                      <td key={col.key} className="px-4 py-2 text-fg">
+                        {col.render ? (
+                          col.render(row)
+                        ) : (
+                          <span className="block max-w-xs truncate" title={String(value)}>
+                            {String(value)}
+                          </span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+      {!loading && showPager && (
+        <div className="flex items-center justify-between border-t border-border-soft px-4 py-2">
+          <Button
+            variant="ghost-rect"
+            compact
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={currentPage === 0}
+          >
+            Previous
+          </Button>
+          <span className="text-[length:var(--fs-caption)] text-fg-2">
+            Page {currentPage + 1} of {pageCount}
+          </span>
+          <Button
+            variant="ghost-rect"
+            compact
+            onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+            disabled={currentPage >= pageCount - 1}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

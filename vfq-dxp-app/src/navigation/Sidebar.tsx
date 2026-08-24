@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom';
+import { useEffect } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { getAllModules } from '../engines/configEngine';
 import { Icon } from '../components/primitives/Icon';
 import { VodafoneMark } from '../components/primitives/VodafoneMark';
@@ -45,18 +46,62 @@ const MODULE_ICONS: Record<string, string> = {
 // Collapsible per the provided design: collapsing shrinks the rail to icons/
 // monograms only (persisted via sidebarStore) — the nav items, routes, RBAC
 // badges, and everything else are unchanged, only their presentation toggles.
+//
+// Below `md:`, the sidebar instead renders as an off-canvas drawer (see
+// `mobileOpen` in sidebarStore) that's always shown expanded — the desktop
+// `collapsed` icon-rail preference only applies to the persistent md:+ rail.
 export function Sidebar() {
   const modules = getAllModules();
-  const { collapsed, toggleCollapsed } = useSidebarStore();
+  const { collapsed: collapsedPref, toggleCollapsed, mobileOpen, closeMobile } = useSidebarStore();
+  const location = useLocation();
+
+  // Below `md:`, the sidebar is an off-canvas drawer — close it automatically
+  // whenever the route changes so it doesn't stay open over the new screen.
+  useEffect(() => {
+    closeMobile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  // The mobile drawer ignores the desktop collapse preference (it's always
+  // shown fully expanded); only the md:+ in-flow rail respects it.
+  const collapsed = mobileOpen ? false : collapsedPref;
 
   return (
-    <nav
-      className={`shrink-0 border-r border-border-soft bg-bg h-full overflow-y-auto transition-[width] duration-150 ${
-        collapsed ? 'w-16' : 'w-64'
-      }`}
-    >
+    <>
+      {/* Mobile-only backdrop: sits below the drawer, above the page content,
+          and is only present in the DOM/visible when the drawer is open. */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+          onClick={closeMobile}
+          aria-hidden="true"
+        />
+      )}
+      <nav
+        className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-200 ease-in-out ${
+          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:static md:inset-auto md:z-auto md:translate-x-0 md:transition-[width] md:duration-150 shrink-0 border-r border-border-soft bg-bg h-full overflow-y-auto ${
+          collapsed ? 'md:w-16' : 'md:w-64'
+        }`}
+      >
+      {/* Mobile drawer always renders the expanded header/nav regardless of
+          the desktop `collapsed` preference — collapsing to icon-only only
+          makes sense for the persistent in-flow rail at md:+. */}
+      <div className="flex items-center justify-between h-16 px-4 border-b border-border-soft md:hidden">
+        <NavLink to="/" className="flex items-center gap-2 min-w-0">
+          <VodafoneMark className="w-7 h-7 shrink-0" />
+          <span className="text-[length:var(--fs-h5)] font-bold text-fg truncate">vodafone</span>
+        </NavLink>
+        <button
+          onClick={closeMobile}
+          aria-label="Close navigation"
+          className="text-muted hover:text-fg shrink-0"
+        >
+          <Icon path={PANEL_TOGGLE_ICON} className="w-4.5 h-4.5" />
+        </button>
+      </div>
       {!collapsed && (
-        <div className="flex items-center justify-between h-16 px-4 border-b border-border-soft">
+        <div className="hidden md:flex items-center justify-between h-16 px-4 border-b border-border-soft">
           <NavLink to="/" className="flex items-center gap-2 min-w-0">
             <VodafoneMark className="w-7 h-7 shrink-0" />
             <span className="text-[length:var(--fs-h5)] font-bold text-fg truncate">vodafone</span>
@@ -73,7 +118,7 @@ export function Sidebar() {
         </div>
       )}
       {collapsed && (
-        <div className="flex items-center justify-center h-16 border-b border-border-soft">
+        <div className="hidden md:flex items-center justify-center h-16 border-b border-border-soft">
           <Tooltip content="Expand navigation" placement="right">
             <button onClick={toggleCollapsed} aria-label="Expand navigation" className="text-muted hover:text-fg">
               <Icon path={PANEL_TOGGLE_ICON} className="w-4.5 h-4.5" />
@@ -124,5 +169,6 @@ export function Sidebar() {
         </ul>
       </TooltipGroup>
     </nav>
+    </>
   );
 }

@@ -10,6 +10,7 @@ interface SelectOption {
 interface SelectProps {
   label?: string;
   error?: string;
+  helperText?: string;
   options: SelectOption[];
   placeholder?: string;
   value?: string;
@@ -32,8 +33,10 @@ const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 // used. `onChange` synthesizes a minimal `{ target: { value } }` event —
 // every call site in the app only ever reads `e.target.value`, so this is a
 // drop-in replacement with no caller changes required.
-export function Select({ label, error, options, placeholder, value, onChange, disabled, className = '', id, dark = false }: SelectProps) {
+export function Select({ label, error, helperText, options, placeholder, value, onChange, disabled, className = '', id, dark = false }: SelectProps) {
   const selectId = id ?? `select-${label?.replace(/\s+/g, '-').toLowerCase()}`;
+  const helperId = `${selectId}-helper`;
+  const describedBy = helperText && !error ? helperId : undefined;
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -99,6 +102,11 @@ export function Select({ label, error, options, placeholder, value, onChange, di
           {label}
         </label>
       )}
+      {helperText && !error && (
+        <span id={helperId} className="text-[length:var(--fs-caption)] text-muted">
+          {helperText}
+        </span>
+      )}
       <div ref={containerRef} className="relative">
         <button
           type="button"
@@ -107,6 +115,7 @@ export function Select({ label, error, options, placeholder, value, onChange, di
           role="combobox"
           aria-haspopup="listbox"
           aria-expanded={open}
+          aria-describedby={describedBy}
           onClick={() => !disabled && setOpen((v) => !v)}
           onKeyDown={onTriggerKeyDown}
           className={`w-full flex items-center justify-between gap-2 rounded-[var(--radius-button)] border pl-3 pr-3 py-2 text-[length:var(--fs-body)] text-left

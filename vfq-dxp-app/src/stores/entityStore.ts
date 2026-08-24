@@ -5,6 +5,7 @@ import type { EntityKind } from '../engines/mockDataEngine';
 interface EntityState {
   records: Partial<Record<EntityKind, Record<string, unknown>[]>>;
   loading: Partial<Record<EntityKind, boolean>>;
+  errors: Partial<Record<EntityKind, string>>;
   loadKind: (kind: EntityKind) => Promise<void>;
   createRecord: (kind: EntityKind, record: Record<string, unknown>) => Promise<void>;
   updateRecord: (kind: EntityKind, idField: string, id: string, patch: Record<string, unknown>) => Promise<void>;
@@ -16,15 +17,25 @@ interface EntityState {
 export const useEntityStore = create<EntityState>((set, get) => ({
   records: {},
   loading: {},
+  errors: {},
 
   loadKind: async (kind) => {
     if (get().records[kind]) return;
     set((state) => ({ loading: { ...state.loading, [kind]: true } }));
-    const data = await mockDataEngine.list(kind);
-    set((state) => ({
-      records: { ...state.records, [kind]: data },
-      loading: { ...state.loading, [kind]: false },
-    }));
+    try {
+      const data = await mockDataEngine.list(kind);
+      set((state) => ({
+        records: { ...state.records, [kind]: data },
+        loading: { ...state.loading, [kind]: false },
+        errors: { ...state.errors, [kind]: undefined },
+      }));
+    } catch (err) {
+      console.error(`[entityStore] loadKind(${kind}) failed:`, err);
+      set((state) => ({
+        loading: { ...state.loading, [kind]: false },
+        errors: { ...state.errors, [kind]: `Failed to load ${kind}: ${err instanceof Error ? err.message : 'unknown error'}` },
+      }));
+    }
   },
 
   createRecord: async (kind, record) => {

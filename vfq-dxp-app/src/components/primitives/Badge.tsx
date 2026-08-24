@@ -12,7 +12,7 @@ const variantClasses: Record<BadgeVariant, string> = {
   'outlined-red': 'border border-accent text-accent bg-transparent',
   'filled-neutral': 'bg-light-neutral text-fg-2',
   success: 'bg-[color-mix(in_oklab,var(--success),white_85%)] text-success',
-  warning: 'bg-[color-mix(in_oklab,var(--warn),white_80%)] text-[var(--warn)]',
+  warning: 'bg-[color-mix(in_oklab,var(--warn),white_80%)] text-[var(--warn-text)]',
   danger: 'bg-[color-mix(in_oklab,var(--danger),white_85%)] text-danger',
 };
 

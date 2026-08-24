@@ -30,6 +30,7 @@ export function LeadListView({ scope }: { scope: LeadScope }) {
   const navigate = useNavigate();
   const loadKind = useEntityStore((s) => s.loadKind);
   const leads = (useEntityStore((s) => s.records.leads) ?? []) as unknown as Lead[];
+  const loading = useEntityStore((s) => s.loading.leads);
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
 
   useEffect(() => {
@@ -62,6 +63,7 @@ export function LeadListView({ scope }: { scope: LeadScope }) {
         rowKey={(row) => row.leadId}
         onRowClick={(row) => navigate(`/lead-management/lead-details-view?id=${row.leadId}`)}
         emptyMessage="No leads in this view."
+        loading={loading}
       />
     </div>
   );

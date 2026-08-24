@@ -20,6 +20,8 @@ interface Order {
 export function OrderApprovalQueue() {
   const orders = (useEntityStore((s) => s.records.orders) ?? []) as unknown as Order[];
   const loadKind = useEntityStore((s) => s.loadKind);
+  const loadError = useEntityStore((s) => s.errors.orders);
+  const loading = useEntityStore((s) => s.loading.orders);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,6 +34,11 @@ export function OrderApprovalQueue() {
     <div className="p-8">
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Order Approval Queue</h1>
       <p className="text-fg-2 mb-6">Queues: ADJ_APPR_QUEUE_BUSI_1000, VFQA_DSA_ORDER_APPROVAL_QUEUE_DSQ/JAGUAR/TESTING/VISTAS</p>
+      {loadError && (
+        <div className="mb-4 rounded border border-danger px-4 py-3 text-[length:var(--fs-body)] text-danger">
+          {loadError}
+        </div>
+      )}
       <DataTable<Order>
         columns={[
           { key: 'orderId', header: 'Order #' },
@@ -51,6 +58,7 @@ export function OrderApprovalQueue() {
         rows={pending}
         rowKey={(r) => r.orderId}
         emptyMessage="No orders awaiting approval."
+        loading={loading}
       />
     </div>
   );

@@ -71,7 +71,11 @@ export function NewPreToPostWizard() {
                 customerName={(values.qid as QidValue | undefined)?.moiResult?.name}
               />
             ),
-            isValid: (values) => Boolean((values.caf as CafValue | undefined)?.signatureDataUrl),
+            isValid: (values) => {
+              const c = values.caf as CafValue | undefined;
+              if (!c?.cafType) return false;
+              return c.cafType !== 'Digital' || Boolean(c.signatureDataUrl);
+            },
           },
           {
             key: 'activity',

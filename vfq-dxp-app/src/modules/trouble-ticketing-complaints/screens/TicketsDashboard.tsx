@@ -32,6 +32,7 @@ const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'filled-
 export function TicketsDashboard() {
   const tickets = (useEntityStore((s) => s.records['trouble-tickets']) ?? []) as unknown as Ticket[];
   const loadKind = useEntityStore((s) => s.loadKind);
+  const loading = useEntityStore((s) => s.loading['trouble-tickets']);
   const createRecord = useEntityStore((s) => s.createRecord);
   const pushToast = useNotificationStore((s) => s.pushToast);
   const navigate = useNavigate();
@@ -97,6 +98,7 @@ export function TicketsDashboard() {
         rowKey={(r) => r.ticketId}
         onRowClick={(r) => navigate(`/trouble-ticketing-complaints/ticket-detail-screen-public-notes-bell-icon-notifications?id=${r.ticketId}`)}
         emptyMessage="No trouble tickets."
+        loading={loading}
       />
 
       <TicketCreationModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={createTicket} />

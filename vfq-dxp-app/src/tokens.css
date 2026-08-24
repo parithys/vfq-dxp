@@ -23,6 +23,9 @@
   --fg: #1f1f1f;
   --fg-2: #4a4d4e;
   --focus-ring: 0 0 0 4px rgba(230,0,0,.22);
+  /* Inter is aspirational — not loaded via CDN/package in this build; the
+     system-font fallback (Segoe UI Variable/Segoe UI/sans-serif) is the
+     actual accepted production rendering. */
   --font-body: "Inter","Segoe UI Variable","Segoe UI",sans-serif;
   --font-display: "Inter","Segoe UI Variable","Segoe UI",sans-serif;
   --font-mono: ui-monospace,"SF Mono",Menlo,monospace;
@@ -51,6 +54,7 @@
   --fw-light: 300;
   --fw-medium: 600;
   --fw-regular: 400;
+  --gradient-brand-panel: linear-gradient(135deg, var(--accent) 0%, var(--deep-red) 100%);
   --grey-body: #7e7e7e;
   --grey-disabled: #bebebe;
   --grey-form: #333333;
@@ -103,6 +107,9 @@
   --tracking-btn: 0.144px;
   --tracking-display: -0.015em;
   --warn: #f5b400;
+  /* Darkened amber tuned for >=4.5:1 text contrast on white/near-white —
+     --warn itself (#f5b400) is ~1.84:1 as text and only meant for fills/icons. */
+  --warn-text: #8a5a00;
   --white-80: rgba(255,255,255,.8);
   --white-glass-10: rgba(255,255,255,.1);
 }

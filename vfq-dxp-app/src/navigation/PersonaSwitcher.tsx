@@ -9,6 +9,7 @@ import { Icon } from '../components/primitives/Icon';
 import { Select } from '../components/primitives/Select';
 import { Tooltip } from '../components/primitives/Tooltip';
 import { TooltipGroup } from '../components/primitives/TooltipContext';
+import { useSidebarStore } from '../stores/sidebarStore';
 
 const ICONS = {
   moon: 'M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z',
@@ -17,6 +18,7 @@ const ICONS = {
   help: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M9.2 9a2.8 2.8 0 1 1 3.9 2.6c-.9.4-1.4 1-1.4 2 M12 17h.01',
   chevronDown: 'M6 9l6 6 6-6',
   signOut: 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4 M16 17l5-5-5-5 M21 12H9',
+  menu: 'M4 6h16 M4 12h16 M4 18h16',
 };
 
 // Top bar: theme toggle, notifications, help, and a profile chip (with
@@ -25,10 +27,17 @@ const ICONS = {
 // itself is unchanged (frontend-architecture.md §8's dev/demo "login-as"
 // control, not a real auth boundary); it's just relocated.
 export function PersonaSwitcher() {
-  const { activePersonaId, setActivePersona } = usePersonaStore();
-  const { staffId, profile, signOut, setProfile } = useAuthStore();
-  const { theme, toggleTheme } = useThemeStore();
-  const { history, markAllRead } = useNotificationStore();
+  const activePersonaId = usePersonaStore((s) => s.activePersonaId);
+  const setActivePersona = usePersonaStore((s) => s.setActivePersona);
+  const staffId = useAuthStore((s) => s.staffId);
+  const profile = useAuthStore((s) => s.profile);
+  const signOut = useAuthStore((s) => s.signOut);
+  const setProfile = useAuthStore((s) => s.setProfile);
+  const theme = useThemeStore((s) => s.theme);
+  const toggleTheme = useThemeStore((s) => s.toggleTheme);
+  const history = useNotificationStore((s) => s.history);
+  const markAllRead = useNotificationStore((s) => s.markAllRead);
+  const toggleMobileOpen = useSidebarStore((s) => s.toggleMobileOpen);
   const personas = getAllPersonas();
   const rbacCount = getRbacForPersona(activePersonaId).length;
   const unreadCount = history.filter((h) => !h.read).length;
@@ -63,7 +72,14 @@ export function PersonaSwitcher() {
 
   return (
     <div className="flex items-center gap-3 h-16 px-4 border-b border-border-soft bg-bg">
-      <span className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted">
+      <button
+        onClick={toggleMobileOpen}
+        aria-label="Open navigation"
+        className="md:hidden w-9 h-9 -ml-1 rounded-[var(--radius-pill)] flex items-center justify-center text-fg-2 hover:bg-surface shrink-0"
+      >
+        <Icon path={ICONS.menu} className="w-5 h-5" />
+      </button>
+      <span className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted truncate">
         {rbacCount > 0 ? `${rbacCount} evidenced RBAC entries` : 'No RBAC entries evidenced for this persona'}
       </span>
 
@@ -84,6 +100,8 @@ export function PersonaSwitcher() {
             <button
               onClick={() => toggle('notifications')}
               aria-label="Notifications"
+              aria-haspopup="true"
+              aria-expanded={open === 'notifications'}
               className="relative w-9 h-9 rounded-[var(--radius-pill)] border border-border-soft flex items-center justify-center text-fg-2 hover:bg-surface"
             >
               <Icon path={ICONS.bell} className="w-4.5 h-4.5" />
@@ -109,6 +127,8 @@ export function PersonaSwitcher() {
             <button
               onClick={() => toggle('help')}
               aria-label="Help & support"
+              aria-haspopup="true"
+              aria-expanded={open === 'help'}
               className="w-9 h-9 rounded-[var(--radius-pill)] border border-border-soft flex items-center justify-center text-fg-2 hover:bg-surface"
             >
               <Icon path={ICONS.help} className="w-4.5 h-4.5" />
@@ -128,6 +148,8 @@ export function PersonaSwitcher() {
           <button
             onClick={() => toggle('profile')}
             aria-label="User profile menu"
+            aria-haspopup="menu"
+            aria-expanded={open === 'profile'}
             className="flex items-center gap-2 rounded-[var(--radius-pill)] pl-1.5 pr-3 py-1.5 hover:bg-surface"
           >
             <span className="w-7 h-7 rounded-full bg-accent text-white text-[length:var(--fs-caption)] font-semibold flex items-center justify-center">

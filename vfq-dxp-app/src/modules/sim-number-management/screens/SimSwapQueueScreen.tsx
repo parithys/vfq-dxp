@@ -35,6 +35,7 @@ export function SimSwapQueueScreen() {
   const orderId = params.get('id');
   const orders = (useEntityStore((s) => s.records['sim-swap-orders']) ?? []) as unknown as SimSwapOrder[];
   const loadKind = useEntityStore((s) => s.loadKind);
+  const loading = useEntityStore((s) => s.loading['sim-swap-orders']);
   const updateRecord = useEntityStore((s) => s.updateRecord);
   const pushToast = useNotificationStore((s) => s.pushToast);
 
@@ -74,6 +75,7 @@ export function SimSwapQueueScreen() {
           rows={pending}
           rowKey={(r) => r.simSwapOrderId}
           emptyMessage="No SIM Swap requests awaiting approval."
+          loading={loading}
         />
       </div>
     );
@@ -147,7 +149,7 @@ export function SimSwapQueueScreen() {
         <Textarea label="Comments" value={approveComment} onChange={(e) => setApproveComment(e.target.value)} />
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>
-          <Button variant="primary-rect" onClick={approve}>Submit</Button>
+          <Button variant="primary-rect" onClick={approve}>Approve SIM swap</Button>
         </div>
       </Modal>
 

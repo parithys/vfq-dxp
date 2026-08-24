@@ -173,7 +173,7 @@ export function OrderApprovalDetail() {
         </div>
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>
-          <Button variant="primary-rect" onClick={approve} disabled={!ackApprove}>Submit</Button>
+          <Button variant="primary-rect" onClick={approve} disabled={!ackApprove}>Submit approval</Button>
         </div>
       </Modal>
 

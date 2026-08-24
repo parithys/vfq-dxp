@@ -50,6 +50,18 @@
   --light-neutral: #2a2c30;
   --grey-form: #6b6e72;
   --black-80: rgba(0,0,0,.6);
+
+  /* Status colors and elevation/shadow tokens were tuned against the light
+     surfaces above and read as too saturated/low-contrast on the dark ones —
+     brightened slightly for legibility; elevation shadows reduced in opacity
+     since a dark backdrop needs less shadow to read as "raised". */
+  --danger: #ff5c5c;
+  --success: #3ecf5f;
+  --warn: #ffc94d;
+  --warn-text: #ffc94d;
+  --elev-raised: 0 18px 44px rgba(0,0,0,.4);
+  --elev-ring: 0 0 0 1px var(--border);
+  --focus-ring: 0 0 0 4px rgba(255,92,92,.3);
 }
 
 /* Cursor affordance baseline (UI cursor remediation). Tailwind v4 removed the

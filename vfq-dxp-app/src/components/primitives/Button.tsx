@@ -12,7 +12,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const base =
-  'inline-flex items-center justify-center gap-2 font-medium transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed';
+  'inline-flex items-center justify-center gap-2 font-medium tracking-[var(--tracking-btn)] transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed';
 
 // Hover/active use the `enabled:` variant so disabled buttons never shift
 // color on hover — the visual affordance must match the cursor (not-allowed)
@@ -29,7 +29,6 @@ export function Button({ variant = 'primary-rect', compact, className = '', chil
   return (
     <button
       className={`${base} ${variantClasses[variant]} ${compact ? 'text-[length:var(--fs-btn-compact)]' : 'text-[length:var(--fs-btn)]'} ${className}`}
-      style={{ letterSpacing: 'var(--tracking-btn)' }}
       {...rest}
     >
       {children}

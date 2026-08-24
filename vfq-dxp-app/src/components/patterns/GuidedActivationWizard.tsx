@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useWorkflowStore } from '../../stores/workflowStore';
 import { Button } from '../primitives/Button';
 import { Icon } from '../primitives/Icon';
+import { Modal } from '../primitives/Modal';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
 
 const CHEVRON_LEFT = 'M15 18l-6-6 6-6';
@@ -45,11 +46,24 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
   // create a byte-identical second order. Confirmed live: a rapid double
   // click on "Save & Finish" produced two orders with the same ID and fields.
   const [submitting, setSubmitting] = useState(false);
+  const [confirmingAbandon, setConfirmingAbandon] = useState(false);
 
   const activeSteps = steps.filter((s) => !s.skip?.(draft.values));
   const currentIndex = Math.min(draft.currentStep, activeSteps.length - 1);
   const currentStep = activeSteps[currentIndex];
   const canProceed = currentStep?.isValid ? currentStep.isValid(draft.values) : true;
+
+  // Focus management: move focus to the new step's heading when advancing
+  // via Continue/Back, but never steal focus on first mount.
+  const stepHeadingRef = useRef<HTMLHeadingElement>(null);
+  const hasMountedRef = useRef(false);
+  useEffect(() => {
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return;
+    }
+    stepHeadingRef.current?.focus();
+  }, [currentIndex]);
 
   const setValue = (field: string, value: unknown) => setFieldValue(wizardId, field, value);
 
@@ -74,6 +88,7 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
 
   const abandon = () => {
     clearDraft(wizardId);
+    setConfirmingAbandon(false);
     onAbandon?.();
   };
 
@@ -83,14 +98,19 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
     <div className="max-w-5xl">
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-6">{title}</h1>
 
+      <span className="sr-only" aria-live="polite">
+        {currentStep && `Step ${currentIndex + 1} of ${activeSteps.length}: ${currentStep.label}`}
+      </span>
+
       <div className="flex items-start gap-6">
-        <div className="w-72 shrink-0 rounded-[var(--radius-card)] border border-border-soft divide-y divide-border-soft bg-bg overflow-hidden">
+        <ol className="w-72 shrink-0 rounded-[var(--radius-card)] border border-border-soft divide-y divide-border-soft bg-bg overflow-hidden">
           {activeSteps.map((step, i) => {
             const isActive = i === currentIndex;
             const isDone = i < currentIndex;
             return (
-              <div
+              <li
                 key={step.key}
+                aria-current={isActive ? 'step' : undefined}
                 className={`flex items-start gap-3 px-4 py-4 border-l-2 ${isActive ? 'bg-surface-warm border-l-accent' : 'border-l-transparent'}`}
               >
                 <span
@@ -105,17 +125,23 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
                     <div className="text-[length:var(--fs-caption)] text-muted mt-0.5 truncate">{step.description}</div>
                   )}
                 </div>
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ol>
 
         <div className="flex-1 min-w-0 rounded-[var(--radius-card)] border border-border-soft bg-bg p-6" onKeyDown={handleStepKeyDown}>
-          <h2 className="text-[length:var(--fs-h4)] font-bold text-fg mb-4">{currentStep?.label}</h2>
+          <h2
+            ref={stepHeadingRef}
+            tabIndex={-1}
+            className="text-[length:var(--fs-h4)] font-bold text-fg mb-4 focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+          >
+            {currentStep?.label}
+          </h2>
           {currentStep?.render({ values: draft.values, setValue })}
           <div className="flex items-center justify-between mt-6 pt-6 border-t border-border-soft">
             <div className="flex gap-2">
-              <Button variant="ghost-rect" onClick={abandon}>
+              <Button variant="ghost-rect" onClick={() => setConfirmingAbandon(true)}>
                 Abandon Order
               </Button>
               {currentIndex > 0 && (
@@ -132,6 +158,24 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
           </div>
         </div>
       </div>
+
+      <Modal
+        open={confirmingAbandon}
+        onClose={() => setConfirmingAbandon(false)}
+        title="Abandon this order?"
+        footer={
+          <>
+            <Button variant="ghost-rect" onClick={() => setConfirmingAbandon(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary-rect" onClick={abandon} className="bg-danger enabled:hover:bg-danger enabled:active:bg-danger">
+              Discard order
+            </Button>
+          </>
+        }
+      >
+        <p className="text-fg-2">This will discard everything entered in this order so far. This cannot be undone.</p>
+      </Modal>
     </div>
   );
 }

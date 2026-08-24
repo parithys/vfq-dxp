@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { Dashboard } from './modules/Dashboard';
 import { ModuleScreenList } from './modules/ModuleScreenList';
 import { ScreenRouteResolver } from './modules/ScreenRouteResolver';
+import { NotFound } from './modules/NotFound';
 
 // Side-effect imports: each module's screens/index.ts calls registerScreen()
 // so router.tsx doesn't need to know which screens are implemented.
@@ -30,6 +31,7 @@ export function AppRouter() {
       <Route path="/" element={<Dashboard />} />
       <Route path="/:moduleSlug" element={<ModuleScreenList />} />
       <Route path="/:moduleSlug/:screenSlug" element={<ScreenRouteResolver />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

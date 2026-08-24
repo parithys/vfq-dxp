@@ -24,6 +24,7 @@ const statusVariant = (status: string) => {
 export function MySalesOrders() {
   const orders = (useEntityStore((s) => s.records.orders) ?? []) as unknown as Order[];
   const loadKind = useEntityStore((s) => s.loadKind);
+  const loading = useEntityStore((s) => s.loading.orders);
 
   useEffect(() => {
     loadKind('orders');
@@ -44,6 +45,7 @@ export function MySalesOrders() {
         rows={orders}
         rowKey={(r) => r.orderId}
         emptyMessage="No orders submitted yet — build one via a New Fixed Line/FWA/Postpaid wizard first."
+        loading={loading}
       />
     </div>
   );

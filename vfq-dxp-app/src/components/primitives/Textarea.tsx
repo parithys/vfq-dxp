@@ -3,10 +3,13 @@ import type { TextareaHTMLAttributes } from 'react';
 interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
+  helperText?: string;
 }
 
-export function Textarea({ label, error, className = '', id, ...rest }: TextareaProps) {
+export function Textarea({ label, error, helperText, className = '', id, 'aria-describedby': ariaDescribedby, ...rest }: TextareaProps) {
   const textareaId = id ?? `textarea-${label?.replace(/\s+/g, '-').toLowerCase()}`;
+  const helperId = `${textareaId}-helper`;
+  const describedBy = [ariaDescribedby, helperText && !error ? helperId : undefined].filter(Boolean).join(' ') || undefined;
   return (
     <div className="flex flex-col gap-1">
       {label && (
@@ -14,9 +17,15 @@ export function Textarea({ label, error, className = '', id, ...rest }: Textarea
           {label}
         </label>
       )}
+      {helperText && !error && (
+        <span id={helperId} className="text-[length:var(--fs-caption)] text-muted">
+          {helperText}
+        </span>
+      )}
       <textarea
         id={textareaId}
         rows={4}
+        aria-describedby={describedBy}
         className={`rounded-[var(--radius-button)] border px-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg
           ${error ? 'border-danger' : 'border-[var(--grey-form)]'}
           focus:outline-none focus-visible:shadow-[var(--focus-ring)]
