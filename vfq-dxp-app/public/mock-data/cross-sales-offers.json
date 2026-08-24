@@ -59,5 +59,27 @@
       "PROD-300"
     ],
     "contactId": "CONT-3001"
+  },
+  {
+    "offerId": "OFR-4004",
+    "offerType": "Plan Upgrade",
+    "offerName": "Postpaid U Start Promotion",
+    "monthlyRental": 135,
+    "offerDescription": "System-recommended prepaid-to-postpaid migration offer sourced from the Unica campaign engine",
+    "campaignCode": "C000006358",
+    "priorityCode": "100.0",
+    "serviceIdentifier": "+97466701234",
+    "status": "Offered",
+    "treatmentCode": "TRT-04",
+    "channel": "Inbound",
+    "promotionId": "1-92T1KE1",
+    "price": 135,
+    "addOnMonthly": 15,
+    "linkedProductIds": [
+      "PROD-100"
+    ],
+    "contactId": "CONT-3001",
+    "journeyType": "PreToPost",
+    "_note": "App-level demo addition (not in blueprint/reconstruction-package/mock-data) — the three originally-evidenced cross-sales offers don't cover the Pre-to-Post Migration journey (UJ-087/BR-272); field values (OfferName, CampaignCode, PromotionId, MonthlyRental, AddOnMonthly, Channel, Status) are taken verbatim from the evidenced walkthrough in guided-journeys-pre-to-post-open-ui-desktop-pre-to-post-auto-7cb45c57. journeyType is an app-added discriminator, not part of the original schema."
   }
 ]

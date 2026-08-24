@@ -140,7 +140,7 @@
     "screenId": "SCR-016",
     "screenName": "Siebel Excel Export (Uncontrolled)",
     "screenType": "Screen",
-    "module": "Trouble Ticketing & Complaints",
+    "module": "Platform Governance & Architecture",
     "personaAccess": "All Siebel users (uncontrolled today)"
   },
   {
@@ -329,7 +329,7 @@
     "screenId": "SCR-037",
     "screenName": "New Postpaid Connection Journey (single-scroll flow)",
     "screenType": "Wizard",
-    "module": "SIM & Number Management",
+    "module": "Mobile Postpaid",
     "personaAccess": ""
   },
   {
@@ -374,7 +374,7 @@
     "screenId": "SCR-042",
     "screenName": "QID Offers grid",
     "screenType": "Screen",
-    "module": "Pre-to-Post Migration",
+    "module": "Fixed Line / Fibre",
     "personaAccess": ""
   },
   {
@@ -1013,7 +1013,7 @@
     "screenId": "SCR-113",
     "screenName": "MNP Postpaid Billing Step",
     "screenType": "Wizard",
-    "module": "Pre-to-Post Migration",
+    "module": "MNP / FNP Porting",
     "personaAccess": ""
   },
   {
@@ -1472,7 +1472,7 @@
     "screenId": "SCR-164",
     "screenName": "Assets / Complex Assets view",
     "screenType": "Screen",
-    "module": "Pre-to-Post Migration",
+    "module": "Mobile Postpaid",
     "personaAccess": "Retail/CRM Agent, Back office"
   },
   {

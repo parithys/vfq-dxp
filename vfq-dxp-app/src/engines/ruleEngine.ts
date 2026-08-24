@@ -106,6 +106,38 @@ const ruleImplementations: Record<string, RuleImplementation> = {
       message: `Disconnecting before 12-month lock-in completes: remainder of the 3-month minimum service period (${remainingOfMinimum} mo) plus QR 80 x ${remainingLockInMonths} remaining months = QR ${fee} lock-in charge.`,
     };
   },
+
+  // SIM Swap Charging Rule (BR-056): eSIM to eSIM is free, eSIM to physical is
+  // charged, lost SIM replacement is chargeable, damaged SIM replacement is
+  // not charged. Informational, not blocking — matches the evidenced flow
+  // where the reason selection just determines the fee shown, not eligibility.
+  'BR-056': (ctx) => {
+    const { reason } = ctx as { reason: string };
+    const charged = reason === 'eSIM to Physical' || reason === 'Lost SIM';
+    return {
+      pass: true,
+      message: charged ? 'This SIM Swap reason is chargeable.' : 'This SIM Swap reason is free of charge.',
+    };
+  },
+
+  // Unsubmitted ticket never routes to a queue (BR-068) — gates queue
+  // assignment on the ticket having its required fields (issue type +
+  // template content) filled before Submit commits it.
+  'BR-068': (ctx) => {
+    const { issueType, templateContent } = ctx as { issueType?: string; templateContent?: string };
+    return issueType && templateContent
+      ? { pass: true }
+      : { pass: false, message: 'Ticket is unsubmitted — Issue Type and template content are required before it can route to a queue.' };
+  },
+
+  // Only an agent can reopen a closed ticket, never the customer (BR-066).
+  // Every screen in this app is agent-facing (no customer self-service
+  // persona is modeled), so this always passes here — kept as a real rule
+  // so the restriction is documented and evaluated, not silently assumed.
+  'BR-066': () => ({
+    pass: true,
+    message: 'Only an agent can reopen a closed ticket — this restriction is moot for agent-facing screens, but customers cannot self-reopen.',
+  }),
 };
 
 export function getRuleCatalogueEntry(ruleId: string) {

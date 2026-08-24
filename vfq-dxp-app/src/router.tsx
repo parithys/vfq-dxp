@@ -14,6 +14,9 @@ import './modules/enterprise-iot-b2b/screens';
 import './modules/order-management/screens';
 import './modules/mnp-fnp-porting/screens';
 import './modules/identity-customer-management/screens';
+import './modules/sim-number-management/screens';
+import './modules/trouble-ticketing-complaints/screens';
+import './modules/pre-to-post-migration/screens';
 
 // Generated from config/routes.json's module list (16) + config/routes.json's
 // 213 individual screen paths, per folder-structure.md's "Route generation" note.

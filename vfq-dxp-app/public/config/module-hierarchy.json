@@ -87,7 +87,7 @@
     "moduleId": "MOD-mobile-postpaid",
     "module": "Mobile Postpaid",
     "moduleSlug": "mobile-postpaid",
-    "screenCount": 22,
+    "screenCount": 31,
     "subModules": [
       {
         "subModule": "New Postpaid Activation",
@@ -264,7 +264,7 @@
     "moduleId": "MOD-pre-to-post-migration",
     "module": "Pre-to-Post Migration",
     "moduleSlug": "pre-to-post-migration",
-    "screenCount": 15,
+    "screenCount": 5,
     "subModules": [
       {
         "subModule": "Prepaid to Postpaid Conversion",
@@ -351,7 +351,7 @@
     "moduleId": "MOD-mnp-fnp-porting",
     "module": "MNP / FNP Porting",
     "moduleSlug": "mnp-fnp-porting",
-    "screenCount": 17,
+    "screenCount": 29,
     "subModules": [
       {
         "subModule": "MNP Port-In",
@@ -494,7 +494,7 @@
     "moduleId": "MOD-fixed-line-fibre",
     "module": "Fixed Line / Fibre",
     "moduleSlug": "fixed-line-fibre",
-    "screenCount": 49,
+    "screenCount": 38,
     "subModules": [
       {
         "subModule": "Fixed Line Activation",
@@ -1495,7 +1495,7 @@
     "moduleId": "MOD-sim-number-management",
     "module": "SIM & Number Management",
     "moduleSlug": "sim-number-management",
-    "screenCount": 7,
+    "screenCount": 6,
     "subModules": [
       {
         "subModule": "SIM Swap",
@@ -1615,7 +1615,7 @@
     "moduleId": "MOD-trouble-ticketing-complaints",
     "module": "Trouble Ticketing & Complaints",
     "moduleSlug": "trouble-ticketing-complaints",
-    "screenCount": 5,
+    "screenCount": 4,
     "subModules": [
       {
         "subModule": "Ticket Creation & Handling",
@@ -1858,7 +1858,7 @@
     "moduleId": "MOD-platform-governance-architecture",
     "module": "Platform Governance & Architecture",
     "moduleSlug": "platform-governance-architecture",
-    "screenCount": 1,
+    "screenCount": 2,
     "subModules": [
       {
         "subModule": "Delivery & Traceability Governance",
