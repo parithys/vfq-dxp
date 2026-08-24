@@ -68,5 +68,20 @@
     "phone": "+97455512005",
     "preferredLanguage": "English",
     "companyName": "Acme Trading Qatar W.L.L."
+  },
+  {
+    "customerId": "CUST-9001",
+    "qid": "P1234567",
+    "idType": "QID",
+    "name": "QA Test User",
+    "dob": "1990-01-01",
+    "nationality": "Qatari",
+    "segment": "Consumer",
+    "email": "qa.test@example.qa",
+    "phone": "+97450009001",
+    "preferredLanguage": "English",
+    "blacklisted": false,
+    "moiValidationStatus": "Verified",
+    "_note": "App-level demo addition (not in blueprint/reconstruction-package/mock-data) — a fixed QA test identity so 'P1234567' (as Qatari ID) and '12345678910' (as Passport Number) resolve successfully wherever the ID-lookup/MOI step (IdLookupStep/QidInput) appears across the app, regardless of module or persona."
   }
 ]

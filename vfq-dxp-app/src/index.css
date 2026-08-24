@@ -33,6 +33,57 @@
   --shadow-ring: var(--elev-ring);
 }
 
+/* Dark theme — overrides the structural surface/text/border tokens only;
+   brand/status colors (accent, success, warn, danger) stay constant across
+   themes. Toggled via themeStore adding/removing `.dark` on <html>. */
+:root.dark {
+  --bg: #1b1d21;
+  --surface: #101114;
+  --surface-warm: #241a1a;
+  --fg: #f2f2f2;
+  --fg-2: #c7c9cb;
+  --muted: #9a9da0;
+  --border: #3a3d42;
+  --border-soft: #2a2c30;
+  --light-neutral: #2a2c30;
+  --grey-form: #6b6e72;
+  --black-80: rgba(0,0,0,.6);
+}
+
+/* Cursor affordance baseline (UI cursor remediation). Tailwind v4 removed the
+   v3 preflight rule that gave buttons `cursor: pointer` — every button in this
+   app was silently showing the browser default (`cursor: default`) on hover
+   despite being fully clickable. This restores it for every native
+   actionable element in one place, so all shared components (Button, Select,
+   Tabs, Modal, Toast, and every raw <button> across the app) inherit it
+   automatically with no per-component changes needed. Disabled convention
+   matches what Button.tsx/MsisdnPicker.tsx/AppointmentBookingStep.tsx already
+   used before this fix: `cursor: not-allowed`, not `default`. */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href],
+  label[for],
+  select:not(:disabled),
+  summary,
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="button"]:not(:disabled),
+  input[type="reset"]:not(:disabled),
+  input[type="file"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  [aria-disabled="true"],
+  [data-disabled] {
+    cursor: not-allowed;
+  }
+}
+
 * {
   box-sizing: border-box;
 }

@@ -30,5 +30,27 @@
     "status": "Validated",
     "scanCompleted": true,
     "scannedAt": "2026-08-20T13:50:00+03:00"
+  },
+  {
+    "identityDocumentId": "IDD-9901",
+    "customerId": "CUST-9001",
+    "documentType": "QID",
+    "documentNumber": "P1234567",
+    "validationPath": "MOI Validation",
+    "status": "Validated",
+    "scanCompleted": true,
+    "scannedAt": "2026-08-24T09:00:00+03:00",
+    "_note": "App-level demo addition — fixed QA test ID (see customers.json CUST-9001) so this value resolves everywhere IdLookupStep/QidInput is used."
+  },
+  {
+    "identityDocumentId": "IDD-9902",
+    "customerId": "CUST-9001",
+    "documentType": "Passport",
+    "documentNumber": "12345678910",
+    "validationPath": "MOI Validation",
+    "status": "Validated",
+    "scanCompleted": true,
+    "scannedAt": "2026-08-24T09:00:00+03:00",
+    "_note": "App-level demo addition — fixed QA test ID (see customers.json CUST-9001) so this value resolves everywhere IdLookupStep/QidInput is used."
   }
 ]

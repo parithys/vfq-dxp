@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 
 interface ModalProps {
@@ -11,9 +12,26 @@ interface ModalProps {
 // Backs 32 Modal-type screens per component-catalogue.md §1 — Assumed shape
 // (no design-system analog), styled with real tokens.
 export function Modal({ open, onClose, title, children, footer }: ModalProps) {
+  // Escape-to-close: the backdrop's click-to-dismiss below is a mouse-only
+  // convenience (a full-screen div is intentionally not made focusable/
+  // keyboard-actionable — that would be a false affordance in the other
+  // direction). Escape is the real accessible path to close without using
+  // the dialog's own controls.
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [open, onClose]);
+
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--black-80)]" onClick={onClose}>
+    // cursor-default (not pointer): clicking the backdrop dismisses the
+    // modal, but per UI cursor remediation guidance a full-screen dismiss
+    // surface should not read as "clickable" the way a button does.
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--black-80)] cursor-default" onClick={onClose}>
       <div
         className="w-full max-w-lg rounded-[var(--radius-card)] bg-bg shadow-raised p-6"
         onClick={(e) => e.stopPropagation()}

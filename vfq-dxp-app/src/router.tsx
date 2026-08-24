@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import { Home } from './modules/Home';
+import { Dashboard } from './modules/Dashboard';
 import { ModuleScreenList } from './modules/ModuleScreenList';
 import { ScreenRouteResolver } from './modules/ScreenRouteResolver';
 
@@ -27,7 +27,7 @@ import './modules/pre-to-post-migration/screens';
 export function AppRouter() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Dashboard />} />
       <Route path="/:moduleSlug" element={<ModuleScreenList />} />
       <Route path="/:moduleSlug/:screenSlug" element={<ScreenRouteResolver />} />
     </Routes>
