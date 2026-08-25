@@ -113,7 +113,7 @@ export function EligibilityGateStep({ idNumber, onResult }: EligibilityGateStepP
   return (
     <div className="space-y-3">
       <div
-        className={`rounded-[var(--radius-card)] border p-3 flex items-start gap-2 ${
+        className={`rounded-[var(--radius-card)] border p-3 flex items-center gap-2 ${
           blacklist.pass ? 'border-success/30 bg-[color-mix(in_oklab,var(--success),white_92%)]' : 'border-danger/30 bg-[color-mix(in_oklab,var(--danger),white_92%)]'
         }`}
       >
@@ -122,7 +122,7 @@ export function EligibilityGateStep({ idNumber, onResult }: EligibilityGateStepP
       </div>
 
       <div
-        className={`rounded-[var(--radius-card)] border p-3 flex items-start gap-2 ${
+        className={`rounded-[var(--radius-card)] border p-3 flex items-center gap-2 ${
           lineCap.pass ? 'border-success/30 bg-[color-mix(in_oklab,var(--success),white_92%)]' : 'border-danger/30 bg-[color-mix(in_oklab,var(--danger),white_92%)]'
         }`}
       >
@@ -131,13 +131,13 @@ export function EligibilityGateStep({ idNumber, onResult }: EligibilityGateStepP
       </div>
 
       {hrnFlag && (
-        <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),white_92%)] p-3 flex items-start gap-2">
+        <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),white_92%)] p-3 flex items-center gap-2">
           <Badge variant="warning">HRN</Badge>
           <span className="text-[length:var(--fs-caption)] text-fg">{hrn.message}</span>
         </div>
       )}
 
-      <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-3 flex items-start gap-2">
+      <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-3 flex items-center gap-2">
         <Badge variant="filled-neutral">Credit limit</Badge>
         <span className="text-[length:var(--fs-caption)] text-fg-2">{credit.message}</span>
       </div>

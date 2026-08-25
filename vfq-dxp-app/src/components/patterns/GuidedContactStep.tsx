@@ -32,16 +32,25 @@ interface GuidedContactStepProps {
   showIptvToggle?: boolean;
 }
 
-// Single source of truth for "is this a valid Alt. phone #" — accepts an
-// optional +974/974 country-code prefix (a real Qatar mobile number is
-// naturally written that way) and requires an 8-digit local mobile number
-// (3/5/6/7 prefix) after it. Exported so every wizard's Contact step
-// isValid gate checks the exact same rule as the field's own inline error;
-// previously each wizard duplicated a stricter, out-of-sync regex
-// (`/^974\d{8}$/`, no "+" allowed) that silently blocked Continue even when
-// the field itself showed no error once "+" input was accepted.
+// Single source of truth for "is this a valid Alternate phone #" — exported
+// so every wizard's Contact step isValid gate checks the exact same rule as
+// the field's own inline error.
+//
+// Deliberately accepts any plausible mobile number, not just a Qatar-local
+// one, per explicit product direction: field-inventory/business-rules.json
+// evidence says this field "must be a local mobile number" (repeated across
+// 5+ journeys, FLD-352 et al.) since it's used as an SMS notification
+// contact — but a postpaid customer may only have a foreign number on file
+// (e.g. a GCC/expat/diplomatic customer), so hard-blocking on Qatar's format
+// specifically was judged too restrictive for this rebuild. Accepts either
+// an 8-digit Qatar mobile (optionally +974/974-prefixed, 3/5/6/7 leading
+// digit) or a general international number (optional "+", 7–15 digits).
 export function isValidAltPhone(raw: string | undefined): boolean {
-  return Boolean(raw && /^[3567]\d{7}$/.test(raw.replace(/^\+?974/, '')));
+  if (!raw) return false;
+  const digits = raw.replace(/[\s-]/g, '');
+  const isQatarLocal = /^[3567]\d{7}$/.test(digits.replace(/^\+?974/, ''));
+  const isInternational = /^(\+[1-9]\d{7,14}|\d{7,15})$/.test(digits);
+  return isQatarLocal || isInternational;
 }
 
 // Contact step shared across New Fixed Line (SCR-043, FLD-340–352) and New FWA
@@ -78,7 +87,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true }: Gu
             placeholder="+974 5566 7766"
             error={
               value.altPhone && !isValidAltPhone(value.altPhone)
-                ? 'This is a notification contact. Please enter a local mobile number.'
+                ? 'Please enter a valid mobile number (local or international).'
                 : undefined
             }
             onChange={(e) => onChange({ ...value, altPhone: e.target.value })}

@@ -57,9 +57,17 @@ export function NewMnpWizard() {
           {
             key: 'address',
             label: 'Address',
-            render: ({ values, setValue }) => (
-              <ZsbAddressStep value={(values.address as ZsbAddressValue) ?? {}} onChange={(v) => setValue('address', v)} />
-            ),
+            render: ({ values, setValue }) => {
+              const contact = values.contact as GuidedContactValue | undefined;
+              return (
+                <ZsbAddressStep
+                  value={(values.address as ZsbAddressValue) ?? {}}
+                  onChange={(v) => setValue('address', v)}
+                  idNumber={contact?.idNumber}
+                  nationality={contact?.moiResult?.nationality}
+                />
+              );
+            },
             isValid: () => true,
           },
           {

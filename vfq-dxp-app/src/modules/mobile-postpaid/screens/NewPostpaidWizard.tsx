@@ -140,9 +140,17 @@ export function NewPostpaidWizard() {
           {
             key: 'address',
             label: 'Address',
-            render: ({ values, setValue }) => (
-              <ZsbAddressStep value={(values.address as ZsbAddressValue) ?? {}} onChange={(v) => setValue('address', v)} />
-            ),
+            render: ({ values, setValue }) => {
+              const contact = values.contact as GuidedContactValue | undefined;
+              return (
+                <ZsbAddressStep
+                  value={(values.address as ZsbAddressValue) ?? {}}
+                  onChange={(v) => setValue('address', v)}
+                  idNumber={contact?.idNumber}
+                  nationality={contact?.moiResult?.nationality}
+                />
+              );
+            },
             // Mandatory: No per FLD-523–526 — never gates progression, matching the evidenced Skip Address affordance.
             isValid: () => true,
           },
