@@ -17,11 +17,6 @@ export function Textarea({ label, error, helperText, className = '', id, 'aria-d
           {label}
         </label>
       )}
-      {helperText && !error && (
-        <span id={helperId} className="text-[length:var(--fs-caption)] text-muted">
-          {helperText}
-        </span>
-      )}
       <textarea
         id={textareaId}
         rows={4}
@@ -32,6 +27,11 @@ export function Textarea({ label, error, helperText, className = '', id, 'aria-d
           ${className}`}
         {...rest}
       />
+      {helperText && !error && (
+        <span id={helperId} className="text-[length:var(--fs-caption)] text-muted">
+          {helperText}
+        </span>
+      )}
       {error && <span className="text-[length:var(--fs-caption)] text-danger">{error}</span>}
     </div>
   );

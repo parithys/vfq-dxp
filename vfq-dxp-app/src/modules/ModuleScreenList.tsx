@@ -13,6 +13,7 @@ import type { Route } from '../types/config';
 const ICONS = {
   chevronLeft: 'M15 18l-6-6 6-6',
   search: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3',
+  openArrow: 'M7 17L17 7 M7 7h10v10',
 };
 
 type Filter = 'all' | 'built' | 'not-built' | 'not-rbac';
@@ -81,18 +82,23 @@ export function ModuleScreenList() {
   const { groups, ungrouped } = groupRoutesByFeature(module, routes);
   const visibleCount = [...enrichedByScreenId.values()].filter(passesFilters).length;
 
-  const renderRow = (route: Route) => {
+  const renderCard = (route: Route) => {
     const e = enrichedByScreenId.get(route.screenId);
     if (!e || !passesFilters(e)) return null;
     return (
-      <Link key={route.routeId} to={route.path} className="flex items-center justify-between px-4 py-3 hover:bg-surface">
-        <div>
-          <div className="text-fg">{route.screenName}</div>
-          <div className="text-[length:var(--fs-caption)] text-muted">
-            {route.screenId} · {route.screenType}
-          </div>
+      <Link
+        key={route.routeId}
+        to={route.path}
+        className="group rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 hover:shadow-raised hover:border-accent transition-all"
+      >
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="font-medium text-fg text-[length:var(--fs-body-lg)]">{route.screenName}</div>
+          <Icon path={ICONS.openArrow} className="w-4 h-4 text-muted shrink-0 mt-1 group-hover:text-accent transition-colors" />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="text-accent text-[length:var(--fs-micro)] font-semibold uppercase tracking-wide mb-3">
+          {route.screenId} · {route.screenType}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant={e.built ? 'success' : 'filled-neutral'}>{e.built ? 'Built' : 'Not built'}</Badge>
           <Badge variant={e.permissionLevel ? 'outlined-red' : 'filled-neutral'}>{e.permissionLevel ?? 'Not RBAC-evidenced'}</Badge>
         </div>
@@ -164,27 +170,27 @@ export function ModuleScreenList() {
       </div>
 
       {groups.map(({ subModule, feature, routes: featureRoutes }) => {
-        const rows = featureRoutes.map(renderRow).filter(Boolean);
-        if (rows.length === 0) return null;
+        const cards = featureRoutes.map(renderCard).filter(Boolean);
+        if (cards.length === 0) return null;
         return (
           <div key={`${subModule}::${feature}`} className="mb-6">
             <h2 className="text-[length:var(--fs-h5)] font-medium text-fg-2 mb-1">{subModule}</h2>
-            <p className="mb-2 text-[length:var(--fs-caption)] text-muted">{feature}</p>
-            <div className="rounded-[var(--radius-card)] border border-border-soft divide-y divide-border-soft bg-bg">{rows}</div>
+            <p className="mb-3 text-[length:var(--fs-caption)] text-muted">{feature}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{cards}</div>
           </div>
         );
       })}
 
       {(() => {
-        const rows = ungrouped.map(renderRow).filter(Boolean);
-        if (rows.length === 0) return null;
+        const cards = ungrouped.map(renderCard).filter(Boolean);
+        if (cards.length === 0) return null;
         return (
           <div className="mb-6">
             <h2 className="text-[length:var(--fs-h5)] font-medium text-fg-2 mb-1">Other Screens</h2>
-            <p className="mb-2 text-[length:var(--fs-caption)] text-muted">
+            <p className="mb-3 text-[length:var(--fs-caption)] text-muted">
               Not evidenced or heuristically matched to a sub-module/feature above.
             </p>
-            <div className="rounded-[var(--radius-card)] border border-border-soft divide-y divide-border-soft bg-bg">{rows}</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{cards}</div>
           </div>
         );
       })()}

@@ -102,11 +102,6 @@ export function Select({ label, error, helperText, options, placeholder, value, 
           {label}
         </label>
       )}
-      {helperText && !error && (
-        <span id={helperId} className="text-[length:var(--fs-caption)] text-muted">
-          {helperText}
-        </span>
-      )}
       <div ref={containerRef} className="relative">
         <button
           type="button"
@@ -155,6 +150,11 @@ export function Select({ label, error, helperText, options, placeholder, value, 
           </ul>
         )}
       </div>
+      {helperText && !error && (
+        <span id={helperId} className="text-[length:var(--fs-caption)] text-muted">
+          {helperText}
+        </span>
+      )}
       {error && <span className="text-[length:var(--fs-caption)] text-danger">{error}</span>}
     </div>
   );

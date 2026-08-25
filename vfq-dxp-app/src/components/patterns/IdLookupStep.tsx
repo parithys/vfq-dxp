@@ -9,6 +9,7 @@ interface MoiResult {
   name: string;
   dob: string;
   nationality: string;
+  email?: string;
 }
 
 interface IdLookupStepProps {
@@ -42,13 +43,16 @@ export function IdLookupStep({ value = {}, onChange }: IdLookupStepProps) {
       setLoading(false);
       return;
     }
-    const customers = await mockDataEngine.list<{ customerId: string; name: string; dob: string; nationality: string }>(
+    const customers = await mockDataEngine.list<{ customerId: string; name: string; dob: string; nationality: string; email?: string }>(
       'customers'
     );
     const customer = customers.find((c) => c.customerId === match.customerId);
     setLoading(false);
     if (customer) {
-      onChange({ ...value, moiResult: { name: customer.name, dob: customer.dob, nationality: customer.nationality } });
+      onChange({
+        ...value,
+        moiResult: { name: customer.name, dob: customer.dob, nationality: customer.nationality, email: customer.email },
+      });
     }
   };
 

@@ -24,11 +24,6 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           {label}
         </label>
       )}
-      {helperText && !error && (
-        <span id={helperId} className="text-[length:var(--fs-caption)] text-muted">
-          {helperText}
-        </span>
-      )}
       <input
         ref={ref}
         id={inputId}
@@ -40,6 +35,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           ${className}`}
         {...rest}
       />
+      {helperText && !error && (
+        <span id={helperId} className="text-[length:var(--fs-caption)] text-muted">
+          {helperText}
+        </span>
+      )}
       {error && <span className="text-[length:var(--fs-caption)] text-danger">{error}</span>}
     </div>
   );

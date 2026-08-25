@@ -8,6 +8,7 @@ interface MoiResult {
   name: string;
   dob: string;
   nationality: string;
+  email?: string;
 }
 
 export interface GuidedContactValue {
@@ -54,7 +55,11 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true }: Gu
     <div className="space-y-4">
       <IdLookupStep
         value={{ idType: value.idType, idNumber: value.idNumber, moiResult: value.moiResult }}
-        onChange={(v) => onChange({ ...value, ...v })}
+        // Email is fetched from MOI, not agent-entered — re-derive it from
+        // the result every time it changes (and clear it along with the
+        // result when the ID is edited/re-typed) rather than leaving
+        // whatever the field held before.
+        onChange={(v) => onChange({ ...value, ...v, email: v.moiResult?.email })}
       />
 
       {value.moiResult && (
@@ -63,10 +68,12 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true }: Gu
             label="Email"
             type="email"
             value={value.email ?? ''}
-            onChange={(e) => onChange({ ...value, email: e.target.value })}
+            disabled
+            helperText="Fetched from MOI — not editable."
+            onChange={() => {}}
           />
           <PhoneNumberInput
-            label="Alt. phone #"
+            label="Alternate phone #"
             value={value.altPhone ?? ''}
             placeholder="+974 5566 7766"
             error={
