@@ -11,7 +11,8 @@
     "phone": "+97455512001",
     "preferredLanguage": "Arabic",
     "blacklisted": false,
-    "moiValidationStatus": "Verified"
+    "moiValidationStatus": "Verified",
+    "activePostpaidLines": 1
   },
   {
     "customerId": "CUST-1002",
@@ -26,7 +27,8 @@
     "preferredLanguage": "English",
     "blacklisted": false,
     "moiValidationStatus": "Verified",
-    "hrnAdvancePaymentRequired": true
+    "hrnAdvancePaymentRequired": true,
+    "activePostpaidLines": 1
   },
   {
     "customerId": "CUST-1003",
@@ -40,7 +42,8 @@
     "phone": "+97455512003",
     "preferredLanguage": "Arabic",
     "blacklisted": false,
-    "moiValidationStatus": "Verified"
+    "moiValidationStatus": "Verified",
+    "activePostpaidLines": 0
   },
   {
     "customerId": "CUST-1004",
@@ -54,7 +57,8 @@
     "phone": "+97455512004",
     "preferredLanguage": "English",
     "blacklisted": true,
-    "blacklistReason": "Outstanding dues > threshold"
+    "blacklistReason": "Outstanding dues > threshold",
+    "activePostpaidLines": 0
   },
   {
     "customerId": "CUST-2001",
@@ -70,6 +74,38 @@
     "companyName": "Acme Trading Qatar W.L.L."
   },
   {
+    "customerId": "CUST-1005",
+    "qid": "784202312345678",
+    "idType": "GCC ID",
+    "name": "Khalid Al-Mazrouei",
+    "dob": "1988-09-14",
+    "nationality": "Emirati",
+    "segment": "Consumer",
+    "email": "khalid.almazrouei@example.ae",
+    "phone": "+97455512006",
+    "preferredLanguage": "Arabic",
+    "blacklisted": false,
+    "moiValidationStatus": "Verified",
+    "activePostpaidLines": 2,
+    "_note": "App-level demo addition — GCC ID Contact/ID Type card had no seeded identity-documents record to resolve against. Deliberately set at the BR-288 expat cap (2 postpaid mobile lines) so the Eligibility Gate's connection-limit hard-block, previously untested by any seeded customer, has a real scenario."
+  },
+  {
+    "customerId": "CUST-1006",
+    "qid": "DIP-QA-004521",
+    "idType": "Diplomatic ID",
+    "name": "Sophie Laurent",
+    "dob": "1979-04-02",
+    "nationality": "French",
+    "segment": "Consumer",
+    "email": "sophie.laurent@embassy.example",
+    "phone": "+97455512007",
+    "preferredLanguage": "English",
+    "blacklisted": false,
+    "moiValidationStatus": "Verified",
+    "activePostpaidLines": 0,
+    "_note": "App-level demo addition — Diplomatic ID Contact/ID Type card had no seeded identity-documents record to resolve against. Happy-path expat scenario (non-Qatari but under the BR-288 line cap), giving that ID Type card a clean success case."
+  },
+  {
     "customerId": "CUST-9001",
     "qid": "P1234567",
     "idType": "QID",
@@ -82,6 +118,7 @@
     "preferredLanguage": "English",
     "blacklisted": false,
     "moiValidationStatus": "Verified",
+    "activePostpaidLines": 0,
     "_note": "App-level demo addition (not in blueprint/reconstruction-package/mock-data) — a fixed QA test identity so 'P1234567' (as Qatari ID) and '12345678910' (as Passport Number) resolve successfully wherever the ID-lookup/MOI step (IdLookupStep/QidInput) appears across the app, regardless of module or persona."
   }
 ]

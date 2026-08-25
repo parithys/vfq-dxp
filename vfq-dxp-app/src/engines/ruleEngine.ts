@@ -120,6 +120,53 @@ const ruleImplementations: Record<string, RuleImplementation> = {
     };
   },
 
+  // Postpaid eligibility gate (BR-113): eligibility for a NEW postpaid
+  // subscription is decided by blacklist/collection status alone, explicitly
+  // NOT by the outstanding amount owed — so this rule only ever inspects
+  // `blacklisted`, never a balance figure.
+  'BR-113': (ctx) => {
+    const { blacklisted, blacklistReason } = ctx as { blacklisted: boolean; blacklistReason?: string };
+    return blacklisted
+      ? { pass: false, message: `Blacklisted (${blacklistReason ?? 'reason not recorded'}) — postpaid activation is blocked. Escalate to Risk/Collections; no agent override.` }
+      : { pass: true };
+  },
+
+  // Maximum mobility lines cap (BR-110 general cap + BR-288's stricter,
+  // postpaid-mobile-specific override for expat QIDs). BR-111 requires any
+  // override to be an authorized-officer role flag on the account, not an
+  // in-journey bypass — so this never exposes an override control here.
+  'BR-288': (ctx) => {
+    const { nationality, activePostpaidLines } = ctx as { nationality: string; activePostpaidLines: number };
+    if (nationality === 'Qatari') return { pass: true, message: 'Qatari nationals have no line cap (BR-110).' };
+    const cap = 2;
+    return activePostpaidLines < cap
+      ? { pass: true, message: `${activePostpaidLines}/${cap} postpaid mobile lines used (expat cap, BR-288).` }
+      : {
+          pass: false,
+          message: `Expat QID cap of ${cap} postpaid mobile lines reached (BR-288 — a business-policy cap tighter than the system's technical 5-line/operator limit, BR-110). Overriding requires an authorized-officer role flag on the account (BR-111), not an in-journey bypass.`,
+        };
+  },
+
+  // HRN (High-Risk Nationality) advance payment (BR-187/BR-194/BR-252, all
+  // independently evidenced at QR 100): amount is driven by nationality/sales
+  // channel, explicitly NOT by plan value (BR-112) — so this never reads plan
+  // context, only the HRN flag itself.
+  'BR-187': (ctx) => {
+    const { hrnFlag } = ctx as { hrnFlag: boolean };
+    return hrnFlag
+      ? { pass: true, message: 'HRN customer — QR 100 advance payment required at checkout (BR-187/194/252); routes to manager approval (BR-268) rather than auto-completing.' }
+      : { pass: true };
+  },
+
+  // Default credit limit by nationality (BR-076) — informational, not a gate;
+  // surfaced so the agent sees the limit the Bill Limit step will enforce as
+  // its Agent Minimum floor before they pick a plan.
+  'BR-076': (ctx) => {
+    const { hrnFlag } = ctx as { hrnFlag: boolean };
+    const amount = hrnFlag ? 50 : 1000;
+    return { pass: true, message: `Default credit limit: QR ${amount} (${hrnFlag ? 'HRN' : 'expat, non-HRN'} new account, BR-076).` };
+  },
+
   // Unsubmitted ticket never routes to a queue (BR-068) — gates queue
   // assignment on the ticket having its required fields (issue type +
   // template content) filled before Submit commits it.

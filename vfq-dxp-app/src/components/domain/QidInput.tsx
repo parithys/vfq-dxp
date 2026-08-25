@@ -1,24 +1,92 @@
-import { Input } from '../primitives/Input';
+import { Icon } from '../primitives/Icon';
+import { Button } from '../primitives/Button';
+
+export type QidType = 'QID' | 'Passport' | 'GCC ID' | 'Diplomatic ID';
 
 interface QidInputProps {
+  idType: QidType;
+  onIdTypeChange: (type: QidType) => void;
   value: string;
   onChange: (value: string) => void;
-  label?: string;
+  onFetch: () => void;
+  fetching?: boolean;
   error?: string;
 }
 
-// QID/Passport/GCC/Diplomatic ID formatted input, per component-catalogue.md §2
-// (ENT-023/037 Customer/Contact). Full validation is a TextInput + format check —
-// kept minimal here (11-digit QID pattern) since the format rules themselves
-// aren't itemized per-digit in the corpus beyond "Qatari ID or Passport Number".
-export function QidInput({ value, onChange, label = 'Qatari ID / Passport Number', error }: QidInputProps) {
+const CHECK = 'M20 6L9 17l-5-5';
+const SEARCH_ICON = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3';
+const CARD_ICON = 'M3 6h18v12H3z M3 10h18 M6 15h3';
+const BOOK_ICON = 'M12 6.5c-1.6-1.1-4-1.6-6-1.2v12.8c2-0.4 4.4 0.1 6 1.2 M12 6.5c1.6-1.1 4-1.6 6-1.2v12.8c-2-0.4-4.4 0.1-6 1.2 M12 6.5v12.8';
+const GLOBE_ICON = 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M3 12h18 M12 3c2.4 2.6 2.4 15.4 0 18 M12 3c-2.4 2.6-2.4 15.4 0 18';
+const SHIELD_ICON = 'M12 3l7 3v5.5c0 5-3 8.3-7 9.5-4-1.2-7-4.5-7-9.5V6z';
+
+const ID_TYPES: { type: QidType; label: string; numberLabel: string; icon: string }[] = [
+  { type: 'QID', label: 'Qatar ID (QID)', numberLabel: 'Qatar ID (QID) Number', icon: CARD_ICON },
+  { type: 'Passport', label: 'Passport', numberLabel: 'Passport Number', icon: BOOK_ICON },
+  { type: 'GCC ID', label: 'GCC ID', numberLabel: 'GCC ID Number', icon: GLOBE_ICON },
+  { type: 'Diplomatic ID', label: 'Diplomatic ID', numberLabel: 'Diplomatic ID Number', icon: SHIELD_ICON },
+];
+
+// QID/Passport/GCC/Diplomatic ID lookup control, per component-catalogue.md §2
+// (ENT-023/037 Customer/Contact) — a 4-way ID Type card selector (only QID and
+// Passport have evidenced identity-documents records to resolve against; GCC
+// ID/Diplomatic ID are included as selectable per the reference but have no
+// seeded MOI matches yet) driving the label/placeholder of a single number
+// field with an inline Fetch action, replacing the earlier plain text input +
+// separate below-field submit button.
+export function QidInput({ idType, onIdTypeChange, value, onChange, onFetch, fetching, error }: QidInputProps) {
+  const current = ID_TYPES.find((t) => t.type === idType) ?? ID_TYPES[0];
+
   return (
-    <Input
-      label={label}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder="Insert or scan ID"
-      error={error}
-    />
+    <div className="space-y-4">
+      <div>
+        <p className="text-[length:var(--fs-label)] text-fg-2 mb-2">ID Type</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {ID_TYPES.map((t) => {
+            const selected = t.type === idType;
+            return (
+              <button
+                key={t.type}
+                type="button"
+                onClick={() => onIdTypeChange(t.type)}
+                className={`relative flex flex-col items-center gap-2 rounded-[var(--radius-card)] border p-4 ${
+                  selected ? 'border-accent bg-surface-warm text-accent' : 'border-border-soft text-fg-2 enabled:hover:border-accent/50'
+                }`}
+              >
+                {selected && (
+                  <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-accent text-white flex items-center justify-center">
+                    <Icon path={CHECK} className="w-2.5 h-2.5" />
+                  </span>
+                )}
+                <Icon path={t.icon} className="w-6 h-6" />
+                <span className="text-[length:var(--fs-caption)] font-medium">{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <label htmlFor="qid-number-input" className="block text-[length:var(--fs-label)] text-fg-2 mb-1">
+          {current.numberLabel}
+        </label>
+        <div className="flex gap-2">
+          <input
+            id="qid-number-input"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="Insert or scan ID"
+            className={`flex-1 min-w-0 rounded-[var(--radius-button)] border px-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg
+              ${error ? 'border-danger' : 'border-[var(--grey-form)]'}
+              focus:outline-none focus-visible:shadow-[var(--focus-ring)]`}
+          />
+          <Button variant="primary-rect" onClick={onFetch} disabled={!value || fetching}>
+            <Icon path={SEARCH_ICON} className="w-4 h-4" />
+            {fetching ? 'Fetching…' : 'Fetch'}
+          </Button>
+        </div>
+        {error && <p className="text-danger text-[length:var(--fs-caption)] mt-1">{error}</p>}
+      </div>
+    </div>
   );
 }

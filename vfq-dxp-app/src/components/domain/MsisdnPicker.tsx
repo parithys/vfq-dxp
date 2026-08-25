@@ -21,15 +21,19 @@ interface MsisdnPickerProps {
 // immediate reservation with a confirmation token (SCR-024/048/082/104/157/191).
 export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
   const [numbers, setNumbers] = useState<MsisdnRecord[]>([]);
-  const [tab, setTab] = useState<'Free' | 'Reserved'>('Free');
+  const [tab, setTab] = useState<'Free' | 'Star'>('Free');
   const [search, setSearch] = useState('');
 
   useEffect(() => {
     mockDataEngine.list<MsisdnRecord>('numbers').then(setNumbers);
   }, []);
 
+  // Category (Free vs Star/premium) and status (AVAILABLE/Reserved/BLOCKED)
+  // are independent axes — tabs must filter on category so a Star number
+  // that happens to be AVAILABLE rather than Reserved still surfaces
+  // somewhere selectable, instead of falling into neither tab.
   const filtered = numbers.filter((n) => {
-    const matchesTab = tab === 'Free' ? n.category === 'Free' : n.status === 'Reserved';
+    const matchesTab = n.category === tab;
     const matchesSearch = search ? n.msisdn.includes(search) : true;
     return matchesTab && matchesSearch;
   });
@@ -37,7 +41,7 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
   return (
     <div className="space-y-3">
       <div className="flex gap-1 border-b border-border-soft">
-        {(['Free', 'Reserved'] as const).map((t) => (
+        {(['Free', 'Star'] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -45,7 +49,7 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
               tab === t ? 'border-accent text-accent font-medium' : 'border-transparent text-fg-2'
             }`}
           >
-            {t} Number
+            {t === 'Star' ? 'Star Number (Premium)' : 'Free Number'}
           </button>
         ))}
       </div>

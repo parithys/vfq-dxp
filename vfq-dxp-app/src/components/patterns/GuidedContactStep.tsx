@@ -1,4 +1,5 @@
 import { IdLookupStep } from './IdLookupStep';
+import type { QidType } from '../domain/QidInput';
 import { Input } from '../primitives/Input';
 import { PhoneNumberInput } from '../primitives/PhoneNumberInput';
 import { Select } from '../primitives/Select';
@@ -10,6 +11,7 @@ interface MoiResult {
 }
 
 export interface GuidedContactValue {
+  idType?: QidType;
   idNumber?: string;
   moiResult?: MoiResult;
   email?: string;
@@ -51,7 +53,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true }: Gu
   return (
     <div className="space-y-4">
       <IdLookupStep
-        value={{ idNumber: value.idNumber, moiResult: value.moiResult }}
+        value={{ idType: value.idType, idNumber: value.idNumber, moiResult: value.moiResult }}
         onChange={(v) => onChange({ ...value, ...v })}
       />
 

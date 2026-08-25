@@ -32,6 +32,41 @@
     "scannedAt": "2026-08-20T13:50:00+03:00"
   },
   {
+    "identityDocumentId": "IDD-5504",
+    "customerId": "CUST-1004",
+    "documentType": "QID",
+    "documentNumber": "29011122233",
+    "validationPath": "MOI Validation",
+    "status": "Validated",
+    "scanCompleted": true,
+    "scannedAt": "2026-08-05T11:10:00+03:00",
+    "_note": "App-level demo addition — customers.json's blacklisted test customer (CUST-1004) had no matching identity-documents record, so the Eligibility Gate's blacklist hard-block could never actually be reached via ID lookup. Document number matches CUST-1004's own qid field for consistency."
+  },
+  {
+    "identityDocumentId": "IDD-5505",
+    "customerId": "CUST-1005",
+    "documentType": "GCC ID",
+    "documentNumber": "784202312345678",
+    "issuingCountry": "United Arab Emirates",
+    "validationPath": "MOI Validation",
+    "status": "Validated",
+    "scanCompleted": true,
+    "scannedAt": "2026-08-12T10:05:00+03:00",
+    "_note": "App-level demo addition — gives the GCC ID Contact/ID Type card a resolvable test identity (see customers.json CUST-1005)."
+  },
+  {
+    "identityDocumentId": "IDD-5506",
+    "customerId": "CUST-1006",
+    "documentType": "Diplomatic ID",
+    "documentNumber": "DIP-QA-004521",
+    "issuingCountry": "France",
+    "validationPath": "MOI Validation",
+    "status": "Validated",
+    "scanCompleted": true,
+    "scannedAt": "2026-08-14T14:30:00+03:00",
+    "_note": "App-level demo addition — gives the Diplomatic ID Contact/ID Type card a resolvable test identity (see customers.json CUST-1006)."
+  },
+  {
     "identityDocumentId": "IDD-9901",
     "customerId": "CUST-9001",
     "documentType": "QID",
