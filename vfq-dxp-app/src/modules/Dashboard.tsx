@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getAllModules, getPersona } from '../engines/configEngine';
+import { getAllModules, getPersona, getJourneyIdsForModule, getJourneyMeta } from '../engines/configEngine';
 import { MODULE_DESCRIPTIONS } from '../engines/moduleDescriptions';
 import { usePersonaStore } from '../stores/personaStore';
 import { useEntityStore } from '../stores/entityStore';
@@ -135,7 +135,12 @@ export function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredModules.map((m) => (
+        {filteredModules.map((m) => {
+          // Only present when this module has a confident match in the CRM
+          // Journeys catalogue crosswalk (journey-catalogue-map.json) —
+          // absent for every other module, unchanged from before this was added.
+          const journeyIds = getJourneyIdsForModule(m.moduleId);
+          return (
           <Link
             key={m.moduleId}
             to={`/${m.moduleSlug}`}
@@ -147,10 +152,16 @@ export function Dashboard() {
             </div>
             <div className="text-accent text-[length:var(--fs-micro)] font-semibold uppercase tracking-wide mb-2">
               {m.screenCount} screens
+              {journeyIds.map((id) => (
+                <span key={id} title={getJourneyMeta(id)?.name ?? id} className="ml-1.5 text-fg-2 normal-case tracking-normal">
+                  · {id}
+                </span>
+              ))}
             </div>
             <p className="text-fg-2 text-[length:var(--fs-caption)]">{MODULE_DESCRIPTIONS[m.module] ?? ''}</p>
           </Link>
-        ))}
+          );
+        })}
         {filteredModules.length === 0 && <p className="text-muted col-span-full">No modules match “{query}”.</p>}
       </div>
     </div>

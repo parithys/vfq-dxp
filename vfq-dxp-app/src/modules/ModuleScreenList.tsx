@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getAllModules, getAllRoutes } from '../engines/configEngine';
+import { getAllModules, getAllRoutes, getJourneyIdsForScreen, getJourneyMeta } from '../engines/configEngine';
 import { MODULE_DESCRIPTIONS } from '../engines/moduleDescriptions';
 import { usePersonaStore } from '../stores/personaStore';
 import { screensVisibleFor } from '../engines/personaEngine';
@@ -85,6 +85,10 @@ export function ModuleScreenList() {
   const renderCard = (route: Route) => {
     const e = enrichedByScreenId.get(route.screenId);
     if (!e || !passesFilters(e)) return null;
+    // Only present when this screen has a confident match in the CRM Journeys
+    // catalogue crosswalk (journey-catalogue-map.json) — absent for every
+    // other screen, which renders exactly as it did before this was added.
+    const journeyIds = getJourneyIdsForScreen(route.screenId);
     return (
       <Link
         key={route.routeId}
@@ -97,6 +101,11 @@ export function ModuleScreenList() {
         </div>
         <div className="text-accent text-[length:var(--fs-micro)] font-semibold uppercase tracking-wide mb-3">
           {route.screenId} · {route.screenType}
+          {journeyIds.map((id) => (
+            <span key={id} title={getJourneyMeta(id)?.name ?? id} className="ml-1.5 text-fg-2 normal-case tracking-normal">
+              · {id}
+            </span>
+          ))}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant={e.built ? 'success' : 'filled-neutral'}>{e.built ? 'Built' : 'Not built'}</Badge>

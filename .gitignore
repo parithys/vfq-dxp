@@ -3,6 +3,16 @@
 !/data/CRM_Journeys_Final_Updated_with_Type.xlsx
 !/data/Vodafone_Requirement_Hierarchy_Traceability_Template.xlsx
 
+# Reference-only source corpus (screenshots, recordings, raw docs) — not consumed at runtime
+/Application Screenshots/
+/BRSD/
+/Business Documents/
+/CAF (Customer Application Form)/
+/Generated/
+/Guided Journeys/
+/Process Manuals/
+/Workshop Recordings/
+
 # Local session/tooling state
 .claude/
 .DS_Store

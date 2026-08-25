@@ -1,15 +1,33 @@
+## Project structure
+
+`vfq-dxp-app/` is the single source of truth for the application — it is
+fully self-contained (verified 2026-08-25: no import, fetch, or config
+reaches outside its own directory). Everything else at this root (`data/`,
+`Guided Journeys/`, `Workshop Recordings/`, and `vfq-dxp-app/reference/`) is
+reference-only source corpus that fed the app's construction but is not
+consumed by it at runtime — treat it as background material, not part of the
+active implementation, unless a task explicitly asks you to consult it.
+
+The distilled documentation that used to live at this root
+(`blueprint/`, `.knowledge/`, `diagrams/`, `BRSD/`, and the loose
+`VFQ_*`/`CRM_Journeys_*` files) now lives under `vfq-dxp-app/reference/`.
+Citations inside those documents of the form `data/<file>` refer to this
+root's `data/` folder, i.e. `../../data/<file>` relative to a file's new
+location under `vfq-dxp-app/reference/`.
+
 ## Knowledge base
 
 Before answering questions about the VFQ (Vodafone Qatar) stack modernization
 project — workshops, business process reviews, business requirements specs
 (BRSDs), business rules, customer forms, or Guided Journey UI walkthroughs —
-read `.knowledge/INDEX.md` first, then open only the specific
-`.knowledge/docs/<slug>.md` files the question requires. Do not answer from
-the index one-liner alone when the question needs detail — open the summary.
-Cite the slug in your answer so claims trace back to a source document.
+read `vfq-dxp-app/reference/.knowledge/INDEX.md` first, then open only the
+specific `vfq-dxp-app/reference/.knowledge/docs/<slug>.md` files the question
+requires. Do not answer from the index one-liner alone when the question
+needs detail — open the summary. Cite the slug in your answer so claims trace
+back to a source document.
 
-If `.knowledge/INDEX.md` reports a document as low-confidence or failed, say
-so rather than answering from it.
+If `vfq-dxp-app/reference/.knowledge/INDEX.md` reports a document as
+low-confidence or failed, say so rather than answering from it.
 
 `Guided Journeys/` files are screenshot-driven UI walkthroughs. Plain text
 extraction (pandoc/markitdown) recovers almost nothing from them — the

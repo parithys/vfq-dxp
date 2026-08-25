@@ -22,7 +22,21 @@ interface ConfigData {
    * cite a screen — see screenGrouping.ts for how this partial evidence is
    * used (and where it falls back to a heuristic). */
   reqToScreens: Record<string, string[]>;
+  journeyCatalogueMap: JourneyCatalogueMap;
 }
+
+/** Crosswalk between CRM_Journeys_Final_Updated_with_Type.xlsx (Page Type
+ * sheet, Unique ID column) and this app's screens/modules — see that
+ * workbook's Mapping Report sheet for the full mapped/unmapped list and
+ * rationale. Only screens/modules with a confident, manually-verified name
+ * match are present; anything absent here simply has no journey ID to show. */
+interface JourneyCatalogueMap {
+  journeys: Record<string, { name: string; type: string }>;
+  screens: Record<string, string[]>;
+  modules: Record<string, string[]>;
+}
+
+const EMPTY_JOURNEY_CATALOGUE_MAP: JourneyCatalogueMap = { journeys: {}, screens: {}, modules: {} };
 
 let cache: ConfigData | null = null;
 let loading: Promise<ConfigData> | null = null;
@@ -51,7 +65,13 @@ export async function loadConfig(): Promise<ConfigData> {
         fetchJson<Record<string, string>>('/config/design-tokens.json'),
         fetchJson<Record<string, string[]>>('/config/req-to-screens.json'),
       ]);
-    cache = { routes, personas, rbac, businessRules, validationRules, domainSchema, moduleHierarchy, designTokens, reqToScreens };
+    // Fetched separately, with a silent fallback to "no mappings" — this file
+    // is purely additive (traceability-ID badges), so a missing/broken copy
+    // must never fail app boot the way a missing core config file should.
+    const journeyCatalogueMap = await fetchJson<JourneyCatalogueMap>('/config/journey-catalogue-map.json').catch(
+      () => EMPTY_JOURNEY_CATALOGUE_MAP
+    );
+    cache = { routes, personas, rbac, businessRules, validationRules, domainSchema, moduleHierarchy, designTokens, reqToScreens, journeyCatalogueMap };
     return cache;
   })();
   return loading;
@@ -115,6 +135,22 @@ export function getDesignToken(name: string): string | undefined {
 
 export function getReqToScreens(): Record<string, string[]> {
   return requireConfig().reqToScreens;
+}
+
+/** Unique IDs from the CRM Journeys catalogue mapped onto this screen, if
+ * any — empty when the screen has no confident match (see journey-catalogue-
+ * map.json's _comment and the workbook's Mapping Report sheet). */
+export function getJourneyIdsForScreen(screenId: string): string[] {
+  return requireConfig().journeyCatalogueMap.screens[screenId] ?? [];
+}
+
+/** Same as getJourneyIdsForScreen, but for a module card. */
+export function getJourneyIdsForModule(moduleId: string): string[] {
+  return requireConfig().journeyCatalogueMap.modules[moduleId] ?? [];
+}
+
+export function getJourneyMeta(journeyId: string): { name: string; type: string } | undefined {
+  return requireConfig().journeyCatalogueMap.journeys[journeyId];
 }
 
 export function isConfigLoaded(): boolean {
