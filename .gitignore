@@ -5,9 +5,11 @@
 
 # Reference-only source corpus (screenshots, recordings, raw docs) — not consumed at runtime
 /Application Screenshots/
+/BRD/
 /BRSD/
 /Business Documents/
 /CAF (Customer Application Form)/
+/CRM Journeys/
 /Generated/
 /Guided Journeys/
 /Process Manuals/

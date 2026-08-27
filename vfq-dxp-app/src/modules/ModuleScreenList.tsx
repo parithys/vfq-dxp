@@ -100,10 +100,11 @@ export function ModuleScreenList() {
           <Icon path={ICONS.openArrow} className="w-4 h-4 text-muted shrink-0 mt-1 group-hover:text-accent transition-colors" />
         </div>
         <div className="text-accent text-[length:var(--fs-micro)] font-semibold uppercase tracking-wide mb-3">
-          {route.screenId} · {route.screenType}
-          {journeyIds.map((id) => (
-            <span key={id} title={getJourneyMeta(id)?.name ?? id} className="ml-1.5 text-fg-2 normal-case tracking-normal">
-              · {id}
+          <span className="hidden">{route.screenId} · {route.screenType}</span>
+          {journeyIds.map((id, i) => (
+            <span key={id} title={getJourneyMeta(id)?.name ?? id}>
+              {i > 0 && <span className="mx-1.5">·</span>}
+              {id}
             </span>
           ))}
         </div>
