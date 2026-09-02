@@ -611,6 +611,59 @@ function wrapToBox(text, size, maxLines) {
   }
   return [...head, keep];
 }
+/* Decision labels never went through wrapToBox() above at all — the spec supplies a pre-split
+ * array of lines (chosen by whoever authored the extraction, not measured), and drawNode() just
+ * rendered it as-is. Even if it HAD gone through wrapToBox(), that budget (NODE_INNER, sized for
+ * the 160px rectangle step nodes) would still be wrong here: a decision diamond is a rotated
+ * square, so its usable width isn't flat like a rectangle's — it tapers the further a line sits
+ * from vertical centre, reaching zero at the top/bottom tips. A two-line label that measures
+ * under a flat budget can still be too wide for its own second line's narrower slice of the
+ * diamond. This wraps against the diamond's real per-line width instead, trying 1, then 2, then
+ * 3 lines (matching the existing 1-or-2-line vertical centring in nodeBaselines()) until every
+ * line fits the diamond at the height it will actually be drawn. */
+function wrapToDiamond(text, size, reach) {
+  const raw = String(text == null ? '' : text).trim();
+  if (!raw) return [''];
+  const widthAt = y => Math.max(0, 2 * (reach - Math.abs(y)));
+  const words = raw.split(/\s+/).filter(Boolean)
+    .flatMap(w => textWidth(w, size) <= widthAt(0) ? [w] : w.split(/(?<=[./\-→>|])/));
+  if (!words.length) return [''];
+  function attempt(n) {
+    const ys = nodeBaselines(n, 0, -40);
+    const lines = [];
+    let cur = '';
+    for (const w of words) {
+      const trial = cur ? cur + ' ' + w : w;
+      const budget = widthAt(ys[lines.length]);
+      if (textWidth(trial, size) <= budget || !cur) cur = trial;
+      else {
+        lines.push(cur);
+        if (lines.length >= n) return null;   // ran out of permitted lines mid-wrap
+        cur = w;
+      }
+    }
+    if (cur) lines.push(cur);
+    return lines.length <= n ? lines : null;
+  }
+  for (let n = 1; n <= 3; n++) {
+    const lines = attempt(n);
+    if (lines) return lines;
+  }
+  // Even 3 lines can't fit every word within the diamond's own taper — fold the remainder into
+  // the last line rather than silently dropping it; an over-wide diamond is a visible signal to
+  // shorten the label in the source spec, a silently dropped word is not.
+  const ys = nodeBaselines(3, 0, -40);
+  const lines = [];
+  let cur = '';
+  for (const w of words) {
+    const trial = cur ? cur + ' ' + w : w;
+    if (lines.length < 2 && cur && textWidth(trial, size) > widthAt(ys[lines.length])) {
+      lines.push(cur); cur = w;
+    } else cur = trial;
+  }
+  lines.push(cur);
+  return lines;
+}
 
 /* The ONE place a node becomes a canonical record. Every consumer — drawer, filters,
  * accessibility name, edge endpoints — reads this, so the rendered SVG and the JSON can no
@@ -702,13 +755,17 @@ function drawNode(n, ctx, B) {
 
   if (n.type === 'decision') {
     ctx.usedDecision = true;
-    const lines = Array.isArray(n.title) ? n.title : [n.title || DEFAULT_LABELS.decision];
+    // n.title may arrive as a pre-split array (older specs) or a plain string — either way,
+    // re-wrap it ourselves against the diamond's own tapered width rather than trusting
+    // whatever line breaks the spec happened to carry (see wrapToDiamond() above).
+    const rawTitle = Array.isArray(n.title) ? n.title.join(' ') : (n.title || DEFAULT_LABELS.decision);
+    const lines = wrapToDiamond(rawTitle, TYPE.decision, diamondReach(n));
     out.push(`<g transform="translate(${n.cx}, ${n.cy})">`);
     out.push(`  <rect x="-40" y="-40" width="80" height="80" rx="4" transform="rotate(45)" fill="${DECISION.fill}" stroke="${DECISION.stroke}" stroke-width="1.5"/>`);
     // A 80×80 square rotated 45° reaches ±56.57 from centre — the ±57 tips in §13.
     markRect(B, n.cx - 57, n.cy - 57, 114, 114);
-    const startY = lines.length > 1 ? -4 : 5;
-    lines.forEach((ln, k) => out.push('  ' + t(0, startY + k * LH.titleTitle, INK, TYPE.decision, ln, { weight: 600, anchor: 'middle' })));
+    const ys = nodeBaselines(lines.length, 0, -40);
+    lines.forEach((ln, k) => out.push('  ' + t(0, ys[k], INK, TYPE.decision, ln, { weight: 600, anchor: 'middle' })));
     out.push('</g>');
     recordNode(ctx, n, { title: lines.join(' '), num: '' });
     out.push(nodeClose(ctx));
