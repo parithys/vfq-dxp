@@ -1,0 +1,24 @@
+{
+  "title": "[PROCESS NAME]",
+  "subtitle": "[Process description / purpose]",
+  "footer": "[Context] | [Owner]",
+  "slug": "process-flow-template",
+  "flow": [
+    { "type": "start", "label": "Start" },
+    { "type": "step", "id": "s1", "kind": "manual", "role": "👤 [Role]", "title": "[Step One]",
+      "desc": ["[What happens here]"], "edgeLabel": "[payload]" },
+    { "type": "step", "id": "s2", "kind": "automated", "role": "⚡ [System]", "title": "[Step Two]",
+      "desc": ["[What happens here]"], "edgeLabel": "[payload]" },
+    { "type": "decision", "id": "gate", "title": ["[Condition]", "met?"],
+      "yesLabel": "Yes", "noLabel": "No", "no": { "label": "[Negative outcome]" } },
+    { "type": "step", "id": "s3", "kind": "integration", "role": "🔗 [Service]", "title": "[Step Three]",
+      "desc": ["[What happens here]"], "edgeLabel": "[payload]" },
+    { "type": "end", "label": "Complete" }
+  ],
+  "cards": {
+    "ioTable": [
+      { "input": "[Input artefacts]", "output": "[Output artefacts]", "meaning": "[What this stage achieves]" },
+      { "input": "[Input artefacts]", "output": "[Output artefacts]", "meaning": "[What this stage achieves]" }
+    ]
+  }
+}

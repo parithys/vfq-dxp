@@ -1,0 +1,4 @@
+Schritt,Verantwortlicher,Beschreibung,Vorgaenger
+S1,Sachbearbeiter,Antrag pruefen,
+S2,Pruefsystem,Automatische Bonitaet,S1
+S3,Schnittstelle,Externe Abfrage,S2

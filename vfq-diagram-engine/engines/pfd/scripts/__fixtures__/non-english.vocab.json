@@ -1,0 +1,51 @@
+{
+  "kind": {
+    "manual": [
+      "sachbearbeiter",
+      "pruefer",
+      "mitarbeiter",
+      "genehmiger"
+    ],
+    "automated": [
+      "pruefsystem",
+      "system",
+      "automatik"
+    ],
+    "integration": [
+      "schnittstelle",
+      "api"
+    ]
+  },
+  "terminal": {
+    "start": [
+      "anfang",
+      "beginn"
+    ],
+    "end": [
+      "ende",
+      "abschluss"
+    ]
+  },
+  "decision": [
+    "entscheidung",
+    "pruefung"
+  ],
+  "nullTokens": [
+    "keine",
+    "keiner"
+  ],
+  "headers": {
+    "title": [
+      "schritt"
+    ],
+    "role": [
+      "verantwortlicher"
+    ],
+    "desc": [
+      "beschreibung"
+    ],
+    "source": [
+      "vorgaenger"
+    ]
+  }
+}

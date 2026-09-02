@@ -1,0 +1,9 @@
+From,To,Action,Owner,Execution
+Request Raised,Eligibility Check,"application, attachments",Requester,human
+Eligibility Check,Budget Validation,eligibility result,Rules Engine,automated batch
+Budget Validation,Panel Review,funding envelope,Finance System,system
+Panel Review,Award Decision,scored dossier,Review Committee,human review
+Award Decision,Disbursement,approved,Award Board,manual
+Award Decision,Request Raised,rejected - resubmit with corrections,Award Board,manual
+Disbursement,Payment Confirmed,payment instruction,Payments API,api integration
+Payment Confirmed,Award Decision,monitor drawdown variance,Ledger Sync,event feed

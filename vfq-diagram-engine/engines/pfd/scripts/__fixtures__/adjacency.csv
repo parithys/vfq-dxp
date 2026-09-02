@@ -1,0 +1,7 @@
+Task ID,Task Name,Depends On,Responsible,Mode,Details
+T1,Define Scope,,Programme Manager,human,Agree boundaries and success measures
+T2,Collect Baseline,T1,Data Platform,automated,Pull current-state metrics from the warehouse
+T3,Draft Options,T1;T2,Design Working Group,human,Produce costed options with trade-offs
+T4,Model Impact,T3,Simulation Engine,automated,Run scenarios across the option set
+T5,Endorse Option,T4,Steering Group,human,Select and endorse the preferred option
+T6,Publish Plan,T5,Publishing Webhook,integration,Emit the endorsed plan to downstream subscribers

@@ -1,0 +1,285 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Process Flow Diagram Spec",
+  "description": "Declarative input for generate.js. Produces one standalone HTML process-flow diagram matching the template.html design system.",
+  "type": "object",
+  "required": [
+    "title",
+    "flow"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Process name (header h1 + <title> + default footer/slug)."
+    },
+    "subtitle": {
+      "type": "string",
+      "description": "One-line purpose, shown under the title."
+    },
+    "footer": {
+      "type": "string",
+      "description": "Footer credit line. Defaults to title."
+    },
+    "slug": {
+      "type": "string",
+      "description": "Filename stem for PNG/PDF export. Defaults to a slug of title."
+    },
+    "interactive": {
+      "type": "boolean",
+      "default": false,
+      "description": "Opt into the interactivity layer (§11.3): focusable nodes, a click-to-detail side drawer showing each node's role, description and inbound/outbound edges, and type filter chips. Off by default — when false none of that CSS/markup/script is emitted, so the file stays byte-identical to the static design system. Turn it on for diagrams meant to be explored in a browser; leave it off for diagrams destined for a deck, a PDF, or print."
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Items shown in the dashed PREREQUISITES band at the top of the canvas (spread horizontally). Also used as the Prerequisites card if cards.prerequisites is omitted."
+    },
+    "flow": {
+      "type": "array",
+      "description": "Ordered nodes laid out left-to-right. Each item is one node; connectors between consecutive items are generated automatically and coloured by the SOURCE node.",
+      "items": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "start",
+              "end",
+              "step",
+              "decision",
+              "rowbreak"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "description": "Optional stable id; referenced by loops[].from / loops[].to."
+          },
+          "label": {
+            "type": "string",
+            "description": "start/end: pill text (defaults Start / Complete)."
+          },
+          "variant": {
+            "enum": [
+              "reject"
+            ],
+            "description": "end only: render as a rose-stroked negative terminal."
+          },
+          "kind": {
+            "enum": [
+              "manual",
+              "automated",
+              "integration"
+            ],
+            "description": "step only: drives colour + default glyph. manual=emerald 👤, automated=violet ⚡, integration=amber 🔗."
+          },
+          "role": {
+            "type": "string",
+            "description": "step only: label above the box, e.g. '👤 Business Owner'. Defaults to glyph + kind."
+          },
+          "title": {
+            "type": [
+              "string",
+              "array"
+            ],
+            "description": "step: box heading. decision: diamond text (string or array of up to 2 lines)."
+          },
+          "desc": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "step only: up to 3 description lines inside the box."
+          },
+          "num": {
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "step only: badge number. Auto-increments (1,2,3…) if omitted."
+          },
+          "edgeLabel": {
+            "type": "string",
+            "description": "step/start: payload label on the OUTGOING connector, e.g. 'intake form'."
+          },
+          "meaning": {
+            "type": "string",
+            "description": "step only: a brief explanation of what this step or node means or accomplishes. Shown in the interactive drawer when interactive=true."
+          },
+          "inputDesc": {
+            "type": "string",
+            "description": "step only: description of input data or prerequisites flowing into this step. Shown above the inbound edges in the interactive drawer."
+          },
+          "outputDesc": {
+            "type": "string",
+            "description": "step only: description of output data or results flowing out of this step. Shown above the outbound edges in the interactive drawer."
+          },
+          "example": {
+            "type": "string",
+            "description": "step only: a concrete example of this step or node in action. Shown in the interactive drawer when interactive=true."
+          },
+          "edgeMeta": {
+            "type": "object",
+            "description": "Optional metadata attached to the OUTGOING flow connector from this node (rendered when that connector is clicked in the interactive drawer). Free-form: routingPurpose, condition, triggerEvent, dataTransferred, businessMeaning, downstreamImpact are recognised and grouped; any other key still renders under Additional Details."
+          },
+          "wrapMeta": {
+            "type": "object",
+            "description": "Optional metadata attached to the OUTGOING row-wrap connector from this node (a rowbreak continuation), rendered the same way as edgeMeta when that connector is clicked."
+          },
+          "yesLabel": {
+            "type": "string",
+            "description": "decision only: label on the in-lane (yes) branch. Default 'Yes'."
+          },
+          "no": {
+            "type": "object",
+            "description": "decision only: the negative branch. Supply EITHER `to` (route it to a node the flow already models) OR `label` (synthesise a reject terminal below the diamond). Prefer `to` when the failure path leads somewhere the process already has a node for: synthesising a second node with the same name duplicates it on the canvas and filters it as a terminal rather than as the step it actually is. `to` must name an existing node id; an unknown id is rejected before rendering.",
+            "properties": {
+              "to": {
+                "type": "string",
+                "description": "Id of an existing node to route the negative branch into. Mutually exclusive with `label`."
+              },
+              "label": {
+                "type": "string",
+                "description": "Text for a synthesised reject terminal. Default 'Rejected'. Ignored when `to` is set."
+              },
+              "meta": {
+                "type": "object",
+                "description": "Optional metadata for this negative-branch connector, rendered when it is clicked in the interactive drawer. Free-form: routingPurpose, condition, triggerEvent, dataTransferred, businessMeaning, downstreamImpact are recognised and grouped; any other key still renders under Additional Details."
+              }
+            }
+          },
+          "noLabel": {
+            "type": "string",
+            "description": "decision only: label on the downward (no) branch. Default 'No'."
+          },
+          "outcomes": {
+            "type": "array",
+            "description": "decision/gateway only: structured branch-level detail shown in the interactive drawer's Decision Logic group — one card per outcome. Each item is free-form (label, condition, to, businessImpact, exceptionPath, escalationPath are recognised field names; any others still render). This is presentation detail for the drawer only — it does not affect layout or routing, which is still driven by `no`/`yesLabel`/`noLabel` and the flow order.",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "decisionLogic": {
+            "type": "string",
+            "description": "decision/gateway only: plain-language explanation of how the outcome is determined. Shown in the interactive drawer's Decision Logic group."
+          },
+          "evaluationCriteria": {
+            "type": "string",
+            "description": "decision/gateway only: the criteria evaluated to reach an outcome. Shown in the interactive drawer's Decision Logic group."
+          },
+          "ruleExpression": {
+            "type": "string",
+            "description": "decision/gateway only: a rule expression or validation formula (e.g. 'score >= 80'). Shown in the interactive drawer's Decision Logic group."
+          },
+          "wrapLabel": {
+            "type": "string",
+            "description": "rowbreak only: label on the dashed wrap connector into the next row. Default 'continue'."
+          }
+        },
+        "additionalProperties": true,
+        "$comment": "additionalProperties is intentionally true: the interactive drawer (references/interactive-drawer-guide.md) is metadata-driven and renders ANY field placed on a flow node, not only the named properties above. Add domain fields freely — actor, owner, sourceSystem, targetSystem, businessRules, validationRules, preconditions, postconditions, dependencies, upstreamImpact, downstreamImpact, kpis, slas, audit, documents, or any other name — and it will appear in the drawer automatically. See the guide for the full list of names that get a dedicated, labelled group."
+      }
+    },
+    "loops": {
+      "type": "array",
+      "description": "Extra edges (loop-backs / exceptions) drawn as dashed routed paths between two nodes referenced by id.",
+      "items": {
+        "type": "object",
+        "required": [
+          "from",
+          "to"
+        ],
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "Source node id."
+          },
+          "to": {
+            "type": "string",
+            "description": "Target node id."
+          },
+          "label": {
+            "type": "string"
+          },
+          "style": {
+            "enum": [
+              "cycle",
+              "revision",
+              "exception",
+              "plain"
+            ],
+            "description": "cycle=cyan, revision=emerald, exception=rose, plain=slate. Default plain."
+          },
+          "route": {
+            "enum": [
+              "under",
+              "over"
+            ],
+            "description": "under = channel below the flow (default); over = channel above the boxes."
+          },
+          "meta": {
+            "type": "object",
+            "description": "Optional metadata for this loop/exception connector, rendered when it is clicked in the interactive drawer. Free-form: routingPurpose, condition, triggerEvent, dataTransferred, businessMeaning, downstreamImpact are recognised and grouped; any other key still renders under Additional Details."
+          }
+        }
+      }
+    },
+    "cards": {
+      "type": "object",
+      "description": "The three reference cards below the diagram.",
+      "properties": {
+        "ioTable": {
+          "type": "array",
+          "description": "DEFAULT card (Mode A1) — the Input · Output · Example · Meaning table. One row per transformation stage. When present, this single card replaces the three-card set. `example` auto-derives from the leading input→output terms if omitted.",
+          "items": {
+            "type": "object",
+            "required": [
+              "input",
+              "output",
+              "meaning"
+            ],
+            "properties": {
+              "input": {
+                "type": "string"
+              },
+              "output": {
+                "type": "string"
+              },
+              "example": {
+                "type": "string"
+              },
+              "meaning": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Fallback three-card mode: Prerequisites bullets."
+        },
+        "io": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Fallback three-card mode: Inputs → Outputs bullets."
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Fallback three-card mode: Tools & Integrations bullets."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,120 @@
+{
+  "title": "AI Governance Workflow with Interactive Details",
+  "subtitle": "From use-case proposal through ethics review, deployment, and post-launch monitoring",
+  "footer": "AI Governance Workflow • Generated • v0.1",
+  "slug": "ai-governance-interactive",
+  "interactive": true,
+  "prerequisites": [
+    "AI policy & risk taxonomy published",
+    "Ethics committee chartered",
+    "Model registry / MLOps platform",
+    "Incident response runbook",
+    "Audit logging enabled"
+  ],
+  "flow": [
+    { "type": "start", "label": "Start" },
+    {
+      "type": "step",
+      "id": "submit",
+      "kind": "manual",
+      "role": "Business Owner",
+      "title": "Submit Use Case",
+      "desc": ["Describe purpose, data,", "stakeholders, success metrics"],
+      "edgeLabel": "intake form",
+      "meaning": "A business owner formally submits a new AI use case, documenting its purpose, data sources, and expected business impact.",
+      "inputDesc": "Business context, problem statement, success metrics",
+      "outputDesc": "Intake form, use case proposal",
+      "example": "Marketing team submits a proposal to use NLP for customer sentiment analysis on support tickets to improve response routing."
+    },
+    {
+      "type": "step",
+      "id": "classify",
+      "kind": "automated",
+      "role": "Risk Engine",
+      "title": "Risk Classification",
+      "desc": ["Score against EU AI Act", "tiers + internal taxonomy"],
+      "edgeLabel": "risk tier",
+      "meaning": "An automated system evaluates the use case against regulatory frameworks and internal risk taxonomies to assign a governance tier.",
+      "inputDesc": "Use case intake form, training data lineage, stakeholders",
+      "outputDesc": "Risk tier classification, in-scope data map",
+      "example": "Use case intake form → Risk tier classification"
+    },
+    {
+      "type": "step",
+      "id": "ethics",
+      "kind": "manual",
+      "role": "Ethics Committee",
+      "title": "Ethics Review",
+      "desc": ["Bias, fairness, privacy,", "human-impact assessment"],
+      "edgeLabel": "findings",
+      "meaning": "A cross-functional ethics committee reviews the classified use case for bias, fairness concerns, and privacy implications.",
+      "inputDesc": "Risk tier classification, training data analysis, model card",
+      "outputDesc": "Ethics review findings, mitigation recommendations",
+      "example": "Committee examines whether sentiment model has bias against non-English speakers, and ensures ticket routing decisions have human override capability."
+    },
+    {
+      "type": "decision",
+      "id": "approved",
+      "title": "Approved?",
+      "yesLabel": "Yes",
+      "no": { "label": "Rejected" },
+      "noLabel": "No",
+      "meaning": "A binary decision gate: proceed to deployment or request modifications.",
+      "example": "If bias concerns are identified, the decision routes to 'Rejected' with conditions; if none, routing is approved."
+    },
+    {
+      "type": "step",
+      "id": "deploy",
+      "kind": "integration",
+      "role": "MLOps Platform",
+      "title": "Deploy Model",
+      "desc": ["Register, sign,", "canary release to prod"],
+      "edgeLabel": "live",
+      "meaning": "The approved model is registered in the model registry, cryptographically signed, and released to production via canary deployment.",
+      "inputDesc": "Approved model artifacts, deployment plan, infrastructure configs",
+      "outputDesc": "Signed model artifact, live endpoint, audit trail",
+      "example": "The sentiment model is registered in the internal model registry, signed with the deployment certificate, and rolled out to 5% of production traffic for validation."
+    },
+    {
+      "type": "step",
+      "id": "monitor",
+      "kind": "automated",
+      "role": "Observability",
+      "title": "Monitor & Audit",
+      "desc": ["Drift, fairness,", "incident detection"],
+      "meaning": "Continuous monitoring detects model performance drift, fairness degradation, and anomalies; all predictions are audit-logged.",
+      "inputDesc": "Live model predictions, ground truth labels, user feedback",
+      "outputDesc": "Performance metrics, drift alerts, audit logs",
+      "example": "Daily dashboards track model accuracy on ticket sentiment, detecting any drift in non-English text handling. Every routing decision is logged immutably."
+    },
+    { "type": "end", "label": "In Production" }
+  ],
+  "loops": [
+    {
+      "from": "monitor",
+      "to": "classify",
+      "style": "plain",
+      "label": "drift detected → re-classify",
+      "meaning": "If monitoring detects performance drift or fairness issues, the use case is re-classified and re-reviewed before continuing."
+    }
+  ],
+  "cards": {
+    "ioTable": [
+      {
+        "input": "Use case intake form, training data lineage, stakeholders",
+        "output": "Risk tier classification, in-scope data map",
+        "meaning": "Intake details are classified against the risk taxonomy to assign a governed risk tier."
+      },
+      {
+        "input": "Risk tier, bias/fairness findings, human-impact notes",
+        "output": "Ethics decision, mitigation conditions, sign-off",
+        "meaning": "The ethics committee reviews the tiered case and returns an approve/reject decision with conditions."
+      },
+      {
+        "input": "Approved model, deployment plan, monitors",
+        "output": "Signed model artifact, live endpoint, audit trail",
+        "meaning": "The approved model is registered, signed, and canary-released with drift and fairness monitoring."
+      }
+    ]
+  }
+}

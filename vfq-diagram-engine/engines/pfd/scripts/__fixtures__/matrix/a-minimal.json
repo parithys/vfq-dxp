@@ -1,0 +1,23 @@
+{
+  "title": "Minimal Flow",
+  "subtitle": "Start, one task, end",
+  "flow": [
+    {
+      "type": "start",
+      "label": "Start"
+    },
+    {
+      "type": "step",
+      "id": "n1",
+      "kind": "manual",
+      "title": "Single Task",
+      "desc": [
+        "The only step"
+      ]
+    },
+    {
+      "type": "end",
+      "label": "Done"
+    }
+  ]
+}

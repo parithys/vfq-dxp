@@ -1,0 +1,60 @@
+{
+  "title": "Branch Rejoin Flow",
+  "subtitle": "A negative branch that routes to a real node instead of a dead end",
+  "interactive": true,
+  "flow": [
+    {
+      "type": "start",
+      "label": "Intake"
+    },
+    {
+      "type": "step",
+      "id": "triage",
+      "kind": "automated",
+      "title": "Auto Triage",
+      "desc": [
+        "Rules engine classifies the request"
+      ]
+    },
+    {
+      "type": "decision",
+      "id": "confident",
+      "title": [
+        "Confident?"
+      ],
+      "yesLabel": "Yes",
+      "noLabel": "No",
+      "no": {
+        "to": "review"
+      }
+    },
+    {
+      "type": "step",
+      "id": "route",
+      "kind": "automated",
+      "title": "Auto Route",
+      "desc": [
+        "Assigned without human review"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "review",
+      "kind": "manual",
+      "title": "Human Review",
+      "desc": [
+        "Analyst classifies by hand"
+      ]
+    },
+    {
+      "type": "end",
+      "label": "Resolved"
+    },
+    {
+      "type": "end",
+      "id": "dropped",
+      "variant": "reject",
+      "label": "Dropped"
+    }
+  ]
+}

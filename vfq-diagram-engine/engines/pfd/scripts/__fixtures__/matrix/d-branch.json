@@ -1,0 +1,44 @@
+{
+  "title": "Branching Flow",
+  "subtitle": "One decision, two outcomes",
+  "flow": [
+    {
+      "type": "start",
+      "label": "Start"
+    },
+    {
+      "type": "step",
+      "id": "n1",
+      "kind": "manual",
+      "title": "Submit",
+      "desc": [
+        "Initial submission"
+      ]
+    },
+    {
+      "type": "decision",
+      "id": "d1",
+      "title": [
+        "Approved?"
+      ],
+      "yesLabel": "Yes",
+      "noLabel": "No",
+      "no": {
+        "label": "Rejected"
+      }
+    },
+    {
+      "type": "step",
+      "id": "n2",
+      "kind": "automated",
+      "title": "Process",
+      "desc": [
+        "Downstream processing"
+      ]
+    },
+    {
+      "type": "end",
+      "label": "Complete"
+    }
+  ]
+}

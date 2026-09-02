@@ -1,0 +1,30 @@
+{
+  "brsds": {
+    "vfq-fibre-brsd-v1-0": {
+      "sourcePath": "BRSD/VFQ_Fibre_BRSD_v1.0.xlsx",
+      "sourceSha256": "551e7b1cc196b01af54ae8ae0ab1c25b1cb6d15c73e36a2d7100f0769f786790",
+      "diagrams": {
+        "bpmn": {
+          "extractedAt": "2026-09-02T12:32:13.227Z",
+          "renderedAt": "2026-09-02T18:50:09.694Z",
+          "engineHash": "d5170bcd5a80c2f5"
+        },
+        "journey": {
+          "extractedAt": "2026-09-02T12:59:23.031Z",
+          "renderedAt": "2026-09-02T14:20:12.041Z",
+          "engineHash": "d3c2ba1e3d67b9e0"
+        },
+        "processflow": {
+          "extractedAt": "2026-09-02T12:27:33.018Z",
+          "renderedAt": "2026-09-02T12:59:49.281Z",
+          "engineHash": "35e841ab5744df14"
+        },
+        "userflow": {
+          "extractedAt": "2026-09-02T12:34:06.644Z",
+          "renderedAt": "2026-09-02T14:20:12.074Z",
+          "engineHash": "234695a2f2ccdb48"
+        }
+      }
+    }
+  }
+}

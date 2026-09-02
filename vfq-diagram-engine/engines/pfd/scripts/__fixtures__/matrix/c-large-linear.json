@@ -1,0 +1,140 @@
+{
+  "title": "Large Linear Flow",
+  "subtitle": "Enough nodes to force row wrapping",
+  "flow": [
+    {
+      "type": "start",
+      "label": "Start"
+    },
+    {
+      "type": "step",
+      "id": "n1",
+      "kind": "automated",
+      "title": "Stage 1",
+      "desc": [
+        "Detail 1"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n2",
+      "kind": "integration",
+      "title": "Stage 2",
+      "desc": [
+        "Detail 2"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n3",
+      "kind": "manual",
+      "title": "Stage 3",
+      "desc": [
+        "Detail 3"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n4",
+      "kind": "automated",
+      "title": "Stage 4",
+      "desc": [
+        "Detail 4"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n5",
+      "kind": "integration",
+      "title": "Stage 5",
+      "desc": [
+        "Detail 5"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n6",
+      "kind": "manual",
+      "title": "Stage 6",
+      "desc": [
+        "Detail 6"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n7",
+      "kind": "automated",
+      "title": "Stage 7",
+      "desc": [
+        "Detail 7"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n8",
+      "kind": "integration",
+      "title": "Stage 8",
+      "desc": [
+        "Detail 8"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n9",
+      "kind": "manual",
+      "title": "Stage 9",
+      "desc": [
+        "Detail 9"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n10",
+      "kind": "automated",
+      "title": "Stage 10",
+      "desc": [
+        "Detail 10"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n11",
+      "kind": "integration",
+      "title": "Stage 11",
+      "desc": [
+        "Detail 11"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n12",
+      "kind": "manual",
+      "title": "Stage 12",
+      "desc": [
+        "Detail 12"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n13",
+      "kind": "automated",
+      "title": "Stage 13",
+      "desc": [
+        "Detail 13"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n14",
+      "kind": "integration",
+      "title": "Stage 14",
+      "desc": [
+        "Detail 14"
+      ]
+    },
+    {
+      "type": "end",
+      "label": "End"
+    }
+  ]
+}

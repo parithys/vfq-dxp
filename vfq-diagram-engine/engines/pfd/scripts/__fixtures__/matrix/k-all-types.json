@@ -1,0 +1,56 @@
+{
+  "title": "Integration Heavy",
+  "subtitle": "Manual, automated, integration, decision, start and end",
+  "flow": [
+    {
+      "type": "start",
+      "label": "Start"
+    },
+    {
+      "type": "step",
+      "id": "n1",
+      "kind": "manual",
+      "title": "Human Task",
+      "desc": [
+        "A person acts"
+      ],
+      "role": "👤 Operator"
+    },
+    {
+      "type": "step",
+      "id": "n2",
+      "kind": "automated",
+      "title": "System Task",
+      "desc": [
+        "A system acts"
+      ],
+      "role": "⚡ Engine"
+    },
+    {
+      "type": "step",
+      "id": "n3",
+      "kind": "integration",
+      "title": "API Task",
+      "desc": [
+        "An interface acts"
+      ],
+      "role": "🔗 Gateway"
+    },
+    {
+      "type": "decision",
+      "id": "d1",
+      "title": [
+        "Route?"
+      ],
+      "yesLabel": "Primary",
+      "noLabel": "Fallback",
+      "no": {
+        "label": "Fallback path"
+      }
+    },
+    {
+      "type": "end",
+      "label": "Complete"
+    }
+  ]
+}

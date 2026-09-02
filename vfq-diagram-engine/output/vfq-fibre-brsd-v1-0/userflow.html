@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fibre Activation through Retail Agent</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background:#eef1f4; margin:0; padding:32px; color:#1b1f24; }
+  .card { background:#fff; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.06); padding:28px; max-width:828px; margin:0 auto 24px; }
+  h1 { font-size:26px; margin:0 0 4px; }
+  .sub { color:#5b6570; margin:0 0 20px; font-size:14px; }
+  .diagram-wrap { overflow-x:auto; border:1px solid #e5e8eb; border-radius:8px; }
+  .legend { display:flex; gap:48px; margin-top:20px; flex-wrap:wrap; }
+  .legend-col h4 { margin:0 0 8px; font-size:13px; text-transform:uppercase; color:#5b6570; letter-spacing:0.06em; }
+  .legend-item { display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:6px; text-transform:capitalize; }
+  .swatch { width:14px; height:14px; border-radius:3px; border:2px solid transparent; display:inline-block; }
+  .swatch.line { height:3px; border-radius:2px; }
+  .stats { display:flex; gap:16px; margin:16px 0 4px; }
+  .stat { background:#f7f8fa; border-radius:8px; padding:12px 18px; }
+  .stat b { display:block; font-size:28px; }
+  .stat span { font-size:12px; color:#5b6570; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Fibre Activation through Retail Agent</h1>
+    <p class="sub">FIB-ACT-RTL-001: Fibre and Fixed Wireless Access activation, assisted retail/field agent channel &middot; 32 nodes &middot; 35 connectors</p>
+    <div class="diagram-wrap"><svg viewBox="0 0 748 4440.2307692307695" width="748" height="4440.2307692307695" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif">
+    <defs>
+    <marker id="arrow-default" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5b6570"/>
+    </marker>
+    <marker id="arrow-success" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1fa971"/>
+    </marker>
+    <marker id="arrow-granted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1fa971"/>
+    </marker>
+    <marker id="arrow-valid" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1fa971"/>
+    </marker>
+    <marker id="arrow-approved" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1fa971"/>
+    </marker>
+    <marker id="arrow-yes" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1fa971"/>
+    </marker>
+    <marker id="arrow-failure" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#eb5757"/>
+    </marker>
+    <marker id="arrow-denied" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#eb5757"/>
+    </marker>
+    <marker id="arrow-rejected" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#eb5757"/>
+    </marker>
+    <marker id="arrow-blocked" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#eb5757"/>
+    </marker>
+    <marker id="arrow-no" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#eb5757"/>
+    </marker>
+    <marker id="arrow-escalate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#eb5757"/>
+    </marker>
+    <marker id="arrow-fallback" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f2994a"/>
+    </marker>
+    <marker id="arrow-alternate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f2994a"/>
+    </marker>
+    <marker id="arrow-reference" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f2994a"/>
+    </marker></defs>
+    <rect x="0" y="0" width="748" height="4440.2307692307695" fill="#f7f8fa"/>
+    <g class="connectors"><path d="M 424 116 L 424 180" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/>
+<path d="M 424 252 L 424 316" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/><g>
+    <rect x="408.9904" y="263.48" width="90.0192" height="16" rx="3" fill="#ffffff" stroke="#5b6570" stroke-width="1"/>
+    <text x="454" y="275.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#5b6570" letter-spacing="0.3">queue ticket</text>
+  </g>
+<path d="M 424 388 L 424 452" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/><g>
+    <rect x="396.1762" y="399.48" width="115.64760000000004" height="16" rx="3" fill="#ffffff" stroke="#5b6570" stroke-width="1"/>
+    <text x="454" y="411.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#5b6570" letter-spacing="0.3">verified identity</text>
+  </g>
+<path d="M 424 508 L 424 572" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/><g>
+    <rect x="391.1866" y="519.48" width="125.62680000000003" height="16" rx="3" fill="#ffffff" stroke="#5b6570" stroke-width="1"/>
+    <text x="454" y="531.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#5b6570" letter-spacing="0.3">customer account</text>
+  </g>
+<path d="M 424 644 L 424 708" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/><g>
+    <rect x="385.63" y="655.48" width="136.74000000000007" height="16" rx="3" fill="#ffffff" stroke="#5b6570" stroke-width="1"/>
+    <text x="454" y="667.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#5b6570" letter-spacing="0.3">installation address</text>
+  </g>
+<path d="M 424 780 L 424 844" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/><g>
+    <rect x="414.3202" y="791.48" width="79.3596" height="16" rx="3" fill="#ffffff" stroke="#5b6570" stroke-width="1"/>
+    <text x="454" y="803.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#5b6570" letter-spacing="0.3">RFS result</text>
+  </g>
+<path d="M 424 1084 L 424 1148" fill="none" stroke="#1fa971" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-yes)"/><g>
+    <rect x="436.8868" y="1095.48" width="34.2264" height="16" rx="3" fill="#ffffff" stroke="#1fa971" stroke-width="1"/>
+    <text x="454" y="1107.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#1fa971" letter-spacing="0.3">Yes</text>
+  </g>
+<path d="M 424 1084 L 424 1104.48 L 128 1104.48 L 128 1148" fill="none" stroke="#eb5757" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-no)"/><g>
+    <rect x="262.4022" y="1087.48" width="27.1956" height="16" rx="3" fill="#ffffff" stroke="#eb5757" stroke-width="1"/>
+    <text x="276" y="1099.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#eb5757" letter-spacing="0.3">No</text>
+  </g>
+<path d="M 424 1220 L 424 1284" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/><g>
+    <rect x="357.5068" y="1231.48" width="192.9864" height="16" rx="3" fill="#ffffff" stroke="#5b6570" stroke-width="1"/>
+    <text x="454" y="1243.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#5b6570" letter-spacing="0.3">locked address + tenancy doc</text>
+  </g>
+<path d="M 424 1340 L 424 1404" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/><g>
+    <rect x="397.42359999999996" y="1351.48" width="113.15280000000001" height="16" rx="3" fill="#ffffff" stroke="#5b6570" stroke-width="1"/>
+    <text x="454" y="1363.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#5b6570" letter-spacing="0.3">eligibility result</text>
+  </g>
+<path d="M 424 1612.3076923076924 L 424 1676.3076923076924" fill="none" stroke="#1fa971" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-yes)"/><g>
+    <rect x="436.8868" y="1623.7876923076924" width="34.2264" height="16" rx="3" fill="#ffffff" stroke="#1fa971" stroke-width="1"/>
+    <text x="454" y="1635.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#1fa971" letter-spacing="0.3">Yes</text>
+  </g>
+<path d="M 424 1612.3076923076924 L 424 1632.7876923076924 L 128 1632.7876923076924 L 128 1684.3076923076924" fill="none" stroke="#eb5757" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-no)"/><g>
+    <rect x="262.4022" y="1615.7876923076924" width="27.1956" height="16" rx="3" fill="#ffffff" stroke="#eb5757" stroke-width="1"/>
+    <text x="276" y="1627.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#eb5757" letter-spacing="0.3">No</text>
+  </g>
+<path d="M 424 1748.3076923076924 L 424 1812.3076923076924" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/>
+<path d="M 424 1884.3076923076924 L 424 1948.3076923076924" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/><g>
+    <rect x="415.3408" y="1895.7876923076924" width="77.3184" height="16" rx="3" fill="#ffffff" stroke="#5b6570" stroke-width="1"/>
+    <text x="454" y="1907.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#5b6570" letter-spacing="0.3">bill profile</text>
+  </g>
+<path d="M 424 2004.3076923076924 L 424 2068.3076923076924" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/>
+<path d="M 424 2124.3076923076924 L 424 2188.3076923076924" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/><g>
+    <rect x="433.9384" y="2135.7876923076924" width="40.1232" height="16" rx="3" fill="#ffffff" stroke="#5b6570" stroke-width="1"/>
+    <text x="454" y="2147.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#5b6570" letter-spacing="0.3">cart</text>
+  </g>
+<path d="M 424 2260.3076923076924 L 424 2324.3076923076924" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/><g>
+    <rect x="385.74339999999995" y="2271.7876923076924" width="136.51320000000004" height="16" rx="3" fill="#ffffff" stroke="#5b6570" stroke-width="1"/>
+    <text x="454" y="2283.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#5b6570" letter-spacing="0.3">number + resources</text>
+  </g>
+<path d="M 424 2380.3076923076924 L 424 2444.3076923076924" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/><g>
+    <rect x="408.7636" y="2391.7876923076924" width="90.4728" height="16" rx="3" fill="#ffffff" stroke="#5b6570" stroke-width="1"/>
+    <text x="454" y="2403.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#5b6570" letter-spacing="0.3">appointment</text>
+  </g>
+<path d="M 424 2500.3076923076924 L 424 2564.3076923076924" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/><g>
+    <rect x="401.9596" y="2511.7876923076924" width="104.08080000000001" height="16" rx="3" fill="#ffffff" stroke="#5b6570" stroke-width="1"/>
+    <text x="454" y="2523.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#5b6570" letter-spacing="0.3">device capture</text>
+  </g>
+<path d="M 424 2804.3076923076924 L 424 2868.3076923076924" fill="none" stroke="#1fa971" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-yes)"/><g>
+    <rect x="422.485" y="2815.7876923076924" width="63.029999999999994" height="16" rx="3" fill="#ffffff" stroke="#1fa971" stroke-width="1"/>
+    <text x="454" y="2827.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#1fa971" letter-spacing="0.3">No issue</text>
+  </g>
+<path d="M 424 2804.3076923076924 L 424 2824.7876923076924 L 128 2824.7876923076924 L 128 2868.3076923076924" fill="none" stroke="#eb5757" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-no)"/><g>
+    <rect x="223.9596" y="2807.7876923076924" width="104.08080000000001" height="16" rx="3" fill="#ffffff" stroke="#eb5757" stroke-width="1"/>
+    <text x="276" y="2819.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#eb5757" letter-spacing="0.3">Issue reported</text>
+  </g>
+<path d="M 424 2924.3076923076924 L 424 2988.3076923076924" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/><g>
+    <rect x="412.5058" y="2935.7876923076924" width="82.9884" height="16" rx="3" fill="#ffffff" stroke="#5b6570" stroke-width="1"/>
+    <text x="454" y="2947.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#5b6570" letter-spacing="0.3">task closed</text>
+  </g>
+<path d="M 424 3044.3076923076924 L 424 3108.3076923076924" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/>
+<path d="M 424 3164.3076923076924 L 424 3228.3076923076924" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/><g>
+    <rect x="414.3202" y="3175.7876923076924" width="79.35960000000001" height="16" rx="3" fill="#ffffff" stroke="#5b6570" stroke-width="1"/>
+    <text x="454" y="3187.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#5b6570" letter-spacing="0.3">signed CAF</text>
+  </g>
+<path d="M 424 3284.3076923076924 L 424 3348.3076923076924" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/>
+<path d="M 424 3420.3076923076924 L 424 3484.3076923076924" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/><g>
+    <rect x="378.14559999999994" y="3431.7876923076924" width="151.70880000000005" height="16" rx="3" fill="#ffffff" stroke="#5b6570" stroke-width="1"/>
+    <text x="454" y="3443.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#5b6570" letter-spacing="0.3">payment confirmation</text>
+  </g>
+<path d="M 424 3700.2307692307695 L 424 3764.2307692307695" fill="none" stroke="#1fa971" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-yes)"/><g>
+    <rect x="436.8868" y="3711.7107692307695" width="34.2264" height="16" rx="3" fill="#ffffff" stroke="#1fa971" stroke-width="1"/>
+    <text x="454" y="3723.7107692307695" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#1fa971" letter-spacing="0.3">Yes</text>
+  </g>
+<path d="M 424 3820.2307692307695 L 424 3884.2307692307695" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/><g>
+    <rect x="396.2896" y="3831.7107692307695" width="115.42080000000003" height="16" rx="3" fill="#ffffff" stroke="#5b6570" stroke-width="1"/>
+    <text x="454" y="3843.7107692307695" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#5b6570" letter-spacing="0.3">submitted order</text>
+  </g>
+<path d="M 424 3956.2307692307695 L 424 4020.2307692307695" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/>
+<path d="M 424 4092.2307692307695 L 424 4156.2307692307695" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/><g>
+    <rect x="387.331" y="4103.710769230769" width="133.33800000000002" height="16" rx="3" fill="#ffffff" stroke="#5b6570" stroke-width="1"/>
+    <text x="454" y="4115.710769230769" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#5b6570" letter-spacing="0.3">activation outcome</text>
+  </g>
+<path d="M 424 4228.2307692307695 L 424 4292.2307692307695" fill="none" stroke="#5b6570" stroke-width="2" stroke-dasharray="0" marker-end="url(#arrow-default)"/><g>
+    <rect x="406.7224" y="4239.710769230769" width="94.5552" height="16" rx="3" fill="#ffffff" stroke="#5b6570" stroke-width="1"/>
+    <text x="454" y="4251.710769230769" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#5b6570" letter-spacing="0.3">billing update</text>
+  </g>
+<path d="M 128 1148 L 128 1127.52 L 660 1127.52 L 660 687.52 L 424 687.52 L 424 644" fill="none" stroke="#f2994a" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-fallback)"/><g>
+    <rect x="595.8258" y="1110.52" width="128.34840000000003" height="16" rx="3" fill="#ffffff" stroke="#f2994a" stroke-width="1"/>
+    <text x="660" y="1122.52" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#f2994a" letter-spacing="0.3">recapture address</text>
+  </g>
+<path d="M 128 1684.3076923076924 L 128 1655.8276923076924 L 700 1655.8276923076924 L 700 295.52 L 424 295.52 L 424 252" fill="none" stroke="#f2994a" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-fallback)"/><g>
+    <rect x="589.672" y="1638.8276923076924" width="220.65599999999995" height="16" rx="3" fill="#ffffff" stroke="#f2994a" stroke-width="1"/>
+    <text x="700" y="1650.8276923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#f2994a" letter-spacing="0.3">eligibility failure, end interaction</text>
+  </g>
+<path d="M 128 2868.3076923076924 L 128 2847.8276923076924 L 700 2847.8276923076924 L 700 2423.8276923076924 L 424 2423.8276923076924 L 424 2380.3076923076924" fill="none" stroke="#f2994a" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-fallback)"/><g>
+    <rect x="619.2694" y="2830.8276923076924" width="161.46120000000002" height="16" rx="3" fill="#ffffff" stroke="#f2994a" stroke-width="1"/>
+    <text x="700" y="2842.8276923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#f2994a" letter-spacing="0.3">reschedule appointment</text>
+  </g>
+<path d="M 424 3484.3076923076924 L 424 3463.8276923076924 L 660 3463.8276923076924 L 660 3463.8276923076924 L 424 3463.8276923076924 L 424 3420.3076923076924" fill="none" stroke="#eb5757" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-no)"/><g>
+    <rect x="646.4022" y="3446.8276923076924" width="27.1956" height="16" rx="3" fill="#ffffff" stroke="#eb5757" stroke-width="1"/>
+    <text x="660" y="3458.8276923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#eb5757" letter-spacing="0.3">No</text>
+  </g></g>
+    <g class="nodes"><g class="flow-node" data-id="start"><circle cx="424" cy="82" r="34" fill="#1fa971" stroke="#0e7a4d" stroke-width="2"/><text x="424" y="86.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Start</text></g>
+<g class="flow-node" data-id="jsm"><rect x="344" y="180" width="160" height="72" rx="8" ry="8" fill="#f2994a" stroke="#c96f22" stroke-width="2"/><text x="424" y="204.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Initiate</text><text x="424" y="220.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Customer</text><text x="424" y="236.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Interaction</text></g>
+<g class="flow-node" data-id="kyc"><rect x="344" y="316" width="160" height="72" rx="8" ry="8" fill="#f2994a" stroke="#c96f22" stroke-width="2"/><text x="424" y="340.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Initiate</text><text x="424" y="356.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Customer</text><text x="424" y="372.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Verification</text></g>
+<g class="flow-node" data-id="cam"><rect x="334.7" y="452" width="178.6" height="56" rx="8" ry="8" fill="#f2994a" stroke="#c96f22" stroke-width="2"/><text x="424" y="476.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Initiate Customer</text><text x="424" y="492.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Account Creation</text></g>
+<g class="flow-node" data-id="addr"><rect x="344" y="572" width="160" height="72" rx="8" ry="8" fill="#2f80ed" stroke="#1c5fc4" stroke-width="2"/><text x="424" y="596.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Capture</text><text x="424" y="612.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Installation</text><text x="424" y="628.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Address</text></g>
+<g class="flow-node" data-id="rfs"><rect x="344" y="708" width="160" height="72" rx="8" ry="8" fill="#f2994a" stroke="#c96f22" stroke-width="2"/><text x="424" y="732.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Service</text><text x="424" y="748.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Availability</text><text x="424" y="764.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Search</text></g>
+<g class="flow-node" data-id="rfs_gate"><polygon points="424,844 544,964 424,1084 304,964" fill="#eb5757" stroke="#b83a3a" stroke-width="2" stroke-linejoin="round"/><text x="424" y="952.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Fibre/FWA service</text><text x="424" y="968.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">available at</text><text x="424" y="984.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">location?</text></g>
+<g class="flow-node" data-id="addr_lock"><rect x="344" y="1148" width="160" height="72" rx="8" ry="8" fill="#2f80ed" stroke="#1c5fc4" stroke-width="2"/><text x="424" y="1172.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Lock Address</text><text x="424" y="1188.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">and Upload</text><text x="424" y="1204.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Proof</text></g>
+<g class="flow-node" data-id="ecc"><rect x="344" y="1284" width="160" height="56" rx="8" ry="8" fill="#f2994a" stroke="#c96f22" stroke-width="2"/><text x="424" y="1308.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Eligibility and</text><text x="424" y="1324.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Credit Control</text></g>
+<g class="flow-node" data-id="elig_gate"><polygon points="424,1404 528.1538461538462,1508.1538461538462 424,1612.3076923076924 319.84615384615387,1508.1538461538462" fill="#eb5757" stroke="#b83a3a" stroke-width="2" stroke-linejoin="round"/><text x="424" y="1496.6338461538462" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Eligibility and</text><text x="424" y="1512.6338461538462" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">credit check</text><text x="424" y="1528.6338461538462" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">passed?</text></g>
+<g class="flow-node" data-id="milestone1"><rect x="334.7" y="1676.3076923076924" width="178.6" height="72" rx="8" ry="8" fill="#f2994a" stroke="#c96f22" stroke-width="2"/><text x="424" y="1700.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Milestone: Contact</text><text x="424" y="1716.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Created, Eligibility</text><text x="424" y="1732.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Captured</text></g>
+<g class="flow-node" data-id="bam"><rect x="344" y="1812.3076923076924" width="160" height="72" rx="8" ry="8" fill="#2f80ed" stroke="#1c5fc4" stroke-width="2"/><text x="424" y="1836.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Capture</text><text x="424" y="1852.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Customer Bill</text><text x="424" y="1868.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Profile</text></g>
+<g class="flow-node" data-id="milestone2"><rect x="344" y="1948.3076923076924" width="160" height="56" rx="8" ry="8" fill="#f2994a" stroke="#c96f22" stroke-width="2"/><text x="424" y="1972.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Milestone: Bill</text><text x="424" y="1988.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Profile Created</text></g>
+<g class="flow-node" data-id="qpc"><rect x="344" y="2068.3076923076924" width="160" height="56" rx="8" ry="8" fill="#2f80ed" stroke="#1c5fc4" stroke-width="2"/><text x="424" y="2092.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Product</text><text x="424" y="2108.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Selection</text></g>
+<g class="flow-node" data-id="num"><rect x="344" y="2188.3076923076924" width="160" height="72" rx="8" ry="8" fill="#f2994a" stroke="#c96f22" stroke-width="2"/><text x="424" y="2212.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Number and</text><text x="424" y="2228.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">SIM/CPE</text><text x="424" y="2244.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Selection</text></g>
+<g class="flow-node" data-id="wfm_book"><rect x="344" y="2324.3076923076924" width="160" height="56" rx="8" ry="8" fill="#f2994a" stroke="#c96f22" stroke-width="2"/><text x="424" y="2348.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Appointment</text><text x="424" y="2364.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Booking</text></g>
+<g class="flow-node" data-id="wfm_exec"><rect x="344" y="2444.3076923076924" width="160" height="56" rx="8" ry="8" fill="#f2994a" stroke="#c96f22" stroke-width="2"/><text x="424" y="2468.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Workforce Task</text><text x="424" y="2484.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Execution</text></g>
+<g class="flow-node" data-id="wfm_issue"><polygon points="424,2564.3076923076924 544,2684.3076923076924 424,2804.3076923076924 304,2684.3076923076924" fill="#eb5757" stroke="#b83a3a" stroke-width="2" stroke-linejoin="round"/><text x="424" y="2672.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Installation issue</text><text x="424" y="2688.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">reported by</text><text x="424" y="2704.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">technician?</text></g>
+<g class="flow-node" data-id="wfm_close"><rect x="344" y="2868.3076923076924" width="160" height="56" rx="8" ry="8" fill="#2f80ed" stroke="#1c5fc4" stroke-width="2"/><text x="424" y="2892.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Workforce Task</text><text x="424" y="2908.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Closure</text></g>
+<g class="flow-node" data-id="milestone3"><rect x="344" y="2988.3076923076924" width="160" height="56" rx="8" ry="8" fill="#f2994a" stroke="#c96f22" stroke-width="2"/><text x="424" y="3012.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Milestone: Cart</text><text x="424" y="3028.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Checked Out</text></g>
+<g class="flow-node" data-id="caf"><rect x="344" y="3108.3076923076924" width="160" height="56" rx="8" ry="8" fill="#2f80ed" stroke="#1c5fc4" stroke-width="2"/><text x="424" y="3132.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Contract and</text><text x="424" y="3148.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Documentation</text></g>
+<g class="flow-node" data-id="milestone4"><rect x="344" y="3228.3076923076924" width="160" height="56" rx="8" ry="8" fill="#f2994a" stroke="#c96f22" stroke-width="2"/><text x="424" y="3252.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Milestone:</text><text x="424" y="3268.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Signed CAF</text></g>
+<g class="flow-node" data-id="pay"><rect x="344" y="3348.3076923076924" width="160" height="72" rx="8" ry="8" fill="#f2994a" stroke="#c96f22" stroke-width="2"/><text x="424" y="3372.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Payment and</text><text x="424" y="3388.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Inventory</text><text x="424" y="3404.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Depletion</text></g>
+<g class="flow-node" data-id="order_ready"><polygon points="424,3484.3076923076924 531.9615384615385,3592.269230769231 424,3700.2307692307695 316.03846153846155,3592.269230769231" fill="#eb5757" stroke="#b83a3a" stroke-width="2" stroke-linejoin="round"/><text x="424" y="3580.749230769231" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">All sections</text><text x="424" y="3596.749230769231" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">complete and</text><text x="424" y="3612.749230769231" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">payment paid?</text></g>
+<g class="flow-node" data-id="ord_submit"><rect x="344" y="3764.2307692307695" width="160" height="56" rx="8" ry="8" fill="#f2994a" stroke="#c96f22" stroke-width="2"/><text x="424" y="3788.7107692307695" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Order</text><text x="424" y="3804.7107692307695" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Submission</text></g>
+<g class="flow-node" data-id="milestone5"><rect x="344" y="3884.2307692307695" width="160" height="72" rx="8" ry="8" fill="#f2994a" stroke="#c96f22" stroke-width="2"/><text x="424" y="3908.7107692307695" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Milestone:</text><text x="424" y="3924.7107692307695" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Order</text><text x="424" y="3940.7107692307695" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Submitted</text></g>
+<g class="flow-node" data-id="net"><rect x="344" y="4020.2307692307695" width="160" height="72" rx="8" ry="8" fill="#f2994a" stroke="#c96f22" stroke-width="2"/><text x="424" y="4044.7107692307695" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Network</text><text x="424" y="4060.7107692307695" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Activation and</text><text x="424" y="4076.7107692307695" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Fulfilment</text></g>
+<g class="flow-node" data-id="fin"><rect x="344" y="4156.2307692307695" width="160" height="72" rx="8" ry="8" fill="#f2994a" stroke="#c96f22" stroke-width="2"/><text x="424" y="4180.710769230769" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Billing Update</text><text x="424" y="4196.710769230769" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">and Order</text><text x="424" y="4212.710769230769" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Completion</text></g>
+<g class="flow-node" data-id="end"><circle cx="424" cy="4342.2307692307695" r="50" fill="#1fa971" stroke="#0e7a4d" stroke-width="2"/><text x="424" y="4346.710769230769" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Complete</text></g>
+<g class="flow-node" data-id="rfs_blocked"><rect x="48" y="1148" width="160" height="72" rx="8" ry="8" fill="#eb5757" stroke="#b83a3a" stroke-width="2"/><text x="128" y="1172.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Blocked:</text><text x="128" y="1188.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">feasibility</text><text x="128" y="1204.48" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">message</text></g>
+<g class="flow-node" data-id="elig_failed"><rect x="48" y="1684.3076923076924" width="160" height="56" rx="8" ry="8" fill="#eb5757" stroke="#b83a3a" stroke-width="2"/><text x="128" y="1708.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Eligibility</text><text x="128" y="1724.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">failure message</text></g>
+<g class="flow-node" data-id="wfm_fault"><rect x="48" y="2868.3076923076924" width="160" height="56" rx="8" ry="8" fill="#eb5757" stroke="#b83a3a" stroke-width="2"/><text x="128" y="2892.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">Fault ticket</text><text x="128" y="2908.7876923076924" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff">raised</text></g></g>
+  </svg></div>
+    <div class="legend"><div class="legend-col"><h4>Node types</h4><div class="legend-item"><span class="swatch" style="background:#1fa971;border-color:#0e7a4d"></span>start</div><div class="legend-item"><span class="swatch" style="background:#1fa971;border-color:#0e7a4d"></span>end</div><div class="legend-item"><span class="swatch" style="background:#2f80ed;border-color:#1c5fc4"></span>action</div><div class="legend-item"><span class="swatch" style="background:#2f80ed;border-color:#1c5fc4"></span>screen</div><div class="legend-item"><span class="swatch" style="background:#f2994a;border-color:#c96f22"></span>process</div><div class="legend-item"><span class="swatch" style="background:#eb5757;border-color:#b83a3a"></span>decision</div><div class="legend-item"><span class="swatch" style="background:#eb5757;border-color:#b83a3a"></span>error</div></div><div class="legend-col"><h4>Connector types</h4><div class="legend-item"><span class="swatch line" style="background:#5b6570"></span>default</div><div class="legend-item"><span class="swatch line" style="background:#1fa971"></span>success / granted / valid / approved / yes</div><div class="legend-item"><span class="swatch line" style="background:#eb5757"></span>failure / denied / rejected / blocked / no / escalate (dashed)</div><div class="legend-item"><span class="swatch line" style="background:#f2994a"></span>fallback / alternate / reference (dashed)</div></div></div>
+  </div>
+</body>
+</html>

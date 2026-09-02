@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Customer Journey Map</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{
+    --bg:#EFEFEF; --canvas:#FFFFFF; --ink:#1A1A2E; --muted:#6B7280;
+    --line:#E5E7EB;
+    --emotion-positive:#2E7D32; --emotion-neutral:#6B7280; --emotion-friction:#C62828; --emotion-delight:#1565C0;
+    --stage-1:#B9A6DA; --stage-2:#6C3FA6; --stage-3:#3B1F6B; --stage-4:#D32F2F;
+    --stage-5:#F2811D; --stage-6:#12777F; --stage-7:#5E9C33; --stage-8:#A9D08E;
+    --stage-9:#8E6BAE; --stage-10:#2F5D8A;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);font-family:-apple-system,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);}
+  #app{margin:20px;background:var(--canvas);box-shadow:0 2px 18px rgba(0,0,0,.08);border-radius:6px;overflow:hidden;padding-bottom:8px;}
+  header.title-block{text-align:center;padding:28px 20px 16px;}
+  header.title-block h1{margin:0 0 6px;font-size:27px;font-weight:700;}
+  header.title-block p{margin:0;font-size:12.5px;color:var(--muted);font-style:italic;}
+  .grid-row{display:grid;border-bottom:1px solid var(--line);}
+  .rail-label{padding:14px 8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;color:#1F2937;background:#FAFAFB;border-right:1px solid var(--line);display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;transform:rotate(180deg);text-align:center;}
+  .cell{padding:14px 12px;font-size:12.5px;line-height:1.5;border-right:1px solid var(--line);}
+  .cell:last-child{border-right:none;}
+  .stage-col{border-top:3px solid transparent;}
+  .prose{margin:0;}
+  .quote{margin:0;font-style:italic;color:#374151;}
+  .src-tag{display:block;margin-top:5px;font-size:10px;font-weight:600;color:var(--muted);}
+  .stage-header{height:100%;box-sizing:border-box;color:#fff;padding:14px 10px;text-align:center;display:flex;align-items:center;justify-content:center;}
+  .stage-header .name{font-size:15px;font-weight:700;}
+  /* .id-tag (the trailing reference-code tag on a pain point/response/opportunity line) has
+     been removed entirely, along with the JS that rendered it — see factListCell(). */
+  .fact-line{margin:0 0 6px;}
+  .fact-line:last-child{margin-bottom:0;}
+  .emotion-row{position:relative;padding:0;height:154px;}
+  .emotion-svg{width:100%;height:154px;display:block;}
+  .banner{grid-column:1 / -1;position:relative;text-align:center;padding:10px;font-size:13px;font-weight:700;border-bottom:1px solid var(--line);overflow:hidden;background:#F5F5F7;}
+  .banner .fill{position:absolute;left:0;top:0;bottom:0;background:#DEDEE4;z-index:0;}
+  .banner span{position:relative;z-index:1;}
+  .metric-card{background:#fff;border:1px solid var(--line);border-radius:8px;margin:6px;padding:10px;text-align:center;}
+  .metric-card .label{font-size:12.5px;font-weight:700;}
+  .metric-card .bars{display:flex;align-items:flex-end;justify-content:center;gap:2px;height:14px;margin:6px 0 4px;}
+  .metric-card .bars i{display:block;width:5px;background:#B9BEC9;border-radius:1px;}
+  .metric-card .val{font-size:11px;color:var(--muted);}
+  .metric-cell{padding:8px;}
+  footer.legend{padding:12px 16px;font-size:10.5px;color:var(--muted);text-align:center;border-top:1px solid var(--line);}
+  footer.legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 4px 0 12px;vertical-align:middle;}
+  .toolbar{display:flex;justify-content:flex-end;gap:8px;padding:8px 16px 0;}
+  .toolbar button{font:inherit;font-size:11px;padding:6px 10px;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer;}
+  .toolbar button:hover{background:#F3F4F6;}
+  @media print{
+    body{background:#fff;}
+    #app{box-shadow:none;max-width:none;}
+    .toolbar{display:none;}
+    .grid-row{break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="toolbar"><button onclick="window.print()">Print / Save as PDF</button></div>
+  <header class="title-block">
+    <h1 id="doc-title"></h1>
+    <p id="doc-subtitle"></p>
+  </header>
+  <div id="grid"></div>
+  <footer class="legend" id="doc-footer"></footer>
+</div>
+
+<script id="journey-data" type="application/json">
+{
+  "meta": { "title": "REPLACE ME", "subtitle": "", "generatedDate": "", "source": "" },
+  "stages": [],
+  "footnote": ""
+}
+</script>
+
+<script>
+(function(){
+  const DATA = JSON.parse(document.getElementById('journey-data').textContent);
+  const stages = DATA.stages || [];
+  const n = stages.length;
+  const palette = ['--stage-1','--stage-2','--stage-3','--stage-4','--stage-5','--stage-6','--stage-7','--stage-8','--stage-9','--stage-10'];
+  const root = getComputedStyle(document.documentElement);
+  function stageColor(s, i){
+    if (s.color) return s.color;
+    return root.getPropertyValue(palette[i % palette.length]).trim();
+  }
+  const emotionColor = {
+    positive: root.getPropertyValue('--emotion-positive').trim(),
+    neutral:  root.getPropertyValue('--emotion-neutral').trim(),
+    friction: root.getPropertyValue('--emotion-friction').trim(),
+    delight:  root.getPropertyValue('--emotion-delight').trim()
+  };
+
+  document.getElementById('doc-title').textContent = DATA.meta.title || '';
+  document.getElementById('doc-subtitle').textContent = DATA.meta.subtitle || '';
+
+  const cols = `170px repeat(${n}, 1fr)`;
+  const grid = document.getElementById('grid');
+
+  function appendRow(labelText, cellsHtml, extraRowClass){
+    const r = document.createElement('div');
+    r.className = 'grid-row' + (extraRowClass ? ' ' + extraRowClass : '');
+    r.style.gridTemplateColumns = cols;
+    r.innerHTML = `<div class="rail-label">${labelText}</div>` + cellsHtml;
+    grid.appendChild(r);
+  }
+
+  function proseCell(text, borderColor){
+    return `<div class="cell stage-col" style="border-top-color:${borderColor}"><p class="prose">${text || 'None identified'}</p></div>`;
+  }
+
+  function commaListCell(text, borderColor){
+    return `<div class="cell stage-col" style="border-top-color:${borderColor}"><p class="prose">${text || 'None identified'}</p></div>`;
+  }
+
+  function quoteCell(thought, borderColor){
+    const quote = (thought && thought.quote) ? thought.quote : 'None captured';
+    const source = thought && thought.source;
+    return `<div class="cell stage-col" style="border-top-color:${borderColor}"><p class="quote">&ldquo;${quote}&rdquo;</p>${source ? `<span class="src-tag">${source}</span>` : ''}</div>`;
+  }
+
+  function factListCell(items, borderColor){
+    // The trailing "(RFS-001)"-style reference-code tag has been removed entirely — used by
+    // Pain Points, Current Responses, and Opportunities (this one shared function renders all
+    // three) — per an explicit "reference code should no longer be displayed" requirement.
+    // p.id itself is untouched in the data, just never read here any more.
+    const arr = (items && items.length) ? items : [{ text: 'None identified' }];
+    return `<div class="cell stage-col" style="border-top-color:${borderColor}">${
+      arr.map(p => `<p class="fact-line">${p.text}</p>`).join('')
+    }</div>`;
+  }
+
+  function kpiListCell(items, borderColor){
+    const arr = (items && items.length) ? items : ['Not currently tracked'];
+    return `<div class="cell stage-col" style="border-top-color:${borderColor}">${
+      arr.map(k => `<p class="fact-line">${k}</p>`).join('')
+    }</div>`;
+  }
+
+  // 1. Stage header
+  appendRow('Stage', stages.map((s,i)=>{
+    const c = stageColor(s,i);
+    return `<div class="cell stage-col" style="padding:0;border-top-color:${c}"><div class="stage-header" style="background:${c}"><div class="name">${s.name}</div></div></div>`;
+  }).join(''));
+
+  // 2. Goals (customer)
+  appendRow('Goals', stages.map((s,i)=>proseCell(s.goals, stageColor(s,i))).join(''));
+
+  // 3. Customer / Agent Actions
+  appendRow('Customer / Agent Actions', stages.map((s,i)=>proseCell(s.actions, stageColor(s,i))).join(''));
+
+  // 4. Touchpoints & Channels
+  appendRow('Touchpoints & Channels', stages.map((s,i)=>proseCell(s.touchpoints, stageColor(s,i))).join(''));
+
+  // 5. Supporting Systems
+  appendRow('Supporting Systems', stages.map((s,i)=>commaListCell(s.systems, stageColor(s,i))).join(''));
+
+  // 6. Thoughts
+  appendRow('Thoughts', stages.map((s,i)=>quoteCell(s.thoughts, stageColor(s,i))).join(''));
+
+  // 7. Emotional Journey — SVG with native percentage coordinates, NO viewBox (see design-system.md §5:
+  // a viewBox here requires either a stale one-time JS width measurement or a distorting
+  // preserveAspectRatio="none", both of which previously broke this exact row).
+  (function(){
+    // Milestone labels always wrap to 2 lines at the "Label (CODE)" boundary — never rendered as one
+    // line. With ≥5 stages (or long labels) at moderate widths, adjacent single-line labels collide
+    // or run past the row's outer edges; splitting at the parenthetical (a boundary every label in the
+    // schema already has) roughly halves each line's width and fixes both problems at once, at any
+    // stage count or viewport width — this must not be made conditional on measured width, since that
+    // reintroduces the same "looks fine at the width I tested" fragility fixed elsewhere in this row.
+    function splitMilestone(label){
+      const m = /^(.*)\s(\([^)]*\))$/.exec(label || '');
+      return m ? [m[1], m[2]] : [label || '', ''];
+    }
+    // rowH gives 38px above the top band (clears the state-word callout) and enough below the bottom
+    // band for a two-line milestone label plus descenders — a tighter margin is exactly what
+    // previously let labels clip into the row above/below or the two lines collide into one.
+    const rowH = 154, padTop = 38, bandH = 58;
+    function yFor(cat){
+      if (cat === 'positive' || cat === 'delight') return padTop;
+      if (cat === 'friction') return padTop + bandH;
+      return padTop + bandH * 0.5;
+    }
+    const pts = stages.map((s,i)=>{
+      const xPct = ((i + 0.5) / n * 100).toFixed(2);
+      const cat = (s.emotion && s.emotion.category) || 'neutral';
+      const [line1, line2] = splitMilestone(s.emotion && s.emotion.milestoneLabel);
+      return {
+        xPct, y: yFor(cat), color: emotionColor[cat] || emotionColor.neutral,
+        line1, line2,
+        stateWord: (s.emotion && s.emotion.stateWord) || ''
+      };
+    });
+    let segments = '';
+    for (let i = 0; i < pts.length - 1; i++){
+      segments += `<line x1="${pts[i].xPct}%" y1="${pts[i].y}" x2="${pts[i+1].xPct}%" y2="${pts[i+1].y}" stroke="#8b3a3a" stroke-width="2"></line>`;
+    }
+    const dots = pts.map(p => `
+      ${p.stateWord ? `<text data-fit="1" x="${p.xPct}%" y="${(p.y-20).toFixed(1)}" fill="${p.color}" text-anchor="middle" font-size="11" font-weight="700">${p.stateWord}</text>` : ''}
+      <circle cx="${p.xPct}%" cy="${p.y.toFixed(1)}" r="7" fill="${p.color}"></circle>
+      <text data-fit="1" x="${p.xPct}%" y="${(p.y+22).toFixed(1)}" fill="#1F2937" text-anchor="middle" font-size="11.5" font-weight="700">${p.line1}</text>
+      ${p.line2 ? `<text data-fit="1" x="${p.xPct}%" y="${(p.y+36).toFixed(1)}" fill="#1F2937" text-anchor="middle" font-size="11.5" font-weight="700">${p.line2}</text>` : ''}
+    `).join('');
+    const svg = `<svg class="emotion-svg" height="${rowH}">${segments}${dots}</svg>`;
+    appendRow('Emotional Journey', `<div class="cell emotion-row" style="grid-column: 2 / -1; padding:0;">${svg}</div>`);
+
+    // Shrink-to-fit pass: real DOM text measurement (getComputedTextLength), used only to scale
+    // font-size down for labels that are still too wide for their column after the line-split above
+    // (e.g. many stages + long labels at a narrow viewport). This is safe from the "stale on resize"
+    // failure class documented in design-system.md §5 because it only adjusts font-size, never
+    // position — a later resize can leave text non-optimally sized, but never misaligned or
+    // overlapping the wrong stage.
+    const svgEl = grid.querySelector('.emotion-svg');
+    if (svgEl){
+      const colW = svgEl.getBoundingClientRect().width / n;
+      const maxW = colW * 0.94;
+      svgEl.querySelectorAll('text[data-fit]').forEach(t => {
+        if (!t.textContent) return;
+        const len = t.getComputedTextLength();
+        if (len > maxW){
+          const curSize = parseFloat(t.getAttribute('font-size'));
+          const newSize = Math.max(8.5, curSize * (maxW / len));
+          t.setAttribute('font-size', newSize.toFixed(1));
+        }
+      });
+    }
+  })();
+
+  // 8. Customer Experience
+  appendRow('Customer Experience', stages.map((s,i)=>proseCell(s.customerExperience, stageColor(s,i))).join(''));
+
+  // 9. Pain Points
+  appendRow('Pain Points', stages.map((s,i)=>factListCell(s.painPoints, stageColor(s,i))).join(''));
+
+  // 10. Current Responses
+  appendRow('Current Responses', stages.map((s,i)=>factListCell(s.currentResponses, stageColor(s,i))).join(''));
+
+  // 11. Opportunities
+  appendRow('Opportunities', stages.map((s,i)=>factListCell(s.opportunities, stageColor(s,i))).join(''));
+
+  // 12. KPIs / Key Metrics
+  appendRow('KPIs / Key Metrics', stages.map((s,i)=>kpiListCell(s.kpis, stageColor(s,i))).join(''));
+
+  // 13. Business Goals
+  appendRow('Business Goals', stages.map((s,i)=>proseCell(s.businessGoals, stageColor(s,i))).join(''));
+
+  // 14. Teams / Responsible Parties
+  appendRow('Teams / Responsible Parties', stages.map((s,i)=>commaListCell(s.teams, stageColor(s,i))).join(''));
+
+  // 15. Structural Metrics — lifecycle banner (auto-computed, never hand-typed) + per-stage cards
+  const stepsSum = stages.reduce((a,s)=>a+((s.structural&&s.structural.steps)||0),0);
+  const manualSum = stages.reduce((a,s)=>a+((s.structural&&s.structural.manual)||0),0);
+  const pct = stepsSum ? Math.round((manualSum/stepsSum)*100) : 0;
+  const bannerRow = document.createElement('div');
+  bannerRow.className = 'grid-row';
+  bannerRow.style.gridTemplateColumns = '1fr';
+  bannerRow.innerHTML = `<div class="banner"><div class="fill" style="width:${pct}%"></div><span>Total Lifecycle Steps: ${stepsSum} (${manualSum} manual / ${pct}%)</span></div>`;
+  grid.appendChild(bannerRow);
+
+  appendRow('Structural Metrics', stages.map((s,i)=>{
+    const st = s.structural || {steps:0,manual:0};
+    const heights = [5,8,11,14];
+    const bars = heights.map(h=>`<i style="height:${h}px"></i>`).join('');
+    return `<div class="cell metric-cell stage-col" style="border-top-color:${stageColor(s,i)}"><div class="metric-card"><div class="label">${s.shortLabel || s.name}</div><div class="bars">${bars}</div><div class="val">${st.manual} manual</div></div></div>`;
+  }).join(''));
+
+  // Footer
+  const fEl = document.getElementById('doc-footer');
+  fEl.innerHTML = `Emotion:
+    <span class="dot" style="background:${emotionColor.positive}"></span>Positive
+    <span class="dot" style="background:${emotionColor.neutral}"></span>Neutral
+    <span class="dot" style="background:${emotionColor.friction}"></span>Friction
+    <span class="dot" style="background:${emotionColor.delight}"></span>Delight
+    &nbsp;|&nbsp; ${DATA.footnote || ''}`;
+})();
+</script>
+</body>
+</html>

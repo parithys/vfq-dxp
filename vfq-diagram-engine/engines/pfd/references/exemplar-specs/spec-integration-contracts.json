@@ -1,0 +1,346 @@
+{
+  "title": "Integration Contracts: Complete Portal Orchestration",
+  "subtitle": "13 Governed Contracts | Portfolio Governance ↔ Adoption Intelligence | Event-Driven Data Streams",
+  "footer": "Agent Ecosystem Documentation | Integration Contracts",
+  "slug": "integration-contracts-complete-portal-orchestration",
+  "flow": [
+    {
+      "type": "start",
+      "label": "Start"
+    },
+    {
+      "type": "step",
+      "id": "n1",
+      "kind": "manual",
+      "role": "1: PG",
+      "title": "INT-01: Initiative Master",
+      "desc": [
+        "PG publishes initiative catalog"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n2",
+      "kind": "integration",
+      "role": "1a: Event",
+      "title": "initiative.upserted",
+      "desc": [
+        "Event: Create/update trigger"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n3",
+      "kind": "automated",
+      "role": "1b: AI",
+      "title": "AI Binds Program",
+      "desc": [
+        "Map adoption to initiative"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n4",
+      "kind": "manual",
+      "role": "2: PG",
+      "title": "INT-13: Identity &amp; SSO",
+      "desc": [
+        "Configure shared session"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n5",
+      "kind": "manual",
+      "role": "3: PG",
+      "title": "INT-05: Narrative &amp; Standards",
+      "desc": [
+        "Publish governance narrative"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n6",
+      "kind": "manual",
+      "role": "4: PG",
+      "title": "INT-10: KPI Framework",
+      "desc": [
+        "Define shared measurement"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n7",
+      "kind": "manual",
+      "role": "5: PG",
+      "title": "INT-04: Readiness Gate",
+      "desc": [
+        "PG awaits AI assessment"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n8",
+      "kind": "integration",
+      "role": "5a: Event",
+      "title": "readiness.assessed",
+      "desc": [
+        "AI submits assessment"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n9",
+      "kind": "manual",
+      "role": "5b",
+      "title": "Gate Decision",
+      "desc": []
+    },
+    {
+      "type": "step",
+      "id": "n10",
+      "kind": "automated",
+      "role": "1: AI",
+      "title": "1. SENSING: AI Monitors",
+      "desc": [
+        "7 simultaneous data streams"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n11",
+      "kind": "automated",
+      "role": "6: AI",
+      "title": "INT-02: Adoption Metrics",
+      "desc": [
+        "adoption.metrics.published"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n12",
+      "kind": "automated",
+      "role": "7: AI",
+      "title": "INT-03: Health Signals",
+      "desc": [
+        "health.signal.raised"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n13",
+      "kind": "automated",
+      "role": "8: AI",
+      "title": "INT-06: Comms Data",
+      "desc": [
+        "comms.effectiveness.reported"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n14",
+      "kind": "automated",
+      "role": "9: AI",
+      "title": "INT-08: Stakeholder Data",
+      "desc": [
+        "stakeholder.register.updated"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n15",
+      "kind": "automated",
+      "role": "10: AI",
+      "title": "INT-09: Risk Promotion",
+      "desc": [
+        "risk.promotion.requested"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n16",
+      "kind": "automated",
+      "role": "11: AI",
+      "title": "INT-12: Value Signals",
+      "desc": [
+        "valueLeakage.signalled"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n17",
+      "kind": "automated",
+      "role": "2: PG",
+      "title": "2. AGGREGATION: PG Consumes",
+      "desc": [
+        "Consolidate 6 data streams"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n18",
+      "kind": "automated",
+      "role": "12a: PG",
+      "title": "Health Index Scoring",
+      "desc": [
+        "INT-02/03: Leading indicators"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n19",
+      "kind": "automated",
+      "role": "12b: PG",
+      "title": "Comms Governance QA",
+      "desc": [
+        "INT-06: Message-risk detection"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n20",
+      "kind": "automated",
+      "role": "12c: PG",
+      "title": "Risk &amp; Stakeholder Map",
+      "desc": [
+        "INT-08/09: Portfolio visibility"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n21",
+      "kind": "automated",
+      "role": "12d: PG",
+      "title": "Benefits &amp; Value Track",
+      "desc": [
+        "INT-12: Adoption→Benefits link"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n22",
+      "kind": "manual",
+      "role": "3: Governance",
+      "title": "3. GOVERNANCE: PG Decides",
+      "desc": [
+        "Board reviews, acts"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n23",
+      "kind": "integration",
+      "role": "13: Event",
+      "title": "INT-07: Escalations",
+      "desc": [
+        "escalation.decided"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n24",
+      "kind": "integration",
+      "role": "14: Event",
+      "title": "INT-04: Gate Decision",
+      "desc": [
+        "gate.decided (go/no-go)"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n25",
+      "kind": "integration",
+      "role": "15: Event",
+      "title": "INT-05: Narrative Update",
+      "desc": [
+        "narrative.published (v2)"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n26",
+      "kind": "automated",
+      "role": "4: AI",
+      "title": "4. EXECUTION: AI Acts",
+      "desc": [
+        "Respond to governance"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n27",
+      "kind": "automated",
+      "role": "16: AI",
+      "title": "Intervene &amp; Remediate",
+      "desc": [
+        "Execute escalation directives"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n28",
+      "kind": "automated",
+      "role": "17: AI",
+      "title": "Adjust Strategy",
+      "desc": [
+        "Align to narrative/framework"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n29",
+      "kind": "automated",
+      "role": "18: Shared",
+      "title": "INT-11: KT Repository",
+      "desc": [
+        "Bidirectional asset flow"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n30",
+      "kind": "automated",
+      "role": "19: Shared",
+      "title": "INT-12: Benefit Mapping",
+      "desc": [
+        "Bidirectional benefit target"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n31",
+      "kind": "automated",
+      "role": "5: PG",
+      "title": "5. VALUE: Realize Benefits",
+      "desc": [
+        "Track adoption to ROI"
+      ]
+    },
+    {
+      "type": "end",
+      "label": "Complete"
+    }
+  ],
+  "cards": {
+    "ioTable": [
+      {
+        "input": "Integration requirements, contract templates, protocol specifications",
+        "output": "Contracts defined, endpoints configured, data formats specified",
+        "example": "Integration requirements → Contracts defined",
+        "meaning": "Requirements and templates are formalised into defined contracts with configured endpoints and agreed data formats."
+      },
+      {
+        "input": "Contract definitions, message schemas, routing rules",
+        "output": "Integration deployed, bidirectional flows active, data validation enabled",
+        "example": "Contract definitions → Integration deployed",
+        "meaning": "Contract definitions and routing rules are deployed into live, validated bidirectional integrations."
+      },
+      {
+        "input": "Integration logs, performance metrics, error rates",
+        "output": "Contract health status, SLA compliance, optimization recommendations",
+        "example": "Integration logs → Contract health status",
+        "meaning": "Runtime logs and metrics are analysed to report contract health, SLA compliance, and optimisation opportunities."
+      }
+    ]
+  }
+}

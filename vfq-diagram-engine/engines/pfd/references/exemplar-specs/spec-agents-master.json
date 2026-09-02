@@ -1,0 +1,453 @@
+{
+  "title": "Agents (Master): Complete Ecosystem Architecture",
+  "subtitle": "29 Agents | 2 Portals + 27 Capabilities | Portfolio Governance ↔ Adoption Intelligence",
+  "footer": "Agent Ecosystem Documentation | Agents Master",
+  "slug": "agents-master-complete-ecosystem-architecture",
+  "flow": [
+    {
+      "type": "start",
+      "label": "Start"
+    },
+    {
+      "type": "step",
+      "id": "n1",
+      "kind": "manual",
+      "role": "1: Portal",
+      "title": "Portfolio Governance Portal",
+      "desc": [
+        "Hub Agent | In:14, Out:10,",
+        "Degree:24"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n2",
+      "kind": "automated",
+      "role": "1a: PG Layer",
+      "title": "PG Governance Capabilities (5)",
+      "desc": [
+        "Strategy, compliance, gates, risk"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n3",
+      "kind": "automated",
+      "role": "1a-i: PG",
+      "title": "PG-C2: Initiative Register",
+      "desc": [
+        "PRODUCES | Degree: 1"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n4",
+      "kind": "automated",
+      "role": "1a-ii: PG",
+      "title": "PG-C3: Strategy Management",
+      "desc": [
+        "PRODUCES | Degree: 1"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n5",
+      "kind": "automated",
+      "role": "1a-iii: PG",
+      "title": "PG-C4: Compliance Monitor",
+      "desc": [
+        "INTERNAL (PG) | Degree: 1"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n6",
+      "kind": "automated",
+      "role": "1a-iv: PG",
+      "title": "PG-C9: Readiness Gates",
+      "desc": [
+        "CONSUMES &amp; PRODUCES | Degree: 4"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n7",
+      "kind": "automated",
+      "role": "1a-v: PG",
+      "title": "PG-C14: Methodology Library",
+      "desc": [
+        "INTERNAL (PG) | Degree: 1"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n8",
+      "kind": "automated",
+      "role": "1b: PG Layer",
+      "title": "PG Aggregation Capabilities (4)",
+      "desc": [
+        "Dashboards, reporting, analytics"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n9",
+      "kind": "automated",
+      "role": "1b-i: PG",
+      "title": "PG-C1: Portfolio Dashboard",
+      "desc": [
+        "CONSUMES &amp; PRODUCES | Degree: 5"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n10",
+      "kind": "automated",
+      "role": "1b-ii: PG",
+      "title": "PG-C5: Health Index (HUB)",
+      "desc": [
+        "CONSUMES &amp; PRODUCES | Degree: 11"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n11",
+      "kind": "automated",
+      "role": "1b-iii: PG",
+      "title": "PG-C11: Exec Reporting",
+      "desc": [
+        "CONSUMES &amp; PRODUCES | Degree: 6"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n12",
+      "kind": "automated",
+      "role": "1b-iv: PG",
+      "title": "PG-C12: KT Repository",
+      "desc": [
+        "CONSUMES &amp; PRODUCES | Degree: 4"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n13",
+      "kind": "automated",
+      "role": "1c: PG Layer",
+      "title": "PG Governance Capabilities (5)",
+      "desc": [
+        "Comms, benefits, risks,",
+        "interventions"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n14",
+      "kind": "automated",
+      "role": "1c-i: PG",
+      "title": "PG-C6: Intervention Governance",
+      "desc": [
+        "CONSUMES &amp; PRODUCES | Degree: 4"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n15",
+      "kind": "automated",
+      "role": "1c-ii: PG",
+      "title": "PG-C7: Comms Governance",
+      "desc": [
+        "CONSUMES &amp; PRODUCES | Degree: 3"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n16",
+      "kind": "automated",
+      "role": "1c-iii: PG",
+      "title": "PG-C8: Benefits Tracking",
+      "desc": [
+        "CONSUMES &amp; PRODUCES | Degree: 5"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n17",
+      "kind": "automated",
+      "role": "1c-iv: PG",
+      "title": "PG-C10: Risk Register",
+      "desc": [
+        "CONSUMES &amp; PRODUCES | Degree: 4"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n18",
+      "kind": "automated",
+      "role": "1c-v: PG",
+      "title": "PG-C13: Transparency Layer",
+      "desc": [
+        "CONSUMES &amp; PRODUCES | Degree: 3"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n19",
+      "kind": "manual",
+      "role": "2: Portal",
+      "title": "Adoption Intelligence Portal",
+      "desc": [
+        "Hub Agent | In:13, Out:11,",
+        "Degree:24"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n20",
+      "kind": "automated",
+      "role": "2a: AI Layer",
+      "title": "AI Sensing Capabilities (4)",
+      "desc": [
+        "Analysis, feedback, assessment"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n21",
+      "kind": "automated",
+      "role": "2a-i: AI",
+      "title": "AI-C1: Stakeholder Analysis",
+      "desc": [
+        "CONSUMES &amp; PRODUCES | Degree: 5"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n22",
+      "kind": "automated",
+      "role": "2a-ii: AI",
+      "title": "AI-C2: Readiness Assessment",
+      "desc": [
+        "CONSUMES &amp; PRODUCES | Degree: 3"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n23",
+      "kind": "automated",
+      "role": "2a-iii: AI",
+      "title": "AI-C3: Feedback Engine",
+      "desc": [
+        "PRODUCES | Degree: 3"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n24",
+      "kind": "automated",
+      "role": "2a-iv: AI",
+      "title": "AI-C12: Impact Assessment",
+      "desc": [
+        "PRODUCES | Degree: 3"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n25",
+      "kind": "automated",
+      "role": "2b: AI Layer",
+      "title": "AI Execution Capabilities (5)",
+      "desc": [
+        "Comms, training, hypercare,",
+        "interventions"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n26",
+      "kind": "automated",
+      "role": "2b-i: AI",
+      "title": "AI-C4: Comms Execution",
+      "desc": [
+        "CONSUMES | Degree: 3"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n27",
+      "kind": "automated",
+      "role": "2b-ii: AI",
+      "title": "AI-C5: Comms Analytics",
+      "desc": [
+        "PRODUCES | Degree: 3"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n28",
+      "kind": "automated",
+      "role": "2b-iii: AI",
+      "title": "AI-C6: Training Analysis",
+      "desc": [
+        "CONSUMES | Degree: 4"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n29",
+      "kind": "automated",
+      "role": "2b-iv: AI",
+      "title": "AI-C7: Training Delivery",
+      "desc": [
+        "PRODUCES | Degree: 4"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n30",
+      "kind": "automated",
+      "role": "2b-v: AI",
+      "title": "AI-C8: Capability Building",
+      "desc": [
+        "CONSUMES &amp; PRODUCES | Degree: 4"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n31",
+      "kind": "automated",
+      "role": "2c: AI Layer",
+      "title": "AI Monitoring Capabilities (4)",
+      "desc": [
+        "Metrics, reporting, resistance mgmt"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n32",
+      "kind": "automated",
+      "role": "2c-i: AI",
+      "title": "AI-C9: Hypercare Support",
+      "desc": [
+        "CONSUMES &amp; PRODUCES | Degree: 4"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n33",
+      "kind": "automated",
+      "role": "2c-ii: AI",
+      "title": "AI-C10: Adoption Metrics (HUB)",
+      "desc": [
+        "CONSUMES &amp; PRODUCES | Degree: 6"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n34",
+      "kind": "automated",
+      "role": "2c-iii: AI",
+      "title": "AI-C11: Resistance Mgmt (HUB)",
+      "desc": [
+        "CONSUMES &amp; PRODUCES | Degree: 6"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n35",
+      "kind": "automated",
+      "role": "2c-iv: AI",
+      "title": "AI-C13: Adoption Reporting",
+      "desc": [
+        "CONSUMES &amp; PRODUCES | Degree: 3"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n36",
+      "kind": "integration",
+      "role": "3: Event Bus",
+      "title": "Cross-Portal Interconnection",
+      "desc": [
+        "13 Integration Contracts |",
+        "initiativeId join key"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n37",
+      "kind": "integration",
+      "role": "3a: Data Flow",
+      "title": "PG → AI (4 contracts)",
+      "desc": [
+        "Initiative master, narrative, KPIs,",
+        "identity"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n38",
+      "kind": "integration",
+      "role": "3b: Data Flow",
+      "title": "AI → PG (5 contracts)",
+      "desc": [
+        "Adoption metrics, health signals,",
+        "comms, stakeholders, risks"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n39",
+      "kind": "integration",
+      "role": "3c: Data Flow",
+      "title": "PG ↔ AI (4 contracts)",
+      "desc": [
+        "Readiness gates, escalations,",
+        "repository, benefits"
+      ]
+    },
+    {
+      "type": "step",
+      "id": "n40",
+      "kind": "automated",
+      "role": "4: Value",
+      "title": "Ecosystem Outcomes",
+      "desc": [
+        "Adoption measured, benefits",
+        "tracked, value realized"
+      ]
+    },
+    {
+      "type": "end",
+      "label": "Complete"
+    }
+  ],
+  "cards": {
+    "ioTable": [
+      {
+        "input": "Usage signals, adoption data, resistance metrics, comms sentiment",
+        "output": "AI sensing results, preliminary assessments, anomaly detection",
+        "example": "Usage signals → AI sensing results",
+        "meaning": "Raw usage and sentiment signals are sensed by AI into preliminary assessments, with anomalies flagged."
+      },
+      {
+        "input": "AI sensing outputs, PG aggregation rules, scoring models",
+        "output": "Consolidated metrics, readiness scores, health indicators",
+        "example": "AI sensing outputs → Consolidated metrics",
+        "meaning": "The insights generated in Step 1 are aggregated and scored to produce standardised measurements."
+      },
+      {
+        "input": "Consolidated scores, governance rules, decision criteria",
+        "output": "Gate decisions, remediation directives, strategy pivots",
+        "example": "Consolidated scores → Gate decisions",
+        "meaning": "Consolidated scores are evaluated against governance rules to produce gate decisions, remediation directives, and strategy pivots."
+      },
+      {
+        "input": "Execution results, outcome metrics, impact measurements",
+        "output": "Value realization, benefit tracking, ROI calculation",
+        "example": "Execution results → Value realization",
+        "meaning": "Execution results are measured into value realization, benefit tracking, and ROI calculation."
+      }
+    ]
+  }
+}

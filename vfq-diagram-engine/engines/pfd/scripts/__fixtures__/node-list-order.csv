@@ -1,0 +1,8 @@
+Step,ID,Activity,Owner,Type,Notes,Decision,Input,Output,Business Meaning
+1,INT-01,Intake Submission,Applicant,,"Submit the case file, supporting evidence and declared scope through the intake portal",,"Case file, evidence bundle","Registered case record, intake reference","The submitted bundle is registered and given a tracking reference."
+2,SCR-02,Automated Screening,Screening Engine,automated,"Rules run against the register, sanctions data and prior-case history to raise a preliminary risk band",,"Registered case record, reference data","Risk band, exception list","Registered cases are scored against reference data to produce a risk band."
+3,ASM-03,Specialist Assessment,Assessment Team,human,"Assess the exceptions raised by screening
+Record findings against each control",,"Risk band, exception list","Assessment findings, recommendation","Specialists review flagged exceptions and record a recommendation."
+4,GAT-04,Outcome Gate,Review Board,,Approve or return for revision,yes,,,
+5,PUB-05,Publish Outcome,Records API,integration,"Write the decision to the register and emit the outcome event to subscribers",,"Approved recommendation","Published decision, outcome event","The approved recommendation is written to the register and broadcast."
+6,ARC-06,Archive Case,Archive Service,,Retain artefacts for the statutory period,,,,

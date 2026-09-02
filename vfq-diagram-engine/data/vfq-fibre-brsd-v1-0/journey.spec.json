@@ -1,0 +1,335 @@
+{
+  "meta": {
+    "title": "VFQ Fibre Activation Journey",
+    "subtitle": "Retail Agent, Fibre and Fixed Wireless Access Activation (FIB-ACT-RTL-001) — agent-assisted model",
+    "generatedDate": "2026-09-02",
+    "source": "Extracted from VFQ_Fibre_BRSD_v1.0.xlsx"
+  },
+  "stages": [
+    {
+      "name": "Initiate Interaction & Verify Customer (JSM, KYC)",
+      "shortLabel": "Initiate & Verify",
+      "goals": "Not found in source — the document specifies system/agent behaviour for queue initiation and identity verification but does not state a customer-frame goal for this stage.",
+      "actions": "Retail Agent initiates one activation process per queue ticket transaction, creating a tracking record owned by the initiating agent; agent scans the Qatar identity document front and back, capturing name and date of birth on the front and the document number on the back with an optional liveliness check; system retrieves customer information from the Ministry of Interior using the identity document number and compares first name, last name, document number and date of birth exactly between capture and government validation before the journey proceeds; verified attributes are displayed for agent confirmation and locked from editing (JSM, KYC)",
+      "touchpoints": "Retail Store / Field - Retail Agent / Field Agent - Tablet or Desktop (JSM, KYC)",
+      "systems": "Siebel CRM, Identity Capture Service, Ministry of Interior, Qnomy",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source — the document is a requirements register and contains no customer verbatim or illustrative quotes anywhere."
+      },
+      "emotion": {
+        "category": "neutral",
+        "milestoneLabel": "Verification (KYC)"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential narrative is provided for this stage, only functional requirements and rules.",
+      "painPoints": [
+        { "text": "Only a Qatar identity document is accepted for fibre and fixed wireless access; a passport is not permitted, blocking non-QID holders at the outset", "id": "BR-004" }
+      ],
+      "currentResponses": [
+        { "text": "No current mitigation documented — the source states the rule (BR-004) but records no workaround or interim process for a customer without a QID", "id": "RESP-BR-004" }
+      ],
+      "opportunities": [
+        { "text": "None identified", "id": "OPP-JSM-001" }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target of any kind is present in the source for this or any other stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given for this stage beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — Wipro Owner, VFQ Business Owner and VFQ IT Owner columns in 05_Requirements are populated as \"To be assigned\" for every requirement row, and stakeholder names in 01_Document_Control are \"To be confirmed\"; no named team or role is attributed to this or any specific stage.",
+      "structural": { "steps": 3, "manual": 2 }
+    },
+    {
+      "name": "Capture Installation Address & Service Feasibility (RFS)",
+      "shortLabel": "Capture Address (RFS)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "Agent captures the installation address from the utility identifier or by searching zone, street, building number, floor and flat number, floor and flat applying only to apartments; address selection is filtered hierarchically so the street list is constrained by zone and the building list by street; agent searches the point of presence in the ready for service screen by address, utility identifier or area, with the address auto filled from the RFS data based on utility identifier; system displays the service types available at the location (Fiber, FWA Indoor, FWA Outdoor) and displays detected customer premises equipment/optical network terminal information where a device is present; installation address is updated after the RFS check and rendered non editable, requiring recapture to change; agent uploads a tenancy document (PDF or Word, maximum two megabytes) as proof of address (RFS)",
+      "touchpoints": "Retail Store / Field - Retail Agent / Field Agent - Tablet or Desktop, RFS Portal search (RFS)",
+      "systems": "RFS Portal, Siebel CRM",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "friction",
+        "milestoneLabel": "RFS Data Accuracy (RFS)",
+        "stateWord": "Friction"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided; the friction classification here is inferred from the open question and dependency entries (D-07, OI-11) about RFS data reliability, not from a stated customer-experience narrative.",
+      "painPoints": [
+        { "text": "RFS data flow frequency, delta-versus-full-load logic per downstream system and the eligibility/instant-activation detection logic are unconfirmed, risking inaccurate or stale service-availability results at this stage (BR-023, BR-130, OI-11)", "id": "RFS-001" }
+      ],
+      "currentResponses": [
+        { "text": "No current mitigation documented — the source records this as an open dependency (D-07) awaiting VFQ IT confirmation, not an existing workaround", "id": "RESP-RFS-001" }
+      ],
+      "opportunities": [
+        { "text": "VFQ to confirm the ready for service data flow frequency and delta-versus-full-load logic per downstream system before build (D-07, OI-11)", "id": "OPP-RFS-001" }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the functional requirement and rule text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\". The related dependency D-07 lists \"VFQ IT\" as the owner of confirming RFS data flow logic, but this is a document-governance owner for an open item, not a stated operational team for the stage.",
+      "structural": { "steps": 8, "manual": 5 }
+    },
+    {
+      "name": "Eligibility & Credit Control (ECC)",
+      "shortLabel": "Eligibility Check",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "System permits the fibre/FWA journey to proceed only for a Qatar identity document holder taking a postpaid connection; existing-customer credit check uses the enterprise data warehouse and a new-customer credit check uses the Qatar Credit Authority; a customer returned as blacklisted or in collections may not proceed; customer may not proceed where outstanding balance exceeds the configured fibre threshold; only a privileged agent may modify the system-defaulted credit limit; each eligibility failure displays a distinct message on the interface so the agent can communicate the reason to the customer (ECC)",
+      "touchpoints": "Retail Store / Field - Retail Agent - Tablet or Desktop, system-assisted credit check (ECC)",
+      "systems": "Enterprise Data Warehouse, Qatar Credit Authority, Billing System",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "friction",
+        "milestoneLabel": "Credit/Threshold Block (ECC)"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided for this stage.",
+      "painPoints": [
+        { "text": "The fibre outstanding dues threshold value (P-17) is unconfirmed, and version 1.3 records contradictory guidance on whether it should differ from or match the mobility threshold, risking incorrect blocking decisions at go-live (BR-033, OI-04)", "id": "ECC-001" }
+      ],
+      "currentResponses": [
+        { "text": "No current mitigation documented — BR-033 is recorded with status \"Open\" and OI-04 is recorded as an open question awaiting VFQ Business confirmation, with no interim workaround stated", "id": "RESP-ECC-001" }
+      ],
+      "opportunities": [
+        { "text": "VFQ Business to supply and confirm the fibre outstanding dues threshold value before configuration is finalised (D-01, OI-04)", "id": "OPP-ECC-001" }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\". D-01 lists \"VFQ Business\" as the owner of supplying the threshold value, which is a document-dependency owner, not a stated operational team for this stage.",
+      "structural": { "steps": 3, "manual": 1 }
+    },
+    {
+      "name": "Capture Billing Profile (BAM)",
+      "shortLabel": "Billing Profile",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "Agent captures the billing profile covering payment type, payment method, bill cycle, bill media and language; billing address is set to the customer address or newly captured; a billing profile holds exactly one active payment profile and multiple billing contacts with exactly one primary, the invoice being delivered to the primary contact; bill cycle is defaulted in accordance with the configured rule; payment details are validated before the payment profile is created (BAM)",
+      "touchpoints": "Retail Store / Field - Retail Agent - Tablet or Desktop (BAM)",
+      "systems": "Billing System",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "neutral",
+        "milestoneLabel": "Bill Profile Created (BAM)"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided for this stage.",
+      "painPoints": [
+        { "text": "None identified" }
+      ],
+      "currentResponses": [
+        { "text": "No current mitigation — no pain point is recorded against this stage in the source" }
+      ],
+      "opportunities": [
+        { "text": "None identified" }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\".",
+      "structural": { "steps": 4, "manual": 3 }
+    },
+    {
+      "name": "Build Product Cart & Select Numbers (QPC, NUM, SIM)",
+      "shortLabel": "Build Cart",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "System presents only fibre base plans eligible for the service type available at the address and the customer segment; IPTV is bundled by default with the base plan, displaying all child plans, with agent able to remove it at customer request; only add ons pre configured and mapped to the base plan may be added, and only discounts mapped to the product are shown; cart totals recalculate on every add, amend or remove; agent searches and selects a preferred fixed line number (free number category) into the cart, or for FWA journeys selects a mobile number instead, star numbers being prohibited for FWA; for FWA journeys agent scans SIM and customer premises equipment serial numbers into the cart; number category and charges are displayed for agent review before confirmation (QPC, NUM, SIM)",
+      "touchpoints": "Retail Store / Field - Retail Agent - Tablet or Desktop, number and SIM/CPE scan (QPC, NUM, SIM)",
+      "systems": "Catalogue, UIM",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "neutral",
+        "milestoneLabel": "Cart Built (QPC)"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided; the IPTV-removal tension is documented as a business decision conflict (OI-03), not as a customer-facing experience.",
+      "painPoints": [
+        { "text": "Whether the agent may remove the IPTV bundle during activation is unresolved — the requirement permits removal while the VFQ business response records this is not preferred, creating conflicting build guidance (BR-051, OI-03)", "id": "QPC-001" }
+      ],
+      "currentResponses": [
+        { "text": "No current mitigation documented — BR-051 is recorded with status \"Open\" pending VFQ Business decision (OI-03), with no interim workaround stated", "id": "RESP-QPC-001" }
+      ],
+      "opportunities": [
+        { "text": "VFQ Business to confirm the IPTV bundle removal policy so cart behaviour is unambiguous before build (OI-03)", "id": "OPP-QPC-001" }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\". OI-03 lists \"VFQ Business\" as the owner of the IPTV decision, which is a document-governance owner, not a stated operational team for this stage.",
+      "structural": { "steps": 10, "manual": 7 }
+    },
+    {
+      "name": "Book Appointment & Field Workforce Task (WFM)",
+      "shortLabel": "Appointment (WFM)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "System fetches available appointment slots from Field Workforce Management with lead time and technician availability; agent selects a slot and the customer may request a specific date and time; agent captures additional notes and marks whether the contract application form and tenancy document are to be collected by the technician; appointment booking is skipped for FWA Indoor and mandatory for FWA Outdoor and fibre; technician captures the optical network terminal and set top box serial numbers, mesh device quantity (first two complimentary, further devices charged) and wire length with one time charge; order proceeds only after task closure with customer feedback is received; a reported installation issue creates a fault ticket, updates the task on closure and allows the appointment to be rescheduled (WFM)",
+      "touchpoints": "Customer Premises / Field Agent (Technician) - Field Workforce Management task, Store / Agent - Tablet or Desktop for booking (WFM)",
+      "systems": "Field Workforce Management",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "friction",
+        "milestoneLabel": "WFM Delay (WFM Delay)",
+        "stateWord": "Friction"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided; the friction classification is inferred from the unresolved WFM integration specification (INT-11) recorded in the source, not from a stated customer-experience narrative.",
+      "painPoints": [
+        { "text": "The Field Workforce Management integration specification (INT-11) was not provided in version 1.3, and the order is held pending task closure with only an alert raised on failure, creating an unresolved dependency for appointment, execution and closure timing", "id": "WFM-001" }
+      ],
+      "currentResponses": [
+        { "text": "System raises an alert on WFM task failure as the only stated handling; no fallback, retry or manual escalation process is documented beyond the alert (WFM-001)", "id": "RESP-WFM-001" }
+      ],
+      "opportunities": [
+        { "text": "Finalise and confirm the WFM integration specification (INT-11) including timeout, retry and fallback behaviour ahead of build", "id": "OPP-WFM-001" }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage beyond \"Field Agent (Technician)\" as a channel/actor in Touchpoints; requirement owner columns are \"To be assigned\".",
+      "structural": { "steps": 11, "manual": 4 }
+    },
+    {
+      "name": "Checkout & Contract Documentation (CVC, CAF)",
+      "shortLabel": "Checkout & CAF",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "Cart, customer, billing, number, resource and eligibility validations execute at checkout before payment; key information (plan selected, lock-in period) is displayed before contract application form submission and refreshed on any cart amendment; the CAF is generated from the template selected by product type and connection type using the configured role/channel/product/connection matrix; agent captures the customer signature via the digital form or touch screen, or uploads a manually signed form (PDF or JPG, maximum two megabytes); an agent holding the fulfilment role may skip CAF submission; agent uploads additional supporting documents into a separate section and captures activity comments passed to the WFM task (CVC, CAF)",
+      "touchpoints": "Retail Store / Field - Retail Agent - Tablet or Desktop, digital signature capture or offline upload (CVC, CAF)",
+      "systems": "Siebel CRM",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "friction",
+        "milestoneLabel": "CAF Template Gap (CAF)"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided for this stage.",
+      "painPoints": [
+        { "text": "The contract application form template matrix for each combination of agent role, channel, product type and connection type has not been supplied by VFQ Business, blocking correct CAF generation at this stage (BR-081, OI-02)", "id": "CAF-001" }
+      ],
+      "currentResponses": [
+        { "text": "No current mitigation documented — BR-081 is recorded with status \"Open\" and OI-02 records the matrix as \"needing to be filled\" with no interim template or workaround stated", "id": "RESP-CAF-001" }
+      ],
+      "opportunities": [
+        { "text": "VFQ Business to supply the CAF template matrix so form generation can be configured and validated (D-02, OI-02)", "id": "OPP-CAF-001" }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\". D-02 and OI-02 list \"VFQ Business\" as the owner of supplying the CAF matrix, which is a document-dependency owner, not a stated operational team for this stage.",
+      "structural": { "steps": 6, "manual": 4 }
+    },
+    {
+      "name": "Payment & Order Submission (PAY, ORD)",
+      "shortLabel": "Payment & Submit",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "Upfront payment request is sent to the point of sale payment system and payment status is set from the response; fixed line number inventory is depleted in UIM as part of the fulfilment flow, and SIM/equipment inventory is depleted to the point of sale payment system on payment completion for an FWA journey; agent submits the order once all sections are complete and payment is paid, the submit action being enabled only under those conditions; agent is navigated to the all orders view on submission (PAY, ORD)",
+      "touchpoints": "Retail Store / Field - Retail Agent - Tablet or Desktop, Point of Sale Payment System (PAY, ORD)",
+      "systems": "Point of Sale Payment System, UIM, Order Management",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "positive",
+        "milestoneLabel": "Order Submitted (ORD)",
+        "stateWord": "Positive"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided for this stage.",
+      "painPoints": [
+        { "text": "None identified" }
+      ],
+      "currentResponses": [
+        { "text": "No current mitigation — no pain point is recorded against this stage in the source" }
+      ],
+      "opportunities": [
+        { "text": "None identified" }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\".",
+      "structural": { "steps": 4, "manual": 1 }
+    },
+    {
+      "name": "Network Activation & Fulfilment (NET)",
+      "shortLabel": "Network Activation",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage; the source notes this stage is system-orchestrated with no direct agent or customer action.",
+      "actions": "Order Management orchestrates fulfilment; for fibre, network activation is triggered on WFM task completion and the status is updated in the CRM; for FWA Indoor, network activation proceeds on the planned activation date without waiting for a WFM task; for an FWA journey, the SIM is activated together with network activation; order status is updated to the field workforce management system so the technician may proceed with order activation (NET)",
+      "touchpoints": "System-orchestrated / Order Management - background processing, no direct agent action (NET)",
+      "systems": "Order Management, Field Workforce Management, Siebel CRM",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "neutral",
+        "milestoneLabel": "Activation Triggered (NET)"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided for this stage.",
+      "painPoints": [
+        { "text": "None identified" }
+      ],
+      "currentResponses": [
+        { "text": "No current mitigation — no pain point is recorded against this stage in the source" }
+      ],
+      "opportunities": [
+        { "text": "None identified" }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\".",
+      "structural": { "steps": 4, "manual": 0 }
+    },
+    {
+      "name": "Billing Update & Completion (FIN)",
+      "shortLabel": "Billing & Completion",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "Account, product, service and resource information with per-line prices, including additional devices captured during WFM installation, is passed to the billing system after task closure; for FWA Indoor, the customer premises equipment captured at order capture is billed; order completion notification from Order Management sets the order status to completed in the CRM; tracking record is set to resolved once the order is completed and the order number is recorded; customer feedback survey is despatched on tracking record closure (FIN)",
+      "touchpoints": "System-orchestrated / Order Management and Billing - background processing, customer receives survey (FIN)",
+      "systems": "Billing System, Siebel CRM, Notification Platform",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "delight",
+        "milestoneLabel": "Service Activated (FIN)",
+        "stateWord": "Delight"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided; the notification-gap pain point below is recorded as an unconfirmed configuration item, not a stated customer-experience narrative.",
+      "painPoints": [
+        { "text": "Notification trigger points, templates and recipient lists for order submission and completion have not been supplied by VFQ Business, leaving customer communication at this closing stage unconfirmed (BR-120, OI-13)", "id": "FIN-001" }
+      ],
+      "currentResponses": [
+        { "text": "No current mitigation documented — BR-120 is recorded with status \"Open\" and OI-13 records the trigger points, templates and recipient lists as \"to be provided by business\", with no interim notification process stated", "id": "RESP-FIN-001" }
+      ],
+      "opportunities": [
+        { "text": "VFQ Business to supply notification trigger points, templates and recipient lists ahead of build (D-04, OI-13)", "id": "OPP-FIN-001" }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\". D-04 and OI-13 list \"VFQ Business\" as the owner of supplying notification content, which is a document-dependency owner, not a stated operational team for this stage.",
+      "structural": { "steps": 5, "manual": 0 }
+    }
+  ],
+  "footnote": "Extracted from VFQ_Fibre_BRSD_v1.0.xlsx (05_Requirements sheet, use case FIB-ACT-RTL-001 Fiber Activation through Retail Agent, milestones #1-#19), cross-referenced against 06_Business_Rules and 08_Open_Items for pain points and current responses, and against 00_Cover, 01_Document_Control, 03_Scope, 04_Capability_Summary and Annex_02_Status_Model for goals/thoughts/customerExperience/kpis/businessGoals/teams. This source is a technical requirements register (atomic, testable requirement statements with acceptance criteria) and contains no customer research artefacts, quotes, experiential narrative, KPI targets, or named operational team/owner assignments (all Wipro/VFQ owner fields read 'To be assigned' or 'To be confirmed') — these six new-schema fields are stated-absence for every stage rather than inferred. Structural step/manual counts are derived from distinct requirement/rule actions attributed to each stage in the source requirements register; not independently specified as counts in the source."
+}

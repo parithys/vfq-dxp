@@ -1,0 +1,93 @@
+{
+  "_comment": "PFD v2.3 Configuration Reference — All configurable options with defaults and descriptions",
+  "_version": "2.3",
+  "_usage": "Add 'config' object to your spec.json to customize. All fields optional—omit to use defaults.",
+
+  "config_defaults": {
+    "layout": {
+      "containerWidth": 1600,
+      "edgeLabelSpacing": 10
+    },
+    "styling": {
+      "payloadLabelBackground": {
+        "opacity": 1,
+        "fill": "#ffffff"
+      }
+    },
+    "drawer": {
+      "overlayMode": true,
+      "minWidth": 320,
+      "maxWidth": 760,
+      "defaultWidth": 400
+    },
+    "cards": {
+      "showIOTable": false
+    },
+    "interactive": true
+  },
+
+  "configuration_options": {
+    "layout": {
+      "containerWidth": {
+        "type": "number | null",
+        "default": 1600,
+        "description": "Diagram container width in pixels. Set to 1600 for fixed-width (horizontal scroll on narrow), null or 1920 for responsive (scales to max 1920px)."
+      },
+      "edgeLabelSpacing": {
+        "type": "number",
+        "default": 10,
+        "unit": "pixels",
+        "description": "Vertical distance of payload labels above connector lines."
+      }
+    },
+    "styling": {
+      "payloadLabelBackground": {
+        "opacity": {
+          "type": "number",
+          "default": 1,
+          "range": [0, 1],
+          "description": "Background plate opacity for payload labels. 0 = transparent, 1 = fully solid."
+        },
+        "fill": {
+          "type": "string (hex color)",
+          "default": "#ffffff",
+          "description": "Background plate fill color for payload labels (the pill drawn behind edge/branch/loop text so the connector line doesn't strike through the glyphs)."
+        }
+      }
+    },
+    "drawer": {
+      "overlayMode": {
+        "type": "boolean",
+        "default": true,
+        "description": "true = position:fixed overlay, false = layout push (deprecated)"
+      },
+      "minWidth": {
+        "type": "number",
+        "default": 320,
+        "unit": "pixels"
+      },
+      "maxWidth": {
+        "type": "number",
+        "default": 760,
+        "unit": "pixels"
+      },
+      "defaultWidth": {
+        "type": "number",
+        "default": 400,
+        "unit": "pixels"
+      }
+    },
+    "cards": {
+      "showIOTable": {
+        "type": "boolean",
+        "default": false,
+        "description": "Show Input → Output table on page (true) or hide for drawer-only (false)"
+      }
+    },
+    "interactive": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable drawer (true) or static mode (false)"
+    }
+  }
+}
