@@ -4004,6 +4004,11 @@
    "to": "rfs_continuous",
    "kind": "data",
    "label": "ongoing refresh"
+  },
+  {
+   "from": "mig_telesales",
+   "to": "mig_continuity",
+   "kind": "seq"
   }
  ],
  "model": {
