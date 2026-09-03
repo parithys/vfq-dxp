@@ -1451,6 +1451,13 @@ function buildSVG(spec, viewportWidth) {
   ]) {
     parts.push(`<marker id="${mid}" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="${col}"/></marker>`);
   }
+  // Dedicated highlight marker: an SVG marker's fill is fixed at definition time and is outside
+  // the reach of any CSS class on the <path>/<line> that references it via marker-end, so
+  // .pf-edge.pf-hl-path's CSS stroke override alone would leave a red highlighted line ending in
+  // whatever colour that edge kind's own marker was defined with. pfApplyHL()/pfClearHL() below
+  // swap marker-end to this id (and back) alongside toggling the class, keeping line and
+  // arrowhead in sync.
+  parts.push(`<marker id="arrowhead-hl" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#e60000"/></marker>`);
   // Grid pattern stays available in <defs> but is NOT painted: the r2 default canvas is
   // the clean #ffffff card ground (§1). To re-enable an alignment backdrop, paint a
   // full-canvas rect with fill="url(#grid)" opacity="0.5" immediately after the defs.
@@ -1575,6 +1582,18 @@ function interactiveCSS() {
     .pf-node, .pf-edge { transition: opacity 0.2s ease; }
     .pf-node.is-dim, .pf-edge.is-dim { opacity: 0.22; pointer-events: none; }
     .pf-node.is-sel > rect, .pf-node.is-sel > circle, .pf-node.is-sel > g > rect { stroke-width: 3; }
+    /* Neighbor-network highlight (hover, and click-to-lock — see pfApplyHL()/toggleHlLock() in
+     * the script below). Deliberately separate class names from the TYPE-filter's own .is-dim
+     * (pfApplyFilter()) — the two dimming mechanisms are independent and must not stomp on each
+     * other if a filter happens to be active at the same time a node is hovered/locked. No
+     * pointer-events:none here (unlike .is-dim): a dimmed node under an active highlight must
+     * stay clickable, since clicking a different node is exactly how the lock switches targets. */
+    .pf-node.pf-hl-dim, .pf-edge.pf-hl-dim { opacity: 0.12; filter: grayscale(1) brightness(1.15); }
+    .pf-edge.pf-hl-path { stroke: #e60000 !important; stroke-width: 3 !important; filter: drop-shadow(0 0 3px rgba(230,0,0,.55)); }
+    /* The click-locked anchor node's own outline — distinct from .is-sel (which marks whichever
+     * node/edge the DRAWER is currently showing, a separate and independently-triggered state
+     * now that a plain click no longer opens the drawer — see the click/dblclick handlers below). */
+    .pf-node.pf-hl-lock > rect, .pf-node.pf-hl-lock > circle, .pf-node.pf-hl-lock > g > rect { stroke: #e60000 !important; stroke-width: 3 !important; }
     /* The drawer floats as an overlay — position: fixed with no body padding. Opening/closing
        the drawer does not affect layout of the diagram or any page content. */
     .pf-drawer { position: fixed; top: 0; right: 0; height: 100vh; width: var(--pf-drawer-w, 400px); background: #ffffff; border-left: 1px solid #A4D3FF; box-shadow: -12px 0 32px rgba(24,20,14,0.10); transform: translateX(101%); transition: transform 0.25s ease; z-index: 40; display: flex; }
@@ -1803,6 +1822,51 @@ function interactiveJS(ctx) {
 
     const pfNodeEls = () => Array.from(document.querySelectorAll('.pf-node'));
     const pfEdgeEls = () => Array.from(document.querySelectorAll('.pf-edge'));
+
+    // ---- neighbor-network highlight (hover preview + click-to-lock) -------------------------
+    // Deliberately a SEPARATE state from pfSelected/pfSelectedEdge (the drawer's own selection):
+    // a plain click now only toggles this highlight lock, the drawer opens on double click, and
+    // closing the drawer does not clear the lock — the two are independent interactions.
+    let pfHlLocked = null;   // id of the locked-highlighted node, or null
+    function pfNeighbors(id) {
+      const s = new Set([id]);
+      PF_EDGES.forEach(e => { if (e.from === id) s.add(e.to); if (e.to === id) s.add(e.from); });
+      return s;
+    }
+    function pfApplyHL(id) {
+      const ns = pfNeighbors(id);
+      pfNodeEls().forEach(el => el.classList.toggle('pf-hl-dim', !ns.has(el.dataset.id)));
+      pfEdgeEls().forEach(el => {
+        const on = el.dataset.from === id || el.dataset.to === id;
+        el.classList.toggle('pf-hl-dim', !on);
+        el.classList.toggle('pf-hl-path', on);
+        if (!el.dataset.origMarker) { const m = el.getAttribute('marker-end'); if (m) el.dataset.origMarker = m; }
+        if (el.dataset.origMarker) el.setAttribute('marker-end', on ? 'url(#arrowhead-hl)' : el.dataset.origMarker);
+      });
+      if (pfHlLocked) { const lg = pfNodeEls().find(e => e.dataset.id === pfHlLocked); if (lg) lg.classList.remove('pf-hl-dim'); }
+    }
+    function pfClearAllHL() {
+      pfNodeEls().forEach(el => el.classList.remove('pf-hl-dim'));
+      pfEdgeEls().forEach(el => {
+        el.classList.remove('pf-hl-dim', 'pf-hl-path');
+        if (el.dataset.origMarker) el.setAttribute('marker-end', el.dataset.origMarker);
+      });
+    }
+    function pfHoverHL(id) { pfApplyHL(id); }                              // mouseenter
+    function pfHoverClearHL() { if (pfHlLocked) pfApplyHL(pfHlLocked); else pfClearAllHL(); }  // mouseleave
+    function pfSetLock(id) {
+      if (pfHlLocked) { const p = pfNodeEls().find(e => e.dataset.id === pfHlLocked); if (p) p.classList.remove('pf-hl-lock'); }
+      pfHlLocked = id;
+      const g = pfNodeEls().find(e => e.dataset.id === id); if (g) g.classList.add('pf-hl-lock');
+    }
+    function pfClearLock() {
+      if (pfHlLocked) { const g = pfNodeEls().find(e => e.dataset.id === pfHlLocked); if (g) g.classList.remove('pf-hl-lock'); }
+      pfHlLocked = null;
+    }
+    function toggleHlLock(id) {
+      if (pfHlLocked === id) { pfClearLock(); pfClearAllHL(); }
+      else { pfSetLock(id); pfApplyHL(id); }
+    }
 
     function pfLabelFor(id) {
       const n = pfById[id];
@@ -2177,7 +2241,17 @@ function interactiveJS(ctx) {
     function pfResetView() { pfApplyFilter('all'); if (pfSelected || pfSelectedEdge !== null) pfClose(); }
 
     pfNodeEls().forEach(el => {
-      el.addEventListener('click', () => pfOpen(el.dataset.id));
+      // A plain click now toggles the persistent neighbor highlight instead of opening the
+      // drawer; double click opens the drawer (and locks the highlight on, unconditionally, so
+      // its two leading native 'click' events — which fire before 'dblclick' and would otherwise
+      // toggle the lock on then off — can't leave it off right when the drawer opens). Keyboard
+      // access (Enter/Space) is left opening the drawer directly, same as before: there is no
+      // keyboard equivalent of a double click, and keyboard users should not lose direct
+      // one-key access to a node's detail view as a side effect of this change.
+      el.addEventListener('click', () => toggleHlLock(el.dataset.id));
+      el.addEventListener('dblclick', () => { pfSetLock(el.dataset.id); pfApplyHL(el.dataset.id); pfOpen(el.dataset.id); });
+      el.addEventListener('mouseenter', () => pfHoverHL(el.dataset.id));
+      el.addEventListener('mouseleave', () => pfHoverClearHL());
       el.addEventListener('keydown', ev => {
         if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); pfOpen(el.dataset.id); }
       });
@@ -2209,6 +2283,20 @@ function interactiveJS(ctx) {
       if (pfDrawer.contains(ev.target)) return;
       if (ev.target.closest('.pf-node, .pf-edge')) return;
       pfClose();
+    });
+    // Releases the highlight lock on a genuine empty-canvas click. Scoped to INSIDE
+    // .diagram-container specifically (not "anywhere in the document that isn't a node/edge/
+    // drawer" — that broader test was tried first and had a real bug: it also fired for clicks
+    // on the filter chips, Export button, or any other page chrome, silently dropping the
+    // highlight as a side effect of an unrelated action like changing the type filter). A click
+    // on a different node already switches the lock via that node's own click listener
+    // (toggleHlLock); clicking an edge does not clear it (opens that edge's own drawer instead,
+    // independent of the node highlight, same principle as the node drawer above).
+    document.addEventListener('click', ev => {
+      if (!pfHlLocked) return;
+      if (!ev.target.closest('.diagram-container')) return;
+      if (ev.target.closest('.pf-node, .pf-edge')) return;
+      pfClearLock(); pfClearAllHL();
     });
 
     /* Drawer resize — pointer drag plus arrow keys, clamped so the panel can never
@@ -2283,7 +2371,18 @@ function buildHTML(spec, viewportWidth = 1200) {
      * itself wider than any viewport narrower than the generation width, so the BODY scrolled
      * horizontally and the header, filter bar and diagram all ran off the right edge. */
     .container { width: 100%; max-width: ${containerMax}px; margin: 0 auto; }
-    .header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-start; }
+    /* position:relative + z-index above .pf-drawer's (40) is required, not decorative: the
+     * drawer is position:fixed;top:0;height:100vh, so with no stacking context of its own
+     * .header (a normal in-flow element) would paint BENEATH it whenever the drawer is open,
+     * covering the Export button in the toolbar and making it unclickable as well as hidden.
+     * Raising .header above the drawer's stacking level fixes click-through, but .header itself
+     * has always been transparent (the page body's own light-blue shows through it) — without
+     * an opaque background of its own here too, the white drawer panel would still show visually
+     * behind/around the toolbar buttons even once they're clickable again, which reads as
+     * "half-covered" rather than genuinely clear. background matches the page body colour so the
+     * header reads as normal, undisturbed page chrome sitting above the drawer, not a visibly
+     * different opaque patch appearing only when the drawer opens. */
+    .header { position: relative; z-index: 50; background: #E9F2FE; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-start; }
     .header-content { flex: 1; }
     .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
     .pulse-dot { width: 12px; height: 12px; background: #6d4aad; border-radius: 50%; animation: pulse 2s infinite; }
@@ -2480,7 +2579,20 @@ ${ix.drawer}
         clone.removeAttribute('style');
         clone.setAttribute('style', 'background:' + ${JSON.stringify(CANVAS_GROUND)});
         const st = document.createElementNS('http://www.w3.org/2000/svg', 'style');
-        st.textContent = 'text{font-family:' + getComputedStyle(src).fontFamily.replace(/"/g, "'") + '}';
+        // The live page's main <style> block (.pf-node, .pf-hl-dim, .pf-hl-path, .pf-hl-lock,
+        // .is-dim, .is-sel, …) lives in <head>, OUTSIDE this <svg> — cloning just the svg element
+        // does not carry it along, so a standalone-opened export previously lost any highlight,
+        // selection or filter styling even though the classes themselves were still present on
+        // the cloned elements (the export never stripped them, it simply had no CSS to render
+        // them with). These rules are the highlight-related subset that must travel with the
+        // file so it "represents exactly what the user is viewing" per the interactive state
+        // active at export time, not a silently-reset clean diagram.
+        st.textContent = 'text{font-family:' + getComputedStyle(src).fontFamily.replace(/"/g, "'") + '}'
+          + '.pf-node.pf-hl-dim,.pf-edge.pf-hl-dim{opacity:.12;filter:grayscale(1) brightness(1.15);}'
+          + '.pf-edge.pf-hl-path{stroke:#e60000 !important;stroke-width:3 !important;filter:drop-shadow(0 0 3px rgba(230,0,0,.55));}'
+          + '.pf-node.pf-hl-lock>rect,.pf-node.pf-hl-lock>circle,.pf-node.pf-hl-lock>g>rect{stroke:#e60000 !important;stroke-width:3 !important;}'
+          + '.pf-node.is-dim,.pf-edge.is-dim{opacity:.22;}'
+          + '.pf-node.is-sel>rect,.pf-node.is-sel>circle,.pf-node.is-sel>g>rect{stroke-width:3;}';
         clone.insertBefore(st, clone.firstChild);
         const blob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>\\n' + new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml;charset=utf-8' });
         const url = URL.createObjectURL(blob);

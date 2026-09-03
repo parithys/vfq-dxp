@@ -38,7 +38,16 @@ a{color:var(--accent);text-decoration:none}
    strip and a toolbar row both used to sit between the two and each needed its own matching
    gutter; both have since been removed entirely, so only .top and .wrap remain in this
    alignment.) */
-.top{background:linear-gradient(180deg,var(--charcoal),var(--charcoal-2));color:#f4f4f4;padding:18px 24px 14px;
+/* position:relative + z-index above .drawer's (80) is required, not decorative: .drawer is
+   `position:fixed;top:0;height:100vh`, so with no stacking context of its own .top (a normal
+   in-flow, non-positioned element) would paint BENEATH it whenever the drawer is open — its
+   opaque background would cover the Happy Flow/Export button group in the top-right corner,
+   and pointer-events would go to the drawer, not the buttons underneath it, making them
+   unclickable as well as invisible. Raising .top above the drawer's stacking level means its
+   own opaque background instead covers the drawer's top edge where they'd otherwise overlap,
+   so the header (and every button in it) always stays fully visible and clickable regardless
+   of drawer state. */
+.top{position:relative;z-index:90;background:linear-gradient(180deg,var(--charcoal),var(--charcoal-2));color:#f4f4f4;padding:18px 24px 14px;
  display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
 /* Happy Flow and Export both live in the header now, aligned to the top-right corner as a
    group. Reset used to sit here too (between Happy Flow and Export), simply re-running the
@@ -1367,7 +1376,15 @@ NODES.forEach(n=>{
  nodeLayer.appendChild(g);
  g.addEventListener('mouseenter',()=>highlight(n.id));
  g.addEventListener('mouseleave',()=>clearHL());
- g.addEventListener('click',(e)=>{e.stopPropagation();openDrawer(n);});
+ // Single click toggles the persistent highlight lock (same dim/hlpath treatment as hover, but
+ // pinned). Double click opens the side drawer, and additionally locks the highlight on if it
+ // isn't already locked to this node — viewing a node's detail implies wanting its connections
+ // highlighted too. A double click's two leading native 'click' events already fire toggleLock
+ // twice (on, then off) before 'dblclick' fires; setSelected/applyHL below are called
+ // unconditionally rather than toggled, so the end state is always "locked on", regardless of
+ // that leading on/off pair.
+ g.addEventListener('click',(e)=>{e.stopPropagation();toggleLock(n.id);});
+ g.addEventListener('dblclick',(e)=>{e.stopPropagation();setSelected(n.id);applyHL(n.id);openDrawer(n);});
 });
 // ---- z-order fix: connectors + arrowheads must paint ON TOP of node shapes, not under them.
 // nodeLayer/edgeLayer/labelLayer were all built in this textual order for a practical reason
@@ -1397,8 +1414,14 @@ vp.insertBefore(nodeLayer, edgeLayer);
 vp.appendChild(labelLayer);   // keep edge labels above both nodes and edges so they are never hidden
 
 // ---- highlight
+// `selectedId` is a click-lock, not just a drawer flag: clicking a node turns on the exact same
+// dim/hlpath treatment hover uses and PINS it there — mouseleave no longer clears it, only
+// clicking a different node (switches the lock) or clicking empty canvas (releases it) does.
+// Hovering a different node while one is locked still shows that node's own preview (matches
+// the existing hover affordance); leaving it reverts the display to the locked node's view
+// rather than clearing to nothing, since there IS still an active selection to show.
 function neighbors(id){const s=new Set([id]);FLOWS.forEach(f=>{if(f.from===id)s.add(f.to);if(f.to===id)s.add(f.from);});return s;}
-function highlight(id){
+function applyHL(id){
  const ns=neighbors(id);
  nodeLayer.querySelectorAll('.node').forEach(g=>{g.classList.toggle('dim',!ns.has(g.dataset.id));});
  edgeEls.forEach(p=>{const on=(p.dataset.from===id||p.dataset.to===id);
@@ -1412,17 +1435,28 @@ function highlight(id){
    // in sync; p.dataset.marker (set once at path creation, never re-derived) is what makes
    // "restore" exact rather than an approximation.
    p.setAttribute('marker-end', on ? 'url(#ar-hl)' : `url(#${p.dataset.marker})`);});
- if(selectedId){const sg=nodeG(selectedId); if(sg)sg.classList.remove('dim');}   // selection is never dimmed by hover
+ if(selectedId){const sg=nodeG(selectedId); if(sg)sg.classList.remove('dim');}   // the lock is never dimmed by a hover preview
 }
-function clearHL(){nodeLayer.querySelectorAll('.node').forEach(g=>g.classList.remove('dim'));
+function highlight(id){applyHL(id);}   // called on hover (mouseenter)
+function clearHL(){                    // called on mouseleave AND on background click
+ if(selectedId){applyHL(selectedId);return;}   // an active lock exists — revert the preview to it, don't clear
+ clearAllHL();
+}
+function clearAllHL(){nodeLayer.querySelectorAll('.node').forEach(g=>g.classList.remove('dim'));
  edgeEls.forEach(p=>{p.classList.remove('dim','hlpath'); p.setAttribute('marker-end', `url(#${p.dataset.marker})`);});}
 
-// ---- persistent selection (one node at a time; survives hover / pan / zoom)
+// ---- persistent selection (one node at a time; survives hover / scroll; cleared only by
+// clicking a different node or clicking empty canvas — see toggleLock() and the svg background
+// click handler below)
 let selectedId=null;
 function nodeG(id){return nodeLayer.querySelector('.node[data-id="'+(window.CSS&&CSS.escape?CSS.escape(id):id)+'"]');}
 function setSelected(id){ if(selectedId===id){return;} if(selectedId){const p=nodeG(selectedId); if(p)p.classList.remove('selected');}
  selectedId=id; const g=nodeG(id); if(g)g.classList.add('selected'); }
 function clearSelected(){ if(selectedId){const g=nodeG(selectedId); if(g)g.classList.remove('selected');} selectedId=null; }
+function toggleLock(id){
+ if(selectedId===id){ clearSelected(); clearAllHL(); }
+ else { setSelected(id); applyHL(id); }
+}
 
 // The Flows filter (Sequence/Data/Conditional/Escalation/Error toggle buttons, and the
 // "Flows:" label chip) has been removed entirely — every connector kind is now always
@@ -1712,8 +1746,14 @@ function fit(){const dim=sizeHost();if(!dim){requestAnimationFrame(fit);return;}
 // fit()) has now been removed entirely too — with no pan/zoom/drag possible any more, there
 // was never anything left for it to reset FROM, so the button itself was pure dead weight
 // even though it was harmless. `fit()` is still called automatically on load and on resize
-// (see the listeners below) — only the manual re-trigger button is gone.
-svg.addEventListener('click',()=>clearHL());
+// (see the listeners below) — only the manual re-trigger button is gone. Horizontal scroll
+// (overflow-x:auto on .diagram-shell, for a wide model) and ordinary page scroll (for a tall
+// one, since the shell grows to fit) remain the only navigation — both work unaffected by an
+// active highlight lock, since neither touches `vp`'s transform or any node/edge class.
+// Clicking empty canvas releases an active highlight lock (see toggleLock()) — this is the
+// "clicks outside the selected node" release. A click on a NODE never reaches this handler
+// (its own listener calls stopPropagation()), so this only fires for genuine background clicks.
+svg.addEventListener('click',()=>{ if(selectedId){clearSelected();clearAllHL();} });
 
 // ---- drawer
 const drawer=document.getElementById('drawer');
@@ -1793,9 +1833,14 @@ function openDrawer(n){
    if(block) h+=`<div class="dsec"><div class="k">How the teams work together</div><ul>${block}</ul></div>`;}
  document.getElementById('d-body').innerHTML=h;
  drawer.classList.add('open');
- setSelected(n.id);   // mark the clicked node as the active selection
+ setSelected(n.id);   // no-op if the caller (dblclick) already locked this node; kept so any
+                       // future direct call to openDrawer() still locks the highlight too
 }
-document.getElementById('d-close').onclick=()=>{drawer.classList.remove('open');clearSelected();};
+// Closing the drawer no longer clears the highlight lock — the drawer and the highlight are two
+// independent interactions now (dblclick opens the drawer without unlocking on close; the lock
+// is released only by clicking a different node or clicking empty canvas — see toggleLock() and
+// the svg background click handler above).
+document.getElementById('d-close').onclick=()=>{drawer.classList.remove('open');};
 
 // The tab bar (<nav class="tabs">) and the "panel" show/hide mechanism it drove have been
 // removed entirely — this skill's single source of truth is the diagram plus its side drawer,
@@ -1823,9 +1868,14 @@ const M=D.model;   // still needed: openDrawer()'s "Agents involved" section res
 // weight version — meaning every exported file rendered the legend with completely different,
 // out-of-date typography than the live view, independent of and in addition to the
 // letter-spacing measurement bug in buildLegend() itself (see there for that). Any class the
-// live `<style>` block adds or changes that affects a STATIC visual (not an interactive-only
-// state like hover/selection/dim, which exportSVGString() strips before export anyway) needs
-// its export-facing equivalent added or updated here in the SAME change, not as a follow-up.
+// live `<style>` block adds or changes that affects a STATIC visual needs its export-facing
+// equivalent added or updated here in the SAME change, not as a follow-up. This now INCLUDES
+// the highlight-lock state (.dim / .edge.hlpath / .node.selected): exports are required to
+// preserve whatever the user currently has locked/highlighted rather than exporting a clean
+// unhighlighted diagram, so exportSVGString() below no longer strips these classes and their
+// visual effect has to actually exist here for a standalone-opened export file to show it (the
+// `ar-hl` highlighted-arrowhead marker needs no equivalent entry — it's a real SVG <marker>
+// element cloned as part of the DOM, not a CSS rule, so it always travels with the clone as-is).
 const EXPORT_CSS=`
 text{font-family:"Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif;}
 .lbl{font-size:14px;font-weight:600;fill:#1f1f1f;}
@@ -1840,7 +1890,11 @@ text{font-family:"Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif;}
 .edge.data{stroke:#3860be;stroke-width:1.5;stroke-dasharray:5 4;}
 .edge.cond{stroke:#8a5cc9;stroke-width:1.6;stroke-dasharray:2 4;}
 .edge.esc{stroke:#f5b400;stroke-width:2;}
-.edge.err{stroke:#bd0000;stroke-width:1.8;stroke-dasharray:4 4;}`;
+.edge.err{stroke:#bd0000;stroke-width:1.8;stroke-dasharray:4 4;}
+.dim{opacity:.05;filter:grayscale(1) brightness(1.15);}
+.edge.hlpath{stroke:#e60000 !important;stroke-width:3.5 !important;filter:drop-shadow(0 0 3px rgba(230,0,0,.55)) !important;}
+.node.selected .box{stroke:#e60000 !important;stroke-width:4px !important;filter:drop-shadow(0 0 6px rgba(230,0,0,.65)) drop-shadow(0 1px 3px rgba(0,0,0,.25));}
+.node.selected{opacity:1 !important;}`;
 function exportSVGString(){
  const clone=svg.cloneNode(true);
  clone.setAttribute('viewBox',`0 0 ${LY.totalW} ${LY.totalH}`);
@@ -1860,8 +1914,10 @@ function exportSVGString(){
  // itself to whatever it's opened in, same as the in-app canvas does.
  clone.setAttribute('style','width:100%;height:auto;max-width:100%;display:block;');
  const cvp=clone.querySelector('#vp'); cvp.setAttribute('transform','translate(0,0) scale(1)');
- clone.querySelectorAll('.dim').forEach(n=>n.classList.remove('dim'));
- clone.querySelectorAll('.hlpath').forEach(n=>n.classList.remove('hlpath'));
+ // .dim/.hlpath (hover/lock highlight) and .selected (the locked node's own outline) are
+ // deliberately NOT stripped here — exports must preserve whatever highlight/selection state
+ // is currently active, so the exported file matches what the user is actually looking at. See
+ // the EXPORT_CSS comment above for the corresponding style rules this now depends on.
  const bg=document.createElementNS(SVGNS,'rect');
  bg.setAttribute('x',0);bg.setAttribute('y',0);bg.setAttribute('width',LY.totalW);bg.setAttribute('height',LY.totalH);bg.setAttribute('fill','#ffffff');
  cvp.insertBefore(bg,cvp.firstChild);
