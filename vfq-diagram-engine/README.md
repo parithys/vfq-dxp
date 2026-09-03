@@ -59,6 +59,7 @@ vfq-diagram-engine/
     ├── manifest.js               manifest.json read/write helper (+ CLI: record-extraction)
     ├── render-all.js            pure Node, zero AI calls — the re-render command
     ├── check-drift.js           reports engines/ vs. live skill divergence (report only)
+    ├── check-staleness.js       reports rendered output vs. current engine divergence (report only)
     └── new-brsd.sh               extract (4x) + render, for one new BRSD
 ```
 
@@ -66,6 +67,43 @@ Engines are **copied, not symlinked**, so an intentional local edit (e.g. a
 design-token tweak) doesn't silently drift when the upstream skill updates.
 Run `check-drift.js` periodically to see if the two have diverged in either
 direction; it never auto-merges.
+
+## Canonical sources vs. generated output
+
+Everything under `engines/` is canonical — the single source of truth for
+how every diagram of that type looks and behaves, across every BRSD:
+
+| Diagram type | Canonical engine file(s) |
+|---|---|
+| BPMN swimlane | `engines/bpnm/reference/engine_template.html`, `engines/bpnm/scripts/build_model.py`, and its documented rules in `engines/bpnm/reference/MODEL_SCHEMA.md` + `DESIGN_SYSTEM.md` |
+| Customer journey map | `engines/customer-journey-map/assets/template.html` |
+| Process flow diagram | `engines/pfd/scripts/generate.js` |
+| User flow diagram | `engines/user-flow-diagram/user-flow-diagram-v4.0.js` |
+
+Everything under `output/{brsd-slug}/` is **generated, derived output** —
+never canonical, never hand-edited. Concretely, that means two rules,
+enforced by how the tooling is built (not just by convention):
+
+1. **Forward: an engine edit is automatically inherited by every BRSD.**
+   `render-all.js` always reads whatever is currently in `engines/` — there
+   is no per-BRSD fork or cached copy of engine logic. Fix a routing bug,
+   tune a spacing constant, adjust a design token once in the engine file,
+   and the next `render-all.js` run picks it up for every BRSD that has
+   data for that diagram type, not just the one you were looking at when
+   you found the bug.
+2. **Reverse: a fix discovered via one generated diagram belongs in the
+   engine, not the output file.** If a rendering issue is spotted in some
+   BRSD's `output/{slug}/{type}.html`, the fix is traced to and applied in
+   the corresponding canonical engine file above — never patched directly
+   into the generated HTML, which would apply only to that one file and be
+   silently overwritten by the next render anyway. Every routing, spacing,
+   and labelling fix made to these engines during this project's build-out
+   followed this rule.
+
+Because rule 1 is automatic but silent, output can go **stale** — an engine
+file changes but a given BRSD isn't re-rendered to pick it up. Run
+`check-staleness.js` (below) to find that before it causes confusion about
+which output is current.
 
 ## Commands
 
@@ -117,6 +155,42 @@ this machine (currently resolved from the Claude Desktop plugin cache —
 see `LIVE_SOURCES` in the script if that path changes) and reports
 additions, deletions, or content differences in either direction. Report
 only — it never copies anything for you.
+
+This is a different check from staleness, below: drift is about
+`engines/` vs. the *upstream* skill source it was copied from (did the
+plugin get updated). Staleness is about a BRSD's *rendered output* vs.
+`engines/` as it stands right now (did someone edit the engine and forget
+to re-render).
+
+### Staleness check (`scripts/check-staleness.js`)
+
+```
+node scripts/check-staleness.js [--json]
+```
+
+For every BRSD in `manifest.json`, recomputes each diagram type's current
+engine hash and compares it against the hash recorded the last time that
+BRSD was rendered (`manifest.json`'s `engineHash`, written by
+`render-all.js` on every successful render — see "manifest.json shape"
+below). A mismatch means an engine file was edited since that output was
+generated, so `output/{slug}/{type}.html` no longer reflects the canonical
+engine. Report only, exits non-zero if anything is stale:
+
+```
+[vfq-fibre-brsd-v1-0]
+  ✓ bpmn: fresh (rendered 2026-09-02T19:22:13.846Z)
+  ✗ userflow: STALE — engine changed since 2026-09-03T02:10:06.853Z
+      rendered against 0608251a15f2b6f6, engine is now e96b45706fb6972a
+
+3 fresh, 1 stale, 0 never rendered.
+Re-render stale entries with: node scripts/render-all.js --brsd <slug> --type <type>
+```
+
+This only detects engine-vs-render drift — it has no way to detect a
+hand-edit made directly to an `output/*.html` file, since no hash of the
+output itself is stored. That's intentional: output files aren't meant to
+be hand-edited at all (see "Canonical sources vs. generated output"
+above), so there's nothing to check them against except regenerating them.
 
 ### New BRSD (`scripts/new-brsd.sh`)
 
