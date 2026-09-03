@@ -1395,6 +1395,52 @@ function placeEdgeLabel(text,baseX,baseY,ownIdx){
 // a label against — including edges that come LATER in FLOWS order. Placing labels inside the
 // same pass that draws the paths could only ever see edges drawn so far, so a label placed early
 // could still end up sitting on top of a not-yet-drawn edge from later in the array.
+// ---- orthogonality: no diagonal segments -----------------------------------------------
+// Every segment in this engine is DOCUMENTED to be strictly horizontal or vertical ("built
+// from L commands exclusively — no curves, arcs, or diagonals", per DESIGN_SYSTEM.md's
+// connector-compliance summary) — but that invariant wasn't actually being enforced or
+// verified anywhere, and a real, systemic violation of it was found empirically: several
+// obstacle-detour branches in edgePath() compute a "clearY" (or equivalent) value more than
+// once for what's supposed to be the SAME row, and the two computations don't always agree to
+// the sub-pixel — e.g. one edge's path measured `L1154.5,1130 L1042.5,1126` (Δx=-112, Δy=-4)
+// and, later in the SAME path, `L1042.5,2248 L1406.5,2230` (Δx=364, Δy=-18) — two genuine
+// diagonals in one connector, both small residual drifts riding on a much larger dominant-axis
+// move, not an intentional angled route (this engine has no such thing). A diagonal FINAL
+// segment also produces a diagonal-oriented arrowhead — `marker-end` with `orient="auto"`
+// faithfully follows the path's own last-segment tangent — so this is the direct root cause of
+// "arrowheads pointing at an angle instead of cleanly up/down/left/right", not just a routing
+// nicety.
+//
+// Fixed generically, at the same shared call site as the other connector-quality passes below,
+// by SPLITTING each diagonal segment into two orthogonal ones (inserting one new point) rather
+// than moving either of its existing endpoints — the endpoints are never disturbed, so this
+// can't cascade into or undo any OTHER segment's own correctness. The split axis is chosen to
+// CONTINUE whichever direction the incoming segment was already travelling (so the corner reads
+// as a natural extension, not an arbitrary new zigzag); with no incoming segment to reference,
+// it defaults to whichever of the diagonal's own two deltas is larger, so the dominant travel
+// direction comes first and the corrective jog is the short remainder. Runs FIRST, before every
+// other pass below — those all classify a segment as horizontal/vertical to decide what to do,
+// and a residual diagonal would make that classification ambiguous.
+function dediagonalize(d){
+ const nums=d.match(/-?\d+\.?\d*/g); if(!nums) return d;
+ const P=[]; for(let i=0;i<nums.length;i+=2) P.push([Number(nums[i]),Number(nums[i+1])]);
+ for(let i=0;i<P.length-1;i++){
+  const dx=P[i+1][0]-P[i][0], dy=P[i+1][1]-P[i][1];
+  if(Math.abs(dx)>0.5 && Math.abs(dy)>0.5){
+   let vertFirst;
+   if(i>0){
+    const pdx=P[i][0]-P[i-1][0], pdy=P[i][1]-P[i-1][1];
+    vertFirst=Math.abs(pdy)>Math.abs(pdx);
+   } else {
+    vertFirst=Math.abs(dy)>Math.abs(dx);
+   }
+   const corner=vertFirst?[P[i][0],P[i+1][1]]:[P[i+1][0],P[i][1]];
+   P.splice(i+1,0,corner);
+   i++;   // both new segments (P[i]->corner, corner->P[i+1]) are orthogonal by construction — skip re-checking them
+  }
+ }
+ return `M${P[0][0]},${P[0][1]}`+P.slice(1).map(p=>` L${p[0]},${p[1]}`).join('');
+}
 // ---- minimum connector segment length -----------------------------------------------
 // Enforces a floor on the length of the FIRST segment (leaving a source node) and the LAST
 // segment (entering a target node) of every connector path — the two segments immediately
@@ -1421,25 +1467,151 @@ function placeEdgeLabel(text,baseX,baseY,ownIdx){
 // identical, since the segment has zero delta on that axis) — so nudging the first segment and
 // nudging the last segment, even when they share the same middle point on a short 3-point path,
 // touch different, independent coordinates of that point and never fight each other.
-// 20px, not a smaller absolute floor like 10px — chosen against actual reported cases, not just
-// theoretically: a segment can clear a small absolute floor (e.g. 15px) and still read as
-// "barely enters the box" once compared to the node it's entering (typical node height here is
-// 44-64px, so even 15px is 25-35% of the node's own height). 20px still leaves a 4px margin
-// under OBSTACLE_CLEARANCE (24px).
-const MIN_SEG_LEN=20;
+// 30px — raised from an earlier 20px per an explicit "every segment, not just the ones
+// touching a node, needs at least 30px before any bend/turn/termination" requirement. 30px
+// exceeds OBSTACLE_CLEARANCE (24px), unlike the previous 20px value, which sat safely inside
+// it — so the "this nudge can never reach back into a previously-cleared obstacle" guarantee
+// the smaller value had by construction no longer holds automatically at every possible
+// original length. Verified empirically instead, after implementing: swept every edge across
+// every diagram in this corpus for a segment crossing an UNRELATED node's box post-nudge and
+// found none — the worst-case nudge distance in practice is well under the clearance margin,
+// since a segment already close to 30px only needs a small top-up, and the very short
+// (near-zero) cases this floor exists for are rare enough not to collide in the corpus tested.
+const MIN_SEG_LEN=30;
 function enforceMinSegLength(d){
  const nums=d.match(/-?\d+\.?\d*/g); if(!nums) return d;
  const P=[]; for(let i=0;i<nums.length;i+=2) P.push([Number(nums[i]),Number(nums[i+1])]);
  if(P.length<3) return d;   // a single straight segment has no node-adjacent bend to nudge
+ const n=P.length;
+ // Because this engine's routing always alternates horizontal/vertical from one segment to
+ // the next, stretching the first segment (0-1) necessarily moves the coordinate segment 1-2
+ // depends on to stay orthogonal, so the fix must propagate through every consecutive point
+ // that shares the original value on the changed axis — same idea as enforceAnchorSeparation's
+ // shiftChain(). chainReach() finds how far that shared-value run extends before hitting a
+ // real corner (a differing value) or the opposite fixed endpoint.
+ function chainReach(startIdx,axis,dir,stopIdx){
+  let idx=startIdx,last=startIdx;
+  const val=P[startIdx][axis];
+  while(true){
+   const next=idx+dir;
+   if(next<0||next>=n||next===stopIdx) break;
+   if(P[next][axis]!==val) break;
+   idx=next; last=idx;
+  }
+  return last;
+ }
+ let firstFix=null,lastFix=null;
  {
   const [x0,y0]=P[0], [x1,y1]=P[1];
   const len=Math.hypot(x1-x0,y1-y0);
-  if(len>0 && len<MIN_SEG_LEN){ const k=MIN_SEG_LEN/len; P[1]=[x0+(x1-x0)*k, y0+(y1-y0)*k]; }
+  if(len>0 && len<MIN_SEG_LEN){
+   const axis=(x0===x1)?1:0;
+   const dir=(P[1][axis]>P[0][axis])?1:-1;
+   firstFix={axis,target:P[0][axis]+dir*MIN_SEG_LEN,chainEnd:chainReach(1,axis,1,n-1),origVal:P[1][axis]};
+  }
  }
  {
-  const n=P.length; const [x0,y0]=P[n-1], [x1,y1]=P[n-2];
+  const [x0,y0]=P[n-1], [x1,y1]=P[n-2];
   const len=Math.hypot(x1-x0,y1-y0);
-  if(len>0 && len<MIN_SEG_LEN){ const k=MIN_SEG_LEN/len; P[n-2]=[x0+(x1-x0)*k, y0+(y1-y0)*k]; }
+  if(len>0 && len<MIN_SEG_LEN){
+   const axis=(x0===x1)?1:0;
+   const dir=(P[n-2][axis]>P[n-1][axis])?1:-1;
+   lastFix={axis,target:P[n-1][axis]+dir*MIN_SEG_LEN,chainEnd:chainReach(n-2,axis,-1,0),origVal:P[n-2][axis]};
+  }
+ }
+ // Conflict case: the first-segment fix and the last-segment fix reach into the SAME shared
+ // interior run (e.g. a single pass-through segment connecting both node-adjacent segments on
+ // a short 4-point path). Applying both independently makes the second overwrite — and can even
+ // shrink below the ORIGINAL length — whatever the first one just fixed, since they're really
+ // fighting over one shared point. Found empirically: a 46px-wide corridor between two node
+ // anchors needing two independent 30px stretches (60px total) is geometrically impossible to
+ // satisfy with a single shared pivot; try each side's own target first, and only fall back to
+ // the balanced midpoint (best-effort, honestly short of 30px) when neither fits.
+ const conflict = firstFix && lastFix && firstFix.axis===lastFix.axis && firstFix.chainEnd>=lastFix.chainEnd;
+ if(conflict){
+  const axis=firstFix.axis;
+  const p0v=P[0][axis], pLv=P[n-1][axis];
+  const okFirst=Math.abs(pLv-firstFix.target)>=MIN_SEG_LEN;
+  const okLast=Math.abs(lastFix.target-p0v)>=MIN_SEG_LEN;
+  const pivot = okFirst?firstFix.target : okLast?lastFix.target : (p0v+pLv)/2;
+  const origVal=firstFix.origVal;
+  for(let i=1;i<=n-2;i++) if(P[i][axis]===origVal) P[i][axis]=pivot;
+ } else {
+  if(firstFix){
+   const {axis,target,chainEnd}=firstFix;
+   for(let i=1;i<=chainEnd;i++) P[i][axis]=target;
+  }
+  if(lastFix){
+   const {axis,target,chainEnd}=lastFix;
+   for(let i=n-2;i>=chainEnd;i--) P[i][axis]=target;
+  }
+ }
+ return `M${P[0][0]},${P[0][1]}`+P.slice(1).map(p=>` L${p[0]},${p[1]}`).join('');
+}
+// ---- minimum length for INTERIOR segments (not touching either node boundary) --------------
+// The pass above only ever stretches the FIRST and LAST segment — the two touching a node
+// boundary — since it works by extending a movable point away from a FIXED one (the node
+// attachment). An interior segment has no fixed endpoint on either side, so the same
+// "stretch outward" technique doesn't apply; instead, a too-short interior segment is
+// ELIMINATED entirely by merging its two flanking segments (always parallel to each other —
+// this file's routing is exclusively orthogonal, so segments alternate H/V, meaning the segment
+// immediately before and immediately after a given one always share the OTHER axis) into a
+// single corner. This only ever moves the two points belonging to the short segment itself —
+// P[i-1] and P[i+2] (everything outside this local 3-point neighbourhood) are untouched, so
+// eliminating one short segment can't disturb any other, unrelated part of the path.
+//
+// Between the two orthogonal ways to place that corner, this prefers extending whichever of the
+// flanking segments was LONGER — EXCEPT when one of P[i-1]/P[i+2] is the path's own absolute
+// endpoint (P[0] or P[n-1]): the segment touching that endpoint carries a direction invariant
+// (enforceExitEntryDirection, run before this) that must be exactly matched to the node's exit/
+// entry side, and CANNOT be silently flipped by this pass's own corner choice regardless of
+// which flanking segment happens to be longer. When BOTH P[i-1]===P[0] AND P[i+2]===P[n-1] hold
+// simultaneously (a 4-point path whose one interior segment is short — both flanking segments
+// carry a fixed-direction requirement at once), a single corner cannot satisfy both directions
+// unless they already coincidentally agree; this case is left uncollapsed rather than risk
+// silently breaking either invariant, since a single still-short segment is a far smaller defect
+// than a wrong-direction arrowhead. Re-scans from the start after every fix (paths in this
+// engine are always short — a handful of points — so this is cheap) since eliminating one short
+// segment can occasionally reveal or create another; capped at 20 iterations as a safety
+// backstop, not a value expected to ever bind in practice.
+function collapseShortInteriorSegments(d){
+ let P; {
+  const nums=d.match(/-?\d+\.?\d*/g); if(!nums) return d;
+  P=[]; for(let i=0;i<nums.length;i+=2) P.push([Number(nums[i]),Number(nums[i+1])]);
+ }
+ let guard=0;
+ while(guard++<20 && P.length>=4){
+  let fixedAt=-1;
+  for(let i=1;i<P.length-2;i++){
+   const len=Math.hypot(P[i+1][0]-P[i][0],P[i+1][1]-P[i][1]);
+   if(len>0 && len<MIN_SEG_LEN){ fixedAt=i; break; }
+  }
+  if(fixedAt<0) break;
+  const i=fixedAt;
+  const n=P.length;
+  const prevIsFirst=(i-1===0), nextIsLast=(i+2===n-1);
+  const prevVertical=(P[i-1][0]===P[i][0]);   // segment i-1's own axis, before any change
+  const nextVertical=(P[i+1][0]===P[i+2][0]); // segment i+1's own axis, before any change
+  // optionA: corner=[P[i-1] x-or-y matching axis, P[i+2]'s other coord] — extends segment i-1's
+  // own axis through to P[i+2]. optionB: the mirror, extending segment i+1's own axis back
+  // through to P[i-1].
+  const optionA = prevVertical ? [P[i-1][0], P[i+2][1]] : [P[i+2][0], P[i-1][1]];
+  const optionB = nextVertical ? [P[i+2][0], P[i-1][1]] : [P[i-1][0], P[i+2][1]];
+  let corner;
+  if(prevIsFirst && nextIsLast){
+   // Both flanking segments are direction-locked at once — only collapse if the two options
+   // agree (they coincidentally preserve both directions at once); otherwise leave uncollapsed.
+   if(optionA[0]===optionB[0] && optionA[1]===optionB[1]) corner=optionA; else break;
+  } else if(prevIsFirst){
+   corner=optionA;   // must preserve segment i-1's (the FIRST segment's) own axis
+  } else if(nextIsLast){
+   corner=optionB;   // must preserve segment i+1's (the LAST segment's) own axis
+  } else {
+   const prevLen=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);
+   const nextLen=Math.hypot(P[i+2][0]-P[i+1][0],P[i+2][1]-P[i+1][1]);
+   corner = prevLen>=nextLen ? optionA : optionB;   // free choice — prefer the longer neighbour
+  }
+  P.splice(i,2,corner);
  }
  return `M${P[0][0]},${P[0][1]}`+P.slice(1).map(p=>` L${p[0]},${p[1]}`).join('');
 }
@@ -1464,10 +1636,10 @@ function enforceMinSegLength(d){
 // in a short (STUB_DIR px) lead-out/lead-in segment IN THE CORRECT DIRECTION, moving away from
 // the node's own boundary (never back into it — the direction is derived from which side it
 // is, not guessed) — the original bend point then continues exactly as before, just reached
-// from the new lead point instead of directly from the node boundary. STUB_DIR (20px) matches
+// from the new lead point instead of directly from the node boundary. STUB_DIR must match
 // MIN_SEG_LEN so the newly-inserted lead segment already satisfies the minimum-length rule
 // without needing a second pass to fix it up.
-const STUB_DIR=20;
+const STUB_DIR=30;
 function sideAt(node,px,py){
  const tol=3;
  if(!node) return null;
@@ -1592,13 +1764,31 @@ function enforceAnchorSeparation(d,srcNode,tgtNode){
  const nums=d.match(/-?\d+\.?\d*/g); if(!nums) return d;
  const P=[]; for(let i=0;i<nums.length;i+=2) P.push([Number(nums[i]),Number(nums[i+1])]);
  if(P.length<2) return d;
+ // Shifts the anchor coordinate (axis 0/X for a top/bottom side, axis 1/Y for left/right),
+ // propagating the SAME shift through every consecutive point that shares the original
+ // value — i.e. every point still part of the same straight run the anchor point belongs to —
+ // not just the single adjacent point. A real bug this fixes: only shifting P[0]/P[1] (or
+ // P[n-2]/P[n-1]) together, as an earlier version of this function did, silently ASSUMED the
+ // segment after that pair (P[1]-P[2], or before it, P[n-3]-P[n-2]) didn't itself depend on the
+ // exact coordinate being moved — but when it did (P[1] was ALSO the shared-axis endpoint of a
+ // longer straight run continuing past P[2]), the nudge left that next segment diagonal, which
+ // dediagonalize() (run earlier in the pipeline, before this point) never got a chance to see or
+ // fix. Stops at the first point that doesn't share the value (the genuine corner where the
+ // path was already turning away — a segment ending there was never dependent on this axis to
+ // begin with) or at the opposite end of the array.
+ function shiftChain(startIdx,axis,delta,dir){
+  const orig=P[startIdx][axis];
+  let idx=startIdx;
+  while(idx>=0 && idx<P.length && P[idx][axis]===orig){ P[idx][axis]+=delta; idx+=dir; }
+ }
  {
   const side=sideAt(srcNode,P[0][0],P[0][1]);
   if(side){
    const vertical=(side==='top'||side==='bottom');
-   const orig=vertical?P[0][0]:P[0][1];
+   const axis=vertical?0:1;
+   const orig=P[0][axis];
    const nc=reserveAnchor(srcNode,side,orig);
-   if(nc!==orig){ if(vertical){P[0][0]=nc; if(P.length>1)P[1][0]=nc;} else {P[0][1]=nc; if(P.length>1)P[1][1]=nc;} }
+   if(nc!==orig) shiftChain(0,axis,nc-orig,1);
   }
  }
  {
@@ -1606,9 +1796,10 @@ function enforceAnchorSeparation(d,srcNode,tgtNode){
   const side=sideAt(tgtNode,P[n-1][0],P[n-1][1]);
   if(side){
    const vertical=(side==='top'||side==='bottom');
-   const orig=vertical?P[n-1][0]:P[n-1][1];
+   const axis=vertical?0:1;
+   const orig=P[n-1][axis];
    const nc=reserveAnchor(tgtNode,side,orig);
-   if(nc!==orig){ if(vertical){P[n-1][0]=nc; if(n>1)P[n-2][0]=nc;} else {P[n-1][1]=nc; if(n>1)P[n-2][1]=nc;} }
+   if(nc!==orig) shiftChain(n-1,axis,nc-orig,-1);
   }
  }
  return `M${P[0][0]},${P[0][1]}`+P.slice(1).map(p=>` L${p[0]},${p[1]}`).join('');
@@ -1619,10 +1810,17 @@ FLOWS.forEach((f,i)=>{
  const lc=latChannelCount[i]||1, lch=latChannel[i]||0;
  const latOffset = lc>1 ? (lch-(lc-1)/2)*LAT_CHANNEL_GAP : 0;
  let {d,mid}=edgePath(a,b,trackOf[i],fwdChannelMx[i],latOffset,decisionBranchOffset[i]||0,targetConvergeOffset[i]||0);
- d=enforceExitEntryDirection(d,a,b);   // structural fix (direction) before the magnitude fix below
+ // Order matters: orthogonality first (every other pass below classifies a segment as
+ // horizontal/vertical to decide what to do, which is ambiguous for a residual diagonal),
+ // then direction (which axis the first/last segment must run on), then length (both the
+ // node-adjacent stretch and the interior collapse), then anchor separation last (shifts
+ // endpoints sideways only, which none of the length/direction fixes above would reintroduce
+ // a violation of).
+ d=dediagonalize(d);
+ d=enforceExitEntryDirection(d,a,b);
  d=enforceMinSegLength(d);
- d=enforceAnchorSeparation(d,a,b);   // run last: shifts endpoints sideways only, which changing
-   // segment length/direction beforehand doesn't reintroduce a violation of either of those
+ d=collapseShortInteriorSegments(d);
+ d=enforceAnchorSeparation(d,a,b);
  const mk = f.kind==='data'?'ar-data':f.kind==='cond'?'ar-cond':f.kind==='esc'?'ar-esc':f.kind==='err'?'ar-err':'ar';
  const p=el('path',{d,class:'edge '+f.kind,'marker-end':`url(#${mk})`});
  p.dataset.from=f.from; p.dataset.to=f.to; p.dataset.kind=f.kind; p.dataset.marker=mk; p.dataset.flowIdx=i;   // remembered so
