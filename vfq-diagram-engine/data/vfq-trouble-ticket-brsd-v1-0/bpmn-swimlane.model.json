@@ -1,0 +1,2284 @@
+{
+ "meta": {
+  "title": "Trouble Ticket Lifecycle \u2014 All Channels",
+  "generated": "2026-09-03",
+  "source": "VFQ_Trouble_Ticket_BRSD_v1.0.xlsx"
+ },
+ "layout": {
+  "x0": 140,
+  "topbar": 70,
+  "colw": 252,
+  "totalW": 19310,
+  "totalH": 2010,
+  "laneLabelW": 120,
+  "lanes": [
+   {
+    "key": "trg",
+    "name": "Trigger / Login",
+    "hint": "Agent login and system-initiated triggers",
+    "y": 70,
+    "h": 180
+   },
+   {
+    "key": "agt",
+    "name": "Agent",
+    "hint": "Agent-driven ticket lifecycle steps",
+    "y": 250,
+    "h": 460
+   },
+   {
+    "key": "crm",
+    "name": "Siebel CRM",
+    "hint": "Ticket, queue, assignment, audit and activity records",
+    "y": 710,
+    "h": 320
+   },
+   {
+    "key": "kb",
+    "name": "Knowledge Base",
+    "hint": "Categorisation search, description templates, articles",
+    "y": 1030,
+    "h": 180
+   },
+   {
+    "key": "sla",
+    "name": "SLA & Escalation Engine",
+    "hint": "SLA monitoring, RAG status, escalation routing",
+    "y": 1210,
+    "h": 180
+   },
+   {
+    "key": "notif",
+    "name": "Notification",
+    "hint": "SMS, email, WhatsApp, push, distribution lists",
+    "y": 1390,
+    "h": 180
+   },
+   {
+    "key": "ext",
+    "name": "External Systems",
+    "hint": "AIA/OSM, UIM, Medallia survey platform",
+    "y": 1570,
+    "h": 320
+   }
+  ],
+  "phases": [
+   "Login & Access",
+   "Login & Access",
+   "Login & Access",
+   "Customer Verification",
+   "Customer Verification",
+   "Customer Verification",
+   "Customer Verification",
+   "Customer Verification",
+   "Ticket Creation & Categorisation",
+   "Ticket Creation & Categorisation",
+   "Ticket Creation & Categorisation",
+   "Ticket Creation & Categorisation",
+   "Ticket Creation & Categorisation",
+   "Ticket Creation & Categorisation",
+   "Ticket Creation & Categorisation",
+   "Ticket Creation & Categorisation",
+   "Ticket Creation & Categorisation",
+   "Ticket Creation & Categorisation",
+   "Ticket Creation & Categorisation",
+   "Ticket Creation & Categorisation",
+   "Ticket Creation & Categorisation",
+   "Ticket Creation & Categorisation",
+   "Assignment",
+   "Assignment",
+   "Assignment",
+   "Assignment",
+   "Assignment",
+   "Assignment",
+   "Assignment",
+   "Assignment",
+   "Investigation",
+   "Investigation",
+   "Investigation",
+   "Investigation",
+   "Investigation",
+   "Investigation",
+   "Investigation",
+   "Investigation",
+   "Activity Execution",
+   "Activity Execution",
+   "Activity Execution",
+   "Activity Execution",
+   "Activity Execution",
+   "Activity Execution",
+   "Activity Execution",
+   "Activity Execution",
+   "Customer Communication",
+   "Customer Communication",
+   "Customer Communication",
+   "Customer Communication",
+   "Customer Communication",
+   "Customer Communication",
+   "Customer Communication",
+   "SLA & Escalation",
+   "SLA & Escalation",
+   "SLA & Escalation",
+   "SLA & Escalation",
+   "SLA & Escalation",
+   "SLA & Escalation",
+   "SLA & Escalation",
+   "SLA & Escalation",
+   "Resolution & Closure",
+   "Resolution & Closure",
+   "Resolution & Closure",
+   "Resolution & Closure",
+   "Resolution & Closure",
+   "Resolution & Closure",
+   "Resolution & Closure",
+   "Feedback & Reporting",
+   "Feedback & Reporting",
+   "Feedback & Reporting",
+   "Feedback & Reporting",
+   "Feedback & Reporting",
+   "Feedback & Reporting",
+   "Feedback & Reporting",
+   "Feedback & Reporting"
+  ]
+ },
+ "nodes": [
+  {
+   "id": "start",
+   "type": "start",
+   "lane": "trg",
+   "slot": 0,
+   "label": "Agent Starts Shift / Receives Contact",
+   "phase": 0,
+   "x": 216.0,
+   "y": 110.0,
+   "w": 100,
+   "h": 100,
+   "cx": 266.0,
+   "cy": 160.0
+  },
+  {
+   "id": "jsm_login",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Agent Login & Credential Validation",
+   "sub": "TT-001-JSM-01 / TT-001-JSM-02",
+   "desc": "The agent logs in using Agent ID and password; the system validates the Agent ID and credentials before granting access.",
+   "phase": 1,
+   "x": 415.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 518.0,
+   "cy": 340.0
+  },
+  {
+   "id": "jsm_role",
+   "type": "control",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Role-Based Access & Dashboard",
+   "sub": "TT-001-JSM-03 / TT-001-JSM-04 / TT-001-JSM-05",
+   "desc": "After login the agent sees role-scoped view/edit options, Agent 360, and a dashboard displaying only the tickets and tasks assigned to that agent (reuses Agent 360 BRSD requirements).",
+   "phase": 2,
+   "x": 667.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 770.0,
+   "cy": 340.0
+  },
+  {
+   "id": "tt_qticket_validate",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Validate Q Ticket & Identify Customer",
+   "sub": "TT-001-JSM-01 (\u00a72)",
+   "desc": "The agent validates the Q Ticket and identifies the customer before initiating a Trouble Ticket. Note: this requirement ID duplicates TT-001-JSM-01 used under \u00a71 Agent Login in the source register \u2014 carried forward as-is, not renumbered.",
+   "phase": 3,
+   "x": 919.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 1022.0,
+   "cy": 340.0
+  },
+  {
+   "id": "cam_identify",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Customer Identification",
+   "sub": "TT-001-CAM-02",
+   "desc": "Customer identification is completed before the agent initiates the Trouble Ticket.",
+   "phase": 4,
+   "x": 1171.0,
+   "y": 310.0,
+   "w": 206,
+   "h": 60,
+   "cx": 1274.0,
+   "cy": 340.0
+  },
+  {
+   "id": "d_verify_method",
+   "type": "decision",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Verification Method by Channel",
+   "branches": [
+    {
+     "label": "Retail \u2014 ID scan",
+     "to": "kyc_scan"
+    },
+    {
+     "label": "Telesales / Call Centre \u2014 question",
+     "to": "cav_question"
+    }
+   ],
+   "phase": 5,
+   "x": 1451.0,
+   "y": 290.0,
+   "w": 150,
+   "h": 100,
+   "cx": 1526.0,
+   "cy": 340.0
+  },
+  {
+   "id": "kyc_scan",
+   "type": "external",
+   "lane": "ext",
+   "slot": 0,
+   "label": "Verify Customer via IDWise Scan",
+   "sub": "TT-001-KYC-03",
+   "desc": "The Retail Agent verifies the customer by scanning the ID document through IDWise, before initiating a Trouble Ticket.",
+   "phase": 6,
+   "x": 1690.0,
+   "y": 1610.0,
+   "w": 176,
+   "h": 100,
+   "cx": 1778.0,
+   "cy": 1660.0
+  },
+  {
+   "id": "cav_question",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Verify Customer via Verification Question",
+   "sub": "TT-001-CAV-04",
+   "desc": "Telesales or Retail agents verify the customer by asking a verification question, before initiating a Trouble Ticket.",
+   "phase": 6,
+   "x": 1675.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 1778.0,
+   "cy": 340.0
+  },
+  {
+   "id": "cam_nav360",
+   "type": "control",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Navigate to Customer 360",
+   "sub": "TT-001-CAM-01 / BR-001",
+   "desc": "The agent navigates to Customer 360 before initiating the ticket (reuses Customer 360 BRSD requirements). A Trouble Ticket may only be created once verified Customer, Service Account and Billing Account context exists.",
+   "phase": 7,
+   "x": 1927.0,
+   "y": 770.0,
+   "w": 206,
+   "h": 60,
+   "cx": 2030.0,
+   "cy": 800.0
+  },
+  {
+   "id": "start_sysfail",
+   "type": "start",
+   "lane": "ext",
+   "slot": 0,
+   "label": "AIA Order Creation Failure",
+   "phase": 0,
+   "x": 224.0,
+   "y": 1618.0,
+   "w": 84,
+   "h": 84,
+   "cx": 266.0,
+   "cy": 1660.0
+  },
+  {
+   "id": "cre_smartsearch",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Smart Search for Categorisation",
+   "sub": "TT-001-CRE-01 / BR-002",
+   "desc": "The agent searches by keyword (minimum three characters, P-01) to identify the applicable ticket category before raising a ticket; ranked suggestions come from the Knowledge Base and historical tickets.",
+   "phase": 8,
+   "x": 2179.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 2282.0,
+   "cy": 340.0
+  },
+  {
+   "id": "d_create_mode",
+   "type": "decision",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Creation Trigger",
+   "branches": [
+    {
+     "label": "Manual (agent)",
+     "to": "cre_manual_create"
+    },
+    {
+     "label": "System (order failure)",
+     "to": "cre_auto_create"
+    }
+   ],
+   "phase": 9,
+   "x": 2459.0,
+   "y": 290.0,
+   "w": 150,
+   "h": 100,
+   "cx": 2534.0,
+   "cy": 340.0
+  },
+  {
+   "id": "cre_manual_create",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Create Manual Trouble Ticket",
+   "sub": "TT-001-CRE-02",
+   "desc": "The system creates a ticket automatically with a unique Ticket ID for the selected Service Request, Trouble Ticket or Query category when the agent raises it manually.",
+   "phase": 10,
+   "x": 2683.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 2786.0,
+   "cy": 340.0
+  },
+  {
+   "id": "cre_auto_create",
+   "type": "system",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Automatic Ticket on Order Failure",
+   "sub": "TT-001-CRE-14 / INT-TT-02",
+   "desc": "A Trouble Ticket is created automatically when an AIA order creation request fails; the error reason is recorded in the Description field and the error code is returned to AIA. Integration: INT-TT-02 (OSM/AIA, synchronous SOAP over OSB, CreateTroubleTicket operation).",
+   "phase": 10,
+   "x": 2691.0,
+   "y": 750.0,
+   "w": 190,
+   "h": 100,
+   "cx": 2786.0,
+   "cy": 800.0
+  },
+  {
+   "id": "cre_autofields",
+   "type": "system",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Auto-Populated Fields",
+   "sub": "TT-001-CRE-03 / BR-003 / INT-TT-10",
+   "desc": "Fields designated for automatic population use the approved source of record; override is permitted only by an authorised role. Integration: INT-TT-10 (UIM, retrieves service and inventory information for ticket enrichment; ticket creation proceeds without enrichment on failure).",
+   "phase": 11,
+   "x": 2943.0,
+   "y": 772.0,
+   "w": 190,
+   "h": 56,
+   "cx": 3038.0,
+   "cy": 800.0
+  },
+  {
+   "id": "cre_manualfields",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Manually Filled Fields",
+   "sub": "TT-001-CRE-04 / BR-004",
+   "desc": "The agent enters the fields designated as manually filled; the creating agent is accountable for their completeness and accuracy.",
+   "phase": 12,
+   "x": 3187.0,
+   "y": 310.0,
+   "w": 206,
+   "h": 60,
+   "cx": 3290.0,
+   "cy": 340.0
+  },
+  {
+   "id": "cre_kb_access",
+   "type": "control",
+   "lane": "kb",
+   "slot": 0,
+   "label": "Knowledge Base Access from Ticket",
+   "sub": "TT-001-CRE-05 / BR-005 / INT-TT-11",
+   "desc": "Selecting the knowledge base button opens the Knowledge Base in another tab; categorisation and handling guidance must use current, approved content. Integration: INT-TT-11 (Knowledge Base, bi-directional REST, searchArticles operation).",
+   "phase": 13,
+   "x": 3439.0,
+   "y": 1070.0,
+   "w": 206,
+   "h": 100,
+   "cx": 3542.0,
+   "cy": 1120.0
+  },
+  {
+   "id": "cre_view_new",
+   "type": "control",
+   "lane": "agt",
+   "slot": 0,
+   "label": "View Newly Created Ticket",
+   "sub": "TT-001-CRE-06",
+   "phase": 14,
+   "x": 3691.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 3794.0,
+   "cy": 340.0
+  },
+  {
+   "id": "cre_capture_details",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Capture Trouble Ticket Details",
+   "sub": "TT-001-CRE-07",
+   "phase": 15,
+   "x": 3943.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 4046.0,
+   "cy": 340.0
+  },
+  {
+   "id": "cre_categorise",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Categorise: Source / TT Type / Area / Sub-Area",
+   "sub": "TT-001-CRE-08 / TT-001-CRE-09",
+   "desc": "The agent selects Source, Category, Area and Sub Area by keyword search and Knowledge Base reference; the Sub Area picklist is dynamically filtered to only mapped, valid values for the selected Area.",
+   "phase": 16,
+   "x": 4195.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 4298.0,
+   "cy": 340.0
+  },
+  {
+   "id": "cre_desc_template",
+   "type": "control",
+   "lane": "kb",
+   "slot": 0,
+   "label": "Select Description Template",
+   "sub": "TT-001-CRE-10 / BR-006 / INT-TT-11",
+   "desc": "The agent selects the correct description template from the Knowledge Base and updates the ticket description; the template must be active, approved and applicable to the selected classification. Integration: INT-TT-11 (Knowledge Base, description template retrieval).",
+   "phase": 17,
+   "x": 4447.0,
+   "y": 1070.0,
+   "w": 206,
+   "h": 100,
+   "cx": 4550.0,
+   "cy": 1120.0
+  },
+  {
+   "id": "cre_template_admin",
+   "type": "control",
+   "lane": "kb",
+   "slot": 0,
+   "label": "Description Template Administration",
+   "sub": "TT-001-CRE-13",
+   "desc": "A user holding the Template Administration privilege may create, amend and retire description templates.",
+   "phase": 18,
+   "x": 4699.0,
+   "y": 1070.0,
+   "w": 206,
+   "h": 100,
+   "cx": 4802.0,
+   "cy": 1120.0
+  },
+  {
+   "id": "cre_save",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Save Ticket Details",
+   "sub": "TT-001-CRE-11",
+   "desc": "The ticket is saved once all mandatory fields are populated.",
+   "phase": 18,
+   "x": 4699.0,
+   "y": 310.0,
+   "w": 206,
+   "h": 60,
+   "cx": 4802.0,
+   "cy": 340.0
+  },
+  {
+   "id": "cre_downstream",
+   "type": "system",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Pass Ticket Details Downstream",
+   "sub": "TT-001-CRE-12 / INT-TT-03 / INT-TT-04",
+   "phase": 19,
+   "x": 4959.0,
+   "y": 750.0,
+   "w": 190,
+   "h": 100,
+   "cx": 5054.0,
+   "cy": 800.0,
+   "desc": "Integrations: INT-TT-03 (Kafka/ODS/Channels, publishes TroubleTicketStatusChangeEvent) and INT-TT-04 (Downstream Systems, asynchronous real-time Trouble Ticket updates)."
+  },
+  {
+   "id": "cre_assign_creator",
+   "type": "system",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Auto-Assign to Creator",
+   "sub": "TT-001-CRE-15",
+   "desc": "The newly created ticket is automatically assigned to the agent who created it.",
+   "phase": 20,
+   "x": 5211.0,
+   "y": 772.0,
+   "w": 190,
+   "h": 56,
+   "cx": 5306.0,
+   "cy": 800.0
+  },
+  {
+   "id": "cre_priority",
+   "type": "system",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Priority Derivation from Customer Type",
+   "sub": "TT-001-CRE-16 / P-03",
+   "desc": "Ticket Priority (P-03: 1-ASAP, 2-High, 3-Medium, 4-Low) is derived from the Customer Type matrix at creation and cannot be overridden by a non-privileged user.",
+   "phase": 21,
+   "x": 5463.0,
+   "y": 750.0,
+   "w": 190,
+   "h": 100,
+   "cx": 5558.0,
+   "cy": 800.0
+  },
+  {
+   "id": "asg_auto_queue",
+   "type": "system",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Auto-Assign to Queue",
+   "sub": "TT-001-ASG-01 / TT-001-ASG-04",
+   "desc": "The ticket is assigned to the appropriate queue using the predefined combination of Source, TT Category, Area, Sub Area, Language, Customer Type and TT Queue, assuming agents in that queue hold the appropriate privileges.",
+   "phase": 22,
+   "x": 5715.0,
+   "y": 772.0,
+   "w": 190,
+   "h": 56,
+   "cx": 5810.0,
+   "cy": 800.0
+  },
+  {
+   "id": "d_asg_match",
+   "type": "decision",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Predefined Combination Matched?",
+   "branches": [
+    {
+     "label": "Matched",
+     "to": "asg_view_queue"
+    },
+    {
+     "label": "Unmatched",
+     "to": "asg_generic"
+    }
+   ],
+   "phase": 23,
+   "x": 5987.0,
+   "y": 750.0,
+   "w": 150,
+   "h": 100,
+   "cx": 6062.0,
+   "cy": 800.0
+  },
+  {
+   "id": "asg_generic",
+   "type": "system",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Generic Queue Fallback",
+   "sub": "TT-001-ASG-02",
+   "desc": "A ticket whose auto-assignment parameters match no predefined combination is assigned to the Generic Queue.",
+   "phase": 24,
+   "x": 6219.0,
+   "y": 772.0,
+   "w": 190,
+   "h": 56,
+   "cx": 6314.0,
+   "cy": 800.0
+  },
+  {
+   "id": "asg_view_queue",
+   "type": "control",
+   "lane": "agt",
+   "slot": 0,
+   "label": "View Queue-Assigned Tickets",
+   "sub": "TT-001-ASG-03",
+   "desc": "The agent views tickets assigned to the applicable queue, including generic and auto-assigned queues.",
+   "phase": 25,
+   "x": 6463.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 6566.0,
+   "cy": 340.0
+  },
+  {
+   "id": "asg_supervisor_reassign",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Supervisor Cross-Queue Reassignment",
+   "sub": "TT-001-ASG-05",
+   "desc": "An agent acting as supervisor reassigns the Trouble Ticket to a different queue.",
+   "phase": 26,
+   "x": 6715.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 6818.0,
+   "cy": 340.0
+  },
+  {
+   "id": "asg_self",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 1,
+   "label": "Self Assignment",
+   "sub": "TT-001-ASG-07",
+   "phase": 26,
+   "x": 6715.0,
+   "y": 450.0,
+   "w": 206,
+   "h": 60,
+   "cx": 6818.0,
+   "cy": 480.0
+  },
+  {
+   "id": "asg_bulk",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 2,
+   "label": "Bulk Selection & Assignment",
+   "sub": "TT-001-ASG-12 / TT-001-ASG-13 / TT-001-ASG-14 / TT-001-ASG-15 / TT-001-ASG-16",
+   "desc": "The agent selects multiple or all filtered tickets and bulk-assigns them to one target queue in a single action, permitted only in accordance with agent privileges.",
+   "phase": 26,
+   "x": 6715.0,
+   "y": 570.0,
+   "w": 206,
+   "h": 100,
+   "cx": 6818.0,
+   "cy": 620.0
+  },
+  {
+   "id": "asg_status_update",
+   "type": "system",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Status/Sub-Status Set to Assigned",
+   "sub": "TT-001-ASG-06 / TT-001-ASG-08",
+   "desc": "Status and Sub-Status change to 'Assigned' when a ticket is allocated to a named user or queue, including a supervisor-assigned ticket received by the agent; recorded in the audit trail.",
+   "phase": 27,
+   "x": 6975.0,
+   "y": 750.0,
+   "w": 190,
+   "h": 100,
+   "cx": 7070.0,
+   "cy": 800.0
+  },
+  {
+   "id": "asg_notify_email",
+   "type": "system",
+   "lane": "notif",
+   "slot": 0,
+   "label": "Assignment Email Notification",
+   "sub": "TT-001-ASG-11 / INT-TT-07",
+   "desc": "The agent receives an email after a Trouble Ticket is assigned. Integration: INT-TT-07 (Enterprise SMTP Relay, assignment email notification).",
+   "phase": 28,
+   "x": 7227.0,
+   "y": 1430.0,
+   "w": 190,
+   "h": 100,
+   "cx": 7322.0,
+   "cy": 1480.0
+  },
+  {
+   "id": "d_asg_reject",
+   "type": "decision",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Agent Accepts Assignment?",
+   "branches": [
+    {
+     "label": "Accept",
+     "to": "asc_associate"
+    },
+    {
+     "label": "Reject",
+     "to": "asg_reject"
+    }
+   ],
+   "phase": 28,
+   "x": 7247.0,
+   "y": 290.0,
+   "w": 150,
+   "h": 100,
+   "cx": 7322.0,
+   "cy": 340.0
+  },
+  {
+   "id": "asg_reject",
+   "type": "escalation",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Assignment Rejection",
+   "sub": "TT-001-ASG-09 / TT-001-ASG-10",
+   "desc": "The agent rejects an assigned ticket, setting Sub-Status to 'Rejected' and making it available for reallocation, with the reason recorded in the audit trail; reassignment among team members is not permitted.",
+   "phase": 29,
+   "x": 7479.0,
+   "y": 311.0,
+   "w": 190,
+   "h": 58,
+   "cx": 7574.0,
+   "cy": 340.0
+  },
+  {
+   "id": "asc_associate",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 1,
+   "label": "Manual Parent-Child Association",
+   "sub": "TT-001-ASC-01 / TT-001-ASC-02",
+   "desc": "The agent manually associates related tickets as child of a master ticket; tickets matching TT Category, MSISDN, Area and Sub Area may be marked associated.",
+   "phase": 29,
+   "x": 7471.0,
+   "y": 430.0,
+   "w": 206,
+   "h": 100,
+   "cx": 7574.0,
+   "cy": 480.0
+  },
+  {
+   "id": "asc_duplicate",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Duplicate Ticket Association",
+   "sub": "TT-001-ASC-03 / TT-001-ASC-04",
+   "desc": "The agent manually associates duplicate Trouble Tickets; tickets matching TT Category, MSISDN, Area and Sub Area may be marked as duplicate.",
+   "phase": 30,
+   "x": 7723.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 7826.0,
+   "cy": 340.0
+  },
+  {
+   "id": "att_scan_retail",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Scan-to-Attach (Retail)",
+   "sub": "TT-001-ATT-01",
+   "desc": "A Retail Agent scans a physical document and attaches it to the ticket; the scan control is not displayed to any other role.",
+   "phase": 31,
+   "x": 7975.0,
+   "y": 310.0,
+   "w": 206,
+   "h": 60,
+   "cx": 8078.0,
+   "cy": 340.0
+  },
+  {
+   "id": "d_att_status",
+   "type": "decision",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Ticket in Terminal Status?",
+   "sub": "TT-001-ATT-03",
+   "branches": [
+    {
+     "label": "Non-terminal",
+     "to": "att_manual_upload"
+    },
+    {
+     "label": "Closed / Cancelled",
+     "to": "att_blocked"
+    }
+   ],
+   "phase": 32,
+   "x": 8255.0,
+   "y": 290.0,
+   "w": 150,
+   "h": 100,
+   "cx": 8330.0,
+   "cy": 340.0
+  },
+  {
+   "id": "att_blocked",
+   "type": "error",
+   "lane": "agt",
+   "slot": 0,
+   "label": "New Attachment Rejected \u2014 Terminal Status",
+   "phase": 33,
+   "x": 8487.0,
+   "y": 290.0,
+   "w": 190,
+   "h": 100,
+   "cx": 8582.0,
+   "cy": 340.0
+  },
+  {
+   "id": "att_manual_upload",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 1,
+   "label": "Manual File Attachment",
+   "sub": "TT-001-ATT-02 / TT-001-ATT-05 / P-13 / P-14 / P-15",
+   "desc": "The agent attaches files while the ticket is in any non-terminal status; the system enforces a maximum file size, permitted file-type whitelist and maximum attachment count, and malware-scans every file before storage. Size, type-whitelist and count constraints are configurable: P-13 (max file size), P-14 (permitted file types), P-15 (max attachments per ticket) \u2014 all three values marked To be confirmed in the source.",
+   "phase": 33,
+   "x": 8479.0,
+   "y": 450.0,
+   "w": 206,
+   "h": 60,
+   "cx": 8582.0,
+   "cy": 480.0
+  },
+  {
+   "id": "att_view_download",
+   "type": "control",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Attachment View & Download",
+   "sub": "TT-001-ATT-04",
+   "desc": "A permitted user views and downloads attachments at any ticket status, including terminal ones; each access is recorded in the audit trail.",
+   "phase": 34,
+   "x": 8731.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 8834.0,
+   "cy": 340.0
+  },
+  {
+   "id": "aud_capture",
+   "type": "control",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Audit Trail Capture",
+   "sub": "TT-001-AUD-01 / BR-007",
+   "desc": "Every Status change, Sub-Status change, field change, assignment change, attachment action and notification dispatch is recorded immutably with actor, UTC timestamp, before value and after value.",
+   "phase": 35,
+   "x": 8983.0,
+   "y": 770.0,
+   "w": 206,
+   "h": 60,
+   "cx": 9086.0,
+   "cy": 800.0
+  },
+  {
+   "id": "aud_view",
+   "type": "control",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Audit Trail Access",
+   "sub": "TT-001-AUD-02",
+   "desc": "A permitted user views the audit trail chronologically from the detailed ticket view; records cannot be edited or deleted.",
+   "phase": 36,
+   "x": 9235.0,
+   "y": 310.0,
+   "w": 206,
+   "h": 60,
+   "cx": 9338.0,
+   "cy": 340.0
+  },
+  {
+   "id": "aud_access_log",
+   "type": "control",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Access Event Logging",
+   "sub": "TT-001-AUD-03 / BR-008",
+   "desc": "Ticket access events log user identity, IP address, geo-location where available, and access channel, retained per the approved retention policy.",
+   "phase": 37,
+   "x": 9487.0,
+   "y": 770.0,
+   "w": 206,
+   "h": 60,
+   "cx": 9590.0,
+   "cy": 800.0
+  },
+  {
+   "id": "vew_manual_activity",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Create Manual Activity",
+   "sub": "TT-001-VEW-01 (\u00a79) / BR-009",
+   "desc": "The agent adds an activity manually under the Trouble Ticket, identifying its business purpose and responsible agent.",
+   "phase": 38,
+   "x": 9739.0,
+   "y": 310.0,
+   "w": 206,
+   "h": 60,
+   "cx": 9842.0,
+   "cy": 340.0
+  },
+  {
+   "id": "vew_activity_assoc",
+   "type": "control",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Associate Activity to Ticket",
+   "sub": "TT-001-VEW-02 (\u00a79)",
+   "phase": 39,
+   "x": 9991.0,
+   "y": 750.0,
+   "w": 206,
+   "h": 100,
+   "cx": 10094.0,
+   "cy": 800.0
+  },
+  {
+   "id": "vew_view_activities",
+   "type": "control",
+   "lane": "agt",
+   "slot": 0,
+   "label": "View Ticket Activities",
+   "sub": "TT-001-VEW-03 (\u00a79) / TT-001-VEW-07 / BR-010",
+   "desc": "Manual and system-generated activities are visible under the ticket with their origin, viewable only by users authorised for the parent ticket.",
+   "phase": 40,
+   "x": 10243.0,
+   "y": 310.0,
+   "w": 206,
+   "h": 60,
+   "cx": 10346.0,
+   "cy": 340.0
+  },
+  {
+   "id": "vew_auto_activity",
+   "type": "system",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Automatic Activity at Trigger Points",
+   "sub": "TT-001-VEW-04 (\u00a79) / BR-011",
+   "desc": "An activity is created automatically at business trigger points approved by the process owner.",
+   "phase": 41,
+   "x": 10503.0,
+   "y": 750.0,
+   "w": 190,
+   "h": 100,
+   "cx": 10598.0,
+   "cy": 800.0
+  },
+  {
+   "id": "vew_close_activity",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Close Open Activity",
+   "sub": "TT-001-VEW-05 (\u00a79) / BR-012",
+   "desc": "The agent closes activities that are not closed automatically; an open activity may be closed only by its owner or another role authorised for that activity type.",
+   "phase": 42,
+   "x": 10747.0,
+   "y": 310.0,
+   "w": 206,
+   "h": 60,
+   "cx": 10850.0,
+   "cy": 340.0
+  },
+  {
+   "id": "vew_close_on_ticket_close",
+   "type": "system",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Close All Activities on Ticket Closure",
+   "sub": "TT-001-VEW-06 (\u00a79)",
+   "phase": 43,
+   "x": 11007.0,
+   "y": 750.0,
+   "w": 190,
+   "h": 100,
+   "cx": 11102.0,
+   "cy": 800.0
+  },
+  {
+   "id": "vew_ai_assist",
+   "type": "system",
+   "lane": "kb",
+   "slot": 0,
+   "label": "AI-Assisted Triage",
+   "sub": "TT-001-VEW-08",
+   "desc": "An AI-assisted journey contextualises the reported issue, pre-populates ticket fields, and proposes TT Type, Area, Sub-Area, Priority and routing; the agent may accept or override each proposal. Positioned under Activity Execution in the source register, though its content concerns ticket creation/triage.",
+   "phase": 44,
+   "x": 11259.0,
+   "y": 1092.0,
+   "w": 190,
+   "h": 56,
+   "cx": 11354.0,
+   "cy": 1120.0
+  },
+  {
+   "id": "vew_b2b",
+   "type": "control",
+   "lane": "crm",
+   "slot": 0,
+   "label": "B2B & Enterprise Ticket Support",
+   "sub": "TT-001-VEW-09",
+   "desc": "Trouble Tickets against B2B/enterprise accounts capture account-hierarchy context and apply the enterprise Customer Type SLA matrix.",
+   "phase": 45,
+   "x": 11503.0,
+   "y": 750.0,
+   "w": 206,
+   "h": 100,
+   "cx": 11606.0,
+   "cy": 800.0
+  },
+  {
+   "id": "not_auto_sms",
+   "type": "system",
+   "lane": "notif",
+   "slot": 0,
+   "label": "Automatic SMS at Defined Events",
+   "sub": "TT-001-NOT-01 / TT-001-NOT-02 / TT-001-NOT-03 / P-02 / INT-TT-05",
+   "desc": "A preconfigured SMS (P-02 languages: English, Arabic, Hindi, Malayalam) sends at defined events, triggered by the combination of TT Source, Category, Area, Sub Area and Queue, in the customer's preferred account language. Integration: INT-TT-05 (SMS Gateway, REST or SOAP via OSB, sendSMS operation).",
+   "phase": 46,
+   "x": 11763.0,
+   "y": 1430.0,
+   "w": 190,
+   "h": 100,
+   "cx": 11858.0,
+   "cy": 1480.0
+  },
+  {
+   "id": "not_manual_sms",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Send Manual SMS",
+   "sub": "TT-001-NOT-04 / BR-013",
+   "desc": "The agent sends a manual SMS to an approved customer contact number, in line with the customer's contact permissions.",
+   "phase": 47,
+   "x": 12007.0,
+   "y": 310.0,
+   "w": 206,
+   "h": 60,
+   "cx": 12110.0,
+   "cy": 340.0
+  },
+  {
+   "id": "not_template_search",
+   "type": "control",
+   "lane": "notif",
+   "slot": 0,
+   "label": "Search & Filter SMS Template",
+   "sub": "TT-001-NOT-05 / TT-001-NOT-06 / TT-001-NOT-07",
+   "desc": "Templates are searched by Keyword, TT Source, Category, Area, Sub Area and Status, filtered in sequence Number, Service Type, Language, Keyword; language choice covers Hindi, English, Malayalam and Arabic.",
+   "phase": 48,
+   "x": 12259.0,
+   "y": 1430.0,
+   "w": 206,
+   "h": 100,
+   "cx": 12362.0,
+   "cy": 1480.0
+  },
+  {
+   "id": "not_template_select",
+   "type": "control",
+   "lane": "notif",
+   "slot": 0,
+   "label": "Select SMS Template",
+   "sub": "TT-001-NOT-08 / BR-014",
+   "desc": "Only active, approved templates applicable to the ticket may be selected.",
+   "phase": 49,
+   "x": 12511.0,
+   "y": 1450.0,
+   "w": 206,
+   "h": 60,
+   "cx": 12614.0,
+   "cy": 1480.0
+  },
+  {
+   "id": "not_edit_role",
+   "type": "validation",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Edit SMS Content by Role",
+   "sub": "TT-001-NOT-09",
+   "desc": "MSISDN, Language and text are editable per agent role: Frontline cannot edit text, Back Office can.",
+   "phase": 50,
+   "x": 12778.0,
+   "y": 290.0,
+   "w": 176,
+   "h": 100,
+   "cx": 12866.0,
+   "cy": 340.0
+  },
+  {
+   "id": "not_history",
+   "type": "system",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Save SMS to Interaction History",
+   "sub": "TT-001-NOT-10",
+   "phase": 51,
+   "x": 13023.0,
+   "y": 750.0,
+   "w": 190,
+   "h": 100,
+   "cx": 13118.0,
+   "cy": 800.0
+  },
+  {
+   "id": "not_channels",
+   "type": "system",
+   "lane": "notif",
+   "slot": 0,
+   "label": "WhatsApp & Push Notification Channels",
+   "sub": "TT-001-NOT-11 / INT-TT-06",
+   "desc": "WhatsApp and mobile app push are supported as additional customer notification channels, selectable by template and consented contact preference. Integration: INT-TT-06 (WhatsApp Business Platform, sendMessage operation; fallback to SMS on failure).",
+   "phase": 52,
+   "x": 13275.0,
+   "y": 1430.0,
+   "w": 190,
+   "h": 100,
+   "cx": 13370.0,
+   "cy": 1480.0
+  },
+  {
+   "id": "sla_breach",
+   "type": "system",
+   "lane": "sla",
+   "slot": 0,
+   "label": "SLA Breach \u2192 Auto-Escalate",
+   "sub": "TT-001-ESC-01 / BR-015 / P-10 / P-11",
+   "desc": "The ticket is automatically escalated and Status changes to 'Escalate' when the applicable SLA threshold in the Customer Type matrix (BR-015 status: Open) is breached. SLA target: P-10 (non-Expatriate: 24h), P-11 (Expatriate: 48h).",
+   "phase": 53,
+   "x": 13527.0,
+   "y": 1250.0,
+   "w": 190,
+   "h": 100,
+   "cx": 13622.0,
+   "cy": 1300.0
+  },
+  {
+   "id": "sla_notify",
+   "type": "system",
+   "lane": "sla",
+   "slot": 0,
+   "label": "SLA Breach Notification",
+   "sub": "TT-001-ESC-02 / P-04 / P-05 / P-06 / P-07 / P-08 / P-09",
+   "desc": "Reuses the TT-001-ESC-02 requirement as stated in the source; text is a direct self-reference with no further detail given. Notification tiers per P-04 (first, non-Expatriate: 12h), P-05 (first, Expatriate: 24h), P-06 (second, non-Expatriate: 24h), P-07 (second, Expatriate: 48h), P-08 (third, non-Expatriate: 72h), P-09 (third, Expatriate: 5 days).",
+   "phase": 54,
+   "x": 13779.0,
+   "y": 1250.0,
+   "w": 190,
+   "h": 100,
+   "cx": 13874.0,
+   "cy": 1300.0
+  },
+  {
+   "id": "sla_rag",
+   "type": "system",
+   "lane": "sla",
+   "slot": 0,
+   "label": "RAG Status Update",
+   "sub": "TT-001-ESC-03 / P-16 / P-17 / P-18",
+   "desc": "RAG status is updated per the SLA matrix: Green within target (P-16), Amber past first notification threshold (P-17), Red on target breach (P-18).",
+   "phase": 55,
+   "x": 14031.0,
+   "y": 1272.0,
+   "w": 190,
+   "h": 56,
+   "cx": 14126.0,
+   "cy": 1300.0
+  },
+  {
+   "id": "sla_activity_log",
+   "type": "system",
+   "lane": "crm",
+   "slot": 0,
+   "label": "SLA Notification as Siebel Activity",
+   "sub": "TT-001-ESC-04",
+   "desc": "Each SLA notification issued creates an associated Siebel Activity record containing the ticket reference, notification tier and issue timestamp.",
+   "phase": 56,
+   "x": 14283.0,
+   "y": 750.0,
+   "w": 190,
+   "h": 100,
+   "cx": 14378.0,
+   "cy": 800.0
+  },
+  {
+   "id": "esc_manual",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Manual Escalation with Reason",
+   "sub": "TT-001-ESC-05",
+   "desc": "The agent escalates a ticket manually by selecting a mandatory escalation reason from a controlled list; a submission without a reason is rejected.",
+   "phase": 57,
+   "x": 14527.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 14630.0,
+   "cy": 340.0
+  },
+  {
+   "id": "esc_dl_notify",
+   "type": "system",
+   "lane": "notif",
+   "slot": 0,
+   "label": "Escalation Email to Distribution Lists",
+   "sub": "TT-001-ESC-06 / INT-TT-07",
+   "desc": "An email is sent to every distribution list mapped to the assigned queue on escalation. Note: Priority is Must but Change Category is marked Out of Scope in the source \u2014 an apparent internal inconsistency, carried forward as stated rather than resolved. Integration: INT-TT-07 (Enterprise SMTP Relay, escalation email notification).",
+   "phase": 58,
+   "x": 14787.0,
+   "y": 1430.0,
+   "w": 190,
+   "h": 100,
+   "cx": 14882.0,
+   "cy": 1480.0
+  },
+  {
+   "id": "esc_hierarchy",
+   "type": "system",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Hierarchical Escalation Notification",
+   "sub": "TT-001-ESC-07",
+   "desc": "The next higher position in the Siebel position hierarchy relative to the ticket owner is identified and notified; where none exists, the assigned queue distribution list is notified instead.",
+   "phase": 59,
+   "x": 15039.0,
+   "y": 750.0,
+   "w": 190,
+   "h": 100,
+   "cx": 15134.0,
+   "cy": 800.0
+  },
+  {
+   "id": "esc_dl_admin",
+   "type": "control",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Distribution List Administration",
+   "sub": "TT-001-ESC-08",
+   "desc": "A user holding the Distribution List Administration privilege adds, amends and removes distribution lists mapped to a queue.",
+   "phase": 60,
+   "x": 15283.0,
+   "y": 750.0,
+   "w": 206,
+   "h": 100,
+   "cx": 15386.0,
+   "cy": 800.0
+  },
+  {
+   "id": "esc_dashboard",
+   "type": "control",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Escalation Dashboard",
+   "sub": "TT-001-ESC-09",
+   "desc": "The agent views escalated tickets via 'escalated to me' and 'rejected by me' filters in a separate dashboard.",
+   "phase": 60,
+   "x": 15283.0,
+   "y": 310.0,
+   "w": 206,
+   "h": 60,
+   "cx": 15386.0,
+   "cy": 340.0
+  },
+  {
+   "id": "res_gate",
+   "type": "validation",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Mandatory Fields Gate on Solved",
+   "sub": "TT-001-RES-01",
+   "desc": "Transition to Status 'Solved' succeeds only once Resolution Code, Hashtag and TT Actual Issue are populated; otherwise the missing fields are identified to the agent.",
+   "phase": 61,
+   "x": 15550.0,
+   "y": 290.0,
+   "w": 176,
+   "h": 100,
+   "cx": 15638.0,
+   "cy": 340.0
+  },
+  {
+   "id": "res_code",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Resolution Code Selection",
+   "sub": "TT-001-RES-02",
+   "desc": "Exactly one Resolution Code is retained per ticket; selecting a different value replaces the existing one.",
+   "phase": 62,
+   "x": 15787.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 15890.0,
+   "cy": 340.0
+  },
+  {
+   "id": "res_hashtag",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Hashtag Capture & Administration",
+   "sub": "TT-001-RES-03 / TT-001-RES-04",
+   "desc": "One or more Hashtags are selected from a picklist filtered by TT Type, Area and Sub-Area; a Reference Data Administration privilege holder adds and retires Hashtag values.",
+   "phase": 63,
+   "x": 16039.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 16142.0,
+   "cy": 340.0
+  },
+  {
+   "id": "res_actual_issue",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Actual Issue Capture & Administration",
+   "sub": "TT-001-RES-05 / TT-001-RES-06",
+   "desc": "TT Actual Issue is selected from a picklist filtered by the chosen description template; a Reference Data Administration privilege holder adds and retires values.",
+   "phase": 64,
+   "x": 16291.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 16394.0,
+   "cy": 340.0
+  },
+  {
+   "id": "res_l3_referral",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 1,
+   "label": "L3 Referral Reference Capture",
+   "sub": "TT-001-RES-07 / INT-TT-12",
+   "desc": "An external L3 ticket reference is recorded in a dedicated validated field while the ticket remains in Status 'Not Solved'; it is searchable and does not itself change Status. Integration: INT-TT-12 (External L3 Systems, manual reference capture only, no automated interface).",
+   "phase": 62,
+   "x": 15787.0,
+   "y": 430.0,
+   "w": 206,
+   "h": 100,
+   "cx": 15890.0,
+   "cy": 480.0
+  },
+  {
+   "id": "d_res_completed",
+   "type": "decision",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Outstanding Activities?",
+   "sub": "TT-001-RES-08",
+   "branches": [
+    {
+     "label": "None outstanding",
+     "to": "res_closed"
+    },
+    {
+     "label": "Outstanding",
+     "to": "res_completed_blocked"
+    }
+   ],
+   "phase": 65,
+   "x": 16571.0,
+   "y": 750.0,
+   "w": 150,
+   "h": 100,
+   "cx": 16646.0,
+   "cy": 800.0
+  },
+  {
+   "id": "res_completed_blocked",
+   "type": "error",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Completed Blocked \u2014 Open Activities",
+   "phase": 66,
+   "x": 16803.0,
+   "y": 290.0,
+   "w": 190,
+   "h": 100,
+   "cx": 16898.0,
+   "cy": 340.0
+  },
+  {
+   "id": "res_autoresolve_portout",
+   "type": "system",
+   "lane": "ext",
+   "slot": 0,
+   "label": "Automatic Resolution \u2014 Port-Out Verification",
+   "sub": "TT-001-RES-12",
+   "desc": "Port-Out verification tickets are resolved automatically; a back-office agent may set Status to 'Solved' manually when the automated process fails, with the response sent to the MNP gateway.",
+   "phase": 63,
+   "x": 16047.0,
+   "y": 1610.0,
+   "w": 190,
+   "h": 100,
+   "cx": 16142.0,
+   "cy": 1660.0
+  },
+  {
+   "id": "res_closed",
+   "type": "control",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Ticket Closure",
+   "sub": "TT-001-RES-09",
+   "desc": "The agent sets ticket Status to 'Closed'; the system closes all associated activities using the same timestamp.",
+   "phase": 66,
+   "x": 16795.0,
+   "y": 770.0,
+   "w": 206,
+   "h": 60,
+   "cx": 16898.0,
+   "cy": 800.0
+  },
+  {
+   "id": "res_reopen",
+   "type": "escalation",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Ticket Reopen",
+   "sub": "TT-001-RES-10",
+   "desc": "A Reopen privilege holder returns a ticket from 'Closed' to 'Not Solved' within the configured reopen window (P-12, value to be confirmed) with a mandatory reason; an attempt outside the window is rejected with guidance to raise a linked ticket.",
+   "phase": 67,
+   "x": 17055.0,
+   "y": 311.0,
+   "w": 190,
+   "h": 58,
+   "cx": 17150.0,
+   "cy": 340.0
+  },
+  {
+   "id": "res_cancel",
+   "type": "end",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Ticket Cancellation",
+   "sub": "TT-001-RES-11",
+   "desc": "A Cancellation privilege holder sets ticket Status to 'Cancelled' with a mandatory reason code; the ticket is excluded from performance reporting. Terminal.",
+   "phase": 0,
+   "x": 216.0,
+   "y": 290.0,
+   "w": 100,
+   "h": 100,
+   "cx": 266.0,
+   "cy": 340.0
+  },
+  {
+   "id": "csa_trigger",
+   "type": "system",
+   "lane": "ext",
+   "slot": 0,
+   "label": "Trigger Customer Satisfaction Survey",
+   "sub": "TT-001-CSA-01 / TT-001-CSA-02 / INT-TT-08",
+   "desc": "A feedback survey trigger is sent to Medallia only when the Trouble Ticket reaches Resolved status. Integration: INT-TT-08 (Medallia/Survey Platform, triggerSurvey operation).",
+   "phase": 67,
+   "x": 17055.0,
+   "y": 1610.0,
+   "w": 190,
+   "h": 100,
+   "cx": 17150.0,
+   "cy": 1660.0
+  },
+  {
+   "id": "csa_attribution",
+   "type": "system",
+   "lane": "crm",
+   "slot": 0,
+   "label": "CSAT Response Attribution",
+   "sub": "TT-001-CSA-03 / INT-TT-09",
+   "desc": "The survey response is stored against the originating ticket and made visible in the ticket view and in reporting. Integration: INT-TT-09 (Medallia/Survey Platform, postSurveyResponse operation, inbound).",
+   "phase": 68,
+   "x": 17307.0,
+   "y": 750.0,
+   "w": 190,
+   "h": 100,
+   "cx": 17402.0,
+   "cy": 800.0
+  },
+  {
+   "id": "vew_list_filter",
+   "type": "control",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Ticket List View with Filters",
+   "sub": "TT-001-VEW-01 (\u00a715)",
+   "desc": "Tickets are viewed in a list filtered by field set FS-09 criteria; filters can be saved and reapplied. Note: this Req ID duplicates TT-001-VEW-01 used earlier under \u00a79 Activity Execution in the source register \u2014 a different requirement, same identifier.",
+   "phase": 69,
+   "x": 17551.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 17654.0,
+   "cy": 340.0
+  },
+  {
+   "id": "vew_export",
+   "type": "agent",
+   "lane": "agt",
+   "slot": 0,
+   "label": "Export Ticket List to Excel",
+   "sub": "TT-001-VEW-02 (\u00a715)",
+   "phase": 70,
+   "x": 17803.0,
+   "y": 290.0,
+   "w": 206,
+   "h": 100,
+   "cx": 17906.0,
+   "cy": 340.0
+  },
+  {
+   "id": "vew_standard_views",
+   "type": "control",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Standard Siebel Ticket Views",
+   "sub": "TT-001-VEW-03 (\u00a715) / INT-TT-13",
+   "desc": "My Trouble Tickets, My Team's Trouble Tickets and All Trouble Tickets views are provided, per DE_079. Integration: INT-TT-13 (ODS/Analytics Platform, Trouble Ticket reporting).",
+   "phase": 71,
+   "x": 18055.0,
+   "y": 750.0,
+   "w": 206,
+   "h": 100,
+   "cx": 18158.0,
+   "cy": 800.0
+  },
+  {
+   "id": "vew_restricted_views",
+   "type": "control",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Queue-Restricted Ticket Views",
+   "sub": "TT-001-VEW-04 (\u00a715)",
+   "desc": "Tickets assigned to the Back Office Queue and Credit Control/Collection Queue are restricted to members of the applicable queue.",
+   "phase": 72,
+   "x": 18307.0,
+   "y": 750.0,
+   "w": 206,
+   "h": 100,
+   "cx": 18410.0,
+   "cy": 800.0
+  },
+  {
+   "id": "vew_c360_panel",
+   "type": "control",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Customer 360 Ticket Panel",
+   "sub": "TT-001-VEW-05 (\u00a715) / INT-TT-13",
+   "desc": "All Trouble Tickets raised against a customer account are viewable from Customer 360, without restriction on ticket age. Integration: INT-TT-13 (ODS/Analytics Platform, Kafka/GoldenGate event replication for Customer 360 visibility).",
+   "phase": 73,
+   "x": 18559.0,
+   "y": 750.0,
+   "w": 206,
+   "h": 100,
+   "cx": 18662.0,
+   "cy": 800.0
+  },
+  {
+   "id": "vew_rag_indicator",
+   "type": "control",
+   "lane": "crm",
+   "slot": 0,
+   "label": "RAG Status Indicator in List Views",
+   "sub": "TT-001-VEW-06 (\u00a715)",
+   "desc": "A Red, Amber or Green indicator is displayed per ticket in list views, derived from elapsed time against the applicable Customer Type SLA target.",
+   "phase": 74,
+   "x": 18811.0,
+   "y": 750.0,
+   "w": 206,
+   "h": 100,
+   "cx": 18914.0,
+   "cy": 800.0
+  },
+  {
+   "id": "end_lifecycle",
+   "type": "end",
+   "lane": "crm",
+   "slot": 0,
+   "label": "Trouble Ticket Lifecycle Complete",
+   "desc": "Terminal.",
+   "phase": 75,
+   "x": 19124.0,
+   "y": 758.0,
+   "w": 84,
+   "h": 84,
+   "cx": 19166.0,
+   "cy": 800.0
+  },
+  {
+   "id": "start_digital",
+   "type": "start",
+   "lane": "ext",
+   "phase": 0,
+   "slot": 1,
+   "label": "Digital Self-Service Channel Request",
+   "x": 216.0,
+   "y": 1750.0,
+   "w": 100,
+   "h": 100,
+   "cx": 266.0,
+   "cy": 1800.0
+  },
+  {
+   "id": "cre_digital_create",
+   "type": "system",
+   "lane": "crm",
+   "phase": 10,
+   "slot": 1,
+   "label": "Create Ticket from Digital Channel",
+   "sub": "INT-TT-01",
+   "desc": "A Trouble Ticket is created inbound from Web, Mobile App or Chatbot channels via the DXP createTroubleTicket interface (REST/JSON, TMF621). Fallback on interface failure is manual ticket creation by an agent.",
+   "x": 2691.0,
+   "y": 890.0,
+   "w": 190,
+   "h": 100,
+   "cx": 2786.0,
+   "cy": 940.0
+  }
+ ],
+ "flows": [
+  {
+   "from": "start",
+   "to": "jsm_login",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "jsm_login",
+   "to": "jsm_role",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "jsm_role",
+   "to": "tt_qticket_validate",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "tt_qticket_validate",
+   "to": "cam_identify",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cam_identify",
+   "to": "d_verify_method",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "d_verify_method",
+   "to": "kyc_scan",
+   "kind": "cond",
+   "label": "Retail \u2014 ID scan",
+   "happy": true
+  },
+  {
+   "from": "d_verify_method",
+   "to": "cav_question",
+   "kind": "cond",
+   "label": "Telesales / Call Centre \u2014 question"
+  },
+  {
+   "from": "kyc_scan",
+   "to": "cam_nav360",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cav_question",
+   "to": "cam_nav360",
+   "kind": "seq"
+  },
+  {
+   "from": "cam_nav360",
+   "to": "cre_smartsearch",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cre_smartsearch",
+   "to": "d_create_mode",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "d_create_mode",
+   "to": "cre_manual_create",
+   "kind": "cond",
+   "label": "Manual (agent)",
+   "happy": true
+  },
+  {
+   "from": "d_create_mode",
+   "to": "cre_auto_create",
+   "kind": "cond",
+   "label": "System (order failure)"
+  },
+  {
+   "from": "start_sysfail",
+   "to": "cre_auto_create",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cre_manual_create",
+   "to": "cre_autofields",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cre_auto_create",
+   "to": "cre_autofields",
+   "kind": "seq"
+  },
+  {
+   "from": "cre_autofields",
+   "to": "cre_manualfields",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cre_manualfields",
+   "to": "cre_kb_access",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cre_kb_access",
+   "to": "cre_view_new",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cre_view_new",
+   "to": "cre_capture_details",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cre_capture_details",
+   "to": "cre_categorise",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cre_categorise",
+   "to": "cre_desc_template",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cre_desc_template",
+   "to": "cre_template_admin",
+   "kind": "data",
+   "label": "privileged admin action"
+  },
+  {
+   "from": "cre_desc_template",
+   "to": "cre_save",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cre_save",
+   "to": "cre_downstream",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cre_downstream",
+   "to": "cre_assign_creator",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cre_assign_creator",
+   "to": "cre_priority",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cre_priority",
+   "to": "asg_auto_queue",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "asg_auto_queue",
+   "to": "d_asg_match",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "d_asg_match",
+   "to": "asg_view_queue",
+   "kind": "cond",
+   "label": "Matched",
+   "happy": true
+  },
+  {
+   "from": "d_asg_match",
+   "to": "asg_generic",
+   "kind": "cond",
+   "label": "Unmatched"
+  },
+  {
+   "from": "asg_generic",
+   "to": "asg_view_queue",
+   "kind": "seq"
+  },
+  {
+   "from": "asg_view_queue",
+   "to": "asg_supervisor_reassign",
+   "kind": "data",
+   "label": "supervisor role"
+  },
+  {
+   "from": "asg_view_queue",
+   "to": "asg_self",
+   "kind": "data",
+   "label": "self assignment"
+  },
+  {
+   "from": "asg_view_queue",
+   "to": "asg_bulk",
+   "kind": "data",
+   "label": "bulk operation"
+  },
+  {
+   "from": "asg_view_queue",
+   "to": "asg_status_update",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "asg_supervisor_reassign",
+   "to": "asg_status_update",
+   "kind": "esc",
+   "label": "reassigned"
+  },
+  {
+   "from": "asg_self",
+   "to": "asg_status_update",
+   "kind": "data"
+  },
+  {
+   "from": "asg_status_update",
+   "to": "asg_notify_email",
+   "kind": "data"
+  },
+  {
+   "from": "asg_status_update",
+   "to": "d_asg_reject",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "d_asg_reject",
+   "to": "asc_associate",
+   "kind": "cond",
+   "label": "Accept",
+   "happy": true
+  },
+  {
+   "from": "d_asg_reject",
+   "to": "asg_reject",
+   "kind": "cond",
+   "label": "Reject"
+  },
+  {
+   "from": "asg_reject",
+   "to": "asg_generic",
+   "kind": "esc",
+   "label": "reallocation"
+  },
+  {
+   "from": "asc_associate",
+   "to": "asc_duplicate",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "asc_duplicate",
+   "to": "att_scan_retail",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "att_scan_retail",
+   "to": "d_att_status",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "d_att_status",
+   "to": "att_manual_upload",
+   "kind": "cond",
+   "label": "Non-terminal",
+   "happy": true
+  },
+  {
+   "from": "d_att_status",
+   "to": "att_blocked",
+   "kind": "cond",
+   "label": "Closed / Cancelled"
+  },
+  {
+   "from": "att_manual_upload",
+   "to": "att_view_download",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "att_view_download",
+   "to": "aud_capture",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "aud_capture",
+   "to": "aud_view",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "aud_view",
+   "to": "aud_access_log",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "aud_access_log",
+   "to": "vew_manual_activity",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vew_manual_activity",
+   "to": "vew_activity_assoc",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vew_activity_assoc",
+   "to": "vew_view_activities",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vew_view_activities",
+   "to": "vew_auto_activity",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vew_auto_activity",
+   "to": "vew_close_activity",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vew_close_activity",
+   "to": "vew_close_on_ticket_close",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vew_close_on_ticket_close",
+   "to": "vew_ai_assist",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vew_ai_assist",
+   "to": "vew_b2b",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vew_b2b",
+   "to": "not_auto_sms",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "not_auto_sms",
+   "to": "not_manual_sms",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "not_manual_sms",
+   "to": "not_template_search",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "not_template_search",
+   "to": "not_template_select",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "not_template_select",
+   "to": "not_edit_role",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "not_edit_role",
+   "to": "not_history",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "not_history",
+   "to": "not_channels",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "not_channels",
+   "to": "sla_breach",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "sla_breach",
+   "to": "sla_notify",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "sla_notify",
+   "to": "sla_rag",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "sla_rag",
+   "to": "sla_activity_log",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "sla_activity_log",
+   "to": "esc_manual",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "esc_manual",
+   "to": "esc_dl_notify",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "esc_dl_notify",
+   "to": "esc_hierarchy",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "esc_hierarchy",
+   "to": "esc_dl_admin",
+   "kind": "data",
+   "label": "privileged admin action"
+  },
+  {
+   "from": "esc_hierarchy",
+   "to": "esc_dashboard",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "esc_dashboard",
+   "to": "res_gate",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "res_gate",
+   "to": "res_l3_referral",
+   "kind": "data",
+   "label": "Not Solved, external referral"
+  },
+  {
+   "from": "res_gate",
+   "to": "res_code",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "res_code",
+   "to": "res_autoresolve_portout",
+   "kind": "data",
+   "label": "Port-Out verification ticket"
+  },
+  {
+   "from": "res_autoresolve_portout",
+   "to": "res_closed",
+   "kind": "esc",
+   "label": "auto-resolved"
+  },
+  {
+   "from": "res_code",
+   "to": "res_hashtag",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "res_hashtag",
+   "to": "res_actual_issue",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "res_actual_issue",
+   "to": "d_res_completed",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "d_res_completed",
+   "to": "res_closed",
+   "kind": "cond",
+   "label": "None outstanding",
+   "happy": true
+  },
+  {
+   "from": "d_res_completed",
+   "to": "res_completed_blocked",
+   "kind": "cond",
+   "label": "Outstanding"
+  },
+  {
+   "from": "res_completed_blocked",
+   "to": "vew_close_activity",
+   "kind": "esc",
+   "label": "close outstanding activities"
+  },
+  {
+   "from": "res_closed",
+   "to": "res_reopen",
+   "kind": "data",
+   "label": "within reopen window"
+  },
+  {
+   "from": "res_reopen",
+   "to": "res_gate",
+   "kind": "esc",
+   "label": "reopened to Not Solved"
+  },
+  {
+   "from": "res_gate",
+   "to": "res_cancel",
+   "kind": "esc",
+   "label": "cancellation"
+  },
+  {
+   "from": "res_closed",
+   "to": "csa_trigger",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "csa_trigger",
+   "to": "csa_attribution",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "csa_attribution",
+   "to": "vew_list_filter",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vew_list_filter",
+   "to": "vew_export",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vew_export",
+   "to": "vew_standard_views",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vew_standard_views",
+   "to": "vew_restricted_views",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vew_restricted_views",
+   "to": "vew_c360_panel",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vew_c360_panel",
+   "to": "vew_rag_indicator",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vew_rag_indicator",
+   "to": "end_lifecycle",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "start_digital",
+   "to": "cre_digital_create",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cre_digital_create",
+   "to": "cre_autofields",
+   "kind": "seq"
+  }
+ ],
+ "model": {
+  "agents": [],
+  "contracts": [],
+  "connectivity": []
+ },
+ "biz": {
+  "bio": {},
+  "contractPlain": {},
+  "nameMap": {}
+ }
+}

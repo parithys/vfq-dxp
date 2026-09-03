@@ -1,0 +1,1233 @@
+{
+  "title": "Fibre Activation through Retail Agent",
+  "subtitle": "FIB-ACT-RTL-001: Fibre and Fixed Wireless Access activation, assisted retail/field agent channel",
+  "footer": "VFQ Fibre and Fixed Wireless Access Activation BRSD v1.0 | Wipro Limited for Vodafone Qatar",
+  "slug": "vfq-fibre-brsd-v1-0",
+  "flow": [
+    {
+      "type": "start",
+      "label": "Start"
+    },
+    {
+      "type": "step",
+      "id": "jsm",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "Initiate Customer Interaction",
+      "desc": [
+        "Journey initiation, agent authorisation, queue ticket and tracking record creation (capability JSM, reused from Mobile Post Paid Journey MOB_POST_ACT_RETL_001)"
+      ],
+      "num": 1,
+      "edgeLabel": "queue ticket"
+    },
+    {
+      "type": "step",
+      "id": "kyc",
+      "kind": "integration",
+      "role": "🔗 Identity Capture / MOI",
+      "title": "Initiate Customer Verification",
+      "desc": [
+        "Identity document scan and MOI validation (capability KYC, reused from Mobile Post Paid Journey MOB_POST_ACT_RETL_001)"
+      ],
+      "num": 2,
+      "edgeLabel": "verified identity"
+    },
+    {
+      "type": "step",
+      "id": "cam",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "Initiate Customer Account Creation",
+      "desc": [
+        "Customer/contact matching, new customer creation, account attributes (capability CAM, reused from Mobile Post Paid Journey MOB_POST_ACT_RETL_001)"
+      ],
+      "num": 3,
+      "edgeLabel": "customer account"
+    },
+    {
+      "type": "step",
+      "id": "addr",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "Capture Installation Address",
+      "desc": [
+        "Address by utility identifier or cascading zone/street/building/floor/flat search (BR-020, BR-021)"
+      ],
+      "num": 4,
+      "edgeLabel": "installation address"
+    },
+    {
+      "type": "step",
+      "id": "rfs",
+      "kind": "integration",
+      "role": "🔗 Ready for Service Portal",
+      "title": "Service Availability Search",
+      "desc": [
+        "Search point of presence by address, utility identifier or area; auto fill address; detect CPE/ONT (BR-023, BR-024, BR-025)"
+      ],
+      "num": 5,
+      "edgeLabel": "RFS result"
+    },
+    {
+      "type": "decision",
+      "id": "rfs_gate",
+      "title": [
+        "Fibre/FWA service",
+        "available at location?"
+      ],
+      "yesLabel": "Yes",
+      "noLabel": "No",
+      "no": {
+        "label": "Blocked – feasibility message"
+      }
+    },
+    {
+      "type": "step",
+      "id": "addr_lock",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "Lock Address and Upload Proof",
+      "desc": [
+        "Installation address becomes read only after RFS check; recapture required to change it (BR-026); tenancy document uploaded, PDF/DOC, max 2MB (BR-022)"
+      ],
+      "num": 6,
+      "edgeLabel": "locked address + tenancy doc"
+    },
+    {
+      "type": "step",
+      "id": "ecc",
+      "kind": "integration",
+      "role": "🔗 EDW / Qatar Credit Authority",
+      "title": "Eligibility and Credit Control",
+      "desc": [
+        "Connection type eligibility restricted to Qatar ID holder on postpaid; existing customer check via EDW, new customer check via QCA (BR-030, BR-031)"
+      ],
+      "num": 7,
+      "edgeLabel": "eligibility result"
+    },
+    {
+      "type": "decision",
+      "id": "elig_gate",
+      "title": [
+        "Eligibility and",
+        "credit check passed?"
+      ],
+      "yesLabel": "Yes",
+      "noLabel": "No",
+      "no": {
+        "label": "Eligibility failure message"
+      }
+    },
+    {
+      "type": "step",
+      "id": "milestone1",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Milestone: Contact Created, Eligibility Captured",
+      "desc": [
+        "First milestone – customer contact created and product offer eligibility captured"
+      ],
+      "num": 8,
+      "edgeLabel": "milestone"
+    },
+    {
+      "type": "step",
+      "id": "bam",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "Capture Customer Bill Profile",
+      "desc": [
+        "Billing account creation/selection, billing contact model, payment profile, bill cycle (capability BAM, reused from Mobile Post Paid Journey, postpaid only)"
+      ],
+      "num": 9,
+      "edgeLabel": "bill profile"
+    },
+    {
+      "type": "step",
+      "id": "milestone2",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Milestone: Bill Profile Created",
+      "desc": [
+        "Second milestone – customer bill profile created (postpaid only)"
+      ],
+      "num": 10,
+      "edgeLabel": "milestone"
+    },
+    {
+      "type": "step",
+      "id": "qpc",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "Product Selection",
+      "desc": [
+        "Eligible fibre base plan display by service type and segment (BR-050); IPTV bundled by default, removable (BR-051); mapped add ons and discounts only (BR-052, BR-053); cart recalculates on every change (BR-054)"
+      ],
+      "num": 11,
+      "edgeLabel": "cart"
+    },
+    {
+      "type": "step",
+      "id": "num",
+      "kind": "integration",
+      "role": "🔗 UIM",
+      "title": "Number and SIM/CPE Selection",
+      "desc": [
+        "Fixed line number selection for fibre (BR-060); mobile number/star number rules for FWA (BR-061); SIM and CPE scan for FWA only (BR-062); number category and charges reviewed before confirmation (BR-063)"
+      ],
+      "num": 12,
+      "edgeLabel": "number + resources"
+    },
+    {
+      "type": "step",
+      "id": "wfm_book",
+      "kind": "integration",
+      "role": "🔗 Field Workforce Management",
+      "title": "Appointment Booking",
+      "desc": [
+        "Fetch available slots with lead time and technician availability (BR-070); capture notes and CAF/tenancy collection flags (BR-071); skipped for FWA indoor, mandatory for FWA outdoor and fibre (BR-072)"
+      ],
+      "num": 13,
+      "edgeLabel": "appointment"
+    },
+    {
+      "type": "rowbreak",
+      "wrapLabel": "continue to installation"
+    },
+    {
+      "type": "step",
+      "id": "wfm_exec",
+      "kind": "integration",
+      "role": "🔗 Field Workforce Management",
+      "title": "Workforce Task Execution",
+      "desc": [
+        "Technician captures ONT, STB, mesh device quantity and wire length from the task (BR-073); first two mesh devices complimentary (BR-074)"
+      ],
+      "num": 14,
+      "edgeLabel": "device capture"
+    },
+    {
+      "type": "decision",
+      "id": "wfm_issue",
+      "title": [
+        "Installation issue",
+        "reported by technician?"
+      ],
+      "yesLabel": "No issue",
+      "noLabel": "Issue reported",
+      "no": {
+        "label": "Fault ticket raised; appointment reschedulable"
+      }
+    },
+    {
+      "type": "step",
+      "id": "wfm_close",
+      "kind": "manual",
+      "role": "👤 Technician",
+      "title": "Workforce Task Closure",
+      "desc": [
+        "Task closure with captured customer feedback required before the order proceeds"
+      ],
+      "num": 15,
+      "edgeLabel": "task closed"
+    },
+    {
+      "type": "step",
+      "id": "milestone3",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Milestone: Cart Checked Out",
+      "desc": [
+        "Third milestone – cart validated and checked out (capability CVC, reused from Mobile Post Paid Journey)"
+      ],
+      "num": 16,
+      "edgeLabel": "milestone"
+    },
+    {
+      "type": "step",
+      "id": "caf",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "Contract and Documentation",
+      "desc": [
+        "Offline signed CAF upload, PDF/JPEG max 2MB (BR-082); digital signature via online form or touch screen (BR-083); submission skippable by fulfilment role (BR-084); supporting documents uploaded to a separate section"
+      ],
+      "num": 17,
+      "edgeLabel": "signed CAF"
+    },
+    {
+      "type": "step",
+      "id": "milestone4",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Milestone: Signed CAF",
+      "desc": [
+        "Fourth milestone – signed contract application form captured"
+      ],
+      "num": 18,
+      "edgeLabel": "milestone"
+    },
+    {
+      "type": "step",
+      "id": "pay",
+      "kind": "integration",
+      "role": "🔗 Point of Sale Payment System",
+      "title": "Payment and Inventory Depletion",
+      "desc": [
+        "Payment collection (capability PAY, reused); fixed line number inventory depleted in UIM via fulfilment (BR-092); SIM/equipment inventory depleted for FWA on payment completion"
+      ],
+      "num": 19,
+      "edgeLabel": "payment confirmation"
+    },
+    {
+      "type": "decision",
+      "id": "order_ready",
+      "title": [
+        "All sections complete",
+        "and payment paid?"
+      ],
+      "yesLabel": "Yes",
+      "noLabel": "No",
+      "no": {
+        "to": "pay"
+      }
+    },
+    {
+      "type": "step",
+      "id": "ord_submit",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "Order Submission",
+      "desc": [
+        "Order submitted once all sections are filled/saved and payment has completed (BR-093)"
+      ],
+      "num": 20,
+      "edgeLabel": "submitted order"
+    },
+    {
+      "type": "step",
+      "id": "milestone5",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Milestone: Order Submitted",
+      "desc": [
+        "Final order capture milestone – order submitted"
+      ],
+      "num": 21,
+      "edgeLabel": "milestone"
+    },
+    {
+      "type": "step",
+      "id": "net",
+      "kind": "integration",
+      "role": "🔗 Order Management System",
+      "title": "Network Activation and Fulfilment",
+      "desc": [
+        "Network activation triggered on WFM task completion for fibre, status updated to CRM (BR-100); FWA indoor activates on planned date without a WFM task (BR-101); SIM activated with network for FWA (BR-102)"
+      ],
+      "num": 22,
+      "edgeLabel": "activation outcome"
+    },
+    {
+      "type": "step",
+      "id": "fin",
+      "kind": "integration",
+      "role": "🔗 Billing System",
+      "title": "Billing Update and Order Completion",
+      "desc": [
+        "Account/product/service/resource information with per line prices passed to billing after task closure, including additional devices (BR-110); FWA indoor device billed at order capture (BR-111); order completion sets status to completed in CRM (BR-112); tracking record set to resolved with order number recorded (BR-113)"
+      ],
+      "num": 23,
+      "edgeLabel": "billing update"
+    },
+    {
+      "type": "end",
+      "label": "Complete"
+    },
+    {
+      "type": "start",
+      "label": "Start — Instant Activation"
+    },
+    {
+      "type": "step",
+      "id": "ins_eligible",
+      "kind": "integration",
+      "role": "🔗 Ready for Service Portal",
+      "title": "Instant Activation Eligibility Detection",
+      "desc": [
+        "A reusable pre-installed device eligible for instant activation is detected from the ready for service response (FAR_002_INS_01, BR-130)."
+      ],
+      "num": 24,
+      "edgeLabel": "eligible device"
+    },
+    {
+      "type": "step",
+      "id": "ins_channel",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "Channel Constraint Check",
+      "desc": [
+        "Instant activation available only to field agents on a tablet device; physical device verification not supported on a desktop-only agent (BR-136, FAR_002_INS_07)."
+      ],
+      "num": 25,
+      "edgeLabel": "channel check"
+    },
+    {
+      "type": "step",
+      "id": "ins_serial_verify",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "Device Serial Verification",
+      "desc": [
+        "Agent verifies the detected device serial number against the physical device before instant activation proceeds; a mismatch is recorded and may lead to failure (FAR_002_INS_02, BR-131)."
+      ],
+      "num": 26,
+      "edgeLabel": "serial verified"
+    },
+    {
+      "type": "decision",
+      "id": "ins_select",
+      "title": [
+        "Instant or",
+        "Normal Activation?"
+      ],
+      "yesLabel": "Instant",
+      "noLabel": "Normal",
+      "no": {
+        "label": "Normal activation continues via the standard appointment/WFM path (FAR_002_INS_03, BR-132)"
+      }
+    },
+    {
+      "type": "step",
+      "id": "ins_skip",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Appointment Auto-Skip",
+      "desc": [
+        "Appointment booking auto-skipped for instant activation; agent retains flexibility to book on customer request (FAR_002_INS_04, BR-133)."
+      ],
+      "num": 27,
+      "edgeLabel": "auto-skip"
+    },
+    {
+      "type": "step",
+      "id": "ins_trigger",
+      "kind": "integration",
+      "role": "🔗 Order Management System",
+      "title": "Immediate Activation Trigger",
+      "desc": [
+        "Immediate network activation flow triggered on order submission; completion target 30 minutes (FAR_002_INS_05, BR-134, P-21). Outcome is notified."
+      ],
+      "num": 28,
+      "edgeLabel": "activation outcome"
+    },
+    {
+      "type": "decision",
+      "id": "d_ins_working",
+      "title": [
+        "Service",
+        "Working?"
+      ],
+      "yesLabel": "Working",
+      "noLabel": "Not working",
+      "no": {
+        "label": "Instant Activation Failure Handling — a non-working service raises a support request and arranges a technician visit (FAR_002_INS_06, BR-135)"
+      }
+    },
+    {
+      "type": "end",
+      "label": "Instant Activation Complete"
+    },
+    {
+      "type": "start",
+      "label": "Start — Migration Request Raised"
+    },
+    {
+      "type": "step",
+      "id": "mig_eligible_service",
+      "kind": "integration",
+      "role": "🔗 CRM / Service Inventory",
+      "title": "Migration Eligibility Validation",
+      "desc": [
+        "Migration is permitted only from active FWA Indoor or FWA Outdoor services to Fibre (FIB_MIG_RTL_003_01, BR-140A)."
+      ],
+      "num": 29,
+      "edgeLabel": "eligible service"
+    },
+    {
+      "type": "step",
+      "id": "mig_verify",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "Customer Verification",
+      "desc": [
+        "Customer verification must be completed before migration order creation (FIB_MIG_RTL_003_02, BR-141)."
+      ],
+      "num": 30,
+      "edgeLabel": "verified customer"
+    },
+    {
+      "type": "step",
+      "id": "mig_fibre_avail",
+      "kind": "integration",
+      "role": "🔗 Ready for Service Portal",
+      "title": "Fibre Availability Validation",
+      "desc": [
+        "Migration can proceed only where Fibre service is RFS-ready at the installation address (FIB_MIG_RTL_003_03, BR-140B)."
+      ],
+      "num": 31,
+      "edgeLabel": "fibre availability"
+    },
+    {
+      "type": "step",
+      "id": "mig_existing_retrieve",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "Existing Service Retrieval",
+      "desc": [
+        "Existing FWA service details retrieved for the migration (FIB_MIG_RTL_003_04)."
+      ],
+      "num": 32,
+      "edgeLabel": "existing service details"
+    },
+    {
+      "type": "step",
+      "id": "mig_order_capture",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "Migration Order Capture",
+      "desc": [
+        "Lead ID, opportunity ID, language, alternate contact and enterprise-care flag are mandatory migration attributes (FIB_MIG_RTL_003_05, BR-142)."
+      ],
+      "num": 33,
+      "edgeLabel": "migration order"
+    },
+    {
+      "type": "step",
+      "id": "mig_appt",
+      "kind": "integration",
+      "role": "🔗 Field Workforce Management",
+      "title": "Fibre Installation Appointment",
+      "desc": [
+        "Mandatory for all migrations. Telephone-originated requests require CAF and tenancy collection flags (FIB_MIG_RTL_003_06, BR-143, FIB_MIG_RTL_003_07). FWA Outdoor migrations require a separate outdoor device recovery appointment (FIB_MIG_RTL_003_08, BR-144)."
+      ],
+      "num": 34,
+      "edgeLabel": "appointment booked"
+    },
+    {
+      "type": "step",
+      "id": "mig_continuity",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Existing Service Continuity",
+      "desc": [
+        "Existing FWA service remains active until Fibre activation succeeds (FIB_MIG_RTL_003_09, BR-145A). Fibre activation cannot occur before successful installation closure (FIB_MIG_RTL_003_10, BR-145B)."
+      ],
+      "num": 35,
+      "edgeLabel": "continuity held"
+    },
+    {
+      "type": "decision",
+      "id": "d_mig_success",
+      "title": [
+        "Fibre Activation",
+        "Successful?"
+      ],
+      "yesLabel": "Success",
+      "noLabel": "Failed",
+      "no": {
+        "to": "mig_continuity",
+        "label": "Migration Failure Recovery",
+        "meta": {
+          "businessMeaning": "Failed Fibre migration shall not automatically terminate the existing FWA service (FIB_MIG_RTL_003_15, BR-145F)."
+        }
+      }
+    },
+    {
+      "type": "step",
+      "id": "mig_sim_deactivate",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "SIM Deactivation & Resource Release",
+      "desc": [
+        "FWA SIM deactivation occurs only after successful Fibre activation; connection and services terminated (FIB_MIG_RTL_003_11, BR-145). FWA resources released only after successful migration completion (FIB_MIG_RTL_003_12, BR-145C)."
+      ],
+      "num": 36,
+      "edgeLabel": "resources released"
+    },
+    {
+      "type": "step",
+      "id": "mig_billing",
+      "kind": "integration",
+      "role": "🔗 Billing System",
+      "title": "Billing Migration Cutover & Notification",
+      "desc": [
+        "Billing for Fibre begins on migration completion date; FWA billing ceases on the same date (FIB_MIG_RTL_003_13, BR-145D). Customers notified at request creation, appointment confirmation, migration completion and migration failure (FIB_MIG_RTL_003_14, BR-145E)."
+      ],
+      "num": 37,
+      "edgeLabel": "billing cutover"
+    },
+    {
+      "type": "end",
+      "label": "Migration Complete"
+    },
+    {
+      "type": "start",
+      "label": "Start — Home Move Request Created"
+    },
+    {
+      "type": "step",
+      "id": "hmv_new_addr",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "New Installation Address Capture",
+      "desc": [
+        "Created through the store queue or by a support agent, routed to the fibre fulfilment team queue (FIB_HMV_RTL_004_01, BR-150). New installation address captured and its service availability checked for the new location (FIB_HMV_RTL_004_02, BR-151, P-18)."
+      ],
+      "num": 38,
+      "edgeLabel": "new address"
+    },
+    {
+      "type": "step",
+      "id": "hmv_number",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Fixed Line Number Retention & Appointment",
+      "desc": [
+        "A new fixed line number is refused for a Home Move order — the existing number is retained (FIB_HMV_RTL_004_03, BR-152). New location installation appointment booked (FIB_HMV_RTL_004_03)."
+      ],
+      "num": 39,
+      "edgeLabel": "retained number + appointment"
+    },
+    {
+      "type": "step",
+      "id": "hmv_retain_dev",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Old Location Device Retention / Uninstallation",
+      "desc": [
+        "No uninstallation appointment is captured for a fibre-to-fibre home move; the device is retained at the old location (FIB_HMV_RTL_004_04, BR-153). Uninstallation appointment for the FWA Outdoor device at the old location for a move originating from FWA Outdoor (FIB_HMV_RTL_004_05, BR-154)."
+      ],
+      "num": 40,
+      "edgeLabel": "device handling decided"
+    },
+    {
+      "type": "step",
+      "id": "hmv_terminate_old",
+      "kind": "integration",
+      "role": "🔗 Order Management System",
+      "title": "Service Termination & Inventory Release at Old Location",
+      "desc": [
+        "All services at the old location terminated on the confirmed move date (FIB_HMV_RTL_004_06, BR-155). Customer premises equipment and IP address at the old location released on the confirmed move date (FIB_HMV_RTL_004_07, BR-156)."
+      ],
+      "num": 41,
+      "edgeLabel": "old location closed"
+    },
+    {
+      "type": "step",
+      "id": "hmv_wfm_new",
+      "kind": "integration",
+      "role": "🔗 Field Workforce Management",
+      "title": "WFM Task Execution at New Location",
+      "desc": [
+        "Field workforce task executed to install service at the new location (FIB_HMV_RTL_004_08)."
+      ],
+      "num": 42,
+      "edgeLabel": "new location installed"
+    },
+    {
+      "type": "step",
+      "id": "hmv_billing",
+      "kind": "integration",
+      "role": "🔗 Billing System",
+      "title": "Move Date Billing Update",
+      "desc": [
+        "Billing triggered on the move date for new location activation and updated for old location termination (FIB_HMV_RTL_004_09, BR-157). FWA equipment carried by the customer to the new location and handed over at the store where the move is to a FWA area (FIB_HMV_RTL_004_10, BR-158)."
+      ],
+      "num": 43,
+      "edgeLabel": "billing updated"
+    },
+    {
+      "type": "end",
+      "label": "Home Move Complete"
+    },
+    {
+      "type": "start",
+      "label": "Start — Port In Request Initiated"
+    },
+    {
+      "type": "step",
+      "id": "fpi_number",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "Ported Number Capture",
+      "desc": [
+        "Fixed line number being ported in is captured; new number selection is refused for a port in (FIB_FPI_RTL_005_01, BR-160)."
+      ],
+      "num": 44,
+      "edgeLabel": "ported number"
+    },
+    {
+      "type": "step",
+      "id": "fpi_appt_id",
+      "kind": "integration",
+      "role": "🔗 Field Workforce Management",
+      "title": "Portability Identifier & Appointment Date",
+      "desc": [
+        "Portability identifier marked during appointment booking (FIB_FPI_RTL_005_02, BR-161). Appointment date auto-set to Installation Date + 5 business days, excluding Friday and Saturday (FIB_FPI_RTL_005_03, BR-161A)."
+      ],
+      "num": 45,
+      "edgeLabel": "appointment date"
+    },
+    {
+      "type": "step",
+      "id": "fpi_form",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "Portability Form Submission",
+      "desc": [
+        "Portability form completed, signed by the customer and uploaded before the port in proceeds (FIB_FPI_RTL_005_04, BR-162)."
+      ],
+      "num": 46,
+      "edgeLabel": "signed form"
+    },
+    {
+      "type": "step",
+      "id": "fpi_request",
+      "kind": "integration",
+      "role": "🔗 Number Portability Administration System",
+      "title": "Portability Request Creation",
+      "desc": [
+        "Portability request created and submitted to the number portability administration system (FIB_FPI_RTL_005_05, BR-163, INT-15)."
+      ],
+      "num": 47,
+      "edgeLabel": "portability request"
+    },
+    {
+      "type": "step",
+      "id": "fpi_confirm",
+      "kind": "integration",
+      "role": "🔗 Donor Service Provider (NPAS)",
+      "title": "Request Confirmation by Donor Provider",
+      "desc": [
+        "Portability request validated and confirmed in the portability administration system by the donor service provider (FIB_FPI_RTL_005_06, BR-164)."
+      ],
+      "num": 48,
+      "edgeLabel": "donor confirmation"
+    },
+    {
+      "type": "step",
+      "id": "fpi_reschedule",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Appointment Date Reconfirmation",
+      "desc": [
+        "Portability appointment date must be rescheduled based on the confirmed port-in date (BR-164A)."
+      ],
+      "num": 49,
+      "edgeLabel": "reconfirmed date"
+    },
+    {
+      "type": "step",
+      "id": "fpi_wfm_exec",
+      "kind": "integration",
+      "role": "🔗 Field Workforce Management",
+      "title": "Portability WFM Appointment Execution",
+      "desc": [
+        "Field workforce management appointment executed for the portability task (FIB_FPI_RTL_005_07)."
+      ],
+      "num": 50,
+      "edgeLabel": "task executed"
+    },
+    {
+      "type": "step",
+      "id": "fpi_activate",
+      "kind": "integration",
+      "role": "🔗 Order Management System",
+      "title": "Ported Number Activation",
+      "desc": [
+        "Ported number activated after portability completion and configured during the task; no temporary number is provided (FIB_FPI_RTL_005_08, BR-165)."
+      ],
+      "num": 51,
+      "edgeLabel": "number activated"
+    },
+    {
+      "type": "end",
+      "label": "Port In Complete"
+    },
+    {
+      "type": "start",
+      "label": "Start — Port Out Request from NPAS"
+    },
+    {
+      "type": "step",
+      "id": "fpo_queue",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Trouble Ticket & Queue Assignment",
+      "desc": [
+        "A port out request from the number portability administration system creates a trouble ticket in Siebel CRM (FIB_FPO_RTL_006_01, BR-170). Ticket auto-assigned to the portability queue; initial validation service level timer started, 2 hours (FIB_FPO_RTL_006_02, BR-171, P-11)."
+      ],
+      "num": 52,
+      "edgeLabel": "queued ticket"
+    },
+    {
+      "type": "step",
+      "id": "fpo_doc_validate",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "Document & Mandatory Field Validation",
+      "desc": [
+        "Portability form and identity document validated; documents may be uploaded to the ticket (FIB_FPO_RTL_006_03, BR-172). Form date within the allowed period, 30 days; customer name, identity document number and service type match system records (FIB_FPO_RTL_006_04, BR-173, P-10)."
+      ],
+      "num": 53,
+      "edgeLabel": "validated documents"
+    },
+    {
+      "type": "decision",
+      "id": "fpo_outstanding",
+      "title": [
+        "Outstanding",
+        "Bill?"
+      ],
+      "yesLabel": "Pending bill",
+      "noLabel": "Clear",
+      "no": {
+        "to": "fpo_sla_ext"
+      }
+    },
+    {
+      "type": "step",
+      "id": "fpo_sla_ext",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Service Level Extension",
+      "desc": [
+        "A pending bill moves the request to conditionally accepted with a defined settlement window, 24 hours (FIB_FPO_RTL_006_05, BR-174, P-13). A valid document set extends the service level timer to the final action period, 24 hours (FIB_FPO_RTL_006_06, BR-175, P-12)."
+      ],
+      "num": 54,
+      "edgeLabel": "extended SLA"
+    },
+    {
+      "type": "decision",
+      "id": "d_fpo_breach",
+      "title": [
+        "Action Within",
+        "Service Level?"
+      ],
+      "yesLabel": "Action taken",
+      "noLabel": "Breach",
+      "no": {
+        "to": "fpo_breach"
+      }
+    },
+    {
+      "type": "step",
+      "id": "fpo_breach",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Auto-Processing on Breach",
+      "desc": [
+        "A request with no action within the service level is auto-processed per the configured rule, auto-accept vs auto-reject to be confirmed (FIB_FPO_RTL_006_07, BR-176)."
+      ],
+      "num": 55,
+      "edgeLabel": "auto-processed"
+    },
+    {
+      "type": "step",
+      "id": "fpo_status",
+      "kind": "integration",
+      "role": "🔗 Number Portability Administration System",
+      "title": "Status Communication to NPAS",
+      "desc": [
+        "Every accept, reject and conditional acceptance action communicated to NPAS with the defined status code, rejection code list to be supplied by VFQ (FIB_FPO_RTL_006_08, BR-177, P-14, P-20)."
+      ],
+      "num": 56,
+      "edgeLabel": "status communicated"
+    },
+    {
+      "type": "decision",
+      "id": "d_fpo_accept",
+      "title": [
+        "Accepted or",
+        "Rejected?"
+      ],
+      "yesLabel": "Accepted",
+      "noLabel": "Rejected",
+      "no": {
+        "label": "Port Out Rejected"
+      }
+    },
+    {
+      "type": "step",
+      "id": "fpo_term_order",
+      "kind": "integration",
+      "role": "🔗 Order Management System",
+      "title": "Termination Order & Network Deactivation",
+      "desc": [
+        "Termination order generated from the closed ticket with a non-editable wish date equal to the confirmed portability date (FIB_FPO_RTL_006_09, BR-178). Services deactivated on the confirmed portability date with a one-hour activation window towards the new provider (FIB_FPO_RTL_006_10, BR-179, P-15)."
+      ],
+      "num": 57,
+      "edgeLabel": "deactivated"
+    },
+    {
+      "type": "step",
+      "id": "fpo_quarantine",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Inventory Quarantine",
+      "desc": [
+        "Ported inventory quarantined for the configured period, 90 days; SIM deactivated and released for FWA (FIB_FPO_RTL_006_11, BR-180, P-16)."
+      ],
+      "num": 58,
+      "edgeLabel": "inventory quarantined"
+    },
+    {
+      "type": "end",
+      "label": "Port Out Complete"
+    },
+    {
+      "type": "start",
+      "label": "Start — Termination Request Initiated"
+    },
+    {
+      "type": "step",
+      "id": "ter_eligibility",
+      "kind": "integration",
+      "role": "🔗 CRM / Service Inventory",
+      "title": "Customer & Service Eligibility Validation",
+      "desc": [
+        "Initiated from Customer 360 or a linked disconnection ticket by an authorised Retail or Retention user (FIB_TER_RTL_007_01, BR-200). Termination may proceed only for an active eligible Fibre/FWA service with no conflicting open order or restricted block (FIB_TER_RTL_007_02, BR-201)."
+      ],
+      "num": 59,
+      "edgeLabel": "eligible service"
+    },
+    {
+      "type": "decision",
+      "id": "ter_retention",
+      "title": [
+        "Retention",
+        "Handling?"
+      ],
+      "yesLabel": "Proceed to terminate",
+      "noLabel": "Retained",
+      "no": {
+        "label": "Retained — Termination Averted",
+        "meta": {
+          "businessMeaning": "A retention outcome is mandatory before termination order creation where the process is routed through Retention (FIB_TER_RTL_007_03, BR-202)."
+        }
+      }
+    },
+    {
+      "type": "step",
+      "id": "ter_outstanding",
+      "kind": "integration",
+      "role": "🔗 Order Management System",
+      "title": "Outstanding Dues Validation",
+      "desc": [
+        "Outstanding dues handling must follow the configured VFQ settlement rule before termination completion (FIB_TER_RTL_007_04, BR-203)."
+      ],
+      "num": 60,
+      "edgeLabel": "dues validated"
+    },
+    {
+      "type": "step",
+      "id": "ter_penalty",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Penalty Charge Display",
+      "desc": [
+        "Early termination or lock-in penalty calculated and shown where the service is within the applicable minimum subscription period; plan lock-in is 3 months per the CAF (FIB_TER_RTL_007_05, BR-204)."
+      ],
+      "num": 61,
+      "edgeLabel": "penalty shown"
+    },
+    {
+      "type": "step",
+      "id": "ter_consent",
+      "kind": "manual",
+      "role": "👤 Retail / Retention Agent",
+      "title": "Consent & Reason Capture",
+      "desc": [
+        "Customer consent, termination reason and requested termination date are mandatory before submission (BR-205)."
+      ],
+      "num": 62,
+      "edgeLabel": "consent captured"
+    },
+    {
+      "type": "step",
+      "id": "ter_recovery_appt",
+      "kind": "integration",
+      "role": "🔗 Field Workforce Management",
+      "title": "Equipment Recovery Appointment",
+      "desc": [
+        "WFM recovery appointment mandatory for configured service/device scenarios, skipped where recovery is not required (FIB_TER_RTL_007_06, BR-206)."
+      ],
+      "num": 63,
+      "edgeLabel": "recovery appointment"
+    },
+    {
+      "type": "step",
+      "id": "ter_order_capture",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "Termination Order Capture & Submission",
+      "desc": [
+        "Termination order created only after validations, consent and recovery rules are satisfied (FIB_TER_RTL_007_07, BR-207). Termination order submitted to Order Management (FIB_TER_RTL_007_08)."
+      ],
+      "num": 64,
+      "edgeLabel": "submitted order"
+    },
+    {
+      "type": "step",
+      "id": "ter_net_deactivate",
+      "kind": "integration",
+      "role": "🔗 Order Management System",
+      "title": "Network Deactivation & Billing Closure",
+      "desc": [
+        "Occurs on the confirmed termination date; outcome returned to CRM (FIB_TER_RTL_007_09, BR-208). Final billing posted after termination, including outstanding, penalty, credit/refund and closure details where applicable (FIB_TER_RTL_007_10, BR-209)."
+      ],
+      "num": 65,
+      "edgeLabel": "deactivated + billed"
+    },
+    {
+      "type": "step",
+      "id": "ter_inventory_release",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Resource Release / Quarantine & Notification",
+      "desc": [
+        "Service resources released, recovered or quarantined according to resource type and configured rules (FIB_TER_RTL_007_11, BR-210, FIB_TER_RTL_007_13). Customer notifications triggered at configured termination milestones (FIB_TER_RTL_007_12, BR-211)."
+      ],
+      "num": 66,
+      "edgeLabel": "resources closed"
+    },
+    {
+      "type": "end",
+      "label": "Termination Complete"
+    },
+    {
+      "type": "start",
+      "label": "Start — RFS Data Management Cycle"
+    },
+    {
+      "type": "step",
+      "id": "rfs_gis_ingest",
+      "kind": "integration",
+      "role": "🔗 GIS / IMS",
+      "title": "Site & Building Data Ingestion",
+      "desc": [
+        "Site and building data from the geographic information system ingested into the inventory management system, the master for building and connectivity data (FIB_RFS_008_01, BR-190)."
+      ],
+      "num": 67,
+      "edgeLabel": "ingested site data"
+    },
+    {
+      "type": "step",
+      "id": "rfs_gtm_file",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Go-To-Market File Generation",
+      "desc": [
+        "The go-to-market file is generated from the inventory management system as a full extract (BR-191)."
+      ],
+      "num": 68,
+      "edgeLabel": "GTM file"
+    },
+    {
+      "type": "step",
+      "id": "rfs_pickup",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Pickup, Transformation & Distribution",
+      "desc": [
+        "Go-to-market file picked up through the mediation layer and transformed into the format required by each downstream system (FIB_RFS_008_01, BR-192). Distributed to the inventory management system, ready for service portal, Siebel CRM and the analytics data warehouse — IMS receives a full extract, CRM a delta (FIB_RFS_008_02, BR-193, INT-16)."
+      ],
+      "num": 69,
+      "edgeLabel": "distributed data"
+    },
+    {
+      "type": "step",
+      "id": "rfs_vfid_map",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Vodafone Identifier Generation & Mapping",
+      "desc": [
+        "Operator identifier generated separately and mapped to the utility identifier through field survey, supporting one-to-one and one-to-many relationships (FIB_RFS_008_03, BR-194)."
+      ],
+      "num": 70,
+      "edgeLabel": "VF ID mapped"
+    },
+    {
+      "type": "step",
+      "id": "rfs_status_update",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Ready for Service Status Update",
+      "desc": [
+        "A building is marked ready for service once ready for provisioning, with its service level category recorded (FIB_RFS_008_04, BR-195). Feeds the RFS search used by activation and the RFS availability check used by migration."
+      ],
+      "num": 71,
+      "edgeLabel": "RFS status set"
+    },
+    {
+      "type": "step",
+      "id": "rfs_portal_search",
+      "kind": "manual",
+      "role": "👤 Retail Agent",
+      "title": "RFS Portal Search & Recommendation",
+      "desc": [
+        "Ready for service portal searchable by address, utility identifier or area (FIB_RFS_008_05, BR-196). Offer recommendations from the big data system received into the ready for service portal (FIB_RFS_008_06, BR-197)."
+      ],
+      "num": 72,
+      "edgeLabel": "portal search + offers"
+    },
+    {
+      "type": "step",
+      "id": "rfs_lead",
+      "kind": "integration",
+      "role": "🔗 Siebel CRM",
+      "title": "Lead Creation from Portal",
+      "desc": [
+        "A lead is created in Siebel CRM from the portal using the mobile number (FIB_RFS_008_07, BR-198)."
+      ],
+      "num": 73,
+      "edgeLabel": "lead created"
+    },
+    {
+      "type": "step",
+      "id": "rfs_continuous",
+      "kind": "automated",
+      "role": "⚡ System",
+      "title": "Continuous RFS Update",
+      "desc": [
+        "Ready for service data updated by subsequent go-to-market file loads and by manual business updates (FIB_RFS_008_08, BR-199, P-19)."
+      ],
+      "num": 74,
+      "edgeLabel": "ongoing refresh"
+    },
+    {
+      "type": "end",
+      "label": "RFS Data Management Cycle Complete"
+    }
+  ],
+  "loops": [
+    {
+      "from": "rfs_gate",
+      "to": "addr",
+      "label": "recapture address",
+      "style": "exception",
+      "route": "under"
+    },
+    {
+      "from": "elig_gate",
+      "to": "jsm",
+      "label": "eligibility failure – end interaction",
+      "style": "exception",
+      "route": "under"
+    },
+    {
+      "from": "wfm_issue",
+      "to": "wfm_book",
+      "label": "fault ticket – reschedule appointment",
+      "style": "exception",
+      "route": "over"
+    },
+    {
+      "from": "d_mig_success",
+      "to": "mig_continuity",
+      "label": "failed migration – FWA service remains active, retry",
+      "style": "exception",
+      "route": "under"
+    }
+  ],
+  "cards": {
+    "ioTable": [
+      {
+        "input": "Queue ticket / walk-in customer",
+        "output": "Tracking record + customer account",
+        "meaning": "Journey initiation, identity verification and customer/account creation (JSM, KYC, CAM)"
+      },
+      {
+        "input": "Utility identifier or ZSB address",
+        "output": "Locked installation address + RFS result",
+        "meaning": "Address capture, service availability search and address lock (RFS)"
+      },
+      {
+        "input": "Customer ID type + payment type",
+        "output": "Eligibility/credit decision",
+        "meaning": "Connection type eligibility and credit control (ECC)"
+      },
+      {
+        "input": "Billing details",
+        "output": "Billing account + payment profile",
+        "meaning": "Bill profile capture for postpaid (BAM)"
+      },
+      {
+        "input": "Available plans, numbers, SIM/CPE",
+        "output": "Populated cart with number and resources",
+        "meaning": "Product, number and resource selection (QPC, NUM, SIM/CPE)"
+      },
+      {
+        "input": "Available WFM slots",
+        "output": "Booked appointment + installed devices",
+        "meaning": "Appointment booking, technician execution and task closure (WFM)"
+      },
+      {
+        "input": "Checked out cart",
+        "output": "Signed contract application form",
+        "meaning": "CAF generation, signature capture and document upload (CAF)"
+      },
+      {
+        "input": "Payment request",
+        "output": "Payment confirmation + depleted inventory",
+        "meaning": "Payment collection and inventory depletion (PAY)"
+      },
+      {
+        "input": "Completed cart + signed CAF + payment",
+        "output": "Submitted order",
+        "meaning": "Order submission and routing to fulfilment (ORD)"
+      },
+      {
+        "input": "Submitted order",
+        "output": "Activated service + updated billing + resolved tracking record",
+        "meaning": "Network activation, billing update and order completion (NET, FIN)"
+      },
+      {
+        "input": "RFS-detected reusable device + tablet-channel agent session",
+        "output": "Instantly activated service or routed technician visit",
+        "meaning": "Instant activation eligibility, serial verification, channel gating and immediate activation trigger (FAR_002_INS_01, FAR_002_INS_02, FAR_002_INS_03, FAR_002_INS_04, FAR_002_INS_05, FAR_002_INS_06, FAR_002_INS_07, BR-130, BR-131, BR-132, BR-133, BR-134, BR-135, BR-136, P-21)"
+      },
+      {
+        "input": "Active FWA Indoor/Outdoor service + migration request",
+        "output": "Activated Fibre service with FWA deactivated and billing cut over",
+        "meaning": "FWA-to-Fibre migration eligibility, appointment, continuity guarantee and billing cutover (FIB_MIG_RTL_003_01 through FIB_MIG_RTL_003_15, BR-140A, BR-140B, BR-141, BR-142, BR-143, BR-144, BR-145, BR-145A, BR-145B, BR-145C, BR-145D, BR-145E, BR-145F)"
+      },
+      {
+        "input": "Home move request + new installation address",
+        "output": "Service relocated with number retained and billing cut over",
+        "meaning": "New-address capture, number retention, old-location closure and new-location install/billing (FIB_HMV_RTL_004_01 through FIB_HMV_RTL_004_10, BR-150, BR-151, BR-152, BR-153, BR-154, BR-155, BR-156, BR-157, BR-158, P-18)"
+      },
+      {
+        "input": "Existing fixed line number to be ported + donor provider",
+        "output": "Activated ported-in number on VFQ network",
+        "meaning": "Number capture, portability form, donor confirmation and ported-number activation (FIB_FPI_RTL_005_01 through FIB_FPI_RTL_005_08, BR-160, BR-161, BR-161A, BR-162, BR-163, BR-164, BR-164A, BR-165, INT-15)"
+      },
+      {
+        "input": "Port out request from NPAS + donor validation",
+        "output": "Terminated/deactivated service or rejected port with NPAS status update",
+        "meaning": "Ticket queueing, document/outstanding validation, SLA-governed decisioning and termination/deactivation on port out (FIB_FPO_RTL_006_01 through FIB_FPO_RTL_006_11, BR-170, BR-171, BR-172, BR-173, BR-174, BR-175, BR-176, BR-177, BR-178, BR-179, BR-180, P-10, P-11, P-12, P-13, P-14, P-15, P-16, P-20)"
+      },
+      {
+        "input": "Termination request from Customer 360 / disconnection ticket",
+        "output": "Terminated service with billing closed and resources released, or retained subscription",
+        "meaning": "Eligibility validation, retention handling, dues/penalty/consent capture and deactivation/billing/resource closure (FIB_TER_RTL_007_01 through FIB_TER_RTL_007_13, BR-200, BR-201, BR-202, BR-203, BR-204, BR-205, BR-206, BR-207, BR-208, BR-209, BR-210, BR-211)"
+      },
+      {
+        "input": "GIS site/building extracts + big-data recommendation feed",
+        "output": "RFS-ready address/building data, Vodafone identifiers and CRM leads",
+        "meaning": "GIS/IMS ingestion, GTM file distribution, VF ID mapping, RFS status, portal search/recommendation, lead creation and continuous refresh (FIB_RFS_008_01 through FIB_RFS_008_08, BR-190, BR-191, BR-192, BR-193, BR-194, BR-195, BR-196, BR-197, BR-198, BR-199, INT-16, P-19)"
+      }
+    ]
+  }
+}

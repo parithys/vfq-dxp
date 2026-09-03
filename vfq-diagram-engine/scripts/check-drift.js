@@ -28,7 +28,10 @@ const RPM_BASE = path.join(
 );
 
 const LIVE_SOURCES = {
-  bpnm: {
+  // Keyed by our LOCAL engines/ folder name (bpmn-swimlane, process-flow) — the `dir` path
+  // below still points at the upstream plugin's own skill directory, which is named `bpnm`/`pfd`
+  // on disk regardless of what we call our local copy; do not rename those path segments.
+  'bpmn-swimlane': {
     dir: path.join(RPM_BASE, 'plugin_01LWfNTm8qwbSkHdsdPut1Ax', 'skills', 'bpnm'),
     subpaths: ['reference', 'scripts']
   },
@@ -36,7 +39,7 @@ const LIVE_SOURCES = {
     dir: path.join(RPM_BASE, 'plugin_01VW2tCAvpnGnDfHmtNATJcb', 'skills', 'customer-journey-map'),
     subpaths: ['assets', 'references']
   },
-  pfd: {
+  'process-flow': {
     dir: path.join(RPM_BASE, 'plugin_019xQE3SRU7KZWW2jbsb1cHx', 'skills', 'pfd'),
     subpaths: ['scripts', 'references', 'assets/reference']
   },

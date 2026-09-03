@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Patch a bpnm engine (reference/engine_template.html) or any already-generated
-bpnm diagram HTML so the SVG canvas always occupies 100% of the horizontal
+Patch a bpmn-swimlane engine (reference/engine_template.html) or any already-generated
+bpmn-swimlane diagram HTML so the SVG canvas always occupies 100% of the horizontal
 space available inside .diagram-shell.
 
 Root cause being fixed

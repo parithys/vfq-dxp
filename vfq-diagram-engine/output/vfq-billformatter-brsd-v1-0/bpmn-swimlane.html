@@ -1,0 +1,1940 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agent Ecosystem — Business Process Diagram</title>
+<style>
+:root{
+ /* ---- Vodafone Design System tokens ----------------------------------------------
+    Variable NAMES are kept as-is (--pg, --sys, --ext, etc.) to avoid rewriting every
+    var() reference across this file; only VALUES are remapped. Full rationale for every
+    mapping — including which node types use official Vodafone tokens vs. retained or
+    derived hues where Vodafone provides no equivalent — is in reference/DESIGN_SYSTEM.md. */
+ --ink:#1f1f1f; --ink2:#4a4d4e; --muted:#6f7375; --line:#d8d8d8; --line2:#eeeeee;
+ --bg:#ffffff; --panel:#ffffff; --panelalt:#f2f2f2; --surface-warm:#fff1f1;
+ --pg:#3860be; --pg-bg:#e7ecf7; --ai:#178a86; --ai-bg:#dfefee;
+ --sys:#4a4d4e; --sys-bg:#f2f2f2; --ext:#d46e08; --ext-bg:#f9ecdf;
+ --start:#008a00; --end:#ac1811; --dec:#8a5cc9; --dec-bg:#f1ebf9;
+ --err:#bd0000; --esc:#f5b400; --val:#2b8a8f;
+ --accent:#e60000; --accent-on:#ffffff;
+ --charcoal:#25282b; --charcoal-2:#1a1c1e;
+ --ease-standard:cubic-bezier(.4,0,.2,1);
+ --shadow:0 1px 2px rgba(0,0,0,.05),0 3px 8px rgba(0,0,0,.05);
+ --shadow-raised:0 18px 44px rgba(0,0,0,.12);
+ --focus-ring:0 0 0 4px rgba(230,0,0,.22);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:"Inter","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+ color:var(--ink);background:var(--bg);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.01em}
+a{color:var(--accent);text-decoration:none}
+/* header */
+/* Header/diagram gutter alignment: .top and .wrap previously used two different horizontal
+   paddings (26px / 12px, later reconciled to 24px each after the tab bar sat between them
+   using its own third value) — the header title and the diagram-shell border below it didn't
+   line up on either edge, so the diagram looked "inset" relative to the header above it. Both
+   now share one CONTENT_GUTTER (24px) so every horizontal edge on the page — header text,
+   and the diagram-shell's own left/right border — sits on the same vertical grid line. (A tab
+   strip and a toolbar row both used to sit between the two and each needed its own matching
+   gutter; both have since been removed entirely, so only .top and .wrap remain in this
+   alignment.) */
+.top{background:linear-gradient(180deg,var(--charcoal),var(--charcoal-2));color:#f4f4f4;padding:18px 24px 14px;
+ display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+/* Happy Flow and Export both live in the header now, aligned to the top-right corner as a
+   group. Reset used to sit here too (between Happy Flow and Export), simply re-running the
+   same width-first fit; it has been removed entirely, since with pan/zoom/drag all already
+   removed there was nothing left for it to reset FROM — it was pure dead weight, even though
+   harmless. Export used to sit in the diagram toolbar (alongside Reset, at the end); that
+   toolbar has since been removed entirely (see the ".toolbar" comment further down), so this
+   header group is the ONLY place any of these buttons live. flex-shrink:0 keeps the group
+   from being compressed if the title is long. */
+.top .header-actions{flex:none;display:flex;align-items:center;gap:8px}
+.top h1{font-size:20px;color:#fff;display:flex;align-items:center;gap:10px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--ai);box-shadow:0 0 0 3px rgba(23,138,134,.25)}
+.kpis{display:flex;gap:10px;flex-wrap:wrap;margin-top:13px}
+.kpi{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:9px;
+ padding:7px 12px;min-width:96px}
+.kpi b{display:block;font-size:19px;color:#fff;font-variant-numeric:tabular-nums}
+.kpi span{font-size:10.5px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em}
+.btn:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.wrap{padding:18px 24px 60px}
+/* .toolbar (Flow-type filter buttons + View Labels toggle) has been removed entirely — every
+   connector kind is unconditionally visible with no filter UI (see the header-actions comment
+   above), and connector labels are now always shown by default with no toggle either (see
+   below). The diagram-section has no toolbar row above the canvas any more at all. */
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink2);border-radius:2px;
+ padding:7px 11px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.exportwrap{position:relative;display:inline-block}
+.exportmenu{position:absolute;right:0;top:calc(100% + 5px);background:var(--panel);border:1px solid var(--line);
+ border-radius:6px;box-shadow:var(--shadow-raised);display:none;flex-direction:column;min-width:150px;z-index:60;overflow:hidden;padding:4px}
+.exportmenu.open{display:flex}
+.exportmenu button{padding:8px 12px;border:none;background:none;text-align:left;cursor:pointer;font-size:12.5px;
+ color:var(--ink);border-radius:4px;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.exportmenu button:hover{background:var(--accent);color:#fff}
+.exportmenu button:hover .fmt-hint{color:rgba(255,255,255,.75)}
+.exportmenu .fmt-hint{font-size:10.5px;color:var(--muted)}
+/* .chip and the Flows filter it labelled have both been removed entirely — every connector
+   kind is now unconditionally visible, with no toggle UI at all. */
+/* diagram */
+/* The shell's height is a fallback only — sizeHost()/fit() below drive it from the live
+   viewport. Sizing is WIDTH-FIRST: scale = max(width-fill, height-fill), so the canvas
+   always consumes 100% of the horizontal space available inside this container and can
+   never be letterboxed. A wide model still overflows and scrolls horizontally; a tall one
+   grows the shell vertically instead of shrinking to fit a fixed height. */
+/* No outer wrapper framing: border, border-radius, background fill (the ruled-paper gradient
+   plus solid panel colour), and box-shadow have all been removed — the shell used to read as
+   a distinct bordered "card" sitting on the page; now only the individual lanes and their
+   content are visible, with no enclosing box drawn around them at all. overflow-x/overflow-y
+   are functional (they're what makes horizontal scroll and vertical growth work — see the
+   comment above) and stay; everything else here was purely decorative framing. */
+.diagram-shell{position:relative;width:100%;box-sizing:border-box;
+ height:74vh;overflow-x:auto;overflow-y:hidden}
+/* height above is only the pre-JS fallback — sizeHost() drives the real height from the live
+   viewport so the shell can grow to keep a width-filled diagram's aspect ratio intact. */
+#svgHost{width:100%;height:100%;display:block}
+/* No frozen rows or columns: the lane gutter (left-hand lane names/hints) and the phase header
+   (top row of phase badges) both scroll and pan naturally with the rest of the diagram, same
+   as every node and connector — neither pins to an edge while the canvas moves beneath it. A
+   prior version duplicated both as separate `position:sticky` HTML overlays layered on top of
+   the SVG (true CSS sticky doesn't apply to child shapes inside an <svg> the way it does to
+   HTML block elements, so pinning either one meant building an HTML twin of SVG content that
+   already existed) — `#svgLaneGutter` and `#svgPhaseHeader`, both drawn once as part of the
+   ordinary SVG content, are now simply left visible (no longer hidden behind `opacity:0` in
+   favour of an HTML overlay) and there is no more sticky positioning, sync-on-pan/zoom JS, or
+   HTML duplication of either one anywhere in this file. Both were already rendered exactly
+   this way for exported files (which never had the sticky overlay to begin with); the live
+   view now matches that same non-frozen behaviour instead of diverging from it. */
+/* The legend footer is intentionally NOT part of this change — it stays sticky. It isn't a
+   row or column of the diagram grid at all (unlike the lane gutter and phase header above,
+   which ARE literally a frozen column and a frozen row); it's a floating UI footer, and
+   leaving it inside the pannable/zoomable content would let a tall multi-lane diagram's
+   "fit-to-height" scale shrink it to a near-illegible sliver (a 22-unit-tall row at 0.67x
+   scale renders ~15px tall). #legendLayer (the SVG-drawn version) stays hidden live and is
+   restored for exports, same pattern lane-gutter/phase-header used to follow before this
+   change — the difference is the legend has a genuine reason to stay fixed at a readable size
+   regardless of scroll or zoom, and the diagram's own rows/columns don't. */
+/* Legend readability pass: font bumped 11px -> 12.5px (the smallest text on the whole canvas
+   was previously the one piece of UI every reader depends on to decode the diagram), items are
+   grouped into labelled clusters (Node types / Connector types) instead of one undifferentiated
+   run, each on its OWN row rather than sharing one — a prior version used a flex-row container
+   with inline-flex groups, so "Node types" and "Connector types" sat side by side whenever they
+   both fit the available width, only stacking once genuinely overflowing; the spec calls for
+   always-separate rows regardless of available width, so the container is now a flex COLUMN
+   with each group as its own full-width flex row (items within a group still wrap onto
+   additional lines if that one group alone needs more room than the canvas has). */
+.legend-sticky{position:sticky;left:0;bottom:0;z-index:6;display:flex;flex-direction:column;
+ gap:8px;background:rgba(255,255,255,.97);border-top:1px solid #eeeeee;
+ padding:10px 14px;pointer-events:none}
+.legend-sticky .lgd-item{display:inline-flex;align-items:center;gap:6px;font:600 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif;color:#333333;white-space:nowrap}
+.legend-sticky .lgd-group{display:flex;align-items:center;flex-wrap:wrap;row-gap:6px;column-gap:16px}
+.legend-sticky .lgd-cat{font:800 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif;color:var(--muted);
+ text-transform:uppercase;letter-spacing:.08em;margin-right:2px;white-space:nowrap}
+.legend-sticky svg{flex:none}
+.node{cursor:pointer}
+.node .box{stroke-width:1.5;transition:stroke .12s var(--ease-standard),stroke-width .12s var(--ease-standard),filter .12s var(--ease-standard)}
+/* Selection uses the Vodafone brand-red accent (--accent, #e60000) rather than the signal-blue
+   identity colour — the identity blue is already used pervasively for 'agent' node fill/stroke
+   and portfolio-lane tints, so a selected node in that same hue had low figure/ground contrast
+   against its own type colour and against nearby agent nodes. Brand red is reserved on this
+   canvas almost exclusively for selection/selected-path emphasis and the header/phase-badge
+   accents, so it reads immediately as "the thing that's active" rather than blending into the
+   diagram's own colour vocabulary. Stroke width and glow radius are both increased over the
+   previous blue treatment for stronger visual prominence at any zoom level.
+   NOTE: DESIGN_SYSTEM.md previously documented this as a magenta stroke; that was aspirational
+   and never matched the shipped engine (which used --pg blue). Brand-red is now the actual and
+   documented behaviour — see DESIGN_SYSTEM.md "Node types" for the corrected spec. */
+.node.selected .box{stroke:var(--accent) !important;stroke-width:4px !important;filter:drop-shadow(0 0 6px rgba(230,0,0,.65)) drop-shadow(0 1px 3px rgba(0,0,0,.25))}
+.node.selected{opacity:1 !important}
+.node text{font-family:"Inter","Segoe UI",system-ui,sans-serif;pointer-events:none}
+/* Minimum 14px font-size across the diagram canvas (nodes, connectors, lane gutter, phase
+   headers, legend) for readability — every diagram-canvas text size that was previously below
+   14px (node sub-labels at 9.5px, lane hints at 9px, edge labels at 9.5px, phase badge numbers
+   at 9px, legend category captions at 9.5px, etc.) is now 14px. This does trade away the prior
+   visual hierarchy some of these had (a node's own label and its smaller "sub" caption used to
+   read at clearly different sizes; now both read at the same 14px) — that trade-off is the
+   explicit, accepted cost of the minimum-size requirement, not an oversight. Node/shape
+   dimensions in build_model.py's `sizes` dict were NOT enlarged to compensate: the existing
+   measurement-driven wrap/truncate/fold logic (wrapTextPx(), truncatePx()) already adapts
+   correctly to whatever font it's given, so nothing overflows a shape's boundary — a small
+   node (a circle, a decision diamond) may now truncate its label more aggressively than before
+   simply because the same physical space holds less 14px text than it held 9.5-11.5px text.
+   That's an inherent, unavoidable consequence of enforcing a larger minimum inside fixed-size
+   shapes, not a rendering defect. */
+.node .lbl{font-size:14px;font-weight:600;fill:var(--ink)}
+/* .node .sub (the reference/requirement-code caption under a node's label) has been removed
+   entirely, along with the JS that rendered it — see the NODES.forEach loop. */
+.edge{fill:none;stroke-linejoin:round;transition:opacity .15s var(--ease-standard),filter .15s var(--ease-standard)}
+.edge.seq{stroke:var(--sys);stroke-width:1.7}
+.edge.data{stroke:var(--pg);stroke-width:1.5;stroke-dasharray:5 4}
+.edge.cond{stroke:var(--dec);stroke-width:1.6;stroke-dasharray:2 4}
+.edge.esc{stroke:var(--esc);stroke-width:2}
+.edge.err{stroke:var(--err);stroke-width:1.8;stroke-dasharray:4 4}
+/* Connector labels went through two changes in successive rounds. A prior version carried a
+   4.5px white stroke halo (via paint-order:stroke) as a background/pill effect to keep small
+   text legible against whatever it crossed; that halo was then removed entirely (no stroke,
+   no paint-order) in favour of italic, regular weight (not the original bold), reading as
+   lighter, more unobtrusive annotation — but with the explicit, accepted trade-off that a
+   label could now visually cross a connector line or another element behind it with nothing
+   separating them. That trade-off was then reversed: the white background is back
+   (`paint-order:stroke;stroke:#fff`), restoring legibility against crossed content, while the
+   italic/regular-weight/dark-grey styling from the round in between is KEPT — only the
+   background was asked to come back, not the original bold weight. The net result is a label
+   that reads as lighter/secondary via its typography (italic, not bold) while still being
+   fully legible against anything it happens to cross, via the restored white halo. */
+.elabel{font-size:14px;font-style:italic;font-weight:700;fill:#4a4d4e;paint-order:stroke;stroke:#fff;stroke-width:4.5px;stroke-linejoin:round}
+/* Inactive/background dimming for the hover-isolation interaction. Previously .12 opacity left
+   unrelated nodes/edges clearly legible, which read as "everything is still part of the story"
+   rather than "this is the isolated path" — the whole point of the interaction. Two changes,
+   both required together:
+   (1) opacity drops to .05 (near-invisible, never literally 0 so a reader can still tell there
+       WAS other content, preserving orientation on a large canvas), and
+   (2) a grayscale filter desaturates whatever residual pixels remain, so the faint background
+       reads as "greyed-out context" rather than "full-colour content at low volume" — the two
+       read very differently even at matched opacity. Never applied to .selected (see rule
+       above) or to the active/highlighted path (.hl / .hlpath), which stay at full opacity and
+       full colour so the active path has maximum contrast against the greyed-out rest. */
+.dim{opacity:.05;filter:grayscale(1) brightness(1.15);transition:opacity .15s var(--ease-standard),filter .15s var(--ease-standard)}
+.hl{opacity:1 !important;filter:none !important}
+/* The active/highlighted path (hover-isolated edges) is redrawn in brand red at a heavier
+   weight plus a soft glow — matching the selection treatment above — instead of merely
+   thickening the edge's own type colour, which kept e.g. a pale amber escalation line looking
+   washed out even at 3px. A single shared "this is the active thing" colour across both
+   selection (nodes) and isolation (edges) is the fix for "poor visual prominence": the reader
+   should never have to hunt for which path lit up. */
+.edge.hlpath{stroke:var(--accent) !important;stroke-width:3.5 !important;filter:drop-shadow(0 0 3px rgba(230,0,0,.55)) !important}
+.lanelabel{font-size:14px;font-weight:700;fill:#4a4d4e}
+/* .lanehint restored — hints render inline again as additional rotated column(s) after the
+   lane name's own column(s), per an explicit "display the sub-headings too" requirement. It
+   was removed for a round in between (a vertical-orientation change initially left no room
+   for a second element beside the rotated name at all) but that gap has been closed: see the
+   lane-gutter rendering loop below for how name and hint columns now share one consistent
+   column-layout scheme. Kept at the same 14px minimum every other canvas text respects. */
+.lanehint{font-size:14px;fill:#6f7375}
+.leglabel{font-size:14px;font-weight:600;fill:#333333}
+.legcat{font-size:14px;font-weight:800;fill:#6f7375;letter-spacing:.08em}
+.phasehdr{font-size:14px;font-weight:700;fill:#ffffff;dominant-baseline:middle}
+/* .phasenum removed: the numbered badge circle it styled (a small red circle with the stage's
+   1-based index) has been removed entirely from the phase header — stage headings now show
+   only their name, per an explicit "remove the numeric prefixes" requirement. */
+/* detail drawer */
+.drawer{position:fixed;top:0;right:0;height:100vh;width:390px;max-width:92vw;background:var(--panel);
+ box-shadow:-18px 0 44px rgba(0,0,0,.12);transform:translateX(100%);transition:transform .22s var(--ease-standard);z-index:80;
+ display:flex;flex-direction:column}
+.drawer.open{transform:none}
+.drawer .dh{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}
+.drawer .dh h3{font-size:15px}
+.drawer .db{padding:16px 18px;overflow:auto}
+.drawer .x{cursor:pointer;color:var(--muted);font-size:20px;line-height:1;border:none;background:none}
+.dsec{margin-bottom:14px}
+.dsec .k{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700;margin-bottom:5px}
+.dsec ul{margin:0;padding-left:16px}
+.dsec li{margin-bottom:3px}
+/* Incoming/Outgoing paths — a bordered two-column box replacing the previous separate
+   "Comes after"/"Leads to" pill rows, matching a supplied reference layout. Kept in the
+   drawer's existing sans-serif typography rather than switching to the reference's monospace
+   face, since the rest of the drawer (and the rest of this skill's UI) is Inter/system-ui
+   throughout — adopting the reference's STRUCTURE (bordered box, two columns, arrow + bold
+   step name) without a wholesale typography change that would clash with everything else. */
+.dsec-paths{border:1px solid #b8d4f5;background:#eef4fd;border-radius:8px;padding:14px 16px;
+ display:flex;gap:20px;margin-bottom:14px}
+.dsec-paths .col{flex:1;min-width:0}
+.dsec-paths .k{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);
+ font-weight:700;margin-bottom:8px}
+.dsec-paths .path-item{display:flex;gap:6px;align-items:baseline;margin-bottom:6px;font-size:13px;line-height:1.4}
+.dsec-paths .path-item:last-child{margin-bottom:0}
+.dsec-paths .arrow{color:var(--muted);flex:none}
+.dsec-paths .path-item b{font-weight:700;color:var(--ink)}
+.dsec-paths .path-item .detail{opacity:.7;font-weight:400}
+.pill{display:inline-block;font-size:10.5px;font-weight:700;border-radius:999px;padding:2px 7px;margin:2px 4px 2px 0}
+/* .t-portal is kept: the side drawer's own Stage/lane pills reuse it (the "Comes after"/
+   "Leads to" chips that also used to reuse this class have since been replaced entirely by
+   the bordered Incoming/Outgoing paths box above, which doesn't use .pill/.t-portal at all —
+   see .dsec-paths). Everything else in this block (table styling, .tag color variants,
+   .search, .count, .sec-h) was exclusively for the four removed tabs (Agent Inventory, Inputs
+   & Outputs, Data Flow Matrix, Source Traceability) and their tables, which no longer exist
+   anywhere in this document. */
+.t-portal{background:#eeeeee;color:#1f1f1f}
+.assum{background:#fef8e6;border:1px solid #fbe29e;border-radius:6px;padding:6px 10px;font-size:11.5px;color:#5d4400;display:inline-block;margin:2px 0}
+</style></head><body>
+<header class="top">
+ <h1><span class="dot"></span>Portfolio Governance Portal — Agent Ecosystem Business Process</h1>
+ <div class="header-actions">
+  <button class="btn" id="happyFlow">Happy Flow</button>
+  <div class="exportwrap">
+   <button class="btn" id="exportBtn">Export</button>
+   <div class="exportmenu" id="exportMenu">
+    <button data-fmt="svg">SVG <span class="fmt-hint">vector · editing</span></button>
+    <button data-fmt="jpg">JPG <span class="fmt-hint">image · sharing</span></button>
+    <button data-fmt="pdf">PDF <span class="fmt-hint">document</span></button>
+   </div>
+  </div>
+ </div>
+</header>
+<div class="wrap">
+
+ <div class="diagram-section">
+  <div class="diagram-shell"><svg id="svgHost"></svg><div id="legendBar" class="legend-sticky"></div></div>
+ </div>
+
+</div>
+<aside class="drawer" id="drawer"><div class="dh"><h3 id="d-title">Node</h3><button class="x" id="d-close">×</button></div><div class="db" id="d-body"></div></aside>
+<script>window.DATA={"meta": {"title": "Bill Formatter \u2014 Invoice Processing, Distribution and On-Demand Servicing", "generated": "2026-09-03", "source": "VFQ_BillFormatter_BRSD_V1.0.xlsx"}, "layout": {"x0": 140, "topbar": 70, "colw": 252, "totalW": 9230, "totalH": 2490, "laneLabelW": 120, "lanes": [{"key": "src", "name": "Source Systems", "hint": "Oracle BRM, Mediation Zone, Product Catalogue, Legacy Invoice Buffer", "y": 70, "h": 180}, {"key": "bfr", "name": "Bill Formatter", "hint": "Core ingestion, generation, masking and orchestration engine", "y": 250, "h": 740}, {"key": "ops", "name": "Billing Operations", "hint": "Admin Console users \u2014 review, reprocess, configure, action", "y": 990, "h": 460}, {"key": "crm", "name": "Siebel CRM", "hint": "Reprint/resend requests, hot bill landing, notification logging", "y": 1450, "h": 460}, {"key": "chn", "name": "Distribution Channels", "hint": "SMTP, SMS Gateway, WhatsApp Business, Web", "y": 1910, "h": 460}], "phases": ["Ingest", "Ingest", "Ingest", "Ingest", "Ingest", "Validate", "Validate", "Validate", "Validate", "Validate", "Batch & Parse", "Batch & Parse", "Generate", "Generate", "Generate", "Generate", "Generate", "Generate", "Mask & Review", "Mask & Review", "Mask & Review", "Mask & Review", "Mask & Review", "Mask & Review", "Distribute", "Distribute", "Distribute", "Distribute", "Distribute", "Distribute", "Distribute", "Distribute", "Distribute", "Report & Manage", "Report & Manage", "Report & Manage"]}, "nodes": [{"id": "start", "type": "start", "lane": "src", "slot": 0, "label": "Bill Run / On-Demand Trigger", "desc": "Regular bill cycle run, trial bill run, or hot bill request initiates XML retrieval (BFR_XML_001.01/.02/.03).", "phase": 0, "x": 224.0, "y": 118.0, "w": 84, "h": 84, "cx": 266.0, "cy": 160.0}, {"id": "pull_regular", "type": "agent", "lane": "bfr", "slot": 0, "label": "Pull Regular Bill XML", "sub": "BFR_XML_001.01 / BR-001 / INT-01 / BFR_DATA_INGESTION_001.01", "desc": "Formatter pulls invoice XML from Mediation Zone for regular bills at the predefined input location. Integration: INT-01 (Oracle BRM via Mediation Zone, invoice XML supply and regeneration request). Status Model \u2014 XML Record: Received (XML file collected or uploaded and awaiting validation).", "inputs": ["Invoice XML (regular)"], "outputs": ["Retrieved XML file"], "systems": ["Mediation Zone"], "phase": 1, "x": 415.0, "y": 310.0, "w": 206, "h": 60, "cx": 518.0, "cy": 340.0}, {"id": "pull_trial", "type": "agent", "lane": "bfr", "slot": 1, "label": "Pull Trial Bill XML", "sub": "BFR_XML_001.02 / BR-001 / INT-01", "desc": "Formatter pulls invoice XML from Mediation Zone for trial bills at the predefined input location. Integration: INT-01 (Oracle BRM via Mediation Zone, invoice XML supply and regeneration request). Status Model \u2014 XML Record: Received (XML file collected or uploaded and awaiting validation).", "inputs": ["Invoice XML (trial)"], "outputs": ["Retrieved XML file"], "systems": ["Mediation Zone"], "phase": 1, "x": 415.0, "y": 450.0, "w": 206, "h": 60, "cx": 518.0, "cy": 480.0}, {"id": "pull_hot", "type": "agent", "lane": "bfr", "slot": 2, "label": "Pull Hot Bill XML", "sub": "BFR_XML_001.03 / BR-001 / INT-01", "desc": "Formatter pulls invoice XML from Mediation Zone for hot bills at the predefined input location. Integration: INT-01 (Oracle BRM via Mediation Zone, invoice XML supply and regeneration request). Status Model \u2014 XML Record: Received (XML file collected or uploaded and awaiting validation).", "inputs": ["Invoice XML (hot)"], "outputs": ["Retrieved XML file"], "systems": ["Mediation Zone"], "phase": 1, "x": 415.0, "y": 590.0, "w": 206, "h": 60, "cx": 518.0, "cy": 620.0}, {"id": "manual_upload", "type": "agent", "lane": "ops", "slot": 0, "label": "Manual XML / ZIP Upload", "sub": "BR-007", "desc": "Manual XML and ZIP upload, restricted to authorised users, as an alternative ingestion path.", "phase": 1, "x": 415.0, "y": 1050.0, "w": 206, "h": 60, "cx": 518.0, "cy": 1080.0}, {"id": "atomic_write", "type": "control", "lane": "bfr", "slot": 0, "label": "Atomic File Write", "sub": "BR-002", "desc": "XML is written to a temporary location or filename, closed and verified, then renamed/moved to the final destination so no partially written file is readable downstream.", "phase": 2, "x": 667.0, "y": 310.0, "w": 206, "h": 60, "cx": 770.0, "cy": 340.0}, {"id": "dup_check", "type": "validation", "lane": "bfr", "slot": 0, "label": "Duplicate Prevention Check", "sub": "BR-004", "desc": "The same invoice XML file is not processed more than once.", "phase": 3, "x": 934.0, "y": 290.0, "w": 176, "h": 100, "cx": 1022.0, "cy": 340.0}, {"id": "batch_create", "type": "agent", "lane": "bfr", "slot": 0, "label": "Batch Creation", "sub": "BR-003 / BFR_CONSL_BATCH_001.02 / P-22 / BFR_CONSL_BATCH_001.01 / BFR_CONSL_BATCH_001.03 / BFR_CONSL_BATCH_001.04 / BFR_CONSL_BATCH_001.04.A_ViewBill_Action / BFR_CONSL_BATCH_001.04.B_ViewBill_StatusLog / BFR_CONSL_BATCH_001.04.Cx_ViewBill_Download_PDF / BFR_CONSL_BATCH_001.04.D_ViewBill_Download_PDF / BFR_CONSL_BATCH_001.04.E_ViewBill_Download_XML / BFR_CONSL_BATCH_001.04.F_ViewBill_Reprint_Bill / BFR_CONSL_BATCH_001.04.G_ViewBill_Regenerate_Document / BFR_CONSL_BATCH_001.04.H_ViewBill_Regenerate_XML / BFR_CONSL_BATCH_001.04.I_ViewBill_Send_Email / BFR_CONSL_BATCH_001.06_Action_Overall_Report / BFR_CONSL_BATCH_001.07_Action_Detailed_Report / BFR_CONSL_BATCH_001.08_Action_Failed_Report / BFR_CONSL_BATCH_001.09_Action_Failed_Emails_Report / BFR_CONSL_BATCH_001.10_Action_Send_Overall_Report / BFR_CONSL_BATCH_001.11_Action_Send_Email / BFR_CONSL_REP_001.15", "desc": "XML files are retrieved and processed batch-wise; each collection cycle produces a single batch identifier. P-22 (maximum batch size). Status Model \u2014 Batch: Created (batch created from the loaded XML files).", "phase": 4, "x": 1171.0, "y": 310.0, "w": 206, "h": 60, "cx": 1274.0, "cy": 340.0}, {"id": "schema_validate", "type": "validation", "lane": "bfr", "slot": 0, "label": "XML Schema & Mandatory Data Validation", "sub": "BFR_XML_002.04 / BR-009", "desc": "Bill Formatter loads the XML, performs schema validation, and validates mandatory billing data required for invoice generation. Status Model \u2014 XML Record: Valid (XML has passed schema and mandatory data validation).", "phase": 5, "x": 1438.0, "y": 290.0, "w": 176, "h": 100, "cx": 1526.0, "cy": 340.0}, {"id": "d_valid", "type": "decision", "lane": "bfr", "slot": 0, "label": "XML Valid?", "branches": [{"label": "Valid", "to": "type_segment"}, {"label": "Failed XML", "to": "failed_xml"}], "phase": 6, "x": 1703.0, "y": 298.0, "w": 150, "h": 84, "cx": 1778.0, "cy": 340.0}, {"id": "failed_xml", "type": "error", "lane": "bfr", "slot": 0, "label": "Failed XML \u2014 Reason Recorded", "sub": "BR-009", "desc": "XML failing schema or mandatory data validation is marked Failed XML with a recorded failure reason; it does not proceed to invoice generation. Status Model \u2014 XML Record: Failed XML (XML has failed schema or mandatory data validation and carries a failure reason).", "phase": 7, "x": 1935.0, "y": 290.0, "w": 190, "h": 100, "cx": 2030.0, "cy": 340.0}, {"id": "xml_portal_visible", "type": "system", "lane": "bfr", "slot": 0, "label": "Failed XML Visible in Portal", "sub": "BR-010", "desc": "Failed XML records are visible in the Bill Formatter Portal with failure reason and processing status.", "phase": 8, "x": 2187.0, "y": 290.0, "w": 190, "h": 100, "cx": 2282.0, "cy": 340.0}, {"id": "reprocess_failed_xml", "type": "agent", "lane": "ops", "slot": 0, "label": "Review & Reprocess Failed XML", "sub": "BR-010", "desc": "Billing Operations users review failed XML records and initiate reprocessing after corrective action.", "phase": 9, "x": 2431.0, "y": 1030.0, "w": 206, "h": 100, "cx": 2534.0, "cy": 1080.0}, {"id": "retry_retrieval", "type": "escalation", "lane": "bfr", "slot": 0, "label": "Retry per Configured Policy", "sub": "BR-006", "desc": "Retrieval errors are retried per the configured retry policy; a persistent failure is raised for operational review. Retry count: to be confirmed (P-19).", "phase": 0, "x": 171.0, "y": 290.0, "w": 190, "h": 100, "cx": 266.0, "cy": 340.0}, {"id": "stats_log", "type": "system", "lane": "bfr", "slot": 2, "label": "Log Retrieval / Load Status", "sub": "BR-005 / BR-011 / BFR_CONSL_RPT_001.01 / BFR_CONSL_XML_SEARCH_001.02_Operational_Log / BFR_CONSL_XML_SEARCH_001.03_Operational_Log", "desc": "Retrieval and load status is logged for every XML file; batch statistics reflect successful and failed outcomes.", "phase": 8, "x": 2187.0, "y": 570.0, "w": 190, "h": 100, "cx": 2282.0, "cy": 620.0}, {"id": "type_segment", "type": "control", "lane": "bfr", "slot": 1, "label": "Derive Invoice Type & Customer Segment", "sub": "BR-008", "desc": "Invoice type and customer segment are derived from the loaded XML content.", "phase": 7, "x": 1927.0, "y": 430.0, "w": 206, "h": 100, "cx": 2030.0, "cy": 480.0}, {"id": "parse_load", "type": "agent", "lane": "bfr", "slot": 1, "label": "Load & Parse XML", "sub": "BFR_XML_002.01 / BR-012 / BFR_CONSL_XML_SEARCH_001.03_Download_XML / BFR_CONSL_XML_SEARCH_001.04_Regenerate_XML", "desc": "Invoice Header, Invoice Summary and Invoice Detail structures are loaded from the parsed XML. Status Model \u2014 XML Record: Processed (XML has been consumed by invoice generation; terminal).", "phase": 8, "x": 2179.0, "y": 450.0, "w": 206, "h": 60, "cx": 2282.0, "cy": 480.0}, {"id": "csv_check", "type": "validation", "lane": "bfr", "slot": 0, "label": "Supporting CSV Presence Check", "sub": "BR-013", "desc": "Scheduler checks every 10 minutes (P-01) whether an expected supporting CSV has been received.", "phase": 9, "x": 2446.0, "y": 290.0, "w": 176, "h": 100, "cx": 2534.0, "cy": 340.0}, {"id": "csv_alert", "type": "escalation", "lane": "bfr", "slot": 0, "label": "Supporting CSV Absent Alert", "sub": "BR-013 / INT-04 / BFR_CONSL_REP_001.11", "desc": "Where a supporting CSV remains absent 4 hours after XML receipt (P-02), an alert email is issued to the configured recipients. Integration: INT-04 (Alerting recipients, operational alert distribution).", "outputs": ["Alert email"], "systems": ["Alerting recipients"], "phase": 10, "x": 2691.0, "y": 290.0, "w": 190, "h": 100, "cx": 2786.0, "cy": 340.0}, {"id": "batch_ready", "type": "control", "lane": "bfr", "slot": 0, "label": "Batch Ready", "sub": "Status Model \u2014 Batch: Ready", "desc": "Batch validated and available for invoice generation.", "phase": 11, "x": 2935.0, "y": 310.0, "w": 206, "h": 60, "cx": 3038.0, "cy": 340.0}, {"id": "d_bill_type", "type": "decision", "lane": "bfr", "slot": 0, "label": "Bill Type?", "branches": [{"label": "Regular", "to": "gen_regular"}, {"label": "Trial", "to": "gen_trial"}, {"label": "Hot", "to": "gen_hot"}], "phase": 12, "x": 3215.0, "y": 298.0, "w": 150, "h": 84, "cx": 3290.0, "cy": 340.0, "desc": "Status Model \u2014 Invoice: Pending (invoice awaiting generation)."}, {"id": "gen_regular", "type": "agent", "lane": "bfr", "slot": 0, "label": "Generate Regular Bill", "sub": "BR-025 / BR-031 / BFR_INV_PDF_REG_003.01 / BFR_INV_PDF_REG_003.02 / BFR_INV_PDF_REG_003.03 / BFR_INV_PDF_REG_003.04 / BFR_INV_XLS_REG_001.01 / BFR_INV_XLS_REG_001.02 / BFR_OLD_INV_COMP_001.01", "desc": "Regular bill PDF generated using the template applicable to Consumer Mobile, Consumer Fixed Line, Enterprise and Black; XLS and CSV also produced for Enterprise. BR-031 (all information/business rules currently defined within the existing legacy formatter carry forward into this capability).", "outputs": ["Regular bill PDF", "XLS (Enterprise)", "CSV (Enterprise)"], "phase": 13, "x": 3439.0, "y": 310.0, "w": 206, "h": 60, "cx": 3542.0, "cy": 340.0}, {"id": "gen_trial", "type": "agent", "lane": "bfr", "slot": 1, "label": "Generate Trial Bill", "sub": "BR-020 / BR-021 / BR-022 / BFR_INV_PDF_TRL_003.01 / BFR_INV_PDF_TRL_003.02 / BFR_INV_PDF_TRL_003.03 / BFR_INV_PDF_TRL_003.04 / BFR_INV_XLS_TRL_001.01 / BFR_INV_XLS_TRL_001.02", "desc": "Trial bill PDF generated by customer segment (Consumer Mobile, Consumer Fixed Line, Enterprise, Black) for internal audit and bill validation only; a trial run covers an entire bill cycle or a nominated customer list. Trial bills are never distributed to a customer through any channel.", "outputs": ["Trial bill PDF"], "phase": 13, "x": 3439.0, "y": 450.0, "w": 206, "h": 60, "cx": 3542.0, "cy": 480.0}, {"id": "gen_hot", "type": "agent", "lane": "bfr", "slot": 2, "label": "Generate Hot Bill", "sub": "BR-024 / BFR_CONSL_REP_001.12 / BFR_INV_PDF_HOT_003.01 / BFR_INV_PDF_HOT_003.02 / BFR_INV_PDF_HOT_003.03 / BFR_INV_XLS_HOT_001.01 / BFR_INV_XLS_HOT_001.02", "desc": "Hot bill PDF generated using the template applicable to Consumer, Enterprise and Black; XLS and CSV also produced for Enterprise.", "outputs": ["Hot bill PDF", "XLS (Enterprise)", "CSV (Enterprise)"], "phase": 13, "x": 3439.0, "y": 590.0, "w": 206, "h": 60, "cx": 3542.0, "cy": 620.0}, {"id": "gen_bulk_sms", "type": "agent", "lane": "bfr", "slot": 0, "label": "Generate Bulk SMS Invoice", "sub": "BR-026 / BFR_INV_BLK_SMS_001.01 / BFR_INV_BLK_SMS_001.02 / BFR_INV_BLK_SMS_001.03", "desc": "Bulk SMS invoices generated using the Bulk SMS invoice template for regular, trial and hot bills.", "phase": 14, "x": 3691.0, "y": 290.0, "w": 206, "h": 100, "cx": 3794.0, "cy": 340.0}, {"id": "gen_iot", "type": "agent", "lane": "bfr", "slot": 1, "label": "Generate IoT Invoice", "sub": "BR-027 / BFR_INV_IOT_001.01 / BFR_INV_IOT_001.02 / BFR_INV_IOT_001.03", "desc": "IoT invoices generated using the IoT invoice template for regular, trial and hot bills.", "phase": 14, "x": 3691.0, "y": 450.0, "w": 206, "h": 60, "cx": 3794.0, "cy": 480.0}, {"id": "lang_determine", "type": "control", "lane": "bfr", "slot": 3, "label": "Determine Invoice Language", "sub": "BR-028 / BFR_INV_PDF_ENG_001.01 / BFR_INV_PDF_ENG_001.02 / BFR_MULT_LANG_SUPRT_001.01", "desc": "Invoice language is determined from the language type identifier in the source data; English and Arabic (P-08) are supported with the corresponding template and translation values applied.", "phase": 14, "x": 3691.0, "y": 710.0, "w": 206, "h": 100, "cx": 3794.0, "cy": 760.0}, {"id": "calc_fields", "type": "system", "lane": "bfr", "slot": 0, "label": "Populate Calculated Fields", "sub": "BR-163 / BFR_CALC_INV_FLD_001.01 / BFR_CONSL_CONF_001.04", "desc": "Fields requiring calculation and not directly available from source systems are calculated using logic supplied by the billing system (D-07 dependency) and populated in the output.", "phase": 15, "x": 3951.0, "y": 290.0, "w": 190, "h": 100, "cx": 4046.0, "cy": 340.0}, {"id": "enterprise_detail", "type": "system", "lane": "bfr", "slot": 4, "label": "Enterprise Detailed Output", "sub": "BR-023", "desc": "An Enterprise customer opted for the detailed bill receives an XLS output; a call detail CSV is produced in the VFQ approved format and stored in the designated output location.", "phase": 14, "x": 3699.0, "y": 850.0, "w": 190, "h": 100, "cx": 3794.0, "cy": 900.0}, {"id": "d_gen_success", "type": "decision", "lane": "bfr", "slot": 0, "label": "Generation Successful?", "branches": [{"label": "Success", "to": "original_immutable"}, {"label": "Failed", "to": "gen_failed"}], "phase": 16, "x": 4223.0, "y": 290.0, "w": 150, "h": 100, "cx": 4298.0, "cy": 340.0, "desc": "Status Model \u2014 Invoice: Generated (invoice output produced in the required format)."}, {"id": "gen_failed", "type": "error", "lane": "bfr", "slot": 0, "label": "Invoice Generation Failed", "sub": "BR-029 / BFR_BILL_RETRY_001.01", "desc": "Invoices failing processing or generation carry a recorded failure status and reason, visible in the portal. Status Model \u2014 Batch: Failed (batch processing failed) / Invoice: Failed (invoice generation failed and carries a failure reason).", "phase": 17, "x": 4455.0, "y": 290.0, "w": 190, "h": 100, "cx": 4550.0, "cy": 340.0}, {"id": "gen_retry", "type": "escalation", "lane": "ops", "slot": 0, "label": "Reprocess Failed Invoice", "sub": "BR-030 / BFR_CONSL_INV_REGEN_001.01", "desc": "Reprocessing of a failed invoice or batch is restricted by role; the retry count is recorded. Maximum retry attempts: to be confirmed (P-20).", "phase": 0, "x": 171.0, "y": 1030.0, "w": 190, "h": 100, "cx": 266.0, "cy": 1080.0}, {"id": "trial_exclude", "type": "control", "lane": "bfr", "slot": 2, "label": "Trial Batch Excluded from Channel Upload", "sub": "BR-022", "desc": "Trial batches are excluded from channel upload \u2014 a trial bill exists only for internal audit and bill validation.", "phase": 14, "x": 3691.0, "y": 570.0, "w": 206, "h": 100, "cx": 3794.0, "cy": 620.0}, {"id": "original_immutable", "type": "control", "lane": "bfr", "slot": 1, "label": "Original Invoice Remains Unchanged", "sub": "BR-150", "desc": "The original customer invoice is generated, stored and remains unchanged and immutable.", "phase": 17, "x": 4447.0, "y": 430.0, "w": 206, "h": 100, "cx": 4550.0, "cy": 480.0}, {"id": "mask_gen", "type": "agent", "lane": "bfr", "slot": 0, "label": "Generate Masked Invoice", "sub": "BR-151 / BR-153 / BFR_INV_MASK_001.01", "desc": "A separate masked invoice file is generated at the point of invoice generation for each applicable invoice. Tax Identifier, Payment Method and Phone Number are masked in accordance with the configured access policy (masking rule set: D-08 dependency, to be confirmed). BR-153 (masking rules configurable without requiring invoice regeneration).", "phase": 18, "x": 4699.0, "y": 310.0, "w": 206, "h": 60, "cx": 4802.0, "cy": 340.0}, {"id": "role_presentation", "type": "control", "lane": "ops", "slot": 0, "label": "Role-Based Invoice Presentation", "sub": "BR-152 / BR-154", "desc": "User role and access permission determine whether the full invoice or the masked invoice is presented; privileged roles view the full invoice, restricted roles view the masked version. Bill download offers an Agent Copy and a Customer Copy.", "phase": 19, "x": 4951.0, "y": 1030.0, "w": 206, "h": 100, "cx": 5054.0, "cy": 1080.0}, {"id": "d_review_switch", "type": "decision", "lane": "bfr", "slot": 0, "label": "Review & Approval Switch On?", "sub": "BR-080 (default Off, P-12)", "branches": [{"label": "On", "to": "review"}, {"label": "Off", "to": "channel_avail"}], "phase": 20, "x": 5231.0, "y": 290.0, "w": 150, "h": 100, "cx": 5306.0, "cy": 340.0}, {"id": "review", "type": "agent", "lane": "ops", "slot": 0, "label": "Billing Operations Review", "sub": "BR-080 / BFR_CONSL_EMAIL_DISP_APROV_001.01", "desc": "Invoice review and approval before customer despatch, following role-based access, when the review switch is enabled. Status Model \u2014 Invoice: Approved (invoice reviewed and approved for despatch where the review switch is on).", "phase": 21, "x": 5455.0, "y": 1030.0, "w": 206, "h": 100, "cx": 5558.0, "cy": 1080.0}, {"id": "d_review_outcome", "type": "decision", "lane": "ops", "slot": 0, "label": "Approved?", "branches": [{"label": "Approved", "to": "channel_avail"}, {"label": "Rejected", "to": "rejected"}], "phase": 22, "x": 5735.0, "y": 1038.0, "w": 150, "h": 84, "cx": 5810.0, "cy": 1080.0}, {"id": "rejected", "type": "error", "lane": "ops", "slot": 0, "label": "Invoice Rejected \u2014 Despatch Prevented", "sub": "Status Model \u2014 Invoice: Rejected", "desc": "Invoice reviewed and rejected; despatch is prevented. Returns to Pending on regeneration.", "phase": 23, "x": 5967.0, "y": 1030.0, "w": 190, "h": 100, "cx": 6062.0, "cy": 1080.0}, {"id": "channel_avail", "type": "system", "lane": "bfr", "slot": 0, "label": "Make Invoice Available to Channels", "sub": "BR-050 / P-09 / BFR_BILL_EMAIL_LANG_001.02 / BFR_INV_DELV_MODE_001.01 / BFR_INV_TO_CHNL_001.01", "desc": "Generated invoices are made available to downstream channels through the configured integration flow, with regular bill copies provided to Siebel CRM and other customer channels. P-09 (supported invoice output formats).", "phase": 23, "x": 5967.0, "y": 290.0, "w": 190, "h": 100, "cx": 6062.0, "cy": 340.0}, {"id": "hot_landing", "type": "system", "lane": "crm", "slot": 0, "label": "Hot Bill Landing Location", "sub": "BR-051", "desc": "Hot bill invoices are placed in the Siebel CRM hot bill landing location and are available in real time following generation (target time: to be confirmed, P-21).", "phase": 24, "x": 6219.0, "y": 1490.0, "w": 190, "h": 100, "cx": 6314.0, "cy": 1540.0}, {"id": "d_email_eligible", "type": "decision", "lane": "bfr", "slot": 0, "label": "Email Eligible?", "sub": "BR-060", "branches": [{"label": "Eligible", "to": "email_template"}, {"label": "Trial (never emailed)", "to": "trial_terminal"}], "phase": 24, "x": 6239.0, "y": 290.0, "w": 150, "h": 100, "cx": 6314.0, "cy": 340.0, "desc": "Status Model \u2014 Email: Eligible (invoice identified as eligible for email distribution)."}, {"id": "email_template", "type": "control", "lane": "bfr", "slot": 0, "label": "Determine Email Template", "sub": "BR-061 / BFR_BILL_EMAIL_LANG_001.01", "desc": "Email template determined by customer type, invoice type and language; separate templates for Consumer and Enterprise in English and Arabic, with configurable dynamic fields.", "phase": 25, "x": 6463.0, "y": 310.0, "w": 206, "h": 60, "cx": 6566.0, "cy": 340.0}, {"id": "suppression_check", "type": "validation", "lane": "chn", "slot": 0, "label": "Suppression List Check", "sub": "BR-063", "desc": "A configurable list of non-triable email addresses is maintained against which no despatch is attempted.", "phase": 26, "x": 6730.0, "y": 1950.0, "w": 176, "h": 100, "cx": 6818.0, "cy": 2000.0}, {"id": "suppressed", "type": "end", "lane": "chn", "slot": 0, "label": "Email Suppressed", "sub": "Status Model \u2014 Email: Suppressed", "desc": "Despatch not attempted because the address is on the non-triable list. Terminal.", "phase": 27, "x": 7020.0, "y": 1950.0, "w": 100, "h": 100, "cx": 7070.0, "cy": 2000.0}, {"id": "smtp_despatch", "type": "external", "lane": "chn", "slot": 1, "label": "SMTP Despatch", "sub": "BR-062 / INT-03 / BFR_CONSL_EML_RPT_001.01 / BFR_EML_001.01", "desc": "Email despatched through the configured SMTP service, which captures delivery feedback and provides success/failure reporting.", "systems": ["SMTP service"], "phase": 27, "x": 6982.0, "y": 2113.0, "w": 176, "h": 54, "cx": 7070.0, "cy": 2140.0}, {"id": "d_smtp_result", "type": "decision", "lane": "chn", "slot": 0, "label": "SMTP Accepted?", "branches": [{"label": "Accepted", "to": "email_sent"}, {"label": "Failure", "to": "email_failed"}], "phase": 28, "x": 7247.0, "y": 1950.0, "w": 150, "h": 100, "cx": 7322.0, "cy": 2000.0}, {"id": "email_failed", "type": "error", "lane": "chn", "slot": 1, "label": "Email Despatch Failed", "sub": "Status Model \u2014 Email: Failed / BR-062 / BFR_CONSL_REP_001.13_Failed_Email", "desc": "Delivery failed; failure reported in the Failed Email Report. Resend on retry. Status Model \u2014 Batch: Failed Sending Email (one or more invoice emails within the batch failed despatch) / Invoice: Failed Sending Email (invoice email despatch failed).", "phase": 31, "x": 7983.0, "y": 2111.0, "w": 190, "h": 58, "cx": 8078.0, "cy": 2140.0}, {"id": "email_sent", "type": "system", "lane": "chn", "slot": 0, "label": "Email Sent \u2014 Awaiting Delivery Feedback", "sub": "Status Model \u2014 Email: Sent", "phase": 29, "x": 7479.0, "y": 1950.0, "w": 190, "h": 100, "cx": 7574.0, "cy": 2000.0, "desc": "Status Model \u2014 Invoice: Email Sent (invoice email despatched to the customer; terminal)."}, {"id": "d_delivery", "type": "decision", "lane": "chn", "slot": 0, "label": "Delivery Confirmed?", "branches": [{"label": "Delivered", "to": "email_delivered"}, {"label": "Failed", "to": "email_failed"}], "phase": 30, "x": 7751.0, "y": 1950.0, "w": 150, "h": 100, "cx": 7826.0, "cy": 2000.0}, {"id": "email_delivered", "type": "end", "lane": "chn", "slot": 0, "label": "Email Delivered", "sub": "Status Model \u2014 Email: Delivered", "desc": "Delivery confirmed by the SMTP service feedback. Terminal.", "phase": 31, "x": 8036.0, "y": 1958.0, "w": 84, "h": 84, "cx": 8078.0, "cy": 2000.0}, {"id": "crm_log", "type": "agent", "lane": "crm", "slot": 0, "label": "Log CRM Notification", "sub": "BR-064 / INT-02 / BFR_EML_001.02", "desc": "A CRM notification record is created only for invoices processed for customer communication, stored against the customer account and bill reference for servicing and audit. Integration: INT-02 (Siebel CRM, reprint/resend request receipt, invoice delivery, notification logging).", "phase": 32, "x": 8227.0, "y": 1510.0, "w": 206, "h": 60, "cx": 8330.0, "cy": 1540.0}, {"id": "sms_despatch", "type": "external", "lane": "chn", "slot": 0, "label": "SMS Invoice Notification", "sub": "BR-052 / INT-06", "desc": "Invoice communication via SMS, carrying a PDF reference or an invoice URL, with pre-despatch masking applied (BR-053).", "systems": ["SMS Gateway"], "phase": 24, "x": 6226.0, "y": 1950.0, "w": 176, "h": 100, "cx": 6314.0, "cy": 2000.0}, {"id": "whatsapp_despatch", "type": "external", "lane": "chn", "slot": 1, "label": "WhatsApp Invoice Notification", "sub": "BR-052 / INT-07", "desc": "Invoice communication via WhatsApp Business through the approved provider, carrying a PDF reference or an invoice URL, with pre-despatch masking applied (BR-053).", "systems": ["WhatsApp Business (approved provider)"], "phase": 24, "x": 6226.0, "y": 2090.0, "w": 176, "h": 100, "cx": 6314.0, "cy": 2140.0}, {"id": "web_display", "type": "system", "lane": "chn", "slot": 2, "label": "Web Channel Display", "sub": "BR-052", "desc": "Invoice communication supported through the Web channel, with pre-despatch masking applied (BR-053).", "phase": 24, "x": 6219.0, "y": 2252.0, "w": 190, "h": 56, "cx": 6314.0, "cy": 2280.0}, {"id": "trial_terminal", "type": "end", "lane": "bfr", "slot": 2, "label": "Trial Bill \u2014 Not Distributed", "sub": "BR-022", "desc": "A trial bill is generated for internal audit and bill validation only and is never distributed to a customer through any channel. Terminal.", "phase": 25, "x": 6516.0, "y": 570.0, "w": 100, "h": 100, "cx": 6566.0, "cy": 620.0}, {"id": "reprint_request", "type": "agent", "lane": "crm", "slot": 2, "label": "Reprint Bill Request", "sub": "BR-043 / INT-02", "desc": "A reprint request carries the account number, bill period and bill type; the reprinted PDF is transferred through Mediation Zone to the requesting channel. Integration: INT-02 (Siebel CRM, reprint/resend request receipt, invoice delivery, notification logging).", "phase": 24, "x": 6211.0, "y": 1790.0, "w": 206, "h": 60, "cx": 6314.0, "cy": 1820.0}, {"id": "resend_request", "type": "agent", "lane": "crm", "slot": 1, "label": "Resend Bill Request", "sub": "BR-047 / INT-02", "desc": "A resend request carries the account number and bill reference; only a previously generated invoice may be resent, and delivery status is recorded and visible. Integration: INT-02 (Siebel CRM, reprint/resend request receipt, invoice delivery, notification logging).", "phase": 24, "x": 6211.0, "y": 1650.0, "w": 206, "h": 60, "cx": 6314.0, "cy": 1680.0}, {"id": "regen_request", "type": "agent", "lane": "ops", "slot": 0, "label": "Invoice / Batch Regeneration Request", "sub": "BR-040", "desc": "Invoice regeneration supported at both individual invoice level and batch level, including retry and status reporting.", "phase": 24, "x": 6211.0, "y": 1030.0, "w": 206, "h": 100, "cx": 6314.0, "cy": 1080.0}, {"id": "legacy_buffer", "type": "external", "lane": "src", "slot": 0, "label": "Legacy Invoice Buffer Lookup", "sub": "BR-042 / INT-05", "desc": "Invoices are regenerable from legacy XML data held in the Invoice Buffer table, including invoices generated several years previously.", "systems": ["Legacy Invoice Buffer"], "phase": 25, "x": 6478.0, "y": 110.0, "w": 176, "h": 100, "cx": 6566.0, "cy": 160.0}, {"id": "d_legacy_avail", "type": "decision", "lane": "src", "slot": 0, "label": "Historical XML Available?", "branches": [{"label": "Available", "to": "regen_consume_latest"}, {"label": "Unavailable", "to": "legacy_unavailable"}], "phase": 26, "x": 6743.0, "y": 110.0, "w": 150, "h": 100, "cx": 6818.0, "cy": 160.0}, {"id": "legacy_unavailable", "type": "error", "lane": "src", "slot": 0, "label": "Invoice Unavailable for Regeneration", "sub": "INT-05 fallback", "desc": "Fallback behaviour: report the invoice as unavailable for regeneration.", "phase": 27, "x": 6975.0, "y": 110.0, "w": 190, "h": 100, "cx": 7070.0, "cy": 160.0}, {"id": "regen_consume_latest", "type": "control", "lane": "bfr", "slot": 0, "label": "Consume Latest Corrected XML", "sub": "BR-041", "desc": "Where the source XML has been regenerated or corrected, regeneration consumes the latest version.", "phase": 27, "x": 6967.0, "y": 290.0, "w": 206, "h": 100, "cx": 7070.0, "cy": 340.0}, {"id": "reprint_generate", "type": "agent", "lane": "bfr", "slot": 1, "label": "Generate Reprint PDF", "sub": "BR-044 / BR-045 / BFR_CONSL_BATCH_001.03.A_ViewBill_Status_Log / BFR_INV_REPRNT_001.01 / BFR_INV_REPRNT_001.02 / BFR_INV_REPRNT_001.03.B / BFR_INV_REPRNT_001.03.C / BFR_INV_REPRNT_001.03.D / BFR_INV_REPRNT_001.03.E / BFR_INV_REPRNT_001.03.F / BFR_INV_REPRNT_001.03.G / BFR_INV_REPRNT_001.03.H / BFR_INV_REPRNT_001.03_Reprint_Bills", "desc": "Reprint does not alter the original invoice data; only a previously generated bill may be reprinted. Supports Detailed or Summarised bill type and English or Arabic language.", "phase": 25, "x": 6463.0, "y": 450.0, "w": 206, "h": 60, "cx": 6566.0, "cy": 480.0}, {"id": "reprint_register", "type": "system", "lane": "ops", "slot": 0, "label": "Reprint / Resend Register", "sub": "BR-046", "desc": "Reprint and resend requests are displayed in dedicated console registers with status and process date.", "phase": 25, "x": 6471.0, "y": 1030.0, "w": 190, "h": 100, "cx": 6566.0, "cy": 1080.0}, {"id": "resend_email", "type": "agent", "lane": "chn", "slot": 0, "label": "Resend via Distinct Template", "sub": "BR-048 / BR-049 / BFR_CONSL_RESEND_BILL_001.02 / BFR_CONSL_RESEND_BILL_001.03 / BFR_EML_RESEND_001.01", "desc": "The resend email template may differ from the first-time bill email template and is separately maintainable in English and Arabic. Existing reprint/resend interface signatures remain unchanged (parallel running, no impact to current channels).", "phase": 25, "x": 6463.0, "y": 1950.0, "w": 206, "h": 100, "cx": 6566.0, "cy": 2000.0}, {"id": "batch_stats", "type": "system", "lane": "bfr", "slot": 0, "label": "Update Batch Statistics", "sub": "BR-011 / BR-078 / BR-072 / BR-073 / BFR_CONSL_BATCH_001.05_View_Statistics", "desc": "Batch statistics display successful and failed PDF generation with identifier, bill number, account number, status and reason. BR-072 (processing status maintained/displayed at batch and item level). BR-073 (supported operational status values: Failed, Ready, Report Generated, Invoice Completed, Failed Sending Email). Status Model \u2014 Batch: Report Generated (batch reports have been produced).", "phase": 33, "x": 8487.0, "y": 290.0, "w": 190, "h": 100, "cx": 8582.0, "cy": 340.0}, {"id": "admin_console", "type": "agent", "lane": "ops", "slot": 0, "label": "Admin Console \u2014 Batch / Bill / Hot Bill Actions", "sub": "BR-070 / BR-074 / BR-075 / BR-071 / BR-076 / BR-077 / BR-079 / BFR_ADM_CONSL_001.01 / BFR_HOT_BILL_DTLS_002.01 / BFR_HOT_BILL_DTLS_002.02 / BFR_HOT_BILL_DTLS_002.03_Status_Log / BFR_HOT_BILL_DTLS_002.04_Download_pdf / BFR_HOT_BILL_DTLS_002.05_Download_Xls / BFR_HOT_BILL_DTLS_002.06_Download_xml / BFR_HOT_BILL_DTLS_002.07_Reprint_Bill / BFR_HOT_BILL_DTLS_002.08_regenerate_Document / BFR_HOT_BILL_DTLS_002.09_Regenerate_xml / BFR_HOT_BILL_DTLS_002.10_Send_Email", "desc": "Front-end Admin Console for Billing Operations covering batches, bills, hot bills, XML records, reports, translations and role-based access. Batch action menu: View Bills, View Statistics, Overall Report, Detail Report, Failed Report, Failed Email Report, Send Overall Report, Send Email. Bill action menu (applies equally to the hot bill register): Status Log, Download PDF, Download XLS, Download XML, Reprint Bill, Regenerate Document, Regenerate XML, Send Email. BR-071 (batch list displays identifier, date created, reference, status). BR-076 (status log displays identifier, label, reason, date created). BR-077 (selected bill downloadable in PDF, XLS and XML). BR-079 (hot bill register displays identifier, process date, bill number).", "phase": 34, "x": 8731.0, "y": 1030.0, "w": 206, "h": 100, "cx": 8834.0, "cy": 1080.0}, {"id": "search_retrieve", "type": "agent", "lane": "ops", "slot": 0, "label": "Search & Retrieve Invoices / Reports / XML", "sub": "BR-090 / BR-091 / BR-092 / BR-093 / BFR_CONSL_INV_SEARCH_001.01 / BFR_CONSL_SEARCH_001.01 / BFR_CONSL_XML_SEARCH_001.01", "desc": "Search across invoice type, invoice number, batch identifier, date created, language, MSISDN, product, status, email address, account number, customer type and internal identifier. Results support download, regenerate, reprocess and email actions by role and status. BR-093 (configuration records open in a separate window/pop-up on drill-down).", "phase": 35, "x": 8983.0, "y": 1030.0, "w": 206, "h": 100, "cx": 9086.0, "cy": 1080.0}, {"id": "ref_data_config", "type": "agent", "lane": "ops", "slot": 1, "label": "Reference Data Configuration", "sub": "BR-100/BR-101/BR-102/BR-103/BR-104/BR-105/BR-106/BR-107/BR-108/BR-109/BR-110/BR-111/BR-112/BR-113 / P-11 / INT-08 / BFR_CONSL_ADJ_RSN_CONF_001.01 / BFR_CONSL_ADJ_RSN_CONF_001.02_Create / BFR_CONSL_ADJ_RSN_CONF_001.02_Edit / BFR_CONSL_BANNER_CONF_001.01 / BFR_CONSL_CONSL_BENEFIT_CONF_001.01_Benefit_Configure / BFR_CONSL_CONSL_BENEFIT_CONF_001.02_Benefit_Edit_Delete / BFR_CONSL_CONSL_BENEFIT_CONF_001.03_Benefit_Create / BFR_CONSL_CONSL_BENEFIT_CONF_001.04_Benefit_Search / BFR_CONSL_CONSL_CONF_001.01 / BFR_CONSL_CONSL_CONF_001.02 / BFR_CONSL_EML_TEMP_CONF_001.01 / BFR_CONSL_FLEX_BKT_CONF_001.01 / BFR_CONSL_FLEX_BKT_CONF_001.02 / BFR_CONSL_FLEX_BKT_CONF_001.03 / BFR_CONSL_PLAN_SPEED_001.01 / BFR_CONSL_VAS_CONF_001.01 / BFR_CONSL_VAS_CONF_001.02 / BFR_CONSL_VAS_CONF_001.03 / BFR_SETTNG_CONSL_TRNSL_CONF_001.01 / BFR_SETTNG_CONSL_TRNSL_CONF_001.02", "desc": "Translation, adjustment reason, benefits, flex bucket, VAS short code and plan speed configuration, with import/export, effective dating and role control; benefit/flex bucket/VAS/plan speed synchronise with the product catalogue where applicable. P-11 (configuration export and import formats). Integration: INT-08 (Product Catalogue, configuration synchronisation).", "systems": ["Product Catalogue"], "phase": 35, "x": 8983.0, "y": 1170.0, "w": 206, "h": 100, "cx": 9086.0, "cy": 1220.0}, {"id": "template_config", "type": "agent", "lane": "ops", "slot": 2, "label": "Template & Presentation Configuration", "sub": "BR-120/BR-121/BR-122/BR-123/BR-124 / BFR_CONSL_BILL_TEMPLATE_CONF_001.01 / BFR_CONSL_CONF_DRL_DWN_001.01 / BFR_CONSL_INTRCT_PDF_001.01 / BFR_CONSL_INTRCT_PDF_001.02 / BFR_INVC_TEMPLT_CHNG_001.01 / BFR_INVOICE__BUS_RULE_001.01 / REQ_BFR_006", "desc": "Bill template field maintenance by segment and invoice type; bill banner configuration with page-overlap handling; report template configuration; interactive PDF tabs and dynamic links.", "phase": 35, "x": 8983.0, "y": 1310.0, "w": 206, "h": 100, "cx": 9086.0, "cy": 1360.0}, {"id": "reporting_dash", "type": "system", "lane": "bfr", "slot": 0, "label": "Reporting & Dashboards", "sub": "BR-130/BR-131/BR-132/BR-133/BR-134/BR-135/BR-136/BR-137/BR-138/BR-139/BR-140/BR-141/BR-142 / P-03 / P-04 / P-05 / P-06 / P-07 / P-10 / BFR_CONSL_DASH_BRD_001.01 / BFR_CONSL_EML_TEMP_CONF_001.02 / BFR_CONSL_OPR_STAT_001.02 / BFR_CONSL_REP_001.01 / BFR_CONSL_REP_001.02 / BFR_CONSL_REP_001.03 / BFR_CONSL_REP_001.04 / BFR_CONSL_REP_001.05 / BFR_CONSL_REP_001.06 / BFR_CONSL_REP_001.07 / BFR_CONSL_REP_001.08 / BFR_CONSL_REP_001.09 / BFR_CONSL_REP_001.10_BiullRunMonitor / BFR_CONSL_REP_001.11_VLB / BFR_CONSL_REP_001.12_Overall / BFR_CONSL_REP_001.13_Internal / BFR_CONSL_REP_001.14_Failed_Bill_Report / BFR_DATA_SORTING_001.01", "desc": "Enterprise reports (CDR List, Credit File, Invoice Report), operational dashboard, batch reports, failed bill/email reports, processing statistics, bill run monitor and hot bill failure alerts. Reports generated daily, monthly, after bill run or ad hoc, in PDF, CSV or Excel; no print media output produced (BR-132). P-03 (hot bill failure report interval). P-04 (bill run days). P-05 (bill run monitor interval). P-06 (delivery preference PDF only, code 0). P-07 (delivery preference PDF and XLS, code 3). P-10 (supported report output formats).", "phase": 34, "x": 8739.0, "y": 312.0, "w": 190, "h": 56, "cx": 8834.0, "cy": 340.0}, {"id": "retention", "type": "control", "lane": "bfr", "slot": 1, "label": "Storage & Retention Housekeeping", "sub": "BR-160 / BFR_STRG_RTN_POL_001.01", "desc": "Generated invoices, reports, XML files and emails are retained for the configured duration; artefacts exceeding the retention period are removed automatically. Retention periods: to be confirmed (P-14/P-15/P-16/P-17/P-18).", "phase": 33, "x": 8479.0, "y": 430.0, "w": 206, "h": 100, "cx": 8582.0, "cy": 480.0}, {"id": "end_batch_complete", "type": "end", "lane": "bfr", "slot": 0, "label": "Batch Processing Complete", "sub": "Status Model \u2014 Batch: Email Sent (terminal)", "desc": "All invoice outputs within the batch generated and email despatch complete. Status Model \u2014 Batch: Invoice Completed (all invoice outputs within the batch have been generated).", "phase": 32, "x": 8280.0, "y": 290.0, "w": 100, "h": 100, "cx": 8330.0, "cy": 340.0}, {"id": "platform_tax_currency", "type": "control", "lane": "bfr", "phase": 15, "slot": 1, "label": "Currency & Tax Handling", "sub": "BFR_MULT_CUR_001.01 / BFR_CONSL_CONF_001.04 / BR-161 / BR-162 / P-13", "desc": "Currency information received in the source billing data is used to generate the invoice in that currency (BR-161); base currency is Qatari Riyal (P-13). Tax information received in the source data is processed and displayed on the invoice (BR-162).", "x": 3943.0, "y": 450.0, "w": 206, "h": 60, "cx": 4046.0, "cy": 480.0}], "flows": [{"from": "start", "to": "pull_regular", "kind": "seq", "happy": true}, {"from": "start", "to": "pull_trial", "kind": "seq", "label": "trial run"}, {"from": "start", "to": "pull_hot", "kind": "seq", "label": "hot bill request"}, {"from": "start", "to": "manual_upload", "kind": "seq", "label": "manual upload path"}, {"from": "pull_regular", "to": "atomic_write", "kind": "seq", "happy": true}, {"from": "pull_trial", "to": "atomic_write", "kind": "seq"}, {"from": "pull_hot", "to": "atomic_write", "kind": "seq"}, {"from": "manual_upload", "to": "atomic_write", "kind": "seq"}, {"from": "atomic_write", "to": "dup_check", "kind": "seq", "happy": true}, {"from": "dup_check", "to": "batch_create", "kind": "seq", "happy": true}, {"from": "batch_create", "to": "schema_validate", "kind": "seq", "happy": true}, {"from": "schema_validate", "to": "d_valid", "kind": "seq", "happy": true}, {"from": "d_valid", "to": "type_segment", "kind": "cond", "label": "Valid", "happy": true}, {"from": "d_valid", "to": "failed_xml", "kind": "cond", "label": "Failed XML"}, {"from": "failed_xml", "to": "xml_portal_visible", "kind": "seq"}, {"from": "xml_portal_visible", "to": "reprocess_failed_xml", "kind": "seq"}, {"from": "reprocess_failed_xml", "to": "schema_validate", "kind": "esc", "label": "corrected, reprocess"}, {"from": "failed_xml", "to": "retry_retrieval", "kind": "esc"}, {"from": "retry_retrieval", "to": "pull_regular", "kind": "esc", "label": "retry per policy"}, {"from": "schema_validate", "to": "stats_log", "kind": "data"}, {"from": "failed_xml", "to": "stats_log", "kind": "data"}, {"from": "type_segment", "to": "parse_load", "kind": "seq", "happy": true}, {"from": "parse_load", "to": "csv_check", "kind": "seq", "happy": true}, {"from": "csv_check", "to": "csv_alert", "kind": "cond", "label": "CSV absent > 4h"}, {"from": "csv_check", "to": "batch_ready", "kind": "cond", "label": "CSV present / not required", "happy": true}, {"from": "csv_alert", "to": "batch_ready", "kind": "seq"}, {"from": "batch_ready", "to": "d_bill_type", "kind": "seq", "happy": true}, {"from": "d_bill_type", "to": "gen_regular", "kind": "cond", "label": "Regular", "happy": true}, {"from": "d_bill_type", "to": "gen_trial", "kind": "cond", "label": "Trial"}, {"from": "d_bill_type", "to": "gen_hot", "kind": "cond", "label": "Hot"}, {"from": "gen_regular", "to": "lang_determine", "kind": "seq", "happy": true}, {"from": "gen_trial", "to": "lang_determine", "kind": "seq"}, {"from": "gen_hot", "to": "lang_determine", "kind": "seq"}, {"from": "gen_regular", "to": "gen_bulk_sms", "kind": "data", "label": "Bulk SMS segment"}, {"from": "gen_regular", "to": "gen_iot", "kind": "data", "label": "IoT segment"}, {"from": "gen_regular", "to": "enterprise_detail", "kind": "data", "label": "Enterprise detailed bill"}, {"from": "lang_determine", "to": "calc_fields", "kind": "seq", "happy": true}, {"from": "calc_fields", "to": "d_gen_success", "kind": "seq", "happy": true}, {"from": "gen_bulk_sms", "to": "d_gen_success", "kind": "seq"}, {"from": "gen_iot", "to": "d_gen_success", "kind": "seq"}, {"from": "gen_trial", "to": "trial_exclude", "kind": "seq"}, {"from": "trial_exclude", "to": "d_gen_success", "kind": "seq"}, {"from": "d_gen_success", "to": "original_immutable", "kind": "cond", "label": "Success", "happy": true}, {"from": "d_gen_success", "to": "gen_failed", "kind": "cond", "label": "Failed"}, {"from": "gen_failed", "to": "gen_retry", "kind": "esc"}, {"from": "gen_retry", "to": "schema_validate", "kind": "esc", "label": "reprocess"}, {"from": "original_immutable", "to": "mask_gen", "kind": "seq", "happy": true}, {"from": "mask_gen", "to": "role_presentation", "kind": "seq", "happy": true}, {"from": "role_presentation", "to": "d_review_switch", "kind": "seq", "happy": true}, {"from": "d_review_switch", "to": "review", "kind": "cond", "label": "On"}, {"from": "d_review_switch", "to": "channel_avail", "kind": "cond", "label": "Off", "happy": true}, {"from": "review", "to": "d_review_outcome", "kind": "seq"}, {"from": "d_review_outcome", "to": "channel_avail", "kind": "cond", "label": "Approved", "happy": true}, {"from": "d_review_outcome", "to": "rejected", "kind": "cond", "label": "Rejected"}, {"from": "rejected", "to": "gen_regular", "kind": "esc", "label": "pending on regeneration"}, {"from": "channel_avail", "to": "hot_landing", "kind": "data", "label": "hot bill"}, {"from": "channel_avail", "to": "d_email_eligible", "kind": "seq", "happy": true}, {"from": "d_email_eligible", "to": "email_template", "kind": "cond", "label": "Eligible", "happy": true}, {"from": "d_email_eligible", "to": "trial_terminal", "kind": "cond", "label": "Trial (never emailed)"}, {"from": "email_template", "to": "suppression_check", "kind": "seq", "happy": true}, {"from": "suppression_check", "to": "suppressed", "kind": "cond", "label": "On suppression list"}, {"from": "suppression_check", "to": "smtp_despatch", "kind": "cond", "label": "Not suppressed", "happy": true}, {"from": "smtp_despatch", "to": "d_smtp_result", "kind": "seq", "happy": true}, {"from": "d_smtp_result", "to": "email_sent", "kind": "cond", "label": "Accepted", "happy": true}, {"from": "d_smtp_result", "to": "email_failed", "kind": "cond", "label": "Failure"}, {"from": "email_sent", "to": "d_delivery", "kind": "seq", "happy": true}, {"from": "d_delivery", "to": "email_delivered", "kind": "cond", "label": "Delivered", "happy": true}, {"from": "d_delivery", "to": "email_failed", "kind": "cond", "label": "Failed"}, {"from": "email_failed", "to": "smtp_despatch", "kind": "esc", "label": "resend on retry"}, {"from": "email_delivered", "to": "crm_log", "kind": "data"}, {"from": "suppressed", "to": "crm_log", "kind": "data"}, {"from": "channel_avail", "to": "sms_despatch", "kind": "data", "label": "SMS channel"}, {"from": "channel_avail", "to": "whatsapp_despatch", "kind": "data", "label": "WhatsApp channel"}, {"from": "channel_avail", "to": "web_display", "kind": "data", "label": "Web channel"}, {"from": "crm_log", "to": "batch_stats", "kind": "data"}, {"from": "email_delivered", "to": "end_batch_complete", "kind": "seq", "happy": true}, {"from": "reprint_request", "to": "reprint_register", "kind": "seq"}, {"from": "resend_request", "to": "reprint_register", "kind": "seq"}, {"from": "regen_request", "to": "reprint_register", "kind": "seq"}, {"from": "reprint_request", "to": "reprint_generate", "kind": "seq"}, {"from": "regen_request", "to": "legacy_buffer", "kind": "cond", "label": "legacy invoice"}, {"from": "legacy_buffer", "to": "d_legacy_avail", "kind": "seq"}, {"from": "d_legacy_avail", "to": "regen_consume_latest", "kind": "cond", "label": "Available"}, {"from": "d_legacy_avail", "to": "legacy_unavailable", "kind": "cond", "label": "Unavailable"}, {"from": "regen_consume_latest", "to": "gen_regular", "kind": "esc", "label": "regenerate"}, {"from": "reprint_generate", "to": "channel_avail", "kind": "esc", "label": "reprint to requesting channel"}, {"from": "resend_request", "to": "resend_email", "kind": "seq"}, {"from": "resend_email", "to": "smtp_despatch", "kind": "esc", "label": "resend despatch"}, {"from": "batch_stats", "to": "admin_console", "kind": "data"}, {"from": "admin_console", "to": "search_retrieve", "kind": "data"}, {"from": "admin_console", "to": "ref_data_config", "kind": "data"}, {"from": "admin_console", "to": "template_config", "kind": "data"}, {"from": "batch_stats", "to": "reporting_dash", "kind": "data"}, {"from": "end_batch_complete", "to": "retention", "kind": "data"}, {"from": "lang_determine", "to": "platform_tax_currency", "kind": "data"}, {"from": "platform_tax_currency", "to": "d_gen_success", "kind": "data"}], "model": {"agents": [], "contracts": [], "connectivity": []}, "biz": {"bio": {}, "contractPlain": {}, "nameMap": {}}};</script>
+<script>
+const D=window.DATA, LY=D.layout, NODES=D.nodes, FLOWS=D.flows;
+const NID={}; NODES.forEach(n=>NID[n.id]=n);
+const SVGNS="http://www.w3.org/2000/svg";
+// Connector labels must participate in the SAME layout pass that positions everything else,
+// not get dropped afterward at whatever gap the column grid already happened to leave. Every
+// phase column boundary is a fixed LY.colw apart regardless of what has to be labelled across
+// it — a label wider than that gap (e.g. "milestone: contact & eligibility" needing ~165px
+// across a ~46px node-to-node gap) spills straight into the nodes on either side. This widens
+// only the specific column boundaries that need it and shifts every column after them,
+// mirroring the same "measure, then make room, then shift what follows" approach already used
+// for the lane-label gutter and the backward-edge routing tracks.
+{
+ const lblCtx=document.createElement('canvas').getContext('2d');
+ const ELABELFONT='italic 700 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';   // kept in sync with .elabel's weight — MUST match exactly, or this width measurement (used for column-shift spacing, see below) under/overestimates what actually renders and either spills a label into a node or leaves excess gap
+ lblCtx.font=ELABELFONT;
+ const LABEL_CLEARANCE=16;   // clearance from each node edge, beyond the bare text width
+ const extraGap={};          // extraGap[phase] = extra px this column boundary needs, if any
+ FLOWS.forEach(f=>{
+  if(!f.label) return;
+  const a=NID[f.from], b=NID[f.to]; if(!a||!b) return;
+  if(b.phase!==a.phase+1) return;   // only a directly-adjacent pair shares exactly one boundary
+  const need=lblCtx.measureText(f.label).width+LABEL_CLEARANCE*2;
+  const rawGap=b.x-(a.x+a.w);
+  if(need>rawGap) extraGap[a.phase]=Math.max(extraGap[a.phase]||0, need-rawGap);
+ });
+ const maxPhase=NODES.reduce((m,n)=>Math.max(m,n.phase),0);
+ const shiftAt=[0];
+ for(let p=1;p<=maxPhase+1;p++) shiftAt[p]=(shiftAt[p-1]||0)+(extraGap[p-1]||0);
+ if(shiftAt[maxPhase+1]){
+  NODES.forEach(n=>{ const s=shiftAt[n.phase]||0; if(s){ n.x+=s; n.cx+=s; } });
+  LY.totalW+=shiftAt[maxPhase+1];
+ }
+ LY._colShift=shiftAt;   // phase headers use this so their boundaries track the same shift
+}
+// The Vodafone-mapped lane colour palette (LANECOL/LANEPAL) and the laneCol() lookup that
+// picked from it have been removed entirely — both fed exclusively the full-width lane
+// background tint (removed several rounds ago) and, after that, the 4px left accent stripe
+// that briefly replaced it (removed this round, per an explicit "remove the coloured strip on
+// the left side of each lane" requirement). With neither consumer left, this was genuinely
+// dead code rather than something to leave orphaned "just in case."
+const FILL={start:'#def0de',end:'#f6e6e5',agent:'#ffffff',control:'#fbf2e9',decision:'#f1ebf9',
+ validation:'#e6f1f2',system:'#f2f2f2',external:'#f9ecdf',error:'#f8e6e6',escalation:'#fef4db'};
+const STROKE={start:'#008a00',end:'#ac1811',agent:'#3860be',control:'#d46e08',decision:'#8a5cc9',
+ validation:'#2b8a8f',system:'#4a4d4e',external:'#d46e08',error:'#bd0000',escalation:'#f5b400'};
+function el(t,a){const e=document.createElementNS(SVGNS,t);for(const k in(a||{}))e.setAttribute(k,a[k]);return e;}
+function laneOf(k){return LY.lanes.find(l=>l.key===k);}
+
+// ---- build diagram
+const svg=document.getElementById('svgHost');
+svg.setAttribute('viewBox',`0 0 ${LY.totalW} ${LY.totalH}`);
+const vp=el('g',{id:'vp'}); svg.appendChild(vp);
+// defs arrow markers
+const defs=el('defs');
+// A dedicated `ar-hl` marker exists ALONGSIDE the per-kind markers, not instead of them — it's
+// swapped in only on the specific paths currently highlighted (see highlight()/clearHL()
+// below). SVG markers carry a FIXED fill baked into their own <path> at definition time; that
+// fill is completely outside the reach of any CSS class placed on the referencing element —
+// `.edge.hlpath{stroke:var(--accent) !important}` overrides the LINE's colour correctly, but
+// the arrowhead it draws via marker-end keeps whatever colour its marker was defined with,
+// regardless of any CSS on the path referencing it. That produced exactly the reported defect:
+// a highlighted connector's line turns brand-red, but its arrowhead stays whatever colour that
+// edge KIND's marker was defined with (blue for data, amber for escalation, dark red for
+// error) — a single connector rendered in two different colours along its own route.
+[['ar','#4a4d4e'],['ar-data','#3860be'],['ar-cond','#8a5cc9'],['ar-esc','#f5b400'],['ar-err','#bd0000'],['ar-hl','#e60000']].forEach(([id,c])=>{
+ const m=el('marker',{id,markerWidth:9,markerHeight:9,refX:7.5,refY:3,orient:'auto',markerUnits:'strokeWidth'});
+ m.appendChild(el('path',{d:'M0,0 L7.5,3 L0,6 z',fill:c})); defs.appendChild(m);});
+svg.appendChild(defs);
+// lane bands + labels
+// Lane names/hints are wrapped (name, up to 2 lines) or ellipsis-truncated (hint, 1 line) to
+// LY.laneLabelW at render time — previously they were placed at a fixed x=14 with no width
+// constraint at all, so anything longer than the gutter (e.g. "CRM / Order Mgmt / Billing" /
+// "Siebel CRM, Order Management, Billing System") overflowed straight into the lane's own
+// coloured band and could overlap the diagram content that starts at LY.x0.
+const bands=el('g'); vp.appendChild(bands);
+const _laneCtx=document.createElement('canvas').getContext('2d');
+const LANE_NAME_FONT='700 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';   // kept in sync with .lanelabel's 14px minimum
+const LANE_HINT_FONT='400 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';   // kept in sync with .lanehint's 14px minimum
+// wrapLines() and truncate1() have both been removed, at two different points. wrapLines()
+// went when the lane name switched from horizontal multi-line wrap to vertical rotation with
+// truncate1() (a round where hints were also dropped from inline display entirely).
+// truncate1() went one round after that, when the lane name itself (its one remaining caller)
+// switched from single-line truncation to wrapTextPx()'s up-to-2-line wrap, per an explicit
+// "wrap instead of truncate" requirement. LANE_HINT_FONT was removed alongside wrapLines() but
+// has SINCE BEEN REINTRODUCED (this comment predates that — see the gutter-building loop
+// below) once hints came back as a rendered column, per an explicit "display the sub-headings
+// too" requirement. Both wrapLines() and truncate1() remain genuinely gone; dead code left in
+// place invites a future edit to "helpfully" call it again without noticing its real callers
+// moved on.
+// Gutter-specific elements (the white overlay behind each lane's label, plus the name/hint
+// text itself — NOT the row divider line, which isn't gutter content) are collected into one
+// group per lane (`laneBlock`) rather than going straight into `bands`, purely so a single
+// `<title>` tooltip can cover the whole lane's clickable/hoverable area at once. This grouping
+// predates several since-removed things it used to also serve — a full-width lane colour
+// band (removed when lane tints went entirely), a 4px accent stripe (removed the round after
+// that), and a sticky HTML overlay that used to replace this group in the live view and get
+// restored for exports (removed when lane labels switched to always-visible ordinary SVG
+// content, several rounds before the vertical-rotation change). None of that machinery exists
+// any more; `laneBlock` is now just a convenience container for the tooltip, nothing more.
+const svgLaneGutter=el('g',{id:'svgLaneGutter'});
+LY.lanes.forEach((L,li)=>{
+ // Lane background tint AND the 4px left accent stripe have both been removed entirely —
+ // lanes are now plain (transparent/page-background) with no colour cue of any kind, per an
+ // explicit "remove the coloured strip on the left side of each lane" requirement following
+ // an earlier round's removal of the full-width tint. Lanes are separated purely by the
+ // divider line below now. Content (nodes, connectors, labels) provides its own contrast
+ // against a plain background just as it did against a tinted one; nothing about
+ // node/connector styling depended on either the lane tint or the accent stripe being present.
+ const laneBlock=el('g',{});   // one group per lane so a single <title> covers its whole clickable/hoverable area
+ laneBlock.appendChild(el('rect',{x:0,y:L.y,width:LY.laneLabelW,height:L.h,fill:'#fff',opacity:.65}));
+ const laneNameOnly=L.name.split('·')[0].trim();
+ // Lane name renders rotated -90° (vertical, reading bottom-to-top), centred vertically on
+ // the lane's own vertical midpoint — matching a supplied reference layout. If the full name
+ // doesn't fit as a single rotated line, it wraps to a SECOND line/column instead of
+ // truncating with an ellipsis — reusing wrapTextPx(), the same generic word-wrap helper node
+ // labels use. Only a name that still doesn't fit even after wrapping to 2 lines falls back
+ // to wrapTextPx()'s own built-in ellipsis-on-last-line truncation (the same graceful
+ // degradation every other wrapped text in this engine already has).
+ const gutterCx=LY.laneLabelW/2, laneCy=L.y+L.h/2;
+ const availLen=Math.max(40,L.h-24);
+ const nameLines=wrapTextPx(_laneCtx,LANE_NAME_FONT,laneNameOnly,availLen,2);
+ // Hints (both a name-embedded "Lane Name · hint text" and a separate L.hint field) render
+ // as additional rotated columns, after the name's own column(s) — reintroduced per an
+ // explicit "display the sub-headings too" requirement, having been dropped entirely for a
+ // round in between (the initial vertical-orientation change left no room for a second
+ // element beside the rotated name at all). Both hint sources are combined into ONE string
+ // (joined by " · " when both are present) and WRAPPED to up to HINT_MAX_LINES columns —
+ // never truncated with an ellipsis, per an explicit "don't truncate, wrap instead"
+ // requirement (a truncated hint discards real content with no way to recover it on-canvas;
+ // wrapping is the same graceful-degradation approach the lane name and every node label
+ // already use). LY.laneLabelW is sized by build_model.py's compute_layout() specifically
+ // to fit the worst lane's name+hint column count at this same HINT_MAX_LINES cap — the two
+ // MUST stay in sync (see compute_layout()'s _lane_gutter_columns()), or the gutter Python
+ // allocated width for and what the browser actually wraps into can disagree. Only a hint
+ // that still doesn't fit even after HINT_MAX_LINES columns falls back to wrapTextPx()'s own
+ // built-in ellipsis-on-last-line truncation — the same graceful degradation every other
+ // wrapped text in this engine already has — and even then the FULL, untruncated text is
+ // still always available via the tooltip below.
+ const HINT_MAX_LINES=12;
+ const fullHintParts=[];
+ if(L.name.includes('·')) fullHintParts.push(L.name.split('·')[1].trim());
+ if(L.hint) fullHintParts.push(L.hint);
+ const hintLines=fullHintParts.length ? wrapTextPx(_laneCtx,LANE_HINT_FONT,fullHintParts.join(' · '),availLen,HINT_MAX_LINES) : [];
+ // Name and hint columns share ONE consistent layout scheme: each entry (whether a name line
+ // or the hint line) is its own independently-rotated text element, offset along the gutter's
+ // WIDTH (not its height — that axis is already spent on the text's own length). With `n`
+ // total entries, entry `i` sits at `gutterCx + (i - (n-1)/2) * COL_GAP`: a single entry sits
+ // exactly on the gutter's own centre; multiple entries straddle that centre symmetrically.
+ // COL_GAP (20px) comfortably separates columns of 14px text without any two competing for
+ // space. Name columns always come first (closer to one side), the hint column last.
+ const COL_GAP=20;
+ const columns=nameLines.map(ln=>({text:ln,cls:'lanelabel'}));
+ hintLines.forEach(ln=>columns.push({text:ln,cls:'lanehint'}));
+ columns.forEach((col,i)=>{
+  const colX=gutterCx+(i-(columns.length-1)/2)*COL_GAP;
+  const t=el('text',{x:colX,y:laneCy,'text-anchor':'middle','dominant-baseline':'middle',
+   class:col.cls,transform:`rotate(-90 ${colX} ${laneCy})`});
+  t.textContent=col.text;
+  laneBlock.appendChild(t);
+ });
+ // Native SVG hover tooltip carrying the FULL, untruncated name + hint(s) — the fallback for
+ // any lane name still too long to fit even after wrapping to 2 lines, and for any hint text
+ // still too long to fit even after the on-canvas line's own truncation. This used to live
+ // exclusively in the (now-removed) sticky HTML overlay's `title` attribute; with that overlay
+ // gone and this SVG-drawn gutter the only visible version, the fallback has to live here
+ // instead, or long lane names/hints would have no way to reveal their full text at all any
+ // more. `<title>` on an SVG element is a real, native, universally-supported browser
+ // tooltip — the direct SVG equivalent of the HTML `title` attribute it's replacing.
+ const laneTitle=el('title',{});
+ laneTitle.textContent=fullHintParts.length ? `${laneNameOnly} — ${fullHintParts.join(' · ')}` : laneNameOnly;
+ laneBlock.appendChild(laneTitle);
+ svgLaneGutter.appendChild(laneBlock);
+ // Lane divider colour is `#E3E3E3` — a deliberately subtle, near-background tone (darkened
+ // slightly from a prior `#F5F5F5`), matching the vertical stage-separator colour above so
+ // both kinds of separator line in this diagram (horizontal lane dividers, vertical stage
+ // dividers) share one consistent value. History of prior values: `#dde4ec` (original, back
+ // when lane tints were still present) -> `#b9c2cc` (darkened, since the tint needed a
+ // stronger divider for contrast) -> `#F5F5F5` (lightened again once tints and the lane accent
+ // stripe were both removed, deliberately subtle rather than contrast-driven) -> `#E3E3E3`
+ // (current — a further deliberate adjustment, still in the same "subtle, not contrast-driven"
+ // spirit as `#F5F5F5`, just a shade darker).
+ bands.appendChild(el('line',{x1:0,y1:L.y+L.h,x2:LY.totalW,y2:L.y+L.h,stroke:'#E3E3E3','stroke-width':1.5}));
+});
+bands.appendChild(svgLaneGutter);   // always visible now — no sticky HTML overlay hides it any more (no frozen columns)
+// phase headers
+// Consecutive phase columns that share the same label are one BUSINESS stage split across
+// several node columns (e.g. an "Eligibility" branch, or a buffer column reserved purely
+// for connector routing clearance) — not several distinct stages. Rendering a separate
+// badge+title pill per column repeated the same word 3-5x in a row and implied more phases
+// than the process actually has, so identically-named neighbours are grouped into ONE
+// header spanning their combined width, numbered sequentially by GROUP rather than by raw
+// column index. Divider guides are only drawn at group boundaries, not between columns that
+// belong to the same group.
+// id'd so it can be hidden in the live view (the sticky HTML header replaces it visually —
+// see .phase-header-sticky) while still rendering normally in exports (exportSVGString()
+// resets this opacity on the clone, since a static file has no sticky-overlay equivalent).
+const ph=el('g',{id:'svgPhaseHeader'}); vp.appendChild(ph);
+const _measCtx=document.createElement('canvas').getContext('2d');
+const PHFONT='700 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';   // kept in sync with .phasehdr's 14px minimum
+const phaseGroups=[];
+LY.phases.forEach((p,i)=>{
+ const last=phaseGroups[phaseGroups.length-1];
+ if(last && last.label===p) last.end=i; else phaseGroups.push({label:p, start:i, end:i});
+});
+phaseGroups.forEach((grp,gi)=>{
+ // Column boundaries aren't uniformly LY.colw apart once a wide connector label has forced
+ // extra room somewhere (see the label-aware spacing pass above) — headers use the same
+ // per-boundary shift so they stay aligned with where their columns actually ended up.
+ const x=LY.x0+grp.start*LY.colw+(LY._colShift[grp.start]||0);
+ const endX=LY.x0+(grp.end+1)*LY.colw+(LY._colShift[grp.end+1]||0);
+ const spanW=endX-x;
+ // Stage separators now draw at EVERY group boundary, including before the very first stage
+ // (a prior version skipped that one via `if(gi>0)`, leaving the first stage with no leading
+ // boundary line at all — inconsistent with every other stage, which gets one on both sides).
+ // Since `x` for the first group is already exactly `LY.x0` (the content area's own left
+ // edge — `grp.start` is 0 and `LY._colShift[0]` is always 0), removing the `gi>0` guard
+ // draws this leading separator in exactly the right place with no special-casing needed.
+ // Colour is `#E3E3E3` (also used for the horizontal lane-divider lines below, so both kinds
+ // of separator share one value — darkened slightly from a prior `#F5F5F5`, still deliberately
+ // subtle/near-background rather than contrast-driven).
+ ph.appendChild(el('line',{x1:x,y1:LY.topbar-2,x2:x,y2:LY.totalH-30,stroke:'#E3E3E3','stroke-width':2,'stroke-dasharray':'4 3'}));
+ const g=el('g');
+ const rectX=x+8, rectW=spanW-16, rectCx=rectX+rectW/2;   // centre of the header bar
+ g.appendChild(el('rect',{x:rectX,y:14,width:rectW,height:42,rx:6,fill:'#25282b'}));
+ // width-based wrap: keep the (upper-cased) title on ONE line whenever it fits the bar; only split if it truly overflows
+ const upper=grp.label.toUpperCase();
+ _measCtx.font=PHFONT;
+ const innerPad=12;
+ // No numeric badge any more — the stage heading shows only its name (see the removed
+ // circle+number below), so the full bar width (minus inner padding) is available for the
+ // title text, and the text is centred on `rectCx` directly rather than offset to make room
+ // for a badge that no longer exists.
+ const availW=rectW-innerPad*2;
+ let l1=upper, l2='';
+ if(_measCtx.measureText(upper).width>availW){
+   const words=upper.split(' '); let a='';
+   for(const w of words){ const test=a?a+' '+w:w; if(!a || _measCtx.measureText(test).width<=availW){ a=test; } else { l2=l2?l2+' '+w:w; } }
+   l1=a;
+ }
+ const cy0=35;
+ const t=el('text',{x:rectCx,y:(l2?cy0-7:cy0),'text-anchor':'middle',class:'phasehdr'}); t.style.fill='#ffffff'; t.textContent=l1; g.appendChild(t);
+ if(l2){const t2=el('text',{x:rectCx,y:cy0+7,'text-anchor':'middle',class:'phasehdr'});t2.style.fill='rgba(255,255,255,.75)';t2.textContent=l2;g.appendChild(t2);}
+ ph.appendChild(g);
+ // No stashing on `grp` any more — this used to cache geometry for the now-removed sticky
+ // HTML phase-header overlay (`syncPhaseHeader()`), which read `grp.x`/`spanW`/`badge`/`l1`/
+ // `l2` back out to rebuild its own DOM copy on every pan/zoom. That overlay, its sync
+ // function, and this stash were all left behind when phase headers became ordinary,
+ // always-visible SVG content — nothing reads `phaseGroups` after this loop any more.
+});
+
+// ---- edges
+const edgeLayer=el('g'); vp.appendChild(edgeLayer);
+const labelLayer=el('g'); vp.appendChild(labelLayer);
+const edgeEls=[];
+// Direction is decided by PHASE, not raw x-position. x-position alone breaks for any edge
+// between two nodes in the SAME phase column but different lanes (e.g. an escalation from
+// an Ops-lane node back into a System-lane node in the same stage): b.x is ~equal to a.x for
+// same-phase nodes, so the old `b.x > a.x+a.w-4` check misclassified these as backward loops
+// and routed them through the bottom bus channel meant for genuine phase-regressions —
+// producing wildly out-of-proportion detours (all the way to the canvas floor and back)
+// clustered at the bottom of the diagram for what is really just a short cross-lane hop.
+function isForward(a,b){ return b.phase>a.phase; }
+function isLateral(a,b){ return b.phase===a.phase && a.id!==b.id; }
+// A forward edge is "steep" when the vertical distance to the target's lane exceeds the
+// horizontal distance available to cover it in — e.g. jumping several lanes over just one
+// phase column, the way a step handing off to a background system several rows down often
+// does. Forcing every forward edge through the same right-edge-exit/left-edge-entry anchor
+// pair regardless of geometry crams a large vertical drop into a single phase-column's
+// width, producing a cramped, sharp dogleg rather than a natural-reading route. Steep edges
+// exit from the source's own bottom/top edge instead (matching whichever direction the
+// target actually is) and are excluded from the forward-corridor bend-column distribution
+// pre-pass below entirely, since they don't bend at a shared "mx" column the way a normal
+// forward edge does — registering one there would describe a bend position that doesn't
+// match where the edge is actually drawn, corrupting what nearby lateral edges check
+// against for their own obstacle avoidance. Both call sites (the pre-pass and edgePath()
+// itself) MUST agree on this same definition, which is why it's a single shared function
+// rather than two independent checks that could drift apart.
+function isSteepForward(a,b){ return isForward(a,b) && Math.abs(b.cy-a.cy) > Math.abs(b.cx-a.cx); }
+// Backward (genuine phase-regression / loop-back) edges share a routing "bus" below the
+// diagram. The old version cycled through a fixed 7 offsets by edge ORDER (`backIdx % 7`),
+// so an 8th backward edge reused a track even when its span genuinely overlapped one already
+// using it, AND edges with non-overlapping spans (never actually in each other's way) still
+// consumed distinct offsets unnecessarily. Track assignment below is span-overlap-based
+// instead — the classic greedy interval-scheduling assignment — and the canvas is grown to
+// fit however many tracks are genuinely needed instead of assuming "7 is enough". Lateral
+// (same-phase, cross-lane) edges are excluded here — they get a direct vertical connector
+// (see lateralEdgePath) and never touch this channel or its height budget.
+const trackOf={};             // FLOWS index -> track number, backward edges only
+const BACK_TRACK_GAP=16;      // px between adjacent backward/loop-back bus tracks (was 12 —
+                               // widened for legibility so two loop-back edges sharing the
+                               // bus band are clearly separate lines, not a tightly packed
+                               // stack of near-touching parallels)
+{
+ const occupied=[];           // occupied[trackIdx] = [{lo,hi}, ...] already placed there
+ FLOWS.forEach((f,i)=>{
+  const a=NID[f.from], b=NID[f.to]; if(!a||!b||isForward(a,b)||isLateral(a,b)) return;
+  const lo=Math.min(a.cx,b.cx)-20, hi=Math.max(a.cx,b.cx)+20;
+  let t=0;
+  while(occupied[t]&&occupied[t].some(sp=>!(hi<sp.lo||lo>sp.hi))) t++;
+  (occupied[t]=occupied[t]||[]).push({lo,hi});
+  trackOf[i]=t;
+ });
+ const usedTracks=occupied.length;
+ if(usedTracks){
+  const laneBottom=LY.lanes.length?Math.max(...LY.lanes.map(l=>l.y+l.h)):0;
+  // Widened from 52/+20 to 70/+30: the bus band's clearance from the last lane and from the
+  // diagram's own bottom edge is technically self-consistent either way (the channel always
+  // sits exactly `BUS_CLEARANCE` above whatever LY.totalH ends up being, so it was never
+  // mathematically outside the SVG's own declared bounds) — but a tighter margin reads as
+  // "this connector is hanging off the edge of the diagram" even when it isn't, especially
+  // once the lane bands carry no background tint to visually confirm where the diagram's
+  // content genuinely ends. More generous clearance on both sides removes that ambiguity.
+  const neededBottom=laneBottom+70+usedTracks*BACK_TRACK_GAP+30;   // clearance so the highest track never creeps into the lanes above
+  if(neededBottom>LY.totalH) LY.totalH=neededBottom;
+ }
+}
+// ---- connector-channel spacing (forward + lateral edges) -----------------------------
+// Every forward edge from phase P to phase P' bends at x = the midpoint between the two
+// nodes' facing edges — by construction, that midpoint is nearly identical for every edge
+// crossing the same phase gap, regardless of which lanes/rows the edge actually connects.
+// A prior version only separated edges whose y-ranges ACTUALLY overlapped (span-overlap
+// interval-scheduling, mirroring the backward bus), sharing a single channel among any edges
+// with no real conflict — a valid minimal-lanes strategy, but it produces inconsistent
+// spacing across the diagram: two edges 40px apart in y might get spread 13px apart while two
+// edges 200px apart in a busier phase gap might land in the same channel. Per the explicit
+// routing spec, every forward edge that shares a phase-to-phase corridor with at least one
+// other edge now gets its OWN dedicated lane, evenly distributed across that corridor's full
+// available width — not just the minimum separation needed to avoid a literal collision.
+// The corridor's available width is the SHARED safe window across every member: the largest
+// "source right edge" and the smallest "target left edge" among the group (node widths vary
+// by type — decision vs. agent vs. system — so each edge's own valid range differs slightly;
+// the shared window is what's safely inside EVERY member's own range at once). Lanes are then
+// placed at n+1 equal divisions of that window (n members => n interior points), so there's
+// an equal margin at both ends and equal spacing between every adjacent pair of lanes — true
+// even distribution, not just "far enough apart." Members are ordered by their own vertical
+// midpoint before assigning lane index, so lane order follows top-to-bottom visual order and
+// adjacent edges don't need to cross each other's lanes to reach their own target row. A
+// corridor with only one member is untouched — a lone edge keeps its original clean single
+// bend at the natural midpoint, since there's no sibling to distribute lanes against.
+// Decision branch divergence: a decision's multiple outgoing edges all start out from the
+// SAME single point (a diamond's right-hand vertex — there's only one, geometrically, no
+// "other side" to exit from at a different height) and, without this, all begin their
+// horizontal run at exactly a.cy too. Two branches sharing that same starting row look
+// identical in direction until something ELSE (an incidental obstacle, or their targets
+// happening to sit at different rows) makes them diverge — which the forward-corridor
+// distribution below does NOT help with here, since it only groups edges that share the
+// exact same phase-to-phase span, and sibling decision branches routinely go to DIFFERENT
+// downstream phases. The result: a reader has to trace each dotted line pixel-by-pixel to
+// tell "Eligible" from "Not eligible" instead of the two branches reading as obviously
+// different paths at a glance — exactly backwards for what a decision node's whole point is.
+// Every decision with 2+ outgoing edges gets each branch a distinct vertical exit offset
+// from its own cy, ranked by the target's own cy (so the reader's eye naturally follows
+// "this one heads up, this one heads down/straight" immediately, not several segments later).
+const decisionBranchOffset={};   // FLOWS index -> vertical offset from source cy at exit
+{
+ const bySource={};
+ FLOWS.forEach((f,i)=>{
+  const a=NID[f.from]; if(!a||a.type!=='decision') return;
+  (bySource[f.from]=bySource[f.from]||[]).push(i);
+ });
+ const BRANCH_GAP=18;
+ Object.values(bySource).forEach(idxs=>{
+  if(idxs.length<2) return;   // a lone branch has nothing to diverge from
+  idxs.sort((i,j)=>{ const bi=NID[FLOWS[i].to], bj=NID[FLOWS[j].to]; return (bi?bi.cy:0)-(bj?bj.cy:0); });
+  const n=idxs.length;
+  idxs.forEach((idx,rank)=>{ decisionBranchOffset[idx]=(rank-(n-1)/2)*BRANCH_GAP; });
+ });
+}
+// Converging-target companion to the branch-divergence offset above: several UNRELATED forward
+// edges arriving at the same target all enter via the same fixed point too (the target's
+// left-edge vertex at its own cy — there's exactly one, same reasoning as the decision vertex
+// above, just on the receiving end instead of the sending end). Left alone, every incoming edge
+// to a busy node — a milestone with three predecessors, a merge point after parallel branches —
+// stacks its final segment exactly on top of every sibling's, so only one arrowhead is ever
+// visible even though several edges terminate there, and a decision's two branches that
+// reconverge on the same downstream node (see fpo_outstanding's "Pending bill"/"Clear" case)
+// run as one indistinguishable line for their entire final approach. Each edge sharing a target
+// gets a distinct vertical entry offset from the target's own cy, ranked by the SOURCE's cy so
+// siblings arriving from higher up land higher on the target and vice versa — same convention
+// as the divergence offset, mirrored for convergence.
+const targetConvergeOffset={};   // FLOWS index -> vertical offset from target cy at entry
+{
+ const byTarget={};
+ FLOWS.forEach((f,i)=>{
+  const a=NID[f.from], b=NID[f.to]; if(!a||!b||!isForward(a,b)) return;
+  (byTarget[f.to]=byTarget[f.to]||[]).push(i);
+ });
+ const CONVERGE_GAP=16;
+ Object.values(byTarget).forEach(idxs=>{
+  if(idxs.length<2) return;   // a lone incoming edge has nothing to diverge from
+  idxs.sort((i,j)=>{ const ai=NID[FLOWS[i].from], aj=NID[FLOWS[j].from]; return (ai?ai.cy:0)-(aj?aj.cy:0); });
+  const n=idxs.length;
+  const b=NID[FLOWS[idxs[0]].to];
+  const cap=Math.max(0,(b?b.h:100)/2-16);   // stay well inside the node's own height, never past its top/bottom
+  idxs.forEach((idx,rank)=>{ targetConvergeOffset[idx]=Math.max(-cap,Math.min(cap,(rank-(n-1)/2)*CONVERGE_GAP)); });
+ });
+}
+const fwdChannelMx={};   // FLOWS index -> this edge's own bend x (always set for any bending forward edge)
+const fwdCorridors=[];   // {x, yLo, yHi} for every forward edge's own bend column — read by lateral edges below
+                          // so an obstacle-driven lateral detour doesn't end up running parallel, a few px
+                          // away, alongside an UNRELATED forward edge's vertical run for its whole length.
+                          // These two systems (forward corridor distribution, lateral obstacle-avoidance)
+                          // are computed independently and know nothing about each other by default — a
+                          // forward edge's evenly-distributed lane position can coincidentally land close
+                          // to wherever a lateral edge's detour needed to go, and neither side has any way
+                          // to notice on its own. This registry is what lets the lateral side check.
+{
+ const groups={};
+ FLOWS.forEach((f,i)=>{
+  const a=NID[f.from], b=NID[f.to]; if(!a||!b||!isForward(a,b)) return;
+  if(isSteepForward(a,b)) return;   // routed via source bottom/top instead — see isSteepForward()
+  const sy=a.cy, ty=b.cy; if(sy===ty) return;   // a dead-straight edge never bends — nothing to distribute or register
+  const key=a.phase+'>'+b.phase;
+  (groups[key]=groups[key]||[]).push({i, mid:(sy+ty)/2, sourceRight:a.x+a.w, targetLeft:b.x, sy, ty});
+ });
+ Object.values(groups).forEach(list=>{
+  if(list.length<2){
+   // A lone edge in its corridor still bends at a real x and still occupies a real vertical
+   // segment — it just isn't sharing that corridor with any SIBLING forward edge, so there's
+   // nothing to distribute it against. It's still registered below so a lateral edge elsewhere
+   // in the diagram can check against it.
+   const e=list[0];
+   fwdChannelMx[e.i]=(e.sourceRight+e.targetLeft)/2;
+  } else {
+   const corridorLeft=Math.max(...list.map(e=>e.sourceRight));
+   const corridorRight=Math.min(...list.map(e=>e.targetLeft));
+   const width=corridorRight-corridorLeft;
+   list.sort((p,q)=>p.mid-q.mid);   // top-to-bottom order — adjacent lanes don't cross each other
+   const n=list.length;
+   list.forEach((e,idx)=>{
+    fwdChannelMx[e.i] = width>0 ? corridorLeft+(idx+1)*width/(n+1) : (corridorLeft+corridorRight)/2;
+   });
+  }
+  list.forEach(e=>{ fwdCorridors.push({x:fwdChannelMx[e.i], yLo:Math.min(e.sy,e.ty), yHi:Math.max(e.sy,e.ty)}); });
+ });
+}
+// Returns the first registered forward corridor running within OBSTACLE_CLEARANCE of x whose
+// y-range genuinely overlaps [yLo,yHi] — i.e. a forward edge's own vertical run that a lateral
+// edge's detour would otherwise run parallel and too close to for a meaningful stretch, not
+// just a fleeting crossing point (two connectors briefly crossing paths is normal and fine;
+// running side-by-side for their whole shared height is the actual "not distributed" defect).
+function forwardCorridorHit(x,yLo,yHi){
+ for(const c of fwdCorridors){
+  if(Math.abs(c.x-x)<OBSTACLE_CLEARANCE && !(yHi<c.yLo||yLo>c.yHi)) return c;
+ }
+ return null;
+}
+// Lateral edges have a similar-looking but distinct problem in the perpendicular direction:
+// two same-phase, cross-lane edges connecting the SAME pair of lanes land on the same x by
+// construction (same-type nodes at a given phase share the column-centred x regardless of
+// which lane they're in), so two independent laterals between one lane pair would draw
+// exactly on top of each other if left untouched. A prior version assumed "any 2+ laterals
+// sharing a lane-pair key always coincide" and gave every one of them a distinct channel
+// unconditionally — true for edges genuinely running between two DIFFERENT fixed lanes, but
+// FALSE for edges that share a lane-pair key only because several nodes are stacked in the
+// very same lane at the very same phase (isLateral() only checks phase+id, not lane, so this
+// happens whenever a source has multiple same-phase, same-lane targets). Two such edges can
+// have completely different, non-overlapping y-spans (a short hop to a near sibling vs. a
+// long reach past that sibling to a farther one) — and once the farther edge is obstacle-
+// routed via a side-edge attachment (see the obstacle-driven branch of lateralEdgePath()
+// below), it doesn't even LEAVE the source from the same boundary point as the short edge
+// any more, so there's no actual visual conflict between them left to separate. Forcing a
+// channel offset onto the short, genuinely-unblocked edge anyway produced an unnecessary
+// elbow with multiple direction changes where a single straight vertical connector would
+// have been correct — the elbow existed to avoid a collision that, once obstacle-routing
+// existed, no longer occurred.
+// The fix: obstacle status is now decided per edge, using its NATURAL (unoffset) column,
+// BEFORE any channel grouping happens. An edge with a genuine obstacle in its way is excluded
+// from channel-offset grouping entirely — it routes independently via the side-edge branch,
+// which inherently avoids collision with any lane-mate by construction (different attachment
+// side, different final x). Only the REMAINING (unblocked) edges in a lane-pair+phase group
+// are then separated, and — mirroring the forward-edge channel assignment's own span-overlap
+// interval-scheduling exactly, rather than the previous blanket "any 2+ conflict" assumption
+// — only the ones whose y-spans genuinely overlap get distinct channels; two unblocked edges
+// with disjoint spans share channel 0 (no offset, a plain straight connector) same as forward
+// edges with no real conflict do.
+const LAT_CHANNEL_GAP=13;
+const latChannel={}, latChannelCount={}, latBlocked={};
+{
+ FLOWS.forEach((f,i)=>{
+  const a=NID[f.from], b=NID[f.to]; if(!a||!b||!isLateral(a,b)) return;
+  const down=b.cy>a.cy;
+  const natSy=down?a.y+a.h:a.y, natTy=down?b.y:b.y+b.h;
+  latBlocked[i]=!!obstacleOnColumn(natSy,natTy,a.cx,a.id,b.id);
+ });
+ const groups={};
+ FLOWS.forEach((f,i)=>{
+  const a=NID[f.from], b=NID[f.to]; if(!a||!b||!isLateral(a,b)||latBlocked[i]) return;
+  const down=b.cy>a.cy;
+  const natSy=down?a.y+a.h:a.y, natTy=down?b.y:b.y+b.h;
+  const key=a.phase+'|'+[a.lane,b.lane].sort().join('~');
+  (groups[key]=groups[key]||[]).push({i, lo:Math.min(natSy,natTy), hi:Math.max(natSy,natTy)});
+ });
+ Object.values(groups).forEach(list=>{
+  const occ=[];
+  list.forEach(e=>{
+   let t=0;
+   while(occ[t]&&occ[t].some(sp=>!(e.hi<sp.lo||e.lo>sp.hi))) t++;
+   (occ[t]=occ[t]||[]).push({lo:e.lo,hi:e.hi});
+   e.ch=t;
+  });
+  list.forEach(e=>{ latChannel[e.i]=e.ch; latChannelCount[e.i]=occ.length; });
+ });
+}
+// Clearance distance used whenever a connector detours around a third node it isn't
+// connected to (see obstacleOnRow/obstacleOnColumn below). This used to be 14px — enough to
+// keep the line from geometrically touching the obstacle, but NOT enough to keep it from
+// reading as ambiguous: a line running 14px outside a node's edge, alongside its full height,
+// looks like it could plausibly originate from or terminate at that node — especially once
+// arrowheads/connectors paint on top of nodes (so the near-miss is fully visible rather than
+// partly hidden). "Technically not touching" and "visually unambiguous about what connects to
+// what" are different bars; 24px is wide enough that a reader can tell at a glance the line is
+// passing BY the node, not connecting to it, without the detour reading as an unrelated big
+// swing away from the direct path.
+const OBSTACLE_CLEARANCE=24;
+// A forward edge that crosses lanes runs horizontally at the SOURCE's own row
+// before jogging up/down to the target's row. If an unrelated node happens to sit
+// in that row between the source and the jog point — e.g. a decision's reject
+// terminal placed right next to it, with the "yes" branch continuing on to a
+// node several lanes away — that straight run passes directly behind the
+// obstacle. Connectors now paint ON TOP of nodes (see the z-order fix near the
+// end of the "nodes" section below), so the line stays visible rather than being
+// hidden by the obstacle — but visually crossing straight through an unrelated
+// node's body still reads as "the obstacle connects onward", which is wrong:
+// nothing changed about what connects to what, but a reader has no way to tell
+// that from the rendering alone. This finds any such obstacle and detours the
+// run above or below it (whichever direction the edge is already heading)
+// instead of running through occupied space blindly.
+function obstacleOnRow(x1,x2,y,skipId1,skipId2){
+ const lo=Math.min(x1,x2), hi=Math.max(x1,x2);
+ for(const n of NODES){
+  if(n.id===skipId1||n.id===skipId2) continue;
+  if(n.y<=y && y<=n.y+n.h && !(hi<n.x||lo>n.x+n.w)) return n;
+ }
+ return null;
+}
+// A single clearY jog that clears the ONE obstacle it was computed for is not the same as a
+// clear PATH — the jog's own horizontal run (at x1..x2, the new y) is new canvas territory
+// that was never checked before this function existed, and can itself cross a second,
+// different obstacle sitting further along in the same direction. Widens further, bounded,
+// in the SAME direction (dir<0 = keep decreasing y / jogging up, dir>0 = keep increasing y /
+// jogging down) until the row is genuinely clear or the attempt budget runs out — mirroring
+// the same "nudge until clear, bounded" shape as the label-collision avoidance above, applied
+// here to connector routing instead of text placement.
+function widenRowClear(initialY,dir,x1,x2,skip1,skip2,maxTries){
+ let y=initialY;
+ for(let i=0;i<(maxTries||6);i++){
+  const blocker=obstacleOnRow(x1,x2,y,skip1,skip2);
+  if(!blocker) return y;
+  y = dir<0 ? Math.min(y,blocker.y-OBSTACLE_CLEARANCE) : Math.max(y,blocker.y+blocker.h+OBSTACLE_CLEARANCE);
+ }
+ return y;
+}
+// Vertical counterpart of obstacleOnRow(), for lateral (same-phase, cross-lane) edges: checks
+// whether some third node's column occupies the x the lateral edge travels straight down/up
+// through, between the two lanes it's connecting.
+function obstacleOnColumn(y1,y2,x,skipId1,skipId2){
+ const lo=Math.min(y1,y2), hi=Math.max(y1,y2);
+ for(const n of NODES){
+  if(n.id===skipId1||n.id===skipId2) continue;
+  if(n.x<=x && x<=n.x+n.w && !(hi<n.y||lo>n.y+n.h)) return n;
+ }
+ return null;
+}
+// A node's LEFT/RIGHT boundary is a vertical line at n.x / n.x+n.w for every shape EXCEPT the
+// 'external' parallelogram (see the n.type==='external' shape branch further down, skewed by a
+// fixed 13px) — its left/right edges are slanted, so n.x / n.x+n.w only actually sits on the
+// boundary at one single y (the bottom vertex for the left edge, the top vertex for the right
+// edge). Every other y along a plain n.x/n.x+n.w entry misses the real boundary by up to the
+// full 13px skew. sideX() returns the boundary x for the specific y an edge is actually
+// entering/exiting at, so a left/right-edge connector lands exactly on a parallelogram's slanted
+// side the same way it already does on every rectangle, circle, and diamond.
+function sideX(n,y,side){
+ if(n.type==='external'){
+  const s=13, f=Math.max(0,Math.min(1,(y-n.y)/n.h));   // 0 at top, 1 at bottom
+  return side==='left' ? n.x+s*(1-f) : n.x+n.w-s*f;
+ }
+ return side==='left' ? n.x : n.x+n.w;
+}
+// A detour whose FINAL approach into the target is vertical (the path's last segment runs
+// straight up/down, not left-to-right) still needs to land ON the target's boundary — but
+// several forward-edge branches below default to the target's LEFT edge (b.x, b.cy) always,
+// regardless of which direction the path is actually arriving from. An SVG marker auto-
+// orients to the path's own final-segment tangent, so a vertically-arriving connector still
+// draws a vertical (down- or up-pointing) arrowhead — and a vertical arrowhead touching a
+// VERTICAL boundary (the left edge) reads as misaligned: the boundary being entered and the
+// direction of entry don't visually agree, unlike every horizontally-arriving connector
+// (whose arrowhead correctly points left-to-right straight into that same left edge).
+// verticalEntry() computes the TOP or BOTTOM edge point instead — matching whichever
+// direction (above/below) the approach is actually coming from — so a vertical arrowhead
+// always lands on a horizontal boundary, and a horizontal arrowhead always lands on a
+// vertical one, exactly the pairing a reader expects.
+function verticalEntry(b,approachY){
+ const fromAbove = approachY <= b.cy;
+ return {ex:b.cx, ey: fromAbove ? b.y : b.y+b.h};
+}
+// Same-phase, cross-lane edges get a short, direct connector between the two lanes instead
+// of the backward bus (see isLateral() above for why the old code routed these incorrectly).
+// A straight vertical line covers the common case. Two different situations can force a
+// deviation from that straight line, and they're handled differently:
+//  - Channel separation ONLY (no third node in the way): a small top/bottom-to-top/bottom jog
+//    is fine — this is the "two lateral edges share a lane pair, nothing physically blocks
+//    either" case, and it was never the source of any reported ambiguity.
+//  - A literal obstacle (a third node's column sits directly in the path): rather than jogging
+//    sideways and then jogging BACK into the target's top/bottom edge — which produces a
+//    "swings out, swings back in right next to a node it swung past" shape that reads as
+//    ambiguous about whether the line connects to the node it passed (see the note on
+//    OBSTACLE_CLEARANCE above) — this now approaches BOTH ends via their LEFT or RIGHT edge
+//    instead, at each node's own vertical centre, so the whole run reads as one deliberate
+//    side-approach that never re-enters the natural column near the obstacle at all.
+function lateralEdgePath(a,b,chOffset){
+ const down=b.cy>a.cy;
+ const sx=a.cx, sy=down?a.y+a.h:a.y;
+ const tx=b.cx, ty=down?b.y:b.y+b.h;
+ // Candidate travel x: the natural shared column, nudged sideways if this edge shares a
+ // congested lane-pair corridor with sibling laterals (chOffset, from the channel assignment
+ // above) — 0 when there's no such conflict.
+ let travelX=sx+(chOffset||0);
+ // THIS CHECK MUST RUN REGARDLESS OF WHY travelX IS OFFSET FROM sx. A channel offset from
+ // congestion-separation is typically only ~6-13px — comfortably narrower than almost any
+ // node's own width — so if two lateral edges share a lane pair AND one of them targets a
+ // node further away than a sibling target sitting in between (e.g. esc1->a1 passing the
+ // height of a nearer esc1->qa1 in the very same lane), the small sideways nudge alone does
+ // NOT clear that sibling's box: the previous version only ran this obstacle check when
+ // chOffset was falsy, so a channel-separated edge could — and did — cut straight through an
+ // unrelated node's body it was never meant to touch, which is exactly as wrong as running
+ // through it at chOffset 0 would have been (worse, visually, now that edges paint on top of
+ // nodes: the line became a visible slash across the obstacle's box instead of just being
+ // hidden behind it). Obstacle clearance and channel separation are two independent reasons a
+ // lateral edge might need to move off the shared centre-line, and BOTH must be honoured on
+ // every edge, not one at the expense of the other.
+ let hit=obstacleOnColumn(sy,ty,travelX,a.id,b.id);
+ if(!hit){
+  if(!chOffset && Math.abs(sx-tx)<0.5){
+   return {d:`M${sx},${sy} L${tx},${ty}`, mid:[sx,(sy+ty)/2]};
+  }
+  const minX=LY.x0+10, maxX=LY.totalW-10;   // keep the run on-canvas and clear of the lane-label gutter
+  if(travelX<minX) travelX=minX; if(travelX>maxX) travelX=maxX;
+  // The channel-offset jog previously ended `L${travelX},${ty} L${tx},${ty}` — a FINAL
+  // segment that runs horizontally (only x changes, y stays at ty) whenever travelX != tx,
+  // which is exactly whenever a channel offset is actually doing anything. `marker-end`
+  // orients to the path's own final-segment direction, so that horizontal last leg pointed
+  // the arrowhead sideways instead of up/down into the target's top/bottom edge — wrong for
+  // an attachment that's still conceptually top/bottom (unlike the obstacle-detour case below,
+  // which deliberately switches to a horizontal, side-edge attachment where a horizontal
+  // arrow IS correct). The fix is a short vertical "lead-in" stub immediately before the
+  // target: do the horizontal correction back to tx one stub-length above/below ty instead of
+  // exactly at ty, so the path's actual final segment is a clean vertical run into the
+  // boundary, matching the top/bottom attachment the arrow is supposed to represent. Mirrored
+  // at the source end for the same reason (a short vertical lead-out before the horizontal
+  // jog, rather than jogging immediately along the source's own boundary line). The stub
+  // shrinks (never below a small minimum) for very short spans so it can't overshoot past the
+  // opposite endpoint.
+  const stub=Math.max(4, Math.min(16, Math.abs(ty-sy)/3));
+  const leadY = down ? sy+stub : sy-stub;
+  const arriveY = down ? ty-stub : ty+stub;
+  return {d:`M${sx},${sy} L${sx},${leadY} L${travelX},${leadY} L${travelX},${arriveY} L${tx},${arriveY} L${tx},${ty}`, mid:[travelX,(leadY+arriveY)/2]};
+ }
+ // A literal obstacle: switch to the side-approach style. Clear the obstacle on whichever
+ // side the channel offset (if any) was already biasing toward, so a group of sibling edges
+ // keeps spreading apart instead of being pulled back toward each other; otherwise prefer
+ // whichever side actually has room (clear of the lane-label gutter, on-canvas).
+ const preferLeft = chOffset ? chOffset<0 : (hit.x-OBSTACLE_CLEARANCE >= LY.x0+10);
+ travelX = preferLeft ? hit.x-OBSTACLE_CLEARANCE : hit.x+hit.w+OBSTACLE_CLEARANCE;
+ const ySpanLo=Math.min(a.y,b.y), ySpanHi=Math.max(a.y+a.h,b.y+b.h);
+ const hit2=obstacleOnColumn(ySpanLo,ySpanHi,travelX,a.id,b.id);   // clearing the first obstacle may reveal a second
+ if(hit2){ travelX = preferLeft ? hit2.x-OBSTACLE_CLEARANCE : hit2.x+hit2.w+OBSTACLE_CLEARANCE; }
+ // Clearing a NODE obstacle only solves half the collision problem: the detour's own vertical
+ // run could still land right alongside an unrelated FORWARD edge's bend column for their
+ // entire shared height — the two systems (this obstacle-avoidance branch, and the forward-
+ // edge corridor distribution above) are computed independently and have no way to know about
+ // each other otherwise. Check the shared registry and push further out if there's a genuine,
+ // sustained overlap (not just a brief crossing point, which is normal and fine).
+ const fHit=forwardCorridorHit(travelX,ySpanLo,ySpanHi);
+ if(fHit){
+  travelX = preferLeft ? fHit.x-OBSTACLE_CLEARANCE : fHit.x+OBSTACLE_CLEARANCE;
+  const hit3=obstacleOnColumn(ySpanLo,ySpanHi,travelX,a.id,b.id);   // that push may have landed back on a node
+  if(hit3){ travelX = preferLeft ? hit3.x-OBSTACLE_CLEARANCE : hit3.x+hit3.w+OBSTACLE_CLEARANCE; }
+ }
+ const minX=LY.x0+10, maxX=LY.totalW-10;
+ if(travelX<minX) travelX=minX; if(travelX>maxX) travelX=maxX;
+ const srcEdgeX = sideX(a,a.cy,preferLeft?'left':'right');   // source's LEFT or RIGHT edge, not top/bottom, for this case
+ const tgtEdgeX = sideX(b,b.cy,preferLeft?'left':'right');   // target's LEFT or RIGHT edge, likewise
+ const midY=(a.cy+b.cy)/2;
+ return {d:`M${srcEdgeX},${a.cy} L${travelX},${a.cy} L${travelX},${b.cy} L${tgtEdgeX},${b.cy}`, mid:[travelX,midY]};
+}
+function edgePath(a,b,track,fwdMx,latOffset,branchOffset,convergeOffset){
+ if(isSteepForward(a,b)){ // forward, but a lane-jump so large the usual right-exit would
+  // cram it into one phase-column's width — see isSteepForward() for the full rationale.
+  const down=b.cy>a.cy;
+  const sx=a.cx, sy=down?a.y+a.h:a.y, ty=b.cy+(convergeOffset||0), tx=sideX(b,ty,'left');
+  const colHit=obstacleOnColumn(sy,ty,sx,a.id,b.id);
+  if(!colHit){
+   // The straight vertical run is clear, but the final horizontal jog INTO the target (at
+   // y=ty) is a separate segment that can still cross a third node sharing the target's row
+   // — obstacleOnColumn only ever checked the vertical run, never this segment. Detour it
+   // vertically exactly the way the ordinary forward-edge branch below handles its own row
+   // obstacle, rather than leaving it unchecked.
+   const rowHit=obstacleOnRow(sx,tx,ty,a.id,b.id);
+   if(!rowHit){
+    return {d:`M${sx},${sy} L${sx},${ty} L${tx},${ty}`, mid:[sx,(sy+ty)/2]};
+   }
+   const clearY=down?rowHit.y-OBSTACLE_CLEARANCE:rowHit.y+rowHit.h+OBSTACLE_CLEARANCE;
+   // The jog lands via a VERTICAL final segment — enter via the target's top/bottom edge
+   // (whichever the approach is actually coming from), not its left edge, or the arrowhead's
+   // vertical orientation won't match the vertical boundary it's supposed to align with.
+   const {ex,ey}=verticalEntry(b,clearY);
+   return {d:`M${sx},${sy} L${sx},${clearY} L${ex},${clearY} L${ex},${ey}`, mid:[(sx+ex)/2,clearY]};
+  }
+  // A third node sits in the straight vertical run — detour around it the same way
+  // lateralEdgePath()'s own obstacle branch does: sidestep IMMEDIATELY, at the source's own
+  // exit row (sy), before any vertical travel happens — not partway down. Travelling down at
+  // the original sx first and only sidestepping once reaching some midpoint (an earlier
+  // version of this branch did exactly that) still cuts straight through the very obstacle
+  // it's meant to avoid whenever that obstacle sits early in the vertical run, since the
+  // "safe" travelX was never actually reached until after passing the danger zone.
+  const preferLeft = colHit.x-OBSTACLE_CLEARANCE >= LY.x0+10;
+  let travelX = preferLeft ? colHit.x-OBSTACLE_CLEARANCE : colHit.x+colHit.w+OBSTACLE_CLEARANCE;
+  const minX=LY.x0+10, maxX=LY.totalW-10;
+  if(travelX<minX) travelX=minX; if(travelX>maxX) travelX=maxX;
+  // Re-check the FULL vertical span at travelX too (mirroring lateralEdgePath's own hit2
+  // re-check) in case sidestepping landed on a second, different obstacle.
+  const colHit2=obstacleOnColumn(sy,ty,travelX,a.id,b.id);
+  if(colHit2){ travelX = preferLeft ? colHit2.x-OBSTACLE_CLEARANCE : colHit2.x+colHit2.w+OBSTACLE_CLEARANCE; }
+  // sx sits at the source's own TOP/BOTTOM-CENTRE, not a corner — so the sidestep segment
+  // that immediately follows (at y=sy, travelling toward travelX) is, for however much of its
+  // length still lies between sx and the node's near vertical edge, running exactly along the
+  // node's own boundary line rather than past it, which reads as the connector overlapping the
+  // node it just left. A short vertical lead-out (mirroring the stub in lateralEdgePath's own
+  // channel-jog case above) clears the box's silhouette first, so the horizontal sidestep runs
+  // entirely off the node instead of tracing its edge.
+  const stub=Math.max(4, Math.min(16, Math.abs(ty-sy)/6));
+  const leadY = down ? sy+stub : sy-stub;
+  // Same final-segment gap applies to this route's own last jog (travelX -> tx) into the target.
+  const rowHit2=obstacleOnRow(travelX,tx,ty,a.id,b.id);
+  if(!rowHit2){
+   return {d:`M${sx},${sy} L${sx},${leadY} L${travelX},${leadY} L${travelX},${ty} L${tx},${ty}`, mid:[travelX,(sy+ty)/2]};
+  }
+  const clearY2=down?rowHit2.y-OBSTACLE_CLEARANCE:rowHit2.y+rowHit2.h+OBSTACLE_CLEARANCE;
+  // Same top/bottom-entry correction as above — this jog's final segment is vertical too.
+  const {ex:ex2,ey:ey2}=verticalEntry(b,clearY2);
+  return {d:`M${sx},${sy} L${sx},${leadY} L${travelX},${leadY} L${travelX},${clearY2} L${ex2},${clearY2} L${ex2},${ey2}`, mid:[travelX,clearY2]};
+ } else if(isForward(a,b)){ // forward
+  // branchOffset (only ever set for a decision with 2+ outgoing branches — see the
+  // decisionBranchOffset pre-pass above) shifts this edge's exit row a few px off the
+  // source's true cy, so sibling branches leave the SAME vertex at visibly different
+  // heights instead of all overlapping until something else makes them diverge. For a
+  // diamond specifically this means the line's drawn start doesn't sit exactly on the
+  // single geometric vertex any more (there's no OTHER point on a diamond's own boundary at
+  // a different height to exit from) — a small, deliberate trade-off: a few px of visual
+  // gap between line and vertex reads far better than two branches that are indistinguishable
+  // in direction until the reader traces them all the way to their targets.
+  const sy=a.cy+(branchOffset||0), sx=sideX(a,sy,'right'), ty=b.cy+(convergeOffset||0), tx=sideX(b,ty,'left');
+  // Use this edge's pre-computed, evenly-distributed lane position when it shares a corridor
+  // with at least one other edge (fwdMx is only set for those — see the corridor-distribution
+  // block above); otherwise fall back to the natural midpoint for a lone, unshared edge. Then
+  // clamp so it always stays a safe distance inside THIS edge's own node-facing edges — node
+  // widths vary by type (a decision diamond vs. an agent rounded-rect), so the safe range
+  // differs per edge even within one group, and the shared corridor computed above already
+  // accounts for this across the group, but an individual clamp is kept as a final guard.
+  let mx=(fwdMx!=null) ? fwdMx : (sx+tx)/2;
+  const minX=sx+10, maxX=tx-10;
+  if(maxX>minX){ if(mx<minX) mx=minX; if(mx>maxX) mx=maxX; }
+  if(sy===ty){
+   // Dead-straight, same-row edge — every obstacle check below lives inside the sy!==ty
+   // branch (they all reason about which SIDE of a bend to detour toward), so a straight
+   // single-segment edge skipped obstacle checking ENTIRELY: there's no bend to speak of,
+   // but a third node can still sit directly on the line between source and target on that
+   // same row. Checked here as its own case, across the edge's full span (not just the
+   // bend-adjacent portion sy!==ty's checks use), since the whole path is just one segment.
+   const hit=obstacleOnRow(sx,tx,sy,a.id,b.id);
+   if(!hit){
+    return {d:`M${sx},${sy} L${tx},${ty}`, mid:[(sx+tx)/2,sy]};
+   }
+   // No natural "which way" bias exists when sy===ty (unlike the bend cases, which already
+   // know which side they're heading toward) — prefer jogging above the obstacle, falling
+   // back to below only if that would go above the canvas's own top edge.
+   const dir = (hit.y-OBSTACLE_CLEARANCE>=LY.topbar) ? -1 : 1;
+   const clearY = widenRowClear(dir<0?hit.y-OBSTACLE_CLEARANCE:hit.y+hit.h+OBSTACLE_CLEARANCE, dir, sx, tx, a.id, b.id);
+   // Vertical final approach — enter via top/bottom, not left, so the arrowhead's direction
+   // actually matches the boundary it lands on (see verticalEntry() above).
+   const {ex,ey}=verticalEntry(b,clearY);
+   return {d:`M${sx},${sy} L${sx},${clearY} L${ex},${clearY} L${ex},${ey}`, mid:[(sx+ex)/2,clearY]};
+  }
+  // sy!==ty from here on — the sy===ty case above always returns.
+  {
+   const hit=obstacleOnRow(sx,mx,sy,a.id,b.id);
+   if(hit){
+    const dir = ty<sy ? -1 : 1;   // clearance, on the side already heading toward ty
+    // The jog that clears THIS obstacle is new canvas territory of its own — the segment
+    // it just carved (sx,clearY -> mx,clearY) was never itself checked, so widen further in
+    // the same direction until that row is genuinely clear too, not just the one obstacle
+    // that triggered this branch.
+    const clearY = widenRowClear(dir<0?hit.y-OBSTACLE_CLEARANCE:hit.y+hit.h+OBSTACLE_CLEARANCE, dir, sx, mx, a.id, b.id);
+    // The bend column itself (mx) is a SEPARATE problem: it's very often positioned right on
+    // top of the very obstacle that triggered this branch (an edge whose source and target
+    // straddle an intervening node naturally bends near that node's own x-position) — so the
+    // vertical return-to-ty segment and the final horizontal-into-target segment, both of
+    // which pass back through ty (inside the obstacle's original y-range), would cut straight
+    // through it again regardless of how far clearY moved. Push the bend column itself past
+    // the obstacle's far edge — specifically the edge closer to the target, since the final
+    // segment travels FROM the bend column TO the target and must not re-cross the obstacle
+    // on that leg — not just jog the row above/below it.
+    let mx2 = (tx>=sx) ? Math.max(mx,hit.x+hit.w+OBSTACLE_CLEARANCE) : Math.min(mx,hit.x-OBSTACLE_CLEARANCE);
+    mx2 = Math.max(Math.min(sx,tx)+10, Math.min(Math.max(sx,tx)-10, mx2));
+    return {d:`M${sx},${sy} L${sx},${clearY} L${mx2},${clearY} L${mx2},${ty} L${tx},${ty}`, mid:[mx2,(clearY+ty)/2]};
+   }
+   // The FIRST segment (at the source's own row, sy) is clear, checked above — but the LAST
+   // segment (at the target's row, ty, from mx to tx) is a separate stretch of canvas that was
+   // never checked at all: a third node sharing the target's row, sitting between the bend
+   // column and the target itself, could still sit directly in this final jog's path.
+   const rowHit=obstacleOnRow(mx,tx,ty,a.id,b.id);
+   if(rowHit){
+    const dir = sy<ty ? -1 : 1;
+    const clearY = widenRowClear(dir<0?rowHit.y-OBSTACLE_CLEARANCE:rowHit.y+rowHit.h+OBSTACLE_CLEARANCE, dir, mx, tx, a.id, b.id);
+    // Same top/bottom-entry correction — this jog's final segment is vertical too.
+    const {ex,ey}=verticalEntry(b,clearY);
+    return {d:`M${sx},${sy} L${mx},${sy} L${mx},${clearY} L${ex},${clearY} L${ex},${ey}`, mid:[(mx+ex)/2,clearY]};
+   }
+  }
+  return {d:`M${sx},${sy} L${mx},${sy} L${mx},${ty} L${tx},${ty}`, mid:[mx,(sy+ty)/2]};
+ } else if(isLateral(a,b)){ // same phase, different lane -> direct vertical connector, not the backward bus
+  return lateralEdgePath(a,b,latOffset);
+ } else { // backward / genuine loop-back -> route through bottom channel
+  const sx=a.cx, sy=a.y+a.h, tx=b.cx, ty=b.y+b.h;
+  const ch=LY.totalH-70-(track||0)*BACK_TRACK_GAP;   // loop-back bus sits in the reserved band, clear of the bottom edge (widened from 52 — see the growth-check comment above)
+  return {d:`M${sx},${sy} L${sx},${ch} L${tx},${ch} L${tx},${ty}`, mid:[(sx+tx)/2,ch]};
+ }
+}
+// Label collision avoidance: a connector's label sits at roughly the midpoint of ONE
+// segment of a possibly multi-segment, obstacle-detoured path — the existing obstacle
+// avoidance (obstacleOnRow/obstacleOnColumn, above) keeps the LINE itself clear of nodes
+// it isn't connected to, but never checked whether the LABEL TEXT at that midpoint also
+// lands clear of some unrelated node's box. It usually does, but not always — a lateral or
+// backward/loop-back edge's midpoint can coincide with another node's body (its own
+// endpoint's box included), especially in a dense multi-lane diagram, producing a label
+// visually stamped on top of a node instead of floating in clear space beside the line.
+// This is a straightforward last-mile fix: measure the label, and if it collides with ANY
+// node's box (not just unrelated ones — a label sitting on its own endpoint's text is just
+// as broken to read as one sitting on an unrelated node's), try progressively larger
+// vertical nudges, alternating above/below the original position, until one clears every
+// node or the attempt budget runs out (falls back to the largest nudge tried — always some
+// improvement over the untried original, never worse).
+const _elblCtx=document.createElement('canvas').getContext('2d');
+// Local font string, not a reference to the ELABELFONT declared in the column-shift
+// pre-pass above — that const is block-scoped to its own `{...}` and is genuinely out of
+// reach here (referencing it directly throws ReferenceError and, since that would happen
+// before this file's node/edge rendering ever runs, silently blanks the ENTIRE diagram —
+// not just labels). Keep this string's weight in sync with .elabel's font-weight by hand.
+_elblCtx.font='italic 700 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';
+function labelClearsAllNodes(cx,cy,halfW,halfH){
+ for(const n of NODES){
+  const nx1=n.x-2, nx2=n.x+n.w+2, ny1=n.y-2, ny2=n.y+n.h+2;   // small padding so a label can't even graze an edge
+  if(cx-halfW<nx2 && nx1<cx+halfW && cy-halfH<ny2 && ny1<cy+halfH) return false;
+ }
+ return true;
+}
+// Two decision branches leaving the same vertex (or any pair of edges whose midpoints happen
+// to land close together) can each independently nudge clear of every NODE and still stack
+// their label TEXT on top of each other — labelClearsAllNodes above only ever checked labels
+// against node boxes, never against labels placed earlier in this same pass, so two captions
+// like "Pending bill" / "Clear" a few px apart in y rendered as illegible overlapping text.
+// Every successfully-placed label's box is remembered here and checked like any other obstacle.
+const placedLabelBoxes=[];
+function labelClearsPlacedLabels(cx,cy,halfW,halfH){
+ for(const b of placedLabelBoxes){
+  if(cx-halfW<b.x2 && b.x1<cx+halfW && cy-halfH<b.y2 && b.y1<cy+halfH) return false;
+ }
+ return true;
+}
+// Exact min distance from an axis-aligned rect to an axis-aligned segment — every segment in
+// this engine's routing is strictly horizontal or vertical (orthogonal-only, see edgePath()),
+// so this is cheap and precise rather than an approximation: the gap on each axis is 0 whenever
+// the rect's span already overlaps the segment's span on that axis, and the two independent
+// per-axis gaps combine via Pythagoras into the true closest distance either way.
+function rectSegDist(x1,y1,x2,y2,sx1,sy1,sx2,sy2){
+ if(sy1===sy2){   // horizontal segment
+  const lo=Math.min(sx1,sx2), hi=Math.max(sx1,sx2), y0=sy1;
+  const dx = hi<x1 ? x1-hi : lo>x2 ? lo-x2 : 0;
+  const dy = y0<y1 ? y1-y0 : y0>y2 ? y0-y2 : 0;
+  return Math.hypot(dx,dy);
+ }
+ const lo=Math.min(sy1,sy2), hi=Math.max(sy1,sy2), x0=sx1;   // vertical segment
+ const dy = hi<y1 ? y1-hi : lo>y2 ? lo-y2 : 0;
+ const dx = x0<x1 ? x1-x0 : x0>x2 ? x0-x2 : 0;
+ return Math.hypot(dx,dy);
+}
+// A label's own node/label checks (above) say nothing about UNRELATED connector lines: a caption
+// nudged clear of every node and every other label can still end up sitting on, or a few px from,
+// some other edge's path that happens to pass nearby (two independent branches converging through
+// the same stretch of canvas, or a long forward edge's bend column running past a decision's
+// caption). Every rendered edge's `d` is checked here except the label's OWN edge — a caption is
+// SUPPOSED to sit close to the line it captions (that relationship is the whole point, tuned via
+// the -13 starting offset above), so excluding it isn't a loophole, it's the correct baseline.
+const LABEL_EDGE_CLEARANCE=10;
+const edgeDList=[];   // {i, d} for every rendered edge — populated before any label is placed
+function labelClearsAllEdges(cx,cy,halfW,halfH,ownIdx){
+ const x1=cx-halfW, x2=cx+halfW, y1=cy-halfH, y2=cy+halfH;
+ for(const {i,d} of edgeDList){
+  if(i===ownIdx) continue;
+  const nums=d.match(/-?\d+\.?\d*/g).map(Number);
+  for(let k=0;k+3<nums.length;k+=2){
+   if(rectSegDist(x1,y1,x2,y2,nums[k],nums[k+1],nums[k+2],nums[k+3]) < LABEL_EDGE_CLEARANCE) return false;
+  }
+ }
+ return true;
+}
+function placeEdgeLabel(text,baseX,baseY,ownIdx){
+ const m=_elblCtx.measureText(text);
+ const halfW=m.width/2+4;
+ // A flat "half the 14px line height" guess (=9) undershoots this font's real glyph extent —
+ // bold italic text's ascent measures closer to 11-12px above the baseline for this size, so a
+ // symmetric ±9 box let the collision checks below believe a label had cleared an obstacle by a
+ // couple of px when the actually-rendered glyph still touched it (measured via a real browser
+ // getBBox(), not this same estimate, so the mismatch wasn't self-consistent). Use the canvas's
+ // own measured ascent/descent when available — taking the larger of the two and applying it
+ // symmetrically errs toward reserving slightly MORE space than needed, never less.
+ const halfH=(m.actualBoundingBoxAscent!=null && m.actualBoundingBoxDescent!=null)
+  ? Math.max(m.actualBoundingBoxAscent,m.actualBoundingBoxDescent)+1
+  : 11;
+ const NUDGE=16;
+ let best=baseY;
+ for(let step=0;step<=8;step++){
+  const dy = step===0?0:(step%2?1:-1)*Math.ceil(step/2)*NUDGE;   // 0, -16, +16, -32, +32, -48, +48, -64, +64
+  const y=baseY+dy;
+  best=y;
+  if(labelClearsAllNodes(baseX,y,halfW,halfH) && labelClearsPlacedLabels(baseX,y,halfW,halfH) && labelClearsAllEdges(baseX,y,halfW,halfH,ownIdx)){
+   placedLabelBoxes.push({x1:baseX-halfW,x2:baseX+halfW,y1:y-halfH,y2:y+halfH});
+   return y;
+  }
+ }
+ placedLabelBoxes.push({x1:baseX-halfW,x2:baseX+halfW,y1:best-halfH,y2:best+halfH});
+ return best;   // exhausted the budget — largest nudge tried is still strictly better than the untried original
+}
+// Two passes, not one: labelClearsAllEdges() (below) needs every edge's own `d` path to check
+// a label against — including edges that come LATER in FLOWS order. Placing labels inside the
+// same pass that draws the paths could only ever see edges drawn so far, so a label placed early
+// could still end up sitting on top of a not-yet-drawn edge from later in the array.
+const edgeMidByFlow={};
+FLOWS.forEach((f,i)=>{
+ const a=NID[f.from], b=NID[f.to]; if(!a||!b)return;
+ const lc=latChannelCount[i]||1, lch=latChannel[i]||0;
+ const latOffset = lc>1 ? (lch-(lc-1)/2)*LAT_CHANNEL_GAP : 0;
+ const {d,mid}=edgePath(a,b,trackOf[i],fwdChannelMx[i],latOffset,decisionBranchOffset[i]||0,targetConvergeOffset[i]||0);
+ const mk = f.kind==='data'?'ar-data':f.kind==='cond'?'ar-cond':f.kind==='esc'?'ar-esc':f.kind==='err'?'ar-err':'ar';
+ const p=el('path',{d,class:'edge '+f.kind,'marker-end':`url(#${mk})`});
+ p.dataset.from=f.from; p.dataset.to=f.to; p.dataset.kind=f.kind; p.dataset.marker=mk; p.dataset.flowIdx=i;   // remembered so
+   // highlight()/clearHL() can swap marker-end to/from ar-hl and always restore the exact
+   // original marker this specific edge's kind uses — never a guess re-derived from f.kind at
+   // toggle time, which would be one more place the two could drift out of sync. flowIdx is
+   // used by the Happy Flow toggle below to correlate this exact path (and, separately, its
+   // label if it has one) back to its own FLOWS[] entry, rather than re-matching on
+   // from/to/kind — which could be ambiguous if two edges ever shared the same endpoints.
+ edgeLayer.appendChild(p); edgeEls.push(p);
+ edgeDList.push({i,d});
+ edgeMidByFlow[i]=mid;
+});
+FLOWS.forEach((f,i)=>{
+ if(!f.label) return;
+ const mid=edgeMidByFlow[i]; if(!mid) return;
+ // Offset raised from -3 to -13 (10px more clearance above the connector line) — at -3 the
+ // label's own baseline sat close enough to the line that a bold label (see the .elabel
+ // font-weight change above) visually touched or crossed it instead of reading as a caption
+ // floating just above it. That's the STARTING point placeEdgeLabel() nudges from if this
+ // position turns out to collide with some node's box, another label, or an UNRELATED edge's
+ // own line (see above).
+ const ly=placeEdgeLabel(f.label,mid[0],mid[1]-13,i);
+ const t=el('text',{x:mid[0],y:ly,'text-anchor':'middle',class:'elabel'}); t.textContent=f.label; t.dataset.kind=f.kind; t.dataset.flowIdx=i; labelLayer.appendChild(t);
+});
+
+// ---- nodes
+const nodeLayer=el('g'); vp.appendChild(nodeLayer);
+// Pixel-measured wrap (reuses the phase-header canvas context declared above), not the old
+// character-count heuristic — a fixed "16 chars" or "28 chars" threshold has no relationship
+// to how wide those characters actually render, so it silently overflowed with some labels
+// and wasted space with others depending on letter width and font weight. This also NEVER
+// silently drops a line the way the old `.slice(0,3)` did: once maxLines is reached, every
+// remaining word is folded into the final line and ellipsis-truncated so cut content is
+// always visible to the reader instead of vanishing. Two-pass approach (wrap everything
+// first, THEN fold any overflow into the last allowed line) rather than tracking overflow
+// inline during the wrap itself — an earlier single-pass version had a real bug here: when
+// content needed more lines than `maxLines` allowed, it could overwrite an already-correctly-
+// wrapped final line with ONLY the not-yet-placed leftover word(s), silently discarding that
+// line's real content instead of folding the leftover INTO it (e.g. "Digital Channel /
+// Self-Service Portal" wrapped to 2 lines produced "Digital Channel /" + "Portal", quietly
+// losing "Self-Service" entirely — not truncated-with-ellipsis, just gone). The two-pass
+// version can't make that mistake: every word is placed into `allLines` first with no line
+// count limit, and only THEN, if there are more lines than allowed, are the excess lines'
+// words joined back together and ellipsis-truncated as one unit appended to the last kept
+// line — nothing is ever computed from a word in isolation from the line it actually
+// belonged to.
+function wrapTextPx(ctx,font,txt,maxW,maxLines){
+ ctx.font=font;
+ if(ctx.measureText(txt).width<=maxW) return [txt];
+ const words=txt.split(' '); const allLines=[]; let cur='';
+ for(const w of words){
+  const test=cur?cur+' '+w:w;
+  if(!cur||ctx.measureText(test).width<=maxW){ cur=test; }
+  else { allLines.push(cur); cur=w; }
+ }
+ if(cur) allLines.push(cur);
+ if(allLines.length<=maxLines) return allLines;
+ const kept=allLines.slice(0,maxLines-1);
+ let remainder=allLines.slice(maxLines-1).join(' ');
+ while(remainder.length>1&&ctx.measureText(remainder+'…').width>maxW) remainder=remainder.slice(0,-1);
+ kept.push(remainder.replace(/\s+$/,'')+'…');
+ return kept;
+}
+function truncatePx(ctx,font,txt,maxW){
+ ctx.font=font;
+ if(ctx.measureText(txt).width<=maxW) return txt;
+ let t=txt; while(t.length>1&&ctx.measureText(t+'…').width>maxW) t=t.slice(0,-1);
+ return t.replace(/\s+$/,'')+'…';
+}
+const LBLFONT='600 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';   // kept in sync with .node .lbl's 14px minimum
+// SUBFONT (the node sub-code/reference-code measurement font) has been removed entirely
+// along with the sub-code rendering it measured for — see the NODES.forEach loop below.
+NODES.forEach(n=>{
+ const g=el('g',{class:'node'}); g.dataset.id=n.id;
+ const st=STROKE[n.type]||'#3860be', fl=FILL[n.type]||'#fff';
+ let shape;
+ if(n.type==='start'||n.type==='end'){shape=el('circle',{cx:n.cx,cy:n.cy,r:n.w/2,class:'box',fill:fl,stroke:st});}
+ else if(n.type==='decision'){const p=[[n.cx,n.y],[n.x+n.w,n.cy],[n.cx,n.y+n.h],[n.x,n.cy]].map(q=>q.join(',')).join(' ');shape=el('polygon',{points:p,class:'box',fill:fl,stroke:st});}
+ else if(n.type==='validation'){const c=14;const p=[[n.x+c,n.y],[n.x+n.w-c,n.y],[n.x+n.w,n.cy],[n.x+n.w-c,n.y+n.h],[n.x+c,n.y+n.h],[n.x,n.cy]].map(q=>q.join(',')).join(' ');shape=el('polygon',{points:p,class:'box',fill:fl,stroke:st});}
+ else if(n.type==='external'){const s=13;const p=[[n.x+s,n.y],[n.x+n.w,n.y],[n.x+n.w-s,n.y+n.h],[n.x,n.y+n.h]].map(q=>q.join(',')).join(' ');shape=el('polygon',{points:p,class:'box',fill:fl,stroke:st});}
+ else if(n.type==='system'){shape=el('rect',{x:n.x,y:n.y,width:n.w,height:n.h,rx:2,class:'box',fill:fl,stroke:st,'stroke-dasharray':n.type==='system'?'':''});}
+ else {const dash=(n.type==='error'||n.type==='escalation')?'':''; shape=el('rect',{x:n.x,y:n.y,width:n.w,height:n.h,rx:6,class:'box',fill:fl,stroke:st,'stroke-width':(n.type==='error'||n.type==='escalation')?2.2:1.5});}
+ g.appendChild(shape);
+ if(n.type==='system'){g.appendChild(el('line',{x1:n.x,y1:n.y+9,x2:n.x+n.w,y2:n.y+9,stroke:st,'stroke-width':1}));}
+ // label — effective text width accounts for each shape's actual usable area at
+ // vertical-centre (a diamond is narrowest there relative to its bounding box; a
+ // hexagon/parallelogram are close to full width at centre, so only get a small inset)
+ const isCircle=(n.type==='start'||n.type==='end');
+ const effW=isCircle?n.w*0.72:n.type==='decision'?n.w*0.62:n.w-18;
+ // maxLines used to be 2 for circles specifically, which forced any 3-word label (e.g.
+ // "Eligibility Failure Message") through wrapTextPx()'s own overflow fallback — merging the
+ // excess words onto the last allowed line and ellipsis-truncating it — even though
+ // compute_layout() had already grown the circle's diameter to fit the content. That was a
+ // maxLines ceiling problem, not a size problem, so it was raised to 3 to match rects. But a
+ // circle's usable chord (effW = n.w*0.72) is still narrower PER LINE than a rect's
+ // (n.w-18) at a comparable diameter, so an equally-long label needs MORE lines in a circle
+ // than in a rect — 3 wasn't always enough either (e.g. "End of Order Capture Journey" still
+ // needed 4). Circles get 4 now; rects/decisions stay at 3, where their extra per-line width
+ // budget already covers realistic labels. See build_model.py's _circle_label_fits() — it
+ // must use this SAME max_lines=4 for circles or the two can disagree about what "fits"
+ // means (the whole reason compute_layout() decided to grow a circle to MULTILINE_H in the
+ // first place is to satisfy exactly this cap).
+ const maxLines=isCircle?4:3;
+ const lines=wrapTextPx(_measCtx,LBLFONT,n.label,effW,maxLines);
+ // The sub-code (n.sub — the node's reference/requirement code, e.g. "FAR_001_ECC_02 /
+ // BR-030") is no longer rendered on canvas at all, per an explicit "reference code should
+ // no longer be displayed on any node" requirement. There is no sub-related rendering left
+ // in this function at all now — n.sub itself is untouched in the data (still readable by
+ // anything else that wants it, e.g. build_model.py, or a future consumer), just never read
+ // here. Label centring is on n.cy alone: (lines.length-1)*10 is exactly half the label
+ // block's own line-to-line span, same "half of whatever the per-line increment is" logic
+ // multi-line label centring has always used, independent of sub-code entirely now.
+ //
+ // 'dominant-baseline':'middle' (matching the same convention .phasehdr and the lane-gutter
+ // text already use elsewhere in this file) is REQUIRED here, not optional polish: without
+ // it, SVG positions text by its BASELINE, not its visual centre — a font's ascent (space
+ // above the baseline) is larger than its descent (space below), so a baseline sitting
+ // exactly on n.cy still reads as visibly shifted upward from true centre, by roughly
+ // (ascent-descent)/2. This was never fixed before because a second line (the sub-code) sat
+ // below the label, and the two-line block's overall position partially masked the offset;
+ // now that a single-line label can be the ONLY content in the box (sub-code removed — see
+ // above), the offset became directly visible on every single-line node instead of being
+ // absorbed into a busier block. dominant-baseline:middle makes each text element's `y`
+ // mean its true vertical centre instead of its baseline, which is what the startY maths
+ // here already assumes every one of these y values IS.
+ const startY = n.cy - (lines.length-1)*10;
+ lines.forEach((ln,i)=>{const t=el('text',{x:n.cx,y:startY+i*20,'text-anchor':'middle','dominant-baseline':'middle',class:'lbl'});
+   // Circle labels must be set via .style, not .setAttribute('font-size', ...): an SVG
+   // presentation ATTRIBUTE has lower CSS specificity than the .node .lbl{font-size:14px}
+   // class rule, so setAttribute here was silently overridden by that rule the whole
+   // time — every circle's label has actually always rendered at 14px, never the intended
+   // 10.5px, which (now that a circle can hold up to 3 lines instead of 2 — see maxLines
+   // above) packs 3 lines of 14px text into 20px-apart slots tightly enough to visibly
+   // overlap. An inline style property, unlike a bare attribute, DOES win over a class
+   // rule, which is what actually shrinks the font and restores real breathing room
+   // between lines.
+   if(isCircle)t.style.fontSize='10.5px';
+   t.textContent=ln; g.appendChild(t);});
+ nodeLayer.appendChild(g);
+ g.addEventListener('mouseenter',()=>highlight(n.id));
+ g.addEventListener('mouseleave',()=>clearHL());
+ g.addEventListener('click',(e)=>{e.stopPropagation();openDrawer(n);});
+});
+// ---- z-order fix: connectors + arrowheads must paint ON TOP of node shapes, not under them.
+// nodeLayer/edgeLayer/labelLayer were all built in this textual order for a practical reason
+// (edge geometry needs finished node coordinates, so edges are computed first; nodes are then
+// drawn using those same coordinates) — but DOM/paint order in SVG is z-order, and `edgeLayer`
+// had been appendChild'd to `vp` BEFORE `nodeLayer` simply because it was created first. That
+// put every node's opaque fill/stroke ON TOP of every connector and arrowhead, so anywhere an
+// edge's endpoint (or an arrowhead marker, which is painted as part of the path at that exact
+// vertex) coincided with a node's own boundary — which is everywhere every arrow terminates,
+// by design — the node's boundary stroke (itself painted centred on that same coordinate, so
+// it bleeds ~0.75-1.1px outward past the mathematical edge) covered the finest, sharpest part
+// of the arrowhead tip. That's a small numeric overlap, but arrowhead tips are exactly the
+// thin, pointed geometry most visually destroyed by a small covering: the result reads as
+// "arrowhead clipped / half-buried under the activity box / connector penetrating the border",
+// which is a genuine defect regardless of how small the underlying overlap is.
+// This one line reorders the SVG child list (moving the already-built, already-populated
+// nodeLayer to sit immediately BEFORE edgeLayer) without touching the build/compute order
+// above — node geometry is still computed first, only the PAINT order changes. Connectors and
+// their arrowheads now render on top of every node they touch, so an arrow always terminates
+// as a clean, fully visible point right at the boundary it's drawn to reach. The existing
+// obstacle-detour logic (obstacleOnRow/obstacleOnColumn, see the "edges" section above) is
+// UNCHANGED and still required — it exists to stop a connector from visually crossing through
+// an UNRELATED third node's body (which would look like a spurious connection even though
+// that edge would now render on top of it), not to solve the endpoint-clipping problem this
+// fixes.
+vp.insertBefore(nodeLayer, edgeLayer);
+vp.appendChild(labelLayer);   // keep edge labels above both nodes and edges so they are never hidden
+
+// ---- highlight
+function neighbors(id){const s=new Set([id]);FLOWS.forEach(f=>{if(f.from===id)s.add(f.to);if(f.to===id)s.add(f.from);});return s;}
+function highlight(id){
+ const ns=neighbors(id);
+ nodeLayer.querySelectorAll('.node').forEach(g=>{g.classList.toggle('dim',!ns.has(g.dataset.id));});
+ edgeEls.forEach(p=>{const on=(p.dataset.from===id||p.dataset.to===id);
+   p.classList.toggle('dim',!on); p.classList.toggle('hlpath',on);
+   // The .hlpath CSS class overrides this path's own STROKE colour via `!important` — but an
+   // SVG marker's fill is fixed at marker-definition time and is completely outside the reach
+   // of any CSS class on the element that references it via marker-end. Without this, a
+   // highlighted connector's line turns brand-red while its arrowhead stays whatever colour
+   // that edge kind's marker was originally defined with — one connector, two colours along
+   // its own route. Swapping marker-end itself (not just toggling a class) is what keeps them
+   // in sync; p.dataset.marker (set once at path creation, never re-derived) is what makes
+   // "restore" exact rather than an approximation.
+   p.setAttribute('marker-end', on ? 'url(#ar-hl)' : `url(#${p.dataset.marker})`);});
+ if(selectedId){const sg=nodeG(selectedId); if(sg)sg.classList.remove('dim');}   // selection is never dimmed by hover
+}
+function clearHL(){nodeLayer.querySelectorAll('.node').forEach(g=>g.classList.remove('dim'));
+ edgeEls.forEach(p=>{p.classList.remove('dim','hlpath'); p.setAttribute('marker-end', `url(#${p.dataset.marker})`);});}
+
+// ---- persistent selection (one node at a time; survives hover / pan / zoom)
+let selectedId=null;
+function nodeG(id){return nodeLayer.querySelector('.node[data-id="'+(window.CSS&&CSS.escape?CSS.escape(id):id)+'"]');}
+function setSelected(id){ if(selectedId===id){return;} if(selectedId){const p=nodeG(selectedId); if(p)p.classList.remove('selected');}
+ selectedId=id; const g=nodeG(id); if(g)g.classList.add('selected'); }
+function clearSelected(){ if(selectedId){const g=nodeG(selectedId); if(g)g.classList.remove('selected');} selectedId=null; }
+
+// The Flows filter (Sequence/Data/Conditional/Escalation/Error toggle buttons, and the
+// "Flows:" label chip) has been removed entirely — every connector kind is now always
+// visible, unconditionally, with no way to hide any of them. `highlight()` used to also check
+// `edgeVisible(kind)` before considering an edge "on" for hover-isolation purposes; that check
+// is gone too, since there's no longer a filter state for it to consult.
+// The "View Labels" toggle has also been removed — connector labels are now always visible by
+// default (labelLayer text elements are created without a `display:none` starting state — see
+// the FLOWS.forEach loop above), with no button or state to turn them off. The `.toolbar` row
+// that used to hold this button (and, before that, the Flows filter) has been removed from the
+// HTML entirely, since it would otherwise be empty.
+
+// ---- Happy Flow / All Flows toggle
+// A flow edge belongs to the happy path if `f.happy` is explicitly `true`, is excluded if
+// explicitly `false`, and otherwise defaults by `kind`: `seq`/`data` (ordinary forward
+// progression) default to happy; `esc`/`err` (escalation/error paths, by definition
+// exception handling) default to NOT happy; `cond` (a decision's branch) defaults to NOT
+// happy and must be explicitly marked `happy:true` on whichever branch is the success path —
+// unlike seq/data/esc/err, a decision's branches are inherently ambiguous from `kind` alone
+// (which branch is "the happy one" is a business-logic fact the data has to state, not
+// something the engine can infer), so `cond` is the one kind with no permissive default.
+// This mirrors the same "engine renders what the data says, never infers business meaning it
+// wasn't told" principle used throughout this skill (see e.g. `n.lane`/`n.agents` — the
+// engine never guesses domain facts on the model's behalf).
+function isHappyFlow(f){
+ if(f.happy===true) return true;
+ if(f.happy===false) return false;
+ if(f.kind==='esc'||f.kind==='err'||f.kind==='cond') return false;
+ return true;   // seq, data — and any future kind not explicitly listed above — default happy
+}
+const HAPPY_FLOW_IDX=new Set();          // FLOWS indices that are on the happy path
+const HAPPY_NODE_IDS=new Set();          // node ids reachable via at least one happy edge
+FLOWS.forEach((f,i)=>{
+ if(!isHappyFlow(f)) return;
+ const a=NID[f.from], b=NID[f.to]; if(!a||!b) return;
+ HAPPY_FLOW_IDX.add(i); HAPPY_NODE_IDS.add(f.from); HAPPY_NODE_IDS.add(f.to);
+});
+let happyMode=false;   // false = "All Flows" (everything shown, the default); true = "Happy Flow" (filtered)
+function applyHappyFlow(){
+ // Hiding via `display:none` — not `.dim`'s opacity fade — is deliberate: this is a genuine
+ // content filter (an explicit request to REMOVE non-happy-path elements from view), not a
+ // hover-style "de-emphasise but keep visible" treatment. Positions are never recomputed —
+ // hidden nodes/edges simply leave their own space empty rather than the remaining content
+ // reflowing to fill it — which is exactly what "preserving the overall diagram layout"
+ // requires: a reader who has seen the full diagram can still recognise where everything sits
+ // when they switch to the filtered view, because nothing that remains has moved.
+ nodeLayer.querySelectorAll('.node').forEach(g=>{
+  g.style.display=(!happyMode||HAPPY_NODE_IDS.has(g.dataset.id))?'':'none';
+ });
+ edgeEls.forEach((p,i)=>{
+  p.style.display=(!happyMode||HAPPY_FLOW_IDX.has(Number(p.dataset.flowIdx)))?'':'none';
+ });
+ labelLayer.querySelectorAll('text.elabel').forEach(t=>{
+  t.style.display=(!happyMode||HAPPY_FLOW_IDX.has(Number(t.dataset.flowIdx)))?'':'none';
+ });
+}
+document.getElementById('happyFlow').addEventListener('click',function(){
+ happyMode=!happyMode;
+ this.textContent=happyMode?'All Flows':'Happy Flow';
+ this.classList.toggle('on',happyMode);
+ applyHappyFlow();
+});
+
+
+// ---- legend
+// Rendered INSIDE the SVG canvas — appended to `vp` as diagram content, not as a separate
+// HTML element above it. That makes it (a) visible in the same pannable/zoomable canvas
+// view as everything else, and (b) automatically captured by every export, since
+// exportSVGString() only ever clones the <svg> subtree — an HTML sibling was invisible to
+// SVG/JPG/PDF exports no matter how it looked in the live page.
+const LEG=[['start','Start event','shape'],['end','End event','shape'],['agent','Agent activity','shape'],
+ ['control','Control / internal','shape'],['decision','Decision','shape'],['validation','Validation gate','shape'],
+ ['system','System / data','shape'],['external','External actor','shape'],['error','Error path','shape'],['escalation','Escalation','shape']];
+const LEGE=[['seq','Sequence flow'],['data','Data flow'],['cond','Conditional'],['esc','Escalation'],['err','Error']];
+const EDGECOL={seq:'#4a4d4e',data:'#3860be',cond:'#8a5cc9',esc:'#f5b400',err:'#bd0000'};
+const EDGEDASH={seq:null,data:'5 4',cond:'2 4',esc:null,err:'4 4'};
+// Each swatch mirrors that type's REAL node shape (drawNode()/DESIGN_SYSTEM.md), not one
+// generic rounded-rect box — otherwise circle/diamond/hexagon/parallelogram types (start,
+// end, decision, validation, external) render identically to rect types in the legend,
+// looking inconsistent with the shapes actually used on the canvas.
+function legendShapeEl(t){
+ const f=FILL[t],s=STROKE[t]; const g=el('g');
+ const add=(tag,attrs)=>g.appendChild(el(tag,attrs));
+ if(t==='start'||t==='end') add('circle',{cx:11,cy:7,r:6,fill:f,stroke:s,'stroke-width':1.5});
+ else if(t==='decision') add('polygon',{points:'11,1 20,7 11,13 2,7',fill:f,stroke:s,'stroke-width':1.5});
+ else if(t==='validation') add('polygon',{points:'5,1 17,1 21,7 17,13 5,13 1,7',fill:f,stroke:s,'stroke-width':1.5});
+ else if(t==='external') add('polygon',{points:'6,1 21,1 16,13 1,13',fill:f,stroke:s,'stroke-width':1.5});
+ else if(t==='system'){ add('rect',{x:1,y:1,width:20,height:12,rx:2,fill:f,stroke:s,'stroke-width':1.5}); add('line',{x1:1,y1:4.5,x2:21,y2:4.5,stroke:s,'stroke-width':1}); }
+ else if(t==='error'||t==='escalation') add('rect',{x:1.6,y:1.6,width:18.8,height:10.8,rx:4,fill:f,stroke:s,'stroke-width':2.2});
+ else add('rect',{x:1,y:1,width:20,height:12,rx:4,fill:f,stroke:s,'stroke-width':1.5});   // agent, control
+ return g;
+}
+// Legend items are grouped into two labelled clusters — "NODE TYPES" and "CONNECTOR TYPES" —
+// rather than one undifferentiated run of 15 swatches. A category caption (12px caps, muted
+// grey, matching .legcat) precedes each group, and a wider gap separates the two groups than
+// separates items within a group, so a reader can tell at a glance "these ten are shapes,
+// these five are lines" instead of scanning the whole legend to figure out its own structure.
+function buildLegend(){
+ const shapeItems=LEG.map(([t,lab])=>({icon:'shape',type:t,label:lab,w:22}));
+ const lineItems=LEGE.map(([k,lab])=>({icon:'line',type:k,label:lab,w:26}));
+ const ctx=document.createElement('canvas').getContext('2d');
+ ctx.font='600 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';   // kept in sync with .leglabel's 14px minimum
+ const gap=7, itemGap=20, catGap=10, padX=8, rowH=24, rowGap=10;
+ const measure=(it)=>({...it,textW:ctx.measureText(it.label).width});
+ // Category caption width MUST be measured via a real, temporarily-attached SVG <text>
+ // element (getComputedTextLength()), not Canvas's ctx.measureText(). `.legcat` carries a
+ // real `letter-spacing:.08em` in its CSS — Canvas's 2D context `font` property has no way to
+ // apply letter-spacing, so ctx.measureText() silently UNDERESTIMATES the caption's true
+ // rendered width by roughly (character-count × font-size × 0.08): ~7.6px short for "NODE
+ // TYPES", ~11.4px short for "CONNECTOR TYPES". That shortfall is exactly what positioned the
+ // first icon of each group a few pixels INSIDE the tail of its own caption text instead of
+ // after it — the "NODE TYPOS" / "CONNECTOR TYPESequence flow" overlap. getComputedTextLength()
+ // is real SVG layout, so it accounts for letter-spacing (and anything else CSS does to the
+ // text) exactly, by construction — there's no formula to keep in sync as the style evolves.
+ const measureEl=el('text',{class:'legcat', style:'visibility:hidden'});
+ vp.appendChild(measureEl);
+ const measureCatW=(str)=>{ measureEl.textContent=str; return measureEl.getComputedTextLength(); };
+ const groups=[
+  {cat:'NODE TYPES', items:shapeItems.map(measure)},
+  {cat:'CONNECTOR TYPES', items:lineItems.map(measure)},
+ ];
+ groups.forEach(gr=>{ gr.catW=measureCatW(gr.cat); });
+ vp.removeChild(measureEl);
+ // Each group ALWAYS starts its own row — "Node types" and "Connector types" must never share
+ // a row, per spec, regardless of how much horizontal space is available. Within a single
+ // group, items still wrap onto additional rows the same greedy way if the group itself is
+ // wide enough to need it (a long list of node types on a narrow canvas, for instance).
+ const allRows=[];
+ groups.forEach(gr=>{
+  const rows=[[]]; let curW=padX; let first=true;
+  gr.items.forEach(it=>{
+   const capW=first?gr.catW+catGap:0;
+   const w=capW+it.w+gap+it.textW;
+   if(curW>padX && curW+itemGap+w>LY.totalW-padX){ rows.push([]); curW=padX; }
+   else if(rows[rows.length-1].length){ curW+=itemGap; }
+   rows[rows.length-1].push({...it, cat:first?gr.cat:null, capW});
+   curW+=w; first=false;
+  });
+  allRows.push(...rows);
+ });
+ // Symmetric vertical rhythm: the same gap above the legend's first row as below its last row,
+ // rather than an ad hoc 18px above and only 8px below (a prior version's asymmetry — the
+ // legend visibly floated with too much air above it and felt cramped against the canvas edge
+ // below it). LEGEND_VGAP is the single value both sides are built from, so they can't drift
+ // apart again the way `X0`/`laneLabelW` once did before that was unified.
+ const LEGEND_VGAP=20;
+ const top=LY.totalH+LEGEND_VGAP;
+ const g=el('g',{id:'legendLayer'});
+ allRows.forEach((row,ri)=>{
+  let x=padX; const y=top+ri*(rowH+rowGap);
+  row.forEach(it=>{
+   const ig=el('g',{transform:`translate(${x+it.capW},${y})`}); g.appendChild(ig);
+   if(it.cat){ const ct=el('text',{x:-it.capW,y:11,class:'legcat'}); ct.textContent=it.cat; ig.appendChild(ct); }
+   if(it.icon==='shape'){ ig.appendChild(legendShapeEl(it.type)); }
+   else {
+    const line=el('line',{x1:0,y1:7,x2:it.w,y2:7,stroke:EDGECOL[it.type],'stroke-width':it.type==='esc'?2:1.7});
+    if(EDGEDASH[it.type]) line.setAttribute('stroke-dasharray',EDGEDASH[it.type]);
+    ig.appendChild(line);
+   }
+   const t=el('text',{x:it.w+gap,y:11,class:'leglabel'}); t.textContent=it.label; ig.appendChild(t);
+   x+=it.capW+it.w+gap+it.textW+itemGap;
+  });
+ });
+ vp.appendChild(g);
+ // LY.totalH needs to include the legend for EXPORTS (a static file has no sticky footer to
+ // fall back on), but the live "fit to height" scale must NOT be computed against that taller
+ // number — the legend is hidden live (below) and consumes no on-screen space there, so
+ // reserving room for it would just shrink the rest of the diagram to make space for a gap
+ // nothing is drawn into. sizeHost() uses LY._preLegendTotalH instead, once it's set.
+ LY._preLegendTotalH=LY.totalH;
+ // Bottom padding matches LEGEND_VGAP exactly, same as the top gap — a prior version used 8px
+ // here against 18px above, an asymmetry that read as "too much air above the legend, too
+ // little below it, before the canvas edge cuts it off."
+ LY.totalH=top+allRows.length*(rowH+rowGap)-rowGap+LEGEND_VGAP;   // extend the (export-facing) canvas bounds to include the legend row(s)
+ g.style.opacity='0';   // sticky HTML legend (below) replaces this live; exportSVGString() restores it on the clone
+}
+buildLegend();
+// Sticky HTML legend — a fixed-size footer, built once (it isn't tied to any row/column
+// position, so unlike the header/gutter it needs no per-frame geometry sync).
+const legendBarEl=document.getElementById('legendBar');
+function buildLegendBar(){
+ if(!legendBarEl) return;
+ // Same grouping as buildLegend() (SVG/export version): two labelled clusters instead of one
+ // flat run, so the live sticky footer and the exported file present an identical, legible
+ // legend structure.
+ const groups=[
+  {cat:'Node types', items:LEG.map(([t,lab])=>({icon:'shape',type:t,label:lab}))},
+  {cat:'Connector types', items:LEGE.map(([k,lab])=>({icon:'line',type:k,label:lab}))},
+ ];
+ groups.forEach(gr=>{
+  const groupEl=document.createElement('span'); groupEl.className='lgd-group';
+  const catEl=document.createElement('span'); catEl.className='lgd-cat'; catEl.textContent=gr.cat;
+  groupEl.appendChild(catEl);
+  gr.items.forEach(it=>{
+   const w=it.icon==='shape'?22:26;
+   const wrap=document.createElement('span'); wrap.className='lgd-item';
+   const svgEl=document.createElementNS(SVGNS,'svg');
+   svgEl.setAttribute('width',w); svgEl.setAttribute('height',14); svgEl.setAttribute('viewBox',`0 0 ${w} 14`);
+   if(it.icon==='shape'){ svgEl.appendChild(legendShapeEl(it.type)); }
+   else {
+    const line=el('line',{x1:0,y1:7,x2:w,y2:7,stroke:EDGECOL[it.type],'stroke-width':it.type==='esc'?2:1.7});
+    if(EDGEDASH[it.type]) line.setAttribute('stroke-dasharray',EDGEDASH[it.type]);
+    svgEl.appendChild(line);
+   }
+   wrap.appendChild(svgEl);
+   const txt=document.createElement('span'); txt.textContent=it.label; wrap.appendChild(txt);
+   groupEl.appendChild(wrap);
+  });
+  legendBarEl.appendChild(groupEl);
+ });
+}
+buildLegendBar();
+
+// ---- pan & zoom
+let scale=1,tx=0,ty=0;
+// The lane gutter and phase header no longer need any JS sync at all — both are now ordinary,
+// always-visible SVG content (#svgLaneGutter, #svgPhaseHeader) that pans and scales along with
+// everything else inside the `vp` transform below, exactly like every node and connector. A
+// prior version duplicated both as separate sticky HTML overlays that needed constant
+// repositioning (syncLaneGutter()/syncPhaseHeader(), called from apply() on every pan/zoom) to
+// stay visually aligned with the scrolling/zooming SVG beneath them — none of that exists any
+// more, since there's nothing frozen left to keep in sync.
+function apply(){vp.setAttribute('transform',`translate(${tx},${ty}) scale(${scale})`);}
+/* ---- responsive width-first sizing -------------------------------------------------
+   The canvas must always consume 100% of the horizontal space inside .diagram-shell.
+   The previous implementation fitted to the shell's fixed height ONLY and then let the
+   <svg> element's width fall out of that scale, so any model whose aspect ratio was
+   taller-per-unit-width than the shell rendered as a narrow column with dead white space
+   beside it. Sizing is now driven by BOTH axes:
+
+       sW = (availW - 2*PAD_X) / totalW      // scale that makes the content span the full width
+       sH = (availH - 2*PAD_Y) / contentH    // scale that makes the content span the full height
+       s  = max(sW, sH)                      // whichever fills its axis LAST — never letterboxed
+
+   * A wide/flat model keeps its previous behaviour exactly (sH wins, the content overflows
+     horizontally and the shell scrolls) — it already used the full width.
+   * A tall/narrow model now takes sW: the diagram spans the entire width and the SHELL grows
+     vertically to preserve the aspect ratio, rather than the diagram shrinking to fit a fixed
+     height. Growing the shell (page scroll) instead of adding overflow-y keeps the sticky lane
+     gutter, phase header and legend working unchanged — they pin against the shell's scrollport
+     and would drift out of alignment if a second, vertical scroll axis were introduced here.
+   * There is deliberately NO cap on how tall the shell may grow to honour sW. An earlier version
+     capped growth at a multiple of the viewport budget as a guard against a "pathological aspect
+     ratio", but that guard silently broke the width-fill goal it sat inside: whenever a real
+     model's height demand exceeded the cap (any BPMN swimlane with many lanes and few phases —
+     an ordinary shape, not a pathological one), the code reverted to a much smaller height-fit
+     scale while STILL stretching the <svg> element to the full available width — drawing the
+     actual content at a fraction of that width and leaving dead space beside it, i.e. exactly
+     the bug width-first sizing exists to prevent. A tall page that scrolls vertically is the
+     correct outcome for a tall/narrow model; it is not a failure mode to guard against.
+   Aspect ratio is preserved in every branch: one uniform `scale`, no independent x/y stretch. */
+const PAD_X=14, PAD_Y=22;                           // buffer kept on each edge (x trimmed: the
+                                                    // horizontal axis is the scarce one here)
+const CANVAS_PAD=PAD_X;                             // back-compat alias
+const SHELL_MIN_H=340;                              // never collapse the canvas below usable height
+function viewportBudget(shell){                     // usable height from the shell's top edge to the
+                                                    // bottom of the viewport, measured live so the canvas
+                                                    // is responsive to window size instead of a fixed vh
+ const free=window.innerHeight-shell.getBoundingClientRect().top-24;   // 24px breathing room below
+ return Math.max(SHELL_MIN_H,Math.round(free));}
+function sizeHost(){
+ const shell=svg.parentElement; if(!shell) return null;
+ const availW=shell.clientWidth; if(!availW) return null;
+ const contentW=LY.totalW;
+ const contentH=LY._preLegendTotalH||LY.totalH;     // live view excludes the export-only legend extension
+ const legendEl=document.getElementById('legendBar');
+ const legendH=legendEl?legendEl.offsetHeight:0;    // reserved so the sticky legend never forces a scrollbar
+ const budget=viewportBudget(shell);
+ const sW=(availW-2*PAD_X)/contentW;
+ const sH=(budget-legendH-2*PAD_Y)/contentH;
+ let s=Math.max(sW,sH);                             // fill whichever axis is the binding constraint
+ let shellH=Math.round(contentH*s+2*PAD_Y+legendH);
+ shellH=Math.max(shellH,SHELL_MIN_H);
+ shell.style.height=shellH+'px';
+ const drawnW=contentW*s, drawnH=contentH*s;
+ const w=Math.max(availW,Math.round(drawnW+2*PAD_X));    // >= the shell: 100% of the horizontal space
+ const h=Math.max(shellH-legendH,Math.round(drawnH+2*PAD_Y));
+ svg.style.width=w+'px'; svg.style.height=h+'px';
+ svg.setAttribute('viewBox',`0 0 ${w} ${h}`);       // 1:1 px space so the vp transform fully controls scaling
+ return {w,h,s,offX:Math.max(PAD_X,(w-drawnW)/2),offY:Math.max(PAD_Y,(h-drawnH)/2)};}
+function fit(){const dim=sizeHost();if(!dim){requestAnimationFrame(fit);return;}
+ scale=dim.s;tx=dim.offX;ty=dim.offY;apply();}      // centred within whatever slack remains
+// Zoom controls (the +/- buttons, mouse-wheel zoom) and drag-to-pan have both been removed
+// entirely — the diagram is fixed: it always renders at its computed width-first fit scale,
+// at its computed centred position, with no way for the user to move or zoom it away from
+// that. The "Reset" button (which used to sit in the header and simply re-ran this same
+// fit()) has now been removed entirely too — with no pan/zoom/drag possible any more, there
+// was never anything left for it to reset FROM, so the button itself was pure dead weight
+// even though it was harmless. `fit()` is still called automatically on load and on resize
+// (see the listeners below) — only the manual re-trigger button is gone.
+svg.addEventListener('click',()=>clearHL());
+
+// ---- drawer
+const drawer=document.getElementById('drawer');
+function chip(txt,cls){return `<span class="pill ${cls}">${txt}</span>`;}
+const TYPELABEL={start:'Start',end:'End',agent:'Process step',control:'Control step',
+ decision:'Decision point',validation:'Check point',system:'Shared system',
+ external:'External group',error:'Exception',escalation:'Escalation'};
+function openDrawer(n){
+ document.getElementById('d-title').textContent=n.label;
+ const st=STROKE[n.type]||'#3860be';
+ const bio=(D.biz&&D.biz.bio)?D.biz.bio[n.id]:null;
+ const sec=(k,txt)=>txt?`<div class="dsec"><div class="k">${k}</div>${txt}</div>`:'';
+ const listSec=(k,arr)=>(arr&&arr.length)?`<div class="dsec"><div class="k">${k}</div><ul>${arr.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:'';
+ const KINDNAME=Object.fromEntries(LEGE.map(([k,lab])=>[k,lab]));   // 'seq'->'Sequence flow' etc — reuse
+   // the legend's own kind→name mapping so the drawer's language can't drift from the legend's.
+ let h=`<div class="dsec"><span class="pill" style="background:${FILL[n.type]};color:${st};border:1px solid ${st}">${TYPELABEL[n.type]||'Step'}</span>`;
+ h+=`<span class="pill t-portal">Stage: ${LY.phases[n.phase]}</span>`;
+ // Lane (the owning actor/team/system) was previously visible ONLY on the canvas itself —
+ // never surfaced in the drawer, even though "who does this step" is exactly the kind of
+ // context a comprehensive panel should never make the reader go back to the diagram to find.
+ const laneDef=LY.lanes.find(l=>l.key===n.lane);
+ if(laneDef) h+=`<span class="pill t-portal">${laneDef.name.split('·')[0].trim()}</span>`;
+ h+='</div>';
+ // A "Reference code" section (n.sub) used to render here — removed entirely per an explicit
+ // "reference code should no longer be displayed on any node" requirement, matching the same
+ // removal from the canvas label above. n.sub itself is untouched in the data.
+ h+=sec('What this does', bio?bio.does:(n.desc||''));
+ if(bio){ h+=sec('What it needs to start', bio.needs); h+=sec('What it produces', bio.makes); h+=sec('For example', bio.example); }
+ else { h+=listSec('What it needs to start', n.inputs); h+=listSec('What it produces', n.outputs); }
+ if(n.branches&&n.branches.length) h+=`<div class="dsec"><div class="k">Possible outcomes</div><ul>${n.branches.map(b=>`<li><b>${b.label}</b> → ${NID[b.to]?NID[b.to].label:b.to}</li>`).join('')}</ul></div>`;
+ // Agents directly associated with this node (n.agents — a documented model.json field that
+ // was previously never rendered anywhere in the drawer at all, a genuine omission rather than
+ // an intentional simplification). Where an id matches the agent catalogue (D.model.agents),
+ // resolve it to that catalogue row's full detail rather than showing a bare, meaningless code.
+ if(n.agents&&n.agents.length){
+  const catalogue=(M&&M.agents)||[];
+  const rows=n.agents.map(aid=>{
+   const row=catalogue.find(a=>a.AgentID===aid);
+   return row ? `<li><b>${row.Name||aid}</b> (${row['Agent Type']||'agent'}${row['Parent Portal']?', '+row['Parent Portal']:''})${row['Purpose / Feature']?' — '+row['Purpose / Feature']:''}</li>` : `<li>${aid}</li>`;
+  });
+  h+=`<div class="dsec"><div class="k">Agents involved</div><ul>${rows.join('')}</ul></div>`;
+ }
+ // who it works with — by step name, WITH the connecting flow's own label and kind carried
+ // along, not dropped. A bare "Leads to: Reject application" chip discards exactly the
+ // business-rule context (e.g. which condition triggers that path — "confirmed fraud" vs
+ // "cleared" for two different outgoing edges from the same node) that a comprehensive context
+ // panel is supposed to surface; that detail previously only existed as a tiny canvas label,
+ // invisible unless "View Labels" happened to be toggled on.
+ const predFlows=FLOWS.filter(f=>f.to===n.id);
+ const succFlows=FLOWS.filter(f=>f.from===n.id);
+ const pathItem=(arrow,other,f)=>{
+  const label=NID[other]?NID[other].label:other;
+  const detail=[KINDNAME[f.kind]||f.kind, f.label].filter(Boolean).join(': ');
+  return `<div class="path-item"><span class="arrow">${arrow}</span><span><b>${label}</b>${detail?` <span class="detail">(${detail})</span>`:''}</span></div>`;
+ };
+ // Incoming/Outgoing rendered as one bordered two-column box (INCOMING PATHS / OUTGOING
+ // PATHS side by side) rather than as two separate pill rows — matching a supplied reference
+ // layout. A node with no outgoing connector that isn't the designated "end" type is
+ // genuinely ambiguous (does the journey stop here, wait, or hand off outside this diagram?);
+ // that anomaly notice still renders in the outgoing column, styled distinctly in the error
+ // colour, rather than being silently replaced by an empty/"None" column.
+ if(predFlows.length||succFlows.length||n.type!=='end'){
+  const incoming=predFlows.length
+   ? predFlows.map(f=>pathItem('←',f.from,f)).join('')
+   : '<div class="path-item" style="color:var(--muted)">None</div>';
+  const outgoing=succFlows.length
+   ? succFlows.map(f=>pathItem('→',f.to,f)).join('')
+   : (n.type!=='end'
+      ? '<div class="path-item" style="color:#bd0000"><span class="arrow">→</span><span>No further step in this process — check whether this is a genuine end point, a wait/pause state, or a gap in the source data</span></div>'
+      : '<div class="path-item" style="color:var(--muted)">None</div>');
+  h+=`<div class="dsec-paths"><div class="col"><div class="k">Incoming paths</div>${incoming}</div><div class="col"><div class="k">Outgoing paths</div>${outgoing}</div></div>`;
+ }
+ h+=listSec('Rules &amp; safeguards', n.controls);
+ h+=listSec('Systems involved', n.systems);
+ if(n.contracts&&n.contracts.length){const seen={};let block='';
+   n.contracts.forEach(cid=>{const p=(D.biz&&D.biz.contractPlain)?D.biz.contractPlain[cid]:null; if(p&&!seen[cid]){seen[cid]=1; block+=`<li>${p}</li>`;}});
+   if(block) h+=`<div class="dsec"><div class="k">How the teams work together</div><ul>${block}</ul></div>`;}
+ document.getElementById('d-body').innerHTML=h;
+ drawer.classList.add('open');
+ setSelected(n.id);   // mark the clicked node as the active selection
+}
+document.getElementById('d-close').onclick=()=>{drawer.classList.remove('open');clearSelected();};
+
+// The tab bar (<nav class="tabs">) and the "panel" show/hide mechanism it drove have been
+// removed entirely — this skill's single source of truth is the diagram plus its side drawer,
+// with no separate tab-switching UI at all any more (a prior round removed the four
+// reference-table tabs but kept a single non-interactive "Business Process Diagram" tab and
+// its click handler; this round removes that too, since a nav bar with one item served no
+// purpose). The diagram markup is now a plain, always-visible `<div class="diagram-section">`.
+
+const M=D.model;   // still needed: openDrawer()'s "Agents involved" section resolves n.agents
+                    // ids against M.agents (the agent catalogue) — the ONLY remaining consumer
+                    // of D.model in this file, now that the Agent Inventory / Data Flow Matrix /
+                    // Source Traceability tables (which used M.agentflows, M.sources, and
+                    // D.deliv.bioMatrix/agentPhase) have all been removed. Those fields are
+                    // still accepted in model.json (harmless pass-through, may be useful for
+                    // something consuming the JSON directly outside this engine) but nothing
+                    // in this file reads them any more — see MODEL_SCHEMA.md.
+
+// ---- export (SVG / JPG / PDF) — self-contained, offline
+// Hardcoded literal hex here (not var()) is intentional: an exported .svg opened standalone
+// has no access to the parent page's CSS custom properties, so this must mirror the live
+// palette in absolute values. Keep in sync with the Vodafone token mapping in the live <style>
+// block and in reference/DESIGN_SYSTEM.md whenever either changes. THIS IS NOT OPTIONAL
+// HOUSEKEEPING: `.legcat` was missing from this block entirely for several rounds after it was
+// added to the live legend styling, and `.leglabel` here was still the pre-redesign 11px/no-
+// weight version — meaning every exported file rendered the legend with completely different,
+// out-of-date typography than the live view, independent of and in addition to the
+// letter-spacing measurement bug in buildLegend() itself (see there for that). Any class the
+// live `<style>` block adds or changes that affects a STATIC visual (not an interactive-only
+// state like hover/selection/dim, which exportSVGString() strips before export anyway) needs
+// its export-facing equivalent added or updated here in the SAME change, not as a follow-up.
+const EXPORT_CSS=`
+text{font-family:"Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif;}
+.lbl{font-size:14px;font-weight:600;fill:#1f1f1f;}
+.lanelabel{font-size:14px;font-weight:700;fill:#4a4d4e;}
+.lanehint{font-size:14px;fill:#6f7375;}
+.leglabel{font-size:14px;font-weight:600;fill:#333333;}
+.legcat{font-size:14px;font-weight:800;fill:#6f7375;letter-spacing:.08em;}
+.phasehdr{font-size:14px;font-weight:700;fill:#ffffff;dominant-baseline:middle;}
+.elabel{font-size:14px;font-style:italic;font-weight:700;fill:#4a4d4e;paint-order:stroke;stroke:#fff;stroke-width:4.5px;stroke-linejoin:round;}
+.edge{fill:none;stroke-linejoin:round;}
+.edge.seq{stroke:#4a4d4e;stroke-width:1.7;}
+.edge.data{stroke:#3860be;stroke-width:1.5;stroke-dasharray:5 4;}
+.edge.cond{stroke:#8a5cc9;stroke-width:1.6;stroke-dasharray:2 4;}
+.edge.esc{stroke:#f5b400;stroke-width:2;}
+.edge.err{stroke:#bd0000;stroke-width:1.8;stroke-dasharray:4 4;}`;
+function exportSVGString(){
+ const clone=svg.cloneNode(true);
+ clone.setAttribute('viewBox',`0 0 ${LY.totalW} ${LY.totalH}`);
+ clone.setAttribute('width',LY.totalW); clone.setAttribute('height',LY.totalH);
+ clone.removeAttribute('style');
+ // The legend is the only one of the three SVG-drawn overlays still hidden live (in favour of
+ // its own sticky HTML footer, which has no equivalent in a static file) — the lane gutter and
+ // phase header are ordinary, always-visible SVG content now (no frozen rows/columns), so
+ // there's nothing left to restore for either of them here.
+ const clonedLeg=clone.querySelector('#legendLayer'); if(clonedLeg) clonedLeg.style.opacity='';
+ // Literal width/height above keep the file's true pixel dimensions for tools
+ // that need them (Illustrator, Inkscape, print). Without this style, a browser
+ // opening the .svg directly (not through this page's own CSS) renders it at
+ // that literal size with no scale-to-fit — for a wide diagram that means only
+ // the top-left corner is visible on load, requiring manual scroll/zoom even
+ // though every node and connector is present in the file. This makes it size
+ // itself to whatever it's opened in, same as the in-app canvas does.
+ clone.setAttribute('style','width:100%;height:auto;max-width:100%;display:block;');
+ const cvp=clone.querySelector('#vp'); cvp.setAttribute('transform','translate(0,0) scale(1)');
+ clone.querySelectorAll('.dim').forEach(n=>n.classList.remove('dim'));
+ clone.querySelectorAll('.hlpath').forEach(n=>n.classList.remove('hlpath'));
+ const bg=document.createElementNS(SVGNS,'rect');
+ bg.setAttribute('x',0);bg.setAttribute('y',0);bg.setAttribute('width',LY.totalW);bg.setAttribute('height',LY.totalH);bg.setAttribute('fill','#ffffff');
+ cvp.insertBefore(bg,cvp.firstChild);
+ const st=document.createElementNS(SVGNS,'style'); st.textContent=EXPORT_CSS;
+ clone.insertBefore(st,clone.firstChild);
+ return '<?xml version="1.0" encoding="UTF-8"?>\n'+new XMLSerializer().serializeToString(clone);
+}
+function downloadBlob(blob,name){const a=document.createElement('a');const u=URL.createObjectURL(blob);
+ a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove();},150);}
+function rasterize(scaleFactor){return new Promise((resolve,reject)=>{
+ const blob=new Blob([exportSVGString()],{type:'image/svg+xml;charset=utf-8'});
+ const url=URL.createObjectURL(blob); const img=new Image();
+ img.onload=()=>{const cw=Math.round(LY.totalW*scaleFactor),ch=Math.round(LY.totalH*scaleFactor);
+  const cv=document.createElement('canvas');cv.width=cw;cv.height=ch;
+  const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cw,ch);ctx.drawImage(img,0,0,cw,ch);
+  URL.revokeObjectURL(url);resolve(cv);};
+ img.onerror=(e)=>{URL.revokeObjectURL(url);reject(e);}; img.src=url;});}
+function jpegToPdf(jpeg,wPx,hPx){
+ // Page size is DERIVED from the diagram's own aspect ratio (content + a fixed
+ // margin), not forced onto a fixed A3 sheet. These diagrams are wide swimlane
+ // layouts (often 5:1-7:1) — fitting that onto a fixed-height A3 page left the
+ // image filling the width but only a thin vertical sliver, with huge blank
+ // bands above/below. Sizing the page to the content instead means the image
+ // always fills the full page (minus the margin), matching the JPG export.
+ const margin=24, maxContent=1600;                   // generous content cap, points
+ const aspect=wPx/hPx;
+ let dW,dH;
+ if(aspect>=1){ dW=maxContent; dH=dW/aspect; } else { dH=maxContent; dW=dH*aspect; }
+ const pageW=dW+2*margin, pageH=dH+2*margin;
+ const x=margin,y=margin;
+ const enc=(s)=>{const a=new Uint8Array(s.length);for(let i=0;i<s.length;i++)a[i]=s.charCodeAt(i)&0xff;return a;};
+ const parts=[];let len=0;const off={};
+ const push=(u8)=>{parts.push(u8);len+=u8.length;}; const ps=(s)=>push(enc(s));
+ ps('%PDF-1.3\n%\xFF\xFF\xFF\xFF\n');
+ const so=(n)=>{off[n]=len;};
+ so(1); ps('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+ so(2); ps('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n');
+ so(3); ps(`3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW.toFixed(2)} ${pageH.toFixed(2)}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>\nendobj\n`);
+ const content=`q\n${dW.toFixed(2)} 0 0 ${dH.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} cm\n/Im0 Do\nQ\n`;
+ so(4); ps(`4 0 obj\n<< /Length ${content.length} >>\nstream\n${content}endstream\nendobj\n`);
+ so(5); ps(`5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${wPx} /Height ${hPx} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`);
+ push(jpeg); ps('\nendstream\nendobj\n');
+ const xo=len; let xr='xref\n0 6\n0000000000 65535 f \n';
+ for(let i=1;i<=5;i++) xr+=String(off[i]).padStart(10,'0')+' 00000 n \n';
+ ps(xr); ps(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xo}\n%%EOF`);
+ const total=new Uint8Array(len);let o=0;for(const p of parts){total.set(p,o);o+=p.length;}
+ return new Blob([total],{type:'application/pdf'});
+}
+const FNAME='Agent_Ecosystem_Business_Process_Diagram';
+const exBtn=document.getElementById('exportBtn'), exMenu=document.getElementById('exportMenu');
+exBtn.addEventListener('click',(e)=>{e.stopPropagation();exMenu.classList.toggle('open');});
+document.addEventListener('click',()=>exMenu.classList.remove('open'));
+exMenu.addEventListener('click',(e)=>e.stopPropagation());
+exMenu.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+ const fmt=b.dataset.fmt; exMenu.classList.remove('open');
+ const prev=exBtn.textContent; exBtn.textContent='Exporting…';
+ const done=()=>{exBtn.textContent=prev;};
+ try{
+  if(fmt==='svg'){downloadBlob(new Blob([exportSVGString()],{type:'image/svg+xml;charset=utf-8'}),FNAME+'.svg');done();}
+  else if(fmt==='jpg'){rasterize(2).then(cv=>cv.toBlob(bl=>{downloadBlob(bl,FNAME+'.jpg');done();},'image/jpeg',0.95)).catch(()=>{alert('Export failed.');done();});}
+  else if(fmt==='pdf'){rasterize(2).then(cv=>cv.toBlob(bl=>bl.arrayBuffer().then(buf=>{downloadBlob(jpegToPdf(new Uint8Array(buf),cv.width,cv.height),FNAME+'.pdf');done();}),'image/jpeg',0.92)).catch(()=>{alert('Export failed.');done();});}
+ }catch(err){alert('Export failed.');done();}
+}));
+
+// init
+requestAnimationFrame(()=>requestAnimationFrame(fit));
+window.addEventListener('load',()=>setTimeout(fit,60));
+window.addEventListener('resize',()=>fit());   // no tabs/panels to check any more — the diagram is the only content, always visible
+</script>
+<script>(function(){try{var D=window.DATA||{};var m=D.meta||{};
+ if(m.title){var h=document.querySelector('.top h1');if(h)h.innerHTML='<span class="dot"></span>'+m.title;document.title=m.title;}
+ // The header subtitle line (.top .sub, and m.subtitle here) has been removed entirely — the
+ // header now shows only the title. meta.subtitle may still be present in model.json (harmless
+ // pass-through — see MODEL_SCHEMA.md) but nothing in this file reads it any more.
+}catch(e){console.warn('shim',e);}})();</script>
+</body></html>

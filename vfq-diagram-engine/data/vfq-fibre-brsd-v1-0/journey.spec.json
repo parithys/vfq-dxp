@@ -440,7 +440,779 @@
         "steps": 5,
         "manual": 0
       }
+    },
+    {
+      "name": "Instant Activation Eligibility & Serial Verification (INS)",
+      "shortLabel": "Instant Activation (INS)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "System detects a reusable pre-installed device from the ready-for-service response (FAR_002_INS_01, BR-130); the agent, on a tablet only (FAR_002_INS_07, BR-136), verifies the detected device serial number against the physical device (FAR_002_INS_02, BR-131), then explicitly selects instant or normal activation, defaulting to normal where instant is not selected (FAR_002_INS_03, BR-132).",
+      "touchpoints": "Retail Store / Field - Retail Agent - Tablet only, physical device serial check (INS)",
+      "systems": "Ready for Service Portal, Siebel CRM",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "neutral",
+        "milestoneLabel": "Instant/Normal Selected (INS)"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided for this stage.",
+      "painPoints": [
+        {
+          "text": "Instant activation is available only to field agents on a tablet device; physical device verification is not supported on a desktop-only agent, and a detected device serial mismatch is recorded and may lead to failure of the instant path (BR-136, BR-131, FAR_002_INS_07)",
+          "id": "INS-001"
+        }
+      ],
+      "currentResponses": [
+        {
+          "text": "No current mitigation documented beyond the channel constraint check itself (BR-136) — a desktop agent simply cannot offer instant activation; no fallback path for a serial mismatch is stated beyond defaulting to normal activation (BR-132)",
+          "id": "RESP-INS-001"
+        }
+      ],
+      "opportunities": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\".",
+      "structural": {
+        "steps": 4,
+        "manual": 3
+      }
+    },
+    {
+      "name": "Appointment Auto-Skip & Immediate Activation (INS)",
+      "shortLabel": "Immediate Activation (INS)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "Appointment booking is auto-skipped for the instant path (FAR_002_INS_04, BR-133; agent retains flexibility to book on customer request), the order is submitted, and the immediate network activation flow is triggered (FAR_002_INS_05, BR-134, P-21) with a completion target and outcome notification; a non-working service raises a support request and arranges a technician visit (FAR_002_INS_06, BR-135).",
+      "touchpoints": "System-orchestrated / Order Management - background processing following order submission (INS)",
+      "systems": "Order Management, Field Workforce Management",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "friction",
+        "milestoneLabel": "Instant Activation Failure Handling (INS)",
+        "stateWord": "Friction"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided; the friction classification is inferred from the stated failure-handling path (support request plus technician visit), not from a stated customer-experience narrative.",
+      "painPoints": [
+        {
+          "text": "Immediate activation targets completion within 30 minutes (P-21, BR-134); where the service is not working after instant activation, the only stated handling is to raise a support request and arrange a technician visit (BR-135, FAR_002_INS_06), meaning the promised speed advantage can revert to a full field visit with no stated interim compensation or communication to the customer",
+          "id": "INS-002"
+        }
+      ],
+      "currentResponses": [
+        {
+          "text": "System raises a support request and arranges a technician visit on a non-working instant-activated service as the only stated handling; no retry, credit, or proactive customer notification process is documented beyond this (BR-135)",
+          "id": "RESP-INS-002"
+        }
+      ],
+      "opportunities": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "kpis": [
+        "Instant activation completion target: 30 minutes (P-21)"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\".",
+      "structural": {
+        "steps": 3,
+        "manual": 0
+      }
+    },
+    {
+      "name": "Migration Eligibility, Verification & Order Capture (MIG)",
+      "shortLabel": "Migration Eligibility (MIG)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "System validates that migration is permitted only from an active FWA Indoor or FWA Outdoor service to Fibre (FIB_MIG_RTL_003_01, BR-140A) and that Fibre is ready-for-service at the installation address (FIB_MIG_RTL_003_03, BR-140B); the agent completes customer verification before order creation (FIB_MIG_RTL_003_02, BR-141), retrieves the existing FWA service details (FIB_MIG_RTL_003_04), and captures the mandatory migration order attributes — lead ID, opportunity ID, language, alternate contact and enterprise-care flag (FIB_MIG_RTL_003_05, BR-142); telephone-originated migration requests are handled under the same governance (FIB_MIG_RTL_003_07).",
+      "touchpoints": "Retail Store / Field or Telesales - Retail Agent - Tablet or Desktop, RFS Portal availability check (MIG)",
+      "systems": "Ready for Service Portal, Siebel CRM",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "neutral",
+        "milestoneLabel": "Migration Order Captured (MIG)"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided for this stage.",
+      "painPoints": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "currentResponses": [
+        {
+          "text": "No current mitigation — no pain point is recorded against this stage in the source",
+          "id": "RESP-MIG-000"
+        }
+      ],
+      "opportunities": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\".",
+      "structural": {
+        "steps": 6,
+        "manual": 4
+      }
+    },
+    {
+      "name": "Migration Appointment & Device Recovery (MIG)",
+      "shortLabel": "Migration Appointment (MIG)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "Agent books a mandatory Fibre installation appointment for every migration (FIB_MIG_RTL_003_06, BR-143); a FWA Outdoor migration additionally requires a separate outdoor device recovery appointment (FIB_MIG_RTL_003_08, BR-144); the existing FWA service remains active and continues to be billed until Fibre activation succeeds (FIB_MIG_RTL_003_09, BR-145A), and Fibre activation cannot occur before successful installation closure (FIB_MIG_RTL_003_10, BR-145B).",
+      "touchpoints": "Customer Premises / Field Agent (Technician) - Field Workforce Management task (MIG)",
+      "systems": "Field Workforce Management, Order Management",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "neutral",
+        "milestoneLabel": "Installation Closure Required (MIG)"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided for this stage.",
+      "painPoints": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "currentResponses": [
+        {
+          "text": "No current mitigation — no pain point is recorded against this stage in the source",
+          "id": "RESP-MIG-001"
+        }
+      ],
+      "opportunities": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage beyond \"Field Agent (Technician)\" as a channel/actor; requirement owner columns are \"To be assigned\".",
+      "structural": {
+        "steps": 5,
+        "manual": 3
+      }
+    },
+    {
+      "name": "Migration Cutover, Failure Recovery & Notification (MIG)",
+      "shortLabel": "Migration Cutover (MIG)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "On successful Fibre activation the system deactivates the FWA SIM (FIB_MIG_RTL_003_11, BR-145), terminates the old connection and services, releases FWA resources (FIB_MIG_RTL_003_12, BR-145C), cuts billing over to Fibre from the migration completion date with FWA billing ceasing the same date (FIB_MIG_RTL_003_13, BR-145D), and notifies the customer at request creation, appointment confirmation, migration completion and migration failure (FIB_MIG_RTL_003_14, BR-145E); a failed Fibre migration does not automatically terminate the existing FWA service (FIB_MIG_RTL_003_15, BR-145F).",
+      "touchpoints": "System-orchestrated / Order Management and Billing - background processing, customer receives notifications (MIG)",
+      "systems": "Order Management, Billing System",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "delight",
+        "milestoneLabel": "Migration Complete (MIG)",
+        "stateWord": "Delight"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided; the delight classification is inferred from the completion milestone and the fail-safe continuity rule, not from a stated customer-experience narrative.",
+      "painPoints": [
+        {
+          "text": "A failed Fibre migration explicitly does not auto-terminate the existing FWA service, meaning the customer is protected from service loss on failure, but no stated recovery, retry cadence, or customer communication timeline is given beyond the general failure notification trigger (BR-145F, BR-145)",
+          "id": "MIG-001"
+        }
+      ],
+      "currentResponses": [
+        {
+          "text": "System keeps the existing FWA service active on migration failure and sends a failure notification as the only stated handling; no defined retry or escalation process beyond the notification trigger is documented (BR-145F, BR-145E)",
+          "id": "RESP-MIG-001"
+        }
+      ],
+      "opportunities": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\".",
+      "structural": {
+        "steps": 6,
+        "manual": 0
+      }
+    },
+    {
+      "name": "Home Move Address Capture & Appointment (HMV)",
+      "shortLabel": "Home Move Address (HMV)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "Request is created through the store queue or by a support agent and routed to the fibre fulfilment team queue (FIB_HMV_RTL_004_01, BR-150); agent captures the new installation address and checks service availability there (FIB_HMV_RTL_004_02, BR-151, P-18), refuses a new fixed line number and retains the existing number (FIB_HMV_RTL_004_03, BR-152), and books the new-location installation appointment (FIB_HMV_RTL_004_03) within the configured lead time.",
+      "touchpoints": "Retail Store / Field or Support Agent - Tablet or Desktop, RFS Portal availability check at new address (HMV)",
+      "systems": "Ready for Service Portal, Siebel CRM",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "neutral",
+        "milestoneLabel": "New Address Captured (HMV)"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided for this stage.",
+      "painPoints": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "currentResponses": [
+        {
+          "text": "No current mitigation — no pain point is recorded against this stage in the source",
+          "id": "RESP-HMV-000"
+        }
+      ],
+      "opportunities": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "kpis": [
+        "Home move appointment lead time defined (P-18)"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\".",
+      "structural": {
+        "steps": 4,
+        "manual": 3
+      }
+    },
+    {
+      "name": "Home Move Old-Location Uninstall & Termination (HMV)",
+      "shortLabel": "Old Location Close (HMV)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "No uninstallation appointment is captured for a fibre-to-fibre move — the device is retained at the old location (FIB_HMV_RTL_004_04, BR-153); a move originating from FWA Outdoor requires a separate outdoor-device uninstallation appointment (FIB_HMV_RTL_004_05, BR-154); all services at the old location are terminated (FIB_HMV_RTL_004_06, BR-155) and customer premises equipment and IP address are released on the confirmed move date (FIB_HMV_RTL_004_07, BR-156).",
+      "touchpoints": "Customer Premises / Field Agent (Technician) - Field Workforce Management task at old location (HMV)",
+      "systems": "Field Workforce Management, Order Management",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "neutral",
+        "milestoneLabel": "Old Location Terminated (HMV)"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided for this stage.",
+      "painPoints": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "currentResponses": [
+        {
+          "text": "No current mitigation — no pain point is recorded against this stage in the source",
+          "id": "RESP-HMV-001"
+        }
+      ],
+      "opportunities": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage beyond \"Field Agent (Technician)\" as a channel/actor; requirement owner columns are \"To be assigned\".",
+      "structural": {
+        "steps": 4,
+        "manual": 2
+      }
+    },
+    {
+      "name": "Home Move New-Location Fulfilment & Billing (HMV)",
+      "shortLabel": "New Location Fulfil (HMV)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "Field workforce management task executes at the new location (FIB_HMV_RTL_004_08); billing is triggered on the move date for new-location activation and updated for old-location termination (FIB_HMV_RTL_004_09, BR-157); where the move is into a FWA area, the customer carries their FWA equipment to the new location and hands it over at the store rather than through a technician visit (FIB_HMV_RTL_004_10, BR-158).",
+      "touchpoints": "Customer Premises / Field Agent (Technician) - Field Workforce Management task at new location, or Retail Store handover for FWA equipment (HMV)",
+      "systems": "Field Workforce Management, Billing System",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "delight",
+        "milestoneLabel": "Home Move Complete (HMV)",
+        "stateWord": "Delight"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided for this stage.",
+      "painPoints": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "currentResponses": [
+        {
+          "text": "No current mitigation — no pain point is recorded against this stage in the source",
+          "id": "RESP-HMV-002"
+        }
+      ],
+      "opportunities": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage beyond \"Field Agent (Technician)\" as a channel/actor; requirement owner columns are \"To be assigned\".",
+      "structural": {
+        "steps": 4,
+        "manual": 1
+      }
+    },
+    {
+      "name": "Port-In Number Capture & Form Submission (FPI)",
+      "shortLabel": "Port-In Capture (FPI)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "Agent captures the fixed line number being ported in — new number selection is refused for a port in (FIB_FPI_RTL_005_01, BR-160) — marks the portability identifier during appointment booking (FIB_FPI_RTL_005_02, BR-161) with the appointment date auto-set to installation date plus 5 business days excluding Friday and Saturday (FIB_FPI_RTL_005_03, BR-161A), and has the customer complete, sign and upload the portability form (FIB_FPI_RTL_005_04, BR-162) before submitting the portability request to the number portability administration system (FIB_FPI_RTL_005_05, BR-163, INT-15).",
+      "touchpoints": "Retail Store / Field - Retail Agent - Tablet or Desktop, portability form capture and upload (FPI)",
+      "systems": "Number Portability Administration System, Siebel CRM",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "neutral",
+        "milestoneLabel": "Portability Request Submitted (FPI)"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided for this stage.",
+      "painPoints": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "currentResponses": [
+        {
+          "text": "No current mitigation — no pain point is recorded against this stage in the source",
+          "id": "RESP-FPI-000"
+        }
+      ],
+      "opportunities": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\".",
+      "structural": {
+        "steps": 5,
+        "manual": 3
+      }
+    },
+    {
+      "name": "Port-In Donor Confirmation & Activation (FPI)",
+      "shortLabel": "Port-In Activation (FPI)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "Donor service provider validates and confirms the portability request in the administration system (FIB_FPI_RTL_005_06, BR-164); the portability appointment date is reconfirmed to match the confirmed port-in date (BR-164A), the field workforce task executes (FIB_FPI_RTL_005_07), and the ported number is activated after portability completion and configured during the task with no temporary number provided (FIB_FPI_RTL_005_08, BR-165).",
+      "touchpoints": "Customer Premises / Field Agent (Technician) - Field Workforce Management task, donor-provider confirmation in background (FPI)",
+      "systems": "Number Portability Administration System, Field Workforce Management, Order Management",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "delight",
+        "milestoneLabel": "Port In Complete (FPI)",
+        "stateWord": "Delight"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided for this stage.",
+      "painPoints": [
+        {
+          "text": "No temporary number is provided while the port-in is pending, and the appointment date depends on donor-provider confirmation timing, which is outside VFQ's direct control",
+          "id": "FPI-001"
+        }
+      ],
+      "currentResponses": [
+        {
+          "text": "No current mitigation documented — the source states the reschedule-to-confirmed-date rule (BR-164A) but records no interim number or workaround while awaiting donor confirmation",
+          "id": "RESP-FPI-001"
+        }
+      ],
+      "opportunities": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage beyond \"Field Agent (Technician)\" as a channel/actor; requirement owner columns are \"To be assigned\".",
+      "structural": {
+        "steps": 4,
+        "manual": 1
+      }
+    },
+    {
+      "name": "Port-Out Ticket Intake & Document Validation (FPO)",
+      "shortLabel": "Port-Out Intake (FPO)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "A port out request from the number portability administration system creates a trouble ticket in Siebel CRM (FIB_FPO_RTL_006_01, BR-170), auto-assigned to the portability queue with an initial validation service level timer started (FIB_FPO_RTL_006_02, BR-171, P-11); agent validates the portability form and identity document (FIB_FPO_RTL_006_03, BR-172), checking the form date is within the allowed period and that customer name, identity document number and service type match system records (FIB_FPO_RTL_006_04, BR-173, P-10).",
+      "touchpoints": "System-generated ticket / Retail Agent - Tablet or Desktop, document validation against system records (FPO)",
+      "systems": "Number Portability Administration System, Siebel CRM",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "neutral",
+        "milestoneLabel": "Ticket Validating (FPO)"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided for this stage.",
+      "painPoints": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "currentResponses": [
+        {
+          "text": "No current mitigation — no pain point is recorded against this stage in the source. Status model: Portability Ticket/Created (port out ticket created from the administration system request); Portability Ticket/Validating (documents and mandatory checks in progress within the initial service level).",
+          "id": "RESP-FPO-000"
+        }
+      ],
+      "opportunities": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "kpis": [
+        "Initial validation service level: 2 hours (P-11)",
+        "Portability form allowed period: 30 days (P-10)"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\".",
+      "structural": {
+        "steps": 4,
+        "manual": 3
+      }
+    },
+    {
+      "name": "Port-Out Outstanding Bill & Service Level Handling (FPO)",
+      "shortLabel": "Port-Out Bill Check (FPO)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "System checks for an outstanding bill (FIB_FPO_RTL_006_05, BR-174, P-13); a pending bill moves the request to conditionally accepted with a settlement window, and a valid document set extends the service level timer to the final action period (FIB_FPO_RTL_006_06, BR-175, P-12); a request with no action taken within the service level is auto-processed per the configured rule (FIB_FPO_RTL_006_07, BR-176).",
+      "touchpoints": "System-orchestrated / Siebel CRM - background processing with agent action window (FPO)",
+      "systems": "Siebel CRM, Billing System",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "friction",
+        "milestoneLabel": "Service Level Breach Risk (FPO)",
+        "stateWord": "Friction"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided; the friction classification is inferred from the unresolved auto-accept-versus-auto-reject configuration on service-level breach, not from a stated customer-experience narrative.",
+      "painPoints": [
+        {
+          "text": "The auto-processing outcome on a service-level breach (auto-accept versus auto-reject) is unconfirmed, and the rejection code list to communicate to NPAS has not been supplied by VFQ, risking inconsistent or undefined port-out handling at go-live (BR-176 Open, BR-177, P-14, P-20)",
+          "id": "FPO-001"
+        }
+      ],
+      "currentResponses": [
+        {
+          "text": "No current mitigation documented — BR-176 is recorded with status \"Open\" pending confirmation of the auto-accept/auto-reject rule, with no interim default stated. Status model: Portability Ticket/Conditionally Accepted (awaiting outstanding dues settlement within the window); Portability Ticket/Suspended (request suspended where no action taken within the service level).",
+          "id": "RESP-FPO-001"
+        }
+      ],
+      "opportunities": [
+        {
+          "text": "VFQ to confirm the auto-accept/auto-reject rule on service-level breach and supply the rejection code list before build (BR-176, P-14, P-20)",
+          "id": "OPP-FPO-001"
+        }
+      ],
+      "kpis": [
+        "Settlement window on pending bill: 24 hours (P-13)",
+        "Final action period after extension: 24 hours (P-12)"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\".",
+      "structural": {
+        "steps": 4,
+        "manual": 0
+      }
+    },
+    {
+      "name": "Port-Out Deactivation, Quarantine & Closure (FPO)",
+      "shortLabel": "Port-Out Closure (FPO)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "System communicates every accept, reject and conditional-acceptance action to NPAS with a status code (FIB_FPO_RTL_006_08, BR-177, P-14, P-20), generates a termination order from the closed ticket with a non-editable wish date equal to the confirmed portability date (FIB_FPO_RTL_006_09, BR-178), deactivates services on the confirmed date within a defined activation window towards the new provider (FIB_FPO_RTL_006_10, BR-179, P-15), and quarantines ported inventory for a configured period, deactivating and releasing the SIM for FWA (FIB_FPO_RTL_006_11, BR-180, P-16).",
+      "touchpoints": "System-orchestrated / Order Management - background processing (FPO)",
+      "systems": "Number Portability Administration System, Order Management, UIM",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "neutral",
+        "milestoneLabel": "Port Out Complete (FPO)"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided for this stage.",
+      "painPoints": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "currentResponses": [
+        {
+          "text": "No current mitigation — no pain point is recorded against this stage in the source. Status model: Portability Ticket/Accepted (request accepted and communicated to the administration system); Portability Ticket/Termination Order Generated (termination order generated and linked, network deactivation scheduled; terminal); Portability Ticket/Rejected (request rejected with a reason communicated to the administration system; terminal).",
+          "id": "RESP-FPO-002"
+        }
+      ],
+      "opportunities": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "kpis": [
+        "New-provider activation window: 1 hour (P-15)",
+        "Inventory quarantine period: 90 days (P-16)"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\".",
+      "structural": {
+        "steps": 4,
+        "manual": 0
+      }
+    },
+    {
+      "name": "Termination Eligibility, Retention & Consent (TER)",
+      "shortLabel": "Termination Intake (TER)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "Request is initiated from Customer 360 or a linked disconnection ticket by an authorised Retail or Retention user (FIB_TER_RTL_007_01, BR-200); system validates the service is active and eligible with no conflicting open order or restricted block (FIB_TER_RTL_007_02, BR-201), a retention outcome is mandatory before termination order creation where routed through Retention (FIB_TER_RTL_007_03, BR-202), and the agent displays any applicable early-termination or lock-in penalty (FIB_TER_RTL_007_05, BR-204) and captures customer consent, termination reason and requested date (BR-205).",
+      "touchpoints": "Retail Store / Field or Retention Agent - Tablet or Desktop, Customer 360 (TER)",
+      "systems": "Siebel CRM, Enterprise Data Warehouse",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "friction",
+        "milestoneLabel": "Retention or Penalty Decision (TER)",
+        "stateWord": "Friction"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided; the friction classification is inferred from the mandatory retention gate and penalty-display requirement, not from a stated customer-experience narrative.",
+      "painPoints": [
+        {
+          "text": "Where a request is routed through Retention, a retention outcome is mandatory before the customer can proceed to terminate, and any early-termination or lock-in penalty (plan lock-in is 3 months per the CAF) is calculated and shown at this stage, both of which can add friction or cost the customer had not anticipated when requesting termination",
+          "id": "TER-001"
+        }
+      ],
+      "currentResponses": [
+        {
+          "text": "No current mitigation documented — the source states the retention gate (BR-202) and penalty display (BR-204) as mandatory steps with no stated waiver or override path. Status model: Termination Request/Created (termination request captured from Customer 360 or disconnection ticket); Termination Request/Under Retention (retention handling in progress); Termination Request/Cancelled (request cancelled before completion; terminal); Termination Request/Retained (customer accepts retention outcome, does not proceed with termination; terminal).",
+          "id": "RESP-TER-001"
+        }
+      ],
+      "opportunities": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage beyond \"authorised Retail or Retention user\" named as an actor in the trigger; requirement owner columns are \"To be assigned\".",
+      "structural": {
+        "steps": 5,
+        "manual": 4
+      }
+    },
+    {
+      "name": "Termination Order, Recovery & Deactivation (TER)",
+      "shortLabel": "Termination Order (TER)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "Outstanding dues are handled per the configured VFQ settlement rule (FIB_TER_RTL_007_04, BR-203), a field workforce equipment recovery appointment is booked where required for the service/device scenario, skipped otherwise (FIB_TER_RTL_007_06, BR-206), the termination order is created only after validations, consent and recovery rules are satisfied (FIB_TER_RTL_007_07, BR-207), submitted to Order Management (FIB_TER_RTL_007_08), and network deactivation occurs on the confirmed termination date with the outcome returned to CRM (FIB_TER_RTL_007_09, BR-208).",
+      "touchpoints": "Customer Premises / Field Agent (Technician) - equipment recovery, or System-orchestrated deactivation (TER)",
+      "systems": "Order Management, Field Workforce Management, Siebel CRM",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "neutral",
+        "milestoneLabel": "Termination Order Submitted (TER)"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided for this stage.",
+      "painPoints": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "currentResponses": [
+        {
+          "text": "No current mitigation — no pain point is recorded against this stage in the source. Status model: Termination Request/Validation Failed (one or more mandatory validations failed; returns to Under Retention or moves to Cancelled); Termination Request/Validated for Termination (eligibility, outstanding, penalty and consent validations completed); Termination Request/Termination Order Submitted (termination order created and sent to Order Management); Termination Request/In Deactivation (network/service deactivation in progress); Termination Request/Failed (termination failed during order, deactivation, billing or inventory step).",
+          "id": "RESP-TER-002"
+        }
+      ],
+      "opportunities": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage beyond \"Field Agent (Technician)\" as a channel/actor; requirement owner columns are \"To be assigned\".",
+      "structural": {
+        "steps": 5,
+        "manual": 2
+      }
+    },
+    {
+      "name": "Termination Billing Closure & Resource Release (TER)",
+      "shortLabel": "Termination Closure (TER)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "Final billing is posted after termination, including outstanding, penalty, credit/refund and closure details where applicable (FIB_TER_RTL_007_10, BR-209); service resources are released, recovered or quarantined according to resource type and configured rules (FIB_TER_RTL_007_11, BR-210, FIB_TER_RTL_007_13); customer notifications are triggered at configured termination milestones (FIB_TER_RTL_007_12, BR-211).",
+      "touchpoints": "System-orchestrated / Billing and Order Management - background processing, customer receives notifications (TER)",
+      "systems": "Billing System, Order Management, Notification Platform",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "neutral",
+        "milestoneLabel": "Termination Complete (TER)"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided for this stage.",
+      "painPoints": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "currentResponses": [
+        {
+          "text": "No current mitigation — no pain point is recorded against this stage in the source. Status model: Termination Request/Completed (service terminated, billing/inventory closure completed; terminal).",
+          "id": "RESP-TER-003"
+        }
+      ],
+      "opportunities": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\".",
+      "structural": {
+        "steps": 3,
+        "manual": 0
+      }
+    },
+    {
+      "name": "RFS Data Ingestion, Transformation & Distribution (RFS)",
+      "shortLabel": "RFS Data Pipeline (RFS)",
+      "goals": "Not found in source — this stage is entirely back-office data management with no customer-frame goal statement present.",
+      "actions": "System ingests site and building data from the geographic information system into the inventory management system (FIB_RFS_008_01, BR-190), generates a go-to-market file as a full extract (BR-191), picks it up through the mediation layer and transforms it into the format required by each downstream system (FIB_RFS_008_01, BR-192), then distributes it to the inventory management system, ready-for-service portal, Siebel CRM and the analytics data warehouse — IMS receiving a full extract and CRM a delta (FIB_RFS_008_02, BR-193, INT-16).",
+      "touchpoints": "System-orchestrated / GIS-IMS mediation - background processing, no direct agent or customer action (RFS)",
+      "systems": "GIS, IMS, Ready for Service Portal, Siebel CRM, Analytics Data Warehouse",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "neutral",
+        "milestoneLabel": "RFS Data Distributed (RFS)"
+      },
+      "customerExperience": "Not found in source — this is a back-office data pipeline stage with no descriptive/experiential narrative for any customer.",
+      "painPoints": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "currentResponses": [
+        {
+          "text": "No current mitigation — no pain point is recorded against this stage in the source",
+          "id": "RESP-RFS-002"
+        }
+      ],
+      "opportunities": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "kpis": [
+        "Not currently tracked — no KPI, metric or target is present in the source for this stage"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\".",
+      "structural": {
+        "steps": 4,
+        "manual": 0
+      }
+    },
+    {
+      "name": "RFS Identifier Mapping, Status & Portal Recommendations (RFS)",
+      "shortLabel": "RFS Mapping & Status (RFS)",
+      "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
+      "actions": "System generates the Vodafone operator identifier and maps it to the utility identifier through field survey, supporting one-to-one and one-to-many relationships (FIB_RFS_008_03, BR-194); marks a building ready for service once ready for provisioning with its service level category recorded (FIB_RFS_008_04, BR-195); makes the ready-for-service portal searchable by address, utility identifier or area (FIB_RFS_008_05, BR-196); receives offer recommendations from the big data system into the portal (FIB_RFS_008_06, BR-197); creates a lead in Siebel CRM from the portal using the mobile number (FIB_RFS_008_07, BR-198); and refreshes ready-for-service data on subsequent go-to-market file loads and manual business updates at a defined frequency (FIB_RFS_008_08, BR-199, P-19).",
+      "touchpoints": "System-orchestrated / RFS Portal - background processing, portal search available to agents (RFS)",
+      "systems": "Ready for Service Portal, Siebel CRM, Big Data System",
+      "thoughts": {
+        "quote": "None identified",
+        "source": "Not found in source"
+      },
+      "emotion": {
+        "category": "neutral",
+        "milestoneLabel": "Lead Created from Portal (RFS)"
+      },
+      "customerExperience": "Not found in source — no descriptive/experiential sentence is provided for this stage.",
+      "painPoints": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "currentResponses": [
+        {
+          "text": "No current mitigation — no pain point is recorded against this stage in the source",
+          "id": "RESP-RFS-003"
+        }
+      ],
+      "opportunities": [
+        {
+          "text": "None identified"
+        }
+      ],
+      "kpis": [
+        "RFS data refresh frequency defined (P-19)"
+      ],
+      "businessGoals": "Not found in source — no organisational-objective statement is given beyond the rule and requirement text already captured in Actions.",
+      "teams": "Not found in source — no named team or role is attributed to this stage; requirement owner columns are \"To be assigned\".",
+      "structural": {
+        "steps": 6,
+        "manual": 0
+      }
     }
   ],
-  "footnote": "Extracted from VFQ_Fibre_BRSD_v1.0.xlsx (05_Requirements sheet, use case FIB-ACT-RTL-001 Fiber Activation through Retail Agent, milestones #1-#19), cross-referenced against 06_Business_Rules and 08_Open_Items for pain points and current responses, and against 00_Cover, 01_Document_Control, 03_Scope, 04_Capability_Summary and Annex_02_Status_Model for goals/thoughts/customerExperience/kpis/businessGoals/teams. This source is a technical requirements register (atomic, testable requirement statements with acceptance criteria) and contains no customer research artefacts, quotes, experiential narrative, KPI targets, or named operational team/owner assignments (all Wipro/VFQ owner fields read 'To be assigned' or 'To be confirmed') — these six new-schema fields are stated-absence for every stage rather than inferred. Structural step/manual counts are derived from distinct requirement/rule actions attributed to each stage in the source requirements register; not independently specified as counts in the source."
+  "footnote": "Extracted from VFQ_Fibre_BRSD_v1.0.xlsx (05_Requirements sheet, use case FIB-ACT-RTL-001 Fiber Activation through Retail Agent, milestones #1-#19), cross-referenced against 06_Business_Rules and 08_Open_Items for pain points and current responses, and against 00_Cover, 01_Document_Control, 03_Scope, 04_Capability_Summary and Annex_02_Status_Model for goals/thoughts/customerExperience/kpis/businessGoals/teams. This source is a technical requirements register (atomic, testable requirement statements with acceptance criteria) and contains no customer research artefacts, quotes, experiential narrative, KPI targets, or named operational team/owner assignments (all Wipro/VFQ owner fields read 'To be assigned' or 'To be confirmed') — these six new-schema fields are stated-absence for every stage rather than inferred. Structural step/manual counts are derived from distinct requirement/rule actions attributed to each stage in the source requirements register; not independently specified as counts in the source. This file was subsequently extended to cover the other 7 use cases documented in the same BRSD (FAR_002 Instant Activation, FIB_MIG_RTL_003 Migration, FIB_HMV_RTL_004 Home Move, FIB_FPI_RTL_005 Port In, FIB_FPO_RTL_006 Port Out, FIB_TER_RTL_007 Termination, FIB_RFS_008 RFS Data Management), sourced from the citation-audited bpmn-swimlane.model.json for this BRSD rather than re-reading the raw Excel; the original 10 Fiber-Activation-through-Retail-Agent stages above are unchanged."
 }

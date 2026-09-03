@@ -32,9 +32,9 @@ function ensureBrsd(manifest, slug, sourcePath, sourceSha256) {
       sourcePath,
       sourceSha256,
       diagrams: {
-        bpmn: { extractedAt: null, renderedAt: null, engineHash: null },
+        'bpmn-swimlane': { extractedAt: null, renderedAt: null, engineHash: null },
         journey: { extractedAt: null, renderedAt: null, engineHash: null },
-        processflow: { extractedAt: null, renderedAt: null, engineHash: null },
+        'process-flow': { extractedAt: null, renderedAt: null, engineHash: null },
         userflow: { extractedAt: null, renderedAt: null, engineHash: null }
       }
     };

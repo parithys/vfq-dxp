@@ -33,14 +33,14 @@ echo "== slug: $SLUG"
 if ! command -v claude >/dev/null 2>&1; then
   echo "error: 'claude' CLI not found on PATH — cannot run /extract-* commands." >&2
   echo "Run the four /extract-* slash commands manually inside a Claude Code session instead:" >&2
-  echo "  /extract-bpmn $BRSD_PATH" >&2
+  echo "  /extract-bpmn-swimlane $BRSD_PATH" >&2
   echo "  /extract-journey $BRSD_PATH" >&2
-  echo "  /extract-processflow $BRSD_PATH" >&2
+  echo "  /extract-process-flow $BRSD_PATH" >&2
   echo "  /extract-userflow $BRSD_PATH" >&2
   exit 1
 fi
 
-for cmd in extract-bpmn extract-journey extract-processflow extract-userflow; do
+for cmd in extract-bpmn-swimlane extract-journey extract-process-flow extract-userflow; do
   echo "== running /$cmd $BRSD_PATH"
   claude -p "/$cmd $BRSD_PATH"
 done
@@ -48,4 +48,4 @@ done
 echo "== rendering all four outputs for $SLUG"
 node "$SCRIPT_DIR/render-all.js" --brsd "$SLUG"
 
-echo "== done: output/$SLUG/{bpmn,journey,processflow,userflow}.html"
+echo "== done: output/$SLUG/{bpmn-swimlane,journey,process-flow,userflow}.html"

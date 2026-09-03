@@ -1,29 +1,34 @@
 # vfq-diagram-engine
 
-An orchestration layer over four existing Claude Code diagram skills
-(`bpnm`, `customer-journey-map`, `pfd`, `user-flow-diagram`). It does not
-reimplement any of their rendering, layout, or validation logic — it
-persists each BRSD's extracted data as JSON and re-renders through the
+An orchestration layer over four existing Claude Code diagram skills. It
+does not reimplement any of their rendering, layout, or validation logic —
+it persists each BRSD's extracted data as JSON and re-renders through the
 unmodified engines on demand, so a template edit or a re-render doesn't
 require re-reading any BRSD or spending another AI call.
 
 ## Why this exists
 
 Each of the four skills already separates a fixed rendering engine from a
-data-driven input file:
+data-driven input file. Diagram types are referred to throughout this
+project (extraction commands, `--type` flag, file names, manifest keys) as
+`bpmn-swimlane`, `journey`, `process-flow`, and `userflow` — the two
+renamed from their original skill names (`bpnm`, `pfd`) for clarity, since
+abbreviations get ambiguous over time. The upstream Claude Code skill each
+is copied from is still literally named `bpnm`/`pfd` on disk (relevant only
+to `check-drift.js`, which compares against that real upstream path):
 
-| Diagram type | Skill | Fixed engine | Data input |
+| Diagram type | Upstream skill name | Fixed engine | Data input |
 |---|---|---|---|
-| BPMN swimlane | `bpnm` | `engines/bpnm/scripts/render.py` + `reference/engine_template.html` | `bpmn.model.json` |
+| BPMN swimlane | `bpnm` | `engines/bpmn-swimlane/scripts/render.py` + `reference/engine_template.html` | `bpmn-swimlane.model.json` |
 | Customer journey map | `customer-journey-map` | `engines/customer-journey-map/assets/template.html` (string injection) | `journey.spec.json` |
-| Process flow diagram | `pfd` | `engines/pfd/scripts/generate.js` (`buildHTML`) | `processflow.spec.json` |
+| Process flow diagram | `pfd` | `engines/process-flow/scripts/generate.js` (`buildHTML`) | `process-flow.spec.json` |
 | User flow diagram | `user-flow-diagram` | `engines/user-flow-diagram/user-flow-diagram-v4.0.js` (`renderReport`) | `userflow.spec.json` |
 
-`bpnm` is the one exception to "engines compute their own layout at render
-time": `bpmn.model.json` bakes pixel geometry (`nodes[].x/y/w/h/cx/cy`,
-`layout.lanes[].y/h`, `layout.totalW/totalH`) directly into the data, so
-`/extract-bpmn` must run
-`python3 engines/bpnm/scripts/layout_model.py data/{slug}/bpmn.model.json`
+`bpmn-swimlane` is the one exception to "engines compute their own layout
+at render time": `bpmn-swimlane.model.json` bakes pixel geometry
+(`nodes[].x/y/w/h/cx/cy`, `layout.lanes[].y/h`, `layout.totalW/totalH`)
+directly into the data, so `/extract-bpmn-swimlane` must run
+`python3 engines/bpmn-swimlane/scripts/layout_model.py data/{slug}/bpmn-swimlane.model.json`
 after writing the structural JSON and before validating — skipping it
 produces a file that validates cleanly (the validator only checks
 id/phase/flow integrity, not geometry) but renders as an illegibly
@@ -43,14 +48,14 @@ three without touching any engine's layout, styling, or validation code.
 ```
 vfq-diagram-engine/
 ├── engines/                     unmodified copies of each skill's render engine
-│   ├── bpnm/                    reference/ + scripts/
+│   ├── bpmn-swimlane/           reference/ + scripts/
 │   ├── customer-journey-map/    assets/ + references/
-│   ├── pfd/                     scripts/ + references/ + assets/reference/
+│   ├── process-flow/            scripts/ + references/ + assets/reference/
 │   └── user-flow-diagram/       user-flow-diagram-v4.0.js
 ├── data/{brsd-slug}/            one JSON per diagram type, the persistent canonical store
-│   ├── bpmn.model.json
+│   ├── bpmn-swimlane.model.json
 │   ├── journey.spec.json
-│   ├── processflow.spec.json
+│   ├── process-flow.spec.json
 │   └── userflow.spec.json
 ├── output/{brsd-slug}/          rendered HTML, one per diagram type
 ├── manifest.json                source hash + extraction/render timestamps + engine hash, per BRSD per type
@@ -75,9 +80,9 @@ how every diagram of that type looks and behaves, across every BRSD:
 
 | Diagram type | Canonical engine file(s) |
 |---|---|
-| BPMN swimlane | `engines/bpnm/reference/engine_template.html`, `engines/bpnm/scripts/build_model.py`, and its documented rules in `engines/bpnm/reference/MODEL_SCHEMA.md` + `DESIGN_SYSTEM.md` |
+| BPMN swimlane | `engines/bpmn-swimlane/reference/engine_template.html`, `engines/bpmn-swimlane/scripts/build_model.py`, and its documented rules in `engines/bpmn-swimlane/reference/MODEL_SCHEMA.md` + `DESIGN_SYSTEM.md` |
 | Customer journey map | `engines/customer-journey-map/assets/template.html` |
-| Process flow diagram | `engines/pfd/scripts/generate.js` |
+| Process flow diagram | `engines/process-flow/scripts/generate.js` |
 | User flow diagram | `engines/user-flow-diagram/user-flow-diagram-v4.0.js` |
 
 Everything under `output/{brsd-slug}/` is **generated, derived output** —
@@ -110,9 +115,9 @@ which output is current.
 ### Extraction (the only step that uses Claude)
 
 ```
-/extract-bpmn <path-to-one-brsd-file>
+/extract-bpmn-swimlane <path-to-one-brsd-file>
 /extract-journey <path-to-one-brsd-file>
-/extract-processflow <path-to-one-brsd-file>
+/extract-process-flow <path-to-one-brsd-file>
 /extract-userflow <path-to-one-brsd-file>
 ```
 
@@ -125,21 +130,22 @@ slash commands from the active project's `.claude/commands/`.
 ### Rendering (`scripts/render-all.js`, pure Node, zero AI calls)
 
 ```
-node scripts/render-all.js                        # everything
-node scripts/render-all.js --brsd <slug>           # one BRSD's 4 outputs
-node scripts/render-all.js --type processflow      # one diagram type, all BRSDs
-node scripts/render-all.js --brsd <slug> --type bpmn
+node scripts/render-all.js                          # everything
+node scripts/render-all.js --brsd <slug>             # one BRSD's 4 outputs
+node scripts/render-all.js --type process-flow       # one diagram type, all BRSDs
+node scripts/render-all.js --brsd <slug> --type bpmn-swimlane
 ```
 
 This is the command that makes an engine edit propagate everywhere: edit
-`engines/pfd/scripts/generate.js`, run
-`node scripts/render-all.js --type processflow`, every process-flow
+`engines/process-flow/scripts/generate.js`, run
+`node scripts/render-all.js --type process-flow`, every process-flow
 diagram regenerates with no extraction, no Claude call, no re-reading any
 BRSD.
 
 Failures are per-file and non-fatal to the batch: a data file that fails
-its engine's own validator (bpnm's `validate_model.py`; pfd/user-flow-diagram
-throw internally) is skipped with the exact validator error printed, and
+its engine's own validator (bpmn-swimlane's `validate_model.py`;
+process-flow/user-flow-diagram throw internally) is skipped with the exact
+validator error printed, and
 the run continues to the next file. Exit code is `1` if anything failed,
 `0` otherwise. `manifest.json` is updated with a render timestamp and an
 engine-file hash for every output that succeeded.
@@ -178,7 +184,7 @@ engine. Report only, exits non-zero if anything is stale:
 
 ```
 [vfq-fibre-brsd-v1-0]
-  ✓ bpmn: fresh (rendered 2026-09-02T19:22:13.846Z)
+  ✓ bpmn-swimlane: fresh (rendered 2026-09-02T19:22:13.846Z)
   ✗ userflow: STALE — engine changed since 2026-09-03T02:10:06.853Z
       rendered against 0608251a15f2b6f6, engine is now e96b45706fb6972a
 
@@ -211,10 +217,10 @@ for an incoming document.
       "sourcePath": "/Users/.../BRSD/VFQ_Fibre_BRSD_v1.0.xlsx",
       "sourceSha256": "…",
       "diagrams": {
-        "bpmn":        { "extractedAt": "…", "renderedAt": "…", "engineHash": "…" },
-        "journey":     { "extractedAt": "…", "renderedAt": "…", "engineHash": "…" },
-        "processflow": { "extractedAt": "…", "renderedAt": "…", "engineHash": "…" },
-        "userflow":    { "extractedAt": "…", "renderedAt": "…", "engineHash": "…" }
+        "bpmn-swimlane": { "extractedAt": "…", "renderedAt": "…", "engineHash": "…" },
+        "journey":       { "extractedAt": "…", "renderedAt": "…", "engineHash": "…" },
+        "process-flow":  { "extractedAt": "…", "renderedAt": "…", "engineHash": "…" },
+        "userflow":      { "extractedAt": "…", "renderedAt": "…", "engineHash": "…" }
       }
     }
   }

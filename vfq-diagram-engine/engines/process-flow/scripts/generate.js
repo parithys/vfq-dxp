@@ -357,7 +357,7 @@ function computeLayout(flow, configOverrides = {}) {
  *
  * Every stroke/fill pair below clears WCAG's 3.0:1 non-text minimum against its own fill, and
  * every stroke clears 3.0:1 against the canvas, so type is never carried by fill alone and the
- * diagram survives greyscale printing. Values are shared with the bpnm skill's design system so
+ * diagram survives greyscale printing. Values are shared with the bpmn-swimlane skill's design system so
  * a reader moving between a swimlane map and a process flow sees one colour language. */
 const INK      = '#1a1a1a';   // node titles, pill/decision text — near-black, never pure #000
 const KIND = {

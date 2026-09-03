@@ -12,7 +12,7 @@
  *   node scripts/render-all.js --type <type>     only that diagram type, all BRSDs
  *   node scripts/render-all.js --brsd <slug> --type <type>
  *
- * <type> is one of: bpmn | journey | processflow | userflow
+ * <type> is one of: bpmn-swimlane | journey | process-flow | userflow
  *
  * Fails loudly per-file: a bad data file is skipped and reported, the rest
  * of the batch keeps going. Exits 1 if any file failed, 0 otherwise.
@@ -31,12 +31,12 @@ const OUTPUT_DIR = path.join(ROOT, 'output');
 const ENGINES_DIR = path.join(ROOT, 'engines');
 
 const TYPES = {
-  bpmn: {
-    dataFile: 'bpmn.model.json',
-    outputFile: 'bpmn.html',
-    engineDir: path.join(ENGINES_DIR, 'bpnm'),
+  'bpmn-swimlane': {
+    dataFile: 'bpmn-swimlane.model.json',
+    outputFile: 'bpmn-swimlane.html',
+    engineDir: path.join(ENGINES_DIR, 'bpmn-swimlane'),
     hashFiles: ['scripts/render.py', 'scripts/validate_model.py', 'reference/engine_template.html'],
-    render: renderBpmn
+    render: renderBpmnSwimlane
   },
   journey: {
     dataFile: 'journey.spec.json',
@@ -45,12 +45,12 @@ const TYPES = {
     hashFiles: ['assets/template.html'],
     render: renderJourney
   },
-  processflow: {
-    dataFile: 'processflow.spec.json',
-    outputFile: 'processflow.html',
-    engineDir: path.join(ENGINES_DIR, 'pfd'),
+  'process-flow': {
+    dataFile: 'process-flow.spec.json',
+    outputFile: 'process-flow.html',
+    engineDir: path.join(ENGINES_DIR, 'process-flow'),
     hashFiles: ['scripts/generate.js', 'scripts/normalize-spec.js'],
-    render: renderProcessflow
+    render: renderProcessFlow
   },
   userflow: {
     dataFile: 'userflow.spec.json',
@@ -97,7 +97,7 @@ function listSlugs() {
 // ---- per-type render functions ----
 // Each returns { ok: true } or { ok: false, error: string }
 
-function renderBpmn(dataPath, outputPath, engineDir) {
+function renderBpmnSwimlane(dataPath, outputPath, engineDir) {
   const renderScript = path.join(engineDir, 'scripts', 'render.py');
   const result = spawnSync('python3', [renderScript, dataPath, outputPath], {
     encoding: 'utf8'
@@ -132,7 +132,7 @@ function renderJourney(dataPath, outputPath, engineDir) {
   return { ok: true };
 }
 
-function renderProcessflow(dataPath, outputPath, engineDir) {
+function renderProcessFlow(dataPath, outputPath, engineDir) {
   let spec;
   try {
     spec = JSON.parse(fs.readFileSync(dataPath, 'utf8'));

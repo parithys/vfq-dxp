@@ -1,28 +1,132 @@
 {
   "brsds": {
     "vfq-fibre-brsd-v1-0": {
-      "sourcePath": "BRSD/VFQ_Fibre_BRSD_v1.0.xlsx",
-      "sourceSha256": "551e7b1cc196b01af54ae8ae0ab1c25b1cb6d15c73e36a2d7100f0769f786790",
+      "sourcePath": "/Users/parithimalsaravanan/claude-projects/vfq/BRSD/VFQ_Fibre_BRSD_v1.0.xlsx",
+      "sourceSha256": "f022c0de44ed458abe9791670a586c8b09dc21af3e6bd7b0b54673719752a869",
       "diagrams": {
-        "bpmn": {
-          "extractedAt": "2026-09-02T12:32:13.227Z",
-          "renderedAt": "2026-09-02T19:22:13.846Z",
-          "engineHash": "65b387c49c3d5292"
+        "bpmn-swimlane": {
+          "extractedAt": "2026-09-03T04:03:41.564Z",
+          "renderedAt": "2026-09-03T04:14:36.406Z",
+          "engineHash": "09d13287fd57a318"
         },
         "journey": {
-          "extractedAt": "2026-09-02T12:59:23.031Z",
-          "renderedAt": "2026-09-03T01:52:06.549Z",
+          "extractedAt": "2026-09-03T04:14:31.291Z",
+          "renderedAt": "2026-09-03T04:14:36.409Z",
           "engineHash": "d3c2ba1e3d67b9e0"
         },
-        "processflow": {
-          "extractedAt": "2026-09-02T12:27:33.018Z",
-          "renderedAt": "2026-09-02T19:27:48.356Z",
-          "engineHash": "f0b922ce0db1f1f3"
+        "process-flow": {
+          "extractedAt": "2026-09-03T04:14:31.314Z",
+          "renderedAt": "2026-09-03T04:14:36.422Z",
+          "engineHash": "5320f415e29269d6"
         },
         "userflow": {
-          "extractedAt": "2026-09-02T12:34:06.644Z",
-          "renderedAt": "2026-09-03T02:18:59.665Z",
+          "extractedAt": "2026-09-03T04:14:31.339Z",
+          "renderedAt": "2026-09-03T04:14:36.433Z",
           "engineHash": "0608251a15f2b6f6"
+        }
+      }
+    },
+    "vfq-agent-360-brsd-v1-0": {
+      "sourcePath": "/Users/parithimalsaravanan/claude-projects/vfq/BRSD/VFQ_Agent_360_BRSD_v1.0.xlsx",
+      "sourceSha256": "8de5f2b05b0c54cbc10b221576a229bc730b8e80594dd2effdcd96abb559edc8",
+      "diagrams": {
+        "bpmn-swimlane": {
+          "extractedAt": "2026-09-03T02:56:34.565Z",
+          "renderedAt": "2026-09-03T04:14:36.350Z",
+          "engineHash": "09d13287fd57a318"
+        },
+        "journey": {
+          "extractedAt": null,
+          "renderedAt": null,
+          "engineHash": null
+        },
+        "process-flow": {
+          "extractedAt": null,
+          "renderedAt": null,
+          "engineHash": null
+        },
+        "userflow": {
+          "extractedAt": null,
+          "renderedAt": null,
+          "engineHash": null
+        }
+      }
+    },
+    "vfq-billformatter-brsd-v1-0": {
+      "sourcePath": "/Users/parithimalsaravanan/claude-projects/vfq/BRSD/VFQ_BillFormatter_BRSD_V1.0.xlsx",
+      "sourceSha256": "ec984f8ad71ac005b5383f61272baace96120aead4115fadddb7ba48aeef3f94",
+      "diagrams": {
+        "bpmn-swimlane": {
+          "extractedAt": "2026-09-03T04:07:38.560Z",
+          "renderedAt": "2026-09-03T04:14:36.379Z",
+          "engineHash": "09d13287fd57a318"
+        },
+        "journey": {
+          "extractedAt": null,
+          "renderedAt": null,
+          "engineHash": null
+        },
+        "process-flow": {
+          "extractedAt": null,
+          "renderedAt": null,
+          "engineHash": null
+        },
+        "userflow": {
+          "extractedAt": null,
+          "renderedAt": null,
+          "engineHash": null
+        }
+      }
+    },
+    "vfq-mobile-postpaid-activation-brsd-v1-1": {
+      "sourcePath": "/Users/parithimalsaravanan/claude-projects/vfq/BRSD/VFQ_Mobile_Postpaid_Activation_BRSD_v1.1.xlsx",
+      "sourceSha256": "7bb1ffa837f6d5d2ff4dde39456682a4d4a18e5c08b2f30778571321f5693f28",
+      "diagrams": {
+        "bpmn-swimlane": {
+          "extractedAt": "2026-09-03T03:38:27.972Z",
+          "renderedAt": "2026-09-03T04:14:36.480Z",
+          "engineHash": "09d13287fd57a318"
+        },
+        "journey": {
+          "extractedAt": null,
+          "renderedAt": null,
+          "engineHash": null
+        },
+        "process-flow": {
+          "extractedAt": null,
+          "renderedAt": null,
+          "engineHash": null
+        },
+        "userflow": {
+          "extractedAt": null,
+          "renderedAt": null,
+          "engineHash": null
+        }
+      }
+    },
+    "vfq-trouble-ticket-brsd-v1-0": {
+      "sourcePath": "/Users/parithimalsaravanan/claude-projects/vfq/BRSD/VFQ_Trouble_Ticket_BRSD_v1.0.xlsx",
+      "sourceSha256": "1b44568826285fbc8869789628c8149f6ca5b6ab01d1b178809b57c06ba73204",
+      "diagrams": {
+        "bpmn-swimlane": {
+          "extractedAt": "2026-09-03T04:00:56.996Z",
+          "renderedAt": "2026-09-03T04:14:36.510Z",
+          "engineHash": "09d13287fd57a318"
+        },
+        "journey": {
+          "extractedAt": null,
+          "renderedAt": null,
+          "engineHash": null
+        },
+        "process-flow": {
+          "extractedAt": null,
+          "renderedAt": null,
+          "engineHash": null
+        },
+        "userflow": {
+          "extractedAt": null,
+          "renderedAt": null,
+          "engineHash": null
         }
       }
     }
