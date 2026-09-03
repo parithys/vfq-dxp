@@ -867,9 +867,13 @@ const targetConvergeOffset={};   // FLOWS index -> vertical offset from target c
  const CONVERGE_GAP=16;
  Object.values(byTarget).forEach(idxs=>{
   if(idxs.length<2) return;   // a lone incoming edge has nothing to diverge from
+  const b=NID[FLOWS[idxs[0]].to];
+  // 'external' targets are excluded, same rationale and same exclusion as reserveAnchor's own
+  // decision/external skip above: every connector touching an external-actor parallelogram
+  // must land at the exact cardinal centre of whichever side it enters, never an offset point.
+  if(b && b.type==='external') return;
   idxs.sort((i,j)=>{ const ai=NID[FLOWS[i].from], aj=NID[FLOWS[j].from]; return (ai?ai.cy:0)-(aj?aj.cy:0); });
   const n=idxs.length;
-  const b=NID[FLOWS[idxs[0]].to];
   const cap=Math.max(0,(b?b.h:100)/2-16);   // stay well inside the node's own height, never past its top/bottom
   idxs.forEach((idx,rank)=>{ targetConvergeOffset[idx]=Math.max(-cap,Math.min(cap,(rank-(n-1)/2)*CONVERGE_GAP)); });
  });
@@ -1041,18 +1045,25 @@ function obstacleOnColumn(y1,y2,x,skipId1,skipId2){
  }
  return null;
 }
+// Skew (px) of the 'external' parallelogram's slanted left/right edges — shared between the
+// polygon's own rendering (see the n.type==='external' shape branch further down) and sideX()
+// below, so the two can never drift out of sync with each other.
+const EXTERNAL_SKEW=13;
 // A node's LEFT/RIGHT boundary is a vertical line at n.x / n.x+n.w for every shape EXCEPT the
-// 'external' parallelogram (see the n.type==='external' shape branch further down, skewed by a
-// fixed 13px) — its left/right edges are slanted, so n.x / n.x+n.w only actually sits on the
-// boundary at one single y (the bottom vertex for the left edge, the top vertex for the right
-// edge). Every other y along a plain n.x/n.x+n.w entry misses the real boundary by up to the
-// full 13px skew. sideX() returns the boundary x for the specific y an edge is actually
-// entering/exiting at, so a left/right-edge connector lands exactly on a parallelogram's slanted
-// side the same way it already does on every rectangle, circle, and diamond.
+// 'external' parallelogram, whose left/right edges are slanted. An explicit requirement
+// restricts every connector touching an 'external' node to exactly ONE of its four cardinal
+// anchors — left-centre, right-centre, top-centre, bottom-centre — never a point along the
+// slanted edge itself: sideX() here always returns the FIXED x where that slanted edge crosses
+// the shape's own vertical centre (n.cy), regardless of the y an edge is actually approaching
+// from, so a left/right connector can only ever land on that one centred point. (An earlier
+// version instead tracked the boundary's x as a function of y, deliberately letting a connector
+// land anywhere along the slant — reversed by this requirement.) The `y` parameter is kept for
+// call-site compatibility with the other node types (whose flat left/right boundary doesn't
+// depend on y either, so the fixed-x behaviour was already effectively true for them) but is no
+// longer read for 'external'.
 function sideX(n,y,side){
  if(n.type==='external'){
-  const s=13, f=Math.max(0,Math.min(1,(y-n.y)/n.h));   // 0 at top, 1 at bottom
-  return side==='left' ? n.x+s*(1-f) : n.x+n.w-s*f;
+  return side==='left' ? n.x+EXTERNAL_SKEW/2 : n.x+n.w-EXTERNAL_SKEW/2;
  }
  return side==='left' ? n.x : n.x+n.w;
 }
@@ -1663,6 +1674,22 @@ const STUB_DIR=30;
 function sideAt(node,px,py){
  const tol=3;
  if(!node) return null;
+ // 'external' nodes render as a parallelogram (see the n.type==='external' polygon branch
+ // below) — its left/right boundary is the SLANTED line sideX() already computes for routing,
+ // not the flat n.x/n.x+n.w this function assumes for every other shape. Checking px against
+ // the flat bbox edge here always misses (off by up to the full 13px skew except at the one
+ // y where the slant happens to cross the bbox edge), so every anchor-separation/exit-direction
+ // fix below silently never ran on an 'external' node's left/right side — found empirically:
+ // a node with two connectors on the same skewed side had nothing keeping their y-coordinates
+ // apart, unlike every other shape. Top/bottom stay flat even for 'external' (only left/right
+ // are cut on the diagonal), so only those two branches need the shape-specific check.
+ if(node.type==='external'){
+  if(Math.abs(px-sideX(node,py,'left'))<tol) return 'left';
+  if(Math.abs(px-sideX(node,py,'right'))<tol) return 'right';
+  if(Math.abs(py-node.y)<tol) return 'top';
+  if(Math.abs(py-(node.y+node.h))<tol) return 'bottom';
+  return null;
+ }
  if(Math.abs(px-node.x)<tol) return 'left';
  if(Math.abs(px-(node.x+node.w))<tol) return 'right';
  if(Math.abs(py-node.y)<tol) return 'top';
@@ -1766,10 +1793,14 @@ function enforceExitEntryDirection(d,srcNode,tgtNode){
 // offset point — see enforceExitEntryDirection's neighbour, the decision-anchor fix in
 // edgePath()'s branchOffset/convergeOffset handling. Applying this nudge there would directly
 // violate that invariant, so decisions are excluded rather than merely deprioritised.
+// `external` nodes are excluded for the identical reason, per a later, separate requirement:
+// every connector touching an external-actor parallelogram must land on exactly one of its
+// four cardinal anchors (left-centre, right-centre, top-centre, bottom-centre — see sideX()'s
+// own comment), never spread across a range along one side the way every other shape allows.
 const ANCHOR_MIN_SEP=14;
 const placedAnchors={};
 function reserveAnchor(node,side,coord){
- if(!node || node.type==='decision') return coord;
+ if(!node || node.type==='decision' || node.type==='external') return coord;
  const key=node.id+'|'+side;
  const used=placedAnchors[key]||(placedAnchors[key]=[]);
  const vertical=(side==='top'||side==='bottom');   // true -> the shared coordinate is X; false -> Y
@@ -1828,7 +1859,15 @@ function enforceAnchorSeparation(d,srcNode,tgtNode){
    const axis=vertical?0:1;
    const orig=P[0][axis];
    const nc=reserveAnchor(srcNode,side,orig);
-   if(nc!==orig) shiftChain(0,axis,nc-orig,1);
+   if(nc!==orig){
+    shiftChain(0,axis,nc-orig,1);
+    // shiftChain only moves the shared axis (Y, for a left/right side) — correct for every
+    // OTHER shape, whose left/right boundary is a flat vertical line at any Y. 'external's
+    // left/right boundary is the SLANTED line sideX() computes (see sideAt()'s own comment
+    // above), so after moving the anchor's Y the point's existing X no longer sits on that
+    // line — it needs recomputing at the new Y, not just carried over from the old one.
+    if(!vertical && srcNode.type==='external') P[0][0]=sideX(srcNode,P[0][1],side);
+   }
   }
  }
  {
@@ -1839,7 +1878,10 @@ function enforceAnchorSeparation(d,srcNode,tgtNode){
    const axis=vertical?0:1;
    const orig=P[n-1][axis];
    const nc=reserveAnchor(tgtNode,side,orig);
-   if(nc!==orig) shiftChain(n-1,axis,nc-orig,-1);
+   if(nc!==orig){
+    shiftChain(n-1,axis,nc-orig,-1);
+    if(!vertical && tgtNode.type==='external') P[n-1][0]=sideX(tgtNode,P[n-1][1],side);
+   }
   }
  }
  return `M${P[0][0]},${P[0][1]}`+P.slice(1).map(p=>` L${p[0]},${p[1]}`).join('');
@@ -1874,6 +1916,122 @@ FLOWS.forEach((f,i)=>{
  edgeDList.push({i,d});
  edgeMidByFlow[i]=mid;
 });
+// ---- edge-balancing: distribute multiple connectors across an external node's 4 cardinal
+// anchors instead of letting them pile onto whichever side each one naturally resolves to ------
+// reserveAnchor()/targetConvergeOffset already exclude 'external' nodes from ANY anchor
+// separation (an explicit requirement restricts them to exactly the 4 cardinal points, never a
+// spread along one side) — but that alone doesn't stop two independently-routed connectors from
+// both naturally landing on the SAME cardinal point while a different side sits completely
+// unused. This pass runs once here, after every edge's `d` has been fully computed by the loop
+// above (rebalancing needs to see every connector touching a given external node at once, which
+// no per-edge pass can do), and before any label is placed (labels read edgeDList, so it must
+// already reflect whatever this pass moves) —
+//  - groups every connector endpoint currently on an external node by (node, side)
+//  - for any side with 2+ connectors while another side has 0, tries moving one of the excess
+//    connectors there, in the top > right > bottom > left priority order the requirement states
+//  - a candidate side is only used if it's actually VALID for that specific connector: it must
+//    face roughly toward the connector's OTHER endpoint (comparing centre-to-centre), or
+//    redirecting there would draw the connector looping past the very node it's attaching to
+//    rather than approaching it directly — found empirically on wfm_retrieve (Fibre), where both
+//    connectors sharing its left side approach from up-and-to-the-left, so top and left are the
+//    only sides either could validly use, and top was already taken by an unrelated outgoing
+//    edge; forcing either onto the empty right/bottom sides there would have produced exactly
+//    that kind of backward loop, which is why this validity check exists rather than blindly
+//    filling any empty side.
+//  - console.warn()s once per external node where 2+ connectors still share a side afterward —
+//    covers both "no valid empty side existed" and "a valid one existed but was itself already
+//    claimed by another congested side's own move" — the "last resort, then flag it" half of
+//    the requirement.
+const CARDINAL_ORDER=['top','right','bottom','left'];
+function cardinalXY(n,side){
+ if(side==='left') return [n.x+EXTERNAL_SKEW/2,n.cy];
+ if(side==='right') return [n.x+n.w-EXTERNAL_SKEW/2,n.cy];
+ if(side==='top') return [n.cx,n.y];
+ return [n.cx,n.y+n.h];
+}
+function sideOfCardinalPoint(n,px,py){
+ const tol=0.6;
+ for(const s of CARDINAL_ORDER){ const [cx,cy]=cardinalXY(n,s); if(Math.abs(cx-px)<tol && Math.abs(cy-py)<tol) return s; }
+ return null;
+}
+function sideValidForOther(side,n,otherCx,otherCy){
+ if(side==='left') return otherCx<n.cx;
+ if(side==='right') return otherCx>n.cx;
+ if(side==='top') return otherCy<n.cy;
+ return otherCy>n.cy;   // bottom
+}
+// Rebuilds the final 1-2 points on whichever end is moving so the connector still approaches
+// its new cardinal side orthogonally: a fresh corner is derived from the point two steps back
+// (P[2] for a source move, P[n-3] for a target move — the point BEFORE the segment that used to
+// lead into the old anchor), keeping that point's own coordinate on the axis the new approach
+// segment must share with it, exactly like enforceExitEntryDirection's own stub construction.
+function applyAnchorMove(occ,newSide){
+ const pos=edgeDList.findIndex(x=>x.i===occ.flowIdx); if(pos<0) return;
+ const el=edgeEls[pos]; if(!el) return;
+ const d=el.getAttribute('d');
+ const nums=d.match(/-?\d+\.?\d*/g); const P=[]; for(let k=0;k<nums.length;k+=2) P.push([Number(nums[k]),Number(nums[k+1])]);
+ const [nx,ny]=cardinalXY(occ.node,newSide);
+ const vertical=(newSide==='top'||newSide==='bottom');
+ if(occ.end==='source'){
+  const ref = P.length>=3 ? P[2] : P[P.length-1];
+  const corner = vertical ? [nx,ref[1]] : [ref[0],ny];
+  P[0]=[nx,ny];
+  if(P.length>=3) P[1]=corner; else P.splice(1,0,corner);
+ } else {
+  const n=P.length;
+  const ref = n>=3 ? P[n-3] : P[0];
+  const corner = vertical ? [nx,ref[1]] : [ref[0],ny];
+  P[n-1]=[nx,ny];
+  if(n>=3) P[n-2]=corner; else P.splice(n-1,0,corner);
+ }
+ const newD=`M${P[0][0]},${P[0][1]}`+P.slice(1).map(p=>` L${p[0]},${p[1]}`).join('');
+ el.setAttribute('d',newD);
+ edgeDList[pos].d=newD;
+}
+function rebalanceExternalAnchors(){
+ const byNode={};
+ edgeDList.forEach(({i,d})=>{
+  const f=FLOWS[i]; const a=NID[f.from], b=NID[f.to]; if(!a||!b) return;
+  const nums=d.match(/-?\d+\.?\d*/g); const P=[]; for(let k=0;k<nums.length;k+=2) P.push([Number(nums[k]),Number(nums[k+1])]);
+  if(a.type==='external'){
+   const side=sideOfCardinalPoint(a,P[0][0],P[0][1]);
+   if(side){ (byNode[a.id]=byNode[a.id]||{}); (byNode[a.id][side]=byNode[a.id][side]||[]).push({flowIdx:i,end:'source',node:a,otherCx:b.cx,otherCy:b.cy}); }
+  }
+  if(b.type==='external'){
+   const last=P[P.length-1];
+   const side=sideOfCardinalPoint(b,last[0],last[1]);
+   if(side){ (byNode[b.id]=byNode[b.id]||{}); (byNode[b.id][side]=byNode[b.id][side]||[]).push({flowIdx:i,end:'target',node:b,otherCx:a.cx,otherCy:a.cy}); }
+  }
+ });
+ for(const [nodeId,sides] of Object.entries(byNode)){
+  let guard=0, moved=true;
+  while(moved && guard++<8){
+   moved=false;
+   const congested=Object.entries(sides).filter(([,arr])=>arr.length>1).sort((x,y)=>y[1].length-x[1].length)[0];
+   if(!congested) break;
+   const [fromSide,occupants]=congested;
+   for(let oi=occupants.length-1; oi>=0 && !moved; oi--){
+    const occ=occupants[oi];
+    const candidate=CARDINAL_ORDER.find(s=>{
+     if(s===fromSide) return false;
+     if(sides[s] && sides[s].length) return false;
+     return sideValidForOther(s,occ.node,occ.otherCx,occ.otherCy);
+    });
+    if(!candidate) continue;
+    applyAnchorMove(occ,candidate);
+    occupants.splice(oi,1);
+    (sides[candidate]=sides[candidate]||[]).push(occ);
+    moved=true;
+   }
+  }
+  Object.entries(sides).forEach(([side,arr])=>{
+   if(arr.length>1){
+    console.warn(`[edge-balancing] ${arr.length} connectors share external node "${nodeId}"'s ${side} anchor — no valid unused side available (flows: ${arr.map(o=>FLOWS[o.flowIdx].from+'->'+FLOWS[o.flowIdx].to).join(', ')}).`);
+   }
+  });
+ }
+}
+rebalanceExternalAnchors();
 FLOWS.forEach((f,i)=>{
  if(!f.label) return;
  const mid=edgeMidByFlow[i]; if(!mid) return;
@@ -1941,7 +2099,7 @@ NODES.forEach(n=>{
  if(n.type==='start'||n.type==='end'){shape=el('circle',{cx:n.cx,cy:n.cy,r:n.w/2,class:'box',fill:fl,stroke:st});}
  else if(n.type==='decision'){const p=[[n.cx,n.y],[n.x+n.w,n.cy],[n.cx,n.y+n.h],[n.x,n.cy]].map(q=>q.join(',')).join(' ');shape=el('polygon',{points:p,class:'box',fill:fl,stroke:st});}
  else if(n.type==='validation'){const c=14;const p=[[n.x+c,n.y],[n.x+n.w-c,n.y],[n.x+n.w,n.cy],[n.x+n.w-c,n.y+n.h],[n.x+c,n.y+n.h],[n.x,n.cy]].map(q=>q.join(',')).join(' ');shape=el('polygon',{points:p,class:'box',fill:fl,stroke:st});}
- else if(n.type==='external'){const s=13;const p=[[n.x+s,n.y],[n.x+n.w,n.y],[n.x+n.w-s,n.y+n.h],[n.x,n.y+n.h]].map(q=>q.join(',')).join(' ');shape=el('polygon',{points:p,class:'box',fill:fl,stroke:st});}
+ else if(n.type==='external'){const s=EXTERNAL_SKEW;const p=[[n.x+s,n.y],[n.x+n.w,n.y],[n.x+n.w-s,n.y+n.h],[n.x,n.y+n.h]].map(q=>q.join(',')).join(' ');shape=el('polygon',{points:p,class:'box',fill:fl,stroke:st});}
  else if(n.type==='system'){shape=el('rect',{x:n.x,y:n.y,width:n.w,height:n.h,rx:2,class:'box',fill:fl,stroke:st,'stroke-dasharray':n.type==='system'?'':''});}
  else {const dash=(n.type==='error'||n.type==='escalation')?'':''; shape=el('rect',{x:n.x,y:n.y,width:n.w,height:n.h,rx:6,class:'box',fill:fl,stroke:st,'stroke-width':(n.type==='error'||n.type==='escalation')?2.2:1.5});}
  g.appendChild(shape);
