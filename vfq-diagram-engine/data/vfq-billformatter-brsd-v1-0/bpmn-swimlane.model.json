@@ -9,7 +9,7 @@
   "topbar": 70,
   "colw": 252,
   "totalW": 9230,
-  "totalH": 2570,
+  "totalH": 2590,
   "laneLabelW": 120,
   "lanes": [
    {
@@ -23,28 +23,28 @@
     "key": "bfr",
     "name": "Bill Formatter",
     "hint": "Core ingestion, generation, masking and orchestration engine",
-    "y": 266,
+    "y": 270,
     "h": 740
    },
    {
     "key": "ops",
     "name": "Billing Operations",
     "hint": "Admin Console users \u2014 review, reprocess, configure, action",
-    "y": 1022,
+    "y": 1030,
     "h": 460
    },
    {
     "key": "crm",
     "name": "Siebel CRM",
     "hint": "Reprint/resend requests, hot bill landing, notification logging",
-    "y": 1498,
+    "y": 1510,
     "h": 460
    },
    {
     "key": "chn",
     "name": "Distribution Channels",
     "hint": "SMTP, SMS Gateway, WhatsApp Business, Web",
-    "y": 1974,
+    "y": 1990,
     "h": 460
    }
   ],
@@ -122,11 +122,11 @@
    ],
    "phase": 1,
    "x": 415.0,
-   "y": 326.0,
+   "y": 330.0,
    "w": 206,
    "h": 60,
    "cx": 518.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "pull_trial",
@@ -147,11 +147,11 @@
    ],
    "phase": 1,
    "x": 415.0,
-   "y": 466.0,
+   "y": 470.0,
    "w": 206,
    "h": 60,
    "cx": 518.0,
-   "cy": 496.0
+   "cy": 500.0
   },
   {
    "id": "pull_hot",
@@ -172,11 +172,11 @@
    ],
    "phase": 1,
    "x": 415.0,
-   "y": 606.0,
+   "y": 610.0,
    "w": 206,
    "h": 60,
    "cx": 518.0,
-   "cy": 636.0
+   "cy": 640.0
   },
   {
    "id": "manual_upload",
@@ -188,11 +188,11 @@
    "desc": "Manual XML and ZIP upload, restricted to authorised users, as an alternative ingestion path.",
    "phase": 1,
    "x": 415.0,
-   "y": 1082.0,
+   "y": 1090.0,
    "w": 206,
    "h": 60,
    "cx": 518.0,
-   "cy": 1112.0
+   "cy": 1120.0
   },
   {
    "id": "atomic_write",
@@ -204,11 +204,11 @@
    "desc": "XML is written to a temporary location or filename, closed and verified, then renamed/moved to the final destination so no partially written file is readable downstream.",
    "phase": 2,
    "x": 667.0,
-   "y": 326.0,
+   "y": 330.0,
    "w": 206,
    "h": 60,
    "cx": 770.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "dup_check",
@@ -220,11 +220,11 @@
    "desc": "The same invoice XML file is not processed more than once.",
    "phase": 3,
    "x": 934.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 176,
    "h": 100,
    "cx": 1022.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "batch_create",
@@ -236,11 +236,11 @@
    "desc": "XML files are retrieved and processed batch-wise; each collection cycle produces a single batch identifier. P-22 (maximum batch size). Status Model \u2014 Batch: Created (batch created from the loaded XML files).",
    "phase": 4,
    "x": 1171.0,
-   "y": 326.0,
+   "y": 330.0,
    "w": 206,
    "h": 60,
    "cx": 1274.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "schema_validate",
@@ -252,11 +252,11 @@
    "desc": "Bill Formatter loads the XML, performs schema validation, and validates mandatory billing data required for invoice generation. Status Model \u2014 XML Record: Valid (XML has passed schema and mandatory data validation).",
    "phase": 5,
    "x": 1438.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 176,
    "h": 100,
    "cx": 1526.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "d_valid",
@@ -276,11 +276,11 @@
    ],
    "phase": 6,
    "x": 1703.0,
-   "y": 314.0,
+   "y": 318.0,
    "w": 150,
    "h": 84,
    "cx": 1778.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "failed_xml",
@@ -292,11 +292,11 @@
    "desc": "XML failing schema or mandatory data validation is marked Failed XML with a recorded failure reason; it does not proceed to invoice generation. Status Model \u2014 XML Record: Failed XML (XML has failed schema or mandatory data validation and carries a failure reason).",
    "phase": 7,
    "x": 1935.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 190,
    "h": 100,
    "cx": 2030.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "xml_portal_visible",
@@ -308,11 +308,11 @@
    "desc": "Failed XML records are visible in the Bill Formatter Portal with failure reason and processing status.",
    "phase": 8,
    "x": 2187.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 190,
    "h": 100,
    "cx": 2282.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "reprocess_failed_xml",
@@ -324,11 +324,11 @@
    "desc": "Billing Operations users review failed XML records and initiate reprocessing after corrective action.",
    "phase": 9,
    "x": 2431.0,
-   "y": 1062.0,
+   "y": 1070.0,
    "w": 206,
    "h": 100,
    "cx": 2534.0,
-   "cy": 1112.0
+   "cy": 1120.0
   },
   {
    "id": "retry_retrieval",
@@ -340,11 +340,11 @@
    "desc": "Retrieval errors are retried per the configured retry policy; a persistent failure is raised for operational review. Retry count: to be confirmed (P-19).",
    "phase": 0,
    "x": 171.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 190,
    "h": 100,
    "cx": 266.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "stats_log",
@@ -356,11 +356,11 @@
    "desc": "Retrieval and load status is logged for every XML file; batch statistics reflect successful and failed outcomes.",
    "phase": 8,
    "x": 2187.0,
-   "y": 586.0,
+   "y": 590.0,
    "w": 190,
    "h": 100,
    "cx": 2282.0,
-   "cy": 636.0
+   "cy": 640.0
   },
   {
    "id": "type_segment",
@@ -372,11 +372,11 @@
    "desc": "Invoice type and customer segment are derived from the loaded XML content.",
    "phase": 7,
    "x": 1927.0,
-   "y": 446.0,
+   "y": 450.0,
    "w": 206,
    "h": 100,
    "cx": 2030.0,
-   "cy": 496.0
+   "cy": 500.0
   },
   {
    "id": "parse_load",
@@ -388,11 +388,11 @@
    "desc": "Invoice Header, Invoice Summary and Invoice Detail structures are loaded from the parsed XML. Status Model \u2014 XML Record: Processed (XML has been consumed by invoice generation; terminal).",
    "phase": 8,
    "x": 2179.0,
-   "y": 466.0,
+   "y": 470.0,
    "w": 206,
    "h": 60,
    "cx": 2282.0,
-   "cy": 496.0
+   "cy": 500.0
   },
   {
    "id": "csv_check",
@@ -404,11 +404,11 @@
    "desc": "Scheduler checks every 10 minutes (P-01) whether an expected supporting CSV has been received.",
    "phase": 9,
    "x": 2446.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 176,
    "h": 100,
    "cx": 2534.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "csv_alert",
@@ -426,11 +426,11 @@
    ],
    "phase": 10,
    "x": 2691.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 190,
    "h": 100,
    "cx": 2786.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "batch_ready",
@@ -442,11 +442,11 @@
    "desc": "Batch validated and available for invoice generation.",
    "phase": 11,
    "x": 2935.0,
-   "y": 326.0,
+   "y": 330.0,
    "w": 206,
    "h": 60,
    "cx": 3038.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "d_bill_type",
@@ -470,11 +470,11 @@
    ],
    "phase": 12,
    "x": 3215.0,
-   "y": 314.0,
+   "y": 318.0,
    "w": 150,
    "h": 84,
    "cx": 3290.0,
-   "cy": 356.0,
+   "cy": 360.0,
    "desc": "Status Model \u2014 Invoice: Pending (invoice awaiting generation)."
   },
   {
@@ -492,11 +492,11 @@
    ],
    "phase": 13,
    "x": 3439.0,
-   "y": 326.0,
+   "y": 330.0,
    "w": 206,
    "h": 60,
    "cx": 3542.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "gen_trial",
@@ -511,11 +511,11 @@
    ],
    "phase": 13,
    "x": 3439.0,
-   "y": 466.0,
+   "y": 470.0,
    "w": 206,
    "h": 60,
    "cx": 3542.0,
-   "cy": 496.0
+   "cy": 500.0
   },
   {
    "id": "gen_hot",
@@ -532,11 +532,11 @@
    ],
    "phase": 13,
    "x": 3439.0,
-   "y": 606.0,
+   "y": 610.0,
    "w": 206,
    "h": 60,
    "cx": 3542.0,
-   "cy": 636.0
+   "cy": 640.0
   },
   {
    "id": "gen_bulk_sms",
@@ -548,11 +548,11 @@
    "desc": "Bulk SMS invoices generated using the Bulk SMS invoice template for regular, trial and hot bills.",
    "phase": 14,
    "x": 3691.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 3794.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "gen_iot",
@@ -564,11 +564,11 @@
    "desc": "IoT invoices generated using the IoT invoice template for regular, trial and hot bills.",
    "phase": 14,
    "x": 3691.0,
-   "y": 466.0,
+   "y": 470.0,
    "w": 206,
    "h": 60,
    "cx": 3794.0,
-   "cy": 496.0
+   "cy": 500.0
   },
   {
    "id": "lang_determine",
@@ -580,11 +580,11 @@
    "desc": "Invoice language is determined from the language type identifier in the source data; English and Arabic (P-08) are supported with the corresponding template and translation values applied.",
    "phase": 14,
    "x": 3691.0,
-   "y": 726.0,
+   "y": 730.0,
    "w": 206,
    "h": 100,
    "cx": 3794.0,
-   "cy": 776.0
+   "cy": 780.0
   },
   {
    "id": "calc_fields",
@@ -596,11 +596,11 @@
    "desc": "Fields requiring calculation and not directly available from source systems are calculated using logic supplied by the billing system (D-07 dependency) and populated in the output.",
    "phase": 15,
    "x": 3951.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 190,
    "h": 100,
    "cx": 4046.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "enterprise_detail",
@@ -612,11 +612,11 @@
    "desc": "An Enterprise customer opted for the detailed bill receives an XLS output; a call detail CSV is produced in the VFQ approved format and stored in the designated output location.",
    "phase": 14,
    "x": 3699.0,
-   "y": 866.0,
+   "y": 870.0,
    "w": 190,
    "h": 100,
    "cx": 3794.0,
-   "cy": 916.0
+   "cy": 920.0
   },
   {
    "id": "d_gen_success",
@@ -636,11 +636,11 @@
    ],
    "phase": 16,
    "x": 4223.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 150,
    "h": 100,
    "cx": 4298.0,
-   "cy": 356.0,
+   "cy": 360.0,
    "desc": "Status Model \u2014 Invoice: Generated (invoice output produced in the required format)."
   },
   {
@@ -653,11 +653,11 @@
    "desc": "Invoices failing processing or generation carry a recorded failure status and reason, visible in the portal. Status Model \u2014 Batch: Failed (batch processing failed) / Invoice: Failed (invoice generation failed and carries a failure reason).",
    "phase": 17,
    "x": 4455.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 190,
    "h": 100,
    "cx": 4550.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "gen_retry",
@@ -669,11 +669,11 @@
    "desc": "Reprocessing of a failed invoice or batch is restricted by role; the retry count is recorded. Maximum retry attempts: to be confirmed (P-20).",
    "phase": 0,
    "x": 171.0,
-   "y": 1062.0,
+   "y": 1070.0,
    "w": 190,
    "h": 100,
    "cx": 266.0,
-   "cy": 1112.0
+   "cy": 1120.0
   },
   {
    "id": "trial_exclude",
@@ -685,11 +685,11 @@
    "desc": "Trial batches are excluded from channel upload \u2014 a trial bill exists only for internal audit and bill validation.",
    "phase": 14,
    "x": 3691.0,
-   "y": 586.0,
+   "y": 590.0,
    "w": 206,
    "h": 100,
    "cx": 3794.0,
-   "cy": 636.0
+   "cy": 640.0
   },
   {
    "id": "original_immutable",
@@ -701,11 +701,11 @@
    "desc": "The original customer invoice is generated, stored and remains unchanged and immutable.",
    "phase": 17,
    "x": 4447.0,
-   "y": 446.0,
+   "y": 450.0,
    "w": 206,
    "h": 100,
    "cx": 4550.0,
-   "cy": 496.0
+   "cy": 500.0
   },
   {
    "id": "mask_gen",
@@ -717,11 +717,11 @@
    "desc": "A separate masked invoice file is generated at the point of invoice generation for each applicable invoice. Tax Identifier, Payment Method and Phone Number are masked in accordance with the configured access policy (masking rule set: D-08 dependency, to be confirmed). BR-153 (masking rules configurable without requiring invoice regeneration).",
    "phase": 18,
    "x": 4699.0,
-   "y": 326.0,
+   "y": 330.0,
    "w": 206,
    "h": 60,
    "cx": 4802.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "role_presentation",
@@ -733,11 +733,11 @@
    "desc": "User role and access permission determine whether the full invoice or the masked invoice is presented; privileged roles view the full invoice, restricted roles view the masked version. Bill download offers an Agent Copy and a Customer Copy.",
    "phase": 19,
    "x": 4951.0,
-   "y": 1062.0,
+   "y": 1070.0,
    "w": 206,
    "h": 100,
    "cx": 5054.0,
-   "cy": 1112.0
+   "cy": 1120.0
   },
   {
    "id": "d_review_switch",
@@ -758,11 +758,11 @@
    ],
    "phase": 20,
    "x": 5231.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 150,
    "h": 100,
    "cx": 5306.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "review",
@@ -774,11 +774,11 @@
    "desc": "Invoice review and approval before customer despatch, following role-based access, when the review switch is enabled. Status Model \u2014 Invoice: Approved (invoice reviewed and approved for despatch where the review switch is on).",
    "phase": 21,
    "x": 5455.0,
-   "y": 1062.0,
+   "y": 1070.0,
    "w": 206,
    "h": 100,
    "cx": 5558.0,
-   "cy": 1112.0
+   "cy": 1120.0
   },
   {
    "id": "d_review_outcome",
@@ -798,11 +798,11 @@
    ],
    "phase": 22,
    "x": 5735.0,
-   "y": 1070.0,
+   "y": 1078.0,
    "w": 150,
    "h": 84,
    "cx": 5810.0,
-   "cy": 1112.0
+   "cy": 1120.0
   },
   {
    "id": "rejected",
@@ -814,11 +814,11 @@
    "desc": "Invoice reviewed and rejected; despatch is prevented. Returns to Pending on regeneration.",
    "phase": 23,
    "x": 5967.0,
-   "y": 1062.0,
+   "y": 1070.0,
    "w": 190,
    "h": 100,
    "cx": 6062.0,
-   "cy": 1112.0
+   "cy": 1120.0
   },
   {
    "id": "channel_avail",
@@ -830,11 +830,11 @@
    "desc": "Generated invoices are made available to downstream channels through the configured integration flow, with regular bill copies provided to Siebel CRM and other customer channels. P-09 (supported invoice output formats).",
    "phase": 23,
    "x": 5967.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 190,
    "h": 100,
    "cx": 6062.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "hot_landing",
@@ -846,11 +846,11 @@
    "desc": "Hot bill invoices are placed in the Siebel CRM hot bill landing location and are available in real time following generation (target time: to be confirmed, P-21).",
    "phase": 24,
    "x": 6219.0,
-   "y": 1538.0,
+   "y": 1550.0,
    "w": 190,
    "h": 100,
    "cx": 6314.0,
-   "cy": 1588.0
+   "cy": 1600.0
   },
   {
    "id": "d_email_eligible",
@@ -871,11 +871,11 @@
    ],
    "phase": 24,
    "x": 6239.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 150,
    "h": 100,
    "cx": 6314.0,
-   "cy": 356.0,
+   "cy": 360.0,
    "desc": "Status Model \u2014 Email: Eligible (invoice identified as eligible for email distribution)."
   },
   {
@@ -888,11 +888,11 @@
    "desc": "Email template determined by customer type, invoice type and language; separate templates for Consumer and Enterprise in English and Arabic, with configurable dynamic fields.",
    "phase": 25,
    "x": 6463.0,
-   "y": 326.0,
+   "y": 330.0,
    "w": 206,
    "h": 60,
    "cx": 6566.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "suppression_check",
@@ -904,11 +904,11 @@
    "desc": "A configurable list of non-triable email addresses is maintained against which no despatch is attempted.",
    "phase": 26,
    "x": 6730.0,
-   "y": 2014.0,
+   "y": 2030.0,
    "w": 176,
    "h": 100,
    "cx": 6818.0,
-   "cy": 2064.0
+   "cy": 2080.0
   },
   {
    "id": "suppressed",
@@ -920,11 +920,11 @@
    "desc": "Despatch not attempted because the address is on the non-triable list. Terminal.",
    "phase": 27,
    "x": 7020.0,
-   "y": 2014.0,
+   "y": 2030.0,
    "w": 100,
    "h": 100,
    "cx": 7070.0,
-   "cy": 2064.0
+   "cy": 2080.0
   },
   {
    "id": "smtp_despatch",
@@ -939,11 +939,11 @@
    ],
    "phase": 27,
    "x": 6982.0,
-   "y": 2177.0,
+   "y": 2193.0,
    "w": 176,
    "h": 54,
    "cx": 7070.0,
-   "cy": 2204.0
+   "cy": 2220.0
   },
   {
    "id": "d_smtp_result",
@@ -963,11 +963,11 @@
    ],
    "phase": 28,
    "x": 7247.0,
-   "y": 2014.0,
+   "y": 2030.0,
    "w": 150,
    "h": 100,
    "cx": 7322.0,
-   "cy": 2064.0
+   "cy": 2080.0
   },
   {
    "id": "email_failed",
@@ -979,11 +979,11 @@
    "desc": "Delivery failed; failure reported in the Failed Email Report. Resend on retry. Status Model \u2014 Batch: Failed Sending Email (one or more invoice emails within the batch failed despatch) / Invoice: Failed Sending Email (invoice email despatch failed).",
    "phase": 31,
    "x": 7983.0,
-   "y": 2175.0,
+   "y": 2191.0,
    "w": 190,
    "h": 58,
    "cx": 8078.0,
-   "cy": 2204.0
+   "cy": 2220.0
   },
   {
    "id": "email_sent",
@@ -994,11 +994,11 @@
    "sub": "Status Model \u2014 Email: Sent",
    "phase": 29,
    "x": 7479.0,
-   "y": 2014.0,
+   "y": 2030.0,
    "w": 190,
    "h": 100,
    "cx": 7574.0,
-   "cy": 2064.0,
+   "cy": 2080.0,
    "desc": "Status Model \u2014 Invoice: Email Sent (invoice email despatched to the customer; terminal)."
   },
   {
@@ -1019,11 +1019,11 @@
    ],
    "phase": 30,
    "x": 7751.0,
-   "y": 2014.0,
+   "y": 2030.0,
    "w": 150,
    "h": 100,
    "cx": 7826.0,
-   "cy": 2064.0
+   "cy": 2080.0
   },
   {
    "id": "email_delivered",
@@ -1035,11 +1035,11 @@
    "desc": "Delivery confirmed by the SMTP service feedback. Terminal.",
    "phase": 31,
    "x": 8036.0,
-   "y": 2022.0,
+   "y": 2038.0,
    "w": 84,
    "h": 84,
    "cx": 8078.0,
-   "cy": 2064.0
+   "cy": 2080.0
   },
   {
    "id": "crm_log",
@@ -1051,11 +1051,11 @@
    "desc": "A CRM notification record is created only for invoices processed for customer communication, stored against the customer account and bill reference for servicing and audit. Integration: INT-02 (Siebel CRM, reprint/resend request receipt, invoice delivery, notification logging).",
    "phase": 32,
    "x": 8227.0,
-   "y": 1558.0,
+   "y": 1570.0,
    "w": 206,
    "h": 60,
    "cx": 8330.0,
-   "cy": 1588.0
+   "cy": 1600.0
   },
   {
    "id": "sms_despatch",
@@ -1070,11 +1070,11 @@
    ],
    "phase": 24,
    "x": 6226.0,
-   "y": 2014.0,
+   "y": 2030.0,
    "w": 176,
    "h": 100,
    "cx": 6314.0,
-   "cy": 2064.0
+   "cy": 2080.0
   },
   {
    "id": "whatsapp_despatch",
@@ -1089,11 +1089,11 @@
    ],
    "phase": 24,
    "x": 6226.0,
-   "y": 2154.0,
+   "y": 2170.0,
    "w": 176,
    "h": 100,
    "cx": 6314.0,
-   "cy": 2204.0
+   "cy": 2220.0
   },
   {
    "id": "web_display",
@@ -1105,11 +1105,11 @@
    "desc": "Invoice communication supported through the Web channel, with pre-despatch masking applied (BR-053).",
    "phase": 24,
    "x": 6219.0,
-   "y": 2316.0,
+   "y": 2332.0,
    "w": 190,
    "h": 56,
    "cx": 6314.0,
-   "cy": 2344.0
+   "cy": 2360.0
   },
   {
    "id": "trial_terminal",
@@ -1121,11 +1121,11 @@
    "desc": "A trial bill is generated for internal audit and bill validation only and is never distributed to a customer through any channel. Terminal.",
    "phase": 25,
    "x": 6516.0,
-   "y": 586.0,
+   "y": 590.0,
    "w": 100,
    "h": 100,
    "cx": 6566.0,
-   "cy": 636.0
+   "cy": 640.0
   },
   {
    "id": "reprint_request",
@@ -1137,11 +1137,11 @@
    "desc": "A reprint request carries the account number, bill period and bill type; the reprinted PDF is transferred through Mediation Zone to the requesting channel. Integration: INT-02 (Siebel CRM, reprint/resend request receipt, invoice delivery, notification logging).",
    "phase": 24,
    "x": 6211.0,
-   "y": 1838.0,
+   "y": 1850.0,
    "w": 206,
    "h": 60,
    "cx": 6314.0,
-   "cy": 1868.0
+   "cy": 1880.0
   },
   {
    "id": "resend_request",
@@ -1153,11 +1153,11 @@
    "desc": "A resend request carries the account number and bill reference; only a previously generated invoice may be resent, and delivery status is recorded and visible. Integration: INT-02 (Siebel CRM, reprint/resend request receipt, invoice delivery, notification logging).",
    "phase": 24,
    "x": 6211.0,
-   "y": 1698.0,
+   "y": 1710.0,
    "w": 206,
    "h": 60,
    "cx": 6314.0,
-   "cy": 1728.0
+   "cy": 1740.0
   },
   {
    "id": "regen_request",
@@ -1169,11 +1169,11 @@
    "desc": "Invoice regeneration supported at both individual invoice level and batch level, including retry and status reporting.",
    "phase": 24,
    "x": 6211.0,
-   "y": 1062.0,
+   "y": 1070.0,
    "w": 206,
    "h": 100,
    "cx": 6314.0,
-   "cy": 1112.0
+   "cy": 1120.0
   },
   {
    "id": "legacy_buffer",
@@ -1244,11 +1244,11 @@
    "desc": "Where the source XML has been regenerated or corrected, regeneration consumes the latest version.",
    "phase": 27,
    "x": 6967.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 7070.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "reprint_generate",
@@ -1260,11 +1260,11 @@
    "desc": "Reprint does not alter the original invoice data; only a previously generated bill may be reprinted. Supports Detailed or Summarised bill type and English or Arabic language.",
    "phase": 25,
    "x": 6463.0,
-   "y": 466.0,
+   "y": 470.0,
    "w": 206,
    "h": 60,
    "cx": 6566.0,
-   "cy": 496.0
+   "cy": 500.0
   },
   {
    "id": "reprint_register",
@@ -1276,11 +1276,11 @@
    "desc": "Reprint and resend requests are displayed in dedicated console registers with status and process date.",
    "phase": 25,
    "x": 6471.0,
-   "y": 1062.0,
+   "y": 1070.0,
    "w": 190,
    "h": 100,
    "cx": 6566.0,
-   "cy": 1112.0
+   "cy": 1120.0
   },
   {
    "id": "resend_email",
@@ -1292,11 +1292,11 @@
    "desc": "The resend email template may differ from the first-time bill email template and is separately maintainable in English and Arabic. Existing reprint/resend interface signatures remain unchanged (parallel running, no impact to current channels).",
    "phase": 25,
    "x": 6463.0,
-   "y": 2014.0,
+   "y": 2030.0,
    "w": 206,
    "h": 100,
    "cx": 6566.0,
-   "cy": 2064.0
+   "cy": 2080.0
   },
   {
    "id": "batch_stats",
@@ -1308,11 +1308,11 @@
    "desc": "Batch statistics display successful and failed PDF generation with identifier, bill number, account number, status and reason. BR-072 (processing status maintained/displayed at batch and item level). BR-073 (supported operational status values: Failed, Ready, Report Generated, Invoice Completed, Failed Sending Email). Status Model \u2014 Batch: Report Generated (batch reports have been produced).",
    "phase": 33,
    "x": 8487.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 190,
    "h": 100,
    "cx": 8582.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "admin_console",
@@ -1324,11 +1324,11 @@
    "desc": "Front-end Admin Console for Billing Operations covering batches, bills, hot bills, XML records, reports, translations and role-based access. Batch action menu: View Bills, View Statistics, Overall Report, Detail Report, Failed Report, Failed Email Report, Send Overall Report, Send Email. Bill action menu (applies equally to the hot bill register): Status Log, Download PDF, Download XLS, Download XML, Reprint Bill, Regenerate Document, Regenerate XML, Send Email. BR-071 (batch list displays identifier, date created, reference, status). BR-076 (status log displays identifier, label, reason, date created). BR-077 (selected bill downloadable in PDF, XLS and XML). BR-079 (hot bill register displays identifier, process date, bill number).",
    "phase": 34,
    "x": 8731.0,
-   "y": 1062.0,
+   "y": 1070.0,
    "w": 206,
    "h": 100,
    "cx": 8834.0,
-   "cy": 1112.0
+   "cy": 1120.0
   },
   {
    "id": "search_retrieve",
@@ -1340,11 +1340,11 @@
    "desc": "Search across invoice type, invoice number, batch identifier, date created, language, MSISDN, product, status, email address, account number, customer type and internal identifier. Results support download, regenerate, reprocess and email actions by role and status. BR-093 (configuration records open in a separate window/pop-up on drill-down).",
    "phase": 35,
    "x": 8983.0,
-   "y": 1062.0,
+   "y": 1070.0,
    "w": 206,
    "h": 100,
    "cx": 9086.0,
-   "cy": 1112.0
+   "cy": 1120.0
   },
   {
    "id": "ref_data_config",
@@ -1359,11 +1359,11 @@
    ],
    "phase": 35,
    "x": 8983.0,
-   "y": 1202.0,
+   "y": 1210.0,
    "w": 206,
    "h": 100,
    "cx": 9086.0,
-   "cy": 1252.0
+   "cy": 1260.0
   },
   {
    "id": "template_config",
@@ -1375,11 +1375,11 @@
    "desc": "Bill template field maintenance by segment and invoice type; bill banner configuration with page-overlap handling; report template configuration; interactive PDF tabs and dynamic links.",
    "phase": 35,
    "x": 8983.0,
-   "y": 1342.0,
+   "y": 1350.0,
    "w": 206,
    "h": 100,
    "cx": 9086.0,
-   "cy": 1392.0
+   "cy": 1400.0
   },
   {
    "id": "reporting_dash",
@@ -1391,11 +1391,11 @@
    "desc": "Enterprise reports (CDR List, Credit File, Invoice Report), operational dashboard, batch reports, failed bill/email reports, processing statistics, bill run monitor and hot bill failure alerts. Reports generated daily, monthly, after bill run or ad hoc, in PDF, CSV or Excel; no print media output produced (BR-132). P-03 (hot bill failure report interval). P-04 (bill run days). P-05 (bill run monitor interval). P-06 (delivery preference PDF only, code 0). P-07 (delivery preference PDF and XLS, code 3). P-10 (supported report output formats).",
    "phase": 34,
    "x": 8739.0,
-   "y": 328.0,
+   "y": 332.0,
    "w": 190,
    "h": 56,
    "cx": 8834.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "retention",
@@ -1407,11 +1407,11 @@
    "desc": "Generated invoices, reports, XML files and emails are retained for the configured duration; artefacts exceeding the retention period are removed automatically. Retention periods: to be confirmed (P-14/P-15/P-16/P-17/P-18).",
    "phase": 33,
    "x": 8479.0,
-   "y": 446.0,
+   "y": 450.0,
    "w": 206,
    "h": 100,
    "cx": 8582.0,
-   "cy": 496.0
+   "cy": 500.0
   },
   {
    "id": "end_batch_complete",
@@ -1423,11 +1423,11 @@
    "desc": "All invoice outputs within the batch generated and email despatch complete. Status Model \u2014 Batch: Invoice Completed (all invoice outputs within the batch have been generated).",
    "phase": 32,
    "x": 8280.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 100,
    "h": 100,
    "cx": 8330.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "platform_tax_currency",
@@ -1439,11 +1439,11 @@
    "sub": "BFR_MULT_CUR_001.01 / BFR_CONSL_CONF_001.04 / BR-161 / BR-162 / P-13",
    "desc": "Currency information received in the source billing data is used to generate the invoice in that currency (BR-161); base currency is Qatari Riyal (P-13). Tax information received in the source data is processed and displayed on the invoice (BR-162).",
    "x": 3943.0,
-   "y": 466.0,
+   "y": 470.0,
    "w": 206,
    "h": 60,
    "cx": 4046.0,
-   "cy": 496.0
+   "cy": 500.0
   }
  ],
  "flows": [

@@ -537,14 +537,15 @@ def compute_layout(N, LANES, PHASES, F=None):
     # thin 1.5px line with zero breathing room on either side, which read as ambiguous exactly
     # where a node from a taller lane extended close to the boundary (worse once phase columns
     # gained their own tinted backgrounds, which made the lack of any horizontal gap between
-    # lanes more visually obvious than it was against a plain white canvas). 16px sits in the
-    # middle of an explicitly requested 10-20px range. This is pure inter-lane whitespace, not a
-    # change to any lane's own row count/height or to any node's position WITHIN its lane — every
-    # node, connector, and label downstream of `lane_y` picks up the shift automatically since
-    # nothing here is hardcoded elsewhere; the divider line (drawn in engine_template.html at
-    # `L.y+L.h`, unchanged) now has real empty space around it instead of sitting flush against
-    # content on both sides.
-    LANE_GAP = 16
+    # lanes more visually obvious than it was against a plain white canvas). Went 16 -> 20px per
+    # an explicit follow-up request that also replaced the old thin #E3E3E3 divider LINE with a
+    # solid #FFFFFF filled band spanning this exact gap (see engine_template.html's own lane-loop
+    # comment) — sized to exactly fill the gap, not float within it, so the two values can never
+    # drift out of sync. This is pure inter-lane whitespace, not a change to any lane's own row
+    # count/height or to any node's position WITHIN its lane — every node, connector, and label
+    # downstream of `lane_y` picks up the shift automatically since nothing here is hardcoded
+    # elsewhere.
+    LANE_GAP = 20
     lane_y = {}
     y = TOPBAR
     for L in LANES:

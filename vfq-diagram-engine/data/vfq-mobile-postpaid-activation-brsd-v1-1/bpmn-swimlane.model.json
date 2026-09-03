@@ -9,7 +9,7 @@
   "topbar": 70,
   "colw": 252,
   "totalW": 23322,
-  "totalH": 2262,
+  "totalH": 2290,
   "laneLabelW": 100,
   "lanes": [
    {
@@ -23,42 +23,42 @@
     "key": "agt",
     "name": "Retail Agent",
     "hint": "Agent-driven journey steps",
-    "y": 266,
+    "y": 270,
     "h": 320
    },
    {
     "key": "ext",
     "name": "External Verification",
     "hint": "IDWise, MOI, Email Verification",
-    "y": 602,
+    "y": 610,
     "h": 180
    },
    {
     "key": "crm",
     "name": "Siebel CRM",
     "hint": "Customer, account, billing, order and tracking records",
-    "y": 798,
+    "y": 810,
     "h": 180
    },
    {
     "key": "bill",
     "name": "Credit & Billing",
     "hint": "Eligibility, credit control, billing account, WinCash payment",
-    "y": 994,
+    "y": 1010,
     "h": 320
    },
    {
     "key": "inv",
     "name": "Inventory (UIM)",
     "hint": "MSISDN and SIM reservation, allocation, depletion",
-    "y": 1330,
+    "y": 1350,
     "h": 180
    },
    {
     "key": "ful",
     "name": "Fulfilment & Notification",
     "hint": "Downstream provisioning, notification, feedback survey",
-    "y": 1526,
+    "y": 1550,
     "h": 600
    }
   ],
@@ -182,11 +182,11 @@
    "desc": "Retail Agent starts a New Postpaid Mobility activation journey from the Agent Desktop. The agent is authenticated and journey access is authorised against the agent role privilege matrix; an agent without the New Activation privilege is denied.",
    "phase": 1,
    "x": 395.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 498.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "jsm_qticket",
@@ -214,11 +214,11 @@
    "desc": "A Tracking Record is created automatically on journey initiation, assigned to the initiating agent in New status; creation is rejected if any configured mandatory field is unpopulated. Status model: Tracking Record/Open/New (record created automatically at journey initiation) transitioning to Tracking Record/Open/In Progress (journey in progress against the assigned agent).",
    "phase": 3,
    "x": 899.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 206,
    "h": 100,
    "cx": 1002.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "jsm_milestone",
@@ -230,11 +230,11 @@
    "desc": "The journey milestone is persisted as a Draft Order on each successful stage validation. An agent may view and resume only Draft Orders that agent created. A Draft Order not submitted within the configured retention period (P-22, value to be confirmed) expires and its reservations are released. Status model: Order/Draft/In Progress (journey initiated, milestone saved, not yet submitted). Status model: Order/Draft/Expired (the draft retention period elapsed without submission; terminal).",
    "phase": 4,
    "x": 1151.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 206,
    "h": 100,
    "cx": 1254.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "kyc_scan",
@@ -246,11 +246,11 @@
    "desc": "Front page and back page are mandatory; liveliness capture is optional, subject to customer consent. Only QID, Passport, Diplomatic ID and GCC ID are accepted \u2014 any other document type is rejected. MADA ID may optionally be captured for special discount evidence. Integration: INT-02 (IDWise, synchronous REST, scan/extract identity attributes and liveliness).",
    "phase": 5,
    "x": 1403.0,
-   "y": 326.0,
+   "y": 330.0,
    "w": 206,
    "h": 60,
    "cx": 1506.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "d_kyc_type",
@@ -270,11 +270,11 @@
    ],
    "phase": 6,
    "x": 1683.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 150,
    "h": 100,
    "cx": 1758.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "kyc_reject_type",
@@ -284,11 +284,11 @@
    "label": "Journey Blocked \u2014 Unsupported Document",
    "phase": 7,
    "x": 1915.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 190,
    "h": 100,
    "cx": 2010.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "kyc_rescan_check",
@@ -310,11 +310,11 @@
    ],
    "phase": 7,
    "x": 1935.0,
-   "y": 446.0,
+   "y": 450.0,
    "w": 150,
    "h": 100,
    "cx": 2010.0,
-   "cy": 496.0
+   "cy": 500.0
   },
   {
    "id": "kyc_manual",
@@ -326,11 +326,11 @@
    "desc": "Manual capture is permitted where IDWise fails or is unavailable after the configured maximum scan attempts; the capture source is recorded as Manual.",
    "phase": 8,
    "x": 2159.0,
-   "y": 326.0,
+   "y": 330.0,
    "w": 206,
    "h": 60,
    "cx": 2262.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "kyc_capture_attrs",
@@ -342,11 +342,11 @@
    "desc": "ID Type, ID Number, First Name, Last Name, Date of Birth, Nationality and ID Expiry Date are populated from the IDWise response and shown to the agent on a read-only panel for visual confirmation against the physical document.",
    "phase": 9,
    "x": 2411.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 2514.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "d_kyc_age",
@@ -367,11 +367,11 @@
    ],
    "phase": 10,
    "x": 2691.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 150,
    "h": 100,
    "cx": 2766.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "kyc_age_reject",
@@ -381,11 +381,11 @@
    "label": "Journey Blocked \u2014 Under Minimum Age",
    "phase": 11,
    "x": 2923.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 190,
    "h": 100,
    "cx": 3018.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "kyc_moi",
@@ -397,11 +397,11 @@
    "desc": "Customer information is retrieved from MOI using QID, Diplomatic ID or Passport Number for any issuing country. MOI validation is not invoked for a GCC ID, since MOI does not support that document type. Integration: INT-03 (MOI, synchronous, validate identity and return demographic attributes and ID status).",
    "phase": 11,
    "x": 2930.0,
-   "y": 642.0,
+   "y": 650.0,
    "w": 176,
    "h": 100,
    "cx": 3018.0,
-   "cy": 692.0
+   "cy": 700.0
   },
   {
    "id": "kyc_moi_compare",
@@ -413,11 +413,11 @@
    "desc": "First Name, Last Name, ID Number, Date of Birth and Nationality are compared between the IDWise capture and the MOI response.",
    "phase": 12,
    "x": 3182.0,
-   "y": 642.0,
+   "y": 650.0,
    "w": 176,
    "h": 100,
    "cx": 3270.0,
-   "cy": 692.0
+   "cy": 700.0
   },
   {
    "id": "d_kyc_match",
@@ -437,11 +437,11 @@
    ],
    "phase": 13,
    "x": 3447.0,
-   "y": 642.0,
+   "y": 650.0,
    "w": 150,
    "h": 100,
    "cx": 3522.0,
-   "cy": 692.0
+   "cy": 700.0
   },
   {
    "id": "kyc_mismatch",
@@ -453,11 +453,11 @@
    "desc": "On mismatch the agent is offered to reject the application or return to ID capture and re-scan; the failing attribute is named in the message.",
    "phase": 14,
    "x": 3679.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 190,
    "h": 100,
    "cx": 3774.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "kyc_rejected",
@@ -467,11 +467,11 @@
    "label": "Application Rejected \u2014 Identity Mismatch",
    "phase": 0,
    "x": 196.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 100,
    "h": 100,
    "cx": 246.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "kyc_moi_display",
@@ -483,11 +483,11 @@
    "desc": "ID Type, ID Number, Date of Birth, name fields, Nationality, Salutation and ID Expiry Date returned by MOI are displayed; the MOI validation timestamp is recorded. ID Expiry Date is sourced from MOI (superseding any IDWise-scanned value) since MOI is the only source that returns it. P-19: interim ID expiry derivation period is 365 days.",
    "phase": 14,
    "x": 3671.0,
-   "y": 446.0,
+   "y": 450.0,
    "w": 206,
    "h": 100,
    "cx": 3774.0,
-   "cy": 496.0
+   "cy": 500.0
   },
   {
    "id": "d_kyc_status",
@@ -509,11 +509,11 @@
    ],
    "phase": 15,
    "x": 3951.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 150,
    "h": 100,
    "cx": 4026.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "kyc_status_blocked",
@@ -523,11 +523,11 @@
    "label": "Journey Blocked \u2014 ID Status",
    "phase": 16,
    "x": 4183.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 190,
    "h": 100,
    "cx": 4278.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "kyc_moi_outage",
@@ -539,11 +539,11 @@
    "desc": "Where MOI is unavailable the order is saved as a draft and MOI validation is enforced as a mandatory gate at order submission.",
    "phase": 0,
    "x": 151.0,
-   "y": 642.0,
+   "y": 650.0,
    "w": 190,
    "h": 100,
    "cx": 246.0,
-   "cy": 692.0
+   "cy": 700.0
   },
   {
    "id": "kyc_transfer_crm",
@@ -555,11 +555,11 @@
    "desc": "Extracted identity information is transferred from IDWise/MOI to Siebel CRM for customer creation and validation at the first milestone. A Postpaid or Prepaid connection may not be taken by a representative acting on behalf of the customer.",
    "phase": 16,
    "x": 4183.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 190,
    "h": 100,
    "cx": 4278.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "d_cam_match",
@@ -581,11 +581,11 @@
    ],
    "phase": 17,
    "x": 4455.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 150,
    "h": 100,
    "cx": 4530.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "cam_display_existing",
@@ -597,11 +597,11 @@
    "desc": "Matched customer details are displayed for agent confirmation before the journey continues.",
    "phase": 18,
    "x": 4679.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 4782.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "cam_create_new",
@@ -612,11 +612,11 @@
    "sub": "MPAR_001_CAM_03 / BR-030",
    "phase": 18,
    "x": 4687.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 190,
    "h": 100,
    "cx": 4782.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "cam_overwrite",
@@ -628,11 +628,11 @@
    "desc": "Any attribute on an existing customer record is overwritten from the latest MOI retrieval following successful validation.",
    "phase": 19,
    "x": 4939.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 190,
    "h": 100,
    "cx": 5034.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "cam_contact_match",
@@ -644,11 +644,11 @@
    "desc": "An existing contact is identified using ID Type and ID Number before a new contact is created, to avoid duplication.",
    "phase": 20,
    "x": 5183.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 206,
    "h": 100,
    "cx": 5286.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "cam_lock",
@@ -660,11 +660,11 @@
    "desc": "ID Number, ID Type, name fields, Date of Birth, Nationality, ID Expiry Date and Salutation are rendered read-only once MOI validation succeeds.",
    "phase": 21,
    "x": 5435.0,
-   "y": 326.0,
+   "y": 330.0,
    "w": 206,
    "h": 60,
    "cx": 5538.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "cam_address",
@@ -676,11 +676,11 @@
    "desc": "The address returned by MOI is presented as editable, covering Building Number, Street Number, Zone and Apartment/Villa/Flat Number.",
    "phase": 22,
    "x": 5687.0,
-   "y": 326.0,
+   "y": 330.0,
    "w": 206,
    "h": 60,
    "cx": 5790.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "cam_account_attrs",
@@ -692,11 +692,11 @@
    "desc": "Account Type, Customer Category and Segment are mandatory for account creation; Category and Segment are auto-derived from nationality using the configured nationality-to-customer-type matrix (BR-035 status: Open).",
    "phase": 23,
    "x": 5939.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 6042.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "cam_primary_contact",
@@ -708,11 +708,11 @@
    "desc": "A default primary contact is created automatically for the customer account using the verified identity information.",
    "phase": 24,
    "x": 6199.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 190,
    "h": 100,
    "cx": 6294.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "cam_credit_limit_default",
@@ -724,11 +724,11 @@
    "desc": "The default credit limit is populated from the customer segment per the configured parameter table (P-07 Qatari 4000 QAR, P-08 expatriate 1000 QAR, P-09 HRN 50 QAR). Credit limit and spend-limit functionality is noted for update alongside legacy project details.",
    "phase": 25,
    "x": 6451.0,
-   "y": 1056.0,
+   "y": 1072.0,
    "w": 190,
    "h": 56,
    "cx": 6546.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "cam_override",
@@ -740,11 +740,11 @@
    "desc": "Email Address, Language and Alternate Phone Number may be overridden by the agent.",
    "phase": 26,
    "x": 6695.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 6798.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "cam_hrn",
@@ -756,11 +756,11 @@
    "desc": "The HRN flag is derived from nationality using the HRN nationality list held in the Siebel LOV, and is passed to WinCash for advance payment collection (P-11: 50 QAR). The configured HRN advance payment message is displayed where flagged.",
    "phase": 27,
    "x": 6962.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 176,
    "h": 100,
    "cx": 7050.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "cam_contacts_multi",
@@ -772,11 +772,11 @@
    "desc": "Multiple contacts may be associated with a customer account; each contact carries an assigned role/relation, since one national ID may hold different responsibilities across accounts.",
    "phase": 28,
    "x": 7199.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 206,
    "h": 100,
    "cx": 7302.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "cam_email_verify",
@@ -788,11 +788,11 @@
    "desc": "The customer email address is verified through the email verification service, marked Verified on success. Restricted to the Retail channel. Integration: INT-04 (Email Verification Service, synchronous REST).",
    "phase": 29,
    "x": 7466.0,
-   "y": 642.0,
+   "y": 650.0,
    "w": 176,
    "h": 100,
    "cx": 7554.0,
-   "cy": 692.0
+   "cy": 700.0
   },
   {
    "id": "ecc_connection_type",
@@ -804,11 +804,11 @@
    "desc": "QID and Diplomatic ID permit Postpaid and Prepaid; Passport and GCC ID are restricted to Prepaid only.",
    "phase": 30,
    "x": 7718.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 176,
    "h": 100,
    "cx": 7806.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "d_ecc_age",
@@ -830,11 +830,11 @@
    ],
    "phase": 31,
    "x": 7983.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 150,
    "h": 100,
    "cx": 8058.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "ecc_failure_msg",
@@ -846,11 +846,11 @@
    "desc": "A distinct validation message is shown for each eligibility failure condition, drawn from the configured message catalogue (BR-042 status: Open).",
    "phase": 34,
    "x": 8719.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 190,
    "h": 100,
    "cx": 8814.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "ecc_blacklist_check",
@@ -862,11 +862,11 @@
    "desc": "Journey progression is blocked where the customer status is returned as Blacklisted or In Collections. Integration: INT-05 (Billing System, synchronous, retrieve customer status and outstanding balance).",
    "phase": 32,
    "x": 8222.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 176,
    "h": 100,
    "cx": 8310.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "d_ecc_status",
@@ -886,11 +886,11 @@
    ],
    "phase": 33,
    "x": 8487.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 150,
    "h": 100,
    "cx": 8562.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "ecc_dues_threshold",
@@ -902,11 +902,11 @@
    "desc": "Journey progression is blocked where the outstanding balance exceeds the configured threshold (P-02: 10 QAR standard, P-03: 100 QAR HRN, BR-044 status: Open). The agent may direct the customer to settle dues and the balance is re-evaluated before continuing.",
    "phase": 34,
    "x": 8726.0,
-   "y": 1174.0,
+   "y": 1190.0,
    "w": 176,
    "h": 100,
    "cx": 8814.0,
-   "cy": 1224.0
+   "cy": 1240.0
   },
   {
    "id": "ecc_linecount",
@@ -918,11 +918,11 @@
    "desc": "The total active mobile voice connection count is retrieved. A Qatari, Safwa or Safwa Plus national is unrestricted (P-06). An expatriate QID holder may hold up to five connections, all of which may be Postpaid (P-04).",
    "phase": 35,
    "x": 8978.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 176,
    "h": 100,
    "cx": 9066.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "d_ecc_linecount_breach",
@@ -944,11 +944,11 @@
    ],
    "phase": 36,
    "x": 9243.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 150,
    "h": 100,
    "cx": 9318.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "ecc_approval_task",
@@ -960,11 +960,11 @@
    "desc": "An approval task is created for the Credit team for an expatriate customer's third, fourth or fifth Postpaid connection (P-05: 2 permitted without approval). The order is held; submission is enabled only once the task is approved. Status model: Order/Draft/Pending Approval (held awaiting Credit or Collections approval).",
    "phase": 37,
    "x": 9467.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 206,
    "h": 100,
    "cx": 9570.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "d_ecc_approval",
@@ -984,11 +984,11 @@
    ],
    "phase": 38,
    "x": 9747.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 150,
    "h": 100,
    "cx": 9822.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "ecc_cancel",
@@ -1000,11 +1000,11 @@
    "desc": "The Retail Agent cancels the held order where the approval task is rejected; all reservations are released. Status model: Order/Closed/Cancelled (order cancelled by the agent following approval rejection or customer withdrawal; terminal). Status model: Tracking Record/Closed/Cancelled (journey abandoned or order cancelled; terminal).",
    "phase": 39,
    "x": 9979.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 190,
    "h": 100,
    "cx": 10074.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "ecc_limit_override",
@@ -1016,11 +1016,11 @@
    "desc": "Credit limit enhancement does not apply within New Activation itself, but where applicable an agent holding the privileged role may amend the system-defaulted limit within the segment ceiling (P-10: 50\u20131000 QAR).",
    "phase": 40,
    "x": 10223.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 206,
    "h": 100,
    "cx": 10326.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "ecc_collections_escalate",
@@ -1032,11 +1032,11 @@
    "desc": "An increase beyond the agent-permitted ceiling is routed to the Collections team as an approval ticket; only that role may apply the increase.",
    "phase": 41,
    "x": 10483.0,
-   "y": 1174.0,
+   "y": 1190.0,
    "w": 190,
    "h": 100,
    "cx": 10578.0,
-   "cy": 1224.0
+   "cy": 1240.0
   },
   {
    "id": "ecc_advance_payment",
@@ -1048,11 +1048,11 @@
    "desc": "The delta between the enhanced and default credit limit is collected as a refundable advance payment before the order is saved, and adjusted against the next bill cycle. Integration: INT-06 (WinCash, synchronous, point of sale payment and stock).",
    "phase": 41,
    "x": 10483.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 190,
    "h": 100,
    "cx": 10578.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "ecc_creditnote",
@@ -1064,11 +1064,11 @@
    "desc": "A credit note adjustment is created and issued to the customer where an order carrying a collected payment is cancelled.",
    "phase": 40,
    "x": 10231.0,
-   "y": 1174.0,
+   "y": 1190.0,
    "w": 190,
    "h": 100,
    "cx": 10326.0,
-   "cy": 1224.0
+   "cy": 1240.0
   },
   {
    "id": "milestone1",
@@ -1079,11 +1079,11 @@
    "sub": "Section #5",
    "phase": 39,
    "x": 9971.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 206,
    "h": 100,
    "cx": 10074.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "bam_account",
@@ -1095,11 +1095,11 @@
    "desc": "A billing account is created for a new customer, or an existing one is selected where already present. Exactly one billing account is associated with each plan/MSISDN/fixed-line number.",
    "phase": 40,
    "x": 10223.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 10326.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "bam_address",
@@ -1111,11 +1111,11 @@
    "desc": "The billing address is the customer address or a newly captured address.",
    "phase": 41,
    "x": 10475.0,
-   "y": 326.0,
+   "y": 330.0,
    "w": 206,
    "h": 60,
    "cx": 10578.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "bam_contacts",
@@ -1127,11 +1127,11 @@
    "desc": "A billing account carries multiple billing contacts, exactly one designated primary; the invoice is delivered to the primary contact.",
    "phase": 42,
    "x": 10727.0,
-   "y": 858.0,
+   "y": 870.0,
    "w": 206,
    "h": 60,
    "cx": 10830.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "bam_payment_profile_req",
@@ -1143,11 +1143,11 @@
    "desc": "Only a billing account holding an active payment profile may be selected for an activation order; a billing account may hold multiple payment profiles.",
    "phase": 43,
    "x": 10994.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 176,
    "h": 100,
    "cx": 11082.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "bam_billcycle",
@@ -1159,11 +1159,11 @@
    "desc": "VIP segment defaults to bill cycle 7th of the month (P-15). Other segments default to the 1st or 15th (P-16), taking the next cycle where the submission date falls within three days of the cycle date (P-17).",
    "phase": 44,
    "x": 11239.0,
-   "y": 1056.0,
+   "y": 1072.0,
    "w": 190,
    "h": 56,
    "cx": 11334.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "bam_payment_capture",
@@ -1175,11 +1175,11 @@
    "desc": "Payment Method, Payment Type and Billing Frequency are captured; only credit card and debit card are permitted for auto-debit.",
    "phase": 45,
    "x": 11483.0,
-   "y": 326.0,
+   "y": 330.0,
    "w": 206,
    "h": 60,
    "cx": 11586.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "bam_payment_validate",
@@ -1191,11 +1191,11 @@
    "desc": "Captured payment details are validated before the payment profile is updated; last-4-digit card reference and payment-gateway token are captured. A validation failure returns the agent to recapture. Integration: INT-06 (WinCash, synchronous, point of sale payment and stock).",
    "phase": 46,
    "x": 11750.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 176,
    "h": 100,
    "cx": 11838.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "milestone2",
@@ -1206,11 +1206,11 @@
    "sub": "Section #7",
    "phase": 47,
    "x": 11987.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 206,
    "h": 100,
    "cx": 12090.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "qpc_baseplan",
@@ -1222,11 +1222,11 @@
    "desc": "Only base plans eligible for the customer segment and Postpaid connection type are presented.",
    "phase": 48,
    "x": 12239.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 12342.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "qpc_addon",
@@ -1238,11 +1238,11 @@
    "desc": "Only add-ons eligible for the selected base plan may be selected; configured minimum, maximum and default quantity are enforced.",
    "phase": 49,
    "x": 12491.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 12594.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "qpc_discount",
@@ -1254,11 +1254,11 @@
    "desc": "Only discounts eligible for the selected base plan may be added; the latest effective version is applied.",
    "phase": 50,
    "x": 12743.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 12846.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "qpc_special_discount_doc",
@@ -1270,11 +1270,11 @@
    "desc": "Adding a special discount requires the MADA identity document, captured alongside the mandatory KYC identity documents.",
    "phase": 51,
    "x": 12995.0,
-   "y": 326.0,
+   "y": 330.0,
    "w": 206,
    "h": 60,
    "cx": 13098.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "qpc_cart_create",
@@ -1286,11 +1286,11 @@
    "desc": "A cart is created holding the selected base plan, add-ons and discounts with an order number allocated; the bill limit of the selected plan is displayed.",
    "phase": 52,
    "x": 13255.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 190,
    "h": 100,
    "cx": 13350.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "qpc_cart_amend",
@@ -1302,11 +1302,11 @@
    "desc": "The Retail Agent may review, amend and remove selected plans, add-ons and discounts at any point before order submission.",
    "phase": 53,
    "x": 13499.0,
-   "y": 326.0,
+   "y": 330.0,
    "w": 206,
    "h": 60,
    "cx": 13602.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "qpc_recalc",
@@ -1318,11 +1318,11 @@
    "desc": "One-time charges, recurring charges and discounts are recalculated whenever a product is added, amended or removed.",
    "phase": 54,
    "x": 13759.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 190,
    "h": 100,
    "cx": 13854.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "d_num_category",
@@ -1348,11 +1348,11 @@
    ],
    "phase": 55,
    "x": 14031.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 150,
    "h": 100,
    "cx": 14106.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "num_reserved_lookup",
@@ -1364,11 +1364,11 @@
    "desc": "An active reserved MSISDN against the customer QID (from telesales or any channel) is retrieved and auto-populated on the number selection screen. Integration: INT-07 (UIM, synchronous, reserve/deplete MSISDN and Virtual eSIM).",
    "phase": 56,
    "x": 14270.0,
-   "y": 1370.0,
+   "y": 1390.0,
    "w": 176,
    "h": 100,
    "cx": 14358.0,
-   "cy": 1420.0
+   "cy": 1440.0
   },
   {
    "id": "num_reserved_price_check",
@@ -1380,11 +1380,11 @@
    "desc": "The reserved MSISDN price is validated against the selected base plan's entitlement; the excess and applicable upfront charge are shown where the price exceeds entitlement.",
    "phase": 57,
    "x": 14522.0,
-   "y": 1370.0,
+   "y": 1390.0,
    "w": 176,
    "h": 100,
    "cx": 14610.0,
-   "cy": 1420.0
+   "cy": 1440.0
   },
   {
    "id": "num_star_search",
@@ -1396,11 +1396,11 @@
    "desc": "Eligible Star Numbers \u2014 those within the entitlement band of the selected base plan price per the plan-price-to-number-price eligibility matrix (BR-074 status: Open) \u2014 are searchable, shown in descending price order.",
    "phase": 56,
    "x": 14255.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 14358.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "num_star_charges",
@@ -1412,11 +1412,11 @@
    "desc": "Number category, applicable price, upfront charge and lock-in period are displayed before the agent confirms the Star Number selection.",
    "phase": 57,
    "x": 14507.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 14610.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "num_free_search",
@@ -1427,11 +1427,11 @@
    "sub": "MPAR_001_NUM_13 / BR-076",
    "phase": 56,
    "x": 14255.0,
-   "y": 446.0,
+   "y": 450.0,
    "w": 206,
    "h": 100,
    "cx": 14358.0,
-   "cy": 496.0
+   "cy": 500.0
   },
   {
    "id": "num_reserve_confirm",
@@ -1443,11 +1443,11 @@
    "desc": "The selected MSISDN is reserved on confirmation, preventing allocation via any other order/channel; an unconsumed reservation is released after 72 hours (P-12). Integration: INT-07 (UIM, synchronous, reserve/deplete MSISDN and Virtual eSIM).",
    "phase": 58,
    "x": 14767.0,
-   "y": 1370.0,
+   "y": 1390.0,
    "w": 190,
    "h": 100,
    "cx": 14862.0,
-   "cy": 1420.0
+   "cy": 1440.0
   },
   {
    "id": "d_sim_type",
@@ -1468,11 +1468,11 @@
    ],
    "phase": 59,
    "x": 15039.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 150,
    "h": 100,
    "cx": 15114.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "sim_scan_physical",
@@ -1483,11 +1483,11 @@
    "sub": "MPAR_001_SIM_02 / BR-080 / INT-07",
    "phase": 60,
    "x": 15263.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 15366.0,
-   "cy": 356.0,
+   "cy": 360.0,
    "desc": "Integration: INT-07 (UIM, synchronous, reserve/deplete MSISDN and Virtual eSIM)."
   },
   {
@@ -1500,11 +1500,11 @@
    "desc": "A Virtual eSIM profile is generated and assigned to the order with an ICCID allocated.",
    "phase": 60,
    "x": 15271.0,
-   "y": 1370.0,
+   "y": 1390.0,
    "w": 190,
    "h": 100,
    "cx": 15366.0,
-   "cy": 1420.0
+   "cy": 1440.0
   },
   {
    "id": "sim_validate",
@@ -1516,11 +1516,11 @@
    "desc": "The scanned/generated SIM identifier is validated against inventory, capturing SIM Type, SIM Serial Number and ICCID; an unknown or already-allocated identifier is rejected. Integration: INT-07 (UIM, synchronous, reserve/deplete MSISDN and Virtual eSIM).",
    "phase": 61,
    "x": 15530.0,
-   "y": 1370.0,
+   "y": 1390.0,
    "w": 176,
    "h": 100,
    "cx": 15618.0,
-   "cy": 1420.0
+   "cy": 1440.0
   },
   {
    "id": "sim_lineitem",
@@ -1532,11 +1532,11 @@
    "desc": "The allocated SIM is added to the order as a line item and reserved in inventory until order completion. Integration: INT-07 (UIM, synchronous, reserve/deplete MSISDN and Virtual eSIM).",
    "phase": 62,
    "x": 15775.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 190,
    "h": 100,
    "cx": 15870.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "sim_esim_deliver",
@@ -1548,11 +1548,11 @@
    "desc": "The Virtual eSIM profile is delivered by email to the verified customer email address. MPAR_001_SIM_07 (SIM Swap Reason capture) is explicitly out of scope for this journey per the source's own acceptance criteria \u2014 it belongs to a separate SIM Swap BRSD, not applicable here. Integration: INT-08 (Notification Platform, asynchronous, despatch email/SMS).",
    "phase": 63,
    "x": 16027.0,
-   "y": 664.0,
+   "y": 672.0,
    "w": 190,
    "h": 56,
    "cx": 16122.0,
-   "cy": 692.0
+   "cy": 700.0
   },
   {
    "id": "cvc_gate",
@@ -1564,11 +1564,11 @@
    "desc": "All customer, account, billing, number, SIM, product, eligibility and compatibility validations execute before payment is initiated; progression is blocked until every mandatory validation succeeds. Status model: Order/Draft/Pending Payment (validations passed, awaiting payment capture).",
    "phase": 64,
    "x": 16286.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 176,
    "h": 100,
    "cx": 16374.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "bam_add_at_checkout",
@@ -1580,11 +1580,11 @@
    "desc": "The Retail Agent may add a billing account holding an active payment profile at the cart validation stage where none is present.",
    "phase": 65,
    "x": 16523.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 16626.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "cvc_review",
@@ -1596,11 +1596,11 @@
    "desc": "Plan, SIM, MSISDN, service components and price are presented on a consolidated review screen before the agent proceeds to CAF generation and payment.",
    "phase": 66,
    "x": 16775.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 16878.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "cvc_star_charge",
@@ -1612,11 +1612,11 @@
    "desc": "The additional upfront charge for a Star Number priced above plan entitlement is included in the payment request to WinCash. Integration: INT-06 (WinCash, synchronous, point of sale payment and stock).",
    "phase": 67,
    "x": 17035.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 190,
    "h": 100,
    "cx": 17130.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "cvc_hrn_charge",
@@ -1628,11 +1628,11 @@
    "desc": "The configured HRN advance payment (P-11: 50 QAR) is collected as a precondition to eligibility for the selected plan/product. Integration: INT-06 (WinCash, synchronous, point of sale payment and stock).",
    "phase": 68,
    "x": 17287.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 190,
    "h": 100,
    "cx": 17382.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "cvc_credit_charge",
@@ -1644,11 +1644,11 @@
    "desc": "The applicable advance payment for a credit limit enhancement is collected upfront and recorded against the customer account. Integration: INT-06 (WinCash, synchronous, point of sale payment and stock).",
    "phase": 69,
    "x": 17539.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 190,
    "h": 100,
    "cx": 17634.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "cvc_summary",
@@ -1660,11 +1660,11 @@
    "desc": "The itemised payment summary and total payable are displayed before payment is confirmed; any advance payment collected here is later adjusted against the customer's first bill. Integration: INT-09 (Billing System, asynchronous, post payments and adjust advance payment against first bill).",
    "phase": 70,
    "x": 17783.0,
-   "y": 326.0,
+   "y": 330.0,
    "w": 206,
    "h": 60,
    "cx": 17886.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "milestone3",
@@ -1675,11 +1675,11 @@
    "sub": "Section #10",
    "phase": 71,
    "x": 18035.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 206,
    "h": 100,
    "cx": 18138.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "caf_keyinfo",
@@ -1691,11 +1691,11 @@
    "desc": "Key terms \u2014 plan, plan lock-in, Star Number and its lock-in, device-on-instalment and its lock-in \u2014 are displayed before CAF submission, shown only at the Retail Agent outlet, varying by service type and refreshed on any cart amendment.",
    "phase": 72,
    "x": 18287.0,
-   "y": 326.0,
+   "y": 330.0,
    "w": 206,
    "h": 60,
    "cx": 18390.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "caf_generate",
@@ -1707,11 +1707,11 @@
    "desc": "The digital CAF is generated from the template selected via the configured matrix of agent role, channel and service type (BR-091 status: Open), populated from customer details and cart contents.",
    "phase": 73,
    "x": 18547.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 190,
    "h": 100,
    "cx": 18642.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "d_caf_mode",
@@ -1732,11 +1732,11 @@
    ],
    "phase": 74,
    "x": 18819.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 150,
    "h": 100,
    "cx": 18894.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "caf_offline_upload",
@@ -1748,11 +1748,11 @@
    "desc": "A manually signed paper CAF is uploaded in PDF or JPG format, up to two megabytes (P-13, P-14).",
    "phase": 75,
    "x": 19043.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 19146.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "caf_sign_device",
@@ -1764,11 +1764,11 @@
    "desc": "CAF Digital (customer-facing touchpad) or CAF Touch Screen (touch-screen laptop) is selected.",
    "phase": 75,
    "x": 19043.0,
-   "y": 446.0,
+   "y": 450.0,
    "w": 206,
    "h": 100,
    "cx": 19146.0,
-   "cy": 496.0
+   "cy": 500.0
   },
   {
    "id": "caf_sign_capture",
@@ -1780,11 +1780,11 @@
    "desc": "The CAF is displayed to the customer on the selected device for review; the captured signature is embedded and shown within the online CAF on the agent UI.",
    "phase": 76,
    "x": 19295.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 19398.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "caf_docs",
@@ -1796,11 +1796,11 @@
    "desc": "Supporting documents required for activation are attached in PDF or JPG format up to two megabytes; each is listed for the agent to view and download.",
    "phase": 77,
    "x": 19547.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 19650.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "milestone4",
@@ -1811,11 +1811,11 @@
    "sub": "Section #12",
    "phase": 78,
    "x": 19799.0,
-   "y": 858.0,
+   "y": 870.0,
    "w": 206,
    "h": 60,
    "cx": 19902.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "pay_request",
@@ -1827,11 +1827,11 @@
    "desc": "The upfront payment request is sent to WinCash; the CRM payment status is set from the response. Integration: INT-06 (WinCash, synchronous, point of sale payment and stock).",
    "phase": 79,
    "x": 20066.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 176,
    "h": 100,
    "cx": 20154.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "d_pay_success",
@@ -1851,11 +1851,11 @@
    ],
    "phase": 80,
    "x": 20331.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 150,
    "h": 100,
    "cx": 20406.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "pay_failure",
@@ -1867,11 +1867,11 @@
    "desc": "The order is placed on hold and the agent returned to the payment summary screen for a further attempt; the failed-attempt count is recorded and further attempts are blocked at the configured maximum (P-21, value to be confirmed). Status model: Order/Draft/Pending Payment Retry (a payment attempt failed, a further attempt is permitted).",
    "phase": 81,
    "x": 20563.0,
-   "y": 1034.0,
+   "y": 1050.0,
    "w": 190,
    "h": 100,
    "cx": 20658.0,
-   "cy": 1084.0
+   "cy": 1100.0
   },
   {
    "id": "pay_receipt",
@@ -1883,11 +1883,11 @@
    "desc": "A WinCash receipt is provided to the customer for every transaction, including a zero-value transaction.",
    "phase": 81,
    "x": 20563.0,
-   "y": 1196.0,
+   "y": 1212.0,
    "w": 190,
    "h": 56,
    "cx": 20658.0,
-   "cy": 1224.0
+   "cy": 1240.0
   },
   {
    "id": "pay_billpost",
@@ -1899,11 +1899,11 @@
    "desc": "Captured bill payments are posted to the billing system. Integration: INT-09 (Billing System, asynchronous, post payments and adjust advance payment against first bill).",
    "phase": 82,
    "x": 20815.0,
-   "y": 860.0,
+   "y": 872.0,
    "w": 190,
    "h": 56,
    "cx": 20910.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "pay_sim_deplete",
@@ -1915,11 +1915,11 @@
    "desc": "A Physical SIM or Printed eSIM is depleted from stock through WinCash on payment completion. Virtual eSIM is not store-allocated or WinCash-tracked, so its inventory depletion in UIM is deferred to order fulfilment. Integration: INT-07 (UIM, synchronous, reserve/deplete MSISDN and Virtual eSIM).",
    "phase": 83,
    "x": 21067.0,
-   "y": 1370.0,
+   "y": 1390.0,
    "w": 190,
    "h": 100,
    "cx": 21162.0,
-   "cy": 1420.0
+   "cy": 1440.0
   },
   {
    "id": "ord_submit",
@@ -1931,11 +1931,11 @@
    "desc": "The Retail Agent submits the order once payment status is Paid; submission is enabled only in that state. Status model: Order/Open/Submitted (order submitted to downstream provisioning).",
    "phase": 84,
    "x": 21311.0,
-   "y": 326.0,
+   "y": 330.0,
    "w": 206,
    "h": 60,
    "cx": 21414.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "milestone5",
@@ -1946,11 +1946,11 @@
    "sub": "Section #14",
    "phase": 85,
    "x": 21563.0,
-   "y": 838.0,
+   "y": 850.0,
    "w": 206,
    "h": 100,
    "cx": 21666.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "ord_route",
@@ -1962,11 +1962,11 @@
    "desc": "The order is submitted to downstream provisioning and activation systems with all order line items intact; the four-business-hour Postpaid activation service level (P-18) is displayed for the agent to communicate to the customer. Integration: INT-10 (Order Fulfilment, asynchronous, submit order and receive completion/failure outcome). Status model: Order/Open/In Fulfilment (downstream provisioning and activation in progress).",
    "phase": 86,
    "x": 21823.0,
-   "y": 1566.0,
+   "y": 1590.0,
    "w": 190,
    "h": 100,
    "cx": 21918.0,
-   "cy": 1616.0
+   "cy": 1640.0
   },
   {
    "id": "ord_nav360",
@@ -1978,11 +1978,11 @@
    "desc": "The agent lands on the Customer 360 All Orders view with the new order listed; any order can be opened to view its detail.",
    "phase": 87,
    "x": 22067.0,
-   "y": 306.0,
+   "y": 310.0,
    "w": 206,
    "h": 100,
    "cx": 22170.0,
-   "cy": 356.0
+   "cy": 360.0
   },
   {
    "id": "d_ord_outcome",
@@ -2003,11 +2003,11 @@
    ],
    "phase": 88,
    "x": 22347.0,
-   "y": 1566.0,
+   "y": 1590.0,
    "w": 150,
    "h": 100,
    "cx": 22422.0,
-   "cy": 1616.0,
+   "cy": 1640.0,
    "desc": "Integration: INT-10 (Order Fulfilment, asynchronous, submit order and receive completion/failure outcome)."
   },
   {
@@ -2019,11 +2019,11 @@
    "desc": "The order is set to the failed state and the failure reason is made available to the agent. Status model: Order/Closed/Failed (provisioning or activation failed downstream; terminal).",
    "phase": 89,
    "x": 22579.0,
-   "y": 1566.0,
+   "y": 1590.0,
    "w": 190,
    "h": 100,
    "cx": 22674.0,
-   "cy": 1616.0
+   "cy": 1640.0
   },
   {
    "id": "ord_tracking_resolve",
@@ -2035,11 +2035,11 @@
    "desc": "The Tracking Record is set to Resolved once the order status is completed in CRM, with the order number recorded; resolution requires all configured mandatory fields to be populated. Status model: Tracking Record/Resolved/Order Complete (order completed in CRM, order number recorded).",
    "phase": 89,
    "x": 22571.0,
-   "y": 858.0,
+   "y": 870.0,
    "w": 206,
    "h": 60,
    "cx": 22674.0,
-   "cy": 888.0
+   "cy": 900.0
   },
   {
    "id": "not_submit",
@@ -2051,11 +2051,11 @@
    "desc": "An order submission notification is despatched through the mode selected on the customer record (email or SMS), using a template, trigger point and recipient list sourced from configuration so amendments require no code change. Integration: INT-08 (Notification Platform, asynchronous, despatch email/SMS).",
    "phase": 86,
    "x": 21823.0,
-   "y": 1706.0,
+   "y": 1730.0,
    "w": 190,
    "h": 100,
    "cx": 21918.0,
-   "cy": 1756.0
+   "cy": 1780.0
   },
   {
    "id": "not_failure",
@@ -2066,11 +2066,11 @@
    "sub": "MPAR_001_NOT_02 / BR-120 / INT-08",
    "phase": 90,
    "x": 22831.0,
-   "y": 1566.0,
+   "y": 1590.0,
    "w": 190,
    "h": 100,
    "cx": 22926.0,
-   "cy": 1616.0,
+   "cy": 1640.0,
    "desc": "Integration: INT-08 (Notification Platform, asynchronous, despatch email/SMS)."
   },
   {
@@ -2082,11 +2082,11 @@
    "sub": "MPAR_001_NOT_03 / BR-120 / INT-08",
    "phase": 90,
    "x": 22831.0,
-   "y": 1846.0,
+   "y": 1870.0,
    "w": 190,
    "h": 100,
    "cx": 22926.0,
-   "cy": 1896.0,
+   "cy": 1920.0,
    "desc": "Integration: INT-08 (Notification Platform, asynchronous, despatch email/SMS). Status model: Order/Closed/Complete (provisioning and activation completed successfully; terminal)."
   },
   {
@@ -2099,11 +2099,11 @@
    "desc": "The activation notification is sent to every active MSISDN registered against the customer QID, per the CRA regulatory requirement. Integration: INT-08 (Notification Platform, asynchronous, despatch email/SMS).",
    "phase": 90,
    "x": 22831.0,
-   "y": 1986.0,
+   "y": 2010.0,
    "w": 190,
    "h": 100,
    "cx": 22926.0,
-   "cy": 2036.0
+   "cy": 2060.0
   },
   {
    "id": "not_survey",
@@ -2115,11 +2115,11 @@
    "desc": "The customer feedback survey request is sent to the Customer Survey system once the Tracking Record is set to Resolved. Integration: INT-11 (Medilia, asynchronous, despatch feedback survey request).",
    "phase": 90,
    "x": 22831.0,
-   "y": 1706.0,
+   "y": 1730.0,
    "w": 190,
    "h": 100,
    "cx": 22926.0,
-   "cy": 1756.0
+   "cy": 1780.0
   },
   {
    "id": "end_closed",
@@ -2131,11 +2131,11 @@
    "desc": "The Tracking Record is updated to Closed once customer feedback is received from the Customer Survey system. Terminal. Status model: Tracking Record/Closed/Closed (all mandatory updates complete against Resolved; terminal, triggers the feedback survey).",
    "phase": 91,
    "x": 23136.0,
-   "y": 846.0,
+   "y": 858.0,
    "w": 84,
    "h": 84,
    "cx": 23178.0,
-   "cy": 888.0
+   "cy": 900.0
   }
  ],
  "flows": [
