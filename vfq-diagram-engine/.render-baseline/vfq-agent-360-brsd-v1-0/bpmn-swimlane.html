@@ -825,9 +825,24 @@ const decisionBranchOffset={};   // FLOWS index -> vertical offset from source c
  const BRANCH_GAP=18;
  Object.values(bySource).forEach(idxs=>{
   if(idxs.length<2) return;   // a lone branch has nothing to diverge from
-  idxs.sort((i,j)=>{ const bi=NID[FLOWS[i].to], bj=NID[FLOWS[j].to]; return (bi?bi.cy:0)-(bj?bj.cy:0); });
-  const n=idxs.length;
-  idxs.forEach((idx,rank)=>{ decisionBranchOffset[idx]=(rank-(n-1)/2)*BRANCH_GAP; });
+  const a=NID[FLOWS[idxs[0]].from];
+  // A branch whose target sits on the EXACT same row as the source (b.cy===a.cy) is eligible
+  // for edgePath's own dead-straight sy===ty fast path — but only at offset 0; any nonzero
+  // branchOffset shifts sy off a.cy and defeats that fast path, forcing a pointless dogleg on
+  // a branch that already reads as unambiguously "the straight one" the instant it leaves the
+  // vertex — there's no direction ambiguity with a sibling heading up/down left to resolve.
+  // Only skip the offset when exactly one sibling is flat: two flat siblings would exit the
+  // same point in the same (horizontal) direction and genuinely need separating.
+  const flat=idxs.filter(idx=>{ const b=NID[FLOWS[idx].to]; return b && b.cy===a.cy; });
+  const rankGroup = flat.length===1 ? idxs.filter(idx=>!flat.includes(idx)) : idxs;
+  if(rankGroup.length<2) return;   // 0 or 1 left to rank — default (unset ⇒ 0) offset is correct
+  rankGroup.sort((i,j)=>{ const bi=NID[FLOWS[i].to], bj=NID[FLOWS[j].to]; return (bi?bi.cy:0)-(bj?bj.cy:0); });
+  const n=rankGroup.length;
+  rankGroup.forEach((idx,rank)=>{ decisionBranchOffset[idx]=(rank-(n-1)/2)*BRANCH_GAP; });
+  // Guard against a ranked offset landing on exactly 0 — the row the flat sibling already
+  // claims — which only happens when n is odd (the middle rank naturally offsets to 0); nudge
+  // the whole ranked set by half a gap so it stays evenly spaced but never coincides with it.
+  if(flat.length===1 && n%2===1){ rankGroup.forEach(idx=>{ decisionBranchOffset[idx]+=BRANCH_GAP/2; }); }
  });
 }
 // Converging-target companion to the branch-divergence offset above: several UNRELATED forward
@@ -1660,7 +1675,17 @@ function enforceExitEntryDirection(d,srcNode,tgtNode){
  const nums=d.match(/-?\d+\.?\d*/g); if(!nums) return d;
  const P=[]; for(let i=0;i<nums.length;i+=2) P.push([Number(nums[i]),Number(nums[i+1])]);
  if(P.length<3) return d;
- // Source / first segment.
+ // Source / first segment. Inserts ONE new corner point at the stub's lead coordinate, then
+ // shifts the chain of points sharing the original first segment's coordinate on the stubbed
+ // axis to that same lead coordinate (shiftChain — same propagation technique used by
+ // enforceMinSegLength/enforceAnchorSeparation) instead of leaving that original point where it
+ // was. A prior version left the original point in place, which spliced in a full "advance
+ // STUB_DIR, then immediately retreat STUB_DIR back to the original coordinate" zigzag before
+ // the path went on to do what it was already going to do — a real, visible redundant dogleg
+ // found empirically (e.g. a decision's obstacle-detour exit advancing right 30px only to
+ // immediately backtrack the same 30px before turning). Shifting the chain instead means the
+ // mandatory directional stub simply becomes the new starting point of whatever run followed
+ // it, with no wasted advance-and-retreat.
  {
   const side=sideAt(srcNode,P[0][0],P[0][1]);
   if(side){
@@ -1671,16 +1696,23 @@ function enforceExitEntryDirection(d,srcNode,tgtNode){
     if(expectH){
      const dir=side==='right'?1:-1;
      const leadX=P[0][0]+dir*STUB_DIR;
-     P.splice(1,0,[leadX,P[0][1]],[leadX,P[1][1]]);
+     const origX=P[1][0];
+     P.splice(1,0,[leadX,P[0][1]]);
+     let idx=2;
+     while(idx<P.length-1 && P[idx][0]===origX){ P[idx][0]=leadX; idx++; }
     } else {
      const dir=side==='bottom'?1:-1;
      const leadY=P[0][1]+dir*STUB_DIR;
-     P.splice(1,0,[P[0][0],leadY],[P[1][0],leadY]);
+     const origY=P[1][1];
+     P.splice(1,0,[P[0][0],leadY]);
+     let idx=2;
+     while(idx<P.length-1 && P[idx][1]===origY){ P[idx][1]=leadY; idx++; }
     }
    }
   }
  }
- // Target / last segment — mirrors the source case, inserting toward the end instead.
+ // Target / last segment — mirrors the source case, walking backward from the fixed target
+ // anchor instead of forward from the fixed source anchor. Same shiftChain rationale as above.
  {
   const n=P.length;
   const side=sideAt(tgtNode,P[n-1][0],P[n-1][1]);
@@ -1692,14 +1724,17 @@ function enforceExitEntryDirection(d,srcNode,tgtNode){
     if(expectH){
      const dir=side==='right'?1:-1;
      const leadX=P[n-1][0]+dir*STUB_DIR;
-     // Insert [leadX,P[n-2].y] (a new horizontal segment off P[n-2]) then [leadX,P[n-1].y] (a
-     // vertical segment carrying the original — now no-longer-last — direction); the final
-     // segment into P[n-1] is then leadX -> P[n-1].x at the target's own y, correctly horizontal.
-     P.splice(n-1,0,[leadX,P[n-2][1]],[leadX,P[n-1][1]]);
+     const origX=P[n-2][0];
+     P.splice(n-1,0,[leadX,P[n-1][1]]);
+     let idx=n-2;
+     while(idx>0 && P[idx][0]===origX){ P[idx][0]=leadX; idx--; }
     } else {
      const dir=side==='bottom'?1:-1;
      const leadY=P[n-1][1]+dir*STUB_DIR;
-     P.splice(n-1,0,[P[n-2][0],leadY],[P[n-1][0],leadY]);
+     const origY=P[n-2][1];
+     P.splice(n-1,0,[P[n-1][0],leadY]);
+     let idx=n-2;
+     while(idx>0 && P[idx][1]===origY){ P[idx][1]=leadY; idx--; }
     }
    }
   }
