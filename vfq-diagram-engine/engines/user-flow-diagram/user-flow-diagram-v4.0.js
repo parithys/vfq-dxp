@@ -572,6 +572,84 @@ function anchor(box, side) {
   return { x: box.cx, y: box.bottom };
 }
 
+// A node's normal forward flow always exits its bottom and enters its top (see connectorSVG's
+// 'direct' branches, and a forward jump's default sides, below) — so a BACKWARD (loop-back) jump,
+// whose own default anchor lands on that identical side (bottom for its source, top for its
+// target — see the `forward` ternaries below), stacks a second, completely unrelated connector
+// exactly on top of the first at that one point, while the node's left/right edges sit entirely
+// unused. Detected here, before any path is drawn, by tallying which side every connector's
+// endpoints would naturally claim. Only JUMP connectors are ever redirected: every jump's lane
+// already runs along the right-hand gutter (see laneX in connectorSVG), so entering via the
+// right edge is a shorter, more natural route for them, not a special case — a 'direct' connector
+// between adjacent rows has no such lane to redirect through.
+// True only if the straight horizontal run from x1 to x2 at height y is clear of every node
+// EXCEPT the two the connector actually touches — a side-column node (the reject/error column
+// sits left of the trunk) can have the trunk itself sitting directly between it and the lane, so
+// "right is unclaimed" alone isn't sufficient: the override must also confirm there is a real,
+// unobstructed corridor to reach that right edge before committing to it.
+function hSegClear(y, x1, x2, boxes, excludeIds) {
+  const lo = Math.min(x1, x2), hi = Math.max(x1, x2);
+  for (const box of boxes.values()) {
+    if (excludeIds.has(box.id)) continue;
+    if (y > box.top + 0.5 && y < box.bottom - 0.5 && hi > box.left + 0.5 && lo < box.right - 0.5) return false;
+  }
+  return true;
+}
+function computeSideOverrides(paths, boxes, laneXOf) {
+  const claims = {};
+  function claim(id, side) {
+    const c = claims[id] = claims[id] || { top: 0, bottom: 0, left: 0, right: 0 };
+    c[side]++;
+    return c;
+  }
+  const natural = paths.map(p => {
+    const a = boxes.get(p.from), b = boxes.get(p.to);
+    let startSide, endSide;
+    if (p.kind === 'direct') { startSide = 'bottom'; endSide = 'top'; }
+    else { const forward = b.row > a.row; startSide = forward ? 'bottom' : 'top'; endSide = forward ? 'top' : 'bottom'; }
+    claim(p.from, startSide);
+    claim(p.to, endSide);
+    return { p, startSide, endSide };
+  });
+  const overrides = new Map();
+  for (const { p, startSide, endSide } of natural) {
+    if (p.kind !== 'jump') continue;   // no side lane to redirect a direct connector through
+    const a = boxes.get(p.from), b = boxes.get(p.to);
+    const laneX = laneXOf(p);
+    const excl = new Set([p.from, p.to]);
+    const ac = claims[p.from], bc = claims[p.to];
+    let ov = null;
+    if (ac[startSide] >= 2 && ac.right === 0 && hSegClear(a.cy, a.right, laneX, boxes, excl)) {
+      ov = ov || {}; ov.startSide = 'right'; ac[startSide]--; ac.right++;
+    }
+    if (bc[endSide] >= 2 && bc.right === 0 && hSegClear(b.cy, b.right, laneX, boxes, excl)) {
+      ov = ov || {}; ov.endSide = 'right'; bc[endSide]--; bc.right++;
+    }
+    if (ov) overrides.set(p, ov);
+  }
+  // A diamond's "Yes" (straight down, same column) and "No" (branch-out, a different column)
+  // exits both naturally claim 'bottom' too — but a diamond, unlike a rectangle, only HAS one
+  // point per side (its four vertices), never a full edge to spread multiple exits along, so
+  // this collision is structural rather than incidental. Its left/right vertices are otherwise
+  // never used at all (anchor() already supports them — see above), so the branch-out exit,
+  // which is already heading toward one side or the other, redirects to that side's vertex
+  // instead of the shared bottom tip whenever the source is a diamond with 2+ bottom claims.
+  for (const { p, startSide } of natural) {
+    if (p.kind !== 'direct' || startSide !== 'bottom') continue;
+    const a = boxes.get(p.from), b = boxes.get(p.to);
+    if (a.shape !== 'diamond' || a.cx === b.cx) continue;   // same-column child keeps the tip
+    const ac = claims[p.from];
+    if (ac.bottom < 2) continue;
+    const side = b.cx < a.cx ? 'left' : 'right';
+    if (ac[side] > 0) continue;   // that vertex is already spoken for by something else
+    const existing = overrides.get(p) || {};
+    existing.startSide = side;
+    overrides.set(p, existing);
+    ac.bottom--; ac[side]++;
+  }
+  return overrides;
+}
+
 // Edge labels are centred on their connector's own x — usually the trunk/branch midpoint, but
 // for a jump/bypass edge that's an outer lane position computed independently of label width
 // (laneX only has to clear the CONNECTOR LINE, via G.margin — a lane near the diagram's right
@@ -613,28 +691,50 @@ function edgeLabel(x, y, text, color, canvasWidth) {
 // only ever run along a single column's (or lane's) fixed x, so they only
 // ever touch the two nodes they actually connect. This is what guarantees
 // "no connector crosses a node" structurally, not by accident.
-function connectorSVG(path, boxes, geo, laneXOf) {
+function connectorSVG(path, boxes, geo, laneXOf, sideOverrides) {
   const a = boxes.get(path.from), b = boxes.get(path.to);
   const style = THEME.edge[path.type];
   const marker = `url(#arrow-${path.type})`;
   let d, labelX, labelY;
+  const override = sideOverrides && sideOverrides.get(path);
 
   if (path.kind === 'direct' && a.col === b.col) {
-    // Same column, adjacent rows: a single straight vertical line. Its
-    // label sits in the branch sub-band so it never collides with a jump
-    // transit line leaving the same row.
+    // Same column, adjacent rows: a single straight vertical line.
     const start = anchor(a, 'bottom');
     const end = anchor(b, 'top');
     d = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
-    labelX = start.x + (a.col === 0 ? 30 : (a.col < 0 ? -30 : 30));
-    labelY = geo.branchY[a.row];
+    // Label text is centre-anchored (edgeLabel(), below), so a flat 30px offset only clears the
+    // LINE for words narrow enough that half their own rendered width is under 30px — "cart"
+    // (half-width ~15) cleared it with room to spare, but "appointment" (half-width ~45) still
+    // straddled the line despite the same nominal offset, since centring 30px away from a line
+    // still leaves the text's own near half reaching back across it. Offset by the label's own
+    // measured half-width plus a fixed gap instead, so the offset scales with the word and the
+    // line is guaranteed clear regardless of length.
+    const dir = a.col < 0 ? -1 : 1;
+    const labelGap = 8;
+    const labelHalfW = path.label ? textWidth(path.label, THEME.typography.edge.size) / 2 : 0;
+    labelX = start.x + dir * (labelHalfW + labelGap);
+    // Centred on the connector's own span (not geo.branchY, the fixed sub-band close to the
+    // SOURCE used for branch-out elbow geometry below) — a same-column connector is a single
+    // straight line with no elbow to keep clear of, so there's no reason for its label to hug
+    // one end rather than sit centred between the two nodes it names.
+    labelY = (start.y + end.y) / 2;
   } else if (path.kind === 'direct') {
     // Branch-out / merge-back between trunk and a side column, exactly one
     // row apart: drop into the branch sub-band below the source, jog
     // sideways there, then drop into the top of the target.
     const gy = geo.branchY[a.row];
-    const start = anchor(a, 'bottom');
+    // A diamond source with two exits (its "Yes", straight down, and this branch-out "No") both
+    // naturally want its single bottom vertex — computeSideOverrides() redirects this one to the
+    // diamond's own left/right vertex instead when that happens (see there for why a diamond
+    // can't just spread exits along "the bottom" the way a rectangle's full edge would allow).
+    const startSide = (override && override.startSide) || 'bottom';
+    const start = anchor(a, startSide);
     const end = anchor(b, 'top');
+    // Works unchanged whether `start` is the bottom tip or a side vertex: the vertical run at
+    // start.x stays clear of the diamond either way — held at a.left/a.right, it's outside the
+    // shape for the whole lower half, since the diamond's own boundary narrows toward the
+    // opposite (bottom) tip as y increases past its vertical centre.
     d = `M ${start.x} ${start.y} L ${start.x} ${gy} L ${end.x} ${gy} L ${end.x} ${end.y}`;
     labelX = (start.x + end.x) / 2;
     labelY = gy - 8;
@@ -644,13 +744,28 @@ function connectorSVG(path, boxes, geo, laneXOf) {
     // column), then enter the target from its own jump sub-band.
     const laneX = laneXOf(path);
     const forward = b.row > a.row;
-    const startAnchor = anchor(a, forward ? 'bottom' : 'top');
-    const endAnchor = anchor(b, forward ? 'top' : 'bottom');
+    // A backward (loop-back) jump's natural anchor is the SAME side (bottom for its source, top
+    // for its target) that a node's own normal forward flow already uses on that side — so two
+    // completely unrelated connectors end up stacked on one identical point while the node's
+    // left/right edges sit unused (every jump lane already runs along the right-hand gutter —
+    // see laneX above — so left is never even a candidate). computeSideOverrides() (below)
+    // detects this and redirects the colliding endpoint onto 'right' here; a plain node's normal
+    // (non-diamond) anchor() already supports it, so this is a routing choice, not a new shape.
+    const startSide = (override && override.startSide) || (forward ? 'bottom' : 'top');
+    const endSide = (override && override.endSide) || (forward ? 'top' : 'bottom');
+    const startAnchor = anchor(a, startSide);
+    const endAnchor = anchor(b, endSide);
     const startGap = forward ? geo.jumpY[a.row] : geo.jumpY[a.row - 1];
     const endGap = forward ? geo.jumpY[b.row - 1] : geo.jumpY[b.row];
-    d = `M ${startAnchor.x} ${startAnchor.y} L ${startAnchor.x} ${startGap} L ${laneX} ${startGap} L ${laneX} ${endGap} L ${endAnchor.x} ${endGap} L ${endAnchor.x} ${endAnchor.y}`;
+    const startLeg = startSide === 'right'
+      ? `M ${startAnchor.x} ${startAnchor.y} L ${laneX} ${startAnchor.y}`
+      : `M ${startAnchor.x} ${startAnchor.y} L ${startAnchor.x} ${startGap} L ${laneX} ${startGap}`;
+    const endLeg = endSide === 'right'
+      ? `L ${laneX} ${endAnchor.y} L ${endAnchor.x} ${endAnchor.y}`
+      : `L ${laneX} ${endGap} L ${endAnchor.x} ${endGap} L ${endAnchor.x} ${endAnchor.y}`;
+    d = `${startLeg} ${endLeg}`;
     labelX = laneX;
-    labelY = startGap - 8;
+    labelY = (startSide === 'right' ? startAnchor.y : startGap) - 8;
   }
 
   const line = `<path d="${d}" fill="none" stroke="${style.color}" stroke-width="2" stroke-dasharray="${style.dash}" marker-end="${marker}"/>`;
@@ -753,7 +868,8 @@ function generate(rawInput) {
   // Draw direct connectors first, jumps on top so bypass lanes read clearly.
   const directPaths = layout.paths.filter(p => p.kind === 'direct');
   const jumpPaths = layout.paths.filter(p => p.kind === 'jump');
-  const rendered = [...directPaths, ...jumpPaths].map(p => connectorSVG(p, geo.boxes, geo, laneXOf));
+  const sideOverrides = computeSideOverrides(layout.paths, geo.boxes, laneXOf);
+  const rendered = [...directPaths, ...jumpPaths].map(p => connectorSVG(p, geo.boxes, geo, laneXOf, sideOverrides));
   validateConnectors(rendered, geo.boxes);
   const connectorsSVG = rendered.map(r => r.svg).join('\n');
 

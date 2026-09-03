@@ -81,7 +81,7 @@
       "name": "Initiate Interaction & Verify Customer (JSM, KYC)",
       "shortLabel": "Initiate & Verify",
       "goals": "Not found in source — the document specifies system/agent behaviour for queue initiation and identity verification but does not state a customer-frame goal for this stage.",
-      "actions": "Retail Agent initiates one activation process per queue ticket transaction, creating a tracking record owned by the initiating agent; agent scans the Qatar identity document front and back, capturing name and date of birth on the front and the document number on the back with an optional liveliness check; system retrieves customer information from the Ministry of Interior using the identity document number and compares first name, last name, document number and date of birth exactly between capture and government validation before the journey proceeds; verified attributes are displayed for agent confirmation and locked from editing (JSM, KYC)",
+      "actions": "Agent opens a new activation ticket and scans the customer's Qatar ID; the system verifies their identity against Ministry of Interior records and locks the confirmed details.",
       "touchpoints": "Retail Store / Field - Retail Agent / Field Agent - Tablet or Desktop (JSM, KYC)",
       "systems": "Siebel CRM, Identity Capture Service, Ministry of Interior, Qnomy",
       "thoughts": {
@@ -125,7 +125,7 @@
       "name": "Capture Installation Address & Service Feasibility (RFS)",
       "shortLabel": "Capture Address (RFS)",
       "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
-      "actions": "Agent captures the installation address from the utility identifier or by searching zone, street, building number, floor and flat number, floor and flat applying only to apartments; address selection is filtered hierarchically so the street list is constrained by zone and the building list by street; agent searches the point of presence in the ready for service screen by address, utility identifier or area, with the address auto filled from the RFS data based on utility identifier; system displays the service types available at the location (Fiber, FWA Indoor, FWA Outdoor) and displays detected customer premises equipment/optical network terminal information where a device is present; installation address is updated after the RFS check and rendered non editable, requiring recapture to change; agent uploads a tenancy document (PDF or Word, maximum two megabytes) as proof of address (RFS)",
+      "actions": "Agent captures the installation address and checks service availability; the system shows which connection types are available at that location, and the agent uploads proof of address.",
       "touchpoints": "Retail Store / Field - Retail Agent / Field Agent - Tablet or Desktop, RFS Portal search (RFS)",
       "systems": "RFS Portal, Siebel CRM",
       "thoughts": {
@@ -170,7 +170,7 @@
       "name": "Eligibility & Credit Control (ECC)",
       "shortLabel": "Eligibility Check",
       "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
-      "actions": "System permits the fibre/FWA journey to proceed only for a Qatar identity document holder taking a postpaid connection; existing-customer credit check uses the enterprise data warehouse and a new-customer credit check uses the Qatar Credit Authority; a customer returned as blacklisted or in collections may not proceed; customer may not proceed where outstanding balance exceeds the configured fibre threshold; only a privileged agent may modify the system-defaulted credit limit; each eligibility failure displays a distinct message on the interface so the agent can communicate the reason to the customer (ECC)",
+      "actions": "System checks the customer's eligibility and runs a credit check, blocking anyone blacklisted, in collections, or over the balance threshold, and shows the agent a clear reason for any failure.",
       "touchpoints": "Retail Store / Field - Retail Agent - Tablet or Desktop, system-assisted credit check (ECC)",
       "systems": "Enterprise Data Warehouse, Qatar Credit Authority, Billing System",
       "thoughts": {
@@ -214,7 +214,7 @@
       "name": "Capture Billing Profile (BAM)",
       "shortLabel": "Billing Profile",
       "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
-      "actions": "Agent captures the billing profile covering payment type, payment method, bill cycle, bill media and language; billing address is set to the customer address or newly captured; a billing profile holds exactly one active payment profile and multiple billing contacts with exactly one primary, the invoice being delivered to the primary contact; bill cycle is defaulted in accordance with the configured rule; payment details are validated before the payment profile is created (BAM)",
+      "actions": "Agent sets up the customer's billing profile — payment method, bill cycle, and delivery preferences — and the system validates the payment details before saving it.",
       "touchpoints": "Retail Store / Field - Retail Agent - Tablet or Desktop (BAM)",
       "systems": "Billing System",
       "thoughts": {
@@ -255,7 +255,7 @@
       "name": "Build Product Cart & Select Numbers (QPC, NUM, SIM)",
       "shortLabel": "Build Cart",
       "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
-      "actions": "System presents only fibre base plans eligible for the service type available at the address and the customer segment; IPTV is bundled by default with the base plan, displaying all child plans, with agent able to remove it at customer request; only add ons pre configured and mapped to the base plan may be added, and only discounts mapped to the product are shown; cart totals recalculate on every add, amend or remove; agent searches and selects a preferred fixed line number (free number category) into the cart, or for FWA journeys selects a mobile number instead, star numbers being prohibited for FWA; for FWA journeys agent scans SIM and customer premises equipment serial numbers into the cart; number category and charges are displayed for agent review before confirmation (QPC, NUM, SIM)",
+      "actions": "Agent builds the customer's plan and add-ons in the cart, then selects a phone number and, for FWA journeys, scans the SIM and equipment serial numbers.",
       "touchpoints": "Retail Store / Field - Retail Agent - Tablet or Desktop, number and SIM/CPE scan (QPC, NUM, SIM)",
       "systems": "Catalogue, UIM",
       "thoughts": {
@@ -299,7 +299,7 @@
       "name": "Book Appointment & Field Workforce Task (WFM)",
       "shortLabel": "Appointment (WFM)",
       "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
-      "actions": "System fetches available appointment slots from Field Workforce Management with lead time and technician availability; agent selects a slot and the customer may request a specific date and time; agent captures additional notes and marks whether the contract application form and tenancy document are to be collected by the technician; appointment booking is skipped for FWA Indoor and mandatory for FWA Outdoor and fibre; technician captures the optical network terminal and set top box serial numbers, mesh device quantity (first two complimentary, further devices charged) and wire length with one time charge; order proceeds only after task closure with customer feedback is received; a reported installation issue creates a fault ticket, updates the task on closure and allows the appointment to be rescheduled (WFM)",
+      "actions": "Agent books an installation appointment from available technician slots; the technician later completes the install, logs equipment details, and closes the task with customer feedback.",
       "touchpoints": "Customer Premises / Field Agent (Technician) - Field Workforce Management task, Store / Agent - Tablet or Desktop for booking (WFM)",
       "systems": "Field Workforce Management",
       "thoughts": {
@@ -344,7 +344,7 @@
       "name": "Checkout & Contract Documentation (CVC, CAF)",
       "shortLabel": "Checkout & CAF",
       "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
-      "actions": "Cart, customer, billing, number, resource and eligibility validations execute at checkout before payment; key information (plan selected, lock-in period) is displayed before contract application form submission and refreshed on any cart amendment; the CAF is generated from the template selected by product type and connection type using the configured role/channel/product/connection matrix; agent captures the customer signature via the digital form or touch screen, or uploads a manually signed form (PDF or JPG, maximum two megabytes); an agent holding the fulfilment role may skip CAF submission; agent uploads additional supporting documents into a separate section and captures activity comments passed to the WFM task (CVC, CAF)",
+      "actions": "System runs final validations, then the agent has the customer sign the contract — digitally or on paper — and attaches any supporting documents.",
       "touchpoints": "Retail Store / Field - Retail Agent - Tablet or Desktop, digital signature capture or offline upload (CVC, CAF)",
       "systems": "Siebel CRM",
       "thoughts": {
@@ -388,7 +388,7 @@
       "name": "Payment & Order Submission (PAY, ORD)",
       "shortLabel": "Payment & Submit",
       "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
-      "actions": "Upfront payment request is sent to the point of sale payment system and payment status is set from the response; fixed line number inventory is depleted in UIM as part of the fulfilment flow, and SIM/equipment inventory is depleted to the point of sale payment system on payment completion for an FWA journey; agent submits the order once all sections are complete and payment is paid, the submit action being enabled only under those conditions; agent is navigated to the all orders view on submission (PAY, ORD)",
+      "actions": "Agent takes upfront payment and submits the order once everything is complete and paid, deducting the reserved number and equipment from inventory.",
       "touchpoints": "Retail Store / Field - Retail Agent - Tablet or Desktop, Point of Sale Payment System (PAY, ORD)",
       "systems": "Point of Sale Payment System, UIM, Order Management",
       "thoughts": {
@@ -430,7 +430,7 @@
       "name": "Network Activation & Fulfilment (NET)",
       "shortLabel": "Network Activation",
       "goals": "Not found in source — no customer-frame goal statement is present for this stage; the source notes this stage is system-orchestrated with no direct agent or customer action.",
-      "actions": "Order Management orchestrates fulfilment; for fibre, network activation is triggered on WFM task completion and the status is updated in the CRM; for FWA Indoor, network activation proceeds on the planned activation date without waiting for a WFM task; for an FWA journey, the SIM is activated together with network activation; order status is updated to the field workforce management system so the technician may proceed with order activation (NET)",
+      "actions": "Order Management triggers network activation once installation is complete (or on the planned date for FWA Indoor, without waiting), activates the SIM for FWA journeys, and keeps the technician system updated.",
       "touchpoints": "System-orchestrated / Order Management - background processing, no direct agent action (NET)",
       "systems": "Order Management, Field Workforce Management, Siebel CRM",
       "thoughts": {
@@ -471,7 +471,7 @@
       "name": "Billing Update & Completion (FIN)",
       "shortLabel": "Billing & Completion",
       "goals": "Not found in source — no customer-frame goal statement is present for this stage.",
-      "actions": "Account, product, service and resource information with per-line prices, including additional devices captured during WFM installation, is passed to the billing system after task closure; for FWA Indoor, the customer premises equipment captured at order capture is billed; order completion notification from Order Management sets the order status to completed in the CRM; tracking record is set to resolved once the order is completed and the order number is recorded; customer feedback survey is despatched on tracking record closure (FIN)",
+      "actions": "Billing system is updated with the final account and pricing details, the order is marked complete, and the customer receives a feedback survey.",
       "touchpoints": "System-orchestrated / Order Management and Billing - background processing, customer receives survey (FIN)",
       "systems": "Billing System, Siebel CRM, Notification Platform",
       "thoughts": {
