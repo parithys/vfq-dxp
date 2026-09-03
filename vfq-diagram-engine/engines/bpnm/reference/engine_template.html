@@ -1151,15 +1151,63 @@ function labelClearsPlacedLabels(cx,cy,halfW,halfH){
  }
  return true;
 }
-function placeEdgeLabel(text,baseX,baseY){
- const halfW=_elblCtx.measureText(text).width/2+4, halfH=9;   // ~half the 14px line height, plus a hair of padding
+// Exact min distance from an axis-aligned rect to an axis-aligned segment — every segment in
+// this engine's routing is strictly horizontal or vertical (orthogonal-only, see edgePath()),
+// so this is cheap and precise rather than an approximation: the gap on each axis is 0 whenever
+// the rect's span already overlaps the segment's span on that axis, and the two independent
+// per-axis gaps combine via Pythagoras into the true closest distance either way.
+function rectSegDist(x1,y1,x2,y2,sx1,sy1,sx2,sy2){
+ if(sy1===sy2){   // horizontal segment
+  const lo=Math.min(sx1,sx2), hi=Math.max(sx1,sx2), y0=sy1;
+  const dx = hi<x1 ? x1-hi : lo>x2 ? lo-x2 : 0;
+  const dy = y0<y1 ? y1-y0 : y0>y2 ? y0-y2 : 0;
+  return Math.hypot(dx,dy);
+ }
+ const lo=Math.min(sy1,sy2), hi=Math.max(sy1,sy2), x0=sx1;   // vertical segment
+ const dy = hi<y1 ? y1-hi : lo>y2 ? lo-y2 : 0;
+ const dx = x0<x1 ? x1-x0 : x0>x2 ? x0-x2 : 0;
+ return Math.hypot(dx,dy);
+}
+// A label's own node/label checks (above) say nothing about UNRELATED connector lines: a caption
+// nudged clear of every node and every other label can still end up sitting on, or a few px from,
+// some other edge's path that happens to pass nearby (two independent branches converging through
+// the same stretch of canvas, or a long forward edge's bend column running past a decision's
+// caption). Every rendered edge's `d` is checked here except the label's OWN edge — a caption is
+// SUPPOSED to sit close to the line it captions (that relationship is the whole point, tuned via
+// the -13 starting offset above), so excluding it isn't a loophole, it's the correct baseline.
+const LABEL_EDGE_CLEARANCE=10;
+const edgeDList=[];   // {i, d} for every rendered edge — populated before any label is placed
+function labelClearsAllEdges(cx,cy,halfW,halfH,ownIdx){
+ const x1=cx-halfW, x2=cx+halfW, y1=cy-halfH, y2=cy+halfH;
+ for(const {i,d} of edgeDList){
+  if(i===ownIdx) continue;
+  const nums=d.match(/-?\d+\.?\d*/g).map(Number);
+  for(let k=0;k+3<nums.length;k+=2){
+   if(rectSegDist(x1,y1,x2,y2,nums[k],nums[k+1],nums[k+2],nums[k+3]) < LABEL_EDGE_CLEARANCE) return false;
+  }
+ }
+ return true;
+}
+function placeEdgeLabel(text,baseX,baseY,ownIdx){
+ const m=_elblCtx.measureText(text);
+ const halfW=m.width/2+4;
+ // A flat "half the 14px line height" guess (=9) undershoots this font's real glyph extent —
+ // bold italic text's ascent measures closer to 11-12px above the baseline for this size, so a
+ // symmetric ±9 box let the collision checks below believe a label had cleared an obstacle by a
+ // couple of px when the actually-rendered glyph still touched it (measured via a real browser
+ // getBBox(), not this same estimate, so the mismatch wasn't self-consistent). Use the canvas's
+ // own measured ascent/descent when available — taking the larger of the two and applying it
+ // symmetrically errs toward reserving slightly MORE space than needed, never less.
+ const halfH=(m.actualBoundingBoxAscent!=null && m.actualBoundingBoxDescent!=null)
+  ? Math.max(m.actualBoundingBoxAscent,m.actualBoundingBoxDescent)+1
+  : 11;
  const NUDGE=16;
  let best=baseY;
  for(let step=0;step<=8;step++){
   const dy = step===0?0:(step%2?1:-1)*Math.ceil(step/2)*NUDGE;   // 0, -16, +16, -32, +32, -48, +48, -64, +64
   const y=baseY+dy;
   best=y;
-  if(labelClearsAllNodes(baseX,y,halfW,halfH) && labelClearsPlacedLabels(baseX,y,halfW,halfH)){
+  if(labelClearsAllNodes(baseX,y,halfW,halfH) && labelClearsPlacedLabels(baseX,y,halfW,halfH) && labelClearsAllEdges(baseX,y,halfW,halfH,ownIdx)){
    placedLabelBoxes.push({x1:baseX-halfW,x2:baseX+halfW,y1:y-halfH,y2:y+halfH});
    return y;
   }
@@ -1167,6 +1215,11 @@ function placeEdgeLabel(text,baseX,baseY){
  placedLabelBoxes.push({x1:baseX-halfW,x2:baseX+halfW,y1:best-halfH,y2:best+halfH});
  return best;   // exhausted the budget — largest nudge tried is still strictly better than the untried original
 }
+// Two passes, not one: labelClearsAllEdges() (below) needs every edge's own `d` path to check
+// a label against — including edges that come LATER in FLOWS order. Placing labels inside the
+// same pass that draws the paths could only ever see edges drawn so far, so a label placed early
+// could still end up sitting on top of a not-yet-drawn edge from later in the array.
+const edgeMidByFlow={};
 FLOWS.forEach((f,i)=>{
  const a=NID[f.from], b=NID[f.to]; if(!a||!b)return;
  const lc=latChannelCount[i]||1, lch=latChannel[i]||0;
@@ -1182,12 +1235,20 @@ FLOWS.forEach((f,i)=>{
    // label if it has one) back to its own FLOWS[] entry, rather than re-matching on
    // from/to/kind — which could be ambiguous if two edges ever shared the same endpoints.
  edgeLayer.appendChild(p); edgeEls.push(p);
+ edgeDList.push({i,d});
+ edgeMidByFlow[i]=mid;
+});
+FLOWS.forEach((f,i)=>{
+ if(!f.label) return;
+ const mid=edgeMidByFlow[i]; if(!mid) return;
  // Offset raised from -3 to -13 (10px more clearance above the connector line) — at -3 the
  // label's own baseline sat close enough to the line that a bold label (see the .elabel
  // font-weight change above) visually touched or crossed it instead of reading as a caption
  // floating just above it. That's the STARTING point placeEdgeLabel() nudges from if this
- // position turns out to collide with some node's box (see above).
- if(f.label){ const ly=placeEdgeLabel(f.label,mid[0],mid[1]-13); const t=el('text',{x:mid[0],y:ly,'text-anchor':'middle',class:'elabel'}); t.textContent=f.label; t.dataset.kind=f.kind; t.dataset.flowIdx=i; labelLayer.appendChild(t);}
+ // position turns out to collide with some node's box, another label, or an UNRELATED edge's
+ // own line (see above).
+ const ly=placeEdgeLabel(f.label,mid[0],mid[1]-13,i);
+ const t=el('text',{x:mid[0],y:ly,'text-anchor':'middle',class:'elabel'}); t.textContent=f.label; t.dataset.kind=f.kind; t.dataset.flowIdx=i; labelLayer.appendChild(t);
 });
 
 // ---- nodes

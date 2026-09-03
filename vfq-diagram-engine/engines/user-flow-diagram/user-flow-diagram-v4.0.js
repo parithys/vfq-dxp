@@ -349,23 +349,51 @@ function sizeNode(node) {
   }
 
   if (style.shape === 'diamond') {
-    // A rectangle of half-width tw/2 and half-height th/2 fits inside a
-    // (square) diamond of side `s` iff tw/s + th/s <= 1 (geometric diagonal
-    // constraint). We solve this with a small fixed-point iteration, always
-    // leaving a safety margin (0.78 instead of 1.0) since our text-width
-    // estimate is only approximate.
-    let s = G.minDiamond;
-    let lines, w, h, maxLinesUsed = 2;
-    for (let pass = 0; pass < 6; pass++) {
-      const maxLineW = s * 0.60;
-      lines = wrapToWidth(node.label, maxLineW, t.size);
-      if (lines.length > maxLinesUsed && s >= G.maxDiamond) maxLinesUsed = lines.length; // last resort
-      w = Math.max(...lines.map(l => textWidth(l, t.size)), 0);
-      h = lines.length * t.lineHeight;
-      const needed = (w + h) / 0.78 + G.nodePadX;
-      const next = Math.min(G.maxDiamond, Math.max(G.minDiamond, needed));
-      if (Math.abs(next - s) < 1) { s = next; break; }
-      s = next;
+    // A diamond's usable width TAPERS with distance from its own vertical centre, reaching zero
+    // at the top/bottom tips — the previous formula summed the label's FULL height and its
+    // single widest line into one flat budget against the diagonal (tw/s + th/s <= 1), which
+    // treats a 3-line block as if every line sat at the diamond's widest point. Only the middle
+    // line actually does; the outer lines sit where the diamond is narrower AND are usually
+    // narrower themselves, so that sum badly over-estimates the diamond a multi-line label
+    // needs — for a typical 3-line question, it was demanding more diagonal budget than even
+    // the 240px hard cap could supply, so the diamond just pinned at the ceiling, mostly empty.
+    // Wrap against each line's own real per-line width instead (the same fix already applied to
+    // the pfd engine's fixed-size diamonds, adapted here since THIS diamond grows to fit rather
+    // than the reverse), and grow s only as far as that tighter, more accurate fit needs.
+    const FILL = 0.78;   // fraction of the true geometric edge actually used — the rest is
+                          // intentional clearance from the diamond's own boundary, not slop
+    const widthBudget = (s, dy) => Math.max(0, (s - 2 * Math.abs(dy)) * FILL);
+    const words = String(node.label || '').split(/\s+/).filter(Boolean);
+    function attempt(n, s) {
+      const lines = [];
+      let cur = '';
+      for (const w of words) {
+        const trial = cur ? cur + ' ' + w : w;
+        const dy = (lines.length - (n - 1) / 2) * t.lineHeight;
+        if (textWidth(trial, t.size) <= widthBudget(s, dy) || !cur) cur = trial;
+        else {
+          lines.push(cur);
+          if (lines.length >= n) return null;
+          cur = w;
+        }
+      }
+      if (cur) lines.push(cur);
+      return lines.length === n ? lines : null;
+    }
+    // Fewer lines read better than more (a 2-line wrap beats a fragmented 4-line one even if
+    // both technically fit), so search line counts outer, diamond size inner: for each candidate
+    // line count, grow s from the floor until that exact count fits, and take the FIRST (fewest
+    // lines, then smallest s) combination that works — never settle for more lines than the
+    // diamond actually needs just because the floor size happened to fit them.
+    let s = G.maxDiamond, lines = [words.join(' ')];
+    outer:
+    for (let n = 1; n <= 4; n++) {
+      if (n * t.lineHeight > G.maxDiamond * FILL) continue;   // this many lines can't fit even at the cap
+      for (let cand = G.minDiamond; cand <= G.maxDiamond; cand += 6) {
+        if (n * t.lineHeight > cand * FILL) continue;   // block too tall for this size yet
+        const found = attempt(n, cand);
+        if (found) { s = cand; lines = found; break outer; }
+      }
     }
     return { w: s, h: s, shape: 'diamond', lines };
   }
@@ -544,13 +572,39 @@ function anchor(box, side) {
   return { x: box.cx, y: box.bottom };
 }
 
-function edgeLabel(x, y, text, color) {
+// Edge labels are centred on their connector's own x — usually the trunk/branch midpoint, but
+// for a jump/bypass edge that's an outer lane position computed independently of label width
+// (laneX only has to clear the CONNECTOR LINE, via G.margin — a lane near the diagram's right
+// edge with a long label can still centre that label past the canvas boundary). canvasWidth, if
+// given, both re-centres the label so it never crosses either edge and, for the rarer case where
+// the label alone is wider than the whole canvas, wraps it onto multiple lines instead — the
+// same fallback fitText() uses for over-wide node text, so a label is never silently clipped.
+function edgeLabel(x, y, text, color, canvasWidth) {
   if (!text) return '';
-  const w = textWidth(text, THEME.typography.edge.size) + 12;
-  return `<g>
-    <rect x="${x - w / 2}" y="${y - 9}" width="${w}" height="16" rx="3" fill="#ffffff" stroke="${color}" stroke-width="1"/>
-    <text x="${x}" y="${y + 3}" text-anchor="middle" font-family="${THEME.font}" font-size="${THEME.typography.edge.size}" font-weight="${THEME.typography.edge.weight}" fill="${color}" letter-spacing="0.3">${esc(text)}</text>
-  </g>`;
+  const size = THEME.typography.edge.size;
+  const PAD = 6;   // breathing room from the canvas edge
+  let lines = [text];
+  let lineWidth = textWidth(text, size);
+  if (canvasWidth != null) {
+    const maxLineWidth = Math.max(canvasWidth - PAD * 2, 20);
+    if (lineWidth > maxLineWidth) {
+      lines = wrapToWidth(text, maxLineWidth, size);
+      lineWidth = Math.max(...lines.map(l => textWidth(l, size)));
+    }
+  }
+  let cx = x;
+  if (canvasWidth != null) {
+    const half = lineWidth / 2;
+    cx = Math.min(Math.max(x, PAD + half), canvasWidth - PAD - half);
+  }
+  if (lines.length === 1) {
+    return `<text x="${cx}" y="${y + 3}" text-anchor="middle" font-family="${THEME.font}" font-size="${size}" font-weight="${THEME.typography.edge.weight}" fill="${color}" letter-spacing="0.3">${esc(text)}</text>`;
+  }
+  const lineHeight = size * 1.25;
+  const startY = y - (lines.length - 1) * lineHeight / 2 + 3;
+  return lines.map((ln, i) =>
+    `<text x="${cx}" y="${startY + i * lineHeight}" text-anchor="middle" font-family="${THEME.font}" font-size="${size}" font-weight="${THEME.typography.edge.weight}" fill="${color}" letter-spacing="0.3">${esc(ln)}</text>`
+  ).join('\n');
 }
 
 // Every horizontal segment below is placed at a `gapY` value — the empty
@@ -600,7 +654,7 @@ function connectorSVG(path, boxes, geo, laneXOf) {
   }
 
   const line = `<path d="${d}" fill="none" stroke="${style.color}" stroke-width="2" stroke-dasharray="${style.dash}" marker-end="${marker}"/>`;
-  const label = path.label ? edgeLabel(labelX, labelY, path.label, style.color) : '';
+  const label = path.label ? edgeLabel(labelX, labelY, path.label, style.color, geo.totalWidth) : '';
   return { svg: line + label, d, from: path.from, to: path.to };
 }
 
@@ -705,7 +759,6 @@ function generate(rawInput) {
 
   const svg = `<svg viewBox="0 0 ${geo.totalWidth} ${geo.totalHeight}" width="${geo.totalWidth}" height="${geo.totalHeight}" xmlns="http://www.w3.org/2000/svg" font-family="${THEME.font}">
     <defs>${buildMarkers()}</defs>
-    <rect x="0" y="0" width="${geo.totalWidth}" height="${geo.totalHeight}" fill="${THEME.canvasBg}"/>
     <g class="connectors">${connectorsSVG}</g>
     <g class="nodes">${nodesSVG}</g>
   </svg>`;
@@ -743,10 +796,10 @@ function renderReport(rawInput) {
 <style>
   * { box-sizing: border-box; }
   body { font-family: ${THEME.font}; background:#eef1f4; margin:0; padding:32px; color:#1b1f24; }
-  .card { background:#fff; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.06); padding:28px; max-width:${result.width + 80}px; margin:0 auto 24px; }
+  .card { background:#fff; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.06); padding:28px; margin:0 0 24px; }
   h1 { font-size:${THEME.typography.title.size}px; margin:0 0 4px; }
   .sub { color:#5b6570; margin:0 0 20px; font-size:14px; }
-  .diagram-wrap { overflow-x:auto; border:1px solid #e5e8eb; border-radius:8px; }
+  .diagram-wrap { overflow-x:auto; border-radius:8px; }
   .legend { display:flex; gap:48px; margin-top:20px; flex-wrap:wrap; }
   .legend-col h4 { margin:0 0 8px; font-size:13px; text-transform:uppercase; color:#5b6570; letter-spacing:0.06em; }
   .legend-item { display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:6px; text-transform:capitalize; }

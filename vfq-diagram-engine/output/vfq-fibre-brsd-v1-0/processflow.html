@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="spec-hash" content="sha256:240aea4298b88e5fb2924b173fca1e147b48726ed41ff81a1b3510bb478a9c08">
-  <meta name="generated-at" content="2026-09-02T19:04:54.036Z">
+  <meta name="generated-at" content="2026-09-02T19:27:48.355Z">
   <meta name="diagram-version" content="2.3">
   <title>Fibre Activation through Retail Agent - Process Flow</title>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -322,82 +322,82 @@
 </defs>
 <line x1="213.5" y1="70" x2="273.5" y2="70" stroke="#2e9e6b" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="start1" data-to="jsm" data-eidx="0" tabindex="0" role="button" aria-label="Connector: start1 to jsm. Open details."/>
 <line x1="433.5" y1="70" x2="527.5" y2="70" stroke="#2e9e6b" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="jsm" data-to="kyc" data-eidx="1" tabindex="0" role="button" aria-label="Connector: jsm to kyc. Open details."/>
-<rect x="446.74" y="51.76" width="67.52" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="480.5" y="60" fill="#6b7280" font-size="8" text-anchor="middle">queue ticket</text>
+<rect x="446.74" y="48.76" width="67.52" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="480.5" y="57" fill="#6b7280" font-size="8" text-anchor="middle">queue ticket</text>
 <line x1="687.5" y1="70" x2="806.5" y2="70" stroke="#9e7513" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-amber)" class="pf-edge" data-from="kyc" data-to="cam" data-eidx="2" tabindex="0" role="button" aria-label="Connector: kyc to cam. Open details."/>
-<rect x="700.84" y="51.76" width="92.32" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="747" y="60" fill="#6b7280" font-size="8" text-anchor="middle">verified identity</text>
-<path d="M 886.5 110 L 886.5 144 L 184 144 L 184 330" stroke="#6b7280" stroke-width="1.5" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="cam" data-to="addr" data-eidx="3" tabindex="0" role="button" aria-label="Connector: cam to addr. Open details."/>
-<rect x="892.5" y="127.76" width="47.68" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="896.5" y="136" fill="#6b7280" font-size="8">continue</text>
+<rect x="700.84" y="48.76" width="92.32" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="747" y="57" fill="#6b7280" font-size="8" text-anchor="middle">verified identity</text>
+<path d="M 886.5 110 L 886.5 150 L 184 150 L 184 330" stroke="#6b7280" stroke-width="1.5" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="cam" data-to="addr" data-eidx="3" tabindex="0" role="button" aria-label="Connector: cam to addr. Open details."/>
+<rect x="892.5" y="130.76" width="47.68" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="896.5" y="139" fill="#6b7280" font-size="8">continue</text>
 <line x1="264" y1="370" x2="398" y2="370" stroke="#2e9e6b" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="addr" data-to="rfs" data-eidx="4" tabindex="0" role="button" aria-label="Connector: addr to rfs. Open details."/>
-<rect x="277.4" y="351.76" width="107.2" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="331" y="360" fill="#6b7280" font-size="8" text-anchor="middle">installation address</text>
+<rect x="277.4" y="348.76" width="107.2" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="331" y="357" fill="#6b7280" font-size="8" text-anchor="middle">installation address</text>
 <line x1="558" y1="370" x2="642" y2="370" stroke="#9e7513" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-amber)" class="pf-edge" data-from="rfs" data-to="rfs_gate" data-eidx="5" tabindex="0" role="button" aria-label="Connector: rfs to rfs_gate. Open details."/>
-<rect x="571.2" y="351.76" width="57.6" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="600" y="360" fill="#6b7280" font-size="8" text-anchor="middle">RFS result</text>
+<rect x="571.2" y="348.76" width="57.6" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="600" y="357" fill="#6b7280" font-size="8" text-anchor="middle">RFS result</text>
 <line x1="756" y1="370" x2="816" y2="370" stroke="#2e9e6b" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="rfs_gate" data-to="addr_lock" data-eidx="6" tabindex="0" role="button" aria-label="Connector: rfs_gate to addr_lock. Open details."/>
-<rect x="774.56" y="351.76" width="22.88" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="786" y="360" fill="#d4667f" font-size="8" font-weight="600" text-anchor="middle">Yes</text>
-<path d="M 896 410 L 896 556.5685424949238 L 191.5 556.5685424949238 L 191.5 630" stroke="#6b7280" stroke-width="1.5" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="addr_lock" data-to="ecc" data-eidx="7" tabindex="0" role="button" aria-label="Connector: addr_lock to ecc. Open details."/>
-<rect x="902" y="540.33" width="47.68" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="906" y="548.5685424949238" fill="#6b7280" font-size="8">continue</text>
+<rect x="774.56" y="348.76" width="22.88" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="786" y="357" fill="#d4667f" font-size="8" font-weight="600" text-anchor="middle">Yes</text>
+<path d="M 896 410 L 896 562.5685424949238 L 191.5 562.5685424949238 L 191.5 630" stroke="#6b7280" stroke-width="1.5" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="addr_lock" data-to="ecc" data-eidx="7" tabindex="0" role="button" aria-label="Connector: addr_lock to ecc. Open details."/>
+<rect x="902" y="543.33" width="47.68" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="906" y="551.5685424949238" fill="#6b7280" font-size="8">continue</text>
 <line x1="271.5" y1="670" x2="395.5" y2="670" stroke="#9e7513" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-amber)" class="pf-edge" data-from="ecc" data-to="elig_gate" data-eidx="8" tabindex="0" role="button" aria-label="Connector: ecc to elig_gate. Open details."/>
-<rect x="284.86" y="651.76" width="97.28" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="333.5" y="660" fill="#6b7280" font-size="8" text-anchor="middle">eligibility result</text>
+<rect x="284.86" y="648.76" width="97.28" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="333.5" y="657" fill="#6b7280" font-size="8" text-anchor="middle">eligibility result</text>
 <line x1="509.5" y1="670" x2="569.5" y2="670" stroke="#2e9e6b" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="elig_gate" data-to="milestone1" data-eidx="9" tabindex="0" role="button" aria-label="Connector: elig_gate to milestone1. Open details."/>
-<rect x="528.06" y="651.76" width="22.88" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="539.5" y="660" fill="#d4667f" font-size="8" font-weight="600" text-anchor="middle">Yes</text>
+<rect x="528.06" y="648.76" width="22.88" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="539.5" y="657" fill="#d4667f" font-size="8" font-weight="600" text-anchor="middle">Yes</text>
 <line x1="729.5" y1="670" x2="808.5" y2="670" stroke="#7c5cd6" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-violet)" class="pf-edge" data-from="milestone1" data-to="bam" data-eidx="10" tabindex="0" role="button" aria-label="Connector: milestone1 to bam. Open details."/>
-<rect x="742.68" y="651.76" width="52.64" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="769" y="660" fill="#6b7280" font-size="8" text-anchor="middle">milestone</text>
-<path d="M 888.5 710 L 888.5 856.5685424949238 L 168.5 856.5685424949238 L 168.5 930" stroke="#6b7280" stroke-width="1.5" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="bam" data-to="milestone2" data-eidx="11" tabindex="0" role="button" aria-label="Connector: bam to milestone2. Open details."/>
-<rect x="894.5" y="840.33" width="47.68" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="898.5" y="848.5685424949238" fill="#6b7280" font-size="8">continue</text>
+<rect x="742.68" y="648.76" width="52.64" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="769" y="657" fill="#6b7280" font-size="8" text-anchor="middle">milestone</text>
+<path d="M 888.5 710 L 888.5 862.5685424949238 L 168.5 862.5685424949238 L 168.5 930" stroke="#6b7280" stroke-width="1.5" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="bam" data-to="milestone2" data-eidx="11" tabindex="0" role="button" aria-label="Connector: bam to milestone2. Open details."/>
+<rect x="894.5" y="843.33" width="47.68" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="898.5" y="851.5685424949238" fill="#6b7280" font-size="8">continue</text>
 <line x1="248.5" y1="970" x2="327.5" y2="970" stroke="#7c5cd6" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-violet)" class="pf-edge" data-from="milestone2" data-to="qpc" data-eidx="12" tabindex="0" role="button" aria-label="Connector: milestone2 to qpc. Open details."/>
-<rect x="261.68" y="951.76" width="52.64" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="288" y="960" fill="#6b7280" font-size="8" text-anchor="middle">milestone</text>
+<rect x="261.68" y="948.76" width="52.64" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="288" y="957" fill="#6b7280" font-size="8" text-anchor="middle">milestone</text>
 <line x1="487.5" y1="970" x2="547.5" y2="970" stroke="#2e9e6b" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="qpc" data-to="num" data-eidx="13" tabindex="0" role="button" aria-label="Connector: qpc to num. Open details."/>
-<rect x="503.58" y="951.76" width="27.84" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="517.5" y="960" fill="#6b7280" font-size="8" text-anchor="middle">cart</text>
+<rect x="503.58" y="948.76" width="27.84" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="517.5" y="957" fill="#6b7280" font-size="8" text-anchor="middle">cart</text>
 <line x1="707.5" y1="970" x2="831.5" y2="970" stroke="#9e7513" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-amber)" class="pf-edge" data-from="num" data-to="wfm_book" data-eidx="14" tabindex="0" role="button" aria-label="Connector: num to wfm_book. Open details."/>
-<rect x="720.86" y="951.76" width="97.28" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="769.5" y="960" fill="#6b7280" font-size="8" text-anchor="middle">number + resources</text>
+<rect x="720.86" y="948.76" width="97.28" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="769.5" y="957" fill="#6b7280" font-size="8" text-anchor="middle">number + resources</text>
 <line x1="276.5" y1="1270" x2="380.5" y2="1270" stroke="#9e7513" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-amber)" class="pf-edge" data-from="wfm_exec" data-to="wfm_issue" data-eidx="15" tabindex="0" role="button" aria-label="Connector: wfm_exec to wfm_issue. Open details."/>
-<rect x="289.78" y="1251.76" width="77.44" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="328.5" y="1260" fill="#6b7280" font-size="8" text-anchor="middle">device capture</text>
+<rect x="289.78" y="1248.76" width="77.44" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="328.5" y="1257" fill="#6b7280" font-size="8" text-anchor="middle">device capture</text>
 <line x1="494.5" y1="1270" x2="554.5" y2="1270" stroke="#2e9e6b" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="wfm_issue" data-to="wfm_close" data-eidx="16" tabindex="0" role="button" aria-label="Connector: wfm_issue to wfm_close. Open details."/>
-<rect x="500.66" y="1251.76" width="47.68" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="524.5" y="1260" fill="#d4667f" font-size="8" font-weight="600" text-anchor="middle">No issue</text>
+<rect x="500.66" y="1248.76" width="47.68" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="524.5" y="1257" fill="#d4667f" font-size="8" font-weight="600" text-anchor="middle">No issue</text>
 <line x1="714.5" y1="1270" x2="803.5" y2="1270" stroke="#2e9e6b" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="wfm_close" data-to="milestone3" data-eidx="17" tabindex="0" role="button" aria-label="Connector: wfm_close to milestone3. Open details."/>
-<rect x="727.72" y="1251.76" width="62.56" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="759" y="1260" fill="#6b7280" font-size="8" text-anchor="middle">task closed</text>
-<path d="M 883.5 1310 L 883.5 1456.5685424949238 L 174.5 1456.5685424949238 L 174.5 1530" stroke="#6b7280" stroke-width="1.5" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="milestone3" data-to="caf" data-eidx="18" tabindex="0" role="button" aria-label="Connector: milestone3 to caf. Open details."/>
-<rect x="889.5" y="1440.33" width="47.68" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="893.5" y="1448.5685424949238" fill="#6b7280" font-size="8">continue</text>
+<rect x="727.72" y="1248.76" width="62.56" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="759" y="1257" fill="#6b7280" font-size="8" text-anchor="middle">task closed</text>
+<path d="M 883.5 1310 L 883.5 1462.5685424949238 L 174.5 1462.5685424949238 L 174.5 1530" stroke="#6b7280" stroke-width="1.5" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="milestone3" data-to="caf" data-eidx="18" tabindex="0" role="button" aria-label="Connector: milestone3 to caf. Open details."/>
+<rect x="889.5" y="1443.33" width="47.68" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="893.5" y="1451.5685424949238" fill="#6b7280" font-size="8">continue</text>
 <line x1="254.5" y1="1570" x2="338.5" y2="1570" stroke="#2e9e6b" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="caf" data-to="milestone4" data-eidx="19" tabindex="0" role="button" aria-label="Connector: caf to milestone4. Open details."/>
-<rect x="267.7" y="1551.76" width="57.6" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="296.5" y="1560" fill="#6b7280" font-size="8" text-anchor="middle">signed CAF</text>
+<rect x="267.7" y="1548.76" width="57.6" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="296.5" y="1557" fill="#6b7280" font-size="8" text-anchor="middle">signed CAF</text>
 <line x1="498.5" y1="1570" x2="577.5" y2="1570" stroke="#7c5cd6" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-violet)" class="pf-edge" data-from="milestone4" data-to="pay" data-eidx="20" tabindex="0" role="button" aria-label="Connector: milestone4 to pay. Open details."/>
-<rect x="511.68" y="1551.76" width="52.64" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="538" y="1560" fill="#6b7280" font-size="8" text-anchor="middle">milestone</text>
+<rect x="511.68" y="1548.76" width="52.64" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="538" y="1557" fill="#6b7280" font-size="8" text-anchor="middle">milestone</text>
 <line x1="737.5" y1="1570" x2="871.5" y2="1570" stroke="#9e7513" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-amber)" class="pf-edge" data-from="pay" data-to="order_ready" data-eidx="21" tabindex="0" role="button" aria-label="Connector: pay to order_ready. Open details."/>
-<rect x="750.9" y="1551.76" width="107.2" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="804.5" y="1560" fill="#6b7280" font-size="8" text-anchor="middle">payment confirmation</text>
-<path d="M 928.5 1610 L 928.5 1644 L 842.5 1644 L 842.5 1756.5685424949238 L 144 1756.5685424949238 L 144 1830" stroke="#6b7280" stroke-width="1.5" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="order_ready" data-to="ord_submit" data-eidx="22" tabindex="0" role="button" aria-label="Connector: order_ready to ord_submit. Open details."/>
-<rect x="934.5" y="1740.33" width="47.68" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="938.5" y="1748.5685424949238" fill="#6b7280" font-size="8">continue</text>
+<rect x="750.9" y="1548.76" width="107.2" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="804.5" y="1557" fill="#6b7280" font-size="8" text-anchor="middle">payment confirmation</text>
+<path d="M 928.5 1610 L 928.5 1650 L 842.5 1650 L 842.5 1762.5685424949238 L 144 1762.5685424949238 L 144 1830" stroke="#6b7280" stroke-width="1.5" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="order_ready" data-to="ord_submit" data-eidx="22" tabindex="0" role="button" aria-label="Connector: order_ready to ord_submit. Open details."/>
+<rect x="934.5" y="1743.33" width="47.68" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="938.5" y="1751.5685424949238" fill="#6b7280" font-size="8">continue</text>
 <line x1="224" y1="1870" x2="333" y2="1870" stroke="#2e9e6b" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-emerald)" class="pf-edge" data-from="ord_submit" data-to="milestone5" data-eidx="23" tabindex="0" role="button" aria-label="Connector: ord_submit to milestone5. Open details."/>
-<rect x="237.3" y="1851.76" width="82.4" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="278.5" y="1860" fill="#6b7280" font-size="8" text-anchor="middle">submitted order</text>
+<rect x="237.3" y="1848.76" width="82.4" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="278.5" y="1857" fill="#6b7280" font-size="8" text-anchor="middle">submitted order</text>
 <line x1="493" y1="1870" x2="572" y2="1870" stroke="#7c5cd6" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-violet)" class="pf-edge" data-from="milestone5" data-to="net" data-eidx="24" tabindex="0" role="button" aria-label="Connector: milestone5 to net. Open details."/>
-<rect x="506.18" y="1851.76" width="52.64" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="532.5" y="1860" fill="#6b7280" font-size="8" text-anchor="middle">milestone</text>
+<rect x="506.18" y="1848.76" width="52.64" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="532.5" y="1857" fill="#6b7280" font-size="8" text-anchor="middle">milestone</text>
 <line x1="732" y1="1870" x2="856" y2="1870" stroke="#9e7513" stroke-width="1.5" opacity="0.75" marker-end="url(#arrowhead-amber)" class="pf-edge" data-from="net" data-to="fin" data-eidx="25" tabindex="0" role="button" aria-label="Connector: net to fin. Open details."/>
-<rect x="745.36" y="1851.76" width="97.28" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="794" y="1860" fill="#6b7280" font-size="8" text-anchor="middle">activation outcome</text>
-<path d="M 936 1910 L 936 1944 L 540 1944 L 540 2150" stroke="#6b7280" stroke-width="1.5" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="fin" data-to="end30" data-eidx="26" tabindex="0" role="button" aria-label="Connector: fin to end30. Open details."/>
-<rect x="942" y="1927.76" width="47.68" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="946" y="1936" fill="#6b7280" font-size="8">continue</text>
+<rect x="745.36" y="1848.76" width="97.28" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="794" y="1857" fill="#6b7280" font-size="8" text-anchor="middle">activation outcome</text>
+<path d="M 936 1910 L 936 1950 L 540 1950 L 540 2150" stroke="#6b7280" stroke-width="1.5" fill="none" opacity="0.6" stroke-dasharray="6,3" marker-end="url(#arrowhead-slate)" class="pf-edge" data-from="fin" data-to="end30" data-eidx="26" tabindex="0" role="button" aria-label="Connector: fin to end30. Open details."/>
+<rect x="942" y="1930.76" width="47.68" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="946" y="1939" fill="#6b7280" font-size="8">continue</text>
 <line x1="699" y1="426.5685424949238" x2="699" y2="482.5685424949238" stroke="#d4667f" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="rfs_gate" data-to="rfs_gate-no" data-eidx="27" tabindex="0" role="button" aria-label="Connector: rfs_gate to rfs_gate-no. Open details."/>
-<rect x="703" y="440.33" width="17.92" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="707" y="448.5685424949238" fill="#d4667f" font-size="8" font-weight="600">No</text>
+<rect x="707" y="440.33" width="17.92" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="711" y="448.5685424949238" fill="#d4667f" font-size="8" font-weight="600">No</text>
 <g class="pf-node" data-id="rfs_gate-no" data-type="reject" tabindex="0" role="button" aria-label="Terminal: Blocked – feasibility message">
 <rect x="593" y="482.5685424949238" width="212" height="40" rx="20" fill="#fdeaef" stroke="#c8365f" stroke-width="1.5"/>
 <text x="699" y="506.5685424949238" fill="#1a1a1a" font-size="10" font-weight="600" text-anchor="middle">Blocked – feasibility message</text>
 </g>
 <line x1="452.5" y1="726.5685424949238" x2="452.5" y2="782.5685424949238" stroke="#d4667f" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="elig_gate" data-to="elig_gate-no" data-eidx="28" tabindex="0" role="button" aria-label="Connector: elig_gate to elig_gate-no. Open details."/>
-<rect x="456.5" y="740.33" width="17.92" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="460.5" y="748.5685424949238" fill="#d4667f" font-size="8" font-weight="600">No</text>
+<rect x="460.5" y="740.33" width="17.92" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="464.5" y="748.5685424949238" fill="#d4667f" font-size="8" font-weight="600">No</text>
 <g class="pf-node" data-id="elig_gate-no" data-type="reject" tabindex="0" role="button" aria-label="Terminal: Eligibility failure message">
 <rect x="352.5" y="782.5685424949238" width="200" height="40" rx="20" fill="#fdeaef" stroke="#c8365f" stroke-width="1.5"/>
 <text x="452.5" y="806.5685424949238" fill="#1a1a1a" font-size="10" font-weight="600" text-anchor="middle">Eligibility failure message</text>
 </g>
 <line x1="437.5" y1="1326.5685424949238" x2="437.5" y2="1382.5685424949238" stroke="#d4667f" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="wfm_issue" data-to="wfm_issue-no" data-eidx="29" tabindex="0" role="button" aria-label="Connector: wfm_issue to wfm_issue-no. Open details."/>
-<rect x="441.5" y="1340.33" width="77.44" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="445.5" y="1348.5685424949238" fill="#d4667f" font-size="8" font-weight="600">Issue reported</text>
+<rect x="445.5" y="1340.33" width="77.44" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="449.5" y="1348.5685424949238" fill="#d4667f" font-size="8" font-weight="600">Issue reported</text>
 <g class="pf-node" data-id="wfm_issue-no" data-type="reject" tabindex="0" role="button" aria-label="Terminal: Fault ticket raised; appointment reschedulable">
 <rect x="278.5" y="1382.5685424949238" width="318" height="40" rx="20" fill="#fdeaef" stroke="#c8365f" stroke-width="1.5"/>
 <text x="437.5" y="1406.5685424949238" fill="#1a1a1a" font-size="10" font-weight="600" text-anchor="middle">Fault ticket raised; appointment reschedulable</text>
 </g>
-<path d="M 928.5 1626.5685424949238 L 928.5 1660.5685424949238 L 657.5 1660.5685424949238 L 657.5 1610" stroke="#d4667f" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="order_ready" data-to="pay" data-eidx="30" tabindex="0" role="button" aria-label="Connector: order_ready to pay. Open details."/>
-<rect x="932.5" y="1635.33" width="17.92" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="936.5" y="1643.5685424949238" fill="#d4667f" font-size="8" font-weight="600">No</text>
-<path d="M 699 410 L 699 444 L 184 444 L 184 410" stroke="#c8365f" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrowhead-crimson)" class="pf-edge" data-from="rfs_gate" data-to="addr" data-eidx="31" tabindex="0" role="button" aria-label="Connector: rfs_gate to addr. Open details."/>
-<rect x="395.34" y="445.76" width="92.32" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="441.5" y="454" fill="#c8365f" font-size="8" font-weight="600" text-anchor="middle">recapture address</text>
-<path d="M 452.5 710 L 452.5 758 L 24 758 L 24 -28 L 353.5 -28 L 353.5 30" stroke="#c8365f" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrowhead-crimson)" class="pf-edge" data-from="elig_gate" data-to="jsm" data-eidx="32" tabindex="0" role="button" aria-label="Connector: elig_gate to jsm. Open details."/>
+<path d="M 928.5 1626.5685424949238 L 928.5 1666.5685424949238 L 657.5 1666.5685424949238 L 657.5 1610" stroke="#d4667f" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrowhead-rose)" class="pf-edge" data-from="order_ready" data-to="pay" data-eidx="30" tabindex="0" role="button" aria-label="Connector: order_ready to pay. Open details."/>
+<rect x="936.5" y="1638.33" width="17.92" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="940.5" y="1646.5685424949238" fill="#d4667f" font-size="8" font-weight="600">No</text>
+<path d="M 699 410 L 699 450 L 184 450 L 184 410" stroke="#c8365f" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrowhead-crimson)" class="pf-edge" data-from="rfs_gate" data-to="addr" data-eidx="31" tabindex="0" role="button" aria-label="Connector: rfs_gate to addr. Open details."/>
+<rect x="395.34" y="454.76" width="92.32" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="441.5" y="463" fill="#c8365f" font-size="8" font-weight="600" text-anchor="middle">recapture address</text>
+<path d="M 452.5 710 L 452.5 764 L 24 764 L 24 -28 L 353.5 -28 L 353.5 30" stroke="#c8365f" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrowhead-crimson)" class="pf-edge" data-from="elig_gate" data-to="jsm" data-eidx="32" tabindex="0" role="button" aria-label="Connector: elig_gate to jsm. Open details."/>
 <rect x="92.99" y="-42.24" width="191.52" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="188.75" y="-34" fill="#c8365f" font-size="8" font-weight="600" text-anchor="middle">eligibility failure – end interaction</text>
-<path d="M 437.5 1310 L 437.5 1372 L 10 1372 L 10 858 L 911.5 858 L 911.5 930" stroke="#c8365f" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrowhead-crimson)" class="pf-edge" data-from="wfm_issue" data-to="wfm_book" data-eidx="33" tabindex="0" role="button" aria-label="Connector: wfm_issue to wfm_book. Open details."/>
+<path d="M 437.5 1310 L 437.5 1378 L 10 1378 L 10 858 L 911.5 858 L 911.5 930" stroke="#c8365f" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrowhead-crimson)" class="pf-edge" data-from="wfm_issue" data-to="wfm_book" data-eidx="33" tabindex="0" role="button" aria-label="Connector: wfm_issue to wfm_book. Open details."/>
 <rect x="364.99" y="843.76" width="191.52" height="12" rx="6" fill="#ffffff" opacity="1"/><text x="460.75" y="852" fill="#c8365f" font-size="8" font-weight="600" text-anchor="middle">fault ticket – reschedule appointment</text>
 <g class="pf-node" data-id="start1" data-type="terminal" tabindex="0" role="button" aria-label="Terminal: Start">
 <rect x="113.5" y="50" width="100" height="40" rx="20" fill="#e2f6fb" stroke="#16829a" stroke-width="1.5"/>
@@ -1281,6 +1281,15 @@
       c.addEventListener('click', () => pfApplyFilter(c.dataset.filter)));
     document.getElementById('pfClose').addEventListener('click', pfClose);
     document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && (pfSelected || pfSelectedEdge !== null)) pfClose(); });
+    // Click anywhere outside the drawer closes it — except a node/edge, which already opens
+    // or switches the drawer itself via its own listener above; treating that as "outside" too
+    // would close the drawer the instant it opens (its own click bubbles to this handler).
+    document.addEventListener('click', ev => {
+      if (!(pfSelected || pfSelectedEdge !== null)) return;
+      if (pfDrawer.contains(ev.target)) return;
+      if (ev.target.closest('.pf-node, .pf-edge')) return;
+      pfClose();
+    });
 
     /* Drawer resize — pointer drag plus arrow keys, clamped so the panel can never
        swallow the diagram or shrink below a readable measure. */

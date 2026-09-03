@@ -60,7 +60,12 @@ const { validateDiagramCompliance } = require('./compliance');
 const CONFIG_DEFAULTS = {
   layout: {
     containerWidth: 1600,        // max page width in px (a ceiling, not a fixed width); null = 1920 default
-    edgeLabelSpacing: 10          // px above connector lines (payloadLabels)
+    // This is a BASELINE offset, not the real gap to the line: the label's own descent (glyphs
+    // dipping below the baseline) and its background plate's padding both eat back into it, so
+    // the actual rendered clearance measured at the glyph's own lower edge came out ~2.5px short
+    // of this nominal value (10 nominal measured as ~7.65 real). Raised so real clearance clears
+    // the 10px minimum connector labels must keep from any line.
+    edgeLabelSpacing: 13          // px above connector lines (payloadLabels)
   },
   styling: {
     payloadLabelBackground: {
@@ -863,12 +868,22 @@ function edgeAttrs(ctx, from, to, idx) {
 const diamondReach = n => (n.config.nodeHeight.decision * Math.SQRT2) / 2;
 
 const ROUTE = {
-  channelGap: 34,     // clearance from a node's underside to a loop channel
+  // A branch label that rides in this channel (see the n.no.to case in drawNoBranches()) sits
+  // centred between the two lines bounding it — so the channel has to hold the label's own
+  // height PLUS 10px of clearance on both sides simultaneously, not just fit the connector
+  // itself. 34 left only ~8px on either side once the label's own glyph height was subtracted;
+  // widened so every branch label sandwiched in a channel clears both bounding lines by ≥10px.
+  channelGap: 40,     // clearance from a node's underside to a loop channel
   riseGap: 44,        // clearance above a target's box for the approach channel
   gutterGap: 26,      // clearance from the content edge to a side gutter
   stagger: 14,        // offset between successive loops sharing a direction
   branchDrop: 56,     // diamond tip to the top of its No-terminal
-  labelInset: 8       // horizontal inset for a branch label beside its path
+  // A branch label sits beside its own vertical line, offset purely horizontally by this much —
+  // so this IS the label's whole clearance budget from that line, not just a visual nicety. 8
+  // measured exactly 8px of real clearance (and less again near an L-shaped bend, where the
+  // corner brings the line closer than the straight-segment gap alone implies). Raised to clear
+  // the 10px minimum with a small margin.
+  labelInset: 12      // horizontal inset for a branch label beside its path
 };
 function drawNoBranches(layoutNodes, ctx, B) {
   const out = [];
@@ -1095,7 +1110,10 @@ function drawConnectors(layoutNodes, flow, ctx, B) {
       markPoint(B, exit.x, exit.y); markPoint(B, entry.x, mid); markPoint(B, entry.x, entry.y);
       ctx.usedWrap = true;
       const wrapLabel = prevNode.wrapLabel || DEFAULT_LABELS.wrap;
-      out.push(t(exit.x + 10, mid - 8, NEUTRAL, TYPE.wrap, wrapLabel, { bounds: B, plate: true }));
+      // -8 measured ~7px of real clearance to the corridor line once the glyph's own descent and
+      // plate padding were accounted for (same shortfall as edgeLabelSpacing above) — raised to
+      // clear the 10px minimum.
+      out.push(t(exit.x + 10, mid - 11, NEUTRAL, TYPE.wrap, wrapLabel, { bounds: B, plate: true }));
       ctx.edges.push({ from: prevNode.id, to: currNode.id, label: wrapLabel, style: 'wrap', ...(prevNode.wrapMeta || {}) });
     }
 
@@ -2183,6 +2201,15 @@ function interactiveJS(ctx) {
       c.addEventListener('click', () => pfApplyFilter(c.dataset.filter)));
     document.getElementById('pfClose').addEventListener('click', pfClose);
     document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && (pfSelected || pfSelectedEdge !== null)) pfClose(); });
+    // Click anywhere outside the drawer closes it — except a node/edge, which already opens
+    // or switches the drawer itself via its own listener above; treating that as "outside" too
+    // would close the drawer the instant it opens (its own click bubbles to this handler).
+    document.addEventListener('click', ev => {
+      if (!(pfSelected || pfSelectedEdge !== null)) return;
+      if (pfDrawer.contains(ev.target)) return;
+      if (ev.target.closest('.pf-node, .pf-edge')) return;
+      pfClose();
+    });
 
     /* Drawer resize — pointer drag plus arrow keys, clamped so the panel can never
        swallow the diagram or shrink below a readable measure. */
