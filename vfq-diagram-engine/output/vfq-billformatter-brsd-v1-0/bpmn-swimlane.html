@@ -16,17 +16,42 @@
  --err:#bd0000; --esc:#f5b400; --val:#2b8a8f;
  --accent:#e60000; --accent-on:#ffffff;
  --charcoal:#25282b; --charcoal-2:#1a1c1e;
- --ease-standard:cubic-bezier(.4,0,.2,1);
+ /* Vodafone's own documented standard-easing curve (elevation.motion.standard_ease) — this
+    replaced a generic Material-Design "standard" curve (cubic-bezier(.4,0,.2,1)) that had been
+    in use here instead; both durations already in play elsewhere in this file (150ms/220ms)
+    already match Vodafone's duration_fast_ms/duration_base_ms exactly, so only the curve itself
+    needed correcting, not the timings. */
+ --ease-standard:cubic-bezier(.2,0,0,1);
  --shadow:0 1px 2px rgba(0,0,0,.05),0 3px 8px rgba(0,0,0,.05);
  --shadow-raised:0 18px 44px rgba(0,0,0,.12);
  --focus-ring:0 0 0 4px rgba(230,0,0,.22);
+ /* Vodafone's 4px base spacing scale (spacing.base_scale_px) and radius scale
+    (borders_radius), added as reusable tokens for this file's own HTML chrome (header, buttons,
+    drawer, legend, export menu) — never applied to the SVG canvas's own layout constants
+    (PAD_X/PAD_Y, column/row sizing, connector clearances, node dimensions), which are
+    content-geometry, not presentation, and are explicitly out of scope for a visual-design-only
+    pass. Several chrome padding/gap values that had drifted slightly off this scale (7px, 11px,
+    18px, 10px, 6px) are snapped onto the nearest step below. */
+ --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px;
+ --space-6:24px; --space-7:32px; --space-8:38px; --space-9:48px;
+ --radius-button:2px; --radius-card:6px; --radius-sm:8px; --radius-md:16px; --radius-pill:9999px;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
-body{font-family:"Inter","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+/* Interactions must be constrained to the diagram canvas itself, with the header and the legend
+   footer staying fixed and unaffected by them (scroll included — this used to be page-level: a
+   tall/narrow model made .diagram-shell GROW to fit all of its content and left the whole page
+   to scroll, which dragged the header off the top of the viewport and reduced the legend's own
+   position:sticky;bottom:0 to a no-op (nothing above it was ever actually scrolling WITHIN the
+   shell for it to stick against). body is now a fixed-viewport flex column instead: header
+   (fixed height) + .wrap (flex:1, filling exactly what's left) with overflow:hidden here at the
+   body level so the PAGE itself can never scroll. .diagram-shell further down is what actually
+   receives the scroll (see its own comment) — the one and only scrollable region now. */
+body{height:100vh;overflow:hidden;display:flex;flex-direction:column;
+ font-family:"Inter","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
  color:var(--ink);background:var(--bg);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
 .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
-h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.01em}
+h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.015em}
 a{color:var(--accent);text-decoration:none}
 /* header */
 /* Header/diagram gutter alignment: .top and .wrap previously used two different horizontal
@@ -47,37 +72,53 @@ a{color:var(--accent);text-decoration:none}
    own opaque background instead covers the drawer's top edge where they'd otherwise overlap,
    so the header (and every button in it) always stays fully visible and clickable regardless
    of drawer state. */
-.top{position:relative;z-index:90;background:linear-gradient(180deg,var(--charcoal),var(--charcoal-2));color:#f4f4f4;padding:18px 24px 14px;
+/* flex:none — body is now a flex column (see the body{} comment above) and the header must never
+   grow or shrink to share space with .wrap; it keeps its own natural content height and .wrap
+   absorbs 100% of whatever height is left. */
+.top{position:relative;z-index:90;flex:none;background:linear-gradient(180deg,var(--charcoal),var(--charcoal-2));color:#f4f4f4;padding:var(--space-5) var(--space-6) var(--space-4);
  display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
-/* Happy Flow and Export both live in the header now, aligned to the top-right corner as a
-   group. Reset used to sit here too (between Happy Flow and Export), simply re-running the
-   same width-first fit; it has been removed entirely, since with pan/zoom/drag all already
-   removed there was nothing left for it to reset FROM — it was pure dead weight, even though
-   harmless. Export used to sit in the diagram toolbar (alongside Reset, at the end); that
-   toolbar has since been removed entirely (see the ".toolbar" comment further down), so this
-   header group is the ONLY place any of these buttons live. flex-shrink:0 keeps the group
-   from being compressed if the title is long. */
+/* Reset, View Details, Happy Flow, and Export all live in the header now, aligned to the
+   top-right corner as a group, in that explicit order. Reset originally sat here too (in a
+   different position, between Happy Flow and Export) simply re-running the width-first fit; it
+   was removed entirely at a time when pan/zoom/drag were all also removed, leaving nothing to
+   reset FROM. Wheel-zoom and drag-to-pan have both since been reinstated (see "wheel zoom" and
+   "drag-to-pan" further down) WITHOUT bringing Reset back at first — that gap is what this
+   button now closes: a single control that unwinds every temporary view change (zoom, pan,
+   Happy Flow filter, highlight lock, drawer, View Details mode) back to exactly how the page
+   first loaded — see its own click handler, defined alongside View Details further down, for
+   the full list. Export used to sit in the diagram toolbar (alongside a Reset button, at the
+   end); that toolbar has since been removed entirely (see the ".toolbar" comment further down),
+   so this header group is the ONLY place any of these buttons live. flex-shrink:0 keeps the
+   group from being compressed if the title is long. */
 .top .header-actions{flex:none;display:flex;align-items:center;gap:8px}
 .top h1{font-size:20px;color:#fff;display:flex;align-items:center;gap:10px}
-.dot{width:9px;height:9px;border-radius:50%;background:var(--ai);box-shadow:0 0 0 3px rgba(23,138,134,.25)}
-.kpis{display:flex;gap:10px;flex-wrap:wrap;margin-top:13px}
-.kpi{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:9px;
- padding:7px 12px;min-width:96px}
+.kpis{display:flex;gap:var(--space-3);flex-wrap:wrap;margin-top:13px}
+.kpi{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius-sm);
+ padding:var(--space-2) var(--space-3);min-width:96px}
 .kpi b{display:block;font-size:19px;color:#fff;font-variant-numeric:tabular-nums}
 .kpi span{font-size:10.5px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em}
 .btn:focus-visible{outline:none;box-shadow:var(--focus-ring)}
-.wrap{padding:18px 24px 60px}
+/* flex:1;min-height:0 — takes exactly the viewport height left over after .top (see body{}).
+   min-height:0 overrides flexbox's default min-height:auto, which would otherwise let this
+   grow to fit .diagram-shell's content instead of the reverse (the classic flex-child-with-
+   scrollable-content trap); with it, .wrap stays capped at its allotted share and the overflow
+   is left entirely to .diagram-shell's own scrolling, not this container's.
+   display:flex;flex-direction:column so .diagram-section — its only child — inherits the same
+   fill-height behaviour down to .diagram-shell (each link in this chain needs its own
+   flex:1;min-height:0; skipping one breaks containment for everything below it). */
+.wrap{padding:var(--space-5) var(--space-6) var(--space-6);flex:1;min-height:0;display:flex;flex-direction:column}
 /* .toolbar (Flow-type filter buttons + View Labels toggle) has been removed entirely — every
    connector kind is unconditionally visible with no filter UI (see the header-actions comment
    above), and connector labels are now always shown by default with no toggle either (see
    below). The diagram-section has no toolbar row above the canvas any more at all. */
-.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink2);border-radius:2px;
- padding:7px 11px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink2);border-radius:var(--radius-button);
+ padding:var(--space-2) var(--space-3);font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:var(--space-2);
+ transition:border-color .15s var(--ease-standard),color .15s var(--ease-standard),background .15s var(--ease-standard)}
 .btn:hover{border-color:var(--accent);color:var(--accent)}
 .btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .exportwrap{position:relative;display:inline-block}
 .exportmenu{position:absolute;right:0;top:calc(100% + 5px);background:var(--panel);border:1px solid var(--line);
- border-radius:6px;box-shadow:var(--shadow-raised);display:none;flex-direction:column;min-width:150px;z-index:60;overflow:hidden;padding:4px}
+ border-radius:var(--radius-card);box-shadow:var(--shadow-raised);display:none;flex-direction:column;min-width:150px;z-index:60;overflow:hidden;padding:var(--space-1)}
 .exportmenu.open{display:flex}
 .exportmenu button{padding:8px 12px;border:none;background:none;text-align:left;cursor:pointer;font-size:12.5px;
  color:var(--ink);border-radius:4px;display:flex;justify-content:space-between;gap:12px;align-items:center}
@@ -87,21 +128,28 @@ a{color:var(--accent);text-decoration:none}
 /* .chip and the Flows filter it labelled have both been removed entirely — every connector
    kind is now unconditionally visible, with no toggle UI at all. */
 /* diagram */
-/* The shell's height is a fallback only — sizeHost()/fit() below drive it from the live
-   viewport. Sizing is WIDTH-FIRST: scale = max(width-fill, height-fill), so the canvas
-   always consumes 100% of the horizontal space available inside this container and can
-   never be letterboxed. A wide model still overflows and scrolls horizontally; a tall one
-   grows the shell vertically instead of shrinking to fit a fixed height. */
-/* No outer wrapper framing: border, border-radius, background fill (the ruled-paper gradient
-   plus solid panel colour), and box-shadow have all been removed — the shell used to read as
-   a distinct bordered "card" sitting on the page; now only the individual lanes and their
-   content are visible, with no enclosing box drawn around them at all. overflow-x/overflow-y
-   are functional (they're what makes horizontal scroll and vertical growth work — see the
-   comment above) and stay; everything else here was purely decorative framing. */
+/* .diagram-section: pure pass-through of .wrap's fill-height behaviour down to .diagram-shell —
+   see .wrap's own comment for why each link in this chain needs its own flex:1;min-height:0. */
+.diagram-section{flex:1;min-height:0;display:flex;flex-direction:column}
+/* .diagram-shell is now THE scroll boundary — the one and only element interactions (scroll,
+   and pan/zoom if either is ever reintroduced) are allowed to affect. It fills exactly whatever
+   height .diagram-section hands it (flex:1 again) rather than growing to fit its own content,
+   and overflow:auto on BOTH axes means a model too wide, too tall, or both scrolls WITHIN this
+   box instead of the page scrolling around it. Sizing is still WIDTH-FIRST — sizeHost()/fit()
+   below still compute scale = max(width-fill, height-fill), so the canvas still always consumes
+   100% of the horizontal space available and is never letterboxed — the only thing that changed
+   is what absorbs a model whose height at that scale exceeds what's visible: previously the
+   shell grew and the PAGE scrolled past the header to reach it; now the shell scrolls internally
+   and the header/legend, both outside this box, are structurally unable to move. min-height
+   keeps the canvas usable even in a very short viewport, matching the old SHELL_MIN_H floor that
+   used to be enforced in JS. */
 .diagram-shell{position:relative;width:100%;box-sizing:border-box;
- height:74vh;overflow-x:auto;overflow-y:hidden}
-/* height above is only the pre-JS fallback — sizeHost() drives the real height from the live
-   viewport so the shell can grow to keep a width-filled diagram's aspect ratio intact. */
+ flex:1;min-height:340px;overflow:auto;cursor:grab;user-select:none;-webkit-user-select:none}
+/* .panning (toggled by the drag-to-pan pointerdown/up handlers, further down) forces a
+   grabbing cursor everywhere over the shell for the duration of an active drag — including
+   over a node, which would otherwise keep showing its own .node{cursor:pointer} since that's a
+   more specific selector than the shell's own resting cursor:grab. */
+.diagram-shell.panning, .diagram-shell.panning *{cursor:grabbing !important}
 #svgHost{width:100%;height:100%;display:block}
 /* No frozen rows or columns: the lane gutter (left-hand lane names/hints) and the phase header
    (top row of phase badges) both scroll and pan naturally with the rest of the diagram, same
@@ -115,15 +163,25 @@ a{color:var(--accent);text-decoration:none}
    HTML duplication of either one anywhere in this file. Both were already rendered exactly
    this way for exported files (which never had the sticky overlay to begin with); the live
    view now matches that same non-frozen behaviour instead of diverging from it. */
-/* The legend footer is intentionally NOT part of this change — it stays sticky. It isn't a
-   row or column of the diagram grid at all (unlike the lane gutter and phase header above,
-   which ARE literally a frozen column and a frozen row); it's a floating UI footer, and
-   leaving it inside the pannable/zoomable content would let a tall multi-lane diagram's
-   "fit-to-height" scale shrink it to a near-illegible sliver (a 22-unit-tall row at 0.67x
-   scale renders ~15px tall). #legendLayer (the SVG-drawn version) stays hidden live and is
-   restored for exports, same pattern lane-gutter/phase-header used to follow before this
-   change — the difference is the legend has a genuine reason to stay fixed at a readable size
-   regardless of scroll or zoom, and the diagram's own rows/columns don't. */
+/* The legend footer is intentionally NOT part of this change — it never scales with the
+   canvas. It isn't a row or column of the diagram grid at all (unlike the lane gutter and
+   phase header above, which ARE literally a frozen column and a frozen row); embedding it in
+   the scaled SVG content would let a tall multi-lane diagram's "fit-to-height" scale shrink it
+   to a near-illegible sliver (a 22-unit-tall row at 0.67x scale renders ~15px tall).
+   #legendLayer (the SVG-drawn version) stays hidden live and is restored for exports, same
+   pattern lane-gutter/phase-header used to follow before that change — the difference is the
+   legend has a genuine reason to stay fixed at a readable size regardless of scroll, and the
+   diagram's own rows/columns don't.
+   It is now a plain HTML sibling AFTER .diagram-shell (see the markup), not a child positioned
+   inside it — a prior version nested it inside .diagram-shell with position:sticky so it would
+   float, pinned, over the bottom of the scrolling canvas. That put it inside the same box whose
+   native horizontal/vertical scrollbars are rendered at ITS outer edge, so the scrollbar ended
+   up drawn UNDERNEATH the sticky legend instead of between the canvas and the legend — exactly
+   backwards from "scrollbar immediately below the canvas, legend below that". Moving it outside
+   the scroll container entirely (a flex:none row of its own in .diagram-section, below the
+   flex:1 .diagram-shell) fixes both at once: the shell's scrollbar now sits at the shell's own
+   bottom edge (immediately below the canvas, nothing else in that box), and the legend is a
+   separate, always-visible row below it that scrolling can never cover or be covered by. */
 /* Legend readability pass: font bumped 11px -> 12.5px (the smallest text on the whole canvas
    was previously the one piece of UI every reader depends on to decode the diagram), items are
    grouped into labelled clusters (Node types / Connector types) instead of one undifferentiated
@@ -133,16 +191,20 @@ a{color:var(--accent);text-decoration:none}
    always-separate rows regardless of available width, so the container is now a flex COLUMN
    with each group as its own full-width flex row (items within a group still wrap onto
    additional lines if that one group alone needs more room than the canvas has). */
-.legend-sticky{position:sticky;left:0;bottom:0;z-index:6;display:flex;flex-direction:column;
- gap:8px;background:rgba(255,255,255,.97);border-top:1px solid #eeeeee;
- padding:10px 14px;pointer-events:none}
+/* flex:none — a fixed-height row of its own after .diagram-shell in the .diagram-section flex
+   column (see markup), never sharing space with or sitting inside the scrollable canvas. Kept
+   the "legend-sticky" class name for continuity even though it's no longer position:sticky —
+   see the comment above this rule for why it moved out of .diagram-shell entirely. */
+.legend-sticky{flex:none;display:flex;flex-direction:column;
+ gap:var(--space-2);background:rgba(255,255,255,.97);border-top:1px solid #eeeeee;
+ padding:var(--space-3) var(--space-4)}
 .legend-sticky .lgd-item{display:inline-flex;align-items:center;gap:6px;font:600 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif;color:#333333;white-space:nowrap}
-.legend-sticky .lgd-group{display:flex;align-items:center;flex-wrap:wrap;row-gap:6px;column-gap:16px}
+.legend-sticky .lgd-group{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;row-gap:6px;column-gap:16px}
 .legend-sticky .lgd-cat{font:800 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif;color:var(--muted);
  text-transform:uppercase;letter-spacing:.08em;margin-right:2px;white-space:nowrap}
 .legend-sticky svg{flex:none}
 .node{cursor:pointer}
-.node .box{stroke-width:1.5;transition:stroke .12s var(--ease-standard),stroke-width .12s var(--ease-standard),filter .12s var(--ease-standard)}
+.node .box{stroke-width:1.5;transition:stroke .15s var(--ease-standard),stroke-width .15s var(--ease-standard),filter .15s var(--ease-standard)}
 /* Selection uses the Vodafone brand-red accent (--accent, #e60000) rather than the signal-blue
    identity colour — the identity blue is already used pervasively for 'agent' node fill/stroke
    and portfolio-lane tints, so a selected node in that same hue had low figure/ground contrast
@@ -228,13 +290,28 @@ a{color:var(--accent);text-decoration:none}
    1-based index) has been removed entirely from the phase header — stage headings now show
    only their name, per an explicit "remove the numeric prefixes" requirement. */
 /* detail drawer */
-.drawer{position:fixed;top:0;right:0;height:100vh;width:390px;max-width:92vw;background:var(--panel);
+/* top/height were previously fixed 0/100vh, same as the app header itself (z-index:90, above
+   the drawer's own 80) — since both started at the exact same y, the header's opaque background
+   painted over the drawer's own top portion (`.dh`, including its × close button), hiding and
+   disabling it even though the drawer's SCROLLABLE body (`.db`) below happened to start clear
+   of the header by coincidence of the two elements' similar heights. --header-h is set at
+   runtime (see syncDrawerTop(), called on load/resize alongside fit()) to the header's actual
+   rendered height — not a hardcoded px guess — since that height isn't a fixed constant (a long
+   title can wrap to two lines at a narrow viewport, growing the header). The fallback (62px)
+   only matters for the brief instant before JS first runs. */
+.drawer{position:fixed;top:var(--header-h,62px);right:0;height:calc(100vh - var(--header-h,62px));width:390px;max-width:92vw;background:var(--panel);
  box-shadow:-18px 0 44px rgba(0,0,0,.12);transform:translateX(100%);transition:transform .22s var(--ease-standard);z-index:80;
+ /* top/height deliberately NOT transitioned (only transform is): found empirically that
+    transitioning a var()/calc()-driven length here made the browser freeze `top` at its
+    initial computed value and never re-resolve it on subsequent --header-h changes, rather
+    than animating — a real engine quirk with this specific property/value combination, not a
+    style choice. A resize-triggered header-height change is rare and doesn't need animating
+    anyway, so top/height simply apply instantly; only the open/close slide stays animated. */
  display:flex;flex-direction:column}
 .drawer.open{transform:none}
-.drawer .dh{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}
+.drawer .dh{padding:var(--space-4) var(--space-5);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:var(--space-3)}
 .drawer .dh h3{font-size:15px}
-.drawer .db{padding:16px 18px;overflow:auto}
+.drawer .db{padding:var(--space-4) var(--space-5);overflow:auto}
 .drawer .x{cursor:pointer;color:var(--muted);font-size:20px;line-height:1;border:none;background:none}
 .dsec{margin-bottom:14px}
 .dsec .k{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700;margin-bottom:5px}
@@ -246,7 +323,7 @@ a{color:var(--accent);text-decoration:none}
    face, since the rest of the drawer (and the rest of this skill's UI) is Inter/system-ui
    throughout — adopting the reference's STRUCTURE (bordered box, two columns, arrow + bold
    step name) without a wholesale typography change that would clash with everything else. */
-.dsec-paths{border:1px solid #b8d4f5;background:#eef4fd;border-radius:8px;padding:14px 16px;
+.dsec-paths{border:1px solid #b8d4f5;background:#eef4fd;border-radius:var(--radius-sm);padding:var(--space-4);
  display:flex;gap:20px;margin-bottom:14px}
 .dsec-paths .col{flex:1;min-width:0}
 .dsec-paths .k{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);
@@ -256,7 +333,7 @@ a{color:var(--accent);text-decoration:none}
 .dsec-paths .arrow{color:var(--muted);flex:none}
 .dsec-paths .path-item b{font-weight:700;color:var(--ink)}
 .dsec-paths .path-item .detail{opacity:.7;font-weight:400}
-.pill{display:inline-block;font-size:10.5px;font-weight:700;border-radius:999px;padding:2px 7px;margin:2px 4px 2px 0}
+.pill{display:inline-block;font-size:10.5px;font-weight:700;border-radius:var(--radius-pill);padding:2px 7px;margin:2px 4px 2px 0}
 /* .t-portal is kept: the side drawer's own Stage/lane pills reuse it (the "Comes after"/
    "Leads to" chips that also used to reuse this class have since been replaced entirely by
    the bordered Incoming/Outgoing paths box above, which doesn't use .pill/.t-portal at all —
@@ -268,8 +345,10 @@ a{color:var(--accent);text-decoration:none}
 .assum{background:#fef8e6;border:1px solid #fbe29e;border-radius:6px;padding:6px 10px;font-size:11.5px;color:#5d4400;display:inline-block;margin:2px 0}
 </style></head><body>
 <header class="top">
- <h1><span class="dot"></span>Portfolio Governance Portal — Agent Ecosystem Business Process</h1>
+ <h1>BPMN Swimlane: Portfolio Governance Portal — Agent Ecosystem Business Process</h1>
  <div class="header-actions">
+  <button class="btn" id="resetBtn">Reset</button>
+  <button class="btn" id="viewDetailsBtn">View Details</button>
   <button class="btn" id="happyFlow">Happy Flow</button>
   <div class="exportwrap">
    <button class="btn" id="exportBtn">Export</button>
@@ -284,12 +363,12 @@ a{color:var(--accent);text-decoration:none}
 <div class="wrap">
 
  <div class="diagram-section">
-  <div class="diagram-shell"><svg id="svgHost"></svg><div id="legendBar" class="legend-sticky"></div></div>
+  <div class="diagram-shell"><svg id="svgHost"></svg></div><div id="legendBar" class="legend-sticky"></div>
  </div>
 
 </div>
 <aside class="drawer" id="drawer"><div class="dh"><h3 id="d-title">Node</h3><button class="x" id="d-close">×</button></div><div class="db" id="d-body"></div></aside>
-<script>window.DATA={"meta": {"title": "Bill Formatter \u2014 Invoice Processing, Distribution and On-Demand Servicing", "generated": "2026-09-03", "source": "VFQ_BillFormatter_BRSD_V1.0.xlsx"}, "layout": {"x0": 140, "topbar": 70, "colw": 252, "totalW": 9230, "totalH": 2490, "laneLabelW": 120, "lanes": [{"key": "src", "name": "Source Systems", "hint": "Oracle BRM, Mediation Zone, Product Catalogue, Legacy Invoice Buffer", "y": 70, "h": 180}, {"key": "bfr", "name": "Bill Formatter", "hint": "Core ingestion, generation, masking and orchestration engine", "y": 250, "h": 740}, {"key": "ops", "name": "Billing Operations", "hint": "Admin Console users \u2014 review, reprocess, configure, action", "y": 990, "h": 460}, {"key": "crm", "name": "Siebel CRM", "hint": "Reprint/resend requests, hot bill landing, notification logging", "y": 1450, "h": 460}, {"key": "chn", "name": "Distribution Channels", "hint": "SMTP, SMS Gateway, WhatsApp Business, Web", "y": 1910, "h": 460}], "phases": ["Ingest", "Ingest", "Ingest", "Ingest", "Ingest", "Validate", "Validate", "Validate", "Validate", "Validate", "Batch & Parse", "Batch & Parse", "Generate", "Generate", "Generate", "Generate", "Generate", "Generate", "Mask & Review", "Mask & Review", "Mask & Review", "Mask & Review", "Mask & Review", "Mask & Review", "Distribute", "Distribute", "Distribute", "Distribute", "Distribute", "Distribute", "Distribute", "Distribute", "Distribute", "Report & Manage", "Report & Manage", "Report & Manage"]}, "nodes": [{"id": "start", "type": "start", "lane": "src", "slot": 0, "label": "Bill Run / On-Demand Trigger", "desc": "Regular bill cycle run, trial bill run, or hot bill request initiates XML retrieval (BFR_XML_001.01/.02/.03).", "phase": 0, "x": 224.0, "y": 118.0, "w": 84, "h": 84, "cx": 266.0, "cy": 160.0}, {"id": "pull_regular", "type": "agent", "lane": "bfr", "slot": 0, "label": "Pull Regular Bill XML", "sub": "BFR_XML_001.01 / BR-001 / INT-01 / BFR_DATA_INGESTION_001.01", "desc": "Formatter pulls invoice XML from Mediation Zone for regular bills at the predefined input location. Integration: INT-01 (Oracle BRM via Mediation Zone, invoice XML supply and regeneration request). Status Model \u2014 XML Record: Received (XML file collected or uploaded and awaiting validation).", "inputs": ["Invoice XML (regular)"], "outputs": ["Retrieved XML file"], "systems": ["Mediation Zone"], "phase": 1, "x": 415.0, "y": 310.0, "w": 206, "h": 60, "cx": 518.0, "cy": 340.0}, {"id": "pull_trial", "type": "agent", "lane": "bfr", "slot": 1, "label": "Pull Trial Bill XML", "sub": "BFR_XML_001.02 / BR-001 / INT-01", "desc": "Formatter pulls invoice XML from Mediation Zone for trial bills at the predefined input location. Integration: INT-01 (Oracle BRM via Mediation Zone, invoice XML supply and regeneration request). Status Model \u2014 XML Record: Received (XML file collected or uploaded and awaiting validation).", "inputs": ["Invoice XML (trial)"], "outputs": ["Retrieved XML file"], "systems": ["Mediation Zone"], "phase": 1, "x": 415.0, "y": 450.0, "w": 206, "h": 60, "cx": 518.0, "cy": 480.0}, {"id": "pull_hot", "type": "agent", "lane": "bfr", "slot": 2, "label": "Pull Hot Bill XML", "sub": "BFR_XML_001.03 / BR-001 / INT-01", "desc": "Formatter pulls invoice XML from Mediation Zone for hot bills at the predefined input location. Integration: INT-01 (Oracle BRM via Mediation Zone, invoice XML supply and regeneration request). Status Model \u2014 XML Record: Received (XML file collected or uploaded and awaiting validation).", "inputs": ["Invoice XML (hot)"], "outputs": ["Retrieved XML file"], "systems": ["Mediation Zone"], "phase": 1, "x": 415.0, "y": 590.0, "w": 206, "h": 60, "cx": 518.0, "cy": 620.0}, {"id": "manual_upload", "type": "agent", "lane": "ops", "slot": 0, "label": "Manual XML / ZIP Upload", "sub": "BR-007", "desc": "Manual XML and ZIP upload, restricted to authorised users, as an alternative ingestion path.", "phase": 1, "x": 415.0, "y": 1050.0, "w": 206, "h": 60, "cx": 518.0, "cy": 1080.0}, {"id": "atomic_write", "type": "control", "lane": "bfr", "slot": 0, "label": "Atomic File Write", "sub": "BR-002", "desc": "XML is written to a temporary location or filename, closed and verified, then renamed/moved to the final destination so no partially written file is readable downstream.", "phase": 2, "x": 667.0, "y": 310.0, "w": 206, "h": 60, "cx": 770.0, "cy": 340.0}, {"id": "dup_check", "type": "validation", "lane": "bfr", "slot": 0, "label": "Duplicate Prevention Check", "sub": "BR-004", "desc": "The same invoice XML file is not processed more than once.", "phase": 3, "x": 934.0, "y": 290.0, "w": 176, "h": 100, "cx": 1022.0, "cy": 340.0}, {"id": "batch_create", "type": "agent", "lane": "bfr", "slot": 0, "label": "Batch Creation", "sub": "BR-003 / BFR_CONSL_BATCH_001.02 / P-22 / BFR_CONSL_BATCH_001.01 / BFR_CONSL_BATCH_001.03 / BFR_CONSL_BATCH_001.04 / BFR_CONSL_BATCH_001.04.A_ViewBill_Action / BFR_CONSL_BATCH_001.04.B_ViewBill_StatusLog / BFR_CONSL_BATCH_001.04.Cx_ViewBill_Download_PDF / BFR_CONSL_BATCH_001.04.D_ViewBill_Download_PDF / BFR_CONSL_BATCH_001.04.E_ViewBill_Download_XML / BFR_CONSL_BATCH_001.04.F_ViewBill_Reprint_Bill / BFR_CONSL_BATCH_001.04.G_ViewBill_Regenerate_Document / BFR_CONSL_BATCH_001.04.H_ViewBill_Regenerate_XML / BFR_CONSL_BATCH_001.04.I_ViewBill_Send_Email / BFR_CONSL_BATCH_001.06_Action_Overall_Report / BFR_CONSL_BATCH_001.07_Action_Detailed_Report / BFR_CONSL_BATCH_001.08_Action_Failed_Report / BFR_CONSL_BATCH_001.09_Action_Failed_Emails_Report / BFR_CONSL_BATCH_001.10_Action_Send_Overall_Report / BFR_CONSL_BATCH_001.11_Action_Send_Email / BFR_CONSL_REP_001.15", "desc": "XML files are retrieved and processed batch-wise; each collection cycle produces a single batch identifier. P-22 (maximum batch size). Status Model \u2014 Batch: Created (batch created from the loaded XML files).", "phase": 4, "x": 1171.0, "y": 310.0, "w": 206, "h": 60, "cx": 1274.0, "cy": 340.0}, {"id": "schema_validate", "type": "validation", "lane": "bfr", "slot": 0, "label": "XML Schema & Mandatory Data Validation", "sub": "BFR_XML_002.04 / BR-009", "desc": "Bill Formatter loads the XML, performs schema validation, and validates mandatory billing data required for invoice generation. Status Model \u2014 XML Record: Valid (XML has passed schema and mandatory data validation).", "phase": 5, "x": 1438.0, "y": 290.0, "w": 176, "h": 100, "cx": 1526.0, "cy": 340.0}, {"id": "d_valid", "type": "decision", "lane": "bfr", "slot": 0, "label": "XML Valid?", "branches": [{"label": "Valid", "to": "type_segment"}, {"label": "Failed XML", "to": "failed_xml"}], "phase": 6, "x": 1703.0, "y": 298.0, "w": 150, "h": 84, "cx": 1778.0, "cy": 340.0}, {"id": "failed_xml", "type": "error", "lane": "bfr", "slot": 0, "label": "Failed XML \u2014 Reason Recorded", "sub": "BR-009", "desc": "XML failing schema or mandatory data validation is marked Failed XML with a recorded failure reason; it does not proceed to invoice generation. Status Model \u2014 XML Record: Failed XML (XML has failed schema or mandatory data validation and carries a failure reason).", "phase": 7, "x": 1935.0, "y": 290.0, "w": 190, "h": 100, "cx": 2030.0, "cy": 340.0}, {"id": "xml_portal_visible", "type": "system", "lane": "bfr", "slot": 0, "label": "Failed XML Visible in Portal", "sub": "BR-010", "desc": "Failed XML records are visible in the Bill Formatter Portal with failure reason and processing status.", "phase": 8, "x": 2187.0, "y": 290.0, "w": 190, "h": 100, "cx": 2282.0, "cy": 340.0}, {"id": "reprocess_failed_xml", "type": "agent", "lane": "ops", "slot": 0, "label": "Review & Reprocess Failed XML", "sub": "BR-010", "desc": "Billing Operations users review failed XML records and initiate reprocessing after corrective action.", "phase": 9, "x": 2431.0, "y": 1030.0, "w": 206, "h": 100, "cx": 2534.0, "cy": 1080.0}, {"id": "retry_retrieval", "type": "escalation", "lane": "bfr", "slot": 0, "label": "Retry per Configured Policy", "sub": "BR-006", "desc": "Retrieval errors are retried per the configured retry policy; a persistent failure is raised for operational review. Retry count: to be confirmed (P-19).", "phase": 0, "x": 171.0, "y": 290.0, "w": 190, "h": 100, "cx": 266.0, "cy": 340.0}, {"id": "stats_log", "type": "system", "lane": "bfr", "slot": 2, "label": "Log Retrieval / Load Status", "sub": "BR-005 / BR-011 / BFR_CONSL_RPT_001.01 / BFR_CONSL_XML_SEARCH_001.02_Operational_Log / BFR_CONSL_XML_SEARCH_001.03_Operational_Log", "desc": "Retrieval and load status is logged for every XML file; batch statistics reflect successful and failed outcomes.", "phase": 8, "x": 2187.0, "y": 570.0, "w": 190, "h": 100, "cx": 2282.0, "cy": 620.0}, {"id": "type_segment", "type": "control", "lane": "bfr", "slot": 1, "label": "Derive Invoice Type & Customer Segment", "sub": "BR-008", "desc": "Invoice type and customer segment are derived from the loaded XML content.", "phase": 7, "x": 1927.0, "y": 430.0, "w": 206, "h": 100, "cx": 2030.0, "cy": 480.0}, {"id": "parse_load", "type": "agent", "lane": "bfr", "slot": 1, "label": "Load & Parse XML", "sub": "BFR_XML_002.01 / BR-012 / BFR_CONSL_XML_SEARCH_001.03_Download_XML / BFR_CONSL_XML_SEARCH_001.04_Regenerate_XML", "desc": "Invoice Header, Invoice Summary and Invoice Detail structures are loaded from the parsed XML. Status Model \u2014 XML Record: Processed (XML has been consumed by invoice generation; terminal).", "phase": 8, "x": 2179.0, "y": 450.0, "w": 206, "h": 60, "cx": 2282.0, "cy": 480.0}, {"id": "csv_check", "type": "validation", "lane": "bfr", "slot": 0, "label": "Supporting CSV Presence Check", "sub": "BR-013", "desc": "Scheduler checks every 10 minutes (P-01) whether an expected supporting CSV has been received.", "phase": 9, "x": 2446.0, "y": 290.0, "w": 176, "h": 100, "cx": 2534.0, "cy": 340.0}, {"id": "csv_alert", "type": "escalation", "lane": "bfr", "slot": 0, "label": "Supporting CSV Absent Alert", "sub": "BR-013 / INT-04 / BFR_CONSL_REP_001.11", "desc": "Where a supporting CSV remains absent 4 hours after XML receipt (P-02), an alert email is issued to the configured recipients. Integration: INT-04 (Alerting recipients, operational alert distribution).", "outputs": ["Alert email"], "systems": ["Alerting recipients"], "phase": 10, "x": 2691.0, "y": 290.0, "w": 190, "h": 100, "cx": 2786.0, "cy": 340.0}, {"id": "batch_ready", "type": "control", "lane": "bfr", "slot": 0, "label": "Batch Ready", "sub": "Status Model \u2014 Batch: Ready", "desc": "Batch validated and available for invoice generation.", "phase": 11, "x": 2935.0, "y": 310.0, "w": 206, "h": 60, "cx": 3038.0, "cy": 340.0}, {"id": "d_bill_type", "type": "decision", "lane": "bfr", "slot": 0, "label": "Bill Type?", "branches": [{"label": "Regular", "to": "gen_regular"}, {"label": "Trial", "to": "gen_trial"}, {"label": "Hot", "to": "gen_hot"}], "phase": 12, "x": 3215.0, "y": 298.0, "w": 150, "h": 84, "cx": 3290.0, "cy": 340.0, "desc": "Status Model \u2014 Invoice: Pending (invoice awaiting generation)."}, {"id": "gen_regular", "type": "agent", "lane": "bfr", "slot": 0, "label": "Generate Regular Bill", "sub": "BR-025 / BR-031 / BFR_INV_PDF_REG_003.01 / BFR_INV_PDF_REG_003.02 / BFR_INV_PDF_REG_003.03 / BFR_INV_PDF_REG_003.04 / BFR_INV_XLS_REG_001.01 / BFR_INV_XLS_REG_001.02 / BFR_OLD_INV_COMP_001.01", "desc": "Regular bill PDF generated using the template applicable to Consumer Mobile, Consumer Fixed Line, Enterprise and Black; XLS and CSV also produced for Enterprise. BR-031 (all information/business rules currently defined within the existing legacy formatter carry forward into this capability).", "outputs": ["Regular bill PDF", "XLS (Enterprise)", "CSV (Enterprise)"], "phase": 13, "x": 3439.0, "y": 310.0, "w": 206, "h": 60, "cx": 3542.0, "cy": 340.0}, {"id": "gen_trial", "type": "agent", "lane": "bfr", "slot": 1, "label": "Generate Trial Bill", "sub": "BR-020 / BR-021 / BR-022 / BFR_INV_PDF_TRL_003.01 / BFR_INV_PDF_TRL_003.02 / BFR_INV_PDF_TRL_003.03 / BFR_INV_PDF_TRL_003.04 / BFR_INV_XLS_TRL_001.01 / BFR_INV_XLS_TRL_001.02", "desc": "Trial bill PDF generated by customer segment (Consumer Mobile, Consumer Fixed Line, Enterprise, Black) for internal audit and bill validation only; a trial run covers an entire bill cycle or a nominated customer list. Trial bills are never distributed to a customer through any channel.", "outputs": ["Trial bill PDF"], "phase": 13, "x": 3439.0, "y": 450.0, "w": 206, "h": 60, "cx": 3542.0, "cy": 480.0}, {"id": "gen_hot", "type": "agent", "lane": "bfr", "slot": 2, "label": "Generate Hot Bill", "sub": "BR-024 / BFR_CONSL_REP_001.12 / BFR_INV_PDF_HOT_003.01 / BFR_INV_PDF_HOT_003.02 / BFR_INV_PDF_HOT_003.03 / BFR_INV_XLS_HOT_001.01 / BFR_INV_XLS_HOT_001.02", "desc": "Hot bill PDF generated using the template applicable to Consumer, Enterprise and Black; XLS and CSV also produced for Enterprise.", "outputs": ["Hot bill PDF", "XLS (Enterprise)", "CSV (Enterprise)"], "phase": 13, "x": 3439.0, "y": 590.0, "w": 206, "h": 60, "cx": 3542.0, "cy": 620.0}, {"id": "gen_bulk_sms", "type": "agent", "lane": "bfr", "slot": 0, "label": "Generate Bulk SMS Invoice", "sub": "BR-026 / BFR_INV_BLK_SMS_001.01 / BFR_INV_BLK_SMS_001.02 / BFR_INV_BLK_SMS_001.03", "desc": "Bulk SMS invoices generated using the Bulk SMS invoice template for regular, trial and hot bills.", "phase": 14, "x": 3691.0, "y": 290.0, "w": 206, "h": 100, "cx": 3794.0, "cy": 340.0}, {"id": "gen_iot", "type": "agent", "lane": "bfr", "slot": 1, "label": "Generate IoT Invoice", "sub": "BR-027 / BFR_INV_IOT_001.01 / BFR_INV_IOT_001.02 / BFR_INV_IOT_001.03", "desc": "IoT invoices generated using the IoT invoice template for regular, trial and hot bills.", "phase": 14, "x": 3691.0, "y": 450.0, "w": 206, "h": 60, "cx": 3794.0, "cy": 480.0}, {"id": "lang_determine", "type": "control", "lane": "bfr", "slot": 3, "label": "Determine Invoice Language", "sub": "BR-028 / BFR_INV_PDF_ENG_001.01 / BFR_INV_PDF_ENG_001.02 / BFR_MULT_LANG_SUPRT_001.01", "desc": "Invoice language is determined from the language type identifier in the source data; English and Arabic (P-08) are supported with the corresponding template and translation values applied.", "phase": 14, "x": 3691.0, "y": 710.0, "w": 206, "h": 100, "cx": 3794.0, "cy": 760.0}, {"id": "calc_fields", "type": "system", "lane": "bfr", "slot": 0, "label": "Populate Calculated Fields", "sub": "BR-163 / BFR_CALC_INV_FLD_001.01 / BFR_CONSL_CONF_001.04", "desc": "Fields requiring calculation and not directly available from source systems are calculated using logic supplied by the billing system (D-07 dependency) and populated in the output.", "phase": 15, "x": 3951.0, "y": 290.0, "w": 190, "h": 100, "cx": 4046.0, "cy": 340.0}, {"id": "enterprise_detail", "type": "system", "lane": "bfr", "slot": 4, "label": "Enterprise Detailed Output", "sub": "BR-023", "desc": "An Enterprise customer opted for the detailed bill receives an XLS output; a call detail CSV is produced in the VFQ approved format and stored in the designated output location.", "phase": 14, "x": 3699.0, "y": 850.0, "w": 190, "h": 100, "cx": 3794.0, "cy": 900.0}, {"id": "d_gen_success", "type": "decision", "lane": "bfr", "slot": 0, "label": "Generation Successful?", "branches": [{"label": "Success", "to": "original_immutable"}, {"label": "Failed", "to": "gen_failed"}], "phase": 16, "x": 4223.0, "y": 290.0, "w": 150, "h": 100, "cx": 4298.0, "cy": 340.0, "desc": "Status Model \u2014 Invoice: Generated (invoice output produced in the required format)."}, {"id": "gen_failed", "type": "error", "lane": "bfr", "slot": 0, "label": "Invoice Generation Failed", "sub": "BR-029 / BFR_BILL_RETRY_001.01", "desc": "Invoices failing processing or generation carry a recorded failure status and reason, visible in the portal. Status Model \u2014 Batch: Failed (batch processing failed) / Invoice: Failed (invoice generation failed and carries a failure reason).", "phase": 17, "x": 4455.0, "y": 290.0, "w": 190, "h": 100, "cx": 4550.0, "cy": 340.0}, {"id": "gen_retry", "type": "escalation", "lane": "ops", "slot": 0, "label": "Reprocess Failed Invoice", "sub": "BR-030 / BFR_CONSL_INV_REGEN_001.01", "desc": "Reprocessing of a failed invoice or batch is restricted by role; the retry count is recorded. Maximum retry attempts: to be confirmed (P-20).", "phase": 0, "x": 171.0, "y": 1030.0, "w": 190, "h": 100, "cx": 266.0, "cy": 1080.0}, {"id": "trial_exclude", "type": "control", "lane": "bfr", "slot": 2, "label": "Trial Batch Excluded from Channel Upload", "sub": "BR-022", "desc": "Trial batches are excluded from channel upload \u2014 a trial bill exists only for internal audit and bill validation.", "phase": 14, "x": 3691.0, "y": 570.0, "w": 206, "h": 100, "cx": 3794.0, "cy": 620.0}, {"id": "original_immutable", "type": "control", "lane": "bfr", "slot": 1, "label": "Original Invoice Remains Unchanged", "sub": "BR-150", "desc": "The original customer invoice is generated, stored and remains unchanged and immutable.", "phase": 17, "x": 4447.0, "y": 430.0, "w": 206, "h": 100, "cx": 4550.0, "cy": 480.0}, {"id": "mask_gen", "type": "agent", "lane": "bfr", "slot": 0, "label": "Generate Masked Invoice", "sub": "BR-151 / BR-153 / BFR_INV_MASK_001.01", "desc": "A separate masked invoice file is generated at the point of invoice generation for each applicable invoice. Tax Identifier, Payment Method and Phone Number are masked in accordance with the configured access policy (masking rule set: D-08 dependency, to be confirmed). BR-153 (masking rules configurable without requiring invoice regeneration).", "phase": 18, "x": 4699.0, "y": 310.0, "w": 206, "h": 60, "cx": 4802.0, "cy": 340.0}, {"id": "role_presentation", "type": "control", "lane": "ops", "slot": 0, "label": "Role-Based Invoice Presentation", "sub": "BR-152 / BR-154", "desc": "User role and access permission determine whether the full invoice or the masked invoice is presented; privileged roles view the full invoice, restricted roles view the masked version. Bill download offers an Agent Copy and a Customer Copy.", "phase": 19, "x": 4951.0, "y": 1030.0, "w": 206, "h": 100, "cx": 5054.0, "cy": 1080.0}, {"id": "d_review_switch", "type": "decision", "lane": "bfr", "slot": 0, "label": "Review & Approval Switch On?", "sub": "BR-080 (default Off, P-12)", "branches": [{"label": "On", "to": "review"}, {"label": "Off", "to": "channel_avail"}], "phase": 20, "x": 5231.0, "y": 290.0, "w": 150, "h": 100, "cx": 5306.0, "cy": 340.0}, {"id": "review", "type": "agent", "lane": "ops", "slot": 0, "label": "Billing Operations Review", "sub": "BR-080 / BFR_CONSL_EMAIL_DISP_APROV_001.01", "desc": "Invoice review and approval before customer despatch, following role-based access, when the review switch is enabled. Status Model \u2014 Invoice: Approved (invoice reviewed and approved for despatch where the review switch is on).", "phase": 21, "x": 5455.0, "y": 1030.0, "w": 206, "h": 100, "cx": 5558.0, "cy": 1080.0}, {"id": "d_review_outcome", "type": "decision", "lane": "ops", "slot": 0, "label": "Approved?", "branches": [{"label": "Approved", "to": "channel_avail"}, {"label": "Rejected", "to": "rejected"}], "phase": 22, "x": 5735.0, "y": 1038.0, "w": 150, "h": 84, "cx": 5810.0, "cy": 1080.0}, {"id": "rejected", "type": "error", "lane": "ops", "slot": 0, "label": "Invoice Rejected \u2014 Despatch Prevented", "sub": "Status Model \u2014 Invoice: Rejected", "desc": "Invoice reviewed and rejected; despatch is prevented. Returns to Pending on regeneration.", "phase": 23, "x": 5967.0, "y": 1030.0, "w": 190, "h": 100, "cx": 6062.0, "cy": 1080.0}, {"id": "channel_avail", "type": "system", "lane": "bfr", "slot": 0, "label": "Make Invoice Available to Channels", "sub": "BR-050 / P-09 / BFR_BILL_EMAIL_LANG_001.02 / BFR_INV_DELV_MODE_001.01 / BFR_INV_TO_CHNL_001.01", "desc": "Generated invoices are made available to downstream channels through the configured integration flow, with regular bill copies provided to Siebel CRM and other customer channels. P-09 (supported invoice output formats).", "phase": 23, "x": 5967.0, "y": 290.0, "w": 190, "h": 100, "cx": 6062.0, "cy": 340.0}, {"id": "hot_landing", "type": "system", "lane": "crm", "slot": 0, "label": "Hot Bill Landing Location", "sub": "BR-051", "desc": "Hot bill invoices are placed in the Siebel CRM hot bill landing location and are available in real time following generation (target time: to be confirmed, P-21).", "phase": 24, "x": 6219.0, "y": 1490.0, "w": 190, "h": 100, "cx": 6314.0, "cy": 1540.0}, {"id": "d_email_eligible", "type": "decision", "lane": "bfr", "slot": 0, "label": "Email Eligible?", "sub": "BR-060", "branches": [{"label": "Eligible", "to": "email_template"}, {"label": "Trial (never emailed)", "to": "trial_terminal"}], "phase": 24, "x": 6239.0, "y": 290.0, "w": 150, "h": 100, "cx": 6314.0, "cy": 340.0, "desc": "Status Model \u2014 Email: Eligible (invoice identified as eligible for email distribution)."}, {"id": "email_template", "type": "control", "lane": "bfr", "slot": 0, "label": "Determine Email Template", "sub": "BR-061 / BFR_BILL_EMAIL_LANG_001.01", "desc": "Email template determined by customer type, invoice type and language; separate templates for Consumer and Enterprise in English and Arabic, with configurable dynamic fields.", "phase": 25, "x": 6463.0, "y": 310.0, "w": 206, "h": 60, "cx": 6566.0, "cy": 340.0}, {"id": "suppression_check", "type": "validation", "lane": "chn", "slot": 0, "label": "Suppression List Check", "sub": "BR-063", "desc": "A configurable list of non-triable email addresses is maintained against which no despatch is attempted.", "phase": 26, "x": 6730.0, "y": 1950.0, "w": 176, "h": 100, "cx": 6818.0, "cy": 2000.0}, {"id": "suppressed", "type": "end", "lane": "chn", "slot": 0, "label": "Email Suppressed", "sub": "Status Model \u2014 Email: Suppressed", "desc": "Despatch not attempted because the address is on the non-triable list. Terminal.", "phase": 27, "x": 7020.0, "y": 1950.0, "w": 100, "h": 100, "cx": 7070.0, "cy": 2000.0}, {"id": "smtp_despatch", "type": "external", "lane": "chn", "slot": 1, "label": "SMTP Despatch", "sub": "BR-062 / INT-03 / BFR_CONSL_EML_RPT_001.01 / BFR_EML_001.01", "desc": "Email despatched through the configured SMTP service, which captures delivery feedback and provides success/failure reporting.", "systems": ["SMTP service"], "phase": 27, "x": 6982.0, "y": 2113.0, "w": 176, "h": 54, "cx": 7070.0, "cy": 2140.0}, {"id": "d_smtp_result", "type": "decision", "lane": "chn", "slot": 0, "label": "SMTP Accepted?", "branches": [{"label": "Accepted", "to": "email_sent"}, {"label": "Failure", "to": "email_failed"}], "phase": 28, "x": 7247.0, "y": 1950.0, "w": 150, "h": 100, "cx": 7322.0, "cy": 2000.0}, {"id": "email_failed", "type": "error", "lane": "chn", "slot": 1, "label": "Email Despatch Failed", "sub": "Status Model \u2014 Email: Failed / BR-062 / BFR_CONSL_REP_001.13_Failed_Email", "desc": "Delivery failed; failure reported in the Failed Email Report. Resend on retry. Status Model \u2014 Batch: Failed Sending Email (one or more invoice emails within the batch failed despatch) / Invoice: Failed Sending Email (invoice email despatch failed).", "phase": 31, "x": 7983.0, "y": 2111.0, "w": 190, "h": 58, "cx": 8078.0, "cy": 2140.0}, {"id": "email_sent", "type": "system", "lane": "chn", "slot": 0, "label": "Email Sent \u2014 Awaiting Delivery Feedback", "sub": "Status Model \u2014 Email: Sent", "phase": 29, "x": 7479.0, "y": 1950.0, "w": 190, "h": 100, "cx": 7574.0, "cy": 2000.0, "desc": "Status Model \u2014 Invoice: Email Sent (invoice email despatched to the customer; terminal)."}, {"id": "d_delivery", "type": "decision", "lane": "chn", "slot": 0, "label": "Delivery Confirmed?", "branches": [{"label": "Delivered", "to": "email_delivered"}, {"label": "Failed", "to": "email_failed"}], "phase": 30, "x": 7751.0, "y": 1950.0, "w": 150, "h": 100, "cx": 7826.0, "cy": 2000.0}, {"id": "email_delivered", "type": "end", "lane": "chn", "slot": 0, "label": "Email Delivered", "sub": "Status Model \u2014 Email: Delivered", "desc": "Delivery confirmed by the SMTP service feedback. Terminal.", "phase": 31, "x": 8036.0, "y": 1958.0, "w": 84, "h": 84, "cx": 8078.0, "cy": 2000.0}, {"id": "crm_log", "type": "agent", "lane": "crm", "slot": 0, "label": "Log CRM Notification", "sub": "BR-064 / INT-02 / BFR_EML_001.02", "desc": "A CRM notification record is created only for invoices processed for customer communication, stored against the customer account and bill reference for servicing and audit. Integration: INT-02 (Siebel CRM, reprint/resend request receipt, invoice delivery, notification logging).", "phase": 32, "x": 8227.0, "y": 1510.0, "w": 206, "h": 60, "cx": 8330.0, "cy": 1540.0}, {"id": "sms_despatch", "type": "external", "lane": "chn", "slot": 0, "label": "SMS Invoice Notification", "sub": "BR-052 / INT-06", "desc": "Invoice communication via SMS, carrying a PDF reference or an invoice URL, with pre-despatch masking applied (BR-053).", "systems": ["SMS Gateway"], "phase": 24, "x": 6226.0, "y": 1950.0, "w": 176, "h": 100, "cx": 6314.0, "cy": 2000.0}, {"id": "whatsapp_despatch", "type": "external", "lane": "chn", "slot": 1, "label": "WhatsApp Invoice Notification", "sub": "BR-052 / INT-07", "desc": "Invoice communication via WhatsApp Business through the approved provider, carrying a PDF reference or an invoice URL, with pre-despatch masking applied (BR-053).", "systems": ["WhatsApp Business (approved provider)"], "phase": 24, "x": 6226.0, "y": 2090.0, "w": 176, "h": 100, "cx": 6314.0, "cy": 2140.0}, {"id": "web_display", "type": "system", "lane": "chn", "slot": 2, "label": "Web Channel Display", "sub": "BR-052", "desc": "Invoice communication supported through the Web channel, with pre-despatch masking applied (BR-053).", "phase": 24, "x": 6219.0, "y": 2252.0, "w": 190, "h": 56, "cx": 6314.0, "cy": 2280.0}, {"id": "trial_terminal", "type": "end", "lane": "bfr", "slot": 2, "label": "Trial Bill \u2014 Not Distributed", "sub": "BR-022", "desc": "A trial bill is generated for internal audit and bill validation only and is never distributed to a customer through any channel. Terminal.", "phase": 25, "x": 6516.0, "y": 570.0, "w": 100, "h": 100, "cx": 6566.0, "cy": 620.0}, {"id": "reprint_request", "type": "agent", "lane": "crm", "slot": 2, "label": "Reprint Bill Request", "sub": "BR-043 / INT-02", "desc": "A reprint request carries the account number, bill period and bill type; the reprinted PDF is transferred through Mediation Zone to the requesting channel. Integration: INT-02 (Siebel CRM, reprint/resend request receipt, invoice delivery, notification logging).", "phase": 24, "x": 6211.0, "y": 1790.0, "w": 206, "h": 60, "cx": 6314.0, "cy": 1820.0}, {"id": "resend_request", "type": "agent", "lane": "crm", "slot": 1, "label": "Resend Bill Request", "sub": "BR-047 / INT-02", "desc": "A resend request carries the account number and bill reference; only a previously generated invoice may be resent, and delivery status is recorded and visible. Integration: INT-02 (Siebel CRM, reprint/resend request receipt, invoice delivery, notification logging).", "phase": 24, "x": 6211.0, "y": 1650.0, "w": 206, "h": 60, "cx": 6314.0, "cy": 1680.0}, {"id": "regen_request", "type": "agent", "lane": "ops", "slot": 0, "label": "Invoice / Batch Regeneration Request", "sub": "BR-040", "desc": "Invoice regeneration supported at both individual invoice level and batch level, including retry and status reporting.", "phase": 24, "x": 6211.0, "y": 1030.0, "w": 206, "h": 100, "cx": 6314.0, "cy": 1080.0}, {"id": "legacy_buffer", "type": "external", "lane": "src", "slot": 0, "label": "Legacy Invoice Buffer Lookup", "sub": "BR-042 / INT-05", "desc": "Invoices are regenerable from legacy XML data held in the Invoice Buffer table, including invoices generated several years previously.", "systems": ["Legacy Invoice Buffer"], "phase": 25, "x": 6478.0, "y": 110.0, "w": 176, "h": 100, "cx": 6566.0, "cy": 160.0}, {"id": "d_legacy_avail", "type": "decision", "lane": "src", "slot": 0, "label": "Historical XML Available?", "branches": [{"label": "Available", "to": "regen_consume_latest"}, {"label": "Unavailable", "to": "legacy_unavailable"}], "phase": 26, "x": 6743.0, "y": 110.0, "w": 150, "h": 100, "cx": 6818.0, "cy": 160.0}, {"id": "legacy_unavailable", "type": "error", "lane": "src", "slot": 0, "label": "Invoice Unavailable for Regeneration", "sub": "INT-05 fallback", "desc": "Fallback behaviour: report the invoice as unavailable for regeneration.", "phase": 27, "x": 6975.0, "y": 110.0, "w": 190, "h": 100, "cx": 7070.0, "cy": 160.0}, {"id": "regen_consume_latest", "type": "control", "lane": "bfr", "slot": 0, "label": "Consume Latest Corrected XML", "sub": "BR-041", "desc": "Where the source XML has been regenerated or corrected, regeneration consumes the latest version.", "phase": 27, "x": 6967.0, "y": 290.0, "w": 206, "h": 100, "cx": 7070.0, "cy": 340.0}, {"id": "reprint_generate", "type": "agent", "lane": "bfr", "slot": 1, "label": "Generate Reprint PDF", "sub": "BR-044 / BR-045 / BFR_CONSL_BATCH_001.03.A_ViewBill_Status_Log / BFR_INV_REPRNT_001.01 / BFR_INV_REPRNT_001.02 / BFR_INV_REPRNT_001.03.B / BFR_INV_REPRNT_001.03.C / BFR_INV_REPRNT_001.03.D / BFR_INV_REPRNT_001.03.E / BFR_INV_REPRNT_001.03.F / BFR_INV_REPRNT_001.03.G / BFR_INV_REPRNT_001.03.H / BFR_INV_REPRNT_001.03_Reprint_Bills", "desc": "Reprint does not alter the original invoice data; only a previously generated bill may be reprinted. Supports Detailed or Summarised bill type and English or Arabic language.", "phase": 25, "x": 6463.0, "y": 450.0, "w": 206, "h": 60, "cx": 6566.0, "cy": 480.0}, {"id": "reprint_register", "type": "system", "lane": "ops", "slot": 0, "label": "Reprint / Resend Register", "sub": "BR-046", "desc": "Reprint and resend requests are displayed in dedicated console registers with status and process date.", "phase": 25, "x": 6471.0, "y": 1030.0, "w": 190, "h": 100, "cx": 6566.0, "cy": 1080.0}, {"id": "resend_email", "type": "agent", "lane": "chn", "slot": 0, "label": "Resend via Distinct Template", "sub": "BR-048 / BR-049 / BFR_CONSL_RESEND_BILL_001.02 / BFR_CONSL_RESEND_BILL_001.03 / BFR_EML_RESEND_001.01", "desc": "The resend email template may differ from the first-time bill email template and is separately maintainable in English and Arabic. Existing reprint/resend interface signatures remain unchanged (parallel running, no impact to current channels).", "phase": 25, "x": 6463.0, "y": 1950.0, "w": 206, "h": 100, "cx": 6566.0, "cy": 2000.0}, {"id": "batch_stats", "type": "system", "lane": "bfr", "slot": 0, "label": "Update Batch Statistics", "sub": "BR-011 / BR-078 / BR-072 / BR-073 / BFR_CONSL_BATCH_001.05_View_Statistics", "desc": "Batch statistics display successful and failed PDF generation with identifier, bill number, account number, status and reason. BR-072 (processing status maintained/displayed at batch and item level). BR-073 (supported operational status values: Failed, Ready, Report Generated, Invoice Completed, Failed Sending Email). Status Model \u2014 Batch: Report Generated (batch reports have been produced).", "phase": 33, "x": 8487.0, "y": 290.0, "w": 190, "h": 100, "cx": 8582.0, "cy": 340.0}, {"id": "admin_console", "type": "agent", "lane": "ops", "slot": 0, "label": "Admin Console \u2014 Batch / Bill / Hot Bill Actions", "sub": "BR-070 / BR-074 / BR-075 / BR-071 / BR-076 / BR-077 / BR-079 / BFR_ADM_CONSL_001.01 / BFR_HOT_BILL_DTLS_002.01 / BFR_HOT_BILL_DTLS_002.02 / BFR_HOT_BILL_DTLS_002.03_Status_Log / BFR_HOT_BILL_DTLS_002.04_Download_pdf / BFR_HOT_BILL_DTLS_002.05_Download_Xls / BFR_HOT_BILL_DTLS_002.06_Download_xml / BFR_HOT_BILL_DTLS_002.07_Reprint_Bill / BFR_HOT_BILL_DTLS_002.08_regenerate_Document / BFR_HOT_BILL_DTLS_002.09_Regenerate_xml / BFR_HOT_BILL_DTLS_002.10_Send_Email", "desc": "Front-end Admin Console for Billing Operations covering batches, bills, hot bills, XML records, reports, translations and role-based access. Batch action menu: View Bills, View Statistics, Overall Report, Detail Report, Failed Report, Failed Email Report, Send Overall Report, Send Email. Bill action menu (applies equally to the hot bill register): Status Log, Download PDF, Download XLS, Download XML, Reprint Bill, Regenerate Document, Regenerate XML, Send Email. BR-071 (batch list displays identifier, date created, reference, status). BR-076 (status log displays identifier, label, reason, date created). BR-077 (selected bill downloadable in PDF, XLS and XML). BR-079 (hot bill register displays identifier, process date, bill number).", "phase": 34, "x": 8731.0, "y": 1030.0, "w": 206, "h": 100, "cx": 8834.0, "cy": 1080.0}, {"id": "search_retrieve", "type": "agent", "lane": "ops", "slot": 0, "label": "Search & Retrieve Invoices / Reports / XML", "sub": "BR-090 / BR-091 / BR-092 / BR-093 / BFR_CONSL_INV_SEARCH_001.01 / BFR_CONSL_SEARCH_001.01 / BFR_CONSL_XML_SEARCH_001.01", "desc": "Search across invoice type, invoice number, batch identifier, date created, language, MSISDN, product, status, email address, account number, customer type and internal identifier. Results support download, regenerate, reprocess and email actions by role and status. BR-093 (configuration records open in a separate window/pop-up on drill-down).", "phase": 35, "x": 8983.0, "y": 1030.0, "w": 206, "h": 100, "cx": 9086.0, "cy": 1080.0}, {"id": "ref_data_config", "type": "agent", "lane": "ops", "slot": 1, "label": "Reference Data Configuration", "sub": "BR-100/BR-101/BR-102/BR-103/BR-104/BR-105/BR-106/BR-107/BR-108/BR-109/BR-110/BR-111/BR-112/BR-113 / P-11 / INT-08 / BFR_CONSL_ADJ_RSN_CONF_001.01 / BFR_CONSL_ADJ_RSN_CONF_001.02_Create / BFR_CONSL_ADJ_RSN_CONF_001.02_Edit / BFR_CONSL_BANNER_CONF_001.01 / BFR_CONSL_CONSL_BENEFIT_CONF_001.01_Benefit_Configure / BFR_CONSL_CONSL_BENEFIT_CONF_001.02_Benefit_Edit_Delete / BFR_CONSL_CONSL_BENEFIT_CONF_001.03_Benefit_Create / BFR_CONSL_CONSL_BENEFIT_CONF_001.04_Benefit_Search / BFR_CONSL_CONSL_CONF_001.01 / BFR_CONSL_CONSL_CONF_001.02 / BFR_CONSL_EML_TEMP_CONF_001.01 / BFR_CONSL_FLEX_BKT_CONF_001.01 / BFR_CONSL_FLEX_BKT_CONF_001.02 / BFR_CONSL_FLEX_BKT_CONF_001.03 / BFR_CONSL_PLAN_SPEED_001.01 / BFR_CONSL_VAS_CONF_001.01 / BFR_CONSL_VAS_CONF_001.02 / BFR_CONSL_VAS_CONF_001.03 / BFR_SETTNG_CONSL_TRNSL_CONF_001.01 / BFR_SETTNG_CONSL_TRNSL_CONF_001.02", "desc": "Translation, adjustment reason, benefits, flex bucket, VAS short code and plan speed configuration, with import/export, effective dating and role control; benefit/flex bucket/VAS/plan speed synchronise with the product catalogue where applicable. P-11 (configuration export and import formats). Integration: INT-08 (Product Catalogue, configuration synchronisation).", "systems": ["Product Catalogue"], "phase": 35, "x": 8983.0, "y": 1170.0, "w": 206, "h": 100, "cx": 9086.0, "cy": 1220.0}, {"id": "template_config", "type": "agent", "lane": "ops", "slot": 2, "label": "Template & Presentation Configuration", "sub": "BR-120/BR-121/BR-122/BR-123/BR-124 / BFR_CONSL_BILL_TEMPLATE_CONF_001.01 / BFR_CONSL_CONF_DRL_DWN_001.01 / BFR_CONSL_INTRCT_PDF_001.01 / BFR_CONSL_INTRCT_PDF_001.02 / BFR_INVC_TEMPLT_CHNG_001.01 / BFR_INVOICE__BUS_RULE_001.01 / REQ_BFR_006", "desc": "Bill template field maintenance by segment and invoice type; bill banner configuration with page-overlap handling; report template configuration; interactive PDF tabs and dynamic links.", "phase": 35, "x": 8983.0, "y": 1310.0, "w": 206, "h": 100, "cx": 9086.0, "cy": 1360.0}, {"id": "reporting_dash", "type": "system", "lane": "bfr", "slot": 0, "label": "Reporting & Dashboards", "sub": "BR-130/BR-131/BR-132/BR-133/BR-134/BR-135/BR-136/BR-137/BR-138/BR-139/BR-140/BR-141/BR-142 / P-03 / P-04 / P-05 / P-06 / P-07 / P-10 / BFR_CONSL_DASH_BRD_001.01 / BFR_CONSL_EML_TEMP_CONF_001.02 / BFR_CONSL_OPR_STAT_001.02 / BFR_CONSL_REP_001.01 / BFR_CONSL_REP_001.02 / BFR_CONSL_REP_001.03 / BFR_CONSL_REP_001.04 / BFR_CONSL_REP_001.05 / BFR_CONSL_REP_001.06 / BFR_CONSL_REP_001.07 / BFR_CONSL_REP_001.08 / BFR_CONSL_REP_001.09 / BFR_CONSL_REP_001.10_BiullRunMonitor / BFR_CONSL_REP_001.11_VLB / BFR_CONSL_REP_001.12_Overall / BFR_CONSL_REP_001.13_Internal / BFR_CONSL_REP_001.14_Failed_Bill_Report / BFR_DATA_SORTING_001.01", "desc": "Enterprise reports (CDR List, Credit File, Invoice Report), operational dashboard, batch reports, failed bill/email reports, processing statistics, bill run monitor and hot bill failure alerts. Reports generated daily, monthly, after bill run or ad hoc, in PDF, CSV or Excel; no print media output produced (BR-132). P-03 (hot bill failure report interval). P-04 (bill run days). P-05 (bill run monitor interval). P-06 (delivery preference PDF only, code 0). P-07 (delivery preference PDF and XLS, code 3). P-10 (supported report output formats).", "phase": 34, "x": 8739.0, "y": 312.0, "w": 190, "h": 56, "cx": 8834.0, "cy": 340.0}, {"id": "retention", "type": "control", "lane": "bfr", "slot": 1, "label": "Storage & Retention Housekeeping", "sub": "BR-160 / BFR_STRG_RTN_POL_001.01", "desc": "Generated invoices, reports, XML files and emails are retained for the configured duration; artefacts exceeding the retention period are removed automatically. Retention periods: to be confirmed (P-14/P-15/P-16/P-17/P-18).", "phase": 33, "x": 8479.0, "y": 430.0, "w": 206, "h": 100, "cx": 8582.0, "cy": 480.0}, {"id": "end_batch_complete", "type": "end", "lane": "bfr", "slot": 0, "label": "Batch Processing Complete", "sub": "Status Model \u2014 Batch: Email Sent (terminal)", "desc": "All invoice outputs within the batch generated and email despatch complete. Status Model \u2014 Batch: Invoice Completed (all invoice outputs within the batch have been generated).", "phase": 32, "x": 8280.0, "y": 290.0, "w": 100, "h": 100, "cx": 8330.0, "cy": 340.0}, {"id": "platform_tax_currency", "type": "control", "lane": "bfr", "phase": 15, "slot": 1, "label": "Currency & Tax Handling", "sub": "BFR_MULT_CUR_001.01 / BFR_CONSL_CONF_001.04 / BR-161 / BR-162 / P-13", "desc": "Currency information received in the source billing data is used to generate the invoice in that currency (BR-161); base currency is Qatari Riyal (P-13). Tax information received in the source data is processed and displayed on the invoice (BR-162).", "x": 3943.0, "y": 450.0, "w": 206, "h": 60, "cx": 4046.0, "cy": 480.0}], "flows": [{"from": "start", "to": "pull_regular", "kind": "seq", "happy": true}, {"from": "start", "to": "pull_trial", "kind": "seq", "label": "trial run"}, {"from": "start", "to": "pull_hot", "kind": "seq", "label": "hot bill request"}, {"from": "start", "to": "manual_upload", "kind": "seq", "label": "manual upload path"}, {"from": "pull_regular", "to": "atomic_write", "kind": "seq", "happy": true}, {"from": "pull_trial", "to": "atomic_write", "kind": "seq"}, {"from": "pull_hot", "to": "atomic_write", "kind": "seq"}, {"from": "manual_upload", "to": "atomic_write", "kind": "seq"}, {"from": "atomic_write", "to": "dup_check", "kind": "seq", "happy": true}, {"from": "dup_check", "to": "batch_create", "kind": "seq", "happy": true}, {"from": "batch_create", "to": "schema_validate", "kind": "seq", "happy": true}, {"from": "schema_validate", "to": "d_valid", "kind": "seq", "happy": true}, {"from": "d_valid", "to": "type_segment", "kind": "cond", "label": "Valid", "happy": true}, {"from": "d_valid", "to": "failed_xml", "kind": "cond", "label": "Failed XML"}, {"from": "failed_xml", "to": "xml_portal_visible", "kind": "seq"}, {"from": "xml_portal_visible", "to": "reprocess_failed_xml", "kind": "seq"}, {"from": "reprocess_failed_xml", "to": "schema_validate", "kind": "esc", "label": "corrected, reprocess"}, {"from": "failed_xml", "to": "retry_retrieval", "kind": "esc"}, {"from": "retry_retrieval", "to": "pull_regular", "kind": "esc", "label": "retry per policy"}, {"from": "schema_validate", "to": "stats_log", "kind": "data"}, {"from": "failed_xml", "to": "stats_log", "kind": "data"}, {"from": "type_segment", "to": "parse_load", "kind": "seq", "happy": true}, {"from": "parse_load", "to": "csv_check", "kind": "seq", "happy": true}, {"from": "csv_check", "to": "csv_alert", "kind": "cond", "label": "CSV absent > 4h"}, {"from": "csv_check", "to": "batch_ready", "kind": "cond", "label": "CSV present / not required", "happy": true}, {"from": "csv_alert", "to": "batch_ready", "kind": "seq"}, {"from": "batch_ready", "to": "d_bill_type", "kind": "seq", "happy": true}, {"from": "d_bill_type", "to": "gen_regular", "kind": "cond", "label": "Regular", "happy": true}, {"from": "d_bill_type", "to": "gen_trial", "kind": "cond", "label": "Trial"}, {"from": "d_bill_type", "to": "gen_hot", "kind": "cond", "label": "Hot"}, {"from": "gen_regular", "to": "lang_determine", "kind": "seq", "happy": true}, {"from": "gen_trial", "to": "lang_determine", "kind": "seq"}, {"from": "gen_hot", "to": "lang_determine", "kind": "seq"}, {"from": "gen_regular", "to": "gen_bulk_sms", "kind": "data", "label": "Bulk SMS segment"}, {"from": "gen_regular", "to": "gen_iot", "kind": "data", "label": "IoT segment"}, {"from": "gen_regular", "to": "enterprise_detail", "kind": "data", "label": "Enterprise detailed bill"}, {"from": "lang_determine", "to": "calc_fields", "kind": "seq", "happy": true}, {"from": "calc_fields", "to": "d_gen_success", "kind": "seq", "happy": true}, {"from": "gen_bulk_sms", "to": "d_gen_success", "kind": "seq"}, {"from": "gen_iot", "to": "d_gen_success", "kind": "seq"}, {"from": "gen_trial", "to": "trial_exclude", "kind": "seq"}, {"from": "trial_exclude", "to": "d_gen_success", "kind": "seq"}, {"from": "d_gen_success", "to": "original_immutable", "kind": "cond", "label": "Success", "happy": true}, {"from": "d_gen_success", "to": "gen_failed", "kind": "cond", "label": "Failed"}, {"from": "gen_failed", "to": "gen_retry", "kind": "esc"}, {"from": "gen_retry", "to": "schema_validate", "kind": "esc", "label": "reprocess"}, {"from": "original_immutable", "to": "mask_gen", "kind": "seq", "happy": true}, {"from": "mask_gen", "to": "role_presentation", "kind": "seq", "happy": true}, {"from": "role_presentation", "to": "d_review_switch", "kind": "seq", "happy": true}, {"from": "d_review_switch", "to": "review", "kind": "cond", "label": "On"}, {"from": "d_review_switch", "to": "channel_avail", "kind": "cond", "label": "Off", "happy": true}, {"from": "review", "to": "d_review_outcome", "kind": "seq"}, {"from": "d_review_outcome", "to": "channel_avail", "kind": "cond", "label": "Approved", "happy": true}, {"from": "d_review_outcome", "to": "rejected", "kind": "cond", "label": "Rejected"}, {"from": "rejected", "to": "gen_regular", "kind": "esc", "label": "pending on regeneration"}, {"from": "channel_avail", "to": "hot_landing", "kind": "data", "label": "hot bill"}, {"from": "channel_avail", "to": "d_email_eligible", "kind": "seq", "happy": true}, {"from": "d_email_eligible", "to": "email_template", "kind": "cond", "label": "Eligible", "happy": true}, {"from": "d_email_eligible", "to": "trial_terminal", "kind": "cond", "label": "Trial (never emailed)"}, {"from": "email_template", "to": "suppression_check", "kind": "seq", "happy": true}, {"from": "suppression_check", "to": "suppressed", "kind": "cond", "label": "On suppression list"}, {"from": "suppression_check", "to": "smtp_despatch", "kind": "cond", "label": "Not suppressed", "happy": true}, {"from": "smtp_despatch", "to": "d_smtp_result", "kind": "seq", "happy": true}, {"from": "d_smtp_result", "to": "email_sent", "kind": "cond", "label": "Accepted", "happy": true}, {"from": "d_smtp_result", "to": "email_failed", "kind": "cond", "label": "Failure"}, {"from": "email_sent", "to": "d_delivery", "kind": "seq", "happy": true}, {"from": "d_delivery", "to": "email_delivered", "kind": "cond", "label": "Delivered", "happy": true}, {"from": "d_delivery", "to": "email_failed", "kind": "cond", "label": "Failed"}, {"from": "email_failed", "to": "smtp_despatch", "kind": "esc", "label": "resend on retry"}, {"from": "email_delivered", "to": "crm_log", "kind": "data"}, {"from": "suppressed", "to": "crm_log", "kind": "data"}, {"from": "channel_avail", "to": "sms_despatch", "kind": "data", "label": "SMS channel"}, {"from": "channel_avail", "to": "whatsapp_despatch", "kind": "data", "label": "WhatsApp channel"}, {"from": "channel_avail", "to": "web_display", "kind": "data", "label": "Web channel"}, {"from": "crm_log", "to": "batch_stats", "kind": "data"}, {"from": "email_delivered", "to": "end_batch_complete", "kind": "seq", "happy": true}, {"from": "reprint_request", "to": "reprint_register", "kind": "seq"}, {"from": "resend_request", "to": "reprint_register", "kind": "seq"}, {"from": "regen_request", "to": "reprint_register", "kind": "seq"}, {"from": "reprint_request", "to": "reprint_generate", "kind": "seq"}, {"from": "regen_request", "to": "legacy_buffer", "kind": "cond", "label": "legacy invoice"}, {"from": "legacy_buffer", "to": "d_legacy_avail", "kind": "seq"}, {"from": "d_legacy_avail", "to": "regen_consume_latest", "kind": "cond", "label": "Available"}, {"from": "d_legacy_avail", "to": "legacy_unavailable", "kind": "cond", "label": "Unavailable"}, {"from": "regen_consume_latest", "to": "gen_regular", "kind": "esc", "label": "regenerate"}, {"from": "reprint_generate", "to": "channel_avail", "kind": "esc", "label": "reprint to requesting channel"}, {"from": "resend_request", "to": "resend_email", "kind": "seq"}, {"from": "resend_email", "to": "smtp_despatch", "kind": "esc", "label": "resend despatch"}, {"from": "batch_stats", "to": "admin_console", "kind": "data"}, {"from": "admin_console", "to": "search_retrieve", "kind": "data"}, {"from": "admin_console", "to": "ref_data_config", "kind": "data"}, {"from": "admin_console", "to": "template_config", "kind": "data"}, {"from": "batch_stats", "to": "reporting_dash", "kind": "data"}, {"from": "end_batch_complete", "to": "retention", "kind": "data"}, {"from": "lang_determine", "to": "platform_tax_currency", "kind": "data"}, {"from": "platform_tax_currency", "to": "d_gen_success", "kind": "data"}], "model": {"agents": [], "contracts": [], "connectivity": []}, "biz": {"bio": {}, "contractPlain": {}, "nameMap": {}}};</script>
+<script>window.DATA={"meta": {"title": "Bill Formatter \u2014 Invoice Processing, Distribution and On-Demand Servicing", "generated": "2026-09-03", "source": "VFQ_BillFormatter_BRSD_V1.0.xlsx"}, "layout": {"x0": 140, "topbar": 70, "colw": 252, "totalW": 9230, "totalH": 2570, "laneLabelW": 120, "lanes": [{"key": "src", "name": "Source Systems", "hint": "Oracle BRM, Mediation Zone, Product Catalogue, Legacy Invoice Buffer", "y": 70, "h": 180}, {"key": "bfr", "name": "Bill Formatter", "hint": "Core ingestion, generation, masking and orchestration engine", "y": 266, "h": 740}, {"key": "ops", "name": "Billing Operations", "hint": "Admin Console users \u2014 review, reprocess, configure, action", "y": 1022, "h": 460}, {"key": "crm", "name": "Siebel CRM", "hint": "Reprint/resend requests, hot bill landing, notification logging", "y": 1498, "h": 460}, {"key": "chn", "name": "Distribution Channels", "hint": "SMTP, SMS Gateway, WhatsApp Business, Web", "y": 1974, "h": 460}], "phases": ["Ingest", "Ingest", "Ingest", "Ingest", "Ingest", "Validate", "Validate", "Validate", "Validate", "Validate", "Batch & Parse", "Batch & Parse", "Generate", "Generate", "Generate", "Generate", "Generate", "Generate", "Mask & Review", "Mask & Review", "Mask & Review", "Mask & Review", "Mask & Review", "Mask & Review", "Distribute", "Distribute", "Distribute", "Distribute", "Distribute", "Distribute", "Distribute", "Distribute", "Distribute", "Report & Manage", "Report & Manage", "Report & Manage"]}, "nodes": [{"id": "start", "type": "start", "lane": "src", "slot": 0, "label": "Bill Run / On-Demand Trigger", "desc": "Regular bill cycle run, trial bill run, or hot bill request initiates XML retrieval (BFR_XML_001.01/.02/.03).", "phase": 0, "x": 224.0, "y": 118.0, "w": 84, "h": 84, "cx": 266.0, "cy": 160.0}, {"id": "pull_regular", "type": "agent", "lane": "bfr", "slot": 0, "label": "Pull Regular Bill XML", "sub": "BFR_XML_001.01 / BR-001 / INT-01 / BFR_DATA_INGESTION_001.01", "desc": "Formatter pulls invoice XML from Mediation Zone for regular bills at the predefined input location. Integration: INT-01 (Oracle BRM via Mediation Zone, invoice XML supply and regeneration request). Status Model \u2014 XML Record: Received (XML file collected or uploaded and awaiting validation).", "inputs": ["Invoice XML (regular)"], "outputs": ["Retrieved XML file"], "systems": ["Mediation Zone"], "phase": 1, "x": 415.0, "y": 326.0, "w": 206, "h": 60, "cx": 518.0, "cy": 356.0}, {"id": "pull_trial", "type": "agent", "lane": "bfr", "slot": 1, "label": "Pull Trial Bill XML", "sub": "BFR_XML_001.02 / BR-001 / INT-01", "desc": "Formatter pulls invoice XML from Mediation Zone for trial bills at the predefined input location. Integration: INT-01 (Oracle BRM via Mediation Zone, invoice XML supply and regeneration request). Status Model \u2014 XML Record: Received (XML file collected or uploaded and awaiting validation).", "inputs": ["Invoice XML (trial)"], "outputs": ["Retrieved XML file"], "systems": ["Mediation Zone"], "phase": 1, "x": 415.0, "y": 466.0, "w": 206, "h": 60, "cx": 518.0, "cy": 496.0}, {"id": "pull_hot", "type": "agent", "lane": "bfr", "slot": 2, "label": "Pull Hot Bill XML", "sub": "BFR_XML_001.03 / BR-001 / INT-01", "desc": "Formatter pulls invoice XML from Mediation Zone for hot bills at the predefined input location. Integration: INT-01 (Oracle BRM via Mediation Zone, invoice XML supply and regeneration request). Status Model \u2014 XML Record: Received (XML file collected or uploaded and awaiting validation).", "inputs": ["Invoice XML (hot)"], "outputs": ["Retrieved XML file"], "systems": ["Mediation Zone"], "phase": 1, "x": 415.0, "y": 606.0, "w": 206, "h": 60, "cx": 518.0, "cy": 636.0}, {"id": "manual_upload", "type": "agent", "lane": "ops", "slot": 0, "label": "Manual XML / ZIP Upload", "sub": "BR-007", "desc": "Manual XML and ZIP upload, restricted to authorised users, as an alternative ingestion path.", "phase": 1, "x": 415.0, "y": 1082.0, "w": 206, "h": 60, "cx": 518.0, "cy": 1112.0}, {"id": "atomic_write", "type": "control", "lane": "bfr", "slot": 0, "label": "Atomic File Write", "sub": "BR-002", "desc": "XML is written to a temporary location or filename, closed and verified, then renamed/moved to the final destination so no partially written file is readable downstream.", "phase": 2, "x": 667.0, "y": 326.0, "w": 206, "h": 60, "cx": 770.0, "cy": 356.0}, {"id": "dup_check", "type": "validation", "lane": "bfr", "slot": 0, "label": "Duplicate Prevention Check", "sub": "BR-004", "desc": "The same invoice XML file is not processed more than once.", "phase": 3, "x": 934.0, "y": 306.0, "w": 176, "h": 100, "cx": 1022.0, "cy": 356.0}, {"id": "batch_create", "type": "agent", "lane": "bfr", "slot": 0, "label": "Batch Creation", "sub": "BR-003 / BFR_CONSL_BATCH_001.02 / P-22 / BFR_CONSL_BATCH_001.01 / BFR_CONSL_BATCH_001.03 / BFR_CONSL_BATCH_001.04 / BFR_CONSL_BATCH_001.04.A_ViewBill_Action / BFR_CONSL_BATCH_001.04.B_ViewBill_StatusLog / BFR_CONSL_BATCH_001.04.Cx_ViewBill_Download_PDF / BFR_CONSL_BATCH_001.04.D_ViewBill_Download_PDF / BFR_CONSL_BATCH_001.04.E_ViewBill_Download_XML / BFR_CONSL_BATCH_001.04.F_ViewBill_Reprint_Bill / BFR_CONSL_BATCH_001.04.G_ViewBill_Regenerate_Document / BFR_CONSL_BATCH_001.04.H_ViewBill_Regenerate_XML / BFR_CONSL_BATCH_001.04.I_ViewBill_Send_Email / BFR_CONSL_BATCH_001.06_Action_Overall_Report / BFR_CONSL_BATCH_001.07_Action_Detailed_Report / BFR_CONSL_BATCH_001.08_Action_Failed_Report / BFR_CONSL_BATCH_001.09_Action_Failed_Emails_Report / BFR_CONSL_BATCH_001.10_Action_Send_Overall_Report / BFR_CONSL_BATCH_001.11_Action_Send_Email / BFR_CONSL_REP_001.15", "desc": "XML files are retrieved and processed batch-wise; each collection cycle produces a single batch identifier. P-22 (maximum batch size). Status Model \u2014 Batch: Created (batch created from the loaded XML files).", "phase": 4, "x": 1171.0, "y": 326.0, "w": 206, "h": 60, "cx": 1274.0, "cy": 356.0}, {"id": "schema_validate", "type": "validation", "lane": "bfr", "slot": 0, "label": "XML Schema & Mandatory Data Validation", "sub": "BFR_XML_002.04 / BR-009", "desc": "Bill Formatter loads the XML, performs schema validation, and validates mandatory billing data required for invoice generation. Status Model \u2014 XML Record: Valid (XML has passed schema and mandatory data validation).", "phase": 5, "x": 1438.0, "y": 306.0, "w": 176, "h": 100, "cx": 1526.0, "cy": 356.0}, {"id": "d_valid", "type": "decision", "lane": "bfr", "slot": 0, "label": "XML Valid?", "branches": [{"label": "Valid", "to": "type_segment"}, {"label": "Failed XML", "to": "failed_xml"}], "phase": 6, "x": 1703.0, "y": 314.0, "w": 150, "h": 84, "cx": 1778.0, "cy": 356.0}, {"id": "failed_xml", "type": "error", "lane": "bfr", "slot": 0, "label": "Failed XML \u2014 Reason Recorded", "sub": "BR-009", "desc": "XML failing schema or mandatory data validation is marked Failed XML with a recorded failure reason; it does not proceed to invoice generation. Status Model \u2014 XML Record: Failed XML (XML has failed schema or mandatory data validation and carries a failure reason).", "phase": 7, "x": 1935.0, "y": 306.0, "w": 190, "h": 100, "cx": 2030.0, "cy": 356.0}, {"id": "xml_portal_visible", "type": "system", "lane": "bfr", "slot": 0, "label": "Failed XML Visible in Portal", "sub": "BR-010", "desc": "Failed XML records are visible in the Bill Formatter Portal with failure reason and processing status.", "phase": 8, "x": 2187.0, "y": 306.0, "w": 190, "h": 100, "cx": 2282.0, "cy": 356.0}, {"id": "reprocess_failed_xml", "type": "agent", "lane": "ops", "slot": 0, "label": "Review & Reprocess Failed XML", "sub": "BR-010", "desc": "Billing Operations users review failed XML records and initiate reprocessing after corrective action.", "phase": 9, "x": 2431.0, "y": 1062.0, "w": 206, "h": 100, "cx": 2534.0, "cy": 1112.0}, {"id": "retry_retrieval", "type": "escalation", "lane": "bfr", "slot": 0, "label": "Retry per Configured Policy", "sub": "BR-006", "desc": "Retrieval errors are retried per the configured retry policy; a persistent failure is raised for operational review. Retry count: to be confirmed (P-19).", "phase": 0, "x": 171.0, "y": 306.0, "w": 190, "h": 100, "cx": 266.0, "cy": 356.0}, {"id": "stats_log", "type": "system", "lane": "bfr", "slot": 2, "label": "Log Retrieval / Load Status", "sub": "BR-005 / BR-011 / BFR_CONSL_RPT_001.01 / BFR_CONSL_XML_SEARCH_001.02_Operational_Log / BFR_CONSL_XML_SEARCH_001.03_Operational_Log", "desc": "Retrieval and load status is logged for every XML file; batch statistics reflect successful and failed outcomes.", "phase": 8, "x": 2187.0, "y": 586.0, "w": 190, "h": 100, "cx": 2282.0, "cy": 636.0}, {"id": "type_segment", "type": "control", "lane": "bfr", "slot": 1, "label": "Derive Invoice Type & Customer Segment", "sub": "BR-008", "desc": "Invoice type and customer segment are derived from the loaded XML content.", "phase": 7, "x": 1927.0, "y": 446.0, "w": 206, "h": 100, "cx": 2030.0, "cy": 496.0}, {"id": "parse_load", "type": "agent", "lane": "bfr", "slot": 1, "label": "Load & Parse XML", "sub": "BFR_XML_002.01 / BR-012 / BFR_CONSL_XML_SEARCH_001.03_Download_XML / BFR_CONSL_XML_SEARCH_001.04_Regenerate_XML", "desc": "Invoice Header, Invoice Summary and Invoice Detail structures are loaded from the parsed XML. Status Model \u2014 XML Record: Processed (XML has been consumed by invoice generation; terminal).", "phase": 8, "x": 2179.0, "y": 466.0, "w": 206, "h": 60, "cx": 2282.0, "cy": 496.0}, {"id": "csv_check", "type": "validation", "lane": "bfr", "slot": 0, "label": "Supporting CSV Presence Check", "sub": "BR-013", "desc": "Scheduler checks every 10 minutes (P-01) whether an expected supporting CSV has been received.", "phase": 9, "x": 2446.0, "y": 306.0, "w": 176, "h": 100, "cx": 2534.0, "cy": 356.0}, {"id": "csv_alert", "type": "escalation", "lane": "bfr", "slot": 0, "label": "Supporting CSV Absent Alert", "sub": "BR-013 / INT-04 / BFR_CONSL_REP_001.11", "desc": "Where a supporting CSV remains absent 4 hours after XML receipt (P-02), an alert email is issued to the configured recipients. Integration: INT-04 (Alerting recipients, operational alert distribution).", "outputs": ["Alert email"], "systems": ["Alerting recipients"], "phase": 10, "x": 2691.0, "y": 306.0, "w": 190, "h": 100, "cx": 2786.0, "cy": 356.0}, {"id": "batch_ready", "type": "control", "lane": "bfr", "slot": 0, "label": "Batch Ready", "sub": "Status Model \u2014 Batch: Ready", "desc": "Batch validated and available for invoice generation.", "phase": 11, "x": 2935.0, "y": 326.0, "w": 206, "h": 60, "cx": 3038.0, "cy": 356.0}, {"id": "d_bill_type", "type": "decision", "lane": "bfr", "slot": 0, "label": "Bill Type?", "branches": [{"label": "Regular", "to": "gen_regular"}, {"label": "Trial", "to": "gen_trial"}, {"label": "Hot", "to": "gen_hot"}], "phase": 12, "x": 3215.0, "y": 314.0, "w": 150, "h": 84, "cx": 3290.0, "cy": 356.0, "desc": "Status Model \u2014 Invoice: Pending (invoice awaiting generation)."}, {"id": "gen_regular", "type": "agent", "lane": "bfr", "slot": 0, "label": "Generate Regular Bill", "sub": "BR-025 / BR-031 / BFR_INV_PDF_REG_003.01 / BFR_INV_PDF_REG_003.02 / BFR_INV_PDF_REG_003.03 / BFR_INV_PDF_REG_003.04 / BFR_INV_XLS_REG_001.01 / BFR_INV_XLS_REG_001.02 / BFR_OLD_INV_COMP_001.01", "desc": "Regular bill PDF generated using the template applicable to Consumer Mobile, Consumer Fixed Line, Enterprise and Black; XLS and CSV also produced for Enterprise. BR-031 (all information/business rules currently defined within the existing legacy formatter carry forward into this capability).", "outputs": ["Regular bill PDF", "XLS (Enterprise)", "CSV (Enterprise)"], "phase": 13, "x": 3439.0, "y": 326.0, "w": 206, "h": 60, "cx": 3542.0, "cy": 356.0}, {"id": "gen_trial", "type": "agent", "lane": "bfr", "slot": 1, "label": "Generate Trial Bill", "sub": "BR-020 / BR-021 / BR-022 / BFR_INV_PDF_TRL_003.01 / BFR_INV_PDF_TRL_003.02 / BFR_INV_PDF_TRL_003.03 / BFR_INV_PDF_TRL_003.04 / BFR_INV_XLS_TRL_001.01 / BFR_INV_XLS_TRL_001.02", "desc": "Trial bill PDF generated by customer segment (Consumer Mobile, Consumer Fixed Line, Enterprise, Black) for internal audit and bill validation only; a trial run covers an entire bill cycle or a nominated customer list. Trial bills are never distributed to a customer through any channel.", "outputs": ["Trial bill PDF"], "phase": 13, "x": 3439.0, "y": 466.0, "w": 206, "h": 60, "cx": 3542.0, "cy": 496.0}, {"id": "gen_hot", "type": "agent", "lane": "bfr", "slot": 2, "label": "Generate Hot Bill", "sub": "BR-024 / BFR_CONSL_REP_001.12 / BFR_INV_PDF_HOT_003.01 / BFR_INV_PDF_HOT_003.02 / BFR_INV_PDF_HOT_003.03 / BFR_INV_XLS_HOT_001.01 / BFR_INV_XLS_HOT_001.02", "desc": "Hot bill PDF generated using the template applicable to Consumer, Enterprise and Black; XLS and CSV also produced for Enterprise.", "outputs": ["Hot bill PDF", "XLS (Enterprise)", "CSV (Enterprise)"], "phase": 13, "x": 3439.0, "y": 606.0, "w": 206, "h": 60, "cx": 3542.0, "cy": 636.0}, {"id": "gen_bulk_sms", "type": "agent", "lane": "bfr", "slot": 0, "label": "Generate Bulk SMS Invoice", "sub": "BR-026 / BFR_INV_BLK_SMS_001.01 / BFR_INV_BLK_SMS_001.02 / BFR_INV_BLK_SMS_001.03", "desc": "Bulk SMS invoices generated using the Bulk SMS invoice template for regular, trial and hot bills.", "phase": 14, "x": 3691.0, "y": 306.0, "w": 206, "h": 100, "cx": 3794.0, "cy": 356.0}, {"id": "gen_iot", "type": "agent", "lane": "bfr", "slot": 1, "label": "Generate IoT Invoice", "sub": "BR-027 / BFR_INV_IOT_001.01 / BFR_INV_IOT_001.02 / BFR_INV_IOT_001.03", "desc": "IoT invoices generated using the IoT invoice template for regular, trial and hot bills.", "phase": 14, "x": 3691.0, "y": 466.0, "w": 206, "h": 60, "cx": 3794.0, "cy": 496.0}, {"id": "lang_determine", "type": "control", "lane": "bfr", "slot": 3, "label": "Determine Invoice Language", "sub": "BR-028 / BFR_INV_PDF_ENG_001.01 / BFR_INV_PDF_ENG_001.02 / BFR_MULT_LANG_SUPRT_001.01", "desc": "Invoice language is determined from the language type identifier in the source data; English and Arabic (P-08) are supported with the corresponding template and translation values applied.", "phase": 14, "x": 3691.0, "y": 726.0, "w": 206, "h": 100, "cx": 3794.0, "cy": 776.0}, {"id": "calc_fields", "type": "system", "lane": "bfr", "slot": 0, "label": "Populate Calculated Fields", "sub": "BR-163 / BFR_CALC_INV_FLD_001.01 / BFR_CONSL_CONF_001.04", "desc": "Fields requiring calculation and not directly available from source systems are calculated using logic supplied by the billing system (D-07 dependency) and populated in the output.", "phase": 15, "x": 3951.0, "y": 306.0, "w": 190, "h": 100, "cx": 4046.0, "cy": 356.0}, {"id": "enterprise_detail", "type": "system", "lane": "bfr", "slot": 4, "label": "Enterprise Detailed Output", "sub": "BR-023", "desc": "An Enterprise customer opted for the detailed bill receives an XLS output; a call detail CSV is produced in the VFQ approved format and stored in the designated output location.", "phase": 14, "x": 3699.0, "y": 866.0, "w": 190, "h": 100, "cx": 3794.0, "cy": 916.0}, {"id": "d_gen_success", "type": "decision", "lane": "bfr", "slot": 0, "label": "Generation Successful?", "branches": [{"label": "Success", "to": "original_immutable"}, {"label": "Failed", "to": "gen_failed"}], "phase": 16, "x": 4223.0, "y": 306.0, "w": 150, "h": 100, "cx": 4298.0, "cy": 356.0, "desc": "Status Model \u2014 Invoice: Generated (invoice output produced in the required format)."}, {"id": "gen_failed", "type": "error", "lane": "bfr", "slot": 0, "label": "Invoice Generation Failed", "sub": "BR-029 / BFR_BILL_RETRY_001.01", "desc": "Invoices failing processing or generation carry a recorded failure status and reason, visible in the portal. Status Model \u2014 Batch: Failed (batch processing failed) / Invoice: Failed (invoice generation failed and carries a failure reason).", "phase": 17, "x": 4455.0, "y": 306.0, "w": 190, "h": 100, "cx": 4550.0, "cy": 356.0}, {"id": "gen_retry", "type": "escalation", "lane": "ops", "slot": 0, "label": "Reprocess Failed Invoice", "sub": "BR-030 / BFR_CONSL_INV_REGEN_001.01", "desc": "Reprocessing of a failed invoice or batch is restricted by role; the retry count is recorded. Maximum retry attempts: to be confirmed (P-20).", "phase": 0, "x": 171.0, "y": 1062.0, "w": 190, "h": 100, "cx": 266.0, "cy": 1112.0}, {"id": "trial_exclude", "type": "control", "lane": "bfr", "slot": 2, "label": "Trial Batch Excluded from Channel Upload", "sub": "BR-022", "desc": "Trial batches are excluded from channel upload \u2014 a trial bill exists only for internal audit and bill validation.", "phase": 14, "x": 3691.0, "y": 586.0, "w": 206, "h": 100, "cx": 3794.0, "cy": 636.0}, {"id": "original_immutable", "type": "control", "lane": "bfr", "slot": 1, "label": "Original Invoice Remains Unchanged", "sub": "BR-150", "desc": "The original customer invoice is generated, stored and remains unchanged and immutable.", "phase": 17, "x": 4447.0, "y": 446.0, "w": 206, "h": 100, "cx": 4550.0, "cy": 496.0}, {"id": "mask_gen", "type": "agent", "lane": "bfr", "slot": 0, "label": "Generate Masked Invoice", "sub": "BR-151 / BR-153 / BFR_INV_MASK_001.01", "desc": "A separate masked invoice file is generated at the point of invoice generation for each applicable invoice. Tax Identifier, Payment Method and Phone Number are masked in accordance with the configured access policy (masking rule set: D-08 dependency, to be confirmed). BR-153 (masking rules configurable without requiring invoice regeneration).", "phase": 18, "x": 4699.0, "y": 326.0, "w": 206, "h": 60, "cx": 4802.0, "cy": 356.0}, {"id": "role_presentation", "type": "control", "lane": "ops", "slot": 0, "label": "Role-Based Invoice Presentation", "sub": "BR-152 / BR-154", "desc": "User role and access permission determine whether the full invoice or the masked invoice is presented; privileged roles view the full invoice, restricted roles view the masked version. Bill download offers an Agent Copy and a Customer Copy.", "phase": 19, "x": 4951.0, "y": 1062.0, "w": 206, "h": 100, "cx": 5054.0, "cy": 1112.0}, {"id": "d_review_switch", "type": "decision", "lane": "bfr", "slot": 0, "label": "Review & Approval Switch On?", "sub": "BR-080 (default Off, P-12)", "branches": [{"label": "On", "to": "review"}, {"label": "Off", "to": "channel_avail"}], "phase": 20, "x": 5231.0, "y": 306.0, "w": 150, "h": 100, "cx": 5306.0, "cy": 356.0}, {"id": "review", "type": "agent", "lane": "ops", "slot": 0, "label": "Billing Operations Review", "sub": "BR-080 / BFR_CONSL_EMAIL_DISP_APROV_001.01", "desc": "Invoice review and approval before customer despatch, following role-based access, when the review switch is enabled. Status Model \u2014 Invoice: Approved (invoice reviewed and approved for despatch where the review switch is on).", "phase": 21, "x": 5455.0, "y": 1062.0, "w": 206, "h": 100, "cx": 5558.0, "cy": 1112.0}, {"id": "d_review_outcome", "type": "decision", "lane": "ops", "slot": 0, "label": "Approved?", "branches": [{"label": "Approved", "to": "channel_avail"}, {"label": "Rejected", "to": "rejected"}], "phase": 22, "x": 5735.0, "y": 1070.0, "w": 150, "h": 84, "cx": 5810.0, "cy": 1112.0}, {"id": "rejected", "type": "error", "lane": "ops", "slot": 0, "label": "Invoice Rejected \u2014 Despatch Prevented", "sub": "Status Model \u2014 Invoice: Rejected", "desc": "Invoice reviewed and rejected; despatch is prevented. Returns to Pending on regeneration.", "phase": 23, "x": 5967.0, "y": 1062.0, "w": 190, "h": 100, "cx": 6062.0, "cy": 1112.0}, {"id": "channel_avail", "type": "system", "lane": "bfr", "slot": 0, "label": "Make Invoice Available to Channels", "sub": "BR-050 / P-09 / BFR_BILL_EMAIL_LANG_001.02 / BFR_INV_DELV_MODE_001.01 / BFR_INV_TO_CHNL_001.01", "desc": "Generated invoices are made available to downstream channels through the configured integration flow, with regular bill copies provided to Siebel CRM and other customer channels. P-09 (supported invoice output formats).", "phase": 23, "x": 5967.0, "y": 306.0, "w": 190, "h": 100, "cx": 6062.0, "cy": 356.0}, {"id": "hot_landing", "type": "system", "lane": "crm", "slot": 0, "label": "Hot Bill Landing Location", "sub": "BR-051", "desc": "Hot bill invoices are placed in the Siebel CRM hot bill landing location and are available in real time following generation (target time: to be confirmed, P-21).", "phase": 24, "x": 6219.0, "y": 1538.0, "w": 190, "h": 100, "cx": 6314.0, "cy": 1588.0}, {"id": "d_email_eligible", "type": "decision", "lane": "bfr", "slot": 0, "label": "Email Eligible?", "sub": "BR-060", "branches": [{"label": "Eligible", "to": "email_template"}, {"label": "Trial (never emailed)", "to": "trial_terminal"}], "phase": 24, "x": 6239.0, "y": 306.0, "w": 150, "h": 100, "cx": 6314.0, "cy": 356.0, "desc": "Status Model \u2014 Email: Eligible (invoice identified as eligible for email distribution)."}, {"id": "email_template", "type": "control", "lane": "bfr", "slot": 0, "label": "Determine Email Template", "sub": "BR-061 / BFR_BILL_EMAIL_LANG_001.01", "desc": "Email template determined by customer type, invoice type and language; separate templates for Consumer and Enterprise in English and Arabic, with configurable dynamic fields.", "phase": 25, "x": 6463.0, "y": 326.0, "w": 206, "h": 60, "cx": 6566.0, "cy": 356.0}, {"id": "suppression_check", "type": "validation", "lane": "chn", "slot": 0, "label": "Suppression List Check", "sub": "BR-063", "desc": "A configurable list of non-triable email addresses is maintained against which no despatch is attempted.", "phase": 26, "x": 6730.0, "y": 2014.0, "w": 176, "h": 100, "cx": 6818.0, "cy": 2064.0}, {"id": "suppressed", "type": "end", "lane": "chn", "slot": 0, "label": "Email Suppressed", "sub": "Status Model \u2014 Email: Suppressed", "desc": "Despatch not attempted because the address is on the non-triable list. Terminal.", "phase": 27, "x": 7020.0, "y": 2014.0, "w": 100, "h": 100, "cx": 7070.0, "cy": 2064.0}, {"id": "smtp_despatch", "type": "external", "lane": "chn", "slot": 1, "label": "SMTP Despatch", "sub": "BR-062 / INT-03 / BFR_CONSL_EML_RPT_001.01 / BFR_EML_001.01", "desc": "Email despatched through the configured SMTP service, which captures delivery feedback and provides success/failure reporting.", "systems": ["SMTP service"], "phase": 27, "x": 6982.0, "y": 2177.0, "w": 176, "h": 54, "cx": 7070.0, "cy": 2204.0}, {"id": "d_smtp_result", "type": "decision", "lane": "chn", "slot": 0, "label": "SMTP Accepted?", "branches": [{"label": "Accepted", "to": "email_sent"}, {"label": "Failure", "to": "email_failed"}], "phase": 28, "x": 7247.0, "y": 2014.0, "w": 150, "h": 100, "cx": 7322.0, "cy": 2064.0}, {"id": "email_failed", "type": "error", "lane": "chn", "slot": 1, "label": "Email Despatch Failed", "sub": "Status Model \u2014 Email: Failed / BR-062 / BFR_CONSL_REP_001.13_Failed_Email", "desc": "Delivery failed; failure reported in the Failed Email Report. Resend on retry. Status Model \u2014 Batch: Failed Sending Email (one or more invoice emails within the batch failed despatch) / Invoice: Failed Sending Email (invoice email despatch failed).", "phase": 31, "x": 7983.0, "y": 2175.0, "w": 190, "h": 58, "cx": 8078.0, "cy": 2204.0}, {"id": "email_sent", "type": "system", "lane": "chn", "slot": 0, "label": "Email Sent \u2014 Awaiting Delivery Feedback", "sub": "Status Model \u2014 Email: Sent", "phase": 29, "x": 7479.0, "y": 2014.0, "w": 190, "h": 100, "cx": 7574.0, "cy": 2064.0, "desc": "Status Model \u2014 Invoice: Email Sent (invoice email despatched to the customer; terminal)."}, {"id": "d_delivery", "type": "decision", "lane": "chn", "slot": 0, "label": "Delivery Confirmed?", "branches": [{"label": "Delivered", "to": "email_delivered"}, {"label": "Failed", "to": "email_failed"}], "phase": 30, "x": 7751.0, "y": 2014.0, "w": 150, "h": 100, "cx": 7826.0, "cy": 2064.0}, {"id": "email_delivered", "type": "end", "lane": "chn", "slot": 0, "label": "Email Delivered", "sub": "Status Model \u2014 Email: Delivered", "desc": "Delivery confirmed by the SMTP service feedback. Terminal.", "phase": 31, "x": 8036.0, "y": 2022.0, "w": 84, "h": 84, "cx": 8078.0, "cy": 2064.0}, {"id": "crm_log", "type": "agent", "lane": "crm", "slot": 0, "label": "Log CRM Notification", "sub": "BR-064 / INT-02 / BFR_EML_001.02", "desc": "A CRM notification record is created only for invoices processed for customer communication, stored against the customer account and bill reference for servicing and audit. Integration: INT-02 (Siebel CRM, reprint/resend request receipt, invoice delivery, notification logging).", "phase": 32, "x": 8227.0, "y": 1558.0, "w": 206, "h": 60, "cx": 8330.0, "cy": 1588.0}, {"id": "sms_despatch", "type": "external", "lane": "chn", "slot": 0, "label": "SMS Invoice Notification", "sub": "BR-052 / INT-06", "desc": "Invoice communication via SMS, carrying a PDF reference or an invoice URL, with pre-despatch masking applied (BR-053).", "systems": ["SMS Gateway"], "phase": 24, "x": 6226.0, "y": 2014.0, "w": 176, "h": 100, "cx": 6314.0, "cy": 2064.0}, {"id": "whatsapp_despatch", "type": "external", "lane": "chn", "slot": 1, "label": "WhatsApp Invoice Notification", "sub": "BR-052 / INT-07", "desc": "Invoice communication via WhatsApp Business through the approved provider, carrying a PDF reference or an invoice URL, with pre-despatch masking applied (BR-053).", "systems": ["WhatsApp Business (approved provider)"], "phase": 24, "x": 6226.0, "y": 2154.0, "w": 176, "h": 100, "cx": 6314.0, "cy": 2204.0}, {"id": "web_display", "type": "system", "lane": "chn", "slot": 2, "label": "Web Channel Display", "sub": "BR-052", "desc": "Invoice communication supported through the Web channel, with pre-despatch masking applied (BR-053).", "phase": 24, "x": 6219.0, "y": 2316.0, "w": 190, "h": 56, "cx": 6314.0, "cy": 2344.0}, {"id": "trial_terminal", "type": "end", "lane": "bfr", "slot": 2, "label": "Trial Bill \u2014 Not Distributed", "sub": "BR-022", "desc": "A trial bill is generated for internal audit and bill validation only and is never distributed to a customer through any channel. Terminal.", "phase": 25, "x": 6516.0, "y": 586.0, "w": 100, "h": 100, "cx": 6566.0, "cy": 636.0}, {"id": "reprint_request", "type": "agent", "lane": "crm", "slot": 2, "label": "Reprint Bill Request", "sub": "BR-043 / INT-02", "desc": "A reprint request carries the account number, bill period and bill type; the reprinted PDF is transferred through Mediation Zone to the requesting channel. Integration: INT-02 (Siebel CRM, reprint/resend request receipt, invoice delivery, notification logging).", "phase": 24, "x": 6211.0, "y": 1838.0, "w": 206, "h": 60, "cx": 6314.0, "cy": 1868.0}, {"id": "resend_request", "type": "agent", "lane": "crm", "slot": 1, "label": "Resend Bill Request", "sub": "BR-047 / INT-02", "desc": "A resend request carries the account number and bill reference; only a previously generated invoice may be resent, and delivery status is recorded and visible. Integration: INT-02 (Siebel CRM, reprint/resend request receipt, invoice delivery, notification logging).", "phase": 24, "x": 6211.0, "y": 1698.0, "w": 206, "h": 60, "cx": 6314.0, "cy": 1728.0}, {"id": "regen_request", "type": "agent", "lane": "ops", "slot": 0, "label": "Invoice / Batch Regeneration Request", "sub": "BR-040", "desc": "Invoice regeneration supported at both individual invoice level and batch level, including retry and status reporting.", "phase": 24, "x": 6211.0, "y": 1062.0, "w": 206, "h": 100, "cx": 6314.0, "cy": 1112.0}, {"id": "legacy_buffer", "type": "external", "lane": "src", "slot": 0, "label": "Legacy Invoice Buffer Lookup", "sub": "BR-042 / INT-05", "desc": "Invoices are regenerable from legacy XML data held in the Invoice Buffer table, including invoices generated several years previously.", "systems": ["Legacy Invoice Buffer"], "phase": 25, "x": 6478.0, "y": 110.0, "w": 176, "h": 100, "cx": 6566.0, "cy": 160.0}, {"id": "d_legacy_avail", "type": "decision", "lane": "src", "slot": 0, "label": "Historical XML Available?", "branches": [{"label": "Available", "to": "regen_consume_latest"}, {"label": "Unavailable", "to": "legacy_unavailable"}], "phase": 26, "x": 6743.0, "y": 110.0, "w": 150, "h": 100, "cx": 6818.0, "cy": 160.0}, {"id": "legacy_unavailable", "type": "error", "lane": "src", "slot": 0, "label": "Invoice Unavailable for Regeneration", "sub": "INT-05 fallback", "desc": "Fallback behaviour: report the invoice as unavailable for regeneration.", "phase": 27, "x": 6975.0, "y": 110.0, "w": 190, "h": 100, "cx": 7070.0, "cy": 160.0}, {"id": "regen_consume_latest", "type": "control", "lane": "bfr", "slot": 0, "label": "Consume Latest Corrected XML", "sub": "BR-041", "desc": "Where the source XML has been regenerated or corrected, regeneration consumes the latest version.", "phase": 27, "x": 6967.0, "y": 306.0, "w": 206, "h": 100, "cx": 7070.0, "cy": 356.0}, {"id": "reprint_generate", "type": "agent", "lane": "bfr", "slot": 1, "label": "Generate Reprint PDF", "sub": "BR-044 / BR-045 / BFR_CONSL_BATCH_001.03.A_ViewBill_Status_Log / BFR_INV_REPRNT_001.01 / BFR_INV_REPRNT_001.02 / BFR_INV_REPRNT_001.03.B / BFR_INV_REPRNT_001.03.C / BFR_INV_REPRNT_001.03.D / BFR_INV_REPRNT_001.03.E / BFR_INV_REPRNT_001.03.F / BFR_INV_REPRNT_001.03.G / BFR_INV_REPRNT_001.03.H / BFR_INV_REPRNT_001.03_Reprint_Bills", "desc": "Reprint does not alter the original invoice data; only a previously generated bill may be reprinted. Supports Detailed or Summarised bill type and English or Arabic language.", "phase": 25, "x": 6463.0, "y": 466.0, "w": 206, "h": 60, "cx": 6566.0, "cy": 496.0}, {"id": "reprint_register", "type": "system", "lane": "ops", "slot": 0, "label": "Reprint / Resend Register", "sub": "BR-046", "desc": "Reprint and resend requests are displayed in dedicated console registers with status and process date.", "phase": 25, "x": 6471.0, "y": 1062.0, "w": 190, "h": 100, "cx": 6566.0, "cy": 1112.0}, {"id": "resend_email", "type": "agent", "lane": "chn", "slot": 0, "label": "Resend via Distinct Template", "sub": "BR-048 / BR-049 / BFR_CONSL_RESEND_BILL_001.02 / BFR_CONSL_RESEND_BILL_001.03 / BFR_EML_RESEND_001.01", "desc": "The resend email template may differ from the first-time bill email template and is separately maintainable in English and Arabic. Existing reprint/resend interface signatures remain unchanged (parallel running, no impact to current channels).", "phase": 25, "x": 6463.0, "y": 2014.0, "w": 206, "h": 100, "cx": 6566.0, "cy": 2064.0}, {"id": "batch_stats", "type": "system", "lane": "bfr", "slot": 0, "label": "Update Batch Statistics", "sub": "BR-011 / BR-078 / BR-072 / BR-073 / BFR_CONSL_BATCH_001.05_View_Statistics", "desc": "Batch statistics display successful and failed PDF generation with identifier, bill number, account number, status and reason. BR-072 (processing status maintained/displayed at batch and item level). BR-073 (supported operational status values: Failed, Ready, Report Generated, Invoice Completed, Failed Sending Email). Status Model \u2014 Batch: Report Generated (batch reports have been produced).", "phase": 33, "x": 8487.0, "y": 306.0, "w": 190, "h": 100, "cx": 8582.0, "cy": 356.0}, {"id": "admin_console", "type": "agent", "lane": "ops", "slot": 0, "label": "Admin Console \u2014 Batch / Bill / Hot Bill Actions", "sub": "BR-070 / BR-074 / BR-075 / BR-071 / BR-076 / BR-077 / BR-079 / BFR_ADM_CONSL_001.01 / BFR_HOT_BILL_DTLS_002.01 / BFR_HOT_BILL_DTLS_002.02 / BFR_HOT_BILL_DTLS_002.03_Status_Log / BFR_HOT_BILL_DTLS_002.04_Download_pdf / BFR_HOT_BILL_DTLS_002.05_Download_Xls / BFR_HOT_BILL_DTLS_002.06_Download_xml / BFR_HOT_BILL_DTLS_002.07_Reprint_Bill / BFR_HOT_BILL_DTLS_002.08_regenerate_Document / BFR_HOT_BILL_DTLS_002.09_Regenerate_xml / BFR_HOT_BILL_DTLS_002.10_Send_Email", "desc": "Front-end Admin Console for Billing Operations covering batches, bills, hot bills, XML records, reports, translations and role-based access. Batch action menu: View Bills, View Statistics, Overall Report, Detail Report, Failed Report, Failed Email Report, Send Overall Report, Send Email. Bill action menu (applies equally to the hot bill register): Status Log, Download PDF, Download XLS, Download XML, Reprint Bill, Regenerate Document, Regenerate XML, Send Email. BR-071 (batch list displays identifier, date created, reference, status). BR-076 (status log displays identifier, label, reason, date created). BR-077 (selected bill downloadable in PDF, XLS and XML). BR-079 (hot bill register displays identifier, process date, bill number).", "phase": 34, "x": 8731.0, "y": 1062.0, "w": 206, "h": 100, "cx": 8834.0, "cy": 1112.0}, {"id": "search_retrieve", "type": "agent", "lane": "ops", "slot": 0, "label": "Search & Retrieve Invoices / Reports / XML", "sub": "BR-090 / BR-091 / BR-092 / BR-093 / BFR_CONSL_INV_SEARCH_001.01 / BFR_CONSL_SEARCH_001.01 / BFR_CONSL_XML_SEARCH_001.01", "desc": "Search across invoice type, invoice number, batch identifier, date created, language, MSISDN, product, status, email address, account number, customer type and internal identifier. Results support download, regenerate, reprocess and email actions by role and status. BR-093 (configuration records open in a separate window/pop-up on drill-down).", "phase": 35, "x": 8983.0, "y": 1062.0, "w": 206, "h": 100, "cx": 9086.0, "cy": 1112.0}, {"id": "ref_data_config", "type": "agent", "lane": "ops", "slot": 1, "label": "Reference Data Configuration", "sub": "BR-100/BR-101/BR-102/BR-103/BR-104/BR-105/BR-106/BR-107/BR-108/BR-109/BR-110/BR-111/BR-112/BR-113 / P-11 / INT-08 / BFR_CONSL_ADJ_RSN_CONF_001.01 / BFR_CONSL_ADJ_RSN_CONF_001.02_Create / BFR_CONSL_ADJ_RSN_CONF_001.02_Edit / BFR_CONSL_BANNER_CONF_001.01 / BFR_CONSL_CONSL_BENEFIT_CONF_001.01_Benefit_Configure / BFR_CONSL_CONSL_BENEFIT_CONF_001.02_Benefit_Edit_Delete / BFR_CONSL_CONSL_BENEFIT_CONF_001.03_Benefit_Create / BFR_CONSL_CONSL_BENEFIT_CONF_001.04_Benefit_Search / BFR_CONSL_CONSL_CONF_001.01 / BFR_CONSL_CONSL_CONF_001.02 / BFR_CONSL_EML_TEMP_CONF_001.01 / BFR_CONSL_FLEX_BKT_CONF_001.01 / BFR_CONSL_FLEX_BKT_CONF_001.02 / BFR_CONSL_FLEX_BKT_CONF_001.03 / BFR_CONSL_PLAN_SPEED_001.01 / BFR_CONSL_VAS_CONF_001.01 / BFR_CONSL_VAS_CONF_001.02 / BFR_CONSL_VAS_CONF_001.03 / BFR_SETTNG_CONSL_TRNSL_CONF_001.01 / BFR_SETTNG_CONSL_TRNSL_CONF_001.02", "desc": "Translation, adjustment reason, benefits, flex bucket, VAS short code and plan speed configuration, with import/export, effective dating and role control; benefit/flex bucket/VAS/plan speed synchronise with the product catalogue where applicable. P-11 (configuration export and import formats). Integration: INT-08 (Product Catalogue, configuration synchronisation).", "systems": ["Product Catalogue"], "phase": 35, "x": 8983.0, "y": 1202.0, "w": 206, "h": 100, "cx": 9086.0, "cy": 1252.0}, {"id": "template_config", "type": "agent", "lane": "ops", "slot": 2, "label": "Template & Presentation Configuration", "sub": "BR-120/BR-121/BR-122/BR-123/BR-124 / BFR_CONSL_BILL_TEMPLATE_CONF_001.01 / BFR_CONSL_CONF_DRL_DWN_001.01 / BFR_CONSL_INTRCT_PDF_001.01 / BFR_CONSL_INTRCT_PDF_001.02 / BFR_INVC_TEMPLT_CHNG_001.01 / BFR_INVOICE__BUS_RULE_001.01 / REQ_BFR_006", "desc": "Bill template field maintenance by segment and invoice type; bill banner configuration with page-overlap handling; report template configuration; interactive PDF tabs and dynamic links.", "phase": 35, "x": 8983.0, "y": 1342.0, "w": 206, "h": 100, "cx": 9086.0, "cy": 1392.0}, {"id": "reporting_dash", "type": "system", "lane": "bfr", "slot": 0, "label": "Reporting & Dashboards", "sub": "BR-130/BR-131/BR-132/BR-133/BR-134/BR-135/BR-136/BR-137/BR-138/BR-139/BR-140/BR-141/BR-142 / P-03 / P-04 / P-05 / P-06 / P-07 / P-10 / BFR_CONSL_DASH_BRD_001.01 / BFR_CONSL_EML_TEMP_CONF_001.02 / BFR_CONSL_OPR_STAT_001.02 / BFR_CONSL_REP_001.01 / BFR_CONSL_REP_001.02 / BFR_CONSL_REP_001.03 / BFR_CONSL_REP_001.04 / BFR_CONSL_REP_001.05 / BFR_CONSL_REP_001.06 / BFR_CONSL_REP_001.07 / BFR_CONSL_REP_001.08 / BFR_CONSL_REP_001.09 / BFR_CONSL_REP_001.10_BiullRunMonitor / BFR_CONSL_REP_001.11_VLB / BFR_CONSL_REP_001.12_Overall / BFR_CONSL_REP_001.13_Internal / BFR_CONSL_REP_001.14_Failed_Bill_Report / BFR_DATA_SORTING_001.01", "desc": "Enterprise reports (CDR List, Credit File, Invoice Report), operational dashboard, batch reports, failed bill/email reports, processing statistics, bill run monitor and hot bill failure alerts. Reports generated daily, monthly, after bill run or ad hoc, in PDF, CSV or Excel; no print media output produced (BR-132). P-03 (hot bill failure report interval). P-04 (bill run days). P-05 (bill run monitor interval). P-06 (delivery preference PDF only, code 0). P-07 (delivery preference PDF and XLS, code 3). P-10 (supported report output formats).", "phase": 34, "x": 8739.0, "y": 328.0, "w": 190, "h": 56, "cx": 8834.0, "cy": 356.0}, {"id": "retention", "type": "control", "lane": "bfr", "slot": 1, "label": "Storage & Retention Housekeeping", "sub": "BR-160 / BFR_STRG_RTN_POL_001.01", "desc": "Generated invoices, reports, XML files and emails are retained for the configured duration; artefacts exceeding the retention period are removed automatically. Retention periods: to be confirmed (P-14/P-15/P-16/P-17/P-18).", "phase": 33, "x": 8479.0, "y": 446.0, "w": 206, "h": 100, "cx": 8582.0, "cy": 496.0}, {"id": "end_batch_complete", "type": "end", "lane": "bfr", "slot": 0, "label": "Batch Processing Complete", "sub": "Status Model \u2014 Batch: Email Sent (terminal)", "desc": "All invoice outputs within the batch generated and email despatch complete. Status Model \u2014 Batch: Invoice Completed (all invoice outputs within the batch have been generated).", "phase": 32, "x": 8280.0, "y": 306.0, "w": 100, "h": 100, "cx": 8330.0, "cy": 356.0}, {"id": "platform_tax_currency", "type": "control", "lane": "bfr", "phase": 15, "slot": 1, "label": "Currency & Tax Handling", "sub": "BFR_MULT_CUR_001.01 / BFR_CONSL_CONF_001.04 / BR-161 / BR-162 / P-13", "desc": "Currency information received in the source billing data is used to generate the invoice in that currency (BR-161); base currency is Qatari Riyal (P-13). Tax information received in the source data is processed and displayed on the invoice (BR-162).", "x": 3943.0, "y": 466.0, "w": 206, "h": 60, "cx": 4046.0, "cy": 496.0}], "flows": [{"from": "start", "to": "pull_regular", "kind": "seq", "happy": true}, {"from": "start", "to": "pull_trial", "kind": "seq", "label": "trial run"}, {"from": "start", "to": "pull_hot", "kind": "seq", "label": "hot bill request"}, {"from": "start", "to": "manual_upload", "kind": "seq", "label": "manual upload path"}, {"from": "pull_regular", "to": "atomic_write", "kind": "seq", "happy": true}, {"from": "pull_trial", "to": "atomic_write", "kind": "seq"}, {"from": "pull_hot", "to": "atomic_write", "kind": "seq"}, {"from": "manual_upload", "to": "atomic_write", "kind": "seq"}, {"from": "atomic_write", "to": "dup_check", "kind": "seq", "happy": true}, {"from": "dup_check", "to": "batch_create", "kind": "seq", "happy": true}, {"from": "batch_create", "to": "schema_validate", "kind": "seq", "happy": true}, {"from": "schema_validate", "to": "d_valid", "kind": "seq", "happy": true}, {"from": "d_valid", "to": "type_segment", "kind": "cond", "label": "Valid", "happy": true}, {"from": "d_valid", "to": "failed_xml", "kind": "cond", "label": "Failed XML"}, {"from": "failed_xml", "to": "xml_portal_visible", "kind": "seq"}, {"from": "xml_portal_visible", "to": "reprocess_failed_xml", "kind": "seq"}, {"from": "reprocess_failed_xml", "to": "schema_validate", "kind": "esc", "label": "corrected, reprocess"}, {"from": "failed_xml", "to": "retry_retrieval", "kind": "esc"}, {"from": "retry_retrieval", "to": "pull_regular", "kind": "esc", "label": "retry per policy"}, {"from": "schema_validate", "to": "stats_log", "kind": "data"}, {"from": "failed_xml", "to": "stats_log", "kind": "data"}, {"from": "type_segment", "to": "parse_load", "kind": "seq", "happy": true}, {"from": "parse_load", "to": "csv_check", "kind": "seq", "happy": true}, {"from": "csv_check", "to": "csv_alert", "kind": "cond", "label": "CSV absent > 4h"}, {"from": "csv_check", "to": "batch_ready", "kind": "cond", "label": "CSV present / not required", "happy": true}, {"from": "csv_alert", "to": "batch_ready", "kind": "seq"}, {"from": "batch_ready", "to": "d_bill_type", "kind": "seq", "happy": true}, {"from": "d_bill_type", "to": "gen_regular", "kind": "cond", "label": "Regular", "happy": true}, {"from": "d_bill_type", "to": "gen_trial", "kind": "cond", "label": "Trial"}, {"from": "d_bill_type", "to": "gen_hot", "kind": "cond", "label": "Hot"}, {"from": "gen_regular", "to": "lang_determine", "kind": "seq", "happy": true}, {"from": "gen_trial", "to": "lang_determine", "kind": "seq"}, {"from": "gen_hot", "to": "lang_determine", "kind": "seq"}, {"from": "gen_regular", "to": "gen_bulk_sms", "kind": "data", "label": "Bulk SMS segment"}, {"from": "gen_regular", "to": "gen_iot", "kind": "data", "label": "IoT segment"}, {"from": "gen_regular", "to": "enterprise_detail", "kind": "data", "label": "Enterprise detailed bill"}, {"from": "lang_determine", "to": "calc_fields", "kind": "seq", "happy": true}, {"from": "calc_fields", "to": "d_gen_success", "kind": "seq", "happy": true}, {"from": "gen_bulk_sms", "to": "d_gen_success", "kind": "seq"}, {"from": "gen_iot", "to": "d_gen_success", "kind": "seq"}, {"from": "gen_trial", "to": "trial_exclude", "kind": "seq"}, {"from": "trial_exclude", "to": "d_gen_success", "kind": "seq"}, {"from": "d_gen_success", "to": "original_immutable", "kind": "cond", "label": "Success", "happy": true}, {"from": "d_gen_success", "to": "gen_failed", "kind": "cond", "label": "Failed"}, {"from": "gen_failed", "to": "gen_retry", "kind": "esc"}, {"from": "gen_retry", "to": "schema_validate", "kind": "esc", "label": "reprocess"}, {"from": "original_immutable", "to": "mask_gen", "kind": "seq", "happy": true}, {"from": "mask_gen", "to": "role_presentation", "kind": "seq", "happy": true}, {"from": "role_presentation", "to": "d_review_switch", "kind": "seq", "happy": true}, {"from": "d_review_switch", "to": "review", "kind": "cond", "label": "On"}, {"from": "d_review_switch", "to": "channel_avail", "kind": "cond", "label": "Off", "happy": true}, {"from": "review", "to": "d_review_outcome", "kind": "seq"}, {"from": "d_review_outcome", "to": "channel_avail", "kind": "cond", "label": "Approved", "happy": true}, {"from": "d_review_outcome", "to": "rejected", "kind": "cond", "label": "Rejected"}, {"from": "rejected", "to": "gen_regular", "kind": "esc", "label": "pending on regeneration"}, {"from": "channel_avail", "to": "hot_landing", "kind": "data", "label": "hot bill"}, {"from": "channel_avail", "to": "d_email_eligible", "kind": "seq", "happy": true}, {"from": "d_email_eligible", "to": "email_template", "kind": "cond", "label": "Eligible", "happy": true}, {"from": "d_email_eligible", "to": "trial_terminal", "kind": "cond", "label": "Trial (never emailed)"}, {"from": "email_template", "to": "suppression_check", "kind": "seq", "happy": true}, {"from": "suppression_check", "to": "suppressed", "kind": "cond", "label": "On suppression list"}, {"from": "suppression_check", "to": "smtp_despatch", "kind": "cond", "label": "Not suppressed", "happy": true}, {"from": "smtp_despatch", "to": "d_smtp_result", "kind": "seq", "happy": true}, {"from": "d_smtp_result", "to": "email_sent", "kind": "cond", "label": "Accepted", "happy": true}, {"from": "d_smtp_result", "to": "email_failed", "kind": "cond", "label": "Failure"}, {"from": "email_sent", "to": "d_delivery", "kind": "seq", "happy": true}, {"from": "d_delivery", "to": "email_delivered", "kind": "cond", "label": "Delivered", "happy": true}, {"from": "d_delivery", "to": "email_failed", "kind": "cond", "label": "Failed"}, {"from": "email_failed", "to": "smtp_despatch", "kind": "esc", "label": "resend on retry"}, {"from": "email_delivered", "to": "crm_log", "kind": "data"}, {"from": "suppressed", "to": "crm_log", "kind": "data"}, {"from": "channel_avail", "to": "sms_despatch", "kind": "data", "label": "SMS channel"}, {"from": "channel_avail", "to": "whatsapp_despatch", "kind": "data", "label": "WhatsApp channel"}, {"from": "channel_avail", "to": "web_display", "kind": "data", "label": "Web channel"}, {"from": "crm_log", "to": "batch_stats", "kind": "data"}, {"from": "email_delivered", "to": "end_batch_complete", "kind": "seq", "happy": true}, {"from": "reprint_request", "to": "reprint_register", "kind": "seq"}, {"from": "resend_request", "to": "reprint_register", "kind": "seq"}, {"from": "regen_request", "to": "reprint_register", "kind": "seq"}, {"from": "reprint_request", "to": "reprint_generate", "kind": "seq"}, {"from": "regen_request", "to": "legacy_buffer", "kind": "cond", "label": "legacy invoice"}, {"from": "legacy_buffer", "to": "d_legacy_avail", "kind": "seq"}, {"from": "d_legacy_avail", "to": "regen_consume_latest", "kind": "cond", "label": "Available"}, {"from": "d_legacy_avail", "to": "legacy_unavailable", "kind": "cond", "label": "Unavailable"}, {"from": "regen_consume_latest", "to": "gen_regular", "kind": "esc", "label": "regenerate"}, {"from": "reprint_generate", "to": "channel_avail", "kind": "esc", "label": "reprint to requesting channel"}, {"from": "resend_request", "to": "resend_email", "kind": "seq"}, {"from": "resend_email", "to": "smtp_despatch", "kind": "esc", "label": "resend despatch"}, {"from": "batch_stats", "to": "admin_console", "kind": "data"}, {"from": "admin_console", "to": "search_retrieve", "kind": "data"}, {"from": "admin_console", "to": "ref_data_config", "kind": "data"}, {"from": "admin_console", "to": "template_config", "kind": "data"}, {"from": "batch_stats", "to": "reporting_dash", "kind": "data"}, {"from": "end_batch_complete", "to": "retention", "kind": "data"}, {"from": "lang_determine", "to": "platform_tax_currency", "kind": "data"}, {"from": "platform_tax_currency", "to": "d_gen_success", "kind": "data"}], "model": {"agents": [], "contracts": [], "connectivity": []}, "biz": {"bio": {}, "contractPlain": {}, "nameMap": {}}};</script>
 <script>
 const D=window.DATA, LY=D.layout, NODES=D.nodes, FLOWS=D.flows;
 const NID={}; NODES.forEach(n=>NID[n.id]=n);
@@ -335,13 +414,75 @@ const FILL={start:'#def0de',end:'#f6e6e5',agent:'#ffffff',control:'#fbf2e9',deci
  validation:'#e6f1f2',system:'#f2f2f2',external:'#f9ecdf',error:'#f8e6e6',escalation:'#fef4db'};
 const STROKE={start:'#008a00',end:'#ac1811',agent:'#3860be',control:'#d46e08',decision:'#8a5cc9',
  validation:'#2b8a8f',system:'#4a4d4e',external:'#d46e08',error:'#bd0000',escalation:'#f5b400'};
+// Per-phase-group colour palette: one distinct hue per phase heading (the dark pill), paired
+// with a light tint of that SAME hue for the column's full-height body background beneath it.
+// Every `header` value is verified >=4.5:1 contrast against white text (WCAG AA, normal text —
+// the phase heading is 14px/700, which does not qualify as "large text" under the 18.66px-bold
+// threshold, so normal-text AA is the correct bar, not the more lenient large-text 3:1). Built
+// by darkening/extending hues already used elsewhere in this file (signal_blue, the decision/
+// validation/external node-type colours, --start, --end, --sys, --charcoal) rather than
+// inventing an unrelated new palette — `teal` and `amber` needed darkening from their node-type
+// values specifically to clear 4.5:1 (their node-fill versions are contrast-checked against a
+// DARK stroke on a LIGHT fill, not white text on the colour itself, so passing one doesn't
+// imply passing the other). `wine` and `olive` have no node-type equivalent — added purely to
+// cover a 9th/10th distinct phase without repeating a hue, verified the same way (8.03 and 5.67
+// respectively). Each `tint` is the same hue at ~94% lightness/45% saturation, matching the
+// lightness/saturation this file's existing bg tokens already use (`--pg-bg`, `--ai-bg`,
+// `--dec-bg`, `--ext-bg`) — computed programmatically, not eyeballed, so every tint reads as
+// "the same colour family as its header" rather than an arbitrary pastel. `slate`/`charcoal`
+// use plain light neutrals for their tints instead of a hue-rotated pastel: both are themselves
+// near-zero-saturation colours, so mechanically applying the same H/L/S recipe produced an
+// unstable, incidentally blue-tinted result (HSL hue is not well-defined at very low
+// saturation) that read as a near-duplicate of the `blue` entry rather than a genuine neutral.
+// Cycles (via `gi % PHASE_PALETTE.length`) if a model has more phase groups than palette
+// entries — verified against the actual data: the widest current model (Trouble Ticket /
+// Postpaid Activation) has 10 distinct phase groups, exactly the palette's own length, so no
+// diagram in this corpus repeats a colour; a future model with more than 10 groups would.
+const PHASE_PALETTE=[
+ {header:'#3860be',tint:'#e9edf7'},   // blue    (signal_blue)
+ {header:'#157d7a',tint:'#e9f7f6'},   // teal    (darkened from validation/ai teal)
+ {header:'#8a5cc9',tint:'#efe9f7'},   // purple  (decision)
+ {header:'#b65f07',tint:'#f7f0e9'},   // amber   (darkened from external amber)
+ {header:'#008a00',tint:'#e9f7e9'},   // green   (start / semantic.success)
+ {header:'#ac1811',tint:'#f7e9e9'},   // red     (end / deep_red_secondary — never brand_red/--accent, which stays reserved for selection)
+ {header:'#4a4d4e',tint:'#f2f2f2'},   // slate   (system / text.secondary)
+ {header:'#25282b',tint:'#eaecee'},   // charcoal
+ {header:'#7a3b5e',tint:'#f7e9f0'},   // wine    (no node-type equivalent — extends the set past 8)
+ {header:'#6b6a1f',tint:'#f7f6e9'},   // olive   (no node-type equivalent — extends the set past 9)
+];
 function el(t,a){const e=document.createElementNS(SVGNS,t);for(const k in(a||{}))e.setAttribute(k,a[k]);return e;}
 function laneOf(k){return LY.lanes.find(l=>l.key===k);}
+// Hoisted above `bands`/nodes/edges so the tinted backgrounds below can be computed and painted
+// FIRST (bottom of the z-order) — everything else (lane dividers, nodes, connectors, the header
+// pills themselves) then paints on top of the tint, never the reverse. The phase-header-pill
+// loop further down reuses this exact array rather than recomputing it a second time.
+const phaseGroups=[];
+LY.phases.forEach((p,i)=>{
+ const last=phaseGroups[phaseGroups.length-1];
+ if(last && last.label===p) last.end=i; else phaseGroups.push({label:p, start:i, end:i});
+});
 
 // ---- build diagram
 const svg=document.getElementById('svgHost');
 svg.setAttribute('viewBox',`0 0 ${LY.totalW} ${LY.totalH}`);
 const vp=el('g',{id:'vp'}); svg.appendChild(vp);
+// Phase-column tinted backgrounds — appended FIRST, before anything else touches `vp`, so this
+// is the bottommost layer in z-order: lane dividers, nodes, connectors, and the header pills
+// themselves (added later) all paint on top of the tint, never the reverse. Span is
+// LY.topbar (top of actual lane/node content, right below the header-pill row) down to
+// LY.totalH-30 — the exact same vertical bounds the phase-divider guide lines already use (see
+// the header-pill loop below), so the tint's bottom edge lines up with where those guides stop
+// rather than bleeding into the shared bottom "bus" band that backward/loop connectors from
+// every phase route through (tinting that shared band per-column would cut a vertical colour
+// seam through connectors that visually belong to no single phase).
+const phaseBg=el('g',{id:'svgPhaseBg'});
+phaseGroups.forEach((grp,gi)=>{
+ const x=LY.x0+grp.start*LY.colw+(LY._colShift[grp.start]||0);
+ const endX=LY.x0+(grp.end+1)*LY.colw+(LY._colShift[grp.end+1]||0);
+ const pal=PHASE_PALETTE[gi%PHASE_PALETTE.length];
+ phaseBg.appendChild(el('rect',{x,y:LY.topbar,width:endX-x,height:(LY.totalH-30)-LY.topbar,fill:pal.tint}));
+});
+vp.appendChild(phaseBg);
 // defs arrow markers
 const defs=el('defs');
 // A dedicated `ar-hl` marker exists ALONGSIDE the per-kind markers, not instead of them — it's
@@ -400,7 +541,18 @@ LY.lanes.forEach((L,li)=>{
  // node/connector styling depended on either the lane tint or the accent stripe being present.
  const laneBlock=el('g',{});   // one group per lane so a single <title> covers its whole clickable/hoverable area
  laneBlock.appendChild(el('rect',{x:0,y:L.y,width:LY.laneLabelW,height:L.h,fill:'#fff',opacity:.65}));
- const laneNameOnly=L.name.split('·')[0].trim();
+ // Uppercased HERE, once, at the source — not via a CSS text-transform on .lanelabel. The width
+ // measurement two lines below (wrapTextPx) has to measure the exact string that ends up
+ // rendered, or the wrap decision and the actual glyphs painted can disagree: uppercase letters
+ // are typically wider than the mixed-case originals they replace (no lowercase ascenders/
+ // descenders to borrow space from), so a name CSS would still call "one rotated line" could
+ // overflow its column once the glyphs actually painted are the wider uppercase ones. Uppercasing
+ // the string before wrapTextPx ever sees it keeps measurement and render in exact agreement,
+ // the same way every other sizing decision in this file is measurement-driven rather than
+ // assumed. Deliberately scoped to this local variable only — laneDef.name itself (the model
+ // data, e.g. what the side drawer's lane pill reads) is untouched, so this is a display-only
+ // transform of the on-canvas rotated heading, not a change to the underlying lane name.
+ const laneNameOnly=L.name.split('·')[0].trim().toUpperCase();
  // Lane name renders rotated -90° (vertical, reading bottom-to-top), centred vertically on
  // the lane's own vertical midpoint — matching a supplied reference layout. If the full name
  // doesn't fit as a single rotated line, it wraps to a SECOND line/column instead of
@@ -489,11 +641,9 @@ bands.appendChild(svgLaneGutter);   // always visible now — no sticky HTML ove
 const ph=el('g',{id:'svgPhaseHeader'}); vp.appendChild(ph);
 const _measCtx=document.createElement('canvas').getContext('2d');
 const PHFONT='700 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';   // kept in sync with .phasehdr's 14px minimum
-const phaseGroups=[];
-LY.phases.forEach((p,i)=>{
- const last=phaseGroups[phaseGroups.length-1];
- if(last && last.label===p) last.end=i; else phaseGroups.push({label:p, start:i, end:i});
-});
+// phaseGroups is computed once, hoisted above `vp`'s own creation — see its declaration for why
+// (the tinted column backgrounds need it before anything else is painted) — and reused here
+// unchanged rather than recomputed a second time.
 phaseGroups.forEach((grp,gi)=>{
  // Column boundaries aren't uniformly LY.colw apart once a wide connector label has forced
  // extra room somewhere (see the label-aware spacing pass above) — headers use the same
@@ -513,7 +663,13 @@ phaseGroups.forEach((grp,gi)=>{
  ph.appendChild(el('line',{x1:x,y1:LY.topbar-2,x2:x,y2:LY.totalH-30,stroke:'#E3E3E3','stroke-width':2,'stroke-dasharray':'4 3'}));
  const g=el('g');
  const rectX=x+8, rectW=spanW-16, rectCx=rectX+rectW/2;   // centre of the header bar
- g.appendChild(el('rect',{x:rectX,y:14,width:rectW,height:42,rx:6,fill:'#25282b'}));
+ // Each phase group's pill uses its own colour from PHASE_PALETTE (see that array's own
+ // comment) instead of one uniform charcoal for every phase — differentiating stages at a
+ // glance rather than relying on the reader to read every label. The tinted column background
+ // behind this pill (svgPhaseBg, appended before anything else touches `vp`) uses the SAME
+ // palette entry's lighter tint, so a phase's heading and its content area are visually paired.
+ const pal=PHASE_PALETTE[gi%PHASE_PALETTE.length];
+ g.appendChild(el('rect',{x:rectX,y:14,width:rectW,height:42,rx:6,fill:pal.header}));
  // width-based wrap: keep the (upper-cased) title on ONE line whenever it fits the bar; only split if it truly overflows
  const upper=grp.label.toUpperCase();
  _measCtx.font=PHFONT;
@@ -1228,12 +1384,148 @@ function placeEdgeLabel(text,baseX,baseY,ownIdx){
 // a label against — including edges that come LATER in FLOWS order. Placing labels inside the
 // same pass that draws the paths could only ever see edges drawn so far, so a label placed early
 // could still end up sitting on top of a not-yet-drawn edge from later in the array.
+// ---- minimum connector segment length -----------------------------------------------
+// Enforces a floor on the length of the FIRST segment (leaving a source node) and the LAST
+// segment (entering a target node) of every connector path — the two segments immediately
+// adjacent to a node boundary, per an explicit "connectors should not create extremely short
+// segments immediately before entering or exiting a node" requirement. Applied as a single
+// shared post-process at edgePath()'s one call site below, rather than hand-adjusting the many
+// individual return branches spread across edgePath()/lateralEdgePath() (both forward and
+// lateral routing funnel through this one call — lateralEdgePath() is only ever reached VIA
+// edgePath()'s own isLateral() branch, so one enforcement point covers every routing case
+// either function can produce, present or future, with no risk of missing a branch).
+//
+// Only the SECOND point (for the first segment) or SECOND-TO-LAST point (for the last segment)
+// is ever moved — never the absolute first/last point itself, which is the exact node-boundary
+// attachment coordinate every other invariant in this file depends on (arrowhead orientation;
+// "does this point lie exactly on the node's own perimeter", per DESIGN_SYSTEM.md's connector-
+// compliance summary). The nudge only extends that bend FURTHER along the segment's own
+// existing direction — never sideways, never past the next bend — by however much is needed to
+// reach MIN_SEG_LEN. Safe against reopening an obstacle collision: MIN_SEG_LEN (10px) sits well
+// inside OBSTACLE_CLEARANCE (24px, the margin every clearance-driven jog in this file already
+// keeps from whatever it detoured around), so a nudge this small cannot reach back into a
+// previously-cleared obstacle. For an orthogonal path (every segment strictly horizontal or
+// vertical — see edgePath()'s own comment), linear interpolation between a fixed endpoint and
+// its neighbour only ever changes ONE coordinate of the neighbour (the other is already
+// identical, since the segment has zero delta on that axis) — so nudging the first segment and
+// nudging the last segment, even when they share the same middle point on a short 3-point path,
+// touch different, independent coordinates of that point and never fight each other.
+// 20px, not a smaller absolute floor like 10px — chosen against actual reported cases, not just
+// theoretically: a segment can clear a small absolute floor (e.g. 15px) and still read as
+// "barely enters the box" once compared to the node it's entering (typical node height here is
+// 44-64px, so even 15px is 25-35% of the node's own height). 20px still leaves a 4px margin
+// under OBSTACLE_CLEARANCE (24px).
+const MIN_SEG_LEN=20;
+function enforceMinSegLength(d){
+ const nums=d.match(/-?\d+\.?\d*/g); if(!nums) return d;
+ const P=[]; for(let i=0;i<nums.length;i+=2) P.push([Number(nums[i]),Number(nums[i+1])]);
+ if(P.length<3) return d;   // a single straight segment has no node-adjacent bend to nudge
+ {
+  const [x0,y0]=P[0], [x1,y1]=P[1];
+  const len=Math.hypot(x1-x0,y1-y0);
+  if(len>0 && len<MIN_SEG_LEN){ const k=MIN_SEG_LEN/len; P[1]=[x0+(x1-x0)*k, y0+(y1-y0)*k]; }
+ }
+ {
+  const n=P.length; const [x0,y0]=P[n-1], [x1,y1]=P[n-2];
+  const len=Math.hypot(x1-x0,y1-y0);
+  if(len>0 && len<MIN_SEG_LEN){ const k=MIN_SEG_LEN/len; P[n-2]=[x0+(x1-x0)*k, y0+(y1-y0)*k]; }
+ }
+ return `M${P[0][0]},${P[0][1]}`+P.slice(1).map(p=>` L${p[0]},${p[1]}`).join('');
+}
+// ---- exit/entry-edge-aligned first/last segment direction ---------------------------
+// A connector's first segment must run in the direction that matches whichever side of the
+// SOURCE node it exits from (left/right edge -> horizontal first, top/bottom edge -> vertical
+// first — it may turn the other way LATER, just not immediately); the last segment must match
+// the TARGET's entry side the same way. Most of this file's routing branches already get this
+// right by construction (the exit/entry point itself is derived from sideX()/verticalEntry(),
+// and the very next point in the path is normally built to share the matching coordinate) —
+// but a few obstacle-detour branches jog vertically immediately at a right/left-edge exit
+// point (clearing a row obstacle) before ever moving horizontally, which is exactly the
+// violation this fixes: found empirically (12 instances on the Fibre sample alone, all
+// side:"right" + dir:"vertical") by checking every rendered edge's actual first-segment
+// direction against its source node's real geometry — not by reasoning about the code first.
+// Fixed generically here, at the shared call site, rather than patching each individual
+// violating branch by hand — this also covers the symmetric top/bottom -> horizontal case and
+// the target/last-segment side, neither of which had a found instance in the current corpus,
+// but both follow from the identical rule and cost nothing extra to enforce uniformly.
+//
+// Fix: when the first (or last) segment's direction doesn't match the exit/entry side, splice
+// in a short (STUB_DIR px) lead-out/lead-in segment IN THE CORRECT DIRECTION, moving away from
+// the node's own boundary (never back into it — the direction is derived from which side it
+// is, not guessed) — the original bend point then continues exactly as before, just reached
+// from the new lead point instead of directly from the node boundary. STUB_DIR (20px) matches
+// MIN_SEG_LEN so the newly-inserted lead segment already satisfies the minimum-length rule
+// without needing a second pass to fix it up.
+const STUB_DIR=20;
+function sideAt(node,px,py){
+ const tol=3;
+ if(!node) return null;
+ if(Math.abs(px-node.x)<tol) return 'left';
+ if(Math.abs(px-(node.x+node.w))<tol) return 'right';
+ if(Math.abs(py-node.y)<tol) return 'top';
+ if(Math.abs(py-(node.y+node.h))<tol) return 'bottom';
+ return null;   // not axis-aligned to the node's own bbox at this point (e.g. a diamond/hexagon
+                 // vertex that isn't also a bbox edge) — can't reliably classify, so skip rather
+                 // than risk "fixing" a case that was never actually wrong.
+}
+function enforceExitEntryDirection(d,srcNode,tgtNode){
+ const nums=d.match(/-?\d+\.?\d*/g); if(!nums) return d;
+ const P=[]; for(let i=0;i<nums.length;i+=2) P.push([Number(nums[i]),Number(nums[i+1])]);
+ if(P.length<3) return d;
+ // Source / first segment.
+ {
+  const side=sideAt(srcNode,P[0][0],P[0][1]);
+  if(side){
+   const expectH=(side==='left'||side==='right');
+   const dx=P[1][0]-P[0][0], dy=P[1][1]-P[0][1];
+   const actualH=Math.abs(dx)>Math.abs(dy);
+   if(actualH!==expectH){
+    if(expectH){
+     const dir=side==='right'?1:-1;
+     const leadX=P[0][0]+dir*STUB_DIR;
+     P.splice(1,0,[leadX,P[0][1]],[leadX,P[1][1]]);
+    } else {
+     const dir=side==='bottom'?1:-1;
+     const leadY=P[0][1]+dir*STUB_DIR;
+     P.splice(1,0,[P[0][0],leadY],[P[1][0],leadY]);
+    }
+   }
+  }
+ }
+ // Target / last segment — mirrors the source case, inserting toward the end instead.
+ {
+  const n=P.length;
+  const side=sideAt(tgtNode,P[n-1][0],P[n-1][1]);
+  if(side){
+   const expectH=(side==='left'||side==='right');
+   const dx=P[n-1][0]-P[n-2][0], dy=P[n-1][1]-P[n-2][1];
+   const actualH=Math.abs(dx)>Math.abs(dy);
+   if(actualH!==expectH){
+    if(expectH){
+     const dir=side==='right'?1:-1;
+     const leadX=P[n-1][0]+dir*STUB_DIR;
+     // Insert [leadX,P[n-2].y] (a new horizontal segment off P[n-2]) then [leadX,P[n-1].y] (a
+     // vertical segment carrying the original — now no-longer-last — direction); the final
+     // segment into P[n-1] is then leadX -> P[n-1].x at the target's own y, correctly horizontal.
+     P.splice(n-1,0,[leadX,P[n-2][1]],[leadX,P[n-1][1]]);
+    } else {
+     const dir=side==='bottom'?1:-1;
+     const leadY=P[n-1][1]+dir*STUB_DIR;
+     P.splice(n-1,0,[P[n-2][0],leadY],[P[n-1][0],leadY]);
+    }
+   }
+  }
+ }
+ return `M${P[0][0]},${P[0][1]}`+P.slice(1).map(p=>` L${p[0]},${p[1]}`).join('');
+}
 const edgeMidByFlow={};
 FLOWS.forEach((f,i)=>{
  const a=NID[f.from], b=NID[f.to]; if(!a||!b)return;
  const lc=latChannelCount[i]||1, lch=latChannel[i]||0;
  const latOffset = lc>1 ? (lch-(lc-1)/2)*LAT_CHANNEL_GAP : 0;
- const {d,mid}=edgePath(a,b,trackOf[i],fwdChannelMx[i],latOffset,decisionBranchOffset[i]||0,targetConvergeOffset[i]||0);
+ let {d,mid}=edgePath(a,b,trackOf[i],fwdChannelMx[i],latOffset,decisionBranchOffset[i]||0,targetConvergeOffset[i]||0);
+ d=enforceExitEntryDirection(d,a,b);   // structural fix (direction) before the magnitude fix below
+ d=enforceMinSegLength(d);
  const mk = f.kind==='data'?'ar-data':f.kind==='cond'?'ar-cond':f.kind==='esc'?'ar-esc':f.kind==='err'?'ar-err':'ar';
  const p=el('path',{d,class:'edge '+f.kind,'marker-end':`url(#${mk})`});
  p.dataset.from=f.from; p.dataset.to=f.to; p.dataset.kind=f.kind; p.dataset.marker=mk; p.dataset.flowIdx=i;   // remembered so
@@ -1376,14 +1668,21 @@ NODES.forEach(n=>{
  nodeLayer.appendChild(g);
  g.addEventListener('mouseenter',()=>highlight(n.id));
  g.addEventListener('mouseleave',()=>clearHL());
- // Single click toggles the persistent highlight lock (same dim/hlpath treatment as hover, but
- // pinned). Double click opens the side drawer, and additionally locks the highlight on if it
- // isn't already locked to this node — viewing a node's detail implies wanting its connections
- // highlighted too. A double click's two leading native 'click' events already fire toggleLock
- // twice (on, then off) before 'dblclick' fires; setSelected/applyHL below are called
- // unconditionally rather than toggled, so the end state is always "locked on", regardless of
- // that leading on/off pair.
- g.addEventListener('click',(e)=>{e.stopPropagation();toggleLock(n.id);});
+ // Single click behaviour branches on View Details mode (see the toggle button wiring further
+ // down). OFF (default): toggles the persistent highlight lock (same dim/hlpath treatment as
+ // hover, but pinned) — same as before this mode existed. ON: click opens/updates the drawer
+ // directly, every time, as a pinned inspection panel — the drawer no longer requires a double
+ // click to reach while this mode is active. Double click keeps its own OFF-mode behaviour
+ // (opens the drawer transiently, closeable via its own × button) unchanged either way; while
+ // View Details is ON it's simply redundant with the single click, not conflicting with it — a
+ // double click's two leading native 'click' events already fire the branch below twice before
+ // 'dblclick' fires, and since ON-mode's click branch sets state unconditionally (not toggled),
+ // the end result is the same "drawer open on this node" regardless of that leading pair.
+ g.addEventListener('click',(e)=>{
+  e.stopPropagation();
+  if(viewDetailsMode){ setSelected(n.id); applyHL(n.id); openDrawer(n); }
+  else{ toggleLock(n.id); }
+ });
  g.addEventListener('dblclick',(e)=>{e.stopPropagation();setSelected(n.id);applyHL(n.id);openDrawer(n);});
 });
 // ---- z-order fix: connectors + arrowheads must paint ON TOP of node shapes, not under them.
@@ -1417,9 +1716,15 @@ vp.appendChild(labelLayer);   // keep edge labels above both nodes and edges so 
 // `selectedId` is a click-lock, not just a drawer flag: clicking a node turns on the exact same
 // dim/hlpath treatment hover uses and PINS it there — mouseleave no longer clears it, only
 // clicking a different node (switches the lock) or clicking empty canvas (releases it) does.
-// Hovering a different node while one is locked still shows that node's own preview (matches
-// the existing hover affordance); leaving it reverts the display to the locked node's view
-// rather than clearing to nothing, since there IS still an active selection to show.
+// Hover works independently of an active lock, and does not override/clear it: hovering ANY
+// node — related to the lock or not — substitutes that node's own neighbour set for the
+// duration of the hover, and clearHL() (mouseleave) reverts to re-painting the locked node's
+// view, not to nothing. The lock's underlying state (`selectedId`, the `.selected` class) never
+// changes from hovering — only the click/background-click handlers touch that. (An earlier pass
+// through this file made hover fully inert while a lock was active instead, reasoning that a
+// hover briefly showing a different outcome than the click asked for reads as the lock being
+// interrupted; a later, explicit requirement reversed that back to this independent-hover
+// behaviour, which is what ships now.)
 function neighbors(id){const s=new Set([id]);FLOWS.forEach(f=>{if(f.from===id)s.add(f.to);if(f.to===id)s.add(f.from);});return s;}
 function applyHL(id){
  const ns=neighbors(id);
@@ -1435,15 +1740,36 @@ function applyHL(id){
    // in sync; p.dataset.marker (set once at path creation, never re-derived) is what makes
    // "restore" exact rather than an approximation.
    p.setAttribute('marker-end', on ? 'url(#ar-hl)' : `url(#${p.dataset.marker})`);});
+ // Connector/branch labels (text.elabel — "Cancelled", "Approved", "Login Failed", every
+ // condition/outcome word drawn beside a connector) previously never picked up `.dim` at all:
+ // they're drawn into their own labelLayer, a sibling of nodeLayer/edgeLayer, so neither
+ // forEach above ever touched them, and they stayed at full opacity/contrast no matter what was
+ // highlighted — a label for an unrelated, dimmed connector reading exactly as sharp as one on
+ // the active path. `.dim` is a bare class rule (not scoped to `.node`/`.edge`), so simply
+ // toggling it on the label text is enough; no separate CSS was needed, only this missing pass.
+ // Each label carries the same `flowIdx` its connector was built with (see the FLOWS.forEach
+ // loop that creates both), so ownership is exact, not inferred from proximity.
+ labelLayer.querySelectorAll('text.elabel').forEach(t=>{
+  const f=FLOWS[Number(t.dataset.flowIdx)];
+  const on=f&&(f.from===id||f.to===id);
+  t.classList.toggle('dim',!on);
+ });
  if(selectedId){const sg=nodeG(selectedId); if(sg)sg.classList.remove('dim');}   // the lock is never dimmed by a hover preview
 }
-function highlight(id){applyHL(id);}   // called on hover (mouseenter)
+function highlight(id){ if(panMoved)return; applyHL(id); }   // called on hover (mouseenter) — works
+ // independently of any active click-lock (see the "---- highlight" comment above); only
+ // suppressed while an active drag-to-pan is under way (panMoved; declared with the
+ // drag-to-pan handlers further down) — without that, nodes sweeping under the cursor mid-drag
+ // would flicker their hover highlight on and off, which reads as broken, not useful.
 function clearHL(){                    // called on mouseleave AND on background click
- if(selectedId){applyHL(selectedId);return;}   // an active lock exists — revert the preview to it, don't clear
+ if(selectedId){applyHL(selectedId);return;}   // an active lock exists — hover may have just shown a
+   // different node's own preview (highlight() applies independently of the lock now), so
+   // mouseleave re-paints the locked node's view rather than leaving the last-hovered preview stuck
  clearAllHL();
 }
 function clearAllHL(){nodeLayer.querySelectorAll('.node').forEach(g=>g.classList.remove('dim'));
- edgeEls.forEach(p=>{p.classList.remove('dim','hlpath'); p.setAttribute('marker-end', `url(#${p.dataset.marker})`);});}
+ edgeEls.forEach(p=>{p.classList.remove('dim','hlpath'); p.setAttribute('marker-end', `url(#${p.dataset.marker})`);});
+ labelLayer.querySelectorAll('text.elabel').forEach(t=>t.classList.remove('dim'));}
 
 // ---- persistent selection (one node at a time; survives hover / scroll; cleared only by
 // clicking a different node or clicking empty canvas — see toggleLock() and the svg background
@@ -1518,6 +1844,65 @@ document.getElementById('happyFlow').addEventListener('click',function(){
  this.textContent=happyMode?'All Flows':'Happy Flow';
  this.classList.toggle('on',happyMode);
  applyHappyFlow();
+});
+
+// ---- View Details mode: a persistent-inspection variant of the drawer (BPMN swimlane and
+// process-flow diagrams only, per the requirement this was built against). OFF (default): a
+// plain click toggles the highlight lock, as established before this mode existed. ON: a plain
+// click opens/updates the drawer directly (see the node click handler above) and neither
+// clicking a different node nor clicking empty canvas closes it — only turning this toggle back
+// off, or the drawer's own × button (which turns the toggle off too, see its handler above),
+// does. Enabling the toggle does not itself open the drawer — nothing is selected yet — it only
+// changes what the NEXT node click does; disabling it closes whatever the drawer is currently
+// showing, since a stale pinned panel with the mode already off would be a confusing leftover.
+let viewDetailsMode=false;
+const viewDetailsBtn=document.getElementById('viewDetailsBtn');
+function setViewDetails(on){
+ viewDetailsMode=on;
+ viewDetailsBtn.classList.toggle('on',on);
+ if(!on) drawer.classList.remove('open');
+}
+viewDetailsBtn.addEventListener('click',()=>setViewDetails(!viewDetailsMode));
+
+// ---- Reset: restores the diagram to its exact page-load state, undoing every temporary view
+// change a user may have made — zoom level, pan/scroll position, the Happy Flow filter, a
+// click-locked highlight, an open drawer (whether opened via View Details mode or a plain
+// double-click), View Details mode itself, an in-progress drag gesture, and an open Export
+// dropdown. Deliberately does NOT touch anything that isn't view state (the underlying
+// model/node/flow data, or files already exported/downloaded) — there's nothing else to reset.
+// References state declared further down this script (drawer, selectedId, clearSelected/
+// clearAllHL, panning/panMoved, fit) — safe because this only runs inside a click handler, which
+// never fires until long after the whole script — and every declaration in it — has run once.
+document.getElementById('resetBtn').addEventListener('click',()=>{
+ if(happyMode){
+  happyMode=false;
+  const hb=document.getElementById('happyFlow');
+  hb.textContent='Happy Flow'; hb.classList.remove('on');
+  applyHappyFlow();
+ }
+ // setViewDetails(false) already closes the drawer, but the drawer can also be open from a plain
+ // double-click with the mode OFF — close it unconditionally either way.
+ if(viewDetailsMode) setViewDetails(false);
+ drawer.classList.remove('open');
+ clearSelected(); clearAllHL();
+ panning=false; panMoved=false;
+ const shell=svg.parentElement;
+ if(shell) shell.classList.remove('panning');
+ const exMenu=document.getElementById('exportMenu'); if(exMenu) exMenu.classList.remove('open');
+ // Collapse the svg's inline size back to its CSS default (#svgHost{width:100%;height:100%})
+ // BEFORE calling fit() — if a prior zoom left the svg larger than the shell, its own
+ // scrollbars are still reducing shell.clientWidth/Height at the exact moment fit() would
+ // otherwise measure them (mid-click-handler, before the browser has any reason to reflow
+ // early), so fit() would compute a slightly-too-small scale relative to the true page-load
+ // value — the fresh page-load fit() never faces this, since the very first call happens
+ // before the svg has been sized at all. Clearing back to 100%/100% (which can never itself
+ // cause overflow/scrollbars, by definition) reproduces that same scrollbar-free precondition.
+ svg.style.width=''; svg.style.height='';
+ // fit() recomputes the default width-first scale/offsets and resizes the svg back to its
+ // natural (unzoomed) footprint; scrollLeft/Top=0 matches the shell's own scroll position at
+ // initial page load (nothing sets it to anything else before first paint).
+ fit();
+ if(shell){ shell.scrollLeft=0; shell.scrollTop=0; }
 });
 
 
@@ -1671,7 +2056,7 @@ function buildLegendBar(){
 buildLegendBar();
 
 // ---- pan & zoom
-let scale=1,tx=0,ty=0;
+let scale=1,tx=0,ty=0,baseScale=1;
 // The lane gutter and phase header no longer need any JS sync at all — both are now ordinary,
 // always-visible SVG content (#svgLaneGutter, #svgPhaseHeader) that pans and scales along with
 // everything else inside the `vp` transform below, exactly like every node and connector. A
@@ -1682,10 +2067,7 @@ let scale=1,tx=0,ty=0;
 function apply(){vp.setAttribute('transform',`translate(${tx},${ty}) scale(${scale})`);}
 /* ---- responsive width-first sizing -------------------------------------------------
    The canvas must always consume 100% of the horizontal space inside .diagram-shell.
-   The previous implementation fitted to the shell's fixed height ONLY and then let the
-   <svg> element's width fall out of that scale, so any model whose aspect ratio was
-   taller-per-unit-width than the shell rendered as a narrow column with dead white space
-   beside it. Sizing is now driven by BOTH axes:
+   Sizing is driven by BOTH axes:
 
        sW = (availW - 2*PAD_X) / totalW      // scale that makes the content span the full width
        sH = (availH - 2*PAD_Y) / contentH    // scale that makes the content span the full height
@@ -1693,67 +2075,177 @@ function apply(){vp.setAttribute('transform',`translate(${tx},${ty}) scale(${sca
 
    * A wide/flat model keeps its previous behaviour exactly (sH wins, the content overflows
      horizontally and the shell scrolls) — it already used the full width.
-   * A tall/narrow model now takes sW: the diagram spans the entire width and the SHELL grows
-     vertically to preserve the aspect ratio, rather than the diagram shrinking to fit a fixed
-     height. Growing the shell (page scroll) instead of adding overflow-y keeps the sticky lane
-     gutter, phase header and legend working unchanged — they pin against the shell's scrollport
-     and would drift out of alignment if a second, vertical scroll axis were introduced here.
-   * There is deliberately NO cap on how tall the shell may grow to honour sW. An earlier version
-     capped growth at a multiple of the viewport budget as a guard against a "pathological aspect
-     ratio", but that guard silently broke the width-fill goal it sat inside: whenever a real
-     model's height demand exceeded the cap (any BPMN swimlane with many lanes and few phases —
-     an ordinary shape, not a pathological one), the code reverted to a much smaller height-fit
-     scale while STILL stretching the <svg> element to the full available width — drawing the
-     actual content at a fraction of that width and leaving dead space beside it, i.e. exactly
-     the bug width-first sizing exists to prevent. A tall page that scrolls vertically is the
-     correct outcome for a tall/narrow model; it is not a failure mode to guard against.
+   * A tall/narrow model takes sW: the diagram spans the entire width, and content that's taller
+     than the shell's own (now CSS-bounded — see .diagram-shell) height scrolls WITHIN it via
+     overflow:auto rather than growing the shell to fit. This is a deliberate reversal of an
+     earlier version of this comment, which grew the shell instead and let the PAGE scroll past
+     it — that kept the width-fill goal but broke a later, equally explicit requirement:
+     interactions (scroll, and pan/zoom if either is ever reintroduced) must stay confined to the
+     canvas, with the header and the legend footer genuinely fixed and unaffected by them. Growing
+     the shell dragged the header off-screen on every tall/narrow model and left the legend's own
+     position:sticky;bottom:0 unable to stick to anything (nothing was scrolling WITHIN the shell
+     for it to pin against — the whole PAGE was). Both are now true at once: full width fill AND
+     a canvas that's the only thing that ever scrolls, because availH below is .diagram-shell's
+     actual CSS-flex-determined height (fixed, never written back to), not a budget this function
+     computes and then grows the shell to match.
    Aspect ratio is preserved in every branch: one uniform `scale`, no independent x/y stretch. */
 const PAD_X=14, PAD_Y=22;                           // buffer kept on each edge (x trimmed: the
                                                     // horizontal axis is the scarce one here)
 const CANVAS_PAD=PAD_X;                             // back-compat alias
-const SHELL_MIN_H=340;                              // never collapse the canvas below usable height
-function viewportBudget(shell){                     // usable height from the shell's top edge to the
-                                                    // bottom of the viewport, measured live so the canvas
-                                                    // is responsive to window size instead of a fixed vh
- const free=window.innerHeight-shell.getBoundingClientRect().top-24;   // 24px breathing room below
- return Math.max(SHELL_MIN_H,Math.round(free));}
-function sizeHost(){
+// applySizeAtScale(s): the actual DOM-writing half of sizing — given an explicit scale, sizes
+// the svg element (width/height/viewBox) to fit that scale's content plus padding, never
+// smaller than the shell's own visible area, and returns the centring offsets. Shared by
+// sizeHost() (which derives the width-first AUTOFIT scale, below) and zoomAt() (which sizes
+// to whatever scale the user has interactively zoomed to) — one sizing implementation, two
+// different ways of arriving at the `s` it's given.
+function applySizeAtScale(s){
  const shell=svg.parentElement; if(!shell) return null;
  const availW=shell.clientWidth; if(!availW) return null;
+ const availH=shell.clientHeight; if(!availH) return null;   // CSS-bounded (flex:1 on .diagram-shell) — this
+                                                    // function reads it, never sets it; excess content
+                                                    // scrolls within the shell (overflow:auto) instead
  const contentW=LY.totalW;
  const contentH=LY._preLegendTotalH||LY.totalH;     // live view excludes the export-only legend extension
- const legendEl=document.getElementById('legendBar');
- const legendH=legendEl?legendEl.offsetHeight:0;    // reserved so the sticky legend never forces a scrollbar
- const budget=viewportBudget(shell);
- const sW=(availW-2*PAD_X)/contentW;
- const sH=(budget-legendH-2*PAD_Y)/contentH;
- let s=Math.max(sW,sH);                             // fill whichever axis is the binding constraint
- let shellH=Math.round(contentH*s+2*PAD_Y+legendH);
- shellH=Math.max(shellH,SHELL_MIN_H);
- shell.style.height=shellH+'px';
+ // No legend-height reservation needed here any more: #legendBar is now a flex:none sibling
+ // AFTER .diagram-shell (see markup + the .legend-sticky comment), not a child positioned
+ // inside it, so shell.clientHeight (= availH above) already excludes the legend's space —
+ // the flex column allocates it before .diagram-shell's flex:1 share is ever computed.
  const drawnW=contentW*s, drawnH=contentH*s;
  const w=Math.max(availW,Math.round(drawnW+2*PAD_X));    // >= the shell: 100% of the horizontal space
- const h=Math.max(shellH-legendH,Math.round(drawnH+2*PAD_Y));
+ const h=Math.max(availH,Math.round(drawnH+2*PAD_Y));
  svg.style.width=w+'px'; svg.style.height=h+'px';
  svg.setAttribute('viewBox',`0 0 ${w} ${h}`);       // 1:1 px space so the vp transform fully controls scaling
  return {w,h,s,offX:Math.max(PAD_X,(w-drawnW)/2),offY:Math.max(PAD_Y,(h-drawnH)/2)};}
+function sizeHost(){
+ const shell=svg.parentElement; if(!shell) return null;
+ const availW=shell.clientWidth; if(!availW) return null;
+ const availH=shell.clientHeight; if(!availH) return null;
+ const sW=(availW-2*PAD_X)/LY.totalW;
+ const sH=(availH-2*PAD_Y)/(LY._preLegendTotalH||LY.totalH);
+ const s=Math.max(sW,sH);                           // fill whichever axis is the binding constraint
+ return applySizeAtScale(s);
+}
 function fit(){const dim=sizeHost();if(!dim){requestAnimationFrame(fit);return;}
- scale=dim.s;tx=dim.offX;ty=dim.offY;apply();}      // centred within whatever slack remains
-// Zoom controls (the +/- buttons, mouse-wheel zoom) and drag-to-pan have both been removed
-// entirely — the diagram is fixed: it always renders at its computed width-first fit scale,
-// at its computed centred position, with no way for the user to move or zoom it away from
-// that. The "Reset" button (which used to sit in the header and simply re-ran this same
-// fit()) has now been removed entirely too — with no pan/zoom/drag possible any more, there
-// was never anything left for it to reset FROM, so the button itself was pure dead weight
-// even though it was harmless. `fit()` is still called automatically on load and on resize
-// (see the listeners below) — only the manual re-trigger button is gone. Horizontal scroll
-// (overflow-x:auto on .diagram-shell, for a wide model) and ordinary page scroll (for a tall
-// one, since the shell grows to fit) remain the only navigation — both work unaffected by an
-// active highlight lock, since neither touches `vp`'s transform or any node/edge class.
+ scale=dim.s;tx=dim.offX;ty=dim.offY;baseScale=dim.s;apply();}   // centred within whatever slack
+                                                    // remains; baseScale anchors zoomAt()'s min/max clamp
+// ---- wheel zoom (mouse wheel + trackpad pinch), confined to the canvas -------------------
+// Reinstates zoom — explicitly REMOVED earlier in this project's build-out in favour of
+// "scroll only, no zoom/pan" (the comment this replaces said as much). A later, equally
+// explicit requirement reverses that specifically for zoom: mouse-wheel and trackpad
+// pinch-to-zoom must both zoom the diagram, confined to the canvas, with the header, footer,
+// legend, and toolbar staying fixed in both position AND scale at all times. Drag-to-pan is
+// still NOT reintroduced — panning stays exactly as it already was, via the shell's native
+// scrollbars (overflow:auto); zoom only changes how much content there is to scroll through,
+// using the same applySizeAtScale() the width-first autofit above already relies on.
+//
+// Trackpad pinch is delivered by every major browser as a `wheel` event with `ctrlKey:true`
+// (a synthetic flag — it does not mean the physical Ctrl key is actually held down; this is
+// the standard cross-browser convention apps use to tell a pinch gesture apart from an
+// ordinary scroll). Treating every wheel event inside the canvas as zoom, regardless of
+// ctrlKey, covers both a literal mouse-wheel notch and a trackpad pinch with one handler.
+const ZOOM_MIN_MULT=0.4, ZOOM_MAX_MULT=6;           // how far below/above the autofit scale
+                                                    // (baseScale) the user may zoom
+function zoomAt(clientX,clientY,deltaY){
+ const shell=svg.parentElement; if(!shell) return;
+ const shellRect=shell.getBoundingClientRect();
+ const cx=clientX-shellRect.left, cy=clientY-shellRect.top;          // cursor pos within the shell's viewport
+ const svgX=shell.scrollLeft+cx, svgY=shell.scrollTop+cy;            // same point, in the svg's own coordinate space
+ const contentX=(svgX-tx)/scale, contentY=(svgY-ty)/scale;           // that point in content-space — invariant across zoom
+ const factor=Math.exp(-deltaY*0.0015);
+ const newScale=Math.min(Math.max(scale*factor,baseScale*ZOOM_MIN_MULT),baseScale*ZOOM_MAX_MULT);
+ const dim=applySizeAtScale(newScale); if(!dim) return;
+ scale=dim.s; tx=dim.offX; ty=dim.offY; apply();
+ const newSvgX=tx+contentX*scale, newSvgY=ty+contentY*scale;         // same content point, at the new scale
+ shell.scrollLeft=newSvgX-cx; shell.scrollTop=newSvgY-cy;            // re-centre it back under the cursor
+}
+window.addEventListener('wheel',(e)=>{
+ const shell=svg.parentElement;
+ if(shell && shell.contains(e.target)){
+  e.preventDefault();
+  zoomAt(e.clientX,e.clientY,e.deltaY);
+ } else if(e.ctrlKey){
+  // Pinch (or literal ctrl+wheel) anywhere OUTSIDE the canvas — block the browser's native
+  // whole-page zoom instead of letting it through; the header/legend/toolbar must never change
+  // scale, and there's no diagram under the cursor here to redirect the gesture to instead.
+  e.preventDefault();
+ }
+},{passive:false});
+// ---- drag-to-pan, confined to the canvas ------------------------------------------------
+// Reinstated — an earlier pass through this file explicitly did NOT bring drag-to-pan back
+// alongside wheel-zoom (see the "wheel zoom" comment above, which still says so; left as
+// history rather than rewritten, since it was accurate when written), reasoning that the
+// shell's native scrollbars already covered panning. A later, equally explicit requirement
+// asks for it directly: once zoomed in, click-and-drag on the canvas must reposition the
+// viewport, confined to the canvas, without touching the header/footer/legend/toolbar.
+//
+// Delegated to `shell` itself (not per-node listeners) so a drag started ON a node pans just
+// as well as one started on empty canvas — standard behaviour for diagram/map tools. Pointer
+// Events (not mouse events) are used so mouse, pen, and touch all work through one code path.
+// A small movement threshold (PAN_THRESHOLD) distinguishes an actual drag from a plain click:
+// below it, nothing happens differently and the eventual 'click' still reaches the
+// node/background handlers below exactly as before (selection, drawer, highlight-lock
+// release); at or above it, the gesture is marked as a drag and the capture-phase listener
+// further down swallows the resulting 'click' before it can reach any node or the
+// background-clear handler — otherwise every pan would ALSO toggle a node's selection lock or
+// clear one, as if it had been clicked.
+//
+// setPointerCapture is deliberately called ONLY once real movement crosses PAN_THRESHOLD, not
+// on every pointerdown — this fixes a real regression, not a hypothetical one: capturing
+// unconditionally on pointerdown retargets the eventual mouseup/click to the CAPTURING element
+// (`shell`) per the Pointer Events spec, not to whatever node the cursor is actually over. That
+// silently broke node selection entirely for ordinary clicks (a node's own 'click' listener,
+// living below `shell` in the tree, was never reached — dispatch starts at the retargeted
+// target and only bubbles UP from there, so a descendant's listener is skipped outright), while
+// hover kept working, which is exactly the "click no longer highlights, only hover does" bug
+// this was built to fix. Only capturing once a drag is confirmed real means an ordinary click
+// never triggers capture at all, so its click event dispatches normally, hitting the node under
+// the cursor first exactly as before this feature existed. (setPointerCapture still keeps an
+// ACTUAL drag going even if the cursor leaves the shell mid-gesture, which fast drags routinely
+// do — that guarantee is preserved, just deferred to the point where we know it's needed.)
+let panning=false, panMoved=false, panStartX=0, panStartY=0, panStartScrollL=0, panStartScrollT=0, panPointerId=null;
+const PAN_THRESHOLD=4;
+(function(){
+ const shell=svg.parentElement; if(!shell) return;
+ shell.addEventListener('pointerdown',(e)=>{
+  if(e.button!==0) return;                          // primary mouse button / primary touch point only
+  panning=true; panMoved=false;
+  panStartX=e.clientX; panStartY=e.clientY;
+  panStartScrollL=shell.scrollLeft; panStartScrollT=shell.scrollTop;
+  panPointerId=e.pointerId;
+ });
+ shell.addEventListener('pointermove',(e)=>{
+  if(!panning) return;
+  const dx=e.clientX-panStartX, dy=e.clientY-panStartY;
+  if(!panMoved && (Math.abs(dx)>PAN_THRESHOLD||Math.abs(dy)>PAN_THRESHOLD)){
+   panMoved=true;
+   try{shell.setPointerCapture(panPointerId);}catch(_){}   // only now — see the comment above
+   shell.classList.add('panning');
+  }
+  if(panMoved){ shell.scrollLeft=panStartScrollL-dx; shell.scrollTop=panStartScrollT-dy; }
+ });
+ const endPan=(e)=>{
+  if(!panning) return;
+  panning=false;
+  shell.classList.remove('panning');
+  if(panMoved){ try{shell.releasePointerCapture(e.pointerId);}catch(_){} }
+ };
+ shell.addEventListener('pointerup',endPan);
+ shell.addEventListener('pointercancel',endPan);
+ // Capture phase: runs before the event reaches the node/background 'click' handlers below,
+ // so stopping it here means a drag never also fires a click on whatever the cursor happened
+ // to end the gesture over.
+ shell.addEventListener('click',(e)=>{
+  if(panMoved){ e.stopPropagation(); e.preventDefault(); }
+  panMoved=false;
+ },true);
+})();
 // Clicking empty canvas releases an active highlight lock (see toggleLock()) — this is the
 // "clicks outside the selected node" release. A click on a NODE never reaches this handler
 // (its own listener calls stopPropagation()), so this only fires for genuine background clicks.
-svg.addEventListener('click',()=>{ if(selectedId){clearSelected();clearAllHL();} });
+// Suppressed entirely while View Details mode is ON: that mode's whole point is a drawer (and
+// the highlight that goes with it) that survives clicking away from the diagram — only turning
+// the mode off, or its own × button, may close it (see the viewDetailsBtn wiring below).
+svg.addEventListener('click',()=>{ if(viewDetailsMode)return; if(selectedId){clearSelected();clearAllHL();} });
 
 // ---- drawer
 const drawer=document.getElementById('drawer');
@@ -1839,8 +2331,11 @@ function openDrawer(n){
 // Closing the drawer no longer clears the highlight lock — the drawer and the highlight are two
 // independent interactions now (dblclick opens the drawer without unlocking on close; the lock
 // is released only by clicking a different node or clicking empty canvas — see toggleLock() and
-// the svg background click handler above).
-document.getElementById('d-close').onclick=()=>{drawer.classList.remove('open');};
+// the svg background click handler above). It DOES turn off View Details mode if that's what's
+// currently keeping the drawer open — the × button and the toggle button are two paths to the
+// same "exit the pinned inspection panel" action, kept in sync so the toggle's own on/off state
+// never silently goes stale relative to whether the drawer is actually showing.
+document.getElementById('d-close').onclick=()=>{drawer.classList.remove('open'); if(viewDetailsMode)setViewDetails(false);};
 
 // The tab bar (<nav class="tabs">) and the "panel" show/hide mechanism it drove have been
 // removed entirely — this skill's single source of truth is the diagram plus its side drawer,
@@ -1982,13 +2477,22 @@ exMenu.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
  }catch(err){alert('Export failed.');done();}
 }));
 
+// Keeps --header-h (see .drawer's own comment) in sync with the header's REAL rendered height,
+// not a hardcoded guess — a long title can wrap to two lines at a narrow viewport, growing the
+// header, and the drawer must never overlap it regardless. Run alongside fit() everywhere fit()
+// itself runs (load/resize) since both respond to the same triggers.
+function syncDrawerTop(){
+ const top=document.querySelector('.top'); if(!top) return;
+ document.documentElement.style.setProperty('--header-h', top.getBoundingClientRect().height+'px');
+}
 // init
 requestAnimationFrame(()=>requestAnimationFrame(fit));
-window.addEventListener('load',()=>setTimeout(fit,60));
-window.addEventListener('resize',()=>fit());   // no tabs/panels to check any more — the diagram is the only content, always visible
+syncDrawerTop();
+window.addEventListener('load',()=>{setTimeout(fit,60);syncDrawerTop();});
+window.addEventListener('resize',()=>{fit();syncDrawerTop();});   // no tabs/panels to check any more — the diagram is the only content, always visible
 </script>
 <script>(function(){try{var D=window.DATA||{};var m=D.meta||{};
- if(m.title){var h=document.querySelector('.top h1');if(h)h.innerHTML='<span class="dot"></span>'+m.title;document.title=m.title;}
+ if(m.title){var h=document.querySelector('.top h1');if(h)h.textContent='BPMN Swimlane: '+m.title;document.title='BPMN Swimlane: '+m.title;}
  // The header subtitle line (.top .sub, and m.subtitle here) has been removed entirely — the
  // header now shows only the title. meta.subtitle may still be present in model.json (harmless
  // pass-through — see MODEL_SCHEMA.md) but nothing in this file reads it any more.

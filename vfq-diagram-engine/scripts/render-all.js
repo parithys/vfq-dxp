@@ -4,21 +4,40 @@
 /**
  * Pure Node orchestrator. Zero AI calls. Renders data/{slug}/*.json through
  * each diagram type's existing engine (copied unmodified under engines/)
- * and writes output/{slug}/{type}.html.
+ * and reconciles the result into output/{slug}/{type}.html.
  *
  * Usage:
  *   node scripts/render-all.js                  render everything
  *   node scripts/render-all.js --brsd <slug>     only that BRSD's 4 outputs
  *   node scripts/render-all.js --type <type>     only that diagram type, all BRSDs
  *   node scripts/render-all.js --brsd <slug> --type <type>
+ *   node scripts/render-all.js --force ...       discard manual edits, reset to a pure engine render
  *
  * <type> is one of: bpmn-swimlane | journey | process-flow | userflow
  *
  * Fails loudly per-file: a bad data file is skipped and reported, the rest
- * of the batch keeps going. Exits 1 if any file failed, 0 otherwise.
+ * of the batch keeps going. Exits 1 if any file failed OR any merge produced
+ * a conflict, 0 otherwise.
+ *
+ * Manual-edit reconciliation: output/*.html is allowed to be hand-edited
+ * (content, connector routing, node connectivity, layout, diagram-specific
+ * behaviour). To keep those edits from being silently clobbered by the next
+ * engine-driven render, every successful render is diffed against a stored
+ * baseline (`.render-baseline/{slug}/{type}.html` — the last pure engine
+ * render for that file) before being written:
+ *   - no baseline / output unchanged since baseline -> plain overwrite.
+ *   - output has manual edits -> 3-way merge via `git merge-file`
+ *     (base = baseline, ours = your manual edits, theirs = new engine
+ *     render). A clean merge folds the engine update in and advances the
+ *     baseline. A conflicting merge writes standard `<<<<<<<` markers into
+ *     the output file and does NOT advance the baseline, so it's reported
+ *     again (and re-attempted) on the next run until resolved by hand.
+ * See README.md "Canonical sources vs. generated output" for the full
+ * policy this implements.
  */
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
 const { spawnSync } = require('child_process');
@@ -29,6 +48,7 @@ const ROOT = path.join(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'data');
 const OUTPUT_DIR = path.join(ROOT, 'output');
 const ENGINES_DIR = path.join(ROOT, 'engines');
+const BASELINE_DIR = path.join(ROOT, '.render-baseline');
 
 const TYPES = {
   'bpmn-swimlane': {
@@ -62,16 +82,89 @@ const TYPES = {
 };
 
 function parseArgs(argv) {
-  const args = { brsd: null, type: null };
+  const args = { brsd: null, type: null, force: false };
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--brsd') args.brsd = argv[++i];
     else if (argv[i] === '--type') args.type = argv[++i];
+    else if (argv[i] === '--force') args.force = true;
   }
   if (args.type && !TYPES[args.type]) {
     console.error(`Unknown --type "${args.type}". Must be one of: ${Object.keys(TYPES).join(', ')}`);
     process.exit(1);
   }
   return args;
+}
+
+// Reconciles a freshly-rendered file (newPath) into the real output path,
+// preserving any manual edits found there. Returns one of:
+//   'created'   output/baseline didn't exist yet, written fresh
+//   'forced'    --force: manual edits (if any) discarded, reset to engine output
+//   'updated'   no manual edits detected, plain overwrite
+//   'unchanged' manual edits exist but this render is byte-identical to
+//               current output, so there's nothing to merge
+//   'merged'    manual edits existed and were cleanly folded with the new
+//               engine render; baseline advanced
+//   'conflict'  manual edits collided with the engine update; conflict
+//               markers were written into the output file, baseline NOT
+//               advanced (will be re-attempted on the next run)
+function reconcileOutput(slug, spec, newPath, outputPath, force) {
+  const newContent = fs.readFileSync(newPath, 'utf8');
+  const baselineDir = path.join(BASELINE_DIR, slug);
+  const baselinePath = path.join(baselineDir, spec.outputFile);
+  fs.mkdirSync(baselineDir, { recursive: true });
+
+  if (force || !fs.existsSync(outputPath)) {
+    fs.writeFileSync(outputPath, newContent, 'utf8');
+    fs.writeFileSync(baselinePath, newContent, 'utf8');
+    return force ? 'forced' : 'created';
+  }
+
+  const currentContent = fs.readFileSync(outputPath, 'utf8');
+  // No stored baseline yet (file predates this system, or was never diffed
+  // before) — bootstrap by assuming the current output is a clean engine
+  // render, per the documented default. This does NOT write newContent over
+  // it; it only seeds the comparison point for this and future runs.
+  const baselineContent = fs.existsSync(baselinePath)
+    ? fs.readFileSync(baselinePath, 'utf8')
+    : currentContent;
+
+  if (currentContent === baselineContent) {
+    fs.writeFileSync(outputPath, newContent, 'utf8');
+    fs.writeFileSync(baselinePath, newContent, 'utf8');
+    return 'updated';
+  }
+
+  if (currentContent === newContent) {
+    if (!fs.existsSync(baselinePath)) fs.writeFileSync(baselinePath, baselineContent, 'utf8');
+    return 'unchanged';
+  }
+
+  // Manual edits exist AND the engine render changed — 3-way merge.
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vfq-merge-'));
+  const oursPath = path.join(tmpDir, 'ours.html');
+  const basePath = path.join(tmpDir, 'base.html');
+  const theirsPath = path.join(tmpDir, 'theirs.html');
+  fs.writeFileSync(oursPath, currentContent, 'utf8');
+  fs.writeFileSync(basePath, baselineContent, 'utf8');
+  fs.writeFileSync(theirsPath, newContent, 'utf8');
+
+  const mergeRes = spawnSync('git', [
+    'merge-file', '--stdout',
+    '-L', 'your manual edits',
+    '-L', 'baseline (previous engine render)',
+    '-L', 'new engine render',
+    oursPath, basePath, theirsPath
+  ], { encoding: 'utf8' });
+
+  fs.rmSync(tmpDir, { recursive: true, force: true });
+
+  fs.writeFileSync(outputPath, mergeRes.stdout, 'utf8');
+
+  if (mergeRes.status === 0) {
+    fs.writeFileSync(baselinePath, newContent, 'utf8');
+    return 'merged';
+  }
+  return 'conflict';
 }
 
 function computeEngineHash(engineDir, relFiles) {
@@ -194,6 +287,8 @@ function main() {
   let successCount = 0;
   let failCount = 0;
   let skippedCount = 0;
+  let conflictCount = 0;
+  let mergedCount = 0;
 
   for (const slug of slugs) {
     const slugDataDir = path.join(DATA_DIR, slug);
@@ -212,22 +307,41 @@ function main() {
       const outDir = path.join(OUTPUT_DIR, slug);
       fs.mkdirSync(outDir, { recursive: true });
       const outputPath = path.join(outDir, spec.outputFile);
+      const tmpPath = outputPath + '.tmp-render';
 
-      const result = spec.render(dataPath, outputPath, spec.engineDir);
-      if (result.ok) {
-        successCount++;
-        const engineHash = computeEngineHash(spec.engineDir, spec.hashFiles);
-        manifestStore.recordRender(slug, typeName, new Date().toISOString(), engineHash);
-        console.log(`[${slug}] ${typeName}: OK -> output/${slug}/${spec.outputFile}`);
-      } else {
+      const result = spec.render(dataPath, tmpPath, spec.engineDir);
+      if (!result.ok) {
+        fs.rmSync(tmpPath, { force: true });
         failCount++;
         console.error(`[${slug}] ${typeName}: FAILED\n${indent(result.error)}`);
+        continue;
       }
+
+      const status = reconcileOutput(slug, spec, tmpPath, outputPath, args.force);
+      fs.rmSync(tmpPath, { force: true });
+      const engineHash = computeEngineHash(spec.engineDir, spec.hashFiles);
+      manifestStore.recordRender(slug, typeName, new Date().toISOString(), engineHash);
+
+      if (status === 'conflict') {
+        conflictCount++;
+        console.error(`[${slug}] ${typeName}: MERGE CONFLICT -> output/${slug}/${spec.outputFile} (manual edits collided with the engine update — conflict markers written, resolve by hand)`);
+        continue;
+      }
+      successCount++;
+      if (status === 'merged') mergedCount++;
+      const note = status === 'merged' ? ' (manual edits preserved, engine update merged in)'
+        : status === 'unchanged' ? ' (manual edits preserved, engine output for this file unchanged)'
+        : status === 'forced' ? ' (--force: manual edits discarded)'
+        : '';
+      console.log(`[${slug}] ${typeName}: OK -> output/${slug}/${spec.outputFile}${note}`);
     }
   }
 
-  console.log(`\n${successCount} rendered, ${failCount} failed, ${skippedCount} skipped (no data file).`);
-  process.exit(failCount > 0 ? 1 : 0);
+  console.log(`\n${successCount} rendered, ${failCount} failed, ${conflictCount} conflict(s), ${mergedCount} merged, ${skippedCount} skipped (no data file).`);
+  if (conflictCount > 0) {
+    console.log('Resolve conflicts by editing the affected output file(s) directly (look for <<<<<<< markers), then re-run render-all.js to advance the baseline.');
+  }
+  process.exit(failCount > 0 || conflictCount > 0 ? 1 : 0);
 }
 
 function indent(text) {

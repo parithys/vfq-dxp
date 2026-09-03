@@ -233,8 +233,28 @@ class LayoutNode {
 
   exitAnchor() { return { x: this.x + this.width, y: this.cy }; }
   entryAnchor() { return { x: this.x, y: this.cy }; }
-  wrapExitAnchor() { return { x: this.cx, y: this.y + this.height }; }
-  wrapEntryAnchor() { return { x: this.cx, y: this.y }; }
+  // A decision's bottom/top wrap anchors are a special case, not the generic this.y/this.height
+  // math every other node type uses. nodeWidth.decision (114, see Config) already accounts for
+  // the diamond's 45° rotation, so exitAnchor()/entryAnchor() above land correctly on the true
+  // left/right vertices by construction. nodeHeight.decision (80) does NOT get the same
+  // treatment — it deliberately stays the PRE-rotation square's side length, because
+  // diamondReach() (below) derives the diamond's true reach FROM that 80 value
+  // (80*Math.SQRT2/2 = 56.57). Using this.height directly here, as if it were the rendered
+  // shape's actual vertical extent, computed a wrap anchor ~17px short of the diamond's real
+  // bottom/top tip — landing INSIDE the shape instead of on its boundary (found empirically:
+  // a decision's wrap-case connector started at cy+40 instead of the true tip at cy+56.57,
+  // confirmed against the live-rendered Fibre process-flow output, not by reasoning about the
+  // code alone). diamondReach(this) is the same helper drawNoBranches() already uses for the
+  // identical geometry, so this now agrees with every other decision-anchored connector in the
+  // file rather than introducing a second, diverging formula.
+  wrapExitAnchor() {
+    if (this.type === 'decision') return { x: this.cx, y: this.cy + diamondReach(this) };
+    return { x: this.cx, y: this.y + this.height };
+  }
+  wrapEntryAnchor() {
+    if (this.type === 'decision') return { x: this.cx, y: this.cy - diamondReach(this) };
+    return { x: this.cx, y: this.y };
+  }
 }
 
 function distributeNodesPerRow(flow, config) {
@@ -459,15 +479,65 @@ function labelPlate(x, y, size, text, anchor) {
            box: { x: x0, y: y0, w, h } };
 }
 
+// Connector Label Placement Rule: a plated label (payload/branch/loop labels — the only kind
+// meant to sit ON a connector, per labelPlate() above) must have unambiguous ownership of its
+// own connector, not merely avoid literal overlap with node text. Two plated labels landing on
+// or near each other read as "which connector is this for?" even when their pixel boxes don't
+// technically intersect a neighbour's TITLE — the ambiguity is between labels, and between a
+// label and a node it happens to drift over. boxesOverlap()/nudge below check every new plated
+// label against every box already placed (via opts.placedLabels, a per-render array seeded with
+// every node's own box before any connector is drawn — see buildSVG()) and, on collision, walk
+// it along the label's OWN axis (vertical for a 'middle'-anchored label — true for every plated
+// call site in this file — horizontal otherwise) in growing steps until clear. This is placement
+// order dependent: earlier-drawn connectors (main flow) keep their natural position; later ones
+// (loops, decision branches, drawn after) are the ones that move — see the drawConnectors/
+// drawNoBranches/drawLoops call order in buildSVG(), which puts the primary flow first
+// deliberately, so an exception/loop label is what yields, never the main path's own label.
+function boxesOverlap(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
 const t = (x, y, fill, size, text, opts = {}) => {
   const w = opts.weight ? ` font-weight="${opts.weight}"` : '';
   const a = opts.anchor ? ` text-anchor="${opts.anchor}"` : '';
-  const c = opts.cls ? ` class="${opts.cls}"` : '';
   if (opts.bounds) markText(opts.bounds, x, y, size, text, opts.anchor);
-  const txt = `<text x="${x}" y="${y}" fill="${fill}" font-size="${size}"${w}${a}${c}>${esc(text)}</text>`;
-  if (!opts.plate) return txt;
-  const p = labelPlate(x, y, size, text, opts.anchor);
+  if (!opts.plate) {
+    const c = opts.cls ? ` class="${opts.cls}"` : '';
+    return `<text x="${x}" y="${y}" fill="${fill}" font-size="${size}"${w}${a}${c}>${esc(text)}</text>`;
+  }
+  // Highlight & Dimming Rule: every plated label is a CONNECTOR label (payload/branch/wrap/loop
+  // — see labelPlate()'s own comment), so it must dim/undim in lockstep with the connector it
+  // names. `pf-elabel` plus data-from/data-to (mirroring edgeAttrs()'s own convention on the
+  // path element right beside each of these calls) is what pfApplyHL()/pfClearAllHL() key off —
+  // without this, a label drawn as a plain <text> sibling of its connector (never a CSS child of
+  // it) inherits no opacity from the connector's own .pf-hl-dim class, and stays at full
+  // contrast regardless of what's highlighted. opts.cls, if the caller also passed one, is kept
+  // alongside pf-elabel rather than overwritten.
+  const cls = ['pf-elabel', opts.cls].filter(Boolean).join(' ');
+  const c = ` class="${cls}"`;
+  const d = (opts.edgeFrom !== undefined || opts.edgeTo !== undefined)
+    ? ` data-from="${esc(opts.edgeFrom || '')}" data-to="${esc(opts.edgeTo || '')}"` : '';
+  let py = y, px = x;
+  let box = labelPlate(px, py, size, text, opts.anchor).box;
+  if (opts.placedLabels && text) {
+    const STEP = size + PLATE.padY * 2 + 3;   // one plate-height-plus-breathing-room per nudge
+    // Every plated call site in this file rides a vertical (or near-vertical) connector segment
+    // — the main flow's payload labels, the decision branch labels beside a straight-down "No"
+    // drop, and a loop's rise/channel segment near its target all run top-to-bottom. Nudging
+    // vertically keeps a label travelling along its own connector's length when it has to yield,
+    // rather than drifting sideways off the line it's meant to be read against.
+    let tries = 0;
+    while (tries < 12 && opts.placedLabels.some(bx => boxesOverlap(box, bx))) {
+      tries++;
+      const dir = tries % 2 ? 1 : -1;
+      const mag = Math.ceil(tries / 2) * STEP;
+      py = y + dir * mag;
+      box = labelPlate(px, py, size, text, opts.anchor).box;
+    }
+    opts.placedLabels.push(box);
+  }
+  const p = labelPlate(px, py, size, text, opts.anchor);
   if (opts.bounds) markRect(opts.bounds, p.box.x, p.box.y, p.box.w, p.box.h);
+  const txt = `<text x="${px}" y="${py}" fill="${fill}" font-size="${size}"${w}${a}${c}${d}>${esc(text)}</text>`;
   return p.svg + txt;
 };
 
@@ -866,6 +936,15 @@ function edgeAttrs(ctx, from, to, idx) {
 // A square of side S rotated 45° about its centre reaches S·√2/2 from that centre — the
 // diamond's bottom tip. Read the side off the node rather than assuming 80.
 const diamondReach = n => (n.config.nodeHeight.decision * Math.SQRT2) / 2;
+// True top/bottom Y for a node's own anchor purposes — n.bbox.top()/bottom() give the PRE-
+// rotation square's extent for a decision (n.config.nodeHeight.decision, 80), not the rendered
+// diamond's actual reach (56.57, via diamondReach()); anything anchoring a connector to a
+// decision's top/bottom edge must use these, not raw bbox.top()/bottom(), or it lands ~17px
+// short — inside the shape rather than on its boundary. Every other node type is unaffected
+// (bbox already matches its real rendered extent), so these are safe drop-in replacements
+// anywhere a connector-anchor calculation currently reads bbox.top()/bottom() directly.
+const nodeTrueTop = n => n.type === 'decision' ? n.cy - diamondReach(n) : n.bbox.top();
+const nodeTrueBottom = n => n.type === 'decision' ? n.cy + diamondReach(n) : n.bbox.bottom();
 
 const ROUTE = {
   // A branch label that rides in this channel (see the n.no.to case in drawNoBranches()) sits
@@ -922,14 +1001,17 @@ function drawNoBranches(layoutNodes, ctx, B) {
        * previous step in the row, rather than from the decision it actually came from. Anchoring
        * to bottom-centre keeps the arrow on the axis the connector genuinely travelled, and
        * matches how drawLoops() already terminates its own bottom-channel routes. */
+      // nodeTrueTop()/nodeTrueBottom(), not raw tgt.bbox.top()/bottom() — matters if the no.to
+      // target is ITSELF a decision (see nodeTrueTop/nodeTrueBottom's own comment); harmless
+      // no-op for every other node type, whose bbox already matches its real rendered extent.
       const entry = tgt.cy > n.cy
-        ? { x: tgt.cx, y: tgt.bbox.top() }        // target below: drop in at top-centre
-        : { x: tgt.cx, y: tgt.bbox.bottom() };    // same row or above: climb into bottom-centre
+        ? { x: tgt.cx, y: nodeTrueTop(tgt) }       // target below: drop in at top-centre
+        : { x: tgt.cx, y: nodeTrueBottom(tgt) };   // same row or above: climb into bottom-centre
       // Both legs are identical once the anchor is chosen; the branch above is the only variance.
       const d = `M ${n.cx} ${tip} L ${n.cx} ${chan} L ${entry.x} ${chan} L ${entry.x} ${entry.y}`;
       out.push(`<path d="${d}" stroke="${DECISION.stroke}" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#${DECISION.marker})"${edgeAttrs(ctx, n.id, tgt.id, ctx.edges.length)}/>`);
       markPoint(B, n.cx, chan); markPoint(B, entry.x, chan); markPoint(B, entry.x, entry.y);
-      out.push(t(n.cx + ROUTE.labelInset, tip + ROUTE.channelGap / 2, DECISION.stroke, TYPE.branch, label, { weight: 600, bounds: B, plate: true }));
+      out.push(t(n.cx + ROUTE.labelInset, tip + ROUTE.channelGap / 2, DECISION.stroke, TYPE.branch, label, { weight: 600, bounds: B, plate: true, placedLabels: ctx.placedLabels, edgeFrom: n.id, edgeTo: tgt.id }));
       // n.no.meta carries any connector-level metadata the spec author attached to this
       // negative branch (condition, triggerEvent, dataTransferred, businessMeaning,
       // downstreamImpact, routingPurpose, or anything else) — surfaced verbatim in the drawer.
@@ -952,7 +1034,7 @@ function drawNoBranches(layoutNodes, ctx, B) {
 
     out.push(`<line x1="${n.cx}" y1="${top}" x2="${n.cx}" y2="${pillY}" stroke="${DECISION.stroke}" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#${DECISION.marker})"${edgeAttrs(ctx, n.id, noId, ctx.edges.length)}/>`);
     // Label sits midway down the branch path, offset clear of the stroke.
-    out.push(t(n.cx + ROUTE.labelInset, top + ROUTE.branchDrop / 2 - 6, DECISION.stroke, TYPE.branch, label, { weight: 600, bounds: B, plate: true }));
+    out.push(t(n.cx + ROUTE.labelInset, top + ROUTE.branchDrop / 2 - 6, DECISION.stroke, TYPE.branch, label, { weight: 600, bounds: B, plate: true, placedLabels: ctx.placedLabels, edgeFrom: n.id, edgeTo: noId }));
 
     // Wrapped as an interactive group like every other node, so the type filters and the
     // drawer reach it. Previously it was drawn as bare shapes and pushed straight into
@@ -1080,8 +1162,8 @@ function drawConnectors(layoutNodes, flow, ctx, B) {
         // The plate applies to labels that sit ON a connector line (r7). Node-attached text
         // (role, title, meta) has clear ground behind it and needs none.
         const style = prevNode.type === 'decision'
-          ? { anchor: 'middle', weight: 600, bounds: B, plate: true }
-          : { anchor: 'middle', bounds: B, plate: true };
+          ? { anchor: 'middle', weight: 600, bounds: B, plate: true, placedLabels: ctx.placedLabels, edgeFrom: prevNode.id, edgeTo: currNode.id }
+          : { anchor: 'middle', bounds: B, plate: true, placedLabels: ctx.placedLabels, edgeFrom: prevNode.id, edgeTo: currNode.id };
         const fill = prevNode.type === 'decision' ? DECISION.stroke : NEUTRAL;
         const bSize = prevNode.type === 'decision' ? TYPE.branch : TYPE.edgeLabel;
         out.push(t(mid, ex.y - lift, fill, bSize, branchLabel, style));
@@ -1113,7 +1195,7 @@ function drawConnectors(layoutNodes, flow, ctx, B) {
       // -8 measured ~7px of real clearance to the corridor line once the glyph's own descent and
       // plate padding were accounted for (same shortfall as edgeLabelSpacing above) — raised to
       // clear the 10px minimum.
-      out.push(t(exit.x + 10, mid - 11, NEUTRAL, TYPE.wrap, wrapLabel, { bounds: B, plate: true }));
+      out.push(t(exit.x + 10, mid - 11, NEUTRAL, TYPE.wrap, wrapLabel, { bounds: B, plate: true, placedLabels: ctx.placedLabels, edgeFrom: prevNode.id, edgeTo: currNode.id }));
       ctx.edges.push({ from: prevNode.id, to: currNode.id, label: wrapLabel, style: 'wrap', ...(prevNode.wrapMeta || {}) });
     }
 
@@ -1154,11 +1236,19 @@ function drawLoops(layoutNodes, loops, ctx, B) {
     const off = stagger * ROUTE.stagger;
     stagger++;
 
+    // nodeTrueBottom()/nodeTrueTop() (not raw bbox.bottom()/bbox.top()) everywhere below: for a
+    // decision node, bbox.height is the pre-rotation square's side (80), which understates the
+    // rendered diamond's real vertical reach (56.57 from centre, ~113 total) by ~17px on each
+    // side — anchoring a loop connector to raw bbox.bottom()/top() landed it inside the diamond
+    // shape rather than on its true tip. Every other node type's bbox already matches its real
+    // extent, so this is a safe substitution regardless of node type (see nodeTrueTop/
+    // nodeTrueBottom's own comment above).
+    const aBottom = nodeTrueBottom(a), bBottom = nodeTrueBottom(b), bTop = nodeTrueTop(b);
     let d, labelX, labelY;
     if (a.rowIndex === b.rowIndex) {
       // Same row: a channel under the row, entering the target's underside.
-      const chan = a.bbox.bottom() + ROUTE.channelGap + off;
-      d = `M ${a.cx} ${a.bbox.bottom()} L ${a.cx} ${chan} L ${b.cx} ${chan} L ${b.cx} ${b.bbox.bottom()}`;
+      const chan = aBottom + ROUTE.channelGap + off;
+      d = `M ${a.cx} ${aBottom} L ${a.cx} ${chan} L ${b.cx} ${chan} L ${b.cx} ${bBottom}`;
       // r7: centre the label ON its own channel, like every other connector label. It used to
       // be pushed 12 units BELOW the channel, which put it on whatever ran underneath — with a
       // decision's No corridor there, "re-score" appeared to label the rejection path instead
@@ -1173,18 +1263,18 @@ function drawLoops(layoutNodes, loops, ctx, B) {
       // The channel sits at targetTop − 44, clear of the payload (−32) and role (−12) labels.
       const goingBack = b.rowIndex < a.rowIndex || b.bbox.left() < a.bbox.left();
       const gutter = goingBack ? contentLeft - ROUTE.gutterGap - off : contentRight + ROUTE.gutterGap + off;
-      const drop = a.bbox.bottom() + ROUTE.channelGap + off;
-      const rise = b.bbox.top() - ROUTE.riseGap - off;
-      d = `M ${a.cx} ${a.bbox.bottom()} L ${a.cx} ${drop} L ${gutter} ${drop} L ${gutter} ${rise} L ${b.cx} ${rise} L ${b.cx} ${b.bbox.top()}`;
+      const drop = aBottom + ROUTE.channelGap + off;
+      const rise = bTop - ROUTE.riseGap - off;
+      d = `M ${a.cx} ${aBottom} L ${a.cx} ${drop} L ${gutter} ${drop} L ${gutter} ${rise} L ${b.cx} ${rise} L ${b.cx} ${bTop}`;
       labelX = (gutter + b.cx) / 2; labelY = rise - 6;
-      markPoint(B, gutter, drop); markPoint(B, gutter, rise); markPoint(B, b.cx, b.bbox.top());
+      markPoint(B, gutter, drop); markPoint(B, gutter, rise); markPoint(B, b.cx, bTop);
       markText(B, labelX, labelY, TYPE.loop, lp.label || '', 'middle');
     }
 
     const marker = st.marker ? ` marker-end="url(#${st.marker})"` : '';
     out.push(`<path d="${d}" stroke="${st.stroke}" stroke-width="${st.width}" fill="none" stroke-dasharray="${st.dash}"${marker}${edgeAttrs(ctx, lp.from, lp.to, ctx.edges.length)}/>`);
     if (lp.label) {
-      out.push(t(labelX, labelY, st.stroke, TYPE.loop, lp.label, { anchor: 'middle', weight: 600, bounds: B, plate: true }));
+      out.push(t(labelX, labelY, st.stroke, TYPE.loop, lp.label, { anchor: 'middle', weight: 600, bounds: B, plate: true, placedLabels: ctx.placedLabels, edgeFrom: lp.from, edgeTo: lp.to }));
     }
     // lp.meta carries any connector-level metadata attached to this loop/exception edge in the
     // spec (condition, triggerEvent, dataTransferred, businessMeaning, downstreamImpact,
@@ -1375,8 +1465,19 @@ function buildSVG(spec, viewportWidth) {
     stepNo: 1, interactive,
     usedKinds: new Set(), usedLoops: new Set(),
     usedDecision: false, usedTerminal: false, usedReject: false, usedWrap: false,
-    edges: [], nodes: []
+    edges: [], nodes: [],
+    // Connector Label Placement Rule (r8): every plated connector/branch/loop label registers
+    // its final box here as it's drawn (see t()'s opts.placedLabels handling above) so the NEXT
+    // label drawn can detect and nudge away from it. Seeded with every node's own box below,
+    // before any connector is drawn, so a label can't drift onto a node either — a node's
+    // position is fixed by computeLayout() already, so it's always the label that has to yield,
+    // never the box.
+    placedLabels: []
   };
+
+  for (const n of layoutNodes) {
+    ctx.placedLabels.push({ x: n.bbox.left(), y: n.bbox.top(), w: n.bbox.width, h: n.bbox.height });
+  }
 
   const B = newBounds();
 
@@ -1588,7 +1689,7 @@ function interactiveCSS() {
      * other if a filter happens to be active at the same time a node is hovered/locked. No
      * pointer-events:none here (unlike .is-dim): a dimmed node under an active highlight must
      * stay clickable, since clicking a different node is exactly how the lock switches targets. */
-    .pf-node.pf-hl-dim, .pf-edge.pf-hl-dim { opacity: 0.12; filter: grayscale(1) brightness(1.15); }
+    .pf-node.pf-hl-dim, .pf-edge.pf-hl-dim, .pf-elabel.pf-hl-dim { opacity: 0.12; filter: grayscale(1) brightness(1.15); }
     .pf-edge.pf-hl-path { stroke: #e60000 !important; stroke-width: 3 !important; filter: drop-shadow(0 0 3px rgba(230,0,0,.55)); }
     /* The click-locked anchor node's own outline — distinct from .is-sel (which marks whichever
      * node/edge the DRAWER is currently showing, a separate and independently-triggered state
@@ -1596,7 +1697,17 @@ function interactiveCSS() {
     .pf-node.pf-hl-lock > rect, .pf-node.pf-hl-lock > circle, .pf-node.pf-hl-lock > g > rect { stroke: #e60000 !important; stroke-width: 3 !important; }
     /* The drawer floats as an overlay — position: fixed with no body padding. Opening/closing
        the drawer does not affect layout of the diagram or any page content. */
-    .pf-drawer { position: fixed; top: 0; right: 0; height: 100vh; width: var(--pf-drawer-w, 400px); background: #ffffff; border-left: 1px solid #A4D3FF; box-shadow: -12px 0 32px rgba(24,20,14,0.10); transform: translateX(101%); transition: transform 0.25s ease; z-index: 40; display: flex; }
+    /* top/height were previously fixed 0/100vh, same as .header itself (z-index:50, above the
+       drawer's own 40) — since both started at the exact same y, the header's opaque background
+       painted over the drawer's own top portion, hiding content underneath it. --pf-header-h is
+       set at runtime (see syncPfHeaderH()) to the header's actual rendered height — not a
+       hardcoded px guess — since a long title can wrap onto a second line at a narrow viewport,
+       growing the header. top/height are deliberately NOT in the transition list below (only
+       transform is) — found empirically elsewhere in this project that transitioning a
+       var()/calc()-driven length makes some engines freeze at the initial computed value
+       instead of animating; a resize-triggered header-height change is rare and doesn't need
+       animating anyway. */
+    .pf-drawer { position: fixed; top: var(--pf-header-h, 48px); right: 0; height: calc(100vh - var(--pf-header-h, 48px)); width: var(--pf-drawer-w, 400px); background: #ffffff; border-left: 1px solid #A4D3FF; box-shadow: -12px 0 32px rgba(24,20,14,0.10); transform: translateX(101%); transition: transform 0.25s ease; z-index: 40; display: flex; }
     .pf-drawer.is-open { transform: none; }
     /* The resize handle is a filled bar rather than a transparent strip with a hairline: at 6px
      * wide an invisible grab target is undiscoverable, and the drawer's own left border already
@@ -1822,6 +1933,7 @@ function interactiveJS(ctx) {
 
     const pfNodeEls = () => Array.from(document.querySelectorAll('.pf-node'));
     const pfEdgeEls = () => Array.from(document.querySelectorAll('.pf-edge'));
+    const pfLabelEls = () => Array.from(document.querySelectorAll('.pf-elabel'));
 
     // ---- neighbor-network highlight (hover preview + click-to-lock) -------------------------
     // Deliberately a SEPARATE state from pfSelected/pfSelectedEdge (the drawer's own selection):
@@ -1843,6 +1955,17 @@ function interactiveJS(ctx) {
         if (!el.dataset.origMarker) { const m = el.getAttribute('marker-end'); if (m) el.dataset.origMarker = m; }
         if (el.dataset.origMarker) el.setAttribute('marker-end', on ? 'url(#arrowhead-hl)' : el.dataset.origMarker);
       });
+      // Connector labels (.pf-elabel — payload/branch/wrap/loop text like "Yes", "queue ticket",
+      // "continue") are drawn as plain <text> siblings of their connector, never its CSS child,
+      // so they previously never inherited any opacity from the connector's own .pf-hl-dim and
+      // stayed at full contrast regardless of what was highlighted — a label for an unrelated,
+      // dimmed connector reading exactly as sharp as one on the active path. data-from/data-to
+      // (set alongside pf-elabel in t()'s plate branch, mirroring edgeAttrs()'s own convention)
+      // give each label the same from/to ownership test used for edges just above.
+      pfLabelEls().forEach(el => {
+        const on = el.dataset.from === id || el.dataset.to === id;
+        el.classList.toggle('pf-hl-dim', !on);
+      });
       if (pfHlLocked) { const lg = pfNodeEls().find(e => e.dataset.id === pfHlLocked); if (lg) lg.classList.remove('pf-hl-dim'); }
     }
     function pfClearAllHL() {
@@ -1851,9 +1974,20 @@ function interactiveJS(ctx) {
         el.classList.remove('pf-hl-dim', 'pf-hl-path');
         if (el.dataset.origMarker) el.setAttribute('marker-end', el.dataset.origMarker);
       });
+      pfLabelEls().forEach(el => el.classList.remove('pf-hl-dim'));
     }
-    function pfHoverHL(id) { pfApplyHL(id); }                              // mouseenter
-    function pfHoverClearHL() { if (pfHlLocked) pfApplyHL(pfHlLocked); else pfClearAllHL(); }  // mouseleave
+    // Hover works independently of an active lock, and does not override/clear it: hovering ANY
+    // node — related to the lock or not — substitutes that node's own neighbour set for the
+    // duration of the hover, and pfHoverClearHL() (mouseleave) reverts to re-painting the locked
+    // node's view, not to nothing. The lock's underlying state (pfHlLocked, the .pf-hl-lock
+    // class) never changes from hovering — only pfSetLock()/pfClearLock() (click) touch that.
+    // (An earlier pass through this file made hover fully inert while a lock was active instead,
+    // reasoning that a hover briefly showing a different outcome than the click asked for reads
+    // as the lock being interrupted; a later, explicit requirement reversed that back to this
+    // independent-hover behaviour, which is what ships now — see the matching bpmn-swimlane
+    // engine's own "---- highlight" comment for the same history.)
+    function pfHoverHL(id) { pfApplyHL(id); }                               // mouseenter
+    function pfHoverClearHL() { if (pfHlLocked) { pfApplyHL(pfHlLocked); return; } pfClearAllHL(); }  // mouseleave
     function pfSetLock(id) {
       if (pfHlLocked) { const p = pfNodeEls().find(e => e.dataset.id === pfHlLocked); if (p) p.classList.remove('pf-hl-lock'); }
       pfHlLocked = id;
@@ -1867,6 +2001,22 @@ function interactiveJS(ctx) {
       if (pfHlLocked === id) { pfClearLock(); pfClearAllHL(); }
       else { pfSetLock(id); pfApplyHL(id); }
     }
+
+    // ---- View Details mode: a persistent-inspection variant of the drawer. OFF (default): a
+    // plain node click toggles the highlight lock, as above. ON: a plain node click opens/
+    // updates the drawer directly (via pfOpen — see the node click handler below) and applies
+    // the highlight lock to match; neither clicking a different node nor clicking empty canvas
+    // closes it — only turning this toggle back off, or the drawer's own × button (kept in sync
+    // with the toggle — see pfClose()), does. Turning the toggle on does not itself open the
+    // drawer (nothing is selected yet); turning it off closes whatever it's currently showing.
+    let pfViewDetailsMode = false;
+    const pfViewDetailsBtn = document.getElementById('viewDetailsBtn');
+    function setPfViewDetails(on) {
+      pfViewDetailsMode = on;
+      if (pfViewDetailsBtn) { pfViewDetailsBtn.classList.toggle('is-active', on); pfViewDetailsBtn.setAttribute('aria-pressed', String(on)); }
+      if (!on) pfClose();
+    }
+    if (pfViewDetailsBtn) pfViewDetailsBtn.addEventListener('click', () => setPfViewDetails(!pfViewDetailsMode));
 
     function pfLabelFor(id) {
       const n = pfById[id];
@@ -2241,14 +2391,21 @@ function interactiveJS(ctx) {
     function pfResetView() { pfApplyFilter('all'); if (pfSelected || pfSelectedEdge !== null) pfClose(); }
 
     pfNodeEls().forEach(el => {
-      // A plain click now toggles the persistent neighbor highlight instead of opening the
-      // drawer; double click opens the drawer (and locks the highlight on, unconditionally, so
-      // its two leading native 'click' events — which fire before 'dblclick' and would otherwise
-      // toggle the lock on then off — can't leave it off right when the drawer opens). Keyboard
-      // access (Enter/Space) is left opening the drawer directly, same as before: there is no
-      // keyboard equivalent of a double click, and keyboard users should not lose direct
-      // one-key access to a node's detail view as a side effect of this change.
-      el.addEventListener('click', () => toggleHlLock(el.dataset.id));
+      // Plain click behaviour branches on View Details mode. OFF (default): toggles the
+      // persistent neighbor highlight instead of opening the drawer, as established before this
+      // mode existed. ON: click opens/updates the drawer directly, every time, as a pinned
+      // inspection panel. Double click keeps its own OFF-mode behaviour (opens the drawer
+      // transiently) unchanged either way — while View Details is ON it's simply redundant with
+      // the single click, not conflicting with it (its two leading native 'click' events already
+      // run the branch below twice before 'dblclick' fires; both branches set state
+      // unconditionally rather than toggling when a node is passed explicitly, so the end result
+      // is the same regardless of that leading pair). Keyboard access (Enter/Space) is left
+      // opening the drawer directly, same as before: there is no keyboard equivalent of a double
+      // click, and keyboard users should not lose direct one-key access to a node's detail view.
+      el.addEventListener('click', () => {
+        if (pfViewDetailsMode) { pfSetLock(el.dataset.id); pfApplyHL(el.dataset.id); pfOpen(el.dataset.id); }
+        else { toggleHlLock(el.dataset.id); }
+      });
       el.addEventListener('dblclick', () => { pfSetLock(el.dataset.id); pfApplyHL(el.dataset.id); pfOpen(el.dataset.id); });
       el.addEventListener('mouseenter', () => pfHoverHL(el.dataset.id));
       el.addEventListener('mouseleave', () => pfHoverClearHL());
@@ -2273,12 +2430,29 @@ function interactiveJS(ctx) {
     });
     document.querySelectorAll('.pf-chip').forEach(c =>
       c.addEventListener('click', () => pfApplyFilter(c.dataset.filter)));
-    document.getElementById('pfClose').addEventListener('click', pfClose);
-    document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && (pfSelected || pfSelectedEdge !== null)) pfClose(); });
+    // The × button also turns off View Details mode if that's what's currently keeping the
+    // drawer open — the × button and the toggle button are two paths to the same "exit the
+    // pinned inspection panel" action, kept in sync so the toggle's own on/off state never
+    // silently goes stale relative to whether the drawer is actually showing. pfClose() itself
+    // stays unaware of pfViewDetailsMode (setPfViewDetails(false) calls pfClose() internally, so
+    // having pfClose() call back into setPfViewDetails would recurse) — this listener is the one
+    // place both directions meet, and calling pfClose() twice when in View Details mode is
+    // harmless (it only removes classes/resets state that's already gone the second time).
+    document.getElementById('pfClose').addEventListener('click', () => { pfClose(); if (pfViewDetailsMode) setPfViewDetails(false); });
+    // Escape keeps closing the drawer regardless of View Details mode (a standard, expected
+    // escape hatch for any panel, independent of the click-based rules below) but stays in sync
+    // with the toggle the same way the × button does.
+    document.addEventListener('keydown', ev => {
+      if (ev.key === 'Escape' && (pfSelected || pfSelectedEdge !== null)) { pfClose(); if (pfViewDetailsMode) setPfViewDetails(false); }
+    });
     // Click anywhere outside the drawer closes it — except a node/edge, which already opens
     // or switches the drawer itself via its own listener above; treating that as "outside" too
     // would close the drawer the instant it opens (its own click bubbles to this handler).
+    // Suppressed entirely while View Details mode is ON: that mode's whole point is a drawer
+    // that survives clicking away from it — only the toggle or its × button (both above) may
+    // close it while active.
     document.addEventListener('click', ev => {
+      if (pfViewDetailsMode) return;
       if (!(pfSelected || pfSelectedEdge !== null)) return;
       if (pfDrawer.contains(ev.target)) return;
       if (ev.target.closest('.pf-node, .pf-edge')) return;
@@ -2291,8 +2465,11 @@ function interactiveJS(ctx) {
     // highlight as a side effect of an unrelated action like changing the type filter). A click
     // on a different node already switches the lock via that node's own click listener
     // (toggleHlLock); clicking an edge does not clear it (opens that edge's own drawer instead,
-    // independent of the node highlight, same principle as the node drawer above).
+    // independent of the node highlight, same principle as the node drawer above). Also
+    // suppressed while View Details mode is ON, for the same reason as the drawer-close handler
+    // just above — the highlight is meant to stay matched to whatever the pinned drawer shows.
     document.addEventListener('click', ev => {
+      if (pfViewDetailsMode) return;
       if (!pfHlLocked) return;
       if (!ev.target.closest('.diagram-container')) return;
       if (ev.target.closest('.pf-node, .pf-edge')) return;
@@ -2314,6 +2491,23 @@ function interactiveJS(ctx) {
         if (ev.key === 'ArrowLeft') { setW(cur + 24); ev.preventDefault(); }
         if (ev.key === 'ArrowRight') { setW(cur - 24); ev.preventDefault(); }
       });
+    })();
+    /* Keeps --pf-header-h (see .pf-drawer's own comment) in sync with .header's REAL rendered
+       height, not a hardcoded guess — run on load and resize since a wrapped title only
+       changes the header's height at some viewport widths, not others. */
+    (function () {
+      function syncPfHeaderH() {
+        const header = document.querySelector('.header');
+        if (!header) return;
+        // .bottom, not .height: unlike bpmn-swimlane's app header, .header here does not sit
+        // flush against the very top of the viewport (the page has its own top padding above
+        // it), so its own height alone understates how far down its visible bottom edge
+        // actually is — exactly the coordinate the fixed-position drawer's own top needs to match.
+        document.documentElement.style.setProperty('--pf-header-h', header.getBoundingClientRect().bottom + 'px');
+      }
+      syncPfHeaderH();
+      window.addEventListener('load', syncPfHeaderH);
+      window.addEventListener('resize', syncPfHeaderH);
     })();`;
 }
 
@@ -2432,6 +2626,12 @@ function buildHTML(spec, viewportWidth = 1200) {
     .export-hint { color: #64748b; font-size: 0.6875rem; white-space: nowrap; }
     .export-sep { height: 1px; margin: 0.25rem 0.5rem; background: #e2e8f0; }
     .export-btn:focus-visible, .export-item:focus-visible { outline: 2px solid #6d4aad; outline-offset: 2px; }
+    /* View Details toggle reuses .export-btn's shape/sizing for visual consistency with the
+     * other toolbar button, with its own accent-filled "on" state (matching the purple accent
+     * used elsewhere on this page — .pulse-dot, focus rings) so its active/inactive state reads
+     * clearly at a glance, the same way .pf-chip[aria-pressed="true"] already does for filters. */
+    .view-details-btn.is-active { background: #6d4aad; color: #ffffff; border-color: #6d4aad; }
+    .view-details-btn.is-active:hover { background: #7c5cd6; }
     @media (max-width: 768px) { .header { flex-direction: column; gap: 1rem; } }
     @media print { body { background: #E9F2FE; padding: 1rem; } .toolbar { display: none !important; } }${interactive ? interactiveCSS() : ''}
   </style>
@@ -2446,7 +2646,7 @@ function buildHTML(spec, viewportWidth = 1200) {
         </div>
       </div>
       <div class="toolbar">
-        <button class="export-btn" id="exportBtn" onclick="toggleExport(event)" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu" aria-label="Export options">Export</button>
+${interactive ? '        <button class="export-btn view-details-btn" id="viewDetailsBtn" type="button" aria-pressed="false">View Details</button>\n' : ''}        <button class="export-btn" id="exportBtn" onclick="toggleExport(event)" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu" aria-label="Export options">Export</button>
         <div class="export-menu" id="exportMenu" role="menu" aria-labelledby="exportBtn">
 ${EXPORT_FORMATS.map(f =>
   `          <button role="menuitem" class="export-item" onclick="${f.fn}(this)"><span class="export-fmt">${esc(f.label)}</span><span class="export-hint">${esc(f.hint)}</span></button>`
@@ -2588,7 +2788,7 @@ ${ix.drawer}
         // file so it "represents exactly what the user is viewing" per the interactive state
         // active at export time, not a silently-reset clean diagram.
         st.textContent = 'text{font-family:' + getComputedStyle(src).fontFamily.replace(/"/g, "'") + '}'
-          + '.pf-node.pf-hl-dim,.pf-edge.pf-hl-dim{opacity:.12;filter:grayscale(1) brightness(1.15);}'
+          + '.pf-node.pf-hl-dim,.pf-edge.pf-hl-dim,.pf-elabel.pf-hl-dim{opacity:.12;filter:grayscale(1) brightness(1.15);}'
           + '.pf-edge.pf-hl-path{stroke:#e60000 !important;stroke-width:3 !important;filter:drop-shadow(0 0 3px rgba(230,0,0,.55));}'
           + '.pf-node.pf-hl-lock>rect,.pf-node.pf-hl-lock>circle,.pf-node.pf-hl-lock>g>rect{stroke:#e60000 !important;stroke-width:3 !important;}'
           + '.pf-node.is-dim,.pf-edge.is-dim{opacity:.22;}'

@@ -12,10 +12,12 @@
  *   node scripts/render-all.js --brsd <slug> --type <type>
  * (or with no flags, for everything) to bring stale output back in sync.
  *
- * This does NOT detect hand-edits to an output/*.html file itself (there
- * is no hash of the output stored, only of the engine that produced it) —
- * output files are derived artifacts and are never meant to be hand-edited;
- * see README.md "Canonical sources vs. generated output".
+ * This checks engine-vs-render drift only (is output/{slug}/{type}.html
+ * built from the current engine source), not manual-edit status. Manual
+ * edits to output/*.html ARE supported and are preserved automatically by
+ * render-all.js's baseline/3-way-merge reconciliation — see its file header
+ * and README.md "Canonical sources vs. generated output" — so a file being
+ * "stale" here says nothing about whether it also carries hand-edits.
  *
  * Usage: node scripts/check-staleness.js [--json]
  */

@@ -85,30 +85,71 @@ how every diagram of that type looks and behaves, across every BRSD:
 | Process flow diagram | `engines/process-flow/scripts/generate.js` |
 | User flow diagram | `engines/user-flow-diagram/user-flow-diagram-v4.0.js` |
 
-Everything under `output/{brsd-slug}/` is **generated, derived output** —
-never canonical, never hand-edited. Concretely, that means two rules,
-enforced by how the tooling is built (not just by convention):
+Everything under `output/{brsd-slug}/` is **generated output** — the
+engine is still the source of truth for anything meant to apply across
+every BRSD. Concretely, that means two rules, enforced by how the tooling
+is built (not just by convention):
 
-1. **Forward: an engine edit is automatically inherited by every BRSD.**
-   `render-all.js` always reads whatever is currently in `engines/` — there
-   is no per-BRSD fork or cached copy of engine logic. Fix a routing bug,
-   tune a spacing constant, adjust a design token once in the engine file,
-   and the next `render-all.js` run picks it up for every BRSD that has
-   data for that diagram type, not just the one you were looking at when
-   you found the bug.
-2. **Reverse: a fix discovered via one generated diagram belongs in the
-   engine, not the output file.** If a rendering issue is spotted in some
-   BRSD's `output/{slug}/{type}.html`, the fix is traced to and applied in
-   the corresponding canonical engine file above — never patched directly
-   into the generated HTML, which would apply only to that one file and be
-   silently overwritten by the next render anyway. Every routing, spacing,
-   and labelling fix made to these engines during this project's build-out
-   followed this rule.
+1. **Forward: an engine edit is automatically inherited by every BRSD,
+   without clobbering per-file manual edits.** `render-all.js` always reads
+   whatever is currently in `engines/` — there is no per-BRSD fork or
+   cached copy of engine logic. Fix a routing bug, tune a spacing constant,
+   adjust a design token once in the engine file, and the next
+   `render-all.js` run folds it into every BRSD that has data for that
+   diagram type. If a given `output/{slug}/{type}.html` has been hand-edited
+   (content, connector routing, node connectivity, layout, diagram-specific
+   behaviour), that edit is preserved — see "Manual edits to generated
+   output" below for how.
+2. **Reverse: an enhancement meant to apply everywhere belongs in the
+   engine, not one output file.** If a rendering issue or improvement is
+   general-purpose — it should look right for every BRSD, not just the one
+   you happened to be looking at — trace the fix to and apply it in the
+   corresponding canonical engine file above, then re-render. Only apply a
+   fix directly to a generated HTML file when it's specific to that one
+   diagram (a one-off manual correction) and you don't want it propagated
+   elsewhere; that's exactly the case the mechanism below exists for.
 
 Because rule 1 is automatic but silent, output can go **stale** — an engine
 file changes but a given BRSD isn't re-rendered to pick it up. Run
 `check-staleness.js` (below) to find that before it causes confusion about
 which output is current.
+
+### Manual edits to generated output
+
+`output/*.html` may be hand-edited directly — for a one-off fix to a single
+diagram's content, connector routing, node connectivity, layout, or other
+diagram-specific behaviour that shouldn't be generalized into the engine.
+Those edits are preserved across future `render-all.js` runs unless you
+explicitly fold them into the engine yourself and re-render.
+
+This works via a stored baseline per output file, at
+`.render-baseline/{slug}/{type}.html` — a copy of the last *pure engine
+render* for that file (no manual edits). Every `render-all.js` run compares
+the current `output/*.html` against its baseline before writing:
+
+- **No manual edits** (current output == baseline): plain overwrite, new
+  render becomes the new baseline.
+- **Manual edits, engine output for this file unchanged**: nothing to do,
+  file is left as-is.
+- **Manual edits AND the engine render changed**: a 3-way merge
+  (`git merge-file`) with base = baseline, ours = your manual edits,
+  theirs = the new engine render.
+  - Clean merge: the engine update folds in around your edits, and the
+    baseline advances to the new render.
+  - Conflict (the engine change touched the same region you hand-edited):
+    standard `<<<<<<<`/`=======`/`>>>>>>>` markers are written directly
+    into the output file, and the baseline is **not** advanced — the same
+    conflict will be reported again on the next run until you resolve it by
+    hand (edit out the markers, keep whichever side — or a manual blend —
+    is correct).
+
+`render-all.js`'s console output reports which of these happened per file
+(`merged`, `unchanged`, `conflict`, etc.). To discard a file's manual edits
+and force it back to a pure engine render, pass `--force`.
+
+`.render-baseline/` is tracked in git alongside `output/` — it has to
+survive across sessions/machines for the diff to mean anything, so don't
+add it to `.gitignore`.
 
 ## Commands
 
@@ -134,21 +175,27 @@ node scripts/render-all.js                          # everything
 node scripts/render-all.js --brsd <slug>             # one BRSD's 4 outputs
 node scripts/render-all.js --type process-flow       # one diagram type, all BRSDs
 node scripts/render-all.js --brsd <slug> --type bpmn-swimlane
+node scripts/render-all.js --brsd <slug> --type bpmn-swimlane --force   # discard that file's manual edits
 ```
 
 This is the command that makes an engine edit propagate everywhere: edit
 `engines/process-flow/scripts/generate.js`, run
 `node scripts/render-all.js --type process-flow`, every process-flow
 diagram regenerates with no extraction, no Claude call, no re-reading any
-BRSD.
+BRSD — and any file-specific manual edits made to a given output are
+preserved by the baseline/merge mechanism in "Manual edits to generated
+output" above, rather than overwritten.
 
 Failures are per-file and non-fatal to the batch: a data file that fails
 its engine's own validator (bpmn-swimlane's `validate_model.py`;
 process-flow/user-flow-diagram throw internally) is skipped with the exact
 validator error printed, and
-the run continues to the next file. Exit code is `1` if anything failed,
+the run continues to the next file. Exit code is `1` if anything failed OR
+any file's manual edits produced a merge conflict against an engine update,
 `0` otherwise. `manifest.json` is updated with a render timestamp and an
-engine-file hash for every output that succeeded.
+engine-file hash for every output that succeeded (including merged/
+conflicted ones, since the engine hash reflects the engine as it stands
+now regardless of merge outcome).
 
 ### Drift check (`scripts/check-drift.js`)
 
@@ -192,11 +239,10 @@ engine. Report only, exits non-zero if anything is stale:
 Re-render stale entries with: node scripts/render-all.js --brsd <slug> --type <type>
 ```
 
-This only detects engine-vs-render drift — it has no way to detect a
-hand-edit made directly to an `output/*.html` file, since no hash of the
-output itself is stored. That's intentional: output files aren't meant to
-be hand-edited at all (see "Canonical sources vs. generated output"
-above), so there's nothing to check them against except regenerating them.
+This only detects engine-vs-render drift — it says nothing about whether a
+given output file also carries manual edits. That's tracked separately, via
+the `.render-baseline/` mechanism described in "Manual edits to generated
+output" above.
 
 ### New BRSD (`scripts/new-brsd.sh`)
 

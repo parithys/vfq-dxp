@@ -531,11 +531,25 @@ def compute_layout(N, LANES, PHASES, F=None):
     # which already shifts every node's x/cx when it widens the gutter; that logic remains
     # correct and unaffected by this change since it operates on whatever x0 it's given).
     X0 = LANE_LABEL_W + X0_MARGIN
+    # LANE_GAP: empty vertical space inserted BETWEEN adjacent lanes (not added to any lane's
+    # own height) so lane ownership reads at a glance instead of requiring the reader to trace
+    # the divider line carefully — two lanes' nodes previously abutted right up against that one
+    # thin 1.5px line with zero breathing room on either side, which read as ambiguous exactly
+    # where a node from a taller lane extended close to the boundary (worse once phase columns
+    # gained their own tinted backgrounds, which made the lack of any horizontal gap between
+    # lanes more visually obvious than it was against a plain white canvas). 16px sits in the
+    # middle of an explicitly requested 10-20px range. This is pure inter-lane whitespace, not a
+    # change to any lane's own row count/height or to any node's position WITHIN its lane — every
+    # node, connector, and label downstream of `lane_y` picks up the shift automatically since
+    # nothing here is hardcoded elsewhere; the divider line (drawn in engine_template.html at
+    # `L.y+L.h`, unchanged) now has real empty space around it instead of sitting flush against
+    # content on both sides.
+    LANE_GAP = 16
     lane_y = {}
     y = TOPBAR
     for L in LANES:
         h = lane_rows.get(L["key"], 1) * ROW + PAD * 2
-        lane_y[L["key"]] = (y, h); y += h
+        lane_y[L["key"]] = (y, h); y += h + LANE_GAP
     total_h = y + 120
     total_w = X0 + len(PHASES) * COLW + 18
     # Vertical text-fit sizing: a node's box height is a flat per-type constant from

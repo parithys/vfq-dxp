@@ -3,22 +3,54 @@
 Everything below lives inside `engine_template.html` and must be preserved
 verbatim. It is domain-agnostic: it renders whatever `model.json` provides.
 
-## Colour palette (CSS variables)
-- ink `#0f1c2e` · ink-2 `#33475e` · muted `#6b7c93` · lines `#dde4ec` / `#eef2f7`
-- **page bg `#ffffff`** (`--bg` — changed from `#f4f4f4`; this table had
-  actually drifted from the real CSS value even before that change, which
-  documented `#f4f6fa` while the engine shipped `#f4f4f4` — treat this line,
-  not memory of an earlier version, as authoritative) · panel `#ffffff` ·
-  panel-alt `#fafbfd`
-- Portfolio/primary blue `#2b5aa8` (bg `#e8f0fb`) · teal `#178a86` (bg `#e2f3f1`)
-- system slate `#5b6b7f` · external amber `#b5701c`
-- semantic: start green `#2e9e5b` · end red `#c0392b` · decision purple `#8a5cc9`
-- validation `#2b8a8f` · escalation `#e08a1e` · error `#c0392b` · selection/active-path
-  brand-red `#e60000` (`--accent` — see "Node types" below for why this replaced
-  the signal-blue `--pg` the engine originally shipped with, and why this
-  document's own former claim of a magenta selection colour never matched
-  either)
-- header gradient `#12233b → #0f1c2e`
+## Colour palette (CSS variables) — Vodafone Design System alignment
+
+**This section was rewritten from scratch — everything it previously
+documented (ink `#0f1c2e`, portfolio blue `#2b5aa8`, header gradient
+`#12233b → #0f1c2e`, etc.) was stale and did not match the shipped engine,
+in some cases for several rounds of changes. Treat the table below, not
+memory of an earlier version of this file, as authoritative.** Values are
+cross-checked directly against the `brand-guidelines-vodafone` skill's
+token set (colors/typography/spacing/radius/elevation), not re-derived —
+see that skill for the full palette, accessibility audit, and gap analysis
+this table draws from.
+
+| CSS var | Value | Vodafone token | Match |
+|---|---|---|---|
+| `--ink` | `#1f1f1f` | `text.primary` | exact |
+| `--ink2` | `#4a4d4e` | `text.secondary` | exact |
+| `--muted` | `#6f7375` | `text.muted` | exact |
+| `--line` | `#d8d8d8` | `border.default` | exact |
+| `--line2` | `#eeeeee` | `border.soft` | exact |
+| `--bg` / `--panel` | `#ffffff` | `background.white` | exact |
+| `--panelalt` | `#f2f2f2` | `background.light_neutral` | exact |
+| `--surface-warm` | `#fff1f1` | `background.warm_surface` | exact |
+| `--accent` | `#e60000` | `primary.brand_red` | exact |
+| `--charcoal` | `#25282b` | `surfaces.charcoal_panel` | exact |
+| `--charcoal-2` | `#1a1c1e` | — | derived (darker gradient stop; no Vodafone equivalent) |
+| `--pg` (agent node / data-flow edge) | `#3860be` | `accent.signal_blue` | exact |
+| `--start` (start-event node) | `#008a00` | `semantic.success` | exact |
+| `--end` (end-event node) | `#ac1811` | `primary.deep_red_secondary` | exact |
+| `--err` (error node/edge) | `#bd0000` | `semantic.danger` | exact |
+| `--esc` (escalation node/edge) | `#f5b400` | `semantic.warning` | exact (used only as a stroke/fill, never as text-on-white — the skill's audit flags warning as failing text contrast) |
+| `--sys` (system node) | `#4a4d4e` | `text.secondary` | exact |
+| `--dec` (decision node) | `#8a5cc9` | — | **gap**: Vodafone's real palette has no purple; retained as the only distinguishable hue left for a 10-category node-type system built from a red/blue/green/amber/grey palette |
+| `--ai`/`--val` (validation node) | `#178a86`/`#2b8a8f` | — | **gap**: same reasoning — teal retained, no Vodafone equivalent |
+| `--ext` (external-actor node) | `#d46e08` | — | **gap**: deliberately distinct from `--esc`'s amber so escalation and external-actor never look identical; no Vodafone equivalent |
+
+**Gap-analysis note**: Vodafone's own skill explicitly flags "No
+data-visualization/chart palette" as a known gap and recommends deriving
+from the core tokens where one is genuinely needed. A BPMN diagram needs
+~10 visually-distinct node-type colours; Vodafone's real palette provides
+enough distinct hues for 6 of them exactly (the rows marked "exact" above).
+The remaining categories (decision, validation, external) keep their
+previously-chosen, harmonically-fitted but off-palette hues rather than
+collapsing multiple node types onto the same colour, which would be a
+worse outcome than an acknowledged, documented gap.
+- header gradient `var(--charcoal) → var(--charcoal-2)` (`#25282b → #1a1c1e`)
+- typography: `"Inter","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif` — Inter is Vodafone's documented typeface (the skill flags it as an ASSUMPTION substitute for Vodafone's proprietary corporate face pending licensed font files)
+- motion: `--ease-standard` is Vodafone's own `cubic-bezier(.2,0,0,1)` (not a generic Material curve); UI transitions run at 150ms (`duration_fast_ms`) or 220ms (`duration_base_ms`, the drawer slide) — both exact Vodafone motion tokens
+- spacing/radius: header/button/drawer/legend/export-menu chrome padding and gaps are drawn from Vodafone's 4px base scale (`--space-1` 4px … `--space-9` 48px) and radius scale (`--radius-button` 2px, `--radius-card` 6px, `--radius-sm` 8px, `--radius-pill` 9999px) — see `:root` in `engine_template.html` for the full token list. **These tokens apply only to HTML chrome** (header, buttons, drawer, legend footer, export dropdown) — never to the SVG canvas's own layout constants (`PAD_X`/`PAD_Y`, column/row sizing, connector clearances, node dimensions), which are content-geometry governed by `build_model.py`/`layout_model.py`, not presentation, and are out of scope for any visual-design-only change.
 
 ## Lane bands
 - **No background tint, and no left accent stripe either.** A prior
@@ -697,82 +729,81 @@ inspection (not just source-reading):
   `X0` 80 (down from a prior 210/190/20 set, back when the gutter needed
   much more width for horizontal wrapped text).
 - **The canvas is sized WIDTH-FIRST and always fills 100% of the horizontal
-  space inside `.diagram-shell`.** `sizeHost()` computes both fits and takes
-  the larger — `s = max(widthFill, heightFill)` — so the diagram can never be
-  letterboxed with dead space beside it. One uniform `scale` drives both axes,
-  so the aspect ratio is preserved in every branch (there is no independent
-  x/y stretch anywhere in the engine).
-  - A **wide/flat** model is height-bound (`heightFill` wins): it overflows the
-    container's width and the shell scrolls horizontally, exactly as before —
-    content integrity still takes priority over cramming the whole width in.
-  - A **tall/narrow** model is width-bound (`widthFill` wins): it spans the full
-    width and the SHELL GROWS VERTICALLY to keep the ratio, rather than the
-    diagram shrinking to fit a fixed height. Growing the shell (page scroll)
-    instead of adding `overflow-y` is deliberate — the sticky legend footer
-    (see below) pins against the shell's own scrollport and would drift out
-    of alignment if a second, vertical scroll axis were introduced inside it.
-  - Growth is capped at `HEIGHT_GROWTH_CAP` (1.75) × the live viewport budget so
-    a pathological aspect ratio can't produce an endless page; past the cap the
-    fit reverts to height-bound and any residual horizontal slack is CENTRED,
-    never dumped on one side.
-  - The shell's height comes from the live viewport (`viewportBudget()`), not a
-    hard `74vh`, so the canvas is responsive to window size; the CSS `height`
-    is only the pre-JS fallback. The sticky legend's measured height is reserved
-    out of that budget so it can never force a scrollbar.
-  - Canvas buffer is `PAD_X` 14 / `PAD_Y` 22 — the horizontal axis is the scarce
-    one, so it gets the tighter inset.
-  "Reset" re-applies exactly this fit — there is no other way to change zoom
-  level any more (see "Header & navigation" below).
+  space inside `.diagram-shell`.** `sizeHost()` (which delegates its actual
+  DOM writes to the shared `applySizeAtScale(s)`) computes both fits and
+  takes the larger — `s = max(widthFill, heightFill)` — so the diagram can
+  never be letterboxed with dead space beside it. One uniform `scale`
+  drives both axes, so the aspect ratio is preserved in every branch (there
+  is no independent x/y stretch anywhere in the engine).
+  - A **wide/flat** model is height-bound (`heightFill` wins): it overflows
+    the container's width and the shell scrolls horizontally.
+  - A **tall/narrow** model is width-bound (`widthFill` wins): it spans the
+    full width; content taller than the shell's own CSS-bounded height
+    scrolls WITHIN the shell (`overflow:auto`) rather than growing the
+    shell or the page. **This is a deliberate reversal of an earlier
+    version of this section**, which had the shell grow vertically and let
+    the PAGE scroll past it — that kept width-fill but broke a later,
+    equally explicit requirement: all scroll/pan/zoom interaction must stay
+    confined to the canvas, with the header and legend footer genuinely
+    fixed and unaffected. `body` is a fixed-viewport flex column
+    (`height:100vh;overflow:hidden`) so the page itself can never scroll;
+    `.diagram-shell` is the one and only scrollable region, sized via
+    `flex:1;min-height:340px` (a fixed floor, not a JS-computed budget).
+  - Zoom is no longer fixed at the auto-fit value either: wheel-zoom and
+    drag-to-pan (see "Interactions" above) let the user move beyond what
+    `fit()` computes, clamped to `[0.4×, 6×]` the auto-fit scale
+    (`baseScale`) — `fit()` itself still runs automatically on load and
+    resize and still recomputes exactly this same width-first scale, it
+    just no longer represents a hard ceiling on what the user can reach.
+  - Canvas buffer is `PAD_X` 14 / `PAD_Y` 22 — the horizontal axis is the
+    scarce one, so it gets the tighter inset. Unchanged by any of the
+    above — content-geometry constants, not view-state.
 - **No frozen rows or columns.** The lane-name gutter and the phase-header
-  bar are both ordinary, always-visible SVG content now — they pan and
-  scale along with every node and connector inside the `vp` transform,
-  exactly like everything else on the canvas. A prior version pinned both
-  via separate `position:sticky` HTML overlays (synced to the live pan/zoom
-  transform via `syncLaneGutter()`/`syncPhaseHeader()`, called on every
-  `apply()`) so they'd stay visible regardless of how far the canvas had
-  scrolled — that mechanism, and both sync functions, have been removed
-  entirely, along with the HTML overlay elements themselves
-  (`#laneGutter`, `#phaseHeaderBar`) and their dedicated CSS. The
-  underlying SVG-drawn versions (`#svgLaneGutter`, `#svgPhaseHeader`) were
-  always there — they're simply no longer hidden behind `opacity:0` in
-  favour of the overlay. The legend footer is the one exception, and
-  deliberately so: it isn't a row or column of the diagram grid at all
-  (it's a floating UI footer, not tied to any lane or phase position), and
-  leaving it inside the pannable/zoomable content would let a tall
-  multi-lane diagram's fit-to-height scale shrink it to a near-illegible
-  sliver. `#legendLayer` (the SVG-drawn version) stays hidden live and is
-  restored for exports — the only remaining instance of that pattern.
-- **No outer wrapper framing.** `.diagram-shell` no longer has a `border`,
-  `border-radius`, `background` (a ruled-paper gradient plus a solid panel
-  colour), or `box-shadow` — it used to read as a distinct bordered "card"
-  sitting on the page; now only the individual lanes and their content are
-  visible, with nothing drawn around them at all. `overflow-x`/`overflow-y`
-  stay, since they're what makes horizontal scroll and the width-first
-  vertical growth above actually work — everything else removed was purely
-  decorative framing with no functional role.
+  bar are both ordinary, always-visible SVG content — they pan and scale
+  along with every node and connector inside the `vp` transform, exactly
+  like everything else on the canvas; no `position:sticky` HTML overlay or
+  pan/zoom-sync JS exists for either. The legend footer is the one
+  exception, and for a different reason than before: it is now a plain
+  HTML sibling positioned AFTER `.diagram-shell` (not nested inside it) —
+  `.diagram-section` is a flex column with `.diagram-shell` (`flex:1`) and
+  the legend (`flex:none`) as two separate rows, so the legend never scales
+  with canvas zoom, is never scrolled/panned, and sits immediately below
+  the shell's own scrollbar rather than covering it (a prior version
+  nested the legend inside the shell with `position:sticky`, which put the
+  shell's native scrollbar underneath the sticky legend instead of between
+  the canvas and the legend). `#legendLayer` (the SVG-drawn version) stays
+  hidden live and is restored for exports, same as before.
+- **No outer wrapper framing.** `.diagram-shell` has no `border`,
+  `border-radius`, `background`, or `box-shadow` of its own — only the
+  individual lanes and their content are visible, nothing drawn around
+  them. `overflow-x`/`overflow-y:auto` (via the shorthand `overflow:auto`)
+  stay, since they're what makes canvas-confined scroll/pan/zoom work.
 
 ## Interactions
-The diagram is now fixed — it cannot be panned, dragged, or zoomed by the
-user at all. Hover-isolation, click-to-select, and Export are still fully
-interactive; view-manipulation (pan/zoom), the flow-type filter, and the
-"View Labels" toggle have all been removed — connector labels are simply
-always shown now — and a new Happy Flow / All Flows content filter has
-been added.
-- **The canvas cannot be moved or zoomed at all, and there is no "Reset"
-  button any more either.** `fit()` (width-first: fills the container
-  width, scrolls or grows on the other axis as the model's aspect ratio
-  requires) still runs automatically on load and on resize, but the
-  manual "Reset" button that used to sit in the header and simply
-  re-trigger it has been removed entirely — with pan/zoom/drag all
-  already gone, there was nothing left for a reader to reset the view
-  FROM, so the button was pure dead weight even though harmless. Zoom
-  in/out (the ＋/－ buttons) and mouse-wheel zoom were removed in an
-  earlier round; drag-to-pan (mousedown/mousemove/mouseup on `#svgHost`,
-  which changed `tx`/`ty`) was removed in the round after that, along with
-  the `cursor:grab`/`.grab` cursor styling that signalled it was
-  available. The diagram is fully fixed: what `fit()` computes on load is
-  what stays on screen, with no user-driven view state and no manual
-  control over it at all.
+**This section's pan/zoom/Reset description below was stale — the diagram
+was fixed-only for a period of this project's history, but pan, zoom, and
+Reset have all since been reinstated per later, explicit requirements.**
+Hover-isolation, click-to-select, drag-to-pan, wheel-zoom (mouse wheel and
+trackpad pinch, both confined to the canvas), View Details mode, Reset, and
+Export are all interactive; the flow-type filter and the "View Labels"
+toggle remain removed — connector labels are simply always shown — and
+Happy Flow / All Flows is still the one content filter.
+- **The canvas can be panned and zoomed, confined entirely to
+  `.diagram-shell`; the header, footer/legend, and toolbar are structurally
+  unable to move or change scale.** Wheel-zoom (any wheel event over the
+  canvas, including a trackpad pinch — delivered by every major browser as
+  a synthetic `ctrlKey:true` wheel event — zooms centred on the cursor,
+  clamped to `[0.4×, 6×]` the auto-fit scale) and drag-to-pan (pointer
+  events delegated to the shell, with a small movement threshold
+  distinguishing an actual drag from a plain click so panning never also
+  triggers node selection) were both reinstated after the "fully fixed"
+  period this section used to describe. **Reset** (leftmost header button,
+  before View Details) restores the exact page-load state in one click —
+  zoom, pan/scroll position, the Happy Flow filter, click-locked highlight,
+  an open drawer, View Details mode, an in-progress drag, and an open
+  Export dropdown, all at once. `fit()` still runs automatically on load
+  and resize, computing the same width-first auto-fit scale as before;
+  Reset re-invokes it after clearing every other piece of view state.
 - **There is no flow-type filter.** A prior version let the user toggle
   Sequence/Data/Conditional/Escalation/Error connectors on and off
   individually via a row of buttons (labelled "Flows:") in the toolbar;
@@ -827,14 +858,28 @@ been added.
   `marker-end` attribute directly (to `ar-hl` on highlight, back to that specific path's own
   original marker — remembered in `p.dataset.marker` at creation time, never re-derived — on
   clear), so line and arrowhead change together, atomically, every time.
-- Click a node → persistent selection + side drawer; close drawer or click another
-  node to move selection. Selection renders as a brand-red stroke (see "Node types" above); a
-  selected node is always excluded from `.dim`, hover or otherwise.
+- **Click a node → persistent highlight lock, independent of hover, and
+  independent of View Details mode.** Clicking toggles a lock (`selectedId`)
+  that keeps that node and its connections highlighted until cleared by a
+  background click or by clicking a different node. Hovering ANY node while
+  a lock is active still shows that node's own preview (not suppressed by
+  the lock) and reverts to the locked view on mouseleave — hover and the
+  click-lock are deliberately independent, neither overrides the other.
+  Selection renders as a brand-red stroke (see "Node types" above); a
+  locked node is always excluded from `.dim`, hover or otherwise.
+- **View Details mode (header toggle) changes what a click does, layered
+  on top of the same lock.** OFF (default): a plain click only toggles the
+  highlight lock; the side drawer opens only via double-click. ON: a plain
+  click also opens/updates the side drawer, which then stays open across
+  further node clicks and survives clicking the empty canvas — only
+  turning View Details off (or the drawer's own × button, which turns the
+  mode off too) closes it.
 - **Export SVG / JPG / PDF (offline, high-res, includes the legend and full
   lane/header content even though the legend is hidden as a sticky overlay
-  live).** Export lives in the page header, aligned to the top-right
-  corner (see "Header & navigation" below for the full history of what
-  moved where, including Reset's removal). Responsive.
+  live). Preserves whatever highlight/selection state is currently active**
+  — an export reflects exactly what the user is looking at, not a
+  neutral/cleared canvas. Export lives in the page header, aligned to the
+  top-right corner (see "Header & navigation" below). Responsive.
 
 ## Side drawer (comprehensive context panel — nothing in the model is left unsurfaced)
 Sections, in order, each shown only when the underlying data is actually
@@ -908,21 +953,18 @@ this class have since been replaced by the bordered Incoming/Outgoing
 paths box — see "Side drawer" above — which doesn't use `.pill`/
 `.t-portal` at all).
 
-**Header action buttons.** Export moved into the header in an earlier
-round (top-right, aligned opposite the title); Reset joined it the round
-after that, positioned immediately before Export; the round after that
-added a third button, Happy Flow, positioned first — before Reset — so
-the header's action group briefly read Happy Flow, Reset, Export, left to
-right. **Reset has since been removed entirely**: with pan/zoom/drag all
-already gone by that point, there was nothing left for it to reset FROM,
-so it was pure dead weight even though harmless — `fit()` itself still
-runs automatically on load and resize, only the manual re-trigger button
-is gone. The header's action group is now just Happy Flow, then Export,
-inside a shared `.header-actions` flex container. All of these used to
-live in (or, for Happy Flow, would have lived in) the diagram toolbar —
-but that toolbar no longer exists at all: it held only "View Labels"
-after the Flow-type filter was removed (see "Interactions" above), and
-once the "View Labels" toggle was removed too (connector labels are
-simply always shown now), the toolbar had nothing left in it and was
-removed from the HTML entirely. The header is now the only row of
-controls above the diagram canvas.
+**Header action buttons — current order: Reset, View Details, Happy Flow,
+Export**, left to right, inside a shared `.header-actions` flex container,
+aligned opposite the title. This order and Reset's presence are both
+current, not historical: Reset was removed for a period when pan/zoom/drag
+were all also gone (nothing left to reset FROM at that point), but once
+wheel-zoom, drag-to-pan, View Details mode, and the persistent highlight
+lock were all reinstated, a single control to unwind every temporary view
+change back to page-load state became necessary again — see "Interactions"
+above for exactly what Reset restores. All four buttons used to live in
+(or, for Happy Flow, would have lived in) a separate diagram toolbar row —
+that toolbar no longer exists at all: it held only "View Labels" after the
+Flow-type filter was removed, and once "View Labels" was removed too
+(connector labels are simply always shown now), the toolbar had nothing
+left in it and was removed from the HTML entirely. The header remains the
+only row of controls above the diagram canvas.

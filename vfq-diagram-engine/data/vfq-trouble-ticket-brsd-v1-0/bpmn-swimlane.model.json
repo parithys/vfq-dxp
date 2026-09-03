@@ -9,7 +9,7 @@
   "topbar": 70,
   "colw": 252,
   "totalW": 19310,
-  "totalH": 2010,
+  "totalH": 2122,
   "laneLabelW": 120,
   "lanes": [
    {
@@ -23,42 +23,42 @@
     "key": "agt",
     "name": "Agent",
     "hint": "Agent-driven ticket lifecycle steps",
-    "y": 250,
+    "y": 266,
     "h": 460
    },
    {
     "key": "crm",
     "name": "Siebel CRM",
     "hint": "Ticket, queue, assignment, audit and activity records",
-    "y": 710,
+    "y": 742,
     "h": 320
    },
    {
     "key": "kb",
     "name": "Knowledge Base",
     "hint": "Categorisation search, description templates, articles",
-    "y": 1030,
+    "y": 1078,
     "h": 180
    },
    {
     "key": "sla",
     "name": "SLA & Escalation Engine",
     "hint": "SLA monitoring, RAG status, escalation routing",
-    "y": 1210,
+    "y": 1274,
     "h": 180
    },
    {
     "key": "notif",
     "name": "Notification",
     "hint": "SMS, email, WhatsApp, push, distribution lists",
-    "y": 1390,
+    "y": 1470,
     "h": 180
    },
    {
     "key": "ext",
     "name": "External Systems",
     "hint": "AIA/OSM, UIM, Medallia survey platform",
-    "y": 1570,
+    "y": 1666,
     "h": 320
    }
   ],
@@ -166,11 +166,11 @@
    "desc": "The agent logs in using Agent ID and password; the system validates the Agent ID and credentials before granting access.",
    "phase": 1,
    "x": 415.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 518.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "jsm_role",
@@ -182,11 +182,11 @@
    "desc": "After login the agent sees role-scoped view/edit options, Agent 360, and a dashboard displaying only the tickets and tasks assigned to that agent (reuses Agent 360 BRSD requirements).",
    "phase": 2,
    "x": 667.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 770.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "tt_qticket_validate",
@@ -198,11 +198,11 @@
    "desc": "The agent validates the Q Ticket and identifies the customer before initiating a Trouble Ticket. Note: this requirement ID duplicates TT-001-JSM-01 used under \u00a71 Agent Login in the source register \u2014 carried forward as-is, not renumbered.",
    "phase": 3,
    "x": 919.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 1022.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "cam_identify",
@@ -214,11 +214,11 @@
    "desc": "Customer identification is completed before the agent initiates the Trouble Ticket.",
    "phase": 4,
    "x": 1171.0,
-   "y": 310.0,
+   "y": 326.0,
    "w": 206,
    "h": 60,
    "cx": 1274.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "d_verify_method",
@@ -238,11 +238,11 @@
    ],
    "phase": 5,
    "x": 1451.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 150,
    "h": 100,
    "cx": 1526.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "kyc_scan",
@@ -254,11 +254,11 @@
    "desc": "The Retail Agent verifies the customer by scanning the ID document through IDWise, before initiating a Trouble Ticket.",
    "phase": 6,
    "x": 1690.0,
-   "y": 1610.0,
+   "y": 1706.0,
    "w": 176,
    "h": 100,
    "cx": 1778.0,
-   "cy": 1660.0
+   "cy": 1756.0
   },
   {
    "id": "cav_question",
@@ -270,11 +270,11 @@
    "desc": "Telesales or Retail agents verify the customer by asking a verification question, before initiating a Trouble Ticket.",
    "phase": 6,
    "x": 1675.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 1778.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "cam_nav360",
@@ -286,11 +286,11 @@
    "desc": "The agent navigates to Customer 360 before initiating the ticket (reuses Customer 360 BRSD requirements). A Trouble Ticket may only be created once verified Customer, Service Account and Billing Account context exists.",
    "phase": 7,
    "x": 1927.0,
-   "y": 770.0,
+   "y": 802.0,
    "w": 206,
    "h": 60,
    "cx": 2030.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "start_sysfail",
@@ -300,11 +300,11 @@
    "label": "AIA Order Creation Failure",
    "phase": 0,
    "x": 224.0,
-   "y": 1618.0,
+   "y": 1714.0,
    "w": 84,
    "h": 84,
    "cx": 266.0,
-   "cy": 1660.0
+   "cy": 1756.0
   },
   {
    "id": "cre_smartsearch",
@@ -316,11 +316,11 @@
    "desc": "The agent searches by keyword (minimum three characters, P-01) to identify the applicable ticket category before raising a ticket; ranked suggestions come from the Knowledge Base and historical tickets.",
    "phase": 8,
    "x": 2179.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 2282.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "d_create_mode",
@@ -340,11 +340,11 @@
    ],
    "phase": 9,
    "x": 2459.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 150,
    "h": 100,
    "cx": 2534.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "cre_manual_create",
@@ -356,11 +356,11 @@
    "desc": "The system creates a ticket automatically with a unique Ticket ID for the selected Service Request, Trouble Ticket or Query category when the agent raises it manually.",
    "phase": 10,
    "x": 2683.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 2786.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "cre_auto_create",
@@ -372,11 +372,11 @@
    "desc": "A Trouble Ticket is created automatically when an AIA order creation request fails; the error reason is recorded in the Description field and the error code is returned to AIA. Integration: INT-TT-02 (OSM/AIA, synchronous SOAP over OSB, CreateTroubleTicket operation).",
    "phase": 10,
    "x": 2691.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 190,
    "h": 100,
    "cx": 2786.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "cre_autofields",
@@ -388,11 +388,11 @@
    "desc": "Fields designated for automatic population use the approved source of record; override is permitted only by an authorised role. Integration: INT-TT-10 (UIM, retrieves service and inventory information for ticket enrichment; ticket creation proceeds without enrichment on failure).",
    "phase": 11,
    "x": 2943.0,
-   "y": 772.0,
+   "y": 804.0,
    "w": 190,
    "h": 56,
    "cx": 3038.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "cre_manualfields",
@@ -404,11 +404,11 @@
    "desc": "The agent enters the fields designated as manually filled; the creating agent is accountable for their completeness and accuracy.",
    "phase": 12,
    "x": 3187.0,
-   "y": 310.0,
+   "y": 326.0,
    "w": 206,
    "h": 60,
    "cx": 3290.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "cre_kb_access",
@@ -420,11 +420,11 @@
    "desc": "Selecting the knowledge base button opens the Knowledge Base in another tab; categorisation and handling guidance must use current, approved content. Integration: INT-TT-11 (Knowledge Base, bi-directional REST, searchArticles operation).",
    "phase": 13,
    "x": 3439.0,
-   "y": 1070.0,
+   "y": 1118.0,
    "w": 206,
    "h": 100,
    "cx": 3542.0,
-   "cy": 1120.0
+   "cy": 1168.0
   },
   {
    "id": "cre_view_new",
@@ -435,11 +435,11 @@
    "sub": "TT-001-CRE-06",
    "phase": 14,
    "x": 3691.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 3794.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "cre_capture_details",
@@ -450,11 +450,11 @@
    "sub": "TT-001-CRE-07",
    "phase": 15,
    "x": 3943.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 4046.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "cre_categorise",
@@ -466,11 +466,11 @@
    "desc": "The agent selects Source, Category, Area and Sub Area by keyword search and Knowledge Base reference; the Sub Area picklist is dynamically filtered to only mapped, valid values for the selected Area.",
    "phase": 16,
    "x": 4195.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 4298.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "cre_desc_template",
@@ -482,11 +482,11 @@
    "desc": "The agent selects the correct description template from the Knowledge Base and updates the ticket description; the template must be active, approved and applicable to the selected classification. Integration: INT-TT-11 (Knowledge Base, description template retrieval).",
    "phase": 17,
    "x": 4447.0,
-   "y": 1070.0,
+   "y": 1118.0,
    "w": 206,
    "h": 100,
    "cx": 4550.0,
-   "cy": 1120.0
+   "cy": 1168.0
   },
   {
    "id": "cre_template_admin",
@@ -498,11 +498,11 @@
    "desc": "A user holding the Template Administration privilege may create, amend and retire description templates.",
    "phase": 18,
    "x": 4699.0,
-   "y": 1070.0,
+   "y": 1118.0,
    "w": 206,
    "h": 100,
    "cx": 4802.0,
-   "cy": 1120.0
+   "cy": 1168.0
   },
   {
    "id": "cre_save",
@@ -514,11 +514,11 @@
    "desc": "The ticket is saved once all mandatory fields are populated.",
    "phase": 18,
    "x": 4699.0,
-   "y": 310.0,
+   "y": 326.0,
    "w": 206,
    "h": 60,
    "cx": 4802.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "cre_downstream",
@@ -529,11 +529,11 @@
    "sub": "TT-001-CRE-12 / INT-TT-03 / INT-TT-04",
    "phase": 19,
    "x": 4959.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 190,
    "h": 100,
    "cx": 5054.0,
-   "cy": 800.0,
+   "cy": 832.0,
    "desc": "Integrations: INT-TT-03 (Kafka/ODS/Channels, publishes TroubleTicketStatusChangeEvent) and INT-TT-04 (Downstream Systems, asynchronous real-time Trouble Ticket updates)."
   },
   {
@@ -546,11 +546,11 @@
    "desc": "The newly created ticket is automatically assigned to the agent who created it.",
    "phase": 20,
    "x": 5211.0,
-   "y": 772.0,
+   "y": 804.0,
    "w": 190,
    "h": 56,
    "cx": 5306.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "cre_priority",
@@ -562,11 +562,11 @@
    "desc": "Ticket Priority (P-03: 1-ASAP, 2-High, 3-Medium, 4-Low) is derived from the Customer Type matrix at creation and cannot be overridden by a non-privileged user.",
    "phase": 21,
    "x": 5463.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 190,
    "h": 100,
    "cx": 5558.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "asg_auto_queue",
@@ -578,11 +578,11 @@
    "desc": "The ticket is assigned to the appropriate queue using the predefined combination of Source, TT Category, Area, Sub Area, Language, Customer Type and TT Queue, assuming agents in that queue hold the appropriate privileges.",
    "phase": 22,
    "x": 5715.0,
-   "y": 772.0,
+   "y": 804.0,
    "w": 190,
    "h": 56,
    "cx": 5810.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "d_asg_match",
@@ -602,11 +602,11 @@
    ],
    "phase": 23,
    "x": 5987.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 150,
    "h": 100,
    "cx": 6062.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "asg_generic",
@@ -618,11 +618,11 @@
    "desc": "A ticket whose auto-assignment parameters match no predefined combination is assigned to the Generic Queue.",
    "phase": 24,
    "x": 6219.0,
-   "y": 772.0,
+   "y": 804.0,
    "w": 190,
    "h": 56,
    "cx": 6314.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "asg_view_queue",
@@ -634,11 +634,11 @@
    "desc": "The agent views tickets assigned to the applicable queue, including generic and auto-assigned queues.",
    "phase": 25,
    "x": 6463.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 6566.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "asg_supervisor_reassign",
@@ -650,11 +650,11 @@
    "desc": "An agent acting as supervisor reassigns the Trouble Ticket to a different queue.",
    "phase": 26,
    "x": 6715.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 6818.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "asg_self",
@@ -665,11 +665,11 @@
    "sub": "TT-001-ASG-07",
    "phase": 26,
    "x": 6715.0,
-   "y": 450.0,
+   "y": 466.0,
    "w": 206,
    "h": 60,
    "cx": 6818.0,
-   "cy": 480.0
+   "cy": 496.0
   },
   {
    "id": "asg_bulk",
@@ -681,11 +681,11 @@
    "desc": "The agent selects multiple or all filtered tickets and bulk-assigns them to one target queue in a single action, permitted only in accordance with agent privileges.",
    "phase": 26,
    "x": 6715.0,
-   "y": 570.0,
+   "y": 586.0,
    "w": 206,
    "h": 100,
    "cx": 6818.0,
-   "cy": 620.0
+   "cy": 636.0
   },
   {
    "id": "asg_status_update",
@@ -697,11 +697,11 @@
    "desc": "Status and Sub-Status change to 'Assigned' when a ticket is allocated to a named user or queue, including a supervisor-assigned ticket received by the agent; recorded in the audit trail.",
    "phase": 27,
    "x": 6975.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 190,
    "h": 100,
    "cx": 7070.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "asg_notify_email",
@@ -713,11 +713,11 @@
    "desc": "The agent receives an email after a Trouble Ticket is assigned. Integration: INT-TT-07 (Enterprise SMTP Relay, assignment email notification).",
    "phase": 28,
    "x": 7227.0,
-   "y": 1430.0,
+   "y": 1510.0,
    "w": 190,
    "h": 100,
    "cx": 7322.0,
-   "cy": 1480.0
+   "cy": 1560.0
   },
   {
    "id": "d_asg_reject",
@@ -737,11 +737,11 @@
    ],
    "phase": 28,
    "x": 7247.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 150,
    "h": 100,
    "cx": 7322.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "asg_reject",
@@ -753,11 +753,11 @@
    "desc": "The agent rejects an assigned ticket, setting Sub-Status to 'Rejected' and making it available for reallocation, with the reason recorded in the audit trail; reassignment among team members is not permitted.",
    "phase": 29,
    "x": 7479.0,
-   "y": 311.0,
+   "y": 327.0,
    "w": 190,
    "h": 58,
    "cx": 7574.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "asc_associate",
@@ -769,11 +769,11 @@
    "desc": "The agent manually associates related tickets as child of a master ticket; tickets matching TT Category, MSISDN, Area and Sub Area may be marked associated.",
    "phase": 29,
    "x": 7471.0,
-   "y": 430.0,
+   "y": 446.0,
    "w": 206,
    "h": 100,
    "cx": 7574.0,
-   "cy": 480.0
+   "cy": 496.0
   },
   {
    "id": "asc_duplicate",
@@ -785,11 +785,11 @@
    "desc": "The agent manually associates duplicate Trouble Tickets; tickets matching TT Category, MSISDN, Area and Sub Area may be marked as duplicate.",
    "phase": 30,
    "x": 7723.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 7826.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "att_scan_retail",
@@ -801,11 +801,11 @@
    "desc": "A Retail Agent scans a physical document and attaches it to the ticket; the scan control is not displayed to any other role.",
    "phase": 31,
    "x": 7975.0,
-   "y": 310.0,
+   "y": 326.0,
    "w": 206,
    "h": 60,
    "cx": 8078.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "d_att_status",
@@ -826,11 +826,11 @@
    ],
    "phase": 32,
    "x": 8255.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 150,
    "h": 100,
    "cx": 8330.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "att_blocked",
@@ -840,11 +840,11 @@
    "label": "New Attachment Rejected \u2014 Terminal Status",
    "phase": 33,
    "x": 8487.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 190,
    "h": 100,
    "cx": 8582.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "att_manual_upload",
@@ -856,11 +856,11 @@
    "desc": "The agent attaches files while the ticket is in any non-terminal status; the system enforces a maximum file size, permitted file-type whitelist and maximum attachment count, and malware-scans every file before storage. Size, type-whitelist and count constraints are configurable: P-13 (max file size), P-14 (permitted file types), P-15 (max attachments per ticket) \u2014 all three values marked To be confirmed in the source.",
    "phase": 33,
    "x": 8479.0,
-   "y": 450.0,
+   "y": 466.0,
    "w": 206,
    "h": 60,
    "cx": 8582.0,
-   "cy": 480.0
+   "cy": 496.0
   },
   {
    "id": "att_view_download",
@@ -872,11 +872,11 @@
    "desc": "A permitted user views and downloads attachments at any ticket status, including terminal ones; each access is recorded in the audit trail.",
    "phase": 34,
    "x": 8731.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 8834.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "aud_capture",
@@ -888,11 +888,11 @@
    "desc": "Every Status change, Sub-Status change, field change, assignment change, attachment action and notification dispatch is recorded immutably with actor, UTC timestamp, before value and after value.",
    "phase": 35,
    "x": 8983.0,
-   "y": 770.0,
+   "y": 802.0,
    "w": 206,
    "h": 60,
    "cx": 9086.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "aud_view",
@@ -904,11 +904,11 @@
    "desc": "A permitted user views the audit trail chronologically from the detailed ticket view; records cannot be edited or deleted.",
    "phase": 36,
    "x": 9235.0,
-   "y": 310.0,
+   "y": 326.0,
    "w": 206,
    "h": 60,
    "cx": 9338.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "aud_access_log",
@@ -920,11 +920,11 @@
    "desc": "Ticket access events log user identity, IP address, geo-location where available, and access channel, retained per the approved retention policy.",
    "phase": 37,
    "x": 9487.0,
-   "y": 770.0,
+   "y": 802.0,
    "w": 206,
    "h": 60,
    "cx": 9590.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "vew_manual_activity",
@@ -936,11 +936,11 @@
    "desc": "The agent adds an activity manually under the Trouble Ticket, identifying its business purpose and responsible agent.",
    "phase": 38,
    "x": 9739.0,
-   "y": 310.0,
+   "y": 326.0,
    "w": 206,
    "h": 60,
    "cx": 9842.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "vew_activity_assoc",
@@ -951,11 +951,11 @@
    "sub": "TT-001-VEW-02 (\u00a79)",
    "phase": 39,
    "x": 9991.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 206,
    "h": 100,
    "cx": 10094.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "vew_view_activities",
@@ -967,11 +967,11 @@
    "desc": "Manual and system-generated activities are visible under the ticket with their origin, viewable only by users authorised for the parent ticket.",
    "phase": 40,
    "x": 10243.0,
-   "y": 310.0,
+   "y": 326.0,
    "w": 206,
    "h": 60,
    "cx": 10346.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "vew_auto_activity",
@@ -983,11 +983,11 @@
    "desc": "An activity is created automatically at business trigger points approved by the process owner.",
    "phase": 41,
    "x": 10503.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 190,
    "h": 100,
    "cx": 10598.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "vew_close_activity",
@@ -999,11 +999,11 @@
    "desc": "The agent closes activities that are not closed automatically; an open activity may be closed only by its owner or another role authorised for that activity type.",
    "phase": 42,
    "x": 10747.0,
-   "y": 310.0,
+   "y": 326.0,
    "w": 206,
    "h": 60,
    "cx": 10850.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "vew_close_on_ticket_close",
@@ -1014,11 +1014,11 @@
    "sub": "TT-001-VEW-06 (\u00a79)",
    "phase": 43,
    "x": 11007.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 190,
    "h": 100,
    "cx": 11102.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "vew_ai_assist",
@@ -1030,11 +1030,11 @@
    "desc": "An AI-assisted journey contextualises the reported issue, pre-populates ticket fields, and proposes TT Type, Area, Sub-Area, Priority and routing; the agent may accept or override each proposal. Positioned under Activity Execution in the source register, though its content concerns ticket creation/triage.",
    "phase": 44,
    "x": 11259.0,
-   "y": 1092.0,
+   "y": 1140.0,
    "w": 190,
    "h": 56,
    "cx": 11354.0,
-   "cy": 1120.0
+   "cy": 1168.0
   },
   {
    "id": "vew_b2b",
@@ -1046,11 +1046,11 @@
    "desc": "Trouble Tickets against B2B/enterprise accounts capture account-hierarchy context and apply the enterprise Customer Type SLA matrix.",
    "phase": 45,
    "x": 11503.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 206,
    "h": 100,
    "cx": 11606.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "not_auto_sms",
@@ -1062,11 +1062,11 @@
    "desc": "A preconfigured SMS (P-02 languages: English, Arabic, Hindi, Malayalam) sends at defined events, triggered by the combination of TT Source, Category, Area, Sub Area and Queue, in the customer's preferred account language. Integration: INT-TT-05 (SMS Gateway, REST or SOAP via OSB, sendSMS operation).",
    "phase": 46,
    "x": 11763.0,
-   "y": 1430.0,
+   "y": 1510.0,
    "w": 190,
    "h": 100,
    "cx": 11858.0,
-   "cy": 1480.0
+   "cy": 1560.0
   },
   {
    "id": "not_manual_sms",
@@ -1078,11 +1078,11 @@
    "desc": "The agent sends a manual SMS to an approved customer contact number, in line with the customer's contact permissions.",
    "phase": 47,
    "x": 12007.0,
-   "y": 310.0,
+   "y": 326.0,
    "w": 206,
    "h": 60,
    "cx": 12110.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "not_template_search",
@@ -1094,11 +1094,11 @@
    "desc": "Templates are searched by Keyword, TT Source, Category, Area, Sub Area and Status, filtered in sequence Number, Service Type, Language, Keyword; language choice covers Hindi, English, Malayalam and Arabic.",
    "phase": 48,
    "x": 12259.0,
-   "y": 1430.0,
+   "y": 1510.0,
    "w": 206,
    "h": 100,
    "cx": 12362.0,
-   "cy": 1480.0
+   "cy": 1560.0
   },
   {
    "id": "not_template_select",
@@ -1110,11 +1110,11 @@
    "desc": "Only active, approved templates applicable to the ticket may be selected.",
    "phase": 49,
    "x": 12511.0,
-   "y": 1450.0,
+   "y": 1530.0,
    "w": 206,
    "h": 60,
    "cx": 12614.0,
-   "cy": 1480.0
+   "cy": 1560.0
   },
   {
    "id": "not_edit_role",
@@ -1126,11 +1126,11 @@
    "desc": "MSISDN, Language and text are editable per agent role: Frontline cannot edit text, Back Office can.",
    "phase": 50,
    "x": 12778.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 176,
    "h": 100,
    "cx": 12866.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "not_history",
@@ -1141,11 +1141,11 @@
    "sub": "TT-001-NOT-10",
    "phase": 51,
    "x": 13023.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 190,
    "h": 100,
    "cx": 13118.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "not_channels",
@@ -1157,11 +1157,11 @@
    "desc": "WhatsApp and mobile app push are supported as additional customer notification channels, selectable by template and consented contact preference. Integration: INT-TT-06 (WhatsApp Business Platform, sendMessage operation; fallback to SMS on failure).",
    "phase": 52,
    "x": 13275.0,
-   "y": 1430.0,
+   "y": 1510.0,
    "w": 190,
    "h": 100,
    "cx": 13370.0,
-   "cy": 1480.0
+   "cy": 1560.0
   },
   {
    "id": "sla_breach",
@@ -1173,11 +1173,11 @@
    "desc": "The ticket is automatically escalated and Status changes to 'Escalate' when the applicable SLA threshold in the Customer Type matrix (BR-015 status: Open) is breached. SLA target: P-10 (non-Expatriate: 24h), P-11 (Expatriate: 48h).",
    "phase": 53,
    "x": 13527.0,
-   "y": 1250.0,
+   "y": 1314.0,
    "w": 190,
    "h": 100,
    "cx": 13622.0,
-   "cy": 1300.0
+   "cy": 1364.0
   },
   {
    "id": "sla_notify",
@@ -1189,11 +1189,11 @@
    "desc": "Reuses the TT-001-ESC-02 requirement as stated in the source; text is a direct self-reference with no further detail given. Notification tiers per P-04 (first, non-Expatriate: 12h), P-05 (first, Expatriate: 24h), P-06 (second, non-Expatriate: 24h), P-07 (second, Expatriate: 48h), P-08 (third, non-Expatriate: 72h), P-09 (third, Expatriate: 5 days).",
    "phase": 54,
    "x": 13779.0,
-   "y": 1250.0,
+   "y": 1314.0,
    "w": 190,
    "h": 100,
    "cx": 13874.0,
-   "cy": 1300.0
+   "cy": 1364.0
   },
   {
    "id": "sla_rag",
@@ -1205,11 +1205,11 @@
    "desc": "RAG status is updated per the SLA matrix: Green within target (P-16), Amber past first notification threshold (P-17), Red on target breach (P-18).",
    "phase": 55,
    "x": 14031.0,
-   "y": 1272.0,
+   "y": 1336.0,
    "w": 190,
    "h": 56,
    "cx": 14126.0,
-   "cy": 1300.0
+   "cy": 1364.0
   },
   {
    "id": "sla_activity_log",
@@ -1221,11 +1221,11 @@
    "desc": "Each SLA notification issued creates an associated Siebel Activity record containing the ticket reference, notification tier and issue timestamp.",
    "phase": 56,
    "x": 14283.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 190,
    "h": 100,
    "cx": 14378.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "esc_manual",
@@ -1237,11 +1237,11 @@
    "desc": "The agent escalates a ticket manually by selecting a mandatory escalation reason from a controlled list; a submission without a reason is rejected.",
    "phase": 57,
    "x": 14527.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 14630.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "esc_dl_notify",
@@ -1253,11 +1253,11 @@
    "desc": "An email is sent to every distribution list mapped to the assigned queue on escalation. Note: Priority is Must but Change Category is marked Out of Scope in the source \u2014 an apparent internal inconsistency, carried forward as stated rather than resolved. Integration: INT-TT-07 (Enterprise SMTP Relay, escalation email notification).",
    "phase": 58,
    "x": 14787.0,
-   "y": 1430.0,
+   "y": 1510.0,
    "w": 190,
    "h": 100,
    "cx": 14882.0,
-   "cy": 1480.0
+   "cy": 1560.0
   },
   {
    "id": "esc_hierarchy",
@@ -1269,11 +1269,11 @@
    "desc": "The next higher position in the Siebel position hierarchy relative to the ticket owner is identified and notified; where none exists, the assigned queue distribution list is notified instead.",
    "phase": 59,
    "x": 15039.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 190,
    "h": 100,
    "cx": 15134.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "esc_dl_admin",
@@ -1285,11 +1285,11 @@
    "desc": "A user holding the Distribution List Administration privilege adds, amends and removes distribution lists mapped to a queue.",
    "phase": 60,
    "x": 15283.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 206,
    "h": 100,
    "cx": 15386.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "esc_dashboard",
@@ -1301,11 +1301,11 @@
    "desc": "The agent views escalated tickets via 'escalated to me' and 'rejected by me' filters in a separate dashboard.",
    "phase": 60,
    "x": 15283.0,
-   "y": 310.0,
+   "y": 326.0,
    "w": 206,
    "h": 60,
    "cx": 15386.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "res_gate",
@@ -1317,11 +1317,11 @@
    "desc": "Transition to Status 'Solved' succeeds only once Resolution Code, Hashtag and TT Actual Issue are populated; otherwise the missing fields are identified to the agent.",
    "phase": 61,
    "x": 15550.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 176,
    "h": 100,
    "cx": 15638.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "res_code",
@@ -1333,11 +1333,11 @@
    "desc": "Exactly one Resolution Code is retained per ticket; selecting a different value replaces the existing one.",
    "phase": 62,
    "x": 15787.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 15890.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "res_hashtag",
@@ -1349,11 +1349,11 @@
    "desc": "One or more Hashtags are selected from a picklist filtered by TT Type, Area and Sub-Area; a Reference Data Administration privilege holder adds and retires Hashtag values.",
    "phase": 63,
    "x": 16039.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 16142.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "res_actual_issue",
@@ -1365,11 +1365,11 @@
    "desc": "TT Actual Issue is selected from a picklist filtered by the chosen description template; a Reference Data Administration privilege holder adds and retires values.",
    "phase": 64,
    "x": 16291.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 16394.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "res_l3_referral",
@@ -1381,11 +1381,11 @@
    "desc": "An external L3 ticket reference is recorded in a dedicated validated field while the ticket remains in Status 'Not Solved'; it is searchable and does not itself change Status. Integration: INT-TT-12 (External L3 Systems, manual reference capture only, no automated interface).",
    "phase": 62,
    "x": 15787.0,
-   "y": 430.0,
+   "y": 446.0,
    "w": 206,
    "h": 100,
    "cx": 15890.0,
-   "cy": 480.0
+   "cy": 496.0
   },
   {
    "id": "d_res_completed",
@@ -1406,11 +1406,11 @@
    ],
    "phase": 65,
    "x": 16571.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 150,
    "h": 100,
    "cx": 16646.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "res_completed_blocked",
@@ -1420,11 +1420,11 @@
    "label": "Completed Blocked \u2014 Open Activities",
    "phase": 66,
    "x": 16803.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 190,
    "h": 100,
    "cx": 16898.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "res_autoresolve_portout",
@@ -1436,11 +1436,11 @@
    "desc": "Port-Out verification tickets are resolved automatically; a back-office agent may set Status to 'Solved' manually when the automated process fails, with the response sent to the MNP gateway.",
    "phase": 63,
    "x": 16047.0,
-   "y": 1610.0,
+   "y": 1706.0,
    "w": 190,
    "h": 100,
    "cx": 16142.0,
-   "cy": 1660.0
+   "cy": 1756.0
   },
   {
    "id": "res_closed",
@@ -1452,11 +1452,11 @@
    "desc": "The agent sets ticket Status to 'Closed'; the system closes all associated activities using the same timestamp.",
    "phase": 66,
    "x": 16795.0,
-   "y": 770.0,
+   "y": 802.0,
    "w": 206,
    "h": 60,
    "cx": 16898.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "res_reopen",
@@ -1468,11 +1468,11 @@
    "desc": "A Reopen privilege holder returns a ticket from 'Closed' to 'Not Solved' within the configured reopen window (P-12, value to be confirmed) with a mandatory reason; an attempt outside the window is rejected with guidance to raise a linked ticket.",
    "phase": 67,
    "x": 17055.0,
-   "y": 311.0,
+   "y": 327.0,
    "w": 190,
    "h": 58,
    "cx": 17150.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "res_cancel",
@@ -1484,11 +1484,11 @@
    "desc": "A Cancellation privilege holder sets ticket Status to 'Cancelled' with a mandatory reason code; the ticket is excluded from performance reporting. Terminal.",
    "phase": 0,
    "x": 216.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 100,
    "h": 100,
    "cx": 266.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "csa_trigger",
@@ -1500,11 +1500,11 @@
    "desc": "A feedback survey trigger is sent to Medallia only when the Trouble Ticket reaches Resolved status. Integration: INT-TT-08 (Medallia/Survey Platform, triggerSurvey operation).",
    "phase": 67,
    "x": 17055.0,
-   "y": 1610.0,
+   "y": 1706.0,
    "w": 190,
    "h": 100,
    "cx": 17150.0,
-   "cy": 1660.0
+   "cy": 1756.0
   },
   {
    "id": "csa_attribution",
@@ -1516,11 +1516,11 @@
    "desc": "The survey response is stored against the originating ticket and made visible in the ticket view and in reporting. Integration: INT-TT-09 (Medallia/Survey Platform, postSurveyResponse operation, inbound).",
    "phase": 68,
    "x": 17307.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 190,
    "h": 100,
    "cx": 17402.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "vew_list_filter",
@@ -1532,11 +1532,11 @@
    "desc": "Tickets are viewed in a list filtered by field set FS-09 criteria; filters can be saved and reapplied. Note: this Req ID duplicates TT-001-VEW-01 used earlier under \u00a79 Activity Execution in the source register \u2014 a different requirement, same identifier.",
    "phase": 69,
    "x": 17551.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 17654.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "vew_export",
@@ -1547,11 +1547,11 @@
    "sub": "TT-001-VEW-02 (\u00a715)",
    "phase": 70,
    "x": 17803.0,
-   "y": 290.0,
+   "y": 306.0,
    "w": 206,
    "h": 100,
    "cx": 17906.0,
-   "cy": 340.0
+   "cy": 356.0
   },
   {
    "id": "vew_standard_views",
@@ -1563,11 +1563,11 @@
    "desc": "My Trouble Tickets, My Team's Trouble Tickets and All Trouble Tickets views are provided, per DE_079. Integration: INT-TT-13 (ODS/Analytics Platform, Trouble Ticket reporting).",
    "phase": 71,
    "x": 18055.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 206,
    "h": 100,
    "cx": 18158.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "vew_restricted_views",
@@ -1579,11 +1579,11 @@
    "desc": "Tickets assigned to the Back Office Queue and Credit Control/Collection Queue are restricted to members of the applicable queue.",
    "phase": 72,
    "x": 18307.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 206,
    "h": 100,
    "cx": 18410.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "vew_c360_panel",
@@ -1595,11 +1595,11 @@
    "desc": "All Trouble Tickets raised against a customer account are viewable from Customer 360, without restriction on ticket age. Integration: INT-TT-13 (ODS/Analytics Platform, Kafka/GoldenGate event replication for Customer 360 visibility).",
    "phase": 73,
    "x": 18559.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 206,
    "h": 100,
    "cx": 18662.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "vew_rag_indicator",
@@ -1611,11 +1611,11 @@
    "desc": "A Red, Amber or Green indicator is displayed per ticket in list views, derived from elapsed time against the applicable Customer Type SLA target.",
    "phase": 74,
    "x": 18811.0,
-   "y": 750.0,
+   "y": 782.0,
    "w": 206,
    "h": 100,
    "cx": 18914.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "end_lifecycle",
@@ -1626,11 +1626,11 @@
    "desc": "Terminal.",
    "phase": 75,
    "x": 19124.0,
-   "y": 758.0,
+   "y": 790.0,
    "w": 84,
    "h": 84,
    "cx": 19166.0,
-   "cy": 800.0
+   "cy": 832.0
   },
   {
    "id": "start_digital",
@@ -1640,11 +1640,11 @@
    "slot": 1,
    "label": "Digital Self-Service Channel Request",
    "x": 216.0,
-   "y": 1750.0,
+   "y": 1846.0,
    "w": 100,
    "h": 100,
    "cx": 266.0,
-   "cy": 1800.0
+   "cy": 1896.0
   },
   {
    "id": "cre_digital_create",
@@ -1656,11 +1656,11 @@
    "sub": "INT-TT-01",
    "desc": "A Trouble Ticket is created inbound from Web, Mobile App or Chatbot channels via the DXP createTroubleTicket interface (REST/JSON, TMF621). Fallback on interface failure is manual ticket creation by an agent.",
    "x": 2691.0,
-   "y": 890.0,
+   "y": 922.0,
    "w": 190,
    "h": 100,
    "cx": 2786.0,
-   "cy": 940.0
+   "cy": 972.0
   }
  ],
  "flows": [
