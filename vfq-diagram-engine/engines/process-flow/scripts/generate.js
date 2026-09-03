@@ -1690,7 +1690,12 @@ function interactiveCSS() {
      * pointer-events:none here (unlike .is-dim): a dimmed node under an active highlight must
      * stay clickable, since clicking a different node is exactly how the lock switches targets. */
     .pf-node.pf-hl-dim, .pf-edge.pf-hl-dim, .pf-elabel.pf-hl-dim { opacity: 0.12; filter: grayscale(1) brightness(1.15); }
-    .pf-edge.pf-hl-path { stroke: #e60000 !important; stroke-width: 3 !important; filter: drop-shadow(0 0 3px rgba(230,0,0,.55)); }
+    /* Stroke-width deliberately NOT overridden here (an earlier version bumped it to 3px): every
+     * marker in this file is defined with the SVG default markerUnits="strokeWidth", so widening
+     * the line also silently scaled up its arrowhead — both caused a layout shift at the moment
+     * of hover, which a later requirement explicitly disallows. Colour + glow alone signal the
+     * highlighted path now; geometry, thickness, and arrowhead size stay exactly as drawn. */
+    .pf-edge.pf-hl-path { stroke: #e60000 !important; filter: drop-shadow(0 0 3px rgba(230,0,0,.55)); }
     /* The click-locked anchor node's own outline — distinct from .is-sel (which marks whichever
      * node/edge the DRAWER is currently showing, a separate and independently-triggered state
      * now that a plain click no longer opens the drawer — see the click/dblclick handlers below). */
@@ -2789,7 +2794,7 @@ ${ix.drawer}
         // active at export time, not a silently-reset clean diagram.
         st.textContent = 'text{font-family:' + getComputedStyle(src).fontFamily.replace(/"/g, "'") + '}'
           + '.pf-node.pf-hl-dim,.pf-edge.pf-hl-dim,.pf-elabel.pf-hl-dim{opacity:.12;filter:grayscale(1) brightness(1.15);}'
-          + '.pf-edge.pf-hl-path{stroke:#e60000 !important;stroke-width:3 !important;filter:drop-shadow(0 0 3px rgba(230,0,0,.55));}'
+          + '.pf-edge.pf-hl-path{stroke:#e60000 !important;filter:drop-shadow(0 0 3px rgba(230,0,0,.55));}'
           + '.pf-node.pf-hl-lock>rect,.pf-node.pf-hl-lock>circle,.pf-node.pf-hl-lock>g>rect{stroke:#e60000 !important;stroke-width:3 !important;}'
           + '.pf-node.is-dim,.pf-edge.is-dim{opacity:.22;}'
           + '.pf-node.is-sel>rect,.pf-node.is-sel>circle,.pf-node.is-sel>g>rect{stroke-width:3;}';
