@@ -517,6 +517,18 @@ def compute_layout(N, LANES, PHASES, F=None):
     # still needs a wider gutter for some other reason, `layout.laneLabelW` in model.json
     # overrides this computed value exactly as it always could — nothing about the override
     # mechanism changed, only how the default is derived.
+    #
+    # No `max(100, ...)` floor on top of that computed value any more — an explicit "the
+    # gutter shall expand only as required to accommodate the longest navigation item,
+    # avoiding unnecessary whitespace" requirement, filed after a 100px hardcoded floor was
+    # found forcing every diagram whose worst lane needed fewer than 4 columns (i.e.
+    # max_cols*20+20 < 100) up to 100px anyway — pure dead space with no content behind it
+    # (confirmed empirically: 4 of the 5 live diagrams were sitting at exactly this floor,
+    # one needing as little as 60px of actual content width). `max_cols` starts at 1 and
+    # _lane_gutter_columns() always returns >= 1 for any non-empty name, so the formula
+    # below already has its own inherent floor (1*20+20=40) with no separate constant
+    # needed — the computed value IS the minimum required, by construction, not an
+    # approximation that needs a safety margin on top.
     HINT_MAX_LINES = 12
     COL_GAP = 20   # kept in sync with engine_template.html's own COL_GAP constant
     max_cols = 1
@@ -524,7 +536,7 @@ def compute_layout(N, LANES, PHASES, F=None):
         lane_h = lane_rows.get(L["key"], 1) * ROW + PAD * 2
         avail_len = max(40, lane_h - 24)
         max_cols = max(max_cols, _lane_gutter_columns(L.get("name", ""), L.get("hint", ""), avail_len, HINT_MAX_LINES))
-    LANE_LABEL_W = max(100, max_cols * COL_GAP + 20)
+    LANE_LABEL_W = max_cols * COL_GAP + 20
     X0_MARGIN = MIN_PAD   # minimum clear gap between the gutter's right edge and the first
                           # phase column's own left edge, beyond LANE_LABEL_W itself — a
                           # container-boundary case of the same MIN_PAD floor every other
