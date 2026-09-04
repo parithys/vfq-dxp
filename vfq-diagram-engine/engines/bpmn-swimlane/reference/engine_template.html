@@ -415,7 +415,15 @@ body.drawer-resizing .drawer{transition:none}
    to chase the reference's own literal palette. Same principle .dsec-paths below already
    established for the Incoming/Outgoing box, extended to the rest of the panel. */
 .drawer .dh{padding:var(--space-5);border-bottom:4px solid var(--line);display:flex;flex-direction:column;gap:var(--space-3)}
-.drawer .dh-top{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-3)}
+/* flex-wrap:wrap — the safety net for "remain visible across all supported viewports": on a
+   narrow drawer (mobile's max-width:92vw can squeeze it below its 500px desktop floor) a long
+   type-pill label plus the now-labelled Prev/Next controls plus Close can outgrow one line.
+   Wrapping the right-hand group onto its own line keeps every label fully visible rather than
+   clipping or truncating it — the one thing this requirement explicitly rules out — at the
+   cost of the header occasionally being two lines tall instead of one, which is a fully
+   supported flex layout already (syncDrawerTop() measures the header's REAL rendered height on
+   every load/resize specifically so a taller-than-usual header is never a problem elsewhere). */
+.drawer .dh-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:var(--space-3) var(--space-2)}
 .drawer .dh h3{font-size:19px;font-weight:800;line-height:1.28;margin:0;color:var(--ink)}
 .drawer .db{padding:var(--space-4) var(--space-5);overflow:auto}
 /* A bare "×" glyph read as flat/incidental against the drawer's now much more deliberate
@@ -434,8 +442,18 @@ body.drawer-resizing .drawer{transition:none}
 .dh-top-right{display:flex;align-items:center;gap:var(--space-2);flex:none}
 .dh-nav{display:flex;align-items:center;background:var(--panel);border-radius:var(--radius-pill);
  box-shadow:var(--shadow);overflow:hidden}
-.dh-navbtn{cursor:pointer;color:var(--ink2);font-size:16px;font-weight:800;line-height:1;border:none;
- background:none;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+/* "Previous"/"Next" text labels added alongside the ‹/› icons — an icon-only control wasn't
+   self-explanatory enough on its own, per an explicit "clearly indicate the navigation
+   direction" requirement. Buttons switch from a fixed 28px square to auto width (height stays
+   28px, matching .x) with horizontal padding, since a text label can't be squeezed into a
+   square icon slot the way a single glyph could. Icon leads the label on Previous and trails it
+   on Next (‹ Previous / Next ›) so each arrow still points toward the direction it moves in
+   relative to its own word, not just decorating it. white-space:nowrap keeps a given button's
+   own icon+label together as one unit even if .dh-top wraps the whole nav group onto its own
+   line (see .dh-top's own comment). */
+.dh-navbtn{cursor:pointer;color:var(--ink2);font-size:12.5px;font-weight:700;line-height:1;border:none;
+ background:none;height:28px;padding:0 12px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.dh-navbtn .dh-navbtn-icon{font-size:16px;font-weight:800;line-height:1}
 .dh-navbtn:hover:not(:disabled){color:var(--accent)}
 .dh-navbtn:disabled{color:var(--line);cursor:not-allowed}
 .dh-navbtn+.dh-navbtn{border-left:1px solid var(--line2)}
@@ -567,7 +585,7 @@ body.drawer-resizing .drawer{transition:none}
  </div>
 
 </div>
-<aside class="drawer" id="drawer"><div class="drawer-resize-handle" id="drawerResizeHandle" title="Drag to resize"></div><div class="dh" id="d-header"><div class="dh-top"><span class="pill dh-typepill" id="d-typepill"></span><div class="dh-top-right"><div class="dh-nav"><button class="dh-navbtn" id="d-prev" title="Previous node (primary flow)" aria-label="Previous node">‹</button><button class="dh-navbtn" id="d-next" title="Next node (primary flow)" aria-label="Next node">›</button></div><button class="x" id="d-close">×</button></div></div><h3 id="d-title">Node</h3></div><div class="db" id="d-body"></div></aside>
+<aside class="drawer" id="drawer"><div class="drawer-resize-handle" id="drawerResizeHandle" title="Drag to resize"></div><div class="dh" id="d-header"><div class="dh-top"><span class="pill dh-typepill" id="d-typepill"></span><div class="dh-top-right"><div class="dh-nav"><button class="dh-navbtn" id="d-prev" title="Previous node (primary flow)" aria-label="Previous node"><span class="dh-navbtn-icon">‹</span><span class="dh-navbtn-label">Previous</span></button><button class="dh-navbtn" id="d-next" title="Next node (primary flow)" aria-label="Next node"><span class="dh-navbtn-label">Next</span><span class="dh-navbtn-icon">›</span></button></div><button class="x" id="d-close">×</button></div></div><h3 id="d-title">Node</h3></div><div class="db" id="d-body"></div></aside>
 <script>window.DATA=__MODEL_JSON__;</script>
 <script>
 const D=window.DATA, LY=D.layout, NODES=D.nodes, FLOWS=D.flows;
@@ -2600,10 +2618,10 @@ NODES.forEach(n=>{
  // the end result is the same "drawer open on this node" regardless of that leading pair.
  g.addEventListener('click',(e)=>{
   e.stopPropagation();
-  if(viewDetailsMode){ setSelected(n.id); applyHL(n.id); openDrawer(n); }
+  if(viewDetailsMode){ setSelected(n.id); applyHL(n.id); openDrawer(n); scrollNodeIntoView(n.id); }
   else{ toggleLock(n.id); }
  });
- g.addEventListener('dblclick',(e)=>{e.stopPropagation();setSelected(n.id);applyHL(n.id);openDrawer(n);});
+ g.addEventListener('dblclick',(e)=>{e.stopPropagation();setSelected(n.id);applyHL(n.id);openDrawer(n);scrollNodeIntoView(n.id);});
 });
 // ---- z-order fix: connectors + arrowheads must paint ON TOP of node shapes, not under them.
 // nodeLayer/edgeLayer/labelLayer were all built in this textual order for a practical reason
@@ -2797,12 +2815,61 @@ function happyNeighbor(id,dir){
 // level and everything else about the current view stays untouched apart from scroll position,
 // per an explicit "shall not modify... zoom level, pan position... except as required to bring
 // the selected node into view" requirement.
+//
+// The drawer is `position:fixed`, painted OVER the canvas rather than a layout sibling that
+// shrinks it — .diagram-shell's own clientWidth is the FULL viewport width whether or not the
+// drawer is open, since a fixed-position element is out of normal flow and never affects an
+// ancestor's box size. Centring against that full width (the original behaviour) reliably
+// landed the just-selected node exactly under the drawer's own left edge — precisely where the
+// node being inspected right now most often ends up, since that's the last place the reader's
+// attention was. The fix centres against only the UNCOVERED region instead: shell width minus
+// however much of the right edge the open drawer's own rendered width currently occupies
+// (measured live via getBoundingClientRect rather than trusting the drawerW/DRAWER_MIN_W JS
+// variable, so this stays correct even if CSS's own max-width:92vw is the thing actually
+// constraining the drawer's rendered width on a narrow viewport, not drawerW itself).
+//
+// Simply setting shell.scrollLeft is not sufficient on its own: sizeHost()'s single-axis-
+// overflow fit (see its own comment) makes the SVG's rendered width EXACTLY match the shell's
+// width whenever width is the binding/unconstrained axis (contentW*scale fits with no overflow
+// — the common case for a tall, narrow swimlane diagram) — meaning scrollWidth===clientWidth
+// and there is ZERO horizontal scroll range to move through, so no scrollLeft value can shift
+// such a diagram at all, drawer or not. Reaching a target scrollLeft that exceeds the SVG's
+// current scrollable range requires temporarily widening/heightening the SVG's own rendered
+// canvas first — as trailing BLANK space past the real content, never by changing `scale` — to
+// manufacture just enough real scroll room. This is the only way to satisfy "shall never be
+// obscured... regardless" for a diagram that happens to have no natural slack on the axis that
+// needs it; scale (zoom level) itself is never touched, only how much of the existing content
+// the shell is ABLE to scroll to.
 function scrollNodeIntoView(id){
  const n=NID[id]; if(!n) return;
  const shell=svg.parentElement; if(!shell) return;
  const svgX=tx+n.cx*scale, svgY=ty+n.cy*scale;
- shell.scrollLeft=svgX-shell.clientWidth/2;
- shell.scrollTop=svgY-shell.clientHeight/2;
+ const drawerCoversW=drawer.classList.contains('open')?drawer.getBoundingClientRect().width:0;
+ const visibleW=Math.max(shell.clientWidth-drawerCoversW,0);
+ const wantScrollLeft=Math.max(0,svgX-visibleW/2);
+ const wantScrollTop=Math.max(0,svgY-shell.clientHeight/2);
+ const neededW=Math.ceil(wantScrollLeft)+shell.clientWidth, neededH=Math.ceil(wantScrollTop)+shell.clientHeight;
+ const curW=svg.clientWidth||0, curH=svg.clientHeight||0;
+ if(neededW>curW||neededH>curH){
+  svg.style.width=Math.max(curW,neededW)+'px';
+  svg.style.height=Math.max(curH,neededH)+'px';
+  svg.setAttribute('viewBox',`0 0 ${Math.max(curW,neededW)} ${Math.max(curH,neededH)}`);
+ }
+ shell.scrollLeft=wantScrollLeft;
+ shell.scrollTop=wantScrollTop;
+}
+// Undoes scrollNodeIntoView()'s temporary canvas widening (see its own comment on why that
+// widening happens) once the drawer actually closes and the full shell width is available
+// again — called from every place the drawer closes, below — otherwise a stray scrollbar past
+// the diagram's own natural single-axis-overflow fit would linger long after the drawer that
+// required the extra room is gone. fit() is idempotent here: shell dimensions haven't changed
+// by closing the drawer (it's a fixed-position overlay, not a layout sibling — see
+// scrollNodeIntoView()'s own comment), so this recomputes the exact same scale/tx/ty as before,
+// only shrinking the SVG's own rendered size back down; the browser clamps scroll position to
+// whatever the smaller bounds now allow.
+function restoreNaturalCanvasSize(){
+ svg.style.width=''; svg.style.height='';
+ fit();
 }
 // Called at the end of every openDrawer() (see there) — not just from the nav buttons
 // themselves — so the enabled/disabled state is always correct for whichever node the drawer
@@ -2908,7 +2975,7 @@ const viewDetailsBtn=document.getElementById('viewDetailsBtn');
 function setViewDetails(on){
  viewDetailsMode=on;
  viewDetailsBtn.classList.toggle('on',on);
- if(!on) drawer.classList.remove('open');
+ if(!on){ drawer.classList.remove('open'); restoreNaturalCanvasSize(); }
 }
 viewDetailsBtn.addEventListener('click',()=>setViewDetails(!viewDetailsMode));
 
@@ -3477,7 +3544,7 @@ function openDrawer(n){
 // currently keeping the drawer open — the × button and the toggle button are two paths to the
 // same "exit the pinned inspection panel" action, kept in sync so the toggle's own on/off state
 // never silently goes stale relative to whether the drawer is actually showing.
-document.getElementById('d-close').onclick=()=>{drawer.classList.remove('open'); if(viewDetailsMode)setViewDetails(false);};
+document.getElementById('d-close').onclick=()=>{drawer.classList.remove('open'); restoreNaturalCanvasSize(); if(viewDetailsMode)setViewDetails(false);};
 document.getElementById('d-prev').addEventListener('click',()=>navigateDrawer(-1));
 document.getElementById('d-next').addEventListener('click',()=>navigateDrawer(1));
 
