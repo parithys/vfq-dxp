@@ -369,7 +369,7 @@
   },
   {
    "id": "export_entities",
-   "type": "agent",
+   "type": "end",
    "lane": "agt",
    "phase": 6,
    "label": "Export Visible Entities",
@@ -380,10 +380,10 @@
     "Ticket export"
    ],
    "slot": 1,
-   "w": 206,
-   "h": 60,
-   "x": 1695.0,
-   "y": 670.0,
+   "w": 84,
+   "h": 84,
+   "x": 1756.0,
+   "y": 658.0,
    "cx": 1798.0,
    "cy": 700.0
   },

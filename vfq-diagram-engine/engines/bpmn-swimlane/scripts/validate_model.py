@@ -53,6 +53,23 @@ def classify(a, b):
     return "backward"
 
 
+def is_happy_flow(f):
+    """Mirrors engine_template.html's isHappyFlow() exactly — the same classification the
+    Happy Flow filter and the drawer's Previous/Next navigation both already use. A flow is
+    happy if explicitly marked so, excluded if explicitly marked false, and otherwise defaults
+    by kind: seq/data (ordinary forward progression) default happy; esc/err (by definition
+    exception handling) default NOT happy; cond (a decision's branch) defaults NOT happy and
+    must be explicitly marked happy:true — a decision's branches are inherently ambiguous from
+    kind alone, unlike every other kind."""
+    if f.get("happy") is True:
+        return True
+    if f.get("happy") is False:
+        return False
+    if f.get("kind") in ("esc", "err", "cond"):
+        return False
+    return True
+
+
 def validate(model_path):
     errors = []
     warnings = []
@@ -173,6 +190,67 @@ def validate(model_path):
                              f"'{n.get('type')}', not 'end', but has zero outgoing edges. "
                              f"The engine will flag this in its side drawer at view time — "
                              f"confirm this is a genuine stopping point, not a gap.")
+
+    # 5. Happy path continuity — an explicit "the happy path shall be a continuous, fully
+    # connected route from Start to End, with no missing nodes, broken connectors, orphaned
+    # steps, or disconnected transitions" requirement. Every happy edge (is_happy_flow(f),
+    # dangling ones already excluded/reported above) is assembled into a directed graph and
+    # walked breadth-first from every 'start' node; anything that graph can't reach an 'end'
+    # node through is exactly the "disconnected segment" this check exists to catch. This is
+    # also what the diagram's own drawer Previous/Next controls rely on at view time — the same
+    # happy_out adjacency a broken link here would silently strand navigation on.
+    happy_flows = [f for f in flows
+                   if is_happy_flow(f) and f.get("from") in nid and f.get("to") in nid]
+    happy_out = {}
+    for f in happy_flows:
+        happy_out.setdefault(f["from"], []).append(f["to"])
+    start_nodes = [n for n in nodes if n.get("type") == "start"]
+    end_nodes = [n for n in nodes if n.get("type") == "end"]
+    end_ids = {n["id"] for n in end_nodes}
+
+    if not start_nodes:
+        errors.append("HAPPY PATH: no node with type 'start' exists — there is no starting "
+                       "point a happy-path traversal can begin from.")
+    if not end_nodes:
+        errors.append("HAPPY PATH: no node with type 'end' exists — there is no terminal point "
+                       "a happy-path traversal can conclude at.")
+
+    reached_from_any_start = set()
+    for s in start_nodes:
+        seen = {s["id"]}
+        queue = [s["id"]]
+        reached_end = s["id"] in end_ids
+        while queue:
+            cur = queue.pop(0)
+            for nxt in happy_out.get(cur, []):
+                if nxt in end_ids:
+                    reached_end = True
+                if nxt not in seen:
+                    seen.add(nxt)
+                    queue.append(nxt)
+        reached_from_any_start |= seen
+        if not reached_end:
+            errors.append(f"HAPPY PATH: no continuous happy-path route from start node "
+                           f"'{s['id']}' ({s.get('label','')}) reaches any 'end' node — the "
+                           f"happy path is broken or dead-ends before completion. Reached "
+                           f"{len(seen)} node(s) total: "
+                           f"{', '.join(sorted(seen)[:15])}{' ...' if len(seen) > 15 else ''}")
+        # A node the happy path reaches but that has no happy way OUT (and isn't itself the
+        # end) is a dead end mid-path — a "disconnected transition" from that point onward,
+        # even though the node itself is reachable.
+        for reached_id in seen:
+            rn = nid[reached_id]
+            if rn.get("type") != "end" and reached_id not in happy_out:
+                errors.append(f"HAPPY PATH: node '{reached_id}' ({rn.get('label','')}) is "
+                               f"reachable from start '{s['id']}' along the happy path but has "
+                               f"no outgoing happy edge and is not an 'end' node — the happy "
+                               f"path dead-ends here instead of continuing to a terminal step.")
+    for e in end_nodes:
+        if e["id"] not in reached_from_any_start:
+            warnings.append(f"HAPPY PATH: end node '{e['id']}' ({e.get('label','')}) is never "
+                             f"reached by any start node's happy-path traversal — it may only "
+                             f"be reachable via a non-happy (exception/alternate) route, or the "
+                             f"happy path never actually concludes here.")
 
     print(f"Nodes: {len(nodes)}   Flows: {len(flows)}")
     print(f"Direction mix — forward: {forward}   lateral: {lateral}   backward/loop: {backward}"

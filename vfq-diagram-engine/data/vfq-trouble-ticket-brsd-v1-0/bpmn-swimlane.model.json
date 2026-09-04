@@ -2309,7 +2309,7 @@
    "from": "dup_detect",
    "to": "audit_capture",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "audit_capture",

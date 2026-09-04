@@ -1490,7 +1490,7 @@
    "from": "xml_retrieve",
    "to": "csv_scheduler",
    "kind": "data",
-   "happy": true
+   "happy": false
   },
   {
    "from": "csv_scheduler",
@@ -1672,7 +1672,7 @@
    "from": "hot_bill_landing",
    "to": "crm_notification",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "channel_availability",

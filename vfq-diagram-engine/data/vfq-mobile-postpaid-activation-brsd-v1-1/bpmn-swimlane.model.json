@@ -3189,13 +3189,13 @@
    "from": "kyc_transfer_crm",
    "to": "kyc_expiry_source",
    "kind": "data",
-   "happy": true
+   "happy": false
   },
   {
    "from": "kyc_expiry_source",
    "to": "kyc_expiry_interim",
    "kind": "data",
-   "happy": true
+   "happy": false
   },
   {
    "from": "kyc_transfer_crm",
@@ -3555,8 +3555,8 @@
   {
    "from": "bam_cycle_vip",
    "to": "bam_cycle_default",
-   "kind": "data",
-   "happy": false
+   "kind": "seq",
+   "happy": true
   },
   {
    "from": "bam_cycle_default",
@@ -3636,7 +3636,7 @@
    "from": "qpc_cart_create",
    "to": "qpc_price_recalc",
    "kind": "seq",
-   "happy": true
+   "happy": false
   },
   {
    "from": "qpc_price_recalc",
@@ -3713,7 +3713,7 @@
    "from": "num_category_order",
    "to": "num_star_search",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "num_star_search",
@@ -3743,7 +3743,7 @@
    "from": "num_star_lockin",
    "to": "num_reserve_confirm",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "num_category_order",
@@ -4059,7 +4059,7 @@
    "from": "ord_route_fulfil",
    "to": "ord_c360_nav",
    "kind": "seq",
-   "happy": true
+   "happy": false
   },
   {
    "from": "ord_c360_nav",
@@ -4102,7 +4102,7 @@
    "from": "ord_tracking_resolve",
    "to": "not_submission",
    "kind": "seq",
-   "happy": true
+   "happy": false
   },
   {
    "from": "not_submission",
@@ -4138,7 +4138,7 @@
    "from": "ord_tracking_resolve",
    "to": "not_survey_trigger",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "not_survey_trigger",

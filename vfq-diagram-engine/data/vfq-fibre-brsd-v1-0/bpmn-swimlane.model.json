@@ -2172,7 +2172,8 @@
    "from": "num_select",
    "to": "sim_select",
    "kind": "cond",
-   "label": "FWA journey"
+   "label": "FWA journey",
+   "happy": true
   },
   {
    "from": "sim_select",
@@ -2196,7 +2197,8 @@
    "from": "wfm_applicability",
    "to": "wfm_task",
    "kind": "cond",
-   "label": "Fibre / FWA outdoor \u2014 book"
+   "label": "Fibre / FWA outdoor \u2014 book",
+   "happy": true
   },
   {
    "from": "wfm_task",
@@ -2258,7 +2260,7 @@
    "from": "ord_fulfil",
    "to": "not_order",
    "kind": "data",
-   "happy": true
+   "happy": false
   },
   {
    "from": "ord_fulfil",
