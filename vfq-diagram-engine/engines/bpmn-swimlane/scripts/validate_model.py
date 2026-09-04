@@ -30,11 +30,18 @@ itself — only in the rendered output, after the fact:
      Python-side and reports the mix, so a build that quietly regresses
      `phase` assignment is caught here instead of by eyeballing the diagram.
 
+Also checks `meta.brsdId` — the persisted, canonical BRSD reference that
+render-all.js's output-file naming convention ("{brsdId}-{type}.html") is
+meant to keep aligned with the model's actual source. It must be present
+and must exactly equal the data/{slug}/ directory the model.json lives in;
+a missing or mismatched brsdId means a generated diagram's filename could
+silently point back to the wrong (or no) source artefact.
+
 Usage:
   python validate_model.py <model.json>          # exits 1 on ERROR, 0 with warnings allowed
   python validate_model.py <model.json> --strict  # exits 1 on WARNING too
 """
-import sys, json
+import sys, json, os
 
 
 def classify(a, b):
@@ -53,6 +60,21 @@ def validate(model_path):
     nodes = blob.get("nodes", [])
     flows = blob.get("flows", [])
 
+    # 0. brsdId — the persisted BRSD reference the output-filename convention depends on.
+    expected_brsd_id = os.path.basename(os.path.dirname(os.path.abspath(model_path)))
+    actual_brsd_id = blob.get("meta", {}).get("brsdId")
+    if not actual_brsd_id:
+        errors.append(f"meta.brsdId is missing — every model.json must carry the persisted "
+                       f"BRSD reference (expected '{expected_brsd_id}', matching this file's "
+                       f"data/{{slug}}/ directory) so generated output filenames stay "
+                       f"traceable to their source artefact.")
+    elif actual_brsd_id != expected_brsd_id:
+        errors.append(f"meta.brsdId ('{actual_brsd_id}') does not match this model's own "
+                       f"data/{{slug}}/ directory ('{expected_brsd_id}') — the model was likely "
+                       f"copied/renamed without updating brsdId. Fix meta.brsdId to "
+                       f"'{expected_brsd_id}', or move this file to data/{actual_brsd_id}/ if "
+                       f"that's actually the correct source.")
+
     nid = {}
     dupe_ids = set()
     for n in nodes:
@@ -68,6 +90,29 @@ def validate(model_path):
         if "phase" not in n or not isinstance(n["phase"], int):
             errors.append(f"NODE '{n.get('id','?')}': missing or non-integer 'phase' — "
                            f"forward/lateral/backward routing cannot be classified without it.")
+
+    # 0b. Out-of-bounds phase — a node whose 'phase' index has no corresponding entry in
+    # layout.phases gets positioned at X0 + phase*colw, past every declared column, i.e.
+    # outside the canvas's own totalW entirely (compute_layout()'s total_w only spans
+    # len(PHASES) columns). Such a node doesn't wrap, doesn't clip visibly at a column
+    # edge, and doesn't show up as a connector-integrity problem in this script's other
+    # checks — it silently renders (partially or fully) beyond the SVG's own viewBox, so
+    # no scroll/zoom/fit setting in the live view or any export can ever bring it into
+    # view. This is exactly the "invisible until the rendered output, after the fact"
+    # defect class this script exists to catch — found empirically via a diagram that
+    # looked truncated in every viewport and every export despite scrolling/sizing being
+    # otherwise correct, traced to nodes whose phase (7, 8, 9) simply didn't exist in a
+    # 7-entry (0-6) layout.phases array.
+    nphases = len(blob.get("layout", {}).get("phases", []))
+    for n in nodes:
+        p = n.get("phase")
+        if isinstance(p, int) and (p < 0 or p >= nphases):
+            errors.append(f"NODE '{n.get('id','?')}' ({n.get('label','')}): phase={p} has no "
+                           f"corresponding entry in layout.phases (which has {nphases} entries, "
+                           f"valid range 0-{nphases-1}) — this node will be positioned past "
+                           f"every declared column, outside the canvas's own totalW, and will "
+                           f"never be visible in the live view or in any export regardless of "
+                           f"scroll/zoom/fit settings. Reassign it to a real phase index.")
 
     # 1. Dangling references — the silent-drop defect class.
     dangling = []

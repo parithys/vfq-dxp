@@ -1,1782 +1,1703 @@
 {
  "meta": {
-  "title": "Bill Formatter \u2014 Invoice Processing, Distribution and On-Demand Servicing",
-  "generated": "2026-09-03",
+  "title": "Bill Formatter \u2014 XML Ingestion to Invoice Distribution",
+  "brsdId": "vfq-billformatter-brsd-v1-0",
+  "generated": "2026-09-04",
   "source": "VFQ_BillFormatter_BRSD_V1.0.xlsx"
  },
  "layout": {
-  "x0": 140,
+  "x0": 200,
   "topbar": 70,
   "colw": 252,
-  "totalW": 9230,
-  "totalH": 2590,
-  "laneLabelW": 120,
+  "totalW": 2316,
+  "totalH": 6490,
+  "laneLabelW": 100,
   "lanes": [
    {
-    "key": "src",
-    "name": "Source Systems",
-    "hint": "Oracle BRM, Mediation Zone, Product Catalogue, Legacy Invoice Buffer",
+    "key": "trigger",
+    "name": "Mediation Zone / XML Source",
+    "hint": "BRM invoice XML retrieval location",
     "y": 70,
-    "h": 180
+    "h": 260
    },
    {
-    "key": "bfr",
-    "name": "Bill Formatter",
-    "hint": "Core ingestion, generation, masking and orchestration engine",
-    "y": 270,
-    "h": 740
+    "key": "bfops",
+    "name": "Billing Operations User",
+    "hint": "Admin Console / Bill Formatter Portal actions",
+    "y": 350,
+    "h": 2240
    },
    {
-    "key": "ops",
-    "name": "Billing Operations",
-    "hint": "Admin Console users \u2014 review, reprocess, configure, action",
-    "y": 1030,
-    "h": 460
+    "key": "bf",
+    "name": "Bill Formatter (DXP)",
+    "hint": "Core ingestion, generation, masking, reporting engine",
+    "y": 2610,
+    "h": 1800
    },
    {
     "key": "crm",
     "name": "Siebel CRM",
-    "hint": "Reprint/resend requests, hot bill landing, notification logging",
-    "y": 1510,
-    "h": 460
+    "hint": "Hot bill landing, notification logging, resend/reprint requests",
+    "y": 4430,
+    "h": 700
    },
    {
-    "key": "chn",
-    "name": "Distribution Channels",
-    "hint": "SMTP, SMS Gateway, WhatsApp Business, Web",
-    "y": 1990,
-    "h": 460
+    "key": "email",
+    "name": "SMTP Service",
+    "hint": "Email despatch and delivery feedback",
+    "y": 5150,
+    "h": 920
+   },
+   {
+    "key": "ext",
+    "name": "Other Channels",
+    "hint": "SMS Gateway, WhatsApp BSP, Web",
+    "y": 6090,
+    "h": 260
    }
   ],
   "phases": [
-   "Ingest",
-   "Ingest",
-   "Ingest",
-   "Ingest",
-   "Ingest",
-   "Validate",
-   "Validate",
-   "Validate",
-   "Validate",
-   "Validate",
-   "Batch & Parse",
-   "Batch & Parse",
-   "Generate",
-   "Generate",
-   "Generate",
-   "Generate",
-   "Generate",
-   "Generate",
-   "Mask & Review",
-   "Mask & Review",
-   "Mask & Review",
-   "Mask & Review",
-   "Mask & Review",
-   "Mask & Review",
-   "Distribute",
-   "Distribute",
-   "Distribute",
-   "Distribute",
-   "Distribute",
-   "Distribute",
-   "Distribute",
-   "Distribute",
-   "Distribute",
-   "Report & Manage",
-   "Report & Manage",
-   "Report & Manage"
+   "XML Ingestion & Validation",
+   "Batching & Parsing",
+   "Invoice Generation",
+   "Regeneration & Review",
+   "Channel & Email Distribution",
+   "Search, Reports & Config",
+   "Masking & Access Control",
+   "Reprint / Hot Bill / Resend"
   ]
  },
  "nodes": [
   {
    "id": "start",
    "type": "start",
-   "lane": "src",
-   "slot": 0,
-   "label": "Bill Run / On-Demand Trigger",
-   "desc": "Regular bill cycle run, trial bill run, or hot bill request initiates XML retrieval (BFR_XML_001.01/.02/.03).",
+   "lane": "trigger",
    "phase": 0,
-   "x": 224.0,
-   "y": 118.0,
+   "label": "Bill Run / Manual Upload Trigger",
+   "desc": "Invoice XML retrieval begins from the Mediation Zone predefined input location for regular, trial and hot bills, or an authorised user performs a manual XML/ZIP upload.",
+   "slot": 0,
    "w": 84,
    "h": 84,
-   "cx": 266.0,
-   "cy": 160.0
+   "x": 284.0,
+   "y": 158.0,
+   "cx": 326.0,
+   "cy": 200.0
   },
   {
-   "id": "pull_regular",
+   "id": "xml_retrieve",
    "type": "agent",
-   "lane": "bfr",
+   "lane": "bf",
+   "phase": 0,
+   "label": "Retrieve/Upload XML",
+   "sub": "BR-001, BR-007",
+   "desc": "XML is retrieved from the Mediation Zone predefined location for regular, trial and hot bills, or received via authorised manual XML/ZIP upload.",
+   "inputs": [
+    "Invoice XML"
+   ],
+   "outputs": [
+    "Received XML file"
+   ],
    "slot": 0,
-   "label": "Pull Regular Bill XML",
-   "sub": "BFR_XML_001.01 / BR-001 / INT-01 / BFR_DATA_INGESTION_001.01",
-   "desc": "Formatter pulls invoice XML from Mediation Zone for regular bills at the predefined input location. Integration: INT-01 (Oracle BRM via Mediation Zone, invoice XML supply and regeneration request). Status Model \u2014 XML Record: Received (XML file collected or uploaded and awaiting validation).",
-   "inputs": [
-    "Invoice XML (regular)"
-   ],
-   "outputs": [
-    "Retrieved XML file"
-   ],
-   "systems": [
-    "Mediation Zone"
-   ],
-   "phase": 1,
-   "x": 415.0,
-   "y": 330.0,
    "w": 206,
    "h": 60,
-   "cx": 518.0,
-   "cy": 360.0
+   "x": 223.0,
+   "y": 2710.0,
+   "cx": 326.0,
+   "cy": 2740.0
   },
   {
-   "id": "pull_trial",
-   "type": "agent",
-   "lane": "bfr",
-   "slot": 1,
-   "label": "Pull Trial Bill XML",
-   "sub": "BFR_XML_001.02 / BR-001 / INT-01",
-   "desc": "Formatter pulls invoice XML from Mediation Zone for trial bills at the predefined input location. Integration: INT-01 (Oracle BRM via Mediation Zone, invoice XML supply and regeneration request). Status Model \u2014 XML Record: Received (XML file collected or uploaded and awaiting validation).",
-   "inputs": [
-    "Invoice XML (trial)"
-   ],
-   "outputs": [
-    "Retrieved XML file"
-   ],
-   "systems": [
-    "Mediation Zone"
-   ],
-   "phase": 1,
-   "x": 415.0,
-   "y": 470.0,
-   "w": 206,
-   "h": 60,
-   "cx": 518.0,
-   "cy": 500.0
-  },
-  {
-   "id": "pull_hot",
-   "type": "agent",
-   "lane": "bfr",
-   "slot": 2,
-   "label": "Pull Hot Bill XML",
-   "sub": "BFR_XML_001.03 / BR-001 / INT-01",
-   "desc": "Formatter pulls invoice XML from Mediation Zone for hot bills at the predefined input location. Integration: INT-01 (Oracle BRM via Mediation Zone, invoice XML supply and regeneration request). Status Model \u2014 XML Record: Received (XML file collected or uploaded and awaiting validation).",
-   "inputs": [
-    "Invoice XML (hot)"
-   ],
-   "outputs": [
-    "Retrieved XML file"
-   ],
-   "systems": [
-    "Mediation Zone"
-   ],
-   "phase": 1,
-   "x": 415.0,
-   "y": 610.0,
-   "w": 206,
-   "h": 60,
-   "cx": 518.0,
-   "cy": 640.0
-  },
-  {
-   "id": "manual_upload",
-   "type": "agent",
-   "lane": "ops",
-   "slot": 0,
-   "label": "Manual XML / ZIP Upload",
-   "sub": "BR-007",
-   "desc": "Manual XML and ZIP upload, restricted to authorised users, as an alternative ingestion path.",
-   "phase": 1,
-   "x": 415.0,
-   "y": 1090.0,
-   "w": 206,
-   "h": 60,
-   "cx": 518.0,
-   "cy": 1120.0
-  },
-  {
-   "id": "atomic_write",
+   "id": "xml_atomic_write",
    "type": "control",
-   "lane": "bfr",
-   "slot": 0,
+   "lane": "bf",
+   "phase": 0,
    "label": "Atomic File Write",
    "sub": "BR-002",
-   "desc": "XML is written to a temporary location or filename, closed and verified, then renamed/moved to the final destination so no partially written file is readable downstream.",
-   "phase": 2,
-   "x": 667.0,
-   "y": 330.0,
+   "desc": "The XML file is written to a temporary location or filename, closed and verified, then renamed/moved to the final destination so no partially written file is readable downstream.",
+   "slot": 1,
    "w": 206,
    "h": 60,
-   "cx": 770.0,
-   "cy": 360.0
+   "x": 223.0,
+   "y": 2930.0,
+   "cx": 326.0,
+   "cy": 2960.0
   },
   {
-   "id": "dup_check",
+   "id": "xml_batch_group",
+   "type": "control",
+   "lane": "bf",
+   "phase": 0,
+   "label": "Batch Grouping",
+   "sub": "BR-003",
+   "desc": "XML files are retrieved and processed batch-wise; each collection cycle produces a single batch identifier.",
+   "slot": 2,
+   "w": 206,
+   "h": 60,
+   "x": 223.0,
+   "y": 3150.0,
+   "cx": 326.0,
+   "cy": 3180.0
+  },
+  {
+   "id": "xml_dupe_check",
    "type": "validation",
-   "lane": "bfr",
-   "slot": 0,
+   "lane": "bf",
+   "phase": 0,
    "label": "Duplicate Prevention Check",
    "sub": "BR-004",
    "desc": "The same invoice XML file is not processed more than once.",
-   "phase": 3,
-   "x": 934.0,
-   "y": 310.0,
+   "slot": 4,
    "w": 176,
    "h": 100,
-   "cx": 1022.0,
-   "cy": 360.0
+   "x": 238.0,
+   "y": 3570.0,
+   "cx": 326.0,
+   "cy": 3620.0
   },
   {
-   "id": "batch_create",
-   "type": "agent",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Batch Creation",
-   "sub": "BR-003 / BFR_CONSL_BATCH_001.02 / P-22 / BFR_CONSL_BATCH_001.01 / BFR_CONSL_BATCH_001.03 / BFR_CONSL_BATCH_001.04 / BFR_CONSL_BATCH_001.04.A_ViewBill_Action / BFR_CONSL_BATCH_001.04.B_ViewBill_StatusLog / BFR_CONSL_BATCH_001.04.Cx_ViewBill_Download_PDF / BFR_CONSL_BATCH_001.04.D_ViewBill_Download_PDF / BFR_CONSL_BATCH_001.04.E_ViewBill_Download_XML / BFR_CONSL_BATCH_001.04.F_ViewBill_Reprint_Bill / BFR_CONSL_BATCH_001.04.G_ViewBill_Regenerate_Document / BFR_CONSL_BATCH_001.04.H_ViewBill_Regenerate_XML / BFR_CONSL_BATCH_001.04.I_ViewBill_Send_Email / BFR_CONSL_BATCH_001.06_Action_Overall_Report / BFR_CONSL_BATCH_001.07_Action_Detailed_Report / BFR_CONSL_BATCH_001.08_Action_Failed_Report / BFR_CONSL_BATCH_001.09_Action_Failed_Emails_Report / BFR_CONSL_BATCH_001.10_Action_Send_Overall_Report / BFR_CONSL_BATCH_001.11_Action_Send_Email / BFR_CONSL_REP_001.15",
-   "desc": "XML files are retrieved and processed batch-wise; each collection cycle produces a single batch identifier. P-22 (maximum batch size). Status Model \u2014 Batch: Created (batch created from the loaded XML files).",
-   "phase": 4,
-   "x": 1171.0,
-   "y": 330.0,
+   "id": "xml_log_retrieval",
+   "type": "control",
+   "lane": "bf",
+   "phase": 0,
+   "label": "Log Retrieval Status",
+   "sub": "BR-005",
+   "desc": "Retrieval and load status is logged for every XML file.",
+   "slot": 6,
    "w": 206,
    "h": 60,
-   "cx": 1274.0,
-   "cy": 360.0
+   "x": 223.0,
+   "y": 4030.0,
+   "cx": 326.0,
+   "cy": 4060.0
   },
   {
-   "id": "schema_validate",
-   "type": "validation",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "XML Schema & Mandatory Data Validation",
-   "sub": "BFR_XML_002.04 / BR-009",
-   "desc": "Bill Formatter loads the XML, performs schema validation, and validates mandatory billing data required for invoice generation. Status Model \u2014 XML Record: Valid (XML has passed schema and mandatory data validation).",
-   "phase": 5,
-   "x": 1438.0,
-   "y": 310.0,
-   "w": 176,
-   "h": 100,
-   "cx": 1526.0,
-   "cy": 360.0
-  },
-  {
-   "id": "d_valid",
+   "id": "d_retrieval_error",
    "type": "decision",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "XML Valid?",
+   "lane": "bf",
+   "phase": 0,
+   "label": "Retrieval Successful?",
+   "sub": "BR-006",
+   "desc": "Retrieval errors are retried per the configured retry policy; a persistent failure is raised for operational review.",
    "branches": [
     {
-     "label": "Valid",
-     "to": "type_segment"
+     "label": "Retry exhausted",
+     "to": "err_retrieval_failure"
     },
     {
-     "label": "Failed XML",
-     "to": "failed_xml"
+     "label": "Success",
+     "to": "xml_type_segment"
     }
    ],
-   "phase": 6,
-   "x": 1703.0,
-   "y": 318.0,
+   "slot": 3,
    "w": 150,
-   "h": 84,
-   "cx": 1778.0,
-   "cy": 360.0
+   "h": 100,
+   "x": 251.0,
+   "y": 3350.0,
+   "cx": 326.0,
+   "cy": 3400.0
   },
   {
-   "id": "failed_xml",
+   "id": "err_retrieval_failure",
    "type": "error",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Failed XML \u2014 Reason Recorded",
-   "sub": "BR-009",
-   "desc": "XML failing schema or mandatory data validation is marked Failed XML with a recorded failure reason; it does not proceed to invoice generation. Status Model \u2014 XML Record: Failed XML (XML has failed schema or mandatory data validation and carries a failure reason).",
-   "phase": 7,
-   "x": 1935.0,
-   "y": 310.0,
-   "w": 190,
-   "h": 100,
-   "cx": 2030.0,
-   "cy": 360.0
-  },
-  {
-   "id": "xml_portal_visible",
-   "type": "system",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Failed XML Visible in Portal",
-   "sub": "BR-010",
-   "desc": "Failed XML records are visible in the Bill Formatter Portal with failure reason and processing status.",
-   "phase": 8,
-   "x": 2187.0,
-   "y": 310.0,
-   "w": 190,
-   "h": 100,
-   "cx": 2282.0,
-   "cy": 360.0
-  },
-  {
-   "id": "reprocess_failed_xml",
-   "type": "agent",
-   "lane": "ops",
-   "slot": 0,
-   "label": "Review & Reprocess Failed XML",
-   "sub": "BR-010",
-   "desc": "Billing Operations users review failed XML records and initiate reprocessing after corrective action.",
-   "phase": 9,
-   "x": 2431.0,
-   "y": 1070.0,
-   "w": 206,
-   "h": 100,
-   "cx": 2534.0,
-   "cy": 1120.0
-  },
-  {
-   "id": "retry_retrieval",
-   "type": "escalation",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Retry per Configured Policy",
-   "sub": "BR-006",
-   "desc": "Retrieval errors are retried per the configured retry policy; a persistent failure is raised for operational review. Retry count: to be confirmed (P-19).",
+   "lane": "bf",
    "phase": 0,
-   "x": 171.0,
-   "y": 310.0,
+   "label": "Persistent Retrieval Failure Raised",
+   "sub": "BR-006",
+   "desc": "A persistent retrieval failure is raised for operational review after configured retries are exhausted.",
+   "slot": 5,
    "w": 190,
    "h": 100,
-   "cx": 266.0,
-   "cy": 360.0
+   "x": 231.0,
+   "y": 3790.0,
+   "cx": 326.0,
+   "cy": 3840.0
   },
   {
-   "id": "stats_log",
-   "type": "system",
-   "lane": "bfr",
-   "slot": 2,
-   "label": "Log Retrieval / Load Status",
-   "sub": "BR-005 / BR-011 / BFR_CONSL_RPT_001.01 / BFR_CONSL_XML_SEARCH_001.02_Operational_Log / BFR_CONSL_XML_SEARCH_001.03_Operational_Log",
-   "desc": "Retrieval and load status is logged for every XML file; batch statistics reflect successful and failed outcomes.",
-   "phase": 8,
-   "x": 2187.0,
-   "y": 590.0,
-   "w": 190,
-   "h": 100,
-   "cx": 2282.0,
-   "cy": 640.0
-  },
-  {
-   "id": "type_segment",
-   "type": "control",
-   "lane": "bfr",
-   "slot": 1,
-   "label": "Derive Invoice Type & Customer Segment",
+   "id": "xml_type_segment",
+   "type": "agent",
+   "lane": "bf",
+   "phase": 1,
+   "label": "Derive Invoice Type & Segment",
    "sub": "BR-008",
    "desc": "Invoice type and customer segment are derived from the loaded XML content.",
-   "phase": 7,
-   "x": 1927.0,
-   "y": 450.0,
+   "slot": 2,
    "w": 206,
    "h": 100,
-   "cx": 2030.0,
-   "cy": 500.0
+   "x": 475.0,
+   "y": 3130.0,
+   "cx": 578.0,
+   "cy": 3180.0
   },
   {
-   "id": "parse_load",
-   "type": "agent",
-   "lane": "bfr",
-   "slot": 1,
-   "label": "Load & Parse XML",
-   "sub": "BFR_XML_002.01 / BR-012 / BFR_CONSL_XML_SEARCH_001.03_Download_XML / BFR_CONSL_XML_SEARCH_001.04_Regenerate_XML",
-   "desc": "Invoice Header, Invoice Summary and Invoice Detail structures are loaded from the parsed XML. Status Model \u2014 XML Record: Processed (XML has been consumed by invoice generation; terminal).",
-   "phase": 8,
-   "x": 2179.0,
-   "y": 470.0,
-   "w": 206,
-   "h": 60,
-   "cx": 2282.0,
-   "cy": 500.0
-  },
-  {
-   "id": "csv_check",
+   "id": "xml_validate",
    "type": "validation",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Supporting CSV Presence Check",
-   "sub": "BR-013",
-   "desc": "Scheduler checks every 10 minutes (P-01) whether an expected supporting CSV has been received.",
-   "phase": 9,
-   "x": 2446.0,
-   "y": 310.0,
+   "lane": "bf",
+   "phase": 1,
+   "label": "Schema & Mandatory Data Validation",
+   "sub": "BR-009, BFR_XML_002.04",
+   "desc": "XML is validated for schema conformance and mandatory billing data. Only files passing both proceed to invoice generation.",
+   "slot": 4,
    "w": 176,
    "h": 100,
-   "cx": 2534.0,
-   "cy": 360.0
+   "x": 490.0,
+   "y": 3570.0,
+   "cx": 578.0,
+   "cy": 3620.0
+  },
+  {
+   "id": "d_xml_valid",
+   "type": "decision",
+   "lane": "bf",
+   "phase": 1,
+   "label": "XML Valid?",
+   "sub": "BR-009",
+   "desc": "A validation failure marks the file as Failed XML with a recorded reason.",
+   "branches": [
+    {
+     "label": "Failed",
+     "to": "xml_failed"
+    },
+    {
+     "label": "Valid",
+     "to": "xml_parse"
+    }
+   ],
+   "slot": 5,
+   "w": 150,
+   "h": 84,
+   "x": 503.0,
+   "y": 3798.0,
+   "cx": 578.0,
+   "cy": 3840.0
+  },
+  {
+   "id": "xml_failed",
+   "type": "error",
+   "lane": "bf",
+   "phase": 1,
+   "label": "Failed XML \u2014 Reason Recorded",
+   "sub": "BR-009, BR-010, XML Record: Failed XML",
+   "desc": "The XML is marked Failed XML with the failure reason recorded and is visible in the portal for review and reprocessing after corrective action.",
+   "slot": 1,
+   "w": 190,
+   "h": 100,
+   "x": 483.0,
+   "y": 2910.0,
+   "cx": 578.0,
+   "cy": 2960.0
+  },
+  {
+   "id": "xml_reprocess",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 1,
+   "label": "Review & Reprocess Failed XML",
+   "sub": "BR-010",
+   "desc": "Billing Operations reviews failed XML records in the portal and initiates reprocessing following corrective action.",
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 475.0,
+   "y": 430.0,
+   "cx": 578.0,
+   "cy": 480.0
+  },
+  {
+   "id": "xml_stats",
+   "type": "control",
+   "lane": "bf",
+   "phase": 1,
+   "label": "Update Batch Statistics",
+   "sub": "BR-011",
+   "desc": "Batch statistics are updated to reflect successful and failed XML processing outcomes.",
+   "slot": 6,
+   "w": 206,
+   "h": 60,
+   "x": 475.0,
+   "y": 4030.0,
+   "cx": 578.0,
+   "cy": 4060.0
+  },
+  {
+   "id": "csv_scheduler",
+   "type": "control",
+   "lane": "bf",
+   "phase": 1,
+   "label": "Supporting CSV Presence Check",
+   "sub": "BR-013, P-01, P-02",
+   "desc": "A scheduler checks every ten minutes for an expected supporting CSV; if still absent four hours after XML receipt, an alert email is issued to configured recipients.",
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 475.0,
+   "y": 2690.0,
+   "cx": 578.0,
+   "cy": 2740.0
   },
   {
    "id": "csv_alert",
    "type": "escalation",
-   "lane": "bfr",
+   "lane": "email",
+   "phase": 1,
+   "label": "Supporting CSV Missing Alert",
+   "sub": "BR-013",
+   "desc": "An alert email is issued to the configured recipients when the expected supporting CSV remains absent four hours after XML receipt.",
    "slot": 0,
-   "label": "Supporting CSV Absent Alert",
-   "sub": "BR-013 / INT-04 / BFR_CONSL_REP_001.11",
-   "desc": "Where a supporting CSV remains absent 4 hours after XML receipt (P-02), an alert email is issued to the configured recipients. Integration: INT-04 (Alerting recipients, operational alert distribution).",
-   "outputs": [
-    "Alert email"
-   ],
-   "systems": [
-    "Alerting recipients"
-   ],
-   "phase": 10,
-   "x": 2691.0,
-   "y": 310.0,
    "w": 190,
    "h": 100,
-   "cx": 2786.0,
-   "cy": 360.0
+   "x": 483.0,
+   "y": 5230.0,
+   "cx": 578.0,
+   "cy": 5280.0
   },
   {
-   "id": "batch_ready",
+   "id": "xml_parse",
    "type": "control",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Batch Ready",
-   "sub": "Status Model \u2014 Batch: Ready",
-   "desc": "Batch validated and available for invoice generation.",
-   "phase": 11,
-   "x": 2935.0,
-   "y": 330.0,
+   "lane": "bf",
+   "phase": 1,
+   "label": "Parse XML & Load Data",
+   "sub": "BR-012, BFR_XML_002.01",
+   "desc": "Invoice Header, Invoice Summary and Invoice Detail structures are loaded from the parsed XML.",
+   "slot": 3,
    "w": 206,
    "h": 60,
-   "cx": 3038.0,
-   "cy": 360.0
+   "x": 475.0,
+   "y": 3370.0,
+   "cx": 578.0,
+   "cy": 3400.0
   },
   {
-   "id": "d_bill_type",
+   "id": "invoice_generate",
+   "type": "agent",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Generate Invoice Output",
+   "sub": "BR-020, BR-024, BR-025, CAP-02",
+   "desc": "PDF, XLS and CSV invoice outputs are generated for regular, trial and hot bills across Consumer Mobile, Consumer Fixed Line, Enterprise, Black, Bulk SMS and IoT segments in English and Arabic.",
+   "slot": 2,
+   "w": 206,
+   "h": 60,
+   "x": 727.0,
+   "y": 3150.0,
+   "cx": 830.0,
+   "cy": 3180.0
+  },
+  {
+   "id": "invoice_lang",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Determine Invoice Language",
+   "sub": "BR-028, P-08",
+   "desc": "The invoice language is determined from the language type identifier in the source data; English and Arabic templates and translation values are applied.",
+   "slot": 3,
+   "w": 206,
+   "h": 100,
+   "x": 727.0,
+   "y": 3350.0,
+   "cx": 830.0,
+   "cy": 3400.0
+  },
+  {
+   "id": "invoice_enterprise_detail",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Enterprise Detailed Output (XLS/CSV)",
+   "sub": "BR-023",
+   "desc": "An Enterprise customer opted for the detailed bill receives an XLS output, and a call detail CSV is produced in the VFQ approved format and stored in the designated output location.",
+   "slot": 4,
+   "w": 206,
+   "h": 100,
+   "x": 727.0,
+   "y": 3570.0,
+   "cx": 830.0,
+   "cy": 3620.0
+  },
+  {
+   "id": "invoice_bulk_iot",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Bulk SMS & IoT Templates",
+   "sub": "BR-026, BR-027",
+   "desc": "Bulk SMS invoices use the Bulk SMS invoice template and IoT invoices use the IoT invoice template, for regular, trial and hot bills.",
+   "slot": 5,
+   "w": 206,
+   "h": 60,
+   "x": 727.0,
+   "y": 3810.0,
+   "cx": 830.0,
+   "cy": 3840.0
+  },
+  {
+   "id": "trial_scope",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Trial Bill Run Scope",
+   "sub": "BR-021, BR-022",
+   "desc": "A trial bill run covers either an entire bill cycle or a nominated list of customers, for internal audit and bill validation only; trial batches are excluded from channel upload and never distributed to a customer.",
+   "slot": 6,
+   "w": 206,
+   "h": 60,
+   "x": 727.0,
+   "y": 4030.0,
+   "cx": 830.0,
+   "cy": 4060.0
+  },
+  {
+   "id": "d_invoice_gen_ok",
    "type": "decision",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Bill Type?",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Generation Successful?",
+   "sub": "BR-029",
+   "desc": "Invoices failing processing or generation carry a recorded failure status and reason, visible in the portal.",
    "branches": [
     {
-     "label": "Regular",
-     "to": "gen_regular"
+     "label": "Failed",
+     "to": "invoice_failed"
     },
     {
-     "label": "Trial",
-     "to": "gen_trial"
-    },
-    {
-     "label": "Hot",
-     "to": "gen_hot"
+     "label": "Success",
+     "to": "invoice_completed"
     }
    ],
-   "phase": 12,
-   "x": 3215.0,
-   "y": 318.0,
+   "slot": 7,
    "w": 150,
-   "h": 84,
-   "cx": 3290.0,
-   "cy": 360.0,
-   "desc": "Status Model \u2014 Invoice: Pending (invoice awaiting generation)."
-  },
-  {
-   "id": "gen_regular",
-   "type": "agent",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Generate Regular Bill",
-   "sub": "BR-025 / BR-031 / BFR_INV_PDF_REG_003.01 / BFR_INV_PDF_REG_003.02 / BFR_INV_PDF_REG_003.03 / BFR_INV_PDF_REG_003.04 / BFR_INV_XLS_REG_001.01 / BFR_INV_XLS_REG_001.02 / BFR_OLD_INV_COMP_001.01",
-   "desc": "Regular bill PDF generated using the template applicable to Consumer Mobile, Consumer Fixed Line, Enterprise and Black; XLS and CSV also produced for Enterprise. BR-031 (all information/business rules currently defined within the existing legacy formatter carry forward into this capability).",
-   "outputs": [
-    "Regular bill PDF",
-    "XLS (Enterprise)",
-    "CSV (Enterprise)"
-   ],
-   "phase": 13,
-   "x": 3439.0,
-   "y": 330.0,
-   "w": 206,
-   "h": 60,
-   "cx": 3542.0,
-   "cy": 360.0
-  },
-  {
-   "id": "gen_trial",
-   "type": "agent",
-   "lane": "bfr",
-   "slot": 1,
-   "label": "Generate Trial Bill",
-   "sub": "BR-020 / BR-021 / BR-022 / BFR_INV_PDF_TRL_003.01 / BFR_INV_PDF_TRL_003.02 / BFR_INV_PDF_TRL_003.03 / BFR_INV_PDF_TRL_003.04 / BFR_INV_XLS_TRL_001.01 / BFR_INV_XLS_TRL_001.02",
-   "desc": "Trial bill PDF generated by customer segment (Consumer Mobile, Consumer Fixed Line, Enterprise, Black) for internal audit and bill validation only; a trial run covers an entire bill cycle or a nominated customer list. Trial bills are never distributed to a customer through any channel.",
-   "outputs": [
-    "Trial bill PDF"
-   ],
-   "phase": 13,
-   "x": 3439.0,
-   "y": 470.0,
-   "w": 206,
-   "h": 60,
-   "cx": 3542.0,
-   "cy": 500.0
-  },
-  {
-   "id": "gen_hot",
-   "type": "agent",
-   "lane": "bfr",
-   "slot": 2,
-   "label": "Generate Hot Bill",
-   "sub": "BR-024 / BFR_CONSL_REP_001.12 / BFR_INV_PDF_HOT_003.01 / BFR_INV_PDF_HOT_003.02 / BFR_INV_PDF_HOT_003.03 / BFR_INV_XLS_HOT_001.01 / BFR_INV_XLS_HOT_001.02",
-   "desc": "Hot bill PDF generated using the template applicable to Consumer, Enterprise and Black; XLS and CSV also produced for Enterprise.",
-   "outputs": [
-    "Hot bill PDF",
-    "XLS (Enterprise)",
-    "CSV (Enterprise)"
-   ],
-   "phase": 13,
-   "x": 3439.0,
-   "y": 610.0,
-   "w": 206,
-   "h": 60,
-   "cx": 3542.0,
-   "cy": 640.0
-  },
-  {
-   "id": "gen_bulk_sms",
-   "type": "agent",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Generate Bulk SMS Invoice",
-   "sub": "BR-026 / BFR_INV_BLK_SMS_001.01 / BFR_INV_BLK_SMS_001.02 / BFR_INV_BLK_SMS_001.03",
-   "desc": "Bulk SMS invoices generated using the Bulk SMS invoice template for regular, trial and hot bills.",
-   "phase": 14,
-   "x": 3691.0,
-   "y": 310.0,
-   "w": 206,
    "h": 100,
-   "cx": 3794.0,
-   "cy": 360.0
+   "x": 755.0,
+   "y": 4230.0,
+   "cx": 830.0,
+   "cy": 4280.0
   },
   {
-   "id": "gen_iot",
-   "type": "agent",
-   "lane": "bfr",
-   "slot": 1,
-   "label": "Generate IoT Invoice",
-   "sub": "BR-027 / BFR_INV_IOT_001.01 / BFR_INV_IOT_001.02 / BFR_INV_IOT_001.03",
-   "desc": "IoT invoices generated using the IoT invoice template for regular, trial and hot bills.",
-   "phase": 14,
-   "x": 3691.0,
-   "y": 470.0,
-   "w": 206,
-   "h": 60,
-   "cx": 3794.0,
-   "cy": 500.0
+   "id": "invoice_failed",
+   "type": "error",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Invoice Failed \u2014 Reason Recorded",
+   "sub": "BR-029, Invoice: Failed",
+   "desc": "Invoice generation failure carries a recorded failure status and reason, visible in the portal.",
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 735.0,
+   "y": 2690.0,
+   "cx": 830.0,
+   "cy": 2740.0
   },
   {
-   "id": "lang_determine",
+   "id": "invoice_retry_control",
    "type": "control",
-   "lane": "bfr",
-   "slot": 3,
-   "label": "Determine Invoice Language",
-   "sub": "BR-028 / BFR_INV_PDF_ENG_001.01 / BFR_INV_PDF_ENG_001.02 / BFR_MULT_LANG_SUPRT_001.01",
-   "desc": "Invoice language is determined from the language type identifier in the source data; English and Arabic (P-08) are supported with the corresponding template and translation values applied.",
-   "phase": 14,
-   "x": 3691.0,
-   "y": 730.0,
+   "lane": "bfops",
+   "phase": 2,
+   "label": "Reprocessing Control (Role-based)",
+   "sub": "BR-030",
+   "desc": "Reprocessing of a failed invoice or batch is restricted by role and the retry count is recorded.",
+   "slot": 0,
    "w": 206,
    "h": 100,
-   "cx": 3794.0,
-   "cy": 780.0
+   "x": 727.0,
+   "y": 430.0,
+   "cx": 830.0,
+   "cy": 480.0
   },
   {
-   "id": "calc_fields",
-   "type": "system",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Populate Calculated Fields",
-   "sub": "BR-163 / BFR_CALC_INV_FLD_001.01 / BFR_CONSL_CONF_001.04",
-   "desc": "Fields requiring calculation and not directly available from source systems are calculated using logic supplied by the billing system (D-07 dependency) and populated in the output.",
-   "phase": 15,
-   "x": 3951.0,
-   "y": 310.0,
-   "w": 190,
+   "id": "invoice_completed",
+   "type": "agent",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Invoice Completed",
+   "sub": "Batch: Invoice Completed",
+   "desc": "All invoice outputs within the batch have been generated.",
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 727.0,
+   "y": 2930.0,
+   "cx": 830.0,
+   "cy": 2960.0
+  },
+  {
+   "id": "regen_request",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 3,
+   "label": "Initiate Invoice Regeneration",
+   "sub": "BR-040, BFR_CONSL_INV_REGEN_001.01",
+   "desc": "Billing Operations initiates an invoice regeneration request at individual invoice or batch level through the Bill Formatter application.",
+   "slot": 2,
+   "w": 206,
    "h": 100,
-   "cx": 4046.0,
-   "cy": 360.0
-  },
-  {
-   "id": "enterprise_detail",
-   "type": "system",
-   "lane": "bfr",
-   "slot": 4,
-   "label": "Enterprise Detailed Output",
-   "sub": "BR-023",
-   "desc": "An Enterprise customer opted for the detailed bill receives an XLS output; a call detail CSV is produced in the VFQ approved format and stored in the designated output location.",
-   "phase": 14,
-   "x": 3699.0,
+   "x": 979.0,
    "y": 870.0,
-   "w": 190,
-   "h": 100,
-   "cx": 3794.0,
+   "cx": 1082.0,
    "cy": 920.0
   },
   {
-   "id": "d_gen_success",
+   "id": "regen_xml_check",
    "type": "decision",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Generation Successful?",
+   "lane": "bf",
+   "phase": 3,
+   "label": "Source XML Corrected?",
+   "sub": "BR-041",
+   "desc": "Where the source XML has been regenerated or corrected, regeneration consumes the latest version.",
    "branches": [
     {
-     "label": "Success",
-     "to": "original_immutable"
+     "label": "Yes \u2014 use latest",
+     "to": "regen_execute"
     },
     {
-     "label": "Failed",
-     "to": "gen_failed"
+     "label": "No \u2014 use existing",
+     "to": "regen_execute"
     }
    ],
-   "phase": 16,
-   "x": 4223.0,
-   "y": 310.0,
+   "slot": 1,
    "w": 150,
    "h": 100,
-   "cx": 4298.0,
-   "cy": 360.0,
-   "desc": "Status Model \u2014 Invoice: Generated (invoice output produced in the required format)."
+   "x": 1007.0,
+   "y": 2910.0,
+   "cx": 1082.0,
+   "cy": 2960.0
   },
   {
-   "id": "gen_failed",
+   "id": "regen_legacy_buffer",
+   "type": "system",
+   "lane": "bf",
+   "phase": 3,
+   "label": "Legacy Invoice Buffer Lookup",
+   "sub": "BR-042",
+   "desc": "Invoices are regenerable from the legacy XML data held in the Invoice Buffer table, including invoices generated several years previously.",
+   "slot": 2,
+   "w": 190,
+   "h": 100,
+   "x": 987.0,
+   "y": 3130.0,
+   "cx": 1082.0,
+   "cy": 3180.0
+  },
+  {
+   "id": "regen_execute",
+   "type": "agent",
+   "lane": "bf",
+   "phase": 3,
+   "label": "Regenerate Invoice (Retry + Status)",
+   "sub": "BR-040",
+   "desc": "Invoice regeneration is supported at both individual invoice level and batch level, and includes retry and status reporting.",
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 979.0,
+   "y": 2690.0,
+   "cx": 1082.0,
+   "cy": 2740.0
+  },
+  {
+   "id": "review_switch",
+   "type": "decision",
+   "lane": "bfops",
+   "phase": 3,
+   "label": "Review & Approval Switch On?",
+   "sub": "BR-080, P-12",
+   "desc": "Invoice review and approval before customer dispatch follows role-based access and is controlled by a switch defaulted to off.",
+   "branches": [
+    {
+     "label": "On \u2014 review required",
+     "to": "review_approve"
+    },
+    {
+     "label": "Off \u2014 bypass review",
+     "to": "channel_availability"
+    }
+   ],
+   "slot": 0,
+   "w": 150,
+   "h": 100,
+   "x": 1007.0,
+   "y": 430.0,
+   "cx": 1082.0,
+   "cy": 480.0
+  },
+  {
+   "id": "review_approve",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 3,
+   "label": "Reviewer Approve/Reject",
+   "sub": "Invoice: Approved / Rejected",
+   "desc": "Invoice reviewed and approved for despatch, or reviewed and rejected with despatch prevented and the invoice returned to Pending on regeneration.",
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 979.0,
+   "y": 670.0,
+   "cx": 1082.0,
+   "cy": 700.0
+  },
+  {
+   "id": "invoice_rejected",
    "type": "error",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Invoice Generation Failed",
-   "sub": "BR-029 / BFR_BILL_RETRY_001.01",
-   "desc": "Invoices failing processing or generation carry a recorded failure status and reason, visible in the portal. Status Model \u2014 Batch: Failed (batch processing failed) / Invoice: Failed (invoice generation failed and carries a failure reason).",
-   "phase": 17,
-   "x": 4455.0,
-   "y": 310.0,
+   "lane": "bfops",
+   "phase": 3,
+   "label": "Invoice Rejected",
+   "sub": "Invoice: Rejected",
+   "desc": "Invoice reviewed and rejected; despatch is prevented and the invoice returns to Pending on regeneration.",
+   "slot": 3,
    "w": 190,
-   "h": 100,
-   "cx": 4550.0,
-   "cy": 360.0
+   "h": 58,
+   "x": 987.0,
+   "y": 1111.0,
+   "cx": 1082.0,
+   "cy": 1140.0
   },
   {
-   "id": "gen_retry",
-   "type": "escalation",
-   "lane": "ops",
+   "id": "channel_availability",
+   "type": "agent",
+   "lane": "bf",
+   "phase": 4,
+   "label": "Make Invoice Available to Channels",
+   "sub": "BR-050, CAP-04",
+   "desc": "Generated invoices are made available to downstream channels through the configured integration flow, with regular bill copies provided to Siebel CRM and other customer channels.",
    "slot": 0,
-   "label": "Reprocess Failed Invoice",
-   "sub": "BR-030 / BFR_CONSL_INV_REGEN_001.01",
-   "desc": "Reprocessing of a failed invoice or batch is restricted by role; the retry count is recorded. Maximum retry attempts: to be confirmed (P-20).",
-   "phase": 0,
-   "x": 171.0,
-   "y": 1070.0,
+   "w": 206,
+   "h": 100,
+   "x": 1231.0,
+   "y": 2690.0,
+   "cx": 1334.0,
+   "cy": 2740.0
+  },
+  {
+   "id": "hot_bill_landing",
+   "type": "system",
+   "lane": "crm",
+   "phase": 4,
+   "label": "Hot Bill Landing Location",
+   "sub": "BR-051",
+   "desc": "Hot bill invoices are placed in the Siebel CRM hot bill landing location and are available in real time following generation.",
+   "slot": 0,
    "w": 190,
    "h": 100,
-   "cx": 266.0,
-   "cy": 1120.0
+   "x": 1239.0,
+   "y": 4510.0,
+   "cx": 1334.0,
+   "cy": 4560.0
   },
   {
    "id": "trial_exclude",
    "type": "control",
-   "lane": "bfr",
-   "slot": 2,
-   "label": "Trial Batch Excluded from Channel Upload",
+   "lane": "bf",
+   "phase": 4,
+   "label": "Exclude Trial Batches from Channel Upload",
    "sub": "BR-022",
-   "desc": "Trial batches are excluded from channel upload \u2014 a trial bill exists only for internal audit and bill validation.",
-   "phase": 14,
-   "x": 3691.0,
-   "y": 590.0,
-   "w": 206,
-   "h": 100,
-   "cx": 3794.0,
-   "cy": 640.0
-  },
-  {
-   "id": "original_immutable",
-   "type": "control",
-   "lane": "bfr",
+   "desc": "Trial batches are excluded from channel upload.",
    "slot": 1,
-   "label": "Original Invoice Remains Unchanged",
-   "sub": "BR-150",
-   "desc": "The original customer invoice is generated, stored and remains unchanged and immutable.",
-   "phase": 17,
-   "x": 4447.0,
-   "y": 450.0,
    "w": 206,
    "h": 100,
-   "cx": 4550.0,
-   "cy": 500.0
+   "x": 1231.0,
+   "y": 2910.0,
+   "cx": 1334.0,
+   "cy": 2960.0
   },
   {
-   "id": "mask_gen",
-   "type": "agent",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Generate Masked Invoice",
-   "sub": "BR-151 / BR-153 / BFR_INV_MASK_001.01",
-   "desc": "A separate masked invoice file is generated at the point of invoice generation for each applicable invoice. Tax Identifier, Payment Method and Phone Number are masked in accordance with the configured access policy (masking rule set: D-08 dependency, to be confirmed). BR-153 (masking rules configurable without requiring invoice regeneration).",
-   "phase": 18,
-   "x": 4699.0,
-   "y": 330.0,
-   "w": 206,
-   "h": 60,
-   "cx": 4802.0,
-   "cy": 360.0
-  },
-  {
-   "id": "role_presentation",
+   "id": "predispatch_masking",
    "type": "control",
-   "lane": "ops",
-   "slot": 0,
-   "label": "Role-Based Invoice Presentation",
-   "sub": "BR-152 / BR-154",
-   "desc": "User role and access permission determine whether the full invoice or the masked invoice is presented; privileged roles view the full invoice, restricted roles view the masked version. Bill download offers an Agent Copy and a Customer Copy.",
-   "phase": 19,
-   "x": 4951.0,
-   "y": 1070.0,
+   "lane": "bf",
+   "phase": 4,
+   "label": "Apply Pre-Despatch Masking",
+   "sub": "BR-053",
+   "desc": "Customer specific masking rules are applied to the invoice before despatch through any communication channel.",
+   "slot": 2,
    "w": 206,
    "h": 100,
-   "cx": 5054.0,
-   "cy": 1120.0
-  },
-  {
-   "id": "d_review_switch",
-   "type": "decision",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Review & Approval Switch On?",
-   "sub": "BR-080 (default Off, P-12)",
-   "branches": [
-    {
-     "label": "On",
-     "to": "review"
-    },
-    {
-     "label": "Off",
-     "to": "channel_avail"
-    }
-   ],
-   "phase": 20,
-   "x": 5231.0,
-   "y": 310.0,
-   "w": 150,
-   "h": 100,
-   "cx": 5306.0,
-   "cy": 360.0
-  },
-  {
-   "id": "review",
-   "type": "agent",
-   "lane": "ops",
-   "slot": 0,
-   "label": "Billing Operations Review",
-   "sub": "BR-080 / BFR_CONSL_EMAIL_DISP_APROV_001.01",
-   "desc": "Invoice review and approval before customer despatch, following role-based access, when the review switch is enabled. Status Model \u2014 Invoice: Approved (invoice reviewed and approved for despatch where the review switch is on).",
-   "phase": 21,
-   "x": 5455.0,
-   "y": 1070.0,
-   "w": 206,
-   "h": 100,
-   "cx": 5558.0,
-   "cy": 1120.0
-  },
-  {
-   "id": "d_review_outcome",
-   "type": "decision",
-   "lane": "ops",
-   "slot": 0,
-   "label": "Approved?",
-   "branches": [
-    {
-     "label": "Approved",
-     "to": "channel_avail"
-    },
-    {
-     "label": "Rejected",
-     "to": "rejected"
-    }
-   ],
-   "phase": 22,
-   "x": 5735.0,
-   "y": 1078.0,
-   "w": 150,
-   "h": 84,
-   "cx": 5810.0,
-   "cy": 1120.0
-  },
-  {
-   "id": "rejected",
-   "type": "error",
-   "lane": "ops",
-   "slot": 0,
-   "label": "Invoice Rejected \u2014 Despatch Prevented",
-   "sub": "Status Model \u2014 Invoice: Rejected",
-   "desc": "Invoice reviewed and rejected; despatch is prevented. Returns to Pending on regeneration.",
-   "phase": 23,
-   "x": 5967.0,
-   "y": 1070.0,
-   "w": 190,
-   "h": 100,
-   "cx": 6062.0,
-   "cy": 1120.0
-  },
-  {
-   "id": "channel_avail",
-   "type": "system",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Make Invoice Available to Channels",
-   "sub": "BR-050 / P-09 / BFR_BILL_EMAIL_LANG_001.02 / BFR_INV_DELV_MODE_001.01 / BFR_INV_TO_CHNL_001.01",
-   "desc": "Generated invoices are made available to downstream channels through the configured integration flow, with regular bill copies provided to Siebel CRM and other customer channels. P-09 (supported invoice output formats).",
-   "phase": 23,
-   "x": 5967.0,
-   "y": 310.0,
-   "w": 190,
-   "h": 100,
-   "cx": 6062.0,
-   "cy": 360.0
-  },
-  {
-   "id": "hot_landing",
-   "type": "system",
-   "lane": "crm",
-   "slot": 0,
-   "label": "Hot Bill Landing Location",
-   "sub": "BR-051",
-   "desc": "Hot bill invoices are placed in the Siebel CRM hot bill landing location and are available in real time following generation (target time: to be confirmed, P-21).",
-   "phase": 24,
-   "x": 6219.0,
-   "y": 1550.0,
-   "w": 190,
-   "h": 100,
-   "cx": 6314.0,
-   "cy": 1600.0
+   "x": 1231.0,
+   "y": 3130.0,
+   "cx": 1334.0,
+   "cy": 3180.0
   },
   {
    "id": "d_email_eligible",
    "type": "decision",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Email Eligible?",
-   "sub": "BR-060",
+   "lane": "bf",
+   "phase": 4,
+   "label": "Eligible for Email?",
+   "sub": "BR-060, Email: Eligible",
+   "desc": "Only successfully generated invoices are eligible for email distribution; trial invoices are never emailed.",
    "branches": [
+    {
+     "label": "Suppressed",
+     "to": "email_suppressed"
+    },
     {
      "label": "Eligible",
      "to": "email_template"
-    },
-    {
-     "label": "Trial (never emailed)",
-     "to": "trial_terminal"
     }
    ],
-   "phase": 24,
-   "x": 6239.0,
-   "y": 310.0,
+   "slot": 3,
    "w": 150,
    "h": 100,
-   "cx": 6314.0,
-   "cy": 360.0,
-   "desc": "Status Model \u2014 Email: Eligible (invoice identified as eligible for email distribution)."
+   "x": 1259.0,
+   "y": 3350.0,
+   "cx": 1334.0,
+   "cy": 3400.0
+  },
+  {
+   "id": "email_suppressed",
+   "type": "error",
+   "lane": "email",
+   "phase": 4,
+   "label": "Despatch Suppressed",
+   "sub": "BR-063, Email: Suppressed",
+   "desc": "A configurable list of non-triable email addresses is maintained; despatch is not attempted for a match on the suppression list.",
+   "slot": 2,
+   "w": 190,
+   "h": 58,
+   "x": 1239.0,
+   "y": 5691.0,
+   "cx": 1334.0,
+   "cy": 5720.0
   },
   {
    "id": "email_template",
    "type": "control",
-   "lane": "bfr",
-   "slot": 0,
+   "lane": "bf",
+   "phase": 4,
    "label": "Determine Email Template",
-   "sub": "BR-061 / BFR_BILL_EMAIL_LANG_001.01",
-   "desc": "Email template determined by customer type, invoice type and language; separate templates for Consumer and Enterprise in English and Arabic, with configurable dynamic fields.",
-   "phase": 25,
-   "x": 6463.0,
-   "y": 330.0,
+   "sub": "BR-061",
+   "desc": "The email template is determined by customer type, invoice type and language; separate templates are supported for Consumer and Enterprise in English and Arabic, with configurable dynamic fields.",
+   "slot": 4,
    "w": 206,
    "h": 60,
-   "cx": 6566.0,
-   "cy": 360.0
+   "x": 1231.0,
+   "y": 3590.0,
+   "cx": 1334.0,
+   "cy": 3620.0
   },
   {
-   "id": "suppression_check",
-   "type": "validation",
-   "lane": "chn",
-   "slot": 0,
-   "label": "Suppression List Check",
-   "sub": "BR-063",
-   "desc": "A configurable list of non-triable email addresses is maintained against which no despatch is attempted.",
-   "phase": 26,
-   "x": 6730.0,
-   "y": 2030.0,
-   "w": 176,
-   "h": 100,
-   "cx": 6818.0,
-   "cy": 2080.0
-  },
-  {
-   "id": "suppressed",
-   "type": "end",
-   "lane": "chn",
-   "slot": 0,
-   "label": "Email Suppressed",
-   "sub": "Status Model \u2014 Email: Suppressed",
-   "desc": "Despatch not attempted because the address is on the non-triable list. Terminal.",
-   "phase": 27,
-   "x": 7020.0,
-   "y": 2030.0,
-   "w": 100,
-   "h": 100,
-   "cx": 7070.0,
-   "cy": 2080.0
-  },
-  {
-   "id": "smtp_despatch",
-   "type": "external",
-   "lane": "chn",
-   "slot": 1,
+   "id": "email_dispatch",
+   "type": "agent",
+   "lane": "email",
+   "phase": 4,
    "label": "SMTP Despatch",
-   "sub": "BR-062 / INT-03 / BFR_CONSL_EML_RPT_001.01 / BFR_EML_001.01",
-   "desc": "Email despatched through the configured SMTP service, which captures delivery feedback and provides success/failure reporting.",
-   "systems": [
-    "SMTP service"
-   ],
-   "phase": 27,
-   "x": 6982.0,
-   "y": 2193.0,
-   "w": 176,
-   "h": 54,
-   "cx": 7070.0,
-   "cy": 2220.0
+   "sub": "BR-062",
+   "desc": "Email is despatched through the configured SMTP service, which captures delivery feedback and provides success and failure reporting.",
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 1231.0,
+   "y": 5250.0,
+   "cx": 1334.0,
+   "cy": 5280.0
   },
   {
-   "id": "d_smtp_result",
+   "id": "d_email_delivered",
    "type": "decision",
-   "lane": "chn",
-   "slot": 0,
-   "label": "SMTP Accepted?",
+   "lane": "email",
+   "phase": 4,
+   "label": "Delivered?",
+   "sub": "Email: Sent / Delivered / Failed",
+   "desc": "SMTP acceptance moves the email to Sent; delivery feedback confirms Delivered or reports Failed, which is retried and resent.",
    "branches": [
     {
-     "label": "Accepted",
-     "to": "email_sent"
+     "label": "Failed",
+     "to": "email_failed"
     },
     {
-     "label": "Failure",
-     "to": "email_failed"
+     "label": "Delivered",
+     "to": "crm_notification"
     }
    ],
-   "phase": 28,
-   "x": 7247.0,
-   "y": 2030.0,
+   "slot": 1,
    "w": 150,
-   "h": 100,
-   "cx": 7322.0,
-   "cy": 2080.0
+   "h": 84,
+   "x": 1259.0,
+   "y": 5458.0,
+   "cx": 1334.0,
+   "cy": 5500.0
   },
   {
    "id": "email_failed",
    "type": "error",
-   "lane": "chn",
-   "slot": 1,
-   "label": "Email Despatch Failed",
-   "sub": "Status Model \u2014 Email: Failed / BR-062 / BFR_CONSL_REP_001.13_Failed_Email",
-   "desc": "Delivery failed; failure reported in the Failed Email Report. Resend on retry. Status Model \u2014 Batch: Failed Sending Email (one or more invoice emails within the batch failed despatch) / Invoice: Failed Sending Email (invoice email despatch failed).",
-   "phase": 31,
-   "x": 7983.0,
-   "y": 2191.0,
+   "lane": "email",
+   "phase": 4,
+   "label": "Email Delivery Failed",
+   "sub": "Email: Failed, Invoice: Failed Sending Email",
+   "desc": "Delivery failed and the failure is reported in the Failed Email Report; the email is resent on retry.",
+   "slot": 3,
    "w": 190,
    "h": 58,
-   "cx": 8078.0,
-   "cy": 2220.0
+   "x": 1239.0,
+   "y": 5911.0,
+   "cx": 1334.0,
+   "cy": 5940.0
   },
   {
-   "id": "email_sent",
+   "id": "crm_notification",
    "type": "system",
-   "lane": "chn",
-   "slot": 0,
-   "label": "Email Sent \u2014 Awaiting Delivery Feedback",
-   "sub": "Status Model \u2014 Email: Sent",
-   "phase": 29,
-   "x": 7479.0,
-   "y": 2030.0,
+   "lane": "crm",
+   "phase": 4,
+   "label": "Create CRM Notification Record",
+   "sub": "BR-064",
+   "desc": "A CRM notification record is created only for invoices processed for customer communication and is stored against the customer account and bill reference for servicing and audit.",
+   "slot": 1,
    "w": 190,
    "h": 100,
-   "cx": 7574.0,
-   "cy": 2080.0,
-   "desc": "Status Model \u2014 Invoice: Email Sent (invoice email despatched to the customer; terminal)."
+   "x": 1239.0,
+   "y": 4730.0,
+   "cx": 1334.0,
+   "cy": 4780.0
   },
   {
-   "id": "d_delivery",
-   "type": "decision",
-   "lane": "chn",
+   "id": "multi_channel_delivery",
+   "type": "external",
+   "lane": "ext",
+   "phase": 4,
+   "label": "SMS / WhatsApp / Web Delivery",
+   "sub": "BR-052",
+   "desc": "Invoice communication is also supported through SMS, WhatsApp Business and Web, carrying a PDF reference or an invoice URL.",
    "slot": 0,
-   "label": "Delivery Confirmed?",
-   "branches": [
-    {
-     "label": "Delivered",
-     "to": "email_delivered"
-    },
-    {
-     "label": "Failed",
-     "to": "email_failed"
-    }
-   ],
-   "phase": 30,
-   "x": 7751.0,
-   "y": 2030.0,
-   "w": 150,
+   "w": 176,
    "h": 100,
-   "cx": 7826.0,
-   "cy": 2080.0
+   "x": 1246.0,
+   "y": 6170.0,
+   "cx": 1334.0,
+   "cy": 6220.0
   },
   {
-   "id": "email_delivered",
-   "type": "end",
-   "lane": "chn",
-   "slot": 0,
-   "label": "Email Delivered",
-   "sub": "Status Model \u2014 Email: Delivered",
-   "desc": "Delivery confirmed by the SMTP service feedback. Terminal.",
-   "phase": 31,
-   "x": 8036.0,
-   "y": 2038.0,
-   "w": 84,
-   "h": 84,
-   "cx": 8078.0,
-   "cy": 2080.0
-  },
-  {
-   "id": "crm_log",
+   "id": "invoice_search",
    "type": "agent",
-   "lane": "crm",
-   "slot": 0,
-   "label": "Log CRM Notification",
-   "sub": "BR-064 / INT-02 / BFR_EML_001.02",
-   "desc": "A CRM notification record is created only for invoices processed for customer communication, stored against the customer account and bill reference for servicing and audit. Integration: INT-02 (Siebel CRM, reprint/resend request receipt, invoice delivery, notification logging).",
-   "phase": 32,
-   "x": 8227.0,
-   "y": 1570.0,
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Search Invoices & Reports",
+   "sub": "BR-090",
+   "desc": "Invoice and report search supports invoice type, invoice number, batch identifier, date created, language, MSISDN, product, status, email address, account number, customer type and Bill Formatter internal identifier.",
+   "slot": 1,
+   "w": 206,
+   "h": 100,
+   "x": 1483.0,
+   "y": 650.0,
+   "cx": 1586.0,
+   "cy": 700.0
+  },
+  {
+   "id": "search_result_actions",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Search Result Actions",
+   "sub": "BR-091",
+   "desc": "Search results support download, regenerate, reprocess and email actions, with availability determined by user role and invoice status; download formats are PDF, XML, XLS and CSV.",
+   "slot": 2,
    "w": 206,
    "h": 60,
-   "cx": 8330.0,
-   "cy": 1600.0
+   "x": 1483.0,
+   "y": 890.0,
+   "cx": 1586.0,
+   "cy": 920.0
   },
   {
-   "id": "sms_despatch",
-   "type": "external",
-   "lane": "chn",
-   "slot": 0,
-   "label": "SMS Invoice Notification",
-   "sub": "BR-052 / INT-06",
-   "desc": "Invoice communication via SMS, carrying a PDF reference or an invoice URL, with pre-despatch masking applied (BR-053).",
-   "systems": [
-    "SMS Gateway"
-   ],
-   "phase": 24,
-   "x": 6226.0,
-   "y": 2030.0,
-   "w": 176,
-   "h": 100,
-   "cx": 6314.0,
-   "cy": 2080.0
+   "id": "xml_search",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Search XML Records",
+   "sub": "BR-092",
+   "desc": "XML record search supports invoice type, invoice number, batch identifier and XML status, displays the latest processing status and offers Operational Log, Download XML and Regenerate XML actions.",
+   "slot": 3,
+   "w": 206,
+   "h": 60,
+   "x": 1483.0,
+   "y": 1110.0,
+   "cx": 1586.0,
+   "cy": 1140.0
   },
   {
-   "id": "whatsapp_despatch",
-   "type": "external",
-   "lane": "chn",
-   "slot": 1,
-   "label": "WhatsApp Invoice Notification",
-   "sub": "BR-052 / INT-07",
-   "desc": "Invoice communication via WhatsApp Business through the approved provider, carrying a PDF reference or an invoice URL, with pre-despatch masking applied (BR-053).",
-   "systems": [
-    "WhatsApp Business (approved provider)"
-   ],
-   "phase": 24,
-   "x": 6226.0,
-   "y": 2170.0,
-   "w": 176,
-   "h": 100,
-   "cx": 6314.0,
-   "cy": 2220.0
+   "id": "config_drilldown",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Configuration Drill-Down",
+   "sub": "BR-093",
+   "desc": "Configuration records open in a separate window or pop-up view, and selecting a batch identifier displays the invoices belonging to that batch.",
+   "slot": 4,
+   "w": 206,
+   "h": 60,
+   "x": 1483.0,
+   "y": 1330.0,
+   "cx": 1586.0,
+   "cy": 1360.0
   },
   {
-   "id": "web_display",
+   "id": "admin_console",
    "type": "system",
-   "lane": "chn",
+   "lane": "bf",
+   "phase": 5,
+   "label": "Admin Console \u2014 Batch/Bill Status",
+   "sub": "BR-070, BR-071, BR-072, BR-073, CAP-06",
+   "desc": "The Admin Console displays batch identifier, date created, reference, status, number of documents and the ZIP document, with status maintained at both batch and bill level across the operational status values.",
    "slot": 2,
-   "label": "Web Channel Display",
-   "sub": "BR-052",
-   "desc": "Invoice communication supported through the Web channel, with pre-despatch masking applied (BR-053).",
-   "phase": 24,
-   "x": 6219.0,
-   "y": 2332.0,
+   "w": 190,
+   "h": 100,
+   "x": 1491.0,
+   "y": 3130.0,
+   "cx": 1586.0,
+   "cy": 3180.0
+  },
+  {
+   "id": "batch_action_menu",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Batch Action Menu",
+   "sub": "BR-074",
+   "desc": "The batch action menu offers View Bills, View Statistics, Overall Report, Detail Report, Failed Report, Failed Email Report, Send Overall Report and Send Email.",
+   "slot": 5,
+   "w": 206,
+   "h": 60,
+   "x": 1483.0,
+   "y": 1550.0,
+   "cx": 1586.0,
+   "cy": 1580.0
+  },
+  {
+   "id": "bill_action_menu",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Bill Action Menu",
+   "sub": "BR-075",
+   "desc": "The bill action menu offers Status Log, Download PDF, Download XLS, Download XML, Reprint Bill, Regenerate Document, Regenerate XML and Send Email, and applies equally to the hot bill register.",
+   "slot": 6,
+   "w": 206,
+   "h": 60,
+   "x": 1483.0,
+   "y": 1770.0,
+   "cx": 1586.0,
+   "cy": 1800.0
+  },
+  {
+   "id": "document_download",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Download Bill (PDF/XLS/XML)",
+   "sub": "BR-077",
+   "desc": "A selected bill is downloadable in PDF, XLS and XML format.",
+   "slot": 7,
+   "w": 206,
+   "h": 100,
+   "x": 1483.0,
+   "y": 1970.0,
+   "cx": 1586.0,
+   "cy": 2020.0
+  },
+  {
+   "id": "batch_statistics",
+   "type": "control",
+   "lane": "bf",
+   "phase": 5,
+   "label": "Batch Statistics",
+   "sub": "BR-078",
+   "desc": "Batch statistics display successful and failed PDF generation with identifier, bill number, account number, status and reason.",
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 1483.0,
+   "y": 2710.0,
+   "cx": 1586.0,
+   "cy": 2740.0
+  },
+  {
+   "id": "hot_bill_register",
+   "type": "system",
+   "lane": "bf",
+   "phase": 5,
+   "label": "Hot Bill Register",
+   "sub": "BR-079",
+   "desc": "The hot bill register displays identifier, process date, bill number, status, email address, total size, current month due, total due and the action menu.",
+   "slot": 1,
    "w": 190,
    "h": 56,
-   "cx": 6314.0,
-   "cy": 2360.0
+   "x": 1491.0,
+   "y": 2932.0,
+   "cx": 1586.0,
+   "cy": 2960.0
   },
   {
-   "id": "trial_terminal",
-   "type": "end",
-   "lane": "bfr",
+   "id": "reference_config",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Reference Data Configuration",
+   "sub": "BR-100 to BR-113, CAP-08",
+   "desc": "Translation, adjustment reason, benefits, flex bucket, VAS short code, plan speed and enterprise report account configuration, with import, export, effective dating, role control and product catalogue synchronisation.",
+   "slot": 8,
+   "w": 206,
+   "h": 100,
+   "x": 1483.0,
+   "y": 2190.0,
+   "cx": 1586.0,
+   "cy": 2240.0
+  },
+  {
+   "id": "template_config",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Template & Presentation Configuration",
+   "sub": "BR-120 to BR-124, CAP-09",
+   "desc": "Bill template field maintenance by segment and invoice type, email and resend template configuration, bill banner configuration and overlap resolution, report template configuration and interactive PDF features.",
+   "slot": 9,
+   "w": 206,
+   "h": 100,
+   "x": 1483.0,
+   "y": 2410.0,
+   "cx": 1586.0,
+   "cy": 2460.0
+  },
+  {
+   "id": "reporting_dashboards",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Reports & Dashboards",
+   "sub": "BR-130 to BR-142, CAP-10",
+   "desc": "Enterprise reports, operational dashboard, batch status, overall and detailed batch reports, failed bill and failed email reports, email delivery statistics, XML processing statistics, bill run monitor and hot bill failure alerts.",
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 1483.0,
+   "y": 450.0,
+   "cx": 1586.0,
+   "cy": 480.0
+  },
+  {
+   "id": "bill_run_monitor",
+   "type": "escalation",
+   "lane": "email",
+   "phase": 5,
+   "label": "Bill Run Monitor Alert",
+   "sub": "BR-141, P-04, P-05",
+   "desc": "The Bill Run Monitor email report is despatched during bill run windows at the configured interval from first batch start until the last batch or end marker.",
+   "slot": 0,
+   "w": 190,
+   "h": 58,
+   "x": 1491.0,
+   "y": 5251.0,
+   "cx": 1586.0,
+   "cy": 5280.0
+  },
+  {
+   "id": "hot_bill_failure_alert",
+   "type": "escalation",
+   "lane": "email",
+   "phase": 5,
+   "label": "Hot Bill Failure Alert",
+   "sub": "BR-142, P-03",
+   "desc": "Failed hot bill generation is identified and an email alert report is despatched at the configured interval.",
+   "slot": 1,
+   "w": 190,
+   "h": 58,
+   "x": 1491.0,
+   "y": 5471.0,
+   "cx": 1586.0,
+   "cy": 5500.0
+  },
+  {
+   "id": "mask_generate",
+   "type": "control",
+   "lane": "bf",
+   "phase": 6,
+   "label": "Generate Masked Invoice File",
+   "sub": "BR-151, CAP-11",
+   "desc": "A separate masked invoice file is generated at the point of invoice generation for each applicable invoice; Tax Identifier, Payment Method and Phone Number are masked in accordance with the configured access policy.",
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 1735.0,
+   "y": 2690.0,
+   "cx": 1838.0,
+   "cy": 2740.0
+  },
+  {
+   "id": "mask_original_immutable",
+   "type": "control",
+   "lane": "bf",
+   "phase": 6,
+   "label": "Original Invoice Remains Immutable",
+   "sub": "BR-150",
+   "desc": "The original customer invoice is generated, stored and remains unchanged and immutable.",
+   "slot": 1,
+   "w": 206,
+   "h": 100,
+   "x": 1735.0,
+   "y": 2910.0,
+   "cx": 1838.0,
+   "cy": 2960.0
+  },
+  {
+   "id": "d_role_presentation",
+   "type": "decision",
+   "lane": "bf",
+   "phase": 6,
+   "label": "Privileged Role?",
+   "sub": "BR-152",
+   "desc": "The user role and access permission determine whether the full invoice or the masked invoice is presented; privileged roles view the full invoice and restricted roles view the masked version.",
+   "branches": [
+    {
+     "label": "Restricted",
+     "to": "present_masked"
+    },
+    {
+     "label": "Privileged",
+     "to": "present_full"
+    }
+   ],
    "slot": 2,
-   "label": "Trial Bill \u2014 Not Distributed",
-   "sub": "BR-022",
-   "desc": "A trial bill is generated for internal audit and bill validation only and is never distributed to a customer through any channel. Terminal.",
-   "phase": 25,
-   "x": 6516.0,
-   "y": 590.0,
+   "w": 150,
+   "h": 100,
+   "x": 1763.0,
+   "y": 3130.0,
+   "cx": 1838.0,
+   "cy": 3180.0
+  },
+  {
+   "id": "present_masked",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 6,
+   "label": "Present Masked Invoice",
+   "sub": "BR-152",
+   "desc": "Restricted roles view the masked invoice version.",
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 1735.0,
+   "y": 670.0,
+   "cx": 1838.0,
+   "cy": 700.0
+  },
+  {
+   "id": "present_full",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 6,
+   "label": "Present Full Invoice",
+   "sub": "BR-152",
+   "desc": "Privileged roles view the full invoice.",
+   "slot": 2,
+   "w": 206,
+   "h": 60,
+   "x": 1735.0,
+   "y": 890.0,
+   "cx": 1838.0,
+   "cy": 920.0
+  },
+  {
+   "id": "agent_customer_copy",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 6,
+   "label": "Agent Copy / Customer Copy Download",
+   "sub": "BR-154",
+   "desc": "The bill download offers an Agent Copy and a Customer Copy; the Agent Copy is produced either as a summarised format without the usage view or as a masked format, each enabled or disabled by configuration.",
+   "slot": 3,
+   "w": 206,
+   "h": 100,
+   "x": 1735.0,
+   "y": 1090.0,
+   "cx": 1838.0,
+   "cy": 1140.0
+  },
+  {
+   "id": "mask_rule_config",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 6,
+   "label": "Masking Rule Configuration",
+   "sub": "BR-153",
+   "desc": "Masking rules are configurable without requiring invoice regeneration for rules applied at the point of presentation.",
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 1735.0,
+   "y": 430.0,
+   "cx": 1838.0,
+   "cy": 480.0
+  },
+  {
+   "id": "end_masking",
+   "type": "end",
+   "lane": "bfops",
+   "phase": 6,
+   "label": "Invoice Presented per Access Policy",
+   "desc": "The correct invoice presentation (full or masked) has been delivered to the requesting user per role-based access policy.",
+   "slot": 4,
    "w": 100,
    "h": 100,
-   "cx": 6566.0,
-   "cy": 640.0
+   "x": 1788.0,
+   "y": 1310.0,
+   "cx": 1838.0,
+   "cy": 1360.0
   },
   {
    "id": "reprint_request",
    "type": "agent",
    "lane": "crm",
-   "slot": 2,
-   "label": "Reprint Bill Request",
-   "sub": "BR-043 / INT-02",
-   "desc": "A reprint request carries the account number, bill period and bill type; the reprinted PDF is transferred through Mediation Zone to the requesting channel. Integration: INT-02 (Siebel CRM, reprint/resend request receipt, invoice delivery, notification logging).",
-   "phase": 24,
-   "x": 6211.0,
-   "y": 1850.0,
+   "phase": 7,
+   "label": "Reprint Request from Siebel CRM",
+   "sub": "BR-043, BFR_INV_REPRNT_001.01",
+   "desc": "A reprint request carries the account number, bill period and bill type and originates from Siebel CRM.",
+   "slot": 0,
    "w": 206,
-   "h": 60,
-   "cx": 6314.0,
-   "cy": 1880.0
+   "h": 100,
+   "x": 1987.0,
+   "y": 4510.0,
+   "cx": 2090.0,
+   "cy": 4560.0
+  },
+  {
+   "id": "reprint_generate",
+   "type": "agent",
+   "lane": "bf",
+   "phase": 7,
+   "label": "Retrieve XML & Regenerate PDF",
+   "sub": "BR-044, BR-045",
+   "desc": "Reprint does not alter the original invoice data; only a previously generated bill may be reprinted, with Detailed or Summarised bill type and English or Arabic language selection.",
+   "slot": 1,
+   "w": 206,
+   "h": 100,
+   "x": 1987.0,
+   "y": 2910.0,
+   "cx": 2090.0,
+   "cy": 2960.0
+  },
+  {
+   "id": "reprint_transfer_mz",
+   "type": "system",
+   "lane": "crm",
+   "phase": 7,
+   "label": "Transfer PDF via Mediation Zone",
+   "sub": "BFR_INV_REPRNT_001.01",
+   "desc": "The reprinted PDF is transferred through the Mediation Zone to the requesting channel.",
+   "slot": 1,
+   "w": 190,
+   "h": 100,
+   "x": 1995.0,
+   "y": 4730.0,
+   "cx": 2090.0,
+   "cy": 4780.0
+  },
+  {
+   "id": "reprint_register",
+   "type": "system",
+   "lane": "bf",
+   "phase": 7,
+   "label": "Reprint/Resend Registers",
+   "sub": "BR-046",
+   "desc": "Reprint and resend requests are displayed in dedicated console registers with status and process date.",
+   "slot": 2,
+   "w": 190,
+   "h": 100,
+   "x": 1995.0,
+   "y": 3130.0,
+   "cx": 2090.0,
+   "cy": 3180.0
   },
   {
    "id": "resend_request",
    "type": "agent",
    "lane": "crm",
-   "slot": 1,
-   "label": "Resend Bill Request",
-   "sub": "BR-047 / INT-02",
-   "desc": "A resend request carries the account number and bill reference; only a previously generated invoice may be resent, and delivery status is recorded and visible. Integration: INT-02 (Siebel CRM, reprint/resend request receipt, invoice delivery, notification logging).",
-   "phase": 24,
-   "x": 6211.0,
-   "y": 1710.0,
-   "w": 206,
-   "h": 60,
-   "cx": 6314.0,
-   "cy": 1740.0
-  },
-  {
-   "id": "regen_request",
-   "type": "agent",
-   "lane": "ops",
-   "slot": 0,
-   "label": "Invoice / Batch Regeneration Request",
-   "sub": "BR-040",
-   "desc": "Invoice regeneration supported at both individual invoice level and batch level, including retry and status reporting.",
-   "phase": 24,
-   "x": 6211.0,
-   "y": 1070.0,
-   "w": 206,
-   "h": 100,
-   "cx": 6314.0,
-   "cy": 1120.0
-  },
-  {
-   "id": "legacy_buffer",
-   "type": "external",
-   "lane": "src",
-   "slot": 0,
-   "label": "Legacy Invoice Buffer Lookup",
-   "sub": "BR-042 / INT-05",
-   "desc": "Invoices are regenerable from legacy XML data held in the Invoice Buffer table, including invoices generated several years previously.",
-   "systems": [
-    "Legacy Invoice Buffer"
-   ],
-   "phase": 25,
-   "x": 6478.0,
-   "y": 110.0,
-   "w": 176,
-   "h": 100,
-   "cx": 6566.0,
-   "cy": 160.0
-  },
-  {
-   "id": "d_legacy_avail",
-   "type": "decision",
-   "lane": "src",
-   "slot": 0,
-   "label": "Historical XML Available?",
-   "branches": [
-    {
-     "label": "Available",
-     "to": "regen_consume_latest"
-    },
-    {
-     "label": "Unavailable",
-     "to": "legacy_unavailable"
-    }
-   ],
-   "phase": 26,
-   "x": 6743.0,
-   "y": 110.0,
-   "w": 150,
-   "h": 100,
-   "cx": 6818.0,
-   "cy": 160.0
-  },
-  {
-   "id": "legacy_unavailable",
-   "type": "error",
-   "lane": "src",
-   "slot": 0,
-   "label": "Invoice Unavailable for Regeneration",
-   "sub": "INT-05 fallback",
-   "desc": "Fallback behaviour: report the invoice as unavailable for regeneration.",
-   "phase": 27,
-   "x": 6975.0,
-   "y": 110.0,
-   "w": 190,
-   "h": 100,
-   "cx": 7070.0,
-   "cy": 160.0
-  },
-  {
-   "id": "regen_consume_latest",
-   "type": "control",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Consume Latest Corrected XML",
-   "sub": "BR-041",
-   "desc": "Where the source XML has been regenerated or corrected, regeneration consumes the latest version.",
-   "phase": 27,
-   "x": 6967.0,
-   "y": 310.0,
-   "w": 206,
-   "h": 100,
-   "cx": 7070.0,
-   "cy": 360.0
-  },
-  {
-   "id": "reprint_generate",
-   "type": "agent",
-   "lane": "bfr",
-   "slot": 1,
-   "label": "Generate Reprint PDF",
-   "sub": "BR-044 / BR-045 / BFR_CONSL_BATCH_001.03.A_ViewBill_Status_Log / BFR_INV_REPRNT_001.01 / BFR_INV_REPRNT_001.02 / BFR_INV_REPRNT_001.03.B / BFR_INV_REPRNT_001.03.C / BFR_INV_REPRNT_001.03.D / BFR_INV_REPRNT_001.03.E / BFR_INV_REPRNT_001.03.F / BFR_INV_REPRNT_001.03.G / BFR_INV_REPRNT_001.03.H / BFR_INV_REPRNT_001.03_Reprint_Bills",
-   "desc": "Reprint does not alter the original invoice data; only a previously generated bill may be reprinted. Supports Detailed or Summarised bill type and English or Arabic language.",
-   "phase": 25,
-   "x": 6463.0,
-   "y": 470.0,
-   "w": 206,
-   "h": 60,
-   "cx": 6566.0,
-   "cy": 500.0
-  },
-  {
-   "id": "reprint_register",
-   "type": "system",
-   "lane": "ops",
-   "slot": 0,
-   "label": "Reprint / Resend Register",
-   "sub": "BR-046",
-   "desc": "Reprint and resend requests are displayed in dedicated console registers with status and process date.",
-   "phase": 25,
-   "x": 6471.0,
-   "y": 1070.0,
-   "w": 190,
-   "h": 100,
-   "cx": 6566.0,
-   "cy": 1120.0
-  },
-  {
-   "id": "resend_email",
-   "type": "agent",
-   "lane": "chn",
-   "slot": 0,
-   "label": "Resend via Distinct Template",
-   "sub": "BR-048 / BR-049 / BFR_CONSL_RESEND_BILL_001.02 / BFR_CONSL_RESEND_BILL_001.03 / BFR_EML_RESEND_001.01",
-   "desc": "The resend email template may differ from the first-time bill email template and is separately maintainable in English and Arabic. Existing reprint/resend interface signatures remain unchanged (parallel running, no impact to current channels).",
-   "phase": 25,
-   "x": 6463.0,
-   "y": 2030.0,
-   "w": 206,
-   "h": 100,
-   "cx": 6566.0,
-   "cy": 2080.0
-  },
-  {
-   "id": "batch_stats",
-   "type": "system",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Update Batch Statistics",
-   "sub": "BR-011 / BR-078 / BR-072 / BR-073 / BFR_CONSL_BATCH_001.05_View_Statistics",
-   "desc": "Batch statistics display successful and failed PDF generation with identifier, bill number, account number, status and reason. BR-072 (processing status maintained/displayed at batch and item level). BR-073 (supported operational status values: Failed, Ready, Report Generated, Invoice Completed, Failed Sending Email). Status Model \u2014 Batch: Report Generated (batch reports have been produced).",
-   "phase": 33,
-   "x": 8487.0,
-   "y": 310.0,
-   "w": 190,
-   "h": 100,
-   "cx": 8582.0,
-   "cy": 360.0
-  },
-  {
-   "id": "admin_console",
-   "type": "agent",
-   "lane": "ops",
-   "slot": 0,
-   "label": "Admin Console \u2014 Batch / Bill / Hot Bill Actions",
-   "sub": "BR-070 / BR-074 / BR-075 / BR-071 / BR-076 / BR-077 / BR-079 / BFR_ADM_CONSL_001.01 / BFR_HOT_BILL_DTLS_002.01 / BFR_HOT_BILL_DTLS_002.02 / BFR_HOT_BILL_DTLS_002.03_Status_Log / BFR_HOT_BILL_DTLS_002.04_Download_pdf / BFR_HOT_BILL_DTLS_002.05_Download_Xls / BFR_HOT_BILL_DTLS_002.06_Download_xml / BFR_HOT_BILL_DTLS_002.07_Reprint_Bill / BFR_HOT_BILL_DTLS_002.08_regenerate_Document / BFR_HOT_BILL_DTLS_002.09_Regenerate_xml / BFR_HOT_BILL_DTLS_002.10_Send_Email",
-   "desc": "Front-end Admin Console for Billing Operations covering batches, bills, hot bills, XML records, reports, translations and role-based access. Batch action menu: View Bills, View Statistics, Overall Report, Detail Report, Failed Report, Failed Email Report, Send Overall Report, Send Email. Bill action menu (applies equally to the hot bill register): Status Log, Download PDF, Download XLS, Download XML, Reprint Bill, Regenerate Document, Regenerate XML, Send Email. BR-071 (batch list displays identifier, date created, reference, status). BR-076 (status log displays identifier, label, reason, date created). BR-077 (selected bill downloadable in PDF, XLS and XML). BR-079 (hot bill register displays identifier, process date, bill number).",
-   "phase": 34,
-   "x": 8731.0,
-   "y": 1070.0,
-   "w": 206,
-   "h": 100,
-   "cx": 8834.0,
-   "cy": 1120.0
-  },
-  {
-   "id": "search_retrieve",
-   "type": "agent",
-   "lane": "ops",
-   "slot": 0,
-   "label": "Search & Retrieve Invoices / Reports / XML",
-   "sub": "BR-090 / BR-091 / BR-092 / BR-093 / BFR_CONSL_INV_SEARCH_001.01 / BFR_CONSL_SEARCH_001.01 / BFR_CONSL_XML_SEARCH_001.01",
-   "desc": "Search across invoice type, invoice number, batch identifier, date created, language, MSISDN, product, status, email address, account number, customer type and internal identifier. Results support download, regenerate, reprocess and email actions by role and status. BR-093 (configuration records open in a separate window/pop-up on drill-down).",
-   "phase": 35,
-   "x": 8983.0,
-   "y": 1070.0,
-   "w": 206,
-   "h": 100,
-   "cx": 9086.0,
-   "cy": 1120.0
-  },
-  {
-   "id": "ref_data_config",
-   "type": "agent",
-   "lane": "ops",
-   "slot": 1,
-   "label": "Reference Data Configuration",
-   "sub": "BR-100/BR-101/BR-102/BR-103/BR-104/BR-105/BR-106/BR-107/BR-108/BR-109/BR-110/BR-111/BR-112/BR-113 / P-11 / INT-08 / BFR_CONSL_ADJ_RSN_CONF_001.01 / BFR_CONSL_ADJ_RSN_CONF_001.02_Create / BFR_CONSL_ADJ_RSN_CONF_001.02_Edit / BFR_CONSL_BANNER_CONF_001.01 / BFR_CONSL_CONSL_BENEFIT_CONF_001.01_Benefit_Configure / BFR_CONSL_CONSL_BENEFIT_CONF_001.02_Benefit_Edit_Delete / BFR_CONSL_CONSL_BENEFIT_CONF_001.03_Benefit_Create / BFR_CONSL_CONSL_BENEFIT_CONF_001.04_Benefit_Search / BFR_CONSL_CONSL_CONF_001.01 / BFR_CONSL_CONSL_CONF_001.02 / BFR_CONSL_EML_TEMP_CONF_001.01 / BFR_CONSL_FLEX_BKT_CONF_001.01 / BFR_CONSL_FLEX_BKT_CONF_001.02 / BFR_CONSL_FLEX_BKT_CONF_001.03 / BFR_CONSL_PLAN_SPEED_001.01 / BFR_CONSL_VAS_CONF_001.01 / BFR_CONSL_VAS_CONF_001.02 / BFR_CONSL_VAS_CONF_001.03 / BFR_SETTNG_CONSL_TRNSL_CONF_001.01 / BFR_SETTNG_CONSL_TRNSL_CONF_001.02",
-   "desc": "Translation, adjustment reason, benefits, flex bucket, VAS short code and plan speed configuration, with import/export, effective dating and role control; benefit/flex bucket/VAS/plan speed synchronise with the product catalogue where applicable. P-11 (configuration export and import formats). Integration: INT-08 (Product Catalogue, configuration synchronisation).",
-   "systems": [
-    "Product Catalogue"
-   ],
-   "phase": 35,
-   "x": 8983.0,
-   "y": 1210.0,
-   "w": 206,
-   "h": 100,
-   "cx": 9086.0,
-   "cy": 1260.0
-  },
-  {
-   "id": "template_config",
-   "type": "agent",
-   "lane": "ops",
+   "phase": 7,
+   "label": "Resend Request from Siebel CRM",
+   "sub": "BR-047, BFR_EML_RESEND_001.01",
+   "desc": "A resend request carries the account number and bill reference; only a previously generated invoice may be resent.",
    "slot": 2,
-   "label": "Template & Presentation Configuration",
-   "sub": "BR-120/BR-121/BR-122/BR-123/BR-124 / BFR_CONSL_BILL_TEMPLATE_CONF_001.01 / BFR_CONSL_CONF_DRL_DWN_001.01 / BFR_CONSL_INTRCT_PDF_001.01 / BFR_CONSL_INTRCT_PDF_001.02 / BFR_INVC_TEMPLT_CHNG_001.01 / BFR_INVOICE__BUS_RULE_001.01 / REQ_BFR_006",
-   "desc": "Bill template field maintenance by segment and invoice type; bill banner configuration with page-overlap handling; report template configuration; interactive PDF tabs and dynamic links.",
-   "phase": 35,
-   "x": 8983.0,
-   "y": 1350.0,
    "w": 206,
    "h": 100,
-   "cx": 9086.0,
-   "cy": 1400.0
+   "x": 1987.0,
+   "y": 4950.0,
+   "cx": 2090.0,
+   "cy": 5000.0
   },
   {
-   "id": "reporting_dash",
-   "type": "system",
-   "lane": "bfr",
-   "slot": 0,
-   "label": "Reporting & Dashboards",
-   "sub": "BR-130/BR-131/BR-132/BR-133/BR-134/BR-135/BR-136/BR-137/BR-138/BR-139/BR-140/BR-141/BR-142 / P-03 / P-04 / P-05 / P-06 / P-07 / P-10 / BFR_CONSL_DASH_BRD_001.01 / BFR_CONSL_EML_TEMP_CONF_001.02 / BFR_CONSL_OPR_STAT_001.02 / BFR_CONSL_REP_001.01 / BFR_CONSL_REP_001.02 / BFR_CONSL_REP_001.03 / BFR_CONSL_REP_001.04 / BFR_CONSL_REP_001.05 / BFR_CONSL_REP_001.06 / BFR_CONSL_REP_001.07 / BFR_CONSL_REP_001.08 / BFR_CONSL_REP_001.09 / BFR_CONSL_REP_001.10_BiullRunMonitor / BFR_CONSL_REP_001.11_VLB / BFR_CONSL_REP_001.12_Overall / BFR_CONSL_REP_001.13_Internal / BFR_CONSL_REP_001.14_Failed_Bill_Report / BFR_DATA_SORTING_001.01",
-   "desc": "Enterprise reports (CDR List, Credit File, Invoice Report), operational dashboard, batch reports, failed bill/email reports, processing statistics, bill run monitor and hot bill failure alerts. Reports generated daily, monthly, after bill run or ad hoc, in PDF, CSV or Excel; no print media output produced (BR-132). P-03 (hot bill failure report interval). P-04 (bill run days). P-05 (bill run monitor interval). P-06 (delivery preference PDF only, code 0). P-07 (delivery preference PDF and XLS, code 3). P-10 (supported report output formats).",
-   "phase": 34,
-   "x": 8739.0,
-   "y": 332.0,
-   "w": 190,
-   "h": 56,
-   "cx": 8834.0,
-   "cy": 360.0
-  },
-  {
-   "id": "retention",
+   "id": "resend_template",
    "type": "control",
-   "lane": "bfr",
-   "slot": 1,
-   "label": "Storage & Retention Housekeeping",
-   "sub": "BR-160 / BFR_STRG_RTN_POL_001.01",
-   "desc": "Generated invoices, reports, XML files and emails are retained for the configured duration; artefacts exceeding the retention period are removed automatically. Retention periods: to be confirmed (P-14/P-15/P-16/P-17/P-18).",
-   "phase": 33,
-   "x": 8479.0,
-   "y": 450.0,
+   "lane": "bf",
+   "phase": 7,
+   "label": "Apply Resend Email Template",
+   "sub": "BR-048",
+   "desc": "The resend email template may differ from the first-time bill email template and is separately maintainable in English and Arabic.",
+   "slot": 0,
    "w": 206,
    "h": 100,
-   "cx": 8582.0,
-   "cy": 500.0
+   "x": 1987.0,
+   "y": 2690.0,
+   "cx": 2090.0,
+   "cy": 2740.0
   },
   {
-   "id": "end_batch_complete",
-   "type": "end",
-   "lane": "bfr",
+   "id": "resend_dispatch",
+   "type": "agent",
+   "lane": "email",
+   "phase": 7,
+   "label": "Despatch Resend Email",
+   "sub": "BR-047",
+   "desc": "The resend invoice is despatched and the delivery status is recorded and visible.",
    "slot": 0,
-   "label": "Batch Processing Complete",
-   "sub": "Status Model \u2014 Batch: Email Sent (terminal)",
-   "desc": "All invoice outputs within the batch generated and email despatch complete. Status Model \u2014 Batch: Invoice Completed (all invoice outputs within the batch have been generated).",
-   "phase": 32,
-   "x": 8280.0,
-   "y": 310.0,
+   "w": 206,
+   "h": 60,
+   "x": 1987.0,
+   "y": 5250.0,
+   "cx": 2090.0,
+   "cy": 5280.0
+  },
+  {
+   "id": "interface_preserve",
+   "type": "control",
+   "lane": "bf",
+   "phase": 7,
+   "label": "Preserve Existing Interface Signatures",
+   "sub": "BR-049",
+   "desc": "The existing reprint and resend interface signatures remain unchanged to support parallel running and to avoid impact to current channels.",
+   "slot": 4,
+   "w": 206,
+   "h": 100,
+   "x": 1987.0,
+   "y": 3570.0,
+   "cx": 2090.0,
+   "cy": 3620.0
+  },
+  {
+   "id": "end",
+   "type": "end",
+   "lane": "bf",
+   "phase": 7,
+   "label": "Batch/Bill Cycle Complete",
+   "sub": "Batch: Email Sent (Terminal)",
+   "desc": "Invoice emails for the batch have been despatched, completing the batch processing lifecycle.",
+   "slot": 3,
    "w": 100,
    "h": 100,
-   "cx": 8330.0,
-   "cy": 360.0
-  },
-  {
-   "id": "platform_tax_currency",
-   "type": "control",
-   "lane": "bfr",
-   "phase": 15,
-   "slot": 1,
-   "label": "Currency & Tax Handling",
-   "sub": "BFR_MULT_CUR_001.01 / BFR_CONSL_CONF_001.04 / BR-161 / BR-162 / P-13",
-   "desc": "Currency information received in the source billing data is used to generate the invoice in that currency (BR-161); base currency is Qatari Riyal (P-13). Tax information received in the source data is processed and displayed on the invoice (BR-162).",
-   "x": 3943.0,
-   "y": 470.0,
-   "w": 206,
-   "h": 60,
-   "cx": 4046.0,
-   "cy": 500.0
+   "x": 2040.0,
+   "y": 3350.0,
+   "cx": 2090.0,
+   "cy": 3400.0
   }
  ],
  "flows": [
   {
    "from": "start",
-   "to": "pull_regular",
+   "to": "xml_retrieve",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "start",
-   "to": "pull_trial",
-   "kind": "seq",
-   "label": "trial run"
-  },
-  {
-   "from": "start",
-   "to": "pull_hot",
-   "kind": "seq",
-   "label": "hot bill request"
-  },
-  {
-   "from": "start",
-   "to": "manual_upload",
-   "kind": "seq",
-   "label": "manual upload path"
-  },
-  {
-   "from": "pull_regular",
-   "to": "atomic_write",
+   "from": "xml_retrieve",
+   "to": "xml_atomic_write",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "pull_trial",
-   "to": "atomic_write",
-   "kind": "seq"
-  },
-  {
-   "from": "pull_hot",
-   "to": "atomic_write",
-   "kind": "seq"
-  },
-  {
-   "from": "manual_upload",
-   "to": "atomic_write",
-   "kind": "seq"
-  },
-  {
-   "from": "atomic_write",
-   "to": "dup_check",
+   "from": "xml_atomic_write",
+   "to": "xml_batch_group",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "dup_check",
-   "to": "batch_create",
+   "from": "xml_batch_group",
+   "to": "xml_dupe_check",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "batch_create",
-   "to": "schema_validate",
+   "from": "xml_dupe_check",
+   "to": "xml_log_retrieval",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "schema_validate",
-   "to": "d_valid",
+   "from": "xml_log_retrieval",
+   "to": "d_retrieval_error",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "d_valid",
-   "to": "type_segment",
+   "from": "d_retrieval_error",
+   "to": "err_retrieval_failure",
    "kind": "cond",
-   "label": "Valid",
-   "happy": true
+   "label": "Retry exhausted",
+   "happy": false
   },
   {
-   "from": "d_valid",
-   "to": "failed_xml",
-   "kind": "cond",
-   "label": "Failed XML"
-  },
-  {
-   "from": "failed_xml",
-   "to": "xml_portal_visible",
-   "kind": "seq"
-  },
-  {
-   "from": "xml_portal_visible",
-   "to": "reprocess_failed_xml",
-   "kind": "seq"
-  },
-  {
-   "from": "reprocess_failed_xml",
-   "to": "schema_validate",
-   "kind": "esc",
-   "label": "corrected, reprocess"
-  },
-  {
-   "from": "failed_xml",
-   "to": "retry_retrieval",
-   "kind": "esc"
-  },
-  {
-   "from": "retry_retrieval",
-   "to": "pull_regular",
-   "kind": "esc",
-   "label": "retry per policy"
-  },
-  {
-   "from": "schema_validate",
-   "to": "stats_log",
-   "kind": "data"
-  },
-  {
-   "from": "failed_xml",
-   "to": "stats_log",
-   "kind": "data"
-  },
-  {
-   "from": "type_segment",
-   "to": "parse_load",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "parse_load",
-   "to": "csv_check",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "csv_check",
-   "to": "csv_alert",
-   "kind": "cond",
-   "label": "CSV absent > 4h"
-  },
-  {
-   "from": "csv_check",
-   "to": "batch_ready",
-   "kind": "cond",
-   "label": "CSV present / not required",
-   "happy": true
-  },
-  {
-   "from": "csv_alert",
-   "to": "batch_ready",
-   "kind": "seq"
-  },
-  {
-   "from": "batch_ready",
-   "to": "d_bill_type",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "d_bill_type",
-   "to": "gen_regular",
-   "kind": "cond",
-   "label": "Regular",
-   "happy": true
-  },
-  {
-   "from": "d_bill_type",
-   "to": "gen_trial",
-   "kind": "cond",
-   "label": "Trial"
-  },
-  {
-   "from": "d_bill_type",
-   "to": "gen_hot",
-   "kind": "cond",
-   "label": "Hot"
-  },
-  {
-   "from": "gen_regular",
-   "to": "lang_determine",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "gen_trial",
-   "to": "lang_determine",
-   "kind": "seq"
-  },
-  {
-   "from": "gen_hot",
-   "to": "lang_determine",
-   "kind": "seq"
-  },
-  {
-   "from": "gen_regular",
-   "to": "gen_bulk_sms",
-   "kind": "data",
-   "label": "Bulk SMS segment"
-  },
-  {
-   "from": "gen_regular",
-   "to": "gen_iot",
-   "kind": "data",
-   "label": "IoT segment"
-  },
-  {
-   "from": "gen_regular",
-   "to": "enterprise_detail",
-   "kind": "data",
-   "label": "Enterprise detailed bill"
-  },
-  {
-   "from": "lang_determine",
-   "to": "calc_fields",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "calc_fields",
-   "to": "d_gen_success",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "gen_bulk_sms",
-   "to": "d_gen_success",
-   "kind": "seq"
-  },
-  {
-   "from": "gen_iot",
-   "to": "d_gen_success",
-   "kind": "seq"
-  },
-  {
-   "from": "gen_trial",
-   "to": "trial_exclude",
-   "kind": "seq"
-  },
-  {
-   "from": "trial_exclude",
-   "to": "d_gen_success",
-   "kind": "seq"
-  },
-  {
-   "from": "d_gen_success",
-   "to": "original_immutable",
+   "from": "d_retrieval_error",
+   "to": "xml_type_segment",
    "kind": "cond",
    "label": "Success",
    "happy": true
   },
   {
-   "from": "d_gen_success",
-   "to": "gen_failed",
+   "from": "xml_type_segment",
+   "to": "xml_validate",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "xml_validate",
+   "to": "d_xml_valid",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "d_xml_valid",
+   "to": "xml_failed",
    "kind": "cond",
-   "label": "Failed"
+   "label": "Failed",
+   "happy": false
   },
   {
-   "from": "gen_failed",
-   "to": "gen_retry",
-   "kind": "esc"
+   "from": "d_xml_valid",
+   "to": "xml_parse",
+   "kind": "cond",
+   "label": "Valid",
+   "happy": true
   },
   {
-   "from": "gen_retry",
-   "to": "schema_validate",
+   "from": "xml_failed",
+   "to": "xml_reprocess",
    "kind": "esc",
-   "label": "reprocess"
+   "happy": false
   },
   {
-   "from": "original_immutable",
-   "to": "mask_gen",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "mask_gen",
-   "to": "role_presentation",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "role_presentation",
-   "to": "d_review_switch",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "d_review_switch",
-   "to": "review",
-   "kind": "cond",
-   "label": "On"
-  },
-  {
-   "from": "d_review_switch",
-   "to": "channel_avail",
-   "kind": "cond",
-   "label": "Off",
-   "happy": true
-  },
-  {
-   "from": "review",
-   "to": "d_review_outcome",
-   "kind": "seq"
-  },
-  {
-   "from": "d_review_outcome",
-   "to": "channel_avail",
-   "kind": "cond",
-   "label": "Approved",
-   "happy": true
-  },
-  {
-   "from": "d_review_outcome",
-   "to": "rejected",
-   "kind": "cond",
-   "label": "Rejected"
-  },
-  {
-   "from": "rejected",
-   "to": "gen_regular",
-   "kind": "esc",
-   "label": "pending on regeneration"
-  },
-  {
-   "from": "channel_avail",
-   "to": "hot_landing",
+   "from": "xml_reprocess",
+   "to": "xml_retrieve",
    "kind": "data",
-   "label": "hot bill"
+   "happy": false
   },
   {
-   "from": "channel_avail",
+   "from": "xml_validate",
+   "to": "xml_stats",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "xml_stats",
+   "to": "xml_parse",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "xml_retrieve",
+   "to": "csv_scheduler",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "csv_scheduler",
+   "to": "csv_alert",
+   "kind": "esc",
+   "happy": false
+  },
+  {
+   "from": "xml_parse",
+   "to": "invoice_generate",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "invoice_lang",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_lang",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "invoice_enterprise_detail",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_enterprise_detail",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "invoice_bulk_iot",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_bulk_iot",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "trial_scope",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "trial_scope",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "d_invoice_gen_ok",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "d_invoice_gen_ok",
+   "to": "invoice_failed",
+   "kind": "cond",
+   "label": "Failed",
+   "happy": false
+  },
+  {
+   "from": "d_invoice_gen_ok",
+   "to": "invoice_completed",
+   "kind": "cond",
+   "label": "Success",
+   "happy": true
+  },
+  {
+   "from": "invoice_failed",
+   "to": "invoice_retry_control",
+   "kind": "esc",
+   "happy": false
+  },
+  {
+   "from": "invoice_retry_control",
+   "to": "invoice_generate",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "invoice_completed",
+   "to": "regen_request",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "regen_request",
+   "to": "regen_xml_check",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "regen_xml_check",
+   "to": "regen_execute",
+   "kind": "cond",
+   "label": "Yes \u2014 use latest",
+   "happy": true
+  },
+  {
+   "from": "regen_xml_check",
+   "to": "regen_execute",
+   "kind": "cond",
+   "label": "No \u2014 use existing",
+   "happy": true
+  },
+  {
+   "from": "regen_request",
+   "to": "regen_legacy_buffer",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "regen_legacy_buffer",
+   "to": "regen_execute",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "regen_execute",
+   "to": "review_switch",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "review_switch",
+   "to": "review_approve",
+   "kind": "cond",
+   "label": "On \u2014 review required",
+   "happy": false
+  },
+  {
+   "from": "review_switch",
+   "to": "channel_availability",
+   "kind": "cond",
+   "label": "Off \u2014 bypass review",
+   "happy": true
+  },
+  {
+   "from": "review_approve",
+   "to": "channel_availability",
+   "kind": "data",
+   "label": "Approved",
+   "happy": false
+  },
+  {
+   "from": "review_approve",
+   "to": "invoice_rejected",
+   "kind": "data",
+   "label": "Rejected",
+   "happy": false
+  },
+  {
+   "from": "invoice_rejected",
+   "to": "regen_request",
+   "kind": "err",
+   "happy": false
+  },
+  {
+   "from": "channel_availability",
+   "to": "hot_bill_landing",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "hot_bill_landing",
+   "to": "crm_notification",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "channel_availability",
+   "to": "trial_exclude",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "channel_availability",
+   "to": "predispatch_masking",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "predispatch_masking",
    "to": "d_email_eligible",
    "kind": "seq",
    "happy": true
+  },
+  {
+   "from": "d_email_eligible",
+   "to": "email_suppressed",
+   "kind": "cond",
+   "label": "Suppressed",
+   "happy": false
   },
   {
    "from": "d_email_eligible",
@@ -1786,218 +1707,260 @@
    "happy": true
   },
   {
-   "from": "d_email_eligible",
-   "to": "trial_terminal",
-   "kind": "cond",
-   "label": "Trial (never emailed)"
-  },
-  {
    "from": "email_template",
-   "to": "suppression_check",
+   "to": "email_dispatch",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "suppression_check",
-   "to": "suppressed",
-   "kind": "cond",
-   "label": "On suppression list"
-  },
-  {
-   "from": "suppression_check",
-   "to": "smtp_despatch",
-   "kind": "cond",
-   "label": "Not suppressed",
-   "happy": true
-  },
-  {
-   "from": "smtp_despatch",
-   "to": "d_smtp_result",
+   "from": "email_dispatch",
+   "to": "d_email_delivered",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "d_smtp_result",
-   "to": "email_sent",
-   "kind": "cond",
-   "label": "Accepted",
-   "happy": true
-  },
-  {
-   "from": "d_smtp_result",
+   "from": "d_email_delivered",
    "to": "email_failed",
    "kind": "cond",
-   "label": "Failure"
+   "label": "Failed",
+   "happy": false
   },
   {
-   "from": "email_sent",
-   "to": "d_delivery",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "d_delivery",
-   "to": "email_delivered",
+   "from": "d_email_delivered",
+   "to": "crm_notification",
    "kind": "cond",
    "label": "Delivered",
    "happy": true
   },
   {
-   "from": "d_delivery",
-   "to": "email_failed",
-   "kind": "cond",
-   "label": "Failed"
-  },
-  {
    "from": "email_failed",
-   "to": "smtp_despatch",
-   "kind": "esc",
-   "label": "resend on retry"
+   "to": "email_dispatch",
+   "kind": "err",
+   "happy": false
   },
   {
-   "from": "email_delivered",
-   "to": "crm_log",
-   "kind": "data"
-  },
-  {
-   "from": "suppressed",
-   "to": "crm_log",
-   "kind": "data"
-  },
-  {
-   "from": "channel_avail",
-   "to": "sms_despatch",
+   "from": "predispatch_masking",
+   "to": "multi_channel_delivery",
    "kind": "data",
-   "label": "SMS channel"
+   "happy": false
   },
   {
-   "from": "channel_avail",
-   "to": "whatsapp_despatch",
+   "from": "multi_channel_delivery",
+   "to": "crm_notification",
    "kind": "data",
-   "label": "WhatsApp channel"
+   "happy": false
   },
   {
-   "from": "channel_avail",
-   "to": "web_display",
-   "kind": "data",
-   "label": "Web channel"
-  },
-  {
-   "from": "crm_log",
-   "to": "batch_stats",
-   "kind": "data"
-  },
-  {
-   "from": "email_delivered",
-   "to": "end_batch_complete",
+   "from": "crm_notification",
+   "to": "end",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "reprint_request",
-   "to": "reprint_register",
-   "kind": "seq"
+   "from": "channel_availability",
+   "to": "invoice_search",
+   "kind": "data",
+   "happy": false
   },
   {
-   "from": "resend_request",
-   "to": "reprint_register",
-   "kind": "seq"
+   "from": "invoice_search",
+   "to": "search_result_actions",
+   "kind": "seq",
+   "happy": false
   },
   {
-   "from": "regen_request",
-   "to": "reprint_register",
-   "kind": "seq"
+   "from": "invoice_search",
+   "to": "xml_search",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "xml_search",
+   "to": "config_drilldown",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "search_result_actions",
+   "to": "config_drilldown",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "admin_console",
+   "to": "batch_action_menu",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "batch_action_menu",
+   "to": "bill_action_menu",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "bill_action_menu",
+   "to": "document_download",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "admin_console",
+   "to": "batch_statistics",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "admin_console",
+   "to": "hot_bill_register",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "invoice_search",
+   "to": "admin_console",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "config_drilldown",
+   "to": "reference_config",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "reference_config",
+   "to": "template_config",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "template_config",
+   "to": "reporting_dashboards",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "reporting_dashboards",
+   "to": "bill_run_monitor",
+   "kind": "esc",
+   "happy": false
+  },
+  {
+   "from": "reporting_dashboards",
+   "to": "hot_bill_failure_alert",
+   "kind": "esc",
+   "happy": false
+  },
+  {
+   "from": "invoice_completed",
+   "to": "mask_original_immutable",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "mask_original_immutable",
+   "to": "mask_generate",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "mask_generate",
+   "to": "d_role_presentation",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "d_role_presentation",
+   "to": "present_masked",
+   "kind": "cond",
+   "label": "Restricted",
+   "happy": false
+  },
+  {
+   "from": "d_role_presentation",
+   "to": "present_full",
+   "kind": "cond",
+   "label": "Privileged",
+   "happy": false
+  },
+  {
+   "from": "present_masked",
+   "to": "agent_customer_copy",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "present_full",
+   "to": "agent_customer_copy",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "agent_customer_copy",
+   "to": "end_masking",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "mask_generate",
+   "to": "mask_rule_config",
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "reprint_request",
    "to": "reprint_generate",
-   "kind": "seq"
-  },
-  {
-   "from": "regen_request",
-   "to": "legacy_buffer",
-   "kind": "cond",
-   "label": "legacy invoice"
-  },
-  {
-   "from": "legacy_buffer",
-   "to": "d_legacy_avail",
-   "kind": "seq"
-  },
-  {
-   "from": "d_legacy_avail",
-   "to": "regen_consume_latest",
-   "kind": "cond",
-   "label": "Available"
-  },
-  {
-   "from": "d_legacy_avail",
-   "to": "legacy_unavailable",
-   "kind": "cond",
-   "label": "Unavailable"
-  },
-  {
-   "from": "regen_consume_latest",
-   "to": "gen_regular",
-   "kind": "esc",
-   "label": "regenerate"
+   "kind": "seq",
+   "happy": false
   },
   {
    "from": "reprint_generate",
-   "to": "channel_avail",
-   "kind": "esc",
-   "label": "reprint to requesting channel"
+   "to": "reprint_transfer_mz",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "reprint_transfer_mz",
+   "to": "reprint_register",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "reprint_generate",
+   "to": "interface_preserve",
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "resend_request",
-   "to": "resend_email",
-   "kind": "seq"
+   "to": "resend_template",
+   "kind": "seq",
+   "happy": false
   },
   {
-   "from": "resend_email",
-   "to": "smtp_despatch",
-   "kind": "esc",
-   "label": "resend despatch"
+   "from": "resend_template",
+   "to": "resend_dispatch",
+   "kind": "seq",
+   "happy": false
   },
   {
-   "from": "batch_stats",
-   "to": "admin_console",
-   "kind": "data"
+   "from": "resend_dispatch",
+   "to": "reprint_register",
+   "kind": "data",
+   "happy": false
   },
   {
-   "from": "admin_console",
-   "to": "search_retrieve",
-   "kind": "data"
+   "from": "resend_request",
+   "to": "interface_preserve",
+   "kind": "data",
+   "happy": false
   },
   {
-   "from": "admin_console",
-   "to": "ref_data_config",
-   "kind": "data"
-  },
-  {
-   "from": "admin_console",
-   "to": "template_config",
-   "kind": "data"
-  },
-  {
-   "from": "batch_stats",
-   "to": "reporting_dash",
-   "kind": "data"
-  },
-  {
-   "from": "end_batch_complete",
-   "to": "retention",
-   "kind": "data"
-  },
-  {
-   "from": "lang_determine",
-   "to": "platform_tax_currency",
-   "kind": "data"
-  },
-  {
-   "from": "platform_tax_currency",
-   "to": "d_gen_success",
-   "kind": "data"
+   "from": "reprint_register",
+   "to": "end",
+   "kind": "data",
+   "happy": false
   }
  ],
  "model": {

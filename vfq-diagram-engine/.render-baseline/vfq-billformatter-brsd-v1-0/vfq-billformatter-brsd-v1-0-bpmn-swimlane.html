@@ -144,7 +144,23 @@ a{color:var(--accent);text-decoration:none}
    keeps the canvas usable even in a very short viewport, matching the old SHELL_MIN_H floor that
    used to be enforced in JS. */
 .diagram-shell{position:relative;width:100%;box-sizing:border-box;
- flex:1;min-height:340px;overflow:auto;cursor:grab;user-select:none;-webkit-user-select:none}
+ flex:1;min-height:340px;overflow:auto;cursor:grab;user-select:none;-webkit-user-select:none;
+ scrollbar-width:auto;scrollbar-color:var(--muted) var(--panelalt)}
+/* Force a persistent, always-rendered scrollbar rather than the OS-default auto-hiding
+   overlay (macOS/trackpad-driven systems hide overflow:auto's scrollbar entirely until an
+   active scroll gesture, and never show it in a static screenshot, a "full page" capture
+   tool, or a PDF/PNG export — any of which only ever see the currently-scrolled slice of a
+   wide diagram with NO visual indication that more content exists off-screen). Styling
+   ::-webkit-scrollbar switches Chromium/Safari out of overlay mode into classic
+   always-reserved-space scrollbars; scrollbar-width/-color above does the equivalent for
+   Firefox. This is what actually makes horizontal scrolling *discoverable*, not just
+   technically present via overflow:auto. */
+.diagram-shell::-webkit-scrollbar{width:14px;height:14px}
+.diagram-shell::-webkit-scrollbar-track{background:var(--panelalt)}
+.diagram-shell::-webkit-scrollbar-thumb{background:var(--muted);border-radius:var(--radius-pill);
+ border:3px solid var(--panelalt);background-clip:padding-box}
+.diagram-shell::-webkit-scrollbar-thumb:hover{background:var(--ink2)}
+.diagram-shell::-webkit-scrollbar-corner{background:var(--panelalt)}
 /* .panning (toggled by the drag-to-pan pointerdown/up handlers, further down) forces a
    grabbing cursor everywhere over the shell for the duration of an active drag — including
    over a node, which would otherwise keep showing its own .node{cursor:pointer} since that's a
@@ -314,35 +330,133 @@ a{color:var(--accent);text-decoration:none}
     anyway, so top/height simply apply instantly; only the open/close slide stays animated. */
  display:flex;flex-direction:column}
 .drawer.open{transform:none}
-.drawer .dh{padding:var(--space-4) var(--space-5);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:var(--space-3)}
-.drawer .dh h3{font-size:15px}
+/* Resize handle — a thin drag strip on the drawer's own left edge (its only free edge; top,
+   right and bottom are all screen boundaries) letting a reader widen the panel on demand for
+   content that would otherwise wrap or scroll more than necessary (a long Rules & safeguards
+   list, a wide Incoming/Outgoing paths box, etc.). Kept as a genuine drag interaction rather
+   than a fixed "expanded" toggle state so the reader lands on whatever width actually suits the
+   node they're looking at, not one of two preset sizes. 6px hit target (comfortably
+   grabbable) with only a 2px visible bar centred in it, so it doesn't read as a stray line down
+   the drawer at rest — the full hit target and an accent-coloured bar both light up on hover so
+   it's still discoverable. */
+.drawer-resize-handle{position:absolute;top:0;left:-3px;width:6px;height:100%;cursor:ew-resize;
+ z-index:1;background:transparent}
+.drawer-resize-handle::after{content:'';position:absolute;top:0;left:2px;width:2px;height:100%;
+ background:transparent;transition:background-color .15s var(--ease-standard)}
+.drawer-resize-handle:hover::after,.drawer-resize-handle.dragging::after{background:var(--accent)}
+/* Dragging disables the width transition (below) and the text-selection that would otherwise
+   fire on every mouse-move while the button is held, and forces the resize cursor everywhere
+   over the page (not just while directly over the 6px handle) so a fast mouse movement that
+   briefly leaves the handle's own hit-box doesn't flicker the cursor back to normal mid-drag. */
+body.drawer-resizing{cursor:ew-resize !important;user-select:none}
+body.drawer-resizing .drawer{transition:none}
+/* Drawer layout/structure reworked to match a supplied reference (stacked header with the type
+   pill promoted above a larger title, a dot-badge row for Stage/Actor, every content section as
+   a distinctly-tinted rounded card, Inputs/Outputs side by side). Only STRUCTURE changes here —
+   every colour is one already defined in this file's own :root token set or an existing literal
+   reused verbatim from elsewhere in it (FILL/PHASE_PALETTE/.assum), never a new colour invented
+   to chase the reference's own literal palette. Same principle .dsec-paths below already
+   established for the Incoming/Outgoing box, extended to the rest of the panel. */
+.drawer .dh{padding:var(--space-5);border-bottom:4px solid var(--line);display:flex;flex-direction:column;gap:var(--space-3)}
+.drawer .dh-top{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-3)}
+.drawer .dh h3{font-size:19px;font-weight:800;line-height:1.28;margin:0;color:var(--ink)}
 .drawer .db{padding:var(--space-4) var(--space-5);overflow:auto}
-.drawer .x{cursor:pointer;color:var(--muted);font-size:20px;line-height:1;border:none;background:none}
-.dsec{margin-bottom:14px}
+/* A bare "×" glyph read as flat/incidental against the drawer's now much more deliberate
+   header. A small floating circular button (shadow + pill radius, both already-established
+   chrome tokens) reads as an intentional, tappable dismiss action instead. */
+.drawer .x{cursor:pointer;color:var(--ink2);font-size:15px;line-height:1;border:none;
+ background:var(--panel);width:28px;height:28px;border-radius:var(--radius-pill);
+ display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);flex:none}
+.drawer .x:hover{color:var(--ink)}
+/* Stage/Actor context — a plain two-column label|value table (was a pair of dot-tinted
+   pills), matching a supplied reference layout: one row per fact, a bold label cell on the
+   left, its value on the right, both in bordered cells rather than side-by-side floating
+   chips. Borders/text use this file's own existing neutral tokens (--line, --ink/--ink2,
+   --panelalt for the label cell's subtle fill) rather than the reference's literal stark black
+   rule lines, so it reads as "clean and straightforward" without clashing with the soft,
+   rounded, coloured-card treatment the rest of the drawer already uses — same principle every
+   other reference-driven pass in this file has followed (adopt the STRUCTURE, keep this file's
+   own palette/typography). No colour-coding by category any more (the dot/tint pairing is
+   gone) — the table's own row-per-fact structure already carries that distinction. */
+.dinfo-table{border-collapse:collapse;width:100%;margin-bottom:var(--space-4);font-size:12.5px}
+.dinfo-table td{border:1px solid var(--line);padding:6px 10px}
+.dinfo-table .dlabel{font-weight:700;color:var(--ink);background:var(--panelalt);width:64px;white-space:nowrap}
+.dinfo-table .dvalue{color:var(--ink2)}
+.dsec{margin-bottom:var(--space-3);border-radius:var(--radius-card);padding:var(--space-4)}
 .dsec .k{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700;margin-bottom:5px}
 .dsec ul{margin:0;padding-left:16px}
 .dsec li{margin-bottom:3px}
+/* Per-section tint, one pairing per section so a reader learns "purple = what this step does,
+   pink = what it needs, green = what it produces" etc. at a glance across every node they open —
+   every pairing below is an EXISTING token pair (or, for the two without a dedicated --xxx-bg
+   token, an exact literal already used elsewhere in this file for that same colour family, cited
+   in each comment) rather than a new colour invented for this pass.
+   Every card also gets a border now — a subtle, same-hue-as-the-label rgba() derived from that
+   SAME token, not a new colour. Originally only .dsec-example/.dsec-paths/.dinfo-table (below)
+   had one, inherited from styles this pass reused verbatim (.assum's cream palette, the
+   pre-existing Incoming/Outgoing box) — every OTHER card here was new in this same pass and
+   only got a background fill, an inconsistency with no intentional reason behind it, not a
+   deliberate "some cards are bordered, some aren't" design choice. */
+.dsec-desc{background:var(--pg-bg);border:1px solid rgba(56,96,190,.25)}
+.dsec-desc .k{color:var(--pg)}
+.dsec-inputs{background:var(--surface-warm);border:1px solid rgba(189,0,0,.2)}     /* --surface-warm is already this file's own "warm/pink" surface token */
+.dsec-inputs .k{color:var(--err)}
+.dsec-outputs{background:#e9f7e9;border:1px solid rgba(0,138,0,.2)}                /* == PHASE_PALETTE's own green tint literal, reused verbatim */
+.dsec-outputs .k{color:var(--start)}
+.dsec-example{background:#fef8e6;border:1px solid #fbe29e}   /* == .assum's own cream palette, reused verbatim */
+.dsec-example .k{color:#5d4400}
+.dsec-outcomes{background:var(--dec-bg);border:1px solid rgba(138,92,201,.25)}
+.dsec-outcomes .k{color:var(--dec)}
+.dsec-agents{background:var(--ai-bg);border:1px solid rgba(23,138,134,.25)}
+.dsec-agents .k{color:var(--ai)}
+.dsec-rules{background:var(--ext-bg);border:1px solid rgba(212,110,8,.25)}
+.dsec-rules .k{color:var(--ext)}
+.dsec-systems{background:var(--sys-bg);border:1px solid rgba(74,77,78,.2)}
+.dsec-systems .k{color:var(--sys)}
+.dsec-contracts{background:var(--panelalt);border:1px solid var(--line)}
+.dsec-contracts .k{color:var(--ink2)}
+/* Inputs/Outputs side by side, same two-column technique .dsec-paths already uses below —
+   degrades gracefully to a single full-width card if only one side has content, since flex
+   simply has one item to lay out instead of two. */
+.dsec-twocol{display:flex;gap:var(--space-3)}
+.dsec-twocol>.dsec{flex:1;min-width:0;margin-bottom:0}
 /* Incoming/Outgoing paths — a bordered two-column box replacing the previous separate
    "Comes after"/"Leads to" pill rows, matching a supplied reference layout. Kept in the
    drawer's existing sans-serif typography rather than switching to the reference's monospace
    face, since the rest of the drawer (and the rest of this skill's UI) is Inter/system-ui
    throughout — adopting the reference's STRUCTURE (bordered box, two columns, arrow + bold
    step name) without a wholesale typography change that would clash with everything else. */
-.dsec-paths{border:1px solid #b8d4f5;background:#eef4fd;border-radius:var(--radius-sm);padding:var(--space-4);
- display:flex;gap:20px;margin-bottom:14px}
+.dsec-paths{border:1px solid #b8d4f5;background:#eef4fd;border-radius:var(--radius-card);padding:var(--space-4);
+ display:flex;gap:20px;margin-bottom:var(--space-3)}
 .dsec-paths .col{flex:1;min-width:0}
 .dsec-paths .k{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);
  font-weight:700;margin-bottom:8px}
-.dsec-paths .path-item{display:flex;gap:6px;align-items:baseline;margin-bottom:6px;font-size:13px;line-height:1.4}
+.dsec-paths .path-item{display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:13px;line-height:1.4}
 .dsec-paths .path-item:last-child{margin-bottom:0}
-.dsec-paths .arrow{color:var(--muted);flex:none}
+/* Arrow glyph promoted to a small tinted circle (matching the reference's icon treatment) —
+   blue for a path coming IN, green for one going OUT, the same two pairings already used for
+   the Stage badge and the Outputs card respectively, not a third new colour. The no-outgoing-
+   step anomaly notice deliberately gets neither class, keeping its plain muted circle so the
+   warning colour lives only in its own text (see openDrawer()), not the icon too. */
+/* font-weight:800 (was the default ~400) + a slightly larger glyph: at 12px/normal-weight the
+   ←/→ character read as a thin, faint line against its own tinted circle — barely legible as an
+   icon rather than incidental punctuation. Bumped size/weight, not the circle itself, so the
+   icon reads as a deliberate glyph without changing the badge's own footprint. */
+.dsec-paths .arrow{color:var(--muted);flex:none;display:flex;align-items:center;justify-content:center;
+ width:22px;height:22px;border-radius:50%;font-size:14px;font-weight:800;line-height:1;background:var(--panelalt)}
+.dsec-paths .path-item.pin .arrow{background:var(--pg-bg);color:var(--pg)}
+.dsec-paths .path-item.pout .arrow{background:#e9f7e9;color:var(--start)}
 .dsec-paths .path-item b{font-weight:700;color:var(--ink)}
 .dsec-paths .path-item .detail{opacity:.7;font-weight:400}
 .pill{display:inline-block;font-size:10.5px;font-weight:700;border-radius:var(--radius-pill);padding:2px 7px;margin:2px 4px 2px 0}
-/* .t-portal is kept: the side drawer's own Stage/lane pills reuse it (the "Comes after"/
-   "Leads to" chips that also used to reuse this class have since been replaced entirely by
-   the bordered Incoming/Outgoing paths box above, which doesn't use .pill/.t-portal at all —
-   see .dsec-paths). Everything else in this block (table styling, .tag color variants,
+/* .dh-typepill: the type pill promoted into the header (was a body .dsec pill) — sized up
+   slightly to hold its own against the header's now much larger title. Colour still set inline
+   per node in openDrawer(), exactly as the old body pill was (FILL[type]/STROKE[type]), so
+   node-type colour-coding is unchanged, only its position moved. */
+.dh-typepill{font-size:11px;padding:4px 10px;margin:0}
+/* .t-portal is retained even though the side drawer's own Stage/lane pills no longer use it
+   (they're .dbadge-stage/.dbadge-actor now, see above) — kept for any future plain grey pill
+   need. Everything else that used to live in this block (table styling, .tag color variants,
    .search, .count, .sec-h) was exclusively for the four removed tabs (Agent Inventory, Inputs
    & Outputs, Data Flow Matrix, Source Traceability) and their tables, which no longer exist
    anywhere in this document. */
@@ -372,20 +486,114 @@ a{color:var(--accent);text-decoration:none}
  </div>
 
 </div>
-<aside class="drawer" id="drawer"><div class="dh"><h3 id="d-title">Node</h3><button class="x" id="d-close">×</button></div><div class="db" id="d-body"></div></aside>
-<script>window.DATA={"meta": {"title": "Mobile Postpaid Activation Journey \u2014 Retail Channel", "generated": "2026-09-03", "source": "VFQ_Mobile_Postpaid_Activation_BRSD_v1.1.xlsx"}, "layout": {"x0": 120, "topbar": 70, "colw": 252, "totalW": 23322, "totalH": 2290, "laneLabelW": 100, "lanes": [{"key": "trg", "name": "Trigger / Queue", "hint": "Qnomy queue and ticketing", "y": 70, "h": 180}, {"key": "agt", "name": "Retail Agent", "hint": "Agent-driven journey steps", "y": 270, "h": 320}, {"key": "ext", "name": "External Verification", "hint": "IDWise, MOI, Email Verification", "y": 610, "h": 180}, {"key": "crm", "name": "Siebel CRM", "hint": "Customer, account, billing, order and tracking records", "y": 810, "h": 180}, {"key": "bill", "name": "Credit & Billing", "hint": "Eligibility, credit control, billing account, WinCash payment", "y": 1010, "h": 320}, {"key": "inv", "name": "Inventory (UIM)", "hint": "MSISDN and SIM reservation, allocation, depletion", "y": 1350, "h": 180}, {"key": "ful", "name": "Fulfilment & Notification", "hint": "Downstream provisioning, notification, feedback survey", "y": 1550, "h": 600}], "phases": ["Journey Intake", "Journey Intake", "Journey Intake", "Journey Intake", "Journey Intake", "Verify Customer", "Verify Customer", "Verify Customer", "Verify Customer", "Verify Customer", "Verify Customer", "Verify Customer", "Verify Customer", "Verify Customer", "Verify Customer", "Verify Customer", "Verify Customer", "Account & Contact", "Account & Contact", "Account & Contact", "Account & Contact", "Account & Contact", "Account & Contact", "Account & Contact", "Account & Contact", "Account & Contact", "Account & Contact", "Account & Contact", "Account & Contact", "Account & Contact", "Eligibility & Credit", "Eligibility & Credit", "Eligibility & Credit", "Eligibility & Credit", "Eligibility & Credit", "Eligibility & Credit", "Eligibility & Credit", "Eligibility & Credit", "Eligibility & Credit", "Eligibility & Credit", "Eligibility & Credit", "Eligibility & Credit", "Billing Profile", "Billing Profile", "Billing Profile", "Billing Profile", "Billing Profile", "Billing Profile", "Cart, Number & SIM", "Cart, Number & SIM", "Cart, Number & SIM", "Cart, Number & SIM", "Cart, Number & SIM", "Cart, Number & SIM", "Cart, Number & SIM", "Cart, Number & SIM", "Cart, Number & SIM", "Cart, Number & SIM", "Cart, Number & SIM", "Cart, Number & SIM", "Cart, Number & SIM", "Cart, Number & SIM", "Cart, Number & SIM", "Cart, Number & SIM", "Checkout & Validation", "Checkout & Validation", "Checkout & Validation", "Checkout & Validation", "Checkout & Validation", "Checkout & Validation", "Checkout & Validation", "Checkout & Validation", "Contract (CAF)", "Contract (CAF)", "Contract (CAF)", "Contract (CAF)", "Contract (CAF)", "Contract (CAF)", "Contract (CAF)", "Payment & Submission", "Payment & Submission", "Payment & Submission", "Payment & Submission", "Payment & Submission", "Payment & Submission", "Payment & Submission", "Fulfilment & Notification", "Fulfilment & Notification", "Fulfilment & Notification", "Fulfilment & Notification", "Fulfilment & Notification", "Fulfilment & Notification"]}, "nodes": [{"id": "start", "type": "start", "lane": "trg", "slot": 0, "label": "Walk-In Customer at Retail Store", "phase": 0, "x": 204.0, "y": 118.0, "w": 84, "h": 84, "cx": 246.0, "cy": 160.0}, {"id": "jsm_init", "type": "agent", "lane": "agt", "slot": 0, "label": "Initiate Retail Interaction", "sub": "MPAR_001_JSM_01 / MPAR_001_JSM_02 / BR-001", "desc": "Retail Agent starts a New Postpaid Mobility activation journey from the Agent Desktop. The agent is authenticated and journey access is authorised against the agent role privilege matrix; an agent without the New Activation privilege is denied.", "phase": 1, "x": 395.0, "y": 310.0, "w": 206, "h": 100, "cx": 498.0, "cy": 360.0}, {"id": "jsm_qticket", "type": "external", "lane": "trg", "slot": 0, "label": "Q Ticket Creation & Consumption", "sub": "MPAR_001_JSM_03 / MPAR_001_JSM_04 / MPAR_001_JSM_05 / BR-002 / INT-01", "desc": "A Q Ticket is created in Qnomy for the selected service type and consumed by the agent from the queue, opening the bound journey. Where Qnomy is unavailable the journey proceeds and the Q Ticket reference is recorded as Not Available. Integration: INT-01 (Qnomy, REST over the MPI interface, synchronous, create/consume Q Ticket).", "phase": 2, "x": 662.0, "y": 110.0, "w": 176, "h": 100, "cx": 750.0, "cy": 160.0}, {"id": "jsm_tracking", "type": "control", "lane": "crm", "slot": 0, "label": "Automatic Tracking Record Creation", "sub": "MPAR_001_JSM_06 / MPAR_001_JSM_07 / BR-003", "desc": "A Tracking Record is created automatically on journey initiation, assigned to the initiating agent in New status; creation is rejected if any configured mandatory field is unpopulated. Status model: Tracking Record/Open/New (record created automatically at journey initiation) transitioning to Tracking Record/Open/In Progress (journey in progress against the assigned agent).", "phase": 3, "x": 899.0, "y": 850.0, "w": 206, "h": 100, "cx": 1002.0, "cy": 900.0}, {"id": "jsm_milestone", "type": "control", "lane": "crm", "slot": 0, "label": "Milestone Persistence & Draft Resume", "sub": "MPAR_001_JSM_08 / MPAR_001_JSM_09 / MPAR_001_JSM_10 / BR-004 / BR-005 / BR-006", "desc": "The journey milestone is persisted as a Draft Order on each successful stage validation. An agent may view and resume only Draft Orders that agent created. A Draft Order not submitted within the configured retention period (P-22, value to be confirmed) expires and its reservations are released. Status model: Order/Draft/In Progress (journey initiated, milestone saved, not yet submitted). Status model: Order/Draft/Expired (the draft retention period elapsed without submission; terminal).", "phase": 4, "x": 1151.0, "y": 850.0, "w": 206, "h": 100, "cx": 1254.0, "cy": 900.0}, {"id": "kyc_scan", "type": "agent", "lane": "agt", "slot": 0, "label": "Scan Identity Document", "sub": "MPAR_001_KYC_01 / MPAR_001_KYC_02 / MPAR_001_KYC_03 / BR-010 / BR-011 / INT-02", "desc": "Front page and back page are mandatory; liveliness capture is optional, subject to customer consent. Only QID, Passport, Diplomatic ID and GCC ID are accepted \u2014 any other document type is rejected. MADA ID may optionally be captured for special discount evidence. Integration: INT-02 (IDWise, synchronous REST, scan/extract identity attributes and liveliness).", "phase": 5, "x": 1403.0, "y": 330.0, "w": 206, "h": 60, "cx": 1506.0, "cy": 360.0}, {"id": "d_kyc_type", "type": "decision", "lane": "agt", "slot": 0, "label": "Permitted Document Type?", "branches": [{"label": "Permitted", "to": "kyc_rescan_check"}, {"label": "Unsupported", "to": "kyc_reject_type"}], "phase": 6, "x": 1683.0, "y": 310.0, "w": 150, "h": 100, "cx": 1758.0, "cy": 360.0}, {"id": "kyc_reject_type", "type": "error", "lane": "agt", "slot": 0, "label": "Journey Blocked \u2014 Unsupported Document", "phase": 7, "x": 1915.0, "y": 310.0, "w": 190, "h": 100, "cx": 2010.0, "cy": 360.0}, {"id": "kyc_rescan_check", "type": "decision", "lane": "agt", "slot": 1, "label": "Extraction Successful?", "sub": "MPAR_001_KYC_04 / BR-012", "desc": "Re-scan is permitted on extraction failure up to the configured maximum number of attempts (P-20, value to be confirmed).", "branches": [{"label": "Success", "to": "kyc_capture_attrs"}, {"label": "Failed", "to": "kyc_manual"}], "phase": 7, "x": 1935.0, "y": 450.0, "w": 150, "h": 100, "cx": 2010.0, "cy": 500.0}, {"id": "kyc_manual", "type": "agent", "lane": "agt", "slot": 0, "label": "Manual Capture Fallback", "sub": "MPAR_001_KYC_05 / BR-013", "desc": "Manual capture is permitted where IDWise fails or is unavailable after the configured maximum scan attempts; the capture source is recorded as Manual.", "phase": 8, "x": 2159.0, "y": 330.0, "w": 206, "h": 60, "cx": 2262.0, "cy": 360.0}, {"id": "kyc_capture_attrs", "type": "control", "lane": "agt", "slot": 0, "label": "Capture & Display ID Attributes", "sub": "MPAR_001_KYC_06 / MPAR_001_KYC_07", "desc": "ID Type, ID Number, First Name, Last Name, Date of Birth, Nationality and ID Expiry Date are populated from the IDWise response and shown to the agent on a read-only panel for visual confirmation against the physical document.", "phase": 9, "x": 2411.0, "y": 310.0, "w": 206, "h": 100, "cx": 2514.0, "cy": 360.0}, {"id": "d_kyc_age", "type": "decision", "lane": "agt", "slot": 0, "label": "Age 18 or Over?", "sub": "MPAR_001_KYC_08 / P-01", "branches": [{"label": "18+", "to": "kyc_moi"}, {"label": "Under 18", "to": "kyc_age_reject"}], "phase": 10, "x": 2691.0, "y": 310.0, "w": 150, "h": 100, "cx": 2766.0, "cy": 360.0}, {"id": "kyc_age_reject", "type": "error", "lane": "agt", "slot": 0, "label": "Journey Blocked \u2014 Under Minimum Age", "phase": 11, "x": 2923.0, "y": 310.0, "w": 190, "h": 100, "cx": 3018.0, "cy": 360.0}, {"id": "kyc_moi", "type": "external", "lane": "ext", "slot": 0, "label": "Ministry of Interior Lookup", "sub": "MPAR_001_KYC_09 / MPAR_001_KYC_10 / BR-020 / INT-03", "desc": "Customer information is retrieved from MOI using QID, Diplomatic ID or Passport Number for any issuing country. MOI validation is not invoked for a GCC ID, since MOI does not support that document type. Integration: INT-03 (MOI, synchronous, validate identity and return demographic attributes and ID status).", "phase": 11, "x": 2930.0, "y": 650.0, "w": 176, "h": 100, "cx": 3018.0, "cy": 700.0}, {"id": "kyc_moi_compare", "type": "validation", "lane": "ext", "slot": 0, "label": "IDWise \u2194 MOI Field Comparison", "sub": "MPAR_001_KYC_11 / MPAR_001_KYC_12 / BR-021", "desc": "First Name, Last Name, ID Number, Date of Birth and Nationality are compared between the IDWise capture and the MOI response.", "phase": 12, "x": 3182.0, "y": 650.0, "w": 176, "h": 100, "cx": 3270.0, "cy": 700.0}, {"id": "d_kyc_match", "type": "decision", "lane": "ext", "slot": 0, "label": "All Five Attributes Match?", "branches": [{"label": "Match", "to": "kyc_moi_display"}, {"label": "Mismatch", "to": "kyc_mismatch"}], "phase": 13, "x": 3447.0, "y": 650.0, "w": 150, "h": 100, "cx": 3522.0, "cy": 700.0}, {"id": "kyc_mismatch", "type": "error", "lane": "agt", "slot": 0, "label": "Mismatch \u2014 Reject or Re-scan", "sub": "MPAR_001_KYC_13 / BR-021", "desc": "On mismatch the agent is offered to reject the application or return to ID capture and re-scan; the failing attribute is named in the message.", "phase": 14, "x": 3679.0, "y": 310.0, "w": 190, "h": 100, "cx": 3774.0, "cy": 360.0}, {"id": "kyc_rejected", "type": "end", "lane": "agt", "slot": 0, "label": "Application Rejected \u2014 Identity Mismatch", "phase": 0, "x": 196.0, "y": 310.0, "w": 100, "h": 100, "cx": 246.0, "cy": 360.0}, {"id": "kyc_moi_display", "type": "control", "lane": "agt", "slot": 1, "label": "Display MOI Attributes & Lock", "sub": "MPAR_001_KYC_14 / MPAR_001_KYC_16 / MPAR_001_KYC_19 / MPAR_001_KYC_20 / BR-014 / P-19", "desc": "ID Type, ID Number, Date of Birth, name fields, Nationality, Salutation and ID Expiry Date returned by MOI are displayed; the MOI validation timestamp is recorded. ID Expiry Date is sourced from MOI (superseding any IDWise-scanned value) since MOI is the only source that returns it. P-19: interim ID expiry derivation period is 365 days.", "phase": 14, "x": 3671.0, "y": 450.0, "w": 206, "h": 100, "cx": 3774.0, "cy": 500.0}, {"id": "d_kyc_status", "type": "decision", "lane": "agt", "slot": 0, "label": "ID Status Permits Journey?", "sub": "MPAR_001_KYC_15 / BR-022", "desc": "An active QID, Passport, GCC ID or Diplomatic ID permits New Connection and Modification. An expired QID permits Modification only. An expired Passport, GCC ID or Diplomatic ID permits no action.", "branches": [{"label": "Permitted", "to": "kyc_transfer_crm"}, {"label": "Not permitted", "to": "kyc_status_blocked"}], "phase": 15, "x": 3951.0, "y": 310.0, "w": 150, "h": 100, "cx": 4026.0, "cy": 360.0}, {"id": "kyc_status_blocked", "type": "error", "lane": "agt", "slot": 0, "label": "Journey Blocked \u2014 ID Status", "phase": 16, "x": 4183.0, "y": 310.0, "w": 190, "h": 100, "cx": 4278.0, "cy": 360.0}, {"id": "kyc_moi_outage", "type": "error", "lane": "ext", "slot": 0, "label": "MOI Unavailable \u2014 Draft & Defer", "sub": "MPAR_001_KYC_17 / BR-023", "desc": "Where MOI is unavailable the order is saved as a draft and MOI validation is enforced as a mandatory gate at order submission.", "phase": 0, "x": 151.0, "y": 650.0, "w": 190, "h": 100, "cx": 246.0, "cy": 700.0}, {"id": "kyc_transfer_crm", "type": "system", "lane": "crm", "slot": 0, "label": "Transfer Identity to CRM", "sub": "MPAR_001_KYC_18 / MPAR_001_KYC_21 / BR-024", "desc": "Extracted identity information is transferred from IDWise/MOI to Siebel CRM for customer creation and validation at the first milestone. A Postpaid or Prepaid connection may not be taken by a representative acting on behalf of the customer.", "phase": 16, "x": 4183.0, "y": 850.0, "w": 190, "h": 100, "cx": 4278.0, "cy": 900.0}, {"id": "d_cam_match", "type": "decision", "lane": "crm", "slot": 0, "label": "Existing Customer Match?", "sub": "MPAR_001_CAM_01 / BR-030", "desc": "Customer existence is determined by matching ID Type, ID Number and Nationality against existing customer records.", "branches": [{"label": "Matched", "to": "cam_display_existing"}, {"label": "Not matched", "to": "cam_create_new"}], "phase": 17, "x": 4455.0, "y": 850.0, "w": 150, "h": 100, "cx": 4530.0, "cy": 900.0}, {"id": "cam_display_existing", "type": "control", "lane": "agt", "slot": 0, "label": "Display Retrieved Customer", "sub": "MPAR_001_CAM_02", "desc": "Matched customer details are displayed for agent confirmation before the journey continues.", "phase": 18, "x": 4679.0, "y": 310.0, "w": 206, "h": 100, "cx": 4782.0, "cy": 360.0}, {"id": "cam_create_new", "type": "system", "lane": "crm", "slot": 0, "label": "Create New Customer Record", "sub": "MPAR_001_CAM_03 / BR-030", "phase": 18, "x": 4687.0, "y": 850.0, "w": 190, "h": 100, "cx": 4782.0, "cy": 900.0}, {"id": "cam_overwrite", "type": "system", "lane": "crm", "slot": 0, "label": "Overwrite Attributes from MOI", "sub": "MPAR_001_CAM_04 / BR-031", "desc": "Any attribute on an existing customer record is overwritten from the latest MOI retrieval following successful validation.", "phase": 19, "x": 4939.0, "y": 850.0, "w": 190, "h": 100, "cx": 5034.0, "cy": 900.0}, {"id": "cam_contact_match", "type": "control", "lane": "crm", "slot": 0, "label": "Existing Contact Identification", "sub": "MPAR_001_CAM_05 / BR-032", "desc": "An existing contact is identified using ID Type and ID Number before a new contact is created, to avoid duplication.", "phase": 20, "x": 5183.0, "y": 850.0, "w": 206, "h": 100, "cx": 5286.0, "cy": 900.0}, {"id": "cam_lock", "type": "control", "lane": "agt", "slot": 0, "label": "Lock Verified Attributes", "sub": "MPAR_001_CAM_06 / BR-033", "desc": "ID Number, ID Type, name fields, Date of Birth, Nationality, ID Expiry Date and Salutation are rendered read-only once MOI validation succeeds.", "phase": 21, "x": 5435.0, "y": 330.0, "w": 206, "h": 60, "cx": 5538.0, "cy": 360.0}, {"id": "cam_address", "type": "agent", "lane": "agt", "slot": 0, "label": "Capture Editable Address", "sub": "MPAR_001_CAM_07", "desc": "The address returned by MOI is presented as editable, covering Building Number, Street Number, Zone and Apartment/Villa/Flat Number.", "phase": 22, "x": 5687.0, "y": 330.0, "w": 206, "h": 60, "cx": 5790.0, "cy": 360.0}, {"id": "cam_account_attrs", "type": "agent", "lane": "agt", "slot": 0, "label": "Account Attributes & Category Derivation", "sub": "MPAR_001_CAM_08 / MPAR_001_CAM_09 / BR-034 / BR-035", "desc": "Account Type, Customer Category and Segment are mandatory for account creation; Category and Segment are auto-derived from nationality using the configured nationality-to-customer-type matrix (BR-035 status: Open).", "phase": 23, "x": 5939.0, "y": 310.0, "w": 206, "h": 100, "cx": 6042.0, "cy": 360.0}, {"id": "cam_primary_contact", "type": "system", "lane": "crm", "slot": 0, "label": "Default Primary Contact", "sub": "MPAR_001_CAM_10", "desc": "A default primary contact is created automatically for the customer account using the verified identity information.", "phase": 24, "x": 6199.0, "y": 850.0, "w": 190, "h": 100, "cx": 6294.0, "cy": 900.0}, {"id": "cam_credit_limit_default", "type": "system", "lane": "bill", "slot": 0, "label": "Default Credit Limit", "sub": "MPAR_001_CAM_11 / BR-036", "desc": "The default credit limit is populated from the customer segment per the configured parameter table (P-07 Qatari 4000 QAR, P-08 expatriate 1000 QAR, P-09 HRN 50 QAR). Credit limit and spend-limit functionality is noted for update alongside legacy project details.", "phase": 25, "x": 6451.0, "y": 1072.0, "w": 190, "h": 56, "cx": 6546.0, "cy": 1100.0}, {"id": "cam_override", "type": "control", "lane": "agt", "slot": 0, "label": "Agent-Overridable Attributes", "sub": "MPAR_001_CAM_12 / BR-037", "desc": "Email Address, Language and Alternate Phone Number may be overridden by the agent.", "phase": 26, "x": 6695.0, "y": 310.0, "w": 206, "h": 100, "cx": 6798.0, "cy": 360.0}, {"id": "cam_hrn", "type": "validation", "lane": "crm", "slot": 0, "label": "High Risk Nationality Determination", "sub": "MPAR_001_CAM_13 / MPAR_001_CAM_14 / BR-015", "desc": "The HRN flag is derived from nationality using the HRN nationality list held in the Siebel LOV, and is passed to WinCash for advance payment collection (P-11: 50 QAR). The configured HRN advance payment message is displayed where flagged.", "phase": 27, "x": 6962.0, "y": 850.0, "w": 176, "h": 100, "cx": 7050.0, "cy": 900.0}, {"id": "cam_contacts_multi", "type": "control", "lane": "crm", "slot": 0, "label": "Multiple Contacts & Roles", "sub": "MPAR_001_CAM_15 / MPAR_001_CAM_16 / BR-038", "desc": "Multiple contacts may be associated with a customer account; each contact carries an assigned role/relation, since one national ID may hold different responsibilities across accounts.", "phase": 28, "x": 7199.0, "y": 850.0, "w": 206, "h": 100, "cx": 7302.0, "cy": 900.0}, {"id": "cam_email_verify", "type": "external", "lane": "ext", "slot": 0, "label": "Email Capture & Verification", "sub": "MPAR_001_CAM_17 / MPAR_001_CAM_18 / BR-039 / INT-04", "desc": "The customer email address is verified through the email verification service, marked Verified on success. Restricted to the Retail channel. Integration: INT-04 (Email Verification Service, synchronous REST).", "phase": 29, "x": 7466.0, "y": 650.0, "w": 176, "h": 100, "cx": 7554.0, "cy": 700.0}, {"id": "ecc_connection_type", "type": "validation", "lane": "bill", "slot": 0, "label": "Connection Type Eligibility", "sub": "MPAR_001_ECC_01 / BR-040", "desc": "QID and Diplomatic ID permit Postpaid and Prepaid; Passport and GCC ID are restricted to Prepaid only.", "phase": 30, "x": 7718.0, "y": 1050.0, "w": 176, "h": 100, "cx": 7806.0, "cy": 1100.0}, {"id": "d_ecc_age", "type": "decision", "lane": "bill", "slot": 0, "label": "Age Eligibility Re-affirmed?", "sub": "MPAR_001_ECC_02 / BR-041 / P-01", "desc": "Customer age is recalculated from Date of Birth at the eligibility gate (restates the KYC-stage check as its own atomic requirement under this capability).", "branches": [{"label": "Eligible", "to": "ecc_blacklist_check"}, {"label": "Not eligible", "to": "ecc_failure_msg"}], "phase": 31, "x": 7983.0, "y": 1050.0, "w": 150, "h": 100, "cx": 8058.0, "cy": 1100.0}, {"id": "ecc_failure_msg", "type": "error", "lane": "bill", "slot": 0, "label": "Eligibility Failure Message", "sub": "MPAR_001_ECC_03 / BR-042", "desc": "A distinct validation message is shown for each eligibility failure condition, drawn from the configured message catalogue (BR-042 status: Open).", "phase": 34, "x": 8719.0, "y": 1050.0, "w": 190, "h": 100, "cx": 8814.0, "cy": 1100.0}, {"id": "ecc_blacklist_check", "type": "external", "lane": "bill", "slot": 0, "label": "Blacklist & Collections Screening", "sub": "MPAR_001_ECC_04 / MPAR_001_ECC_05 / BR-043 / INT-05", "desc": "Journey progression is blocked where the customer status is returned as Blacklisted or In Collections. Integration: INT-05 (Billing System, synchronous, retrieve customer status and outstanding balance).", "phase": 32, "x": 8222.0, "y": 1050.0, "w": 176, "h": 100, "cx": 8310.0, "cy": 1100.0}, {"id": "d_ecc_status", "type": "decision", "lane": "bill", "slot": 0, "label": "Customer Status Clear?", "branches": [{"label": "Clear", "to": "ecc_dues_threshold"}, {"label": "Blocked", "to": "ecc_failure_msg"}], "phase": 33, "x": 8487.0, "y": 1050.0, "w": 150, "h": 100, "cx": 8562.0, "cy": 1100.0}, {"id": "ecc_dues_threshold", "type": "external", "lane": "bill", "slot": 1, "label": "Outstanding Dues Threshold", "sub": "MPAR_001_ECC_06 / MPAR_001_ECC_07 / BR-044", "desc": "Journey progression is blocked where the outstanding balance exceeds the configured threshold (P-02: 10 QAR standard, P-03: 100 QAR HRN, BR-044 status: Open). The agent may direct the customer to settle dues and the balance is re-evaluated before continuing.", "phase": 34, "x": 8726.0, "y": 1190.0, "w": 176, "h": 100, "cx": 8814.0, "cy": 1240.0}, {"id": "ecc_linecount", "type": "external", "lane": "bill", "slot": 0, "label": "Active Line Count & Ceiling", "sub": "MPAR_001_ECC_08 / MPAR_001_ECC_09 / MPAR_001_ECC_10 / BR-045", "desc": "The total active mobile voice connection count is retrieved. A Qatari, Safwa or Safwa Plus national is unrestricted (P-06). An expatriate QID holder may hold up to five connections, all of which may be Postpaid (P-04).", "phase": 35, "x": 8978.0, "y": 1050.0, "w": 176, "h": 100, "cx": 9066.0, "cy": 1100.0}, {"id": "d_ecc_linecount_breach", "type": "decision", "lane": "bill", "slot": 0, "label": "Line Count Ceiling Reached?", "sub": "MPAR_001_ECC_11 / BR-045", "desc": "On breach a validation message is displayed and the agent may proceed subject to the approval task.", "branches": [{"label": "Within ceiling", "to": "milestone1"}, {"label": "3rd\u20135th line (breach)", "to": "ecc_approval_task"}], "phase": 36, "x": 9243.0, "y": 1050.0, "w": 150, "h": 100, "cx": 9318.0, "cy": 1100.0}, {"id": "ecc_approval_task", "type": "control", "lane": "bill", "slot": 0, "label": "Credit Team Approval Task", "sub": "MPAR_001_ECC_12 / MPAR_001_ECC_13 / BR-045 / BR-046 / P-05", "desc": "An approval task is created for the Credit team for an expatriate customer's third, fourth or fifth Postpaid connection (P-05: 2 permitted without approval). The order is held; submission is enabled only once the task is approved. Status model: Order/Draft/Pending Approval (held awaiting Credit or Collections approval).", "phase": 37, "x": 9467.0, "y": 1050.0, "w": 206, "h": 100, "cx": 9570.0, "cy": 1100.0}, {"id": "d_ecc_approval", "type": "decision", "lane": "bill", "slot": 0, "label": "Approval Task Outcome?", "branches": [{"label": "Approved", "to": "milestone1"}, {"label": "Rejected", "to": "ecc_cancel"}], "phase": 38, "x": 9747.0, "y": 1050.0, "w": 150, "h": 100, "cx": 9822.0, "cy": 1100.0}, {"id": "ecc_cancel", "type": "error", "lane": "bill", "slot": 0, "label": "Order Cancelled \u2014 Approval Rejected", "sub": "MPAR_001_ECC_14 / BR-046", "desc": "The Retail Agent cancels the held order where the approval task is rejected; all reservations are released. Status model: Order/Closed/Cancelled (order cancelled by the agent following approval rejection or customer withdrawal; terminal). Status model: Tracking Record/Closed/Cancelled (journey abandoned or order cancelled; terminal).", "phase": 39, "x": 9979.0, "y": 1050.0, "w": 190, "h": 100, "cx": 10074.0, "cy": 1100.0}, {"id": "ecc_limit_override", "type": "control", "lane": "bill", "slot": 0, "label": "Privileged Credit Limit Amendment", "sub": "MPAR_001_ECC_15 / MPAR_001_ECC_16 / BR-047 / P-10", "desc": "Credit limit enhancement does not apply within New Activation itself, but where applicable an agent holding the privileged role may amend the system-defaulted limit within the segment ceiling (P-10: 50\u20131000 QAR).", "phase": 40, "x": 10223.0, "y": 1050.0, "w": 206, "h": 100, "cx": 10326.0, "cy": 1100.0}, {"id": "ecc_collections_escalate", "type": "escalation", "lane": "bill", "slot": 1, "label": "Collections Approval Ticket", "sub": "MPAR_001_ECC_17 / BR-047", "desc": "An increase beyond the agent-permitted ceiling is routed to the Collections team as an approval ticket; only that role may apply the increase.", "phase": 41, "x": 10483.0, "y": 1190.0, "w": 190, "h": 100, "cx": 10578.0, "cy": 1240.0}, {"id": "ecc_advance_payment", "type": "system", "lane": "bill", "slot": 0, "label": "Advance Payment for Limit Delta", "sub": "MPAR_001_ECC_18 / MPAR_001_ECC_19 / BR-048 / INT-06", "desc": "The delta between the enhanced and default credit limit is collected as a refundable advance payment before the order is saved, and adjusted against the next bill cycle. Integration: INT-06 (WinCash, synchronous, point of sale payment and stock).", "phase": 41, "x": 10483.0, "y": 1050.0, "w": 190, "h": 100, "cx": 10578.0, "cy": 1100.0}, {"id": "ecc_creditnote", "type": "system", "lane": "bill", "slot": 1, "label": "Credit Note on Cancellation", "sub": "MPAR_001_ECC_20 / BR-049", "desc": "A credit note adjustment is created and issued to the customer where an order carrying a collected payment is cancelled.", "phase": 40, "x": 10231.0, "y": 1190.0, "w": 190, "h": 100, "cx": 10326.0, "cy": 1240.0}, {"id": "milestone1", "type": "control", "lane": "crm", "slot": 0, "label": "Milestone: Contact Created & Eligibility Captured", "sub": "Section #5", "phase": 39, "x": 9971.0, "y": 850.0, "w": 206, "h": 100, "cx": 10074.0, "cy": 900.0}, {"id": "bam_account", "type": "agent", "lane": "agt", "slot": 0, "label": "Billing Account Create/Select", "sub": "MPAR_001_BAM_01 / MPAR_001_BAM_02 / MPAR_001_BAM_03 / BR-050", "desc": "A billing account is created for a new customer, or an existing one is selected where already present. Exactly one billing account is associated with each plan/MSISDN/fixed-line number.", "phase": 40, "x": 10223.0, "y": 310.0, "w": 206, "h": 100, "cx": 10326.0, "cy": 360.0}, {"id": "bam_address", "type": "control", "lane": "agt", "slot": 0, "label": "Billing Address", "sub": "MPAR_001_BAM_04", "desc": "The billing address is the customer address or a newly captured address.", "phase": 41, "x": 10475.0, "y": 330.0, "w": 206, "h": 60, "cx": 10578.0, "cy": 360.0}, {"id": "bam_contacts", "type": "control", "lane": "crm", "slot": 0, "label": "Billing Contact Model", "sub": "MPAR_001_BAM_05 / MPAR_001_BAM_06 / BR-051", "desc": "A billing account carries multiple billing contacts, exactly one designated primary; the invoice is delivered to the primary contact.", "phase": 42, "x": 10727.0, "y": 870.0, "w": 206, "h": 60, "cx": 10830.0, "cy": 900.0}, {"id": "bam_payment_profile_req", "type": "validation", "lane": "bill", "slot": 0, "label": "Active Payment Profile Requirement", "sub": "MPAR_001_BAM_07 / MPAR_001_BAM_08 / BR-052", "desc": "Only a billing account holding an active payment profile may be selected for an activation order; a billing account may hold multiple payment profiles.", "phase": 43, "x": 10994.0, "y": 1050.0, "w": 176, "h": 100, "cx": 11082.0, "cy": 1100.0}, {"id": "bam_billcycle", "type": "system", "lane": "bill", "slot": 0, "label": "Bill Cycle Default", "sub": "MPAR_001_BAM_10 / MPAR_001_BAM_11 / BR-053", "desc": "VIP segment defaults to bill cycle 7th of the month (P-15). Other segments default to the 1st or 15th (P-16), taking the next cycle where the submission date falls within three days of the cycle date (P-17).", "phase": 44, "x": 11239.0, "y": 1072.0, "w": 190, "h": 56, "cx": 11334.0, "cy": 1100.0}, {"id": "bam_payment_capture", "type": "agent", "lane": "agt", "slot": 0, "label": "Payment Profile Capture", "sub": "MPAR_001_BAM_12 / BR-054", "desc": "Payment Method, Payment Type and Billing Frequency are captured; only credit card and debit card are permitted for auto-debit.", "phase": 45, "x": 11483.0, "y": 330.0, "w": 206, "h": 60, "cx": 11586.0, "cy": 360.0}, {"id": "bam_payment_validate", "type": "validation", "lane": "bill", "slot": 0, "label": "Payment Profile Validation", "sub": "MPAR_001_BAM_13 / MPAR_001_BAM_14 / BR-054 / INT-06", "desc": "Captured payment details are validated before the payment profile is updated; last-4-digit card reference and payment-gateway token are captured. A validation failure returns the agent to recapture. Integration: INT-06 (WinCash, synchronous, point of sale payment and stock).", "phase": 46, "x": 11750.0, "y": 1050.0, "w": 176, "h": 100, "cx": 11838.0, "cy": 1100.0}, {"id": "milestone2", "type": "control", "lane": "crm", "slot": 0, "label": "Milestone: Bill Profile Created", "sub": "Section #7", "phase": 47, "x": 11987.0, "y": 850.0, "w": 206, "h": 100, "cx": 12090.0, "cy": 900.0}, {"id": "qpc_baseplan", "type": "agent", "lane": "agt", "slot": 0, "label": "Base Plan Eligibility Display", "sub": "MPAR_001_QPC_01 / BR-060", "desc": "Only base plans eligible for the customer segment and Postpaid connection type are presented.", "phase": 48, "x": 12239.0, "y": 310.0, "w": 206, "h": 100, "cx": 12342.0, "cy": 360.0}, {"id": "qpc_addon", "type": "control", "lane": "agt", "slot": 0, "label": "Add-On Eligibility & Cardinality", "sub": "MPAR_001_QPC_02 / MPAR_001_QPC_03 / BR-061", "desc": "Only add-ons eligible for the selected base plan may be selected; configured minimum, maximum and default quantity are enforced.", "phase": 49, "x": 12491.0, "y": 310.0, "w": 206, "h": 100, "cx": 12594.0, "cy": 360.0}, {"id": "qpc_discount", "type": "control", "lane": "agt", "slot": 0, "label": "Discount Eligibility & Version", "sub": "MPAR_001_QPC_04 / MPAR_001_QPC_08 / BR-062", "desc": "Only discounts eligible for the selected base plan may be added; the latest effective version is applied.", "phase": 50, "x": 12743.0, "y": 310.0, "w": 206, "h": 100, "cx": 12846.0, "cy": 360.0}, {"id": "qpc_special_discount_doc", "type": "agent", "lane": "agt", "slot": 0, "label": "MADA Document Upload", "sub": "MPAR_001_QPC_10 / BR-064", "desc": "Adding a special discount requires the MADA identity document, captured alongside the mandatory KYC identity documents.", "phase": 51, "x": 12995.0, "y": 330.0, "w": 206, "h": 60, "cx": 13098.0, "cy": 360.0}, {"id": "qpc_cart_create", "type": "system", "lane": "crm", "slot": 0, "label": "Cart Creation & Bill Limit Display", "sub": "MPAR_001_QPC_05 / MPAR_001_QPC_09", "desc": "A cart is created holding the selected base plan, add-ons and discounts with an order number allocated; the bill limit of the selected plan is displayed.", "phase": 52, "x": 13255.0, "y": 850.0, "w": 190, "h": 100, "cx": 13350.0, "cy": 900.0}, {"id": "qpc_cart_amend", "type": "agent", "lane": "agt", "slot": 0, "label": "Cart Review & Amendment", "sub": "MPAR_001_QPC_06", "desc": "The Retail Agent may review, amend and remove selected plans, add-ons and discounts at any point before order submission.", "phase": 53, "x": 13499.0, "y": 330.0, "w": 206, "h": 60, "cx": 13602.0, "cy": 360.0}, {"id": "qpc_recalc", "type": "system", "lane": "crm", "slot": 0, "label": "Cart Price Recalculation", "sub": "MPAR_001_QPC_07 / BR-063", "desc": "One-time charges, recurring charges and discounts are recalculated whenever a product is added, amended or removed.", "phase": 54, "x": 13759.0, "y": 850.0, "w": 190, "h": 100, "cx": 13854.0, "cy": 900.0}, {"id": "d_num_category", "type": "decision", "lane": "agt", "slot": 0, "label": "Number Category Selection", "sub": "MPAR_001_NUM_03 / BR-071", "desc": "Number categories are presented in sequence: Reserved Number, then Star Number, then Free Number.", "branches": [{"label": "Reserved", "to": "num_reserved_lookup"}, {"label": "Star", "to": "num_star_search"}, {"label": "Free", "to": "num_free_search"}], "phase": 55, "x": 14031.0, "y": 310.0, "w": 150, "h": 100, "cx": 14106.0, "cy": 360.0}, {"id": "num_reserved_lookup", "type": "external", "lane": "inv", "slot": 0, "label": "Reserved Number Retrieval", "sub": "MPAR_001_NUM_01 / MPAR_001_NUM_02 / BR-070 / INT-07", "desc": "An active reserved MSISDN against the customer QID (from telesales or any channel) is retrieved and auto-populated on the number selection screen. Integration: INT-07 (UIM, synchronous, reserve/deplete MSISDN and Virtual eSIM).", "phase": 56, "x": 14270.0, "y": 1390.0, "w": 176, "h": 100, "cx": 14358.0, "cy": 1440.0}, {"id": "num_reserved_price_check", "type": "validation", "lane": "inv", "slot": 0, "label": "Reserved Number Price Validation", "sub": "MPAR_001_NUM_04 / MPAR_001_NUM_05 / BR-072", "desc": "The reserved MSISDN price is validated against the selected base plan's entitlement; the excess and applicable upfront charge are shown where the price exceeds entitlement.", "phase": 57, "x": 14522.0, "y": 1390.0, "w": 176, "h": 100, "cx": 14610.0, "cy": 1440.0}, {"id": "num_star_search", "type": "agent", "lane": "agt", "slot": 0, "label": "Star Number Search & Selection", "sub": "MPAR_001_NUM_08 / MPAR_001_NUM_09 / MPAR_001_NUM_10 / BR-074", "desc": "Eligible Star Numbers \u2014 those within the entitlement band of the selected base plan price per the plan-price-to-number-price eligibility matrix (BR-074 status: Open) \u2014 are searchable, shown in descending price order.", "phase": 56, "x": 14255.0, "y": 310.0, "w": 206, "h": 100, "cx": 14358.0, "cy": 360.0}, {"id": "num_star_charges", "type": "control", "lane": "agt", "slot": 0, "label": "Star Number Charges & Lock-In", "sub": "MPAR_001_NUM_11 / MPAR_001_NUM_12 / BR-072 / BR-075", "desc": "Number category, applicable price, upfront charge and lock-in period are displayed before the agent confirms the Star Number selection.", "phase": 57, "x": 14507.0, "y": 310.0, "w": 206, "h": 100, "cx": 14610.0, "cy": 360.0}, {"id": "num_free_search", "type": "agent", "lane": "agt", "slot": 1, "label": "Free Number Search & Selection", "sub": "MPAR_001_NUM_13 / BR-076", "phase": 56, "x": 14255.0, "y": 450.0, "w": 206, "h": 100, "cx": 14358.0, "cy": 500.0}, {"id": "num_reserve_confirm", "type": "system", "lane": "inv", "slot": 0, "label": "MSISDN Reservation on Confirmation", "sub": "MPAR_001_NUM_06 / MPAR_001_NUM_07 / BR-073 / P-12 / INT-07", "desc": "The selected MSISDN is reserved on confirmation, preventing allocation via any other order/channel; an unconsumed reservation is released after 72 hours (P-12). Integration: INT-07 (UIM, synchronous, reserve/deplete MSISDN and Virtual eSIM).", "phase": 58, "x": 14767.0, "y": 1390.0, "w": 190, "h": 100, "cx": 14862.0, "cy": 1440.0}, {"id": "d_sim_type", "type": "decision", "lane": "agt", "slot": 0, "label": "SIM Type Selection", "sub": "MPAR_001_SIM_01 / BR-080", "branches": [{"label": "Physical / Printed eSIM", "to": "sim_scan_physical"}, {"label": "Virtual eSIM", "to": "sim_esim_generate"}], "phase": 59, "x": 15039.0, "y": 310.0, "w": 150, "h": 100, "cx": 15114.0, "cy": 360.0}, {"id": "sim_scan_physical", "type": "agent", "lane": "agt", "slot": 0, "label": "Physical SIM / Printed eSIM Scan", "sub": "MPAR_001_SIM_02 / BR-080 / INT-07", "phase": 60, "x": 15263.0, "y": 310.0, "w": 206, "h": 100, "cx": 15366.0, "cy": 360.0, "desc": "Integration: INT-07 (UIM, synchronous, reserve/deplete MSISDN and Virtual eSIM)."}, {"id": "sim_esim_generate", "type": "system", "lane": "inv", "slot": 0, "label": "Virtual eSIM Generation", "sub": "MPAR_001_SIM_03 / BR-080", "desc": "A Virtual eSIM profile is generated and assigned to the order with an ICCID allocated.", "phase": 60, "x": 15271.0, "y": 1390.0, "w": 190, "h": 100, "cx": 15366.0, "cy": 1440.0}, {"id": "sim_validate", "type": "validation", "lane": "inv", "slot": 0, "label": "SIM Identifier Validation", "sub": "MPAR_001_SIM_04 / BR-081 / INT-07", "desc": "The scanned/generated SIM identifier is validated against inventory, capturing SIM Type, SIM Serial Number and ICCID; an unknown or already-allocated identifier is rejected. Integration: INT-07 (UIM, synchronous, reserve/deplete MSISDN and Virtual eSIM).", "phase": 61, "x": 15530.0, "y": 1390.0, "w": 176, "h": 100, "cx": 15618.0, "cy": 1440.0}, {"id": "sim_lineitem", "type": "system", "lane": "crm", "slot": 0, "label": "SIM Added as Order Line Item", "sub": "MPAR_001_SIM_05 / BR-081 / INT-07", "desc": "The allocated SIM is added to the order as a line item and reserved in inventory until order completion. Integration: INT-07 (UIM, synchronous, reserve/deplete MSISDN and Virtual eSIM).", "phase": 62, "x": 15775.0, "y": 850.0, "w": 190, "h": 100, "cx": 15870.0, "cy": 900.0}, {"id": "sim_esim_deliver", "type": "system", "lane": "ext", "slot": 0, "label": "eSIM Delivery by Email", "sub": "MPAR_001_SIM_06 / BR-082 / MPAR_001_SIM_07 (out of scope) / INT-08", "desc": "The Virtual eSIM profile is delivered by email to the verified customer email address. MPAR_001_SIM_07 (SIM Swap Reason capture) is explicitly out of scope for this journey per the source's own acceptance criteria \u2014 it belongs to a separate SIM Swap BRSD, not applicable here. Integration: INT-08 (Notification Platform, asynchronous, despatch email/SMS).", "phase": 63, "x": 16027.0, "y": 672.0, "w": 190, "h": 56, "cx": 16122.0, "cy": 700.0}, {"id": "cvc_gate", "type": "validation", "lane": "crm", "slot": 0, "label": "Pre-Payment Validation Gate", "sub": "MPAR_001_CVC_01 / MPAR_001_CVC_02 / BR-100", "desc": "All customer, account, billing, number, SIM, product, eligibility and compatibility validations execute before payment is initiated; progression is blocked until every mandatory validation succeeds. Status model: Order/Draft/Pending Payment (validations passed, awaiting payment capture).", "phase": 64, "x": 16286.0, "y": 850.0, "w": 176, "h": 100, "cx": 16374.0, "cy": 900.0}, {"id": "bam_add_at_checkout", "type": "agent", "lane": "agt", "slot": 0, "label": "Add Billing Account if Missing", "sub": "MPAR_001_BAM_09 / BR-052", "desc": "The Retail Agent may add a billing account holding an active payment profile at the cart validation stage where none is present.", "phase": 65, "x": 16523.0, "y": 310.0, "w": 206, "h": 100, "cx": 16626.0, "cy": 360.0}, {"id": "cvc_review", "type": "control", "lane": "agt", "slot": 0, "label": "Cart Review Before CAF/Payment", "sub": "MPAR_001_CVC_03", "desc": "Plan, SIM, MSISDN, service components and price are presented on a consolidated review screen before the agent proceeds to CAF generation and payment.", "phase": 66, "x": 16775.0, "y": 310.0, "w": 206, "h": 100, "cx": 16878.0, "cy": 360.0}, {"id": "cvc_star_charge", "type": "system", "lane": "bill", "slot": 0, "label": "Star Number Upfront Charge", "sub": "MPAR_001_CVC_04 / BR-072 / INT-06", "desc": "The additional upfront charge for a Star Number priced above plan entitlement is included in the payment request to WinCash. Integration: INT-06 (WinCash, synchronous, point of sale payment and stock).", "phase": 67, "x": 17035.0, "y": 1050.0, "w": 190, "h": 100, "cx": 17130.0, "cy": 1100.0}, {"id": "cvc_hrn_charge", "type": "system", "lane": "bill", "slot": 0, "label": "HRN Advance Payment Collection", "sub": "MPAR_001_CVC_05 / BR-101 / P-11 / INT-06", "desc": "The configured HRN advance payment (P-11: 50 QAR) is collected as a precondition to eligibility for the selected plan/product. Integration: INT-06 (WinCash, synchronous, point of sale payment and stock).", "phase": 68, "x": 17287.0, "y": 1050.0, "w": 190, "h": 100, "cx": 17382.0, "cy": 1100.0}, {"id": "cvc_credit_charge", "type": "system", "lane": "bill", "slot": 0, "label": "Credit Limit Advance Payment", "sub": "MPAR_001_CVC_06 / BR-048 / INT-06", "desc": "The applicable advance payment for a credit limit enhancement is collected upfront and recorded against the customer account. Integration: INT-06 (WinCash, synchronous, point of sale payment and stock).", "phase": 69, "x": 17539.0, "y": 1050.0, "w": 190, "h": 100, "cx": 17634.0, "cy": 1100.0}, {"id": "cvc_summary", "type": "control", "lane": "agt", "slot": 0, "label": "Payment Summary Display", "sub": "MPAR_001_CVC_07 / MPAR_001_CVC_08 / BR-101 / INT-09", "desc": "The itemised payment summary and total payable are displayed before payment is confirmed; any advance payment collected here is later adjusted against the customer's first bill. Integration: INT-09 (Billing System, asynchronous, post payments and adjust advance payment against first bill).", "phase": 70, "x": 17783.0, "y": 330.0, "w": 206, "h": 60, "cx": 17886.0, "cy": 360.0}, {"id": "milestone3", "type": "control", "lane": "crm", "slot": 0, "label": "Milestone: Cart Checked Out", "sub": "Section #10", "phase": 71, "x": 18035.0, "y": 850.0, "w": 206, "h": 100, "cx": 18138.0, "cy": 900.0}, {"id": "caf_keyinfo", "type": "control", "lane": "agt", "slot": 0, "label": "Key Information Display", "sub": "MPAR_001_CAF_01 / MPAR_001_CAF_02 / MPAR_001_CAF_03 / BR-090", "desc": "Key terms \u2014 plan, plan lock-in, Star Number and its lock-in, device-on-instalment and its lock-in \u2014 are displayed before CAF submission, shown only at the Retail Agent outlet, varying by service type and refreshed on any cart amendment.", "phase": 72, "x": 18287.0, "y": 330.0, "w": 206, "h": 60, "cx": 18390.0, "cy": 360.0}, {"id": "caf_generate", "type": "system", "lane": "crm", "slot": 0, "label": "CAF Generation from Template", "sub": "MPAR_001_CAF_04 / MPAR_001_CAF_05 / MPAR_001_CAF_06 / BR-091", "desc": "The digital CAF is generated from the template selected via the configured matrix of agent role, channel and service type (BR-091 status: Open), populated from customer details and cart contents.", "phase": 73, "x": 18547.0, "y": 850.0, "w": 190, "h": 100, "cx": 18642.0, "cy": 900.0}, {"id": "d_caf_mode", "type": "decision", "lane": "agt", "slot": 0, "label": "Signature Mode", "sub": "MPAR_001_CAF_08 / BR-092", "branches": [{"label": "Digital", "to": "caf_sign_device"}, {"label": "Offline paper CAF", "to": "caf_offline_upload"}], "phase": 74, "x": 18819.0, "y": 310.0, "w": 150, "h": 100, "cx": 18894.0, "cy": 360.0}, {"id": "caf_offline_upload", "type": "agent", "lane": "agt", "slot": 0, "label": "Offline Signed CAF Upload", "sub": "MPAR_001_CAF_07 / MPAR_001_CAF_09 / BR-092 / BR-093 / P-13 / P-14", "desc": "A manually signed paper CAF is uploaded in PDF or JPG format, up to two megabytes (P-13, P-14).", "phase": 75, "x": 19043.0, "y": 310.0, "w": 206, "h": 100, "cx": 19146.0, "cy": 360.0}, {"id": "caf_sign_device", "type": "agent", "lane": "agt", "slot": 1, "label": "Signature Capture Device Selection", "sub": "MPAR_001_CAF_10 / BR-094", "desc": "CAF Digital (customer-facing touchpad) or CAF Touch Screen (touch-screen laptop) is selected.", "phase": 75, "x": 19043.0, "y": 450.0, "w": 206, "h": 100, "cx": 19146.0, "cy": 500.0}, {"id": "caf_sign_capture", "type": "agent", "lane": "agt", "slot": 0, "label": "Display & Capture Signature", "sub": "MPAR_001_CAF_11 / MPAR_001_CAF_12", "desc": "The CAF is displayed to the customer on the selected device for review; the captured signature is embedded and shown within the online CAF on the agent UI.", "phase": 76, "x": 19295.0, "y": 310.0, "w": 206, "h": 100, "cx": 19398.0, "cy": 360.0}, {"id": "caf_docs", "type": "agent", "lane": "agt", "slot": 0, "label": "Supporting Document Upload", "sub": "MPAR_001_CAF_13 / MPAR_001_CAF_14 / BR-093", "desc": "Supporting documents required for activation are attached in PDF or JPG format up to two megabytes; each is listed for the agent to view and download.", "phase": 77, "x": 19547.0, "y": 310.0, "w": 206, "h": 100, "cx": 19650.0, "cy": 360.0}, {"id": "milestone4", "type": "control", "lane": "crm", "slot": 0, "label": "Milestone: Signed CAF", "sub": "Section #12", "phase": 78, "x": 19799.0, "y": 870.0, "w": 206, "h": 60, "cx": 19902.0, "cy": 900.0}, {"id": "pay_request", "type": "external", "lane": "bill", "slot": 0, "label": "Upfront Payment Request to WinCash", "sub": "MPAR_001_PAY_01 / BR-102 / INT-06", "desc": "The upfront payment request is sent to WinCash; the CRM payment status is set from the response. Integration: INT-06 (WinCash, synchronous, point of sale payment and stock).", "phase": 79, "x": 20066.0, "y": 1050.0, "w": 176, "h": 100, "cx": 20154.0, "cy": 1100.0}, {"id": "d_pay_success", "type": "decision", "lane": "bill", "slot": 0, "label": "Payment Successful?", "branches": [{"label": "Paid", "to": "pay_receipt"}, {"label": "Failed", "to": "pay_failure"}], "phase": 80, "x": 20331.0, "y": 1050.0, "w": 150, "h": 100, "cx": 20406.0, "cy": 1100.0}, {"id": "pay_failure", "type": "error", "lane": "bill", "slot": 0, "label": "Payment Failure \u2014 Hold & Retry", "sub": "MPAR_001_PAY_02 / MPAR_001_PAY_03 / BR-102 / P-21", "desc": "The order is placed on hold and the agent returned to the payment summary screen for a further attempt; the failed-attempt count is recorded and further attempts are blocked at the configured maximum (P-21, value to be confirmed). Status model: Order/Draft/Pending Payment Retry (a payment attempt failed, a further attempt is permitted).", "phase": 81, "x": 20563.0, "y": 1050.0, "w": 190, "h": 100, "cx": 20658.0, "cy": 1100.0}, {"id": "pay_receipt", "type": "system", "lane": "bill", "slot": 1, "label": "Receipt Issuance", "sub": "MPAR_001_PAY_04 / BR-103", "desc": "A WinCash receipt is provided to the customer for every transaction, including a zero-value transaction.", "phase": 81, "x": 20563.0, "y": 1212.0, "w": 190, "h": 56, "cx": 20658.0, "cy": 1240.0}, {"id": "pay_billpost", "type": "system", "lane": "crm", "slot": 0, "label": "Bill Payment Posting", "sub": "MPAR_001_PAY_05 / BR-102 / INT-09", "desc": "Captured bill payments are posted to the billing system. Integration: INT-09 (Billing System, asynchronous, post payments and adjust advance payment against first bill).", "phase": 82, "x": 20815.0, "y": 872.0, "w": 190, "h": 56, "cx": 20910.0, "cy": 900.0}, {"id": "pay_sim_deplete", "type": "system", "lane": "inv", "slot": 0, "label": "SIM Inventory Depletion", "sub": "MPAR_001_PAY_06 / MPAR_001_PAY_07 / BR-104 / INT-07", "desc": "A Physical SIM or Printed eSIM is depleted from stock through WinCash on payment completion. Virtual eSIM is not store-allocated or WinCash-tracked, so its inventory depletion in UIM is deferred to order fulfilment. Integration: INT-07 (UIM, synchronous, reserve/deplete MSISDN and Virtual eSIM).", "phase": 83, "x": 21067.0, "y": 1390.0, "w": 190, "h": 100, "cx": 21162.0, "cy": 1440.0}, {"id": "ord_submit", "type": "agent", "lane": "agt", "slot": 0, "label": "Order Submission", "sub": "MPAR_001_ORD_01 / BR-110", "desc": "The Retail Agent submits the order once payment status is Paid; submission is enabled only in that state. Status model: Order/Open/Submitted (order submitted to downstream provisioning).", "phase": 84, "x": 21311.0, "y": 330.0, "w": 206, "h": 60, "cx": 21414.0, "cy": 360.0}, {"id": "milestone5", "type": "control", "lane": "crm", "slot": 0, "label": "Milestone: Order Submitted", "sub": "Section #14", "phase": 85, "x": 21563.0, "y": 850.0, "w": 206, "h": 100, "cx": 21666.0, "cy": 900.0}, {"id": "ord_route", "type": "system", "lane": "ful", "slot": 0, "label": "Route to Downstream Fulfilment", "sub": "MPAR_001_ORD_02 / MPAR_001_ORD_07 / BR-110 / BR-111 / P-18 / INT-10", "desc": "The order is submitted to downstream provisioning and activation systems with all order line items intact; the four-business-hour Postpaid activation service level (P-18) is displayed for the agent to communicate to the customer. Integration: INT-10 (Order Fulfilment, asynchronous, submit order and receive completion/failure outcome). Status model: Order/Open/In Fulfilment (downstream provisioning and activation in progress).", "phase": 86, "x": 21823.0, "y": 1590.0, "w": 190, "h": 100, "cx": 21918.0, "cy": 1640.0}, {"id": "ord_nav360", "type": "control", "lane": "agt", "slot": 0, "label": "Navigate to Customer 360 All Orders", "sub": "MPAR_001_ORD_03 / MPAR_001_ORD_04", "desc": "The agent lands on the Customer 360 All Orders view with the new order listed; any order can be opened to view its detail.", "phase": 87, "x": 22067.0, "y": 310.0, "w": 206, "h": 100, "cx": 22170.0, "cy": 360.0}, {"id": "d_ord_outcome", "type": "decision", "lane": "ful", "slot": 0, "label": "Downstream Outcome", "sub": "MPAR_001_ORD_05 / MPAR_001_ORD_06 / BR-111 / INT-10", "branches": [{"label": "Completed", "to": "ord_tracking_resolve"}, {"label": "Failed", "to": "ord_failure"}], "phase": 88, "x": 22347.0, "y": 1590.0, "w": 150, "h": 100, "cx": 22422.0, "cy": 1640.0, "desc": "Integration: INT-10 (Order Fulfilment, asynchronous, submit order and receive completion/failure outcome)."}, {"id": "ord_failure", "type": "error", "lane": "ful", "slot": 0, "label": "Order Failed Downstream", "desc": "The order is set to the failed state and the failure reason is made available to the agent. Status model: Order/Closed/Failed (provisioning or activation failed downstream; terminal).", "phase": 89, "x": 22579.0, "y": 1590.0, "w": 190, "h": 100, "cx": 22674.0, "cy": 1640.0}, {"id": "ord_tracking_resolve", "type": "control", "lane": "crm", "slot": 0, "label": "Tracking Record Resolved", "sub": "MPAR_001_ORD_08 / MPAR_001_ORD_09 / BR-112", "desc": "The Tracking Record is set to Resolved once the order status is completed in CRM, with the order number recorded; resolution requires all configured mandatory fields to be populated. Status model: Tracking Record/Resolved/Order Complete (order completed in CRM, order number recorded).", "phase": 89, "x": 22571.0, "y": 870.0, "w": 206, "h": 60, "cx": 22674.0, "cy": 900.0}, {"id": "not_submit", "type": "system", "lane": "ful", "slot": 1, "label": "Order Submission Notification", "sub": "MPAR_001_NOT_01 / MPAR_001_NOT_05 / BR-120 / INT-08", "desc": "An order submission notification is despatched through the mode selected on the customer record (email or SMS), using a template, trigger point and recipient list sourced from configuration so amendments require no code change. Integration: INT-08 (Notification Platform, asynchronous, despatch email/SMS).", "phase": 86, "x": 21823.0, "y": 1730.0, "w": 190, "h": 100, "cx": 21918.0, "cy": 1780.0}, {"id": "not_failure", "type": "system", "lane": "ful", "slot": 0, "label": "Order Failure Notification", "sub": "MPAR_001_NOT_02 / BR-120 / INT-08", "phase": 90, "x": 22831.0, "y": 1590.0, "w": 190, "h": 100, "cx": 22926.0, "cy": 1640.0, "desc": "Integration: INT-08 (Notification Platform, asynchronous, despatch email/SMS)."}, {"id": "not_complete", "type": "system", "lane": "ful", "slot": 2, "label": "Order Completion Notification", "sub": "MPAR_001_NOT_03 / BR-120 / INT-08", "phase": 90, "x": 22831.0, "y": 1870.0, "w": 190, "h": 100, "cx": 22926.0, "cy": 1920.0, "desc": "Integration: INT-08 (Notification Platform, asynchronous, despatch email/SMS). Status model: Order/Closed/Complete (provisioning and activation completed successfully; terminal)."}, {"id": "not_cra", "type": "system", "lane": "ful", "slot": 3, "label": "CRA Notification to All MSISDNs on QID", "sub": "MPAR_001_NOT_04 / BR-121 / INT-08", "desc": "The activation notification is sent to every active MSISDN registered against the customer QID, per the CRA regulatory requirement. Integration: INT-08 (Notification Platform, asynchronous, despatch email/SMS).", "phase": 90, "x": 22831.0, "y": 2010.0, "w": 190, "h": 100, "cx": 22926.0, "cy": 2060.0}, {"id": "not_survey", "type": "system", "lane": "ful", "slot": 1, "label": "Feedback Survey Despatch", "sub": "MPAR_001_NOT_06 / BR-122 / INT-11", "desc": "The customer feedback survey request is sent to the Customer Survey system once the Tracking Record is set to Resolved. Integration: INT-11 (Medilia, asynchronous, despatch feedback survey request).", "phase": 90, "x": 22831.0, "y": 1730.0, "w": 190, "h": 100, "cx": 22926.0, "cy": 1780.0}, {"id": "end_closed", "type": "end", "lane": "crm", "slot": 0, "label": "Tracking Record Closed", "sub": "MPAR_001_NOT_07", "desc": "The Tracking Record is updated to Closed once customer feedback is received from the Customer Survey system. Terminal. Status model: Tracking Record/Closed/Closed (all mandatory updates complete against Resolved; terminal, triggers the feedback survey).", "phase": 91, "x": 23136.0, "y": 858.0, "w": 84, "h": 84, "cx": 23178.0, "cy": 900.0}], "flows": [{"from": "start", "to": "jsm_init", "kind": "seq", "happy": true}, {"from": "jsm_init", "to": "jsm_qticket", "kind": "seq", "happy": true}, {"from": "jsm_qticket", "to": "jsm_tracking", "kind": "seq", "happy": true}, {"from": "jsm_tracking", "to": "jsm_milestone", "kind": "seq", "happy": true}, {"from": "jsm_milestone", "to": "kyc_scan", "kind": "seq", "happy": true}, {"from": "kyc_scan", "to": "d_kyc_type", "kind": "seq", "happy": true}, {"from": "d_kyc_type", "to": "kyc_rescan_check", "kind": "cond", "label": "Permitted", "happy": true}, {"from": "d_kyc_type", "to": "kyc_reject_type", "kind": "cond", "label": "Unsupported"}, {"from": "kyc_rescan_check", "to": "kyc_capture_attrs", "kind": "cond", "label": "Success", "happy": true}, {"from": "kyc_rescan_check", "to": "kyc_manual", "kind": "cond", "label": "Failed"}, {"from": "kyc_manual", "to": "kyc_capture_attrs", "kind": "seq"}, {"from": "kyc_capture_attrs", "to": "d_kyc_age", "kind": "seq", "happy": true}, {"from": "d_kyc_age", "to": "kyc_moi", "kind": "cond", "label": "18+", "happy": true}, {"from": "d_kyc_age", "to": "kyc_age_reject", "kind": "cond", "label": "Under 18"}, {"from": "kyc_moi", "to": "kyc_moi_compare", "kind": "seq", "happy": true}, {"from": "kyc_moi", "to": "kyc_moi_outage", "kind": "esc", "label": "MOI unavailable", "happy": false}, {"from": "kyc_moi_outage", "to": "kyc_transfer_crm", "kind": "esc", "label": "draft, enforce at submission"}, {"from": "kyc_moi_compare", "to": "d_kyc_match", "kind": "seq", "happy": true}, {"from": "d_kyc_match", "to": "kyc_moi_display", "kind": "cond", "label": "Match", "happy": true}, {"from": "d_kyc_match", "to": "kyc_mismatch", "kind": "cond", "label": "Mismatch"}, {"from": "kyc_mismatch", "to": "kyc_scan", "kind": "esc", "label": "re-scan"}, {"from": "kyc_mismatch", "to": "kyc_rejected", "kind": "esc", "label": "reject"}, {"from": "kyc_moi_display", "to": "d_kyc_status", "kind": "seq", "happy": true}, {"from": "d_kyc_status", "to": "kyc_transfer_crm", "kind": "cond", "label": "Permitted", "happy": true}, {"from": "d_kyc_status", "to": "kyc_status_blocked", "kind": "cond", "label": "Not permitted"}, {"from": "kyc_transfer_crm", "to": "d_cam_match", "kind": "seq", "happy": true}, {"from": "d_cam_match", "to": "cam_display_existing", "kind": "cond", "label": "Matched", "happy": true}, {"from": "d_cam_match", "to": "cam_create_new", "kind": "cond", "label": "Not matched", "happy": true}, {"from": "cam_display_existing", "to": "cam_overwrite", "kind": "seq", "happy": true}, {"from": "cam_create_new", "to": "cam_overwrite", "kind": "seq"}, {"from": "cam_overwrite", "to": "cam_contact_match", "kind": "seq", "happy": true}, {"from": "cam_contact_match", "to": "cam_lock", "kind": "seq", "happy": true}, {"from": "cam_lock", "to": "cam_address", "kind": "seq", "happy": true}, {"from": "cam_address", "to": "cam_account_attrs", "kind": "seq", "happy": true}, {"from": "cam_account_attrs", "to": "cam_primary_contact", "kind": "seq", "happy": true}, {"from": "cam_primary_contact", "to": "cam_credit_limit_default", "kind": "seq", "happy": true}, {"from": "cam_credit_limit_default", "to": "cam_override", "kind": "seq", "happy": true}, {"from": "cam_override", "to": "cam_hrn", "kind": "seq", "happy": true}, {"from": "cam_hrn", "to": "cam_contacts_multi", "kind": "seq", "happy": true}, {"from": "cam_contacts_multi", "to": "cam_email_verify", "kind": "seq", "happy": true}, {"from": "cam_email_verify", "to": "ecc_connection_type", "kind": "seq", "happy": true}, {"from": "ecc_connection_type", "to": "d_ecc_age", "kind": "seq", "happy": true}, {"from": "d_ecc_age", "to": "ecc_blacklist_check", "kind": "cond", "label": "Eligible", "happy": true}, {"from": "d_ecc_age", "to": "ecc_failure_msg", "kind": "cond", "label": "Not eligible"}, {"from": "ecc_blacklist_check", "to": "d_ecc_status", "kind": "seq", "happy": true}, {"from": "d_ecc_status", "to": "ecc_dues_threshold", "kind": "cond", "label": "Clear", "happy": true}, {"from": "d_ecc_status", "to": "ecc_failure_msg", "kind": "cond", "label": "Blocked"}, {"from": "ecc_dues_threshold", "to": "ecc_linecount", "kind": "seq", "happy": true}, {"from": "ecc_linecount", "to": "d_ecc_linecount_breach", "kind": "seq", "happy": true}, {"from": "d_ecc_linecount_breach", "to": "milestone1", "kind": "cond", "label": "Within ceiling", "happy": true}, {"from": "d_ecc_linecount_breach", "to": "ecc_approval_task", "kind": "cond", "label": "3rd\u20135th line (breach)"}, {"from": "ecc_approval_task", "to": "d_ecc_approval", "kind": "seq", "happy": true}, {"from": "d_ecc_approval", "to": "milestone1", "kind": "cond", "label": "Approved", "happy": true}, {"from": "d_ecc_approval", "to": "ecc_cancel", "kind": "cond", "label": "Rejected"}, {"from": "ecc_cancel", "to": "ecc_creditnote", "kind": "esc", "label": "refund if paid"}, {"from": "d_ecc_approval", "to": "ecc_limit_override", "kind": "esc", "label": "credit limit adjustment needed", "happy": false}, {"from": "ecc_limit_override", "to": "ecc_advance_payment", "kind": "seq"}, {"from": "ecc_limit_override", "to": "ecc_collections_escalate", "kind": "esc", "label": "beyond agent ceiling"}, {"from": "ecc_collections_escalate", "to": "ecc_advance_payment", "kind": "esc", "label": "approved"}, {"from": "ecc_advance_payment", "to": "milestone1", "kind": "esc", "label": "continue"}, {"from": "milestone1", "to": "bam_account", "kind": "seq", "happy": true}, {"from": "bam_account", "to": "bam_address", "kind": "seq", "happy": true}, {"from": "bam_address", "to": "bam_contacts", "kind": "seq", "happy": true}, {"from": "bam_contacts", "to": "bam_payment_profile_req", "kind": "seq", "happy": true}, {"from": "bam_payment_profile_req", "to": "bam_billcycle", "kind": "seq", "happy": true}, {"from": "bam_billcycle", "to": "bam_payment_capture", "kind": "seq", "happy": true}, {"from": "bam_payment_capture", "to": "bam_payment_validate", "kind": "seq", "happy": true}, {"from": "bam_payment_validate", "to": "bam_payment_capture", "kind": "esc", "label": "validation failed"}, {"from": "bam_payment_validate", "to": "milestone2", "kind": "seq", "happy": true}, {"from": "milestone2", "to": "qpc_baseplan", "kind": "seq", "happy": true}, {"from": "qpc_baseplan", "to": "qpc_addon", "kind": "seq", "happy": true}, {"from": "qpc_addon", "to": "qpc_discount", "kind": "seq", "happy": true}, {"from": "qpc_discount", "to": "qpc_special_discount_doc", "kind": "data", "label": "special discount selected"}, {"from": "qpc_discount", "to": "qpc_cart_create", "kind": "seq", "happy": true}, {"from": "qpc_special_discount_doc", "to": "qpc_cart_create", "kind": "seq"}, {"from": "qpc_cart_create", "to": "qpc_cart_amend", "kind": "seq", "happy": true}, {"from": "qpc_cart_amend", "to": "qpc_recalc", "kind": "seq", "happy": true}, {"from": "qpc_recalc", "to": "d_num_category", "kind": "seq", "happy": true}, {"from": "d_num_category", "to": "num_reserved_lookup", "kind": "cond", "label": "Reserved", "happy": true}, {"from": "d_num_category", "to": "num_star_search", "kind": "cond", "label": "Star"}, {"from": "d_num_category", "to": "num_free_search", "kind": "cond", "label": "Free"}, {"from": "num_reserved_lookup", "to": "num_reserved_price_check", "kind": "seq", "happy": true}, {"from": "num_reserved_price_check", "to": "num_reserve_confirm", "kind": "seq", "happy": true}, {"from": "num_star_search", "to": "num_star_charges", "kind": "seq"}, {"from": "num_star_charges", "to": "num_reserve_confirm", "kind": "seq"}, {"from": "num_free_search", "to": "num_reserve_confirm", "kind": "seq"}, {"from": "num_reserve_confirm", "to": "d_sim_type", "kind": "seq", "happy": true}, {"from": "d_sim_type", "to": "sim_scan_physical", "kind": "cond", "label": "Physical / Printed eSIM", "happy": true}, {"from": "d_sim_type", "to": "sim_esim_generate", "kind": "cond", "label": "Virtual eSIM"}, {"from": "sim_scan_physical", "to": "sim_validate", "kind": "seq", "happy": true}, {"from": "sim_esim_generate", "to": "sim_validate", "kind": "seq"}, {"from": "sim_validate", "to": "sim_lineitem", "kind": "seq", "happy": true}, {"from": "sim_lineitem", "to": "sim_esim_deliver", "kind": "data", "label": "eSIM path"}, {"from": "sim_lineitem", "to": "cvc_gate", "kind": "seq", "happy": true}, {"from": "sim_esim_deliver", "to": "cvc_gate", "kind": "seq"}, {"from": "cvc_gate", "to": "bam_add_at_checkout", "kind": "data", "label": "no active payment profile"}, {"from": "bam_add_at_checkout", "to": "cvc_review", "kind": "seq"}, {"from": "cvc_gate", "to": "cvc_review", "kind": "seq", "happy": true}, {"from": "cvc_review", "to": "cvc_star_charge", "kind": "seq", "happy": true}, {"from": "cvc_star_charge", "to": "cvc_hrn_charge", "kind": "seq", "happy": true}, {"from": "cvc_hrn_charge", "to": "cvc_credit_charge", "kind": "seq", "happy": true}, {"from": "cvc_credit_charge", "to": "cvc_summary", "kind": "seq", "happy": true}, {"from": "cvc_summary", "to": "milestone3", "kind": "seq", "happy": true}, {"from": "milestone3", "to": "caf_keyinfo", "kind": "seq", "happy": true}, {"from": "caf_keyinfo", "to": "caf_generate", "kind": "seq", "happy": true}, {"from": "caf_generate", "to": "d_caf_mode", "kind": "seq", "happy": true}, {"from": "d_caf_mode", "to": "caf_sign_device", "kind": "cond", "label": "Digital", "happy": true}, {"from": "d_caf_mode", "to": "caf_offline_upload", "kind": "cond", "label": "Offline paper CAF"}, {"from": "caf_sign_device", "to": "caf_sign_capture", "kind": "seq", "happy": true}, {"from": "caf_sign_capture", "to": "caf_docs", "kind": "seq", "happy": true}, {"from": "caf_offline_upload", "to": "caf_docs", "kind": "seq"}, {"from": "caf_docs", "to": "milestone4", "kind": "seq", "happy": true}, {"from": "milestone4", "to": "pay_request", "kind": "seq", "happy": true}, {"from": "pay_request", "to": "d_pay_success", "kind": "seq", "happy": true}, {"from": "d_pay_success", "to": "pay_receipt", "kind": "cond", "label": "Paid", "happy": true}, {"from": "d_pay_success", "to": "pay_failure", "kind": "cond", "label": "Failed"}, {"from": "pay_failure", "to": "pay_request", "kind": "esc", "label": "retry"}, {"from": "pay_receipt", "to": "pay_billpost", "kind": "seq", "happy": true}, {"from": "pay_billpost", "to": "pay_sim_deplete", "kind": "seq", "happy": true}, {"from": "pay_sim_deplete", "to": "ord_submit", "kind": "seq", "happy": true}, {"from": "ord_submit", "to": "milestone5", "kind": "seq", "happy": true}, {"from": "milestone5", "to": "not_submit", "kind": "data"}, {"from": "milestone5", "to": "ord_route", "kind": "seq", "happy": true}, {"from": "ord_route", "to": "ord_nav360", "kind": "seq", "happy": true}, {"from": "ord_nav360", "to": "d_ord_outcome", "kind": "seq", "happy": true}, {"from": "d_ord_outcome", "to": "ord_tracking_resolve", "kind": "cond", "label": "Completed", "happy": true}, {"from": "d_ord_outcome", "to": "ord_failure", "kind": "cond", "label": "Failed"}, {"from": "ord_failure", "to": "not_failure", "kind": "data"}, {"from": "ord_tracking_resolve", "to": "not_complete", "kind": "data"}, {"from": "ord_tracking_resolve", "to": "not_cra", "kind": "data"}, {"from": "ord_tracking_resolve", "to": "not_survey", "kind": "seq", "happy": true}, {"from": "not_survey", "to": "end_closed", "kind": "seq", "happy": true}], "model": {"agents": [], "contracts": [], "connectivity": []}, "biz": {"bio": {}, "contractPlain": {}, "nameMap": {}}};</script>
+<aside class="drawer" id="drawer"><div class="drawer-resize-handle" id="drawerResizeHandle" title="Drag to resize"></div><div class="dh" id="d-header"><div class="dh-top"><span class="pill dh-typepill" id="d-typepill"></span><button class="x" id="d-close">×</button></div><h3 id="d-title">Node</h3></div><div class="db" id="d-body"></div></aside>
+<script>window.DATA={"meta": {"title": "Bill Formatter \u2014 XML Ingestion to Invoice Distribution", "brsdId": "vfq-billformatter-brsd-v1-0", "generated": "2026-09-04", "source": "VFQ_BillFormatter_BRSD_V1.0.xlsx"}, "layout": {"x0": 200, "topbar": 70, "colw": 252, "totalW": 2316, "totalH": 6490, "laneLabelW": 100, "lanes": [{"key": "trigger", "name": "Mediation Zone / XML Source", "hint": "BRM invoice XML retrieval location", "y": 70, "h": 260}, {"key": "bfops", "name": "Billing Operations User", "hint": "Admin Console / Bill Formatter Portal actions", "y": 350, "h": 2240}, {"key": "bf", "name": "Bill Formatter (DXP)", "hint": "Core ingestion, generation, masking, reporting engine", "y": 2610, "h": 1800}, {"key": "crm", "name": "Siebel CRM", "hint": "Hot bill landing, notification logging, resend/reprint requests", "y": 4430, "h": 700}, {"key": "email", "name": "SMTP Service", "hint": "Email despatch and delivery feedback", "y": 5150, "h": 920}, {"key": "ext", "name": "Other Channels", "hint": "SMS Gateway, WhatsApp BSP, Web", "y": 6090, "h": 260}], "phases": ["XML Ingestion & Validation", "Batching & Parsing", "Invoice Generation", "Regeneration & Review", "Channel & Email Distribution", "Search, Reports & Config", "Masking & Access Control", "Reprint / Hot Bill / Resend"]}, "nodes": [{"id": "start", "type": "start", "lane": "trigger", "phase": 0, "label": "Bill Run / Manual Upload Trigger", "desc": "Invoice XML retrieval begins from the Mediation Zone predefined input location for regular, trial and hot bills, or an authorised user performs a manual XML/ZIP upload.", "slot": 0, "w": 84, "h": 84, "x": 284.0, "y": 158.0, "cx": 326.0, "cy": 200.0}, {"id": "xml_retrieve", "type": "agent", "lane": "bf", "phase": 0, "label": "Retrieve/Upload XML", "sub": "BR-001, BR-007", "desc": "XML is retrieved from the Mediation Zone predefined location for regular, trial and hot bills, or received via authorised manual XML/ZIP upload.", "inputs": ["Invoice XML"], "outputs": ["Received XML file"], "slot": 0, "w": 206, "h": 60, "x": 223.0, "y": 2710.0, "cx": 326.0, "cy": 2740.0}, {"id": "xml_atomic_write", "type": "control", "lane": "bf", "phase": 0, "label": "Atomic File Write", "sub": "BR-002", "desc": "The XML file is written to a temporary location or filename, closed and verified, then renamed/moved to the final destination so no partially written file is readable downstream.", "slot": 1, "w": 206, "h": 60, "x": 223.0, "y": 2930.0, "cx": 326.0, "cy": 2960.0}, {"id": "xml_batch_group", "type": "control", "lane": "bf", "phase": 0, "label": "Batch Grouping", "sub": "BR-003", "desc": "XML files are retrieved and processed batch-wise; each collection cycle produces a single batch identifier.", "slot": 2, "w": 206, "h": 60, "x": 223.0, "y": 3150.0, "cx": 326.0, "cy": 3180.0}, {"id": "xml_dupe_check", "type": "validation", "lane": "bf", "phase": 0, "label": "Duplicate Prevention Check", "sub": "BR-004", "desc": "The same invoice XML file is not processed more than once.", "slot": 4, "w": 176, "h": 100, "x": 238.0, "y": 3570.0, "cx": 326.0, "cy": 3620.0}, {"id": "xml_log_retrieval", "type": "control", "lane": "bf", "phase": 0, "label": "Log Retrieval Status", "sub": "BR-005", "desc": "Retrieval and load status is logged for every XML file.", "slot": 6, "w": 206, "h": 60, "x": 223.0, "y": 4030.0, "cx": 326.0, "cy": 4060.0}, {"id": "d_retrieval_error", "type": "decision", "lane": "bf", "phase": 0, "label": "Retrieval Successful?", "sub": "BR-006", "desc": "Retrieval errors are retried per the configured retry policy; a persistent failure is raised for operational review.", "branches": [{"label": "Retry exhausted", "to": "err_retrieval_failure"}, {"label": "Success", "to": "xml_type_segment"}], "slot": 3, "w": 150, "h": 100, "x": 251.0, "y": 3350.0, "cx": 326.0, "cy": 3400.0}, {"id": "err_retrieval_failure", "type": "error", "lane": "bf", "phase": 0, "label": "Persistent Retrieval Failure Raised", "sub": "BR-006", "desc": "A persistent retrieval failure is raised for operational review after configured retries are exhausted.", "slot": 5, "w": 190, "h": 100, "x": 231.0, "y": 3790.0, "cx": 326.0, "cy": 3840.0}, {"id": "xml_type_segment", "type": "agent", "lane": "bf", "phase": 1, "label": "Derive Invoice Type & Segment", "sub": "BR-008", "desc": "Invoice type and customer segment are derived from the loaded XML content.", "slot": 2, "w": 206, "h": 100, "x": 475.0, "y": 3130.0, "cx": 578.0, "cy": 3180.0}, {"id": "xml_validate", "type": "validation", "lane": "bf", "phase": 1, "label": "Schema & Mandatory Data Validation", "sub": "BR-009, BFR_XML_002.04", "desc": "XML is validated for schema conformance and mandatory billing data. Only files passing both proceed to invoice generation.", "slot": 4, "w": 176, "h": 100, "x": 490.0, "y": 3570.0, "cx": 578.0, "cy": 3620.0}, {"id": "d_xml_valid", "type": "decision", "lane": "bf", "phase": 1, "label": "XML Valid?", "sub": "BR-009", "desc": "A validation failure marks the file as Failed XML with a recorded reason.", "branches": [{"label": "Failed", "to": "xml_failed"}, {"label": "Valid", "to": "xml_parse"}], "slot": 5, "w": 150, "h": 84, "x": 503.0, "y": 3798.0, "cx": 578.0, "cy": 3840.0}, {"id": "xml_failed", "type": "error", "lane": "bf", "phase": 1, "label": "Failed XML \u2014 Reason Recorded", "sub": "BR-009, BR-010, XML Record: Failed XML", "desc": "The XML is marked Failed XML with the failure reason recorded and is visible in the portal for review and reprocessing after corrective action.", "slot": 1, "w": 190, "h": 100, "x": 483.0, "y": 2910.0, "cx": 578.0, "cy": 2960.0}, {"id": "xml_reprocess", "type": "agent", "lane": "bfops", "phase": 1, "label": "Review & Reprocess Failed XML", "sub": "BR-010", "desc": "Billing Operations reviews failed XML records in the portal and initiates reprocessing following corrective action.", "slot": 0, "w": 206, "h": 100, "x": 475.0, "y": 430.0, "cx": 578.0, "cy": 480.0}, {"id": "xml_stats", "type": "control", "lane": "bf", "phase": 1, "label": "Update Batch Statistics", "sub": "BR-011", "desc": "Batch statistics are updated to reflect successful and failed XML processing outcomes.", "slot": 6, "w": 206, "h": 60, "x": 475.0, "y": 4030.0, "cx": 578.0, "cy": 4060.0}, {"id": "csv_scheduler", "type": "control", "lane": "bf", "phase": 1, "label": "Supporting CSV Presence Check", "sub": "BR-013, P-01, P-02", "desc": "A scheduler checks every ten minutes for an expected supporting CSV; if still absent four hours after XML receipt, an alert email is issued to configured recipients.", "slot": 0, "w": 206, "h": 100, "x": 475.0, "y": 2690.0, "cx": 578.0, "cy": 2740.0}, {"id": "csv_alert", "type": "escalation", "lane": "email", "phase": 1, "label": "Supporting CSV Missing Alert", "sub": "BR-013", "desc": "An alert email is issued to the configured recipients when the expected supporting CSV remains absent four hours after XML receipt.", "slot": 0, "w": 190, "h": 100, "x": 483.0, "y": 5230.0, "cx": 578.0, "cy": 5280.0}, {"id": "xml_parse", "type": "control", "lane": "bf", "phase": 1, "label": "Parse XML & Load Data", "sub": "BR-012, BFR_XML_002.01", "desc": "Invoice Header, Invoice Summary and Invoice Detail structures are loaded from the parsed XML.", "slot": 3, "w": 206, "h": 60, "x": 475.0, "y": 3370.0, "cx": 578.0, "cy": 3400.0}, {"id": "invoice_generate", "type": "agent", "lane": "bf", "phase": 2, "label": "Generate Invoice Output", "sub": "BR-020, BR-024, BR-025, CAP-02", "desc": "PDF, XLS and CSV invoice outputs are generated for regular, trial and hot bills across Consumer Mobile, Consumer Fixed Line, Enterprise, Black, Bulk SMS and IoT segments in English and Arabic.", "slot": 2, "w": 206, "h": 60, "x": 727.0, "y": 3150.0, "cx": 830.0, "cy": 3180.0}, {"id": "invoice_lang", "type": "control", "lane": "bf", "phase": 2, "label": "Determine Invoice Language", "sub": "BR-028, P-08", "desc": "The invoice language is determined from the language type identifier in the source data; English and Arabic templates and translation values are applied.", "slot": 3, "w": 206, "h": 100, "x": 727.0, "y": 3350.0, "cx": 830.0, "cy": 3400.0}, {"id": "invoice_enterprise_detail", "type": "control", "lane": "bf", "phase": 2, "label": "Enterprise Detailed Output (XLS/CSV)", "sub": "BR-023", "desc": "An Enterprise customer opted for the detailed bill receives an XLS output, and a call detail CSV is produced in the VFQ approved format and stored in the designated output location.", "slot": 4, "w": 206, "h": 100, "x": 727.0, "y": 3570.0, "cx": 830.0, "cy": 3620.0}, {"id": "invoice_bulk_iot", "type": "control", "lane": "bf", "phase": 2, "label": "Bulk SMS & IoT Templates", "sub": "BR-026, BR-027", "desc": "Bulk SMS invoices use the Bulk SMS invoice template and IoT invoices use the IoT invoice template, for regular, trial and hot bills.", "slot": 5, "w": 206, "h": 60, "x": 727.0, "y": 3810.0, "cx": 830.0, "cy": 3840.0}, {"id": "trial_scope", "type": "control", "lane": "bf", "phase": 2, "label": "Trial Bill Run Scope", "sub": "BR-021, BR-022", "desc": "A trial bill run covers either an entire bill cycle or a nominated list of customers, for internal audit and bill validation only; trial batches are excluded from channel upload and never distributed to a customer.", "slot": 6, "w": 206, "h": 60, "x": 727.0, "y": 4030.0, "cx": 830.0, "cy": 4060.0}, {"id": "d_invoice_gen_ok", "type": "decision", "lane": "bf", "phase": 2, "label": "Generation Successful?", "sub": "BR-029", "desc": "Invoices failing processing or generation carry a recorded failure status and reason, visible in the portal.", "branches": [{"label": "Failed", "to": "invoice_failed"}, {"label": "Success", "to": "invoice_completed"}], "slot": 7, "w": 150, "h": 100, "x": 755.0, "y": 4230.0, "cx": 830.0, "cy": 4280.0}, {"id": "invoice_failed", "type": "error", "lane": "bf", "phase": 2, "label": "Invoice Failed \u2014 Reason Recorded", "sub": "BR-029, Invoice: Failed", "desc": "Invoice generation failure carries a recorded failure status and reason, visible in the portal.", "slot": 0, "w": 190, "h": 100, "x": 735.0, "y": 2690.0, "cx": 830.0, "cy": 2740.0}, {"id": "invoice_retry_control", "type": "control", "lane": "bfops", "phase": 2, "label": "Reprocessing Control (Role-based)", "sub": "BR-030", "desc": "Reprocessing of a failed invoice or batch is restricted by role and the retry count is recorded.", "slot": 0, "w": 206, "h": 100, "x": 727.0, "y": 430.0, "cx": 830.0, "cy": 480.0}, {"id": "invoice_completed", "type": "agent", "lane": "bf", "phase": 2, "label": "Invoice Completed", "sub": "Batch: Invoice Completed", "desc": "All invoice outputs within the batch have been generated.", "slot": 1, "w": 206, "h": 60, "x": 727.0, "y": 2930.0, "cx": 830.0, "cy": 2960.0}, {"id": "regen_request", "type": "agent", "lane": "bfops", "phase": 3, "label": "Initiate Invoice Regeneration", "sub": "BR-040, BFR_CONSL_INV_REGEN_001.01", "desc": "Billing Operations initiates an invoice regeneration request at individual invoice or batch level through the Bill Formatter application.", "slot": 2, "w": 206, "h": 100, "x": 979.0, "y": 870.0, "cx": 1082.0, "cy": 920.0}, {"id": "regen_xml_check", "type": "decision", "lane": "bf", "phase": 3, "label": "Source XML Corrected?", "sub": "BR-041", "desc": "Where the source XML has been regenerated or corrected, regeneration consumes the latest version.", "branches": [{"label": "Yes \u2014 use latest", "to": "regen_execute"}, {"label": "No \u2014 use existing", "to": "regen_execute"}], "slot": 1, "w": 150, "h": 100, "x": 1007.0, "y": 2910.0, "cx": 1082.0, "cy": 2960.0}, {"id": "regen_legacy_buffer", "type": "system", "lane": "bf", "phase": 3, "label": "Legacy Invoice Buffer Lookup", "sub": "BR-042", "desc": "Invoices are regenerable from the legacy XML data held in the Invoice Buffer table, including invoices generated several years previously.", "slot": 2, "w": 190, "h": 100, "x": 987.0, "y": 3130.0, "cx": 1082.0, "cy": 3180.0}, {"id": "regen_execute", "type": "agent", "lane": "bf", "phase": 3, "label": "Regenerate Invoice (Retry + Status)", "sub": "BR-040", "desc": "Invoice regeneration is supported at both individual invoice level and batch level, and includes retry and status reporting.", "slot": 0, "w": 206, "h": 100, "x": 979.0, "y": 2690.0, "cx": 1082.0, "cy": 2740.0}, {"id": "review_switch", "type": "decision", "lane": "bfops", "phase": 3, "label": "Review & Approval Switch On?", "sub": "BR-080, P-12", "desc": "Invoice review and approval before customer dispatch follows role-based access and is controlled by a switch defaulted to off.", "branches": [{"label": "On \u2014 review required", "to": "review_approve"}, {"label": "Off \u2014 bypass review", "to": "channel_availability"}], "slot": 0, "w": 150, "h": 100, "x": 1007.0, "y": 430.0, "cx": 1082.0, "cy": 480.0}, {"id": "review_approve", "type": "agent", "lane": "bfops", "phase": 3, "label": "Reviewer Approve/Reject", "sub": "Invoice: Approved / Rejected", "desc": "Invoice reviewed and approved for despatch, or reviewed and rejected with despatch prevented and the invoice returned to Pending on regeneration.", "slot": 1, "w": 206, "h": 60, "x": 979.0, "y": 670.0, "cx": 1082.0, "cy": 700.0}, {"id": "invoice_rejected", "type": "error", "lane": "bfops", "phase": 3, "label": "Invoice Rejected", "sub": "Invoice: Rejected", "desc": "Invoice reviewed and rejected; despatch is prevented and the invoice returns to Pending on regeneration.", "slot": 3, "w": 190, "h": 58, "x": 987.0, "y": 1111.0, "cx": 1082.0, "cy": 1140.0}, {"id": "channel_availability", "type": "agent", "lane": "bf", "phase": 4, "label": "Make Invoice Available to Channels", "sub": "BR-050, CAP-04", "desc": "Generated invoices are made available to downstream channels through the configured integration flow, with regular bill copies provided to Siebel CRM and other customer channels.", "slot": 0, "w": 206, "h": 100, "x": 1231.0, "y": 2690.0, "cx": 1334.0, "cy": 2740.0}, {"id": "hot_bill_landing", "type": "system", "lane": "crm", "phase": 4, "label": "Hot Bill Landing Location", "sub": "BR-051", "desc": "Hot bill invoices are placed in the Siebel CRM hot bill landing location and are available in real time following generation.", "slot": 0, "w": 190, "h": 100, "x": 1239.0, "y": 4510.0, "cx": 1334.0, "cy": 4560.0}, {"id": "trial_exclude", "type": "control", "lane": "bf", "phase": 4, "label": "Exclude Trial Batches from Channel Upload", "sub": "BR-022", "desc": "Trial batches are excluded from channel upload.", "slot": 1, "w": 206, "h": 100, "x": 1231.0, "y": 2910.0, "cx": 1334.0, "cy": 2960.0}, {"id": "predispatch_masking", "type": "control", "lane": "bf", "phase": 4, "label": "Apply Pre-Despatch Masking", "sub": "BR-053", "desc": "Customer specific masking rules are applied to the invoice before despatch through any communication channel.", "slot": 2, "w": 206, "h": 100, "x": 1231.0, "y": 3130.0, "cx": 1334.0, "cy": 3180.0}, {"id": "d_email_eligible", "type": "decision", "lane": "bf", "phase": 4, "label": "Eligible for Email?", "sub": "BR-060, Email: Eligible", "desc": "Only successfully generated invoices are eligible for email distribution; trial invoices are never emailed.", "branches": [{"label": "Suppressed", "to": "email_suppressed"}, {"label": "Eligible", "to": "email_template"}], "slot": 3, "w": 150, "h": 100, "x": 1259.0, "y": 3350.0, "cx": 1334.0, "cy": 3400.0}, {"id": "email_suppressed", "type": "error", "lane": "email", "phase": 4, "label": "Despatch Suppressed", "sub": "BR-063, Email: Suppressed", "desc": "A configurable list of non-triable email addresses is maintained; despatch is not attempted for a match on the suppression list.", "slot": 2, "w": 190, "h": 58, "x": 1239.0, "y": 5691.0, "cx": 1334.0, "cy": 5720.0}, {"id": "email_template", "type": "control", "lane": "bf", "phase": 4, "label": "Determine Email Template", "sub": "BR-061", "desc": "The email template is determined by customer type, invoice type and language; separate templates are supported for Consumer and Enterprise in English and Arabic, with configurable dynamic fields.", "slot": 4, "w": 206, "h": 60, "x": 1231.0, "y": 3590.0, "cx": 1334.0, "cy": 3620.0}, {"id": "email_dispatch", "type": "agent", "lane": "email", "phase": 4, "label": "SMTP Despatch", "sub": "BR-062", "desc": "Email is despatched through the configured SMTP service, which captures delivery feedback and provides success and failure reporting.", "slot": 0, "w": 206, "h": 60, "x": 1231.0, "y": 5250.0, "cx": 1334.0, "cy": 5280.0}, {"id": "d_email_delivered", "type": "decision", "lane": "email", "phase": 4, "label": "Delivered?", "sub": "Email: Sent / Delivered / Failed", "desc": "SMTP acceptance moves the email to Sent; delivery feedback confirms Delivered or reports Failed, which is retried and resent.", "branches": [{"label": "Failed", "to": "email_failed"}, {"label": "Delivered", "to": "crm_notification"}], "slot": 1, "w": 150, "h": 84, "x": 1259.0, "y": 5458.0, "cx": 1334.0, "cy": 5500.0}, {"id": "email_failed", "type": "error", "lane": "email", "phase": 4, "label": "Email Delivery Failed", "sub": "Email: Failed, Invoice: Failed Sending Email", "desc": "Delivery failed and the failure is reported in the Failed Email Report; the email is resent on retry.", "slot": 3, "w": 190, "h": 58, "x": 1239.0, "y": 5911.0, "cx": 1334.0, "cy": 5940.0}, {"id": "crm_notification", "type": "system", "lane": "crm", "phase": 4, "label": "Create CRM Notification Record", "sub": "BR-064", "desc": "A CRM notification record is created only for invoices processed for customer communication and is stored against the customer account and bill reference for servicing and audit.", "slot": 1, "w": 190, "h": 100, "x": 1239.0, "y": 4730.0, "cx": 1334.0, "cy": 4780.0}, {"id": "multi_channel_delivery", "type": "external", "lane": "ext", "phase": 4, "label": "SMS / WhatsApp / Web Delivery", "sub": "BR-052", "desc": "Invoice communication is also supported through SMS, WhatsApp Business and Web, carrying a PDF reference or an invoice URL.", "slot": 0, "w": 176, "h": 100, "x": 1246.0, "y": 6170.0, "cx": 1334.0, "cy": 6220.0}, {"id": "invoice_search", "type": "agent", "lane": "bfops", "phase": 5, "label": "Search Invoices & Reports", "sub": "BR-090", "desc": "Invoice and report search supports invoice type, invoice number, batch identifier, date created, language, MSISDN, product, status, email address, account number, customer type and Bill Formatter internal identifier.", "slot": 1, "w": 206, "h": 100, "x": 1483.0, "y": 650.0, "cx": 1586.0, "cy": 700.0}, {"id": "search_result_actions", "type": "control", "lane": "bfops", "phase": 5, "label": "Search Result Actions", "sub": "BR-091", "desc": "Search results support download, regenerate, reprocess and email actions, with availability determined by user role and invoice status; download formats are PDF, XML, XLS and CSV.", "slot": 2, "w": 206, "h": 60, "x": 1483.0, "y": 890.0, "cx": 1586.0, "cy": 920.0}, {"id": "xml_search", "type": "agent", "lane": "bfops", "phase": 5, "label": "Search XML Records", "sub": "BR-092", "desc": "XML record search supports invoice type, invoice number, batch identifier and XML status, displays the latest processing status and offers Operational Log, Download XML and Regenerate XML actions.", "slot": 3, "w": 206, "h": 60, "x": 1483.0, "y": 1110.0, "cx": 1586.0, "cy": 1140.0}, {"id": "config_drilldown", "type": "control", "lane": "bfops", "phase": 5, "label": "Configuration Drill-Down", "sub": "BR-093", "desc": "Configuration records open in a separate window or pop-up view, and selecting a batch identifier displays the invoices belonging to that batch.", "slot": 4, "w": 206, "h": 60, "x": 1483.0, "y": 1330.0, "cx": 1586.0, "cy": 1360.0}, {"id": "admin_console", "type": "system", "lane": "bf", "phase": 5, "label": "Admin Console \u2014 Batch/Bill Status", "sub": "BR-070, BR-071, BR-072, BR-073, CAP-06", "desc": "The Admin Console displays batch identifier, date created, reference, status, number of documents and the ZIP document, with status maintained at both batch and bill level across the operational status values.", "slot": 2, "w": 190, "h": 100, "x": 1491.0, "y": 3130.0, "cx": 1586.0, "cy": 3180.0}, {"id": "batch_action_menu", "type": "control", "lane": "bfops", "phase": 5, "label": "Batch Action Menu", "sub": "BR-074", "desc": "The batch action menu offers View Bills, View Statistics, Overall Report, Detail Report, Failed Report, Failed Email Report, Send Overall Report and Send Email.", "slot": 5, "w": 206, "h": 60, "x": 1483.0, "y": 1550.0, "cx": 1586.0, "cy": 1580.0}, {"id": "bill_action_menu", "type": "control", "lane": "bfops", "phase": 5, "label": "Bill Action Menu", "sub": "BR-075", "desc": "The bill action menu offers Status Log, Download PDF, Download XLS, Download XML, Reprint Bill, Regenerate Document, Regenerate XML and Send Email, and applies equally to the hot bill register.", "slot": 6, "w": 206, "h": 60, "x": 1483.0, "y": 1770.0, "cx": 1586.0, "cy": 1800.0}, {"id": "document_download", "type": "agent", "lane": "bfops", "phase": 5, "label": "Download Bill (PDF/XLS/XML)", "sub": "BR-077", "desc": "A selected bill is downloadable in PDF, XLS and XML format.", "slot": 7, "w": 206, "h": 100, "x": 1483.0, "y": 1970.0, "cx": 1586.0, "cy": 2020.0}, {"id": "batch_statistics", "type": "control", "lane": "bf", "phase": 5, "label": "Batch Statistics", "sub": "BR-078", "desc": "Batch statistics display successful and failed PDF generation with identifier, bill number, account number, status and reason.", "slot": 0, "w": 206, "h": 60, "x": 1483.0, "y": 2710.0, "cx": 1586.0, "cy": 2740.0}, {"id": "hot_bill_register", "type": "system", "lane": "bf", "phase": 5, "label": "Hot Bill Register", "sub": "BR-079", "desc": "The hot bill register displays identifier, process date, bill number, status, email address, total size, current month due, total due and the action menu.", "slot": 1, "w": 190, "h": 56, "x": 1491.0, "y": 2932.0, "cx": 1586.0, "cy": 2960.0}, {"id": "reference_config", "type": "control", "lane": "bfops", "phase": 5, "label": "Reference Data Configuration", "sub": "BR-100 to BR-113, CAP-08", "desc": "Translation, adjustment reason, benefits, flex bucket, VAS short code, plan speed and enterprise report account configuration, with import, export, effective dating, role control and product catalogue synchronisation.", "slot": 8, "w": 206, "h": 100, "x": 1483.0, "y": 2190.0, "cx": 1586.0, "cy": 2240.0}, {"id": "template_config", "type": "control", "lane": "bfops", "phase": 5, "label": "Template & Presentation Configuration", "sub": "BR-120 to BR-124, CAP-09", "desc": "Bill template field maintenance by segment and invoice type, email and resend template configuration, bill banner configuration and overlap resolution, report template configuration and interactive PDF features.", "slot": 9, "w": 206, "h": 100, "x": 1483.0, "y": 2410.0, "cx": 1586.0, "cy": 2460.0}, {"id": "reporting_dashboards", "type": "agent", "lane": "bfops", "phase": 5, "label": "Reports & Dashboards", "sub": "BR-130 to BR-142, CAP-10", "desc": "Enterprise reports, operational dashboard, batch status, overall and detailed batch reports, failed bill and failed email reports, email delivery statistics, XML processing statistics, bill run monitor and hot bill failure alerts.", "slot": 0, "w": 206, "h": 60, "x": 1483.0, "y": 450.0, "cx": 1586.0, "cy": 480.0}, {"id": "bill_run_monitor", "type": "escalation", "lane": "email", "phase": 5, "label": "Bill Run Monitor Alert", "sub": "BR-141, P-04, P-05", "desc": "The Bill Run Monitor email report is despatched during bill run windows at the configured interval from first batch start until the last batch or end marker.", "slot": 0, "w": 190, "h": 58, "x": 1491.0, "y": 5251.0, "cx": 1586.0, "cy": 5280.0}, {"id": "hot_bill_failure_alert", "type": "escalation", "lane": "email", "phase": 5, "label": "Hot Bill Failure Alert", "sub": "BR-142, P-03", "desc": "Failed hot bill generation is identified and an email alert report is despatched at the configured interval.", "slot": 1, "w": 190, "h": 58, "x": 1491.0, "y": 5471.0, "cx": 1586.0, "cy": 5500.0}, {"id": "mask_generate", "type": "control", "lane": "bf", "phase": 6, "label": "Generate Masked Invoice File", "sub": "BR-151, CAP-11", "desc": "A separate masked invoice file is generated at the point of invoice generation for each applicable invoice; Tax Identifier, Payment Method and Phone Number are masked in accordance with the configured access policy.", "slot": 0, "w": 206, "h": 100, "x": 1735.0, "y": 2690.0, "cx": 1838.0, "cy": 2740.0}, {"id": "mask_original_immutable", "type": "control", "lane": "bf", "phase": 6, "label": "Original Invoice Remains Immutable", "sub": "BR-150", "desc": "The original customer invoice is generated, stored and remains unchanged and immutable.", "slot": 1, "w": 206, "h": 100, "x": 1735.0, "y": 2910.0, "cx": 1838.0, "cy": 2960.0}, {"id": "d_role_presentation", "type": "decision", "lane": "bf", "phase": 6, "label": "Privileged Role?", "sub": "BR-152", "desc": "The user role and access permission determine whether the full invoice or the masked invoice is presented; privileged roles view the full invoice and restricted roles view the masked version.", "branches": [{"label": "Restricted", "to": "present_masked"}, {"label": "Privileged", "to": "present_full"}], "slot": 2, "w": 150, "h": 100, "x": 1763.0, "y": 3130.0, "cx": 1838.0, "cy": 3180.0}, {"id": "present_masked", "type": "agent", "lane": "bfops", "phase": 6, "label": "Present Masked Invoice", "sub": "BR-152", "desc": "Restricted roles view the masked invoice version.", "slot": 1, "w": 206, "h": 60, "x": 1735.0, "y": 670.0, "cx": 1838.0, "cy": 700.0}, {"id": "present_full", "type": "agent", "lane": "bfops", "phase": 6, "label": "Present Full Invoice", "sub": "BR-152", "desc": "Privileged roles view the full invoice.", "slot": 2, "w": 206, "h": 60, "x": 1735.0, "y": 890.0, "cx": 1838.0, "cy": 920.0}, {"id": "agent_customer_copy", "type": "control", "lane": "bfops", "phase": 6, "label": "Agent Copy / Customer Copy Download", "sub": "BR-154", "desc": "The bill download offers an Agent Copy and a Customer Copy; the Agent Copy is produced either as a summarised format without the usage view or as a masked format, each enabled or disabled by configuration.", "slot": 3, "w": 206, "h": 100, "x": 1735.0, "y": 1090.0, "cx": 1838.0, "cy": 1140.0}, {"id": "mask_rule_config", "type": "control", "lane": "bfops", "phase": 6, "label": "Masking Rule Configuration", "sub": "BR-153", "desc": "Masking rules are configurable without requiring invoice regeneration for rules applied at the point of presentation.", "slot": 0, "w": 206, "h": 100, "x": 1735.0, "y": 430.0, "cx": 1838.0, "cy": 480.0}, {"id": "end_masking", "type": "end", "lane": "bfops", "phase": 6, "label": "Invoice Presented per Access Policy", "desc": "The correct invoice presentation (full or masked) has been delivered to the requesting user per role-based access policy.", "slot": 4, "w": 100, "h": 100, "x": 1788.0, "y": 1310.0, "cx": 1838.0, "cy": 1360.0}, {"id": "reprint_request", "type": "agent", "lane": "crm", "phase": 7, "label": "Reprint Request from Siebel CRM", "sub": "BR-043, BFR_INV_REPRNT_001.01", "desc": "A reprint request carries the account number, bill period and bill type and originates from Siebel CRM.", "slot": 0, "w": 206, "h": 100, "x": 1987.0, "y": 4510.0, "cx": 2090.0, "cy": 4560.0}, {"id": "reprint_generate", "type": "agent", "lane": "bf", "phase": 7, "label": "Retrieve XML & Regenerate PDF", "sub": "BR-044, BR-045", "desc": "Reprint does not alter the original invoice data; only a previously generated bill may be reprinted, with Detailed or Summarised bill type and English or Arabic language selection.", "slot": 1, "w": 206, "h": 100, "x": 1987.0, "y": 2910.0, "cx": 2090.0, "cy": 2960.0}, {"id": "reprint_transfer_mz", "type": "system", "lane": "crm", "phase": 7, "label": "Transfer PDF via Mediation Zone", "sub": "BFR_INV_REPRNT_001.01", "desc": "The reprinted PDF is transferred through the Mediation Zone to the requesting channel.", "slot": 1, "w": 190, "h": 100, "x": 1995.0, "y": 4730.0, "cx": 2090.0, "cy": 4780.0}, {"id": "reprint_register", "type": "system", "lane": "bf", "phase": 7, "label": "Reprint/Resend Registers", "sub": "BR-046", "desc": "Reprint and resend requests are displayed in dedicated console registers with status and process date.", "slot": 2, "w": 190, "h": 100, "x": 1995.0, "y": 3130.0, "cx": 2090.0, "cy": 3180.0}, {"id": "resend_request", "type": "agent", "lane": "crm", "phase": 7, "label": "Resend Request from Siebel CRM", "sub": "BR-047, BFR_EML_RESEND_001.01", "desc": "A resend request carries the account number and bill reference; only a previously generated invoice may be resent.", "slot": 2, "w": 206, "h": 100, "x": 1987.0, "y": 4950.0, "cx": 2090.0, "cy": 5000.0}, {"id": "resend_template", "type": "control", "lane": "bf", "phase": 7, "label": "Apply Resend Email Template", "sub": "BR-048", "desc": "The resend email template may differ from the first-time bill email template and is separately maintainable in English and Arabic.", "slot": 0, "w": 206, "h": 100, "x": 1987.0, "y": 2690.0, "cx": 2090.0, "cy": 2740.0}, {"id": "resend_dispatch", "type": "agent", "lane": "email", "phase": 7, "label": "Despatch Resend Email", "sub": "BR-047", "desc": "The resend invoice is despatched and the delivery status is recorded and visible.", "slot": 0, "w": 206, "h": 60, "x": 1987.0, "y": 5250.0, "cx": 2090.0, "cy": 5280.0}, {"id": "interface_preserve", "type": "control", "lane": "bf", "phase": 7, "label": "Preserve Existing Interface Signatures", "sub": "BR-049", "desc": "The existing reprint and resend interface signatures remain unchanged to support parallel running and to avoid impact to current channels.", "slot": 4, "w": 206, "h": 100, "x": 1987.0, "y": 3570.0, "cx": 2090.0, "cy": 3620.0}, {"id": "end", "type": "end", "lane": "bf", "phase": 7, "label": "Batch/Bill Cycle Complete", "sub": "Batch: Email Sent (Terminal)", "desc": "Invoice emails for the batch have been despatched, completing the batch processing lifecycle.", "slot": 3, "w": 100, "h": 100, "x": 2040.0, "y": 3350.0, "cx": 2090.0, "cy": 3400.0}], "flows": [{"from": "start", "to": "xml_retrieve", "kind": "seq", "happy": true}, {"from": "xml_retrieve", "to": "xml_atomic_write", "kind": "seq", "happy": true}, {"from": "xml_atomic_write", "to": "xml_batch_group", "kind": "seq", "happy": true}, {"from": "xml_batch_group", "to": "xml_dupe_check", "kind": "seq", "happy": true}, {"from": "xml_dupe_check", "to": "xml_log_retrieval", "kind": "seq", "happy": true}, {"from": "xml_log_retrieval", "to": "d_retrieval_error", "kind": "seq", "happy": true}, {"from": "d_retrieval_error", "to": "err_retrieval_failure", "kind": "cond", "label": "Retry exhausted", "happy": false}, {"from": "d_retrieval_error", "to": "xml_type_segment", "kind": "cond", "label": "Success", "happy": true}, {"from": "xml_type_segment", "to": "xml_validate", "kind": "seq", "happy": true}, {"from": "xml_validate", "to": "d_xml_valid", "kind": "seq", "happy": true}, {"from": "d_xml_valid", "to": "xml_failed", "kind": "cond", "label": "Failed", "happy": false}, {"from": "d_xml_valid", "to": "xml_parse", "kind": "cond", "label": "Valid", "happy": true}, {"from": "xml_failed", "to": "xml_reprocess", "kind": "esc", "happy": false}, {"from": "xml_reprocess", "to": "xml_retrieve", "kind": "data", "happy": false}, {"from": "xml_validate", "to": "xml_stats", "kind": "data", "happy": true}, {"from": "xml_stats", "to": "xml_parse", "kind": "data", "happy": true}, {"from": "xml_retrieve", "to": "csv_scheduler", "kind": "data", "happy": true}, {"from": "csv_scheduler", "to": "csv_alert", "kind": "esc", "happy": false}, {"from": "xml_parse", "to": "invoice_generate", "kind": "seq", "happy": true}, {"from": "invoice_generate", "to": "invoice_lang", "kind": "data", "happy": true}, {"from": "invoice_lang", "to": "d_invoice_gen_ok", "kind": "data", "happy": true}, {"from": "invoice_generate", "to": "invoice_enterprise_detail", "kind": "data", "happy": true}, {"from": "invoice_enterprise_detail", "to": "d_invoice_gen_ok", "kind": "data", "happy": true}, {"from": "invoice_generate", "to": "invoice_bulk_iot", "kind": "data", "happy": true}, {"from": "invoice_bulk_iot", "to": "d_invoice_gen_ok", "kind": "data", "happy": true}, {"from": "invoice_generate", "to": "trial_scope", "kind": "data", "happy": true}, {"from": "trial_scope", "to": "d_invoice_gen_ok", "kind": "data", "happy": true}, {"from": "invoice_generate", "to": "d_invoice_gen_ok", "kind": "seq", "happy": true}, {"from": "d_invoice_gen_ok", "to": "invoice_failed", "kind": "cond", "label": "Failed", "happy": false}, {"from": "d_invoice_gen_ok", "to": "invoice_completed", "kind": "cond", "label": "Success", "happy": true}, {"from": "invoice_failed", "to": "invoice_retry_control", "kind": "esc", "happy": false}, {"from": "invoice_retry_control", "to": "invoice_generate", "kind": "data", "happy": false}, {"from": "invoice_completed", "to": "regen_request", "kind": "seq", "happy": true}, {"from": "regen_request", "to": "regen_xml_check", "kind": "seq", "happy": true}, {"from": "regen_xml_check", "to": "regen_execute", "kind": "cond", "label": "Yes \u2014 use latest", "happy": true}, {"from": "regen_xml_check", "to": "regen_execute", "kind": "cond", "label": "No \u2014 use existing", "happy": true}, {"from": "regen_request", "to": "regen_legacy_buffer", "kind": "data", "happy": false}, {"from": "regen_legacy_buffer", "to": "regen_execute", "kind": "data", "happy": false}, {"from": "regen_execute", "to": "review_switch", "kind": "seq", "happy": true}, {"from": "review_switch", "to": "review_approve", "kind": "cond", "label": "On \u2014 review required", "happy": false}, {"from": "review_switch", "to": "channel_availability", "kind": "cond", "label": "Off \u2014 bypass review", "happy": true}, {"from": "review_approve", "to": "channel_availability", "kind": "data", "label": "Approved", "happy": false}, {"from": "review_approve", "to": "invoice_rejected", "kind": "data", "label": "Rejected", "happy": false}, {"from": "invoice_rejected", "to": "regen_request", "kind": "err", "happy": false}, {"from": "channel_availability", "to": "hot_bill_landing", "kind": "data", "happy": true}, {"from": "hot_bill_landing", "to": "crm_notification", "kind": "data", "happy": false}, {"from": "channel_availability", "to": "trial_exclude", "kind": "data", "happy": false}, {"from": "channel_availability", "to": "predispatch_masking", "kind": "seq", "happy": true}, {"from": "predispatch_masking", "to": "d_email_eligible", "kind": "seq", "happy": true}, {"from": "d_email_eligible", "to": "email_suppressed", "kind": "cond", "label": "Suppressed", "happy": false}, {"from": "d_email_eligible", "to": "email_template", "kind": "cond", "label": "Eligible", "happy": true}, {"from": "email_template", "to": "email_dispatch", "kind": "seq", "happy": true}, {"from": "email_dispatch", "to": "d_email_delivered", "kind": "seq", "happy": true}, {"from": "d_email_delivered", "to": "email_failed", "kind": "cond", "label": "Failed", "happy": false}, {"from": "d_email_delivered", "to": "crm_notification", "kind": "cond", "label": "Delivered", "happy": true}, {"from": "email_failed", "to": "email_dispatch", "kind": "err", "happy": false}, {"from": "predispatch_masking", "to": "multi_channel_delivery", "kind": "data", "happy": false}, {"from": "multi_channel_delivery", "to": "crm_notification", "kind": "data", "happy": false}, {"from": "crm_notification", "to": "end", "kind": "seq", "happy": true}, {"from": "channel_availability", "to": "invoice_search", "kind": "data", "happy": false}, {"from": "invoice_search", "to": "search_result_actions", "kind": "seq", "happy": false}, {"from": "invoice_search", "to": "xml_search", "kind": "data", "happy": false}, {"from": "xml_search", "to": "config_drilldown", "kind": "data", "happy": false}, {"from": "search_result_actions", "to": "config_drilldown", "kind": "data", "happy": false}, {"from": "admin_console", "to": "batch_action_menu", "kind": "seq", "happy": false}, {"from": "batch_action_menu", "to": "bill_action_menu", "kind": "data", "happy": false}, {"from": "bill_action_menu", "to": "document_download", "kind": "data", "happy": false}, {"from": "admin_console", "to": "batch_statistics", "kind": "data", "happy": false}, {"from": "admin_console", "to": "hot_bill_register", "kind": "data", "happy": false}, {"from": "invoice_search", "to": "admin_console", "kind": "data", "happy": false}, {"from": "config_drilldown", "to": "reference_config", "kind": "data", "happy": false}, {"from": "reference_config", "to": "template_config", "kind": "data", "happy": false}, {"from": "template_config", "to": "reporting_dashboards", "kind": "data", "happy": false}, {"from": "reporting_dashboards", "to": "bill_run_monitor", "kind": "esc", "happy": false}, {"from": "reporting_dashboards", "to": "hot_bill_failure_alert", "kind": "esc", "happy": false}, {"from": "invoice_completed", "to": "mask_original_immutable", "kind": "data", "happy": false}, {"from": "mask_original_immutable", "to": "mask_generate", "kind": "seq", "happy": false}, {"from": "mask_generate", "to": "d_role_presentation", "kind": "seq", "happy": false}, {"from": "d_role_presentation", "to": "present_masked", "kind": "cond", "label": "Restricted", "happy": false}, {"from": "d_role_presentation", "to": "present_full", "kind": "cond", "label": "Privileged", "happy": false}, {"from": "present_masked", "to": "agent_customer_copy", "kind": "data", "happy": false}, {"from": "present_full", "to": "agent_customer_copy", "kind": "data", "happy": false}, {"from": "agent_customer_copy", "to": "end_masking", "kind": "seq", "happy": false}, {"from": "mask_generate", "to": "mask_rule_config", "kind": "data", "happy": false}, {"from": "reprint_request", "to": "reprint_generate", "kind": "seq", "happy": false}, {"from": "reprint_generate", "to": "reprint_transfer_mz", "kind": "seq", "happy": false}, {"from": "reprint_transfer_mz", "to": "reprint_register", "kind": "data", "happy": false}, {"from": "reprint_generate", "to": "interface_preserve", "kind": "data", "happy": false}, {"from": "resend_request", "to": "resend_template", "kind": "seq", "happy": false}, {"from": "resend_template", "to": "resend_dispatch", "kind": "seq", "happy": false}, {"from": "resend_dispatch", "to": "reprint_register", "kind": "data", "happy": false}, {"from": "resend_request", "to": "interface_preserve", "kind": "data", "happy": false}, {"from": "reprint_register", "to": "end", "kind": "data", "happy": false}], "model": {"agents": [], "contracts": [], "connectivity": []}, "biz": {"bio": {}, "contractPlain": {}, "nameMap": {}}};</script>
 <script>
 const D=window.DATA, LY=D.layout, NODES=D.nodes, FLOWS=D.flows;
 const NID={}; NODES.forEach(n=>NID[n.id]=n);
 const SVGNS="http://www.w3.org/2000/svg";
+// ---- content-driven column widening (node labels first, then connector labels) -----------
+// Every phase column previously had one FIXED width (LY.colw) no matter what any node placed
+// in it actually needed to say: a label too wide for that column's usable text area just kept
+// wrapping (up to wrapTextPx's own maxLines ceiling, below) or, past that ceiling, got
+// silently ellipsis-truncated — genuine content loss driven purely by an arbitrary column
+// width, not by anything about the content itself. This measures every node's own label with
+// real canvas text measurement (matching wrapTextPx/LBLFONT exactly — the box has to be sized
+// against the SAME font/wrap rules that will actually render inside it) and widens a column —
+// shifting every later column to make room — whenever a node would otherwise need more than
+// TARGET_MAX_LINES lines at the column's base width, up to a bounded per-shape cap so one
+// outlier label can't balloon the whole diagram (past the cap it still wraps/truncates as
+// before). The SAME pass also enforces MIN_PAD: an explicit "every node keeps >=100px
+// clearance on every side, from its nearest neighbour, connector, label, or the canvas edge"
+// requirement — every node's cell is widened (independent of whether its own label needed
+// it) to at least `nodeWidth + 2*MIN_PAD`, so any two adjacent-phase nodes are guaranteed
+// >=MIN_PAD margin on EACH of their own facing sides, meaning the gap between them is never
+// less than 2*MIN_PAD even in the worst case. Vertical MIN_PAD (between stacked nodes, across
+// lanes, and from the lane gutter/canvas edges) is enforced statically in build_model.py's
+// compute_layout() (ROW/X0_MARGIN/total_w — see that function's own MIN_PAD comment); this is
+// the horizontal half of the same requirement, done here because column width is already
+// content-dependent and JS-computed (see above), not a value Python can pin down in advance.
+// Runs BEFORE the connector-label pass just below, which measures its own gaps against
+// whatever positions THIS pass already produced — the two compose additively (see that
+// pass's own final line) into one LY._colShift the phase-header/background code reads.
+{
+ const wCtx=document.createElement('canvas').getContext('2d');
+ const NODEFONT='600 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';   // == LBLFONT below — MUST match: this decides how wide a node's box becomes, wrapTextPx decides how content then wraps INSIDE that box, and the two have to agree on what "fits" means
+ wCtx.font=NODEFONT;
+ const TARGET_MAX_LINES=2;    // prefer widening a box over letting its label wrap past this many lines
+ const MAX_NODE_W={decision:280, _default:340};   // bounded cap per shape family — a genuinely
+                                                   // extreme label still wraps/truncates past
+                                                   // this rather than growing the column forever
+ const MIN_PAD=100;           // == build_model.py's own MIN_PAD — MUST match, or the horizontal
+                               // and vertical halves of the same "100px minimum" requirement disagree
+ const effWOf=(type,w)=>type==='decision'?w*0.62:w-18;     // MUST mirror the node-drawing loop's own effW formula below, or a box sized here can still under/overflow what actually gets drawn into it
+ const wOfEffW=(type,effW)=>type==='decision'?effW/0.62:effW+18;
+ // Smallest effW at which `label` wraps to <=maxLines lines (same greedy wrap algorithm as
+ // wrapTextPx, run repeatedly over a binary search on the target width instead of a single
+ // fixed one) — or capEffW itself if even that isn't enough, so the caller just uses the cap
+ // and lets the existing wrap/truncate ceiling handle the rest exactly as it already did.
+ function minEffWForLines(label,maxLines,capEffW){
+  const lineCountAt=(w)=>{
+   const words=String(label).split(' ');let lines=1,cur='';
+   for(const wd of words){
+    const test=cur?cur+' '+wd:wd;
+    if(!cur||wCtx.measureText(test).width<=w){cur=test;}
+    else{lines++;cur=wd;}
+   }
+   return lines;
+  };
+  if(lineCountAt(capEffW)>maxLines) return capEffW;
+  let lo=10,hi=capEffW;
+  while(hi-lo>2){ const mid=(lo+hi)/2; if(lineCountAt(mid)<=maxLines) hi=mid; else lo=mid; }
+  return hi;
+ }
+ const nodeExtra={};   // nodeExtra[phase] = extra px this phase's OWN column needs, for its widest node's own label AND/OR the MIN_PAD floor
+ NODES.forEach(n=>{
+  if(n.type!=='start'&&n.type!=='end'&&n.label){   // circles already grow their own diameter in build_model.py for wrap-avoidance and never need more column width for THAT reason — but they still participate in the MIN_PAD floor below, same as every other type
+   const capW=MAX_NODE_W[n.type]||MAX_NODE_W._default;
+   const capEffW=effWOf(n.type,capW);
+   const curEffW=effWOf(n.type,n.w);
+   if(wCtx.measureText(n.label).width>curEffW){   // doesn't already fit on one line
+    const neededEffW=minEffWForLines(n.label,TARGET_MAX_LINES,capEffW);
+    if(neededEffW>curEffW){                        // current size doesn't satisfy the target line count either
+     n._wantedW=Math.min(Math.ceil(wOfEffW(n.type,neededEffW)),capW);
+    }
+   }
+  }
+  // MIN_PAD floor: this node's cell must be at least effectiveW+2*MIN_PAD wide, regardless
+  // of whether wrap-avoidance above asked for anything — a short label in a small box still
+  // needs 100px of clear column on each side of ITSELF, not just enough to hold its text.
+  // effectiveW (n._wantedW||n.w) already folds in any wrap-avoidance widening from above, so
+  // this one comparison against LY.colw covers both requirements at once — no separate
+  // "wrap-avoidance cell" vs "MIN_PAD cell" computation needed.
+  const effectiveW=n._wantedW||n.w;
+  const minPadNeed=effectiveW+2*MIN_PAD;
+  if(minPadNeed>LY.colw) nodeExtra[n.phase]=Math.max(nodeExtra[n.phase]||0, minPadNeed-LY.colw);
+ });
+ const maxPhaseForW=NODES.reduce((m,n)=>Math.max(m,n.phase),0);
+ const nodeShift=[0];
+ for(let p=1;p<=maxPhaseForW+1;p++) nodeShift[p]=(nodeShift[p-1]||0)+(nodeExtra[p-1]||0);
+ if(nodeShift[maxPhaseForW+1]){
+  NODES.forEach(n=>{
+   const cellStart=LY.x0+n.phase*LY.colw+(nodeShift[n.phase]||0);
+   const cellW=LY.colw+(nodeExtra[n.phase]||0);
+   const w=n._wantedW||n.w;
+   if(n._wantedW) n.w=w;
+   n.x=cellStart+(cellW-w)/2; n.cx=n.x+w/2;
+  });
+  LY.totalW+=nodeShift[maxPhaseForW+1];
+ }
+ LY._colShift=nodeShift;   // the connector-label pass below adds its own extra on top of this
+}
 // Connector labels must participate in the SAME layout pass that positions everything else,
 // not get dropped afterward at whatever gap the column grid already happened to leave. Every
-// phase column boundary is a fixed LY.colw apart regardless of what has to be labelled across
-// it — a label wider than that gap (e.g. "milestone: contact & eligibility" needing ~165px
-// across a ~46px node-to-node gap) spills straight into the nodes on either side. This widens
-// only the specific column boundaries that need it and shifts every column after them,
-// mirroring the same "measure, then make room, then shift what follows" approach already used
-// for the lane-label gutter and the backward-edge routing tracks.
+// phase column boundary is a fixed LY.colw (plus whatever the node-width pass above already
+// added) apart regardless of what has to be labelled across it — a label wider than that gap
+// (e.g. "milestone: contact & eligibility" needing ~165px across a ~46px node-to-node gap)
+// spills straight into the nodes on either side. This widens only the specific column
+// boundaries that need it and shifts every column after them, mirroring the same "measure,
+// then make room, then shift what follows" approach already used for the lane-label gutter,
+// the backward-edge routing tracks, and the node-width pass just above.
 {
  const lblCtx=document.createElement('canvas').getContext('2d');
  const ELABELFONT='italic 700 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';   // kept in sync with .elabel's weight — MUST match exactly, or this width measurement (used for column-shift spacing, see below) under/overestimates what actually renders and either spills a label into a node or leaves excess gap
@@ -397,7 +605,7 @@ const SVGNS="http://www.w3.org/2000/svg";
   const a=NID[f.from], b=NID[f.to]; if(!a||!b) return;
   if(b.phase!==a.phase+1) return;   // only a directly-adjacent pair shares exactly one boundary
   const need=lblCtx.measureText(f.label).width+LABEL_CLEARANCE*2;
-  const rawGap=b.x-(a.x+a.w);
+  const rawGap=b.x-(a.x+a.w);   // measured against positions the node-width pass above may have already shifted — correct either way, since this only cares about the gap that's actually there right now
   if(need>rawGap) extraGap[a.phase]=Math.max(extraGap[a.phase]||0, need-rawGap);
  });
  const maxPhase=NODES.reduce((m,n)=>Math.max(m,n.phase),0);
@@ -407,7 +615,11 @@ const SVGNS="http://www.w3.org/2000/svg";
   NODES.forEach(n=>{ const s=shiftAt[n.phase]||0; if(s){ n.x+=s; n.cx+=s; } });
   LY.totalW+=shiftAt[maxPhase+1];
  }
- LY._colShift=shiftAt;   // phase headers use this so their boundaries track the same shift
+ // Combine with the node-width pass's own shift (set as LY._colShift above) rather than
+ // overwrite it — phase headers/backgrounds read ONE array and need the TOTAL cumulative
+ // widening from both sources, or their boundaries would track only whichever pass ran last.
+ const priorShift=LY._colShift||[0];
+ LY._colShift=shiftAt.map((v,i)=>v+(priorShift[i]||0));
 }
 // The Vodafone-mapped lane colour palette (LANECOL/LANEPAL) and the laneCol() lookup that
 // picked from it have been removed entirely — both fed exclusively the full-width lane
@@ -1338,6 +1550,7 @@ const _elblCtx=document.createElement('canvas').getContext('2d');
 // before this file's node/edge rendering ever runs, silently blanks the ENTIRE diagram —
 // not just labels). Keep this string's weight in sync with .elabel's font-weight by hand.
 _elblCtx.font='italic 700 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';
+const ELABEL_LINE_H=20;   // matches the 20px line spacing node labels use at the same 14px font size (see LINE_HEIGHT_RATIO in the node-drawing loop below) — kept the same ratio for visual consistency between the two label families
 function labelClearsAllNodes(cx,cy,halfW,halfH){
  for(const n of NODES){
   const nx1=n.x-2, nx2=n.x+n.w+2, ny1=n.y-2, ny2=n.y+n.h+2;   // small padding so a label can't even graze an edge
@@ -1395,9 +1608,14 @@ function labelClearsAllEdges(cx,cy,halfW,halfH,ownIdx){
  }
  return true;
 }
-function placeEdgeLabel(text,baseX,baseY,ownIdx){
- const m=_elblCtx.measureText(text);
- const halfW=m.width/2+4;
+function placeEdgeLabel(lines,baseX,baseY,ownIdx){
+ // lines: an array of already-wrapped strings (1 entry for a label that fit on one line and was
+ // never wrapped — see the ELABEL_MAX_W wrapping pass at the call site — up to however many
+ // wrapTextPx() decided a long label needs). halfW comes from the WIDEST line, not just line 0,
+ // since a greedy word-wrap doesn't guarantee every line is the same length.
+ let maxLineW=0;
+ for(const ln of lines){ const w=_elblCtx.measureText(ln).width; if(w>maxLineW) maxLineW=w; }
+ const halfW=maxLineW/2+4;
  // A flat "half the 14px line height" guess (=9) undershoots this font's real glyph extent —
  // bold italic text's ascent measures closer to 11-12px above the baseline for this size, so a
  // symmetric ±9 box let the collision checks below believe a label had cleared an obstacle by a
@@ -1405,9 +1623,15 @@ function placeEdgeLabel(text,baseX,baseY,ownIdx){
  // getBBox(), not this same estimate, so the mismatch wasn't self-consistent). Use the canvas's
  // own measured ascent/descent when available — taking the larger of the two and applying it
  // symmetrically errs toward reserving slightly MORE space than needed, never less.
- const halfH=(m.actualBoundingBoxAscent!=null && m.actualBoundingBoxDescent!=null)
+ const m=_elblCtx.measureText(lines[0]);
+ const singleHalfH=(m.actualBoundingBoxAscent!=null && m.actualBoundingBoxDescent!=null)
   ? Math.max(m.actualBoundingBoxAscent,m.actualBoundingBoxDescent)+1
   : 11;
+ // Extra lines extend the collision box symmetrically outward by half a line-height each — the
+ // block's own vertical centre (baseY) stays where a single-line label's would have been, so
+ // wrapping a label never shifts where its FIRST line would have landed, only how far its
+ // total footprint now reaches above/below that point.
+ const halfH=singleHalfH+(lines.length-1)*ELABEL_LINE_H/2;
  const NUDGE=16;
  let best=baseY;
  for(let step=0;step<=8;step++){
@@ -2032,17 +2256,108 @@ function rebalanceExternalAnchors(){
  }
 }
 rebalanceExternalAnchors();
+// edgeDByIdx: FLOWS-index -> final, post-processing `d` string. edgeDList is sparse (a flow
+// with a missing endpoint never gets pushed — see its own building loop above), so it can't be
+// indexed positionally; every other lookup in this file that needs "the d for flow i" already
+// goes through edgeDList's own `.i` field the same way (see rebalanceExternalAnchors' `pos`
+// lookup above) — this just does it once, as a map, since the label loop below needs it per
+// labeled flow rather than the occasional single lookup those other call sites do.
+const edgeDByIdx={};
+edgeDList.forEach(({i,d})=>{edgeDByIdx[i]=d;});
+// Finds the segment of a (post-processing, FINAL) path `d` that a point actually sits on —
+// matching by whichever coordinate is constant along that segment (x for vertical, y for
+// horizontal), not just trusting the PRE-processing `mid` computed inside edgePath(): the
+// dediagonalize/enforceExitEntryDirection/enforceMinSegLength/collapseShortInteriorSegments/
+// enforceAnchorSeparation passes between edgePath() and here can all still nudge a segment's
+// exact endpoints, so re-deriving the segment's TRUE final length from the rendered path is
+// the only way the vertical/horizontal orientation decision below is measuring the length
+// that will actually appear on screen, not a stale pre-adjustment estimate.
+function findMidSegment(d,mid){
+ const nums=d.match(/-?\d+\.?\d*/g).map(Number); const P=[];
+ for(let k=0;k<nums.length;k+=2) P.push([nums[k],nums[k+1]]);
+ for(let k=0;k<P.length-1;k++){
+  const [x1,y1]=P[k],[x2,y2]=P[k+1];
+  if(Math.abs(x1-x2)<0.5 && Math.abs(x1-mid[0])<1.5 && mid[1]>=Math.min(y1,y2)-1 && mid[1]<=Math.max(y1,y2)+1){
+   return {vertical:true, length:Math.abs(y2-y1)};
+  }
+  if(Math.abs(y1-y2)<0.5 && Math.abs(y1-mid[1])<1.5 && mid[0]>=Math.min(x1,x2)-1 && mid[0]<=Math.max(x1,x2)+1){
+   return {vertical:false, length:Math.abs(x2-x1)};
+  }
+ }
+ return null;   // no confident match (e.g. a residual diagonal) — caller falls back to the default horizontal placement
+}
+// ROTATED_LABEL_GAP: the explicit "minimum 10px spacing... between the label and the
+// connector" requirement for the vertical-orientation case below — distinct from, and much
+// smaller than, the diagram's own general MIN_PAD(100) node/column spacing floor (that one
+// governs whitespace between NODES; this one governs a label's own clearance from the single
+// line it's captioning, the same relationship LABEL_EDGE_CLEARANCE(10) already governs for a
+// label against every OTHER, unrelated edge — kept at the same 10px for consistency).
+const ROTATED_LABEL_GAP=10;
+// Horizontal (0°) connector labels previously always rendered as one unbroken line — fine for
+// short captions, but a long one (e.g. "Compliant & matches confirmation") had no width limit
+// at all and could run past nearby nodes or off the edge of its own lane, with nothing to catch
+// it: the column-widening pass near the top of this file only protects a FORWARD label sitting
+// exactly on the phase-to-phase gap it measures against (`if(b.phase!==a.phase+1) return;`) —
+// a lateral/backward label, or one whose segment isn't the boundary that pass widened, gets no
+// such protection. Wrapping is the general fix that doesn't depend on which routing case placed
+// the label. ELABEL_MAX_W ties to LY.colw (the diagram's base column width, the same stable
+// reference every phase column starts from before any dynamic per-column widening) rather than
+// a flat px guess, so the wrap width scales automatically with whatever this diagram's own
+// column grid actually is — no per-diagram tuning. Explicitly NOT applied to the rotated (90°)
+// branch above, which returns before reaching this point: a rotated label is only ever chosen
+// when its full, unwrapped length already fits the connector segment it's aligned with (see
+// that branch's own comment), so it never needs — and per this requirement, must never receive
+// — wrapping; it stays a single continuous text block, unconditionally.
+const ELABEL_MAX_W=Math.max(80,LY.colw-40);
 FLOWS.forEach((f,i)=>{
  if(!f.label) return;
  const mid=edgeMidByFlow[i]; if(!mid) return;
+ const d=edgeDByIdx[i];
+ const seg=d?findMidSegment(d,mid):null;
+ const m=_elblCtx.measureText(f.label);
+ // Orientation rule, applied deterministically from the connector segment's own final length
+ // vs. the label's real rendered length — no per-diagram tuning, no manual override:
+ //   - segment is vertical AND longer than the label -> rotate 90° to read along the
+ //     connector, since there's genuinely enough run to hold it without overflowing past
+ //     either end.
+ //   - label length >= segment length (or the segment isn't vertical, or couldn't be
+ //     identified) -> stays at the default 0° horizontal orientation, exactly as before this
+ //     feature existed.
+ if(seg && seg.vertical && seg.length>m.width){
+  // Perpendicular offset off the line itself: half the label's own rendered THICKNESS (its
+  // ascent+descent — the same real-glyph measurement placeEdgeLabel() below uses, not a flat
+  // guess) plus ROTATED_LABEL_GAP, so the rotated text clears the connector line by at least
+  // the required 10px rather than sitting centred ON it.
+  const halfThickness=(m.actualBoundingBoxAscent!=null && m.actualBoundingBoxDescent!=null)
+   ? Math.max(m.actualBoundingBoxAscent,m.actualBoundingBoxDescent)+1 : 11;
+  const lx=mid[0]+halfThickness+ROTATED_LABEL_GAP, ly=mid[1];
+  const t=el('text',{x:lx,y:ly,'text-anchor':'middle',class:'elabel',transform:`rotate(-90 ${lx} ${ly})`});
+  t.textContent=f.label; t.dataset.kind=f.kind; t.dataset.flowIdx=i; labelLayer.appendChild(t);
+  // Registered into the SAME collision registry placeEdgeLabel() below checks against for
+  // every subsequently-placed horizontal label — width/height swapped from the usual
+  // horizontal-label box, since a rotated label's screen-space footprint runs along the
+  // connector (its rendered WIDTH) rather than across it (its rendered THICKNESS). Not itself
+  // nudge-avoided against nodes/other labels/other edges (that search assumes a horizontal
+  // footprint) — a deliberate, explicitly-scoped limit: the requirement here is the
+  // orientation/spacing rule, not a second full collision-avoidance system for the vertical
+  // case.
+  const halfAlong=m.width/2+4;
+  placedLabelBoxes.push({x1:lx-halfThickness,x2:lx+halfThickness,y1:ly-halfAlong,y2:ly+halfAlong});
+  return;
+ }
  // Offset raised from -3 to -13 (10px more clearance above the connector line) — at -3 the
  // label's own baseline sat close enough to the line that a bold label (see the .elabel
  // font-weight change above) visually touched or crossed it instead of reading as a caption
  // floating just above it. That's the STARTING point placeEdgeLabel() nudges from if this
  // position turns out to collide with some node's box, another label, or an UNRELATED edge's
  // own line (see above).
- const ly=placeEdgeLabel(f.label,mid[0],mid[1]-13,i);
- const t=el('text',{x:mid[0],y:ly,'text-anchor':'middle',class:'elabel'}); t.textContent=f.label; t.dataset.kind=f.kind; t.dataset.flowIdx=i; labelLayer.appendChild(t);
+ const lines=wrapTextPx(_elblCtx,_elblCtx.font,f.label,ELABEL_MAX_W,3);   // no-ops (returns [f.label] unchanged) for any label that already fits ELABEL_MAX_W on one line
+ const centerY=placeEdgeLabel(lines,mid[0],mid[1]-13,i);
+ const startY=centerY-(lines.length-1)*ELABEL_LINE_H/2;
+ lines.forEach((ln,li)=>{
+  const t=el('text',{x:mid[0],y:startY+li*ELABEL_LINE_H,'text-anchor':'middle',class:'elabel'});
+  t.textContent=ln; t.dataset.kind=f.kind; t.dataset.flowIdx=i; labelLayer.appendChild(t);
+ });
 });
 
 // ---- nodes
@@ -2145,8 +2460,20 @@ NODES.forEach(n=>{
  // absorbed into a busier block. dominant-baseline:middle makes each text element's `y`
  // mean its true vertical centre instead of its baseline, which is what the startY maths
  // here already assumes every one of these y values IS.
- const startY = n.cy - (lines.length-1)*10;
- lines.forEach((ln,i)=>{const t=el('text',{x:n.cx,y:startY+i*20,'text-anchor':'middle','dominant-baseline':'middle',class:'lbl'});
+ // Line-to-line spacing was a flat 20px regardless of node type — correct for the default
+ // 14px .node .lbl font (a 20/14 ≈ 1.43× ratio), but a circle's label renders at a smaller
+ // 10.5px (see CIRCLE_FONT_SIZE below) while still using that SAME flat 20px, giving circles
+ // a visibly looser ≈1.9× ratio — noticeably more breathing room between lines than every
+ // other node type gets relative to its own font size. lineH is now DERIVED from whichever
+ // font size this node actually uses (LINE_HEIGHT_RATIO applied uniformly), so a circle's
+ // 10.5px label gets 10.5×20/14=15px spacing — the same ratio as a rect's 14px/20px — instead
+ // of inheriting the rect's absolute px value.
+ const CIRCLE_FONT_SIZE=10.5;
+ const LINE_HEIGHT_RATIO=20/14;
+ const fontSize=isCircle?CIRCLE_FONT_SIZE:14;
+ const lineH=fontSize*LINE_HEIGHT_RATIO;
+ const startY = n.cy - (lines.length-1)*lineH/2;
+ lines.forEach((ln,i)=>{const t=el('text',{x:n.cx,y:startY+i*lineH,'text-anchor':'middle','dominant-baseline':'middle',class:'lbl'});
    // Circle labels must be set via .style, not .setAttribute('font-size', ...): an SVG
    // presentation ATTRIBUTE has lower CSS specificity than the .node .lbl{font-size:14px}
    // class rule, so setAttribute here was silently overridden by that rule the whole
@@ -2156,7 +2483,7 @@ NODES.forEach(n=>{
    // overlap. An inline style property, unlike a bare attribute, DOES win over a class
    // rule, which is what actually shrinks the font and restores real breathing room
    // between lines.
-   if(isCircle)t.style.fontSize='10.5px';
+   if(isCircle)t.style.fontSize=CIRCLE_FONT_SIZE+'px';
    t.textContent=ln; g.appendChild(t);});
  nodeLayer.appendChild(g);
  g.addEventListener('mouseenter',()=>highlight(n.id));
@@ -2373,11 +2700,18 @@ document.getElementById('resetBtn').addEventListener('click',()=>{
   hb.textContent='Happy Flow'; hb.classList.remove('on');
   applyHappyFlow();
  }
- // setViewDetails(false) already closes the drawer, but the drawer can also be open from a plain
- // double-click with the mode OFF — close it unconditionally either way.
- if(viewDetailsMode) setViewDetails(false);
- drawer.classList.remove('open');
- clearSelected(); clearAllHL();
+ // View Details mode's own pinned selection and the drawer content it's driving are explicitly
+ // exempt from Reset: "the Reset action shall not clear, deselect, or modify the currently
+ // selected View Details item ... side-drawer content shall remain unchanged after a reset
+ // operation." Everything else Reset normally clears here (drawer, selection, highlight lock)
+ // still happens when View Details mode is OFF — a drawer left open from a plain double-click
+ // with the mode off isn't "a View Details item," so it's unaffected by this exemption and
+ // still closes on Reset exactly as before.
+ if(!viewDetailsMode){
+  drawer.classList.remove('open');
+  clearSelected(); clearAllHL();
+  applyDrawerWidth(DRAWER_MIN_W);   // a manually-dragged width is exactly the "temporary view change" Reset exists to undo — skipped alongside the rest of this block when View Details mode is active, for the same reason its drawer/selection are
+ }
  panning=false; panMoved=false;
  const shell=svg.parentElement;
  if(shell) shell.classList.remove('panning');
@@ -2558,39 +2892,53 @@ let scale=1,tx=0,ty=0,baseScale=1;
 // stay visually aligned with the scrolling/zooming SVG beneath them — none of that exists any
 // more, since there's nothing frozen left to keep in sync.
 function apply(){vp.setAttribute('transform',`translate(${tx},${ty}) scale(${scale})`);}
-/* ---- responsive width-first sizing -------------------------------------------------
-   The canvas must always consume 100% of the horizontal space inside .diagram-shell.
-   Sizing is driven by BOTH axes:
+/* ---- responsive single-axis-overflow sizing ------------------------------------------
+   On load, exactly ONE axis is ever allowed to overflow and need scrolling — never both at
+   once, never a scale so small either axis is crushed just to avoid scrolling the other:
 
        sW = (availW - 2*PAD_X) / totalW      // scale that makes the content span the full width
-       sH = (availH - 2*PAD_Y) / contentH    // scale that makes the content span the full height
-       s  = max(sW, sH)                      // whichever fills its axis LAST — never letterboxed
+       sH = (availH - 2*PAD_Y) / totalH      // scale that makes the content span the full height
+       s  = max(sW, sH)                      // whichever axis needs LESS shrinking wins
 
-   * A wide/flat model keeps its previous behaviour exactly (sH wins, the content overflows
-     horizontally and the shell scrolls) — it already used the full width.
-   * A tall/narrow model takes sW: the diagram spans the entire width, and content that's taller
-     than the shell's own (now CSS-bounded — see .diagram-shell) height scrolls WITHIN it via
-     overflow:auto rather than growing the shell to fit. This is a deliberate reversal of an
-     earlier version of this comment, which grew the shell instead and let the PAGE scroll past
-     it — that kept the width-fill goal but broke a later, equally explicit requirement:
-     interactions (scroll, and pan/zoom if either is ever reintroduced) must stay confined to the
-     canvas, with the header and the legend footer genuinely fixed and unaffected by them. Growing
-     the shell dragged the header off-screen on every tall/narrow model and left the legend's own
-     position:sticky;bottom:0 unable to stick to anything (nothing was scrolling WITHIN the shell
-     for it to pin against — the whole PAGE was). Both are now true at once: full width fill AND
-     a canvas that's the only thing that ever scrolls, because availH below is .diagram-shell's
-     actual CSS-flex-determined height (fixed, never written back to), not a budget this function
-     computes and then grows the shell to match.
-   Aspect ratio is preserved in every branch: one uniform `scale`, no independent x/y stretch. */
-const PAD_X=14, PAD_Y=22;                           // buffer kept on each edge (x trimmed: the
-                                                    // horizontal axis is the scarce one here)
+   This function went through two single-axis-only attempts before landing here, each of which
+   fixed one real problem while reintroducing a different one:
+     - Unconditional `s = sW` (width always fits exactly) guaranteed a wide/flat model was
+       never cut off, but crushed it to fit an arbitrary window width regardless of how much
+       spare HEIGHT the viewport actually had — illegibly small text with the bottom of the
+       viewport left blank.
+     - Unconditional `s = sH` (height always fits exactly) fixed that for wide/flat models, but
+       did the mirror-image thing to a tall/narrow model: shrunk to fill height regardless of
+       how much spare WIDTH was available, rendering as a narrow column with most of the
+       viewport's width left blank.
+   Both were "pick one axis, always" rules — deterministic, but blind to which axis actually
+   NEEDED the scrolling for a given model's own shape. `max(sW, sH)` is the rule that is both
+   deterministic AND shape-aware, proven algebraically, not just empirically: whichever of sW/
+   sH is larger is, BY CONSTRUCTION, the scale that would make the OTHER axis overflow (if
+   sW>sH, then totalH*sW > totalH*sH = availH — height overflows at that scale; symmetrically
+   if sH>sW, width overflows) — so choosing s=max(sW,sH) always leaves the WINNING axis fitting
+   EXACTLY (zero overflow, zero scroll) and the losing axis is the only one that can ever need
+   to scroll. A model whose aspect ratio happens to exactly match the viewport's needs neither
+   scrollbar (sW===sH, both fit exactly) — the degenerate, still-correct case of the same rule.
+   applySizeAtScale() below already handles "drawn content narrower than the shell on either
+   axis" (centres it, via its own `w=Math.max(availW,...)`/`h=Math.max(availH,...)` floors) and
+   "wider/taller than the shell" (grows the SVG past that axis, so .diagram-shell's own
+   overflow:auto — and its always-visible ::-webkit-scrollbar styling, see .diagram-shell's own
+   CSS — picks it up on THAT axis only) without any changes needed here; only which scale gets
+   computed changes. Mouse-wheel/trackpad-pinch zoom (below) still lets an interactive viewer go
+   past this default for even finer detail on either axis, and the Export button's PNG/JPG/PDF/
+   SVG output is completely unaffected by this live-view scale (it always rasterizes at native
+   LY.totalW×LY.totalH — see exportSVGString()/rasterize() — so exported artefacts stay fully
+   legible regardless of what scale the live page happens to be showing). Interactions (scroll,
+   and pan/zoom) stay confined to the canvas either way, with the header and legend footer
+   genuinely fixed and unaffected by them. */
+const PAD_X=14, PAD_Y=22;                           // buffer kept on each edge
 const CANVAS_PAD=PAD_X;                             // back-compat alias
 // applySizeAtScale(s): the actual DOM-writing half of sizing — given an explicit scale, sizes
 // the svg element (width/height/viewBox) to fit that scale's content plus padding, never
 // smaller than the shell's own visible area, and returns the centring offsets. Shared by
-// sizeHost() (which derives the width-first AUTOFIT scale, below) and zoomAt() (which sizes
-// to whatever scale the user has interactively zoomed to) — one sizing implementation, two
-// different ways of arriving at the `s` it's given.
+// sizeHost() (which derives the single-axis-overflow AUTOFIT scale, below) and zoomAt() (which
+// sizes to whatever scale the user has interactively zoomed to) — one sizing implementation,
+// two different ways of arriving at the `s` it's given.
 function applySizeAtScale(s){
  const shell=svg.parentElement; if(!shell) return null;
  const availW=shell.clientWidth; if(!availW) return null;
@@ -2609,14 +2957,36 @@ function applySizeAtScale(s){
  svg.style.width=w+'px'; svg.style.height=h+'px';
  svg.setAttribute('viewBox',`0 0 ${w} ${h}`);       // 1:1 px space so the vp transform fully controls scaling
  return {w,h,s,offX:Math.max(PAD_X,(w-drawnW)/2),offY:Math.max(PAD_Y,(h-drawnH)/2)};}
+// Reads the shell's CURRENT available space and derives the single-axis-overflow fit scale
+// against it — pure measurement + arithmetic, no DOM writes. Split out from sizeHost() so it
+// can be called twice (see sizeHost()'s own comment on why).
+function computeFitScale(shell){
+ const availW=shell.clientWidth, availH=shell.clientHeight;
+ if(!availW||!availH) return null;
+ const contentH=LY._preLegendTotalH||LY.totalH;      // live view excludes the export-only legend extension, same as applySizeAtScale()'s own contentH
+ const sW=(availW-2*PAD_X)/LY.totalW;
+ const sH=(availH-2*PAD_Y)/contentH;
+ return {s:Math.max(sW,sH), availW, availH};   // see the sizing comment above for why max(sW,sH) guarantees exactly one axis ever overflows
+}
 function sizeHost(){
  const shell=svg.parentElement; if(!shell) return null;
- const availW=shell.clientWidth; if(!availW) return null;
- const availH=shell.clientHeight; if(!availH) return null;
- const sW=(availW-2*PAD_X)/LY.totalW;
- const sH=(availH-2*PAD_Y)/(LY._preLegendTotalH||LY.totalH);
- const s=Math.max(sW,sH);                           // fill whichever axis is the binding constraint
- return applySizeAtScale(s);
+ const first=computeFitScale(shell); if(!first) return null;
+ let dim=applySizeAtScale(first.s);
+ // Applying a scale can flip which scrollbar(s) .diagram-shell's own overflow:auto renders —
+ // a vertical scrollbar (appearing when height overflows) narrows the shell's effective width;
+ // a horizontal one (width overflowing) shortens its effective height — and shell.clientWidth/
+ // clientHeight, read again, would now come back DIFFERENT from what `first` was computed
+ // against. CSS's scrollbar-gutter property could pre-reserve this for the vertical case, but
+ // there is no equivalent for a horizontal scrollbar, so the only reliable fix is to actually
+ // re-measure after the first application and, if the available space genuinely changed as a
+ // result, redo the fit against the corrected numbers. This converges in exactly one extra
+ // pass — once a scrollbar state is reached, applying the SAME resulting scale again can't
+ // change the client dimensions any further, so a second correction is never needed.
+ const second=computeFitScale(shell);
+ if(second && (second.availW!==first.availW || second.availH!==first.availH)){
+  dim=applySizeAtScale(second.s);
+ }
+ return dim;
 }
 function fit(){const dim=sizeHost();if(!dim){requestAnimationFrame(fit);return;}
  scale=dim.s;tx=dim.offX;ty=dim.offY;baseScale=dim.s;apply();}   // centred within whatever slack
@@ -2750,25 +3120,95 @@ function openDrawer(n){
  document.getElementById('d-title').textContent=n.label;
  const st=STROKE[n.type]||'#3860be';
  const bio=(D.biz&&D.biz.bio)?D.biz.bio[n.id]:null;
- const sec=(k,txt)=>txt?`<div class="dsec"><div class="k">${k}</div>${txt}</div>`:'';
- const listSec=(k,arr)=>(arr&&arr.length)?`<div class="dsec"><div class="k">${k}</div><ul>${arr.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:'';
+ const sec=(k,txt,cls)=>txt?`<div class="dsec ${cls||''}"><div class="k">${k}</div>${txt}</div>`:'';
+ // Leading reference codes ("BR-06: ", "AGN-001: " — a short letters-hyphen-digits token
+ // immediately followed by a colon) are stripped from list items for DISPLAY only; n.controls/
+ // n.systems themselves are untouched, so anything that reads this data directly (not through
+ // the drawer) still sees the code. The code's own value isn't lost either — every item in
+ // n.controls/n.systems is plain prose with the rule ID as a citation prefix, not the rule's
+ // only identifying label the way, say, a branch's `b.label` is, so dropping just the prefix
+ // here doesn't remove anything a reader needs to make sense of the sentence that follows it.
+ // Also strips a literal "Acceptance Criteria: " lead-in (agent-360's own bio.example rows all
+ // start this way) and the "(Open)"-style status parenthetical some Business Rule citations
+ // carry (fibre's "BR-131 (Open): ..." rows) — same principle as the bare code case: the prefix
+ // is a citation/label ahead of the real sentence, not content a reader loses by not seeing it.
+ const stripRefCode=(s)=>String(s).replace(/^(Acceptance Criteria:\s*|[A-Z]{1,6}-\d{1,4}(?:\s*\([^)]*\))?:\s*)/,'');
+ const listSec=(k,arr,cls)=>(arr&&arr.length)?`<div class="dsec ${cls||''}"><div class="k">${k}</div><ul>${arr.map(x=>`<li>${stripRefCode(x)}</li>`).join('')}</ul></div>`:'';
  const KINDNAME=Object.fromEntries(LEGE.map(([k,lab])=>[k,lab]));   // 'seq'->'Sequence flow' etc — reuse
    // the legend's own kind→name mapping so the drawer's language can't drift from the legend's.
- let h=`<div class="dsec"><span class="pill" style="background:${FILL[n.type]};color:${st};border:1px solid ${st}">${TYPELABEL[n.type]||'Step'}</span>`;
- h+=`<span class="pill t-portal">Stage: ${LY.phases[n.phase]}</span>`;
+ // Type pill moved from a body .dsec into the header itself (#d-typepill, see the drawer's
+ // static markup) — same inline FILL[type]/STROKE[type] colouring as before, just relocated so
+ // the header carries the node's own type colour instead of a plain title-only bar. Header's
+ // own border-bottom picks up the same accent colour, tying the whole header band to this
+ // node's type without needing a full-bleed colour fill that would go white-on-white for the
+ // (most common) 'agent' type, whose FILL value IS white.
+ const typePill=document.getElementById('d-typepill');
+ typePill.textContent=TYPELABEL[n.type]||'Step';
+ typePill.style.background=FILL[n.type]; typePill.style.color=st; typePill.style.border=`1px solid ${st}`;
+ document.getElementById('d-header').style.borderBottomColor=st;
+ // Stage/Actor context — a plain label|value table row per fact (see .dinfo-table), sitting
+ // directly below the header. Same underlying values as before (LY.phases[n.phase], the lane's
+ // own name), just presented as a table row instead of a dot-tinted pill.
+ let h=`<table class="dinfo-table"><tr><td class="dlabel">Stage:</td><td class="dvalue">${LY.phases[n.phase]}</td></tr>`;
  // Lane (the owning actor/team/system) was previously visible ONLY on the canvas itself —
  // never surfaced in the drawer, even though "who does this step" is exactly the kind of
  // context a comprehensive panel should never make the reader go back to the diagram to find.
  const laneDef=LY.lanes.find(l=>l.key===n.lane);
- if(laneDef) h+=`<span class="pill t-portal">${laneDef.name.split('·')[0].trim()}</span>`;
- h+='</div>';
+ if(laneDef) h+=`<tr><td class="dlabel">Actor:</td><td class="dvalue">${laneDef.name.split('·')[0].trim()}</td></tr>`;
+ h+='</table>';
  // A "Reference code" section (n.sub) used to render here — removed entirely per an explicit
  // "reference code should no longer be displayed on any node" requirement, matching the same
  // removal from the canvas label above. n.sub itself is untouched in the data.
- h+=sec('What this does', bio?bio.does:(n.desc||''));
- if(bio){ h+=sec('What it needs to start', bio.needs); h+=sec('What it produces', bio.makes); h+=sec('For example', bio.example); }
- else { h+=listSec('What it needs to start', n.inputs); h+=listSec('What it produces', n.outputs); }
- if(n.branches&&n.branches.length) h+=`<div class="dsec"><div class="k">Possible outcomes</div><ul>${n.branches.map(b=>`<li><b>${b.label}</b> → ${NID[b.to]?NID[b.to].label:b.to}</li>`).join('')}</ul></div>`;
+ //
+ // Section order below is now an explicit fixed sequence (not "whatever was easiest to compute
+ // first"): What this does -> Incoming/Outgoing paths -> What it needs to start -> What it
+ // produces -> Acceptance Criteria/Business Rules -> Possible outcomes -> (everything else this
+ // node happens to have, unchanged relative order). Inputs and Outputs are no longer a
+ // side-by-side pair (see the removed .dsec-twocol wrapper) — each renders full-width in its
+ // own place in the sequence instead.
+ h+=sec('What this does', bio?bio.does:(n.desc||''), 'dsec-desc');
+ // who it works with — by step name, WITH the connecting flow's own label and kind carried
+ // along, not dropped. A bare "Leads to: Reject application" chip discards exactly the
+ // business-rule context (e.g. which condition triggers that path — "confirmed fraud" vs
+ // "cleared" for two different outgoing edges from the same node) that a comprehensive context
+ // panel is supposed to surface; that detail previously only existed as a tiny canvas label,
+ // invisible unless "View Labels" happened to be toggled on.
+ const predFlows=FLOWS.filter(f=>f.to===n.id);
+ const succFlows=FLOWS.filter(f=>f.from===n.id);
+ const pathItem=(arrow,other,f,dir)=>{
+  const label=NID[other]?NID[other].label:other;
+  const detail=[KINDNAME[f.kind]||f.kind, f.label].filter(Boolean).join(': ');
+  return `<div class="path-item ${dir||''}"><span class="arrow">${arrow}</span><span><b>${label}</b>${detail?` <span class="detail">(${detail})</span>`:''}</span></div>`;
+ };
+ // Incoming/Outgoing rendered as one bordered two-column box (INCOMING PATHS / OUTGOING
+ // PATHS side by side) rather than as two separate pill rows — matching a supplied reference
+ // layout. A node with no outgoing connector that isn't the designated "end" type is
+ // genuinely ambiguous (does the journey stop here, wait, or hand off outside this diagram?);
+ // that anomaly notice still renders in the outgoing column, styled distinctly in the error
+ // colour, rather than being silently replaced by an empty/"None" column.
+ if(predFlows.length||succFlows.length||n.type!=='end'){
+  const incoming=predFlows.length
+   ? predFlows.map(f=>pathItem('←',f.from,f,'pin')).join('')
+   : '<div class="path-item" style="color:var(--muted)">None</div>';
+  const outgoing=succFlows.length
+   ? succFlows.map(f=>pathItem('→',f.to,f,'pout')).join('')
+   : (n.type!=='end'
+      ? '<div class="path-item" style="color:#bd0000"><span class="arrow">→</span><span>No further step in this process — check whether this is a genuine end point, a wait/pause state, or a gap in the source data</span></div>'
+      : '<div class="path-item" style="color:var(--muted)">None</div>');
+  h+=`<div class="dsec-paths"><div class="col"><div class="k">Incoming paths</div>${incoming}</div><div class="col"><div class="k">Outgoing paths</div>${outgoing}</div></div>`;
+ }
+ if(bio){ h+=sec('What it needs to start', bio.needs, 'dsec-inputs'); }
+ else { h+=listSec('What it needs to start', n.inputs, 'dsec-inputs'); }
+ if(bio){ h+=sec('What it produces', bio.makes, 'dsec-outputs'); }
+ else { h+=listSec('What it produces', n.outputs, 'dsec-outputs'); }
+ // "For example" relabelled "Acceptance Criteria / Business Rules" — bio.example's own content
+ // is, in practice, exactly that (acceptance-criteria wording sourced from the Requirements
+ // sheet's Acceptance Criteria column, or a reused/cited requirement/business-rule ID) — the
+ // data and field are unchanged, only the heading now names what it actually is. Run through
+ // stripRefCode() (see above) so its own "Acceptance Criteria: "/"BR-06: " citation lead-in
+ // doesn't restate the section heading immediately above it.
+ if(bio) h+=sec('Acceptance Criteria / Business Rules', stripRefCode(bio.example), 'dsec-example');
+ if(n.branches&&n.branches.length) h+=`<div class="dsec dsec-outcomes"><div class="k">Possible outcomes</div><ul>${n.branches.map(b=>`<li><b>${b.label}</b> → ${NID[b.to]?NID[b.to].label:b.to}</li>`).join('')}</ul></div>`;
  // Agents directly associated with this node (n.agents — a documented model.json field that
  // was previously never rendered anywhere in the drawer at all, a genuine omission rather than
  // an intentional simplification). Where an id matches the agent catalogue (D.model.agents),
@@ -2779,43 +3219,13 @@ function openDrawer(n){
    const row=catalogue.find(a=>a.AgentID===aid);
    return row ? `<li><b>${row.Name||aid}</b> (${row['Agent Type']||'agent'}${row['Parent Portal']?', '+row['Parent Portal']:''})${row['Purpose / Feature']?' — '+row['Purpose / Feature']:''}</li>` : `<li>${aid}</li>`;
   });
-  h+=`<div class="dsec"><div class="k">Agents involved</div><ul>${rows.join('')}</ul></div>`;
+  h+=`<div class="dsec dsec-agents"><div class="k">Agents involved</div><ul>${rows.join('')}</ul></div>`;
  }
- // who it works with — by step name, WITH the connecting flow's own label and kind carried
- // along, not dropped. A bare "Leads to: Reject application" chip discards exactly the
- // business-rule context (e.g. which condition triggers that path — "confirmed fraud" vs
- // "cleared" for two different outgoing edges from the same node) that a comprehensive context
- // panel is supposed to surface; that detail previously only existed as a tiny canvas label,
- // invisible unless "View Labels" happened to be toggled on.
- const predFlows=FLOWS.filter(f=>f.to===n.id);
- const succFlows=FLOWS.filter(f=>f.from===n.id);
- const pathItem=(arrow,other,f)=>{
-  const label=NID[other]?NID[other].label:other;
-  const detail=[KINDNAME[f.kind]||f.kind, f.label].filter(Boolean).join(': ');
-  return `<div class="path-item"><span class="arrow">${arrow}</span><span><b>${label}</b>${detail?` <span class="detail">(${detail})</span>`:''}</span></div>`;
- };
- // Incoming/Outgoing rendered as one bordered two-column box (INCOMING PATHS / OUTGOING
- // PATHS side by side) rather than as two separate pill rows — matching a supplied reference
- // layout. A node with no outgoing connector that isn't the designated "end" type is
- // genuinely ambiguous (does the journey stop here, wait, or hand off outside this diagram?);
- // that anomaly notice still renders in the outgoing column, styled distinctly in the error
- // colour, rather than being silently replaced by an empty/"None" column.
- if(predFlows.length||succFlows.length||n.type!=='end'){
-  const incoming=predFlows.length
-   ? predFlows.map(f=>pathItem('←',f.from,f)).join('')
-   : '<div class="path-item" style="color:var(--muted)">None</div>';
-  const outgoing=succFlows.length
-   ? succFlows.map(f=>pathItem('→',f.to,f)).join('')
-   : (n.type!=='end'
-      ? '<div class="path-item" style="color:#bd0000"><span class="arrow">→</span><span>No further step in this process — check whether this is a genuine end point, a wait/pause state, or a gap in the source data</span></div>'
-      : '<div class="path-item" style="color:var(--muted)">None</div>');
-  h+=`<div class="dsec-paths"><div class="col"><div class="k">Incoming paths</div>${incoming}</div><div class="col"><div class="k">Outgoing paths</div>${outgoing}</div></div>`;
- }
- h+=listSec('Rules &amp; safeguards', n.controls);
- h+=listSec('Systems involved', n.systems);
+ h+=listSec('Rules &amp; safeguards', n.controls, 'dsec-rules');
+ h+=listSec('Systems involved', n.systems, 'dsec-systems');
  if(n.contracts&&n.contracts.length){const seen={};let block='';
    n.contracts.forEach(cid=>{const p=(D.biz&&D.biz.contractPlain)?D.biz.contractPlain[cid]:null; if(p&&!seen[cid]){seen[cid]=1; block+=`<li>${p}</li>`;}});
-   if(block) h+=`<div class="dsec"><div class="k">How the teams work together</div><ul>${block}</ul></div>`;}
+   if(block) h+=`<div class="dsec dsec-contracts"><div class="k">How the teams work together</div><ul>${block}</ul></div>`;}
  document.getElementById('d-body').innerHTML=h;
  drawer.classList.add('open');
  setSelected(n.id);   // no-op if the caller (dblclick) already locked this node; kept so any
@@ -2829,6 +3239,50 @@ function openDrawer(n){
 // same "exit the pinned inspection panel" action, kept in sync so the toggle's own on/off state
 // never silently goes stale relative to whether the drawer is actually showing.
 document.getElementById('d-close').onclick=()=>{drawer.classList.remove('open'); if(viewDetailsMode)setViewDetails(false);};
+
+// ---- drawer resize (drag the left-edge handle to widen/narrow the panel) -------------------
+// DRAWER_MIN_W is the drawer's own CSS default (390px) — the handle only ever WIDENS from
+// there, per the "increase the width... on demand" requirement this was built against; it's
+// still bidirectionally draggable within [min,max] rather than a one-way ratchet, so a reader
+// who's dragged it wide can narrow it back down without having to reload the page, they just
+// can't go narrower than the panel already started at. DRAWER_MAX_W leaves genuine breathing
+// room against the viewport itself (85% of it, same spirit as .drawer's own max-width:92vw
+// floor-level safety) so an expanded drawer can never crowd the diagram canvas down to nothing
+// on a narrow browser window.
+const DRAWER_MIN_W=390;
+let drawerW=DRAWER_MIN_W;   // persists across drawer close/reopen (a different node) within this
+                            // page session — resizing is a per-session view preference, not
+                            // per-node state — until Reset (see below) or a page reload.
+const resizeHandle=document.getElementById('drawerResizeHandle');
+let resizing=false, resizeStartX=0, resizeStartW=0;
+function drawerMaxW(){ return Math.max(DRAWER_MIN_W, Math.round(window.innerWidth*0.85)); }
+function applyDrawerWidth(w){
+ drawerW=Math.min(drawerMaxW(), Math.max(DRAWER_MIN_W, w));
+ drawer.style.width=drawerW+'px';
+}
+resizeHandle.addEventListener('pointerdown',(e)=>{
+ e.preventDefault();   // stops a text-selection drag starting underneath the handle
+ resizing=true; resizeStartX=e.clientX; resizeStartW=drawerW;
+ resizeHandle.classList.add('dragging');
+ document.body.classList.add('drawer-resizing');
+ resizeHandle.setPointerCapture(e.pointerId);   // keeps receiving move/up events even if the
+                                                 // cursor leaves the 6px handle mid-drag
+});
+resizeHandle.addEventListener('pointermove',(e)=>{
+ if(!resizing) return;
+ // The drawer is anchored to the right edge of the screen (right:0) — dragging the handle
+ // LEFT (negative clientX delta) must WIDEN it, the opposite sign from a left-anchored panel.
+ applyDrawerWidth(resizeStartW-(e.clientX-resizeStartX));
+});
+function endDrawerResize(e){
+ if(!resizing) return;
+ resizing=false;
+ resizeHandle.classList.remove('dragging');
+ document.body.classList.remove('drawer-resizing');
+ if(e&&resizeHandle.releasePointerCapture&&e.pointerId!=null) resizeHandle.releasePointerCapture(e.pointerId);
+}
+resizeHandle.addEventListener('pointerup',endDrawerResize);
+resizeHandle.addEventListener('pointercancel',endDrawerResize);
 
 // The tab bar (<nav class="tabs">) and the "panel" show/hide mechanism it drove have been
 // removed entirely — this skill's single source of truth is the diagram plus its side drawer,

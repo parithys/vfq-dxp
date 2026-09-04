@@ -4,7 +4,7 @@
 /**
  * Pure Node orchestrator. Zero AI calls. Renders data/{slug}/*.json through
  * each diagram type's existing engine (copied unmodified under engines/)
- * and reconciles the result into output/{slug}/{type}.html.
+ * and reconciles the result into output/{slug}/{brsdId}-{type}.html.
  *
  * Usage:
  *   node scripts/render-all.js                  render everything
@@ -19,12 +19,23 @@
  * of the batch keeps going. Exits 1 if any file failed OR any merge produced
  * a conflict, 0 otherwise.
  *
+ * Output filenames carry the originating BRSD reference: every rendered
+ * file is named `{brsdId}-{type}.html` (e.g.
+ * `vfq-agent-360-brsd-v1-0-bpmn-swimlane.html`), never a bare `{type}.html`.
+ * `brsdId` is the same slug used for the `data/{slug}/` directory and the
+ * `manifest.json` key — the canonical, engine-persisted reference to the
+ * source BRSD (derived at extraction time from the source document's own
+ * filename via `slugify.js`, and recorded durably in `manifest.json`
+ * alongside `sourcePath`/`sourceSha256`). This keeps every generated file
+ * self-identifying and traceable back to its source artefact even outside
+ * its `output/{slug}/` directory. See `computeOutputFileName()` below.
+ *
  * Manual-edit reconciliation: output/*.html is allowed to be hand-edited
  * (content, connector routing, node connectivity, layout, diagram-specific
  * behaviour). To keep those edits from being silently clobbered by the next
  * engine-driven render, every successful render is diffed against a stored
- * baseline (`.render-baseline/{slug}/{type}.html` — the last pure engine
- * render for that file) before being written:
+ * baseline (`.render-baseline/{slug}/{brsdId}-{type}.html` — the last pure
+ * engine render for that file) before being written:
  *   - no baseline / output unchanged since baseline -> plain overwrite.
  *   - output has manual edits -> 3-way merge via `git merge-file`
  *     (base = baseline, ours = your manual edits, theirs = new engine
@@ -50,36 +61,51 @@ const OUTPUT_DIR = path.join(ROOT, 'output');
 const ENGINES_DIR = path.join(ROOT, 'engines');
 const BASELINE_DIR = path.join(ROOT, '.render-baseline');
 
+// `outputSuffix` is the per-type tail of the filename, e.g. "bpmn-swimlane.html".
+// The actual on-disk filename is always `{brsdId}-{outputSuffix}` — see
+// computeOutputFileName() — never the bare suffix. This keeps every
+// generated file self-identifying back to its source BRSD.
 const TYPES = {
   'bpmn-swimlane': {
     dataFile: 'bpmn-swimlane.model.json',
-    outputFile: 'bpmn-swimlane.html',
+    outputSuffix: 'bpmn-swimlane.html',
     engineDir: path.join(ENGINES_DIR, 'bpmn-swimlane'),
     hashFiles: ['scripts/render.py', 'scripts/validate_model.py', 'reference/engine_template.html'],
     render: renderBpmnSwimlane
   },
   journey: {
     dataFile: 'journey.spec.json',
-    outputFile: 'journey.html',
+    outputSuffix: 'journey.html',
     engineDir: path.join(ENGINES_DIR, 'customer-journey-map'),
     hashFiles: ['assets/template.html'],
     render: renderJourney
   },
   'process-flow': {
     dataFile: 'process-flow.spec.json',
-    outputFile: 'process-flow.html',
+    outputSuffix: 'process-flow.html',
     engineDir: path.join(ENGINES_DIR, 'process-flow'),
     hashFiles: ['scripts/generate.js', 'scripts/normalize-spec.js'],
     render: renderProcessFlow
   },
   userflow: {
     dataFile: 'userflow.spec.json',
-    outputFile: 'userflow.html',
+    outputSuffix: 'userflow.html',
     engineDir: path.join(ENGINES_DIR, 'user-flow-diagram'),
     hashFiles: ['user-flow-diagram-v4.0.js'],
     render: renderUserflow
   }
 };
+
+// The originating-BRSD-reference naming convention, applied uniformly across
+// all four diagram types: {brsdId}-{outputSuffix}, e.g.
+// "vfq-agent-360-brsd-v1-0-bpmn-swimlane.html". `brsdId` is the same slug
+// that names the data/{slug}/ directory and the manifest.json key — the
+// canonical persisted reference to the source BRSD, so filenames stay
+// unique and traceable to their source artefact even outside their own
+// output/{slug}/ directory.
+function computeOutputFileName(brsdId, spec) {
+  return `${brsdId}-${spec.outputSuffix}`;
+}
 
 function parseArgs(argv) {
   const args = { brsd: null, type: null, force: false };
@@ -107,10 +133,10 @@ function parseArgs(argv) {
 //   'conflict'  manual edits collided with the engine update; conflict
 //               markers were written into the output file, baseline NOT
 //               advanced (will be re-attempted on the next run)
-function reconcileOutput(slug, spec, newPath, outputPath, force) {
+function reconcileOutput(slug, spec, newPath, outputPath, force, outputFileName) {
   const newContent = fs.readFileSync(newPath, 'utf8');
   const baselineDir = path.join(BASELINE_DIR, slug);
-  const baselinePath = path.join(baselineDir, spec.outputFile);
+  const baselinePath = path.join(baselineDir, outputFileName);
   fs.mkdirSync(baselineDir, { recursive: true });
 
   if (force || !fs.existsSync(outputPath)) {
@@ -306,7 +332,8 @@ function main() {
       }
       const outDir = path.join(OUTPUT_DIR, slug);
       fs.mkdirSync(outDir, { recursive: true });
-      const outputPath = path.join(outDir, spec.outputFile);
+      const outputFileName = computeOutputFileName(slug, spec);
+      const outputPath = path.join(outDir, outputFileName);
       const tmpPath = outputPath + '.tmp-render';
 
       const result = spec.render(dataPath, tmpPath, spec.engineDir);
@@ -317,14 +344,14 @@ function main() {
         continue;
       }
 
-      const status = reconcileOutput(slug, spec, tmpPath, outputPath, args.force);
+      const status = reconcileOutput(slug, spec, tmpPath, outputPath, args.force, outputFileName);
       fs.rmSync(tmpPath, { force: true });
       const engineHash = computeEngineHash(spec.engineDir, spec.hashFiles);
       manifestStore.recordRender(slug, typeName, new Date().toISOString(), engineHash);
 
       if (status === 'conflict') {
         conflictCount++;
-        console.error(`[${slug}] ${typeName}: MERGE CONFLICT -> output/${slug}/${spec.outputFile} (manual edits collided with the engine update — conflict markers written, resolve by hand)`);
+        console.error(`[${slug}] ${typeName}: MERGE CONFLICT -> output/${slug}/${outputFileName} (manual edits collided with the engine update — conflict markers written, resolve by hand)`);
         continue;
       }
       successCount++;
@@ -333,7 +360,7 @@ function main() {
         : status === 'unchanged' ? ' (manual edits preserved, engine output for this file unchanged)'
         : status === 'forced' ? ' (--force: manual edits discarded)'
         : '';
-      console.log(`[${slug}] ${typeName}: OK -> output/${slug}/${spec.outputFile}${note}`);
+      console.log(`[${slug}] ${typeName}: OK -> output/${slug}/${outputFileName}${note}`);
     }
   }
 
@@ -352,4 +379,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { TYPES, computeEngineHash, listSlugs };
+module.exports = { TYPES, computeEngineHash, computeOutputFileName, listSlugs };

@@ -48,4 +48,4 @@ done
 echo "== rendering all four outputs for $SLUG"
 node "$SCRIPT_DIR/render-all.js" --brsd "$SLUG"
 
-echo "== done: output/$SLUG/{bpmn-swimlane,journey,process-flow,userflow}.html"
+echo "== done: output/$SLUG/$SLUG-{bpmn-swimlane,journey,process-flow,userflow}.html"

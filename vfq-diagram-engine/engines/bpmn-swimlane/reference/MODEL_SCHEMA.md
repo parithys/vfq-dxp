@@ -13,6 +13,14 @@ domain content.
     // header subtitle line and the tab bar it used to sit above were both removed entirely.
     // Only "title" is read by the engine now.
     "subtitle": "string — no longer displayed; safe to omit",
+    // "brsdId" is the canonical, persisted reference to the originating BRSD — the same
+    // slug that names the data/{slug}/ directory and the manifest.json key (derived at
+    // extraction time from the source document's own filename via scripts/slugify.js).
+    // render-all.js uses this identifier (via the data directory it's already scoped to)
+    // to name every generated output file "{brsdId}-{type}.html" instead of a bare
+    // "{type}.html", so the BRSD reference travels with the file itself. Required on every
+    // extraction — never omit or leave stale if a BRSD is renamed/re-sourced.
+    "brsdId":   "string — e.g. \"vfq-agent-360-brsd-v1-0\", must equal the data/{slug}/ directory name",
     "generated":"YYYY-MM-DD",
     "source":   "source file name"
   },

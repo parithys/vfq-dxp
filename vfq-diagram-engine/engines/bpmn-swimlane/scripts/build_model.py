@@ -455,17 +455,30 @@ def _lane_gutter_columns(name, hint, avail_len, hint_max_lines):
 
 
 def compute_layout(N, LANES, PHASES, F=None):
-    # ROW (the vertical spacing between stacked same-lane/same-phase node slots) is 140.
-    # It went 92 -> 112 in an earlier pass specifically to stay taller than MULTILINE_H
-    # (100) and avoid two stacked multi-line nodes literally touching — but 112 only left
-    # a bare 12px gap, which is the MINIMUM needed to avoid contact, not a comfortable
-    # visual gap. Once most nodes started growing to MULTILINE_H (many more of them do,
-    # after the various dynamic-height fixes), that 12px gap became the norm across large
-    # parts of the diagram instead of a rare edge case, reading as visually cramped even
-    # though nothing was literally overlapping. 140 gives a genuine ~40px breathing room
-    # between two MULTILINE_H-tall stacked nodes — a deliberate, comfortable margin, not
-    # just the minimum that happens to avoid contact.
-    TOPBAR, COLW, PAD, ROW = 70, 252, 20, 140
+    # MIN_PAD: the minimum clear whitespace (px, diagram-internal coordinate space — the
+    # same units as every x/y/w/h in this file) required on every side of every node,
+    # relative to the next node, lane boundary, or the canvas's own edge — an explicit
+    # "100px minimum padding on all sides" requirement, not a target/typical value. Every
+    # spacing constant below that governs a node's clearance is DERIVED from it (not an
+    # independent guess), so the guarantee holds even at the worst case (two MULTILINE_H,
+    # 100px-tall nodes stacked back to back) rather than just in the common case.
+    MIN_PAD = 100
+    # ROW (the vertical spacing between stacked same-lane/same-phase node slots) was 140 —
+    # tuned only against the 12px-bare-minimum failure mode (two MULTILINE_H/100px-tall
+    # stacked nodes almost touching), not against any specific padding floor. The actual
+    # worst-case gap a flat ROW produces between two stacked nodes of height h1/h2 is
+    # `ROW - (h1+h2)/2` (each node is centred within its own ROW-tall slot, so half of
+    # each node's height eats into the gap from its own side) — for ROW=140 and two
+    # MULTILINE_H(100) nodes that's 140-100=40px, well under a 100px floor. Solving
+    # `ROW - (100+100)/2 >= MIN_PAD` for the worst case (both nodes at MULTILINE_H, the
+    # tallest a rect/circle ever grows to — defined further down as MULTILINE_H=100, but
+    # inlined here as a literal since it's needed before that point in the function) gives
+    # ROW >= MIN_PAD + 100 = 200; +20 on top keeps a small safety margin above that exact
+    # floor rather than landing on it (guards against float-accumulation from the JS-side
+    # dynamic widening pass, further downstream, ever nudging a real gap a fraction under
+    # the nominal 100).
+    ROW = MIN_PAD + 100 + 20
+    TOPBAR, COLW, PAD = 70, 252, 20
     sizes = {"start": (84, 84), "end": (84, 84), "decision": (150, 84), "validation": (176, 70),
              "system": (190, 56), "external": (176, 54), "agent": (206, 60), "control": (206, 60),
              "error": (190, 58), "escalation": (190, 58)}
@@ -512,8 +525,10 @@ def compute_layout(N, LANES, PHASES, F=None):
         avail_len = max(40, lane_h - 24)
         max_cols = max(max_cols, _lane_gutter_columns(L.get("name", ""), L.get("hint", ""), avail_len, HINT_MAX_LINES))
     LANE_LABEL_W = max(100, max_cols * COL_GAP + 20)
-    X0_MARGIN = 20        # minimum clear gap between the gutter's right edge and the first
-                          # phase column's own left edge, beyond LANE_LABEL_W itself
+    X0_MARGIN = MIN_PAD   # minimum clear gap between the gutter's right edge and the first
+                          # phase column's own left edge, beyond LANE_LABEL_W itself — a
+                          # container-boundary case of the same MIN_PAD floor every other
+                          # node-to-node/node-to-edge gap in this function now derives from
     # X0 (where the first phase column begins) is DERIVED from LANE_LABEL_W, not a second,
     # independent constant. It used to be a hardcoded 150 sitting alongside a hardcoded
     # LANE_LABEL_W of 150 — the two only stayed consistent by coincidence, and when
@@ -551,8 +566,11 @@ def compute_layout(N, LANES, PHASES, F=None):
     for L in LANES:
         h = lane_rows.get(L["key"], 1) * ROW + PAD * 2
         lane_y[L["key"]] = (y, h); y += h + LANE_GAP
-    total_h = y + 120
-    total_w = X0 + len(PHASES) * COLW + 18
+    total_h = y + 120     # already exceeds MIN_PAD on its own (this band also carries the
+                          # backward/loop-connector "bus" routing space — see
+                          # engine_template.html's own comment on that shared band — so it
+                          # isn't reduced to a bare MIN_PAD floor)
+    total_w = X0 + len(PHASES) * COLW + MIN_PAD   # right-edge container-boundary clearance
     # Vertical text-fit sizing: a node's box height is a flat per-type constant from
     # `sizes` above, but the label it has to hold isn't — a label that wraps to 2-3
     # lines (plus a sub-code line, most nodes have one) needs more vertical room than

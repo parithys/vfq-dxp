@@ -1,3367 +1,2245 @@
 {
  "meta": {
-  "title": "Fibre & FWA Activation, Migration, Home Move, Portability and Termination",
-  "generated": "2026-09-03",
+  "title": "Fibre & Fixed Wireless Access \u2014 Activation, Migration, Home Move, Portability, Termination and RFS",
+  "brsdId": "vfq-fibre-brsd-v1-0",
+  "generated": "2026-09-04",
   "source": "VFQ_Fibre_BRSD_v1.0.xlsx"
  },
  "layout": {
-  "x0": 160,
+  "x0": 200,
   "topbar": 70,
   "colw": 252,
-  "totalW": 33190,
-  "totalH": 2430,
-  "laneLabelW": 140,
+  "totalW": 4836,
+  "totalH": 8650,
+  "laneLabelW": 100,
   "lanes": [
    {
-    "key": "trg",
+    "key": "trigger",
     "name": "Trigger / Queue",
-    "hint": "Queue ticket intake per use case",
+    "hint": "Queue ticket transaction, port-out/administration-system requests",
     "y": 70,
-    "h": 180
+    "h": 260
    },
    {
-    "key": "agt",
-    "name": "Retail Agent",
-    "hint": "Agent-driven journey steps across all use cases",
-    "y": 270,
-    "h": 320
+    "key": "agent",
+    "name": "Retail / Retention / Support Agent",
+    "hint": "Retail Agent, Retention Agent, Support Agent, sales agent, fulfilment-role agent",
+    "y": 350,
+    "h": 1140
    },
    {
     "key": "crm",
-    "name": "Siebel CRM",
-    "hint": "System of record for customer, order, tracking record",
-    "y": 610,
-    "h": 320
+    "name": "CRM / Order Capture",
+    "hint": "Journey, cart, contract, tracking record, Customer 360",
+    "y": 1510,
+    "h": 1140
    },
    {
-    "key": "ext",
-    "name": "External Verification & Feasibility",
-    "hint": "MOI, EDW/QCA, RFS Portal, GIS/IMS",
-    "y": 950,
-    "h": 320
+    "key": "rfs",
+    "name": "RFS Portal / GIS",
+    "hint": "Ready for service search, feasibility, RFS data management",
+    "y": 2670,
+    "h": 2240
+   },
+   {
+    "key": "billing",
+    "name": "Billing System",
+    "hint": "Credit check, billing account, payment profile, billing update, closure",
+    "y": 4930,
+    "h": 700
    },
    {
     "key": "wfm",
-    "name": "Field Workforce",
-    "hint": "Appointment, task execution, closure",
-    "y": 1290,
-    "h": 320
+    "name": "Field Workforce Management",
+    "hint": "Appointment, technician task execution and closure",
+    "y": 5650,
+    "h": 920
    },
    {
-    "key": "om",
-    "name": "Order Mgmt, Network & Billing",
-    "hint": "Order Management, network activation/deactivation, Billing, UIM, Notification",
-    "y": 1630,
-    "h": 460
+    "key": "oms",
+    "name": "Order Management System",
+    "hint": "Order routing, network activation/deactivation, fulfilment orchestration",
+    "y": 6590,
+    "h": 920
    },
    {
     "key": "npas",
-    "name": "Portability Admin (NPAS)",
-    "hint": "Number Portability Administration System, donor/recipient exchange",
-    "y": 2110,
-    "h": 180
+    "name": "Number Portability Admin System",
+    "hint": "Port-in / port-out request processing with donor/recipient provider",
+    "y": 7530,
+    "h": 700
+   },
+   {
+    "key": "notif",
+    "name": "Notification Platform",
+    "hint": "Customer notification and feedback survey dispatch",
+    "y": 8250,
+    "h": 260
    }
   ],
   "phases": [
-   "Journey Intake",
-   "Journey Intake",
-   "Journey Intake",
-   "Verify Customer",
-   "Verify Customer",
-   "Verify Customer",
-   "Verify Customer",
-   "Verify Customer",
-   "Verify Customer",
-   "Account & Address",
-   "Account & Address",
-   "Account & Address",
-   "Account & Address",
-   "Account & Address",
-   "Account & Address",
-   "Account & Address",
-   "Account & Address",
-   "Account & Address",
-   "Account & Address",
-   "Account & Address",
-   "Eligibility & Billing",
-   "Eligibility & Billing",
-   "Eligibility & Billing",
-   "Eligibility & Billing",
-   "Eligibility & Billing",
-   "Eligibility & Billing",
-   "Eligibility & Billing",
-   "Eligibility & Billing",
-   "Eligibility & Billing",
-   "Eligibility & Billing",
-   "Cart & Resources",
-   "Cart & Resources",
-   "Cart & Resources",
-   "Cart & Resources",
-   "Cart & Resources",
-   "Cart & Resources",
-   "Cart & Resources",
-   "Cart & Resources",
-   "Appointment",
-   "Appointment",
-   "Appointment",
-   "Appointment",
-   "Appointment",
-   "Appointment",
-   "Appointment",
-   "Appointment",
-   "Appointment",
-   "Appointment",
-   "Contract",
-   "Contract",
-   "Contract",
-   "Contract",
-   "Contract",
-   "Contract",
-   "Contract",
-   "Contract",
-   "Payment & Submission",
-   "Payment & Submission",
-   "Payment & Submission",
-   "Payment & Submission",
-   "Payment & Submission",
-   "Payment & Submission",
-   "Fulfilment & Close",
-   "Fulfilment & Close",
-   "Fulfilment & Close",
-   "Fulfilment & Close",
-   "Fulfilment & Close",
-   "Fiber Connection Migration",
-   "Fiber Connection Migration",
-   "Fiber Connection Migration",
-   "Fiber Connection Migration",
-   "Fiber Connection Migration",
-   "Fiber Connection Migration",
-   "Fiber Connection Migration",
-   "Fiber Connection Migration",
-   "Fiber Connection Migration",
-   "Fiber Connection Migration",
-   "Fiber Connection Migration",
-   "Fiber Connection Migration",
-   "Fiber Connection Migration",
-   "Fiber Connection Migration",
-   "Fiber Connection Migration",
-   "Fiber Connection Migration",
+   "Initiate",
+   "Verify & Account",
+   "Address & Feasibility",
+   "Eligibility & Credit",
+   "Billing Profile",
+   "Cart & Number & SIM",
+   "Appointment & WFM Task",
+   "Checkout & Contract",
+   "Payment & Order Submission",
+   "Fulfilment & Activation",
+   "Billing Update & Completion",
+   "Instant Activation",
+   "Migration",
    "Home Move",
-   "Home Move",
-   "Home Move",
-   "Home Move",
-   "Home Move",
-   "Home Move",
-   "Home Move",
-   "Home Move",
-   "Home Move",
-   "Home Move",
-   "Fixed Number Portability Port In",
-   "Fixed Number Portability Port In",
-   "Fixed Number Portability Port In",
-   "Fixed Number Portability Port In",
-   "Fixed Number Portability Port In",
-   "Fixed Number Portability Port In",
-   "Fixed Number Portability Port In",
-   "Fixed Number Portability Port In",
-   "Fixed Number Portability Port In",
-   "Fixed Number Portability Port In",
-   "Fixed Number Portability Port In",
-   "Fixed Number Portability Port Out",
-   "Fixed Number Portability Port Out",
-   "Fixed Number Portability Port Out",
-   "Fixed Number Portability Port Out",
-   "Fixed Number Portability Port Out",
-   "Fixed Number Portability Port Out",
-   "Fixed Number Portability Port Out",
-   "Fixed Number Portability Port Out",
-   "Fixed Number Portability Port Out",
-   "Fixed Number Portability Port Out",
-   "Fixed Number Portability Port Out",
-   "Fixed Number Portability Port Out",
-   "Fixed Number Portability Port Out",
-   "Fibre Termination",
-   "Fibre Termination",
-   "Fibre Termination",
-   "Fibre Termination",
-   "Fibre Termination",
-   "Fibre Termination",
-   "Fibre Termination",
-   "Fibre Termination",
-   "Fibre Termination",
-   "Fibre Termination",
-   "Fibre Termination",
-   "Fibre Termination",
-   "Fibre Termination",
-   "Fibre Termination"
+   "Port In",
+   "Port Out",
+   "Termination",
+   "RFS Data Management"
   ]
  },
  "nodes": [
   {
    "id": "start",
    "type": "start",
-   "lane": "trg",
-   "slot": 0,
-   "label": "Queue Ticket Trigger",
-   "desc": "One activation, migration, home move or portability process may be initiated per queue ticket transaction (BR-001). Integration: INT-01 (Queue Management System).",
+   "lane": "trigger",
    "phase": 0,
-   "x": 244.0,
-   "y": 118.0,
-   "w": 84,
-   "h": 84,
-   "cx": 286.0,
-   "cy": 160.0,
-   "sub": "INT-01"
+   "label": "Queue Ticket Transaction",
+   "desc": "One activation, migration, home move or portability process may be initiated per queue ticket transaction (BR-001).",
+   "slot": 0,
+   "w": 100,
+   "h": 100,
+   "x": 276.0,
+   "y": 150.0,
+   "cx": 326.0,
+   "cy": 200.0
   },
   {
-   "id": "jsm_init",
+   "id": "jsm_journey",
    "type": "agent",
-   "lane": "agt",
+   "lane": "agent",
+   "phase": 0,
+   "label": "Journey & Session Management",
+   "sub": "JSM (FAR_001_JSM_01)",
+   "desc": "Follows the same JSM capability as Mobile Post Paid Journey (MOB_POST_ACT_RETL_001). Tracking record created and owned by initiating agent (BR-002).",
    "slot": 0,
-   "label": "Initiate Customer Interaction",
-   "sub": "FAR_001_JSM_01 / BR-002 / INT-17",
-   "desc": "A tracking record is created at journey initiation and owned by the initiating agent. Integration: INT-17 (CRM / Ticketing system, journey and tracking record creation). Status model: Tracking Record/New (record created automatically at journey initiation).",
-   "phase": 1,
-   "x": 435.0,
-   "y": 310.0,
    "w": 206,
    "h": 100,
-   "cx": 538.0,
-   "cy": 360.0
+   "x": 223.0,
+   "y": 430.0,
+   "cx": 326.0,
+   "cy": 480.0
   },
   {
-   "id": "jsm_milestone",
-   "type": "control",
-   "lane": "agt",
+   "id": "tr_new",
+   "type": "system",
+   "lane": "crm",
+   "phase": 0,
+   "label": "Tracking Record Created",
+   "sub": "Status: New",
+   "desc": "Tracking record created automatically at journey initiation (Status_Model: Tracking Record New -> In Progress).",
    "slot": 0,
-   "label": "Journey Milestone Persistence",
-   "sub": "BR-016",
-   "desc": "The journey milestone is persisted as a draft order on every successful stage validation. Status model: Order/Draft (journey initiated, milestone saved, not yet submitted). Status model: Order/Cancelled (order withdrawn before completion; terminal). Status model: Tracking Record/In Progress (journey in progress against the assigned agent). Status model: Tracking Record/Cancelled (journey abandoned or order cancelled; terminal).",
-   "phase": 2,
-   "x": 687.0,
-   "y": 310.0,
-   "w": 206,
-   "h": 100,
-   "cx": 790.0,
-   "cy": 360.0
-  },
-  {
-   "id": "kyc_scan",
-   "type": "agent",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Scan Qatar Identity Document",
-   "sub": "FAR_001_KYC_01 / BR-003 / BR-004 / P-08 / INT-02",
-   "desc": "Front and back scanned, capturing name and date of birth on the front, document number on the back, with an optional liveliness check. Only a Qatar identity document is accepted; a passport is not permitted. P-08 (supported identity document types for fibre/FWA activation). Integration: INT-02 (Identity Capture Service).",
-   "phase": 3,
-   "x": 939.0,
-   "y": 310.0,
-   "w": 206,
-   "h": 100,
-   "cx": 1042.0,
-   "cy": 360.0
-  },
-  {
-   "id": "kyc_moi",
-   "type": "external",
-   "lane": "ext",
-   "slot": 0,
-   "label": "Ministry of Interior Validation",
-   "sub": "BR-005 / INT-03",
-   "desc": "Customer information is retrieved from the Ministry of Interior using the Qatar identity document number. Integration: INT-03 (Ministry of Interior).",
-   "systems": [
-    "Ministry of Interior"
-   ],
-   "phase": 4,
-   "x": 1206.0,
-   "y": 990.0,
-   "w": 176,
-   "h": 100,
-   "cx": 1294.0,
-   "cy": 1040.0
-  },
-  {
-   "id": "d_kyc_match",
-   "type": "decision",
-   "lane": "ext",
-   "slot": 0,
-   "label": "Identity Match Exact?",
-   "sub": "BR-006",
-   "desc": "First name, last name, document number and date of birth must match exactly between capture and government validation.",
-   "branches": [
-    {
-     "label": "Match",
-     "to": "kyc_display"
-    },
-    {
-     "label": "Mismatch",
-     "to": "kyc_blocked"
-    }
-   ],
-   "phase": 5,
-   "x": 1471.0,
-   "y": 990.0,
-   "w": 150,
-   "h": 100,
-   "cx": 1546.0,
-   "cy": 1040.0
-  },
-  {
-   "id": "kyc_blocked",
-   "type": "error",
-   "lane": "ext",
-   "slot": 0,
-   "label": "Journey Blocked \u2014 Identity Mismatch",
-   "desc": "The journey does not proceed where identity comparison fails.",
-   "phase": 6,
-   "x": 1703.0,
-   "y": 990.0,
    "w": 190,
    "h": 100,
-   "cx": 1798.0,
-   "cy": 1040.0
+   "x": 231.0,
+   "y": 1590.0,
+   "cx": 326.0,
+   "cy": 1640.0
   },
   {
-   "id": "kyc_display",
-   "type": "control",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Display Verified Attributes",
-   "sub": "BR-007",
-   "desc": "Government-returned attributes are displayed for agent confirmation before the journey advances.",
-   "phase": 6,
-   "x": 1695.0,
-   "y": 310.0,
-   "w": 206,
-   "h": 100,
-   "cx": 1798.0,
-   "cy": 360.0
-  },
-  {
-   "id": "kyc_lock",
-   "type": "control",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Lock Verified Attributes",
-   "sub": "BR-010",
-   "desc": "Identity attributes verified through government validation are rendered non-editable.",
-   "phase": 7,
-   "x": 1947.0,
-   "y": 330.0,
-   "w": 206,
-   "h": 60,
-   "cx": 2050.0,
-   "cy": 360.0
-  },
-  {
-   "id": "kyc_matchkey",
-   "type": "validation",
-   "lane": "crm",
-   "slot": 0,
-   "label": "Customer Match Key Lookup",
-   "sub": "BR-008 / BR-009",
-   "desc": "Customer existence determined by nationality, identity document type and identity document number; an existing customer record is refreshed with the latest validation information.",
-   "systems": [
-    "Siebel CRM"
-   ],
-   "phase": 8,
-   "x": 2214.0,
-   "y": 650.0,
-   "w": 176,
-   "h": 100,
-   "cx": 2302.0,
-   "cy": 700.0
-  },
-  {
-   "id": "cam_create",
+   "id": "kyc_verify",
    "type": "agent",
-   "lane": "agt",
+   "lane": "agent",
+   "phase": 1,
+   "label": "Customer Identification & Verification",
+   "sub": "KYC (FAR_001_KYC_01)",
+   "desc": "Follows the same KYC capability as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
    "slot": 0,
-   "label": "Create Customer Account",
-   "sub": "FAR_001_CAM_01 / BR-011 / BR-012",
-   "desc": "Account type, customer category and segment are mandatory. Default credit limit is set from the customer segment.",
-   "phase": 9,
-   "x": 2451.0,
-   "y": 330.0,
-   "w": 206,
-   "h": 60,
-   "cx": 2554.0,
-   "cy": 360.0
-  },
-  {
-   "id": "cam_override",
-   "type": "control",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Agent Overridable Attributes",
-   "sub": "BR-013",
-   "desc": "Email address, language and alternate phone number may be overridden by the agent.",
-   "phase": 10,
-   "x": 2703.0,
-   "y": 310.0,
    "w": 206,
    "h": 100,
-   "cx": 2806.0,
-   "cy": 360.0
+   "x": 475.0,
+   "y": 430.0,
+   "cx": 578.0,
+   "cy": 480.0
   },
   {
-   "id": "cam_email_verify",
-   "type": "external",
-   "lane": "ext",
-   "slot": 0,
-   "label": "Email Verification",
-   "sub": "BR-015 / INT-04",
-   "desc": "The email address is captured and marked verified through the email verification service. Integration: INT-04 (Email Verification Service).",
-   "systems": [
-    "Email Verification Service"
-   ],
-   "phase": 11,
-   "x": 2970.0,
-   "y": 1013.0,
-   "w": 176,
-   "h": 54,
-   "cx": 3058.0,
-   "cy": 1040.0
-  },
-  {
-   "id": "cam_contact",
-   "type": "control",
+   "id": "cam_account",
+   "type": "agent",
    "lane": "crm",
+   "phase": 1,
+   "label": "Customer & Account Management",
+   "sub": "CAM (FAR_001_CAM_01)",
+   "desc": "Follows the same CAM capability as Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
    "slot": 0,
-   "label": "Contact Model",
-   "sub": "BR-014",
-   "desc": "A customer account may hold multiple contacts, each carrying an assigned role.",
-   "phase": 12,
-   "x": 3207.0,
-   "y": 670.0,
    "w": 206,
-   "h": 60,
-   "cx": 3310.0,
-   "cy": 700.0
+   "h": 100,
+   "x": 475.0,
+   "y": 1590.0,
+   "cx": 578.0,
+   "cy": 1640.0
   },
   {
    "id": "rfs_addr_capture",
    "type": "agent",
-   "lane": "agt",
-   "slot": 0,
+   "lane": "agent",
+   "phase": 2,
    "label": "Capture Installation Address",
-   "sub": "FAR_001_RFS_01 / BR-020",
-   "desc": "Captured by utility identifier or by zone, street, building, floor and flat number; floor and flat apply only to apartments.",
-   "phase": 13,
-   "x": 3459.0,
-   "y": 310.0,
-   "w": 206,
-   "h": 100,
-   "cx": 3562.0,
-   "cy": 360.0
-  },
-  {
-   "id": "rfs_cascade",
-   "type": "control",
-   "lane": "agt",
+   "sub": "FAR_001_RFS_01 / RFS_02",
+   "desc": "Captured from utility identifier or by cascading zone/street/building/floor/flat search (floor & flat only for apartments). BR-020, BR-021.",
+   "inputs": [
+    "Utility identifier",
+    "Zone / street / building / floor / flat"
+   ],
+   "outputs": [
+    "Installation address"
+   ],
    "slot": 0,
-   "label": "Cascading Address Selection",
-   "sub": "FAR_001_RFS_02 / BR-021",
-   "desc": "Address selection is filtered hierarchically: street list constrained by zone, building list by street.",
-   "phase": 14,
-   "x": 3711.0,
-   "y": 310.0,
    "w": 206,
    "h": 100,
-   "cx": 3814.0,
-   "cy": 360.0
+   "x": 727.0,
+   "y": 430.0,
+   "cx": 830.0,
+   "cy": 480.0
   },
   {
    "id": "rfs_search",
-   "type": "agent",
-   "lane": "ext",
-   "slot": 0,
-   "label": "Service Availability Search",
-   "sub": "FAR_001_RFS_03 / BR-023 / FAR_001_RFS_04 / INT-05",
-   "desc": "Point of presence searched by address, utility identifier or area; address auto-filled from ready for service data. FAR_001_RFS_04 (address auto-filled from ready for service data on search). Integration: INT-05 (Ready for Service Portal).",
-   "systems": [
-    "Ready for Service Portal"
+   "type": "system",
+   "lane": "rfs",
+   "phase": 2,
+   "label": "RFS Availability Search",
+   "sub": "FAR_001_RFS_03/04/05/06",
+   "desc": "Searches point of presence by address, utility identifier or area; auto-fills address; displays service types (Fiber, FWA indoor, FWA outdoor); shows detected CPE/ONT. BR-023 to BR-025.",
+   "outputs": [
+    "Service availability",
+    "Detected device info"
    ],
-   "phase": 15,
-   "x": 3963.0,
-   "y": 990.0,
-   "w": 206,
-   "h": 100,
-   "cx": 4066.0,
-   "cy": 1040.0
-  },
-  {
-   "id": "rfs_type_display",
-   "type": "system",
-   "lane": "agt",
    "slot": 0,
-   "label": "Service Type Display",
-   "sub": "FAR_001_RFS_05 / BR-024",
-   "desc": "Service types available at the location \u2014 Fiber, FWA Indoor, FWA Outdoor \u2014 are displayed.",
-   "phase": 16,
-   "x": 4223.0,
-   "y": 332.0,
-   "w": 190,
-   "h": 56,
-   "cx": 4318.0,
-   "cy": 360.0
-  },
-  {
-   "id": "rfs_device_detect",
-   "type": "system",
-   "lane": "ext",
-   "slot": 0,
-   "label": "Customer Premises Equipment Detection",
-   "sub": "FAR_001_RFS_06 / BR-025",
-   "desc": "Customer premises equipment and optical network terminal information displayed where a device is detected at the location.",
-   "phase": 17,
-   "x": 4475.0,
-   "y": 990.0,
    "w": 190,
    "h": 100,
-   "cx": 4570.0,
-   "cy": 1040.0
+   "x": 735.0,
+   "y": 2750.0,
+   "cx": 830.0,
+   "cy": 2800.0
   },
   {
    "id": "rfs_addr_lock",
    "type": "control",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Installation Address Lock",
-   "sub": "FAR_001_RFS_07 / BR-026",
-   "desc": "Installation address updated after the ready for service check and is not editable; changing it requires recapture.",
-   "phase": 18,
-   "x": 4719.0,
-   "y": 310.0,
+   "lane": "agent",
+   "phase": 2,
+   "label": "Address Locked After Check",
+   "sub": "FAR_001_RFS_07",
+   "desc": "Installation address updated after RFS check and rendered non-editable; recapture required to change (BR-026).",
+   "slot": 2,
    "w": 206,
    "h": 100,
-   "cx": 4822.0,
-   "cy": 360.0
+   "x": 727.0,
+   "y": 870.0,
+   "cx": 830.0,
+   "cy": 920.0
   },
   {
-   "id": "rfs_proof_upload",
-   "type": "agent",
-   "lane": "agt",
-   "slot": 0,
+   "id": "rfs_poa_upload",
+   "type": "control",
+   "lane": "agent",
+   "phase": 2,
    "label": "Proof of Address Upload",
-   "sub": "FAR_001_RFS_08 / BR-022 / P-01 / P-03",
-   "desc": "A tenancy document is uploaded in PDF or Word format, maximum two megabytes. P-01 / P-03 (proof-of-address document maximum size and permitted format).",
-   "phase": 19,
-   "x": 4971.0,
-   "y": 330.0,
+   "sub": "FAR_001_RFS_08",
+   "desc": "Tenancy document uploaded as PDF or Word, max 2MB (BR-022, P-01, P-03).",
+   "slot": 1,
    "w": 206,
    "h": 60,
-   "cx": 5074.0,
-   "cy": 360.0
+   "x": 727.0,
+   "y": 670.0,
+   "cx": 830.0,
+   "cy": 700.0
   },
   {
-   "id": "ecc_connection",
-   "type": "validation",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Connection Type Eligibility",
-   "sub": "FAR_001_ECC_02 / BR-030 / FAR_001_ECC_01 / P-09",
-   "desc": "Journey proceeds only for a Qatar identity document holder taking a postpaid connection, with a distinct message per eligibility failure. FAR_001_ECC_01 (connection type eligibility gate, parent requirement of ECC_02/03). P-09 (supported connection type for this journey).",
-   "phase": 20,
-   "x": 5238.0,
-   "y": 310.0,
-   "w": 176,
-   "h": 100,
-   "cx": 5326.0,
-   "cy": 360.0
-  },
-  {
-   "id": "d_ecc_eligible",
+   "id": "ecc_check",
    "type": "decision",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Eligible?",
+   "lane": "billing",
+   "phase": 3,
+   "label": "Eligibility & Credit Control",
+   "sub": "ECC (FAR_001_ECC_01/02)",
+   "desc": "Follows same ECC capability as Mobile Post Paid Journey. Permits only Qatar ID holders taking postpaid (BR-030). Credit source: EDW for existing customer, Qatar Credit Authority for new (BR-031). Blocks blacklisted/collections (BR-032) and outstanding-threshold breach (BR-033, Open \u2014 threshold value TBC by VFQ).",
    "branches": [
     {
      "label": "Eligible",
-     "to": "ecc_credit"
+     "to": "bam_billing"
     },
     {
-     "label": "Not Eligible",
-     "to": "ecc_failed"
+     "label": "Failed",
+     "to": "ecc_fail"
     }
    ],
-   "phase": 21,
-   "x": 5503.0,
-   "y": 318.0,
+   "slot": 0,
    "w": 150,
-   "h": 84,
-   "cx": 5578.0,
-   "cy": 360.0
+   "h": 100,
+   "x": 1007.0,
+   "y": 5010.0,
+   "cx": 1082.0,
+   "cy": 5060.0
   },
   {
-   "id": "ecc_failed",
+   "id": "ecc_fail",
    "type": "error",
-   "lane": "agt",
-   "slot": 0,
+   "lane": "agent",
+   "phase": 3,
    "label": "Eligibility Failure Message",
    "sub": "FAR_001_ECC_03",
-   "desc": "A distinct failure message is shown per eligibility failure reason.",
-   "phase": 24,
-   "x": 6239.0,
-   "y": 310.0,
+   "desc": "Distinct validation message displayed per eligibility failure so the agent can communicate the reason to the customer (BR-030).",
+   "slot": 0,
    "w": 190,
    "h": 100,
-   "cx": 6334.0,
-   "cy": 360.0
+   "x": 987.0,
+   "y": 430.0,
+   "cx": 1082.0,
+   "cy": 480.0
   },
   {
-   "id": "ecc_credit",
-   "type": "external",
-   "lane": "ext",
-   "slot": 0,
-   "label": "Credit Check",
-   "sub": "BR-031 / INT-06 / INT-07",
-   "desc": "Existing customer credit check uses the enterprise data warehouse; new customer credit check uses the Qatar Credit Authority. Integration: INT-06 (Enterprise Data Warehouse) / INT-07 (Qatar Credit Authority).",
-   "systems": [
-    "Enterprise Data Warehouse",
-    "Qatar Credit Authority"
-   ],
-   "phase": 22,
-   "x": 5742.0,
-   "y": 1013.0,
-   "w": 176,
-   "h": 54,
-   "cx": 5830.0,
-   "cy": 1040.0
-  },
-  {
-   "id": "d_ecc_status",
-   "type": "decision",
-   "lane": "ext",
-   "slot": 0,
-   "label": "Blacklisted / Over Threshold?",
-   "sub": "BR-032 / BR-033",
-   "desc": "A customer returned as blacklisted or in collections may not proceed; nor may one whose outstanding balance exceeds the configured fibre threshold (value: to be confirmed, P-17).",
-   "branches": [
-    {
-     "label": "Blocked",
-     "to": "ecc_failed"
-    },
-    {
-     "label": "Clear",
-     "to": "milestone1"
-    }
-   ],
-   "phase": 23,
-   "x": 6007.0,
-   "y": 990.0,
-   "w": 150,
-   "h": 100,
-   "cx": 6082.0,
-   "cy": 1040.0
-  },
-  {
-   "id": "ecc_limit_override",
-   "type": "control",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Privileged Credit Limit Override",
-   "sub": "BR-034",
-   "desc": "Only a privileged agent may modify the system-defaulted credit limit.",
-   "phase": 25,
-   "x": 6483.0,
-   "y": 310.0,
-   "w": 206,
-   "h": 100,
-   "cx": 6586.0,
-   "cy": 360.0
-  },
-  {
-   "id": "milestone1",
-   "type": "control",
-   "lane": "crm",
-   "slot": 0,
-   "label": "Milestone: Contact Created & Eligibility Captured",
-   "sub": "Section #6",
-   "phase": 24,
-   "x": 6231.0,
-   "y": 650.0,
-   "w": 206,
-   "h": 100,
-   "cx": 6334.0,
-   "cy": 700.0
-  },
-  {
-   "id": "bam_profile",
+   "id": "bam_billing",
    "type": "agent",
-   "lane": "agt",
+   "lane": "billing",
+   "phase": 4,
+   "label": "Billing Account Management",
+   "sub": "BAM (FAR_001_BAM_01)",
+   "desc": "Follows same BAM capability as Mobile Post Paid Journey (billing account creation/selection, billing contact model, payment profile, bill cycle).",
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 1231.0,
+   "y": 5010.0,
+   "cx": 1334.0,
+   "cy": 5060.0
+  },
+  {
+   "id": "qpc_plan",
+   "type": "agent",
+   "lane": "crm",
+   "phase": 5,
+   "label": "Product Catalogue & Cart",
+   "sub": "QPC (FAR_001_QPC_01-06)",
+   "desc": "Presents only eligible fibre base plans for the service type/segment (BR-050); bundles IPTV by default, removable (BR-051); allows only mapped add-ons (BR-052) and mapped discounts (BR-053); recalculates cart totals on every change (BR-054).",
+   "inputs": [
+    "Service type",
+    "Customer segment"
+   ],
+   "outputs": [
+    "Cart with base plan, IPTV bundle, add-ons, discounts"
+   ],
    "slot": 1,
-   "label": "Capture Billing Profile",
-   "sub": "FAR_001_BAM_01 / BR-041 / BR-040",
-   "desc": "Covers payment type, payment method, bill cycle, bill media and language. Postpaid only. BR-040 (single billing account per plan/MSISDN/fixed line number).",
-   "phase": 25,
-   "x": 6483.0,
-   "y": 470.0,
    "w": 206,
    "h": 60,
-   "cx": 6586.0,
-   "cy": 500.0
+   "x": 1483.0,
+   "y": 1830.0,
+   "cx": 1586.0,
+   "cy": 1860.0
   },
   {
-   "id": "bam_address",
-   "type": "control",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Billing Address",
-   "sub": "BR-042",
-   "desc": "The billing address is the customer address or a newly captured address.",
-   "phase": 26,
-   "x": 6735.0,
-   "y": 330.0,
-   "w": 206,
-   "h": 60,
-   "cx": 6838.0,
-   "cy": 360.0
-  },
-  {
-   "id": "bam_payment_profile",
-   "type": "control",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Single Active Payment Profile",
-   "sub": "BR-043 / BR-046",
-   "desc": "A billing profile holds only one active payment profile; payment details are validated before the payment profile is created.",
-   "phase": 27,
-   "x": 6987.0,
-   "y": 310.0,
-   "w": 206,
-   "h": 100,
-   "cx": 7090.0,
-   "cy": 360.0
-  },
-  {
-   "id": "bam_contacts",
-   "type": "control",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Billing Contacts",
-   "sub": "BR-044 / BR-045",
-   "desc": "Multiple billing contacts with exactly one primary; invoice delivered to the primary contact. Bill cycle defaulted per configured rule.",
-   "phase": 28,
-   "x": 7239.0,
-   "y": 330.0,
-   "w": 206,
-   "h": 60,
-   "cx": 7342.0,
-   "cy": 360.0
-  },
-  {
-   "id": "milestone2",
-   "type": "control",
+   "id": "num_select",
+   "type": "agent",
    "lane": "crm",
-   "slot": 0,
-   "label": "Milestone: Bill Profile Created",
-   "sub": "Section #8",
-   "phase": 29,
-   "x": 7491.0,
-   "y": 650.0,
-   "w": 206,
-   "h": 100,
-   "cx": 7594.0,
-   "cy": 700.0
-  },
-  {
-   "id": "qpc_baseplan",
-   "type": "agent",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Eligible Base Plan Display",
-   "sub": "FAR_001_QPC_01 / BR-050",
-   "desc": "Only fibre base plans eligible for the service type available at the address and the customer segment are presented.",
-   "phase": 30,
-   "x": 7743.0,
-   "y": 310.0,
-   "w": 206,
-   "h": 100,
-   "cx": 7846.0,
-   "cy": 360.0
-  },
-  {
-   "id": "qpc_iptv",
-   "type": "control",
-   "lane": "agt",
-   "slot": 0,
-   "label": "IPTV Default Bundling",
-   "sub": "FAR_001_QPC_02 / FAR_001_QPC_03 / BR-051",
-   "desc": "IPTV bundled by default with the base plan; may be removed by the agent at customer request.",
-   "phase": 31,
-   "x": 7995.0,
-   "y": 330.0,
-   "w": 206,
-   "h": 60,
-   "cx": 8098.0,
-   "cy": 360.0
-  },
-  {
-   "id": "qpc_addon",
-   "type": "control",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Mapped Add-On Selection",
-   "sub": "FAR_001_QPC_04 / BR-052",
-   "desc": "Only an add-on pre-configured and mapped to the base plan may be added; no unmapped add-on is permitted.",
-   "phase": 32,
-   "x": 8247.0,
-   "y": 330.0,
-   "w": 206,
-   "h": 60,
-   "cx": 8350.0,
-   "cy": 360.0
-  },
-  {
-   "id": "qpc_discount",
-   "type": "control",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Mapped Discount Display",
-   "sub": "FAR_001_QPC_05 / BR-053",
-   "desc": "Only a discount mapped to the product is displayed; the section is empty where none applies.",
-   "phase": 33,
-   "x": 8499.0,
-   "y": 330.0,
-   "w": 206,
-   "h": 60,
-   "cx": 8602.0,
-   "cy": 360.0
-  },
-  {
-   "id": "qpc_recalc",
-   "type": "system",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Cart Price Recalculation",
-   "sub": "FAR_001_QPC_06 / BR-054",
-   "desc": "Cart totals are recalculated on every add, amend or remove action.",
-   "phase": 34,
-   "x": 8759.0,
-   "y": 310.0,
-   "w": 190,
-   "h": 100,
-   "cx": 8854.0,
-   "cy": 360.0
-  },
-  {
-   "id": "num_selection",
-   "type": "agent",
-   "lane": "agt",
-   "slot": 0,
+   "phase": 5,
    "label": "Number Selection",
-   "sub": "FAR_001_NUM_01 / BR-060 / BR-061 / FAR_001_NUM_02 / FAR_001_NUM_03 / INT-09",
-   "desc": "Fixed line number (free number category) for fibre; mobile number for FWA, star number not permitted for FWA. FAR_001_NUM_02 (mobile number selection for FWA) / FAR_001_NUM_03 (star number not permitted for FWA). Integration: INT-09 (UIM \u2014 number management).",
-   "phase": 35,
-   "x": 9003.0,
-   "y": 330.0,
-   "w": 206,
-   "h": 60,
-   "cx": 9106.0,
-   "cy": 360.0
-  },
-  {
-   "id": "sim_phy_selection",
-   "type": "agent",
-   "lane": "agt",
-   "slot": 0,
-   "label": "SIM & CPE Selection",
-   "sub": "FAR_001_SIM_01 / FAR_001_PHY_01 / BR-062",
-   "desc": "Subscriber identity module and customer premises equipment scanned only for a fixed wireless access journey.",
-   "phase": 36,
-   "x": 9255.0,
-   "y": 330.0,
-   "w": 206,
-   "h": 60,
-   "cx": 9358.0,
-   "cy": 360.0
-  },
-  {
-   "id": "num_review",
-   "type": "control",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Number & Charges Review",
-   "sub": "FAR_001_NUM_04 / BR-063",
-   "desc": "Number category and applicable charges displayed before the selection is confirmed.",
-   "phase": 37,
-   "x": 9507.0,
-   "y": 330.0,
-   "w": 206,
-   "h": 60,
-   "cx": 9610.0,
-   "cy": 360.0
-  },
-  {
-   "id": "wfm_retrieve",
-   "type": "external",
-   "lane": "wfm",
-   "slot": 0,
-   "label": "Appointment Slot Retrieval",
-   "sub": "FAR_001_WFM_01 / BR-070 / INT-11",
-   "desc": "Available appointment slots with lead time and technician availability fetched from the field workforce management system. Integration: INT-11 (Field Workforce Management).",
-   "systems": [
-    "Field Workforce Management"
-   ],
-   "phase": 38,
-   "x": 9774.0,
-   "y": 1330.0,
-   "w": 176,
-   "h": 100,
-   "cx": 9862.0,
-   "cy": 1380.0
-  },
-  {
-   "id": "wfm_select",
-   "type": "agent",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Appointment Slot Selection",
-   "sub": "FAR_001_WFM_02 / FAR_001_WFM_04",
-   "desc": "Selected slot passed back to the field workforce management task. FAR_001_WFM_04 (selected slot and appointment information passed to the field workforce management task).",
-   "phase": 39,
-   "x": 10011.0,
-   "y": 310.0,
-   "w": 206,
-   "h": 100,
-   "cx": 10114.0,
-   "cy": 360.0
-  },
-  {
-   "id": "d_wfm_applicability",
-   "type": "decision",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Appointment Applicability",
-   "sub": "FAR_001_WFM_05 / FAR_001_WFM_06 / BR-072 / P-06 / P-07",
-   "desc": "Appointment booking is skipped for FWA Indoor and mandatory for FWA Outdoor and fibre. P-06 / P-07 (FWA Indoor and FWA Outdoor appointment applicability parameters).",
+   "sub": "NUM (FAR_001_NUM_01-04)",
+   "desc": "Fixed line number of category free number selectable for fibre (BR-060). Mobile number selectable only for FWA; star number prohibited for FWA (BR-061). Number category and charges reviewed before confirmation (BR-063).",
    "branches": [
     {
-     "label": "Skip (FWA Indoor)",
-     "to": "cvc_checkout"
+     "label": "Fixed line (fibre)",
+     "to": "sim_select"
     },
     {
-     "label": "Book",
-     "to": "wfm_notes"
+     "label": "Mobile number (FWA)",
+     "to": "sim_select"
     }
    ],
-   "phase": 40,
-   "x": 10291.0,
-   "y": 310.0,
-   "w": 150,
+   "slot": 2,
+   "w": 206,
+   "h": 60,
+   "x": 1483.0,
+   "y": 2050.0,
+   "cx": 1586.0,
+   "cy": 2080.0
+  },
+  {
+   "id": "sim_select",
+   "type": "agent",
+   "lane": "crm",
+   "phase": 5,
+   "label": "SIM & CPE Selection (FWA only)",
+   "sub": "SIM (FAR_001_SIM_01), PHY (FAR_001_PHY_01)",
+   "desc": "SIM serial number and customer premises equipment serial number scanned and added to cart, only for FWA indoor/outdoor journeys; refused for fibre (BR-062).",
+   "slot": 0,
+   "w": 206,
    "h": 100,
-   "cx": 10366.0,
-   "cy": 360.0
+   "x": 1483.0,
+   "y": 1590.0,
+   "cx": 1586.0,
+   "cy": 1640.0
+  },
+  {
+   "id": "wfm_slot",
+   "type": "agent",
+   "lane": "agent",
+   "phase": 6,
+   "label": "Appointment Slot Retrieval & Selection",
+   "sub": "WFM (FAR_001_WFM_01/02)",
+   "desc": "Fetches available slots with lead time/technician availability from WFM; agent selects a slot, customer can request a specific date/time (BR-070).",
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 1735.0,
+   "y": 430.0,
+   "cx": 1838.0,
+   "cy": 480.0
   },
   {
    "id": "wfm_notes",
-   "type": "agent",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Appointment Notes & Collection Flags",
-   "sub": "FAR_001_WFM_03 / BR-071",
-   "desc": "Additional notes and CAF/tenancy document collection flags captured and passed to the field workforce management task.",
-   "phase": 41,
-   "x": 10515.0,
-   "y": 310.0,
-   "w": 206,
-   "h": 100,
-   "cx": 10618.0,
-   "cy": 360.0
-  },
-  {
-   "id": "wfm_task_exec",
-   "type": "agent",
-   "lane": "wfm",
-   "slot": 0,
-   "label": "Workforce Task Execution",
-   "sub": "FAR_001_WFM_07 / BR-073",
-   "desc": "Optical network terminal and set top box serial numbers, mesh device quantity, and wire length with one-time charge captured from the task. Status model: Order/Awaiting Workforce (order held pending field workforce management task closure).",
-   "phase": 42,
-   "x": 10767.0,
-   "y": 1350.0,
-   "w": 206,
-   "h": 60,
-   "cx": 10870.0,
-   "cy": 1380.0
-  },
-  {
-   "id": "wfm_mesh_rule",
    "type": "control",
-   "lane": "wfm",
-   "slot": 0,
-   "label": "Complimentary Mesh Device Rule",
-   "sub": "FAR_001_WFM_08 / BR-074",
-   "desc": "The first two mesh devices are complimentary (P-05); further devices carry the configured monthly recurring charge.",
-   "phase": 43,
-   "x": 11019.0,
-   "y": 1330.0,
+   "lane": "agent",
+   "phase": 6,
+   "label": "Appointment Notes & Collection Flags",
+   "sub": "WFM (FAR_001_WFM_03/04)",
+   "desc": "Captures notes and CAF/tenancy-document collection flags; passed to the WFM task (BR-071).",
+   "slot": 2,
    "w": 206,
    "h": 100,
-   "cx": 11122.0,
-   "cy": 1380.0
+   "x": 1735.0,
+   "y": 870.0,
+   "cx": 1838.0,
+   "cy": 920.0
   },
   {
-   "id": "wfm_outdoor_capture",
-   "type": "agent",
-   "lane": "wfm",
-   "slot": 0,
-   "label": "Indoor & Outdoor Device Capture",
-   "sub": "FAR_001_WFM_09 / BR-075",
-   "desc": "Both indoor and outdoor customer premises equipment serial numbers captured for a FWA Outdoor journey.",
-   "phase": 44,
-   "x": 11271.0,
-   "y": 1330.0,
-   "w": 206,
-   "h": 100,
-   "cx": 11374.0,
-   "cy": 1380.0
-  },
-  {
-   "id": "wfm_closure",
-   "type": "agent",
-   "lane": "wfm",
-   "slot": 0,
-   "label": "Workforce Task Closure",
-   "sub": "FAR_001_WFM_10 / BR-076",
-   "desc": "The order proceeds only after field workforce management task closure with customer feedback is received.",
-   "phase": 45,
-   "x": 11523.0,
-   "y": 1350.0,
-   "w": 206,
-   "h": 60,
-   "cx": 11626.0,
-   "cy": 1380.0
-  },
-  {
-   "id": "d_wfm_issue",
+   "id": "wfm_applicability",
    "type": "decision",
-   "lane": "wfm",
-   "slot": 0,
-   "label": "Installation Issue Reported?",
+   "lane": "agent",
+   "phase": 6,
+   "label": "Appointment Applicability by Service Type",
+   "sub": "WFM (FAR_001_WFM_05/06)",
+   "desc": "Skipped for FWA indoor; mandatory for FWA outdoor and fibre (BR-072, P-06, P-07).",
    "branches": [
     {
-     "label": "Issue",
-     "to": "wfm_fault"
+     "label": "FWA indoor \u2014 skip",
+     "to": "cvc_checkout"
     },
     {
-     "label": "No issue",
-     "to": "cvc_checkout"
+     "label": "Fibre / FWA outdoor \u2014 book",
+     "to": "wfm_task"
     }
    ],
-   "phase": 46,
-   "x": 11803.0,
-   "y": 1330.0,
+   "slot": 1,
    "w": 150,
    "h": 100,
-   "cx": 11878.0,
-   "cy": 1380.0
+   "x": 1763.0,
+   "y": 650.0,
+   "cx": 1838.0,
+   "cy": 700.0
   },
   {
-   "id": "wfm_fault",
+   "id": "wfm_task",
+   "type": "system",
+   "lane": "wfm",
+   "phase": 6,
+   "label": "WFM Task Execution",
+   "sub": "WFM (FAR_001_WFM_07-10)",
+   "desc": "Technician captures ONT/STB serials, mesh device quantity with MRC, wire length with OTC (BR-073). First 2 mesh devices complimentary (BR-074, P-05). Both indoor & outdoor CPE captured for outdoor journeys (BR-075). Task closure with customer feedback required before order proceeds (BR-076).",
+   "slot": 0,
+   "w": 190,
+   "h": 56,
+   "x": 1743.0,
+   "y": 5752.0,
+   "cx": 1838.0,
+   "cy": 5780.0
+  },
+  {
+   "id": "wfm_fail",
    "type": "error",
    "lane": "wfm",
-   "slot": 0,
-   "label": "Fault Ticket & Reschedule",
-   "sub": "FAR_001_WFM_11 / BR-077",
-   "desc": "A reported installation issue creates a fault ticket, updates the task on closure, and allows the appointment to be rescheduled.",
-   "phase": 47,
-   "x": 12035.0,
-   "y": 1330.0,
+   "phase": 6,
+   "label": "Workforce Failure Handling",
+   "sub": "WFM (FAR_001_WFM_11)",
+   "desc": "Fault ticket created if technician reports an issue during activation; WFM task updated on ticket closure; appointment can be rescheduled (BR-077).",
+   "slot": 1,
    "w": 190,
    "h": 100,
-   "cx": 12130.0,
-   "cy": 1380.0
+   "x": 1743.0,
+   "y": 5950.0,
+   "cx": 1838.0,
+   "cy": 6000.0
   },
   {
    "id": "cvc_checkout",
-   "type": "control",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Initiate Cart Checkout",
-   "sub": "FAR_001_CVC_01 / BR-090",
-   "desc": "Cart, customer, billing, number, resource and eligibility validations execute at checkout before payment. Status model: Order/Pending Payment (validations passed, awaiting payment).",
-   "phase": 47,
-   "x": 12027.0,
-   "y": 330.0,
-   "w": 206,
-   "h": 60,
-   "cx": 12130.0,
-   "cy": 360.0
-  },
-  {
-   "id": "milestone3",
-   "type": "control",
+   "type": "agent",
    "lane": "crm",
+   "phase": 7,
+   "label": "Cart Validation & Check Out",
+   "sub": "CVC (FAR_001_CVC_01)",
+   "desc": "Follows same CVC capability as Mobile Post Paid Journey (pre-payment validation gate, eligibility/compatibility/cardinality rule check, payment request summary display).",
    "slot": 0,
-   "label": "Milestone: Cart Checked Out",
-   "sub": "Section #11",
-   "phase": 48,
-   "x": 12279.0,
-   "y": 650.0,
    "w": 206,
    "h": 100,
-   "cx": 12382.0,
-   "cy": 700.0
+   "x": 1987.0,
+   "y": 1590.0,
+   "cx": 2090.0,
+   "cy": 1640.0
   },
   {
-   "id": "caf_keyinfo",
-   "type": "system",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Display Key Information",
-   "sub": "BR-080",
-   "desc": "Plan selected and lock-in period displayed before CAF submission, refreshed on any cart amendment.",
-   "phase": 49,
-   "x": 12539.0,
-   "y": 310.0,
-   "w": 190,
-   "h": 100,
-   "cx": 12634.0,
-   "cy": 360.0
-  },
-  {
-   "id": "caf_generate",
-   "type": "system",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Generate Contract Application Form",
-   "sub": "FAR_001_CAF_01 / BR-081",
-   "desc": "Generated from the template selected by product type and connection type, using the configured matrix of agent role, channel, product type and connection type.",
-   "phase": 50,
-   "x": 12791.0,
-   "y": 310.0,
-   "w": 190,
-   "h": 100,
-   "cx": 12886.0,
-   "cy": 360.0
-  },
-  {
-   "id": "d_caf_skip",
-   "type": "decision",
-   "lane": "agt",
-   "slot": 0,
-   "label": "CAF Skip by Role?",
-   "sub": "FAR_001_CAF_04 / BR-084",
-   "branches": [
-    {
-     "label": "Skip (fulfilment role)",
-     "to": "caf_docs"
-    },
-    {
-     "label": "Proceed",
-     "to": "caf_sign"
-    }
-   ],
-   "phase": 51,
-   "x": 13063.0,
-   "y": 310.0,
-   "w": 150,
-   "h": 100,
-   "cx": 13138.0,
-   "cy": 360.0
-  },
-  {
-   "id": "caf_sign",
+   "id": "caf_contract",
    "type": "agent",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Capture Signature",
-   "sub": "FAR_001_CAF_03 / BR-083",
-   "desc": "Customer signature captured through the digital form or touch screen, displayed within the online form.",
-   "phase": 52,
-   "x": 13287.0,
-   "y": 330.0,
-   "w": 206,
-   "h": 60,
-   "cx": 13390.0,
-   "cy": 360.0
-  },
-  {
-   "id": "caf_offline",
-   "type": "agent",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Offline Signed Form Upload",
-   "sub": "FAR_001_CAF_02 / BR-082 / P-02 / P-04",
-   "desc": "Signed form uploaded in PDF or JPG format, up to two megabytes. P-02 / P-04 (signed CAF document maximum size and permitted format).",
-   "phase": 53,
-   "x": 13539.0,
-   "y": 310.0,
-   "w": 206,
-   "h": 100,
-   "cx": 13642.0,
-   "cy": 360.0
-  },
-  {
-   "id": "caf_docs",
-   "type": "agent",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Additional Documents & Activity Comments",
-   "sub": "FAR_001_CAF_05 / FAR_001_CAF_06 / BR-085",
-   "desc": "Additional supporting documents uploaded; activity comments captured by the agent are passed to the field workforce management task.",
-   "phase": 54,
-   "x": 13791.0,
-   "y": 310.0,
-   "w": 206,
-   "h": 100,
-   "cx": 13894.0,
-   "cy": 360.0
-  },
-  {
-   "id": "milestone4",
-   "type": "control",
    "lane": "crm",
-   "slot": 0,
-   "label": "Milestone: Signed CAF",
-   "sub": "Section #13",
-   "phase": 55,
-   "x": 14043.0,
-   "y": 670.0,
+   "phase": 7,
+   "label": "Contract & Documentation (CAF)",
+   "sub": "CAF (FAR_001_CAF_01-06)",
+   "desc": "Follows same CAF capability as Mobile Post Paid Journey. Offline signed form upload PDF/JPG max 2MB (BR-082). Digital signature via touch screen embedded in form (BR-083). Skippable by fulfilment-role agent (BR-084, Should). Additional documents in separate section (BR-082). Activity comments passed to WFM task (BR-085).",
+   "slot": 1,
    "w": 206,
-   "h": 60,
-   "cx": 14146.0,
-   "cy": 700.0
+   "h": 100,
+   "x": 1987.0,
+   "y": 1810.0,
+   "cx": 2090.0,
+   "cy": 1860.0
   },
   {
-   "id": "pay_process",
-   "type": "external",
-   "lane": "om",
-   "slot": 0,
-   "label": "Upfront Payment Processing",
-   "sub": "FAR_001_PAY_01 / BR-091 / INT-08",
-   "desc": "Upfront payment request sent to the point of sale payment system; payment status set from the response. Integration: INT-08 (Point of Sale Payment System).",
-   "systems": [
-    "Point of Sale Payment System"
-   ],
-   "phase": 56,
-   "x": 14310.0,
-   "y": 1670.0,
-   "w": 176,
-   "h": 100,
-   "cx": 14398.0,
-   "cy": 1720.0
+   "id": "pay_payment",
+   "type": "agent",
+   "lane": "billing",
+   "phase": 8,
+   "label": "Payment & Inventory",
+   "sub": "PAY (FAR_001_PAY_01)",
+   "desc": "Follows same PAY capability as Mobile Post Paid Journey (payment summary, upfront charge/deposit, WinCash handling, receipt issuance).",
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 2239.0,
+   "y": 5250.0,
+   "cx": 2342.0,
+   "cy": 5280.0
   },
   {
    "id": "pay_inventory",
    "type": "system",
-   "lane": "om",
-   "slot": 0,
+   "lane": "billing",
+   "phase": 8,
    "label": "Inventory Depletion",
-   "sub": "FAR_001_PAY_02 / FAR_001_PAY_03 / BR-092 / INT-10",
-   "desc": "Fixed line number inventory depleted for fibre; SIM and equipment inventory depleted for FWA, on payment completion. Integration: INT-10 (UIM \u2014 SIM/equipment/address inventory).",
-   "systems": [
-    "UIM"
-   ],
-   "phase": 57,
-   "x": 14555.0,
-   "y": 1692.0,
+   "sub": "FAR_001_PAY_02/03",
+   "desc": "Fixed line number inventory depleted in UIM as part of fulfilment flow (BR-092). SIM/CPE inventory depleted to point-of-sale payment system on payment completion for FWA (BR-092).",
+   "slot": 0,
    "w": 190,
    "h": 56,
-   "cx": 14650.0,
-   "cy": 1720.0
+   "x": 2247.0,
+   "y": 5032.0,
+   "cx": 2342.0,
+   "cy": 5060.0
   },
   {
    "id": "ord_submit",
    "type": "agent",
-   "lane": "agt",
-   "slot": 0,
+   "lane": "crm",
+   "phase": 8,
    "label": "Order Submission",
-   "sub": "FAR_001_ORD_01 / BR-093 / FAR_001_ORD_02 / INT-12",
-   "desc": "Order submitted once all sections are complete and payment is paid, routed to the order management system. FAR_001_ORD_02 (order routed to fulfilment on submission). Integration: INT-12 (Order Management). Status model: Order/Submitted (order submitted to the order management system).",
-   "phase": 58,
-   "x": 14799.0,
-   "y": 330.0,
+   "sub": "ORD (FAR_001_ORD_01)",
+   "desc": "Order submitted once all sections complete and payment status is paid (BR-093).",
+   "slot": 0,
    "w": 206,
    "h": 60,
-   "cx": 14902.0,
-   "cy": 360.0
+   "x": 2239.0,
+   "y": 1610.0,
+   "cx": 2342.0,
+   "cy": 1640.0
   },
   {
-   "id": "ord_navigate",
-   "type": "control",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Navigate to All Orders View",
-   "sub": "BR-094",
-   "phase": 59,
-   "x": 15051.0,
-   "y": 310.0,
-   "w": 206,
-   "h": 100,
-   "cx": 15154.0,
-   "cy": 360.0
-  },
-  {
-   "id": "milestone5",
-   "type": "control",
-   "lane": "crm",
-   "slot": 0,
-   "label": "Milestone: Order Submitted",
-   "sub": "Section #15",
-   "phase": 60,
-   "x": 15303.0,
-   "y": 650.0,
-   "w": 206,
-   "h": 100,
-   "cx": 15406.0,
-   "cy": 700.0
-  },
-  {
-   "id": "not_submit",
+   "id": "ord_fulfil",
    "type": "system",
-   "lane": "om",
-   "slot": 0,
-   "label": "Submission Notification",
-   "sub": "FAR_001_NOT_01 / BR-120 / INT-14",
-   "desc": "Order submission notification sent to the primary contact mobile number and email address (trigger points, templates and recipients: to be confirmed). Integration: INT-14 (Notification Platform).",
-   "systems": [
-    "Notification Platform"
-   ],
-   "phase": 61,
-   "x": 15563.0,
-   "y": 1670.0,
-   "w": 190,
-   "h": 100,
-   "cx": 15658.0,
-   "cy": 1720.0
-  },
-  {
-   "id": "net_activate_fibre",
-   "type": "system",
-   "lane": "om",
+   "lane": "oms",
+   "phase": 9,
+   "label": "Order Submission & Fulfilment Routing",
+   "sub": "ORD (FAR_001_ORD_02)",
+   "desc": "Follows same ORD capability as Mobile Post Paid Journey.",
    "slot": 1,
-   "label": "Network Activation \u2014 Fibre",
-   "sub": "FAR_001_NET_01 / BR-100",
-   "desc": "Triggered on field workforce management task completion for fibre; status updated in Siebel CRM. Status model: Order/In Fulfilment (provisioning, workforce and activation in progress); Order/Failed (fulfilment or activation failed; reprocesses to In Fulfilment or moves to Cancelled). Status model: Order/Activated (network activated, service is live).",
-   "systems": [
-    "Order Management"
-   ],
-   "phase": 61,
-   "x": 15563.0,
-   "y": 1810.0,
    "w": 190,
    "h": 100,
-   "cx": 15658.0,
-   "cy": 1860.0
+   "x": 2499.0,
+   "y": 6890.0,
+   "cx": 2594.0,
+   "cy": 6940.0
   },
   {
-   "id": "net_activate_indoor",
+   "id": "not_order",
    "type": "system",
-   "lane": "om",
+   "lane": "notif",
+   "phase": 9,
+   "label": "Order Notification",
+   "sub": "NOT (FAR_001_NOT_01)",
+   "desc": "Same NOT capability as Mobile Post Paid Journey; for WFM activities, feedback/survey done separately at WFM system.",
    "slot": 0,
-   "label": "Network Activation \u2014 FWA Indoor",
-   "sub": "FAR_001_NET_02 / BR-101",
-   "desc": "Proceeds on the planned activation date without a field workforce management task.",
-   "phase": 62,
-   "x": 15815.0,
-   "y": 1670.0,
-   "w": 190,
-   "h": 100,
-   "cx": 15910.0,
-   "cy": 1720.0
-  },
-  {
-   "id": "net_sim_activate",
-   "type": "system",
-   "lane": "om",
-   "slot": 2,
-   "label": "SIM Activation",
-   "sub": "FAR_001_NET_03 / BR-102",
-   "desc": "Subscriber identity module activated together with network activation for a FWA journey.",
-   "phase": 62,
-   "x": 15815.0,
-   "y": 1972.0,
    "w": 190,
    "h": 56,
-   "cx": 15910.0,
-   "cy": 2000.0
+   "x": 2499.0,
+   "y": 8352.0,
+   "cx": 2594.0,
+   "cy": 8380.0
   },
   {
-   "id": "net_status_wfm",
+   "id": "net_activation",
+   "type": "decision",
+   "lane": "oms",
+   "phase": 9,
+   "label": "Network Activation / Deactivation",
+   "sub": "NET (FAR_001_NET_01-04)",
+   "desc": "Fibre: triggered on WFM task completion, status updated to CRM (BR-100). FWA indoor: proceeds on planned activation date without waiting for WFM task (BR-101). SIM activated with network activation for FWA (BR-102). Order status updated to WFM (BR-100).",
+   "branches": [
+    {
+     "label": "Fibre \u2014 after WFM task",
+     "to": "net_activated"
+    },
+    {
+     "label": "FWA indoor \u2014 planned date",
+     "to": "net_activated"
+    }
+   ],
+   "slot": 2,
+   "w": 150,
+   "h": 100,
+   "x": 2519.0,
+   "y": 7110.0,
+   "cx": 2594.0,
+   "cy": 7160.0
+  },
+  {
+   "id": "net_activated",
    "type": "system",
-   "lane": "wfm",
+   "lane": "oms",
+   "phase": 9,
+   "label": "Order Status to Workforce / CRM",
+   "desc": "Order status updated to WFM so technician may proceed; CRM receives activation status (BR-100).",
    "slot": 0,
-   "label": "Order Management Status to Workforce",
-   "sub": "FAR_001_NET_04",
-   "phase": 62,
-   "x": 15815.0,
-   "y": 1330.0,
    "w": 190,
    "h": 100,
-   "cx": 15910.0,
-   "cy": 1380.0
+   "x": 2499.0,
+   "y": 6670.0,
+   "cx": 2594.0,
+   "cy": 6720.0
   },
   {
    "id": "fin_billing_update",
    "type": "system",
-   "lane": "om",
-   "slot": 1,
-   "label": "Billing Update",
-   "sub": "FAR_001_FIN_01 / BR-110 / INT-13",
-   "desc": "Account, product, service and resource information with per-line prices, including additional devices, passed to the billing system after task closure. Integration: INT-13 (Billing System).",
-   "systems": [
-    "Billing System"
-   ],
-   "phase": 62,
-   "x": 15815.0,
-   "y": 1832.0,
-   "w": 190,
-   "h": 56,
-   "cx": 15910.0,
-   "cy": 1860.0
-  },
-  {
-   "id": "fin_device_billing",
-   "type": "system",
-   "lane": "om",
+   "lane": "billing",
+   "phase": 10,
+   "label": "Billing Update After Fulfilment",
+   "sub": "FIN (FAR_001_FIN_01/02/03)",
+   "desc": "Account/product/service/resource info with per-line prices passed to billing after WFM task closed (BR-110). Additional devices captured during installation billed (BR-110). FWA indoor CPE captured at order capture billed at order capture (BR-111).",
    "slot": 0,
-   "label": "Additional Device Billing",
-   "sub": "FAR_001_FIN_02 / FAR_001_FIN_03 / BR-111",
-   "desc": "CPE captured at order capture billed for FWA Indoor; CPE captured during the task billed for fibre and FWA Outdoor.",
-   "phase": 63,
-   "x": 16067.0,
-   "y": 1670.0,
    "w": 190,
    "h": 100,
-   "cx": 16162.0,
-   "cy": 1720.0
+   "x": 2751.0,
+   "y": 5010.0,
+   "cx": 2846.0,
+   "cy": 5060.0
   },
   {
    "id": "fin_order_complete",
-   "type": "system",
-   "lane": "crm",
-   "slot": 0,
-   "label": "Order Completion",
-   "sub": "FAR_001_FIN_04 / BR-112",
-   "desc": "Order completion notification sets order status to completed in Siebel CRM. Status model: Order/Completed (order completed and billing updated; terminal).",
-   "phase": 64,
-   "x": 16319.0,
-   "y": 672.0,
-   "w": 190,
-   "h": 56,
-   "cx": 16414.0,
-   "cy": 700.0
-  },
-  {
-   "id": "fin_tracking_resolved",
-   "type": "control",
-   "lane": "crm",
-   "slot": 0,
-   "label": "Tracking Record Resolved",
-   "sub": "FAR_001_FIN_05 / BR-113",
-   "desc": "Tracking record set to resolved on order completion, with the order number recorded. Status model: Tracking Record/Resolved (order completed, order number recorded).",
-   "phase": 65,
-   "x": 16563.0,
-   "y": 670.0,
-   "w": 206,
-   "h": 60,
-   "cx": 16666.0,
-   "cy": 700.0
-  },
-  {
-   "id": "end_survey",
    "type": "end",
-   "lane": "om",
+   "lane": "crm",
+   "phase": 10,
+   "label": "Order Completed",
+   "sub": "FIN (FAR_001_FIN_04/05)",
+   "desc": "Order completion notification received into CRM, sets order status to Completed (BR-112). Tracking record set to Resolved with order number recorded (BR-113).",
    "slot": 0,
-   "label": "Feedback Survey Despatched",
-   "sub": "BR-114",
-   "desc": "Customer feedback survey despatched on tracking record closure. Terminal. Status model: Tracking Record/Closed (all updates complete, feedback survey triggered; terminal).",
-   "phase": 66,
-   "x": 16868.0,
-   "y": 1670.0,
-   "w": 100,
-   "h": 100,
-   "cx": 16918.0,
-   "cy": 1720.0
+   "w": 84,
+   "h": 84,
+   "x": 2804.0,
+   "y": 1598.0,
+   "cx": 2846.0,
+   "cy": 1640.0
   },
   {
-   "id": "ins_eligible",
-   "type": "validation",
-   "lane": "ext",
-   "slot": 0,
+   "id": "ins_detect",
+   "type": "decision",
+   "lane": "rfs",
+   "phase": 11,
    "label": "Instant Activation Eligibility Detection",
-   "sub": "FAR_002_INS_01 / BR-130",
-   "desc": "A reusable pre-installed device eligible for instant activation is detected from the ready for service response.",
-   "phase": 18,
-   "x": 4734.0,
-   "y": 990.0,
+   "sub": "INS (FAR_002_INS_01)",
+   "desc": "Detects from RFS response whether a reusable pre-installed device exists and is eligible for instant activation (BR-130, Open).",
+   "branches": [
+    {
+     "label": "Eligible",
+     "to": "ins_verify"
+    },
+    {
+     "label": "Not eligible",
+     "to": "cvc_checkout"
+    }
+   ],
+   "slot": 0,
+   "w": 150,
+   "h": 100,
+   "x": 3023.0,
+   "y": 2750.0,
+   "cx": 3098.0,
+   "cy": 2800.0
+  },
+  {
+   "id": "ins_verify",
+   "type": "validation",
+   "lane": "agent",
+   "phase": 11,
+   "label": "Device Serial Verification",
+   "sub": "INS (FAR_002_INS_02)",
+   "desc": "Agent verifies detected device serial number against the physical device before instant activation proceeds; mismatch recorded (BR-131, Open).",
+   "slot": 3,
    "w": 176,
    "h": 100,
-   "cx": 4822.0,
-   "cy": 1040.0
-  },
-  {
-   "id": "ins_channel",
-   "type": "control",
-   "lane": "agt",
-   "slot": 1,
-   "label": "Channel Constraint Check",
-   "sub": "BR-136 / FAR_002_INS_07",
-   "desc": "Instant activation is available only to field agents on a tablet device; physical device verification is not supported on a desktop-only agent. FAR_002_INS_07 (channel constraint check, exact match).",
-   "phase": 19,
-   "x": 4971.0,
-   "y": 470.0,
-   "w": 206,
-   "h": 60,
-   "cx": 5074.0,
-   "cy": 500.0
-  },
-  {
-   "id": "ins_serial_verify",
-   "type": "agent",
-   "lane": "agt",
-   "slot": 1,
-   "label": "Device Serial Verification",
-   "sub": "FAR_002_INS_02 / BR-131",
-   "desc": "Agent verifies the detected device serial number against the physical device before instant activation proceeds; a mismatch is recorded and may lead to failure.",
-   "phase": 20,
-   "x": 5223.0,
-   "y": 450.0,
-   "w": 206,
-   "h": 100,
-   "cx": 5326.0,
-   "cy": 500.0
+   "x": 3010.0,
+   "y": 1090.0,
+   "cx": 3098.0,
+   "cy": 1140.0
   },
   {
    "id": "ins_select",
    "type": "decision",
-   "lane": "agt",
-   "slot": 1,
-   "label": "Instant or Normal Activation?",
-   "sub": "FAR_002_INS_03 / BR-132",
-   "desc": "Agent selects explicitly, defaulting to normal where instant is not selected.",
+   "lane": "agent",
+   "phase": 11,
+   "label": "Instant or Normal Selection",
+   "sub": "INS (FAR_002_INS_03)",
+   "desc": "Agent selects explicitly between instant and normal activation, defaulting to normal where not selected (BR-132, Open).",
    "branches": [
     {
      "label": "Instant",
-     "to": "ins_skip"
+     "to": "ins_skip_appt"
     },
     {
-     "label": "Normal",
-     "to": "wfm_retrieve"
+     "label": "Normal (default)",
+     "to": "wfm_slot"
     }
    ],
-   "phase": 21,
-   "x": 5503.0,
-   "y": 450.0,
+   "slot": 4,
    "w": 150,
    "h": 100,
-   "cx": 5578.0,
-   "cy": 500.0
+   "x": 3023.0,
+   "y": 1310.0,
+   "cx": 3098.0,
+   "cy": 1360.0
   },
   {
-   "id": "ins_skip",
+   "id": "ins_skip_appt",
    "type": "control",
-   "lane": "agt",
-   "slot": 0,
+   "lane": "agent",
+   "phase": 11,
    "label": "Appointment Auto-Skip",
-   "sub": "FAR_002_INS_04 / BR-133",
-   "desc": "Appointment booking is auto-skipped for instant activation; the agent retains the flexibility to book on customer request.",
-   "phase": 22,
-   "x": 5727.0,
-   "y": 330.0,
+   "sub": "INS (FAR_002_INS_04)",
+   "desc": "Appointment booking auto-skipped for instant activation; agent retains flexibility to book on customer request (BR-133).",
+   "slot": 1,
    "w": 206,
    "h": 60,
-   "cx": 5830.0,
-   "cy": 360.0
+   "x": 2995.0,
+   "y": 670.0,
+   "cx": 3098.0,
+   "cy": 700.0
   },
   {
    "id": "ins_trigger",
    "type": "system",
-   "lane": "om",
-   "slot": 0,
+   "lane": "oms",
+   "phase": 11,
    "label": "Immediate Activation Trigger",
-   "sub": "FAR_002_INS_05 / BR-134",
-   "desc": "Immediate network activation flow triggered on order submission; completion target 30 minutes (P-21). Outcome is notified.",
-   "phase": 59,
-   "x": 15059.0,
-   "y": 1670.0,
-   "w": 190,
-   "h": 100,
-   "cx": 15154.0,
-   "cy": 1720.0
-  },
-  {
-   "id": "d_ins_working",
-   "type": "decision",
-   "lane": "om",
+   "sub": "INS (FAR_002_INS_05)",
+   "desc": "Immediate network activation flow triggered on order submission; agent notified of activation outcome (BR-134, Open).",
    "slot": 0,
-   "label": "Service Working?",
-   "branches": [
-    {
-     "label": "Working",
-     "to": "end_survey"
-    },
-    {
-     "label": "Not working",
-     "to": "ins_failure"
-    }
-   ],
-   "phase": 60,
-   "x": 15331.0,
-   "y": 1670.0,
-   "w": 150,
-   "h": 100,
-   "cx": 15406.0,
-   "cy": 1720.0
-  },
-  {
-   "id": "ins_failure",
-   "type": "error",
-   "lane": "om",
-   "slot": 2,
-   "label": "Instant Activation Failure Handling",
-   "sub": "FAR_002_INS_06 / BR-135",
-   "desc": "A non-working service following instant activation raises a support request and arranges a technician visit.",
-   "phase": 61,
-   "x": 15563.0,
-   "y": 1950.0,
    "w": 190,
    "h": 100,
-   "cx": 15658.0,
-   "cy": 2000.0
+   "x": 3003.0,
+   "y": 6670.0,
+   "cx": 3098.0,
+   "cy": 6720.0
+  },
+  {
+   "id": "ins_fail",
+   "type": "error",
+   "lane": "agent",
+   "phase": 11,
+   "label": "Instant Activation Failure Handling",
+   "sub": "INS (FAR_002_INS_06)",
+   "desc": "Support request raised and technician visit arranged where service does not work following instant activation (BR-135, Open).",
+   "slot": 2,
+   "w": 190,
+   "h": 100,
+   "x": 3003.0,
+   "y": 870.0,
+   "cx": 3098.0,
+   "cy": 920.0
+  },
+  {
+   "id": "ins_channel",
+   "type": "control",
+   "lane": "agent",
+   "phase": 11,
+   "label": "Channel Constraint",
+   "sub": "INS (FAR_002_INS_07)",
+   "desc": "Instant activation available only to field agents on a tablet device; physical device verification not supported on desktop-only agent (BR-136).",
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 2995.0,
+   "y": 450.0,
+   "cx": 3098.0,
+   "cy": 480.0
   },
   {
    "id": "mig_start",
-   "type": "start",
-   "lane": "trg",
+   "type": "trigger",
+   "lane": "trigger",
+   "phase": 12,
+   "label": "Migration Request",
+   "desc": "Migration request raised by the customer, captured and confirmed; customer notified (BR-140, Open \u2014 request details format TBC by VFQ).",
    "slot": 0,
-   "label": "Migration Request Raised",
-   "phase": 67,
-   "x": 17128.0,
-   "y": 118.0,
-   "w": 84,
-   "h": 84,
-   "cx": 17170.0,
-   "cy": 160.0
+   "w": 206,
+   "h": 60,
+   "x": 3247.0,
+   "y": 170.0,
+   "cx": 3350.0,
+   "cy": 200.0
   },
   {
-   "id": "mig_eligible_service",
-   "type": "validation",
-   "lane": "agt",
-   "slot": 0,
+   "id": "mig_eligibility",
+   "type": "decision",
+   "lane": "crm",
+   "phase": 12,
    "label": "Migration Eligibility Validation",
-   "sub": "FIB_MIG_RTL_003_01 / BR-140A",
-   "desc": "Migration is permitted only from active FWA Indoor or FWA Outdoor services to Fibre.",
-   "phase": 68,
-   "x": 17334.0,
-   "y": 310.0,
-   "w": 176,
+   "sub": "FIB_MIG_RTL_003_01",
+   "desc": "Migration permitted only for active FWA Indoor/Outdoor services with no open fulfilment, termination, portability or home-move orders (BR-140A). Ineligible services blocked with reason displayed.",
+   "branches": [
+    {
+     "label": "Eligible",
+     "to": "mig_verify"
+    },
+    {
+     "label": "Blocked",
+     "to": "mig_blocked"
+    }
+   ],
+   "slot": 0,
+   "w": 150,
    "h": 100,
-   "cx": 17422.0,
-   "cy": 360.0
+   "x": 3275.0,
+   "y": 1590.0,
+   "cx": 3350.0,
+   "cy": 1640.0
+  },
+  {
+   "id": "mig_blocked",
+   "type": "error",
+   "lane": "agent",
+   "phase": 12,
+   "label": "Migration Blocked",
+   "desc": "Ineligible services are blocked and the reason is displayed (FIB_MIG_RTL_003_01).",
+   "slot": 0,
+   "w": 190,
+   "h": 58,
+   "x": 3255.0,
+   "y": 451.0,
+   "cx": 3350.0,
+   "cy": 480.0
   },
   {
    "id": "mig_verify",
-   "type": "agent",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Customer Verification",
-   "sub": "FIB_MIG_RTL_003_02 / BR-141",
-   "desc": "Customer verification must be completed before migration order creation.",
-   "phase": 69,
-   "x": 17571.0,
-   "y": 330.0,
-   "w": 206,
-   "h": 60,
-   "cx": 17674.0,
-   "cy": 360.0
-  },
-  {
-   "id": "mig_fibre_avail",
    "type": "validation",
-   "lane": "ext",
-   "slot": 0,
-   "label": "Fibre Availability Validation",
-   "sub": "FIB_MIG_RTL_003_03 / BR-140B",
-   "desc": "Migration can proceed only where Fibre service is RFS-ready at the installation address.",
-   "phase": 70,
-   "x": 17838.0,
-   "y": 990.0,
+   "lane": "agent",
+   "phase": 12,
+   "label": "Customer Verification",
+   "sub": "FIB_MIG_RTL_003_02",
+   "desc": "Customer identity verification required before migration initiation; migration cannot proceed without success (BR-141).",
+   "slot": 1,
    "w": 176,
    "h": 100,
-   "cx": 17926.0,
-   "cy": 1040.0
+   "x": 3262.0,
+   "y": 650.0,
+   "cx": 3350.0,
+   "cy": 700.0
   },
   {
-   "id": "mig_existing_retrieve",
-   "type": "agent",
-   "lane": "agt",
+   "id": "mig_rfs_check",
+   "type": "validation",
+   "lane": "rfs",
+   "phase": 12,
+   "label": "Fibre Service Availability Validation",
+   "sub": "FIB_MIG_RTL_003_03",
+   "desc": "Fibre availability at target installation address validated before migration order creation; proceeds only where Fibre RFS status is available (BR-140B).",
    "slot": 0,
+   "w": 176,
+   "h": 100,
+   "x": 3262.0,
+   "y": 2750.0,
+   "cx": 3350.0,
+   "cy": 2800.0
+  },
+  {
+   "id": "mig_retrieve",
+   "type": "system",
+   "lane": "crm",
+   "phase": 12,
    "label": "Existing Service Retrieval",
    "sub": "FIB_MIG_RTL_003_04",
-   "desc": "Existing FWA service details retrieved for the migration.",
-   "phase": 71,
-   "x": 18075.0,
-   "y": 310.0,
-   "w": 206,
+   "desc": "Retrieves existing service, equipment, MSISDN, SIM and billing information from the active FWA subscription; displayed to agent before confirmation (BR-142).",
+   "slot": 3,
+   "w": 190,
    "h": 100,
-   "cx": 18178.0,
-   "cy": 360.0
+   "x": 3255.0,
+   "y": 2250.0,
+   "cx": 3350.0,
+   "cy": 2300.0
   },
   {
    "id": "mig_order_capture",
    "type": "agent",
-   "lane": "agt",
-   "slot": 0,
+   "lane": "crm",
+   "phase": 12,
    "label": "Migration Order Capture",
-   "sub": "FIB_MIG_RTL_003_05 / BR-142",
-   "desc": "Lead ID, opportunity ID, language, alternate contact and enterprise-care flag are mandatory migration attributes.",
-   "phase": 72,
-   "x": 18327.0,
-   "y": 330.0,
+   "sub": "FIB_MIG_RTL_003_05",
+   "desc": "Captures migration order, customer contact preference, language, alternate number (BR-142).",
+   "slot": 2,
    "w": 206,
    "h": 60,
-   "cx": 18430.0,
-   "cy": 360.0
+   "x": 3247.0,
+   "y": 2050.0,
+   "cx": 3350.0,
+   "cy": 2080.0
   },
   {
-   "id": "mig_appt",
+   "id": "mig_appointment",
    "type": "agent",
    "lane": "wfm",
-   "slot": 0,
-   "label": "Fibre Installation Appointment",
-   "sub": "FIB_MIG_RTL_003_06 / BR-143",
-   "desc": "Mandatory for all migrations. Telephone-originated requests require CAF and tenancy collection flags.",
-   "phase": 73,
-   "x": 18579.0,
-   "y": 1330.0,
+   "phase": 12,
+   "label": "Installation Appointment Creation",
+   "sub": "FIB_MIG_RTL_003_06",
+   "desc": "Creates a Fibre installation appointment through WFM; appointment mandatory for all migrations (BR-143).",
+   "slot": 1,
    "w": 206,
    "h": 100,
-   "cx": 18682.0,
-   "cy": 1380.0
+   "x": 3247.0,
+   "y": 5950.0,
+   "cx": 3350.0,
+   "cy": 6000.0
   },
   {
    "id": "mig_telesales",
-   "type": "agent",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Telesales Request Handling",
+   "type": "control",
+   "lane": "agent",
+   "phase": 12,
+   "label": "Telesales CAF/Tenancy Flag",
    "sub": "FIB_MIG_RTL_003_07",
-   "desc": "Migration requests raised via telesales are handled per the same governance.",
-   "phase": 74,
-   "x": 18831.0,
-   "y": 310.0,
+   "desc": "Automatically flags CAF and tenancy document collection for telephone-originated migration requests; collection flags passed to WFM (BR-143).",
+   "slot": 2,
    "w": 206,
    "h": 100,
-   "cx": 18934.0,
-   "cy": 360.0
+   "x": 3247.0,
+   "y": 870.0,
+   "cx": 3350.0,
+   "cy": 920.0
   },
   {
-   "id": "mig_recovery",
-   "type": "agent",
+   "id": "mig_outdoor_recovery",
+   "type": "control",
    "lane": "wfm",
-   "slot": 0,
+   "phase": 12,
    "label": "Outdoor Device Recovery Appointment",
-   "sub": "FIB_MIG_RTL_003_08 / BR-144",
-   "desc": "FWA Outdoor migrations require separate outdoor device recovery.",
-   "phase": 74,
-   "x": 18831.0,
-   "y": 1330.0,
+   "sub": "FIB_MIG_RTL_003_08",
+   "desc": "Creates a device recovery appointment when migrating from FWA Outdoor to Fibre; recovery task exists before migration completion (BR-144).",
+   "slot": 0,
    "w": 206,
    "h": 100,
-   "cx": 18934.0,
-   "cy": 1380.0
+   "x": 3247.0,
+   "y": 5730.0,
+   "cx": 3350.0,
+   "cy": 5780.0
   },
   {
    "id": "mig_continuity",
    "type": "control",
-   "lane": "agt",
-   "slot": 0,
+   "lane": "oms",
+   "phase": 12,
    "label": "Existing Service Continuity",
-   "sub": "FIB_MIG_RTL_003_09 / BR-145A",
-   "desc": "Existing FWA service remains active until Fibre activation succeeds.",
-   "phase": 75,
-   "x": 19083.0,
-   "y": 310.0,
+   "sub": "FIB_MIG_RTL_003_09",
+   "desc": "Existing FWA service kept active until Fibre installation successfully completed; no interruption before successful activation (BR-145A).",
+   "slot": 1,
    "w": 206,
    "h": 100,
-   "cx": 19186.0,
-   "cy": 360.0
+   "x": 3247.0,
+   "y": 6890.0,
+   "cx": 3350.0,
+   "cy": 6940.0
   },
   {
    "id": "mig_fibre_trigger",
    "type": "system",
-   "lane": "om",
-   "slot": 0,
+   "lane": "oms",
+   "phase": 12,
    "label": "Fibre Activation Trigger",
-   "sub": "FIB_MIG_RTL_003_10 / BR-145B",
-   "desc": "Fibre activation cannot occur before successful installation closure.",
-   "systems": [
-    "Order Management"
-   ],
-   "phase": 76,
-   "x": 19343.0,
-   "y": 1670.0,
+   "sub": "FIB_MIG_RTL_003_10",
+   "desc": "Fibre activation triggered only after successful installation closure from WFM (BR-145B).",
+   "slot": 2,
    "w": 190,
    "h": 100,
-   "cx": 19438.0,
-   "cy": 1720.0
-  },
-  {
-   "id": "d_mig_success",
-   "type": "decision",
-   "lane": "om",
-   "slot": 0,
-   "label": "Fibre Activation Successful?",
-   "branches": [
-    {
-     "label": "Success",
-     "to": "mig_sim_deactivate"
-    },
-    {
-     "label": "Failed",
-     "to": "mig_failure"
-    }
-   ],
-   "phase": 77,
-   "x": 19615.0,
-   "y": 1670.0,
-   "w": 150,
-   "h": 100,
-   "cx": 19690.0,
-   "cy": 1720.0
-  },
-  {
-   "id": "mig_failure",
-   "type": "error",
-   "lane": "om",
-   "slot": 0,
-   "label": "Migration Failure Recovery",
-   "sub": "FIB_MIG_RTL_003_15 / BR-145F",
-   "desc": "Failed Fibre migration shall not automatically terminate the existing FWA service.",
-   "phase": 78,
-   "x": 19847.0,
-   "y": 1670.0,
-   "w": 190,
-   "h": 100,
-   "cx": 19942.0,
-   "cy": 1720.0
+   "x": 3255.0,
+   "y": 7110.0,
+   "cx": 3350.0,
+   "cy": 7160.0
   },
   {
    "id": "mig_sim_deactivate",
    "type": "system",
-   "lane": "om",
-   "slot": 1,
+   "lane": "oms",
+   "phase": 12,
    "label": "SIM Deactivation",
-   "sub": "FIB_MIG_RTL_003_11 / BR-145",
-   "desc": "FWA SIM deactivation occurs only after successful Fibre activation; connection and services terminated.",
-   "phase": 78,
-   "x": 19847.0,
-   "y": 1832.0,
+   "sub": "FIB_MIG_RTL_003_11",
+   "desc": "FWA SIM deactivated only after successful Fibre activation; SIM remains active until Fibre activation succeeds (BR-145).",
+   "slot": 3,
    "w": 190,
    "h": 56,
-   "cx": 19942.0,
-   "cy": 1860.0
+   "x": 3255.0,
+   "y": 7352.0,
+   "cx": 3350.0,
+   "cy": 7380.0
   },
   {
    "id": "mig_resource_release",
    "type": "system",
-   "lane": "om",
-   "slot": 0,
+   "lane": "oms",
+   "phase": 12,
    "label": "Resource Release",
-   "sub": "FIB_MIG_RTL_003_12 / BR-145C",
-   "desc": "FWA resources released only after successful migration completion.",
-   "phase": 79,
-   "x": 20099.0,
-   "y": 1692.0,
+   "sub": "FIB_MIG_RTL_003_12",
+   "desc": "Releases FWA-specific resources, SIM inventory and associated network resources following successful migration (BR-145C).",
+   "slot": 0,
    "w": 190,
    "h": 56,
-   "cx": 20194.0,
-   "cy": 1720.0
+   "x": 3255.0,
+   "y": 6692.0,
+   "cx": 3350.0,
+   "cy": 6720.0
   },
   {
    "id": "mig_billing",
    "type": "system",
-   "lane": "om",
+   "lane": "billing",
+   "phase": 12,
+   "label": "Billing Migration",
+   "sub": "FIB_MIG_RTL_003_13",
+   "desc": "Terminates FWA recurring charges and activates Fibre recurring charges on migration completion date; billing reflects the migrated service only (BR-145D).",
    "slot": 0,
-   "label": "Billing Migration Cutover",
-   "sub": "FIB_MIG_RTL_003_13 / BR-145D",
-   "desc": "Billing for Fibre begins on migration completion date; FWA billing ceases on the same date.",
-   "systems": [
-    "Billing System"
-   ],
-   "phase": 80,
-   "x": 20351.0,
-   "y": 1670.0,
    "w": 190,
-   "h": 100,
-   "cx": 20446.0,
-   "cy": 1720.0
+   "h": 56,
+   "x": 3255.0,
+   "y": 5032.0,
+   "cx": 3350.0,
+   "cy": 5060.0
   },
   {
    "id": "mig_notify",
    "type": "system",
-   "lane": "om",
-   "slot": 0,
+   "lane": "notif",
+   "phase": 12,
    "label": "Customer Notification",
-   "sub": "FIB_MIG_RTL_003_14 / BR-145E",
-   "desc": "Customers notified at request creation, appointment confirmation, migration completion and migration failure.",
-   "phase": 81,
-   "x": 20603.0,
-   "y": 1692.0,
+   "sub": "FIB_MIG_RTL_003_14",
+   "desc": "Notifies customer at migration request creation, appointment booking, activation success and failure events (BR-145E).",
+   "slot": 0,
    "w": 190,
    "h": 56,
-   "cx": 20698.0,
-   "cy": 1720.0
+   "x": 3255.0,
+   "y": 8352.0,
+   "cx": 3350.0,
+   "cy": 8380.0
   },
   {
-   "id": "end_migration",
+   "id": "mig_end",
    "type": "end",
-   "lane": "om",
-   "slot": 0,
-   "label": "Migration Complete",
-   "desc": "Terminal.",
-   "phase": 82,
-   "x": 20908.0,
-   "y": 1678.0,
+   "lane": "crm",
+   "phase": 12,
+   "label": "Migration Completed",
+   "desc": "Migration journey complete: Fibre active, FWA service terminated, billing migrated, customer notified.",
+   "slot": 1,
    "w": 84,
    "h": 84,
-   "cx": 20950.0,
-   "cy": 1720.0
+   "x": 3308.0,
+   "y": 1818.0,
+   "cx": 3350.0,
+   "cy": 1860.0
+  },
+  {
+   "id": "mig_failure",
+   "type": "error",
+   "lane": "agent",
+   "phase": 12,
+   "label": "Migration Failure Handling",
+   "sub": "FIB_MIG_RTL_003_15",
+   "desc": "Retains the FWA service and raises a support ticket when Fibre installation or activation fails; failed migration shall not automatically terminate the existing FWA service (BR-145F).",
+   "slot": 3,
+   "w": 190,
+   "h": 100,
+   "x": 3255.0,
+   "y": 1090.0,
+   "cx": 3350.0,
+   "cy": 1140.0
   },
   {
    "id": "hmv_start",
-   "type": "start",
-   "lane": "trg",
+   "type": "trigger",
+   "lane": "trigger",
+   "phase": 13,
+   "label": "Home Move Request",
+   "sub": "FIB_HMV_RTL_004_01",
+   "desc": "Created through the retail store queue, or via a support agent (customer calls) assigning to the fibre fulfilment team queue (BR-150).",
    "slot": 0,
-   "label": "Home Move Request Created",
-   "sub": "FIB_HMV_RTL_004_01 / BR-150",
-   "desc": "Created through the store queue or by a support agent, routed to the fibre fulfilment team queue.",
-   "phase": 83,
-   "x": 21160.0,
-   "y": 118.0,
-   "w": 84,
-   "h": 84,
-   "cx": 21202.0,
-   "cy": 160.0
+   "w": 206,
+   "h": 60,
+   "x": 3499.0,
+   "y": 170.0,
+   "cx": 3602.0,
+   "cy": 200.0
   },
   {
    "id": "hmv_new_addr",
    "type": "agent",
-   "lane": "agt",
-   "slot": 0,
+   "lane": "agent",
+   "phase": 13,
    "label": "New Installation Address Capture",
-   "sub": "FIB_HMV_RTL_004_02 / BR-151 / P-18",
-   "desc": "New installation address captured and its service availability checked for the new location. P-18 (home move appointment lead time).",
-   "phase": 84,
-   "x": 21351.0,
-   "y": 310.0,
+   "sub": "FIB_HMV_RTL_004_02",
+   "desc": "Captures new installation address for the home move and checks service availability for the new location (BR-151).",
+   "slot": 0,
    "w": 206,
    "h": 100,
-   "cx": 21454.0,
-   "cy": 360.0
+   "x": 3499.0,
+   "y": 430.0,
+   "cx": 3602.0,
+   "cy": 480.0
   },
   {
-   "id": "hmv_appt",
+   "id": "hmv_appointment",
    "type": "agent",
    "lane": "wfm",
-   "slot": 0,
+   "phase": 13,
    "label": "New Location Installation Appointment",
    "sub": "FIB_HMV_RTL_004_03",
-   "phase": 85,
-   "x": 21603.0,
-   "y": 1330.0,
+   "desc": "Follows same WFM capability as Fiber Activation Journey (FAR_001_WFM_01 to WFM_06).",
+   "slot": 0,
    "w": 206,
    "h": 100,
-   "cx": 21706.0,
-   "cy": 1380.0
+   "x": 3499.0,
+   "y": 5730.0,
+   "cx": 3602.0,
+   "cy": 5780.0
   },
   {
-   "id": "hmv_number",
+   "id": "hmv_number_retain",
    "type": "control",
-   "lane": "agt",
-   "slot": 0,
+   "lane": "crm",
+   "phase": 13,
    "label": "Fixed Line Number Retention",
-   "sub": "FIB_HMV_RTL_004_03 / BR-152",
-   "desc": "A new fixed line number is refused for a Home Move order \u2014 the existing number is retained.",
-   "phase": 85,
-   "x": 21603.0,
-   "y": 310.0,
+   "sub": "FIB_HMV_RTL_004_03",
+   "desc": "New fixed line number selection not permitted for a home move order; number must be retained (BR-152).",
+   "slot": 0,
    "w": 206,
    "h": 100,
-   "cx": 21706.0,
-   "cy": 360.0
+   "x": 3499.0,
+   "y": 1590.0,
+   "cx": 3602.0,
+   "cy": 1640.0
   },
   {
-   "id": "hmv_retain_dev",
-   "type": "control",
+   "id": "hmv_device_decision",
+   "type": "decision",
    "lane": "wfm",
-   "slot": 0,
-   "label": "Old Location Fibre Device Retention",
-   "sub": "FIB_HMV_RTL_004_04 / BR-153",
-   "desc": "No uninstallation appointment is captured for a fibre-to-fibre home move; the device is retained at the old location.",
-   "phase": 86,
-   "x": 21855.0,
-   "y": 1330.0,
-   "w": 206,
+   "phase": 13,
+   "label": "Old Location Device Handling",
+   "sub": "FIB_HMV_RTL_004_04/05",
+   "desc": "Fibre-to-fibre move: no uninstallation appointment, device retained at old location (BR-153). FWA outdoor origin: uninstallation appointment captured for the outdoor device at old location (BR-154).",
+   "branches": [
+    {
+     "label": "Fibre-to-fibre \u2014 retained",
+     "to": "hmv_termination"
+    },
+    {
+     "label": "FWA outdoor origin \u2014 uninstall",
+     "to": "hmv_uninstall"
+    }
+   ],
+   "slot": 3,
+   "w": 150,
    "h": 100,
-   "cx": 21958.0,
-   "cy": 1380.0
+   "x": 3527.0,
+   "y": 6390.0,
+   "cx": 3602.0,
+   "cy": 6440.0
   },
   {
    "id": "hmv_uninstall",
    "type": "agent",
    "lane": "wfm",
-   "slot": 1,
-   "label": "Old Location Outdoor Uninstallation",
-   "sub": "FIB_HMV_RTL_004_05 / BR-154",
-   "desc": "Uninstallation appointment for the FWA Outdoor device at the old location, for a move originating from FWA Outdoor.",
-   "phase": 86,
-   "x": 21855.0,
-   "y": 1470.0,
+   "phase": 13,
+   "label": "Outdoor Device Uninstallation Appointment",
+   "sub": "FIB_HMV_RTL_004_05",
+   "desc": "Uninstallation appointment for the FWA outdoor device at the old location captured for a move originating from FWA outdoor (BR-154).",
+   "slot": 2,
    "w": 206,
    "h": 100,
-   "cx": 21958.0,
-   "cy": 1520.0
+   "x": 3499.0,
+   "y": 6170.0,
+   "cx": 3602.0,
+   "cy": 6220.0
   },
   {
-   "id": "hmv_terminate_old",
+   "id": "hmv_termination",
    "type": "system",
-   "lane": "om",
+   "lane": "oms",
+   "phase": 13,
+   "label": "Old Location Service Termination",
+   "sub": "FIB_HMV_RTL_004_06",
+   "desc": "Terminates all services at the old location on the confirmed move date (BR-155).",
    "slot": 0,
-   "label": "Service Termination at Old Location",
-   "sub": "FIB_HMV_RTL_004_06 / BR-155",
-   "desc": "All services at the old location terminated on the confirmed move date.",
-   "phase": 87,
-   "x": 22115.0,
-   "y": 1670.0,
    "w": 190,
    "h": 100,
-   "cx": 22210.0,
-   "cy": 1720.0
+   "x": 3507.0,
+   "y": 6670.0,
+   "cx": 3602.0,
+   "cy": 6720.0
   },
   {
-   "id": "hmv_release",
+   "id": "hmv_inventory_release",
    "type": "system",
-   "lane": "om",
-   "slot": 0,
-   "label": "Inventory Release at Old Location",
-   "sub": "FIB_HMV_RTL_004_07 / BR-156",
-   "desc": "Customer premises equipment and IP address at the old location released on the confirmed move date.",
-   "phase": 88,
-   "x": 22367.0,
-   "y": 1670.0,
+   "lane": "oms",
+   "phase": 13,
+   "label": "Old Location Inventory Release",
+   "sub": "FIB_HMV_RTL_004_07",
+   "desc": "Releases CPE and IP address at old location on confirmed move date (BR-156).",
+   "slot": 1,
    "w": 190,
    "h": 100,
-   "cx": 22462.0,
-   "cy": 1720.0
+   "x": 3507.0,
+   "y": 6890.0,
+   "cx": 3602.0,
+   "cy": 6940.0
   },
   {
    "id": "hmv_wfm_new",
-   "type": "agent",
+   "type": "system",
    "lane": "wfm",
-   "slot": 0,
+   "phase": 13,
    "label": "WFM Task Execution at New Location",
    "sub": "FIB_HMV_RTL_004_08",
-   "phase": 89,
-   "x": 22611.0,
-   "y": 1330.0,
-   "w": 206,
+   "desc": "Follows same WFM capability as Fiber Activation Journey (FAR_001_WFM_07 to WFM_10).",
+   "slot": 1,
+   "w": 190,
    "h": 100,
-   "cx": 22714.0,
-   "cy": 1380.0
+   "x": 3507.0,
+   "y": 5950.0,
+   "cx": 3602.0,
+   "cy": 6000.0
   },
   {
    "id": "hmv_billing",
    "type": "system",
-   "lane": "om",
-   "slot": 0,
+   "lane": "billing",
+   "phase": 13,
    "label": "Move Date Billing Update",
-   "sub": "FIB_HMV_RTL_004_09 / BR-157",
-   "desc": "Billing triggered on the move date for new location activation and updated for old location termination.",
-   "phase": 90,
-   "x": 22871.0,
-   "y": 1670.0,
+   "sub": "FIB_HMV_RTL_004_09",
+   "desc": "Billing updated on move date with new plan/resources at new location and for terminated services at old location (BR-157).",
+   "slot": 0,
    "w": 190,
    "h": 100,
-   "cx": 22966.0,
-   "cy": 1720.0
+   "x": 3507.0,
+   "y": 5010.0,
+   "cx": 3602.0,
+   "cy": 5060.0
   },
   {
-   "id": "hmv_carry",
+   "id": "hmv_equipment_carry",
    "type": "control",
-   "lane": "agt",
-   "slot": 0,
+   "lane": "agent",
+   "phase": 13,
    "label": "FWA Equipment Carried by Customer",
-   "sub": "FIB_HMV_RTL_004_10 / BR-158",
-   "desc": "FWA equipment carried by the customer to the new location and handed over at the store where the move is to a FWA area.",
-   "phase": 91,
-   "x": 23115.0,
-   "y": 310.0,
+   "sub": "FIB_HMV_RTL_004_10",
+   "desc": "Records that FWA CPE is carried by the customer to the new location where the move is to a FWA service area (BR-158).",
+   "slot": 1,
    "w": 206,
    "h": 100,
-   "cx": 23218.0,
-   "cy": 360.0
+   "x": 3499.0,
+   "y": 650.0,
+   "cx": 3602.0,
+   "cy": 700.0
   },
   {
-   "id": "end_hmv",
+   "id": "hmv_end",
    "type": "end",
-   "lane": "om",
-   "slot": 0,
-   "label": "Home Move Complete",
-   "desc": "Terminal.",
-   "phase": 92,
-   "x": 23428.0,
-   "y": 1678.0,
+   "lane": "crm",
+   "phase": 13,
+   "label": "Home Move Completed",
+   "desc": "Home move journey complete: new location active, old location terminated and billed.",
+   "slot": 1,
    "w": 84,
    "h": 84,
-   "cx": 23470.0,
-   "cy": 1720.0
+   "x": 3560.0,
+   "y": 1818.0,
+   "cx": 3602.0,
+   "cy": 1860.0
   },
   {
    "id": "fpi_start",
-   "type": "start",
-   "lane": "trg",
+   "type": "trigger",
+   "lane": "trigger",
+   "phase": 14,
+   "label": "Port In Request",
+   "desc": "Fixed line number being ported in is captured; new number selection not permitted for a port-in journey (BR-160).",
    "slot": 0,
-   "label": "Port In Request Initiated",
-   "phase": 93,
-   "x": 23680.0,
-   "y": 118.0,
-   "w": 84,
-   "h": 84,
-   "cx": 23722.0,
-   "cy": 160.0
-  },
-  {
-   "id": "fpi_number",
-   "type": "agent",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Ported Number Capture",
-   "sub": "FIB_FPI_RTL_005_01 / BR-160",
-   "desc": "Fixed line number being ported in is captured; new number selection is refused for a port in.",
-   "phase": 94,
-   "x": 23871.0,
-   "y": 330.0,
    "w": 206,
    "h": 60,
-   "cx": 23974.0,
-   "cy": 360.0
+   "x": 3751.0,
+   "y": 170.0,
+   "cx": 3854.0,
+   "cy": 200.0
   },
   {
-   "id": "fpi_appt_id",
+   "id": "fpi_capture",
    "type": "agent",
-   "lane": "wfm",
+   "lane": "agent",
+   "phase": 14,
+   "label": "Ported Number Capture",
+   "sub": "FIB_FPI_RTL_005_01",
+   "desc": "Captures the fixed line number being ported in (BR-160).",
    "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 3751.0,
+   "y": 450.0,
+   "cx": 3854.0,
+   "cy": 480.0
+  },
+  {
+   "id": "fpi_identifier",
+   "type": "control",
+   "lane": "agent",
+   "phase": 14,
    "label": "Portability Identifier at Appointment",
-   "sub": "FIB_FPI_RTL_005_02 / BR-161",
-   "desc": "Portability identifier marked during appointment booking.",
-   "phase": 95,
-   "x": 24123.0,
-   "y": 1330.0,
+   "sub": "FIB_FPI_RTL_005_02/03",
+   "desc": "Portability identifier marked by agent during appointment booking (BR-161). Portability Appointment Date auto-set to Installation Date + 5 business days if identifier marked (BR-161A, Open).",
+   "slot": 1,
    "w": 206,
    "h": 100,
-   "cx": 24226.0,
-   "cy": 1380.0
-  },
-  {
-   "id": "fpi_appt_date",
-   "type": "system",
-   "lane": "wfm",
-   "slot": 0,
-   "label": "Portability Appointment Date",
-   "sub": "FIB_FPI_RTL_005_03 / BR-161A",
-   "desc": "Auto-set to Installation Date + 5 business days (excluding Friday and Saturday).",
-   "phase": 96,
-   "x": 24383.0,
-   "y": 1330.0,
-   "w": 190,
-   "h": 100,
-   "cx": 24478.0,
-   "cy": 1380.0
+   "x": 3751.0,
+   "y": 650.0,
+   "cx": 3854.0,
+   "cy": 700.0
   },
   {
    "id": "fpi_form",
-   "type": "agent",
-   "lane": "agt",
-   "slot": 0,
+   "type": "control",
+   "lane": "agent",
+   "phase": 14,
    "label": "Portability Form Submission",
-   "sub": "FIB_FPI_RTL_005_04 / BR-162",
-   "desc": "Portability form completed, signed by the customer and uploaded before the port in proceeds.",
-   "phase": 97,
-   "x": 24627.0,
-   "y": 310.0,
+   "sub": "FIB_FPI_RTL_005_04",
+   "desc": "Agent completes and submits the portability form; customer signs; signed form uploaded before port-in proceeds (BR-162).",
+   "slot": 2,
    "w": 206,
    "h": 100,
-   "cx": 24730.0,
-   "cy": 360.0
+   "x": 3751.0,
+   "y": 870.0,
+   "cx": 3854.0,
+   "cy": 920.0
   },
   {
    "id": "fpi_request",
-   "type": "agent",
-   "lane": "agt",
-   "slot": 0,
+   "type": "system",
+   "lane": "npas",
+   "phase": 14,
    "label": "Portability Request Creation",
-   "sub": "FIB_FPI_RTL_005_05 / BR-163 / INT-15",
-   "desc": "Portability request created and submitted to the number portability administration system. Integration: INT-15 (Number Portability Administration System).",
-   "systems": [
-    "Number Portability Administration System"
-   ],
-   "phase": 98,
-   "x": 24879.0,
-   "y": 310.0,
-   "w": 206,
+   "sub": "FIB_FPI_RTL_005_05",
+   "desc": "Creates the portability request based on the portability identifier; submits to the Number Portability Administration System (BR-163).",
+   "slot": 0,
+   "w": 190,
    "h": 100,
-   "cx": 24982.0,
-   "cy": 360.0
+   "x": 3759.0,
+   "y": 7610.0,
+   "cx": 3854.0,
+   "cy": 7660.0
   },
   {
    "id": "fpi_confirm",
-   "type": "external",
+   "type": "decision",
    "lane": "npas",
-   "slot": 0,
-   "label": "Request Confirmation by Donor Provider",
-   "sub": "FIB_FPI_RTL_005_06 / BR-164",
-   "desc": "Portability request validated and confirmed in the portability administration system by the donor service provider.",
-   "phase": 99,
-   "x": 25146.0,
-   "y": 2150.0,
-   "w": 176,
+   "phase": 14,
+   "label": "Portability Request Confirmation",
+   "sub": "FIB_FPI_RTL_005_06",
+   "desc": "Receives update on the portability request from NPAS after approval/rejection by donor service provider (BR-164).",
+   "branches": [
+    {
+     "label": "Approved",
+     "to": "fpi_wfm_exec"
+    },
+    {
+     "label": "Rejected",
+     "to": "fpi_rejected"
+    }
+   ],
+   "slot": 1,
+   "w": 150,
    "h": 100,
-   "cx": 25234.0,
-   "cy": 2200.0
+   "x": 3779.0,
+   "y": 7830.0,
+   "cx": 3854.0,
+   "cy": 7880.0
   },
   {
-   "id": "fpi_reschedule",
-   "type": "control",
-   "lane": "wfm",
-   "slot": 0,
-   "label": "Appointment Date Reconfirmation",
-   "sub": "BR-164A",
-   "desc": "Portability appointment date must be rescheduled based on the confirmed port-in date.",
-   "phase": 100,
-   "x": 25383.0,
-   "y": 1330.0,
-   "w": 206,
-   "h": 100,
-   "cx": 25486.0,
-   "cy": 1380.0
+   "id": "fpi_rejected",
+   "type": "end",
+   "lane": "npas",
+   "phase": 14,
+   "label": "Port In Rejected",
+   "desc": "Portability request rejected by donor service provider.",
+   "slot": 2,
+   "w": 84,
+   "h": 84,
+   "x": 3812.0,
+   "y": 8058.0,
+   "cx": 3854.0,
+   "cy": 8100.0
   },
   {
    "id": "fpi_wfm_exec",
-   "type": "agent",
+   "type": "system",
    "lane": "wfm",
-   "slot": 0,
+   "phase": 14,
    "label": "Portability WFM Appointment Execution",
    "sub": "FIB_FPI_RTL_005_07",
-   "phase": 101,
-   "x": 25635.0,
-   "y": 1330.0,
-   "w": 206,
-   "h": 100,
-   "cx": 25738.0,
-   "cy": 1380.0
-  },
-  {
-   "id": "fpi_activate",
-   "type": "system",
-   "lane": "om",
+   "desc": "Triggers WFM task for FLN change based on confirmed port-in date received on or before the captured portability appointment date; date rescheduled based on confirmed port-in date (BR-164A, Open).",
    "slot": 0,
-   "label": "Ported Number Activation",
-   "sub": "FIB_FPI_RTL_005_08 / BR-165",
-   "desc": "Ported number activated after portability completion and configured during the task; no temporary number is provided.",
-   "phase": 102,
-   "x": 25895.0,
-   "y": 1670.0,
    "w": 190,
    "h": 100,
-   "cx": 25990.0,
-   "cy": 1720.0
+   "x": 3759.0,
+   "y": 5730.0,
+   "cx": 3854.0,
+   "cy": 5780.0
   },
   {
-   "id": "end_fpi",
-   "type": "end",
-   "lane": "om",
+   "id": "fpi_activation",
+   "type": "system",
+   "lane": "oms",
+   "phase": 14,
+   "label": "Portability Activation After Completion",
+   "sub": "FIB_FPI_RTL_005_08",
+   "desc": "Activates the ported fixed line number after portability completion; configured during the WFM task; no temporary number provided (BR-165).",
    "slot": 0,
-   "label": "Port In Complete",
-   "desc": "Terminal.",
-   "phase": 103,
-   "x": 26200.0,
-   "y": 1678.0,
+   "w": 190,
+   "h": 100,
+   "x": 3759.0,
+   "y": 6670.0,
+   "cx": 3854.0,
+   "cy": 6720.0
+  },
+  {
+   "id": "fpi_end",
+   "type": "end",
+   "lane": "crm",
+   "phase": 14,
+   "label": "Port In Completed",
+   "desc": "Port-in journey complete: number activated on VFQ network.",
+   "slot": 0,
    "w": 84,
    "h": 84,
-   "cx": 26242.0,
-   "cy": 1720.0
+   "x": 3812.0,
+   "y": 1598.0,
+   "cx": 3854.0,
+   "cy": 1640.0
   },
   {
    "id": "fpo_start",
-   "type": "start",
-   "lane": "trg",
-   "slot": 0,
-   "label": "Port Out Request from NPAS",
-   "sub": "FIB_FPO_RTL_006_01 / BR-170",
-   "desc": "A port out request from the number portability administration system creates a trouble ticket in Siebel CRM. Status model: Portability Ticket/Created (port out ticket created from the administration system request).",
-   "systems": [
-    "Number Portability Administration System"
-   ],
-   "phase": 104,
-   "x": 26452.0,
-   "y": 118.0,
-   "w": 84,
-   "h": 84,
-   "cx": 26494.0,
-   "cy": 160.0
+   "type": "trigger",
+   "lane": "npas",
+   "phase": 15,
+   "label": "Port Out Request Received",
+   "sub": "FIB_FPO_RTL_006_01",
+   "desc": "Trouble ticket automatically created in CRM on receipt of a port-out request from NPAS, carrying ticket and order identifiers (BR-170).",
+   "slot": 1,
+   "w": 206,
+   "h": 100,
+   "x": 4003.0,
+   "y": 7830.0,
+   "cx": 4106.0,
+   "cy": 7880.0
+  },
+  {
+   "id": "fpo_ticket",
+   "type": "system",
+   "lane": "crm",
+   "phase": 15,
+   "label": "Port Out Trouble Ticket Created",
+   "desc": "Trouble ticket created (BR-170).",
+   "slot": 1,
+   "w": 190,
+   "h": 100,
+   "x": 4011.0,
+   "y": 1810.0,
+   "cx": 4106.0,
+   "cy": 1860.0
   },
   {
    "id": "fpo_queue",
    "type": "control",
    "lane": "crm",
+   "phase": 15,
+   "label": "Queue Assignment & Initial SLA Timer",
+   "sub": "FIB_FPO_RTL_006_02",
+   "desc": "Auto-assigned to the portability queue; initial validation service level timer started (BR-171, Open, P-11: 2 hours).",
    "slot": 0,
-   "label": "Queue Assignment",
-   "sub": "FIB_FPO_RTL_006_02 / BR-171",
-   "desc": "Ticket auto-assigned to the portability queue; initial validation service level timer started (2 hours, P-11). Status model: Portability Ticket/Validating (documents and mandatory checks in progress within the initial service level).",
-   "phase": 105,
-   "x": 26643.0,
-   "y": 670.0,
    "w": 206,
-   "h": 60,
-   "cx": 26746.0,
-   "cy": 700.0
+   "h": 100,
+   "x": 4003.0,
+   "y": 1590.0,
+   "cx": 4106.0,
+   "cy": 1640.0
   },
   {
-   "id": "fpo_doc_validate",
-   "type": "agent",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Document Validation",
-   "sub": "FIB_FPO_RTL_006_03 / BR-172",
-   "desc": "Portability form and identity document validated; documents may be uploaded to the ticket.",
-   "phase": 106,
-   "x": 26895.0,
-   "y": 330.0,
-   "w": 206,
-   "h": 60,
-   "cx": 26998.0,
-   "cy": 360.0
-  },
-  {
-   "id": "fpo_checks",
+   "id": "fpo_validate",
    "type": "validation",
-   "lane": "agt",
+   "lane": "agent",
+   "phase": 15,
+   "label": "Document & Mandatory Validation",
+   "sub": "FIB_FPO_RTL_006_03/04",
+   "desc": "Agent validates portability form and identity document from NPAS; documents may be uploaded (BR-172, Open). Form date within allowed period (P-10: 30 days); name, ID number and service type must match records (BR-173).",
+   "branches": [
+    {
+     "label": "Valid",
+     "to": "fpo_sla_extend"
+    },
+    {
+     "label": "Invalid / mismatch",
+     "to": "fpo_status_comm"
+    }
+   ],
    "slot": 0,
-   "label": "Mandatory & Form Checks",
-   "sub": "FIB_FPO_RTL_006_04 / BR-173",
-   "desc": "Form date within the allowed period (30 days, P-10); customer name, identity document number and service type match system records.",
-   "phase": 107,
-   "x": 27162.0,
-   "y": 310.0,
    "w": 176,
    "h": 100,
-   "cx": 27250.0,
-   "cy": 360.0
+   "x": 4018.0,
+   "y": 430.0,
+   "cx": 4106.0,
+   "cy": 480.0
   },
   {
    "id": "fpo_outstanding",
    "type": "decision",
-   "lane": "crm",
-   "slot": 0,
-   "label": "Outstanding Bill?",
-   "sub": "FIB_FPO_RTL_006_05 / BR-174",
-   "desc": "A pending bill moves the request to conditionally accepted with a defined settlement window (24 hours, P-13). Status model: Portability Ticket/Conditionally Accepted (awaiting outstanding dues settlement within the window).",
+   "lane": "billing",
+   "phase": 15,
+   "label": "Outstanding Bill Handling",
+   "sub": "FIB_FPO_RTL_006_05",
+   "desc": "Pending bill moves request to Conditionally Accepted with a defined settlement window (BR-174, P-13: 24 hours).",
    "branches": [
     {
      "label": "Pending bill",
-     "to": "fpo_sla_ext"
+     "to": "fpo_status_comm"
     },
     {
-     "label": "Clear",
-     "to": "fpo_sla_ext"
+     "label": "No pending bill",
+     "to": "fpo_sla_extend"
     }
    ],
-   "phase": 108,
-   "x": 27427.0,
-   "y": 650.0,
+   "slot": 0,
    "w": 150,
    "h": 100,
-   "cx": 27502.0,
-   "cy": 700.0
+   "x": 4031.0,
+   "y": 5010.0,
+   "cx": 4106.0,
+   "cy": 5060.0
   },
   {
-   "id": "fpo_sla_ext",
+   "id": "fpo_sla_extend",
    "type": "control",
    "lane": "crm",
-   "slot": 0,
+   "phase": 15,
    "label": "Service Level Extension",
-   "sub": "FIB_FPO_RTL_006_06 / BR-175",
-   "desc": "A valid document set extends the service level timer to the final action period (24 hours, P-12).",
-   "phase": 109,
-   "x": 27651.0,
-   "y": 670.0,
+   "sub": "FIB_FPO_RTL_006_06",
+   "desc": "Service level timer extended from initial period to final action period where documents are valid (BR-175, P-12: 24 hours).",
+   "slot": 4,
    "w": 206,
    "h": 60,
-   "cx": 27754.0,
-   "cy": 700.0
-  },
-  {
-   "id": "d_fpo_breach",
-   "type": "decision",
-   "lane": "crm",
-   "slot": 0,
-   "label": "Action Within Service Level?",
-   "branches": [
-    {
-     "label": "Action taken",
-     "to": "fpo_status"
-    },
-    {
-     "label": "Breach",
-     "to": "fpo_breach"
-    }
-   ],
-   "phase": 110,
-   "x": 27931.0,
-   "y": 650.0,
-   "w": 150,
-   "h": 100,
-   "cx": 28006.0,
-   "cy": 700.0
+   "x": 4003.0,
+   "y": 2490.0,
+   "cx": 4106.0,
+   "cy": 2520.0
   },
   {
    "id": "fpo_breach",
-   "type": "escalation",
+   "type": "decision",
    "lane": "crm",
-   "slot": 0,
-   "label": "Auto-Processing on Breach",
-   "sub": "FIB_FPO_RTL_006_07 / BR-176",
-   "desc": "A request with no action within the service level is auto-processed per the configured rule (auto-accept vs auto-reject: to be confirmed, BR-176 Open). Status model: Portability Ticket/Suspended (request suspended where no action taken within the service level).",
-   "phase": 111,
-   "x": 28163.0,
-   "y": 650.0,
-   "w": 190,
+   "phase": 15,
+   "label": "Automatic Processing on Breach",
+   "sub": "FIB_FPO_RTL_006_07",
+   "desc": "Request auto-processed per the configured rule where no action taken within the service level (BR-176, Open \u2014 auto-accept vs auto-reject logic TBC).",
+   "branches": [
+    {
+     "label": "Auto-accept",
+     "to": "fpo_status_comm"
+    },
+    {
+     "label": "Auto-reject",
+     "to": "fpo_status_comm"
+    }
+   ],
+   "slot": 2,
+   "w": 150,
    "h": 100,
-   "cx": 28258.0,
-   "cy": 700.0
+   "x": 4031.0,
+   "y": 2030.0,
+   "cx": 4106.0,
+   "cy": 2080.0
   },
   {
-   "id": "fpo_status",
+   "id": "fpo_status_comm",
    "type": "system",
-   "lane": "crm",
-   "slot": 0,
+   "lane": "npas",
+   "phase": 15,
    "label": "Status Communication to NPAS",
-   "sub": "FIB_FPO_RTL_006_08 / BR-177 / P-14 / P-20",
-   "desc": "Every accept, reject and conditional acceptance action communicated to NPAS with the defined status code (rejection code list: to be supplied by VFQ). P-14 (port-out portability window) / P-20 (port-out escalation threshold). Status model: Portability Ticket/Accepted (request accepted and communicated to the administration system).",
-   "phase": 112,
-   "x": 28415.0,
-   "y": 650.0,
+   "sub": "FIB_FPO_RTL_006_08",
+   "desc": "Every accept, reject and conditional acceptance action communicated to NPAS using defined status codes (BR-177, Open \u2014 full rejection code list TBC by VFQ).",
+   "slot": 0,
    "w": 190,
    "h": 100,
-   "cx": 28510.0,
-   "cy": 700.0
+   "x": 4011.0,
+   "y": 7610.0,
+   "cx": 4106.0,
+   "cy": 7660.0
   },
   {
-   "id": "fpo_term_order",
+   "id": "fpo_termination_order",
    "type": "system",
-   "lane": "om",
-   "slot": 0,
+   "lane": "oms",
+   "phase": 15,
    "label": "Termination Order Generation",
-   "sub": "FIB_FPO_RTL_006_09 / BR-178",
-   "desc": "Termination order generated from the closed ticket with a non-editable wish date equal to the confirmed portability date. Status model: Portability Ticket/Termination Order Generated (termination order generated and linked, network deactivation scheduled; terminal).",
-   "phase": 113,
-   "x": 28667.0,
-   "y": 1670.0,
+   "sub": "FIB_FPO_RTL_006_09",
+   "desc": "Termination order generated from the closed ticket, linked to it, wish date set to the confirmed portability date and non-editable (BR-178).",
+   "slot": 0,
    "w": 190,
    "h": 100,
-   "cx": 28762.0,
-   "cy": 1720.0
+   "x": 4011.0,
+   "y": 6670.0,
+   "cx": 4106.0,
+   "cy": 6720.0
   },
   {
-   "id": "fpo_net_deactivate",
+   "id": "fpo_deactivation",
    "type": "system",
-   "lane": "om",
-   "slot": 0,
+   "lane": "oms",
+   "phase": 15,
    "label": "Network Deactivation",
-   "sub": "FIB_FPO_RTL_006_10 / BR-179",
-   "desc": "Services deactivated on the confirmed portability date with a one-hour activation window towards the new provider (P-15).",
-   "phase": 114,
-   "x": 28919.0,
-   "y": 1692.0,
+   "sub": "FIB_FPO_RTL_006_10",
+   "desc": "Services deactivated on confirmed portability date with a one-hour activation window towards the new provider (BR-179, P-15: 1 hour).",
+   "slot": 1,
    "w": 190,
    "h": 56,
-   "cx": 29014.0,
-   "cy": 1720.0
+   "x": 4011.0,
+   "y": 6912.0,
+   "cx": 4106.0,
+   "cy": 6940.0
   },
   {
    "id": "fpo_quarantine",
    "type": "system",
-   "lane": "om",
-   "slot": 0,
+   "lane": "oms",
+   "phase": 15,
    "label": "Inventory Quarantine",
-   "sub": "FIB_FPO_RTL_006_11 / BR-180",
-   "desc": "Ported inventory quarantined for the configured period (90 days, P-16); SIM deactivated and released for FWA.",
-   "phase": 115,
-   "x": 29171.0,
-   "y": 1692.0,
+   "sub": "FIB_FPO_RTL_006_11",
+   "desc": "Ported inventory marked to quarantine for the configured period (P-16: 90 days); SIM deactivated and released for FWA service (BR-180).",
+   "slot": 2,
    "w": 190,
    "h": 56,
-   "cx": 29266.0,
-   "cy": 1720.0
+   "x": 4011.0,
+   "y": 7132.0,
+   "cx": 4106.0,
+   "cy": 7160.0
   },
   {
-   "id": "end_fpo",
-   "type": "end",
-   "lane": "om",
-   "slot": 0,
-   "label": "Port Out Complete",
-   "desc": "Terminal.",
-   "phase": 116,
-   "x": 29476.0,
-   "y": 1678.0,
-   "w": 84,
-   "h": 84,
-   "cx": 29518.0,
-   "cy": 1720.0
-  },
-  {
-   "id": "end_fpo_rejected",
+   "id": "fpo_end",
    "type": "end",
    "lane": "crm",
-   "slot": 0,
-   "label": "Port Out Rejected",
-   "desc": "Terminal. Status model: Portability Ticket/Rejected (request rejected with a reason communicated to the administration system; terminal).",
-   "phase": 113,
-   "x": 28720.0,
-   "y": 658.0,
+   "phase": 15,
+   "label": "Port Out Completed",
+   "desc": "Port-out journey complete: service deactivated, inventory quarantined.",
+   "slot": 3,
    "w": 84,
    "h": 84,
-   "cx": 28762.0,
-   "cy": 700.0
+   "x": 4064.0,
+   "y": 2258.0,
+   "cx": 4106.0,
+   "cy": 2300.0
   },
   {
    "id": "ter_start",
-   "type": "start",
-   "lane": "trg",
+   "type": "trigger",
+   "lane": "trigger",
+   "phase": 16,
+   "label": "Termination Request Initiation",
+   "sub": "FIB_TER_RTL_007_01",
+   "desc": "Retail Agent or Retention Agent initiates a termination request from Customer 360 for an active Fibre or FWA service (BR-200).",
    "slot": 0,
-   "label": "Termination Request Initiated",
-   "sub": "FIB_TER_RTL_007_01 / BR-200",
-   "desc": "Initiated from Customer 360 or a linked disconnection ticket by an authorised Retail or Retention user. Status model: Termination Request/Created (termination request captured from Customer 360 or disconnection ticket).",
-   "phase": 117,
-   "x": 29720.0,
-   "y": 110.0,
-   "w": 100,
+   "w": 206,
    "h": 100,
-   "cx": 29770.0,
-   "cy": 160.0
+   "x": 4255.0,
+   "y": 150.0,
+   "cx": 4358.0,
+   "cy": 200.0
   },
   {
    "id": "ter_eligibility",
    "type": "validation",
-   "lane": "ext",
-   "slot": 0,
+   "lane": "agent",
+   "phase": 16,
    "label": "Customer & Service Eligibility Validation",
-   "sub": "FIB_TER_RTL_007_02 / BR-201",
-   "desc": "Termination may proceed only for an active eligible Fibre/FWA service with no conflicting open order or restricted block.",
-   "phase": 118,
-   "x": 29934.0,
-   "y": 990.0,
+   "sub": "FIB_TER_RTL_007_02",
+   "desc": "Validates customer identity, service status, open orders, active disputes, fraud/legal blocks and pending termination requests; distinct reason displayed per failure (BR-201).",
+   "slot": 0,
    "w": 176,
    "h": 100,
-   "cx": 30022.0,
-   "cy": 1040.0
+   "x": 4270.0,
+   "y": 430.0,
+   "cx": 4358.0,
+   "cy": 480.0
   },
   {
    "id": "ter_retention",
    "type": "decision",
-   "lane": "agt",
-   "slot": 0,
+   "lane": "agent",
+   "phase": 16,
    "label": "Retention Handling",
-   "sub": "FIB_TER_RTL_007_03 / BR-202",
-   "desc": "A retention outcome is mandatory before termination order creation where the process is routed through Retention. Status model: Termination Request/Under Retention (retention handling in progress). Status model: Termination Request/Cancelled (request cancelled before completion; terminal).",
+   "sub": "FIB_TER_RTL_007_03",
+   "desc": "Routes to retention process where required; retention outcome captured (retained, proceed to terminate, customer unreachable) before termination order creation (BR-202).",
    "branches": [
     {
      "label": "Retained",
-     "to": "end_terminate_retained"
+     "to": "ter_retained"
     },
     {
      "label": "Proceed to terminate",
      "to": "ter_outstanding"
     }
    ],
-   "phase": 119,
-   "x": 30199.0,
-   "y": 310.0,
+   "slot": 1,
    "w": 150,
    "h": 100,
-   "cx": 30274.0,
-   "cy": 360.0
+   "x": 4283.0,
+   "y": 650.0,
+   "cx": 4358.0,
+   "cy": 700.0
   },
   {
-   "id": "end_terminate_retained",
+   "id": "ter_retained",
    "type": "end",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Retained \u2014 Termination Averted",
-   "desc": "Terminal. Status model: Termination Request/Retained (customer accepts retention outcome, does not proceed with termination; terminal).",
-   "phase": 120,
-   "x": 30476.0,
-   "y": 310.0,
-   "w": 100,
-   "h": 100,
-   "cx": 30526.0,
-   "cy": 360.0
+   "lane": "agent",
+   "phase": 16,
+   "label": "Customer Retained",
+   "desc": "Customer accepts retention outcome and does not proceed with termination.",
+   "slot": 3,
+   "w": 84,
+   "h": 84,
+   "x": 4316.0,
+   "y": 1098.0,
+   "cx": 4358.0,
+   "cy": 1140.0
   },
   {
    "id": "ter_outstanding",
    "type": "validation",
-   "lane": "om",
-   "slot": 0,
+   "lane": "billing",
+   "phase": 16,
    "label": "Outstanding Dues Validation",
-   "sub": "FIB_TER_RTL_007_04 / BR-203",
-   "desc": "Outstanding dues handling must follow the configured VFQ settlement rule before termination completion. Status model: Termination Request/Validation Failed (one or more mandatory validations failed; returns to Under Retention or moves to Cancelled).",
-   "phase": 120,
-   "x": 30438.0,
-   "y": 1670.0,
+   "sub": "FIB_TER_RTL_007_04",
+   "desc": "Retrieves outstanding balance; prevents or conditionally allows termination based on configured VFQ settlement rule (BR-203).",
+   "slot": 1,
    "w": 176,
    "h": 100,
-   "cx": 30526.0,
-   "cy": 1720.0
+   "x": 4270.0,
+   "y": 5230.0,
+   "cx": 4358.0,
+   "cy": 5280.0
   },
   {
    "id": "ter_penalty",
    "type": "system",
-   "lane": "agt",
-   "slot": 0,
+   "lane": "billing",
+   "phase": 16,
    "label": "Penalty Charge Display",
-   "sub": "FIB_TER_RTL_007_05 / BR-204",
-   "desc": "Early termination or lock-in penalty calculated and shown where the service is within the applicable minimum subscription period. Plan lock-in is 3 months per the CAF.",
-   "phase": 121,
-   "x": 30683.0,
-   "y": 332.0,
+   "sub": "FIB_TER_RTL_007_05",
+   "desc": "Calculates and displays applicable early termination/lock-in penalty before confirmation (BR-204; plan lock-in is 3 months per CAF).",
+   "slot": 0,
    "w": 190,
    "h": 56,
-   "cx": 30778.0,
-   "cy": 360.0
+   "x": 4263.0,
+   "y": 5032.0,
+   "cx": 4358.0,
+   "cy": 5060.0
   },
   {
-   "id": "ter_consent",
-   "type": "agent",
-   "lane": "agt",
-   "slot": 0,
-   "label": "Consent & Reason Capture",
-   "sub": "BR-205",
-   "desc": "Customer consent, termination reason and requested termination date are mandatory before submission.",
-   "phase": 122,
-   "x": 30927.0,
-   "y": 330.0,
-   "w": 206,
-   "h": 60,
-   "cx": 31030.0,
-   "cy": 360.0
-  },
-  {
-   "id": "ter_recovery_appt",
-   "type": "agent",
+   "id": "ter_recovery",
+   "type": "control",
    "lane": "wfm",
-   "slot": 0,
+   "phase": 16,
    "label": "Equipment Recovery Appointment",
-   "sub": "FIB_TER_RTL_007_06 / BR-206",
-   "desc": "WFM recovery appointment mandatory for configured service/device scenarios, skipped where recovery is not required.",
-   "phase": 123,
-   "x": 31179.0,
-   "y": 1330.0,
+   "sub": "FIB_TER_RTL_007_06",
+   "desc": "WFM appointment triggered/allowed for equipment recovery where service type and device ownership rule require it, including FWA outdoor device recovery; skipped where not applicable (BR-206, Open).",
+   "slot": 0,
    "w": 206,
    "h": 100,
-   "cx": 31282.0,
-   "cy": 1380.0
+   "x": 4255.0,
+   "y": 5730.0,
+   "cx": 4358.0,
+   "cy": 5780.0
   },
   {
    "id": "ter_order_capture",
    "type": "agent",
-   "lane": "agt",
-   "slot": 0,
+   "lane": "agent",
+   "phase": 16,
    "label": "Termination Order Capture",
-   "sub": "FIB_TER_RTL_007_07 / BR-207",
-   "desc": "Termination order created only after validations, consent and recovery rules are satisfied. Status model: Termination Request/Validated for Termination (eligibility, outstanding, penalty and consent validations completed).",
-   "phase": 124,
-   "x": 31431.0,
-   "y": 310.0,
+   "sub": "FIB_TER_RTL_007_07",
+   "desc": "Captures termination reason and requested termination date before submitting the order, along with appointment and payment details; consent, reason and date mandatory (BR-205, Open).",
+   "slot": 2,
    "w": 206,
    "h": 100,
-   "cx": 31534.0,
-   "cy": 360.0
+   "x": 4255.0,
+   "y": 870.0,
+   "cx": 4358.0,
+   "cy": 920.0
   },
   {
    "id": "ter_order_submit",
    "type": "system",
-   "lane": "om",
-   "slot": 0,
+   "lane": "oms",
+   "phase": 16,
    "label": "Termination Order Submission",
    "sub": "FIB_TER_RTL_007_08",
-   "systems": [
-    "Order Management"
-   ],
-   "phase": 125,
-   "x": 31691.0,
-   "y": 1670.0,
+   "desc": "Creates and submits termination order to Order Management after all mandatory validations, consent and recovery requirements are satisfied (BR-207, Open).",
+   "slot": 2,
    "w": 190,
    "h": 100,
-   "cx": 31786.0,
-   "cy": 1720.0,
-   "desc": "Status model: Termination Request/Termination Order Submitted (termination order created and sent to Order Management)."
+   "x": 4263.0,
+   "y": 7110.0,
+   "cx": 4358.0,
+   "cy": 7160.0
   },
   {
-   "id": "ter_net_deactivate",
+   "id": "ter_deactivation",
    "type": "system",
-   "lane": "om",
-   "slot": 0,
+   "lane": "oms",
+   "phase": 16,
    "label": "Network Deactivation",
-   "sub": "FIB_TER_RTL_007_09 / BR-208",
-   "desc": "Occurs on the confirmed termination date; outcome returned to CRM. Status model: Termination Request/In Deactivation (network/service deactivation in progress); Termination Request/Failed (termination failed during order, deactivation, billing or inventory step).",
-   "phase": 126,
-   "x": 31943.0,
-   "y": 1692.0,
+   "sub": "FIB_TER_RTL_007_09",
+   "desc": "Deactivates the fixed/FWA service on the confirmed termination date; returns deactivation outcome to CRM (BR-208, Open).",
+   "slot": 3,
    "w": 190,
    "h": 56,
-   "cx": 32038.0,
-   "cy": 1720.0
+   "x": 4263.0,
+   "y": 7352.0,
+   "cx": 4358.0,
+   "cy": 7380.0
   },
   {
    "id": "ter_billing_close",
    "type": "system",
-   "lane": "om",
-   "slot": 0,
-   "label": "Final Billing Closure",
-   "sub": "FIB_TER_RTL_007_10 / BR-209",
-   "desc": "Posted after termination, including outstanding, penalty, credit/refund and closure details where applicable.",
-   "phase": 127,
-   "x": 32195.0,
-   "y": 1692.0,
+   "lane": "billing",
+   "phase": 16,
+   "label": "Billing Closure",
+   "sub": "FIB_TER_RTL_007_10",
+   "desc": "Updates billing after termination including final charges, penalty, refund/credit where applicable and service closure status (BR-209, Open).",
+   "slot": 2,
    "w": 190,
    "h": 56,
-   "cx": 32290.0,
-   "cy": 1720.0
+   "x": 4263.0,
+   "y": 5472.0,
+   "cx": 4358.0,
+   "cy": 5500.0
   },
   {
    "id": "ter_inventory_release",
    "type": "system",
-   "lane": "om",
-   "slot": 0,
-   "label": "Resource Release / Quarantine",
-   "sub": "FIB_TER_RTL_007_11 / BR-210 / FIB_TER_RTL_007_13",
-   "desc": "Service resources released, recovered or quarantined according to resource type and configured rules. FIB_TER_RTL_007_13 (termination inventory quarantine).",
-   "phase": 128,
-   "x": 32447.0,
-   "y": 1670.0,
+   "lane": "oms",
+   "phase": 16,
+   "label": "Inventory Release",
+   "sub": "FIB_TER_RTL_007_11",
+   "desc": "Releases fixed line number, CPE, ONT, FWA SIM/equipment and IP resources based on service type and configured release/quarantine rules (BR-210, Open).",
+   "slot": 1,
    "w": 190,
-   "h": 100,
-   "cx": 32542.0,
-   "cy": 1720.0
+   "h": 56,
+   "x": 4263.0,
+   "y": 6912.0,
+   "cx": 4358.0,
+   "cy": 6940.0
   },
   {
    "id": "ter_notify",
    "type": "system",
-   "lane": "om",
-   "slot": 0,
+   "lane": "notif",
+   "phase": 16,
    "label": "Customer Notification",
-   "sub": "FIB_TER_RTL_007_12 / BR-211",
-   "desc": "Customer notifications triggered at configured termination milestones.",
-   "phase": 129,
-   "x": 32699.0,
-   "y": 1692.0,
+   "sub": "FIB_TER_RTL_007_12",
+   "desc": "Notifies customer on termination request creation, order submission, appointment where applicable and completion/failure (BR-211, Open).",
+   "slot": 0,
    "w": 190,
    "h": 56,
-   "cx": 32794.0,
-   "cy": 1720.0
+   "x": 4263.0,
+   "y": 8352.0,
+   "cx": 4358.0,
+   "cy": 8380.0
   },
   {
-   "id": "end_termination",
-   "type": "end",
-   "lane": "om",
-   "slot": 0,
-   "label": "Termination Complete",
-   "desc": "Terminal. Status model: Termination Request/Completed (service terminated, billing/inventory closure completed; terminal).",
-   "phase": 130,
-   "x": 32996.0,
-   "y": 1670.0,
-   "w": 100,
-   "h": 100,
-   "cx": 33046.0,
-   "cy": 1720.0
-  },
-  {
-   "id": "rfs_gis_ingest",
+   "id": "ter_quarantine",
    "type": "system",
-   "lane": "ext",
+   "lane": "oms",
+   "phase": 16,
+   "label": "Termination Inventory Quarantine",
+   "sub": "FIB_TER_RTL_007_13",
+   "desc": "Ported inventory marked to quarantine for the configured period; SIM deactivated and released for FWA service (BR-180).",
    "slot": 0,
-   "label": "Site & Building Data Ingestion",
-   "sub": "FIB_RFS_008_01 / BR-190",
-   "desc": "Site and building data from the geographic information system ingested into the inventory management system, the master for building and connectivity data.",
-   "systems": [
-    "GIS",
-    "IMS"
-   ],
-   "phase": 0,
-   "x": 191.0,
-   "y": 990.0,
    "w": 190,
    "h": 100,
-   "cx": 286.0,
-   "cy": 1040.0
+   "x": 4263.0,
+   "y": 6670.0,
+   "cx": 4358.0,
+   "cy": 6720.0
+  },
+  {
+   "id": "ter_end",
+   "type": "end",
+   "lane": "crm",
+   "phase": 16,
+   "label": "Termination Completed",
+   "desc": "Termination journey complete: service deactivated, billing closed, inventory released/quarantined.",
+   "slot": 0,
+   "w": 100,
+   "h": 100,
+   "x": 4308.0,
+   "y": 1590.0,
+   "cx": 4358.0,
+   "cy": 1640.0
+  },
+  {
+   "id": "rfs_gtm_start",
+   "type": "trigger",
+   "lane": "rfs",
+   "phase": 17,
+   "label": "GIS Data Ingestion",
+   "desc": "Site and building data from the geographic information system ingested into the inventory management system, the master for building and connectivity data (BR-190).",
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 4507.0,
+   "y": 2990.0,
+   "cx": 4610.0,
+   "cy": 3020.0
   },
   {
    "id": "rfs_gtm_file",
    "type": "system",
-   "lane": "ext",
-   "slot": 0,
-   "label": "Go-To-Market File Generation",
-   "sub": "BR-191",
-   "desc": "The go-to-market file is generated from the inventory management system as a full extract.",
-   "phase": 1,
-   "x": 443.0,
-   "y": 990.0,
+   "lane": "rfs",
+   "phase": 17,
+   "label": "Go-to-Market File Generation",
+   "desc": "Go-to-market file generated from the inventory management system as a full extract (BR-191).",
+   "slot": 2,
    "w": 190,
    "h": 100,
-   "cx": 538.0,
-   "cy": 1040.0
+   "x": 4515.0,
+   "y": 3190.0,
+   "cx": 4610.0,
+   "cy": 3240.0
   },
   {
    "id": "rfs_pickup",
    "type": "system",
-   "lane": "ext",
-   "slot": 0,
+   "lane": "rfs",
+   "phase": 17,
    "label": "Pickup & Transformation",
-   "sub": "FIB_RFS_008_01 / BR-192",
-   "desc": "Go-to-market file picked up through the mediation layer and transformed into the format required by each downstream system.",
-   "phase": 2,
-   "x": 695.0,
-   "y": 990.0,
+   "sub": "FIB_RFS_008_01",
+   "desc": "Go-to-market file picked up through the mediation layer, filtered and transformed into the format required by each downstream system (BR-192, Open).",
+   "slot": 3,
    "w": 190,
    "h": 100,
-   "cx": 790.0,
-   "cy": 1040.0
+   "x": 4515.0,
+   "y": 3410.0,
+   "cx": 4610.0,
+   "cy": 3460.0
   },
   {
    "id": "rfs_distribute",
    "type": "system",
-   "lane": "ext",
-   "slot": 0,
-   "label": "Data Distribution",
-   "sub": "FIB_RFS_008_02 / BR-193 / INT-16",
-   "desc": "Distributed to the inventory management system, ready for service portal, Siebel CRM and the analytics data warehouse \u2014 IMS receives a full extract, CRM a delta. Integration: INT-16 (GIS / IMS / RPA mediation).",
-   "phase": 3,
-   "x": 947.0,
-   "y": 1012.0,
-   "w": 190,
-   "h": 56,
-   "cx": 1042.0,
-   "cy": 1040.0
-  },
-  {
-   "id": "rfs_vfid_map",
-   "type": "system",
-   "lane": "ext",
-   "slot": 1,
-   "label": "Vodafone Identifier Generation & Mapping",
-   "sub": "FIB_RFS_008_03 / BR-194",
-   "desc": "Operator identifier generated separately and mapped to the utility identifier through field survey, supporting one-to-one and one-to-many relationships.",
-   "phase": 4,
-   "x": 1199.0,
-   "y": 1130.0,
+   "lane": "rfs",
+   "phase": 17,
+   "label": "Distribution to Downstream Systems",
+   "sub": "FIB_RFS_008_02",
+   "desc": "Distributed to inventory management system (full extract), RFS portal, CRM (delta) and analytics data warehouse (BR-193, Open).",
+   "slot": 4,
    "w": 190,
    "h": 100,
-   "cx": 1294.0,
-   "cy": 1180.0
+   "x": 4515.0,
+   "y": 3630.0,
+   "cx": 4610.0,
+   "cy": 3680.0
+  },
+  {
+   "id": "rfs_id_mapping",
+   "type": "system",
+   "lane": "rfs",
+   "phase": 17,
+   "label": "Operator Identifier Generation & Mapping",
+   "sub": "FIB_RFS_008_03",
+   "desc": "Operator identifier generated separately and mapped to the utility identifier through field survey, supporting one-to-one and one-to-many relationships (BR-194, Open).",
+   "slot": 5,
+   "w": 190,
+   "h": 100,
+   "x": 4515.0,
+   "y": 3850.0,
+   "cx": 4610.0,
+   "cy": 3900.0
   },
   {
    "id": "rfs_status_update",
    "type": "system",
-   "lane": "ext",
-   "slot": 1,
+   "lane": "rfs",
+   "phase": 17,
    "label": "Ready for Service Status Update",
-   "sub": "FIB_RFS_008_04 / BR-195",
-   "desc": "A building is marked ready for service once ready for provisioning, with its service level category recorded.",
-   "phase": 5,
-   "x": 1451.0,
-   "y": 1130.0,
+   "sub": "FIB_RFS_008_04",
+   "desc": "Marks a building ready for service once ready for provisioning; records applicable service level category (BR-195, Open).",
+   "slot": 6,
    "w": 190,
    "h": 100,
-   "cx": 1546.0,
-   "cy": 1180.0
+   "x": 4515.0,
+   "y": 4070.0,
+   "cx": 4610.0,
+   "cy": 4120.0
   },
   {
    "id": "rfs_portal_search",
-   "type": "agent",
-   "lane": "agt",
-   "slot": 1,
+   "type": "system",
+   "lane": "rfs",
+   "phase": 17,
    "label": "RFS Portal Search",
-   "sub": "FIB_RFS_008_05 / BR-196",
-   "desc": "Ready for service portal searchable by address, utility identifier or area.",
-   "phase": 6,
-   "x": 1695.0,
-   "y": 470.0,
-   "w": 206,
-   "h": 60,
-   "cx": 1798.0,
-   "cy": 500.0
+   "sub": "FIB_RFS_008_05",
+   "desc": "Sales team searches the RFS portal by address, utility identifier or area (BR-196).",
+   "slot": 7,
+   "w": 190,
+   "h": 56,
+   "x": 4515.0,
+   "y": 4312.0,
+   "cx": 4610.0,
+   "cy": 4340.0
   },
   {
    "id": "rfs_recommend",
    "type": "system",
-   "lane": "ext",
-   "slot": 0,
+   "lane": "rfs",
+   "phase": 17,
    "label": "Recommendation Integration",
-   "sub": "FIB_RFS_008_06 / BR-197",
-   "desc": "Offer recommendations from the big data system received into the ready for service portal.",
-   "phase": 7,
-   "x": 1955.0,
-   "y": 990.0,
+   "sub": "FIB_RFS_008_06",
+   "desc": "Receives offer recommendations from the big data system into the RFS portal (BR-197, Open).",
+   "slot": 0,
    "w": 190,
    "h": 100,
-   "cx": 2050.0,
-   "cy": 1040.0
+   "x": 4515.0,
+   "y": 2750.0,
+   "cx": 4610.0,
+   "cy": 2800.0
   },
   {
    "id": "rfs_lead",
-   "type": "system",
-   "lane": "crm",
-   "slot": 1,
+   "type": "agent",
+   "lane": "agent",
+   "phase": 17,
    "label": "Lead Creation from Portal",
-   "sub": "FIB_RFS_008_07 / BR-198",
-   "desc": "A lead is created in Siebel CRM from the portal using the mobile number.",
-   "phase": 8,
-   "x": 2207.0,
-   "y": 790.0,
-   "w": 190,
+   "sub": "FIB_RFS_008_07",
+   "desc": "Sales agent creates a lead in CRM from the RFS portal using the customer mobile number (BR-198, Open).",
+   "slot": 0,
+   "w": 206,
    "h": 100,
-   "cx": 2302.0,
-   "cy": 840.0
+   "x": 4507.0,
+   "y": 430.0,
+   "cx": 4610.0,
+   "cy": 480.0
   },
   {
-   "id": "rfs_continuous",
-   "type": "system",
-   "lane": "ext",
-   "slot": 1,
+   "id": "rfs_continuous_update",
+   "type": "control",
+   "lane": "rfs",
+   "phase": 17,
    "label": "Continuous RFS Update",
-   "sub": "FIB_RFS_008_08 / BR-199 / P-19",
-   "desc": "Ready for service data updated by subsequent go-to-market file loads and by manual business updates. P-19 (RFS data refresh frequency).",
-   "phase": 6,
-   "x": 1703.0,
-   "y": 1152.0,
-   "w": 190,
-   "h": 56,
-   "cx": 1798.0,
-   "cy": 1180.0
+   "sub": "FIB_RFS_008_08",
+   "desc": "RFS data updated through subsequent go-to-market file loads and through manual updates from the business (BR-199).",
+   "slot": 8,
+   "w": 206,
+   "h": 60,
+   "x": 4507.0,
+   "y": 4530.0,
+   "cx": 4610.0,
+   "cy": 4560.0
+  },
+  {
+   "id": "rfs_end",
+   "type": "end",
+   "lane": "rfs",
+   "phase": 17,
+   "label": "RFS Data Ready",
+   "desc": "RFS data management cycle complete; portal reflects current serviceability for downstream sales and activation journeys.",
+   "slot": 9,
+   "w": 84,
+   "h": 84,
+   "x": 4568.0,
+   "y": 4738.0,
+   "cx": 4610.0,
+   "cy": 4780.0
   }
  ],
  "flows": [
   {
    "from": "start",
-   "to": "jsm_init",
+   "to": "jsm_journey",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "jsm_init",
-   "to": "jsm_milestone",
+   "from": "jsm_journey",
+   "to": "tr_new",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "tr_new",
+   "to": "kyc_verify",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "jsm_milestone",
-   "to": "kyc_scan",
+   "from": "kyc_verify",
+   "to": "cam_account",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "kyc_scan",
-   "to": "kyc_moi",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "kyc_moi",
-   "to": "d_kyc_match",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "d_kyc_match",
-   "to": "kyc_display",
-   "kind": "cond",
-   "label": "Match",
-   "happy": true
-  },
-  {
-   "from": "d_kyc_match",
-   "to": "kyc_blocked",
-   "kind": "cond",
-   "label": "Mismatch"
-  },
-  {
-   "from": "kyc_display",
-   "to": "kyc_lock",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "kyc_lock",
-   "to": "kyc_matchkey",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "kyc_matchkey",
-   "to": "cam_create",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "cam_create",
-   "to": "cam_override",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "cam_override",
-   "to": "cam_email_verify",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "cam_email_verify",
-   "to": "cam_contact",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "cam_contact",
+   "from": "cam_account",
    "to": "rfs_addr_capture",
    "kind": "seq",
    "happy": true
   },
   {
    "from": "rfs_addr_capture",
-   "to": "rfs_cascade",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "rfs_cascade",
    "to": "rfs_search",
-   "kind": "seq",
+   "kind": "data",
    "happy": true
   },
   {
    "from": "rfs_search",
-   "to": "rfs_type_display",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "rfs_type_display",
-   "to": "rfs_device_detect",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "rfs_device_detect",
    "to": "rfs_addr_lock",
    "kind": "seq",
    "happy": true
   },
   {
    "from": "rfs_addr_lock",
-   "to": "rfs_proof_upload",
+   "to": "rfs_poa_upload",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "rfs_proof_upload",
-   "to": "ecc_connection",
+   "from": "rfs_poa_upload",
+   "to": "ecc_check",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "ecc_connection",
-   "to": "d_ecc_eligible",
-   "kind": "seq",
-   "happy": true
+   "from": "ecc_check",
+   "to": "ecc_fail",
+   "kind": "cond",
+   "label": "Failed"
   },
   {
-   "from": "d_ecc_eligible",
-   "to": "ecc_credit",
+   "from": "ecc_check",
+   "to": "bam_billing",
    "kind": "cond",
    "label": "Eligible",
    "happy": true
   },
   {
-   "from": "d_ecc_eligible",
-   "to": "ecc_failed",
+   "from": "bam_billing",
+   "to": "qpc_plan",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "qpc_plan",
+   "to": "num_select",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "num_select",
+   "to": "sim_select",
    "kind": "cond",
-   "label": "Not Eligible"
-  },
-  {
-   "from": "ecc_credit",
-   "to": "d_ecc_status",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "d_ecc_status",
-   "to": "milestone1",
-   "kind": "cond",
-   "label": "Clear",
-   "happy": true
-  },
-  {
-   "from": "d_ecc_status",
-   "to": "ecc_failed",
-   "kind": "cond",
-   "label": "Blocked"
-  },
-  {
-   "from": "ecc_failed",
-   "to": "ecc_limit_override",
-   "kind": "esc",
-   "label": "privileged override"
-  },
-  {
-   "from": "ecc_limit_override",
-   "to": "ecc_credit",
-   "kind": "esc",
-   "label": "re-check"
-  },
-  {
-   "from": "milestone1",
-   "to": "bam_profile",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "bam_profile",
-   "to": "bam_address",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "bam_address",
-   "to": "bam_payment_profile",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "bam_payment_profile",
-   "to": "bam_contacts",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "bam_contacts",
-   "to": "milestone2",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "milestone2",
-   "to": "qpc_baseplan",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "qpc_baseplan",
-   "to": "qpc_iptv",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "qpc_iptv",
-   "to": "qpc_addon",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "qpc_addon",
-   "to": "qpc_discount",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "qpc_discount",
-   "to": "qpc_recalc",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "qpc_recalc",
-   "to": "num_selection",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "num_selection",
-   "to": "sim_phy_selection",
-   "kind": "data",
    "label": "FWA journey"
   },
   {
-   "from": "num_selection",
-   "to": "num_review",
+   "from": "sim_select",
+   "to": "wfm_slot",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "sim_phy_selection",
-   "to": "num_review",
-   "kind": "seq"
-  },
-  {
-   "from": "num_review",
-   "to": "wfm_retrieve",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "wfm_retrieve",
-   "to": "wfm_select",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "wfm_select",
-   "to": "d_wfm_applicability",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "d_wfm_applicability",
+   "from": "wfm_slot",
    "to": "wfm_notes",
-   "kind": "cond",
-   "label": "Book",
+   "kind": "seq",
    "happy": true
-  },
-  {
-   "from": "d_wfm_applicability",
-   "to": "cvc_checkout",
-   "kind": "cond",
-   "label": "Skip (FWA Indoor)"
   },
   {
    "from": "wfm_notes",
-   "to": "wfm_task_exec",
+   "to": "wfm_applicability",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "wfm_task_exec",
-   "to": "wfm_mesh_rule",
-   "kind": "seq",
-   "happy": true
+   "from": "wfm_applicability",
+   "to": "wfm_task",
+   "kind": "cond",
+   "label": "Fibre / FWA outdoor \u2014 book"
   },
   {
-   "from": "wfm_mesh_rule",
-   "to": "wfm_outdoor_capture",
+   "from": "wfm_task",
+   "to": "wfm_fail",
+   "kind": "esc",
+   "label": "Issue reported",
+   "happy": false
+  },
+  {
+   "from": "wfm_fail",
+   "to": "wfm_task",
    "kind": "data",
-   "label": "FWA Outdoor"
+   "label": "Rescheduled",
+   "happy": false
   },
   {
-   "from": "wfm_mesh_rule",
-   "to": "wfm_closure",
+   "from": "wfm_task",
+   "to": "cvc_checkout",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "wfm_outdoor_capture",
-   "to": "wfm_closure",
-   "kind": "seq"
-  },
-  {
-   "from": "wfm_closure",
-   "to": "d_wfm_issue",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "d_wfm_issue",
+   "from": "wfm_applicability",
    "to": "cvc_checkout",
    "kind": "cond",
-   "label": "No issue",
-   "happy": true
-  },
-  {
-   "from": "d_wfm_issue",
-   "to": "wfm_fault",
-   "kind": "cond",
-   "label": "Issue"
-  },
-  {
-   "from": "wfm_fault",
-   "to": "wfm_task_exec",
-   "kind": "esc",
-   "label": "reschedule"
+   "label": "FWA indoor \u2014 skip"
   },
   {
    "from": "cvc_checkout",
-   "to": "milestone3",
+   "to": "caf_contract",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "milestone3",
-   "to": "caf_keyinfo",
+   "from": "caf_contract",
+   "to": "pay_payment",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "caf_keyinfo",
-   "to": "caf_generate",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "caf_generate",
-   "to": "d_caf_skip",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "d_caf_skip",
-   "to": "caf_sign",
-   "kind": "cond",
-   "label": "Proceed",
-   "happy": true
-  },
-  {
-   "from": "d_caf_skip",
-   "to": "caf_docs",
-   "kind": "cond",
-   "label": "Skip (fulfilment role)"
-  },
-  {
-   "from": "caf_sign",
-   "to": "caf_offline",
-   "kind": "data",
-   "label": "offline signed alternative"
-  },
-  {
-   "from": "caf_sign",
-   "to": "caf_docs",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "caf_offline",
-   "to": "caf_docs",
-   "kind": "seq"
-  },
-  {
-   "from": "caf_docs",
-   "to": "milestone4",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "milestone4",
-   "to": "pay_process",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "pay_process",
+   "from": "pay_payment",
    "to": "pay_inventory",
-   "kind": "seq",
+   "kind": "data",
    "happy": true
   },
   {
@@ -3372,503 +2250,493 @@
   },
   {
    "from": "ord_submit",
-   "to": "ord_navigate",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "ord_navigate",
-   "to": "milestone5",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "milestone5",
-   "to": "not_submit",
-   "kind": "data"
-  },
-  {
-   "from": "milestone5",
-   "to": "net_activate_fibre",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "net_activate_fibre",
-   "to": "net_activate_indoor",
+   "to": "ord_fulfil",
    "kind": "data",
-   "label": "FWA Indoor"
+   "happy": true
   },
   {
-   "from": "net_activate_fibre",
-   "to": "net_sim_activate",
+   "from": "ord_fulfil",
+   "to": "not_order",
    "kind": "data",
-   "label": "FWA journey"
+   "happy": true
   },
   {
-   "from": "net_activate_fibre",
-   "to": "net_status_wfm",
-   "kind": "data"
+   "from": "ord_fulfil",
+   "to": "net_activation",
+   "kind": "seq",
+   "happy": true
   },
   {
-   "from": "net_activate_fibre",
+   "from": "wfm_task",
+   "to": "net_activation",
+   "kind": "data",
+   "label": "WFM task closed (fibre)",
+   "happy": true
+  },
+  {
+   "from": "net_activation",
+   "to": "net_activated",
+   "kind": "cond",
+   "label": "Activated",
+   "happy": true
+  },
+  {
+   "from": "net_activated",
    "to": "fin_billing_update",
-   "kind": "seq",
+   "kind": "data",
    "happy": true
   },
   {
    "from": "fin_billing_update",
-   "to": "fin_device_billing",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "fin_device_billing",
    "to": "fin_order_complete",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "fin_order_complete",
-   "to": "fin_tracking_resolved",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "fin_tracking_resolved",
-   "to": "end_survey",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "rfs_device_detect",
-   "to": "ins_eligible",
+   "from": "rfs_search",
+   "to": "ins_detect",
    "kind": "data",
-   "label": "reusable device detected"
+   "happy": false
   },
   {
-   "from": "ins_eligible",
-   "to": "ins_channel",
-   "kind": "seq",
-   "happy": true
+   "from": "ins_detect",
+   "to": "cvc_checkout",
+   "kind": "cond",
+   "label": "Not eligible",
+   "happy": false
   },
   {
-   "from": "ins_channel",
-   "to": "ins_serial_verify",
-   "kind": "seq",
-   "happy": true
+   "from": "ins_detect",
+   "to": "ins_verify",
+   "kind": "cond",
+   "label": "Eligible",
+   "happy": false
   },
   {
-   "from": "ins_serial_verify",
+   "from": "ins_verify",
    "to": "ins_select",
    "kind": "seq",
-   "happy": true
+   "happy": false
   },
   {
    "from": "ins_select",
-   "to": "ins_skip",
+   "to": "wfm_slot",
    "kind": "cond",
-   "label": "Instant"
+   "label": "Normal (default)"
   },
   {
    "from": "ins_select",
-   "to": "wfm_retrieve",
+   "to": "ins_skip_appt",
    "kind": "cond",
-   "label": "Normal",
-   "happy": true
+   "label": "Instant",
+   "happy": false
   },
   {
-   "from": "ins_skip",
-   "to": "ord_submit",
-   "kind": "esc",
-   "label": "continue to submission"
-  },
-  {
-   "from": "ord_submit",
+   "from": "ins_skip_appt",
    "to": "ins_trigger",
    "kind": "data",
-   "label": "instant journey"
+   "happy": false
   },
   {
    "from": "ins_trigger",
-   "to": "d_ins_working",
-   "kind": "seq"
+   "to": "cvc_checkout",
+   "kind": "data",
+   "label": "Proceed to checkout",
+   "happy": false
   },
   {
-   "from": "d_ins_working",
-   "to": "end_survey",
-   "kind": "cond",
-   "label": "Working",
-   "happy": true
+   "from": "ins_trigger",
+   "to": "ins_fail",
+   "kind": "esc",
+   "label": "Service not working",
+   "happy": false
   },
   {
-   "from": "d_ins_working",
-   "to": "ins_failure",
-   "kind": "cond",
-   "label": "Not working"
+   "from": "ins_fail",
+   "to": "wfm_task",
+   "kind": "data",
+   "label": "Technician visit arranged",
+   "happy": false
+  },
+  {
+   "from": "ins_channel",
+   "to": "ins_detect",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "start",
+   "to": "mig_start",
+   "kind": "seq",
+   "happy": false
   },
   {
    "from": "mig_start",
-   "to": "mig_eligible_service",
+   "to": "mig_eligibility",
    "kind": "seq",
-   "happy": true
+   "happy": false
   },
   {
-   "from": "mig_eligible_service",
+   "from": "mig_eligibility",
+   "to": "mig_blocked",
+   "kind": "cond",
+   "label": "Blocked"
+  },
+  {
+   "from": "mig_eligibility",
    "to": "mig_verify",
-   "kind": "seq",
-   "happy": true
+   "kind": "cond",
+   "label": "Eligible",
+   "happy": false
   },
   {
    "from": "mig_verify",
-   "to": "mig_fibre_avail",
+   "to": "mig_rfs_check",
    "kind": "seq",
-   "happy": true
+   "happy": false
   },
   {
-   "from": "mig_fibre_avail",
-   "to": "mig_existing_retrieve",
-   "kind": "seq",
-   "happy": true
+   "from": "mig_rfs_check",
+   "to": "mig_retrieve",
+   "kind": "data",
+   "happy": false
   },
   {
-   "from": "mig_existing_retrieve",
+   "from": "mig_retrieve",
    "to": "mig_order_capture",
    "kind": "seq",
-   "happy": true
+   "happy": false
   },
   {
    "from": "mig_order_capture",
-   "to": "mig_appt",
+   "to": "mig_appointment",
    "kind": "seq",
-   "happy": true
+   "happy": false
   },
   {
-   "from": "mig_appt",
+   "from": "mig_appointment",
    "to": "mig_telesales",
+   "kind": "cond",
+   "label": "Telephone-originated"
+  },
+  {
+   "from": "mig_telesales",
+   "to": "mig_outdoor_recovery",
    "kind": "data",
-   "label": "telephone-originated"
+   "happy": false
   },
   {
-   "from": "mig_appt",
-   "to": "mig_recovery",
+   "from": "mig_appointment",
+   "to": "mig_outdoor_recovery",
+   "kind": "cond",
+   "label": "Store-originated",
+   "happy": false
+  },
+  {
+   "from": "mig_outdoor_recovery",
+   "to": "mig_continuity",
    "kind": "data",
-   "label": "FWA Outdoor"
-  },
-  {
-   "from": "mig_appt",
-   "to": "mig_continuity",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "mig_recovery",
-   "to": "mig_continuity",
-   "kind": "seq"
+   "happy": false
   },
   {
    "from": "mig_continuity",
    "to": "mig_fibre_trigger",
-   "kind": "seq",
-   "happy": true
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "mig_fibre_trigger",
-   "to": "d_mig_success",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "d_mig_success",
    "to": "mig_sim_deactivate",
-   "kind": "cond",
-   "label": "Success",
-   "happy": true
-  },
-  {
-   "from": "d_mig_success",
-   "to": "mig_failure",
-   "kind": "cond",
-   "label": "Failed"
-  },
-  {
-   "from": "mig_failure",
-   "to": "mig_continuity",
-   "kind": "esc",
-   "label": "FWA remains active"
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "mig_sim_deactivate",
    "to": "mig_resource_release",
-   "kind": "seq",
-   "happy": true
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "mig_resource_release",
    "to": "mig_billing",
-   "kind": "seq",
-   "happy": true
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "mig_billing",
    "to": "mig_notify",
-   "kind": "seq",
-   "happy": true
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "mig_notify",
-   "to": "end_migration",
+   "to": "mig_end",
    "kind": "seq",
-   "happy": true
+   "happy": false
+  },
+  {
+   "from": "mig_fibre_trigger",
+   "to": "mig_failure",
+   "kind": "esc",
+   "label": "Installation/activation failure",
+   "happy": false
+  },
+  {
+   "from": "start",
+   "to": "hmv_start",
+   "kind": "seq",
+   "happy": false
   },
   {
    "from": "hmv_start",
    "to": "hmv_new_addr",
    "kind": "seq",
-   "happy": true
+   "happy": false
   },
   {
    "from": "hmv_new_addr",
-   "to": "hmv_appt",
+   "to": "hmv_appointment",
    "kind": "seq",
-   "happy": true
+   "happy": false
   },
   {
-   "from": "hmv_new_addr",
-   "to": "hmv_number",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "hmv_appt",
-   "to": "hmv_retain_dev",
+   "from": "hmv_appointment",
+   "to": "hmv_number_retain",
    "kind": "data",
-   "label": "fibre-to-fibre"
+   "happy": false
   },
   {
-   "from": "hmv_appt",
+   "from": "hmv_number_retain",
+   "to": "hmv_device_decision",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "hmv_device_decision",
    "to": "hmv_uninstall",
-   "kind": "data",
-   "label": "from FWA Outdoor"
-  },
-  {
-   "from": "hmv_number",
-   "to": "hmv_retain_dev",
-   "kind": "seq"
-  },
-  {
-   "from": "hmv_retain_dev",
-   "to": "hmv_terminate_old",
-   "kind": "seq",
-   "happy": true
+   "kind": "cond",
+   "label": "FWA outdoor origin \u2014 uninstall"
   },
   {
    "from": "hmv_uninstall",
-   "to": "hmv_terminate_old",
-   "kind": "seq"
-  },
-  {
-   "from": "hmv_terminate_old",
-   "to": "hmv_release",
+   "to": "hmv_termination",
    "kind": "seq",
-   "happy": true
+   "happy": false
   },
   {
-   "from": "hmv_release",
+   "from": "hmv_device_decision",
+   "to": "hmv_termination",
+   "kind": "cond",
+   "label": "Fibre-to-fibre \u2014 retained",
+   "happy": false
+  },
+  {
+   "from": "hmv_termination",
+   "to": "hmv_inventory_release",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "hmv_inventory_release",
    "to": "hmv_wfm_new",
-   "kind": "seq",
-   "happy": true
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "hmv_wfm_new",
    "to": "hmv_billing",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "hmv_billing",
-   "to": "hmv_carry",
    "kind": "data",
-   "label": "move to FWA area"
+   "happy": false
   },
   {
    "from": "hmv_billing",
-   "to": "end_hmv",
-   "kind": "seq",
-   "happy": true
+   "to": "hmv_equipment_carry",
+   "kind": "data",
+   "label": "Move to FWA area",
+   "happy": false
   },
   {
-   "from": "hmv_carry",
-   "to": "end_hmv",
-   "kind": "seq"
+   "from": "hmv_billing",
+   "to": "hmv_end",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "hmv_equipment_carry",
+   "to": "hmv_end",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "start",
+   "to": "fpi_start",
+   "kind": "seq",
+   "happy": false
   },
   {
    "from": "fpi_start",
-   "to": "fpi_number",
+   "to": "fpi_capture",
    "kind": "seq",
-   "happy": true
+   "happy": false
   },
   {
-   "from": "fpi_number",
-   "to": "fpi_appt_id",
+   "from": "fpi_capture",
+   "to": "fpi_identifier",
    "kind": "seq",
-   "happy": true
+   "happy": false
   },
   {
-   "from": "fpi_appt_id",
-   "to": "fpi_appt_date",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "fpi_appt_date",
+   "from": "fpi_identifier",
    "to": "fpi_form",
    "kind": "seq",
-   "happy": true
+   "happy": false
   },
   {
    "from": "fpi_form",
    "to": "fpi_request",
-   "kind": "seq",
-   "happy": true
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "fpi_request",
    "to": "fpi_confirm",
-   "kind": "seq",
-   "happy": true
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "fpi_confirm",
-   "to": "fpi_reschedule",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "fpi_reschedule",
-   "to": "fpi_wfm_exec",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "fpi_wfm_exec",
-   "to": "fpi_activate",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "fpi_activate",
-   "to": "end_fpi",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "fpo_start",
-   "to": "fpo_queue",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "fpo_queue",
-   "to": "fpo_doc_validate",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "fpo_doc_validate",
-   "to": "fpo_checks",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "fpo_checks",
-   "to": "fpo_outstanding",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "fpo_outstanding",
-   "to": "fpo_sla_ext",
-   "kind": "cond",
-   "label": "Pending bill"
-  },
-  {
-   "from": "fpo_outstanding",
-   "to": "fpo_sla_ext",
-   "kind": "cond",
-   "label": "Clear",
-   "happy": true
-  },
-  {
-   "from": "fpo_sla_ext",
-   "to": "d_fpo_breach",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "d_fpo_breach",
-   "to": "fpo_status",
-   "kind": "cond",
-   "label": "Action taken",
-   "happy": true
-  },
-  {
-   "from": "d_fpo_breach",
-   "to": "fpo_breach",
-   "kind": "cond",
-   "label": "Breach"
-  },
-  {
-   "from": "fpo_breach",
-   "to": "fpo_status",
-   "kind": "seq"
-  },
-  {
-   "from": "fpo_status",
-   "to": "fpo_term_order",
-   "kind": "cond",
-   "label": "Accepted",
-   "happy": true
-  },
-  {
-   "from": "fpo_status",
-   "to": "end_fpo_rejected",
+   "to": "fpi_rejected",
    "kind": "cond",
    "label": "Rejected"
   },
   {
-   "from": "fpo_term_order",
-   "to": "fpo_net_deactivate",
-   "kind": "seq",
-   "happy": true
+   "from": "fpi_confirm",
+   "to": "fpi_wfm_exec",
+   "kind": "cond",
+   "label": "Approved",
+   "happy": false
   },
   {
-   "from": "fpo_net_deactivate",
-   "to": "fpo_quarantine",
+   "from": "fpi_wfm_exec",
+   "to": "fpi_activation",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "fpi_activation",
+   "to": "fpi_end",
    "kind": "seq",
-   "happy": true
+   "happy": false
+  },
+  {
+   "from": "start",
+   "to": "fpo_start",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "fpo_start",
+   "to": "fpo_ticket",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "fpo_ticket",
+   "to": "fpo_queue",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "fpo_queue",
+   "to": "fpo_validate",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "fpo_validate",
+   "to": "fpo_outstanding",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "fpo_outstanding",
+   "to": "fpo_sla_extend",
+   "kind": "cond",
+   "label": "No pending bill",
+   "happy": false
+  },
+  {
+   "from": "fpo_sla_extend",
+   "to": "fpo_breach",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "fpo_breach",
+   "to": "fpo_status_comm",
+   "kind": "cond",
+   "label": "Auto-accept / auto-reject",
+   "happy": false
+  },
+  {
+   "from": "fpo_outstanding",
+   "to": "fpo_status_comm",
+   "kind": "cond",
+   "label": "Pending bill",
+   "happy": false
+  },
+  {
+   "from": "fpo_validate",
+   "to": "fpo_status_comm",
+   "kind": "cond",
+   "label": "Invalid / mismatch"
+  },
+  {
+   "from": "fpo_status_comm",
+   "to": "fpo_termination_order",
+   "kind": "data",
+   "label": "Accepted",
+   "happy": false
+  },
+  {
+   "from": "fpo_termination_order",
+   "to": "fpo_deactivation",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "fpo_deactivation",
+   "to": "fpo_quarantine",
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "fpo_quarantine",
-   "to": "end_fpo",
+   "to": "fpo_end",
    "kind": "seq",
-   "happy": true
+   "happy": false
+  },
+  {
+   "from": "start",
+   "to": "ter_start",
+   "kind": "seq",
+   "happy": false
   },
   {
    "from": "ter_start",
    "to": "ter_eligibility",
    "kind": "seq",
-   "happy": true
+   "happy": false
   },
   {
    "from": "ter_eligibility",
    "to": "ter_retention",
    "kind": "seq",
-   "happy": true
+   "happy": false
   },
   {
    "from": "ter_retention",
-   "to": "end_terminate_retained",
+   "to": "ter_retained",
    "kind": "cond",
    "label": "Retained"
   },
@@ -3877,353 +2745,512 @@
    "to": "ter_outstanding",
    "kind": "cond",
    "label": "Proceed to terminate",
-   "happy": true
+   "happy": false
   },
   {
    "from": "ter_outstanding",
    "to": "ter_penalty",
-   "kind": "seq",
-   "happy": true
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "ter_penalty",
-   "to": "ter_consent",
-   "kind": "seq",
-   "happy": true
+   "to": "ter_recovery",
+   "kind": "data",
+   "happy": false
   },
   {
-   "from": "ter_consent",
-   "to": "ter_recovery_appt",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "ter_recovery_appt",
+   "from": "ter_recovery",
    "to": "ter_order_capture",
    "kind": "seq",
-   "happy": true
+   "happy": false
   },
   {
    "from": "ter_order_capture",
    "to": "ter_order_submit",
-   "kind": "seq",
-   "happy": true
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "ter_order_submit",
-   "to": "ter_net_deactivate",
-   "kind": "seq",
-   "happy": true
+   "to": "ter_deactivation",
+   "kind": "data",
+   "happy": false
   },
   {
-   "from": "ter_net_deactivate",
+   "from": "ter_deactivation",
    "to": "ter_billing_close",
-   "kind": "seq",
-   "happy": true
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "ter_billing_close",
    "to": "ter_inventory_release",
-   "kind": "seq",
-   "happy": true
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "ter_inventory_release",
    "to": "ter_notify",
-   "kind": "seq",
-   "happy": true
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "ter_notify",
-   "to": "end_termination",
-   "kind": "seq",
-   "happy": true
+   "to": "ter_quarantine",
+   "kind": "data",
+   "happy": false
   },
   {
-   "from": "rfs_gis_ingest",
-   "to": "rfs_gtm_file",
+   "from": "ter_quarantine",
+   "to": "ter_end",
    "kind": "seq",
-   "happy": true
+   "happy": false
+  },
+  {
+   "from": "start",
+   "to": "rfs_gtm_start",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "rfs_gtm_start",
+   "to": "rfs_gtm_file",
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "rfs_gtm_file",
    "to": "rfs_pickup",
-   "kind": "seq",
-   "happy": true
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "rfs_pickup",
    "to": "rfs_distribute",
-   "kind": "seq",
-   "happy": true
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "rfs_distribute",
-   "to": "rfs_vfid_map",
-   "kind": "seq",
-   "happy": true
+   "to": "rfs_id_mapping",
+   "kind": "data",
+   "happy": false
   },
   {
-   "from": "rfs_vfid_map",
+   "from": "rfs_id_mapping",
    "to": "rfs_status_update",
-   "kind": "seq",
-   "happy": true
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "rfs_status_update",
    "to": "rfs_portal_search",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "rfs_status_update",
-   "to": "rfs_search",
    "kind": "data",
-   "label": "feeds RFS search"
-  },
-  {
-   "from": "rfs_status_update",
-   "to": "mig_fibre_avail",
-   "kind": "data",
-   "label": "feeds migration RFS check"
+   "happy": false
   },
   {
    "from": "rfs_portal_search",
    "to": "rfs_recommend",
-   "kind": "seq",
-   "happy": true
+   "kind": "data",
+   "happy": false
   },
   {
    "from": "rfs_recommend",
    "to": "rfs_lead",
-   "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "rfs_status_update",
-   "to": "rfs_continuous",
    "kind": "data",
-   "label": "ongoing refresh"
+   "happy": false
   },
   {
-   "from": "mig_telesales",
-   "to": "mig_continuity",
-   "kind": "seq"
+   "from": "rfs_lead",
+   "to": "rfs_continuous_update",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "rfs_continuous_update",
+   "to": "rfs_end",
+   "kind": "seq",
+   "happy": false
   }
  ],
  "model": {
-  "agents": [],
-  "contracts": [],
-  "connectivity": [
+  "agents": [
    {
-    "Interface ID": "INT-01",
-    "System": "Queue Management System",
-    "Purpose": "Queue ticket intake and home move request routing",
-    "Direction": "Inbound and Outbound",
-    "Mode": "Synchronous",
-    "Protocol": "To be confirmed",
-    "Operation": "Create and consume the queue ticket, route the home move request",
-    "Timeout and Retry": "To be confirmed",
-    "Fallback Behaviour": "Allow the agent to proceed and record the degradation",
-    "Status": "Open. Interface specification reused from Mobile Activation"
+    "AgentID": "AG-01",
+    "Agent Type": "Human",
+    "Name": "Retail Agent",
+    "Parent Portal": "CRM / Order Capture",
+    "Relationship": "Initiates and progresses fibre/FWA activation, migration, home move, port-in journeys",
+    "Purpose / Feature": "Journey, identity, cart, appointment, contract, payment and order submission across capabilities CAP-01 to CAP-13"
    },
    {
-    "Interface ID": "INT-02",
-    "System": "Identity Capture Service",
-    "Purpose": "Qatar identity document scanning and extraction",
-    "Direction": "Outbound",
-    "Mode": "Synchronous",
-    "Protocol": "REST",
-    "Operation": "Scan the identity document and extract attributes",
-    "Timeout and Retry": "To be confirmed",
-    "Fallback Behaviour": "Permit manual capture of the identity attributes",
-    "Status": "Open. Reused from Mobile Activation"
+    "AgentID": "AG-02",
+    "Agent Type": "Human",
+    "Name": "Retention Agent",
+    "Parent Portal": "CRM / Order Capture",
+    "Relationship": "Handles retention step of termination requests",
+    "Purpose / Feature": "BR-202 retention outcome capture"
    },
    {
-    "Interface ID": "INT-03",
-    "System": "Ministry of Interior",
-    "Purpose": "Government identity validation",
-    "Direction": "Outbound",
-    "Mode": "Synchronous",
-    "Protocol": "To be confirmed",
-    "Operation": "Validate identity and return demographic attributes",
-    "Timeout and Retry": "To be confirmed",
-    "Fallback Behaviour": "Draft the order and validate at submission",
-    "Status": "Open. Reused from Mobile Activation"
+    "AgentID": "AG-03",
+    "Agent Type": "Human",
+    "Name": "Support Agent",
+    "Parent Portal": "CRM / Order Capture",
+    "Relationship": "Handles telephone-originated home move and port-out administration",
+    "Purpose / Feature": "BR-150 home move request creation via telephone"
    },
    {
-    "Interface ID": "INT-04",
-    "System": "Email Verification Service",
-    "Purpose": "Email address validation",
-    "Direction": "Outbound",
-    "Mode": "Synchronous",
-    "Protocol": "REST",
-    "Operation": "Validate the customer email address",
-    "Timeout and Retry": "To be confirmed",
-    "Fallback Behaviour": "Capture the email address as unverified",
-    "Status": "Open"
+    "AgentID": "AG-04",
+    "Agent Type": "Human",
+    "Name": "Field Technician",
+    "Parent Portal": "Field Workforce Management",
+    "Relationship": "Executes installation, recovery and uninstallation tasks",
+    "Purpose / Feature": "BR-073 to BR-077 WFM task capture and closure"
    },
    {
-    "Interface ID": "INT-05",
-    "System": "Ready for Service Portal",
-    "Purpose": "Service availability and address",
-    "Direction": "Outbound",
-    "Mode": "Synchronous",
-    "Protocol": "To be confirmed",
-    "Operation": "Search point of presence, return service type and device detection",
-    "Timeout and Retry": "To be confirmed",
-    "Fallback Behaviour": "Block feasibility and raise an agent message",
-    "Status": "Open. Interface specification not provided in version 1.3"
-   },
-   {
-    "Interface ID": "INT-06",
-    "System": "Enterprise Data Warehouse",
-    "Purpose": "Existing customer credit check",
-    "Direction": "Outbound",
-    "Mode": "Synchronous",
-    "Protocol": "To be confirmed",
-    "Operation": "Return existing customer credit status and outstanding balance",
-    "Timeout and Retry": "To be confirmed",
-    "Fallback Behaviour": "Block progression and raise an agent message",
-    "Status": "Open"
-   },
-   {
-    "Interface ID": "INT-07",
-    "System": "Qatar Credit Authority",
-    "Purpose": "New customer credit check",
-    "Direction": "Outbound",
-    "Mode": "Synchronous",
-    "Protocol": "To be confirmed",
-    "Operation": "Return new customer credit status",
-    "Timeout and Retry": "To be confirmed",
-    "Fallback Behaviour": "Block progression and raise an agent message",
-    "Status": "Open"
-   },
-   {
-    "Interface ID": "INT-08",
-    "System": "Point of Sale Payment System",
-    "Purpose": "Upfront payment and inventory depletion",
-    "Direction": "Outbound and Inbound",
-    "Mode": "Synchronous",
-    "Protocol": "To be confirmed",
-    "Operation": "Take payment, issue receipt and deplete number, subscriber identity module and equipment inventory",
-    "Timeout and Retry": "To be confirmed",
-    "Fallback Behaviour": "Hold the order and return the agent to the payment summary",
-    "Status": "Open. Reused from Mobile Activation"
-   },
-   {
-    "Interface ID": "INT-09",
-    "System": "UIM",
-    "Purpose": "Number reservation and management",
-    "Direction": "Outbound",
-    "Mode": "Synchronous",
-    "Protocol": "To be confirmed",
-    "Operation": "Reserve and manage the fixed line and mobile number",
-    "Timeout and Retry": "To be confirmed",
-    "Fallback Behaviour": "Block number selection and raise an agent message",
-    "Status": "Open"
-   },
-   {
-    "Interface ID": "INT-10",
-    "System": "UIM",
-    "Purpose": "SIM, equipment and address inventory",
-    "Direction": "Outbound",
-    "Mode": "Synchronous",
-    "Protocol": "To be confirmed",
-    "Operation": "Manage subscriber identity module, equipment and internet protocol address inventory",
-    "Timeout and Retry": "To be confirmed",
-    "Fallback Behaviour": "Block resource allocation and raise an agent message",
-    "Status": "Open"
-   },
-   {
-    "Interface ID": "INT-11",
-    "System": "Field Workforce Management",
-    "Purpose": "Appointment, task execution and closure",
-    "Direction": "Outbound and Inbound",
-    "Mode": "Asynchronous",
-    "Protocol": "To be confirmed",
-    "Operation": "Book the appointment, execute the task, capture devices and close with feedback",
-    "Timeout and Retry": "Not applicable",
-    "Fallback Behaviour": "Hold the order pending task closure and raise an alert",
-    "Status": "Open. Interface specification not provided in version 1.3"
-   },
-   {
-    "Interface ID": "INT-12",
-    "System": "Order Management",
-    "Purpose": "Order orchestration and network activation/deactivation",
-    "Direction": "Outbound and Inbound",
-    "Mode": "Asynchronous",
-    "Protocol": "To be confirmed",
-    "Operation": "Orchestrate fulfilment, trigger network activation/deactivation and return the outcome",
-    "Timeout and Retry": "Not applicable",
-    "Fallback Behaviour": "Set the order to failed and expose the failure reason",
-    "Status": "Open"
-   },
-   {
-    "Interface ID": "INT-13",
-    "System": "Billing System",
-    "Purpose": "Billing update",
-    "Direction": "Outbound",
-    "Mode": "Asynchronous",
-    "Protocol": "To be confirmed",
-    "Operation": "Post account, product, service and resource information with prices",
-    "Timeout and Retry": "Not applicable",
-    "Fallback Behaviour": "Queue and retry",
-    "Status": "Open"
-   },
-   {
-    "Interface ID": "INT-14",
-    "System": "Notification Platform",
-    "Purpose": "Customer notification and survey",
-    "Direction": "Outbound",
-    "Mode": "Asynchronous",
-    "Protocol": "To be confirmed",
-    "Operation": "Despatch submission and completion notifications and the feedback survey",
-    "Timeout and Retry": "Not applicable",
-    "Fallback Behaviour": "Queue and retry",
-    "Status": "Open. Templates awaited from VFQ"
-   },
-   {
-    "Interface ID": "INT-15",
-    "System": "Number Portability Administration System",
-    "Purpose": "Fixed number portability",
-    "Direction": "Outbound and Inbound",
-    "Mode": "Asynchronous",
-    "Protocol": "To be confirmed",
-    "Operation": "Submit, confirm and communicate portability requests and receive port out requests",
-    "Timeout and Retry": "To be confirmed",
-    "Fallback Behaviour": "Hold the ticket and escalate on service level breach",
-    "Status": "Open. Status and rejection code alignment to be confirmed"
-   },
-   {
-    "Interface ID": "INT-16",
-    "System": "GIS, IMS and RPA",
-    "Purpose": "Ready for service data supply",
-    "Direction": "Inbound",
-    "Mode": "Batch",
-    "Protocol": "File transfer through the mediation layer",
-    "Operation": "Ingest, transform and distribute the go to market building data",
-    "Timeout and Retry": "Not applicable",
-    "Fallback Behaviour": "Retain the last good load and raise an operational alert",
-    "Status": "Open. Frequency and delta logic to be confirmed"
-   },
-   {
-    "Interface ID": "INT-17",
-    "System": "CRM/Ticketing",
-    "Purpose": "Ticket Creation and Update",
-    "Direction": "Outbound and Inbound",
-    "Mode": "Synchronous",
-    "Protocol": "To be confirmed",
-    "Operation": null,
-    "Timeout and Retry": null,
-    "Fallback Behaviour": null,
-    "Status": null
+    "AgentID": "AG-05",
+    "Agent Type": "Human",
+    "Name": "Sales Agent / Sales Team",
+    "Parent Portal": "RFS Portal",
+    "Relationship": "Searches RFS portal and creates leads",
+    "Purpose / Feature": "BR-196 to BR-198 RFS portal search, recommendation, lead creation"
    }
-  ]
+  ],
+  "contracts": [],
+  "connectivity": []
  },
  "biz": {
-  "bio": {},
+  "bio": {
+   "start": {
+    "title": "Queue Ticket Transaction",
+    "does": "Starts a single fibre/FWA process (activation, migration, home move or portability) from one queue ticket transaction.",
+    "needs": "A queue ticket transaction.",
+    "makes": "A new journey/tracking record owned by the initiating agent.",
+    "example": "BR-001: one process per queue ticket transaction; BR-002: tracking record created at journey initiation."
+   },
+   "jsm_journey": {
+    "title": "Journey & Session Management",
+    "does": "Initiates the journey/session; a tracking record is created and owned by the initiating agent.",
+    "needs": "Agent authorisation and queue ticket.",
+    "makes": "Tracking record (status: New).",
+    "example": "FAR_001_JSM_01: process follows the same JSM capability as detailed in the Mobile Post Paid Journey."
+   },
+   "kyc_verify": {
+    "title": "Customer Identification & Verification",
+    "does": "Runs identity capture/verification per the same KYC capability used in the Mobile Post Paid Journey.",
+    "needs": "Qatar identity document (only accepted document type per BR-004).",
+    "makes": "Verified identity attributes locked from edit (BR-010).",
+    "example": "FAR_001_KYC_01: process follows the same capability (\"KYC\") as MPAR_001_KYC_*."
+   },
+   "cam_account": {
+    "title": "Customer & Account Management",
+    "does": "Creates/matches the customer and account record.",
+    "needs": "Verified KYC output.",
+    "makes": "Customer account record.",
+    "example": "FAR_001_CAM_01: process follows the same capability (\"CAM\") as MPAR_001_CAM_*."
+   },
+   "rfs_addr_capture": {
+    "title": "Capture Installation Address",
+    "does": "Captures the installation address by utility identifier or cascading zone/street/building search.",
+    "needs": "Utility identifier or manual cascading selection.",
+    "makes": "Installation address.",
+    "example": "BR-021: selecting a zone restricts the street list, selecting a street restricts the building list."
+   },
+   "rfs_search": {
+    "title": "RFS Availability Search",
+    "does": "Searches the point of presence and returns service-type availability and any detected device at the location.",
+    "needs": "Installation address, utility identifier or area.",
+    "makes": "Ready-for-service result including service types and detected CPE/ONT.",
+    "example": "BR-024: service types shown are Fiber, FWA indoor and FWA outdoor."
+   },
+   "rfs_addr_lock": {
+    "title": "Address Locked After Check",
+    "does": "Locks the installation address as read-only after the RFS check.",
+    "needs": "RFS check result.",
+    "makes": "Locked installation address.",
+    "example": "BR-026: the installation address is read only after the ready for service check and can only be changed by recapture."
+   },
+   "rfs_poa_upload": {
+    "title": "Proof of Address Upload",
+    "does": "Uploads a tenancy document as proof of address.",
+    "needs": "PDF or Word document, max 2MB.",
+    "makes": "Stored proof-of-address document.",
+    "example": "BR-022 / P-01 / P-03: max 2MB, PDF or Word format; non-conforming files are rejected."
+   },
+   "ecc_check": {
+    "title": "Eligibility & Credit Control",
+    "does": "Validates connection-type eligibility and runs the credit check.",
+    "needs": "Verified customer identity, postpaid connection type.",
+    "makes": "Eligibility decision with a distinct failure message per condition.",
+    "example": "FAR_001_ECC_03: each eligibility failure condition displays its own configured message."
+   },
+   "ecc_fail": {
+    "title": "Eligibility Failure Message",
+    "does": "Shows a distinct message for the specific eligibility failure.",
+    "needs": "Failed eligibility/credit result.",
+    "makes": "Displayed failure reason; journey does not proceed.",
+    "example": "Each eligibility failure condition displays its own message from the configured message catalogue."
+   },
+   "bam_billing": {
+    "title": "Billing Account Management",
+    "does": "Creates or selects the billing account and captures the billing profile.",
+    "needs": "Eligible customer/account.",
+    "makes": "Billing account and payment profile.",
+    "example": "FAR_001_BAM_01: process follows the same capability (\"BAM\") as MPAR_001_BAM_*."
+   },
+   "qpc_plan": {
+    "title": "Product Catalogue & Cart",
+    "does": "Builds the cart: eligible base plan, default IPTV bundle (removable), mapped add-ons and discounts, live recalculation.",
+    "needs": "Service type available at address, customer segment.",
+    "makes": "Priced cart.",
+    "example": "BR-051 (Open): IPTV bundled by default with the base plan and may be removed by the agent at customer request."
+   },
+   "num_select": {
+    "title": "Number Selection",
+    "does": "Selects a fixed line number (fibre) or a mobile number (FWA only, no star numbers).",
+    "needs": "Free number list search.",
+    "makes": "Number added to cart, reviewed before confirmation.",
+    "example": "BR-061: a mobile number is selectable only for a fixed wireless access journey and a star number is not permitted for FWA."
+   },
+   "sim_select": {
+    "title": "SIM & CPE Selection (FWA only)",
+    "does": "Scans SIM and CPE serial numbers into the cart for FWA journeys.",
+    "needs": "Physical SIM/CPE serial numbers.",
+    "makes": "SIM and CPE lines added to cart (FWA only).",
+    "example": "BR-062: SIM and CPE are scanned only for a fixed wireless access journey."
+   },
+   "wfm_slot": {
+    "title": "Appointment Slot Retrieval & Selection",
+    "does": "Fetches and lets the agent select an appointment slot.",
+    "needs": "Installation address, service type.",
+    "makes": "Selected appointment slot.",
+    "example": "BR-070: available appointment slots with lead time and technician availability are fetched from WFM and the selected slot is passed back."
+   },
+   "wfm_applicability": {
+    "title": "Appointment Applicability by Service Type",
+    "does": "Determines whether appointment booking is required.",
+    "needs": "Service type (fibre, FWA indoor, FWA outdoor).",
+    "makes": "Skip (FWA indoor) or mandatory booking (fibre / FWA outdoor) decision.",
+    "example": "P-06/P-07: FWA indoor appointment = Skipped; FWA outdoor appointment = Mandatory."
+   },
+   "wfm_task": {
+    "title": "WFM Task Execution",
+    "does": "Technician executes the installation task and captures device/resource data.",
+    "needs": "Booked appointment.",
+    "makes": "ONT/STB serials, mesh device count & charge, wire length & charge, task closure with feedback.",
+    "example": "BR-074 / P-05: the first two mesh devices are complimentary; further devices carry the configured monthly recurring charge."
+   },
+   "wfm_fail": {
+    "title": "Workforce Failure Handling",
+    "does": "Creates a fault ticket for a reported installation issue and allows rescheduling.",
+    "needs": "Technician-reported issue.",
+    "makes": "Fault ticket; rescheduled appointment.",
+    "example": "BR-077: a reported installation issue creates a fault ticket, updates the task on closure and allows the appointment to be rescheduled."
+   },
+   "cvc_checkout": {
+    "title": "Cart Validation & Check Out",
+    "does": "Runs pre-payment validation and displays the payment request summary.",
+    "needs": "Completed cart, number, resource selections.",
+    "makes": "Validated, checked-out cart ready for contract.",
+    "example": "FAR_001_CVC_01: process follows the same capability (\"CVC\") as MPAR_001_CVC_*."
+   },
+   "caf_contract": {
+    "title": "Contract & Documentation (CAF)",
+    "does": "Generates/collects the signed contract application form and supporting documents.",
+    "needs": "Checked-out cart, key information display.",
+    "makes": "Signed CAF plus supporting documents.",
+    "example": "BR-084: the contract application form submission step may be skipped by an agent holding the fulfilment role."
+   },
+   "pay_payment": {
+    "title": "Payment & Inventory",
+    "does": "Processes the upfront payment and issues the receipt.",
+    "needs": "Signed CAF, checked-out cart.",
+    "makes": "Payment completion status.",
+    "example": "FAR_001_PAY_01: process follows the same capability (\"PAY\") as MPAR_001_PAY_*."
+   },
+   "pay_inventory": {
+    "title": "Inventory Depletion",
+    "does": "Depletes number/SIM/CPE inventory on payment completion.",
+    "needs": "Completed payment.",
+    "makes": "Updated inventory position.",
+    "example": "BR-092: fixed line number inventory depleted for fibre, and SIM/equipment inventory depleted for FWA, on payment completion."
+   },
+   "ord_submit": {
+    "title": "Order Submission",
+    "does": "Submits the order once all sections are complete and payment is paid.",
+    "needs": "Completed sections, paid payment status.",
+    "makes": "Submitted order routed to fulfilment.",
+    "example": "BR-093: the submit action is enabled only when all sections are complete and payment status is paid."
+   },
+   "not_order": {
+    "title": "Order Notification",
+    "does": "Sends submission/failure/completion notifications.",
+    "needs": "Order status events.",
+    "makes": "Customer notification.",
+    "example": "FAR_001_NOT_01: for WFM activities feedback & survey will be done separately at the WFM system."
+   },
+   "net_activation": {
+    "title": "Network Activation / Deactivation",
+    "does": "Triggers network activation via the order management system.",
+    "needs": "WFM task completion (fibre) or planned activation date (FWA indoor).",
+    "makes": "Activated network status pushed to CRM.",
+    "example": "BR-101: network activation proceeds on the planned activation date without a WFM task for FWA indoor."
+   },
+   "fin_billing_update": {
+    "title": "Billing Update After Fulfilment",
+    "does": "Sends account/product/service/resource information with per-line prices to billing.",
+    "needs": "WFM task closure (or order capture data for FWA indoor).",
+    "makes": "Updated billing account.",
+    "example": "BR-111: FWA indoor CPE is billed from order-capture data; fibre and FWA outdoor bill from the WFM task data."
+   },
+   "fin_order_complete": {
+    "title": "Order Completed",
+    "does": "Sets order status to completed and resolves the tracking record.",
+    "needs": "Billing update completion.",
+    "makes": "Completed order; resolved tracking record.",
+    "example": "BR-113: order completion sets the tracking record to resolved with the order number recorded."
+   },
+   "ins_detect": {
+    "title": "Instant Activation Eligibility Detection",
+    "does": "Checks RFS response for a reusable pre-installed device eligible for instant activation.",
+    "needs": "RFS response.",
+    "makes": "Instant-activation eligibility flag.",
+    "example": "BR-130 (Open): the RFS response indicates device presence and instant activation eligibility for an eligible location."
+   },
+   "ins_verify": {
+    "title": "Device Serial Verification",
+    "does": "Confirms the physical device serial matches the RFS-detected device.",
+    "needs": "Detected device serial, physical device.",
+    "makes": "Verified match or recorded mismatch.",
+    "example": "BR-131 (Open): instant activation does not proceed until the agent confirms the serial number match."
+   },
+   "ins_fail": {
+    "title": "Instant Activation Failure Handling",
+    "does": "Raises a support request and arranges a technician visit on instant-activation failure.",
+    "needs": "Non-working service post instant activation.",
+    "makes": "Support request; scheduled technician visit.",
+    "example": "BR-135 (Open): a non working service following instant activation raises a support request and arranges a technician visit."
+   },
+   "ins_channel": {
+    "title": "Channel Constraint",
+    "does": "Restricts instant activation to tablet-equipped field agents.",
+    "needs": "Field agent tablet device.",
+    "makes": "Channel-gated availability of instant activation.",
+    "example": "BR-136: instant activation is offered on a tablet field agent device and is not offered on a desktop only agent."
+   },
+   "mig_eligibility": {
+    "title": "Migration Eligibility Validation",
+    "does": "Validates the source FWA service is eligible for migration to Fibre.",
+    "needs": "Active FWA Indoor/Outdoor service, no conflicting open orders.",
+    "makes": "Eligibility pass/fail with displayed reason.",
+    "example": "BR-140A: migration is permitted only from active FWA Indoor or FWA Outdoor services to Fibre."
+   },
+   "mig_outdoor_recovery": {
+    "title": "Outdoor Device Recovery Appointment",
+    "does": "Books a device-recovery appointment for FWA Outdoor -> Fibre migrations.",
+    "needs": "Migration from FWA Outdoor.",
+    "makes": "Recovery task prior to migration completion.",
+    "example": "BR-144: FWA Outdoor migrations require separate outdoor device recovery."
+   },
+   "mig_failure": {
+    "title": "Migration Failure Handling",
+    "does": "Retains the existing FWA service and raises a support ticket on Fibre installation/activation failure.",
+    "needs": "Failed Fibre installation or activation.",
+    "makes": "Support ticket; retained FWA service.",
+    "example": "BR-145F: failed Fibre migration shall not automatically terminate the existing FWA service."
+   },
+   "hmv_device_decision": {
+    "title": "Old Location Device Handling",
+    "does": "Decides whether the old-location device is retained or uninstalled.",
+    "needs": "Origin service type of the move.",
+    "makes": "Retention (fibre-to-fibre) or uninstallation appointment (FWA outdoor origin).",
+    "example": "BR-153: no uninstallation appointment for a fibre-to-fibre home move; BR-154: uninstallation appointment captured for FWA outdoor origin."
+   },
+   "fpi_identifier": {
+    "title": "Portability Identifier at Appointment",
+    "does": "Marks the portability identifier and sets the initial portability appointment date.",
+    "needs": "Appointment booking step.",
+    "makes": "Portability identifier flag; provisional appointment date.",
+    "example": "BR-161A (Open): the Portability Appointment Date is auto set to Installation Date + 5 business days (excluding Friday and Saturday)."
+   },
+   "fpi_confirm": {
+    "title": "Portability Request Confirmation",
+    "does": "Receives the donor service provider's approve/reject decision from NPAS.",
+    "needs": "Submitted portability request.",
+    "makes": "Confirmed or rejected portability status.",
+    "example": "BR-164: NPAS updates the portability request status back after it is approved or rejected by the donor service provider."
+   },
+   "fpi_activation": {
+    "title": "Portability Activation After Completion",
+    "does": "Activates the ported number after completion, configured during the WFM task.",
+    "needs": "Completed WFM task, confirmed portability.",
+    "makes": "Activated ported fixed line number.",
+    "example": "BR-165: the ported number is activated after portability completion and configured during the field workforce management task, providing no temporary number."
+   },
+   "fpo_validate": {
+    "title": "Document & Mandatory Validation",
+    "does": "Validates the portability form, identity document, and mandatory field matches.",
+    "needs": "Portability form and identity document from NPAS.",
+    "makes": "Valid/invalid validation outcome.",
+    "example": "BR-173 / P-10: form date must be within 30 days; name, identity document number and service type must match system records."
+   },
+   "fpo_breach": {
+    "title": "Automatic Processing on Breach",
+    "does": "Auto-processes the port-out request when the service level is breached.",
+    "needs": "SLA timer expiry with no agent action.",
+    "makes": "Auto-accepted or auto-rejected outcome.",
+    "example": "BR-176 (Open): the auto accept against auto reject logic is to be confirmed."
+   },
+   "fpo_status_comm": {
+    "title": "Status Communication to NPAS",
+    "does": "Reports the accept/reject/conditional-accept decision back to NPAS.",
+    "needs": "Validation, outstanding-bill or breach-processing outcome.",
+    "makes": "Status code sent to NPAS.",
+    "example": "BR-177 (Open): the full rejection code list is to be supplied by VFQ."
+   },
+   "ter_retention": {
+    "title": "Retention Handling",
+    "does": "Routes the request through the retention process and captures its outcome.",
+    "needs": "Eligibility-validated termination request.",
+    "makes": "Retention outcome: retained, proceed to terminate, or customer unreachable.",
+    "example": "BR-202: retention outcome is captured as retained, proceed to terminate or customer unreachable before the next step."
+   },
+   "ter_penalty": {
+    "title": "Penalty Charge Display",
+    "does": "Calculates and displays the early-termination or lock-in penalty.",
+    "needs": "Service subscription period status.",
+    "makes": "Displayed penalty amount and reason.",
+    "example": "BR-204: plan lock-in is 3 months as mentioned in the CAF."
+   }
+  },
   "contractPlain": {},
-  "nameMap": {}
+  "nameMap": {
+   "JSM": "Journey and Session Management",
+   "KYC": "Customer Identification and Verification",
+   "CAM": "Customer and Account Management",
+   "ECC": "Eligibility and Credit Control",
+   "BAM": "Billing Account Management",
+   "QPC": "Product Catalogue and Cart",
+   "NUM": "Number Management",
+   "SIM": "SIM Management",
+   "PHY": "Resource Management",
+   "CVC": "Cart Validation & Check Out",
+   "CAF": "Contract and Documentation",
+   "PAY": "Payment and Inventory",
+   "ORD": "Order Submission",
+   "NOT": "Notification and Feedback",
+   "RFS": "Installation Address and Service Feasibility",
+   "WFM": "Appointment and Field Workforce Management",
+   "NET": "Network Activation/Deactivation and Fulfilment",
+   "FIN": "Billing Update and Order Completion",
+   "INS": "Instant Activation",
+   "MIG": "Fiber Connection Migration",
+   "HMV": "Home Move",
+   "FPI": "Fixed Number Portability Port In",
+   "FPO": "Fixed Number Portability Port Out",
+   "TER": "Fibre Termination",
+   "GIS": "RFS Data Management"
+  }
  }
 }
