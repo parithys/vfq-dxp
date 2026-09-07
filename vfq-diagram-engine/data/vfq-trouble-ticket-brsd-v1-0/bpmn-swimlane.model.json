@@ -1920,6 +1920,22 @@
    "y": 1158.0,
    "cx": 16978.0,
    "cy": 1200.0
+  },
+  {
+   "id": "close_activities_on_closure",
+   "type": "system",
+   "lane": "sys",
+   "phase": 57,
+   "label": "Close Activities on Ticket Closure",
+   "sub": "TT-001-VEW-06",
+   "desc": "System closes all activities associated with the Trouble Ticket when the ticket status moves to Closed.",
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 14615.0,
+   "y": 870.0,
+   "cx": 14710.0,
+   "cy": 920.0
   }
  ],
  "flows": [
@@ -2650,7 +2666,7 @@
   },
   {
    "from": "ticket_closure",
-   "to": "csat_trigger",
+   "to": "close_activities_on_closure",
    "kind": "seq",
    "happy": true
   },
@@ -2711,6 +2727,12 @@
   {
    "from": "rag_indicator",
    "to": "end",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "close_activities_on_closure",
+   "to": "csat_trigger",
    "kind": "seq",
    "happy": true
   }

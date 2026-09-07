@@ -10,7 +10,7 @@
   "topbar": 70,
   "colw": 252,
   "totalW": 2024,
-  "totalH": 6210,
+  "totalH": 3570,
   "laneLabelW": 60,
   "lanes": [
    {
@@ -25,28 +25,28 @@
     "name": "Agent",
     "hint": "Agent-driven actions across Agent 360 capabilities",
     "y": 350,
-    "h": 2680
+    "h": 1360
    },
    {
     "key": "boff",
     "name": "Backoffice / Privileged Staff",
     "hint": "Configure and publish notifications and bulk notes",
-    "y": 3050,
+    "y": 1730,
     "h": 480
    },
    {
     "key": "sup",
     "name": "Supervisor",
     "hint": "Task assignment authority",
-    "y": 3550,
+    "y": 2230,
     "h": 260
    },
    {
     "key": "sys",
     "name": "System (DXP / Siebel)",
     "hint": "Role-based views, validation, storage, expiry",
-    "y": 3830,
-    "h": 2240
+    "y": 2510,
+    "h": 920
    }
   ],
   "phases": [
@@ -109,9 +109,9 @@
    "w": 190,
    "h": 100,
    "x": 443.0,
-   "y": 3910.0,
+   "y": 2590.0,
    "cx": 538.0,
-   "cy": 3960.0
+   "cy": 2640.0
   },
   {
    "id": "profile_edit_initiate",
@@ -184,13 +184,13 @@
      "to": "change_password"
     }
    ],
-   "slot": 0,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 939.0,
-   "y": 450.0,
+   "y": 670.0,
    "cx": 1042.0,
-   "cy": 480.0
+   "cy": 700.0
   },
   {
    "id": "change_password",
@@ -200,13 +200,13 @@
    "label": "Change Password",
    "sub": "AGN-001-APM-06",
    "desc": "The Agent shall be able to change password by providing current password, new password, and confirm password.",
-   "slot": 1,
+   "slot": 2,
    "w": 206,
    "h": 60,
    "x": 939.0,
-   "y": 670.0,
+   "y": 890.0,
    "cx": 1042.0,
-   "cy": 700.0
+   "cy": 920.0
   },
   {
    "id": "identify_change_password",
@@ -241,13 +241,13 @@
    "controls": [
     "BR-02: An agent may request an MFA change only after identity verification and within the privileges approved by VFQ Security."
    ],
-   "slot": 3,
+   "slot": 5,
    "w": 206,
    "h": 60,
    "x": 939.0,
-   "y": 1110.0,
+   "y": 1550.0,
    "cx": 1042.0,
-   "cy": 1140.0
+   "cy": 1580.0
   },
   {
    "id": "identify_mfa",
@@ -266,13 +266,13 @@
      "to": "update_mfa"
     }
    ],
-   "slot": 2,
+   "slot": 4,
    "w": 176,
    "h": 100,
    "x": 702.0,
-   "y": 870.0,
+   "y": 1310.0,
    "cx": 790.0,
-   "cy": 920.0
+   "cy": 1360.0
   },
   {
    "id": "change_language",
@@ -282,13 +282,13 @@
    "label": "Change Language",
    "sub": "AGN-001-APM-09 \u00b7 BR-01",
    "desc": "The Agent shall be able to change language from available options.",
-   "slot": 2,
+   "slot": 3,
    "w": 206,
    "h": 60,
    "x": 939.0,
-   "y": 890.0,
+   "y": 1110.0,
    "cx": 1042.0,
-   "cy": 920.0
+   "cy": 1140.0
   },
   {
    "id": "save_profile",
@@ -308,13 +308,13 @@
      "to": "profile_edit_initiate"
     }
    ],
-   "slot": 1,
+   "slot": 2,
    "w": 190,
    "h": 56,
    "x": 1199.0,
-   "y": 4152.0,
+   "y": 3052.0,
    "cx": 1294.0,
-   "cy": 4180.0
+   "cy": 3080.0
   },
   {
    "id": "profile_saved",
@@ -324,13 +324,13 @@
    "label": "Profile Changes Saved",
    "sub": "Status Model: Agent Profile",
    "desc": "Agent Profile status model: Saved \u2014 Profile changes are saved.",
-   "slot": 0,
+   "slot": 3,
    "w": 84,
    "h": 84,
    "x": 1252.0,
-   "y": 3918.0,
+   "y": 3258.0,
    "cx": 1294.0,
-   "cy": 3960.0
+   "cy": 3300.0
   },
   {
    "id": "view_eligible_entities",
@@ -355,23 +355,23 @@
    "id": "choose_entity_type",
    "type": "agent",
    "lane": "agt",
-   "phase": 6,
+   "phase": 2,
    "label": "Choose Entity Type",
    "sub": "AGN-001-AEX-03",
    "desc": "The Agent shall be able to choose the entity type before export.",
-   "slot": 0,
+   "slot": 2,
    "w": 206,
    "h": 60,
-   "x": 1695.0,
-   "y": 450.0,
-   "cx": 1798.0,
-   "cy": 480.0
+   "x": 687.0,
+   "y": 890.0,
+   "cx": 790.0,
+   "cy": 920.0
   },
   {
    "id": "export_entities",
    "type": "end",
    "lane": "agt",
-   "phase": 6,
+   "phase": 2,
    "label": "Export Visible Entities",
    "sub": "AGN-001-AEX-02",
    "desc": "The Agent shall be able to export all visible entity records such as Orders, and Tickets.",
@@ -379,13 +379,13 @@
     "Order export",
     "Ticket export"
    ],
-   "slot": 1,
+   "slot": 3,
    "w": 84,
    "h": 84,
-   "x": 1756.0,
-   "y": 658.0,
-   "cx": 1798.0,
-   "cy": 700.0
+   "x": 748.0,
+   "y": 1098.0,
+   "cx": 790.0,
+   "cy": 1140.0
   },
   {
    "id": "configure_bell",
@@ -403,15 +403,15 @@
    "w": 206,
    "h": 100,
    "x": 1443.0,
-   "y": 3130.0,
+   "y": 1810.0,
    "cx": 1546.0,
-   "cy": 3180.0
+   "cy": 1860.0
   },
   {
    "id": "publish_bell",
    "type": "agent",
    "lane": "boff",
-   "phase": 6,
+   "phase": 3,
    "label": "Publish Notification Manually",
    "sub": "AGN-001-BIN-02 \u00b7 BR-03, BR-04",
    "desc": "The privileged Agent shall be able to publish bell icon notifications manually using a defined format.",
@@ -422,90 +422,90 @@
    "slot": 0,
    "w": 206,
    "h": 100,
-   "x": 1695.0,
-   "y": 3130.0,
-   "cx": 1798.0,
-   "cy": 3180.0
+   "x": 939.0,
+   "y": 1810.0,
+   "cx": 1042.0,
+   "cy": 1860.0
   },
   {
    "id": "view_bell_banner",
    "type": "agent",
    "lane": "agt",
-   "phase": 6,
+   "phase": 3,
    "label": "View Bell Banner",
    "sub": "AGN-001-BIN-03",
    "desc": "The Agent shall be able to view the bell icon notification as a banner across Customer 360 screens.",
-   "slot": 2,
+   "slot": 0,
    "w": 206,
    "h": 60,
-   "x": 1695.0,
-   "y": 890.0,
-   "cx": 1798.0,
-   "cy": 920.0
+   "x": 939.0,
+   "y": 450.0,
+   "cx": 1042.0,
+   "cy": 480.0
   },
   {
    "id": "bell_visibility",
    "type": "system",
    "lane": "sys",
-   "phase": 6,
+   "phase": 3,
    "label": "Customer-Specific Notification Visibility",
    "sub": "AGN-001-BIN-04",
    "desc": "The System shall display only customer account or MSISDN-specific notifications based on access permissions.",
    "slot": 0,
    "w": 190,
    "h": 100,
-   "x": 1703.0,
-   "y": 3910.0,
-   "cx": 1798.0,
-   "cy": 3960.0
+   "x": 947.0,
+   "y": 2590.0,
+   "cx": 1042.0,
+   "cy": 2640.0
   },
   {
    "id": "sort_bell",
    "type": "system",
    "lane": "sys",
-   "phase": 6,
+   "phase": 3,
    "label": "Sort Notifications",
    "sub": "AGN-001-BIN-05",
    "desc": "The System shall sort customer notifications from latest to oldest.",
    "slot": 2,
    "w": 190,
    "h": 56,
-   "x": 1703.0,
-   "y": 4372.0,
-   "cx": 1798.0,
-   "cy": 4400.0
+   "x": 947.0,
+   "y": 3052.0,
+   "cx": 1042.0,
+   "cy": 3080.0
   },
   {
    "id": "no_manual_expire",
    "type": "control",
    "lane": "agt",
-   "phase": 6,
+   "phase": 3,
    "label": "No Manual Expiration",
    "sub": "AGN-001-BIN-06",
    "desc": "The agent shall not be able to expire the bell icon notification manually.",
-   "slot": 3,
+   "slot": 4,
    "w": 206,
    "h": 60,
-   "x": 1695.0,
-   "y": 1110.0,
-   "cx": 1798.0,
-   "cy": 1140.0
+   "x": 939.0,
+   "y": 1330.0,
+   "cx": 1042.0,
+   "cy": 1360.0
   },
   {
    "id": "expire_bell",
    "type": "end",
    "lane": "sys",
-   "phase": 6,
+   "phase": 3,
    "label": "Expire Notification",
    "sub": "AGN-001-BIN-07",
    "desc": "The System shall remove bell icon notification after the preconfigured expiration interval.",
-   "slot": 4,
+   "slot": 1,
    "w": 100,
    "h": 100,
-   "x": 1748.0,
-   "y": 4790.0,
-   "cx": 1798.0,
-   "cy": 4840.0
+   "x": 992.0,
+   "y": 2810.0,
+   "cx": 1042.0,
+   "cy": 2860.0
   },
   {
    "id": "configure_bulk_notes",
@@ -523,57 +523,57 @@
    "w": 206,
    "h": 60,
    "x": 1443.0,
-   "y": 3370.0,
+   "y": 2050.0,
    "cx": 1546.0,
-   "cy": 3400.0
+   "cy": 2080.0
   },
   {
    "id": "apply_bulk_note",
    "type": "system",
    "lane": "sys",
-   "phase": 6,
+   "phase": 4,
    "label": "Apply Note to Multiple Accounts",
    "sub": "AGN-001-BNT-02",
    "desc": "The System shall allow the same bulk note to be applied to multiple customer accounts.",
-   "slot": 3,
+   "slot": 1,
    "w": 190,
    "h": 100,
-   "x": 1703.0,
-   "y": 4570.0,
-   "cx": 1798.0,
-   "cy": 4620.0
+   "x": 1199.0,
+   "y": 2810.0,
+   "cx": 1294.0,
+   "cy": 2860.0
   },
   {
    "id": "view_bulk_notes",
    "type": "agent",
    "lane": "agt",
-   "phase": 6,
+   "phase": 4,
    "label": "View Bulk Notes",
    "sub": "AGN-001-BNT-01",
    "desc": "The Agent shall be able to view multiple notes pushed by the system with posting date and time.",
-   "slot": 4,
+   "slot": 0,
    "w": 206,
    "h": 60,
-   "x": 1695.0,
-   "y": 1330.0,
-   "cx": 1798.0,
-   "cy": 1360.0
+   "x": 1191.0,
+   "y": 450.0,
+   "cx": 1294.0,
+   "cy": 480.0
   },
   {
    "id": "bulk_note_posted",
    "type": "end",
    "lane": "sys",
-   "phase": 6,
+   "phase": 4,
    "label": "Bulk Note Visibility Maintained",
    "sub": "AGN-001-BNT-03",
    "desc": "The System shall display bulk notes irrespective of timeline after posting.",
-   "slot": 5,
+   "slot": 0,
    "w": 100,
    "h": 100,
-   "x": 1748.0,
-   "y": 5010.0,
-   "cx": 1798.0,
-   "cy": 5060.0
+   "x": 1244.0,
+   "y": 2590.0,
+   "cx": 1294.0,
+   "cy": 2640.0
   },
   {
    "id": "view_task_dashboard",
@@ -595,39 +595,39 @@
    "id": "display_assigned_tasks",
    "type": "system",
    "lane": "sys",
-   "phase": 6,
+   "phase": 5,
    "label": "Display Assigned Tasks",
    "sub": "AGN-001-ATV-02",
    "desc": "The System shall display assigned tasks and priority tasks only for the logged-in agent.",
-   "slot": 6,
+   "slot": 2,
    "w": 190,
    "h": 56,
-   "x": 1703.0,
-   "y": 5252.0,
-   "cx": 1798.0,
-   "cy": 5280.0
+   "x": 1451.0,
+   "y": 3052.0,
+   "cx": 1546.0,
+   "cy": 3080.0
   },
   {
    "id": "categorize_tasks",
    "type": "system",
    "lane": "sys",
-   "phase": 6,
+   "phase": 5,
    "label": "Categorize Tasks",
    "sub": "AGN-001-ATV-05",
    "desc": "The System shall categorize tasks based on priority and open task rules.",
    "slot": 1,
    "w": 190,
    "h": 56,
-   "x": 1703.0,
-   "y": 4152.0,
-   "cx": 1798.0,
-   "cy": 4180.0
+   "x": 1451.0,
+   "y": 2832.0,
+   "cx": 1546.0,
+   "cy": 2860.0
   },
   {
    "id": "supervisor_assign_task",
    "type": "agent",
    "lane": "sup",
-   "phase": 6,
+   "phase": 5,
    "label": "Supervisor Assigns Task",
    "sub": "AGN-001-ATV-03 \u00b7 BR-05",
    "desc": "The System shall allow only the supervisor to assign tasks to team members.",
@@ -637,58 +637,58 @@
    "slot": 0,
    "w": 206,
    "h": 60,
-   "x": 1695.0,
-   "y": 3650.0,
-   "cx": 1798.0,
-   "cy": 3680.0
+   "x": 1443.0,
+   "y": 2330.0,
+   "cx": 1546.0,
+   "cy": 2360.0
   },
   {
    "id": "navigate_task_detail",
    "type": "agent",
    "lane": "agt",
-   "phase": 6,
+   "phase": 5,
    "label": "Navigate to Task Detail",
    "sub": "AGN-001-ATV-04",
    "desc": "The Agent shall be able to navigate to detailed task view by selecting Open Tasks.",
-   "slot": 5,
+   "slot": 2,
    "w": 206,
    "h": 60,
-   "x": 1695.0,
-   "y": 1550.0,
-   "cx": 1798.0,
-   "cy": 1580.0
+   "x": 1443.0,
+   "y": 890.0,
+   "cx": 1546.0,
+   "cy": 920.0
   },
   {
    "id": "update_task_status",
    "type": "agent",
    "lane": "agt",
-   "phase": 6,
+   "phase": 5,
    "label": "Update Task Status",
    "sub": "AGN-001-ATV-06",
    "desc": "The Agent shall be able to move task status to In-progress or Close.",
-   "slot": 6,
+   "slot": 3,
    "w": 206,
    "h": 60,
-   "x": 1695.0,
-   "y": 1770.0,
-   "cx": 1798.0,
-   "cy": 1800.0
+   "x": 1443.0,
+   "y": 1110.0,
+   "cx": 1546.0,
+   "cy": 1140.0
   },
   {
    "id": "task_closed",
    "type": "end",
    "lane": "sys",
-   "phase": 6,
+   "phase": 5,
    "label": "Task Closed",
    "sub": "Status Model: Task",
    "desc": "Agent closes task.",
-   "slot": 7,
+   "slot": 3,
    "w": 84,
    "h": 84,
-   "x": 1756.0,
-   "y": 5458.0,
-   "cx": 1798.0,
-   "cy": 5500.0
+   "x": 1504.0,
+   "y": 3258.0,
+   "cx": 1546.0,
+   "cy": 3300.0
   },
   {
    "id": "approval_matrix",
@@ -702,9 +702,9 @@
    "w": 190,
    "h": 100,
    "x": 1451.0,
-   "y": 3910.0,
+   "y": 2590.0,
    "cx": 1546.0,
-   "cy": 3960.0
+   "cy": 2640.0
   },
   {
    "id": "view_assigned_approvals",
@@ -714,13 +714,13 @@
    "label": "View Assigned Approval Tasks",
    "sub": "AGN-001-AAV-02",
    "desc": "The System shall display all approval tasks assigned to the specific agent.",
-   "slot": 8,
+   "slot": 0,
    "w": 206,
    "h": 100,
    "x": 1695.0,
-   "y": 2190.0,
+   "y": 430.0,
    "cx": 1798.0,
-   "cy": 2240.0
+   "cy": 480.0
   },
   {
    "id": "view_task_detail_approval",
@@ -739,13 +739,14 @@
      "to": "view_assigned_approvals"
     }
    ],
-   "slot": 9,
+   "slot": 2,
    "w": 206,
    "h": 60,
    "x": 1695.0,
-   "y": 2430.0,
+   "y": 890.0,
    "cx": 1798.0,
-   "cy": 2460.0
+   "cy": 920.0,
+   "sub": "AGN-001-AAV-06"
   },
   {
    "id": "view_task_history",
@@ -755,13 +756,13 @@
    "label": "View Task History",
    "sub": "AGN-001-AAV-05",
    "desc": "The Agent shall be able to see task history before confirming Approval, Rejection, or Return.",
-   "slot": 11,
+   "slot": 4,
    "w": 206,
    "h": 60,
    "x": 1695.0,
-   "y": 2870.0,
+   "y": 1330.0,
    "cx": 1798.0,
-   "cy": 2900.0
+   "cy": 1360.0
   },
   {
    "id": "approve_reject_return",
@@ -788,13 +789,13 @@
      "to": "add_approval_notes"
     }
    ],
-   "slot": 10,
+   "slot": 1,
    "w": 150,
    "h": 100,
    "x": 1723.0,
-   "y": 2630.0,
+   "y": 650.0,
    "cx": 1798.0,
-   "cy": 2680.0
+   "cy": 700.0
   },
   {
    "id": "add_approval_notes",
@@ -807,13 +808,13 @@
    "controls": [
     "BR-06: Only the assigned approver may approve, reject, or return an approval task; rejection or return must include the applicable reason and supporting notes."
    ],
-   "slot": 7,
+   "slot": 3,
    "w": 206,
    "h": 60,
    "x": 1695.0,
-   "y": 1990.0,
+   "y": 1110.0,
    "cx": 1798.0,
-   "cy": 2020.0
+   "cy": 1140.0
   },
   {
    "id": "approval_approved",
@@ -823,13 +824,13 @@
    "label": "Approval Task Approved",
    "sub": "Status Model: Approval Task",
    "desc": "Approver selects approve.",
-   "slot": 8,
+   "slot": 0,
    "w": 84,
    "h": 84,
    "x": 1756.0,
-   "y": 5678.0,
+   "y": 2598.0,
    "cx": 1798.0,
-   "cy": 5720.0
+   "cy": 2640.0
   },
   {
    "id": "approval_rejected",
@@ -839,13 +840,13 @@
    "label": "Approval Task Rejected",
    "sub": "Status Model: Approval Task",
    "desc": "Approver selects reject.",
-   "slot": 9,
+   "slot": 1,
    "w": 84,
    "h": 84,
    "x": 1756.0,
-   "y": 5898.0,
+   "y": 2818.0,
    "cx": 1798.0,
-   "cy": 5940.0
+   "cy": 2860.0
   }
  ],
  "flows": [

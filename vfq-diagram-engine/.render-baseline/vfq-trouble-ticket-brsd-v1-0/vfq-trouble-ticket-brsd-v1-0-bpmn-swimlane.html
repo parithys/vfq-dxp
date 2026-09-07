@@ -89,8 +89,18 @@ a{color:var(--accent);text-decoration:none}
    the full list. Export used to sit in the diagram toolbar (alongside a Reset button, at the
    end); that toolbar has since been removed entirely (see the ".toolbar" comment further down),
    so this header group is the ONLY place any of these buttons live. flex-shrink:0 keeps the
-   group from being compressed if the title is long. */
-.top .header-actions{flex:none;display:flex;align-items:center;gap:8px}
+   group from being compressed if the title is long.
+
+   The group is now a two-row stack (.header-row1/.header-row2), per an explicit "two-row
+   structure" requirement for this corner: row 1 keeps the four buttons above unchanged, row 2
+   holds the zoom control (-/percentage/+) and the Jump to Phase select that replaced the former
+   Actors dropdown (see the removed applyActorFilter()/.actor-dim comments this replaces for that
+   feature's own history — it was a multi-select lane/actor visibility filter, unrelated to
+   navigation, and is not reused or ported forward here). align-items:flex-end keeps both rows
+   right-aligned against the header's own right edge, matching row 1's prior single-row
+   alignment. */
+.top .header-actions{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.top .header-row1,.top .header-row2{display:flex;align-items:center;gap:8px}
 /* Two-line title, explicit visual hierarchy per an explicit requirement: a small uppercase
    "BPMN Swimlane" eyebrow line above the actual diagram title, the latter now the dominant
    element instead of both being fused into one 20px line. The eyebrow reuses the exact
@@ -151,28 +161,25 @@ a{color:var(--accent);text-decoration:none}
 .exportmenu button:hover{background:var(--accent);color:#fff}
 .exportmenu button:hover .fmt-hint{color:rgba(255,255,255,.75)}
 .exportmenu .fmt-hint{font-size:10.5px;color:var(--muted)}
-/* Actors dropdown — same absolute-panel mechanism as .exportwrap/.exportmenu immediately above
-   (position:relative wrapper, position:absolute panel toggled via .open, closed by the same
-   document-level click-away listener), reused rather than re-invented since it already solves
-   "a button that opens a panel, closes on outside click, doesn't close on clicks inside it." A
-   checkbox list replaces the export menu's action buttons since this one is a multi-select
-   filter, not a set of one-shot commands. */
-.actorswrap{position:relative;display:inline-block}
-.actorsmenu{position:absolute;right:0;top:calc(100% + 5px);background:var(--panel);border:1px solid var(--line);
- border-radius:var(--radius-card);box-shadow:var(--shadow-raised);display:none;flex-direction:column;min-width:220px;max-width:280px;z-index:60;overflow:hidden;padding:var(--space-1)}
-.actorsmenu.open{display:flex}
-.actorsmenu-head{display:flex;justify-content:space-between;gap:8px;padding:6px 10px;border-bottom:1px solid var(--line2);margin-bottom:2px}
-.actorsmenu-head button{border:none;background:none;padding:0;font-size:11px;font-weight:700;color:var(--pg);cursor:pointer}
-.actorsmenu-head button:hover{text-decoration:underline}
-.actorsmenu-list{max-height:280px;overflow-y:auto;padding:2px}
-.actor-row{display:flex;align-items:flex-start;gap:8px;padding:7px 8px;border-radius:4px;cursor:pointer}
-.actor-row:hover{background:var(--panelalt)}
-.actor-row input{margin:2px 0 0;accent-color:var(--accent);flex:none;cursor:pointer}
-.actor-row .actor-name{font-size:12.5px;font-weight:700;color:var(--ink);display:block}
-.actor-row .actor-hint{font-size:10.5px;color:var(--muted);display:block;margin-top:1px}
-.actors-badge{display:inline-block;font-size:10px;font-weight:700;background:var(--panelalt);color:var(--ink2);
- border-radius:var(--radius-pill);padding:1px 6px;margin-left:2px}
-.btn.on .actors-badge{background:rgba(255,255,255,.25);color:#fff}
+/* Zoom control + Jump to Phase — replace the former Actors dropdown (a multi-select actor/lane
+   filter, removed entirely; see the removed applyActorFilter()/.actor-dim comments this replaces
+   for that feature's own history). Both are plain, always-visible controls (no absolute-panel
+   popover like .exportwrap/.exportmenu above), living in a second header row underneath Reset/
+   View Details/Happy Flow/Export per an explicit "two-row structure" requirement for the
+   header's right-hand control group. */
+.zoomctrl{display:flex;align-items:center;border:1px solid var(--line);background:var(--panel);
+ border-radius:var(--radius-button);overflow:hidden}
+.zoomctrl .zoombtn{border:none;background:none;color:var(--ink2);font-size:15px;font-weight:700;
+ line-height:1;cursor:pointer;padding:var(--space-2) var(--space-3);display:flex;align-items:center;
+ justify-content:center;transition:background .15s var(--ease-standard),color .15s var(--ease-standard)}
+.zoomctrl .zoombtn:hover{background:var(--panelalt);color:var(--accent)}
+.zoomctrl .zoompct{font-size:12px;font-weight:700;color:var(--ink);min-width:40px;text-align:center;
+ font-variant-numeric:tabular-nums;padding:0 2px;border-left:1px solid var(--line2);border-right:1px solid var(--line2)}
+.jumpphase{display:flex;align-items:center;gap:8px}
+.jumpphase-label{font-size:12px;font-weight:700;color:rgba(255,255,255,.85);white-space:nowrap}
+.phaseselect{border:1px solid var(--line);background:var(--panel);color:var(--ink2);
+ border-radius:var(--radius-button);padding:var(--space-2) var(--space-3);font-size:12px;font-weight:600;
+ cursor:pointer;min-width:88px}
 /* .chip and the Flows filter it labelled have both been removed entirely — every connector
    kind is now unconditionally visible, with no toggle UI at all. */
 /* diagram */
@@ -282,7 +289,25 @@ a{color:var(--accent);text-decoration:none}
    documented behaviour — see DESIGN_SYSTEM.md "Node types" for the corrected spec. */
 .node.selected .box{stroke:var(--accent) !important;stroke-width:4px !important;filter:drop-shadow(0 0 6px rgba(230,0,0,.65)) drop-shadow(0 1px 3px rgba(0,0,0,.25))}
 .node.selected{opacity:1 !important}
-.node text{font-family:"Inter","Segoe UI",system-ui,sans-serif;pointer-events:none}
+/* Happy Path Playback highlight states — deliberately separate classes/colours from the hover/
+   click-lock system above (.dim/.hlpath/.selected, all brand-red) and from the Happy Flow filter
+   (which hides content via display:none, not colour). Playback highlights must accumulate and
+   persist across hover/lock changes elsewhere on the canvas and must survive until Reset is
+   explicitly triggered — reusing the red selection/lock colour or its classes would mean an
+   ordinary node hover or a Prev/Next click stomps playback's own state (clearAllHL() only ever
+   touches .dim/.hlpath, never .hp-active/.hp-done, so the two systems can never collide).
+   hp-done (a node the playback has already stepped through) uses the same green already reserved
+   for 'start'-type nodes elsewhere on this canvas, reading as "completed/success". hp-active (the
+   single node currently being visited) uses amber/gold with a slow pulse so the current position
+   is unambiguous even on a large, hundreds-of-nodes diagram — see the animation further down. */
+.node.hp-done .box{stroke:#1e7d34 !important;stroke-width:3px !important;filter:drop-shadow(0 0 5px rgba(30,125,52,.55))}
+.node.hp-active .box{stroke:#e6a700 !important;stroke-width:4px !important;animation:hpPulse 1.1s ease-in-out infinite}
+@keyframes hpPulse{
+ 0%,100%{filter:drop-shadow(0 0 4px rgba(230,167,0,.6))}
+ 50%{filter:drop-shadow(0 0 11px rgba(230,167,0,1))}
+}
+.edge.hp-done{stroke:#1e7d34 !important;stroke-width:2.6px !important;filter:none !important}
+.node text{font-family:"Segoe UI",Arial,sans-serif;pointer-events:none}
 /* Minimum 14px font-size across the diagram canvas (nodes, connectors, lane gutter, phase
    headers, legend) for readability — every diagram-canvas text size that was previously below
    14px (node sub-labels at 9.5px, lane hints at 9px, edge labels at 9.5px, phase badge numbers
@@ -301,11 +326,15 @@ a{color:var(--accent);text-decoration:none}
 /* .node .sub (the reference/requirement-code caption under a node's label) has been removed
    entirely, along with the JS that rendered it — see the NODES.forEach loop. */
 .edge{fill:none;stroke-linejoin:round;transition:opacity .15s var(--ease-standard),filter .15s var(--ease-standard)}
-.edge.seq{stroke:var(--sys);stroke-width:1.7}
-.edge.data{stroke:var(--pg);stroke-width:1.5;stroke-dasharray:5 4}
-.edge.cond{stroke:var(--dec);stroke-width:1.6;stroke-dasharray:2 4}
-.edge.esc{stroke:var(--esc);stroke-width:2}
-.edge.err{stroke:var(--err);stroke-width:1.8;stroke-dasharray:4 4}
+/* Literal hex here (not var()) is intentional: these five colours are decoupled from the
+   shared :root tokens on purpose, since --sys/--pg/--dec/--esc/--err are also used by the
+   (preserved) drawer's .dsec-* sections — changing the shared token would have silently
+   recoloured the drawer along with the canvas. Values match the reference canvas design. */
+.edge.seq{stroke:#333333;stroke-width:1.7}
+.edge.data{stroke:#555555;stroke-width:1.5;stroke-dasharray:5 4}
+.edge.cond{stroke:#8a8f98;stroke-width:1.6;stroke-dasharray:2 4}
+.edge.esc{stroke:#b7791f;stroke-width:2}
+.edge.err{stroke:#c0392b;stroke-width:1.8;stroke-dasharray:4 4}
 /* Connector labels went through two changes in successive rounds. A prior version carried a
    4.5px white stroke halo (via paint-order:stroke) as a background/pill effect to keep small
    text legible against whatever it crossed; that halo was then removed entirely (no stroke,
@@ -318,7 +347,7 @@ a{color:var(--accent);text-decoration:none}
    background was asked to come back, not the original bold weight. The net result is a label
    that reads as lighter/secondary via its typography (italic, not bold) while still being
    fully legible against anything it happens to cross, via the restored white halo. */
-.elabel{font-size:14px;font-style:italic;font-weight:700;fill:#4a4d4e;paint-order:stroke;stroke:#fff;stroke-width:4.5px;stroke-linejoin:round}
+.elabel{font-family:"Segoe UI",Arial,sans-serif;font-size:14px;font-style:italic;font-weight:700;fill:#4a4d4e;paint-order:stroke;stroke:#fff;stroke-width:4.5px;stroke-linejoin:round}
 /* Inactive/background dimming for the hover-isolation interaction. Previously .12 opacity left
    unrelated nodes/edges clearly legible, which read as "everything is still part of the story"
    rather than "this is the isolated path" — the whole point of the interaction. Two changes,
@@ -330,16 +359,7 @@ a{color:var(--accent);text-decoration:none}
        read very differently even at matched opacity. Never applied to .selected (see rule
        above) or to the active/highlighted path (.hl / .hlpath), which stay at full opacity and
        full colour so the active path has maximum contrast against the greyed-out rest. */
-/* .actor-dim gets the IDENTICAL visual treatment as .dim (same opacity/grayscale fade) but is
-   a SEPARATE class with its own independent state source (the Actors dropdown's selection set,
-   see applyActorFilter() further down) rather than a reuse of .dim itself. .dim is already
-   exclusively owned by the hover/click highlight-lock (applyHL()/clearAllHL() unconditionally
-   recompute it on every hover/click); sharing one class between two independent triggers would
-   mean each stomps the other's state the instant either fires. Two separate classes combine
-   naturally via the DOM's own class list — a node can be actor-dimmed AND hover-highlighted (or
-   neither, or either) with no special-casing required, and each system only ever touches its
-   own class. */
-.dim,.actor-dim{opacity:.05;filter:grayscale(1) brightness(1.15);transition:opacity .15s var(--ease-standard),filter .15s var(--ease-standard)}
+.dim{opacity:.05;filter:grayscale(1) brightness(1.15);transition:opacity .15s var(--ease-standard),filter .15s var(--ease-standard)}
 .hl{opacity:1 !important;filter:none !important}
 /* The active/highlighted path (hover-isolated edges) is redrawn in brand red plus a soft glow —
    matching the selection treatment above — instead of merely thickening the edge's own type
@@ -353,17 +373,17 @@ a{color:var(--accent);text-decoration:none}
    thickness and arrowhead size fixed across hover/selected states and rely on colour + glow
    alone. */
 .edge.hlpath{stroke:var(--accent) !important;filter:drop-shadow(0 0 3px rgba(230,0,0,.55)) !important}
-.lanelabel{font-size:14px;font-weight:700;fill:#4a4d4e}
+.lanelabel{font-family:"Segoe UI",Arial,sans-serif;font-size:14px;font-weight:700;fill:#1a1a1a}
 /* .lanehint restored — hints render inline again as additional rotated column(s) after the
    lane name's own column(s), per an explicit "display the sub-headings too" requirement. It
    was removed for a round in between (a vertical-orientation change initially left no room
    for a second element beside the rotated name at all) but that gap has been closed: see the
    lane-gutter rendering loop below for how name and hint columns now share one consistent
    column-layout scheme. Kept at the same 14px minimum every other canvas text respects. */
-.lanehint{font-size:14px;fill:#6f7375}
-.leglabel{font-size:14px;font-weight:600;fill:#333333}
-.legcat{font-size:14px;font-weight:800;fill:#6f7375;letter-spacing:.08em}
-.phasehdr{font-size:14px;font-weight:700;fill:#ffffff;dominant-baseline:middle}
+.lanehint{font-family:"Segoe UI",Arial,sans-serif;font-size:14px;fill:#6f7375}
+.leglabel{font-family:"Segoe UI",Arial,sans-serif;font-size:14px;font-weight:600;fill:#333333}
+.legcat{font-family:"Segoe UI",Arial,sans-serif;font-size:14px;font-weight:800;fill:#6f7375;letter-spacing:.08em}
+.phasehdr{font-family:"Segoe UI",Arial,sans-serif;font-size:14px;font-weight:700;fill:#1a1a1a;dominant-baseline:middle}
 /* .phasenum removed: the numbered badge circle it styled (a small red circle with the stage's
    1-based index) has been removed entirely from the phase header — stage headings now show
    only their name, per an explicit "remove the numeric prefixes" requirement. */
@@ -555,25 +575,31 @@ body.drawer-resizing .drawer{transition:none}
 <header class="top">
  <h1><span class="h1-eyebrow">BPMN Swimlane</span><span class="h1-main">Portfolio Governance Portal</span><span class="h1-sub">Agent Ecosystem Business Process</span></h1>
  <div class="header-actions">
-  <button class="btn" id="resetBtn">Reset</button>
-  <button class="btn" id="viewDetailsBtn">View Details</button>
-  <button class="btn" id="happyFlow">Happy Flow</button>
-  <div class="actorswrap">
-   <button class="btn" id="actorsBtn">Actors <span class="actors-badge" id="actorsBadge"></span></button>
-   <div class="actorsmenu" id="actorsMenu">
-    <div class="actorsmenu-head">
-     <button type="button" id="actorsSelectAll">Select all</button>
-     <button type="button" id="actorsClearAll">Clear all</button>
+  <div class="header-row1">
+   <button class="btn" id="resetBtn">Reset</button>
+   <button class="btn" id="happyPlayBtn">Play</button>
+   <button class="btn" id="viewDetailsBtn">View Details</button>
+   <button class="btn" id="happyFlow">Happy Flow</button>
+   <div class="exportwrap">
+    <button class="btn" id="exportBtn">Export</button>
+    <div class="exportmenu" id="exportMenu">
+     <button data-fmt="svg">SVG <span class="fmt-hint">vector · editing</span></button>
+     <button data-fmt="jpg">JPG <span class="fmt-hint">image · sharing</span></button>
+     <button data-fmt="pdf">PDF <span class="fmt-hint">document</span></button>
     </div>
-    <div class="actorsmenu-list" id="actorsList"></div>
    </div>
   </div>
-  <div class="exportwrap">
-   <button class="btn" id="exportBtn">Export</button>
-   <div class="exportmenu" id="exportMenu">
-    <button data-fmt="svg">SVG <span class="fmt-hint">vector · editing</span></button>
-    <button data-fmt="jpg">JPG <span class="fmt-hint">image · sharing</span></button>
-    <button data-fmt="pdf">PDF <span class="fmt-hint">document</span></button>
+  <div class="header-row2">
+   <div class="zoomctrl">
+    <button type="button" class="zoombtn" id="zoomOutBtn" aria-label="Decrease zoom">−</button>
+    <span class="zoompct" id="zoomPct">100%</span>
+    <button type="button" class="zoombtn" id="zoomInBtn" aria-label="Increase zoom">+</button>
+   </div>
+   <div class="jumpphase">
+    <span class="jumpphase-label">Jump to Phase</span>
+    <select class="phaseselect" id="phaseJump">
+     <option value="">All</option>
+    </select>
    </div>
   </div>
  </div>
@@ -586,7 +612,7 @@ body.drawer-resizing .drawer{transition:none}
 
 </div>
 <aside class="drawer" id="drawer"><div class="drawer-resize-handle" id="drawerResizeHandle" title="Drag to resize"></div><div class="dh" id="d-header"><div class="dh-top"><span class="pill dh-typepill" id="d-typepill"></span><div class="dh-top-right"><div class="dh-nav"><button class="dh-navbtn" id="d-prev" title="Previous node (primary flow)" aria-label="Previous node"><span class="dh-navbtn-icon">‹</span><span class="dh-navbtn-label">Previous</span></button><button class="dh-navbtn" id="d-next" title="Next node (primary flow)" aria-label="Next node"><span class="dh-navbtn-label">Next</span><span class="dh-navbtn-icon">›</span></button></div><button class="x" id="d-close">×</button></div></div><h3 id="d-title">Node</h3></div><div class="db" id="d-body"></div></aside>
-<script>window.DATA={"meta": {"title": "Trouble Ticket Lifecycle \u2014 Creation, Assignment, Resolution & Closure", "brsdId": "vfq-trouble-ticket-brsd-v1-0", "generated": "2026-09-04", "source": "VFQ_Trouble_Ticket_BRSD_v1.0.xlsx"}, "layout": {"x0": 220, "topbar": 70, "colw": 252, "totalW": 17204, "totalH": 2470, "laneLabelW": 120, "lanes": [{"key": "agt", "name": "Agent / Supervisor", "hint": "Call Centre, Retail, Telesales, Back Office agents and supervisors", "y": 70, "h": 700}, {"key": "sys", "name": "DXP", "hint": "Digital experience platform UI, smart search, AI-assisted triage", "y": 790, "h": 260}, {"key": "crm", "name": "Siebel CRM", "hint": "System of record for ticket, assignment, SLA, audit, resolution", "y": 1070, "h": 700}, {"key": "adm", "name": "Privileged Admin", "hint": "Template, hashtag, actual-issue, distribution-list and reopen/cancellation privilege holders", "y": 1790, "h": 260}, {"key": "ext", "name": "External Systems", "hint": "AIA, Notification Platform, Medelia, MNP Gateway", "y": 2070, "h": 260}], "phases": ["Agent Login", "Agent Login", "Customer Verification", "Customer Verification", "Customer Verification", "Customer Verification", "Issue Identification", "Ticket Creation", "Ticket Creation", "Knowledge Reference & Analysis", "Ticket Classification", "Ticket Classification", "Ticket Classification", "Ticket Classification", "Ticket Classification", "Ticket Classification", "Ticket Classification", "Ticket Classification", "Assignment of Trouble Ticket", "Assignment of Trouble Ticket", "Assignment of Trouble Ticket", "Assignment of Trouble Ticket", "Ownership Management", "Ownership Management", "Ownership Management", "Ownership Management", "Ownership Management", "Ownership Management", "Ownership Management", "Ticket Investigation", "Ticket Investigation", "Ticket Investigation", "Ticket Investigation", "Ticket Investigation", "Activity Execution", "Activity Execution", "Activity Execution", "Activity Execution", "Activity Execution", "Customer Communication", "Customer Communication", "Customer Communication", "Customer Communication", "Customer Communication", "Customer Communication", "Customer Communication", "SLA Monitoring", "SLA Monitoring", "SLA Monitoring", "Escalation Processing", "Escalation Processing", "Escalation Processing", "Resolution Recording", "Resolution Recording", "Resolution Recording", "Resolution Recording", "Resolution Recording", "Resolution Recording", "Resolution Recording", "Customer Feedback", "Customer Feedback", "Customer Feedback", "Dashboard & Reporting", "Dashboard & Reporting", "Dashboard & Reporting", "Dashboard & Reporting", "Dashboard & Reporting"]}, "nodes": [{"id": "start", "type": "start", "lane": "agt", "phase": 0, "label": "Agent Login Trigger", "desc": "The agent shall be able to log in to the system using Agent ID and password (TT-001-JSM-01).", "slot": 0, "w": 84, "h": 84, "x": 304.0, "y": 158.0, "cx": 346.0, "cy": 200.0}, {"id": "cred_validate", "type": "validation", "lane": "crm", "phase": 0, "label": "Validate Credentials", "sub": "TT-001-JSM-02", "desc": "The system shall validate the Agent ID and credentials before granting access.", "slot": 0, "w": 176, "h": 70, "x": 258.0, "y": 1165.0, "cx": 346.0, "cy": 1200.0}, {"id": "role_access", "type": "control", "lane": "crm", "phase": 0, "label": "Role-Based Access", "sub": "TT-001-JSM-03", "desc": "The system shall provide role-based view and edit options to the authenticated agent.", "slot": 1, "w": 206, "h": 60, "x": 243.0, "y": 1390.0, "cx": 346.0, "cy": 1420.0}, {"id": "agent360", "type": "agent", "lane": "agt", "phase": 1, "label": "View Agent 360", "sub": "TT-001-JSM-04", "desc": "The agent shall be able to view Agent 360 after successful login.", "slot": 1, "w": 206, "h": 60, "x": 495.0, "y": 390.0, "cx": 598.0, "cy": 420.0}, {"id": "agent_dash", "type": "agent", "lane": "agt", "phase": 1, "label": "Agent Dashboard", "sub": "TT-001-JSM-05", "desc": "The system shall display the tickets, tasks etc. assigned to the logged-in agent (reuse of BRSD Agent 360).", "slot": 0, "w": 206, "h": 60, "x": 495.0, "y": 170.0, "cx": 598.0, "cy": 200.0}, {"id": "validate_qticket", "type": "agent", "lane": "agt", "phase": 2, "label": "Validate Q Ticket & Identify Customer", "sub": "TT-001-JSM-01", "desc": "The agent shall be able to validate the Q Ticket and identify the customer before initiating a Trouble Ticket.", "slot": 0, "w": 206, "h": 100, "x": 747.0, "y": 150.0, "cx": 850.0, "cy": 200.0}, {"id": "cust_id", "type": "agent", "lane": "agt", "phase": 3, "label": "Customer Identification", "sub": "TT-001-CAM-02", "desc": "The agent shall be able to complete customer identification before initiating a Trouble Ticket.", "slot": 0, "w": 206, "h": 60, "x": 999.0, "y": 170.0, "cx": 1102.0, "cy": 200.0}, {"id": "idwise_verify", "type": "external", "lane": "ext", "phase": 4, "label": "Verify via IDWise Scan (Retail)", "sub": "TT-001-KYC-03", "desc": "The agent shall be able to verify the customer by scanning the ID by retail agent only, before initiating a Trouble Ticket.", "slot": 0, "w": 176, "h": 100, "x": 1266.0, "y": 2150.0, "cx": 1354.0, "cy": 2200.0}, {"id": "cav_verify", "type": "validation", "lane": "agt", "phase": 4, "label": "Verify via Verification Question (Telesales/Retail)", "sub": "TT-001-CAV-04", "desc": "The agent shall be able to verify the customer by asking a verification question \u2014 Telesales and Retail agent \u2014 before initiating a Trouble Ticket.", "slot": 0, "w": 176, "h": 100, "x": 1266.0, "y": 150.0, "cx": 1354.0, "cy": 200.0}, {"id": "cust360", "type": "agent", "lane": "agt", "phase": 5, "label": "Navigate to Customer 360", "sub": "TT-001-CAM-01", "desc": "The agent shall be able to navigate to Customer 360 before initiating the ticket (reuse of BRSD Customer 360). BR-001: a ticket may only be created when verified Customer, Service Account and Billing Account context exists.", "slot": 0, "w": 206, "h": 60, "x": 1503.0, "y": 170.0, "cx": 1606.0, "cy": 200.0}, {"id": "smart_search", "type": "system", "lane": "sys", "phase": 6, "label": "Smart Search for Categorisation", "sub": "TT-001-CRE-01", "desc": "The agent shall be able to search by keyword to identify the applicable ticket category before raising a ticket. BR-002: minimum three characters before suggestions are returned.", "slot": 0, "w": 190, "h": 100, "x": 1763.0, "y": 870.0, "cx": 1858.0, "cy": 920.0}, {"id": "create_manual_tt", "type": "agent", "lane": "agt", "phase": 7, "label": "Create Manual Trouble Ticket", "sub": "TT-001-CRE-02", "desc": "The system shall create a ticket automatically with a unique Ticket ID according to the selected category when the agent raises a ticket manually.", "slot": 0, "w": 206, "h": 100, "x": 2007.0, "y": 150.0, "cx": 2110.0, "cy": 200.0}, {"id": "auto_populate", "type": "system", "lane": "crm", "phase": 8, "label": "Auto-Populate Ticket Fields", "sub": "TT-001-CRE-03", "desc": "The system shall auto-populate the ticket fields identified as auto-populated in the source requirement. BR-003: authoritative field population from the approved source of record, overridable only by an authorised role.", "slot": 0, "w": 190, "h": 100, "x": 2267.0, "y": 1150.0, "cx": 2362.0, "cy": 1200.0}, {"id": "manual_fields", "type": "agent", "lane": "agt", "phase": 8, "label": "Capture Manually Filled Fields", "sub": "TT-001-CRE-04", "desc": "The agent shall be able to enter the ticket fields identified as manually filled in the source requirement. BR-004: the creating agent is accountable for completeness and accuracy of manually entered fields.", "slot": 0, "w": 206, "h": 100, "x": 2259.0, "y": 150.0, "cx": 2362.0, "cy": 200.0}, {"id": "kb_access", "type": "system", "lane": "sys", "phase": 9, "label": "Open Knowledge Base (New Tab)", "sub": "TT-001-CRE-05", "desc": "The agent shall be able to open the knowledge base from the system in another tab through a button. BR-005: categorisation and handling guidance shall use current, approved Knowledge Base content.", "slot": 0, "w": 190, "h": 100, "x": 2519.0, "y": 870.0, "cx": 2614.0, "cy": 920.0}, {"id": "view_new_tt", "type": "agent", "lane": "agt", "phase": 10, "label": "View Newly Created Trouble Ticket", "sub": "TT-001-CRE-06", "desc": "The agent shall be able to view the newly created Trouble Ticket with its auto-populated fields.", "slot": 0, "w": 206, "h": 100, "x": 2763.0, "y": 150.0, "cx": 2866.0, "cy": 200.0}, {"id": "capture_tt_details", "type": "agent", "lane": "agt", "phase": 11, "label": "Capture Trouble Ticket Details", "sub": "TT-001-CRE-07", "desc": "The agent shall be able to fill the Trouble Ticket details manually.", "slot": 0, "w": 206, "h": 100, "x": 3015.0, "y": 150.0, "cx": 3118.0, "cy": 200.0}, {"id": "select_type_area", "type": "agent", "lane": "agt", "phase": 12, "label": "Select TT Type / Area / Sub-Area", "sub": "TT-001-CRE-08", "desc": "The agent shall be able to select Source, Category, Area and Sub Area by searching keywords and referring to the knowledge base (mandatory fields).", "slot": 0, "w": 206, "h": 100, "x": 3267.0, "y": 150.0, "cx": 3370.0, "cy": 200.0}, {"id": "cascade_subarea", "type": "control", "lane": "crm", "phase": 13, "label": "Cascading Area / Sub-Area Filter", "sub": "TT-001-CRE-09", "desc": "The system shall dynamically filter the Sub Area picklist based on the selected Area so that only mapped and valid Sub Area values are available.", "slot": 0, "w": 206, "h": 100, "x": 3519.0, "y": 1150.0, "cx": 3622.0, "cy": 1200.0}, {"id": "desc_template", "type": "agent", "lane": "agt", "phase": 14, "label": "Select Description Template", "sub": "TT-001-CRE-10", "desc": "The agent shall be able to use the correct description template from the knowledge base and update the Trouble Ticket description. BR-006: the description template shall be an active, approved template applicable to the selected classification.", "slot": 0, "w": 206, "h": 100, "x": 3771.0, "y": 150.0, "cx": 3874.0, "cy": 200.0}, {"id": "save_tt", "type": "agent", "lane": "agt", "phase": 15, "label": "Save Ticket Details", "sub": "TT-001-CRE-11", "desc": "The agent shall be able to save the Trouble Ticket details after all mandatory fields are filled.", "slot": 0, "w": 206, "h": 60, "x": 4023.0, "y": 170.0, "cx": 4126.0, "cy": 200.0}, {"id": "pass_downstream", "type": "system", "lane": "crm", "phase": 16, "label": "Pass Ticket Details Downstream", "sub": "TT-001-CRE-12", "desc": "The system shall pass the captured Trouble Ticket details to downstream systems when the ticket is saved.", "slot": 0, "w": 190, "h": 100, "x": 4283.0, "y": 1150.0, "cx": 4378.0, "cy": 1200.0}, {"id": "priority_derivation", "type": "control", "lane": "crm", "phase": 16, "label": "Derive Priority from Customer Type", "sub": "TT-001-CRE-16", "desc": "The system shall derive ticket Priority from Customer Type per the matrix; a non-privileged user cannot override it.", "slot": 1, "w": 206, "h": 100, "x": 4275.0, "y": 1370.0, "cx": 4378.0, "cy": 1420.0}, {"id": "template_admin", "type": "agent", "lane": "adm", "phase": 15, "label": "Administer Description Templates", "sub": "TT-001-CRE-13", "desc": "A user holding the Template Administration privilege shall be able to create, amend and retire description templates.", "slot": 0, "w": 206, "h": 100, "x": 4023.0, "y": 1870.0, "cx": 4126.0, "cy": 1920.0}, {"id": "auto_tt_order_fail", "type": "system", "lane": "ext", "phase": 16, "label": "Auto-Create TT on AIA Order Failure", "sub": "TT-001-CRE-14", "desc": "The system shall automatically create a Trouble Ticket when an order creation request received from AIA fails, and record the error reason in the Description field.", "slot": 0, "w": 190, "h": 100, "x": 4283.0, "y": 2150.0, "cx": 4378.0, "cy": 2200.0}, {"id": "assign_to_creator", "type": "control", "lane": "crm", "phase": 17, "label": "Assign New Ticket to Creator", "sub": "TT-001-CRE-15", "desc": "The system shall automatically assign the newly created ticket to the creator of the ticket.", "slot": 0, "w": 206, "h": 100, "x": 4527.0, "y": 1150.0, "cx": 4630.0, "cy": 1200.0}, {"id": "auto_assign_queue", "type": "control", "lane": "crm", "phase": 18, "label": "Auto-Assign Ticket to Queue", "sub": "TT-001-ASG-01", "desc": "The system shall assign the ticket to the appropriate queue using the predefined combination of Source, TT Category, Area, Sub Area, Language, Customer Type and TT Queue.", "slot": 0, "w": 206, "h": 100, "x": 4779.0, "y": 1150.0, "cx": 4882.0, "cy": 1200.0}, {"id": "d_queue_match", "type": "decision", "lane": "crm", "phase": 19, "label": "Queue Combination Matched?", "sub": "TT-001-ASG-02", "desc": "The system shall assign the ticket to a Generic Queue when the auto-assignment parameters do not match any predefined combination.", "branches": [{"label": "Matched", "to": "view_queue_tickets"}, {"label": "No Match", "to": "generic_queue"}], "slot": 0, "w": 150, "h": 100, "x": 5059.0, "y": 1150.0, "cx": 5134.0, "cy": 1200.0}, {"id": "generic_queue", "type": "system", "lane": "crm", "phase": 20, "label": "Assign to Generic Queue", "sub": "TT-001-ASG-02", "slot": 0, "w": 190, "h": 100, "x": 5291.0, "y": 1150.0, "cx": 5386.0, "cy": 1200.0}, {"id": "view_queue_tickets", "type": "agent", "lane": "agt", "phase": 20, "label": "View Tickets in Applicable Queue", "sub": "TT-001-ASG-03", "desc": "The agent shall be able to view tickets assigned to the applicable queue, including generic and auto-assigned queues.", "slot": 0, "w": 206, "h": 100, "x": 5283.0, "y": 150.0, "cx": 5386.0, "cy": 200.0}, {"id": "queue_scoped_worklist", "type": "control", "lane": "crm", "phase": 20, "label": "Queue-Scoped Work List (Privilege-Gated)", "sub": "TT-001-ASG-04", "desc": "The system shall assign tickets automatically to a queue assuming agents in the queue have the appropriate privileges and rights.", "slot": 1, "w": 206, "h": 100, "x": 5283.0, "y": 1370.0, "cx": 5386.0, "cy": 1420.0}, {"id": "supervisor_reassign", "type": "agent", "lane": "agt", "phase": 21, "label": "Supervisor Cross-Queue Assignment", "sub": "TT-001-ASG-05", "desc": "An agent acting as supervisor shall be able to assign the Trouble Ticket to a different queue.", "slot": 0, "w": 206, "h": 100, "x": 5535.0, "y": 150.0, "cx": 5638.0, "cy": 200.0}, {"id": "status_assigned", "type": "control", "lane": "crm", "phase": 22, "label": "Set Status/Sub-Status = Assigned", "sub": "TT-001-ASG-06", "desc": "The system shall set Status to 'Assigned' and Sub-Status to 'Assigned' when a ticket is allocated to a named user or user queue.", "slot": 0, "w": 206, "h": 100, "x": 5787.0, "y": 1150.0, "cx": 5890.0, "cy": 1200.0}, {"id": "self_assign", "type": "agent", "lane": "agt", "phase": 23, "label": "Self-Assign Ticket", "sub": "TT-001-ASG-07", "desc": "The agent shall be able to assign a Trouble Ticket to self.", "slot": 0, "w": 206, "h": 60, "x": 6039.0, "y": 170.0, "cx": 6142.0, "cy": 200.0}, {"id": "receive_sup_assign", "type": "agent", "lane": "agt", "phase": 23, "label": "Receive Supervisor Assignment", "sub": "TT-001-ASG-08", "desc": "The agent shall be able to receive a Trouble Ticket assigned by the supervisor.", "slot": 1, "w": 206, "h": 100, "x": 6039.0, "y": 370.0, "cx": 6142.0, "cy": 420.0}, {"id": "reject_assignment", "type": "escalation", "lane": "agt", "phase": 24, "label": "Reject Assignment", "sub": "TT-001-ASG-09", "desc": "The Agent shall be able to reject a ticket assigned to them, setting Sub-Status to 'Rejected'.", "slot": 0, "w": 190, "h": 58, "x": 6299.0, "y": 171.0, "cx": 6394.0, "cy": 200.0}, {"id": "restrict_team_reassign", "type": "control", "lane": "crm", "phase": 24, "label": "Restrict Team-Member Reassignment", "sub": "TT-001-ASG-10", "desc": "The system shall not allow Trouble Ticket assignment among team members.", "slot": 0, "w": 206, "h": 100, "x": 6291.0, "y": 1150.0, "cx": 6394.0, "cy": 1200.0}, {"id": "assign_email", "type": "external", "lane": "ext", "phase": 25, "label": "Send Assignment Email", "sub": "TT-001-ASG-11", "desc": "The agent shall receive an email after a Trouble Ticket is assigned to the agent.", "slot": 0, "w": 176, "h": 100, "x": 6558.0, "y": 2150.0, "cx": 6646.0, "cy": 2200.0}, {"id": "select_multi_tickets", "type": "agent", "lane": "agt", "phase": 25, "label": "Select Multiple Tickets by Filter", "sub": "TT-001-ASG-12", "desc": "The agent shall be able to select multiple Trouble Tickets based on filter criteria.", "slot": 0, "w": 206, "h": 100, "x": 6543.0, "y": 150.0, "cx": 6646.0, "cy": 200.0}, {"id": "select_all_tickets", "type": "agent", "lane": "agt", "phase": 26, "label": "Select All Applicable Tickets", "sub": "TT-001-ASG-13", "desc": "The agent shall be able to select all tickets in one action before or after applying filter criteria.", "slot": 0, "w": 206, "h": 100, "x": 6795.0, "y": 150.0, "cx": 6898.0, "cy": 200.0}, {"id": "bulk_assign", "type": "control", "lane": "crm", "phase": 27, "label": "Bulk Assign to Target Queue", "sub": "TT-001-ASG-14", "desc": "The agent shall be able to bulk assign selected Trouble Tickets to the proper target queue.", "slot": 1, "w": 206, "h": 100, "x": 7047.0, "y": 1370.0, "cx": 7150.0, "cy": 1420.0}, {"id": "restrict_bulk_privilege", "type": "validation", "lane": "crm", "phase": 27, "label": "Restrict Bulk Assignment by Privilege", "sub": "TT-001-ASG-15", "desc": "The system shall permit bulk assignment only in accordance with the agent privileges and rights.", "slot": 0, "w": 176, "h": 100, "x": 7062.0, "y": 1150.0, "cx": 7150.0, "cy": 1200.0}, {"id": "single_bulk_target", "type": "control", "lane": "crm", "phase": 28, "label": "Single Bulk-Assignment Target", "sub": "TT-001-ASG-16", "desc": "The system shall allow a bulk assignment to only one target entity.", "slot": 0, "w": 206, "h": 100, "x": 7299.0, "y": 1150.0, "cx": 7402.0, "cy": 1200.0}, {"id": "parent_child_assoc", "type": "agent", "lane": "agt", "phase": 29, "label": "Associate Parent-Child Tickets", "sub": "TT-001-ASC-01", "desc": "The agent shall be able to associate related Trouble Tickets manually as child of the master ticket.", "slot": 2, "w": 206, "h": 100, "x": 7551.0, "y": 590.0, "cx": 7654.0, "cy": 640.0}, {"id": "related_match", "type": "validation", "lane": "crm", "phase": 30, "label": "Related Ticket Match Criteria", "sub": "TT-001-ASC-02", "desc": "The system shall allow tickets to be marked as associated when TT Category, MSISDN, Area and Sub Area match.", "slot": 2, "w": 176, "h": 100, "x": 7818.0, "y": 1590.0, "cx": 7906.0, "cy": 1640.0}, {"id": "dup_manual_assoc", "type": "agent", "lane": "agt", "phase": 31, "label": "Associate Duplicate Ticket Manually", "sub": "TT-001-ASC-03", "desc": "The agent shall be able to associate duplicate Trouble Tickets manually.", "slot": 1, "w": 206, "h": 100, "x": 8055.0, "y": 370.0, "cx": 8158.0, "cy": 420.0}, {"id": "dup_detect", "type": "validation", "lane": "crm", "phase": 32, "label": "Duplicate Candidate Detection", "sub": "TT-001-ASC-04", "desc": "The system shall allow tickets to be marked as duplicate when TT Category, MSISDN, Area and Sub Area match.", "slot": 1, "w": 176, "h": 100, "x": 8322.0, "y": 1370.0, "cx": 8410.0, "cy": 1420.0}, {"id": "scan_attach_retail", "type": "agent", "lane": "agt", "phase": 29, "label": "Scan-to-Attach (Retail Role)", "sub": "TT-001-ATT-01", "desc": "An Agent holding the Retail Agent role shall be able to scan a physical document and attach it to the ticket.", "slot": 0, "w": 206, "h": 100, "x": 7551.0, "y": 150.0, "cx": 7654.0, "cy": 200.0}, {"id": "manual_attach", "type": "agent", "lane": "agt", "phase": 29, "label": "Manual File Attachment", "sub": "TT-001-ATT-02", "desc": "The Agent shall be able to attach files while the ticket is in any non-terminal Status.", "slot": 1, "w": 206, "h": 60, "x": 7551.0, "y": 390.0, "cx": 7654.0, "cy": 420.0}, {"id": "d_terminal_status", "type": "decision", "lane": "crm", "phase": 30, "label": "Ticket Status Terminal?", "sub": "TT-001-ATT-03", "desc": "The System shall not permit new attachments where Status is 'Closed' or 'Cancelled'.", "branches": [{"label": "Non-Terminal", "to": "view_download_attach"}, {"label": "Terminal", "to": "attach_blocked"}], "slot": 1, "w": 150, "h": 100, "x": 7831.0, "y": 1370.0, "cx": 7906.0, "cy": 1420.0}, {"id": "attach_blocked", "type": "error", "lane": "crm", "phase": 31, "label": "Attachment Rejected (API Business Error)", "sub": "TT-001-ATT-03", "slot": 0, "w": 190, "h": 100, "x": 8063.0, "y": 1150.0, "cx": 8158.0, "cy": 1200.0}, {"id": "view_download_attach", "type": "agent", "lane": "agt", "phase": 31, "label": "View & Download Attachments", "sub": "TT-001-ATT-04", "desc": "The Agent shall be able to view and download attachments in any Status including terminal ones, subject to role permission; each access is recorded in the audit trail.", "slot": 0, "w": 206, "h": 100, "x": 8055.0, "y": 150.0, "cx": 8158.0, "cy": 200.0}, {"id": "attach_constraints", "type": "control", "lane": "crm", "phase": 30, "label": "Enforce Attachment Constraints", "sub": "TT-001-ATT-05", "desc": "The System shall enforce a maximum file size, a permitted file-type whitelist and a maximum attachment count per ticket, and shall scan every uploaded file for malware before storage.", "slot": 0, "w": 206, "h": 100, "x": 7803.0, "y": 1150.0, "cx": 7906.0, "cy": 1200.0}, {"id": "audit_capture", "type": "control", "lane": "crm", "phase": 32, "label": "Audit Trail Capture", "sub": "TT-001-AUD-01", "desc": "The System shall record every Status change, Sub-Status change, field change, assignment change, attachment action and notification dispatch, capturing actor, timestamp, before value and after value. BR-007: an audit record must not be modified or deleted once created.", "slot": 0, "w": 206, "h": 60, "x": 8307.0, "y": 1170.0, "cx": 8410.0, "cy": 1200.0}, {"id": "audit_access", "type": "agent", "lane": "agt", "phase": 33, "label": "View Audit Trail", "sub": "TT-001-AUD-02", "desc": "The Agent shall be able to view the audit trail from the detailed ticket view, subject to role permission. BR-007.", "slot": 0, "w": 206, "h": 60, "x": 8559.0, "y": 170.0, "cx": 8662.0, "cy": 200.0}, {"id": "access_logging", "type": "control", "lane": "crm", "phase": 33, "label": "Access Logging with Source Attribution", "sub": "TT-001-AUD-03", "desc": "The System shall log ticket access events including user identity, IP address, geo-location where available and access channel. BR-008: ticket access information shall be retained per the approved retention policy.", "slot": 0, "w": 206, "h": 100, "x": 8559.0, "y": 1150.0, "cx": 8662.0, "cy": 1200.0}, {"id": "create_manual_activity", "type": "agent", "lane": "agt", "phase": 34, "label": "Create Manual Activity", "sub": "TT-001-VEW-01b", "desc": "The agent shall be able to add an activity manually under a Trouble Ticket. BR-009: a manually created activity shall identify its business purpose and the responsible agent.", "slot": 0, "w": 206, "h": 60, "x": 8811.0, "y": 170.0, "cx": 8914.0, "cy": 200.0}, {"id": "assoc_activity", "type": "control", "lane": "crm", "phase": 35, "label": "Associate Activity to Ticket", "sub": "TT-001-VEW-02b", "desc": "The system shall associate each created activity with the Trouble Ticket under which it was created.", "slot": 0, "w": 206, "h": 100, "x": 9063.0, "y": 1150.0, "cx": 9166.0, "cy": 1200.0}, {"id": "view_activities", "type": "agent", "lane": "agt", "phase": 36, "label": "View Ticket Activities", "sub": "TT-001-VEW-03b", "desc": "The agent shall be able to view activities created under the Trouble Ticket. BR-010: activities may be viewed only by users authorised to access the parent ticket.", "slot": 0, "w": 206, "h": 60, "x": 9315.0, "y": 170.0, "cx": 9418.0, "cy": 200.0}, {"id": "auto_activity", "type": "control", "lane": "crm", "phase": 34, "label": "Create Automatic Activity", "sub": "TT-001-VEW-04b", "desc": "The system shall automatically create an activity at defined trigger points. BR-011: automatic activities shall be created only for approved business trigger points.", "slot": 0, "w": 206, "h": 100, "x": 8811.0, "y": 1150.0, "cx": 8914.0, "cy": 1200.0}, {"id": "close_open_activity", "type": "agent", "lane": "agt", "phase": 37, "label": "Close Open Activity", "sub": "TT-001-VEW-05b", "desc": "The agent shall be able to close activities created under the ticket when they are not closed automatically. BR-012: an open activity may be closed only by its owner or another authorised role.", "slot": 0, "w": 206, "h": 60, "x": 9567.0, "y": 170.0, "cx": 9670.0, "cy": 200.0}, {"id": "activity_visibility", "type": "agent", "lane": "agt", "phase": 38, "label": "Activity Visibility & Closure (Manual + System)", "sub": "TT-001-VEW-07", "desc": "The Agent shall be able to view all activities on a ticket, manual and system-generated, and close any that remain open.", "slot": 0, "w": 206, "h": 100, "x": 9819.0, "y": 150.0, "cx": 9922.0, "cy": 200.0}, {"id": "ai_assisted_triage", "type": "system", "lane": "sys", "phase": 34, "label": "AI-Assisted Ticket Creation & Triage", "sub": "TT-001-VEW-08", "desc": "The System shall provide an AI-assisted journey that contextualises the reported issue, pre-populates ticket fields, recommends TT Type and Priority, and proposes routing. The agent can accept or override each proposal.", "slot": 0, "w": 190, "h": 100, "x": 8819.0, "y": 870.0, "cx": 8914.0, "cy": 920.0}, {"id": "b2b_enterprise_tt", "type": "control", "lane": "crm", "phase": 34, "label": "B2B / Enterprise Trouble Tickets", "sub": "TT-001-VEW-09", "desc": "The System shall support trouble tickets against B2B and enterprise accounts, including account-hierarchy context and the enterprise Customer Types in the SLA matrix.", "slot": 1, "w": 206, "h": 100, "x": 8811.0, "y": 1370.0, "cx": 8914.0, "cy": 1420.0}, {"id": "auto_sms", "type": "external", "lane": "ext", "phase": 39, "label": "Send Automatic SMS", "sub": "TT-001-NOT-01", "desc": "The system shall send a preconfigured SMS to the customer at defined events.", "slot": 0, "w": 176, "h": 54, "x": 10086.0, "y": 2173.0, "cx": 10174.0, "cy": 2200.0}, {"id": "auto_sms_combo", "type": "control", "lane": "crm", "phase": 40, "label": "Automatic SMS Combination Match", "sub": "TT-001-NOT-02", "desc": "The system shall trigger automatic SMS using the defined combination of TT Source, TT Category, TT Area, TT Sub Area and TT Queue.", "slot": 0, "w": 206, "h": 100, "x": 10323.0, "y": 1150.0, "cx": 10426.0, "cy": 1200.0}, {"id": "sms_language", "type": "control", "lane": "crm", "phase": 41, "label": "SMS Language Selection", "sub": "TT-001-NOT-03", "desc": "The system shall send the automatic SMS in the preferred language recorded on the customer account.", "slot": 0, "w": 206, "h": 60, "x": 10575.0, "y": 1170.0, "cx": 10678.0, "cy": 1200.0}, {"id": "manual_sms", "type": "agent", "lane": "agt", "phase": 39, "label": "Send Manual SMS", "sub": "TT-001-NOT-04", "desc": "The agent shall be able to send a manual SMS to the customer. BR-013: manual SMS may be sent only by an authorised agent to an approved contact number, in line with contact permissions.", "slot": 0, "w": 206, "h": 60, "x": 10071.0, "y": 170.0, "cx": 10174.0, "cy": 200.0}, {"id": "search_sms_template", "type": "agent", "lane": "agt", "phase": 40, "label": "Search SMS Template", "sub": "TT-001-NOT-05", "desc": "The agent shall be able to search for the correct SMS template using Keyword, TT Source, TT Category, TT Area, TT Sub Area and TT Status.", "slot": 0, "w": 206, "h": 60, "x": 10323.0, "y": 170.0, "cx": 10426.0, "cy": 200.0}, {"id": "filter_template", "type": "control", "lane": "sys", "phase": 41, "label": "Filter Template (Number, Type, Language, Keyword)", "sub": "TT-001-NOT-06", "desc": "The system shall filter SMS templates in the sequence Number, Service Type, Language and Keyword.", "slot": 0, "w": 206, "h": 100, "x": 10575.0, "y": 870.0, "cx": 10678.0, "cy": 920.0}, {"id": "manual_sms_lang", "type": "agent", "lane": "agt", "phase": 42, "label": "Select Manual SMS Language", "sub": "TT-001-NOT-07", "desc": "The agent shall be able to select Hindi, English, Malayalam or Arabic for a manual SMS.", "slot": 0, "w": 206, "h": 100, "x": 10827.0, "y": 150.0, "cx": 10930.0, "cy": 200.0}, {"id": "select_sms_template", "type": "agent", "lane": "agt", "phase": 43, "label": "Select SMS Template", "sub": "TT-001-NOT-08", "desc": "The agent shall be able to select an SMS template for the Trouble Ticket. BR-014: only active and approved SMS templates applicable to the ticket may be selected.", "slot": 0, "w": 206, "h": 60, "x": 11079.0, "y": 170.0, "cx": 11182.0, "cy": 200.0}, {"id": "edit_sms_role", "type": "control", "lane": "crm", "phase": 44, "label": "Edit SMS Subject to Role", "sub": "TT-001-NOT-09", "desc": "The system shall allow MSISDN, Language and text to be edited based on agent role and access \u2014 Frontline unable to edit text, Back Office able to edit text.", "slot": 0, "w": 206, "h": 60, "x": 11331.0, "y": 1170.0, "cx": 11434.0, "cy": 1200.0}, {"id": "save_interaction_hist", "type": "control", "lane": "crm", "phase": 45, "label": "Save SMS in Interaction History", "sub": "TT-001-NOT-10", "desc": "The system shall save SMS sent to the customer in Interaction History.", "slot": 0, "w": 206, "h": 100, "x": 11583.0, "y": 1150.0, "cx": 11686.0, "cy": 1200.0}, {"id": "additional_channels", "type": "external", "lane": "ext", "phase": 45, "label": "WhatsApp / Push Notification Channels", "sub": "TT-001-NOT-11", "desc": "The System shall support WhatsApp and mobile app push as additional customer notification channels, selectable by template and consented contact preference.", "slot": 0, "w": 176, "h": 100, "x": 11598.0, "y": 2150.0, "cx": 11686.0, "cy": 2200.0}, {"id": "d_sla_breach", "type": "decision", "lane": "crm", "phase": 46, "label": "SLA Threshold Breached?", "sub": "TT-001-ESC-01", "desc": "The System shall escalate the ticket and change the status to 'Escalate' automatically when SLA is breached as per the defined SLA matrix. BR-015: the first SLA notification shall be issued according to the Customer Type SLA matrix when ticket conditions are met.", "branches": [{"label": "Breached", "to": "sla_breach_status"}, {"label": "Within SLA", "to": "rag_status_update"}], "slot": 0, "w": 150, "h": 100, "x": 11863.0, "y": 1150.0, "cx": 11938.0, "cy": 1200.0}, {"id": "sla_breach_status", "type": "escalation", "lane": "crm", "phase": 47, "label": "Set Status = Escalate", "sub": "TT-001-ESC-01", "slot": 0, "w": 190, "h": 58, "x": 12095.0, "y": 1171.0, "cx": 12190.0, "cy": 1200.0}, {"id": "sla_breach_notification", "type": "external", "lane": "ext", "phase": 48, "label": "SLA Breach Notification", "sub": "TT-001-ESC-02", "desc": "Reuse of TT-001-ESC-02 (As-Is).", "slot": 0, "w": 176, "h": 100, "x": 12354.0, "y": 2150.0, "cx": 12442.0, "cy": 2200.0}, {"id": "rag_status_update", "type": "control", "lane": "crm", "phase": 47, "label": "Update RAG Status", "sub": "TT-001-ESC-03", "desc": "The System shall update the RAG status as per defined in the SLA matrix.", "slot": 1, "w": 206, "h": 60, "x": 12087.0, "y": 1390.0, "cx": 12190.0, "cy": 1420.0}, {"id": "sla_activity_record", "type": "control", "lane": "crm", "phase": 48, "label": "Create Siebel Activity for SLA Notification", "sub": "TT-001-ESC-04", "desc": "The System shall create an Activity record for each SLA notification issued.", "slot": 0, "w": 206, "h": 100, "x": 12339.0, "y": 1150.0, "cx": 12442.0, "cy": 1200.0}, {"id": "manual_escalation", "type": "escalation", "lane": "agt", "phase": 49, "label": "Manual Escalation with Reason", "sub": "TT-001-ESC-05", "desc": "The Agent shall be able to escalate a ticket manually by selecting a mandatory escalation reason from a controlled list; a ticket submitted without a reason is rejected.", "slot": 0, "w": 190, "h": 100, "x": 12599.0, "y": 150.0, "cx": 12694.0, "cy": 200.0}, {"id": "dl_escalation_notify", "type": "external", "lane": "ext", "phase": 50, "label": "Notify Distribution Lists on Escalation", "sub": "TT-001-ESC-06", "desc": "The System shall send an email notification to every distribution list mapped to the assigned queue when a ticket is escalated. Change Category: Out of Scope.", "slot": 0, "w": 176, "h": 100, "x": 12858.0, "y": 2150.0, "cx": 12946.0, "cy": 2200.0}, {"id": "hierarchical_escalation", "type": "escalation", "lane": "crm", "phase": 50, "label": "Hierarchical Escalation Notification", "sub": "TT-001-ESC-07", "desc": "The System shall identify and notify the next higher position in the Siebel position hierarchy relative to the ticket owner when a ticket is escalated; when no higher position exists, the assigned queue distribution list is notified.", "slot": 0, "w": 190, "h": 100, "x": 12851.0, "y": 1150.0, "cx": 12946.0, "cy": 1200.0}, {"id": "dl_admin", "type": "agent", "lane": "adm", "phase": 49, "label": "Administer Distribution Lists", "sub": "TT-001-ESC-08", "desc": "A user holding the Distribution List Administration privilege shall be able to add, amend and remove multiple distribution lists mapped to a queue.", "slot": 0, "w": 206, "h": 100, "x": 12591.0, "y": 1870.0, "cx": 12694.0, "cy": 1920.0}, {"id": "rejected_view", "type": "agent", "lane": "agt", "phase": 51, "label": "View Escalated / Rejected Tickets Dashboard", "sub": "TT-001-ESC-09", "desc": "The Agent shall be able to view escalated tickets using the 'escalated to me' and 'rejected by me' filters in a separate dashboard.", "slot": 0, "w": 206, "h": 100, "x": 13095.0, "y": 150.0, "cx": 13198.0, "cy": 200.0}, {"id": "d_solved_gate", "type": "decision", "lane": "crm", "phase": 52, "label": "Mandatory Fields Gate on Solved?", "sub": "TT-001-RES-01", "desc": "The System shall prevent a ticket from transitioning to Status 'Solved' until Resolution Code, Hashtag and TT Actual Issue are populated.", "branches": [{"label": "Complete", "to": "resolution_code"}, {"label": "Missing", "to": "solved_gate_blocked"}], "slot": 0, "w": 150, "h": 100, "x": 13375.0, "y": 1150.0, "cx": 13450.0, "cy": 1200.0}, {"id": "solved_gate_blocked", "type": "error", "lane": "crm", "phase": 53, "label": "Missing Fields Identified to Agent", "sub": "TT-001-RES-01", "slot": 0, "w": 190, "h": 100, "x": 13607.0, "y": 1150.0, "cx": 13702.0, "cy": 1200.0}, {"id": "resolution_code", "type": "agent", "lane": "agt", "phase": 53, "label": "Select Resolution Code", "sub": "TT-001-RES-02", "desc": "The System shall permit the selection of exactly one Resolution Code per ticket.", "slot": 0, "w": 206, "h": 60, "x": 13599.0, "y": 170.0, "cx": 13702.0, "cy": 200.0}, {"id": "hashtag_capture", "type": "agent", "lane": "agt", "phase": 54, "label": "Select Hashtag(s) (Filtered)", "sub": "TT-001-RES-03", "desc": "The Agent shall be able to select one or more Hashtags from a picklist filtered by TT Type, Area and Sub-Area.", "slot": 0, "w": 206, "h": 100, "x": 13851.0, "y": 150.0, "cx": 13954.0, "cy": 200.0}, {"id": "hashtag_admin", "type": "agent", "lane": "adm", "phase": 53, "label": "Administer Hashtag Values", "sub": "TT-001-RES-04", "desc": "A user holding the Reference Data Administration privilege shall be able to add and retire Hashtag values.", "slot": 0, "w": 206, "h": 100, "x": 13599.0, "y": 1870.0, "cx": 13702.0, "cy": 1920.0}, {"id": "actual_issue_capture", "type": "agent", "lane": "agt", "phase": 55, "label": "Select TT Actual Issue (Filtered)", "sub": "TT-001-RES-05", "desc": "The Agent shall be able to select TT Actual Issue from a picklist filtered by the selected description template.", "slot": 0, "w": 206, "h": 100, "x": 14103.0, "y": 150.0, "cx": 14206.0, "cy": 200.0}, {"id": "actual_issue_admin", "type": "agent", "lane": "adm", "phase": 55, "label": "Administer TT Actual Issue Values", "sub": "TT-001-RES-06", "desc": "A user holding the Reference Data Administration privilege shall be able to add and retire TT Actual Issue values.", "slot": 0, "w": 206, "h": 100, "x": 14103.0, "y": 1870.0, "cx": 14206.0, "cy": 1920.0}, {"id": "l3_referral", "type": "agent", "lane": "agt", "phase": 54, "label": "Record L3 Referral Reference", "sub": "TT-001-RES-07", "desc": "The Agent shall be able to record an external L3 ticket reference in a dedicated validated field while the ticket remains in Status 'Not Solved'.", "slot": 1, "w": 206, "h": 100, "x": 13851.0, "y": 370.0, "cx": 13954.0, "cy": 420.0}, {"id": "d_completed_gate", "type": "decision", "lane": "crm", "phase": 56, "label": "Outstanding Activities Remain?", "sub": "TT-001-RES-08", "desc": "The System shall permit a ticket to transition to Status 'Completed' only when no relevant activities remain outstanding.", "branches": [{"label": "None Outstanding", "to": "ticket_closure"}, {"label": "Outstanding", "to": "completed_gate_blocked"}], "slot": 0, "w": 150, "h": 100, "x": 14383.0, "y": 1150.0, "cx": 14458.0, "cy": 1200.0}, {"id": "completed_gate_blocked", "type": "error", "lane": "crm", "phase": 57, "label": "Open Activities Identified to Agent", "sub": "TT-001-RES-08", "slot": 0, "w": 190, "h": 100, "x": 14615.0, "y": 1150.0, "cx": 14710.0, "cy": 1200.0}, {"id": "ticket_closure", "type": "agent", "lane": "agt", "phase": 57, "label": "Close Ticket (Status = Closed)", "sub": "TT-001-RES-09", "desc": "The Agent shall be able to set a ticket Status to 'Closed', and the System shall close all activities associated with the ticket.", "slot": 0, "w": 206, "h": 100, "x": 14607.0, "y": 150.0, "cx": 14710.0, "cy": 200.0}, {"id": "ticket_reopen", "type": "agent", "lane": "adm", "phase": 58, "label": "Reopen Ticket (Privileged, Windowed)", "sub": "TT-001-RES-10", "desc": "A user holding the Reopen privilege shall be able to return a ticket from Status 'Closed' to Status 'Not Solved' within the configured reopen window by providing a mandatory reason; an attempt outside the window is rejected with guidance to raise a linked ticket.", "slot": 0, "w": 206, "h": 100, "x": 14859.0, "y": 1870.0, "cx": 14962.0, "cy": 1920.0}, {"id": "ticket_cancel", "type": "agent", "lane": "adm", "phase": 56, "label": "Cancel Ticket (Privileged, Reason Code)", "sub": "TT-001-RES-11", "desc": "A user holding the Cancellation privilege shall be able to set a ticket Status to 'Cancelled' by selecting a mandatory reason code; the ticket is excluded from performance reporting.", "slot": 0, "w": 206, "h": 100, "x": 14355.0, "y": 1870.0, "cx": 14458.0, "cy": 1920.0}, {"id": "portout_auto_resolve", "type": "system", "lane": "ext", "phase": 56, "label": "Automatic Resolution \u2014 Port-Out Verification", "sub": "TT-001-RES-12", "desc": "The System shall automatically resolve Port-Out verification tickets and shall permit a back-office agent to set Status to 'Solved' when the automated process fails; the response is sent to the MNP gateway.", "slot": 0, "w": 190, "h": 100, "x": 14363.0, "y": 2150.0, "cx": 14458.0, "cy": 2200.0}, {"id": "portout_manual_resolve", "type": "agent", "lane": "agt", "phase": 57, "label": "Manual Solve on Automation Failure (Back Office)", "sub": "TT-001-RES-12", "slot": 1, "w": 206, "h": 100, "x": 14607.0, "y": 370.0, "cx": 14710.0, "cy": 420.0}, {"id": "csat_trigger", "type": "external", "lane": "ext", "phase": 59, "label": "Trigger CSAT Survey to Medelia", "sub": "TT-001-CSA-01", "desc": "The system shall send a feedback survey trigger to Medelia when the Trouble Ticket is in Resolved status.", "slot": 0, "w": 176, "h": 100, "x": 15126.0, "y": 2150.0, "cx": 15214.0, "cy": 2200.0}, {"id": "csat_restrict", "type": "control", "lane": "crm", "phase": 60, "label": "Restrict Survey Trigger to Resolved Status", "sub": "TT-001-CSA-02", "desc": "The system shall send the Medelia survey trigger only when the Trouble Ticket status is Resolved.", "slot": 0, "w": 206, "h": 100, "x": 15363.0, "y": 1150.0, "cx": 15466.0, "cy": 1200.0}, {"id": "csat_attribution", "type": "control", "lane": "crm", "phase": 61, "label": "CSAT Response Attribution", "sub": "TT-001-CSA-03", "desc": "The System shall store the survey response against the originating ticket and make it visible in the ticket view and in reporting.", "slot": 0, "w": 206, "h": 100, "x": 15615.0, "y": 1150.0, "cx": 15718.0, "cy": 1200.0}, {"id": "ticket_list_filters", "type": "agent", "lane": "agt", "phase": 62, "label": "Ticket List View with Filters", "sub": "TT-001-VEW-01c", "desc": "The Agent shall be able to view tickets in a list filtered by the criteria defined in field set FS-09; the filter can be saved and reapplied.", "slot": 0, "w": 206, "h": 100, "x": 15867.0, "y": 150.0, "cx": 15970.0, "cy": 200.0}, {"id": "export_ticket_list", "type": "agent", "lane": "agt", "phase": 63, "label": "Export Ticket List (Excel)", "sub": "TT-001-VEW-02c", "desc": "The agent shall be able to export the list of tickets after applying filters in Excel format.", "slot": 0, "w": 206, "h": 100, "x": 16119.0, "y": 150.0, "cx": 16222.0, "cy": 200.0}, {"id": "std_siebel_views", "type": "control", "lane": "crm", "phase": 63, "label": "Standard Siebel Ticket Views", "sub": "TT-001-VEW-03c", "desc": "The System shall provide My Trouble Tickets, My Team's Trouble Tickets and All Trouble Tickets views.", "slot": 0, "w": 206, "h": 100, "x": 16119.0, "y": 1150.0, "cx": 16222.0, "cy": 1200.0}, {"id": "queue_restricted_views", "type": "validation", "lane": "crm", "phase": 64, "label": "Queue-Restricted Views", "sub": "TT-001-VEW-04c", "desc": "The System shall restrict tickets assigned to the Back Office Queue and Credit Control / Collection Queue to members of the applicable queue.", "slot": 0, "w": 176, "h": 100, "x": 16386.0, "y": 1150.0, "cx": 16474.0, "cy": 1200.0}, {"id": "cust360_panel", "type": "agent", "lane": "agt", "phase": 64, "label": "Customer 360 Ticket Panel", "sub": "TT-001-VEW-05c", "desc": "The Agent shall be able to view all Trouble Tickets raised against a customer account from Customer 360, without restriction on ticket age.", "slot": 0, "w": 206, "h": 100, "x": 16371.0, "y": 150.0, "cx": 16474.0, "cy": 200.0}, {"id": "rag_indicator", "type": "control", "lane": "crm", "phase": 65, "label": "RAG Status Indicator in List Views", "sub": "TT-001-VEW-06c", "desc": "The System shall display a Red, Amber or Green indicator for each ticket in list views, derived from elapsed time against the SLA target for the applicable Customer Type.", "slot": 0, "w": 206, "h": 100, "x": 16623.0, "y": 1150.0, "cx": 16726.0, "cy": 1200.0}, {"id": "end", "type": "end", "lane": "crm", "phase": 66, "label": "Trouble Ticket Lifecycle Complete", "slot": 0, "w": 84, "h": 84, "x": 16936.0, "y": 1158.0, "cx": 16978.0, "cy": 1200.0}], "flows": [{"from": "start", "to": "cred_validate", "kind": "seq", "happy": true}, {"from": "cred_validate", "to": "role_access", "kind": "seq", "happy": true}, {"from": "role_access", "to": "agent360", "kind": "seq", "happy": true}, {"from": "agent360", "to": "agent_dash", "kind": "seq", "happy": true}, {"from": "agent_dash", "to": "validate_qticket", "kind": "seq", "happy": true}, {"from": "validate_qticket", "to": "cust_id", "kind": "seq", "happy": true}, {"from": "cust_id", "to": "idwise_verify", "kind": "seq", "happy": true}, {"from": "cust_id", "to": "cav_verify", "kind": "seq", "happy": false}, {"from": "idwise_verify", "to": "cust360", "kind": "seq", "happy": true}, {"from": "cav_verify", "to": "cust360", "kind": "seq", "happy": false}, {"from": "cust360", "to": "smart_search", "kind": "seq", "happy": true}, {"from": "smart_search", "to": "create_manual_tt", "kind": "seq", "happy": true}, {"from": "create_manual_tt", "to": "auto_populate", "kind": "seq", "happy": true}, {"from": "create_manual_tt", "to": "manual_fields", "kind": "seq", "happy": true}, {"from": "auto_populate", "to": "kb_access", "kind": "seq", "happy": true}, {"from": "manual_fields", "to": "kb_access", "kind": "seq", "happy": true}, {"from": "kb_access", "to": "view_new_tt", "kind": "seq", "happy": true}, {"from": "view_new_tt", "to": "capture_tt_details", "kind": "seq", "happy": true}, {"from": "capture_tt_details", "to": "select_type_area", "kind": "seq", "happy": true}, {"from": "select_type_area", "to": "cascade_subarea", "kind": "seq", "happy": true}, {"from": "cascade_subarea", "to": "desc_template", "kind": "seq", "happy": true}, {"from": "desc_template", "to": "save_tt", "kind": "seq", "happy": true}, {"from": "save_tt", "to": "pass_downstream", "kind": "seq", "happy": true}, {"from": "save_tt", "to": "priority_derivation", "kind": "seq", "happy": true}, {"from": "template_admin", "to": "desc_template", "kind": "data", "happy": false}, {"from": "auto_tt_order_fail", "to": "pass_downstream", "kind": "data", "happy": false}, {"from": "pass_downstream", "to": "assign_to_creator", "kind": "seq", "happy": true}, {"from": "priority_derivation", "to": "assign_to_creator", "kind": "seq", "happy": true}, {"from": "assign_to_creator", "to": "auto_assign_queue", "kind": "seq", "happy": true}, {"from": "auto_assign_queue", "to": "d_queue_match", "kind": "seq", "happy": true}, {"from": "d_queue_match", "to": "generic_queue", "kind": "cond", "label": "No Match", "happy": false}, {"from": "d_queue_match", "to": "view_queue_tickets", "kind": "cond", "label": "Matched", "happy": true}, {"from": "generic_queue", "to": "view_queue_tickets", "kind": "seq", "happy": false}, {"from": "view_queue_tickets", "to": "queue_scoped_worklist", "kind": "seq", "happy": true}, {"from": "queue_scoped_worklist", "to": "supervisor_reassign", "kind": "seq", "happy": false}, {"from": "queue_scoped_worklist", "to": "status_assigned", "kind": "seq", "happy": true}, {"from": "supervisor_reassign", "to": "status_assigned", "kind": "seq", "happy": false}, {"from": "status_assigned", "to": "self_assign", "kind": "seq", "happy": true}, {"from": "status_assigned", "to": "receive_sup_assign", "kind": "seq", "happy": false}, {"from": "self_assign", "to": "reject_assignment", "kind": "seq", "happy": false}, {"from": "receive_sup_assign", "to": "reject_assignment", "kind": "seq", "happy": false}, {"from": "self_assign", "to": "restrict_team_reassign", "kind": "seq", "happy": true}, {"from": "restrict_team_reassign", "to": "assign_email", "kind": "seq", "happy": true}, {"from": "receive_sup_assign", "to": "assign_email", "kind": "data", "happy": false}, {"from": "assign_email", "to": "select_multi_tickets", "kind": "seq", "happy": true}, {"from": "select_multi_tickets", "to": "select_all_tickets", "kind": "seq", "happy": true}, {"from": "select_all_tickets", "to": "bulk_assign", "kind": "seq", "happy": true}, {"from": "bulk_assign", "to": "restrict_bulk_privilege", "kind": "seq", "happy": true}, {"from": "restrict_bulk_privilege", "to": "single_bulk_target", "kind": "seq", "happy": true}, {"from": "reject_assignment", "to": "parent_child_assoc", "kind": "data", "happy": false}, {"from": "single_bulk_target", "to": "parent_child_assoc", "kind": "seq", "happy": true}, {"from": "parent_child_assoc", "to": "related_match", "kind": "seq", "happy": true}, {"from": "related_match", "to": "dup_manual_assoc", "kind": "seq", "happy": true}, {"from": "dup_manual_assoc", "to": "dup_detect", "kind": "seq", "happy": true}, {"from": "single_bulk_target", "to": "scan_attach_retail", "kind": "seq", "happy": false}, {"from": "single_bulk_target", "to": "manual_attach", "kind": "seq", "happy": true}, {"from": "scan_attach_retail", "to": "d_terminal_status", "kind": "seq", "happy": true}, {"from": "manual_attach", "to": "d_terminal_status", "kind": "seq", "happy": true}, {"from": "d_terminal_status", "to": "attach_blocked", "kind": "cond", "label": "Terminal", "happy": false}, {"from": "d_terminal_status", "to": "view_download_attach", "kind": "cond", "label": "Non-Terminal", "happy": true}, {"from": "d_terminal_status", "to": "attach_constraints", "kind": "seq", "happy": true}, {"from": "attach_constraints", "to": "audit_capture", "kind": "seq", "happy": true}, {"from": "view_download_attach", "to": "audit_capture", "kind": "data", "happy": true}, {"from": "dup_detect", "to": "audit_capture", "kind": "data", "happy": true}, {"from": "audit_capture", "to": "audit_access", "kind": "seq", "happy": true}, {"from": "audit_access", "to": "access_logging", "kind": "seq", "happy": true}, {"from": "access_logging", "to": "create_manual_activity", "kind": "seq", "happy": true}, {"from": "create_manual_activity", "to": "assoc_activity", "kind": "seq", "happy": true}, {"from": "assoc_activity", "to": "view_activities", "kind": "seq", "happy": true}, {"from": "access_logging", "to": "auto_activity", "kind": "seq", "happy": true}, {"from": "auto_activity", "to": "view_activities", "kind": "seq", "happy": true}, {"from": "view_activities", "to": "close_open_activity", "kind": "seq", "happy": true}, {"from": "close_open_activity", "to": "activity_visibility", "kind": "seq", "happy": true}, {"from": "access_logging", "to": "ai_assisted_triage", "kind": "data", "happy": false}, {"from": "access_logging", "to": "b2b_enterprise_tt", "kind": "data", "happy": false}, {"from": "activity_visibility", "to": "auto_sms", "kind": "seq", "happy": true}, {"from": "auto_sms", "to": "auto_sms_combo", "kind": "seq", "happy": true}, {"from": "auto_sms_combo", "to": "sms_language", "kind": "seq", "happy": true}, {"from": "activity_visibility", "to": "manual_sms", "kind": "seq", "happy": true}, {"from": "manual_sms", "to": "search_sms_template", "kind": "seq", "happy": true}, {"from": "search_sms_template", "to": "filter_template", "kind": "seq", "happy": true}, {"from": "filter_template", "to": "manual_sms_lang", "kind": "seq", "happy": true}, {"from": "manual_sms_lang", "to": "select_sms_template", "kind": "seq", "happy": true}, {"from": "select_sms_template", "to": "edit_sms_role", "kind": "seq", "happy": true}, {"from": "edit_sms_role", "to": "save_interaction_hist", "kind": "seq", "happy": true}, {"from": "sms_language", "to": "save_interaction_hist", "kind": "seq", "happy": true}, {"from": "save_interaction_hist", "to": "additional_channels", "kind": "seq", "happy": true}, {"from": "additional_channels", "to": "d_sla_breach", "kind": "seq", "happy": true}, {"from": "d_sla_breach", "to": "sla_breach_status", "kind": "cond", "label": "Breached", "happy": false}, {"from": "sla_breach_status", "to": "sla_breach_notification", "kind": "seq", "happy": false}, {"from": "d_sla_breach", "to": "rag_status_update", "kind": "cond", "label": "Within SLA", "happy": true}, {"from": "sla_breach_notification", "to": "sla_activity_record", "kind": "seq", "happy": false}, {"from": "rag_status_update", "to": "sla_activity_record", "kind": "seq", "happy": true}, {"from": "sla_activity_record", "to": "manual_escalation", "kind": "seq", "happy": false}, {"from": "manual_escalation", "to": "dl_escalation_notify", "kind": "seq", "happy": false}, {"from": "manual_escalation", "to": "hierarchical_escalation", "kind": "seq", "happy": false}, {"from": "dl_admin", "to": "hierarchical_escalation", "kind": "data", "happy": false}, {"from": "hierarchical_escalation", "to": "rejected_view", "kind": "seq", "happy": false}, {"from": "dl_escalation_notify", "to": "rejected_view", "kind": "seq", "happy": false}, {"from": "rejected_view", "to": "d_solved_gate", "kind": "data", "happy": false}, {"from": "sla_activity_record", "to": "d_solved_gate", "kind": "seq", "happy": true}, {"from": "d_solved_gate", "to": "solved_gate_blocked", "kind": "cond", "label": "Missing", "happy": false}, {"from": "solved_gate_blocked", "to": "d_solved_gate", "kind": "seq", "happy": false}, {"from": "d_solved_gate", "to": "resolution_code", "kind": "cond", "label": "Complete", "happy": true}, {"from": "resolution_code", "to": "hashtag_capture", "kind": "seq", "happy": true}, {"from": "hashtag_admin", "to": "hashtag_capture", "kind": "data", "happy": false}, {"from": "hashtag_capture", "to": "actual_issue_capture", "kind": "seq", "happy": true}, {"from": "actual_issue_admin", "to": "actual_issue_capture", "kind": "data", "happy": false}, {"from": "resolution_code", "to": "l3_referral", "kind": "seq", "happy": false}, {"from": "l3_referral", "to": "hashtag_capture", "kind": "seq", "happy": false}, {"from": "actual_issue_capture", "to": "d_completed_gate", "kind": "seq", "happy": true}, {"from": "d_completed_gate", "to": "completed_gate_blocked", "kind": "cond", "label": "Outstanding", "happy": false}, {"from": "completed_gate_blocked", "to": "d_completed_gate", "kind": "seq", "happy": false}, {"from": "d_completed_gate", "to": "ticket_closure", "kind": "cond", "label": "None Outstanding", "happy": true}, {"from": "ticket_closure", "to": "ticket_reopen", "kind": "seq", "happy": false}, {"from": "ticket_reopen", "to": "d_solved_gate", "kind": "seq", "happy": false}, {"from": "d_solved_gate", "to": "ticket_cancel", "kind": "data", "happy": false}, {"from": "portout_auto_resolve", "to": "portout_manual_resolve", "kind": "cond", "label": "Automation Failed", "happy": false}, {"from": "portout_manual_resolve", "to": "ticket_closure", "kind": "seq", "happy": false}, {"from": "ticket_closure", "to": "csat_trigger", "kind": "seq", "happy": true}, {"from": "csat_trigger", "to": "csat_restrict", "kind": "seq", "happy": true}, {"from": "csat_restrict", "to": "csat_attribution", "kind": "seq", "happy": true}, {"from": "csat_attribution", "to": "ticket_list_filters", "kind": "seq", "happy": true}, {"from": "ticket_list_filters", "to": "export_ticket_list", "kind": "seq", "happy": true}, {"from": "ticket_list_filters", "to": "std_siebel_views", "kind": "seq", "happy": true}, {"from": "std_siebel_views", "to": "queue_restricted_views", "kind": "seq", "happy": true}, {"from": "export_ticket_list", "to": "cust360_panel", "kind": "seq", "happy": true}, {"from": "queue_restricted_views", "to": "rag_indicator", "kind": "seq", "happy": true}, {"from": "cust360_panel", "to": "rag_indicator", "kind": "seq", "happy": true}, {"from": "rag_indicator", "to": "end", "kind": "seq", "happy": true}], "model": {"agents": [], "contracts": [], "connectivity": []}, "biz": {"bio": {}, "contractPlain": {}, "nameMap": {}}};</script>
+<script>window.DATA={"meta": {"title": "Trouble Ticket Lifecycle \u2014 Creation, Assignment, Resolution & Closure", "brsdId": "vfq-trouble-ticket-brsd-v1-0", "generated": "2026-09-04", "source": "VFQ_Trouble_Ticket_BRSD_v1.0.xlsx"}, "layout": {"x0": 220, "topbar": 70, "colw": 252, "totalW": 17204, "totalH": 2470, "laneLabelW": 120, "lanes": [{"key": "agt", "name": "Agent / Supervisor", "hint": "Call Centre, Retail, Telesales, Back Office agents and supervisors", "y": 70, "h": 700}, {"key": "sys", "name": "DXP", "hint": "Digital experience platform UI, smart search, AI-assisted triage", "y": 790, "h": 260}, {"key": "crm", "name": "Siebel CRM", "hint": "System of record for ticket, assignment, SLA, audit, resolution", "y": 1070, "h": 700}, {"key": "adm", "name": "Privileged Admin", "hint": "Template, hashtag, actual-issue, distribution-list and reopen/cancellation privilege holders", "y": 1790, "h": 260}, {"key": "ext", "name": "External Systems", "hint": "AIA, Notification Platform, Medelia, MNP Gateway", "y": 2070, "h": 260}], "phases": ["Agent Login", "Agent Login", "Customer Verification", "Customer Verification", "Customer Verification", "Customer Verification", "Issue Identification", "Ticket Creation", "Ticket Creation", "Knowledge Reference & Analysis", "Ticket Classification", "Ticket Classification", "Ticket Classification", "Ticket Classification", "Ticket Classification", "Ticket Classification", "Ticket Classification", "Ticket Classification", "Assignment of Trouble Ticket", "Assignment of Trouble Ticket", "Assignment of Trouble Ticket", "Assignment of Trouble Ticket", "Ownership Management", "Ownership Management", "Ownership Management", "Ownership Management", "Ownership Management", "Ownership Management", "Ownership Management", "Ticket Investigation", "Ticket Investigation", "Ticket Investigation", "Ticket Investigation", "Ticket Investigation", "Activity Execution", "Activity Execution", "Activity Execution", "Activity Execution", "Activity Execution", "Customer Communication", "Customer Communication", "Customer Communication", "Customer Communication", "Customer Communication", "Customer Communication", "Customer Communication", "SLA Monitoring", "SLA Monitoring", "SLA Monitoring", "Escalation Processing", "Escalation Processing", "Escalation Processing", "Resolution Recording", "Resolution Recording", "Resolution Recording", "Resolution Recording", "Resolution Recording", "Resolution Recording", "Resolution Recording", "Customer Feedback", "Customer Feedback", "Customer Feedback", "Dashboard & Reporting", "Dashboard & Reporting", "Dashboard & Reporting", "Dashboard & Reporting", "Dashboard & Reporting"]}, "nodes": [{"id": "start", "type": "start", "lane": "agt", "phase": 0, "label": "Agent Login Trigger", "desc": "The agent shall be able to log in to the system using Agent ID and password (TT-001-JSM-01).", "slot": 0, "w": 84, "h": 84, "x": 304.0, "y": 158.0, "cx": 346.0, "cy": 200.0}, {"id": "cred_validate", "type": "validation", "lane": "crm", "phase": 0, "label": "Validate Credentials", "sub": "TT-001-JSM-02", "desc": "The system shall validate the Agent ID and credentials before granting access.", "slot": 0, "w": 176, "h": 70, "x": 258.0, "y": 1165.0, "cx": 346.0, "cy": 1200.0}, {"id": "role_access", "type": "control", "lane": "crm", "phase": 0, "label": "Role-Based Access", "sub": "TT-001-JSM-03", "desc": "The system shall provide role-based view and edit options to the authenticated agent.", "slot": 1, "w": 206, "h": 60, "x": 243.0, "y": 1390.0, "cx": 346.0, "cy": 1420.0}, {"id": "agent360", "type": "agent", "lane": "agt", "phase": 1, "label": "View Agent 360", "sub": "TT-001-JSM-04", "desc": "The agent shall be able to view Agent 360 after successful login.", "slot": 1, "w": 206, "h": 60, "x": 495.0, "y": 390.0, "cx": 598.0, "cy": 420.0}, {"id": "agent_dash", "type": "agent", "lane": "agt", "phase": 1, "label": "Agent Dashboard", "sub": "TT-001-JSM-05", "desc": "The system shall display the tickets, tasks etc. assigned to the logged-in agent (reuse of BRSD Agent 360).", "slot": 0, "w": 206, "h": 60, "x": 495.0, "y": 170.0, "cx": 598.0, "cy": 200.0}, {"id": "validate_qticket", "type": "agent", "lane": "agt", "phase": 2, "label": "Validate Q Ticket & Identify Customer", "sub": "TT-001-JSM-01", "desc": "The agent shall be able to validate the Q Ticket and identify the customer before initiating a Trouble Ticket.", "slot": 0, "w": 206, "h": 100, "x": 747.0, "y": 150.0, "cx": 850.0, "cy": 200.0}, {"id": "cust_id", "type": "agent", "lane": "agt", "phase": 3, "label": "Customer Identification", "sub": "TT-001-CAM-02", "desc": "The agent shall be able to complete customer identification before initiating a Trouble Ticket.", "slot": 0, "w": 206, "h": 60, "x": 999.0, "y": 170.0, "cx": 1102.0, "cy": 200.0}, {"id": "idwise_verify", "type": "external", "lane": "ext", "phase": 4, "label": "Verify via IDWise Scan (Retail)", "sub": "TT-001-KYC-03", "desc": "The agent shall be able to verify the customer by scanning the ID by retail agent only, before initiating a Trouble Ticket.", "slot": 0, "w": 176, "h": 100, "x": 1266.0, "y": 2150.0, "cx": 1354.0, "cy": 2200.0}, {"id": "cav_verify", "type": "validation", "lane": "agt", "phase": 4, "label": "Verify via Verification Question (Telesales/Retail)", "sub": "TT-001-CAV-04", "desc": "The agent shall be able to verify the customer by asking a verification question \u2014 Telesales and Retail agent \u2014 before initiating a Trouble Ticket.", "slot": 0, "w": 176, "h": 100, "x": 1266.0, "y": 150.0, "cx": 1354.0, "cy": 200.0}, {"id": "cust360", "type": "agent", "lane": "agt", "phase": 5, "label": "Navigate to Customer 360", "sub": "TT-001-CAM-01", "desc": "The agent shall be able to navigate to Customer 360 before initiating the ticket (reuse of BRSD Customer 360). BR-001: a ticket may only be created when verified Customer, Service Account and Billing Account context exists.", "slot": 0, "w": 206, "h": 60, "x": 1503.0, "y": 170.0, "cx": 1606.0, "cy": 200.0}, {"id": "smart_search", "type": "system", "lane": "sys", "phase": 6, "label": "Smart Search for Categorisation", "sub": "TT-001-CRE-01", "desc": "The agent shall be able to search by keyword to identify the applicable ticket category before raising a ticket. BR-002: minimum three characters before suggestions are returned.", "slot": 0, "w": 190, "h": 100, "x": 1763.0, "y": 870.0, "cx": 1858.0, "cy": 920.0}, {"id": "create_manual_tt", "type": "agent", "lane": "agt", "phase": 7, "label": "Create Manual Trouble Ticket", "sub": "TT-001-CRE-02", "desc": "The system shall create a ticket automatically with a unique Ticket ID according to the selected category when the agent raises a ticket manually.", "slot": 0, "w": 206, "h": 100, "x": 2007.0, "y": 150.0, "cx": 2110.0, "cy": 200.0}, {"id": "auto_populate", "type": "system", "lane": "crm", "phase": 8, "label": "Auto-Populate Ticket Fields", "sub": "TT-001-CRE-03", "desc": "The system shall auto-populate the ticket fields identified as auto-populated in the source requirement. BR-003: authoritative field population from the approved source of record, overridable only by an authorised role.", "slot": 0, "w": 190, "h": 100, "x": 2267.0, "y": 1150.0, "cx": 2362.0, "cy": 1200.0}, {"id": "manual_fields", "type": "agent", "lane": "agt", "phase": 8, "label": "Capture Manually Filled Fields", "sub": "TT-001-CRE-04", "desc": "The agent shall be able to enter the ticket fields identified as manually filled in the source requirement. BR-004: the creating agent is accountable for completeness and accuracy of manually entered fields.", "slot": 0, "w": 206, "h": 100, "x": 2259.0, "y": 150.0, "cx": 2362.0, "cy": 200.0}, {"id": "kb_access", "type": "system", "lane": "sys", "phase": 9, "label": "Open Knowledge Base (New Tab)", "sub": "TT-001-CRE-05", "desc": "The agent shall be able to open the knowledge base from the system in another tab through a button. BR-005: categorisation and handling guidance shall use current, approved Knowledge Base content.", "slot": 0, "w": 190, "h": 100, "x": 2519.0, "y": 870.0, "cx": 2614.0, "cy": 920.0}, {"id": "view_new_tt", "type": "agent", "lane": "agt", "phase": 10, "label": "View Newly Created Trouble Ticket", "sub": "TT-001-CRE-06", "desc": "The agent shall be able to view the newly created Trouble Ticket with its auto-populated fields.", "slot": 0, "w": 206, "h": 100, "x": 2763.0, "y": 150.0, "cx": 2866.0, "cy": 200.0}, {"id": "capture_tt_details", "type": "agent", "lane": "agt", "phase": 11, "label": "Capture Trouble Ticket Details", "sub": "TT-001-CRE-07", "desc": "The agent shall be able to fill the Trouble Ticket details manually.", "slot": 0, "w": 206, "h": 100, "x": 3015.0, "y": 150.0, "cx": 3118.0, "cy": 200.0}, {"id": "select_type_area", "type": "agent", "lane": "agt", "phase": 12, "label": "Select TT Type / Area / Sub-Area", "sub": "TT-001-CRE-08", "desc": "The agent shall be able to select Source, Category, Area and Sub Area by searching keywords and referring to the knowledge base (mandatory fields).", "slot": 0, "w": 206, "h": 100, "x": 3267.0, "y": 150.0, "cx": 3370.0, "cy": 200.0}, {"id": "cascade_subarea", "type": "control", "lane": "crm", "phase": 13, "label": "Cascading Area / Sub-Area Filter", "sub": "TT-001-CRE-09", "desc": "The system shall dynamically filter the Sub Area picklist based on the selected Area so that only mapped and valid Sub Area values are available.", "slot": 0, "w": 206, "h": 100, "x": 3519.0, "y": 1150.0, "cx": 3622.0, "cy": 1200.0}, {"id": "desc_template", "type": "agent", "lane": "agt", "phase": 14, "label": "Select Description Template", "sub": "TT-001-CRE-10", "desc": "The agent shall be able to use the correct description template from the knowledge base and update the Trouble Ticket description. BR-006: the description template shall be an active, approved template applicable to the selected classification.", "slot": 0, "w": 206, "h": 100, "x": 3771.0, "y": 150.0, "cx": 3874.0, "cy": 200.0}, {"id": "save_tt", "type": "agent", "lane": "agt", "phase": 15, "label": "Save Ticket Details", "sub": "TT-001-CRE-11", "desc": "The agent shall be able to save the Trouble Ticket details after all mandatory fields are filled.", "slot": 0, "w": 206, "h": 60, "x": 4023.0, "y": 170.0, "cx": 4126.0, "cy": 200.0}, {"id": "pass_downstream", "type": "system", "lane": "crm", "phase": 16, "label": "Pass Ticket Details Downstream", "sub": "TT-001-CRE-12", "desc": "The system shall pass the captured Trouble Ticket details to downstream systems when the ticket is saved.", "slot": 0, "w": 190, "h": 100, "x": 4283.0, "y": 1150.0, "cx": 4378.0, "cy": 1200.0}, {"id": "priority_derivation", "type": "control", "lane": "crm", "phase": 16, "label": "Derive Priority from Customer Type", "sub": "TT-001-CRE-16", "desc": "The system shall derive ticket Priority from Customer Type per the matrix; a non-privileged user cannot override it.", "slot": 1, "w": 206, "h": 100, "x": 4275.0, "y": 1370.0, "cx": 4378.0, "cy": 1420.0}, {"id": "template_admin", "type": "agent", "lane": "adm", "phase": 15, "label": "Administer Description Templates", "sub": "TT-001-CRE-13", "desc": "A user holding the Template Administration privilege shall be able to create, amend and retire description templates.", "slot": 0, "w": 206, "h": 100, "x": 4023.0, "y": 1870.0, "cx": 4126.0, "cy": 1920.0}, {"id": "auto_tt_order_fail", "type": "system", "lane": "ext", "phase": 16, "label": "Auto-Create TT on AIA Order Failure", "sub": "TT-001-CRE-14", "desc": "The system shall automatically create a Trouble Ticket when an order creation request received from AIA fails, and record the error reason in the Description field.", "slot": 0, "w": 190, "h": 100, "x": 4283.0, "y": 2150.0, "cx": 4378.0, "cy": 2200.0}, {"id": "assign_to_creator", "type": "control", "lane": "crm", "phase": 17, "label": "Assign New Ticket to Creator", "sub": "TT-001-CRE-15", "desc": "The system shall automatically assign the newly created ticket to the creator of the ticket.", "slot": 0, "w": 206, "h": 100, "x": 4527.0, "y": 1150.0, "cx": 4630.0, "cy": 1200.0}, {"id": "auto_assign_queue", "type": "control", "lane": "crm", "phase": 18, "label": "Auto-Assign Ticket to Queue", "sub": "TT-001-ASG-01", "desc": "The system shall assign the ticket to the appropriate queue using the predefined combination of Source, TT Category, Area, Sub Area, Language, Customer Type and TT Queue.", "slot": 0, "w": 206, "h": 100, "x": 4779.0, "y": 1150.0, "cx": 4882.0, "cy": 1200.0}, {"id": "d_queue_match", "type": "decision", "lane": "crm", "phase": 19, "label": "Queue Combination Matched?", "sub": "TT-001-ASG-02", "desc": "The system shall assign the ticket to a Generic Queue when the auto-assignment parameters do not match any predefined combination.", "branches": [{"label": "Matched", "to": "view_queue_tickets"}, {"label": "No Match", "to": "generic_queue"}], "slot": 0, "w": 150, "h": 100, "x": 5059.0, "y": 1150.0, "cx": 5134.0, "cy": 1200.0}, {"id": "generic_queue", "type": "system", "lane": "crm", "phase": 20, "label": "Assign to Generic Queue", "sub": "TT-001-ASG-02", "slot": 0, "w": 190, "h": 100, "x": 5291.0, "y": 1150.0, "cx": 5386.0, "cy": 1200.0}, {"id": "view_queue_tickets", "type": "agent", "lane": "agt", "phase": 20, "label": "View Tickets in Applicable Queue", "sub": "TT-001-ASG-03", "desc": "The agent shall be able to view tickets assigned to the applicable queue, including generic and auto-assigned queues.", "slot": 0, "w": 206, "h": 100, "x": 5283.0, "y": 150.0, "cx": 5386.0, "cy": 200.0}, {"id": "queue_scoped_worklist", "type": "control", "lane": "crm", "phase": 20, "label": "Queue-Scoped Work List (Privilege-Gated)", "sub": "TT-001-ASG-04", "desc": "The system shall assign tickets automatically to a queue assuming agents in the queue have the appropriate privileges and rights.", "slot": 1, "w": 206, "h": 100, "x": 5283.0, "y": 1370.0, "cx": 5386.0, "cy": 1420.0}, {"id": "supervisor_reassign", "type": "agent", "lane": "agt", "phase": 21, "label": "Supervisor Cross-Queue Assignment", "sub": "TT-001-ASG-05", "desc": "An agent acting as supervisor shall be able to assign the Trouble Ticket to a different queue.", "slot": 0, "w": 206, "h": 100, "x": 5535.0, "y": 150.0, "cx": 5638.0, "cy": 200.0}, {"id": "status_assigned", "type": "control", "lane": "crm", "phase": 22, "label": "Set Status/Sub-Status = Assigned", "sub": "TT-001-ASG-06", "desc": "The system shall set Status to 'Assigned' and Sub-Status to 'Assigned' when a ticket is allocated to a named user or user queue.", "slot": 0, "w": 206, "h": 100, "x": 5787.0, "y": 1150.0, "cx": 5890.0, "cy": 1200.0}, {"id": "self_assign", "type": "agent", "lane": "agt", "phase": 23, "label": "Self-Assign Ticket", "sub": "TT-001-ASG-07", "desc": "The agent shall be able to assign a Trouble Ticket to self.", "slot": 0, "w": 206, "h": 60, "x": 6039.0, "y": 170.0, "cx": 6142.0, "cy": 200.0}, {"id": "receive_sup_assign", "type": "agent", "lane": "agt", "phase": 23, "label": "Receive Supervisor Assignment", "sub": "TT-001-ASG-08", "desc": "The agent shall be able to receive a Trouble Ticket assigned by the supervisor.", "slot": 1, "w": 206, "h": 100, "x": 6039.0, "y": 370.0, "cx": 6142.0, "cy": 420.0}, {"id": "reject_assignment", "type": "escalation", "lane": "agt", "phase": 24, "label": "Reject Assignment", "sub": "TT-001-ASG-09", "desc": "The Agent shall be able to reject a ticket assigned to them, setting Sub-Status to 'Rejected'.", "slot": 0, "w": 190, "h": 58, "x": 6299.0, "y": 171.0, "cx": 6394.0, "cy": 200.0}, {"id": "restrict_team_reassign", "type": "control", "lane": "crm", "phase": 24, "label": "Restrict Team-Member Reassignment", "sub": "TT-001-ASG-10", "desc": "The system shall not allow Trouble Ticket assignment among team members.", "slot": 0, "w": 206, "h": 100, "x": 6291.0, "y": 1150.0, "cx": 6394.0, "cy": 1200.0}, {"id": "assign_email", "type": "external", "lane": "ext", "phase": 25, "label": "Send Assignment Email", "sub": "TT-001-ASG-11", "desc": "The agent shall receive an email after a Trouble Ticket is assigned to the agent.", "slot": 0, "w": 176, "h": 100, "x": 6558.0, "y": 2150.0, "cx": 6646.0, "cy": 2200.0}, {"id": "select_multi_tickets", "type": "agent", "lane": "agt", "phase": 25, "label": "Select Multiple Tickets by Filter", "sub": "TT-001-ASG-12", "desc": "The agent shall be able to select multiple Trouble Tickets based on filter criteria.", "slot": 0, "w": 206, "h": 100, "x": 6543.0, "y": 150.0, "cx": 6646.0, "cy": 200.0}, {"id": "select_all_tickets", "type": "agent", "lane": "agt", "phase": 26, "label": "Select All Applicable Tickets", "sub": "TT-001-ASG-13", "desc": "The agent shall be able to select all tickets in one action before or after applying filter criteria.", "slot": 0, "w": 206, "h": 100, "x": 6795.0, "y": 150.0, "cx": 6898.0, "cy": 200.0}, {"id": "bulk_assign", "type": "control", "lane": "crm", "phase": 27, "label": "Bulk Assign to Target Queue", "sub": "TT-001-ASG-14", "desc": "The agent shall be able to bulk assign selected Trouble Tickets to the proper target queue.", "slot": 1, "w": 206, "h": 100, "x": 7047.0, "y": 1370.0, "cx": 7150.0, "cy": 1420.0}, {"id": "restrict_bulk_privilege", "type": "validation", "lane": "crm", "phase": 27, "label": "Restrict Bulk Assignment by Privilege", "sub": "TT-001-ASG-15", "desc": "The system shall permit bulk assignment only in accordance with the agent privileges and rights.", "slot": 0, "w": 176, "h": 100, "x": 7062.0, "y": 1150.0, "cx": 7150.0, "cy": 1200.0}, {"id": "single_bulk_target", "type": "control", "lane": "crm", "phase": 28, "label": "Single Bulk-Assignment Target", "sub": "TT-001-ASG-16", "desc": "The system shall allow a bulk assignment to only one target entity.", "slot": 0, "w": 206, "h": 100, "x": 7299.0, "y": 1150.0, "cx": 7402.0, "cy": 1200.0}, {"id": "parent_child_assoc", "type": "agent", "lane": "agt", "phase": 29, "label": "Associate Parent-Child Tickets", "sub": "TT-001-ASC-01", "desc": "The agent shall be able to associate related Trouble Tickets manually as child of the master ticket.", "slot": 2, "w": 206, "h": 100, "x": 7551.0, "y": 590.0, "cx": 7654.0, "cy": 640.0}, {"id": "related_match", "type": "validation", "lane": "crm", "phase": 30, "label": "Related Ticket Match Criteria", "sub": "TT-001-ASC-02", "desc": "The system shall allow tickets to be marked as associated when TT Category, MSISDN, Area and Sub Area match.", "slot": 2, "w": 176, "h": 100, "x": 7818.0, "y": 1590.0, "cx": 7906.0, "cy": 1640.0}, {"id": "dup_manual_assoc", "type": "agent", "lane": "agt", "phase": 31, "label": "Associate Duplicate Ticket Manually", "sub": "TT-001-ASC-03", "desc": "The agent shall be able to associate duplicate Trouble Tickets manually.", "slot": 1, "w": 206, "h": 100, "x": 8055.0, "y": 370.0, "cx": 8158.0, "cy": 420.0}, {"id": "dup_detect", "type": "validation", "lane": "crm", "phase": 32, "label": "Duplicate Candidate Detection", "sub": "TT-001-ASC-04", "desc": "The system shall allow tickets to be marked as duplicate when TT Category, MSISDN, Area and Sub Area match.", "slot": 1, "w": 176, "h": 100, "x": 8322.0, "y": 1370.0, "cx": 8410.0, "cy": 1420.0}, {"id": "scan_attach_retail", "type": "agent", "lane": "agt", "phase": 29, "label": "Scan-to-Attach (Retail Role)", "sub": "TT-001-ATT-01", "desc": "An Agent holding the Retail Agent role shall be able to scan a physical document and attach it to the ticket.", "slot": 0, "w": 206, "h": 100, "x": 7551.0, "y": 150.0, "cx": 7654.0, "cy": 200.0}, {"id": "manual_attach", "type": "agent", "lane": "agt", "phase": 29, "label": "Manual File Attachment", "sub": "TT-001-ATT-02", "desc": "The Agent shall be able to attach files while the ticket is in any non-terminal Status.", "slot": 1, "w": 206, "h": 60, "x": 7551.0, "y": 390.0, "cx": 7654.0, "cy": 420.0}, {"id": "d_terminal_status", "type": "decision", "lane": "crm", "phase": 30, "label": "Ticket Status Terminal?", "sub": "TT-001-ATT-03", "desc": "The System shall not permit new attachments where Status is 'Closed' or 'Cancelled'.", "branches": [{"label": "Non-Terminal", "to": "view_download_attach"}, {"label": "Terminal", "to": "attach_blocked"}], "slot": 1, "w": 150, "h": 100, "x": 7831.0, "y": 1370.0, "cx": 7906.0, "cy": 1420.0}, {"id": "attach_blocked", "type": "error", "lane": "crm", "phase": 31, "label": "Attachment Rejected (API Business Error)", "sub": "TT-001-ATT-03", "slot": 0, "w": 190, "h": 100, "x": 8063.0, "y": 1150.0, "cx": 8158.0, "cy": 1200.0}, {"id": "view_download_attach", "type": "agent", "lane": "agt", "phase": 31, "label": "View & Download Attachments", "sub": "TT-001-ATT-04", "desc": "The Agent shall be able to view and download attachments in any Status including terminal ones, subject to role permission; each access is recorded in the audit trail.", "slot": 0, "w": 206, "h": 100, "x": 8055.0, "y": 150.0, "cx": 8158.0, "cy": 200.0}, {"id": "attach_constraints", "type": "control", "lane": "crm", "phase": 30, "label": "Enforce Attachment Constraints", "sub": "TT-001-ATT-05", "desc": "The System shall enforce a maximum file size, a permitted file-type whitelist and a maximum attachment count per ticket, and shall scan every uploaded file for malware before storage.", "slot": 0, "w": 206, "h": 100, "x": 7803.0, "y": 1150.0, "cx": 7906.0, "cy": 1200.0}, {"id": "audit_capture", "type": "control", "lane": "crm", "phase": 32, "label": "Audit Trail Capture", "sub": "TT-001-AUD-01", "desc": "The System shall record every Status change, Sub-Status change, field change, assignment change, attachment action and notification dispatch, capturing actor, timestamp, before value and after value. BR-007: an audit record must not be modified or deleted once created.", "slot": 0, "w": 206, "h": 60, "x": 8307.0, "y": 1170.0, "cx": 8410.0, "cy": 1200.0}, {"id": "audit_access", "type": "agent", "lane": "agt", "phase": 33, "label": "View Audit Trail", "sub": "TT-001-AUD-02", "desc": "The Agent shall be able to view the audit trail from the detailed ticket view, subject to role permission. BR-007.", "slot": 0, "w": 206, "h": 60, "x": 8559.0, "y": 170.0, "cx": 8662.0, "cy": 200.0}, {"id": "access_logging", "type": "control", "lane": "crm", "phase": 33, "label": "Access Logging with Source Attribution", "sub": "TT-001-AUD-03", "desc": "The System shall log ticket access events including user identity, IP address, geo-location where available and access channel. BR-008: ticket access information shall be retained per the approved retention policy.", "slot": 0, "w": 206, "h": 100, "x": 8559.0, "y": 1150.0, "cx": 8662.0, "cy": 1200.0}, {"id": "create_manual_activity", "type": "agent", "lane": "agt", "phase": 34, "label": "Create Manual Activity", "sub": "TT-001-VEW-01b", "desc": "The agent shall be able to add an activity manually under a Trouble Ticket. BR-009: a manually created activity shall identify its business purpose and the responsible agent.", "slot": 0, "w": 206, "h": 60, "x": 8811.0, "y": 170.0, "cx": 8914.0, "cy": 200.0}, {"id": "assoc_activity", "type": "control", "lane": "crm", "phase": 35, "label": "Associate Activity to Ticket", "sub": "TT-001-VEW-02b", "desc": "The system shall associate each created activity with the Trouble Ticket under which it was created.", "slot": 0, "w": 206, "h": 100, "x": 9063.0, "y": 1150.0, "cx": 9166.0, "cy": 1200.0}, {"id": "view_activities", "type": "agent", "lane": "agt", "phase": 36, "label": "View Ticket Activities", "sub": "TT-001-VEW-03b", "desc": "The agent shall be able to view activities created under the Trouble Ticket. BR-010: activities may be viewed only by users authorised to access the parent ticket.", "slot": 0, "w": 206, "h": 60, "x": 9315.0, "y": 170.0, "cx": 9418.0, "cy": 200.0}, {"id": "auto_activity", "type": "control", "lane": "crm", "phase": 34, "label": "Create Automatic Activity", "sub": "TT-001-VEW-04b", "desc": "The system shall automatically create an activity at defined trigger points. BR-011: automatic activities shall be created only for approved business trigger points.", "slot": 0, "w": 206, "h": 100, "x": 8811.0, "y": 1150.0, "cx": 8914.0, "cy": 1200.0}, {"id": "close_open_activity", "type": "agent", "lane": "agt", "phase": 37, "label": "Close Open Activity", "sub": "TT-001-VEW-05b", "desc": "The agent shall be able to close activities created under the ticket when they are not closed automatically. BR-012: an open activity may be closed only by its owner or another authorised role.", "slot": 0, "w": 206, "h": 60, "x": 9567.0, "y": 170.0, "cx": 9670.0, "cy": 200.0}, {"id": "activity_visibility", "type": "agent", "lane": "agt", "phase": 38, "label": "Activity Visibility & Closure (Manual + System)", "sub": "TT-001-VEW-07", "desc": "The Agent shall be able to view all activities on a ticket, manual and system-generated, and close any that remain open.", "slot": 0, "w": 206, "h": 100, "x": 9819.0, "y": 150.0, "cx": 9922.0, "cy": 200.0}, {"id": "ai_assisted_triage", "type": "system", "lane": "sys", "phase": 34, "label": "AI-Assisted Ticket Creation & Triage", "sub": "TT-001-VEW-08", "desc": "The System shall provide an AI-assisted journey that contextualises the reported issue, pre-populates ticket fields, recommends TT Type and Priority, and proposes routing. The agent can accept or override each proposal.", "slot": 0, "w": 190, "h": 100, "x": 8819.0, "y": 870.0, "cx": 8914.0, "cy": 920.0}, {"id": "b2b_enterprise_tt", "type": "control", "lane": "crm", "phase": 34, "label": "B2B / Enterprise Trouble Tickets", "sub": "TT-001-VEW-09", "desc": "The System shall support trouble tickets against B2B and enterprise accounts, including account-hierarchy context and the enterprise Customer Types in the SLA matrix.", "slot": 1, "w": 206, "h": 100, "x": 8811.0, "y": 1370.0, "cx": 8914.0, "cy": 1420.0}, {"id": "auto_sms", "type": "external", "lane": "ext", "phase": 39, "label": "Send Automatic SMS", "sub": "TT-001-NOT-01", "desc": "The system shall send a preconfigured SMS to the customer at defined events.", "slot": 0, "w": 176, "h": 54, "x": 10086.0, "y": 2173.0, "cx": 10174.0, "cy": 2200.0}, {"id": "auto_sms_combo", "type": "control", "lane": "crm", "phase": 40, "label": "Automatic SMS Combination Match", "sub": "TT-001-NOT-02", "desc": "The system shall trigger automatic SMS using the defined combination of TT Source, TT Category, TT Area, TT Sub Area and TT Queue.", "slot": 0, "w": 206, "h": 100, "x": 10323.0, "y": 1150.0, "cx": 10426.0, "cy": 1200.0}, {"id": "sms_language", "type": "control", "lane": "crm", "phase": 41, "label": "SMS Language Selection", "sub": "TT-001-NOT-03", "desc": "The system shall send the automatic SMS in the preferred language recorded on the customer account.", "slot": 0, "w": 206, "h": 60, "x": 10575.0, "y": 1170.0, "cx": 10678.0, "cy": 1200.0}, {"id": "manual_sms", "type": "agent", "lane": "agt", "phase": 39, "label": "Send Manual SMS", "sub": "TT-001-NOT-04", "desc": "The agent shall be able to send a manual SMS to the customer. BR-013: manual SMS may be sent only by an authorised agent to an approved contact number, in line with contact permissions.", "slot": 0, "w": 206, "h": 60, "x": 10071.0, "y": 170.0, "cx": 10174.0, "cy": 200.0}, {"id": "search_sms_template", "type": "agent", "lane": "agt", "phase": 40, "label": "Search SMS Template", "sub": "TT-001-NOT-05", "desc": "The agent shall be able to search for the correct SMS template using Keyword, TT Source, TT Category, TT Area, TT Sub Area and TT Status.", "slot": 0, "w": 206, "h": 60, "x": 10323.0, "y": 170.0, "cx": 10426.0, "cy": 200.0}, {"id": "filter_template", "type": "control", "lane": "sys", "phase": 41, "label": "Filter Template (Number, Type, Language, Keyword)", "sub": "TT-001-NOT-06", "desc": "The system shall filter SMS templates in the sequence Number, Service Type, Language and Keyword.", "slot": 0, "w": 206, "h": 100, "x": 10575.0, "y": 870.0, "cx": 10678.0, "cy": 920.0}, {"id": "manual_sms_lang", "type": "agent", "lane": "agt", "phase": 42, "label": "Select Manual SMS Language", "sub": "TT-001-NOT-07", "desc": "The agent shall be able to select Hindi, English, Malayalam or Arabic for a manual SMS.", "slot": 0, "w": 206, "h": 100, "x": 10827.0, "y": 150.0, "cx": 10930.0, "cy": 200.0}, {"id": "select_sms_template", "type": "agent", "lane": "agt", "phase": 43, "label": "Select SMS Template", "sub": "TT-001-NOT-08", "desc": "The agent shall be able to select an SMS template for the Trouble Ticket. BR-014: only active and approved SMS templates applicable to the ticket may be selected.", "slot": 0, "w": 206, "h": 60, "x": 11079.0, "y": 170.0, "cx": 11182.0, "cy": 200.0}, {"id": "edit_sms_role", "type": "control", "lane": "crm", "phase": 44, "label": "Edit SMS Subject to Role", "sub": "TT-001-NOT-09", "desc": "The system shall allow MSISDN, Language and text to be edited based on agent role and access \u2014 Frontline unable to edit text, Back Office able to edit text.", "slot": 0, "w": 206, "h": 60, "x": 11331.0, "y": 1170.0, "cx": 11434.0, "cy": 1200.0}, {"id": "save_interaction_hist", "type": "control", "lane": "crm", "phase": 45, "label": "Save SMS in Interaction History", "sub": "TT-001-NOT-10", "desc": "The system shall save SMS sent to the customer in Interaction History.", "slot": 0, "w": 206, "h": 100, "x": 11583.0, "y": 1150.0, "cx": 11686.0, "cy": 1200.0}, {"id": "additional_channels", "type": "external", "lane": "ext", "phase": 45, "label": "WhatsApp / Push Notification Channels", "sub": "TT-001-NOT-11", "desc": "The System shall support WhatsApp and mobile app push as additional customer notification channels, selectable by template and consented contact preference.", "slot": 0, "w": 176, "h": 100, "x": 11598.0, "y": 2150.0, "cx": 11686.0, "cy": 2200.0}, {"id": "d_sla_breach", "type": "decision", "lane": "crm", "phase": 46, "label": "SLA Threshold Breached?", "sub": "TT-001-ESC-01", "desc": "The System shall escalate the ticket and change the status to 'Escalate' automatically when SLA is breached as per the defined SLA matrix. BR-015: the first SLA notification shall be issued according to the Customer Type SLA matrix when ticket conditions are met.", "branches": [{"label": "Breached", "to": "sla_breach_status"}, {"label": "Within SLA", "to": "rag_status_update"}], "slot": 0, "w": 150, "h": 100, "x": 11863.0, "y": 1150.0, "cx": 11938.0, "cy": 1200.0}, {"id": "sla_breach_status", "type": "escalation", "lane": "crm", "phase": 47, "label": "Set Status = Escalate", "sub": "TT-001-ESC-01", "slot": 0, "w": 190, "h": 58, "x": 12095.0, "y": 1171.0, "cx": 12190.0, "cy": 1200.0}, {"id": "sla_breach_notification", "type": "external", "lane": "ext", "phase": 48, "label": "SLA Breach Notification", "sub": "TT-001-ESC-02", "desc": "Reuse of TT-001-ESC-02 (As-Is).", "slot": 0, "w": 176, "h": 100, "x": 12354.0, "y": 2150.0, "cx": 12442.0, "cy": 2200.0}, {"id": "rag_status_update", "type": "control", "lane": "crm", "phase": 47, "label": "Update RAG Status", "sub": "TT-001-ESC-03", "desc": "The System shall update the RAG status as per defined in the SLA matrix.", "slot": 1, "w": 206, "h": 60, "x": 12087.0, "y": 1390.0, "cx": 12190.0, "cy": 1420.0}, {"id": "sla_activity_record", "type": "control", "lane": "crm", "phase": 48, "label": "Create Siebel Activity for SLA Notification", "sub": "TT-001-ESC-04", "desc": "The System shall create an Activity record for each SLA notification issued.", "slot": 0, "w": 206, "h": 100, "x": 12339.0, "y": 1150.0, "cx": 12442.0, "cy": 1200.0}, {"id": "manual_escalation", "type": "escalation", "lane": "agt", "phase": 49, "label": "Manual Escalation with Reason", "sub": "TT-001-ESC-05", "desc": "The Agent shall be able to escalate a ticket manually by selecting a mandatory escalation reason from a controlled list; a ticket submitted without a reason is rejected.", "slot": 0, "w": 190, "h": 100, "x": 12599.0, "y": 150.0, "cx": 12694.0, "cy": 200.0}, {"id": "dl_escalation_notify", "type": "external", "lane": "ext", "phase": 50, "label": "Notify Distribution Lists on Escalation", "sub": "TT-001-ESC-06", "desc": "The System shall send an email notification to every distribution list mapped to the assigned queue when a ticket is escalated. Change Category: Out of Scope.", "slot": 0, "w": 176, "h": 100, "x": 12858.0, "y": 2150.0, "cx": 12946.0, "cy": 2200.0}, {"id": "hierarchical_escalation", "type": "escalation", "lane": "crm", "phase": 50, "label": "Hierarchical Escalation Notification", "sub": "TT-001-ESC-07", "desc": "The System shall identify and notify the next higher position in the Siebel position hierarchy relative to the ticket owner when a ticket is escalated; when no higher position exists, the assigned queue distribution list is notified.", "slot": 0, "w": 190, "h": 100, "x": 12851.0, "y": 1150.0, "cx": 12946.0, "cy": 1200.0}, {"id": "dl_admin", "type": "agent", "lane": "adm", "phase": 49, "label": "Administer Distribution Lists", "sub": "TT-001-ESC-08", "desc": "A user holding the Distribution List Administration privilege shall be able to add, amend and remove multiple distribution lists mapped to a queue.", "slot": 0, "w": 206, "h": 100, "x": 12591.0, "y": 1870.0, "cx": 12694.0, "cy": 1920.0}, {"id": "rejected_view", "type": "agent", "lane": "agt", "phase": 51, "label": "View Escalated / Rejected Tickets Dashboard", "sub": "TT-001-ESC-09", "desc": "The Agent shall be able to view escalated tickets using the 'escalated to me' and 'rejected by me' filters in a separate dashboard.", "slot": 0, "w": 206, "h": 100, "x": 13095.0, "y": 150.0, "cx": 13198.0, "cy": 200.0}, {"id": "d_solved_gate", "type": "decision", "lane": "crm", "phase": 52, "label": "Mandatory Fields Gate on Solved?", "sub": "TT-001-RES-01", "desc": "The System shall prevent a ticket from transitioning to Status 'Solved' until Resolution Code, Hashtag and TT Actual Issue are populated.", "branches": [{"label": "Complete", "to": "resolution_code"}, {"label": "Missing", "to": "solved_gate_blocked"}], "slot": 0, "w": 150, "h": 100, "x": 13375.0, "y": 1150.0, "cx": 13450.0, "cy": 1200.0}, {"id": "solved_gate_blocked", "type": "error", "lane": "crm", "phase": 53, "label": "Missing Fields Identified to Agent", "sub": "TT-001-RES-01", "slot": 0, "w": 190, "h": 100, "x": 13607.0, "y": 1150.0, "cx": 13702.0, "cy": 1200.0}, {"id": "resolution_code", "type": "agent", "lane": "agt", "phase": 53, "label": "Select Resolution Code", "sub": "TT-001-RES-02", "desc": "The System shall permit the selection of exactly one Resolution Code per ticket.", "slot": 0, "w": 206, "h": 60, "x": 13599.0, "y": 170.0, "cx": 13702.0, "cy": 200.0}, {"id": "hashtag_capture", "type": "agent", "lane": "agt", "phase": 54, "label": "Select Hashtag(s) (Filtered)", "sub": "TT-001-RES-03", "desc": "The Agent shall be able to select one or more Hashtags from a picklist filtered by TT Type, Area and Sub-Area.", "slot": 0, "w": 206, "h": 100, "x": 13851.0, "y": 150.0, "cx": 13954.0, "cy": 200.0}, {"id": "hashtag_admin", "type": "agent", "lane": "adm", "phase": 53, "label": "Administer Hashtag Values", "sub": "TT-001-RES-04", "desc": "A user holding the Reference Data Administration privilege shall be able to add and retire Hashtag values.", "slot": 0, "w": 206, "h": 100, "x": 13599.0, "y": 1870.0, "cx": 13702.0, "cy": 1920.0}, {"id": "actual_issue_capture", "type": "agent", "lane": "agt", "phase": 55, "label": "Select TT Actual Issue (Filtered)", "sub": "TT-001-RES-05", "desc": "The Agent shall be able to select TT Actual Issue from a picklist filtered by the selected description template.", "slot": 0, "w": 206, "h": 100, "x": 14103.0, "y": 150.0, "cx": 14206.0, "cy": 200.0}, {"id": "actual_issue_admin", "type": "agent", "lane": "adm", "phase": 55, "label": "Administer TT Actual Issue Values", "sub": "TT-001-RES-06", "desc": "A user holding the Reference Data Administration privilege shall be able to add and retire TT Actual Issue values.", "slot": 0, "w": 206, "h": 100, "x": 14103.0, "y": 1870.0, "cx": 14206.0, "cy": 1920.0}, {"id": "l3_referral", "type": "agent", "lane": "agt", "phase": 54, "label": "Record L3 Referral Reference", "sub": "TT-001-RES-07", "desc": "The Agent shall be able to record an external L3 ticket reference in a dedicated validated field while the ticket remains in Status 'Not Solved'.", "slot": 1, "w": 206, "h": 100, "x": 13851.0, "y": 370.0, "cx": 13954.0, "cy": 420.0}, {"id": "d_completed_gate", "type": "decision", "lane": "crm", "phase": 56, "label": "Outstanding Activities Remain?", "sub": "TT-001-RES-08", "desc": "The System shall permit a ticket to transition to Status 'Completed' only when no relevant activities remain outstanding.", "branches": [{"label": "None Outstanding", "to": "ticket_closure"}, {"label": "Outstanding", "to": "completed_gate_blocked"}], "slot": 0, "w": 150, "h": 100, "x": 14383.0, "y": 1150.0, "cx": 14458.0, "cy": 1200.0}, {"id": "completed_gate_blocked", "type": "error", "lane": "crm", "phase": 57, "label": "Open Activities Identified to Agent", "sub": "TT-001-RES-08", "slot": 0, "w": 190, "h": 100, "x": 14615.0, "y": 1150.0, "cx": 14710.0, "cy": 1200.0}, {"id": "ticket_closure", "type": "agent", "lane": "agt", "phase": 57, "label": "Close Ticket (Status = Closed)", "sub": "TT-001-RES-09", "desc": "The Agent shall be able to set a ticket Status to 'Closed', and the System shall close all activities associated with the ticket.", "slot": 0, "w": 206, "h": 100, "x": 14607.0, "y": 150.0, "cx": 14710.0, "cy": 200.0}, {"id": "ticket_reopen", "type": "agent", "lane": "adm", "phase": 58, "label": "Reopen Ticket (Privileged, Windowed)", "sub": "TT-001-RES-10", "desc": "A user holding the Reopen privilege shall be able to return a ticket from Status 'Closed' to Status 'Not Solved' within the configured reopen window by providing a mandatory reason; an attempt outside the window is rejected with guidance to raise a linked ticket.", "slot": 0, "w": 206, "h": 100, "x": 14859.0, "y": 1870.0, "cx": 14962.0, "cy": 1920.0}, {"id": "ticket_cancel", "type": "agent", "lane": "adm", "phase": 56, "label": "Cancel Ticket (Privileged, Reason Code)", "sub": "TT-001-RES-11", "desc": "A user holding the Cancellation privilege shall be able to set a ticket Status to 'Cancelled' by selecting a mandatory reason code; the ticket is excluded from performance reporting.", "slot": 0, "w": 206, "h": 100, "x": 14355.0, "y": 1870.0, "cx": 14458.0, "cy": 1920.0}, {"id": "portout_auto_resolve", "type": "system", "lane": "ext", "phase": 56, "label": "Automatic Resolution \u2014 Port-Out Verification", "sub": "TT-001-RES-12", "desc": "The System shall automatically resolve Port-Out verification tickets and shall permit a back-office agent to set Status to 'Solved' when the automated process fails; the response is sent to the MNP gateway.", "slot": 0, "w": 190, "h": 100, "x": 14363.0, "y": 2150.0, "cx": 14458.0, "cy": 2200.0}, {"id": "portout_manual_resolve", "type": "agent", "lane": "agt", "phase": 57, "label": "Manual Solve on Automation Failure (Back Office)", "sub": "TT-001-RES-12", "slot": 1, "w": 206, "h": 100, "x": 14607.0, "y": 370.0, "cx": 14710.0, "cy": 420.0}, {"id": "csat_trigger", "type": "external", "lane": "ext", "phase": 59, "label": "Trigger CSAT Survey to Medelia", "sub": "TT-001-CSA-01", "desc": "The system shall send a feedback survey trigger to Medelia when the Trouble Ticket is in Resolved status.", "slot": 0, "w": 176, "h": 100, "x": 15126.0, "y": 2150.0, "cx": 15214.0, "cy": 2200.0}, {"id": "csat_restrict", "type": "control", "lane": "crm", "phase": 60, "label": "Restrict Survey Trigger to Resolved Status", "sub": "TT-001-CSA-02", "desc": "The system shall send the Medelia survey trigger only when the Trouble Ticket status is Resolved.", "slot": 0, "w": 206, "h": 100, "x": 15363.0, "y": 1150.0, "cx": 15466.0, "cy": 1200.0}, {"id": "csat_attribution", "type": "control", "lane": "crm", "phase": 61, "label": "CSAT Response Attribution", "sub": "TT-001-CSA-03", "desc": "The System shall store the survey response against the originating ticket and make it visible in the ticket view and in reporting.", "slot": 0, "w": 206, "h": 100, "x": 15615.0, "y": 1150.0, "cx": 15718.0, "cy": 1200.0}, {"id": "ticket_list_filters", "type": "agent", "lane": "agt", "phase": 62, "label": "Ticket List View with Filters", "sub": "TT-001-VEW-01c", "desc": "The Agent shall be able to view tickets in a list filtered by the criteria defined in field set FS-09; the filter can be saved and reapplied.", "slot": 0, "w": 206, "h": 100, "x": 15867.0, "y": 150.0, "cx": 15970.0, "cy": 200.0}, {"id": "export_ticket_list", "type": "agent", "lane": "agt", "phase": 63, "label": "Export Ticket List (Excel)", "sub": "TT-001-VEW-02c", "desc": "The agent shall be able to export the list of tickets after applying filters in Excel format.", "slot": 0, "w": 206, "h": 100, "x": 16119.0, "y": 150.0, "cx": 16222.0, "cy": 200.0}, {"id": "std_siebel_views", "type": "control", "lane": "crm", "phase": 63, "label": "Standard Siebel Ticket Views", "sub": "TT-001-VEW-03c", "desc": "The System shall provide My Trouble Tickets, My Team's Trouble Tickets and All Trouble Tickets views.", "slot": 0, "w": 206, "h": 100, "x": 16119.0, "y": 1150.0, "cx": 16222.0, "cy": 1200.0}, {"id": "queue_restricted_views", "type": "validation", "lane": "crm", "phase": 64, "label": "Queue-Restricted Views", "sub": "TT-001-VEW-04c", "desc": "The System shall restrict tickets assigned to the Back Office Queue and Credit Control / Collection Queue to members of the applicable queue.", "slot": 0, "w": 176, "h": 100, "x": 16386.0, "y": 1150.0, "cx": 16474.0, "cy": 1200.0}, {"id": "cust360_panel", "type": "agent", "lane": "agt", "phase": 64, "label": "Customer 360 Ticket Panel", "sub": "TT-001-VEW-05c", "desc": "The Agent shall be able to view all Trouble Tickets raised against a customer account from Customer 360, without restriction on ticket age.", "slot": 0, "w": 206, "h": 100, "x": 16371.0, "y": 150.0, "cx": 16474.0, "cy": 200.0}, {"id": "rag_indicator", "type": "control", "lane": "crm", "phase": 65, "label": "RAG Status Indicator in List Views", "sub": "TT-001-VEW-06c", "desc": "The System shall display a Red, Amber or Green indicator for each ticket in list views, derived from elapsed time against the SLA target for the applicable Customer Type.", "slot": 0, "w": 206, "h": 100, "x": 16623.0, "y": 1150.0, "cx": 16726.0, "cy": 1200.0}, {"id": "end", "type": "end", "lane": "crm", "phase": 66, "label": "Trouble Ticket Lifecycle Complete", "slot": 0, "w": 84, "h": 84, "x": 16936.0, "y": 1158.0, "cx": 16978.0, "cy": 1200.0}, {"id": "close_activities_on_closure", "type": "system", "lane": "sys", "phase": 57, "label": "Close Activities on Ticket Closure", "sub": "TT-001-VEW-06", "desc": "System closes all activities associated with the Trouble Ticket when the ticket status moves to Closed.", "slot": 0, "w": 190, "h": 100, "x": 14615.0, "y": 870.0, "cx": 14710.0, "cy": 920.0}], "flows": [{"from": "start", "to": "cred_validate", "kind": "seq", "happy": true}, {"from": "cred_validate", "to": "role_access", "kind": "seq", "happy": true}, {"from": "role_access", "to": "agent360", "kind": "seq", "happy": true}, {"from": "agent360", "to": "agent_dash", "kind": "seq", "happy": true}, {"from": "agent_dash", "to": "validate_qticket", "kind": "seq", "happy": true}, {"from": "validate_qticket", "to": "cust_id", "kind": "seq", "happy": true}, {"from": "cust_id", "to": "idwise_verify", "kind": "seq", "happy": true}, {"from": "cust_id", "to": "cav_verify", "kind": "seq", "happy": false}, {"from": "idwise_verify", "to": "cust360", "kind": "seq", "happy": true}, {"from": "cav_verify", "to": "cust360", "kind": "seq", "happy": false}, {"from": "cust360", "to": "smart_search", "kind": "seq", "happy": true}, {"from": "smart_search", "to": "create_manual_tt", "kind": "seq", "happy": true}, {"from": "create_manual_tt", "to": "auto_populate", "kind": "seq", "happy": true}, {"from": "create_manual_tt", "to": "manual_fields", "kind": "seq", "happy": true}, {"from": "auto_populate", "to": "kb_access", "kind": "seq", "happy": true}, {"from": "manual_fields", "to": "kb_access", "kind": "seq", "happy": true}, {"from": "kb_access", "to": "view_new_tt", "kind": "seq", "happy": true}, {"from": "view_new_tt", "to": "capture_tt_details", "kind": "seq", "happy": true}, {"from": "capture_tt_details", "to": "select_type_area", "kind": "seq", "happy": true}, {"from": "select_type_area", "to": "cascade_subarea", "kind": "seq", "happy": true}, {"from": "cascade_subarea", "to": "desc_template", "kind": "seq", "happy": true}, {"from": "desc_template", "to": "save_tt", "kind": "seq", "happy": true}, {"from": "save_tt", "to": "pass_downstream", "kind": "seq", "happy": true}, {"from": "save_tt", "to": "priority_derivation", "kind": "seq", "happy": true}, {"from": "template_admin", "to": "desc_template", "kind": "data", "happy": false}, {"from": "auto_tt_order_fail", "to": "pass_downstream", "kind": "data", "happy": false}, {"from": "pass_downstream", "to": "assign_to_creator", "kind": "seq", "happy": true}, {"from": "priority_derivation", "to": "assign_to_creator", "kind": "seq", "happy": true}, {"from": "assign_to_creator", "to": "auto_assign_queue", "kind": "seq", "happy": true}, {"from": "auto_assign_queue", "to": "d_queue_match", "kind": "seq", "happy": true}, {"from": "d_queue_match", "to": "generic_queue", "kind": "cond", "label": "No Match", "happy": false}, {"from": "d_queue_match", "to": "view_queue_tickets", "kind": "cond", "label": "Matched", "happy": true}, {"from": "generic_queue", "to": "view_queue_tickets", "kind": "seq", "happy": false}, {"from": "view_queue_tickets", "to": "queue_scoped_worklist", "kind": "seq", "happy": true}, {"from": "queue_scoped_worklist", "to": "supervisor_reassign", "kind": "seq", "happy": false}, {"from": "queue_scoped_worklist", "to": "status_assigned", "kind": "seq", "happy": true}, {"from": "supervisor_reassign", "to": "status_assigned", "kind": "seq", "happy": false}, {"from": "status_assigned", "to": "self_assign", "kind": "seq", "happy": true}, {"from": "status_assigned", "to": "receive_sup_assign", "kind": "seq", "happy": false}, {"from": "self_assign", "to": "reject_assignment", "kind": "seq", "happy": false}, {"from": "receive_sup_assign", "to": "reject_assignment", "kind": "seq", "happy": false}, {"from": "self_assign", "to": "restrict_team_reassign", "kind": "seq", "happy": true}, {"from": "restrict_team_reassign", "to": "assign_email", "kind": "seq", "happy": true}, {"from": "receive_sup_assign", "to": "assign_email", "kind": "data", "happy": false}, {"from": "assign_email", "to": "select_multi_tickets", "kind": "seq", "happy": true}, {"from": "select_multi_tickets", "to": "select_all_tickets", "kind": "seq", "happy": true}, {"from": "select_all_tickets", "to": "bulk_assign", "kind": "seq", "happy": true}, {"from": "bulk_assign", "to": "restrict_bulk_privilege", "kind": "seq", "happy": true}, {"from": "restrict_bulk_privilege", "to": "single_bulk_target", "kind": "seq", "happy": true}, {"from": "reject_assignment", "to": "parent_child_assoc", "kind": "data", "happy": false}, {"from": "single_bulk_target", "to": "parent_child_assoc", "kind": "seq", "happy": true}, {"from": "parent_child_assoc", "to": "related_match", "kind": "seq", "happy": true}, {"from": "related_match", "to": "dup_manual_assoc", "kind": "seq", "happy": true}, {"from": "dup_manual_assoc", "to": "dup_detect", "kind": "seq", "happy": true}, {"from": "single_bulk_target", "to": "scan_attach_retail", "kind": "seq", "happy": false}, {"from": "single_bulk_target", "to": "manual_attach", "kind": "seq", "happy": true}, {"from": "scan_attach_retail", "to": "d_terminal_status", "kind": "seq", "happy": true}, {"from": "manual_attach", "to": "d_terminal_status", "kind": "seq", "happy": true}, {"from": "d_terminal_status", "to": "attach_blocked", "kind": "cond", "label": "Terminal", "happy": false}, {"from": "d_terminal_status", "to": "view_download_attach", "kind": "cond", "label": "Non-Terminal", "happy": true}, {"from": "d_terminal_status", "to": "attach_constraints", "kind": "seq", "happy": true}, {"from": "attach_constraints", "to": "audit_capture", "kind": "seq", "happy": true}, {"from": "view_download_attach", "to": "audit_capture", "kind": "data", "happy": true}, {"from": "dup_detect", "to": "audit_capture", "kind": "data", "happy": true}, {"from": "audit_capture", "to": "audit_access", "kind": "seq", "happy": true}, {"from": "audit_access", "to": "access_logging", "kind": "seq", "happy": true}, {"from": "access_logging", "to": "create_manual_activity", "kind": "seq", "happy": true}, {"from": "create_manual_activity", "to": "assoc_activity", "kind": "seq", "happy": true}, {"from": "assoc_activity", "to": "view_activities", "kind": "seq", "happy": true}, {"from": "access_logging", "to": "auto_activity", "kind": "seq", "happy": true}, {"from": "auto_activity", "to": "view_activities", "kind": "seq", "happy": true}, {"from": "view_activities", "to": "close_open_activity", "kind": "seq", "happy": true}, {"from": "close_open_activity", "to": "activity_visibility", "kind": "seq", "happy": true}, {"from": "access_logging", "to": "ai_assisted_triage", "kind": "data", "happy": false}, {"from": "access_logging", "to": "b2b_enterprise_tt", "kind": "data", "happy": false}, {"from": "activity_visibility", "to": "auto_sms", "kind": "seq", "happy": true}, {"from": "auto_sms", "to": "auto_sms_combo", "kind": "seq", "happy": true}, {"from": "auto_sms_combo", "to": "sms_language", "kind": "seq", "happy": true}, {"from": "activity_visibility", "to": "manual_sms", "kind": "seq", "happy": true}, {"from": "manual_sms", "to": "search_sms_template", "kind": "seq", "happy": true}, {"from": "search_sms_template", "to": "filter_template", "kind": "seq", "happy": true}, {"from": "filter_template", "to": "manual_sms_lang", "kind": "seq", "happy": true}, {"from": "manual_sms_lang", "to": "select_sms_template", "kind": "seq", "happy": true}, {"from": "select_sms_template", "to": "edit_sms_role", "kind": "seq", "happy": true}, {"from": "edit_sms_role", "to": "save_interaction_hist", "kind": "seq", "happy": true}, {"from": "sms_language", "to": "save_interaction_hist", "kind": "seq", "happy": true}, {"from": "save_interaction_hist", "to": "additional_channels", "kind": "seq", "happy": true}, {"from": "additional_channels", "to": "d_sla_breach", "kind": "seq", "happy": true}, {"from": "d_sla_breach", "to": "sla_breach_status", "kind": "cond", "label": "Breached", "happy": false}, {"from": "sla_breach_status", "to": "sla_breach_notification", "kind": "seq", "happy": false}, {"from": "d_sla_breach", "to": "rag_status_update", "kind": "cond", "label": "Within SLA", "happy": true}, {"from": "sla_breach_notification", "to": "sla_activity_record", "kind": "seq", "happy": false}, {"from": "rag_status_update", "to": "sla_activity_record", "kind": "seq", "happy": true}, {"from": "sla_activity_record", "to": "manual_escalation", "kind": "seq", "happy": false}, {"from": "manual_escalation", "to": "dl_escalation_notify", "kind": "seq", "happy": false}, {"from": "manual_escalation", "to": "hierarchical_escalation", "kind": "seq", "happy": false}, {"from": "dl_admin", "to": "hierarchical_escalation", "kind": "data", "happy": false}, {"from": "hierarchical_escalation", "to": "rejected_view", "kind": "seq", "happy": false}, {"from": "dl_escalation_notify", "to": "rejected_view", "kind": "seq", "happy": false}, {"from": "rejected_view", "to": "d_solved_gate", "kind": "data", "happy": false}, {"from": "sla_activity_record", "to": "d_solved_gate", "kind": "seq", "happy": true}, {"from": "d_solved_gate", "to": "solved_gate_blocked", "kind": "cond", "label": "Missing", "happy": false}, {"from": "solved_gate_blocked", "to": "d_solved_gate", "kind": "seq", "happy": false}, {"from": "d_solved_gate", "to": "resolution_code", "kind": "cond", "label": "Complete", "happy": true}, {"from": "resolution_code", "to": "hashtag_capture", "kind": "seq", "happy": true}, {"from": "hashtag_admin", "to": "hashtag_capture", "kind": "data", "happy": false}, {"from": "hashtag_capture", "to": "actual_issue_capture", "kind": "seq", "happy": true}, {"from": "actual_issue_admin", "to": "actual_issue_capture", "kind": "data", "happy": false}, {"from": "resolution_code", "to": "l3_referral", "kind": "seq", "happy": false}, {"from": "l3_referral", "to": "hashtag_capture", "kind": "seq", "happy": false}, {"from": "actual_issue_capture", "to": "d_completed_gate", "kind": "seq", "happy": true}, {"from": "d_completed_gate", "to": "completed_gate_blocked", "kind": "cond", "label": "Outstanding", "happy": false}, {"from": "completed_gate_blocked", "to": "d_completed_gate", "kind": "seq", "happy": false}, {"from": "d_completed_gate", "to": "ticket_closure", "kind": "cond", "label": "None Outstanding", "happy": true}, {"from": "ticket_closure", "to": "ticket_reopen", "kind": "seq", "happy": false}, {"from": "ticket_reopen", "to": "d_solved_gate", "kind": "seq", "happy": false}, {"from": "d_solved_gate", "to": "ticket_cancel", "kind": "data", "happy": false}, {"from": "portout_auto_resolve", "to": "portout_manual_resolve", "kind": "cond", "label": "Automation Failed", "happy": false}, {"from": "portout_manual_resolve", "to": "ticket_closure", "kind": "seq", "happy": false}, {"from": "ticket_closure", "to": "close_activities_on_closure", "kind": "seq", "happy": true}, {"from": "csat_trigger", "to": "csat_restrict", "kind": "seq", "happy": true}, {"from": "csat_restrict", "to": "csat_attribution", "kind": "seq", "happy": true}, {"from": "csat_attribution", "to": "ticket_list_filters", "kind": "seq", "happy": true}, {"from": "ticket_list_filters", "to": "export_ticket_list", "kind": "seq", "happy": true}, {"from": "ticket_list_filters", "to": "std_siebel_views", "kind": "seq", "happy": true}, {"from": "std_siebel_views", "to": "queue_restricted_views", "kind": "seq", "happy": true}, {"from": "export_ticket_list", "to": "cust360_panel", "kind": "seq", "happy": true}, {"from": "queue_restricted_views", "to": "rag_indicator", "kind": "seq", "happy": true}, {"from": "cust360_panel", "to": "rag_indicator", "kind": "seq", "happy": true}, {"from": "rag_indicator", "to": "end", "kind": "seq", "happy": true}, {"from": "close_activities_on_closure", "to": "csat_trigger", "kind": "seq", "happy": true}], "model": {"agents": [], "contracts": [], "connectivity": []}, "biz": {"bio": {}, "contractPlain": {}, "nameMap": {}}};</script>
 <script>
 const D=window.DATA, LY=D.layout, NODES=D.nodes, FLOWS=D.flows;
 const NID={}; NODES.forEach(n=>NID[n.id]=n);
@@ -617,7 +643,7 @@ const SVGNS="http://www.w3.org/2000/svg";
 // pass's own final line) into one LY._colShift the phase-header/background code reads.
 {
  const wCtx=document.createElement('canvas').getContext('2d');
- const NODEFONT='600 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';   // == LBLFONT below — MUST match: this decides how wide a node's box becomes, wrapTextPx decides how content then wraps INSIDE that box, and the two have to agree on what "fits" means
+ const NODEFONT='600 14px "Segoe UI",Arial,sans-serif';   // == LBLFONT below — MUST match: this decides how wide a node's box becomes, wrapTextPx decides how content then wraps INSIDE that box, and the two have to agree on what "fits" means
  wCtx.font=NODEFONT;
  const TARGET_MAX_LINES=2;    // prefer widening a box over letting its label wrap past this many lines
  const MAX_NODE_W={decision:280, _default:340};   // bounded cap per shape family — a genuinely
@@ -695,7 +721,7 @@ const SVGNS="http://www.w3.org/2000/svg";
 // the backward-edge routing tracks, and the node-width pass just above.
 {
  const lblCtx=document.createElement('canvas').getContext('2d');
- const ELABELFONT='italic 700 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';   // kept in sync with .elabel's weight — MUST match exactly, or this width measurement (used for column-shift spacing, see below) under/overestimates what actually renders and either spills a label into a node or leaves excess gap
+ const ELABELFONT='italic 700 14px "Segoe UI",Arial,sans-serif';   // kept in sync with .elabel's weight — MUST match exactly, or this width measurement (used for column-shift spacing, see below) under/overestimates what actually renders and either spills a label into a node or leaves excess gap
  lblCtx.font=ELABELFONT;
  const LABEL_CLEARANCE=16;   // clearance from each node edge, beyond the bare text width
  const extraGap={};          // extraGap[phase] = extra px this column boundary needs, if any
@@ -726,46 +752,22 @@ const SVGNS="http://www.w3.org/2000/svg";
 // that briefly replaced it (removed this round, per an explicit "remove the coloured strip on
 // the left side of each lane" requirement). With neither consumer left, this was genuinely
 // dead code rather than something to leave orphaned "just in case."
-const FILL={start:'#def0de',end:'#f6e6e5',agent:'#ffffff',control:'#fbf2e9',decision:'#f1ebf9',
- validation:'#e6f1f2',system:'#f2f2f2',external:'#f9ecdf',error:'#f8e6e6',escalation:'#fef4db'};
-const STROKE={start:'#008a00',end:'#ac1811',agent:'#3860be',control:'#d46e08',decision:'#8a5cc9',
- validation:'#2b8a8f',system:'#4a4d4e',external:'#d46e08',error:'#bd0000',escalation:'#f5b400'};
-// Per-phase-group colour palette: one distinct hue per phase heading (the dark pill), paired
-// with a light tint of that SAME hue for the column's full-height body background beneath it.
-// Every `header` value is verified >=4.5:1 contrast against white text (WCAG AA, normal text —
-// the phase heading is 14px/700, which does not qualify as "large text" under the 18.66px-bold
-// threshold, so normal-text AA is the correct bar, not the more lenient large-text 3:1). Built
-// by darkening/extending hues already used elsewhere in this file (signal_blue, the decision/
-// validation/external node-type colours, --start, --end, --sys, --charcoal) rather than
-// inventing an unrelated new palette — `teal` and `amber` needed darkening from their node-type
-// values specifically to clear 4.5:1 (their node-fill versions are contrast-checked against a
-// DARK stroke on a LIGHT fill, not white text on the colour itself, so passing one doesn't
-// imply passing the other). `wine` and `olive` have no node-type equivalent — added purely to
-// cover a 9th/10th distinct phase without repeating a hue, verified the same way (8.03 and 5.67
-// respectively). Each `tint` is the same hue at ~94% lightness/45% saturation, matching the
-// lightness/saturation this file's existing bg tokens already use (`--pg-bg`, `--ai-bg`,
-// `--dec-bg`, `--ext-bg`) — computed programmatically, not eyeballed, so every tint reads as
-// "the same colour family as its header" rather than an arbitrary pastel. `slate`/`charcoal`
-// use plain light neutrals for their tints instead of a hue-rotated pastel: both are themselves
-// near-zero-saturation colours, so mechanically applying the same H/L/S recipe produced an
-// unstable, incidentally blue-tinted result (HSL hue is not well-defined at very low
-// saturation) that read as a near-duplicate of the `blue` entry rather than a genuine neutral.
-// Cycles (via `gi % PHASE_PALETTE.length`) if a model has more phase groups than palette
-// entries — verified against the actual data: the widest current model (Trouble Ticket /
-// Postpaid Activation) has 10 distinct phase groups, exactly the palette's own length, so no
-// diagram in this corpus repeats a colour; a future model with more than 10 groups would.
-const PHASE_PALETTE=[
- {header:'#3860be',tint:'#e9edf7'},   // blue    (signal_blue)
- {header:'#157d7a',tint:'#e9f7f6'},   // teal    (darkened from validation/ai teal)
- {header:'#8a5cc9',tint:'#efe9f7'},   // purple  (decision)
- {header:'#b65f07',tint:'#f7f0e9'},   // amber   (darkened from external amber)
- {header:'#008a00',tint:'#e9f7e9'},   // green   (start / semantic.success)
- {header:'#ac1811',tint:'#f7e9e9'},   // red     (end / deep_red_secondary — never brand_red/--accent, which stays reserved for selection)
- {header:'#4a4d4e',tint:'#f2f2f2'},   // slate   (system / text.secondary)
- {header:'#25282b',tint:'#eaecee'},   // charcoal
- {header:'#7a3b5e',tint:'#f7e9f0'},   // wine    (no node-type equivalent — extends the set past 8)
- {header:'#6b6a1f',tint:'#f7f6e9'},   // olive   (no node-type equivalent — extends the set past 9)
-];
+// Palette aligned to the reference canvas design (VFQ_Mobile_Postpaid_Activation_BPMN2_Merged.html)
+// — a visual-presentation-only remap: shapes/types themselves are unchanged, only which fill/
+// stroke hex each type uses. control/external stay paired on one shared hue, matching this
+// same pairing already used before this remap (both were '#d46e08'; both are now '#8a7355').
+const FILL={start:'#ffffff',end:'#ffffff',agent:'#ffffff',control:'#ffffff',decision:'#fdead9',
+ validation:'#e8f6f6',system:'#f2f3f4',external:'#ffffff',error:'#ffffff',escalation:'#fffaf0'};
+const STROKE={start:'#1e7d34',end:'#c0392b',agent:'#2b6cb0',control:'#8a7355',decision:'#d2660b',
+ validation:'#0f7d7d',system:'#6b7280',external:'#8a7355',error:'#c0392b',escalation:'#b7791f'};
+// PHASE_PALETTE (one colour per phase-group pill + a matching full-height column tint) has been
+// removed entirely, replaced by the reference canvas's plain treatment: no per-phase colour cue
+// at all, just the phase-header text and its divider line (see the phaseGroups loop below) —
+// consistent with the reference's own phase headers, which are plain black-on-white text with no
+// pill or column tint behind them. Nothing about node/connector styling depended on the tint or
+// pill colour being present, so nothing else needed to change when this went. (The 493-line
+// `.dsec-outputs` comment still calls out this array's old green tint literal by name for
+// provenance — that CSS value itself is untouched, only its one-time source array is gone.)
 function el(t,a){const e=document.createElementNS(SVGNS,t);for(const k in(a||{}))e.setAttribute(k,a[k]);return e;}
 function laneOf(k){return LY.lanes.find(l=>l.key===k);}
 // Hoisted above `bands`/nodes/edges so the tinted backgrounds below can be computed and painted
@@ -782,23 +784,18 @@ LY.phases.forEach((p,i)=>{
 const svg=document.getElementById('svgHost');
 svg.setAttribute('viewBox',`0 0 ${LY.totalW} ${LY.totalH}`);
 const vp=el('g',{id:'vp'}); svg.appendChild(vp);
-// Phase-column tinted backgrounds — appended FIRST, before anything else touches `vp`, so this
-// is the bottommost layer in z-order: lane dividers, nodes, connectors, and the header pills
-// themselves (added later) all paint on top of the tint, never the reverse. Span is
-// LY.topbar (top of actual lane/node content, right below the header-pill row) down to
-// LY.totalH-30 — the exact same vertical bounds the phase-divider guide lines already use (see
-// the header-pill loop below), so the tint's bottom edge lines up with where those guides stop
-// rather than bleeding into the shared bottom "bus" band that backward/loop connectors from
-// every phase route through (tinting that shared band per-column would cut a vertical colour
-// seam through connectors that visually belong to no single phase).
-const phaseBg=el('g',{id:'svgPhaseBg'});
-phaseGroups.forEach((grp,gi)=>{
- const x=LY.x0+grp.start*LY.colw+(LY._colShift[grp.start]||0);
- const endX=LY.x0+(grp.end+1)*LY.colw+(LY._colShift[grp.end+1]||0);
- const pal=PHASE_PALETTE[gi%PHASE_PALETTE.length];
- phaseBg.appendChild(el('rect',{x,y:LY.topbar,width:endX-x,height:(LY.totalH-30)-LY.topbar,fill:pal.tint}));
+// Canvas background + outer border, and alternating lane bands — matches the reference canvas's
+// plain white card with a subtle grey border and zebra-striped lanes, replacing the former
+// per-phase-group colour tint above. Appended FIRST, before anything else touches `vp`, so both
+// stay the bottommost layer in z-order: lane dividers, nodes, connectors, and phase-header text
+// (added later) all paint on top, never the reverse.
+const canvasBg=el('rect',{x:0,y:0,width:LY.totalW,height:LY.totalH,fill:'#ffffff',stroke:'#9aa0a6','stroke-width':1.4});
+vp.appendChild(canvasBg);
+const laneZebra=el('g',{id:'svgLaneZebra'});
+LY.lanes.forEach((L,li)=>{
+ if(li%2===1) laneZebra.appendChild(el('rect',{x:0,y:L.y,width:LY.totalW,height:L.h,fill:'#f4f5f6'}));
 });
-vp.appendChild(phaseBg);
+vp.appendChild(laneZebra);
 // defs arrow markers
 const defs=el('defs');
 // A dedicated `ar-hl` marker exists ALONGSIDE the per-kind markers, not instead of them — it's
@@ -811,7 +808,7 @@ const defs=el('defs');
 // a highlighted connector's line turns brand-red, but its arrowhead stays whatever colour that
 // edge KIND's marker was defined with (blue for data, amber for escalation, dark red for
 // error) — a single connector rendered in two different colours along its own route.
-[['ar','#4a4d4e'],['ar-data','#3860be'],['ar-cond','#8a5cc9'],['ar-esc','#f5b400'],['ar-err','#bd0000'],['ar-hl','#e60000']].forEach(([id,c])=>{
+[['ar','#333333'],['ar-data','#555555'],['ar-cond','#8a8f98'],['ar-esc','#b7791f'],['ar-err','#c0392b'],['ar-hl','#e60000'],['ar-hp','#1e7d34']].forEach(([id,c])=>{
  const m=el('marker',{id,markerWidth:9,markerHeight:9,refX:7.5,refY:3,orient:'auto',markerUnits:'strokeWidth'});
  m.appendChild(el('path',{d:'M0,0 L7.5,3 L0,6 z',fill:c})); defs.appendChild(m);});
 svg.appendChild(defs);
@@ -823,8 +820,8 @@ svg.appendChild(defs);
 // coloured band and could overlap the diagram content that starts at LY.x0.
 const bands=el('g'); vp.appendChild(bands);
 const _laneCtx=document.createElement('canvas').getContext('2d');
-const LANE_NAME_FONT='700 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';   // kept in sync with .lanelabel's 14px minimum
-const LANE_HINT_FONT='400 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';   // kept in sync with .lanehint's 14px minimum
+const LANE_NAME_FONT='700 14px "Segoe UI",Arial,sans-serif';   // kept in sync with .lanelabel's 14px minimum
+const LANE_HINT_FONT='400 14px "Segoe UI",Arial,sans-serif';   // kept in sync with .lanehint's 14px minimum
 // wrapLines() and truncate1() have both been removed, at two different points. wrapLines()
 // went when the lane name switched from horizontal multi-line wrap to vertical rotation with
 // truncate1() (a round where hints were also dropped from inline display entirely).
@@ -847,6 +844,16 @@ const LANE_HINT_FONT='400 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,
 // content, several rounds before the vertical-rotation change). None of that machinery exists
 // any more; `laneBlock` is now just a convenience container for the tooltip, nothing more.
 const svgLaneGutter=el('g',{id:'svgLaneGutter'});
+// One continuous fill for the ENTIRE gutter column, painted once up front — from y:0 (so it
+// also covers the corner cell under the phase header, see the header-row fill below) down to
+// the bottom of the last lane. Previously each lane painted its own rect (x:0,y:L.y,h:L.h),
+// which left LANE_GAP-wide (20px) white bands between every pair of lanes, since consecutive
+// lane rects don't touch — L.y for lane N+1 starts LANE_GAP past lane N's own y+h. Those gaps
+// are correct/intentional in the diagram's own content area (nodes/connectors), but the
+// lane-label gutter is a section header, not diagram content, and must read as one unbroken
+// band per an explicit "no white gaps/patches within the header column" requirement.
+const lastLane=LY.lanes[LY.lanes.length-1];
+svgLaneGutter.appendChild(el('rect',{x:0,y:0,width:LY.laneLabelW,height:lastLane.y+lastLane.h,fill:'#B6BDC4'}));
 LY.lanes.forEach((L,li)=>{
  // Lane background tint AND the 4px left accent stripe have both been removed entirely —
  // lanes are now plain (transparent/page-background) with no colour cue of any kind, per an
@@ -856,8 +863,10 @@ LY.lanes.forEach((L,li)=>{
  // against a plain background just as it did against a tinted one; nothing about
  // node/connector styling depended on either the lane tint or the accent stripe being present.
  const laneBlock=el('g',{});   // one group per lane so a single <title> covers its whole clickable/hoverable area
- laneBlock.dataset.lane=L.key;   // read by applyActorFilter() to dim this lane's own gutter entry when its actor is deselected
- laneBlock.appendChild(el('rect',{x:0,y:L.y,width:LY.laneLabelW,height:L.h,fill:'#fff',opacity:.65}));
+ laneBlock.dataset.lane=L.key;   // identifies this gutter entry's own lane; not read by any filter any more (the former Actors dropdown that once did is removed)
+ // No per-lane background rect here any more — the single continuous gutter-column fill above
+ // already covers this lane's own y:L.y..L.y+L.h span (and every other lane's), so painting a
+ // second, redundant #B6BDC4 rect per lane on top of it would be dead weight, not a bug fix.
  // Uppercased HERE, once, at the source — not via a CSS text-transform on .lanelabel. The width
  // measurement two lines below (wrapTextPx) has to measure the exact string that ends up
  // rendered, or the wrap decision and the actual glyphs painted can disagree: uppercase letters
@@ -985,8 +994,15 @@ bands.appendChild(svgLaneGutter);   // always visible now — no sticky HTML ove
 // see .phase-header-sticky) while still rendering normally in exports (exportSVGString()
 // resets this opacity on the clone, since a static file has no sticky-overlay equivalent).
 const ph=el('g',{id:'svgPhaseHeader'}); vp.appendChild(ph);
+// Top-left corner fill — where the header ROW (phase header, painted below per phase group,
+// starting only at LY.x0) meets the header COLUMN (lane gutter, x:0..LY.laneLabelW). Neither
+// loop ever painted this x:0..LY.x0, y:0..LY.topbar cell on its own (the phase-header loop
+// starts at LY.x0; the lane-gutter fill starts below LY.topbar), so it rendered as plain
+// unstyled canvas background — a visible white patch exactly at the point both header bands
+// are expected to read as one continuous band. Same #B6BDC4 as both.
+ph.appendChild(el('rect',{x:0,y:0,width:LY.x0,height:LY.topbar,fill:'#B6BDC4'}));
 const _measCtx=document.createElement('canvas').getContext('2d');
-const PHFONT='700 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';   // kept in sync with .phasehdr's 14px minimum
+const PHFONT='700 14px "Segoe UI",Arial,sans-serif';   // kept in sync with .phasehdr's 14px minimum
 // phaseGroups is computed once, hoisted above `vp`'s own creation — see its declaration for why
 // (the tinted column backgrounds need it before anything else is painted) — and reused here
 // unchanged rather than recomputed a second time.
@@ -997,25 +1013,30 @@ phaseGroups.forEach((grp,gi)=>{
  const x=LY.x0+grp.start*LY.colw+(LY._colShift[grp.start]||0);
  const endX=LY.x0+(grp.end+1)*LY.colw+(LY._colShift[grp.end+1]||0);
  const spanW=endX-x;
+ // Solid background fill for the phase header row itself (0..LY.topbar), matching the same
+ // #B6BDC4 applied to the lane gutter's own left-side labels — both are "section header"
+ // treatments per an explicit requirement, added back after an earlier round removed the
+ // header's coloured pill entirely (see the "No coloured pill any more" comment just below,
+ // left as history since it's still accurate about the PILL — a narrow, padded, per-title box —
+ // this is a plain full-bleed rect behind the whole row instead, edge-to-edge with the adjacent
+ // phase group so neighbouring headers' fills meet exactly at the dashed divider line rather
+ // than leaving a gap). Appended first, before the divider/text below, so both paint on top.
+ ph.appendChild(el('rect',{x,y:0,width:spanW,height:LY.topbar,fill:'#B6BDC4'}));
  // Stage separators now draw at EVERY group boundary, including before the very first stage
  // (a prior version skipped that one via `if(gi>0)`, leaving the first stage with no leading
  // boundary line at all — inconsistent with every other stage, which gets one on both sides).
  // Since `x` for the first group is already exactly `LY.x0` (the content area's own left
  // edge — `grp.start` is 0 and `LY._colShift[0]` is always 0), removing the `gi>0` guard
  // draws this leading separator in exactly the right place with no special-casing needed.
- // Colour is `#E3E3E3` (also used for the horizontal lane-divider lines below, so both kinds
- // of separator share one value — darkened slightly from a prior `#F5F5F5`, still deliberately
- // subtle/near-background rather than contrast-driven).
- ph.appendChild(el('line',{x1:x,y1:LY.topbar-2,x2:x,y2:LY.totalH-30,stroke:'#E3E3E3','stroke-width':2,'stroke-dasharray':'4 3'}));
+ // Dashed divider matching the reference canvas's own phase-boundary guide (lighter/thinner
+ // than this file's former #E3E3E3/2px — reference uses a subtle #c9cfd8 hairline).
+ ph.appendChild(el('line',{x1:x,y1:LY.topbar-2,x2:x,y2:LY.totalH-30,stroke:'#c9cfd8','stroke-width':1.2,'stroke-dasharray':'3 3'}));
  const g=el('g');
- const rectX=x+8, rectW=spanW-16, rectCx=rectX+rectW/2;   // centre of the header bar
- // Each phase group's pill uses its own colour from PHASE_PALETTE (see that array's own
- // comment) instead of one uniform charcoal for every phase — differentiating stages at a
- // glance rather than relying on the reader to read every label. The tinted column background
- // behind this pill (svgPhaseBg, appended before anything else touches `vp`) uses the SAME
- // palette entry's lighter tint, so a phase's heading and its content area are visually paired.
- const pal=PHASE_PALETTE[gi%PHASE_PALETTE.length];
- g.appendChild(el('rect',{x:rectX,y:14,width:rectW,height:42,rx:6,fill:pal.header}));
+ const rectX=x+8, rectW=spanW-16, rectCx=rectX+rectW/2;   // centre of the header bar — title text still
+   // centres on this narrower, padded measure (rectCx/rectW), even though the #B6BDC4 fill behind it
+   // (appended above) now runs the full, unpadded x..endX span — the two were always independent
+   // measurements (rectX/rectW only ever existed to keep the TEXT off the divider lines, never to
+   // size a background), so reintroducing a background didn't require touching this at all.
  // width-based wrap: keep the (upper-cased) title on ONE line whenever it fits the bar; only split if it truly overflows
  const upper=grp.label.toUpperCase();
  _measCtx.font=PHFONT;
@@ -1032,14 +1053,15 @@ phaseGroups.forEach((grp,gi)=>{
    l1=a;
  }
  const cy0=35;
- const t=el('text',{x:rectCx,y:(l2?cy0-7:cy0),'text-anchor':'middle',class:'phasehdr'}); t.style.fill='#ffffff'; t.textContent=l1; g.appendChild(t);
- if(l2){const t2=el('text',{x:rectCx,y:cy0+7,'text-anchor':'middle',class:'phasehdr'});t2.style.fill='rgba(255,255,255,.75)';t2.textContent=l2;g.appendChild(t2);}
+ const t=el('text',{x:rectCx,y:(l2?cy0-7:cy0),'text-anchor':'middle',class:'phasehdr'}); t.style.fill='#1a1a1a'; t.textContent=l1; g.appendChild(t);
+ if(l2){const t2=el('text',{x:rectCx,y:cy0+7,'text-anchor':'middle',class:'phasehdr'});t2.style.fill='#4a4d4e';t2.textContent=l2;g.appendChild(t2);}
  ph.appendChild(g);
- // No stashing on `grp` any more — this used to cache geometry for the now-removed sticky
- // HTML phase-header overlay (`syncPhaseHeader()`), which read `grp.x`/`spanW`/`badge`/`l1`/
- // `l2` back out to rebuild its own DOM copy on every pan/zoom. That overlay, its sync
- // function, and this stash were all left behind when phase headers became ordinary,
- // always-visible SVG content — nothing reads `phaseGroups` after this loop any more.
+ // `grp.x`/`grp.spanW` ARE stashed again (a prior version of this comment said neither was
+ // needed once the old sticky HTML phase-header overlay was removed) — the Jump to Phase
+ // header control, wired up further down, reads them back to scroll a chosen phase's column
+ // range into view. Same content-space units `x`/`tx`/`scale` already use everywhere else in
+ // this file, so no separate coordinate system is introduced for this one feature.
+ grp.x=x; grp.spanW=spanW;
 });
 
 // ---- edges
@@ -1667,7 +1689,7 @@ const _elblCtx=document.createElement('canvas').getContext('2d');
 // reach here (referencing it directly throws ReferenceError and, since that would happen
 // before this file's node/edge rendering ever runs, silently blanks the ENTIRE diagram —
 // not just labels). Keep this string's weight in sync with .elabel's font-weight by hand.
-_elblCtx.font='italic 700 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';
+_elblCtx.font='italic 700 14px "Segoe UI",Arial,sans-serif';
 const ELABEL_LINE_H=20;   // matches the 20px line spacing node labels use at the same 14px font size (see LINE_HEIGHT_RATIO in the node-drawing loop below) — kept the same ratio for visual consistency between the two label families
 function labelClearsAllNodes(cx,cy,halfW,halfH){
  for(const n of NODES){
@@ -2522,7 +2544,7 @@ function truncatePx(ctx,font,txt,maxW){
  let t=txt; while(t.length>1&&ctx.measureText(t+'…').width>maxW) t=t.slice(0,-1);
  return t.replace(/\s+$/,'')+'…';
 }
-const LBLFONT='600 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';   // kept in sync with .node .lbl's 14px minimum
+const LBLFONT='600 14px "Segoe UI",Arial,sans-serif';   // kept in sync with .node .lbl's 14px minimum
 // SUBFONT (the node sub-code/reference-code measurement font) has been removed entirely
 // along with the sub-code rendering it measured for — see the NODES.forEach loop below.
 NODES.forEach(n=>{
@@ -2616,10 +2638,15 @@ NODES.forEach(n=>{
  // double click's two leading native 'click' events already fire the branch below twice before
  // 'dblclick' fires, and since ON-mode's click branch sets state unconditionally (not toggled),
  // the end result is the same "drawer open on this node" regardless of that leading pair.
+ // scrollNodeIntoView() now runs on EVERY plain click too (click-to-focus), not just the View
+ // Details/dblclick paths that already called it — an explicit "clicking a node should
+ // automatically focus and centre that element" requirement, added at the same time wheel/pinch
+ // zoom was removed from the canvas so clicking plus the header's zoom buttons together fully
+ // replace it as the way to navigate a large diagram.
  g.addEventListener('click',(e)=>{
   e.stopPropagation();
   if(viewDetailsMode){ setSelected(n.id); applyHL(n.id); openDrawer(n); scrollNodeIntoView(n.id); }
-  else{ toggleLock(n.id); }
+  else{ toggleLock(n.id); scrollNodeIntoView(n.id); }
  });
  g.addEventListener('dblclick',(e)=>{e.stopPropagation();setSelected(n.id);applyHL(n.id);openDrawer(n);scrollNodeIntoView(n.id);});
 });
@@ -2784,6 +2811,119 @@ document.getElementById('happyFlow').addEventListener('click',function(){
  applyHappyFlow();
 });
 
+// ---- Happy Path Playback engine — an automated, resumable, guided walkthrough of the Happy
+// Path from its START node to its END node, one node highlighted every 2 seconds, driven by the
+// header's Play/Pause button (Reset, further down, also stops/clears it). Deliberately its own
+// isolated state machine with its own CSS classes (.hp-active/.hp-done on nodes, .hp-done on
+// edges — see their definitions up in <style>) rather than reusing the hover/click-lock system
+// (.dim/.hlpath/.selected) or the Happy Flow display:none filter above: playback highlights must
+// ACCUMULATE and PERSIST across ordinary hovering/clicking elsewhere on the canvas, and must
+// never disappear on their own — only Reset clears them — which the hover/lock system explicitly
+// does not guarantee (clearAllHL() runs constantly, on every mouseleave and background click).
+// Using separate classes means the two systems literally cannot collide: clearAllHL() only ever
+// touches .dim/.hlpath, never .hp-active/.hp-done, in either direction.
+//
+// The traversal itself walks the exact same single path happyOut()/happyNeighbor() above already
+// define as "the" happy path (first FLOWS-array-order edge off each node where isHappyFlow(f) is
+// true) — reusing that definition rather than inventing a second one, so playback always agrees
+// with what Prev/Next in the drawer would also step through. A decision node with more than one
+// edge marked happy (an equally-valid alternate branch, same as this engine's own Python
+// counterpart used to build the standalone Happy-Path exports) is walked via whichever branch
+// happens to be listed first in the model's own flows[] array — not a claim that the OTHER
+// branch is somehow less happy, simply the one deterministic line a single linear playback has
+// to pick.
+function computeHappyPath(){
+ const startNode=NODES.find(n=>n.type==='start');
+ if(!startNode) return {path:[],edgeIdx:[]};
+ const path=[startNode.id], edgeIdx=[], seen=new Set([startNode.id]);
+ let cur=startNode.id;
+ while(true){
+  const f=happyOut(cur); if(!f) break;
+  if(seen.has(f.to)) break;   // cycle guard — should not occur in a well-formed model, defensive only
+  path.push(f.to); edgeIdx.push(FLOWS.indexOf(f)); seen.add(f.to); cur=f.to;
+ }
+ return {path,edgeIdx};
+}
+const HP=computeHappyPath();
+let hpTimer=null, hpIndex=-1, hpState='idle';   // 'idle' | 'playing' | 'paused' | 'done'
+const happyPlayBtn=document.getElementById('happyPlayBtn');
+function hpClearHighlights(){
+ nodeLayer.querySelectorAll('.hp-active,.hp-done').forEach(g=>g.classList.remove('hp-active','hp-done'));
+ edgeEls.forEach(p=>{
+  if(p.classList.contains('hp-done')){ p.classList.remove('hp-done'); p.setAttribute('marker-end',`url(#${p.dataset.marker})`); }
+ });
+}
+// Advances the active-node marker to HP.path[idx]: demotes whatever was active to "done" (a
+// completed step, not the current one — see the .hp-active/.hp-done CSS comment), marks the new
+// node active, marks the connecting edge (if any — absent only for idx===0, the START node
+// itself) as done, and pans/centres the canvas on it. Centring uses the same scrollNodeIntoView()
+// every click-to-focus interaction uses, now smooth-scrolling (see its own comment), which is
+// what gives playback its "presentation mode" panning feel.
+function hpSetActive(idx){
+ if(hpIndex>=0 && hpIndex<HP.path.length){
+  const prevG=nodeG(HP.path[hpIndex]);
+  if(prevG){ prevG.classList.remove('hp-active'); prevG.classList.add('hp-done'); }
+ }
+ hpIndex=idx;
+ const id=HP.path[idx];
+ const g=nodeG(id); if(g) g.classList.add('hp-active');
+ if(idx>0){
+  const p=edgeEls[HP.edgeIdx[idx-1]];
+  if(p){ p.classList.add('hp-done'); p.setAttribute('marker-end','url(#ar-hp)'); }
+ }
+ scrollNodeIntoView(id);
+}
+function hpFinish(){
+ if(hpTimer){ clearInterval(hpTimer); hpTimer=null; }
+ // The END node's own brief moment as "active" ends here too — per "active state should be
+ // removed... all Happy Path nodes must remain highlighted in their completed state", the final
+ // node is demoted to .hp-done exactly like every node before it, leaving nothing still pulsing.
+ const g=nodeG(HP.path[HP.path.length-1]);
+ if(g){ g.classList.remove('hp-active'); g.classList.add('hp-done'); }
+ hpState='done';
+ happyPlayBtn.textContent='Play'; happyPlayBtn.classList.remove('on');
+}
+function hpAdvance(){
+ if(hpIndex+1>=HP.path.length){ hpFinish(); return; }
+ hpSetActive(hpIndex+1);
+ if(hpIndex>=HP.path.length-1){ hpFinish(); }
+}
+function hpPlay(){
+ if(HP.path.length<2) return;   // no usable happy path on this model — Play is a no-op
+ if(hpState==='playing') return;
+ if(hpState==='idle'||hpState==='done'){
+  // Starting fresh (first-ever Play, or replaying after a completed run) — a completed run's
+  // own accumulated highlights are cleared first so a replay starts from a genuinely blank
+  // canvas, per "allowing the user to replay the journey if required".
+  hpClearHighlights(); hpIndex=-1;
+  hpState='playing'; happyPlayBtn.textContent='Pause'; happyPlayBtn.classList.add('on');
+  hpSetActive(0);   // first node highlights immediately, not after the first 2s tick
+  hpTimer=setInterval(hpAdvance,2000);
+ } else if(hpState==='paused'){
+  // Resume exactly where playback left off — hpIndex/highlights are untouched by Pause, so
+  // simply restarting the interval continues the sequence rather than restarting it.
+  hpState='playing'; happyPlayBtn.textContent='Pause'; happyPlayBtn.classList.add('on');
+  hpTimer=setInterval(hpAdvance,2000);
+ }
+}
+function hpPause(){
+ if(hpState!=='playing') return;
+ if(hpTimer){ clearInterval(hpTimer); hpTimer=null; }
+ hpState='paused';
+ happyPlayBtn.textContent='Play'; happyPlayBtn.classList.remove('on');
+}
+// Used by the header Reset button (further down) — stops any run in progress, clears every
+// playback highlight (nodes AND connectors), and returns both the internal state and the canvas
+// viewport to exactly how they looked before Play was ever clicked.
+function hpResetToStart(){
+ if(hpTimer){ clearInterval(hpTimer); hpTimer=null; }
+ hpClearHighlights();
+ hpIndex=-1; hpState='idle';
+ happyPlayBtn.textContent='Play'; happyPlayBtn.classList.remove('on');
+ if(HP.path.length) scrollNodeIntoView(HP.path[0]);
+}
+happyPlayBtn.addEventListener('click',()=>{ hpState==='playing' ? hpPause() : hpPlay(); });
+
 // ---- Drawer Prev/Next node navigation — steps through the primary (happy) flow only, reusing
 // HAPPY_NODE_IDS/isHappyFlow() immediately above rather than a second, separate notion of "the
 // main path". Order follows the ACTUAL directed happy edges (f.from -> f.to), not visual
@@ -2855,8 +2995,15 @@ function scrollNodeIntoView(id){
   svg.style.height=Math.max(curH,neededH)+'px';
   svg.setAttribute('viewBox',`0 0 ${Math.max(curW,neededW)} ${Math.max(curH,neededH)}`);
  }
- shell.scrollLeft=wantScrollLeft;
- shell.scrollTop=wantScrollTop;
+ // Smooth (not instant) scroll — reused by click-to-focus (every node click) and the Happy Path
+ // Playback engine (below), both of which have an explicit "smooth transition, no abrupt
+ // movement" requirement. Native scrollTo({behavior:'smooth'}) rather than a hand-rolled
+ // requestAnimationFrame tween: the browser already handles interrupting/retargeting a smooth
+ // scroll that's still in flight when the next call arrives (exactly what happens every 2s
+ // during playback, or on a rapid double-click), so there's nothing this file needs to manage
+ // itself. Falls back to an instant jump only if the browser has no scrollTo(options) support.
+ if(shell.scrollTo){ shell.scrollTo({left:wantScrollLeft, top:wantScrollTop, behavior:'smooth'}); }
+ else { shell.scrollLeft=wantScrollLeft; shell.scrollTop=wantScrollTop; }
 }
 // Undoes scrollNodeIntoView()'s temporary canvas widening (see its own comment on why that
 // widening happens) once the drawer actually closes and the full shell width is available
@@ -2893,73 +3040,40 @@ function navigateDrawer(dir){
  setSelected(target.id); applyHL(target.id); openDrawer(target); scrollNodeIntoView(target.id);
 }
 
-// ---- Actors filter: a dropdown, populated from this model's own lanes (each lane IS an
-// actor — Agent, Supervisor, Backoffice, System, etc. — so no separate "actors" data source
-// exists or is needed; the swimlane structure already names them). Every actor is selected by
-// default (nothing dimmed, full diagram visible) per an explicit "by default, all actors shall
-// be selected and visible" requirement. Selecting a subset de-emphasises everything NOT
-// associated with any selected actor via `.actor-dim` (opacity fade, same visual language as
-// `.dim` — see that class's comment above for why this is a separate class rather than a reuse)
-// rather than hiding it outright — an explicit "non-selected actors may remain visible but
-// should be de-emphasised" requirement, deliberately distinct from Happy Flow's own
-// display:none filter immediately above, which is a genuine content REMOVAL, not a fade.
-const ACTORS=LY.lanes.map(l=>({key:l.key,name:(l.name||l.key||'').split('·')[0].trim(),hint:l.hint||''}));
-let selectedActors=new Set(ACTORS.map(a=>a.key));   // every actor on by default
-function actorOf(id){const n=NID[id];return n?n.lane:null;}
-// A node/edge/label is "associated with" the current selection if EITHER endpoint's actor is
-// selected — an interaction between a selected actor and an unselected one is still part of
-// that selected actor's own journey (e.g. "Agent submits -> System validates" belongs to the
-// Agent's journey even though System itself isn't selected), so it stays highlighted rather
-// than dimmed. Only interactions with NEITHER endpoint selected are de-emphasised.
-function applyActorFilter(){
- const allOn=selectedActors.size===ACTORS.length;   // default state — nothing to dim, skip the work
- nodeLayer.querySelectorAll('.node').forEach(g=>{
-  g.classList.toggle('actor-dim', !allOn && !selectedActors.has(g.dataset.lane));
- });
- edgeEls.forEach(p=>{
-  const on=allOn||selectedActors.has(actorOf(p.dataset.from))||selectedActors.has(actorOf(p.dataset.to));
-  p.classList.toggle('actor-dim', !on);
- });
- labelLayer.querySelectorAll('text.elabel').forEach(t=>{
-  const f=FLOWS[Number(t.dataset.flowIdx)];
-  const on=allOn||!f||selectedActors.has(actorOf(f.from))||selectedActors.has(actorOf(f.to));
-  t.classList.toggle('actor-dim', !on);
- });
- svgLaneGutter.querySelectorAll('g[data-lane]').forEach(gb=>{
-  gb.classList.toggle('actor-dim', !allOn && !selectedActors.has(gb.dataset.lane));
- });
+// ---- Jump to Phase: a plain <select>, replacing the former Actors dropdown entirely (a
+// multi-select lane/actor VISIBILITY filter — `.actor-dim` opacity-faded whatever fell outside
+// the current selection; see the removed applyActorFilter() this replaces for that feature's
+// full former behaviour). This is pure navigation instead: it changes nothing's visibility or
+// styling, it only scrolls. Options are populated from the same `phaseGroups` the phase-header
+// loop above already computed — one per distinct phase, in diagram order, using the `x`/
+// `spanW` geometry that loop stashes back onto each group — plus a leading "All" (already in
+// the markup) that scrolls back to the canvas's own left edge instead of any particular phase.
+const phaseJumpSel=document.getElementById('phaseJump');
+// LY.phaseJumpLabels is an OPTIONAL model.json field (layout.phaseJumpLabels), a plain
+// {fullPhaseName: shortDropdownLabel} map — display text for THIS select only, never touching
+// grp.label itself (still the full phase name everywhere else: the on-canvas phase-header bar
+// above, and the side drawer's Stage field, both read grp.label / LY.phases directly and are
+// unaffected by this map). Added per an explicit "shorten only the dropdown options, not the
+// section titles" requirement — a model with no phaseJumpLabels (or no entry for a given
+// phase) falls straight back to the full grp.label exactly as before this existed.
+const jumpLabels=LY.phaseJumpLabels||{};
+phaseGroups.forEach((grp,gi)=>{
+ const opt=document.createElement('option'); opt.value=String(gi); opt.textContent=jumpLabels[grp.label]||grp.label;
+ phaseJumpSel.appendChild(opt);
+});
+// Centres the chosen phase's own column span in the shell's CURRENT viewport, at whatever pan/
+// zoom (tx/scale, assigned by fit()/zoomAt() further down) the user already has — deliberately
+// never recomputes or resets either, same "shall not modify... zoom level... except as required
+// to bring the diagram into view" reasoning wheel-zoom's own comment cites for itself.
+function jumpToPhase(val){
+ const shell=svg.parentElement; if(!shell) return;
+ if(val===''){ shell.scrollLeft=0; return; }
+ const grp=phaseGroups[Number(val)]; if(!grp) return;
+ const centerContentX=grp.x+grp.spanW/2;
+ const targetSvgX=tx+centerContentX*scale;
+ shell.scrollLeft=Math.max(0, targetSvgX-shell.clientWidth/2);
 }
-const actorsBtn=document.getElementById('actorsBtn'), actorsMenu=document.getElementById('actorsMenu'),
-      actorsList=document.getElementById('actorsList'), actorsBadge=document.getElementById('actorsBadge');
-function syncActorsUI(){
- actorsBadge.textContent=selectedActors.size+'/'+ACTORS.length;
- actorsBtn.classList.toggle('on', selectedActors.size>0 && selectedActors.size<ACTORS.length);
- actorsList.querySelectorAll('input[type=checkbox]').forEach(cb=>{cb.checked=selectedActors.has(cb.value);});
-}
-ACTORS.forEach(a=>{
- const row=document.createElement('label'); row.className='actor-row';
- const cb=document.createElement('input'); cb.type='checkbox'; cb.value=a.key; cb.checked=true;
- cb.addEventListener('change',()=>{
-  if(cb.checked) selectedActors.add(a.key); else selectedActors.delete(a.key);
-  syncActorsUI(); applyActorFilter();
- });
- const txt=document.createElement('span');
- const nameEl=document.createElement('span'); nameEl.className='actor-name'; nameEl.textContent=a.name;
- txt.appendChild(nameEl);
- if(a.hint){const hintEl=document.createElement('span'); hintEl.className='actor-hint'; hintEl.textContent=a.hint; txt.appendChild(hintEl);}
- row.appendChild(cb); row.appendChild(txt);
- actorsList.appendChild(row);
-});
-actorsBtn.addEventListener('click',(e)=>{e.stopPropagation();actorsMenu.classList.toggle('open');});
-document.addEventListener('click',()=>actorsMenu.classList.remove('open'));
-actorsMenu.addEventListener('click',(e)=>e.stopPropagation());
-document.getElementById('actorsSelectAll').addEventListener('click',()=>{
- selectedActors=new Set(ACTORS.map(a=>a.key)); syncActorsUI(); applyActorFilter();
-});
-document.getElementById('actorsClearAll').addEventListener('click',()=>{
- selectedActors=new Set(); syncActorsUI(); applyActorFilter();
-});
-syncActorsUI();   // paint the default "all selected" badge/checkbox state — applyActorFilter() is a no-op at this point (allOn), nothing to dim yet
+phaseJumpSel.addEventListener('change',()=>jumpToPhase(phaseJumpSel.value));
 
 // ---- View Details mode: a persistent-inspection variant of the drawer (BPMN swimlane and
 // process-flow diagrams only, per the requirement this was built against). OFF (default): a
@@ -2980,11 +3094,13 @@ function setViewDetails(on){
 viewDetailsBtn.addEventListener('click',()=>setViewDetails(!viewDetailsMode));
 
 // ---- Reset: restores the diagram to its exact page-load state, undoing every temporary view
-// change a user may have made — zoom level, pan/scroll position, the Happy Flow filter, a
-// click-locked highlight, an open drawer (whether opened via View Details mode or a plain
-// double-click), View Details mode itself, an in-progress drag gesture, and an open Export
-// dropdown. Deliberately does NOT touch anything that isn't view state (the underlying
-// model/node/flow data, or files already exported/downloaded) — there's nothing else to reset.
+// change a user may have made — zoom level, pan/scroll position, the Jump to Phase selection,
+// the Happy Flow filter, the Happy Path Playback engine's progress/highlights (see
+// hpResetToStart(), defined earlier alongside the rest of that engine), a click-locked
+// highlight, an open drawer (whether opened via View Details mode or a plain double-click),
+// View Details mode itself, an in-progress drag gesture, and an open Export dropdown.
+// Deliberately does NOT touch anything that isn't view state (the underlying model/node/flow
+// data, or files already exported/downloaded) — there's nothing else to reset.
 // References state declared further down this script (drawer, selectedId, clearSelected/
 // clearAllHL, panning/panMoved, fit) — safe because this only runs inside a click handler, which
 // never fires until long after the whole script — and every declaration in it — has run once.
@@ -2995,15 +3111,11 @@ document.getElementById('resetBtn').addEventListener('click',()=>{
   hb.textContent='Happy Flow'; hb.classList.remove('on');
   applyHappyFlow();
  }
- // Actors filter: a non-default selection is exactly the kind of "temporary view change" Reset
- // exists to undo (same reasoning as Happy Flow immediately above) — restore every actor to
- // selected, matching page load, regardless of View Details mode (that exemption covers only
- // the pinned node/drawer, not this independent filter).
- if(selectedActors.size!==ACTORS.length){
-  selectedActors=new Set(ACTORS.map(a=>a.key));
-  syncActorsUI(); applyActorFilter();
- }
- const actorsMenuEl=document.getElementById('actorsMenu'); if(actorsMenuEl) actorsMenuEl.classList.remove('open');
+ // Jump to Phase: a non-"All" selection is exactly the kind of "temporary view change" Reset
+ // exists to undo (same reasoning as Happy Flow immediately above) — restore the select to its
+ // default option, matching page load. The actual scroll position is already reset below
+ // (scrollLeft=0 alongside fit()), so this only needs to fix the dropdown's own displayed value.
+ if(phaseJumpSel.value!==''){ phaseJumpSel.value=''; }
  // View Details mode's own pinned selection and the drawer content it's driving are explicitly
  // exempt from Reset: "the Reset action shall not clear, deselect, or modify the currently
  // selected View Details item ... side-drawer content shall remain unchanged after a reset
@@ -3030,10 +3142,16 @@ document.getElementById('resetBtn').addEventListener('click',()=>{
  // cause overflow/scrollbars, by definition) reproduces that same scrollbar-free precondition.
  svg.style.width=''; svg.style.height='';
  // fit() recomputes the default width-first scale/offsets and resizes the svg back to its
- // natural (unzoomed) footprint; scrollLeft/Top=0 matches the shell's own scroll position at
- // initial page load (nothing sets it to anything else before first paint).
+ // natural (unzoomed) footprint.
  fit();
- if(shell){ shell.scrollLeft=0; shell.scrollTop=0; }
+ // Happy Path Playback: stop any run in progress, clear every .hp-active/.hp-done highlight
+ // (nodes and connectors alike), and reset the Play/Pause button back to Play — an explicit
+ // "Reset ... clear all playback progress, remove all highlights" requirement. hpResetToStart()
+ // also scrolls to the START node itself, which is now this engine's definition of Reset's
+ // canvas focus target — a more precise match for "return canvas focus to the START node" than
+ // the previous plain scrollLeft/Top=0 (which only coincidentally matched START's position for a
+ // layout that happens to originate there).
+ hpResetToStart();
 });
 
 
@@ -3047,7 +3165,7 @@ const LEG=[['start','Start event','shape'],['end','End event','shape'],['agent',
  ['control','Control / internal','shape'],['decision','Decision','shape'],['validation','Validation gate','shape'],
  ['system','System / data','shape'],['external','External actor','shape'],['error','Error path','shape'],['escalation','Escalation','shape']];
 const LEGE=[['seq','Sequence flow'],['data','Data flow'],['cond','Conditional'],['esc','Escalation'],['err','Error']];
-const EDGECOL={seq:'#4a4d4e',data:'#3860be',cond:'#8a5cc9',esc:'#f5b400',err:'#bd0000'};
+const EDGECOL={seq:'#333333',data:'#555555',cond:'#8a8f98',esc:'#b7791f',err:'#c0392b'};
 const EDGEDASH={seq:null,data:'5 4',cond:'2 4',esc:null,err:'4 4'};
 // Each swatch mirrors that type's REAL node shape (drawNode()/DESIGN_SYSTEM.md), not one
 // generic rounded-rect box — otherwise circle/diamond/hexagon/parallelogram types (start,
@@ -3074,7 +3192,7 @@ function buildLegend(){
  const shapeItems=LEG.map(([t,lab])=>({icon:'shape',type:t,label:lab,w:22}));
  const lineItems=LEGE.map(([k,lab])=>({icon:'line',type:k,label:lab,w:26}));
  const ctx=document.createElement('canvas').getContext('2d');
- ctx.font='600 14px "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif';   // kept in sync with .leglabel's 14px minimum
+ ctx.font='600 14px "Segoe UI",Arial,sans-serif';   // kept in sync with .leglabel's 14px minimum
  const gap=7, itemGap=20, catGap=10, padX=8, rowH=24, rowGap=10;
  const measure=(it)=>({...it,textW:ctx.measureText(it.label).width});
  // Category caption width MUST be measured via a real, temporarily-attached SVG <text>
@@ -3195,7 +3313,17 @@ let scale=1,tx=0,ty=0,baseScale=1;
 // repositioning (syncLaneGutter()/syncPhaseHeader(), called from apply() on every pan/zoom) to
 // stay visually aligned with the scrolling/zooming SVG beneath them — none of that exists any
 // more, since there's nothing frozen left to keep in sync.
-function apply(){vp.setAttribute('transform',`translate(${tx},${ty}) scale(${scale})`);}
+function apply(){vp.setAttribute('transform',`translate(${tx},${ty}) scale(${scale})`);syncZoomPct();}
+// Header zoom-percentage readout: relative to `baseScale` (the autofit scale fit() computes,
+// i.e. whatever this diagram's own default load-time view is), NOT an absolute CSS/SVG scale
+// factor — so "100%" always means "this diagram at its own default view", matching what the
+// zoom buttons' own step (see zoomBy() below) and ZOOM_MIN_MULT/ZOOM_MAX_MULT's 40%-600% range
+// are both already expressed relative to. Called from apply() itself so every path that changes
+// `scale` (fit(), zoomAt(), zoomBy()) keeps this in sync with no separate call needed at each.
+function syncZoomPct(){
+ const el=document.getElementById('zoomPct'); if(!el) return;
+ el.textContent=Math.round((scale/(baseScale||1))*100)+'%';
+}
 /* ---- responsive single-axis-overflow sizing ------------------------------------------
    On load, exactly ONE axis is ever allowed to overflow and need scrolling — never both at
    once, never a scale so small either axis is crushed just to avoid scrolling the other:
@@ -3272,10 +3400,21 @@ function computeFitScale(shell){
  const sH=(availH-2*PAD_Y)/contentH;
  return {s:Math.max(sW,sH), availW, availH};   // see the sizing comment above for why max(sW,sH) guarantees exactly one axis ever overflows
 }
+// Never shrink below 100% ("MIN_READABLE_SCALE"), even when the single-axis-overflow autofit
+// above computes something smaller — a wide, many-phase swimlane (these models routinely run
+// 15000-22000px wide) easily produces an autofit scale under 10%, at which every node label
+// becomes illegible on load. Below this floor, BOTH axes are allowed to overflow and scroll
+// (.diagram-shell already supports two-axis overflow:auto — see its own CSS) rather than
+// shrinking further just to avoid scrolling one of them; this matches the reference canvas
+// design, which defaults to a plain 100% and relies on scrolling to browse a wide diagram
+// rather than shrinking it to fit. Above the floor (a small/short model in a generously sized
+// viewport) the existing upscale-to-fill behaviour from max(sW,sH) is unchanged — the floor
+// only ever raises a too-small autofit result, never lowers an already-larger one.
+const MIN_READABLE_SCALE=1;
 function sizeHost(){
  const shell=svg.parentElement; if(!shell) return null;
  const first=computeFitScale(shell); if(!first) return null;
- let dim=applySizeAtScale(first.s);
+ let dim=applySizeAtScale(Math.max(first.s,MIN_READABLE_SCALE));
  // Applying a scale can flip which scrollbar(s) .diagram-shell's own overflow:auto renders —
  // a vertical scrollbar (appearing when height overflows) narrows the shell's effective width;
  // a horizontal one (width overflowing) shortens its effective height — and shell.clientWidth/
@@ -3288,28 +3427,25 @@ function sizeHost(){
  // change the client dimensions any further, so a second correction is never needed.
  const second=computeFitScale(shell);
  if(second && (second.availW!==first.availW || second.availH!==first.availH)){
-  dim=applySizeAtScale(second.s);
+  dim=applySizeAtScale(Math.max(second.s,MIN_READABLE_SCALE));
  }
  return dim;
 }
 function fit(){const dim=sizeHost();if(!dim){requestAnimationFrame(fit);return;}
  scale=dim.s;tx=dim.offX;ty=dim.offY;baseScale=dim.s;apply();}   // centred within whatever slack
                                                     // remains; baseScale anchors zoomAt()'s min/max clamp
-// ---- wheel zoom (mouse wheel + trackpad pinch), confined to the canvas -------------------
-// Reinstates zoom — explicitly REMOVED earlier in this project's build-out in favour of
-// "scroll only, no zoom/pan" (the comment this replaces said as much). A later, equally
-// explicit requirement reverses that specifically for zoom: mouse-wheel and trackpad
-// pinch-to-zoom must both zoom the diagram, confined to the canvas, with the header, footer,
-// legend, and toolbar staying fixed in both position AND scale at all times. Drag-to-pan is
-// still NOT reintroduced — panning stays exactly as it already was, via the shell's native
-// scrollbars (overflow:auto); zoom only changes how much content there is to scroll through,
-// using the same applySizeAtScale() the width-first autofit above already relies on.
-//
-// Trackpad pinch is delivered by every major browser as a `wheel` event with `ctrlKey:true`
-// (a synthetic flag — it does not mean the physical Ctrl key is actually held down; this is
-// the standard cross-browser convention apps use to tell a pinch gesture apart from an
-// ordinary scroll). Treating every wheel event inside the canvas as zoom, regardless of
-// ctrlKey, covers both a literal mouse-wheel notch and a trackpad pinch with one handler.
+// ---- header zoom controls only — wheel/pinch zoom REMOVED from the canvas ----------------
+// A prior version of this file zoomed on every wheel event over the canvas (mouse-wheel notch
+// or trackpad pinch alike, see the removed comment this replaces). A later, explicit
+// requirement reverses that: the header's own Increase/Decrease zoom buttons are the ONLY way
+// to change zoom level now — "mouse wheel and trackpad gestures must not trigger zoom-in or
+// zoom-out actions" — so plain wheel-scroll over the canvas is left alone entirely (no
+// preventDefault, no zoomAt call) and falls through to the shell's own native overflow:auto
+// scrolling, exactly as it would with no JS listener there at all. Only trackpad pinch/ctrl+
+// wheel is still intercepted, and only to preventDefault the browser's native whole-page zoom
+// (which pinching would otherwise trigger) — it is deliberately NOT redirected to zoomAt any
+// more, so pinching over the canvas now does nothing rather than zooming the diagram.
+// zoomAt()/zoomBy() themselves are unchanged and still drive the header +/- buttons below.
 const ZOOM_MIN_MULT=0.4, ZOOM_MAX_MULT=6;           // how far below/above the autofit scale
                                                     // (baseScale) the user may zoom
 function zoomAt(clientX,clientY,deltaY){
@@ -3325,11 +3461,28 @@ function zoomAt(clientX,clientY,deltaY){
  const newSvgX=tx+contentX*scale, newSvgY=ty+contentY*scale;         // same content point, at the new scale
  shell.scrollLeft=newSvgX-cx; shell.scrollTop=newSvgY-cy;            // re-centre it back under the cursor
 }
+// Header Increase/Decrease zoom buttons: same underlying zoomAt(), just anchored at the shell's
+// own visible centre instead of a cursor position (there's no pointer location for a button
+// click to reuse) — everything else, including the min/max clamp and the re-centring of
+// whatever content point was there before, is shared with wheel-zoom unchanged. `mult` is a
+// plain scale multiplier (1.1 = +10%); solved for the `deltaY` that zoomAt()'s own
+// `exp(-deltaY*0.0015)` factor would need to produce that exact multiplier, rather than
+// duplicating zoomAt()'s scale/clamp math a second time here.
+function zoomBy(mult){
+ const shell=svg.parentElement; if(!shell) return;
+ const r=shell.getBoundingClientRect();
+ const cx=r.left+shell.clientWidth/2, cy=r.top+shell.clientHeight/2;
+ zoomAt(cx,cy,-Math.log(mult)/0.0015);
+}
+document.getElementById('zoomInBtn').addEventListener('click',()=>zoomBy(1.1));
+document.getElementById('zoomOutBtn').addEventListener('click',()=>zoomBy(1/1.1));
 window.addEventListener('wheel',(e)=>{
  const shell=svg.parentElement;
  if(shell && shell.contains(e.target)){
-  e.preventDefault();
-  zoomAt(e.clientX,e.clientY,e.deltaY);
+  // Pinch (ctrlKey wheel) over the canvas: block the browser's native page-zoom but do NOT
+  // zoom the diagram either — zoom is header-buttons-only now (see the comment above). Plain
+  // wheel-scroll (no ctrlKey) is left completely alone so native scroll/pan still works.
+  if(e.ctrlKey){ e.preventDefault(); }
  } else if(e.ctrlKey){
   // Pinch (or literal ctrl+wheel) anywhere OUTSIDE the canvas — block the browser's native
   // whole-page zoom instead of letting it through; the header/legend/toolbar must never change
@@ -3629,24 +3782,27 @@ const M=D.model;   // still needed: openDrawer()'s "Agents involved" section res
 // `ar-hl` highlighted-arrowhead marker needs no equivalent entry — it's a real SVG <marker>
 // element cloned as part of the DOM, not a CSS rule, so it always travels with the clone as-is).
 const EXPORT_CSS=`
-text{font-family:"Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif;}
+text{font-family:"Segoe UI",Arial,sans-serif;}
 .lbl{font-size:14px;font-weight:600;fill:#1f1f1f;}
-.lanelabel{font-size:14px;font-weight:700;fill:#4a4d4e;}
+.lanelabel{font-size:14px;font-weight:700;fill:#1a1a1a;}
 .lanehint{font-size:14px;fill:#6f7375;}
 .leglabel{font-size:14px;font-weight:600;fill:#333333;}
 .legcat{font-size:14px;font-weight:800;fill:#6f7375;letter-spacing:.08em;}
-.phasehdr{font-size:14px;font-weight:700;fill:#ffffff;dominant-baseline:middle;}
+.phasehdr{font-size:14px;font-weight:700;fill:#1a1a1a;dominant-baseline:middle;}
 .elabel{font-size:14px;font-style:italic;font-weight:700;fill:#4a4d4e;paint-order:stroke;stroke:#fff;stroke-width:4.5px;stroke-linejoin:round;}
 .edge{fill:none;stroke-linejoin:round;}
-.edge.seq{stroke:#4a4d4e;stroke-width:1.7;}
-.edge.data{stroke:#3860be;stroke-width:1.5;stroke-dasharray:5 4;}
-.edge.cond{stroke:#8a5cc9;stroke-width:1.6;stroke-dasharray:2 4;}
-.edge.esc{stroke:#f5b400;stroke-width:2;}
-.edge.err{stroke:#bd0000;stroke-width:1.8;stroke-dasharray:4 4;}
-.dim,.actor-dim{opacity:.05;filter:grayscale(1) brightness(1.15);}
+.edge.seq{stroke:#333333;stroke-width:1.7;}
+.edge.data{stroke:#555555;stroke-width:1.5;stroke-dasharray:5 4;}
+.edge.cond{stroke:#8a8f98;stroke-width:1.6;stroke-dasharray:2 4;}
+.edge.esc{stroke:#b7791f;stroke-width:2;}
+.edge.err{stroke:#c0392b;stroke-width:1.8;stroke-dasharray:4 4;}
+.dim{opacity:.05;filter:grayscale(1) brightness(1.15);}
 .edge.hlpath{stroke:#e60000 !important;filter:drop-shadow(0 0 3px rgba(230,0,0,.55)) !important;}
 .node.selected .box{stroke:#e60000 !important;stroke-width:4px !important;filter:drop-shadow(0 0 6px rgba(230,0,0,.65)) drop-shadow(0 1px 3px rgba(0,0,0,.25));}
-.node.selected{opacity:1 !important;}`;
+.node.selected{opacity:1 !important;}
+.node.hp-done .box{stroke:#1e7d34 !important;stroke-width:3px !important;filter:drop-shadow(0 0 5px rgba(30,125,52,.55));}
+.node.hp-active .box{stroke:#e6a700 !important;stroke-width:4px !important;filter:drop-shadow(0 0 9px rgba(230,167,0,.85));}
+.edge.hp-done{stroke:#1e7d34 !important;stroke-width:2.6px !important;filter:none !important;}`;
 function exportSVGString(){
  const clone=svg.cloneNode(true);
  clone.setAttribute('viewBox',`0 0 ${LY.totalW} ${LY.totalH}`);

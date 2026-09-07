@@ -38,6 +38,21 @@ this table draws from.
 | `--ai`/`--val` (validation node) | `#178a86`/`#2b8a8f` | — | **gap**: same reasoning — teal retained, no Vodafone equivalent |
 | `--ext` (external-actor node) | `#d46e08` | — | **gap**: deliberately distinct from `--esc`'s amber so escalation and external-actor never look identical; no Vodafone equivalent |
 
+**This table now governs HTML chrome and the side drawer ONLY — not the canvas.**
+Following an explicit "make the canvas mirror this reference design" requirement
+(reference: a Segoe UI/white-card/muted-palette static export of the Mobile
+Postpaid journey, predating the Vodafone-alignment pass above), the canvas's
+own node/edge colours were deliberately DECOUPLED from these `:root` tokens —
+changing the shared token values in place would have silently recoloured the
+drawer's `.dsec-*` sections too, which this requirement explicitly said must
+stay untouched. The canvas now has its own literal palette (`FILL`/`STROKE`/
+`EDGECOL` JS consts, and five `.edge.*` CSS rules that used to read `var(--sys)`
+etc. and now hold literal hex instead) — see "Node types" and "Connectors"
+below for its values. The table above is still accurate for what it actually
+governs (header, buttons, drawer, legend footer, export dropdown) — it's
+scoped to chrome now, not because it was wrong, but because the canvas grew
+its own separate palette alongside it.
+
 **Gap-analysis note**: Vodafone's own skill explicitly flags "No
 data-visualization/chart palette" as a known gap and recommends deriving
 from the core tokens where one is genuinely needed. A BPMN diagram needs
@@ -48,18 +63,36 @@ previously-chosen, harmonically-fitted but off-palette hues rather than
 collapsing multiple node types onto the same colour, which would be a
 worse outcome than an acknowledged, documented gap.
 - header gradient `var(--charcoal) → var(--charcoal-2)` (`#25282b → #1a1c1e`)
-- typography: `"Inter","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif` — Inter is Vodafone's documented typeface (the skill flags it as an ASSUMPTION substitute for Vodafone's proprietary corporate face pending licensed font files)
+- typography (chrome/drawer/legend footer only): `"Inter","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif` — Inter is Vodafone's documented typeface (the skill flags it as an ASSUMPTION substitute for Vodafone's proprietary corporate face pending licensed font files). **The canvas itself (node/lane/phase/edge-label text) now uses `"Segoe UI",Arial,sans-serif` instead — no Inter** — matching the reference design's own typography exactly, per the same canvas/chrome decoupling described above. Every canvas text-measurement JS constant (`NODEFONT`/`LBLFONT`/`ELABELFONT`/`LANE_NAME_FONT`/`LANE_HINT_FONT`/`PHFONT`) and its corresponding CSS class (`.node text`/`.node .lbl`/`.elabel`/`.lanelabel`/`.lanehint`/`.phasehdr`) were updated together, or a text element's wrap/measurement would disagree with what it actually renders.
 - motion: `--ease-standard` is Vodafone's own `cubic-bezier(.2,0,0,1)` (not a generic Material curve); UI transitions run at 150ms (`duration_fast_ms`) or 220ms (`duration_base_ms`, the drawer slide) — both exact Vodafone motion tokens
 - spacing/radius: header/button/drawer/legend/export-menu chrome padding and gaps are drawn from Vodafone's 4px base scale (`--space-1` 4px … `--space-9` 48px) and radius scale (`--radius-button` 2px, `--radius-card` 6px, `--radius-sm` 8px, `--radius-pill` 9999px) — see `:root` in `engine_template.html` for the full token list. **These tokens apply only to HTML chrome** (header, buttons, drawer, legend footer, export dropdown) — never to the SVG canvas's own layout constants (`PAD_X`/`PAD_Y`, column/row sizing, connector clearances, node dimensions), which are content-geometry governed by `build_model.py`/`layout_model.py`, not presentation, and are out of scope for any visual-design-only change.
 
 ## Lane bands
-- **No background tint, and no left accent stripe either.** A prior
+- **Alternating zebra tint restored, one flat colour per lane — `#f4f5f6`
+  on every odd-indexed lane (`li%2===1`), plain white on every even one —
+  drawn by a new `#svgLaneZebra` group, appended immediately after the
+  canvas background/border rect and before everything else touches `vp`.**
+  This reverses the "no background tint at all" state the several
+  paragraphs below describe, per the same reference-canvas-alignment
+  requirement documented at the top of "Colour palette" above — the
+  reference design zebra-stripes its lanes exactly this way. Unlike the
+  fuller history below (a 0.85-opacity tint, then a 4px accent stripe,
+  then nothing), this is a full-lane-width flat fill with no opacity
+  applied and no left-edge-only stripe variant — closer to the original
+  "tinted each lane" state than either later approach, though the exact
+  colour and lane-index logic are new, not restored from either prior
+  round. `LANECOL`/`LANEPAL`/`laneCol()` remain removed — this zebra tint
+  is computed inline from `LY.lanes`, it doesn't revive that old
+  Vodafone-mapped per-lane palette.
+- Everything below this point describes the lane-tint history PRIOR to the
+  zebra stripe above — kept for provenance, not current behaviour. A prior
   version tinted each lane at 0.85 opacity; that tinting was removed
   entirely in one round, replaced with a compact 4px left accent stripe
   (a colour-key rather than a full-width fill); that stripe has now been
   removed too, per an explicit "remove the coloured strip on the left side
-  of each lane" requirement. Lanes carry no colour cue of any kind any
-  more — separated purely by the divider line below. `LANECOL`/`LANEPAL`
+  of each lane" requirement. Lanes carried no colour cue of any kind for
+  several rounds — separated purely by the divider line below — until the
+  zebra stripe above was added. `LANECOL`/`LANEPAL`
   (the Vodafone-mapped lane colour palette) and `laneCol()` (the lookup
   function that read from them) have all been removed from the engine
   entirely, since the accent stripe was their only remaining consumer —
@@ -172,8 +205,19 @@ worse outcome than an acknowledged, documented gap.
   more content).
 
 ## Phase headers
-- Dark navy pill per phase group; upper-cased title, centre-aligned; title
-  wraps to a second line only if it does not fit. **No numeric badge** — a
+- **No pill/badge background of any kind any more — plain upper-cased text
+  directly on the canvas background, dark ink (`#1a1a1a` for line 1,
+  `#4a4d4e` for a wrapped second line), centre-aligned.** This replaces
+  BOTH the "dark navy pill" this bullet used to describe AND the
+  per-phase-group `PHASE_PALETTE`-coloured pill + matching full-height
+  column tint that had actually shipped instead (`PHASE_PALETTE`, the pill
+  `<rect>`, and the per-column tint `<rect>` loop have all been removed
+  from the engine entirely) — per the same reference-canvas-alignment
+  requirement noted at the top of "Colour palette": the reference design's
+  phase headers are plain black-on-white text with no pill or column tint
+  behind them at all. The 14–56px vertical band the pill used to occupy is
+  simply left blank now. Title wraps to a second line only if it does not
+  fit. **No numeric badge** — a
   prior version prefixed each heading with a small numbered circle (1, 2,
   3…) counting phase *groups*; that badge has been removed entirely, per
   an explicit "display only the stage name" requirement. The title is now
@@ -189,30 +233,44 @@ worse outcome than an acknowledged, documented gap.
   group's own starting x-coordinate is already exactly `LY.x0` (the
   content area's own left edge), removing that guard draws the leading
   separator in exactly the right place with no special-casing needed.
-- **Divider lines — both the vertical stage separators here and the
-  horizontal lane dividers in "Lane bands" above — are `#E3E3E3` at 2px
-  with a `4 3` dash pattern** (for the vertical ones; lane dividers are
-  1.5px solid). Full history: `#eeeeee` (judged too faint to read as a
-  stage boundary at a glance) → `#9aa1a8` (darkened to fix that) →
-  `#F5F5F5` (lightened again for a deliberately subtle, non-contrast-
-  driven look, once lane tints were removed) → `#E3E3E3` (current — a
-  further deliberate darkening within that same subtle-not-contrast-
-  driven spirit). Both separator types have shared one colour value since
-  the `#F5F5F5` round; before that they were tuned independently.
+- **The vertical stage-separator dashed line is now `#c9cfd8` at 1.2px with
+  a `3 3` dash pattern** — lighter and thinner than the former `#E3E3E3`
+  2px/`4 3` version, matching the reference canvas's own hairline phase
+  divider exactly. (Horizontal lane separation is now handled by the zebra
+  stripe in "Lane bands" above rather than a dedicated divider line/rect —
+  the two separator kinds no longer share one colour value the way the
+  history below describes.) Full history up to the prior `#E3E3E3`: `#eeeeee`
+  (judged too faint to read as a stage boundary at a glance) → `#9aa1a8`
+  (darkened to fix that) → `#F5F5F5` (lightened again for a deliberately
+  subtle, non-contrast-driven look, once lane tints were removed) →
+  `#E3E3E3` → `#c9cfd8` (current).
 - Column boundaries are not always a uniform width apart: a connector label
   too wide for the raw gap between two adjacent-phase nodes widens that
   specific boundary (see "Connectors" below), and phase headers track the
   same per-boundary shift so they stay aligned with their columns.
 
 ## Node types (shape · fill · stroke)
-- start / end: circle · green/red tint
-- agent: rounded rect (r=11) · white · blue
-- control: rounded rect · amber tint
-- decision: diamond · purple tint
-- validation: hexagon · teal tint
-- system: rect with top rule · slate
-- external: parallelogram · amber tint
-- error / escalation: rounded rect, 2.2px border · red / amber
+**Shapes are unchanged; fill/stroke hex values were remapped to the
+reference canvas design (see "Colour palette" above for why this is now a
+separate palette from `:root`'s tokens).** `FILL`/`STROKE` in
+`engine_template.html` are the single source of truth — this list mirrors
+them:
+- start: circle · white · `#1e7d34` (green)
+- end: circle · white · `#c0392b` (red — same value as `error` below;
+  shape still disambiguates the two, matching how the reference itself
+  doesn't rely on colour alone here either)
+- agent: rounded rect (r=6) · white · `#2b6cb0` (blue)
+- control: rounded rect · white · `#8a7355` (tan/brown)
+- decision: diamond · `#fdead9` tint · `#d2660b` (orange — was purple; the
+  reference canvas consistently uses orange diamonds throughout)
+- validation: hexagon · `#e8f6f6` tint · `#0f7d7d` (teal)
+- system: rect with top rule · `#f2f3f4` tint · `#6b7280` (slate grey)
+- external: parallelogram · white · `#8a7355` (tan/brown — paired with
+  `control` on one shared hue, same pairing convention as before this
+  remap, just a different shared value: both used to be `#d46e08`)
+- error: rounded rect, 2.2px border · white · `#c0392b` (red)
+- escalation: rounded rect, 2.2px border · `#fffaf0` tint · `#b7791f`
+  (gold/amber — was a brighter `#f5b400`)
 - **selected: brand-red (`--accent` `#e60000`) stroke 4px + soft red glow
   (`drop-shadow(0 0 6px rgba(230,0,0,.65))`); never dimmed by hover.** This
   corrects a prior spec/implementation mismatch: this document previously
@@ -238,8 +296,16 @@ worse outcome than an acknowledged, documented gap.
   genuine gap, not something to suppress.
 
 ## Connectors
-- sequence: solid slate 1.7 · data: dashed blue (5 4) · conditional: dotted purple
-- escalation: solid amber 2 · error: dashed red (4 4)
+**Colours remapped to the reference canvas design, same rationale as "Node
+types" above — dash patterns and stroke widths are unchanged, only hex
+values.** `EDGECOL` (JS, drives the legend swatches) and the five
+`.edge.*` CSS rules (now literal hex, decoupled from `:root` — see "Colour
+palette") are the source of truth:
+- sequence: solid `#333333` 1.7 (was slate `#4a4d4e`)
+- data: dashed `#555555` (5 4) (was blue `#3860be`)
+- conditional: dotted `#8a8f98` (2 4) (was purple `#8a5cc9`)
+- escalation: solid `#b7791f` 2 (was brighter amber `#f5b400`)
+- error: dashed `#c0392b` (4 4) (was `#bd0000`)
 - **Direction is classified by `phase`, never by pixel position** —
   `phase(to) > phase(from)` is forward, `phase(to) === phase(from)` (a
   different node) is lateral, `phase(to) < phase(from)` is backward. A prior

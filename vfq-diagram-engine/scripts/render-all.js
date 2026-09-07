@@ -8,12 +8,12 @@
  *
  * Usage:
  *   node scripts/render-all.js                  render everything
- *   node scripts/render-all.js --brsd <slug>     only that BRSD's 4 outputs
- *   node scripts/render-all.js --type <type>     only that diagram type, all BRSDs
- *   node scripts/render-all.js --brsd <slug> --type <type>
+ *   node scripts/render-all.js --brsd <slug>     only that BRSD's output
+ *   node scripts/render-all.js --brsd <slug> --type bpmn-swimlane
  *   node scripts/render-all.js --force ...       discard manual edits, reset to a pure engine render
  *
- * <type> is one of: bpmn-swimlane | journey | process-flow | userflow
+ * bpmn-swimlane is the only supported diagram type — the sole source of
+ * generated process visualisation for this project. See README.md.
  *
  * Fails loudly per-file: a bad data file is skipped and reported, the rest
  * of the batch keeps going. Exits 1 if any file failed OR any merge produced
@@ -72,27 +72,6 @@ const TYPES = {
     engineDir: path.join(ENGINES_DIR, 'bpmn-swimlane'),
     hashFiles: ['scripts/render.py', 'scripts/validate_model.py', 'reference/engine_template.html'],
     render: renderBpmnSwimlane
-  },
-  journey: {
-    dataFile: 'journey.spec.json',
-    outputSuffix: 'journey.html',
-    engineDir: path.join(ENGINES_DIR, 'customer-journey-map'),
-    hashFiles: ['assets/template.html'],
-    render: renderJourney
-  },
-  'process-flow': {
-    dataFile: 'process-flow.spec.json',
-    outputSuffix: 'process-flow.html',
-    engineDir: path.join(ENGINES_DIR, 'process-flow'),
-    hashFiles: ['scripts/generate.js', 'scripts/normalize-spec.js'],
-    render: renderProcessFlow
-  },
-  userflow: {
-    dataFile: 'userflow.spec.json',
-    outputSuffix: 'userflow.html',
-    engineDir: path.join(ENGINES_DIR, 'user-flow-diagram'),
-    hashFiles: ['user-flow-diagram-v4.0.js'],
-    render: renderUserflow
   }
 };
 
@@ -226,76 +205,6 @@ function renderBpmnSwimlane(dataPath, outputPath, engineDir) {
     return { ok: false, error: msg };
   }
   return { ok: true };
-}
-
-function renderJourney(dataPath, outputPath, engineDir) {
-  let spec;
-  try {
-    spec = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
-  } catch (e) {
-    return { ok: false, error: `Invalid JSON: ${e.message}` };
-  }
-  for (const key of ['meta', 'stages', 'footnote']) {
-    if (!(key in spec)) {
-      return { ok: false, error: `Spec missing required top-level key "${key}" (see engines/customer-journey-map/references/schema.md)` };
-    }
-  }
-  const templatePath = path.join(engineDir, 'assets', 'template.html');
-  const template = fs.readFileSync(templatePath, 'utf8');
-  const marker = /(<script id="journey-data" type="application\/json">\n)[\s\S]*?(\n<\/script>)/;
-  if (!marker.test(template)) {
-    return { ok: false, error: 'Engine template.html is missing the "journey-data" injection marker — engine may have drifted, run check-drift.js' };
-  }
-  const html = template.replace(marker, (_, open, close) => open + JSON.stringify(spec, null, 2) + close);
-  fs.writeFileSync(outputPath, html, 'utf8');
-  return { ok: true };
-}
-
-function renderProcessFlow(dataPath, outputPath, engineDir) {
-  let spec;
-  try {
-    spec = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
-  } catch (e) {
-    return { ok: false, error: `Invalid JSON: ${e.message}` };
-  }
-  let buildHTML;
-  try {
-    // eslint-disable-next-line global-require
-    ({ buildHTML } = require(path.join(engineDir, 'scripts', 'generate.js')));
-  } catch (e) {
-    return { ok: false, error: `Failed to load engine generate.js: ${e.message}` };
-  }
-  const viewportWidth = (spec.config && spec.config.layout && spec.config.layout.viewportWidth) || 1200;
-  try {
-    const html = buildHTML(spec, viewportWidth);
-    fs.writeFileSync(outputPath, html, 'utf8');
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: e.name === 'SpecError' ? e.message : `${e.name || 'Error'}: ${e.message}` };
-  }
-}
-
-function renderUserflow(dataPath, outputPath, engineDir) {
-  let spec;
-  try {
-    spec = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
-  } catch (e) {
-    return { ok: false, error: `Invalid JSON: ${e.message}` };
-  }
-  let renderReport;
-  try {
-    // eslint-disable-next-line global-require
-    ({ renderReport } = require(path.join(engineDir, 'user-flow-diagram-v4.0.js')));
-  } catch (e) {
-    return { ok: false, error: `Failed to load engine module: ${e.message}` };
-  }
-  try {
-    const html = renderReport(spec);
-    fs.writeFileSync(outputPath, html, 'utf8');
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: e.message };
-  }
 }
 
 // ---- driver ----

@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# Convenience wrapper for a new incoming BRSD: extract all four diagram
-# types via Claude, then render all four for that BRSD.
+# Convenience wrapper for a new incoming BRSD: correct the workbook (add
+# New Req ID / Updated Requirement Statement / Updated Acceptance Criteria
+# columns in place, if not already present), extract the bpmn-swimlane
+# model, then render it. bpmn-swimlane is the only supported diagram type.
 #
 # Usage: ./scripts/new-brsd.sh /path/to/New_BRSD.xlsx
 #
 # This is the only command needed for the "upcoming documents" case. It
-# shells out to `claude` in non-interactive mode to run each /extract-*
-# command in turn (they must run sequentially — each is a separate Claude
-# invocation, not scriptable in pure Node since only extraction touches an
-# LLM), then calls render-all.js (zero-AI, pure Node) for that BRSD.
+# shells out to `claude` in non-interactive mode to run /extract-bpmn-swimlane
+# (which performs the workbook correction step first, then extraction — not
+# scriptable in pure Node since both touch an LLM), then calls render-all.js
+# (zero-AI, pure Node) for that BRSD.
 set -euo pipefail
 
 if [ $# -ne 1 ]; then
@@ -31,21 +33,16 @@ echo "== BRSD: $BRSD_PATH"
 echo "== slug: $SLUG"
 
 if ! command -v claude >/dev/null 2>&1; then
-  echo "error: 'claude' CLI not found on PATH — cannot run /extract-* commands." >&2
-  echo "Run the four /extract-* slash commands manually inside a Claude Code session instead:" >&2
+  echo "error: 'claude' CLI not found on PATH — cannot run /extract-bpmn-swimlane." >&2
+  echo "Run the slash command manually inside a Claude Code session instead:" >&2
   echo "  /extract-bpmn-swimlane $BRSD_PATH" >&2
-  echo "  /extract-journey $BRSD_PATH" >&2
-  echo "  /extract-process-flow $BRSD_PATH" >&2
-  echo "  /extract-userflow $BRSD_PATH" >&2
   exit 1
 fi
 
-for cmd in extract-bpmn-swimlane extract-journey extract-process-flow extract-userflow; do
-  echo "== running /$cmd $BRSD_PATH"
-  claude -p "/$cmd $BRSD_PATH"
-done
+echo "== running /extract-bpmn-swimlane $BRSD_PATH (corrects the workbook in place, if needed, then extracts)"
+claude -p "/extract-bpmn-swimlane $BRSD_PATH"
 
-echo "== rendering all four outputs for $SLUG"
+echo "== rendering output for $SLUG"
 node "$SCRIPT_DIR/render-all.js" --brsd "$SLUG"
 
-echo "== done: output/$SLUG/$SLUG-{bpmn-swimlane,journey,process-flow,userflow}.html"
+echo "== done: output/$SLUG/$SLUG-bpmn-swimlane.html"

@@ -10,7 +10,7 @@
   "topbar": 70,
   "colw": 252,
   "totalW": 2296,
-  "totalH": 6490,
+  "totalH": 24310,
   "laneLabelW": 80,
   "lanes": [
    {
@@ -25,34 +25,34 @@
     "name": "Billing Operations User",
     "hint": "Admin Console / Bill Formatter Portal actions",
     "y": 350,
-    "h": 2240
+    "h": 14780
    },
    {
     "key": "bf",
     "name": "Bill Formatter (DXP)",
     "hint": "Core ingestion, generation, masking, reporting engine",
-    "y": 2610,
-    "h": 1800
+    "y": 15150,
+    "h": 6420
    },
    {
     "key": "crm",
     "name": "Siebel CRM",
     "hint": "Hot bill landing, notification logging, resend/reprint requests",
-    "y": 4430,
-    "h": 700
+    "y": 21590,
+    "h": 920
    },
    {
     "key": "email",
     "name": "SMTP Service",
     "hint": "Email despatch and delivery feedback",
-    "y": 5150,
-    "h": 920
+    "y": 22530,
+    "h": 1360
    },
    {
     "key": "ext",
     "name": "Other Channels",
     "hint": "SMS Gateway, WhatsApp BSP, Web",
-    "y": 6090,
+    "y": 23910,
     "h": 260
    }
   ],
@@ -84,28 +84,6 @@
    "cy": 200.0
   },
   {
-   "id": "xml_retrieve",
-   "type": "agent",
-   "lane": "bf",
-   "phase": 0,
-   "label": "Retrieve/Upload XML",
-   "sub": "BR-001, BR-007",
-   "desc": "XML is retrieved from the Mediation Zone predefined location for regular, trial and hot bills, or received via authorised manual XML/ZIP upload.",
-   "inputs": [
-    "Invoice XML"
-   ],
-   "outputs": [
-    "Received XML file"
-   ],
-   "slot": 0,
-   "w": 206,
-   "h": 60,
-   "x": 203.0,
-   "y": 2710.0,
-   "cx": 306.0,
-   "cy": 2740.0
-  },
-  {
    "id": "xml_atomic_write",
    "type": "control",
    "lane": "bf",
@@ -113,13 +91,13 @@
    "label": "Atomic File Write",
    "sub": "BR-002",
    "desc": "The XML file is written to a temporary location or filename, closed and verified, then renamed/moved to the final destination so no partially written file is readable downstream.",
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 60,
    "x": 203.0,
-   "y": 2930.0,
+   "y": 15250.0,
    "cx": 306.0,
-   "cy": 2960.0
+   "cy": 15280.0
   },
   {
    "id": "xml_batch_group",
@@ -129,13 +107,13 @@
    "label": "Batch Grouping",
    "sub": "BR-003",
    "desc": "XML files are retrieved and processed batch-wise; each collection cycle produces a single batch identifier.",
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 203.0,
-   "y": 3150.0,
+   "y": 15470.0,
    "cx": 306.0,
-   "cy": 3180.0
+   "cy": 15500.0
   },
   {
    "id": "xml_dupe_check",
@@ -145,13 +123,13 @@
    "label": "Duplicate Prevention Check",
    "sub": "BR-004",
    "desc": "The same invoice XML file is not processed more than once.",
-   "slot": 4,
+   "slot": 3,
    "w": 176,
    "h": 100,
    "x": 218.0,
-   "y": 3570.0,
+   "y": 15890.0,
    "cx": 306.0,
-   "cy": 3620.0
+   "cy": 15940.0
   },
   {
    "id": "xml_log_retrieval",
@@ -165,9 +143,9 @@
    "w": 206,
    "h": 60,
    "x": 203.0,
-   "y": 4030.0,
+   "y": 16570.0,
    "cx": 306.0,
-   "cy": 4060.0
+   "cy": 16600.0
   },
   {
    "id": "d_retrieval_error",
@@ -187,13 +165,13 @@
      "to": "xml_type_segment"
     }
    ],
-   "slot": 3,
+   "slot": 2,
    "w": 150,
    "h": 100,
    "x": 231.0,
-   "y": 3350.0,
+   "y": 15670.0,
    "cx": 306.0,
-   "cy": 3400.0
+   "cy": 15720.0
   },
   {
    "id": "err_retrieval_failure",
@@ -203,13 +181,13 @@
    "label": "Persistent Retrieval Failure Raised",
    "sub": "BR-006",
    "desc": "A persistent retrieval failure is raised for operational review after configured retries are exhausted.",
-   "slot": 5,
+   "slot": 4,
    "w": 190,
    "h": 100,
    "x": 211.0,
-   "y": 3790.0,
+   "y": 16110.0,
    "cx": 306.0,
-   "cy": 3840.0
+   "cy": 16160.0
   },
   {
    "id": "xml_type_segment",
@@ -219,13 +197,13 @@
    "label": "Derive Invoice Type & Segment",
    "sub": "BR-008",
    "desc": "Invoice type and customer segment are derived from the loaded XML content.",
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 100,
    "x": 455.0,
-   "y": 3130.0,
+   "y": 15450.0,
    "cx": 558.0,
-   "cy": 3180.0
+   "cy": 15500.0
   },
   {
    "id": "xml_validate",
@@ -235,13 +213,13 @@
    "label": "Schema & Mandatory Data Validation",
    "sub": "BR-009, BFR_XML_002.04",
    "desc": "XML is validated for schema conformance and mandatory billing data. Only files passing both proceed to invoice generation.",
-   "slot": 4,
+   "slot": 3,
    "w": 176,
    "h": 100,
    "x": 470.0,
-   "y": 3570.0,
+   "y": 15890.0,
    "cx": 558.0,
-   "cy": 3620.0
+   "cy": 15940.0
   },
   {
    "id": "d_xml_valid",
@@ -265,9 +243,9 @@
    "w": 150,
    "h": 84,
    "x": 483.0,
-   "y": 3798.0,
+   "y": 16338.0,
    "cx": 558.0,
-   "cy": 3840.0
+   "cy": 16380.0
   },
   {
    "id": "xml_failed",
@@ -277,13 +255,13 @@
    "label": "Failed XML \u2014 Reason Recorded",
    "sub": "BR-009, BR-010, XML Record: Failed XML",
    "desc": "The XML is marked Failed XML with the failure reason recorded and is visible in the portal for review and reprocessing after corrective action.",
-   "slot": 1,
+   "slot": 0,
    "w": 190,
    "h": 100,
    "x": 463.0,
-   "y": 2910.0,
+   "y": 15230.0,
    "cx": 558.0,
-   "cy": 2960.0
+   "cy": 15280.0
   },
   {
    "id": "xml_reprocess",
@@ -313,9 +291,9 @@
    "w": 206,
    "h": 60,
    "x": 455.0,
-   "y": 4030.0,
+   "y": 16570.0,
    "cx": 558.0,
-   "cy": 4060.0
+   "cy": 16600.0
   },
   {
    "id": "csv_scheduler",
@@ -325,13 +303,13 @@
    "label": "Supporting CSV Presence Check",
    "sub": "BR-013, P-01, P-02",
    "desc": "A scheduler checks every ten minutes for an expected supporting CSV; if still absent four hours after XML receipt, an alert email is issued to configured recipients.",
-   "slot": 0,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 455.0,
-   "y": 2690.0,
+   "y": 15670.0,
    "cx": 558.0,
-   "cy": 2740.0
+   "cy": 15720.0
   },
   {
    "id": "csv_alert",
@@ -345,9 +323,9 @@
    "w": 190,
    "h": 100,
    "x": 463.0,
-   "y": 5230.0,
+   "y": 22610.0,
    "cx": 558.0,
-   "cy": 5280.0
+   "cy": 22660.0
   },
   {
    "id": "xml_parse",
@@ -357,13 +335,13 @@
    "label": "Parse XML & Load Data",
    "sub": "BR-012, BFR_XML_002.01",
    "desc": "Invoice Header, Invoice Summary and Invoice Detail structures are loaded from the parsed XML.",
-   "slot": 3,
+   "slot": 4,
    "w": 206,
    "h": 60,
    "x": 455.0,
-   "y": 3370.0,
+   "y": 16130.0,
    "cx": 558.0,
-   "cy": 3400.0
+   "cy": 16160.0
   },
   {
    "id": "invoice_generate",
@@ -377,73 +355,9 @@
    "w": 206,
    "h": 60,
    "x": 707.0,
-   "y": 3150.0,
+   "y": 15690.0,
    "cx": 810.0,
-   "cy": 3180.0
-  },
-  {
-   "id": "invoice_lang",
-   "type": "control",
-   "lane": "bf",
-   "phase": 2,
-   "label": "Determine Invoice Language",
-   "sub": "BR-028, P-08",
-   "desc": "The invoice language is determined from the language type identifier in the source data; English and Arabic templates and translation values are applied.",
-   "slot": 3,
-   "w": 206,
-   "h": 100,
-   "x": 707.0,
-   "y": 3350.0,
-   "cx": 810.0,
-   "cy": 3400.0
-  },
-  {
-   "id": "invoice_enterprise_detail",
-   "type": "control",
-   "lane": "bf",
-   "phase": 2,
-   "label": "Enterprise Detailed Output (XLS/CSV)",
-   "sub": "BR-023",
-   "desc": "An Enterprise customer opted for the detailed bill receives an XLS output, and a call detail CSV is produced in the VFQ approved format and stored in the designated output location.",
-   "slot": 4,
-   "w": 206,
-   "h": 100,
-   "x": 707.0,
-   "y": 3570.0,
-   "cx": 810.0,
-   "cy": 3620.0
-  },
-  {
-   "id": "invoice_bulk_iot",
-   "type": "control",
-   "lane": "bf",
-   "phase": 2,
-   "label": "Bulk SMS & IoT Templates",
-   "sub": "BR-026, BR-027",
-   "desc": "Bulk SMS invoices use the Bulk SMS invoice template and IoT invoices use the IoT invoice template, for regular, trial and hot bills.",
-   "slot": 5,
-   "w": 206,
-   "h": 60,
-   "x": 707.0,
-   "y": 3810.0,
-   "cx": 810.0,
-   "cy": 3840.0
-  },
-  {
-   "id": "trial_scope",
-   "type": "control",
-   "lane": "bf",
-   "phase": 2,
-   "label": "Trial Bill Run Scope",
-   "sub": "BR-021, BR-022",
-   "desc": "A trial bill run covers either an entire bill cycle or a nominated list of customers, for internal audit and bill validation only; trial batches are excluded from channel upload and never distributed to a customer.",
-   "slot": 6,
-   "w": 206,
-   "h": 60,
-   "x": 707.0,
-   "y": 4030.0,
-   "cx": 810.0,
-   "cy": 4060.0
+   "cy": 15720.0
   },
   {
    "id": "d_invoice_gen_ok",
@@ -463,13 +377,13 @@
      "to": "invoice_completed"
     }
    ],
-   "slot": 7,
+   "slot": 3,
    "w": 150,
    "h": 100,
    "x": 735.0,
-   "y": 4230.0,
+   "y": 15890.0,
    "cx": 810.0,
-   "cy": 4280.0
+   "cy": 15940.0
   },
   {
    "id": "invoice_failed",
@@ -479,13 +393,13 @@
    "label": "Invoice Failed \u2014 Reason Recorded",
    "sub": "BR-029, Invoice: Failed",
    "desc": "Invoice generation failure carries a recorded failure status and reason, visible in the portal.",
-   "slot": 0,
+   "slot": 1,
    "w": 190,
    "h": 100,
    "x": 715.0,
-   "y": 2690.0,
+   "y": 15450.0,
    "cx": 810.0,
-   "cy": 2740.0
+   "cy": 15500.0
   },
   {
    "id": "invoice_retry_control",
@@ -493,15 +407,15 @@
    "lane": "bfops",
    "phase": 2,
    "label": "Reprocessing Control (Role-based)",
-   "sub": "BR-030",
+   "sub": "BR-030, BFR_BILL_RETRY_001.01",
    "desc": "Reprocessing of a failed invoice or batch is restricted by role and the retry count is recorded.",
-   "slot": 0,
+   "slot": 1,
    "w": 206,
    "h": 100,
    "x": 707.0,
-   "y": 430.0,
+   "y": 650.0,
    "cx": 810.0,
-   "cy": 480.0
+   "cy": 700.0
   },
   {
    "id": "invoice_completed",
@@ -511,13 +425,13 @@
    "label": "Invoice Completed",
    "sub": "Batch: Invoice Completed",
    "desc": "All invoice outputs within the batch have been generated.",
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 60,
    "x": 707.0,
-   "y": 2930.0,
+   "y": 15250.0,
    "cx": 810.0,
-   "cy": 2960.0
+   "cy": 15280.0
   },
   {
    "id": "regen_request",
@@ -557,9 +471,9 @@
    "w": 150,
    "h": 100,
    "x": 987.0,
-   "y": 2910.0,
+   "y": 15450.0,
    "cx": 1062.0,
-   "cy": 2960.0
+   "cy": 15500.0
   },
   {
    "id": "regen_legacy_buffer",
@@ -573,9 +487,9 @@
    "w": 190,
    "h": 100,
    "x": 967.0,
-   "y": 3130.0,
+   "y": 15670.0,
    "cx": 1062.0,
-   "cy": 3180.0
+   "cy": 15720.0
   },
   {
    "id": "regen_execute",
@@ -589,9 +503,9 @@
    "w": 206,
    "h": 100,
    "x": 959.0,
-   "y": 2690.0,
+   "y": 15230.0,
    "cx": 1062.0,
-   "cy": 2740.0
+   "cy": 15280.0
   },
   {
    "id": "review_switch",
@@ -657,15 +571,15 @@
    "lane": "bf",
    "phase": 4,
    "label": "Make Invoice Available to Channels",
-   "sub": "BR-050, CAP-04",
+   "sub": "BR-050, CAP-04, BFR_INV_TO_CHNL_001.01",
    "desc": "Generated invoices are made available to downstream channels through the configured integration flow, with regular bill copies provided to Siebel CRM and other customer channels.",
    "slot": 0,
    "w": 206,
    "h": 100,
    "x": 1211.0,
-   "y": 2690.0,
+   "y": 15230.0,
    "cx": 1314.0,
-   "cy": 2740.0
+   "cy": 15280.0
   },
   {
    "id": "hot_bill_landing",
@@ -675,13 +589,13 @@
    "label": "Hot Bill Landing Location",
    "sub": "BR-051",
    "desc": "Hot bill invoices are placed in the Siebel CRM hot bill landing location and are available in real time following generation.",
-   "slot": 0,
+   "slot": 1,
    "w": 190,
    "h": 100,
    "x": 1219.0,
-   "y": 4510.0,
+   "y": 21890.0,
    "cx": 1314.0,
-   "cy": 4560.0
+   "cy": 21940.0
   },
   {
    "id": "trial_exclude",
@@ -695,9 +609,9 @@
    "w": 206,
    "h": 100,
    "x": 1211.0,
-   "y": 2910.0,
+   "y": 15450.0,
    "cx": 1314.0,
-   "cy": 2960.0
+   "cy": 15500.0
   },
   {
    "id": "predispatch_masking",
@@ -711,9 +625,9 @@
    "w": 206,
    "h": 100,
    "x": 1211.0,
-   "y": 3130.0,
+   "y": 15670.0,
    "cx": 1314.0,
-   "cy": 3180.0
+   "cy": 15720.0
   },
   {
    "id": "d_email_eligible",
@@ -733,13 +647,13 @@
      "to": "email_template"
     }
    ],
-   "slot": 3,
+   "slot": 4,
    "w": 150,
    "h": 100,
    "x": 1239.0,
-   "y": 3350.0,
+   "y": 16110.0,
    "cx": 1314.0,
-   "cy": 3400.0
+   "cy": 16160.0
   },
   {
    "id": "email_suppressed",
@@ -749,13 +663,13 @@
    "label": "Despatch Suppressed",
    "sub": "BR-063, Email: Suppressed",
    "desc": "A configurable list of non-triable email addresses is maintained; despatch is not attempted for a match on the suppression list.",
-   "slot": 2,
+   "slot": 3,
    "w": 190,
    "h": 58,
    "x": 1219.0,
-   "y": 5691.0,
+   "y": 23291.0,
    "cx": 1314.0,
-   "cy": 5720.0
+   "cy": 23320.0
   },
   {
    "id": "email_template",
@@ -765,13 +679,13 @@
    "label": "Determine Email Template",
    "sub": "BR-061",
    "desc": "The email template is determined by customer type, invoice type and language; separate templates are supported for Consumer and Enterprise in English and Arabic, with configurable dynamic fields.",
-   "slot": 4,
+   "slot": 3,
    "w": 206,
    "h": 60,
    "x": 1211.0,
-   "y": 3590.0,
+   "y": 15910.0,
    "cx": 1314.0,
-   "cy": 3620.0
+   "cy": 15940.0
   },
   {
    "id": "email_dispatch",
@@ -779,15 +693,15 @@
    "lane": "email",
    "phase": 4,
    "label": "SMTP Despatch",
-   "sub": "BR-062",
+   "sub": "BR-062, BFR_EML_001.01",
    "desc": "Email is despatched through the configured SMTP service, which captures delivery feedback and provides success and failure reporting.",
    "slot": 0,
    "w": 206,
    "h": 60,
    "x": 1211.0,
-   "y": 5250.0,
+   "y": 22630.0,
    "cx": 1314.0,
-   "cy": 5280.0
+   "cy": 22660.0
   },
   {
    "id": "d_email_delivered",
@@ -811,9 +725,9 @@
    "w": 150,
    "h": 84,
    "x": 1239.0,
-   "y": 5458.0,
+   "y": 22838.0,
    "cx": 1314.0,
-   "cy": 5500.0
+   "cy": 22880.0
   },
   {
    "id": "email_failed",
@@ -823,13 +737,13 @@
    "label": "Email Delivery Failed",
    "sub": "Email: Failed, Invoice: Failed Sending Email",
    "desc": "Delivery failed and the failure is reported in the Failed Email Report; the email is resent on retry.",
-   "slot": 3,
+   "slot": 2,
    "w": 190,
    "h": 58,
    "x": 1219.0,
-   "y": 5911.0,
+   "y": 23071.0,
    "cx": 1314.0,
-   "cy": 5940.0
+   "cy": 23100.0
   },
   {
    "id": "crm_notification",
@@ -839,13 +753,13 @@
    "label": "Create CRM Notification Record",
    "sub": "BR-064",
    "desc": "A CRM notification record is created only for invoices processed for customer communication and is stored against the customer account and bill reference for servicing and audit.",
-   "slot": 1,
+   "slot": 0,
    "w": 190,
    "h": 100,
    "x": 1219.0,
-   "y": 4730.0,
+   "y": 21670.0,
    "cx": 1314.0,
-   "cy": 4780.0
+   "cy": 21720.0
   },
   {
    "id": "multi_channel_delivery",
@@ -853,15 +767,15 @@
    "lane": "ext",
    "phase": 4,
    "label": "SMS / WhatsApp / Web Delivery",
-   "sub": "BR-052",
+   "sub": "BR-052, BFR_INV_DELV_MODE_001.01",
    "desc": "Invoice communication is also supported through SMS, WhatsApp Business and Web, carrying a PDF reference or an invoice URL.",
    "slot": 0,
    "w": 176,
    "h": 100,
    "x": 1226.0,
-   "y": 6170.0,
+   "y": 23990.0,
    "cx": 1314.0,
-   "cy": 6220.0
+   "cy": 24040.0
   },
   {
    "id": "invoice_search",
@@ -869,7 +783,7 @@
    "lane": "bfops",
    "phase": 5,
    "label": "Search Invoices & Reports",
-   "sub": "BR-090",
+   "sub": "BR-090, BFR_CONSL_INV_SEARCH_001.01",
    "desc": "Invoice and report search supports invoice type, invoice number, batch identifier, date created, language, MSISDN, product, status, email address, account number, customer type and Bill Formatter internal identifier.",
    "slot": 1,
    "w": 206,
@@ -887,29 +801,13 @@
    "label": "Search Result Actions",
    "sub": "BR-091",
    "desc": "Search results support download, regenerate, reprocess and email actions, with availability determined by user role and invoice status; download formats are PDF, XML, XLS and CSV.",
-   "slot": 2,
+   "slot": 10,
    "w": 206,
    "h": 60,
    "x": 1463.0,
-   "y": 890.0,
+   "y": 2650.0,
    "cx": 1566.0,
-   "cy": 920.0
-  },
-  {
-   "id": "xml_search",
-   "type": "agent",
-   "lane": "bfops",
-   "phase": 5,
-   "label": "Search XML Records",
-   "sub": "BR-092",
-   "desc": "XML record search supports invoice type, invoice number, batch identifier and XML status, displays the latest processing status and offers Operational Log, Download XML and Regenerate XML actions.",
-   "slot": 3,
-   "w": 206,
-   "h": 60,
-   "x": 1463.0,
-   "y": 1110.0,
-   "cx": 1566.0,
-   "cy": 1140.0
+   "cy": 2680.0
   },
   {
    "id": "config_drilldown",
@@ -919,13 +817,13 @@
    "label": "Configuration Drill-Down",
    "sub": "BR-093",
    "desc": "Configuration records open in a separate window or pop-up view, and selecting a batch identifier displays the invoices belonging to that batch.",
-   "slot": 4,
+   "slot": 7,
    "w": 206,
    "h": 60,
    "x": 1463.0,
-   "y": 1330.0,
+   "y": 1990.0,
    "cx": 1566.0,
-   "cy": 1360.0
+   "cy": 2020.0
   },
   {
    "id": "admin_console",
@@ -935,77 +833,13 @@
    "label": "Admin Console \u2014 Batch/Bill Status",
    "sub": "BR-070, BR-071, BR-072, BR-073, CAP-06",
    "desc": "The Admin Console displays batch identifier, date created, reference, status, number of documents and the ZIP document, with status maintained at both batch and bill level across the operational status values.",
-   "slot": 2,
+   "slot": 1,
    "w": 190,
    "h": 100,
    "x": 1471.0,
-   "y": 3130.0,
+   "y": 15450.0,
    "cx": 1566.0,
-   "cy": 3180.0
-  },
-  {
-   "id": "batch_action_menu",
-   "type": "control",
-   "lane": "bfops",
-   "phase": 5,
-   "label": "Batch Action Menu",
-   "sub": "BR-074",
-   "desc": "The batch action menu offers View Bills, View Statistics, Overall Report, Detail Report, Failed Report, Failed Email Report, Send Overall Report and Send Email.",
-   "slot": 5,
-   "w": 206,
-   "h": 60,
-   "x": 1463.0,
-   "y": 1550.0,
-   "cx": 1566.0,
-   "cy": 1580.0
-  },
-  {
-   "id": "bill_action_menu",
-   "type": "control",
-   "lane": "bfops",
-   "phase": 5,
-   "label": "Bill Action Menu",
-   "sub": "BR-075",
-   "desc": "The bill action menu offers Status Log, Download PDF, Download XLS, Download XML, Reprint Bill, Regenerate Document, Regenerate XML and Send Email, and applies equally to the hot bill register.",
-   "slot": 6,
-   "w": 206,
-   "h": 60,
-   "x": 1463.0,
-   "y": 1770.0,
-   "cx": 1566.0,
-   "cy": 1800.0
-  },
-  {
-   "id": "document_download",
-   "type": "agent",
-   "lane": "bfops",
-   "phase": 5,
-   "label": "Download Bill (PDF/XLS/XML)",
-   "sub": "BR-077",
-   "desc": "A selected bill is downloadable in PDF, XLS and XML format.",
-   "slot": 7,
-   "w": 206,
-   "h": 100,
-   "x": 1463.0,
-   "y": 1970.0,
-   "cx": 1566.0,
-   "cy": 2020.0
-  },
-  {
-   "id": "batch_statistics",
-   "type": "control",
-   "lane": "bf",
-   "phase": 5,
-   "label": "Batch Statistics",
-   "sub": "BR-078",
-   "desc": "Batch statistics display successful and failed PDF generation with identifier, bill number, account number, status and reason.",
-   "slot": 0,
-   "w": 206,
-   "h": 60,
-   "x": 1463.0,
-   "y": 2710.0,
-   "cx": 1566.0,
-   "cy": 2740.0
+   "cy": 15500.0
   },
   {
    "id": "hot_bill_register",
@@ -1015,29 +849,13 @@
    "label": "Hot Bill Register",
    "sub": "BR-079",
    "desc": "The hot bill register displays identifier, process date, bill number, status, email address, total size, current month due, total due and the action menu.",
-   "slot": 1,
+   "slot": 2,
    "w": 190,
    "h": 56,
    "x": 1471.0,
-   "y": 2932.0,
+   "y": 15692.0,
    "cx": 1566.0,
-   "cy": 2960.0
-  },
-  {
-   "id": "reference_config",
-   "type": "control",
-   "lane": "bfops",
-   "phase": 5,
-   "label": "Reference Data Configuration",
-   "sub": "BR-100 to BR-113, CAP-08",
-   "desc": "Translation, adjustment reason, benefits, flex bucket, VAS short code, plan speed and enterprise report account configuration, with import, export, effective dating, role control and product catalogue synchronisation.",
-   "slot": 8,
-   "w": 206,
-   "h": 100,
-   "x": 1463.0,
-   "y": 2190.0,
-   "cx": 1566.0,
-   "cy": 2240.0
+   "cy": 15720.0
   },
   {
    "id": "template_config",
@@ -1047,29 +865,13 @@
    "label": "Template & Presentation Configuration",
    "sub": "BR-120 to BR-124, CAP-09",
    "desc": "Bill template field maintenance by segment and invoice type, email and resend template configuration, bill banner configuration and overlap resolution, report template configuration and interactive PDF features.",
-   "slot": 9,
+   "slot": 8,
    "w": 206,
    "h": 100,
    "x": 1463.0,
-   "y": 2410.0,
+   "y": 2190.0,
    "cx": 1566.0,
-   "cy": 2460.0
-  },
-  {
-   "id": "reporting_dashboards",
-   "type": "agent",
-   "lane": "bfops",
-   "phase": 5,
-   "label": "Reports & Dashboards",
-   "sub": "BR-130 to BR-142, CAP-10",
-   "desc": "Enterprise reports, operational dashboard, batch status, overall and detailed batch reports, failed bill and failed email reports, email delivery statistics, XML processing statistics, bill run monitor and hot bill failure alerts.",
-   "slot": 0,
-   "w": 206,
-   "h": 60,
-   "x": 1463.0,
-   "y": 450.0,
-   "cx": 1566.0,
-   "cy": 480.0
+   "cy": 2240.0
   },
   {
    "id": "bill_run_monitor",
@@ -1079,13 +881,13 @@
    "label": "Bill Run Monitor Alert",
    "sub": "BR-141, P-04, P-05",
    "desc": "The Bill Run Monitor email report is despatched during bill run windows at the configured interval from first batch start until the last batch or end marker.",
-   "slot": 0,
+   "slot": 1,
    "w": 190,
    "h": 58,
    "x": 1471.0,
-   "y": 5251.0,
+   "y": 22851.0,
    "cx": 1566.0,
-   "cy": 5280.0
+   "cy": 22880.0
   },
   {
    "id": "hot_bill_failure_alert",
@@ -1095,13 +897,13 @@
    "label": "Hot Bill Failure Alert",
    "sub": "BR-142, P-03",
    "desc": "Failed hot bill generation is identified and an email alert report is despatched at the configured interval.",
-   "slot": 1,
+   "slot": 2,
    "w": 190,
    "h": 58,
    "x": 1471.0,
-   "y": 5471.0,
+   "y": 23071.0,
    "cx": 1566.0,
-   "cy": 5500.0
+   "cy": 23100.0
   },
   {
    "id": "mask_generate",
@@ -1109,15 +911,15 @@
    "lane": "bf",
    "phase": 6,
    "label": "Generate Masked Invoice File",
-   "sub": "BR-151, CAP-11",
+   "sub": "BR-151, CAP-11, BFR_INV_MASK_001.01",
    "desc": "A separate masked invoice file is generated at the point of invoice generation for each applicable invoice; Tax Identifier, Payment Method and Phone Number are masked in accordance with the configured access policy.",
    "slot": 0,
    "w": 206,
    "h": 100,
    "x": 1715.0,
-   "y": 2690.0,
+   "y": 15230.0,
    "cx": 1818.0,
-   "cy": 2740.0
+   "cy": 15280.0
   },
   {
    "id": "mask_original_immutable",
@@ -1131,9 +933,9 @@
    "w": 206,
    "h": 100,
    "x": 1715.0,
-   "y": 2910.0,
+   "y": 15450.0,
    "cx": 1818.0,
-   "cy": 2960.0
+   "cy": 15500.0
   },
   {
    "id": "d_role_presentation",
@@ -1157,9 +959,9 @@
    "w": 150,
    "h": 100,
    "x": 1743.0,
-   "y": 3130.0,
+   "y": 15670.0,
    "cx": 1818.0,
-   "cy": 3180.0
+   "cy": 15720.0
   },
   {
    "id": "present_masked",
@@ -1169,22 +971,6 @@
    "label": "Present Masked Invoice",
    "sub": "BR-152",
    "desc": "Restricted roles view the masked invoice version.",
-   "slot": 1,
-   "w": 206,
-   "h": 60,
-   "x": 1715.0,
-   "y": 670.0,
-   "cx": 1818.0,
-   "cy": 700.0
-  },
-  {
-   "id": "present_full",
-   "type": "agent",
-   "lane": "bfops",
-   "phase": 6,
-   "label": "Present Full Invoice",
-   "sub": "BR-152",
-   "desc": "Privileged roles view the full invoice.",
    "slot": 2,
    "w": 206,
    "h": 60,
@@ -1194,6 +980,22 @@
    "cy": 920.0
   },
   {
+   "id": "present_full",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 6,
+   "label": "Present Full Invoice",
+   "sub": "BR-152",
+   "desc": "Privileged roles view the full invoice.",
+   "slot": 3,
+   "w": 206,
+   "h": 60,
+   "x": 1715.0,
+   "y": 1110.0,
+   "cx": 1818.0,
+   "cy": 1140.0
+  },
+  {
    "id": "agent_customer_copy",
    "type": "control",
    "lane": "bfops",
@@ -1201,13 +1003,13 @@
    "label": "Agent Copy / Customer Copy Download",
    "sub": "BR-154",
    "desc": "The bill download offers an Agent Copy and a Customer Copy; the Agent Copy is produced either as a summarised format without the usage view or as a masked format, each enabled or disabled by configuration.",
-   "slot": 3,
+   "slot": 5,
    "w": 206,
    "h": 100,
    "x": 1715.0,
-   "y": 1090.0,
+   "y": 1530.0,
    "cx": 1818.0,
-   "cy": 1140.0
+   "cy": 1580.0
   },
   {
    "id": "mask_rule_config",
@@ -1232,13 +1034,13 @@
    "phase": 6,
    "label": "Invoice Presented per Access Policy",
    "desc": "The correct invoice presentation (full or masked) has been delivered to the requesting user per role-based access policy.",
-   "slot": 4,
+   "slot": 6,
    "w": 100,
    "h": 100,
    "x": 1768.0,
-   "y": 1310.0,
+   "y": 1750.0,
    "cx": 1818.0,
-   "cy": 1360.0
+   "cy": 1800.0
   },
   {
    "id": "reprint_request",
@@ -1248,13 +1050,13 @@
    "label": "Reprint Request from Siebel CRM",
    "sub": "BR-043, BFR_INV_REPRNT_001.01",
    "desc": "A reprint request carries the account number, bill period and bill type and originates from Siebel CRM.",
-   "slot": 0,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 1967.0,
-   "y": 4510.0,
+   "y": 22110.0,
    "cx": 2070.0,
-   "cy": 4560.0
+   "cy": 22160.0
   },
   {
    "id": "reprint_generate",
@@ -1264,13 +1066,13 @@
    "label": "Retrieve XML & Regenerate PDF",
    "sub": "BR-044, BR-045",
    "desc": "Reprint does not alter the original invoice data; only a previously generated bill may be reprinted, with Detailed or Summarised bill type and English or Arabic language selection.",
-   "slot": 1,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 1967.0,
-   "y": 2910.0,
+   "y": 15670.0,
    "cx": 2070.0,
-   "cy": 2960.0
+   "cy": 15720.0
   },
   {
    "id": "reprint_transfer_mz",
@@ -1280,13 +1082,13 @@
    "label": "Transfer PDF via Mediation Zone",
    "sub": "BFR_INV_REPRNT_001.01",
    "desc": "The reprinted PDF is transferred through the Mediation Zone to the requesting channel.",
-   "slot": 1,
+   "slot": 0,
    "w": 190,
    "h": 100,
    "x": 1975.0,
-   "y": 4730.0,
+   "y": 21670.0,
    "cx": 2070.0,
-   "cy": 4780.0
+   "cy": 21720.0
   },
   {
    "id": "reprint_register",
@@ -1296,13 +1098,13 @@
    "label": "Reprint/Resend Registers",
    "sub": "BR-046",
    "desc": "Reprint and resend requests are displayed in dedicated console registers with status and process date.",
-   "slot": 2,
+   "slot": 1,
    "w": 190,
    "h": 100,
    "x": 1975.0,
-   "y": 3130.0,
+   "y": 15450.0,
    "cx": 2070.0,
-   "cy": 3180.0
+   "cy": 15500.0
   },
   {
    "id": "resend_request",
@@ -1312,13 +1114,13 @@
    "label": "Resend Request from Siebel CRM",
    "sub": "BR-047, BFR_EML_RESEND_001.01",
    "desc": "A resend request carries the account number and bill reference; only a previously generated invoice may be resent.",
-   "slot": 2,
+   "slot": 3,
    "w": 206,
    "h": 100,
    "x": 1967.0,
-   "y": 4950.0,
+   "y": 22330.0,
    "cx": 2070.0,
-   "cy": 5000.0
+   "cy": 22380.0
   },
   {
    "id": "resend_template",
@@ -1328,13 +1130,13 @@
    "label": "Apply Resend Email Template",
    "sub": "BR-048",
    "desc": "The resend email template may differ from the first-time bill email template and is separately maintainable in English and Arabic.",
-   "slot": 0,
+   "slot": 4,
    "w": 206,
    "h": 100,
    "x": 1967.0,
-   "y": 2690.0,
+   "y": 16110.0,
    "cx": 2070.0,
-   "cy": 2740.0
+   "cy": 16160.0
   },
   {
    "id": "resend_dispatch",
@@ -1344,13 +1146,13 @@
    "label": "Despatch Resend Email",
    "sub": "BR-047",
    "desc": "The resend invoice is despatched and the delivery status is recorded and visible.",
-   "slot": 0,
+   "slot": 3,
    "w": 206,
    "h": 60,
    "x": 1967.0,
-   "y": 5250.0,
+   "y": 23290.0,
    "cx": 2070.0,
-   "cy": 5280.0
+   "cy": 23320.0
   },
   {
    "id": "interface_preserve",
@@ -1360,13 +1162,13 @@
    "label": "Preserve Existing Interface Signatures",
    "sub": "BR-049",
    "desc": "The existing reprint and resend interface signatures remain unchanged to support parallel running and to avoid impact to current channels.",
-   "slot": 4,
+   "slot": 5,
    "w": 206,
    "h": 100,
    "x": 1967.0,
-   "y": 3570.0,
+   "y": 16330.0,
    "cx": 2070.0,
-   "cy": 3620.0
+   "cy": 16380.0
   },
   {
    "id": "end",
@@ -1376,24 +1178,2207 @@
    "label": "Batch/Bill Cycle Complete",
    "sub": "Batch: Email Sent (Terminal)",
    "desc": "Invoice emails for the batch have been despatched, completing the batch processing lifecycle.",
-   "slot": 3,
+   "slot": 0,
    "w": 100,
    "h": 100,
    "x": 2020.0,
-   "y": 3350.0,
+   "y": 15230.0,
    "cx": 2070.0,
-   "cy": 3400.0
+   "cy": 15280.0
+  },
+  {
+   "id": "xml_pull_regular",
+   "type": "agent",
+   "lane": "bf",
+   "phase": 0,
+   "label": "Pull XML \u2014 Regular Bill",
+   "sub": "BFR_XML_001.01",
+   "desc": "Formatter pulls invoice XML from the Mediation Zone for regular bills at the predefined file location, with retry on error.",
+   "slot": 7,
+   "w": 206,
+   "h": 60,
+   "x": 203.0,
+   "y": 16790.0,
+   "cx": 306.0,
+   "cy": 16820.0
+  },
+  {
+   "id": "xml_pull_trial",
+   "type": "agent",
+   "lane": "bf",
+   "phase": 0,
+   "label": "Pull XML \u2014 Trial Bill",
+   "sub": "BFR_XML_001.02",
+   "desc": "Formatter pulls invoice XML from BRM/Billing source for trial bills, with retry on error.",
+   "slot": 8,
+   "w": 206,
+   "h": 60,
+   "x": 203.0,
+   "y": 17010.0,
+   "cx": 306.0,
+   "cy": 17040.0
+  },
+  {
+   "id": "xml_pull_hot",
+   "type": "agent",
+   "lane": "bf",
+   "phase": 0,
+   "label": "Pull XML \u2014 Hot Bill",
+   "sub": "BFR_XML_001.03",
+   "desc": "Formatter pulls invoice XML from BRM/Billing source for hot bills, with retry on error.",
+   "slot": 9,
+   "w": 206,
+   "h": 60,
+   "x": 203.0,
+   "y": 17230.0,
+   "cx": 306.0,
+   "cy": 17260.0
+  },
+  {
+   "id": "xml_data_ingestion",
+   "type": "control",
+   "lane": "bf",
+   "phase": 0,
+   "label": "Data Ingestion (XML or DB Table)",
+   "sub": "BFR_DATA_INGESTION_001.01",
+   "desc": "Bill Formatter ingests invoice data either as XML or from a database table.",
+   "slot": 5,
+   "w": 206,
+   "h": 100,
+   "x": 203.0,
+   "y": 16330.0,
+   "cx": 306.0,
+   "cy": 16380.0
+  },
+  {
+   "id": "xml_search_result",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Search Uploaded Bill XML",
+   "sub": "BFR_CONSL_XML_SEARCH_001.01",
+   "desc": "Billing Operations user searches uploaded bill XML records; results show the latest processing status.",
+   "slot": 9,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 2430.0,
+   "cx": 1566.0,
+   "cy": 2460.0
+  },
+  {
+   "id": "xml_search_actions",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "XML Record Action Options",
+   "sub": "BFR_CONSL_XML_SEARCH_001.02_Operational_Log",
+   "desc": "Clicking Action on an XML record offers Operational Log, Download XML, and Regenerate XML.",
+   "slot": 12,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 3070.0,
+   "cx": 1566.0,
+   "cy": 3120.0
+  },
+  {
+   "id": "xml_search_oplog",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "View XML Operational Log",
+   "sub": "BFR_CONSL_XML_SEARCH_001.03_Operational_Log",
+   "desc": "Displays the operational log: Id, Type, Description, Data, Date Created.",
+   "slot": 13,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 3310.0,
+   "cx": 1566.0,
+   "cy": 3340.0
+  },
+  {
+   "id": "xml_search_download",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Download XML",
+   "sub": "BFR_CONSL_XML_SEARCH_001.03_Download_XML",
+   "desc": "Downloads the selected XML file.",
+   "slot": 14,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 3530.0,
+   "cx": 1566.0,
+   "cy": 3560.0
+  },
+  {
+   "id": "xml_search_regen",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Regenerate XML (from Search)",
+   "sub": "BFR_CONSL_XML_SEARCH_001.04_Regenerate_XML",
+   "desc": "Requests BRM to regenerate the XML for the selected record.",
+   "slot": 11,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 2850.0,
+   "cx": 1566.0,
+   "cy": 2900.0
+  },
+  {
+   "id": "batch_status_report",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Batch Status Report",
+   "sub": "BFR_CONSL_BATCH_001.01",
+   "desc": "Provides Billing Operations users real-time visibility of batch processing status, invoice generation status and XML status at the batch level (Failed/Ready/Report Generated/Invoice Completed/Email Sent/Failed Sending Email/Failed XML Data).",
+   "slot": 15,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 3750.0,
+   "cx": 1566.0,
+   "cy": 3780.0
+  },
+  {
+   "id": "batch_create_upload",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Create Batch / Upload Batch",
+   "sub": "BFR_CONSL_BATCH_001.02",
+   "desc": "Authorised user creates a batch (automated BRM/MZ pickup) or uploads a batch manually.",
+   "slot": 16,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 3950.0,
+   "cx": 1566.0,
+   "cy": 4000.0
+  },
+  {
+   "id": "bill_status_report",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Bill-Level Status Report",
+   "sub": "BFR_CONSL_BATCH_001.03",
+   "desc": "Provides real-time status updates for individual bills processed within a batch, using the same status values.",
+   "slot": 17,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 4190.0,
+   "cx": 1566.0,
+   "cy": 4220.0
+  },
+  {
+   "id": "batch_menu_view_bill",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Batch Action Menu \u2014 View Bill",
+   "sub": "BFR_CONSL_BATCH_001.04",
+   "desc": "Batch Action menu exposes a 'View Bill' option showing the bill details of that batch.",
+   "slot": 18,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 4390.0,
+   "cx": 1566.0,
+   "cy": 4440.0
+  },
+  {
+   "id": "view_bill_action_menu",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "View Bill \u2014 Action Sub-Menu",
+   "sub": "BFR_CONSL_BATCH_001.04.A_ViewBill_Action",
+   "desc": "Selecting View Bill on a batch opens its own Action sub-menu.",
+   "slot": 19,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 4610.0,
+   "cx": 1566.0,
+   "cy": 4660.0
+  },
+  {
+   "id": "vb_status_log",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "View Bill \u2192 Status Log",
+   "sub": "BFR_CONSL_BATCH_001.04.B_ViewBill_StatusLog",
+   "desc": "Shows Id, Label, Reason, Date Created for the selected bill.",
+   "slot": 20,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 4850.0,
+   "cx": 1566.0,
+   "cy": 4880.0
+  },
+  {
+   "id": "vb_download_pdf",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "View Bill \u2192 Download PDF",
+   "sub": "BFR_CONSL_BATCH_001.04.Cx_ViewBill_Download_PDF",
+   "desc": "Downloads the selected bill's PDF.",
+   "slot": 21,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 5070.0,
+   "cx": 1566.0,
+   "cy": 5100.0
+  },
+  {
+   "id": "vb_download_xls",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "View Bill \u2192 Download XLS",
+   "sub": "BFR_CONSL_BATCH_001.04.D_ViewBill_Download_PDF",
+   "desc": "Downloads the selected bill's XLS.",
+   "slot": 22,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 5290.0,
+   "cx": 1566.0,
+   "cy": 5320.0
+  },
+  {
+   "id": "vb_download_xml",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "View Bill \u2192 Download XML",
+   "sub": "BFR_CONSL_BATCH_001.04.E_ViewBill_Download_XML",
+   "desc": "Downloads the selected bill's XML.",
+   "slot": 23,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 5510.0,
+   "cx": 1566.0,
+   "cy": 5540.0
+  },
+  {
+   "id": "vb_reprint",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "View Bill \u2192 Reprint Bill",
+   "sub": "BFR_CONSL_BATCH_001.04.F_ViewBill_Reprint_Bill",
+   "desc": "Reprints the bill; prompts for bill type (Summary/Detailed) and language.",
+   "slot": 24,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 5730.0,
+   "cx": 1566.0,
+   "cy": 5760.0
+  },
+  {
+   "id": "vb_regen_doc",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "View Bill \u2192 Regenerate Document",
+   "sub": "BFR_CONSL_BATCH_001.04.G_ViewBill_Regenerate_Document",
+   "desc": "Initiates generation of the document for the selected bill.",
+   "slot": 25,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 5930.0,
+   "cx": 1566.0,
+   "cy": 5980.0
+  },
+  {
+   "id": "vb_regen_xml",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "View Bill \u2192 Regenerate XML",
+   "sub": "BFR_CONSL_BATCH_001.04.H_ViewBill_Regenerate_XML",
+   "desc": "Initiates creation of the XML for the selected bill.",
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 430.0,
+   "cx": 1566.0,
+   "cy": 480.0
+  },
+  {
+   "id": "vb_send_email",
+   "type": "agent",
+   "lane": "email",
+   "phase": 5,
+   "label": "View Bill \u2192 Send Email",
+   "sub": "BFR_CONSL_BATCH_001.04.I_ViewBill_Send_Email",
+   "desc": "Sends the bill email per the configured template and address, excluding the non-triable list.",
+   "slot": 3,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 23290.0,
+   "cx": 1566.0,
+   "cy": 23320.0
+  },
+  {
+   "id": "batch_view_statistics",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Batch \u2192 View Statistics",
+   "sub": "BFR_CONSL_BATCH_001.05_View_Statistics",
+   "desc": "Shows successful PDF generation counts graphically plus a failed-PDF list (Id, Bill No., Acct. No., Status, Reason).",
+   "slot": 26,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 6170.0,
+   "cx": 1566.0,
+   "cy": 6200.0
+  },
+  {
+   "id": "batch_overall_report",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Batch \u2192 Overall Report",
+   "sub": "BFR_CONSL_BATCH_001.06_Action_Overall_Report",
+   "desc": "Downloads the Overall Report for the batch in XLS format.",
+   "slot": 27,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 6390.0,
+   "cx": 1566.0,
+   "cy": 6420.0
+  },
+  {
+   "id": "batch_detailed_report",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Batch \u2192 Detailed Report",
+   "sub": "BFR_CONSL_BATCH_001.07_Action_Detailed_Report",
+   "desc": "Downloads the Detailed Report for the batch in XLS format.",
+   "slot": 28,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 6610.0,
+   "cx": 1566.0,
+   "cy": 6640.0
+  },
+  {
+   "id": "batch_failed_report",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Batch \u2192 Failed Report",
+   "sub": "BFR_CONSL_BATCH_001.08_Action_Failed_Report",
+   "desc": "Downloads the Failed Report for the batch in XLS format.",
+   "slot": 29,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 6830.0,
+   "cx": 1566.0,
+   "cy": 6860.0
+  },
+  {
+   "id": "batch_failed_email_report",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Batch \u2192 Failed Emails Report",
+   "sub": "BFR_CONSL_BATCH_001.09_Action_Failed_Emails_Report",
+   "desc": "Downloads the Failed Emails Report for the batch in XLS format.",
+   "slot": 30,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 7030.0,
+   "cx": 1566.0,
+   "cy": 7080.0
+  },
+  {
+   "id": "batch_send_overall_report",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Batch \u2192 Send Overall Report",
+   "sub": "BFR_CONSL_BATCH_001.10_Action_Send_Overall_Report",
+   "desc": "Generates the Overall Report in XLS format for distribution.",
+   "slot": 2,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 870.0,
+   "cx": 1566.0,
+   "cy": 920.0
+  },
+  {
+   "id": "batch_send_email",
+   "type": "agent",
+   "lane": "email",
+   "phase": 5,
+   "label": "Batch \u2192 Send Email",
+   "sub": "BFR_CONSL_BATCH_001.11_Action_Send_Email",
+   "desc": "Sends an email to the batch's customers per the configured template.",
+   "slot": 4,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 23510.0,
+   "cx": 1566.0,
+   "cy": 23540.0
+  },
+  {
+   "id": "report_detailed_batch",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Detailed Batch Report",
+   "sub": "BFR_CONSL_REP_001.09",
+   "desc": "Detailed Batch Report with bill-level aggregation (plan/extras/payment/dues) and service-specific tabs.",
+   "slot": 32,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 7490.0,
+   "cx": 1566.0,
+   "cy": 7520.0
+  },
+  {
+   "id": "report_overall_batch",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Overall Batch Report",
+   "sub": "BFR_CONSL_REP_001.15",
+   "desc": "Overall Batch Report summarising each generated bill/document; delivery preference (PDF only vs PDF+XLS) drives output; Document ID is unique per document.",
+   "slot": 33,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 7710.0,
+   "cx": 1566.0,
+   "cy": 7740.0
+  },
+  {
+   "id": "report_ops_email_stats",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Operational Stats \u2014 Email Delivery",
+   "sub": "BFR_CONSL_RPT_001.01",
+   "desc": "Reports total successful and failed emails per batch, account-wise and bill-wise, including exclusion-list and invalid/failure scenarios.",
+   "slot": 3,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 1090.0,
+   "cx": 1566.0,
+   "cy": 1140.0
+  },
+  {
+   "id": "hot_bill_failed_report",
+   "type": "escalation",
+   "lane": "email",
+   "phase": 5,
+   "label": "Hot Bill Generation Failed Report",
+   "sub": "BFR_CONSL_REP_001.12",
+   "desc": "Runs every four hours; identifies failed hot bill generation and sends an email alert/report.",
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 1471.0,
+   "y": 22610.0,
+   "cx": 1566.0,
+   "cy": 22660.0
+  },
+  {
+   "id": "gen_pdf_english",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Generate PDF \u2014 English",
+   "sub": "BFR_INV_PDF_ENG_001.01",
+   "slot": 4,
+   "w": 206,
+   "h": 60,
+   "x": 707.0,
+   "y": 16130.0,
+   "cx": 810.0,
+   "cy": 16160.0
+  },
+  {
+   "id": "gen_pdf_arabic",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Generate PDF \u2014 Arabic",
+   "sub": "BFR_INV_PDF_ENG_001.02",
+   "slot": 5,
+   "w": 206,
+   "h": 60,
+   "x": 707.0,
+   "y": 16350.0,
+   "cx": 810.0,
+   "cy": 16380.0
+  },
+  {
+   "id": "gen_trial_pdf_consumer_mobile",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Trial PDF \u2014 Consumer (Mobile)",
+   "sub": "BFR_INV_PDF_TRL_003.01",
+   "slot": 6,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 16550.0,
+   "cx": 810.0,
+   "cy": 16600.0
+  },
+  {
+   "id": "gen_trial_pdf_consumer_fixed",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Trial PDF \u2014 Consumer (Fixed Line)",
+   "sub": "BFR_INV_PDF_TRL_003.02",
+   "slot": 7,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 16770.0,
+   "cx": 810.0,
+   "cy": 16820.0
+  },
+  {
+   "id": "gen_trial_pdf_enterprise",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Trial PDF \u2014 Enterprise",
+   "sub": "BFR_INV_PDF_TRL_003.03",
+   "slot": 8,
+   "w": 206,
+   "h": 60,
+   "x": 707.0,
+   "y": 17010.0,
+   "cx": 810.0,
+   "cy": 17040.0
+  },
+  {
+   "id": "gen_trial_pdf_black",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Trial PDF \u2014 Black",
+   "sub": "BFR_INV_PDF_TRL_003.04",
+   "slot": 9,
+   "w": 206,
+   "h": 60,
+   "x": 707.0,
+   "y": 17230.0,
+   "cx": 810.0,
+   "cy": 17260.0
+  },
+  {
+   "id": "gen_trial_xls_enterprise",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Trial XLS \u2014 Enterprise",
+   "sub": "BFR_INV_XLS_TRL_001.01",
+   "slot": 10,
+   "w": 206,
+   "h": 60,
+   "x": 707.0,
+   "y": 17450.0,
+   "cx": 810.0,
+   "cy": 17480.0
+  },
+  {
+   "id": "gen_trial_csv_enterprise",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Trial CSV \u2014 Large Enterprise",
+   "sub": "BFR_INV_XLS_TRL_001.02",
+   "slot": 11,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 17650.0,
+   "cx": 810.0,
+   "cy": 17700.0
+  },
+  {
+   "id": "gen_hot_pdf_consumer",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Hot Bill PDF \u2014 Consumer",
+   "sub": "BFR_INV_PDF_HOT_003.01",
+   "slot": 12,
+   "w": 206,
+   "h": 60,
+   "x": 707.0,
+   "y": 17890.0,
+   "cx": 810.0,
+   "cy": 17920.0
+  },
+  {
+   "id": "gen_hot_pdf_enterprise",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Hot Bill PDF \u2014 Enterprise",
+   "sub": "BFR_INV_PDF_HOT_003.02",
+   "slot": 13,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 18090.0,
+   "cx": 810.0,
+   "cy": 18140.0
+  },
+  {
+   "id": "gen_hot_pdf_black",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Hot Bill PDF \u2014 Black",
+   "sub": "BFR_INV_PDF_HOT_003.03",
+   "slot": 14,
+   "w": 206,
+   "h": 60,
+   "x": 707.0,
+   "y": 18330.0,
+   "cx": 810.0,
+   "cy": 18360.0
+  },
+  {
+   "id": "gen_hot_xls_enterprise",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Hot Bill XLS \u2014 Enterprise",
+   "sub": "BFR_INV_XLS_HOT_001.01",
+   "slot": 15,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 18530.0,
+   "cx": 810.0,
+   "cy": 18580.0
+  },
+  {
+   "id": "gen_hot_csv_enterprise",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Hot Bill CSV \u2014 Large Enterprise",
+   "sub": "BFR_INV_XLS_HOT_001.02",
+   "slot": 16,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 18750.0,
+   "cx": 810.0,
+   "cy": 18800.0
+  },
+  {
+   "id": "gen_reg_pdf_consumer_mobile",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Regular PDF \u2014 Consumer (Mobile)",
+   "sub": "BFR_INV_PDF_REG_003.01",
+   "slot": 17,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 18970.0,
+   "cx": 810.0,
+   "cy": 19020.0
+  },
+  {
+   "id": "gen_reg_pdf_consumer_fixed",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Regular PDF \u2014 Consumer (Fixed Line)",
+   "sub": "BFR_INV_PDF_REG_003.02",
+   "slot": 18,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 19190.0,
+   "cx": 810.0,
+   "cy": 19240.0
+  },
+  {
+   "id": "gen_reg_pdf_enterprise",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Regular PDF \u2014 Enterprise",
+   "sub": "BFR_INV_PDF_REG_003.03",
+   "slot": 19,
+   "w": 206,
+   "h": 60,
+   "x": 707.0,
+   "y": 19430.0,
+   "cx": 810.0,
+   "cy": 19460.0
+  },
+  {
+   "id": "gen_reg_pdf_black",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Regular PDF \u2014 Black",
+   "sub": "BFR_INV_PDF_REG_003.04",
+   "slot": 20,
+   "w": 206,
+   "h": 60,
+   "x": 707.0,
+   "y": 19650.0,
+   "cx": 810.0,
+   "cy": 19680.0
+  },
+  {
+   "id": "gen_reg_xls_enterprise",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Regular XLS \u2014 Enterprise",
+   "sub": "BFR_INV_XLS_REG_001.01",
+   "slot": 21,
+   "w": 206,
+   "h": 60,
+   "x": 707.0,
+   "y": 19870.0,
+   "cx": 810.0,
+   "cy": 19900.0
+  },
+  {
+   "id": "gen_reg_csv_enterprise",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Regular CSV \u2014 Large Enterprise",
+   "sub": "BFR_INV_XLS_REG_001.02",
+   "slot": 22,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 20070.0,
+   "cx": 810.0,
+   "cy": 20120.0
+  },
+  {
+   "id": "gen_trial_bulk_sms",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Trial Bill \u2014 Bulk SMS",
+   "sub": "BFR_INV_BLK_SMS_001.01",
+   "slot": 23,
+   "w": 206,
+   "h": 60,
+   "x": 707.0,
+   "y": 20310.0,
+   "cx": 810.0,
+   "cy": 20340.0
+  },
+  {
+   "id": "gen_hot_bulk_sms",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Hot Bill \u2014 Bulk SMS",
+   "sub": "BFR_INV_BLK_SMS_001.02",
+   "slot": 24,
+   "w": 206,
+   "h": 60,
+   "x": 707.0,
+   "y": 20530.0,
+   "cx": 810.0,
+   "cy": 20560.0
+  },
+  {
+   "id": "gen_reg_bulk_sms",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Regular Bill \u2014 Bulk SMS",
+   "sub": "BFR_INV_BLK_SMS_001.03",
+   "slot": 25,
+   "w": 206,
+   "h": 60,
+   "x": 707.0,
+   "y": 20750.0,
+   "cx": 810.0,
+   "cy": 20780.0
+  },
+  {
+   "id": "gen_reg_iot",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Regular Bill \u2014 IoT",
+   "sub": "BFR_INV_IOT_001.01",
+   "slot": 26,
+   "w": 206,
+   "h": 60,
+   "x": 707.0,
+   "y": 20970.0,
+   "cx": 810.0,
+   "cy": 21000.0
+  },
+  {
+   "id": "gen_hot_iot",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Hot Bill \u2014 IoT",
+   "sub": "BFR_INV_IOT_001.02",
+   "slot": 27,
+   "w": 206,
+   "h": 60,
+   "x": 707.0,
+   "y": 21190.0,
+   "cx": 810.0,
+   "cy": 21220.0
+  },
+  {
+   "id": "gen_trial_iot",
+   "type": "control",
+   "lane": "bf",
+   "phase": 2,
+   "label": "Trial Bill \u2014 IoT",
+   "sub": "BFR_INV_IOT_001.03",
+   "slot": 28,
+   "w": 206,
+   "h": 60,
+   "x": 707.0,
+   "y": 21410.0,
+   "cx": 810.0,
+   "cy": 21440.0
+  },
+  {
+   "id": "invoice_regen_review",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 2,
+   "label": "Review Generated Invoices (Switch-Controlled)",
+   "sub": "BFR_CONSL_EMAIL_DISP_APROV_001.01",
+   "desc": "Role-based users may review generated invoices/documents and approve or reject them before customer dispatch; gated by an on/off switch, default OFF.",
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 430.0,
+   "cx": 810.0,
+   "cy": 480.0
+  },
+  {
+   "id": "cfg_admin_console",
+   "type": "system",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Admin Console",
+   "sub": "BFR_ADM_CONSL_001.01",
+   "desc": "Front-end Admin Console for Billing Ops to manage batches, bills, hot bills, XMLs, reports, translations, settings and role-based access.",
+   "slot": 34,
+   "w": 190,
+   "h": 56,
+   "x": 1471.0,
+   "y": 7932.0,
+   "cx": 1566.0,
+   "cy": 7960.0
+  },
+  {
+   "id": "cfg_drilldown2",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Centralised Configuration Drill-Down",
+   "sub": "BFR_CONSL_CONF_DRL_DWN_001.01",
+   "desc": "Selected configuration records open in a pop-up; selecting a Batch ID shows that batch's invoice details.",
+   "slot": 35,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 8130.0,
+   "cx": 1566.0,
+   "cy": 8180.0
+  },
+  {
+   "id": "cfg_translation",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Translation Configuration",
+   "sub": "BFR_SETTNG_CONSL_TRNSL_CONF_001.01",
+   "desc": "Language column mandatory; translation list self-updates from XML fields; applied during invoice generation.",
+   "slot": 36,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 8350.0,
+   "cx": 1566.0,
+   "cy": 8400.0
+  },
+  {
+   "id": "cfg_translation_menu",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Translation \u2014 Edit / Show-Hide per Invoice Type",
+   "sub": "BFR_SETTNG_CONSL_TRNSL_CONF_001.02",
+   "desc": "Edit action per record; Show/Hide a product explicitly per invoice column (Consumer PDF, Enterprise PDF, Enterprise XLS).",
+   "slot": 37,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 8570.0,
+   "cx": 1566.0,
+   "cy": 8620.0
+  },
+  {
+   "id": "cfg_adj_reason",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Adjustment Reason Configuration",
+   "sub": "BFR_CONSL_ADJ_RSN_CONF_001.01",
+   "desc": "Search and view configured adjustment reason codes and labels.",
+   "slot": 38,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 8790.0,
+   "cx": 1566.0,
+   "cy": 8840.0
+  },
+  {
+   "id": "cfg_adj_reason_create",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Adjustment Reason \u2014 Create",
+   "sub": "BFR_CONSL_ADJ_RSN_CONF_001.02_Create",
+   "desc": "Create a new adjustment reason code/label; only configured reasons display on the invoice.",
+   "slot": 39,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 9010.0,
+   "cx": 1566.0,
+   "cy": 9060.0
+  },
+  {
+   "id": "cfg_adj_reason_edit",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Adjustment Reason \u2014 Edit",
+   "sub": "BFR_CONSL_ADJ_RSN_CONF_001.02_Edit",
+   "desc": "Update or remove an existing adjustment reason code/label.",
+   "slot": 40,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 9250.0,
+   "cx": 1566.0,
+   "cy": 9280.0
+  },
+  {
+   "id": "cfg_benefits",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Benefits Configuration",
+   "sub": "BFR_CONSL_CONSL_BENEFIT_CONF_001.01_Benefit_Configure",
+   "desc": "Displays plan benefits against a product on the invoice; product list auto-updates from BRM XML; syncs with product catalogue.",
+   "slot": 41,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 9470.0,
+   "cx": 1566.0,
+   "cy": 9500.0
+  },
+  {
+   "id": "cfg_benefits_create",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Benefits \u2014 Create",
+   "sub": "BFR_CONSL_CONSL_BENEFIT_CONF_001.03_Benefit_Create",
+   "desc": "Create a new benefit record.",
+   "slot": 42,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 9690.0,
+   "cx": 1566.0,
+   "cy": 9720.0
+  },
+  {
+   "id": "cfg_benefits_search",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Benefits \u2014 Search",
+   "sub": "BFR_CONSL_CONSL_BENEFIT_CONF_001.04_Benefit_Search",
+   "desc": "Search existing benefits by name.",
+   "slot": 43,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 9910.0,
+   "cx": 1566.0,
+   "cy": 9940.0
+  },
+  {
+   "id": "cfg_benefits_edit",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Benefits \u2014 Edit / Delete",
+   "sub": "BFR_CONSL_CONSL_BENEFIT_CONF_001.02_Benefit_Edit_Delete",
+   "desc": "Configure/edit benefit fields (Id, Name, Value, Product) or delete a benefit record.",
+   "slot": 44,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 10130.0,
+   "cx": 1566.0,
+   "cy": 10160.0
+  },
+  {
+   "id": "cfg_flex_bucket",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Flex Bucket ID Configuration",
+   "sub": "BFR_CONSL_FLEX_BKT_CONF_001.01",
+   "desc": "Maintain the Flex Bucket ID list per product; used to display Flex Bucket usage on the invoice; syncs with product catalogue.",
+   "slot": 45,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 10330.0,
+   "cx": 1566.0,
+   "cy": 10380.0
+  },
+  {
+   "id": "cfg_flex_bucket_menu",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Flex Bucket \u2014 Edit / Delete",
+   "sub": "BFR_CONSL_FLEX_BKT_CONF_001.02",
+   "desc": "Action menu per record: edit or delete a Flex Bucket ID.",
+   "slot": 46,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 10550.0,
+   "cx": 1566.0,
+   "cy": 10600.0
+  },
+  {
+   "id": "cfg_flex_bucket_io",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Flex Bucket \u2014 Create / Import / Export",
+   "sub": "BFR_CONSL_FLEX_BKT_CONF_001.03",
+   "desc": "Create a new Flex record, bulk-import Flex records, or export configuration.",
+   "slot": 47,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 10770.0,
+   "cx": 1566.0,
+   "cy": 10820.0
+  },
+  {
+   "id": "cfg_vas",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "VAS Short Code Configuration",
+   "sub": "BFR_CONSL_VAS_CONF_001.01",
+   "desc": "Classifies usage CDRs under VAS Usage on the invoice; mapping maintained from Called_To/Record_Type in BRM XML; syncs with product catalogue.",
+   "slot": 48,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 10990.0,
+   "cx": 1566.0,
+   "cy": 11040.0
+  },
+  {
+   "id": "cfg_vas_menu",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "VAS Short Code \u2014 Edit / Delete",
+   "sub": "BFR_CONSL_VAS_CONF_001.02",
+   "desc": "Action menu per record: edit or delete a VAS short code mapping.",
+   "slot": 49,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 11210.0,
+   "cx": 1566.0,
+   "cy": 11260.0
+  },
+  {
+   "id": "cfg_vas_search",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "VAS Short Code \u2014 Search",
+   "sub": "BFR_CONSL_VAS_CONF_001.03",
+   "desc": "Search existing VAS codes; results show Called_To, Record_Type and display/translation details.",
+   "slot": 50,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 11450.0,
+   "cx": 1566.0,
+   "cy": 11480.0
+  },
+  {
+   "id": "cfg_email_template",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Bill Email Template Configuration",
+   "sub": "BFR_CONSL_EML_TEMP_CONF_001.01",
+   "desc": "Separate first-time and resend templates for Consumer and Enterprise customers.",
+   "slot": 51,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 11650.0,
+   "cx": 1566.0,
+   "cy": 11700.0
+  },
+  {
+   "id": "cfg_email_template_menu",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Email Template \u2014 Edit",
+   "sub": "BFR_CONSL_EML_TEMP_CONF_001.02",
+   "desc": "Action menu per record: edit subject/body/dynamic fields (Id, Name, Value, Product).",
+   "slot": 52,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 11890.0,
+   "cx": 1566.0,
+   "cy": 11920.0
+  },
+  {
+   "id": "cfg_bill_template_change",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Bill Template Change",
+   "sub": "BFR_CONSL_BILL_TEMPLATE_CONF_001.01",
+   "desc": "Implements a cosmetically enhanced template supplied by the business, replicated in Bill Formatter.",
+   "slot": 31,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 7270.0,
+   "cx": 1566.0,
+   "cy": 7300.0
+  },
+  {
+   "id": "cfg_data_sorting",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Data Sorting on Page Headers",
+   "sub": "BFR_DATA_SORTING_001.01",
+   "desc": "Sorting options on page headers let users arrange records ascending or descending.",
+   "slot": 53,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 12090.0,
+   "cx": 1566.0,
+   "cy": 12140.0
+  },
+  {
+   "id": "cfg_banner",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Bill Banner Configuration",
+   "sub": "BFR_CONSL_BANNER_CONF_001.01",
+   "desc": "Search/view bill banners per language and customer type; overflow content continues on the next page, banner retained on both.",
+   "slot": 54,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 12310.0,
+   "cx": 1566.0,
+   "cy": 12360.0
+  },
+  {
+   "id": "cfg_export_import",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Configuration Export / Import",
+   "sub": "BFR_CONSL_CONSL_CONF_001.01",
+   "desc": "Export/import configuration data in XLS/CSV formats; maintenance controlled by role.",
+   "slot": 55,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 12530.0,
+   "cx": 1566.0,
+   "cy": 12580.0
+  },
+  {
+   "id": "cfg_activation_dates",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Configuration Active-From / Active-To",
+   "sub": "BFR_CONSL_CONSL_CONF_001.02",
+   "desc": "Configuration activation/deactivation controlled using Active From and Active To dates.",
+   "slot": 56,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 12750.0,
+   "cx": 1566.0,
+   "cy": 12800.0
+  },
+  {
+   "id": "rpt_general",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Billing Reports by Business Need",
+   "sub": "BFR_CONSL_REP_001.03",
+   "desc": "Billing users generate reports and send to specified email IDs or distribution lists; supports enterprise-specific structures, frequency and formats.",
+   "slot": 57,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 12970.0,
+   "cx": 1566.0,
+   "cy": 13020.0
+  },
+  {
+   "id": "rpt_download_export",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Report Download / Export",
+   "sub": "BFR_CONSL_REP_001.04",
+   "desc": "Reports can be downloaded/exported in PDF or Excel format.",
+   "slot": 58,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 13210.0,
+   "cx": 1566.0,
+   "cy": 13240.0
+  },
+  {
+   "id": "rpt_business_reports",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Business Reports (Agreed Needs)",
+   "sub": "BFR_CONSL_REP_001.05",
+   "desc": "Provides reports required by business users per agreed reporting needs.",
+   "slot": 4,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 1310.0,
+   "cx": 1566.0,
+   "cy": 1360.0
+  },
+  {
+   "id": "cfg_dashboard",
+   "type": "control",
+   "lane": "bf",
+   "phase": 5,
+   "label": "Operational Statistics Dashboard",
+   "sub": "BFR_CONSL_DASH_BRD_001.01",
+   "desc": "Operational statistics for successful/failed invoices by batch, split Consumer vs Enterprise.",
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 15230.0,
+   "cx": 1566.0,
+   "cy": 15280.0
+  },
+  {
+   "id": "rpt_avg_bill_size",
+   "type": "control",
+   "lane": "bf",
+   "phase": 5,
+   "label": "Operational Stats \u2014 Average Bill Size",
+   "sub": "BFR_CONSL_OPR_STAT_001.02",
+   "desc": "Average bill size statistics, segregated by Consumer and Enterprise.",
+   "slot": 3,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 15890.0,
+   "cx": 1566.0,
+   "cy": 15940.0
+  },
+  {
+   "id": "rpt_failed_email_export",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Failed Email Report Export",
+   "sub": "BFR_CONSL_EML_RPT_001.01",
+   "desc": "Exportable Failed Bills Report including Account Number, Bill Number, Bill Status, Status Reason.",
+   "slot": 59,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 13410.0,
+   "cx": 1566.0,
+   "cy": 13460.0
+  },
+  {
+   "id": "rpt_statistics",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "XML Processing Statistics Report",
+   "sub": "BFR_CONSL_REP_001.06",
+   "desc": "Statistics Report for XML processing activity (uploaded vs processed, monthly stats).",
+   "slot": 60,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 13630.0,
+   "cx": 1566.0,
+   "cy": 13680.0
+  },
+  {
+   "id": "rpt_large_enterprise",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Large Enterprise Billing Reports",
+   "sub": "BFR_CONSL_REP_001.01",
+   "desc": "Customer-specific format report generation for very large enterprise accounts.",
+   "slot": 61,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 13850.0,
+   "cx": 1566.0,
+   "cy": 13900.0
+  },
+  {
+   "id": "rpt_account_manager",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Billing Reports Accounts Manager",
+   "sub": "BFR_CONSL_REP_001.02",
+   "desc": "Configure the accounts, report type and template used for enterprise billing reports.",
+   "slot": 62,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 14070.0,
+   "cx": 1566.0,
+   "cy": 14120.0
+  },
+  {
+   "id": "rpt_overall_detail",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Overall & Detail Reports",
+   "sub": "BFR_CONSL_REP_001.07",
+   "desc": "Overall and Detail Reports for a selected invoice batch in XLS format.",
+   "slot": 63,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 14310.0,
+   "cx": 1566.0,
+   "cy": 14340.0
+  },
+  {
+   "id": "rpt_template_config",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Report Template Configuration",
+   "sub": "BFR_CONSL_REP_001.08",
+   "desc": "Configure, modify and delete report templates; used when sending reports to configured recipients.",
+   "slot": 64,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 14510.0,
+   "cx": 1566.0,
+   "cy": 14560.0
+  },
+  {
+   "id": "cfg_plan_speed",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Plan Speed Configuration",
+   "sub": "BFR_CONSL_PLAN_SPEED_001.01",
+   "desc": "Search, configure and update Plan Speed configurations; syncs with product catalogue.",
+   "slot": 5,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 1550.0,
+   "cx": 1566.0,
+   "cy": 1580.0
+  },
+  {
+   "id": "rpt_tmpl_bill_run_monitor",
+   "type": "escalation",
+   "lane": "email",
+   "phase": 5,
+   "label": "Report Template \u2014 Bill Run Monitor",
+   "sub": "BFR_CONSL_REP_001.10_BiullRunMonitor",
+   "desc": "Scheduled email reports during bill run windows (e.g. 2nd/16th), hourly or configured interval.",
+   "slot": 5,
+   "w": 190,
+   "h": 100,
+   "x": 1471.0,
+   "y": 23710.0,
+   "cx": 1566.0,
+   "cy": 23760.0
+  },
+  {
+   "id": "rpt_tmpl_vlb",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Report Template \u2014 VLB",
+   "sub": "BFR_CONSL_REP_001.11_VLB",
+   "desc": "VLB report template configuration with Action/Sub-menu edit option.",
+   "slot": 65,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 14750.0,
+   "cx": 1566.0,
+   "cy": 14780.0
+  },
+  {
+   "id": "rpt_tmpl_overall",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Report Template \u2014 Overall",
+   "sub": "BFR_CONSL_REP_001.12_Overall",
+   "desc": "Overall report template configuration with Action/Sub-menu edit option.",
+   "slot": 66,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 14950.0,
+   "cx": 1566.0,
+   "cy": 15000.0
+  },
+  {
+   "id": "rpt_tmpl_internal",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 5,
+   "label": "Report Template \u2014 Internal",
+   "sub": "BFR_CONSL_REP_001.13_Internal",
+   "desc": "Internal report template configuration with Action/Sub-menu edit option.",
+   "slot": 6,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 1750.0,
+   "cx": 1566.0,
+   "cy": 1800.0
+  },
+  {
+   "id": "invoice_template_doc",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 6,
+   "label": "Invoice Template Change Documentation",
+   "sub": "BFR_INVC_TEMPLT_CHNG_001.01",
+   "desc": "All invoice field definitions, rules and business logic governing the template are exposed and maintained as documentation.",
+   "slot": 1,
+   "w": 206,
+   "h": 100,
+   "x": 1715.0,
+   "y": 650.0,
+   "cx": 1818.0,
+   "cy": 700.0
+  },
+  {
+   "id": "invoice_calc_fields",
+   "type": "control",
+   "lane": "bf",
+   "phase": 6,
+   "label": "Calculated Invoice/Report Fields",
+   "sub": "BFR_CALC_INV_FLD_001.01",
+   "desc": "Fields not directly available from source systems are computed via defined calculation logic.",
+   "slot": 3,
+   "w": 206,
+   "h": 100,
+   "x": 1715.0,
+   "y": 15890.0,
+   "cx": 1818.0,
+   "cy": 15940.0
+  },
+  {
+   "id": "invoice_template_rules",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 6,
+   "label": "Invoice Template Business Rules",
+   "sub": "BFR_INVOICE__BUS_RULE_001.01",
+   "desc": "All business rules currently defined within the invoice templates are implemented.",
+   "slot": 4,
+   "w": 206,
+   "h": 100,
+   "x": 1715.0,
+   "y": 1310.0,
+   "cx": 1818.0,
+   "cy": 1360.0
+  },
+  {
+   "id": "reprint_list_view",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Reprint Console \u2014 List View",
+   "sub": "BFR_INV_REPRNT_001.02",
+   "desc": "Lists prior reprint requests: ID, Process Date, Bill Number, Status, Email, Total Size, This Month Due, Total Due.",
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 1967.0,
+   "y": 430.0,
+   "cx": 2070.0,
+   "cy": 480.0
+  },
+  {
+   "id": "reprint_menu_options",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Reprint Console \u2014 Action Menu",
+   "sub": "BFR_INV_REPRNT_001.03_Reprint_Bills",
+   "desc": "Per-record Action menu: Status Log, Download PDF/XLS/XML, Reprint Bill, Regenerate Document/XML, Send Email.",
+   "slot": 2,
+   "w": 206,
+   "h": 100,
+   "x": 1967.0,
+   "y": 870.0,
+   "cx": 2070.0,
+   "cy": 920.0
+  },
+  {
+   "id": "reprint_status_log",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Reprint \u2192 Status Log",
+   "sub": "BFR_CONSL_BATCH_001.03.A_ViewBill_Status_Log",
+   "desc": "Shows Id, Label, Reason, Date Created for the selected batch/bill.",
+   "slot": 5,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 1550.0,
+   "cx": 2070.0,
+   "cy": 1580.0
+  },
+  {
+   "id": "reprint_download_pdf",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Reprint \u2192 Download PDF",
+   "sub": "BFR_INV_REPRNT_001.03.B",
+   "slot": 6,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 1770.0,
+   "cx": 2070.0,
+   "cy": 1800.0
+  },
+  {
+   "id": "reprint_download_xls",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Reprint \u2192 Download XLS",
+   "sub": "BFR_INV_REPRNT_001.03.C",
+   "slot": 7,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 1990.0,
+   "cx": 2070.0,
+   "cy": 2020.0
+  },
+  {
+   "id": "reprint_download_xml",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Reprint \u2192 Download XML",
+   "sub": "BFR_INV_REPRNT_001.03.D",
+   "slot": 8,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 2210.0,
+   "cx": 2070.0,
+   "cy": 2240.0
+  },
+  {
+   "id": "reprint_do_reprint",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Reprint \u2192 Reprint Bill",
+   "sub": "BFR_INV_REPRNT_001.03.E",
+   "desc": "Prompts bill type (Summary/Detailed) and language, then regenerates.",
+   "slot": 9,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 2430.0,
+   "cx": 2070.0,
+   "cy": 2460.0
+  },
+  {
+   "id": "reprint_regen_doc",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Reprint \u2192 Regenerate Document",
+   "sub": "BFR_INV_REPRNT_001.03.F",
+   "slot": 10,
+   "w": 206,
+   "h": 100,
+   "x": 1967.0,
+   "y": 2630.0,
+   "cx": 2070.0,
+   "cy": 2680.0
+  },
+  {
+   "id": "reprint_regen_xml",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Reprint \u2192 Regenerate XML",
+   "sub": "BFR_INV_REPRNT_001.03.G",
+   "slot": 3,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 1110.0,
+   "cx": 2070.0,
+   "cy": 1140.0
+  },
+  {
+   "id": "reprint_send_email",
+   "type": "agent",
+   "lane": "email",
+   "phase": 7,
+   "label": "Reprint \u2192 Send Email",
+   "sub": "BFR_INV_REPRNT_001.03.H",
+   "slot": 4,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 23510.0,
+   "cx": 2070.0,
+   "cy": 23540.0
+  },
+  {
+   "id": "hotbill_list_view",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Hot Bill Console \u2014 List View",
+   "sub": "BFR_HOT_BILL_DTLS_002.01",
+   "desc": "Displays Hot Bill details: Id, Process Date, Bill No, Status, Email, Total Size, This Month Due, Total Due.",
+   "slot": 11,
+   "w": 206,
+   "h": 100,
+   "x": 1967.0,
+   "y": 2850.0,
+   "cx": 2070.0,
+   "cy": 2900.0
+  },
+  {
+   "id": "hotbill_menu_options",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Hot Bill Console \u2014 Action Menu",
+   "sub": "BFR_HOT_BILL_DTLS_002.02",
+   "desc": "Batch \u2192 Action \u2192 View Bills exposes the same 8-action sub-menu.",
+   "slot": 12,
+   "w": 206,
+   "h": 100,
+   "x": 1967.0,
+   "y": 3070.0,
+   "cx": 2070.0,
+   "cy": 3120.0
+  },
+  {
+   "id": "hotbill_status_log",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Hot Bill \u2192 Status Log",
+   "sub": "BFR_HOT_BILL_DTLS_002.03_Status_Log",
+   "slot": 13,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 3310.0,
+   "cx": 2070.0,
+   "cy": 3340.0
+  },
+  {
+   "id": "hotbill_download_pdf",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Hot Bill \u2192 Download PDF",
+   "sub": "BFR_HOT_BILL_DTLS_002.04_Download_pdf",
+   "slot": 14,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 3530.0,
+   "cx": 2070.0,
+   "cy": 3560.0
+  },
+  {
+   "id": "hotbill_download_xls",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Hot Bill \u2192 Download XLS",
+   "sub": "BFR_HOT_BILL_DTLS_002.05_Download_Xls",
+   "slot": 15,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 3750.0,
+   "cx": 2070.0,
+   "cy": 3780.0
+  },
+  {
+   "id": "hotbill_download_xml",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Hot Bill \u2192 Download XML",
+   "sub": "BFR_HOT_BILL_DTLS_002.06_Download_xml",
+   "slot": 16,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 3970.0,
+   "cx": 2070.0,
+   "cy": 4000.0
+  },
+  {
+   "id": "hotbill_reprint",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Hot Bill \u2192 Reprint Bill",
+   "sub": "BFR_HOT_BILL_DTLS_002.07_Reprint_Bill",
+   "slot": 17,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 4190.0,
+   "cx": 2070.0,
+   "cy": 4220.0
+  },
+  {
+   "id": "hotbill_regen_doc",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Hot Bill \u2192 Regenerate Document",
+   "sub": "BFR_HOT_BILL_DTLS_002.08_regenerate_Document",
+   "slot": 18,
+   "w": 206,
+   "h": 100,
+   "x": 1967.0,
+   "y": 4390.0,
+   "cx": 2070.0,
+   "cy": 4440.0
+  },
+  {
+   "id": "hotbill_regen_xml",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Hot Bill \u2192 Regenerate XML",
+   "sub": "BFR_HOT_BILL_DTLS_002.09_Regenerate_xml",
+   "slot": 4,
+   "w": 206,
+   "h": 100,
+   "x": 1967.0,
+   "y": 1310.0,
+   "cx": 2070.0,
+   "cy": 1360.0
+  },
+  {
+   "id": "hotbill_send_email",
+   "type": "agent",
+   "lane": "email",
+   "phase": 7,
+   "label": "Hot Bill \u2192 Send Email",
+   "sub": "BFR_HOT_BILL_DTLS_002.10_Send_Email",
+   "slot": 5,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 23730.0,
+   "cx": 2070.0,
+   "cy": 23760.0
+  },
+  {
+   "id": "resend_status_view",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Resend Bill \u2014 Status View",
+   "sub": "BFR_CONSL_RESEND_BILL_001.02",
+   "desc": "Shows Resend Bill status: Sl No, Bill Number, Status, Process Date.",
+   "slot": 19,
+   "w": 206,
+   "h": 100,
+   "x": 1967.0,
+   "y": 4610.0,
+   "cx": 2070.0,
+   "cy": 4660.0
+  },
+  {
+   "id": "resend_template_menu",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Resend Bill \u2014 Template Action Menu",
+   "sub": "BFR_CONSL_RESEND_BILL_001.03",
+   "desc": "Action menu per record: edit the Resend Bill Template.",
+   "slot": 20,
+   "w": 206,
+   "h": 100,
+   "x": 1967.0,
+   "y": 4830.0,
+   "cx": 2070.0,
+   "cy": 4880.0
+  },
+  {
+   "id": "console_search",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Console Search",
+   "sub": "BFR_CONSL_SEARCH_001.01",
+   "desc": "Search by Document type, Status, Language, MSISDN, Account No, Email, Bill Number, Customer Type.",
+   "slot": 21,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 5070.0,
+   "cx": 2070.0,
+   "cy": 5100.0
+  },
+  {
+   "id": "cfg_retention_policy",
+   "type": "control",
+   "lane": "bf",
+   "phase": 7,
+   "label": "Storage & Retention Policy",
+   "sub": "BFR_STRG_RTN_POL_001.01",
+   "desc": "Retains successful/failed XMLs, documents and emails for the configured period; auto-cleanup after expiry.",
+   "slot": 6,
+   "w": 206,
+   "h": 100,
+   "x": 1967.0,
+   "y": 16550.0,
+   "cx": 2070.0,
+   "cy": 16600.0
+  },
+  {
+   "id": "cfg_multi_language",
+   "type": "control",
+   "lane": "bf",
+   "phase": 7,
+   "label": "Multi-Language Support",
+   "sub": "BFR_MULT_LANG_SUPRT_001.01",
+   "desc": "Supports additional languages beyond English and Arabic.",
+   "slot": 7,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 16790.0,
+   "cx": 2070.0,
+   "cy": 16820.0
+  },
+  {
+   "id": "cfg_tax_support",
+   "type": "control",
+   "lane": "bf",
+   "phase": 7,
+   "label": "Tax Field Support",
+   "sub": "BFR_CONSL_CONF_001.04",
+   "desc": "Tax-related information is received as part of invoice data and displayed on the generated invoice.",
+   "slot": 8,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 17010.0,
+   "cx": 2070.0,
+   "cy": 17040.0
+  },
+  {
+   "id": "cfg_interactive_pdf_tabs",
+   "type": "control",
+   "lane": "bf",
+   "phase": 7,
+   "label": "Interactive PDF Tabs",
+   "sub": "BFR_CONSL_INTRCT_PDF_001.01",
+   "desc": "Bill sections move to PDF tabs for one-click navigation.",
+   "slot": 9,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 17230.0,
+   "cx": 2070.0,
+   "cy": 17260.0
+  },
+  {
+   "id": "cfg_interactive_pdf_links",
+   "type": "control",
+   "lane": "bf",
+   "phase": 7,
+   "label": "Interactive PDF Dynamic Links",
+   "sub": "BFR_CONSL_INTRCT_PDF_001.02",
+   "desc": "Interactive PDF supports graphical information and dynamic links.",
+   "slot": 10,
+   "w": 206,
+   "h": 100,
+   "x": 1967.0,
+   "y": 17430.0,
+   "cx": 2070.0,
+   "cy": 17480.0
+  },
+  {
+   "id": "cfg_multi_currency",
+   "type": "control",
+   "lane": "bf",
+   "phase": 7,
+   "label": "Multi-Currency Support",
+   "sub": "BFR_MULT_CUR_001.01",
+   "desc": "Supports invoice generation in currencies other than Qatari Riyal, per source XML.",
+   "slot": 11,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 17670.0,
+   "cx": 2070.0,
+   "cy": 17700.0
+  },
+  {
+   "id": "email_lang_english",
+   "type": "control",
+   "lane": "email",
+   "phase": 7,
+   "label": "Email \u2014 English",
+   "sub": "BFR_BILL_EMAIL_LANG_001.01",
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 22850.0,
+   "cx": 2070.0,
+   "cy": 22880.0
+  },
+  {
+   "id": "email_lang_arabic",
+   "type": "control",
+   "lane": "email",
+   "phase": 7,
+   "label": "Email \u2014 Arabic",
+   "sub": "BFR_BILL_EMAIL_LANG_001.02",
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 22630.0,
+   "cx": 2070.0,
+   "cy": 22660.0
+  },
+  {
+   "id": "old_invoice_compat",
+   "type": "system",
+   "lane": "bf",
+   "phase": 7,
+   "label": "Old Invoice Compatibility",
+   "sub": "BFR_OLD_INV_COMP_001.01",
+   "desc": "Produces historical invoices from legacy data across all time periods.",
+   "slot": 3,
+   "w": 190,
+   "h": 100,
+   "x": 1975.0,
+   "y": 15890.0,
+   "cx": 2070.0,
+   "cy": 15940.0
+  },
+  {
+   "id": "csv_missing_report",
+   "type": "escalation",
+   "lane": "email",
+   "phase": 7,
+   "label": "CSV Not Received Report",
+   "sub": "BFR_CONSL_REP_001.11",
+   "desc": "Scheduler checks every 10 minutes; alerts if a supporting CSV is still missing 4 hours after XML receipt.",
+   "slot": 2,
+   "w": 190,
+   "h": 100,
+   "x": 1975.0,
+   "y": 23050.0,
+   "cx": 2070.0,
+   "cy": 23100.0
+  },
+  {
+   "id": "failed_email_report2",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Failed Email Report",
+   "sub": "BFR_CONSL_REP_001.13_Failed_Email",
+   "desc": "Lists email addresses for which the bill email could not be sent.",
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 670.0,
+   "cx": 2070.0,
+   "cy": 700.0
+  },
+  {
+   "id": "failed_bill_report",
+   "type": "agent",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Failed Bill Report",
+   "sub": "BFR_CONSL_REP_001.14_Failed_Bill_Report",
+   "desc": "Lists bills/documents that failed processing with status and reason.",
+   "slot": 22,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 5290.0,
+   "cx": 2070.0,
+   "cy": 5320.0
+  },
+  {
+   "id": "email_delivery_log_crm",
+   "type": "system",
+   "lane": "crm",
+   "phase": 7,
+   "label": "Log Email Delivery to CRM",
+   "sub": "BFR_EML_001.02",
+   "desc": "Creates a CRM notification record after an invoice email is sent, for servicing and audit.",
+   "slot": 1,
+   "w": 190,
+   "h": 100,
+   "x": 1975.0,
+   "y": 21890.0,
+   "cx": 2070.0,
+   "cy": 21940.0
+  },
+  {
+   "id": "bill_template_redesign",
+   "type": "control",
+   "lane": "bfops",
+   "phase": 7,
+   "label": "Bill Template Redesign",
+   "sub": "REQ_BFR_006",
+   "desc": "Supports changing/removing field positions per role and per customer segment/invoice type, maintained via configuration.",
+   "slot": 23,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 5510.0,
+   "cx": 2070.0,
+   "cy": 5540.0
   }
  ],
  "flows": [
   {
    "from": "start",
-   "to": "xml_retrieve",
+   "to": "xml_pull_regular",
    "kind": "seq",
    "happy": true
   },
   {
-   "from": "xml_retrieve",
+   "from": "xml_data_ingestion",
    "to": "xml_atomic_write",
    "kind": "seq",
    "happy": true
@@ -1470,7 +3455,7 @@
   },
   {
    "from": "xml_reprocess",
-   "to": "xml_retrieve",
+   "to": "xml_pull_regular",
    "kind": "data",
    "happy": false
   },
@@ -1487,7 +3472,7 @@
    "happy": true
   },
   {
-   "from": "xml_retrieve",
+   "from": "xml_data_ingestion",
    "to": "csv_scheduler",
    "kind": "data",
    "happy": false
@@ -1502,54 +3487,6 @@
    "from": "xml_parse",
    "to": "invoice_generate",
    "kind": "seq",
-   "happy": true
-  },
-  {
-   "from": "invoice_generate",
-   "to": "invoice_lang",
-   "kind": "data",
-   "happy": true
-  },
-  {
-   "from": "invoice_lang",
-   "to": "d_invoice_gen_ok",
-   "kind": "data",
-   "happy": true
-  },
-  {
-   "from": "invoice_generate",
-   "to": "invoice_enterprise_detail",
-   "kind": "data",
-   "happy": true
-  },
-  {
-   "from": "invoice_enterprise_detail",
-   "to": "d_invoice_gen_ok",
-   "kind": "data",
-   "happy": true
-  },
-  {
-   "from": "invoice_generate",
-   "to": "invoice_bulk_iot",
-   "kind": "data",
-   "happy": true
-  },
-  {
-   "from": "invoice_bulk_iot",
-   "to": "d_invoice_gen_ok",
-   "kind": "data",
-   "happy": true
-  },
-  {
-   "from": "invoice_generate",
-   "to": "trial_scope",
-   "kind": "data",
-   "happy": true
-  },
-  {
-   "from": "trial_scope",
-   "to": "d_invoice_gen_ok",
-   "kind": "data",
    "happy": true
   },
   {
@@ -1770,12 +3707,12 @@
   },
   {
    "from": "invoice_search",
-   "to": "xml_search",
+   "to": "xml_search_result",
    "kind": "data",
    "happy": false
   },
   {
-   "from": "xml_search",
+   "from": "xml_search_regen",
    "to": "config_drilldown",
    "kind": "data",
    "happy": false
@@ -1788,25 +3725,13 @@
   },
   {
    "from": "admin_console",
-   "to": "batch_action_menu",
+   "to": "batch_status_report",
    "kind": "seq",
    "happy": false
   },
   {
-   "from": "batch_action_menu",
-   "to": "bill_action_menu",
-   "kind": "data",
-   "happy": false
-  },
-  {
-   "from": "bill_action_menu",
-   "to": "document_download",
-   "kind": "data",
-   "happy": false
-  },
-  {
-   "from": "admin_console",
-   "to": "batch_statistics",
+   "from": "report_ops_email_stats",
+   "to": "hot_bill_failed_report",
    "kind": "data",
    "happy": false
   },
@@ -1824,30 +3749,30 @@
   },
   {
    "from": "config_drilldown",
-   "to": "reference_config",
+   "to": "cfg_admin_console",
    "kind": "data",
    "happy": false
   },
   {
-   "from": "reference_config",
+   "from": "cfg_activation_dates",
    "to": "template_config",
    "kind": "data",
    "happy": false
   },
   {
    "from": "template_config",
-   "to": "reporting_dashboards",
+   "to": "rpt_general",
    "kind": "data",
    "happy": false
   },
   {
-   "from": "reporting_dashboards",
+   "from": "rpt_tmpl_internal",
    "to": "bill_run_monitor",
    "kind": "esc",
    "happy": false
   },
   {
-   "from": "reporting_dashboards",
+   "from": "rpt_tmpl_internal",
    "to": "hot_bill_failure_alert",
    "kind": "esc",
    "happy": false
@@ -1960,6 +3885,966 @@
    "from": "reprint_register",
    "to": "end",
    "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "xml_pull_regular",
+   "to": "xml_pull_trial",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "xml_pull_trial",
+   "to": "xml_pull_hot",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "xml_pull_hot",
+   "to": "xml_data_ingestion",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "xml_search_result",
+   "to": "xml_search_actions",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "xml_search_actions",
+   "to": "xml_search_oplog",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "xml_search_oplog",
+   "to": "xml_search_download",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "xml_search_download",
+   "to": "xml_search_regen",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "batch_status_report",
+   "to": "batch_create_upload",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "batch_create_upload",
+   "to": "bill_status_report",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "bill_status_report",
+   "to": "batch_menu_view_bill",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "batch_menu_view_bill",
+   "to": "view_bill_action_menu",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "view_bill_action_menu",
+   "to": "vb_status_log",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vb_status_log",
+   "to": "vb_download_pdf",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vb_download_pdf",
+   "to": "vb_download_xls",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vb_download_xls",
+   "to": "vb_download_xml",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vb_download_xml",
+   "to": "vb_reprint",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vb_reprint",
+   "to": "vb_regen_doc",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vb_regen_doc",
+   "to": "vb_regen_xml",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vb_regen_xml",
+   "to": "vb_send_email",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "vb_send_email",
+   "to": "batch_view_statistics",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "batch_view_statistics",
+   "to": "batch_overall_report",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "batch_overall_report",
+   "to": "batch_detailed_report",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "batch_detailed_report",
+   "to": "batch_failed_report",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "batch_failed_report",
+   "to": "batch_failed_email_report",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "batch_failed_email_report",
+   "to": "batch_send_overall_report",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "batch_send_overall_report",
+   "to": "batch_send_email",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "batch_send_email",
+   "to": "report_detailed_batch",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "report_detailed_batch",
+   "to": "report_overall_batch",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "report_overall_batch",
+   "to": "report_ops_email_stats",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_pdf_english",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_pdf_english",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_pdf_arabic",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_pdf_arabic",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_trial_pdf_consumer_mobile",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_trial_pdf_consumer_mobile",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_trial_pdf_consumer_fixed",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_trial_pdf_consumer_fixed",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_trial_pdf_enterprise",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_trial_pdf_enterprise",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_trial_pdf_black",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_trial_pdf_black",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_trial_xls_enterprise",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_trial_xls_enterprise",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_trial_csv_enterprise",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_trial_csv_enterprise",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_hot_pdf_consumer",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_hot_pdf_consumer",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_hot_pdf_enterprise",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_hot_pdf_enterprise",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_hot_pdf_black",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_hot_pdf_black",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_hot_xls_enterprise",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_hot_xls_enterprise",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_hot_csv_enterprise",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_hot_csv_enterprise",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_reg_pdf_consumer_mobile",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_reg_pdf_consumer_mobile",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_reg_pdf_consumer_fixed",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_reg_pdf_consumer_fixed",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_reg_pdf_enterprise",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_reg_pdf_enterprise",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_reg_pdf_black",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_reg_pdf_black",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_reg_xls_enterprise",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_reg_xls_enterprise",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_reg_csv_enterprise",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_reg_csv_enterprise",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_trial_bulk_sms",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_trial_bulk_sms",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_hot_bulk_sms",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_hot_bulk_sms",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_reg_bulk_sms",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_reg_bulk_sms",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_reg_iot",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_reg_iot",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_hot_iot",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_hot_iot",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_generate",
+   "to": "gen_trial_iot",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "gen_trial_iot",
+   "to": "d_invoice_gen_ok",
+   "kind": "data",
+   "happy": true
+  },
+  {
+   "from": "invoice_completed",
+   "to": "invoice_regen_review",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "cfg_admin_console",
+   "to": "cfg_drilldown2",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_drilldown2",
+   "to": "cfg_translation",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_translation",
+   "to": "cfg_translation_menu",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_translation_menu",
+   "to": "cfg_adj_reason",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_adj_reason",
+   "to": "cfg_adj_reason_create",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_adj_reason_create",
+   "to": "cfg_adj_reason_edit",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_adj_reason_edit",
+   "to": "cfg_benefits",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_benefits",
+   "to": "cfg_benefits_create",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_benefits_create",
+   "to": "cfg_benefits_search",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_benefits_search",
+   "to": "cfg_benefits_edit",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_benefits_edit",
+   "to": "cfg_flex_bucket",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_flex_bucket",
+   "to": "cfg_flex_bucket_menu",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_flex_bucket_menu",
+   "to": "cfg_flex_bucket_io",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_flex_bucket_io",
+   "to": "cfg_vas",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_vas",
+   "to": "cfg_vas_menu",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_vas_menu",
+   "to": "cfg_vas_search",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_vas_search",
+   "to": "cfg_email_template",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_email_template",
+   "to": "cfg_email_template_menu",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_email_template_menu",
+   "to": "cfg_bill_template_change",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_bill_template_change",
+   "to": "cfg_data_sorting",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_data_sorting",
+   "to": "cfg_banner",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_banner",
+   "to": "cfg_export_import",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_export_import",
+   "to": "cfg_activation_dates",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "rpt_general",
+   "to": "rpt_download_export",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "rpt_download_export",
+   "to": "rpt_business_reports",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "rpt_business_reports",
+   "to": "cfg_dashboard",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_dashboard",
+   "to": "rpt_avg_bill_size",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "rpt_avg_bill_size",
+   "to": "rpt_failed_email_export",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "rpt_failed_email_export",
+   "to": "rpt_statistics",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "rpt_statistics",
+   "to": "rpt_large_enterprise",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "rpt_large_enterprise",
+   "to": "rpt_account_manager",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "rpt_account_manager",
+   "to": "rpt_overall_detail",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "rpt_overall_detail",
+   "to": "rpt_template_config",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "rpt_template_config",
+   "to": "cfg_plan_speed",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cfg_plan_speed",
+   "to": "rpt_tmpl_bill_run_monitor",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "rpt_tmpl_bill_run_monitor",
+   "to": "rpt_tmpl_vlb",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "rpt_tmpl_vlb",
+   "to": "rpt_tmpl_overall",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "rpt_tmpl_overall",
+   "to": "rpt_tmpl_internal",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "mask_generate",
+   "to": "invoice_template_doc",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "invoice_template_doc",
+   "to": "invoice_calc_fields",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "invoice_calc_fields",
+   "to": "invoice_template_rules",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "reprint_generate",
+   "to": "reprint_list_view",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "reprint_list_view",
+   "to": "reprint_menu_options",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "reprint_menu_options",
+   "to": "reprint_status_log",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "reprint_status_log",
+   "to": "reprint_download_pdf",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "reprint_download_pdf",
+   "to": "reprint_download_xls",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "reprint_download_xls",
+   "to": "reprint_download_xml",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "reprint_download_xml",
+   "to": "reprint_do_reprint",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "reprint_do_reprint",
+   "to": "reprint_regen_doc",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "reprint_regen_doc",
+   "to": "reprint_regen_xml",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "reprint_regen_xml",
+   "to": "reprint_send_email",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "reprint_send_email",
+   "to": "reprint_register",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "hot_bill_register",
+   "to": "hotbill_list_view",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "hotbill_list_view",
+   "to": "hotbill_menu_options",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "hotbill_menu_options",
+   "to": "hotbill_status_log",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "hotbill_status_log",
+   "to": "hotbill_download_pdf",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "hotbill_download_pdf",
+   "to": "hotbill_download_xls",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "hotbill_download_xls",
+   "to": "hotbill_download_xml",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "hotbill_download_xml",
+   "to": "hotbill_reprint",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "hotbill_reprint",
+   "to": "hotbill_regen_doc",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "hotbill_regen_doc",
+   "to": "hotbill_regen_xml",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "hotbill_regen_xml",
+   "to": "hotbill_send_email",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "resend_request",
+   "to": "resend_status_view",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "resend_status_view",
+   "to": "resend_template_menu",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "resend_template_menu",
+   "to": "console_search",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "interface_preserve",
+   "to": "cfg_retention_policy",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "cfg_retention_policy",
+   "to": "cfg_multi_language",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "cfg_multi_language",
+   "to": "cfg_tax_support",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "cfg_tax_support",
+   "to": "cfg_interactive_pdf_tabs",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "cfg_interactive_pdf_tabs",
+   "to": "cfg_interactive_pdf_links",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "cfg_interactive_pdf_links",
+   "to": "cfg_multi_currency",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "email_template",
+   "to": "email_lang_english",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "email_lang_english",
+   "to": "email_lang_arabic",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "regen_legacy_buffer",
+   "to": "old_invoice_compat",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "csv_scheduler",
+   "to": "csv_missing_report",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "csv_missing_report",
+   "to": "csv_alert",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "crm_notification",
+   "to": "email_delivery_log_crm",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "email_failed",
+   "to": "failed_email_report2",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "invoice_failed",
+   "to": "failed_bill_report",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "cfg_bill_template_change",
+   "to": "bill_template_redesign",
+   "kind": "seq",
    "happy": false
   }
  ],

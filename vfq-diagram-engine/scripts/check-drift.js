@@ -27,25 +27,15 @@ const RPM_BASE = path.join(
   'dc6bd27a-9850-4316-8096-52cb89001e4c/57c8ecb3-3705-47bf-91ca-12cc077808db/rpm'
 );
 
+// bpmn-swimlane is the only supported diagram type — the sole source of
+// generated process visualisation for this project. See README.md.
 const LIVE_SOURCES = {
-  // Keyed by our LOCAL engines/ folder name (bpmn-swimlane, process-flow) — the `dir` path
-  // below still points at the upstream plugin's own skill directory, which is named `bpnm`/`pfd`
+  // Keyed by our LOCAL engines/ folder name (bpmn-swimlane) — the `dir` path
+  // below still points at the upstream plugin's own skill directory, which is named `bpnm`
   // on disk regardless of what we call our local copy; do not rename those path segments.
   'bpmn-swimlane': {
     dir: path.join(RPM_BASE, 'plugin_01LWfNTm8qwbSkHdsdPut1Ax', 'skills', 'bpnm'),
     subpaths: ['reference', 'scripts']
-  },
-  'customer-journey-map': {
-    dir: path.join(RPM_BASE, 'plugin_01VW2tCAvpnGnDfHmtNATJcb', 'skills', 'customer-journey-map'),
-    subpaths: ['assets', 'references']
-  },
-  'process-flow': {
-    dir: path.join(RPM_BASE, 'plugin_019xQE3SRU7KZWW2jbsb1cHx', 'skills', 'pfd'),
-    subpaths: ['scripts', 'references', 'assets/reference']
-  },
-  'user-flow-diagram': {
-    dir: path.join(RPM_BASE, 'plugin_018fLGkobgXmcbDNg4QwdwvR', 'skills', 'user-flow-diagram'),
-    subpaths: ['user-flow-diagram-v4.0.js']
   }
 };
 

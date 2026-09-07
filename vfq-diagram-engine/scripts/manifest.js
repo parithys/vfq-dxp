@@ -12,6 +12,18 @@ const path = require('path');
 
 const MANIFEST_PATH = path.join(__dirname, '..', 'manifest.json');
 
+// The full set of diagram types manifest.json tracks per BRSD — must stay
+// in sync with render-all.js's own TYPES registry keys. Kept as one
+// canonical list (not duplicated as separate object literals in two
+// places) specifically so adding a new diagram type is a one-line change
+// here, backfilled automatically onto every existing manifest entry by
+// ensureBrsd() below, rather than a silent `entry.diagrams[type]` crash
+// the first time recordRender()/recordExtraction() is called for it.
+//
+// bpmn-swimlane is the only supported diagram type — the sole source of
+// generated process visualisation for this project. See README.md.
+const DIAGRAM_TYPES = ['bpmn-swimlane'];
+
 function load() {
   if (!fs.existsSync(MANIFEST_PATH)) {
     return { brsds: {} };
@@ -28,19 +40,19 @@ function save(manifest) {
 
 function ensureBrsd(manifest, slug, sourcePath, sourceSha256) {
   if (!manifest.brsds[slug]) {
-    manifest.brsds[slug] = {
-      sourcePath,
-      sourceSha256,
-      diagrams: {
-        'bpmn-swimlane': { extractedAt: null, renderedAt: null, engineHash: null },
-        journey: { extractedAt: null, renderedAt: null, engineHash: null },
-        'process-flow': { extractedAt: null, renderedAt: null, engineHash: null },
-        userflow: { extractedAt: null, renderedAt: null, engineHash: null }
-      }
-    };
+    manifest.brsds[slug] = { sourcePath, sourceSha256, diagrams: {} };
   } else {
     manifest.brsds[slug].sourcePath = sourcePath;
     manifest.brsds[slug].sourceSha256 = sourceSha256;
+    if (!manifest.brsds[slug].diagrams) manifest.brsds[slug].diagrams = {};
+  }
+  // Backfill any diagram type not yet present on this entry — covers both
+  // a brand-new slug (every type missing) and an existing slug that
+  // predates a newly-added type (only the new one missing).
+  for (const type of DIAGRAM_TYPES) {
+    if (!manifest.brsds[slug].diagrams[type]) {
+      manifest.brsds[slug].diagrams[type] = { extractedAt: null, renderedAt: null, engineHash: null };
+    }
   }
   return manifest.brsds[slug];
 }
