@@ -1,0 +1,1120 @@
+{
+ "meta": {
+  "title": "Mobile Postpaid Plan Change (Upgrade/Downgrade) \u2014 Process Flow",
+  "brsdId": "mobile-macd-plan-change",
+  "generated": "2026-09-07",
+  "source": "Mobile_MACD.xlsx (sheet: Plan Change)"
+ },
+ "layout": {
+  "x0": 160,
+  "topbar": 70,
+  "colw": 252,
+  "totalW": 1772,
+  "totalH": 4070,
+  "laneLabelW": 60,
+  "lanes": [
+   {
+    "key": "cust",
+    "name": "Customer",
+    "hint": "Visits retail store / subscriber",
+    "y": 70,
+    "h": 260
+   },
+   {
+    "key": "agt",
+    "name": "Retail Agent",
+    "hint": "Retail agent handling the plan change",
+    "y": 350,
+    "h": 700
+   },
+   {
+    "key": "sys",
+    "name": "System / CRM",
+    "hint": "CRM, tracking record, cart, order orchestration",
+    "y": 1070,
+    "h": 920
+   },
+   {
+    "key": "idv",
+    "name": "ID Verification (IDWise / MOI)",
+    "hint": "IDWise scanning, MOI identity lookup",
+    "y": 2010,
+    "h": 700
+   },
+   {
+    "key": "billing",
+    "name": "Billing / BRM / WinCash",
+    "hint": "Penalty payment, billing cycle",
+    "y": 2730,
+    "h": 480
+   },
+   {
+    "key": "fulfil",
+    "name": "Fulfilment, Notification & Feedback",
+    "hint": "Downstream provisioning, Mediallia survey",
+    "y": 3230,
+    "h": 700
+   }
+  ],
+  "phases": [
+   "Initiate Customer Interaction",
+   "Customer Verification & Identification",
+   "Initiate Plan Change & Eligibility",
+   "Cart & Order Preparation",
+   "Payment & Order Submission",
+   "Fulfilment & Closure"
+  ]
+ },
+ "nodes": [
+  {
+   "id": "start",
+   "type": "start",
+   "lane": "cust",
+   "phase": 0,
+   "label": "Customer Visits Retail Store",
+   "sub": "MOB_POST_PLN_CHG_RETL_001.01",
+   "desc": "Customer Postpaid Plan Change (Upgrade/Downgrade) - Mobility by Retail Agent. Customer visits Retail store for Postpaid Plan Change (Upgrade/Downgrade).",
+   "controls": [],
+   "slot": 0,
+   "w": 84,
+   "h": 84,
+   "x": 244.0,
+   "y": 158.0,
+   "cx": 286.0,
+   "cy": 200.0
+  },
+  {
+   "id": "qnomy_ticket",
+   "type": "system",
+   "lane": "sys",
+   "phase": 0,
+   "label": "Qnomy Ticketing Process",
+   "sub": "Requirement Name: Qnomy Ticketing Process",
+   "desc": "A QTicket is created in Qnomy for the selected service chosen by the customer. Retail agent shall select the next available ticket in the queue and will provide respective service to the customer.",
+   "controls": [
+    "Only one process can be initiated per transaction."
+   ],
+   "slot": 1,
+   "w": 190,
+   "h": 100,
+   "x": 191.0,
+   "y": 1370.0,
+   "cx": 286.0,
+   "cy": 1420.0
+  },
+  {
+   "id": "tracking_record",
+   "type": "system",
+   "lane": "sys",
+   "phase": 0,
+   "label": "Automatic Tracking Record Creation",
+   "sub": "MOB_POST_PLN_CHG_RETL_001.02",
+   "desc": "As agent initiates the customer onboarding process, System shall create the tracking record automatically for tracking purpose and assign it to the agent.",
+   "controls": [
+    "Mandatory fields for creating the tracking record will be captured during design phase."
+   ],
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 191.0,
+   "y": 1150.0,
+   "cx": 286.0,
+   "cy": 1200.0
+  },
+  {
+   "id": "cust_verif_process",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Customer Verification Process",
+   "sub": "Requirement Name: Customer Veriffication Process",
+   "desc": "Agent shall be able to verify customers' identity either through Physical ID Scanning or by asking security questions.",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 435.0,
+   "y": 430.0,
+   "cx": 538.0,
+   "cy": 480.0
+  },
+  {
+   "id": "cust_identification",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Customer Identification",
+   "sub": "CBU_C360_REQ_001.02",
+   "desc": "Agent shall be able to identify the customer by searching: 1. Customer Name 2. Mobile number 3. Account ID 4. Customer Identification number (Qatar ID, passport ID, GCC ID, diplomatic ID).",
+   "controls": [
+    "Customer shall have existing customer account",
+    "List of all the accounts matching to the search will be displayed by the system"
+   ],
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 435.0,
+   "y": 670.0,
+   "cx": 538.0,
+   "cy": 700.0
+  },
+  {
+   "id": "verify_customer",
+   "type": "validation",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Verify the Customer (Security Questions)",
+   "sub": "CBU_C360_REQ_001.03",
+   "desc": "Agent shall be able to view the verification questions and answers related to the customer in the screen. Agents shall be able to mark the customer as verified if customer response matches.",
+   "controls": [
+    "All agent role (Retail agent, Telesales, Call center) shall be able to view the verification questions and manually match the answer"
+   ],
+   "slot": 2,
+   "w": 176,
+   "h": 100,
+   "x": 450.0,
+   "y": 870.0,
+   "cx": 538.0,
+   "cy": 920.0
+  },
+  {
+   "id": "id_capture",
+   "type": "system",
+   "lane": "idv",
+   "phase": 1,
+   "label": "ID Capture (IDWise)",
+   "sub": "MOB_POST_ACT_RETL_001.03",
+   "desc": "Agent shall be able to scan the customer's ID using IDWise: a) Front Page b) Back page c) Liveliness (optional if customer agrees).",
+   "controls": [
+    "System (IDWise) shall be able to validate the ID Type and only allow: QID, Passport, Diplomatic ID, GCC ID",
+    "System shall allow to re-scan the ID if the ID-wise fails to capture information at previous attempt."
+   ],
+   "slot": 0,
+   "w": 190,
+   "h": 56,
+   "x": 443.0,
+   "y": 2112.0,
+   "cx": 538.0,
+   "cy": 2140.0
+  },
+  {
+   "id": "display_id_info",
+   "type": "system",
+   "lane": "idv",
+   "phase": 1,
+   "label": "Display Captured ID Information",
+   "sub": "Requirement Name: Display Captured ID Information",
+   "desc": "System shall be able to capture customer information from the scanned ID. Agent shall be able to view scanned ID information in UI. System shall be able to send the scanned ID information to CRM. System shall capture the Expiry Date from ID wise and populate in CRM (as MOI not returning Expiry date).",
+   "controls": [],
+   "outputs": [
+    "ID Type",
+    "ID Number",
+    "First Name",
+    "Last Name",
+    "Date of Birth",
+    "Nationality",
+    "ID Expiry Date"
+   ],
+   "slot": 1,
+   "w": 190,
+   "h": 100,
+   "x": 443.0,
+   "y": 2310.0,
+   "cx": 538.0,
+   "cy": 2360.0
+  },
+  {
+   "id": "moi_validation",
+   "type": "validation",
+   "lane": "idv",
+   "phase": 1,
+   "label": "MOI Validation",
+   "sub": "MOB_POST_ACT_RETL_001.04",
+   "desc": "System shall be able to fetch the Customer information from MOI based on QID, Diplomatic ID and Passport No (from all countries). MOI will return captured fields.",
+   "controls": [
+    "System shall compare the MOI returned fields with ID wise captured fields.",
+    "System shall be able to compare below fields between IDWise and MOI: First Name, Last Name, ID Number and DOB",
+    "If all fields match (100%) then agent shall be allowed to proceed else agent can reject or re-scan (from ID Capture)"
+   ],
+   "branches": [
+    {
+     "label": "Fields match (100%)",
+     "to": "nav_customer_360"
+    },
+    {
+     "label": "Mismatch - reject or re-scan",
+     "to": "id_capture"
+    }
+   ],
+   "slot": 2,
+   "w": 176,
+   "h": 70,
+   "x": 450.0,
+   "y": 2545.0,
+   "cx": 538.0,
+   "cy": 2580.0
+  },
+  {
+   "id": "nav_customer_360",
+   "type": "system",
+   "lane": "sys",
+   "phase": 1,
+   "label": "Navigation to Customer 360",
+   "sub": "CBU_C360_REQ_001.04",
+   "desc": "The agent shall be able to view customer information through the Customer 360 View. Agent shall be able to navigate to the service account for which customer is asking for Plan Change. System shall allow the agent to create order for the requested service by customer (like Post to Pre / Plan change / Pre to post).",
+   "controls": [
+    "System shall navigate to Customer 360 upon successful validation of the customer account"
+   ],
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 443.0,
+   "y": 1150.0,
+   "cx": 538.0,
+   "cy": 1200.0
+  },
+  {
+   "id": "initiate_plan_change",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 2,
+   "label": "Initiate Plan Change",
+   "sub": "MOB_POST_PLN_CHG_RETL_001.03",
+   "desc": "Agent should be able to initiate the plan change.",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 687.0,
+   "y": 450.0,
+   "cx": 790.0,
+   "cy": 480.0
+  },
+  {
+   "id": "blacklist_check",
+   "type": "validation",
+   "lane": "sys",
+   "phase": 2,
+   "label": "Blacklist Check",
+   "sub": "MOB_POST_PLN_CHG_RETL_001.04",
+   "desc": "The system shall perform a blacklist verification for the customer before processing the Plan change request.",
+   "controls": [
+    "Blacklisted customers shall not be eligible for plan change requests.",
+    "The plan change process shall be restricted until the blacklist status is removed or cleared."
+   ],
+   "branches": [
+    {
+     "label": "Not blacklisted",
+     "to": "lockin_check"
+    },
+    {
+     "label": "Blacklisted",
+     "to": "reject_blacklist"
+    }
+   ],
+   "slot": 3,
+   "w": 176,
+   "h": 70,
+   "x": 702.0,
+   "y": 1825.0,
+   "cx": 790.0,
+   "cy": 1860.0
+  },
+  {
+   "id": "reject_blacklist",
+   "type": "error",
+   "lane": "sys",
+   "phase": 2,
+   "label": "Plan Change Restricted (Blacklisted)",
+   "sub": "MOB_POST_PLN_CHG_RETL_001.04",
+   "desc": "Plan change process is restricted until the blacklist status is removed or cleared.",
+   "controls": [
+    "Blacklisted customers shall not be eligible for plan change requests."
+   ],
+   "slot": 2,
+   "w": 190,
+   "h": 100,
+   "x": 695.0,
+   "y": 1590.0,
+   "cx": 790.0,
+   "cy": 1640.0
+  },
+  {
+   "id": "lockin_check",
+   "type": "decision",
+   "lane": "sys",
+   "phase": 2,
+   "label": "Plan Lock-in Check (3-Month)",
+   "sub": "MOB_POST_PLN_CHG_RETL_001.05",
+   "desc": "The system shall verify whether the customer has completed the mandatory 3-month plan lock-in period. If the lock-in period is not completed, the customer must confirm acceptance of the applicable penalty charges.",
+   "controls": [
+    "All postpaid plans are subject to a mandatory 3-month lock-in period."
+   ],
+   "branches": [
+    {
+     "label": "Lock-in completed",
+     "to": "upgrade_downgrade_check"
+    },
+    {
+     "label": "Not completed - customer agrees to penalty",
+     "to": "lockin_penalty_payment"
+    },
+    {
+     "label": "Not completed - customer declines penalty",
+     "to": "reject_lockin"
+    }
+   ],
+   "slot": 1,
+   "w": 150,
+   "h": 100,
+   "x": 715.0,
+   "y": 1370.0,
+   "cx": 790.0,
+   "cy": 1420.0
+  },
+  {
+   "id": "reject_lockin",
+   "type": "end",
+   "lane": "cust",
+   "phase": 2,
+   "label": "Plan Change Rejected (Lock-in Penalty Declined)",
+   "sub": "MOB_POST_PLN_CHG_RETL_001.05",
+   "desc": "If the customer does not agree to pay the penalty, the plan change request shall be rejected, and the process shall end.",
+   "controls": [],
+   "slot": 0,
+   "w": 100,
+   "h": 100,
+   "x": 740.0,
+   "y": 150.0,
+   "cx": 790.0,
+   "cy": 200.0
+  },
+  {
+   "id": "lockin_penalty_payment",
+   "type": "agent",
+   "lane": "billing",
+   "phase": 2,
+   "label": "Lock-in Period Penalty Payment",
+   "sub": "Requirement Name: Lock In Period Penalty Payment",
+   "desc": "Agent should be able to collect the payment for lock-in period penalty from customer through WinCash, if customer wants to change the plan within the lock-in period. Agent should be able to proceed further with the next steps after the penalty collection. If customer fails to pay the penalty then the process needs to be stopped at this step.",
+   "controls": [],
+   "branches": [
+    {
+     "label": "Penalty paid",
+     "to": "upgrade_downgrade_check"
+    },
+    {
+     "label": "Penalty not paid",
+     "to": "reject_penalty_unpaid"
+    }
+   ],
+   "slot": 1,
+   "w": 206,
+   "h": 100,
+   "x": 687.0,
+   "y": 3030.0,
+   "cx": 790.0,
+   "cy": 3080.0
+  },
+  {
+   "id": "reject_penalty_unpaid",
+   "type": "end",
+   "lane": "billing",
+   "phase": 2,
+   "label": "Process Stopped (Penalty Not Paid)",
+   "sub": "Requirement Name: Lock In Period Penalty Payment",
+   "desc": "If customer fails to pay the penalty then the process needs to be stopped at this step.",
+   "controls": [],
+   "slot": 0,
+   "w": 84,
+   "h": 84,
+   "x": 748.0,
+   "y": 2818.0,
+   "cx": 790.0,
+   "cy": 2860.0
+  },
+  {
+   "id": "upgrade_downgrade_check",
+   "type": "control",
+   "lane": "sys",
+   "phase": 2,
+   "label": "Plan Upgrade/Downgrade Check",
+   "sub": "MOB_POST_PLN_CHG_RETL_001.06",
+   "desc": "System shall compare the price of the new plan with old plan and automatically consider whether it's plan downgrade or upgrade. Agent shall be able to view the penalty charges if any during the Downgrade Plan.",
+   "controls": [
+    "Upgrade Plan: if new plan price is greater than old plan then system should consider this journey as Upgrade Plan and there will not be any penalties to be collected.",
+    "Downgrade Plan: if new plan price is lesser than old plan then system shall consider this journey as Downgrade Plan and penalty to be collected based on the Business rules.",
+    "System should automatically calculate the penalty amount for Plan Downgrade and process it during billing.",
+    "If the Plan price is same as previous plan then it'll be just plan update and no need to consider it as Upgrade or Downgrade."
+   ],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 687.0,
+   "y": 1150.0,
+   "cx": 790.0,
+   "cy": 1200.0
+  },
+  {
+   "id": "cart_creation",
+   "type": "agent",
+   "lane": "sys",
+   "phase": 3,
+   "label": "Cart Creation",
+   "sub": "MOB_POST_PLN_CHG_RETL_001.07",
+   "desc": "Agent shall be able to create the cart (order) with new plan, add-ons and discounts. Agent shall be able to review and modify the selected plans, add-ons before submission.",
+   "controls": [
+    "Previous Add On or Discount has to be removed (Bundled with the plan)",
+    "Any Add On or Discount added out of Bundle to be carry forward without any change",
+    "System should not allow to change SIM and MSISDN"
+   ],
+   "outputs": [
+    "Order Number",
+    "Contract Type"
+   ],
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 939.0,
+   "y": 1170.0,
+   "cx": 1042.0,
+   "cy": 1200.0
+  },
+  {
+   "id": "save_milestone",
+   "type": "system",
+   "lane": "sys",
+   "phase": 3,
+   "label": "Save Milestone",
+   "sub": "Requirement Name: Save Milestone",
+   "desc": "System shall save the journey milestone upon successful validation.",
+   "controls": [
+    "System shall save the journey milestone upon successful validation."
+   ],
+   "slot": 1,
+   "w": 190,
+   "h": 56,
+   "x": 947.0,
+   "y": 1392.0,
+   "cx": 1042.0,
+   "cy": 1420.0
+  },
+  {
+   "id": "verify_cart",
+   "type": "validation",
+   "lane": "agt",
+   "phase": 3,
+   "label": "Verify Cart",
+   "sub": "MOB_POST_DWN_RETL_001.07",
+   "desc": "Agent shall be able to review and validate before proceeding to payment.",
+   "controls": [
+    "System shall perform all customer, account, product, compatibility validations prior to payment initiation.",
+    "System shall prevent order progression until all mandatory validations are successfully completed.",
+    "System should over write and apply the latest discount added to the cart"
+   ],
+   "inputs": [
+    "Plan, Price - Based on the New plan selected",
+    "Existing details (Non Editable): SIM, MSISDN"
+   ],
+   "slot": 1,
+   "w": 176,
+   "h": 70,
+   "x": 954.0,
+   "y": 665.0,
+   "cx": 1042.0,
+   "cy": 700.0
+  },
+  {
+   "id": "caf_documents",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 3,
+   "label": "CAF Documents",
+   "sub": "MOB_POST_PLN_CHG_RETL_001.08",
+   "desc": "Agent shall not be able to remove any previous CAF documents or other additional documents.",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 939.0,
+   "y": 450.0,
+   "cx": 1042.0,
+   "cy": 480.0
+  },
+  {
+   "id": "payment_processing",
+   "type": "system",
+   "lane": "billing",
+   "phase": 4,
+   "label": "Payment Processing",
+   "sub": "MOB_POST_DWN_RETL_001.08",
+   "desc": "Agent shall be able to view the payment summary which will be added to the next bill. Agent shall be able to provide the customer copy of the receipt generated by WinCash (even if customer doesn't need to pay upfront, WinCash will generate receipt for zero payment).",
+   "controls": [
+    "System shall display the payment summary",
+    "System shall be able to capture and process Bill payments (penalty for downgrade plan) to billing system.",
+    "System shall be able to add the penalty details to the next billing cycle",
+    "System shall be able to add the penalty details for the plan downgrade in the bill"
+   ],
+   "slot": 0,
+   "w": 190,
+   "h": 56,
+   "x": 1199.0,
+   "y": 2832.0,
+   "cx": 1294.0,
+   "cy": 2860.0
+  },
+  {
+   "id": "order_submission",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 4,
+   "label": "Order Submission and Processing",
+   "sub": "MOB_POST_DWN_RETL_001.09",
+   "desc": "Agent shall be able to submit the order. Agent shall be able to create Activity in UI with Description of the activity as Free Text field to capture the Order specific details. This Activity will have tooltip or information icon as \"Please note down a comment regarding the actions performed. This will be used by other advisors to better understand the customer's history.\"",
+   "controls": [
+    "System shall submit the order to downstream systems for backend provisioning and Activation",
+    "System shall pass the penalty details to BRM systems for billing process",
+    "System shall send acknowledgement and order confirmation to customer through the selected mode (Email/SMS)."
+   ],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 1191.0,
+   "y": 430.0,
+   "cx": 1294.0,
+   "cy": 480.0
+  },
+  {
+   "id": "notify_submission",
+   "type": "system",
+   "lane": "fulfil",
+   "phase": 4,
+   "label": "Customer Notification - Submission",
+   "sub": "MOB_POST_TO_PRE_RETL_001.19",
+   "desc": "System shall send order submission notification to customer through the selected mode (Email/SMS).",
+   "controls": [],
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 1199.0,
+   "y": 3310.0,
+   "cx": 1294.0,
+   "cy": 3360.0
+  },
+  {
+   "id": "all_orders_view",
+   "type": "system",
+   "lane": "sys",
+   "phase": 4,
+   "label": "All Orders View from Customer 360",
+   "sub": "MOB_POST_ACT_RETL_001.19.2",
+   "desc": "System shall navigate the agent to Customer 360 -> All Orders View after order is submitted to the downstream systems. Agent shall be able to check the recently submitted order and their status.",
+   "controls": [],
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 1199.0,
+   "y": 1150.0,
+   "cx": 1294.0,
+   "cy": 1200.0
+  },
+  {
+   "id": "order_completion",
+   "type": "system",
+   "lane": "fulfil",
+   "phase": 5,
+   "label": "Order Completion",
+   "sub": "MOB_POST_TO_PRE_RETL_001.20",
+   "desc": "System shall get the order completion from downstream systems to CRM once the order is completed (Plan change completed).",
+   "controls": [],
+   "slot": 0,
+   "w": 190,
+   "h": 56,
+   "x": 1451.0,
+   "y": 3332.0,
+   "cx": 1546.0,
+   "cy": 3360.0
+  },
+  {
+   "id": "tracking_record_update",
+   "type": "system",
+   "lane": "sys",
+   "phase": 5,
+   "label": "Tracking Record Update",
+   "sub": "MOB_POST_ACT_RETL_001.21.1",
+   "desc": "System shall update the ticket with \"Resolved\" status.",
+   "controls": [
+    "System shall update the Order Number in the Tracking record Ticket details.",
+    "System shall update the mandatory fields while making the TT Status Resolved."
+   ],
+   "inputs": [
+    "TT Closure Fields - align with TT Closure flow"
+   ],
+   "slot": 0,
+   "w": 190,
+   "h": 56,
+   "x": 1451.0,
+   "y": 1172.0,
+   "cx": 1546.0,
+   "cy": 1200.0
+  },
+  {
+   "id": "feedback_survey",
+   "type": "external",
+   "lane": "fulfil",
+   "phase": 5,
+   "label": "Feedback Survey (Mediallia)",
+   "sub": "MOB_POST_ACT_RETL_001.21.1",
+   "desc": "Once Order is completed, System shall send the information to Medilia for sending the Customer Feedback Survey. System shall also receive the Survey Status from Medilia in CRM.",
+   "controls": [
+    "System shall keep the trouble ticket in Resolved status until the Survey is not completed.",
+    "System shall automatically mark the Trouble ticket as Closed once all order tasks/activities are completed"
+   ],
+   "slot": 1,
+   "w": 176,
+   "h": 100,
+   "x": 1458.0,
+   "y": 3530.0,
+   "cx": 1546.0,
+   "cy": 3580.0
+  },
+  {
+   "id": "notify_completion",
+   "type": "end",
+   "lane": "fulfil",
+   "phase": 5,
+   "label": "Customer Notification - Completion",
+   "sub": "MOB_POST_TO_PRE_RETL_001.21",
+   "desc": "System shall send acknowledgement on order completion to customer through the selected mode (Email/SMS). System shall send notification on order completion to all the MSISDNs which are available under the QID. E.g. if Customer account with QID has 5 contacts/MSISDNs active then notification will be sent to all 5 MSISDNs for the successful activation of any MSISDN.",
+   "controls": [],
+   "slot": 2,
+   "w": 100,
+   "h": 100,
+   "x": 1496.0,
+   "y": 3750.0,
+   "cx": 1546.0,
+   "cy": 3800.0
+  }
+ ],
+ "flows": [
+  {
+   "from": "start",
+   "to": "qnomy_ticket",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "qnomy_ticket",
+   "to": "tracking_record",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "tracking_record",
+   "to": "cust_verif_process",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cust_verif_process",
+   "to": "cust_identification",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cust_identification",
+   "to": "verify_customer",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "verify_customer",
+   "to": "id_capture",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "id_capture",
+   "to": "display_id_info",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "display_id_info",
+   "to": "moi_validation",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "moi_validation",
+   "to": "nav_customer_360",
+   "kind": "cond",
+   "label": "Fields match (100%)",
+   "happy": true
+  },
+  {
+   "from": "moi_validation",
+   "to": "id_capture",
+   "kind": "cond",
+   "label": "Mismatch - reject or re-scan",
+   "happy": false
+  },
+  {
+   "from": "nav_customer_360",
+   "to": "initiate_plan_change",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "initiate_plan_change",
+   "to": "blacklist_check",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "blacklist_check",
+   "to": "lockin_check",
+   "kind": "cond",
+   "label": "Not blacklisted",
+   "happy": true
+  },
+  {
+   "from": "blacklist_check",
+   "to": "reject_blacklist",
+   "kind": "cond",
+   "label": "Blacklisted",
+   "happy": false
+  },
+  {
+   "from": "lockin_check",
+   "to": "upgrade_downgrade_check",
+   "kind": "cond",
+   "label": "Lock-in completed",
+   "happy": true
+  },
+  {
+   "from": "lockin_check",
+   "to": "lockin_penalty_payment",
+   "kind": "cond",
+   "label": "Not completed - customer agrees to penalty",
+   "happy": false
+  },
+  {
+   "from": "lockin_check",
+   "to": "reject_lockin",
+   "kind": "cond",
+   "label": "Not completed - customer declines penalty",
+   "happy": false
+  },
+  {
+   "from": "lockin_penalty_payment",
+   "to": "upgrade_downgrade_check",
+   "kind": "cond",
+   "label": "Penalty paid",
+   "happy": false
+  },
+  {
+   "from": "lockin_penalty_payment",
+   "to": "reject_penalty_unpaid",
+   "kind": "cond",
+   "label": "Penalty not paid",
+   "happy": false
+  },
+  {
+   "from": "upgrade_downgrade_check",
+   "to": "cart_creation",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cart_creation",
+   "to": "save_milestone",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "save_milestone",
+   "to": "verify_cart",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "verify_cart",
+   "to": "caf_documents",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "caf_documents",
+   "to": "payment_processing",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "payment_processing",
+   "to": "order_submission",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "order_submission",
+   "to": "notify_submission",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "order_submission",
+   "to": "all_orders_view",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "notify_submission",
+   "to": "order_completion",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "order_completion",
+   "to": "tracking_record_update",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "tracking_record_update",
+   "to": "feedback_survey",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "feedback_survey",
+   "to": "notify_completion",
+   "kind": "seq",
+   "happy": true
+  }
+ ],
+ "model": {
+  "agents": [],
+  "contracts": [],
+  "connectivity": []
+ },
+ "deliv": {
+  "bioMatrix": {}
+ },
+ "biz": {
+  "bio": {
+   "start": {
+    "title": "Customer Visits Retail Store",
+    "does": "Customer visits a retail store requesting a Postpaid Plan Change (upgrade or downgrade).",
+    "needs": "Customer presence at the store.",
+    "makes": "A service request for plan change.",
+    "example": "A postpaid customer walks into a Vodafone Qatar retail store to switch plans."
+   },
+   "qnomy_ticket": {
+    "title": "Qnomy Ticketing Process",
+    "does": "A queue ticket is created in Qnomy for the chosen service and the agent selects the next ticket to serve the customer.",
+    "needs": "Selected service type (e.g. New Connection, MNP, TON).",
+    "makes": "A queued service ticket.",
+    "example": "Customer selects 'Plan Change' at the Qnomy kiosk and waits for their number to be called."
+   },
+   "tracking_record": {
+    "title": "Automatic Tracking Record Creation",
+    "does": "System automatically creates a tracking record as the agent begins onboarding, assigning it to the agent.",
+    "needs": "Agent initiation of the process.",
+    "makes": "A tracking record assigned to the agent.",
+    "example": "A new tracking ticket is auto-logged the moment the agent opens the customer's case."
+   },
+   "cust_verif_process": {
+    "title": "Customer Verification Process",
+    "does": "Agent verifies the customer's identity via physical ID scanning or security questions.",
+    "needs": "Customer's physical ID or ability to answer security questions.",
+    "makes": "A verification method selection.",
+    "example": "Agent chooses to scan the customer's QID rather than ask security questions."
+   },
+   "cust_identification": {
+    "title": "Customer Identification",
+    "does": "Agent searches for the customer account by name, mobile number, account ID, or identification number.",
+    "needs": "Customer Name, Mobile number, Account ID, or ID number (Qatar ID, passport, GCC ID, diplomatic ID).",
+    "makes": "A matched customer account (or list of matches).",
+    "example": "Agent searches by mobile number and the system returns the matching account."
+   },
+   "verify_customer": {
+    "title": "Verify the Customer",
+    "does": "Agent views the stored verification questions and answers, and marks the customer verified if responses match.",
+    "needs": "Customer's answers to security questions (DOB, city of birth, last name).",
+    "makes": "A verified customer flag.",
+    "example": "Customer correctly states their date of birth and is marked verified."
+   },
+   "id_capture": {
+    "title": "ID Capture (IDWise)",
+    "does": "Agent scans the customer's ID (front, back, and optional liveliness check) using IDWise.",
+    "needs": "A valid ID document (QID, Passport, Diplomatic ID, or GCC ID).",
+    "makes": "Scanned ID images and extracted data.",
+    "example": "Agent scans the front and back of the customer's QID via IDWise."
+   },
+   "display_id_info": {
+    "title": "Display Captured ID Information",
+    "does": "System extracts and displays the scanned ID's data, sending it to CRM.",
+    "needs": "Successfully scanned ID from IDWise.",
+    "makes": "ID Type, ID Number, Name, DOB, Nationality, Expiry Date populated in CRM.",
+    "example": "The agent's screen shows the customer's extracted QID number and name."
+   },
+   "moi_validation": {
+    "title": "MOI Validation",
+    "does": "System fetches the customer's identity record from MOI and compares it field-by-field against the IDWise-captured data.",
+    "needs": "QID, Diplomatic ID, or Passport number.",
+    "makes": "A match/mismatch result determining whether the agent may proceed.",
+    "example": "MOI confirms the same name and DOB as IDWise, so the agent proceeds."
+   },
+   "nav_customer_360": {
+    "title": "Navigation to Customer 360",
+    "does": "Agent views the customer's full profile in Customer 360 and navigates to the specific service account for the plan change.",
+    "needs": "Successful customer account validation.",
+    "makes": "An order context ready for the plan change.",
+    "example": "Agent opens the customer's mobile line inside Customer 360 to begin the plan change."
+   },
+   "initiate_plan_change": {
+    "title": "Initiate Plan Change",
+    "does": "Agent starts the plan change transaction for the identified account.",
+    "needs": "A validated customer account.",
+    "makes": "An in-progress plan change request.",
+    "example": "Agent clicks 'Change Plan' on the customer's active line."
+   },
+   "blacklist_check": {
+    "title": "Blacklist Check",
+    "does": "System checks whether the customer is blacklisted before allowing the plan change to proceed.",
+    "needs": "Customer account status.",
+    "makes": "A pass/fail eligibility result.",
+    "example": "System finds no blacklist flag and allows the request to continue."
+   },
+   "reject_blacklist": {
+    "title": "Plan Change Restricted (Blacklisted)",
+    "does": "The plan change request is blocked because the customer is blacklisted.",
+    "needs": "A blacklist flag on the account.",
+    "makes": "A restricted/rejected request.",
+    "example": "The request is halted until the customer's blacklist status is cleared."
+   },
+   "lockin_check": {
+    "title": "Plan Lock-in Check",
+    "does": "System checks if the customer has completed the mandatory 3-month lock-in period for their current plan.",
+    "needs": "The plan's activation/last-change date.",
+    "makes": "A lock-in status and, if unmet, a penalty acceptance decision.",
+    "example": "Customer is 2 months into their plan and must accept a penalty to change now."
+   },
+   "reject_lockin": {
+    "title": "Plan Change Rejected (Lock-in Penalty Declined)",
+    "does": "The process ends because the customer declined to pay the lock-in penalty.",
+    "needs": "Customer's refusal to pay the penalty.",
+    "makes": "A terminated plan change request.",
+    "example": "Customer decides not to pay the early-change penalty and leaves the plan as is."
+   },
+   "lockin_penalty_payment": {
+    "title": "Lock-in Period Penalty Payment",
+    "does": "Agent collects the lock-in penalty payment from the customer via WinCash.",
+    "needs": "Customer's agreement to pay and a payment method.",
+    "makes": "A penalty payment record / WinCash receipt.",
+    "example": "Customer pays the early-termination fee at the counter via WinCash."
+   },
+   "reject_penalty_unpaid": {
+    "title": "Process Stopped (Penalty Not Paid)",
+    "does": "The plan change process halts because the customer failed to pay the required penalty.",
+    "needs": "A failed payment attempt.",
+    "makes": "A stopped process.",
+    "example": "Customer's card is declined for the penalty amount and the process stops."
+   },
+   "upgrade_downgrade_check": {
+    "title": "Plan Upgrade/Downgrade Check",
+    "does": "System compares the new plan's price to the old plan's price to classify the change as an upgrade, downgrade, or same-price update, applying penalty logic for downgrades.",
+    "needs": "Old plan price and new plan price.",
+    "makes": "An upgrade/downgrade classification and any applicable penalty amount.",
+    "example": "New plan costs less than the old one, so the system flags it as a downgrade and calculates the penalty."
+   },
+   "cart_creation": {
+    "title": "Cart Creation",
+    "does": "Agent builds a cart/order containing the new plan, add-ons, and discounts, and can review/modify it before submission.",
+    "needs": "Selected new plan and any add-ons/discounts.",
+    "makes": "An order cart with Order Number and Contract Type.",
+    "example": "Agent adds the new plan and carries forward an existing non-bundled discount."
+   },
+   "save_milestone": {
+    "title": "Save Milestone",
+    "does": "System saves the journey milestone once validation succeeds.",
+    "needs": "A successfully validated step in the journey.",
+    "makes": "A saved milestone checkpoint.",
+    "example": "The journey's progress is checkpointed after the cart is built."
+   },
+   "verify_cart": {
+    "title": "Verify Cart",
+    "does": "Agent reviews and validates the cart, and the system runs all customer/account/product/compatibility checks before allowing payment.",
+    "needs": "A populated cart.",
+    "makes": "A validated, payment-ready cart.",
+    "example": "System applies the latest discount and confirms the cart is ready for checkout."
+   },
+   "caf_documents": {
+    "title": "CAF Documents",
+    "does": "Agent ensures previous CAF (Customer Application Form) or other documents are retained and not removed.",
+    "needs": "Existing CAF/document records on the account.",
+    "makes": "An intact document set.",
+    "example": "The customer's originally signed CAF remains attached to the account."
+   },
+   "payment_processing": {
+    "title": "Payment Processing",
+    "does": "Agent shows the payment summary (added to next bill) and gives the customer a WinCash receipt, even for zero-payment cases.",
+    "needs": "The calculated penalty/charge summary.",
+    "makes": "A billed payment summary and WinCash receipt.",
+    "example": "Customer receives a zero-value WinCash receipt because no upfront penalty is due for an upgrade."
+   },
+   "order_submission": {
+    "title": "Order Submission and Processing",
+    "does": "Agent submits the order and logs an activity note describing the actions performed for other advisors.",
+    "needs": "A validated cart and payment outcome.",
+    "makes": "A submitted order sent to downstream systems, plus an activity log entry.",
+    "example": "Agent submits the plan change order and notes 'Downgrade penalty collected via WinCash.'"
+   },
+   "notify_submission": {
+    "title": "Customer Notification - Submission",
+    "does": "System sends an order-submission notification to the customer via their selected channel.",
+    "needs": "Customer's selected notification mode (Email/SMS).",
+    "makes": "A submission notification.",
+    "example": "Customer receives an SMS confirming their plan change order was submitted."
+   },
+   "all_orders_view": {
+    "title": "All Orders View from Customer 360",
+    "does": "System navigates the agent to the Customer 360 All Orders view after submission so they can check order status.",
+    "needs": "A submitted order.",
+    "makes": "A visible order status entry for the agent.",
+    "example": "Agent checks the All Orders tab and sees the new plan change order as 'In Progress'."
+   },
+   "order_completion": {
+    "title": "Order Completion",
+    "does": "System receives order completion confirmation from downstream systems once the plan change is completed.",
+    "needs": "Downstream provisioning/activation completion.",
+    "makes": "A completed order status in CRM.",
+    "example": "Downstream billing/provisioning confirms the new plan is now active."
+   },
+   "tracking_record_update": {
+    "title": "Tracking Record Update",
+    "does": "System updates the tracking ticket to 'Resolved' status and records the order number and mandatory closure fields.",
+    "needs": "Order completion confirmation.",
+    "makes": "A resolved tracking ticket.",
+    "example": "The original Qnomy/tracking ticket is marked Resolved with the order number attached."
+   },
+   "feedback_survey": {
+    "title": "Feedback Survey (Mediallia)",
+    "does": "System sends order completion info to Mediallia to trigger a customer feedback survey, and receives the survey status back into CRM.",
+    "needs": "A completed order.",
+    "makes": "A dispatched survey and, later, a survey status update.",
+    "example": "Customer receives a satisfaction survey link after their plan change completes."
+   },
+   "notify_completion": {
+    "title": "Customer Notification - Completion",
+    "does": "System sends an order-completion acknowledgement to the customer and to all MSISDNs registered under the same QID.",
+    "needs": "Completed order and list of MSISDNs under the QID.",
+    "makes": "Completion notifications to all associated lines.",
+    "example": "All 5 lines under the customer's QID receive a notification that the plan change succeeded."
+   }
+  },
+  "contractPlain": {},
+  "nameMap": {}
+ }
+}

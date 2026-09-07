@@ -1,0 +1,1416 @@
+{
+ "meta": {
+  "title": "Customer 360 \u2014 Process Flow",
+  "brsdId": "vfq-customer-360-brsd-v3-1",
+  "generated": "2026-09-07",
+  "source": "VFQ_Customer_360_BRSD_v3.1.xlsx"
+ },
+ "layout": {
+  "x0": 240,
+  "topbar": 70,
+  "colw": 252,
+  "totalW": 2860,
+  "totalH": 2850,
+  "laneLabelW": 140,
+  "lanes": [
+   {
+    "key": "trg",
+    "name": "Trigger / Verification",
+    "hint": "Customer identification and verification gate (BR-01)",
+    "y": 70,
+    "h": 260
+   },
+   {
+    "key": "agt",
+    "name": "Agent",
+    "hint": "Agent-driven Customer 360 actions across all capabilities",
+    "y": 350,
+    "h": 1580
+   },
+   {
+    "key": "sys",
+    "name": "Customer 360 System",
+    "hint": "Validation, derived display logic, ticket generation (BR-01..BR-11)",
+    "y": 1950,
+    "h": 480
+   },
+   {
+    "key": "ext",
+    "name": "Source Systems (CRM / IDWise-MOI / Billing System)",
+    "hint": "Systems Involved per Capability_Summary: CRM, IDWise, MOI, Billing System, DXP, Siebel CRM",
+    "y": 2450,
+    "h": 260
+   }
+  ],
+  "phases": [
+   "#1 Customer Verification",
+   "#2 View Customer 360",
+   "#3 Manage Customer Demography",
+   "#4 Manage Customer Contact",
+   "#5 Manage Customer Address",
+   "#6 Manage Billing Account",
+   "#7 Manage Invoice",
+   "#8 Manage Assets and Services",
+   "#9 View And Manage Interaction History",
+   "#10 Manage Attachments"
+  ]
+ },
+ "nodes": [
+  {
+   "id": "start",
+   "type": "start",
+   "lane": "trg",
+   "phase": 0,
+   "label": "Interaction Begins",
+   "slot": 0,
+   "w": 100,
+   "h": 100,
+   "x": 316.0,
+   "y": 150.0,
+   "cx": 366.0,
+   "cy": 200.0
+  },
+  {
+   "id": "identify_account",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 0,
+   "label": "Identify Customer Account",
+   "sub": "CUS-001-CAM-01",
+   "desc": "Agent shall be able to identify the customer account associated with an interaction before performing any Customer 360 action.",
+   "slot": 2,
+   "w": 206,
+   "h": 100,
+   "x": 263.0,
+   "y": 870.0,
+   "cx": 366.0,
+   "cy": 920.0
+  },
+  {
+   "id": "identify_customer",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 0,
+   "label": "Identify Customer",
+   "sub": "CUS-001-KYC-01",
+   "desc": "Agent shall be able to identify the customer using the supported identification attributes before proceeding with Customer 360 actions.",
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 263.0,
+   "y": 450.0,
+   "cx": 366.0,
+   "cy": 480.0
+  },
+  {
+   "id": "verify_customer",
+   "type": "validation",
+   "lane": "sys",
+   "phase": 0,
+   "label": "Verify Customer Identity",
+   "sub": "CUS-001-KYC-02 \u00b7 BR-01",
+   "desc": "Agent shall be able to verify the identified customer's identity before undertaking any customer, contact, address or billing maintenance action, consistent with BR-01.",
+   "controls": [
+    "BR-01"
+   ],
+   "branches": [
+    {
+     "label": "Verified",
+     "to": "navigate_c360"
+    }
+   ],
+   "slot": 0,
+   "w": 176,
+   "h": 100,
+   "x": 278.0,
+   "y": 2030.0,
+   "cx": 366.0,
+   "cy": 2080.0
+  },
+  {
+   "id": "navigate_c360",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 0,
+   "label": "Navigate to Customer 360",
+   "sub": "CUS-001-CAM-04 (New Req ID CUS-001-SEQ-004)",
+   "desc": "Agent shall be able to navigate to the Customer 360 page for a verified customer to view and manage that customer's information.",
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 263.0,
+   "y": 670.0,
+   "cx": 366.0,
+   "cy": 700.0
+  },
+  {
+   "id": "display_profile",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Display Customer Profile",
+   "sub": "CUS-001-CAM-02",
+   "desc": "System shall display customer profile attributes including account, contact, segmentation and service information.",
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 515.0,
+   "y": 670.0,
+   "cx": 618.0,
+   "cy": 700.0
+  },
+  {
+   "id": "view_hierarchy",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 1,
+   "label": "View Account Hierarchy",
+   "sub": "CUS-001-CAM-03",
+   "desc": "Agent shall be able to view customer account hierarchy comprising Customer Account, Billing Account and Service Account.",
+   "slot": 2,
+   "w": 206,
+   "h": 60,
+   "x": 515.0,
+   "y": 890.0,
+   "cx": 618.0,
+   "cy": 920.0
+  },
+  {
+   "id": "navigate_hierarchy",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Navigate Hierarchy Levels",
+   "sub": "CUS-001-CAM-04",
+   "desc": "Agent shall be able to navigate between Customer Account, Billing Account and Service Account levels.",
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 515.0,
+   "y": 430.0,
+   "cx": 618.0,
+   "cy": 480.0
+  },
+  {
+   "id": "billing_overview",
+   "type": "system",
+   "lane": "ext",
+   "phase": 1,
+   "label": "Retrieve Billing/Usage Overview",
+   "sub": "CUS-001-BIV-01..25, CAM-05..07 \u00b7 BR-07/08/09/10/11",
+   "desc": "Customer 360 shall display current outstanding/bill/charges, previous payment/outstanding, barring status/type/reason, Promise-to-Pay status/amount/dates, collection status/scenario/stage/action, current voice/data usage, data balance, spend, Call Detail Records, penalty amount/type/status, and IN-platform main/data/voice/SMS balances of the selected billing account/service.",
+   "controls": [
+    "BR-07",
+    "BR-08",
+    "BR-09",
+    "BR-10",
+    "BR-11"
+   ],
+   "systems": [
+    "Billing System"
+   ],
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 523.0,
+   "y": 2530.0,
+   "cx": 618.0,
+   "cy": 2580.0
+  },
+  {
+   "id": "manage_demography_start",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 2,
+   "label": "View Demographic Details",
+   "sub": "CUS-001-CAM-08",
+   "desc": "Agent shall be able to view customer demographic information.",
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 767.0,
+   "y": 450.0,
+   "cx": 870.0,
+   "cy": 480.0
+  },
+  {
+   "id": "id_scan_validate",
+   "type": "validation",
+   "lane": "sys",
+   "phase": 2,
+   "label": "ID Scanning and Validation",
+   "sub": "CUS-001-KYC-03 \u00b7 BR-01 (moved before Edit Demographic Details)",
+   "desc": "Agent shall be able to scan customer ID and perform MOI validation. Corrected sequencing: this validation gate is placed before Edit Demographic Details, per BR-01 (no maintenance until validation succeeds).",
+   "controls": [
+    "BR-01"
+   ],
+   "systems": [
+    "IDWise",
+    "MOI"
+   ],
+   "branches": [
+    {
+     "label": "Validated",
+     "to": "edit_demography"
+    }
+   ],
+   "slot": 0,
+   "w": 176,
+   "h": 100,
+   "x": 782.0,
+   "y": 2030.0,
+   "cx": 870.0,
+   "cy": 2080.0
+  },
+  {
+   "id": "edit_demography",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 2,
+   "label": "Edit Demographic Details",
+   "sub": "CUS-001-CAM-09 \u00b7 BR-01, BR-02",
+   "desc": "Agent shall be able to edit customer demographic details after successful validation.",
+   "controls": [
+    "BR-01",
+    "BR-02"
+   ],
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 767.0,
+   "y": 670.0,
+   "cx": 870.0,
+   "cy": 700.0
+  },
+  {
+   "id": "demography_ticket",
+   "type": "system",
+   "lane": "sys",
+   "phase": 2,
+   "label": "Automatic Trouble Ticket Creation",
+   "sub": "CUS-001-CAM-10 \u00b7 BR-04",
+   "desc": "System shall automatically create a ticket when demographic information is modified.",
+   "controls": [
+    "BR-04"
+   ],
+   "slot": 1,
+   "w": 190,
+   "h": 100,
+   "x": 775.0,
+   "y": 2250.0,
+   "cx": 870.0,
+   "cy": 2300.0
+  },
+  {
+   "id": "save_demography",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 2,
+   "label": "Save Demographic Changes",
+   "sub": "CUS-001-CAM-11 \u00b7 BR-01, BR-02",
+   "desc": "Agent shall be able to save demographic changes and view updated information.",
+   "controls": [
+    "BR-01",
+    "BR-02"
+   ],
+   "slot": 2,
+   "w": 206,
+   "h": 60,
+   "x": 767.0,
+   "y": 890.0,
+   "cx": 870.0,
+   "cy": 920.0
+  },
+  {
+   "id": "view_contact_list",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 3,
+   "label": "View Contact List",
+   "sub": "CUS-001-CAM-12",
+   "desc": "Agent shall be able to view all customer contacts associated with the account.",
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 1019.0,
+   "y": 670.0,
+   "cx": 1122.0,
+   "cy": 700.0
+  },
+  {
+   "id": "view_contact_details",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 3,
+   "label": "View Contact Details",
+   "sub": "CUS-001-CAM-13",
+   "desc": "Agent shall be able to view detailed customer contact information.",
+   "slot": 2,
+   "w": 206,
+   "h": 60,
+   "x": 1019.0,
+   "y": 890.0,
+   "cx": 1122.0,
+   "cy": 920.0
+  },
+  {
+   "id": "edit_contact",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 3,
+   "label": "Edit Contact Details",
+   "sub": "CUS-001-CAM-14 \u00b7 BR-02, BR-03",
+   "desc": "Agent shall be able to edit permitted customer contact details. Restricted fields such as ID Type and ID Number shall remain non-editable per BR-03.",
+   "controls": [
+    "BR-02",
+    "BR-03"
+   ],
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 1019.0,
+   "y": 450.0,
+   "cx": 1122.0,
+   "cy": 480.0
+  },
+  {
+   "id": "contact_ticket",
+   "type": "system",
+   "lane": "sys",
+   "phase": 3,
+   "label": "Contact Update Ticket Creation",
+   "sub": "CUS-001-CAM-15 \u00b7 BR-04",
+   "desc": "System shall create a ticket whenever contact information is modified.",
+   "controls": [
+    "BR-04"
+   ],
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 1027.0,
+   "y": 2030.0,
+   "cx": 1122.0,
+   "cy": 2080.0
+  },
+  {
+   "id": "view_address",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 4,
+   "label": "View Address Details",
+   "sub": "CUS-001-CAM-16",
+   "desc": "Agent shall be able to view customer address information.",
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 1271.0,
+   "y": 450.0,
+   "cx": 1374.0,
+   "cy": 480.0
+  },
+  {
+   "id": "edit_address",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 4,
+   "label": "Edit Address Details",
+   "sub": "CUS-001-CAM-17 \u00b7 BR-01, BR-02",
+   "desc": "Agent shall be able to update address information manually after validation.",
+   "controls": [
+    "BR-01",
+    "BR-02"
+   ],
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 1271.0,
+   "y": 670.0,
+   "cx": 1374.0,
+   "cy": 700.0
+  },
+  {
+   "id": "address_ticket",
+   "type": "system",
+   "lane": "sys",
+   "phase": 4,
+   "label": "Address Update Ticket Creation",
+   "sub": "CUS-001-CAM-18 \u00b7 BR-04",
+   "desc": "System shall create a ticket when customer address is modified.",
+   "controls": [
+    "BR-04"
+   ],
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 1279.0,
+   "y": 2030.0,
+   "cx": 1374.0,
+   "cy": 2080.0
+  },
+  {
+   "id": "dynamic_address_filter",
+   "type": "system",
+   "lane": "sys",
+   "phase": 4,
+   "label": "Dynamic Address Filtering",
+   "sub": "CUS-001-CAM-19",
+   "desc": "System shall filter available street and building values based on selected address attributes.",
+   "slot": 1,
+   "w": 190,
+   "h": 100,
+   "x": 1279.0,
+   "y": 2250.0,
+   "cx": 1374.0,
+   "cy": 2300.0
+  },
+  {
+   "id": "navigate_billing_account",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 5,
+   "label": "Navigate to Billing Account",
+   "sub": "CUS-001-BAM-01 \u00b7 BR-05",
+   "desc": "Agent shall be able to navigate from customer account to billing account.",
+   "controls": [
+    "BR-05"
+   ],
+   "slot": 1,
+   "w": 206,
+   "h": 100,
+   "x": 1523.0,
+   "y": 650.0,
+   "cx": 1626.0,
+   "cy": 700.0
+  },
+  {
+   "id": "view_billing_profile",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 5,
+   "label": "View Billing Profile",
+   "sub": "CUS-001-BAM-02",
+   "desc": "Agent shall be able to view billing profile information.",
+   "slot": 2,
+   "w": 206,
+   "h": 60,
+   "x": 1523.0,
+   "y": 890.0,
+   "cx": 1626.0,
+   "cy": 920.0
+  },
+  {
+   "id": "view_billing_contact",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 5,
+   "label": "View Billing Contact",
+   "sub": "CUS-001-BAM-03",
+   "desc": "Agent shall be able to view billing contact information.",
+   "slot": 3,
+   "w": 206,
+   "h": 60,
+   "x": 1523.0,
+   "y": 1110.0,
+   "cx": 1626.0,
+   "cy": 1140.0
+  },
+  {
+   "id": "edit_billing_contact",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 5,
+   "label": "Edit Billing Contact",
+   "sub": "CUS-001-BAM-04 \u00b7 BR-02, BR-05",
+   "desc": "Agent shall be able to edit authorized billing contact information.",
+   "controls": [
+    "BR-02",
+    "BR-05"
+   ],
+   "slot": 4,
+   "w": 206,
+   "h": 60,
+   "x": 1523.0,
+   "y": 1330.0,
+   "cx": 1626.0,
+   "cy": 1360.0
+  },
+  {
+   "id": "edit_billing_address",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 5,
+   "label": "Edit Billing Address",
+   "sub": "CUS-001-BAM-05 \u00b7 BR-01, BR-02, BR-05",
+   "desc": "Agent shall be able to update billing address after successful validation.",
+   "controls": [
+    "BR-01",
+    "BR-02",
+    "BR-05"
+   ],
+   "slot": 5,
+   "w": 206,
+   "h": 60,
+   "x": 1523.0,
+   "y": 1550.0,
+   "cx": 1626.0,
+   "cy": 1580.0
+  },
+  {
+   "id": "edit_billing_language",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 5,
+   "label": "Edit Billing Language",
+   "sub": "CUS-001-BAM-06 \u00b7 BR-02, BR-05",
+   "desc": "Agent shall be able to update billing language from predefined options.",
+   "controls": [
+    "BR-02",
+    "BR-05"
+   ],
+   "slot": 6,
+   "w": 206,
+   "h": 60,
+   "x": 1523.0,
+   "y": 1770.0,
+   "cx": 1626.0,
+   "cy": 1800.0
+  },
+  {
+   "id": "edit_payment_mode",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 5,
+   "label": "Edit Payment Mode",
+   "sub": "CUS-001-BAM-07 \u00b7 BR-02, BR-05",
+   "desc": "Agent shall be able to update customer payment mode.",
+   "controls": [
+    "BR-02",
+    "BR-05"
+   ],
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 1523.0,
+   "y": 450.0,
+   "cx": 1626.0,
+   "cy": 480.0
+  },
+  {
+   "id": "view_bills",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 6,
+   "label": "View Bills",
+   "sub": "CUS-001-BIV-26 \u00b7 BR-05",
+   "desc": "Agent shall be able to view customer billing history for the last 12 months.",
+   "controls": [
+    "BR-05"
+   ],
+   "systems": [
+    "Billing System"
+   ],
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 1775.0,
+   "y": 450.0,
+   "cx": 1878.0,
+   "cy": 480.0
+  },
+  {
+   "id": "view_outstanding_info",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 6,
+   "label": "View Outstanding Information",
+   "sub": "CUS-001-BIV-27 \u00b7 BR-07",
+   "desc": "Agent shall be able to view outstanding amounts and balances.",
+   "controls": [
+    "BR-07"
+   ],
+   "systems": [
+    "Billing System"
+   ],
+   "slot": 1,
+   "w": 206,
+   "h": 100,
+   "x": 1775.0,
+   "y": 650.0,
+   "cx": 1878.0,
+   "cy": 700.0
+  },
+  {
+   "id": "download_resend_invoice",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 6,
+   "label": "Download and Resend Invoice",
+   "sub": "CUS-001-BIV-28 \u00b7 BR-05, BR-06",
+   "desc": "Agent shall be able to download, print and resend customer invoices. Per BR-06, an invoice may be downloaded, printed or resent only by an authorised agent.",
+   "controls": [
+    "BR-05",
+    "BR-06"
+   ],
+   "slot": 2,
+   "w": 206,
+   "h": 100,
+   "x": 1775.0,
+   "y": 870.0,
+   "cx": 1878.0,
+   "cy": 920.0
+  },
+  {
+   "id": "view_service_accounts",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 7,
+   "label": "View Service Accounts",
+   "sub": "CUS-001-CAM-20",
+   "desc": "Agent shall be able to view service account information.",
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 2027.0,
+   "y": 670.0,
+   "cx": 2130.0,
+   "cy": 700.0
+  },
+  {
+   "id": "view_installed_assets",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 7,
+   "label": "View Installed Assets",
+   "sub": "CUS-001-CAM-21",
+   "desc": "Agent shall be able to view installed assets associated with service accounts.",
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 2027.0,
+   "y": 450.0,
+   "cx": 2130.0,
+   "cy": 480.0
+  },
+  {
+   "id": "view_interactions",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 8,
+   "label": "View Customer Interactions",
+   "sub": "CUS-001-VEW-01",
+   "desc": "Agent shall be able to view customer interactions performed via email, SMS and phone.",
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 2279.0,
+   "y": 430.0,
+   "cx": 2382.0,
+   "cy": 480.0
+  },
+  {
+   "id": "interaction_tracking",
+   "type": "system",
+   "lane": "sys",
+   "phase": 8,
+   "label": "Interaction Tracking",
+   "sub": "CUS-001-VEW-02",
+   "desc": "System shall generate a unique interaction identifier for each interaction.",
+   "slot": 0,
+   "w": 190,
+   "h": 56,
+   "x": 2287.0,
+   "y": 2052.0,
+   "cx": 2382.0,
+   "cy": 2080.0
+  },
+  {
+   "id": "view_sent_comms",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 8,
+   "label": "View Sent Communications",
+   "sub": "CUS-001-VEW-03",
+   "desc": "Agent shall be able to view SMS and email communications associated with customer interactions.",
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 2279.0,
+   "y": 670.0,
+   "cx": 2382.0,
+   "cy": 700.0
+  },
+  {
+   "id": "view_attachments",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 9,
+   "label": "View Attachments",
+   "sub": "CUS-001-ATT-01 (New Req ID CUS-001-SEQ-064)",
+   "desc": "Agent shall be able to view customer account attachments.",
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 2531.0,
+   "y": 450.0,
+   "cx": 2634.0,
+   "cy": 480.0
+  },
+  {
+   "id": "download_attachments",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 9,
+   "label": "Download Attachments",
+   "sub": "CUS-001-ATT-01 (New Req ID CUS-001-SEQ-065)",
+   "desc": "Agent shall be able to download customer account attachments.",
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 2531.0,
+   "y": 670.0,
+   "cx": 2634.0,
+   "cy": 700.0
+  },
+  {
+   "id": "view_archived_docs",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 9,
+   "label": "View Archived Documents",
+   "sub": "CUS-001-ATT-03 (New Req ID CUS-001-SEQ-066)",
+   "desc": "Agent shall be able to access archived customer documents through archival links.",
+   "slot": 2,
+   "w": 206,
+   "h": 60,
+   "x": 2531.0,
+   "y": 890.0,
+   "cx": 2634.0,
+   "cy": 920.0
+  },
+  {
+   "id": "view_archived_docs_dup",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 9,
+   "label": "View Archived Documents (duplicate)",
+   "sub": "CUS-001-ATT-01 (New Req ID CUS-001-SEQ-067) \u2014 flagged duplicate of CUS-001-ATT-03",
+   "desc": "DUPLICATE CONTENT flagged during correction: this row (Req ID CUS-001-ATT-01, New Req ID CUS-001-SEQ-067) repeats row 80 (CUS-001-ATT-03, New Req ID CUS-001-SEQ-066) near-verbatim -- identical Requirement Name, Requirement Statement and Acceptance Criteria. Retained in the model, unchanged, pending a business decision on consolidation; not deleted per the correction methodology.",
+   "slot": 3,
+   "w": 206,
+   "h": 100,
+   "x": 2531.0,
+   "y": 1090.0,
+   "cx": 2634.0,
+   "cy": 1140.0
+  },
+  {
+   "id": "end",
+   "type": "end",
+   "lane": "agt",
+   "phase": 9,
+   "label": "Customer 360 Interaction Complete",
+   "slot": 4,
+   "w": 100,
+   "h": 100,
+   "x": 2584.0,
+   "y": 1310.0,
+   "cx": 2634.0,
+   "cy": 1360.0
+  }
+ ],
+ "flows": [
+  {
+   "from": "start",
+   "to": "identify_account",
+   "kind": "seq"
+  },
+  {
+   "from": "identify_account",
+   "to": "identify_customer",
+   "kind": "seq"
+  },
+  {
+   "from": "identify_customer",
+   "to": "verify_customer",
+   "kind": "seq"
+  },
+  {
+   "from": "verify_customer",
+   "to": "navigate_c360",
+   "kind": "cond",
+   "label": "Verified",
+   "happy": true
+  },
+  {
+   "from": "navigate_c360",
+   "to": "display_profile",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "display_profile",
+   "to": "view_hierarchy",
+   "kind": "seq"
+  },
+  {
+   "from": "view_hierarchy",
+   "to": "navigate_hierarchy",
+   "kind": "seq"
+  },
+  {
+   "from": "navigate_hierarchy",
+   "to": "billing_overview",
+   "kind": "data"
+  },
+  {
+   "from": "billing_overview",
+   "to": "manage_demography_start",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "manage_demography_start",
+   "to": "id_scan_validate",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "id_scan_validate",
+   "to": "edit_demography",
+   "kind": "cond",
+   "label": "Validated",
+   "happy": true
+  },
+  {
+   "from": "edit_demography",
+   "to": "demography_ticket",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "demography_ticket",
+   "to": "save_demography",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "save_demography",
+   "to": "view_contact_list",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "view_contact_list",
+   "to": "view_contact_details",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "view_contact_details",
+   "to": "edit_contact",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "edit_contact",
+   "to": "contact_ticket",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "contact_ticket",
+   "to": "view_address",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "view_address",
+   "to": "edit_address",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "edit_address",
+   "to": "address_ticket",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "address_ticket",
+   "to": "dynamic_address_filter",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "dynamic_address_filter",
+   "to": "navigate_billing_account",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "navigate_billing_account",
+   "to": "view_billing_profile",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "view_billing_profile",
+   "to": "view_billing_contact",
+   "kind": "seq"
+  },
+  {
+   "from": "view_billing_contact",
+   "to": "edit_billing_contact",
+   "kind": "seq"
+  },
+  {
+   "from": "edit_billing_contact",
+   "to": "edit_billing_address",
+   "kind": "seq"
+  },
+  {
+   "from": "edit_billing_address",
+   "to": "edit_billing_language",
+   "kind": "seq"
+  },
+  {
+   "from": "edit_billing_language",
+   "to": "edit_payment_mode",
+   "kind": "seq"
+  },
+  {
+   "from": "edit_payment_mode",
+   "to": "view_bills",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "view_bills",
+   "to": "view_outstanding_info",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "view_outstanding_info",
+   "to": "download_resend_invoice",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "download_resend_invoice",
+   "to": "view_service_accounts",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "view_service_accounts",
+   "to": "view_installed_assets",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "view_installed_assets",
+   "to": "view_interactions",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "view_interactions",
+   "to": "interaction_tracking",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "interaction_tracking",
+   "to": "view_sent_comms",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "view_sent_comms",
+   "to": "view_attachments",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "view_attachments",
+   "to": "download_attachments",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "download_attachments",
+   "to": "view_archived_docs",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "view_archived_docs",
+   "to": "view_archived_docs_dup",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "view_archived_docs",
+   "to": "end",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "view_archived_docs_dup",
+   "to": "end",
+   "kind": "seq",
+   "happy": false
+  }
+ ],
+ "model": {
+  "agents": [
+   {
+    "AgentID": "CAP-02",
+    "Agent Type": "Capability",
+    "Name": "Customer Identification and Verification",
+    "Parent Portal": "Customer 360",
+    "Relationship": "Reuse",
+    "Purpose / Feature": "Customer search and identification using QID, Passport, GCC ID, Diplomatic ID, Mobile Number and Account ID, including IDWise scanning, MOI validation and customer verification."
+   },
+   {
+    "AgentID": "CAP-03",
+    "Agent Type": "Capability",
+    "Name": "Customer Account Management",
+    "Parent Portal": "Customer 360",
+    "Relationship": "Enhance",
+    "Purpose / Feature": "Consolidates customer profile and account management in a hierarchy, including demographic, contact and address viewing and updates, validation and verification, dynamic address selection, and automatic ticket generation for approved changes. Also provides visibility of the customer's service accounts, subscribed services and installed assets within the selected customer and account context."
+   },
+   {
+    "AgentID": "CAP-05",
+    "Agent Type": "Capability",
+    "Name": "Billing Account Management",
+    "Parent Portal": "Customer 360",
+    "Relationship": "Enhance",
+    "Purpose / Feature": "Billing account hierarchy, billing profile and contact management, payment profile management, and billing account maintenance."
+   },
+   {
+    "AgentID": "CAP-28",
+    "Agent Type": "Capability",
+    "Name": "Attachment Management",
+    "Parent Portal": "Customer 360",
+    "Relationship": "Reuse",
+    "Purpose / Feature": "View, upload, download and maintain customer supporting documents and archived attachments."
+   },
+   {
+    "AgentID": "CAP-34",
+    "Agent Type": "Capability",
+    "Name": "Ticket, Search and Activity",
+    "Parent Portal": "Customer 360",
+    "Relationship": "Enhance",
+    "Purpose / Feature": "Consolidates ticket visibility, search, assignment and queue management with customer activity and interaction history across SMS, email, calls and customer-service interactions."
+   },
+   {
+    "AgentID": "CAP-35",
+    "Agent Type": "Capability",
+    "Name": "Billing Information and Invoice View",
+    "Parent Portal": "Customer 360",
+    "Relationship": "New",
+    "Purpose / Feature": "Invoice history, outstanding balance visibility, invoice download, resend and billing inquiry support."
+   }
+  ],
+  "contracts": [],
+  "connectivity": []
+ },
+ "deliv": {
+  "bioMatrix": {}
+ },
+ "biz": {
+  "bio": {
+   "identify_account": {
+    "title": "Identify Customer Account",
+    "does": "Agent identifies the customer account tied to the current interaction.",
+    "needs": "Interaction context",
+    "makes": "Identified customer account",
+    "example": "CUS-001-CAM-01: Given an agent starts a Customer 360 interaction, the associated customer account shall be available for the agent to proceed."
+   },
+   "identify_customer": {
+    "title": "Identify Customer",
+    "does": "Agent identifies the customer using supported identification attributes.",
+    "needs": "Identification attributes",
+    "makes": "Matching customer record",
+    "example": "CUS-001-KYC-01: Given identification attributes are provided, the matching customer record shall be identified."
+   },
+   "verify_customer": {
+    "title": "Verify Customer Identity",
+    "does": "System/agent verifies the identified customer's identity before any maintenance action is allowed.",
+    "needs": "Identified customer",
+    "makes": "Verified customer status (gate for all maintenance actions)",
+    "example": "CUS-001-KYC-02 / BR-01: The agent shall not undertake demographic, address or billing-address maintenance until the customer has successfully completed the prescribed validation process."
+   },
+   "navigate_c360": {
+    "title": "Navigate to Customer 360",
+    "does": "Agent opens the Customer 360 page for the verified customer.",
+    "needs": "Verified customer",
+    "makes": "Customer 360 page opened",
+    "example": "CUS-001-CAM-04 (SEQ-004): Given a customer has been identified and verified, the Customer 360 page for that customer shall open successfully."
+   },
+   "display_profile": {
+    "title": "Display Customer Profile",
+    "does": "Agent views the customer's profile.",
+    "needs": "Customer account",
+    "makes": "Displayed profile fields",
+    "example": "CUS-001-CAM-02: Configured profile fields shall be displayed on the Customer 360 page."
+   },
+   "view_hierarchy": {
+    "title": "View Account Hierarchy",
+    "does": "Agent views the account hierarchy tree.",
+    "needs": "Customer account",
+    "makes": "Hierarchy tree (Customer/Billing/Service Account)",
+    "example": "CUS-001-CAM-03: Hierarchy shall be displayed in tree structure."
+   },
+   "navigate_hierarchy": {
+    "title": "Navigate Hierarchy Levels",
+    "does": "Agent moves between hierarchy levels.",
+    "needs": "Account hierarchy",
+    "makes": "Opened account level",
+    "example": "CUS-001-CAM-04: Selected account level shall open successfully."
+   },
+   "billing_overview": {
+    "title": "Retrieve Billing / Usage Overview",
+    "does": "System retrieves and displays the full set of billing, barring, collection, usage and penalty attributes for the selected billing account/service.",
+    "needs": "Selected billing account / service",
+    "makes": "Outstanding amount, bill amount, charges, previous payment/outstanding, barring status/type/reason, Promise-to-Pay status/amount/dates, collection status/scenario/stage/action, voice/data usage, data balance, spend, CDRs, penalty amount/type/status, IN-platform balances",
+    "example": "CUS-001-BIV-01: Given a billing account is selected, when billing information is retrieved, then the current outstanding amount shall be displayed. (BR-07 billing dues visibility, BR-08 barring status visibility, BR-09 collection status visibility, BR-10 current voice usage visibility, BR-11 penalty amount visibility)"
+   },
+   "manage_demography_start": {
+    "title": "View Demographic Details",
+    "does": "Agent views demographic info.",
+    "needs": "Customer profile",
+    "makes": "Displayed demographic details",
+    "example": "CUS-001-CAM-08: Demographic details shall be displayed from customer profile."
+   },
+   "id_scan_validate": {
+    "title": "ID Scanning and Validation",
+    "does": "Agent scans the customer's ID and the system performs MOI validation before demographic maintenance is allowed.",
+    "needs": "Customer ID document",
+    "makes": "Validation outcome",
+    "example": "CUS-001-KYC-03: System shall return validation outcome before update is allowed. (BR-01: no maintenance until validation succeeds -- moved ahead of Edit Demographic Details in the corrected sequence)"
+   },
+   "edit_demography": {
+    "title": "Edit Demographic Details",
+    "does": "Agent edits demographic details after validation.",
+    "needs": "Validated customer, authorised agent",
+    "makes": "Edited demographic details",
+    "example": "CUS-001-CAM-09: System shall allow update only for authorized users."
+   },
+   "demography_ticket": {
+    "title": "Automatic Trouble Ticket Creation",
+    "does": "System auto-creates a ticket on demographic change.",
+    "needs": "Demographic change event",
+    "makes": "Unique ticket ID assigned to initiating agent",
+    "example": "CUS-001-CAM-10 / BR-04: Unique ticket ID shall be generated and assigned to initiating agent, used as the operational reference for follow-up, escalation and audit."
+   },
+   "save_demography": {
+    "title": "Save Demographic Changes",
+    "does": "Agent saves changes and views updated info.",
+    "needs": "Edited demographic details",
+    "makes": "Updated details reflected in Customer 360",
+    "example": "CUS-001-CAM-11: Updated details shall be reflected in Customer 360."
+   },
+   "view_contact_list": {
+    "title": "View Contact List",
+    "does": "Agent views all contacts on the account.",
+    "needs": "Customer account",
+    "makes": "List of associated contacts",
+    "example": "CUS-001-CAM-12: System shall display all associated contacts."
+   },
+   "view_contact_details": {
+    "title": "View Contact Details",
+    "does": "Agent views a contact's detailed profile.",
+    "needs": "Selected contact",
+    "makes": "Detailed contact profile",
+    "example": "CUS-001-CAM-13: Detailed contact profile shall be displayed successfully."
+   },
+   "edit_contact": {
+    "title": "Edit Contact Details",
+    "does": "Agent edits permitted contact fields; ID Type/Number stay locked.",
+    "needs": "Contact details, authorised agent",
+    "makes": "Edited contact details (ID Type/Number non-editable)",
+    "example": "CUS-001-CAM-14 / BR-03: Restricted fields such as ID Type and ID Number shall remain non-editable; correction of those follows the approved KYC identity-correction process."
+   },
+   "contact_ticket": {
+    "title": "Contact Update Ticket Creation",
+    "does": "System creates a ticket on contact change.",
+    "needs": "Contact change event",
+    "makes": "Unique ticket linked to the update request",
+    "example": "CUS-001-CAM-15: Unique ticket shall be generated and linked to the update request."
+   },
+   "view_address": {
+    "title": "View Address Details",
+    "does": "Agent views the customer's address.",
+    "needs": "Customer account",
+    "makes": "Displayed address information",
+    "example": "CUS-001-CAM-16: Address information shall be displayed successfully."
+   },
+   "edit_address": {
+    "title": "Edit Address Details",
+    "does": "Agent updates address after validation.",
+    "needs": "Validated customer, authorised agent",
+    "makes": "Saved address information",
+    "example": "CUS-001-CAM-17: Address information shall be saved successfully."
+   },
+   "address_ticket": {
+    "title": "Address Update Ticket Creation",
+    "does": "System creates a ticket on address change.",
+    "needs": "Address change event",
+    "makes": "Automatically generated ticket ID",
+    "example": "CUS-001-CAM-18: Ticket ID shall be generated automatically."
+   },
+   "dynamic_address_filter": {
+    "title": "Dynamic Address Filtering",
+    "does": "System filters street/building options as the agent selects address attributes.",
+    "needs": "Selected address attributes",
+    "makes": "Valid, filtered address values",
+    "example": "CUS-001-CAM-19: Only valid address values shall be available for selection."
+   },
+   "navigate_billing_account": {
+    "title": "Navigate to Billing Account",
+    "does": "Agent navigates from customer to billing account, confirming billing context per BR-05.",
+    "needs": "Customer account",
+    "makes": "Opened billing account details page",
+    "example": "CUS-001-BAM-01 / BR-05: Billing account details page shall open successfully; agent confirms intended billing-account context before maintenance."
+   },
+   "view_billing_profile": {
+    "title": "View Billing Profile",
+    "does": "Agent views billing profile fields.",
+    "needs": "Billing account",
+    "makes": "Displayed billing profile fields",
+    "example": "CUS-001-BAM-02: Billing profile fields shall be displayed."
+   },
+   "view_billing_contact": {
+    "title": "View Billing Contact",
+    "does": "Agent views billing contact info.",
+    "needs": "Billing account",
+    "makes": "Displayed billing contact details",
+    "example": "CUS-001-BAM-03: Billing contact details shall be displayed successfully."
+   },
+   "edit_billing_contact": {
+    "title": "Edit Billing Contact",
+    "does": "Authorised agent edits billing contact info.",
+    "needs": "Billing contact, authorised agent",
+    "makes": "Stored updated billing contact information",
+    "example": "CUS-001-BAM-04: Updated billing contact information shall be stored successfully."
+   },
+   "edit_billing_address": {
+    "title": "Edit Billing Address",
+    "does": "Agent updates billing address after validation.",
+    "needs": "Validated customer, billing account",
+    "makes": "Saved address updates",
+    "example": "CUS-001-BAM-05: Address updates shall be saved successfully."
+   },
+   "edit_billing_language": {
+    "title": "Edit Billing Language",
+    "does": "Agent updates billing language from a predefined list.",
+    "needs": "Billing account",
+    "makes": "Saved new billing language",
+    "example": "CUS-001-BAM-06: New billing language shall be saved successfully."
+   },
+   "edit_payment_mode": {
+    "title": "Edit Payment Mode",
+    "does": "Agent updates the customer's payment mode.",
+    "needs": "Billing account",
+    "makes": "Updated payment mode reflected in billing profile",
+    "example": "CUS-001-BAM-07: Updated payment mode shall be reflected in billing profile."
+   },
+   "view_bills": {
+    "title": "View Bills",
+    "does": "Agent views up to 12 months of billing history.",
+    "needs": "Billing account",
+    "makes": "Bill records within the supported period",
+    "example": "CUS-001-BIV-26: System shall display bill records within supported period."
+   },
+   "view_outstanding_info": {
+    "title": "View Outstanding Information",
+    "does": "Agent views outstanding amounts/balances.",
+    "needs": "Billing account",
+    "makes": "Real-time outstanding information",
+    "example": "CUS-001-BIV-27: Outstanding information shall be displayed in real time."
+   },
+   "download_resend_invoice": {
+    "title": "Download and Resend Invoice",
+    "does": "Authorised agent downloads, prints or resends an invoice.",
+    "needs": "Selected invoice, authorised agent",
+    "makes": "Completed invoice action",
+    "example": "CUS-001-BIV-28 / BR-06: Invoice action shall complete successfully; only an authorised agent may perform this per the approved document-distribution procedure."
+   },
+   "view_service_accounts": {
+    "title": "View Service Accounts",
+    "does": "Agent views service account info.",
+    "needs": "Customer account",
+    "makes": "Displayed service account information",
+    "example": "CUS-001-CAM-20: Service account information shall be displayed successfully."
+   },
+   "view_installed_assets": {
+    "title": "View Installed Assets",
+    "does": "Agent views installed assets on service accounts.",
+    "needs": "Service account",
+    "makes": "Displayed asset details",
+    "example": "CUS-001-CAM-21: Asset details shall be displayed successfully."
+   },
+   "view_interactions": {
+    "title": "View Customer Interactions",
+    "does": "Agent views interaction history across channels.",
+    "needs": "Customer account",
+    "makes": "Displayed interaction history",
+    "example": "CUS-001-VEW-01: Interaction history shall be displayed successfully."
+   },
+   "interaction_tracking": {
+    "title": "Interaction Tracking",
+    "does": "System auto-generates a unique interaction identifier.",
+    "needs": "New interaction",
+    "makes": "Unique interaction ID",
+    "example": "CUS-001-VEW-02: Unique interaction ID shall be created automatically."
+   },
+   "view_sent_comms": {
+    "title": "View Sent Communications",
+    "does": "Agent views SMS/email communications tied to interactions.",
+    "needs": "Customer interactions",
+    "makes": "Available communication history",
+    "example": "CUS-001-VEW-03: Communication history shall be available for viewing."
+   },
+   "view_attachments": {
+    "title": "View Attachments",
+    "does": "Agent views customer account attachments.",
+    "needs": "Customer account",
+    "makes": "Displayed associated attachments",
+    "example": "CUS-001-ATT-01: Associated attachments shall be displayed successfully."
+   },
+   "download_attachments": {
+    "title": "Download Attachments",
+    "does": "Agent downloads a selected attachment.",
+    "needs": "Selected attachment",
+    "makes": "Downloaded attachment",
+    "example": "CUS-001-ATT-01: Selected attachment shall download successfully."
+   },
+   "view_archived_docs": {
+    "title": "View Archived Documents",
+    "does": "Agent opens an archived document via its archival link.",
+    "needs": "Archived document link",
+    "makes": "Opened archived document",
+    "example": "CUS-001-ATT-03: Archived document shall open successfully when selected."
+   },
+   "view_archived_docs_dup": {
+    "title": "View Archived Documents (duplicate)",
+    "does": "Duplicate of the row above -- same archived-document access capability, flagged not removed.",
+    "needs": "Archived document link",
+    "makes": "Opened archived document",
+    "example": "CUS-001-ATT-01 (SEQ-067): Archived document shall open successfully when selected. Flagged as duplicate content of SEQ-066 during BRSD correction; retained for traceability, not consolidated."
+   }
+  },
+  "contractPlain": {},
+  "nameMap": {
+   "KYC": "Customer Identification and Verification",
+   "CAM": "Customer Account Management",
+   "BAM": "Billing Account Management",
+   "ATT": "Attachment Management",
+   "VEW": "Ticket, Search and Activity",
+   "BIV": "Billing Information and Invoice View"
+  }
+ }
+}

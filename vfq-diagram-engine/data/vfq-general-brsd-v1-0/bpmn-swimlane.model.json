@@ -1,0 +1,1447 @@
+{
+ "meta": {
+  "title": "VFQ General (Agent-Agnostic) Journey \u2014 Requirements Register",
+  "brsdId": "vfq-general-brsd-v1-0",
+  "generated": "2026-09-07",
+  "source": "VFQ_General_BRSD_v1.0.xlsx"
+ },
+ "layout": {
+  "x0": 200,
+  "topbar": 70,
+  "colw": 252,
+  "totalW": 3324,
+  "totalH": 2630,
+  "laneLabelW": 100,
+  "lanes": [
+   {
+    "key": "agt",
+    "name": "Agent",
+    "hint": "Retail, Telesales, Fulfillment and Direct Sale/Mass Market agent actions (persona is undifferentiated in this BRSD)",
+    "y": 70,
+    "h": 700
+   },
+   {
+    "key": "cust",
+    "name": "Customer",
+    "hint": "Customer consent, review and signature actions explicit in the requirements",
+    "y": 790,
+    "h": 260
+   },
+   {
+    "key": "sys",
+    "name": "System (VFQ Platform)",
+    "hint": "Core platform validations, orchestration and record-keeping (\"the system shall...\")",
+    "y": 1070,
+    "h": 700
+   },
+   {
+    "key": "ext",
+    "name": "External Systems",
+    "hint": "Identity and Access Management, Qnomy/CTI, ID Verification System (MOI), Data Warehouse System, Credit Control, Payment Collection System, Fulfillment System, Billing Platform, UIM Inventory, WinCash, Customer Survey System",
+    "y": 1790,
+    "h": 700
+   }
+  ],
+  "phases": [
+   "Journey and Session Management",
+   "Customer Account Management",
+   "Customer Identification and Verification",
+   "Eligibility and Credit Control",
+   "Billing and Account Management",
+   "Number Management",
+   "SIM Management",
+   "Cart Validation and Check Out",
+   "CAF Generation and Signature Capture",
+   "Payment and Inventory",
+   "Order Submission",
+   "Notification and Feedback"
+  ]
+ },
+ "nodes": [
+  {
+   "id": "start",
+   "type": "start",
+   "lane": "agt",
+   "phase": 0,
+   "label": "Agent Initiates Journey",
+   "desc": "Agent begins a customer journey (Retail, Telesales, Fulfillment, or Direct Sale/Mass Market channel).",
+   "slot": 0,
+   "w": 84,
+   "h": 84,
+   "x": 284.0,
+   "y": 158.0,
+   "cx": 326.0,
+   "cy": 200.0
+  },
+  {
+   "id": "jsm_001",
+   "type": "control",
+   "lane": "agt",
+   "phase": 0,
+   "label": "Agent Access Management",
+   "sub": "AGN_GEN_SEQ_001",
+   "desc": "1. System shall authenticate the agent using configured Identity and Access Management services before granting access to any journey, validate credentials, and deny access when authentication fails.\n\n2. System shall authorize journey initiation and control view, edit and submit permissions based on assigned roles and privileges, \n\n3. System shall restrict Agents without the required privilege, based on role and access from initiating a journey.",
+   "controls": [],
+   "inputs": [
+    "Role and Access matrix for Agents is needed"
+   ],
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 223.0,
+   "y": 390.0,
+   "cx": 326.0,
+   "cy": 420.0
+  },
+  {
+   "id": "jsm_002",
+   "type": "system",
+   "lane": "sys",
+   "phase": 0,
+   "label": "Agent Access Management",
+   "sub": "AGN_GEN_SEQ_002",
+   "desc": "System shall maintain agent session details including Agent ID, Channel ID and Login Timestamp.",
+   "controls": [],
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 231.0,
+   "y": 1150.0,
+   "cx": 326.0,
+   "cy": 1200.0
+  },
+  {
+   "id": "jsm_003",
+   "type": "system",
+   "lane": "sys",
+   "phase": 0,
+   "label": "Channel and Queue Context",
+   "sub": "AGN_GEN_SEQ_003",
+   "desc": "1. System shall receive journey context from Qnomy, CTI calls and email interactions before journey initiation; \n\n2. Associate the Q-Ticket Number, Service Type and available interaction attributes with the journey and tracking record; \n\n3. System shall continue journey processing using configured fallback rules when Qnomy is unavailable.",
+   "controls": [],
+   "agents": [
+    "qnomy"
+   ],
+   "slot": 2,
+   "w": 190,
+   "h": 100,
+   "x": 231.0,
+   "y": 1590.0,
+   "cx": 326.0,
+   "cy": 1640.0
+  },
+  {
+   "id": "jsm_004",
+   "type": "system",
+   "lane": "sys",
+   "phase": 0,
+   "label": "Tracking Record Management",
+   "sub": "AGN_GEN_SEQ_004",
+   "desc": "1. System shall automatically create a tracking record upon successful journey initiation, generate a unique Tracking Reference Number, and populate mandatory attributes including Journey Reference, Agent ID, Channel, Service Type and Timestamp.\n\n2. System shall permit resolution only after all mandatory journey validations are complete and automatically close the tracking record after successful journey completion and downstream processing.\n\n3. System shall maintain a complete audit history of tracking-record changes.",
+   "controls": [],
+   "slot": 1,
+   "w": 190,
+   "h": 100,
+   "x": 231.0,
+   "y": 1370.0,
+   "cx": 326.0,
+   "cy": 1420.0
+  },
+  {
+   "id": "cam_001",
+   "type": "control",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Customer Search and Matching",
+   "sub": "AGN_GEN_SEQ_005",
+   "desc": "Modification Flow:\n1. The system shall provide the agent with a customer-search function.\n2. The system shall support Contact Number, MSISDN, Account ID,QID, Passport Number,GCC ID and Diplomatic ID as a customer-search criterion.\n3.  The system shall display an error message when customer-search results cannot be retrieved.\n4. The system shall allow the agent to clear the selected criterion and entered search value.\n5. The system shall allow the agent to select exactly one customer record from the multiple records retrieved search results.\n\nActivation Flow:\n1. The system shall provide the agent with a customer details after matching the IDs (QID, Passport Number,GCC ID and Diplomatic ID).\n2. The system shall create a New Customer incase there is no match with the ID Type, ID Number and Nationality",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 475.0,
+   "y": 150.0,
+   "cx": 578.0,
+   "cy": 200.0
+  },
+  {
+   "id": "cam_002",
+   "type": "control",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Navigation to Customer 360",
+   "sub": "AGN_GEN_SEQ_006",
+   "desc": "1. The system shall enable navigation to Customer 360 only after a customer record has been selected.\n2. The system shall open Customer 360 for the active selected-customer context.\n3. The system shall display the following customer account information for the selected customer in customer 360:\na. contact information\nb. customer-segmentation information \nc.service information associated \n4. The system shall allow the agent to refresh customer 360 page to fetch the latest information for the active selected customer.",
+   "controls": [],
+   "slot": 1,
+   "w": 206,
+   "h": 100,
+   "x": 475.0,
+   "y": 370.0,
+   "cx": 578.0,
+   "cy": 420.0
+  },
+  {
+   "id": "cam_003",
+   "type": "control",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Account Hierarchy",
+   "sub": "AGN_GEN_SEQ_007",
+   "desc": "1. The system shall retrieve the account hierarchy associated with the selected customer.\n2. The system shall display the account hierarchy in tree structure for the selected Customer as Customer  Accounts -> Billing Account -> Service account. \n3. The system shall allow the agent to expand , Navigate and collapse to an account-hierarchy node.\n4. The system shall display information applicable to the active hierarchy level.\n5. The system shall display an error message when the account hierarchy cannot be retrieved.",
+   "controls": [],
+   "slot": 2,
+   "w": 206,
+   "h": 60,
+   "x": 475.0,
+   "y": 610.0,
+   "cx": 578.0,
+   "cy": 640.0
+  },
+  {
+   "id": "kyc_001",
+   "type": "control",
+   "lane": "agt",
+   "phase": 2,
+   "label": "Identity Capture",
+   "sub": "AGN_GEN_SEQ_008",
+   "desc": "1. The system shall allow an authorised agent to select a supported identity-document type and capture the required document images, including front, back images, optional liveliness check (selfi of the customer) where the customer consents.\n\n2. The system shall submit the images, extract all available identity attributes - ID Type, ID Number, First Name, Last Name, Date of Birth, Nationality and ID Expiry Date from the scanned document.\n\n3. The system shall display the captured images and extracted attributes to the agent and store the images, attributes and capture outcome as identity evidence in the customer journey context.",
+   "controls": [
+    "ID Type Permitted\n1. Passport\n2. QID\n3. GCC ID\n4. Diplomatic ID"
+   ],
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 727.0,
+   "y": 390.0,
+   "cx": 830.0,
+   "cy": 420.0
+  },
+  {
+   "id": "kyc_002",
+   "type": "validation",
+   "lane": "agt",
+   "phase": 2,
+   "label": "Identity Capture",
+   "sub": "AGN_GEN_SEQ_009",
+   "desc": "1. The system shall prevent journey progression when a required image or identity attribute is missing, or when image capture or automated extraction is unsuccessful.\n\n2. The system shall allow the agent to re-scan the identity document after an unsuccessful capture or extraction attempt and retain the latest successful images and attributes.\n\n3. When automated verification is unavailable or remains unsuccessful after the permitted attempts, the system shall allow an authorised agent to capture the identity information manually under the configured fallback conditions.",
+   "controls": [
+    "The maximum number of capture attempts shall be configurable - as of now it is 4."
+   ],
+   "slot": 0,
+   "w": 176,
+   "h": 70,
+   "x": 742.0,
+   "y": 165.0,
+   "cx": 830.0,
+   "cy": 200.0
+  },
+  {
+   "id": "kyc_003",
+   "type": "decision",
+   "lane": "ext",
+   "phase": 2,
+   "label": "Government Identity Verification and Reconciliation",
+   "sub": "AGN_GEN_SEQ_010",
+   "desc": "1. The system shall compare each captured identity attribute with the corresponding ID Verification System attribute and store the attribute-level results and overall reconciliation result.\n\n\n2. The system shall evaluate the identity status and permit journey progression only when the status is acceptable; \n\n3. Journey progression shall be permitted only when all mandatory identity attributes satisfy the configured reconciliation criteria and \n\n4. The System shall allow the Journey based on identity status if acceptable, allow the agent to re-scan the document or terminate the journey according to the permitted actions.\n\n5. Following identity re-capture, the system shall submit the latest identity information for verification and reconciliation again while retaining previous attempts in the audit history.",
+   "controls": [
+    "ID Verification System Validation is applicable for - Passport, QID and Diplomatic ID.\n\nID Verification System Validation excluded for GCC and continue the Journey.\n\nID reconsilation Rule - Identity Captured attributes and validated information from MOI should be a 100% match.\n\nID Status - Active Allowed for all Journey\nExpired QID - Permits Modification Only\nExpired Passport, GCC ID Or Diplomatic ID  - Not allowed for any Journey"
+   ],
+   "agents": [
+    "moi_idv"
+   ],
+   "slot": 1,
+   "w": 150,
+   "h": 100,
+   "x": 755.0,
+   "y": 2090.0,
+   "cx": 830.0,
+   "cy": 2140.0
+  },
+  {
+   "id": "kyc_004",
+   "type": "system",
+   "lane": "ext",
+   "phase": 2,
+   "label": "Government Identity Verification and Reconciliation",
+   "sub": "AGN_GEN_SEQ_011",
+   "desc": "1. The system shall preserve the captured images and attributes reconciled with MOI attributes.\n\n2. The system shall derive and store the applicable nationality-risk indicator using the authoritative nationality returned by MOI and the active nationality-risk configuration",
+   "controls": [
+    "HRN = \"Y\", if Nationality = Bangladesh, Pakistan, Nepal(values to be confirmed)"
+   ],
+   "agents": [
+    "moi_idv"
+   ],
+   "slot": 2,
+   "w": 190,
+   "h": 100,
+   "x": 735.0,
+   "y": 2310.0,
+   "cx": 830.0,
+   "cy": 2360.0
+  },
+  {
+   "id": "kyc_005",
+   "type": "escalation",
+   "lane": "ext",
+   "phase": 2,
+   "label": "Government Identity Verification and Reconciliation",
+   "sub": "AGN_GEN_SEQ_012",
+   "desc": "1. When MOI is unavailable or does not respond within the configured period, preserve the captured identity information, and save the journey as pending government verification or Draft.\n\n2. Final Order submission shall remain blocked until MOI verification is completed successfully.\n\n3. The system shall support automatic retry of MOI verification during Order Submission for the pending journey.\n\n4. If successfully verified, update the result and allow the journey to continue subject to all other validations.",
+   "controls": [
+    "1. MOI timeout limit - Configurable value(to be provided by Business)"
+   ],
+   "agents": [
+    "moi_idv"
+   ],
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 735.0,
+   "y": 1870.0,
+   "cx": 830.0,
+   "cy": 1920.0
+  },
+  {
+   "id": "ecc_001",
+   "type": "system",
+   "lane": "ext",
+   "phase": 3,
+   "label": "Blacklist Management",
+   "sub": "AGN_GEN_SEQ_013",
+   "desc": "Existing Customers:\n1. The system shall receive blacklist customer data from Data Warehouse System through the configured batch interface for existing customers. Blacklist feed is received and processed successfully. Invalid records are logged.\n2. The system shall insert and update blacklist customer information received from Data Warehouse System into the Customer Blacklist Repository. \n3. The system shall retain historical blacklist information including changes to status, source and reason. Historical records remain available for audit purposes.\n4. The system shall validate existing customers against the Customer Blacklist Repository during customer retrieval and transaction initiation. Repository lookup is performed prior to transaction continuation.\n5. The system shall receive and record blacklist information generated through collections processing due to non-payment in Colllections state.\n6. The system shall allow Fraud Team users to create blacklist entries, capturing the source, reason, user, date and time for audit purposes.",
+   "controls": [],
+   "agents": [
+    "dwh"
+   ],
+   "slot": 1,
+   "w": 190,
+   "h": 56,
+   "x": 987.0,
+   "y": 2112.0,
+   "cx": 1082.0,
+   "cy": 2140.0
+  },
+  {
+   "id": "ecc_002",
+   "type": "decision",
+   "lane": "ext",
+   "phase": 3,
+   "label": "Blacklist Management",
+   "sub": "AGN_GEN_SEQ_014",
+   "desc": "New Customers: \n1. The system shall perform blacklist validation for new customers. \n2. The system shall receive blacklist validation results from Credit Control and store  information in Customer Blacklist Repository. \n\nBlacklist Status Check:\n3. The system shall prevent/permit customer onboarding or transaction completion depending on the blacklist status.",
+   "controls": [
+    "1.Status -Blacklisted -Prevent journey continuation\n2.Status- Other than Blacklisted-Permit journey."
+   ],
+   "agents": [
+    "credit_control"
+   ],
+   "slot": 0,
+   "w": 150,
+   "h": 100,
+   "x": 1007.0,
+   "y": 1870.0,
+   "cx": 1082.0,
+   "cy": 1920.0
+  },
+  {
+   "id": "ecc_003",
+   "type": "system",
+   "lane": "sys",
+   "phase": 3,
+   "label": "Blacklist Management",
+   "sub": "AGN_GEN_SEQ_015",
+   "desc": "1. The system shall associate every blacklist record with a blacklist reason code, originating source, description ,effective date.",
+   "controls": [],
+   "slot": 0,
+   "w": 190,
+   "h": 56,
+   "x": 987.0,
+   "y": 1172.0,
+   "cx": 1082.0,
+   "cy": 1200.0
+  },
+  {
+   "id": "ecc_004",
+   "type": "system",
+   "lane": "sys",
+   "phase": 3,
+   "label": "Credit Limit Management",
+   "sub": "AGN_GEN_SEQ_016",
+   "desc": "1.The system shall determine and assign the initial account-level credit limit based on the business-configured credit limit matrix using customer segment.\n2.The system shall display the current credit limit maintained at customer account level.",
+   "controls": [
+    "The default initial credit limit for new Consumer postpaid customers shall be 1,000 QAR for Expat customers and 4,000 QAR for Qatari customers."
+   ],
+   "slot": 2,
+   "w": 190,
+   "h": 100,
+   "x": 987.0,
+   "y": 1590.0,
+   "cx": 1082.0,
+   "cy": 1640.0
+  },
+  {
+   "id": "ecc_005",
+   "type": "decision",
+   "lane": "agt",
+   "phase": 3,
+   "label": "Credit Limit Management",
+   "sub": "AGN_GEN_SEQ_017",
+   "desc": "1.The system shall allow an authorized Credit and Collections user to override the determined credit limit within the user\u2019s configured authority. \n2.An authorized user can submit an override within the applicable threshold; unauthorized or above-threshold changes are prevented or routed for approval.\n3.The system shall initiate an approval workflow when the requested credit limit exceeds the requestor\u2019s authority threshold. The limit is not applied until an authorized approver approves the request; rejection records the approver and reason.\n4.The system shall maintain an audit trail for credit limit creation, modification, approval, rejection, and synchronization. The audit record captures the account, previous value, requested value, applied value, action, user, date and time, reason, and outcome.",
+   "controls": [
+    "System shall allow credit limit enhancement during only modifications journeys"
+   ],
+   "slot": 2,
+   "w": 150,
+   "h": 100,
+   "x": 1007.0,
+   "y": 590.0,
+   "cx": 1082.0,
+   "cy": 640.0
+  },
+  {
+   "id": "ecc_006",
+   "type": "system",
+   "lane": "ext",
+   "phase": 3,
+   "label": "Credit Limit Management",
+   "sub": "AGN_GEN_SEQ_018",
+   "desc": "1. The system shall support an applicable credit limit increase based on a confirmed advance payment from customer . The additional limit is applied only after advance payment confirmation and is associated with the relevant account.\n\n2. The system shall send an approved credit limit to the billing platform and update the account with the processing outcome. Billing confirms successful processing and the account displays the approved value;",
+   "controls": [],
+   "agents": [
+    "billing_platform"
+   ],
+   "slot": 2,
+   "w": 190,
+   "h": 100,
+   "x": 987.0,
+   "y": 2310.0,
+   "cx": 1082.0,
+   "cy": 2360.0
+  },
+  {
+   "id": "ecc_007",
+   "type": "validation",
+   "lane": "sys",
+   "phase": 3,
+   "label": "Commitment Break Penalty Calculation",
+   "sub": "AGN_GEN_SEQ_019",
+   "desc": "1.The system shall validate active commitments such as  plan lock-in conditions,Star Number Lock in conditions and Device Lock in conditions  before processing a migration, downgrade  or termintaion request.\n2.The system shall determine the remaining commitment duration by comparing the commitment end date with the requested transaction date.\n3.The system shall evaluate whether the requested transaction qualifies for a commitment break penalty based on product and contract.\n4.The system shall calculate the commitment break penalty using configurable business rules and tariff-specific formulas.",
+   "controls": [
+    "Lock in Penalty charges calculation rules to be confirmed with business"
+   ],
+   "slot": 1,
+   "w": 176,
+   "h": 100,
+   "x": 994.0,
+   "y": 1370.0,
+   "cx": 1082.0,
+   "cy": 1420.0
+  },
+  {
+   "id": "ecc_008",
+   "type": "control",
+   "lane": "agt",
+   "phase": 3,
+   "label": "Commitment Break Penalty Calculation",
+   "sub": "AGN_GEN_SEQ_020",
+   "desc": "1.The system shall display the calculated penalty amount to the agent to customer  for each respective committement break (Plan Lock in , Star Number Lock IN , Device Lock in)prior to order confirmation.",
+   "controls": [],
+   "slot": 1,
+   "w": 206,
+   "h": 100,
+   "x": 979.0,
+   "y": 370.0,
+   "cx": 1082.0,
+   "cy": 420.0
+  },
+  {
+   "id": "bam_001",
+   "type": "control",
+   "lane": "agt",
+   "phase": 4,
+   "label": "Billing Account and Payment Profile Management",
+   "sub": "AGN_GEN_SEQ_021",
+   "desc": "1. The system shall allow agent to create a new billing account or select an Existing Account for eligible customers.\n2. The system shall allow agent to capture billing Information \n- Contatct (Primary & Secondary)\n- Preferred invoice recipient contact\n- New or Existing Billing address\n- Bill Cycle\n- Payment Profile, Validate Payment Profile, Update Payment Profile\n3. The system shall allow the Retail Agent to capture payment profile details covering Payment Method, Payment Type and Billing Frequency. The system should only allow credit card & debit card for auto debit.\n4. The system shall validate the captured payment details and shall update the payment profile only following successful validation. The system shall capture last 4 digit of card & token number generated from payment gateway in the payment profile.",
+   "controls": [
+    "1. Every billing account shall have one designated primary billing contact.\n2. An Active payment Profile\n3. The VIP segment defaults to bill cycle 7th of the month. \n4. All other segments default to the 1st or 15th, taking the next cycle where the submission date falls within three days of the cycle date."
+   ],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 1231.0,
+   "y": 150.0,
+   "cx": 1334.0,
+   "cy": 200.0
+  },
+  {
+   "id": "bam_002",
+   "type": "validation",
+   "lane": "sys",
+   "phase": 4,
+   "label": "Billing Account and Payment Profile Management",
+   "sub": "AGN_GEN_SEQ_022",
+   "desc": "The system shall validate if the Billing account and Payment Profile selected meets the order Journey Rules else throw relevant error to Agent",
+   "controls": [
+    "1. Incase of Postpaid Journey only a Postpaid billing account is allowed\n2. In case of Prepaid Journey - No Billing should be selected"
+   ],
+   "slot": 0,
+   "w": 176,
+   "h": 100,
+   "x": 1246.0,
+   "y": 1150.0,
+   "cx": 1334.0,
+   "cy": 1200.0
+  },
+  {
+   "id": "num_001",
+   "type": "system",
+   "lane": "sys",
+   "phase": 5,
+   "label": "Number Discovery and Qualification",
+   "sub": "AGN_GEN_SEQ_023",
+   "desc": "The system shall retrieve and auto-populate customer reserved numbers which are eligible for the journey",
+   "controls": [],
+   "slot": 1,
+   "w": 190,
+   "h": 100,
+   "x": 1491.0,
+   "y": 1370.0,
+   "cx": 1586.0,
+   "cy": 1420.0
+  },
+  {
+   "id": "num_002",
+   "type": "control",
+   "lane": "agt",
+   "phase": 5,
+   "label": "Number Discovery and Qualification",
+   "sub": "AGN_GEN_SEQ_024",
+   "desc": "The system shall allow agent to search and select Free Numbers, Star Number or Fixed Line Numbers based on the journey or Customer Choice",
+   "controls": [],
+   "slot": 1,
+   "w": 206,
+   "h": 100,
+   "x": 1483.0,
+   "y": 370.0,
+   "cx": 1586.0,
+   "cy": 420.0
+  },
+  {
+   "id": "num_003",
+   "type": "validation",
+   "lane": "sys",
+   "phase": 5,
+   "label": "Number Discovery and Qualification",
+   "sub": "AGN_GEN_SEQ_025",
+   "desc": "The system shall validate Star Number eligibility based on Business Rules.",
+   "controls": [
+    "Star Number eligibility shall be determined using the approved Plan Price versus Number Category matrix."
+   ],
+   "inputs": [
+    "VFQ to provide the plan-to-Star-Number eligibility and pricing rules"
+   ],
+   "slot": 2,
+   "w": 176,
+   "h": 100,
+   "x": 1498.0,
+   "y": 1590.0,
+   "cx": 1586.0,
+   "cy": 1640.0
+  },
+  {
+   "id": "num_004",
+   "type": "system",
+   "lane": "sys",
+   "phase": 5,
+   "label": "Number Reservation",
+   "sub": "AGN_GEN_SEQ_026",
+   "desc": "The system shall reserve selected Number during order processing and release the number If draft order is expired or cancelled",
+   "controls": [],
+   "slot": 0,
+   "w": 190,
+   "h": 56,
+   "x": 1491.0,
+   "y": 1172.0,
+   "cx": 1586.0,
+   "cy": 1200.0
+  },
+  {
+   "id": "num_005",
+   "type": "control",
+   "lane": "agt",
+   "phase": 5,
+   "label": "Number Reservation",
+   "sub": "AGN_GEN_SEQ_027",
+   "desc": "The system shall display selected number details, Upfront Charges and Commitment period to agent for customer confirmation before submission.",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 1483.0,
+   "y": 170.0,
+   "cx": 1586.0,
+   "cy": 200.0
+  },
+  {
+   "id": "sim_001",
+   "type": "control",
+   "lane": "agt",
+   "phase": 6,
+   "label": "SIM and eSIM Lifecycle Management",
+   "sub": "AGN_GEN_SEQ_028",
+   "desc": "1. The system shall allow agent to select appropriate SIM type during journey initiation.\n2. The system shall allow agent to capture Physical SIM/Printed eSIM details.\n3. The system shall assign SIM to the customer service.\n4. The system shall generate Virtual eSIM and deliver Virtual eSIM information to the customer through Email or SMS after order fulfillment",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 1735.0,
+   "y": 150.0,
+   "cx": 1838.0,
+   "cy": 200.0
+  },
+  {
+   "id": "sim_002",
+   "type": "validation",
+   "lane": "sys",
+   "phase": 6,
+   "label": "SIM and eSIM Lifecycle Management",
+   "sub": "AGN_GEN_SEQ_029",
+   "desc": "1. The system shall validate SIM serial number, ICCID, status and availability and throw and error to agent in case of any issue\n2. The System shall reserve the SIM from the inventory and mark it consumed after fulfillment\n- eSIM and Virtual SIM must be depleted from UIM Inventory\n- Physical SIM must be depleted from WinCash and UIM Inventory",
+   "controls": [],
+   "agents": [
+    "uim_wincash"
+   ],
+   "slot": 0,
+   "w": 176,
+   "h": 100,
+   "x": 1750.0,
+   "y": 1150.0,
+   "cx": 1838.0,
+   "cy": 1200.0
+  },
+  {
+   "id": "cvc_001",
+   "type": "validation",
+   "lane": "sys",
+   "phase": 7,
+   "label": "Cart Validation, Review and Payment Preparation",
+   "sub": "AGN_GEN_SEQ_030",
+   "desc": "1. The system shall validate customer eligibility -customer account status, Billing Profile availability and completeness , payment profile availability and completeness  prior to checkout.\n2.The system shall validate that the selected assets are eligible for modification, migration, suspension, resumption, or termination.\n3. The system shall execute compatibility validations and quantity validations for products included in the cart.\n4. The system shall validate that the requested MSISDN and SIMor eSIM is available for allocation.\n5. The system shall validate the availability of requested equipment and devices included in the order.\n6. The system shall validate that all mandatory appointment requirements have been fulfilled for fulfilment-related orders.\n7. The system shall calculate applicable recurring and non-recurring charges, deposits and advance payments, penalties and termination charges.\n8. The system shall present an itemized order and payment summary before confirmation.\n9.The system shall prevent checkout if any mandatory validation returns a failure status and corresponding corrective actions to be displayed to the user before order submission.",
+   "controls": [
+    "1. Compatibility rules and quantity limits  shall be defined and maintained by Product configuration.\n2. Charging shall be based on the approved product price catalogue.\n3. Contractual penalties shall be charged in accordance with the customer's active agreement terms."
+   ],
+   "slot": 0,
+   "w": 176,
+   "h": 100,
+   "x": 2002.0,
+   "y": 1150.0,
+   "cx": 2090.0,
+   "cy": 1200.0
+  },
+  {
+   "id": "caf_001",
+   "type": "control",
+   "lane": "agt",
+   "phase": 8,
+   "label": "Key Information Management",
+   "sub": "AGN_GEN_SEQ_031",
+   "desc": "1. The system shall generate and display key information before CAF submission to the Agent and Customer.\n2. The key information shall include the connection type, service type, selected product, associated resources, selected plan, plan lock-in period, Star Number, Star Number lock-in period, device instalment details, and device instalment lock-in period, as applicable as per the Cart of the Journey.\n3. The system shall refresh the displayed key information whenever the agent adds, removes, or amends an item in the cart, Key Information must be consistent with the final validated cart.",
+   "controls": [],
+   "inputs": [
+    "VFQ to provide the CAF template set and mapping by journey, product type, service type, agent role and channel - a CAF template Matrix"
+   ],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 2239.0,
+   "y": 150.0,
+   "cx": 2342.0,
+   "cy": 200.0
+  },
+  {
+   "id": "caf_002",
+   "type": "control",
+   "lane": "cust",
+   "phase": 8,
+   "label": "Contract Generation, Signature and Distribution",
+   "sub": "AGN_GEN_SEQ_032",
+   "desc": "1. The system shall use the applicable CAF template using the configured mapping for journey, product type, service type, agent role, and channel and generate the CAF related to the ongoing Journey with all information like Customer, Account, Service, product, Resources.\n\n2. The system shall prevent CAF generation where mandatory CAF information is unavailable.\n\n3. The system shall allow the authorised agent to select the applicable digital signature-capture method - 1. customer-facing touchpad and 2. touch-screen device options.\n\n4. The system shall display the complete CAF to the customer on the selected customer-facing device, Customer shall be able to review the CAF before signature capture.\n\n5. The system shall capture the customer signature through the selected signature device, captured Signature must be embedded in CAF, Signed CAF should be visible to Agent.\n\n6. The system shall detect and report signature-capture failure, shall allow for recapturing if required, system shall allow to proceed until CAF submission is completed.\n\n7. The system shall allow an Agent to upload a manually signed CAF during CAF submission, acceptable format is PDF or JPG limited of 2 MB maximum size of a document.",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 2239.0,
+   "y": 870.0,
+   "cx": 2342.0,
+   "cy": 920.0
+  },
+  {
+   "id": "pay_001",
+   "type": "control",
+   "lane": "agt",
+   "phase": 9,
+   "label": "Payment Summary, Processing and Receipt Management",
+   "sub": "AGN_GEN_SEQ_033",
+   "desc": "The system shall display a consolidated payment summary showing all applicable charges prior to payment confirmation.\n- HRN Advance\n- Star Number Charges\n- Credit Limit Enhancement Charges\n- Plan Downgrade Penalty\n- Plan Commitment Breakin Penalty\n- Migration Charges\n- SIM Card Charges\n- Plan and Add-On Charges\n- Additional Device Charges",
+   "controls": [],
+   "inputs": [
+    "VFQ to confirm the HRN advance-payment matrix and applicable order-charge rules"
+   ],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 2491.0,
+   "y": 150.0,
+   "cx": 2594.0,
+   "cy": 200.0
+  },
+  {
+   "id": "pay_002",
+   "type": "system",
+   "lane": "ext",
+   "phase": 9,
+   "label": "Payment Summary, Processing and Receipt Management",
+   "sub": "AGN_GEN_SEQ_034",
+   "desc": "1. The system shall create and send a payment request to the Payment Collection System for all applicable order charges\n2. The system shall prevent duplicate payment collection for the same chargeable event.\n3. The system shall validate payment status returned by the Payment Collection System before continuing order processing.\n4. The system shall handle payment failures\n5. The system should hold the order and does not allow submission untill the Payment is completed\n6. The system shall generate a payment receipt after successful payment collection even for the Zero Payments",
+   "controls": [],
+   "agents": [
+    "payment_collection"
+   ],
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 2499.0,
+   "y": 1870.0,
+   "cx": 2594.0,
+   "cy": 1920.0
+  },
+  {
+   "id": "pay_003",
+   "type": "error",
+   "lane": "agt",
+   "phase": 9,
+   "label": "Payment Summary, Processing and Receipt Management",
+   "sub": "AGN_GEN_SEQ_035",
+   "desc": "1. The system shall allow agent to retry the Payment during the payment failures\n2. The system shall enforce a configurable limit on failed payment attempts.\n3. The system shall capture all payment requests, responses, retries, cancellations, and refunds to be retained in the audit history.",
+   "controls": [
+    "Payment retry is allowed for 4 times"
+   ],
+   "slot": 1,
+   "w": 190,
+   "h": 100,
+   "x": 2499.0,
+   "y": 370.0,
+   "cx": 2594.0,
+   "cy": 420.0
+  },
+  {
+   "id": "ord_001",
+   "type": "decision",
+   "lane": "ext",
+   "phase": 10,
+   "label": "Order Visibility and Status Management",
+   "sub": "AGN_GEN_SEQ_036",
+   "desc": "1. The system shall submit the order once the payment is succesful, in case of payment failure system save the order in draft\n2. The system shall receive the order Status and Display it within the Customer 360\n3. The system shall mark the Order Status based on the response from Fullfillment system\n4. The system shall display error reasons in case of Order Failure",
+   "controls": [],
+   "agents": [
+    "fulfillment"
+   ],
+   "slot": 0,
+   "w": 150,
+   "h": 100,
+   "x": 2771.0,
+   "y": 1870.0,
+   "cx": 2846.0,
+   "cy": 1920.0
+  },
+  {
+   "id": "not_001",
+   "type": "system",
+   "lane": "ext",
+   "phase": 11,
+   "label": "Notification Trigger, Template and Channel Management",
+   "sub": "AGN_GEN_SEQ_037",
+   "desc": "1.The system shall support configuration of notification events, templates, recipients, languages and channels.\n2.The system shall trigger the applicable communication template based on the notification event type .\n3.The system shall determine the communication language and delivery based on customer preference.\n4.The system shall populate dynamic template attributes using transaction, customer, account, and service data.\n5.The system shall record communication delivery status updates including sent, delivered, failed, and pending statuses.\n6.The system shall maintain a notification history for customer communications generated as part of the transaction lifecycle.",
+   "controls": [],
+   "inputs": [
+    "VFQ to provide notification events, templates, recipients, languages, channels and trigger rules"
+   ],
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 3003.0,
+   "y": 1870.0,
+   "cx": 3098.0,
+   "cy": 1920.0
+  },
+  {
+   "id": "not_002",
+   "type": "system",
+   "lane": "ext",
+   "phase": 11,
+   "label": "Feedback Management",
+   "sub": "AGN_GEN_SEQ_038",
+   "desc": "1.The system shall send the customer feedback survey request to \"Customer Survey\" System once the ticket associated with the respective journey is resolved.",
+   "controls": [],
+   "agents": [
+    "customer_survey"
+   ],
+   "slot": 1,
+   "w": 190,
+   "h": 56,
+   "x": 3003.0,
+   "y": 2112.0,
+   "cx": 3098.0,
+   "cy": 2140.0
+  },
+  {
+   "id": "end_success",
+   "type": "end",
+   "lane": "ext",
+   "phase": 11,
+   "label": "Journey Completed",
+   "desc": "Order submitted to Fulfillment, feedback survey requested; journey lifecycle complete.",
+   "slot": 2,
+   "w": 84,
+   "h": 84,
+   "x": 3056.0,
+   "y": 2318.0,
+   "cx": 3098.0,
+   "cy": 2360.0
+  },
+  {
+   "id": "end_terminated",
+   "type": "end",
+   "lane": "agt",
+   "phase": 3,
+   "label": "Journey Terminated",
+   "desc": "Journey terminated due to unacceptable identity status or blacklist status per permitted actions.",
+   "slot": 0,
+   "w": 100,
+   "h": 100,
+   "x": 1032.0,
+   "y": 150.0,
+   "cx": 1082.0,
+   "cy": 200.0
+  }
+ ],
+ "flows": [
+  {
+   "from": "start",
+   "to": "jsm_001",
+   "kind": "seq"
+  },
+  {
+   "from": "jsm_001",
+   "to": "jsm_002",
+   "kind": "seq"
+  },
+  {
+   "from": "jsm_002",
+   "to": "jsm_003",
+   "kind": "seq"
+  },
+  {
+   "from": "jsm_003",
+   "to": "jsm_004",
+   "kind": "seq"
+  },
+  {
+   "from": "jsm_004",
+   "to": "cam_001",
+   "kind": "seq"
+  },
+  {
+   "from": "cam_001",
+   "to": "cam_002",
+   "kind": "seq"
+  },
+  {
+   "from": "cam_002",
+   "to": "cam_003",
+   "kind": "seq"
+  },
+  {
+   "from": "cam_003",
+   "to": "kyc_001",
+   "kind": "seq"
+  },
+  {
+   "from": "kyc_001",
+   "to": "kyc_002",
+   "kind": "seq"
+  },
+  {
+   "from": "kyc_002",
+   "to": "kyc_003",
+   "kind": "seq"
+  },
+  {
+   "from": "kyc_003",
+   "to": "kyc_004",
+   "kind": "cond",
+   "label": "Identity acceptable",
+   "happy": true
+  },
+  {
+   "from": "kyc_003",
+   "to": "end_terminated",
+   "kind": "cond",
+   "label": "Identity not acceptable / terminate"
+  },
+  {
+   "from": "kyc_003",
+   "to": "kyc_001",
+   "kind": "cond",
+   "label": "Re-scan document"
+  },
+  {
+   "from": "kyc_004",
+   "to": "kyc_005",
+   "kind": "seq"
+  },
+  {
+   "from": "kyc_005",
+   "to": "ecc_001",
+   "kind": "seq",
+   "label": "MOI verified / continue",
+   "happy": true
+  },
+  {
+   "from": "kyc_005",
+   "to": "ord_001",
+   "kind": "esc",
+   "label": "Pending MOI verification (Draft, retried at Order Submission)"
+  },
+  {
+   "from": "ecc_001",
+   "to": "ecc_002",
+   "kind": "seq"
+  },
+  {
+   "from": "ecc_002",
+   "to": "ecc_003",
+   "kind": "cond",
+   "label": "Not blacklisted",
+   "happy": true
+  },
+  {
+   "from": "ecc_002",
+   "to": "end_terminated",
+   "kind": "cond",
+   "label": "Blacklisted / prevent continuation"
+  },
+  {
+   "from": "ecc_003",
+   "to": "ecc_004",
+   "kind": "seq"
+  },
+  {
+   "from": "ecc_004",
+   "to": "ecc_005",
+   "kind": "seq"
+  },
+  {
+   "from": "ecc_005",
+   "to": "ecc_006",
+   "kind": "cond",
+   "label": "Within authority / approved",
+   "happy": true
+  },
+  {
+   "from": "ecc_005",
+   "to": "ecc_006",
+   "kind": "esc",
+   "label": "Approval workflow required"
+  },
+  {
+   "from": "ecc_006",
+   "to": "ecc_007",
+   "kind": "seq"
+  },
+  {
+   "from": "ecc_007",
+   "to": "ecc_008",
+   "kind": "seq"
+  },
+  {
+   "from": "ecc_008",
+   "to": "bam_001",
+   "kind": "seq"
+  },
+  {
+   "from": "bam_001",
+   "to": "bam_002",
+   "kind": "seq"
+  },
+  {
+   "from": "bam_002",
+   "to": "num_001",
+   "kind": "seq"
+  },
+  {
+   "from": "num_001",
+   "to": "num_002",
+   "kind": "seq"
+  },
+  {
+   "from": "num_002",
+   "to": "num_003",
+   "kind": "seq"
+  },
+  {
+   "from": "num_003",
+   "to": "num_004",
+   "kind": "seq"
+  },
+  {
+   "from": "num_004",
+   "to": "num_005",
+   "kind": "seq"
+  },
+  {
+   "from": "num_005",
+   "to": "sim_001",
+   "kind": "seq"
+  },
+  {
+   "from": "sim_001",
+   "to": "sim_002",
+   "kind": "seq"
+  },
+  {
+   "from": "sim_002",
+   "to": "cvc_001",
+   "kind": "seq"
+  },
+  {
+   "from": "cvc_001",
+   "to": "caf_001",
+   "kind": "cond",
+   "label": "Validation passed",
+   "happy": true
+  },
+  {
+   "from": "cvc_001",
+   "to": "sim_002",
+   "kind": "err",
+   "label": "Validation failed / corrective action -> agent amends cart"
+  },
+  {
+   "from": "caf_001",
+   "to": "caf_002",
+   "kind": "seq"
+  },
+  {
+   "from": "caf_002",
+   "to": "pay_001",
+   "kind": "seq"
+  },
+  {
+   "from": "pay_001",
+   "to": "pay_002",
+   "kind": "seq"
+  },
+  {
+   "from": "pay_002",
+   "to": "pay_003",
+   "kind": "err",
+   "label": "Payment failure / retry"
+  },
+  {
+   "from": "pay_002",
+   "to": "ord_001",
+   "kind": "seq",
+   "label": "Payment successful",
+   "happy": true
+  },
+  {
+   "from": "pay_003",
+   "to": "pay_002",
+   "kind": "seq",
+   "label": "Retry payment"
+  },
+  {
+   "from": "ord_001",
+   "to": "not_001",
+   "kind": "cond",
+   "label": "Order submitted",
+   "happy": true
+  },
+  {
+   "from": "ord_001",
+   "to": "pay_002",
+   "kind": "cond",
+   "label": "Payment failed -> save Draft"
+  },
+  {
+   "from": "not_001",
+   "to": "not_002",
+   "kind": "seq"
+  },
+  {
+   "from": "not_002",
+   "to": "end_success",
+   "kind": "seq"
+  }
+ ],
+ "model": {
+  "agents": [
+   {
+    "AgentID": "iam",
+    "Agent Type": "External System",
+    "Name": "Identity and Access Management",
+    "Parent Portal": "VFQ Platform",
+    "Relationship": "Authenticates and authorizes agents",
+    "Purpose / Feature": "Agent login, credential validation, role/privilege enforcement"
+   },
+   {
+    "AgentID": "qnomy",
+    "Agent Type": "External System",
+    "Name": "Qnomy",
+    "Parent Portal": "Queueing / CTI",
+    "Relationship": "Supplies journey/channel context",
+    "Purpose / Feature": "Q-Ticket Number, Service Type, interaction attributes"
+   },
+   {
+    "AgentID": "moi_idv",
+    "Agent Type": "External System",
+    "Name": "ID Verification System (MOI)",
+    "Parent Portal": "Government",
+    "Relationship": "Reconciles captured identity attributes",
+    "Purpose / Feature": "Identity attribute verification/reconciliation, nationality-risk lookup"
+   },
+   {
+    "AgentID": "dwh",
+    "Agent Type": "External System",
+    "Name": "Data Warehouse System",
+    "Parent Portal": "VFQ Enterprise",
+    "Relationship": "Feeds blacklist customer data",
+    "Purpose / Feature": "Batch blacklist feed for existing customers"
+   },
+   {
+    "AgentID": "credit_control",
+    "Agent Type": "External System",
+    "Name": "Credit Control",
+    "Parent Portal": "VFQ Enterprise",
+    "Relationship": "Provides blacklist validation for new customers",
+    "Purpose / Feature": "New-customer blacklist validation result"
+   },
+   {
+    "AgentID": "billing_platform",
+    "Agent Type": "External System",
+    "Name": "Billing Platform",
+    "Parent Portal": "VFQ Enterprise",
+    "Relationship": "Applies approved credit limits",
+    "Purpose / Feature": "Credit limit synchronization and processing outcome"
+   },
+   {
+    "AgentID": "payment_collection",
+    "Agent Type": "External System",
+    "Name": "Payment Collection System",
+    "Parent Portal": "VFQ Enterprise",
+    "Relationship": "Processes order payments",
+    "Purpose / Feature": "Payment request/response, receipt generation"
+   },
+   {
+    "AgentID": "fulfillment",
+    "Agent Type": "External System",
+    "Name": "Fulfillment System",
+    "Parent Portal": "VFQ Enterprise",
+    "Relationship": "Fulfills submitted orders",
+    "Purpose / Feature": "Order status updates, fulfillment outcome"
+   },
+   {
+    "AgentID": "uim_wincash",
+    "Agent Type": "External System",
+    "Name": "UIM Inventory / WinCash",
+    "Parent Portal": "VFQ Enterprise",
+    "Relationship": "SIM/eSIM inventory management",
+    "Purpose / Feature": "SIM reservation and consumption tracking"
+   },
+   {
+    "AgentID": "customer_survey",
+    "Agent Type": "External System",
+    "Name": "Customer Survey System",
+    "Parent Portal": "VFQ Enterprise",
+    "Relationship": "Sends feedback survey requests",
+    "Purpose / Feature": "Post-resolution customer feedback survey"
+   }
+  ],
+  "contracts": [],
+  "connectivity": []
+ },
+ "biz": {
+  "bio": {
+   "jsm_001": {
+    "title": "Agent Access Management",
+    "does": "1. System shall authenticate the agent using configured Identity and Access Management services before granting access to any journey, validate credentials, and deny access when authentication fails.\n\n2. System shall authorize journey initiation and control view, edit and submit permissions based on assigned roles and privileges, \n\n3. System shall restrict Agents without the required privilege, based on role and access from initiating a journey.",
+    "needs": "Role and Access matrix for Agents is needed",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "jsm_002": {
+    "title": "Agent Access Management",
+    "does": "System shall maintain agent session details including Agent ID, Channel ID and Login Timestamp.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "jsm_003": {
+    "title": "Channel and Queue Context",
+    "does": "1. System shall receive journey context from Qnomy, CTI calls and email interactions before journey initiation; \n\n2. Associate the Q-Ticket Number, Service Type and available interaction attributes with the journey and tracking record; \n\n3. System shall continue journey processing using configured fallback rules when Qnomy is unavailable.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "jsm_004": {
+    "title": "Tracking Record Management",
+    "does": "1. System shall automatically create a tracking record upon successful journey initiation, generate a unique Tracking Reference Number, and populate mandatory attributes including Journey Reference, Agent ID, Channel, Service Type and Timestamp.\n\n2. System shall permit resolution only after all mandatory journey validations are complete and automatically close the tracking record after successful journey completion and downstream processing.\n\n3. System shall maintain a complete audit history of tracking-record changes.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "cam_001": {
+    "title": "Customer Search and Matching",
+    "does": "Modification Flow:\n1. The system shall provide the agent with a customer-search function.\n2. The system shall support Contact Number, MSISDN, Account ID,QID, Passport Number,GCC ID and Diplomatic ID as a customer-search criterion.\n3.  The system shall display an error message when customer-search results cannot be retrieved.\n4. The system shall allow the agent to clear the selected criterion and entered search value.\n5. The system shall allow the agent to select exactly one customer record from the multiple records retrieved search results.\n\nActivation Flow:\n1. The system shall provide the agent with a customer details after matching the IDs (QID, Passport Number,GCC ID and Diplomatic ID).\n2. The system shall create a New Customer incase there is no match with the ID Type, ID Number and Nationality",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "cam_002": {
+    "title": "Navigation to Customer 360",
+    "does": "1. The system shall enable navigation to Customer 360 only after a customer record has been selected.\n2. The system shall open Customer 360 for the active selected-customer context.\n3. The system shall display the following customer account information for the selected customer in customer 360:\na. contact information\nb. customer-segmentation information \nc.service information associated \n4. The system shall allow the agent to refresh customer 360 page to fetch the latest information for the active selected customer.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "cam_003": {
+    "title": "Account Hierarchy",
+    "does": "1. The system shall retrieve the account hierarchy associated with the selected customer.\n2. The system shall display the account hierarchy in tree structure for the selected Customer as Customer  Accounts -> Billing Account -> Service account. \n3. The system shall allow the agent to expand , Navigate and collapse to an account-hierarchy node.\n4. The system shall display information applicable to the active hierarchy level.\n5. The system shall display an error message when the account hierarchy cannot be retrieved.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "kyc_001": {
+    "title": "Identity Capture",
+    "does": "1. The system shall allow an authorised agent to select a supported identity-document type and capture the required document images, including front, back images, optional liveliness check (selfi of the customer) where the customer consents.\n\n2. The system shall submit the images, extract all available identity attributes - ID Type, ID Number, First Name, Last Name, Date of Birth, Nationality and ID Expiry Date from the scanned document.\n\n3. The system shall display the captured images and extracted attributes to the agent and store the images, attributes and capture outcome as identity evidence in the customer journey context.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": "ID Type Permitted\n1. Passport\n2. QID\n3. GCC ID\n4. Diplomatic ID"
+   },
+   "kyc_002": {
+    "title": "Identity Capture",
+    "does": "1. The system shall prevent journey progression when a required image or identity attribute is missing, or when image capture or automated extraction is unsuccessful.\n\n2. The system shall allow the agent to re-scan the identity document after an unsuccessful capture or extraction attempt and retain the latest successful images and attributes.\n\n3. When automated verification is unavailable or remains unsuccessful after the permitted attempts, the system shall allow an authorised agent to capture the identity information manually under the configured fallback conditions.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": "The maximum number of capture attempts shall be configurable - as of now it is 4."
+   },
+   "kyc_003": {
+    "title": "Government Identity Verification and Reconciliation",
+    "does": "1. The system shall compare each captured identity attribute with the corresponding ID Verification System attribute and store the attribute-level results and overall reconciliation result.\n\n\n2. The system shall evaluate the identity status and permit journey progression only when the status is acceptable; \n\n3. Journey progression shall be permitted only when all mandatory identity attributes satisfy the configured reconciliation criteria and \n\n4. The System shall allow the Journey based on identity status if acceptable, allow the agent to re-scan the document or terminate the journey according to the permitted actions.\n\n5. Following identity re-capture, the system shall submit the latest identity information for verification and reconciliation again while retaining previous attempts in the audit history.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": "ID Verification System Validation is applicable for - Passport, QID and Diplomatic ID.\n\nID Verification System Validation excluded for GCC and continue the Journey.\n\nID reconsilation Rule - Identity C"
+   },
+   "kyc_004": {
+    "title": "Government Identity Verification and Reconciliation",
+    "does": "1. The system shall preserve the captured images and attributes reconciled with MOI attributes.\n\n2. The system shall derive and store the applicable nationality-risk indicator using the authoritative nationality returned by MOI and the active nationality-risk configuration",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": "HRN = \"Y\", if Nationality = Bangladesh, Pakistan, Nepal(values to be confirmed)"
+   },
+   "kyc_005": {
+    "title": "Government Identity Verification and Reconciliation",
+    "does": "1. When MOI is unavailable or does not respond within the configured period, preserve the captured identity information, and save the journey as pending government verification or Draft.\n\n2. Final Order submission shall remain blocked until MOI verification is completed successfully.\n\n3. The system shall support automatic retry of MOI verification during Order Submission for the pending journey.\n\n4. If successfully verified, update the result and allow the journey to continue subject to all other validations.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": "1. MOI timeout limit - Configurable value(to be provided by Business)"
+   },
+   "ecc_001": {
+    "title": "Blacklist Management",
+    "does": "Existing Customers:\n1. The system shall receive blacklist customer data from Data Warehouse System through the configured batch interface for existing customers. Blacklist feed is received and processed successfully. Invalid records are logged.\n2. The system shall insert and update blacklist customer information received from Data Warehouse System into the Customer Blacklist Repository. \n3. The system shall retain historical blacklist information including changes to status, source and reason. Historical records remain available for audit purposes.\n4. The system shall validate existing customers against the Customer Blacklist Repository during customer retrieval and transaction initiation. Repository lookup is performed prior to transaction continuation.\n5. The system shall receive and record blacklist information generated through collections processing due to non-payment in Colllections state.\n6. The system shall allow Fraud Team users to create blacklist entries, capturing the source, reason, user, date and time for audit purposes.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "ecc_002": {
+    "title": "Blacklist Management",
+    "does": "New Customers: \n1. The system shall perform blacklist validation for new customers. \n2. The system shall receive blacklist validation results from Credit Control and store  information in Customer Blacklist Repository. \n\nBlacklist Status Check:\n3. The system shall prevent/permit customer onboarding or transaction completion depending on the blacklist status.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": "1.Status -Blacklisted -Prevent journey continuation\n2.Status- Other than Blacklisted-Permit journey."
+   },
+   "ecc_003": {
+    "title": "Blacklist Management",
+    "does": "1. The system shall associate every blacklist record with a blacklist reason code, originating source, description ,effective date.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "ecc_004": {
+    "title": "Credit Limit Management",
+    "does": "1.The system shall determine and assign the initial account-level credit limit based on the business-configured credit limit matrix using customer segment.\n2.The system shall display the current credit limit maintained at customer account level.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": "The default initial credit limit for new Consumer postpaid customers shall be 1,000 QAR for Expat customers and 4,000 QAR for Qatari customers."
+   },
+   "ecc_005": {
+    "title": "Credit Limit Management",
+    "does": "1.The system shall allow an authorized Credit and Collections user to override the determined credit limit within the user\u2019s configured authority. \n2.An authorized user can submit an override within the applicable threshold; unauthorized or above-threshold changes are prevented or routed for approval.\n3.The system shall initiate an approval workflow when the requested credit limit exceeds the requestor\u2019s authority threshold. The limit is not applied until an authorized approver approves the request; rejection records the approver and reason.\n4.The system shall maintain an audit trail for credit limit creation, modification, approval, rejection, and synchronization. The audit record captures the account, previous value, requested value, applied value, action, user, date and time, reason, and outcome.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": "System shall allow credit limit enhancement during only modifications journeys"
+   },
+   "ecc_006": {
+    "title": "Credit Limit Management",
+    "does": "1. The system shall support an applicable credit limit increase based on a confirmed advance payment from customer . The additional limit is applied only after advance payment confirmation and is associated with the relevant account.\n\n2. The system shall send an approved credit limit to the billing platform and update the account with the processing outcome. Billing confirms successful processing and the account displays the approved value;",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "ecc_007": {
+    "title": "Commitment Break Penalty Calculation",
+    "does": "1.The system shall validate active commitments such as  plan lock-in conditions,Star Number Lock in conditions and Device Lock in conditions  before processing a migration, downgrade  or termintaion request.\n2.The system shall determine the remaining commitment duration by comparing the commitment end date with the requested transaction date.\n3.The system shall evaluate whether the requested transaction qualifies for a commitment break penalty based on product and contract.\n4.The system shall calculate the commitment break penalty using configurable business rules and tariff-specific formulas.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": "Lock in Penalty charges calculation rules to be confirmed with business"
+   },
+   "ecc_008": {
+    "title": "Commitment Break Penalty Calculation",
+    "does": "1.The system shall display the calculated penalty amount to the agent to customer  for each respective committement break (Plan Lock in , Star Number Lock IN , Device Lock in)prior to order confirmation.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "bam_001": {
+    "title": "Billing Account and Payment Profile Management",
+    "does": "1. The system shall allow agent to create a new billing account or select an Existing Account for eligible customers.\n2. The system shall allow agent to capture billing Information \n- Contatct (Primary & Secondary)\n- Preferred invoice recipient contact\n- New or Existing Billing address\n- Bill Cycle\n- Payment Profile, Validate Payment Profile, Update Payment Profile\n3. The system shall allow the Retail Agent to capture payment profile details covering Payment Method, Payment Type and Billing Frequency. The system should only allow credit card & debit card for auto debit.\n4. The system shall validate the captured payment details and shall update the payment profile only following successful validation. The system shall capture last 4 digit of card & token number generated from payment gateway in the payment profile.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": "1. Every billing account shall have one designated primary billing contact.\n2. An Active payment Profile\n3. The VIP segment defaults to bill cycle 7th of the month. \n4. All other segments default to t"
+   },
+   "bam_002": {
+    "title": "Billing Account and Payment Profile Management",
+    "does": "The system shall validate if the Billing account and Payment Profile selected meets the order Journey Rules else throw relevant error to Agent",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": "1. Incase of Postpaid Journey only a Postpaid billing account is allowed\n2. In case of Prepaid Journey - No Billing should be selected"
+   },
+   "num_001": {
+    "title": "Number Discovery and Qualification",
+    "does": "The system shall retrieve and auto-populate customer reserved numbers which are eligible for the journey",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "num_002": {
+    "title": "Number Discovery and Qualification",
+    "does": "The system shall allow agent to search and select Free Numbers, Star Number or Fixed Line Numbers based on the journey or Customer Choice",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "num_003": {
+    "title": "Number Discovery and Qualification",
+    "does": "The system shall validate Star Number eligibility based on Business Rules.",
+    "needs": "VFQ to provide the plan-to-Star-Number eligibility and pricing rules",
+    "makes": "Updated journey/order state per the requirement",
+    "example": "Star Number eligibility shall be determined using the approved Plan Price versus Number Category matrix."
+   },
+   "num_004": {
+    "title": "Number Reservation",
+    "does": "The system shall reserve selected Number during order processing and release the number If draft order is expired or cancelled",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "num_005": {
+    "title": "Number Reservation",
+    "does": "The system shall display selected number details, Upfront Charges and Commitment period to agent for customer confirmation before submission.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "sim_001": {
+    "title": "SIM and eSIM Lifecycle Management",
+    "does": "1. The system shall allow agent to select appropriate SIM type during journey initiation.\n2. The system shall allow agent to capture Physical SIM/Printed eSIM details.\n3. The system shall assign SIM to the customer service.\n4. The system shall generate Virtual eSIM and deliver Virtual eSIM information to the customer through Email or SMS after order fulfillment",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "sim_002": {
+    "title": "SIM and eSIM Lifecycle Management",
+    "does": "1. The system shall validate SIM serial number, ICCID, status and availability and throw and error to agent in case of any issue\n2. The System shall reserve the SIM from the inventory and mark it consumed after fulfillment\n- eSIM and Virtual SIM must be depleted from UIM Inventory\n- Physical SIM must be depleted from WinCash and UIM Inventory",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "cvc_001": {
+    "title": "Cart Validation, Review and Payment Preparation",
+    "does": "1. The system shall validate customer eligibility -customer account status, Billing Profile availability and completeness , payment profile availability and completeness  prior to checkout.\n2.The system shall validate that the selected assets are eligible for modification, migration, suspension, resumption, or termination.\n3. The system shall execute compatibility validations and quantity validations for products included in the cart.\n4. The system shall validate that the requested MSISDN and SIMor eSIM is available for allocation.\n5. The system shall validate the availability of requested equipment and devices included in the order.\n6. The system shall validate that all mandatory appointment requirements have been fulfilled for fulfilment-related orders.\n7. The system shall calculate applicable recurring and non-recurring charges, deposits and advance payments, penalties and termination charges.\n8. The system shall present an itemized order and payment summary before confirmation.\n9.The system shall prevent checkout if any mandatory validation returns a failure status and corresponding corrective actions to be displayed to the user before order submission.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": "1. Compatibility rules and quantity limits  shall be defined and maintained by Product configuration.\n2. Charging shall be based on the approved product price catalogue.\n3. Contractual penalties shall"
+   },
+   "caf_001": {
+    "title": "Key Information Management",
+    "does": "1. The system shall generate and display key information before CAF submission to the Agent and Customer.\n2. The key information shall include the connection type, service type, selected product, associated resources, selected plan, plan lock-in period, Star Number, Star Number lock-in period, device instalment details, and device instalment lock-in period, as applicable as per the Cart of the Journey.\n3. The system shall refresh the displayed key information whenever the agent adds, removes, or amends an item in the cart, Key Information must be consistent with the final validated cart.",
+    "needs": "VFQ to provide the CAF template set and mapping by journey, product type, service type, agent role and channel - a CAF template Matrix",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "caf_002": {
+    "title": "Contract Generation, Signature and Distribution",
+    "does": "1. The system shall use the applicable CAF template using the configured mapping for journey, product type, service type, agent role, and channel and generate the CAF related to the ongoing Journey with all information like Customer, Account, Service, product, Resources.\n\n2. The system shall prevent CAF generation where mandatory CAF information is unavailable.\n\n3. The system shall allow the authorised agent to select the applicable digital signature-capture method - 1. customer-facing touchpad and 2. touch-screen device options.\n\n4. The system shall display the complete CAF to the customer on the selected customer-facing device, Customer shall be able to review the CAF before signature capture.\n\n5. The system shall capture the customer signature through the selected signature device, captured Signature must be embedded in CAF, Signed CAF should be visible to Agent.\n\n6. The system shall detect and report signature-capture failure, shall allow for recapturing if required, system shall allow to proceed until CAF submission is completed.\n\n7. The system shall allow an Agent to upload a manually signed CAF during CAF submission, acceptable format is PDF or JPG limited of 2 MB maximum size of a document.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "pay_001": {
+    "title": "Payment Summary, Processing and Receipt Management",
+    "does": "The system shall display a consolidated payment summary showing all applicable charges prior to payment confirmation.\n- HRN Advance\n- Star Number Charges\n- Credit Limit Enhancement Charges\n- Plan Downgrade Penalty\n- Plan Commitment Breakin Penalty\n- Migration Charges\n- SIM Card Charges\n- Plan and Add-On Charges\n- Additional Device Charges",
+    "needs": "VFQ to confirm the HRN advance-payment matrix and applicable order-charge rules",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "pay_002": {
+    "title": "Payment Summary, Processing and Receipt Management",
+    "does": "1. The system shall create and send a payment request to the Payment Collection System for all applicable order charges\n2. The system shall prevent duplicate payment collection for the same chargeable event.\n3. The system shall validate payment status returned by the Payment Collection System before continuing order processing.\n4. The system shall handle payment failures\n5. The system should hold the order and does not allow submission untill the Payment is completed\n6. The system shall generate a payment receipt after successful payment collection even for the Zero Payments",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "pay_003": {
+    "title": "Payment Summary, Processing and Receipt Management",
+    "does": "1. The system shall allow agent to retry the Payment during the payment failures\n2. The system shall enforce a configurable limit on failed payment attempts.\n3. The system shall capture all payment requests, responses, retries, cancellations, and refunds to be retained in the audit history.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": "Payment retry is allowed for 4 times"
+   },
+   "ord_001": {
+    "title": "Order Visibility and Status Management",
+    "does": "1. The system shall submit the order once the payment is succesful, in case of payment failure system save the order in draft\n2. The system shall receive the order Status and Display it within the Customer 360\n3. The system shall mark the Order Status based on the response from Fullfillment system\n4. The system shall display error reasons in case of Order Failure",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "not_001": {
+    "title": "Notification Trigger, Template and Channel Management",
+    "does": "1.The system shall support configuration of notification events, templates, recipients, languages and channels.\n2.The system shall trigger the applicable communication template based on the notification event type .\n3.The system shall determine the communication language and delivery based on customer preference.\n4.The system shall populate dynamic template attributes using transaction, customer, account, and service data.\n5.The system shall record communication delivery status updates including sent, delivered, failed, and pending statuses.\n6.The system shall maintain a notification history for customer communications generated as part of the transaction lifecycle.",
+    "needs": "VFQ to provide notification events, templates, recipients, languages, channels and trigger rules",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   },
+   "not_002": {
+    "title": "Feedback Management",
+    "does": "1.The system shall send the customer feedback survey request to \"Customer Survey\" System once the ticket associated with the respective journey is resolved.",
+    "needs": "Preceding step output in the journey",
+    "makes": "Updated journey/order state per the requirement",
+    "example": ""
+   }
+  },
+  "contractPlain": {},
+  "nameMap": {}
+ }
+}
