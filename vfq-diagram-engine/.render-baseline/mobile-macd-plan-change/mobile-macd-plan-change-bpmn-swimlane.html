@@ -92,13 +92,15 @@ a{color:var(--accent);text-decoration:none}
    group from being compressed if the title is long.
 
    The group is now a two-row stack (.header-row1/.header-row2), per an explicit "two-row
-   structure" requirement for this corner: row 1 keeps the four buttons above unchanged, row 2
-   holds the zoom control (-/percentage/+) and the Jump to Phase select that replaced the former
-   Actors dropdown (see the removed applyActorFilter()/.actor-dim comments this replaces for that
-   feature's own history — it was a multi-select lane/actor visibility filter, unrelated to
-   navigation, and is not reused or ported forward here). align-items:flex-end keeps both rows
-   right-aligned against the header's own right edge, matching row 1's prior single-row
-   alignment. */
+   structure" requirement for this corner: row 1 holds Reset, the Jump to Phase select (moved
+   here from row 2 — see the removed .jumpphase-label comment below for why it no longer carries
+   a visible "Jump to Phase" caption of its own), Play, View Details, Happy Flow and Export, in
+   that order; row 2 holds node Search (see .searchctrl below) and the zoom control
+   (-/percentage/+). The phase select replaced the former Actors dropdown (see the removed
+   applyActorFilter()/.actor-dim comments this replaces for that feature's own history — it was
+   a multi-select lane/actor visibility filter, unrelated to navigation, and is not reused or
+   ported forward here). align-items:flex-end keeps both rows right-aligned against the header's
+   own right edge, matching row 1's prior single-row alignment. */
 .top .header-actions{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
 .top .header-row1,.top .header-row2{display:flex;align-items:center;gap:8px}
 /* Two-line title, explicit visual hierarchy per an explicit requirement: a small uppercase
@@ -161,12 +163,13 @@ a{color:var(--accent);text-decoration:none}
 .exportmenu button:hover{background:var(--accent);color:#fff}
 .exportmenu button:hover .fmt-hint{color:rgba(255,255,255,.75)}
 .exportmenu .fmt-hint{font-size:10.5px;color:var(--muted)}
-/* Zoom control + Jump to Phase — replace the former Actors dropdown (a multi-select actor/lane
-   filter, removed entirely; see the removed applyActorFilter()/.actor-dim comments this replaces
-   for that feature's own history). Both are plain, always-visible controls (no absolute-panel
-   popover like .exportwrap/.exportmenu above), living in a second header row underneath Reset/
-   View Details/Happy Flow/Export per an explicit "two-row structure" requirement for the
-   header's right-hand control group. */
+/* Zoom control + node Search — the former Actors dropdown (a multi-select actor/lane filter,
+   removed entirely; see the removed applyActorFilter()/.actor-dim comments this replaces for
+   that feature's own history) has been replaced by two unrelated things instead: the Jump to
+   Phase select (moved up into row 1 — see .phaseselect below) and this row's Search box. Both
+   Search and the zoom control are plain, always-visible controls (no absolute-panel popover
+   like .exportwrap/.exportmenu above), living in the header's second row per the "two-row
+   structure" requirement for this corner. */
 .zoomctrl{display:flex;align-items:center;border:1px solid var(--line);background:var(--panel);
  border-radius:var(--radius-button);overflow:hidden}
 .zoomctrl .zoombtn{border:none;background:none;color:var(--ink2);font-size:15px;font-weight:700;
@@ -175,11 +178,32 @@ a{color:var(--accent);text-decoration:none}
 .zoomctrl .zoombtn:hover{background:var(--panelalt);color:var(--accent)}
 .zoomctrl .zoompct{font-size:12px;font-weight:700;color:var(--ink);min-width:40px;text-align:center;
  font-variant-numeric:tabular-nums;padding:0 2px;border-left:1px solid var(--line2);border-right:1px solid var(--line2)}
-.jumpphase{display:flex;align-items:center;gap:8px}
-.jumpphase-label{font-size:12px;font-weight:700;color:rgba(255,255,255,.85);white-space:nowrap}
+/* Jump to Phase now sits in row 1 among the other header buttons (see the header-actions
+   comment above) with no visible caption of its own — an explicit "remove the label" requirement
+   replacing the former .jumpphase wrapper + .jumpphase-label span this used to need purely to
+   hold that caption next to the select. The select needs SOME accessible name now that its
+   caption is gone, hence aria-label="Jump to phase" on the element itself in the markup below;
+   nothing about its population (phaseJumpSel further down) or behaviour (jumpToPhase()) changed,
+   only where it physically sits and how it's labelled. Same look as `.btn` (border/background/
+   radius/padding/font all identical) so it reads as one more control in that row, not a
+   visually distinct dropdown bolted on afterward. */
 .phaseselect{border:1px solid var(--line);background:var(--panel);color:var(--ink2);
  border-radius:var(--radius-button);padding:var(--space-2) var(--space-3);font-size:12px;font-weight:600;
  cursor:pointer;min-width:88px}
+/* Node Search — free-text/abbreviation lookup (see the "---- Node search" JS section further
+   down for the id/sub/label/desc matching it drives). Styled as one bordered box like
+   .zoomctrl rather than a bare input, so it reads as a control of the same visual weight; the
+   icon is a plain inline SVG (no icon font/sprite dependency, consistent with every other glyph
+   in this file already being hand-drawn SVG). .no-match (toggled from JS, only while the field
+   has non-empty text with zero matching nodes) recolours the typed text itself rather than
+   adding a separate error message the header has no spare room for. */
+.searchctrl{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);
+ border-radius:var(--radius-button);padding:0 var(--space-3)}
+.searchctrl svg{flex:none;color:var(--ink2)}
+.searchbox{border:none;background:none;color:var(--ink);font-size:12px;font-weight:600;width:180px;
+ padding:var(--space-2) 0;outline:none}
+.searchbox::placeholder{color:var(--muted);font-weight:600}
+.searchbox.no-match{color:#c0392b}
 /* .chip and the Flows filter it labelled have both been removed entirely — every connector
    kind is now unconditionally visible, with no toggle UI at all. */
 /* diagram */
@@ -577,6 +601,9 @@ body.drawer-resizing .drawer{transition:none}
  <div class="header-actions">
   <div class="header-row1">
    <button class="btn" id="resetBtn">Reset</button>
+   <select class="phaseselect" id="phaseJump" aria-label="Jump to phase">
+    <option value="">All</option>
+   </select>
    <button class="btn" id="happyPlayBtn">Play</button>
    <button class="btn" id="viewDetailsBtn">View Details</button>
    <button class="btn" id="happyFlow">Happy Flow</button>
@@ -590,16 +617,14 @@ body.drawer-resizing .drawer{transition:none}
    </div>
   </div>
   <div class="header-row2">
+   <div class="searchctrl">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    <input type="text" class="searchbox" id="nodeSearch" placeholder="Search node…" aria-label="Search node by abbreviation or text">
+   </div>
    <div class="zoomctrl">
     <button type="button" class="zoombtn" id="zoomOutBtn" aria-label="Decrease zoom">−</button>
     <span class="zoompct" id="zoomPct">100%</span>
     <button type="button" class="zoombtn" id="zoomInBtn" aria-label="Increase zoom">+</button>
-   </div>
-   <div class="jumpphase">
-    <span class="jumpphase-label">Jump to Phase</span>
-    <select class="phaseselect" id="phaseJump">
-     <option value="">All</option>
-    </select>
    </div>
   </div>
  </div>
@@ -3100,6 +3125,43 @@ function jumpToPhase(val){
 }
 phaseJumpSel.addEventListener('change',()=>jumpToPhase(phaseJumpSel.value));
 
+// ---- Node search: locate a node by its abbreviation (id or sub — e.g. "kyc01_reject" or
+// "BR-002") or by free text (label or desc), then select + highlight + centre it — the exact
+// same three primitives (setSelected/applyHL/scrollNodeIntoView) the plain click handler and
+// View Details click already use, just driven by typed text instead of a click. Deterministic,
+// not a toggle: searching the same node twice in a row leaves it selected both times, it never
+// flips back off the way toggleLock()'s click behaviour would.
+const nodeSearchInput=document.getElementById('nodeSearch');
+function findNodeByQuery(q){
+ const needle=q.trim().toLowerCase(); if(!needle) return null;
+ // Exact id/abbreviation match first: typing a full id or sub in full should never lose to
+ // some unrelated node whose much longer label merely happens to CONTAIN that same text.
+ const exact=NODES.find(n=>n.id.toLowerCase()===needle || (n.sub&&n.sub.toLowerCase()===needle));
+ if(exact) return exact;
+ // Otherwise substring match across id, sub (abbreviation) and label/desc (free text) — first
+ // match in model order wins, the same "first match, no ranking" convention NID/neighbors()
+ // lookups elsewhere in this file already use rather than trying to score multiple hits.
+ return NODES.find(n=>
+   n.id.toLowerCase().includes(needle) ||
+   (n.sub&&n.sub.toLowerCase().includes(needle)) ||
+   (n.label&&n.label.toLowerCase().includes(needle)) ||
+   (n.desc&&n.desc.toLowerCase().includes(needle))
+ )||null;
+}
+function runNodeSearch(){
+ const hit=findNodeByQuery(nodeSearchInput.value);
+ nodeSearchInput.classList.toggle('no-match', !!nodeSearchInput.value.trim() && !hit);
+ if(!hit) return;
+ setSelected(hit.id); applyHL(hit.id); scrollNodeIntoView(hit.id);
+}
+// Debounced as-you-type search (300ms, same "settle before acting" pattern as every other
+// debounce in this codebase) PLUS an immediate Enter-key trigger that bypasses the debounce
+// entirely — a user who already knows the exact id/sub they want and hits Enter shouldn't wait
+// out the timer that's there for the still-typing case.
+let nodeSearchDebounce=null;
+nodeSearchInput.addEventListener('input',()=>{ clearTimeout(nodeSearchDebounce); nodeSearchDebounce=setTimeout(runNodeSearch,300); });
+nodeSearchInput.addEventListener('keydown',(e)=>{ if(e.key==='Enter'){ clearTimeout(nodeSearchDebounce); runNodeSearch(); } });
+
 // ---- View Details mode: a persistent-inspection variant of the drawer (BPMN swimlane and
 // process-flow diagrams only, per the requirement this was built against). OFF (default): a
 // plain click toggles the highlight lock, as established before this mode existed. ON: a plain
@@ -3141,6 +3203,10 @@ document.getElementById('resetBtn').addEventListener('click',()=>{
  // default option, matching page load. The actual scroll position is already reset below
  // (scrollLeft=0 alongside fit()), so this only needs to fix the dropdown's own displayed value.
  if(phaseJumpSel.value!==''){ phaseJumpSel.value=''; }
+ // Node Search: same "temporary view change" reasoning as Jump to Phase immediately above —
+ // leftover typed text (and any stale no-match colouring) shouldn't survive a Reset either,
+ // even though the node it found is already being deselected/un-highlighted below.
+ if(nodeSearchInput.value!==''){ nodeSearchInput.value=''; nodeSearchInput.classList.remove('no-match'); }
  // View Details mode's own pinned selection and the drawer content it's driving are explicitly
  // exempt from Reset: "the Reset action shall not clear, deselect, or modify the currently
  // selected View Details item ... side-drawer content shall remain unchanged after a reset
