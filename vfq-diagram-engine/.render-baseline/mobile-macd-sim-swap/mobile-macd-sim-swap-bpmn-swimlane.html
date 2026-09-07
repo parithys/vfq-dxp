@@ -3065,13 +3065,38 @@ phaseGroups.forEach((grp,gi)=>{
 // zoom (tx/scale, assigned by fit()/zoomAt() further down) the user already has — deliberately
 // never recomputes or resets either, same "shall not modify... zoom level... except as required
 // to bring the diagram into view" reasoning wheel-zoom's own comment cites for itself.
+// Also centres vertically on that phase's OWN nodes (not just horizontally on its column span):
+// a lane's height is uniform across the whole diagram (sized by whichever phase stacks the most
+// nodes into it), so a phase with only one or two nodes concentrated in a single lane can sit far
+// from wherever scrollTop already happens to be — e.g. a tall diagram merging several sub-journeys
+// (one BRSD per Jump-to-Phase entry) where one entry has 16 nodes and another has 1. Horizontal-only
+// centring left that case scrolled to a blank slice of an unrelated lane's empty vertical span for
+// this phase. Reuses scrollNodeIntoView()'s canvas-widening safety net (below) since the same
+// "target may exceed the currently-rendered svg box" possibility applies to either axis here too.
 function jumpToPhase(val){
  const shell=svg.parentElement; if(!shell) return;
  if(val===''){ shell.scrollLeft=0; return; }
  const grp=phaseGroups[Number(val)]; if(!grp) return;
  const centerContentX=grp.x+grp.spanW/2;
  const targetSvgX=tx+centerContentX*scale;
- shell.scrollLeft=Math.max(0, targetSvgX-shell.clientWidth/2);
+ const wantScrollLeft=Math.max(0, targetSvgX-shell.clientWidth/2);
+ const inPhase=NODES.filter(n=>n.phase>=grp.start && n.phase<=grp.end);
+ let wantScrollTop=shell.scrollTop;
+ if(inPhase.length){
+  const cys=inPhase.map(n=>n.cy);
+  const centerContentY=(Math.min(...cys)+Math.max(...cys))/2;
+  const targetSvgY=ty+centerContentY*scale;
+  wantScrollTop=Math.max(0, targetSvgY-shell.clientHeight/2);
+ }
+ const neededW=Math.ceil(wantScrollLeft)+shell.clientWidth, neededH=Math.ceil(wantScrollTop)+shell.clientHeight;
+ const curW=svg.clientWidth||0, curH=svg.clientHeight||0;
+ if(neededW>curW||neededH>curH){
+  svg.style.width=Math.max(curW,neededW)+'px';
+  svg.style.height=Math.max(curH,neededH)+'px';
+  svg.setAttribute('viewBox',`0 0 ${Math.max(curW,neededW)} ${Math.max(curH,neededH)}`);
+ }
+ if(shell.scrollTo){ shell.scrollTo({left:wantScrollLeft, top:wantScrollTop, behavior:'smooth'}); }
+ else { shell.scrollLeft=wantScrollLeft; shell.scrollTop=wantScrollTop; }
 }
 phaseJumpSel.addEventListener('change',()=>jumpToPhase(phaseJumpSel.value));
 
