@@ -2,7 +2,7 @@
  "meta": {
   "title": "Agent 360 \u2014 Process Flow",
   "brsdId": "vfq-agent-360-brsd-v1-0",
-  "generated": "2026-09-04",
+  "generated": "2026-09-07",
   "source": "VFQ_Agent_360_BRSD_v1.0.xlsx"
  },
  "layout": {
@@ -10,7 +10,7 @@
   "topbar": 70,
   "colw": 252,
   "totalW": 2024,
-  "totalH": 3570,
+  "totalH": 3790,
   "laneLabelW": 60,
   "lanes": [
    {
@@ -25,27 +25,27 @@
     "name": "Agent",
     "hint": "Agent-driven actions across Agent 360 capabilities",
     "y": 350,
-    "h": 1360
+    "h": 1580
    },
    {
     "key": "boff",
     "name": "Backoffice / Privileged Staff",
     "hint": "Configure and publish notifications and bulk notes",
-    "y": 1730,
+    "y": 1950,
     "h": 480
    },
    {
     "key": "sup",
     "name": "Supervisor",
     "hint": "Task assignment authority",
-    "y": 2230,
+    "y": 2450,
     "h": 260
    },
    {
     "key": "sys",
     "name": "System (DXP / Siebel)",
     "hint": "Role-based views, validation, storage, expiry",
-    "y": 2510,
+    "y": 2730,
     "h": 920
    }
   ],
@@ -81,11 +81,7 @@
    "phase": 0,
    "label": "Submit Agent ID & Password",
    "sub": "AGN-001-JSM-01",
-   "desc": "The agent can submit Agent ID and password to log in to the system.",
-   "inputs": [
-    "Agent ID",
-    "Password"
-   ],
+   "desc": "The agent shall be able to submit Agent ID and password to log in to the system.",
    "slot": 0,
    "w": 206,
    "h": 100,
@@ -101,17 +97,14 @@
    "phase": 1,
    "label": "Role-Based View Rendered",
    "sub": "AGN-001-APM-01",
-   "desc": "The System shall provide role-based view.",
-   "outputs": [
-    "Views enabled/disabled per role matrix"
-   ],
+   "desc": "The System shall provide role-based view; views are enabled or disabled based on the role matrix.",
    "slot": 0,
    "w": 190,
    "h": 100,
    "x": 443.0,
-   "y": 2590.0,
+   "y": 2810.0,
    "cx": 538.0,
-   "cy": 2640.0
+   "cy": 2860.0
   },
   {
    "id": "profile_edit_initiate",
@@ -120,17 +113,17 @@
    "phase": 1,
    "label": "Initiate Profile Edit",
    "sub": "AGN-001-APM-05 \u00b7 BR-01",
-   "desc": "The Agent shall be able to initiate agent profile edit from the profile section.",
+   "desc": "The Agent shall be able to initiate agent profile edit from the profile section, where role permits.",
    "controls": [
-    "BR-01: Only agents granted profile-edit authority may update profile information, and they are accountable for the accuracy of the changes they submit."
+    "BR-01"
    ],
-   "slot": 1,
+   "slot": 2,
    "w": 206,
    "h": 60,
    "x": 435.0,
-   "y": 670.0,
+   "y": 890.0,
    "cx": 538.0,
-   "cy": 700.0
+   "cy": 920.0
   },
   {
    "id": "forgot_password",
@@ -139,14 +132,14 @@
    "phase": 1,
    "label": "Forgot Password",
    "sub": "AGN-001-APM-02",
-   "desc": "The Agent shall be able to initiate forgotten password flow.",
-   "slot": 0,
+   "desc": "The Agent shall be able to initiate the forgotten password flow.",
+   "slot": 3,
    "w": 206,
    "h": 60,
    "x": 435.0,
-   "y": 450.0,
+   "y": 1110.0,
    "cx": 538.0,
-   "cy": 480.0
+   "cy": 1140.0
   },
   {
    "id": "identify_password",
@@ -155,20 +148,24 @@
    "phase": 2,
    "label": "Verify Identity (Authcode/OTP)",
    "sub": "AGN-001-APM-03",
-   "desc": "The agent shall be able to verify himself by providing the necessary details (Authcode or OTP). Invalid or expired details are rejected with a validation message (no forward transition).",
+   "desc": "As part of the forgot-password flow, the agent shall be able to verify himself by providing the necessary details (Authcode or OTP) before proceeding to create a new password.",
    "branches": [
     {
      "label": "Valid",
      "to": "create_new_password"
+    },
+    {
+     "label": "Invalid/expired",
+     "to": "forgot_password"
     }
    ],
-   "slot": 0,
+   "slot": 3,
    "w": 176,
    "h": 100,
    "x": 702.0,
-   "y": 430.0,
+   "y": 1090.0,
    "cx": 790.0,
-   "cy": 480.0
+   "cy": 1140.0
   },
   {
    "id": "create_new_password",
@@ -177,36 +174,36 @@
    "phase": 3,
    "label": "Create New Password",
    "sub": "AGN-001-APM-04",
-   "desc": "The agent shall be able to create the new password as per password policy. Non-compliant or mismatched entries are rejected with a validation message (no forward transition).",
+   "desc": "The agent shall be able to create the new password as per password policy. A non-compliant or mismatched entry is rejected in place with a validation message (agent re-enters the password on the same step).",
    "branches": [
     {
      "label": "Compliant & matches confirmation",
      "to": "change_password"
     }
    ],
-   "slot": 1,
+   "slot": 4,
    "w": 206,
    "h": 60,
    "x": 939.0,
-   "y": 670.0,
+   "y": 1330.0,
    "cx": 1042.0,
-   "cy": 700.0
+   "cy": 1360.0
   },
   {
    "id": "change_password",
    "type": "agent",
    "lane": "agt",
-   "phase": 3,
+   "phase": 4,
    "label": "Change Password",
    "sub": "AGN-001-APM-06",
    "desc": "The Agent shall be able to change password by providing current password, new password, and confirm password.",
-   "slot": 2,
+   "slot": 3,
    "w": 206,
    "h": 60,
-   "x": 939.0,
-   "y": 890.0,
-   "cx": 1042.0,
-   "cy": 920.0
+   "x": 1191.0,
+   "y": 1110.0,
+   "cx": 1294.0,
+   "cy": 1140.0
   },
   {
    "id": "identify_change_password",
@@ -215,11 +212,55 @@
    "phase": 2,
    "label": "Verify Identity for Password Change",
    "sub": "AGN-001-APM-07",
-   "desc": "The agent shall be able to identify himself for change password by providing necessary details (Authcode or OTP). Invalid or expired details prevent the change and display a validation message (no forward transition).",
+   "desc": "The agent shall be able to identify himself for change password by providing necessary details (Authcode or OTP). Invalid or expired details prevent the change and re-prompt on the same step with a validation message.",
    "branches": [
     {
      "label": "Verified",
      "to": "change_password"
+    }
+   ],
+   "slot": 2,
+   "w": 176,
+   "h": 100,
+   "x": 702.0,
+   "y": 870.0,
+   "cx": 790.0,
+   "cy": 920.0
+  },
+  {
+   "id": "update_mfa",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 4,
+   "label": "Update MFA Settings",
+   "sub": "AGN-001-APM-08 \u00b7 BR-02",
+   "desc": "The Agent shall be able to change MFA settings with privileges.",
+   "controls": [
+    "BR-02"
+   ],
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 1191.0,
+   "y": 670.0,
+   "cx": 1294.0,
+   "cy": 700.0
+  },
+  {
+   "id": "identify_mfa",
+   "type": "validation",
+   "lane": "agt",
+   "phase": 2,
+   "label": "Verify Identity for MFA Settings",
+   "sub": "AGN-001-APM-07A \u00b7 BR-02",
+   "desc": "The agent shall be able to identify himself for MFA Settings by providing necessary details (Authcode or OTP). Invalid or expired details prevent the change and re-prompt on the same step with a validation message.",
+   "controls": [
+    "BR-02"
+   ],
+   "branches": [
+    {
+     "label": "Verified",
+     "to": "update_mfa"
     }
    ],
    "slot": 1,
@@ -231,73 +272,35 @@
    "cy": 700.0
   },
   {
-   "id": "update_mfa",
-   "type": "agent",
-   "lane": "agt",
-   "phase": 3,
-   "label": "Update MFA Settings",
-   "sub": "AGN-001-APM-08 \u00b7 BR-02",
-   "desc": "The Agent shall be able to change MFA settings with privileges.",
-   "controls": [
-    "BR-02: An agent may request an MFA change only after identity verification and within the privileges approved by VFQ Security."
-   ],
-   "slot": 5,
-   "w": 206,
-   "h": 60,
-   "x": 939.0,
-   "y": 1550.0,
-   "cx": 1042.0,
-   "cy": 1580.0
-  },
-  {
-   "id": "identify_mfa",
-   "type": "validation",
-   "lane": "agt",
-   "phase": 2,
-   "label": "Verify Identity for MFA Settings",
-   "sub": "AGN-001-APM-07 (MFA) \u00b7 BR-02",
-   "desc": "The agent shall be able to identify himself for MFA Settings by providing necessary details (Authcode or OTP). Invalid or expired details prevent the change and display a validation message (no forward transition).",
-   "controls": [
-    "BR-02: An agent may request an MFA change only after identity verification and within the privileges approved by VFQ Security."
-   ],
-   "branches": [
-    {
-     "label": "Verified",
-     "to": "update_mfa"
-    }
-   ],
-   "slot": 4,
-   "w": 176,
-   "h": 100,
-   "x": 702.0,
-   "y": 1310.0,
-   "cx": 790.0,
-   "cy": 1360.0
-  },
-  {
    "id": "change_language",
    "type": "agent",
    "lane": "agt",
-   "phase": 3,
+   "phase": 4,
    "label": "Change Language",
    "sub": "AGN-001-APM-09 \u00b7 BR-01",
    "desc": "The Agent shall be able to change language from available options.",
-   "slot": 3,
+   "controls": [
+    "BR-01"
+   ],
+   "slot": 2,
    "w": 206,
    "h": 60,
-   "x": 939.0,
-   "y": 1110.0,
-   "cx": 1042.0,
-   "cy": 1140.0
+   "x": 1191.0,
+   "y": 890.0,
+   "cx": 1294.0,
+   "cy": 920.0
   },
   {
    "id": "save_profile",
    "type": "system",
    "lane": "sys",
-   "phase": 4,
+   "phase": 5,
    "label": "Save Profile Changes",
    "sub": "AGN-001-APM-10 \u00b7 BR-01",
    "desc": "The Agent shall be able to save profile changes.",
+   "controls": [
+    "BR-01"
+   ],
    "branches": [
     {
      "label": "Valid",
@@ -308,47 +311,44 @@
      "to": "profile_edit_initiate"
     }
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 190,
    "h": 56,
-   "x": 1199.0,
+   "x": 1451.0,
    "y": 3052.0,
-   "cx": 1294.0,
+   "cx": 1546.0,
    "cy": 3080.0
   },
   {
    "id": "profile_saved",
    "type": "end",
    "lane": "sys",
-   "phase": 4,
+   "phase": 5,
    "label": "Profile Changes Saved",
    "sub": "Status Model: Agent Profile",
-   "desc": "Agent Profile status model: Saved \u2014 Profile changes are saved.",
-   "slot": 3,
+   "desc": "Agent Profile status model: Edit Initiated -> Saved.",
+   "slot": 0,
    "w": 84,
    "h": 84,
-   "x": 1252.0,
-   "y": 3258.0,
-   "cx": 1294.0,
-   "cy": 3300.0
+   "x": 1504.0,
+   "y": 2818.0,
+   "cx": 1546.0,
+   "cy": 2860.0
   },
   {
    "id": "view_eligible_entities",
    "type": "agent",
    "lane": "agt",
-   "phase": 5,
+   "phase": 1,
    "label": "View Eligible Entities",
    "sub": "AGN-001-AEX-01",
    "desc": "The Agent shall be able to navigate to view entities for which access is available.",
-   "outputs": [
-    "Entity list per access rights"
-   ],
    "slot": 0,
    "w": 206,
    "h": 60,
-   "x": 1443.0,
+   "x": 435.0,
    "y": 450.0,
-   "cx": 1546.0,
+   "cx": 538.0,
    "cy": 480.0
   },
   {
@@ -359,73 +359,69 @@
    "label": "Choose Entity Type",
    "sub": "AGN-001-AEX-03",
    "desc": "The Agent shall be able to choose the entity type before export.",
-   "slot": 2,
+   "slot": 0,
    "w": 206,
    "h": 60,
    "x": 687.0,
-   "y": 890.0,
+   "y": 450.0,
    "cx": 790.0,
-   "cy": 920.0
+   "cy": 480.0
   },
   {
    "id": "export_entities",
    "type": "end",
    "lane": "agt",
-   "phase": 2,
+   "phase": 3,
    "label": "Export Visible Entities",
    "sub": "AGN-001-AEX-02",
    "desc": "The Agent shall be able to export all visible entity records such as Orders, and Tickets.",
-   "outputs": [
-    "Order export",
-    "Ticket export"
-   ],
-   "slot": 3,
+   "slot": 1,
    "w": 84,
    "h": 84,
-   "x": 748.0,
-   "y": 1098.0,
-   "cx": 790.0,
-   "cy": 1140.0
+   "x": 1000.0,
+   "y": 658.0,
+   "cx": 1042.0,
+   "cy": 700.0
   },
   {
    "id": "configure_bell",
    "type": "agent",
    "lane": "boff",
-   "phase": 5,
+   "phase": 1,
    "label": "Configure Bell Notification",
    "sub": "AGN-001-BIN-01 \u00b7 BR-03, BR-04",
    "desc": "The Backoffice role shall be able to configure bell icon notification against a customer using the defined template and expiry date.",
    "controls": [
-    "BR-03: Only designated Backoffice or privileged staff may create or publish bell icon notifications and bulk notes.",
-    "BR-04: Staff publishing bell icon notifications or bulk notes must use an approved template and confirm the applicable customer or account context and expiry before publication."
+    "BR-03",
+    "BR-04"
    ],
    "slot": 0,
    "w": 206,
    "h": 100,
-   "x": 1443.0,
-   "y": 1810.0,
-   "cx": 1546.0,
-   "cy": 1860.0
+   "x": 435.0,
+   "y": 2030.0,
+   "cx": 538.0,
+   "cy": 2080.0
   },
   {
    "id": "publish_bell",
    "type": "agent",
    "lane": "boff",
-   "phase": 3,
+   "phase": 2,
    "label": "Publish Notification Manually",
    "sub": "AGN-001-BIN-02 \u00b7 BR-03, BR-04",
    "desc": "The privileged Agent shall be able to publish bell icon notifications manually using a defined format.",
    "controls": [
-    "BR-03: Only designated Backoffice or privileged staff may create or publish bell icon notifications and bulk notes.",
-    "BR-04: Staff publishing bell icon notifications or bulk notes must use an approved template and confirm the applicable customer or account context and expiry before publication."
+    "BR-03",
+    "BR-04"
    ],
    "slot": 0,
    "w": 206,
    "h": 100,
-   "x": 939.0,
-   "y": 1810.0,
-   "cx": 1042.0,
-   "cy": 1860.0
+   "x": 687.0,
+   "y": 2030.0,
+   "cx": 790.0,
+   "cy": 2080.0
   },
   {
    "id": "view_bell_banner",
@@ -455,9 +451,9 @@
    "w": 190,
    "h": 100,
    "x": 947.0,
-   "y": 2590.0,
+   "y": 2810.0,
    "cx": 1042.0,
-   "cy": 2640.0
+   "cy": 2860.0
   },
   {
    "id": "sort_bell",
@@ -471,9 +467,9 @@
    "w": 190,
    "h": 56,
    "x": 947.0,
-   "y": 3052.0,
+   "y": 3272.0,
    "cx": 1042.0,
-   "cy": 3080.0
+   "cy": 3300.0
   },
   {
    "id": "no_manual_expire",
@@ -483,13 +479,13 @@
    "label": "No Manual Expiration",
    "sub": "AGN-001-BIN-06",
    "desc": "The agent shall not be able to expire the bell icon notification manually.",
-   "slot": 4,
+   "slot": 3,
    "w": 206,
    "h": 60,
    "x": 939.0,
-   "y": 1330.0,
+   "y": 1110.0,
    "cx": 1042.0,
-   "cy": 1360.0
+   "cy": 1140.0
   },
   {
    "id": "expire_bell",
@@ -499,58 +495,157 @@
    "label": "Expire Notification",
    "sub": "AGN-001-BIN-07",
    "desc": "The System shall remove bell icon notification after the preconfigured expiration interval.",
-   "slot": 1,
+   "slot": 3,
    "w": 100,
    "h": 100,
    "x": 992.0,
-   "y": 2810.0,
+   "y": 3470.0,
    "cx": 1042.0,
-   "cy": 2860.0
+   "cy": 3520.0
   },
   {
    "id": "configure_bulk_notes",
    "type": "agent",
    "lane": "boff",
-   "phase": 5,
+   "phase": 1,
    "label": "Configure Bulk Notes",
    "sub": "AGN-001-BNT-04 \u00b7 BR-03, BR-04",
    "desc": "The Backoffice role shall be able to configure bulk notes using a defined template.",
    "controls": [
-    "BR-03: Only designated Backoffice or privileged staff may create or publish bell icon notifications and bulk notes.",
-    "BR-04: Staff publishing bell icon notifications or bulk notes must use an approved template and confirm the applicable customer or account context and expiry before publication."
+    "BR-03",
+    "BR-04"
    ],
    "slot": 1,
    "w": 206,
    "h": 60,
-   "x": 1443.0,
-   "y": 2050.0,
-   "cx": 1546.0,
-   "cy": 2080.0
+   "x": 435.0,
+   "y": 2270.0,
+   "cx": 538.0,
+   "cy": 2300.0
   },
   {
    "id": "apply_bulk_note",
    "type": "system",
    "lane": "sys",
-   "phase": 4,
+   "phase": 2,
    "label": "Apply Note to Multiple Accounts",
    "sub": "AGN-001-BNT-02",
    "desc": "The System shall allow the same bulk note to be applied to multiple customer accounts.",
-   "slot": 1,
+   "slot": 2,
    "w": 190,
    "h": 100,
-   "x": 1199.0,
-   "y": 2810.0,
-   "cx": 1294.0,
-   "cy": 2860.0
+   "x": 695.0,
+   "y": 3250.0,
+   "cx": 790.0,
+   "cy": 3300.0
   },
   {
    "id": "view_bulk_notes",
    "type": "agent",
    "lane": "agt",
-   "phase": 4,
+   "phase": 3,
    "label": "View Bulk Notes",
    "sub": "AGN-001-BNT-01",
    "desc": "The Agent shall be able to view multiple notes pushed by the system with posting date and time.",
+   "slot": 2,
+   "w": 206,
+   "h": 60,
+   "x": 939.0,
+   "y": 890.0,
+   "cx": 1042.0,
+   "cy": 920.0
+  },
+  {
+   "id": "bulk_note_posted",
+   "type": "end",
+   "lane": "sys",
+   "phase": 3,
+   "label": "Bulk Note Visibility Maintained",
+   "sub": "AGN-001-BNT-03",
+   "desc": "The System shall display bulk notes irrespective of timeline after posting.",
+   "slot": 1,
+   "w": 100,
+   "h": 100,
+   "x": 992.0,
+   "y": 3030.0,
+   "cx": 1042.0,
+   "cy": 3080.0
+  },
+  {
+   "id": "view_task_dashboard",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 1,
+   "label": "View Task Dashboard",
+   "sub": "AGN-001-ATV-01",
+   "desc": "The Agent shall be able to view task dashboard categories including Open Tasks, In Progress Tasks, Pending Payments, Priority Tasks, and Draft Orders.",
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 435.0,
+   "y": 670.0,
+   "cx": 538.0,
+   "cy": 700.0
+  },
+  {
+   "id": "display_assigned_tasks",
+   "type": "system",
+   "lane": "sys",
+   "phase": 2,
+   "label": "Display Assigned Tasks",
+   "sub": "AGN-001-ATV-02",
+   "desc": "The System shall display assigned tasks and priority tasks only for the logged-in agent.",
+   "slot": 1,
+   "w": 190,
+   "h": 56,
+   "x": 695.0,
+   "y": 3052.0,
+   "cx": 790.0,
+   "cy": 3080.0
+  },
+  {
+   "id": "categorize_tasks",
+   "type": "system",
+   "lane": "sys",
+   "phase": 2,
+   "label": "Categorize Tasks",
+   "sub": "AGN-001-ATV-05",
+   "desc": "The System shall categorize tasks based on priority and open task rules.",
+   "slot": 0,
+   "w": 190,
+   "h": 56,
+   "x": 695.0,
+   "y": 2832.0,
+   "cx": 790.0,
+   "cy": 2860.0
+  },
+  {
+   "id": "supervisor_assign_task",
+   "type": "agent",
+   "lane": "sup",
+   "phase": 3,
+   "label": "Supervisor Assigns Task",
+   "sub": "AGN-001-ATV-03 \u00b7 BR-05",
+   "desc": "The System shall allow only the supervisor to assign tasks to team members.",
+   "controls": [
+    "BR-05"
+   ],
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 939.0,
+   "y": 2550.0,
+   "cx": 1042.0,
+   "cy": 2580.0
+  },
+  {
+   "id": "navigate_task_detail",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 4,
+   "label": "Navigate to Task Detail",
+   "sub": "AGN-001-ATV-04",
+   "desc": "The Agent shall be able to navigate to detailed task view by selecting Open Tasks.",
    "slot": 0,
    "w": 206,
    "h": 60,
@@ -560,105 +655,6 @@
    "cy": 480.0
   },
   {
-   "id": "bulk_note_posted",
-   "type": "end",
-   "lane": "sys",
-   "phase": 4,
-   "label": "Bulk Note Visibility Maintained",
-   "sub": "AGN-001-BNT-03",
-   "desc": "The System shall display bulk notes irrespective of timeline after posting.",
-   "slot": 0,
-   "w": 100,
-   "h": 100,
-   "x": 1244.0,
-   "y": 2590.0,
-   "cx": 1294.0,
-   "cy": 2640.0
-  },
-  {
-   "id": "view_task_dashboard",
-   "type": "agent",
-   "lane": "agt",
-   "phase": 5,
-   "label": "View Task Dashboard",
-   "sub": "AGN-001-ATV-01",
-   "desc": "The Agent shall be able to view task dashboard categories including Open Tasks, In Progress Tasks, Pending Payments, Priority Tasks, and Draft Orders.",
-   "slot": 1,
-   "w": 206,
-   "h": 60,
-   "x": 1443.0,
-   "y": 670.0,
-   "cx": 1546.0,
-   "cy": 700.0
-  },
-  {
-   "id": "display_assigned_tasks",
-   "type": "system",
-   "lane": "sys",
-   "phase": 5,
-   "label": "Display Assigned Tasks",
-   "sub": "AGN-001-ATV-02",
-   "desc": "The System shall display assigned tasks and priority tasks only for the logged-in agent.",
-   "slot": 2,
-   "w": 190,
-   "h": 56,
-   "x": 1451.0,
-   "y": 3052.0,
-   "cx": 1546.0,
-   "cy": 3080.0
-  },
-  {
-   "id": "categorize_tasks",
-   "type": "system",
-   "lane": "sys",
-   "phase": 5,
-   "label": "Categorize Tasks",
-   "sub": "AGN-001-ATV-05",
-   "desc": "The System shall categorize tasks based on priority and open task rules.",
-   "slot": 1,
-   "w": 190,
-   "h": 56,
-   "x": 1451.0,
-   "y": 2832.0,
-   "cx": 1546.0,
-   "cy": 2860.0
-  },
-  {
-   "id": "supervisor_assign_task",
-   "type": "agent",
-   "lane": "sup",
-   "phase": 5,
-   "label": "Supervisor Assigns Task",
-   "sub": "AGN-001-ATV-03 \u00b7 BR-05",
-   "desc": "The System shall allow only the supervisor to assign tasks to team members.",
-   "controls": [
-    "BR-05: Only the responsible supervisor may assign or reassign tasks to members of the supervisor's team."
-   ],
-   "slot": 0,
-   "w": 206,
-   "h": 60,
-   "x": 1443.0,
-   "y": 2330.0,
-   "cx": 1546.0,
-   "cy": 2360.0
-  },
-  {
-   "id": "navigate_task_detail",
-   "type": "agent",
-   "lane": "agt",
-   "phase": 5,
-   "label": "Navigate to Task Detail",
-   "sub": "AGN-001-ATV-04",
-   "desc": "The Agent shall be able to navigate to detailed task view by selecting Open Tasks.",
-   "slot": 2,
-   "w": 206,
-   "h": 60,
-   "x": 1443.0,
-   "y": 890.0,
-   "cx": 1546.0,
-   "cy": 920.0
-  },
-  {
    "id": "update_task_status",
    "type": "agent",
    "lane": "agt",
@@ -666,68 +662,69 @@
    "label": "Update Task Status",
    "sub": "AGN-001-ATV-06",
    "desc": "The Agent shall be able to move task status to In-progress or Close.",
-   "slot": 3,
+   "slot": 0,
    "w": 206,
    "h": 60,
    "x": 1443.0,
-   "y": 1110.0,
+   "y": 450.0,
    "cx": 1546.0,
-   "cy": 1140.0
+   "cy": 480.0
   },
   {
    "id": "task_closed",
    "type": "end",
    "lane": "sys",
-   "phase": 5,
+   "phase": 6,
    "label": "Task Closed",
    "sub": "Status Model: Task",
-   "desc": "Agent closes task.",
-   "slot": 3,
+   "desc": "Task status model: Open -> Assigned -> In Progress -> Closed.",
+   "slot": 0,
    "w": 84,
    "h": 84,
-   "x": 1504.0,
-   "y": 3258.0,
-   "cx": 1546.0,
-   "cy": 3300.0
+   "x": 1756.0,
+   "y": 2818.0,
+   "cx": 1798.0,
+   "cy": 2860.0
   },
   {
    "id": "approval_matrix",
    "type": "system",
    "lane": "sys",
-   "phase": 5,
+   "phase": 1,
    "label": "Maintain Approval Matrix",
    "sub": "AGN-001-AAV-01",
    "desc": "The System shall maintain a configured approval matrix for each task category.",
-   "slot": 0,
+   "slot": 1,
    "w": 190,
    "h": 100,
-   "x": 1451.0,
-   "y": 2590.0,
-   "cx": 1546.0,
-   "cy": 2640.0
+   "x": 443.0,
+   "y": 3030.0,
+   "cx": 538.0,
+   "cy": 3080.0
   },
   {
    "id": "view_assigned_approvals",
    "type": "agent",
    "lane": "agt",
-   "phase": 6,
+   "phase": 2,
    "label": "View Assigned Approval Tasks",
    "sub": "AGN-001-AAV-02",
    "desc": "The System shall display all approval tasks assigned to the specific agent.",
-   "slot": 0,
+   "slot": 4,
    "w": 206,
    "h": 100,
-   "x": 1695.0,
-   "y": 430.0,
-   "cx": 1798.0,
-   "cy": 480.0
+   "x": 687.0,
+   "y": 1310.0,
+   "cx": 790.0,
+   "cy": 1360.0
   },
   {
    "id": "view_task_detail_approval",
-   "type": "agent",
+   "type": "validation",
    "lane": "agt",
-   "phase": 6,
+   "phase": 3,
    "label": "Open Detailed Task View",
+   "sub": "AGN-001-AAV-02A",
    "desc": "The Agent shall be able to view the detailed view of the task by opening the task.",
    "branches": [
     {
@@ -739,41 +736,40 @@
      "to": "view_assigned_approvals"
     }
    ],
-   "slot": 2,
-   "w": 206,
-   "h": 60,
-   "x": 1695.0,
-   "y": 890.0,
-   "cx": 1798.0,
-   "cy": 920.0,
-   "sub": "AGN-001-AAV-06"
+   "slot": 6,
+   "w": 176,
+   "h": 100,
+   "x": 954.0,
+   "y": 1750.0,
+   "cx": 1042.0,
+   "cy": 1800.0
   },
   {
    "id": "view_task_history",
    "type": "agent",
    "lane": "agt",
-   "phase": 6,
+   "phase": 3,
    "label": "View Task History",
    "sub": "AGN-001-AAV-05",
    "desc": "The Agent shall be able to see task history before confirming Approval, Rejection, or Return.",
-   "slot": 4,
+   "slot": 5,
    "w": 206,
    "h": 60,
-   "x": 1695.0,
-   "y": 1330.0,
-   "cx": 1798.0,
-   "cy": 1360.0
+   "x": 939.0,
+   "y": 1550.0,
+   "cx": 1042.0,
+   "cy": 1580.0
   },
   {
    "id": "approve_reject_return",
    "type": "decision",
    "lane": "agt",
-   "phase": 6,
+   "phase": 4,
    "label": "Approve / Reject / Return",
    "sub": "AGN-001-AAV-03 \u00b7 BR-06",
    "desc": "The Agent shall be able to approve, reject, or return an approval task.",
    "controls": [
-    "BR-06: Only the assigned approver may approve, reject, or return an approval task; rejection or return must include the applicable reason and supporting notes."
+    "BR-06"
    ],
    "branches": [
     {
@@ -789,64 +785,64 @@
      "to": "add_approval_notes"
     }
    ],
-   "slot": 1,
+   "slot": 4,
    "w": 150,
    "h": 100,
-   "x": 1723.0,
-   "y": 650.0,
-   "cx": 1798.0,
-   "cy": 700.0
+   "x": 1219.0,
+   "y": 1310.0,
+   "cx": 1294.0,
+   "cy": 1360.0
   },
   {
    "id": "add_approval_notes",
    "type": "agent",
    "lane": "agt",
-   "phase": 6,
+   "phase": 5,
    "label": "Add Approval Notes",
    "sub": "AGN-001-AAV-04 \u00b7 BR-06",
    "desc": "The Agent shall be able to add notes for approval task status Approved, Rejected, or Returned.",
    "controls": [
-    "BR-06: Only the assigned approver may approve, reject, or return an approval task; rejection or return must include the applicable reason and supporting notes."
+    "BR-06"
    ],
-   "slot": 3,
+   "slot": 1,
    "w": 206,
    "h": 60,
-   "x": 1695.0,
-   "y": 1110.0,
-   "cx": 1798.0,
-   "cy": 1140.0
+   "x": 1443.0,
+   "y": 670.0,
+   "cx": 1546.0,
+   "cy": 700.0
   },
   {
    "id": "approval_approved",
    "type": "end",
    "lane": "sys",
-   "phase": 6,
+   "phase": 5,
    "label": "Approval Task Approved",
    "sub": "Status Model: Approval Task",
-   "desc": "Approver selects approve.",
-   "slot": 0,
+   "desc": "Approval Task status model: Pending Approval -> Approved.",
+   "slot": 2,
    "w": 84,
    "h": 84,
-   "x": 1756.0,
-   "y": 2598.0,
-   "cx": 1798.0,
-   "cy": 2640.0
+   "x": 1504.0,
+   "y": 3258.0,
+   "cx": 1546.0,
+   "cy": 3300.0
   },
   {
    "id": "approval_rejected",
    "type": "end",
    "lane": "sys",
-   "phase": 6,
+   "phase": 5,
    "label": "Approval Task Rejected",
    "sub": "Status Model: Approval Task",
-   "desc": "Approver selects reject.",
-   "slot": 1,
+   "desc": "Approval Task status model: Pending Approval -> Rejected.",
+   "slot": 3,
    "w": 84,
    "h": 84,
-   "x": 1756.0,
-   "y": 2818.0,
-   "cx": 1798.0,
-   "cy": 2860.0
+   "x": 1504.0,
+   "y": 3478.0,
+   "cx": 1546.0,
+   "cy": 3520.0
   }
  ],
  "flows": [
@@ -883,6 +879,13 @@
    "kind": "cond",
    "label": "Valid",
    "happy": true
+  },
+  {
+   "from": "identify_password",
+   "to": "forgot_password",
+   "kind": "cond",
+   "label": "Invalid/expired",
+   "happy": false
   },
   {
    "from": "create_new_password",
@@ -1117,9 +1120,428 @@
   }
  ],
  "model": {
-  "agents": [],
-  "contracts": [],
+  "agents": [
+   {
+    "AgentID": "CAP-01",
+    "Agent Type": "Capability",
+    "Name": "Journey and Session Management",
+    "Parent Portal": "Agent 360",
+    "Relationship": "Reuse (MOB_POST_ACT_RETL_001)",
+    "Purpose / Feature": "Journey initiation, agent authorisation, Qnomy queue and ticketing, automatic tracking record creation, milestone persistence and draft order resume"
+   },
+   {
+    "AgentID": "CAP-36",
+    "Agent Type": "Capability",
+    "Name": "Agent Profile Management",
+    "Parent Portal": "Agent 360",
+    "Relationship": "New",
+    "Purpose / Feature": "Manage the changes in the agent profile by changing the password, MFA settings and language"
+   },
+   {
+    "AgentID": "CAP-37",
+    "Agent Type": "Capability",
+    "Name": "Bell Icon Notification",
+    "Parent Portal": "Agent 360",
+    "Relationship": "New",
+    "Purpose / Feature": "Configure, publish, view, sort, and expire customer account/MSISDN notifications."
+   },
+   {
+    "AgentID": "CAP-38",
+    "Agent Type": "Capability",
+    "Name": "Bulk Notes",
+    "Parent Portal": "Agent 360",
+    "Relationship": "New",
+    "Purpose / Feature": "View and publish notes applicable to one or multiple customer accounts."
+   },
+   {
+    "AgentID": "CAP-39",
+    "Agent Type": "Capability",
+    "Name": "Agent Task View",
+    "Parent Portal": "Agent 360",
+    "Relationship": "New",
+    "Purpose / Feature": "View assigned tasks by open, in progress, pending payment, priority, and draft orders; navigate to task detail and update status."
+   },
+   {
+    "AgentID": "CAP-40",
+    "Agent Type": "Capability",
+    "Name": "Agent Approval View",
+    "Parent Portal": "Agent 360",
+    "Relationship": "New",
+    "Purpose / Feature": "View assigned approval tasks, approve, reject, return with notes, and see task history."
+   },
+   {
+    "AgentID": "CAP-41",
+    "Agent Type": "Capability",
+    "Name": "Agent Level Entity Export",
+    "Parent Portal": "Agent 360",
+    "Relationship": "New",
+    "Purpose / Feature": "View eligible entities, select an entity type, and export all visible records such as Orders and Tickets"
+   }
+  ],
+  "contracts": [
+   {
+    "RuleID": "BR-01",
+    "Capability": "Agent Profile Management",
+    "RuleName": "Profile change accountability",
+    "RuleStatement": "Only agents granted profile-edit authority may update profile information, and they are accountable for the accuracy of the changes they submit."
+   },
+   {
+    "RuleID": "BR-02",
+    "Capability": "Agent Profile Management",
+    "RuleName": "MFA change authorisation",
+    "RuleStatement": "An agent may request an MFA change only after identity verification and within the privileges approved by VFQ Security."
+   },
+   {
+    "RuleID": "BR-03",
+    "Capability": "Bell Icon Notification / Bulk Notes",
+    "RuleName": "Customer communication authority",
+    "RuleStatement": "Only designated Backoffice or privileged staff may create or publish bell icon notifications and bulk notes."
+   },
+   {
+    "RuleID": "BR-04",
+    "Capability": "Bell Icon Notification / Bulk Notes",
+    "RuleName": "Approved communication content",
+    "RuleStatement": "Staff publishing bell icon notifications or bulk notes must use an approved template and confirm the applicable customer or account context and expiry before publication."
+   },
+   {
+    "RuleID": "BR-05",
+    "Capability": "Agent Task View",
+    "RuleName": "Task assignment authority",
+    "RuleStatement": "Only the responsible supervisor may assign or reassign tasks to members of the supervisor's team."
+   },
+   {
+    "RuleID": "BR-06",
+    "Capability": "Agent Approval View",
+    "RuleName": "Approval decision accountability",
+    "RuleStatement": "Only the assigned approver may approve, reject, or return an approval task; rejection or return must include the applicable reason and supporting notes."
+   }
+  ],
   "connectivity": []
+ },
+ "deliv": {
+  "bioMatrix": {
+   "login_submit": {
+    "inputs": [
+     "Agent ID",
+     "Password"
+    ],
+    "outputs": [
+     "Login attempt for validation"
+    ]
+   },
+   "role_view": {
+    "inputs": [
+     "Authenticated agent",
+     "Role matrix"
+    ],
+    "outputs": [
+     "Role-scoped Agent 360 UI"
+    ]
+   },
+   "profile_edit_initiate": {
+    "inputs": [
+     "Edit-profile role permission"
+    ],
+    "outputs": [
+     "Profile edit session"
+    ]
+   },
+   "forgot_password": {
+    "inputs": [
+     "Agent ID"
+    ],
+    "outputs": [
+     "Password-reset session"
+    ]
+   },
+   "identify_password": {
+    "inputs": [
+     "Authcode or OTP"
+    ],
+    "outputs": [
+     "Verified identity / rejection"
+    ]
+   },
+   "create_new_password": {
+    "inputs": [
+     "New password",
+     "Confirmation value",
+     "Password policy"
+    ],
+    "outputs": [
+     "Accepted password / validation message"
+    ]
+   },
+   "change_password": {
+    "inputs": [
+     "Current password",
+     "New password",
+     "Confirm password"
+    ],
+    "outputs": [
+     "Updated credential"
+    ]
+   },
+   "identify_change_password": {
+    "inputs": [
+     "Authcode or OTP"
+    ],
+    "outputs": [
+     "Verified identity / validation message"
+    ]
+   },
+   "update_mfa": {
+    "inputs": [
+     "Role/security privilege"
+    ],
+    "outputs": [
+     "Updated MFA configuration"
+    ]
+   },
+   "identify_mfa": {
+    "inputs": [
+     "Authcode or OTP"
+    ],
+    "outputs": [
+     "Verified identity / validation message"
+    ]
+   },
+   "change_language": {
+    "inputs": [
+     "Available language options"
+    ],
+    "outputs": [
+     "Updated language preference"
+    ]
+   },
+   "save_profile": {
+    "inputs": [
+     "Pending profile edits"
+    ],
+    "outputs": [
+     "Persisted profile / rejection"
+    ]
+   },
+   "view_eligible_entities": {
+    "inputs": [
+     "Access rights"
+    ],
+    "outputs": [
+     "Entity list"
+    ]
+   },
+   "choose_entity_type": {
+    "inputs": [
+     "Entity type list"
+    ],
+    "outputs": [
+     "Selected entity type"
+    ]
+   },
+   "export_entities": {
+    "inputs": [
+     "Selected entity type",
+     "Visible entity records"
+    ],
+    "outputs": [
+     "Exported entity file"
+    ]
+   },
+   "configure_bell": {
+    "inputs": [
+     "Permitted role",
+     "Template",
+     "Customer/account context",
+     "Expiry date"
+    ],
+    "outputs": [
+     "Configured notification"
+    ]
+   },
+   "publish_bell": {
+    "inputs": [
+     "Configured notification",
+     "Publish privilege"
+    ],
+    "outputs": [
+     "Published notification"
+    ]
+   },
+   "view_bell_banner": {
+    "inputs": [
+     "Published notification"
+    ],
+    "outputs": [
+     "Visible notification banner"
+    ]
+   },
+   "bell_visibility": {
+    "inputs": [
+     "Access permissions",
+     "Account/MSISDN context"
+    ],
+    "outputs": [
+     "Access-scoped visibility"
+    ]
+   },
+   "sort_bell": {
+    "inputs": [
+     "Notification set"
+    ],
+    "outputs": [
+     "Sorted notification list"
+    ]
+   },
+   "no_manual_expire": {
+    "inputs": [
+     "Published notification"
+    ],
+    "outputs": [
+     "Notification remains visible"
+    ]
+   },
+   "expire_bell": {
+    "inputs": [
+     "Expiry rule/interval"
+    ],
+    "outputs": [
+     "Notification removed"
+    ]
+   },
+   "configure_bulk_notes": {
+    "inputs": [
+     "Permitted role",
+     "Approved template"
+    ],
+    "outputs": [
+     "Configured bulk note"
+    ]
+   },
+   "apply_bulk_note": {
+    "inputs": [
+     "Configured bulk note",
+     "Target accounts"
+    ],
+    "outputs": [
+     "Bulk note associated with accounts"
+    ]
+   },
+   "view_bulk_notes": {
+    "inputs": [
+     "Posted bulk notes"
+    ],
+    "outputs": [
+     "Displayed bulk-note list"
+    ]
+   },
+   "bulk_note_posted": {
+    "inputs": [
+     "Posted bulk note"
+    ],
+    "outputs": [
+     "Continued visibility"
+    ]
+   },
+   "view_task_dashboard": {
+    "inputs": [
+     "Logged-in agent context"
+    ],
+    "outputs": [
+     "Task dashboard view"
+    ]
+   },
+   "display_assigned_tasks": {
+    "inputs": [
+     "Logged-in agent identity"
+    ],
+    "outputs": [
+     "Agent-scoped task list"
+    ]
+   },
+   "categorize_tasks": {
+    "inputs": [
+     "Configured business rules"
+    ],
+    "outputs": [
+     "Categorised task list"
+    ]
+   },
+   "supervisor_assign_task": {
+    "inputs": [
+     "Supervisor role",
+     "Team task pool"
+    ],
+    "outputs": [
+     "Assigned task"
+    ]
+   },
+   "navigate_task_detail": {
+    "inputs": [
+     "Assigned/open task"
+    ],
+    "outputs": [
+     "Task detail view"
+    ]
+   },
+   "update_task_status": {
+    "inputs": [
+     "Task detail view",
+     "Permitted lifecycle transition"
+    ],
+    "outputs": [
+     "Updated task status"
+    ]
+   },
+   "approval_matrix": {
+    "inputs": [
+     "Task category configuration"
+    ],
+    "outputs": [
+     "Approval matrix"
+    ]
+   },
+   "view_assigned_approvals": {
+    "inputs": [
+     "Approval matrix",
+     "Agent identity"
+    ],
+    "outputs": [
+     "Assigned approval task list"
+    ]
+   },
+   "view_task_detail_approval": {
+    "inputs": [
+     "Selected approval task"
+    ],
+    "outputs": [
+     "Task detail view / access-denied"
+    ]
+   },
+   "view_task_history": {
+    "inputs": [
+     "Task detail view"
+    ],
+    "outputs": [
+     "Displayed task history"
+    ]
+   },
+   "approve_reject_return": {
+    "inputs": [
+     "Reviewed task detail and history"
+    ],
+    "outputs": [
+     "Updated approval task status"
+    ]
+   },
+   "add_approval_notes": {
+    "inputs": [
+     "Approval decision"
+    ],
+    "outputs": [
+     "Approval notes captured"
+    ]
+   }
+  }
  },
  "biz": {
   "bio": {
@@ -1128,297 +1550,312 @@
     "does": "The agent submits Agent ID and password to log in.",
     "needs": "Agent ID, Password",
     "makes": "Login attempt for validation",
-    "example": "Reuse requirement TT-001-JSM-* (Requirement Statement, AGN-001-JSM-01)."
+    "example": "AGN-001-JSM-01: The agent can submit Agent ID and password to log in to the system."
    },
    "role_view": {
     "title": "Role-Based View Rendered",
-    "does": "System renders views enabled or disabled based on the role matrix.",
-    "needs": "Authenticated agent session, role matrix",
-    "makes": "Role-scoped Agent 360 view",
-    "example": "Acceptance Criteria: Views are enabled or disabled based on the role matrix (AGN-001-APM-01)."
+    "does": "System renders Agent 360 views enabled/disabled per the role matrix.",
+    "needs": "Authenticated agent, role matrix",
+    "makes": "Role-scoped Agent 360 UI",
+    "example": "AGN-001-APM-01: Views are enabled or disabled based on the role matrix."
    },
    "profile_edit_initiate": {
     "title": "Initiate Profile Edit",
-    "does": "Agent initiates profile edit from the profile section.",
-    "needs": "Role permits profile edit",
-    "makes": "Profile edit session opened",
-    "example": "Acceptance Criteria: Edit profile option is available to the agent where role permits (AGN-001-APM-05)."
+    "does": "Agent opens the profile edit option from the profile section.",
+    "needs": "Edit-profile role permission",
+    "makes": "Profile edit session (Edit Initiated)",
+    "example": "AGN-001-APM-05: Edit profile option is available to the agent where role permits."
    },
    "forgot_password": {
     "title": "Forgot Password",
-    "does": "Agent initiates the forgotten-password flow.",
-    "needs": "Agent identity claim",
-    "makes": "Redirect to password setup with identification step",
-    "example": "Acceptance Criteria: Forgot password directs the agent to password setup and supports the confirmed identification step (AGN-001-APM-02)."
+    "does": "Agent initiates the forgotten password flow.",
+    "needs": "Agent ID",
+    "makes": "Password-reset session directed to identity verification",
+    "example": "AGN-001-APM-02: Forgot password directs the agent to password setup and supports the confirmed identification step."
    },
    "identify_password": {
     "title": "Verify Identity (Authcode/OTP)",
-    "does": "Agent verifies identity by providing Authcode or OTP.",
+    "does": "Agent identity is verified via Authcode or OTP before password reset can continue.",
     "needs": "Authcode or OTP",
-    "makes": "Verified identity or rejection with validation message",
-    "example": "Acceptance Criteria: Agent identity is successfully verified only when the required Authcode or OTP is valid; invalid or expired details are rejected with an appropriate validation message (AGN-001-APM-03)."
+    "makes": "Verified identity, or rejection with validation message",
+    "example": "AGN-001-APM-03: Agent identity is successfully verified only when the required Authcode or OTP is valid; invalid or expired details are rejected with an appropriate validation message."
    },
    "create_new_password": {
     "title": "Create New Password",
-    "does": "Agent creates a new password per password policy.",
-    "needs": "New password, confirmation value",
-    "makes": "Accepted password or validation message",
-    "example": "Acceptance Criteria: A new password is accepted only when it complies with the configured password policy and matches the confirmation value; otherwise, a clear validation message is displayed (AGN-001-APM-04)."
+    "does": "Agent sets a new password conforming to password policy.",
+    "needs": "New password, confirmation value, password policy",
+    "makes": "Accepted new password, or a validation message on failure",
+    "example": "AGN-001-APM-04: A new password is accepted only when it complies with the configured password policy and matches the confirmation value; otherwise, a clear validation message is displayed."
    },
    "change_password": {
     "title": "Change Password",
     "does": "Agent changes password by providing current, new, and confirm password.",
-    "needs": "Current password, new password, confirm password",
-    "makes": "Updated password after policy validation",
-    "example": "Acceptance Criteria: Password change is accepted only after successful login and after password policy validation (AGN-001-APM-06)."
+    "needs": "Current password, new password, confirm password, successful login",
+    "makes": "Updated credential (pending profile save)",
+    "example": "AGN-001-APM-06: Password change is accepted only after successful login and after password policy validation."
    },
    "identify_change_password": {
     "title": "Verify Identity for Password Change",
-    "does": "Agent identifies himself for password change via Authcode or OTP.",
+    "does": "Agent identity is verified via Authcode or OTP before the change-password action proceeds.",
     "needs": "Authcode or OTP",
-    "makes": "Verified proceed-to-change or blocked with validation message",
-    "example": "Acceptance Criteria: The agent can proceed to change Password Change only after successful verification using a valid Authcode or OTP; invalid or expired details prevent the change and display an appropriate validation message (AGN-001-APM-07)."
+    "makes": "Verified identity, or a validation message preventing the change",
+    "example": "AGN-001-APM-07: The agent can proceed to Password Change only after successful verification using a valid Authcode or OTP; invalid or expired details prevent the change and display an appropriate validation message."
    },
    "update_mfa": {
     "title": "Update MFA Settings",
-    "does": "Agent changes MFA settings with privileges.",
+    "does": "Agent updates MFA status/authenticator settings.",
     "needs": "Role/security-policy privilege",
-    "makes": "Updated MFA status/authenticator setting",
-    "example": "Acceptance Criteria: MFA status and authenticator/OTP setting can be updated only when permitted by role and security policy (AGN-001-APM-08)."
+    "makes": "Updated MFA configuration (pending profile save)",
+    "example": "AGN-001-APM-08: MFA status and authenticator/OTP setting can be updated only when permitted by role and security policy."
    },
    "identify_mfa": {
     "title": "Verify Identity for MFA Settings",
-    "does": "Agent identifies himself for MFA settings via Authcode or OTP.",
+    "does": "Agent identity is verified via Authcode or OTP before the MFA-settings change proceeds.",
     "needs": "Authcode or OTP",
-    "makes": "Verified proceed-to-change or blocked with validation message",
-    "example": "Acceptance Criteria: The agent can proceed to change MFA settings only after successful verification using a valid Authcode or OTP; invalid or expired details prevent the change and display an appropriate validation message (AGN-001-APM-07, MFA row)."
+    "makes": "Verified identity, or a validation message preventing the change",
+    "example": "AGN-001-APM-07A: The agent can proceed to change MFA settings only after successful verification using a valid Authcode or OTP; invalid or expired details prevent the change and display an appropriate validation message."
    },
    "change_language": {
     "title": "Change Language",
-    "does": "Agent changes language from available options.",
+    "does": "Agent switches interface language from available options.",
     "needs": "Available language options",
-    "makes": "Updated language setting",
-    "example": "Acceptance Criteria: English and/or Arabic options are available subject to VFQ confirmation (AGN-001-APM-09)."
+    "makes": "Updated language preference (pending profile save)",
+    "example": "AGN-001-APM-09: English and/or Arabic options are available subject to VFQ confirmation."
    },
    "save_profile": {
     "title": "Save Profile Changes",
-    "does": "System saves valid profile changes; rejects invalid changes.",
-    "needs": "Edited profile fields (password, MFA settings, language)",
-    "makes": "Persisted profile changes or rejection with validation message",
-    "example": "Acceptance Criteria: Valid profile changes are saved and invalid changes are rejected with validation message (AGN-001-APM-10)."
+    "does": "System validates and saves the agent's profile changes.",
+    "needs": "Password/MFA/language edits pending save",
+    "makes": "Persisted profile changes, or a rejection with validation message",
+    "example": "AGN-001-APM-10: Valid profile changes are saved and invalid changes are rejected with validation message."
    },
    "profile_saved": {
     "title": "Profile Changes Saved",
-    "does": "Profile reaches Saved status after valid changes are saved.",
-    "needs": "Valid saved profile changes",
-    "makes": "Agent Profile status = Saved (permitted next status: Edit Initiated)",
-    "example": "Annex_02_Status_Model \u2014 Object: Agent Profile, Status: Saved, Trigger: Agent saves valid profile changes."
+    "does": "Profile changes are persisted; profile status moves to Saved.",
+    "needs": "Valid profile changes",
+    "makes": "Saved agent profile",
+    "example": "Status_Model: Agent Profile / Saved \u2014 Profile changes are saved. Trigger: Agent saves valid profile changes."
    },
    "view_eligible_entities": {
     "title": "View Eligible Entities",
-    "does": "Agent navigates to view entities for which access is available.",
-    "needs": "Agent access rights",
-    "makes": "Entity list displayed per access rights",
-    "example": "Acceptance Criteria: Entity list displays as per access rights (AGN-001-AEX-01)."
+    "does": "Agent navigates to view entities available under their access rights.",
+    "needs": "Access rights",
+    "makes": "Entity list scoped to access rights",
+    "example": "AGN-001-AEX-01: Entity list displays as per access rights."
    },
    "choose_entity_type": {
     "title": "Choose Entity Type",
-    "does": "Agent chooses the entity type before export.",
-    "needs": "Available entity types",
-    "makes": "Selected entity type for export",
-    "example": "Acceptance Criteria: Entity type values include Order, Ticket until VFQ confirms the complete list (AGN-001-AEX-03)."
+    "does": "Agent selects the entity type (Order, Ticket) before exporting.",
+    "needs": "Entity type list",
+    "makes": "Selected entity type",
+    "example": "AGN-001-AEX-03: Entity type values include Order, Ticket until VFQ confirms the complete list."
    },
    "export_entities": {
     "title": "Export Visible Entities",
-    "does": "Agent exports all visible entity records such as Orders and Tickets.",
-    "needs": "Visible entity records",
-    "makes": "Export generated irrespective of assignment to logged-in agent",
-    "example": "Acceptance Criteria: Export can be generated for visible entities irrespective of whether they are assigned to the logged-in agent (AGN-001-AEX-02)."
+    "does": "Agent exports all visible entity records of the chosen type.",
+    "needs": "Selected entity type, visible entity records",
+    "makes": "Exported entity file",
+    "example": "AGN-001-AEX-02: Export can be generated for visible entities irrespective of whether they are assigned to the logged-in agent."
    },
    "configure_bell": {
     "title": "Configure Bell Notification",
-    "does": "Backoffice role configures a bell icon notification against a customer using a defined template and expiry date.",
-    "needs": "Customer context, template, expiry date",
-    "makes": "Configured bell notification (permitted role only)",
-    "example": "Acceptance Criteria: Bell notification can be configured only by the permitted role (AGN-001-BIN-01)."
+    "does": "Backoffice configures a bell icon notification against a customer using an approved template and expiry date.",
+    "needs": "Permitted role, template, customer/account context, expiry date",
+    "makes": "Configured notification (Draft)",
+    "example": "AGN-001-BIN-01: Bell notification can be configured only by the permitted role."
    },
    "publish_bell": {
     "title": "Publish Notification Manually",
-    "does": "Privileged agent publishes bell icon notifications manually using a defined format.",
-    "needs": "Stored template",
-    "makes": "Published notification, editable before publishing",
-    "example": "Acceptance Criteria: Notification can be created from a stored template and edited before publishing (AGN-001-BIN-02)."
+    "does": "Privileged staff publish the bell notification, created from a stored template and editable before publishing.",
+    "needs": "Configured notification, publish privilege",
+    "makes": "Published notification (Status: Published)",
+    "example": "AGN-001-BIN-02: Notification can be created from a stored template and edited before publishing."
    },
    "view_bell_banner": {
     "title": "View Bell Banner",
     "does": "Agent views the bell icon notification as a banner across Customer 360 screens.",
-    "needs": "Applicable account/MSISDN",
-    "makes": "Notification banner visible on Customer 360",
-    "example": "Acceptance Criteria: Notification banner is visible on Customer 360 for applicable account/MSISDN (AGN-001-BIN-03)."
+    "needs": "Published notification",
+    "makes": "Visible notification banner",
+    "example": "AGN-001-BIN-03: Notification banner is visible on Customer 360 for applicable account/MSISDN."
    },
    "bell_visibility": {
     "title": "Customer-Specific Notification Visibility",
-    "does": "System displays only customer account/MSISDN-specific notifications based on access permissions.",
-    "needs": "Access permissions",
-    "makes": "Filtered notification set for accessible customer account/MSISDN context",
-    "example": "Acceptance Criteria: Agent can view notifications only for accessible customer account/MSISDN context (AGN-001-BIN-04)."
+    "does": "System restricts displayed notifications to the accessible customer account/MSISDN context.",
+    "needs": "Access permissions, account/MSISDN context",
+    "makes": "Access-scoped notification visibility",
+    "example": "AGN-001-BIN-04: Agent can view notifications only for accessible customer account/MSISDN context."
    },
    "sort_bell": {
     "title": "Sort Notifications",
-    "does": "System sorts customer notifications from latest to oldest.",
-    "needs": "Notification records",
-    "makes": "Descending chronological order display",
-    "example": "Acceptance Criteria: Notifications display in descending chronological order (AGN-001-BIN-05)."
+    "does": "System sorts notifications from latest to oldest.",
+    "needs": "Notification set",
+    "makes": "Chronologically sorted notification list",
+    "example": "AGN-001-BIN-05: Notifications display in descending chronological order."
    },
    "no_manual_expire": {
     "title": "No Manual Expiration",
-    "does": "Agent has no manual expire action available for bell icon notifications.",
-    "needs": "N/A (restriction)",
-    "makes": "Notification remains visible until configured expiry",
-    "example": "Acceptance Criteria: No manual expire action is available to the agent; the bell icon notification remains visible until the configured expiry date or interval is reached, after which it is removed automatically (AGN-001-BIN-06)."
+    "does": "System blocks any manual-expire action by the agent; notification stays visible until its configured expiry.",
+    "needs": "Published notification",
+    "makes": "Notification remains visible until auto-expiry",
+    "example": "AGN-001-BIN-06: No manual expire action is available to the agent; the bell icon notification remains visible until the configured expiry date or interval is reached, after which it is removed automatically."
    },
    "expire_bell": {
     "title": "Expire Notification",
-    "does": "System removes bell icon notification after the preconfigured expiration interval.",
-    "needs": "Preconfigured expiration interval",
-    "makes": "Notification no longer displayed",
-    "example": "Acceptance Criteria: Expired notification is no longer displayed after expiry rules are met (AGN-001-BIN-07). Status Model \u2014 Object: Bell Notification, Status: Expired, Trigger: Expiry interval reached."
+    "does": "System automatically removes the notification after its configured expiry interval.",
+    "needs": "Expiry rule/interval",
+    "makes": "Notification removed (Status: Expired)",
+    "example": "AGN-001-BIN-07: Expired notification is no longer displayed after expiry rules are met."
    },
    "configure_bulk_notes": {
     "title": "Configure Bulk Notes",
-    "does": "Backoffice role configures bulk notes using a defined template.",
-    "needs": "Approved template, role permission",
-    "makes": "Configured bulk note (permitted role only)",
-    "example": "Acceptance Criteria: Only a permitted Backoffice user can create or configure a bulk note using an approved template; users without the required role cannot access or submit the configuration (AGN-001-BNT-04)."
+    "does": "A permitted Backoffice user creates/configures a bulk note from an approved template.",
+    "needs": "Permitted role, approved template",
+    "makes": "Configured bulk note",
+    "example": "AGN-001-BNT-04: Only a permitted Backoffice user can create or configure a bulk note using an approved template; users without the required role cannot access or submit the configuration."
    },
    "apply_bulk_note": {
     "title": "Apply Note to Multiple Accounts",
-    "does": "System applies the same bulk note to multiple customer accounts.",
-    "needs": "Bulk note, target accounts",
-    "makes": "Bulk note associated with one or more customer accounts",
-    "example": "Acceptance Criteria: A bulk note can be associated with one or more customer accounts (AGN-001-BNT-02)."
+    "does": "System applies the same bulk note across one or more customer accounts.",
+    "needs": "Configured bulk note, target accounts",
+    "makes": "Bulk note associated with target accounts (Status: Posted)",
+    "example": "AGN-001-BNT-02: A bulk note can be associated with one or more customer accounts."
    },
    "view_bulk_notes": {
     "title": "View Bulk Notes",
-    "does": "Agent views multiple notes pushed by the system with posting date and time.",
+    "does": "Agent views posted bulk notes with their posting date/time.",
     "needs": "Posted bulk notes",
-    "makes": "Bulk notes displayed with associated date and time",
-    "example": "Acceptance Criteria: Bulk notes display with associated date and time (AGN-001-BNT-01)."
+    "makes": "Displayed bulk-note list",
+    "example": "AGN-001-BNT-01: Bulk notes display with associated date and time."
    },
    "bulk_note_posted": {
     "title": "Bulk Note Visibility Maintained",
-    "does": "System displays bulk notes irrespective of timeline after posting.",
+    "does": "System keeps posted bulk notes visible regardless of elapsed time (until a confirmed expiry rule exists).",
     "needs": "Posted bulk note",
-    "makes": "Bulk note remains visible unless business confirms an expiry rule",
-    "example": "Acceptance Criteria: Posted bulk notes remain visible unless business confirms an expiry rule (AGN-001-BNT-03). Status Model \u2014 Object: Bulk Note, Status: Posted, Trigger: Bulk note upload/publish action."
+    "makes": "Continued bulk-note visibility",
+    "example": "AGN-001-BNT-03: Posted bulk notes remain visible unless business confirms an expiry rule."
    },
    "view_task_dashboard": {
     "title": "View Task Dashboard",
-    "does": "Agent views task dashboard categories: Open Tasks, In Progress Tasks, Pending Payments, Priority Tasks, Draft Orders.",
-    "needs": "Task records",
-    "makes": "Dashboard showing all task categories",
-    "example": "Acceptance Criteria: Dashboard shows all task categories (AGN-001-ATV-01)."
+    "does": "Agent views the task dashboard across all task categories.",
+    "needs": "Logged-in agent context",
+    "makes": "Task dashboard view",
+    "example": "AGN-001-ATV-01: Dashboard shows all task categories."
    },
    "display_assigned_tasks": {
     "title": "Display Assigned Tasks",
-    "does": "System displays assigned tasks and priority tasks only for the logged-in agent.",
+    "does": "System filters the dashboard to tasks assigned/prioritised for the logged-in agent only.",
     "needs": "Logged-in agent identity",
-    "makes": "Task records scoped to the logged-in agent",
-    "example": "Acceptance Criteria: Logged-in agent sees only task records permitted for that agent (AGN-001-ATV-02)."
+    "makes": "Agent-scoped task list",
+    "example": "AGN-001-ATV-02: Logged-in agent sees only task records permitted for that agent."
    },
    "categorize_tasks": {
     "title": "Categorize Tasks",
-    "does": "System categorizes tasks based on priority and open task rules.",
-    "needs": "Business rules configuration",
-    "makes": "Task shown in correct category",
-    "example": "Acceptance Criteria: Task appears in the correct category after business rules are configured (AGN-001-ATV-05)."
+    "does": "System places each task into the correct category using configured priority/open-task rules.",
+    "needs": "Configured business rules",
+    "makes": "Categorised task list",
+    "example": "AGN-001-ATV-05: Task appears in the correct category after business rules are configured."
    },
    "supervisor_assign_task": {
     "title": "Supervisor Assigns Task",
-    "does": "Supervisor assigns tasks to team members; non-supervisors cannot.",
-    "needs": "Supervisor role",
-    "makes": "Task assigned to team member",
-    "example": "Acceptance Criteria: Non-supervisor users cannot assign tasks to team members (AGN-001-ATV-03). Status Model \u2014 Object: Task, Status: Assigned, Trigger: Assignment."
+    "does": "Only the responsible supervisor assigns/reassigns tasks to team members.",
+    "needs": "Supervisor role, team task pool",
+    "makes": "Assigned task (Status: Assigned)",
+    "example": "AGN-001-ATV-03: Non-supervisor users cannot assign tasks to team members."
    },
    "navigate_task_detail": {
     "title": "Navigate to Task Detail",
-    "does": "Agent navigates to detailed task view by selecting Open Tasks.",
-    "needs": "Open task selection",
-    "makes": "Task detail page opened",
-    "example": "Acceptance Criteria: Selecting a task opens the task detail page (AGN-001-ATV-04)."
+    "does": "Agent opens the detailed task view by selecting an Open Task.",
+    "needs": "Assigned/open task",
+    "makes": "Task detail view",
+    "example": "AGN-001-ATV-04: Selecting a task opens the task detail page."
    },
    "update_task_status": {
     "title": "Update Task Status",
-    "does": "Agent moves task status to In-progress or Close.",
-    "needs": "Task in Open/Assigned status",
-    "makes": "Task status updated through permitted lifecycle transitions",
-    "example": "Acceptance Criteria: Task status can be updated only through permitted lifecycle transitions (AGN-001-ATV-06). Status Model \u2014 Object: Task, Statuses: Open -> Assigned/In Progress/Closed; In Progress -> Closed."
+    "does": "Agent moves the task status to In-Progress or Closed.",
+    "needs": "Task detail view, permitted lifecycle transition",
+    "makes": "Updated task status",
+    "example": "AGN-001-ATV-06: Task status can be updated only through permitted lifecycle transitions."
    },
    "task_closed": {
     "title": "Task Closed",
-    "does": "Task reaches Closed status.",
+    "does": "Task reaches the terminal Closed status.",
     "needs": "Agent status update",
-    "makes": "Task status = Closed (no further permitted next status)",
-    "example": "Annex_02_Status_Model \u2014 Object: Task, Status: Closed, Trigger: Agent status update."
+    "makes": "Closed task record",
+    "example": "Status_Model: Task / Closed \u2014 Agent closes task. Trigger: Agent status update."
    },
    "approval_matrix": {
     "title": "Maintain Approval Matrix",
-    "does": "System maintains a configured approval matrix for each task category.",
+    "does": "System maintains the configured approval matrix governing approval task assignment.",
     "needs": "Task category configuration",
-    "makes": "Approval task assignment follows configured approval matrix",
-    "example": "Acceptance Criteria: Approval task assignment follows configured approval matrix (AGN-001-AAV-01)."
+    "makes": "Approval matrix used to route approval tasks",
+    "example": "AGN-001-AAV-01: Approval task assignment follows configured approval matrix."
    },
    "view_assigned_approvals": {
     "title": "View Assigned Approval Tasks",
-    "does": "System displays all approval tasks assigned to the specific agent.",
-    "needs": "Logged-in agent identity",
-    "makes": "Approval view showing tasks assigned to the logged-in agent",
-    "example": "Acceptance Criteria: Approval view shows tasks assigned to the logged-in agent (AGN-001-AAV-02). Status Model \u2014 Object: Approval Task, Status: Pending Approval, Trigger: Approval task creation/assignment."
+    "does": "Agent sees all approval tasks assigned to them (Status: Pending Approval).",
+    "needs": "Approval matrix, agent identity",
+    "makes": "Assigned approval task list",
+    "example": "AGN-001-AAV-02: Approval view shows tasks assigned to the logged-in agent."
    },
    "view_task_detail_approval": {
     "title": "Open Detailed Task View",
-    "does": "Agent opens the task to view its detailed view.",
-    "needs": "Assigned/accessible approval task",
-    "makes": "Task detail view with all configured fields, or access denied",
-    "example": "Acceptance Criteria: When the agent selects and opens an assigned approval task, the system displays the task detail view with all configured fields for that task; if the task is not assigned or accessible to the agent, access is denied (unlabeled row under #7 Agent Approval View)."
+    "does": "Agent opens the detail view of an assigned approval task; access is denied if the task isn't assigned/accessible.",
+    "needs": "Selected approval task",
+    "makes": "Task detail view with all configured fields, or access-denied outcome",
+    "example": "AGN-001-AAV-02A: When the agent selects and opens an assigned approval task, the system displays the task detail view with all configured fields for that task; if the task is not assigned or accessible to the agent, access is denied."
    },
    "view_task_history": {
     "title": "View Task History",
-    "does": "Agent sees task history before confirming Approval, Rejection, or Return.",
-    "needs": "Approval task",
-    "makes": "Task history: Task ID, Task Name, Action Taken, Date Time Stamp",
-    "example": "Acceptance Criteria: Task history displays Task ID, Task Name, Action Taken, and Date Time Stamp (AGN-001-AAV-05)."
+    "does": "Agent reviews task history before confirming an approval decision.",
+    "needs": "Task detail view",
+    "makes": "Displayed task history (Task ID, Task Name, Action Taken, Date/Time)",
+    "example": "AGN-001-AAV-05: Task history displays Task ID, Task Name, Action Taken, and Date Time Stamp."
    },
    "approve_reject_return": {
     "title": "Approve / Reject / Return",
-    "does": "Agent approves, rejects, or returns an approval task.",
-    "needs": "Assigned approver role",
-    "makes": "Task status updated per workflow; notes recorded where required",
-    "example": "Acceptance Criteria: Approval action updates task status as per workflow and records notes where required (AGN-001-AAV-03)."
+    "does": "Only the assigned approver approves, rejects, or returns the approval task.",
+    "needs": "Reviewed task detail and history",
+    "makes": "Updated approval task status",
+    "example": "AGN-001-AAV-03: Approval action updates task status as per workflow and records notes where required."
    },
    "add_approval_notes": {
     "title": "Add Approval Notes",
-    "does": "Agent adds notes for approval task status Approved, Rejected, or Returned.",
-    "needs": "Approval action (Approved/Rejected/Returned)",
-    "makes": "Approval notes captured with the approval action",
-    "example": "Acceptance Criteria: Approval notes are captured with the approval action (AGN-001-AAV-04). Status Model \u2014 Object: Approval Task, Status: Returned, Permitted Next Status: Pending Approval."
+    "does": "Agent records notes with the approval action; rejection/return must include reason and supporting notes.",
+    "needs": "Approval decision (Approved/Rejected/Returned)",
+    "makes": "Approval notes captured with the action; a Returned task cycles back to Pending Approval",
+    "example": "AGN-001-AAV-04: Approval notes are captured with the approval action."
    },
    "approval_approved": {
     "title": "Approval Task Approved",
-    "does": "Approval task reaches Approved status.",
+    "does": "Approval task reaches terminal Approved status.",
     "needs": "Approver selects approve",
-    "makes": "Approval Task status = Approved (no further permitted next status)",
-    "example": "Annex_02_Status_Model \u2014 Object: Approval Task, Status: Approved, Trigger: Approver selects approve."
+    "makes": "Approved approval task",
+    "example": "Status_Model: Approval Task / Approved \u2014 Approval task is approved. Trigger: Approver selects approve."
    },
    "approval_rejected": {
     "title": "Approval Task Rejected",
-    "does": "Approval task reaches Rejected status.",
-    "needs": "Approver selects reject",
-    "makes": "Approval Task status = Rejected (no further permitted next status)",
-    "example": "Annex_02_Status_Model \u2014 Object: Approval Task, Status: Rejected, Trigger: Approver selects reject."
+    "does": "Approval task reaches terminal Rejected status, with reason/notes recorded.",
+    "needs": "Approver selects reject, reason/notes",
+    "makes": "Rejected approval task",
+    "example": "Status_Model: Approval Task / Rejected \u2014 Approval task is rejected with reason/notes. Trigger: Approver selects reject."
    }
   },
-  "contractPlain": {},
-  "nameMap": {}
+  "contractPlain": {
+   "BR-01": "Only agents with profile-edit authority may update profile info, and they own the accuracy of what they submit.",
+   "BR-02": "An agent can only request an MFA change after identity verification and within VFQ Security's approved privileges.",
+   "BR-03": "Only designated Backoffice or privileged staff can create or publish bell icon notifications and bulk notes.",
+   "BR-04": "Notifications and bulk notes must use an approved template and confirm the right customer/account context and expiry before publishing.",
+   "BR-05": "Only the responsible supervisor can assign or reassign tasks within their team.",
+   "BR-06": "Only the assigned approver can approve, reject, or return an approval task; reject/return needs a reason and supporting notes."
+  },
+  "nameMap": {
+   "JSM": "Journey and Session Management",
+   "APM": "Agent Profile Management",
+   "AEX": "Agent Level Entity Export",
+   "BIN": "Bell Icon Notification",
+   "BNT": "Bulk Notes",
+   "ATV": "Agent Task View",
+   "AAV": "Agent Approval View"
+  }
  }
 }

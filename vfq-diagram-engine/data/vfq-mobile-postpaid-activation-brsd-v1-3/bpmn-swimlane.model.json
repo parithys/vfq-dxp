@@ -1,0 +1,2890 @@
+{
+ "meta": {
+  "title": "Mobile Postpaid Activation \u2014 Process Flow",
+  "brsdId": "vfq-mobile-postpaid-activation-brsd-v1-3",
+  "generated": "2026-09-07",
+  "source": "VFQ_Mobile_Postpaid_Activation_BRSD_v1.3.xlsx"
+ },
+ "layout": {
+  "x0": 180,
+  "topbar": 70,
+  "colw": 252,
+  "totalW": 2548,
+  "totalH": 12230,
+  "laneLabelW": 80,
+  "lanes": [
+   {
+    "key": "trg",
+    "name": "Trigger / Channel",
+    "hint": "Qnomy, CTI, Email, walk-in",
+    "y": 70,
+    "h": 480
+   },
+   {
+    "key": "agt",
+    "name": "Retail Agent",
+    "hint": "Retail, Telesales, Fulfillment, Direct Sale/Mass Market",
+    "y": 570,
+    "h": 2680
+   },
+   {
+    "key": "cust",
+    "name": "Customer",
+    "hint": "Applicant / subscriber",
+    "y": 3270,
+    "h": 260
+   },
+   {
+    "key": "dxp",
+    "name": "DXP / CRM Journey",
+    "hint": "Journey, cart, contract, order orchestration",
+    "y": 3550,
+    "h": 2460
+   },
+   {
+    "key": "ver",
+    "name": "ID Verification (MOI)",
+    "hint": "Ministry of Interior identity lookup",
+    "y": 6030,
+    "h": 1360
+   },
+   {
+    "key": "credit",
+    "name": "Credit / Collections",
+    "hint": "Blacklist, dues, credit approval",
+    "y": 7410,
+    "h": 1360
+   },
+   {
+    "key": "sup",
+    "name": "Supervisor / Approver",
+    "hint": "Credit team approval tasks, re-assignment",
+    "y": 8790,
+    "h": 260
+   },
+   {
+    "key": "prod",
+    "name": "Product, Number & SIM Systems",
+    "hint": "Catalogue, MSISDN, SIM/eSIM inventory",
+    "y": 9070,
+    "h": 1140
+   },
+   {
+    "key": "pay",
+    "name": "Payment Collection System",
+    "hint": "Payment gateway / WinCash",
+    "y": 10230,
+    "h": 700
+   },
+   {
+    "key": "fulfil",
+    "name": "Fulfilment & Notification",
+    "hint": "Order fulfilment, notification, survey",
+    "y": 10950,
+    "h": 1140
+   }
+  ],
+  "phases": [
+   "Initiate Customer Interaction",
+   "Initiate Customer Verification",
+   "Customer Information / Account",
+   "Eligibility & Credit Control",
+   "Bill Profile (Postpaid)",
+   "Product, Number & SIM Selection",
+   "Checkout & Contract (CAF)",
+   "Payment & Order Submission",
+   "Fulfilment & Notification"
+  ]
+ },
+ "nodes": [
+  {
+   "id": "start",
+   "type": "start",
+   "lane": "trg",
+   "phase": 0,
+   "label": "Customer / Interaction Arrives",
+   "desc": "A customer engages a channel (Retail, Telesales, Fulfillment, Direct Sale/Mass Market) to begin a Mobile Postpaid Activation journey.",
+   "slot": 0,
+   "w": 100,
+   "h": 100,
+   "x": 256.0,
+   "y": 150.0,
+   "cx": 306.0,
+   "cy": 200.0
+  },
+  {
+   "id": "jsm01",
+   "type": "control",
+   "lane": "agt",
+   "phase": 0,
+   "label": "Agent Access & Authorization",
+   "sub": "MPAR_001_JSM_01",
+   "desc": "1. System shall authenticate the agent using configured Identity and Access Management services before granting access to any journey, validate credentials, and deny access when authentication fails.\n\n2. System shall authorize journey initiation and control view, edit and submit permissions based on assigned roles and privileges, \n\n3. System shall restrict Agents without the required privilege, based on role and access from initiating a journey.",
+   "controls": [],
+   "slot": 3,
+   "w": 206,
+   "h": 100,
+   "x": 203.0,
+   "y": 1310.0,
+   "cx": 306.0,
+   "cy": 1360.0
+  },
+  {
+   "id": "jsm01_deny",
+   "type": "error",
+   "lane": "agt",
+   "phase": 0,
+   "label": "Access Denied",
+   "desc": "Authentication fails or the agent lacks the required role/privilege; journey initiation is restricted.",
+   "slot": 2,
+   "w": 190,
+   "h": 58,
+   "x": 211.0,
+   "y": 1111.0,
+   "cx": 306.0,
+   "cy": 1140.0
+  },
+  {
+   "id": "jsm02",
+   "type": "control",
+   "lane": "agt",
+   "phase": 0,
+   "label": "Maintain Agent Session",
+   "sub": "MPAR_001_JSM_02",
+   "desc": "System shall maintain agent session details including Agent ID, Channel ID and Login Timestamp.",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 203.0,
+   "y": 670.0,
+   "cx": 306.0,
+   "cy": 700.0
+  },
+  {
+   "id": "jsm03",
+   "type": "system",
+   "lane": "trg",
+   "phase": 0,
+   "label": "Receive Channel & Queue Context",
+   "sub": "MPAR_001_JSM_03",
+   "desc": "1. System shall receive journey details from Qnomy, CTI calls and email interactions before journey initiation; \n\n2. Associate the Q-Ticket Number, Service Type and available interaction attributes with the journey and tracking record; \n\n3. System shall continue journey processing using configured fallback rules when Qnomy is unavailable.",
+   "controls": [],
+   "systems": [
+    "Qnomy",
+    "CTI",
+    "Email"
+   ],
+   "slot": 1,
+   "w": 190,
+   "h": 100,
+   "x": 211.0,
+   "y": 370.0,
+   "cx": 306.0,
+   "cy": 420.0
+  },
+  {
+   "id": "jsm04",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 0,
+   "label": "Create Tracking Record",
+   "sub": "MPAR_001_JSM_04",
+   "desc": "1. System shall automatically create a tracking record upon successful journey initiation, generate a unique Tracking Reference Number, and populate mandatory attributes including Journey Reference, Agent ID, Channel, Service Type and Timestamp.\n\n2. System shall permit resolution only after all mandatory journey validations are complete and automatically close the tracking record after successful journey completion and downstream processing.\n\n3. System shall maintain a complete audit history of tracking-record changes.",
+   "controls": [],
+   "slot": 2,
+   "w": 206,
+   "h": 60,
+   "x": 203.0,
+   "y": 4090.0,
+   "cx": 306.0,
+   "cy": 4120.0
+  },
+  {
+   "id": "jsm05",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 0,
+   "label": "Save Milestone as Draft Order",
+   "sub": "MPAR_001_JSM_05",
+   "desc": "The system shall persist the journey milestone as a Draft Order on each successful stage validation so that the journey can be resumed without re entering captured data.",
+   "controls": [],
+   "slot": 1,
+   "w": 206,
+   "h": 100,
+   "x": 203.0,
+   "y": 3850.0,
+   "cx": 306.0,
+   "cy": 3900.0
+  },
+  {
+   "id": "jsm06",
+   "type": "control",
+   "lane": "agt",
+   "phase": 0,
+   "label": "Resume Draft Order",
+   "sub": "MPAR_001_JSM_06",
+   "desc": "The system shall allow the Retail Agent to view and resume the list of Draft Orders initiated by the same agent and System shall re-apply all the validation before proceeding ahead",
+   "controls": [],
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 203.0,
+   "y": 890.0,
+   "cx": 306.0,
+   "cy": 920.0
+  },
+  {
+   "id": "jsm07",
+   "type": "agent",
+   "lane": "sup",
+   "phase": 0,
+   "label": "Re-Assign Draft to Different Agent",
+   "sub": "MPAR_001_JSM_07",
+   "desc": "The system shall allow supervisor to assign the Draft order to different agent, So that the same can be picked by the agent",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 203.0,
+   "y": 8870.0,
+   "cx": 306.0,
+   "cy": 8920.0
+  },
+  {
+   "id": "jsm08",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 0,
+   "label": "Draft Order Expiry (30 Days)",
+   "sub": "MPAR_001_JSM_08 \u00b7 BR-001",
+   "desc": "The system shall expire a Draft Order that has not been submitted within the configured retention period and shall release all reservations held by that draft.",
+   "controls": [
+    "BR-001"
+   ],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 203.0,
+   "y": 3630.0,
+   "cx": 306.0,
+   "cy": 3680.0
+  },
+  {
+   "id": "kyc01",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Scan Identity Document",
+   "sub": "MPAR_001_KYC_01 \u00b7 BR-002",
+   "desc": "1. The system shall allow an authorised agent to select a supported identity-document type and capture the required document images, including front, back images, optional liveliness check (selfi of the customer) where the customer consents and through Bar code Reader\n\n2. The system shall submit the images, extract all available identity attributes - ID Type, ID Number, First Name, Last Name, Date of Birth, Nationality and ID Expiry Date from the scanned document.\n\n3. The system shall display the captured images and extracted attributes to the agent and store the images, attributes and capture outcome as identity evidence in the customer journey context.",
+   "controls": [
+    "BR-002"
+   ],
+   "inputs": [
+    "ID document images (front/back)",
+    "Optional liveness selfie",
+    "Barcode read"
+   ],
+   "outputs": [
+    "ID Type",
+    "ID Number",
+    "First Name",
+    "Last Name",
+    "Date of Birth",
+    "Nationality",
+    "ID Expiry Date"
+   ],
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 455.0,
+   "y": 670.0,
+   "cx": 558.0,
+   "cy": 700.0
+  },
+  {
+   "id": "kyc01_type_check",
+   "type": "decision",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Supported ID Document Type?",
+   "sub": "BR-002 \u00b7 BR-010",
+   "desc": "The scanned document's ID Type is checked against the permitted set for this journey (BR-002: QID, Diplomatic ID permitted for Postpaid; BR-010: GCC ID and Passport are Prepaid-only, not Postpaid-eligible). An unsupported/ineligible document type for a Postpaid activation is rejected here rather than being allowed to proceed into verification.",
+   "controls": [
+    "BR-002",
+    "BR-010"
+   ],
+   "branches": [
+    {
+     "label": "Unsupported for Postpaid",
+     "to": "kyc01_reject"
+    },
+    {
+     "label": "Supported (QID / Diplomatic ID)",
+     "to": "kyc03_capture_check"
+    }
+   ],
+   "slot": 2,
+   "w": 150,
+   "h": 100,
+   "x": 483.0,
+   "y": 1090.0,
+   "cx": 558.0,
+   "cy": 1140.0
+  },
+  {
+   "id": "kyc01_reject",
+   "type": "error",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Reject Unsupported Document Type",
+   "sub": "BR-002 \u00b7 BR-010 \u00b7 ECC-02",
+   "desc": "The system rejects continuation of a Postpaid activation on an ID type not permitted for Postpaid (per BR-002/BR-010, e.g. GCC ID or Passport, which BR-010 routes to Prepaid only) and, per MPAR_001_ECC_02, displays a distinct validation message identifying this specific eligibility-failure condition so the agent can communicate the reason to the customer.",
+   "controls": [
+    "BR-002",
+    "BR-010"
+   ],
+   "slot": 1,
+   "w": 190,
+   "h": 100,
+   "x": 463.0,
+   "y": 870.0,
+   "cx": 558.0,
+   "cy": 920.0
+  },
+  {
+   "id": "kyc03_capture_check",
+   "type": "validation",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Capture Complete & Successful?",
+   "sub": "MPAR_001_KYC_03 \u00b7 BR-003",
+   "desc": "1. The system shall prevent journey progression when a required image or identity attribute is missing, or when image capture or automated extraction is unsuccessful.\n\n2. The system shall allow the agent to re-scan the identity document after an unsuccessful capture or extraction attempt and retain the latest successful images and attributes.\n\n3. When automated verification is unavailable or remains unsuccessful after the permitted attempts, the system shall allow an authorised agent to capture the identity information manually under the configured fallback conditions.",
+   "controls": [
+    "BR-003"
+   ],
+   "branches": [
+    {
+     "label": "Missing / capture failed",
+     "to": "kyc03_rescan"
+    },
+    {
+     "label": "Captured successfully",
+     "to": "kyc04_age"
+    }
+   ],
+   "slot": 4,
+   "w": 176,
+   "h": 100,
+   "x": 470.0,
+   "y": 1530.0,
+   "cx": 558.0,
+   "cy": 1580.0
+  },
+  {
+   "id": "kyc03_rescan",
+   "type": "control",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Re-scan (max 4 attempts) / Manual Capture Fallback",
+   "sub": "BR-003",
+   "desc": "The agent may re-scan after an unsuccessful capture, retaining the latest successful images/attributes; the maximum number of capture attempts is configurable (currently 4). If automated verification remains unsuccessful after the permitted attempts, an authorised agent may capture identity information manually, which raises an Approval task.",
+   "controls": [
+    "BR-003"
+   ],
+   "slot": 3,
+   "w": 206,
+   "h": 100,
+   "x": 455.0,
+   "y": 1310.0,
+   "cx": 558.0,
+   "cy": 1360.0
+  },
+  {
+   "id": "kyc03_manual_approval",
+   "type": "escalation",
+   "lane": "sup",
+   "phase": 1,
+   "label": "Manual Capture Approval Task",
+   "sub": "BR-003",
+   "desc": "A Task is raised for Approval when identity information is captured manually under the configured fallback conditions.",
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 463.0,
+   "y": 8870.0,
+   "cx": 558.0,
+   "cy": 8920.0
+  },
+  {
+   "id": "kyc02",
+   "type": "control",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Capture Optional MADA ID",
+   "sub": "MPAR_001_KYC_02",
+   "desc": "The system shall accept MADA ID optionally (to be considered for special discount) ",
+   "controls": [],
+   "slot": 10,
+   "w": 206,
+   "h": 60,
+   "x": 455.0,
+   "y": 2870.0,
+   "cx": 558.0,
+   "cy": 2900.0
+  },
+  {
+   "id": "kyc04_age",
+   "type": "decision",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Age \u2265 18?",
+   "sub": "MPAR_001_KYC_04",
+   "desc": "The system shall execute age verification from the Date of Birth Field & reject if the Customer age is below 18 years.",
+   "controls": [],
+   "branches": [
+    {
+     "label": "Under 18",
+     "to": "kyc04_reject"
+    },
+    {
+     "label": "18 or over",
+     "to": "kyc05_moi"
+    }
+   ],
+   "slot": 7,
+   "w": 150,
+   "h": 84,
+   "x": 483.0,
+   "y": 2198.0,
+   "cx": 558.0,
+   "cy": 2240.0
+  },
+  {
+   "id": "kyc04_reject",
+   "type": "error",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Reject \u2014 Underage",
+   "desc": "Journey rejected because the derived customer age (from Date of Birth) is below 18 years.",
+   "slot": 8,
+   "w": 190,
+   "h": 58,
+   "x": 463.0,
+   "y": 2431.0,
+   "cx": 558.0,
+   "cy": 2460.0
+  },
+  {
+   "id": "kyc05_moi",
+   "type": "system",
+   "lane": "ver",
+   "phase": 1,
+   "label": "Reconcile Attributes with MOI",
+   "sub": "MPAR_001_KYC_05 \u00b7 BR-004",
+   "desc": "1. The system shall compare each captured identity attribute with the corresponding ID Verification System attribute and store the attribute-level results and overall reconciliation result.\n\n2. The system shall evaluate the identity status and permit journey progression only when the status is acceptable; \n\n3. Journey progression shall be permitted only when all mandatory identity attributes satisfy the configured reconciliation criteria and \n\n4. The System shall allow the Journey based on identity status if acceptable, allow the agent to re-scan the document or terminate the journey according to the permitted actions.\n\n5. Following identity re-capture, the system shall submit the latest identity information for verification and reconciliation again while retaining previous attempts in the audit history.",
+   "controls": [
+    "BR-004"
+   ],
+   "systems": [
+    "MOI"
+   ],
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 463.0,
+   "y": 6110.0,
+   "cx": 558.0,
+   "cy": 6160.0
+  },
+  {
+   "id": "kyc05_status",
+   "type": "decision",
+   "lane": "ver",
+   "phase": 1,
+   "label": "Identity Status Acceptable?",
+   "sub": "BR-004",
+   "desc": "ID Verification System (MOI) validation applies to Passport, QID and Diplomatic ID (excluded/skipped for GCC, which continues the journey). Reconciliation requires a 100% match between captured and MOI-validated attributes. Status handling: Active allows all journeys; Expired QID permits modification only; Expired Passport, GCC ID or Diplomatic ID is not allowed for any journey; a Passport linked to a QID with the journey initiated on Passport is not allowed to progress.",
+   "controls": [
+    "BR-004"
+   ],
+   "branches": [
+    {
+     "label": "Acceptable",
+     "to": "kyc06_moi_lookup"
+    },
+    {
+     "label": "Not acceptable \u2014 re-scan or terminate",
+     "to": "kyc03_rescan"
+    }
+   ],
+   "slot": 1,
+   "w": 150,
+   "h": 100,
+   "x": 483.0,
+   "y": 6330.0,
+   "cx": 558.0,
+   "cy": 6380.0
+  },
+  {
+   "id": "kyc06_moi_lookup",
+   "type": "system",
+   "lane": "ver",
+   "phase": 1,
+   "label": "MOI Lookup & Nationality-Risk Status",
+   "sub": "MPAR_001_KYC_06 \u00b7 BR-005",
+   "desc": "1. The system shall preserve the captured images and attributes reconciled with MOI attributes.\n\n2. The system shall derive and store the applicable nationality-risk indicator using the authoritative nationality returned by MOI and the active nationality-risk configuration",
+   "controls": [
+    "BR-005"
+   ],
+   "systems": [
+    "MOI"
+   ],
+   "slot": 4,
+   "w": 190,
+   "h": 100,
+   "x": 463.0,
+   "y": 6990.0,
+   "cx": 558.0,
+   "cy": 7040.0
+  },
+  {
+   "id": "kyc07_display",
+   "type": "control",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Display MOI Attributes to Agent",
+   "sub": "MPAR_001_KYC_07",
+   "desc": "The system shall display ID Type, ID Number, Date of Birth, the five name fields, Last Name, Nationality, Salutation and ID Expiry Date, MOI Validation Timestamp returned by MOI on the customer verification screen.",
+   "controls": [],
+   "slot": 5,
+   "w": 206,
+   "h": 100,
+   "x": 455.0,
+   "y": 1750.0,
+   "cx": 558.0,
+   "cy": 1800.0
+  },
+  {
+   "id": "kyc08_moi_avail",
+   "type": "decision",
+   "lane": "ver",
+   "phase": 1,
+   "label": "MOI Available / Responds in Time?",
+   "sub": "MPAR_001_KYC_08 \u00b7 BR-006",
+   "desc": "1. When MOI is unavailable or does not respond within the configured period, preserve the captured identity information, and save the journey as pending government verification or Draft.\n\n2. Final Order submission shall remain blocked until MOI verification is completed successfully.\n\n3. The system shall support automatic retry of MOI verification during Order Submission for the pending journey, if the automatic 3 retry fails, then the system shall fetch the data from Local MOI Data\n\n4. If successfully verified, update the result and allow the journey to continue subject to all other validations.",
+   "controls": [
+    "BR-006"
+   ],
+   "branches": [
+    {
+     "label": "Unavailable / timeout",
+     "to": "kyc08_pending"
+    },
+    {
+     "label": "Available",
+     "to": "kyc09_expiry"
+    }
+   ],
+   "slot": 3,
+   "w": 150,
+   "h": 100,
+   "x": 483.0,
+   "y": 6770.0,
+   "cx": 558.0,
+   "cy": 6820.0
+  },
+  {
+   "id": "kyc08_pending",
+   "type": "escalation",
+   "lane": "ver",
+   "phase": 1,
+   "label": "Pending Government Verification (Draft)",
+   "sub": "BR-006",
+   "desc": "Identity information is preserved and the journey is saved as pending government verification/Draft. Final order submission is blocked until MOI verification succeeds. Automatic retry is attempted (re-triggered if order not submitted within 30 minutes); after 3 failed automatic retries, the system falls back to Local MOI Data.",
+   "slot": 2,
+   "w": 190,
+   "h": 100,
+   "x": 463.0,
+   "y": 6550.0,
+   "cx": 558.0,
+   "cy": 6600.0
+  },
+  {
+   "id": "kyc08_resume",
+   "type": "system",
+   "lane": "ver",
+   "phase": 1,
+   "label": "MOI Verified \u2014 Resume Journey",
+   "desc": "Once successfully verified, the result is updated and the journey continues subject to all other validations.",
+   "slot": 5,
+   "w": 190,
+   "h": 100,
+   "x": 463.0,
+   "y": 7210.0,
+   "cx": 558.0,
+   "cy": 7260.0
+  },
+  {
+   "id": "kyc09_expiry",
+   "type": "control",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Capture Interim Expiry from MOI",
+   "sub": "MPAR_001_KYC_09",
+   "desc": "The system shall capture ID Expiry Date from MOI even if ID Verification System return the data",
+   "controls": [],
+   "slot": 11,
+   "w": 206,
+   "h": 100,
+   "x": 455.0,
+   "y": 3070.0,
+   "cx": 558.0,
+   "cy": 3120.0
+  },
+  {
+   "id": "kyc10_rep",
+   "type": "validation",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Representative Restriction Check",
+   "sub": "MPAR_001_KYC_10",
+   "desc": "The system shall not permit a Postpaid or Prepaid connection to be taken by a representative acting on behalf of the customer.",
+   "controls": [],
+   "branches": [
+    {
+     "label": "Representative acting for customer",
+     "to": "kyc10_reject"
+    }
+   ],
+   "slot": 6,
+   "w": 176,
+   "h": 100,
+   "x": 470.0,
+   "y": 1970.0,
+   "cx": 558.0,
+   "cy": 2020.0
+  },
+  {
+   "id": "kyc10_reject",
+   "type": "error",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Reject \u2014 Representative Not Permitted",
+   "desc": "A Postpaid or Prepaid connection may not be taken by a representative acting on behalf of the customer.",
+   "slot": 9,
+   "w": 190,
+   "h": 100,
+   "x": 463.0,
+   "y": 2630.0,
+   "cx": 558.0,
+   "cy": 2680.0
+  },
+  {
+   "id": "cam01",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 2,
+   "label": "Customer Search & Matching",
+   "sub": "MPAR_001_CAM_01",
+   "desc": "Modification Flow:\n1. The system shall provide the agent with a customer-search function.\n2. The system shall support Contact Number, MSISDN, Account ID,QID, Passport Number,GCC ID and Diplomatic ID as a customer-search criterion.\n3.  The system shall display an error message when customer-search results cannot be retrieved.\n4. The system shall allow the agent to clear the selected criterion and entered search value.\n5. The system shall allow the agent to select exactly one customer record from the multiple records retrieved search results.\n\nActivation Flow:\n1. The system shall provide the agent with a customer details after matching the IDs (QID, Passport Number,GCC ID and Diplomatic ID).\n2. The system shall create a New Customer incase there is no match with the ID Type, ID Number and Nationality\n- QID to be used as Unique Identifier\n- For Passport - Passport number and Nationality to be used as Unique Identifier",
+   "controls": [],
+   "slot": 1,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 3850.0,
+   "cx": 810.0,
+   "cy": 3900.0
+  },
+  {
+   "id": "cam01_match",
+   "type": "decision",
+   "lane": "dxp",
+   "phase": 2,
+   "label": "Existing Customer Matched?",
+   "desc": "Activation flow matches by ID (QID, Passport Number, GCC ID, Diplomatic ID); if no match on ID Type, ID Number and Nationality, a new customer is created (QID as unique identifier, or Passport Number + Nationality for Passport holders).",
+   "branches": [
+    {
+     "label": "Existing customer matched",
+     "to": "cam02"
+    },
+    {
+     "label": "No match \u2014 create new customer",
+     "to": "cam06"
+    }
+   ],
+   "slot": 2,
+   "w": 150,
+   "h": 100,
+   "x": 735.0,
+   "y": 4070.0,
+   "cx": 810.0,
+   "cy": 4120.0
+  },
+  {
+   "id": "cam02",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 2,
+   "label": "Overwrite Attributes from Latest MOI",
+   "sub": "MPAR_001_CAM_02",
+   "desc": "The system shall overwrite any attribute on an existing customer record from the MOI response from the latest retriveal of MOI data.",
+   "controls": [],
+   "slot": 5,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 4730.0,
+   "cx": 810.0,
+   "cy": 4780.0
+  },
+  {
+   "id": "cam03",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 2,
+   "label": "Identify Existing Contact",
+   "sub": "MPAR_001_CAM_03",
+   "desc": "The system shall identify an existing contact using ID Type and ID Number before creating a new contact.",
+   "controls": [],
+   "slot": 6,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 4950.0,
+   "cx": 810.0,
+   "cy": 5000.0
+  },
+  {
+   "id": "cam04",
+   "type": "validation",
+   "lane": "dxp",
+   "phase": 2,
+   "label": "Lock Verified Attributes (Non-Editable)",
+   "sub": "MPAR_001_CAM_04",
+   "desc": "The system shall render ID Number, ID Type, the five name fields, Date of Birth, Nationality, ID Expiry Date and Salutation as non editable following successful MOI validation",
+   "controls": [],
+   "slot": 3,
+   "w": 176,
+   "h": 100,
+   "x": 722.0,
+   "y": 4290.0,
+   "cx": 810.0,
+   "cy": 4340.0
+  },
+  {
+   "id": "cam05",
+   "type": "control",
+   "lane": "agt",
+   "phase": 2,
+   "label": "Capture Editable Address Attributes",
+   "sub": "MPAR_001_CAM_05",
+   "desc": "The system shall present the address returned by MOI as editable covering Building Number, Street Number, Zone and Apartment, Villa or Flat Number.",
+   "controls": [],
+   "slot": 2,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 1090.0,
+   "cx": 810.0,
+   "cy": 1140.0
+  },
+  {
+   "id": "cam06",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 2,
+   "label": "Mandatory Account Attributes",
+   "sub": "MPAR_001_CAM_06 \u00b7 BR-007",
+   "desc": "The system shall require Account Type, Customer Category and Segment to be populated before the customer account can be created.",
+   "controls": [
+    "BR-007"
+   ],
+   "slot": 7,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 5170.0,
+   "cx": 810.0,
+   "cy": 5220.0
+  },
+  {
+   "id": "cam07",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 2,
+   "label": "Derive Category & Segment from Nationality",
+   "sub": "MPAR_001_CAM_07",
+   "desc": "The system shall derive Customer Category and Segment automatically from customer Nationality using the configured nationality to customer type matrix.",
+   "controls": [],
+   "slot": 8,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 5390.0,
+   "cx": 810.0,
+   "cy": 5440.0
+  },
+  {
+   "id": "cam08",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 2,
+   "label": "Create Default Primary Contact",
+   "sub": "MPAR_001_CAM_08",
+   "desc": "The system shall create a default primary contact for the customer account using the verified customer identity information.",
+   "controls": [],
+   "slot": 9,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 5610.0,
+   "cx": 810.0,
+   "cy": 5660.0
+  },
+  {
+   "id": "cam09",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 2,
+   "label": "Populate Default Credit Limit",
+   "sub": "MPAR_001_CAM_09",
+   "desc": "The system shall populate the default credit limit on the customer account based on the customer segment.",
+   "controls": [],
+   "slot": 4,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 4510.0,
+   "cx": 810.0,
+   "cy": 4560.0
+  },
+  {
+   "id": "cam10",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 2,
+   "label": "Agent-Overridable Attributes",
+   "sub": "MPAR_001_CAM_10",
+   "desc": "The system shall allow the Agent to override Email Address, Language and Alternate Phone Number on the customer account.",
+   "controls": [],
+   "slot": 3,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 1310.0,
+   "cx": 810.0,
+   "cy": 1360.0
+  },
+  {
+   "id": "cam11",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 2,
+   "label": "HRN Advance Payment Message",
+   "sub": "MPAR_001_CAM_11 \u00b7 BR-008",
+   "desc": "The system shall display the configured advance payment message on the customer creation page where the customer is flagged as High Risk Nationality.",
+   "controls": [
+    "BR-008"
+   ],
+   "slot": 10,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 5830.0,
+   "cx": 810.0,
+   "cy": 5880.0
+  },
+  {
+   "id": "cam12",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 2,
+   "label": "Multiple Contacts per Customer",
+   "sub": "MPAR_001_CAM_12 \u00b7 BR-009",
+   "desc": "The system shall allow multiple contacts to be associated with a single customer account.",
+   "controls": [
+    "BR-009"
+   ],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 707.0,
+   "y": 3630.0,
+   "cx": 810.0,
+   "cy": 3680.0
+  },
+  {
+   "id": "cam13",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 2,
+   "label": "Assign Contact Role",
+   "sub": "MPAR_001_CAM_13",
+   "desc": "The system shall allow a role to be assigned to each contact created against the customer account. \nA customer (with unique National ID) can assume different responsibilities and relations with VFQ (personal account or SPOC for enterprise account). The contact should have a custom field to indicate that relation.",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 707.0,
+   "y": 670.0,
+   "cx": 810.0,
+   "cy": 700.0
+  },
+  {
+   "id": "cam14",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 2,
+   "label": "Capture & Verify Email",
+   "sub": "MPAR_001_CAM_14",
+   "desc": "The system shall allow the Agent to capture the customer Email Address (Multiple E-Mail address can be added to an account) and to verify it through the email verification service, marking the address as Verified on success.",
+   "controls": [],
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 707.0,
+   "y": 890.0,
+   "cx": 810.0,
+   "cy": 920.0
+  },
+  {
+   "id": "ecc01",
+   "type": "decision",
+   "lane": "dxp",
+   "phase": 3,
+   "label": "Connection Type Eligibility by ID Type",
+   "sub": "MPAR_001_ECC_01 \u00b7 BR-010",
+   "desc": "The system shall determine eligibility for Postpaid and Prepaid connection types based on the customer ID type in accordance with business rule.",
+   "controls": [
+    "BR-010"
+   ],
+   "branches": [
+    {
+     "label": "Eligible for Postpaid (QID / Diplomatic ID)",
+     "to": "ecc03"
+    },
+    {
+     "label": "Not eligible for Postpaid (GCC ID / Passport \u2014 Prepaid only)",
+     "to": "ecc02"
+    }
+   ],
+   "slot": 1,
+   "w": 150,
+   "h": 100,
+   "x": 987.0,
+   "y": 3850.0,
+   "cx": 1062.0,
+   "cy": 3900.0
+  },
+  {
+   "id": "ecc02",
+   "type": "error",
+   "lane": "agt",
+   "phase": 3,
+   "label": "Display Eligibility Failure Message",
+   "sub": "MPAR_001_ECC_02",
+   "desc": "The system shall display a distinct validation message on the user interface for each eligibility failure condition so that the agent can communicate the reason to the customer.",
+   "controls": [],
+   "slot": 1,
+   "w": 190,
+   "h": 100,
+   "x": 967.0,
+   "y": 870.0,
+   "cx": 1062.0,
+   "cy": 920.0
+  },
+  {
+   "id": "ecc03",
+   "type": "system",
+   "lane": "credit",
+   "phase": 3,
+   "label": "Blacklist Check",
+   "sub": "MPAR_001_ECC_03",
+   "desc": "New Customers: \n1. The system shall perform blacklist validation for new customers. \n2. The system shall receive blacklist validation results from credit control and store  information in Customer Blacklist Repository. \n\nBlacklist Status Check:\n3. The system shall prevent/permit customer onboarding or transaction completion depending on the blacklist status. ",
+   "controls": [],
+   "systems": [
+    "Customer Blacklist Repository"
+   ],
+   "branches": [
+    {
+     "label": "Blacklisted",
+     "to": "ecc02"
+    }
+   ],
+   "slot": 1,
+   "w": 190,
+   "h": 56,
+   "x": 967.0,
+   "y": 7732.0,
+   "cx": 1062.0,
+   "cy": 7760.0
+  },
+  {
+   "id": "ecc04",
+   "type": "decision",
+   "lane": "credit",
+   "phase": 3,
+   "label": "In Collections?",
+   "sub": "MPAR_001_ECC_04",
+   "desc": "The system shall block journey progression where the customer status is returned as In Collections.",
+   "controls": [],
+   "branches": [
+    {
+     "label": "In Collections",
+     "to": "ecc02"
+    },
+    {
+     "label": "Not in Collections",
+     "to": "ecc05"
+    }
+   ],
+   "slot": 2,
+   "w": 150,
+   "h": 100,
+   "x": 987.0,
+   "y": 7930.0,
+   "cx": 1062.0,
+   "cy": 7980.0
+  },
+  {
+   "id": "ecc05",
+   "type": "decision",
+   "lane": "credit",
+   "phase": 3,
+   "label": "Outstanding Dues \u2264 Threshold?",
+   "sub": "MPAR_001_ECC_05",
+   "desc": "The system shall retrieve the customer outstanding balance and shall block journey progression where the balance exceeds the configured threshold.",
+   "controls": [],
+   "branches": [
+    {
+     "label": "Exceeds threshold",
+     "to": "ecc06"
+    },
+    {
+     "label": "Within threshold",
+     "to": "ecc07"
+    }
+   ],
+   "slot": 3,
+   "w": 150,
+   "h": 100,
+   "x": 987.0,
+   "y": 8150.0,
+   "cx": 1062.0,
+   "cy": 8200.0
+  },
+  {
+   "id": "ecc06",
+   "type": "control",
+   "lane": "agt",
+   "phase": 3,
+   "label": "Settle Dues & Re-check",
+   "sub": "MPAR_001_ECC_06",
+   "desc": "The system shall allow the Agent to direct the customer to settle outstanding dues and shall re evaluate the outstanding balance before permitting the journey to continue.",
+   "controls": [],
+   "slot": 2,
+   "w": 206,
+   "h": 60,
+   "x": 959.0,
+   "y": 1110.0,
+   "cx": 1062.0,
+   "cy": 1140.0
+  },
+  {
+   "id": "ecc07",
+   "type": "system",
+   "lane": "credit",
+   "phase": 3,
+   "label": "Retrieve Active Line Count",
+   "sub": "MPAR_001_ECC_07 \u00b7 BR-011",
+   "desc": "The system shall retrieve the total number of active mobile voice connections associated with the customer.",
+   "controls": [
+    "BR-011"
+   ],
+   "slot": 4,
+   "w": 190,
+   "h": 100,
+   "x": 967.0,
+   "y": 8370.0,
+   "cx": 1062.0,
+   "cy": 8420.0
+  },
+  {
+   "id": "ecc08",
+   "type": "decision",
+   "lane": "credit",
+   "phase": 3,
+   "label": "Line Count Ceiling Reached?",
+   "sub": "MPAR_001_ECC_08",
+   "desc": "The system shall display a validation message where the line count ceiling is reached and shall permit the Retail Agent to proceed, subject to the approval task.",
+   "controls": [],
+   "branches": [
+    {
+     "label": "Ceiling reached",
+     "to": "ecc09"
+    },
+    {
+     "label": "Within limit",
+     "to": "ecc12"
+    }
+   ],
+   "slot": 5,
+   "w": 150,
+   "h": 100,
+   "x": 987.0,
+   "y": 8590.0,
+   "cx": 1062.0,
+   "cy": 8640.0
+  },
+  {
+   "id": "ecc09",
+   "type": "escalation",
+   "lane": "credit",
+   "phase": 3,
+   "label": "Credit Approval Task (3rd\u20135th Line)",
+   "sub": "MPAR_001_ECC_09",
+   "desc": "The system shall create an approval task for the Credit team where an expatriate customer requests a third, fourth or fifth Postpaid connection.",
+   "controls": [],
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 967.0,
+   "y": 7490.0,
+   "cx": 1062.0,
+   "cy": 7540.0
+  },
+  {
+   "id": "ecc10",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 3,
+   "label": "Hold Order Pending Approval",
+   "sub": "MPAR_001_ECC_10",
+   "desc": "The system shall allow the Agent to capture the order and hold it, and shall permit submission only once the associated approval task has been approved.",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 959.0,
+   "y": 3630.0,
+   "cx": 1062.0,
+   "cy": 3680.0
+  },
+  {
+   "id": "ecc10_decision",
+   "type": "decision",
+   "lane": "sup",
+   "phase": 3,
+   "label": "Approval Task Outcome",
+   "desc": "The held order awaits the Credit team's decision on the approval task.",
+   "branches": [
+    {
+     "label": "Approved",
+     "to": "ecc12"
+    },
+    {
+     "label": "Rejected",
+     "to": "ecc11"
+    }
+   ],
+   "slot": 0,
+   "w": 150,
+   "h": 100,
+   "x": 987.0,
+   "y": 8870.0,
+   "cx": 1062.0,
+   "cy": 8920.0
+  },
+  {
+   "id": "ecc11",
+   "type": "control",
+   "lane": "agt",
+   "phase": 3,
+   "label": "Cancel Held Order (Rejected)",
+   "sub": "MPAR_001_ECC_11",
+   "desc": "The system shall allow the Agent to cancel the held order where the associated approval task is rejected.",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 959.0,
+   "y": 650.0,
+   "cx": 1062.0,
+   "cy": 700.0
+  },
+  {
+   "id": "ecc12",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 3,
+   "label": "Assign Initial Credit Limit",
+   "sub": "MPAR_001_ECC_12 \u00b7 BR-012",
+   "desc": "1.The system shall determine and assign the initial account-level credit limit based on the business-configured credit limit matrix using customer segment.\n2.The system shall display the current credit limit maintained at customer account level. ",
+   "controls": [
+    "BR-012"
+   ],
+   "slot": 3,
+   "w": 206,
+   "h": 100,
+   "x": 959.0,
+   "y": 4290.0,
+   "cx": 1062.0,
+   "cy": 4340.0
+  },
+  {
+   "id": "ecc13",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 3,
+   "label": "Credit Limit Not Amendable at Activation",
+   "sub": "MPAR_001_ECC_13",
+   "desc": "The system shall not permit credit limit enhancement within the New Activation journey because the capability applies only to the Modification and Add On journeys.",
+   "controls": [],
+   "slot": 4,
+   "w": 206,
+   "h": 100,
+   "x": 959.0,
+   "y": 4510.0,
+   "cx": 1062.0,
+   "cy": 4560.0
+  },
+  {
+   "id": "milestone1",
+   "type": "system",
+   "lane": "dxp",
+   "phase": 3,
+   "label": "Milestone: Customer Created & Eligibility Captured",
+   "desc": "#5. First Milestone \u2014 Customer created or existing customer identified, and product offer eligibility captured.",
+   "slot": 2,
+   "w": 190,
+   "h": 100,
+   "x": 967.0,
+   "y": 4070.0,
+   "cx": 1062.0,
+   "cy": 4120.0
+  },
+  {
+   "id": "bam01",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 4,
+   "label": "Create Billing Account & Payment Profile",
+   "sub": "MPAR_001_BAM_01 \u00b7 BR-013",
+   "desc": "1. The system shall allow agent to create a new billing account or select an Existing Account for eligible customers.\n2. The system shall allow agent to capture billing Information \n- Contatct (Primary & Secondary)\n- Preferred invoice recipient contact\n- New or Existing Billing address\n- Bill Cycle\n- Payment Profile, Validate Payment Profile, Update Payment Profile\n3. The system shall allow the Retail Agent to capture payment profile details covering Payment Method, Payment Type and Billing Frequency. The system should only allow credit card & debit card for auto debit.\n4. The system shall validate the captured payment details and shall update the payment profile only following successful validation. The system shall capture last 4 digit of card & token number generated from payment gateway in the payment profile.",
+   "controls": [
+    "BR-013"
+   ],
+   "slot": 1,
+   "w": 206,
+   "h": 100,
+   "x": 1211.0,
+   "y": 870.0,
+   "cx": 1314.0,
+   "cy": 920.0
+  },
+  {
+   "id": "bam02",
+   "type": "control",
+   "lane": "agt",
+   "phase": 4,
+   "label": "Select Existing Billing Account",
+   "sub": "MPAR_001_BAM_02",
+   "desc": "The system shall allow the Retail Agent to select an existing billing account in the cart during a plan purchase, where one or more already exist against the customer.",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 1211.0,
+   "y": 650.0,
+   "cx": 1314.0,
+   "cy": 700.0
+  },
+  {
+   "id": "bam03",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 4,
+   "label": "One Billing Account per Line in Cart",
+   "sub": "MPAR_001_BAM_03",
+   "desc": "The system shall permit exactly one billing account to be associated with a line/Plan (in case there multiple connection & corresponding plans are purchased together in a single cart, each Connection should be associated with a specific billing account).",
+   "controls": [],
+   "slot": 1,
+   "w": 206,
+   "h": 100,
+   "x": 1211.0,
+   "y": 3850.0,
+   "cx": 1314.0,
+   "cy": 3900.0
+  },
+  {
+   "id": "bam04",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 4,
+   "label": "Multiple Payment Profiles per Account",
+   "sub": "MPAR_001_BAM_04",
+   "desc": "The system shall allow a billing account to hold multiple payment profiles.",
+   "controls": [],
+   "slot": 2,
+   "w": 206,
+   "h": 100,
+   "x": 1211.0,
+   "y": 4070.0,
+   "cx": 1314.0,
+   "cy": 4120.0
+  },
+  {
+   "id": "bam05",
+   "type": "validation",
+   "lane": "agt",
+   "phase": 4,
+   "label": "Add Billing Account During Validation",
+   "sub": "MPAR_001_BAM_05",
+   "desc": "The system shall allow the Retail Agent to add a billing account holding an active payment profile at the cart validation stage where none is present.",
+   "controls": [],
+   "slot": 2,
+   "w": 176,
+   "h": 100,
+   "x": 1226.0,
+   "y": 1090.0,
+   "cx": 1314.0,
+   "cy": 1140.0
+  },
+  {
+   "id": "bam06",
+   "type": "validation",
+   "lane": "agt",
+   "phase": 4,
+   "label": "Payment Validation Failed?",
+   "sub": "MPAR_001_BAM_06",
+   "desc": "The system shall return the Retail Agent to the payment profile capture screen where payment validation fails so that the details can be recaptured.",
+   "controls": [],
+   "branches": [
+    {
+     "label": "Failed \u2014 recapture",
+     "to": "bam01"
+    }
+   ],
+   "slot": 3,
+   "w": 176,
+   "h": 100,
+   "x": 1226.0,
+   "y": 1310.0,
+   "cx": 1314.0,
+   "cy": 1360.0
+  },
+  {
+   "id": "milestone2",
+   "type": "system",
+   "lane": "dxp",
+   "phase": 4,
+   "label": "Milestone: Bill Profile Created",
+   "desc": "#7. Second Milestone \u2014 Customer bill profile created (Postpaid only).",
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 1219.0,
+   "y": 3630.0,
+   "cx": 1314.0,
+   "cy": 3680.0
+  },
+  {
+   "id": "qpc01",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 5,
+   "label": "Present Eligible Base Plans",
+   "sub": "MPAR_001_QPC_01",
+   "desc": "The system shall present only those base plans for which the customer is eligible, determined by customer segment and connection type.",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 3630.0,
+   "cx": 1566.0,
+   "cy": 3680.0
+  },
+  {
+   "id": "qpc02",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 5,
+   "label": "Present Eligible Add-Ons",
+   "sub": "MPAR_001_QPC_02",
+   "desc": "The system shall present only those add ons that are eligible for the selected base plan and shall prevent selection of an ineligible add on.",
+   "controls": [],
+   "slot": 3,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 4310.0,
+   "cx": 1566.0,
+   "cy": 4340.0
+  },
+  {
+   "id": "qpc03",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 5,
+   "label": "Enforce Add-On Cardinality",
+   "sub": "MPAR_001_QPC_03",
+   "desc": "The system shall enforce the configured add on cardinality rules covering minimum quantity, maximum quantity and default quantity.",
+   "controls": [],
+   "slot": 4,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 4510.0,
+   "cx": 1566.0,
+   "cy": 4560.0
+  },
+  {
+   "id": "qpc04",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 5,
+   "label": "Present Eligible Discounts",
+   "sub": "MPAR_001_QPC_04",
+   "desc": "The system shall present only those discounts that are eligible for the selected base plan and shall prevent selection of an ineligible discount.",
+   "controls": [],
+   "slot": 2,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 4070.0,
+   "cx": 1566.0,
+   "cy": 4120.0
+  },
+  {
+   "id": "qpc05",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 5,
+   "label": "Create Cart",
+   "sub": "MPAR_001_QPC_05",
+   "desc": "The system shall allow the Retail Agent to create a cart containing the selected base plan, add ons and discounts.",
+   "controls": [],
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 890.0,
+   "cx": 1566.0,
+   "cy": 920.0
+  },
+  {
+   "id": "qpc06",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 5,
+   "label": "Amend Cart Before Submission",
+   "sub": "MPAR_001_QPC_06",
+   "desc": "The system shall allow the Retail Agent to review, amend and remove selected plans, add ons and discounts at any point before order submission.",
+   "controls": [],
+   "slot": 2,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 1090.0,
+   "cx": 1566.0,
+   "cy": 1140.0
+  },
+  {
+   "id": "qpc07",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 5,
+   "label": "Recalculate Cart Pricing",
+   "sub": "MPAR_001_QPC_07",
+   "desc": "The system shall recalculate one time charges, recurring charges and discounts whenever a product is added to, amended within, or removed from the cart.",
+   "controls": [],
+   "slot": 6,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 4970.0,
+   "cx": 1566.0,
+   "cy": 5000.0
+  },
+  {
+   "id": "qpc08",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 5,
+   "label": "Apply Latest Discount Version",
+   "sub": "MPAR_001_QPC_08",
+   "desc": "The system shall apply the latest effective version of an eligible discount to the cart.",
+   "controls": [],
+   "slot": 7,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 5170.0,
+   "cx": 1566.0,
+   "cy": 5220.0
+  },
+  {
+   "id": "qpc09",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 5,
+   "label": "Display Bill Limit",
+   "sub": "MPAR_001_QPC_09",
+   "desc": "The system shall display the bill limit associated with the selected base plan on the cart.",
+   "controls": [],
+   "slot": 5,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 4750.0,
+   "cx": 1566.0,
+   "cy": 4780.0
+  },
+  {
+   "id": "qpc10",
+   "type": "validation",
+   "lane": "agt",
+   "phase": 5,
+   "label": "MADA Discount \u2014 Supporting Document Required",
+   "sub": "MPAR_001_QPC_10",
+   "desc": "The system shall require the MADA identity document to be uploaded as a supporting document where a special discount is added to the cart (captured in KYC processs along with mandatory ids).",
+   "controls": [],
+   "slot": 5,
+   "w": 176,
+   "h": 100,
+   "x": 1478.0,
+   "y": 1750.0,
+   "cx": 1566.0,
+   "cy": 1800.0
+  },
+  {
+   "id": "num01",
+   "type": "control",
+   "lane": "prod",
+   "phase": 5,
+   "label": "Retrieve & Auto-Populate Reserved Numbers",
+   "sub": "MPAR_001_NUM_01",
+   "desc": "The system shall retrieve and auto-populate customer reserved numbers which are eligible for the journey",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 9150.0,
+   "cx": 1566.0,
+   "cy": 9200.0
+  },
+  {
+   "id": "num02",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 5,
+   "label": "Select Number (Free / Star / Fixed Line)",
+   "sub": "MPAR_001_NUM_02",
+   "desc": "The system shall allow agent to search and select Free Numbers, Star Number or Fixed Line Numbers based on the journey or Customer Choice",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 650.0,
+   "cx": 1566.0,
+   "cy": 700.0
+  },
+  {
+   "id": "num03",
+   "type": "validation",
+   "lane": "prod",
+   "phase": 5,
+   "label": "Star Number Validation",
+   "sub": "MPAR_001_NUM_03 \u00b7 BR-014",
+   "desc": "The system shall validate Star Number eligibility based on Business Rules.",
+   "controls": [
+    "BR-014"
+   ],
+   "slot": 1,
+   "w": 176,
+   "h": 100,
+   "x": 1478.0,
+   "y": 9370.0,
+   "cx": 1566.0,
+   "cy": 9420.0
+  },
+  {
+   "id": "num04",
+   "type": "system",
+   "lane": "prod",
+   "phase": 5,
+   "label": "Reserve Number",
+   "sub": "MPAR_001_NUM_04",
+   "desc": "The system shall reserve selected Number during order processing and release the number If draft order is expired or cancelled",
+   "controls": [],
+   "slot": 4,
+   "w": 190,
+   "h": 56,
+   "x": 1471.0,
+   "y": 10052.0,
+   "cx": 1566.0,
+   "cy": 10080.0
+  },
+  {
+   "id": "num05",
+   "type": "control",
+   "lane": "prod",
+   "phase": 5,
+   "label": "Release Reservation After 72 Hours",
+   "sub": "MPAR_001_NUM_05",
+   "desc": "The system shall release a reserved MSISDN back to the available pool where it has not been consumed by the same customer within seventy two hours of reservation.",
+   "controls": [],
+   "slot": 3,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 9810.0,
+   "cx": 1566.0,
+   "cy": 9860.0
+  },
+  {
+   "id": "num06",
+   "type": "control",
+   "lane": "agt",
+   "phase": 5,
+   "label": "Display Number & Upfront Charges",
+   "sub": "MPAR_001_NUM_06",
+   "desc": "The system shall display selected number details, Upfront Charges and Commitment period to agent for customer confirmation before submission.",
+   "controls": [],
+   "slot": 4,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 1530.0,
+   "cx": 1566.0,
+   "cy": 1580.0
+  },
+  {
+   "id": "sim01",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 5,
+   "label": "Select SIM Type",
+   "sub": "MPAR_001_SIM_01",
+   "desc": "1. The system shall allow agent to select appropriate SIM type during journey initiation.\n2. The system shall allow agent to capture Physical SIM/Printed eSIM details.\n3. The system shall assign SIM to the customer service.\n4. The system shall generate Virtual eSIM and deliver Virtual eSIM information to the customer through Email or SMS after order fulfillment",
+   "controls": [],
+   "slot": 3,
+   "w": 206,
+   "h": 60,
+   "x": 1463.0,
+   "y": 1330.0,
+   "cx": 1566.0,
+   "cy": 1360.0
+  },
+  {
+   "id": "sim02",
+   "type": "system",
+   "lane": "prod",
+   "phase": 5,
+   "label": "SIM / eSIM Validation & Inventory Reservation",
+   "sub": "MPAR_001_SIM_02",
+   "desc": "1. The system shall validate SIM serial number, ICCID, status and availability and throw and error to agent in case of any issue\n2. The System shall reserve the SIM from the inventory and mark it consumed after fulfillment\n- eSIM and Virtual SIM must be depleted from UIM Inventory\n- Physical SIM must be depleted from WinCash and UIM Inventory",
+   "controls": [],
+   "systems": [
+    "UIM Inventory",
+    "WinCash"
+   ],
+   "slot": 2,
+   "w": 190,
+   "h": 100,
+   "x": 1471.0,
+   "y": 9590.0,
+   "cx": 1566.0,
+   "cy": 9640.0
+  },
+  {
+   "id": "sim03",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 5,
+   "label": "Add SIM as Order Line Item",
+   "sub": "MPAR_001_SIM_03",
+   "desc": "The system shall add the allocated SIM to the order as a line item and shall reserve that SIM in inventory until order completion.",
+   "controls": [],
+   "slot": 1,
+   "w": 206,
+   "h": 100,
+   "x": 1463.0,
+   "y": 3850.0,
+   "cx": 1566.0,
+   "cy": 3900.0
+  },
+  {
+   "id": "cvc01",
+   "type": "validation",
+   "lane": "dxp",
+   "phase": 6,
+   "label": "Cart Validation, Review & Payment Preparation",
+   "sub": "MPAR_001_CVC_01 \u00b7 BR-015",
+   "desc": "1. The system shall validate customer eligibility -customer account status, Billing Profile availability and completeness , payment profile availability and completeness  prior to checkout.\n2.The system shall validate that the selected assets are eligible for modification, migration, suspension, resumption, or termination.\n3. The system shall execute compatibility validations and quantity validations for products included in the cart.\n4. The system shall validate that the requested MSISDN and SIMor eSIM is available for allocation.\n5. The system shall validate the availability of requested equipment and devices included in the order.\n6. The system shall validate that all mandatory appointment requirements have been fulfilled for fulfilment-related orders.\n7. The system shall calculate applicable recurring and non-recurring charges, deposits and advance payments, penalties and termination charges.\n8. The system shall present an itemized order and payment summary before confirmation.\n9.The system shall prevent checkout if any mandatory validation returns a failure status and corresponding corrective actions to be displayed to the user before order submission.",
+   "controls": [
+    "BR-015"
+   ],
+   "branches": [
+    {
+     "label": "Mandatory validation fails",
+     "to": "cvc01_reject"
+    }
+   ],
+   "slot": 1,
+   "w": 176,
+   "h": 100,
+   "x": 1730.0,
+   "y": 3850.0,
+   "cx": 1818.0,
+   "cy": 3900.0
+  },
+  {
+   "id": "cvc01_reject",
+   "type": "error",
+   "lane": "agt",
+   "phase": 6,
+   "label": "Checkout Blocked \u2014 Corrective Action Required",
+   "desc": "Checkout is prevented if any mandatory validation returns a failure status; corresponding corrective actions are displayed to the user before order submission.",
+   "slot": 1,
+   "w": 190,
+   "h": 100,
+   "x": 1723.0,
+   "y": 870.0,
+   "cx": 1818.0,
+   "cy": 920.0
+  },
+  {
+   "id": "milestone3",
+   "type": "system",
+   "lane": "dxp",
+   "phase": 6,
+   "label": "Milestone: Cart Checked Out",
+   "desc": "#10. Third Milestone \u2014 Cart checked out.",
+   "slot": 2,
+   "w": 190,
+   "h": 100,
+   "x": 1723.0,
+   "y": 4070.0,
+   "cx": 1818.0,
+   "cy": 4120.0
+  },
+  {
+   "id": "caf01",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 6,
+   "label": "Generate Key Information for CAF",
+   "sub": "MPAR_001_CAF_01",
+   "desc": "1. The system shall generate and display key information before CAF submission to the Agent and Customer.\n2. The key information shall include the connection type, service type, selected product, associated resources, selected plan, plan lock-in period, Star Number, Star Number lock-in period, device instalment details, and device instalment lock-in period, as applicable as per the Cart of the Journey.\n3. The system shall refresh the displayed key information whenever the agent adds, removes, or amends an item in the cart, Key Information must be consistent with the final validated cart.",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 1715.0,
+   "y": 3630.0,
+   "cx": 1818.0,
+   "cy": 3680.0
+  },
+  {
+   "id": "caf02",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 6,
+   "label": "Generate, Sign & Distribute CAF",
+   "sub": "MPAR_001_CAF_02",
+   "desc": "1. The system shall use the applicable CAF template using the configured mapping for journey, product type, service type, agent role, and channel and generate the CAF related to the ongoing Journey with all information like Customer, Account, Service, product, Resources.\n2. The system shall prevent CAF generation where mandatory CAF information is unavailable.\n3. The system shall allow the authorised agent to select the applicable digital signature-capture method - 1. customer-facing touchpad and 2. touch-screen device options.\n4. The system shall display the complete CAF to the customer on the selected customer-facing device, Customer shall be able to review the CAF before signature capture.\n5. The system shall capture the customer signature through the selected signature device, captured Signature must be embedded in CAF, Signed CAF should be visible to Agent.\n6. The system shall detect and report signature-capture failure, shall allow for recapturing if required, system shall allow to proceed until CAF submission is completed.\n7. The system shall allow an Agent to upload a manually signed CAF during CAF submission, acceptable format is PDF or JPG limited of 2 MB maximum size of a document.",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 1715.0,
+   "y": 650.0,
+   "cx": 1818.0,
+   "cy": 700.0
+  },
+  {
+   "id": "caf03",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 6,
+   "label": "Upload Supporting Documents",
+   "sub": "MPAR_001_CAF_03",
+   "desc": "The system shall allow the Retail Agent to attach supporting documents required for the activation in PDF or JPG format with a maximum file size of two megabytes per document.",
+   "controls": [],
+   "slot": 2,
+   "w": 206,
+   "h": 100,
+   "x": 1715.0,
+   "y": 1090.0,
+   "cx": 1818.0,
+   "cy": 1140.0
+  },
+  {
+   "id": "caf04",
+   "type": "control",
+   "lane": "agt",
+   "phase": 6,
+   "label": "View & Download Supporting Documents",
+   "sub": "MPAR_001_CAF_04",
+   "desc": "The system shall display uploaded documents in a dedicated section of the user interface and shall allow the Retail Agent to view and download each document.",
+   "controls": [],
+   "slot": 3,
+   "w": 206,
+   "h": 100,
+   "x": 1715.0,
+   "y": 1310.0,
+   "cx": 1818.0,
+   "cy": 1360.0
+  },
+  {
+   "id": "milestone4",
+   "type": "system",
+   "lane": "dxp",
+   "phase": 6,
+   "label": "Milestone: Signed CAF",
+   "desc": "#12. Fourth Milestone \u2014 Signed CAF.",
+   "slot": 3,
+   "w": 190,
+   "h": 56,
+   "x": 1723.0,
+   "y": 4312.0,
+   "cx": 1818.0,
+   "cy": 4340.0
+  },
+  {
+   "id": "pay01",
+   "type": "control",
+   "lane": "agt",
+   "phase": 7,
+   "label": "Display Payment Summary",
+   "sub": "MPAR_001_PAY_01",
+   "desc": "The system shall display a consolidated payment summary showing all applicable charges prior to payment confirmation.\n- HRN Advance\n- Star Number Charges\n- Credit Limit Enhancement Charges\n- Plan Downgrade Penalty\n- Plan Commitment Breakin Penalty\n- Migration Charges\n- SIM Card Charges\n- Plan and Add-On Charges\n- Additional Device Charges",
+   "controls": [],
+   "slot": 1,
+   "w": 206,
+   "h": 60,
+   "x": 1967.0,
+   "y": 890.0,
+   "cx": 2070.0,
+   "cy": 920.0
+  },
+  {
+   "id": "pay02",
+   "type": "system",
+   "lane": "pay",
+   "phase": 7,
+   "label": "Process Payment",
+   "sub": "MPAR_001_PAY_02",
+   "desc": "1. The system shall create and send a payment request to the Payment Collection System for all applicable order charges\n2. The system shall prevent duplicate payment collection for the same chargeable event.\n3. The system shall validate payment status returned by the Payment Collection System before continuing order processing.\n4. The system shall handle payment failures\n5. The system should hold the order and does not allow submission untill the Payment is completed\n6. The system shall generate a payment receipt after successful payment collection even for the Zero Payments",
+   "controls": [],
+   "branches": [
+    {
+     "label": "Payment fails",
+     "to": "pay03"
+    }
+   ],
+   "slot": 0,
+   "w": 190,
+   "h": 56,
+   "x": 1975.0,
+   "y": 10332.0,
+   "cx": 2070.0,
+   "cy": 10360.0
+  },
+  {
+   "id": "pay03",
+   "type": "control",
+   "lane": "agt",
+   "phase": 7,
+   "label": "Retry Payment (max 4 attempts)",
+   "sub": "MPAR_001_PAY_03 \u00b7 BR-016",
+   "desc": "1. The system shall allow agent to retry the Payment during the payment failures\n2. The system shall enforce a configurable limit on failed payment attempts.\n3. The system shall capture all payment requests, responses, retries, cancellations, and refunds to be retained in the audit history.",
+   "controls": [
+    "BR-016"
+   ],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 1967.0,
+   "y": 650.0,
+   "cx": 2070.0,
+   "cy": 700.0
+  },
+  {
+   "id": "pay04",
+   "type": "system",
+   "lane": "pay",
+   "phase": 7,
+   "label": "Post Bill Payment",
+   "sub": "MPAR_001_PAY_04",
+   "desc": "The system shall post captured bill payments to the billing system.",
+   "controls": [],
+   "slot": 2,
+   "w": 190,
+   "h": 56,
+   "x": 1975.0,
+   "y": 10772.0,
+   "cx": 2070.0,
+   "cy": 10800.0
+  },
+  {
+   "id": "pay05",
+   "type": "system",
+   "lane": "pay",
+   "phase": 7,
+   "label": "Deplete Physical SIM Inventory",
+   "sub": "MPAR_001_PAY_05",
+   "desc": "The system shall deplete a Physical SIM or a Printed eSIM from stock through Payment Collection System on payment completion.",
+   "controls": [],
+   "slot": 1,
+   "w": 190,
+   "h": 100,
+   "x": 1975.0,
+   "y": 10530.0,
+   "cx": 2070.0,
+   "cy": 10580.0
+  },
+  {
+   "id": "pay06",
+   "type": "control",
+   "lane": "fulfil",
+   "phase": 7,
+   "label": "Virtual eSIM Depletion at Fulfilment",
+   "sub": "MPAR_001_PAY_06",
+   "desc": "Since Virtual eSIM is not allocated to store & the inventory is not mainatained at Payment Collection System, eSIM depletion will happen at order fulfilment stage. ",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 1967.0,
+   "y": 11030.0,
+   "cx": 2070.0,
+   "cy": 11080.0
+  },
+  {
+   "id": "milestone5",
+   "type": "system",
+   "lane": "dxp",
+   "phase": 7,
+   "label": "Milestone: Order Submitted",
+   "desc": "#14. Final Milestone \u2014 Order submitted.",
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 1975.0,
+   "y": 3630.0,
+   "cx": 2070.0,
+   "cy": 3680.0
+  },
+  {
+   "id": "ord01",
+   "type": "system",
+   "lane": "fulfil",
+   "phase": 8,
+   "label": "Order Visibility & Status Management",
+   "sub": "MPAR_001_ORD_01",
+   "desc": "1. The system shall submit the order once the payment is succesful, in case of payment failure system save the order in draft\n2. The system shall receive the order Status and Display it within the Customer 360\n3. The system shall mark the Order Status based on the response from Fullfillment system\n4. The system shall display error reasons in case of Order Failure",
+   "controls": [],
+   "slot": 0,
+   "w": 190,
+   "h": 100,
+   "x": 2227.0,
+   "y": 11030.0,
+   "cx": 2322.0,
+   "cy": 11080.0
+  },
+  {
+   "id": "ord02",
+   "type": "control",
+   "lane": "agt",
+   "phase": 8,
+   "label": "Communicate Activation Service Level",
+   "sub": "MPAR_001_ORD_02",
+   "desc": "The system shall display the four business hour Postpaid activation service level to the Retail Agent so that it can be communicated to the customer following successful order confirmation.",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 100,
+   "x": 2219.0,
+   "y": 650.0,
+   "cx": 2322.0,
+   "cy": 700.0
+  },
+  {
+   "id": "ord03",
+   "type": "control",
+   "lane": "dxp",
+   "phase": 8,
+   "label": "Resolve Tracking Record",
+   "sub": "MPAR_001_ORD_03",
+   "desc": "The system shall set the Tracking Record status to Resolved once the order status is completed in CRM and shall record the order number in the record detail.",
+   "controls": [],
+   "slot": 0,
+   "w": 206,
+   "h": 60,
+   "x": 2219.0,
+   "y": 3650.0,
+   "cx": 2322.0,
+   "cy": 3680.0
+  },
+  {
+   "id": "ord04",
+   "type": "validation",
+   "lane": "dxp",
+   "phase": 8,
+   "label": "Mandatory Fields on Resolution",
+   "sub": "MPAR_001_ORD_04",
+   "desc": "The system shall require the configured mandatory fields to be populated before the Tracking Record can be set to Resolved.",
+   "controls": [],
+   "slot": 1,
+   "w": 176,
+   "h": 100,
+   "x": 2234.0,
+   "y": 3850.0,
+   "cx": 2322.0,
+   "cy": 3900.0
+  },
+  {
+   "id": "not01",
+   "type": "system",
+   "lane": "fulfil",
+   "phase": 8,
+   "label": "Notification Trigger, Template & Channel",
+   "sub": "MPAR_001_NOT_01",
+   "desc": "1.The system shall support configuration of notification events, templates, recipients, languages and channels.\n2.The system shall trigger the applicable communication template based on the notification event type .\n3.The system shall determine the communication language and delivery based on customer preference.\n4.The system shall populate dynamic template attributes using transaction, customer, account, and service data.\n5.The system shall record communication delivery status updates including sent, delivered, failed, and pending statuses.\n6.The system shall maintain a notification history for customer communications generated as part of the transaction lifecycle.",
+   "controls": [],
+   "slot": 1,
+   "w": 190,
+   "h": 100,
+   "x": 2227.0,
+   "y": 11250.0,
+   "cx": 2322.0,
+   "cy": 11300.0
+  },
+  {
+   "id": "not04",
+   "type": "system",
+   "lane": "fulfil",
+   "phase": 8,
+   "label": "Notify All MSISDNs on QID",
+   "sub": "MPAR_001_NOT_04",
+   "desc": "The system shall send the activation notification to every active MSISDN registered against the customer QID in accordance with the CRA requirement.",
+   "controls": [],
+   "slot": 2,
+   "w": 190,
+   "h": 100,
+   "x": 2227.0,
+   "y": 11470.0,
+   "cx": 2322.0,
+   "cy": 11520.0
+  },
+  {
+   "id": "not06",
+   "type": "system",
+   "lane": "fulfil",
+   "phase": 8,
+   "label": "Trigger Feedback Survey",
+   "sub": "MPAR_001_NOT_06",
+   "desc": "The system shall send the customer feedback survey request to \"Customer Survey\" System once the Tracking Record is set to Resolved.\n",
+   "controls": [],
+   "slot": 3,
+   "w": 190,
+   "h": 100,
+   "x": 2227.0,
+   "y": 11690.0,
+   "cx": 2322.0,
+   "cy": 11740.0
+  },
+  {
+   "id": "end",
+   "type": "end",
+   "lane": "fulfil",
+   "phase": 8,
+   "label": "End of Order Capture Journey",
+   "desc": "#16. End of Order Capture Journey.",
+   "slot": 4,
+   "w": 84,
+   "h": 84,
+   "x": 2280.0,
+   "y": 11918.0,
+   "cx": 2322.0,
+   "cy": 11960.0
+  }
+ ],
+ "flows": [
+  {
+   "from": "start",
+   "to": "jsm01",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "jsm01",
+   "to": "jsm01_deny",
+   "kind": "cond",
+   "label": "Access denied"
+  },
+  {
+   "from": "jsm01",
+   "to": "jsm02",
+   "kind": "cond",
+   "label": "Access granted",
+   "happy": true
+  },
+  {
+   "from": "jsm02",
+   "to": "jsm03",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "jsm03",
+   "to": "jsm04",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "jsm04",
+   "to": "jsm05",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "jsm05",
+   "to": "jsm06",
+   "kind": "data",
+   "label": "Draft available for resume",
+   "happy": false
+  },
+  {
+   "from": "jsm06",
+   "to": "jsm05",
+   "kind": "data",
+   "label": "Validations re-applied",
+   "happy": false
+  },
+  {
+   "from": "jsm05",
+   "to": "jsm07",
+   "kind": "data",
+   "label": "Supervisor reassigns draft",
+   "happy": false
+  },
+  {
+   "from": "jsm07",
+   "to": "jsm06",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "jsm05",
+   "to": "jsm08",
+   "kind": "data",
+   "label": "Retention period elapses",
+   "happy": false
+  },
+  {
+   "from": "jsm05",
+   "to": "kyc01",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "kyc01",
+   "to": "kyc01_type_check",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "kyc01_type_check",
+   "to": "kyc01_reject",
+   "kind": "cond",
+   "label": "Unsupported for Postpaid"
+  },
+  {
+   "from": "kyc01_type_check",
+   "to": "kyc03_capture_check",
+   "kind": "cond",
+   "label": "Supported",
+   "happy": true
+  },
+  {
+   "from": "kyc03_capture_check",
+   "to": "kyc03_rescan",
+   "kind": "cond",
+   "label": "Capture failed"
+  },
+  {
+   "from": "kyc03_rescan",
+   "to": "kyc01",
+   "kind": "data",
+   "label": "Re-scan",
+   "happy": false
+  },
+  {
+   "from": "kyc03_rescan",
+   "to": "kyc03_manual_approval",
+   "kind": "esc",
+   "label": "Manual capture fallback"
+  },
+  {
+   "from": "kyc03_manual_approval",
+   "to": "kyc04_age",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "kyc03_capture_check",
+   "to": "kyc04_age",
+   "kind": "cond",
+   "label": "Captured successfully",
+   "happy": true
+  },
+  {
+   "from": "kyc04_age",
+   "to": "kyc04_reject",
+   "kind": "cond",
+   "label": "Under 18"
+  },
+  {
+   "from": "kyc04_age",
+   "to": "kyc05_moi",
+   "kind": "cond",
+   "label": "18 or over",
+   "happy": true
+  },
+  {
+   "from": "kyc05_moi",
+   "to": "kyc05_status",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "kyc05_status",
+   "to": "kyc03_rescan",
+   "kind": "cond",
+   "label": "Not acceptable"
+  },
+  {
+   "from": "kyc05_status",
+   "to": "kyc06_moi_lookup",
+   "kind": "cond",
+   "label": "Acceptable",
+   "happy": true
+  },
+  {
+   "from": "kyc06_moi_lookup",
+   "to": "kyc02",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "kyc02",
+   "to": "kyc07_display",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "kyc07_display",
+   "to": "kyc08_moi_avail",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "kyc08_moi_avail",
+   "to": "kyc08_pending",
+   "kind": "cond",
+   "label": "Unavailable / timeout"
+  },
+  {
+   "from": "kyc08_pending",
+   "to": "kyc08_resume",
+   "kind": "data",
+   "label": "Verified on retry / Local MOI fallback",
+   "happy": false
+  },
+  {
+   "from": "kyc08_resume",
+   "to": "kyc09_expiry",
+   "kind": "data",
+   "happy": false
+  },
+  {
+   "from": "kyc08_moi_avail",
+   "to": "kyc09_expiry",
+   "kind": "cond",
+   "label": "Available",
+   "happy": true
+  },
+  {
+   "from": "kyc09_expiry",
+   "to": "kyc10_rep",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "kyc10_rep",
+   "to": "kyc10_reject",
+   "kind": "cond",
+   "label": "Representative acting for customer"
+  },
+  {
+   "from": "kyc10_rep",
+   "to": "cam01",
+   "kind": "cond",
+   "label": "Direct customer",
+   "happy": true
+  },
+  {
+   "from": "cam01",
+   "to": "cam01_match",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cam01_match",
+   "to": "cam02",
+   "kind": "cond",
+   "label": "Existing customer matched",
+   "happy": true
+  },
+  {
+   "from": "cam02",
+   "to": "cam03",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cam03",
+   "to": "cam04",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cam04",
+   "to": "cam05",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cam05",
+   "to": "cam06",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cam01_match",
+   "to": "cam06",
+   "kind": "cond",
+   "label": "New customer created",
+   "happy": true
+  },
+  {
+   "from": "cam06",
+   "to": "cam07",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cam07",
+   "to": "cam08",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cam08",
+   "to": "cam09",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cam09",
+   "to": "cam10",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cam10",
+   "to": "cam11",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cam11",
+   "to": "cam12",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cam12",
+   "to": "cam13",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cam13",
+   "to": "cam14",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cam14",
+   "to": "ecc01",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "ecc01",
+   "to": "ecc02",
+   "kind": "cond",
+   "label": "Not eligible"
+  },
+  {
+   "from": "ecc01",
+   "to": "ecc03",
+   "kind": "cond",
+   "label": "Eligible",
+   "happy": true
+  },
+  {
+   "from": "ecc03",
+   "to": "ecc02",
+   "kind": "cond",
+   "label": "Blacklisted"
+  },
+  {
+   "from": "ecc03",
+   "to": "ecc04",
+   "kind": "cond",
+   "label": "Not blacklisted",
+   "happy": true
+  },
+  {
+   "from": "ecc04",
+   "to": "ecc02",
+   "kind": "cond",
+   "label": "In Collections"
+  },
+  {
+   "from": "ecc04",
+   "to": "ecc05",
+   "kind": "cond",
+   "label": "Not in Collections",
+   "happy": true
+  },
+  {
+   "from": "ecc05",
+   "to": "ecc06",
+   "kind": "cond",
+   "label": "Exceeds threshold"
+  },
+  {
+   "from": "ecc06",
+   "to": "ecc05",
+   "kind": "data",
+   "label": "Re-check after settlement",
+   "happy": false
+  },
+  {
+   "from": "ecc05",
+   "to": "ecc07",
+   "kind": "cond",
+   "label": "Within threshold",
+   "happy": true
+  },
+  {
+   "from": "ecc07",
+   "to": "ecc08",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "ecc08",
+   "to": "ecc09",
+   "kind": "cond",
+   "label": "Ceiling reached"
+  },
+  {
+   "from": "ecc09",
+   "to": "ecc10",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "ecc10",
+   "to": "ecc10_decision",
+   "kind": "seq",
+   "happy": false
+  },
+  {
+   "from": "ecc10_decision",
+   "to": "ecc12",
+   "kind": "cond",
+   "label": "Approved",
+   "happy": false
+  },
+  {
+   "from": "ecc10_decision",
+   "to": "ecc11",
+   "kind": "cond",
+   "label": "Rejected"
+  },
+  {
+   "from": "ecc08",
+   "to": "ecc12",
+   "kind": "cond",
+   "label": "Within limit",
+   "happy": true
+  },
+  {
+   "from": "ecc12",
+   "to": "ecc13",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "ecc13",
+   "to": "milestone1",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "milestone1",
+   "to": "bam01",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "bam01",
+   "to": "bam02",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "bam02",
+   "to": "bam03",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "bam03",
+   "to": "bam04",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "bam04",
+   "to": "bam05",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "bam05",
+   "to": "bam06",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "bam06",
+   "to": "bam01",
+   "kind": "cond",
+   "label": "Payment validation failed"
+  },
+  {
+   "from": "bam06",
+   "to": "milestone2",
+   "kind": "cond",
+   "label": "Validated",
+   "happy": true
+  },
+  {
+   "from": "milestone2",
+   "to": "qpc01",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "qpc01",
+   "to": "qpc02",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "qpc02",
+   "to": "qpc03",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "qpc03",
+   "to": "qpc04",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "qpc04",
+   "to": "qpc05",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "qpc05",
+   "to": "qpc06",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "qpc06",
+   "to": "qpc07",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "qpc07",
+   "to": "qpc08",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "qpc08",
+   "to": "qpc09",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "qpc09",
+   "to": "qpc10",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "qpc10",
+   "to": "num01",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "num01",
+   "to": "num02",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "num02",
+   "to": "num03",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "num03",
+   "to": "num04",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "num04",
+   "to": "num05",
+   "kind": "data",
+   "label": "If unconsumed after 72h",
+   "happy": false
+  },
+  {
+   "from": "num04",
+   "to": "num06",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "num06",
+   "to": "sim01",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "sim01",
+   "to": "sim02",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "sim02",
+   "to": "sim03",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "sim03",
+   "to": "cvc01",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "cvc01",
+   "to": "cvc01_reject",
+   "kind": "cond",
+   "label": "Mandatory validation fails"
+  },
+  {
+   "from": "cvc01_reject",
+   "to": "cvc01",
+   "kind": "data",
+   "label": "Corrective action taken",
+   "happy": false
+  },
+  {
+   "from": "cvc01",
+   "to": "milestone3",
+   "kind": "cond",
+   "label": "All validations pass",
+   "happy": true
+  },
+  {
+   "from": "milestone3",
+   "to": "caf01",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "caf01",
+   "to": "caf02",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "caf02",
+   "to": "caf03",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "caf03",
+   "to": "caf04",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "caf04",
+   "to": "milestone4",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "milestone4",
+   "to": "pay01",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "pay01",
+   "to": "pay02",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "pay02",
+   "to": "pay03",
+   "kind": "cond",
+   "label": "Payment fails"
+  },
+  {
+   "from": "pay03",
+   "to": "pay02",
+   "kind": "data",
+   "label": "Retry",
+   "happy": false
+  },
+  {
+   "from": "pay02",
+   "to": "pay04",
+   "kind": "cond",
+   "label": "Payment succeeds",
+   "happy": true
+  },
+  {
+   "from": "pay04",
+   "to": "pay05",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "pay05",
+   "to": "pay06",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "pay06",
+   "to": "milestone5",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "milestone5",
+   "to": "ord01",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "ord01",
+   "to": "ord02",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "ord02",
+   "to": "ord03",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "ord03",
+   "to": "ord04",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "ord04",
+   "to": "not01",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "not01",
+   "to": "not04",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "not04",
+   "to": "not06",
+   "kind": "seq",
+   "happy": true
+  },
+  {
+   "from": "not06",
+   "to": "end",
+   "kind": "seq",
+   "happy": true
+  }
+ ],
+ "model": {
+  "agents": [],
+  "contracts": [],
+  "connectivity": []
+ },
+ "deliv": {
+  "bioMatrix": []
+ },
+ "biz": {
+  "bio": {},
+  "contractPlain": {},
+  "nameMap": {}
+ }
+}

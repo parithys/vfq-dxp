@@ -2,7 +2,7 @@
  "meta": {
   "title": "Fibre & Fixed Wireless Access \u2014 Activation, Migration, Home Move, Portability, Termination and RFS",
   "brsdId": "vfq-fibre-brsd-v1-0",
-  "generated": "2026-09-04",
+  "generated": "2026-09-07",
   "source": "VFQ_Fibre_BRSD_v1.0.xlsx"
  },
  "layout": {
@@ -513,16 +513,16 @@
   },
   {
    "id": "mig_start",
-   "type": "trigger",
+   "type": "start",
    "lane": "trigger",
    "phase": 12,
    "label": "Migration Request",
    "desc": "Migration request raised by the customer, captured and confirmed; customer notified (BR-140, Open \u2014 request details format TBC by VFQ).",
    "slot": 0,
-   "w": 206,
-   "h": 60,
-   "x": 3247.0,
-   "y": 170.0,
+   "w": 84,
+   "h": 84,
+   "x": 3308.0,
+   "y": 158.0,
    "cx": 3350.0,
    "cy": 200.0
   },
@@ -808,17 +808,17 @@
   },
   {
    "id": "hmv_start",
-   "type": "trigger",
+   "type": "start",
    "lane": "trigger",
    "phase": 13,
    "label": "Home Move Request",
    "sub": "FIB_HMV_RTL_004_01",
    "desc": "Created through the retail store queue, or via a support agent (customer calls) assigning to the fibre fulfilment team queue (BR-150).",
    "slot": 0,
-   "w": 206,
-   "h": 60,
-   "x": 3499.0,
-   "y": 170.0,
+   "w": 84,
+   "h": 84,
+   "x": 3560.0,
+   "y": 158.0,
    "cx": 3602.0,
    "cy": 200.0
   },
@@ -860,8 +860,8 @@
    "lane": "crm",
    "phase": 13,
    "label": "Fixed Line Number Retention",
-   "sub": "FIB_HMV_RTL_004_03",
-   "desc": "New fixed line number selection not permitted for a home move order; number must be retained (BR-152).",
+   "sub": "FIB_HMV_RTL_004_11",
+   "desc": "New fixed line number selection is not permitted for a home move order; a new fixed line number must be refused (BR-152).",
    "slot": 0,
    "w": 206,
    "h": 100,
@@ -1009,16 +1009,16 @@
   },
   {
    "id": "fpi_start",
-   "type": "trigger",
+   "type": "start",
    "lane": "trigger",
    "phase": 14,
    "label": "Port In Request",
    "desc": "Fixed line number being ported in is captured; new number selection not permitted for a port-in journey (BR-160).",
    "slot": 0,
-   "w": 206,
-   "h": 60,
-   "x": 3751.0,
-   "y": 170.0,
+   "w": 84,
+   "h": 84,
+   "x": 3812.0,
+   "y": 158.0,
    "cx": 3854.0,
    "cy": 200.0
   },
@@ -1160,17 +1160,17 @@
   },
   {
    "id": "fpo_start",
-   "type": "trigger",
+   "type": "start",
    "lane": "npas",
    "phase": 15,
    "label": "Port Out Request Received",
    "sub": "FIB_FPO_RTL_006_01",
    "desc": "Trouble ticket automatically created in CRM on receipt of a port-out request from NPAS, carrying ticket and order identifiers (BR-170).",
    "slot": 1,
-   "w": 206,
-   "h": 100,
-   "x": 4003.0,
-   "y": 10690.0,
+   "w": 84,
+   "h": 84,
+   "x": 4064.0,
+   "y": 10698.0,
    "cx": 4106.0,
    "cy": 10740.0
   },
@@ -1354,16 +1354,16 @@
   },
   {
    "id": "ter_start",
-   "type": "trigger",
+   "type": "start",
    "lane": "trigger",
    "phase": 16,
    "label": "Termination Request Initiation",
    "sub": "FIB_TER_RTL_007_01",
    "desc": "Retail Agent or Retention Agent initiates a termination request from Customer 360 for an active Fibre or FWA service (BR-200).",
    "slot": 0,
-   "w": 206,
+   "w": 100,
    "h": 100,
-   "x": 4255.0,
+   "x": 4308.0,
    "y": 150.0,
    "cx": 4358.0,
    "cy": 200.0
@@ -1602,16 +1602,16 @@
   },
   {
    "id": "rfs_gtm_start",
-   "type": "trigger",
+   "type": "start",
    "lane": "rfs",
    "phase": 17,
    "label": "GIS Data Ingestion",
    "desc": "Site and building data from the geographic information system ingested into the inventory management system, the master for building and connectivity data (BR-190).",
    "slot": 1,
-   "w": 206,
-   "h": 60,
-   "x": 4507.0,
-   "y": 5190.0,
+   "w": 84,
+   "h": 84,
+   "x": 4568.0,
+   "y": 5178.0,
    "cx": 4610.0,
    "cy": 5220.0
   },
@@ -1829,13 +1829,13 @@
    "label": "Add Mapped Add-Ons Only",
    "sub": "FAR_001_QPC_04",
    "desc": "Retail Agent may add only an add-on pre-configured and mapped to the base plan; unmapped add-ons are blocked.",
-   "slot": 4,
+   "slot": 5,
    "w": 206,
    "h": 60,
    "x": 1483.0,
-   "y": 2710.0,
+   "y": 2930.0,
    "cx": 1586.0,
-   "cy": 2740.0
+   "cy": 2960.0
   },
   {
    "id": "qpc_discount_mapped",
@@ -1845,13 +1845,13 @@
    "label": "Display Mapped Discounts Only",
    "sub": "FAR_001_QPC_05",
    "desc": "System displays only a discount mapped to the product; the section is empty where none applies.",
-   "slot": 5,
+   "slot": 6,
    "w": 206,
    "h": 100,
    "x": 1483.0,
-   "y": 2910.0,
+   "y": 3130.0,
    "cx": 1586.0,
-   "cy": 2960.0
+   "cy": 3180.0
   },
   {
    "id": "qpc_price_recalc",
@@ -1861,13 +1861,13 @@
    "label": "Recalculate Cart Price",
    "sub": "FAR_001_QPC_06",
    "desc": "System recalculates one-time charges, recurring charges and discounts whenever a product is added, amended or removed from the cart.",
-   "slot": 6,
+   "slot": 7,
    "w": 190,
    "h": 56,
    "x": 1491.0,
-   "y": 3152.0,
+   "y": 3372.0,
    "cx": 1586.0,
-   "cy": 3180.0
+   "cy": 3400.0
   },
   {
    "id": "num_fln_select",
@@ -1877,13 +1877,13 @@
    "label": "Select Fixed Line Number",
    "sub": "FAR_001_NUM_01",
    "desc": "Retail Agent searches the free number list and selects a preferred fixed line number into the cart.",
-   "slot": 7,
+   "slot": 8,
    "w": 206,
    "h": 60,
    "x": 1483.0,
-   "y": 3370.0,
+   "y": 3590.0,
    "cx": 1586.0,
-   "cy": 3400.0
+   "cy": 3620.0
   },
   {
    "id": "num_mobile_fwa_select",
@@ -1893,22 +1893,6 @@
    "label": "Select Mobile Number for FWA",
    "sub": "FAR_001_NUM_02",
    "desc": "Retail Agent searches the free number list and selects a mobile number into the cart, only for a fixed wireless access journey.",
-   "slot": 8,
-   "w": 206,
-   "h": 100,
-   "x": 1483.0,
-   "y": 3570.0,
-   "cx": 1586.0,
-   "cy": 3620.0
-  },
-  {
-   "id": "num_star_prohibit_fwa",
-   "type": "control",
-   "lane": "crm",
-   "phase": 5,
-   "label": "Prohibit Star Number for FWA",
-   "sub": "FAR_001_NUM_03",
-   "desc": "A star number may not be selected for a fixed wireless access indoor or outdoor journey.",
    "slot": 9,
    "w": 206,
    "h": 100,
@@ -1918,29 +1902,29 @@
    "cy": 3840.0
   },
   {
-   "id": "num_fln_select_alt",
-   "type": "agent",
+   "id": "num_star_prohibit_fwa",
+   "type": "control",
    "lane": "crm",
    "phase": 5,
-   "label": "Select FLN from List",
-   "sub": "FAR_001_NUM_02",
-   "desc": "Retail Agent searches the FLN list and adds the selected FLN to the cart.",
+   "label": "Prohibit Star Number for FWA",
+   "sub": "FAR_001_NUM_03",
+   "desc": "A star number may not be selected for a fixed wireless access indoor or outdoor journey.",
    "slot": 10,
    "w": 206,
-   "h": 60,
+   "h": 100,
    "x": 1483.0,
-   "y": 4030.0,
+   "y": 4010.0,
    "cx": 1586.0,
    "cy": 4060.0
   },
   {
-   "id": "num_msisdn_select",
+   "id": "num_fln_select_alt",
    "type": "agent",
    "lane": "crm",
    "phase": 5,
-   "label": "Select MSISDN",
-   "sub": "FAR_001_NUM_01",
-   "desc": "Retail Agent searches the free number list and selects a preferred MSISDN into the cart.",
+   "label": "FLN Selection",
+   "sub": "FAR_001_NUM_06",
+   "desc": "Retail Agent searches the FLN from the list of FLN and adds it to the cart; a FLN can be searched and added for a Fiber or Fixed Wireless Access journey (BR-060).",
    "slot": 11,
    "w": 206,
    "h": 60,
@@ -1948,6 +1932,22 @@
    "y": 4250.0,
    "cx": 1586.0,
    "cy": 4280.0
+  },
+  {
+   "id": "num_msisdn_select",
+   "type": "agent",
+   "lane": "crm",
+   "phase": 5,
+   "label": "MSISDN Selection (FWA)",
+   "sub": "FAR_001_NUM_05",
+   "desc": "Follows the same NUM capability as Mobile Post Paid Journey (MPAR_001_NUM_13). A search returns available free numbers restricted to fixed wireless access journeys and a selected mobile number is added to the cart; a star number is not offered or selectable for a fixed wireless access journey (BR-061).",
+   "slot": 12,
+   "w": 206,
+   "h": 60,
+   "x": 1483.0,
+   "y": 4470.0,
+   "cx": 1586.0,
+   "cy": 4500.0
   },
   {
    "id": "num_review",
@@ -1959,21 +1959,21 @@
    "desc": "System displays the number category and applicable charges for the agent to review before the number selection is confirmed.",
    "branches": [
     {
-     "label": "Fixed line (fibre)",
-     "to": "sim_select"
+     "label": "Mobile number (FWA) \u2014 proceed to SIM/CPE",
+     "to": "sim_scan_select"
     },
     {
-     "label": "Mobile number (FWA)",
-     "to": "sim_select"
+     "label": "Fixed line (fibre) \u2014 skip SIM/CPE",
+     "to": "wfm_slot_retrieval"
     }
    ],
-   "slot": 12,
+   "slot": 4,
    "w": 176,
    "h": 100,
    "x": 1498.0,
-   "y": 4450.0,
+   "y": 2690.0,
    "cx": 1586.0,
-   "cy": 4500.0
+   "cy": 2740.0
   },
   {
    "id": "caf_offline_upload",
@@ -2233,26 +2233,16 @@
   },
   {
    "id": "net_activate_sim",
-   "type": "decision",
+   "type": "control",
    "lane": "oms",
    "phase": 9,
-   "label": "Activate SIM with Network",
+   "label": "Activate SIM with Network (FWA)",
    "sub": "FAR_001_NET_03",
-   "desc": "System activates the SIM together with network activation for a fixed wireless access journey.",
-   "branches": [
-    {
-     "label": "Fibre \u2014 after WFM task",
-     "to": "net_activated"
-    },
-    {
-     "label": "FWA indoor \u2014 planned date",
-     "to": "net_activated"
-    }
-   ],
+   "desc": "System activates the SIM together with network activation for a fixed wireless access journey (BR-102).",
    "slot": 5,
-   "w": 150,
+   "w": 206,
    "h": 100,
-   "x": 2519.0,
+   "x": 2491.0,
    "y": 10190.0,
    "cx": 2594.0,
    "cy": 10240.0
@@ -2598,7 +2588,7 @@
    "branches": [
     {
      "label": "Valid",
-     "to": "fpo_sla_extend"
+     "to": "fpo_outstanding"
     },
     {
      "label": "Invalid / mismatch",
@@ -2698,7 +2688,7 @@
    "from": "num_review",
    "to": "sim_scan_select",
    "kind": "cond",
-   "label": "FWA journey",
+   "label": "Mobile number (FWA) \u2014 proceed to SIM/CPE",
    "happy": true
   },
   {
@@ -2804,8 +2794,7 @@
   {
    "from": "net_activate_sim",
    "to": "net_activated",
-   "kind": "cond",
-   "label": "Activated",
+   "kind": "seq",
    "happy": true
   },
   {
@@ -2896,13 +2885,13 @@
    "from": "start",
    "to": "mig_start",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "mig_start",
    "to": "mig_eligibility",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "mig_eligibility",
@@ -2915,31 +2904,31 @@
    "to": "mig_verify",
    "kind": "cond",
    "label": "Eligible",
-   "happy": false
+   "happy": true
   },
   {
    "from": "mig_verify",
    "to": "mig_rfs_check",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "mig_rfs_check",
    "to": "mig_retrieve",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "mig_retrieve",
    "to": "mig_order_capture",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "mig_order_capture",
    "to": "mig_appointment",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "mig_appointment",
@@ -2958,49 +2947,49 @@
    "to": "mig_outdoor_recovery",
    "kind": "cond",
    "label": "Store-originated",
-   "happy": false
+   "happy": true
   },
   {
    "from": "mig_outdoor_recovery",
    "to": "mig_continuity",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "mig_continuity",
    "to": "mig_fibre_trigger",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "mig_fibre_trigger",
    "to": "mig_sim_deactivate",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "mig_sim_deactivate",
    "to": "mig_resource_release",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "mig_resource_release",
    "to": "mig_billing",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "mig_billing",
    "to": "mig_notify",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "mig_notify",
    "to": "mig_end",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "mig_fibre_trigger",
@@ -3013,31 +3002,31 @@
    "from": "start",
    "to": "hmv_start",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "hmv_start",
    "to": "hmv_new_addr",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "hmv_new_addr",
    "to": "hmv_appointment",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "hmv_appointment",
    "to": "hmv_number_retain",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "hmv_number_retain",
    "to": "hmv_device_decision",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "hmv_device_decision",
@@ -3056,25 +3045,25 @@
    "to": "hmv_termination",
    "kind": "cond",
    "label": "Fibre-to-fibre \u2014 retained",
-   "happy": false
+   "happy": true
   },
   {
    "from": "hmv_termination",
    "to": "hmv_inventory_release",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "hmv_inventory_release",
    "to": "hmv_wfm_new",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "hmv_wfm_new",
    "to": "hmv_billing",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "hmv_billing",
@@ -3087,7 +3076,7 @@
    "from": "hmv_billing",
    "to": "hmv_end",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "hmv_equipment_carry",
@@ -3099,37 +3088,37 @@
    "from": "start",
    "to": "fpi_start",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "fpi_start",
    "to": "fpi_capture",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "fpi_capture",
    "to": "fpi_identifier_mark",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "fpi_appt_date",
    "to": "fpi_form",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "fpi_form",
    "to": "fpi_request",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "fpi_request",
    "to": "fpi_confirm",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "fpi_confirm",
@@ -3142,69 +3131,70 @@
    "to": "fpi_wfm_exec",
    "kind": "cond",
    "label": "Approved",
-   "happy": false
+   "happy": true
   },
   {
    "from": "fpi_wfm_exec",
    "to": "fpi_activation",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "fpi_activation",
    "to": "fpi_end",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "start",
    "to": "fpo_start",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "fpo_start",
    "to": "fpo_ticket",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "fpo_ticket",
    "to": "fpo_queue",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "fpo_queue",
    "to": "fpo_doc_validate",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "fpo_mandatory_checks",
    "to": "fpo_outstanding",
    "kind": "data",
-   "happy": false
+   "happy": true,
+   "label": "Valid"
   },
   {
    "from": "fpo_outstanding",
    "to": "fpo_sla_extend",
    "kind": "cond",
    "label": "No pending bill",
-   "happy": false
+   "happy": true
   },
   {
    "from": "fpo_sla_extend",
    "to": "fpo_breach",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "fpo_breach",
    "to": "fpo_status_comm",
    "kind": "cond",
    "label": "Auto-accept / auto-reject",
-   "happy": false
+   "happy": true
   },
   {
    "from": "fpo_outstanding",
@@ -3224,43 +3214,43 @@
    "to": "fpo_termination_order",
    "kind": "data",
    "label": "Accepted",
-   "happy": false
+   "happy": true
   },
   {
    "from": "fpo_termination_order",
    "to": "fpo_deactivation",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "fpo_deactivation",
    "to": "fpo_quarantine",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "fpo_quarantine",
    "to": "fpo_end",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "start",
    "to": "ter_start",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "ter_start",
    "to": "ter_eligibility",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "ter_eligibility",
    "to": "ter_retention",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "ter_retention",
@@ -3273,133 +3263,133 @@
    "to": "ter_outstanding",
    "kind": "cond",
    "label": "Proceed to terminate",
-   "happy": false
+   "happy": true
   },
   {
    "from": "ter_outstanding",
    "to": "ter_penalty",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "ter_penalty",
    "to": "ter_recovery",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "ter_recovery",
    "to": "ter_order_capture",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "ter_order_capture",
    "to": "ter_order_submit",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "ter_order_submit",
    "to": "ter_deactivation",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "ter_deactivation",
    "to": "ter_billing_close",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "ter_billing_close",
    "to": "ter_inventory_release",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "ter_inventory_release",
    "to": "ter_notify",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "ter_notify",
    "to": "ter_quarantine",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "ter_quarantine",
    "to": "ter_end",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "start",
    "to": "rfs_gtm_start",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "rfs_gtm_start",
    "to": "rfs_gtm_file",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "rfs_gtm_file",
    "to": "rfs_pickup",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "rfs_pickup",
    "to": "rfs_distribute",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "rfs_distribute",
    "to": "rfs_id_mapping",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "rfs_id_mapping",
    "to": "rfs_status_update",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "rfs_status_update",
    "to": "rfs_portal_search",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "rfs_portal_search",
    "to": "rfs_recommend",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "rfs_recommend",
    "to": "rfs_lead",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "rfs_lead",
    "to": "rfs_continuous_update",
    "kind": "data",
-   "happy": false
+   "happy": true
   },
   {
    "from": "rfs_continuous_update",
    "to": "rfs_end",
    "kind": "seq",
-   "happy": false
+   "happy": true
   },
   {
    "from": "qpc_base_plan",
@@ -3611,6 +3601,13 @@
    "kind": "cond",
    "label": "Normal (default)",
    "happy": true
+  },
+  {
+   "from": "num_review",
+   "to": "wfm_slot_retrieval",
+   "kind": "cond",
+   "label": "Fixed line (fibre) \u2014 skip SIM/CPE",
+   "happy": true
   }
  ],
  "model": {
@@ -3689,20 +3686,6 @@
     "makes": "Customer account record.",
     "example": "FAR_001_CAM_01: process follows the same capability (\"CAM\") as MPAR_001_CAM_*."
    },
-   "rfs_addr_capture": {
-    "title": "Capture Installation Address",
-    "does": "Captures the installation address by utility identifier or cascading zone/street/building search.",
-    "needs": "Utility identifier or manual cascading selection.",
-    "makes": "Installation address.",
-    "example": "BR-021: selecting a zone restricts the street list, selecting a street restricts the building list."
-   },
-   "rfs_search": {
-    "title": "RFS Availability Search",
-    "does": "Searches the point of presence and returns service-type availability and any detected device at the location.",
-    "needs": "Installation address, utility identifier or area.",
-    "makes": "Ready-for-service result including service types and detected CPE/ONT.",
-    "example": "BR-024: service types shown are Fiber, FWA indoor and FWA outdoor."
-   },
    "rfs_addr_lock": {
     "title": "Address Locked After Check",
     "does": "Locks the installation address as read-only after the RFS check.",
@@ -3738,48 +3721,6 @@
     "makes": "Billing account and payment profile.",
     "example": "FAR_001_BAM_01: process follows the same capability (\"BAM\") as MPAR_001_BAM_*."
    },
-   "qpc_plan": {
-    "title": "Product Catalogue & Cart",
-    "does": "Builds the cart: eligible base plan, default IPTV bundle (removable), mapped add-ons and discounts, live recalculation.",
-    "needs": "Service type available at address, customer segment.",
-    "makes": "Priced cart.",
-    "example": "BR-051 (Open): IPTV bundled by default with the base plan and may be removed by the agent at customer request."
-   },
-   "num_select": {
-    "title": "Number Selection",
-    "does": "Selects a fixed line number (fibre) or a mobile number (FWA only, no star numbers).",
-    "needs": "Free number list search.",
-    "makes": "Number added to cart, reviewed before confirmation.",
-    "example": "BR-061: a mobile number is selectable only for a fixed wireless access journey and a star number is not permitted for FWA."
-   },
-   "sim_select": {
-    "title": "SIM & CPE Selection (FWA only)",
-    "does": "Scans SIM and CPE serial numbers into the cart for FWA journeys.",
-    "needs": "Physical SIM/CPE serial numbers.",
-    "makes": "SIM and CPE lines added to cart (FWA only).",
-    "example": "BR-062: SIM and CPE are scanned only for a fixed wireless access journey."
-   },
-   "wfm_slot": {
-    "title": "Appointment Slot Retrieval & Selection",
-    "does": "Fetches and lets the agent select an appointment slot.",
-    "needs": "Installation address, service type.",
-    "makes": "Selected appointment slot.",
-    "example": "BR-070: available appointment slots with lead time and technician availability are fetched from WFM and the selected slot is passed back."
-   },
-   "wfm_applicability": {
-    "title": "Appointment Applicability by Service Type",
-    "does": "Determines whether appointment booking is required.",
-    "needs": "Service type (fibre, FWA indoor, FWA outdoor).",
-    "makes": "Skip (FWA indoor) or mandatory booking (fibre / FWA outdoor) decision.",
-    "example": "P-06/P-07: FWA indoor appointment = Skipped; FWA outdoor appointment = Mandatory."
-   },
-   "wfm_task": {
-    "title": "WFM Task Execution",
-    "does": "Technician executes the installation task and captures device/resource data.",
-    "needs": "Booked appointment.",
-    "makes": "ONT/STB serials, mesh device count & charge, wire length & charge, task closure with feedback.",
-    "example": "BR-074 / P-05: the first two mesh devices are complimentary; further devices carry the configured monthly recurring charge."
-   },
    "wfm_fail": {
     "title": "Workforce Failure Handling",
     "does": "Creates a fault ticket for a reported installation issue and allows rescheduling.",
@@ -3794,26 +3735,12 @@
     "makes": "Validated, checked-out cart ready for contract.",
     "example": "FAR_001_CVC_01: process follows the same capability (\"CVC\") as MPAR_001_CVC_*."
    },
-   "caf_contract": {
-    "title": "Contract & Documentation (CAF)",
-    "does": "Generates/collects the signed contract application form and supporting documents.",
-    "needs": "Checked-out cart, key information display.",
-    "makes": "Signed CAF plus supporting documents.",
-    "example": "BR-084: the contract application form submission step may be skipped by an agent holding the fulfilment role."
-   },
    "pay_payment": {
     "title": "Payment & Inventory",
     "does": "Processes the upfront payment and issues the receipt.",
     "needs": "Signed CAF, checked-out cart.",
     "makes": "Payment completion status.",
     "example": "FAR_001_PAY_01: process follows the same capability (\"PAY\") as MPAR_001_PAY_*."
-   },
-   "pay_inventory": {
-    "title": "Inventory Depletion",
-    "does": "Depletes number/SIM/CPE inventory on payment completion.",
-    "needs": "Completed payment.",
-    "makes": "Updated inventory position.",
-    "example": "BR-092: fixed line number inventory depleted for fibre, and SIM/equipment inventory depleted for FWA, on payment completion."
    },
    "ord_submit": {
     "title": "Order Submission",
@@ -3828,27 +3755,6 @@
     "needs": "Order status events.",
     "makes": "Customer notification.",
     "example": "FAR_001_NOT_01: for WFM activities feedback & survey will be done separately at the WFM system."
-   },
-   "net_activation": {
-    "title": "Network Activation / Deactivation",
-    "does": "Triggers network activation via the order management system.",
-    "needs": "WFM task completion (fibre) or planned activation date (FWA indoor).",
-    "makes": "Activated network status pushed to CRM.",
-    "example": "BR-101: network activation proceeds on the planned activation date without a WFM task for FWA indoor."
-   },
-   "fin_billing_update": {
-    "title": "Billing Update After Fulfilment",
-    "does": "Sends account/product/service/resource information with per-line prices to billing.",
-    "needs": "WFM task closure (or order capture data for FWA indoor).",
-    "makes": "Updated billing account.",
-    "example": "BR-111: FWA indoor CPE is billed from order-capture data; fibre and FWA outdoor bill from the WFM task data."
-   },
-   "fin_order_complete": {
-    "title": "Order Completed",
-    "does": "Sets order status to completed and resolves the tracking record.",
-    "needs": "Billing update completion.",
-    "makes": "Completed order; resolved tracking record.",
-    "example": "BR-113: order completion sets the tracking record to resolved with the order number recorded."
    },
    "ins_detect": {
     "title": "Instant Activation Eligibility Detection",
@@ -3906,13 +3812,6 @@
     "makes": "Retention (fibre-to-fibre) or uninstallation appointment (FWA outdoor origin).",
     "example": "BR-153: no uninstallation appointment for a fibre-to-fibre home move; BR-154: uninstallation appointment captured for FWA outdoor origin."
    },
-   "fpi_identifier": {
-    "title": "Portability Identifier at Appointment",
-    "does": "Marks the portability identifier and sets the initial portability appointment date.",
-    "needs": "Appointment booking step.",
-    "makes": "Portability identifier flag; provisional appointment date.",
-    "example": "BR-161A (Open): the Portability Appointment Date is auto set to Installation Date + 5 business days (excluding Friday and Saturday)."
-   },
    "fpi_confirm": {
     "title": "Portability Request Confirmation",
     "does": "Receives the donor service provider's approve/reject decision from NPAS.",
@@ -3926,13 +3825,6 @@
     "needs": "Completed WFM task, confirmed portability.",
     "makes": "Activated ported fixed line number.",
     "example": "BR-165: the ported number is activated after portability completion and configured during the field workforce management task, providing no temporary number."
-   },
-   "fpo_validate": {
-    "title": "Document & Mandatory Validation",
-    "does": "Validates the portability form, identity document, and mandatory field matches.",
-    "needs": "Portability form and identity document from NPAS.",
-    "makes": "Valid/invalid validation outcome.",
-    "example": "BR-173 / P-10: form date must be within 30 days; name, identity document number and service type must match system records."
    },
    "fpo_breach": {
     "title": "Automatic Processing on Breach",
@@ -3961,6 +3853,844 @@
     "needs": "Service subscription period status.",
     "makes": "Displayed penalty amount and reason.",
     "example": "BR-204: plan lock-in is 3 months as mentioned in the CAF."
+   },
+   "tr_new": {
+    "title": "Tracking Record Created",
+    "does": "Tracking record created automatically at journey initiation (Status_Model: Tracking Record New -> In Progress).",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record)."
+   },
+   "ord_fulfil": {
+    "title": "Order Submission & Fulfilment Routing",
+    "does": "Follows same ORD capability as Mobile Post Paid Journey.",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FAR_001_ORD_02: As in MPAR_001_ORD_*"
+   },
+   "net_activated": {
+    "title": "Order Status to Workforce / CRM",
+    "does": "Order status updated to WFM so technician may proceed; CRM receives activation status (BR-100).",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event."
+   },
+   "ins_select": {
+    "title": "Instant or Normal Selection",
+    "does": "Agent selects explicitly between instant and normal activation, defaulting to normal where not selected (BR-132, Open).",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FAR_002_INS_03: The agent selects instant or normal explicitly and the journey falls back to normal where instant is not chosen."
+   },
+   "ins_skip_appt": {
+    "title": "Appointment Auto-Skip",
+    "does": "Appointment booking auto-skipped for instant activation; agent retains flexibility to book on customer request (BR-133).",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FAR_002_INS_04: Appointment booking is skipped by default for instant activation and can still be booked on request."
+   },
+   "ins_trigger": {
+    "title": "Immediate Activation Trigger",
+    "does": "Immediate network activation flow triggered on order submission; agent notified of activation outcome (BR-134, Open).",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FAR_002_INS_05: Order submission triggers immediate activation and the outcome is notified to the agent."
+   },
+   "mig_start": {
+    "title": "Migration Request",
+    "does": "Migration request raised by the customer, captured and confirmed; customer notified (BR-140, Open \u2014 request details format TBC by VFQ).",
+    "needs": "A queue ticket, request or system trigger event.",
+    "makes": "A new request/ticket that starts the process."
+   },
+   "mig_blocked": {
+    "title": "Migration Blocked",
+    "does": "Ineligible services are blocked and the reason is displayed (FIB_MIG_RTL_003_01).",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent."
+   },
+   "mig_verify": {
+    "title": "Customer Verification",
+    "does": "Customer identity verification required before migration initiation; migration cannot proceed without success (BR-141).",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FIB_MIG_RTL_003_02: Migration cannot proceed without successful verification."
+   },
+   "mig_rfs_check": {
+    "title": "Fibre Service Availability Validation",
+    "does": "Fibre availability at target installation address validated before migration order creation; proceeds only where Fibre RFS status is available (BR-140B).",
+    "needs": "RFS Portal / GIS data for the installation address or building.",
+    "makes": "Updated RFS/GIS serviceability data or address result.",
+    "example": "FIB_MIG_RTL_003_03: Fibre migration proceeds only where Fibre RFS status is available."
+   },
+   "mig_retrieve": {
+    "title": "Existing Service Retrieval",
+    "does": "Retrieves existing service, equipment, MSISDN, SIM and billing information from the active FWA subscription; displayed to agent before confirmation (BR-142).",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FIB_MIG_RTL_003_04: All active resources are displayed to the agent before confirmation."
+   },
+   "mig_order_capture": {
+    "title": "Migration Order Capture",
+    "does": "Captures migration order, customer contact preference, language, alternate number (BR-142).",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FIB_MIG_RTL_003_05: Mandatory migration attributes are stored."
+   },
+   "mig_appointment": {
+    "title": "Installation Appointment Creation",
+    "does": "Creates a Fibre installation appointment through WFM; appointment mandatory for all migrations (BR-143).",
+    "needs": "A Field Workforce Management appointment or task record.",
+    "makes": "A created, updated or closed WFM appointment/task.",
+    "example": "FIB_MIG_RTL_003_06: Appointment details are successfully booked and stored."
+   },
+   "mig_telesales": {
+    "title": "Telesales CAF/Tenancy Flag",
+    "does": "Automatically flags CAF and tenancy document collection for telephone-originated migration requests; collection flags passed to WFM (BR-143).",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FIB_MIG_RTL_003_07: Collection flags are passed to WFM."
+   },
+   "mig_continuity": {
+    "title": "Existing Service Continuity",
+    "does": "Existing FWA service kept active until Fibre installation successfully completed; no interruption before successful activation (BR-145A).",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FIB_MIG_RTL_003_09: No service interruption occurs before successful Fibre activation."
+   },
+   "mig_fibre_trigger": {
+    "title": "Fibre Activation Trigger",
+    "does": "Fibre activation triggered only after successful installation closure from WFM (BR-145B).",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FIB_MIG_RTL_003_10: Activation request is generated after WFM completion."
+   },
+   "mig_sim_deactivate": {
+    "title": "SIM Deactivation",
+    "does": "FWA SIM deactivated only after successful Fibre activation; SIM remains active until Fibre activation succeeds (BR-145).",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FIB_MIG_RTL_003_11: SIM remains active until Fibre activation succeeds."
+   },
+   "mig_resource_release": {
+    "title": "Resource Release",
+    "does": "Releases FWA-specific resources, SIM inventory and associated network resources following successful migration (BR-145C).",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FIB_MIG_RTL_003_12: Resources are released and inventory updated."
+   },
+   "mig_billing": {
+    "title": "Billing Migration",
+    "does": "Terminates FWA recurring charges and activates Fibre recurring charges on migration completion date; billing reflects the migrated service only (BR-145D).",
+    "needs": "Billing System account, payment or credit data.",
+    "makes": "An updated billing account, charge or payment status.",
+    "example": "FIB_MIG_RTL_003_13: Billing reflects the migrated service only."
+   },
+   "mig_notify": {
+    "title": "Customer Notification",
+    "does": "Notifies customer at migration request creation, appointment booking, activation success and failure events (BR-145E).",
+    "needs": "A trigger event needing customer notification.",
+    "makes": "A customer notification dispatched.",
+    "example": "FIB_MIG_RTL_003_14: Notifications are generated at configured milestones."
+   },
+   "mig_end": {
+    "title": "Migration Completed",
+    "does": "Migration journey complete: Fibre active, FWA service terminated, billing migrated, customer notified.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record)."
+   },
+   "hmv_start": {
+    "title": "Home Move Request",
+    "does": "Created through the retail store queue, or via a support agent (customer calls) assigning to the fibre fulfilment team queue (BR-150).",
+    "needs": "A queue ticket, request or system trigger event.",
+    "makes": "A new request/ticket that starts the process.",
+    "example": "FIB_HMV_RTL_004_01: A home move request is created through the store queue or by a support agent and routed to the fulfilment queue."
+   },
+   "hmv_new_addr": {
+    "title": "New Installation Address Capture",
+    "does": "Captures new installation address for the home move and checks service availability for the new location (BR-151).",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FIB_HMV_RTL_004_02: The new location address is captured and its service availability is checked."
+   },
+   "hmv_appointment": {
+    "title": "New Location Installation Appointment",
+    "does": "Follows same WFM capability as Fiber Activation Journey (FAR_001_WFM_01 to WFM_06).",
+    "needs": "A Field Workforce Management appointment or task record.",
+    "makes": "A created, updated or closed WFM appointment/task.",
+    "example": "FIB_HMV_RTL_004_03: As in FAR_001_WFM_01 to FAR_001_WFM_06"
+   },
+   "hmv_number_retain": {
+    "title": "Fixed Line Number Retention",
+    "does": "New fixed line number selection is not permitted for a home move order; a new fixed line number must be refused (BR-152).",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FIB_HMV_RTL_004_11: A new fixed line number must be refused"
+   },
+   "hmv_uninstall": {
+    "title": "Outdoor Device Uninstallation Appointment",
+    "does": "Uninstallation appointment for the FWA outdoor device at the old location captured for a move originating from FWA outdoor (BR-154).",
+    "needs": "A Field Workforce Management appointment or task record.",
+    "makes": "A created, updated or closed WFM appointment/task.",
+    "example": "FIB_HMV_RTL_004_05: An uninstallation appointment for the outdoor device at the old location is captured for a move from fixed wireless access outdoor."
+   },
+   "hmv_termination": {
+    "title": "Old Location Service Termination",
+    "does": "Terminates all services at the old location on the confirmed move date (BR-155).",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FIB_HMV_RTL_004_06: All old location services are terminated on the confirmed move date."
+   },
+   "hmv_inventory_release": {
+    "title": "Old Location Inventory Release",
+    "does": "Releases CPE and IP address at old location on confirmed move date (BR-156).",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FIB_HMV_RTL_004_07: The old location inventory is released on the confirmed move date in accordance with the local area code rule."
+   },
+   "hmv_wfm_new": {
+    "title": "WFM Task Execution at New Location",
+    "does": "Follows same WFM capability as Fiber Activation Journey (FAR_001_WFM_07 to WFM_10).",
+    "needs": "A Field Workforce Management appointment or task record.",
+    "makes": "A created, updated or closed WFM appointment/task.",
+    "example": "FIB_HMV_RTL_004_08: As in FAR_001_WFM_07 to FAR_001_WFM_10"
+   },
+   "hmv_billing": {
+    "title": "Move Date Billing Update",
+    "does": "Billing updated on move date with new plan/resources at new location and for terminated services at old location (BR-157).",
+    "needs": "Billing System account, payment or credit data.",
+    "makes": "An updated billing account, charge or payment status.",
+    "example": "FIB_HMV_RTL_004_09: Billing is updated on the move date for both the new location activation and the old location termination."
+   },
+   "hmv_equipment_carry": {
+    "title": "FWA Equipment Carried by Customer",
+    "does": "Records that FWA CPE is carried by the customer to the new location where the move is to a FWA service area (BR-158).",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FIB_HMV_RTL_004_10: The equipment carried by the customer is recorded on the home move order for a move to a fixed wireless access area."
+   },
+   "hmv_end": {
+    "title": "Home Move Completed",
+    "does": "Home move journey complete: new location active, old location terminated and billed.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record)."
+   },
+   "fpi_start": {
+    "title": "Port In Request",
+    "does": "Fixed line number being ported in is captured; new number selection not permitted for a port-in journey (BR-160).",
+    "needs": "A queue ticket, request or system trigger event.",
+    "makes": "A new request/ticket that starts the process."
+   },
+   "fpi_capture": {
+    "title": "Ported Number Capture",
+    "does": "Captures the fixed line number being ported in (BR-160).",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FIB_FPI_RTL_005_01: The ported fixed line number is captured and new number selection is refused for a port in."
+   },
+   "fpi_form": {
+    "title": "Portability Form Submission",
+    "does": "Agent completes and submits the portability form; customer signs; signed form uploaded before port-in proceeds (BR-162).",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FIB_FPI_RTL_005_04: The portability form is completed, signed and uploaded before the port in proceeds."
+   },
+   "fpi_request": {
+    "title": "Portability Request Creation",
+    "does": "Creates the portability request based on the portability identifier; submits to the Number Portability Administration System (BR-163).",
+    "needs": "A Number Portability Administration System request or response.",
+    "makes": "A portability request/response exchanged with NPAS.",
+    "example": "FIB_FPI_RTL_005_05: The portability request must be submitted to the number portability administration system."
+   },
+   "fpi_rejected": {
+    "title": "Port In Rejected",
+    "does": "Portability request rejected by donor service provider.",
+    "needs": "A Number Portability Administration System request or response.",
+    "makes": "A portability request/response exchanged with NPAS."
+   },
+   "fpi_wfm_exec": {
+    "title": "Portability WFM Appointment Execution",
+    "does": "Triggers WFM task for FLN change based on confirmed port-in date received on or before the captured portability appointment date; date rescheduled based on confirmed port-in date (BR-164A, Open).",
+    "needs": "A Field Workforce Management appointment or task record.",
+    "makes": "A created, updated or closed WFM appointment/task.",
+    "example": "FIB_FPI_RTL_005_07: The system shall trigger the Portability Appointment based on Confirmed Port In Date received on or before Captured Portability Appointment Date"
+   },
+   "fpi_end": {
+    "title": "Port In Completed",
+    "does": "Port-in journey complete: number activated on VFQ network.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record)."
+   },
+   "fpo_start": {
+    "title": "Port Out Request Received",
+    "does": "Trouble ticket automatically created in CRM on receipt of a port-out request from NPAS, carrying ticket and order identifiers (BR-170).",
+    "needs": "A Number Portability Administration System request or response.",
+    "makes": "A portability request/response exchanged with NPAS.",
+    "example": "FIB_FPO_RTL_006_01: A port out request from the administration system creates a trouble ticket carrying the ticket and order identifiers."
+   },
+   "fpo_ticket": {
+    "title": "Port Out Trouble Ticket Created",
+    "does": "Trouble ticket created (BR-170).",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record)."
+   },
+   "fpo_queue": {
+    "title": "Queue Assignment & Initial SLA Timer",
+    "does": "Auto-assigned to the portability queue; initial validation service level timer started (BR-171, Open, P-11: 2 hours).",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FIB_FPO_RTL_006_02: A port out ticket is auto assigned to the portability queue and the initial validation timer is started."
+   },
+   "fpo_outstanding": {
+    "title": "Outstanding Bill Handling",
+    "does": "Pending bill moves request to Conditionally Accepted with a defined settlement window (BR-174, P-13: 24 hours).",
+    "needs": "Billing System account, payment or credit data.",
+    "makes": "An updated billing account, charge or payment status.",
+    "example": "FIB_FPO_RTL_006_05: A pending bill moves the request to conditionally accepted with a defined settlement window."
+   },
+   "fpo_sla_extend": {
+    "title": "Service Level Extension",
+    "does": "Service level timer extended from initial period to final action period where documents are valid (BR-175, P-12: 24 hours).",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FIB_FPO_RTL_006_06: A valid document set extends the service level timer to the final action period."
+   },
+   "fpo_termination_order": {
+    "title": "Termination Order Generation",
+    "does": "Termination order generated from the closed ticket, linked to it, wish date set to the confirmed portability date and non-editable (BR-178).",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FIB_FPO_RTL_006_09: A termination order is generated from the closed ticket with a non editable wish date equal to the confirmed portability date."
+   },
+   "fpo_deactivation": {
+    "title": "Network Deactivation",
+    "does": "Services deactivated on confirmed portability date with a one-hour activation window towards the new provider (BR-179, P-15: 1 hour).",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FIB_FPO_RTL_006_10: Services are deactivated on the confirmed date with a one hour activation window towards the new provider."
+   },
+   "fpo_quarantine": {
+    "title": "Inventory Quarantine",
+    "does": "Ported inventory marked to quarantine for the configured period (P-16: 90 days); SIM deactivated and released for FWA service (BR-180).",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FIB_FPO_RTL_006_11: The ported inventory is quarantined for the configured period and the subscriber identity module is deactivated and released."
+   },
+   "fpo_end": {
+    "title": "Port Out Completed",
+    "does": "Port-out journey complete: service deactivated, inventory quarantined.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record)."
+   },
+   "ter_start": {
+    "title": "Termination Request Initiation",
+    "does": "Retail Agent or Retention Agent initiates a termination request from Customer 360 for an active Fibre or FWA service (BR-200).",
+    "needs": "A queue ticket, request or system trigger event.",
+    "makes": "A new request/ticket that starts the process.",
+    "example": "FIB_TER_RTL_007_01: A termination request is created from Customer 360 only for an eligible active Fibre/FWA service."
+   },
+   "ter_eligibility": {
+    "title": "Customer & Service Eligibility Validation",
+    "does": "Validates customer identity, service status, open orders, active disputes, fraud/legal blocks and pending termination requests; distinct reason displayed per failure (BR-201).",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FIB_TER_RTL_007_02: Termination proceeds only when mandatory validations pass, and a distinct reason is displayed for each failure."
+   },
+   "ter_retained": {
+    "title": "Customer Retained",
+    "does": "Customer accepts retention outcome and does not proceed with termination.",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent."
+   },
+   "ter_outstanding": {
+    "title": "Outstanding Dues Validation",
+    "does": "Retrieves outstanding balance; prevents or conditionally allows termination based on configured VFQ settlement rule (BR-203).",
+    "needs": "Billing System account, payment or credit data.",
+    "makes": "An updated billing account, charge or payment status.",
+    "example": "FIB_TER_RTL_007_04: Outstanding amount is displayed and the termination follows the configured settlement rule."
+   },
+   "ter_recovery": {
+    "title": "Equipment Recovery Appointment",
+    "does": "WFM appointment triggered/allowed for equipment recovery where service type and device ownership rule require it, including FWA outdoor device recovery; skipped where not applicable (BR-206, Open).",
+    "needs": "A Field Workforce Management appointment or task record.",
+    "makes": "A created, updated or closed WFM appointment/task.",
+    "example": "FIB_TER_RTL_007_06: WFM appointment is required for configured recovery scenarios and skipped where recovery is not applicable."
+   },
+   "ter_order_capture": {
+    "title": "Termination Order Capture",
+    "does": "Captures termination reason and requested termination date before submitting the order, along with appointment and payment details; consent, reason and date mandatory (BR-205, Open).",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FIB_TER_RTL_007_07: Penalty Details, Appointment Details, Termination reason and requested termination date are mandatory before submission."
+   },
+   "ter_order_submit": {
+    "title": "Termination Order Submission",
+    "does": "Creates and submits termination order to Order Management after all mandatory validations, consent and recovery requirements are satisfied (BR-207, Open).",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FIB_TER_RTL_007_08: Termination order is created with customer, service, reason, wish date and recovery information."
+   },
+   "ter_deactivation": {
+    "title": "Network Deactivation",
+    "does": "Deactivates the fixed/FWA service on the confirmed termination date; returns deactivation outcome to CRM (BR-208, Open).",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FIB_TER_RTL_007_09: Service is deactivated on the confirmed date and CRM receives success or failure outcome."
+   },
+   "ter_billing_close": {
+    "title": "Billing Closure",
+    "does": "Updates billing after termination including final charges, penalty, refund/credit where applicable and service closure status (BR-209, Open).",
+    "needs": "Billing System account, payment or credit data.",
+    "makes": "An updated billing account, charge or payment status.",
+    "example": "FIB_TER_RTL_007_10: Billing update is posted after termination with final charge and closure information."
+   },
+   "ter_inventory_release": {
+    "title": "Inventory Release",
+    "does": "Releases fixed line number, CPE, ONT, FWA SIM/equipment and IP resources based on service type and configured release/quarantine rules (BR-210, Open).",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FIB_TER_RTL_007_11: Applicable resources are released, recovered or quarantined as per configuration."
+   },
+   "ter_notify": {
+    "title": "Customer Notification",
+    "does": "Notifies customer on termination request creation, order submission, appointment where applicable and completion/failure (BR-211, Open).",
+    "needs": "A trigger event needing customer notification.",
+    "makes": "A customer notification dispatched.",
+    "example": "FIB_TER_RTL_007_12: Notifications are triggered at configured termination milestones."
+   },
+   "ter_quarantine": {
+    "title": "Termination Inventory Quarantine",
+    "does": "Ported inventory marked to quarantine for the configured period; SIM deactivated and released for FWA service (BR-180).",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FIB_TER_RTL_007_13: The inventory is quarantined for the configured period and the subscriber identity module is deactivated and released."
+   },
+   "ter_end": {
+    "title": "Termination Completed",
+    "does": "Termination journey complete: service deactivated, billing closed, inventory released/quarantined.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record)."
+   },
+   "rfs_gtm_start": {
+    "title": "GIS Data Ingestion",
+    "does": "Site and building data from the geographic information system ingested into the inventory management system, the master for building and connectivity data (BR-190).",
+    "needs": "RFS Portal / GIS data for the installation address or building.",
+    "makes": "Updated RFS/GIS serviceability data or address result."
+   },
+   "rfs_gtm_file": {
+    "title": "Go-to-Market File Generation",
+    "does": "Go-to-market file generated from the inventory management system as a full extract (BR-191).",
+    "needs": "RFS Portal / GIS data for the installation address or building.",
+    "makes": "Updated RFS/GIS serviceability data or address result."
+   },
+   "rfs_pickup": {
+    "title": "Pickup & Transformation",
+    "does": "Go-to-market file picked up through the mediation layer, filtered and transformed into the format required by each downstream system (BR-192, Open).",
+    "needs": "RFS Portal / GIS data for the installation address or building.",
+    "makes": "Updated RFS/GIS serviceability data or address result.",
+    "example": "FIB_RFS_008_01: The file is picked up and transformed into the format required by each downstream system."
+   },
+   "rfs_distribute": {
+    "title": "Distribution to Downstream Systems",
+    "does": "Distributed to inventory management system (full extract), RFS portal, CRM (delta) and analytics data warehouse (BR-193, Open).",
+    "needs": "RFS Portal / GIS data for the installation address or building.",
+    "makes": "Updated RFS/GIS serviceability data or address result.",
+    "example": "FIB_RFS_008_02: Each downstream system receives its data in the full or delta form defined for it."
+   },
+   "rfs_id_mapping": {
+    "title": "Operator Identifier Generation & Mapping",
+    "does": "Operator identifier generated separately and mapped to the utility identifier through field survey, supporting one-to-one and one-to-many relationships (BR-194, Open).",
+    "needs": "RFS Portal / GIS data for the installation address or building.",
+    "makes": "Updated RFS/GIS serviceability data or address result.",
+    "example": "FIB_RFS_008_03: The operator identifier is generated and mapped to the utility identifier supporting both relationship types."
+   },
+   "rfs_status_update": {
+    "title": "Ready for Service Status Update",
+    "does": "Marks a building ready for service once ready for provisioning; records applicable service level category (BR-195, Open).",
+    "needs": "RFS Portal / GIS data for the installation address or building.",
+    "makes": "Updated RFS/GIS serviceability data or address result.",
+    "example": "FIB_RFS_008_04: A building ready for provisioning is marked ready for service with its service level category recorded."
+   },
+   "rfs_portal_search": {
+    "title": "RFS Portal Search",
+    "does": "Sales team searches the RFS portal by address, utility identifier or area (BR-196).",
+    "needs": "RFS Portal / GIS data for the installation address or building.",
+    "makes": "Updated RFS/GIS serviceability data or address result.",
+    "example": "FIB_RFS_008_05: Each of the three search modes returns the correct ready for service result."
+   },
+   "rfs_recommend": {
+    "title": "Recommendation Integration",
+    "does": "Receives offer recommendations from the big data system into the RFS portal (BR-197, Open).",
+    "needs": "RFS Portal / GIS data for the installation address or building.",
+    "makes": "Updated RFS/GIS serviceability data or address result.",
+    "example": "FIB_RFS_008_06: Offer recommendations are received and displayed in the ready for service portal."
+   },
+   "rfs_lead": {
+    "title": "Lead Creation from Portal",
+    "does": "Sales agent creates a lead in CRM from the RFS portal using the customer mobile number (BR-198, Open).",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FIB_RFS_008_07: A lead is created in the customer relationship management system from the portal using the mobile number."
+   },
+   "rfs_continuous_update": {
+    "title": "Continuous RFS Update",
+    "does": "RFS data updated through subsequent go-to-market file loads and through manual updates from the business (BR-199).",
+    "needs": "RFS Portal / GIS data for the installation address or building.",
+    "makes": "Updated RFS/GIS serviceability data or address result.",
+    "example": "FIB_RFS_008_08: The ready for service data is updated by both file load and manual business update."
+   },
+   "rfs_end": {
+    "title": "RFS Data Ready",
+    "does": "RFS data management cycle complete; portal reflects current serviceability for downstream sales and activation journeys.",
+    "needs": "RFS Portal / GIS data for the installation address or building.",
+    "makes": "Updated RFS/GIS serviceability data or address result."
+   },
+   "qpc_base_plan": {
+    "title": "Present Eligible Base Plans",
+    "does": "System presents only the fibre base plans eligible for the customer, determined by the service type available at the address.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_QPC_01: Only plans matching the available service type and the customer segment appear in the plan list."
+   },
+   "qpc_iptv_bundle": {
+    "title": "Bundle IPTV by Default",
+    "does": "System bundles the IPTV offering by default with the base plan and displays all associated child plans.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_QPC_02: The internet protocol television bundle and its child plans appear in the cart by default with the base plan."
+   },
+   "qpc_iptv_remove": {
+    "title": "Remove IPTV Offering",
+    "does": "Retail Agent may remove the IPTV offering from the cart at customer request.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_QPC_03: The internet protocol television offering can be removed from the cart during activation."
+   },
+   "qpc_addon_mapped": {
+    "title": "Add Mapped Add-Ons Only",
+    "does": "Retail Agent may add only an add-on pre-configured and mapped to the base plan; unmapped add-ons are blocked.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_QPC_04: An add on not mapped to the base plan cannot be added to the cart."
+   },
+   "qpc_discount_mapped": {
+    "title": "Display Mapped Discounts Only",
+    "does": "System displays only a discount mapped to the product; the section is empty where none applies.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_QPC_05: A discount not mapped to the product is not selectable and the section is empty where none applies."
+   },
+   "qpc_price_recalc": {
+    "title": "Recalculate Cart Price",
+    "does": "System recalculates one-time charges, recurring charges and discounts whenever a product is added, amended or removed from the cart.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_QPC_06: Cart totals recalculate on every cart change and reconcile to the sum of the constituent charges."
+   },
+   "num_fln_select": {
+    "title": "Select Fixed Line Number",
+    "does": "Retail Agent searches the free number list and selects a preferred fixed line number into the cart.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_NUM_01: A search returns available fixed line numbers of category free number and a selected number is added to the cart."
+   },
+   "num_mobile_fwa_select": {
+    "title": "Select Mobile Number for FWA",
+    "does": "Retail Agent searches the free number list and selects a mobile number into the cart, only for a fixed wireless access journey.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_NUM_02: A mobile number can be selected for a fixed wireless access journey and the selection is refused for a fibre journey."
+   },
+   "num_star_prohibit_fwa": {
+    "title": "Prohibit Star Number for FWA",
+    "does": "A star number may not be selected for a fixed wireless access indoor or outdoor journey.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_NUM_03: A star number is not offered or selectable for a fixed wireless access journey."
+   },
+   "num_fln_select_alt": {
+    "title": "FLN Selection",
+    "does": "Retail Agent searches the FLN from the list of FLN and adds it to the cart; a FLN can be searched and added for a Fiber or Fixed Wireless Access journey (BR-060).",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_NUM_06: A FLN can be searched and added for a Fiber or Fixed Wireless Access Journey."
+   },
+   "num_msisdn_select": {
+    "title": "MSISDN Selection (FWA)",
+    "does": "Follows the same NUM capability as Mobile Post Paid Journey (MPAR_001_NUM_13). A search returns available free numbers restricted to fixed wireless access journeys and a selected mobile number is added to the cart; a star number is not offered or selectable for a fixed wireless access journey (BR-061).",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_NUM_05: A search returns available free numbers restricted to fixed wireless access journeys and a selected mobile number is added to the cart; a star number is not offered or selectable for a fixed wireless access journey."
+   },
+   "num_review": {
+    "title": "Review Number Before Confirmation",
+    "does": "System displays the number category and applicable charges for the agent to review before the number selection is confirmed.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_NUM_04: The number category and charges are displayed before confirmation."
+   },
+   "caf_offline_upload": {
+    "title": "Upload Offline Signed CAF",
+    "does": "Retail Agent uploads a manually signed contract application form (PDF/JPG). Follows the same CAF capability as the Mobile Postpaid journey (MPAR_001_CAF_*, FAR_001_CAF_01).",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_CAF_02: A signed form within the format and size limit is uploaded and a non conforming file is rejected. FAR_001_CAF_01: As in MPAR_001_CAF_*"
+   },
+   "caf_digital_signature": {
+    "title": "Capture Digital Signature",
+    "does": "Retail Agent selects the digital CAF option and touch-screen option; system displays the captured signature.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_CAF_03: Each signature capture method routes to the corresponding device and the captured signature is embedded in the form."
+   },
+   "caf_skip_by_role": {
+    "title": "Skip CAF by Fulfilment Role",
+    "does": "The CAF submission step may be skipped by an agent holding the fulfilment role.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_CAF_04: A fulfilment role can skip the submission step and other roles cannot."
+   },
+   "caf_supporting_docs": {
+    "title": "Upload Supporting Documents",
+    "does": "Retail Agent uploads additional and supporting documents into a separate section (PDF/JPG).",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_CAF_05: Additional documents within the format and size limit are uploaded, sectioned and viewable."
+   },
+   "caf_activity_comments": {
+    "title": "Capture Activity Comments",
+    "does": "Retail Agent captures activity comments to be passed to the field workforce management task.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_CAF_06: Activity comments captured by the agent are passed to the field workforce management task."
+   },
+   "rfs_availability_search": {
+    "title": "Search Point of Presence",
+    "does": "Retail Agent searches the point of presence in the ready-for-service screen by address or utility identifier.",
+    "needs": "RFS Portal / GIS data for the installation address or building.",
+    "makes": "Updated RFS/GIS serviceability data or address result.",
+    "example": "FAR_001_RFS_03: A search by each of the three keys returns the ready for service result for the location."
+   },
+   "rfs_addr_autofill": {
+    "title": "Auto-fill Address from RFS",
+    "does": "System auto-fills the address from the ready-for-service data based on the utility identifier.",
+    "needs": "RFS Portal / GIS data for the installation address or building.",
+    "makes": "Updated RFS/GIS serviceability data or address result.",
+    "example": "FAR_001_RFS_04: The building number, street number, zone and unit are populated from the ready for service response."
+   },
+   "rfs_service_type_display": {
+    "title": "Display Available Service Types",
+    "does": "System displays the service types available at the searched location: Fibre, FWA indoor, FWA outdoor.",
+    "needs": "RFS Portal / GIS data for the installation address or building.",
+    "makes": "Updated RFS/GIS serviceability data or address result.",
+    "example": "FAR_001_RFS_05: The service types available at the location are displayed to the agent."
+   },
+   "rfs_cpe_detect": {
+    "title": "Detect CPE / ONT Information",
+    "does": "System displays the CPE and ONT information retrieved from the ready-for-service response, where available.",
+    "needs": "RFS Portal / GIS data for the installation address or building.",
+    "makes": "Updated RFS/GIS serviceability data or address result.",
+    "example": "FAR_001_RFS_06: Detected device information is displayed where the ready for service response indicates a device is present."
+   },
+   "wfm_task_capture": {
+    "title": "Capture WFM Task Execution",
+    "does": "System captures from the field workforce management task the ONT serial number, set-top box and related fulfilment data.",
+    "needs": "A Field Workforce Management appointment or task record.",
+    "makes": "A created, updated or closed WFM appointment/task.",
+    "example": "FAR_001_WFM_07: The four device and resource values captured by the technician are returned to and stored in the system."
+   },
+   "wfm_mesh_device_rule": {
+    "title": "Apply Complimentary Mesh Device Rule",
+    "does": "System applies the configured complimentary allowance of two mesh devices before charging further mesh devices.",
+    "needs": "A Field Workforce Management appointment or task record.",
+    "makes": "A created, updated or closed WFM appointment/task.",
+    "example": "FAR_001_WFM_08: The first two mesh devices carry no charge and further devices carry the configured monthly recurring charge."
+   },
+   "wfm_indoor_outdoor_capture": {
+    "title": "Capture Indoor & Outdoor Device Serials",
+    "does": "System captures both the indoor and outdoor CPE serial numbers for a fixed wireless access outdoor journey.",
+    "needs": "A Field Workforce Management appointment or task record.",
+    "makes": "A created, updated or closed WFM appointment/task.",
+    "example": "FAR_001_WFM_09: Both the indoor and outdoor device serial numbers are captured for a fixed wireless access outdoor task."
+   },
+   "wfm_task_closure": {
+    "title": "Require WFM Task Closure with Feedback",
+    "does": "The field workforce management task closure, including captured customer feedback, is required before the order proceeds.",
+    "needs": "A Field Workforce Management appointment or task record.",
+    "makes": "A created, updated or closed WFM appointment/task.",
+    "example": "FAR_001_WFM_10: The order does not proceed until the task closure with customer feedback is received."
+   },
+   "net_status_update": {
+    "title": "Update Order Status to Workforce",
+    "does": "System updates the order status to the field workforce management system so the technician may proceed with order activation.",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FAR_001_NET_04: The field workforce management system receives the order status update."
+   },
+   "net_activate_fibre": {
+    "title": "Trigger Network Activation (Fibre)",
+    "does": "System triggers network activation through the order management system on completion of the field workforce management task.",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FAR_001_NET_01: Network activation is triggered on task completion for fibre and the status is updated in the customer relationship management system."
+   },
+   "net_activate_fwa_indoor": {
+    "title": "Activate Network (FWA Indoor)",
+    "does": "System proceeds to network activation on the planned activation date without waiting for a field workforce management task, for a fixed wireless access indoor journey.",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FAR_001_NET_02: Network activation proceeds on the planned date without a field workforce management task for fixed wireless access indoor."
+   },
+   "net_activate_sim": {
+    "title": "Activate SIM with Network (FWA)",
+    "does": "System activates the SIM together with network activation for a fixed wireless access journey (BR-102).",
+    "needs": "An Order Management System order or activation request.",
+    "makes": "An order status update or network activation/deactivation event.",
+    "example": "FAR_001_NET_03: The subscriber identity module is activated with network activation for a fixed wireless access journey."
+   },
+   "fin_billing_pass": {
+    "title": "Pass Fulfilment Data to Billing",
+    "does": "System passes the account, product, service and resource information to the billing system after the field workforce task.",
+    "needs": "Billing System account, payment or credit data.",
+    "makes": "An updated billing account, charge or payment status.",
+    "example": "FAR_001_FIN_01: The billing system receives the account, product, service and resource information with per line prices."
+   },
+   "fin_device_billing": {
+    "title": "Bill Additional Devices",
+    "does": "System sends the additional devices captured during the field workforce installation task towards the billing system.",
+    "needs": "Billing System account, payment or credit data.",
+    "makes": "An updated billing account, charge or payment status.",
+    "example": "FAR_001_FIN_02: Additional devices captured during installation are reflected in the billing update."
+   },
+   "fin_fwa_indoor_billing": {
+    "title": "Bill FWA Indoor Devices at Order Capture",
+    "does": "System passes the CPE information captured during order capture towards the billing system for a fixed wireless access indoor journey.",
+    "needs": "Billing System account, payment or credit data.",
+    "makes": "An updated billing account, charge or payment status.",
+    "example": "FAR_001_FIN_03: The order capture device information is billed for a fixed wireless access indoor journey."
+   },
+   "rfs_addr_capture2": {
+    "title": "Capture Installation Address",
+    "does": "Retail Agent captures the installation address from the utility identifier or by searching.",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FAR_001_RFS_01: The installation address can be captured by utility identifier and, separately, by the zone street building search."
+   },
+   "rfs_cascading_addr": {
+    "title": "Cascading Address Selection",
+    "does": "System filters the address selection hierarchically so the street list is constrained by the selected zone and the building list by the selected street.",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FAR_001_RFS_02: Selecting a zone restricts the street list and selecting a street restricts the building list."
+   },
+   "sim_scan_select": {
+    "title": "Scan & Select SIM (FWA)",
+    "does": "Retail Agent scans the SIM serial number and adds it to the cart, only for a fixed wireless access journey.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_SIM_01: A subscriber identity module can be scanned and added for a fixed wireless access journey and is refused for fibre."
+   },
+   "cpe_scan_select": {
+    "title": "Scan & Select CPE (FWA)",
+    "does": "Retail Agent scans the customer premises equipment serial number and adds it to the cart, only for a fixed wireless access journey.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_PHY_01: Customer premises equipment can be scanned and added for a fixed wireless access journey and is refused for fibre."
+   },
+   "wfm_slot_retrieval": {
+    "title": "Retrieve Appointment Slots",
+    "does": "System fetches the available appointment slots from the field workforce management system together with the lead time.",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FAR_001_WFM_01: Available appointment slots with lead time and technician availability are returned from the field workforce management system."
+   },
+   "wfm_slot_selection": {
+    "title": "Select Appointment Slot",
+    "does": "Retail Agent selects an available appointment slot; the customer may request a specific date and time.",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FAR_001_WFM_02: A slot can be selected and a customer requested date and time can be captured."
+   },
+   "wfm_notes_capture": {
+    "title": "Capture Appointment Notes & Flags",
+    "does": "Retail Agent captures additional notes and marks whether the CAF and supporting documents are ready for the appointment.",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FAR_001_WFM_03: Notes and the two collection flags are captured and passed to the field workforce management system."
+   },
+   "wfm_info_to_workforce": {
+    "title": "Pass Appointment Info to Workforce",
+    "does": "System passes the selected date, time slot, notes and collection flags to the field workforce management system.",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FAR_001_WFM_04: The selected appointment information is present in the field workforce management task."
+   },
+   "wfm_skip_fwa_indoor": {
+    "title": "Skip Appointment for FWA Indoor",
+    "does": "Appointment booking may be skipped for a fixed wireless access indoor journey.",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FAR_001_WFM_05: Appointment booking can be skipped for a fixed wireless access indoor journey."
+   },
+   "wfm_mandatory_fwa_outdoor": {
+    "title": "Require Appointment for FWA Outdoor / Fibre",
+    "does": "Appointment booking is required for a fixed wireless access outdoor journey (and fibre).",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FAR_001_WFM_06: A fixed wireless access outdoor journey cannot proceed without an appointment."
+   },
+   "pay_fln_deplete": {
+    "title": "Deplete FLN Inventory",
+    "does": "System depletes the fixed line number inventory in UIM on payment completion.",
+    "needs": "Billing System account, payment or credit data.",
+    "makes": "An updated billing account, charge or payment status.",
+    "example": "FAR_001_PAY_02: The fixed line number inventory position is updated on payment completion."
+   },
+   "pay_sim_cpe_deplete": {
+    "title": "Deplete SIM & CPE Inventory",
+    "does": "System depletes the SIM and CPE inventory at the point-of-sale payment system on payment completion.",
+    "needs": "Billing System account, payment or credit data.",
+    "makes": "An updated billing account, charge or payment status.",
+    "example": "FAR_001_PAY_03: The subscriber identity module and equipment inventory positions are updated on payment completion."
+   },
+   "fin_order_completion": {
+    "title": "Receive Order Completion",
+    "does": "System receives the order completion notification from the order management system into the CRM.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_FIN_04: A completion event sets the order status to completed in the customer relationship management system."
+   },
+   "fin_tracking_update": {
+    "title": "Resolve Tracking Record",
+    "does": "System sets the tracking record to resolved once the order is completed and records the order number.",
+    "needs": "Data already captured earlier in the journey (customer, cart or order record).",
+    "makes": "An updated CRM record (customer, cart, order or tracking record).",
+    "example": "FAR_001_FIN_05: Order completion sets the tracking record to resolved with the order number recorded."
+   },
+   "fpi_identifier_mark": {
+    "title": "Mark Portability Identifier",
+    "does": "The portability identifier must be marked by the Retail Agent during appointment booking for a port-in journey.",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FIB_FPI_RTL_005_02: The portability identifier is captured at appointment booking for a port in journey."
+   },
+   "fpi_appt_date": {
+    "title": "Set Portability Appointment Date",
+    "does": "System sets the portability appointment date in case the portability identifier is marked by the Retail Agent.",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FIB_FPI_RTL_005_03: The portability Appointment Date is captured at appointment booking for a port in journey."
+   },
+   "fpo_doc_validate": {
+    "title": "Validate Portability Form & Identity Document",
+    "does": "Retail Agent validates the portability form and identity document received from the number portability system.",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FIB_FPO_RTL_006_03: Documents are validated and can be uploaded to the port out ticket."
+   },
+   "fpo_mandatory_checks": {
+    "title": "Check Mandatory Form Fields & Date",
+    "does": "System validates the portability form date within the allowed period and confirms customer name, identity document number and service details.",
+    "needs": "Retail/Retention/Support agent action in the CRM/order-capture UI.",
+    "makes": "Data captured or a decision recorded by the agent.",
+    "example": "FIB_FPO_RTL_006_04: A form outside the validity period or with a mandatory mismatch fails validation."
    }
   },
   "contractPlain": {},
