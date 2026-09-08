@@ -1,0 +1,32 @@
+{
+  "sim-swap-tablet-desktop-vanilla-order-approval-journey-docx": {
+    "path": "SIM Swap - Tablet, Desktop & Vanilla Order Approval Journey.docx",
+    "type": "workflow specification",
+    "slug": "sim-swap-tablet-desktop-vanilla-order-approval-journey-docx",
+    "status": "extracted",
+    "confidence": "high",
+    "created": "2026-08-27",
+    "summary_file": "docs/sim-swap-tablet-desktop-vanilla-order-approval-journey-docx.md"
+  },
+  "open-ui-tablet-new-prepaid-docx": {
+    "path": "Open UI Tablet_New Prepaid.docx",
+    "type": "user flow specification",
+    "slug": "open-ui-tablet-new-prepaid-docx",
+    "status": "metadata_indexed",
+    "confidence": "pending",
+    "created": "2026-08-27"
+  },
+  "open-ui-desktop-new-postpaid-docx": {
+    "path": "Open UI Desktop_New Postpaid.docx",
+    "type": "user flow specification",
+    "slug": "open-ui-desktop-new-postpaid-docx",
+    "status": "metadata_indexed",
+    "confidence": "pending",
+    "created": "2026-08-27"
+  },
+  "extraction_batch_1_complete": true,
+  "total_indexed": 93,
+  "fully_extracted": 1,
+  "pending_extraction": 92,
+  "last_updated": "2026-08-27"
+}

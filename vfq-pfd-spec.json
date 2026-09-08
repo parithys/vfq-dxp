@@ -1,0 +1,691 @@
+{
+  "title": "VFQ DXP — User Journey to Access Control Process Flow",
+  "subtitle": "Traceability model rendered as process: User Journey → Workflow/Task → View → Action → Access/Permission. Type mapping — Journey = cyan terminal, Workflow/Task = violet (orchestrated), View = emerald (human-in-loop screen), Action = amber (operation invoked against the platform), Access/Permission = rose gate.",
+  "footer": "Vodafone Qatar DXP • Journey–Workflow–View–Action–Permission traceability • representative model, see provenance note",
+  "slug": "vfq-dxp-process-flow",
+  "interactive": true,
+  "type": {
+    "min": 10
+  },
+  "config": {
+    "layout": {
+      "containerWidth": null,
+      "edgeLabelSpacing": 12
+    },
+    "drawer": {
+      "overlayMode": true,
+      "defaultWidth": 440,
+      "maxWidth": 760
+    },
+    "cards": {
+      "showIOTable": true
+    }
+  },
+  "prerequisites": [
+    "CRM customer master + Global Search",
+    "Vanilla order management backend",
+    "Document verification (QID / Passport / Bank)",
+    "RBAC permission matrix published",
+    "WFM & fulfilment integration live"
+  ],
+  "flow": [
+    {
+      "type": "start",
+      "label": "User Journey Initiated",
+      "edgeLabel": "journey context"
+    },
+    {
+      "type": "step",
+      "id": "wf-routing",
+      "kind": "automated",
+      "role": "Workflow/Task · WF-000",
+      "title": "Journey Selection",
+      "desc": [
+        "Route to Prepaid, Postpaid,",
+        "FWA or SIM Swap variant"
+      ],
+      "edgeLabel": "journey + channel",
+      "meaning": "The entry workflow resolves which of the four modelled journeys the customer is on (UJ-001 Prepaid Activation, UJ-002 Postpaid Activation, UJ-003 FWA Activation, UJ-004 SIM Swap) and which channel the agent is working in (Desktop, Tablet, Vanilla, Open UI). Every downstream view, action and permission is selected from this resolution.",
+      "inputDesc": "Journey entry point, channel, agent session",
+      "outputDesc": "Resolved journey variant, channel-specific view set",
+      "example": "A sales rep on a tablet starts a new postpaid activation; routing selects UJ-002 and the Open UI Tablet view set."
+    },
+    {
+      "type": "step",
+      "id": "vw-activation-form",
+      "kind": "manual",
+      "role": "View · VW-001 / VW-002",
+      "title": "Activation Form",
+      "desc": [
+        "Customer + service details;",
+        "postpaid adds credit fields"
+      ],
+      "edgeLabel": "data entry attempt",
+      "meaning": "The channel-appropriate data-entry surface. VW-001 (Prepaid Activation Form) captures customer and service selection; VW-002 (Postpaid Activation Form) extends it with the fields the credit evaluation needs.",
+      "inputDesc": "Resolved journey variant, channel view set",
+      "outputDesc": "Draft customer record, service selection",
+      "example": "Agent keys name, contact and plan into the Open UI Tablet postpaid form."
+    },
+    {
+      "type": "decision",
+      "id": "ap-sales-agent",
+      "title": [
+        "Sales Agent",
+        "Access?"
+      ],
+      "yesLabel": "Granted",
+      "noLabel": "Denied",
+      "no": {
+        "label": "Access Denied — AP-001 required"
+      },
+      "meaning": "AP-001 (Sales Agent Access) governs creating and editing orders on tablet and desktop. Authorisation is resolved before the session may query the customer master or commit anything — without it the form is readable but inert.",
+      "example": "A read-only analytics user (AP-007) can open the form but is refused at this gate."
+    },
+    {
+      "type": "step",
+      "id": "ac-search-customer",
+      "kind": "integration",
+      "role": "Action · AC-018",
+      "title": "Search Customer",
+      "desc": [
+        "Retrieve existing record",
+        "from CRM before creating"
+      ],
+      "edgeLabel": "CRM lookup",
+      "meaning": "AC-018 queries the CRM master so an existing customer is reused rather than duplicated. This is the action that makes the journey idempotent against the customer master. Requires AP-001.",
+      "inputDesc": "Identifier entered on the activation form",
+      "outputDesc": "Matched customer record or a new-customer flag",
+      "example": "QID lookup returns an existing account, so the journey continues against that customer rather than creating a second one."
+    },
+    {
+      "type": "rowbreak",
+      "wrapLabel": "identity"
+    },
+    {
+      "type": "step",
+      "id": "wf-validate-identity",
+      "kind": "automated",
+      "role": "Workflow/Task · WF-001",
+      "title": "Validate Identity",
+      "desc": [
+        "Verify customer against",
+        "QID / Passport / Bank docs"
+      ],
+      "edgeLabel": "validation request",
+      "meaning": "WF-001 orchestrates identity validation. It is a precondition for WF-002 eligibility and, for postpaid, for WF-003 credit assessment — no order reaches approval without it.",
+      "inputDesc": "Customer record, journey variant",
+      "outputDesc": "Validation request, required document list",
+      "example": "Postpaid activation requires QID plus a bank document; the workflow raises both as outstanding items."
+    },
+    {
+      "type": "step",
+      "id": "vw-doc-upload",
+      "kind": "manual",
+      "role": "View · VW-004",
+      "title": "Document Upload",
+      "desc": [
+        "Attach QID, passport,",
+        "bank documents"
+      ],
+      "edgeLabel": "attachments",
+      "meaning": "VW-004 is the shared upload surface reused by every journey that needs proof of identity or means of payment. It is reached from both VW-001 and VW-002, and it is where rejected documents are replaced.",
+      "inputDesc": "Required document list from WF-001",
+      "outputDesc": "Uploaded document set",
+      "example": "Agent photographs the customer's QID on the tablet and attaches a bank statement PDF."
+    },
+    {
+      "type": "step",
+      "id": "ac-upload-doc",
+      "kind": "integration",
+      "role": "Action · AC-003",
+      "title": "Upload Document",
+      "desc": [
+        "Transfer and store",
+        "attachment against order"
+      ],
+      "edgeLabel": "stored artefact",
+      "meaning": "AC-003 performs the transfer and binds each artefact to the order. It always precedes AC-004 verification. Requires AP-001.",
+      "inputDesc": "Selected files from VW-004",
+      "outputDesc": "Stored artefact references on the order",
+      "example": "Two files stored and linked to the draft postpaid order."
+    },
+    {
+      "type": "step",
+      "id": "ac-verify-doc",
+      "kind": "integration",
+      "role": "Action · AC-004",
+      "title": "Verify Document",
+      "desc": [
+        "OCR scan; check",
+        "authenticity and expiry"
+      ],
+      "edgeLabel": "verification result",
+      "meaning": "AC-004 runs automated verification on the stored artefacts. It is governed by AP-003 (Compliance Verification) — the agent uploads, but the compliance capability decides whether the artefact stands.",
+      "inputDesc": "Stored artefact references",
+      "outputDesc": "Per-document verification result",
+      "example": "OCR reads the QID number and expiry; an expired document fails here rather than at approval."
+    },
+    {
+      "type": "rowbreak",
+      "wrapLabel": "validate"
+    },
+    {
+      "type": "decision",
+      "id": "dec-docs-valid",
+      "title": [
+        "Documents",
+        "Valid?"
+      ],
+      "yesLabel": "Valid",
+      "noLabel": "Re-upload",
+      "no": {
+        "to": "vw-doc-upload"
+      },
+      "meaning": "The validation gate, governed by AP-003. A failure returns the agent to VW-004 to replace the rejected artefact rather than terminating the journey — this is the most frequently exercised alternate path in the model.",
+      "example": "An expired passport is rejected; the agent is returned to the upload view to capture a current one."
+    },
+    {
+      "type": "step",
+      "id": "wf-eligibility",
+      "kind": "automated",
+      "role": "Workflow/Task · WF-002",
+      "title": "Check Eligibility",
+      "desc": [
+        "Segment rules: standard,",
+        "HRN, B2B2C"
+      ],
+      "edgeLabel": "segment + eligibility",
+      "meaning": "WF-002 resolves the customer segment and the rules that follow from it. Segment is what makes the journey branch: HRN and postpaid carry a credit assessment that prepaid does not.",
+      "inputDesc": "Validated customer record",
+      "outputDesc": "Segment classification, eligibility verdict",
+      "example": "Customer resolves to HRN, so a credit limit must be established before the order can be submitted."
+    },
+    {
+      "type": "decision",
+      "id": "dec-credit-required",
+      "title": [
+        "Credit Check",
+        "Required?"
+      ],
+      "yesLabel": "Postpaid",
+      "noLabel": "Prepaid",
+      "no": {
+        "to": "wf-signature"
+      },
+      "meaning": "The segment branch. Postpaid and HRN journeys require WF-003 credit assessment; prepaid journeys bypass it entirely and rejoin the process at consent capture. Both paths are live — this is a legitimate alternate route, not an error branch.",
+      "example": "UJ-001 Prepaid Activation skips straight to signature; UJ-002 Postpaid Activation continues into credit assessment."
+    },
+    {
+      "type": "step",
+      "id": "wf-credit",
+      "kind": "automated",
+      "role": "Workflow/Task · WF-003",
+      "title": "Calculate Credit",
+      "desc": [
+        "Establish limit for",
+        "postpaid and HRN customers"
+      ],
+      "edgeLabel": "credit request",
+      "meaning": "WF-003 establishes the credit limit that governs what the customer may be sold. It sits between WF-001 identity validation and WF-004 approval submission.",
+      "inputDesc": "Validated identity, segment classification",
+      "outputDesc": "Credit request with supporting evidence",
+      "example": "HRN customer's bank documents and segment feed a limit request."
+    },
+    {
+      "type": "step",
+      "id": "ac-calc-credit",
+      "kind": "integration",
+      "role": "Action · AC-006",
+      "title": "Score Credit",
+      "desc": [
+        "Run scoring engine;",
+        "return limit and band"
+      ],
+      "edgeLabel": "score + limit",
+      "meaning": "AC-006 invokes the credit engine. Governed by AP-004 (Credit Assessment Rights) — the scoring detail is visible only to holders of that permission.",
+      "inputDesc": "Credit request",
+      "outputDesc": "Credit score, assigned limit, risk band",
+      "example": "Engine returns a limit that caps the device subsidy the agent can offer."
+    },
+    {
+      "type": "rowbreak",
+      "wrapLabel": "credit"
+    },
+    {
+      "type": "step",
+      "id": "vw-credit-summary",
+      "kind": "manual",
+      "role": "View · VW-003",
+      "title": "Credit Summary",
+      "desc": [
+        "Display limit and",
+        "approval status to agent"
+      ],
+      "edgeLabel": "credit outcome",
+      "meaning": "VW-003 surfaces the calculated limit and its status. It is the view where a credit analyst intervenes if the automated band needs override.",
+      "inputDesc": "Credit score, assigned limit",
+      "outputDesc": "Confirmed credit position on the order",
+      "example": "Panel shows an approved limit; the agent proceeds to configure the plan within it."
+    },
+    {
+      "type": "decision",
+      "id": "ap-credit-rights",
+      "title": [
+        "Credit Assessment",
+        "Rights?"
+      ],
+      "yesLabel": "Granted",
+      "noLabel": "Referred",
+      "no": {
+        "label": "Referred to Credit Team"
+      },
+      "meaning": "AP-004 gates access to scoring detail and limit assignment. A sales agent without it cannot see or alter the band — the case is referred to the credit team rather than blocking the customer.",
+      "example": "Tablet sales rep sees only the approved/declined outcome; the numeric band is withheld and the case referred."
+    },
+    {
+      "type": "step",
+      "id": "wf-signature",
+      "kind": "automated",
+      "role": "Workflow/Task · WF-008",
+      "title": "Capture Consent",
+      "desc": [
+        "Orchestrate signature",
+        "collection for the order"
+      ],
+      "edgeLabel": "consent request",
+      "meaning": "WF-008 is the rejoin point for both branches — prepaid arrives here directly from the segment gate, postpaid arrives after credit assessment. Consent is captured once, whatever the path.",
+      "inputDesc": "Configured order (with credit position where applicable)",
+      "outputDesc": "Consent request bound to the order",
+      "example": "Both a prepaid SIM sale and a postpaid contract converge on the same consent step."
+    },
+    {
+      "type": "step",
+      "id": "vw-signature",
+      "kind": "manual",
+      "role": "View · VW-005",
+      "title": "Signature Capture",
+      "desc": [
+        "Tablet surface for",
+        "customer signature"
+      ],
+      "edgeLabel": "signature input",
+      "meaning": "VW-005 is the tablet/mobile surface where the customer signs. Reused unchanged across every journey that needs consent.",
+      "inputDesc": "Consent request",
+      "outputDesc": "Raw signature input",
+      "example": "Customer signs on the tablet in front of the agent."
+    },
+    {
+      "type": "step",
+      "id": "ac-capture-sig",
+      "kind": "integration",
+      "role": "Action · AC-005",
+      "title": "Store Signature",
+      "desc": [
+        "Encrypt and bind",
+        "signature to order"
+      ],
+      "edgeLabel": "signed order",
+      "meaning": "AC-005 encrypts the signature and binds it to the order. It is always followed by AC-014 audit logging — consent is an auditable event.",
+      "inputDesc": "Raw signature input",
+      "outputDesc": "Encrypted signature artefact on the order",
+      "example": "Signature stored against the order id and written to the audit log."
+    },
+    {
+      "type": "rowbreak",
+      "wrapLabel": "capture"
+    },
+    {
+      "type": "step",
+      "id": "vw-order-summary",
+      "kind": "manual",
+      "role": "View · VW-008",
+      "title": "Order Summary",
+      "desc": [
+        "Full order review before",
+        "final submission"
+      ],
+      "edgeLabel": "reviewed order",
+      "meaning": "VW-008 is the last point at which the order can be amended by the agent (AC-017 Modify Order). Rejected orders return here to be corrected and resubmitted.",
+      "inputDesc": "Signed order",
+      "outputDesc": "Reviewed order ready for submission",
+      "example": "Agent and customer review plan, add-ons and charges before submitting."
+    },
+    {
+      "type": "step",
+      "id": "ac-submit-queue",
+      "kind": "integration",
+      "role": "Action · AC-007",
+      "title": "Submit to Queue",
+      "desc": [
+        "Route order into the",
+        "approval workflow"
+      ],
+      "edgeLabel": "queued order",
+      "meaning": "AC-007 hands the order off from the sales channel to the approval workflow. This is the primary handoff in the process — ownership moves from agent to approver.",
+      "inputDesc": "Reviewed order",
+      "outputDesc": "Order in the approval queue",
+      "example": "Order leaves the tablet session and appears in the manager's desktop queue."
+    },
+    {
+      "type": "step",
+      "id": "wf-submit-approval",
+      "kind": "automated",
+      "role": "Workflow/Task · WF-004",
+      "title": "Route for Approval",
+      "desc": [
+        "Assign order to the",
+        "correct approval queue"
+      ],
+      "edgeLabel": "assignment",
+      "meaning": "WF-004 assigns the queued order to the right approver based on segment and value. B2B2C and HRN orders route differently from standard ones.",
+      "inputDesc": "Order in the approval queue",
+      "outputDesc": "Queue assignment, approver notification",
+      "example": "A B2B2C postpaid order is routed to the partner-approval queue rather than the standard one."
+    },
+    {
+      "type": "step",
+      "id": "vw-approval-queue",
+      "kind": "manual",
+      "role": "View · VW-006",
+      "title": "Approval Queue",
+      "desc": [
+        "Pending orders awaiting",
+        "manager decision"
+      ],
+      "edgeLabel": "selected order",
+      "meaning": "VW-006 is the approver's working surface — the queue of orders assigned to them. Shared across all journeys; SIM Swap approvals appear in the same queue as activations.",
+      "inputDesc": "Queue assignment",
+      "outputDesc": "Order selected for review",
+      "example": "Manager opens the desktop queue and picks the oldest pending order."
+    },
+    {
+      "type": "rowbreak",
+      "wrapLabel": "approval"
+    },
+    {
+      "type": "decision",
+      "id": "ap-manager",
+      "title": [
+        "Manager Approval",
+        "Rights?"
+      ],
+      "yesLabel": "Granted",
+      "noLabel": "Escalate",
+      "no": {
+        "label": "Escalated — AP-008"
+      },
+      "meaning": "AP-002 (Manager Approval Rights) governs approve and reject. Where the order exceeds the approver's authority, AP-008 (Escalation Rights) carries it to senior management rather than leaving it stalled.",
+      "example": "An order above the manager's value threshold escalates instead of being approved."
+    },
+    {
+      "type": "step",
+      "id": "vw-approval-detail",
+      "kind": "manual",
+      "role": "View · VW-009",
+      "title": "Approval Detail",
+      "desc": [
+        "Full order, documents",
+        "and credit position"
+      ],
+      "edgeLabel": "review context",
+      "meaning": "VW-009 gives the approver everything the decision needs in one place: the order, the verified documents from VW-004 and the credit position from VW-003.",
+      "inputDesc": "Order selected for review",
+      "outputDesc": "Complete review context",
+      "example": "Manager inspects the QID scan and the credit band before deciding."
+    },
+    {
+      "type": "step",
+      "id": "ac-review-order",
+      "kind": "integration",
+      "role": "Action · AC-008",
+      "title": "Retrieve Details",
+      "desc": [
+        "Assemble order, documents",
+        "and audit history"
+      ],
+      "edgeLabel": "assembled case",
+      "meaning": "AC-008 assembles the full case for the approver, including prior audit history from AC-014. Governed by AP-002.",
+      "inputDesc": "Order reference",
+      "outputDesc": "Assembled order case with history",
+      "example": "Retrieval surfaces that this customer had a prior order rejected for document quality."
+    },
+    {
+      "type": "rowbreak",
+      "wrapLabel": "decision"
+    },
+    {
+      "type": "decision",
+      "id": "dec-approve",
+      "title": [
+        "Approve",
+        "Order?"
+      ],
+      "yesLabel": "Approve",
+      "noLabel": "Reject",
+      "no": {
+        "label": "Order Rejected"
+      },
+      "meaning": "The approval gate. AC-009 approves and triggers activation; AC-010 rejects and opens VW-010 (Rejection Reason Form) to capture why. Both outcomes are audit-logged via AC-014.",
+      "example": "Manager rejects for an illegible bank document, records the reason, and the order returns to the agent to amend."
+    },
+    {
+      "type": "step",
+      "id": "wf-activate",
+      "kind": "automated",
+      "role": "Workflow/Task · WF-006",
+      "title": "Activate Service",
+      "desc": [
+        "Trigger provisioning in",
+        "the order backend"
+      ],
+      "edgeLabel": "provisioning order",
+      "meaning": "WF-006 is the handoff from approval to provisioning. It is the point at which the order becomes a commitment to deliver service.",
+      "inputDesc": "Approved order",
+      "outputDesc": "Provisioning instruction to the backend",
+      "example": "Approved postpaid order is passed to the Vanilla backend for activation."
+    },
+    {
+      "type": "step",
+      "id": "ac-activate-backend",
+      "kind": "integration",
+      "role": "Action · AC-011",
+      "title": "Provision Service",
+      "desc": [
+        "Execute activation in",
+        "the backend platform"
+      ],
+      "edgeLabel": "activation result",
+      "meaning": "AC-011 executes the activation. Governed by AP-006 (Administrator Full Access) — no channel user invokes it directly; the workflow does, under system authority.",
+      "inputDesc": "Provisioning instruction",
+      "outputDesc": "Activated service, activation result",
+      "example": "Number provisioned and plan attached on the network."
+    },
+    {
+      "type": "step",
+      "id": "ac-check-inventory",
+      "kind": "integration",
+      "role": "Action · AC-023",
+      "title": "Check Inventory",
+      "desc": [
+        "Verify SIM or CPE",
+        "stock availability"
+      ],
+      "edgeLabel": "stock position",
+      "meaning": "AC-023 checks physical stock where the journey needs hardware — a SIM for mobile journeys, CPE for FWA. Governed by AP-009 (Fulfilment Operations).",
+      "inputDesc": "Activated service, hardware requirement",
+      "outputDesc": "Stock position for the required item",
+      "example": "FWA order checks outdoor CPE stock at the serving warehouse."
+    },
+    {
+      "type": "rowbreak",
+      "wrapLabel": "fulfil"
+    },
+    {
+      "type": "decision",
+      "id": "dec-stock",
+      "title": [
+        "Stock",
+        "Available?"
+      ],
+      "yesLabel": "In stock",
+      "noLabel": "Short",
+      "no": {
+        "label": "Backorder Raised"
+      },
+      "meaning": "The fulfilment gate. Where stock is short the order is backordered rather than failed — the service activation already succeeded, only the hardware delivery is deferred.",
+      "example": "Outdoor CPE out of stock: a backorder is raised and the customer is given a revised date."
+    },
+    {
+      "type": "step",
+      "id": "ac-schedule-delivery",
+      "kind": "integration",
+      "role": "Action · AC-024",
+      "title": "Schedule Delivery",
+      "desc": [
+        "Book delivery or",
+        "WFM installation slot"
+      ],
+      "edgeLabel": "delivery booking",
+      "meaning": "AC-024 books the delivery, or for FWA outdoor the WFM installation visit. Governed by AP-009 (Fulfilment Operations).",
+      "inputDesc": "Allocated stock, customer address",
+      "outputDesc": "Delivery booking or WFM work order",
+      "example": "FWA outdoor installation booked as a WFM engineer visit rather than a courier drop."
+    },
+    {
+      "type": "step",
+      "id": "wf-confirm",
+      "kind": "automated",
+      "role": "Workflow/Task · WF-007",
+      "title": "Notify Customer",
+      "desc": [
+        "Compose confirmation from",
+        "order and delivery data"
+      ],
+      "edgeLabel": "notification set",
+      "meaning": "WF-007 composes what the customer is told: what was activated, when hardware arrives, and how to track it.",
+      "inputDesc": "Activation result, delivery booking",
+      "outputDesc": "Composed SMS and email notifications",
+      "example": "Confirmation combines the activated plan with the booked installation window."
+    },
+    {
+      "type": "step",
+      "id": "ac-send-notify",
+      "kind": "integration",
+      "role": "Action · AC-012 / AC-013",
+      "title": "Send Confirmation",
+      "desc": [
+        "Dispatch SMS and email",
+        "to the customer"
+      ],
+      "edgeLabel": "delivered notice",
+      "meaning": "AC-012 (SMS) and AC-013 (Email) dispatch the notification. Both are logged to the audit trail by AC-014.",
+      "inputDesc": "Composed notifications",
+      "outputDesc": "Delivered SMS and email, delivery receipts",
+      "example": "Customer receives an SMS with the activation confirmation and an email with the full service summary."
+    },
+    {
+      "type": "step",
+      "id": "vw-status-tracker",
+      "kind": "manual",
+      "role": "View · VW-011",
+      "title": "Status Tracker",
+      "desc": [
+        "Customer self-service view",
+        "of activation progress"
+      ],
+      "edgeLabel": "tracked status",
+      "meaning": "VW-011 is the only customer-facing view in the model. Governed by AP-005 (Customer Self-Service Access), which also permits AC-019 order history and AC-020 invoice download.",
+      "inputDesc": "Delivered notice, activation and delivery state",
+      "outputDesc": "Customer-visible progress and shipment tracking",
+      "example": "Customer follows the CPE shipment (AC-025) through to the installation slot."
+    },
+    {
+      "type": "rowbreak",
+      "wrapLabel": "notify"
+    },
+    {
+      "type": "step",
+      "id": "ac-log-audit",
+      "kind": "integration",
+      "role": "Action · AC-014",
+      "title": "Write Audit Trail",
+      "desc": [
+        "Record every event in",
+        "the immutable log"
+      ],
+      "edgeLabel": "audit record",
+      "meaning": "AC-014 records the whole journey — validations, approvals, rejections, notifications. Read access is governed by AP-010 (Audit Trail Access), and it is the evidence base for AC-015 reporting under AP-007.",
+      "inputDesc": "Events emitted across every prior step",
+      "outputDesc": "Immutable audit record for the journey",
+      "example": "Compliance reconstructs who approved an order, when, and against which documents."
+    },
+    {
+      "type": "end",
+      "label": "Service Active"
+    }
+  ],
+  "loops": [
+    {
+      "from": "dec-approve",
+      "to": "vw-order-summary",
+      "style": "revision",
+      "route": "over",
+      "label": "VW-010 reason → AC-017 amend",
+      "meaning": "A rejected order is not a dead end. The approver records a reason in VW-010 (Rejection Reason Form) and the order returns to the agent at VW-008 (Order Summary), where AC-017 Modify Order applies the correction before resubmission."
+    },
+    {
+      "from": "ac-log-audit",
+      "to": "wf-routing",
+      "style": "cycle",
+      "route": "under",
+      "label": "service change / UJ-004 SIM Swap re-enters journey",
+      "meaning": "An active customer re-entering the estate — a SIM swap (UJ-004), a plan change, or a home move — starts the same journey selection workflow again against the existing record rather than a new one. This is what makes the model a lifecycle rather than a one-shot activation."
+    }
+  ],
+  "cards": {
+    "ioTable": [
+      {
+        "input": "Journey entry point, channel, agent session",
+        "output": "Resolved journey variant, channel-specific view set",
+        "example": "Tablet postpaid start → UJ-002 + Open UI Tablet views",
+        "meaning": "Journey selection resolves which of the four journeys and which channel is in play; every downstream view, action and permission follows from this. Gated by AP-001 before any customer data is queried."
+      },
+      {
+        "input": "Customer record, QID / Passport / Bank documents",
+        "output": "Verified identity, cleared document set",
+        "example": "Uploaded QID → OCR-verified, expiry checked",
+        "meaning": "WF-001 identity validation runs through VW-004 upload and AC-003/AC-004 verification, gated by AP-003 Compliance Verification. Failures return to the upload view rather than ending the journey."
+      },
+      {
+        "input": "Verified identity, customer segment",
+        "output": "Eligibility verdict, credit limit and band",
+        "example": "HRN segment → credit limit assigned by AC-006",
+        "meaning": "WF-002 resolves segment and branches: postpaid and HRN take WF-003 credit assessment under AP-004; prepaid bypasses it and rejoins at consent capture."
+      },
+      {
+        "input": "Configured order, credit position",
+        "output": "Signed order in the approval queue",
+        "example": "Tablet signature → encrypted artefact → queued order",
+        "meaning": "WF-008 captures consent through VW-005 and AC-005, VW-008 gives the last amendment point, and AC-007 hands ownership from the sales channel to the approver."
+      },
+      {
+        "input": "Queued order, documents, credit position",
+        "output": "Approval decision with recorded reason",
+        "example": "AC-009 approve, or AC-010 reject with VW-010 reason",
+        "meaning": "WF-004 assigns the queue, VW-006 and VW-009 present the case, and AP-002 governs the decision — with AP-008 escalation where the order exceeds the approver's authority."
+      },
+      {
+        "input": "Approved order, hardware requirement",
+        "output": "Activated service, delivery or WFM booking",
+        "example": "FWA outdoor → CPE allocated → engineer visit booked",
+        "meaning": "WF-006 provisions through AC-011 under AP-006, then AC-023 and AC-024 handle stock and delivery under AP-009. Short stock backorders rather than fails."
+      },
+      {
+        "input": "Activation result, delivery booking",
+        "output": "Customer notification, tracked status, audit record",
+        "example": "SMS + email sent; customer tracks CPE shipment",
+        "meaning": "WF-007 and AC-012/AC-013 notify, VW-011 gives the customer self-service visibility under AP-005, and AC-014 writes the immutable trail read under AP-010."
+      }
+    ]
+  }
+}
