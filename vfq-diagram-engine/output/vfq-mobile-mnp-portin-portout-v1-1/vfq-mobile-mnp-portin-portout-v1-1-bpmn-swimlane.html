@@ -1440,6 +1440,32 @@ function obstacleOnColumn(y1,y2,x,skipId1,skipId2){
  }
  return null;
 }
+// The backward/loop-back bus (edgePath()'s final branch) runs a single vertical column at the
+// SOURCE's own cx from its bottom edge down to the shared bottom channel, and another at the
+// TARGET's own cx from that channel back up to the target — both spanning almost the full
+// canvas height, unlike every other routing branch's short local detours. Neither ever checked
+// for obstacles: any OTHER node sharing that same phase-column x (any lane, any y along the
+// run) sits directly in the line's path. Found via a full 19-diagram connector/node-overlap
+// sweep — the majority pattern behind it (dwarfing every other violation cause combined).
+// Iteratively nudges the column sideways by OBSTACLE_CLEARANCE, same push-and-recheck shape as
+// lateralEdgePath's own multi-hit clearance above, until the FULL span is clear or the attempt
+// budget runs out (falls back to the last computed x — always at least as good as the untried
+// original, per the same philosophy as this file's other best-effort obstacle detours).
+function clearVerticalRun(x,y1,y2,skipId1,skipId2){
+ const minX=LY.x0+10, maxX=LY.totalW-10;
+ let hit=obstacleOnColumn(y1,y2,x,skipId1,skipId2);
+ if(!hit) return x;
+ const preferLeft = (hit.x-OBSTACLE_CLEARANCE >= minX);
+ let cx = preferLeft ? hit.x-OBSTACLE_CLEARANCE : hit.x+hit.w+OBSTACLE_CLEARANCE;
+ let guard=0;
+ while(guard++<10){
+  if(cx<minX) cx=minX; if(cx>maxX) cx=maxX;
+  hit=obstacleOnColumn(y1,y2,cx,skipId1,skipId2);
+  if(!hit) break;
+  cx = preferLeft ? hit.x-OBSTACLE_CLEARANCE : hit.x+hit.w+OBSTACLE_CLEARANCE;
+ }
+ return cx;
+}
 // Skew (px) of the 'external' parallelogram's slanted left/right edges — shared between the
 // polygon's own rendering (see the n.type==='external' shape branch further down) and sideX()
 // below, so the two can never drift out of sync with each other.
@@ -1725,7 +1751,23 @@ function edgePath(a,b,track,fwdMx,latOffset,branchOffset,convergeOffset){
  } else { // backward / genuine loop-back -> route through bottom channel
   const sx=a.cx, sy=a.y+a.h, tx=b.cx, ty=b.y+b.h;
   const ch=LY.totalH-70-(track||0)*BACK_TRACK_GAP;   // loop-back bus sits in the reserved band, clear of the bottom edge (widened from 52 — see the growth-check comment above)
-  return {d:`M${sx},${sy} L${sx},${ch} L${tx},${ch} L${tx},${ty}`, mid:[(sx+tx)/2,ch]};
+  // Both the descent (source's own column, sy->ch) and ascent (target's own column, ch->ty)
+  // can run the length of the whole canvas — see clearVerticalRun()'s own comment for why they
+  // need obstacle clearance the same way every other routing branch already gets it.
+  const sx2=clearVerticalRun(sx,sy,ch,a.id,b.id);
+  const tx2=clearVerticalRun(tx,ch,ty,a.id,b.id);
+  if(sx2===sx && tx2===tx){
+   return {d:`M${sx},${sy} L${sx},${ch} L${tx},${ch} L${tx},${ty}`, mid:[(sx+tx)/2,ch]};
+  }
+  // A cleared column needs a short lead-out/lead-in stub near the node's own edge to jog onto
+  // it — mirrors lateralEdgePath's own stub construction (a short vertical run right at the
+  // node boundary, THEN the horizontal jog to the cleared column), so the path's final approach
+  // into each node stays a clean vertical run rather than an arrow pointing sideways into a
+  // top/bottom boundary.
+  const stubS=Math.max(4,Math.min(16,Math.abs(ch-sy)/6));
+  const stubT=Math.max(4,Math.min(16,Math.abs(ch-ty)/6));
+  const leadS=sy+stubS, leadT=ty+stubT;   // ch is always the far larger y (near the canvas bottom) for both ends
+  return {d:`M${sx},${sy} L${sx},${leadS} L${sx2},${leadS} L${sx2},${ch} L${tx2},${ch} L${tx2},${leadT} L${tx},${leadT} L${tx},${ty}`, mid:[(sx2+tx2)/2,ch]};
  }
 }
 // Label collision avoidance: a connector's label sits at roughly the midpoint of ONE
