@@ -75,7 +75,7 @@
    "type": "agent",
    "lane": "agt",
    "phase": 0,
-   "label": "Refer requirements as MPAR_001_JSM_*",
+   "label": "Journey & Session Management",
    "sub": "MPRA_001_JSM_01",
    "desc": "The Journey and Session Management capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
    "slot": 1,
@@ -91,7 +91,7 @@
    "type": "agent",
    "lane": "agt",
    "phase": 0,
-   "label": "Refer requirements as MPAR_001_KYC_*",
+   "label": "ID Capture & Verification (IDWise / MOI)",
    "sub": "MPRA_001_KYC_01",
    "desc": "The Customer Identification and Verification capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
    "slot": 2,
@@ -107,7 +107,7 @@
    "type": "agent",
    "lane": "agt",
    "phase": 1,
-   "label": "Refer requirements as MPAR_001_CAM_01 to MPAR_001_CAM_10",
+   "label": "Customer & Account Creation",
    "sub": "MPRA_001_CAM_01",
    "desc": "The Customer and Account Management capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
    "slot": 0,
@@ -180,7 +180,7 @@
    "type": "agent",
    "lane": "agt",
    "phase": 1,
-   "label": "Refer requirements as MPAR_001_CAM_12, MPAR_001_CAM_15 to MPAR_001_CAM_18",
+   "label": "Customer & Account Details (Address, Contact, Email)",
    "sub": "MPRA_001_CAM_05",
    "desc": "The Customer and Account Management capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
    "slot": 4,
@@ -196,7 +196,7 @@
    "type": "agent",
    "lane": "agt",
    "phase": 2,
-   "label": "Refer requirements as MPAR_001_ECC_01 to MPAR_001_ECC_14",
+   "label": "Eligibility, Blacklist & Credit Screening",
    "sub": "MPRA_001_ECC_01",
    "desc": "The Eligibility and Credit Control capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
    "slot": 0,
@@ -288,7 +288,7 @@
    "type": "agent",
    "lane": "agt",
    "phase": 3,
-   "label": "Refer requirements as MPAR_001_QPC_01",
+   "label": "Present Eligible Prepaid Plans",
    "sub": "MPRA_001_QPC_01",
    "desc": "The Product Catalogue and Cart capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
    "slot": 0,
@@ -326,7 +326,7 @@
    "type": "agent",
    "lane": "agt",
    "phase": 3,
-   "label": "Refer requirements as MPAR_001_QPC_02 to MPAR_001_QPC_08",
+   "label": "Cart Build: Add-Ons, Pricing & Discounts",
    "sub": "MPRA_001_QPC_03",
    "desc": "The Product Catalogue and Cart capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
    "slot": 2,
@@ -364,7 +364,7 @@
    "type": "agent",
    "lane": "agt",
    "phase": 3,
-   "label": "Refer requirements as MPAR_001_NUM_*",
+   "label": "Number Selection & Reservation",
    "sub": "MPRA_001_NUM_01",
    "desc": "The Number Management capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
    "slot": 4,
@@ -380,7 +380,7 @@
    "type": "agent",
    "lane": "agt",
    "phase": 3,
-   "label": "Refer requirements as MPAR_001_SIM_*",
+   "label": "SIM / eSIM Selection & Validation",
    "sub": "MPRA_001_SIM_01",
    "desc": "The SIM Management capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
    "slot": 5,
@@ -396,7 +396,7 @@
    "type": "agent",
    "lane": "agt",
    "phase": 4,
-   "label": "Refer requirements as MPAR_001_CVC_01 to MPAR_001_QPC_04",
+   "label": "Cart Validation & Check-Out",
    "sub": "MPRA_001_CVC_01",
    "desc": "The Cart Validation & Check Out capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
    "slot": 0,
@@ -456,7 +456,7 @@
    "type": "agent",
    "lane": "agt",
    "phase": 5,
-   "label": "Refer requirements as MPAR_001_CAF_*",
+   "label": "Contract Generation (CAF)",
    "sub": "MPRA_001_CAF_01",
    "desc": "The Contract and Documentation capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
    "slot": 0,
@@ -510,7 +510,7 @@
    "type": "agent",
    "lane": "pay",
    "phase": 6,
-   "label": "Refer requirements as MPAR_001_PAY_01 to MPAR_001_PAY_04",
+   "label": "Payment Collection (WinCash)",
    "sub": "MPRA_001_PAY_01",
    "desc": "The Payment and Inventory capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
    "slot": 0,
@@ -617,7 +617,7 @@
    "type": "agent",
    "lane": "agt",
    "phase": 7,
-   "label": "Refer requirements as MPAR_001_ORD_*",
+   "label": "Order Submission & Routing",
    "sub": "MPRA_001_ORD_02",
    "desc": "The Order Submission capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
    "slot": 0,
@@ -728,7 +728,7 @@
    "type": "agent",
    "lane": "not",
    "phase": 8,
-   "label": "Refer requirements as MPAR_001_NOT_*",
+   "label": "Notification & Feedback (Medilia)",
    "sub": "MPRA_001_NOT_01",
    "desc": "The Notification and Feedback capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
    "slot": 0,
@@ -1328,21 +1328,21 @@
  "biz": {
   "bio": {
    "mpra_001_jsm_01": {
-    "title": "Refer requirements as MPAR_001_JSM_*",
+    "title": "Journey & Session Management",
     "does": "The Journey and Session Management capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
     "needs": "Not found in source",
     "makes": "The Journey and Session Management capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey.",
     "example": "MPRA_001_JSM_01: The Journey and Session Management capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey."
    },
    "mpra_001_kyc_01": {
-    "title": "Refer requirements as MPAR_001_KYC_*",
+    "title": "ID Capture & Verification (IDWise / MOI)",
     "does": "The Customer Identification and Verification capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
     "needs": "Not found in source",
     "makes": "The Customer Identification and Verification capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey.",
     "example": "MPRA_001_KYC_01: The Customer Identification and Verification capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey."
    },
    "mpra_001_cam_01": {
-    "title": "Refer requirements as MPAR_001_CAM_01 to MPAR_001_CAM_10",
+    "title": "Customer & Account Creation",
     "does": "The Customer and Account Management capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
     "needs": "Not found in source",
     "makes": "The Customer and Account Management capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey.",
@@ -1370,14 +1370,14 @@
     "example": "MPRA_001_CAM_04: HRN Payment details will not be displayed"
    },
    "mpra_001_cam_05": {
-    "title": "Refer requirements as MPAR_001_CAM_12, MPAR_001_CAM_15 to MPAR_001_CAM_18",
+    "title": "Customer & Account Details (Address, Contact, Email)",
     "does": "The Customer and Account Management capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
     "needs": "Not found in source",
     "makes": "The Customer and Account Management capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey.",
     "example": "MPRA_001_CAM_05: The Customer and Account Management capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey."
    },
    "mpra_001_ecc_01": {
-    "title": "Refer requirements as MPAR_001_ECC_01 to MPAR_001_ECC_14",
+    "title": "Eligibility, Blacklist & Credit Screening",
     "does": "The Eligibility and Credit Control capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
     "needs": "Not found in source",
     "makes": "The Eligibility and Credit Control capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey.",
@@ -1412,7 +1412,7 @@
     "example": "MPRA_001_BAM_02: No payment profile capture step is presented for Prepaid Activation."
    },
    "mpra_001_qpc_01": {
-    "title": "Refer requirements as MPAR_001_QPC_01",
+    "title": "Present Eligible Prepaid Plans",
     "does": "The Product Catalogue and Cart capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
     "needs": "Not found in source",
     "makes": "The Product Catalogue and Cart capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey.",
@@ -1426,7 +1426,7 @@
     "example": "MPRA_001_QPC_02: Only packs matching the customer segment and Prepaid connection type appear in the product list."
    },
    "mpra_001_qpc_03": {
-    "title": "Refer requirements as MPAR_001_QPC_02 to MPAR_001_QPC_08",
+    "title": "Cart Build: Add-Ons, Pricing & Discounts",
     "does": "The Product Catalogue and Cart capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
     "needs": "Not found in source",
     "makes": "The Product Catalogue and Cart capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey.",
@@ -1440,21 +1440,21 @@
     "example": "MPRA_001_QPC_04: Agent will be able to apply the Prepaid Specific discount"
    },
    "mpra_001_num_01": {
-    "title": "Refer requirements as MPAR_001_NUM_*",
+    "title": "Number Selection & Reservation",
     "does": "The Number Management capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
     "needs": "Not found in source",
     "makes": "The Number Management capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey.",
     "example": "MPRA_001_NUM_01: The Number Management capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey."
    },
    "mpra_001_sim_01": {
-    "title": "Refer requirements as MPAR_001_SIM_*",
+    "title": "SIM / eSIM Selection & Validation",
     "does": "The SIM Management capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
     "needs": "Not found in source",
     "makes": "The SIM Management capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey.",
     "example": "MPRA_001_SIM_01: The SIM Management capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey."
    },
    "mpra_001_cvc_01": {
-    "title": "Refer requirements as MPAR_001_CVC_01 to MPAR_001_QPC_04",
+    "title": "Cart Validation & Check-Out",
     "does": "The Cart Validation & Check Out capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
     "needs": "Not found in source",
     "makes": "The Cart Validation & Check Out capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey.",
@@ -1475,7 +1475,7 @@
     "example": "MPRA_001_CVC_03: The payment summary itemises each charge and the total reconciles to the sum of the items."
    },
    "mpra_001_caf_01": {
-    "title": "Refer requirements as MPAR_001_CAF_*",
+    "title": "Contract Generation (CAF)",
     "does": "The Contract and Documentation capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
     "needs": "Not found in source",
     "makes": "The Contract and Documentation capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey.",
@@ -1496,7 +1496,7 @@
     "example": "MPRA_001_CAF_03: Prepaid CAF will be generated"
    },
    "mpra_001_pay_01": {
-    "title": "Refer requirements as MPAR_001_PAY_01 to MPAR_001_PAY_04",
+    "title": "Payment Collection (WinCash)",
     "does": "The Payment and Inventory capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
     "needs": "Not found in source",
     "makes": "The Payment and Inventory capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey.",
@@ -1531,7 +1531,7 @@
     "example": "MPRA_001_ORD_01: The submit action is enabled only where payment status is Paid and submission moves the order to the submitted state."
    },
    "mpra_001_ord_02": {
-    "title": "Refer requirements as MPAR_001_ORD_*",
+    "title": "Order Submission & Routing",
     "does": "The Order Submission capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
     "needs": "Not found in source",
     "makes": "The Order Submission capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey.",
@@ -1573,7 +1573,7 @@
     "example": "MPRA_001_NET_06: Configured welcome/activation notification is triggered after successful activation."
    },
    "mpra_001_not_01": {
-    "title": "Refer requirements as MPAR_001_NOT_*",
+    "title": "Notification & Feedback (Medilia)",
     "does": "The Notification and Feedback capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
     "needs": "Not found in source",
     "makes": "The Notification and Feedback capability behaves identically to its Mobile Postpaid Activation (\"MOB_POST_ACT_RETL_001\") implementation when exercised within the Mobile Prepaid Activation journey.",
