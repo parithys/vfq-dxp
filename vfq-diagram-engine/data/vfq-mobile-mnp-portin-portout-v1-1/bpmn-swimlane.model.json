@@ -100,7 +100,7 @@
    "type": "control",
    "lane": "dxp",
    "phase": 0,
-   "label": "Reuse: Journey & Session Mgmt",
+   "label": "Agent Session & Tracking Record Management",
    "sub": "MNP_PI_001_SEQ_001 \u00b7 Ref MPAR_001_JSM_*",
    "desc": "Note: The process will follow the same capability (\"JSM\") as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
    "slot": 0,
@@ -132,7 +132,7 @@
    "type": "control",
    "lane": "verify",
    "phase": 1,
-   "label": "Reuse: Customer ID & Verification",
+   "label": "ID Capture & MOI Verification (IDWise)",
    "sub": "MNP_PI_001_SEQ_003 \u00b7 Ref MPAR_001_KYC_*",
    "desc": "Note: The process will follow the same capability (\"KYC\") as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
    "slot": 0,
@@ -164,7 +164,7 @@
    "type": "control",
    "lane": "dxp",
    "phase": 2,
-   "label": "Reuse: Customer & Account Mgmt",
+   "label": "Customer & Account Attribute Management",
    "sub": "MNP_PI_001_SEQ_005 \u00b7 Ref MPAR_001_CAM_*",
    "desc": "Note: The process will follow the same capability (\"CAM\") as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
    "slot": 0,
@@ -196,7 +196,7 @@
    "type": "control",
    "lane": "verify",
    "phase": 3,
-   "label": "Reuse: Eligibility & Credit Control",
+   "label": "Eligibility, Blacklist & Credit Screening",
    "sub": "MNP_PI_001_SEQ_007 \u00b7 Ref MPAR_001_ECC_*",
    "desc": "Note: The process will follow the same capability (\"ECC\") as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
    "slot": 0,
@@ -238,7 +238,7 @@
    "type": "control",
    "lane": "dxp",
    "phase": 4,
-   "label": "Reuse: Billing Account Mgmt",
+   "label": "Billing Account & Payment Profile Setup",
    "sub": "MNP_PI_001_SEQ_009 \u00b7 Ref MPAR_001_BAM_*",
    "desc": "Note: The process will follow the same capability (\"BAM\") as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
    "slot": 0,
@@ -270,14 +270,14 @@
    "type": "control",
    "lane": "dxp",
    "phase": 5,
-   "label": "Reuse: Product Catalogue & Cart",
+   "label": "Product & Cart Selection",
    "sub": "MNP_PI_001_SEQ_011 \u00b7 Ref MPAR_001_QPC_*",
    "desc": "Note: The process will follow the same capability (\"QPC\") as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
    "slot": 0,
    "w": 206,
-   "h": 100,
+   "h": 60,
    "x": 1443.0,
-   "y": 930.0,
+   "y": 950.0,
    "cx": 1546.0,
    "cy": 980.0
   },
@@ -334,14 +334,14 @@
    "type": "control",
    "lane": "sys",
    "phase": 6,
-   "label": "Reuse: SIM Management",
+   "label": "SIM / eSIM Selection & Validation",
    "sub": "MNP_PI_001_SEQ_015 \u00b7 Ref MPAR_001_SIM_*",
    "desc": "Note: The process will follow the same capability (\"SIM\") as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
    "slot": 2,
    "w": 206,
-   "h": 60,
+   "h": 100,
    "x": 1695.0,
-   "y": 2830.0,
+   "y": 2810.0,
    "cx": 1798.0,
    "cy": 2860.0
   },
@@ -350,7 +350,7 @@
    "type": "validation",
    "lane": "dxp",
    "phase": 7,
-   "label": "Reuse: Cart Validation & Checkout",
+   "label": "Cart Validation & Check-Out",
    "sub": "MNP_PI_001_SEQ_016 \u00b7 Ref MPAR_001_CVC_*",
    "desc": "Note: The process will follow the same capability (\"CVC\") as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
    "slot": 0,
@@ -366,7 +366,7 @@
    "type": "control",
    "lane": "dxp",
    "phase": 8,
-   "label": "Reuse: Contract & Documentation",
+   "label": "CAF Key Information Generation",
    "sub": "MNP_PI_001_SEQ_017 \u00b7 Ref MPAR_001_CAF_*",
    "desc": "Note: The process will follow the same capability (\"CAF\") as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
    "slot": 0,
@@ -414,7 +414,7 @@
    "type": "control",
    "lane": "dxp",
    "phase": 9,
-   "label": "Reuse: Payment & Inventory",
+   "label": "Payment Collection & Inventory Update",
    "sub": "MNP_PI_001_SEQ_020 \u00b7 Ref MPAR_001_PAY_*",
    "desc": "Note: The process will follow the same capability (\"PAY\") as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
    "slot": 0,
@@ -430,14 +430,14 @@
    "type": "control",
    "lane": "dxp",
    "phase": 9,
-   "label": "Reuse: Order Submission",
+   "label": "Order Submission & Routing",
    "sub": "MNP_PI_001_SEQ_021 \u00b7 Ref MPAR_001_ORD_*",
    "desc": "Note: The process will follow the same capability (\"ORD\") as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
    "slot": 1,
    "w": 206,
-   "h": 60,
+   "h": 100,
    "x": 2451.0,
-   "y": 1170.0,
+   "y": 1150.0,
    "cx": 2554.0,
    "cy": 1200.0
   },
@@ -462,7 +462,7 @@
    "type": "control",
    "lane": "net",
    "phase": 9,
-   "label": "Reuse: Notification & Feedback",
+   "label": "Order Submission Notification",
    "sub": "MNP_PI_001_SEQ_023 \u00b7 Ref MPAR_001_NOT_*",
    "desc": "Note: The process will follow the same capability (\"NOT\") as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
    "slot": 0,
@@ -977,7 +977,7 @@
     "example": "A Consumer customer visits a retail store asking to bring their existing mobile number to Vodafone Qatar."
    },
    "jsm01": {
-    "title": "Reuse: Journey & Session Management",
+    "title": "Agent Session & Tracking Record Management",
     "does": "Carries forward the Mobile Postpaid Activation journey's session/tracking-record handling unchanged.",
     "needs": "The reused JSM capability from MOB_POST_ACT_RETL_001.",
     "makes": "A journey and session context for the Port-In request.",
@@ -991,7 +991,7 @@
     "example": "Agent selects \"MNP Port-In\" from the DXP journey launcher."
    },
    "kyc01": {
-    "title": "Reuse: Customer Identification & Verification",
+    "title": "ID Capture & MOI Verification (IDWise)",
     "does": "Carries forward the Mobile Postpaid Activation journey's KYC handling unchanged.",
     "needs": "The reused KYC capability from MOB_POST_ACT_RETL_001.",
     "makes": "A verification gate before journey progression.",
@@ -1005,7 +1005,7 @@
     "example": "Agent scans the customer's ID; system cross-checks it against MOI records."
    },
    "cam01": {
-    "title": "Reuse: Customer and Account Management",
+    "title": "Customer & Account Attribute Management",
     "does": "Carries forward the Mobile Postpaid Activation journey's customer/account handling unchanged.",
     "needs": "The reused CAM capability from MOB_POST_ACT_RETL_001.",
     "makes": "A customer/account context ready for the Port-In order.",
@@ -1019,7 +1019,7 @@
     "example": "Agent enters the customer's QID; system finds an existing Siebel CRM record or creates one."
    },
    "ecc01": {
-    "title": "Reuse: Eligibility and Credit Control",
+    "title": "Eligibility, Blacklist & Credit Screening",
     "does": "Carries forward the Mobile Postpaid Activation journey's eligibility/credit-control handling unchanged.",
     "needs": "The reused ECC capability from MOB_POST_ACT_RETL_001.",
     "makes": "An eligibility gate before journey progression.",
@@ -1033,7 +1033,7 @@
     "example": "A customer flagged as In Collections is blocked from continuing the Port-In (BR-MNP-023)."
    },
    "bam01": {
-    "title": "Reuse: Billing Account Management",
+    "title": "Billing Account & Payment Profile Setup",
     "does": "Carries forward the Mobile Postpaid Activation journey's billing-account handling unchanged.",
     "needs": "The reused BAM capability from MOB_POST_ACT_RETL_001.",
     "makes": "A billing-account context ready for the Port-In order.",
@@ -1047,7 +1047,7 @@
     "example": "Agent creates a new billing profile for a customer with no existing postpaid billing account."
    },
    "qpc01": {
-    "title": "Reuse: Product Catalogue and Cart",
+    "title": "Product & Cart Selection",
     "does": "Carries forward the Mobile Postpaid Activation journey's product/cart handling unchanged.",
     "needs": "The reused QPC capability from MOB_POST_ACT_RETL_001.",
     "makes": "A cart ready for product/plan selection.",
@@ -1075,21 +1075,21 @@
     "example": "Agent enters the donor MSISDN; the system validates its format."
    },
    "sim01": {
-    "title": "Reuse: SIM Management",
+    "title": "SIM / eSIM Selection & Validation",
     "does": "Carries forward the Mobile Postpaid Activation journey's SIM handling unchanged.",
     "needs": "The reused SIM capability from MOB_POST_ACT_RETL_001.",
     "makes": "A Vodafone SIM reserved and associated (per BR-MNP-008) but kept inactive until NPAS approval.",
     "example": "Same SIM selection/reservation mechanics as an ordinary postpaid activation journey."
    },
    "cvc01": {
-    "title": "Reuse: Cart Validation and Checkout",
+    "title": "Cart Validation & Check-Out",
     "does": "Carries forward the Mobile Postpaid Activation journey's checkout validation gate unchanged (per BR-MNP-009: prevents progression to payment/order submission until all mandatory validations pass).",
     "needs": "The reused CVC capability from MOB_POST_ACT_RETL_001.",
     "makes": "A validated cart ready for CAF generation.",
     "example": "Same pre-payment validation gate mechanics as an ordinary postpaid activation journey."
    },
    "caf01": {
-    "title": "Reuse: Contract and Documentation",
+    "title": "CAF Key Information Generation",
     "does": "Carries forward the Mobile Postpaid Activation journey's CAF handling unchanged.",
     "needs": "The reused CAF capability from MOB_POST_ACT_RETL_001.",
     "makes": "A CAF-generation context ready for the MNP-specific form.",
@@ -1110,14 +1110,14 @@
     "example": "Customer signs the MNP Form digitally in front of the Retail Agent."
    },
    "pay01": {
-    "title": "Reuse: Payment and Inventory",
+    "title": "Payment Collection & Inventory Update",
     "does": "Carries forward the Mobile Postpaid Activation journey's payment handling unchanged (per BR-MNP-011: applicable charges/deposits collected before submission, or a zero-value receipt generated if none are due).",
     "needs": "The reused PAY capability from MOB_POST_ACT_RETL_001.",
     "makes": "Payment completed (or zero-value receipt issued) ahead of order submission.",
     "example": "Same upfront-payment collection mechanics as an ordinary postpaid activation journey."
    },
    "ord01": {
-    "title": "Reuse: Order Submission",
+    "title": "Order Submission & Routing",
     "does": "Carries forward the Mobile Postpaid Activation journey's order-submission handling unchanged.",
     "needs": "The reused ORD capability from MOB_POST_ACT_RETL_001.",
     "makes": "An order-submission context ready to carry Port-In-specific details.",
@@ -1131,7 +1131,7 @@
     "example": "The outbound NPAS request payload is assembled with all captured Port-In fields."
    },
    "not01": {
-    "title": "Reuse: Notification and Feedback",
+    "title": "Order Submission Notification",
     "does": "Carries forward the Mobile Postpaid Activation journey's notification handling unchanged.",
     "needs": "The reused NOT capability from MOB_POST_ACT_RETL_001.",
     "makes": "A notification context ready for order-submission notifications.",

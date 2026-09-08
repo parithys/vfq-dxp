@@ -3103,7 +3103,7 @@
    "type": "decision",
    "lane": "agt",
    "phase": 22,
-   "label": "Reuse CAF Generation of Mobile Postpaid",
+   "label": "New Postpaid CAF Required?",
    "sub": "PTPRM_001_SEQ_026",
    "desc": "The system shall determine from configuration whether a new Postpaid CAF is required for the Prepaid to Postpaid Migration order.",
    "outputs": [
@@ -3154,7 +3154,7 @@
    "type": "agent",
    "lane": "agt",
    "phase": 22,
-   "label": "Reuse Key Information",
+   "label": "Generate CAF Key Information (Postpaid Template)",
    "sub": "PTPRM_001_SEQ_028",
    "desc": "Where CAF is required or selected, the process shall follow MPAR_001_CAF_* from the Mobile Postpaid Activation Journey.",
    "outputs": [
@@ -3165,9 +3165,9 @@
    ],
    "slot": 2,
    "w": 206,
-   "h": 60,
+   "h": 100,
    "x": 5747.0,
-   "y": 1110.0,
+   "y": 1090.0,
    "cx": 5850.0,
    "cy": 1140.0
   },
@@ -5755,7 +5755,7 @@
     "example": "Agent and customer review the full before/after summary before confirming."
    },
    "ptp_caf_reuse_decision": {
-    "title": "Reuse CAF Generation of Mobile Postpaid",
+    "title": "New Postpaid CAF Required?",
     "does": "Determines from configuration whether a new Postpaid CAF is required for the migration order, per BR-PTPO-020 (currently Open pending VFQ Business confirmation).",
     "needs": "Configured CAF-requirement rule.",
     "makes": "Required/Optional/Not Required determination.",
@@ -5769,7 +5769,7 @@
     "example": "Remote customer receives the CAF by email instead of signing in person."
    },
    "ptp_caf_key_info": {
-    "title": "Reuse Key Information",
+    "title": "Generate CAF Key Information (Postpaid Template)",
     "does": "Follows the Mobile Postpaid Activation journey's CAF template, content, signature and document rules where CAF is required/selected, per BR-PTPO-020.",
     "needs": "Required/selected CAF decision.",
     "makes": "CAF generated per the reused activation pattern.",
