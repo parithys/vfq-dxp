@@ -2469,6 +2469,40 @@ function moveWouldCrossNode(occ,newSide,P){
  if(newSide==='top') return ref[1] > n.y;
  return ref[1] < n.y+n.h;   // bottom
 }
+// applyAnchorMove()'s reconstruction only proves the new near segment doesn't cut back through
+// the MOVING node's own body (moveWouldCrossNode above) — it says nothing about whether that
+// new segment happens to cross a THIRD node's body instead. The reused reference point (P[2] /
+// P[n-3]) was only ever guaranteed clear relative to the OLD anchor's exit column; pairing its
+// y (or x) with the NEW anchor's cardinal point can draw a fresh straight run through completely
+// unrelated node columns/rows that the original obstacle-avoiding route (lateralEdgePath /
+// edgePath) specifically detoured around to reach that reference point in the first place.
+// Found via a full 19-diagram connector/node-overlap sweep: Mobile MACD Activation Prepaid's
+// "Existing Customer Check" (a decision node) moving its "Customer Creation" exit from a
+// congested 'left' to a free 'top' reused the old route's mid-column y but not its clearance x,
+// drawing a straight vertical line through 3 unrelated Agent-lane nodes stacked in between.
+// Mirrors applyAnchorMove()'s own corner construction exactly, then checks both resulting near
+// segments (new anchor -> corner, corner -> reused reference point) with the same
+// obstacleOnColumn/obstacleOnRow helpers the original routing pass uses, excluding this flow's
+// own two endpoints (which the line legitimately touches).
+function moveWouldHitObstacle(occ,newSide,P){
+ const n=occ.node;
+ const f=FLOWS[occ.flowIdx];
+ const [nx,ny]=cardinalXY(n,newSide);
+ const vertical=(newSide==='top'||newSide==='bottom');
+ const ref = occ.end==='source'
+  ? (P.length>=3 ? P[2] : P[P.length-1])
+  : (P.length>=3 ? P[P.length-3] : P[0]);
+ const corner = vertical ? [nx,ref[1]] : [ref[0],ny];
+ const segs = [[[nx,ny],corner], [corner,ref]];
+ for(const [[x1,y1],[x2,y2]] of segs){
+  if(Math.abs(x1-x2)<0.5){
+   if(obstacleOnColumn(y1,y2,x1,f.from,f.to)) return true;
+  } else if(Math.abs(y1-y2)<0.5){
+   if(obstacleOnRow(x1,x2,y1,f.from,f.to)) return true;
+  }
+ }
+ return false;
+}
 function rebalanceExternalAnchors(){
  const byNode={};
  edgeDList.forEach(({i,d})=>{
@@ -2497,7 +2531,8 @@ function rebalanceExternalAnchors(){
      if(s===fromSide) return false;
      if(sides[s] && sides[s].length) return false;
      if(!sideValidForOther(s,occ.node,occ.otherCx,occ.otherCy)) return false;
-     return !moveWouldCrossNode(occ,s,occ.P);
+     if(moveWouldCrossNode(occ,s,occ.P)) return false;
+     return !moveWouldHitObstacle(occ,s,occ.P);
     });
     if(!candidate) continue;
     applyAnchorMove(occ,candidate);
