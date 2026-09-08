@@ -1135,43 +1135,66 @@ function isLateral(a,b){ return b.phase===a.phase && a.id!==b.id; }
 // itself) MUST agree on this same definition, which is why it's a single shared function
 // rather than two independent checks that could drift apart.
 function isSteepForward(a,b){ return isForward(a,b) && Math.abs(b.cy-a.cy) > Math.abs(b.cx-a.cx); }
-// Backward (genuine phase-regression / loop-back) edges share a routing "bus" below the
-// diagram. The old version cycled through a fixed 7 offsets by edge ORDER (`backIdx % 7`),
-// so an 8th backward edge reused a track even when its span genuinely overlapped one already
-// using it, AND edges with non-overlapping spans (never actually in each other's way) still
-// consumed distinct offsets unnecessarily. Track assignment below is span-overlap-based
-// instead — the classic greedy interval-scheduling assignment — and the canvas is grown to
-// fit however many tracks are genuinely needed instead of assuming "7 is enough". Lateral
-// (same-phase, cross-lane) edges are excluded here — they get a direct vertical connector
-// (see lateralEdgePath) and never touch this channel or its height budget.
-const trackOf={};             // FLOWS index -> track number, backward edges only
-const BACK_TRACK_GAP=16;      // px between adjacent backward/loop-back bus tracks (was 12 —
-                               // widened for legibility so two loop-back edges sharing the
-                               // bus band are clearly separate lines, not a tightly packed
-                               // stack of near-touching parallels)
+// Backward (genuine phase-regression / loop-back) edges used to ALL share one routing "bus"
+// at the very bottom of the whole canvas, regardless of how close together the two connected
+// nodes actually are — a same-lane edge jumping back just a few slots paid the exact same
+// full-canvas round trip as one jumping back from the very last phase to the very first.
+// Found via a connector-locality audit (Manhattan-distance-vs-actual-path-length ratio,
+// computed per edge across all 19 diagrams): Fibre's ins_select->wfm_slot_retrieval — same
+// lane, 5 phases apart — measured an 8x length ratio and a path covering 27% of the canvas
+// area, because its channel sat ~10,000px below both nodes purely by virtue of OTHER lanes
+// existing further down the diagram that this specific edge has nothing to do with.
+//
+// Channel placement is now LOCAL and per-edge: just below whichever of the two connected
+// nodes sits lower, pushed down only as far as actually needed to clear a real obstacle on
+// that row (obstacleOnRow — the same helper every other routing branch in this file already
+// uses), not down to the diagram's own floor by default. Two backward edges only need a track
+// offset from each other when their chosen channels are BOTH close in y AND overlap in x —
+// unlike the old x-only interval scheduling, edges whose local channels land in unrelated
+// neighbourhoods of the canvas never interact and can freely reuse the same track index.
+// `track` (the value threaded into edgePath() below) now directly CARRIES the final channel
+// y-coordinate rather than a plain index for edgePath() to multiply by BACK_TRACK_GAP itself
+// — the only place it's read is that one backward branch, so repurposing it needs no signature
+// change elsewhere.
+const trackOf={};             // FLOWS index -> channel y (backward edges only)
+const BACK_TRACK_GAP=16;      // px between two backward edges sharing a local neighbourhood
 {
- const occupied=[];           // occupied[trackIdx] = [{lo,hi}, ...] already placed there
+ const backList=[];
  FLOWS.forEach((f,i)=>{
   const a=NID[f.from], b=NID[f.to]; if(!a||!b||isForward(a,b)||isLateral(a,b)) return;
   const lo=Math.min(a.cx,b.cx)-20, hi=Math.max(a.cx,b.cx)+20;
-  let t=0;
-  while(occupied[t]&&occupied[t].some(sp=>!(hi<sp.lo||lo>sp.hi))) t++;
-  (occupied[t]=occupied[t]||[]).push({lo,hi});
-  trackOf[i]=t;
+  let y=Math.max(a.y+a.h,b.y+b.h)+40, guard=0;
+  while(guard++<60){
+   const hit=obstacleOnRow(lo,hi,y,a.id,b.id);
+   if(!hit) break;
+   y=hit.y+hit.h+16;
+  }
+  backList.push({i,lo,hi,y,aId:a.id,bId:b.id});
  });
- const usedTracks=occupied.length;
- if(usedTracks){
-  const laneBottom=LY.lanes.length?Math.max(...LY.lanes.map(l=>l.y+l.h)):0;
-  // Widened from 52/+20 to 70/+30: the bus band's clearance from the last lane and from the
-  // diagram's own bottom edge is technically self-consistent either way (the channel always
-  // sits exactly `BUS_CLEARANCE` above whatever LY.totalH ends up being, so it was never
-  // mathematically outside the SVG's own declared bounds) — but a tighter margin reads as
-  // "this connector is hanging off the edge of the diagram" even when it isn't, especially
-  // once the lane bands carry no background tint to visually confirm where the diagram's
-  // content genuinely ends. More generous clearance on both sides removes that ambiguity.
-  const neededBottom=laneBottom+70+usedTracks*BACK_TRACK_GAP+30;   // clearance so the highest track never creeps into the lanes above
-  if(neededBottom>LY.totalH) LY.totalH=neededBottom;
- }
+ const placed=[];              // placed[t] = [{lo,hi,y}, ...] already placed on that track
+ backList.forEach(e=>{
+  const conflicts=(p)=> !(e.hi<p.lo||e.lo>p.hi) && Math.abs(e.y-p.y)<BACK_TRACK_GAP*4;
+  let t=0;
+  while(placed[t]&&placed[t].some(conflicts)) t++;
+  (placed[t]=placed[t]||[]).push(e);
+  // The track offset can push this edge's row down far enough to reach a NEW obstacle that
+  // wasn't in the way at its own unnudged y — re-check once more at the final position,
+  // mirroring the same progressive-recheck pattern used everywhere else obstacle clearance
+  // happens in this file (lateralEdgePath's hit2/hit3, etc).
+  let finalY=e.y+t*BACK_TRACK_GAP, guard2=0;
+  while(guard2++<20){
+   const hit=obstacleOnRow(e.lo,e.hi,finalY,e.aId,e.bId);
+   if(!hit) break;
+   finalY=hit.y+hit.h+16;
+  }
+  trackOf[e.i]=finalY;
+ });
+ // Grow the canvas only if some edge's local channel genuinely needs more height than the
+ // diagram already has — unlike the old design, most local channels sit well within the
+ // existing bounds and need no growth at all.
+ let maxNeeded=0;
+ backList.forEach(e=>{ maxNeeded=Math.max(maxNeeded, trackOf[e.i]+30); });
+ if(maxNeeded>LY.totalH) LY.totalH=maxNeeded;
 }
 // ---- connector-channel spacing (forward + lateral edges) -----------------------------
 // Every forward edge from phase P to phase P' bends at x = the midpoint between the two
@@ -1808,9 +1831,11 @@ function edgePath(a,b,track,fwdMx,latOffset,branchOffset,convergeOffset){
   return {d:`M${sx},${sy} L${mx2},${sy} L${mx2},${clearY3} L${ex3},${clearY3} L${ex3},${ey3}`, mid:[(mx2+ex3)/2,clearY3]};
  } else if(isLateral(a,b)){ // same phase, different lane -> direct vertical connector, not the backward bus
   return lateralEdgePath(a,b,latOffset);
- } else { // backward / genuine loop-back -> route through bottom channel
+ } else { // backward / genuine loop-back -> route through a LOCAL channel just below whichever
+  // connected node sits lower (see the trackOf/BACK_TRACK_GAP pre-pass above for how this is
+  // chosen) — `track` now directly carries that precomputed channel y, not a plain index.
   const sx=a.cx, sy=a.y+a.h, tx=b.cx, ty=b.y+b.h;
-  const ch=LY.totalH-70-(track||0)*BACK_TRACK_GAP;   // loop-back bus sits in the reserved band, clear of the bottom edge (widened from 52 — see the growth-check comment above)
+  const ch=(track!=null) ? track : (LY.totalH-70);   // defensive fallback only; every backward edge gets a real trackOf[i]
   // Both the descent (source's own column, sy->ch) and ascent (target's own column, ch->ty)
   // can run the length of the whole canvas — see clearVerticalRun()'s own comment for why they
   // need obstacle clearance the same way every other routing branch already gets it.

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mobile Prepaid Activation — Consolidated Journey Map</title>
+<style>
+:root{
+  --red:#E60000; --red-dark:#B30000; --ink:#1a1a1a; --ink-soft:#4a4a4a;
+  --line:#d0d3d8; --line-soft:#e6e8eb;
+  --bg-page:#f7f7f8; --bg-lane-a:#ffffff; --bg-lane-b:#f4f5f6;
+  --customer:#ffffff; --customer-border:#8a8f98;
+  --agent:#ffffff; --agent-border:#E60000;
+  --backend:#eef0f2; --backend-border:#8a8f98;
+  --escalation:#fff6e0; --escalation-border:#d99a1b;
+  --error:#c0392b; --error-border:#8f2418;
+  --oos:#f0f0f0; --oos-border:#b7bbc2;
+  --milestone:#1a1a1a;
+  --diamond-border:#333;
+  --footnote:#a33;
+  --radius:8px;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg-page);color:var(--ink);-webkit-font-smoothing:antialiased;}
+
+/* ---------- Header ---------- */
+.hdr{background:linear-gradient(135deg,var(--red) 0%,var(--red-dark) 100%);color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.hdr-brand{display:flex;align-items:center;gap:14px;}
+.hdr-logo{width:40px;height:40px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--red);font-weight:800;font-size:13px;letter-spacing:.5px;}
+.hdr-titles h1{margin:0;font-size:20px;letter-spacing:.3px;}
+.hdr-titles p{margin:2px 0 0;font-size:12px;opacity:.9;}
+.hdr-meta{text-align:right;font-size:11px;opacity:.92;line-height:1.5;}
+.hdr-meta b{font-weight:700;}
+
+/* ---------- Legend bar ---------- */
+.legend{display:flex;flex-wrap:wrap;gap:18px;align-items:center;background:#fff;border-bottom:1px solid var(--line);padding:10px 28px;font-size:11px;color:var(--ink-soft);}
+.legend .grp{display:flex;align-items:center;gap:6px;}
+.swatch{width:14px;height:14px;border-radius:3px;display:inline-block;flex:none;}
+.swatch.customer{background:var(--customer);border:1.5px solid var(--customer-border);}
+.swatch.agent{background:var(--agent);border:1.5px solid var(--agent-border);}
+.swatch.backend{background:var(--backend);border:1.5px solid var(--backend-border);}
+.swatch.escalation{background:var(--escalation);border:1.5px solid var(--escalation-border);}
+.swatch.error{background:var(--error);border:1.5px solid var(--error-border);}
+.swatch.oos{background:var(--oos);border:1.5px dashed var(--oos-border);}
+.swatch.diamond{background:#fff;border:1.5px solid var(--diamond-border);transform:rotate(45deg);width:10px;height:10px;}
+
+/* ---------- Scroll wrapper ---------- */
+.scrollwrap{overflow:auto;max-height:calc(100vh - 158px);padding-bottom:40px;}
+
+/* ---------- Step ribbon ---------- */
+.stepgrid{display:grid;grid-template-columns:190px repeat(9,300px);min-width:max-content;}
+.step-cell{background:#e7e2f0;border-right:1px solid var(--line);border-bottom:2px solid #6a4fa0;padding:8px 12px;position:sticky;top:0;z-index:5;}
+.step-cell .num{display:inline-block;background:#6a4fa0;color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 8px;margin-bottom:4px;}
+.step-cell .name{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:#3c2d5c;line-height:1.25;}
+.step-corner{background:#3c2d5c;border-right:1px solid var(--line);border-bottom:2px solid #6a4fa0;position:sticky;top:0;left:0;z-index:6;}
+
+/* ---------- Lane rows ---------- */
+.lane-label{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px 12px;position:sticky;left:0;z-index:4;display:flex;flex-direction:column;gap:6px;justify-content:flex-start;}
+.lane-label .ic{width:22px;height:22px;color:#fff;background:var(--red);border-radius:6px;padding:4px;flex:none;}
+.lane-label b{font-size:11.5px;text-transform:uppercase;letter-spacing:.3px;display:block;line-height:1.3;}
+.lane-label span{font-size:10px;color:var(--ink-soft);line-height:1.35;display:block;}
+
+.lane-cell{border-right:1px solid var(--line-soft);border-bottom:1px solid var(--line);padding:10px 9px;display:flex;flex-direction:column;gap:8px;}
+.lane-row-a .lane-label, .lane-row-a .lane-cell{background:var(--bg-lane-a);}
+.lane-row-b .lane-label, .lane-row-b .lane-cell{background:var(--bg-lane-b);}
+
+/* ---------- Cards ---------- */
+.card{border-radius:var(--radius);padding:8px 10px;font-size:11px;line-height:1.42;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+.card .t{font-weight:700;font-size:11.5px;margin-bottom:3px;display:flex;align-items:center;gap:5px;}
+.card .sub{font-size:9.5px;color:var(--ink-soft);font-weight:600;margin:-2px 0 4px;letter-spacing:.2px;}
+.card ul{margin:4px 0 0;padding-left:15px;}
+.card li{margin-bottom:2px;}
+.card .cite{margin-top:5px;font-size:8.6px;color:#888;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+
+.card.customer{background:var(--customer);border:1.5px solid var(--customer-border);}
+.card.agent{background:var(--agent);border-left:3px solid var(--agent-border);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+.card.backend{background:var(--backend);border:1px solid var(--backend-border);}
+.card.escalation{background:var(--escalation);border:1.5px solid var(--escalation-border);}
+.card.escalation .t{color:#8a5c00;}
+.card.error{background:var(--error);border:1.5px solid var(--error-border);color:#fff;}
+.card.error .t{color:#fff;}
+.card.oos{background:var(--oos);border:1.5px dashed var(--oos-border);color:#777;}
+.card.oos .t{color:#666;text-decoration:line-through;text-decoration-thickness:1px;}
+.card.oos .t .ic{opacity:.6;}
+.card.milestone{background:var(--milestone);color:#fff;border-radius:14px;padding:6px 12px;text-align:center;font-size:10px;font-weight:700;letter-spacing:.3px;}
+
+.ic{width:13px;height:13px;flex:none;}
+
+/* ---------- Decision diamond ---------- */
+.dwrap{display:flex;flex-direction:column;align-items:center;gap:2px;margin:2px 0;}
+.diamond{width:96px;height:96px;background:#fff;border:1.6px solid var(--diamond-border);transform:rotate(45deg);display:flex;align-items:center;justify-content:center;margin:10px auto;}
+.diamond span{transform:rotate(-45deg);font-size:9.6px;font-weight:700;text-align:center;line-height:1.15;width:70px;}
+.outcomes{display:flex;flex-direction:column;gap:3px;width:100%;font-size:9.8px;}
+.outcome{display:flex;gap:5px;align-items:flex-start;padding:3px 6px;border-radius:5px;}
+.outcome.y{background:#e9f6ec;color:#1e7d34;}
+.outcome.n{background:#fbeceb;color:#a33;}
+.outcome b{flex:none;}
+
+/* ---------- Footnotes ---------- */
+.foot{background:#fff4f4;border:1px dashed #e0a3a3;border-radius:6px;padding:6px 8px;font-size:9.8px;color:var(--footnote);font-style:italic;line-height:1.35;}
+.foot b{font-style:normal;}
+
+/* ---------- Arrow between phases ---------- */
+.flowmark{text-align:center;color:#b6b9be;font-size:16px;margin:-2px 0;}
+
+/* ---------- Footer ---------- */
+.ftr{background:#fff;border-top:1px solid var(--line);padding:16px 28px;font-size:10.5px;color:var(--ink-soft);display:flex;gap:28px;flex-wrap:wrap;}
+.ftr .src b{display:block;color:var(--ink);font-size:11px;margin-bottom:3px;}
+.ftr .src ul{margin:0;padding-left:15px;}
+.ftr .src li{margin-bottom:2px;}
+
+@media print{
+  .scrollwrap{overflow:visible;}
+  body{background:#fff;}
+}
+</style>
+</head>
+<body>
+
+<!-- =============== SVG ICON SPRITES =============== -->
+<svg width="0" height="0" style="position:absolute">
+<defs>
+<symbol id="ic-user" viewBox="0 0 24 24"><path fill="currentColor" d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.4 0-9 2.2-9 5v2h18v-2c0-2.8-4.6-5-9-5Z"/></symbol>
+<symbol id="ic-tablet" viewBox="0 0 24 24"><path fill="currentColor" d="M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm0 2v16h14V4H5Zm7 13.2a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z"/></symbol>
+<symbol id="ic-idcard" viewBox="0 0 24 24"><path fill="currentColor" d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm2 3v8h6V8H5Zm2 1.5h2v1H7v-1Zm-.3 2.5h2.6v1H6.7v-1Zm7.3-4h6v1.4h-6V8Zm0 3h6v1.4h-6V11Zm0 3h4v1.4h-4V14Z"/></symbol>
+<symbol id="ic-shield" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Zm-1.2 13.6L7.4 12.2l1.4-1.4 2 2 4.4-4.4 1.4 1.4-5.8 5.8Z"/></symbol>
+<symbol id="ic-sim" viewBox="0 0 24 24"><path fill="currentColor" d="M16 2H9L4 7v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2v-2Zm-6 8h4v6H8v-4a2 2 0 0 1 2-2Z"/></symbol>
+<symbol id="ic-card" viewBox="0 0 24 24"><path fill="currentColor" d="M3 5h18a1 1 0 0 1 1 1v2H2V6a1 1 0 0 1 1-1Zm-1 5h20v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-8Zm2 4h5v2H4v-2Z"/></symbol>
+<symbol id="ic-tower" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2c1.7 1.6 2.7 3.3 2.9 5.4l-1.7.3C13 6.2 12.4 5 12 4.4c-.4.6-1 1.8-1.2 3.3l-1.7-.3C9.3 5.3 10.3 3.6 12 2ZM6.9 9.3l1.5.9c-.8 1.3-1.2 2.5-1.3 3.9l-1.7-.1c.1-1.7.6-3.3 1.5-4.7Zm10.2 0c.9 1.4 1.4 3 1.5 4.7l-1.7.1c-.1-1.4-.5-2.6-1.3-3.9l1.5-.9ZM11 10h2l2 12h-2l-.4-3h-1.2L11 22H9l2-12Z"/></symbol>
+<symbol id="ic-bell" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a2 2 0 0 0-2 2v.6C7.1 5.4 5 8 5 11v4l-2 3v1h18v-1l-2-3v-4c0-3-2.1-5.6-5-6.4V4a2 2 0 0 0-2-2Zm0 20a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Z"/></symbol>
+<symbol id="ic-alert" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2 1 21h22L12 2Zm0 6 1 8h-2l1-8Zm0 10.5a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z"/></symbol>
+<symbol id="ic-check" viewBox="0 0 24 24"><path fill="currentColor" d="m9.5 17-5-5 1.4-1.4 3.6 3.6 8.6-8.6L19.5 7Z"/></symbol>
+<symbol id="ic-x" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19l5.6-5.6L17.6 19 19 17.6 13.4 12 19 6.4 17.6 5 12 10.6Z"/></symbol>
+<symbol id="ic-doc" viewBox="0 0 24 24"><path fill="currentColor" d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 1.5V8h4.5L14 3.5ZM8 12h8v1.5H8V12Zm0 3.5h8V17H8v-1.5ZM8 8.5h4V10H8V8.5Z"/></symbol>
+<symbol id="ic-star" viewBox="0 0 24 24"><path fill="currentColor" d="m12 2 2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8-5.1-4.7 6.9-.8Z"/></symbol>
+</defs>
+</svg>
+
+<!-- =============== HEADER =============== -->
+<div class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-logo">VFQ</div>
+    <div class="hdr-titles">
+      <h1>Mobile Prepaid Activation — Consolidated Journey Map</h1>
+      <p>Customer Journey · Business Process · System Interaction — Retail Agent Assisted Channel</p>
+    </div>
+  </div>
+  <div class="hdr-meta">
+    Use case <b>MOB_PRE_ACT_RETL_001 (MPRA)</b> · Channel: Retail Store, Assisted<br>
+    Source: <b>VFQ_Mobile_Prepaid_Activation_BRSD_V0.1.xlsx</b> + reused capabilities from <b>VFQ_Mobile_Postpaid_Activation_BRSD</b><br>
+    Generated 2026-09-08 · Style reference: <i>2019.07.01 FPD Onboarding MVP.pdf</i>
+  </div>
+</div>
+
+<!-- =============== LEGEND =============== -->
+<div class="legend">
+  <div class="grp"><span class="swatch customer"></span> Customer touchpoint</div>
+  <div class="grp"><span class="swatch agent"></span> Agent screen (DXP / Open UI Tablet)</div>
+  <div class="grp"><span class="swatch backend"></span> Backend / system step</div>
+  <div class="grp"><span class="swatch escalation"></span> Escalation / manual task</div>
+  <div class="grp"><span class="swatch error"></span> Reject / exit path</div>
+  <div class="grp"><span class="swatch oos"></span> Explicitly out of scope for Prepaid</div>
+  <div class="grp"><span class="swatch diamond"></span> Decision gate</div>
+  <div class="grp" style="color:var(--footnote);font-style:italic;">▲ italic red = sourced annotation / business rule callout</div>
+</div>
+
+<!-- =============== MAIN GRID =============== -->
+<div class="scrollwrap">
+<div class="stepgrid">
+
+  <!-- corner -->
+  <div class="step-corner"></div>
+  <div class="step-cell"><span class="num">Step 0</span><div class="name">Customer Interaction &amp; Verification</div></div>
+  <div class="step-cell"><span class="num">Step 1</span><div class="name">Customer Account Creation</div></div>
+  <div class="step-cell"><span class="num">Step 2</span><div class="name">Eligibility &amp; Billing Exclusions</div></div>
+  <div class="step-cell"><span class="num">Step 3</span><div class="name">Product, Number &amp; SIM Selection</div></div>
+  <div class="step-cell"><span class="num">Step 4</span><div class="name">Cart Check-Out</div></div>
+  <div class="step-cell"><span class="num">Step 5</span><div class="name">Contract &amp; Agreement (CAF)</div></div>
+  <div class="step-cell"><span class="num">Step 6</span><div class="name">Payment &amp; Order Submission</div></div>
+  <div class="step-cell"><span class="num">Step 7</span><div class="name">Order Fulfilment &amp; Prepaid Activation</div></div>
+  <div class="step-cell"><span class="num">Step 8</span><div class="name">Notification</div></div>
+
+  <!-- ============ LANE: CUSTOMER ============ -->
+  <div class="lane-label lane-row-a">
+    <svg class="ic"><use href="#ic-user"/></svg>
+    <b>Customer</b>
+    <span>Applicant / prepaid subscriber</span>
+  </div>
+  <div class="lane-cell lane-row-a">
+    <div class="card customer"><div class="t"><svg class="ic"><use href="#ic-user"/></svg>Approaches Retail Store</div>Direct Sales / Retail assisted channel.<div class="cite">SOP §1.1 channel scope</div></div>
+  </div>
+  <div class="lane-cell lane-row-a">
+    <div class="card customer"><div class="t">Presents identity document</div>Qatari ID, GCC ID, Passport or Diplomatic ID; confirms auto-populated name, DOB, nationality; provides email &amp; alt. phone.<div class="cite">SOP §2.1 · New Prepaid Tablet screenshots</div></div>
+  </div>
+  <div class="lane-cell lane-row-a">
+    <div class="card customer"><div class="t">Awaits eligibility outcome</div>No customer-visible credit limit / bill cycle step (Prepaid).</div>
+  </div>
+  <div class="lane-cell lane-row-a">
+    <div class="card customer"><div class="t">Chooses plan, number &amp; SIM</div>Selects a prepaid plan/promotion (e.g. "Prepaid Red Promotion"), a number (Free/Reserved), and SIM type.<div class="cite">Open UI Tablet_New Prepaid.docx</div></div>
+  </div>
+  <div class="lane-cell lane-row-a">
+    <div class="card customer"><div class="t">Reviews charges</div>Sees itemised payment summary incl. starter pack, recharge &amp; SIM charge before confirming.</div>
+  </div>
+  <div class="lane-cell lane-row-a">
+    <div class="card customer"><div class="t">Signs Prepaid CAF</div>Reviews bilingual Prepaid Customer Application Form, signs on tablet.<div class="cite">Consumer Prepaid CAF V2 · screenshot 8–10</div></div>
+  </div>
+  <div class="lane-cell lane-row-a">
+    <div class="card customer"><div class="t">Pays &amp; confirms order</div>Completes upfront payment; order is submitted on payment success.</div>
+  </div>
+  <div class="lane-cell lane-row-a">
+    <div class="card customer"><div class="t">Line activates</div>Receives the activated prepaid MSISDN with plan/benefits live.</div>
+  </div>
+  <div class="lane-cell lane-row-a">
+    <div class="card customer"><div class="t"><svg class="ic"><use href="#ic-bell"/></svg>Receives confirmation</div>Welcome / activation notification on all MSISDNs under the QID; later, a feedback survey.</div>
+  </div>
+
+  <!-- ============ LANE: RETAIL AGENT ============ -->
+  <div class="lane-label lane-row-b">
+    <svg class="ic"><use href="#ic-tablet"/></svg>
+    <b>Retail Agent</b>
+    <span>DXP / Siebel Open UI Tablet</span>
+  </div>
+  <div class="lane-cell lane-row-b">
+    <div class="card agent"><div class="t">Home screen — Open UI Tablet</div>Menu tiles: Home, Contacts, Mobile Postpaid, Sales Order, Passport to QID, MNP Tablet, New Fixed Line Tablet, <b>New Prepaid Tablet</b>, New IOT Tablet, SIM Swap.<div class="cite">Open UI Tablet_New Prepaid.docx, screenshot 1</div></div>
+    <div class="card agent"><div class="t">Access &amp; Authorization</div>Role-based via Agent Role Privilege Matrix; session maintained (JSM_01–02).</div>
+    <div class="dwrap"><div class="diamond"><span>Access permitted?</span></div>
+      <div class="outcomes"><div class="outcome n"><b>N →</b><span>Access Denied (exit)</span></div><div class="outcome y"><b>Y →</b><span>continue</span></div></div>
+    </div>
+    <div class="card agent"><div class="t">Resume Draft Order</div>Milestone/draft persisted for resume (JSM_05–06); draft expires after 30 days.</div>
+    <div class="foot">▲ Qnomy queue/ticket context is captured at entry with a documented fallback if Qnomy is unavailable (JSM_03, postpaid v2.0 requirement narrative).</div>
+  </div>
+  <div class="lane-cell lane-row-b">
+    <div class="card agent"><div class="t">Step 1 — Contact: scan ID</div><span class="sub">MPRA_001_KYC_01 — reused as-is from Postpaid</span>ID Type = Passport/QID/GCC/Diplomatic; ID Number captured, green-checked.</div>
+    <div class="dwrap"><div class="diamond"><span>Supported document type?</span></div>
+      <div class="outcomes"><div class="outcome n"><b>N →</b><span>Reject unsupported type</span></div><div class="outcome y"><b>Y →</b><span>continue</span></div></div>
+    </div>
+    <div class="card agent"><div class="t">Contact confirmation</div>Auto-populated: ID Expiry, Nationality, Gender, First/Last name, DOB. "Connection Details" modal shows <b>Total Prepaid Connections</b> and <b>Total Postpaid Connections</b> before continuing.<div class="cite">screenshot 3</div></div>
+    <div class="card agent"><div class="t">Re-scan / Manual Capture fallback</div>Max 4 re-scan attempts, then manual capture path.</div>
+    <div class="dwrap"><div class="diamond"><span>Capture complete &amp; successful?</span></div>
+      <div class="outcomes"><div class="outcome n"><b>N →</b><span>Escalate: Manual Capture Approval (Supervisor)</span></div><div class="outcome y"><b>Y →</b><span>continue</span></div></div>
+    </div>
+    <div class="dwrap"><div class="diamond"><span>Age ≥ 18?</span></div>
+      <div class="outcomes"><div class="outcome n"><b>N →</b><span>Reject — Underage</span></div><div class="outcome y"><b>Y →</b><span>continue</span></div></div>
+    </div>
+    <div class="card agent"><div class="t">Representative Restriction Check</div>Validates whether a representative is permitted to purchase on the customer's behalf.</div>
+    <div class="outcomes"><div class="outcome n"><b>N →</b><span>Reject — Representative Not Permitted</span></div></div>
+    <div class="card agent"><div class="t">Email, language &amp; docs</div>Email + Language + Alt. phone captured; ID-Front / ID-Back document tiles scanned.</div>
+    <div class="foot">▲ Minors: SOP v8.0 documents an exception process requiring Supreme Judicial Council approval + Customer Data Management sign-off (not modelled as a journey branch here — governance process, not a UI step).</div>
+  </div>
+  <div class="lane-cell lane-row-b">
+    <div class="card agent"><div class="t">Customer Search &amp; Matching</div><span class="sub">reused from Postpaid CAM</span></div>
+    <div class="dwrap"><div class="diamond"><span>Existing customer matched?</span></div>
+      <div class="outcomes"><div class="outcome y"><b>Y →</b><span>Identify existing contact, lock verified attributes</span></div><div class="outcome n"><b>N →</b><span>Create default primary contact</span></div></div>
+    </div>
+    <div class="card agent"><div class="t">Mandatory account attributes</div>Derive category/segment from nationality; capture editable address; assign contact role.</div>
+    <div class="card oos"><div class="t"><svg class="ic"><use href="#ic-x"/></svg>Default credit limit</div>Not populated for Prepaid — field left blank.<div class="cite">MPRA_001_CAM_02 · BR-002</div></div>
+    <div class="card oos"><div class="t"><svg class="ic"><use href="#ic-x"/></svg>HRN advance payment message</div>Not displayed for Prepaid orders.<div class="cite">MPRA_001_CAM_04</div></div>
+    <div class="card agent"><div class="t">HRN nationality flag</div>Derived &amp; stored per Postpaid capability, still used for downstream handling.<div class="cite">MPRA_001_CAM_03 · BR-001</div></div>
+    <div class="card milestone">Milestone: Customer Created</div>
+  </div>
+  <div class="lane-cell lane-row-b">
+    <div class="card agent"><div class="t">Prepaid product eligibility gate</div>Product selection enabled only once identity, customer-status and connection-count validations pass.<div class="cite">MPRA_001_ECC_02 · BR-004</div></div>
+    <div class="card error"><div class="t"><svg class="ic"><use href="#ic-x"/></svg>Eligibility failure message</div>Shown to agent if any gate fails; blocks product selection.</div>
+    <div class="card oos"><div class="t"><svg class="ic"><use href="#ic-x"/></svg>Credit limit</div>Not created, amended or displayed within Prepaid Activation.<div class="cite">MPRA_001_ECC_03 · BR-005</div></div>
+    <div class="card oos"><div class="t"><svg class="ic"><use href="#ic-x"/></svg>Bill cycle</div>Not created or assigned within Prepaid Activation.<div class="cite">MPRA_001_BAM_01 · BR-005</div></div>
+    <div class="card oos"><div class="t"><svg class="ic"><use href="#ic-x"/></svg>Auto-debit payment profile</div>Not captured within Prepaid Activation.<div class="cite">MPRA_001_BAM_02 · BR-005</div></div>
+  </div>
+  <div class="lane-cell lane-row-b">
+    <div class="card agent"><div class="t">Step 2 — Plan selection</div>"Please Select a Plan" search + cards (e.g. <b>Prepaid Red Promotion</b> — selected), filtered to customer segment &amp; Prepaid connection type.<div class="cite">MPRA_001_QPC_02 · BR-006 · DF-12; screenshot 5</div></div>
+    <div class="card agent"><div class="t">Special / Prepaid-specific discount</div>Agent applies Prepaid-specific discount based on the plan selected.<div class="cite">MPRA_001_QPC_04 · BR-008 · DF-14</div></div>
+    <div class="card agent"><div class="t">Create / amend cart</div>Cardinality enforced; pricing recalculated on change.<span class="sub">reused from Postpaid QPC</span></div>
+  </div>
+  <div class="lane-cell lane-row-b">
+    <div class="card agent"><div class="t">Cart Validation, Review &amp; Payment Prep</div>Pre-payment gate: eligibility, compatibility &amp; cardinality re-checked.</div>
+    <div class="dwrap"><div class="diamond"><span>Checkout blocked?</span></div>
+      <div class="outcomes"><div class="outcome n" style="background:#fbeceb;color:#a33"><b>Y →</b><span>Corrective action required</span></div><div class="outcome y"><b>N →</b><span>continue to payment prep</span></div></div>
+    </div>
+    <div class="card agent"><div class="t">Starter pack &amp; recharge charges</div>Included in the payment request where applicable.<div class="cite">MPRA_001_CVC_02 · BR-011 · INT-06 · DF-09</div></div>
+    <div class="card agent"><div class="t">Payment summary display</div>Itemised charges &amp; total payable shown to agent before confirmation.<div class="cite">MPRA_001_CVC_03 · DF-09</div></div>
+    <div class="card milestone">Milestone: Cart Checked Out</div>
+  </div>
+  <div class="lane-cell lane-row-b">
+    <div class="card agent"><div class="t">Step 5 — Generate Key Information</div>Prepaid-specific Terms &amp; Conditions key information generated.<div class="cite">MPRA_001_CAF_02 · BR-009</div></div>
+    <div class="card agent"><div class="t">Bilingual Prepaid CAF (نموذج طلب فودافون مسبق الدفع)</div>Fields: Application date, Store/Retailer ID, Vodafone mobile number, SIM serial, Full name*, ID/RP/Passport/GCC ID* + expiry. Doc list: clear copy of QID or Passport &amp; Visa / GCC ID. USSD opt-out <b>*200*321#</b>.<div class="cite">MPRA_001_CAF_03 · BR-010; Consumer Prepaid CAF V2 (Form PCA001)</div></div>
+    <div class="card agent"><div class="t">Signature capture</div>"Please Sign" pad → signed &amp; stamped with agent name + timestamp.<div class="cite">screenshot 9–10</div></div>
+    <div class="card agent"><div class="t">Upload / view supporting documents</div><span class="sub">reused from Postpaid CAF</span></div>
+    <div class="card milestone">Milestone: Signed CAF</div>
+  </div>
+  <div class="lane-cell lane-row-b">
+    <div class="card agent"><div class="t">Order submission</div>Submit enabled only once payment status = <b>Paid</b>.<div class="cite">MPRA_001_ORD_01 · BR-014 · DF-19</div></div>
+    <div class="card agent"><div class="t">Status transition</div>Order Draft/Pending Payment → <b>Open/Submitted</b>.</div>
+    <div class="card milestone">Milestone: Order Submitted</div>
+  </div>
+  <div class="lane-cell lane-row-b">
+    <div class="card agent"><div class="t">Order visibility &amp; SLA</div>Order status resolved on Tracking Record; agent communicates activation service level to customer.<span class="sub">reused from Postpaid ORD</span></div>
+  </div>
+  <div class="lane-cell lane-row-b"></div>
+
+  <!-- ============ LANE: ID VERIFICATION (MOI) ============ -->
+  <div class="lane-label lane-row-a">
+    <svg class="ic"><use href="#ic-idcard"/></svg>
+    <b>ID Verification</b>
+    <span>Ministry of Interior (MOI) · IDWise</span>
+  </div>
+  <div class="lane-cell lane-row-a"></div>
+  <div class="lane-cell lane-row-a">
+    <div class="card backend"><div class="t"><svg class="ic"><use href="#ic-idcard"/></svg>MOI Lookup &amp; nationality-risk status</div>IDWise-assisted document scan; MOI cross-check.<span class="sub">reused from Postpaid KYC</span></div>
+    <div class="dwrap"><div class="diamond"><span>MOI available / responds in time?</span></div>
+      <div class="outcomes"><div class="outcome n"><b>N →</b><span>Escalate: Pending Government Verification (Draft)</span></div><div class="outcome y"><b>Y →</b><span>continue</span></div></div>
+    </div>
+    <div class="card backend"><div class="t">Reconcile attributes with MOI</div>Field comparison against government record; interim expiry captured.</div>
+    <div class="dwrap"><div class="diamond"><span>Identity status acceptable?</span></div>
+      <div class="outcomes"><div class="outcome n"><b>N →</b><span>Reject</span></div><div class="outcome y"><b>Y →</b><span>continue</span></div></div>
+    </div>
+  </div>
+  <div class="lane-cell lane-row-a"></div>
+  <div class="lane-cell lane-row-a"></div>
+  <div class="lane-cell lane-row-a"></div>
+  <div class="lane-cell lane-row-a"></div>
+  <div class="lane-cell lane-row-a"></div>
+  <div class="lane-cell lane-row-a"></div>
+  <div class="lane-cell lane-row-a"></div>
+
+  <!-- ============ LANE: CREDIT / ELIGIBILITY ============ -->
+  <div class="lane-label lane-row-b">
+    <svg class="ic"><use href="#ic-shield"/></svg>
+    <b>Credit &amp; Eligibility</b>
+    <span>Blacklist, connection-count control (BRM)</span>
+  </div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b">
+    <div class="card backend"><div class="t">Blacklist check</div><span class="sub">CAP-04 relationship: Enhance (from Postpaid)</span></div>
+    <div class="dwrap"><div class="diamond"><span>Connection type eligible by ID type?</span></div>
+      <div class="outcomes"><div class="outcome n"><b>N →</b><span>Eligibility failure</span></div><div class="outcome y"><b>Y →</b><span>continue</span></div></div>
+    </div>
+    <div class="card backend"><div class="t">Retrieve active connection count</div></div>
+    <div class="dwrap"><div class="diamond"><span>Connection-count ceiling reached?</span></div>
+      <div class="outcomes"><div class="outcome y" style="background:#fff6e0;color:#8a5c00"><b>Y →</b><span>Escalate: Credit Approval Task (Supervisor)</span></div><div class="outcome y"><b>N →</b><span>continue</span></div></div>
+    </div>
+    <div class="foot">▲ "Max-connections-per-ID" is a documented business rule specifically for <b>Expatriate Prepaid</b>, added in the Activation SOP v2.0 (2015) and still in force in v8.0 — corroborates that a connection-count gate applies to Prepaid, not only Postpaid credit lines.</div>
+  </div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b"></div>
+
+  <!-- ============ LANE: SUPERVISOR ============ -->
+  <div class="lane-label lane-row-a">
+    <svg class="ic"><use href="#ic-alert"/></svg>
+    <b>Supervisor / Approver</b>
+    <span>Manual approval &amp; re-assignment tasks</span>
+  </div>
+  <div class="lane-cell lane-row-a">
+    <div class="card escalation"><div class="t">Re-assign draft order</div>To a different agent, if required.</div>
+  </div>
+  <div class="lane-cell lane-row-a">
+    <div class="card escalation"><div class="t">Manual Capture Approval Task</div>Reviews a failed automatic ID capture before the journey can proceed.</div>
+  </div>
+  <div class="lane-cell lane-row-a">
+    <div class="card escalation"><div class="t">Credit Approval Task</div>Reviews connection-count-ceiling cases.</div>
+    <div class="dwrap"><div class="diamond"><span>Approval outcome?</span></div>
+      <div class="outcomes"><div class="outcome y"><b>Approve →</b><span>resume journey</span></div><div class="outcome n"><b>Reject →</b><span>cancel held order</span></div></div>
+    </div>
+  </div>
+  <div class="lane-cell lane-row-a"></div>
+  <div class="lane-cell lane-row-a"></div>
+  <div class="lane-cell lane-row-a"></div>
+  <div class="lane-cell lane-row-a"></div>
+  <div class="lane-cell lane-row-a"></div>
+
+  <!-- ============ LANE: PRODUCT / NUMBER / SIM SYSTEMS ============ -->
+  <div class="lane-label lane-row-b">
+    <svg class="ic"><use href="#ic-sim"/></svg>
+    <b>Product, Number &amp; SIM</b>
+    <span>Catalogue (EPC) · Number &amp; SIM/eSIM inventory (UIM)</span>
+  </div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b">
+    <div class="card backend"><div class="t">Step 3 — Number Selection</div>Toggle "Free Number" / "Reserved Number"; card e.g. <b>40204489, QR0.00</b>. Reservation auto-releases after 72h if unused.<div class="cite">screenshot 6; reused Postpaid NUM</div></div>
+    <div class="card backend"><div class="t">Star Number validation</div>Premium/Star entitlement &amp; charging checked where selected.<span class="sub">reused from Postpaid NUM</span></div>
+    <div class="card backend"><div class="t">Step 4 — SIM Serial</div>Enter/scan SIM serial (e.g. <b>8942702400000025359</b>); SIM type = Physical / Printed eSIM / Virtual eSIM. Validation &amp; inventory reservation; added as order line item.<div class="cite">screenshot 7; reused Postpaid SIM</div></div>
+  </div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b"></div>
+
+  <!-- ============ LANE: PAYMENT (WinCash) ============ -->
+  <div class="lane-label lane-row-a">
+    <svg class="ic"><use href="#ic-card"/></svg>
+    <b>Payment</b>
+    <span>WinCash point-of-sale</span>
+  </div>
+  <div class="lane-cell lane-row-a"></div>
+  <div class="lane-cell lane-row-a"></div>
+  <div class="lane-cell lane-row-a"></div>
+  <div class="lane-cell lane-row-a"></div>
+  <div class="lane-cell lane-row-a"></div>
+  <div class="lane-cell lane-row-a"></div>
+  <div class="lane-cell lane-row-a">
+    <div class="card backend"><div class="t">Process payment</div>WinCash request/response for the itemised total.</div>
+    <div class="dwrap"><div class="diamond"><span>Payment validation failed?</span></div>
+      <div class="outcomes"><div class="outcome y" style="background:#fbeceb;color:#a33"><b>Y →</b><span>Retry payment (max 4 attempts)</span></div><div class="outcome n"><b>N →</b><span>continue</span></div></div>
+    </div>
+    <div class="card backend"><div class="t">SIM card charge collection</div>Collected per defined business rule.<div class="cite">MPRA_001_PAY_02 · BR-013</div></div>
+    <div class="card backend"><div class="t">Physical SIM / Printed eSIM depletion</div>Stock in WinCash reduces by one on payment completion.<div class="cite">MPRA_001_PAY_03 · BR-012 · INT-06 · DF-16</div></div>
+    <div class="card oos"><div class="t">Virtual eSIM depletion</div>Not stocked at WinCash — <i>deferred to fulfilment stage</i> (see Order Fulfilment lane).<div class="cite">MPRA_001_PAY_04 · BR-012 · INT-07</div></div>
+  </div>
+  <div class="lane-cell lane-row-a"></div>
+  <div class="lane-cell lane-row-a"></div>
+
+  <!-- ============ LANE: NETWORK / CHARGING / NOTIFICATION ============ -->
+  <div class="lane-label lane-row-b">
+    <svg class="ic"><use href="#ic-tower"/></svg>
+    <b>Network, Charging &amp; Notification</b>
+    <span>Charging System · Order Management · Notification Platform · Medilia</span>
+  </div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b"></div>
+  <div class="lane-cell lane-row-b">
+    <div class="card backend"><div class="t">Prepaid service creation</div>MSISDN + SIM + customer/service identifiers associated.<div class="cite">MPRA_001_NET_02 · BR-016</div></div>
+    <div class="card backend"><div class="t">Charging System account creation</div>Prepaid balance &amp; applicable plan created/updated for the activated MSISDN.<div class="cite">MPRA_001_NET_03 · BR-017</div></div>
+    <div class="card backend"><div class="t">Prepaid plan &amp; benefit activation</div>Selected plan and benefits activated per cart.<div class="cite">MPRA_001_NET_04 · BR-018</div></div>
+    <div class="card backend"><div class="t">Virtual eSIM consumed</div>Marked consumed in UIM at this stage (no WinCash depletion attempted).<div class="cite">MPRA_001_PAY_04 continuation</div></div>
+    <div class="dwrap"><div class="diamond"><span>Activation outcome?</span></div>
+      <div class="outcomes"><div class="outcome y"><b>Success →</b><span>Order Closed / Complete</span></div><div class="outcome n"><b>Failure →</b><span>Order Closed / Failed</span></div></div>
+    </div>
+    <div class="card backend"><div class="t">Activation outcome sync to CRM</div><div class="cite">MPRA_001_NET_05 · BR-015</div></div>
+    <div class="card backend"><div class="t">Welcome / activation lifecycle trigger</div>Per configured Prepaid rules.<div class="cite">MPRA_001_NET_06 · BR-019</div></div>
+  </div>
+  <div class="lane-cell lane-row-b">
+    <div class="card backend"><div class="t"><svg class="ic"><use href="#ic-bell"/></svg>Notification trigger, template &amp; channel</div><span class="sub">reused from Postpaid NOT</span></div>
+    <div class="card backend"><div class="t">Notify all MSISDNs on QID</div>Regulatory notification to every line registered under the customer's QID.</div>
+    <div class="card backend"><div class="t">Feedback survey trigger</div>Via Medilia, post-activation.</div>
+  </div>
+
+</div>
+</div>
+
+<!-- =============== FOOTER / SOURCES =============== -->
+<div class="ftr">
+  <div class="src">
+    <b>Primary sources (this diagram cites only real, extracted content — no fabricated fields, systems or rules)</b>
+    <ul>
+      <li>VFQ_Mobile_Prepaid_Activation_BRSD_V0.1.xlsx — <code>data/vfq-mobile-prepaid-activation-brsd-v0-1/bpmn-swimlane.model.json</code> (Prepaid-specific overrides: credit limit/bill cycle/payment-profile out of scope, prepaid discount, SIM/eSIM charge &amp; depletion, Charging System fulfilment)</li>
+      <li>VFQ_Mobile_Postpaid_Activation_BRSD (v1.3 extraction) — capability detail for every step this journey's own BRSD marks "reused as-is" or "Enhance" from Postpaid (JSM, KYC, CAM, ECC gates, NUM, SIM, CVC, CAF, ORD, NOT)</li>
+      <li>Open UI Tablet_New Prepaid.docx (Guided Journey, medium confidence) — screen-by-screen UI detail: menu tiles, ID capture, plan/number/SIM selection, CAF signature, resulting Sales Order</li>
+      <li>Consumer Prepaid CAF V2_110525_Editable.pdf (Form PCA001) — bilingual Prepaid CAF field list</li>
+      <li>Consumer Activation Process/Procedure Manual v8.0 — channel scope, identity-document rules, minor-exception process, Expatriate Prepaid max-connections-per-ID rule</li>
+    </ul>
+  </div>
+  <div class="src">
+    <b>Known gap</b>
+    <ul>
+      <li>The New Prepaid Tablet guided journey is flagged <i>medium confidence</i> in the knowledge base: the number shown as "reserved" (40204489) differs from the number used in the final order (97479025359), and no screenshot shows a successful Submit/Activation confirmation — the walkthrough's terminal state is "Abandoned / Pending," not a captured success case.</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>
