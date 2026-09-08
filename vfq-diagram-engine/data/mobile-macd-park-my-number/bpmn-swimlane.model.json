@@ -50,13 +50,13 @@
    "label": "Customer Requests Park My Number",
    "desc": "A customer walks in to the store to initiate the park number process.",
    "controls": [],
-   "slot": 1,
+   "slot": 0,
    "w": 84,
    "h": 84,
    "x": 244.0,
-   "y": 378.0,
+   "y": 158.0,
    "cx": 286.0,
-   "cy": 420.0
+   "cy": 200.0
   },
   {
    "id": "stp01",
@@ -67,13 +67,13 @@
    "sub": "REQ_PRK_NBR_002_STP_01",
    "desc": "Customer walks in to the store to do the park number.",
    "controls": [],
-   "slot": 0,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 183.0,
-   "y": 170.0,
+   "y": 390.0,
    "cx": 286.0,
-   "cy": 200.0
+   "cy": 420.0
   },
   {
    "id": "stp02",
@@ -115,13 +115,13 @@
      "to": "stp04"
     }
    ],
-   "slot": 1,
+   "slot": 0,
    "w": 150,
    "h": 100,
    "x": 463.0,
-   "y": 870.0,
+   "y": 650.0,
    "cx": 538.0,
-   "cy": 920.0
+   "cy": 700.0
   },
   {
    "id": "stp03_clear_dues",
@@ -134,13 +134,13 @@
    "controls": [
     "If Bill outstanding then need to clear all dues"
    ],
-   "slot": 3,
+   "slot": 1,
    "w": 190,
    "h": 58,
    "x": 443.0,
-   "y": 1331.0,
+   "y": 891.0,
    "cx": 538.0,
-   "cy": 1360.0
+   "cy": 920.0
   },
   {
    "id": "stp04",
@@ -163,13 +163,13 @@
      "to": "stp05"
     }
    ],
-   "slot": 4,
+   "slot": 2,
    "w": 150,
    "h": 100,
    "x": 463.0,
-   "y": 1530.0,
+   "y": 1090.0,
    "cx": 538.0,
-   "cy": 1580.0
+   "cy": 1140.0
   },
   {
    "id": "stp04_rejected",
@@ -211,13 +211,13 @@
      "to": "stp06"
     }
    ],
-   "slot": 2,
+   "slot": 3,
    "w": 150,
    "h": 100,
    "x": 463.0,
-   "y": 1090.0,
+   "y": 1310.0,
    "cx": 538.0,
-   "cy": 1140.0
+   "cy": 1360.0
   },
   {
    "id": "stp05_extend",
@@ -230,13 +230,13 @@
    "controls": [
     "If the customer is in commitment plan then the commitment plan duration will increase by the parked period"
    ],
-   "slot": 0,
+   "slot": 4,
    "w": 206,
    "h": 100,
    "x": 435.0,
-   "y": 650.0,
+   "y": 1530.0,
    "cx": 538.0,
-   "cy": 700.0
+   "cy": 1580.0
   },
   {
    "id": "stp06",

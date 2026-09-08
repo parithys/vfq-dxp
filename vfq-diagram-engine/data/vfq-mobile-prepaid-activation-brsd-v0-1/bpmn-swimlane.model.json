@@ -62,13 +62,13 @@
    "phase": 0,
    "label": "Prepaid Activation Journey Begins",
    "desc": "Use case MOB_PRE_ACT_RETL_001 (MPRA): the Retail Channel prepaid activation journey is initiated.",
-   "slot": 1,
+   "slot": 0,
    "w": 100,
    "h": 100,
    "x": 236.0,
-   "y": 370.0,
+   "y": 150.0,
    "cx": 286.0,
-   "cy": 420.0
+   "cy": 200.0
   },
   {
    "id": "mpra_001_jsm_01",
@@ -78,13 +78,13 @@
    "label": "Refer requirements as MPAR_001_JSM_*",
    "sub": "MPRA_001_JSM_01",
    "desc": "The Journey and Session Management capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 100,
    "x": 183.0,
-   "y": 590.0,
+   "y": 370.0,
    "cx": 286.0,
-   "cy": 640.0
+   "cy": 420.0
   },
   {
    "id": "mpra_001_kyc_01",
@@ -94,13 +94,13 @@
    "label": "Refer requirements as MPAR_001_KYC_*",
    "sub": "MPRA_001_KYC_01",
    "desc": "The Customer Identification and Verification capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
-   "slot": 0,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 183.0,
-   "y": 150.0,
+   "y": 590.0,
    "cx": 286.0,
-   "cy": 200.0
+   "cy": 640.0
   },
   {
    "id": "mpra_001_cam_01",
@@ -151,38 +151,6 @@
    "controls": [
     "BR-001"
    ],
-   "slot": 3,
-   "w": 206,
-   "h": 100,
-   "x": 435.0,
-   "y": 810.0,
-   "cx": 538.0,
-   "cy": 860.0
-  },
-  {
-   "id": "mpra_001_cam_04",
-   "type": "agent",
-   "lane": "agt",
-   "phase": 1,
-   "label": "HRN advance payment message",
-   "sub": "MPRA_001_CAM_04",
-   "desc": "System will not display any HRN advance payment message for Prepaid Order",
-   "slot": 4,
-   "w": 206,
-   "h": 100,
-   "x": 435.0,
-   "y": 1030.0,
-   "cx": 538.0,
-   "cy": 1080.0
-  },
-  {
-   "id": "mpra_001_cam_05",
-   "type": "agent",
-   "lane": "agt",
-   "phase": 1,
-   "label": "Refer requirements as MPAR_001_CAM_12, MPAR_001_CAM_15 to MPAR_001_CAM_18",
-   "sub": "MPRA_001_CAM_05",
-   "desc": "The Customer and Account Management capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
    "slot": 2,
    "w": 206,
    "h": 100,
@@ -192,6 +160,38 @@
    "cy": 640.0
   },
   {
+   "id": "mpra_001_cam_04",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 1,
+   "label": "HRN advance payment message",
+   "sub": "MPRA_001_CAM_04",
+   "desc": "System will not display any HRN advance payment message for Prepaid Order",
+   "slot": 3,
+   "w": 206,
+   "h": 100,
+   "x": 435.0,
+   "y": 810.0,
+   "cx": 538.0,
+   "cy": 860.0
+  },
+  {
+   "id": "mpra_001_cam_05",
+   "type": "agent",
+   "lane": "agt",
+   "phase": 1,
+   "label": "Refer requirements as MPAR_001_CAM_12, MPAR_001_CAM_15 to MPAR_001_CAM_18",
+   "sub": "MPRA_001_CAM_05",
+   "desc": "The Customer and Account Management capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
+   "slot": 4,
+   "w": 206,
+   "h": 100,
+   "x": 435.0,
+   "y": 1030.0,
+   "cx": 538.0,
+   "cy": 1080.0
+  },
+  {
    "id": "mpra_001_ecc_01",
    "type": "agent",
    "lane": "agt",
@@ -199,13 +199,13 @@
    "label": "Refer requirements as MPAR_001_ECC_01 to MPAR_001_ECC_14",
    "sub": "MPRA_001_ECC_01",
    "desc": "The Eligibility and Credit Control capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 100,
    "x": 687.0,
-   "y": 370.0,
+   "y": 150.0,
    "cx": 790.0,
-   "cy": 420.0
+   "cy": 200.0
   },
   {
    "id": "mpra_001_ecc_02",
@@ -218,13 +218,13 @@
    "controls": [
     "BR-004"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 176,
    "h": 100,
    "x": 702.0,
-   "y": 590.0,
+   "y": 370.0,
    "cx": 790.0,
-   "cy": 640.0
+   "cy": 420.0
   },
   {
    "id": "mpra_001_ecc_03",
@@ -237,13 +237,13 @@
    "controls": [
     "BR-005"
    ],
-   "slot": 3,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 687.0,
-   "y": 810.0,
+   "y": 590.0,
    "cx": 790.0,
-   "cy": 860.0
+   "cy": 640.0
   },
   {
    "id": "mpra_001_bam_01",
@@ -256,13 +256,13 @@
    "controls": [
     "BR-005"
    ],
-   "slot": 4,
+   "slot": 3,
    "w": 206,
    "h": 60,
    "x": 687.0,
-   "y": 1050.0,
+   "y": 830.0,
    "cx": 790.0,
-   "cy": 1080.0
+   "cy": 860.0
   },
   {
    "id": "mpra_001_bam_02",
@@ -275,13 +275,13 @@
    "controls": [
     "BR-005"
    ],
-   "slot": 0,
+   "slot": 4,
    "w": 206,
    "h": 100,
    "x": 687.0,
-   "y": 150.0,
+   "y": 1030.0,
    "cx": 790.0,
-   "cy": 200.0
+   "cy": 1080.0
   },
   {
    "id": "mpra_001_qpc_01",
@@ -329,13 +329,13 @@
    "label": "Refer requirements as MPAR_001_QPC_02 to MPAR_001_QPC_08",
    "sub": "MPRA_001_QPC_03",
    "desc": "The Product Catalogue and Cart capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
-   "slot": 3,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 939.0,
-   "y": 810.0,
+   "y": 590.0,
    "cx": 1042.0,
-   "cy": 860.0
+   "cy": 640.0
   },
   {
    "id": "mpra_001_qpc_04",
@@ -351,13 +351,13 @@
    "inputs": [
     "DF-14"
    ],
-   "slot": 4,
+   "slot": 3,
    "w": 206,
    "h": 60,
    "x": 939.0,
-   "y": 1050.0,
+   "y": 830.0,
    "cx": 1042.0,
-   "cy": 1080.0
+   "cy": 860.0
   },
   {
    "id": "mpra_001_num_01",
@@ -367,13 +367,13 @@
    "label": "Refer requirements as MPAR_001_NUM_*",
    "sub": "MPRA_001_NUM_01",
    "desc": "The Number Management capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
-   "slot": 5,
+   "slot": 4,
    "w": 206,
    "h": 100,
    "x": 939.0,
-   "y": 1250.0,
+   "y": 1030.0,
    "cx": 1042.0,
-   "cy": 1300.0
+   "cy": 1080.0
   },
   {
    "id": "mpra_001_sim_01",
@@ -383,13 +383,13 @@
    "label": "Refer requirements as MPAR_001_SIM_*",
    "sub": "MPRA_001_SIM_01",
    "desc": "The SIM Management capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
-   "slot": 2,
+   "slot": 5,
    "w": 206,
    "h": 100,
    "x": 939.0,
-   "y": 590.0,
+   "y": 1250.0,
    "cx": 1042.0,
-   "cy": 640.0
+   "cy": 1300.0
   },
   {
    "id": "mpra_001_cvc_01",
@@ -399,13 +399,13 @@
    "label": "Refer requirements as MPAR_001_CVC_01 to MPAR_001_QPC_04",
    "sub": "MPRA_001_CVC_01",
    "desc": "The Cart Validation & Check Out capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 100,
    "x": 1191.0,
-   "y": 370.0,
+   "y": 150.0,
    "cx": 1294.0,
-   "cy": 420.0
+   "cy": 200.0
   },
   {
    "id": "mpra_001_cvc_02",
@@ -424,13 +424,13 @@
    "inputs": [
     "DF-09"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 100,
    "x": 1191.0,
-   "y": 590.0,
+   "y": 370.0,
    "cx": 1294.0,
-   "cy": 640.0
+   "cy": 420.0
   },
   {
    "id": "mpra_001_cvc_03",
@@ -443,13 +443,13 @@
    "inputs": [
     "DF-09"
    ],
-   "slot": 0,
+   "slot": 2,
    "w": 206,
    "h": 60,
    "x": 1191.0,
-   "y": 170.0,
+   "y": 610.0,
    "cx": 1294.0,
-   "cy": 200.0
+   "cy": 640.0
   },
   {
    "id": "mpra_001_caf_01",
@@ -478,13 +478,13 @@
    "controls": [
     "BR-009"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 1443.0,
-   "y": 610.0,
+   "y": 390.0,
    "cx": 1546.0,
-   "cy": 640.0
+   "cy": 420.0
   },
   {
    "id": "mpra_001_caf_03",
@@ -497,13 +497,13 @@
    "controls": [
     "BR-010"
    ],
-   "slot": 1,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 1443.0,
-   "y": 370.0,
+   "y": 590.0,
    "cx": 1546.0,
-   "cy": 420.0
+   "cy": 640.0
   },
   {
    "id": "mpra_001_pay_01",
@@ -532,13 +532,13 @@
    "controls": [
     "BR-013"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 100,
    "x": 1695.0,
-   "y": 1970.0,
+   "y": 1750.0,
    "cx": 1798.0,
-   "cy": 2020.0
+   "cy": 1800.0
   },
   {
    "id": "mpra_001_pay_03",
@@ -557,13 +557,13 @@
    "inputs": [
     "DF-16"
    ],
-   "slot": 3,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 1695.0,
-   "y": 2190.0,
+   "y": 1970.0,
    "cx": 1798.0,
-   "cy": 2240.0
+   "cy": 2020.0
   },
   {
    "id": "mpra_001_pay_04",
@@ -582,13 +582,13 @@
    "inputs": [
     "DF-16"
    ],
-   "slot": 1,
+   "slot": 3,
    "w": 206,
    "h": 100,
    "x": 1695.0,
-   "y": 1750.0,
+   "y": 2190.0,
    "cx": 1798.0,
-   "cy": 1800.0
+   "cy": 2240.0
   },
   {
    "id": "mpra_001_ord_01",
@@ -658,13 +658,13 @@
    "controls": [
     "BR-017"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 100,
    "x": 1947.0,
-   "y": 2910.0,
+   "y": 2690.0,
    "cx": 2050.0,
-   "cy": 2960.0
+   "cy": 2740.0
   },
   {
    "id": "mpra_001_net_04",
@@ -677,13 +677,13 @@
    "controls": [
     "BR-018"
    ],
-   "slot": 3,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 1947.0,
-   "y": 3130.0,
+   "y": 2910.0,
    "cx": 2050.0,
-   "cy": 3180.0
+   "cy": 2960.0
   },
   {
    "id": "mpra_001_net_05",
@@ -696,13 +696,13 @@
    "controls": [
     "BR-015"
    ],
-   "slot": 4,
+   "slot": 3,
    "w": 206,
    "h": 100,
    "x": 1947.0,
-   "y": 3350.0,
+   "y": 3130.0,
    "cx": 2050.0,
-   "cy": 3400.0
+   "cy": 3180.0
   },
   {
    "id": "mpra_001_net_06",
@@ -715,13 +715,13 @@
    "controls": [
     "BR-019"
    ],
-   "slot": 1,
+   "slot": 4,
    "w": 206,
    "h": 100,
    "x": 1947.0,
-   "y": 2690.0,
+   "y": 3350.0,
    "cx": 2050.0,
-   "cy": 2740.0
+   "cy": 3400.0
   },
   {
    "id": "mpra_001_not_01",
@@ -731,13 +731,13 @@
    "label": "Refer requirements as MPAR_001_NOT_*",
    "sub": "MPRA_001_NOT_01",
    "desc": "The Notification and Feedback capability shall be reused as-is from the Mobile Postpaid Activation journey (MOB_POST_ACT_RETL_001) for Mobile Prepaid Activation, with no functional change.",
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 100,
    "x": 2199.0,
-   "y": 3850.0,
+   "y": 3630.0,
    "cx": 2302.0,
-   "cy": 3900.0
+   "cy": 3680.0
   },
   {
    "id": "end",
@@ -746,13 +746,13 @@
    "phase": 8,
    "label": "Prepaid Activation Journey Ends",
    "desc": "End of Order Capture Journey (source sheet section #15) following activation confirmation and lifecycle trigger.",
-   "slot": 0,
+   "slot": 1,
    "w": 100,
    "h": 100,
    "x": 2252.0,
-   "y": 3630.0,
+   "y": 3850.0,
    "cx": 2302.0,
-   "cy": 3680.0
+   "cy": 3900.0
   }
  ],
  "flows": [

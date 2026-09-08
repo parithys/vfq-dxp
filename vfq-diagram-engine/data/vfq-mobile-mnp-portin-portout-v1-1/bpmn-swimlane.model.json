@@ -167,13 +167,13 @@
    "label": "Reuse: Customer & Account Mgmt",
    "sub": "MNP_PI_001_SEQ_005 \u00b7 Ref MPAR_001_CAM_*",
    "desc": "Note: The process will follow the same capability (\"CAM\") as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 100,
    "x": 687.0,
-   "y": 1150.0,
+   "y": 930.0,
    "cx": 790.0,
-   "cy": 1200.0
+   "cy": 980.0
   },
   {
    "id": "cam02",
@@ -183,13 +183,13 @@
    "label": "Customer Search and Creation",
    "sub": "MNP_PI_001_SEQ_006 \u00b7 BR-MNP-003",
    "desc": "The system shall search for an existing customer and create a new customer record if none exists.",
-   "slot": 0,
+   "slot": 1,
    "w": 206,
    "h": 100,
    "x": 687.0,
-   "y": 930.0,
+   "y": 1150.0,
    "cx": 790.0,
-   "cy": 980.0
+   "cy": 1200.0
   },
   {
    "id": "ecc01",
@@ -273,13 +273,13 @@
    "label": "Reuse: Product Catalogue & Cart",
    "sub": "MNP_PI_001_SEQ_011 \u00b7 Ref MPAR_001_QPC_*",
    "desc": "Note: The process will follow the same capability (\"QPC\") as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 100,
    "x": 1443.0,
-   "y": 1150.0,
+   "y": 930.0,
    "cx": 1546.0,
-   "cy": 1200.0
+   "cy": 980.0
   },
   {
    "id": "qpc03",
@@ -289,13 +289,13 @@
    "label": "Capture Donor Details",
    "sub": "MNP_PI_001_SEQ_012",
    "desc": "The system shall allow the Retail Agent to capture the donor customer ID, donor customer ID type, donor customer type, donor operator and donor subscription type for the MNP Port-In request.",
-   "slot": 0,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 1443.0,
-   "y": 950.0,
+   "y": 1170.0,
    "cx": 1546.0,
-   "cy": 980.0
+   "cy": 1200.0
   },
   {
    "id": "num03",
@@ -321,13 +321,13 @@
    "label": "Capture MNP Number",
    "sub": "MNP_PI_001_SEQ_014 \u00b7 BR-MNP-007",
    "desc": "The system shall capture and validate the MSISDN format requested for Port-In and use it throughout the journey.",
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 1695.0,
-   "y": 2830.0,
+   "y": 2610.0,
    "cx": 1798.0,
-   "cy": 2860.0
+   "cy": 2640.0
   },
   {
    "id": "sim01",
@@ -337,13 +337,13 @@
    "label": "Reuse: SIM Management",
    "sub": "MNP_PI_001_SEQ_015 \u00b7 Ref MPAR_001_SIM_*",
    "desc": "Note: The process will follow the same capability (\"SIM\") as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
-   "slot": 1,
+   "slot": 2,
    "w": 206,
    "h": 60,
    "x": 1695.0,
-   "y": 2610.0,
+   "y": 2830.0,
    "cx": 1798.0,
-   "cy": 2640.0
+   "cy": 2860.0
   },
   {
    "id": "cvc01",
@@ -385,13 +385,13 @@
    "label": "MNP Form Generation",
    "sub": "MNP_PI_001_SEQ_018 \u00b7 BR-MNP-010",
    "desc": "The system shall generate the MNP Port-In Form using the validated customer, donor, Port-In MSISDN, product and order details captured during the journey.",
-   "slot": 2,
+   "slot": 1,
    "w": 190,
    "h": 56,
    "x": 2207.0,
-   "y": 1392.0,
+   "y": 1172.0,
    "cx": 2302.0,
-   "cy": 1420.0
+   "cy": 1200.0
   },
   {
    "id": "caf03",
@@ -401,13 +401,13 @@
    "label": "MNP Form Customer Signature",
    "sub": "MNP_PI_001_SEQ_019 \u00b7 BR-MNP-010",
    "desc": "The system shall allow the customer to review and sign the generated MNP Port-In Form before the order is submitted for portability processing.",
-   "slot": 1,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 2199.0,
-   "y": 1150.0,
+   "y": 1370.0,
    "cx": 2302.0,
-   "cy": 1200.0
+   "cy": 1420.0
   },
   {
    "id": "pay01",
@@ -417,13 +417,13 @@
    "label": "Reuse: Payment & Inventory",
    "sub": "MNP_PI_001_SEQ_020 \u00b7 Ref MPAR_001_PAY_*",
    "desc": "Note: The process will follow the same capability (\"PAY\") as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 100,
    "x": 2451.0,
-   "y": 1150.0,
+   "y": 930.0,
    "cx": 2554.0,
-   "cy": 1200.0
+   "cy": 980.0
   },
   {
    "id": "ord01",
@@ -433,13 +433,13 @@
    "label": "Reuse: Order Submission",
    "sub": "MNP_PI_001_SEQ_021 \u00b7 Ref MPAR_001_ORD_*",
    "desc": "Note: The process will follow the same capability (\"ORD\") as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 2451.0,
-   "y": 1390.0,
+   "y": 1170.0,
    "cx": 2554.0,
-   "cy": 1420.0
+   "cy": 1200.0
   },
   {
    "id": "ord04",
@@ -449,13 +449,13 @@
    "label": "Add Port-In Details at Order Submission",
    "sub": "MNP_PI_001_SEQ_022 \u00b7 BR-MNP-009, BR-MNP-012",
    "desc": "The system shall include the validated Port-In request type, Port-In MSISDN, donor details, scheduled Port-In date where applicable, and signed MNP Form references in the order-submission payload sent for portability processing.",
-   "slot": 0,
+   "slot": 2,
    "w": 190,
    "h": 100,
    "x": 2459.0,
-   "y": 930.0,
+   "y": 1370.0,
    "cx": 2554.0,
-   "cy": 980.0
+   "cy": 1420.0
   },
   {
    "id": "not01",

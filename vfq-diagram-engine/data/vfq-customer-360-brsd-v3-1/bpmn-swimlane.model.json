@@ -78,13 +78,13 @@
    "label": "Identify Customer Account",
    "sub": "CUS-001-CAM-01",
    "desc": "Agent shall be able to identify the customer account associated with an interaction before performing any Customer 360 action.",
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 100,
    "x": 263.0,
-   "y": 870.0,
+   "y": 650.0,
    "cx": 366.0,
-   "cy": 920.0
+   "cy": 700.0
   },
   {
    "id": "identify_customer",
@@ -94,13 +94,13 @@
    "label": "Identify Customer",
    "sub": "CUS-001-KYC-01",
    "desc": "Agent shall be able to identify the customer using the supported identification attributes before proceeding with Customer 360 actions.",
-   "slot": 0,
+   "slot": 2,
    "w": 206,
    "h": 60,
    "x": 263.0,
-   "y": 450.0,
+   "y": 890.0,
    "cx": 366.0,
-   "cy": 480.0
+   "cy": 920.0
   },
   {
    "id": "verify_customer",
@@ -135,13 +135,13 @@
    "label": "Navigate to Customer 360",
    "sub": "CUS-001-CAM-04 (New Req ID CUS-001-SEQ-004)",
    "desc": "Agent shall be able to navigate to the Customer 360 page for a verified customer to view and manage that customer's information.",
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 60,
    "x": 263.0,
-   "y": 670.0,
+   "y": 450.0,
    "cx": 366.0,
-   "cy": 700.0
+   "cy": 480.0
   },
   {
    "id": "display_profile",
@@ -151,13 +151,13 @@
    "label": "Display Customer Profile",
    "sub": "CUS-001-CAM-02",
    "desc": "System shall display customer profile attributes including account, contact, segmentation and service information.",
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 60,
    "x": 515.0,
-   "y": 670.0,
+   "y": 450.0,
    "cx": 618.0,
-   "cy": 700.0
+   "cy": 480.0
   },
   {
    "id": "view_hierarchy",
@@ -167,13 +167,13 @@
    "label": "View Account Hierarchy",
    "sub": "CUS-001-CAM-03",
    "desc": "Agent shall be able to view customer account hierarchy comprising Customer Account, Billing Account and Service Account.",
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 515.0,
-   "y": 890.0,
+   "y": 670.0,
    "cx": 618.0,
-   "cy": 920.0
+   "cy": 700.0
   },
   {
    "id": "navigate_hierarchy",
@@ -183,13 +183,13 @@
    "label": "Navigate Hierarchy Levels",
    "sub": "CUS-001-CAM-04",
    "desc": "Agent shall be able to navigate between Customer Account, Billing Account and Service Account levels.",
-   "slot": 0,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 515.0,
-   "y": 430.0,
+   "y": 870.0,
    "cx": 618.0,
-   "cy": 480.0
+   "cy": 920.0
   },
   {
    "id": "billing_overview",
@@ -329,13 +329,13 @@
    "label": "View Contact List",
    "sub": "CUS-001-CAM-12",
    "desc": "Agent shall be able to view all customer contacts associated with the account.",
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 60,
    "x": 1019.0,
-   "y": 670.0,
+   "y": 450.0,
    "cx": 1122.0,
-   "cy": 700.0
+   "cy": 480.0
   },
   {
    "id": "view_contact_details",
@@ -345,13 +345,13 @@
    "label": "View Contact Details",
    "sub": "CUS-001-CAM-13",
    "desc": "Agent shall be able to view detailed customer contact information.",
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 1019.0,
-   "y": 890.0,
+   "y": 670.0,
    "cx": 1122.0,
-   "cy": 920.0
+   "cy": 700.0
   },
   {
    "id": "edit_contact",
@@ -365,13 +365,13 @@
     "BR-02",
     "BR-03"
    ],
-   "slot": 0,
+   "slot": 2,
    "w": 206,
    "h": 60,
    "x": 1019.0,
-   "y": 450.0,
+   "y": 890.0,
    "cx": 1122.0,
-   "cy": 480.0
+   "cy": 920.0
   },
   {
    "id": "contact_ticket",
@@ -474,13 +474,13 @@
    "controls": [
     "BR-05"
    ],
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 100,
    "x": 1523.0,
-   "y": 650.0,
+   "y": 430.0,
    "cx": 1626.0,
-   "cy": 700.0
+   "cy": 480.0
   },
   {
    "id": "view_billing_profile",
@@ -490,13 +490,13 @@
    "label": "View Billing Profile",
    "sub": "CUS-001-BAM-02",
    "desc": "Agent shall be able to view billing profile information.",
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 1523.0,
-   "y": 890.0,
+   "y": 670.0,
    "cx": 1626.0,
-   "cy": 920.0
+   "cy": 700.0
   },
   {
    "id": "view_billing_contact",
@@ -506,13 +506,13 @@
    "label": "View Billing Contact",
    "sub": "CUS-001-BAM-03",
    "desc": "Agent shall be able to view billing contact information.",
-   "slot": 3,
+   "slot": 2,
    "w": 206,
    "h": 60,
    "x": 1523.0,
-   "y": 1110.0,
+   "y": 890.0,
    "cx": 1626.0,
-   "cy": 1140.0
+   "cy": 920.0
   },
   {
    "id": "edit_billing_contact",
@@ -526,13 +526,13 @@
     "BR-02",
     "BR-05"
    ],
-   "slot": 4,
+   "slot": 3,
    "w": 206,
    "h": 60,
    "x": 1523.0,
-   "y": 1330.0,
+   "y": 1110.0,
    "cx": 1626.0,
-   "cy": 1360.0
+   "cy": 1140.0
   },
   {
    "id": "edit_billing_address",
@@ -547,13 +547,13 @@
     "BR-02",
     "BR-05"
    ],
-   "slot": 5,
+   "slot": 4,
    "w": 206,
    "h": 60,
    "x": 1523.0,
-   "y": 1550.0,
+   "y": 1330.0,
    "cx": 1626.0,
-   "cy": 1580.0
+   "cy": 1360.0
   },
   {
    "id": "edit_billing_language",
@@ -567,13 +567,13 @@
     "BR-02",
     "BR-05"
    ],
-   "slot": 6,
+   "slot": 5,
    "w": 206,
    "h": 60,
    "x": 1523.0,
-   "y": 1770.0,
+   "y": 1550.0,
    "cx": 1626.0,
-   "cy": 1800.0
+   "cy": 1580.0
   },
   {
    "id": "edit_payment_mode",
@@ -587,13 +587,13 @@
     "BR-02",
     "BR-05"
    ],
-   "slot": 0,
+   "slot": 6,
    "w": 206,
    "h": 60,
    "x": 1523.0,
-   "y": 450.0,
+   "y": 1770.0,
    "cx": 1626.0,
-   "cy": 480.0
+   "cy": 1800.0
   },
   {
    "id": "view_bills",
@@ -667,13 +667,13 @@
    "label": "View Service Accounts",
    "sub": "CUS-001-CAM-20",
    "desc": "Agent shall be able to view service account information.",
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 60,
    "x": 2027.0,
-   "y": 670.0,
+   "y": 450.0,
    "cx": 2130.0,
-   "cy": 700.0
+   "cy": 480.0
   },
   {
    "id": "view_installed_assets",
@@ -683,13 +683,13 @@
    "label": "View Installed Assets",
    "sub": "CUS-001-CAM-21",
    "desc": "Agent shall be able to view installed assets associated with service accounts.",
-   "slot": 0,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 2027.0,
-   "y": 450.0,
+   "y": 670.0,
    "cx": 2130.0,
-   "cy": 480.0
+   "cy": 700.0
   },
   {
    "id": "view_interactions",

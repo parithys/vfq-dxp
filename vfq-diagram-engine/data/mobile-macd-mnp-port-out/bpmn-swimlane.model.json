@@ -160,13 +160,13 @@
      "to": "system_auto_decision"
     }
    ],
-   "slot": 2,
+   "slot": 0,
    "w": 150,
    "h": 100,
    "x": 483.0,
-   "y": 1870.0,
+   "y": 1430.0,
    "cx": 558.0,
-   "cy": 1920.0
+   "cy": 1480.0
   },
   {
    "id": "system_auto_decision",
@@ -177,13 +177,13 @@
    "sub": "MOB_PORTOUT_RETL_001.01",
    "desc": "System automatically accepts or rejects the Port Out request when the agent does not validate the Trouble Ticket within the allowed window.",
    "controls": [],
-   "slot": 0,
+   "slot": 1,
    "w": 190,
    "h": 100,
    "x": 463.0,
-   "y": 1430.0,
+   "y": 1650.0,
    "cx": 558.0,
-   "cy": 1480.0
+   "cy": 1700.0
   },
   {
    "id": "system_field_validation",
@@ -196,13 +196,13 @@
    "controls": [
     "Systems shall validate fields like Customer Name, Customer Id, ID Type and Service Type."
    ],
-   "slot": 1,
+   "slot": 2,
    "w": 176,
    "h": 100,
    "x": 470.0,
-   "y": 1650.0,
+   "y": 1870.0,
    "cx": 558.0,
-   "cy": 1700.0
+   "cy": 1920.0
   },
   {
    "id": "agent_validate_mnp_form",

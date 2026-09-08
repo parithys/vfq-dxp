@@ -94,13 +94,13 @@
    "controls": [
     "Only one process can be initiated per transaction."
    ],
-   "slot": 1,
+   "slot": 0,
    "w": 190,
    "h": 100,
    "x": 191.0,
-   "y": 1370.0,
+   "y": 1150.0,
    "cx": 286.0,
-   "cy": 1420.0
+   "cy": 1200.0
   },
   {
    "id": "tracking_record",
@@ -113,13 +113,13 @@
    "controls": [
     "Mandatory fields for creating the tracking record will be captured during design phase."
    ],
-   "slot": 0,
+   "slot": 1,
    "w": 190,
    "h": 100,
    "x": 191.0,
-   "y": 1150.0,
+   "y": 1370.0,
    "cx": 286.0,
-   "cy": 1200.0
+   "cy": 1420.0
   },
   {
    "id": "cust_verif_process",
@@ -312,13 +312,13 @@
      "to": "reject_blacklist"
     }
    ],
-   "slot": 3,
+   "slot": 1,
    "w": 176,
    "h": 70,
    "x": 702.0,
-   "y": 1825.0,
+   "y": 1385.0,
    "cx": 790.0,
-   "cy": 1860.0
+   "cy": 1420.0
   },
   {
    "id": "reject_blacklist",
@@ -331,13 +331,13 @@
    "controls": [
     "Blacklisted customers shall not be eligible for plan change requests."
    ],
-   "slot": 2,
+   "slot": 0,
    "w": 190,
    "h": 100,
    "x": 695.0,
-   "y": 1590.0,
+   "y": 1150.0,
    "cx": 790.0,
-   "cy": 1640.0
+   "cy": 1200.0
   },
   {
    "id": "lockin_check",
@@ -364,13 +364,13 @@
      "to": "reject_lockin"
     }
    ],
-   "slot": 1,
+   "slot": 2,
    "w": 150,
    "h": 100,
    "x": 715.0,
-   "y": 1370.0,
+   "y": 1590.0,
    "cx": 790.0,
-   "cy": 1420.0
+   "cy": 1640.0
   },
   {
    "id": "reject_lockin",
@@ -447,13 +447,13 @@
     "System should automatically calculate the penalty amount for Plan Downgrade and process it during billing.",
     "If the Plan price is same as previous plan then it'll be just plan update and no need to consider it as Upgrade or Downgrade."
    ],
-   "slot": 0,
+   "slot": 3,
    "w": 206,
    "h": 100,
    "x": 687.0,
-   "y": 1150.0,
+   "y": 1810.0,
    "cx": 790.0,
-   "cy": 1200.0
+   "cy": 1860.0
   },
   {
    "id": "cart_creation",
@@ -516,13 +516,13 @@
     "Plan, Price - Based on the New plan selected",
     "Existing details (Non Editable): SIM, MSISDN"
    ],
-   "slot": 1,
+   "slot": 0,
    "w": 176,
    "h": 70,
    "x": 954.0,
-   "y": 665.0,
+   "y": 445.0,
    "cx": 1042.0,
-   "cy": 700.0
+   "cy": 480.0
   },
   {
    "id": "caf_documents",
@@ -533,13 +533,13 @@
    "sub": "MOB_POST_PLN_CHG_RETL_001.08",
    "desc": "Agent shall not be able to remove any previous CAF documents or other additional documents.",
    "controls": [],
-   "slot": 0,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 939.0,
-   "y": 450.0,
+   "y": 670.0,
    "cx": 1042.0,
-   "cy": 480.0
+   "cy": 700.0
   },
   {
    "id": "payment_processing",

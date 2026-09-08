@@ -186,13 +186,13 @@
    "label": "Address Locked After Check",
    "sub": "FAR_001_RFS_07",
    "desc": "Installation address updated after RFS check and rendered non-editable; recapture required to change (BR-026).",
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 100,
    "x": 727.0,
-   "y": 650.0,
+   "y": 430.0,
    "cx": 830.0,
-   "cy": 700.0
+   "cy": 480.0
   },
   {
    "id": "rfs_poa_upload",
@@ -202,13 +202,13 @@
    "label": "Proof of Address Upload",
    "sub": "FAR_001_RFS_08",
    "desc": "Tenancy document uploaded as PDF or Word, max 2MB (BR-022, P-01, P-03).",
-   "slot": 0,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 727.0,
-   "y": 450.0,
+   "y": 670.0,
    "cx": 830.0,
-   "cy": 480.0
+   "cy": 700.0
   },
   {
    "id": "ecc_check",
@@ -276,13 +276,13 @@
    "label": "Workforce Failure Handling",
    "sub": "WFM (FAR_001_WFM_11)",
    "desc": "Fault ticket created if technician reports an issue during activation; WFM task updated on ticket closure; appointment can be rescheduled (BR-077).",
-   "slot": 3,
+   "slot": 2,
    "w": 190,
    "h": 100,
    "x": 1743.0,
-   "y": 8590.0,
+   "y": 8370.0,
    "cx": 1838.0,
-   "cy": 8640.0
+   "cy": 8420.0
   },
   {
    "id": "cvc_checkout",
@@ -308,13 +308,13 @@
    "label": "Payment & Inventory",
    "sub": "PAY (FAR_001_PAY_01)",
    "desc": "Follows same PAY capability as Mobile Post Paid Journey (payment summary, upfront charge/deposit, WinCash handling, receipt issuance). (BR-040).",
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 60,
    "x": 2239.0,
-   "y": 7450.0,
+   "y": 7230.0,
    "cx": 2342.0,
-   "cy": 7480.0
+   "cy": 7260.0
   },
   {
    "id": "ord_submit",
@@ -340,13 +340,13 @@
    "label": "Order Submission & Fulfilment Routing",
    "sub": "ORD (FAR_001_ORD_02)",
    "desc": "Follows same ORD capability as Mobile Post Paid Journey. (BR-040).",
-   "slot": 1,
+   "slot": 0,
    "w": 190,
    "h": 100,
    "x": 2499.0,
-   "y": 9310.0,
+   "y": 9090.0,
    "cx": 2594.0,
-   "cy": 9360.0
+   "cy": 9140.0
   },
   {
    "id": "not_order",
@@ -371,13 +371,13 @@
    "phase": 9,
    "label": "Order Status to Workforce / CRM",
    "desc": "Order status updated to WFM so technician may proceed; CRM receives activation status (BR-100).",
-   "slot": 0,
+   "slot": 5,
    "w": 190,
    "h": 100,
    "x": 2499.0,
-   "y": 9090.0,
+   "y": 10190.0,
    "cx": 2594.0,
-   "cy": 9140.0
+   "cy": 10240.0
   },
   {
    "id": "ins_detect",
@@ -607,13 +607,13 @@
    "label": "Existing Service Retrieval",
    "sub": "FIB_MIG_RTL_003_04",
    "desc": "Retrieves existing service, equipment, MSISDN, SIM and billing information from the active FWA subscription; displayed to agent before confirmation (BR-142).",
-   "slot": 3,
+   "slot": 2,
    "w": 190,
    "h": 100,
    "x": 3255.0,
-   "y": 2470.0,
+   "y": 2250.0,
    "cx": 3350.0,
-   "cy": 2520.0
+   "cy": 2300.0
   },
   {
    "id": "mig_order_capture",
@@ -623,13 +623,13 @@
    "label": "Migration Order Capture",
    "sub": "FIB_MIG_RTL_003_05",
    "desc": "Captures migration order, customer contact preference, language, alternate number (BR-142).",
-   "slot": 2,
+   "slot": 3,
    "w": 206,
    "h": 60,
    "x": 3247.0,
-   "y": 2270.0,
+   "y": 2490.0,
    "cx": 3350.0,
-   "cy": 2300.0
+   "cy": 2520.0
   },
   {
    "id": "mig_appointment",
@@ -639,13 +639,13 @@
    "label": "Installation Appointment Creation",
    "sub": "FIB_MIG_RTL_003_06",
    "desc": "Creates a Fibre installation appointment through WFM; appointment mandatory for all migrations (BR-143).",
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 100,
    "x": 3247.0,
-   "y": 8150.0,
+   "y": 7930.0,
    "cx": 3350.0,
-   "cy": 8200.0
+   "cy": 7980.0
   },
   {
    "id": "mig_telesales",
@@ -671,13 +671,13 @@
    "label": "Outdoor Device Recovery Appointment",
    "sub": "FIB_MIG_RTL_003_08",
    "desc": "Creates a device recovery appointment when migrating from FWA Outdoor to Fibre; recovery task exists before migration completion (BR-144).",
-   "slot": 0,
+   "slot": 1,
    "w": 206,
    "h": 100,
    "x": 3247.0,
-   "y": 7930.0,
+   "y": 8150.0,
    "cx": 3350.0,
-   "cy": 7980.0
+   "cy": 8200.0
   },
   {
    "id": "mig_continuity",
@@ -687,13 +687,13 @@
    "label": "Existing Service Continuity",
    "sub": "FIB_MIG_RTL_003_09",
    "desc": "Existing FWA service kept active until Fibre installation successfully completed; no interruption before successful activation (BR-145A).",
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 100,
    "x": 3247.0,
-   "y": 9310.0,
+   "y": 9090.0,
    "cx": 3350.0,
-   "cy": 9360.0
+   "cy": 9140.0
   },
   {
    "id": "mig_fibre_trigger",
@@ -703,13 +703,13 @@
    "label": "Fibre Activation Trigger",
    "sub": "FIB_MIG_RTL_003_10",
    "desc": "Fibre activation triggered only after successful installation closure from WFM (BR-145B).",
-   "slot": 2,
+   "slot": 1,
    "w": 190,
    "h": 100,
    "x": 3255.0,
-   "y": 9530.0,
+   "y": 9310.0,
    "cx": 3350.0,
-   "cy": 9580.0
+   "cy": 9360.0
   },
   {
    "id": "mig_sim_deactivate",
@@ -719,13 +719,13 @@
    "label": "SIM Deactivation",
    "sub": "FIB_MIG_RTL_003_11",
    "desc": "FWA SIM deactivated only after successful Fibre activation; SIM remains active until Fibre activation succeeds (BR-145).",
-   "slot": 3,
+   "slot": 2,
    "w": 190,
    "h": 56,
    "x": 3255.0,
-   "y": 9772.0,
+   "y": 9552.0,
    "cx": 3350.0,
-   "cy": 9800.0
+   "cy": 9580.0
   },
   {
    "id": "mig_resource_release",
@@ -735,13 +735,13 @@
    "label": "Resource Release",
    "sub": "FIB_MIG_RTL_003_12",
    "desc": "Releases FWA-specific resources, SIM inventory and associated network resources following successful migration (BR-145C).",
-   "slot": 0,
+   "slot": 3,
    "w": 190,
    "h": 56,
    "x": 3255.0,
-   "y": 9112.0,
+   "y": 9772.0,
    "cx": 3350.0,
-   "cy": 9140.0
+   "cy": 9800.0
   },
   {
    "id": "mig_billing",
@@ -888,13 +888,13 @@
      "to": "hmv_uninstall"
     }
    ],
-   "slot": 3,
+   "slot": 2,
    "w": 150,
    "h": 100,
    "x": 3527.0,
-   "y": 8590.0,
+   "y": 8370.0,
    "cx": 3602.0,
-   "cy": 8640.0
+   "cy": 8420.0
   },
   {
    "id": "hmv_uninstall",
@@ -904,13 +904,13 @@
    "label": "Outdoor Device Uninstallation Appointment",
    "sub": "FIB_HMV_RTL_004_05",
    "desc": "Uninstallation appointment for the FWA outdoor device at the old location captured for a move originating from FWA outdoor (BR-154).",
-   "slot": 2,
+   "slot": 3,
    "w": 206,
    "h": 100,
    "x": 3499.0,
-   "y": 8370.0,
+   "y": 8590.0,
    "cx": 3602.0,
-   "cy": 8420.0
+   "cy": 8640.0
   },
   {
    "id": "hmv_termination",
@@ -1046,13 +1046,13 @@
    "label": "Portability Form Submission",
    "sub": "FIB_FPI_RTL_005_04",
    "desc": "Agent completes and submits the portability form; customer signs; signed form uploaded before port-in proceeds (BR-162).",
-   "slot": 2,
+   "slot": 3,
    "w": 206,
    "h": 100,
    "x": 3751.0,
-   "y": 870.0,
+   "y": 1090.0,
    "cx": 3854.0,
-   "cy": 920.0
+   "cy": 1140.0
   },
   {
    "id": "fpi_request",
@@ -1181,13 +1181,13 @@
    "phase": 15,
    "label": "Port Out Trouble Ticket Created",
    "desc": "Trouble ticket created (BR-170).",
-   "slot": 1,
+   "slot": 0,
    "w": 190,
    "h": 100,
    "x": 4011.0,
-   "y": 2030.0,
+   "y": 1810.0,
    "cx": 4106.0,
-   "cy": 2080.0
+   "cy": 1860.0
   },
   {
    "id": "fpo_queue",
@@ -1197,13 +1197,13 @@
    "label": "Queue Assignment & Initial SLA Timer",
    "sub": "FIB_FPO_RTL_006_02",
    "desc": "Auto-assigned to the portability queue; initial validation service level timer started (BR-171, Open, P-11: 2 hours).",
-   "slot": 0,
+   "slot": 1,
    "w": 206,
    "h": 100,
    "x": 4003.0,
-   "y": 1810.0,
+   "y": 2030.0,
    "cx": 4106.0,
-   "cy": 1860.0
+   "cy": 2080.0
   },
   {
    "id": "fpo_outstanding",
@@ -1239,13 +1239,13 @@
    "label": "Service Level Extension",
    "sub": "FIB_FPO_RTL_006_06",
    "desc": "Service level timer extended from initial period to final action period where documents are valid (BR-175, P-12: 24 hours).",
-   "slot": 4,
+   "slot": 3,
    "w": 206,
    "h": 60,
    "x": 4003.0,
-   "y": 2710.0,
+   "y": 2490.0,
    "cx": 4106.0,
-   "cy": 2740.0
+   "cy": 2520.0
   },
   {
    "id": "fpo_breach",
@@ -1265,13 +1265,13 @@
      "to": "fpo_status_comm"
     }
    ],
-   "slot": 2,
+   "slot": 4,
    "w": 150,
    "h": 100,
    "x": 4031.0,
-   "y": 2250.0,
+   "y": 2690.0,
    "cx": 4106.0,
-   "cy": 2300.0
+   "cy": 2740.0
   },
   {
    "id": "fpo_status_comm",
@@ -1344,13 +1344,13 @@
    "phase": 15,
    "label": "Port Out Completed",
    "desc": "Port-out journey complete: service deactivated, inventory quarantined.",
-   "slot": 3,
+   "slot": 2,
    "w": 84,
    "h": 84,
    "x": 4064.0,
-   "y": 2478.0,
+   "y": 2258.0,
    "cx": 4106.0,
-   "cy": 2520.0
+   "cy": 2300.0
   },
   {
    "id": "ter_start",
@@ -1433,13 +1433,13 @@
    "label": "Outstanding Dues Validation",
    "sub": "FIB_TER_RTL_007_04",
    "desc": "Retrieves outstanding balance; prevents or conditionally allows termination based on configured VFQ settlement rule (BR-203).",
-   "slot": 1,
+   "slot": 0,
    "w": 176,
    "h": 100,
    "x": 4270.0,
-   "y": 7430.0,
+   "y": 7210.0,
    "cx": 4358.0,
-   "cy": 7480.0
+   "cy": 7260.0
   },
   {
    "id": "ter_penalty",
@@ -1449,13 +1449,13 @@
    "label": "Penalty Charge Display",
    "sub": "FIB_TER_RTL_007_05",
    "desc": "Calculates and displays applicable early termination/lock-in penalty before confirmation (BR-204; plan lock-in is 3 months per CAF).",
-   "slot": 0,
+   "slot": 1,
    "w": 190,
    "h": 56,
    "x": 4263.0,
-   "y": 7232.0,
+   "y": 7452.0,
    "cx": 4358.0,
-   "cy": 7260.0
+   "cy": 7480.0
   },
   {
    "id": "ter_recovery",
@@ -1607,13 +1607,13 @@
    "phase": 17,
    "label": "GIS Data Ingestion",
    "desc": "Site and building data from the geographic information system ingested into the inventory management system, the master for building and connectivity data (BR-190).",
-   "slot": 1,
+   "slot": 0,
    "w": 84,
    "h": 84,
    "x": 4568.0,
-   "y": 5178.0,
+   "y": 4958.0,
    "cx": 4610.0,
-   "cy": 5220.0
+   "cy": 5000.0
   },
   {
    "id": "rfs_gtm_file",
@@ -1622,13 +1622,13 @@
    "phase": 17,
    "label": "Go-to-Market File Generation",
    "desc": "Go-to-market file generated from the inventory management system as a full extract (BR-191).",
-   "slot": 2,
+   "slot": 1,
    "w": 190,
    "h": 100,
    "x": 4515.0,
-   "y": 5390.0,
+   "y": 5170.0,
    "cx": 4610.0,
-   "cy": 5440.0
+   "cy": 5220.0
   },
   {
    "id": "rfs_pickup",
@@ -1638,13 +1638,13 @@
    "label": "Pickup & Transformation",
    "sub": "FIB_RFS_008_01",
    "desc": "Go-to-market file picked up through the mediation layer, filtered and transformed into the format required by each downstream system (BR-192, Open).",
-   "slot": 3,
+   "slot": 2,
    "w": 190,
    "h": 100,
    "x": 4515.0,
-   "y": 5610.0,
+   "y": 5390.0,
    "cx": 4610.0,
-   "cy": 5660.0
+   "cy": 5440.0
   },
   {
    "id": "rfs_distribute",
@@ -1654,13 +1654,13 @@
    "label": "Distribution to Downstream Systems",
    "sub": "FIB_RFS_008_02",
    "desc": "Distributed to inventory management system (full extract), RFS portal, CRM (delta) and analytics data warehouse (BR-193, Open).",
-   "slot": 4,
+   "slot": 3,
    "w": 190,
    "h": 100,
    "x": 4515.0,
-   "y": 5830.0,
+   "y": 5610.0,
    "cx": 4610.0,
-   "cy": 5880.0
+   "cy": 5660.0
   },
   {
    "id": "rfs_id_mapping",
@@ -1670,13 +1670,13 @@
    "label": "Operator Identifier Generation & Mapping",
    "sub": "FIB_RFS_008_03",
    "desc": "Operator identifier generated separately and mapped to the utility identifier through field survey, supporting one-to-one and one-to-many relationships (BR-194, Open).",
-   "slot": 5,
+   "slot": 4,
    "w": 190,
    "h": 100,
    "x": 4515.0,
-   "y": 6050.0,
+   "y": 5830.0,
    "cx": 4610.0,
-   "cy": 6100.0
+   "cy": 5880.0
   },
   {
    "id": "rfs_status_update",
@@ -1686,13 +1686,13 @@
    "label": "Ready for Service Status Update",
    "sub": "FIB_RFS_008_04",
    "desc": "Marks a building ready for service once ready for provisioning; records applicable service level category (BR-195, Open).",
-   "slot": 6,
+   "slot": 5,
    "w": 190,
    "h": 100,
    "x": 4515.0,
-   "y": 6270.0,
+   "y": 6050.0,
    "cx": 4610.0,
-   "cy": 6320.0
+   "cy": 6100.0
   },
   {
    "id": "rfs_portal_search",
@@ -1702,13 +1702,13 @@
    "label": "RFS Portal Search",
    "sub": "FIB_RFS_008_05",
    "desc": "Sales team searches the RFS portal by address, utility identifier or area (BR-196).",
-   "slot": 7,
+   "slot": 6,
    "w": 190,
    "h": 56,
    "x": 4515.0,
-   "y": 6512.0,
+   "y": 6292.0,
    "cx": 4610.0,
-   "cy": 6540.0
+   "cy": 6320.0
   },
   {
    "id": "rfs_recommend",
@@ -1718,13 +1718,13 @@
    "label": "Recommendation Integration",
    "sub": "FIB_RFS_008_06",
    "desc": "Receives offer recommendations from the big data system into the RFS portal (BR-197, Open).",
-   "slot": 0,
+   "slot": 7,
    "w": 190,
    "h": 100,
    "x": 4515.0,
-   "y": 4950.0,
+   "y": 6490.0,
    "cx": 4610.0,
-   "cy": 5000.0
+   "cy": 6540.0
   },
   {
    "id": "rfs_lead",
@@ -1781,13 +1781,13 @@
    "label": "Present Eligible Base Plans",
    "sub": "FAR_001_QPC_01",
    "desc": "System presents only the fibre base plans eligible for the customer, determined by the service type available at the address. (BR-050).",
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 100,
    "x": 1483.0,
-   "y": 2030.0,
+   "y": 1810.0,
    "cx": 1586.0,
-   "cy": 2080.0
+   "cy": 1860.0
   },
   {
    "id": "qpc_iptv_bundle",
@@ -1797,13 +1797,13 @@
    "label": "Bundle IPTV by Default",
    "sub": "FAR_001_QPC_02",
    "desc": "System bundles the IPTV offering by default with the base plan and displays all associated child plans. (BR-051).",
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 1483.0,
-   "y": 2270.0,
+   "y": 2050.0,
    "cx": 1586.0,
-   "cy": 2300.0
+   "cy": 2080.0
   },
   {
    "id": "qpc_iptv_remove",
@@ -1813,13 +1813,13 @@
    "label": "Remove IPTV Offering",
    "sub": "FAR_001_QPC_03",
    "desc": "Retail Agent may remove the IPTV offering from the cart at customer request. (BR-051).",
-   "slot": 3,
+   "slot": 2,
    "w": 206,
    "h": 60,
    "x": 1483.0,
-   "y": 2490.0,
+   "y": 2270.0,
    "cx": 1586.0,
-   "cy": 2520.0
+   "cy": 2300.0
   },
   {
    "id": "qpc_addon_mapped",
@@ -1829,13 +1829,13 @@
    "label": "Add Mapped Add-Ons Only",
    "sub": "FAR_001_QPC_04",
    "desc": "Retail Agent may add only an add-on pre-configured and mapped to the base plan; unmapped add-ons are blocked. (BR-052).",
-   "slot": 5,
+   "slot": 3,
    "w": 206,
    "h": 60,
    "x": 1483.0,
-   "y": 2930.0,
+   "y": 2490.0,
    "cx": 1586.0,
-   "cy": 2960.0
+   "cy": 2520.0
   },
   {
    "id": "qpc_discount_mapped",
@@ -1845,13 +1845,13 @@
    "label": "Display Mapped Discounts Only",
    "sub": "FAR_001_QPC_05",
    "desc": "System displays only a discount mapped to the product; the section is empty where none applies. (BR-053).",
-   "slot": 6,
+   "slot": 4,
    "w": 206,
    "h": 100,
    "x": 1483.0,
-   "y": 3130.0,
+   "y": 2690.0,
    "cx": 1586.0,
-   "cy": 3180.0
+   "cy": 2740.0
   },
   {
    "id": "qpc_price_recalc",
@@ -1861,13 +1861,13 @@
    "label": "Recalculate Cart Price",
    "sub": "FAR_001_QPC_06",
    "desc": "System recalculates one-time charges, recurring charges and discounts whenever a product is added, amended or removed from the cart. (BR-054).",
-   "slot": 7,
+   "slot": 5,
    "w": 190,
    "h": 56,
    "x": 1491.0,
-   "y": 3372.0,
+   "y": 2932.0,
    "cx": 1586.0,
-   "cy": 3400.0
+   "cy": 2960.0
   },
   {
    "id": "num_fln_select",
@@ -1877,13 +1877,13 @@
    "label": "Select Fixed Line Number",
    "sub": "FAR_001_NUM_01",
    "desc": "Retail Agent searches the free number list and selects a preferred fixed line number into the cart. (BR-060).",
-   "slot": 8,
+   "slot": 6,
    "w": 206,
    "h": 60,
    "x": 1483.0,
-   "y": 3590.0,
+   "y": 3150.0,
    "cx": 1586.0,
-   "cy": 3620.0
+   "cy": 3180.0
   },
   {
    "id": "num_mobile_fwa_select",
@@ -1893,13 +1893,13 @@
    "label": "Select Mobile Number for FWA",
    "sub": "FAR_001_NUM_02",
    "desc": "Retail Agent searches the free number list and selects a mobile number into the cart, only for a fixed wireless access journey. (BR-061).",
-   "slot": 9,
+   "slot": 7,
    "w": 206,
    "h": 100,
    "x": 1483.0,
-   "y": 3790.0,
+   "y": 3350.0,
    "cx": 1586.0,
-   "cy": 3840.0
+   "cy": 3400.0
   },
   {
    "id": "num_star_prohibit_fwa",
@@ -1909,13 +1909,13 @@
    "label": "Prohibit Star Number for FWA",
    "sub": "FAR_001_NUM_03",
    "desc": "A star number may not be selected for a fixed wireless access indoor or outdoor journey. (BR-061).",
-   "slot": 10,
+   "slot": 8,
    "w": 206,
    "h": 100,
    "x": 1483.0,
-   "y": 4010.0,
+   "y": 3570.0,
    "cx": 1586.0,
-   "cy": 4060.0
+   "cy": 3620.0
   },
   {
    "id": "num_fln_select_alt",
@@ -1925,13 +1925,13 @@
    "label": "FLN Selection",
    "sub": "FAR_001_NUM_06",
    "desc": "Retail Agent searches the FLN from the list of FLN and adds it to the cart; a FLN can be searched and added for a Fiber or Fixed Wireless Access journey (BR-060).",
-   "slot": 11,
+   "slot": 9,
    "w": 206,
    "h": 60,
    "x": 1483.0,
-   "y": 4250.0,
+   "y": 3810.0,
    "cx": 1586.0,
-   "cy": 4280.0
+   "cy": 3840.0
   },
   {
    "id": "num_msisdn_select",
@@ -1941,13 +1941,13 @@
    "label": "MSISDN Selection (FWA)",
    "sub": "FAR_001_NUM_05",
    "desc": "Follows the same NUM capability as Mobile Post Paid Journey (MPAR_001_NUM_13). A search returns available free numbers restricted to fixed wireless access journeys and a selected mobile number is added to the cart; a star number is not offered or selectable for a fixed wireless access journey (BR-061).",
-   "slot": 12,
+   "slot": 10,
    "w": 206,
    "h": 60,
    "x": 1483.0,
-   "y": 4470.0,
+   "y": 4030.0,
    "cx": 1586.0,
-   "cy": 4500.0
+   "cy": 4060.0
   },
   {
    "id": "num_review",
@@ -1967,13 +1967,13 @@
      "to": "wfm_slot_retrieval"
     }
    ],
-   "slot": 4,
+   "slot": 11,
    "w": 176,
    "h": 100,
    "x": 1498.0,
-   "y": 2690.0,
+   "y": 4230.0,
    "cx": 1586.0,
-   "cy": 2740.0
+   "cy": 4280.0
   },
   {
    "id": "caf_offline_upload",
@@ -1999,13 +1999,13 @@
    "label": "Capture Digital Signature",
    "sub": "FAR_001_CAF_03",
    "desc": "Retail Agent selects the digital CAF option and touch-screen option; system displays the captured signature. (BR-083).",
-   "slot": 3,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 1987.0,
-   "y": 2470.0,
+   "y": 2250.0,
    "cx": 2090.0,
-   "cy": 2520.0
+   "cy": 2300.0
   },
   {
    "id": "caf_skip_by_role",
@@ -2015,13 +2015,13 @@
    "label": "Skip CAF by Fulfilment Role",
    "sub": "FAR_001_CAF_04",
    "desc": "The CAF submission step may be skipped by an agent holding the fulfilment role. (BR-084).",
-   "slot": 4,
+   "slot": 3,
    "w": 206,
    "h": 100,
    "x": 1987.0,
-   "y": 2690.0,
+   "y": 2470.0,
    "cx": 2090.0,
-   "cy": 2740.0
+   "cy": 2520.0
   },
   {
    "id": "caf_supporting_docs",
@@ -2031,13 +2031,13 @@
    "label": "Upload Supporting Documents",
    "sub": "FAR_001_CAF_05",
    "desc": "Retail Agent uploads additional and supporting documents into a separate section (PDF/JPG). (BR-082).",
-   "slot": 5,
+   "slot": 4,
    "w": 206,
    "h": 100,
    "x": 1987.0,
-   "y": 2910.0,
+   "y": 2690.0,
    "cx": 2090.0,
-   "cy": 2960.0
+   "cy": 2740.0
   },
   {
    "id": "caf_activity_comments",
@@ -2047,13 +2047,13 @@
    "label": "Capture Activity Comments",
    "sub": "FAR_001_CAF_06",
    "desc": "Retail Agent captures activity comments to be passed to the field workforce management task. (BR-085).",
-   "slot": 2,
+   "slot": 5,
    "w": 206,
    "h": 100,
    "x": 1987.0,
-   "y": 2250.0,
+   "y": 2910.0,
    "cx": 2090.0,
-   "cy": 2300.0
+   "cy": 2960.0
   },
   {
    "id": "rfs_availability_search",
@@ -2079,13 +2079,13 @@
    "label": "Auto-fill Address from RFS",
    "sub": "FAR_001_RFS_04",
    "desc": "System auto-fills the address from the ready-for-service data based on the utility identifier. (BR-023).",
-   "slot": 2,
+   "slot": 1,
    "w": 190,
    "h": 100,
    "x": 735.0,
-   "y": 5390.0,
+   "y": 5170.0,
    "cx": 830.0,
-   "cy": 5440.0
+   "cy": 5220.0
   },
   {
    "id": "rfs_service_type_display",
@@ -2095,13 +2095,13 @@
    "label": "Display Available Service Types",
    "sub": "FAR_001_RFS_05",
    "desc": "System displays the service types available at the searched location: Fibre, FWA indoor, FWA outdoor. (BR-024).",
-   "slot": 3,
+   "slot": 2,
    "w": 190,
    "h": 100,
    "x": 735.0,
-   "y": 5610.0,
+   "y": 5390.0,
    "cx": 830.0,
-   "cy": 5660.0
+   "cy": 5440.0
   },
   {
    "id": "rfs_cpe_detect",
@@ -2111,13 +2111,13 @@
    "label": "Detect CPE / ONT Information",
    "sub": "FAR_001_RFS_06",
    "desc": "System displays the CPE and ONT information retrieved from the ready-for-service response, where available. (BR-025).",
-   "slot": 1,
+   "slot": 3,
    "w": 190,
    "h": 100,
    "x": 735.0,
-   "y": 5170.0,
+   "y": 5610.0,
    "cx": 830.0,
-   "cy": 5220.0
+   "cy": 5660.0
   },
   {
    "id": "wfm_task_capture",
@@ -2159,13 +2159,13 @@
    "label": "Capture Indoor & Outdoor Device Serials",
    "sub": "FAR_001_WFM_09",
    "desc": "System captures both the indoor and outdoor CPE serial numbers for a fixed wireless access outdoor journey. (BR-075).",
-   "slot": 4,
+   "slot": 3,
    "w": 190,
    "h": 100,
    "x": 1743.0,
-   "y": 8810.0,
+   "y": 8590.0,
    "cx": 1838.0,
-   "cy": 8860.0
+   "cy": 8640.0
   },
   {
    "id": "wfm_task_closure",
@@ -2175,13 +2175,13 @@
    "label": "Require WFM Task Closure with Feedback",
    "sub": "FAR_001_WFM_10",
    "desc": "The field workforce management task closure, including captured customer feedback, is required before the order proceeds. (BR-076).",
-   "slot": 2,
+   "slot": 4,
    "w": 176,
    "h": 100,
    "x": 1750.0,
-   "y": 8370.0,
+   "y": 8810.0,
    "cx": 1838.0,
-   "cy": 8420.0
+   "cy": 8860.0
   },
   {
    "id": "net_status_update",
@@ -2191,13 +2191,13 @@
    "label": "Update Order Status to Workforce",
    "sub": "FAR_001_NET_04",
    "desc": "System updates the order status to the field workforce management system so the technician may proceed with order activation. (BR-100).",
-   "slot": 2,
+   "slot": 1,
    "w": 190,
    "h": 100,
    "x": 2499.0,
-   "y": 9530.0,
+   "y": 9310.0,
    "cx": 2594.0,
-   "cy": 9580.0
+   "cy": 9360.0
   },
   {
    "id": "net_activate_fibre",
@@ -2207,13 +2207,13 @@
    "label": "Trigger Network Activation (Fibre)",
    "sub": "FAR_001_NET_01",
    "desc": "System triggers network activation through the order management system on completion of the field workforce management task. (BR-100).",
-   "slot": 3,
+   "slot": 2,
    "w": 190,
    "h": 100,
    "x": 2499.0,
-   "y": 9750.0,
+   "y": 9530.0,
    "cx": 2594.0,
-   "cy": 9800.0
+   "cy": 9580.0
   },
   {
    "id": "net_activate_fwa_indoor",
@@ -2223,13 +2223,13 @@
    "label": "Activate Network (FWA Indoor)",
    "sub": "FAR_001_NET_02",
    "desc": "System proceeds to network activation on the planned activation date without waiting for a field workforce management task, for a fixed wireless access indoor journey. (BR-101).",
-   "slot": 4,
+   "slot": 3,
    "w": 190,
    "h": 100,
    "x": 2499.0,
-   "y": 9970.0,
+   "y": 9750.0,
    "cx": 2594.0,
-   "cy": 10020.0
+   "cy": 9800.0
   },
   {
    "id": "net_activate_sim",
@@ -2239,13 +2239,13 @@
    "label": "Activate SIM with Network (FWA)",
    "sub": "FAR_001_NET_03",
    "desc": "System activates the SIM together with network activation for a fixed wireless access journey (BR-102).",
-   "slot": 5,
+   "slot": 4,
    "w": 206,
    "h": 100,
    "x": 2491.0,
-   "y": 10190.0,
+   "y": 9970.0,
    "cx": 2594.0,
-   "cy": 10240.0
+   "cy": 10020.0
   },
   {
    "id": "fin_billing_pass",
@@ -2303,13 +2303,13 @@
    "label": "Capture Installation Address",
    "sub": "FAR_001_RFS_01",
    "desc": "Retail Agent captures the installation address from the utility identifier or by searching. (BR-020).",
-   "slot": 3,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 727.0,
-   "y": 1090.0,
+   "y": 870.0,
    "cx": 830.0,
-   "cy": 1140.0
+   "cy": 920.0
   },
   {
    "id": "rfs_cascading_addr",
@@ -2319,13 +2319,13 @@
    "label": "Cascading Address Selection",
    "sub": "FAR_001_RFS_02",
    "desc": "System filters the address selection hierarchically so the street list is constrained by the selected zone and the building list by the selected street. (BR-021).",
-   "slot": 2,
+   "slot": 3,
    "w": 190,
    "h": 100,
    "x": 735.0,
-   "y": 870.0,
+   "y": 1090.0,
    "cx": 830.0,
-   "cy": 920.0
+   "cy": 1140.0
   },
   {
    "id": "sim_scan_select",
@@ -2335,13 +2335,13 @@
    "label": "Scan & Select SIM (FWA)",
    "sub": "FAR_001_SIM_01",
    "desc": "Retail Agent scans the SIM serial number and adds it to the cart, only for a fixed wireless access journey. (BR-062).",
-   "slot": 13,
+   "slot": 12,
    "w": 206,
    "h": 60,
    "x": 1483.0,
-   "y": 4690.0,
+   "y": 4470.0,
    "cx": 1586.0,
-   "cy": 4720.0
+   "cy": 4500.0
   },
   {
    "id": "cpe_scan_select",
@@ -2351,13 +2351,13 @@
    "label": "Scan & Select CPE (FWA)",
    "sub": "FAR_001_PHY_01",
    "desc": "Retail Agent scans the customer premises equipment serial number and adds it to the cart, only for a fixed wireless access journey. (BR-062).",
-   "slot": 0,
+   "slot": 13,
    "w": 206,
    "h": 60,
    "x": 1483.0,
-   "y": 1830.0,
+   "y": 4690.0,
    "cx": 1586.0,
-   "cy": 1860.0
+   "cy": 4720.0
   },
   {
    "id": "wfm_slot_retrieval",
@@ -2399,13 +2399,13 @@
    "label": "Capture Appointment Notes & Flags",
    "sub": "FAR_001_WFM_03",
    "desc": "Retail Agent captures additional notes and marks whether the CAF and supporting documents are ready for the appointment. (BR-071).",
-   "slot": 3,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 1735.0,
-   "y": 1090.0,
+   "y": 870.0,
    "cx": 1838.0,
-   "cy": 1140.0
+   "cy": 920.0
   },
   {
    "id": "wfm_info_to_workforce",
@@ -2415,13 +2415,13 @@
    "label": "Pass Appointment Info to Workforce",
    "sub": "FAR_001_WFM_04",
    "desc": "System passes the selected date, time slot, notes and collection flags to the field workforce management system. (BR-071).",
-   "slot": 4,
+   "slot": 3,
    "w": 190,
    "h": 100,
    "x": 1743.0,
-   "y": 1310.0,
+   "y": 1090.0,
    "cx": 1838.0,
-   "cy": 1360.0
+   "cy": 1140.0
   },
   {
    "id": "wfm_skip_fwa_indoor",
@@ -2431,13 +2431,13 @@
    "label": "Skip Appointment for FWA Indoor",
    "sub": "FAR_001_WFM_05",
    "desc": "Appointment booking may be skipped for a fixed wireless access indoor journey. (BR-072).",
-   "slot": 5,
+   "slot": 4,
    "w": 206,
    "h": 100,
    "x": 1735.0,
-   "y": 1530.0,
+   "y": 1310.0,
    "cx": 1838.0,
-   "cy": 1580.0
+   "cy": 1360.0
   },
   {
    "id": "wfm_mandatory_fwa_outdoor",
@@ -2457,13 +2457,13 @@
      "to": "wfm_task_capture"
     }
    ],
-   "slot": 2,
+   "slot": 5,
    "w": 150,
    "h": 100,
    "x": 1763.0,
-   "y": 870.0,
+   "y": 1530.0,
    "cx": 1838.0,
-   "cy": 920.0
+   "cy": 1580.0
   },
   {
    "id": "pay_fln_deplete",
@@ -2473,13 +2473,13 @@
    "label": "Deplete FLN Inventory",
    "sub": "FAR_001_PAY_02",
    "desc": "System depletes the fixed line number inventory in UIM on payment completion. (BR-092).",
-   "slot": 2,
+   "slot": 1,
    "w": 190,
    "h": 56,
    "x": 2247.0,
-   "y": 7672.0,
+   "y": 7452.0,
    "cx": 2342.0,
-   "cy": 7700.0
+   "cy": 7480.0
   },
   {
    "id": "pay_sim_cpe_deplete",
@@ -2489,13 +2489,13 @@
    "label": "Deplete SIM & CPE Inventory",
    "sub": "FAR_001_PAY_03",
    "desc": "System depletes the SIM and CPE inventory at the point-of-sale payment system on payment completion. (BR-092).",
-   "slot": 0,
+   "slot": 2,
    "w": 190,
    "h": 100,
    "x": 2247.0,
-   "y": 7210.0,
+   "y": 7650.0,
    "cx": 2342.0,
-   "cy": 7260.0
+   "cy": 7700.0
   },
   {
    "id": "fin_order_completion",
@@ -2505,13 +2505,13 @@
    "label": "Receive Order Completion",
    "sub": "FAR_001_FIN_04",
    "desc": "System receives the order completion notification from the order management system into the CRM. (BR-112).",
-   "slot": 1,
+   "slot": 0,
    "w": 190,
    "h": 100,
    "x": 2751.0,
-   "y": 2030.0,
+   "y": 1810.0,
    "cx": 2846.0,
-   "cy": 2080.0
+   "cy": 1860.0
   },
   {
    "id": "fin_tracking_update",
@@ -2521,13 +2521,13 @@
    "label": "Resolve Tracking Record",
    "sub": "FAR_001_FIN_05",
    "desc": "System sets the tracking record to resolved once the order is completed and records the order number. (BR-113).",
-   "slot": 0,
+   "slot": 1,
    "w": 84,
    "h": 84,
    "x": 2804.0,
-   "y": 1818.0,
+   "y": 2038.0,
    "cx": 2846.0,
-   "cy": 1860.0
+   "cy": 2080.0
   },
   {
    "id": "fpi_identifier_mark",
@@ -2553,13 +2553,13 @@
    "label": "Set Portability Appointment Date",
    "sub": "FIB_FPI_RTL_005_03",
    "desc": "System sets the portability appointment date in case the portability identifier is marked by the Retail Agent. (BR-161A).",
-   "slot": 3,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 3751.0,
-   "y": 1090.0,
+   "y": 870.0,
    "cx": 3854.0,
-   "cy": 1140.0
+   "cy": 920.0
   },
   {
    "id": "fpo_doc_validate",
@@ -2569,13 +2569,13 @@
    "label": "Validate Portability Form & Identity Document",
    "sub": "FIB_FPO_RTL_006_03",
    "desc": "Retail Agent validates the portability form and identity document received from the number portability system. (BR-172).",
-   "slot": 1,
+   "slot": 0,
    "w": 176,
    "h": 100,
    "x": 4018.0,
-   "y": 650.0,
+   "y": 430.0,
    "cx": 4106.0,
-   "cy": 700.0
+   "cy": 480.0
   },
   {
    "id": "fpo_mandatory_checks",
@@ -2595,13 +2595,13 @@
      "to": "fpo_status_comm"
     }
    ],
-   "slot": 0,
+   "slot": 1,
    "w": 176,
    "h": 100,
    "x": 4018.0,
-   "y": 430.0,
+   "y": 650.0,
    "cx": 4106.0,
-   "cy": 480.0
+   "cy": 700.0
   }
  ],
  "flows": [

@@ -277,13 +277,13 @@
     "Based on nationality from MOI, system flags the customer as HRN.",
     "System displays a message on the customer creation page for advance payment: \"(HRN) Customer needs to pay advance payment of QR 50.\""
    ],
-   "slot": 3,
+   "slot": 1,
    "w": 176,
    "h": 70,
    "x": 722.0,
-   "y": 2705.0,
+   "y": 2265.0,
    "cx": 810.0,
-   "cy": 2740.0
+   "cy": 2300.0
   },
   {
    "id": "contact_creation",
@@ -344,13 +344,13 @@
      "to": "end_rejected"
     }
    ],
-   "slot": 4,
+   "slot": 2,
    "w": 176,
    "h": 100,
    "x": 722.0,
-   "y": 2910.0,
+   "y": 2470.0,
    "cx": 810.0,
-   "cy": 2960.0
+   "cy": 2520.0
   },
   {
    "id": "collections_check",
@@ -375,13 +375,13 @@
      "to": "end_rejected"
     }
    ],
-   "slot": 6,
+   "slot": 4,
    "w": 176,
    "h": 100,
    "x": 722.0,
-   "y": 3350.0,
+   "y": 2910.0,
    "cx": 810.0,
-   "cy": 3400.0
+   "cy": 2960.0
   },
   {
    "id": "line_count_check",
@@ -408,13 +408,13 @@
      "to": "credit_approval"
     }
    ],
-   "slot": 2,
+   "slot": 5,
    "w": 176,
    "h": 70,
    "x": 722.0,
-   "y": 2485.0,
+   "y": 3145.0,
    "cx": 810.0,
-   "cy": 2520.0
+   "cy": 3180.0
   },
   {
    "id": "credit_approval",
@@ -446,13 +446,13 @@
    "controls": [
     "System shall save the journey milestone upon successful validation."
    ],
-   "slot": 1,
+   "slot": 6,
    "w": 206,
    "h": 60,
    "x": 707.0,
-   "y": 2270.0,
+   "y": 3370.0,
    "cx": 810.0,
-   "cy": 2300.0
+   "cy": 3400.0
   },
   {
    "id": "credit_limit_enhancement",
@@ -484,13 +484,13 @@
    "sub": null,
    "desc": "Customer is not eligible for activation (age/ID type) or is blocked (blacklisted / in collections above threshold); journey does not proceed.",
    "controls": [],
-   "slot": 5,
+   "slot": 3,
    "w": 190,
    "h": 100,
    "x": 715.0,
-   "y": 3130.0,
+   "y": 2690.0,
    "cx": 810.0,
-   "cy": 3180.0
+   "cy": 2740.0
   },
   {
    "id": "billing_profile",
@@ -506,13 +506,13 @@
     "One billing profile can have multiple billing contacts \u2014 one primary, others secondary.",
     "Bill invoice shall be sent to the primary billing contact."
    ],
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 60,
    "x": 959.0,
-   "y": 670.0,
+   "y": 450.0,
    "cx": 1062.0,
-   "cy": 700.0
+   "cy": 480.0
   },
   {
    "id": "cart_eligibility",
@@ -528,13 +528,13 @@
     "System shall enforce add-on cardinality rules (minimum/maximum, default quantity) as configured.",
     "System shall only allow eligible discounts on the base plan."
    ],
-   "slot": 3,
+   "slot": 1,
    "w": 206,
    "h": 100,
    "x": 959.0,
-   "y": 1090.0,
+   "y": 650.0,
    "cx": 1062.0,
-   "cy": 1140.0
+   "cy": 700.0
   },
   {
    "id": "privileged_cart",
@@ -549,13 +549,13 @@
     "System will allow Preconfigured Add-On and Privileged Add-on both to be added to the cart.",
     "Currently all agents can provide special discounts, so extra-privilege roles are not required (per VFQ response)."
    ],
-   "slot": 4,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 959.0,
-   "y": 1310.0,
+   "y": 870.0,
    "cx": 1062.0,
-   "cy": 1360.0
+   "cy": 920.0
   },
   {
    "id": "cart_creation",
@@ -570,13 +570,13 @@
     "System shall recalculate cart charges, recurring charges, one-time charges, discounts whenever products are added/modified/removed.",
     "System should apply the latest discount to the cart."
    ],
-   "slot": 0,
+   "slot": 3,
    "w": 206,
    "h": 60,
    "x": 959.0,
-   "y": 450.0,
+   "y": 1110.0,
    "cx": 1062.0,
-   "cy": 480.0
+   "cy": 1140.0
   },
   {
    "id": "save_milestone_2",
@@ -613,13 +613,13 @@
     "Reserved Number is unlocked after 72 hours if not used by the same customer.",
     "Display sequence: 1. Reserved (auto-populate), 2. Star Number, 3. Free Number."
    ],
-   "slot": 5,
+   "slot": 4,
    "w": 206,
    "h": 100,
    "x": 959.0,
-   "y": 1530.0,
+   "y": 1310.0,
    "cx": 1062.0,
-   "cy": 1580.0
+   "cy": 1360.0
   },
   {
    "id": "star_number",
@@ -635,13 +635,13 @@
     "System shall display the Lock-In Period applicable for Star Number.",
     "Display of numbers should be highest to lowest price range."
    ],
-   "slot": 6,
+   "slot": 5,
    "w": 206,
    "h": 60,
    "x": 959.0,
-   "y": 1770.0,
+   "y": 1550.0,
    "cx": 1062.0,
-   "cy": 1800.0
+   "cy": 1580.0
   },
   {
    "id": "free_number",
@@ -654,13 +654,13 @@
    "controls": [
     "System shall display the available numbers from the Free Number category."
    ],
-   "slot": 2,
+   "slot": 6,
    "w": 206,
    "h": 60,
    "x": 959.0,
-   "y": 890.0,
+   "y": 1770.0,
    "cx": 1062.0,
-   "cy": 920.0
+   "cy": 1800.0
   },
   {
    "id": "sim_allocation",
@@ -695,13 +695,13 @@
     "These details must be shown to the agent before CAF submission.",
     "Final Cart and Key Information must match; any cart change before submission must be reflected in the CAF submission Key Information shown to the agent."
    ],
-   "slot": 1,
+   "slot": 0,
    "w": 190,
    "h": 100,
    "x": 1219.0,
-   "y": 2250.0,
+   "y": 2030.0,
    "cx": 1314.0,
-   "cy": 2300.0
+   "cy": 2080.0
   },
   {
    "id": "caf_generate",
@@ -714,13 +714,13 @@
    "controls": [
     "System shall generate the CAF based on a pre-configured template, based on Product Type and Service Type."
    ],
-   "slot": 0,
+   "slot": 1,
    "w": 190,
    "h": 56,
    "x": 1219.0,
-   "y": 2052.0,
+   "y": 2272.0,
    "cx": 1314.0,
-   "cy": 2080.0
+   "cy": 2300.0
   },
   {
    "id": "caf_submission",
@@ -820,13 +820,13 @@
      "to": "cart_creation"
     }
    ],
-   "slot": 3,
+   "slot": 2,
    "w": 176,
    "h": 70,
    "x": 1478.0,
-   "y": 2705.0,
+   "y": 2485.0,
    "cx": 1566.0,
-   "cy": 2740.0
+   "cy": 2520.0
   },
   {
    "id": "payment_processing",
@@ -873,13 +873,13 @@
      "to": "payment_processing"
     }
    ],
-   "slot": 2,
+   "slot": 0,
    "w": 150,
    "h": 100,
    "x": 1491.0,
-   "y": 2470.0,
+   "y": 2030.0,
    "cx": 1566.0,
-   "cy": 2520.0
+   "cy": 2080.0
   },
   {
    "id": "inventory_depletion",
@@ -890,13 +890,13 @@
    "sub": null,
    "desc": "WinCash depletes the physical SIM/Printed eSIM from stock. For Virtual eSIM, the system depletes from the inventory (UIM), since Virtual eSIMs are not maintained through WinCash.",
    "controls": [],
-   "slot": 0,
+   "slot": 1,
    "w": 190,
    "h": 56,
    "x": 1471.0,
-   "y": 2052.0,
+   "y": 2272.0,
    "cx": 1566.0,
-   "cy": 2080.0
+   "cy": 2300.0
   },
   {
    "id": "order_submission",
@@ -926,13 +926,13 @@
    "sub": "MOB_POST_ACT_RETL_001.19.2",
    "desc": "System navigates the agent to Customer 360 -> All Orders View after the order is submitted to downstream systems; agent can view a particular order's detailed view.",
    "controls": [],
-   "slot": 4,
+   "slot": 3,
    "w": 190,
    "h": 100,
    "x": 1471.0,
-   "y": 2910.0,
+   "y": 2690.0,
    "cx": 1566.0,
-   "cy": 2960.0
+   "cy": 2740.0
   },
   {
    "id": "notify_submission",
@@ -943,13 +943,13 @@
    "sub": "MOB_POST_ACT_RETL_001.20",
    "desc": "System sends an order submission notification to the customer through the selected mode (Email/SMS).",
    "controls": [],
-   "slot": 1,
+   "slot": 4,
    "w": 190,
    "h": 100,
    "x": 1471.0,
-   "y": 2250.0,
+   "y": 2910.0,
    "cx": 1566.0,
-   "cy": 2300.0
+   "cy": 2960.0
   },
   {
    "id": "order_completion",
@@ -960,13 +960,13 @@
    "sub": "MOB_POST_ACT_RETL_001.21",
    "desc": "Agent informs the customer that the postpaid activation SLA is 4 business hours after successful order confirmation. System receives order completion from downstream systems into CRM once activation and provisioning are completed.",
    "controls": [],
-   "slot": 1,
+   "slot": 0,
    "w": 190,
    "h": 56,
    "x": 1723.0,
-   "y": 2272.0,
+   "y": 2052.0,
    "cx": 1818.0,
-   "cy": 2300.0
+   "cy": 2080.0
   },
   {
    "id": "tt_update",
@@ -980,13 +980,13 @@
     "System shall update the Order Number in the Trouble Ticket details.",
     "System shall update the mandatory fields while making the TT status Resolved."
    ],
-   "slot": 0,
+   "slot": 1,
    "w": 190,
    "h": 100,
    "x": 1723.0,
-   "y": 2030.0,
+   "y": 2250.0,
    "cx": 1818.0,
-   "cy": 2080.0
+   "cy": 2300.0
   },
   {
    "id": "feedback_survey",

@@ -136,13 +136,13 @@
    "sub": "MOB_POST_ACT_RETL_001.04",
    "desc": "Reuse Requirement of Mobility Postpaid Activation.",
    "controls": [],
-   "slot": 4,
+   "slot": 2,
    "w": 176,
    "h": 70,
    "x": 218.0,
-   "y": 1765.0,
+   "y": 1325.0,
    "cx": 306.0,
-   "cy": 1800.0
+   "cy": 1360.0
   },
   {
    "id": "existing_cust_check",
@@ -187,13 +187,13 @@
    "sub": "MOB_POST_ACT_RETL_001.07",
    "desc": "Reuse Requirement of Mobility Postpaid Activation. Includes: Blacklisted or In Collections Check, Line Count Check, Save Milestone.",
    "controls": [],
-   "slot": 5,
+   "slot": 4,
    "w": 176,
    "h": 70,
    "x": 218.0,
-   "y": 1985.0,
+   "y": 1765.0,
    "cx": 306.0,
-   "cy": 2020.0
+   "cy": 1800.0
   },
   {
    "id": "billing_profile",
@@ -204,13 +204,13 @@
    "sub": "MOB_POST_ACT_RETL_001.08",
    "desc": "Reuse Requirement of Mobility Postpaid Activation.",
    "controls": [],
-   "slot": 2,
+   "slot": 5,
    "w": 190,
    "h": 56,
    "x": 211.0,
-   "y": 1332.0,
+   "y": 1992.0,
    "cx": 306.0,
-   "cy": 1360.0
+   "cy": 2020.0
   },
   {
    "id": "capture_mnp",
@@ -223,13 +223,13 @@
    "controls": [
     "System shall mandatorily capture the MNP details if MNP identifier is selected."
    ],
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 60,
    "x": 455.0,
-   "y": 390.0,
+   "y": 170.0,
    "cx": 558.0,
-   "cy": 420.0
+   "cy": 200.0
   },
   {
    "id": "cart_base_plan",
@@ -240,13 +240,13 @@
    "sub": "MOB_POST_ACT_RETL_001.09",
    "desc": "Reuse Requirement of Mobility Postpaid Activation. Includes: Base Plan Selection, Add on Selection, Discount Selection.",
    "controls": [],
-   "slot": 0,
+   "slot": 1,
    "w": 206,
    "h": 100,
    "x": 455.0,
-   "y": 150.0,
+   "y": 370.0,
    "cx": 558.0,
-   "cy": 200.0
+   "cy": 420.0
   },
   {
    "id": "cart_creation",
@@ -277,13 +277,13 @@
     "System shall auto-populate the MNP Number.",
     "System shall restrict adding any other MSISDN (than the Port-In Number)."
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 176,
    "h": 100,
    "x": 470.0,
-   "y": 1310.0,
+   "y": 1090.0,
    "cx": 558.0,
-   "cy": 1360.0
+   "cy": 1140.0
   },
   {
    "id": "sim_allocation",
@@ -294,13 +294,13 @@
    "sub": "MOB_POST_ACT_RETL_001.13",
    "desc": "Reuse Requirement of Mobility Postpaid Activation. Includes: SIM Inventory Depletion.",
    "controls": [],
-   "slot": 1,
+   "slot": 2,
    "w": 190,
    "h": 100,
    "x": 463.0,
-   "y": 1090.0,
+   "y": 1310.0,
    "cx": 558.0,
-   "cy": 1140.0
+   "cy": 1360.0
   },
   {
    "id": "key_info",
@@ -315,13 +315,13 @@
     "These must be shown to Agent before CAF submission.",
     "Final Cart and Key Information must match; if anything changed in Cart before submission, the CAF Submission Key Information must also be uplifted and shown to the Agent."
    ],
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 60,
    "x": 707.0,
-   "y": 1110.0,
+   "y": 890.0,
    "cx": 810.0,
-   "cy": 1140.0
+   "cy": 920.0
   },
   {
    "id": "caf_generate",
@@ -332,13 +332,13 @@
    "sub": "MOB_POST_ACT_RETL_001.15",
    "desc": "Reuse Requirement of Mobility Postpaid Activation.",
    "controls": [],
-   "slot": 0,
+   "slot": 1,
    "w": 190,
    "h": 56,
    "x": 715.0,
-   "y": 892.0,
+   "y": 1112.0,
    "cx": 810.0,
-   "cy": 920.0
+   "cy": 1140.0
   },
   {
    "id": "caf_submission",
@@ -386,13 +386,13 @@
    "sub": "MOB_POST_ACT_RETL_001.17",
    "desc": "Reuse Requirement of Mobility Postpaid Activation.",
    "controls": [],
-   "slot": 3,
+   "slot": 2,
    "w": 176,
    "h": 70,
    "x": 722.0,
-   "y": 1545.0,
+   "y": 1325.0,
    "cx": 810.0,
-   "cy": 1580.0
+   "cy": 1360.0
   },
   {
    "id": "payment_processing",
@@ -403,13 +403,13 @@
    "sub": "MOB_POST_ACT_RETL_001.18",
    "desc": "Reuse Requirement of Mobility Postpaid Activation.",
    "controls": [],
-   "slot": 2,
+   "slot": 3,
    "w": 190,
    "h": 56,
    "x": 715.0,
-   "y": 1332.0,
+   "y": 1552.0,
    "cx": 810.0,
-   "cy": 1360.0
+   "cy": 1580.0
   },
   {
    "id": "order_submission",
@@ -546,13 +546,13 @@
     "The SLA communicated to the customer for Port-In completion is 48 business hours.",
     "Port-In Request will be automatically Accepted if the customer clears the outstanding amount within the 24-hour conditional acceptance window."
    ],
-   "slot": 4,
+   "slot": 3,
    "w": 176,
    "h": 100,
    "x": 1226.0,
-   "y": 3410.0,
+   "y": 3190.0,
    "cx": 1314.0,
-   "cy": 3460.0
+   "cy": 3240.0
   },
   {
    "id": "donor_decision",
@@ -577,13 +577,13 @@
      "to": "order_update"
     }
    ],
-   "slot": 3,
+   "slot": 4,
    "w": 150,
    "h": 100,
    "x": 1239.0,
-   "y": 3190.0,
+   "y": 3410.0,
    "cx": 1314.0,
-   "cy": 3240.0
+   "cy": 3460.0
   },
   {
    "id": "order_update",
@@ -594,13 +594,13 @@
    "sub": "RETL_MOB_PORTIN_001.06",
    "desc": "System shall wait for MNP request confirmation from NPAS to proceed with order execution or cancellation.",
    "controls": [],
-   "slot": 2,
+   "slot": 0,
    "w": 206,
    "h": 60,
    "x": 1463.0,
-   "y": 1330.0,
+   "y": 890.0,
    "cx": 1566.0,
-   "cy": 1360.0
+   "cy": 920.0
   },
   {
    "id": "mnp_rejection",
@@ -611,13 +611,13 @@
    "sub": "MNP rejection",
    "desc": "System shall cancel the Port-In order if NPAS provides rejection.",
    "controls": [],
-   "slot": 4,
+   "slot": 2,
    "w": 190,
    "h": 58,
    "x": 1471.0,
-   "y": 1771.0,
+   "y": 1331.0,
    "cx": 1566.0,
-   "cy": 1800.0
+   "cy": 1360.0
   },
   {
    "id": "mnp_acceptance",
@@ -634,13 +634,13 @@
     "System shall mark the SIM and MSISDN as activated.",
     "Post network activation and inventory update, System shall send the activation towards billing."
    ],
-   "slot": 0,
+   "slot": 1,
    "w": 190,
    "h": 56,
    "x": 1471.0,
-   "y": 892.0,
+   "y": 1112.0,
    "cx": 1566.0,
-   "cy": 920.0
+   "cy": 1140.0
   },
   {
    "id": "downstream_activation",
@@ -668,13 +668,13 @@
    "sub": "MOB_POST_ACT_RETL_001.21",
    "desc": "Reuse Requirement of Mobility Postpaid Activation.",
    "controls": [],
-   "slot": 5,
+   "slot": 4,
    "w": 190,
    "h": 56,
    "x": 1471.0,
-   "y": 1992.0,
+   "y": 1772.0,
    "cx": 1566.0,
-   "cy": 2020.0
+   "cy": 1800.0
   },
   {
    "id": "notify_completion",
@@ -685,13 +685,13 @@
    "sub": "MOB_POST_ACT_RETL_001.22",
    "desc": "Reuse Requirement of Mobility Postpaid Activation.",
    "controls": [],
-   "slot": 1,
+   "slot": 5,
    "w": 190,
    "h": 100,
    "x": 1471.0,
-   "y": 1090.0,
+   "y": 1970.0,
    "cx": 1566.0,
-   "cy": 1140.0
+   "cy": 2020.0
   },
   {
    "id": "end",

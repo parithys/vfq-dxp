@@ -122,13 +122,13 @@
    "agents": [
     "qnomy"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 190,
    "h": 100,
    "x": 231.0,
-   "y": 1590.0,
+   "y": 1370.0,
    "cx": 326.0,
-   "cy": 1640.0
+   "cy": 1420.0
   },
   {
    "id": "jsm_004",
@@ -139,13 +139,13 @@
    "sub": "AGN_GEN_SEQ_004",
    "desc": "1. System shall automatically create a tracking record upon successful journey initiation, generate a unique Tracking Reference Number, and populate mandatory attributes including Journey Reference, Agent ID, Channel, Service Type and Timestamp.\n\n2. System shall permit resolution only after all mandatory journey validations are complete and automatically close the tracking record after successful journey completion and downstream processing.\n\n3. System shall maintain a complete audit history of tracking-record changes.",
    "controls": [],
-   "slot": 1,
+   "slot": 2,
    "w": 190,
    "h": 100,
    "x": 231.0,
-   "y": 1370.0,
+   "y": 1590.0,
    "cx": 326.0,
-   "cy": 1420.0
+   "cy": 1640.0
   },
   {
    "id": "cam_001",
@@ -209,13 +209,13 @@
    "controls": [
     "ID Type Permitted\n1. Passport\n2. QID\n3. GCC ID\n4. Diplomatic ID"
    ],
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 60,
    "x": 727.0,
-   "y": 390.0,
+   "y": 170.0,
    "cx": 830.0,
-   "cy": 420.0
+   "cy": 200.0
   },
   {
    "id": "kyc_002",
@@ -228,13 +228,13 @@
    "controls": [
     "The maximum number of capture attempts shall be configurable - as of now it is 4."
    ],
-   "slot": 0,
+   "slot": 1,
    "w": 176,
    "h": 70,
    "x": 742.0,
-   "y": 165.0,
+   "y": 385.0,
    "cx": 830.0,
-   "cy": 200.0
+   "cy": 420.0
   },
   {
    "id": "kyc_003",
@@ -250,13 +250,13 @@
    "agents": [
     "moi_idv"
    ],
-   "slot": 1,
+   "slot": 0,
    "w": 150,
    "h": 100,
    "x": 755.0,
-   "y": 2090.0,
+   "y": 1870.0,
    "cx": 830.0,
-   "cy": 2140.0
+   "cy": 1920.0
   },
   {
    "id": "kyc_004",
@@ -272,13 +272,13 @@
    "agents": [
     "moi_idv"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 190,
    "h": 100,
    "x": 735.0,
-   "y": 2310.0,
+   "y": 2090.0,
    "cx": 830.0,
-   "cy": 2360.0
+   "cy": 2140.0
   },
   {
    "id": "kyc_005",
@@ -294,13 +294,13 @@
    "agents": [
     "moi_idv"
    ],
-   "slot": 0,
+   "slot": 2,
    "w": 190,
    "h": 100,
    "x": 735.0,
-   "y": 1870.0,
+   "y": 2310.0,
    "cx": 830.0,
-   "cy": 1920.0
+   "cy": 2360.0
   },
   {
    "id": "ecc_001",
@@ -314,13 +314,13 @@
    "agents": [
     "dwh"
    ],
-   "slot": 1,
+   "slot": 0,
    "w": 190,
    "h": 56,
    "x": 987.0,
-   "y": 2112.0,
+   "y": 1892.0,
    "cx": 1082.0,
-   "cy": 2140.0
+   "cy": 1920.0
   },
   {
    "id": "ecc_002",
@@ -336,13 +336,13 @@
    "agents": [
     "credit_control"
    ],
-   "slot": 0,
+   "slot": 1,
    "w": 150,
    "h": 100,
    "x": 1007.0,
-   "y": 1870.0,
+   "y": 2090.0,
    "cx": 1082.0,
-   "cy": 1920.0
+   "cy": 2140.0
   },
   {
    "id": "ecc_003",
@@ -502,13 +502,13 @@
    "sub": "AGN_GEN_SEQ_023",
    "desc": "The system shall retrieve and auto-populate customer reserved numbers which are eligible for the journey",
    "controls": [],
-   "slot": 1,
+   "slot": 0,
    "w": 190,
    "h": 100,
    "x": 1491.0,
-   "y": 1370.0,
+   "y": 1150.0,
    "cx": 1586.0,
-   "cy": 1420.0
+   "cy": 1200.0
   },
   {
    "id": "num_002",
@@ -541,13 +541,13 @@
    "inputs": [
     "VFQ to provide the plan-to-Star-Number eligibility and pricing rules"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 176,
    "h": 100,
    "x": 1498.0,
-   "y": 1590.0,
+   "y": 1370.0,
    "cx": 1586.0,
-   "cy": 1640.0
+   "cy": 1420.0
   },
   {
    "id": "num_004",
@@ -558,13 +558,13 @@
    "sub": "AGN_GEN_SEQ_026",
    "desc": "The system shall reserve selected Number during order processing and release the number If draft order is expired or cancelled",
    "controls": [],
-   "slot": 0,
+   "slot": 2,
    "w": 190,
    "h": 56,
    "x": 1491.0,
-   "y": 1172.0,
+   "y": 1612.0,
    "cx": 1586.0,
-   "cy": 1200.0
+   "cy": 1640.0
   },
   {
    "id": "num_005",

@@ -23,7 +23,7 @@ other consumer in this skill.
 
 Usage:  python build_model.py <workbook.xlsx> [model.json] [--title "..."] [--date YYYY-MM-DD]
 """
-import sys, os, json, re
+import sys, os, json, re, heapq
 import openpyxl
 
 # ----------------------------------------------------------------- workbook IO
@@ -363,6 +363,90 @@ def _barycenter_reorder(N, F, lane_rows_keys):
         sweep(succs, list(reversed(phases_present)))  # right -> left, keyed on successors already placed
 
 
+def _enforce_topological_order(N, F):
+    """Guarantees a predecessor is never positioned BELOW its own direct successor within the
+    same (lane, phase) bucket — an explicit "preceding activities positioned above subsequent
+    activities, applied consistently as a standard sequencing rule" requirement. This runs as
+    a correction pass AFTER _barycenter_reorder() above, which optimises purely for minimising
+    total connector travel across ALL of a node's neighbours (including ones in unrelated
+    lanes) and has no concept of "this specific pair is directly connected" — so a node can
+    still get pulled below its own direct predecessor whenever some OTHER neighbour's position
+    outweighs that one relationship. Found on Park My Number: the "start" trigger's only
+    neighbour is its own successor "stp01", but stp01 ALSO has a successor "stp02" sitting in a
+    different lane at row 0 — the barycenter sweep pulls stp01 up to track stp02's row, which
+    incidentally lands it above "start" even though start->stp01 is a direct edge inside their
+    own shared bucket.
+
+    A first version of this tried adjacent-pair bubble sort (swap two neighbours whenever a
+    direct edge says they're inverted) — that fails whenever the violating pair isn't already
+    adjacent: an unrelated node sitting between them has no edge to either side, so it never
+    triggers a swap and blocks the violating pair from ever reaching each other, no matter how
+    many passes run. Found on Mobile Prepaid Activation's `collections_check -> line_count_check`
+    edge, five rows apart with three unconnected nodes between them.
+
+    A proper stable topological sort (Kahn's algorithm, ready-set broken by the
+    _barycenter_reorder()-computed order rather than arbitrarily) fixes that generally: it
+    repeatedly emits whichever zero-remaining-indegree node came EARLIEST in the current slot
+    order, which reduces to "leave _barycenter_reorder()'s order untouched" whenever no edge
+    constrains a choice, and otherwise produces a full linear order that satisfies every
+    same-bucket direct edge regardless of how far apart the violating pair started.
+
+    Only `happy is not False` edges feed the constraint graph — an explicit `happy: false` edge
+    (a retry/escalation/exception path looping back to an earlier step) is BY DESIGN meant to
+    run backward, so treating it as an ordinary "predecessor must sit above successor"
+    constraint is self-contradictory, not just unhelpful: found on Fibre's WFM task-closure
+    bucket, where `wfm_task_closure -> wfm_fail -> wfm_task_capture` (both `happy: false`,
+    a reschedule loop) closes a full cycle with the three ordinary `happy: true` steps between
+    them — Kahn's algorithm can never find a zero-indegree node in a genuine cycle, so EVERY
+    node in the bucket fell through to the untouched-order fallback below, silently reverting
+    the very ordering the three real `happy: true` edges (capture -> rule -> indoor/outdoor ->
+    closure, no cycle at all on their own) already wanted fixed. Excluding `happy: false` edges
+    turns that into the plain, satisfiable chain it always was.
+
+    A same-bucket cycle formed ENTIRELY from `happy is not False` edges (A->B and B->A both
+    marked as the main path — a malformed model to begin with) can still leave a residue no
+    ready-set will ever include; that residue is appended in its prior relative order rather
+    than raising, since a diagram missing a wholly self-consistent ordering for a couple of
+    nodes is still far more useful than one that fails to build at all.
+    """
+    if not F:
+        return
+    buckets = {}
+    for n in N:
+        buckets.setdefault((n["lane"], n["phase"]), []).append(n)
+    for bucket in buckets.values():
+        if len(bucket) < 2:
+            continue
+        bucket.sort(key=lambda n: n["slot"])
+        order_index = {n["id"]: i for i, n in enumerate(bucket)}
+        ids_in_bucket = set(order_index)
+        succ = {nid: [] for nid in ids_in_bucket}
+        indeg = {nid: 0 for nid in ids_in_bucket}
+        for f in F:
+            if f.get("happy") is False:   # retry/escalation/exception edges loop backward BY DESIGN
+                continue
+            a, b = f.get("from"), f.get("to")
+            if a in ids_in_bucket and b in ids_in_bucket and a != b:
+                succ[a].append(b)
+                indeg[b] += 1
+        heap = [(order_index[nid], nid) for nid, d in indeg.items() if d == 0]
+        heapq.heapify(heap)
+        result = []
+        while heap:
+            _, nid = heapq.heappop(heap)
+            result.append(nid)
+            for nb in succ[nid]:
+                indeg[nb] -= 1
+                if indeg[nb] == 0:
+                    heapq.heappush(heap, (order_index[nb], nb))
+        if len(result) < len(bucket):   # a same-bucket cycle left some node(s) permanently un-ready
+            done = set(result)
+            result.extend(n["id"] for n in bucket if n["id"] not in done)
+        NID_bucket = {n["id"]: n for n in bucket}
+        for i, nid in enumerate(result):
+            NID_bucket[nid]["slot"] = i
+
+
 def _estimate_label_lines(label, eff_w, max_lines, avg_char_px=7.6):
     """Rough word-wrap line count for node-sizing purposes only — mirrors
     engine_template.html's wrapTextPx() closely enough to size the box, without
@@ -495,6 +579,7 @@ def compute_layout(N, LANES, PHASES, F=None):
         slot_counter[k] = n["slot"] + 1
     lane_keys = [L["key"] for L in LANES]
     _barycenter_reorder(N, F, lane_keys)
+    _enforce_topological_order(N, F)
     lanecount = {}
     for n in N:
         lanecount.setdefault(n["lane"], {})

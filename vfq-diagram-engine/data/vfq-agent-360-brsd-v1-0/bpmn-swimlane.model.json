@@ -311,13 +311,13 @@
      "to": "profile_edit_initiate"
     }
    ],
-   "slot": 1,
+   "slot": 0,
    "w": 190,
    "h": 56,
    "x": 1451.0,
-   "y": 3052.0,
+   "y": 2832.0,
    "cx": 1546.0,
-   "cy": 3080.0
+   "cy": 2860.0
   },
   {
    "id": "profile_saved",
@@ -327,13 +327,13 @@
    "label": "Profile Changes Saved",
    "sub": "Status Model: Agent Profile",
    "desc": "Agent Profile status model: Edit Initiated -> Saved.",
-   "slot": 0,
+   "slot": 1,
    "w": 84,
    "h": 84,
    "x": 1504.0,
-   "y": 2818.0,
+   "y": 3038.0,
    "cx": 1546.0,
-   "cy": 2860.0
+   "cy": 3080.0
   },
   {
    "id": "view_eligible_entities",
@@ -595,13 +595,13 @@
    "label": "Display Assigned Tasks",
    "sub": "AGN-001-ATV-02",
    "desc": "The System shall display assigned tasks and priority tasks only for the logged-in agent.",
-   "slot": 1,
+   "slot": 0,
    "w": 190,
    "h": 56,
    "x": 695.0,
-   "y": 3052.0,
+   "y": 2832.0,
    "cx": 790.0,
-   "cy": 3080.0
+   "cy": 2860.0
   },
   {
    "id": "categorize_tasks",
@@ -611,13 +611,13 @@
    "label": "Categorize Tasks",
    "sub": "AGN-001-ATV-05",
    "desc": "The System shall categorize tasks based on priority and open task rules.",
-   "slot": 0,
+   "slot": 1,
    "w": 190,
    "h": 56,
    "x": 695.0,
-   "y": 2832.0,
+   "y": 3052.0,
    "cx": 790.0,
-   "cy": 2860.0
+   "cy": 3080.0
   },
   {
    "id": "supervisor_assign_task",
@@ -736,13 +736,13 @@
      "to": "view_assigned_approvals"
     }
    ],
-   "slot": 6,
+   "slot": 5,
    "w": 176,
    "h": 100,
    "x": 954.0,
-   "y": 1750.0,
+   "y": 1530.0,
    "cx": 1042.0,
-   "cy": 1800.0
+   "cy": 1580.0
   },
   {
    "id": "view_task_history",
@@ -752,13 +752,13 @@
    "label": "View Task History",
    "sub": "AGN-001-AAV-05",
    "desc": "The Agent shall be able to see task history before confirming Approval, Rejection, or Return.",
-   "slot": 5,
+   "slot": 6,
    "w": 206,
    "h": 60,
    "x": 939.0,
-   "y": 1550.0,
+   "y": 1770.0,
    "cx": 1042.0,
-   "cy": 1580.0
+   "cy": 1800.0
   },
   {
    "id": "approve_reject_return",

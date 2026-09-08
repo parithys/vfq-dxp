@@ -263,13 +263,13 @@
    "outputs": [
     "Processing batch ready for invoice generation"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 455.0,
-   "y": 890.0,
+   "y": 670.0,
    "cx": 558.0,
-   "cy": 920.0
+   "cy": 700.0
   },
   {
    "id": "batch_console",
@@ -381,13 +381,13 @@
     "Trial bill stored internally",
     "Regular/Hot bill sent to Siebel"
    ],
-   "slot": 1,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 455.0,
-   "y": 650.0,
+   "y": 870.0,
    "cx": 558.0,
-   "cy": 700.0
+   "cy": 920.0
   },
   {
    "id": "invoice_gen_failed",
@@ -504,13 +504,13 @@
    "outputs": [
     "Invoice available to downstream channels"
    ],
-   "slot": 2,
+   "slot": 0,
    "w": 206,
    "h": 100,
    "x": 959.0,
-   "y": 870.0,
+   "y": 430.0,
    "cx": 1062.0,
-   "cy": 920.0
+   "cy": 480.0
   },
   {
    "id": "invoice_masking_dispatch",
@@ -549,13 +549,13 @@
    "outputs": [
     "Invoice delivered via SMS/WhatsApp/Web"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 100,
    "x": 959.0,
-   "y": 5510.0,
+   "y": 5290.0,
    "cx": 1062.0,
-   "cy": 5560.0
+   "cy": 5340.0
   },
   {
    "id": "email_eligibility",
@@ -578,13 +578,13 @@
      "to": "email_send"
     }
    ],
-   "slot": 0,
+   "slot": 2,
    "w": 150,
    "h": 100,
    "x": 987.0,
-   "y": 430.0,
+   "y": 870.0,
    "cx": 1062.0,
-   "cy": 480.0
+   "cy": 920.0
   },
   {
    "id": "email_send",
@@ -660,13 +660,13 @@
    "lane": "channels",
    "phase": 3,
    "label": "Invoice Delivered",
-   "slot": 1,
+   "slot": 2,
    "w": 84,
    "h": 84,
    "x": 1020.0,
-   "y": 5298.0,
+   "y": 5518.0,
    "cx": 1062.0,
-   "cy": 5340.0
+   "cy": 5560.0
   },
   {
    "id": "reprint_request",
@@ -704,13 +704,13 @@
    "outputs": [
     "Reprinted PDF transferred via MZ to CRM"
    ],
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 60,
    "x": 1211.0,
-   "y": 1830.0,
+   "y": 1610.0,
    "cx": 1314.0,
-   "cy": 1860.0
+   "cy": 1640.0
   },
   {
    "id": "reprint_action_menu",
@@ -730,13 +730,13 @@
     "Regenerate XML",
     "Send Email"
    ],
-   "slot": 0,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 1211.0,
-   "y": 1610.0,
+   "y": 1830.0,
    "cx": 1314.0,
-   "cy": 1640.0
+   "cy": 1860.0
   },
   {
    "id": "hotbill_console",

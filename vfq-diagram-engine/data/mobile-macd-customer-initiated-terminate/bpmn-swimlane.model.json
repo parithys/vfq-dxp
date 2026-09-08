@@ -472,13 +472,13 @@
     "Disconnect Reason",
     "Effective Date"
    ],
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 100,
    "x": 1715.0,
-   "y": 650.0,
+   "y": 430.0,
    "cx": 1818.0,
-   "cy": 700.0
+   "cy": 480.0
   },
   {
    "id": "n21_partial_disconnection",
@@ -494,13 +494,13 @@
     "Disconnect Reason",
     "MSISDN"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 100,
    "x": 1715.0,
-   "y": 870.0,
+   "y": 650.0,
    "cx": 1818.0,
-   "cy": 920.0
+   "cy": 700.0
   },
   {
    "id": "n22_change_billing_profile",
@@ -516,13 +516,13 @@
     "Overpayments or mistaken payments are handled as separate refund requests, raised via tickets and validated by the back office and finance teams.",
     "The adjustment process is documented as part of the ticketing workflow, and the outcome is tracked until resolution."
    ],
-   "slot": 0,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 1715.0,
-   "y": 430.0,
+   "y": 870.0,
    "cx": 1818.0,
-   "cy": 480.0
+   "cy": 920.0
   },
   {
    "id": "n23_disconnection_end",

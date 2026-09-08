@@ -161,13 +161,13 @@
    "outputs": [
     "Selected MSISDN for plan change"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 455.0,
-   "y": 1110.0,
+   "y": 890.0,
    "cx": 558.0,
-   "cy": 1140.0
+   "cy": 920.0
   },
   {
    "id": "pc_cam_initiate",
@@ -183,13 +183,13 @@
    "controls": [
     "BR-MPC-015 (one MSISDN at a time)"
    ],
-   "slot": 1,
+   "slot": 2,
    "w": 206,
    "h": 60,
    "x": 455.0,
-   "y": 890.0,
+   "y": 1110.0,
    "cx": 558.0,
-   "cy": 920.0
+   "cy": 1140.0
   },
   {
    "id": "pc_ecc_ref",
@@ -199,13 +199,13 @@
    "label": "Eligibility & Credit Control (ECC Capability Reuse)",
    "sub": "MPCR_001_SEQ_009",
    "desc": "Note: the process will follow the same capability (ECC) as detailed in Mobile Postpaid Activation Journey (MOB_POST_ACT_RETL_001).",
-   "slot": 1,
+   "slot": 0,
    "w": 190,
    "h": 100,
    "x": 715.0,
-   "y": 4790.0,
+   "y": 4570.0,
    "cx": 810.0,
-   "cy": 4840.0
+   "cy": 4620.0
   },
   {
    "id": "pc_ecc_cardinality",
@@ -237,13 +237,13 @@
    "outputs": [
     "Only compatibility-permitted plans selectable; incompatible plans excluded/blocked with message"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 176,
    "h": 70,
    "x": 722.0,
-   "y": 1105.0,
+   "y": 885.0,
    "cx": 810.0,
-   "cy": 1140.0
+   "cy": 920.0
   },
   {
    "id": "pc_ecc_lockin",
@@ -269,13 +269,13 @@
      "to": "pc_qpc_ref"
     }
    ],
-   "slot": 1,
+   "slot": 2,
    "w": 150,
    "h": 100,
    "x": 735.0,
-   "y": 870.0,
+   "y": 1090.0,
    "cx": 810.0,
-   "cy": 920.0
+   "cy": 1140.0
   },
   {
    "id": "pc_qpc_ref",
@@ -307,13 +307,13 @@
    "controls": [
     "BR-MPC-002"
    ],
-   "slot": 4,
+   "slot": 3,
    "w": 206,
    "h": 100,
    "x": 707.0,
-   "y": 1530.0,
+   "y": 1310.0,
    "cx": 810.0,
-   "cy": 1580.0
+   "cy": 1360.0
   },
   {
    "id": "pc_qpc_upgrade",
@@ -329,13 +329,13 @@
    "controls": [
     "BR-MPC-003"
    ],
-   "slot": 5,
+   "slot": 4,
    "w": 206,
    "h": 60,
    "x": 707.0,
-   "y": 1770.0,
+   "y": 1550.0,
    "cx": 810.0,
-   "cy": 1800.0
+   "cy": 1580.0
   },
   {
    "id": "pc_qpc_downgrade",
@@ -351,13 +351,13 @@
    "controls": [
     "BR-MPC-004"
    ],
-   "slot": 6,
+   "slot": 5,
    "w": 206,
    "h": 100,
    "x": 707.0,
-   "y": 1970.0,
+   "y": 1750.0,
    "cx": 810.0,
-   "cy": 2020.0
+   "cy": 1800.0
   },
   {
    "id": "pc_qpc_addon_carry",
@@ -370,13 +370,13 @@
    "outputs": [
     "Bundled add-ons/discounts removed; independent add-ons retained"
    ],
-   "slot": 7,
+   "slot": 6,
    "w": 206,
    "h": 60,
    "x": 707.0,
-   "y": 2210.0,
+   "y": 1990.0,
    "cx": 810.0,
-   "cy": 2240.0
+   "cy": 2020.0
   },
   {
    "id": "pc_qpc_addon_update",
@@ -389,13 +389,13 @@
    "outputs": [
     "Add-ons added/removed by agent"
    ],
-   "slot": 8,
+   "slot": 7,
    "w": 206,
    "h": 60,
    "x": 707.0,
-   "y": 2430.0,
+   "y": 2210.0,
    "cx": 810.0,
-   "cy": 2460.0
+   "cy": 2240.0
   },
   {
    "id": "pc_qpc_discount_update",
@@ -408,13 +408,13 @@
    "outputs": [
     "Latest discount applied"
    ],
-   "slot": 3,
+   "slot": 8,
    "w": 206,
    "h": 60,
    "x": 707.0,
-   "y": 1330.0,
+   "y": 2430.0,
    "cx": 810.0,
-   "cy": 1360.0
+   "cy": 2460.0
   },
   {
    "id": "pc_qpc_sim_protect",
@@ -430,13 +430,13 @@
    "controls": [
     "BR-MPC-009"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 707.0,
-   "y": 5030.0,
+   "y": 4810.0,
    "cx": 810.0,
-   "cy": 5060.0
+   "cy": 4840.0
   },
   {
    "id": "pc_milestone_savecart1",
@@ -446,13 +446,13 @@
    "label": "Milestone: Cart Saved",
    "sub": "#7 / #9",
    "desc": "Save Cart milestone \u2014 reached either directly (no Credit Limit Enhancement needed) or after the CLE_001 branch completes.",
-   "slot": 0,
+   "slot": 2,
    "w": 206,
    "h": 60,
    "x": 707.0,
-   "y": 4590.0,
+   "y": 5030.0,
    "cx": 810.0,
-   "cy": 4620.0
+   "cy": 5060.0
   },
   {
    "id": "pc_cle_raise_ticket",
@@ -664,13 +664,13 @@
    "outputs": [
     "Latest discount applied based on plan selection"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 1211.0,
-   "y": 5030.0,
+   "y": 4810.0,
    "cx": 1314.0,
-   "cy": 5060.0
+   "cy": 4840.0
   },
   {
    "id": "pc_milestone_checkedout",
@@ -678,13 +678,13 @@
    "lane": "sys",
    "phase": 4,
    "label": "Milestone: Cart Checked Out, Proceed to Payment",
-   "slot": 3,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 1211.0,
-   "y": 5230.0,
+   "y": 5010.0,
    "cx": 1314.0,
-   "cy": 5280.0
+   "cy": 5060.0
   },
   {
    "id": "pc_pay_request",
@@ -700,13 +700,13 @@
    "controls": [
     "BR-MPC-006"
    ],
-   "slot": 4,
+   "slot": 3,
    "w": 190,
    "h": 100,
    "x": 1219.0,
-   "y": 5450.0,
+   "y": 5230.0,
    "cx": 1314.0,
-   "cy": 5500.0
+   "cy": 5280.0
   },
   {
    "id": "pc_pay_ref",
@@ -716,13 +716,13 @@
    "label": "Payment & Inventory (PAY Capability Reuse)",
    "sub": "MPCR_001_SEQ_033",
    "desc": "Note: the process will follow the same capability (PAY) as detailed in Mobile Postpaid Activation Journey (MOB_POST_ACT_RETL_001).",
-   "slot": 1,
+   "slot": 4,
    "w": 190,
    "h": 100,
    "x": 1219.0,
-   "y": 4790.0,
+   "y": 5450.0,
    "cx": 1314.0,
-   "cy": 4840.0
+   "cy": 5500.0
   },
   {
    "id": "pc_ord_submit",
@@ -844,13 +844,13 @@
    "outputs": [
     "Customer 360 displayed"
    ],
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 60,
    "x": 1715.0,
-   "y": 890.0,
+   "y": 670.0,
    "cx": 1818.0,
-   "cy": 920.0
+   "cy": 700.0
   },
   {
    "id": "pmn_cam_select",
@@ -863,13 +863,13 @@
    "outputs": [
     "Selected MSISDN for Park My Number"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 1715.0,
-   "y": 1110.0,
+   "y": 890.0,
    "cx": 1818.0,
-   "cy": 1140.0
+   "cy": 920.0
   },
   {
    "id": "pmn_cam_initiate",
@@ -885,13 +885,13 @@
    "controls": [
     "BR-MPC-015 (one MSISDN at a time)"
    ],
-   "slot": 0,
+   "slot": 2,
    "w": 206,
    "h": 60,
    "x": 1715.0,
-   "y": 670.0,
+   "y": 1110.0,
    "cx": 1818.0,
-   "cy": 700.0
+   "cy": 1140.0
   },
   {
    "id": "pmn_ecc_outstanding",
@@ -929,13 +929,13 @@
    "controls": [
     "BR-PMN-001"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 176,
    "h": 100,
    "x": 1982.0,
-   "y": 1090.0,
+   "y": 870.0,
    "cx": 2070.0,
-   "cy": 1140.0
+   "cy": 920.0
   },
   {
    "id": "pmn_ecc_collections",
@@ -951,13 +951,13 @@
    "controls": [
     "BR-PMN-002"
    ],
-   "slot": 5,
+   "slot": 2,
    "w": 176,
    "h": 100,
    "x": 1982.0,
-   "y": 1750.0,
+   "y": 1090.0,
    "cx": 2070.0,
-   "cy": 1800.0
+   "cy": 1140.0
   },
   {
    "id": "pmn_ecc_lockin",
@@ -973,13 +973,13 @@
    "controls": [
     "BR-PMN-003"
    ],
-   "slot": 1,
+   "slot": 3,
    "w": 150,
    "h": 100,
    "x": 1995.0,
-   "y": 870.0,
+   "y": 1310.0,
    "cx": 2070.0,
-   "cy": 920.0
+   "cy": 1360.0
   },
   {
    "id": "pmn_ecc_star_extend",
@@ -1027,13 +1027,13 @@
      "to": "pmn_error_not_eligible"
     }
    ],
-   "slot": 3,
+   "slot": 4,
    "w": 150,
    "h": 100,
    "x": 1995.0,
-   "y": 1310.0,
+   "y": 1530.0,
    "cx": 2070.0,
-   "cy": 1360.0
+   "cy": 1580.0
   },
   {
    "id": "pmn_error_not_eligible",
@@ -1042,13 +1042,13 @@
    "phase": 7,
    "label": "Error: Park My Number Not Eligible",
    "desc": "Error displayed and journey stopped when the MSISDN has already used Park My Number twice in the current year, per BR-PMN-006.",
-   "slot": 4,
+   "slot": 5,
    "w": 190,
    "h": 100,
    "x": 1975.0,
-   "y": 1530.0,
+   "y": 1750.0,
    "cx": 2070.0,
-   "cy": 1580.0
+   "cy": 1800.0
   },
   {
    "id": "pmn_qpc_ref",
@@ -1058,13 +1058,13 @@
    "label": "Product Catalogue & Cart (QPC Capability Reuse)",
    "sub": "PMN_001_SEQ_015",
    "desc": "Note: the process will follow the same capability (QPC) as detailed in Mobile Postpaid Activation Journey (MOB_POST_ACT_RETL_001).",
-   "slot": 2,
+   "slot": 0,
    "w": 190,
    "h": 100,
    "x": 2227.0,
-   "y": 5010.0,
+   "y": 4570.0,
    "cx": 2322.0,
-   "cy": 5060.0
+   "cy": 4620.0
   },
   {
    "id": "pmn_qpc_fetch",
@@ -1077,13 +1077,13 @@
    "outputs": [
     "Park Plan displayed for assignment"
    ],
-   "slot": 0,
+   "slot": 1,
    "w": 190,
    "h": 100,
    "x": 2227.0,
-   "y": 4570.0,
+   "y": 4790.0,
    "cx": 2322.0,
-   "cy": 4620.0
+   "cy": 4840.0
   },
   {
    "id": "pmn_qpc_assign",
@@ -1121,13 +1121,13 @@
    "controls": [
     "BR-PMN-005"
    ],
-   "slot": 3,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 2219.0,
-   "y": 5230.0,
+   "y": 5010.0,
    "cx": 2322.0,
-   "cy": 5280.0
+   "cy": 5060.0
   },
   {
    "id": "pmn_qpc_retain",
@@ -1143,13 +1143,13 @@
    "controls": [
     "BR-MPC-009"
    ],
-   "slot": 1,
+   "slot": 3,
    "w": 206,
    "h": 100,
    "x": 2219.0,
-   "y": 4790.0,
+   "y": 5230.0,
    "cx": 2322.0,
-   "cy": 4840.0
+   "cy": 5280.0
   },
   {
    "id": "pmn_cvc_ref",
@@ -1178,13 +1178,13 @@
    "outputs": [
     "Latest discount applied"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 2471.0,
-   "y": 5030.0,
+   "y": 4810.0,
    "cx": 2574.0,
-   "cy": 5060.0
+   "cy": 4840.0
   },
   {
    "id": "pmn_milestone_checkedout",
@@ -1192,13 +1192,13 @@
    "lane": "sys",
    "phase": 9,
    "label": "Milestone: Cart Checked Out",
-   "slot": 3,
+   "slot": 2,
    "w": 206,
    "h": 100,
    "x": 2471.0,
-   "y": 5230.0,
+   "y": 5010.0,
    "cx": 2574.0,
-   "cy": 5280.0
+   "cy": 5060.0
   },
   {
    "id": "pmn_pay_request",
@@ -1214,13 +1214,13 @@
    "controls": [
     "BR-MPC-006"
    ],
-   "slot": 4,
+   "slot": 3,
    "w": 190,
    "h": 100,
    "x": 2479.0,
-   "y": 5450.0,
+   "y": 5230.0,
    "cx": 2574.0,
-   "cy": 5500.0
+   "cy": 5280.0
   },
   {
    "id": "pmn_pay_ref",
@@ -1230,13 +1230,13 @@
    "label": "Payment & Inventory (PAY Capability Reuse)",
    "sub": "PMN_001_SEQ_023",
    "desc": "Note: the process will follow the same capability (PAY) as detailed in Mobile Postpaid Activation Journey (MOB_POST_ACT_RETL_001).",
-   "slot": 1,
+   "slot": 4,
    "w": 190,
    "h": 100,
    "x": 2479.0,
-   "y": 4790.0,
+   "y": 5450.0,
    "cx": 2574.0,
-   "cy": 4840.0
+   "cy": 5500.0
   },
   {
    "id": "pmn_ord_submit",
@@ -1268,13 +1268,13 @@
    "label": "Order Submission (ORD Capability Reuse)",
    "sub": "PMN_001_SEQ_025",
    "desc": "Note: the process will follow the same capability (ORD) as detailed in Mobile Postpaid Activation Journey (MOB_POST_ACT_RETL_001).",
-   "slot": 1,
+   "slot": 0,
    "w": 190,
    "h": 100,
    "x": 2731.0,
-   "y": 4790.0,
+   "y": 4570.0,
    "cx": 2826.0,
-   "cy": 4840.0
+   "cy": 4620.0
   },
   {
    "id": "pmn_not_ref",
@@ -1284,13 +1284,13 @@
    "label": "Notification & Feedback (NOT Capability Reuse)",
    "sub": "PMN_001_SEQ_026",
    "desc": "Note: the process will follow the same capability (NOT) as detailed in Mobile Postpaid Activation Journey (MOB_POST_ACT_RETL_001).",
-   "slot": 2,
+   "slot": 1,
    "w": 190,
    "h": 100,
    "x": 2731.0,
-   "y": 5010.0,
+   "y": 4790.0,
    "cx": 2826.0,
-   "cy": 5060.0
+   "cy": 4840.0
   },
   {
    "id": "pmn_fin_billing",
@@ -1303,13 +1303,13 @@
    "outputs": [
     "Billing updated with Park My Number plan from effective date"
    ],
-   "slot": 3,
+   "slot": 2,
    "w": 190,
    "h": 56,
    "x": 2731.0,
-   "y": 5252.0,
+   "y": 5032.0,
    "cx": 2826.0,
-   "cy": 5280.0
+   "cy": 5060.0
   },
   {
    "id": "pmn_csa_feedback",
@@ -1325,13 +1325,13 @@
    "controls": [
     "BR-MPC-013"
    ],
-   "slot": 4,
+   "slot": 3,
    "w": 190,
    "h": 100,
    "x": 2731.0,
-   "y": 5450.0,
+   "y": 5230.0,
    "cx": 2826.0,
-   "cy": 5500.0
+   "cy": 5280.0
   },
   {
    "id": "pmn_end",
@@ -1339,13 +1339,13 @@
    "lane": "sys",
    "phase": 10,
    "label": "End of Park My Number Order Capture Journey",
-   "slot": 0,
+   "slot": 4,
    "w": 100,
    "h": 100,
    "x": 2776.0,
-   "y": 4570.0,
+   "y": 5450.0,
    "cx": 2826.0,
-   "cy": 4620.0
+   "cy": 5500.0
   },
   {
    "id": "pmnr_jsm_ref",
@@ -1621,13 +1621,13 @@
    "outputs": [
     "Soft ID scan available for plan change, skipped for direct termination"
    ],
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 100,
    "x": 3227.0,
-   "y": 870.0,
+   "y": 650.0,
    "cx": 3330.0,
-   "cy": 920.0
+   "cy": 700.0
   },
   {
    "id": "disc_cav_verify",
@@ -1643,13 +1643,13 @@
    "controls": [
     "BR-MACD-001"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 176,
    "h": 100,
    "x": 3242.0,
-   "y": 1090.0,
+   "y": 870.0,
    "cx": 3330.0,
-   "cy": 1140.0
+   "cy": 920.0
   },
   {
    "id": "disc_cam_search",
@@ -1665,13 +1665,13 @@
    "controls": [
     "BR-DISC-003"
    ],
-   "slot": 3,
+   "slot": 2,
    "w": 206,
    "h": 60,
    "x": 3227.0,
-   "y": 1330.0,
+   "y": 1110.0,
    "cx": 3330.0,
-   "cy": 1360.0
+   "cy": 1140.0
   },
   {
    "id": "disc_cam_initiate",
@@ -1687,13 +1687,13 @@
    "controls": [
     "BR-DISC-004 (Retention Gate)"
    ],
-   "slot": 0,
+   "slot": 3,
    "w": 206,
    "h": 60,
    "x": 3227.0,
-   "y": 670.0,
+   "y": 1330.0,
    "cx": 3330.0,
-   "cy": 700.0
+   "cy": 1360.0
   },
   {
    "id": "disc_edd_dues",
@@ -1750,13 +1750,13 @@
    "controls": [
     "BR-DISC-004"
    ],
-   "slot": 3,
+   "slot": 2,
    "w": 206,
    "h": 60,
    "x": 3479.0,
-   "y": 3370.0,
+   "y": 3150.0,
    "cx": 3582.0,
-   "cy": 3400.0
+   "cy": 3180.0
   },
   {
    "id": "disc_asg_retention_team",
@@ -1772,13 +1772,13 @@
    "controls": [
     "BR-RET-003"
    ],
-   "slot": 4,
+   "slot": 3,
    "w": 206,
    "h": 100,
    "x": 3479.0,
-   "y": 3570.0,
+   "y": 3350.0,
    "cx": 3582.0,
-   "cy": 3620.0
+   "cy": 3400.0
   },
   {
    "id": "disc_branch_offer",
@@ -1801,13 +1801,13 @@
      "to": "disc_res_reject_migrate"
     }
    ],
-   "slot": 2,
+   "slot": 4,
    "w": 150,
    "h": 100,
    "x": 3507.0,
-   "y": 3130.0,
+   "y": 3570.0,
    "cx": 3582.0,
-   "cy": 3180.0
+   "cy": 3620.0
   },
   {
    "id": "disc_qpc_retention_cart",
@@ -1823,13 +1823,13 @@
    "controls": [
     "BR-DISC-007"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 100,
    "x": 3731.0,
-   "y": 3130.0,
+   "y": 2910.0,
    "cx": 3834.0,
-   "cy": 3180.0
+   "cy": 2960.0
   },
   {
    "id": "disc_cvc_validate",
@@ -1845,13 +1845,13 @@
    "controls": [
     "BR-RET-001"
    ],
-   "slot": 1,
+   "slot": 2,
    "w": 176,
    "h": 100,
    "x": 3746.0,
-   "y": 2910.0,
+   "y": 3130.0,
    "cx": 3834.0,
-   "cy": 2960.0
+   "cy": 3180.0
   },
   {
    "id": "disc_pay_no_downgrade_charge",
@@ -2013,13 +2013,13 @@
    "controls": [
     "BR-DISC-009"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 206,
    "h": 60,
    "x": 3983.0,
-   "y": 3150.0,
+   "y": 2930.0,
    "cx": 4086.0,
-   "cy": 3180.0
+   "cy": 2960.0
   },
   {
    "id": "disc_res_cancel_order",
@@ -2076,13 +2076,13 @@
    "controls": [
     "BR-DISC-009"
    ],
-   "slot": 1,
+   "slot": 2,
    "w": 206,
    "h": 60,
    "x": 3983.0,
-   "y": 2930.0,
+   "y": 3150.0,
    "cx": 4086.0,
-   "cy": 2960.0
+   "cy": 3180.0
   },
   {
    "id": "disc_end_cancelled",
@@ -2696,13 +2696,13 @@
    "label": "Customer Identification (KYC Capability Reuse)",
    "sub": "PTPRM_001_SEQ_008",
    "desc": "Note: the process will follow the same capability (KYC) as detailed in Mobile Postpaid Activation Journey (MOB_POST_ACT_RETL_001).",
-   "slot": 2,
+   "slot": 1,
    "w": 190,
    "h": 100,
    "x": 4999.0,
-   "y": 5010.0,
+   "y": 4790.0,
    "cx": 5094.0,
-   "cy": 5060.0
+   "cy": 4840.0
   },
   {
    "id": "ptp_cav_ref",
@@ -2712,13 +2712,13 @@
    "label": "Customer Verification \u2014 Light Weight (CAV Capability Reuse)",
    "sub": "PTPRM_001_SEQ_009",
    "desc": "Note: the process will follow the same capability (CAV) as detailed in Trouble Ticket Journey (TT_001).",
-   "slot": 3,
+   "slot": 2,
    "w": 190,
    "h": 100,
    "x": 4999.0,
-   "y": 5230.0,
+   "y": 5010.0,
    "cx": 5094.0,
-   "cy": 5280.0
+   "cy": 5060.0
   },
   {
    "id": "ptp_kyc_latest_identity",
@@ -2734,13 +2734,13 @@
    "controls": [
     "BR-PTPO-009"
    ],
-   "slot": 4,
+   "slot": 3,
    "w": 206,
    "h": 100,
    "x": 4991.0,
-   "y": 5450.0,
+   "y": 5230.0,
    "cx": 5094.0,
-   "cy": 5500.0
+   "cy": 5280.0
   },
   {
    "id": "ptp_cam_refresh",
@@ -2756,13 +2756,13 @@
    "controls": [
     "BR-PTPO-010"
    ],
-   "slot": 1,
+   "slot": 4,
    "w": 190,
    "h": 100,
    "x": 4999.0,
-   "y": 4790.0,
+   "y": 5450.0,
    "cx": 5094.0,
-   "cy": 4840.0
+   "cy": 5500.0
   },
   {
    "id": "ptp_ecc_ref",
@@ -2804,13 +2804,13 @@
      "to": "ptp_error_not_eligible"
     }
    ],
-   "slot": 3,
+   "slot": 2,
    "w": 150,
    "h": 100,
    "x": 5271.0,
-   "y": 5230.0,
+   "y": 5010.0,
    "cx": 5346.0,
-   "cy": 5280.0
+   "cy": 5060.0
   },
   {
    "id": "ptp_ecc_postpaid_elig",
@@ -2836,13 +2836,13 @@
      "to": "ptp_error_not_eligible"
     }
    ],
-   "slot": 5,
+   "slot": 3,
    "w": 150,
    "h": 100,
    "x": 5271.0,
-   "y": 5670.0,
+   "y": 5230.0,
    "cx": 5346.0,
-   "cy": 5720.0
+   "cy": 5280.0
   },
   {
    "id": "ptp_error_not_eligible",
@@ -2851,13 +2851,13 @@
    "phase": 20,
    "label": "Error: Migration Not Eligible",
    "desc": "Journey blocked with a distinct message when the Prepaid service or Postpaid identity-type eligibility conditions are not met, per BR-PTPO-012/BR-PTPO-009.",
-   "slot": 4,
+   "slot": 5,
    "w": 190,
    "h": 100,
    "x": 5251.0,
-   "y": 5450.0,
+   "y": 5670.0,
    "cx": 5346.0,
-   "cy": 5500.0
+   "cy": 5720.0
   },
   {
    "id": "ptp_bam_ref",
@@ -2867,13 +2867,13 @@
    "label": "Billing Account Management (BAM Capability Reuse)",
    "sub": "PTPRM_001_SEQ_015",
    "desc": "Note: the process will follow the same capability (BAM) as detailed in Mobile Postpaid Activation Journey (MOB_POST_ACT_RETL_001).",
-   "slot": 2,
+   "slot": 4,
    "w": 190,
    "h": 100,
    "x": 5251.0,
-   "y": 5010.0,
+   "y": 5450.0,
    "cx": 5346.0,
-   "cy": 5060.0
+   "cy": 5500.0
   },
   {
    "id": "ptp_bam_create_account",
@@ -2886,13 +2886,13 @@
    "outputs": [
     "Exactly one eligible billing account associated with the migrated subscription"
    ],
-   "slot": 1,
+   "slot": 0,
    "w": 206,
    "h": 100,
    "x": 5243.0,
-   "y": 870.0,
+   "y": 650.0,
    "cx": 5346.0,
-   "cy": 920.0
+   "cy": 700.0
   },
   {
    "id": "ptp_bam_payment_profile",
@@ -2905,13 +2905,13 @@
    "outputs": [
     "Checkout blocked without active payment profile"
    ],
-   "slot": 0,
+   "slot": 1,
    "w": 176,
    "h": 100,
    "x": 5258.0,
-   "y": 650.0,
+   "y": 870.0,
    "cx": 5346.0,
-   "cy": 700.0
+   "cy": 920.0
   },
   {
    "id": "ptp_milestone_cart_saved",
@@ -2979,13 +2979,13 @@
    "controls": [
     "BR-PTPO-013"
    ],
-   "slot": 3,
+   "slot": 2,
    "w": 206,
    "h": 60,
    "x": 5495.0,
-   "y": 5250.0,
+   "y": 5030.0,
    "cx": 5598.0,
-   "cy": 5280.0
+   "cy": 5060.0
   },
   {
    "id": "ptp_qpc_retain_sim",
@@ -3001,13 +3001,13 @@
    "controls": [
     "BR-PTPO-014"
    ],
-   "slot": 4,
+   "slot": 3,
    "w": 206,
    "h": 60,
    "x": 5495.0,
-   "y": 5470.0,
+   "y": 5250.0,
    "cx": 5598.0,
-   "cy": 5500.0
+   "cy": 5280.0
   },
   {
    "id": "ptp_qpc_new_promos",
@@ -3023,13 +3023,13 @@
    "controls": [
     "BR-PTPO-016"
    ],
-   "slot": 5,
+   "slot": 4,
    "w": 206,
    "h": 100,
    "x": 5495.0,
-   "y": 5670.0,
+   "y": 5450.0,
    "cx": 5598.0,
-   "cy": 5720.0
+   "cy": 5500.0
   },
   {
    "id": "ptp_cvc_ref",
@@ -3042,13 +3042,13 @@
    "controls": [
     "BR-PTPO-018"
    ],
-   "slot": 2,
+   "slot": 5,
    "w": 190,
    "h": 100,
    "x": 5503.0,
-   "y": 5010.0,
+   "y": 5670.0,
    "cx": 5598.0,
-   "cy": 5060.0
+   "cy": 5720.0
   },
   {
    "id": "ptp_cvc_validate",
@@ -3179,13 +3179,13 @@
    "label": "Payment and Inventory (PAY Capability Reuse)",
    "sub": "PTPRM_001_SEQ_029",
    "desc": "Note: the process will follow the same payment request, failure, retry, receipt and billing posting capability as detailed in Mobile Postpaid Activation Journey.",
-   "slot": 1,
+   "slot": 0,
    "w": 190,
    "h": 100,
    "x": 6007.0,
-   "y": 4790.0,
+   "y": 4570.0,
    "cx": 6102.0,
-   "cy": 4840.0
+   "cy": 4620.0
   },
   {
    "id": "ptp_pay_summary",
@@ -3201,13 +3201,13 @@
    "controls": [
     "BR-PTPO-017"
    ],
-   "slot": 0,
+   "slot": 1,
    "w": 206,
    "h": 100,
    "x": 5999.0,
-   "y": 4570.0,
+   "y": 4790.0,
    "cx": 6102.0,
-   "cy": 4620.0
+   "cy": 4840.0
   },
   {
    "id": "ptp_atv_balance_approval",
@@ -3328,13 +3328,13 @@
    "controls": [
     "BR-PTPO-023"
    ],
-   "slot": 1,
+   "slot": 0,
    "w": 190,
    "h": 100,
    "x": 6259.0,
-   "y": 4790.0,
+   "y": 4570.0,
    "cx": 6354.0,
-   "cy": 4840.0
+   "cy": 4620.0
   },
   {
    "id": "ptp_ord_link_ticket",
@@ -3350,13 +3350,13 @@
    "controls": [
     "BR-PTPO-007"
    ],
-   "slot": 2,
+   "slot": 1,
    "w": 190,
    "h": 100,
    "x": 6259.0,
-   "y": 5010.0,
+   "y": 4790.0,
    "cx": 6354.0,
-   "cy": 5060.0
+   "cy": 4840.0
   },
   {
    "id": "ptp_not_ref",
@@ -3366,13 +3366,13 @@
    "label": "Notification and Feedback (NOT Capability Reuse)",
    "sub": "PTPRM_001_SEQ_038",
    "desc": "Note: the process will follow the same capability (NOT) as detailed in Mobile Post Paid Journey (MOB_POST_ACT_RETL_001).",
-   "slot": 3,
+   "slot": 2,
    "w": 190,
    "h": 100,
    "x": 6259.0,
-   "y": 5230.0,
+   "y": 5010.0,
    "cx": 6354.0,
-   "cy": 5280.0
+   "cy": 5060.0
   },
   {
    "id": "ptp_not_migration_template",
@@ -3388,13 +3388,13 @@
    "controls": [
     "BR-PTPO-032"
    ],
-   "slot": 0,
+   "slot": 3,
    "w": 190,
    "h": 100,
    "x": 6259.0,
-   "y": 4570.0,
+   "y": 5230.0,
    "cx": 6354.0,
-   "cy": 4620.0
+   "cy": 5280.0
   },
   {
    "id": "ptp_fin_terminate_prepaid",
