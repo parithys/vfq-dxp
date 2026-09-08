@@ -313,22 +313,28 @@ a{color:var(--accent);text-decoration:none}
    documented behaviour — see DESIGN_SYSTEM.md "Node types" for the corrected spec. */
 .node.selected .box{stroke:var(--accent) !important;stroke-width:4px !important;filter:drop-shadow(0 0 6px rgba(230,0,0,.65)) drop-shadow(0 1px 3px rgba(0,0,0,.25))}
 .node.selected{opacity:1 !important}
-/* Happy Path Playback highlight states — deliberately separate classes/colours from the hover/
-   click-lock system above (.dim/.hlpath/.selected, all brand-red) and from the Happy Flow filter
-   (which hides content via display:none, not colour). Playback highlights must accumulate and
-   persist across hover/lock changes elsewhere on the canvas and must survive until Reset is
-   explicitly triggered — reusing the red selection/lock colour or its classes would mean an
-   ordinary node hover or a Prev/Next click stomps playback's own state (clearAllHL() only ever
-   touches .dim/.hlpath, never .hp-active/.hp-done, so the two systems can never collide).
-   hp-done (a node the playback has already stepped through) uses the same green already reserved
-   for 'start'-type nodes elsewhere on this canvas, reading as "completed/success". hp-active (the
-   single node currently being visited) uses amber/gold with a slow pulse so the current position
-   is unambiguous even on a large, hundreds-of-nodes diagram — see the animation further down. */
+/* Happy Path Playback highlight states — deliberately separate CLASSES from the hover/click-lock
+   system above (.dim/.hlpath/.selected) and from the Happy Flow filter (which hides content via
+   display:none, not colour), even though hp-active's own COLOUR is now the identical brand-red
+   .selected already uses — an explicit "the current Play step must look exactly like a manually
+   selected node: same stroke colour, same glow, same everything" requirement (hp-active used a
+   distinct amber/gold before this, precisely so it wouldn't visually collide with .selected;
+   that distinction was removed by the requirement, the separate classes/state were not, since
+   playback highlights must still accumulate and persist across hover/lock changes elsewhere on
+   the canvas and survive until Reset is explicitly triggered — clearAllHL() only ever touches
+   .dim/.hlpath, never .hp-active/.hp-done, so the two systems still can't collide functionally,
+   only their colour is now shared). hp-done (a node the playback has already stepped through)
+   keeps the separate green already reserved for 'start'-type nodes elsewhere on this canvas,
+   reading as "completed/success" — the requirement was specifically about the CURRENT step's
+   own highlight matching selection, not the completed-trail colour. hp-active (the single node
+   currently being visited) keeps its slow pulse so the current position is still unambiguous
+   even on a large, hundreds-of-nodes diagram, just pulsing the same red glow .selected uses at
+   rest instead of amber — see the animation further down. */
 .node.hp-done .box{stroke:#1e7d34 !important;stroke-width:3px !important;filter:drop-shadow(0 0 5px rgba(30,125,52,.55))}
-.node.hp-active .box{stroke:#e6a700 !important;stroke-width:4px !important;animation:hpPulse 1.1s ease-in-out infinite}
+.node.hp-active .box{stroke:var(--accent) !important;stroke-width:4px !important;animation:hpPulse 1.1s ease-in-out infinite}
 @keyframes hpPulse{
- 0%,100%{filter:drop-shadow(0 0 4px rgba(230,167,0,.6))}
- 50%{filter:drop-shadow(0 0 11px rgba(230,167,0,1))}
+ 0%,100%{filter:drop-shadow(0 0 4px rgba(230,0,0,.6))}
+ 50%{filter:drop-shadow(0 0 11px rgba(230,0,0,1))}
 }
 .edge.hp-done{stroke:#1e7d34 !important;stroke-width:2.6px !important;filter:none !important}
 .node text{font-family:"Segoe UI",Arial,sans-serif;pointer-events:none}
@@ -871,14 +877,20 @@ const LANE_HINT_FONT='400 14px "Segoe UI",Arial,sans-serif';   // kept in sync w
 const svgLaneGutter=el('g',{id:'svgLaneGutter'});
 // One continuous fill for the ENTIRE gutter column, painted once up front — from y:0 (so it
 // also covers the corner cell under the phase header, see the header-row fill below) down to
-// the bottom of the last lane. Previously each lane painted its own rect (x:0,y:L.y,h:L.h),
-// which left LANE_GAP-wide (20px) white bands between every pair of lanes, since consecutive
-// lane rects don't touch — L.y for lane N+1 starts LANE_GAP past lane N's own y+h. Those gaps
-// are correct/intentional in the diagram's own content area (nodes/connectors), but the
-// lane-label gutter is a section header, not diagram content, and must read as one unbroken
-// band per an explicit "no white gaps/patches within the header column" requirement.
-const lastLane=LY.lanes[LY.lanes.length-1];
-svgLaneGutter.appendChild(el('rect',{x:0,y:0,width:LY.laneLabelW,height:lastLane.y+lastLane.h,fill:'#B6BDC4'}));
+// the full canvas height. Previously each lane painted its own rect (x:0,y:L.y,h:L.h), which
+// left LANE_GAP-wide (20px) white bands between every pair of lanes, since consecutive lane
+// rects don't touch — L.y for lane N+1 starts LANE_GAP past lane N's own y+h. Those gaps are
+// correct/intentional in the diagram's own content area (nodes/connectors), but the lane-label
+// gutter is a section header, not diagram content, and must read as one unbroken band per an
+// explicit "no white gaps/patches within the header column" requirement.
+// Height is LY.totalH, not the last lane's own y+h: the canvas routinely extends past the last
+// lane's bottom edge (e.g. the reserved bottom channel backward/loop-back connectors route
+// through — see edgePath()'s own "backward" branch further down), and that reserved margin is
+// still visually PART of the gutter's column for its whole height, not a second, differently-
+// coloured region below it. Stopping the fill at the last lane's own bottom left exactly that
+// margin white — a visible patch in the diagram's bottom-left corner whenever a backward-edge
+// channel (or any other reason totalH exceeds the lanes' own combined height) is present.
+svgLaneGutter.appendChild(el('rect',{x:0,y:0,width:LY.laneLabelW,height:LY.totalH,fill:'#B6BDC4'}));
 LY.lanes.forEach((L,li)=>{
  // Lane background tint AND the 4px left accent stripe have both been removed entirely —
  // lanes are now plain (transparent/page-background) with no colour cue of any kind, per an
@@ -1036,7 +1048,13 @@ phaseGroups.forEach((grp,gi)=>{
  // extra room somewhere (see the label-aware spacing pass above) — headers use the same
  // per-boundary shift so they stay aligned with where their columns actually ended up.
  const x=LY.x0+grp.start*LY.colw+(LY._colShift[grp.start]||0);
- const endX=LY.x0+(grp.end+1)*LY.colw+(LY._colShift[grp.end+1]||0);
+ let endX=LY.x0+(grp.end+1)*LY.colw+(LY._colShift[grp.end+1]||0);
+ // The LAST group's own nominal endX can still fall short of the canvas's true right edge
+ // (LY.totalW) — the same "reserved margin beyond the content geometry" gap the lane gutter's
+ // own height fix above addresses, just on the horizontal axis instead (e.g. right-hand
+ // padding reserved for a connector routing corridor past the final column). Extending only
+ // the final group avoids disturbing every other group's already-correct width.
+ if(gi===phaseGroups.length-1) endX=Math.max(endX, LY.totalW);
  const spanW=endX-x;
  // Solid background fill for the phase header row itself (0..LY.topbar), matching the same
  // #B6BDC4 applied to the lane gutter's own left-side labels — both are "section header"
@@ -2321,17 +2339,21 @@ FLOWS.forEach((f,i)=>{
  edgeDList.push({i,d});
  edgeMidByFlow[i]=mid;
 });
-// ---- edge-balancing: distribute multiple connectors across an external node's 4 cardinal
-// anchors instead of letting them pile onto whichever side each one naturally resolves to ------
-// reserveAnchor()/targetConvergeOffset already exclude 'external' nodes from ANY anchor
-// separation (an explicit requirement restricts them to exactly the 4 cardinal points, never a
-// spread along one side) — but that alone doesn't stop two independently-routed connectors from
-// both naturally landing on the SAME cardinal point while a different side sits completely
-// unused. This pass runs once here, after every edge's `d` has been fully computed by the loop
-// above (rebalancing needs to see every connector touching a given external node at once, which
-// no per-edge pass can do), and before any label is placed (labels read edgeDList, so it must
-// already reflect whatever this pass moves) —
-//  - groups every connector endpoint currently on an external node by (node, side)
+// ---- edge-balancing: distribute multiple connectors across a node's 4 cardinal anchors
+// instead of letting them pile onto whichever side each one naturally resolves to -------------
+// Originally 'external'-only; now also covers 'decision' nodes — an explicit "whenever a
+// decision has free edges, spread its connectors across them instead of concentrating on one
+// side" requirement, found on Park My Number's "Agent Checks Eligibility" diamond: its incoming
+// edge and one outgoing branch both landed on the left cardinal point while top and right sat
+// completely unused. reserveAnchor()/targetConvergeOffset already exclude both types from ANY
+// anchor separation (an explicit requirement restricts them to exactly the 4 cardinal points,
+// never a spread along one side) — but that alone doesn't stop two independently-routed
+// connectors from both naturally landing on the SAME cardinal point while a different side sits
+// completely unused. This pass runs once here, after every edge's `d` has been fully computed
+// by the loop above (rebalancing needs to see every connector touching a given node at once,
+// which no per-edge pass can do), and before any label is placed (labels read edgeDList, so it
+// must already reflect whatever this pass moves) —
+//  - groups every connector endpoint currently on an external/decision node by (node, side)
 //  - for any side with 2+ connectors while another side has 0, tries moving one of the excess
 //    connectors there, in the top > right > bottom > left priority order the requirement states
 //  - a candidate side is only used if it's actually VALID for that specific connector: it must
@@ -2343,14 +2365,19 @@ FLOWS.forEach((f,i)=>{
 //    edge; forcing either onto the empty right/bottom sides there would have produced exactly
 //    that kind of backward loop, which is why this validity check exists rather than blindly
 //    filling any empty side.
-//  - console.warn()s once per external node where 2+ connectors still share a side afterward —
-//    covers both "no valid empty side existed" and "a valid one existed but was itself already
-//    claimed by another congested side's own move" — the "last resort, then flag it" half of
-//    the requirement.
+//  - console.warn()s once per node where 2+ connectors still share a side afterward — covers
+//    both "no valid empty side existed" and "a valid one existed but was itself already claimed
+//    by another congested side's own move" — the "last resort, then flag it" half of the
+//    requirement.
 const CARDINAL_ORDER=['top','right','bottom','left'];
+function needsCardinalAnchor(n){ return !!n && (n.type==='external' || n.type==='decision'); }
 function cardinalXY(n,side){
- if(side==='left') return [n.x+EXTERNAL_SKEW/2,n.cy];
- if(side==='right') return [n.x+n.w-EXTERNAL_SKEW/2,n.cy];
+ // The EXTERNAL_SKEW offset only means anything for the 'external' parallelogram's own slanted
+ // left/right edges (see sideX()'s own comment above) — a decision diamond's left/right cardinal
+ // points are already exactly n.x/n.x+n.w at its vertical centre, no skew correction needed.
+ const skew = n.type==='external' ? EXTERNAL_SKEW/2 : 0;
+ if(side==='left') return [n.x+skew,n.cy];
+ if(side==='right') return [n.x+n.w-skew,n.cy];
  if(side==='top') return [n.cx,n.y];
  return [n.cx,n.y+n.h];
 }
@@ -2360,16 +2387,30 @@ function sideOfCardinalPoint(n,px,py){
  return null;
 }
 function sideValidForOther(side,n,otherCx,otherCy){
- if(side==='left') return otherCx<n.cx;
- if(side==='right') return otherCx>n.cx;
- if(side==='top') return otherCy<n.cy;
- return otherCy>n.cy;   // bottom
+ // <=/>= rather than strict </> so an OTHER node exactly centred on this one's own axis (same
+ // cx, e.g. directly above/below; or same cy, directly left/right) counts as valid for EITHER
+ // candidate on the perpendicular axis, not neither. Found on Park My Number's "Agent Checks
+ // Eligibility" decision: its "No dues outstanding" branch targets a node with the exact same
+ // cx (directly below, past a nearer same-cx obstacle already occupying bottom) — under a
+ // strict inequality neither left NOR right ever validated (otherCx===n.cx satisfies neither
+ // `<` nor `>`), so the redistribution pass could never move it off the already-congested left
+ // side even though right sat completely idle and a right-side reroute is exactly as reasonable
+ // a detour as the left one it fell back to. A true off-axis case (found on wfm_retrieve/Fibre,
+ // approaching from clearly up-and-to-the-left) is unaffected — it was never a tie to begin with.
+ if(side==='left') return otherCx<=n.cx;
+ if(side==='right') return otherCx>=n.cx;
+ if(side==='top') return otherCy<=n.cy;
+ return otherCy>=n.cy;   // bottom
 }
 // Rebuilds the final 1-2 points on whichever end is moving so the connector still approaches
 // its new cardinal side orthogonally: a fresh corner is derived from the point two steps back
 // (P[2] for a source move, P[n-3] for a target move — the point BEFORE the segment that used to
 // lead into the old anchor), keeping that point's own coordinate on the axis the new approach
 // segment must share with it, exactly like enforceExitEntryDirection's own stub construction.
+// This patches the ENDPOINT only — it never re-runs obstacle avoidance for the segments before
+// that reference point, which is only safe when the reference point already sits on the correct
+// side of the node for the NEW anchor. moveWouldCrossNode() (below) is what actually guards
+// against the unsafe case; this function assumes it's already been checked.
 function applyAnchorMove(occ,newSide){
  const pos=edgeDList.findIndex(x=>x.i===occ.flowIdx); if(pos<0) return;
  const el=edgeEls[pos]; if(!el) return;
@@ -2393,19 +2434,54 @@ function applyAnchorMove(occ,newSide){
  el.setAttribute('d',newD);
  edgeDList[pos].d=newD;
 }
+// Guards applyAnchorMove() against producing a path that visually cuts back through the very
+// node it's leaving/entering. applyAnchorMove() only ever patches the 1-2 points closest to the
+// node, reusing whatever "reference point" (P[2] for a source move, P[n-3] for a target move —
+// or, for a plain 2-point straight connector with no such point of its own, the FAR endpoint
+// itself) the path already had. Correct for a connector whose reference already sits well clear
+// of the node on the requested newSide's own axis; wrong whenever it doesn't, in two distinct
+// ways both found on Park My Number's "Agent Checks Eligibility":
+//  - a connector with its own existing multi-segment detour (an obstacle-avoidance re-route
+//    from lateralEdgePath/edgePath elsewhere in this file) can have that reference point sitting
+//    on the OLD side's own detour column — patching only the endpoint while leaving it there
+//    draws a segment straight back across the node's body to reach it (stp03->stp04's left-side
+//    detour column at x=675, patched to exit 'right' at x=869, had to cross the diamond's full
+//    width just to reach it).
+//  - even a PLAIN 2-point straight connector can fail once its far endpoint's own coordinate,
+//    reused as the new corner's shared axis, happens to fall inside the node's span on that
+//    axis — stp02->stp03's far endpoint sits at y=700, exactly the node's own vertical centre,
+//    so patching it to exit 'top' produced a corner at (node's cx, 700) and a horizontal leg
+//    from the far endpoint straight into it that cut across the whole diamond before ever
+//    turning upward. Simply having "no multi-segment reference to conflict with" (the case this
+//    function used to treat as automatically safe) says nothing about whether the far endpoint
+//    itself creates exactly the same problem.
+// Both reduce to the same test: unsafe exactly when the reference point is NOT already on the
+// far side of the node's own bbox for the requested newSide — i.e. reaching it from the new
+// anchor would have to travel back across the node's own body (or through its interior) rather
+// than away from it.
+function moveWouldCrossNode(occ,newSide,P){
+ const n=occ.node;
+ const ref = occ.end==='source'
+  ? (P.length>=3 ? P[2] : P[P.length-1])
+  : (P.length>=3 ? P[P.length-3] : P[0]);
+ if(newSide==='left') return ref[0] > n.x;
+ if(newSide==='right') return ref[0] < n.x+n.w;
+ if(newSide==='top') return ref[1] > n.y;
+ return ref[1] < n.y+n.h;   // bottom
+}
 function rebalanceExternalAnchors(){
  const byNode={};
  edgeDList.forEach(({i,d})=>{
   const f=FLOWS[i]; const a=NID[f.from], b=NID[f.to]; if(!a||!b) return;
   const nums=d.match(/-?\d+\.?\d*/g); const P=[]; for(let k=0;k<nums.length;k+=2) P.push([Number(nums[k]),Number(nums[k+1])]);
-  if(a.type==='external'){
+  if(needsCardinalAnchor(a)){
    const side=sideOfCardinalPoint(a,P[0][0],P[0][1]);
-   if(side){ (byNode[a.id]=byNode[a.id]||{}); (byNode[a.id][side]=byNode[a.id][side]||[]).push({flowIdx:i,end:'source',node:a,otherCx:b.cx,otherCy:b.cy}); }
+   if(side){ (byNode[a.id]=byNode[a.id]||{}); (byNode[a.id][side]=byNode[a.id][side]||[]).push({flowIdx:i,end:'source',node:a,otherCx:b.cx,otherCy:b.cy,P}); }
   }
-  if(b.type==='external'){
+  if(needsCardinalAnchor(b)){
    const last=P[P.length-1];
    const side=sideOfCardinalPoint(b,last[0],last[1]);
-   if(side){ (byNode[b.id]=byNode[b.id]||{}); (byNode[b.id][side]=byNode[b.id][side]||[]).push({flowIdx:i,end:'target',node:b,otherCx:a.cx,otherCy:a.cy}); }
+   if(side){ (byNode[b.id]=byNode[b.id]||{}); (byNode[b.id][side]=byNode[b.id][side]||[]).push({flowIdx:i,end:'target',node:b,otherCx:a.cx,otherCy:a.cy,P}); }
   }
  });
  for(const [nodeId,sides] of Object.entries(byNode)){
@@ -2420,7 +2496,8 @@ function rebalanceExternalAnchors(){
     const candidate=CARDINAL_ORDER.find(s=>{
      if(s===fromSide) return false;
      if(sides[s] && sides[s].length) return false;
-     return sideValidForOther(s,occ.node,occ.otherCx,occ.otherCy);
+     if(!sideValidForOther(s,occ.node,occ.otherCx,occ.otherCy)) return false;
+     return !moveWouldCrossNode(occ,s,occ.P);
     });
     if(!candidate) continue;
     applyAnchorMove(occ,candidate);
@@ -3908,7 +3985,7 @@ text{font-family:"Segoe UI",Arial,sans-serif;}
 .node.selected .box{stroke:#e60000 !important;stroke-width:4px !important;filter:drop-shadow(0 0 6px rgba(230,0,0,.65)) drop-shadow(0 1px 3px rgba(0,0,0,.25));}
 .node.selected{opacity:1 !important;}
 .node.hp-done .box{stroke:#1e7d34 !important;stroke-width:3px !important;filter:drop-shadow(0 0 5px rgba(30,125,52,.55));}
-.node.hp-active .box{stroke:#e6a700 !important;stroke-width:4px !important;filter:drop-shadow(0 0 9px rgba(230,167,0,.85));}
+.node.hp-active .box{stroke:#e60000 !important;stroke-width:4px !important;filter:drop-shadow(0 0 9px rgba(230,0,0,.85));}
 .edge.hp-done{stroke:#1e7d34 !important;stroke-width:2.6px !important;filter:none !important;}`;
 function exportSVGString(){
  const clone=svg.cloneNode(true);
