@@ -1544,6 +1544,22 @@ function lateralEdgePath(a,b,chOffset){
   const hit3=obstacleOnColumn(ySpanLo,ySpanHi,travelX,a.id,b.id);   // that push may have landed back on a node
   if(hit3){ travelX = preferLeft ? hit3.x-OBSTACLE_CLEARANCE : hit3.x+hit3.w+OBSTACLE_CLEARANCE; }
  }
+ // obstacleOnColumn (every call above) deliberately excludes a.id/b.id — the line legitimately
+ // touches its own endpoints, so neither should ever register as "the obstacle" blocking it.
+ // But that also means clearing some unrelated third node in between never checks whether the
+ // resulting travel column still cuts through a's or b's OWN body — which it can, whenever the
+ // obstacle is narrower than the wider of the two endpoints (found on Park My Number's
+ // stp01->stp02: the circular "start" node sitting between them is far narrower than stp01's
+ // own rect, so a travelX that clears just the circle can still land mid-way through stp01's
+ // interior). Push travelX past whichever of a/b it still overlaps, on the same preferLeft side
+ // already chosen, then re-run the general obstacle check once more in case that push reveals
+ // yet another node the shorter, unpushed value never reached.
+ const selfSpanLo=Math.min(a.x,b.x), selfSpanHi=Math.max(a.x+a.w,b.x+b.w);
+ if(travelX>selfSpanLo-OBSTACLE_CLEARANCE && travelX<selfSpanHi+OBSTACLE_CLEARANCE){
+  travelX = preferLeft ? selfSpanLo-OBSTACLE_CLEARANCE : selfSpanHi+OBSTACLE_CLEARANCE;
+  const hit4=obstacleOnColumn(ySpanLo,ySpanHi,travelX,a.id,b.id);
+  if(hit4){ travelX = preferLeft ? hit4.x-OBSTACLE_CLEARANCE : hit4.x+hit4.w+OBSTACLE_CLEARANCE; }
+ }
  const minX=LY.x0+10, maxX=LY.totalW-10;
  if(travelX<minX) travelX=minX; if(travelX>maxX) travelX=maxX;
  const srcEdgeX = sideX(a,a.cy,preferLeft?'left':'right');   // source's LEFT or RIGHT edge, not top/bottom, for this case
