@@ -1730,7 +1730,22 @@ function edgePath(a,b,track,fwdMx,latOffset,branchOffset,convergeOffset){
     // on that leg — not just jog the row above/below it.
     let mx2 = (tx>=sx) ? Math.max(mx,hit.x+hit.w+OBSTACLE_CLEARANCE) : Math.min(mx,hit.x-OBSTACLE_CLEARANCE);
     mx2 = Math.max(Math.min(sx,tx)+10, Math.min(Math.max(sx,tx)-10, mx2));
-    return {d:`M${sx},${sy} L${sx},${clearY} L${mx2},${clearY} L${mx2},${ty} L${tx},${ty}`, mid:[mx2,(clearY+ty)/2]};
+    // This branch used to return here unconditionally — but its own final segment (mx2,ty ->
+    // tx,ty) is exactly the same "separate stretch of canvas, never checked" gap the rowHit
+    // check just below handles for the sibling (no-first-row-obstacle) case. Skipping it here
+    // meant an edge whose FIRST row already needed a detour never got its final row checked at
+    // all — found via a full 19-diagram connector/node-overlap sweep (Bill Formatter's
+    // xml_failed->end_rejected cut through 3 unrelated nodes on exactly this final segment).
+    // Mirrors the rowHit branch below exactly, just reusing mx2/clearY as this branch's own
+    // starting point instead of mx/sy.
+    const rowHit2=obstacleOnRow(mx2,tx,ty,a.id,b.id);
+    if(!rowHit2){
+     return {d:`M${sx},${sy} L${sx},${clearY} L${mx2},${clearY} L${mx2},${ty} L${tx},${ty}`, mid:[mx2,(clearY+ty)/2]};
+    }
+    const dir2 = clearY<ty ? -1 : 1;
+    const clearY2 = widenRowClear(dir2<0?rowHit2.y-OBSTACLE_CLEARANCE:rowHit2.y+rowHit2.h+OBSTACLE_CLEARANCE, dir2, mx2, tx, a.id, b.id);
+    const {ex,ey}=verticalEntry(b,clearY2);
+    return {d:`M${sx},${sy} L${sx},${clearY} L${mx2},${clearY} L${mx2},${clearY2} L${ex},${clearY2} L${ex},${ey}`, mid:[(mx2+ex)/2,clearY2]};
    }
    // The FIRST segment (at the source's own row, sy) is clear, checked above — but the LAST
    // segment (at the target's row, ty, from mx to tx) is a separate stretch of canvas that was
@@ -1740,12 +1755,57 @@ function edgePath(a,b,track,fwdMx,latOffset,branchOffset,convergeOffset){
    if(rowHit){
     const dir = sy<ty ? -1 : 1;
     const clearY = widenRowClear(dir<0?rowHit.y-OBSTACLE_CLEARANCE:rowHit.y+rowHit.h+OBSTACLE_CLEARANCE, dir, mx, tx, a.id, b.id);
+    // The vertical run this detour still draws at mx (from sy down/up to clearY) is itself
+    // unchecked — same "bend column, never column-checked" gap as the plain no-obstacle
+    // fallback further down, just reached via this branch's own detour instead. Same
+    // progressive push-and-recheck (first row already confirmed clear at the ORIGINAL mx —
+    // pushing this far is rare enough in practice that re-verifying it isn't worth the extra
+    // complexity, consistent with this file's existing best-effort obstacle clearances).
+    let mxR=mx, guardR=0;
+    while(guardR++<6){
+     const midHitR=obstacleOnColumn(sy,clearY,mxR,a.id,b.id);
+     if(!midHitR) break;
+     mxR = (tx>=sx) ? Math.max(mxR,midHitR.x+midHitR.w+OBSTACLE_CLEARANCE) : Math.min(mxR,midHitR.x-OBSTACLE_CLEARANCE);
+     const minXR=Math.min(sx,tx)+10, maxXR=Math.max(sx,tx)-10;
+     if(maxXR>minXR){ if(mxR<minXR) mxR=minXR; if(mxR>maxXR) mxR=maxXR; }
+    }
     // Same top/bottom-entry correction — this jog's final segment is vertical too.
     const {ex,ey}=verticalEntry(b,clearY);
-    return {d:`M${sx},${sy} L${mx},${sy} L${mx},${clearY} L${ex},${clearY} L${ex},${ey}`, mid:[(mx+ex)/2,clearY]};
+    return {d:`M${sx},${sy} L${mxR},${sy} L${mxR},${clearY} L${ex},${clearY} L${ex},${ey}`, mid:[(mxR+ex)/2,clearY]};
    }
   }
-  return {d:`M${sx},${sy} L${mx},${sy} L${mx},${ty} L${tx},${ty}`, mid:[mx,(sy+ty)/2]};
+  // Both row checks above passed, but neither ever looked at the BEND COLUMN itself — the
+  // vertical run at mx from sy to ty, which is new canvas territory of its own (a straight
+  // shot between two rows that happen to both be clear says nothing about what's directly
+  // between them). A third node sharing this phase-column's x, at some OTHER lane's y in
+  // between, sits directly in this segment — found via a full 19-diagram connector/node-
+  // overlap sweep (Mobile MACD MNP Port Out's system_auto_decision->end_rejected cut straight
+  // through an unrelated "dues_decision" node exactly this way). Same progressive push-and-
+  // recheck shape as every other obstacle clearance in this file.
+  let mx2=mx, guard=0;
+  while(guard++<6){
+   const midHit=obstacleOnColumn(sy,ty,mx2,a.id,b.id);
+   if(!midHit) break;
+   mx2 = (tx>=sx) ? Math.max(mx2,midHit.x+midHit.w+OBSTACLE_CLEARANCE) : Math.min(mx2,midHit.x-OBSTACLE_CLEARANCE);
+   const minX2=Math.min(sx,tx)+10, maxX2=Math.max(sx,tx)-10;
+   if(maxX2>minX2){ if(mx2<minX2) mx2=minX2; if(mx2>maxX2) mx2=maxX2; }
+  }
+  if(mx2===mx){
+   return {d:`M${sx},${sy} L${mx},${sy} L${mx},${ty} L${tx},${ty}`, mid:[mx,(sy+ty)/2]};
+  }
+  // Moving the bend column to clear a MIDDLE obstacle can reintroduce a first- or final-row
+  // hit at its new x (the row checks above only ever verified the ORIGINAL mx) — re-run both
+  // the same way they're checked everywhere else in this function.
+  const hit2=obstacleOnRow(sx,mx2,sy,a.id,b.id);
+  const rowHit3=obstacleOnRow(mx2,tx,ty,a.id,b.id);
+  if(!hit2 && !rowHit3){
+   return {d:`M${sx},${sy} L${mx2},${sy} L${mx2},${ty} L${tx},${ty}`, mid:[mx2,(sy+ty)/2]};
+  }
+  const blocking=rowHit3||hit2;
+  const dir3=sy<ty ? -1 : 1;
+  const clearY3=widenRowClear(dir3<0?blocking.y-OBSTACLE_CLEARANCE:blocking.y+blocking.h+OBSTACLE_CLEARANCE, dir3, mx2, tx, a.id, b.id);
+  const {ex:ex3,ey:ey3}=verticalEntry(b,clearY3);
+  return {d:`M${sx},${sy} L${mx2},${sy} L${mx2},${clearY3} L${ex3},${clearY3} L${ex3},${ey3}`, mid:[(mx2+ex3)/2,clearY3]};
  } else if(isLateral(a,b)){ // same phase, different lane -> direct vertical connector, not the backward bus
   return lateralEdgePath(a,b,latOffset);
  } else { // backward / genuine loop-back -> route through bottom channel
