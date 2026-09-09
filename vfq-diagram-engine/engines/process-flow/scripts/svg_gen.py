@@ -275,6 +275,12 @@ TITLE_Y_ONSPINE_FLOOR = 30
 # rather than a per-transition value.
 CARD_ELEMENT_GAP = 14
 
+# Every connector segment (a lead-in, a lead-out, a dodge, any real
+# straight run) must be at least this long — a segment shorter than
+# this reads as a visual glitch/sliver rather than a deliberate part of
+# the route, regardless of how tight the surrounding layout is.
+MIN_SEGMENT_LENGTH = 50
+
 # Below a text baseline, ~22% of the font size is a reasonable allowance
 # for descenders (CAP_HEIGHT_RATIO above already models the ascent side
 # of the same font stack). Needed because CARD_ELEMENT_GAP has to mean
@@ -1174,20 +1180,16 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # (the shape's own left vertex), not this further-left routing
             # anchor.
             #
-            # This lead-in only needs to be SHORT enough to read as "moving
-            # sideways first," not a full MIN_CLEARANCE(40) clear of every
-            # other card — siblings on the fixed 400px grid can sit as
-            # close as ~30-70px apart card-edge-to-card-edge, tighter than
-            # MIN_CLEARANCE allows, so demanding full clearance here has
-            # no solution at all in the tightest cases (confirmed on
-            # Mobile Postpaid Activation's jsm06 -> jsm05: jsm08's own
-            # card sits only 32px behind jsm06's left vertex — searching
-            # for a fully-clear step just walks past every sibling on the
-            # row and out the far side of the diagram). CARD_ELEMENT_GAP
-            # is small enough to stay inside gaps that tight while still
-            # being a real, visible horizontal step before the vertical
-            # climb takes over.
-            route_x1 = x1 - CARD_ELEMENT_GAP
+            # Every connector segment must be at least MIN_SEGMENT_LENGTH
+            # long, including this lead-in — a shorter one used to be
+            # accepted here specifically because full MIN_CLEARANCE(40)
+            # card clearance had no solution in the tightest sibling
+            # spacing on the fixed 400px grid (~30-70px card-edge-to-
+            # card-edge), but the length floor is now a harder
+            # requirement than that clearance preference: it applies
+            # unconditionally, even in the rare case where the nearest
+            # neighbour's card sits closer than MIN_SEGMENT_LENGTH away.
+            route_x1 = x1 - MIN_SEGMENT_LENGTH
             target_x2 = b["x"]
             true_vertex_x2, true_vertex_y2 = b["x"] - b["r"], b["y"]
             lead_out = ""
@@ -1202,14 +1204,14 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
                 # save_milestone_1's own preceding spine neighbour,
                 # line_count_check, sits close enough that a 60px lead-out
                 # ran directly through its card). Fall back to
-                # CARD_ELEMENT_GAP — the same minimum already accepted as
-                # safe-enough for the exit-side lead-in — if the wider
-                # gap isn't actually clear.
-                for offset in (LANE_PITCH, CARD_ELEMENT_GAP):
+                # MIN_SEGMENT_LENGTH — the hard floor every connector
+                # segment must meet — if the wider gap isn't actually
+                # clear.
+                for offset in (LANE_PITCH, MIN_SEGMENT_LENGTH):
                     lo, hi = true_vertex_x2 - offset, true_vertex_x2
                     if router._clear_of_cards(true_vertex_y2, lo, hi):
                         return true_vertex_x2 - offset
-                return true_vertex_x2 - CARD_ELEMENT_GAP
+                return true_vertex_x2 - MIN_SEGMENT_LENGTH
             # Only dodge when the TARGET node's own dead-centre column is
             # ALSO used by at least one down-direction edge — either one
             # it sources itself (a trunk) or one that terminates at it
@@ -1261,6 +1263,19 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
                     # landing on its single geometric vertex.
                     true_vertex_y2 += dodge_n * CARD_ELEMENT_GAP
                 target_x2, y2 = _dodge_x2(), true_vertex_y2
+            # route_x1 (the lead-in's own endpoint, sized purely from the
+            # SOURCE) and target_x2 (sized purely from the TARGET) are
+            # otherwise unrelated numbers — they can coincidentally land
+            # within MIN_SEGMENT_LENGTH of each other, leaving router
+            # .route()'s own connecting jog shorter than the floor every
+            # segment must meet (confirmed on Mobile MACD Plan Change:
+            # lockin_penalty_payment -> upgrade_downgrade_check's own
+            # jog came out 4px wide). Snapping route_x1 to target_x2
+            # removes that jog entirely — the lead-in simply runs a
+            # little further and connects directly, which only ever
+            # makes it LONGER than its own 50px floor, never shorter.
+            if abs(route_x1 - target_x2) < MIN_SEGMENT_LENGTH:
+                route_x1 = target_x2
             d, jog_y, jog_x_lo, jog_x_hi = router.route(route_x1, y1, target_x2, y2, a.get("rowGap", row_gap),
                                                          a.get("maxCardH", max_card_h), a.get("laneCount"))
             if target_x2 != b["x"]:

@@ -586,7 +586,7 @@ def compute_process_layout(nodes, flows, lanes, phases):
     # exit point landed 4px inside "reports_account_mgr"'s card — the two
     # are on different branches entirely, so this sweep's own EXISTING
     # card-vs-card check, below, had no reason to know about it).
-    LEFT_EXIT_MARGIN = svg_gen.CARD_ELEMENT_GAP
+    LEFT_EXIT_MARGIN = svg_gen.MIN_SEGMENT_LENGTH
 
     off_spine_sorted = sorted(off_spine_ids, key=lambda nid_: (out_nodes[nid_]["y"], out_nodes[nid_]["x"]))
     placed_boxes = []   # (x0, y0, x1, y1) already finalized, in this pass's own order
