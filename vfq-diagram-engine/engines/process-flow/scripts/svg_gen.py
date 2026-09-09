@@ -1038,6 +1038,27 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # climb takes over.
             route_x1 = x1 - CARD_ELEMENT_GAP
             target_x2 = b["x"]
+            true_vertex_x2, true_vertex_y2 = b["x"] - b["r"], b["y"]
+            lead_out = ""
+
+            def _dodge_x2():
+                # Prefer a full LANE_PITCH of separation from the true
+                # vertex (clearly a separate route, not just barely off
+                # the shared column) — but an on-spine target's PRECEDING
+                # neighbour can sit close enough that this lead-out
+                # segment would clip straight through its card instead
+                # (confirmed on Mobile MACD Activation Prepaid:
+                # save_milestone_1's own preceding spine neighbour,
+                # line_count_check, sits close enough that a 60px lead-out
+                # ran directly through its card). Fall back to
+                # CARD_ELEMENT_GAP — the same minimum already accepted as
+                # safe-enough for the exit-side lead-in — if the wider
+                # gap isn't actually clear.
+                for offset in (LANE_PITCH, CARD_ELEMENT_GAP):
+                    lo, hi = true_vertex_x2 - offset, true_vertex_x2
+                    if router._clear_of_cards(true_vertex_y2, lo, hi):
+                        return true_vertex_x2 - offset
+                return true_vertex_x2 - CARD_ELEMENT_GAP
             # If the target's own column is already claimed by a downward
             # trunk (it's the shared anchor of a branch-group fan-out —
             # every child's own path starts with a vertical run at
@@ -1047,13 +1068,17 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # jsm06 -> jsm05: its approach shared jsm05's own x=2060
             # downward-trunk column from y=233 to y=698). Opposite-
             # direction connectors must never share a routing segment, so
-            # when that column is already claimed, enter from the
-            # target's LEFT vertex instead of its top — same convention
-            # already used for a left-vertex EXIT, just mirrored for the
-            # entry side, and always exactly on the shape's own boundary
-            # regardless of the target's radius (unlike nudging x2 while
-            # keeping the "top" y formula, which would float off the
-            # shape for anything but a dead-centre x).
+            # when that column is already claimed, route to a column a
+            # full LANE_PITCH left of the target's own left vertex instead
+            # of dead-centre — just using the bare vertex (offset only by
+            # the target's own radius, often <20px) still read as "the
+            # same line" at normal zoom, not a genuinely separate route.
+            # A short lead-out segment (mirrors the lead-in already used
+            # for a left-vertex EXIT) then cuts back in to the TRUE vertex
+            # right at the very end, so the arrowhead still lands exactly
+            # on the shape despite the approach column being pushed well
+            # clear of it.
+            #
             # A naive pre-check against just [y1, y2] isn't always enough —
             # for a long loop-back, route()'s own lane search can push
             # jog_y far outside that naive span (confirmed on the same
@@ -1061,21 +1086,25 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # touched jsm08's claimed range, but the ACTUAL jog it needed
             # landed at y=2890, which did). Route once, check the REAL
             # resulting vertical span at the target column, and re-route
-            # with a left-vertex entry if that turns out to collide too.
+            # with the wider dodge if that turns out to collide too.
             if not router._v_free(target_x2, min(y1, y2), max(y1, y2)):
-                target_x2, y2 = b["x"] - b["r"], b["y"]
+                target_x2, y2 = _dodge_x2(), true_vertex_y2
             d, jog_y, jog_x_lo, jog_x_hi = router.route(route_x1, y1, target_x2, y2, a.get("rowGap", row_gap),
                                                          a.get("maxCardH", max_card_h), a.get("laneCount"))
             if target_x2 == b["x"] and not router._v_free(target_x2, min(jog_y, y2), max(jog_y, y2)):
                 router.placed_v.pop()   # undo the just-claimed (now-known-bad) entry column
                 router.placed_v.pop()
                 router.placed_h.pop()
-                target_x2, y2 = b["x"] - b["r"], b["y"]
+                target_x2, y2 = _dodge_x2(), true_vertex_y2
                 d, jog_y, jog_x_lo, jog_x_hi = router.route(route_x1, y1, target_x2, y2, a.get("rowGap", row_gap),
                                                              a.get("maxCardH", max_card_h), a.get("laneCount"))
-            d = f"M {x1} {y1} L " + d[2:]   # prepend the true origin's own horizontal lead-in;
-                                             # d[2:] strips router.route()'s own leading "M " so its
-                                             # first point (route_x1, y1) becomes this segment's endpoint
+            if target_x2 != b["x"]:
+                lead_out = f" L {true_vertex_x2} {true_vertex_y2}"
+            d = f"M {x1} {y1} L " + d[2:] + lead_out   # prepend the true origin's own horizontal
+                                             # lead-in; d[2:] strips router.route()'s own leading "M "
+                                             # so its first point (route_x1, y1) becomes this segment's
+                                             # endpoint; lead_out (if any) appends the final cut-in to
+                                             # the target's true vertex
         else:
             d, jog_y, jog_x_lo, jog_x_hi = router.route(x1, y1, b["x"], y2, a.get("rowGap", row_gap),
                                                          a.get("maxCardH", max_card_h), a.get("laneCount"))
