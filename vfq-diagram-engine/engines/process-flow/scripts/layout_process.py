@@ -575,24 +575,39 @@ def compute_process_layout(nodes, flows, lanes, phases):
     # time: push any card that still overlaps an already-placed one to
     # sit just right of it, re-checking against everything placed so far
     # since one push can walk into a card that was already clear.
+    # A node's own reserved footprint isn't just its card text box — an
+    # off-spine node with an upward outgoing edge routes that connector's
+    # exit from its LEFT vertex plus a short horizontal lead-in (see
+    # svg_gen.py's left_vertex_exit), landing OUTSIDE the card box, to its
+    # own left. Not every off-spine node ends up using one, but reserving
+    # the room unconditionally is cheap and guarantees an unrelated card
+    # can never end up sitting exactly where that exit would need to pass
+    # through (confirmed on Bill Formatter: "xml_failed"'s own left-vertex
+    # exit point landed 4px inside "reports_account_mgr"'s card — the two
+    # are on different branches entirely, so this sweep's own EXISTING
+    # card-vs-card check, below, had no reason to know about it).
+    LEFT_EXIT_MARGIN = svg_gen.CARD_ELEMENT_GAP
+
     off_spine_sorted = sorted(off_spine_ids, key=lambda nid_: (out_nodes[nid_]["y"], out_nodes[nid_]["x"]))
     placed_boxes = []   # (x0, y0, x1, y1) already finalized, in this pass's own order
     for node_id in off_spine_sorted:
         n = out_nodes[node_id]
         h = _card_h(node_id, False)
-        x0 = n["x"] + CARD_L
+        base_x = n["x"]
+        left_offset = min(CARD_L, -n["r"] - LEFT_EXIT_MARGIN)
         y0, y1 = n["y"], n["y"] + h
-        for _ in range(len(placed_boxes) + 1):   # bounded: x0 only ever moves right, past a finite set
+        dx = 0
+        for _ in range(len(placed_boxes) + 1):   # bounded: dx only ever grows, past a finite set
             moved = False
+            box_left, box_right = base_x + dx + left_offset, base_x + dx + CARD_R
             for (px0, py0, px1, py1) in placed_boxes:
-                x1 = x0 + (CARD_R - CARD_L)
-                if x0 < px1 and x1 > px0 and y0 < py1 and y1 > py0:
-                    x0 = px1 + ROW_TEXT_CLEARANCE
+                if box_left < px1 and box_right > px0 and y0 < py1 and y1 > py0:
+                    dx = px1 + ROW_TEXT_CLEARANCE - left_offset - base_x
                     moved = True
             if not moved:
                 break
-        n["x"] += x0 - (n["x"] + CARD_L)
-        placed_boxes.append((x0, y0, x0 + (CARD_R - CARD_L), y1))
+        n["x"] = base_x + dx
+        placed_boxes.append((base_x + dx + left_offset, y0, base_x + dx + CARD_R, y1))
 
     # Widen phase bands (forward only) to include any off-spine node whose
     # OWN anchor sits in the same declared phase — i.e. its position and
