@@ -73,6 +73,13 @@ def render(model_path, out_path, template_path=None, skip_validate=False):
         os.path.dirname(os.path.abspath(__file__)), "..", "reference", "engine_template.html")
     tpl = open(template_path, encoding="utf-8").read()
 
+    # Compact keys (f/t/l) matching search_index's own convention (id/x/y/r/lb/t)
+    # — every flow, unfiltered, since the click-to-select feature (see
+    # engine_template.html) needs the FULL adjacency graph, including
+    # trivial spine hops that svg_gen.py draws as plain spine-line segments
+    # rather than a separate labelled connector.
+    flows_js = [{"f": f.get("from"), "t": f.get("to"), "l": f.get("label")} for f in blob.get("flows", [])]
+
     export_base = meta.get("brsdId", "process-flow") + "-process-flow"
     html = (tpl
             .replace("__TITLE__", svg_gen.esc(title))
@@ -83,6 +90,7 @@ def render(model_path, out_path, template_path=None, skip_validate=False):
             .replace("__TOTAL_H__", str(pf_layout["totalH"]))
             .replace("__SVG_BODY__", svg_body)
             .replace("__NODES_JSON__", json.dumps(search_index))
+            .replace("__FLOWS_JSON__", json.dumps(flows_js))
             .replace("__PHASES_JSON__", json.dumps(phases_js))
             .replace("__EXPORT_BASENAME__", export_base))
     open(out_path, "w", encoding="utf-8").write(html)

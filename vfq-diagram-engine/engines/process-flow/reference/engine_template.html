@@ -78,8 +78,32 @@ i{width:13px;height:13px;display:inline-block;flex:none}
 .chipd{background:none;border:1px dashed rgba(255,255,255,.42);border-radius:3px;width:16px;height:11px}
 .scroll{overflow-x:auto;overflow-y:hidden;padding:0 0 28px}
 .scroll svg{display:block}
-.scroll svg g[tabindex]{outline:none}
+.scroll svg g[tabindex]{outline:none;cursor:pointer}
 .scroll svg g[tabindex]:focus-visible{outline:3px solid var(--accent);outline-offset:4px;border-radius:4px}
+/* ---- click-to-select relationship highlight ---- */
+/* Opacity lives on the WHOLE <g id="node-…"> / <g class="pf-edge"> group —
+   shape, card text, tags, and (for edges) the line + its own label all
+   dim or emphasise together as one unit, never independently, so a
+   reader is never left looking at a bright line with a ghosted label or
+   vice versa. Only active while #flow carries .pf-active, so a page with
+   no selection never pays any opacity/cursor cost. */
+#flow .pf-edge{cursor:pointer}
+#flow.pf-active g[id^="node-"].pf-dim,
+#flow.pf-active .pf-edge.pf-dim-edge{opacity:.14}
+#flow.pf-active g[id^="node-"].pf-direct,
+#flow.pf-active g[id^="node-"].pf-path,
+#flow.pf-active g[id^="node-"].pf-selected{opacity:1}
+#flow.pf-active .pf-edge.pf-direct-edge,
+#flow.pf-active .pf-edge.pf-path-edge{opacity:1}
+/* Direct (immediate in/out) connectors read as the strongest signal —
+   thicker line — path AND line both targeted since a trivial spine hop
+   draws a <line>, every other connector a <path>. Presentation attributes
+   (the inline stroke-width every connector already carries) sit BELOW any
+   class selector in the cascade, so this overrides them with no !important
+   needed. */
+#flow.pf-active .pf-edge.pf-direct-edge path,
+#flow.pf-active .pf-edge.pf-direct-edge line{stroke-width:3.6px}
+#selhl circle{pointer-events:none}
 #printdoc{display:none}
 @media print{
   @page{size:A4 landscape;margin:10mm}
@@ -147,7 +171,7 @@ __SVG_BODY__
 </svg>
 </div>
 <script>
-const NODES=__NODES_JSON__, PHASES=__PHASES_JSON__;
+const NODES=__NODES_JSON__, PHASES=__PHASES_JSON__, FLOWS=__FLOWS_JSON__;
 const scroll=document.getElementById('scroll'), hl=document.getElementById('hl'),
       q=document.getElementById('q'), sc=document.getElementById('searchCtrl'),
       hits=document.getElementById('hits'), sel=document.getElementById('phaseSel'),
@@ -224,7 +248,127 @@ q.addEventListener('keydown',e=>{
   }
 });
 
+/* ---- Click-to-select: relationships, upstream/downstream path, dim the rest ----
+   outAdj[id] / inAdj[id] hold every flow leaving/entering that node — built
+   from FLOWS, the full unfiltered edge list (including trivial spine hops,
+   which svg_gen.py draws as plain <line> segments rather than a separate
+   labelled connector — see build()'s own spine-splitting comment — but
+   which still need to participate in the graph here). */
+const flowEl=document.getElementById('flow'), selhl=document.getElementById('selhl');
+const nodeById={}; NODES.forEach(n=>nodeById[n.id]=n);
+const outAdj={}, inAdj={};
+FLOWS.forEach(f=>{
+  if(!f.f || !f.t) return;
+  (outAdj[f.f]=outAdj[f.f]||[]).push(f);
+  (inAdj[f.t]=inAdj[f.t]||[]).push(f);
+});
+let selectedId=null;
+const PF_NODE_CLASSES=['pf-selected','pf-direct','pf-path','pf-dim'];
+const PF_EDGE_CLASSES=['pf-direct-edge','pf-path-edge','pf-dim-edge'];
+
+// BFS over one direction's adjacency, returning every node reached (not
+// including the start) plus every edge traversed to reach it — the "edges
+// traversed" set is what lets an edge be highlighted based on whether it's
+// actually ON some upstream/downstream chain from the selected node, not
+// merely "both its endpoints happen to be somewhere in the reachable set"
+// (two reachable nodes can have an edge between them that isn't part of
+// any chain FROM the selected node — e.g. a lateral link the traversal
+// never needed to follow).
+function reachable(startId, adj, forward){
+  const seen=new Set([startId]), queue=[startId], edgeKeys=new Set();
+  while(queue.length){
+    const cur=queue.shift();
+    (adj[cur]||[]).forEach(f=>{
+      const other=forward?f.t:f.f;
+      edgeKeys.add(forward?(cur+'→'+other):(other+'→'+cur));
+      if(!seen.has(other)){ seen.add(other); queue.push(other); }
+    });
+  }
+  seen.delete(startId);
+  return {nodes:seen, edgeKeys};
+}
+
+function clearSelection(){
+  if(selectedId===null) return;
+  selectedId=null;
+  document.querySelectorAll('g[id^="node-"]').forEach(g=>g.classList.remove(...PF_NODE_CLASSES));
+  document.querySelectorAll('.pf-edge').forEach(g=>g.classList.remove(...PF_EDGE_CLASSES));
+  flowEl.classList.remove('pf-active');
+  selhl.textContent='';
+}
+
+function selectNode(id){
+  if(selectedId===id){ clearSelection(); return; }
+  const wasOpen=selectedId!==null;
+  if(wasOpen) clearSelection();
+  selectedId=id;
+  flowEl.classList.add('pf-active');
+
+  const down=reachable(id, outAdj, true), up=reachable(id, inAdj, false);
+  const directOutIds=new Set((outAdj[id]||[]).map(f=>f.t));
+  const directInIds=new Set((inAdj[id]||[]).map(f=>f.f));
+  const directIds=new Set([...directOutIds, ...directInIds]);
+  const pathIds=new Set([...down.nodes, ...up.nodes]);
+  const directEdgeKeys=new Set([
+    ...(outAdj[id]||[]).map(f=>id+'→'+f.t),
+    ...(inAdj[id]||[]).map(f=>f.f+'→'+id)
+  ]);
+  const pathEdgeKeys=new Set([...down.edgeKeys, ...up.edgeKeys]);
+
+  document.querySelectorAll('g[id^="node-"]').forEach(g=>{
+    const nid=g.id.slice(5);
+    if(nid===id) g.classList.add('pf-selected');
+    else if(directIds.has(nid)) g.classList.add('pf-direct');
+    else if(pathIds.has(nid)) g.classList.add('pf-path');
+    else g.classList.add('pf-dim');
+  });
+  document.querySelectorAll('.pf-edge').forEach(g=>{
+    const key=g.dataset.from+'→'+g.dataset.to;
+    if(directEdgeKeys.has(key)) g.classList.add('pf-direct-edge');
+    else if(pathEdgeKeys.has(key)) g.classList.add('pf-path-edge');
+    else g.classList.add('pf-dim-edge');
+  });
+
+  // n.r from NODES already carries the same +6px margin ring() above uses
+  // for search hits — reused here so both rings read as the same visual
+  // "this is the one" language, just a different colour/weight so the two
+  // features never look identical if a reader has both active at once.
+  const n=nodeById[id];
+  if(n){
+    const c=document.createElementNS(SVGNS,'circle');
+    c.setAttribute('cx',n.x); c.setAttribute('cy',n.y); c.setAttribute('r',n.r);
+    c.setAttribute('fill','none'); c.setAttribute('stroke','#111');
+    c.setAttribute('stroke-width','3.5');
+    selhl.appendChild(c);
+  }
+}
+
+flowEl.addEventListener('click', e=>{
+  const g=e.target.closest('g[id^="node-"]');
+  if(g){ e.stopPropagation(); selectNode(g.id.slice(5)); return; }
+  if(!e.target.closest('.pf-edge')) clearSelection();
+});
+flowEl.addEventListener('keydown', e=>{
+  if(e.key!=='Enter' && e.key!==' ') return;
+  const g=e.target.closest && e.target.closest('g[id^="node-"]');
+  if(g){ e.preventDefault(); selectNode(g.id.slice(5)); }
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && selectedId!==null) clearSelection(); });
+
 /* ---- Paginated PDF via the browser's own print-to-PDF (no external library, works offline) ---- */
+// Shared by both export paths below — a cloned #flow keeps whatever
+// search/selection state was live on screen (highlight rings, dimmed
+// pf-* classes) unless stripped here, and since an exported file has no
+// copy of the page's own <style> block, the pf-* classes wouldn't even
+// render dimmed if left in — better to remove them outright than ship
+// dead class names.
+function _stripSelectionArtifacts(clonedFlow){
+  const h=clonedFlow.querySelector('#hl'); if(h) h.textContent='';
+  const s=clonedFlow.querySelector('#selhl'); if(s) s.textContent='';
+  clonedFlow.classList.remove('pf-active');
+  clonedFlow.querySelectorAll('g[id^="node-"]').forEach(g=>g.classList.remove(...PF_NODE_CLASSES));
+  clonedFlow.querySelectorAll('.pf-edge').forEach(g=>g.classList.remove(...PF_EDGE_CLASSES));
+}
 function exportPDF(){
   const el=document.getElementById('flow');
   const W=+el.getAttribute('width'), H=+el.getAttribute('height');
@@ -237,7 +381,7 @@ function exportPDF(){
     cap.innerHTML='<b>__H1_MAIN__ — __H1_SUB__</b>'+
                   '<span>Page '+(i+1)+' of '+n+'</span>';
     const c=el.cloneNode(true);
-    const h=c.querySelector('#hl'); if(h) h.textContent='';
+    _stripSelectionArtifacts(c);
     c.removeAttribute('id'); c.removeAttribute('width'); c.removeAttribute('height');
     c.setAttribute('viewBox',(i*SLICE)+' 0 '+SLICE+' '+H);
     pg.appendChild(cap); pg.appendChild(c); doc.appendChild(pg);
@@ -256,7 +400,7 @@ expBtn.onclick=e=>{e.stopPropagation();expMenu.classList.toggle('open');};
 document.addEventListener('click',()=>expMenu.classList.remove('open'));
 function svgBlob(){
   const el=document.getElementById('flow').cloneNode(true);
-  el.querySelector('#hl').textContent='';
+  _stripSelectionArtifacts(el);
   el.setAttribute('xmlns',SVGNS);
   return new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n'+new XMLSerializer().serializeToString(el)],
                   {type:'image/svg+xml;charset=utf-8'});
