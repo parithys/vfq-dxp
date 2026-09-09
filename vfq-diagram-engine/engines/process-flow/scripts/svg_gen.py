@@ -213,6 +213,8 @@ def system_tags(node):
 # ----------------------------------------------------------------- node card (title/code/desc/tags)
 TITLE_FONT_PX, CODE_FONT_PX, DESC_FONT_PX, TAG_FONT_PX = 15.0, 11.5, 12.5, 10
 TITLE_AVG_CHAR, DESC_AVG_CHAR, TAG_AVG_CHAR = 8.6, 6.3, 6.8
+TITLE_LINE_H = 20   # gap between two wrapped title lines — same ratio to TITLE_FONT_PX(15) as
+                     # DESC_FONT_PX(12.5)'s own established 21px inter-line gap uses (~1.68x font size)
 CARD_TEXT_OFFSET = 26
 CARD_AVAIL_W = 330
 SYS_TAG_FONT_PX = 9.5
@@ -262,7 +264,7 @@ def _centered_baseline(rect_y, rect_h, font_px):
     return rect_y + (rect_h + font_px * CAP_HEIGHT_RATIO) / 2
 
 
-def card_metrics(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True):
+def card_metrics(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True, avail_w=CARD_AVAIL_W):
     """Pure layout computation for one node's card — no SVG, just the Y
     cursor positions node_card_svg() below would place each element at,
     ending in `bottom` (the card's own lowest extent, relative to the
@@ -284,15 +286,24 @@ def card_metrics(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True):
     TITLE_Y_ONSPINE_FLOOR (see its own comment) so a decision node's title
     never climbs into its own happy-path branch label sitting just above
     the spine line — off-spine nodes have no such label to protect
-    against, so they get the raw, fully top-aligned value."""
+    against, so they get the raw, fully top-aligned value.
+
+    `avail_w` is the actual usable text width for THIS node — CARD_AVAIL_W
+    by default, but narrower for a spine node sitting right up against its
+    own phase's boundary (see layout_process.py's avail_w_by_node): title,
+    description, and system tags all wrap to it, so nothing in the card
+    ever renders past whatever width this node actually has room for."""
     sub = node_data.get("sub")
     desc_line = _clean_desc(node_data.get("desc"))
-    desc_lines = wrap_lines(desc_line, DESC_AVG_CHAR, CARD_AVAIL_W)
+    desc_lines = wrap_lines(desc_line, DESC_AVG_CHAR, avail_w)
+    title_text = node_data.get("label") or node_data.get("id") or ""
+    title_lines = wrap_lines(title_text, TITLE_AVG_CHAR, avail_w) or [""]
 
     raw_title_y = CAP_HEIGHT_RATIO * TITLE_FONT_PX - r
     title_y = max(raw_title_y, TITLE_Y_ONSPINE_FLOOR) if on_spine else raw_title_y
+    title_ys = [title_y + i * TITLE_LINE_H for i in range(len(title_lines))]
     sub_y = None
-    cursor = title_y
+    cursor = title_ys[-1]
     if sub:
         cursor += 26
         sub_y = cursor
@@ -319,17 +330,17 @@ def card_metrics(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True):
         sys_tag_rows = 1
         for tag in sys_tags:
             w = int(text_width(tag, TAG_AVG_CHAR)) + 22 + 8
-            if row_w and (row_w + w) > CARD_AVAIL_W:
+            if row_w and (row_w + w) > avail_w:
                 sys_tag_rows += 1
                 row_w = 0
             row_w += w
         tag_row_y += 24 * sys_tag_rows
 
-    return {"titleY": title_y, "subY": sub_y, "descYs": desc_ys, "actorTagY": actor_tag_y,
-            "descLines": desc_lines, "sysTags": sys_tags, "bottom": tag_row_y}
+    return {"titleLines": title_lines, "titleYs": title_ys, "subY": sub_y, "descYs": desc_ys,
+            "actorTagY": actor_tag_y, "descLines": desc_lines, "sysTags": sys_tags, "bottom": tag_row_y}
 
 
-def card_height(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True):
+def card_height(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True, avail_w=CARD_AVAIL_W):
     """Just the `bottom` figure from card_metrics() — how far below its own
     node.y this card's content extends. Used by layout_process.py in a
     pre-pass (before node y-positions — or shape categories, and so
@@ -337,19 +348,20 @@ def card_height(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True):
     instead of a guessed constant — see compute_process_layout()'s own
     ROW_GAP_MIN derivation. `r` defaults to DEFAULT_CARD_R there; the real
     per-node radius is what node_card_svg() below actually renders with."""
-    return card_metrics(node_data, lane_name, r, on_spine)["bottom"]
+    return card_metrics(node_data, lane_name, r, on_spine, avail_w)["bottom"]
 
 
 def node_card_svg(n, node_data, lane_name):
     x, y = n["x"], n["y"]
     color = _shape_color(n)
     tx = x + CARD_TEXT_OFFSET
-    label = node_data.get("label") or n["id"]
-    m = card_metrics(node_data, lane_name, n["r"], n["onSpine"])
+    avail_w = n.get("availW", CARD_AVAIL_W)
+    m = card_metrics(node_data, lane_name, n["r"], n["onSpine"], avail_w)
 
     parts = []
-    parts.append(f'<text x="{tx}" y="{y + m["titleY"]}" font-size="{TITLE_FONT_PX}" font-weight="700" '
-                 f'fill="{INK}">{esc(label)}</text>')
+    for ty, tl in zip(m["titleYs"], m["titleLines"]):
+        parts.append(f'<text x="{tx}" y="{y + ty}" font-size="{TITLE_FONT_PX}" font-weight="700" '
+                     f'fill="{INK}">{esc(tl)}</text>')
     if m["subY"] is not None:
         parts.append(f'<text x="{tx}" y="{y + m["subY"]}" font-size="{CODE_FONT_PX}" font-weight="400" '
                      f'font-style="italic" fill="{INK}">{esc(str(node_data.get("sub")).upper())}</text>')
@@ -368,12 +380,13 @@ def node_card_svg(n, node_data, lane_name):
 
     # System tags flow left-to-right on one row (matching the reference's own
     # Qnomy/CTI/Email layout), wrapping to a new row only once a row's
-    # accumulated width would exceed CARD_AVAIL_W — not one tag per row.
+    # accumulated width would exceed this node's own avail_w — not one tag
+    # per row.
     sys_tag_x, sys_tag_y = tx, tag_row_y
     row_started = False
     for tag in m["sysTags"]:
         w = int(text_width(tag, TAG_AVG_CHAR)) + 22
-        if row_started and (sys_tag_x - tx + w) > CARD_AVAIL_W:
+        if row_started and (sys_tag_x - tx + w) > avail_w:
             sys_tag_x = tx
             sys_tag_y += 24
         parts.append(f'<rect x="{sys_tag_x}" y="{sys_tag_y}" width="{w}" height="{SYS_TAG_H}" rx="4" '
@@ -408,6 +421,50 @@ def node_card_svg(n, node_data, lane_name):
 # build_model.py's.)
 MIN_CLEARANCE = 40
 LANE_PITCH = 44
+ROTATED_LABEL_GAP = 11   # base gap between a rotated (off-spine) branch label and the LINE it's attached
+                          # to — matches the happy-branch label's own tight -11px perpendicular gap from
+                          # its line exactly, so both label styles read as the same distance off their
+                          # connector. Measured from the line's actual x (which sits at the SOURCE node's
+                          # own x for a straight vertical drop — confirmed against connectors_svg()'s own
+                          # y1/y2 computation just below, which offsets y by the node radius but never x),
+                          # not from the node's radius: an earlier version subtracted a["r"] here too,
+                          # which made the gap balloon for large-radius categories (e.g. R_DECISION=18)
+                          # while the horizontal label's gap stayed a flat 11 regardless of category —
+                          # exactly the cross-label inconsistency this constant exists to remove. Genuine
+                          # overlap with the source shape (only possible when ly lands close to the node's
+                          # own y, e.g. a short edge) is still caught and corrected by
+                          # _clear_of_every_shape below, which pushes ly (not lx) clear — so dropping the
+                          # r term here doesn't reopen the "label drawn through the diamond" bug that
+                          # originally motivated it.
+                          # Kept separate from MIN_CLEARANCE (40px), which stays in use everywhere this
+                          # label is pushed to actually CLEAR a card/shape/sibling-label collision below —
+                          # this constant only sets the default, no-collision starting gap.
+
+
+def is_trivial_spine_hop(f, a, b):
+    """True for a plain consecutive spine hop (st(to)==st(from)+1, happy,
+    unlabelled) — already covered by the single continuous spine line, so
+    connectors_svg() draws nothing for it at all."""
+    return (a["onSpine"] and b["onSpine"] and a["st"] is not None and b["st"] is not None
+            and b["st"] == a["st"] + 1 and f.get("happy") is not False
+            and f.get("kind") not in ("esc", "err") and not f.get("label"))
+
+
+def is_happy_branch_label(f, a, b):
+    """True for an on-spine happy-path branch flow — drawn as a plain
+    inline text label (see connectors_svg()'s happy_branch_label handling),
+    never as a routed path, so it never consumes a _LaneRouter lane."""
+    return a["onSpine"] and b["onSpine"] and f.get("happy") is True and bool(f.get("label"))
+
+
+def needs_lane(f, a, b):
+    """True iff this flow is drawn as an explicit routed connector in
+    connectors_svg() — i.e. it will consume one of _LaneRouter's jog lanes.
+    Shared with layout_process.py, which uses it (via lightweight prelim
+    node dicts, before final layout is known) to size each spine anchor's
+    own row_gap to the ACTUAL number of jogs that anchor needs to route,
+    instead of a flat guess — see N_ROUTING_LANES there."""
+    return not is_trivial_spine_hop(f, a, b) and not is_happy_branch_label(f, a, b)
 
 
 def edge_color(flow, target_node):
@@ -610,7 +667,7 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
     # "Validate Credentials" card, which an on-spine-only check (an
     # earlier version of this fix) never even considered.
     card_intervals = sorted(
-        (n["x"] + CARD_TEXT_OFFSET, n["x"] + CARD_TEXT_OFFSET + CARD_AVAIL_W)
+        (n["x"] + CARD_TEXT_OFFSET, n["x"] + CARD_TEXT_OFFSET + n.get("availW", CARD_AVAIL_W))
         for n in nodes_by_id.values()
     )
 
@@ -666,19 +723,18 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
         a, b = nodes_by_id.get(f.get("from")), nodes_by_id.get(f.get("to"))
         if not a or not b:
             continue
-        trivial_spine_hop = (a["onSpine"] and b["onSpine"] and a["st"] is not None and b["st"] is not None
-                              and b["st"] == a["st"] + 1 and f.get("happy") is not False
-                              and f.get("kind") not in ("esc", "err") and not f.get("label"))
-        if trivial_spine_hop:
+        if is_trivial_spine_hop(f, a, b):
             continue
 
-        happy_branch_label = (a["onSpine"] and b["onSpine"] and f.get("happy") is True and f.get("label"))
-        if happy_branch_label:
-            # Left-aligned, a consistent 40px in from the source node's own
-            # edge — not centred between source and target — so the label
-            # reads as clearly "belonging to" the connector leaving THIS
-            # node, regardless of how far away the target sits.
-            lx = a["x"] + a["r"] + MIN_CLEARANCE
+        if is_happy_branch_label(f, a, b):
+            # Left-aligned at the SAME x as the source node's own card title
+            # (node_card_svg's tx = x + CARD_TEXT_OFFSET) — not offset by
+            # the node's own radius/MIN_CLEARANCE, which varies per node
+            # category (R_DECISION=18 vs R_PRIMARY=14, etc.) and drifted the
+            # label out of alignment with the title sitting directly below
+            # it. Sharing the exact same offset keeps the two vertically
+            # aligned regardless of the source node's shape.
+            lx = a["x"] + CARD_TEXT_OFFSET
             out.append(f'<text x="{lx}" y="{a["y"] - 11}" font-size="11" font-weight="700" fill="{GREEN}" '
                        f'text-anchor="start">{esc(f["label"])}</text>')
             continue
@@ -692,7 +748,7 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
         out.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="2.2"{dash} '
                    f'marker-end="url(#{marker})"/>')
         if f.get("label"):
-            base_lx, ly = a["x"] - a["r"] - MIN_CLEARANCE, (y1 + y2) / 2
+            base_lx, ly = a["x"] - ROTATED_LABEL_GAP, (y1 + y2) / 2
             this_len = _label_len(f["label"])
             lane = sum(1 for (px, py, ptxt) in placed_labels
                        if abs(px - base_lx) < LABEL_X_TOLERANCE

@@ -299,6 +299,65 @@ def compute_process_layout(nodes, flows, lanes, phases):
     spine_set = set(spine_order)
     spine_x = {node_id: X_START + i * STEP for i, node_id in enumerate(spine_order)}
 
+    # Phase bands only ever depend on spine node x (fixed the instant
+    # spine_x above is known — never on row_gap/card height/off-spine
+    # positions), so they're computed here, BEFORE card heights, rather
+    # than at the end where the final returned dict needs them. Doing it
+    # early lets card_metrics() below constrain each spine node's own text
+    # width to whatever room its OWN phase band actually has left, instead
+    # of the flat CARD_AVAIL_W every node used to get regardless of how
+    # close the next phase's boundary sits — confirmed overflowing on a
+    # phase's last node in several diagrams (Mobile Postpaid Activation's
+    # "Save Milestone as Draft Order" among them): CARD_AVAIL_W(330) +
+    # CARD_TEXT_OFFSET(26) = 356px of text width, while a phase boundary
+    # exactly midway between two STEP=400-apart spine nodes leaves only
+    # STEP/2=200px — the card's own description/title/tags ran 150+px past
+    # the tint line into the next phase's territory. See BOUNDARY_MARGIN
+    # below for the fix.
+    phase_x = collections.defaultdict(list)
+    for node_id in spine_order:
+        phase_x[nid[node_id].get("phase", 0)].append(spine_x[node_id])
+    phase_indices = sorted(phase_x.keys())
+    bands = []
+    for i, p in enumerate(phase_indices):
+        xs = phase_x[p]
+        x0 = min(xs) - (STEP / 2 if i > 0 else X_START)
+        x1 = (min(phase_x[phase_indices[i + 1]]) - STEP / 2) if i + 1 < len(phase_indices) else max(xs) + PHASE_PAD
+        bands.append({"name": phases[p] if p < len(phases) else f"Phase {p}",
+                       "x0": max(0, x0), "x1": x1, "tint": i % 2 == 1})
+    band_x1_by_phase = {p: bands[i]["x1"] for i, p in enumerate(phase_indices)}
+
+    def _band_x1_for_x(x):
+        """The x1 of whichever band's [x0, x1) actually contains x — used
+        for OFF-SPINE nodes, which (unlike spine nodes) don't sit at a
+        fixed x tied 1:1 to their own phase: sibling spread (SIBLING_PITCH)
+        and the final collision sweep below can both drift a node's real x
+        away from its anchor's own column, occasionally into a
+        NEIGHBOURING phase's territory. Falls back to the last band for an
+        x past every band's own x1 (shouldn't happen for a valid layout,
+        but avoids a crash on the theoretical edge)."""
+        for b in bands:
+            if b["x0"] <= x < b["x1"]:
+                return b["x1"]
+        return bands[-1]["x1"] if bands else None
+
+    # BOUNDARY_MARGIN keeps a card's own text visibly clear of the phase
+    # divider LINE itself, not just technically not-overlapping it — the
+    # same "real reading gap, not a bare non-collision" reasoning
+    # ROW_TEXT_CLEARANCE already documents for row spacing. MIN_CARD_AVAIL_W
+    # is a floor so a pathologically narrow phase (very short business
+    # phase, few nodes) still wraps to a readable multi-word line instead
+    # of degenerating toward one word per line.
+    BOUNDARY_MARGIN = 20
+    MIN_CARD_AVAIL_W = 120
+    avail_w_by_node = {}
+    for node_id in spine_order:
+        x1 = band_x1_by_phase.get(nid[node_id].get("phase", 0))
+        if x1 is None:
+            continue
+        room = x1 - (spine_x[node_id] + svg_gen.CARD_TEXT_OFFSET) - BOUNDARY_MARGIN
+        avail_w_by_node[node_id] = max(MIN_CARD_AVAIL_W, min(svg_gen.CARD_AVAIL_W, room))
+
     # Row gap is LOCAL to each spine anchor's own branch, not one value for
     # the whole diagram — a branch near short cards sits close to its own
     # spine row; a branch near a verbose card still gets all the room it
@@ -327,7 +386,8 @@ def compute_process_layout(nodes, flows, lanes, phases):
     def _card_h(node_id, is_spine):
         n = nid[node_id]
         lane_name = lane_name_by_key.get(n.get("lane"), "")
-        return svg_gen.card_height(n, lane_name, on_spine=is_spine)
+        avail_w = avail_w_by_node.get(node_id, svg_gen.CARD_AVAIL_W)
+        return svg_gen.card_height(n, lane_name, on_spine=is_spine, avail_w=avail_w)
 
     # Still computed globally — used only as the fallback for a spine node
     # that never anchors any off-spine branch (never actually exercised
@@ -387,7 +447,8 @@ def compute_process_layout(nodes, flows, lanes, phases):
         out_nodes[node_id] = {"id": node_id, "category": cat, "x": x, "y": SPINE_Y,
                                "r": r, "st": i + 1, "onSpine": True,
                                "rowGap": local_row_gap.get(x, fallback_row_gap),
-                               "maxCardH": local_max_h.get(x, max_card_h)}
+                               "maxCardH": local_max_h.get(x, max_card_h),
+                               "availW": avail_w_by_node.get(node_id, svg_gen.CARD_AVAIL_W)}
 
     for (ax, t), ids in bucket.items():
         ids_sorted = sorted(ids)
@@ -436,25 +497,35 @@ def compute_process_layout(nodes, flows, lanes, phases):
         n["x"] += x0 - (n["x"] + CARD_L)
         placed_boxes.append((x0, y0, x0 + (CARD_R - CARD_L), y1))
 
-    # ---- phase bands: x-range per business phase, derived from where its
-    # member nodes actually landed (spine nodes only — off-spine nodes
-    # inherit their anchor's phase visually, they don't need their own
-    # band). Alternating tint, matching the reference's own zebra pattern.
-    phase_x = collections.defaultdict(list)
-    for node_id in spine_order:
-        n = nid[node_id]
-        phase_x[n.get("phase", 0)].append(out_nodes[node_id]["x"])
+    # Off-spine nodes get the SAME phase-boundary text clamp spine nodes
+    # got above, but only now — the sweep just above can drift a node's x
+    # (SIBLING_PITCH spread, or the rightward collision push) far enough to
+    # land inside a NEIGHBOURING phase's territory, so only the node's
+    # FINAL x (not its anchor's) says which band's boundary its own card
+    # actually has to respect (see _band_x1_for_x()'s own docstring).
+    # Rendering-only: deliberately NOT fed back into local_max_h/row_gap
+    # above (which already sized every row using each off-spine card's
+    # un-clamped, wider width) — narrowing only ever ADDS wrapped lines, it
+    # never removes any the row-gap pass already accounted for, so a
+    # clamped card can occasionally run slightly closer to the row below
+    # it than an un-clamped one would, but never past a routing lane or
+    # another row's own shapes (the 40px clearances baked into row_gap
+    # aren't fully consumed by any real card in practice).
+    for node_id in off_spine_ids:
+        n = out_nodes[node_id]
+        x1 = _band_x1_for_x(n["x"])
+        if x1 is None:
+            continue
+        room = x1 - (n["x"] + svg_gen.CARD_TEXT_OFFSET) - BOUNDARY_MARGIN
+        n["availW"] = max(MIN_CARD_AVAIL_W, min(svg_gen.CARD_AVAIL_W, room))
+
+    # `bands`/`phase_indices` were already computed above, right after
+    # spine_x — they only ever depend on spine node x (fixed then), so
+    # out_nodes[node_id]["x"] here (spine nodes never move after spine_x)
+    # would just reproduce the identical result. Only what genuinely
+    # depends on the now-finished out_nodes/max_card_h is computed here.
     all_max_y = max((out_nodes[nid_]["y"] + out_nodes[nid_]["r"] for nid_ in out_nodes), default=SPINE_Y)
     band_bottom = all_max_y + _row_gap(max_card_h, BOTTOM_CHANNEL_LANES)
-
-    phase_indices = sorted(phase_x.keys())
-    bands = []
-    for i, p in enumerate(phase_indices):
-        xs = phase_x[p]
-        x0 = min(xs) - (STEP / 2 if i > 0 else X_START)
-        x1 = (min(phase_x[phase_indices[i + 1]]) - STEP / 2) if i + 1 < len(phase_indices) else max(xs) + PHASE_PAD
-        bands.append({"name": phases[p] if p < len(phases) else f"Phase {p}",
-                       "x0": max(0, x0), "x1": x1, "tint": i % 2 == 1})
 
     total_w = bands[-1]["x1"] if bands else (max((n["x"] for n in out_nodes.values()), default=0) + PHASE_PAD)
     total_h = band_bottom + TOPBAR_H
