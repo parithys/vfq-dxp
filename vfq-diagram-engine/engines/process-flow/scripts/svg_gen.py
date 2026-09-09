@@ -36,6 +36,7 @@ GREEN = "#12A038"
 BLUE = "#3B7DD8"
 INK = "#111111"
 MUTE = "#5A5A66"
+SUB_CODE_INK = "#2D1AA5"
 
 # Actor and system tags used to differ only by a near-identical pale
 # blue-vs-lavender fill (#E4EBF6 vs #E7E8F5) and near-identical dark-blue
@@ -458,7 +459,7 @@ def node_card_svg(n, node_data, lane_name):
 
     if m["subY"] is not None:
         parts.append(f'<text x="{tx}" y="{y + m["subY"]}" font-size="{CODE_FONT_PX}" font-weight="400" '
-                     f'font-style="italic" fill="{INK}">{esc(str(node_data.get("sub")).upper())}</text>')
+                     f'font-style="italic" fill="{SUB_CODE_INK}">{esc(str(node_data.get("sub")).upper())}</text>')
 
     # A node whose declared business phase doesn't match the tint band it
     # actually renders under (see layout_process.py's own phaseLabel
