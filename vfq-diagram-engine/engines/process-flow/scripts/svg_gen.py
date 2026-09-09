@@ -337,7 +337,11 @@ def card_metrics(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True, avail_w=
     sys_tags = system_tags(node_data)
     sys_tag_y = None
     if sys_tags:
-        cursor += 10
+        # No extra lead-in gap here — whatever came before (the actor tag's
+        # own trailing 14px, or the title's plain 26px when there's no
+        # actor tag) already reserved the standard "gap before whatever
+        # comes next" spacing; adding another one on top of it was
+        # doubling up (24px total vs. the 14px used everywhere else).
         sys_tag_y = cursor
         # mirrors the same row-wrap accumulation node_card_svg() does, but
         # only needs the resulting ROW COUNT here, not each tag's own x
@@ -349,7 +353,7 @@ def card_metrics(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True, avail_w=
                 sys_tag_rows += 1
                 row_w = 0
             row_w += w
-        cursor += 24 * sys_tag_rows + 8
+        cursor += 24 * sys_tag_rows + 14   # same 14px trailing gap used after the actor tag
 
     desc_ys = []
     for i, _dl in enumerate(desc_lines):
