@@ -272,6 +272,25 @@ TITLE_Y_ONSPINE_FLOOR = 30
 # rather than a per-transition value.
 CARD_ELEMENT_GAP = 14
 
+# Below a text baseline, ~22% of the font size is a reasonable allowance
+# for descenders (CAP_HEIGHT_RATIO above already models the ascent side
+# of the same font stack). Needed because CARD_ELEMENT_GAP has to mean
+# the same VISUAL whitespace whether it's measured from a box element
+# (whose rect bottom/top are exact) or a baseline-text element (whose
+# baseline sits inside its own glyph ink, not at its visual edge) —
+# without this, a text-to-text transition (description -> sub code)
+# ends up looking tighter or looser than a box-to-box one for the same
+# raw pixel delta.
+DESCENT_RATIO = 0.22
+
+
+def _text_bottom(baseline, font_px):
+    return baseline + DESCENT_RATIO * font_px
+
+
+def _text_top(baseline, font_px):
+    return baseline - CAP_HEIGHT_RATIO * font_px
+
 
 def _centered_baseline(rect_y, rect_h, font_px):
     """Baseline y for text vertically centred within a rect of height
@@ -321,32 +340,34 @@ def card_metrics(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True, avail_w=
     raw_title_y = CAP_HEIGHT_RATIO * TITLE_FONT_PX - r
     title_y = max(raw_title_y, TITLE_Y_ONSPINE_FLOOR) if on_spine else raw_title_y
     title_ys = [title_y + i * TITLE_LINE_H for i in range(len(title_lines))]
-    cursor = title_ys[-1]
 
     # Rendering order: title -> actor tag -> system tags -> description ->
-    # sub code. Every transition between two of these five elements uses
-    # the SAME trailing gap (CARD_ELEMENT_GAP) regardless of which
-    # optional ones (actor tag, system tags, sub code) a given node
-    # actually has, so the rhythm reads evenly card to card — no element
-    # gets a bigger or smaller breathing gap just because of what
-    # happens to sit next to it. Only the gap BETWEEN wrapped lines
-    # WITHIN the description (18/21, below) is different, since that's
-    # intra-element line spacing, not a gap between two distinct
-    # elements.
+    # sub code. `bottom` tracks the lowest VISUALLY INKED pixel used so
+    # far (not a baseline or a raw cursor) — every element below computes
+    # its own position as bottom + CARD_ELEMENT_GAP, then converts that
+    # back into whatever coordinate its own type actually needs (a rect's
+    # top edge is already its visual top, no conversion needed; a text
+    # baseline sits CAP_HEIGHT_RATIO*font above its own visual top, so it
+    # needs that added back in). Without this conversion, the exact same
+    # CARD_ELEMENT_GAP produces visibly different whitespace depending on
+    # whether the elements on either side are boxes or baseline text —
+    # confirmed on description -> sub code, both baseline text, where an
+    # earlier version of this function measured the gap in raw baseline
+    # units and it read as a noticeably bigger gap than every other
+    # transition in the same card.
+    bottom = _text_bottom(title_ys[-1], TITLE_FONT_PX)
+
     actor_tag_y = None
     if lane_name:
-        cursor += CARD_ELEMENT_GAP
-        actor_tag_y = cursor
-        cursor += 20 + CARD_ELEMENT_GAP   # tag height + gap before whatever comes next
-    else:
-        cursor += CARD_ELEMENT_GAP
+        actor_tag_y = bottom + CARD_ELEMENT_GAP
+        bottom = actor_tag_y + 20   # 20px tag height
 
     # System tags sit under the actor tag (or directly under the title
     # when there's none).
     sys_tags = system_tags(node_data)
     sys_tag_y = None
     if sys_tags:
-        sys_tag_y = cursor
+        sys_tag_y = bottom + CARD_ELEMENT_GAP
         # mirrors the same row-wrap accumulation node_card_svg() does, but
         # only needs the resulting ROW COUNT here, not each tag's own x
         row_w = 0
@@ -357,24 +378,24 @@ def card_metrics(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True, avail_w=
                 sys_tag_rows += 1
                 row_w = 0
             row_w += w
-        cursor += 24 * sys_tag_rows + CARD_ELEMENT_GAP
+        bottom = sys_tag_y + 24 * (sys_tag_rows - 1) + SYS_TAG_H
 
     desc_ys = []
-    dcursor = cursor
-    for i, _dl in enumerate(desc_lines):
-        desc_ys.append(dcursor)
-        dcursor += 18 if i == 0 else 21
     if desc_lines:
-        cursor = dcursor + CARD_ELEMENT_GAP
+        dcursor = bottom + CARD_ELEMENT_GAP + CAP_HEIGHT_RATIO * DESC_FONT_PX
+        for i, _dl in enumerate(desc_lines):
+            desc_ys.append(dcursor)
+            dcursor += 18 if i == 0 else 21
+        bottom = _text_bottom(desc_ys[-1], DESC_FONT_PX)
 
     sub_y = None
     if sub:
-        sub_y = cursor
-        cursor += 20
+        sub_y = bottom + CARD_ELEMENT_GAP + CAP_HEIGHT_RATIO * CODE_FONT_PX
+        bottom = _text_bottom(sub_y, CODE_FONT_PX)
 
     return {"titleLines": title_lines, "titleYs": title_ys, "subY": sub_y, "descYs": desc_ys,
             "actorTagY": actor_tag_y, "descLines": desc_lines, "sysTags": sys_tags, "sysTagY": sys_tag_y,
-            "bottom": cursor}
+            "bottom": bottom}
 
 
 def card_height(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True, avail_w=CARD_AVAIL_W):
