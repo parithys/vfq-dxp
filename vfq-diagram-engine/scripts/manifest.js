@@ -20,9 +20,16 @@ const MANIFEST_PATH = path.join(__dirname, '..', 'manifest.json');
 // ensureBrsd() below, rather than a silent `entry.diagrams[type]` crash
 // the first time recordRender()/recordExtraction() is called for it.
 //
-// bpmn-swimlane is the only supported diagram type — the sole source of
-// generated process visualisation for this project. See README.md.
-const DIAGRAM_TYPES = ['bpmn-swimlane'];
+// Two diagram types are generated per BRSD: bpmn-swimlane and
+// process-flow — both rendered from the SAME extracted
+// data/{slug}/bpmn-swimlane.model.json (see render-all.js's own TYPES
+// registry and engines/process-flow/reference/MODEL_SCHEMA.md). Because
+// process-flow has no extraction step of its own — it shares
+// bpmn-swimlane's — recordExtraction() is only ever called with type
+// 'bpmn-swimlane'; process-flow's diagrams.process-flow.extractedAt stays
+// null permanently by design, while renderedAt/engineHash are populated
+// normally by recordRender() on every render-all.js run. See README.md.
+const DIAGRAM_TYPES = ['bpmn-swimlane', 'process-flow'];
 
 function load() {
   if (!fs.existsSync(MANIFEST_PATH)) {

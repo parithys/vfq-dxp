@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Convenience wrapper for a new incoming BRSD: correct the workbook (add
 # New Req ID / Updated Requirement Statement / Updated Acceptance Criteria
-# columns in place, if not already present), extract the bpmn-swimlane
-# model, then render it. bpmn-swimlane is the only supported diagram type.
+# columns in place, if not already present), extract the shared
+# bpmn-swimlane.model.json, then render BOTH diagram types from it
+# (bpmn-swimlane and process-flow — see README.md).
 #
 # Usage: ./scripts/new-brsd.sh /path/to/New_BRSD.xlsx
 #
@@ -10,7 +11,8 @@
 # shells out to `claude` in non-interactive mode to run /extract-bpmn-swimlane
 # (which performs the workbook correction step first, then extraction — not
 # scriptable in pure Node since both touch an LLM), then calls render-all.js
-# (zero-AI, pure Node) for that BRSD.
+# (zero-AI, pure Node) for that BRSD, which renders every registered
+# diagram type from that one extracted file.
 set -euo pipefail
 
 if [ $# -ne 1 ]; then
@@ -46,3 +48,4 @@ echo "== rendering output for $SLUG"
 node "$SCRIPT_DIR/render-all.js" --brsd "$SLUG"
 
 echo "== done: output/$SLUG/$SLUG-bpmn-swimlane.html"
+echo "==       output/$SLUG/$SLUG-process-flow.html"

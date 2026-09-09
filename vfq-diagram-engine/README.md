@@ -7,13 +7,23 @@ data as JSON and re-renders through the unmodified engine on demand, so a
 template edit or a re-render doesn't require re-reading any BRSD or
 spending another AI call.
 
-**`bpmn-swimlane` is the only supported diagram output** — the sole source
-of generated process visualisation for this project. There is no other
-diagram type, no `--type` flag to choose between types, and no plan to add
-one; earlier iterations of this project also produced `bpmn-mermaid`,
-`journey` (customer journey map), `process-flow`, and `userflow` outputs —
-all of that has been removed (engines, data specs, rendered output,
-extraction commands, and the corresponding manifest/render-all machinery).
+**Two diagram types are generated per BRSD: `bpmn-swimlane` and
+`process-flow`** — both rendered from the exact same extracted
+`data/{slug}/bpmn-swimlane.model.json`, via two independent, fixed
+rendering engines under `engines/`. There is no separate `process-flow`
+extraction step and no separate data file — see "The full pipeline" below
+for why one shared structural model, rendered two ways, is what keeps the
+two diagrams synchronised by construction rather than by convention.
+Earlier iterations of this project also produced `bpmn-mermaid`, `journey`
+(customer journey map), and `userflow` outputs; those remain removed
+(engines, data specs, rendered output, extraction commands, and the
+corresponding manifest/render-all machinery) and are out of scope — see
+"Explicitly out of scope" below. `process-flow` itself was previously
+removed too, then deliberately reintroduced on 2026-09-08 as a second
+engine sharing `bpmn-swimlane`'s own extracted data (rather than, as an
+earlier ad hoc attempt did, being built by reading `bpmn-swimlane`'s
+*rendered HTML* as a reference — a real BRSD-to-data dependency this
+architecture doesn't have).
 
 ## Why this exists
 
@@ -34,6 +44,7 @@ compares against that real upstream path):
 | Diagram type | Upstream skill name | Fixed engine | Data input |
 |---|---|---|---|
 | BPMN swimlane | `bpnm` | `engines/bpmn-swimlane/scripts/render.py` + `reference/engine_template.html` | `bpmn-swimlane.model.json` |
+| Process flow | — (bespoke engine modelled on a maintainer-supplied reference file, not copied from any upstream skill or from bpmn-swimlane's own template) | `engines/process-flow/scripts/render.py` + `scripts/svg_gen.py` + `reference/engine_template.html` | `bpmn-swimlane.model.json` (same file, read-only — see `engines/process-flow/reference/MODEL_SCHEMA.md`) |
 
 `bpmn-swimlane.model.json` bakes pixel geometry (`nodes[].x/y/w/h/cx/cy`,
 `layout.lanes[].y/h`, `layout.totalW/totalH`) directly into the data, so
@@ -52,12 +63,19 @@ standalone for data that didn't come through the Excel-workbook pipeline.
 ```
 vfq-diagram-engine/
 ├── engines/
-│   └── bpmn-swimlane/            reference/ + scripts/ — unmodified copy of the skill's render engine
+│   ├── bpmn-swimlane/            reference/ + scripts/ — unmodified copy of the skill's render engine
+│   └── process-flow/             reference/ + scripts/ — a bespoke engine (own template, own SVG
+│                                  generator), modelled on a maintainer-supplied reference file, not on
+│                                  bpmn-swimlane's own template; reads bpmn-swimlane.model.json read-only,
+│                                  computes its own derived layout at render time (see
+│                                  reference/MODEL_SCHEMA.md), never writes to data/ and never reads
+│                                  bpmn-swimlane's rendered HTML
 ├── data/{brsd-slug}/             the persistent canonical store
-│   └── bpmn-swimlane.model.json
+│   └── bpmn-swimlane.model.json  read by BOTH engines above — the single structural source per BRSD
 ├── output/{brsd-slug}/           rendered HTML
-│   └── {brsd-slug}-bpmn-swimlane.html
-├── manifest.json                 source hash + extraction/render timestamps + engine hash, per BRSD
+│   ├── {brsd-slug}-bpmn-swimlane.html
+│   └── {brsd-slug}-process-flow.html
+├── manifest.json                 source hash + extraction/render timestamps + engine hash, per BRSD, per diagram type
 └── scripts/
     ├── slugify.js                BRSD filename -> {brsd-slug}, single source of truth
     ├── manifest.js               manifest.json read/write helper (+ CLI: record-extraction)
@@ -70,10 +88,15 @@ vfq-diagram-engine/
         └── brsd_correct_lib.py    reusable openpyxl helper for the column-insert/reorder/format-preserve step
 ```
 
-The engine is **copied, not symlinked**, so an intentional local edit (e.g.
-a design-token tweak) doesn't silently drift when the upstream skill
-updates. Run `check-drift.js` periodically to see if the two have diverged
-in either direction; it never auto-merges.
+`engines/bpmn-swimlane/` is **copied, not symlinked**, so an intentional
+local edit (e.g. a design-token tweak) doesn't silently drift when the
+upstream skill updates. Run `check-drift.js` periodically to see if the
+two have diverged in either direction; it never auto-merges. `check-drift.js`
+only checks `bpmn-swimlane` against its upstream skill source —
+`process-flow` has no upstream skill at all (it's a bespoke engine, not
+copied or forked from anything upstream — see
+`engines/process-flow/reference/DESIGN_SYSTEM.md` "Architecture") and so
+isn't part of that check.
 
 ## The full pipeline
 
@@ -85,14 +108,25 @@ in either direction; it never auto-merges.
    columns already exist. Preserves 100% of unrelated formatting
    (merges, styles, borders, column widths, row heights, data validation,
    conditional formatting, hidden rows/columns, sheet structure).
-3. **Extract** the corrected data into `data/{brsd-slug}/bpmn-swimlane.model.json`.
-4. **Render** the final `output/{brsd-slug}/{brsd-slug}-bpmn-swimlane.html`.
+3. **Extract** the corrected data into `data/{brsd-slug}/bpmn-swimlane.model.json`
+   — the single structural extraction per BRSD, shared by both diagram types.
+4. **Render** both `output/{brsd-slug}/{brsd-slug}-bpmn-swimlane.html` and
+   `output/{brsd-slug}/{brsd-slug}-process-flow.html` from that one data file.
 
 Steps 2–3 are both performed by the single `/extract-bpmn-swimlane` command
-(step 2 is its "step 0"); step 4 is `render-all.js`. `new-brsd.sh` runs the
-whole thing end-to-end for one new file.
+(step 2 is its "step 0"); step 4 is `render-all.js`, which renders every
+registered diagram type (currently `bpmn-swimlane` and `process-flow`) by
+default — pass `--type` to render only one. `new-brsd.sh` runs the whole
+thing end-to-end for one new file, producing both outputs.
 
 ## Canonical source vs. generated output
+
+Everything below is written in terms of `engines/bpmn-swimlane/` for
+concreteness, but every rule applies identically to
+`engines/process-flow/` and its own `output/{slug}/{slug}-process-flow.html`
+— `render-all.js` treats both diagram types the same way (see its `TYPES`
+registry), including baseline tracking, staleness detection, and manual-edit
+reconciliation.
 
 Everything under `engines/bpmn-swimlane/` is canonical — the single source
 of truth for how the diagram looks and behaves, across every BRSD:
@@ -177,25 +211,29 @@ Scoped to read only the one file it's given. First corrects the workbook
 in place if it isn't already corrected (step 0 — see
 `scripts/brsd-correction/README.md`), then extracts data into
 `data/{brsd-slug}/bpmn-swimlane.model.json` reusing the engine's own schema
-doc, and updates `manifest.json`. Does not render. Defined in
-`../.claude/commands/` (project root) since Claude Code only registers
-slash commands from the active project's `.claude/commands/`.
+doc, and updates `manifest.json`. Does not render — this one file is the
+data source for *both* diagram types. Defined in `../.claude/commands/`
+(project root) since Claude Code only registers slash commands from the
+active project's `.claude/commands/`.
 
 ### Rendering (`scripts/render-all.js`, pure Node, zero AI calls)
 
 ```
-node scripts/render-all.js                    # everything
-node scripts/render-all.js --brsd <slug>      # one BRSD
+node scripts/render-all.js                    # everything, both diagram types
+node scripts/render-all.js --brsd <slug>      # one BRSD, both diagram types
+node scripts/render-all.js --brsd <slug> --type process-flow   # one BRSD, one type
 node scripts/render-all.js --brsd <slug> --force   # discard that file's manual edits
 ```
 
 This is the command that makes an engine edit propagate everywhere: edit
-`engines/bpmn-swimlane/scripts/render.py` (or the template/schema it
-depends on), run `node scripts/render-all.js`, every BRSD's diagram
-regenerates with no extraction, no Claude call, no re-reading any BRSD —
-and any file-specific manual edits made to a given output are preserved by
-the baseline/merge mechanism in "Manual edits to generated output" above,
-rather than overwritten.
+`engines/bpmn-swimlane/scripts/render.py` (or `engines/process-flow/scripts/render.py`,
+or either one's template/schema), run `node scripts/render-all.js`, every
+BRSD's diagram of that type regenerates with no extraction, no Claude call,
+no re-reading any BRSD — and any file-specific manual edits made to a given
+output are preserved by the baseline/merge mechanism in "Manual edits to
+generated output" above, rather than overwritten. A no-arg run always
+renders both types for every BRSD, since both read the same underlying
+data file.
 
 Failures are per-file and non-fatal to the batch: a data file that fails
 the engine's own `validate_model.py` is skipped with the exact validator
@@ -258,8 +296,9 @@ output" above.
 
 Runs `/extract-bpmn-swimlane` against the given file via the `claude` CLI
 (which corrects the workbook in place first, if needed, then extracts),
-then `render-all.js --brsd <derived-slug>`. The only command needed for an
-incoming document.
+then `render-all.js --brsd <derived-slug>` — which renders both
+`{slug}-bpmn-swimlane.html` and `{slug}-process-flow.html` from that one
+extraction. The only command needed for an incoming document.
 
 ## manifest.json shape
 
@@ -270,7 +309,8 @@ incoming document.
       "sourcePath": "/Users/.../BRSD/VFQ_Fibre_BRSD_v1.0.xlsx",
       "sourceSha256": "…",
       "diagrams": {
-        "bpmn-swimlane": { "extractedAt": "…", "renderedAt": "…", "engineHash": "…" }
+        "bpmn-swimlane": { "extractedAt": "…", "renderedAt": "…", "engineHash": "…" },
+        "process-flow": { "extractedAt": null, "renderedAt": "…", "engineHash": "…" }
       }
     }
   }
@@ -281,17 +321,29 @@ incoming document.
 influence output at render time (not the whole `engines/` tree) — computed
 fresh on every successful render, so it always reflects what actually
 produced that output file. The `diagrams` object keeps its nested shape
-(rather than being flattened to top-level fields) so a second diagram type
-could be reintroduced later without a manifest migration.
+(rather than being flattened to top-level fields) specifically so a second
+diagram type could be reintroduced later without a manifest migration —
+`process-flow` is that second type. Its `extractedAt` is always `null`: it
+has no extraction step of its own (`recordExtraction()` is only ever called
+with type `bpmn-swimlane`) since it shares `bpmn-swimlane`'s own extracted
+data file entirely — only `renderedAt`/`engineHash` are meaningful for it.
 
 ## Explicitly out of scope here
 
-- No engine's layout, geometry, validation, or styling logic is modified —
-  only copied.
-- No new HTML template was built from scratch.
+- `bpmn-swimlane`'s own layout, geometry, validation, or styling logic is
+  never modified — only copied. `process-flow` is a separate, bespoke
+  engine (own template, own SVG generator, own layout algorithm — see
+  `engines/process-flow/reference/DESIGN_SYSTEM.md` "Architecture"); it
+  reuses `bpmn-swimlane`'s `validate_model.py` (import, not a copy — see
+  `engines/process-flow/reference/MODEL_SCHEMA.md` "Validation") since the
+  connector-integrity contract it checks applies to both engines
+  identically, but nothing about `process-flow`'s own rendering is a fork
+  of `bpmn-swimlane`'s.
 - No extraction command reads more than the one file it's pointed at.
-- `check-drift.js` never auto-merges; it flags only.
-- No other diagram type (`bpmn-mermaid`, customer journey map, process
-  flow, user flow, or any other variant) is generated. If one is wanted
-  again in the future, it would need to be reintroduced deliberately —
-  nothing here retains a placeholder for it.
+- `check-drift.js` never auto-merges; it flags only, and only covers
+  `bpmn-swimlane` (the only engine with an actual upstream skill source —
+  see "Canonical source vs. generated output").
+- No diagram type beyond `bpmn-swimlane` and `process-flow` is generated —
+  `bpmn-mermaid`, customer journey map, user flow, or any other variant
+  remain removed. If one is wanted again in the future, it would need to
+  be reintroduced deliberately — nothing here retains a placeholder for it.

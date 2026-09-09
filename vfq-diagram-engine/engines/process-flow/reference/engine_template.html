@@ -1,0 +1,228 @@
+<meta charset="utf-8">
+<title>__TITLE__</title>
+<style>
+:root{
+  --charcoal:#25282b; --charcoal-2:#1a1c1e;
+  --panel:#ffffff; --line:#d8d8d8; --ink2:#4a4d4e; --accent:#e60000;
+  --ink:#111; --mute:#5A5A66; --navy:#2A1B9E;
+  --radius-button:2px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px; --space-6:24px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);
+  font-family:Inter,"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+header{position:sticky;top:0;z-index:90;
+  background:linear-gradient(180deg,var(--charcoal),var(--charcoal-2));
+  color:#f4f4f4;padding:var(--space-5) var(--space-6) var(--space-4)}
+.hrow{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.hgroup{display:flex;flex-direction:column;gap:3px}
+.eyebrow{font-size:10.5px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em}
+.h1main{font-size:24px;font-weight:800;color:#fff;line-height:1.25}
+.h1sub{font-size:14px;font-weight:700;color:rgba(255,255,255,.72);line-height:1.3;margin-top:1px}
+.actions{display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-2)}
+.arow{display:flex;align-items:center;gap:var(--space-2)}
+.btn,.phaseselect{border:1px solid var(--line);background:var(--panel);color:var(--ink2);
+  border-radius:var(--radius-button);padding:var(--space-2) var(--space-3);
+  font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn:hover,.phaseselect:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{color:#fff;filter:brightness(1.08)}
+.phaseselect{min-width:190px;padding-right:22px}
+.searchctrl{display:flex;align-items:center;gap:6px;border:1px solid var(--line);
+  background:var(--panel);border-radius:var(--radius-button);padding:0 var(--space-3);height:31px}
+.searchctrl input{border:0;outline:0;font-size:12px;font-weight:600;color:var(--ink2);
+  width:200px;font-family:inherit;background:none}
+.searchctrl.no-match input{color:var(--accent)}
+.hits{font-size:11px;font-weight:700;color:var(--mute);min-width:52px;text-align:right}
+.expwrap{position:relative}
+.expmenu{position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius-button);box-shadow:0 18px 44px rgba(0,0,0,.22);display:none;z-index:120;min-width:180px}
+.expmenu.open{display:block}
+.expmenu button{display:block;width:100%;text-align:left;border:0;background:none;
+  padding:9px 14px;font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer;font-family:inherit}
+.expmenu button:hover{background:#f2f2f2;color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:9px 18px;margin-top:14px;padding-top:12px;
+  border-top:1px solid rgba(255,255,255,.12);font-size:11.5px;color:rgba(255,255,255,.76);align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+i{width:13px;height:13px;display:inline-block;flex:none}
+.dot{border-radius:50%}
+.dia{background:#fff;border:2px solid #2A1B9E;transform:rotate(45deg);width:10px;height:10px}
+.ring{border-radius:50%;background:#0F9B8E;box-shadow:0 0 0 2px var(--charcoal-2) inset,0 0 0 3px #0F9B8E}
+.sq{border-radius:4px;background:#7A2BD6}
+.dash{height:0;border-top:2px dashed #3B7DD8;width:18px}
+.chip{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.42);border-radius:3px;width:16px;height:11px}
+.chipd{background:none;border:1px dashed rgba(255,255,255,.42);border-radius:3px;width:16px;height:11px}
+.scroll{overflow-x:auto;overflow-y:hidden;padding:0 0 28px}
+.scroll svg{display:block}
+#printdoc{display:none}
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  body.printing>header,body.printing>.scroll{display:none!important}
+  body.printing #printdoc{display:block}
+  /* one printed sheet per slice: fixed page box, SVG letterboxes itself inside it */
+  .pg{break-after:page;page-break-after:always;
+      height:100vh;display:flex;flex-direction:column;box-sizing:border-box;overflow:hidden}
+  .pg:last-child{break-after:auto;page-break-after:auto}
+  .pgcap{flex:none}
+  .pg svg{flex:1;min-height:0;width:100%;height:100%}
+  .pgcap{display:flex;justify-content:space-between;align-items:baseline;
+    font-size:9pt;color:#333;border-bottom:1px solid #ccc;
+    padding-bottom:2mm;margin-bottom:3mm}
+  .pgcap b{font-weight:800}
+}
+</style>
+<header>
+  <div class="hrow">
+    <div class="hgroup">
+      <div class="eyebrow">BPMN Process Flow</div>
+      <div class="h1main">__H1_MAIN__</div>
+      <div class="h1sub">__H1_SUB__</div>
+    </div>
+    <div class="actions">
+      <div class="arow">
+        <select class="phaseselect" id="phaseSel" aria-label="Jump to phase"></select>
+        <div class="expwrap">
+          <button class="btn primary" id="expBtn">Export</button>
+          <div class="expmenu" id="expMenu">
+            <button data-fmt="svg">Export as SVG (vector)</button>
+            <button data-fmt="png">Export as PNG</button>
+            <button data-fmt="pdf">Export as PDF (paginated)</button>
+          </div>
+        </div>
+      </div>
+      <div class="arow">
+        <span class="hits" id="hits"></span>
+        <div class="searchctrl" id="searchCtrl">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#6f7375" stroke-width="1.8">
+            <circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 L14 14" stroke-linecap="round"/></svg>
+          <input id="q" type="search" placeholder="Search node…" autocomplete="off">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="legend">
+    <span><i class="dot" style="background:#2A1B9E"></i> Primary-path step</span>
+    <span><i class="dia"></i> Decision / validation</span>
+    <span><i class="ring"></i> Milestone</span>
+    <span><i class="dot" style="background:#F01010"></i> Error / rejection — journey ends</span>
+    <span><i class="dot" style="background:#C07800"></i> Recovery, retry or side flow</span>
+    <span><i class="sq"></i> Escalation / approval task</span>
+    <span><i class="dot" style="background:#12A038"></i> Happy-path branch label</span>
+    <span><i class="dash"></i> Data flow</span>
+    <span><i class="chip"></i> System / actor tag</span>
+  </div>
+</header>
+<div class="scroll" id="scroll">
+<svg id="flow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 __TOTAL_W__ __TOTAL_H__" width="__TOTAL_W__" height="__TOTAL_H__" font-family="Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+__SVG_BODY__
+</svg>
+</div>
+<script>
+const NODES=__NODES_JSON__, PHASES=__PHASES_JSON__;
+const scroll=document.getElementById('scroll'), hl=document.getElementById('hl'),
+      q=document.getElementById('q'), sc=document.getElementById('searchCtrl'),
+      hits=document.getElementById('hits'), sel=document.getElementById('phaseSel');
+
+/* ---- Jump to phase ---- */
+sel.innerHTML='<option value="">Jump to phase…</option>'+
+  PHASES.map((p,i)=>`<option value="${p.x}">${i} · ${p.n}</option>`).join('');
+sel.onchange=()=>{ if(sel.value!=='') scroll.scrollTo({left:+sel.value,behavior:'smooth'}); };
+
+/* ---- Search ---- */
+let matches=[], cur=-1;
+const SVGNS='http://www.w3.org/2000/svg';
+function ring(n,strong){
+  const c=document.createElementNS(SVGNS,'circle');
+  c.setAttribute('cx',n.x); c.setAttribute('cy',n.y); c.setAttribute('r',n.r);
+  c.setAttribute('fill','none'); c.setAttribute('stroke','#e60000');
+  c.setAttribute('stroke-width',strong?4:2.5); c.setAttribute('opacity',strong?1:.55);
+  hl.appendChild(c);
+}
+function paint(){
+  hl.textContent='';
+  matches.forEach((n,i)=>ring(n,i===cur));
+}
+function goto_(i){
+  if(!matches.length) return;
+  cur=(i+matches.length)%matches.length;
+  const n=matches[cur];
+  scroll.scrollTo({left:Math.max(0,n.x-scroll.clientWidth/2),behavior:'smooth'});
+  paint(); hits.textContent=`${cur+1} / ${matches.length}`;
+}
+function run(){
+  const t=q.value.trim().toLowerCase();
+  if(t.length<2){ matches=[]; cur=-1; hl.textContent=''; hits.textContent='';
+                  sc.classList.remove('no-match'); return; }
+  matches=NODES.filter(n=>n.t.includes(t));
+  sc.classList.toggle('no-match',matches.length===0);
+  if(!matches.length){ hl.textContent=''; hits.textContent='0'; cur=-1; return; }
+  cur=-1; goto_(0);
+}
+let deb; q.addEventListener('input',()=>{clearTimeout(deb);deb=setTimeout(run,180);});
+q.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault(); matches.length?goto_(cur+(e.shiftKey?-1:1)):run();}
+  if(e.key==='Escape'){q.value='';run();}
+});
+
+/* ---- Paginated PDF via the browser's own print-to-PDF (no external library, works offline) ---- */
+function exportPDF(){
+  const el=document.getElementById('flow');
+  const W=+el.getAttribute('width'), H=+el.getAttribute('height');
+  const SLICE=Math.round(H*1.50);                 // A4-landscape printable aspect
+  const n=Math.ceil(W/SLICE);
+  const doc=document.createElement('div'); doc.id='printdoc';
+  for(let i=0;i<n;i++){
+    const pg=document.createElement('div'); pg.className='pg';
+    const cap=document.createElement('div'); cap.className='pgcap';
+    cap.innerHTML='<b>__H1_MAIN__ — __H1_SUB__</b>'+
+                  '<span>Page '+(i+1)+' of '+n+'</span>';
+    const c=el.cloneNode(true);
+    const h=c.querySelector('#hl'); if(h) h.textContent='';
+    c.removeAttribute('id'); c.removeAttribute('width'); c.removeAttribute('height');
+    c.setAttribute('viewBox',(i*SLICE)+' 0 '+SLICE+' '+H);
+    pg.appendChild(cap); pg.appendChild(c); doc.appendChild(pg);
+  }
+  document.body.appendChild(doc);
+  document.body.classList.add('printing');
+  const done=()=>{document.body.classList.remove('printing');doc.remove();
+                  window.removeEventListener('afterprint',done);};
+  window.addEventListener('afterprint',done);
+  setTimeout(()=>{window.print(); setTimeout(done,1500);},150);
+}
+
+/* ---- Export ---- */
+const expBtn=document.getElementById('expBtn'), expMenu=document.getElementById('expMenu');
+expBtn.onclick=e=>{e.stopPropagation();expMenu.classList.toggle('open');};
+document.addEventListener('click',()=>expMenu.classList.remove('open'));
+function svgBlob(){
+  const el=document.getElementById('flow').cloneNode(true);
+  el.querySelector('#hl').textContent='';
+  el.setAttribute('xmlns',SVGNS);
+  return new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n'+new XMLSerializer().serializeToString(el)],
+                  {type:'image/svg+xml;charset=utf-8'});
+}
+function save(blob,name){
+  const u=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=u; a.download=name; document.body.appendChild(a); a.click();
+  a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000);
+}
+expMenu.onclick=e=>{
+  const fmt=e.target.dataset&&e.target.dataset.fmt; if(!fmt) return;
+  expMenu.classList.remove('open');
+  const base='__EXPORT_BASENAME__';
+  if(fmt==='svg') return save(svgBlob(),base+'.svg');
+  if(fmt==='pdf') return exportPDF();
+  const el=document.getElementById('flow');
+  const W=+el.getAttribute('width'), H=+el.getAttribute('height');
+  /* a very wide canvas at 1x can exceed browser canvas limits, so PNG renders at 0.5x */
+  const k=0.5, img=new Image(), url=URL.createObjectURL(svgBlob());
+  img.onload=()=>{
+    const cv=document.createElement('canvas'); cv.width=W*k; cv.height=H*k;
+    const cx=cv.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,cv.width,cv.height);
+    cx.drawImage(img,0,0,cv.width,cv.height);
+    cv.toBlob(b=>{save(b,base+'.png');URL.revokeObjectURL(url);},'image/png');
+  };
+  img.onerror=()=>{alert('PNG export failed in this browser — use Export as SVG.');URL.revokeObjectURL(url);};
+  img.src=url;
+};
+</script>

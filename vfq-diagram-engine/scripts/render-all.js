@@ -12,8 +12,14 @@
  *   node scripts/render-all.js --brsd <slug> --type bpmn-swimlane
  *   node scripts/render-all.js --force ...       discard manual edits, reset to a pure engine render
  *
- * bpmn-swimlane is the only supported diagram type — the sole source of
- * generated process visualisation for this project. See README.md.
+ * Two diagram types are generated per BRSD, both from the SAME extracted
+ * data/{slug}/bpmn-swimlane.model.json — bpmn-swimlane and process-flow.
+ * There is no separate process-flow extraction step and no separate data
+ * file: process-flow's own engine (engines/process-flow/) computes its own
+ * derived layout (a flat, auto-row-wrapped sequence instead of a lane/phase
+ * grid) from that one shared structural model at render time, and never
+ * reads bpmn-swimlane's own rendered HTML output. See README.md and
+ * engines/process-flow/reference/MODEL_SCHEMA.md.
  *
  * Fails loudly per-file: a bad data file is skipped and reported, the rest
  * of the batch keeps going. Exits 1 if any file failed OR any merge produced
@@ -72,6 +78,18 @@ const TYPES = {
     engineDir: path.join(ENGINES_DIR, 'bpmn-swimlane'),
     hashFiles: ['scripts/render.py', 'scripts/validate_model.py', 'reference/engine_template.html'],
     render: renderBpmnSwimlane
+  },
+  // Reads the exact same dataFile as bpmn-swimlane above — not a separate
+  // process-flow.model.json — see the file header comment and
+  // engines/process-flow/reference/MODEL_SCHEMA.md for why one shared
+  // structural model, rendered by two independent engines, is what keeps
+  // the two diagrams synchronised by construction.
+  'process-flow': {
+    dataFile: 'bpmn-swimlane.model.json',
+    outputSuffix: 'process-flow.html',
+    engineDir: path.join(ENGINES_DIR, 'process-flow'),
+    hashFiles: ['scripts/render.py', 'scripts/layout_process.py', 'scripts/svg_gen.py', 'reference/engine_template.html'],
+    render: renderProcessFlow
   }
 };
 
@@ -196,6 +214,21 @@ function listSlugs() {
 // Each returns { ok: true } or { ok: false, error: string }
 
 function renderBpmnSwimlane(dataPath, outputPath, engineDir) {
+  const renderScript = path.join(engineDir, 'scripts', 'render.py');
+  const result = spawnSync('python3', [renderScript, dataPath, outputPath], {
+    encoding: 'utf8'
+  });
+  if (result.status !== 0) {
+    const msg = (result.stderr || '').trim() || (result.stdout || '').trim() || `python3 exited with status ${result.status}`;
+    return { ok: false, error: msg };
+  }
+  return { ok: true };
+}
+
+// Same shape as renderBpmnSwimlane() above — engines/process-flow/scripts/render.py
+// takes the identical <model.json> <output.html> CLI, reads the same dataPath
+// (bpmn-swimlane.model.json), and computes its own derived layout in memory.
+function renderProcessFlow(dataPath, outputPath, engineDir) {
   const renderScript = path.join(engineDir, 'scripts', 'render.py');
   const result = spawnSync('python3', [renderScript, dataPath, outputPath], {
     encoding: 'utf8'
