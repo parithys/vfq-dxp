@@ -14,6 +14,7 @@ phase-jump, and export stay client-side JS (see reference/engine_template.html)
 since those are the only genuinely interactive behaviours the reference
 has; everything else is static once rendered, exactly like the reference.
 """
+import bisect
 import html as _html_mod
 import re
 
@@ -439,19 +440,28 @@ class _LaneRouter:
     subsumes the old "long-distance connector" special case entirely: a
     jog placed in the gap right after its own source is, by the same
     row_gap construction, automatically clear of every OTHER row's shapes
-    and card text too, however far away the target ends up being."""
+    and card text too, however far away the target ends up being.
 
-    def __init__(self, total_h, row_gap, max_card_h, n_lanes, bottom_lanes):
+    row_gap/max_card_h are no longer fixed at construction — each route()
+    call takes its own (see connectors_svg() below, which passes the
+    SOURCE node's own local values: layout_process.py sizes row_gap per
+    spine-anchor branch now, not once for the whole diagram, so a branch
+    near short cards stays compact even if some other node far away has a
+    much longer description). This is safe for the shared collision-
+    avoidance below: _h_free()/_v_free()/placed_h/placed_v all compare
+    actual x/y coordinates, never row_gap-relative units, so different
+    calls using different row_gap values still correctly avoid every lane
+    already claimed by any earlier call."""
+
+    def __init__(self, total_h, n_lanes, bottom_lanes):
         self.total_h = total_h
-        self.row_gap = row_gap
-        self.max_card_h = max_card_h
         self.n_lanes = n_lanes
         self.bottom_lanes = bottom_lanes
         self.placed_h = []   # (y, x_lo, x_hi)
         self.placed_v = []   # (x, y_lo, y_hi)
 
-    def _row_index(self, y):
-        return round((y - SPINE_Y_FALLBACK) / self.row_gap) if self.row_gap else 0
+    def _row_index(self, y, row_gap):
+        return round((y - SPINE_Y_FALLBACK) / row_gap) if row_gap else 0
 
     def _h_free(self, y, x_lo, x_hi):
         return all(abs(y - py) >= MIN_CLEARANCE or x_hi < px_lo - 1 or x_lo > px_hi + 1
@@ -461,12 +471,14 @@ class _LaneRouter:
         return all(abs(x - px) >= MIN_CLEARANCE or y_hi < py_lo - 1 or y_lo > py_hi + 1
                    for (px, py_lo, py_hi) in self.placed_v)
 
-    def _gap_lane_y(self, gap_idx, lane):
-        return SPINE_Y_FALLBACK + gap_idx * self.row_gap + self.max_card_h + MIN_CLEARANCE + lane * LANE_PITCH
+    def _gap_lane_y(self, gap_idx, lane, row_gap, max_card_h):
+        return SPINE_Y_FALLBACK + gap_idx * row_gap + max_card_h + MIN_CLEARANCE + lane * LANE_PITCH
 
-    def route(self, x1, y1, x2, y2):
+    def route(self, x1, y1, x2, y2, row_gap, max_card_h):
         """Returns an SVG path `d` string for one connector, registering
-        whatever lanes it claims so later calls route around it."""
+        whatever lanes it claims so later calls route around it. row_gap/
+        max_card_h should be the SOURCE node's own (local) values — see
+        class docstring."""
         x_lo, x_hi = (x1, x2) if x1 <= x2 else (x2, x1)
         if abs(y1 - y2) < 1:
             self._claim_v(x1, y1, y1)
@@ -474,13 +486,13 @@ class _LaneRouter:
             return f"M {x1} {y1} L {x2} {y2}"
 
         going_down = y2 > y1
-        source_row = self._row_index(y1)
+        source_row = self._row_index(y1, row_gap)
         gap_idx = source_row if going_down else source_row - 1
 
         jog_y = None
         for lane in range(self.n_lanes):
-            candidate = self._gap_lane_y(gap_idx, lane) if going_down else \
-                (self._gap_lane_y(gap_idx, self.n_lanes - 1 - lane))
+            candidate = self._gap_lane_y(gap_idx, lane, row_gap, max_card_h) if going_down else \
+                (self._gap_lane_y(gap_idx, self.n_lanes - 1 - lane, row_gap, max_card_h))
             if self._h_free(candidate, x_lo, x_hi):
                 jog_y = candidate
                 break
@@ -511,28 +523,145 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
     a plain consecutive spine hop (st(to)==st(from)+1, happy, unlabelled)
     is already covered by the single continuous spine line and is skipped
     here, matching the reference's own construction (it never draws a
-    separate line for those either)."""
+    separate line for those either).
+
+    row_gap/max_card_h here are only the diagram-wide FALLBACK (used if a
+    node somehow lacks its own — see layout_process.py's out_nodes[id]
+    "rowGap"/"maxCardH"). Each edge instead routes using its own SOURCE
+    node's local values, so a branch near short cards stays compact even
+    when some other node far away in the diagram has a much longer one."""
     out = []
-    router = _LaneRouter(total_h, row_gap, max_card_h, n_lanes, bottom_lanes)
+    router = _LaneRouter(total_h, n_lanes, bottom_lanes)
     # A rotated branch label's position (lx, ly) depends only on the SOURCE
-    # node's x and this one edge's own y-span — with no awareness of any
-    # OTHER label from that same source. A node with 3+ off-spine branches
-    # whose targets land at similar depths (a common shape: several
-    # exception/retry outcomes off one decision) previously produced
-    # several labels at the exact same (lx, ly), rendering as illegible
-    # stacked text (found on Mobile Postpaid Activation: "Draft available
-    # for resume" / "Supervisor reassigns draft" / "Retention period
-    # elapses", all from node jsm05, all at (2049, 408)). Tracked per
-    # SOURCE node (not globally) since two labels from unrelated sources
-    # landing near the same point is not the failure mode this guards
-    # against, and re-flagging them would just fan out labels that were
-    # never actually colliding.
-    placed_label_y_by_source = {}
-    LABEL_COLLIDE_PX = 30   # closer than this (rotated-text is ~11px tall
-                             # per line but frequently much longer once
-                             # rotated, so this is a "would visually
-                             # overlap" margin, not a bare font-height one)
-    LABEL_FAN_PX = 14        # horizontal stagger applied per colliding label
+    # node's x and this one edge's own y-span. Two distinct failure modes
+    # land labels at the same (lx, ly):
+    #   1. A node with 3+ off-spine branches whose targets land at similar
+    #      depths (several exception/retry outcomes off one decision) —
+    #      several labels from the SAME source, at the same point (found on
+    #      Mobile Postpaid Activation: "Draft available for resume" /
+    #      "Supervisor reassigns draft" / "Retention period elapses", all
+    #      from node jsm05, all at (2049, 408)).
+    #   2. A forward edge and its own backward/loop-back edge between the
+    #      SAME two nodes (e.g. ecc05 -> ecc06 "Exceeds threshold" and
+    #      ecc06 -> ecc05 "Re-check after settlement") — lx is identical
+    #      (both derived from the same shared x, since the two nodes sit in
+    #      the same column) and ly is identical too (the midpoint between
+    #      two fixed y's is the same regardless of which end is "from"),
+    #      so the two labels render fully stacked on top of each other,
+    #      illegible. This is a DIFFERENT source per edge, so tracking
+    #      collisions per-source (an earlier version of this code did,
+    #      reasoning that "two labels from unrelated sources landing near
+    #      the same point isn't the failure mode this guards against") misses
+    #      it entirely — confirmed on Mobile Postpaid Activation's ecc05/
+    #      ecc06 pair. Tracking by actual (lx, ly) proximity instead of by
+    #      source id catches both cases uniformly.
+    placed_labels = []   # every (lx, ly, text) placed so far, regardless of source
+    LABEL_CHAR_PX = 7.0      # ~character width for the 11px bold branch-label font — used both to size how
+                              # much vertical room a label's own printed (rotated) length actually needs, and
+                              # (below) to size how far apart two labels' CENTRES must be: text-anchor="middle"
+                              # means a label extends its own half-length on EITHER side of (lx, ly), so a flat
+                              # collision margin (this code's own earlier version used 30px regardless of text
+                              # length) still lets two long labels' printed extents overlap even when their
+                              # centres are placed hundreds of px apart — confirmed on Trouble Ticket
+                              # Lifecycle's "Automated Port-Out resolution feeds closure" (44 chars) and
+                              # "Automation failure escalated to back-office, then feedback on eventual
+                              # Resolved" (82 chars), whose centres were 341px apart yet still visibly crossed.
+    LABEL_MIN_COLLIDE_PX = 30   # floor under the length-aware threshold below, for two very short labels
+    LABEL_X_TOLERANCE = 12   # lx is (some node's x) - (that node's own r) -
+                             # MIN_CLEARANCE — two labels anchored to the
+                             # same column can still differ by up to ~9px
+                             # (the biggest r spread between categories,
+                             # e.g. R_END_OUTER(21) vs R_RECOVERY(12)) even
+                             # though they share the same physical x, so
+                             # the tolerance has to clear that; a
+                             # genuinely different column sits STEP (400px)
+                             # or more away, nowhere near this either way
+    LABEL_FAN_PX = LANE_PITCH   # 44px stagger per colliding label — the
+                                 # same MIN_CLEARANCE(40)-plus-a-few-px pitch
+                                 # every other spacing decision in this file
+                                 # already uses (see _LaneRouter above)
+
+    # A label's baseline position needs to clear TWO things it previously
+    # ignored: its own SOURCE shape (a flat "x - 11" sits inside any shape
+    # whose radius exceeds 11 — true for every category except the very
+    # smallest — confirmed on Mobile MACD Journey 1's decision node, where
+    # branch labels rendered directly through the diamond itself) and the
+    # PRECEDING spine node's card-text reserve (STEP - CARD_TEXT_OFFSET -
+    # CARD_AVAIL_W leaves only 44px between one card's right edge and the
+    # next node's own x — not enough room once a label is also pulled
+    # MIN_CLEARANCE past its own source shape; confirmed on the same
+    # node's 4 branch labels running straight through the PRECEDING
+    # "MACD Journey Triggered" card's paragraph text). Horizontal fanning
+    # alone (the label-vs-label fix above) has no awareness of either.
+    # Checked against EVERY node's card interval, not just whichever one
+    # sits nearest to the left — "nearest left" missed a case on Trouble
+    # Ticket Lifecycle where an off-spine node's label, once pushed right
+    # to clear a genuinely-preceding card, landed inside a DIFFERENT
+    # node's card (an on-spine sibling only ~50px away in x, close enough
+    # for its own reserve to still catch the pushed position, despite not
+    # being the nearest-left neighbour by the strict definition). Pushing
+    # past every interval it currently falls inside, and repeating (since
+    # escaping one card can land inside the next one over), is what
+    # actually guarantees clearance rather than just handling the most
+    # common single-neighbour case. Confirmed necessary for off-spine
+    # sources too, not just on-spine ones — this same diagram's
+    # "Automatic Resolution for Port-Out Verification" (off-spine) ran
+    # its own branch labels straight through the on-spine
+    # "Validate Credentials" card, which an on-spine-only check (an
+    # earlier version of this fix) never even considered.
+    card_intervals = sorted(
+        (n["x"] + CARD_TEXT_OFFSET, n["x"] + CARD_TEXT_OFFSET + CARD_AVAIL_W)
+        for n in nodes_by_id.values()
+    )
+
+    def _clear_of_every_card(x):
+        for _ in range(len(card_intervals) + 1):   # bounded: x only ever moves right, past a finite set
+            moved = False
+            for lo, hi in card_intervals:
+                if lo <= x <= hi:
+                    x = hi + MIN_CLEARANCE
+                    moved = True
+            if not moved:
+                return x
+        return x
+
+    # Same principle as _clear_of_every_card, for shapes instead of card
+    # text: checking only the label's OWN source shape (an earlier version
+    # of this fix) missed cases where a label ends up passing near a
+    # DIFFERENT nearby node's shape — confirmed on Mobile MACD Journey 1
+    # ("New plan/add-on exceeds credit limit") and Mobile Postpaid
+    # Activation ("Supervisor reassigns draft"), both landing on some
+    # other node's circle, not their own source's.
+    node_shapes = [(n["x"], n["y"], n["r"]) for n in nodes_by_id.values()]
+
+    def _clear_of_every_shape(x, y, half_len):
+        for _ in range(len(node_shapes) + 1):   # bounded: y only ever moves down, past a finite set
+            moved = False
+            for cx, cy, r in node_shapes:
+                if cx - r <= x <= cx + r:
+                    shape_top, shape_bottom = cy - r, cy + r
+                    if y - half_len <= shape_bottom and y + half_len >= shape_top:
+                        y = shape_bottom + MIN_CLEARANCE + half_len
+                        moved = True
+            if not moved:
+                return y
+        return y
+
+    card_right_edges = sorted(hi for _lo, hi in card_intervals)
+
+    def _room_to_fan_left(x):
+        # how far x could move left before reaching the nearest card
+        # already behind (to the left of) it — bounds how many horizontal
+        # fan lanes are actually usable before a collision has to stack
+        # vertically instead.
+        i = bisect.bisect_right(card_right_edges, x) - 1
+        return (x - card_right_edges[i] - MIN_CLEARANCE) if i >= 0 else float("inf")
+
+    vert_cursor_by_x = {}   # rounded x -> lowest y-edge used so far by a label stacked at that x (see below)
+
+    def _label_len(txt):
+        return text_width(txt, LABEL_CHAR_PX)
+
     for f in flows:
         a, b = nodes_by_id.get(f.get("from")), nodes_by_id.get(f.get("to"))
         if not a or not b:
@@ -559,16 +688,71 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
         dash = ' stroke-dasharray="6 5"' if color == BLUE else ""
         y1 = a["y"] + (a["r"] if b["y"] >= a["y"] else -a["r"])
         y2 = b["y"] + (-b["r"] if b["y"] >= a["y"] else b["r"])
-        d = router.route(a["x"], y1, b["x"], y2)
+        d = router.route(a["x"], y1, b["x"], y2, a.get("rowGap", row_gap), a.get("maxCardH", max_card_h))
         out.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="2.2"{dash} '
                    f'marker-end="url(#{marker})"/>')
         if f.get("label"):
-            lx, ly = a["x"] - 11, (y1 + y2) / 2
-            prior_ys = placed_label_y_by_source.setdefault(a["id"], [])
-            lane = sum(1 for py in prior_ys if abs(py - ly) < LABEL_COLLIDE_PX)
-            prior_ys.append(ly)
+            base_lx, ly = a["x"] - a["r"] - MIN_CLEARANCE, (y1 + y2) / 2
+            this_len = _label_len(f["label"])
+            lane = sum(1 for (px, py, ptxt) in placed_labels
+                       if abs(px - base_lx) < LABEL_X_TOLERANCE
+                       and abs(py - ly) < max(LABEL_MIN_COLLIDE_PX, this_len / 2 + _label_len(ptxt) / 2 + MIN_CLEARANCE))
+            placed_labels.append((base_lx, ly, f["label"]))
+
+            base_lx = _clear_of_every_card(base_lx)   # baseline itself may already be inside some card's reserve
+
+            horiz_lanes = lane
             if lane:
-                lx -= LABEL_FAN_PX * lane
+                available = _room_to_fan_left(base_lx)
+                horiz_lanes = lane if available == float("inf") else min(lane, max(0, int(available // LABEL_FAN_PX)))
+            # Fanning further left can walk straight into a DIFFERENT
+            # card that happens to sit further over — re-clear
+            # unconditionally rather than trusting the room estimate alone.
+            lx = _clear_of_every_card(base_lx - LABEL_FAN_PX * horiz_lanes)
+
+            # Whatever x a label actually lands on, register/consult a
+            # running vertical cursor for that exact x — not just when
+            # THIS label ran out of horizontal room. Two different labels
+            # can independently land on the same clamped x (whenever 2+
+            # edges share a source that's already pinned against a card),
+            # so the first label placed there has to seed the cursor too,
+            # or a later one has nothing to check against and lands right
+            # on top of it. The cursor tracks the
+            # lowest EDGE used at that x (not a centre), so each consumer
+            # adds its own half-length to find where its own centre needs
+            # to land, then advances the edge by its other half — correct
+            # regardless of how the current and next label's lengths
+            # compare to each other.
+            xkey = round(lx)
+            if horiz_lanes < lane or xkey in vert_cursor_by_x:
+                bottom_used = vert_cursor_by_x.get(xkey)
+                if bottom_used is not None:
+                    ly = max(ly, bottom_used + MIN_CLEARANCE + this_len / 2)
+
+            # A card's clearance and the source shape's own clearance can
+            # be mutually exclusive (the card demands lx stay right of
+            # some x; the shape demands lx stay left of a smaller one) —
+            # confirmed on Mobile MACD Journey 1's decision node, where the
+            # only column with 40px of the preceding card's text clear
+            # still sits inside the diamond's own x-span. When that
+            # happens there's no x that clears both, so clear the shape
+            # VERTICALLY instead: push ly below its bottom edge. This
+            # never reintroduces the card collision the x-clamp already
+            # solved — that one only depends on x, not y. Checked against
+            # EVERY node's shape, not just this edge's own source — a
+            # label can just as easily end up passing near some other
+            # node's circle/diamond that happens to share its column. This
+            # has to run LAST, after the vertical-cursor stacking above:
+            # that step can itself push ly down into a shape neither step
+            # had reason to check yet — confirmed on the same diagram's
+            # "New plan/add-on exceeds credit limit", clear of every shape
+            # at its own natural y, but landing squarely inside an
+            # unrelated node's circle once the cursor pushed it down to
+            # avoid a different label.
+            ly = _clear_of_every_shape(lx, ly, this_len / 2)
+
+            vert_cursor_by_x[xkey] = max(vert_cursor_by_x.get(xkey, ly), ly + this_len / 2)
+
             out.append(f'<text x="{lx}" y="{ly}" font-size="11" font-weight="700" fill="{color}" '
                        f'transform="rotate(-90 {lx} {ly})" text-anchor="middle">{esc(f["label"])}</text>')
     return "".join(out)

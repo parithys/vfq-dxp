@@ -195,6 +195,13 @@ BOTTOM_CHANNEL_LANES = 6    # the reserved channel below the whole diagram (for 
                             # connector in the whole diagram funnels into that one shared channel,
                             # not just the ones crossing one particular row
 LANE_PITCH = 44             # >= ROW_TEXT_CLEARANCE, +4px so float rounding never lands exactly on the floor
+SIBLING_PITCH = svg_gen.CARD_AVAIL_W + ROW_TEXT_CLEARANCE   # >= a card's own width — the flat 300px this used
+                             # to be was LESS than CARD_AVAIL_W (330), guaranteeing a 30px card-vs-card overlap
+                             # between any two off-spine siblings sharing one (anchor, tier) bucket, regardless
+                             # of content — confirmed on Mobile Postpaid Activation's jsm06/jsm07/jsm08 (and
+                             # 18 other diagrams). Deriving this from the real card width, the same "every
+                             # spacing constant comes from a floor, not an independent guess" rule every other
+                             # constant here already follows, makes the guarantee exact instead of coincidental.
 
 
 def _row_gap(max_card_h, n_lanes=N_ROUTING_LANES):
@@ -292,52 +299,82 @@ def compute_process_layout(nodes, flows, lanes, phases):
     spine_set = set(spine_order)
     spine_x = {node_id: X_START + i * STEP for i, node_id in enumerate(spine_order)}
 
-    # Row gap sized from the tallest card in THIS diagram (see _row_gap()'s
-    # own docstring) — one uniform value for every row (spine -> tier 0,
-    # and every subsequent tier), same as every other row-to-row gap.
+    # Row gap is LOCAL to each spine anchor's own branch, not one value for
+    # the whole diagram — a branch near short cards sits close to its own
+    # spine row; a branch near a verbose card still gets all the room it
+    # needs, without inflating spacing anywhere else in the diagram.
     #
-    # Two alternatives were tried and reverted, both for the same reason:
-    # cards have no drawn background box, so their true footprint is
-    # text-only and can extend into space a smaller/local calculation
-    # doesn't account for.
-    #   1. A per-branch LOCAL row gap (sized from just each spine anchor's
-    #      own subtree): broke the moment a spine node had a long
-    #      description but no off-spine children of its own — that card
-    #      isn't "in" any branch's local subtree, so nothing accounted for
-    #      it, and it visually overlapped a neighbouring branch's tier-0
-    #      row (confirmed on Mobile Postpaid Activation's "Scan Identity
-    #      Document"/"Draft Order Expiry" pair — a real, measured overlap).
-    #   2. A CAPPED global budget (count at most N wrapped description
-    #      lines toward the worst case, even though every line still
-    #      renders): closer, but for the same "Scan Identity
-    #      Document" node a cap generous enough to look compact still left
-    #      a small (~7px) measured overlap once that card's REAL height
-    #      exceeded what the cap assumed — i.e. still not the guaranteed
-    #      zero-overlap property every other row-gap decision in this file
-    #      already holds itself to (see MIN_CLEARANCE, _LaneRouter, and the
-    #      40px-clearance audit these were built to satisfy).
-    # A single TRUE (uncapped) global max is the only one of the three that
-    # is mathematically guaranteed overlap-free for a uniform grid, so
-    # that's what's used — some connectors run longer than they would with
-    # a capped/local budget, which is the accepted trade-off for "never
-    # truncate a description AND never risk an overlap."
+    # An earlier version of this tried exactly that and reverted: sizing
+    # a branch's gap from just that anchor's own subtree (itself + its
+    # off-spine descendants) missed the case where a DIFFERENT, unrelated
+    # spine node's card physically reaches into this branch's territory —
+    # off-spine siblings spread up to +/-SIBLING_PITCH per extra sibling
+    # from their own anchor, easily landing inside a NEIGHBOURING spine
+    # column's own 330px-wide card, even when that neighbour has no
+    # off-spine children of its own (so nothing in "just this anchor's
+    # subtree" ever accounted for it). Confirmed and reverted on Mobile
+    # Postpaid Activation's "Scan Identity Document" / "Draft Order
+    # Expiry" pair — a real, measured overlap.
+    #
+    # The fix kept here: local_max_h for a branch is the tallest card
+    # among its own subtree AND every spine node whose own card
+    # (x+CARD_TEXT_OFFSET .. x+CARD_TEXT_OFFSET+CARD_AVAIL_W) horizontally
+    # overlaps the x-territory this branch's own cards occupy — computed
+    # from real x positions (off-spine x never depends on row_gap, so it
+    # can be finalized first), not a guessed safety margin.
     lane_name_by_key = {l["key"]: l["name"] for l in lanes}
-    max_card_h = 0
-    for n in nodes:
+
+    def _card_h(node_id, is_spine):
+        n = nid[node_id]
         lane_name = lane_name_by_key.get(n.get("lane"), "")
-        max_card_h = max(max_card_h, svg_gen.card_height(n, lane_name, on_spine=n["id"] in spine_set))
-    row_gap = _row_gap(max_card_h)
+        return svg_gen.card_height(n, lane_name, on_spine=is_spine)
+
+    # Still computed globally — used only as the fallback for a spine node
+    # that never anchors any off-spine branch (never actually exercised
+    # for row-spacing in that case) and for the shared bottom overflow
+    # channel's own depth, below.
+    max_card_h = max((_card_h(n["id"], n["id"] in spine_set) for n in nodes), default=0)
+    fallback_row_gap = _row_gap(max_card_h)
 
     off_spine_ids = [n["id"] for n in nodes if n["id"] not in spine_set]
     anchors = _anchor_and_tier(off_spine_ids, spine_x, flows)
+    x_to_spine_id = {x: sid for sid, x in spine_x.items()}
 
     # Collision spread: multiple off-spine nodes sharing the exact same
     # (anchor_x, tier) are nudged apart horizontally in a fixed order
     # (sorted by id for determinism) rather than overlapping outright.
+    # X positions never depend on row_gap (only y does), so every off-spine
+    # node's final x can be finalized before row_gap is computed at all.
     bucket = collections.defaultdict(list)
     for node_id in off_spine_ids:
         ax, t = anchors[node_id]
         bucket[(ax, t)].append(node_id)
+
+    off_spine_x = {}
+    descendants_by_anchor = collections.defaultdict(list)
+    for (ax, t), ids in bucket.items():
+        ids_sorted = sorted(ids)
+        n_ids = len(ids_sorted)
+        for j, node_id in enumerate(ids_sorted):
+            offset = (j - (n_ids - 1) / 2) * SIBLING_PITCH
+            off_spine_x[node_id] = ax + offset
+        descendants_by_anchor[ax].extend(ids_sorted)
+
+    CARD_L, CARD_R = svg_gen.CARD_TEXT_OFFSET, svg_gen.CARD_TEXT_OFFSET + svg_gen.CARD_AVAIL_W
+    local_max_h = {}
+    for ax, descendant_ids in descendants_by_anchor.items():
+        anchor_id = x_to_spine_id.get(ax)
+        subtree_ids = ([anchor_id] if anchor_id else []) + descendant_ids
+        h = max((_card_h(nid_, nid_ in spine_set) for nid_ in subtree_ids), default=0)
+        lo = min(off_spine_x[nid_] for nid_ in descendant_ids) + CARD_L
+        hi = max(off_spine_x[nid_] for nid_ in descendant_ids) + CARD_R
+        lo, hi = min(lo, ax + CARD_L), max(hi, ax + CARD_R)
+        for sid in spine_order:
+            s_x = spine_x[sid]
+            if s_x + CARD_L <= hi and s_x + CARD_R >= lo:
+                h = max(h, _card_h(sid, True))
+        local_max_h[ax] = h
+    local_row_gap = {ax: _row_gap(h) for ax, h in local_max_h.items()}
 
     out_nodes = {}
     for i, node_id in enumerate(spine_order):
@@ -348,23 +385,56 @@ def compute_process_layout(nodes, flows, lanes, phases):
         r = {"start": R_START, "end": R_END_OUTER, "milestone": R_MILESTONE_OUTER,
              "decision": R_DECISION}.get(cat, R_PRIMARY)
         out_nodes[node_id] = {"id": node_id, "category": cat, "x": x, "y": SPINE_Y,
-                               "r": r, "st": i + 1, "onSpine": True}
+                               "r": r, "st": i + 1, "onSpine": True,
+                               "rowGap": local_row_gap.get(x, fallback_row_gap),
+                               "maxCardH": local_max_h.get(x, max_card_h)}
 
     for (ax, t), ids in bucket.items():
         ids_sorted = sorted(ids)
         n_ids = len(ids_sorted)
+        row_gap_here = local_row_gap[ax]
+        max_h_here = local_max_h[ax]
         for j, node_id in enumerate(ids_sorted):
             n = nid[node_id]
             out_flows = [f for f in flows if f.get("from") == node_id]
             cat = classify(n, False, out_flows)
-            # spread siblings sharing one (anchor,tier) symmetrically around ax
-            offset = (j - (n_ids - 1) / 2) * 300
-            x = ax + offset
-            y = SPINE_Y + (t + 1) * row_gap
+            x = off_spine_x[node_id]
+            y = SPINE_Y + (t + 1) * row_gap_here
             r = {"error": R_ERROR, "escalation": ESCALATION_SIZE / 2,
                  "decision": R_DECISION}.get(cat, R_RECOVERY)
             out_nodes[node_id] = {"id": node_id, "category": cat, "x": x, "y": y,
-                                   "r": r, "st": None, "onSpine": False}
+                                   "r": r, "st": None, "onSpine": False,
+                                   "rowGap": row_gap_here, "maxCardH": max_h_here}
+
+    # Two off-spine nodes anchored to DIFFERENT spine columns can still
+    # spread toward each other far enough for their cards to overlap —
+    # SIBLING_PITCH above only guarantees clearance WITHIN one (anchor,
+    # tier) bucket, not between two independent branches that happen to
+    # land close together (confirmed on Mobile MACD Plan Change:
+    # "reject_blacklist" / "lockin_penalty_payment", anchored to two
+    # different spine nodes). Final deterministic sweep, sorted by (y, x)
+    # so it processes top-to-bottom/left-to-right the same way every
+    # time: push any card that still overlaps an already-placed one to
+    # sit just right of it, re-checking against everything placed so far
+    # since one push can walk into a card that was already clear.
+    off_spine_sorted = sorted(off_spine_ids, key=lambda nid_: (out_nodes[nid_]["y"], out_nodes[nid_]["x"]))
+    placed_boxes = []   # (x0, y0, x1, y1) already finalized, in this pass's own order
+    for node_id in off_spine_sorted:
+        n = out_nodes[node_id]
+        h = _card_h(node_id, False)
+        x0 = n["x"] + CARD_L
+        y0, y1 = n["y"], n["y"] + h
+        for _ in range(len(placed_boxes) + 1):   # bounded: x0 only ever moves right, past a finite set
+            moved = False
+            for (px0, py0, px1, py1) in placed_boxes:
+                x1 = x0 + (CARD_R - CARD_L)
+                if x0 < px1 and x1 > px0 and y0 < py1 and y1 > py0:
+                    x0 = px1 + ROW_TEXT_CLEARANCE
+                    moved = True
+            if not moved:
+                break
+        n["x"] += x0 - (n["x"] + CARD_L)
+        placed_boxes.append((x0, y0, x0 + (CARD_R - CARD_L), y1))
 
     # ---- phase bands: x-range per business phase, derived from where its
     # member nodes actually landed (spine nodes only — off-spine nodes
@@ -404,10 +474,12 @@ def compute_process_layout(nodes, flows, lanes, phases):
         "totalW": total_w,
         "totalH": total_h,
         "topbarH": TOPBAR_H,
-        # Handed to svg_gen.py's connector router so its routing-lane zones
-        # agree exactly with the clearance this layout already reserved —
-        # see svg_gen.py::connectors_svg()'s own lane allocator.
-        "rowGap": row_gap,
+        # Global fallback only — svg_gen.py::connectors_svg() reads each
+        # edge's own SOURCE node's "rowGap"/"maxCardH" (out_nodes[id],
+        # above) for its actual lane-zone math; these two are the default
+        # for the rare node that has neither (shouldn't happen, but keeps
+        # the router from crashing on a KeyError).
+        "rowGap": fallback_row_gap,
         "maxCardH": max_card_h,
     }
 

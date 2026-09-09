@@ -33,12 +33,31 @@ header{position:sticky;top:0;z-index:90;
 .phaseselect{min-width:190px;appearance:none;-webkit-appearance:none;
   background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 10 6"><path d="M1 1L5 5L9 1" stroke="%234a4d4e" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>');
   background-repeat:no-repeat;background-position:right 14px center;padding-right:38px}
-.searchctrl{display:flex;align-items:center;gap:6px;border:1px solid var(--line);
-  background:var(--panel);border-radius:var(--radius-button);padding:0 var(--space-3);height:31px}
+.searchwrap{position:relative;display:flex;align-items:center}
+.iconbtn{display:flex;align-items:center;justify-content:center;flex:none;
+  width:31px;height:31px;border:1px solid var(--line);background:var(--panel);color:#6f7375;
+  border-radius:var(--radius-button);cursor:pointer;padding:0}
+.iconbtn:hover{border-color:var(--accent);color:var(--accent)}
+.iconbtn.active{border-color:var(--accent);color:var(--accent);background:#fff9f9}
+/* Collapsed by default (icon-only) — expands into the same search control the
+   old always-visible "Search node…" box used, so the underlying behaviour
+   (NODES filter, ring highlights, hit count, keyboard nav) needs zero changes,
+   only where/how it's shown. max-width (not width) is what's animated, since
+   the control's natural content width varies with the hit-count text. */
+.searchctrl{display:flex;align-items:center;gap:6px;border:1px solid transparent;
+  background:var(--panel);border-radius:var(--radius-button);height:31px;
+  max-width:0;opacity:0;padding:0;margin-left:0;overflow:hidden;
+  transition:max-width .22s ease,opacity .16s ease,margin-left .22s ease,padding .22s ease}
+.searchwrap.open .searchctrl{max-width:280px;opacity:1;margin-left:var(--space-2);
+  padding:0 var(--space-3);border-color:var(--line)}
 .searchctrl input{border:0;outline:0;font-size:12px;font-weight:600;color:var(--ink2);
-  width:200px;font-family:inherit;background:none}
+  width:170px;font-family:inherit;background:none;flex:1}
+/* .searchwrap.open .searchctrl (3 classes) otherwise beats a bare
+   .searchctrl.no-match (2 classes) on specificity and the red no-match
+   border never shows while expanded — matched here explicitly so it wins. */
+.searchwrap.open .searchctrl.no-match{border-color:var(--accent)}
 .searchctrl.no-match input{color:var(--accent)}
-.hits{font-size:11px;font-weight:700;color:var(--mute);min-width:52px;text-align:right}
+.hits{font-size:11px;font-weight:700;color:var(--mute);white-space:nowrap}
 .expwrap{position:relative}
 .expmenu{position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line);
   border-radius:var(--radius-button);box-shadow:0 18px 44px rgba(0,0,0,.22);display:none;z-index:120;min-width:180px}
@@ -88,6 +107,16 @@ i{width:13px;height:13px;display:inline-block;flex:none}
     </div>
     <div class="actions">
       <div class="arow">
+        <div class="searchwrap" id="searchWrap">
+          <button class="iconbtn" id="searchToggle" type="button" aria-label="Search" aria-expanded="false">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+              <circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 L14 14" stroke-linecap="round"/></svg>
+          </button>
+          <div class="searchctrl" id="searchCtrl">
+            <input id="q" type="search" placeholder="Search node…" autocomplete="off">
+            <span class="hits" id="hits"></span>
+          </div>
+        </div>
         <select class="phaseselect" id="phaseSel" aria-label="Jump to phase"></select>
         <div class="expwrap">
           <button class="btn primary" id="expBtn">Export</button>
@@ -96,14 +125,6 @@ i{width:13px;height:13px;display:inline-block;flex:none}
             <button data-fmt="png">Export as PNG</button>
             <button data-fmt="pdf">Export as PDF (paginated)</button>
           </div>
-        </div>
-      </div>
-      <div class="arow">
-        <span class="hits" id="hits"></span>
-        <div class="searchctrl" id="searchCtrl">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#6f7375" stroke-width="1.8">
-            <circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 L14 14" stroke-linecap="round"/></svg>
-          <input id="q" type="search" placeholder="Search node…" autocomplete="off">
         </div>
       </div>
     </div>
@@ -129,12 +150,36 @@ i{width:13px;height:13px;display:inline-block;flex:none}
 const NODES=[{"id": "start", "x": 60, "y": 215, "r": 22, "lb": "Prepaid Activation Journey Begins", "t": "1 prepaid activation journey begins use case mob_pre_act_retl_001 (mpra): the retail channel prepaid activation journey is initiated. retail agent / dxp journey"}, {"id": "mpra_001_jsm_01", "x": 460, "y": 215, "r": 20, "lb": "Journey & Session Management", "t": "2 journey & session management mpra_001_jsm_01 the journey and session management capability shall be reused as-is from the mobile postpaid activation journey (mob_post_act_retl_001) for mobile prepaid activation, with no functional change. retail agent / dxp journey"}, {"id": "mpra_001_kyc_01", "x": 860, "y": 215, "r": 20, "lb": "ID Capture & Verification (IDWise / MOI)", "t": "3 id capture & verification (idwise / moi) mpra_001_kyc_01 the customer identification and verification capability shall be reused as-is from the mobile postpaid activation journey (mob_post_act_retl_001) for mobile prepaid activation, with no functional change. retail agent / dxp journey"}, {"id": "mpra_001_cam_01", "x": 1260, "y": 215, "r": 20, "lb": "Customer & Account Creation", "t": "4 customer & account creation mpra_001_cam_01 the customer and account management capability shall be reused as-is from the mobile postpaid activation journey (mob_post_act_retl_001) for mobile prepaid activation, with no functional change. retail agent / dxp journey"}, {"id": "mpra_001_cam_02", "x": 1660, "y": 215, "r": 20, "lb": "Default credit limit and Bill Cycle", "t": "5 default credit limit and bill cycle mpra_001_cam_02 the system shall not populate credit limit and bill cycle attributes for prepaid journey retail agent / dxp journey"}, {"id": "mpra_001_cam_03", "x": 2060, "y": 215, "r": 20, "lb": "HRN nationality flag derivation", "t": "6 hrn nationality flag derivation mpra_001_cam_03 system will derive the hrn flag as per the capability defined in mobile postpaid journey retail agent / dxp journey"}, {"id": "mpra_001_cam_04", "x": 2460, "y": 215, "r": 20, "lb": "HRN advance payment message", "t": "7 hrn advance payment message mpra_001_cam_04 system will not display any hrn advance payment message for prepaid order retail agent / dxp journey"}, {"id": "mpra_001_cam_05", "x": 2860, "y": 215, "r": 20, "lb": "Customer & Account Details (Address, Contact, Email)", "t": "8 customer & account details (address, contact, email) mpra_001_cam_05 the customer and account management capability shall be reused as-is from the mobile postpaid activation journey (mob_post_act_retl_001) for mobile prepaid activation, with no functional change. retail agent / dxp journey"}, {"id": "mpra_001_ecc_01", "x": 3260, "y": 215, "r": 20, "lb": "Eligibility, Blacklist & Credit Screening", "t": "9 eligibility, blacklist & credit screening mpra_001_ecc_01 the eligibility and credit control capability shall be reused as-is from the mobile postpaid activation journey (mob_post_act_retl_001) for mobile prepaid activation, with no functional change. retail agent / dxp journey"}, {"id": "mpra_001_ecc_02", "x": 3660, "y": 215, "r": 24, "lb": "Prepaid product eligibility gate", "t": "10 prepaid product eligibility gate mpra_001_ecc_02 the system shall permit product selection only after successful completion of identity, customer status and line count eligibility validations. retail agent / dxp journey"}, {"id": "mpra_001_ecc_03", "x": 4060, "y": 215, "r": 20, "lb": "Credit limit out of scope", "t": "11 credit limit out of scope mpra_001_ecc_03 the system shall not create, amend or display a credit limit within the prepaid activation journey. retail agent / dxp journey"}, {"id": "mpra_001_bam_01", "x": 4460, "y": 215, "r": 20, "lb": "Bill cycle out of scope", "t": "12 bill cycle out of scope mpra_001_bam_01 the system shall not create or assign a bill cycle within the prepaid activation journey. retail agent / dxp journey"}, {"id": "mpra_001_bam_02", "x": 4860, "y": 215, "r": 20, "lb": "Payment profile out of scope", "t": "13 payment profile out of scope mpra_001_bam_02 the system shall not create an auto debit payment profile within the prepaid activation journey. retail agent / dxp journey"}, {"id": "mpra_001_qpc_01", "x": 5260, "y": 215, "r": 20, "lb": "Present Eligible Prepaid Plans", "t": "14 present eligible prepaid plans mpra_001_qpc_01 the product catalogue and cart capability shall be reused as-is from the mobile postpaid activation journey (mob_post_act_retl_001) for mobile prepaid activation, with no functional change. retail agent / dxp journey"}, {"id": "mpra_001_qpc_02", "x": 5660, "y": 215, "r": 20, "lb": "Prepaid Plan/Add On Selection", "t": "15 prepaid plan/add on selection mpra_001_qpc_02 the system shall filter and provide preapid plan based on the custome eligibility and segment. retail agent / dxp journey"}, {"id": "mpra_001_qpc_03", "x": 6060, "y": 215, "r": 20, "lb": "Cart Build: Add-Ons, Pricing & Discounts", "t": "16 cart build: add-ons, pricing & discounts mpra_001_qpc_03 the product catalogue and cart capability shall be reused as-is from the mobile postpaid activation journey (mob_post_act_retl_001) for mobile prepaid activation, with no functional change. retail agent / dxp journey"}, {"id": "mpra_001_qpc_04", "x": 6460, "y": 215, "r": 20, "lb": "Special discount", "t": "17 special discount mpra_001_qpc_04 system should allow agent to select prepaid specific discount based on the plan selection retail agent / dxp journey"}, {"id": "mpra_001_num_01", "x": 6860, "y": 215, "r": 20, "lb": "Number Selection & Reservation", "t": "18 number selection & reservation mpra_001_num_01 the number management capability shall be reused as-is from the mobile postpaid activation journey (mob_post_act_retl_001) for mobile prepaid activation, with no functional change. retail agent / dxp journey"}, {"id": "mpra_001_sim_01", "x": 7260, "y": 215, "r": 20, "lb": "SIM / eSIM Selection & Validation", "t": "19 sim / esim selection & validation mpra_001_sim_01 the sim management capability shall be reused as-is from the mobile postpaid activation journey (mob_post_act_retl_001) for mobile prepaid activation, with no functional change. retail agent / dxp journey"}, {"id": "mpra_001_cvc_01", "x": 7660, "y": 215, "r": 20, "lb": "Cart Validation & Check-Out", "t": "20 cart validation & check-out mpra_001_cvc_01 the cart validation & check out capability shall be reused as-is from the mobile postpaid activation journey (mob_post_act_retl_001) for mobile prepaid activation, with no functional change. retail agent / dxp journey"}, {"id": "mpra_001_cvc_02", "x": 8060, "y": 215, "r": 20, "lb": "Starter pack and recharge charge collection", "t": "21 starter pack and recharge charge collection mpra_001_cvc_02 the system shall include starter pack and initial recharge charges in the payment request where applicable. retail agent / dxp journey"}, {"id": "mpra_001_cvc_03", "x": 8460, "y": 215, "r": 20, "lb": "Payment summary display", "t": "22 payment summary display mpra_001_cvc_03 the system shall display the payment summary and the total payable amount to the retail agent before payment is confirmed. retail agent / dxp journey"}, {"id": "mpra_001_caf_01", "x": 8860, "y": 215, "r": 20, "lb": "Contract Generation (CAF)", "t": "23 contract generation (caf) mpra_001_caf_01 the contract and documentation capability shall be reused as-is from the mobile postpaid activation journey (mob_post_act_retl_001) for mobile prepaid activation, with no functional change. retail agent / dxp journey"}, {"id": "mpra_001_caf_02", "x": 9260, "y": 215, "r": 20, "lb": "Key Information", "t": "24 key information mpra_001_caf_02 system should generate the terms and condition related to prepaid and rest of the caf capability to be reused from mobile postpaid activation retail agent / dxp journey"}, {"id": "mpra_001_caf_03", "x": 9660, "y": 215, "r": 20, "lb": "CAF generation from template", "t": "25 caf generation from template mpra_001_caf_03 system should generate caf template specific to prepaid retail agent / dxp journey"}, {"id": "mpra_001_pay_01", "x": 10060, "y": 215, "r": 20, "lb": "Payment Collection (WinCash)", "t": "26 payment collection (wincash) mpra_001_pay_01 the payment and inventory capability shall be reused as-is from the mobile postpaid activation journey (mob_post_act_retl_001) for mobile prepaid activation, with no functional change. payment & inventory systems"}, {"id": "mpra_001_pay_02", "x": 10460, "y": 215, "r": 20, "lb": "SIM Card Charge Collection", "t": "27 sim card charge collection mpra_001_pay_02 system should collect the sim card charges based on the business rules defined in br-013 payment & inventory systems"}, {"id": "mpra_001_pay_03", "x": 10860, "y": 215, "r": 20, "lb": "Physical SIM inventory depletion", "t": "28 physical sim inventory depletion mpra_001_pay_03 the system shall deplete a physical sim or a printed esim from stock through wincash on payment completion. payment & inventory systems"}, {"id": "mpra_001_pay_04", "x": 11260, "y": 215, "r": 20, "lb": "Virtual eSIM inventory depletion", "t": "29 virtual esim inventory depletion mpra_001_pay_04 since virtual esim is not allocated to store & the inventory is not mainatained at wincash, esim depletion will happen at order fulfilment stage.  payment & inventory systems"}, {"id": "mpra_001_ord_01", "x": 11660, "y": 215, "r": 20, "lb": "Order submission", "t": "30 order submission mpra_001_ord_01 the system shall allow the retail agent to submit the order once payment has completed successfully. (status_model: order draft/pending payment -> open/submitted, triggered by agent submission.) retail agent / dxp journey"}, {"id": "mpra_001_ord_02", "x": 12060, "y": 215, "r": 20, "lb": "Order Submission & Routing", "t": "31 order submission & routing mpra_001_ord_02 the order submission capability shall be reused as-is from the mobile postpaid activation journey (mob_post_act_retl_001) for mobile prepaid activation, with no functional change. retail agent / dxp journey"}, {"id": "mpra_001_net_02", "x": 12460, "y": 215, "r": 20, "lb": "Prepaid service creation", "t": "32 prepaid service creation mpra_001_net_02 the downstream fulfilment process shall create the prepaid mobile service and associate msisdn, sim and customer/service identifiers. network activation & fulfilment"}, {"id": "mpra_001_net_03", "x": 12860, "y": 215, "r": 20, "lb": "Charging System account creation", "t": "33 charging system account creation mpra_001_net_03 the downstream fulfilment process shall create or update prepaid balance and applicable plan in charging system for the activated msisdn. network activation & fulfilment"}, {"id": "mpra_001_net_04", "x": 13260, "y": 215, "r": 20, "lb": "Prepaid plan and benefit activation", "t": "34 prepaid plan and benefit activation mpra_001_net_04 the downstream fulfilment process shall activate prepaid plan and applicable prepaid benefits selected in cart. network activation & fulfilment"}, {"id": "mpra_001_net_05", "x": 13660, "y": 215, "r": 20, "lb": "Activation outcome synchronization", "t": "35 activation outcome synchronization mpra_001_net_05 the downstream fulfilment process shall synchronize activation outcome to crm order status. (status_model: order open/submitted or in fulfilment -> closed/complete or closed/failed, triggered by the downstream completion or failure event.) network activation & fulfilment"}, {"id": "mpra_001_net_06", "x": 14060, "y": 215, "r": 20, "lb": "Welcome/activation lifecycle trigger", "t": "36 welcome/activation lifecycle trigger mpra_001_net_06 the system shall trigger prepaid activation confirmation and lifecycle initiation according to configured prepaid rules. network activation & fulfilment"}, {"id": "mpra_001_not_01", "x": 14460, "y": 215, "r": 20, "lb": "Notification & Feedback (Medilia)", "t": "37 notification & feedback (medilia) mpra_001_not_01 the notification and feedback capability shall be reused as-is from the mobile postpaid activation journey (mob_post_act_retl_001) for mobile prepaid activation, with no functional change. notification & feedback"}, {"id": "end", "x": 14860, "y": 215, "r": 27, "lb": "Prepaid Activation Journey Ends", "t": "38 prepaid activation journey ends end of order capture journey (source sheet section #15) following activation confirmation and lifecycle trigger. notification & feedback"}], PHASES=[{"n": "Customer Interaction & Verification", "x": 0}, {"n": "Customer Account Creation", "x": 1060.0}, {"n": "Eligibility & Billing Exclusions", "x": 3060.0}, {"n": "Product, Number & SIM Selection", "x": 5060.0}, {"n": "Cart Check-Out", "x": 7460.0}, {"n": "Contract & Agreement (CAF)", "x": 8660.0}, {"n": "Payment & Order Submission", "x": 9860.0}, {"n": "Order Fulfilment & Prepaid Activation", "x": 11860.0}, {"n": "Notification", "x": 14260.0}];
 const scroll=document.getElementById('scroll'), hl=document.getElementById('hl'),
       q=document.getElementById('q'), sc=document.getElementById('searchCtrl'),
-      hits=document.getElementById('hits'), sel=document.getElementById('phaseSel');
+      hits=document.getElementById('hits'), sel=document.getElementById('phaseSel'),
+      searchWrap=document.getElementById('searchWrap'), searchToggle=document.getElementById('searchToggle');
 
 /* ---- Jump to phase ---- */
 sel.innerHTML='<option value="">Jump to phase…</option>'+
   PHASES.map((p,i)=>`<option value="${p.x}">${i} · ${p.n}</option>`).join('');
 sel.onchange=()=>{ if(sel.value!=='') scroll.scrollTo({left:+sel.value,behavior:'smooth'}); };
+
+/* ---- Search icon expand/collapse ---- */
+// Collapsing never clears the query or the on-canvas ring highlight — only
+// hides the input, so a reader can tuck the box away without losing their
+// place, and reopening picks the search straight back up.
+function openSearch(){
+  searchWrap.classList.add('open');
+  searchToggle.setAttribute('aria-expanded','true');
+  searchToggle.classList.add('active');
+  setTimeout(()=>q.focus(),0);
+}
+function closeSearch(){
+  searchWrap.classList.remove('open');
+  searchToggle.setAttribute('aria-expanded','false');
+  searchToggle.classList.remove('active');
+}
+searchToggle.addEventListener('click',e=>{
+  e.stopPropagation();
+  searchWrap.classList.contains('open') ? closeSearch() : openSearch();
+});
+document.addEventListener('click',e=>{
+  if(searchWrap.classList.contains('open') && !searchWrap.contains(e.target)) closeSearch();
+});
 
 /* ---- Search ---- */
 let matches=[], cur=-1;
@@ -173,7 +218,10 @@ function run(){
 let deb; q.addEventListener('input',()=>{clearTimeout(deb);deb=setTimeout(run,180);});
 q.addEventListener('keydown',e=>{
   if(e.key==='Enter'){e.preventDefault(); matches.length?goto_(cur+(e.shiftKey?-1:1)):run();}
-  if(e.key==='Escape'){q.value='';run();}
+  if(e.key==='Escape'){
+    if(q.value){ q.value=''; run(); }
+    else { closeSearch(); q.blur(); }
+  }
 });
 
 /* ---- Paginated PDF via the browser's own print-to-PDF (no external library, works offline) ---- */

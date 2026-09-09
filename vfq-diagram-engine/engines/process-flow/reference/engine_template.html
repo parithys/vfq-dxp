@@ -33,12 +33,31 @@ header{position:sticky;top:0;z-index:90;
 .phaseselect{min-width:190px;appearance:none;-webkit-appearance:none;
   background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 10 6"><path d="M1 1L5 5L9 1" stroke="%234a4d4e" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>');
   background-repeat:no-repeat;background-position:right 14px center;padding-right:38px}
-.searchctrl{display:flex;align-items:center;gap:6px;border:1px solid var(--line);
-  background:var(--panel);border-radius:var(--radius-button);padding:0 var(--space-3);height:31px}
+.searchwrap{position:relative;display:flex;align-items:center}
+.iconbtn{display:flex;align-items:center;justify-content:center;flex:none;
+  width:31px;height:31px;border:1px solid var(--line);background:var(--panel);color:#6f7375;
+  border-radius:var(--radius-button);cursor:pointer;padding:0}
+.iconbtn:hover{border-color:var(--accent);color:var(--accent)}
+.iconbtn.active{border-color:var(--accent);color:var(--accent);background:#fff9f9}
+/* Collapsed by default (icon-only) — expands into the same search control the
+   old always-visible "Search node…" box used, so the underlying behaviour
+   (NODES filter, ring highlights, hit count, keyboard nav) needs zero changes,
+   only where/how it's shown. max-width (not width) is what's animated, since
+   the control's natural content width varies with the hit-count text. */
+.searchctrl{display:flex;align-items:center;gap:6px;border:1px solid transparent;
+  background:var(--panel);border-radius:var(--radius-button);height:31px;
+  max-width:0;opacity:0;padding:0;margin-left:0;overflow:hidden;
+  transition:max-width .22s ease,opacity .16s ease,margin-left .22s ease,padding .22s ease}
+.searchwrap.open .searchctrl{max-width:280px;opacity:1;margin-left:var(--space-2);
+  padding:0 var(--space-3);border-color:var(--line)}
 .searchctrl input{border:0;outline:0;font-size:12px;font-weight:600;color:var(--ink2);
-  width:200px;font-family:inherit;background:none}
+  width:170px;font-family:inherit;background:none;flex:1}
+/* .searchwrap.open .searchctrl (3 classes) otherwise beats a bare
+   .searchctrl.no-match (2 classes) on specificity and the red no-match
+   border never shows while expanded — matched here explicitly so it wins. */
+.searchwrap.open .searchctrl.no-match{border-color:var(--accent)}
 .searchctrl.no-match input{color:var(--accent)}
-.hits{font-size:11px;font-weight:700;color:var(--mute);min-width:52px;text-align:right}
+.hits{font-size:11px;font-weight:700;color:var(--mute);white-space:nowrap}
 .expwrap{position:relative}
 .expmenu{position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line);
   border-radius:var(--radius-button);box-shadow:0 18px 44px rgba(0,0,0,.22);display:none;z-index:120;min-width:180px}
@@ -88,6 +107,16 @@ i{width:13px;height:13px;display:inline-block;flex:none}
     </div>
     <div class="actions">
       <div class="arow">
+        <div class="searchwrap" id="searchWrap">
+          <button class="iconbtn" id="searchToggle" type="button" aria-label="Search" aria-expanded="false">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+              <circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 L14 14" stroke-linecap="round"/></svg>
+          </button>
+          <div class="searchctrl" id="searchCtrl">
+            <input id="q" type="search" placeholder="Search node…" autocomplete="off">
+            <span class="hits" id="hits"></span>
+          </div>
+        </div>
         <select class="phaseselect" id="phaseSel" aria-label="Jump to phase"></select>
         <div class="expwrap">
           <button class="btn primary" id="expBtn">Export</button>
@@ -96,14 +125,6 @@ i{width:13px;height:13px;display:inline-block;flex:none}
             <button data-fmt="png">Export as PNG</button>
             <button data-fmt="pdf">Export as PDF (paginated)</button>
           </div>
-        </div>
-      </div>
-      <div class="arow">
-        <span class="hits" id="hits"></span>
-        <div class="searchctrl" id="searchCtrl">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#6f7375" stroke-width="1.8">
-            <circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 L14 14" stroke-linecap="round"/></svg>
-          <input id="q" type="search" placeholder="Search node…" autocomplete="off">
         </div>
       </div>
     </div>
@@ -129,12 +150,36 @@ __SVG_BODY__
 const NODES=__NODES_JSON__, PHASES=__PHASES_JSON__;
 const scroll=document.getElementById('scroll'), hl=document.getElementById('hl'),
       q=document.getElementById('q'), sc=document.getElementById('searchCtrl'),
-      hits=document.getElementById('hits'), sel=document.getElementById('phaseSel');
+      hits=document.getElementById('hits'), sel=document.getElementById('phaseSel'),
+      searchWrap=document.getElementById('searchWrap'), searchToggle=document.getElementById('searchToggle');
 
 /* ---- Jump to phase ---- */
 sel.innerHTML='<option value="">Jump to phase…</option>'+
   PHASES.map((p,i)=>`<option value="${p.x}">${i} · ${p.n}</option>`).join('');
 sel.onchange=()=>{ if(sel.value!=='') scroll.scrollTo({left:+sel.value,behavior:'smooth'}); };
+
+/* ---- Search icon expand/collapse ---- */
+// Collapsing never clears the query or the on-canvas ring highlight — only
+// hides the input, so a reader can tuck the box away without losing their
+// place, and reopening picks the search straight back up.
+function openSearch(){
+  searchWrap.classList.add('open');
+  searchToggle.setAttribute('aria-expanded','true');
+  searchToggle.classList.add('active');
+  setTimeout(()=>q.focus(),0);
+}
+function closeSearch(){
+  searchWrap.classList.remove('open');
+  searchToggle.setAttribute('aria-expanded','false');
+  searchToggle.classList.remove('active');
+}
+searchToggle.addEventListener('click',e=>{
+  e.stopPropagation();
+  searchWrap.classList.contains('open') ? closeSearch() : openSearch();
+});
+document.addEventListener('click',e=>{
+  if(searchWrap.classList.contains('open') && !searchWrap.contains(e.target)) closeSearch();
+});
 
 /* ---- Search ---- */
 let matches=[], cur=-1;
@@ -173,7 +218,10 @@ function run(){
 let deb; q.addEventListener('input',()=>{clearTimeout(deb);deb=setTimeout(run,180);});
 q.addEventListener('keydown',e=>{
   if(e.key==='Enter'){e.preventDefault(); matches.length?goto_(cur+(e.shiftKey?-1:1)):run();}
-  if(e.key==='Escape'){q.value='';run();}
+  if(e.key==='Escape'){
+    if(q.value){ q.value=''; run(); }
+    else { closeSearch(); q.blur(); }
+  }
 });
 
 /* ---- Paginated PDF via the browser's own print-to-PDF (no external library, works offline) ---- */
