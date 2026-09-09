@@ -15,6 +15,7 @@ since those are the only genuinely interactive behaviours the reference
 has; everything else is static once rendered, exactly like the reference.
 """
 import bisect
+import collections
 import html as _html_mod
 import re
 
@@ -926,6 +927,24 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
         a, b = nodes_by_id.get(f.get("from")), nodes_by_id.get(f.get("to"))
         return 1 if a and b and b["y"] < a["y"] else 0
 
+    # 2+ routed edges sharing one source, both dead-centre exiting
+    # downward (same_row/left_vertex_exit edges use a different exit
+    # point, so they're never part of this), share that source's exit
+    # column for at least their FIRST segment — a branch-group trunk,
+    # same as the reference's own fan-out style. Each one still needs its
+    # OWN direction readable at that shared segment, not just at its own
+    # unique end far downstream, so any edge counted here gets an extra
+    # marker-mid arrow at the corner where its own unique jog begins.
+    trunk_share_count = collections.Counter()
+    for f in flows:
+        a, b = nodes_by_id.get(f.get("from")), nodes_by_id.get(f.get("to"))
+        if not a or not b or is_trivial_spine_hop(f, a, b) or is_happy_branch_label(f, a, b):
+            continue
+        going_down = b["y"] >= a["y"]
+        same_row = not a["onSpine"] and not b["onSpine"] and a["y"] == b["y"]
+        if going_down and not same_row:
+            trunk_share_count[f["from"]] += 1
+
     for f in sorted(flows, key=_flow_dir_key):
         from_id, to_id = f.get("from"), f.get("to")
         a, b = nodes_by_id.get(from_id), nodes_by_id.get(to_id)
@@ -1070,7 +1089,15 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
         # SVG export, unlike a CSS-only rule the exported file has no
         # stylesheet for).
         out.append(f'<path d="{d}" fill="none" stroke="#000" stroke-width="14" opacity="0"/>')
-        out.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="2.2"{dash} '
+        # A branch-group trunk (2+ edges sharing one source's exit column
+        # — see trunk_share_count above) puts a second, smaller copy of
+        # this edge's own arrowhead at every intermediate corner too, not
+        # just the final destination — so this specific connector's
+        # direction stays legible even where its path overlaps a sibling
+        # branch's, instead of only being distinguishable once they've
+        # already diverged onto their own unique jog.
+        mid_marker = f' marker-mid="url(#{marker})"' if trunk_share_count.get(from_id, 0) >= 2 else ""
+        out.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="2.2"{dash}{mid_marker} '
                    f'marker-end="url(#{marker})"/>')
         if dash:
             # A small filled circle at the connector's own ORIGIN point —
