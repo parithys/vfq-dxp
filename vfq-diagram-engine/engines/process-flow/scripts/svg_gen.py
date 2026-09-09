@@ -694,7 +694,7 @@ class _LaneRouter:
         self._claim_v(x2, min(y2, jog_y), max(y2, jog_y))
         return f"M {x1} {y1} L {x1} {jog_y} L {x2} {jog_y} L {x2} {y2}", jog_y, x_lo, x_hi
 
-    def route_under(self, x1, y1, x2, y2, row_gap, max_card_h, n_lanes=None):
+    def route_under(self, x1, y1, x2, y2, min_jog_y, n_lanes=None):
         """Same-row bottom-to-bottom connector (see connectors_svg()'s own
         same_row case): y1 and y2 are usually numerically EQUAL (both
         endpoints are "this row's own bottom edge"), which would hit
@@ -703,16 +703,24 @@ class _LaneRouter:
         for two ADJACENT nodes but not in general: a third node's card can
         sit x-between the source and target at that exact height, and the
         straight line would run right through its text uncontested. This
-        forces the same below-row lane search route() uses for a genuine
-        going_down edge, just with both ends anchored to their own bottom
-        edge instead of one exiting bottom/entering top."""
+        forces a below-row lane search like route()'s own going_down case,
+        just with both ends anchored to their own bottom edge instead of
+        one exiting bottom/entering top.
+
+        Unlike route(), the starting depth isn't derived from the tier's
+        own row_gap/max_card_h (those size the gap to the NEXT full tier,
+        which is usually far more clearance than two SIBLINGS in the same
+        row need just to duck under their own two cards) — the caller
+        passes min_jog_y directly, typically just past the deeper of the
+        two participating cards' own real bottoms. Lanes still step by
+        LANE_PITCH from there so multiple same-row connectors don't
+        collide with each other."""
         n_lanes = self.n_lanes if n_lanes is None else n_lanes
         x_lo, x_hi = (x1, x2) if x1 <= x2 else (x2, x1)
-        source_row = self._row_index(y1, row_gap)
 
         jog_y = None
         for lane in range(n_lanes):
-            candidate = self._gap_lane_y(source_row, lane, row_gap, max_card_h)
+            candidate = min_jog_y + lane * LANE_PITCH
             if self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi):
                 jog_y = candidate
                 break
@@ -723,7 +731,7 @@ class _LaneRouter:
                     jog_y = candidate
                     break
         if jog_y is None:
-            jog_y = self.total_h - MIN_CLEARANCE + 16 - self.bottom_lanes * LANE_PITCH
+            jog_y = min_jog_y + n_lanes * LANE_PITCH
 
         self.placed_h.append((jog_y, x_lo, x_hi))
         self._claim_v(x1, min(y1, jog_y), max(y1, jog_y))
@@ -738,7 +746,7 @@ SPINE_Y_FALLBACK = 215   # must equal layout_process.py's own SPINE_Y — see _L
 
 
 def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
-                    n_lanes=2, bottom_lanes=6, card_boxes=None):
+                    n_lanes=2, bottom_lanes=6, card_boxes=None, card_bottom_by_id=None):
     """Returns SVG for every flow that needs an EXPLICIT drawn connector —
     a plain consecutive spine hop (st(to)==st(from)+1, happy, unlabelled)
     is already covered by the single continuous spine line and is skipped
@@ -757,6 +765,7 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
     (see _LaneRouter._clear_of_cards())."""
     out = []
     router = _LaneRouter(total_h, n_lanes, bottom_lanes, card_boxes)
+    card_bottom_by_id = card_bottom_by_id or {}
     # A rotated branch label's position (lx, ly) depends only on the SOURCE
     # node's x and this one edge's own y-span. Two distinct failure modes
     # land labels at the same (lx, ly):
@@ -945,9 +954,17 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # was built to work around.
             x1, y1 = a["x"] - a["r"], a["y"]
             y2 = b["y"] + (-b["r"] if going_down else b["r"])
-        route_fn = router.route_under if same_row else router.route
-        d, jog_y, jog_x_lo, jog_x_hi = route_fn(x1, y1, b["x"], y2, a.get("rowGap", row_gap),
-                                                 a.get("maxCardH", max_card_h), a.get("laneCount"))
+        if same_row:
+            # The minimum depth this jog needs is the deeper of the two
+            # participating cards' own REAL bottom (not the tier's
+            # aggregate maxCardH/rowGap, which sizes clearance to the NEXT
+            # full tier and massively overshoots what two siblings in the
+            # SAME row need to duck under just their own two cards).
+            min_jog_y = max(card_bottom_by_id.get(from_id, y1), card_bottom_by_id.get(to_id, y2)) + MIN_CLEARANCE
+            d, jog_y, jog_x_lo, jog_x_hi = router.route_under(x1, y1, b["x"], y2, min_jog_y, a.get("laneCount"))
+        else:
+            d, jog_y, jog_x_lo, jog_x_hi = router.route(x1, y1, b["x"], y2, a.get("rowGap", row_gap),
+                                                         a.get("maxCardH", max_card_h), a.get("laneCount"))
         out.append(edge_open)
         # Invisible fat hit-path UNDER the real 2.2px-wide line — SVG's
         # click/pointer target for a fill:none path is the STROKE only, so
@@ -1133,7 +1150,8 @@ def build(blob, pf_layout):
     # allocator's "safe zone" math agrees exactly with what the layout
     # actually reserved.
     parts.append(connectors_svg(blob.get("flows", []), nodes_by_id, total_h,
-                                 pf_layout["rowGap"], pf_layout["maxCardH"], card_boxes=card_boxes))
+                                 pf_layout["rowGap"], pf_layout["maxCardH"], card_boxes=card_boxes,
+                                 card_bottom_by_id=card_bottom_by_id))
     parts.append('<g id="hl"></g>')  # search-highlight rings are appended here at runtime (see engine_template.html)
     parts.append('<g id="selhl"></g>')  # click-to-select ring around the selected node — see engine_template.html
 
