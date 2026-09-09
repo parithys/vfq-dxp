@@ -505,6 +505,15 @@ def node_card_svg(n, node_data, lane_name):
 # elsewhere, e.g. engine_template.html's own MIN_PAD mirroring
 # build_model.py's.)
 MIN_CLEARANCE = 40
+# Every routed connector's own painted stroke-width. Also the scale
+# factor _arrow_svg() applies to its own manually-drawn arrow shapes —
+# an SVG <marker> defaults to markerUnits="strokeWidth", so the SAME
+# native marker-end triangle referencing a 2.2-stroke path renders at
+# 2.2x its own raw path coordinates (8x6 -> ~17.6x13.2px); a manually
+# drawn copy of that exact same path data with no equivalent scaling
+# renders at the bare 8x6 and reads as visibly, jarringly smaller next
+# to marker-end's own arrowhead on the same connector.
+CONNECTOR_STROKE_WIDTH = 2.2
 LANE_PITCH = 60   # >MIN_CLEARANCE(40) on purpose — MIN_CLEARANCE is the enforced floor between any two
                    # elements, LANE_PITCH is the actual spacing BETWEEN two stacked routing lanes, which
                    # reads as visually cramped at a bare 44px once 3+ lanes stack in a dense cluster (every
@@ -673,10 +682,18 @@ def _arrow_svg(x, y, dx, dy, color):
     <marker> defs (see DEFS: markerWidth/Height 9, path "M0,0 L8,3 L0,6
     Z", refX/refY 7.5/3) — drawn as an explicit element positioned and
     rotated to point along (dx, dy) instead of relying on marker-mid
-    (see _segment_arrow_points()'s own docstring for why)."""
+    (see _segment_arrow_points()'s own docstring for why).
+
+    Scaled by CONNECTOR_STROKE_WIDTH to match marker-end's own actual
+    rendered size — an SVG <marker> defaults to markerUnits="strokeWidth",
+    so referencing the SAME "M0,0 L8,3 L0,6 Z" path from a 2.2-stroke
+    connector already renders it at 2.2x its raw coordinates; drawing
+    this copy at its bare, unscaled size read as visibly smaller than
+    every marker-end arrowhead on the same connector."""
     angle = math.degrees(math.atan2(dy, dx))
+    s = CONNECTOR_STROKE_WIDTH
     return (f'<path d="M0,0 L8,3 L0,6 Z" fill="{color}" '
-            f'transform="translate({x:g} {y:g}) rotate({angle:.2f}) translate(-7.5 -3)"/>')
+            f'transform="translate({x:g} {y:g}) rotate({angle:.2f}) scale({s}) translate(-7.5 -3)"/>')
 
 
 def edge_color(flow, target_node):
@@ -1283,7 +1300,7 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
         # not marker-mid, which fires at every intermediate vertex
         # unconditionally — including plain corners never meant to carry
         # their own arrow.
-        out.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="2.2"{dash} '
+        out.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{CONNECTOR_STROKE_WIDTH}"{dash} '
                    f'marker-end="url(#{marker})"/>')
         for ax, ay, adx, ady in _segment_arrow_points(d, claimed_arrow_segments):
             out.append(_arrow_svg(ax, ay, adx, ady, color))
