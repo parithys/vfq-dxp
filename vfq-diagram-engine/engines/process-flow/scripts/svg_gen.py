@@ -977,6 +977,14 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
         out.append(f'<path d="{d}" fill="none" stroke="#000" stroke-width="14" opacity="0"/>')
         out.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="2.2"{dash} '
                    f'marker-end="url(#{marker})"/>')
+        if dash:
+            # A small filled circle at the connector's own ORIGIN point —
+            # every dashed (data-flow / loop-back) connector in the
+            # reference artefact marks its start this way, never just an
+            # arrowhead at the target end alone. Solid connectors don't
+            # get one (confirmed: none of the reference's non-dashed
+            # elbow paths have a matching circle, only the dashed ones).
+            out.append(f'<circle cx="{x1}" cy="{y1}" r="4.5" fill="{color}"/>')
         if f.get("label") and jog_x_lo != jog_x_hi:
             # This edge's path actually bends — a fan-out branch or a
             # loop-back's own jog toward its target. The reference artefact
