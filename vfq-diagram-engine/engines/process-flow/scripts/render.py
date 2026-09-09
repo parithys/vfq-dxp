@@ -58,6 +58,17 @@ def render(model_path, out_path, template_path=None, skip_validate=False):
     h1_main = parts[0].strip() if parts else title
     h1_sub = parts[1].strip() if len(parts) > 1 else "Process Flow"
 
+    # A subtle header stats line — "N nodes (X primary + Y exception &
+    # recovery) · M flows · P phases" — entirely computed from the same
+    # data everything else on the page reads from, never hand-maintained.
+    spine_count = sum(1 for n in pf_layout["nodes"].values() if n["onSpine"])
+    off_spine_count = len(pf_layout["nodes"]) - spine_count
+    stats_line = (
+        f'<b>{len(pf_layout["nodes"])}</b> nodes ({spine_count} primary path + {off_spine_count} exception &amp; recovery)'
+        f'<span class="sep">&middot;</span><b>{len(blob.get("flows", []))}</b> flows'
+        f'<span class="sep">&middot;</span><b>{len(pf_layout["phaseBands"])}</b> phases'
+    )
+
     template_path = template_path or os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..", "reference", "engine_template.html")
     tpl = open(template_path, encoding="utf-8").read()
@@ -67,6 +78,7 @@ def render(model_path, out_path, template_path=None, skip_validate=False):
             .replace("__TITLE__", svg_gen.esc(title))
             .replace("__H1_MAIN__", svg_gen.esc(h1_main))
             .replace("__H1_SUB__", svg_gen.esc(h1_sub))
+            .replace("__STATS_LINE__", stats_line)
             .replace("__TOTAL_W__", str(pf_layout["totalW"]))
             .replace("__TOTAL_H__", str(pf_layout["totalH"]))
             .replace("__SVG_BODY__", svg_body)

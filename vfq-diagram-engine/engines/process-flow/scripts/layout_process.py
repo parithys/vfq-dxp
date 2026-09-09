@@ -26,6 +26,9 @@ directly, in-memory, on every render):
 """
 import sys, os, json, collections
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import svg_gen  # noqa: E402 — card_height() needs to agree exactly with what node_card_svg() actually draws
+
 # ----------------------------------------------------------------- happy-path spine
 def is_happy_flow(f):
     """Mirrors bpmn-swimlane/scripts/validate_model.py::is_happy_flow() exactly —
@@ -168,18 +171,45 @@ def classify(node, is_spine, out_flows):
 STEP = 400            # x-spacing between consecutive spine nodes
 X_START = 60           # first (start) node's x
 SPINE_Y = 215           # y of every spine node
-TIER_BASE = 595          # y of the first off-spine tier (branch nodes directly off the spine)
-TIER_STEP = 215          # y-spacing between subsequent off-spine tiers
 TOPBAR_H = 64            # phase-header band height
+
+# Row-to-row vertical gap (spine -> tier 0, and tier N -> tier N+1) is NOT a
+# flat constant any more — it's derived from the tallest card actually
+# present in this diagram, the same "every spacing constant is DERIVED from
+# a floor, not an independent guess" approach build_model.py's own ROW
+# constant already documents for bpmn-swimlane. A flat 215px (the value
+# reverse-engineered from the reference file, which happened to have
+# modestly-sized cards) left as little as ~15px between one row's card text
+# and the next row's connector routing — nowhere near the 40px minimum
+# clearance a reader needs between adjacent connectors, or between a
+# connector and unrelated card text, once more than one connector needs to
+# cross that gap (see svg_gen.py's connectors_svg() lane allocator, which
+# this gap sizing exists to give room to).
+ROW_TEXT_CLEARANCE = 40   # required clearance: card bottom -> first routing lane, and last lane -> next row's shapes
+N_ROUTING_LANES = 2        # in-gap lanes guaranteed 40px clear of card text and of each other;
+                            # a row-gap needing a 3rd+ concurrent connector overflows into the
+                            # reserved bottom channel instead (see LONG_SPAN_X / lane allocator)
+BOTTOM_CHANNEL_LANES = 6    # the reserved channel below the whole diagram (for long-distance
+                            # connectors — see svg_gen.py's LONG_SPAN_X) gets a more generous lane
+                            # budget than an ordinary in-gap row, since every long-distance
+                            # connector in the whole diagram funnels into that one shared channel,
+                            # not just the ones crossing one particular row
+LANE_PITCH = 44             # >= ROW_TEXT_CLEARANCE, +4px so float rounding never lands exactly on the floor
+
+
+def _row_gap(max_card_h, n_lanes=N_ROUTING_LANES):
+    """Vertical distance needed to fit: the tallest card actually in this
+    diagram + 40px clearance below it + `n_lanes` routing lanes at
+    LANE_PITCH + 40px clearance before whatever comes next. Used both for
+    the uniform spine/tier row gap (default n_lanes) and for the bottom
+    overflow channel's own depth (BOTTOM_CHANNEL_LANES)."""
+    return max_card_h + ROW_TEXT_CLEARANCE + n_lanes * LANE_PITCH + ROW_TEXT_CLEARANCE
 CANVAS_PAD_TOP = 64           # content starts below the topbar
-CANVAS_PAD_BOTTOM = 260           # clear space below the deepest tier actually used — NOT just the
-                                  # node shape's own bottom edge (which is all `all_max_y` below
-                                  # measures): a node's CARD (title/code/desc/tag pills) extends
-                                  # well past its shape, up to ~180px past node.y for a card with a
-                                  # code line + 2-line description + two tag rows, plus ~80px more
-                                  # for the long-distance-connector reserved routing channel (see
-                                  # svg_gen.py's LONG_SPAN_X) that sits just above this margin's
-                                  # own bottom edge
+# CANVAS_PAD_BOTTOM is no longer a flat constant — see compute_process_layout(),
+# where it's computed as _row_gap(max_card_h, BOTTOM_CHANNEL_LANES): the
+# deepest row's own card needs the same 40px clearance any other row's card
+# gets, plus room for however many long-distance connectors funnel into the
+# shared bottom overflow channel (see svg_gen.py's LONG_SPAN_X).
 PHASE_PAD = 200            # extra horizontal padding a phase band gets past its last node
 
 # Drawn radii (not the same as any "search ring" radius — the reference's
@@ -262,6 +292,20 @@ def compute_process_layout(nodes, flows, lanes, phases):
     spine_set = set(spine_order)
     spine_x = {node_id: X_START + i * STEP for i, node_id in enumerate(spine_order)}
 
+    # Row gap sized from the actual tallest card in THIS diagram (see
+    # _row_gap()'s own docstring) — computed once, up front, since every
+    # row (spine -> tier 0, and every subsequent tier) uses the same
+    # uniform gap; a per-row-specific gap was considered and rejected for
+    # the same reason build_model.py's own ROW constant is flat rather than
+    # adaptive: a uniform grid reads as consistent, and the worst case only
+    # has to be paid for once, not re-derived per row.
+    lane_name_by_key = {l["key"]: l["name"] for l in lanes}
+    max_card_h = 0
+    for n in nodes:
+        lane_name = lane_name_by_key.get(n.get("lane"), "")
+        max_card_h = max(max_card_h, svg_gen.card_height(n, lane_name))
+    row_gap = _row_gap(max_card_h)
+
     off_spine_ids = [n["id"] for n in nodes if n["id"] not in spine_set]
     anchors = _anchor_and_tier(off_spine_ids, spine_x, flows)
 
@@ -294,7 +338,7 @@ def compute_process_layout(nodes, flows, lanes, phases):
             # spread siblings sharing one (anchor,tier) symmetrically around ax
             offset = (j - (n_ids - 1) / 2) * 300
             x = ax + offset
-            y = TIER_BASE + t * TIER_STEP
+            y = SPINE_Y + (t + 1) * row_gap
             r = {"error": R_ERROR, "escalation": ESCALATION_SIZE / 2,
                  "decision": R_DECISION}.get(cat, R_RECOVERY)
             out_nodes[node_id] = {"id": node_id, "category": cat, "x": x, "y": y,
@@ -309,7 +353,7 @@ def compute_process_layout(nodes, flows, lanes, phases):
         n = nid[node_id]
         phase_x[n.get("phase", 0)].append(out_nodes[node_id]["x"])
     all_max_y = max((out_nodes[nid_]["y"] + out_nodes[nid_]["r"] for nid_ in out_nodes), default=SPINE_Y)
-    band_bottom = all_max_y + CANVAS_PAD_BOTTOM
+    band_bottom = all_max_y + _row_gap(max_card_h, BOTTOM_CHANNEL_LANES)
 
     phase_indices = sorted(phase_x.keys())
     bands = []
@@ -338,6 +382,11 @@ def compute_process_layout(nodes, flows, lanes, phases):
         "totalW": total_w,
         "totalH": total_h,
         "topbarH": TOPBAR_H,
+        # Handed to svg_gen.py's connector router so its routing-lane zones
+        # agree exactly with the clearance this layout already reserved —
+        # see svg_gen.py::connectors_svg()'s own lane allocator.
+        "rowGap": row_gap,
+        "maxCardH": max_card_h,
     }
 
 

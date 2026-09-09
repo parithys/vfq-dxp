@@ -35,7 +35,6 @@ GREEN = "#12A038"
 BLUE = "#3B7DD8"
 INK = "#111111"
 MUTE = "#5A5A66"
-CODE_GREY = "#8A8A9B"
 
 TAG_FILL_ACTOR = "#E4EBF6"
 TAG_TEXT_ACTOR = "#2F4A6B"
@@ -203,32 +202,86 @@ CARD_TEXT_OFFSET = 26
 CARD_AVAIL_W = 330
 
 
+def card_metrics(node_data, lane_name):
+    """Pure layout computation for one node's card — no SVG, just the Y
+    cursor positions node_card_svg() below would place each element at,
+    ending in `bottom` (the card's own lowest extent, relative to the
+    node's own y). Split out from node_card_svg() so BOTH the renderer AND
+    layout_process.py's row-spacing math (which has to know how much
+    vertical room a card actually needs, to keep connector routing lanes
+    the 40px clear of card text — see layout_process.py's ROW_GAP_MIN
+    derivation) read from exactly one implementation of "how tall is this
+    card," rather than two that could quietly drift apart."""
+    sub = node_data.get("sub")
+    desc_line = _first_sentence(node_data.get("desc"))
+    desc_lines = wrap_lines(desc_line, DESC_AVG_CHAR, CARD_AVAIL_W, 2)
+
+    title_y = 34
+    sub_y = None
+    cursor = title_y
+    if sub:
+        cursor += 26
+        sub_y = cursor
+        cursor += 24
+    else:
+        cursor += 26
+    desc_ys = []
+    for i, _dl in enumerate(desc_lines):
+        desc_ys.append(cursor)
+        cursor += 18 if i == 0 else 21
+
+    tag_row_y = cursor + (0 if desc_lines else -3)
+    actor_tag_y = None
+    if lane_name:
+        actor_tag_y = tag_row_y
+        tag_row_y += 26
+
+    sys_tags = system_tags(node_data)
+    sys_tag_rows = 0
+    if sys_tags:
+        # mirrors the same row-wrap accumulation node_card_svg() does, but
+        # only needs the resulting ROW COUNT here, not each tag's own x
+        row_w = 0
+        sys_tag_rows = 1
+        for tag in sys_tags:
+            w = int(text_width(tag, TAG_AVG_CHAR)) + 22 + 8
+            if row_w and (row_w + w) > CARD_AVAIL_W:
+                sys_tag_rows += 1
+                row_w = 0
+            row_w += w
+        tag_row_y += 24 * sys_tag_rows
+
+    return {"titleY": title_y, "subY": sub_y, "descYs": desc_ys, "actorTagY": actor_tag_y,
+            "descLines": desc_lines, "sysTags": sys_tags, "bottom": tag_row_y}
+
+
+def card_height(node_data, lane_name):
+    """Just the `bottom` figure from card_metrics() — how far below its own
+    node.y this card's content extends. Used by layout_process.py in a
+    pre-pass (before node y-positions are even assigned) to size row gaps
+    with real card heights instead of a guessed constant — see
+    compute_process_layout()'s own ROW_GAP_MIN derivation."""
+    return card_metrics(node_data, lane_name)["bottom"]
+
+
 def node_card_svg(n, node_data, lane_name):
     x, y = n["x"], n["y"]
     color = _shape_color(n)
     tx = x + CARD_TEXT_OFFSET
     label = node_data.get("label") or n["id"]
-    sub = node_data.get("sub")
-    desc_line = _first_sentence(node_data.get("desc"))
+    m = card_metrics(node_data, lane_name)
 
     parts = []
-    cursor = y + 34
-    parts.append(f'<text x="{tx}" y="{cursor}" font-size="{TITLE_FONT_PX}" font-weight="700" '
-                 f'fill="{INK if n["onSpine"] or n["category"] != "recovery" else INK}">{esc(label)}</text>')
-    if sub:
-        cursor += 26
-        parts.append(f'<text x="{tx}" y="{cursor}" font-size="{CODE_FONT_PX}" font-weight="700" '
-                     f'fill="{CODE_GREY}" letter-spacing="0.6">{esc(str(sub).upper())}</text>')
-        cursor += 24
-    else:
-        cursor += 26
-    desc_lines = wrap_lines(desc_line, DESC_AVG_CHAR, CARD_AVAIL_W, 2)
-    for i, dl in enumerate(desc_lines):
-        parts.append(f'<text x="{tx}" y="{cursor}" font-size="{DESC_FONT_PX}" fill="{MUTE}">{esc(dl)}</text>')
-        cursor += 18 if i == 0 else 21
+    parts.append(f'<text x="{tx}" y="{y + m["titleY"]}" font-size="{TITLE_FONT_PX}" font-weight="700" '
+                 f'fill="{INK}">{esc(label)}</text>')
+    if m["subY"] is not None:
+        parts.append(f'<text x="{tx}" y="{y + m["subY"]}" font-size="{CODE_FONT_PX}" font-weight="400" '
+                     f'font-style="italic" fill="{INK}">{esc(str(node_data.get("sub")).upper())}</text>')
+    for dy, dl in zip(m["descYs"], m["descLines"]):
+        parts.append(f'<text x="{tx}" y="{y + dy}" font-size="{DESC_FONT_PX}" fill="{MUTE}">{esc(dl)}</text>')
 
-    tag_row_y = cursor + (0 if desc_lines else -3)
-    if lane_name:
+    tag_row_y = y + (m["actorTagY"] if m["actorTagY"] is not None else m["bottom"])
+    if m["actorTagY"] is not None:
         w = int(text_width(lane_name.upper(), TAG_AVG_CHAR)) + 20
         parts.append(f'<rect x="{tx}" y="{tag_row_y}" width="{w}" height="20" rx="5" fill="{TAG_FILL_ACTOR}"/>')
         parts.append(f'<text x="{tx + 10}" y="{tag_row_y + 14}" font-size="{TAG_FONT_PX}" font-weight="700" '
@@ -240,7 +293,7 @@ def node_card_svg(n, node_data, lane_name):
     # accumulated width would exceed CARD_AVAIL_W — not one tag per row.
     sys_tag_x, sys_tag_y = tx, tag_row_y
     row_started = False
-    for tag in system_tags(node_data):
+    for tag in m["sysTags"]:
         w = int(text_width(tag, TAG_AVG_CHAR)) + 22
         if row_started and (sys_tag_x - tx + w) > CARD_AVAIL_W:
             sys_tag_x = tx
@@ -252,8 +305,6 @@ def node_card_svg(n, node_data, lane_name):
                      f'fill="{TAG_TEXT_SYS}" letter-spacing="0.5">{esc(tag)}</text>')
         sys_tag_x += w + 8
         row_started = True
-    if row_started:
-        tag_row_y = sys_tag_y + 24
 
     shape_svg, number = node_shape_svg(n)
     parts.insert(0, shape_svg)
@@ -261,33 +312,23 @@ def node_card_svg(n, node_data, lane_name):
         num_color = "#fff" if n["category"] not in ("decision",) else color
         parts.insert(1, f'<text x="{x}" y="{y + 3.6}" font-size="10.5" font-weight="700" '
                         f'fill="{num_color}" text-anchor="middle">{number}</text>')
-    return "".join(parts), tag_row_y
+    return "".join(parts), y + m["bottom"]
 
 
 # ----------------------------------------------------------------- connectors
-# A connector whose two endpoints are many columns apart (a long-distance
-# branch — e.g. a data-flow edge from an early spine node to a late
-# off-spine one) can't use a simple interpolated-midpoint elbow: for a
-# large x AND y gap, the horizontal jog invariably lands at some y that
-# cuts straight through OTHER, unrelated nodes' card text sitting between
-# the two endpoints — found on Fibre & Fixed Wireless Access, where a
-# ~11,600px-wide horizontal jog sliced through several intermediate cards.
-# Past LONG_SPAN_X, route the horizontal jog through a reserved channel
-# below every node's content instead (the same "reserved bus" idea
-# build_model.py's own compute_layout() uses for bpmn-swimlane's backward
-# loops) — longer path, but guaranteed clear of card content regardless of
-# how far apart the two endpoints are.
-LONG_SPAN_X = 2400
-
-
-def _elbow_path(x1, y1, x2, y2, total_h=None):
-    if abs(x1 - x2) < 1:
-        return f"M {x1} {y1} L {x2} {y2}"
-    if total_h is not None and abs(x1 - x2) > LONG_SPAN_X:
-        channel_y = total_h - 24
-        return f"M {x1} {y1} L {x1} {channel_y} L {x2} {channel_y} L {x2} {y2}"
-    mid_y = y1 + (y2 - y1) * 0.55
-    return f"M {x1} {y1} L {x1} {mid_y} L {x2} {mid_y} L {x2} {y2}"
+# Minimum required clearance between any two adjacent connector lines (and
+# between a connector and card text) and the pitch between successive
+# routing lanes. MUST agree with layout_process.py's own ROW_TEXT_CLEARANCE
+# / LANE_PITCH — that module sizes every row-to-row gap specifically to fit
+# N_ROUTING_LANES lanes at this exact pitch, so a mismatch here would mean
+# the "guaranteed clear" lanes this router picks from are no longer
+# actually guaranteed. (Not imported from there to avoid a circular import
+# — layout_process.py already imports this module for card_height() — the
+# same "intentionally mirrored constant" pattern this codebase already uses
+# elsewhere, e.g. engine_template.html's own MIN_PAD mirroring
+# build_model.py's.)
+MIN_CLEARANCE = 40
+LANE_PITCH = 44
 
 
 def edge_color(flow, target_node):
@@ -300,13 +341,120 @@ def edge_color(flow, target_node):
     return AMBER
 
 
-def connectors_svg(flows, nodes_by_id, total_h):
+class _LaneRouter:
+    """Allocates each connector's horizontal jog a y that's guaranteed
+    >=MIN_CLEARANCE px from every other jog it x-overlaps with, and
+    guaranteed clear of every node's card text by construction (see
+    layout_process.py's row_gap derivation — every row-to-row gap already
+    reserves enough room for `n_lanes` lanes at LANE_PITCH, past
+    max_card_h + MIN_CLEARANCE below any row's own card).
+
+    Replaces an earlier version that interpolated one fixed midpoint per
+    edge independently of every other edge — the direct cause of the
+    audit's confirmed violation (two jogs measured 35px apart, under the
+    40px floor). This router instead always routes through the safe strip
+    immediately after the source (or immediately before it, for an
+    upward-going edge), picking the first lane in that strip that doesn't
+    x-overlap anything already placed there; only once every in-gap lane
+    is taken does it fall back to the shared bottom overflow channel
+    (itself lane-allocated the same way, not a single fixed y) — this also
+    subsumes the old "long-distance connector" special case entirely: a
+    jog placed in the gap right after its own source is, by the same
+    row_gap construction, automatically clear of every OTHER row's shapes
+    and card text too, however far away the target ends up being."""
+
+    def __init__(self, total_h, row_gap, max_card_h, n_lanes, bottom_lanes):
+        self.total_h = total_h
+        self.row_gap = row_gap
+        self.max_card_h = max_card_h
+        self.n_lanes = n_lanes
+        self.bottom_lanes = bottom_lanes
+        self.placed_h = []   # (y, x_lo, x_hi)
+        self.placed_v = []   # (x, y_lo, y_hi)
+
+    def _row_index(self, y):
+        return round((y - SPINE_Y_FALLBACK) / self.row_gap) if self.row_gap else 0
+
+    def _h_free(self, y, x_lo, x_hi):
+        return all(abs(y - py) >= MIN_CLEARANCE or x_hi < px_lo - 1 or x_lo > px_hi + 1
+                   for (py, px_lo, px_hi) in self.placed_h)
+
+    def _v_free(self, x, y_lo, y_hi):
+        return all(abs(x - px) >= MIN_CLEARANCE or y_hi < py_lo - 1 or y_lo > py_hi + 1
+                   for (px, py_lo, py_hi) in self.placed_v)
+
+    def _gap_lane_y(self, gap_idx, lane):
+        return SPINE_Y_FALLBACK + gap_idx * self.row_gap + self.max_card_h + MIN_CLEARANCE + lane * LANE_PITCH
+
+    def route(self, x1, y1, x2, y2):
+        """Returns an SVG path `d` string for one connector, registering
+        whatever lanes it claims so later calls route around it."""
+        x_lo, x_hi = (x1, x2) if x1 <= x2 else (x2, x1)
+        if abs(y1 - y2) < 1:
+            self._claim_v(x1, y1, y1)
+            self._claim_v(x2, y2, y2)
+            return f"M {x1} {y1} L {x2} {y2}"
+
+        going_down = y2 > y1
+        source_row = self._row_index(y1)
+        gap_idx = source_row if going_down else source_row - 1
+
+        jog_y = None
+        for lane in range(self.n_lanes):
+            candidate = self._gap_lane_y(gap_idx, lane) if going_down else \
+                (self._gap_lane_y(gap_idx, self.n_lanes - 1 - lane))
+            if self._h_free(candidate, x_lo, x_hi):
+                jog_y = candidate
+                break
+        if jog_y is None:
+            for lane in range(self.bottom_lanes):
+                candidate = self.total_h - MIN_CLEARANCE + 16 - lane * LANE_PITCH
+                if self._h_free(candidate, x_lo, x_hi):
+                    jog_y = candidate
+                    break
+        if jog_y is None:   # every lane exhausted (extreme edge case) — stack one more below the last
+            jog_y = self.total_h - MIN_CLEARANCE + 16 - self.bottom_lanes * LANE_PITCH
+
+        self.placed_h.append((jog_y, x_lo, x_hi))
+        self._claim_v(x1, min(y1, jog_y), max(y1, jog_y))
+        self._claim_v(x2, min(y2, jog_y), max(y2, jog_y))
+        return f"M {x1} {y1} L {x1} {jog_y} L {x2} {jog_y} L {x2} {y2}"
+
+    def _claim_v(self, x, y_lo, y_hi):
+        self.placed_v.append((x, y_lo, y_hi))
+
+
+SPINE_Y_FALLBACK = 215   # must equal layout_process.py's own SPINE_Y — see _LaneRouter._row_index()
+
+
+def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
+                    n_lanes=2, bottom_lanes=6):
     """Returns SVG for every flow that needs an EXPLICIT drawn connector —
     a plain consecutive spine hop (st(to)==st(from)+1, happy, unlabelled)
     is already covered by the single continuous spine line and is skipped
     here, matching the reference's own construction (it never draws a
     separate line for those either)."""
     out = []
+    router = _LaneRouter(total_h, row_gap, max_card_h, n_lanes, bottom_lanes)
+    # A rotated branch label's position (lx, ly) depends only on the SOURCE
+    # node's x and this one edge's own y-span — with no awareness of any
+    # OTHER label from that same source. A node with 3+ off-spine branches
+    # whose targets land at similar depths (a common shape: several
+    # exception/retry outcomes off one decision) previously produced
+    # several labels at the exact same (lx, ly), rendering as illegible
+    # stacked text (found on Mobile Postpaid Activation: "Draft available
+    # for resume" / "Supervisor reassigns draft" / "Retention period
+    # elapses", all from node jsm05, all at (2049, 408)). Tracked per
+    # SOURCE node (not globally) since two labels from unrelated sources
+    # landing near the same point is not the failure mode this guards
+    # against, and re-flagging them would just fan out labels that were
+    # never actually colliding.
+    placed_label_y_by_source = {}
+    LABEL_COLLIDE_PX = 30   # closer than this (rotated-text is ~11px tall
+                             # per line but frequently much longer once
+                             # rotated, so this is a "would visually
+                             # overlap" margin, not a bare font-height one)
+    LABEL_FAN_PX = 14        # horizontal stagger applied per colliding label
     for f in flows:
         a, b = nodes_by_id.get(f.get("from")), nodes_by_id.get(f.get("to"))
         if not a or not b:
@@ -319,9 +467,13 @@ def connectors_svg(flows, nodes_by_id, total_h):
 
         happy_branch_label = (a["onSpine"] and b["onSpine"] and f.get("happy") is True and f.get("label"))
         if happy_branch_label:
-            mx = (a["x"] + a["r"] + b["x"] - b["r"]) / 2
-            out.append(f'<text x="{mx}" y="{a["y"] - 11}" font-size="11" font-weight="700" fill="{GREEN}" '
-                       f'text-anchor="middle">{esc(f["label"])}</text>')
+            # Left-aligned, a consistent 40px in from the source node's own
+            # edge — not centred between source and target — so the label
+            # reads as clearly "belonging to" the connector leaving THIS
+            # node, regardless of how far away the target sits.
+            lx = a["x"] + a["r"] + MIN_CLEARANCE
+            out.append(f'<text x="{lx}" y="{a["y"] - 11}" font-size="11" font-weight="700" fill="{GREEN}" '
+                       f'text-anchor="start">{esc(f["label"])}</text>')
             continue
 
         color = edge_color(f, b)
@@ -329,11 +481,16 @@ def connectors_svg(flows, nodes_by_id, total_h):
         dash = ' stroke-dasharray="6 5"' if color == BLUE else ""
         y1 = a["y"] + (a["r"] if b["y"] >= a["y"] else -a["r"])
         y2 = b["y"] + (-b["r"] if b["y"] >= a["y"] else b["r"])
-        d = _elbow_path(a["x"], y1, b["x"], y2, total_h)
+        d = router.route(a["x"], y1, b["x"], y2)
         out.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="2.2"{dash} '
                    f'marker-end="url(#{marker})"/>')
         if f.get("label"):
             lx, ly = a["x"] - 11, (y1 + y2) / 2
+            prior_ys = placed_label_y_by_source.setdefault(a["id"], [])
+            lane = sum(1 for py in prior_ys if abs(py - ly) < LABEL_COLLIDE_PX)
+            prior_ys.append(ly)
+            if lane:
+                lx -= LABEL_FAN_PX * lane
             out.append(f'<text x="{lx}" y="{ly}" font-size="11" font-weight="700" fill="{color}" '
                        f'transform="rotate(-90 {lx} {ly})" text-anchor="middle">{esc(f["label"])}</text>')
     return "".join(out)
@@ -382,14 +539,26 @@ def build(blob, pf_layout):
     for nid, n in nodes_by_id.items():
         nd = node_data_by_id.get(nid, {})
         lane_name = lane_name_by_key.get(nd.get("lane"), "")
-        card_svg, _ = node_card_svg(n, nd, lane_name)
-        node_svgs.append(card_svg)
+        card_svg, _bottom = node_card_svg(n, nd, lane_name)
+        # tabindex="-1": not in the page's natural Tab order (108 nodes all
+        # tab-stopping would be worse for keyboard users, not better) but
+        # programmatically focusable — search's goto_() calls .focus() on
+        # this exact element for its current match, so a screen reader or
+        # keyboard user gets real DOM focus, not just a visual highlight
+        # ring (see engine_template.html's goto_()).
+        node_svgs.append(f'<g id="node-{esc(nid)}" tabindex="-1">{card_svg}</g>')
         search_text = " ".join(str(x) for x in [
             n.get("st") or "", nd.get("label"), nd.get("sub"), nd.get("desc"), lane_name] if x).lower()
         search_index.append({"id": nid, "x": n["x"], "y": n["y"], "r": n["r"] + 6,
                               "lb": nd.get("label") or nid, "t": search_text})
     parts.append("".join(node_svgs))
-    parts.append(connectors_svg(blob.get("flows", []), nodes_by_id, total_h))
+    # row_gap/max_card_h come straight from layout_process.py's own
+    # computation (see compute_process_layout()'s "rowGap"/"maxCardH") —
+    # the SAME values that sized every row-to-row gap, so the lane
+    # allocator's "safe zone" math agrees exactly with what the layout
+    # actually reserved.
+    parts.append(connectors_svg(blob.get("flows", []), nodes_by_id, total_h,
+                                 pf_layout["rowGap"], pf_layout["maxCardH"]))
     parts.append('<g id="hl"></g>')  # search-highlight rings are appended here at runtime (see engine_template.html)
 
     svg_body = "".join(parts)
