@@ -888,7 +888,20 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
         out.append(f'<path d="{d}" fill="none" stroke="#000" stroke-width="14" opacity="0"/>')
         out.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="2.2"{dash} '
                    f'marker-end="url(#{marker})"/>')
-        if f.get("label"):
+        if f.get("label") and jog_x_lo != jog_x_hi:
+            # This edge's path actually bends — a fan-out branch or a
+            # loop-back's own jog toward its target. The reference artefact
+            # always labels these HORIZONTALLY, centred on the exact x-span
+            # the jog covers, riding just above the line itself (see
+            # _LaneRouter.route()'s own docstring on jog_y/x_lo/x_hi) —
+            # never a rotated label guessed independently of where the line
+            # actually runs, which is how two branches from the same source
+            # used to end up with indistinguishable stacked labels.
+            lx, ly = (jog_x_lo + jog_x_hi) / 2, jog_y - LABEL_GAP
+            placed_labels.append((lx, ly, f["label"]))
+            out.append(f'<text x="{lx}" y="{ly}" font-size="11" font-weight="700" fill="{color}" '
+                       f'text-anchor="middle">{esc(f["label"])}</text>')
+        elif f.get("label"):
             base_lx, ly = a["x"] - ROTATED_LABEL_GAP, (y1 + y2) / 2
             this_len = _label_len(f["label"])
             lane = sum(1 for (px, py, ptxt) in placed_labels
