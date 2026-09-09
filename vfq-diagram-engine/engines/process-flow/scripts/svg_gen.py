@@ -546,10 +546,27 @@ def is_trivial_spine_hop(f, a, b):
 
 
 def is_happy_branch_label(f, a, b):
-    """True for an on-spine happy-path branch flow — drawn as a plain
-    inline text label (see connectors_svg()'s happy_branch_label handling),
-    never as a routed path, so it never consumes a _LaneRouter lane."""
-    return a["onSpine"] and b["onSpine"] and f.get("happy") is True and bool(f.get("label"))
+    """True for an on-spine happy-path branch flow that continues to the
+    IMMEDIATE next spine step — drawn as a plain inline text label (see
+    connectors_svg()'s happy_branch_label handling) anchored purely to the
+    SOURCE's own position, never as a routed path, so it never consumes a
+    _LaneRouter lane.
+
+    Requires b["st"] == a["st"] + 1 (mirrors is_trivial_spine_hop()'s own
+    adjacency check): a decision can have TWO happy outcomes — one
+    continuing to the next step, another skipping several steps ahead
+    (e.g. Mobile Postpaid Activation's cam01_match: "Existing customer
+    matched" -> cam02, immediate; "New customer created" -> cam06, skips
+    cam03-05). Both used to qualify here, and since this label's position
+    depends ONLY on the source (not the target), they landed at the
+    EXACT same (x, y) — illegible. A non-adjacent happy branch has
+    nothing about it that makes "just write text near the source" a safe
+    assumption once a second flow can share that same anchor, so it
+    falls through to the normal routed-connector path instead, which
+    positions its label from the ACTUAL jog geometry and naturally can't
+    collide with a sibling label the same way."""
+    return (a["onSpine"] and b["onSpine"] and f.get("happy") is True and bool(f.get("label"))
+            and a.get("st") is not None and b.get("st") is not None and b["st"] == a["st"] + 1)
 
 
 def needs_lane(f, a, b):
@@ -973,7 +990,21 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # origin-point circle (below) still marks the TRUE exit point
             # (the shape's own left vertex), not this further-left routing
             # anchor.
-            route_x1 = x1 - MIN_CLEARANCE
+            #
+            # This lead-in only needs to be SHORT enough to read as "moving
+            # sideways first," not a full MIN_CLEARANCE(40) clear of every
+            # other card — siblings on the fixed 400px grid can sit as
+            # close as ~30-70px apart card-edge-to-card-edge, tighter than
+            # MIN_CLEARANCE allows, so demanding full clearance here has
+            # no solution at all in the tightest cases (confirmed on
+            # Mobile Postpaid Activation's jsm06 -> jsm05: jsm08's own
+            # card sits only 32px behind jsm06's left vertex — searching
+            # for a fully-clear step just walks past every sibling on the
+            # row and out the far side of the diagram). CARD_ELEMENT_GAP
+            # is small enough to stay inside gaps that tight while still
+            # being a real, visible horizontal step before the vertical
+            # climb takes over.
+            route_x1 = x1 - CARD_ELEMENT_GAP
             d, jog_y, jog_x_lo, jog_x_hi = router.route(route_x1, y1, b["x"], y2, a.get("rowGap", row_gap),
                                                          a.get("maxCardH", max_card_h), a.get("laneCount"))
             d = f"M {x1} {y1} L " + d[2:]   # prepend the true origin's own horizontal lead-in;
