@@ -930,6 +930,7 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
         dash = ' stroke-dasharray="6 5"' if color == BLUE else ""
         going_down = b["y"] >= a["y"]
         same_row = not a["onSpine"] and not b["onSpine"] and a["y"] == b["y"]
+        left_vertex_exit = not same_row and not going_down and not a["onSpine"]
         if same_row:
             # Off-spine siblings sitting in the exact same row — the usual
             # top/bottom convention would force an awkward loop up and OVER
@@ -962,6 +963,22 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # SAME row need to duck under just their own two cards).
             min_jog_y = max(card_bottom_by_id.get(from_id, y1), card_bottom_by_id.get(to_id, y2)) + MIN_CLEARANCE
             d, jog_y, jog_x_lo, jog_x_hi = router.route_under(x1, y1, b["x"], y2, min_jog_y, a.get("laneCount"))
+        elif left_vertex_exit:
+            # A connector must always leave its source moving HORIZONTALLY
+            # first, never vertically, regardless of where it goes after
+            # that — router.route() itself always starts with a vertical
+            # climb from (x1, y1), so route from a point further left
+            # instead and prepend the true origin's own horizontal lead-in
+            # segment onto the front of whatever path it returns. The
+            # origin-point circle (below) still marks the TRUE exit point
+            # (the shape's own left vertex), not this further-left routing
+            # anchor.
+            route_x1 = x1 - MIN_CLEARANCE
+            d, jog_y, jog_x_lo, jog_x_hi = router.route(route_x1, y1, b["x"], y2, a.get("rowGap", row_gap),
+                                                         a.get("maxCardH", max_card_h), a.get("laneCount"))
+            d = f"M {x1} {y1} L " + d[2:]   # prepend the true origin's own horizontal lead-in;
+                                             # d[2:] strips router.route()'s own leading "M " so its
+                                             # first point (route_x1, y1) becomes this segment's endpoint
         else:
             d, jog_y, jog_x_lo, jog_x_hi = router.route(x1, y1, b["x"], y2, a.get("rowGap", row_gap),
                                                          a.get("maxCardH", max_card_h), a.get("laneCount"))
