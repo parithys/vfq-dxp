@@ -704,8 +704,27 @@ class _LaneRouter:
                 if self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi):
                     jog_y = candidate
                     break
-        if jog_y is None:   # every lane exhausted (extreme edge case) — stack one more below the last
-            jog_y = self.total_h - MIN_CLEARANCE + 16 - self.bottom_lanes * LANE_PITCH
+        if jog_y is None:
+            # Every one of the reserved bottom_lanes slots was already
+            # taken by an x-overlapping edge — a single FIXED fallback
+            # here (this used to just return one hardcoded y) means every
+            # edge past that point collapses onto the exact same line
+            # regardless of its own x-range, however many of them there
+            # are (confirmed on Bill Formatter: 8 entirely unrelated
+            # connectors, several with real x-overlap between each other,
+            # all landed on one shared y). Keep extending past
+            # bottom_lanes, one LANE_PITCH at a time, re-running the same
+            # clearance checks — this is the last-resort channel, so
+            # there's no fixed cap on how far it can grow; layout_process
+            # reserves generous headroom below the diagram's own content
+            # for exactly this.
+            lane = self.bottom_lanes
+            while True:
+                candidate = self.total_h - MIN_CLEARANCE + 16 - lane * LANE_PITCH
+                if self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi):
+                    jog_y = candidate
+                    break
+                lane += 1
 
         self.placed_h.append((jog_y, x_lo, x_hi))
         self._claim_v(x1, min(y1, jog_y), max(y1, jog_y))
@@ -946,6 +965,7 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
     # up-going loop-back also needed to enter through).
     trunk_share_count = collections.Counter()
     dead_center_down_users = collections.Counter()
+    dodge_count = collections.Counter()   # how many up-edges have already dodged INTO a given target
     for f in flows:
         a, b = nodes_by_id.get(f.get("from")), nodes_by_id.get(f.get("to"))
         if not a or not b or is_trivial_spine_hop(f, a, b) or is_happy_branch_label(f, a, b):
@@ -1109,6 +1129,21 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # rejoining dead-centre there still crossed back through it).
             if (dead_center_down_users.get(to_id, 0) >= 1
                     or (a["x"] == b["x"] and dead_center_down_users.get(from_id, 0) >= 1)):
+                dodge_n = dodge_count[to_id]
+                dodge_count[to_id] += 1
+                if dodge_n:
+                    # A second (or later) up-edge dodging into the SAME
+                    # target would otherwise converge on the exact same
+                    # (true_vertex_x2, true_vertex_y2) point as the
+                    # first one — recreating the same kind of overlap
+                    # this whole mechanism exists to avoid, just between
+                    # two dodges instead of a dodge and a trunk
+                    # (confirmed on Fibre: ins_detect -> cvc_checkout and
+                    # ins_trigger -> cvc_checkout both dodged to the
+                    # identical point). Stagger each additional one along
+                    # the target's own left edge instead of every dodge
+                    # landing on its single geometric vertex.
+                    true_vertex_y2 += dodge_n * CARD_ELEMENT_GAP
                 target_x2, y2 = _dodge_x2(), true_vertex_y2
             d, jog_y, jog_x_lo, jog_x_hi = router.route(route_x1, y1, target_x2, y2, a.get("rowGap", row_gap),
                                                          a.get("maxCardH", max_card_h), a.get("laneCount"))
@@ -1228,7 +1263,13 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             out.append(f'<text x="{lx}" y="{ly}" font-size="11" font-weight="700" fill="{color}" '
                        f'transform="rotate(-90 {lx} {ly})" text-anchor="middle">{esc(f["label"])}</text>')
         out.append('</g>')
-    return "".join(out)
+    # The bottom-overflow channel's own last-resort search (see
+    # _LaneRouter.route()) can push a jog below total_h when enough
+    # x-overlapping edges exhaust every reserved lane — report the
+    # deepest y actually used so the caller can grow the canvas to match,
+    # instead of silently clipping content past the declared viewBox.
+    max_jog_y = max((y for y, _, _ in router.placed_h), default=0)
+    return "".join(out), max_jog_y
 
 
 # ----------------------------------------------------------------- phase bands
@@ -1263,8 +1304,6 @@ def build(blob, pf_layout):
     lane_name_by_key = {l["key"]: l["name"] for l in blob["layout"]["lanes"]}
     total_w, total_h = pf_layout["totalW"], pf_layout["totalH"]
 
-    parts = [DEFS, f'<rect width="{total_w}" height="{total_h}" fill="#ffffff"/>']
-    parts.append(phase_bands_svg(pf_layout["phaseBands"], total_h))
     sp = pf_layout["spine"]
     # Drawn as one <g data-from data-to> per consecutive spine hop, not one
     # continuous <line>, so the trivial (implicit, unlabelled) sequence
@@ -1276,11 +1315,12 @@ def build(blob, pf_layout):
     # visual result is identical to the single line it replaces (nodes
     # already sat ON TOP of that line's interior, never leaving a visible
     # gap at the join either way).
+    spine_svgs = []
     spine_nodes = sorted((n for n in nodes_by_id.values() if n["onSpine"]), key=lambda n: n["st"])
     for i in range(len(spine_nodes) - 1):
         sa, sb = spine_nodes[i], spine_nodes[i + 1]
         x1, x2 = sa["x"] + sa["r"], sb["x"] - sb["r"]
-        parts.append(f'<g class="pf-edge" data-from="{esc(sa["id"])}" data-to="{esc(sb["id"])}">'
+        spine_svgs.append(f'<g class="pf-edge" data-from="{esc(sa["id"])}" data-to="{esc(sb["id"])}">'
                      # invisible fat hit-target — see connectors_svg()'s own comment on the same pattern
                      f'<line x1="{x1}" y1="{sp["y"]}" x2="{x2}" y2="{sp["y"]}" stroke="#000" stroke-width="14" opacity="0"/>'
                      f'<line x1="{x1}" y1="{sp["y"]}" x2="{x2}" y2="{sp["y"]}" '
@@ -1305,7 +1345,6 @@ def build(blob, pf_layout):
         search_index.append({"id": nid, "x": n["x"], "y": n["y"], "r": n["r"] + 6,
                               "lb": nd.get("label") or nid, "t": search_text})
         card_bottom_by_id[nid] = _bottom
-    parts.append("".join(node_svgs))
     # Every node's own real card footprint (x0..x1 by its own avail width,
     # y0..y1 down to the exact bottom node_card_svg() itself just
     # returned) — passed to connectors_svg() so a routed connector's
@@ -1321,10 +1360,25 @@ def build(blob, pf_layout):
     # computation (see compute_process_layout()'s "rowGap"/"maxCardH") —
     # the SAME values that sized every row-to-row gap, so the lane
     # allocator's "safe zone" math agrees exactly with what the layout
-    # actually reserved.
-    parts.append(connectors_svg(blob.get("flows", []), nodes_by_id, total_h,
-                                 pf_layout["rowGap"], pf_layout["maxCardH"], card_boxes=card_boxes,
-                                 card_bottom_by_id=card_bottom_by_id))
+    # actually reserved. connectors_svg() is called BEFORE the background
+    # rect/phase bands are built (even though it paints on top of them)
+    # because its own last-resort bottom-overflow search can need MORE
+    # vertical room than total_h originally reserved — the background and
+    # bands have to know the FINAL height, which isn't known until
+    # routing has actually happened (see _LaneRouter.route()'s own
+    # comment on that search).
+    connectors_body, max_jog_y = connectors_svg(blob.get("flows", []), nodes_by_id, total_h,
+                                                 pf_layout["rowGap"], pf_layout["maxCardH"], card_boxes=card_boxes,
+                                                 card_bottom_by_id=card_bottom_by_id)
+    if max_jog_y + MIN_CLEARANCE > total_h:
+        total_h = max_jog_y + MIN_CLEARANCE
+        pf_layout["totalH"] = total_h   # render.py reads this directly for __TOTAL_H__
+
+    parts = [DEFS, f'<rect width="{total_w}" height="{total_h}" fill="#ffffff"/>',
+             phase_bands_svg(pf_layout["phaseBands"], total_h)]
+    parts.extend(spine_svgs)
+    parts.append("".join(node_svgs))
+    parts.append(connectors_body)
     parts.append('<g id="hl"></g>')  # search-highlight rings are appended here at runtime (see engine_template.html)
     parts.append('<g id="selhl"></g>')  # click-to-select ring around the selected node — see engine_template.html
 
