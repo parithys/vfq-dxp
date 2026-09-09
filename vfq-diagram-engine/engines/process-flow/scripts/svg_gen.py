@@ -829,6 +829,15 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
         d, jog_y, jog_x_lo, jog_x_hi = router.route(a["x"], y1, b["x"], y2, a.get("rowGap", row_gap),
                                                      a.get("maxCardH", max_card_h), a.get("laneCount"))
         out.append(edge_open)
+        # Invisible fat hit-path UNDER the real 2.2px-wide line — SVG's
+        # click/pointer target for a fill:none path is the STROKE only, so
+        # without this the actual clickable area for the click-to-select
+        # feature (see engine_template.html) would be a couple of screen
+        # pixels wide at typical zoom, unreasonably fiddly to hit. Purely
+        # a hit-target: never painted, never exported (opacity:0 survives
+        # SVG export, unlike a CSS-only rule the exported file has no
+        # stylesheet for).
+        out.append(f'<path d="{d}" fill="none" stroke="#000" stroke-width="14" opacity="0"/>')
         out.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="2.2"{dash} '
                    f'marker-end="url(#{marker})"/>')
         if f.get("label"):
@@ -947,8 +956,11 @@ def build(blob, pf_layout):
     spine_nodes = sorted((n for n in nodes_by_id.values() if n["onSpine"]), key=lambda n: n["st"])
     for i in range(len(spine_nodes) - 1):
         sa, sb = spine_nodes[i], spine_nodes[i + 1]
+        x1, x2 = sa["x"] + sa["r"], sb["x"] - sb["r"]
         parts.append(f'<g class="pf-edge" data-from="{esc(sa["id"])}" data-to="{esc(sb["id"])}">'
-                     f'<line x1="{sa["x"] + sa["r"]}" y1="{sp["y"]}" x2="{sb["x"] - sb["r"]}" y2="{sp["y"]}" '
+                     # invisible fat hit-target — see connectors_svg()'s own comment on the same pattern
+                     f'<line x1="{x1}" y1="{sp["y"]}" x2="{x2}" y2="{sp["y"]}" stroke="#000" stroke-width="14" opacity="0"/>'
+                     f'<line x1="{x1}" y1="{sp["y"]}" x2="{x2}" y2="{sp["y"]}" '
                      f'stroke="{NAVY}" stroke-width="2.4"/></g>')
 
     node_svgs = []

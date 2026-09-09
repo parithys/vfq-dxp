@@ -92,9 +92,11 @@ i{width:13px;height:13px;display:inline-block;flex:none}
 #flow.pf-active .pf-edge.pf-dim-edge{opacity:.14}
 #flow.pf-active g[id^="node-"].pf-direct,
 #flow.pf-active g[id^="node-"].pf-path,
-#flow.pf-active g[id^="node-"].pf-selected{opacity:1}
+#flow.pf-active g[id^="node-"].pf-selected,
+#flow.pf-active g[id^="node-"].pf-endpoint{opacity:1}
 #flow.pf-active .pf-edge.pf-direct-edge,
-#flow.pf-active .pf-edge.pf-path-edge{opacity:1}
+#flow.pf-active .pf-edge.pf-path-edge,
+#flow.pf-active .pf-edge.pf-edge-selected{opacity:1}
 /* Direct (immediate in/out) connectors read as the strongest signal —
    thicker line — path AND line both targeted since a trivial spine hop
    draws a <line>, every other connector a <path>. Presentation attributes
@@ -103,6 +105,13 @@ i{width:13px;height:13px;display:inline-block;flex:none}
    needed. */
 #flow.pf-active .pf-edge.pf-direct-edge path,
 #flow.pf-active .pf-edge.pf-direct-edge line{stroke-width:3.6px}
+/* A directly clicked connector (not a node selection's direct/path tiers)
+   gets its own, even stronger treatment — thicker still, plus a drop-
+   shadow — so "I clicked THIS line" is unmistakably distinct from "this
+   line happens to touch the selected node." */
+#flow.pf-active .pf-edge.pf-edge-selected path,
+#flow.pf-active .pf-edge.pf-edge-selected line{
+  stroke-width:5px;filter:drop-shadow(0 0 3px rgba(0,0,0,.45))}
 #selhl circle{pointer-events:none}
 #printdoc{display:none}
 @media print{
@@ -262,9 +271,9 @@ FLOWS.forEach(f=>{
   (outAdj[f.f]=outAdj[f.f]||[]).push(f);
   (inAdj[f.t]=inAdj[f.t]||[]).push(f);
 });
-let selectedId=null;
-const PF_NODE_CLASSES=['pf-selected','pf-direct','pf-path','pf-dim'];
-const PF_EDGE_CLASSES=['pf-direct-edge','pf-path-edge','pf-dim-edge'];
+let selectedId=null, selectedEdgeKey=null;
+const PF_NODE_CLASSES=['pf-selected','pf-direct','pf-path','pf-dim','pf-endpoint'];
+const PF_EDGE_CLASSES=['pf-direct-edge','pf-path-edge','pf-dim-edge','pf-edge-selected'];
 
 // BFS over one direction's adjacency, returning every node reached (not
 // including the start) plus every edge traversed to reach it — the "edges
@@ -289,17 +298,28 @@ function reachable(startId, adj, forward){
 }
 
 function clearSelection(){
-  if(selectedId===null) return;
-  selectedId=null;
+  if(selectedId===null && selectedEdgeKey===null) return;
+  selectedId=null; selectedEdgeKey=null;
   document.querySelectorAll('g[id^="node-"]').forEach(g=>g.classList.remove(...PF_NODE_CLASSES));
   document.querySelectorAll('.pf-edge').forEach(g=>g.classList.remove(...PF_EDGE_CLASSES));
   flowEl.classList.remove('pf-active');
   selhl.textContent='';
 }
 
+// Draws the same black "this is the one" ring ring() (search, red) doesn't
+// use — shared by node selection (one ring) and edge selection (one ring
+// per endpoint), so both features read as the same visual language.
+function selRing(n){
+  const c=document.createElementNS(SVGNS,'circle');
+  c.setAttribute('cx',n.x); c.setAttribute('cy',n.y); c.setAttribute('r',n.r);
+  c.setAttribute('fill','none'); c.setAttribute('stroke','#111');
+  c.setAttribute('stroke-width','3.5');
+  selhl.appendChild(c);
+}
+
 function selectNode(id){
   if(selectedId===id){ clearSelection(); return; }
-  const wasOpen=selectedId!==null;
+  const wasOpen=selectedId!==null || selectedEdgeKey!==null;
   if(wasOpen) clearSelection();
   selectedId=id;
   flowEl.classList.add('pf-active');
@@ -333,27 +353,52 @@ function selectNode(id){
   // for search hits — reused here so both rings read as the same visual
   // "this is the one" language, just a different colour/weight so the two
   // features never look identical if a reader has both active at once.
-  const n=nodeById[id];
-  if(n){
-    const c=document.createElementNS(SVGNS,'circle');
-    c.setAttribute('cx',n.x); c.setAttribute('cy',n.y); c.setAttribute('r',n.r);
-    c.setAttribute('fill','none'); c.setAttribute('stroke','#111');
-    c.setAttribute('stroke-width','3.5');
-    selhl.appendChild(c);
-  }
+  if(nodeById[id]) selRing(nodeById[id]);
+}
+
+// Selecting a connector directly (not via a node) dims everything except
+// that one edge and its two endpoints — the endpoints get a ring each
+// (selRing, same as node selection) so it's immediately visible EXACTLY
+// which two nodes this line connects, per the ask: dimming alone tells you
+// "this line survived," a ring on each end removes any doubt about which
+// two cards it's actually between.
+function selectEdge(fromId, toId){
+  const key=fromId+'→'+toId;
+  if(selectedEdgeKey===key){ clearSelection(); return; }
+  if(selectedId!==null || selectedEdgeKey!==null) clearSelection();
+  selectedEdgeKey=key;
+  flowEl.classList.add('pf-active');
+
+  document.querySelectorAll('g[id^="node-"]').forEach(g=>{
+    const nid=g.id.slice(5);
+    if(nid===fromId || nid===toId) g.classList.add('pf-endpoint');
+    else g.classList.add('pf-dim');
+  });
+  document.querySelectorAll('.pf-edge').forEach(g=>{
+    if(g.dataset.from===fromId && g.dataset.to===toId) g.classList.add('pf-edge-selected');
+    else g.classList.add('pf-dim-edge');
+  });
+
+  [fromId, toId].forEach(nid=>{ if(nodeById[nid]) selRing(nodeById[nid]); });
 }
 
 flowEl.addEventListener('click', e=>{
   const g=e.target.closest('g[id^="node-"]');
   if(g){ e.stopPropagation(); selectNode(g.id.slice(5)); return; }
-  if(!e.target.closest('.pf-edge')) clearSelection();
+  const edge=e.target.closest('.pf-edge');
+  if(edge && edge.dataset.from && edge.dataset.to){
+    e.stopPropagation(); selectEdge(edge.dataset.from, edge.dataset.to); return;
+  }
+  clearSelection();
 });
 flowEl.addEventListener('keydown', e=>{
   if(e.key!=='Enter' && e.key!==' ') return;
   const g=e.target.closest && e.target.closest('g[id^="node-"]');
   if(g){ e.preventDefault(); selectNode(g.id.slice(5)); }
 });
-document.addEventListener('keydown', e=>{ if(e.key==='Escape' && selectedId!==null) clearSelection(); });
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && (selectedId!==null || selectedEdgeKey!==null)) clearSelection();
+});
 
 /* ---- Paginated PDF via the browser's own print-to-PDF (no external library, works offline) ---- */
 // Shared by both export paths below — a cloned #flow keeps whatever
