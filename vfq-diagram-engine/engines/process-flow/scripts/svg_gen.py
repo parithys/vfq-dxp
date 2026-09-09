@@ -580,6 +580,24 @@ def needs_lane(f, a, b):
     return not is_trivial_spine_hop(f, a, b) and not is_happy_branch_label(f, a, b)
 
 
+def _with_segment_midpoints(d):
+    """Inserts a real extra vertex at the exact midpoint of every straight
+    run in an "M x y L x y L x y ..." path — SVG's marker-mid only ever
+    fires at an actual vertex in the path data, so this is what lets a
+    directional arrow land at the visual CENTRE of each individual
+    segment (see connectors_svg()'s own use) instead of only at a
+    segment's trailing end/corner, where marker-mid would otherwise
+    place it. Purely geometric: three collinear points draw identically
+    to two, so this never changes what the line itself looks like —
+    only where markers can attach to it."""
+    pts = [tuple(map(float, p.split())) for p in re.findall(r'[\d.]+ [\d.]+', d)]
+    out_pts = [pts[0]]
+    for (x1, y1), (x2, y2) in zip(pts, pts[1:]):
+        out_pts.append(((x1 + x2) / 2, (y1 + y2) / 2))
+        out_pts.append((x2, y2))
+    return "M " + " L ".join(f"{x:g} {y:g}" for x, y in out_pts)
+
+
 def edge_color(flow, target_node):
     if target_node["category"] == "error":
         return RED
@@ -963,7 +981,6 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
     # trunk of its own — it's a terminal node — but IS the target of a
     # long skip-ahead edge dead-centring the same column an unrelated
     # up-going loop-back also needed to enter through).
-    trunk_share_count = collections.Counter()
     dead_center_down_users = collections.Counter()
     dodge_count = collections.Counter()   # how many up-edges have already dodged INTO a given target
     for f in flows:
@@ -973,7 +990,6 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
         going_down = b["y"] >= a["y"]
         same_row = not a["onSpine"] and not b["onSpine"] and a["y"] == b["y"]
         if going_down and not same_row:
-            trunk_share_count[f["from"]] += 1
             dead_center_down_users[f["from"]] += 1
             dead_center_down_users[f["to"]] += 1
 
@@ -1112,10 +1128,7 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # down-direction user of the column is already enough to
             # collide with this up-going one (confirmed on Mobile MACD
             # Activation Prepaid's save_milestone_1, sourcing only ONE
-            # down-going child yet still colliding). The >= 2 threshold on
-            # trunk_share_count stays reserved for the mid-path arrows
-            # below — a different question (is this a visually shared
-            # trunk worth calling out) from whether a dodge is required.
+            # down-going child yet still colliding).
             # Also dodge when the target itself needs no dodge of its own
             # but this edge's OWN source coincidentally sits at the exact
             # same x as the target (common on the fixed grid) AND that
@@ -1167,16 +1180,19 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
         # SVG export, unlike a CSS-only rule the exported file has no
         # stylesheet for).
         out.append(f'<path d="{d}" fill="none" stroke="#000" stroke-width="14" opacity="0"/>')
-        # A branch-group trunk (2+ edges sharing one source's exit column
-        # — see trunk_share_count above) puts a second, smaller copy of
-        # this edge's own arrowhead at every intermediate corner too, not
-        # just the final destination — so this specific connector's
-        # direction stays legible even where its path overlaps a sibling
-        # branch's, instead of only being distinguishable once they've
-        # already diverged onto their own unique jog.
-        mid_marker = f' marker-mid="url(#{marker})"' if trunk_share_count.get(from_id, 0) >= 2 else ""
-        out.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="2.2"{dash}{mid_marker} '
-                   f'marker-end="url(#{marker})"/>')
+        # Every individual straight run of this connector gets its own
+        # directional arrow at its own visual CENTRE, not just at the
+        # path's trailing end — required so a reader can tell which way
+        # ANY given segment flows without having to trace all the way to
+        # the final destination first, which matters most exactly where
+        # multiple connectors overlap or run close together (a
+        # branch-group trunk sharing one source's exit column, two
+        # opposite-direction connectors dodging past each other, etc.),
+        # but is applied uniformly to every connector, not just ones
+        # known to share a segment with another. marker-end (below)
+        # still marks the true arrival point at the target's own edge.
+        out.append(f'<path d="{_with_segment_midpoints(d)}" fill="none" stroke="{color}" stroke-width="2.2"{dash} '
+                   f'marker-mid="url(#{marker})" marker-end="url(#{marker})"/>')
         if dash:
             # A small filled circle at the connector's own ORIGIN point —
             # every dashed (data-flow / loop-back) connector in the
