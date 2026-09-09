@@ -266,6 +266,12 @@ DEFAULT_CARD_R = 14
 # clear of, so a tight gap there reads as intentional, not cramped.
 TITLE_Y_ONSPINE_FLOOR = 30
 
+# The single trailing gap used between every pair of distinct card
+# elements (title, actor tag, system tags, description, sub code) — see
+# card_metrics()'s own comment on why this has to be one shared constant
+# rather than a per-transition value.
+CARD_ELEMENT_GAP = 14
+
 
 def _centered_baseline(rect_y, rect_h, font_px):
     """Baseline y for text vertically centred within a rect of height
@@ -317,14 +323,29 @@ def card_metrics(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True, avail_w=
     title_ys = [title_y + i * TITLE_LINE_H for i in range(len(title_lines))]
     cursor = title_ys[-1]
 
-    # Rendering order: title -> system tags -> actor tag -> description ->
-    # sub code. System tags sit directly under the title now — "what
-    # channel/system this step runs through" reads first, before who
-    # performs it or what it does.
+    # Rendering order: title -> actor tag -> system tags -> description ->
+    # sub code. Every transition between two of these five elements uses
+    # the SAME trailing gap (CARD_ELEMENT_GAP) regardless of which
+    # optional ones (actor tag, system tags, sub code) a given node
+    # actually has, so the rhythm reads evenly card to card — no element
+    # gets a bigger or smaller breathing gap just because of what
+    # happens to sit next to it. Only the gap BETWEEN wrapped lines
+    # WITHIN the description (18/21, below) is different, since that's
+    # intra-element line spacing, not a gap between two distinct
+    # elements.
+    actor_tag_y = None
+    if lane_name:
+        cursor += CARD_ELEMENT_GAP
+        actor_tag_y = cursor
+        cursor += 20 + CARD_ELEMENT_GAP   # tag height + gap before whatever comes next
+    else:
+        cursor += CARD_ELEMENT_GAP
+
+    # System tags sit under the actor tag (or directly under the title
+    # when there's none).
     sys_tags = system_tags(node_data)
     sys_tag_y = None
     if sys_tags:
-        cursor += 14
         sys_tag_y = cursor
         # mirrors the same row-wrap accumulation node_card_svg() does, but
         # only needs the resulting ROW COUNT here, not each tag's own x
@@ -336,32 +357,18 @@ def card_metrics(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True, avail_w=
                 sys_tag_rows += 1
                 row_w = 0
             row_w += w
-        cursor += 24 * sys_tag_rows + 14   # trailing gap before whatever comes next
-
-    # Actor tag sits under the system tags (or directly under the title
-    # when there are none) — a badge, not a text baseline, so its own Y is
-    # the RECT's top edge, not a baseline offset.
-    actor_tag_y = None
-    if lane_name:
-        if sys_tag_y is None:
-            cursor += 14
-        actor_tag_y = cursor
-        cursor += 34   # 20px tag height + 14px gap before whatever comes next
-    elif sys_tag_y is None:
-        cursor += 26
+        cursor += 24 * sys_tag_rows + CARD_ELEMENT_GAP
 
     desc_ys = []
+    dcursor = cursor
     for i, _dl in enumerate(desc_lines):
-        desc_ys.append(cursor)
-        cursor += 18 if i == 0 else 21
+        desc_ys.append(dcursor)
+        dcursor += 18 if i == 0 else 21
+    if desc_lines:
+        cursor = dcursor + CARD_ELEMENT_GAP
 
-    # Sub code trails the description — a single small italic caption
-    # line, so it only needs a modest gap before it and a little trailing
-    # room after, not the larger allowance a badge or a wrapped paragraph
-    # needs.
     sub_y = None
     if sub:
-        cursor += (0 if desc_lines else -3) + 6
         sub_y = cursor
         cursor += 20
 
@@ -388,12 +395,21 @@ def node_card_svg(n, node_data, lane_name):
     avail_w = n.get("availW", CARD_AVAIL_W)
     m = card_metrics(node_data, lane_name, n["r"], n["onSpine"], avail_w)
 
-    # Rendering order: title(s) -> system tags -> actor tag -> description
+    # Rendering order: title(s) -> actor tag -> system tags -> description
     # -> sub code — see card_metrics()'s own Y math.
     parts = []
     for ty, tl in zip(m["titleYs"], m["titleLines"]):
         parts.append(f'<text x="{tx}" y="{y + ty}" font-size="{TITLE_FONT_PX}" font-weight="700" '
                      f'fill="{INK}">{esc(tl)}</text>')
+
+    if m["actorTagY"] is not None:
+        actor_tag_y = y + m["actorTagY"]
+        w = int(text_width(lane_name.upper(), TAG_AVG_CHAR)) + 20
+        actor_tag_h = 20
+        parts.append(f'<rect x="{tx}" y="{actor_tag_y}" width="{w}" height="{actor_tag_h}" rx="5" fill="{TAG_FILL_ACTOR}"/>')
+        parts.append(f'<text x="{tx + 10}" y="{_centered_baseline(actor_tag_y, actor_tag_h, TAG_FONT_PX)}" '
+                     f'font-size="{TAG_FONT_PX}" font-weight="700" '
+                     f'fill="{TAG_TEXT_ACTOR}" letter-spacing="0.9">{esc(lane_name.upper())}</text>')
 
     # System tags flow left-to-right on one row (matching the reference's own
     # Qnomy/CTI/Email layout), wrapping to a new row only once a row's
@@ -415,15 +431,6 @@ def node_card_svg(n, node_data, lane_name):
                          f'fill="{TAG_TEXT_SYS}" letter-spacing="0.5">{esc(tag)}</text>')
             sys_tag_x += w + 8
             row_started = True
-
-    if m["actorTagY"] is not None:
-        actor_tag_y = y + m["actorTagY"]
-        w = int(text_width(lane_name.upper(), TAG_AVG_CHAR)) + 20
-        actor_tag_h = 20
-        parts.append(f'<rect x="{tx}" y="{actor_tag_y}" width="{w}" height="{actor_tag_h}" rx="5" fill="{TAG_FILL_ACTOR}"/>')
-        parts.append(f'<text x="{tx + 10}" y="{_centered_baseline(actor_tag_y, actor_tag_h, TAG_FONT_PX)}" '
-                     f'font-size="{TAG_FONT_PX}" font-weight="700" '
-                     f'fill="{TAG_TEXT_ACTOR}" letter-spacing="0.9">{esc(lane_name.upper())}</text>')
 
     for dy, dl in zip(m["descYs"], m["descLines"]):
         parts.append(f'<text x="{tx}" y="{y + dy}" font-size="{DESC_FONT_PX}" fill="{MUTE}">{esc(dl)}</text>')
