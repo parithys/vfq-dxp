@@ -17,6 +17,7 @@ has; everything else is static once rendered, exactly like the reference.
 import bisect
 import collections
 import html as _html_mod
+import math
 import re
 
 XMLNS = "http://www.w3.org/2000/svg"
@@ -580,36 +581,52 @@ def needs_lane(f, a, b):
     return not is_trivial_spine_hop(f, a, b) and not is_happy_branch_label(f, a, b)
 
 
-def _with_segment_midpoints(d):
-    """Inserts a real extra vertex at the exact midpoint of every GENUINE
-    straight run in an "M x y L x y L x y ..." path, and reports whether
-    it found more than one — SVG's marker-mid only ever fires at an
-    actual vertex in the path data, so this is what lets a directional
-    arrow land at the visual CENTRE of each individual segment (see
-    connectors_svg()'s own use) instead of only at a segment's trailing
-    end/corner, where marker-mid would otherwise place it.
+def _segment_arrow_points(d, claimed_segments):
+    """Returns (x, y, dx, dy) for the visual CENTRE of every GENUINE
+    straight run in an "M x y L x y L x y ..." path that ISN'T already
+    covered by another connector's own claimed segment — one entry per
+    segment that should get its own directional arrow there.
+
+    Deliberately returns explicit COORDINATES rather than inserting a
+    vertex and relying on SVG's marker-mid: marker-mid fires at EVERY
+    intermediate vertex of a path unconditionally, with no way to make
+    it skip some — so inserting a midpoint only into the segments that
+    should have an arrow still left every plain CORNER vertex (where a
+    path just turns, never intended to carry its own arrow) generating
+    one too, since a corner is just as much an "intermediate vertex" as
+    an inserted midpoint is (confirmed: Trouble Ticket's
+    auto_tt_order_fail -> assign_creator drew an unwanted arrow at
+    (28, 646.86), the plain corner where its lead-in ends and its own
+    real jog begins). The caller draws each returned point as an
+    explicit, independent arrow shape instead, which has no such
+    all-or-nothing limitation.
 
     Consecutive DUPLICATE points are collapsed first — router.route()
     always emits a 4-point "M..L..L..L.." shape even when the source and
     target share the same x (a zero-width horizontal jog, since there's
-    no real bend to route around), and naively inserting a midpoint into
-    that degenerate zero-length segment produced a marker with an
-    undefined orientation, rendered sideways in the middle of an
-    otherwise dead-straight line (confirmed on Mobile Postpaid
-    Activation's jsm01 -> jsm01_deny: three consecutive points collapsed
-    to the exact same (460, 537.86)). Beyond exact duplicates, any
-    waypoint that doesn't actually change direction (every segment this
-    engine draws is axis-aligned, so "changes direction" just means the
-    horizontal/vertical axis flips) is ALSO collapsed — deduplication
-    alone left a lone leftover waypoint sitting on an otherwise dead
-    -straight run (the same jsm01_deny case: x=460 the entire way, so
-    that middle point was never a real corner to begin with, just where
-    a zero-width jog happened to sit). A connector that's genuinely just
-    ONE straight run — regardless of how many redundant or non-turning
-    points its own `d` string happens to contain — gets exactly one
-    arrowhead, at its terminating end, not a spurious one at a fake
-    bend too; the caller uses the returned `has_multiple_segments` flag
-    to decide whether marker-mid applies at all."""
+    no real bend to route around), which would otherwise register as a
+    genuine (but zero-length, undefined-direction) segment. Beyond exact
+    duplicates, any waypoint that doesn't actually change direction
+    (every segment this engine draws is axis-aligned, so "changes
+    direction" just means the horizontal/vertical axis flips, or the
+    same axis reverses) is ALSO collapsed — a connector that's genuinely
+    just one straight run, however many redundant or non-turning points
+    its own `d` string happens to contain, gets exactly one arrow
+    (marker-end, at its terminating end — see the caller), not a
+    spurious extra one at a fake bend.
+
+    claimed_segments is a list of (axis, fixed_coord, lo, hi, direction)
+    tuples, shared and mutated across every connector this is called for
+    within one diagram — a branch-group trunk's shared exit column
+    (multiple sibling edges all starting with the identical first
+    segment) would otherwise get one arrow PER sibling stacked on top of
+    each other on the shared portion (confirmed on Mobile Postpaid
+    Activation's jsm05: three near-identical downward arrows piled up on
+    the first ~500px both jsm06 and jsm07 and jsm08's own paths all
+    travel through in common). Only the FIRST connector to reach a given
+    physical segment gets an arrow there; every later one sharing that
+    same stretch skips its own arrow for that specific segment (its
+    OTHER, genuinely unique segments are unaffected)."""
     pts = [tuple(map(float, p.split())) for p in re.findall(r'[\d.]+ [\d.]+', d)]
     dedup = [pts[0]]
     for p in pts[1:]:
@@ -629,13 +646,37 @@ def _with_segment_midpoints(d):
     simplified.append(dedup[-1])
     dedup = simplified
 
-    if len(dedup) < 3:
-        return d, False
-    out_pts = [dedup[0]]
+    def _claimed(x1, y1, x2, y2):
+        if abs(x1 - x2) < 0.5:
+            axis, fixed, lo, hi = "v", x1, min(y1, y2), max(y1, y2)
+        elif abs(y1 - y2) < 0.5:
+            axis, fixed, lo, hi = "h", y1, min(x1, x2), max(x1, x2)
+        else:
+            return False   # never happens (every segment here is axis-aligned), but stay safe
+        direction = _sign((x2 - x1) + (y2 - y1))
+        for c_axis, c_fixed, c_lo, c_hi, c_dir in claimed_segments:
+            if (axis, direction) == (c_axis, c_dir) and abs(fixed - c_fixed) < 0.5 \
+                    and lo < c_hi and hi > c_lo:
+                return True
+        claimed_segments.append((axis, fixed, lo, hi, direction))
+        return False
+
+    arrows = []
     for (x1, y1), (x2, y2) in zip(dedup, dedup[1:]):
-        out_pts.append(((x1 + x2) / 2, (y1 + y2) / 2))
-        out_pts.append((x2, y2))
-    return "M " + " L ".join(f"{x:g} {y:g}" for x, y in out_pts), True
+        if not _claimed(x1, y1, x2, y2):
+            arrows.append(((x1 + x2) / 2, (y1 + y2) / 2, x2 - x1, y2 - y1))
+    return arrows
+
+
+def _arrow_svg(x, y, dx, dy, color):
+    """One small filled triangle, shaped identically to this engine's own
+    <marker> defs (see DEFS: markerWidth/Height 9, path "M0,0 L8,3 L0,6
+    Z", refX/refY 7.5/3) — drawn as an explicit element positioned and
+    rotated to point along (dx, dy) instead of relying on marker-mid
+    (see _segment_arrow_points()'s own docstring for why)."""
+    angle = math.degrees(math.atan2(dy, dx))
+    return (f'<path d="M0,0 L8,3 L0,6 Z" fill="{color}" '
+            f'transform="translate({x:g} {y:g}) rotate({angle:.2f}) translate(-7.5 -3)"/>')
 
 
 def edge_color(flow, target_node):
@@ -861,6 +902,11 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
     out = []
     router = _LaneRouter(total_h, n_lanes, bottom_lanes, card_boxes)
     card_bottom_by_id = card_bottom_by_id or {}
+    # Shared across every connector's own _segment_arrow_points() call —
+    # see that function's own docstring for why a branch-group trunk's
+    # common first segment must only get ONE arrow between however many
+    # sibling edges travel through it, not one per sibling.
+    claimed_arrow_segments = []
     # A rotated branch label's position (lx, ly) depends only on the SOURCE
     # node's x and this one edge's own y-span. Two distinct failure modes
     # land labels at the same (lx, ly):
@@ -1232,11 +1278,15 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
         # known to share a segment with another. A connector that's
         # genuinely just ONE straight run gets no mid-arrow at all — only
         # marker-end, at its terminating end — since there's no second
-        # segment for a second arrow to actually belong to.
-        mid_d, has_mid = _with_segment_midpoints(d)
-        mid_marker = f' marker-mid="url(#{marker})"' if has_mid else ""
-        out.append(f'<path d="{mid_d}" fill="none" stroke="{color}" stroke-width="2.2"{dash}{mid_marker} '
+        # segment for a second arrow to actually belong to. Drawn as
+        # explicit shapes (see _segment_arrow_points()'s own docstring),
+        # not marker-mid, which fires at every intermediate vertex
+        # unconditionally — including plain corners never meant to carry
+        # their own arrow.
+        out.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="2.2"{dash} '
                    f'marker-end="url(#{marker})"/>')
+        for ax, ay, adx, ady in _segment_arrow_points(d, claimed_arrow_segments):
+            out.append(_arrow_svg(ax, ay, adx, ady, color))
         if dash:
             # A small filled circle at the connector's own ORIGIN point —
             # every dashed (data-flow / loop-back) connector in the
