@@ -173,18 +173,21 @@ X_START = 60           # first (start) node's x
 SPINE_Y = 215           # y of every spine node
 TOPBAR_H = 64            # phase-header band height
 
-# Row-to-row vertical gap (spine -> tier 0, and tier N -> tier N+1) is NOT a
-# flat constant any more — it's derived from the tallest card actually
-# present in this diagram, the same "every spacing constant is DERIVED from
-# a floor, not an independent guess" approach build_model.py's own ROW
-# constant already documents for bpmn-swimlane. A flat 215px (the value
-# reverse-engineered from the reference file, which happened to have
-# modestly-sized cards) left as little as ~15px between one row's card text
-# and the next row's connector routing — nowhere near the 40px minimum
-# clearance a reader needs between adjacent connectors, or between a
-# connector and unrelated card text, once more than one connector needs to
-# cross that gap (see svg_gen.py's connectors_svg() lane allocator, which
-# this gap sizing exists to give room to).
+# Row-to-row vertical gap floors at REFERENCE_TIER_GAP (below), the flat
+# constant reverse-engineered directly from the maintainer-supplied
+# reference file's own off-spine tier spacing — confirmed there across
+# every multi-tier chain checked (x=5260, x=6860, x=16060 all use exactly
+# 215px between consecutive tier centres). Grows past that floor only when
+# THIS row's own content genuinely needs more: an earlier version derived
+# the gap purely from card height with no floor at all, which — for a row
+# whose card happened to be shorter than what the reference's own examples
+# had — left as little as ~15px between that row's card text and the next
+# row's connector routing, nowhere near the 40px minimum clearance a
+# reader needs. Flooring at the reference's own constant, rather than
+# computing every row independently from scratch, matches the reference's
+# actual behaviour for the common case while still growing for genuinely
+# long content instead of letting it overlap.
+REFERENCE_TIER_GAP = 215
 ROW_TEXT_CLEARANCE = 40   # required clearance: card bottom -> first routing lane, and last lane -> next row's shapes
 N_ROUTING_LANES = 2        # in-gap lanes guaranteed 40px clear of card text and of each other;
                             # a row-gap needing a 3rd+ concurrent connector overflows into the
@@ -196,22 +199,16 @@ BOTTOM_CHANNEL_LANES = 6    # the reserved channel below the whole diagram (for 
                             # not just the ones crossing one particular row
 LANE_PITCH = 60             # mirrors svg_gen.py's own LANE_PITCH — see that copy's own comment for why
                             # it's above the bare ROW_TEXT_CLEARANCE(40) floor, not just at it
-SIBLING_PITCH = svg_gen.CARD_AVAIL_W + ROW_TEXT_CLEARANCE   # >= a card's own width — the flat 300px this used
-                             # to be was LESS than CARD_AVAIL_W (330), guaranteeing a 30px card-vs-card overlap
-                             # between any two off-spine siblings sharing one (anchor, tier) bucket, regardless
-                             # of content — confirmed on Mobile Postpaid Activation's jsm06/jsm07/jsm08 (and
-                             # 18 other diagrams). Deriving this from the real card width, the same "every
-                             # spacing constant comes from a floor, not an independent guess" rule every other
-                             # constant here already follows, makes the guarantee exact instead of coincidental.
 
 
 def _row_gap(max_card_h, n_lanes=N_ROUTING_LANES):
     """Vertical distance needed to fit: the tallest card actually in this
     diagram + 40px clearance below it + `n_lanes` routing lanes at
-    LANE_PITCH + 40px clearance before whatever comes next. Used both for
-    the uniform spine/tier row gap (default n_lanes) and for the bottom
-    overflow channel's own depth (BOTTOM_CHANNEL_LANES)."""
-    return max_card_h + ROW_TEXT_CLEARANCE + n_lanes * LANE_PITCH + ROW_TEXT_CLEARANCE
+    LANE_PITCH + 40px clearance before whatever comes next — floored at
+    REFERENCE_TIER_GAP (see its own comment). Used both for the uniform
+    spine/tier row gap (default n_lanes) and for the bottom overflow
+    channel's own depth (BOTTOM_CHANNEL_LANES)."""
+    return max(REFERENCE_TIER_GAP, max_card_h + ROW_TEXT_CLEARANCE + n_lanes * LANE_PITCH + ROW_TEXT_CLEARANCE)
 CANVAS_PAD_TOP = 64           # content starts below the topbar
 # CANVAS_PAD_BOTTOM is no longer a flat constant — see compute_process_layout(),
 # where it's computed as _row_gap(max_card_h, BOTTOM_CHANNEL_LANES): the
@@ -331,12 +328,13 @@ def compute_process_layout(nodes, flows, lanes, phases):
     def _band_x1_for_x(x):
         """The x1 of whichever band's [x0, x1) actually contains x — used
         for OFF-SPINE nodes, which (unlike spine nodes) don't sit at a
-        fixed x tied 1:1 to their own phase: sibling spread (SIBLING_PITCH)
-        and the final collision sweep below can both drift a node's real x
-        away from its anchor's own column, occasionally into a
-        NEIGHBOURING phase's territory. Falls back to the last band for an
-        x past every band's own x1 (shouldn't happen for a valid layout,
-        but avoids a crash on the theoretical edge)."""
+        fixed x tied 1:1 to their own phase: sibling spread (each sibling
+        one STEP further right than the last) and the final collision
+        sweep below can both drift a node's real x away from its anchor's
+        own column, occasionally into a NEIGHBOURING phase's territory.
+        Falls back to the last band for an x past every band's own x1
+        (shouldn't happen for a valid layout, but avoids a crash on the
+        theoretical edge)."""
         for b in bands:
             if b["x0"] <= x < b["x1"]:
                 return b["x1"]
@@ -415,10 +413,21 @@ def compute_process_layout(nodes, flows, lanes, phases):
     descendants_by_anchor = collections.defaultdict(list)
     for (ax, t), ids in bucket.items():
         ids_sorted = sorted(ids)
-        n_ids = len(ids_sorted)
+        # Sequential forward offsets (0, +STEP, +2*STEP, ...) — the first
+        # sibling sits in the SAME column as its own anchor, each further
+        # one shifted one more spine-column-width to the right. Reused
+        # directly from the maintainer-supplied reference file's own
+        # layout (vfq-mobile-postpaid-activation-complete-flow_10.html):
+        # confirmed on its jsm05 cluster, whose three siblings sit at
+        # anchor+0/+400/+800 — the SAME 400px pitch the primary spine
+        # itself uses, not a card-width-derived spread centred on the
+        # anchor. An earlier version of this code centred siblings
+        # symmetrically around their anchor at +/-SIBLING_PITCH; that
+        # doesn't match the reference at all (every real example places
+        # the first sibling directly under the anchor and grows only
+        # rightward).
         for j, node_id in enumerate(ids_sorted):
-            offset = (j - (n_ids - 1) / 2) * SIBLING_PITCH
-            off_spine_x[node_id] = ax + offset
+            off_spine_x[node_id] = ax + j * STEP
         descendants_by_anchor[ax].extend(ids_sorted)
 
     CARD_L, CARD_R = svg_gen.CARD_TEXT_OFFSET, svg_gen.CARD_TEXT_OFFSET + svg_gen.CARD_AVAIL_W
@@ -539,7 +548,7 @@ def compute_process_layout(nodes, flows, lanes, phases):
 
     # Two off-spine nodes anchored to DIFFERENT spine columns can still
     # spread toward each other far enough for their cards to overlap —
-    # SIBLING_PITCH above only guarantees clearance WITHIN one (anchor,
+    # the sibling-offset formula above only guarantees clearance WITHIN one (anchor,
     # tier) bucket, not between two independent branches that happen to
     # land close together (confirmed on Mobile MACD Plan Change:
     # "reject_blacklist" / "lockin_penalty_payment", anchored to two
@@ -597,7 +606,7 @@ def compute_process_layout(nodes, flows, lanes, phases):
 
     # Off-spine nodes get the SAME phase-boundary text clamp spine nodes
     # got above, but only now — the sweep just above can drift a node's x
-    # (SIBLING_PITCH spread, or the rightward collision push) far enough to
+    # (sibling spread, or the rightward collision push) far enough to
     # land inside a NEIGHBOURING phase's territory, so only the node's
     # FINAL x (not its anchor's) says which band's boundary its own card
     # actually has to respect (see _band_x1_for_x()'s own docstring).

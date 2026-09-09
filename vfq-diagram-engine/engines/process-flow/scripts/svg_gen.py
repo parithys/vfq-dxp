@@ -315,24 +315,37 @@ def card_metrics(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True, avail_w=
     raw_title_y = CAP_HEIGHT_RATIO * TITLE_FONT_PX - r
     title_y = max(raw_title_y, TITLE_Y_ONSPINE_FLOOR) if on_spine else raw_title_y
     title_ys = [title_y + i * TITLE_LINE_H for i in range(len(title_lines))]
-    sub_y = None
     cursor = title_ys[-1]
-    if sub:
-        cursor += 26
-        sub_y = cursor
-        cursor += 24
+
+    # Actor tag sits directly under the title now (swapped with the sub
+    # code, which used to occupy this slot) — a badge, not a text
+    # baseline, so its own Y is the RECT's top edge, not a baseline offset;
+    # actor_tag_h(20, set in node_card_svg) + this gap is what the caller
+    # actually reserves before the next element starts.
+    actor_tag_y = None
+    if lane_name:
+        cursor += 14
+        actor_tag_y = cursor
+        cursor += 34   # 20px tag height + 14px gap before whatever comes next
     else:
         cursor += 26
+
     desc_ys = []
     for i, _dl in enumerate(desc_lines):
         desc_ys.append(cursor)
         cursor += 18 if i == 0 else 21
 
-    tag_row_y = cursor + (0 if desc_lines else -3)
-    actor_tag_y = None
-    if lane_name:
-        actor_tag_y = tag_row_y
-        tag_row_y += 26
+    # Sub code now trails the description (previously sat right under the
+    # title) — a single small italic caption line, so it only needs a
+    # modest gap before it and a little trailing room after, not the
+    # larger allowance a badge or a wrapped paragraph needs.
+    sub_y = None
+    if sub:
+        cursor += (0 if desc_lines else -3) + 6
+        sub_y = cursor
+        cursor += 20
+
+    tag_row_y = cursor
 
     sys_tags = system_tags(node_data)
     sys_tag_rows = 0
@@ -371,25 +384,32 @@ def node_card_svg(n, node_data, lane_name):
     avail_w = n.get("availW", CARD_AVAIL_W)
     m = card_metrics(node_data, lane_name, n["r"], n["onSpine"], avail_w)
 
+    # Rendering order: title(s) -> actor tag -> description -> sub code ->
+    # system tags. The actor tag and sub code deliberately swapped slots
+    # here (sub used to sit right under the title, actor tag right before
+    # system tags) — see card_metrics()'s own comments for the Y math.
     parts = []
     for ty, tl in zip(m["titleYs"], m["titleLines"]):
         parts.append(f'<text x="{tx}" y="{y + ty}" font-size="{TITLE_FONT_PX}" font-weight="700" '
                      f'fill="{INK}">{esc(tl)}</text>')
-    if m["subY"] is not None:
-        parts.append(f'<text x="{tx}" y="{y + m["subY"]}" font-size="{CODE_FONT_PX}" font-weight="400" '
-                     f'font-style="italic" fill="{INK}">{esc(str(node_data.get("sub")).upper())}</text>')
+
+    if m["actorTagY"] is not None:
+        actor_tag_y = y + m["actorTagY"]
+        w = int(text_width(lane_name.upper(), TAG_AVG_CHAR)) + 20
+        actor_tag_h = 20
+        parts.append(f'<rect x="{tx}" y="{actor_tag_y}" width="{w}" height="{actor_tag_h}" rx="5" fill="{TAG_FILL_ACTOR}"/>')
+        parts.append(f'<text x="{tx + 10}" y="{_centered_baseline(actor_tag_y, actor_tag_h, TAG_FONT_PX)}" '
+                     f'font-size="{TAG_FONT_PX}" font-weight="700" '
+                     f'fill="{TAG_TEXT_ACTOR}" letter-spacing="0.9">{esc(lane_name.upper())}</text>')
+
     for dy, dl in zip(m["descYs"], m["descLines"]):
         parts.append(f'<text x="{tx}" y="{y + dy}" font-size="{DESC_FONT_PX}" fill="{MUTE}">{esc(dl)}</text>')
 
-    tag_row_y = y + (m["actorTagY"] if m["actorTagY"] is not None else m["bottom"])
-    if m["actorTagY"] is not None:
-        w = int(text_width(lane_name.upper(), TAG_AVG_CHAR)) + 20
-        actor_tag_h = 20
-        parts.append(f'<rect x="{tx}" y="{tag_row_y}" width="{w}" height="{actor_tag_h}" rx="5" fill="{TAG_FILL_ACTOR}"/>')
-        parts.append(f'<text x="{tx + 10}" y="{_centered_baseline(tag_row_y, actor_tag_h, TAG_FONT_PX)}" '
-                     f'font-size="{TAG_FONT_PX}" font-weight="700" '
-                     f'fill="{TAG_TEXT_ACTOR}" letter-spacing="0.9">{esc(lane_name.upper())}</text>')
-        tag_row_y += 26
+    if m["subY"] is not None:
+        parts.append(f'<text x="{tx}" y="{y + m["subY"]}" font-size="{CODE_FONT_PX}" font-weight="400" '
+                     f'font-style="italic" fill="{INK}">{esc(str(node_data.get("sub")).upper())}</text>')
+
+    tag_row_y = y + m["bottom"]
 
     # System tags flow left-to-right on one row (matching the reference's own
     # Qnomy/CTI/Email layout), wrapping to a new row only once a row's
@@ -650,72 +670,8 @@ class _LaneRouter:
 SPINE_Y_FALLBACK = 215   # must equal layout_process.py's own SPINE_Y — see _LaneRouter._row_index()
 
 
-def _route_branch_group(router, ax, a_bottom_y, branches, row_gap, max_card_h, n_lanes, card_boxes):
-    """One shared trunk + junction for every OFF-SPINE branch leaving the
-    SAME source node, each entering its own target from the BOTTOM rather
-    than the top (a single distribution point, not N independent nested
-    rectangles — see connectors_svg()'s own grouping pass for when this
-    applies). `branches`: list of {id, x, r, bottom_y, below_y} — bottom_y
-    is the target's own shape bottom (y+r), below_y is past its own card's
-    lowest point. Returns {branch_id: path_d}, and registers every lane/
-    lock it claims so later routing (single edges, later groups) still
-    avoids it, same discipline _LaneRouter.route() itself follows.
-
-    Why bottom-entry needs a real detour, not just a longer straight line:
-    the target's own SHAPE sits at the very TOP of its card (title/desc
-    render below it), so a straight vertical drop from the distribution
-    line would enter through the TOP of the shape long before reaching its
-    bottom point — the opposite of what's wanted. Each branch instead
-    peels off to a column just LEFT of its own target's shape (clear of
-    both the shape, whose radius never reaches CARD_TEXT_OFFSET, and the
-    card, which sits entirely to the RIGHT of the node's own x), descends
-    past the target's own card, then jogs back right and enters the
-    shape's bottom point travelling upward — the arrow marker's own
-    orient="auto" draws the head correctly with no extra work, since it
-    follows the path's actual final direction, not a hardcoded rotation."""
-    card_boxes = card_boxes or []
-    xs = [ax] + [br["x"] for br in branches]
-    x_lo, x_hi = min(xs), max(xs)
-
-    def _v_clear(x, y_lo, y_hi):
-        return all(x < x0 - 1 or x > x1 + 1 or y_hi < y0 - MIN_CLEARANCE or y_lo > y1 + MIN_CLEARANCE
-                   for (x0, x1, y0, y1) in card_boxes)
-
-    source_row = router._row_index(a_bottom_y, row_gap)
-    jog_y = None
-    for lane in range(n_lanes):
-        candidate = router._gap_lane_y(source_row, lane, row_gap, max_card_h)
-        if router._h_free(candidate, x_lo, x_hi) and router._clear_of_cards(candidate, x_lo, x_hi):
-            jog_y = candidate
-            break
-    if jog_y is None:
-        for lane in range(router.bottom_lanes):
-            candidate = router.total_h - MIN_CLEARANCE + 16 - lane * LANE_PITCH
-            if router._h_free(candidate, x_lo, x_hi) and router._clear_of_cards(candidate, x_lo, x_hi):
-                jog_y = candidate
-                break
-    if jog_y is None:   # every lane exhausted (extreme edge case) — stack one more below the last
-        jog_y = router.total_h - MIN_CLEARANCE + 16 - router.bottom_lanes * LANE_PITCH
-    router.placed_h.append((jog_y, x_lo, x_hi))
-    router._claim_v(ax, min(a_bottom_y, jog_y), max(a_bottom_y, jog_y))
-
-    paths = {}
-    for br in branches:
-        tx, tby, below_y, r = br["x"], br["bottom_y"], br["below_y"], br["r"]
-        offset_x = tx - r - MIN_CLEARANCE
-        for _ in range(6):   # bounded: offset_x only ever moves further left, past a finite set of cards
-            if _v_clear(offset_x, min(jog_y, below_y), max(jog_y, below_y)):
-                break
-            offset_x -= MIN_CLEARANCE
-        router._claim_v(offset_x, min(jog_y, below_y), max(jog_y, below_y))
-        router._claim_v(tx, min(below_y, tby), max(below_y, tby))
-        paths[br["id"]] = (f"M {ax} {a_bottom_y} L {ax} {jog_y} L {offset_x} {jog_y} "
-                            f"L {offset_x} {below_y} L {tx} {below_y} L {tx} {tby}")
-    return paths
-
-
 def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
-                    n_lanes=2, bottom_lanes=6, card_boxes=None, card_bottom_by_id=None):
+                    n_lanes=2, bottom_lanes=6, card_boxes=None):
     """Returns SVG for every flow that needs an EXPLICIT drawn connector —
     a plain consecutive spine hop (st(to)==st(from)+1, happy, unlabelled)
     is already covered by the single continuous spine line and is skipped
@@ -731,13 +687,9 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
     card_boxes — every node's real (x0, x1, y0, y1) card footprint — lets
     the router refuse a candidate lane that would cut through UNRELATED
     card content it happens to pass over on its way across the diagram
-    (see _LaneRouter._clear_of_cards()). card_bottom_by_id — each node's
-    own card's lowest y, used by _route_branch_group() below to route an
-    off-spine branch group's final approach past its target's own card,
-    not just its shape."""
+    (see _LaneRouter._clear_of_cards())."""
     out = []
     router = _LaneRouter(total_h, n_lanes, bottom_lanes, card_boxes)
-    card_bottom_by_id = card_bottom_by_id or {}
     # A rotated branch label's position (lx, ly) depends only on the SOURCE
     # node's x and this one edge's own y-span. Two distinct failure modes
     # land labels at the same (lx, ly):
@@ -868,74 +820,6 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
     def _label_len(txt):
         return text_width(txt, LABEL_CHAR_PX)
 
-    # Bottom-entry is a COLLISION FIX, not a blanket style rule — it costs
-    # a real detour (past the target's own card and back), so it's only
-    # worth paying when top-entry would actually collide with something
-    # else touching that same top point. Two situations create that
-    # collision:
-    #   1. A branch GROUP — 2+ edges leaving the SAME source into off-spine
-    #      targets share one trunk (see _route_branch_group()'s own
-    #      docstring); every member always gets bottom-entry, unconditionally,
-    #      since the shared-trunk shape itself is the point.
-    #   2. A single, ungrouped edge whose target's own TOP point would
-    #      otherwise be touched by something ELSE too — another incoming
-    #      edge from a different source (Mobile Postpaid Activation's
-    #      kyc03_rescan: two different decisions both routing into it), or
-    #      this same node's own outgoing edge leaving upward from that
-    #      identical point. Counted below as top_touch_count.
-    # A single edge into a genuine leaf (no siblings, target has no
-    # upward-exiting edge of its own) has NOTHING to collide with at its
-    # top — forcing it through the bottom-entry detour anyway produced
-    # exactly the "unnecessary long detour" defect this section exists to
-    # avoid (confirmed on the same diagram's jsm01 -> "Access Denied": a
-    # single edge into a true terminal node, previously detoured around
-    # to enter from below when a short, direct top-entry was already
-    # completely collision-free).
-    top_touch_count = {}
-    for f in flows:
-        from_id, to_id = f.get("from"), f.get("to")
-        a, b = nodes_by_id.get(from_id), nodes_by_id.get(to_id)
-        if not a or not b or is_trivial_spine_hop(f, a, b) or is_happy_branch_label(f, a, b):
-            continue
-        if not b["onSpine"] and b["y"] > a["y"]:      # downward edge — touches the TARGET's top
-            top_touch_count[to_id] = top_touch_count.get(to_id, 0) + 1
-        if not a["onSpine"] and b["y"] < a["y"]:      # upward edge — touches the SOURCE's own top
-            top_touch_count[from_id] = top_touch_count.get(from_id, 0) + 1
-
-    groups_by_source = {}
-    for f in flows:
-        from_id, to_id = f.get("from"), f.get("to")
-        a, b = nodes_by_id.get(from_id), nodes_by_id.get(to_id)
-        if (not a or not b or b["onSpine"] or b["y"] <= a["y"]
-                or is_trivial_spine_hop(f, a, b) or is_happy_branch_label(f, a, b)):
-            continue
-        groups_by_source.setdefault(from_id, []).append((f, a, b))
-    # A single-member "group" only earns bottom-entry if its target's top
-    # is genuinely contested (see top_touch_count above) — otherwise it's
-    # a lone edge into an uncontested node, and the plain short top-entry
-    # route (never touched by anything in this pass) is strictly better.
-    groups_by_source = {
-        from_id: members for from_id, members in groups_by_source.items()
-        if len(members) >= 2 or top_touch_count.get(members[0][0].get("to"), 0) >= 2
-    }
-
-    tree_paths = {}      # (from_id, to_id) -> precomputed path d
-    tree_bottom_y = {}   # (from_id, to_id) -> the target y this path actually enters at (its bottom, not top)
-    for from_id, members in groups_by_source.items():
-        a = members[0][1]
-        a_bottom_y = a["y"] + a["r"]
-        branches = []
-        for f, _a, b in members:
-            to_id = f.get("to")
-            below_y = card_bottom_by_id.get(to_id, b["y"] + max_card_h) + MIN_CLEARANCE
-            branches.append({"id": to_id, "x": b["x"], "r": b["r"], "bottom_y": b["y"] + b["r"], "below_y": below_y})
-        paths = _route_branch_group(router, a["x"], a_bottom_y, branches,
-                                     a.get("rowGap", row_gap), a.get("maxCardH", max_card_h),
-                                     a.get("laneCount") or n_lanes, card_boxes)
-        for br in branches:
-            tree_paths[(from_id, br["id"])] = paths[br["id"]]
-            tree_bottom_y[(from_id, br["id"])] = br["bottom_y"]
-
     for f in flows:
         from_id, to_id = f.get("from"), f.get("to")
         a, b = nodes_by_id.get(from_id), nodes_by_id.get(to_id)
@@ -968,20 +852,23 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
         color = edge_color(f, b)
         marker = ARROW_MARKERS[color]
         dash = ' stroke-dasharray="6 5"' if color == BLUE else ""
-        tree_key = (from_id, to_id)
-        if tree_key in tree_paths:
-            # Part of a shared branch-group trunk (see the grouping pass
-            # above) — path and target-entry y are already fully computed;
-            # only the label placement below still needs a y-span to work
-            # from, so y1/y2 here are that label's own fallback midpoint
-            # inputs, not this connector's real geometry.
-            d = tree_paths[tree_key]
-            y1, y2 = a["y"] + a["r"], tree_bottom_y[tree_key]
+        going_down = b["y"] >= a["y"]
+        if going_down or a["onSpine"]:
+            x1 = a["x"]
+            y1 = a["y"] + (a["r"] if going_down else -a["r"])
         else:
-            y1 = a["y"] + (a["r"] if b["y"] >= a["y"] else -a["r"])
-            y2 = b["y"] + (-b["r"] if b["y"] >= a["y"] else b["r"])
-            d, jog_y, jog_x_lo, jog_x_hi = router.route(a["x"], y1, b["x"], y2, a.get("rowGap", row_gap),
-                                                         a.get("maxCardH", max_card_h), a.get("laneCount"))
+            # Off-spine source, upward edge (a loop-back to the spine or an
+            # earlier row) — exits from the LEFT vertex rather than the top.
+            # Matches the reference artefact's own mechanism for keeping a
+            # loop-back visually distinct from anything else that also
+            # touches this node's top point (another incoming edge, or this
+            # same node's own downward continuation) — the reference's
+            # actual fix for the collision an earlier bottom-entry detour
+            # was built to work around.
+            x1, y1 = a["x"] - a["r"], a["y"]
+        y2 = b["y"] + (-b["r"] if going_down else b["r"])
+        d, jog_y, jog_x_lo, jog_x_hi = router.route(x1, y1, b["x"], y2, a.get("rowGap", row_gap),
+                                                     a.get("maxCardH", max_card_h), a.get("laneCount"))
         out.append(edge_open)
         # Invisible fat hit-path UNDER the real 2.2px-wide line — SVG's
         # click/pointer target for a fill:none path is the STROKE only, so
@@ -1154,8 +1041,7 @@ def build(blob, pf_layout):
     # allocator's "safe zone" math agrees exactly with what the layout
     # actually reserved.
     parts.append(connectors_svg(blob.get("flows", []), nodes_by_id, total_h,
-                                 pf_layout["rowGap"], pf_layout["maxCardH"], card_boxes=card_boxes,
-                                 card_bottom_by_id=card_bottom_by_id))
+                                 pf_layout["rowGap"], pf_layout["maxCardH"], card_boxes=card_boxes))
     parts.append('<g id="hl"></g>')  # search-highlight rings are appended here at runtime (see engine_template.html)
     parts.append('<g id="selhl"></g>')  # click-to-select ring around the selected node — see engine_template.html
 
