@@ -499,6 +499,26 @@ def compute_process_layout(nodes, flows, lanes, phases):
     # +1 buffer on any anchor with real demand absorbs that kind of
     # incidental cross-anchor collision without the cost of a full global
     # lane-scheduling pass.
+    # An OFF-SPINE node's own edges route through ITS OWN anchor's row-gap
+    # too (a["laneCount"]/a["rowGap"] for an off-spine source come from
+    # local_lane_count[its own anchor x] — see out_nodes below) — but
+    # only on-spine endpoints were ever counted here, so an edge entirely
+    # BETWEEN two off-spine nodes (neither in spine_x) contributed to NO
+    # anchor's demand at all, no matter how many such edges piled onto
+    # the same busy anchor. Confirmed on Mobile Postpaid Activation:
+    # kyc03_rescan -> kyc03_manual_approval and kyc03_manual_approval ->
+    # kyc04_age (both off-spine-sourced) detoured thousands of px to the
+    # shared bottom channel — their shared anchor's demand count never
+    # saw either edge, so it never provisioned the extra lanes they
+    # needed. _anchor_x resolves an off-spine node to the same anchor x
+    # its own row_gap/laneCount will end up using.
+    def _anchor_x(node_id):
+        if node_id in spine_x:
+            return spine_x[node_id]
+        if node_id in anchors:
+            return anchors[node_id][0]
+        return None
+
     lanes_needed_by_anchor = collections.defaultdict(int)
     for f in flows:
         a_id, b_id = f.get("from"), f.get("to")
@@ -506,10 +526,11 @@ def compute_process_layout(nodes, flows, lanes, phases):
             continue
         if not svg_gen.needs_lane(f, _prelim(a_id), _prelim(b_id)):
             continue
-        if a_id in spine_x:
-            lanes_needed_by_anchor[spine_x[a_id]] += 1
-        if b_id in spine_x:
-            lanes_needed_by_anchor[spine_x[b_id]] += 1
+        a_anchor, b_anchor = _anchor_x(a_id), _anchor_x(b_id)
+        if a_anchor is not None:
+            lanes_needed_by_anchor[a_anchor] += 1
+        if b_anchor is not None:
+            lanes_needed_by_anchor[b_anchor] += 1
 
     local_row_gap = {}
     local_lane_count = {}
