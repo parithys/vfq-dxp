@@ -330,26 +330,15 @@ def card_metrics(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True, avail_w=
     else:
         cursor += 26
 
-    desc_ys = []
-    for i, _dl in enumerate(desc_lines):
-        desc_ys.append(cursor)
-        cursor += 18 if i == 0 else 21
-
-    # Sub code now trails the description (previously sat right under the
-    # title) — a single small italic caption line, so it only needs a
-    # modest gap before it and a little trailing room after, not the
-    # larger allowance a badge or a wrapped paragraph needs.
-    sub_y = None
-    if sub:
-        cursor += (0 if desc_lines else -3) + 6
-        sub_y = cursor
-        cursor += 20
-
-    tag_row_y = cursor
-
+    # System tags sit directly under the actor tag now — the reference's
+    # own Qnomy/CTI/Email row reads as "what channel/system this step runs
+    # through," which belongs right next to the actor badge, not buried
+    # below the description and sub code.
     sys_tags = system_tags(node_data)
-    sys_tag_rows = 0
+    sys_tag_y = None
     if sys_tags:
+        cursor += 10
+        sys_tag_y = cursor
         # mirrors the same row-wrap accumulation node_card_svg() does, but
         # only needs the resulting ROW COUNT here, not each tag's own x
         row_w = 0
@@ -360,10 +349,26 @@ def card_metrics(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True, avail_w=
                 sys_tag_rows += 1
                 row_w = 0
             row_w += w
-        tag_row_y += 24 * sys_tag_rows
+        cursor += 24 * sys_tag_rows + 8
+
+    desc_ys = []
+    for i, _dl in enumerate(desc_lines):
+        desc_ys.append(cursor)
+        cursor += 18 if i == 0 else 21
+
+    # Sub code trails the description — a single small italic caption
+    # line, so it only needs a modest gap before it and a little trailing
+    # room after, not the larger allowance a badge or a wrapped paragraph
+    # needs.
+    sub_y = None
+    if sub:
+        cursor += (0 if desc_lines else -3) + 6
+        sub_y = cursor
+        cursor += 20
 
     return {"titleLines": title_lines, "titleYs": title_ys, "subY": sub_y, "descYs": desc_ys,
-            "actorTagY": actor_tag_y, "descLines": desc_lines, "sysTags": sys_tags, "bottom": tag_row_y}
+            "actorTagY": actor_tag_y, "descLines": desc_lines, "sysTags": sys_tags, "sysTagY": sys_tag_y,
+            "bottom": cursor}
 
 
 def card_height(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True, avail_w=CARD_AVAIL_W):
@@ -384,10 +389,8 @@ def node_card_svg(n, node_data, lane_name):
     avail_w = n.get("availW", CARD_AVAIL_W)
     m = card_metrics(node_data, lane_name, n["r"], n["onSpine"], avail_w)
 
-    # Rendering order: title(s) -> actor tag -> description -> sub code ->
-    # system tags. The actor tag and sub code deliberately swapped slots
-    # here (sub used to sit right under the title, actor tag right before
-    # system tags) — see card_metrics()'s own comments for the Y math.
+    # Rendering order: title(s) -> actor tag -> system tags -> description
+    # -> sub code — see card_metrics()'s own comments for the Y math.
     parts = []
     for ty, tl in zip(m["titleYs"], m["titleLines"]):
         parts.append(f'<text x="{tx}" y="{y + ty}" font-size="{TITLE_FONT_PX}" font-weight="700" '
@@ -402,34 +405,33 @@ def node_card_svg(n, node_data, lane_name):
                      f'font-size="{TAG_FONT_PX}" font-weight="700" '
                      f'fill="{TAG_TEXT_ACTOR}" letter-spacing="0.9">{esc(lane_name.upper())}</text>')
 
+    # System tags flow left-to-right on one row (matching the reference's own
+    # Qnomy/CTI/Email layout), wrapping to a new row only once a row's
+    # accumulated width would exceed this node's own avail_w — not one tag
+    # per row.
+    if m["sysTagY"] is not None:
+        sys_tag_x, sys_tag_y = tx, y + m["sysTagY"]
+        row_started = False
+        for tag in m["sysTags"]:
+            w = int(text_width(tag, TAG_AVG_CHAR)) + 22
+            if row_started and (sys_tag_x - tx + w) > avail_w:
+                sys_tag_x = tx
+                sys_tag_y += 24
+            parts.append(f'<rect x="{sys_tag_x}" y="{sys_tag_y}" width="{w}" height="{SYS_TAG_H}" rx="4" '
+                         f'fill="{TAG_FILL_SYS}" stroke="{TAG_BORDER_SYS}"/>')
+            parts.append(f'<circle cx="{sys_tag_x + 9}" cy="{sys_tag_y + SYS_TAG_H / 2}" r="2.6" fill="{TAG_TEXT_SYS}"/>')
+            parts.append(f'<text x="{sys_tag_x + 17}" y="{_centered_baseline(sys_tag_y, SYS_TAG_H, SYS_TAG_FONT_PX)}" '
+                         f'font-size="{SYS_TAG_FONT_PX}" font-weight="700" '
+                         f'fill="{TAG_TEXT_SYS}" letter-spacing="0.5">{esc(tag)}</text>')
+            sys_tag_x += w + 8
+            row_started = True
+
     for dy, dl in zip(m["descYs"], m["descLines"]):
         parts.append(f'<text x="{tx}" y="{y + dy}" font-size="{DESC_FONT_PX}" fill="{MUTE}">{esc(dl)}</text>')
 
     if m["subY"] is not None:
         parts.append(f'<text x="{tx}" y="{y + m["subY"]}" font-size="{CODE_FONT_PX}" font-weight="400" '
                      f'font-style="italic" fill="{INK}">{esc(str(node_data.get("sub")).upper())}</text>')
-
-    tag_row_y = y + m["bottom"]
-
-    # System tags flow left-to-right on one row (matching the reference's own
-    # Qnomy/CTI/Email layout), wrapping to a new row only once a row's
-    # accumulated width would exceed this node's own avail_w — not one tag
-    # per row.
-    sys_tag_x, sys_tag_y = tx, tag_row_y
-    row_started = False
-    for tag in m["sysTags"]:
-        w = int(text_width(tag, TAG_AVG_CHAR)) + 22
-        if row_started and (sys_tag_x - tx + w) > avail_w:
-            sys_tag_x = tx
-            sys_tag_y += 24
-        parts.append(f'<rect x="{sys_tag_x}" y="{sys_tag_y}" width="{w}" height="{SYS_TAG_H}" rx="4" '
-                     f'fill="{TAG_FILL_SYS}" stroke="{TAG_BORDER_SYS}"/>')
-        parts.append(f'<circle cx="{sys_tag_x + 9}" cy="{sys_tag_y + SYS_TAG_H / 2}" r="2.6" fill="{TAG_TEXT_SYS}"/>')
-        parts.append(f'<text x="{sys_tag_x + 17}" y="{_centered_baseline(sys_tag_y, SYS_TAG_H, SYS_TAG_FONT_PX)}" '
-                     f'font-size="{SYS_TAG_FONT_PX}" font-weight="700" '
-                     f'fill="{TAG_TEXT_SYS}" letter-spacing="0.5">{esc(tag)}</text>')
-        sys_tag_x += w + 8
-        row_started = True
 
     # A node whose declared business phase doesn't match the tint band it
     # actually renders under (see layout_process.py's own phaseLabel
@@ -439,9 +441,10 @@ def node_card_svg(n, node_data, lane_name):
     # deliberately unlike both tag types above (dashed outline, italic,
     # neutral grey — reads as a meta note, not a category) so a reader is
     # never misled by tint colour alone about which phase a node belongs
-    # to.
+    # to. Anchored at the card's real bottom (after description/sub, not
+    # just after the system tags now sitting higher up).
     if n.get("phaseLabel"):
-        phase_y = sys_tag_y + (SYS_TAG_H + 8 if m["sysTags"] else 0)
+        phase_y = y + m["bottom"]
         ptxt = f"Phase: {n['phaseLabel']}"
         pw = int(text_width(ptxt, TAG_AVG_CHAR)) + 16
         parts.append(f'<rect x="{tx}" y="{phase_y}" width="{pw}" height="{SYS_TAG_H}" rx="4" '
