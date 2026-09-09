@@ -412,7 +412,6 @@ def compute_process_layout(nodes, flows, lanes, phases):
     off_spine_x = {}
     descendants_by_anchor = collections.defaultdict(list)
     for (ax, t), ids in bucket.items():
-        ids_sorted = sorted(ids)
         # Sequential forward offsets (0, +STEP, +2*STEP, ...) — the first
         # sibling sits in the SAME column as its own anchor, each further
         # one shifted one more spine-column-width to the right. Reused
@@ -426,6 +425,25 @@ def compute_process_layout(nodes, flows, lanes, phases):
         # doesn't match the reference at all (every real example places
         # the first sibling directly under the anchor and grows only
         # rightward).
+        #
+        # Column ORDER within that sequence: a sibling that is also the
+        # target of another sibling's own edge (a within-cluster
+        # convergence point) is pushed to the outermost column — it needs
+        # routing headroom for that cross-sibling edge on top of whatever
+        # reaches it from the anchor itself. Every other sibling keeps its
+        # natural declaration order, starting at the anchor's own column.
+        # This is the whole reference's ONLY real 3+-way fan-out (every
+        # other spine node in it has exactly one off-spine child, so
+        # there's no ordering to resolve there) — jsm05's cluster: jsm07 ->
+        # jsm06 is a cross-sibling edge, so jsm06 (its target) lands last
+        # (+800) while jsm07 and jsm08, untouched by any cross-sibling
+        # edge, keep their declared order at +0/+400. A single confirmed
+        # example can't rule out a subtler rule for larger clusters, but
+        # this reproduces the one case there is to check against and
+        # never changes behaviour for the common case (no cross-sibling
+        # edges at all).
+        sibling_targets = {f.get("to") for f in flows if f.get("from") in ids and f.get("to") in ids}
+        ids_sorted = sorted(ids, key=lambda nid_: (nid_ in sibling_targets, ids.index(nid_)))
         for j, node_id in enumerate(ids_sorted):
             off_spine_x[node_id] = ax + j * STEP
         descendants_by_anchor[ax].extend(ids_sorted)
