@@ -693,6 +693,42 @@ class _LaneRouter:
         self._claim_v(x2, min(y2, jog_y), max(y2, jog_y))
         return f"M {x1} {y1} L {x1} {jog_y} L {x2} {jog_y} L {x2} {y2}", jog_y, x_lo, x_hi
 
+    def route_under(self, x1, y1, x2, y2, row_gap, max_card_h, n_lanes=None):
+        """Same-row bottom-to-bottom connector (see connectors_svg()'s own
+        same_row case): y1 and y2 are usually numerically EQUAL (both
+        endpoints are "this row's own bottom edge"), which would hit
+        route()'s trivial same-y shortcut — a dead-straight line with NO
+        lane search, and so no _clear_of_cards() check at all. That's fine
+        for two ADJACENT nodes but not in general: a third node's card can
+        sit x-between the source and target at that exact height, and the
+        straight line would run right through its text uncontested. This
+        forces the same below-row lane search route() uses for a genuine
+        going_down edge, just with both ends anchored to their own bottom
+        edge instead of one exiting bottom/entering top."""
+        n_lanes = self.n_lanes if n_lanes is None else n_lanes
+        x_lo, x_hi = (x1, x2) if x1 <= x2 else (x2, x1)
+        source_row = self._row_index(y1, row_gap)
+
+        jog_y = None
+        for lane in range(n_lanes):
+            candidate = self._gap_lane_y(source_row, lane, row_gap, max_card_h)
+            if self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi):
+                jog_y = candidate
+                break
+        if jog_y is None:
+            for lane in range(self.bottom_lanes):
+                candidate = self.total_h - MIN_CLEARANCE + 16 - lane * LANE_PITCH
+                if self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi):
+                    jog_y = candidate
+                    break
+        if jog_y is None:
+            jog_y = self.total_h - MIN_CLEARANCE + 16 - self.bottom_lanes * LANE_PITCH
+
+        self.placed_h.append((jog_y, x_lo, x_hi))
+        self._claim_v(x1, min(y1, jog_y), max(y1, jog_y))
+        self._claim_v(x2, min(y2, jog_y), max(y2, jog_y))
+        return f"M {x1} {y1} L {x1} {jog_y} L {x2} {jog_y} L {x2} {y2}", jog_y, x_lo, x_hi
+
     def _claim_v(self, x, y_lo, y_hi):
         self.placed_v.append((x, y_lo, y_hi))
 
@@ -883,9 +919,20 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
         marker = ARROW_MARKERS[color]
         dash = ' stroke-dasharray="6 5"' if color == BLUE else ""
         going_down = b["y"] >= a["y"]
-        if going_down or a["onSpine"]:
+        same_row = not a["onSpine"] and not b["onSpine"] and a["y"] == b["y"]
+        if same_row:
+            # Off-spine siblings sitting in the exact same row — the usual
+            # top/bottom convention would force an awkward loop up and OVER
+            # both cards to enter the target from above. Looping under
+            # instead (exit the source's bottom, enter the target's bottom)
+            # is the direct, natural path when both ends are already at the
+            # same height.
+            x1, y1 = a["x"], a["y"] + a["r"]
+            y2 = b["y"] + b["r"]
+        elif going_down or a["onSpine"]:
             x1 = a["x"]
             y1 = a["y"] + (a["r"] if going_down else -a["r"])
+            y2 = b["y"] + (-b["r"] if going_down else b["r"])
         else:
             # Off-spine source, upward edge (a loop-back to the spine or an
             # earlier row) — exits from the LEFT vertex rather than the top.
@@ -896,9 +943,10 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # actual fix for the collision an earlier bottom-entry detour
             # was built to work around.
             x1, y1 = a["x"] - a["r"], a["y"]
-        y2 = b["y"] + (-b["r"] if going_down else b["r"])
-        d, jog_y, jog_x_lo, jog_x_hi = router.route(x1, y1, b["x"], y2, a.get("rowGap", row_gap),
-                                                     a.get("maxCardH", max_card_h), a.get("laneCount"))
+            y2 = b["y"] + (-b["r"] if going_down else b["r"])
+        route_fn = router.route_under if same_row else router.route
+        d, jog_y, jog_x_lo, jog_x_hi = route_fn(x1, y1, b["x"], y2, a.get("rowGap", row_gap),
+                                                 a.get("maxCardH", max_card_h), a.get("laneCount"))
         out.append(edge_open)
         # Invisible fat hit-path UNDER the real 2.2px-wide line — SVG's
         # click/pointer target for a fill:none path is the STROKE only, so
