@@ -241,13 +241,14 @@ DEFAULT_CARD_R = 14
 # own text baseline is node.y - 11, so its glyph ink occupies roughly
 # node.y - 22 .. node.y - 11). Off-spine nodes have neither — no line runs
 # through them and nothing is ever drawn above them — so only on-spine
-# title_y is floored, to a value confirmed (by direct on-canvas
-# measurement, not just the arithmetic) to clear both the line itself and
-# that branch-label zone with a few px of margin either side. This still
-# lands every on-spine category much closer to its own shape's top edge
-# than the old flat 34 did, just not always perfectly flush the way an
-# off-spine node's title now is.
-TITLE_Y_ONSPINE_FLOOR = 16
+# title_y is floored. The floor isn't just "clear the line/label" (that
+# alone would allow the title to sit almost flush against the line) — it
+# also has to leave a real, comfortable reading gap between the connector
+# and the card text below it, matching the deliberate spacing a
+# maintainer-supplied reference mockup showed. Off-spine nodes still get
+# the raw, closely top-aligned value — there's no line for them to keep
+# clear of, so a tight gap there reads as intentional, not cramped.
+TITLE_Y_ONSPINE_FLOOR = 30
 
 
 def _centered_baseline(rect_y, rect_h, font_px):
