@@ -310,6 +310,20 @@ function main() {
   if (conflictCount > 0) {
     console.log('Resolve conflicts by editing the affected output file(s) directly (look for <<<<<<< markers), then re-run render-all.js to advance the baseline.');
   }
+
+  // Regenerate both diagram-library dashboards so they reflect whatever is
+  // now on disk — required lazily (not at module top) so this file's own
+  // module.exports is already assigned by the time build-dashboards.js
+  // requires TYPES/listSlugs back from it, avoiding a circular-require
+  // ordering issue. A dashboard-build failure is reported but does not
+  // flip the pipeline's own exit code — the diagrams themselves already
+  // rendered fine.
+  try {
+    require('./build-dashboards').main();
+  } catch (e) {
+    console.error(`[dashboards] FAILED to regenerate: ${e.message}`);
+  }
+
   process.exit(failCount > 0 || conflictCount > 0 ? 1 : 0);
 }
 
@@ -317,8 +331,12 @@ function indent(text) {
   return String(text).split('\n').map((l) => '    ' + l).join('\n');
 }
 
+// Assigned before the require.main check below: main() lazily
+// require()s build-dashboards.js, which requires this same module back
+// (for TYPES/listSlugs) — a circular require that would otherwise see an
+// incomplete (pre-exports) copy of this module if main() ran first.
+module.exports = { TYPES, computeEngineHash, computeOutputFileName, listSlugs };
+
 if (require.main === module) {
   main();
 }
-
-module.exports = { TYPES, computeEngineHash, computeOutputFileName, listSlugs };

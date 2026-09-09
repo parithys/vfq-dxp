@@ -1,0 +1,144 @@
+<meta charset="utf-8">
+<title>Process Flow Dashboard</title>
+<style>
+:root{
+  --accent:#2A1B9E; --ink:#14171c; --mute:#5b6270; --faint:#8990a0;
+  --bg:#f3f4f6; --panel:#ffffff; --line:#e2e5ea;
+  --charcoal:#25282b; --charcoal-2:#1a1c1e;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,"Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;line-height:1.5}
+header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,var(--charcoal),var(--charcoal-2));
+  color:#fff;padding:28px 40px 22px}
+.hrow{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.eyebrow{font-size:11px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px}
+h1{font-size:26px;font-weight:800;margin:0 0 6px;letter-spacing:-.01em}
+.blurb{font-size:13.5px;color:rgba(255,255,255,.68);margin:0;max-width:56ch}
+.switcher{font-size:12px;color:rgba(255,255,255,.6);white-space:nowrap;padding-top:4px}
+.switcher a{color:#fff;text-decoration:none;font-weight:600;border-bottom:1px solid rgba(255,255,255,.4)}
+.switcher a:hover{border-color:#fff}
+.controls{display:flex;gap:10px;align-items:center;margin-top:20px;flex-wrap:wrap}
+.searchbox{flex:1;min-width:240px;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:0 14px;height:38px}
+.searchbox svg{flex:none;opacity:.6}
+.searchbox input{flex:1;border:0;background:none;outline:0;color:#fff;font-size:13.5px;font-family:inherit}
+.searchbox input::placeholder{color:rgba(255,255,255,.45)}
+.count{font-size:12.5px;color:rgba(255,255,255,.55);white-space:nowrap}
+.sortsel{height:38px;border-radius:8px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);
+  color:#fff;font-size:12.5px;font-family:inherit;padding:0 10px;cursor:pointer}
+.sortsel option{color:#111}
+
+main{max-width:1280px;margin:0 auto;padding:28px 40px 80px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 22px;
+  text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:10px;
+  transition:border-color .15s,box-shadow .15s,transform .15s}
+.card:hover{border-color:var(--accent);box-shadow:0 8px 24px rgba(20,23,28,.08);transform:translateY(-1px)}
+.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card-title{font-size:16px;font-weight:700;letter-spacing:-.005em;color:var(--ink)}
+.card-sub{font-size:12.5px;color:var(--mute);margin-top:-6px}
+.card-file{font-family:ui-monospace,"SF Mono","Cascadia Code",Consolas,monospace;font-size:11px;color:var(--faint);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stat-row{display:flex;gap:16px;margin-top:2px}
+.stat{display:flex;flex-direction:column;gap:1px}
+.stat b{font-size:17px;font-variant-numeric:tabular-nums;color:var(--ink);font-weight:700}
+.stat span{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:600}
+.card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:10px;
+  border-top:1px solid var(--line);font-size:11.5px;color:var(--faint)}
+.card-foot .open{color:var(--accent);font-weight:700;display:inline-flex;align-items:center;gap:4px}
+
+.empty{text-align:center;padding:80px 20px;color:var(--mute)}
+.empty b{display:block;font-size:16px;color:var(--ink);margin-bottom:6px}
+
+@media (max-width:640px){
+  header,main{padding-left:20px;padding-right:20px}
+  .grid{grid-template-columns:1fr}
+}
+</style>
+<header>
+  <div class="hrow">
+    <div>
+      <p class="eyebrow">Diagram Library</p>
+      <h1>Process Flow Dashboard</h1>
+      <p class="blurb">Single-spine flowchart diagrams — every BRSD that has been extracted and rendered, in one place.</p>
+    </div>
+    <div class="switcher">Viewing Process Flow Dashboard &middot; <a href="./bpmn-swimlane-dashboard.html">Switch to BPMN Swimlane Dashboard &rarr;</a></div>
+  </div>
+  <div class="controls">
+    <div class="searchbox">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.6">
+        <circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 L14 14" stroke-linecap="round"/></svg>
+      <input id="q" type="search" placeholder="Search by journey name, file, or source workbook&hellip;" autocomplete="off">
+    </div>
+    <select id="sortSel" class="sortsel">
+      <option value="title">Sort: Name (A&ndash;Z)</option>
+      <option value="nodes">Sort: Node count (high&ndash;low)</option>
+      <option value="recent">Sort: Recently generated</option>
+    </select>
+    <span class="count" id="count"></span>
+  </div>
+</header>
+<main>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none"><b>No diagrams match your search</b>Try a different journey name or file.</div>
+</main>
+<script>
+const CARDS = [{"slug":"vfq-agent-360-brsd-v1-0","title":"Agent 360","subtitle":"Process Flow","fileName":"vfq-agent-360-brsd-v1-0-process-flow.html","relPath":"vfq-agent-360-brsd-v1-0/vfq-agent-360-brsd-v1-0-process-flow.html","sourceFile":"VFQ_Agent_360_BRSD_v1.0.xlsx","nodeCount":43,"phaseCount":7,"renderedAt":"2026-09-09T07:32:14.852Z"},{"slug":"vfq-billformatter-brsd-v1-0","title":"Bill Formatter","subtitle":"XML Ingestion, Invoice Generation, Delivery & Configuration","fileName":"vfq-billformatter-brsd-v1-0-process-flow.html","relPath":"vfq-billformatter-brsd-v1-0/vfq-billformatter-brsd-v1-0-process-flow.html","sourceFile":"VFQ_BillFormatter_BRSD_V1.0.xlsx","nodeCount":51,"phaseCount":7,"renderedAt":"2026-09-09T07:32:14.922Z"},{"slug":"vfq-customer-360-brsd-v3-1","title":"Customer 360","subtitle":"Process Flow","fileName":"vfq-customer-360-brsd-v3-1-process-flow.html","relPath":"vfq-customer-360-brsd-v3-1/vfq-customer-360-brsd-v3-1-process-flow.html","sourceFile":"VFQ_Customer_360_BRSD_v3.1.xlsx","nodeCount":42,"phaseCount":10,"renderedAt":"2026-09-09T07:32:15.131Z"},{"slug":"vfq-fibre-brsd-v1-0","title":"Fibre & Fixed Wireless Access","subtitle":"Activation, Migration, Home Move, Portability, Termination and RFS","fileName":"vfq-fibre-brsd-v1-0-process-flow.html","relPath":"vfq-fibre-brsd-v1-0/vfq-fibre-brsd-v1-0-process-flow.html","sourceFile":"VFQ_Fibre_BRSD_v1.0.xlsx","nodeCount":150,"phaseCount":18,"renderedAt":"2026-09-09T07:32:15.200Z"},{"slug":"mobile-macd-activation-prepaid","title":"Mobile MACD","subtitle":"Activation Prepaid","fileName":"mobile-macd-activation-prepaid-process-flow.html","relPath":"mobile-macd-activation-prepaid/mobile-macd-activation-prepaid-process-flow.html","sourceFile":"Mobile_MACD.xlsx (sheet: Activation_Prepaid)","nodeCount":47,"phaseCount":7,"renderedAt":"2026-09-09T07:32:14.350Z"},{"slug":"mobile-macd-customer-initiated-terminate","title":"Mobile MACD","subtitle":"Customer Initiated Terminate","fileName":"mobile-macd-customer-initiated-terminate-process-flow.html","relPath":"mobile-macd-customer-initiated-terminate/mobile-macd-customer-initiated-terminate-process-flow.html","sourceFile":"Mobile_MACD.xlsx — sheet: Customer Initiated Terminate","nodeCount":24,"phaseCount":8,"renderedAt":"2026-09-09T07:32:14.414Z"},{"slug":"mobile-macd-mnp-port-in","title":"Mobile MACD","subtitle":"MNP Port-In — Process Flow","fileName":"mobile-macd-mnp-port-in-process-flow.html","relPath":"mobile-macd-mnp-port-in/mobile-macd-mnp-port-in-process-flow.html","sourceFile":"Mobile_MACD.xlsx (sheet: MNP-Port In)","nodeCount":36,"phaseCount":6,"renderedAt":"2026-09-09T07:32:14.478Z"},{"slug":"mobile-macd-mnp-port-out","title":"Mobile MACD","subtitle":"MNP Port-Out — Process Flow","fileName":"mobile-macd-mnp-port-out-process-flow.html","relPath":"mobile-macd-mnp-port-out/mobile-macd-mnp-port-out-process-flow.html","sourceFile":"Mobile_MACD.xlsx (sheet: MNP-Port Out)","nodeCount":19,"phaseCount":5,"renderedAt":"2026-09-09T07:32:14.539Z"},{"slug":"mobile-macd-sim-swap","title":"Mobile MACD","subtitle":"SIM Swap — Process Flow","fileName":"mobile-macd-sim-swap-process-flow.html","relPath":"mobile-macd-sim-swap/mobile-macd-sim-swap-process-flow.html","sourceFile":"Mobile_MACD.xlsx (sheet: SIM Swap)","nodeCount":28,"phaseCount":5,"renderedAt":"2026-09-09T07:32:14.786Z"},{"slug":"vfq-cbu-mobile-macd-journey1-brsd-v1-1","title":"Mobile MACD","subtitle":"Journey 1 (Plan Change, Park My Number & Resume, Disconnection & Retention, Prepaid-to-Postpaid Migration) — Process Flow","fileName":"vfq-cbu-mobile-macd-journey1-brsd-v1-1-process-flow.html","relPath":"vfq-cbu-mobile-macd-journey1-brsd-v1-1/vfq-cbu-mobile-macd-journey1-brsd-v1-1-process-flow.html","sourceFile":"VFQ_CBU_Mobile_MACD_Journey1_BRSD_v1.1.xlsx","nodeCount":172,"phaseCount":26,"renderedAt":"2026-09-09T07:32:14.993Z"},{"slug":"vfq-cbu-mobile-macd-journey3-brsd-v1-0","title":"Mobile MACD","subtitle":"SIM Swap Journey — Process Flow","fileName":"vfq-cbu-mobile-macd-journey3-brsd-v1-0-process-flow.html","relPath":"vfq-cbu-mobile-macd-journey3-brsd-v1-0/vfq-cbu-mobile-macd-journey3-brsd-v1-0-process-flow.html","sourceFile":"VFQ_CBU_Mobile_MACD_Journey3_BRSD_v1.0.xlsx","nodeCount":26,"phaseCount":9,"renderedAt":"2026-09-09T07:32:15.058Z"},{"slug":"vfq-mobile-mnp-portin-portout-v1-1","title":"Mobile MNP Port-In","subtitle":"Process Flow","fileName":"vfq-mobile-mnp-portin-portout-v1-1-process-flow.html","relPath":"vfq-mobile-mnp-portin-portout-v1-1/vfq-mobile-mnp-portin-portout-v1-1-process-flow.html","sourceFile":"VFQ_Mobile_MNP_PORTIN_PORTOUT_V1.1.xlsx","nodeCount":39,"phaseCount":13,"renderedAt":"2026-09-09T07:32:15.336Z"},{"slug":"vfq-mobile-postpaid-activation-brsd-v1-3","title":"Mobile Postpaid Activation","subtitle":"Process Flow","fileName":"vfq-mobile-postpaid-activation-brsd-v1-3-process-flow.html","relPath":"vfq-mobile-postpaid-activation-brsd-v1-3/vfq-mobile-postpaid-activation-brsd-v1-3-process-flow.html","sourceFile":"VFQ_Mobile_Postpaid_Activation_BRSD_v1.3.xlsx","nodeCount":108,"phaseCount":9,"renderedAt":"2026-09-09T07:32:15.405Z"},{"slug":"mobile-macd-plan-change","title":"Mobile Postpaid Plan Change (Upgrade/Downgrade)","subtitle":"Process Flow","fileName":"mobile-macd-plan-change-process-flow.html","relPath":"mobile-macd-plan-change/mobile-macd-plan-change-process-flow.html","sourceFile":"Mobile_MACD.xlsx (sheet: Plan Change)","nodeCount":30,"phaseCount":6,"renderedAt":"2026-09-09T07:32:14.661Z"},{"slug":"mobile-macd-post-to-pre-migration","title":"Mobile Postpaid to Prepaid Migration","subtitle":"","fileName":"mobile-macd-post-to-pre-migration-process-flow.html","relPath":"mobile-macd-post-to-pre-migration/mobile-macd-post-to-pre-migration-process-flow.html","sourceFile":"Mobile_MACD.xlsx","nodeCount":42,"phaseCount":8,"renderedAt":"2026-09-09T07:32:14.720Z"},{"slug":"vfq-mobile-prepaid-activation-brsd-v0-1","title":"Mobile Prepaid Activation","subtitle":"Process Flow","fileName":"vfq-mobile-prepaid-activation-brsd-v0-1-process-flow.html","relPath":"vfq-mobile-prepaid-activation-brsd-v0-1/vfq-mobile-prepaid-activation-brsd-v0-1-process-flow.html","sourceFile":"VFQ_Mobile_Prepaid_Activation_BRSD_V0.1.xlsx","nodeCount":38,"phaseCount":9,"renderedAt":"2026-09-09T07:32:15.469Z"},{"slug":"mobile-macd-park-my-number","title":"Park My Number","subtitle":"Process Flow","fileName":"mobile-macd-park-my-number-process-flow.html","relPath":"mobile-macd-park-my-number/mobile-macd-park-my-number-process-flow.html","sourceFile":"Mobile_MACD.xlsx (sheet: Park My Number)","nodeCount":12,"phaseCount":3,"renderedAt":"2026-09-09T07:32:14.596Z"},{"slug":"vfq-trouble-ticket-brsd-v1-0","title":"Trouble Ticket Lifecycle","subtitle":"Creation, Assignment, Resolution & Closure","fileName":"vfq-trouble-ticket-brsd-v1-0-process-flow.html","relPath":"vfq-trouble-ticket-brsd-v1-0/vfq-trouble-ticket-brsd-v1-0-process-flow.html","sourceFile":"VFQ_Trouble_Ticket_BRSD_v1.0.xlsx","nodeCount":107,"phaseCount":16,"renderedAt":"2026-09-09T07:32:15.537Z"},{"slug":"vfq-general-brsd-v1-0","title":"VFQ General (Agent-Agnostic) Journey","subtitle":"Requirements Register","fileName":"vfq-general-brsd-v1-0-process-flow.html","relPath":"vfq-general-brsd-v1-0/vfq-general-brsd-v1-0-process-flow.html","sourceFile":"VFQ_General_BRSD_v1.0.xlsx","nodeCount":41,"phaseCount":12,"renderedAt":"2026-09-09T07:32:15.270Z"}];
+const grid = document.getElementById('grid'), q = document.getElementById('q'),
+      countEl = document.getElementById('count'), emptyEl = document.getElementById('empty'),
+      sortSel = document.getElementById('sortSel');
+
+function fmtDate(iso){
+  if(!iso) return '\u2014';
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return '\u2014';
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+}
+function card(c){
+  const a = document.createElement('a');
+  a.className = 'card'; a.href = c.relPath;
+  const nodeStat = c.nodeCount!=null ? c.nodeCount : '\u2014';
+  const phaseStat = c.phaseCount!=null ? c.phaseCount : '\u2014';
+  a.innerHTML =
+    '<div class="card-title"></div>' +
+    (c.subtitle ? '<div class="card-sub"></div>' : '') +
+    '<div class="card-file"></div>' +
+    '<div class="stat-row">' +
+      '<div class="stat"><b>'+phaseStat+'</b><span>Phases</span></div>' +
+      '<div class="stat"><b>'+nodeStat+'</b><span>Nodes</span></div>' +
+    '</div>' +
+    '<div class="card-foot"><span></span><span class="open">Open &rarr;</span></div>';
+  a.querySelector('.card-title').textContent = c.title;
+  if(c.subtitle) a.querySelector('.card-sub').textContent = c.subtitle;
+  a.querySelector('.card-file').textContent = c.fileName;
+  a.querySelector('.card-file').title = c.fileName; // native tooltip for filenames the card's fixed width ellipsis-truncates
+  a.title = c.title + (c.subtitle ? ' — ' + c.subtitle : '');
+  a.querySelector('.card-foot span').textContent = 'Generated ' + fmtDate(c.renderedAt);
+  return a;
+}
+function render(){
+  const term = q.value.trim().toLowerCase();
+  let list = CARDS.filter(c => !term ||
+    c.title.toLowerCase().includes(term) ||
+    c.fileName.toLowerCase().includes(term) ||
+    (c.sourceFile||'').toLowerCase().includes(term) ||
+    (c.subtitle||'').toLowerCase().includes(term));
+  const sortBy = sortSel.value;
+  list = list.slice().sort((a,b) => {
+    if(sortBy==='nodes') return (b.nodeCount||0)-(a.nodeCount||0);
+    if(sortBy==='recent') return new Date(b.renderedAt||0) - new Date(a.renderedAt||0);
+    return a.title.localeCompare(b.title);
+  });
+  grid.innerHTML = '';
+  list.forEach(c => grid.appendChild(card(c)));
+  countEl.textContent = list.length + ' of ' + CARDS.length + ' diagram' + (CARDS.length===1?'':'s');
+  emptyEl.style.display = list.length ? 'none' : 'block';
+  grid.style.display = list.length ? 'grid' : 'none';
+}
+q.addEventListener('input', render);
+sortSel.addEventListener('change', render);
+render();
+</script>
+<!-- generated 2026-09-09T07:32:15.554Z by scripts/build-dashboards.js — do not hand-edit, re-run the script instead -->

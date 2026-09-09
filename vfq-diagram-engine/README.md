@@ -75,11 +75,14 @@ vfq-diagram-engine/
 ├── output/{brsd-slug}/           rendered HTML
 │   ├── {brsd-slug}-bpmn-swimlane.html
 │   └── {brsd-slug}-process-flow.html
+├── output/bpmn-swimlane-dashboard.html   browse-all entry point for every bpmn-swimlane diagram
+├── output/process-flow-dashboard.html    browse-all entry point for every process-flow diagram
 ├── manifest.json                 source hash + extraction/render timestamps + engine hash, per BRSD, per diagram type
 └── scripts/
     ├── slugify.js                BRSD filename -> {brsd-slug}, single source of truth
     ├── manifest.js               manifest.json read/write helper (+ CLI: record-extraction)
-    ├── render-all.js             pure Node, zero AI calls — the re-render command
+    ├── render-all.js             pure Node, zero AI calls — the re-render command (also regenerates both dashboards on every run)
+    ├── build-dashboards.js       pure Node, zero AI calls — the two dashboard HTML files, from manifest.json + data/
     ├── check-drift.js            reports engines/ vs. live skill divergence (report only)
     ├── check-staleness.js        reports rendered output vs. current engine divergence (report only)
     ├── new-brsd.sh                correct (if needed) + extract + render, for one new BRSD
@@ -112,12 +115,18 @@ isn't part of that check.
    — the single structural extraction per BRSD, shared by both diagram types.
 4. **Render** both `output/{brsd-slug}/{brsd-slug}-bpmn-swimlane.html` and
    `output/{brsd-slug}/{brsd-slug}-process-flow.html` from that one data file.
+5. **Regenerate both dashboards** — `output/bpmn-swimlane-dashboard.html`
+   and `output/process-flow-dashboard.html` — so the new BRSD's diagrams
+   are browsable immediately.
 
 Steps 2–3 are both performed by the single `/extract-bpmn-swimlane` command
 (step 2 is its "step 0"); step 4 is `render-all.js`, which renders every
 registered diagram type (currently `bpmn-swimlane` and `process-flow`) by
-default — pass `--type` to render only one. `new-brsd.sh` runs the whole
-thing end-to-end for one new file, producing both outputs.
+default — pass `--type` to render only one. Step 5 runs automatically at
+the end of every `render-all.js` invocation (see "Dashboards" under
+Commands below) — there is no separate command to remember. `new-brsd.sh`
+runs the whole thing end-to-end for one new file, producing both outputs
+and both up-to-date dashboards.
 
 ## Canonical source vs. generated output
 
@@ -243,6 +252,33 @@ against an engine update, `0` otherwise. `manifest.json` is updated with a
 render timestamp and an engine-file hash for every output that succeeded
 (including merged/conflicted ones, since the engine hash reflects the
 engine as it stands now regardless of merge outcome).
+
+### Dashboards (`scripts/build-dashboards.js`, pure Node, zero AI calls)
+
+```
+node scripts/build-dashboards.js
+```
+
+Regenerates `output/bpmn-swimlane-dashboard.html` and
+`output/process-flow-dashboard.html` — one central "browse everything"
+entry point per diagram type, listing every BRSD that has a rendered
+output of that type with its title, source workbook, phase count, node
+count, and last-rendered date, plus client-side search and sort (name,
+node count, most recently rendered). Each card links straight to its
+`output/{slug}/{slug}-{type}.html`.
+
+Reads only what every other script here already trusts —
+`manifest.json` (which BRSDs have a rendered output, and when) and each
+BRSD's own `data/{slug}/bpmn-swimlane.model.json` (title, node count,
+phase count — the same structural file both engines render from, so a
+dashboard entry's numbers can never disagree with what the diagram itself
+shows). It never re-parses generated HTML output.
+
+**You should not need to run this by hand.** `render-all.js` calls it
+automatically at the end of every run (see "The full pipeline" step 5
+above), so both dashboards always reflect whatever is currently in
+`output/` with no separate step to remember. Run it directly only if you
+want to refresh the dashboards without doing a full render pass.
 
 ### Drift check (`scripts/check-drift.js`)
 

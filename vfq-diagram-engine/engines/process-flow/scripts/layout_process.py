@@ -292,18 +292,40 @@ def compute_process_layout(nodes, flows, lanes, phases):
     spine_set = set(spine_order)
     spine_x = {node_id: X_START + i * STEP for i, node_id in enumerate(spine_order)}
 
-    # Row gap sized from the actual tallest card in THIS diagram (see
-    # _row_gap()'s own docstring) — computed once, up front, since every
-    # row (spine -> tier 0, and every subsequent tier) uses the same
-    # uniform gap; a per-row-specific gap was considered and rejected for
-    # the same reason build_model.py's own ROW constant is flat rather than
-    # adaptive: a uniform grid reads as consistent, and the worst case only
-    # has to be paid for once, not re-derived per row.
+    # Row gap sized from the tallest card in THIS diagram (see _row_gap()'s
+    # own docstring) — one uniform value for every row (spine -> tier 0,
+    # and every subsequent tier), same as every other row-to-row gap.
+    #
+    # Two alternatives were tried and reverted, both for the same reason:
+    # cards have no drawn background box, so their true footprint is
+    # text-only and can extend into space a smaller/local calculation
+    # doesn't account for.
+    #   1. A per-branch LOCAL row gap (sized from just each spine anchor's
+    #      own subtree): broke the moment a spine node had a long
+    #      description but no off-spine children of its own — that card
+    #      isn't "in" any branch's local subtree, so nothing accounted for
+    #      it, and it visually overlapped a neighbouring branch's tier-0
+    #      row (confirmed on Mobile Postpaid Activation's "Scan Identity
+    #      Document"/"Draft Order Expiry" pair — a real, measured overlap).
+    #   2. A CAPPED global budget (count at most N wrapped description
+    #      lines toward the worst case, even though every line still
+    #      renders): closer, but for the same "Scan Identity
+    #      Document" node a cap generous enough to look compact still left
+    #      a small (~7px) measured overlap once that card's REAL height
+    #      exceeded what the cap assumed — i.e. still not the guaranteed
+    #      zero-overlap property every other row-gap decision in this file
+    #      already holds itself to (see MIN_CLEARANCE, _LaneRouter, and the
+    #      40px-clearance audit these were built to satisfy).
+    # A single TRUE (uncapped) global max is the only one of the three that
+    # is mathematically guaranteed overlap-free for a uniform grid, so
+    # that's what's used — some connectors run longer than they would with
+    # a capped/local budget, which is the accepted trade-off for "never
+    # truncate a description AND never risk an overlap."
     lane_name_by_key = {l["key"]: l["name"] for l in lanes}
     max_card_h = 0
     for n in nodes:
         lane_name = lane_name_by_key.get(n.get("lane"), "")
-        max_card_h = max(max_card_h, svg_gen.card_height(n, lane_name))
+        max_card_h = max(max_card_h, svg_gen.card_height(n, lane_name, on_spine=n["id"] in spine_set))
     row_gap = _row_gap(max_card_h)
 
     off_spine_ids = [n["id"] for n in nodes if n["id"] not in spine_set]

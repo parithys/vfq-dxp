@@ -50,7 +50,13 @@ def esc(s):
 
 # ----------------------------------------------------------------- text measurement (no canvas server-side — same
 # estimate-then-wrap approach bpmn-swimlane/scripts/build_model.py already uses elsewhere in this codebase)
-def wrap_lines(text, avg_char_px, max_width, max_lines):
+def wrap_lines(text, avg_char_px, max_width, max_lines=None):
+    """Word-wraps `text` to `max_width`. With `max_lines=None` (the
+    default) every word is kept — no line cap, no ellipsis — since
+    card_metrics()/card_height() below size the card to however many lines
+    that turns out to be. Pass an explicit `max_lines` only where a hard
+    cap is actually wanted; the truncate-and-ellipsize behaviour below only
+    triggers in that case."""
     text = re.sub(r"\s+", " ", str(text or "")).strip()
     if not text:
         return []
@@ -63,11 +69,13 @@ def wrap_lines(text, avg_char_px, max_width, max_lines):
         else:
             lines.append(cur)
             cur = w
-            if len(lines) == max_lines:
+            if max_lines is not None and len(lines) == max_lines:
                 cur = ""
                 break
     if cur:
         lines.append(cur)
+    if max_lines is None:
+        return lines
     if len(lines) > max_lines:
         lines = lines[:max_lines]
     if lines and len(text) > sum(len(l) for l in lines) + len(lines):
@@ -83,13 +91,19 @@ def text_width(s, avg_char_px):
 
 
 # ----------------------------------------------------------------- shape drawing
-def _first_sentence(desc):
+def _clean_desc(desc):
+    """Strips a leading requirement-numbering prefix ("1. The system
+    shall…") but otherwise returns the description text as-is — the full
+    text, not just its first sentence. Cards show the whole description,
+    word-wrapped to as many lines as it needs (see wrap_lines() above and
+    its max_lines=None default); there is no drawer/tooltip elsewhere in
+    this engine where a reader could recover text cut here, so nothing
+    gets clipped."""
     desc = re.sub(r"\s+", " ", str(desc or "")).strip()
-    m = re.match(r"^\d+[\.\)]\s*", desc)  # a numbered-requirement desc ("1. The system shall…")
+    m = re.match(r"^\d+[\.\)]\s*", desc)
     if m:
         desc = desc[m.end():]
-    m = re.search(r"[.;](?:\s|$)", desc)
-    return desc[:m.start()].strip() if m else desc
+    return desc
 
 
 def node_shape_svg(n):
@@ -200,9 +214,53 @@ TITLE_FONT_PX, CODE_FONT_PX, DESC_FONT_PX, TAG_FONT_PX = 15.0, 11.5, 12.5, 10
 TITLE_AVG_CHAR, DESC_AVG_CHAR, TAG_AVG_CHAR = 8.6, 6.3, 6.8
 CARD_TEXT_OFFSET = 26
 CARD_AVAIL_W = 330
+SYS_TAG_FONT_PX = 9.5
+SYS_TAG_H = 19   # system-tag pill height (actor tag pill uses its own literal 20 — see node_card_svg())
+
+# Cap-height as a fraction of font-size — used everywhere below that a
+# baseline-positioned SVG <text> needs to be aligned (top- or centre-)
+# against something measured by its actual glyph extent rather than its
+# baseline. ~0.72 is the standard approximation for the sans-serif stack
+# this engine draws with (Inter/system-ui/Helvetica/Arial all cluster
+# close to this). One shared constant so every alignment below agrees.
+CAP_HEIGHT_RATIO = 0.72
+
+# Default node radius for card_height()'s own pre-pass call (see its own
+# docstring) — layout_process.py calls that before any node's real shape
+# category (and therefore radius) has been decided, so there's no true `r`
+# yet to top-align against. R_PRIMARY's own value (14, the most common
+# on-spine category) stands in; the few-px difference against another
+# category's real radius is inconsequential next to the 168px of
+# clearance/lane buffer _row_gap() already reserves beyond max_card_h.
+DEFAULT_CARD_R = 14
+
+# On-spine nodes sit ON the shared horizontal spine line (y = SPINE_Y,
+# stroke-width 2.4 — so its own ink spans roughly SPINE_Y-1.2..SPINE_Y+1.2),
+# and a decision node's happy-path branch label is drawn immediately above
+# that same line (see connectors_svg()'s happy_branch_label handling: its
+# own text baseline is node.y - 11, so its glyph ink occupies roughly
+# node.y - 22 .. node.y - 11). Off-spine nodes have neither — no line runs
+# through them and nothing is ever drawn above them — so only on-spine
+# title_y is floored, to a value confirmed (by direct on-canvas
+# measurement, not just the arithmetic) to clear both the line itself and
+# that branch-label zone with a few px of margin either side. This still
+# lands every on-spine category much closer to its own shape's top edge
+# than the old flat 34 did, just not always perfectly flush the way an
+# off-spine node's title now is.
+TITLE_Y_ONSPINE_FLOOR = 16
 
 
-def card_metrics(node_data, lane_name):
+def _centered_baseline(rect_y, rect_h, font_px):
+    """Baseline y for text vertically centred within a rect of height
+    rect_h starting at rect_y. SVG positions text by baseline, not by a
+    glyph's own vertical centre, so naively using rect_y + rect_h/2 sits
+    text visibly too high — this offsets by half the cap-height to
+    actually centre the glyphs themselves. Used for every tag/badge pill
+    below so they stay consistent with each other."""
+    return rect_y + (rect_h + font_px * CAP_HEIGHT_RATIO) / 2
+
+
+def card_metrics(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True):
     """Pure layout computation for one node's card — no SVG, just the Y
     cursor positions node_card_svg() below would place each element at,
     ending in `bottom` (the card's own lowest extent, relative to the
@@ -211,12 +269,26 @@ def card_metrics(node_data, lane_name):
     vertical room a card actually needs, to keep connector routing lanes
     the 40px clear of card text — see layout_process.py's ROW_GAP_MIN
     derivation) read from exactly one implementation of "how tall is this
-    card," rather than two that could quietly drift apart."""
-    sub = node_data.get("sub")
-    desc_line = _first_sentence(node_data.get("desc"))
-    desc_lines = wrap_lines(desc_line, DESC_AVG_CHAR, CARD_AVAIL_W, 2)
+    card," rather than two that could quietly drift apart.
 
-    title_y = 34
+    `r` is the node's own drawn shape radius (node_card_svg() passes its
+    real n["r"]; layout_process.py's pre-pass call uses DEFAULT_CARD_R —
+    see that function's own docstring) — title_y is derived from it so the
+    shape's own TOP edge (node.y - r, true for every category: circles,
+    the decision diamond's top vertex, and the escalation square all sit
+    r above their own centre) lines up with the title text's top edge,
+    rather than the shape being roughly centred on a block that starts
+    well below it. `on_spine` floors that alignment at
+    TITLE_Y_ONSPINE_FLOOR (see its own comment) so a decision node's title
+    never climbs into its own happy-path branch label sitting just above
+    the spine line — off-spine nodes have no such label to protect
+    against, so they get the raw, fully top-aligned value."""
+    sub = node_data.get("sub")
+    desc_line = _clean_desc(node_data.get("desc"))
+    desc_lines = wrap_lines(desc_line, DESC_AVG_CHAR, CARD_AVAIL_W)
+
+    raw_title_y = CAP_HEIGHT_RATIO * TITLE_FONT_PX - r
+    title_y = max(raw_title_y, TITLE_Y_ONSPINE_FLOOR) if on_spine else raw_title_y
     sub_y = None
     cursor = title_y
     if sub:
@@ -255,13 +327,15 @@ def card_metrics(node_data, lane_name):
             "descLines": desc_lines, "sysTags": sys_tags, "bottom": tag_row_y}
 
 
-def card_height(node_data, lane_name):
+def card_height(node_data, lane_name, r=DEFAULT_CARD_R, on_spine=True):
     """Just the `bottom` figure from card_metrics() — how far below its own
     node.y this card's content extends. Used by layout_process.py in a
-    pre-pass (before node y-positions are even assigned) to size row gaps
-    with real card heights instead of a guessed constant — see
-    compute_process_layout()'s own ROW_GAP_MIN derivation."""
-    return card_metrics(node_data, lane_name)["bottom"]
+    pre-pass (before node y-positions — or shape categories, and so
+    radii — are even assigned) to size row gaps with real card heights
+    instead of a guessed constant — see compute_process_layout()'s own
+    ROW_GAP_MIN derivation. `r` defaults to DEFAULT_CARD_R there; the real
+    per-node radius is what node_card_svg() below actually renders with."""
+    return card_metrics(node_data, lane_name, r, on_spine)["bottom"]
 
 
 def node_card_svg(n, node_data, lane_name):
@@ -269,7 +343,7 @@ def node_card_svg(n, node_data, lane_name):
     color = _shape_color(n)
     tx = x + CARD_TEXT_OFFSET
     label = node_data.get("label") or n["id"]
-    m = card_metrics(node_data, lane_name)
+    m = card_metrics(node_data, lane_name, n["r"], n["onSpine"])
 
     parts = []
     parts.append(f'<text x="{tx}" y="{y + m["titleY"]}" font-size="{TITLE_FONT_PX}" font-weight="700" '
@@ -283,8 +357,10 @@ def node_card_svg(n, node_data, lane_name):
     tag_row_y = y + (m["actorTagY"] if m["actorTagY"] is not None else m["bottom"])
     if m["actorTagY"] is not None:
         w = int(text_width(lane_name.upper(), TAG_AVG_CHAR)) + 20
-        parts.append(f'<rect x="{tx}" y="{tag_row_y}" width="{w}" height="20" rx="5" fill="{TAG_FILL_ACTOR}"/>')
-        parts.append(f'<text x="{tx + 10}" y="{tag_row_y + 14}" font-size="{TAG_FONT_PX}" font-weight="700" '
+        actor_tag_h = 20
+        parts.append(f'<rect x="{tx}" y="{tag_row_y}" width="{w}" height="{actor_tag_h}" rx="5" fill="{TAG_FILL_ACTOR}"/>')
+        parts.append(f'<text x="{tx + 10}" y="{_centered_baseline(tag_row_y, actor_tag_h, TAG_FONT_PX)}" '
+                     f'font-size="{TAG_FONT_PX}" font-weight="700" '
                      f'fill="{TAG_TEXT_ACTOR}" letter-spacing="0.9">{esc(lane_name.upper())}</text>')
         tag_row_y += 26
 
@@ -298,10 +374,11 @@ def node_card_svg(n, node_data, lane_name):
         if row_started and (sys_tag_x - tx + w) > CARD_AVAIL_W:
             sys_tag_x = tx
             sys_tag_y += 24
-        parts.append(f'<rect x="{sys_tag_x}" y="{sys_tag_y}" width="{w}" height="19" rx="4" '
+        parts.append(f'<rect x="{sys_tag_x}" y="{sys_tag_y}" width="{w}" height="{SYS_TAG_H}" rx="4" '
                      f'fill="{TAG_FILL_SYS}" stroke="#B9C2D4"/>')
-        parts.append(f'<circle cx="{sys_tag_x + 9}" cy="{sys_tag_y + 9.5}" r="2.6" fill="{TAG_TEXT_SYS}"/>')
-        parts.append(f'<text x="{sys_tag_x + 17}" y="{sys_tag_y + 14}" font-size="9.5" font-weight="700" '
+        parts.append(f'<circle cx="{sys_tag_x + 9}" cy="{sys_tag_y + SYS_TAG_H / 2}" r="2.6" fill="{TAG_TEXT_SYS}"/>')
+        parts.append(f'<text x="{sys_tag_x + 17}" y="{_centered_baseline(sys_tag_y, SYS_TAG_H, SYS_TAG_FONT_PX)}" '
+                     f'font-size="{SYS_TAG_FONT_PX}" font-weight="700" '
                      f'fill="{TAG_TEXT_SYS}" letter-spacing="0.5">{esc(tag)}</text>')
         sys_tag_x += w + 8
         row_started = True
