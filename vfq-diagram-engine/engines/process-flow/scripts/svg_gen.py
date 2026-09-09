@@ -913,7 +913,20 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
     def _label_len(txt):
         return text_width(txt, LABEL_CHAR_PX)
 
-    for f in flows:
+    # Downward-direction edges are processed before upward ones, regardless
+    # of their original declaration order. A downward edge always claims
+    # its dead-centre exit/entry column outright; an upward edge checks
+    # that column first and dodges to a left-vertex entry if it's already
+    # claimed (see the left_vertex_exit branch below) — but that check
+    # only works if the downward claim was already made. Sorting by
+    # direction (Python's sort is stable, so relative order within each
+    # direction is unchanged) guarantees it always is, instead of only
+    # working when the model happens to declare the downward edge first.
+    def _flow_dir_key(f):
+        a, b = nodes_by_id.get(f.get("from")), nodes_by_id.get(f.get("to"))
+        return 1 if a and b and b["y"] < a["y"] else 0
+
+    for f in sorted(flows, key=_flow_dir_key):
         from_id, to_id = f.get("from"), f.get("to")
         a, b = nodes_by_id.get(from_id), nodes_by_id.get(to_id)
         if not a or not b:
@@ -1005,8 +1018,42 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # being a real, visible horizontal step before the vertical
             # climb takes over.
             route_x1 = x1 - CARD_ELEMENT_GAP
-            d, jog_y, jog_x_lo, jog_x_hi = router.route(route_x1, y1, b["x"], y2, a.get("rowGap", row_gap),
+            target_x2 = b["x"]
+            # If the target's own column is already claimed by a downward
+            # trunk (it's the shared anchor of a branch-group fan-out —
+            # every child's own path starts with a vertical run at
+            # x=target.x), entering dead-centre would share that exact
+            # column over a real y-range despite going the OPPOSITE
+            # direction (confirmed on Mobile Postpaid Activation's
+            # jsm06 -> jsm05: its approach shared jsm05's own x=2060
+            # downward-trunk column from y=233 to y=698). Opposite-
+            # direction connectors must never share a routing segment, so
+            # when that column is already claimed, enter from the
+            # target's LEFT vertex instead of its top — same convention
+            # already used for a left-vertex EXIT, just mirrored for the
+            # entry side, and always exactly on the shape's own boundary
+            # regardless of the target's radius (unlike nudging x2 while
+            # keeping the "top" y formula, which would float off the
+            # shape for anything but a dead-centre x).
+            # A naive pre-check against just [y1, y2] isn't always enough —
+            # for a long loop-back, route()'s own lane search can push
+            # jog_y far outside that naive span (confirmed on the same
+            # diagram's kyc03_rescan -> kyc01: its own y1/y2 span never
+            # touched jsm08's claimed range, but the ACTUAL jog it needed
+            # landed at y=2890, which did). Route once, check the REAL
+            # resulting vertical span at the target column, and re-route
+            # with a left-vertex entry if that turns out to collide too.
+            if not router._v_free(target_x2, min(y1, y2), max(y1, y2)):
+                target_x2, y2 = b["x"] - b["r"], b["y"]
+            d, jog_y, jog_x_lo, jog_x_hi = router.route(route_x1, y1, target_x2, y2, a.get("rowGap", row_gap),
                                                          a.get("maxCardH", max_card_h), a.get("laneCount"))
+            if target_x2 == b["x"] and not router._v_free(target_x2, min(jog_y, y2), max(jog_y, y2)):
+                router.placed_v.pop()   # undo the just-claimed (now-known-bad) entry column
+                router.placed_v.pop()
+                router.placed_h.pop()
+                target_x2, y2 = b["x"] - b["r"], b["y"]
+                d, jog_y, jog_x_lo, jog_x_hi = router.route(route_x1, y1, target_x2, y2, a.get("rowGap", row_gap),
+                                                             a.get("maxCardH", max_card_h), a.get("laneCount"))
             d = f"M {x1} {y1} L " + d[2:]   # prepend the true origin's own horizontal lead-in;
                                              # d[2:] strips router.route()'s own leading "M " so its
                                              # first point (route_x1, y1) becomes this segment's endpoint
