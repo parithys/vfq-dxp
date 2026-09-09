@@ -935,7 +935,17 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
     # OWN direction readable at that shared segment, not just at its own
     # unique end far downstream, so any edge counted here gets an extra
     # marker-mid arrow at the corner where its own unique jog begins.
+    # dead_center_down_users additionally tracks a node's dead-centre
+    # column from the ENTRY side too — a node can be the target of a
+    # down-direction edge that ISN'T its own trunk at all (e.g. some
+    # other, earlier node skipping several steps ahead into it), which
+    # still occupies its dead-centre column exactly the same way a real
+    # trunk would (confirmed: Bill Formatter's "end_delivered" sources no
+    # trunk of its own — it's a terminal node — but IS the target of a
+    # long skip-ahead edge dead-centring the same column an unrelated
+    # up-going loop-back also needed to enter through).
     trunk_share_count = collections.Counter()
+    dead_center_down_users = collections.Counter()
     for f in flows:
         a, b = nodes_by_id.get(f.get("from")), nodes_by_id.get(f.get("to"))
         if not a or not b or is_trivial_spine_hop(f, a, b) or is_happy_branch_label(f, a, b):
@@ -944,6 +954,8 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
         same_row = not a["onSpine"] and not b["onSpine"] and a["y"] == b["y"]
         if going_down and not same_row:
             trunk_share_count[f["from"]] += 1
+            dead_center_down_users[f["from"]] += 1
+            dead_center_down_users[f["to"]] += 1
 
     for f in sorted(flows, key=_flow_dir_key):
         from_id, to_id = f.get("from"), f.get("to")
@@ -1059,45 +1071,47 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
                     if router._clear_of_cards(true_vertex_y2, lo, hi):
                         return true_vertex_x2 - offset
                 return true_vertex_x2 - CARD_ELEMENT_GAP
-            # If the target's own column is already claimed by a downward
-            # trunk (it's the shared anchor of a branch-group fan-out —
-            # every child's own path starts with a vertical run at
-            # x=target.x), entering dead-centre would share that exact
-            # column over a real y-range despite going the OPPOSITE
-            # direction (confirmed on Mobile Postpaid Activation's
-            # jsm06 -> jsm05: its approach shared jsm05's own x=2060
-            # downward-trunk column from y=233 to y=698). Opposite-
-            # direction connectors must never share a routing segment, so
-            # when that column is already claimed, route to a column a
-            # full LANE_PITCH left of the target's own left vertex instead
-            # of dead-centre — just using the bare vertex (offset only by
-            # the target's own radius, often <20px) still read as "the
-            # same line" at normal zoom, not a genuinely separate route.
-            # A short lead-out segment (mirrors the lead-in already used
-            # for a left-vertex EXIT) then cuts back in to the TRUE vertex
-            # right at the very end, so the arrowhead still lands exactly
-            # on the shape despite the approach column being pushed well
-            # clear of it.
-            #
-            # A naive pre-check against just [y1, y2] isn't always enough —
-            # for a long loop-back, route()'s own lane search can push
-            # jog_y far outside that naive span (confirmed on the same
-            # diagram's kyc03_rescan -> kyc01: its own y1/y2 span never
-            # touched jsm08's claimed range, but the ACTUAL jog it needed
-            # landed at y=2890, which did). Route once, check the REAL
-            # resulting vertical span at the target column, and re-route
-            # with the wider dodge if that turns out to collide too.
-            if not router._v_free(target_x2, min(y1, y2), max(y1, y2)):
+            # Only dodge when the TARGET node's own dead-centre column is
+            # ALSO used by at least one down-direction edge — either one
+            # it sources itself (a trunk) or one that terminates at it
+            # from elsewhere (dead_center_down_users counts both) — i.e.
+            # an actual opposite-direction conflict meeting at that SAME
+            # node, never merely "some other, unrelated node's own column
+            # happens to sit at the same raw x" by coincidence of the
+            # 400px grid (confirmed: kyc01 has exactly one routed
+            # connector of its own and must enter dead-centre; checking
+            # raw geometric column occupancy instead of node identity
+            # wrongly dodged kyc03_rescan -> kyc01 just because kyc01's x
+            # happened to match jsm08's own dead-centre column — a
+            # totally different, unrelated node). The entry side matters
+            # too, not just the source side (confirmed on Bill Formatter's
+            # "end_delivered": a terminal node with no trunk of its own,
+            # but the TARGET of a long skip-ahead edge from elsewhere that
+            # dead-centres the exact same column an unrelated up-going
+            # loop-back also needed). >= 1, not >= 2 — a single
+            # down-direction user of the column is already enough to
+            # collide with this up-going one (confirmed on Mobile MACD
+            # Activation Prepaid's save_milestone_1, sourcing only ONE
+            # down-going child yet still colliding). The >= 2 threshold on
+            # trunk_share_count stays reserved for the mid-path arrows
+            # below — a different question (is this a visually shared
+            # trunk worth calling out) from whether a dodge is required.
+            # Also dodge when the target itself needs no dodge of its own
+            # but this edge's OWN source coincidentally sits at the exact
+            # same x as the target (common on the fixed grid) AND that
+            # source column is already a down-direction user — the
+            # eventual rejoin to the target's dead centre would then
+            # still pass back through the source's own conflicted column
+            # (confirmed on Mobile MACD Plan Change: lockin_penalty_payment
+            # is both the target of an incoming down-edge and the source
+            # of this up-edge; upgrade_downgrade_check needs no dodge of
+            # its own, but shares lockin_penalty_payment's x exactly, so
+            # rejoining dead-centre there still crossed back through it).
+            if (dead_center_down_users.get(to_id, 0) >= 1
+                    or (a["x"] == b["x"] and dead_center_down_users.get(from_id, 0) >= 1)):
                 target_x2, y2 = _dodge_x2(), true_vertex_y2
             d, jog_y, jog_x_lo, jog_x_hi = router.route(route_x1, y1, target_x2, y2, a.get("rowGap", row_gap),
                                                          a.get("maxCardH", max_card_h), a.get("laneCount"))
-            if target_x2 == b["x"] and not router._v_free(target_x2, min(jog_y, y2), max(jog_y, y2)):
-                router.placed_v.pop()   # undo the just-claimed (now-known-bad) entry column
-                router.placed_v.pop()
-                router.placed_h.pop()
-                target_x2, y2 = _dodge_x2(), true_vertex_y2
-                d, jog_y, jog_x_lo, jog_x_hi = router.route(route_x1, y1, target_x2, y2, a.get("rowGap", row_gap),
-                                                             a.get("maxCardH", max_card_h), a.get("laneCount"))
             if target_x2 != b["x"]:
                 lead_out = f" L {true_vertex_x2} {true_vertex_y2}"
             d = f"M {x1} {y1} L " + d[2:] + lead_out   # prepend the true origin's own horizontal
