@@ -228,7 +228,23 @@ def system_tags(node):
 
 # ----------------------------------------------------------------- node card (title/code/desc/tags)
 TITLE_FONT_PX, CODE_FONT_PX, DESC_FONT_PX, TAG_FONT_PX = 15.0, 11.5, 12.5, 10
-TITLE_AVG_CHAR, DESC_AVG_CHAR, TAG_AVG_CHAR = 8.6, 6.3, 6.8
+# TAG_AVG_CHAR sizes every tag/label PILL's own box (system tags, actor
+# tags, the phase-mismatch note) — text_width(tag, TAG_AVG_CHAR) has to
+# come out >= the tag's REAL rendered width (bold, letter-spaced) for the
+# fixed padding baked into each pill's own box-width formula to read as
+# actual, positive whitespace rather than being silently eaten by
+# under-estimation. 6.8 (this file's general bold-text average) undershot
+# real glyph widths for short/all-caps tags badly enough to look visibly
+# cramped next to longer ones sharing the same formula (confirmed via
+# real getBBox() measurements: "CRM" renders 24.17px wide at 9.5px bold,
+# vs this file's old estimate of 3*6.8=20.4 — a 4px shortfall that ate
+# most of the pill's own intended right-hand padding). 8.5 is calibrated
+# above the worst real/length ratio measured across the corpus (~8.06,
+# at system-tag size) with a small margin, and also covers actor tags'
+# own slightly larger TAG_FONT_PX(10) — so every tag pill's padding now
+# reads as the SAME comfortable gap regardless of how short its text is,
+# instead of shrinking toward zero for the shortest ones.
+TITLE_AVG_CHAR, DESC_AVG_CHAR, TAG_AVG_CHAR = 8.6, 6.3, 8.5
 TITLE_LINE_H = 20   # gap between two wrapped title lines — same ratio to TITLE_FONT_PX(15) as
                      # DESC_FONT_PX(12.5)'s own established 21px inter-line gap uses (~1.68x font size)
 CARD_TEXT_OFFSET = 26
