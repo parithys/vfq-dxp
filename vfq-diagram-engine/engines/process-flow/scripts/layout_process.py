@@ -352,21 +352,6 @@ def compute_process_layout(nodes, flows, lanes, phases):
                        "x0": max(0, x0), "x1": x1, "tint": i % 2 == 1})
     band_x1_by_phase = {p: bands[i]["x1"] for i, p in enumerate(phase_indices)}
 
-    def _band_x1_for_x(x):
-        """The x1 of whichever band's [x0, x1) actually contains x — used
-        for OFF-SPINE nodes, which (unlike spine nodes) don't sit at a
-        fixed x tied 1:1 to their own phase: sibling spread (each sibling
-        one STEP further right than the last) and the final collision
-        sweep below can both drift a node's real x away from its anchor's
-        own column, occasionally into a NEIGHBOURING phase's territory.
-        Falls back to the last band for an x past every band's own x1
-        (shouldn't happen for a valid layout, but avoids a crash on the
-        theoretical edge)."""
-        for b in bands:
-            if b["x0"] <= x < b["x1"]:
-                return b["x1"]
-        return bands[-1]["x1"] if bands else None
-
     avail_w_by_node = {}
     for node_id in spine_order:
         x1 = band_x1_by_phase.get(nid[node_id].get("phase", 0))
@@ -648,27 +633,68 @@ def compute_process_layout(nodes, flows, lanes, phases):
         n["x"] = base_x + dx
         placed_boxes.append((base_x + dx + left_offset, y0, base_x + dx + CARD_R, y1))
 
-    # Widen phase bands (forward only) to include any off-spine node whose
-    # OWN anchor sits in the same declared phase — i.e. its position and
-    # its phase tag AGREE, so it genuinely belongs inside this band, only
-    # the band's own width (derived from spine x alone, above) didn't
-    # account for how far SIBLING_PITCH spread or the collision sweep just
-    # above could push it. Only ever extends x1 rightward, cascading into
-    # every later band's own x0 so nothing overlaps — never pulls a band's
-    # x0 backward to reach a member that drifted BEFORE its own phase
-    # starts, since that would eat into the PREVIOUS phase's already-
-    # established territory. Nodes that still don't fit after this (either
-    # because their own anchor is in a DIFFERENT declared phase entirely —
-    # a real business-categorization choice, not a bug, see README — or
-    # because they drifted backward) fall through to the phase-mismatch
-    # badge below instead of a position/boundary change.
+    # Widen phase bands (forward only) to include every off-spine node's
+    # full-width card requirement — keyed by which band the node's own x
+    # ACTUALLY falls inside, not by its declared phase field. Those two
+    # routinely disagree: a decision's rejection/exception branch is
+    # commonly declared under the NEXT business phase even though it
+    # renders right next to the decision itself, still inside the
+    # decision's own (earlier) phase's band (a real, intentional
+    # modelling choice — see the phase-mismatch badge below, and
+    # README). Widening whichever band the DECLARED phase names, instead
+    # of whichever band the node is actually drawn inside, widened a
+    # band the node was never rendered in and left the real one exactly
+    # as narrow as before — confirmed on Mobile Postpaid Activation's
+    # "Reject Unsupported Document Type" (anchored at the same x as its
+    # own decision, squarely inside that decision's phase band, but
+    # declared under the FOLLOWING phase): its band never widened, so
+    # its card fell all the way to the MIN_CARD_AVAIL_W floor below and
+    # STILL overflowed the boundary — the floor guarantees a readable
+    # minimum width, never that the width fits in whatever room is
+    # actually left.
+    #
+    # `+ BOUNDARY_MARGIN` (not just `+ CARD_R`) so a member drives its
+    # band all the way out to give its OWN card true CARD_AVAIL_W at
+    # render time (see the avail_w loop just below, which subtracts the
+    # same BOUNDARY_MARGIN) — otherwise every member's card landed
+    # exactly BOUNDARY_MARGIN short of full width regardless of how much
+    # the band grew.
+    #
+    # Only ever extends x1 rightward, cascading into every later band's
+    # own x0 so nothing overlaps — never pulls a band's x0 backward to
+    # reach a member that drifted BEFORE its own band starts, since that
+    # would eat into the PREVIOUS band's already-established territory.
+    #
+    # `natural_bands` is a fixed snapshot of the PRE-widening band list —
+    # every membership decision below (both which band a node's own
+    # requirement widens, and which band's FINAL x1 that same node reads
+    # back for its own avail_w) has to key off this same, stable
+    # definition. Looking membership up again against the (by-then
+    # already-widened) `bands` instead — which an earlier version of
+    # this did for the avail_w side — lets an EARLIER band's widening
+    # retroactively swallow a node whose own requirement was what a
+    # LATER band's widening was sized around: confirmed on Bill
+    # Formatter, where "Operational Dashboard & Statistics" naturally
+    # sat in band 2, but band 1 widened (for an unrelated node) far
+    # enough to cross x=2928, pulling this node's real-band lookup back
+    # into band 1 — whose own widening never accounted for THIS node's
+    # requirement — squeezing it to the MIN_CARD_AVAIL_W floor despite
+    # the widening pass having run.
+    natural_bands = bands
+
+    def _natural_band_index(x):
+        for bi, b in enumerate(natural_bands):
+            if b["x0"] <= x < b["x1"]:
+                return bi
+        return len(natural_bands) - 1
+
     running_x = 0
     widened_bands = []
-    for i, band in enumerate(bands):
+    for i, band in enumerate(natural_bands):
         members_x1 = [
-            out_nodes[nid_]["x"] + CARD_R
+            out_nodes[nid_]["x"] + CARD_R + BOUNDARY_MARGIN
             for nid_ in off_spine_ids
-            if nid[nid_].get("phase", 0) == i
+            if _natural_band_index(out_nodes[nid_]["x"]) == i
         ]
         x0 = max(band["x0"], running_x)
         x1 = max(band["x1"], x0, *members_x1) if members_x1 else max(band["x1"], x0)
@@ -680,21 +706,21 @@ def compute_process_layout(nodes, flows, lanes, phases):
     # got above, but only now — the sweep just above can drift a node's x
     # (sibling spread, or the rightward collision push) far enough to
     # land inside a NEIGHBOURING phase's territory, so only the node's
-    # FINAL x (not its anchor's) says which band's boundary its own card
-    # actually has to respect (see _band_x1_for_x()'s own docstring).
-    # Rendering-only: deliberately NOT fed back into local_max_h/row_gap
-    # above (which already sized every row using each off-spine card's
-    # un-clamped, wider width) — narrowing only ever ADDS wrapped lines, it
-    # never removes any the row-gap pass already accounted for, so a
-    # clamped card can occasionally run slightly closer to the row below
-    # it than an un-clamped one would, but never past a routing lane or
-    # another row's own shapes (the 40px clearances baked into row_gap
-    # aren't fully consumed by any real card in practice).
+    # FINAL x (not its anchor's) says which band it actually belongs to
+    # — reusing the SAME _natural_band_index() the widening pass just
+    # used (see its own comment above), then reading that band's now-
+    # final (post-widening) x1. Rendering-only: deliberately NOT fed
+    # back into local_max_h/row_gap above (which already sized every row
+    # using each off-spine card's un-clamped, wider width) — narrowing
+    # only ever ADDS wrapped lines, it never removes any the row-gap
+    # pass already accounted for, so a clamped card can occasionally run
+    # slightly closer to the row below it than an un-clamped one would,
+    # but never past a routing lane or another row's own shapes (the
+    # 40px clearances baked into row_gap aren't fully consumed by any
+    # real card in practice).
     for node_id in off_spine_ids:
         n = out_nodes[node_id]
-        x1 = _band_x1_for_x(n["x"])
-        if x1 is None:
-            continue
+        x1 = bands[_natural_band_index(n["x"])]["x1"]
         room = x1 - (n["x"] + svg_gen.CARD_TEXT_OFFSET) - BOUNDARY_MARGIN
         n["availW"] = max(MIN_CARD_AVAIL_W, min(svg_gen.CARD_AVAIL_W, room))
 
