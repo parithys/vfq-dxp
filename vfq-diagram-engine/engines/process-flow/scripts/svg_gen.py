@@ -1316,12 +1316,36 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # broke the OTHER floor instead: route_x1 no longer sat a
             # true 50px from x1, so the LEAD-IN itself came out short
             # (confirmed on this same edge, post-snap: a 46px lead-in).
-            # Taking whichever of the two floors pushes route_x1 further
-            # left satisfies both simultaneously, regardless of how close
-            # x1 and target_x2 happen to be — the lead-in only ever gets
-            # longer than MIN_SEGMENT_LENGTH, never shorter, and the same
-            # is true of router.route()'s own jog.
-            route_x1 = min(x1, target_x2) - MIN_SEGMENT_LENGTH
+            #
+            # Whenever x1 and target_x2 already sit MIN_SEGMENT_LENGTH or
+            # more apart, route_x1 = target_x2 directly — the lead-in
+            # alone (x1 -> target_x2) already clears its own floor, and
+            # router.route()'s own connecting jog collapses to zero
+            # width (x1==x2 in its own terms), which both trivially
+            # clears ITS floor (an absent segment needs no minimum) and
+            # is the easiest possible case for its lane search to place
+            # collision-free. Two earlier versions of this got this
+            # wrong: sizing route_x1 from x1 alone (x1 -
+            # MIN_SEGMENT_LENGTH) left a real, wide gap to target_x2
+            # that the router's jog then had to bridge — for a loop-back
+            # target far to the left, that's an unnecessarily WIDE
+            # search corridor, prone to colliding with unrelated content
+            # across its whole span and getting forced into the bottom
+            # overflow channel even though the direct path was clear all
+            # along (confirmed on kyc03_rescan -> kyc01: a 732px-wide
+            # jog corridor pushed the route to y=5050 on a diagram whose
+            # own content never needed it). And unconditionally snapping
+            # to min(x1, target_x2) - MIN_SEGMENT_LENGTH (the version
+            # before that) overshot PAST target_x2 and jogged back,
+            # a visible zigzag with no purpose. Only when x1 and
+            # target_x2 are genuinely too close for route_x1=target_x2
+            # to leave the lead-in its own floor (< MIN_SEGMENT_LENGTH
+            # apart) does route_x1 need to move past target_x2 at all —
+            # by exactly enough to satisfy both floors, no more.
+            if abs(x1 - target_x2) >= MIN_SEGMENT_LENGTH:
+                route_x1 = target_x2
+            else:
+                route_x1 = min(x1, target_x2) - MIN_SEGMENT_LENGTH
             d, jog_y, jog_x_lo, jog_x_hi = router.route(route_x1, y1, target_x2, y2, a.get("rowGap", row_gap),
                                                          a.get("maxCardH", max_card_h), a.get("laneCount"))
             if target_x2 != b["x"]:
