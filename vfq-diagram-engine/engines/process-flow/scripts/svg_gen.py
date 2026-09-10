@@ -1012,6 +1012,15 @@ class _LaneRouter:
                 jog_y = candidate
                 break
         if jog_y is None:
+            # Same local-overflow tier as route()'s own — see its
+            # comment for why exhausting n_lanes here doesn't mean
+            # every nearby slot is taken too.
+            for lane in range(n_lanes, n_lanes + LOCAL_OVERFLOW_LANES):
+                candidate = min_jog_y + lane * LANE_PITCH
+                if self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi):
+                    jog_y = candidate
+                    break
+        if jog_y is None:
             for lane in range(self.bottom_lanes):
                 candidate = self.total_h - MIN_CLEARANCE + 16 - lane * LANE_PITCH
                 if self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi):
