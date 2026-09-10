@@ -1337,15 +1337,38 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # own content never needed it). And unconditionally snapping
             # to min(x1, target_x2) - MIN_SEGMENT_LENGTH (the version
             # before that) overshot PAST target_x2 and jogged back,
-            # a visible zigzag with no purpose. Only when x1 and
-            # target_x2 are genuinely too close for route_x1=target_x2
-            # to leave the lead-in its own floor (< MIN_SEGMENT_LENGTH
-            # apart) does route_x1 need to move past target_x2 at all —
-            # by exactly enough to satisfy both floors, no more.
-            if abs(x1 - target_x2) >= MIN_SEGMENT_LENGTH:
+            # a visible zigzag with no purpose.
+            #
+            # But the direct route_x1=target_x2 shortcut only holds when
+            # that lead-in is actually clear to draw: it runs at y1 —
+            # the SOURCE's own row — for however far x1 and target_x2
+            # sit apart, entirely OUTSIDE router.route()'s own lane
+            # search (which is the only place _clear_of_cards() ever
+            # gets checked for the rest of this connector). A same-row
+            # SIBLING sitting anywhere between x1 and target_x2 — not
+            # this edge's own source or target, just a neighbour who
+            # happens to share the row — got a straight line drawn
+            # directly through its own title (confirmed on Mobile
+            # Postpaid Activation: jsm06 -> jsm05's lead-in ran flat
+            # through both "Re-Assign Draft to Different Agent" and
+            # "Draft Order Expiry (30 Days)"'s cards, neither of them
+            # this edge's own endpoint). Falling back to the short,
+            # local lead-in whenever the direct span isn't clear hands
+            # the long traversal back to router.route()'s own jog
+            # search, which picks a lane above/below the row instead —
+            # only when x1 and target_x2 are genuinely too close for
+            # route_x1=target_x2 to leave the lead-in its own floor (<
+            # MIN_SEGMENT_LENGTH apart) does route_x1 need to move past
+            # target_x2 at all, by exactly enough to satisfy both
+            # floors, no more.
+            direct_lo, direct_hi = (x1, target_x2) if x1 <= target_x2 else (target_x2, x1)
+            if (abs(x1 - target_x2) >= MIN_SEGMENT_LENGTH
+                    and router._clear_of_cards(y1, direct_lo, direct_hi)):
                 route_x1 = target_x2
             else:
-                route_x1 = min(x1, target_x2) - MIN_SEGMENT_LENGTH
+                route_x1 = x1 - MIN_SEGMENT_LENGTH
+                if abs(route_x1 - target_x2) < MIN_SEGMENT_LENGTH:
+                    route_x1 = min(x1, target_x2) - MIN_SEGMENT_LENGTH
             d, jog_y, jog_x_lo, jog_x_hi = router.route(route_x1, y1, target_x2, y2, a.get("rowGap", row_gap),
                                                          a.get("maxCardH", max_card_h), a.get("laneCount"))
             if target_x2 != b["x"]:
