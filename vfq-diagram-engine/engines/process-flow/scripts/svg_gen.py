@@ -865,11 +865,25 @@ class _LaneRouter:
         source_row = self._row_index(y1, row_gap)
         gap_idx = source_row if going_down else source_row - 1
 
+        # A candidate jog_y this close to (but not exactly at) y2 would
+        # leave the path's own FINAL segment — (x2, jog_y) to (x2, y2) —
+        # under the segment-length floor, the same defect the x1/x2 snap
+        # above already guards against for the OTHER end of this same
+        # path. Exactly at y2 is fine (that segment collapses to zero,
+        # not a sliver). Confirmed reachable once a caller's own y2 isn't
+        # always the node's raw, unstaggered y — see left_vertex_exit's
+        # own dodge-arrival y-search in connectors_svg(), whose escaped y
+        # values can coincidentally land within MIN_SEGMENT_LENGTH of a
+        # lane this search would otherwise happily pick.
+        def _far_enough_from_y2(candidate):
+            return candidate == y2 or abs(candidate - y2) >= MIN_SEGMENT_LENGTH
+
         jog_y = None
         for lane in range(n_lanes):
             candidate = self._gap_lane_y(gap_idx, lane, row_gap, max_card_h) if going_down else \
                 (self._gap_lane_y(gap_idx, n_lanes - 1 - lane, row_gap, max_card_h))
-            if self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi):
+            if (self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi)
+                    and _far_enough_from_y2(candidate)):
                 jog_y = candidate
                 break
         if jog_y is None:
@@ -898,13 +912,15 @@ class _LaneRouter:
             for lane in range(n_lanes, n_lanes + LOCAL_OVERFLOW_LANES):
                 candidate = self._gap_lane_y(gap_idx, lane, row_gap, max_card_h) if going_down else \
                     self._gap_lane_y(gap_idx, -(lane - n_lanes + 1), row_gap, max_card_h)
-                if self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi):
+                if (self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi)
+                        and _far_enough_from_y2(candidate)):
                     jog_y = candidate
                     break
         if jog_y is None:
             for lane in range(self.bottom_lanes):
                 candidate = self.total_h - MIN_CLEARANCE + 16 - lane * LANE_PITCH
-                if self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi):
+                if (self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi)
+                        and _far_enough_from_y2(candidate)):
                     jog_y = candidate
                     break
         if jog_y is None:
@@ -924,7 +940,8 @@ class _LaneRouter:
             lane = self.bottom_lanes
             while True:
                 candidate = self.total_h - MIN_CLEARANCE + 16 - lane * LANE_PITCH
-                if self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi):
+                if (self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi)
+                        and _far_enough_from_y2(candidate)):
                     jog_y = candidate
                     break
                 lane += 1
@@ -1421,10 +1438,35 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
                 # MIN_SEGMENT_LENGTH — the hard floor every connector
                 # segment must meet — if the wider gap isn't actually
                 # clear.
+                nonlocal true_vertex_y2
                 for offset in (LANE_PITCH, MIN_SEGMENT_LENGTH):
                     lo, hi = true_vertex_x2 - offset, true_vertex_x2
                     if router._clear_of_cards(true_vertex_y2, lo, hi):
                         return true_vertex_x2 - offset
+                # Neither x offset is clear at this y — trying MORE x
+                # offsets can't help: hi stays pinned at true_vertex_x2
+                # (the target's own true entry point) regardless of how
+                # far left lo moves, so if that fixed right edge is
+                # already too close to whatever's blocking, every offset
+                # shares the same unavoidable collision (confirmed on
+                # Bill Formatter: invoice_generate's true vertex sits
+                # only ~30px clear of batch_create's own card — under
+                # MIN_SEGMENT_LENGTH itself, so no x-only search could
+                # ever find daylight). The escape is in y instead: a
+                # card's own text grows DOWN from its row, so nudging the
+                # arrival point UP first (the direction actually clear
+                # here) before down, in MIN_SEGMENT_LENGTH-plus steps —
+                # matching the segment-length floor so the resulting
+                # arrival offset is never itself a sub-floor sliver —
+                # before giving up and accepting the collision as a last
+                # resort exactly as before.
+                for dy_mag in range(MIN_SEGMENT_LENGTH, MIN_SEGMENT_LENGTH + 400, 10):
+                    for candidate_y in (true_vertex_y2 - dy_mag, true_vertex_y2 + dy_mag):
+                        for offset in (LANE_PITCH, MIN_SEGMENT_LENGTH):
+                            lo, hi = true_vertex_x2 - offset, true_vertex_x2
+                            if router._clear_of_cards(candidate_y, lo, hi):
+                                true_vertex_y2 = candidate_y
+                                return true_vertex_x2 - offset
                 return true_vertex_x2 - MIN_SEGMENT_LENGTH
             # Only dodge when the TARGET node's own dead-centre column is
             # ALSO used by at least one down-direction edge — either one
@@ -1540,6 +1582,9 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # target_x2 at all, by exactly enough to satisfy both
             # floors, no more.
             direct_lo, direct_hi = (x1, target_x2) if x1 <= target_x2 else (target_x2, x1)
+            lead_in_y1 = y1   # the y the lead-in's SECOND point (route_x1) sits at — normally
+                                # just y1, but see the Y-detour fallback below
+            lead_in_mid = ""  # extra waypoints inserted when a straight lead-in can't clear a card
             if (abs(x1 - target_x2) >= MIN_SEGMENT_LENGTH
                     and router._clear_of_cards(y1, direct_lo, direct_hi)):
                 route_x1 = target_x2
@@ -1547,15 +1592,58 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
                 route_x1 = x1 - MIN_SEGMENT_LENGTH
                 if abs(route_x1 - target_x2) < MIN_SEGMENT_LENGTH:
                     route_x1 = min(x1, target_x2) - MIN_SEGMENT_LENGTH
-            d, jog_y, jog_x_lo, jog_x_hi = router.route(route_x1, y1, target_x2, y2, a.get("rowGap", row_gap),
+                if not router._clear_of_cards(y1, min(route_x1, x1), max(route_x1, x1)):
+                    # No route_x1 value can make a single straight lead-in
+                    # clear here: the segment's own far end is pinned at
+                    # x1 (the source's true vertex — it can't move, that's
+                    # the whole point of this exit style), so if a card
+                    # sits close enough to x1 itself, EVERY route_x1 that
+                    # also satisfies both the lead-in's own floor and the
+                    # target_x2-clearance floor above still has to cross
+                    # it — there is no candidate left to search (confirmed
+                    # on Mobile MACD Plan Change: lockin_penalty_payment
+                    # -> upgrade_downgrade_check's lead-in and
+                    # reject_lockin's card left a combined viable window
+                    # of zero width; a direct numeric search over every
+                    # route_x1 satisfying both floors found none clear).
+                    # The escape is a short Y-detour partway along the
+                    # lead-in instead: a brief, always-safe stub right
+                    # next to the source's own true vertex (nothing else
+                    # ever renders immediately adjacent to a node's own
+                    # exit point), then step vertically clear of whatever
+                    # card is blocking (up first, then down, in
+                    # MIN_SEGMENT_LENGTH-plus steps so the vertical step
+                    # itself never comes out under the segment-length
+                    # floor), then continue horizontally to a route_x1
+                    # re-derived from the stub instead of x1 — this still
+                    # leaves with a HORIZONTAL first segment, unchanged.
+                    stub_x = x1 - MIN_SEGMENT_LENGTH
+                    detour_route_x1 = min(stub_x, target_x2) - MIN_SEGMENT_LENGTH
+                    for dy_mag in range(MIN_SEGMENT_LENGTH, MIN_SEGMENT_LENGTH + 400, 10):
+                        for candidate_y in (y1 - dy_mag, y1 + dy_mag):
+                            if router._clear_of_cards(candidate_y, min(detour_route_x1, stub_x), max(detour_route_x1, stub_x)):
+                                lead_in_y1 = candidate_y
+                                route_x1 = detour_route_x1
+                                lead_in_mid = f" L {stub_x} {y1} L {stub_x} {lead_in_y1}"
+                                break
+                        if lead_in_mid:
+                            break
+                    # If the bounded search above still found nothing —
+                    # not observed anywhere in the corpus, but possible in
+                    # a sufficiently pathological layout — route_x1/
+                    # lead_in_y1 stay at their pre-detour values: the same
+                    # graceful degrade this branch always had before this
+                    # fix, not a crash or an unhandled case.
+            d, jog_y, jog_x_lo, jog_x_hi = router.route(route_x1, lead_in_y1, target_x2, y2, a.get("rowGap", row_gap),
                                                          a.get("maxCardH", max_card_h), a.get("laneCount"))
             if target_x2 != b["x"]:
                 lead_out = f" L {true_vertex_x2} {true_vertex_y2}"
-            d = f"M {x1} {y1} L " + d[2:] + lead_out   # prepend the true origin's own horizontal
-                                             # lead-in; d[2:] strips router.route()'s own leading "M "
-                                             # so its first point (route_x1, y1) becomes this segment's
-                                             # endpoint; lead_out (if any) appends the final cut-in to
-                                             # the target's true vertex
+            d = f"M {x1} {y1}" + lead_in_mid + " L " + d[2:] + lead_out   # prepend the true origin's own horizontal
+                                             # lead-in (plus any Y-detour waypoints); d[2:] strips
+                                             # router.route()'s own leading "M " so its first point
+                                             # (route_x1, lead_in_y1) becomes this segment's endpoint;
+                                             # lead_out (if any) appends the final cut-in to the
+                                             # target's true vertex
             # jog_x_lo/jog_x_hi as returned only cover router.route()'s OWN
             # internal jog (route_x1..target_x2) — when route_x1 snapped
             # straight to target_x2 (the common case: see route_x1's own
