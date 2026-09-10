@@ -1508,8 +1508,50 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # branch's own independent lane search would have landed.
             d, jog_y, jog_x_lo, jog_x_hi = router.route_forced(x1, y1, b["x"], y2, shared_jog_y[id(f)])
         else:
-            d, jog_y, jog_x_lo, jog_x_hi = router.route(x1, y1, b["x"], y2, a.get("rowGap", row_gap),
-                                                         a.get("maxCardH", max_card_h), a.get("laneCount"))
+            # A going_down edge's jog lands in the GAP below the source's
+            # own row — but when the target is off-spine and anchored to
+            # a DIFFERENT spine column than this edge's own source (a
+            # decision several columns over converging on the same
+            # shared reject/exception target, say), that gap is the
+            # TARGET's own anchor's row-gap, not the source's. Sizing the
+            # lane search from the source's own (frequently much
+            # smaller) local rowGap/maxCardH/laneCount — provisioned for
+            # whatever ITS OWN direct children need, with no idea this
+            # edge would also be competing for lanes in someone else's
+            # gap — starves the search down to just 1-2 candidates
+            # instead of however many the TARGET's own anchor actually
+            # reserved for exactly this kind of convergence (see
+            # lanes_needed_by_anchor, which already counts every edge
+            # converging on a node toward ITS anchor's demand). Exhausted
+            # early, the edge fell through to the shared bottom-overflow
+            # channel — landing thousands of px below everything, then
+            # jogging back up — even though the target's own row-gap had
+            # plenty of room (confirmed on Mobile Postpaid Activation:
+            # ecc03 -> ecc02 and ecc04 -> ecc02, both converging on ecc02
+            # alongside ecc01 -> ecc02, searched using ecc03's/ecc04's
+            # own 2-lane budgets instead of ecc02's anchor's real 5).
+            # For a genuinely single-source-single-target edge (the
+            # common case) the two are identical anyway — the target's
+            # own local values were inherited from this same source as
+            # its anchor — so this only changes behaviour for the
+            # cross-column convergence case it's meant to fix.
+            #
+            # Only when the target is OFF-SPINE, though — a spine node
+            # has no "anchor" of its own the way an off-spine one does
+            # (lanes_needed_by_anchor's convergence counting is keyed to
+            # off-spine targets converging on a shared node), so a long
+            # spine-to-spine skip-ahead edge has no more claim to using
+            # ITS target's local values than its source's. Using the
+            # target there regardless made several such edges WORSE, not
+            # better (confirmed on Fibre's start -> mig_start/hmv_start/
+            # fpi_start, three long same-level skip-aheads whose target
+            # nodes' own local budgets happened to be smaller than
+            # start's, pushing all three further from the canvas top
+            # than before).
+            route_owner = b if (going_down and not b["onSpine"]) else a
+            d, jog_y, jog_x_lo, jog_x_hi = router.route(x1, y1, b["x"], y2, route_owner.get("rowGap", row_gap),
+                                                         route_owner.get("maxCardH", max_card_h),
+                                                         route_owner.get("laneCount"))
         out.append(edge_open)
         # Invisible fat hit-path UNDER the real 2.2px-wide line — SVG's
         # click/pointer target for a fill:none path is the STROKE only, so
