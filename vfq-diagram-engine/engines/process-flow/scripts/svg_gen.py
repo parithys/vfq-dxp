@@ -477,8 +477,19 @@ def node_card_svg(n, node_data, lane_name):
         w = int(text_width(lane_name.upper(), TAG_AVG_CHAR)) + 20
         actor_tag_h = 20
         parts.append(f'<rect x="{tx}" y="{actor_tag_y}" width="{w}" height="{actor_tag_h}" rx="5" fill="{TAG_FILL_ACTOR}"/>')
-        parts.append(f'<text x="{tx + 10}" y="{_centered_baseline(actor_tag_y, actor_tag_h, TAG_FONT_PX)}" '
-                     f'font-size="{TAG_FONT_PX}" font-weight="700" '
+        # Centred (text-anchor="middle" at the rect's own midpoint), not
+        # left-aligned at a fixed +10 offset — the rect's width above is
+        # sized from text_width()'s plain len*avg_char_px estimate, which
+        # doesn't (and can't cheaply) account for the letter-spacing="0.9"
+        # applied below: for an 11-character label like "RETAIL AGENT"
+        # that's ~9px of real rendered width this estimate never counted,
+        # which a fixed left offset dumps entirely onto the right side —
+        # confirmed by direct user review, the badge's left padding read
+        # as roughly double its right padding. Centring makes the left/
+        # right split even by construction regardless of any estimation
+        # slop, rather than requiring the estimate to be exact.
+        parts.append(f'<text x="{tx + w / 2}" y="{_centered_baseline(actor_tag_y, actor_tag_h, TAG_FONT_PX)}" '
+                     f'font-size="{TAG_FONT_PX}" font-weight="700" text-anchor="middle" '
                      f'fill="{TAG_TEXT_ACTOR}" letter-spacing="0.9">{esc(lane_name.upper())}</text>')
 
     # System tags flow left-to-right on one row (matching the reference's own
