@@ -665,42 +665,66 @@ def compute_process_layout(nodes, flows, lanes, phases):
     # reach a member that drifted BEFORE its own band starts, since that
     # would eat into the PREVIOUS band's already-established territory.
     #
-    # `natural_bands` is a fixed snapshot of the PRE-widening band list —
-    # every membership decision below (both which band a node's own
-    # requirement widens, and which band's FINAL x1 that same node reads
-    # back for its own avail_w) has to key off this same, stable
-    # definition. Looking membership up again against the (by-then
-    # already-widened) `bands` instead — which an earlier version of
-    # this did for the avail_w side — lets an EARLIER band's widening
-    # retroactively swallow a node whose own requirement was what a
-    # LATER band's widening was sized around: confirmed on Bill
-    # Formatter, where "Operational Dashboard & Statistics" naturally
-    # sat in band 2, but band 1 widened (for an unrelated node) far
-    # enough to cross x=2928, pulling this node's real-band lookup back
-    # into band 1 — whose own widening never accounted for THIS node's
-    # requirement — squeezing it to the MIN_CARD_AVAIL_W floor despite
-    # the widening pass having run.
+    # `natural_bands` starts as a snapshot of the PRE-widening band
+    # list, and every membership decision each pass makes (both which
+    # band a node's own requirement widens, and which band's x1 that
+    # same node reads back) keys off this SAME snapshot — but a single
+    # pass isn't enough: widening one band can push its own x1 forward
+    # far enough to swallow a node that a LATER band's own natural
+    # (pre-widening) territory used to contain, and that later band's
+    # own widening was never sized for it (it widened using the
+    # snapshot BEFORE the earlier band grew). Confirmed on Bill
+    # Formatter: "Operational Dashboard & Statistics" (and two
+    # siblings) naturally sat in band 2 pre-widening, but band 1 widened
+    # — for a completely different member — past their shared x, and a
+    # single-pass version of this fix kept sizing these three nodes
+    # against band 2's OWN (unrelated) x1 even though they'd since been
+    # geometrically swallowed by band 1's now-wider territory, so their
+    # cards rendered starting on band 1's background but ending well
+    # into band 2's. Re-running the whole pass against its own previous
+    # output, until no band's x1 moves and every node's natural-band
+    # assignment stops changing, converges on a fixed point where every
+    # off-spine node's requirement is counted by whichever band it's
+    # ACTUALLY, finally rendered inside — not just whichever band
+    # widening had settled on one pass ago. Bounded by the number of
+    # off-spine nodes (at most one additional node can get newly
+    # captured by an earlier band per pass, so it can't run longer than
+    # that before stabilising).
     natural_bands = bands
+    for _ in range(len(off_spine_ids) + 2):
+        def _natural_band_index(x, _bands=natural_bands):
+            for bi, b in enumerate(_bands):
+                if b["x0"] <= x < b["x1"]:
+                    return bi
+            return len(_bands) - 1
 
+        running_x = 0
+        widened_bands = []
+        for i, band in enumerate(natural_bands):
+            members_x1 = [
+                out_nodes[nid_]["x"] + CARD_R + BOUNDARY_MARGIN
+                for nid_ in off_spine_ids
+                if _natural_band_index(out_nodes[nid_]["x"]) == i
+            ]
+            x0 = max(band["x0"], running_x)
+            x1 = max(band["x1"], x0, *members_x1) if members_x1 else max(band["x1"], x0)
+            widened_bands.append({**band, "x0": x0, "x1": x1})
+            running_x = x1
+        if widened_bands == natural_bands:
+            break
+        natural_bands = widened_bands
+    bands = natural_bands
+
+    # Redefined fresh against the FINAL, converged `bands` — the loop's
+    # own last definition of this same helper closed over whichever
+    # `natural_bands` was current one pass before convergence, which
+    # only coincidentally matches `bands` when the loop broke out early
+    # rather than exhausting its safety cap.
     def _natural_band_index(x):
-        for bi, b in enumerate(natural_bands):
+        for bi, b in enumerate(bands):
             if b["x0"] <= x < b["x1"]:
                 return bi
-        return len(natural_bands) - 1
-
-    running_x = 0
-    widened_bands = []
-    for i, band in enumerate(natural_bands):
-        members_x1 = [
-            out_nodes[nid_]["x"] + CARD_R + BOUNDARY_MARGIN
-            for nid_ in off_spine_ids
-            if _natural_band_index(out_nodes[nid_]["x"]) == i
-        ]
-        x0 = max(band["x0"], running_x)
-        x1 = max(band["x1"], x0, *members_x1) if members_x1 else max(band["x1"], x0)
-        widened_bands.append({**band, "x0": x0, "x1": x1})
-        running_x = x1
-    bands = widened_bands
+        return len(bands) - 1
 
     # Off-spine nodes get the SAME phase-boundary text clamp spine nodes
     # got above, but only now — the sweep just above can drift a node's x
