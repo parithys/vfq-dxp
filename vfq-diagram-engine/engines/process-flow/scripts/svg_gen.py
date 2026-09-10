@@ -887,6 +887,46 @@ class _LaneRouter:
         self._claim_v(x2, min(y2, jog_y), max(y2, jog_y))
         return f"M {x1} {y1} L {x1} {jog_y} L {x2} {jog_y} L {x2} {y2}", jog_y, x_lo, x_hi
 
+    def find_shared_jog_y(self, x_lo, x_hi, row_gap, max_card_h, source_y, n_lanes=None):
+        """Same lane search as route()'s own going_down case, but for a
+        span the CALLER already knows in full — used to give 2+ sibling
+        branches sharing one source a single, common jog_y (one real
+        spreader bar, not each branch quietly finding its own lane a few
+        px apart from the others') instead of building one from a single
+        (x1, x2) pair. Doesn't claim or draw anything itself; the caller
+        still calls route_forced() per branch once every sibling is
+        known to share this same y."""
+        n_lanes = self.n_lanes if n_lanes is None else n_lanes
+        gap_idx = self._row_index(source_y, row_gap)
+        for lane in range(n_lanes):
+            candidate = self._gap_lane_y(gap_idx, lane, row_gap, max_card_h)
+            if self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi):
+                return candidate
+        for lane in range(self.bottom_lanes):
+            candidate = self.total_h - MIN_CLEARANCE + 16 - lane * LANE_PITCH
+            if self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi):
+                return candidate
+        lane = self.bottom_lanes
+        while True:
+            candidate = self.total_h - MIN_CLEARANCE + 16 - lane * LANE_PITCH
+            if self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi):
+                return candidate
+            lane += 1
+
+    def route_forced(self, x1, y1, x2, y2, jog_y):
+        """Same shape as route()'s own going_down return (d, jog_y,
+        x_lo, x_hi) and the same placed_h/placed_v bookkeeping, but for
+        a jog_y the caller already picked (see find_shared_jog_y()) —
+        used so multiple sibling branches off one source turn horizontal
+        at the exact same height, a single shared spreader bar, rather
+        than each independently searching for (and generally landing on)
+        its own separate lane a few px apart from the others'."""
+        x_lo, x_hi = (x1, x2) if x1 <= x2 else (x2, x1)
+        self.placed_h.append((jog_y, x_lo, x_hi))
+        self._claim_v(x1, min(y1, jog_y), max(y1, jog_y))
+        self._claim_v(x2, min(y2, jog_y), max(y2, jog_y))
+        return f"M {x1} {y1} L {x1} {jog_y} L {x2} {jog_y} L {x2} {y2}", jog_y, x_lo, x_hi
+
     def route_under(self, x1, y1, x2, y2, min_jog_y, n_lanes=None):
         """Same-row bottom-to-bottom connector (see connectors_svg()'s own
         same_row case): y1 and y2 are usually numerically EQUAL (both
@@ -1136,6 +1176,68 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             dead_center_down_users[f["from"]] += 1
             dead_center_down_users[f["to"]] += 1
 
+    # A source with 2+ ordinary downward branches into off-spine children
+    # already shares its own exit COLUMN for all of them (dead_center_down_
+    # users above), but each branch used to still search for its own jog_y
+    # independently — landing a few px apart from its siblings' rather than
+    # genuinely sharing one height, so the "shared trunk" read as several
+    # near-identical lines stacked close together instead of one real
+    # spreader bar with short, individual drops into each child (the
+    # reference's own fan-out style for exactly this case — see
+    # layout_process.py's off_spine_x). Only branches that already share a
+    # color (and therefore dash style) are grouped — a source with mixed
+    # edge kinds firing into different children has no single style to
+    # paint one shared bar in, so those fall through to their own
+    # independent routing unchanged. Same-row and left-vertex-exit
+    # branches never dead-centre exit downward in the first place (see
+    # dead_center_down_users' own comment), so they're never swept up here
+    # either.
+    by_fanout_source = collections.defaultdict(list)
+    for f in flows:
+        a, b = nodes_by_id.get(f.get("from")), nodes_by_id.get(f.get("to"))
+        if not a or not b or is_trivial_spine_hop(f, a, b) or is_happy_branch_label(f, a, b):
+            continue
+        going_down = b["y"] >= a["y"]
+        same_row = not a["onSpine"] and not b["onSpine"] and a["y"] == b["y"]
+        if going_down and not same_row and not b["onSpine"]:
+            by_fanout_source[f["from"]].append((f, a, b))
+
+    shared_jog_y = {}
+    for from_id, items in by_fanout_source.items():
+        by_color = collections.defaultdict(list)
+        for f, a, b in items:
+            by_color[edge_color(f, b)].append((f, a, b))
+        for color, group in by_color.items():
+            # A "spreader" spreads into DISTINCT children — two edges from
+            # the same source landing on the SAME target aren't siblings
+            # to fan out across, they're parallel routes to one point
+            # (confirmed on the CBU Journey 1 model: disc_res_cancel_order
+            # fires three same-color edges, but only two distinct
+            # targets — one of them, disc_cvc_terminate, reached by two
+            # differently-labelled edges). Forcing a target reached twice
+            # onto the same shared jog_y as its OWN duplicate collapsed
+            # what used to be their only real separation — each branch's
+            # own independently-found jog_y — leaving both labels computed
+            # from identical (source x, target x, jog_y) and landing
+            # exactly on top of each other. Checking length equality
+            # (not just "at least 2 distinct") catches this mixed case
+            # too, where most targets in the group ARE distinct but one
+            # isn't — bailing out for the whole group rather than only the
+            # duplicate pair keeps every sibling's jog_y consistent with
+            # each other; there's no correct shared bar to draw once even
+            # one member doesn't have a distinct destination of its own.
+            targets = [f["to"] for f, _, _ in group]
+            if len(group) < 2 or len(set(targets)) != len(targets):
+                continue
+            a = group[0][1]
+            xs = [a["x"]] + [b["x"] for _, _, b in group]
+            x_lo, x_hi = min(xs), max(xs)
+            source_y = a["y"] + a["r"]
+            jy = router.find_shared_jog_y(x_lo, x_hi, a.get("rowGap", row_gap),
+                                           a.get("maxCardH", max_card_h), source_y, a.get("laneCount"))
+            for f, _, _ in group:
+                shared_jog_y[id(f)] = jy
+
     for f in sorted(flows, key=_flow_dir_key):
         from_id, to_id = f.get("from"), f.get("to")
         a, b = nodes_by_id.get(from_id), nodes_by_id.get(to_id)
@@ -1378,6 +1480,12 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
                                              # so its first point (route_x1, y1) becomes this segment's
                                              # endpoint; lead_out (if any) appends the final cut-in to
                                              # the target's true vertex
+        elif id(f) in shared_jog_y:
+            # This branch shares its source with 1+ same-color siblings —
+            # turn horizontal at the SAME y every one of them uses (see
+            # shared_jog_y's own comment above), not wherever this one
+            # branch's own independent lane search would have landed.
+            d, jog_y, jog_x_lo, jog_x_hi = router.route_forced(x1, y1, b["x"], y2, shared_jog_y[id(f)])
         else:
             d, jog_y, jog_x_lo, jog_x_hi = router.route(x1, y1, b["x"], y2, a.get("rowGap", row_gap),
                                                          a.get("maxCardH", max_card_h), a.get("laneCount"))
