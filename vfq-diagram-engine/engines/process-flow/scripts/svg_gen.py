@@ -1144,16 +1144,29 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
     # its own branch labels straight through the on-spine
     # "Validate Credentials" card, which an on-spine-only check (an
     # earlier version of this fix) never even considered.
+    # Each entry also carries the card's own real vertical extent
+    # (n["y"] down to its measured bottom, falling back to n["y"] for a
+    # node this function never got a bottom for) — checked below
+    # alongside x, not on its own. An x-only version of this used to
+    # treat ANY node's card as a collision purely by horizontal
+    # coincidence, however far away it actually sits vertically —
+    # confirmed on Mobile Postpaid Activation: kyc01_type_check ->
+    # kyc01_reject's "Unsupported for Postpaid" label got pushed off
+    # its own connector's line by jsm06's card, an entirely unrelated
+    # node in a different cluster whose card happens to share an
+    # x-range near y~1183 while this label sits at y~465 — nowhere near
+    # each other, yet treated as touching.
     card_intervals = sorted(
-        (n["x"] + CARD_TEXT_OFFSET, n["x"] + CARD_TEXT_OFFSET + n.get("availW", CARD_AVAIL_W))
-        for n in nodes_by_id.values()
+        (n["x"] + CARD_TEXT_OFFSET, n["x"] + CARD_TEXT_OFFSET + n.get("availW", CARD_AVAIL_W),
+         n["y"], card_bottom_by_id.get(nid, n["y"]))
+        for nid, n in nodes_by_id.items()
     )
 
-    def _clear_of_every_card(x):
+    def _clear_of_every_card(x, y, half_len=0):
         for _ in range(len(card_intervals) + 1):   # bounded: x only ever moves right, past a finite set
             moved = False
-            for lo, hi in card_intervals:
-                if lo <= x <= hi:
+            for lo, hi, y0, y1 in card_intervals:
+                if lo <= x <= hi and y + half_len >= y0 - MIN_CLEARANCE and y - half_len <= y1 + MIN_CLEARANCE:
                     x = hi + MIN_CLEARANCE
                     moved = True
             if not moved:
@@ -1182,7 +1195,7 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
                 return y
         return y
 
-    card_right_edges = sorted(hi for _lo, hi in card_intervals)
+    card_right_edges = sorted(hi for _lo, hi, _y0, _y1 in card_intervals)
 
     def _room_to_fan_left(x):
         # how far x could move left before reaching the nearest card
@@ -1695,7 +1708,7 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
                        and abs(py - ly) < max(LABEL_MIN_COLLIDE_PX, this_len / 2 + _label_len(ptxt) / 2 + MIN_CLEARANCE))
             placed_labels.append((base_lx, ly, f["label"]))
 
-            base_lx = _clear_of_every_card(base_lx)   # baseline itself may already be inside some card's reserve
+            base_lx = _clear_of_every_card(base_lx, ly, this_len / 2)   # baseline itself may already be inside some card's reserve
 
             horiz_lanes = lane
             if lane:
@@ -1704,7 +1717,7 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # Fanning further left can walk straight into a DIFFERENT
             # card that happens to sit further over — re-clear
             # unconditionally rather than trusting the room estimate alone.
-            lx = _clear_of_every_card(base_lx - LABEL_FAN_PX * horiz_lanes)
+            lx = _clear_of_every_card(base_lx - LABEL_FAN_PX * horiz_lanes, ly, this_len / 2)
 
             # Whatever x a label actually lands on, register/consult a
             # running vertical cursor for that exact x — not just when
