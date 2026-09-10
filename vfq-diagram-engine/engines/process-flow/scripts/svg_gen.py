@@ -1480,6 +1480,27 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
                                              # so its first point (route_x1, y1) becomes this segment's
                                              # endpoint; lead_out (if any) appends the final cut-in to
                                              # the target's true vertex
+            # jog_x_lo/jog_x_hi as returned only cover router.route()'s OWN
+            # internal jog (route_x1..target_x2) — when route_x1 snapped
+            # straight to target_x2 (the common case: see route_x1's own
+            # comment above), that jog is zero-width, leaving these equal
+            # even though the LEAD-IN just prepended is a real, often long,
+            # horizontal run of its own (x1..route_x1). The label code just
+            # below decides "does this connector have a real horizontal
+            # jog to anchor a label along" purely from jog_x_lo != jog_x_hi
+            # — left as router.route()'s own narrower view, a connector
+            # whose only real horizontal run IS this lead-in fell through
+            # to the OTHER label style instead: a rotated label anchored to
+            # the SOURCE node's own x, with no awareness that this
+            # particular connector's line leaves that column almost
+            # immediately (confirmed on Mobile Postpaid Activation:
+            # kyc03_rescan -> kyc01's "Re-scan" label rendered 570px below
+            # where its own line last touched that x, nowhere near the
+            # actual drawn path). Folding x1 into the reported span — the
+            # lead-in's own far end — makes jog_x_lo/jog_x_hi describe the
+            # connector's FULL horizontal reach, lead-in included, so the
+            # label logic sees the same real jog a reader's eye does.
+            jog_x_lo, jog_x_hi = min(jog_x_lo, x1), max(jog_x_hi, x1)
         elif id(f) in shared_jog_y:
             # This branch shares its source with 1+ same-color siblings —
             # turn horizontal at the SAME y every one of them uses (see
