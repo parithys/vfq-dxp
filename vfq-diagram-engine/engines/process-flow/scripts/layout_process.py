@@ -532,7 +532,19 @@ def compute_process_layout(nodes, flows, lanes, phases):
         a_anchor, b_anchor = _anchor_x(a_id), _anchor_x(b_id)
         if a_anchor is not None:
             lanes_needed_by_anchor[a_anchor] += 1
-        if b_anchor is not None:
+        # Only counted again for b_anchor when it DIFFERS from a_anchor —
+        # one flow is one lane, however many of its own endpoints happen
+        # to anchor to the same x. Counting it twice against the SAME
+        # anchor's demand when both ends share it (a parent-child edge
+        # anchored to the parent's own column, or any edge entirely
+        # within one multi-child cluster) inflated that anchor's row_gap
+        # far past what its actual lane usage needed — confirmed on
+        # Mobile Postpaid Activation's jsm05 cluster: 5 real edges (3
+        # parent->child drops, 1 within-cluster edge, 1 loop-back), all
+        # anchored to jsm05's own x on BOTH ends, counted as 10 lanes of
+        # demand instead of 5, more than doubling that row's own gap
+        # past what routing them actually required.
+        if b_anchor is not None and b_anchor != a_anchor:
             lanes_needed_by_anchor[b_anchor] += 1
 
     local_row_gap = {}
