@@ -547,6 +547,24 @@ LANE_PITCH = 60   # >MIN_CLEARANCE(40) on purpose — MIN_CLEARANCE is the enfor
                    # reads as visually cramped at a bare 44px once 3+ lanes stack in a dense cluster (every
                    # jog's own line, its rotated label, and the next jog's line all crowding the same
                    # ~40px band) — see layout_process.py's own LANE_PITCH for why both copies move together.
+
+# How many EXTRA lanes route()'s own in-gap search tries, growing the
+# same direction its normal n_lanes candidates already do, before
+# giving up on this gap entirely and falling to the shared bottom-
+# overflow channel — a connector whose anchor's own provisioned budget
+# is exhausted by unrelated edges merely PASSING THROUGH its x-range
+# (lanes_needed_by_anchor counts a gap's own converging edges, not
+# every long-distance edge that happens to cross it) still very often
+# has a genuinely free slot just a little further out; jumping straight
+# to the diagram-wide shared channel instead is a detour regardless of
+# how close that free slot might have been (confirmed excessive on CBU
+# Journey 1's pmn_ecc_star_extend -> pmn_ecc_eligibility: 37967px of
+# needless travel for a target only ~400px away). 20 lanes
+# (20*LANE_PITCH = 1200px of extra local search room) comfortably
+# covers a locally-busy gap without ever reading as "the bottom
+# channel in disguise" — past that, the shared channel is the more
+# honest choice.
+LOCAL_OVERFLOW_LANES = 20
 LABEL_GAP = 18   # base perpendicular gap between ANY connector label (rotated off-spine branch label,
                   # or the horizontal happy-branch label) and the line it's attached to — 16-24px per this
                   # engine's own minimum-clearance standard for label spacing (MIN_CLEARANCE=40 is the
@@ -855,6 +873,35 @@ class _LaneRouter:
                 jog_y = candidate
                 break
         if jog_y is None:
+            # Every one of this anchor's own provisioned lanes was
+            # already claimed by some OTHER connector merely passing
+            # through this x-range (lanes_needed_by_anchor counts a
+            # gap's OWN converging edges, not every unrelated long-
+            # distance edge that happens to cross through it) — but
+            # that doesn't mean every nearby slot is full too. Trying
+            # MORE lanes in this SAME gap, growing the same direction
+            # the existing ones already do, before giving up on it
+            # entirely keeps a locally-exhausted connector close to
+            # where it actually needs to be. Jumping straight to the
+            # shared bottom-overflow channel next (the ONLY fallback
+            # this used to have) is a diagram-wide detour regardless of
+            # how close a genuinely free local slot might have been —
+            # confirmed excessive on CBU Journey 1's
+            # pmn_ecc_star_extend -> pmn_ecc_eligibility, whose target
+            # sat only ~400px away vertically but whose connector
+            # travelled 37967px down and back rather than searching a
+            # few more nearby lanes first. Bounded (not unbounded like
+            # the bottom channel's own search below) — past a modest
+            # local search radius, a slot this far from the row's own
+            # content isn't "nearby" anymore, and the shared channel
+            # becomes the more honest choice.
+            for lane in range(n_lanes, n_lanes + LOCAL_OVERFLOW_LANES):
+                candidate = self._gap_lane_y(gap_idx, lane, row_gap, max_card_h) if going_down else \
+                    self._gap_lane_y(gap_idx, -(lane - n_lanes + 1), row_gap, max_card_h)
+                if self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi):
+                    jog_y = candidate
+                    break
+        if jog_y is None:
             for lane in range(self.bottom_lanes):
                 candidate = self.total_h - MIN_CLEARANCE + 16 - lane * LANE_PITCH
                 if self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi):
@@ -899,6 +946,13 @@ class _LaneRouter:
         n_lanes = self.n_lanes if n_lanes is None else n_lanes
         gap_idx = self._row_index(source_y, row_gap)
         for lane in range(n_lanes):
+            candidate = self._gap_lane_y(gap_idx, lane, row_gap, max_card_h)
+            if self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi):
+                return candidate
+        for lane in range(n_lanes, n_lanes + LOCAL_OVERFLOW_LANES):
+            # See route()'s own identical fallback tier for why this
+            # exists — an exhausted local budget doesn't mean every
+            # nearby slot is taken too.
             candidate = self._gap_lane_y(gap_idx, lane, row_gap, max_card_h)
             if self._h_free(candidate, x_lo, x_hi) and self._clear_of_cards(candidate, x_lo, x_hi):
                 return candidate
