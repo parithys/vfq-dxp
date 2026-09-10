@@ -248,7 +248,16 @@ TITLE_AVG_CHAR, DESC_AVG_CHAR, TAG_AVG_CHAR = 8.6, 6.3, 8.5
 TITLE_LINE_H = 20   # gap between two wrapped title lines — same ratio to TITLE_FONT_PX(15) as
                      # DESC_FONT_PX(12.5)'s own established 21px inter-line gap uses (~1.68x font size)
 CARD_TEXT_OFFSET = 26
-CARD_AVAIL_W = 330
+CARD_AVAIL_W = 270   # was 330 — cut by the SAME 60px as layout_process.py's STEP (400->340) per
+                      # direct user review of rendered output: a short card's text left a large
+                      # stretch of dead canvas before the next spine node. The cut comes entirely
+                      # out of this constant, not CARD_TEXT_OFFSET, so the router's own reserve
+                      # gap (STEP - CARD_TEXT_OFFSET - CARD_AVAIL_W, the room _dodge_x2() and the
+                      # left-vertex-exit "too close" fallback search when a preceding card blocks
+                      # a direct approach) stays exactly 44px, same as before — matching STEP's
+                      # own 60px cut here, not compounding on top of it. See layout_process.py's
+                      # own STEP comment for the full reasoning and the verification this pairing
+                      # was checked against.
 SYS_TAG_FONT_PX = 9.5
 SYS_TAG_H = 19   # system-tag pill height (actor tag pill uses its own literal 20 — see node_card_svg())
 

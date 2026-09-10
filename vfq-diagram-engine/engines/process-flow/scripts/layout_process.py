@@ -168,7 +168,24 @@ def classify(node, is_spine, out_flows):
 
 # ----------------------------------------------------------------- geometry constants
 # Confirmed directly against the reference's own rendered SVG (not estimated):
-STEP = 400            # x-spacing between consecutive spine nodes
+STEP = 340            # x-spacing between consecutive spine nodes — was 400 (a 60px, 15% cut,
+                        # paired with svg_gen.py's CARD_AVAIL_W, 330->270, the SAME 60px cut) per
+                        # direct user review of rendered output across 6 full-page screenshots: a short card's
+                        # text routinely left 150px+ of dead canvas before the next spine node,
+                        # reading as wasted screen real estate rather than intentional breathing
+                        # room. CARD_TEXT_OFFSET is deliberately left untouched — shrinking it
+                        # risks text visibly crowding a node's own shape marker (up to r=21 for
+                        # R_END_OUTER/R_MILESTONE_OUTER) — so the entire 60px cut comes out of
+                        # CARD_AVAIL_W, which keeps the router's own reserve gap (STEP -
+                        # CARD_TEXT_OFFSET - CARD_AVAIL_W, see svg_gen.py's own comment on this
+                        # near its CARD_AVAIL_W definition) shrinking by the SAME 60px as STEP —
+                        # not compounding on top of it. That reserve is exactly the room this
+                        # engine's own dodge/escape connector-routing logic (_dodge_x2 and the
+                        # left-vertex-exit "too close" fallback in svg_gen.py) searches in when a
+                        # preceding card blocks a direct approach — already confirmed tight at the
+                        # OLD 44px reserve (multiple corpus-wide cases needed the y-escape or the
+                        # SHORT_VERTEX_ENTRY_MIN exception even before this change) — see the
+                        # verification note against the CARD_AVAIL_W edit in svg_gen.py.
 X_START = 60           # first (start) node's x
 SPINE_Y = 215           # y of every spine node
 TOPBAR_H = 64            # phase-header band height
