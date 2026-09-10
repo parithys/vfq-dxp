@@ -583,15 +583,20 @@ LANE_PITCH = 60   # >MIN_CLEARANCE(40) on purpose — MIN_CLEARANCE is the enfor
 # channel in disguise" — past that, the shared channel is the more
 # honest choice.
 LOCAL_OVERFLOW_LANES = 20
-LABEL_GAP = 18   # base perpendicular gap between ANY connector label (rotated off-spine branch label,
-                  # or the horizontal happy-branch label) and the line it's attached to — 16-24px per this
-                  # engine's own minimum-clearance standard for label spacing (MIN_CLEARANCE=40 is the
-                  # floor for node/card/shape/connector clearance, a different, larger standard; this one
-                  # is specifically "label to its own line," which reads as visually crowded at a bare
-                  # 11px, this constant's own previous value). Shared by both label styles via this ONE
-                  # constant — an earlier version hardcoded -11 separately in each of the two call sites,
-                  # which is exactly how they drifted out of sync before (see git history) and is why this
-                  # is a single named constant, not two literals that happen to agree today.
+LABEL_GAP = 13   # base perpendicular gap between ANY connector label (rotated off-spine branch label,
+                  # or the horizontal happy-branch label) and the line it's attached to — MIN_CLEARANCE=40
+                  # is the floor for node/card/shape/connector clearance, a different, larger standard;
+                  # this one is specifically "label to its own line." Originally 11px, raised to 18px
+                  # because that read as crowded against its OWN line — then brought back down to 13px
+                  # (confirmed via direct user review of rendered output) once diagrams with several
+                  # closely-spaced parallel connectors showed the opposite problem: at 18px, a label sat
+                  # ambiguously between two different lines, no longer clearly closer to its own. 13px
+                  # keeps ownership visually unambiguous against a neighbouring line while staying clear of
+                  # the crowded-against-its-own-line look that motivated the original increase. Shared by
+                  # both label styles via this ONE constant — an earlier version hardcoded -11 separately
+                  # in each of the two call sites, which is exactly how they drifted out of sync before
+                  # (see git history) and is why this is a single named constant, not two literals that
+                  # happen to agree today.
                   #
                   # Measured from the line's actual x (which sits at the SOURCE node's own x for a straight
                   # vertical drop — confirmed against connectors_svg()'s own y1/y2 computation just below,
