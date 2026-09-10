@@ -1438,11 +1438,23 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
                 # MIN_SEGMENT_LENGTH — the hard floor every connector
                 # segment must meet — if the wider gap isn't actually
                 # clear.
-                nonlocal true_vertex_y2
+                #
+                # Returns (x, y) — the point router.route() should target,
+                # NOT a mutation of true_vertex_y2. An earlier version used
+                # `nonlocal true_vertex_y2` to record its own y-escape,
+                # which corrupted the SAME variable the lead_out cut-in
+                # below relies on to reach the node's real vertex — the
+                # connector's own final arrowhead ended up stranded at the
+                # escaped y instead of the target's true edge (confirmed
+                # on Mobile Postpaid Activation: jsm06 -> jsm05 and 3
+                # other loop-backs all arrived 50px above their target's
+                # actual left vertex). Keeping the escape's y local to this
+                # return value lets the caller add its own short correction
+                # segment back down to the true vertex when needed.
                 for offset in (LANE_PITCH, MIN_SEGMENT_LENGTH):
                     lo, hi = true_vertex_x2 - offset, true_vertex_x2
                     if router._clear_of_cards(true_vertex_y2, lo, hi):
-                        return true_vertex_x2 - offset
+                        return true_vertex_x2 - offset, true_vertex_y2
                 # Neither x offset is clear at this y — trying MORE x
                 # offsets can't help: hi stays pinned at true_vertex_x2
                 # (the target's own true entry point) regardless of how
@@ -1465,9 +1477,8 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
                         for offset in (LANE_PITCH, MIN_SEGMENT_LENGTH):
                             lo, hi = true_vertex_x2 - offset, true_vertex_x2
                             if router._clear_of_cards(candidate_y, lo, hi):
-                                true_vertex_y2 = candidate_y
-                                return true_vertex_x2 - offset
-                return true_vertex_x2 - MIN_SEGMENT_LENGTH
+                                return true_vertex_x2 - offset, candidate_y
+                return true_vertex_x2 - MIN_SEGMENT_LENGTH, true_vertex_y2
             # Only dodge when the TARGET node's own dead-centre column is
             # ALSO used by at least one down-direction edge — either one
             # it sources itself (a trunk) or one that terminates at it
@@ -1518,7 +1529,7 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
                     # the target's own left edge instead of every dodge
                     # landing on its single geometric vertex.
                     true_vertex_y2 += dodge_n * CARD_ELEMENT_GAP
-                target_x2, y2 = _dodge_x2(), true_vertex_y2
+                target_x2, y2 = _dodge_x2()
             # route_x1 has to clear MIN_SEGMENT_LENGTH from BOTH x1 (the
             # lead-in's own length) and target_x2 (router.route()'s own
             # connecting jog, from route_x1 across to target_x2) — sizing
@@ -1637,7 +1648,18 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             d, jog_y, jog_x_lo, jog_x_hi = router.route(route_x1, lead_in_y1, target_x2, y2, a.get("rowGap", row_gap),
                                                          a.get("maxCardH", max_card_h), a.get("laneCount"))
             if target_x2 != b["x"]:
-                lead_out = f" L {true_vertex_x2} {true_vertex_y2}"
+                lead_out = f" L {true_vertex_x2} {y2}"
+                if y2 != true_vertex_y2:
+                    # _dodge_x2()'s own y-escape landed the router's jog
+                    # away from the target's real vertex y (true_vertex_y2
+                    # — b["y"], plus any dodge_n stagger) to find card
+                    # clearance — cut back down/up to the real vertex here
+                    # so the arrowhead still lands where the target
+                    # actually is, not stranded at the escape point
+                    # (confirmed on Mobile Postpaid Activation: without
+                    # this, jsm06 -> jsm05 and 3 similar loop-backs all
+                    # arrived 50px off their target's own left vertex).
+                    lead_out += f" L {true_vertex_x2} {true_vertex_y2}"
             d = f"M {x1} {y1}" + lead_in_mid + " L " + d[2:] + lead_out   # prepend the true origin's own horizontal
                                              # lead-in (plus any Y-detour waypoints); d[2:] strips
                                              # router.route()'s own leading "M " so its first point
