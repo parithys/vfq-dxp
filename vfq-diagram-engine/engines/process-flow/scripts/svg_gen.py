@@ -592,6 +592,20 @@ LABEL_GAP = 18   # base perpendicular gap between ANY connector label (rotated o
 ROTATED_LABEL_GAP = LABEL_GAP   # kept as an alias — see LABEL_GAP above; renaming every call site below
                                  # to the new shared name is unnecessary churn for a value that's identical
 
+LABEL_OWNERSHIP_MAX_DIST = 80   # a rotated label's heuristic anchor (source x, endpoint y-midpoint) can
+                                  # drift arbitrarily far from where its OWN connector actually draws —
+                                  # confirmed corpus-wide (RC-7): the vertical-stacking cursor below has no
+                                  # cap on how far it pushes a colliding label down a crowded column (up to
+                                  # 1,339.6px observed), and separately, horizontal fanning sized only to
+                                  # dodge sibling LABELS has no awareness of the connector's own line either
+                                  # — for a left-vertex-exit loop-back, most of the path's length runs near
+                                  # the TARGET's column, not the source's, so the heuristic's fixed source-x
+                                  # anchor is never guaranteed to be close to begin with. This is the same
+                                  # 80px threshold this review's own audit uses to flag a label as
+                                  # "disowned" from its connector — reusing it here means a label is
+                                  # corrected exactly when it would otherwise fail that check, not on some
+                                  # unrelated internal budget.
+
 
 def is_trivial_spine_hop(f, a, b):
     """True for a plain consecutive spine hop (st(to)==st(from)+1, happy,
@@ -682,7 +696,15 @@ def _segment_arrow_points(d, claimed_segments):
     physical segment gets an arrow there; every later one sharing that
     same stretch skips its own arrow for that specific segment (its
     OTHER, genuinely unique segments are unaffected)."""
-    pts = [tuple(map(float, p.split())) for p in re.findall(r'[\d.]+ [\d.]+', d)]
+    # -? on both halves: a route that climbs above the spine (e.g. into
+    # negative y to duck around content near the canvas top) produces a
+    # coordinate like "4764 -65.0" — the un-hyphenated version of this
+    # pattern silently drops any such point from its match entirely
+    # (confirmed: it left a whole intermediate vertex out of `pts` here,
+    # and separately caused a label-snapping helper elsewhere to compute
+    # a nearest-point search against a corrupted 2-point path instead of
+    # the real 4-point one).
+    pts = [tuple(map(float, p.split())) for p in re.findall(r'-?[\d.]+ -?[\d.]+', d)]
     dedup = [pts[0]]
     for p in pts[1:]:
         if p != dedup[-1]:
@@ -721,6 +743,54 @@ def _segment_arrow_points(d, claimed_segments):
         if not _claimed(x1, y1, x2, y2):
             arrows.append(((x1 + x2) / 2, (y1 + y2) / 2, x2 - x1, y2 - y1))
     return arrows
+
+
+def _nearest_point_on_path(px, py, points):
+    """(dist, fx, fy, dx, dy) for the closest point on an "M x y L x y
+    L x y ..." path (already parsed into `points`) to (px, py) — dx,dy
+    is that segment's own direction vector, so the caller can offset
+    perpendicular to it. Returns None for a degenerate (<2-point) path.
+    Used to snap a rotated branch label back onto its own connector's
+    real line when its independent (source-x, endpoint-midpoint-y)
+    heuristic anchor drifts too far from it — see LABEL_OWNERSHIP_MAX_
+    DIST above."""
+    best = None
+    for (x1, y1), (x2, y2) in zip(points, points[1:]):
+        dx, dy = x2 - x1, y2 - y1
+        if dx == 0 and dy == 0:
+            continue
+        t = max(0.0, min(1.0, ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)))
+        fx, fy = x1 + t * dx, y1 + t * dy
+        dist = math.hypot(px - fx, py - fy)
+        if best is None or dist < best[0]:
+            best = (dist, fx, fy, dx, dy)
+    return best
+
+
+def _snap_label_to_path(lx, ly, d):
+    """If (lx, ly) sits farther than LABEL_OWNERSHIP_MAX_DIST from the
+    connector's own already-routed `d`, return a corrected (lx, ly)
+    projected onto the nearest point of that real path, offset LABEL_
+    GAP perpendicular to it for readability — otherwise (lx, ly)
+    unchanged. Shared by both label placement styles below: each has
+    its own heuristic anchor (a jog's reported x-span for one, the
+    source's x and endpoint y-midpoint for the other) that's a fair
+    guess in the common case but has no built-in check against where
+    the line actually is (RC-7: confirmed drifting up to 1,339.6px in
+    the worst corpus-wide case, and separately — for the jog-anchored
+    style — whenever a lead-in and the router's own internal jog sit at
+    DIFFERENT y's, "widen the reported x-span to include the lead-in"
+    silently assumes they're the same horizontal run when they aren't,
+    anchoring the label to a line that's only partly real)."""
+    path_pts = [tuple(map(float, p.split())) for p in re.findall(r'-?[\d.]+ -?[\d.]+', d)]   # -? — see _segment_arrow_points' own note on this same pattern
+    nearest = _nearest_point_on_path(lx, ly, path_pts)
+    if not nearest or nearest[0] <= LABEL_OWNERSHIP_MAX_DIST:
+        return lx, ly
+    _, fx, fy, ndx, ndy = nearest
+    seg_len = math.hypot(ndx, ndy)
+    if not seg_len:
+        return fx, fy
+    return fx - ndy / seg_len * LABEL_GAP, fy + ndx / seg_len * LABEL_GAP
 
 
 def _arrow_svg(x, y, dx, dy, color):
@@ -1197,12 +1267,28 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
     # ("New plan/add-on exceeds credit limit") and Mobile Postpaid
     # Activation ("Supervisor reassigns draft"), both landing on some
     # other node's circle, not their own source's.
-    node_shapes = [(n["x"], n["y"], n["r"]) for n in nodes_by_id.values()]
+    node_shapes = [(nid, n["x"], n["y"], n["r"]) for nid, n in nodes_by_id.items()]
 
-    def _clear_of_every_shape(x, y, half_len):
+    def _clear_of_every_shape(x, y, half_len, exclude=()):
+        # `exclude` lets a caller skip specific node ids — used when a
+        # label has just been deliberately snapped onto ITS OWN
+        # connector's real path (see _snap_label_to_path): landing close
+        # to that edge's own source/target shape there is expected, not
+        # a collision (a label describing a connector's arrival is
+        # SUPPOSED to sit near where it arrives) — confirmed on Bill
+        # Formatter's bill_action_menu -> invoice_search, where this
+        # check pushed a freshly-corrected, already-compliant label
+        # another 174px away specifically because it now (correctly)
+        # sat right next to invoice_search's own shape, its own target.
+        # Left as () everywhere else: the ORIGINAL bug this function was
+        # rewritten to catch (see the comment above) was a label landing
+        # on some OTHER, unrelated node's shape, which this exclusion
+        # does not affect.
         for _ in range(len(node_shapes) + 1):   # bounded: y only ever moves down, past a finite set
             moved = False
-            for cx, cy, r in node_shapes:
+            for nid, cx, cy, r in node_shapes:
+                if nid in exclude:
+                    continue
                 if cx - r <= x <= cx + r:
                     shape_top, shape_bottom = cy - r, cy + r
                     if y - half_len <= shape_bottom and y + half_len >= shape_top:
@@ -1807,6 +1893,16 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # actually runs, which is how two branches from the same source
             # used to end up with indistinguishable stacked labels.
             lx, ly = (jog_x_lo + jog_x_hi) / 2, jog_y - LABEL_GAP
+            # jog_x_lo/jog_x_hi were widened (above, at the point they're
+            # returned) to fold in the lead-in's own x1, on the assumption
+            # that the lead-in and the router's own internal jog run along
+            # the SAME horizontal line — true when they share a y, false
+            # whenever a vertical segment sits between them (a lead-in at
+            # y1, then a drop to a different jog_y). When that assumption
+            # doesn't hold, (lx, ly) can land nowhere near any real drawn
+            # segment (confirmed: RC-7's kyc03_rescan -> kyc01 and 5 other
+            # corpus-wide instances) — snap back onto the real path.
+            lx, ly = _snap_label_to_path(lx, ly, d)
             placed_labels.append((lx, ly, f["label"]))
             out.append(f'<text x="{lx}" y="{ly}" font-size="11" font-weight="700" fill="{color}" '
                        f'text-anchor="middle">{esc(f["label"])}</text>')
@@ -1869,6 +1965,28 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # unrelated node's circle once the cursor pushed it down to
             # avoid a different label.
             ly = _clear_of_every_shape(lx, ly, this_len / 2)
+
+            # Everything above anchors this label using a heuristic
+            # (source x, endpoint y-midpoint) that has never actually been
+            # checked against where the connector's OWN drawn line sits —
+            # fine when most of the path runs near that column, but for a
+            # left-vertex-exit loop-back the bulk of the vertical run lives
+            # at the TARGET's column, not the source's, and the horizontal
+            # fanning above is sized only to dodge sibling LABELS, with no
+            # awareness of the line either. RC-7: this drifted up to
+            # 1,339.6px from the connector's own path in the worst
+            # corpus-wide case. Snap back onto the real path whenever the
+            # heuristic result would fail this review's own 80px ownership
+            # check; left untouched otherwise, so every already-compliant
+            # label keeps its exact current position. Re-clear against
+            # cards/shapes and re-key the vertical cursor afterward — a
+            # snapped position is a genuinely new (lx, ly), not a small
+            # nudge of the old one.
+            snapped_lx, snapped_ly = _snap_label_to_path(lx, ly, d)
+            if (snapped_lx, snapped_ly) != (lx, ly):
+                lx = _clear_of_every_card(snapped_lx, snapped_ly, this_len / 2)
+                ly = _clear_of_every_shape(lx, snapped_ly, this_len / 2, exclude=(from_id, to_id))
+                xkey = round(lx)
 
             vert_cursor_by_x[xkey] = max(vert_cursor_by_x.get(xkey, ly), ly + this_len / 2)
 
