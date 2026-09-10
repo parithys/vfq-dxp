@@ -297,6 +297,24 @@ CARD_ELEMENT_GAP = 14
 # the route, regardless of how tight the surrounding layout is.
 MIN_SEGMENT_LENGTH = 50
 
+# A narrow, deliberate exception to MIN_SEGMENT_LENGTH: the final
+# horizontal cut-in into a dodge target's TRUE vertex (see _dodge_x2())
+# can find itself with real, obstacle-clear room that's just short of
+# the general 50px floor — confirmed on Mobile Postpaid Activation's
+# jsm06 -> jsm05: jsm04's own card leaves exactly ~24px of genuinely
+# clear space before jsm05's left vertex. Below the 50px floor, the
+# ORIGINAL behaviour escaped vertically instead (see the y-escape tiers
+# in _dodge_x2()/route_x1's own "too close" fallback), which does reach
+# the correct vertex point exactly, but arrives via a vertical drop
+# into the shape's corner rather than a horizontal approach from the
+# side — confirmed, by direct user review of rendered output, to read
+# as "the connector doesn't know where it's landing" even though the
+# coordinate itself is exact. A short cut-in — bounded below so it
+# never degrades into an illegible sliver — reads as "enters from the
+# side" the way every OTHER dodge target does, and is preferred over
+# the vertical escape whenever the available room clears this floor.
+SHORT_VERTEX_ENTRY_MIN = 15
+
 # Radius of a dashed connector's own origin-point marker (see
 # connectors_svg()'s own comment on the circle itself) — centred a full
 # ORIGIN_MARKER_R beyond the node's true exit vertex so the drawn circle
@@ -1541,7 +1559,19 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
                     lo, hi = true_vertex_x2 - offset, true_vertex_x2
                     if router._clear_of_cards(true_vertex_y2, lo, hi):
                         return true_vertex_x2 - offset, true_vertex_y2
-                # Neither x offset is clear at this y — trying MORE x
+                # Neither the full LANE_PITCH nor the 50px floor fits.
+                # Before escaping in y (which reaches the correct vertex
+                # but via a vertical drop into its corner — see
+                # SHORT_VERTEX_ENTRY_MIN above for why that reads badly),
+                # check whether a genuinely clear but SHORTER horizontal
+                # cut-in exists — searched from just under the 50px floor
+                # down to SHORT_VERTEX_ENTRY_MIN, so the result is the
+                # LONGEST short segment available, not the bare minimum.
+                for offset in range(MIN_SEGMENT_LENGTH - 1, SHORT_VERTEX_ENTRY_MIN - 1, -1):
+                    lo, hi = true_vertex_x2 - offset, true_vertex_x2
+                    if router._clear_of_cards(true_vertex_y2, lo, hi):
+                        return true_vertex_x2 - offset, true_vertex_y2
+                # Still nothing horizontal fits at all — trying MORE x
                 # offsets can't help: hi stays pinned at true_vertex_x2
                 # (the target's own true entry point) regardless of how
                 # far left lo moves, so if that fixed right edge is
@@ -1549,7 +1579,7 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
                 # shares the same unavoidable collision (confirmed on
                 # Bill Formatter: invoice_generate's true vertex sits
                 # only ~30px clear of batch_create's own card — under
-                # MIN_SEGMENT_LENGTH itself, so no x-only search could
+                # even SHORT_VERTEX_ENTRY_MIN, so no x-only search could
                 # ever find daylight). The escape is in y instead: a
                 # card's own text grows DOWN from its row, so nudging the
                 # arrival point UP first (the direction actually clear
