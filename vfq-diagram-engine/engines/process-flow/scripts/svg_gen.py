@@ -281,6 +281,12 @@ CARD_ELEMENT_GAP = 14
 # the route, regardless of how tight the surrounding layout is.
 MIN_SEGMENT_LENGTH = 50
 
+# Radius of a dashed connector's own origin-point marker (see
+# connectors_svg()'s own comment on the circle itself) — centred a full
+# ORIGIN_MARKER_R beyond the node's true exit vertex so the drawn circle
+# sits tangent to the shape's boundary, not straddling it.
+ORIGIN_MARKER_R = 4.5
+
 # Below a text baseline, ~22% of the font size is a reasonable allowance
 # for descenders (CAP_HEIGHT_RATIO above already models the ascent side
 # of the same font stack). Needed because CARD_ELEMENT_GAP has to mean
@@ -803,6 +809,18 @@ class _LaneRouter:
         n_lanes is passed here, so the two always agree for a given source
         node."""
         n_lanes = self.n_lanes if n_lanes is None else n_lanes
+        if x1 != x2 and abs(x1 - x2) < MIN_SEGMENT_LENGTH:
+            # x1 and x2 come from two independently-positioned nodes (this
+            # call's own source and target) — nothing about them is ever
+            # guaranteed to differ by a real amount. Left as-is, the
+            # horizontal jog this method draws between them (below) can
+            # come out under the segment-length floor purely by
+            # coincidence (confirmed: two off-spine nodes 6px apart after
+            # the collision sweep nudged one of them). Snapping x2 to x1
+            # collapses that jog to zero rather than leaving it short —
+            # at a few px of difference the visual result is
+            # indistinguishable from a straight vertical run anyway.
+            x2 = x1
         x_lo, x_hi = (x1, x2) if x1 <= x2 else (x2, x1)
         if abs(y1 - y2) < 1:
             self._claim_v(x1, y1, y1)
@@ -1189,7 +1207,9 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # requirement than that clearance preference: it applies
             # unconditionally, even in the rare case where the nearest
             # neighbour's card sits closer than MIN_SEGMENT_LENGTH away.
-            route_x1 = x1 - MIN_SEGMENT_LENGTH
+            # route_x1 itself is computed further below, AFTER target_x2
+            # is finalized (see its own comment there) — its value depends
+            # on target_x2, not just on this node's own x1.
             target_x2 = b["x"]
             true_vertex_x2, true_vertex_y2 = b["x"] - b["r"], b["y"]
             lead_out = ""
@@ -1263,19 +1283,29 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
                     # landing on its single geometric vertex.
                     true_vertex_y2 += dodge_n * CARD_ELEMENT_GAP
                 target_x2, y2 = _dodge_x2(), true_vertex_y2
-            # route_x1 (the lead-in's own endpoint, sized purely from the
-            # SOURCE) and target_x2 (sized purely from the TARGET) are
-            # otherwise unrelated numbers — they can coincidentally land
-            # within MIN_SEGMENT_LENGTH of each other, leaving router
-            # .route()'s own connecting jog shorter than the floor every
-            # segment must meet (confirmed on Mobile MACD Plan Change:
+            # route_x1 has to clear MIN_SEGMENT_LENGTH from BOTH x1 (the
+            # lead-in's own length) and target_x2 (router.route()'s own
+            # connecting jog, from route_x1 across to target_x2) — sizing
+            # it from x1 alone (a flat x1-MIN_SEGMENT_LENGTH) used to
+            # leave that second distance to chance: x1 and target_x2 are
+            # otherwise unrelated numbers (one sized from the SOURCE, one
+            # from the TARGET, the latter often a dodge position pulled
+            # left of its true vertex — see _dodge_x2() above) and can
+            # coincidentally land within MIN_SEGMENT_LENGTH of each other
+            # (confirmed on Mobile MACD Plan Change:
             # lockin_penalty_payment -> upgrade_downgrade_check's own
-            # jog came out 4px wide). Snapping route_x1 to target_x2
-            # removes that jog entirely — the lead-in simply runs a
-            # little further and connects directly, which only ever
-            # makes it LONGER than its own 50px floor, never shorter.
-            if abs(route_x1 - target_x2) < MIN_SEGMENT_LENGTH:
-                route_x1 = target_x2
+            # jog came out 4px wide). An earlier fix snapped route_x1
+            # directly to target_x2 whenever they were close — which did
+            # collapse router.route()'s own jog to zero, but silently
+            # broke the OTHER floor instead: route_x1 no longer sat a
+            # true 50px from x1, so the LEAD-IN itself came out short
+            # (confirmed on this same edge, post-snap: a 46px lead-in).
+            # Taking whichever of the two floors pushes route_x1 further
+            # left satisfies both simultaneously, regardless of how close
+            # x1 and target_x2 happen to be — the lead-in only ever gets
+            # longer than MIN_SEGMENT_LENGTH, never shorter, and the same
+            # is true of router.route()'s own jog.
+            route_x1 = min(x1, target_x2) - MIN_SEGMENT_LENGTH
             d, jog_y, jog_x_lo, jog_x_hi = router.route(route_x1, y1, target_x2, y2, a.get("rowGap", row_gap),
                                                          a.get("maxCardH", max_card_h), a.get("laneCount"))
             if target_x2 != b["x"]:
@@ -1326,7 +1356,27 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
             # arrowhead at the target end alone. Solid connectors don't
             # get one (confirmed: none of the reference's non-dashed
             # elbow paths have a matching circle, only the dashed ones).
-            out.append(f'<circle cx="{x1}" cy="{y1}" r="4.5" fill="{color}"/>')
+            #
+            # (x1, y1) sits exactly ON the source shape's own boundary,
+            # so a circle centred there (radius 4.5) used to render with
+            # half its own area painted OVER the node's face — this
+            # connector's own markup (including the circle) is emitted
+            # after every node shape, so nothing hid the inward half.
+            # Nudging the circle's centre ORIGIN_MARKER_R further out
+            # along this exit's own direction — the same direction
+            # x1/y1 themselves were offset from the node's true centre,
+            # just above — makes it sit tangent to the boundary instead:
+            # fully outside the shape, still visibly anchored right at
+            # the edge it exits from.
+            if same_row:
+                ocx, ocy = x1, y1 + ORIGIN_MARKER_R
+            elif left_vertex_exit:
+                ocx, ocy = x1 - ORIGIN_MARKER_R, y1
+            elif going_down:
+                ocx, ocy = x1, y1 + ORIGIN_MARKER_R
+            else:
+                ocx, ocy = x1, y1 - ORIGIN_MARKER_R
+            out.append(f'<circle cx="{ocx}" cy="{ocy}" r="{ORIGIN_MARKER_R}" fill="{color}"/>')
         if f.get("label") and jog_x_lo != jog_x_hi:
             # This edge's path actually bends — a fan-out branch or a
             # loop-back's own jog toward its target. The reference artefact
