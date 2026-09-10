@@ -295,23 +295,50 @@ def compute_process_layout(nodes, flows, lanes, phases):
     nid = {n["id"]: n for n in nodes}
     spine_order = _spine_order(nodes, flows)
     spine_set = set(spine_order)
-    spine_x = {node_id: X_START + i * STEP for i, node_id in enumerate(spine_order)}
+
+    # BOUNDARY_MARGIN keeps a card's own text visibly clear of the phase
+    # divider LINE itself, not just technically not-overlapping it — the
+    # same "real reading gap, not a bare non-collision" reasoning
+    # ROW_TEXT_CLEARANCE already documents for row spacing. MIN_CARD_AVAIL_W
+    # is a floor so a pathologically narrow phase (very short business
+    # phase, few nodes) still wraps to a readable multi-word line instead
+    # of degenerating toward one word per line. Defined here, ahead of
+    # spine_x, because spine_x's own gap sizing (below) now depends on
+    # them.
+    BOUNDARY_MARGIN = 20
+    MIN_CARD_AVAIL_W = 120
+
+    # Spine spacing is dynamic, floored at STEP(400) — never below it,
+    # regardless of content — but grown past that floor wherever a phase
+    # boundary would otherwise squeeze a card. The boundary line between
+    # two phases sits at the MIDPOINT of the gap separating them (see the
+    # band x0/x1 math below, confirmed against the reference), so at a
+    # flat STEP=400 gap that midpoint lands only 200px past the outgoing
+    # phase's last node — nowhere near the CARD_TEXT_OFFSET(26) +
+    # CARD_AVAIL_W(330) + BOUNDARY_MARGIN(20) = 376px that node's own card
+    # needs, forcing it to compress well below its designed width
+    # (confirmed overflowing on Mobile Postpaid Activation's "Save
+    # Milestone as Draft Order" before this fix existed). Widening JUST
+    # the gap that straddles a phase boundary — to whatever keeps that
+    # midpoint the full 376px clear of the outgoing node — lets every
+    # card render at its full designed width instead of being squeezed;
+    # every other (same-phase) gap stays at the flat STEP floor since
+    # nothing there ever needs more.
+    PHASE_BOUNDARY_GAP = max(STEP, 2 * (svg_gen.CARD_TEXT_OFFSET + svg_gen.CARD_AVAIL_W + BOUNDARY_MARGIN))
+
+    spine_x = {}
+    for i, node_id in enumerate(spine_order):
+        if i == 0:
+            spine_x[node_id] = X_START
+            continue
+        prev_id = spine_order[i - 1]
+        crosses_phase = nid[prev_id].get("phase", 0) != nid[node_id].get("phase", 0)
+        spine_x[node_id] = spine_x[prev_id] + (PHASE_BOUNDARY_GAP if crosses_phase else STEP)
 
     # Phase bands only ever depend on spine node x (fixed the instant
     # spine_x above is known — never on row_gap/card height/off-spine
     # positions), so they're computed here, BEFORE card heights, rather
-    # than at the end where the final returned dict needs them. Doing it
-    # early lets card_metrics() below constrain each spine node's own text
-    # width to whatever room its OWN phase band actually has left, instead
-    # of the flat CARD_AVAIL_W every node used to get regardless of how
-    # close the next phase's boundary sits — confirmed overflowing on a
-    # phase's last node in several diagrams (Mobile Postpaid Activation's
-    # "Save Milestone as Draft Order" among them): CARD_AVAIL_W(330) +
-    # CARD_TEXT_OFFSET(26) = 356px of text width, while a phase boundary
-    # exactly midway between two STEP=400-apart spine nodes leaves only
-    # STEP/2=200px — the card's own description/title/tags ran 150+px past
-    # the tint line into the next phase's territory. See BOUNDARY_MARGIN
-    # below for the fix.
+    # than at the end where the final returned dict needs them.
     phase_x = collections.defaultdict(list)
     for node_id in spine_order:
         phase_x[nid[node_id].get("phase", 0)].append(spine_x[node_id])
@@ -319,8 +346,8 @@ def compute_process_layout(nodes, flows, lanes, phases):
     bands = []
     for i, p in enumerate(phase_indices):
         xs = phase_x[p]
-        x0 = min(xs) - (STEP / 2 if i > 0 else X_START)
-        x1 = (min(phase_x[phase_indices[i + 1]]) - STEP / 2) if i + 1 < len(phase_indices) else max(xs) + PHASE_PAD
+        x0 = min(xs) - (PHASE_BOUNDARY_GAP / 2 if i > 0 else X_START)
+        x1 = (min(phase_x[phase_indices[i + 1]]) - PHASE_BOUNDARY_GAP / 2) if i + 1 < len(phase_indices) else max(xs) + PHASE_PAD
         bands.append({"name": phases[p] if p < len(phases) else f"Phase {p}",
                        "x0": max(0, x0), "x1": x1, "tint": i % 2 == 1})
     band_x1_by_phase = {p: bands[i]["x1"] for i, p in enumerate(phase_indices)}
@@ -340,15 +367,6 @@ def compute_process_layout(nodes, flows, lanes, phases):
                 return b["x1"]
         return bands[-1]["x1"] if bands else None
 
-    # BOUNDARY_MARGIN keeps a card's own text visibly clear of the phase
-    # divider LINE itself, not just technically not-overlapping it — the
-    # same "real reading gap, not a bare non-collision" reasoning
-    # ROW_TEXT_CLEARANCE already documents for row spacing. MIN_CARD_AVAIL_W
-    # is a floor so a pathologically narrow phase (very short business
-    # phase, few nodes) still wraps to a readable multi-word line instead
-    # of degenerating toward one word per line.
-    BOUNDARY_MARGIN = 20
-    MIN_CARD_AVAIL_W = 120
     avail_w_by_node = {}
     for node_id in spine_order:
         x1 = band_x1_by_phase.get(nid[node_id].get("phase", 0))
