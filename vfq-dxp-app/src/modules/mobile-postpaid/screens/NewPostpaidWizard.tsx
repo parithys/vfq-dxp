@@ -206,9 +206,18 @@ export function NewPostpaidWizard() {
                 value={values.doi as DoiSelection | undefined}
                 defaultCreditLimitQar={(values.eligibility as EligibilityResult | undefined)?.defaultCreditLimitQar}
                 onChange={(v) => setValue('doi', v)}
+                planProductId={values.productId as string | undefined}
+                planDiscountId={values.discountId as string | undefined}
+                planAddonIds={(values.addonIds as string[] | undefined) ?? []}
               />
             ),
-            isValid: () => true,
+            // No device chosen: nothing to gate. A device chosen: BR-114's DOI
+            // declaration must be read and accepted before proceeding.
+            isValid: (values) => {
+              const doi = values.doi as DoiSelection | undefined;
+              if (!doi) return true;
+              return Boolean(doi.doiRead) && Boolean(doi.doiAccepted);
+            },
           },
           {
             key: 'simType',
@@ -330,6 +339,10 @@ export function NewPostpaidWizard() {
             msisdn: values.msisdn,
             numberPriceQAR: numberDelta,
             deviceName: doi?.deviceName,
+            deviceColour: doi?.colour,
+            deviceStorage: doi?.storage,
+            deviceImei: doi?.imei,
+            deviceHandoverMethod: doi?.handoverMethod,
             simType: simType?.simType,
             simSerial: simType?.simSerial,
             dueTodayQAR: dueTodayQar,

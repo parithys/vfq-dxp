@@ -12,7 +12,12 @@
     "qcbCreditCheckStatus": "Passed",
     "stockReservationStatus": "Reserved",
     "accountStanding": "Good Standing",
-    "status": "Approved"
+    "status": "Approved",
+    "colourOptions": ["Onyx Black", "Marble Grey", "Cobalt Violet"],
+    "storageOptions": ["128 GB", "256 GB"],
+    "catalogStockStatus": "In Stock",
+    "catalogStockNote": "In stock — same-day store pickup",
+    "tradeInBonusQar": 300
   },
   {
     "id": "DOI-3002",
@@ -27,7 +32,12 @@
     "qcbCreditCheckStatus": "Pending",
     "stockReservationStatus": "Not Reserved",
     "accountStanding": "Good Standing",
-    "status": "Rejected"
+    "status": "Rejected",
+    "colourOptions": ["Natural Titanium", "Black Titanium"],
+    "storageOptions": ["128 GB", "256 GB", "512 GB"],
+    "catalogStockStatus": "Delivery Only",
+    "catalogStockNote": "3–5 day delivery — no store stock",
+    "tradeInBonusQar": null
   },
   {
     "id": "DOI-3003",
@@ -42,6 +52,11 @@
     "qcbCreditCheckStatus": "Failed",
     "stockReservationStatus": "Released",
     "accountStanding": "Good Standing",
-    "status": "Declined"
+    "status": "Declined",
+    "colourOptions": ["Graphite", "Silver"],
+    "storageOptions": ["16 GB"],
+    "catalogStockStatus": "In Stock",
+    "catalogStockNote": "In stock — same-day store pickup",
+    "tradeInBonusQar": null
   }
 ]

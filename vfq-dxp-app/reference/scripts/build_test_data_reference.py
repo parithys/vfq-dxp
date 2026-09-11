@@ -94,6 +94,7 @@ overview_rows = [
     ('Leads (Sales)', 'Seeded leads for the Sales workspace.'),
     ('Postpaid Plans & Discounts', 'The RED plan tiers and eligible discounts shown on the New Postpaid Activation wizard\'s redesigned Plan & Add-ons step.'),
     ('Number Selection', 'Seeded MSISDN inventory plus how to test the Manual MSISDN Entry card\'s valid/blocked/malformed paths.'),
+    ('Devices (DOI)', 'The device catalogue and colour/storage/stock options on the redesigned Device & DOI step, and its DOI declaration gate.'),
     ('Verification Codes', 'The demo password and OTP/verification code used everywhere a code is required (password reset, MFA, change password).'),
 ]
 r = 4
@@ -336,6 +337,35 @@ note = ('The Number Selection step (New Postpaid/Fixed Line/FWA wizards) also ha
 row = title_block(ws, 'Number Selection', 'public/mock-data/numbers.json', note)
 number_rows = [(n.get('msisdn'), n.get('category'), n.get('status'), n.get('priceQAR'), n.get('valueTier') or '—') for n in numbers]
 write_table(ws, row, ['MSISDN', 'Category', 'Status', 'Price (QAR)', 'Value Tier'], number_rows, [18, 12, 14, 14, 14])
+
+# ---------------------------------------------------------------------------
+# Sheet 10: Verification Codes
+# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Sheet: Devices (DOI)
+# ---------------------------------------------------------------------------
+devices = load('device-installments')
+ws = wb.create_sheet('Devices (DOI)')
+note = ('New Postpaid Activation\'s redesigned "Device & DOI" step. DOI = Device on Installment (BR-114/BR-106/BR-329) '
+        '— the step\'s own declaration section is correctly labelled "Device on Installment (DOI) Declaration", not '
+        '"Declaration of Intent". Selecting any device below (not "SIM only") requires ticking both DOI checkboxes '
+        'before Continue enables — "SIM only" skips the declaration entirely. Total contract value = upfront + '
+        '(monthly instalment x term); Monthly total = device instalment + the Plan & Add-ons total from the earlier step.')
+row = title_block(ws, 'Devices (DOI)', 'public/mock-data/device-installments.json', note)
+seen_devices = set()
+device_rows = []
+for d in devices:
+    if d['deviceName'] in seen_devices:
+        continue
+    seen_devices.add(d['deviceName'])
+    device_rows.append((
+        d.get('deviceName'), d.get('devicePriceQar'), d.get('downPaymentQar'), d.get('installmentMonths'),
+        d.get('monthlyInstallmentQar'), ', '.join(d.get('colourOptions', [])), ', '.join(d.get('storageOptions', [])),
+        d.get('catalogStockStatus'), d.get('tradeInBonusQar') or '—'
+    ))
+write_table(ws, row,
+    ['Device', 'Price (QAR)', 'Default Upfront', 'Default Term', 'Default Monthly', 'Colours', 'Storage', 'Stock Status', 'Trade-in Bonus'],
+    device_rows, [22, 12, 14, 12, 14, 30, 20, 14, 14])
 
 # ---------------------------------------------------------------------------
 # Sheet 10: Verification Codes
