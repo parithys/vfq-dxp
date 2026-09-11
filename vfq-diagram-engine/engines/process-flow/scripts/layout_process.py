@@ -470,10 +470,30 @@ def compute_process_layout(nodes, flows, lanes, phases):
 
     CARD_L, CARD_R = svg_gen.CARD_TEXT_OFFSET, svg_gen.CARD_TEXT_OFFSET + svg_gen.CARD_AVAIL_W
     local_max_h = {}
+    # Same computation as local_max_h, but with the anchor's OWN card height
+    # excluded — used for every tier gap AFTER the first (tier1->tier2,
+    # tier2->tier3, ...), never for spine->tier0. The anchor's card renders
+    # once, at y=SPINE_Y, and is fully cleared by the spine->tier0 gap
+    # alone (that gap already reserves its own max_card_h + both
+    # clearances before tier0 begins) — re-adding its height to EVERY
+    # subsequent tier gap too, as the single uniform local_max_h/row_gap
+    # value used to, re-charges space for a card that's already several
+    # hundred px behind by the time a deeper tier is reached. Confirmed on
+    # Mobile Postpaid Activation: kyc03_rescan (tier 0) -> kyc03_manual_
+    # approval (tier 1) sat 908.86px apart — of which 409px was
+    # kyc03_capture_check's (the shared spine anchor) own card height,
+    # despite that card ending ~500px above tier 0 even begins, let alone
+    # tier 1. Every OTHER contributor (descendant cards at any tier, and
+    # any UNRELATED spine node's card that horizontally overlaps this
+    # branch's territory — the specific case an earlier, reverted version
+    # of local_max_h itself was built to catch, see the comment above)
+    # still applies in full; only the anchor's own entry is dropped.
+    local_max_h_excl_anchor = {}
     for ax, descendant_ids in descendants_by_anchor.items():
         anchor_id = x_to_spine_id.get(ax)
         subtree_ids = ([anchor_id] if anchor_id else []) + descendant_ids
         h = max((_card_h(nid_, nid_ in spine_set) for nid_ in subtree_ids), default=0)
+        h_excl_anchor = max((_card_h(nid_, nid_ in spine_set) for nid_ in descendant_ids), default=0)
         lo = min(off_spine_x[nid_] for nid_ in descendant_ids) + CARD_L
         hi = max(off_spine_x[nid_] for nid_ in descendant_ids) + CARD_R
         lo, hi = min(lo, ax + CARD_L), max(hi, ax + CARD_R)
@@ -481,7 +501,10 @@ def compute_process_layout(nodes, flows, lanes, phases):
             s_x = spine_x[sid]
             if s_x + CARD_L <= hi and s_x + CARD_R >= lo:
                 h = max(h, _card_h(sid, True))
+                if sid != anchor_id:
+                    h_excl_anchor = max(h_excl_anchor, _card_h(sid, True))
         local_max_h[ax] = h
+        local_max_h_excl_anchor[ax] = h_excl_anchor
 
     # How many EXPLICIT ROUTED connectors (not the implicit spine line, not
     # an inline happy-branch label — see svg_gen.needs_lane()) actually
@@ -565,6 +588,7 @@ def compute_process_layout(nodes, flows, lanes, phases):
             lanes_needed_by_anchor[b_anchor] += 1
 
     local_row_gap = {}
+    local_row_gap_rest = {}
     local_lane_count = {}
     for ax in spine_x.values():
         demand = lanes_needed_by_anchor.get(ax, 0)
@@ -583,6 +607,11 @@ def compute_process_layout(nodes, flows, lanes, phases):
         n_lanes_here = max(N_ROUTING_LANES, demand + 2 if demand > N_ROUTING_LANES else demand)
         local_lane_count[ax] = n_lanes_here
         local_row_gap[ax] = _row_gap(local_max_h.get(ax, max_card_h), n_lanes_here)
+        # Lane/clearance provisioning is IDENTICAL to local_row_gap above —
+        # only the card-height term drops the anchor's own contribution
+        # (see local_max_h_excl_anchor's own comment) — used for every
+        # tier gap past the first; see the cumulative y() below.
+        local_row_gap_rest[ax] = _row_gap(local_max_h_excl_anchor.get(ax, max_card_h), n_lanes_here)
 
     out_nodes = {}
     for i, node_id in enumerate(spine_order):
@@ -602,14 +631,24 @@ def compute_process_layout(nodes, flows, lanes, phases):
     for (ax, t), ids in bucket.items():
         ids_sorted = sorted(ids)
         n_ids = len(ids_sorted)
-        row_gap_here = local_row_gap[ax]
-        max_h_here = local_max_h[ax]
+        # Cumulative, not a flat (t+1)*row_gap multiply: the FIRST gap
+        # (spine->tier0) alone has to clear the anchor's own card, so it
+        # keeps the full local_row_gap; every gap after that (tier0->tier1,
+        # tier1->tier2, ...) uses local_row_gap_rest, which already fully
+        # cleared that card the first time and never re-charges it. At
+        # t=0 this is exactly SPINE_Y + local_row_gap[ax] — identical to
+        # the old (t+1)*row_gap_here formula, so tier-0 placement is
+        # unchanged for every diagram; only tier>=1 moves, and only
+        # closer. See local_max_h_excl_anchor's own comment for the case
+        # this fixes.
+        row_gap_here = local_row_gap[ax] if t == 0 else local_row_gap_rest[ax]
+        max_h_here = local_max_h[ax] if t == 0 else local_max_h_excl_anchor[ax]
+        y = SPINE_Y + local_row_gap[ax] + t * local_row_gap_rest[ax]
         for j, node_id in enumerate(ids_sorted):
             n = nid[node_id]
             out_flows = [f for f in flows if f.get("from") == node_id]
             cat = classify(n, False, out_flows)
             x = off_spine_x[node_id]
-            y = SPINE_Y + (t + 1) * row_gap_here
             r = {"error": R_ERROR, "escalation": ESCALATION_SIZE / 2,
                  "decision": R_DECISION}.get(cat, R_RECOVERY)
             out_nodes[node_id] = {"id": node_id, "category": cat, "x": x, "y": y,
