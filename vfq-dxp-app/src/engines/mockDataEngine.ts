@@ -3,8 +3,9 @@
 
 const SEED_FILES = [
   'accounts', 'account-level-products', 'addons-discounts', 'addresses', 'adjustments',
-  'apn-records', 'appointments', 'audit-trail', 'authorised-contacts', 'billing-buckets',
-  'billing-profiles', 'bills', 'bulk-activation-orders', 'bulk-sms-orders', 'caf-forms',
+  'apn-records', 'appointments', 'audit-trail', 'authorised-contacts', 'bell-notifications',
+  'billing-buckets', 'billing-profiles', 'bills', 'bulk-activation-orders', 'bulk-notes',
+  'bulk-sms-orders', 'caf-forms',
   'commitment-penalties', 'consumer-deposits', 'contacts-b2b2c', 'cpe-devices', 'credit-limits',
   'cross-sales-offers', 'customer-activities', 'customers', 'deposit-bundles', 'device-installments',
   'donor-details', 'enterprise-accounts', 'enterprise-form-types', 'enterprise-invoices',
@@ -15,7 +16,7 @@ const SEED_FILES = [
   'order-approvals', 'orders', 'osb-notifications', 'park-my-number-plans', 'passport-to-qid-updates',
   'payments', 'port-out-tickets', 'products', 'qtickets', 'reject-reasons', 'rfs-records',
   'sim-swap-orders', 'sims', 'smart-devices', 'sms-templates', 'star-number-tiers',
-  'statements-of-account', 'technician-resources', 'ton-cases', 'trouble-tickets',
+  'statements-of-account', 'tasks', 'technician-resources', 'ton-cases', 'trouble-tickets',
   'uim-inventory-records', 'users-agents', 'vodafone-ids', 'volumetric-discounts', 'wfm-activities',
 ] as const;
 

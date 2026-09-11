@@ -4,6 +4,8 @@ import { getCustomer360, toActiveCustomerSummary, type Customer360Data } from '.
 import { useActiveCustomerStore } from '../../stores/activeCustomerStore';
 import { Badge } from '../../components/primitives/Badge';
 import { Tabs, type TabItem } from '../../components/primitives/Tabs';
+import { BellNotificationBanner } from './BellNotificationBanner';
+import { BulkNotesSection } from './BulkNotesSection';
 import { ProfileSection } from './sections/ProfileSection';
 import { MobileSection } from './sections/MobileSection';
 import { FibreHomeSection } from './sections/FibreHomeSection';
@@ -66,6 +68,7 @@ export function Customer360Layout() {
     { key: 'interactions', label: 'Interactions', content: <InteractionsSection data={data} /> },
     { key: 'documents', label: 'Documents', content: <DocumentsSection data={data} /> },
     { key: 'notifications', label: 'Notifications', content: <NotificationsSection data={data} /> },
+    { key: 'bulk-notes', label: 'Bulk Notes', content: <BulkNotesSection accountIds={data.accounts.map((a) => a.accountId)} /> },
     { key: 'consent', label: 'Consent & Preferences', content: <ConsentSection data={data} /> },
     { key: 'assets', label: 'Products & Assets', content: <ProductsAssetsSection data={data} /> },
     { key: 'relationships', label: 'Relationship Hierarchy', content: <RelationshipHierarchySection data={data} /> },
@@ -79,9 +82,10 @@ export function Customer360Layout() {
         {data.customer.blacklisted && <Badge variant="danger">Blacklisted</Badge>}
         {data.customer.moiValidationStatus === 'Verified' && <Badge variant="success">Verified</Badge>}
       </div>
-      <p className="text-fg-2 mb-6">
+      <p className="text-fg-2 mb-4">
         {data.customer.customerId} · {data.customer.idType} {data.customer.qid} · {data.customer.segment}
       </p>
+      <BellNotificationBanner customerId={data.customer.customerId} />
       <Tabs items={tabs} />
     </div>
   );

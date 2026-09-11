@@ -17,10 +17,15 @@ export const STAFF_ID_ROLE_MAP: Record<string, StaffIdRoleEntry> = {
   VFQ12346: { personaId: 'PERSONA-008', roleLabel: 'IT Operations' },
 };
 
-export const DEFAULT_PERSONA_ID = 'PERSONA-001';
-
 /** Normalizes "VFQ-12341", "vfq 12341", "VFQ12341" to the same lookup key. */
 export function resolveRoleFromStaffId(staffId: string): StaffIdRoleEntry | undefined {
   const normalized = staffId.replace(/[\s-]/g, '').toUpperCase();
   return STAFF_ID_ROLE_MAP[normalized];
 }
+
+// Placeholder demo credential — the Agent 360 BRSD leaves the real password
+// policy and IDAM credential source as open items (D-02, OI-AGN-04); this
+// exists only so the Login Failed state (Annex_02) is reachable in this
+// mock environment. Swap for real IDAM validation once VFQ Security
+// confirms the policy — do not treat this as a real credential scheme.
+export const DEMO_LOGIN_PASSWORD = 'Vodafone@123';

@@ -4,10 +4,10 @@ import { VodafoneMark } from '../components/primitives/VodafoneMark';
 import { Tooltip } from '../components/primitives/Tooltip';
 import { useAuthStore } from '../stores/authStore';
 import { usePersonaStore } from '../stores/personaStore';
-import { useNotificationStore } from '../stores/notificationStore';
 import { pickProfileForRole } from '../engines/agentProfileEngine';
 import { useEnterToSubmit } from '../hooks/useEnterToSubmit';
-import { DEFAULT_PERSONA_ID, resolveRoleFromStaffId } from './staffIdRoleMap';
+import { DEMO_LOGIN_PASSWORD, resolveRoleFromStaffId } from './staffIdRoleMap';
+import { ForgotPasswordFlow } from './ForgotPasswordFlow';
 
 const ICONS = {
   shield: 'M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z M9.5 12l1.8 1.8L15 10',
@@ -37,14 +37,18 @@ const METRICS = [
 // New auth gate — not evidenced in the source corpus (no SCR- id); implements
 // the split-panel login mock supplied directly by the user. The "Sign in with
 // SSO" action is fully mocked (no backend/IdP), consistent with every other
-// simulated action in this app — it just flips authStore's flag. Role is not
-// user-selectable: it's derived from the entered Staff ID via
-// staffIdRoleMap.ts, then carried through post-login the same way a manually
-// picked persona used to be.
+// simulated action in this app. Role is not user-selectable: it's derived
+// from the entered Staff ID via staffIdRoleMap.ts, then carried through
+// post-login the same way a manually picked persona used to be.
+//
+// Credential validation (Agent 360 BRSD JSM-01 / Annex_02 "Login Failed"
+// state): an unrecognised Staff ID or wrong password now genuinely blocks
+// sign-in with an inline error, instead of silently defaulting to a role.
+// The password check is against a placeholder demo credential
+// (DEMO_LOGIN_PASSWORD) — see staffIdRoleMap.ts for why.
 export function LoginPage() {
   const signIn = useAuthStore((s) => s.signIn);
   const setActivePersona = usePersonaStore((s) => s.setActivePersona);
-  const pushToast = useNotificationStore((s) => s.pushToast);
 
   const [staffId, setStaffId] = useState('');
   const [password, setPassword] = useState('');
@@ -52,17 +56,36 @@ export function LoginPage() {
   const [language, setLanguage] = useState<'English' | 'العربية'>('English');
   const [signingIn, setSigningIn] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
 
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   const handleSignIn = async () => {
     if (signingIn) return;
+    setLoginError(null);
+
+    if (!staffId.trim() || !password) {
+      setLoginError('Enter your Staff ID and password.');
+      return;
+    }
+
     setSigningIn(true);
     const resolvedRole = resolveRoleFromStaffId(staffId);
-    const personaId = resolvedRole?.personaId ?? DEFAULT_PERSONA_ID;
-    setActivePersona(personaId);
-    const profile = await pickProfileForRole(personaId);
-    signIn(staffId || 'VFQ-12345', profile);
+    if (!resolvedRole) {
+      setLoginError('Staff ID not recognised.');
+      setSigningIn(false);
+      return;
+    }
+    if (password !== DEMO_LOGIN_PASSWORD) {
+      setLoginError('Incorrect password.');
+      setSigningIn(false);
+      return;
+    }
+
+    setActivePersona(resolvedRole.personaId);
+    const profile = await pickProfileForRole(resolvedRole.personaId);
+    signIn(staffId, profile);
   };
 
   const handleFormKeyDown = useEnterToSubmit(!signingIn, handleSignIn);
@@ -85,6 +108,11 @@ export function LoginPage() {
           </div>
 
           <div className="space-y-5" onKeyDown={handleFormKeyDown}>
+            {loginError && (
+              <div role="alert" className="rounded-[var(--radius-sm)] border border-danger/50 bg-danger/10 px-3 py-2.5 text-[length:var(--fs-caption)] text-white">
+                {loginError}
+              </div>
+            )}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="staff-id" className="text-[length:var(--fs-caption)] text-white/70">Staff ID</label>
               <input
@@ -101,9 +129,7 @@ export function LoginPage() {
                 <label htmlFor="login-password" className="text-[length:var(--fs-caption)] text-white/70">Password</label>
                 <button
                   type="button"
-                  onClick={() =>
-                    pushToast('info', 'Password reset instructions would be sent to your registered email. (Demo — no real reset flow.)')
-                  }
+                  onClick={() => setForgotPasswordOpen(true)}
                   className="text-[length:var(--fs-caption)] text-white/70 underline underline-offset-2 hover:text-white"
                 >
                   Forgot password?
@@ -219,6 +245,8 @@ export function LoginPage() {
           <span className="text-white/40">VFQ-DXP v3.4.1</span>
         </div>
       </div>
+
+      <ForgotPasswordFlow open={forgotPasswordOpen} onClose={() => setForgotPasswordOpen(false)} initialStaffId={staffId} />
     </div>
   );
 }

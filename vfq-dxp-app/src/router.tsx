@@ -9,6 +9,9 @@ import { SalesWorkspace } from './workspace/sales/SalesWorkspace';
 import { SupportWorkspace } from './workspace/support/SupportWorkspace';
 import { OrdersWorkspace } from './workspace/orders/OrdersWorkspace';
 import { AdministrationWorkspace } from './workspace/administration/AdministrationWorkspace';
+import { AgentProfileWorkspace } from './workspace/profile/AgentProfileWorkspace';
+import { TaskListView } from './workspace/tasks/TaskListView';
+import { TaskDetailView } from './workspace/tasks/TaskDetailView';
 
 // Side-effect imports: each module's screens/index.ts calls registerScreen()
 // so router.tsx doesn't need to know which screens are implemented.
@@ -44,6 +47,9 @@ export function AppRouter() {
       <Route path="/support" element={<SupportWorkspace />} />
       <Route path="/orders" element={<OrdersWorkspace />} />
       <Route path="/administration" element={<AdministrationWorkspace />} />
+      <Route path="/profile" element={<AgentProfileWorkspace />} />
+      <Route path="/tasks" element={<TaskListView />} />
+      <Route path="/tasks/:taskId" element={<TaskDetailView />} />
       {/* Legacy: the 213-screen catalogue, kept mounted for direct-link
           access and internal QA (ModuleScreenList's Built/Not-built view) —
           no longer linked from the primary sidebar. */}

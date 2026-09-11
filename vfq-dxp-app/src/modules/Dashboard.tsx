@@ -22,6 +22,7 @@ interface Order { status: string; }
 interface SimSwapOrder { status: string; }
 interface BulkJob { overallStatus: string; jobType?: string; }
 interface CustomerRecord { customerId: string; name: string; segment: string; }
+interface AgentTask { taskStatus: string; taskType: string; priorityFlag: boolean; }
 
 // Agent Workspace redesign: the KPI summary (real entityStore counts) is kept
 // unchanged, but the module-launcher grid it used to sit above is gone — the
@@ -59,16 +60,31 @@ export function Dashboard() {
   const simSwaps = (useEntityStore((s) => s.records['sim-swap-orders']) ?? []) as unknown as SimSwapOrder[];
   const customers = useEntityStore((s) => s.records.customers) ?? [];
   const bulkJobs = (useEntityStore((s) => s.records['bulk-activation-orders']) ?? []) as unknown as BulkJob[];
+  const tasks = (useEntityStore((s) => s.records.tasks) ?? []) as unknown as AgentTask[];
   const loadingMap = useEntityStore((s) => s.loading);
   const anyLoading = ['trouble-tickets', 'orders', 'leads', 'sim-swap-orders', 'customers', 'bulk-activation-orders'].some(
     (k) => loadingMap[k as keyof typeof loadingMap]
   );
 
   useEffect(() => {
-    ['trouble-tickets', 'orders', 'leads', 'sim-swap-orders', 'customers', 'bulk-activation-orders'].forEach((k) =>
+    ['trouble-tickets', 'orders', 'leads', 'sim-swap-orders', 'customers', 'bulk-activation-orders', 'tasks'].forEach((k) =>
       loadKind(k as Parameters<typeof loadKind>[0])
     );
   }, [loadKind]);
+
+  // Agent 360 ATV-01: the BRSD names 5 dashboard categories without saying how
+  // they derive from a task's fields (OI-AGN-14/18 leave this open) — modeled
+  // here as: status-based (Open/In Progress), type-based (Payment/Draft
+  // Order), and flag-based (Priority), all excluding Closed tasks so the
+  // tiles reflect outstanding work, not history.
+  const openTasks = tasks.filter((t) => t.taskStatus !== 'Closed');
+  const taskTiles = [
+    { key: 'open', label: 'Open Tasks', count: openTasks.filter((t) => t.taskStatus === 'Open').length },
+    { key: 'in-progress', label: 'In Progress Tasks', count: openTasks.filter((t) => t.taskStatus === 'In Progress').length },
+    { key: 'payments', label: 'Pending Payments', count: openTasks.filter((t) => t.taskType === 'Payment').length },
+    { key: 'priority', label: 'Priority Tasks', count: openTasks.filter((t) => t.priorityFlag).length },
+    { key: 'draft-orders', label: 'Draft Orders', count: openTasks.filter((t) => t.taskType === 'Draft Order').length },
+  ];
 
   useEffect(() => {
     if (recentCustomerIds.length === 0) {
@@ -145,6 +161,20 @@ export function Dashboard() {
         <Icon path={ICONS.search} className="w-5 h-5" />
         <span className="text-[length:var(--fs-body)]">Search a customer by mobile, QID, name, or account number…</span>
       </Link>
+
+      <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-3">My Tasks</h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
+        {taskTiles.map((tile) => (
+          <Link
+            key={tile.key}
+            to={`/tasks?filter=${tile.key}`}
+            className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 hover:border-accent hover:shadow-raised transition-all"
+          >
+            <div className="text-[length:var(--fs-h3)] font-extrabold text-fg">{anyLoading ? '—' : tile.count}</div>
+            <div className="text-fg-2 text-[length:var(--fs-caption)] mt-1">{tile.label}</div>
+          </Link>
+        ))}
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
         {kpis.map((kpi) => (

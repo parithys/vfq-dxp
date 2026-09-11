@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { usePersonaStore } from '../stores/personaStore';
 import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
@@ -167,6 +168,13 @@ export function PersonaSwitcher() {
                   {staffId} · {profile?.jobTitle ?? '—'}
                 </p>
               </div>
+              <Link
+                to="/profile"
+                onClick={() => setOpen(null)}
+                className="block px-4 py-2.5 text-[length:var(--fs-body)] text-fg-2 hover:bg-surface hover:text-fg border-t border-border-soft"
+              >
+                Edit profile
+              </Link>
               <div className="px-4 py-3 border-t border-border-soft">
                 <label className="text-[length:var(--fs-caption)] text-muted mb-1 block">Switch role</label>
                 <Select

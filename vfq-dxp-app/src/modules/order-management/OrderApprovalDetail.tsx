@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Tabs } from '../../components/primitives/Tabs';
 import { Button } from '../../components/primitives/Button';
@@ -28,29 +28,52 @@ interface RejectReason {
   reasonLabel: string;
 }
 
+interface ApprovalHistoryEntry {
+  activityNumber: string;
+  orderId: string;
+  actionTaken: string;
+  notes?: string;
+  transactionDate: string;
+}
+
 // SCR-061: Order Approval detail — header (Contact, Order #) + 4 tabs
 // (Attachments/Order Details/Activities/Agents Details) + action buttons
-// (Approve, Reject - Correction, Reject - Drop Order, Go Back), evidenced
-// identically across Fixed Line/FWA/Postpaid B2B2C-with-approval journeys.
+// (Approve, Reject - Correction, Reject - Drop Order, Return, Go Back),
+// evidenced identically across Fixed Line/FWA/Postpaid B2B2C-with-approval
+// journeys, extended with Agent 360 BRSD's Return action (AAV-03) and real
+// task history (AAV-05 — `actionTaken` distinguishes an approval-decision
+// record from the pre-seeded general `customer-activities` timeline, which
+// carries no such field).
 export function OrderApprovalDetail() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const orderId = params.get('id');
   const orders = (useEntityStore((s) => s.records.orders) ?? []) as unknown as Order[];
+  const activities = (useEntityStore((s) => s.records['customer-activities']) ?? []) as unknown as ApprovalHistoryEntry[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const updateRecord = useEntityStore((s) => s.updateRecord);
   const createRecord = useEntityStore((s) => s.createRecord);
   const pushToast = useNotificationStore((s) => s.pushToast);
 
   const [reasons, setReasons] = useState<RejectReason[]>([]);
-  const [modal, setModal] = useState<'approve' | 'reject-correction' | 'reject-drop' | null>(null);
+  const [modal, setModal] = useState<'approve' | 'reject-correction' | 'reject-drop' | 'return' | null>(null);
   const [ackApprove, setAckApprove] = useState(false);
   const [approveComment, setApproveComment] = useState('');
   const [rejectReason, setRejectReason] = useState('');
   const [rejectComment, setRejectComment] = useState('');
+  const [returnReason, setReturnReason] = useState('');
+  const [returnComment, setReturnComment] = useState('');
+  // Guards against duplicate submission. Uses a ref, not just `submitting`
+  // state: two click dispatches landing in the same synchronous tick both
+  // read `submitting` as stale `false` (a state update isn't visible until
+  // the next render) — observed in practice as this handler otherwise
+  // creating two near-identical history entries per single click.
+  const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     loadKind('orders');
+    loadKind('customer-activities');
     mockDataEngine.list<RejectReason>('reject-reasons').then(setReasons);
   }, [loadKind]);
 
@@ -59,19 +82,25 @@ export function OrderApprovalDetail() {
     return <div className="p-8 text-fg-2">No order selected — go back to the Approval Queue and Assign to Me first.</div>;
   }
 
-  const logActivity = (text: string) =>
+  const history = activities.filter((a) => a.orderId === order.orderId && a.actionTaken);
+
+  const logActivity = (actionTaken: string, notes: string) =>
     createRecord('customer-activities', {
-      activityId: `ACT-${Date.now().toString().slice(-6)}`,
+      activityNumber: `ACT-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
       orderId: order.orderId,
-      description: text,
-      createdAt: new Date().toISOString(),
+      actionTaken,
+      notes,
+      transactionDate: new Date().toISOString(),
     });
 
   const approve = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setSubmitting(true);
     try {
       const nextStatus = order.nextStatusOnApproval ?? 'Complete';
       await updateRecord('orders', 'orderId', order.orderId, { status: nextStatus, approvalStatus: 'Approved' });
-      await logActivity(`Order Approved — ${approveComment}`);
+      await logActivity('Approved', approveComment);
       pushToast(
         'success',
         nextStatus === 'Complete'
@@ -82,20 +111,56 @@ export function OrderApprovalDetail() {
     } catch (err) {
       console.error('[OrderApprovalDetail] approve failed:', err);
       pushToast('error', `Failed to approve order: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      submittingRef.current = false;
+      setSubmitting(false);
     }
   };
 
   const reject = async (drop: boolean) => {
-    const reasonLabel = reasons.find((r) => r.reasonCode === rejectReason)?.reasonLabel ?? rejectReason;
-    await updateRecord('orders', 'orderId', order.orderId, {
-      status: drop ? 'Cancelled' : 'Rejected - Correction',
-      approvalStatus: 'Rejected',
-      rejectReasonCode: rejectReason,
-      rejectComment,
-    });
-    await logActivity(`Reject - ${drop ? 'Drop Order' : 'Correction'}: ${reasonLabel} — ${rejectComment}`);
-    pushToast(drop ? 'warning' : 'warning', `Order ${order.orderId}: ${drop ? 'dropped as cancelled' : 'rejected — SMS sent to agent for correction'}.`);
-    navigate('/order-management');
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setSubmitting(true);
+    try {
+      const reasonLabel = reasons.find((r) => r.reasonCode === rejectReason)?.reasonLabel ?? rejectReason;
+      await updateRecord('orders', 'orderId', order.orderId, {
+        status: drop ? 'Cancelled' : 'Rejected - Correction',
+        approvalStatus: 'Rejected',
+        rejectReasonCode: rejectReason,
+        rejectComment,
+      });
+      await logActivity(`Rejected — ${drop ? 'Drop Order' : 'Correction'}`, `${reasonLabel}: ${rejectComment}`);
+      pushToast(drop ? 'warning' : 'warning', `Order ${order.orderId}: ${drop ? 'dropped as cancelled' : 'rejected — SMS sent to agent for correction'}.`);
+      navigate('/order-management');
+    } finally {
+      submittingRef.current = false;
+      setSubmitting(false);
+    }
+  };
+
+  // AAV-03/Annex_02: Return is distinct from Reject — it loops the order back
+  // to "Submitted for Approval" (permitted next status per the BRSD's own
+  // status model) rather than terminating it, and per BR-06 requires a
+  // reason + notes exactly like Reject does.
+  const returnOrder = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setSubmitting(true);
+    try {
+      const reasonLabel = reasons.find((r) => r.reasonCode === returnReason)?.reasonLabel ?? returnReason;
+      await updateRecord('orders', 'orderId', order.orderId, {
+        status: 'Submitted for Approval',
+        approvalStatus: 'Returned',
+        returnReasonCode: returnReason,
+        returnComment,
+      });
+      await logActivity('Returned', `${reasonLabel}: ${returnComment}`);
+      pushToast('warning', `Order ${order.orderId} returned for correction — back in the approval queue.`);
+      navigate('/order-management');
+    } finally {
+      submittingRef.current = false;
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -134,7 +199,29 @@ export function OrderApprovalDetail() {
           {
             key: 'activities',
             label: 'Activities',
-            content: <p className="text-fg-2 text-[length:var(--fs-body)]">Activity log entries for this order (Approve/Reject actions logged here).</p>,
+            content: (
+              <div>
+                <p className="text-fg-2 text-[length:var(--fs-body)] mb-3">
+                  Task history — visible before you confirm a decision, per Agent 360 AAV-05.
+                </p>
+                {history.length === 0 && <p className="text-muted text-[length:var(--fs-body)]">No approval actions recorded yet for this order.</p>}
+                {history.length > 0 && (
+                  <div className="rounded-[var(--radius-card)] border border-border-soft divide-y divide-border-soft">
+                    {history.map((entry) => (
+                      <div key={entry.activityNumber} className="px-4 py-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="font-medium text-fg text-[length:var(--fs-body)]">{entry.actionTaken}</span>
+                          <span className="text-muted text-[length:var(--fs-caption)]">{new Date(entry.transactionDate).toLocaleString()}</span>
+                        </div>
+                        <div className="text-fg-2 text-[length:var(--fs-caption)] mt-0.5">
+                          Task ID: {entry.orderId}{entry.notes ? ` · ${entry.notes}` : ''}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ),
           },
           {
             key: 'agents-details',
@@ -158,6 +245,9 @@ export function OrderApprovalDetail() {
         <Button variant="ghost-rect" className="!text-danger !border-danger" onClick={() => setModal('reject-drop')}>
           Reject - Drop Order
         </Button>
+        <Button variant="ghost-rect" onClick={() => setModal('return')}>
+          Return
+        </Button>
         <Button variant="ghost-rect" onClick={() => navigate('/order-management')}>
           Go Back
         </Button>
@@ -173,7 +263,7 @@ export function OrderApprovalDetail() {
         </div>
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>
-          <Button variant="primary-rect" onClick={approve} disabled={!ackApprove}>Submit approval</Button>
+          <Button variant="primary-rect" onClick={approve} disabled={!ackApprove || submitting}>Submit approval</Button>
         </div>
       </Modal>
 
@@ -190,8 +280,30 @@ export function OrderApprovalDetail() {
         </div>
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>
-          <Button variant="primary-rect" onClick={() => reject(modal === 'reject-drop')} disabled={!rejectReason}>
+          <Button variant="primary-rect" onClick={() => reject(modal === 'reject-drop')} disabled={!rejectReason || submitting}>
             Reject Order
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal open={modal === 'return'} onClose={() => setModal(null)} title="Return Order">
+        <div className="space-y-3">
+          <p className="text-fg-2 text-[length:var(--fs-body)]">
+            Returning sends this order back to the approval queue for correction, rather than rejecting it outright.
+          </p>
+          <Select
+            label="Return Reason"
+            value={returnReason}
+            onChange={(e) => setReturnReason(e.target.value)}
+            placeholder="Select a reason"
+            options={reasons.map((r) => ({ value: r.reasonCode, label: r.reasonLabel }))}
+          />
+          <Textarea label="Notes" value={returnComment} onChange={(e) => setReturnComment(e.target.value)} />
+        </div>
+        <div className="flex justify-end gap-2 mt-6">
+          <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>
+          <Button variant="primary-rect" onClick={returnOrder} disabled={!returnReason || !returnComment || submitting}>
+            Return Order
           </Button>
         </div>
       </Modal>

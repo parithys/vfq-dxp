@@ -6,6 +6,10 @@ export interface AgentProfile {
   name: string;
   jobTitle: string;
   team: string;
+  /** Agent 360 BRSD APM-08/DF-AGT-006 — MFA is off by default; method values
+   * are a placeholder LOV (OI-AGN-06 leaves the real allowed set open). */
+  mfaEnabled?: boolean;
+  mfaMethod?: 'Authenticator App' | 'SMS OTP';
 }
 
 interface AuthState {

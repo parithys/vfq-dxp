@@ -1,0 +1,87 @@
+import { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { DataTable } from '../../components/primitives/DataTable';
+import { Badge } from '../../components/primitives/Badge';
+import { useEntityStore } from '../../stores/entityStore';
+
+interface AgentTask {
+  taskId: string;
+  taskName: string;
+  taskType: string;
+  taskStatus: string;
+  priorityFlag: boolean;
+  assignedAgentId: string | null;
+  createdAt: string;
+}
+
+const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'filled-neutral' | 'outlined-red'> = {
+  Open: 'warning',
+  Assigned: 'filled-neutral',
+  'In Progress': 'outlined-red',
+  Closed: 'success',
+};
+
+const FILTER_LABELS: Record<string, string> = {
+  open: 'Open Tasks',
+  'in-progress': 'In Progress Tasks',
+  payments: 'Pending Payments',
+  priority: 'Priority Tasks',
+  'draft-orders': 'Draft Orders',
+};
+
+// Agent 360 ATV-01/04: the task dashboard's 5 category tiles drill into this
+// filtered list; selecting a row opens the task detail (ATV-04). Filtering
+// logic mirrors Dashboard.tsx's tile counts exactly — see that file's
+// comment on how the 5 BRSD categories map onto taskStatus/taskType/
+// priorityFlag, since the BRSD itself leaves the derivation open (OI-AGN-14/18).
+export function TaskListView() {
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const filter = params.get('filter') ?? 'open';
+  const tasks = (useEntityStore((s) => s.records.tasks) ?? []) as unknown as AgentTask[];
+  const loadKind = useEntityStore((s) => s.loadKind);
+  const loading = useEntityStore((s) => s.loading.tasks);
+
+  useEffect(() => {
+    loadKind('tasks');
+  }, [loadKind]);
+
+  const openTasks = tasks.filter((t) => t.taskStatus !== 'Closed');
+  const filtered = {
+    open: openTasks.filter((t) => t.taskStatus === 'Open'),
+    'in-progress': openTasks.filter((t) => t.taskStatus === 'In Progress'),
+    payments: openTasks.filter((t) => t.taskType === 'Payment'),
+    priority: openTasks.filter((t) => t.priorityFlag),
+    'draft-orders': openTasks.filter((t) => t.taskType === 'Draft Order'),
+  }[filter] ?? openTasks;
+
+  return (
+    <div className="p-8">
+      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">{FILTER_LABELS[filter] ?? 'My Tasks'}</h1>
+      <p className="text-fg-2 mb-6">{filtered.length} task(s).</p>
+      <DataTable<AgentTask>
+        columns={[
+          { key: 'taskId', header: 'Task ID' },
+          { key: 'taskName', header: 'Task Name' },
+          { key: 'taskType', header: 'Type' },
+          {
+            key: 'priorityFlag',
+            header: 'Priority',
+            render: (t) => (t.priorityFlag ? <Badge variant="danger">Priority</Badge> : <span>—</span>),
+          },
+          {
+            key: 'taskStatus',
+            header: 'Status',
+            render: (t) => <Badge variant={STATUS_VARIANT[t.taskStatus] ?? 'filled-neutral'}>{t.taskStatus}</Badge>,
+          },
+          { key: 'assignedAgentId', header: 'Assigned To' },
+        ]}
+        rows={filtered}
+        rowKey={(t) => t.taskId}
+        onRowClick={(t) => navigate(`/tasks/${t.taskId}`)}
+        emptyMessage="No tasks in this category."
+        loading={loading}
+      />
+    </div>
+  );
+}
