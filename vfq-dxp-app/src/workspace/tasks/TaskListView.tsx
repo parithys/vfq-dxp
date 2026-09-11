@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DataTable } from '../../components/primitives/DataTable';
 import { Badge } from '../../components/primitives/Badge';
 import { useEntityStore } from '../../stores/entityStore';
+import { useAuthStore } from '../../stores/authStore';
+import { isVisibleToAgent } from '../../engines/agentTaskEngine';
 
 interface AgentTask {
   taskId: string;
@@ -41,12 +43,17 @@ export function TaskListView() {
   const tasks = (useEntityStore((s) => s.records.tasks) ?? []) as unknown as AgentTask[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const loading = useEntityStore((s) => s.loading.tasks);
+  const currentAgentId = useAuthStore((s) => s.profile?.userId);
 
   useEffect(() => {
     loadKind('tasks');
   }, [loadKind]);
 
-  const openTasks = tasks.filter((t) => t.taskStatus !== 'Closed');
+  // ATV-02 — see Dashboard.tsx's tile counts for the same rule; kept
+  // consistent via the shared isVisibleToAgent() predicate.
+  const openTasks = tasks
+    .filter((t) => t.taskStatus !== 'Closed')
+    .filter((t) => isVisibleToAgent(t.assignedAgentId, currentAgentId));
   const filtered = {
     open: openTasks.filter((t) => t.taskStatus === 'Open'),
     'in-progress': openTasks.filter((t) => t.taskStatus === 'In Progress'),

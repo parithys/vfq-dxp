@@ -4,12 +4,15 @@ import { DataTable } from '../../components/primitives/DataTable';
 import { Badge } from '../../components/primitives/Badge';
 import { Button } from '../../components/primitives/Button';
 import { useEntityStore } from '../../stores/entityStore';
+import { useAuthStore } from '../../stores/authStore';
+import { isVisibleToAgent } from '../../engines/agentTaskEngine';
 
 interface Order {
   orderId: string;
   orderType: string;
   status: string;
   customerName?: string;
+  assignedApproverId?: string | null;
 }
 
 // SCR-060/SCR-197: TM SR Queue View / Order Approval Queue — manager queue of
@@ -17,18 +20,36 @@ interface Order {
 // guided-journeys-fixed-line-open-ui-tablet-fixed-line-prepatc-aa41d84a).
 // Filters to orders in `Submitted for Approval` status — B2B2C orders from the
 // New Fixed Line/FWA/Postpaid wizards route here (see those wizards' onSubmit).
+//
+// Agent 360 AAV-02: "display all approval tasks assigned to the specific
+// agent." Previously "Assign to Me" was a pure navigation button — it never
+// recorded who claimed the order, so every approver saw the same shared
+// queue forever. It now sets assignedApproverId on click, and the queue
+// hides orders claimed by someone else (isVisibleToAgent — same rule as
+// Agent Task View's per-agent scoping).
 export function OrderApprovalQueue() {
   const orders = (useEntityStore((s) => s.records.orders) ?? []) as unknown as Order[];
   const loadKind = useEntityStore((s) => s.loadKind);
+  const updateRecord = useEntityStore((s) => s.updateRecord);
   const loadError = useEntityStore((s) => s.errors.orders);
   const loading = useEntityStore((s) => s.loading.orders);
   const navigate = useNavigate();
+  const currentAgentId = useAuthStore((s) => s.profile?.userId);
 
   useEffect(() => {
     loadKind('orders');
   }, [loadKind]);
 
-  const pending = orders.filter((o) => o.status === 'Submitted for Approval');
+  const pending = orders
+    .filter((o) => o.status === 'Submitted for Approval')
+    .filter((o) => isVisibleToAgent(o.assignedApproverId, currentAgentId));
+
+  const assignToMe = (order: Order) => {
+    if (order.assignedApproverId !== currentAgentId) {
+      updateRecord('orders', 'orderId', order.orderId, { assignedApproverId: currentAgentId ?? null });
+    }
+    navigate(`/order-management/order-approval-detail-attachments-order-details-activities-a?id=${order.orderId}`);
+  };
 
   return (
     <div className="p-8">
@@ -49,8 +70,8 @@ export function OrderApprovalQueue() {
             key: 'action',
             header: '',
             render: (r) => (
-              <Button variant="ghost-rect" compact onClick={() => navigate(`/order-management/order-approval-detail-attachments-order-details-activities-a?id=${r.orderId}`)}>
-                Assign to Me
+              <Button variant="ghost-rect" compact onClick={() => assignToMe(r)}>
+                {r.assignedApproverId === currentAgentId ? 'Open' : 'Assign to Me'}
               </Button>
             ),
           },

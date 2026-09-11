@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getPersona, getAllRoutes } from '../engines/configEngine';
 import { usePersonaStore } from '../stores/personaStore';
+import { useAuthStore } from '../stores/authStore';
 import { useEntityStore } from '../stores/entityStore';
 import { useActiveCustomerStore } from '../stores/activeCustomerStore';
 import * as mockDataEngine from '../engines/mockDataEngine';
+import { isVisibleToAgent } from '../engines/agentTaskEngine';
 import { Icon } from '../components/primitives/Icon';
 
 const ICONS = {
@@ -22,7 +24,7 @@ interface Order { status: string; }
 interface SimSwapOrder { status: string; }
 interface BulkJob { overallStatus: string; jobType?: string; }
 interface CustomerRecord { customerId: string; name: string; segment: string; }
-interface AgentTask { taskStatus: string; taskType: string; priorityFlag: boolean; }
+interface AgentTask { taskStatus: string; taskType: string; priorityFlag: boolean; assignedAgentId: string | null; }
 
 // Agent Workspace redesign: the KPI summary (real entityStore counts) is kept
 // unchanged, but the module-launcher grid it used to sit above is gone — the
@@ -49,6 +51,7 @@ export function Dashboard() {
   const navigate = useNavigate();
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
   const persona = getPersona(activePersonaId);
+  const currentAgentId = useAuthStore((s) => s.profile?.userId);
   const recentCustomerIds = useActiveCustomerStore((s) => s.recentCustomerIds);
   const clearActiveCustomer = useActiveCustomerStore((s) => s.clearActiveCustomer);
   const [recentCustomers, setRecentCustomers] = useState<CustomerRecord[]>([]);
@@ -76,8 +79,13 @@ export function Dashboard() {
   // they derive from a task's fields (OI-AGN-14/18 leave this open) — modeled
   // here as: status-based (Open/In Progress), type-based (Payment/Draft
   // Order), and flag-based (Priority), all excluding Closed tasks so the
-  // tiles reflect outstanding work, not history.
-  const openTasks = tasks.filter((t) => t.taskStatus !== 'Closed');
+  // tiles reflect outstanding work, not history. ATV-02: "assigned tasks...
+  // only for the logged-in agent" — unassigned tasks stay visible to
+  // everyone (someone has to be able to pick them up); once assigned, only
+  // that agent sees them, via isVisibleToAgent().
+  const openTasks = tasks
+    .filter((t) => t.taskStatus !== 'Closed')
+    .filter((t) => isVisibleToAgent(t.assignedAgentId, currentAgentId));
   const taskTiles = [
     { key: 'open', label: 'Open Tasks', count: openTasks.filter((t) => t.taskStatus === 'Open').length },
     { key: 'in-progress', label: 'In Progress Tasks', count: openTasks.filter((t) => t.taskStatus === 'In Progress').length },

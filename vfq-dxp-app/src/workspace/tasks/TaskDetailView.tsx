@@ -2,9 +2,16 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Badge } from '../../components/primitives/Badge';
 import { Button } from '../../components/primitives/Button';
-import { Input } from '../../components/primitives/Input';
+import { Select } from '../../components/primitives/Select';
 import { useEntityStore } from '../../stores/entityStore';
 import { usePersonaStore } from '../../stores/personaStore';
+import * as mockDataEngine from '../../engines/mockDataEngine';
+
+interface AgentDirectoryEntry {
+  userId: string;
+  firstName: string;
+  lastName: string;
+}
 
 interface AgentTask {
   taskId: string;
@@ -40,10 +47,19 @@ export function TaskDetailView() {
   const isSupervisor = activePersonaId === 'PERSONA-024';
 
   const [assignTo, setAssignTo] = useState('');
+  const [agents, setAgents] = useState<AgentDirectoryEntry[]>([]);
 
   useEffect(() => {
     loadKind('tasks');
   }, [loadKind]);
+
+  // Real userIds, not free text — an assignment has to produce an ID that
+  // actually matches the assignee's authStore.profile.userId on their next
+  // login, or ATV-02's per-agent scoping (agentTaskEngine.ts) would never
+  // show them this task.
+  useEffect(() => {
+    mockDataEngine.list<AgentDirectoryEntry>('users-agents').then(setAgents);
+  }, []);
 
   const task = tasks.find((t) => t.taskId === taskId);
   if (!task) {
@@ -97,7 +113,14 @@ export function TaskDetailView() {
           <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Assign to a team member</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)] mb-3">Supervisor-only action (BR-05).</p>
           <div className="flex gap-2">
-            <Input placeholder="Agent ID, e.g. AGT-101" value={assignTo} onChange={(e) => setAssignTo(e.target.value)} className="flex-1" />
+            <div className="flex-1">
+              <Select
+                placeholder="Select a team member"
+                value={assignTo}
+                onChange={(e) => setAssignTo(e.target.value)}
+                options={agents.map((a) => ({ value: a.userId, label: `${a.firstName} ${a.lastName}` }))}
+              />
+            </div>
             <Button variant="primary-rect" onClick={assign} disabled={!assignTo.trim()}>
               Assign
             </Button>
