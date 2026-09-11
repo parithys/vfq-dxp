@@ -172,6 +172,23 @@ export function LoginPage() {
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
+            <div className="relative">
+              <button
+                onClick={() => setHelpOpen((v) => !v)}
+                className="flex items-center gap-1.5 text-[length:var(--fs-caption)] text-white/60 hover:text-white"
+              >
+                <Icon path={ICONS.helpCircle} className="w-4 h-4" />
+                Help &amp; support
+              </button>
+              {helpOpen && (
+                <div className="absolute bottom-full left-0 mb-2 w-64 rounded-[var(--radius-card)] border border-white/15 bg-charcoal-panel shadow-raised z-50 p-4">
+                  <p className="text-white font-medium mb-1">Help &amp; support</p>
+                  <p className="text-white/70 text-[length:var(--fs-body)]">
+                    Contact the IT Service Desk at <span className="text-accent">servicedesk@vodafone.qa</span> or extension 4100 for platform issues.
+                  </p>
+                </div>
+              )}
+            </div>
             <div className="inline-flex rounded-[var(--radius-pill)] bg-white/5 p-0.5">
               {(['English', 'العربية'] as const).map((lng) => (
                 <button
@@ -184,23 +201,6 @@ export function LoginPage() {
                   {lng}
                 </button>
               ))}
-            </div>
-            <div className="relative">
-              <button
-                onClick={() => setHelpOpen((v) => !v)}
-                className="flex items-center gap-1.5 text-[length:var(--fs-caption)] text-white/60 hover:text-white"
-              >
-                <Icon path={ICONS.helpCircle} className="w-4 h-4" />
-                Help &amp; support
-              </button>
-              {helpOpen && (
-                <div className="absolute bottom-full right-0 mb-2 w-64 rounded-[var(--radius-card)] border border-white/15 bg-charcoal-panel shadow-raised z-50 p-4">
-                  <p className="text-white font-medium mb-1">Help &amp; support</p>
-                  <p className="text-white/70 text-[length:var(--fs-body)]">
-                    Contact the IT Service Desk at <span className="text-accent">servicedesk@vodafone.qa</span> or extension 4100 for platform issues.
-                  </p>
-                </div>
-              )}
             </div>
           </div>
           <p className="text-[length:var(--fs-caption)] text-white/35">
