@@ -95,6 +95,8 @@ overview_rows = [
     ('Postpaid Plans & Discounts', 'The RED plan tiers and eligible discounts shown on the New Postpaid Activation wizard\'s redesigned Plan & Add-ons step.'),
     ('Number Selection', 'Seeded MSISDN inventory plus how to test the Manual MSISDN Entry card\'s valid/blocked/malformed paths.'),
     ('Devices (DOI)', 'The device catalogue and colour/storage/stock options on the redesigned Device & DOI step, and its DOI declaration gate.'),
+    ('Prepaid Activation Eligibility', 'Which seeded customers pass/fail the New Prepaid Activation wizard\'s eligibility gate (blacklist + BR-347 line cap) and payment gating.'),
+    ('Prepaid Full Journey', 'The full 9-step Prepaid wizard beyond eligibility/payment: plan tiers, discounts, the BR-348 SIM card charge, HRN approval routing, SIM depletion, fulfilment status progression, and notifications.'),
     ('Verification Codes', 'The demo password and OTP/verification code used everywhere a code is required (password reset, MFA, change password).'),
 ]
 r = 4
@@ -217,7 +219,8 @@ note = ('The Approval Queue is EMPTY by default — none of the 5 seeded orders 
         'still lands in status "Pending" as before, since that reflects a real port request awaiting the donor operator, '
         'not a B2B2C order awaiting manager sign-off. Also: CUST-1002 (HRN) will trigger the advance-payment gate on the '
         'New Postpaid wizard, which independently sets the order to Submitted for Approval regardless of the B2B2C '
-        'checkbox.')
+        'checkbox. New Prepaid Activation now has its own matrix entry too — any prepaid order for an HRN customer '
+        '(CUST-1002) routes to approval the same way, no B2B2C checkbox involved (prepaid has no B2B2C concept).')
 row = title_block(ws, 'Orders & Approval Queue', 'public/mock-data/orders.json + public/config/approval-matrix.json', note)
 
 order_rows = [(o.get('orderId'), o.get('orderType'), o.get('orderSubType'), o.get('status'), o.get('approvalStatus'), o.get('customerId')) for o in orders]
@@ -366,6 +369,77 @@ for d in devices:
 write_table(ws, row,
     ['Device', 'Price (QAR)', 'Default Upfront', 'Default Term', 'Default Monthly', 'Colours', 'Storage', 'Stock Status', 'Trade-in Bonus'],
     device_rows, [22, 12, 14, 12, 14, 30, 20, 14, 14])
+
+# ---------------------------------------------------------------------------
+# Sheet: Prepaid Activation Eligibility
+# ---------------------------------------------------------------------------
+ws = wb.create_sheet('Prepaid Activation Eligibility')
+note = ('New Prepaid Activation wizard (SCR-190/191/192) now has 9 steps: Contact -> Eligibility -> Address & Contact '
+        'Details -> Plan & Discount -> Number Selection -> SIM Type -> Checkout -> CAF & Key Information -> Payment '
+        '(originally just Contact -> Number -> SIM Serial, with no gate before reservation, no plan/CAF/checkout at all, '
+        'and no payment before the order was marked Complete — see the "Prepaid Full Journey" sheet for the other 6 '
+        'steps and full onSubmit mechanics). Eligibility reuses the same EligibilityGateStep component New Postpaid '
+        'Activation uses, in a "prepaid" mode: it checks blacklist status (same as postpaid) plus a prepaid-specific line '
+        '-count cap (BR-347 in ruleEngine.ts, sourced from this journey\'s own BRSD BR-003 — NOT the general catalogue\'s '
+        'unrelated BR-003 "Try & Buy 30-Day Waiver"), and it deliberately hides the HRN-advance-payment banner and '
+        'credit-limit badge that postpaid shows, since MPRA_001_CAM_04/ECC_03/BAM_01 explicitly exclude both from '
+        'Prepaid Activation. On submit, the wizard finds-or-creates a "Consumer Mobile Prepaid" account for the resolved '
+        'customer (visible on their Customer 360 > Profile > Accounts list) and increments that customer\'s '
+        'activePrepaidLines by 1 — so re-running the wizard against the same customer moves them closer to (or past) '
+        'their BR-347 cap. That increment only persists for the current browser session; a full page reload re-seeds '
+        'from these JSON files.')
+row = title_block(ws, 'Prepaid Activation Eligibility', 'src/components/domain/EligibilityGateStep.tsx + ruleEngine.ts (BR-347) + customers.json', note)
+
+elig_rows = [
+    ('CUST-1004', 'QID', 'Qatari', 'blacklisted', '—', 'Blocked — blacklist check fails regardless of line count (blacklistReason: "Outstanding dues > threshold").'),
+    ('CUST-1005', 'GCC ID', 'Emirati', 2, 2, 'Blocked — GCC ID cap is 2 prepaid lines (BR-003) and this customer is already at 2. Same customer is also pre-seeded at the postpaid BR-288 cap, so it exercises both gates\' failure paths.'),
+    ('CUST-1002', 'Passport', 'Nepalese (HRN)', 1, 1, 'Passes at 1/2 — a boundary case one below the Passport cap of 2. HRN flag is true on this customer but the HRN banner/credit-limit badge stay hidden per CAM_04, unlike on the postpaid wizard.'),
+    ('CUST-1001', 'QID', 'Qatari', 1, 0, 'Passes — Qatari nationals are unrestricted under BR-003 regardless of line count.'),
+    ('CUST-1003', 'QID', 'Qatari', 0, 0, 'Passes — unrestricted, clean baseline customer.'),
+    ('CUST-1006', 'Diplomatic ID', 'French', 0, 0, 'Passes — BR-003\'s source text does not cover Diplomatic ID at all, so it is left unrestricted rather than an invented cap.'),
+    ('CUST-9001', 'QID', 'Qatari', 0, 0, 'Passes — QA test identity, unrestricted (Qatari).'),
+]
+write_table(ws, row,
+    ['Customer ID', 'ID Type', 'Nationality / Segment', 'Active postpaid lines', 'Active prepaid lines', 'Expected Eligibility result'],
+    elig_rows, [14, 16, 22, 16, 16, 70])
+
+# ---------------------------------------------------------------------------
+# Sheet: Prepaid Full Journey
+# ---------------------------------------------------------------------------
+ws = wb.create_sheet('Prepaid Full Journey')
+note = ('Closes the remaining Mobile Prepaid Activation BRSD gaps beyond the P1 fixes above (2026-09-11 follow-up). '
+        'Full step list: Contact -> Eligibility -> Address & Contact Details (MPRA_001_CAM_05, reuses ZsbAddressStep, '
+        'non-blocking) -> Plan & Discount (MPRA_001_QPC_01-04, new PrepaidPlanStep) -> Number Selection -> SIM Type '
+        '(MPRA_001_SIM_01, reuses SimTypeStep — Physical or eSIM only; "Printed eSIM"/"Virtual eSIM" are not modelled '
+        'as distinct selectable options, matching the same component postpaid uses) -> Checkout (MPRA_001_CVC_01-03, '
+        'new PrepaidCheckoutStep) -> CAF & Key Information (MPRA_001_CAF_01-03, reuses CafSignatureCapture) -> Payment '
+        '(MPRA_001_PAY_01/02, reuses WinCashPaymentStep, now gated on the FULL checkout total, not just the number '
+        'price). On submit: physical SIMs are depleted (stockStatus -> Issued, MPRA_001_PAY_03) — try reusing a serial '
+        'from a completed order and it now correctly shows "This SIM is already assigned"; HRN customers route to the '
+        'Order Approval Queue instead of auto-completing (BR-004, new "New Prepaid Activation" approval-matrix entry, '
+        'same mechanism as postpaid\'s HRN/B2B2C routing) with orderSubType recording the derived HRN flag '
+        '(MPRA_001_CAM_03); non-HRN orders run through a ~1 second simulated fulfilment delay before flipping from '
+        '"Open" to "Complete" (MPRA_001_NET_02-06 — the first place in this app an order progresses through an '
+        'intermediate status rather than jumping straight to a terminal one); and a real osb-notifications record is '
+        'created (MPRA_001_NOT_01, visible on Customer 360 > Notifications), not just a toast. Not built, and why: '
+        'Qnomy queue ticketing (MPRA_001_JSM_01) and a Tracking Record entity (DF-01) have zero implementation '
+        'anywhere else in this app — building them only for prepaid would be a fabricated one-off, not a real reused '
+        'capability. Email is captured/displayed but not "verified" (INT-04), consistent with every other journey '
+        'including postpaid. The BRSD\'s "notify all active MSISDNs on the QID" recipient list (DF-20) is not modelled '
+        '— this schema has no cross-line directory to resolve that from, so the notification targets only the '
+        'just-activated MSISDN.')
+row = title_block(ws, 'Prepaid Full Journey', 'src/modules/mobile-prepaid/screens/NewPrepaidWizard.tsx + ruleEngine.ts (BR-348)', note)
+
+journey_rows = [
+    ('Plan tiers', 'PROD-300 SIM only (QAR 0), PROD-301 Prepaid Red 25, PROD-302 Prepaid Red 50 (POPULAR), PROD-303 Prepaid Red 100 — each with a starter pack charge, data/voice allowance and pack validity instead of postpaid\'s monthly recurring charge.'),
+    ('Discounts', 'ADO-7109/7110/7111 "Prepaid Welcome Discount" (-10%), one per Red tier — MPRA_001_QPC_04\'s "Special discount."'),
+    ('SIM card charge (BR-348/BR-013)', 'Threshold QAR 10 for QID, QAR 40 for Passport, compared against the selected pack\'s starter pack charge. Below threshold: a QAR 15 placeholder charge applies (the BRSD names the threshold but never the charge amount itself — flagged in ruleEngine.ts). Try Prepaid Red 25 (QAR 25) with a Passport contact: 25 < 40, so the charge applies.'),
+    ('HRN approval routing test', 'CUST-1002 (Passport, HRN) — any prepaid order for this customer routes to "Submitted for Approval" and appears in Orders > Approval Queue requiring the "Back Office Fulfilment Agent" role, instead of completing automatically.'),
+    ('SIM depletion test', 'Complete one order with a Physical SIM and a specific serial (e.g. the always-available 8974412345678901234), then start a second order and enter the same serial at the SIM Type step — it now correctly shows "This SIM is already assigned."'),
+    ('Fulfilment status progression test', 'Complete a non-HRN order and immediately check Customer 360 > Orders — status briefly reads the intermediate state before settling on "Complete" a moment later (the ~900ms simulated NET_02-06 fulfilment delay).'),
+    ('Notification test', 'After any completed or approval-routed order, open Customer 360 > Notifications for that customer — a new row appears sourced from osb-notifications.json, not just a toast.'),
+]
+write_table(ws, row, ['Aspect', 'Details / how to test it'], journey_rows, [30, 90])
 
 # ---------------------------------------------------------------------------
 # Sheet 10: Verification Codes

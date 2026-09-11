@@ -147,6 +147,88 @@ const ruleImplementations: Record<string, RuleImplementation> = {
         };
   },
 
+  // Prepaid mobile-voice connection cap by ID type — this is
+  // VFQ_Mobile_Prepaid_Activation_BRSD_V0.1.xlsx's own document-scoped BR-003
+  // ("Line count"), an entirely different rule from this catalogue's BR-003
+  // ("Try & Buy 30-Day Waiver Condition"); the two numbering schemes collide
+  // coincidentally since they come from separate documents. Source rule text:
+  // "Passport holder and GCC ID Holder can have 2 Mobile Voice Prepaid
+  // connections. Qatari, Sawfa and Sawfa Plus Customer will not have any
+  // restrictions. Expatriate with QID can hold 5 Mobile Voice connections
+  // (Including Postpaid and Prepaid)." That source row is marked Status: Open
+  // (not yet Agreed) but the numeric thresholds are corroborated by the same
+  // BRSD's Confirmed configurable parameters P-04 (5, expat QID) and P-06
+  // (unrestricted, Qatari) — implemented despite the Open status on that
+  // basis. Sawfa/Sawfa Plus aren't modelled as distinct customer values in
+  // this app's schema, so only the Qatari-nationality branch of that clause
+  // is checked. Diplomatic ID isn't covered by the source rule text at all —
+  // left unrestricted rather than inventing a cap for it.
+  'BR-347': (ctx) => {
+    const { idType, nationality, activePrepaidLines, activePostpaidLines } = ctx as {
+      idType?: string;
+      nationality: string;
+      activePrepaidLines: number;
+      activePostpaidLines: number;
+    };
+    if (nationality === 'Qatari') {
+      return { pass: true, message: 'Qatari nationals have no prepaid connection cap (BR-003).' };
+    }
+    if (idType === 'Passport' || idType === 'GCC ID') {
+      const cap = 2;
+      return activePrepaidLines < cap
+        ? { pass: true, message: `${activePrepaidLines}/${cap} prepaid mobile lines used (${idType} cap, BR-003).` }
+        : {
+            pass: false,
+            message: `${idType} holders are capped at ${cap} prepaid mobile lines (BR-003) — this customer already has ${activePrepaidLines}.`,
+          };
+    }
+    if (idType === 'QID') {
+      const cap = 5;
+      const total = activePrepaidLines + activePostpaidLines;
+      return total < cap
+        ? { pass: true, message: `${total}/${cap} combined postpaid+prepaid mobile lines used (expat QID cap, BR-003).` }
+        : {
+            pass: false,
+            message: `Expatriate QID holders are capped at ${cap} combined postpaid+prepaid mobile lines (BR-003) — this customer already has ${total}.`,
+          };
+    }
+    return { pass: true, message: `BR-003 does not specify a line cap for ID type "${idType ?? 'unknown'}" — not blocking.` };
+  },
+
+  // Prepaid SIM card charge threshold by ID type — again the Prepaid BRSD's
+  // own document-scoped BR-013 ("SIM Card Charges"), a different rule from
+  // whatever this catalogue's own BR-013 covers (same numbering collision as
+  // BR-347/BR-003 above). Source rule text: "SIM Card charges will be
+  // collected based on the Recharge Amount for each ID Type, if the Recharge
+  // amount is less than the below mentioned limit then System would collect
+  // the SIM Card charges — QID: Recharge 10 QR, PASSPORT: Recharge 40 QR."
+  // Marked Agreed in the source (unlike BR-003, no Open-status caveat here).
+  // The BRSD never names the SIM card charge AMOUNT itself anywhere (no
+  // P-parameter covers it) — this rule only decides whether a charge
+  // applies; the actual QAR figure is a placeholder set at the call site
+  // (NewPrepaidWizard.tsx), clearly flagged there as pending VFQ
+  // confirmation rather than sourced from the BRSD. Open Items OI-01/OI-03
+  // (both Closed) separately note that in practice prepaid is expected to
+  // always be sold bundled with a plan from DXP, so this charge is expected
+  // to rarely apply — implemented regardless since BR-013 remains a
+  // Must-priority row in the requirements register.
+  'BR-348': (ctx) => {
+    const { idType, rechargeAmountQar } = ctx as { idType?: string; rechargeAmountQar: number };
+    const threshold = idType === 'Passport' ? 40 : idType === 'QID' ? 10 : undefined;
+    if (threshold === undefined) {
+      return {
+        pass: true,
+        message: `BR-013 defines a recharge threshold only for QID/Passport — no SIM card charge applies for ID type "${idType ?? 'unknown'}".`,
+      };
+    }
+    return rechargeAmountQar >= threshold
+      ? { pass: true, message: `Recharge of QR ${rechargeAmountQar} meets the ${idType} threshold of QR ${threshold} — no SIM card charge (BR-013).` }
+      : {
+          pass: false,
+          message: `Recharge of QR ${rechargeAmountQar} is below the ${idType} threshold of QR ${threshold} — a SIM card charge applies (BR-013).`,
+        };
+  },
+
   // HRN (High-Risk Nationality) advance payment (BR-187/BR-194/BR-252, all
   // independently evidenced at QR 100): amount is driven by nationality/sales
   // channel, explicitly NOT by plan value (BR-112) — so this never reads plan

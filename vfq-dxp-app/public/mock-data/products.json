@@ -71,6 +71,40 @@
     "productId": "PROD-300",
     "name": "New Prepaid Standard SIM",
     "type": "Prepaid Plan",
-    "activationFeeQAR": 0
+    "activationFeeQAR": 0,
+    "starterPackChargeQAR": 0,
+    "dataAllowanceGB": null,
+    "minutesAllowance": "Pay as you go",
+    "packValidityDays": null,
+    "_note": "SIM-only / pay-as-you-go option — no bundle, agent tops up separately later. Kept distinct from the tiered Prepaid Red packs below (PROD-301/302/303) so the Plan step has a genuine zero-cost baseline choice, matching how prepaid is actually sold."
+  },
+  {
+    "productId": "PROD-301",
+    "name": "Prepaid Red 25",
+    "type": "Prepaid Plan",
+    "starterPackChargeQAR": 25,
+    "dataAllowanceGB": 5,
+    "minutesAllowance": "100 local minutes",
+    "packValidityDays": 30,
+    "_note": "App-level demo addition — the BRSD's own MPRA_001_QPC_02 requires a filterable prepaid plan catalogue but only one bare-activation prepaid product (PROD-300) existed; these three tiers follow the same 'Postpaid Red <price> Promotion' naming family already used for postpaid (PROD-104/105/106) and the same field convention, adapted to prepaid's starter-pack-charge/pack-validity model (DF-21) instead of a monthly recurring charge."
+  },
+  {
+    "productId": "PROD-302",
+    "name": "Prepaid Red 50",
+    "type": "Prepaid Plan",
+    "starterPackChargeQAR": 50,
+    "dataAllowanceGB": 15,
+    "minutesAllowance": "300 local minutes",
+    "packValidityDays": 30,
+    "popular": true
+  },
+  {
+    "productId": "PROD-303",
+    "name": "Prepaid Red 100",
+    "type": "Prepaid Plan",
+    "starterPackChargeQAR": 100,
+    "dataAllowanceGB": 40,
+    "minutesAllowance": "Unlimited local",
+    "packValidityDays": 30
   }
 ]

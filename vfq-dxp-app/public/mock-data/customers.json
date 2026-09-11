@@ -12,7 +12,8 @@
     "preferredLanguage": "Arabic",
     "blacklisted": false,
     "moiValidationStatus": "Verified",
-    "activePostpaidLines": 1
+    "activePostpaidLines": 1,
+    "activePrepaidLines": 0
   },
   {
     "customerId": "CUST-1002",
@@ -28,7 +29,9 @@
     "blacklisted": false,
     "moiValidationStatus": "Verified",
     "hrnAdvancePaymentRequired": true,
-    "activePostpaidLines": 1
+    "activePostpaidLines": 1,
+    "activePrepaidLines": 1,
+    "_note": "activePrepaidLines set to 1 (one below the BR-347/BR-003 Passport cap of 2) so a new prepaid activation for this customer lands exactly at the boundary — a real, testable pass-at-the-edge case."
   },
   {
     "customerId": "CUST-1003",
@@ -43,7 +46,8 @@
     "preferredLanguage": "Arabic",
     "blacklisted": false,
     "moiValidationStatus": "Verified",
-    "activePostpaidLines": 0
+    "activePostpaidLines": 0,
+    "activePrepaidLines": 0
   },
   {
     "customerId": "CUST-1004",
@@ -58,7 +62,8 @@
     "preferredLanguage": "English",
     "blacklisted": true,
     "blacklistReason": "Outstanding dues > threshold",
-    "activePostpaidLines": 0
+    "activePostpaidLines": 0,
+    "activePrepaidLines": 0
   },
   {
     "customerId": "CUST-2001",
@@ -87,7 +92,8 @@
     "blacklisted": false,
     "moiValidationStatus": "Verified",
     "activePostpaidLines": 2,
-    "_note": "App-level demo addition — GCC ID Contact/ID Type card had no seeded identity-documents record to resolve against. Deliberately set at the BR-288 expat cap (2 postpaid mobile lines) so the Eligibility Gate's connection-limit hard-block, previously untested by any seeded customer, has a real scenario."
+    "activePrepaidLines": 2,
+    "_note": "App-level demo addition — GCC ID Contact/ID Type card had no seeded identity-documents record to resolve against. Deliberately set at the BR-288 expat cap (2 postpaid mobile lines) so the Eligibility Gate's connection-limit hard-block, previously untested by any seeded customer, has a real scenario. activePrepaidLines is likewise set at the BR-347/BR-003 GCC ID cap (2 prepaid mobile lines) so the same customer also exercises the Prepaid Activation line-cap block."
   },
   {
     "customerId": "CUST-1006",
@@ -103,7 +109,8 @@
     "blacklisted": false,
     "moiValidationStatus": "Verified",
     "activePostpaidLines": 0,
-    "_note": "App-level demo addition — Diplomatic ID Contact/ID Type card had no seeded identity-documents record to resolve against. Happy-path expat scenario (non-Qatari but under the BR-288 line cap), giving that ID Type card a clean success case."
+    "activePrepaidLines": 0,
+    "_note": "App-level demo addition — Diplomatic ID Contact/ID Type card had no seeded identity-documents record to resolve against. Happy-path expat scenario (non-Qatari but under the BR-288 line cap), giving that ID Type card a clean success case. BR-347/BR-003's Prepaid line-cap text doesn't cover Diplomatic ID at all, so it stays unrestricted there too rather than an invented cap."
   },
   {
     "customerId": "CUST-9001",
@@ -119,6 +126,7 @@
     "blacklisted": false,
     "moiValidationStatus": "Verified",
     "activePostpaidLines": 0,
+    "activePrepaidLines": 0,
     "_note": "App-level demo addition (not in blueprint/reconstruction-package/mock-data) — a fixed QA test identity so 'P1234567' (as Qatari ID) and '12345678910' (as Passport Number) resolve successfully wherever the ID-lookup/MOI step (IdLookupStep/QidInput) appears across the app, regardless of module or persona."
   }
 ]

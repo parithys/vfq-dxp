@@ -2,5 +2,6 @@
   { "category": "New Postpaid Activation", "requiredRole": "Back Office Fulfilment Agent" },
   { "category": "New FWA Postpaid Outdoor Order", "requiredRole": "Back Office Fulfilment Agent" },
   { "category": "New Fixed Line Activation", "requiredRole": "Back Office Fulfilment Agent" },
-  { "category": "MNP Postpaid Port-In", "requiredRole": "Sales Manager" }
+  { "category": "MNP Postpaid Port-In", "requiredRole": "Sales Manager" },
+  { "category": "New Prepaid Activation", "requiredRole": "Back Office Fulfilment Agent" }
 ]

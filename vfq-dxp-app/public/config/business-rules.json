@@ -3112,5 +3112,23 @@
     "engineHint": "procedural",
     "sourceRuleIds": "",
     "confidence": "medium"
+  },
+  {
+    "id": "BR-347",
+    "name": "Prepaid Mobile Voice Connection Cap by ID Type",
+    "ruleType": "Eligibility",
+    "description": "Passport holder and GCC ID Holder can have 2 Mobile Voice Prepaid connections. Qatari, Sawfa and Sawfa Plus Customer will not have any restrictions. Expatriate with QID can hold 5 Mobile Voice connections (Including Postpaid and Prepaid).",
+    "engineHint": "procedural",
+    "sourceRuleIds": "raw:VFQ_Mobile_Prepaid_Activation_BRSD_V0.1 BR-003 (Line count)",
+    "confidence": "medium"
+  },
+  {
+    "id": "BR-348",
+    "name": "Prepaid SIM Card Charge Threshold by ID Type",
+    "ruleType": "Validation",
+    "description": "SIM Card charges will be collected based on the Recharge Amount for each ID Type. If the Recharge amount is less than the below mentioned limit then the system would collect the SIM Card charges: QID - Recharge 10 QR, Passport - Recharge 40 QR.",
+    "engineHint": "threshold",
+    "sourceRuleIds": "raw:VFQ_Mobile_Prepaid_Activation_BRSD_V0.1 BR-013 (SIM Card Charges)",
+    "confidence": "high"
   }
 ]

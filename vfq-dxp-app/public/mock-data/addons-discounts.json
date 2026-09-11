@@ -86,5 +86,39 @@
     "durationMonths": 6,
     "planId": "PROD-106",
     "isLockedReadOnly": false
+  },
+  {
+    "addonDiscountId": "ADO-7109",
+    "addonType": "Prepaid Discount",
+    "name": "Prepaid Welcome Discount",
+    "description": "10% off the starter pack charge for new prepaid activations",
+    "price": -0.10,
+    "category": "Discount",
+    "durationMonths": null,
+    "planId": "PROD-301",
+    "isLockedReadOnly": false,
+    "_note": "App-level demo addition for MPRA_001_QPC_04 (Special discount) — no prepaid-scoped Discount record existed before; rate/naming follows the same -10%/-15% Loyalty Discount pattern already used elsewhere in this file, applied one-time to the starter pack charge rather than a recurring MRC."
+  },
+  {
+    "addonDiscountId": "ADO-7110",
+    "addonType": "Prepaid Discount",
+    "name": "Prepaid Welcome Discount",
+    "description": "10% off the starter pack charge for new prepaid activations",
+    "price": -0.10,
+    "category": "Discount",
+    "durationMonths": null,
+    "planId": "PROD-302",
+    "isLockedReadOnly": false
+  },
+  {
+    "addonDiscountId": "ADO-7111",
+    "addonType": "Prepaid Discount",
+    "name": "Prepaid Welcome Discount",
+    "description": "10% off the starter pack charge for new prepaid activations",
+    "price": -0.10,
+    "category": "Discount",
+    "durationMonths": null,
+    "planId": "PROD-303",
+    "isLockedReadOnly": false
   }
 ]
