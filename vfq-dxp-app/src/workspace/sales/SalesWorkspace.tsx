@@ -6,10 +6,19 @@ import { useActiveCustomerStore } from '../../stores/activeCustomerStore';
 // Resolved by screenId, not a hardcoded path — SCR-037 is filed under the
 // sim-number-management module route in routes.json despite being the
 // Mobile Postpaid wizard, so looking it up avoids baking in that quirk.
+//
+// Every genuinely blank-start "new customer" wizard belongs here (none of
+// these read activeCustomerStore) — Prepaid and MNP Port-In were previously
+// missing even though both are fully built. Pre-to-Post Migration and SIM
+// Swap are deliberately NOT included: both act on a line/service the
+// customer already has, so they're Customer 360 product actions, not new
+// acquisitions.
 const ACQUISITION_ACTIONS = [
   { label: 'New Postpaid Connection', screenId: 'SCR-037' },
+  { label: 'New Prepaid Connection', screenId: 'SCR-190' },
   { label: 'New Fixed Line', screenId: 'SCR-043' },
   { label: 'New FWA / 5G Home', screenId: 'SCR-077' },
+  { label: 'MNP Port-In', screenId: 'SCR-121' },
 ];
 
 // Sales = the lead/prospect pipeline (wraps the existing Lead Management
