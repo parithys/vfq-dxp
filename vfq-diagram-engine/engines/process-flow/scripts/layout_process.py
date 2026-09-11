@@ -641,9 +641,26 @@ def compute_process_layout(nodes, flows, lanes, phases):
         # unchanged for every diagram; only tier>=1 moves, and only
         # closer. See local_max_h_excl_anchor's own comment for the case
         # this fixes.
-        row_gap_here = local_row_gap[ax] if t == 0 else local_row_gap_rest[ax]
-        max_h_here = local_max_h[ax] if t == 0 else local_max_h_excl_anchor[ax]
         y = SPINE_Y + local_row_gap[ax] + t * local_row_gap_rest[ax]
+        # row_gap_here/max_h_here (reported on the node, read by
+        # connectors_svg() as a.get("rowGap"/"maxCardH") whenever THIS
+        # node sources a downward edge) is local_row_gap_rest/
+        # local_max_h_excl_anchor for EVERY tier, t==0 included — never
+        # local_row_gap, which is the SPINE's own first-gap, describing
+        # space BEHIND tier0, not ahead of it. An earlier version of this
+        # reported local_row_gap for t==0 (reusing the constant y() above
+        # was built from) — harmless for y() itself, but wrong as a
+        # routing budget: it told a tier-0 source's own downward edges
+        # they had up to local_row_gap(908.86px, in the confirmed case)
+        # of room, when the REAL physical gap to tier1 is local_row_gap_
+        # rest(769.66px) — a stale, too-generous budget that happened not
+        # to place any lane past the real boundary in this corpus, but
+        # wasn't guaranteed to stay that way. Every off-spine node's own
+        # "room after me" is local_row_gap_rest, full stop, regardless of
+        # which tier it sits at — only the SPINE's own out_nodes entry
+        # (below, in the earlier loop) legitimately reports local_row_gap.
+        row_gap_here = local_row_gap_rest[ax]
+        max_h_here = local_max_h_excl_anchor[ax]
         for j, node_id in enumerate(ids_sorted):
             n = nid[node_id]
             out_flows = [f for f in flows if f.get("from") == node_id]
