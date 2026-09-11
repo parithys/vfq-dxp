@@ -16,6 +16,11 @@ interface Discount {
   planId: string;
 }
 
+interface SimRecord {
+  simSerial: string;
+  iccid: string;
+}
+
 export interface PrepaidCheckoutTotals {
   starterPackChargeQar: number;
   simCardChargeQar: number;
@@ -58,10 +63,12 @@ export function PrepaidCheckoutStep({
 }: PrepaidCheckoutStepProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [discounts, setDiscounts] = useState<Discount[]>([]);
+  const [sims, setSims] = useState<SimRecord[]>([]);
 
   useEffect(() => {
     mockDataEngine.list<Product>('products').then(setProducts);
     mockDataEngine.list<Discount>('addons-discounts').then(setDiscounts);
+    mockDataEngine.list<SimRecord>('sims').then(setSims);
   }, []);
 
   const plan = products.find((p) => p.productId === planProductId);
@@ -71,6 +78,12 @@ export function PrepaidCheckoutStep({
   const simCardChargeQar = simCardRule.pass ? 0 : SIM_CARD_CHARGE_QAR;
   const numberDelta = numberPriceQar ?? 0;
   const totalDueQar = starterPackChargeQar + simCardChargeQar + numberDelta;
+  // DF-16 (SIM data group) requires ICCID alongside SIM Type/Serial — resolved
+  // from the same sims.json record SimSerialScanner already validated against.
+  // eSIM has no backing inventory record to resolve an ICCID from (see
+  // SimTypeStep — no fabricated eSIM provisioning API), so it reads "Not
+  // applicable" rather than a fabricated value.
+  const resolvedIccid = simType?.simType === 'Physical' ? sims.find((s) => s.simSerial === simType.simSerial)?.iccid : undefined;
 
   useEffect(() => {
     onTotalsComputed({ starterPackChargeQar, simCardChargeQar, numberPriceQar: numberDelta, totalDueQar });
@@ -91,6 +104,7 @@ export function PrepaidCheckoutStep({
         <Row label="Pack" value={plan ? `${plan.name} — QR ${starterPackChargeQar}` : 'SIM only, no pack selected'} />
         <Row label="Number" value={msisdn ? `${msisdn}${numberDelta > 0 ? ` (premium, QR ${numberDelta} one-time)` : ''}` : '—'} />
         <Row label="SIM Type" value={simType?.simType ?? '—'} />
+        <Row label="ICCID" value={simType?.simType === 'eSIM' ? 'Not applicable (eSIM)' : (resolvedIccid ?? '—')} />
         <Row label="SIM Card Charge" value={simCardChargeQar > 0 ? `QR ${simCardChargeQar}` : 'Waived'} />
       </dl>
 
