@@ -92,6 +92,7 @@ overview_rows = [
     ('Bell Notifications', 'Seeded notifications per customer, for the Customer 360 banner and Administration config screen.'),
     ('Bulk Notes', 'Seeded bulk notes and the accounts they were posted against.'),
     ('Leads (Sales)', 'Seeded leads for the Sales workspace.'),
+    ('Postpaid Plans & Discounts', 'The RED plan tiers and eligible discounts shown on the New Postpaid Activation wizard\'s redesigned Plan & Add-ons step.'),
     ('Verification Codes', 'The demo password and OTP/verification code used everywhere a code is required (password reset, MFA, change password).'),
 ]
 r = 4
@@ -291,6 +292,32 @@ ws = wb.create_sheet('Leads (Sales)')
 row = title_block(ws, 'Leads (Sales workspace)', 'public/mock-data/leads.json', None)
 lead_rows = [(l.get('leadId'), l.get('serviceNeeded'), l.get('status'), l.get('ownerId'), l.get('mobileNumber') or '—', l.get('callbackDate') or '—') for l in leads]
 write_table(ws, row, ['Lead ID', 'Service Needed', 'Status', 'Owner (agent ID)', 'Mobile', 'Callback Date'], lead_rows, [14, 18, 20, 20, 18, 16])
+
+# ---------------------------------------------------------------------------
+# Sheet: New Postpaid Plans & Discounts
+# ---------------------------------------------------------------------------
+products = load('products')
+addons_discounts = load('addons-discounts')
+ws = wb.create_sheet('Postpaid Plans & Discounts')
+note = ('Redesigned "Plan & Add-ons" step (New Postpaid Activation wizard only — Fixed Line/FWA/MNP/Pre-to-Post still use '
+        'the original single-column ProductPlanStep and are unaffected). Plan names follow the evidenced "Postpaid Red '
+        '<price> Promotion" naming family (Pre-to-Post guided-journey Plan step); the specific data/speed values per '
+        'tier are representative demo catalogue entries, same as the rest of products.json. Discounts reuse the '
+        'Loyalty Discount concept/rate already evidenced in addons-discounts.json (ADO-7103) rather than inventing new '
+        'discount types.')
+row = title_block(ws, 'Postpaid Plans & Discounts', 'public/mock-data/products.json + addons-discounts.json', note)
+plan_rows = [
+    (p.get('productId'), p.get('name'), p.get('mrcQAR'), p.get('dataAllowanceGB') or 'Unlimited', p.get('minutesAllowance'),
+     p.get('speedTier'), 'Yes' if p.get('popular') else '')
+    for p in products if p.get('type') == 'Postpaid Plan'
+]
+row = write_table(ws, row, ['Product ID', 'Plan Name', 'MRC (QAR)', 'Data', 'Voice', 'Speed', 'Popular?'], plan_rows, [12, 32, 12, 14, 20, 16, 12]) or row
+
+next_row = row + len(plan_rows) + 3
+ws.cell(row=next_row, column=1, value='Eligible Discounts (per plan)').font = Font(bold=True, size=13, color='E60000')
+next_row += 2
+disc_rows = [(d.get('addonDiscountId'), d.get('planId'), d.get('name'), f"{round(d.get('price', 0) * 100)}%", d.get('description')) for d in addons_discounts if d.get('category') == 'Discount']
+write_table(ws, next_row, ['Discount ID', 'Applies to Product ID', 'Name', 'Rate', 'Description'], disc_rows, [14, 18, 20, 10, 44])
 
 # ---------------------------------------------------------------------------
 # Sheet 10: Verification Codes

@@ -1,7 +1,7 @@
 // Real Vodafone TagPill per design-system.md §7 has 2 variants; broader status-pill
 // usage (Order/Lead/Ticket lifecycle states) needs more — extended per
 // component-catalogue.md §5 rather than replaced.
-export type BadgeVariant = 'outlined-red' | 'filled-neutral' | 'success' | 'warning' | 'danger';
+export type BadgeVariant = 'outlined-red' | 'filled-neutral' | 'success' | 'warning' | 'danger' | 'accent';
 
 interface BadgeProps {
   variant?: BadgeVariant;
@@ -14,6 +14,7 @@ const variantClasses: Record<BadgeVariant, string> = {
   success: 'bg-[color-mix(in_oklab,var(--success),white_85%)] text-success',
   warning: 'bg-[color-mix(in_oklab,var(--warn),white_80%)] text-[var(--warn-text)]',
   danger: 'bg-[color-mix(in_oklab,var(--danger),white_85%)] text-danger',
+  accent: 'bg-accent text-accent-on',
 };
 
 export function Badge({ variant = 'filled-neutral', children }: BadgeProps) {

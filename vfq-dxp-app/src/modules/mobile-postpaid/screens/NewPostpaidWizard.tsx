@@ -7,9 +7,7 @@ import { ZsbAddressStep } from '../../../components/patterns/ZsbAddressStep';
 import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
 import { BillingProfileStep } from '../../../components/patterns/BillingProfileStep';
 import type { BillingProfileValue } from '../../../components/patterns/BillingProfileStep';
-import { ProductPlanStep } from '../../../components/patterns/ProductPlanStep';
-import { BillLimitEditor } from '../../../components/domain/BillLimitEditor';
-import { AddonsPicker } from '../../../components/domain/AddonsPicker';
+import { PostpaidPlanAddonsStep } from '../../../components/patterns/PostpaidPlanAddonsStep';
 import { MsisdnPicker } from '../../../components/domain/MsisdnPicker';
 import { EligibilityGateStep } from '../../../components/domain/EligibilityGateStep';
 import type { EligibilityResult } from '../../../components/domain/EligibilityGateStep';
@@ -169,27 +167,20 @@ export function NewPostpaidWizard() {
             key: 'plan',
             label: 'Plan & Add-ons',
             render: ({ values, setValue }) => (
-              <div className="space-y-4">
-                <ProductPlanStep
-                  planType="Postpaid Plan"
-                  selectedProductId={values.productId as string | undefined}
-                  onSelect={(id) => setValue('productId', id)}
-                />
-                <AddonsPicker
-                  selectedIds={(values.addonIds as string[] | undefined) ?? []}
-                  onChange={(ids) => setValue('addonIds', ids)}
-                />
-                {Boolean(values.productId) && (
-                  <BillLimitEditor
-                    product="Mobile"
-                    value={values.billLimit as number | undefined}
-                    onChange={(amount, pass) => {
-                      setValue('billLimit', amount);
-                      setValue('billLimitPass', pass);
-                    }}
-                  />
-                )}
-              </div>
+              <PostpaidPlanAddonsStep
+                selectedProductId={values.productId as string | undefined}
+                onSelectProduct={(id) => setValue('productId', id)}
+                discountId={values.discountId as string | undefined}
+                onSelectDiscount={(id) => setValue('discountId', id)}
+                addonIds={(values.addonIds as string[] | undefined) ?? []}
+                onAddonsChange={(ids) => setValue('addonIds', ids)}
+                billLimit={values.billLimit as number | undefined}
+                onBillLimitChange={(amount, pass) => {
+                  setValue('billLimit', amount);
+                  setValue('billLimitPass', pass);
+                }}
+                defaultCreditLimitQar={(values.eligibility as EligibilityResult | undefined)?.defaultCreditLimitQar}
+              />
             ),
             isValid: (values) => Boolean(values.productId) && values.billLimitPass !== false,
           },
@@ -315,7 +306,10 @@ export function NewPostpaidWizard() {
           const products = await mockDataEngine.list<Product>('products');
           const plan = products.find((p) => p.productId === values.productId);
           const addons = products.filter((p) => addonIds.includes(p.productId));
-          const monthlyRecurringQar = (plan?.mrcQAR ?? 0) + addons.reduce((sum, a) => sum + a.mrcQAR, 0) + (doi?.monthlyInstallmentQar ?? 0);
+          const discounts = await mockDataEngine.list<{ addonDiscountId: string; price: number }>('addons-discounts');
+          const discount = discounts.find((d) => d.addonDiscountId === values.discountId);
+          const discountedPlanQar = (plan?.mrcQAR ?? 0) * (1 + (discount?.price ?? 0));
+          const monthlyRecurringQar = discountedPlanQar + addons.reduce((sum, a) => sum + a.mrcQAR, 0) + (doi?.monthlyInstallmentQar ?? 0);
 
           // BR-268: HRN/credit-limit variant routes to manager approval rather
           // than auto-completing, same mechanism as the pre-existing B2B2C
@@ -330,6 +324,7 @@ export function NewPostpaidWizard() {
             status: pendingApproval ? 'Submitted for Approval' : 'Complete',
             customerName: contact.moiResult?.name,
             productId: values.productId,
+            discountId: values.discountId,
             addonIds,
             billLimitQAR: values.billLimit,
             msisdn: values.msisdn,

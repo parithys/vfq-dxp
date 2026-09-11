@@ -42,5 +42,49 @@
     "durationMonths": null,
     "planId": "PROD-300",
     "isLockedReadOnly": true
+  },
+  {
+    "addonDiscountId": "ADO-7105",
+    "addonType": "Loyalty Discount",
+    "name": "Loyalty Discount",
+    "description": "15% off for existing Vodafone customers",
+    "price": -0.15,
+    "category": "Discount",
+    "durationMonths": 6,
+    "planId": "PROD-100",
+    "isLockedReadOnly": false
+  },
+  {
+    "addonDiscountId": "ADO-7106",
+    "addonType": "Loyalty Discount",
+    "name": "Loyalty Discount",
+    "description": "15% off for existing Vodafone customers",
+    "price": -0.15,
+    "category": "Discount",
+    "durationMonths": 6,
+    "planId": "PROD-104",
+    "isLockedReadOnly": false
+  },
+  {
+    "addonDiscountId": "ADO-7107",
+    "addonType": "Loyalty Discount",
+    "name": "Loyalty Discount",
+    "description": "15% off for existing Vodafone customers",
+    "price": -0.15,
+    "category": "Discount",
+    "durationMonths": 6,
+    "planId": "PROD-105",
+    "isLockedReadOnly": false
+  },
+  {
+    "addonDiscountId": "ADO-7108",
+    "addonType": "Loyalty Discount",
+    "name": "Loyalty Discount",
+    "description": "15% off for existing Vodafone customers",
+    "price": -0.15,
+    "category": "Discount",
+    "durationMonths": 6,
+    "planId": "PROD-106",
+    "isLockedReadOnly": false
   }
 ]

@@ -6,6 +6,7 @@
     "mrcQAR": 250,
     "dataAllowanceGB": 30,
     "minutesAllowance": "Unlimited local",
+    "speedTier": "5G Ready",
     "commitmentMonths": 12
   },
   {
@@ -14,6 +15,37 @@
     "type": "Add-on",
     "mrcQAR": 50,
     "description": "50 international minutes bundle"
+  },
+  {
+    "productId": "PROD-104",
+    "name": "Postpaid Red 350 Promotion",
+    "type": "Postpaid Plan",
+    "mrcQAR": 350,
+    "dataAllowanceGB": 100,
+    "minutesAllowance": "Unlimited local",
+    "speedTier": "5G Ready",
+    "commitmentMonths": 12,
+    "popular": true
+  },
+  {
+    "productId": "PROD-105",
+    "name": "Postpaid Red 500 Promotion",
+    "type": "Postpaid Plan",
+    "mrcQAR": 500,
+    "dataAllowanceGB": 250,
+    "minutesAllowance": "Unlimited local",
+    "speedTier": "5G Ready",
+    "commitmentMonths": 12
+  },
+  {
+    "productId": "PROD-106",
+    "name": "Postpaid RED Unlimited Promotion",
+    "type": "Postpaid Plan",
+    "mrcQAR": 750,
+    "dataAllowanceGB": null,
+    "minutesAllowance": "Unlimited local",
+    "speedTier": "5G Priority",
+    "commitmentMonths": 24
   },
   {
     "productId": "PROD-200",
