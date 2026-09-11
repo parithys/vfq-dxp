@@ -5,14 +5,8 @@ import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
 import { useEntityStore } from '../../../stores/entityStore';
 import { TicketCreationModal, type NewTicketValue } from '../../../modules/trouble-ticketing-complaints/screens/TicketCreationModal';
+import { STATUS_VARIANT, buildNewTicketRecord } from '../../../modules/trouble-ticketing-complaints/ticketReferenceData';
 import type { Customer360Data } from '../../../engines/customer360Engine';
-
-const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'filled-neutral'> = {
-  Open: 'warning',
-  Resolved: 'success',
-  Closed: 'success',
-  Reopened: 'danger',
-};
 
 // Create Ticket and Track Ticket are the two real Support actions available
 // from Customer 360 — both reuse the exact same TicketCreationModal/entity
@@ -27,16 +21,7 @@ export function TicketsSection({ data }: { data: Customer360Data }) {
 
   const createTicket = async (value: NewTicketValue) => {
     const ticketId = `TT-${Date.now().toString().slice(-6)}`;
-    await createRecord('trouble-tickets', {
-      ticketId,
-      customerId: value.customerId,
-      status: 'Open',
-      category: value.issueType,
-      actualIssue: value.template || value.templateContent.slice(0, 40),
-      queue: value.queue,
-      priority: value.priority,
-      hashtags: [],
-    });
+    await createRecord('trouble-tickets', buildNewTicketRecord({ ticketId, ...value, createdBy: 'AGENT-VINODHINIR' }));
     setModalOpen(false);
   };
 

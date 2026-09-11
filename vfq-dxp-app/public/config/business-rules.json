@@ -3130,5 +3130,14 @@
     "engineHint": "threshold",
     "sourceRuleIds": "raw:VFQ_Mobile_Prepaid_Activation_BRSD_V0.1 BR-013 (SIM Card Charges)",
     "confidence": "high"
+  },
+  {
+    "id": "BR-349",
+    "name": "Trouble Ticket SLA Notification and Breach Escalation",
+    "ruleType": "Threshold",
+    "description": "The first SLA notification shall be issued according to the Customer Type SLA matrix when ticket conditions are met; the system shall escalate the ticket and change its status to Escalate automatically when the SLA target is breached, and shall update the RAG status (Green/Amber/Red) as per the SLA matrix.",
+    "engineHint": "threshold",
+    "sourceRuleIds": "raw:VFQ_Trouble_Ticket_BRSD_v1.0 BR-015 (SLA Notification, status: Open in source)",
+    "confidence": "medium"
   }
 ]

@@ -88,7 +88,7 @@ overview_rows = [
     ('Accounts & Services', 'Account IDs and Service IDs behind each customer, for the account-number / service-ID search fields.'),
     ('Orders & Approval Queue', 'Existing orders, how to generate a fresh one that lands in the Approval Queue, the approval matrix, and reject reasons.'),
     ('Agent Task View', 'Seeded tasks and which agent identity each is assigned to, for testing per-agent task scoping.'),
-    ('Trouble Tickets', 'Seeded tickets for the Support workspace.'),
+    ('Trouble Tickets', 'The full ticket lifecycle (assignment, SLA/RAG, escalation, resolution/closure, reopen, RBAC) and what each seeded ticket demonstrates.'),
     ('Bell Notifications', 'Seeded notifications per customer, for the Customer 360 banner and Administration config screen.'),
     ('Bulk Notes', 'Seeded bulk notes and the accounts they were posted against.'),
     ('Leads (Sales)', 'Seeded leads for the Sales workspace.'),
@@ -116,27 +116,33 @@ ws.column_dimensions['B'].width = 95
 # Sheet 1: Login Credentials
 # ---------------------------------------------------------------------------
 ws = wb.create_sheet('Login Credentials')
-note = ('Password is the SAME for every Staff ID: Vodafone@123 (placeholder — real VFQ credentials are not confirmed, '
-        'see D-02/OI-AGN-04). "Resulting agent identity" is who you actually become after login (name/job title/team) — '
-        'it is looked up from users-agents.json by matching keywords in the persona name, NOT the Staff ID itself, so two '
-        'Staff IDs can log you in as the same person. VFQ12343 and VFQ12344 both match on the word "Manager" and both '
-        'resolve to Rachel Thompson — this is a real quirk of the matching logic (src/engines/agentProfileEngine.ts), not a typo here.')
+note = ('2026-09-11: Staff ID table replaced with the user-supplied Staff ID/Role/Channel/Context-card mapping — 7 '
+        'Staff IDs now (was 6); VFQ12347 is new, and every ID from VFQ12342 onward shifted role vs. the previous '
+        'table. Password is the SAME for every Staff ID: Vodafone@123 (placeholder — real VFQ credentials are not '
+        'confirmed, see D-02/OI-AGN-04). Channel and Context card are recorded for traceability only — no '
+        'context-card UI exists yet to consume them (Queue Number + Ticket Number for Retail, CTI Reference only '
+        'for Back-office/Telephonic, Hidden for Field/System). "Resulting agent identity" is who you actually '
+        'become after login (name/job title/team) — it is looked up from users-agents.json by matching keywords in '
+        'the persona name, NOT the Staff ID itself, so multiple Staff IDs can log you in as the same person. '
+        'VFQ12342, VFQ12344 and VFQ12345 all match on "Manager"/"Approver" and all three resolve to Rachel Thompson '
+        '— a real quirk of the matching logic (src/engines/agentProfileEngine.ts), not a typo here.')
 row = title_block(ws, 'Login Credentials', 'src/auth/staffIdRoleMap.ts + src/engines/agentProfileEngine.ts', note)
 
 login_rows = [
-    ('VFQ12341', 'Vodafone@123', 'Retail Agent', 'Fatima Al-Kuwari', 'Sales Agent', 'Retail Sales', 'USR-1101', 'Default frontline agent. Use for: Customer Search, Task View as an agent with assigned tasks, claiming un-role-gated approval items.'),
-    ('VFQ12342', 'Vodafone@123', 'Back Office / Fulfilment', 'Omar Hassan', 'Back Office Fulfilment Agent', 'Order Fulfilment', 'USR-1102', 'Use for: approving "New Postpaid Activation" B2B2C orders (approval matrix requires this exact role).'),
-    ('VFQ12343', 'Vodafone@123', 'Manager / Approver', 'Rachel Thompson', 'Sales Manager', 'Sales Management', 'USR-1103', 'Use for: approving "MNP Postpaid Port-In" orders (approval matrix requires this exact role); assigning tasks to team members (supervisor-only action).'),
-    ('VFQ12344', 'Vodafone@123', 'Enterprise Account Manager', 'Rachel Thompson', 'Sales Manager', 'Sales Management', 'USR-1103', 'Resolves to the SAME identity as VFQ12343 (see note above) — role label shown at login differs, but the signed-in agent is identical.'),
-    ('VFQ12345', 'Vodafone@123', 'Field Technician', 'Fatima Al-Kuwari', 'Sales Agent', 'Retail Sales', 'USR-1101', 'Falls back to the default agent — no seeded field-technician identity exists in users-agents.json.'),
-    ('VFQ12346', 'Vodafone@123', 'IT Operations', 'Fatima Al-Kuwari', 'Sales Agent', 'Retail Sales', 'USR-1101', 'Falls back to the default agent — no seeded IT-ops identity exists in users-agents.json.'),
-    ('anything else', 'any value', '—', '—', '—', '—', '—', 'Login is rejected with "Staff ID not recognised." — only the 6 Staff IDs above are recognised.'),
-    ('any of the above', 'wrong password', '—', '—', '—', '—', '—', 'Login is rejected with "Incorrect password." — use this to test the login failure state.'),
+    ('VFQ12341', 'Vodafone@123', 'Retail Agent', 'Retail / in-store', 'Queue Number + Ticket Number', 'Fatima Al-Kuwari', 'Sales Agent', 'Retail Sales', 'USR-1101', 'Default frontline agent. Use for: Customer Search, Task View as an agent with assigned tasks, claiming un-role-gated approval items.'),
+    ('VFQ12342', 'Vodafone@123', 'Retail Store Manager / Approver', 'Retail / in-store', 'Queue Number + Ticket Number', 'Rachel Thompson', 'Sales Manager', 'Sales Management', 'USR-1103', 'Use for: approving "MNP Postpaid Port-In" orders (approval matrix requires this exact role); assigning tasks to team members (supervisor-only action).'),
+    ('VFQ12343', 'Vodafone@123', 'Back Office / Fulfilment', 'Back-office', 'CTI Reference only', 'Omar Hassan', 'Back Office Fulfilment Agent', 'Order Fulfilment', 'USR-1102', 'Use for: approving "New Postpaid Activation" B2B2C orders (approval matrix requires this exact role).'),
+    ('VFQ12344', 'Vodafone@123', 'Back Office Manager / Approver', 'Back-office', 'CTI Reference only', 'Rachel Thompson', 'Sales Manager', 'Sales Management', 'USR-1103', 'Resolves to the SAME identity as VFQ12342/12345 (see note above) — role label shown at login differs, but the signed-in agent is identical.'),
+    ('VFQ12345', 'Vodafone@123', 'Enterprise Account Manager', 'Telephonic / back-office', 'CTI Reference only', 'Rachel Thompson', 'Sales Manager', 'Sales Management', 'USR-1103', 'Resolves to the SAME identity as VFQ12342/12344 (see note above).'),
+    ('VFQ12346', 'Vodafone@123', 'Field Technician', 'Field (no queue, no CTI)', 'Hidden', 'Fatima Al-Kuwari', 'Sales Agent', 'Retail Sales', 'USR-1101', 'Falls back to the default agent — no seeded field-technician identity exists in users-agents.json.'),
+    ('VFQ12347', 'Vodafone@123', 'IT Operations', 'System / no customer interaction', 'Hidden', 'Fatima Al-Kuwari', 'Sales Agent', 'Retail Sales', 'USR-1101', 'Falls back to the default agent — no seeded IT-ops identity exists in users-agents.json.'),
+    ('anything else', 'any value', '—', '—', '—', '—', '—', '—', '—', 'Login is rejected with "Staff ID not recognised." — only the 7 Staff IDs above are recognised.'),
+    ('any of the above', 'wrong password', '—', '—', '—', '—', '—', '—', '—', 'Login is rejected with "Incorrect password." — use this to test the login failure state.'),
 ]
 write_table(ws, row,
-    ['Staff ID', 'Password', 'Role label shown at login', 'Resulting agent name', 'Resulting job title', 'Resulting team', 'Resulting userId', 'What to test with it'],
+    ['Staff ID', 'Password', 'Role label shown at login', 'Channel', 'Context card', 'Resulting agent name', 'Resulting job title', 'Resulting team', 'Resulting userId', 'What to test with it'],
     login_rows,
-    [16, 14, 24, 20, 26, 18, 16, 60])
+    [16, 14, 26, 22, 20, 18, 24, 18, 16, 60])
 
 # ---------------------------------------------------------------------------
 # Sheet 2: Customer Search
@@ -249,8 +255,8 @@ tasks = load('tasks')
 ws = wb.create_sheet('Agent Task View')
 note = ('Tasks with no assigned agent (blank below) are visible to every logged-in agent. Tasks assigned to a specific '
         'userId are ONLY visible to that agent — log in as USR-1101 (Fatima, Staff ID VFQ12341) vs USR-1102 (Omar, '
-        'VFQ12342) to see the difference (ATV-02 per-agent scoping). Log in as VFQ12343/12344 (Rachel, Sales Manager) to '
-        'test assigning an unassigned task to a team member — that control only appears for the Manager persona.')
+        'VFQ12343) to see the difference (ATV-02 per-agent scoping). Log in as VFQ12342/12344/12345 (Rachel, Sales '
+        'Manager) to test assigning an unassigned task to a team member — that control only appears for the Manager persona.')
 row = title_block(ws, 'Agent Task View', 'public/mock-data/tasks.json', note)
 task_rows = [(t.get('taskId'), t.get('taskName'), t.get('taskType'), t.get('taskStatus'), 'Yes' if t.get('priorityFlag') else 'No', t.get('assignedAgentId') or '(unassigned — visible to everyone)') for t in tasks]
 write_table(ws, row,
@@ -262,10 +268,42 @@ write_table(ws, row,
 # ---------------------------------------------------------------------------
 tickets = load('trouble-tickets')
 ws = wb.create_sheet('Trouble Tickets')
-row = title_block(ws, 'Trouble Tickets', 'public/mock-data/trouble-tickets.json',
-                   'Support workspace — open TT-40001 for CUST-1001 to test an open ticket, TT-40002 for a resolved one.')
-ticket_rows = [(t.get('ticketId'), t.get('customerId'), t.get('status'), t.get('category'), t.get('actualIssue', ''), t.get('priority', ''), t.get('queue', '')) for t in tickets]
-write_table(ws, row, ['Ticket ID', 'Customer ID', 'Status', 'Category', 'Issue', 'Priority', 'Queue'], ticket_rows, [14, 14, 14, 22, 30, 12, 18])
+note = ('2026-09-11 rebuild closes most of the gaps found in the Trouble Ticket BRSD forensic gap analysis: '
+        'assignment (Assign to me / supervisor Reassign queue), SLA/RAG (BR-349, computed live against slaDueAt) with '
+        'auto-escalation, manual escalation with mandatory reason, resolution (Resolution Code + Hashtag gate, RES-01) '
+        '-> Complete (gated on no open activities, RES-08) -> Close (closes all activities, triggers a CSA-01/02 '
+        'notification) -> Reopen (mandatory reason + a 7-day window, P-12 placeholder) or Cancel (mandatory reason '
+        'code), real Activities (manual + auto-logged), Attachments (metadata only, blocked on Closed/Cancelled per '
+        'ATT-03), and an Audit Trail tab wired to audit-trail.json. Status vocabulary was corrected to match the '
+        'BRSD\'s own terms (Not Solved/Assigned/Escalate/Solved/Completed/Closed/Cancelled) — "Open"/"Reopened" '
+        'never appear in the source and were replaced. RBAC (§12 of the gap report): Resolution is gated to the '
+        'Complaints Team/Supervisor/Admin personas — switch role via the profile menu\'s "Switch role" select to '
+        '"Complaints Team (Mobile and Fixed)" to test it; the default Retail/Sales Agent persona sees "Resolution '
+        'requires Complaints Team — use Escalate to route it" instead. The Audit Trail tab is hidden for the '
+        'Retail/Sales Agent and FL Agents personas (BR-067) and visible for every other persona.')
+row = title_block(ws, 'Trouble Tickets', 'public/mock-data/trouble-tickets.json + TicketDetail.tsx', note)
+ticket_rows = [
+    (t.get('ticketId'), t.get('customerId'), t.get('status'), t.get('category'), t.get('area', ''), t.get('priority', ''),
+     t.get('queue', ''), t.get('assignedTo') or '—', t.get('slaTargetHours', ''))
+    for t in tickets
+]
+row = write_table(
+    ws, row,
+    ['Ticket ID', 'Customer ID', 'Status', 'Category', 'Area', 'Priority', 'Queue', 'Assigned To', 'SLA Target (h)'],
+    ticket_rows, [14, 14, 14, 20, 14, 12, 18, 16, 14],
+) or row
+
+next_row = row + len(ticket_rows) + 3
+ws.cell(row=next_row, column=1, value='What each seeded ticket demonstrates').font = Font(bold=True, size=13, color='E60000')
+next_row += 2
+demo_rows = [
+    ('TT-40001', 'Fresh, unassigned, SLA Green — the baseline ticket for Assign/Escalate/Resolve/Complete/Close/Reopen testing.'),
+    ('TT-40002', 'Closed 3 days before the demo date — within the 7-day reopen window, so Reopen should succeed.'),
+    ('TT-40003', 'HRN customer (48h Expatriate SLA target), created far enough in the past that its SLA is already breached — a real RAG-Red, auto-escalated ("Escalate" status) demo ticket.'),
+    ('TT-40004', 'Closed well over 7 days before the demo date — outside the reopen window, so Reopen is disabled with the RES-10 guidance message.'),
+    ('TT-40005', 'Enterprise customer (CUST-2001) — demonstrates CRE-16 priority derivation locking to 1-ASAP instead of a freely-chosen value; also a duplicate-detection hit when creating a new SOC ticket for the same customer.'),
+]
+write_table(ws, next_row, ['Ticket', 'What it tests'], demo_rows, [14, 90])
 
 # ---------------------------------------------------------------------------
 # Sheet 7: Bell Notifications

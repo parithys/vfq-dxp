@@ -229,6 +229,34 @@ const ruleImplementations: Record<string, RuleImplementation> = {
         };
   },
 
+  // Trouble Ticket SLA breach -> RAG + auto-escalation — the Trouble Ticket
+  // BRSD's own document-scoped BR-015 ("SLA Notification"), a different rule
+  // from whatever this catalogue's own BR-015 ("Volumetric Discount
+  // Proration Rule") covers (same numbering collision pattern as
+  // BR-347/BR-348 above, and the only Business Rule in that BRSD's own
+  // register still marked Status: Open rather than Agreed). Source: ESC-01
+  // "the system shall...escalate the ticket and change the status as
+  // 'Escalate' automatically when SLA is breached", ESC-03 (RAG status
+  // update), P-16/17/18 (RAG thresholds, Confirmed) and P-10/P-11 (SLA
+  // target 24h non-Expatriate / 48h Expatriate, AS-IS baseline). Computes RAG
+  // from elapsed time against slaDueAt; Red means breached (auto-escalate).
+  'BR-349': (ctx) => {
+    const { slaDueAt, firstNotifyAt, status } = ctx as { slaDueAt?: string; firstNotifyAt?: string; status?: string };
+    if (!slaDueAt) return { pass: true, message: 'No SLA target set on this ticket.' };
+    const now = Date.now();
+    const due = new Date(slaDueAt).getTime();
+    const terminal = status === 'Closed' || status === 'Cancelled';
+    if (terminal) return { pass: true, message: 'Ticket is in a terminal status — SLA clock stopped.' };
+    if (now >= due) {
+      return { pass: false, message: 'SLA target breached — RAG Red (P-18). Ticket auto-escalates (BR-015/ESC-01).' };
+    }
+    const firstNotify = firstNotifyAt ? new Date(firstNotifyAt).getTime() : undefined;
+    if (firstNotify && now >= firstNotify) {
+      return { pass: true, message: 'Past the first SLA notification threshold — RAG Amber (P-17).' };
+    }
+    return { pass: true, message: 'Within the applicable SLA target — RAG Green (P-16).' };
+  },
+
   // HRN (High-Risk Nationality) advance payment (BR-187/BR-194/BR-252, all
   // independently evidenced at QR 100): amount is driven by nationality/sales
   // channel, explicitly NOT by plan value (BR-112) — so this never reads plan

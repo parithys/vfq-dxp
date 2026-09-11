@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal } from '../../../components/primitives/Modal';
 import { Select } from '../../../components/primitives/Select';
 import { Textarea } from '../../../components/primitives/Textarea';
 import { Button } from '../../../components/primitives/Button';
 import { Input } from '../../../components/primitives/Input';
+import { Badge } from '../../../components/primitives/Badge';
 import { evaluateRule } from '../../../engines/ruleEngine';
+import * as mockDataEngine from '../../../engines/mockDataEngine';
+import { useNotificationStore } from '../../../stores/notificationStore';
+import { TT_AREAS, derivePriorityFromSegment, slaTargetHours } from '../ticketReferenceData';
 
 // Slide 15 "Type of Tickets" taxonomy (vodafone-process-overview-290626-ec-1ed338b9).
 const ISSUE_TYPES = [
@@ -29,13 +33,28 @@ const TEMPLATES: Record<string, string> = {
 
 const QUEUES = ['FL Agents', 'Complaints Team'];
 
+interface CustomerRecord {
+  customerId: string;
+  segment?: string;
+  nationality?: string;
+}
+
+interface TicketRecord {
+  customerId: string;
+  category: string;
+  area?: string;
+  status: string;
+}
+
 export interface NewTicketValue {
   customerId: string;
   issueType: string;
+  area: string;
   template: string;
   templateContent: string;
   queue: string;
   priority: string;
+  slaTargetHours: number;
 }
 
 interface TicketCreationModalProps {
@@ -52,33 +71,100 @@ interface TicketCreationModalProps {
 // agents select the ticket's issue type and paste/edit the matching template
 // content; Confirm/Save commits, Cancel discards (screen-behaviour-catalogue.md).
 // BR-068 gates commit on Issue Type + template content both being present —
-// an unsubmitted ticket never routes to a queue.
+// an unsubmitted ticket never routes to a queue. Extended per the Trouble
+// Ticket BRSD gap analysis (2026-09-11) to close: MPRA_001_CRE-08/09 (Area
+// picklist, cascaded from Issue Type — BRSD's own Sub-Area tier isn't
+// enumerated anywhere in the source, so this models the one confirmed level,
+// Area), CRE-01 (3-char smart search over the issue-type list, BR-002),
+// CRE-05 (Knowledge Base access — no real KB integration exists anywhere in
+// this app, so the button surfaces an honest "pending" message rather than
+// linking to a fabricated URL), CRE-16 (Priority derived and locked from
+// Customer Type, not freely picked), and ASC-02/04 (duplicate-ticket
+// candidate detection by Customer + Category + Area match).
 export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId = '' }: TicketCreationModalProps) {
   const [customerId, setCustomerId] = useState(initialCustomerId);
+  const [searchQuery, setSearchQuery] = useState('');
   const [issueType, setIssueType] = useState('');
+  const [area, setArea] = useState('');
   const [template, setTemplate] = useState('');
   const [templateContent, setTemplateContent] = useState('');
   const [queue, setQueue] = useState('');
-  const [priority, setPriority] = useState('Medium');
+  const [customer, setCustomer] = useState<CustomerRecord | null>(null);
+  const [duplicates, setDuplicates] = useState<TicketRecord[]>([]);
+  const pushToast = useNotificationStore((s) => s.pushToast);
 
   const showTemplatePicker = issueType === 'Mobile Complaints' || issueType === 'Fixed/5G Complaints';
   const gate = evaluateRule('BR-068', { issueType, templateContent });
   const [submitting, setSubmitting] = useState(false);
 
+  // CRE-16: resolve the customer once an ID is entered, to derive Priority
+  // and the SLA target — same identity-lookup shape as the rest of the app,
+  // just keyed directly by customerId since this modal has no MOI/ID-scan
+  // step of its own to resolve one from.
+  useEffect(() => {
+    if (!customerId.trim()) {
+      setCustomer(null);
+      return;
+    }
+    let cancelled = false;
+    mockDataEngine.list<CustomerRecord>('customers').then((all) => {
+      if (cancelled) return;
+      setCustomer(all.find((c) => c.customerId === customerId.trim()) ?? null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [customerId]);
+
+  // ASC-02/04: a ticket is a duplicate candidate when Category + Area match
+  // for the same customer on a still-open ticket (MSISDN/Sub-Area aren't
+  // captured anywhere in this simplified schema, so this checks the two
+  // matching fields the app's ticket schema actually has).
+  useEffect(() => {
+    if (!customerId.trim() || !issueType) {
+      setDuplicates([]);
+      return;
+    }
+    let cancelled = false;
+    mockDataEngine.list<TicketRecord>('trouble-tickets').then((all) => {
+      if (cancelled) return;
+      setDuplicates(
+        all.filter(
+          (t) =>
+            t.customerId === customerId.trim() &&
+            t.category === issueType &&
+            (!area || t.area === area) &&
+            t.status !== 'Closed' &&
+            t.status !== 'Cancelled'
+        )
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [customerId, issueType, area]);
+
+  const areaOptions = TT_AREAS[issueType] ?? [];
+  const derivedPriority = derivePriorityFromSegment(customer?.segment);
+  const derivedSlaHours = slaTargetHours(customer?.nationality);
+  const matchingIssueTypes =
+    searchQuery.trim().length >= 3 ? ISSUE_TYPES.filter((t) => t.toLowerCase().includes(searchQuery.trim().toLowerCase())) : ISSUE_TYPES;
+
   const reset = () => {
     setCustomerId('');
+    setSearchQuery('');
     setIssueType('');
+    setArea('');
     setTemplate('');
     setTemplateContent('');
     setQueue('');
-    setPriority('Medium');
   };
 
   const submit = async () => {
     if (submitting) return;
     setSubmitting(true);
     try {
-      await onSubmit({ customerId, issueType, template, templateContent, queue, priority });
+      await onSubmit({ customerId, issueType, area, template, templateContent, queue, priority: derivedPriority, slaTargetHours: derivedSlaHours });
       reset();
     } finally {
       setSubmitting(false);
@@ -94,17 +180,46 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
           value={customerId}
           onChange={(e) => setCustomerId(e.target.value)}
         />
+        <Input
+          label="Search ticket category"
+          placeholder="Type at least 3 characters to filter (BR-002)…"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          helperText="Knowledge-base-assisted category search (MPRA_001_CRE-01)."
+        />
         <Select
           label="Issue Type"
           value={issueType}
           onChange={(e) => {
             setIssueType(e.target.value);
+            setArea('');
             setTemplate('');
             setTemplateContent('');
           }}
           placeholder="Select an issue type"
-          options={ISSUE_TYPES.map((t) => ({ value: t, label: t }))}
+          options={matchingIssueTypes.map((t) => ({ value: t, label: t }))}
         />
+        {issueType && (
+          <Select
+            label="Area"
+            value={area}
+            onChange={(e) => setArea(e.target.value)}
+            placeholder="Select an area"
+            options={areaOptions.map((a) => ({ value: a, label: a }))}
+          />
+        )}
+        {duplicates.length > 0 && (
+          <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),white_92%)] p-3">
+            <p className="text-[length:var(--fs-caption)] text-fg font-medium">
+              {duplicates.length} potential duplicate {duplicates.length === 1 ? 'ticket' : 'tickets'} found for this customer/category/area (ASC-02/04):
+            </p>
+            <ul className="list-disc list-inside text-[length:var(--fs-caption)] text-fg-2">
+              {duplicates.map((d) => (
+                <li key={d.customerId + d.category}>{d.category}{d.area ? ` — ${d.area}` : ''}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         {showTemplatePicker && (
           <Select
             label="Template"
@@ -131,12 +246,24 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
           placeholder="Select a queue"
           options={QUEUES.map((q) => ({ value: q, label: q }))}
         />
-        <Select
-          label="Priority"
-          value={priority}
-          onChange={(e) => setPriority(e.target.value)}
-          options={['Low', 'Medium', 'High'].map((p) => ({ value: p, label: p }))}
-        />
+        <div>
+          <div className="text-[length:var(--fs-caption)] text-muted mb-1">Priority (derived from Customer Type, CRE-16)</div>
+          <div className="flex items-center gap-2">
+            <Badge variant={derivedPriority === '1-ASAP' ? 'danger' : derivedPriority === '2-High' ? 'warning' : 'filled-neutral'}>
+              {derivedPriority}
+            </Badge>
+            <span className="text-[length:var(--fs-caption)] text-muted">
+              {customer ? `Segment: ${customer.segment}` : 'Enter a Customer ID to derive priority'} — not overridable by a non-privileged agent.
+            </span>
+          </div>
+        </div>
+        <button
+          type="button"
+          className="text-[length:var(--fs-caption)] text-accent hover:underline"
+          onClick={() => pushToast('info', 'Knowledge Base integration is pending (BRSD dependency D-07) — this would open the KB in a new tab.')}
+        >
+          Open Knowledge Base ↗
+        </button>
         {!gate.pass && <p className="text-[length:var(--fs-caption)] text-danger">{gate.message}</p>}
       </div>
       <div className="flex justify-end gap-2 mt-6">

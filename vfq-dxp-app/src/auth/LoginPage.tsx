@@ -53,7 +53,6 @@ export function LoginPage() {
   const [staffId, setStaffId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [language, setLanguage] = useState<'English' | 'العربية'>('English');
   const [signingIn, setSigningIn] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -85,9 +84,7 @@ export function LoginPage() {
 
     setActivePersona(resolvedRole.personaId);
     const profile = await pickProfileForRole(resolvedRole.personaId);
-    // APM-09: carry the pre-login language choice into the new profile so
-    // it isn't purely cosmetic — AgentProfileWorkspace can change it later.
-    signIn(staffId, { ...profile, language });
+    signIn(staffId, profile);
   };
 
   const handleFormKeyDown = useEnterToSubmit(!signingIn, handleSignIn);
@@ -171,37 +168,22 @@ export function LoginPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="relative">
-              <button
-                onClick={() => setHelpOpen((v) => !v)}
-                className="flex items-center gap-1.5 text-[length:var(--fs-caption)] text-white/60 hover:text-white"
-              >
-                <Icon path={ICONS.helpCircle} className="w-4 h-4" />
-                Help &amp; support
-              </button>
-              {helpOpen && (
-                <div className="absolute bottom-full left-0 mb-2 w-64 rounded-[var(--radius-card)] border border-white/15 bg-charcoal-panel shadow-raised z-50 p-4">
-                  <p className="text-white font-medium mb-1">Help &amp; support</p>
-                  <p className="text-white/70 text-[length:var(--fs-body)]">
-                    Contact the IT Service Desk at <span className="text-accent">servicedesk@vodafone.qa</span> or extension 4100 for platform issues.
-                  </p>
-                </div>
-              )}
-            </div>
-            <div className="inline-flex rounded-[var(--radius-pill)] bg-white/5 p-0.5">
-              {(['English', 'العربية'] as const).map((lng) => (
-                <button
-                  key={lng}
-                  onClick={() => setLanguage(lng)}
-                  className={`px-3 py-1.5 rounded-[var(--radius-pill)] text-[length:var(--fs-caption)] font-medium transition-colors ${
-                    language === lng ? 'bg-accent text-white' : 'text-white/60'
-                  }`}
-                >
-                  {lng}
-                </button>
-              ))}
-            </div>
+          <div className="relative">
+            <button
+              onClick={() => setHelpOpen((v) => !v)}
+              className="flex items-center gap-1.5 text-[length:var(--fs-caption)] text-white/60 hover:text-white"
+            >
+              <Icon path={ICONS.helpCircle} className="w-4 h-4" />
+              Help &amp; support
+            </button>
+            {helpOpen && (
+              <div className="absolute bottom-full left-0 mb-2 w-64 rounded-[var(--radius-card)] border border-white/15 bg-charcoal-panel shadow-raised z-50 p-4">
+                <p className="text-white font-medium mb-1">Help &amp; support</p>
+                <p className="text-white/70 text-[length:var(--fs-body)]">
+                  Contact the IT Service Desk at <span className="text-accent">servicedesk@vodafone.qa</span> or extension 4100 for platform issues.
+                </p>
+              </div>
+            )}
           </div>
           <p className="text-[length:var(--fs-caption)] text-white/35">
             Vodafone Qatar W.L.L. · Authorised use only · VFQ-DXP v3.4.1
