@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Input } from '../primitives/Input';
+import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 
@@ -16,6 +17,16 @@ interface MsisdnPickerProps {
   onSelect: (msisdn: string, priceQAR: number) => void;
 }
 
+// A full Qatar MSISDN: +974 followed by an 8-digit local number starting
+// 3/5/6/7 (same shape as every seeded numbers.json record and the same
+// leading-digit rule GuidedContactStep's isValidAltPhone uses for a Qatar
+// local number) — stricter than that general validator since a number
+// being reserved here must be a complete, dialable MSISDN, not any
+// alternate-contact phone shape.
+function isValidMsisdn(raw: string): boolean {
+  return /^\+974[3567]\d{7}$/.test(raw.replace(/[\s-]/g, ''));
+}
+
 // Pattern 10: Number Selection / Reservation Step — 8-digit search box + Free/Reserved
 // toggle, matching MSISDNs shown as selectable priced tiles; selecting triggers
 // immediate reservation with a confirmation token (SCR-024/048/082/104/157/191).
@@ -23,10 +34,27 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
   const [numbers, setNumbers] = useState<MsisdnRecord[]>([]);
   const [tab, setTab] = useState<'Free' | 'Star'>('Free');
   const [search, setSearch] = useState('');
+  const [customMsisdn, setCustomMsisdn] = useState('');
+  const [customError, setCustomError] = useState<string | null>(null);
 
   useEffect(() => {
     mockDataEngine.list<MsisdnRecord>('numbers').then(setNumbers);
   }, []);
+
+  const reserveCustom = () => {
+    if (!isValidMsisdn(customMsisdn)) {
+      setCustomError('Enter a full international format MSISDN (e.g. +974 3300 1234).');
+      return;
+    }
+    const normalized = customMsisdn.replace(/[\s-]/g, '');
+    const existing = numbers.find((n) => n.msisdn === normalized);
+    if (existing && existing.status !== 'AVAILABLE') {
+      setCustomError(`${normalized} is already ${existing.status.toLowerCase()} — choose a different number.`);
+      return;
+    }
+    setCustomError(null);
+    onSelect(normalized, existing?.priceQAR ?? 0);
+  };
 
   // Category (Free vs Star/premium) and status (AVAILABLE/Reserved/BLOCKED)
   // are independent axes — tabs must filter on category so a Star number
@@ -82,6 +110,24 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
           SUCCESS: Reservation Token: SBL-EXL-{selected.slice(-5)}
         </p>
       )}
+
+      <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4 space-y-2">
+        <h4 className="text-fg font-semibold">Manual MSISDN Entry</h4>
+        <Input
+          label="Custom MSISDN"
+          placeholder="+974 XXXX XXXX"
+          value={customMsisdn}
+          onChange={(e) => {
+            setCustomMsisdn(e.target.value);
+            setCustomError(null);
+          }}
+          error={customError ?? undefined}
+          helperText="Enter a full international format MSISDN"
+        />
+        <Button variant="primary-rect" className="w-full" disabled={!isValidMsisdn(customMsisdn)} onClick={reserveCustom}>
+          Reserve Custom Number
+        </Button>
+      </div>
     </div>
   );
 }

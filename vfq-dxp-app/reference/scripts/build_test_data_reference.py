@@ -93,6 +93,7 @@ overview_rows = [
     ('Bulk Notes', 'Seeded bulk notes and the accounts they were posted against.'),
     ('Leads (Sales)', 'Seeded leads for the Sales workspace.'),
     ('Postpaid Plans & Discounts', 'The RED plan tiers and eligible discounts shown on the New Postpaid Activation wizard\'s redesigned Plan & Add-ons step.'),
+    ('Number Selection', 'Seeded MSISDN inventory plus how to test the Manual MSISDN Entry card\'s valid/blocked/malformed paths.'),
     ('Verification Codes', 'The demo password and OTP/verification code used everywhere a code is required (password reset, MFA, change password).'),
 ]
 r = 4
@@ -318,6 +319,23 @@ ws.cell(row=next_row, column=1, value='Eligible Discounts (per plan)').font = Fo
 next_row += 2
 disc_rows = [(d.get('addonDiscountId'), d.get('planId'), d.get('name'), f"{round(d.get('price', 0) * 100)}%", d.get('description')) for d in addons_discounts if d.get('category') == 'Discount']
 write_table(ws, next_row, ['Discount ID', 'Applies to Product ID', 'Name', 'Rate', 'Description'], disc_rows, [14, 18, 20, 10, 44])
+
+# ---------------------------------------------------------------------------
+# Sheet 10: Verification Codes
+# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Sheet: Number Selection
+# ---------------------------------------------------------------------------
+numbers = load('numbers')
+ws = wb.create_sheet('Number Selection')
+note = ('The Number Selection step (New Postpaid/Fixed Line/FWA wizards) also has a "Manual MSISDN Entry" card below '
+        'the grid for reserving any MSISDN not in the seeded inventory below — type a full +974-prefixed 8-digit '
+        'number (e.g. +974 3300 9999) and click "Reserve Custom Number". To test its rejection paths: type '
+        '+97433001003 (seeded as Blocked below) to see the "already blocked" error, or an incomplete/malformed number '
+        'to see the format error.')
+row = title_block(ws, 'Number Selection', 'public/mock-data/numbers.json', note)
+number_rows = [(n.get('msisdn'), n.get('category'), n.get('status'), n.get('priceQAR'), n.get('valueTier') or '—') for n in numbers]
+write_table(ws, row, ['MSISDN', 'Category', 'Status', 'Price (QAR)', 'Value Tier'], number_rows, [18, 12, 14, 14, 14])
 
 # ---------------------------------------------------------------------------
 # Sheet 10: Verification Codes
