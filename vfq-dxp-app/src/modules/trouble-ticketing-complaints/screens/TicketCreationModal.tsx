@@ -42,6 +42,10 @@ interface TicketCreationModalProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (value: NewTicketValue) => void | Promise<void>;
+  /** Pre-fills Customer ID when opened from Customer 360, where the customer
+   * is already on screen — the agent shouldn't have to re-type an ID they
+   * already looked up to get here. */
+  initialCustomerId?: string;
 }
 
 // SCR-213: Open UI Tickets Fields (per-issue-type template) — modal where
@@ -49,8 +53,8 @@ interface TicketCreationModalProps {
 // content; Confirm/Save commits, Cancel discards (screen-behaviour-catalogue.md).
 // BR-068 gates commit on Issue Type + template content both being present —
 // an unsubmitted ticket never routes to a queue.
-export function TicketCreationModal({ open, onClose, onSubmit }: TicketCreationModalProps) {
-  const [customerId, setCustomerId] = useState('');
+export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId = '' }: TicketCreationModalProps) {
+  const [customerId, setCustomerId] = useState(initialCustomerId);
   const [issueType, setIssueType] = useState('');
   const [template, setTemplate] = useState('');
   const [templateContent, setTemplateContent] = useState('');

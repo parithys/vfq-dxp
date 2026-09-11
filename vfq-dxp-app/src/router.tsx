@@ -3,6 +3,12 @@ import { Dashboard } from './modules/Dashboard';
 import { ModuleScreenList } from './modules/ModuleScreenList';
 import { ScreenRouteResolver } from './modules/ScreenRouteResolver';
 import { NotFound } from './modules/NotFound';
+import { CustomerSearchPage } from './workspace/customer-search/CustomerSearchPage';
+import { Customer360Layout } from './workspace/customer360/Customer360Layout';
+import { SalesWorkspace } from './workspace/sales/SalesWorkspace';
+import { SupportWorkspace } from './workspace/support/SupportWorkspace';
+import { OrdersWorkspace } from './workspace/orders/OrdersWorkspace';
+import { AdministrationWorkspace } from './workspace/administration/AdministrationWorkspace';
 
 // Side-effect imports: each module's screens/index.ts calls registerScreen()
 // so router.tsx doesn't need to know which screens are implemented.
@@ -29,6 +35,18 @@ export function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<Dashboard />} />
+      {/* Customer -> Product -> Action redesign: new customer-centric routes,
+          added alongside the legacy module routes below (not replacing
+          them) — every existing screen stays reachable at its current URL. */}
+      <Route path="/customer-search" element={<CustomerSearchPage />} />
+      <Route path="/customer/:customerId" element={<Customer360Layout />} />
+      <Route path="/sales" element={<SalesWorkspace />} />
+      <Route path="/support" element={<SupportWorkspace />} />
+      <Route path="/orders" element={<OrdersWorkspace />} />
+      <Route path="/administration" element={<AdministrationWorkspace />} />
+      {/* Legacy: the 213-screen catalogue, kept mounted for direct-link
+          access and internal QA (ModuleScreenList's Built/Not-built view) —
+          no longer linked from the primary sidebar. */}
       <Route path="/:moduleSlug" element={<ModuleScreenList />} />
       <Route path="/:moduleSlug/:screenSlug" element={<ScreenRouteResolver />} />
       <Route path="*" element={<NotFound />} />
