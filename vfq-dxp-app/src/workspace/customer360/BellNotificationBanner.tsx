@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useEntityStore } from '../../stores/entityStore';
 import { Icon } from '../../components/primitives/Icon';
+import { useBellNotificationExpirySweep } from '../../engines/bellNotificationExpiry';
 
 interface BellNotification {
   notificationId: string;
@@ -29,6 +30,7 @@ export function BellNotificationBanner({ customerId }: { customerId: string }) {
   useEffect(() => {
     loadKind('bell-notifications');
   }, [loadKind]);
+  useBellNotificationExpirySweep();
 
   const active = notifications
     .filter(

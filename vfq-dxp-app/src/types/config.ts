@@ -35,6 +35,17 @@ export interface BusinessRule {
   [key: string]: unknown;
 }
 
+/** Agent 360 AAV-01: "maintain a configured approval matrix for each task
+ * category." Neither the requirement nor its linked data field (DF-AGT-011,
+ * which actually describes an unrelated Bell Notification field — one of
+ * the BRSD's own known ID mismatches) specifies real category/role content,
+ * so approval-matrix.json's mapping is a representative placeholder
+ * pending VFQ's confirmed matrix, not sourced business truth. */
+export interface ApprovalMatrixEntry {
+  category: string;
+  requiredRole: string;
+}
+
 export interface ValidationRule {
   id: string;
   [key: string]: unknown;

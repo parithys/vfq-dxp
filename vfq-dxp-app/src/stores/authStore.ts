@@ -10,6 +10,9 @@ export interface AgentProfile {
    * are a placeholder LOV (OI-AGN-06 leaves the real allowed set open). */
   mfaEnabled?: boolean;
   mfaMethod?: 'Authenticator App' | 'SMS OTP';
+  /** APM-09/DF-AGT-008: "English and/or Arabic options are available subject
+   * to VFQ confirmation" (D-03 — completeness open). Defaults to English. */
+  language?: 'English' | 'العربية';
 }
 
 interface AuthState {

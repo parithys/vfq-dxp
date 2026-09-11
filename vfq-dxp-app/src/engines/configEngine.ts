@@ -6,6 +6,7 @@ import type {
   ValidationRule,
   DomainEntity,
   ModuleHierarchyEntry,
+  ApprovalMatrixEntry,
 } from '../types/config';
 
 interface ConfigData {
@@ -23,6 +24,7 @@ interface ConfigData {
    * used (and where it falls back to a heuristic). */
   reqToScreens: Record<string, string[]>;
   journeyCatalogueMap: JourneyCatalogueMap;
+  approvalMatrix: ApprovalMatrixEntry[];
 }
 
 /** Crosswalk between CRM_Journeys_Final_Updated_with_Type.xlsx (Page Type
@@ -71,7 +73,12 @@ export async function loadConfig(): Promise<ConfigData> {
     const journeyCatalogueMap = await fetchJson<JourneyCatalogueMap>('/config/journey-catalogue-map.json').catch(
       () => EMPTY_JOURNEY_CATALOGUE_MAP
     );
-    cache = { routes, personas, rbac, businessRules, validationRules, domainSchema, moduleHierarchy, designTokens, reqToScreens, journeyCatalogueMap };
+    // Same resilience stance — AAV-01's matrix is new and additive (gates
+    // approval assignment eligibility); a missing/broken copy should fall
+    // back to "no matrix configured" (open to any approver) rather than
+    // failing app boot.
+    const approvalMatrix = await fetchJson<ApprovalMatrixEntry[]>('/config/approval-matrix.json').catch(() => []);
+    cache = { routes, personas, rbac, businessRules, validationRules, domainSchema, moduleHierarchy, designTokens, reqToScreens, journeyCatalogueMap, approvalMatrix };
     return cache;
   })();
   return loading;
@@ -155,4 +162,12 @@ export function getJourneyMeta(journeyId: string): { name: string; type: string 
 
 export function isConfigLoaded(): boolean {
   return cache !== null;
+}
+
+/** Agent 360 AAV-01 — the role required to be assigned/approve an approval
+ * task of this category, or undefined if the category has no matrix entry
+ * (open to any approver, same "unconfigured = unrestricted" stance taken
+ * elsewhere for unconfirmed RBAC in this app). */
+export function getRequiredApproverRole(category: string): string | undefined {
+  return requireConfig().approvalMatrix.find((m) => m.category === category)?.requiredRole;
 }

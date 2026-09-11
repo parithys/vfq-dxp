@@ -6,6 +6,7 @@ import { Button } from '../../components/primitives/Button';
 import { useEntityStore } from '../../stores/entityStore';
 import { useAuthStore } from '../../stores/authStore';
 import { isVisibleToAgent } from '../../engines/agentTaskEngine';
+import { getRequiredApproverRole } from '../../engines/configEngine';
 
 interface Order {
   orderId: string;
@@ -27,6 +28,10 @@ interface Order {
 // queue forever. It now sets assignedApproverId on click, and the queue
 // hides orders claimed by someone else (isVisibleToAgent — same rule as
 // Agent Task View's per-agent scoping).
+//
+// Also AAV-01: assignment eligibility is gated by the configured approval
+// matrix (getRequiredApproverRole) — see OrderApprovalDetail.tsx for the
+// matching enforcement on the action buttons themselves.
 export function OrderApprovalQueue() {
   const orders = (useEntityStore((s) => s.records.orders) ?? []) as unknown as Order[];
   const loadKind = useEntityStore((s) => s.loadKind);
@@ -35,6 +40,7 @@ export function OrderApprovalQueue() {
   const loading = useEntityStore((s) => s.loading.orders);
   const navigate = useNavigate();
   const currentAgentId = useAuthStore((s) => s.profile?.userId);
+  const currentJobTitle = useAuthStore((s) => s.profile?.jobTitle);
 
   useEffect(() => {
     loadKind('orders');
@@ -43,6 +49,15 @@ export function OrderApprovalQueue() {
   const pending = orders
     .filter((o) => o.status === 'Submitted for Approval')
     .filter((o) => isVisibleToAgent(o.assignedApproverId, currentAgentId));
+
+  // AAV-01: assignment must follow the configured approval matrix — an
+  // order stays visible to everyone in the shared queue (so the right
+  // approver can find it), but only an agent whose role matches the
+  // category's required role can actually claim it.
+  const isEligible = (order: Order) => {
+    const requiredRole = getRequiredApproverRole(order.orderType);
+    return !requiredRole || requiredRole === currentJobTitle;
+  };
 
   const assignToMe = (order: Order) => {
     if (order.assignedApproverId !== currentAgentId) {
@@ -69,11 +84,16 @@ export function OrderApprovalQueue() {
           {
             key: 'action',
             header: '',
-            render: (r) => (
-              <Button variant="ghost-rect" compact onClick={() => assignToMe(r)}>
-                {r.assignedApproverId === currentAgentId ? 'Open' : 'Assign to Me'}
-              </Button>
-            ),
+            render: (r) =>
+              isEligible(r) ? (
+                <Button variant="ghost-rect" compact onClick={() => assignToMe(r)}>
+                  {r.assignedApproverId === currentAgentId ? 'Open' : 'Assign to Me'}
+                </Button>
+              ) : (
+                <span className="text-muted text-[length:var(--fs-caption)]">
+                  Requires: {getRequiredApproverRole(r.orderType)}
+                </span>
+              ),
           },
         ]}
         rows={pending}

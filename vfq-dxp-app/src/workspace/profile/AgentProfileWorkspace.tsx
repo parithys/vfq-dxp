@@ -122,6 +122,16 @@ export function AgentProfileWorkspace() {
     pushToast('success', `MFA enabled via ${mfaMethod}.`);
   };
 
+  // APM-09: "change language from available options" — English/Arabic per
+  // DF-AGT-008, subject to VFQ confirming completeness (D-03). Persisted on
+  // the profile so it carries across sessions like MFA settings, and read
+  // by App.tsx to mirror the layout (dir="rtl") for Arabic.
+  const changeLanguage = (language: 'English' | 'العربية') => {
+    if (!profile) return;
+    setProfile({ ...profile, language });
+    pushToast('success', language === 'English' ? 'Language set to English.' : 'تم تعيين اللغة إلى العربية.');
+  };
+
   const exportRecords = exportEntity === 'orders' ? orders : tickets;
 
   // AEX-02: "export all visible entity records... irrespective of whether
@@ -208,6 +218,22 @@ export function AgentProfileWorkspace() {
             </div>
           </div>
         )}
+      </div>
+
+      <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mt-6">
+        <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Language</h2>
+        <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
+          Choose your preferred language. (English/Arabic — completeness pending VFQ confirmation, D-03.)
+        </p>
+        <Select
+          label="Language"
+          value={profile?.language ?? 'English'}
+          onChange={(e) => changeLanguage(e.target.value as 'English' | 'العربية')}
+          options={[
+            { value: 'English', label: 'English' },
+            { value: 'العربية', label: 'العربية (Arabic)' },
+          ]}
+        />
       </div>
 
       <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mt-6">

@@ -85,7 +85,9 @@ export function LoginPage() {
 
     setActivePersona(resolvedRole.personaId);
     const profile = await pickProfileForRole(resolvedRole.personaId);
-    signIn(staffId, profile);
+    // APM-09: carry the pre-login language choice into the new profile so
+    // it isn't purely cosmetic — AgentProfileWorkspace can change it later.
+    signIn(staffId, { ...profile, language });
   };
 
   const handleFormKeyDown = useEnterToSubmit(!signingIn, handleSignIn);

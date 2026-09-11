@@ -16,6 +16,7 @@ export default function App() {
   const error = useConfigStore((s) => s.error);
   const boot = useConfigStore((s) => s.boot);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const language = useAuthStore((s) => s.profile?.language);
   const theme = useThemeStore((s) => s.theme);
 
   useEffect(() => {
@@ -26,6 +27,16 @@ export default function App() {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
+
+  // Agent 360 APM-09: the app's own strings aren't translated (no Arabic
+  // copy exists anywhere in the source corpus — D-03 leaves language
+  // completeness open), but layout mirroring is a real, honest effect of
+  // an Arabic preference that doesn't require inventing translated text.
+  useEffect(() => {
+    const isArabic = language === 'العربية';
+    document.documentElement.dir = isArabic ? 'rtl' : 'ltr';
+    document.documentElement.lang = isArabic ? 'ar' : 'en';
+  }, [language]);
 
   if (error) {
     return (

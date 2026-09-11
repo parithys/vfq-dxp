@@ -7,8 +7,10 @@ import { Modal } from '../../components/primitives/Modal';
 import { Select } from '../../components/primitives/Select';
 import { Textarea } from '../../components/primitives/Textarea';
 import { useEntityStore } from '../../stores/entityStore';
+import { useAuthStore } from '../../stores/authStore';
 import { useNotificationStore } from '../../stores/notificationStore';
 import * as mockDataEngine from '../../engines/mockDataEngine';
+import { getRequiredApproverRole } from '../../engines/configEngine';
 
 interface Order {
   orderId: string;
@@ -40,10 +42,10 @@ interface ApprovalHistoryEntry {
 // (Attachments/Order Details/Activities/Agents Details) + action buttons
 // (Approve, Reject - Correction, Reject - Drop Order, Return, Go Back),
 // evidenced identically across Fixed Line/FWA/Postpaid B2B2C-with-approval
-// journeys, extended with Agent 360 BRSD's Return action (AAV-03) and real
+// journeys, extended with Agent 360 BRSD's Return action (AAV-03), real
 // task history (AAV-05 — `actionTaken` distinguishes an approval-decision
 // record from the pre-seeded general `customer-activities` timeline, which
-// carries no such field).
+// carries no such field), and approval-matrix role gating (AAV-01/BR-06).
 export function OrderApprovalDetail() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
@@ -54,6 +56,7 @@ export function OrderApprovalDetail() {
   const updateRecord = useEntityStore((s) => s.updateRecord);
   const createRecord = useEntityStore((s) => s.createRecord);
   const pushToast = useNotificationStore((s) => s.pushToast);
+  const currentJobTitle = useAuthStore((s) => s.profile?.jobTitle);
 
   const [reasons, setReasons] = useState<RejectReason[]>([]);
   const [modal, setModal] = useState<'approve' | 'reject-correction' | 'reject-drop' | 'return' | null>(null);
@@ -83,6 +86,12 @@ export function OrderApprovalDetail() {
   }
 
   const history = activities.filter((a) => a.orderId === order.orderId && a.actionTaken);
+
+  // AAV-01: reject/approve/return still require the matrix role even if an
+  // agent reaches this page directly (e.g. by URL) rather than through the
+  // queue's own "Assign to Me" gate — see OrderApprovalQueue.tsx.
+  const requiredRole = getRequiredApproverRole(order.orderType);
+  const isEligibleApprover = !requiredRole || requiredRole === currentJobTitle;
 
   const logActivity = (actionTaken: string, notes: string) =>
     createRecord('customer-activities', {
@@ -235,17 +244,28 @@ export function OrderApprovalDetail() {
         ]}
       />
 
+      {!isEligibleApprover && (
+        <div className="mb-4 rounded border border-[var(--warn)] px-4 py-3 text-[length:var(--fs-body)] text-[var(--warn-text)]">
+          Only a {requiredRole} may approve, reject, or return this order (Agent 360 AAV-01/BR-06).
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2 mt-6">
-        <Button variant="primary-rect" onClick={() => setModal('approve')}>
+        <Button variant="primary-rect" onClick={() => setModal('approve')} disabled={!isEligibleApprover}>
           Approve
         </Button>
-        <Button variant="ghost-rect" onClick={() => setModal('reject-correction')}>
+        <Button variant="ghost-rect" onClick={() => setModal('reject-correction')} disabled={!isEligibleApprover}>
           Reject - Correction
         </Button>
-        <Button variant="ghost-rect" className="!text-danger !border-danger" onClick={() => setModal('reject-drop')}>
+        <Button
+          variant="ghost-rect"
+          className="!text-danger !border-danger"
+          onClick={() => setModal('reject-drop')}
+          disabled={!isEligibleApprover}
+        >
           Reject - Drop Order
         </Button>
-        <Button variant="ghost-rect" onClick={() => setModal('return')}>
+        <Button variant="ghost-rect" onClick={() => setModal('return')} disabled={!isEligibleApprover}>
           Return
         </Button>
         <Button variant="ghost-rect" onClick={() => navigate('/order-management')}>

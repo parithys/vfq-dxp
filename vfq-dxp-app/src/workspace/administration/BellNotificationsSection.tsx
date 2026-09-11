@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useEntityStore } from '../../stores/entityStore';
 import { useNotificationStore } from '../../stores/notificationStore';
+import { useBellNotificationExpirySweep } from '../../engines/bellNotificationExpiry';
 import { Input } from '../../components/primitives/Input';
 import { Select } from '../../components/primitives/Select';
 import { Textarea } from '../../components/primitives/Textarea';
@@ -54,6 +55,7 @@ export function BellNotificationsSection() {
   useEffect(() => {
     loadKind('bell-notifications');
   }, [loadKind]);
+  useBellNotificationExpirySweep();
 
   const reset = () => {
     setCustomerId('');
