@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { Icon } from '../components/primitives/Icon';
-import { Select } from '../components/primitives/Select';
 import { VodafoneMark } from '../components/primitives/VodafoneMark';
 import { Tooltip } from '../components/primitives/Tooltip';
 import { useAuthStore } from '../stores/authStore';
 import { usePersonaStore } from '../stores/personaStore';
 import { useNotificationStore } from '../stores/notificationStore';
-import { getAllPersonas } from '../engines/configEngine';
 import { pickProfileForRole } from '../engines/agentProfileEngine';
 import { useEnterToSubmit } from '../hooks/useEnterToSubmit';
+import { DEFAULT_PERSONA_ID, resolveRoleFromStaffId } from './staffIdRoleMap';
 
 const ICONS = {
   shield: 'M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z M9.5 12l1.8 1.8L15 10',
@@ -38,17 +37,16 @@ const METRICS = [
 // New auth gate — not evidenced in the source corpus (no SCR- id); implements
 // the split-panel login mock supplied directly by the user. The "Sign in with
 // SSO" action is fully mocked (no backend/IdP), consistent with every other
-// simulated action in this app — it just flips authStore's flag. Selecting a
-// Role ties into the same persona list the rest of the app already uses
-// (PersonaSwitcher), so the choice made here carries through post-login.
+// simulated action in this app — it just flips authStore's flag. Role is not
+// user-selectable: it's derived from the entered Staff ID via
+// staffIdRoleMap.ts, then carried through post-login the same way a manually
+// picked persona used to be.
 export function LoginPage() {
   const signIn = useAuthStore((s) => s.signIn);
   const setActivePersona = usePersonaStore((s) => s.setActivePersona);
   const pushToast = useNotificationStore((s) => s.pushToast);
-  const personas = getAllPersonas();
 
   const [staffId, setStaffId] = useState('');
-  const [role, setRole] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [language, setLanguage] = useState<'English' | 'العربية'>('English');
@@ -60,9 +58,10 @@ export function LoginPage() {
   const handleSignIn = async () => {
     if (signingIn) return;
     setSigningIn(true);
-    const effectiveRole = role || 'PERSONA-001';
-    setActivePersona(effectiveRole);
-    const profile = await pickProfileForRole(effectiveRole);
+    const resolvedRole = resolveRoleFromStaffId(staffId);
+    const personaId = resolvedRole?.personaId ?? DEFAULT_PERSONA_ID;
+    setActivePersona(personaId);
+    const profile = await pickProfileForRole(personaId);
     signIn(staffId || 'VFQ-12345', profile);
   };
 
@@ -96,15 +95,6 @@ export function LoginPage() {
                 className="rounded-[var(--radius-sm)] border border-white/15 bg-white/5 px-3 py-2.5 text-white placeholder:text-white/35 focus:outline-none focus-visible:border-accent"
               />
             </div>
-
-            <Select
-              dark
-              label="Role"
-              placeholder="Select your role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              options={personas.map((p) => ({ value: p.id, label: p.name }))}
-            />
 
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
