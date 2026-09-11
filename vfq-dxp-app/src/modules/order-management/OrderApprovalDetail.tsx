@@ -214,7 +214,7 @@ export function OrderApprovalDetail() {
                           <span className="text-muted text-[length:var(--fs-caption)]">{new Date(entry.transactionDate).toLocaleString()}</span>
                         </div>
                         <div className="text-fg-2 text-[length:var(--fs-caption)] mt-0.5">
-                          Task ID: {entry.orderId}{entry.notes ? ` · ${entry.notes}` : ''}
+                          Task ID: {entry.orderId} · Task Name: {order.orderType}{entry.notes ? ` · ${entry.notes}` : ''}
                         </div>
                       </div>
                     ))}
