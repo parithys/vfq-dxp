@@ -24,10 +24,19 @@ const WIZARD_ID = 'new-mnp';
 // SCR-121–134 — the MNP guided wizard (UJ-069 "MNP Postpaid Port-In (Desktop,
 // Ooredoo to Vodafone)," high confidence): Contact -> Address -> Billing ->
 // SIM Serial -> Plan (Bill Limit) -> Donor Details -> Donor Attachment (MNP
-// form + signature) -> CAF (signature) -> Activity -> Submit. Order Type
-// Activation, Sub Type Port-In, Status Pending per the evidenced success
-// condition — not auto-completed like a direct activation, since a real port
-// request depends on the donor operator's response.
+// form + signature) -> CAF (signature) -> Activity -> Submit. UJ-069 itself
+// (a Consumer/HRN case) ends with Status Pending, not auto-completed like a
+// direct activation, since a real port request depends on the donor
+// operator's response — that base case is unchanged below.
+//
+// B2B2C orders additionally route to manager approval, generalizing UJ-081/
+// UJ-082 (New Postpaid B2B2C With/Without Approval) the same way the Fixed
+// Line and FWA wizards already do — no MNP-specific "B2B2C With Approval"
+// journey is evidenced in the source corpus, but the Contact step's B2B2C
+// checkbox is itself evidenced here (guided-journeys-mnp-postpaid-open-ui-
+// tablet-mnp-postpaid-hrn-10ba9743 shows a "Company Name/B2B2C" field on
+// this exact step), so gating on it is consistent rather than invented from
+// nothing. See order-management's OrderApprovalQueue / approval-matrix.json.
 export function NewMnpWizard() {
   const navigate = useNavigate();
   const createRecord = useEntityStore((s) => s.createRecord);
@@ -178,9 +187,13 @@ export function NewMnpWizard() {
           const orderId = `ORD-${Date.now().toString().slice(-6)}`;
           await createRecord('orders', {
             orderId,
-            orderType: 'Activation',
-            orderSubType: 'Port-In',
-            status: 'Pending',
+            orderType: 'MNP Postpaid Port-In',
+            orderSubType: contact.isB2B2C ? 'B2B2C' : 'Port-In',
+            // B2B2C orders route to manager approval per the generalized UJ-081/UJ-082
+            // pattern (see comment above) — the base Consumer/HRN case keeps UJ-069's
+            // evidenced Pending status (a real port request awaits the donor operator
+            // regardless of approval).
+            status: contact.isB2B2C ? 'Submitted for Approval' : 'Pending',
             customerName: contact.moiResult?.name,
             productId: values.productId,
             billLimitQAR: values.billLimit,
@@ -197,7 +210,12 @@ export function NewMnpWizard() {
             donorOperator: 'Ooredoo Qatar',
             status: 'Pending',
           });
-          pushToast('success', `MNP Port-In order ${orderId} submitted — porting ${donorDetails.portInNumber} from Ooredoo Qatar (Status: Pending).`);
+          pushToast(
+            'success',
+            contact.isB2B2C
+              ? `MNP Port-In order ${orderId} submitted for manager approval (B2B2C) — porting ${donorDetails.portInNumber} from Ooredoo Qatar.`
+              : `MNP Port-In order ${orderId} submitted — porting ${donorDetails.portInNumber} from Ooredoo Qatar (Status: Pending).`
+          );
           navigate('/mnp-fnp-porting');
         }}
         onAbandon={() => navigate('/mnp-fnp-porting')}

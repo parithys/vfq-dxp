@@ -202,18 +202,19 @@ reject_reasons = load('reject-reasons')
 matrix = json.load(open(f'{CONF}/approval-matrix.json'))
 ws = wb.create_sheet('Orders & Approval Queue')
 note = ('The Approval Queue is EMPTY by default — none of the 5 seeded orders are in "Submitted for Approval" status. '
-        'To populate it: run the New Postpaid Activation, New Fixed Line, or New FWA wizard (Sales workspace) and tick the '
-        '"B2B2C order" checkbox on the contact step — all three wizards now write an order-type string that matches an '
-        'approval-matrix category (New Postpaid Activation / New Fixed Line Activation / New FWA Postpaid Outdoor Order), '
-        'so the role gate applies to all of them. Note the two seeded historical orders ORD-90003/ORD-90004 use slightly '
-        'different order-type strings ("New FWA 5G Outdoor Activation" / "New Fixed Line - Triple Play") than the matrix — '
-        'that is harmless since both are already Complete/Open and never re-enter the approval flow, but do not use those '
-        'exact strings as a template if you are hand-editing an order into "Submitted for Approval" for testing; use the '
-        'wizard-created strings shown in the matrix below instead. MNP Postpaid Port-In cannot currently be reached via '
-        'the live MNP wizard (it always creates orderType "Activation" with status "Pending", never "Submitted for '
-        'Approval") — that matrix entry only matches if you hand-edit an order to orderType "MNP Postpaid Port-In" + '
-        'status "Submitted for Approval". Also: CUST-1002 (HRN) will trigger the advance-payment gate on the New Postpaid '
-        'wizard, which independently sets the order to Submitted for Approval regardless of the B2B2C checkbox.')
+        'To populate it: run the New Postpaid Activation, New Fixed Line, New FWA, or MNP Port-In wizard (Sales workspace) '
+        'and tick the "B2B2C order" checkbox on the contact step — all four wizards now write an order-type string that '
+        'matches an approval-matrix category (New Postpaid Activation / New Fixed Line Activation / New FWA Postpaid '
+        'Outdoor Order / MNP Postpaid Port-In), so the role gate applies to all of them. Note the two seeded historical '
+        'orders ORD-90003/ORD-90004 use slightly different order-type strings ("New FWA 5G Outdoor Activation" / "New '
+        'Fixed Line - Triple Play") than the matrix — that is harmless since both are already Complete/Open and never '
+        're-enter the approval flow, but do not use those exact strings as a template if you are hand-editing an order '
+        'into "Submitted for Approval" for testing; use the wizard-created strings shown in the matrix below instead. '
+        'For MNP specifically: only a B2B2C Port-In goes to approval — a Consumer/HRN Port-In (the evidenced UJ-069 case) '
+        'still lands in status "Pending" as before, since that reflects a real port request awaiting the donor operator, '
+        'not a B2B2C order awaiting manager sign-off. Also: CUST-1002 (HRN) will trigger the advance-payment gate on the '
+        'New Postpaid wizard, which independently sets the order to Submitted for Approval regardless of the B2B2C '
+        'checkbox.')
 row = title_block(ws, 'Orders & Approval Queue', 'public/mock-data/orders.json + public/config/approval-matrix.json', note)
 
 order_rows = [(o.get('orderId'), o.get('orderType'), o.get('orderSubType'), o.get('status'), o.get('approvalStatus'), o.get('customerId')) for o in orders]

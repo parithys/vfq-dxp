@@ -46,7 +46,13 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
   // async work committed would re-read the same not-yet-cleared draft and
   // create a byte-identical second order. Confirmed live: a rapid double
   // click on "Save & Finish" produced two orders with the same ID and fields.
+  // `submitting` state alone isn't enough — a second, genuinely-synchronous
+  // invocation in the same tick still reads it as stale `false` (a state
+  // update isn't visible until the next render), so `submittingRef` backs
+  // it for the actual guard while `submitting` still drives the UI (button
+  // label/disabled) — same split used in OrderApprovalDetail.tsx et al.
   const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   const [confirmingAbandon, setConfirmingAbandon] = useState(false);
 
   const activeSteps = steps.filter((s) => !s.skip?.(draft.values));
@@ -75,12 +81,14 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
       setStep(wizardId, currentIndex + 1);
       return;
     }
-    if (submitting) return;
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setSubmitting(true);
     try {
       await onSubmit(draft.values);
       clearDraft(wizardId);
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };
