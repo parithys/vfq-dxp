@@ -89,7 +89,7 @@ export function Select({ label, error, helperText, options, placeholder, value, 
 
   const triggerClasses = dark
     ? 'border-white/15 bg-white/5 text-white focus-visible:border-accent'
-    : `${error ? 'border-danger' : 'border-[var(--grey-form)]'} bg-bg text-fg focus-visible:shadow-[var(--focus-ring)]`;
+    : `${error ? 'border-danger' : 'border-[var(--grey-form)] enabled:hover:border-accent/40'} bg-bg text-fg focus-visible:border-accent focus-visible:shadow-[var(--focus-ring)]`;
   const panelClasses = dark
     ? 'border-white/15 bg-[var(--charcoal-panel)] divide-y divide-white/10'
     : 'border-border-soft bg-bg divide-y divide-border-soft';

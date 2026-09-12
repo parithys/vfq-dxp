@@ -50,7 +50,7 @@ export function DataTable<T>({
           <thead className="bg-surface text-fg-2">
             <tr>
               {columns.map((col) => (
-                <th key={col.key} className="px-4 py-2 font-medium text-[length:var(--fs-caption-upper)] uppercase tracking-wide">
+                <th key={col.key} className="px-4 py-2 font-semibold text-[length:var(--fs-caption-upper)]">
                   {col.header}
                 </th>
               ))}

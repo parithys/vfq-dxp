@@ -91,8 +91,10 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row font-sans">
-      {/* Left panel */}
-      <div className="w-full md:w-[420px] shrink-0 bg-charcoal-panel text-white flex flex-col justify-between px-10 py-10">
+      {/* Sign-in panel — ordered after the brand panel on md:+ to match the
+          reference layout (dark brand story left, focused form right); DOM
+          order (and therefore tab order) is untouched, only visual order. */}
+      <div className="w-full md:w-[420px] shrink-0 md:order-2 bg-charcoal-panel text-white flex flex-col justify-between px-10 py-10">
         <div className="flex items-center gap-2">
           <VodafoneMark />
           <span className="text-[length:var(--fs-h5)] font-bold">Vodafone</span>
@@ -159,7 +161,7 @@ export function LoginPage() {
             <button
               onClick={handleSignIn}
               disabled={signingIn}
-              className="w-full flex items-center justify-center gap-2 rounded-[var(--radius-btn)] bg-accent hover:bg-accent-hover active:bg-accent-active disabled:opacity-60 text-white font-medium py-3 transition-colors"
+              className="w-full flex items-center justify-center gap-2 rounded-[var(--radius-btn)] bg-accent hover:bg-accent-hover active:bg-accent-active active:scale-[0.99] disabled:opacity-60 text-white font-medium py-3 shadow-[var(--shadow-brand)] transition-[color,background-color,transform]"
             >
               {signingIn ? 'Signing in…' : 'Sign in with SSO'}
               {!signingIn && <Icon path={ICONS.arrowRight} className="w-4 h-4" />}
@@ -191,8 +193,8 @@ export function LoginPage() {
         </div>
       </div>
 
-      {/* Right panel */}
-      <div className="flex-1 px-8 md:px-16 py-10 flex flex-col justify-between text-white bg-[image:var(--gradient-brand-panel)]">
+      {/* Brand/metrics panel */}
+      <div className="flex-1 px-8 md:px-16 py-10 flex flex-col justify-between text-white bg-[image:var(--gradient-brand-panel)] md:order-1">
         <div>
           <div className="flex items-center gap-2 mb-4">
             <span className="w-1.5 h-1.5 rounded-full bg-white inline-block" />
@@ -207,7 +209,7 @@ export function LoginPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
             {METRICS.map((m) => (
-              <div key={m.label} className="rounded-[var(--radius-card)] border border-white/15 bg-black/10 p-5">
+              <div key={m.label} className="rounded-[var(--radius-card)] border border-white/15 bg-white/5 p-5">
                 <div className="flex items-center justify-between mb-6">
                   <span className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
                     <Icon path={m.icon} className="w-4.5 h-4.5" />

@@ -176,7 +176,7 @@ export function Dashboard() {
           <Link
             key={tile.key}
             to={`/tasks?filter=${tile.key}`}
-            className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 hover:border-accent hover:shadow-raised transition-all"
+            className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 hover:border-accent hover:shadow-raised hover:-translate-y-0.5 transition-all"
           >
             <div className="text-[length:var(--fs-h3)] font-extrabold text-fg">{anyLoading ? '—' : tile.count}</div>
             <div className="text-fg-2 text-[length:var(--fs-caption)] mt-1">{tile.label}</div>
@@ -227,7 +227,7 @@ export function Dashboard() {
               <Link
                 key={customer.customerId}
                 to={`/customer/${customer.customerId}`}
-                className="flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-border-soft bg-bg px-4 py-3 hover:border-accent hover:shadow-raised transition-all"
+                className="flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-border-soft bg-bg px-4 py-3 hover:border-accent hover:shadow-raised hover:-translate-y-0.5 transition-all"
               >
                 <div>
                   <div className="font-medium text-fg text-[length:var(--fs-body)]">{customer.name}</div>

@@ -33,14 +33,15 @@
 
   --shadow-raised: var(--elev-raised);
   --shadow-ring: var(--elev-ring);
+  --shadow-brand: var(--shadow-brand);
 }
 
 /* Dark theme — overrides the structural surface/text/border tokens only;
    brand/status colors (accent, success, warn, danger) stay constant across
    themes. Toggled via themeStore adding/removing `.dark` on <html>. */
 :root.dark {
-  --bg: #1b1d21;
-  --surface: #101114;
+  --bg: #16171c;
+  --surface: #111319;
   --surface-warm: #241a1a;
   --fg: #f2f2f2;
   --fg-2: #c7c9cb;
@@ -55,13 +56,16 @@
      surfaces above and read as too saturated/low-contrast on the dark ones —
      brightened slightly for legibility; elevation shadows reduced in opacity
      since a dark backdrop needs less shadow to read as "raised". */
-  --danger: #ff5c5c;
-  --success: #3ecf5f;
+  --danger: #f0554a;
+  --success: #3ecb6e;
   --warn: #ffc94d;
   --warn-text: #ffc94d;
-  --elev-raised: 0 18px 44px rgba(0,0,0,.4);
+  --elev-raised: 0 1px 2px rgba(0,0,0,.3), 0 24px 60px -24px rgba(0,0,0,.55);
   --elev-ring: 0 0 0 1px var(--border);
   --focus-ring: 0 0 0 4px rgba(255,92,92,.3);
+  /* Colored CTA glow reads hotter on dark backgrounds at equal alpha, so this
+     is dimmer than the light-mode --shadow-brand mix. */
+  --shadow-brand: 0 12px 32px -12px color-mix(in oklab, var(--accent) 45%, transparent);
 }
 
 /* Cursor affordance baseline (UI cursor remediation). Tailwind v4 removed the

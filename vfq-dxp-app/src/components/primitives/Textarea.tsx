@@ -22,8 +22,8 @@ export function Textarea({ label, error, helperText, className = '', id, 'aria-d
         rows={4}
         aria-describedby={describedBy}
         className={`rounded-[var(--radius-button)] border px-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg
-          ${error ? 'border-danger' : 'border-[var(--grey-form)]'}
-          focus:outline-none focus-visible:shadow-[var(--focus-ring)]
+          ${error ? 'border-danger' : 'border-[var(--grey-form)] enabled:hover:border-accent/40'}
+          focus:outline-none focus-visible:border-accent focus-visible:shadow-[var(--focus-ring)]
           ${className}`}
         {...rest}
       />

@@ -80,37 +80,37 @@ export function Sidebar() {
       <nav
         className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-200 ease-in-out ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:static md:inset-auto md:z-auto md:translate-x-0 md:transition-[width] md:duration-150 shrink-0 border-r border-border-soft bg-bg h-full overflow-y-auto ${
+        } md:static md:inset-auto md:z-auto md:translate-x-0 md:transition-[width] md:duration-150 shrink-0 border-r border-white/10 bg-[var(--charcoal-panel)] h-full overflow-y-auto ${
           collapsed ? 'md:w-16' : 'md:w-64'
         }`}
       >
       {/* Mobile drawer always renders the expanded header/nav regardless of
           the desktop `collapsed` preference — collapsing to icon-only only
           makes sense for the persistent in-flow rail at md:+. */}
-      <div className="flex items-center justify-between h-16 px-4 border-b border-border-soft md:hidden">
+      <div className="flex items-center justify-between h-16 px-4 border-b border-white/10 md:hidden">
         <NavLink to="/" className="flex items-center gap-2 min-w-0">
           <VodafoneMark className="w-7 h-7 shrink-0" />
-          <span className="text-[length:var(--fs-h5)] font-bold text-fg truncate">vodafone</span>
+          <span className="text-[length:var(--fs-h5)] font-bold text-white truncate">vodafone</span>
         </NavLink>
         <button
           onClick={closeMobile}
           aria-label="Close navigation"
-          className="text-muted hover:text-fg shrink-0"
+          className="text-white/60 hover:text-white shrink-0"
         >
           <Icon path={PANEL_TOGGLE_ICON} className="w-4.5 h-4.5" />
         </button>
       </div>
       {!collapsed && (
-        <div className="hidden md:flex items-center justify-between h-16 px-4 border-b border-border-soft">
+        <div className="hidden md:flex items-center justify-between h-16 px-4 border-b border-white/10">
           <NavLink to="/" className="flex items-center gap-2 min-w-0">
             <VodafoneMark className="w-7 h-7 shrink-0" />
-            <span className="text-[length:var(--fs-h5)] font-bold text-fg truncate">vodafone</span>
+            <span className="text-[length:var(--fs-h5)] font-bold text-white truncate">vodafone</span>
           </NavLink>
           <Tooltip content="Collapse navigation" placement="bottom">
             <button
               onClick={toggleCollapsed}
               aria-label="Collapse navigation"
-              className="text-muted hover:text-fg shrink-0"
+              className="text-white/60 hover:text-white shrink-0"
             >
               <Icon path={PANEL_TOGGLE_ICON} className="w-4.5 h-4.5" />
             </button>
@@ -118,9 +118,9 @@ export function Sidebar() {
         </div>
       )}
       {collapsed && (
-        <div className="hidden md:flex items-center justify-center h-16 border-b border-border-soft">
+        <div className="hidden md:flex items-center justify-center h-16 border-b border-white/10">
           <Tooltip content="Expand navigation" placement="right">
-            <button onClick={toggleCollapsed} aria-label="Expand navigation" className="text-muted hover:text-fg">
+            <button onClick={toggleCollapsed} aria-label="Expand navigation" className="text-white/60 hover:text-white">
               <Icon path={PANEL_TOGGLE_ICON} className="w-4.5 h-4.5" />
             </button>
           </Tooltip>
@@ -135,8 +135,8 @@ export function Sidebar() {
                   to={item.to}
                   end={'end' in item ? item.end : false}
                   className={({ isActive }) =>
-                    `flex items-center gap-2.5 h-12 text-[length:var(--fs-body)] border-l-2 ${collapsed ? 'justify-center px-2' : 'px-4'} ${
-                      isActive ? 'border-accent bg-surface-warm text-accent font-medium' : 'border-transparent text-fg-2 hover:bg-surface hover:text-fg'
+                    `flex items-center gap-2.5 h-11 mx-2 rounded-[var(--radius-sm)] text-[length:var(--fs-body)] ${collapsed ? 'justify-center px-2' : 'px-4'} ${
+                      isActive ? 'bg-accent text-accent-on font-medium shadow-[var(--shadow-brand)]' : 'text-white/70 hover:bg-white/10 hover:text-white'
                     }`
                   }
                 >

@@ -72,7 +72,7 @@ export function PersonaSwitcher() {
   };
 
   return (
-    <div className="flex items-center gap-3 h-16 px-4 border-b border-border-soft bg-bg">
+    <div className="flex items-center gap-3 h-16 px-4 border-b border-border-soft bg-[color-mix(in_oklab,var(--bg)_85%,transparent)] backdrop-blur">
       <button
         onClick={toggleMobileOpen}
         aria-label="Open navigation"
@@ -88,7 +88,7 @@ export function PersonaSwitcher() {
           <button
             onClick={toggleTheme}
             aria-label="Toggle theme"
-            className="w-9 h-9 rounded-[var(--radius-pill)] border border-border-soft flex items-center justify-center text-fg-2 hover:bg-surface"
+            className="w-10 h-10 rounded-[var(--radius-pill)] border border-border-soft flex items-center justify-center text-fg-2 hover:bg-surface"
           >
             <Icon path={theme === 'dark' ? ICONS.sun : ICONS.moon} className="w-4.5 h-4.5" />
           </button>
@@ -101,7 +101,7 @@ export function PersonaSwitcher() {
               aria-label="Notifications"
               aria-haspopup="true"
               aria-expanded={open === 'notifications'}
-              className="relative w-9 h-9 rounded-[var(--radius-pill)] border border-border-soft flex items-center justify-center text-fg-2 hover:bg-surface"
+              className="relative w-10 h-10 rounded-[var(--radius-pill)] border border-border-soft flex items-center justify-center text-fg-2 hover:bg-surface"
             >
               <Icon path={ICONS.bell} className="w-4.5 h-4.5" />
               {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent" />}
@@ -128,7 +128,7 @@ export function PersonaSwitcher() {
               aria-label="Help & support"
               aria-haspopup="true"
               aria-expanded={open === 'help'}
-              className="w-9 h-9 rounded-[var(--radius-pill)] border border-border-soft flex items-center justify-center text-fg-2 hover:bg-surface"
+              className="w-10 h-10 rounded-[var(--radius-pill)] border border-border-soft flex items-center justify-center text-fg-2 hover:bg-surface"
             >
               <Icon path={ICONS.help} className="w-4.5 h-4.5" />
             </button>

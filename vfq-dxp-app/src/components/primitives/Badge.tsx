@@ -11,9 +11,9 @@ interface BadgeProps {
 const variantClasses: Record<BadgeVariant, string> = {
   'outlined-red': 'border border-accent text-accent bg-transparent',
   'filled-neutral': 'bg-light-neutral text-fg-2',
-  success: 'bg-[color-mix(in_oklab,var(--success),white_85%)] text-success',
-  warning: 'bg-[color-mix(in_oklab,var(--warn),white_80%)] text-[var(--warn-text)]',
-  danger: 'bg-[color-mix(in_oklab,var(--danger),white_85%)] text-danger',
+  success: 'bg-[color-mix(in_oklab,var(--success)_12%,transparent)] text-success',
+  warning: 'bg-[color-mix(in_oklab,var(--warn)_12%,transparent)] text-[var(--warn-text)]',
+  danger: 'bg-[color-mix(in_oklab,var(--danger)_12%,transparent)] text-danger',
   accent: 'bg-accent text-accent-on',
 };
 
