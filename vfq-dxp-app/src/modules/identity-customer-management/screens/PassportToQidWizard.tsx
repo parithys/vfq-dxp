@@ -6,7 +6,7 @@ import { IdLookupStep } from '../../../components/patterns/IdLookupStep';
 import { QidImageUpload } from '../../../components/domain/QidImageUpload';
 import type { QidImageUploadValue } from '../../../components/domain/QidImageUpload';
 import { SignaturePad } from '../../../components/primitives/SignaturePad';
-import { Modal } from '../../../components/primitives/Modal';
+import { Drawer } from '../../../components/primitives/Drawer';
 import { Button } from '../../../components/primitives/Button';
 import { Badge } from '../../../components/primitives/Badge';
 import { useState } from 'react';
@@ -129,14 +129,14 @@ export function PassportToQidWizard() {
         }}
         onAbandon={() => navigate('/identity-customer-management')}
       />
-      <Modal open={padOpen} onClose={() => setPadOpen(false)} title="Please Sign">
+      <Drawer open={padOpen} onClose={() => setPadOpen(false)} title="Please Sign">
         <SignaturePad
           onDone={(dataUrl) => {
             setSignatureDataUrl(dataUrl);
             setPadOpen(false);
           }}
         />
-      </Modal>
+      </Drawer>
     </div>
   );
 }

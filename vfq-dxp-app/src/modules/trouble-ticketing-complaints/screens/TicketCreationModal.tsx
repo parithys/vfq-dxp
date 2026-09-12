@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Modal } from '../../../components/primitives/Modal';
+import { Drawer } from '../../../components/primitives/Drawer';
 import { Select } from '../../../components/primitives/Select';
 import { Textarea } from '../../../components/primitives/Textarea';
 import { Button } from '../../../components/primitives/Button';
@@ -172,7 +172,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="New Trouble Ticket">
+    <Drawer open={open} onClose={onClose} title="New Trouble Ticket" size="lg">
       <div className="space-y-4">
         <Input
           label="Customer ID"
@@ -272,6 +272,6 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
           {submitting ? 'Saving…' : 'Save'}
         </Button>
       </div>
-    </Modal>
+    </Drawer>
   );
 }

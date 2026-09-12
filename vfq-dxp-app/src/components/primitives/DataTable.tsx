@@ -50,7 +50,7 @@ export function DataTable<T>({
           <thead className="bg-surface text-fg-2">
             <tr>
               {columns.map((col) => (
-                <th key={col.key} className="px-4 py-2 font-semibold text-[length:var(--fs-caption-upper)]">
+                <th key={col.key} className="px-4 py-3 font-semibold text-[length:var(--fs-caption-upper)]">
                   {col.header}
                 </th>
               ))}
@@ -79,12 +79,12 @@ export function DataTable<T>({
                   tabIndex={onRowClick ? 0 : undefined}
                   role={onRowClick ? 'button' : undefined}
                   onKeyDown={onRowClick ? (event) => handleRowKeyDown(event, row) : undefined}
-                  className={`border-t border-border-soft ${onRowClick ? 'cursor-pointer hover:bg-surface' : ''}`}
+                  className={`border-t border-border-soft transition-colors ${onRowClick ? 'cursor-pointer hover:bg-surface' : ''}`}
                 >
                   {columns.map((col) => {
                     const value = (row as Record<string, unknown>)[col.key] ?? '—';
                     return (
-                      <td key={col.key} className="px-4 py-2 text-fg">
+                      <td key={col.key} className="px-4 py-3.5 text-fg">
                         {col.render ? (
                           col.render(row)
                         ) : (

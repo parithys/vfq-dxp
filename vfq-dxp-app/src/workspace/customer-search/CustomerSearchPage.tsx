@@ -6,6 +6,7 @@ import { Badge } from '../../components/primitives/Badge';
 import { Icon } from '../../components/primitives/Icon';
 
 const SEARCH_ICON = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3';
+const CLEAR_ICON = 'M18 6L6 18 M6 6l12 12';
 
 const MATCH_LABEL: Record<string, string> = {
   mobile: 'Mobile',
@@ -62,8 +63,18 @@ export function CustomerSearchPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="e.g. 28512345678, +97455512001, CUST-1003, fatima.alkuwari@example.qa…"
-          className="w-full rounded-[var(--radius-pill)] border border-border-soft bg-bg pl-10 pr-4 py-3 text-fg text-[length:var(--fs-body-lg)] placeholder:text-muted focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+          className="w-full rounded-[var(--radius-pill)] border border-border-soft bg-bg pl-10 pr-10 py-3 text-fg text-[length:var(--fs-body-lg)] placeholder:text-muted focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
         />
+        {query && (
+          <button
+            type="button"
+            onClick={() => setQuery('')}
+            aria-label="Clear search"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-fg"
+          >
+            <Icon path={CLEAR_ICON} className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {!query.trim() && (

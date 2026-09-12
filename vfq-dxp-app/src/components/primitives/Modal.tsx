@@ -10,8 +10,12 @@ interface ModalProps {
   footer?: ReactNode;
 }
 
-// Backs 32 Modal-type screens per component-catalogue.md §1 — Assumed shape
-// (no design-system analog), styled with real tokens.
+// Was backing 32 Modal-type screens per component-catalogue.md §1 (no
+// design-system analog); reserved as of 2026-09-12 for short confirmation
+// messages only (e.g. GuidedActivationWizard's "Abandon this order?") —
+// every other former Modal usage (forms, signature capture, multi-step
+// flows) now renders via Drawer.tsx for a less disruptive, side-anchored
+// interaction.
 export function Modal({ open, onClose, title, children, footer }: ModalProps) {
   // Escape-to-close: the backdrop's click-to-dismiss below is a mouse-only
   // convenience (a full-screen div is intentionally not made focusable/

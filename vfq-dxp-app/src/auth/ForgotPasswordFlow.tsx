@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal } from '../components/primitives/Modal';
+import { Drawer } from '../components/primitives/Drawer';
 import { Input } from '../components/primitives/Input';
 import { Button } from '../components/primitives/Button';
 import { resolveRoleFromStaffId } from './staffIdRoleMap';
@@ -90,7 +90,7 @@ export function ForgotPasswordFlow({ open, onClose, initialStaffId = '' }: Forgo
   };
 
   return (
-    <Modal open={open} onClose={close} title={titleFor[step]}>
+    <Drawer open={open} onClose={close} title={titleFor[step]} size="lg">
       {step === 'identify' && (
         <div className="space-y-3">
           <p className="text-fg-2 text-[length:var(--fs-body)]">Enter your Staff ID to begin password recovery.</p>
@@ -140,6 +140,6 @@ export function ForgotPasswordFlow({ open, onClose, initialStaffId = '' }: Forgo
           </div>
         </div>
       )}
-    </Modal>
+    </Drawer>
   );
 }

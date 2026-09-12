@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
-import { Modal } from '../../../components/primitives/Modal';
+import { Drawer } from '../../../components/primitives/Drawer';
 import { Select } from '../../../components/primitives/Select';
 import { Textarea } from '../../../components/primitives/Textarea';
 import { useEntityStore } from '../../../stores/entityStore';
@@ -145,15 +145,15 @@ export function SimSwapQueueScreen() {
         </Button>
       </div>
 
-      <Modal open={modal === 'approve'} onClose={() => setModal(null)} title="Approve SIM Swap">
+      <Drawer open={modal === 'approve'} onClose={() => setModal(null)} title="Approve SIM Swap">
         <Textarea label="Comments" value={approveComment} onChange={(e) => setApproveComment(e.target.value)} />
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>
           <Button variant="primary-rect" onClick={approve}>Approve SIM swap</Button>
         </div>
-      </Modal>
+      </Drawer>
 
-      <Modal open={modal === 'reject'} onClose={() => setModal(null)} title="Reject Task">
+      <Drawer open={modal === 'reject'} onClose={() => setModal(null)} title="Reject Task">
         <div className="space-y-3">
           <Select
             label="Rejection Reason"
@@ -168,7 +168,7 @@ export function SimSwapQueueScreen() {
           <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>
           <Button variant="primary-rect" onClick={reject} disabled={!rejectReason}>Drop Order</Button>
         </div>
-      </Modal>
+      </Drawer>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { useEntityStore } from '../../stores/entityStore';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { Badge } from '../../components/primitives/Badge';
 import { Button } from '../../components/primitives/Button';
-import { Modal } from '../../components/primitives/Modal';
+import { Drawer } from '../../components/primitives/Drawer';
 import { Select } from '../../components/primitives/Select';
 import { Textarea } from '../../components/primitives/Textarea';
 import { Input } from '../../components/primitives/Input';
@@ -130,7 +130,7 @@ export function LeadDetailsView() {
         </Button>
       </div>
 
-      <Modal open={modal === 'reject'} onClose={() => setModal(null)} title="Reject Lead">
+      <Drawer open={modal === 'reject'} onClose={() => setModal(null)} title="Reject Lead">
         <div className="space-y-3">
           <Select
             label="Reject Reason Code"
@@ -145,9 +145,9 @@ export function LeadDetailsView() {
           <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>
           <Button variant="primary-rect" onClick={submitReject} disabled={!rejectCode}>Confirm rejection</Button>
         </div>
-      </Modal>
+      </Drawer>
 
-      <Modal open={modal === 'reassign'} onClose={() => setModal(null)} title="Lead Owner">
+      <Drawer open={modal === 'reassign'} onClose={() => setModal(null)} title="Lead Owner">
         <Input placeholder="Filter by Last Name" value={ownerFilter} onChange={(e) => setOwnerFilter(e.target.value)} />
         <div className="mt-3 divide-y divide-border-soft max-h-64 overflow-y-auto">
           {filteredAgents.map((a) => (
@@ -162,9 +162,9 @@ export function LeadDetailsView() {
           ))}
           {filteredAgents.length === 0 && <p className="text-muted py-3 text-center">No matching candidates.</p>}
         </div>
-      </Modal>
+      </Drawer>
 
-      <Modal
+      <Drawer
         open={modal === 'description'}
         onClose={() => setModal(null)}
         title="Description"
@@ -176,9 +176,9 @@ export function LeadDetailsView() {
         }
       >
         <Textarea value={descriptionDraft} onChange={(e) => setDescriptionDraft(e.target.value)} />
-      </Modal>
+      </Drawer>
 
-      <Modal
+      <Drawer
         open={modal === 'callback'}
         onClose={() => setModal(null)}
         title="CallBack Date/Time"
@@ -190,7 +190,7 @@ export function LeadDetailsView() {
         }
       >
         <Input type="datetime-local" value={callbackDraft} onChange={(e) => setCallbackDraft(e.target.value)} />
-      </Modal>
+      </Drawer>
     </div>
   );
 }

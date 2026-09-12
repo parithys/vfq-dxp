@@ -5,7 +5,7 @@ import { Button } from '../../../components/primitives/Button';
 import { Textarea } from '../../../components/primitives/Textarea';
 import { Input } from '../../../components/primitives/Input';
 import { Select } from '../../../components/primitives/Select';
-import { Modal } from '../../../components/primitives/Modal';
+import { Drawer } from '../../../components/primitives/Drawer';
 import { Tabs } from '../../../components/primitives/Tabs';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
@@ -516,7 +516,7 @@ export function TicketDetail() {
         </Button>
       </div>
 
-      <Modal open={escalateOpen} onClose={() => setEscalateOpen(false)} title="Escalate Ticket">
+      <Drawer open={escalateOpen} onClose={() => setEscalateOpen(false)} title="Escalate Ticket">
         <div className="space-y-3">
           <Select label="Escalation Reason (mandatory)" value={escalateReason} onChange={(e) => setEscalateReason(e.target.value)} placeholder="Select a reason" options={ESCALATION_REASONS.map((r) => ({ value: r, label: r }))} />
           {!escalateReason && <p className="text-[length:var(--fs-caption)] text-danger">An escalation without a selected reason is rejected (ESC-05).</p>}
@@ -525,9 +525,9 @@ export function TicketDetail() {
           <Button variant="ghost-rect" onClick={() => setEscalateOpen(false)}>Cancel</Button>
           <Button variant="primary-rect" onClick={escalate} disabled={!escalateReason}>Escalate</Button>
         </div>
-      </Modal>
+      </Drawer>
 
-      <Modal open={resolveOpen} onClose={() => setResolveOpen(false)} title="Resolve Ticket">
+      <Drawer open={resolveOpen} onClose={() => setResolveOpen(false)} title="Resolve Ticket">
         <div className="space-y-3">
           <Select label="Resolution Code (mandatory, RES-01/02)" value={resolutionCode} onChange={(e) => setResolutionCode(e.target.value)} placeholder="Select one code" options={RESOLUTION_CODES.map((r) => ({ value: r, label: r }))} />
           <div>
@@ -551,23 +551,23 @@ export function TicketDetail() {
           <Button variant="ghost-rect" onClick={() => setResolveOpen(false)}>Cancel</Button>
           <Button variant="primary-rect" onClick={resolve} disabled={!resolutionCode || resolutionHashtags.length === 0}>Mark Solved</Button>
         </div>
-      </Modal>
+      </Drawer>
 
-      <Modal open={cancelOpen} onClose={() => setCancelOpen(false)} title="Cancel Ticket">
+      <Drawer open={cancelOpen} onClose={() => setCancelOpen(false)} title="Cancel Ticket">
         <Select label="Cancellation Reason (mandatory, RES-11)" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Select a reason" options={CANCELLATION_REASONS.map((r) => ({ value: r, label: r }))} />
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="ghost-rect" onClick={() => setCancelOpen(false)}>Back</Button>
           <Button variant="primary-rect" onClick={cancel} disabled={!cancelReason} className="bg-danger enabled:hover:bg-danger enabled:active:bg-danger">Cancel Ticket</Button>
         </div>
-      </Modal>
+      </Drawer>
 
-      <Modal open={reopenOpen} onClose={() => setReopenOpen(false)} title="Reopen Ticket">
+      <Drawer open={reopenOpen} onClose={() => setReopenOpen(false)} title="Reopen Ticket">
         <Textarea label="Reopen reason (mandatory, RES-10)" value={reopenReason} onChange={(e) => setReopenReason(e.target.value)} placeholder="Why is this ticket being reopened?" />
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="ghost-rect" onClick={() => setReopenOpen(false)}>Cancel</Button>
           <Button variant="primary-rect" onClick={reopen} disabled={!reopenReason.trim()}>Reopen</Button>
         </div>
-      </Modal>
+      </Drawer>
     </div>
   );
 }

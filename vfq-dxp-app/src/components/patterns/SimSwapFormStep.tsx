@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '../primitives/Button';
-import { Modal } from '../primitives/Modal';
+import { Drawer } from '../primitives/Drawer';
 import { SignaturePad } from '../primitives/SignaturePad';
 import { Badge } from '../primitives/Badge';
 
@@ -39,14 +39,14 @@ export function SimSwapFormStep({ value, onChange }: SimSwapFormStepProps) {
         )}
       </div>
 
-      <Modal open={padOpen} onClose={() => setPadOpen(false)} title="Please Sign">
+      <Drawer open={padOpen} onClose={() => setPadOpen(false)} title="Please Sign">
         <SignaturePad
           onDone={(dataUrl) => {
             onChange({ ...value, signatureDataUrl: dataUrl });
             setPadOpen(false);
           }}
         />
-      </Modal>
+      </Drawer>
     </div>
   );
 }

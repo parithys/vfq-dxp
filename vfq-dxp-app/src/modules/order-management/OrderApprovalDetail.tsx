@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Tabs } from '../../components/primitives/Tabs';
 import { Button } from '../../components/primitives/Button';
 import { Badge } from '../../components/primitives/Badge';
-import { Modal } from '../../components/primitives/Modal';
+import { Drawer } from '../../components/primitives/Drawer';
 import { Select } from '../../components/primitives/Select';
 import { Textarea } from '../../components/primitives/Textarea';
 import { useEntityStore } from '../../stores/entityStore';
@@ -273,7 +273,7 @@ export function OrderApprovalDetail() {
         </Button>
       </div>
 
-      <Modal open={modal === 'approve'} onClose={() => setModal(null)} title="Approve Order">
+      <Drawer open={modal === 'approve'} onClose={() => setModal(null)} title="Approve Order">
         <div className="space-y-3">
           <label className="flex items-start gap-2 text-[length:var(--fs-body)] text-fg">
             <input type="checkbox" checked={ackApprove} onChange={(e) => setAckApprove(e.target.checked)} className="mt-1" />
@@ -285,9 +285,9 @@ export function OrderApprovalDetail() {
           <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>
           <Button variant="primary-rect" onClick={approve} disabled={!ackApprove || submitting}>Submit approval</Button>
         </div>
-      </Modal>
+      </Drawer>
 
-      <Modal open={modal === 'reject-correction' || modal === 'reject-drop'} onClose={() => setModal(null)} title="Reject Order">
+      <Drawer open={modal === 'reject-correction' || modal === 'reject-drop'} onClose={() => setModal(null)} title="Reject Order">
         <div className="space-y-3">
           <Select
             label="Reject Reason"
@@ -304,9 +304,9 @@ export function OrderApprovalDetail() {
             Reject Order
           </Button>
         </div>
-      </Modal>
+      </Drawer>
 
-      <Modal open={modal === 'return'} onClose={() => setModal(null)} title="Return Order">
+      <Drawer open={modal === 'return'} onClose={() => setModal(null)} title="Return Order">
         <div className="space-y-3">
           <p className="text-fg-2 text-[length:var(--fs-body)]">
             Returning sends this order back to the approval queue for correction, rather than rejecting it outright.
@@ -326,7 +326,7 @@ export function OrderApprovalDetail() {
             Return Order
           </Button>
         </div>
-      </Modal>
+      </Drawer>
     </div>
   );
 }
