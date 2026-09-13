@@ -61,7 +61,7 @@ export default function App() {
         <div className="flex-1 flex flex-col overflow-hidden">
           <PersonaSwitcher />
           <Breadcrumbs />
-          <main className="flex-1 overflow-y-auto bg-surface">
+          <main className="flex-1 overflow-y-auto bg-[var(--page-bg)]">
             <ErrorBoundary>
               <AppRouter />
             </ErrorBoundary>

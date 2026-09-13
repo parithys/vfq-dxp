@@ -68,6 +68,10 @@
   --motion-base: 220ms;
   --motion-fast: 150ms;
   --muted: #6e7180;
+  /* Distinct from --surface (which still drives hover states elsewhere) so
+     the main content background and table header rows can be tuned
+     independently. */
+  --page-bg: #f2f3f7;
   --radius-asymmetric: 0px 6px 0px 0px;
   --radius-badge-pill: 32px;
   --radius-button: 8px;
@@ -98,6 +102,7 @@
   --success: #2e9159;
   --surface: #f4f4f6;
   --surface-warm: #fceeec;
+  --table-header-bg: #f0f3fd;
   --text-2xl: 36px;
   --text-3xl: 48px;
   --text-4xl: 68px;

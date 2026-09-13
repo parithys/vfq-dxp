@@ -47,7 +47,7 @@ export function DataTable<T>({
     <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-[length:var(--fs-body)]">
-          <thead className="bg-surface text-fg-2">
+          <thead className="bg-[var(--table-header-bg)] text-fg-2">
             <tr>
               {columns.map((col) => (
                 <th key={col.key} className="px-4 py-3 font-semibold text-[length:var(--fs-caption-upper)]">

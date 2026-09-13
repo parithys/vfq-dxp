@@ -43,6 +43,11 @@
   --bg: #16171c;
   --surface: #111319;
   --surface-warm: #241a1a;
+  /* --page-bg/--table-header-bg have no separate dark-mode design of their
+     own yet — fall back to --surface's existing dark value so they don't
+     resolve to nothing (transparent) when the theme toggles. */
+  --page-bg: #111319;
+  --table-header-bg: #111319;
   --fg: #f2f2f2;
   --fg-2: #c7c9cb;
   --muted: #9a9da0;
