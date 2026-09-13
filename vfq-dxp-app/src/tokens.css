@@ -23,12 +23,12 @@
   --fg: #26262b;
   --fg-2: #4a4d4e;
   --focus-ring: 0 0 0 4px rgba(230,0,0,.22);
-  /* Space Grotesk / DM Sans are aspirational — not loaded via CDN/package in
-     this build; the system-font fallback (Segoe UI Variable/Segoe UI/-apple-
-     system/sans-serif) is the actual accepted production rendering, per the
-     same convention already established for the previous Inter target. */
-  --font-body: "DM Sans","Segoe UI Variable","Segoe UI",-apple-system,sans-serif;
-  --font-display: "Space Grotesk","Segoe UI Variable","Segoe UI",-apple-system,sans-serif;
+  /* Figtree is loaded via Google Fonts (index.html) — unlike the previous
+     Space Grotesk/DM Sans targets, this one is real, not aspirational. Same
+     system-font fallback chain stays in place for the pre-load flash and for
+     any environment where the CDN request fails. */
+  --font-body: "Figtree","Segoe UI Variable","Segoe UI",-apple-system,sans-serif;
+  --font-display: "Figtree","Segoe UI Variable","Segoe UI",-apple-system,sans-serif;
   --font-mono: ui-monospace,"SF Mono",Menlo,monospace;
   --fs-body: 16px;
   --fs-body-lg: 18px;
