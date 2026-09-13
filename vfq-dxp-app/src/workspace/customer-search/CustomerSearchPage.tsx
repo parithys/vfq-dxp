@@ -63,7 +63,7 @@ export function CustomerSearchPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="e.g. 28512345678, +97455512001, CUST-1003, fatima.alkuwari@example.qa…"
-          className="w-full rounded-[var(--radius-pill)] border border-border-soft bg-bg pl-10 pr-10 py-3 text-fg text-[length:var(--fs-body-lg)] placeholder:text-muted focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+          className="w-full rounded-[var(--radius-button)] border border-border-soft bg-bg pl-10 pr-10 py-3 text-fg text-[length:var(--fs-body-lg)] placeholder:text-muted focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
         />
         {query && (
           <button

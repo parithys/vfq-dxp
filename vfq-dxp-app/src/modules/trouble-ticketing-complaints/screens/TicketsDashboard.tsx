@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
@@ -48,7 +47,6 @@ export function TicketsDashboard() {
   const loading = useEntityStore((s) => s.loading['trouble-tickets']);
   const createRecord = useEntityStore((s) => s.createRecord);
   const pushToast = useNotificationStore((s) => s.pushToast);
-  const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -171,8 +169,12 @@ export function TicketsDashboard() {
 
       <DataTable<Ticket>
         columns={[
-          { key: 'ticketId', header: 'Ticket #' },
-          { key: 'customerId', header: 'Customer' },
+          {
+            key: 'ticketId',
+            header: 'Ticket #',
+            linkTo: (r) => `/trouble-ticketing-complaints/ticket-detail-screen-public-notes-bell-icon-notifications?id=${r.ticketId}`,
+          },
+          { key: 'customerId', header: 'Customer', linkTo: (r) => (r.customerId ? `/customer/${r.customerId}` : undefined) },
           { key: 'category', header: 'Category' },
           { key: 'queue', header: 'Queue' },
           { key: 'priority', header: 'Priority' },
@@ -182,7 +184,6 @@ export function TicketsDashboard() {
         ]}
         rows={filtered}
         rowKey={(r) => r.ticketId}
-        onRowClick={(r) => navigate(`/trouble-ticketing-complaints/ticket-detail-screen-public-notes-bell-icon-notifications?id=${r.ticketId}`)}
         emptyMessage="No trouble tickets match the current filters."
         loading={loading}
       />

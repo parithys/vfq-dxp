@@ -28,7 +28,7 @@ export function PersonaRbacSection() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search personas…"
-            className="w-full rounded-[var(--radius-pill)] border border-border-soft bg-bg px-3 py-2 text-fg text-[length:var(--fs-body)] placeholder:text-muted focus:outline-none focus-visible:shadow-[var(--focus-ring)] mb-3"
+            className="w-full rounded-[var(--radius-button)] border border-border-soft bg-bg px-3 py-2 text-fg text-[length:var(--fs-body)] placeholder:text-muted focus:outline-none focus-visible:shadow-[var(--focus-ring)] mb-3"
           />
           <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg max-h-[60vh] overflow-y-auto divide-y divide-border-soft">
             {filtered.map((persona) => (

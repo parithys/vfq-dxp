@@ -1,10 +1,18 @@
 import { useState, type KeyboardEvent, type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from './Button';
 
 export interface Column<T> {
   key: string;
   header: string;
   render?: (row: T) => ReactNode;
+  /** Renders this column's value as a real link to a specific destination,
+   * independent of any other column's link or the row's own onRowClick — use
+   * this instead of onRowClick when different columns in the same row point
+   * to different pages (e.g. a ticket # column linking to the ticket, a
+   * customer column linking to that customer's 360 record). Return undefined
+   * for a given row to fall back to plain text (e.g. no customerId on file). */
+  linkTo?: (row: T) => string | undefined;
 }
 
 interface DataTableProps<T> {
@@ -81,14 +89,33 @@ export function DataTable<T>({
                   onKeyDown={onRowClick ? (event) => handleRowKeyDown(event, row) : undefined}
                   className={`border-t border-[var(--table-border)] transition-colors ${onRowClick ? 'cursor-pointer hover:bg-surface' : ''}`}
                 >
-                  {columns.map((col) => {
+                  {columns.map((col, colIndex) => {
                     const value = (row as Record<string, unknown>)[col.key] ?? '—';
+                    const linkHref = col.linkTo?.(row);
+                    // Falls back to the first-column link cue only when the table
+                    // still uses whole-row onRowClick (no per-column linkTo defined
+                    // anywhere) — tables using linkTo get real per-column links
+                    // instead, so this legacy heuristic doesn't double up with them.
+                    const hasAnyColumnLink = columns.some((c) => c.linkTo);
+                    const isLinkCol = colIndex === 0 && Boolean(onRowClick) && !hasAnyColumnLink;
                     return (
                       <td key={col.key} className="px-4 py-3.5 text-fg">
                         {col.render ? (
                           col.render(row)
+                        ) : linkHref ? (
+                          <Link
+                            to={linkHref}
+                            onClick={(event) => event.stopPropagation()}
+                            className="block max-w-xs truncate text-accent font-medium hover:underline"
+                            title={String(value)}
+                          >
+                            {String(value)}
+                          </Link>
                         ) : (
-                          <span className="block max-w-xs truncate" title={String(value)}>
+                          <span
+                            className={`block max-w-xs truncate ${isLinkCol ? 'text-accent font-medium hover:underline' : ''}`}
+                            title={String(value)}
+                          >
                             {String(value)}
                           </span>
                         )}
