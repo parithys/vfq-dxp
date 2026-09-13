@@ -44,7 +44,7 @@ export function DataTable<T>({
   };
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg">
+    <div className="rounded-[var(--radius-card)] border border-[var(--table-border)] bg-bg">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-[length:var(--fs-body)]">
           <thead className="bg-[var(--table-header-bg)] text-fg-2">
@@ -79,7 +79,7 @@ export function DataTable<T>({
                   tabIndex={onRowClick ? 0 : undefined}
                   role={onRowClick ? 'button' : undefined}
                   onKeyDown={onRowClick ? (event) => handleRowKeyDown(event, row) : undefined}
-                  className={`border-t border-border-soft transition-colors ${onRowClick ? 'cursor-pointer hover:bg-surface' : ''}`}
+                  className={`border-t border-[var(--table-border)] transition-colors ${onRowClick ? 'cursor-pointer hover:bg-surface' : ''}`}
                 >
                   {columns.map((col) => {
                     const value = (row as Record<string, unknown>)[col.key] ?? '—';
@@ -101,7 +101,7 @@ export function DataTable<T>({
         </table>
       </div>
       {!loading && showPager && (
-        <div className="flex items-center justify-between border-t border-border-soft px-4 py-2">
+        <div className="flex items-center justify-between border-t border-[var(--table-border)] px-4 py-2">
           <Button
             variant="ghost-rect"
             compact

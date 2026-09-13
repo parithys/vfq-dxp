@@ -7,8 +7,8 @@ import { OrderApprovalQueue } from '../../modules/order-management/OrderApproval
 // unchanged (own submitted orders vs. the approval queue) rather than
 // re-implementing their table/queue logic.
 const TABS: TabItem[] = [
-  { key: 'mine', label: 'My Orders', content: <MySalesOrders /> },
-  { key: 'approval', label: 'Approval Queue', content: <OrderApprovalQueue /> },
+  { key: 'mine', label: 'My Orders', content: <MySalesOrders padded={false} /> },
+  { key: 'approval', label: 'Approval Queue', content: <OrderApprovalQueue padded={false} /> },
 ];
 
 export function OrdersWorkspace() {

@@ -32,7 +32,15 @@ interface Order {
 // Also AAV-01: assignment eligibility is gated by the configured approval
 // matrix (getRequiredApproverRole) — see OrderApprovalDetail.tsx for the
 // matching enforcement on the action buttons themselves.
-export function OrderApprovalQueue() {
+interface OrderApprovalQueueProps {
+  /** False when embedded in a parent that already provides the same padding
+   * (OrdersWorkspace's own p-8 around its Tabs) — true (self-padded) for the
+   * standalone legacy-route usage at SCR-060/SCR-197, which has no other
+   * padding source. */
+  padded?: boolean;
+}
+
+export function OrderApprovalQueue({ padded = true }: OrderApprovalQueueProps) {
   const orders = (useEntityStore((s) => s.records.orders) ?? []) as unknown as Order[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const updateRecord = useEntityStore((s) => s.updateRecord);
@@ -67,7 +75,7 @@ export function OrderApprovalQueue() {
   };
 
   return (
-    <div className="p-8">
+    <div className={padded ? 'p-8' : ''}>
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Order Approval Queue</h1>
       <p className="text-fg-2 mb-6">Queues: ADJ_APPR_QUEUE_BUSI_1000, VFQA_DSA_ORDER_APPROVAL_QUEUE_DSQ/JAGUAR/TESTING/VISTAS</p>
       {loadError && (

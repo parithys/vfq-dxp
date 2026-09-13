@@ -7,7 +7,7 @@
   --black-80: rgba(0,0,0,.8);
   --black-glass-5: rgba(0,0,0,.05);
   --border: #dcdde3;
-  --border-soft: #eeeeee;
+  --border-soft: #dadee3;
   --charcoal-panel: #21232b;
   --container-gutter-desktop: 36px;
   --container-gutter-phone: 16px;
@@ -102,6 +102,11 @@
   --success: #2e9159;
   --surface: #f4f4f6;
   --surface-warm: #fceeec;
+  /* Same value as --border-soft today (both #dadee3, the app-wide card/
+     container/panel border color), but kept as its own token so table
+     borders can still be tuned independently of every other card/container/
+     panel border in the app if they ever need to diverge again. */
+  --table-border: #dadee3;
   --table-header-bg: #f0f3fd;
   --text-2xl: 36px;
   --text-3xl: 48px;

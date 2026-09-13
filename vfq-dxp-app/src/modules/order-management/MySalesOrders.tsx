@@ -21,7 +21,15 @@ const statusVariant = (status: string) => {
 // SCR-059: My Sales Orders / My Pending Approval Orders queue — agent view of
 // own submitted orders and their approval status (evidenced across Fixed
 // Line/FWA/Postpaid B2B2C guided journeys).
-export function MySalesOrders() {
+interface MySalesOrdersProps {
+  /** False when embedded in a parent that already provides the same padding
+   * (OrdersWorkspace's own p-8 around its Tabs) — true (self-padded) for the
+   * standalone legacy-route usage at SCR-059, which has no other padding
+   * source. */
+  padded?: boolean;
+}
+
+export function MySalesOrders({ padded = true }: MySalesOrdersProps) {
   const orders = (useEntityStore((s) => s.records.orders) ?? []) as unknown as Order[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const loading = useEntityStore((s) => s.loading.orders);
@@ -31,7 +39,7 @@ export function MySalesOrders() {
   }, [loadKind]);
 
   return (
-    <div className="p-8">
+    <div className={padded ? 'p-8' : ''}>
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">My Sales Orders</h1>
       <p className="text-fg-2 mb-6">{orders.length} order(s).</p>
       <DataTable<Order>

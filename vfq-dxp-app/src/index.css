@@ -53,6 +53,10 @@
   --muted: #9a9da0;
   --border: #3a3d42;
   --border-soft: #2a2c30;
+  /* No separate dark-mode design of its own yet — light-mode #dadee3 sits
+     right next to --border's own light value, so reuse --border's dark
+     value rather than introducing a new dark shade. */
+  --table-border: #3a3d42;
   --light-neutral: #2a2c30;
   --grey-form: #6b6e72;
   --black-80: rgba(0,0,0,.6);
