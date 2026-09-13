@@ -25,15 +25,26 @@ export interface ProductActionGroup {
 }
 
 // The progressive-disclosure layer for Customer 360's product tabs: groups
-// collapse by default (Existing Customer Services / Number & SIM Services /
-// New Connection, etc.) so an agent sees intent-shaped groups, not a flat
-// wall of every action. Launching an action sets the active-customer bridge
-// then navigates to the EXISTING screen registered for it — no wizard is
-// rewritten to support this, per GuidedContactStep's pre-fill patch.
+// (Existing Customer Services / Number & SIM Services / New Connection,
+// etc.) all expand by default so an agent sees every action group at once
+// without expanding them one at a time — each group can still be collapsed
+// independently via its own header. Launching an action sets the
+// active-customer bridge then navigates to the EXISTING screen registered
+// for it — no wizard is rewritten to support this, per GuidedContactStep's
+// pre-fill patch.
 export function ProductActionGroups({ groups, customer }: { groups: ProductActionGroup[]; customer: ActiveCustomerSummary }) {
   const navigate = useNavigate();
   const setActiveCustomer = useActiveCustomerStore((s) => s.setActiveCustomer);
-  const [openTitle, setOpenTitle] = useState<string | undefined>(groups[0]?.title);
+  const [openTitles, setOpenTitles] = useState<Set<string>>(() => new Set(groups.map((g) => g.title)));
+
+  const toggleGroup = (title: string) => {
+    setOpenTitles((prev) => {
+      const next = new Set(prev);
+      if (next.has(title)) next.delete(title);
+      else next.add(title);
+      return next;
+    });
+  };
 
   const launch = (action: ProductAction) => {
     const route = action.screenId ? getAllRoutes().find((r) => r.screenId === action.screenId) : undefined;
@@ -45,11 +56,11 @@ export function ProductActionGroups({ groups, customer }: { groups: ProductActio
   return (
     <div className="space-y-2.5">
       {groups.map((group) => {
-        const isOpen = openTitle === group.title;
+        const isOpen = openTitles.has(group.title);
         return (
           <div key={group.title} className="rounded-[var(--radius-card)] border border-border-soft bg-bg overflow-hidden">
             <button
-              onClick={() => setOpenTitle(isOpen ? undefined : group.title)}
+              onClick={() => toggleGroup(group.title)}
               aria-expanded={isOpen}
               className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-surface"
             >

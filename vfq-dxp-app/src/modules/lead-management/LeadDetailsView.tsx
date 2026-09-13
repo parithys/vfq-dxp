@@ -85,49 +85,110 @@ export function LeadDetailsView() {
   };
 
   return (
-    <div className="p-8 max-w-2xl">
-      <div className="flex items-center gap-3 mb-1">
-        <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">Lead {lead.leadId}</h1>
-        <Badge variant={lead.status === 'Rejected' ? 'danger' : 'outlined-red'}>{lead.status}</Badge>
-      </div>
-      <p className="text-fg-2 mb-6">{lead.serviceNeeded} — owned by {lead.ownerId}</p>
+    <div className="p-8 max-w-4xl">
+      <div className="flex flex-col lg:flex-row items-start gap-6">
+        <div className="flex-1 min-w-0 space-y-6">
+          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">Lead {lead.leadId}</h1>
+              <Badge variant={lead.status === 'Rejected' ? 'danger' : 'outlined-red'}>{lead.status}</Badge>
+            </div>
+            <p className="text-fg-2">{lead.serviceNeeded} — owned by {lead.ownerId}</p>
+          </div>
 
-      <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)] mb-6">
-        <div>
-          <dt className="text-[length:var(--fs-caption)] text-muted">Sub Status</dt>
-          <dd className="text-fg">{lead.subStatus ?? '—'}</dd>
+          <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)] rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+            <div>
+              <dt className="text-[length:var(--fs-caption)] text-muted">Sub Status</dt>
+              <dd className="text-fg">{lead.subStatus ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-[length:var(--fs-caption)] text-muted">Callback Date</dt>
+              <dd className="text-fg">{lead.callbackDate ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-[length:var(--fs-caption)] text-muted">Fixed Pre-Sales</dt>
+              <dd className="text-fg">{lead.fixedPreSalesRequested ? 'Yes' : 'No'}</dd>
+            </div>
+            <div>
+              <dt className="text-[length:var(--fs-caption)] text-muted">Created Via</dt>
+              <dd className="text-fg">{lead.createdVia}</dd>
+            </div>
+            <div className="col-span-2">
+              <dt className="text-[length:var(--fs-caption)] text-muted">Description</dt>
+              <dd className="text-fg">{lead.description ?? '—'}</dd>
+            </div>
+          </dl>
         </div>
-        <div>
-          <dt className="text-[length:var(--fs-caption)] text-muted">Callback Date</dt>
-          <dd className="text-fg">{lead.callbackDate ?? '—'}</dd>
-        </div>
-        <div>
-          <dt className="text-[length:var(--fs-caption)] text-muted">Fixed Pre-Sales</dt>
-          <dd className="text-fg">{lead.fixedPreSalesRequested ? 'Yes' : 'No'}</dd>
-        </div>
-        <div>
-          <dt className="text-[length:var(--fs-caption)] text-muted">Created Via</dt>
-          <dd className="text-fg">{lead.createdVia}</dd>
-        </div>
-        <div className="col-span-2">
-          <dt className="text-[length:var(--fs-caption)] text-muted">Description</dt>
-          <dd className="text-fg">{lead.description ?? '—'}</dd>
-        </div>
-      </dl>
 
-      <div className="flex flex-wrap gap-2">
-        <Button variant="primary-rect" onClick={() => { setDescriptionDraft(lead.description ?? ''); setModal('description'); }}>
-          Edit Description
-        </Button>
-        <Button variant="ghost-rect" onClick={() => { setCallbackDraft(lead.callbackDate ?? ''); setModal('callback'); }}>
-          Set Callback
-        </Button>
-        <Button variant="ghost-rect" onClick={() => setModal('reassign')}>
-          Reassign Owner
-        </Button>
-        <Button variant="ghost-rect" className="!text-danger !border-danger" onClick={() => setModal('reject')}>
-          Reject
-        </Button>
+        <div className="w-full lg:w-72 shrink-0 space-y-6">
+          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+            <h2 className="text-[length:var(--fs-body-lg)] text-fg font-medium mb-3">Actions</h2>
+            <div className="flex flex-col gap-2">
+              <Button
+                variant="primary-rect"
+                className="w-full justify-center"
+                onClick={() => { setDescriptionDraft(lead.description ?? ''); setModal('description'); }}
+              >
+                Edit Description
+              </Button>
+              <Button
+                variant="ghost-rect"
+                className="w-full justify-center"
+                onClick={() => { setCallbackDraft(lead.callbackDate ?? ''); setModal('callback'); }}
+              >
+                Set Callback
+              </Button>
+              <Button variant="ghost-rect" className="w-full justify-center" onClick={() => setModal('reassign')}>
+                Reassign Owner
+              </Button>
+              <Button
+                variant="ghost-rect"
+                className="w-full justify-center !text-danger !border-danger"
+                onClick={() => setModal('reject')}
+              >
+                Reject
+              </Button>
+            </div>
+          </div>
+
+          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+            <h2 className="text-[length:var(--fs-body-lg)] text-fg font-medium mb-3">Overview</h2>
+            <div className="space-y-3 text-[length:var(--fs-body)]">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted">Status</span>
+                <Badge variant={lead.status === 'Rejected' ? 'danger' : 'outlined-red'}>{lead.status}</Badge>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted">Lead #</span>
+                <span className="text-accent font-medium">{lead.leadId}</span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted">Service Needed</span>
+                <span className="text-fg text-right">{lead.serviceNeeded}</span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted">Owner</span>
+                <span className="text-fg">{lead.ownerId}</span>
+              </div>
+              {lead.contactName && (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted">Contact</span>
+                  <span className="text-fg">{lead.contactName}</span>
+                </div>
+              )}
+              {lead.mobileNumber && (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted">Mobile</span>
+                  <span className="text-fg">{lead.mobileNumber}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted">Created Via</span>
+                <span className="text-fg">{lead.createdVia}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <Drawer open={modal === 'reject'} onClose={() => setModal(null)} title="Reject Lead">

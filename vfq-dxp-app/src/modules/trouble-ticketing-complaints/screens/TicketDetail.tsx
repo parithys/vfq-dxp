@@ -333,187 +333,250 @@ export function TicketDetail() {
   const availableHashtags = HASHTAGS_BY_CATEGORY[ticket.category] ?? [];
 
   return (
-    <div className="p-8 max-w-3xl">
-      <div className="flex items-center gap-3 mb-1">
-        <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">Ticket {ticket.ticketId}</h1>
-        <Badge variant={STATUS_VARIANT[ticket.status] ?? 'filled-neutral'}>{ticket.status}</Badge>
-        <Badge variant={ragVariant}>SLA: {ragLabel}</Badge>
-        <span className="ml-auto flex items-center gap-1 text-fg-2" title="Notifications">
-          🔔 <span className="text-[length:var(--fs-caption)]">{notes.length}</span>
-        </span>
-      </div>
-      <p className="text-fg-2 mb-1">
-        Customer: {ticket.customerId} · {ticket.category}{ticket.area ? ` — ${ticket.area}` : ''} · Queue <Badge variant="outlined-red">{ticket.queue}</Badge>
-      </p>
-      <p className="text-fg-2 text-[length:var(--fs-caption)] mb-6">
-        Assigned to: {ticket.assignedTo ?? 'Unassigned'} · {slaRule.message}
-      </p>
-
-      <div className="flex flex-wrap gap-2 mb-6">
-        {!ticket.assignedTo && !terminal && (
-          <Button variant="ghost-rect" onClick={assignToMe}>Assign to me</Button>
-        )}
-        {canReassignQueue && !terminal && (
-          <div className="flex items-center gap-1">
-            <Select value={reassignQueue} onChange={(e) => setReassignQueue(e.target.value)} placeholder="Reassign queue…" options={['FL Agents', 'Complaints Team'].map((q) => ({ value: q, label: q }))} />
-            <Button variant="ghost-rect" onClick={reassignQueueSubmit} disabled={!reassignQueue}>Reassign</Button>
-          </div>
-        )}
-        {!terminal && ticket.status !== 'Escalate' && (
-          <Button variant="ghost-rect" onClick={() => setEscalateOpen(true)}>Escalate</Button>
-        )}
-        {canResolve && !terminal && ticket.status !== 'Solved' && ticket.status !== 'Completed' && (
-          <Button variant="ghost-rect" onClick={() => setResolveOpen(true)}>Resolve</Button>
-        )}
-        {!canResolve && !terminal && ticket.status !== 'Solved' && ticket.status !== 'Completed' && (
-          <span className="text-[length:var(--fs-caption)] text-muted self-center">Resolution requires Complaints Team — use Escalate to route it.</span>
-        )}
-        {ticket.status === 'Solved' && (
-          <Button variant="ghost-rect" onClick={complete} disabled={openActivities.length > 0}>
-            {openActivities.length > 0 ? `Complete (${openActivities.length} activities open)` : 'Complete'}
-          </Button>
-        )}
-        {ticket.status === 'Completed' && <Button variant="primary-rect" onClick={closeTicket}>Close Ticket</Button>}
-        {!terminal && <Button variant="ghost-rect" onClick={() => setCancelOpen(true)}>Cancel</Button>}
-        {ticket.status === 'Closed' && (
-          <Button variant="ghost-rect" onClick={() => (withinReopenWindow ? setReopenOpen(true) : undefined)} disabled={!withinReopenWindow}>
-            {withinReopenWindow ? 'Reopen' : 'Reopen (outside window)'}
-          </Button>
-        )}
-      </div>
-      {ticket.status === 'Closed' && !withinReopenWindow && (
-        <p className="text-[length:var(--fs-caption)] text-danger -mt-4 mb-4">
-          Outside the {REOPEN_WINDOW_DAYS}-day reopen window (RES-10) — raise a linked ticket instead.
-        </p>
-      )}
-      {ticket.cancelReason && <p className="text-[length:var(--fs-caption)] text-danger -mt-4 mb-4">Cancelled: {ticket.cancelReason}</p>}
-
-      <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 mb-6">
-        <h2 className="text-[length:var(--fs-h5)] text-fg font-medium mb-3">Public Notes</h2>
-        <div className="space-y-2 mb-3">
-          {notes.length === 0 && <p className="text-fg-2 text-[length:var(--fs-body)]">No public notes yet.</p>}
-          {notes.map((n, i) => (
-            <div key={i} className="text-[length:var(--fs-body)] border-l-2 border-accent pl-3">
-              <p className="text-fg">{n.text}</p>
-              <p className="text-[length:var(--fs-caption)] text-muted">{n.author} — {new Date(n.createdAt).toLocaleString()}</p>
+    <div className="p-8 max-w-6xl">
+      <div className="flex flex-col lg:flex-row items-start gap-6">
+        <div className="flex-1 min-w-0 space-y-6">
+          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">Ticket {ticket.ticketId}</h1>
+              <Badge variant={STATUS_VARIANT[ticket.status] ?? 'filled-neutral'}>{ticket.status}</Badge>
+              <Badge variant={ragVariant}>SLA: {ragLabel}</Badge>
+              <span className="ml-auto flex items-center gap-1 text-fg-2" title="Notifications">
+                🔔 <span className="text-[length:var(--fs-caption)]">{notes.length}</span>
+              </span>
             </div>
-          ))}
-        </div>
-        <Textarea placeholder="Add a public note…" value={noteText} onChange={(e) => setNoteText(e.target.value)} />
-        <Button variant="ghost-rect" className="mt-2" onClick={addNote} disabled={!noteText.trim()}>
-          Add Note
-        </Button>
-      </div>
+            <p className="text-fg-2 mb-1">
+              Customer: {ticket.customerId} · {ticket.category}{ticket.area ? ` — ${ticket.area}` : ''} · Queue <Badge variant="outlined-red">{ticket.queue}</Badge>
+            </p>
+            <p className="text-fg-2 text-[length:var(--fs-caption)]">
+              Assigned to: {ticket.assignedTo ?? 'Unassigned'} · {slaRule.message}
+            </p>
+          </div>
 
-      <Tabs
-        items={[
-          {
-            key: 'details',
-            label: 'Details',
-            content: (
-              <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)]">
-                <div><dt className="text-[length:var(--fs-caption)] text-muted">Issue</dt><dd className="text-fg">{ticket.actualIssue ?? '—'}</dd></div>
-                <div><dt className="text-[length:var(--fs-caption)] text-muted">Priority</dt><dd className="text-fg">{ticket.priority}</dd></div>
-                <div><dt className="text-[length:var(--fs-caption)] text-muted">Resolution Code</dt><dd className="text-fg">{ticket.resolutionCode ?? '—'}</dd></div>
-                <div><dt className="text-[length:var(--fs-caption)] text-muted">Hashtags</dt><dd className="text-fg">{(ticket.hashtags ?? []).join(', ') || '—'}</dd></div>
-                <div><dt className="text-[length:var(--fs-caption)] text-muted">SLA Target</dt><dd className="text-fg">{ticket.slaTargetHours ? `${ticket.slaTargetHours}h, due ${ticket.slaDueAt ? new Date(ticket.slaDueAt).toLocaleString() : '—'}` : '—'}</dd></div>
-                <div><dt className="text-[length:var(--fs-caption)] text-muted">Reopen count</dt><dd className="text-fg">{ticket.reopenCount ?? 0}</dd></div>
-                <div className="col-span-2">
-                  <dt className="text-[length:var(--fs-caption)] text-muted mb-1">L3 Reference (RES-07 — editable while Not Solved)</dt>
-                  <Input
-                    placeholder="External L3 ticket reference"
-                    value={ticket.l3Reference ?? ''}
-                    disabled={ticket.status !== 'Not Solved'}
-                    onChange={(e) => updateRecord('trouble-tickets', 'ticketId', ticket.ticketId, { l3Reference: e.target.value })}
-                  />
+          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+            <h2 className="text-[length:var(--fs-h5)] text-fg font-medium mb-3">Public Notes</h2>
+            <div className="space-y-2 mb-3">
+              {notes.length === 0 && <p className="text-fg-2 text-[length:var(--fs-body)]">No public notes yet.</p>}
+              {notes.map((n, i) => (
+                <div key={i} className="text-[length:var(--fs-body)] border-l-2 border-accent pl-3">
+                  <p className="text-fg">{n.text}</p>
+                  <p className="text-[length:var(--fs-caption)] text-muted">{n.author} — {new Date(n.createdAt).toLocaleString()}</p>
                 </div>
-                {(ticket.escalations ?? []).length > 0 && (
-                  <div className="col-span-2">
-                    <dt className="text-[length:var(--fs-caption)] text-muted mb-1">Escalation History</dt>
-                    <ul className="list-disc list-inside text-fg text-[length:var(--fs-caption)]">
-                      {(ticket.escalations ?? []).map((e, i) => (
-                        <li key={i}>{e.reason} — {new Date(e.escalatedAt).toLocaleString()} by {e.escalatedBy}</li>
+              ))}
+            </div>
+            <Textarea placeholder="Add a public note…" value={noteText} onChange={(e) => setNoteText(e.target.value)} />
+            <Button variant="ghost-rect" className="mt-2" onClick={addNote} disabled={!noteText.trim()}>
+              Add Note
+            </Button>
+          </div>
+
+          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+            <Tabs
+              items={[
+                {
+                  key: 'details',
+                  label: 'Details',
+                  content: (
+                    <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)]">
+                      <div><dt className="text-[length:var(--fs-caption)] text-muted">Issue</dt><dd className="text-fg">{ticket.actualIssue ?? '—'}</dd></div>
+                      <div><dt className="text-[length:var(--fs-caption)] text-muted">Priority</dt><dd className="text-fg">{ticket.priority}</dd></div>
+                      <div><dt className="text-[length:var(--fs-caption)] text-muted">Resolution Code</dt><dd className="text-fg">{ticket.resolutionCode ?? '—'}</dd></div>
+                      <div><dt className="text-[length:var(--fs-caption)] text-muted">Hashtags</dt><dd className="text-fg">{(ticket.hashtags ?? []).join(', ') || '—'}</dd></div>
+                      <div><dt className="text-[length:var(--fs-caption)] text-muted">SLA Target</dt><dd className="text-fg">{ticket.slaTargetHours ? `${ticket.slaTargetHours}h, due ${ticket.slaDueAt ? new Date(ticket.slaDueAt).toLocaleString() : '—'}` : '—'}</dd></div>
+                      <div><dt className="text-[length:var(--fs-caption)] text-muted">Reopen count</dt><dd className="text-fg">{ticket.reopenCount ?? 0}</dd></div>
+                      <div className="col-span-2">
+                        <dt className="text-[length:var(--fs-caption)] text-muted mb-1">L3 Reference (RES-07 — editable while Not Solved)</dt>
+                        <Input
+                          placeholder="External L3 ticket reference"
+                          value={ticket.l3Reference ?? ''}
+                          disabled={ticket.status !== 'Not Solved'}
+                          onChange={(e) => updateRecord('trouble-tickets', 'ticketId', ticket.ticketId, { l3Reference: e.target.value })}
+                        />
+                      </div>
+                      {(ticket.escalations ?? []).length > 0 && (
+                        <div className="col-span-2">
+                          <dt className="text-[length:var(--fs-caption)] text-muted mb-1">Escalation History</dt>
+                          <ul className="list-disc list-inside text-fg text-[length:var(--fs-caption)]">
+                            {(ticket.escalations ?? []).map((e, i) => (
+                              <li key={i}>{e.reason} — {new Date(e.escalatedAt).toLocaleString()} by {e.escalatedBy}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </dl>
+                  ),
+                },
+                {
+                  key: 'activities',
+                  label: 'Activities',
+                  content: (
+                    <div className="space-y-3">
+                      {activities.length === 0 && <p className="text-fg-2 text-[length:var(--fs-body)]">No activities logged yet.</p>}
+                      {activities.map((a, i) => (
+                        <div key={i} className="flex items-center justify-between border-b border-border-soft pb-2 last:border-0">
+                          <div>
+                            <span className="text-fg text-[length:var(--fs-body)]">{a.description}</span>
+                            <span className="block text-[length:var(--fs-caption)] text-muted">{a.type} · {a.createdBy} · {new Date(a.createdAt).toLocaleString()}</span>
+                          </div>
+                          {a.open ? (
+                            <Button variant="ghost-rect" compact onClick={() => closeActivity(i)}>Close</Button>
+                          ) : (
+                            <Badge variant="filled-neutral">Closed</Badge>
+                          )}
+                        </div>
                       ))}
-                    </ul>
-                  </div>
-                )}
-              </dl>
-            ),
-          },
-          {
-            key: 'activities',
-            label: 'Activities',
-            content: (
-              <div className="space-y-3">
-                {activities.length === 0 && <p className="text-fg-2 text-[length:var(--fs-body)]">No activities logged yet.</p>}
-                {activities.map((a, i) => (
-                  <div key={i} className="flex items-center justify-between border-b border-border-soft pb-2 last:border-0">
-                    <div>
-                      <span className="text-fg text-[length:var(--fs-body)]">{a.description}</span>
-                      <span className="block text-[length:var(--fs-caption)] text-muted">{a.type} · {a.createdBy} · {new Date(a.createdAt).toLocaleString()}</span>
+                      <div className="flex gap-2 pt-2">
+                        <Input placeholder="Log a manual activity…" value={activityText} onChange={(e) => setActivityText(e.target.value)} className="flex-1" />
+                        <Button variant="ghost-rect" onClick={addManualActivity} disabled={!activityText.trim()}>Add</Button>
+                      </div>
                     </div>
-                    {a.open ? (
-                      <Button variant="ghost-rect" compact onClick={() => closeActivity(i)}>Close</Button>
-                    ) : (
-                      <Badge variant="filled-neutral">Closed</Badge>
-                    )}
-                  </div>
-                ))}
-                <div className="flex gap-2 pt-2">
-                  <Input placeholder="Log a manual activity…" value={activityText} onChange={(e) => setActivityText(e.target.value)} className="flex-1" />
-                  <Button variant="ghost-rect" onClick={addManualActivity} disabled={!activityText.trim()}>Add</Button>
-                </div>
-              </div>
-            ),
-          },
-          {
-            key: 'attachments',
-            label: 'Attachments',
-            content: (
-              <div className="space-y-2">
-                {attachments.length === 0 && <p className="text-fg-2 text-[length:var(--fs-body)]">No attachments.</p>}
-                {attachments.map((a, i) => (
-                  <div key={i} className="flex items-center justify-between text-[length:var(--fs-body)] border-b border-border-soft pb-1 last:border-0">
-                    <span className="text-fg">{a.name} ({Math.round(a.size / 1024)} KB)</span>
-                    <span className="text-[length:var(--fs-caption)] text-muted">{new Date(a.uploadedAt).toLocaleString()}</span>
-                  </div>
-                ))}
-                {terminal ? (
-                  <p className="text-[length:var(--fs-caption)] text-muted">Attachments are blocked on Closed/Cancelled tickets (ATT-03).</p>
-                ) : (
-                  <input
-                    type="file"
-                    className="text-[length:var(--fs-caption)] text-fg-2"
-                    onChange={(e) => e.target.files?.[0] && attach(e.target.files[0])}
-                  />
-                )}
-              </div>
-            ),
-          },
-          {
-            key: 'audit',
-            label: 'Audit Trail',
-            content: canSeeAudit ? (
-              <div className="space-y-2">
-                {auditRecords.length === 0 && <p className="text-fg-2 text-[length:var(--fs-body)]">No audit events yet.</p>}
-                {auditRecords.map((a) => (
-                  <div key={a.auditId} className="text-[length:var(--fs-caption)] border-b border-border-soft pb-1 last:border-0">
-                    <span className="text-fg">{a.fieldModified} → {a.newValue}</span>
-                    <span className="block text-muted">{a.employeeUser} · {new Date(a.timestamp).toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-fg-2 text-[length:var(--fs-body)]">Audit trail is role-restricted from this persona (BR-067).</p>
-            ),
-          },
-        ]}
-      />
+                  ),
+                },
+                {
+                  key: 'attachments',
+                  label: 'Attachments',
+                  content: (
+                    <div className="space-y-2">
+                      {attachments.length === 0 && <p className="text-fg-2 text-[length:var(--fs-body)]">No attachments.</p>}
+                      {attachments.map((a, i) => (
+                        <div key={i} className="flex items-center justify-between text-[length:var(--fs-body)] border-b border-border-soft pb-1 last:border-0">
+                          <span className="text-fg">{a.name} ({Math.round(a.size / 1024)} KB)</span>
+                          <span className="text-[length:var(--fs-caption)] text-muted">{new Date(a.uploadedAt).toLocaleString()}</span>
+                        </div>
+                      ))}
+                      {terminal ? (
+                        <p className="text-[length:var(--fs-caption)] text-muted">Attachments are blocked on Closed/Cancelled tickets (ATT-03).</p>
+                      ) : (
+                        <input
+                          type="file"
+                          className="text-[length:var(--fs-caption)] text-fg-2"
+                          onChange={(e) => e.target.files?.[0] && attach(e.target.files[0])}
+                        />
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  key: 'audit',
+                  label: 'Audit Trail',
+                  content: canSeeAudit ? (
+                    <div className="space-y-2">
+                      {auditRecords.length === 0 && <p className="text-fg-2 text-[length:var(--fs-body)]">No audit events yet.</p>}
+                      {auditRecords.map((a) => (
+                        <div key={a.auditId} className="text-[length:var(--fs-caption)] border-b border-border-soft pb-1 last:border-0">
+                          <span className="text-fg">{a.fieldModified} → {a.newValue}</span>
+                          <span className="block text-muted">{a.employeeUser} · {new Date(a.timestamp).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-fg-2 text-[length:var(--fs-body)]">Audit trail is role-restricted from this persona (BR-067).</p>
+                  ),
+                },
+              ]}
+            />
+          </div>
+        </div>
 
-      <div className="flex gap-2 mt-6">
-        <Button variant="ghost-rect" onClick={() => navigate('/trouble-ticketing-complaints/tickets-dashboard')}>
-          Go Back
-        </Button>
+        <div className="w-full lg:w-72 shrink-0 space-y-6">
+          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+            <h2 className="text-[length:var(--fs-body-lg)] text-fg font-medium mb-3">Actions</h2>
+            <div className="flex flex-col gap-2">
+              {!ticket.assignedTo && !terminal && (
+                <Button variant="ghost-rect" className="w-full justify-center" onClick={assignToMe}>Assign to me</Button>
+              )}
+              {canReassignQueue && !terminal && (
+                <div className="flex flex-col gap-2">
+                  <Select value={reassignQueue} onChange={(e) => setReassignQueue(e.target.value)} placeholder="Reassign queue…" options={['FL Agents', 'Complaints Team'].map((q) => ({ value: q, label: q }))} />
+                  <Button variant="ghost-rect" className="w-full justify-center" onClick={reassignQueueSubmit} disabled={!reassignQueue}>Reassign</Button>
+                </div>
+              )}
+              {!terminal && ticket.status !== 'Escalate' && (
+                <Button variant="ghost-rect" className="w-full justify-center" onClick={() => setEscalateOpen(true)}>Escalate</Button>
+              )}
+              {canResolve && !terminal && ticket.status !== 'Solved' && ticket.status !== 'Completed' && (
+                <Button variant="ghost-rect" className="w-full justify-center" onClick={() => setResolveOpen(true)}>Resolve</Button>
+              )}
+              {!canResolve && !terminal && ticket.status !== 'Solved' && ticket.status !== 'Completed' && (
+                <p className="text-[length:var(--fs-caption)] text-muted">Resolution requires Complaints Team — use Escalate to route it.</p>
+              )}
+              {ticket.status === 'Solved' && (
+                <Button variant="ghost-rect" className="w-full justify-center" onClick={complete} disabled={openActivities.length > 0}>
+                  {openActivities.length > 0 ? `Complete (${openActivities.length} open)` : 'Complete'}
+                </Button>
+              )}
+              {ticket.status === 'Completed' && (
+                <Button variant="primary-rect" className="w-full justify-center" onClick={closeTicket}>Close Ticket</Button>
+              )}
+              {!terminal && (
+                <Button variant="ghost-rect" className="w-full justify-center" onClick={() => setCancelOpen(true)}>Cancel</Button>
+              )}
+              {ticket.status === 'Closed' && (
+                <Button
+                  variant="ghost-rect"
+                  className="w-full justify-center"
+                  onClick={() => (withinReopenWindow ? setReopenOpen(true) : undefined)}
+                  disabled={!withinReopenWindow}
+                >
+                  {withinReopenWindow ? 'Reopen' : 'Reopen (outside window)'}
+                </Button>
+              )}
+              {ticket.status === 'Closed' && !withinReopenWindow && (
+                <p className="text-[length:var(--fs-caption)] text-danger">
+                  Outside the {REOPEN_WINDOW_DAYS}-day reopen window (RES-10) — raise a linked ticket instead.
+                </p>
+              )}
+              {ticket.cancelReason && <p className="text-[length:var(--fs-caption)] text-danger">Cancelled: {ticket.cancelReason}</p>}
+              <Button
+                variant="ghost-rect"
+                className="w-full justify-center !border-transparent"
+                onClick={() => navigate('/trouble-ticketing-complaints/tickets-dashboard')}
+              >
+                Go back
+              </Button>
+            </div>
+          </div>
+
+          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+            <h2 className="text-[length:var(--fs-body-lg)] text-fg font-medium mb-3">Overview</h2>
+            <div className="space-y-3 text-[length:var(--fs-body)]">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted">Status</span>
+                <Badge variant={STATUS_VARIANT[ticket.status] ?? 'filled-neutral'}>{ticket.status}</Badge>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted">Ticket #</span>
+                <span className="text-accent font-medium">{ticket.ticketId}</span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted">Category</span>
+                <span className="text-fg text-right">{ticket.category}</span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted">Priority</span>
+                <span className="text-fg">{ticket.priority}</span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted">Queue</span>
+                <Badge variant="outlined-red">{ticket.queue}</Badge>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted">Assigned to</span>
+                <span className={ticket.assignedTo ? 'text-fg' : 'text-muted italic'}>{ticket.assignedTo ?? 'Unassigned'}</span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted">Customer</span>
+                <span className="text-fg">{ticket.customerId}</span>
+              </div>
+              {ticket.createdAt && (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted">Created</span>
+                  <span className="text-fg">{new Date(ticket.createdAt).toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       <Drawer open={escalateOpen} onClose={() => setEscalateOpen(false)} title="Escalate Ticket">

@@ -18,7 +18,10 @@ const ACQUISITION_ACTIONS = [
   { label: 'New Prepaid Connection', screenId: 'SCR-190' },
   { label: 'New Fixed Line', screenId: 'SCR-043' },
   { label: 'New FWA / 5G Home', screenId: 'SCR-077' },
-  { label: 'MNP Port-In', screenId: 'SCR-121' },
+  // SCR-120, not SCR-121 — the wizard itself now requires a Postpaid/Prepaid
+  // choice (module-hierarchy.json's "MNP guided process presents Postpaid/
+  // Prepaid choice before data entry") before it'll accept data entry.
+  { label: 'MNP Port-In', screenId: 'SCR-120' },
 ];
 
 // Sales = the lead/prospect pipeline (wraps the existing Lead Management

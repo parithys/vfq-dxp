@@ -12,7 +12,7 @@ export function Breadcrumbs() {
   const route = screenSlug ? getAllRoutes().find((r) => r.path === location.pathname) : undefined;
 
   return (
-    <div className="flex items-center gap-2 px-6 py-3 text-[length:var(--fs-caption)] text-muted border-b border-border-soft">
+    <div className="flex items-center gap-2 px-6 py-3 text-[length:var(--fs-caption)] text-muted border-b border-border-soft bg-bg">
       <Link to="/" className="text-fg">
         Dashboard
       </Link>

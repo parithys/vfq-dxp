@@ -11,6 +11,11 @@ interface CafSignatureCaptureProps {
   value: { cafType?: CafType; signatureDataUrl?: string };
   onChange: (value: { cafType?: CafType; signatureDataUrl?: string }) => void;
   customerName?: string;
+  /** Binds an ID Number line onto the CAF preview — module-hierarchy.json's
+   * "CAF form dynamically binds Qatari ID/Passport number field for prepaid
+   * subscribers." Omit for flows where this binding isn't evidenced. */
+  idLabel?: string;
+  idValue?: string;
 }
 
 // Pattern 6: CAF/Contract Signature Capture — CAF-type dropdown (Digital/Manual/
@@ -18,7 +23,7 @@ interface CafSignatureCaptureProps {
 // applicant/billing/plan data, then a "Please Sign" pad modal (drawn signature,
 // Clear/Done) — reused identically for CAF, MNP application, Passport-to-QID
 // forms (SCR-058, SCR-069/070, SCR-084, SCR-127/129, etc.).
-export function CafSignatureCapture({ value, onChange, customerName }: CafSignatureCaptureProps) {
+export function CafSignatureCapture({ value, onChange, customerName, idLabel, idValue }: CafSignatureCaptureProps) {
   const [padOpen, setPadOpen] = useState(false);
 
   return (
@@ -44,6 +49,11 @@ export function CafSignatureCapture({ value, onChange, customerName }: CafSignat
           <p className="text-fg text-[length:var(--fs-body)]">
             Applicant: <span className="font-medium">{customerName ?? '—'}</span>
           </p>
+          {idLabel && (
+            <p className="text-fg text-[length:var(--fs-body)]">
+              {idLabel}: <span className="font-medium">{idValue ?? '—'}</span>
+            </p>
+          )}
           <p className="text-fg-2 text-[length:var(--fs-caption)] mt-1">
             By signing below, the applicant accepts the General Terms and Conditions of Vodafone Qatar.
           </p>

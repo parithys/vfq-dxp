@@ -125,8 +125,8 @@ export function TicketsDashboard() {
         <div className="flex gap-1 border-b border-border-soft">
           {(
             [
-              ['all', 'All Trouble Tickets'],
-              ['mine', 'My Trouble Tickets'],
+              ['all', 'All Tickets'],
+              ['mine', 'My Tickets'],
               ['escalated', 'Escalated to Me'],
             ] as const
           ).map(([key, label]) => (
@@ -143,12 +143,14 @@ export function TicketsDashboard() {
         </div>
         <div className="ml-auto flex flex-wrap items-end gap-2">
           <Input placeholder="Search ticket #, customer, category, issue…" value={search} onChange={(e) => setSearch(e.target.value)} className="w-64" />
-          <Select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            placeholder="Status"
-            options={TICKET_STATUSES.map((s) => ({ value: s, label: s }))}
-          />
+          <div className="w-40">
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              placeholder="Status"
+              options={TICKET_STATUSES.map((s) => ({ value: s, label: s }))}
+            />
+          </div>
           <Select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
