@@ -86,7 +86,7 @@ export function Customer360Layout() {
         {data.customer.customerId} · {data.customer.idType} {data.customer.qid} · {data.customer.segment}
       </p>
       <BellNotificationBanner customerId={data.customer.customerId} />
-      <Tabs items={tabs} />
+      <Tabs items={tabs} orientation="vertical" />
     </div>
   );
 }

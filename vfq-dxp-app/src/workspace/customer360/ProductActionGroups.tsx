@@ -7,6 +7,10 @@ import { Tooltip } from '../../components/primitives/Tooltip';
 
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
+// Clock face — a clearer, at-a-glance "not available yet" signal than the
+// dashed-border/muted-text treatment alone, which was too subtle to notice
+// without hovering for the tooltip.
+const CLOCK_ICON = 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3.2 2';
 
 export interface ProductAction {
   label: string;
@@ -53,15 +57,19 @@ export function ProductActionGroups({ groups, customer }: { groups: ProductActio
               <Icon path={isOpen ? CHEVRON_DOWN : CHEVRON_RIGHT} className="w-4 h-4 text-muted shrink-0" />
             </button>
             {isOpen && (
-              <div className="px-4 pb-4 flex flex-wrap gap-2 border-t border-border-soft pt-3">
+              <div className="px-4 pb-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 border-t border-border-soft pt-3">
                 {group.actions.map((action) => {
                   const available = Boolean(action.screenId && getAllRoutes().find((r) => r.screenId === action.screenId));
                   if (!available) {
                     return (
                       <Tooltip key={action.label} content="Not yet built for this action" placement="top">
-                        <span className="inline-flex items-center rounded-[var(--radius-button)] border border-dashed border-border px-3.5 py-2 text-[length:var(--fs-btn-compact)] text-muted cursor-not-allowed">
-                          {action.label}
-                        </span>
+                        <div className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-dashed border-border bg-light-neutral p-4 text-muted cursor-not-allowed">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-[length:var(--fs-btn-compact)] font-medium">{action.label}</span>
+                            <Icon path={CLOCK_ICON} className="w-3.5 h-3.5 shrink-0" />
+                          </div>
+                          <span className="text-[length:var(--fs-micro)] uppercase tracking-wide">Coming soon</span>
+                        </div>
                       </Tooltip>
                     );
                   }
@@ -69,9 +77,9 @@ export function ProductActionGroups({ groups, customer }: { groups: ProductActio
                     <button
                       key={action.label}
                       onClick={() => launch(action)}
-                      className="inline-flex items-center rounded-[var(--radius-button)] border border-border px-3.5 py-2 text-[length:var(--fs-btn-compact)] text-fg hover:bg-surface hover:border-accent transition-colors"
+                      className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-border bg-bg p-4 text-left text-fg hover:bg-surface hover:border-accent transition-colors"
                     >
-                      {action.label}
+                      <span className="text-[length:var(--fs-btn-compact)] font-medium">{action.label}</span>
                     </button>
                   );
                 })}
