@@ -115,21 +115,23 @@ i{width:13px;height:13px;display:inline-block;flex:none}
 #selhl circle{pointer-events:none}
 #printdoc{display:none}
 @media print{
-  @page{size:A4 landscape;margin:10mm}
   body.printing>header,body.printing>.scroll{display:none!important}
   body.printing #printdoc{display:block}
-  /* one printed sheet per slice: fixed page box, SVG letterboxes itself inside it */
-  .pg{break-after:page;page-break-after:always;
-      height:100vh;display:flex;flex-direction:column;box-sizing:border-box;overflow:hidden}
+  /* One printed sheet per grid tile, edge-to-edge (zero @page margin, set
+     dynamically below) so sheets can be trimmed and taped together into
+     one continuous wall poster with no per-page frame/header breaking up
+     the image. Reassembly order lives in a small corner tag instead of a
+     full-width caption bar, so it costs near-zero content area. */
+  .pg{break-after:page;page-break-after:always;position:relative;
+      height:100vh;display:flex;box-sizing:border-box;overflow:hidden}
   .pg:last-child{break-after:auto;page-break-after:auto}
-  .pgcap{flex:none}
   .pg svg{flex:1;min-height:0;width:100%;height:100%}
-  .pgcap{display:flex;justify-content:space-between;align-items:baseline;
-    font-size:9pt;color:#333;border-bottom:1px solid #ccc;
-    padding-bottom:2mm;margin-bottom:3mm}
-  .pgcap b{font-weight:800}
+  .pgtag{position:absolute;right:2mm;bottom:2mm;font-size:6pt;font-weight:700;
+    color:rgba(0,0,0,.45);background:rgba(255,255,255,.65);
+    padding:0.5mm 1.5mm;border-radius:0.5mm;pointer-events:none}
 }
 </style>
+<style id="pageSizeRule"></style>
 <header>
   <div class="hrow">
     <div class="hgroup">
@@ -156,7 +158,8 @@ i{width:13px;height:13px;display:inline-block;flex:none}
           <div class="expmenu" id="expMenu">
             <button data-fmt="svg">Export as SVG (vector)</button>
             <button data-fmt="png">Export as PNG</button>
-            <button data-fmt="pdf">Export as PDF (paginated)</button>
+            <button data-fmt="pdf-a3">Export as PDF (A3)</button>
+            <button data-fmt="pdf-a4">Export as PDF (A4)</button>
           </div>
         </div>
       </div>
@@ -414,23 +417,95 @@ function _stripSelectionArtifacts(clonedFlow){
   clonedFlow.querySelectorAll('g[id^="node-"]').forEach(g=>g.classList.remove(...PF_NODE_CLASSES));
   clonedFlow.querySelectorAll('.pf-edge').forEach(g=>g.classList.remove(...PF_EDGE_CLASSES));
 }
-function exportPDF(){
+// A rectangular row x column tile grid over a sparse diagram inevitably
+// has some tiles with zero ink in them (e.g. a row that only has branch
+// content under one phase leaves every other phase's tile in that row
+// blank). Printing those wastes paper, so before building the page list
+// every drawn shape in the live #flow (not a detached clone — getBBox()
+// needs it attached/rendered) is reduced to its bounding box once, and any
+// tile whose rect doesn't overlap at least one of them is skipped. The
+// (row, col, n, total) identity of a KEPT tile is computed from its
+// position in the full, un-pruned grid and never renumbered after
+// skipping — so "R4/6 · C20/33 · 119/198" always means the same physical
+// grid cell whether or not other tiles around it got dropped, which is
+// what makes the corner tags usable for wall-poster reassembly at all.
+function _computeContentRects(svgEl){
+  const rects=[];
+  svgEl.querySelectorAll('rect,circle,ellipse,path,line,polygon,polyline,text').forEach(el=>{
+    // .pf-phasebg is the base canvas fill + per-phase tint/divider lines (see
+    // svg_gen.py's build()/phase_bands_svg()) — decorative, and each piece
+    // spans a whole column or the whole canvas, so leaving it in would make
+    // every tile "non-blank" regardless of whether a node is actually there.
+    if(el.closest('.pf-phasebg')) return;
+    let b; try{ b=el.getBBox(); }catch(e){ return; }
+    if(b.width>0 || b.height>0) rects.push(b.x, b.y, b.x+b.width, b.y+b.height);
+  });
+  return rects;
+}
+function _tileHasContent(rects, tx0, ty0, tx1, ty1){
+  for(let i=0;i<rects.length;i+=4){
+    if(rects[i+2]>tx0 && rects[i]<tx1 && rects[i+3]>ty0 && rects[i+1]<ty1) return true;
+  }
+  return false;
+}
+// Tiling is 2-D (rows x columns), not just column-strips: slicing only by
+// width while letterboxing the diagram's FULL height into one sheet (the
+// old approach) forced every unit of vertical extent — which for a process
+// map with many stacked branch/recovery tiers can be thousands of SVG
+// user-units — into one page's printable height, crushing the smallest
+// on-canvas text (SYS_TAG_FONT_PX=9.5 in svg_gen.py) down to an illegible
+// ~2pt on paper. Instead the unit->page scale is fixed so that smallest
+// text prints at a legible floor, and however many pages that requires are
+// tiled — the same approach CAD/poster printing uses for oversized
+// drawings. A3 and A4 share the same floor (so text is equally legible on
+// both), A3 just needs fewer pages to cover the same content.
+const PAPER_MM={A4:{w:297,h:210},A3:{w:420,h:297}};   // both landscape
+const PAGE_MARGIN_MM=0;  // edge-to-edge — see the wall-poster note in the @media print block above
+const PX_PER_MM=96/25.4;
+const MIN_FONT_PX=9.5;   // smallest text drawn anywhere — keep in sync with svg_gen.py's SYS_TAG_FONT_PX
+const MIN_PRINT_PT=8;    // legibility floor for that smallest text once printed
+// #flow's width/height attrs equal its viewBox, so 1 SVG user-unit == 1 CSS px at 96dpi, and 1px == 0.75pt —
+// PRINT_SCALE is the unit->page px scale needed to hit MIN_PRINT_PT on MIN_FONT_PX text.
+const PRINT_SCALE=MIN_PRINT_PT/(0.75*MIN_FONT_PX);
+const LARGE_EXPORT_PAGE_WARNING=60;
+
+function exportPDF(paper){
+  const spec=PAPER_MM[paper];
   const el=document.getElementById('flow');
   const W=+el.getAttribute('width'), H=+el.getAttribute('height');
-  const SLICE=Math.round(H*1.50);                 // A4-landscape printable aspect
-  const n=Math.ceil(W/SLICE);
-  const doc=document.createElement('div'); doc.id='printdoc';
-  for(let i=0;i<n;i++){
-    const pg=document.createElement('div'); pg.className='pg';
-    const cap=document.createElement('div'); cap.className='pgcap';
-    cap.innerHTML='<b>__H1_MAIN__ — __H1_SUB__</b>'+
-                  '<span>Page '+(i+1)+' of '+n+'</span>';
-    const c=el.cloneNode(true);
-    _stripSelectionArtifacts(c);
-    c.removeAttribute('id'); c.removeAttribute('width'); c.removeAttribute('height');
-    c.setAttribute('viewBox',(i*SLICE)+' 0 '+SLICE+' '+H);
-    pg.appendChild(cap); pg.appendChild(c); doc.appendChild(pg);
+  const printableWpx=(spec.w-2*PAGE_MARGIN_MM)*PX_PER_MM;
+  const printableHpx=(spec.h-2*PAGE_MARGIN_MM)*PX_PER_MM;
+  const tileW=printableWpx/PRINT_SCALE, tileH=printableHpx/PRINT_SCALE;
+  const cols=Math.max(1,Math.ceil(W/tileW)), rows=Math.max(1,Math.ceil(H/tileH));
+  const total=cols*rows;
+  const contentRects=_computeContentRects(el);
+  const tiles=[];
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const n=r*cols+c+1;
+      const tx0=c*tileW, ty0=r*tileH;
+      if(_tileHasContent(contentRects, tx0, ty0, tx0+tileW, ty0+tileH)) tiles.push({r,c,n});
+    }
   }
+  const skipped=total-tiles.length;
+  if(tiles.length>LARGE_EXPORT_PAGE_WARNING &&
+     !confirm('This diagram is large — printing on '+paper+' while keeping text readable needs '+
+              tiles.length+' page(s) (a '+rows+'×'+cols+' grid, '+skipped+' blank tile(s) skipped). Continue?')){
+    return;
+  }
+  const rule=document.getElementById('pageSizeRule');
+  rule.textContent='@page{size:'+paper+' landscape;margin:'+PAGE_MARGIN_MM+'mm}';
+  const doc=document.createElement('div'); doc.id='printdoc';
+  tiles.forEach(({r,c,n})=>{
+    const pg=document.createElement('div'); pg.className='pg';
+    const tag=document.createElement('div'); tag.className='pgtag';
+    tag.textContent='R'+(r+1)+'/'+rows+' · C'+(c+1)+'/'+cols+' · '+n+'/'+total;
+    const clone=el.cloneNode(true);
+    _stripSelectionArtifacts(clone);
+    clone.removeAttribute('id'); clone.removeAttribute('width'); clone.removeAttribute('height');
+    clone.setAttribute('viewBox',(c*tileW)+' '+(r*tileH)+' '+tileW+' '+tileH);
+    pg.appendChild(clone); pg.appendChild(tag); doc.appendChild(pg);
+  });
   document.body.appendChild(doc);
   document.body.classList.add('printing');
   const done=()=>{document.body.classList.remove('printing');doc.remove();
@@ -460,7 +535,8 @@ expMenu.onclick=e=>{
   expMenu.classList.remove('open');
   const base='__EXPORT_BASENAME__';
   if(fmt==='svg') return save(svgBlob(),base+'.svg');
-  if(fmt==='pdf') return exportPDF();
+  if(fmt==='pdf-a3') return exportPDF('A3');
+  if(fmt==='pdf-a4') return exportPDF('A4');
   const el=document.getElementById('flow');
   const W=+el.getAttribute('width'), H=+el.getAttribute('height');
   /* a very wide canvas at 1x can exceed browser canvas limits, so PNG renders at 0.5x */

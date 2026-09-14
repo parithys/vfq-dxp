@@ -159,10 +159,8 @@ a{color:var(--accent);text-decoration:none}
  border-radius:var(--radius-card);box-shadow:var(--shadow-raised);display:none;flex-direction:column;min-width:150px;z-index:60;overflow:hidden;padding:var(--space-1)}
 .exportmenu.open{display:flex}
 .exportmenu button{padding:8px 12px;border:none;background:none;text-align:left;cursor:pointer;font-size:12.5px;
- color:var(--ink);border-radius:4px;display:flex;justify-content:space-between;gap:12px;align-items:center}
+ color:var(--ink);border-radius:4px}
 .exportmenu button:hover{background:var(--accent);color:#fff}
-.exportmenu button:hover .fmt-hint{color:rgba(255,255,255,.75)}
-.exportmenu .fmt-hint{font-size:10.5px;color:var(--muted)}
 /* Zoom control + node Search — the former Actors dropdown (a multi-select actor/lane filter,
    removed entirely; see the removed applyActorFilter()/.actor-dim comments this replaces for
    that feature's own history) has been replaced by two unrelated things instead: the Jump to
@@ -601,7 +599,27 @@ body.drawer-resizing .drawer{transition:none}
    anywhere in this document. */
 .t-portal{background:#eeeeee;color:#1f1f1f}
 .assum{background:#fef8e6;border:1px solid #fbe29e;border-radius:6px;padding:6px 10px;font-size:11.5px;color:#5d4400;display:inline-block;margin:2px 0}
-</style></head><body>
+/* PDF (A3/A4) export print styling — aligned with the process-flow engine's own standard (see
+   its engine_template.html): edge-to-edge pages (@page margin set to 0 dynamically, per chosen
+   paper, via #pageSizeRule below) with no per-page header, only a small corner reassembly tag,
+   so a full print run can be trimmed and taped into one continuous wall poster. */
+#printdoc{display:none}
+@media print{
+  body.printing>header,body.printing>.wrap,body.printing>.drawer{display:none!important}
+  body.printing #printdoc{display:block}
+  .pg{break-after:page;page-break-after:always;position:relative;
+      height:100vh;display:flex;box-sizing:border-box;overflow:hidden}
+  .pg:last-child{break-after:auto;page-break-after:auto}
+  .pg svg{flex:1;min-height:0;width:100%;height:100%}
+  .pgtag{position:absolute;bottom:2mm;font-size:6pt;font-weight:700;
+    color:rgba(0,0,0,.45);background:rgba(255,255,255,.65);
+    padding:0.5mm 1.5mm;border-radius:0.5mm;pointer-events:none}
+  .pgtag.pgnum{left:2mm}
+  .pgtag.pgcell{right:2mm}
+}
+</style>
+<style id="pageSizeRule"></style>
+</head><body>
 <header class="top">
  <h1><span class="h1-eyebrow">BPMN Swimlane</span><span class="h1-main">Portfolio Governance Portal</span><span class="h1-sub">Agent Ecosystem Business Process</span></h1>
  <div class="header-actions">
@@ -616,9 +634,10 @@ body.drawer-resizing .drawer{transition:none}
    <div class="exportwrap">
     <button class="btn" id="exportBtn">Export</button>
     <div class="exportmenu" id="exportMenu">
-     <button data-fmt="svg">SVG <span class="fmt-hint">vector · editing</span></button>
-     <button data-fmt="jpg">JPG <span class="fmt-hint">image · sharing</span></button>
-     <button data-fmt="pdf">PDF <span class="fmt-hint">document</span></button>
+     <button data-fmt="svg">SVG</button>
+     <button data-fmt="jpg">JPG</button>
+     <button data-fmt="pdf-a3">PDF (A3)</button>
+     <button data-fmt="pdf-a4">PDF (A4)</button>
     </div>
    </div>
   </div>
@@ -820,9 +839,16 @@ const vp=el('g',{id:'vp'}); svg.appendChild(vp);
 // per-phase-group colour tint above. Appended FIRST, before anything else touches `vp`, so both
 // stay the bottommost layer in z-order: lane dividers, nodes, connectors, and phase-header text
 // (added later) all paint on top, never the reverse.
-const canvasBg=el('rect',{x:0,y:0,width:LY.totalW,height:LY.totalH,fill:'#ffffff',stroke:'#9aa0a6','stroke-width':1.4});
+// class:'bg-deco' on every purely-decorative fill/divider below (this rect, the lane zebra
+// stripes, the inter-lane gap filler, the lane-gutter/phase-header row backgrounds and the
+// phase-divider lines) — never on real content (node cards, connectors, lane/phase TEXT) — is
+// what lets the PDF export's blank-tile detector (see engine_template.html's _computeContentRects)
+// tell "this print tile is genuinely empty" from "this tile just has plain background showing
+// through it". Every one of these spans a whole row or column regardless of whether any actual
+// node sits there, so without the exclusion literally every tile in the grid would look "occupied".
+const canvasBg=el('rect',{x:0,y:0,width:LY.totalW,height:LY.totalH,fill:'#ffffff',stroke:'#9aa0a6','stroke-width':1.4,class:'bg-deco'});
 vp.appendChild(canvasBg);
-const laneZebra=el('g',{id:'svgLaneZebra'});
+const laneZebra=el('g',{id:'svgLaneZebra',class:'bg-deco'});
 LY.lanes.forEach((L,li)=>{
  if(li%2===1) laneZebra.appendChild(el('rect',{x:0,y:L.y,width:LY.totalW,height:L.h,fill:'#f4f5f6'}));
 });
@@ -890,7 +916,7 @@ const svgLaneGutter=el('g',{id:'svgLaneGutter'});
 // coloured region below it. Stopping the fill at the last lane's own bottom left exactly that
 // margin white — a visible patch in the diagram's bottom-left corner whenever a backward-edge
 // channel (or any other reason totalH exceeds the lanes' own combined height) is present.
-svgLaneGutter.appendChild(el('rect',{x:0,y:0,width:LY.laneLabelW,height:LY.totalH,fill:'#B6BDC4'}));
+svgLaneGutter.appendChild(el('rect',{x:0,y:0,width:LY.laneLabelW,height:LY.totalH,fill:'#B6BDC4',class:'bg-deco'}));
 LY.lanes.forEach((L,li)=>{
  // Lane background tint AND the 4px left accent stripe have both been removed entirely —
  // lanes are now plain (transparent/page-background) with no colour cue of any kind, per an
@@ -1014,7 +1040,7 @@ LY.lanes.forEach((L,li)=>{
  if(li<LY.lanes.length-1){
   const nextY=LY.lanes[li+1].y;
   const gapH=nextY-(L.y+L.h);
-  if(gapH>0) bands.appendChild(el('rect',{x:0,y:L.y+L.h,width:LY.totalW,height:gapH,fill:'#ffffff'}));
+  if(gapH>0) bands.appendChild(el('rect',{x:0,y:L.y+L.h,width:LY.totalW,height:gapH,fill:'#ffffff',class:'bg-deco'}));
  }
 });
 bands.appendChild(svgLaneGutter);   // always visible now — no sticky HTML overlay hides it any more (no frozen columns)
@@ -1037,7 +1063,7 @@ const ph=el('g',{id:'svgPhaseHeader'}); vp.appendChild(ph);
 // starts at LY.x0; the lane-gutter fill starts below LY.topbar), so it rendered as plain
 // unstyled canvas background — a visible white patch exactly at the point both header bands
 // are expected to read as one continuous band. Same #B6BDC4 as both.
-ph.appendChild(el('rect',{x:0,y:0,width:LY.x0,height:LY.topbar,fill:'#B6BDC4'}));
+ph.appendChild(el('rect',{x:0,y:0,width:LY.x0,height:LY.topbar,fill:'#B6BDC4',class:'bg-deco'}));
 const _measCtx=document.createElement('canvas').getContext('2d');
 const PHFONT='700 14px "Segoe UI",Arial,sans-serif';   // kept in sync with .phasehdr's 14px minimum
 // phaseGroups is computed once, hoisted above `vp`'s own creation — see its declaration for why
@@ -1064,7 +1090,7 @@ phaseGroups.forEach((grp,gi)=>{
  // this is a plain full-bleed rect behind the whole row instead, edge-to-edge with the adjacent
  // phase group so neighbouring headers' fills meet exactly at the dashed divider line rather
  // than leaving a gap). Appended first, before the divider/text below, so both paint on top.
- ph.appendChild(el('rect',{x,y:0,width:spanW,height:LY.topbar,fill:'#B6BDC4'}));
+ ph.appendChild(el('rect',{x,y:0,width:spanW,height:LY.topbar,fill:'#B6BDC4',class:'bg-deco'}));
  // Stage separators now draw at EVERY group boundary, including before the very first stage
  // (a prior version skipped that one via `if(gi>0)`, leaving the first stage with no leading
  // boundary line at all — inconsistent with every other stage, which gets one on both sides).
@@ -1073,7 +1099,7 @@ phaseGroups.forEach((grp,gi)=>{
  // draws this leading separator in exactly the right place with no special-casing needed.
  // Dashed divider matching the reference canvas's own phase-boundary guide (lighter/thinner
  // than this file's former #E3E3E3/2px — reference uses a subtle #c9cfd8 hairline).
- ph.appendChild(el('line',{x1:x,y1:LY.topbar-2,x2:x,y2:LY.totalH-30,stroke:'#c9cfd8','stroke-width':1.2,'stroke-dasharray':'3 3'}));
+ ph.appendChild(el('line',{x1:x,y1:LY.topbar-2,x2:x,y2:LY.totalH-30,stroke:'#c9cfd8','stroke-width':1.2,'stroke-dasharray':'3 3',class:'bg-deco'}));
  const g=el('g');
  const rectX=x+8, rectW=spanW-16, rectCx=rectX+rectW/2;   // centre of the header bar — title text still
    // centres on this narrower, padded measure (rectCx/rectW), even though the #B6BDC4 fill behind it
@@ -4149,7 +4175,10 @@ text{font-family:"Segoe UI",Arial,sans-serif;}
 .node.hp-done .box{stroke:#1e7d34 !important;stroke-width:3px !important;filter:drop-shadow(0 0 5px rgba(30,125,52,.55));}
 .node.hp-active .box{stroke:#e60000 !important;stroke-width:4px !important;filter:drop-shadow(0 0 9px rgba(230,0,0,.85));}
 .edge.hp-done{stroke:#1e7d34 !important;stroke-width:2.6px !important;filter:none !important;}`;
-function exportSVGString(){
+// Factored out of exportSVGString() (which now just serializes this) so exportPDF() below can
+// reuse the exact same reset-to-native-scale/native-viewBox normalization as its own tiling
+// source, instead of re-deriving a second, potentially-drifting copy of this logic.
+function _buildExportSvgElement(){
  const clone=svg.cloneNode(true);
  clone.setAttribute('viewBox',`0 0 ${LY.totalW} ${LY.totalH}`);
  clone.setAttribute('width',LY.totalW); clone.setAttribute('height',LY.totalH);
@@ -4177,7 +4206,10 @@ function exportSVGString(){
  cvp.insertBefore(bg,cvp.firstChild);
  const st=document.createElementNS(SVGNS,'style'); st.textContent=EXPORT_CSS;
  clone.insertBefore(st,clone.firstChild);
- return '<?xml version="1.0" encoding="UTF-8"?>\n'+new XMLSerializer().serializeToString(clone);
+ return clone;
+}
+function exportSVGString(){
+ return '<?xml version="1.0" encoding="UTF-8"?>\n'+new XMLSerializer().serializeToString(_buildExportSvgElement());
 }
 function downloadBlob(blob,name){const a=document.createElement('a');const u=URL.createObjectURL(blob);
  a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove();},150);}
@@ -4207,36 +4239,94 @@ function rasterize(scaleFactor){return new Promise((resolve,reject)=>{
   const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cw,ch);ctx.drawImage(img,0,0,cw,ch);
   URL.revokeObjectURL(url);resolve(cv);};
  img.onerror=(e)=>{URL.revokeObjectURL(url);reject(e);}; img.src=url;});}
-function jpegToPdf(jpeg,wPx,hPx){
- // Page size is DERIVED from the diagram's own aspect ratio (content + a fixed
- // margin), not forced onto a fixed A3 sheet. These diagrams are wide swimlane
- // layouts (often 5:1-7:1) — fitting that onto a fixed-height A3 page left the
- // image filling the width but only a thin vertical sliver, with huge blank
- // bands above/below. Sizing the page to the content instead means the image
- // always fills the full page (minus the margin), matching the JPG export.
- const margin=24, maxContent=1600;                   // generous content cap, points
- const aspect=wPx/hPx;
- let dW,dH;
- if(aspect>=1){ dW=maxContent; dH=dW/aspect; } else { dH=maxContent; dW=dH*aspect; }
- const pageW=dW+2*margin, pageH=dH+2*margin;
- const x=margin,y=margin;
- const enc=(s)=>{const a=new Uint8Array(s.length);for(let i=0;i<s.length;i++)a[i]=s.charCodeAt(i)&0xff;return a;};
- const parts=[];let len=0;const off={};
- const push=(u8)=>{parts.push(u8);len+=u8.length;}; const ps=(s)=>push(enc(s));
- ps('%PDF-1.3\n%\xFF\xFF\xFF\xFF\n');
- const so=(n)=>{off[n]=len;};
- so(1); ps('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
- so(2); ps('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n');
- so(3); ps(`3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW.toFixed(2)} ${pageH.toFixed(2)}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>\nendobj\n`);
- const content=`q\n${dW.toFixed(2)} 0 0 ${dH.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} cm\n/Im0 Do\nQ\n`;
- so(4); ps(`4 0 obj\n<< /Length ${content.length} >>\nstream\n${content}endstream\nendobj\n`);
- so(5); ps(`5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${wPx} /Height ${hPx} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`);
- push(jpeg); ps('\nendstream\nendobj\n');
- const xo=len; let xr='xref\n0 6\n0000000000 65535 f \n';
- for(let i=1;i<=5;i++) xr+=String(off[i]).padStart(10,'0')+' 00000 n \n';
- ps(xr); ps(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xo}\n%%EOF`);
- const total=new Uint8Array(len);let o=0;for(const p of parts){total.set(p,o);o+=p.length;}
- return new Blob([total],{type:'application/pdf'});
+// ---- PDF (A3/A4) export — aligned with the process-flow engine's own standard (see its
+// engine_template.html for the canonical version of this same design): tiled, native
+// browser print-to-PDF (real vector/text, not a rasterized image wrapped in a hand-built PDF —
+// that's what the single-page jpegToPdf() this replaced did, and why it couldn't offer distinct
+// A3/A4 variants or legible multi-page tiling in the first place), edge-to-edge pages, and
+// blank-tile skipping that never renumbers a kept page.
+const PAPER_MM={A4:{w:297,h:210},A3:{w:420,h:297}};   // both landscape
+const PAGE_MARGIN_MM=0;   // edge-to-edge, for wall-poster reassembly — see the @media print block above
+const PX_PER_MM=96/25.4;
+const MIN_FONT_PX=10.5;   // smallest text drawn anywhere — keep in sync with CIRCLE_FONT_SIZE above
+const MIN_PRINT_PT=8;     // legibility floor for that smallest text once printed
+// The exported SVG's width/height attrs equal its viewBox (see _buildExportSvgElement()), so 1
+// SVG user-unit == 1 CSS px at 96dpi, and 1px == 0.75pt — PRINT_SCALE is the unit->page px scale
+// needed to hit MIN_PRINT_PT on MIN_FONT_PX text.
+const PRINT_SCALE=MIN_PRINT_PT/(0.75*MIN_FONT_PX);
+const LARGE_EXPORT_PAGE_WARNING=60;
+// A rectangular row x column tile grid over a sparse diagram inevitably has some tiles with
+// zero real ink in them. getBBox() is read off the LIVE #svgHost (not a detached clone —
+// getBBox() needs the element attached/rendered), which is safe even mid pan/zoom: per the SVG
+// spec getBBox() returns a shape's bbox in its own local user-coordinate space, unaffected by
+// any ancestor transform, so it lands in the same LY.totalW/totalH coordinate space every tile
+// is sliced from regardless of the live view's current scroll/zoom. `.bg-deco` (the canvas
+// background, lane zebra stripes, inter-lane gap filler, and the lane-gutter/phase-header row
+// fills + divider lines — see where each is built above) is excluded because every one of them
+// spans a whole row or column on its own, which would otherwise mark every tile "occupied"
+// regardless of whether a real node is there.
+function _computeContentRects(svgEl){
+  const rects=[];
+  svgEl.querySelectorAll('rect,circle,ellipse,path,line,polygon,polyline,text').forEach(el=>{
+    if(el.closest('.bg-deco')) return;
+    let b; try{ b=el.getBBox(); }catch(e){ return; }
+    if(b.width>0 || b.height>0) rects.push(b.x, b.y, b.x+b.width, b.y+b.height);
+  });
+  return rects;
+}
+function _tileHasContent(rects, tx0, ty0, tx1, ty1){
+  for(let i=0;i<rects.length;i+=4){
+    if(rects[i+2]>tx0 && rects[i]<tx1 && rects[i+3]>ty0 && rects[i+1]<ty1) return true;
+  }
+  return false;
+}
+function exportPDF(paper){
+  const spec=PAPER_MM[paper];
+  const W=LY.totalW, H=LY.totalH;
+  const printableWpx=(spec.w-2*PAGE_MARGIN_MM)*PX_PER_MM;
+  const printableHpx=(spec.h-2*PAGE_MARGIN_MM)*PX_PER_MM;
+  const tileW=printableWpx/PRINT_SCALE, tileH=printableHpx/PRINT_SCALE;
+  const cols=Math.max(1,Math.ceil(W/tileW)), rows=Math.max(1,Math.ceil(H/tileH));
+  const total=cols*rows;
+  const contentRects=_computeContentRects(svg);
+  // (row, col, n, total) for a KEPT tile is always its position in this full, un-pruned grid —
+  // never renumbered after skipping blanks — so the corner tags still identify the correct
+  // physical cell for wall-poster reassembly regardless of which neighbours were blank.
+  const tiles=[];
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const n=r*cols+c+1;
+      const tx0=c*tileW, ty0=r*tileH;
+      if(_tileHasContent(contentRects, tx0, ty0, tx0+tileW, ty0+tileH)) tiles.push({r,c,n});
+    }
+  }
+  const skipped=total-tiles.length;
+  if(tiles.length>LARGE_EXPORT_PAGE_WARNING &&
+     !confirm('This diagram is large — printing on '+paper+' while keeping text readable needs '+
+              tiles.length+' page(s) (a '+rows+'×'+cols+' grid, '+skipped+' blank tile(s) skipped). Continue?')){
+    return;
+  }
+  const rule=document.getElementById('pageSizeRule');
+  rule.textContent='@page{size:'+paper+' landscape;margin:'+PAGE_MARGIN_MM+'mm}';
+  const master=_buildExportSvgElement();
+  const doc=document.createElement('div'); doc.id='printdoc';
+  tiles.forEach(({r,c,n})=>{
+    const pg=document.createElement('div'); pg.className='pg';
+    const numTag=document.createElement('div'); numTag.className='pgtag pgnum';
+    numTag.textContent=n+'/'+total;
+    const cellTag=document.createElement('div'); cellTag.className='pgtag pgcell';
+    cellTag.textContent='R'+(r+1)+'/C'+(c+1);
+    const clone=master.cloneNode(true);
+    clone.removeAttribute('width'); clone.removeAttribute('height'); clone.removeAttribute('style');
+    clone.setAttribute('viewBox',(c*tileW)+' '+(r*tileH)+' '+tileW+' '+tileH);
+    pg.appendChild(clone); pg.appendChild(numTag); pg.appendChild(cellTag); doc.appendChild(pg);
+  });
+  document.body.appendChild(doc);
+  document.body.classList.add('printing');
+  const donePrint=()=>{document.body.classList.remove('printing');doc.remove();
+                  window.removeEventListener('afterprint',donePrint);};
+  window.addEventListener('afterprint',donePrint);
+  setTimeout(()=>{window.print(); setTimeout(donePrint,1500);},150);
 }
 const FNAME='Agent_Ecosystem_Business_Process_Diagram';
 const exBtn=document.getElementById('exportBtn'), exMenu=document.getElementById('exportMenu');
@@ -4250,7 +4340,8 @@ exMenu.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
  try{
   if(fmt==='svg'){downloadBlob(new Blob([exportSVGString()],{type:'image/svg+xml;charset=utf-8'}),FNAME+'.svg');done();}
   else if(fmt==='jpg'){rasterize(2).then(cv=>cv.toBlob(bl=>{downloadBlob(bl,FNAME+'.jpg');done();},'image/jpeg',0.95)).catch(()=>{alert('Export failed.');done();});}
-  else if(fmt==='pdf'){rasterize(2).then(cv=>cv.toBlob(bl=>bl.arrayBuffer().then(buf=>{downloadBlob(jpegToPdf(new Uint8Array(buf),cv.width,cv.height),FNAME+'.pdf');done();}),'image/jpeg',0.92)).catch(()=>{alert('Export failed.');done();});}
+  else if(fmt==='pdf-a3'){exportPDF('A3');done();}
+  else if(fmt==='pdf-a4'){exportPDF('A4');done();}
  }catch(err){alert('Export failed.');done();}
 }));
 

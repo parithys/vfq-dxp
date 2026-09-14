@@ -98,10 +98,28 @@ columns here instead of `bpmn-swimlane`'s row-zebra.
   forward/backward, hit count shown top-right.
 - **Export menu**: SVG (direct blob download), PNG (rendered via canvas at
   0.5× scale — a very wide canvas can exceed browser canvas-size limits at
-  1×, same reasoning and same mitigation the reference uses), PDF
-  (paginated via `window.print()`, slicing the SVG's viewBox into
-  print-page-sized horizontal strips — no external library, works
-  offline).
+  1×, same reasoning and same mitigation the reference uses), PDF (A3) and
+  PDF (A4) (both via `window.print()`, no external library, works
+  offline). Both PDF variants tile the SVG's viewBox into a 2-D grid of
+  print-page-sized cells — row and column, not just column strips — sized
+  so the diagram's smallest text (`SYS_TAG_FONT_PX` in `svg_gen.py`) never
+  prints below an ~8pt floor; A3 and A4 use the same floor, so A3 just
+  needs fewer pages to cover the same content rather than printing larger
+  text. Exports that would need more than 60 pages to hold that floor
+  prompt for confirmation first (that count already excludes blank tiles —
+  see below). Pages print edge-to-edge (`@page` margin is 0) with no
+  per-page header — only a small corner tag
+  (`R{row}/{rows} · C{col}/{cols} · {n}/{total}`) — so a full print run can
+  be trimmed and taped together into one continuous wall poster rather
+  than a stack of individually-framed sheets. Tiles with zero drawn ink
+  (every SVG shape's bbox tested against the tile rect via
+  `_computeContentRects`/`_tileHasContent`) are dropped from the printed
+  page list entirely, but `(row, col, n, total)` in a kept tile's corner
+  tag is always its position in the full, un-pruned grid — never
+  renumbered after skipping — so the tag still identifies the correct
+  physical cell for reassembly regardless of which neighbours were blank.
+  See `exportPDF()` in `engine_template.html` for the exact scale/tiling/
+  blank-skip math.
 
 ## What this engine deliberately does NOT have
 

@@ -940,12 +940,31 @@ Happy Flow / All Flows is still the one content filter.
   further node clicks and survives clicking the empty canvas — only
   turning View Details off (or the drawer's own × button, which turns the
   mode off too) closes it.
-- **Export SVG / JPG / PDF (offline, high-res, includes the legend and full
-  lane/header content even though the legend is hidden as a sticky overlay
-  live). Preserves whatever highlight/selection state is currently active**
-  — an export reflects exactly what the user is looking at, not a
-  neutral/cleared canvas. Export lives in the page header, aligned to the
-  top-right corner (see "Header & navigation" below). Responsive.
+- **Export SVG / JPG / PDF (A3) / PDF (A4)** (offline, high-res, includes the
+  legend and full lane/header content even though the legend is hidden as a
+  sticky overlay live). SVG/JPG preserve whatever highlight/selection state
+  is currently active — an export reflects exactly what the user is looking
+  at, not a neutral/cleared canvas. Export lives in the page header, aligned
+  to the top-right corner (see "Header & navigation" below). Responsive.
+  PDF (A3)/PDF (A4) are aligned with the process-flow engine's own export
+  standard (see its `DESIGN_SYSTEM.md`) rather than the single-page
+  rasterized-JPEG-in-PDF this replaced: both tile the diagram via the
+  browser's native print-to-PDF into a 2-D grid of print-page-sized cells,
+  sized so the diagram's smallest text (`CIRCLE_FONT_SIZE`=10.5px in
+  `engine_template.html`) never prints below an ~8pt floor. Pages print
+  edge-to-edge (`@page` margin is 0) with no per-page header — only a small
+  corner tag (`R{row}/{rows} · C{col}/{cols} · {n}/{total}`) — so a full
+  print run can be trimmed and taped together into one continuous wall
+  poster. Tiles with zero drawn ink (every SVG shape's bbox tested against
+  the tile rect, excluding the `.bg-deco`-tagged canvas/lane/phase
+  background fills and divider lines — see where each is built above) are
+  dropped from the page list entirely, but a kept tile's `(row, col, n,
+  total)` is always its position in the full, un-pruned grid — never
+  renumbered after skipping — so the tag still identifies the correct
+  physical cell regardless of which neighbours were blank. Exports needing
+  more than 60 pages to hold that floor prompt for confirmation first (that
+  count already excludes blank tiles). See `exportPDF()` in
+  `engine_template.html` for the exact scale/tiling/blank-skip math.
 
 ## Side drawer (comprehensive context panel — nothing in the model is left unsurfaced)
 Sections, in order, each shown only when the underlying data is actually

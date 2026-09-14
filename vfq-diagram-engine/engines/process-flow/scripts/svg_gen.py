@@ -2058,17 +2058,27 @@ def connectors_svg(flows, nodes_by_id, total_h, row_gap, max_card_h,
 
 
 # ----------------------------------------------------------------- phase bands
+# Returns (bg, labels) separately — not one combined string — because
+# engine_template.html's print-export blank-page detection (getBBox() over
+# every drawn shape) needs to tell decorative fill from real content: the
+# per-band tint rect and the header/divider lines cover the ENTIRE column
+# regardless of whether any node actually sits there, so if they weren't
+# excluded every tile in a tinted phase's x-range would read as "has
+# content" even when it's genuinely empty. The phase NAME text is real
+# content and stays out of that exclusion (see build()'s own
+# `pf-phasebg` group, which wraps only what this returns as `bg`).
 def phase_bands_svg(bands, total_h):
-    out = [f'<rect x="0" y="0" width="{bands[-1]["x1"] if bands else 0}" height="64" fill="#BFC4CB"/>']
+    bg = [f'<rect x="0" y="0" width="{bands[-1]["x1"] if bands else 0}" height="64" fill="#BFC4CB"/>']
+    labels = []
     for b in bands:
         if b["tint"]:
-            out.append(f'<rect x="{b["x0"]}" y="64" width="{b["x1"] - b["x0"]}" height="{total_h - 64}" '
+            bg.append(f'<rect x="{b["x0"]}" y="64" width="{b["x1"] - b["x0"]}" height="{total_h - 64}" '
                        f'fill="#F8F8FB"/>')
-        out.append(f'<line x1="{b["x0"]}" y1="64" x2="{b["x0"]}" y2="{total_h}" stroke="#E3E3EC"/>')
-        out.append(f'<line x1="{b["x0"]}" y1="0" x2="{b["x0"]}" y2="64" stroke="#D9DDE2" stroke-width="2"/>')
-        out.append(f'<text x="{b["x0"] + 18}" y="38" font-size="17" font-weight="700" fill="#15181D" '
+        bg.append(f'<line x1="{b["x0"]}" y1="64" x2="{b["x0"]}" y2="{total_h}" stroke="#E3E3EC"/>')
+        bg.append(f'<line x1="{b["x0"]}" y1="0" x2="{b["x0"]}" y2="64" stroke="#D9DDE2" stroke-width="2"/>')
+        labels.append(f'<text x="{b["x0"] + 18}" y="38" font-size="17" font-weight="700" fill="#15181D" '
                    f'letter-spacing="1.4">{esc(str(b["name"]).upper())}</text>')
-    return "".join(out)
+    return "".join(bg), "".join(labels)
 
 
 # ----------------------------------------------------------------- top-level entry point
@@ -2159,8 +2169,10 @@ def build(blob, pf_layout):
         total_h = max_jog_y + MIN_CLEARANCE
         pf_layout["totalH"] = total_h   # render.py reads this directly for __TOTAL_H__
 
-    parts = [DEFS, f'<rect width="{total_w}" height="{total_h}" fill="#ffffff"/>',
-             phase_bands_svg(pf_layout["phaseBands"], total_h)]
+    phase_bg, phase_labels = phase_bands_svg(pf_layout["phaseBands"], total_h)
+    parts = [DEFS,
+             f'<g class="pf-phasebg"><rect width="{total_w}" height="{total_h}" fill="#ffffff"/>{phase_bg}</g>',
+             phase_labels]
     parts.extend(spine_svgs)
     parts.append("".join(node_svgs))
     parts.append(connectors_body)
