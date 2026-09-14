@@ -15,6 +15,9 @@ export interface CustomerRecord {
   moiValidationStatus?: string;
   hrnAdvancePaymentRequired?: boolean;
   activePostpaidLines?: number;
+  /** DF-DEMO-001-007 completeness (CUS-001-CAM-08) */
+  age?: number;
+  gender?: string;
 }
 
 export interface AccountRecord {
@@ -87,6 +90,13 @@ export interface Customer360Data {
   identityDocuments: Record<string, unknown>[];
   activities: Record<string, unknown>[];
   notifications: Record<string, unknown>[];
+  contacts: Record<string, unknown>[];
+  addresses: Record<string, unknown>[];
+  penalties: Record<string, unknown>[];
+  serviceUsage: Record<string, unknown>[];
+  inPlatformBalances: Record<string, unknown>[];
+  callDetailRecords: Record<string, unknown>[];
+  communications: Record<string, unknown>[];
 }
 
 // Read-side aggregation — no unified "Customer 360" entity exists in the mock
@@ -113,6 +123,13 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     identityDocuments,
     activities,
     notifications,
+    contacts,
+    addresses,
+    penalties,
+    serviceUsage,
+    inPlatformBalances,
+    callDetailRecords,
+    communications,
   ] = await Promise.all([
     mockDataEngine.list<CustomerRecord>('customers'),
     mockDataEngine.list<AccountRecord>('accounts'),
@@ -130,6 +147,13 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     mockDataEngine.list<Record<string, unknown>>('identity-documents'),
     mockDataEngine.list<Record<string, unknown>>('customer-activities'),
     mockDataEngine.list<Record<string, unknown>>('osb-notifications'),
+    mockDataEngine.list<Record<string, unknown>>('customer-contacts'),
+    mockDataEngine.list<Record<string, unknown>>('addresses'),
+    mockDataEngine.list<Record<string, unknown>>('commitment-penalties'),
+    mockDataEngine.list<Record<string, unknown>>('service-usage'),
+    mockDataEngine.list<Record<string, unknown>>('in-platform-balances'),
+    mockDataEngine.list<Record<string, unknown>>('call-detail-records'),
+    mockDataEngine.list<Record<string, unknown>>('customer-communications'),
   ]);
 
   const customer = customers.find((c) => c.customerId === customerId);
@@ -159,6 +183,13 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     identityDocuments: identityDocuments.filter((d) => d.customerId === customerId),
     activities: activities.filter((a) => accountIds.has(a.accountId as string)),
     notifications: notifications.filter((n) => orderIds.has(n.orderId as string)),
+    contacts: contacts.filter((c) => c.customerId === customerId),
+    addresses: addresses.filter((a) => a.customerId === customerId),
+    penalties: penalties.filter((p) => p.customerId === customerId),
+    serviceUsage: serviceUsage.filter((u) => accountIds.has(u.accountId as string)),
+    inPlatformBalances: inPlatformBalances.filter((b) => accountIds.has(b.accountId as string)),
+    callDetailRecords: callDetailRecords.filter((c) => accountIds.has(c.accountId as string)),
+    communications: communications.filter((c) => c.customerId === customerId),
   };
 }
 
@@ -176,6 +207,24 @@ export interface BillingSummary {
   paidTotal: number;
   outstanding: number;
   formattedBillPeriod: string;
+  /** CUS-001-BIV-04: the most recent payment on file, isolated as its own
+   * atomic field rather than requiring the agent to scan the full Payments
+   * table for it. */
+  previousPayment: Record<string, unknown> | undefined;
+}
+
+// CUS-001-BIV-26: hard 12-month boundary on billing history — "now" is the
+// fixed session date (2026-09-14) rather than a live Date.now() call, since
+// this mock app has no real clock-driven billing cycle.
+const BILL_HISTORY_MONTHS = 12;
+const SESSION_TODAY = new Date(2026, 8, 14); // 2026-09-14
+
+export function withinBillHistoryWindow(billPeriod: unknown): boolean {
+  const match = /^(\d{4})-(\d{2})$/.exec(String(billPeriod ?? ''));
+  if (!match) return true; // unparseable period — don't silently hide it
+  const period = new Date(Number(match[1]), Number(match[2]) - 1, 1);
+  const cutoff = new Date(SESSION_TODAY.getFullYear(), SESSION_TODAY.getMonth() - BILL_HISTORY_MONTHS, 1);
+  return period >= cutoff;
 }
 
 // Shared by the Billing tab (full detail) and the Customer 360 header's KPI
@@ -183,17 +232,22 @@ export interface BillingSummary {
 // customer currently owe" rather than two divergent calculations.
 export function computeBillingSummary(data: Customer360Data): BillingSummary {
   const creditLimit = data.creditLimits[0];
-  const latestBill = [...data.bills].sort((a, b) =>
+  const billsInWindow = data.bills.filter((b) => withinBillHistoryWindow(b.billPeriod));
+  const latestBill = [...billsInWindow].sort((a, b) =>
     String(a.billPeriod ?? '').localeCompare(String(b.billPeriod ?? '')),
   ).at(-1);
+  const previousPayment = [...data.payments].sort((a, b) =>
+    String(a.capturedAt ?? '').localeCompare(String(b.capturedAt ?? '')),
+  ).at(-1);
 
-  const billedTotal = data.bills
+  const billedTotal = billsInWindow
     .filter((b) => b.status === 'billed')
     .reduce((sum, b) => sum + Number(b.totalAmount ?? 0), 0);
   const paidTotal = data.payments.reduce((sum, p) => sum + Number(p.amountQar ?? 0), 0);
   const outstanding = Math.max(0, billedTotal - paidTotal);
 
   return {
+    previousPayment,
     creditLimit,
     latestBill,
     billedTotal,

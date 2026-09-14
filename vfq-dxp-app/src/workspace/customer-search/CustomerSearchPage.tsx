@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { searchCustomers, toActiveCustomerSummary, type CustomerSearchResult } from '../../engines/customer360Engine';
 import { useActiveCustomerStore } from '../../stores/activeCustomerStore';
+import { useCustomerVerificationStore } from '../../stores/customerVerificationStore';
+import { VerificationGate } from '../../components/patterns/VerificationGate';
 import { Badge } from '../../components/primitives/Badge';
 import { Icon } from '../../components/primitives/Icon';
 
@@ -25,9 +27,11 @@ const MATCH_LABEL: Record<string, string> = {
 export function CustomerSearchPage() {
   const navigate = useNavigate();
   const setActiveCustomer = useActiveCustomerStore((s) => s.setActiveCustomer);
+  const isVerified = useCustomerVerificationStore((s) => s.isVerified);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<CustomerSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
+  const [pendingVerify, setPendingVerify] = useState<CustomerSearchResult | null>(null);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -44,7 +48,16 @@ export function CustomerSearchPage() {
     return () => clearTimeout(handle);
   }, [query]);
 
+  // CUS-001-CAM-04-A: only a *verified* customer may be navigated into
+  // Customer 360 — first selection prompts BR-01 verification (via the same
+  // gate edit actions use); once verified this session, later selections of
+  // the same customer skip straight through (Annex_02: no transition out of
+  // Verified).
   const openCustomer = (result: CustomerSearchResult) => {
+    if (!isVerified(result.customer.customerId)) {
+      setPendingVerify(result);
+      return;
+    }
     setActiveCustomer(toActiveCustomerSummary(result.customer));
     navigate(`/customer/${result.customer.customerId}`);
   };
@@ -118,6 +131,23 @@ export function CustomerSearchPage() {
               </button>
             ))}
         </div>
+      )}
+
+      {pendingVerify && (
+        <VerificationGate
+          customerId={pendingVerify.customer.customerId}
+          customerName={pendingVerify.customer.name}
+          open
+          onClose={() => setPendingVerify(null)}
+          onVerified={() => {
+            const result = pendingVerify;
+            setPendingVerify(null);
+            if (result) {
+              setActiveCustomer(toActiveCustomerSummary(result.customer));
+              navigate(`/customer/${result.customer.customerId}`);
+            }
+          }}
+        />
       )}
     </div>
   );

@@ -29,6 +29,8 @@ export function ProfileSection({ customer, accounts }: { customer: CustomerRecor
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Field label={customer.idType} value={customer.qid} />
           <Field label="Date of birth" value={customer.dob} />
+          <Field label="Age" value={customer.age} />
+          <Field label="Gender" value={customer.gender} />
           <Field label="Nationality" value={customer.nationality} />
           <Field label="Segment" value={customer.segment} />
           <Field label="Preferred language" value={customer.preferredLanguage} />

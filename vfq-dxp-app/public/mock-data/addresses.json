@@ -14,7 +14,11 @@
     "effectiveFrom": "2024-03-01",
     "effectiveTo": null,
     "primaryStatus": "Primary",
-    "activeFlag": true
+    "activeFlag": true,
+    "addressLine1": "Building 34, Street 12, Zone 55",
+    "addressLine2": "Flat 2",
+    "poBox": "0000",
+    "kahramaaId": "KID-1101"
   },
   {
     "id": "ADDR-1102",
@@ -31,7 +35,11 @@
     "effectiveFrom": "2022-01-15",
     "effectiveTo": "2024-02-28",
     "primaryStatus": "Discontinued",
-    "activeFlag": false
+    "activeFlag": false,
+    "addressLine1": "Building 9, Street 820, Zone 39",
+    "addressLine2": "Villa 9",
+    "poBox": "0000",
+    "kahramaaId": "KID-1102"
   },
   {
     "id": "ADDR-1103",
@@ -47,6 +55,10 @@
     "effectiveFrom": "2026-06-01",
     "effectiveTo": null,
     "primaryStatus": "Primary",
-    "activeFlag": true
+    "activeFlag": true,
+    "addressLine1": "Building 7, Street 5, Zone 12",
+    "addressLine2": "Unit 1204",
+    "poBox": "0000",
+    "kahramaaId": "KID-1103"
   }
 ]

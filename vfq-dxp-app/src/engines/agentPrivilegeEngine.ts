@@ -49,3 +49,73 @@ export function isBackofficeOrPrivilegedPersona(personaId: string | undefined): 
   if (!personaId) return false;
   return BACKOFFICE_OR_PRIVILEGED_PERSONA_IDS.has(personaId);
 }
+
+/** Customer 360 BRSD v3.1 BR-02: "Customer, contact, address and
+ * billing-profile changes may be performed only by agents authorised under
+ * the VFQ-approved role and approval matrix." No confirmed matrix exists
+ * (same OI-AGN-06/11/13 gap as above) — reuses the one persona distinction
+ * the source data actually supports: a genuine internal Vodafone agent may
+ * edit; the non-agent categories (enterprise customer-side contacts, the
+ * donor operator, the system account, the channel partner) may not, since
+ * none of them represent a human VFQ staff member the approval matrix could
+ * plausibly apply to. */
+export function canEditCustomerRecords(personaId: string | undefined): boolean {
+  return isInternalAgentPersona(personaId);
+}
+
+// Session reference number visibility (Qnomy Ticket Number / Ticket
+// Reference Number in the page header). No BRSD clause enumerates these
+// exact persona sets either — grounded the same way as the gates above, in personas.json's
+// own name/type text, not an invented mapping:
+//   - "Retail Agent": personas explicitly named/typed Retail or Frontline.
+//     Excludes PERSONA-033 ("Retail Agent (Retail Operations Stakeholder -
+//     Giri)") — its type is "internal business stakeholder", i.e. a named
+//     workshop participant reference, not a functional day-to-day agent
+//     role, and PERSONA-053 (a broad multi-role family spanning retail,
+//     telesales, complaints AND back-office at once) — too broad to safely
+//     call "Retail Agent" specifically.
+//   - "Back-Office Agent": every persona explicitly named/typed Back Office.
+//   - "their managers": personas.json has no retail-specific vs
+//     back-office-specific manager persona — only PERSONA-024 (Supervisor)
+//     is evidenced as generic agent-oversight ("would need visibility
+//     across all agents' tickets"), so it's treated as manager for BOTH
+//     groups rather than inventing a split that isn't evidenced.
+//     PERSONA-041 ("Team Manager / Approver... Order Approval, Test
+//     Manager") was deliberately excluded — its evidenced responsibilities
+//     are order-approval-workflow specific, not agent line-management, so
+//     including it would over-grant beyond what's actually supported.
+// Field Technicians (PERSONA-025 and the field-adjacent PERSONA-045/055) and
+// IT Operations (PERSONA-008) are excluded by construction: this is an
+// allowlist, so any persona not named below — including those — sees
+// neither reference number.
+const RETAIL_AGENT_PERSONA_IDS = new Set([
+  'PERSONA-001', // Retail/Sales Agent (Frontline/Cross-Sell/Front-Office)
+  'PERSONA-043', // Retail Agent (Lead Owner, reassignment target)
+]);
+const BACK_OFFICE_AGENT_PERSONA_IDS = new Set([
+  'PERSONA-005', // Back Office Fulfilment Agent (Siebel Responsibility)
+  'PERSONA-044', // Back Office / Admin (broad org-wide access)
+  'PERSONA-046', // Dispatcher/Back-Office WFM User
+  'PERSONA-060', // Back Office (generic activity channel)
+]);
+const AGENT_MANAGER_PERSONA_IDS = new Set([
+  'PERSONA-024', // Supervisor — the one evidenced generic agent-oversight role
+]);
+
+/** Qnomy Ticket Number: visible exclusively to Retail Agents and their managers. */
+export function canSeeQnomyTicketNumber(personaId: string | undefined): boolean {
+  if (!personaId) return false;
+  return RETAIL_AGENT_PERSONA_IDS.has(personaId) || AGENT_MANAGER_PERSONA_IDS.has(personaId);
+}
+
+/** CTI Reference Number — the customer's active interaction reference,
+ * available throughout the servicing journey (not a post-completion
+ * tracking/order number, which is a separate concept that deliberately does
+ * NOT belong in the header — see SessionReferenceNumbers.tsx). Covers
+ * service requests, enquiries, and issue-related cases alike, sourced from
+ * the customer's active trouble ticket. Visible exclusively to Back-Office
+ * Agents and their managers. */
+export function canSeeCtiReferenceNumber(personaId: string | undefined): boolean {
+  if (!personaId) return false;
+  return BACK_OFFICE_AGENT_PERSONA_IDS.has(personaId) || AGENT_MANAGER_PERSONA_IDS.has(personaId);
+}

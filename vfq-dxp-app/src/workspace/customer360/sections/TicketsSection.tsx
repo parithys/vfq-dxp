@@ -14,14 +14,26 @@ import type { Customer360Data } from '../../../engines/customer360Engine';
 // customer. Escalation/Complaints/Service Requests are ticket *categories*
 // selected inside that same modal, not separate screens, so they aren't
 // listed as distinct actions here.
-export function TicketsSection({ data }: { data: Customer360Data }) {
+export function TicketsSection({
+  data,
+  onTicketCreated,
+}: {
+  data: Customer360Data;
+  /** Without this, a ticket created here would persist correctly but stay
+   * invisible in this same table (and the header's Open Tickets count) until
+   * the agent navigated away and back — data.tickets is Customer360Layout's
+   * one-time fetch snapshot, not entityStore-reactive. */
+  onTicketCreated: (ticket: Record<string, unknown>) => void;
+}) {
   const navigate = useNavigate();
   const createRecord = useEntityStore((s) => s.createRecord);
   const [modalOpen, setModalOpen] = useState(false);
 
   const createTicket = async (value: NewTicketValue) => {
     const ticketId = `TT-${Date.now().toString().slice(-6)}`;
-    await createRecord('trouble-tickets', buildNewTicketRecord({ ticketId, ...value, createdBy: 'AGENT-VINODHINIR' }));
+    const record = buildNewTicketRecord({ ticketId, ...value, createdBy: 'AGENT-VINODHINIR' });
+    await createRecord('trouble-tickets', record);
+    onTicketCreated(record);
     setModalOpen(false);
   };
 

@@ -5,6 +5,7 @@ import { ScreenRouteResolver } from './modules/ScreenRouteResolver';
 import { NotFound } from './modules/NotFound';
 import { CustomerSearchPage } from './workspace/customer-search/CustomerSearchPage';
 import { Customer360Layout } from './workspace/customer360/Customer360Layout';
+import { BillingAccountPage } from './workspace/customer360/BillingAccountPage';
 import { SalesWorkspace } from './workspace/sales/SalesWorkspace';
 import { SupportWorkspace } from './workspace/support/SupportWorkspace';
 import { OrdersWorkspace } from './workspace/orders/OrdersWorkspace';
@@ -43,6 +44,7 @@ export function AppRouter() {
           them) — every existing screen stays reachable at its current URL. */}
       <Route path="/customer-search" element={<CustomerSearchPage />} />
       <Route path="/customer/:customerId" element={<Customer360Layout />} />
+      <Route path="/billing-account/:billingProfileId" element={<BillingAccountPage />} />
       <Route path="/sales" element={<SalesWorkspace />} />
       <Route path="/support" element={<SupportWorkspace />} />
       <Route path="/orders" element={<OrdersWorkspace />} />

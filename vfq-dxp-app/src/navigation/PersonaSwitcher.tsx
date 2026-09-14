@@ -12,6 +12,7 @@ import { Tooltip } from '../components/primitives/Tooltip';
 import { TooltipGroup } from '../components/primitives/TooltipContext';
 import { useSidebarStore } from '../stores/sidebarStore';
 import { GlobalSearch } from './GlobalSearch';
+import { SessionReferenceNumbers } from './SessionReferenceNumbers';
 
 const ICONS = {
   moon: 'M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z',
@@ -72,18 +73,23 @@ export function PersonaSwitcher() {
   };
 
   return (
-    <div className="flex items-center gap-3 h-16 px-4 border-b border-border-soft bg-[color-mix(in_oklab,var(--bg)_85%,transparent)] backdrop-blur">
+    <div className="grid grid-cols-[auto_minmax(0,28rem)_auto_minmax(0,1fr)] items-center gap-3 h-16 px-4 border-b border-border-soft bg-[color-mix(in_oklab,var(--bg)_85%,transparent)] backdrop-blur">
       <button
         onClick={toggleMobileOpen}
         aria-label="Open navigation"
-        className="md:hidden w-9 h-9 -ml-1 rounded-[var(--radius-pill)] flex items-center justify-center text-fg-2 hover:bg-surface shrink-0"
+        className="md:hidden col-start-1 w-9 h-9 -ml-1 rounded-[var(--radius-pill)] flex items-center justify-center text-fg-2 hover:bg-surface shrink-0"
       >
         <Icon path={ICONS.menu} className="w-5 h-5" />
       </button>
-      <GlobalSearch />
+      <div className="col-start-2 w-full">
+        <GlobalSearch />
+      </div>
+      <div className="col-start-3">
+        <SessionReferenceNumbers />
+      </div>
 
       <TooltipGroup>
-      <div ref={containerRef} className="ml-auto flex items-center gap-2">
+      <div ref={containerRef} className="col-start-4 justify-self-end ml-auto flex items-center gap-2">
         <Tooltip content={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} placement="bottom">
           <button
             onClick={toggleTheme}

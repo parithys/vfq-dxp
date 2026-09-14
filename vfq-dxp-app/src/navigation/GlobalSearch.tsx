@@ -138,7 +138,7 @@ export function GlobalSearch() {
   };
 
   return (
-    <div ref={containerRef} className="relative flex-1 max-w-md min-w-0">
+    <div ref={containerRef} className="relative w-full max-w-md min-w-0">
       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
         <Icon path={SEARCH_ICON} className="w-4 h-4" />
       </span>

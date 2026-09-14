@@ -4,21 +4,33 @@
     "customerId": "CUST-1001",
     "accountType": "Consumer Mobile Postpaid",
     "status": "Active",
-    "billingProfileId": "BILL-7001"
+    "billingProfileId": "BILL-7001",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null,
+    "_barringNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   },
   {
     "accountId": "ACC-5002",
     "customerId": "CUST-1002",
     "accountType": "Consumer Mobile Postpaid (HRN)",
     "status": "Active",
-    "billingProfileId": "BILL-7002"
+    "billingProfileId": "BILL-7002",
+    "barringStatus": "Partially Barred",
+    "barringType": "Outgoing Call Barring",
+    "barringReason": "Overdue Payment",
+    "_barringNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   },
   {
     "accountId": "ACC-5003",
     "customerId": "CUST-1003",
     "accountType": "Consumer Fixed Line (GigaHome)",
     "status": "Active",
-    "billingProfileId": "BILL-7003"
+    "billingProfileId": "BILL-7003",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null,
+    "_barringNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   },
   {
     "accountId": "ACC-5004",
@@ -28,7 +40,11 @@
     "billingProfileId": "BILL-7004",
     "subAccountIds": [
       "ACC-5005"
-    ]
+    ],
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null,
+    "_barringNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   },
   {
     "accountId": "ACC-5005",
@@ -36,6 +52,10 @@
     "accountType": "Enterprise (EBU) Sub-Account",
     "status": "Active",
     "parentAccountId": "ACC-5004",
-    "billingProfileId": "BILL-7004"
+    "billingProfileId": "BILL-7004",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null,
+    "_barringNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   }
 ]

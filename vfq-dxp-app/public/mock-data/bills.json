@@ -11,7 +11,9 @@
     "vat": 10.25,
     "totalAmount": 215.25,
     "status": "billed",
-    "isTaxInvoice": true
+    "isTaxInvoice": true,
+    "currentChargesQAR": 205,
+    "_currentChargesNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   },
   {
     "billId": "BILL-9002",
@@ -26,7 +28,9 @@
     "totalAmount": 273,
     "status": "unbilled",
     "isTaxInvoice": false,
-    "note": "Reflects current unbilled usage plus outstanding balance; item statuses unchanged."
+    "note": "Reflects current unbilled usage plus outstanding balance; item statuses unchanged.",
+    "currentChargesQAR": 260,
+    "_currentChargesNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   },
   {
     "billId": "BILL-9003",
@@ -43,7 +47,9 @@
     "isTaxInvoice": false,
     "triggeredFrom": "guided journey - disconnection",
     "disconnectionPenalty": 500,
-    "note": "Explicitly not a tax invoice; shows disconnection penalty impact without affecting upcoming bill."
+    "note": "Explicitly not a tax invoice; shows disconnection penalty impact without affecting upcoming bill.",
+    "currentChargesQAR": 1070,
+    "_currentChargesNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   },
   {
     "billId": "BILL-9004",
@@ -60,6 +66,8 @@
     "isTaxInvoice": false,
     "triggeredFrom": "on-demand button",
     "disconnectionPenalty": 0,
-    "note": "On-demand simulation with no penalty applicable; regular upgrade scenario."
+    "note": "On-demand simulation with no penalty applicable; regular upgrade scenario.",
+    "currentChargesQAR": 315,
+    "_currentChargesNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   }
 ]
