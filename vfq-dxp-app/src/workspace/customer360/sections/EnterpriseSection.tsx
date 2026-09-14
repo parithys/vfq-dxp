@@ -9,12 +9,12 @@ const GROUPS: ProductActionGroup[] = [
   {
     title: 'Enterprise Services',
     actions: [
-      { label: 'Mobile Enterprise' },
-      { label: 'IoT' },
-      { label: 'Connectivity' },
-      { label: 'Business Fibre' },
-      { label: 'Managed Services' },
-      { label: 'Account Setup', screenId: 'SCR-007' },
+      { label: 'Mobile Enterprise', description: 'Manage bulk mobile lines and plans for a business account.' },
+      { label: 'IoT', description: "Provision SIM-connected IoT devices under the customer's enterprise account." },
+      { label: 'Connectivity', description: 'Set up dedicated business internet or leased-line connectivity.' },
+      { label: 'Business Fibre', description: 'Activate fibre broadband for a business premises, separate from consumer fibre plans.' },
+      { label: 'Managed Services', description: 'Configure managed IT/network services bundled under the enterprise account.' },
+      { label: 'Account Setup', description: 'Create the enterprise account structure — parent/sub-accounts, billing hierarchy — before any product lines are added.', screenId: 'SCR-007' },
     ],
   },
 ];

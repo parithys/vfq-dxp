@@ -141,7 +141,7 @@ export function DeviceInstallmentStep({
             <button
               onClick={() => selectDevice(null)}
               className={`text-left rounded-[var(--radius-card)] border p-4 ${
-                !value ? 'border-accent bg-surface-warm shadow-[0_0_0_3px_rgba(230,0,0,0.12)]' : 'border-border-soft hover:border-accent'
+                !value ? 'border-accent bg-surface-warm shadow-[var(--shadow-selected-ring)]' : 'border-border-soft hover:border-accent'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -160,7 +160,7 @@ export function DeviceInstallmentStep({
                   key={d.deviceName}
                   onClick={() => selectDevice(d)}
                   className={`text-left rounded-[var(--radius-card)] border p-4 ${
-                    selected ? 'border-accent bg-surface-warm shadow-[0_0_0_3px_rgba(230,0,0,0.12)]' : 'border-border-soft hover:border-accent'
+                    selected ? 'border-accent bg-surface-warm shadow-[var(--shadow-selected-ring)]' : 'border-border-soft hover:border-accent'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -287,7 +287,7 @@ export function DeviceInstallmentStep({
                       onClick={() => onChange({ ...value, handoverMethod: h.method })}
                       className={`text-left rounded-[var(--radius-card)] border p-3 flex items-center justify-between gap-2 ${
                         value.handoverMethod === h.method
-                          ? 'border-accent bg-surface-warm shadow-[0_0_0_3px_rgba(230,0,0,0.12)]'
+                          ? 'border-accent bg-surface-warm shadow-[var(--shadow-selected-ring)]'
                           : 'border-border-soft hover:border-accent'
                       }`}
                     >

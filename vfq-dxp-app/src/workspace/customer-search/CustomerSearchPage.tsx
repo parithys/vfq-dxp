@@ -60,6 +60,7 @@ export function CustomerSearchPage() {
         </span>
         <input
           autoFocus
+          aria-label="Customer search query"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="e.g. 28512345678, +97455512001, CUST-1003, fatima.alkuwari@example.qa…"

@@ -23,6 +23,10 @@
   --fg: #26262b;
   --fg-2: #4a4d4e;
   --focus-ring: 0 0 0 4px rgba(230,0,0,.22);
+  /* Selected-card ring — same accent color as --focus-ring, softer opacity/
+     tighter spread for a persistent "this option is selected" state rather
+     than a transient keyboard-focus outline. */
+  --shadow-selected-ring: 0 0 0 3px rgba(230,0,0,.12);
   /* Figtree is loaded via Google Fonts (index.html) — unlike the previous
      Space Grotesk/DM Sans targets, this one is real, not aspirational. Same
      system-font fallback chain stays in place for the pre-load flash and for

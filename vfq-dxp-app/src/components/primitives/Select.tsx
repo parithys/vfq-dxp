@@ -20,6 +20,9 @@ interface SelectProps {
   id?: string;
   /** Dark-panel styling for the login page (Role field) — same mechanism, different trigger/panel skin. */
   dark?: boolean;
+  /** For call sites with no visible `label` (e.g. a dense table-cell filter) —
+   * gives the trigger an accessible name without rendering visible text. */
+  'aria-label'?: string;
 }
 
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
@@ -33,7 +36,20 @@ const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 // used. `onChange` synthesizes a minimal `{ target: { value } }` event —
 // every call site in the app only ever reads `e.target.value`, so this is a
 // drop-in replacement with no caller changes required.
-export function Select({ label, error, helperText, options, placeholder, value, onChange, disabled, className = '', id, dark = false }: SelectProps) {
+export function Select({
+  label,
+  error,
+  helperText,
+  options,
+  placeholder,
+  value,
+  onChange,
+  disabled,
+  className = '',
+  id,
+  dark = false,
+  'aria-label': ariaLabel,
+}: SelectProps) {
   const selectId = id ?? `select-${label?.replace(/\s+/g, '-').toLowerCase()}`;
   const helperId = `${selectId}-helper`;
   const describedBy = helperText && !error ? helperId : undefined;
@@ -111,6 +127,7 @@ export function Select({ label, error, helperText, options, placeholder, value, 
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-describedby={describedBy}
+          aria-label={ariaLabel}
           onClick={() => !disabled && setOpen((v) => !v)}
           onKeyDown={onTriggerKeyDown}
           className={`w-full flex items-center justify-between gap-2 rounded-[var(--radius-button)] border pl-3 pr-3 py-2 text-[length:var(--fs-body)] text-left

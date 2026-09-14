@@ -11,20 +11,20 @@ const GROUPS: ProductActionGroup[] = [
   {
     title: 'Service Management',
     actions: [
-      { label: 'Upgrade' },
-      { label: 'Relocation' },
-      { label: 'Suspend' },
-      { label: 'Resume' },
-      { label: 'Terminate' },
+      { label: 'Upgrade', description: 'Move the customer to a higher fibre or broadband speed tier.' },
+      { label: 'Relocation', description: 'Move an existing fibre or home service to a new installation address.' },
+      { label: 'Suspend', description: 'Temporarily pause the home service without cancelling the subscription.' },
+      { label: 'Resume', description: 'Reactivate a suspended fibre or home service.' },
+      { label: 'Terminate', description: 'Permanently close the fibre or home service and stop billing.' },
     ],
   },
   {
     title: 'New Activation',
     actions: [
-      { label: 'Fibre Activation', screenId: 'SCR-043' },
-      { label: 'FWA', screenId: 'SCR-077' },
-      { label: '5G Home', screenId: 'SCR-077' },
-      { label: 'IPTV' },
+      { label: 'Fibre Activation', description: "Install and activate a new fibre broadband connection at the customer's address.", screenId: 'SCR-043' },
+      { label: 'FWA', description: 'Activate Fixed Wireless Access — home broadband delivered over the mobile network, no fibre required.', screenId: 'SCR-077' },
+      { label: '5G Home', description: 'Activate a 5G-based home broadband plan for addresses within 5G coverage.', screenId: 'SCR-077' },
+      { label: 'IPTV', description: "Add IPTV channel packages on top of the customer's home broadband service." },
     ],
   },
 ];

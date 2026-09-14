@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useEntityStore } from '../../stores/entityStore';
+import { ErrorBanner } from '../../components/primitives/ErrorBanner';
 
 interface BulkNote {
   noteId: string;
@@ -17,6 +18,8 @@ interface BulkNote {
 export function BulkNotesSection({ accountIds }: { accountIds: string[] }) {
   const notes = (useEntityStore((s) => s.records['bulk-notes']) ?? []) as unknown as BulkNote[];
   const loadKind = useEntityStore((s) => s.loadKind);
+  const loading = useEntityStore((s) => s.loading['bulk-notes']);
+  const loadError = useEntityStore((s) => s.errors['bulk-notes']);
 
   useEffect(() => {
     loadKind('bulk-notes');
@@ -26,21 +29,27 @@ export function BulkNotesSection({ accountIds }: { accountIds: string[] }) {
     .filter((n) => n.accountIds.some((id) => accountIds.includes(id)))
     .sort((a, b) => new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime());
 
-  if (applicable.length === 0) {
-    return <p className="text-muted text-[length:var(--fs-body)]">No bulk notes apply to this customer's accounts.</p>;
-  }
-
   return (
-    <div className="space-y-2">
-      {applicable.map((note) => (
-        <div key={note.noteId} className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4">
-          <p className="text-fg text-[length:var(--fs-body)]">{note.content}</p>
-          <p className="text-muted text-[length:var(--fs-caption)] mt-1">
-            Posted {new Date(note.postedAt).toLocaleString()} · applies to {note.accountIds.length} account
-            {note.accountIds.length === 1 ? '' : 's'}
-          </p>
+    <div>
+      <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg mb-2">Bulk Notes</h3>
+      <ErrorBanner message={loadError} />
+      {loading && <p className="text-muted text-[length:var(--fs-body)]">Loading…</p>}
+      {!loading && applicable.length === 0 && (
+        <p className="text-muted text-[length:var(--fs-body)]">No bulk notes apply to this customer's accounts.</p>
+      )}
+      {!loading && applicable.length > 0 && (
+        <div className="space-y-2">
+          {applicable.map((note) => (
+            <div key={note.noteId} className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4">
+              <p className="text-fg font-medium text-[length:var(--fs-body)]">{note.content}</p>
+              <p className="text-muted text-[length:var(--fs-caption-upper)] uppercase tracking-wide mt-1.5">
+                Posted {new Date(note.postedAt).toLocaleString()} · applies to {note.accountIds.length} account
+                {note.accountIds.length === 1 ? '' : 's'}
+              </p>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 }

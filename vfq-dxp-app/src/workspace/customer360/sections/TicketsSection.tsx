@@ -27,7 +27,8 @@ export function TicketsSection({ data }: { data: Customer360Data }) {
 
   return (
     <div>
-      <div className="flex justify-end mb-3">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg">Tickets</h3>
         <Button variant="primary-rect" compact onClick={() => setModalOpen(true)}>
           Create Ticket
         </Button>

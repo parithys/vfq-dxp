@@ -8,6 +8,10 @@ import type { Customer360Data } from '../../../engines/customer360Engine';
 // their own. Grouped in one file rather than seven near-identical
 // boilerplate files; each is still a real, independently reachable tab.
 
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg mb-2">{children}</h3>;
+}
+
 export function InteractionsSection({ data }: { data: Customer360Data }) {
   return (
     <DataTable
@@ -33,7 +37,7 @@ export function DocumentsSection({ data }: { data: Customer360Data }) {
   return (
     <div className="space-y-6">
       <section>
-        <h3 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-2">Signed forms (CAF)</h3>
+        <SectionTitle>Signed forms (CAF)</SectionTitle>
         <DataTable
           rows={data.cafForms}
           rowKey={(r) => String(r.cafId)}
@@ -47,7 +51,7 @@ export function DocumentsSection({ data }: { data: Customer360Data }) {
         />
       </section>
       <section>
-        <h3 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-2">Identity documents</h3>
+        <SectionTitle>Identity documents</SectionTitle>
         <DataTable
           rows={data.identityDocuments}
           rowKey={(r) => String(r.identityDocumentId)}
@@ -87,21 +91,24 @@ export function NotificationsSection({ data }: { data: Customer360Data }) {
 export function ConsentSection({ data }: { data: Customer360Data }) {
   const profile = data.billingProfiles[0];
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
-      <div>
-        <div className="text-[length:var(--fs-caption)] text-muted">Preferred language</div>
-        <div className="text-fg text-[length:var(--fs-body)]">{data.customer.preferredLanguage ?? '—'}</div>
-      </div>
-      <div>
-        <div className="text-[length:var(--fs-caption)] text-muted">Bill medium</div>
-        <div className="text-fg text-[length:var(--fs-body)]">{String(profile?.billMedium ?? '—')}</div>
-      </div>
-      <div>
-        <div className="text-[length:var(--fs-caption)] text-muted">AutoPay</div>
-        <div className="text-fg text-[length:var(--fs-body)]">
-          <Badge variant={profile?.autoPayStatus === 'Enrolled' ? 'success' : 'filled-neutral'}>
-            {String(profile?.autoPayStatus ?? 'Not on file')}
-          </Badge>
+    <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+      <SectionTitle>Consent &amp; Preferences</SectionTitle>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <div className="text-[length:var(--fs-caption)] text-muted">Preferred language</div>
+          <div className="text-fg text-[length:var(--fs-body)]">{data.customer.preferredLanguage ?? '—'}</div>
+        </div>
+        <div>
+          <div className="text-[length:var(--fs-caption)] text-muted">Bill medium</div>
+          <div className="text-fg text-[length:var(--fs-body)]">{String(profile?.billMedium ?? '—')}</div>
+        </div>
+        <div>
+          <div className="text-[length:var(--fs-caption)] text-muted">AutoPay</div>
+          <div className="text-fg text-[length:var(--fs-body)]">
+            <Badge variant={profile?.autoPayStatus === 'Enrolled' ? 'success' : 'filled-neutral'}>
+              {String(profile?.autoPayStatus ?? 'Not on file')}
+            </Badge>
+          </div>
         </div>
       </div>
     </div>
@@ -110,21 +117,24 @@ export function ConsentSection({ data }: { data: Customer360Data }) {
 
 export function ProductsAssetsSection({ data }: { data: Customer360Data }) {
   return (
-    <DataTable
-      rows={data.installedAssets}
-      rowKey={(r) => String(r.installedAssetId)}
-      emptyMessage="No installed products or assets on file."
-      columns={[
-        { key: 'productServiceName', header: 'Product / service' },
-        { key: 'serviceId', header: 'Service ID' },
-        { key: 'effectiveFrom', header: 'Since' },
-        {
-          key: 'status',
-          header: 'Status',
-          render: (r) => <Badge variant={r.status === 'Active' ? 'success' : 'filled-neutral'}>{String(r.status)}</Badge>,
-        },
-      ]}
-    />
+    <div>
+      <SectionTitle>Products &amp; Assets</SectionTitle>
+      <DataTable
+        rows={data.installedAssets}
+        rowKey={(r) => String(r.installedAssetId)}
+        emptyMessage="No installed products or assets on file."
+        columns={[
+          { key: 'productServiceName', header: 'Product / service' },
+          { key: 'serviceId', header: 'Service ID' },
+          { key: 'effectiveFrom', header: 'Since' },
+          {
+            key: 'status',
+            header: 'Status',
+            render: (r) => <Badge variant={r.status === 'Active' ? 'success' : 'filled-neutral'}>{String(r.status)}</Badge>,
+          },
+        ]}
+      />
+    </div>
   );
 }
 
@@ -134,17 +144,20 @@ export function RelationshipHierarchySection({ data }: { data: Customer360Data }
     return <p className="text-muted text-[length:var(--fs-body)]">This customer has no parent/sub-account relationships on file.</p>;
   }
   return (
-    <div className="space-y-2">
-      {data.accounts.map((account) => (
-        <div key={account.accountId} className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4">
-          <div className="font-medium text-fg">{account.accountType}</div>
-          <div className="text-fg-2 text-[length:var(--fs-caption)] mt-0.5">
-            {account.accountId}
-            {account.parentAccountId && ` · reports to ${account.parentAccountId}`}
-            {account.subAccountIds && account.subAccountIds.length > 0 && ` · sub-accounts: ${account.subAccountIds.join(', ')}`}
+    <div>
+      <SectionTitle>Relationship Hierarchy</SectionTitle>
+      <div className="space-y-2">
+        {data.accounts.map((account) => (
+          <div key={account.accountId} className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4">
+            <div className="font-medium text-fg">{account.accountType}</div>
+            <div className="text-fg-2 text-[length:var(--fs-caption)] mt-0.5">
+              {account.accountId}
+              {account.parentAccountId && ` · reports to ${account.parentAccountId}`}
+              {account.subAccountIds && account.subAccountIds.length > 0 && ` · sub-accounts: ${account.subAccountIds.join(', ')}`}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
@@ -163,13 +176,16 @@ export function RecentActivitiesSection({ data }: { data: Customer360Data }) {
     return <p className="text-muted text-[length:var(--fs-body)]">No dated activity on file for this customer yet.</p>;
   }
   return (
-    <ul className="space-y-2">
-      {entries.map((entry, i) => (
-        <li key={i} className="flex gap-3 rounded-[var(--radius-card)] border border-border-soft bg-bg p-3">
-          <span className="text-muted text-[length:var(--fs-caption)] shrink-0 w-40">{entry.at}</span>
-          <span className="text-fg text-[length:var(--fs-body)]">{entry.label}</span>
-        </li>
-      ))}
-    </ul>
+    <div>
+      <SectionTitle>Recent Activities</SectionTitle>
+      <ul className="space-y-2">
+        {entries.map((entry, i) => (
+          <li key={i} className="flex gap-3 rounded-[var(--radius-card)] border border-border-soft bg-bg p-3">
+            <span className="text-muted text-[length:var(--fs-caption)] shrink-0 w-40">{entry.at}</span>
+            <span className="text-fg text-[length:var(--fs-body)]">{entry.label}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

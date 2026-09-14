@@ -81,7 +81,7 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
           </button>
         ))}
       </div>
-      <Input placeholder="Search 8-digit number" value={search} onChange={(e) => setSearch(e.target.value)} />
+      <Input aria-label="Search 8-digit number" placeholder="Search 8-digit number" value={search} onChange={(e) => setSearch(e.target.value)} />
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {filtered.map((n) => {
           const isSelected = selected === n.msisdn;

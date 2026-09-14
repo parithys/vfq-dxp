@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DataTable } from '../../components/primitives/DataTable';
 import { Badge } from '../../components/primitives/Badge';
+import { ErrorBanner } from '../../components/primitives/ErrorBanner';
 import { useEntityStore } from '../../stores/entityStore';
 import { useAuthStore } from '../../stores/authStore';
 import { isVisibleToAgent } from '../../engines/agentTaskEngine';
@@ -43,6 +44,7 @@ export function TaskListView() {
   const tasks = (useEntityStore((s) => s.records.tasks) ?? []) as unknown as AgentTask[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const loading = useEntityStore((s) => s.loading.tasks);
+  const loadError = useEntityStore((s) => s.errors.tasks);
   const currentAgentId = useAuthStore((s) => s.profile?.userId);
 
   useEffect(() => {
@@ -66,6 +68,7 @@ export function TaskListView() {
     <div className="p-8">
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">{FILTER_LABELS[filter] ?? 'My Tasks'}</h1>
       <p className="text-fg-2 mb-6">{filtered.length} task(s).</p>
+      <ErrorBanner message={loadError} />
       <DataTable<AgentTask>
         columns={[
           { key: 'taskId', header: 'Task ID' },

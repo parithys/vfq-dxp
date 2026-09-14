@@ -1,6 +1,11 @@
 import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from './Button';
+import { Icon } from './Icon';
+
+const SORT_ASC_ICON = 'M6 15l6-6 6 6';
+const SORT_DESC_ICON = 'M6 9l6 6 6-6';
+const SORT_NEUTRAL_ICON = 'M7 10l5-5 5 5 M7 14l5 5 5-5';
 
 export interface Column<T> {
   key: string;
@@ -13,6 +18,24 @@ export interface Column<T> {
    * customer column linking to that customer's 360 record). Return undefined
    * for a given row to fall back to plain text (e.g. no customerId on file). */
   linkTo?: (row: T) => string | undefined;
+  /** Opt out of sorting for this column — defaults to sortable whenever
+   * `header` is non-empty (action/remove columns conventionally use an empty
+   * header and have nothing meaningful to sort by). */
+  sortable?: boolean;
+  /** Override what's compared when sorting, for columns whose displayed
+   * value is derived rather than a raw row field (e.g. a badge computed from
+   * several fields). Defaults to the row's own `row[key]`. */
+  sortValue?: (row: T) => string | number | null | undefined;
+}
+
+type SortDirection = 'asc' | 'desc';
+
+function compareValues(a: unknown, b: unknown): number {
+  if (a == null && b == null) return 0;
+  if (a == null) return -1;
+  if (b == null) return 1;
+  if (typeof a === 'number' && typeof b === 'number') return a - b;
+  return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
 }
 
 interface DataTableProps<T> {
@@ -37,10 +60,33 @@ export function DataTable<T>({
   pageSize = 50,
 }: DataTableProps<T>) {
   const [page, setPage] = useState(0);
-  const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
+  const [sort, setSort] = useState<{ key: string; direction: SortDirection } | null>(null);
+
+  const isSortable = (col: Column<T>) => col.sortable ?? col.header !== '';
+
+  const toggleSort = (col: Column<T>) => {
+    if (!isSortable(col)) return;
+    setPage(0);
+    setSort((prev) => {
+      if (!prev || prev.key !== col.key) return { key: col.key, direction: 'asc' };
+      if (prev.direction === 'asc') return { key: col.key, direction: 'desc' };
+      return null;
+    });
+  };
+
+  const sortedRows = (() => {
+    if (!sort) return rows;
+    const col = columns.find((c) => c.key === sort.key);
+    if (!col) return rows;
+    const getValue = col.sortValue ?? ((row: T) => (row as Record<string, unknown>)[col.key] as string | number | null | undefined);
+    const sign = sort.direction === 'asc' ? 1 : -1;
+    return [...rows].sort((a, b) => sign * compareValues(getValue(a), getValue(b)));
+  })();
+
+  const pageCount = Math.max(1, Math.ceil(sortedRows.length / pageSize));
   const currentPage = Math.min(page, pageCount - 1);
-  const pagedRows = rows.slice(currentPage * pageSize, currentPage * pageSize + pageSize);
-  const showPager = rows.length > pageSize;
+  const pagedRows = sortedRows.slice(currentPage * pageSize, currentPage * pageSize + pageSize);
+  const showPager = sortedRows.length > pageSize;
 
   const handleRowKeyDown = (event: KeyboardEvent<HTMLTableRowElement>, row: T) => {
     if (event.key === 'Enter') {
@@ -57,11 +103,33 @@ export function DataTable<T>({
         <table className="w-full text-left text-[length:var(--fs-body)]">
           <thead className="bg-[var(--table-header-bg)] text-fg-2">
             <tr>
-              {columns.map((col) => (
-                <th key={col.key} className="px-4 py-3 font-semibold text-[length:var(--fs-caption-upper)]">
-                  {col.header}
-                </th>
-              ))}
+              {columns.map((col) => {
+                const sortable = isSortable(col);
+                const active = sort?.key === col.key;
+                return (
+                  <th
+                    key={col.key}
+                    aria-sort={active ? (sort.direction === 'asc' ? 'ascending' : 'descending') : sortable ? 'none' : undefined}
+                    className="px-4 py-3 font-semibold text-[length:var(--fs-caption-upper)]"
+                  >
+                    {sortable ? (
+                      <button
+                        type="button"
+                        onClick={() => toggleSort(col)}
+                        className="inline-flex items-center gap-1.5 hover:text-fg"
+                      >
+                        {col.header}
+                        <Icon
+                          path={active ? (sort.direction === 'asc' ? SORT_ASC_ICON : SORT_DESC_ICON) : SORT_NEUTRAL_ICON}
+                          className={`w-3.5 h-3.5 shrink-0 ${active ? 'text-fg' : 'text-muted'}`}
+                        />
+                      </button>
+                    ) : (
+                      col.header
+                    )}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>

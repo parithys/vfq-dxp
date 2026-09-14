@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
+import { ErrorBanner } from '../../../components/primitives/ErrorBanner';
 import { Drawer } from '../../../components/primitives/Drawer';
 import { Select } from '../../../components/primitives/Select';
 import { Textarea } from '../../../components/primitives/Textarea';
@@ -36,6 +37,7 @@ export function SimSwapQueueScreen() {
   const orders = (useEntityStore((s) => s.records['sim-swap-orders']) ?? []) as unknown as SimSwapOrder[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const loading = useEntityStore((s) => s.loading['sim-swap-orders']);
+  const loadError = useEntityStore((s) => s.errors['sim-swap-orders']);
   const updateRecord = useEntityStore((s) => s.updateRecord);
   const pushToast = useNotificationStore((s) => s.pushToast);
 
@@ -56,6 +58,7 @@ export function SimSwapQueueScreen() {
       <div className="p-8">
         <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">SIM Swap Queue</h1>
         <p className="text-fg-2 mb-6">Order tasks tab — tasks awaiting SIM Swap approval.</p>
+        <ErrorBanner message={loadError} />
         <DataTable<SimSwapOrder>
           columns={[
             { key: 'simSwapOrderId', header: 'Order #' },

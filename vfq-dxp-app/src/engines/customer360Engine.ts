@@ -162,6 +162,47 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
   };
 }
 
+function formatBillPeriod(period: unknown): string {
+  const match = /^(\d{4})-(\d{2})$/.exec(String(period ?? ''));
+  if (!match) return String(period ?? '—');
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, 1);
+  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
+
+export interface BillingSummary {
+  creditLimit: Record<string, unknown> | undefined;
+  latestBill: Record<string, unknown> | undefined;
+  billedTotal: number;
+  paidTotal: number;
+  outstanding: number;
+  formattedBillPeriod: string;
+}
+
+// Shared by the Billing tab (full detail) and the Customer 360 header's KPI
+// strip (headline numbers only) — one source of truth for "what does this
+// customer currently owe" rather than two divergent calculations.
+export function computeBillingSummary(data: Customer360Data): BillingSummary {
+  const creditLimit = data.creditLimits[0];
+  const latestBill = [...data.bills].sort((a, b) =>
+    String(a.billPeriod ?? '').localeCompare(String(b.billPeriod ?? '')),
+  ).at(-1);
+
+  const billedTotal = data.bills
+    .filter((b) => b.status === 'billed')
+    .reduce((sum, b) => sum + Number(b.totalAmount ?? 0), 0);
+  const paidTotal = data.payments.reduce((sum, p) => sum + Number(p.amountQar ?? 0), 0);
+  const outstanding = Math.max(0, billedTotal - paidTotal);
+
+  return {
+    creditLimit,
+    latestBill,
+    billedTotal,
+    paidTotal,
+    outstanding,
+    formattedBillPeriod: latestBill ? formatBillPeriod(latestBill.billPeriod) : '—',
+  };
+}
+
 export function toActiveCustomerSummary(customer: CustomerRecord) {
   return {
     customerId: customer.customerId,

@@ -209,7 +209,7 @@ export function LeadDetailsView() {
       </Drawer>
 
       <Drawer open={modal === 'reassign'} onClose={() => setModal(null)} title="Lead Owner">
-        <Input placeholder="Filter by Last Name" value={ownerFilter} onChange={(e) => setOwnerFilter(e.target.value)} />
+        <Input aria-label="Filter by Last Name" placeholder="Filter by Last Name" value={ownerFilter} onChange={(e) => setOwnerFilter(e.target.value)} />
         <div className="mt-3 divide-y divide-border-soft max-h-64 overflow-y-auto">
           {filteredAgents.map((a) => (
             <button
@@ -236,7 +236,7 @@ export function LeadDetailsView() {
           </>
         }
       >
-        <Textarea value={descriptionDraft} onChange={(e) => setDescriptionDraft(e.target.value)} />
+        <Textarea aria-label="Description" value={descriptionDraft} onChange={(e) => setDescriptionDraft(e.target.value)} />
       </Drawer>
 
       <Drawer
@@ -250,7 +250,7 @@ export function LeadDetailsView() {
           </>
         }
       >
-        <Input type="datetime-local" value={callbackDraft} onChange={(e) => setCallbackDraft(e.target.value)} />
+        <Input aria-label="Callback date and time" type="datetime-local" value={callbackDraft} onChange={(e) => setCallbackDraft(e.target.value)} />
       </Drawer>
     </div>
   );

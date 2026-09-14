@@ -77,23 +77,23 @@ export function BulkOperationPortal({ rows, onChange, onSubmitRow }: BulkOperati
       key: 'billingProfileId',
       header: 'Billing Profile',
       render: (r) => (
-        <Input value={r.billingProfileId} onChange={(e) => updateRow(r.rowId, { billingProfileId: e.target.value })} placeholder="BILL-xxxx" />
+        <Input aria-label="Billing Profile" value={r.billingProfileId} onChange={(e) => updateRow(r.rowId, { billingProfileId: e.target.value })} placeholder="BILL-xxxx" />
       ),
     },
     {
       key: 'bucket',
       header: 'Bucket',
-      render: (r) => <Select value={r.bucket} onChange={(e) => updateRow(r.rowId, { bucket: e.target.value })} options={BUCKETS.map((b) => ({ value: b, label: b }))} />,
+      render: (r) => <Select aria-label="Bucket" value={r.bucket} onChange={(e) => updateRow(r.rowId, { bucket: e.target.value })} options={BUCKETS.map((b) => ({ value: b, label: b }))} />,
     },
     {
       key: 'unitOfMeasurement',
       header: 'Unit',
       render: (r) => (
-        <Select value={r.unitOfMeasurement} onChange={(e) => updateRow(r.rowId, { unitOfMeasurement: e.target.value })} options={UNITS.map((u) => ({ value: u, label: u }))} />
+        <Select aria-label="Unit" value={r.unitOfMeasurement} onChange={(e) => updateRow(r.rowId, { unitOfMeasurement: e.target.value })} options={UNITS.map((u) => ({ value: u, label: u }))} />
       ),
     },
-    { key: 'amount', header: 'Amount', render: (r) => <Input type="number" value={r.amount} onChange={(e) => updateRow(r.rowId, { amount: e.target.value })} /> },
-    { key: 'comment', header: 'Comment', render: (r) => <Input value={r.comment} onChange={(e) => updateRow(r.rowId, { comment: e.target.value })} /> },
+    { key: 'amount', header: 'Amount', render: (r) => <Input aria-label="Amount" type="number" value={r.amount} onChange={(e) => updateRow(r.rowId, { amount: e.target.value })} /> },
+    { key: 'comment', header: 'Comment', render: (r) => <Input aria-label="Comment" value={r.comment} onChange={(e) => updateRow(r.rowId, { comment: e.target.value })} /> },
     {
       key: 'status',
       header: 'Status',
@@ -104,7 +104,15 @@ export function BulkOperationPortal({ rows, onChange, onSubmitRow }: BulkOperati
         </div>
       ),
     },
-    { key: 'remove', header: '', render: (r) => <button onClick={() => removeRow(r.rowId)} className="text-muted hover:text-danger">×</button> },
+    {
+      key: 'remove',
+      header: '',
+      render: (r) => (
+        <button onClick={() => removeRow(r.rowId)} aria-label="Remove row" className="text-muted hover:text-danger">
+          ×
+        </button>
+      ),
+    },
   ];
 
   return (

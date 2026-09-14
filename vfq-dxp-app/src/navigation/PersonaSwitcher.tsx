@@ -98,13 +98,13 @@ export function PersonaSwitcher() {
           <Tooltip content="Notifications" placement="bottom">
             <button
               onClick={() => toggle('notifications')}
-              aria-label="Notifications"
+              aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
               aria-haspopup="true"
               aria-expanded={open === 'notifications'}
               className="relative w-10 h-10 rounded-[var(--radius-pill)] border border-border-soft flex items-center justify-center text-fg-2 hover:bg-surface"
             >
               <Icon path={ICONS.bell} className="w-4.5 h-4.5" />
-              {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent" />}
+              {unreadCount > 0 && <span aria-hidden="true" className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent" />}
             </button>
           </Tooltip>
           {open === 'notifications' && (

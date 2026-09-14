@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { DataTable } from '../../components/primitives/DataTable';
 import { Badge } from '../../components/primitives/Badge';
+import { ErrorBanner } from '../../components/primitives/ErrorBanner';
 import { useEntityStore } from '../../stores/entityStore';
 
 interface Order {
@@ -33,6 +34,7 @@ export function MySalesOrders({ padded = true }: MySalesOrdersProps) {
   const orders = (useEntityStore((s) => s.records.orders) ?? []) as unknown as Order[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const loading = useEntityStore((s) => s.loading.orders);
+  const loadError = useEntityStore((s) => s.errors.orders);
 
   useEffect(() => {
     loadKind('orders');
@@ -42,6 +44,7 @@ export function MySalesOrders({ padded = true }: MySalesOrdersProps) {
     <div className={padded ? 'p-8' : ''}>
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">My Sales Orders</h1>
       <p className="text-fg-2 mb-6">{orders.length} order(s).</p>
+      <ErrorBanner message={loadError} />
       <DataTable<Order>
         columns={[
           { key: 'orderId', header: 'Order #' },

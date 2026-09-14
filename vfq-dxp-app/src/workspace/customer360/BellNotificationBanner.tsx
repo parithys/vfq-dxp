@@ -6,6 +6,7 @@ import { useBellNotificationExpirySweep } from '../../engines/bellNotificationEx
 interface BellNotification {
   notificationId: string;
   customerId: string;
+  templateId?: string;
   message: string;
   status: 'Draft' | 'Published' | 'Expired';
   publishedAt: string | null;
@@ -13,6 +14,16 @@ interface BellNotification {
 }
 
 const BELL_ICON = 'M6 8a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 12 6 8z M9.5 17a2.5 2.5 0 0 0 5 0';
+
+// Human-readable lead-in derived from the template a notification was
+// published from — turns one long sentence into a scannable title +
+// description, using data already on the record rather than inventing new
+// fields (e.g. a linked order, which no bell-notification record carries).
+const TEMPLATE_TITLE: Record<string, string> = {
+  'TMPL-INSTALL': 'Installation scheduled',
+  'TMPL-MAINTENANCE': 'Network maintenance',
+  'TMPL-BILLING': 'Billing update',
+};
 
 // Agent 360 BIN-03/04/05/06: banner visible across Customer 360 for this
 // customer only (BIN-04), latest-first (BIN-05), no dismiss/expire action
@@ -48,10 +59,15 @@ export function BellNotificationBanner({ customerId }: { customerId: string }) {
       {active.map((n) => (
         <div
           key={n.notificationId}
-          className="flex items-start gap-3 rounded-[var(--radius-card)] border border-accent/30 bg-surface-warm px-4 py-3"
+          className="flex items-start gap-3 rounded-[var(--radius-card)] border border-[color-mix(in_oklab,var(--warn)_35%,transparent)] bg-[color-mix(in_oklab,var(--warn)_12%,transparent)] px-4 py-3"
         >
-          <Icon path={BELL_ICON} className="w-4.5 h-4.5 text-accent shrink-0 mt-0.5" />
-          <p className="text-fg text-[length:var(--fs-body)]">{n.message}</p>
+          <Icon path={BELL_ICON} className="w-4.5 h-4.5 text-[var(--warn-text)] shrink-0 mt-0.5" />
+          <div>
+            <p className="text-[var(--warn-text)] font-medium text-[length:var(--fs-body)]">
+              {TEMPLATE_TITLE[n.templateId ?? ''] ?? 'Notice'}
+            </p>
+            <p className="text-fg text-[length:var(--fs-body)] mt-0.5">{n.message}</p>
+          </div>
         </div>
       ))}
     </div>

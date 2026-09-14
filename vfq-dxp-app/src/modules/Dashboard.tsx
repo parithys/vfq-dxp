@@ -65,9 +65,7 @@ export function Dashboard() {
   const bulkJobs = (useEntityStore((s) => s.records['bulk-activation-orders']) ?? []) as unknown as BulkJob[];
   const tasks = (useEntityStore((s) => s.records.tasks) ?? []) as unknown as AgentTask[];
   const loadingMap = useEntityStore((s) => s.loading);
-  const anyLoading = ['trouble-tickets', 'orders', 'leads', 'sim-swap-orders', 'customers', 'bulk-activation-orders'].some(
-    (k) => loadingMap[k as keyof typeof loadingMap]
-  );
+  const errorMap = useEntityStore((s) => s.errors);
 
   useEffect(() => {
     ['trouble-tickets', 'orders', 'leads', 'sim-swap-orders', 'customers', 'bulk-activation-orders', 'tasks'].forEach((k) =>
@@ -108,36 +106,42 @@ export function Dashboard() {
   const kpis = [
     {
       icon: ICONS.ticket,
+      kind: 'trouble-tickets' as const,
       value: tickets.filter((t) => t.status === 'Open' || t.status === 'Reopened').length,
       label: 'Open tickets',
       sub: 'across all queues',
     },
     {
       icon: ICONS.checkCircle,
+      kind: 'orders' as const,
       value: orders.filter((o) => o.status === 'Submitted for Approval').length,
       label: 'Orders pending approval',
       sub: 'awaiting a manager',
     },
     {
       icon: ICONS.users,
+      kind: 'leads' as const,
       value: leads.length,
       label: 'Total leads',
       sub: 'created this session',
     },
     {
       icon: ICONS.simCard,
+      kind: 'sim-swap-orders' as const,
       value: simSwaps.filter((s) => s.status === 'Submitted for Approval').length,
       label: 'SIM swaps pending',
       sub: 'awaiting approval',
     },
     {
       icon: ICONS.users,
+      kind: 'customers' as const,
       value: customers.length,
       label: 'Customers on file',
       sub: 'in the mock directory',
     },
     {
       icon: ICONS.refresh,
+      kind: 'bulk-activation-orders' as const,
       value: bulkJobs.filter((j) => j.overallStatus === 'Processed' || j.overallStatus === 'Completed').length,
       label: 'Bulk jobs processed',
       sub: 'incl. Pre-to-Post migrations',
@@ -178,7 +182,17 @@ export function Dashboard() {
             to={`/tasks?filter=${tile.key}`}
             className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 hover:border-accent hover:shadow-raised hover:-translate-y-0.5 transition-all"
           >
-            <div className="text-[length:var(--fs-h3)] font-extrabold text-fg">{anyLoading ? '—' : tile.count}</div>
+            <div className="text-[length:var(--fs-h3)] font-extrabold text-fg">
+              {loadingMap.tasks ? (
+                '—'
+              ) : errorMap.tasks ? (
+                <span className="text-danger text-[length:var(--fs-body)]" title={errorMap.tasks}>
+                  Failed to load
+                </span>
+              ) : (
+                tile.count
+              )}
+            </div>
             <div className="text-fg-2 text-[length:var(--fs-caption)] mt-1">{tile.label}</div>
           </Link>
         ))}
@@ -196,7 +210,17 @@ export function Dashboard() {
                 <Icon path={kpi.icon} className="w-4.5 h-4.5" />
               </span>
             </div>
-            <div className="text-[length:var(--fs-h3)] font-extrabold text-fg">{anyLoading ? '—' : kpi.value}</div>
+            <div className="text-[length:var(--fs-h3)] font-extrabold text-fg">
+              {loadingMap[kpi.kind] ? (
+                '—'
+              ) : errorMap[kpi.kind] ? (
+                <span className="text-danger text-[length:var(--fs-body)]" title={errorMap[kpi.kind]}>
+                  Failed to load
+                </span>
+              ) : (
+                kpi.value
+              )}
+            </div>
           </div>
         ))}
       </div>

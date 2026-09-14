@@ -17,12 +17,21 @@ export function Tabs({
   items,
   defaultKey,
   orientation = 'horizontal',
+  activeKey,
+  onChange,
 }: {
   items: TabItem[];
   defaultKey?: string;
   orientation?: 'horizontal' | 'vertical';
+  /** Controlled active tab — pass alongside onChange when a parent needs to
+   * know/drive which tab is active (e.g. to reflect it in a breadcrumb).
+   * Omit both for the original self-managed behavior. */
+  activeKey?: string;
+  onChange?: (key: string) => void;
 }) {
-  const [active, setActive] = useState(defaultKey ?? items[0]?.key);
+  const [uncontrolledActive, setUncontrolledActive] = useState(defaultKey ?? items[0]?.key);
+  const active = activeKey ?? uncontrolledActive;
+  const setActive = onChange ?? setUncontrolledActive;
   const activeItem = items.find((i) => i.key === active);
 
   if (orientation === 'vertical') {

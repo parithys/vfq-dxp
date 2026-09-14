@@ -4,6 +4,7 @@ import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
 import { Input } from '../../../components/primitives/Input';
 import { Select } from '../../../components/primitives/Select';
+import { ErrorBanner } from '../../../components/primitives/ErrorBanner';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import { evaluateRule } from '../../../engines/ruleEngine';
@@ -45,6 +46,7 @@ export function TicketsDashboard() {
   const tickets = (useEntityStore((s) => s.records['trouble-tickets']) ?? []) as unknown as Ticket[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const loading = useEntityStore((s) => s.loading['trouble-tickets']);
+  const loadError = useEntityStore((s) => s.errors['trouble-tickets']);
   const createRecord = useEntityStore((s) => s.createRecord);
   const pushToast = useNotificationStore((s) => s.pushToast);
   const [modalOpen, setModalOpen] = useState(false);
@@ -142,7 +144,13 @@ export function TicketsDashboard() {
           ))}
         </div>
         <div className="ml-auto flex flex-wrap items-end gap-2">
-          <Input placeholder="Search ticket #, customer, category, issue…" value={search} onChange={(e) => setSearch(e.target.value)} className="w-64" />
+          <Input
+            aria-label="Search ticket #, customer, category, issue"
+            placeholder="Search ticket #, customer, category, issue…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-64"
+          />
           <div className="w-40">
             <Select
               value={statusFilter}
@@ -169,6 +177,7 @@ export function TicketsDashboard() {
         </div>
       </div>
 
+      <ErrorBanner message={loadError} />
       <DataTable<Ticket>
         columns={[
           {
@@ -182,7 +191,12 @@ export function TicketsDashboard() {
           { key: 'priority', header: 'Priority' },
           { key: 'assignedTo', header: 'Assigned To', render: (r) => r.assignedTo ?? '—' },
           { key: 'status', header: 'Status', render: (r) => <Badge variant={STATUS_VARIANT[r.status] ?? 'filled-neutral'}>{r.status}</Badge> },
-          { key: 'rag', header: 'SLA', render: (r) => <Badge variant={ragVariant(r)}>{ragVariant(r) === 'danger' ? 'Red' : ragVariant(r) === 'warning' ? 'Amber' : ragVariant(r) === 'success' ? 'Green' : '—'}</Badge> },
+          {
+            key: 'rag',
+            header: 'SLA',
+            render: (r) => <Badge variant={ragVariant(r)}>{ragVariant(r) === 'danger' ? 'Red' : ragVariant(r) === 'warning' ? 'Amber' : ragVariant(r) === 'success' ? 'Green' : '—'}</Badge>,
+            sortValue: (r) => ({ danger: 0, warning: 1, success: 2, 'filled-neutral': 3 }[ragVariant(r)]),
+          },
         ]}
         rows={filtered}
         rowKey={(r) => r.ticketId}

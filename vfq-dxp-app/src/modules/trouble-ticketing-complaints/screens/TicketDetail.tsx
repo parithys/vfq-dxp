@@ -364,7 +364,7 @@ export function TicketDetail() {
                 </div>
               ))}
             </div>
-            <Textarea placeholder="Add a public note…" value={noteText} onChange={(e) => setNoteText(e.target.value)} />
+            <Textarea aria-label="Add a public note" placeholder="Add a public note…" value={noteText} onChange={(e) => setNoteText(e.target.value)} />
             <Button variant="ghost-rect" className="mt-2" onClick={addNote} disabled={!noteText.trim()}>
               Add Note
             </Button>
@@ -387,6 +387,7 @@ export function TicketDetail() {
                       <div className="col-span-2">
                         <dt className="text-[length:var(--fs-caption)] text-muted mb-1">L3 Reference (RES-07 — editable while Not Solved)</dt>
                         <Input
+                          aria-label="L3 Reference"
                           placeholder="External L3 ticket reference"
                           value={ticket.l3Reference ?? ''}
                           disabled={ticket.status !== 'Not Solved'}
@@ -426,7 +427,7 @@ export function TicketDetail() {
                         </div>
                       ))}
                       <div className="flex gap-2 pt-2">
-                        <Input placeholder="Log a manual activity…" value={activityText} onChange={(e) => setActivityText(e.target.value)} className="flex-1" />
+                        <Input aria-label="Log a manual activity" placeholder="Log a manual activity…" value={activityText} onChange={(e) => setActivityText(e.target.value)} className="flex-1" />
                         <Button variant="ghost-rect" onClick={addManualActivity} disabled={!activityText.trim()}>Add</Button>
                       </div>
                     </div>
@@ -449,6 +450,7 @@ export function TicketDetail() {
                       ) : (
                         <input
                           type="file"
+                          aria-label="Upload attachment"
                           className="text-[length:var(--fs-caption)] text-fg-2"
                           onChange={(e) => e.target.files?.[0] && attach(e.target.files[0])}
                         />

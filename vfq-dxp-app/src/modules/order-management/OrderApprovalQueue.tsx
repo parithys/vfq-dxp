@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { DataTable } from '../../components/primitives/DataTable';
 import { Badge } from '../../components/primitives/Badge';
 import { Button } from '../../components/primitives/Button';
+import { ErrorBanner } from '../../components/primitives/ErrorBanner';
 import { useEntityStore } from '../../stores/entityStore';
 import { useAuthStore } from '../../stores/authStore';
 import { isVisibleToAgent } from '../../engines/agentTaskEngine';
@@ -78,11 +79,7 @@ export function OrderApprovalQueue({ padded = true }: OrderApprovalQueueProps) {
     <div className={padded ? 'p-8' : ''}>
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Order Approval Queue</h1>
       <p className="text-fg-2 mb-6">Queues: ADJ_APPR_QUEUE_BUSI_1000, VFQA_DSA_ORDER_APPROVAL_QUEUE_DSQ/JAGUAR/TESTING/VISTAS</p>
-      {loadError && (
-        <div className="mb-4 rounded border border-danger px-4 py-3 text-[length:var(--fs-body)] text-danger">
-          {loadError}
-        </div>
-      )}
+      <ErrorBanner message={loadError} />
       <DataTable<Order>
         columns={[
           { key: 'orderId', header: 'Order #' },

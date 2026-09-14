@@ -14,6 +14,11 @@ const CLOCK_ICON = 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3.2 2';
 
 export interface ProductAction {
   label: string;
+  /** One or two plain-English sentences on what this action actually does —
+   * same style as the MNP Port-In choice screen's Postpaid/Prepaid cards
+   * (MnpProcessChoiceScreen.tsx), so an agent can tell what an action means
+   * without launching it first. */
+  description: string;
   /** Existing screen this action launches, if one exists yet. Omit to show
    * an honest "not yet built" state instead of a fabricated screen. */
   screenId?: string;
@@ -79,6 +84,7 @@ export function ProductActionGroups({ groups, customer }: { groups: ProductActio
                             <span className="text-[length:var(--fs-btn-compact)] font-medium">{action.label}</span>
                             <Icon path={CLOCK_ICON} className="w-3.5 h-3.5 shrink-0" />
                           </div>
+                          <p className="text-[length:var(--fs-caption)] leading-snug">{action.description}</p>
                           <span className="text-[length:var(--fs-micro)] uppercase tracking-wide">Coming soon</span>
                         </div>
                       </Tooltip>
@@ -91,6 +97,7 @@ export function ProductActionGroups({ groups, customer }: { groups: ProductActio
                       className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-border bg-bg p-4 text-left text-fg hover:bg-surface hover:border-accent transition-colors"
                     >
                       <span className="text-[length:var(--fs-btn-compact)] font-medium">{action.label}</span>
+                      <p className="text-[length:var(--fs-caption)] text-fg-2 leading-snug">{action.description}</p>
                     </button>
                   );
                 })}

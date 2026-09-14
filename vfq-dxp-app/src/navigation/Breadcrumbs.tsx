@@ -1,33 +1,76 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getAllModules, getAllRoutes } from '../engines/configEngine';
+import { useActiveCustomerStore } from '../stores/activeCustomerStore';
+import { Icon } from '../components/primitives/Icon';
+import { Tooltip } from '../components/primitives/Tooltip';
+
+const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
+const ARROW_LEFT = 'M19 12H5 M12 19l-7-7 7-7';
+
+function Crumb() {
+  return <Icon path={CHEVRON_RIGHT} className="w-3 h-3 text-muted shrink-0" />;
+}
 
 // Derived automatically from the route's module -> screen path, not hand-authored
 // per screen, per frontend-architecture.md §9.
 export function Breadcrumbs() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const activeCustomerName = useActiveCustomerStore((s) => s.customer?.name);
   const [, moduleSlug, screenSlug] = location.pathname.split('/');
   if (!moduleSlug) return null;
 
   const module = getAllModules().find((m) => m.moduleSlug === moduleSlug);
   const route = screenSlug ? getAllRoutes().find((r) => r.path === location.pathname) : undefined;
+  // Customer 360 has no legacy module/screenName entry (it's part of the
+  // newer primary workspace shell, built after routes.json's module catalogue),
+  // so it needs its own crumb rather than falling through to a bare "Dashboard".
+  const isCustomer360 = moduleSlug === 'customer' && Boolean(screenSlug);
 
   return (
-    <div className="flex items-center gap-2 px-6 py-3 text-[length:var(--fs-caption)] text-muted border-b border-border-soft bg-bg">
-      <Link to="/" className="text-fg">
+    <div className="flex items-center gap-1.5 px-6 py-2.5 text-[length:var(--fs-caption)] text-muted border-b border-border-soft bg-bg">
+      {/* Single global back affordance — this bar is the one persistent
+       * element mounted above every routed page (App.tsx), so placing it
+       * here guarantees it's always in the same spot, rather than the
+       * scattered/inconsistent per-page "Go Back" buttons some screens
+       * already have buried in their own action rows. Never rendered on the
+       * Dashboard itself (component returns null there — see above), which
+       * doubles as "nowhere sensible to go back to" for this button too. */}
+      <Tooltip content="Go back" placement="bottom">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          aria-label="Go back"
+          className="flex items-center justify-center w-6 h-6 -ml-1 rounded-[var(--radius-pill)] text-fg-2 hover:bg-surface hover:text-fg transition-colors shrink-0"
+        >
+          <Icon path={ARROW_LEFT} className="w-4 h-4" />
+        </button>
+      </Tooltip>
+      <Link to="/" className="text-muted hover:text-fg transition-colors">
         Dashboard
       </Link>
-      {module && (
+      {module && !isCustomer360 && (
         <>
-          <span>/</span>
-          <Link to={`/${module.moduleSlug}`} className="hover:text-fg">
+          <Crumb />
+          <Link to={`/${module.moduleSlug}`} className="text-muted hover:text-fg transition-colors">
             {module.module}
           </Link>
         </>
       )}
       {route && (
         <>
-          <span>/</span>
-          <span className="text-fg">{route.screenName}</span>
+          <Crumb />
+          <span className="text-fg font-medium">{route.screenName}</span>
+        </>
+      )}
+      {isCustomer360 && (
+        <>
+          <Crumb />
+          <Link to="/customer-search" className="text-muted hover:text-fg transition-colors">
+            Customers
+          </Link>
+          <Crumb />
+          <span className="text-fg font-medium">{activeCustomerName ?? 'Customer 360'}</span>
         </>
       )}
     </div>

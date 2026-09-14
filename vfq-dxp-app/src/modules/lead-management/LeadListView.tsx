@@ -4,6 +4,7 @@ import { useEntityStore } from '../../stores/entityStore';
 import { usePersonaStore } from '../../stores/personaStore';
 import { DataTable } from '../../components/primitives/DataTable';
 import { Badge } from '../../components/primitives/Badge';
+import { ErrorBanner } from '../../components/primitives/ErrorBanner';
 import type { Lead } from './types';
 
 export type LeadScope = 'my' | 'created' | 'team' | 'all' | 'contact';
@@ -31,6 +32,7 @@ export function LeadListView({ scope }: { scope: LeadScope }) {
   const loadKind = useEntityStore((s) => s.loadKind);
   const leads = (useEntityStore((s) => s.records.leads) ?? []) as unknown as Lead[];
   const loading = useEntityStore((s) => s.loading.leads);
+  const loadError = useEntityStore((s) => s.errors.leads);
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
 
   useEffect(() => {
@@ -47,6 +49,7 @@ export function LeadListView({ scope }: { scope: LeadScope }) {
     <div className="p-8">
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">{SCOPE_TITLES[scope]}</h1>
       <p className="text-fg-2 mb-6">{filtered.length} lead(s).</p>
+      <ErrorBanner message={loadError} />
       <DataTable<Lead>
         columns={[
           { key: 'leadId', header: 'Lead #' },
