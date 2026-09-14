@@ -81,7 +81,7 @@ export function ProductActionGroups({ groups, customer }: { groups: ProductActio
                       <Tooltip key={action.label} content="Not yet built for this action" placement="top">
                         <div className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-dashed border-border bg-light-neutral p-4 text-muted cursor-not-allowed">
                           <div className="flex items-start justify-between gap-2">
-                            <span className="text-[length:var(--fs-btn-compact)] font-medium">{action.label}</span>
+                            <span className="text-[length:var(--fs-btn-compact)] font-medium uppercase tracking-wide">{action.label}</span>
                             <Icon path={CLOCK_ICON} className="w-3.5 h-3.5 shrink-0" />
                           </div>
                           <p className="text-[length:var(--fs-caption)] leading-snug">{action.description}</p>
@@ -96,7 +96,7 @@ export function ProductActionGroups({ groups, customer }: { groups: ProductActio
                       onClick={() => launch(action)}
                       className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-border bg-bg p-4 text-left text-fg hover:bg-surface hover:border-accent transition-colors"
                     >
-                      <span className="text-[length:var(--fs-btn-compact)] font-medium">{action.label}</span>
+                      <span className="text-[length:var(--fs-btn-compact)] font-medium uppercase tracking-wide">{action.label}</span>
                       <p className="text-[length:var(--fs-caption)] text-fg-2 leading-snug">{action.description}</p>
                     </button>
                   );

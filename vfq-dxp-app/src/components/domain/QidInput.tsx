@@ -20,11 +20,11 @@ const BOOK_ICON = 'M12 6.5c-1.6-1.1-4-1.6-6-1.2v12.8c2-0.4 4.4 0.1 6 1.2 M12 6.5
 const GLOBE_ICON = 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M3 12h18 M12 3c2.4 2.6 2.4 15.4 0 18 M12 3c-2.4 2.6-2.4 15.4 0 18';
 const SHIELD_ICON = 'M12 3l7 3v5.5c0 5-3 8.3-7 9.5-4-1.2-7-4.5-7-9.5V6z';
 
-const ID_TYPES: { type: QidType; label: string; numberLabel: string; icon: string }[] = [
-  { type: 'QID', label: 'Qatar ID (QID)', numberLabel: 'Qatar ID (QID) Number', icon: CARD_ICON },
-  { type: 'Passport', label: 'Passport', numberLabel: 'Passport Number', icon: BOOK_ICON },
-  { type: 'GCC ID', label: 'GCC ID', numberLabel: 'GCC ID Number', icon: GLOBE_ICON },
-  { type: 'Diplomatic ID', label: 'Diplomatic ID', numberLabel: 'Diplomatic ID Number', icon: SHIELD_ICON },
+const ID_TYPES: { type: QidType; label: string; numberLabel: string; icon: string; placeholder: string }[] = [
+  { type: 'QID', label: 'Qatar ID (QID)', numberLabel: 'Qatar ID (QID) Number', icon: CARD_ICON, placeholder: 'e.g. 28456701234' },
+  { type: 'Passport', label: 'Passport', numberLabel: 'Passport Number', icon: BOOK_ICON, placeholder: 'e.g. P0998812' },
+  { type: 'GCC ID', label: 'GCC ID', numberLabel: 'GCC ID Number', icon: GLOBE_ICON, placeholder: 'e.g. 784202312345678' },
+  { type: 'Diplomatic ID', label: 'Diplomatic ID', numberLabel: 'Diplomatic ID Number', icon: SHIELD_ICON, placeholder: 'e.g. DIP-QA-004521' },
 ];
 
 // QID/Passport/GCC/Diplomatic ID lookup control, per component-catalogue.md §2
@@ -75,7 +75,7 @@ export function QidInput({ idType, onIdTypeChange, value, onChange, onFetch, fet
             id="qid-number-input"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            placeholder="Insert or scan ID"
+            placeholder={current.placeholder}
             className={`flex-1 min-w-0 rounded-[var(--radius-button)] border px-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg
               ${error ? 'border-danger' : 'border-[var(--grey-form)]'}
               focus:outline-none focus-visible:shadow-[var(--focus-ring)]`}

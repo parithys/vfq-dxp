@@ -1,10 +1,8 @@
-import { useEffect } from 'react';
 import { IdLookupStep } from './IdLookupStep';
 import type { QidType } from '../domain/QidInput';
 import { Input } from '../primitives/Input';
 import { PhoneNumberInput } from '../primitives/PhoneNumberInput';
 import { Select } from '../primitives/Select';
-import { useActiveCustomerStore } from '../../stores/activeCustomerStore';
 
 interface MoiResult {
   name: string;
@@ -61,31 +59,13 @@ export function isValidAltPhone(raw: string | undefined): boolean {
 // evidenced field sets overlap almost entirely (ID Expiry/Nationality/Gender/
 // Name/DOB auto-populate from the ID scan; Email/Alt Phone/Language/Digital
 // Lead-Sale/B2B2C are agent-entered in both).
+// Per explicit product direction, the ID Type/Number fields must never
+// auto-populate with a real value — even when Customer 360's product
+// actions launch this step for a customer already on screen — so the
+// agent always performs (or at least sees) an explicit Fetch rather than
+// silently trusting cached active-customer state. The number field shows
+// a format-example placeholder instead (see QidInput.tsx).
 export function GuidedContactStep({ value, onChange, showIptvToggle = true }: GuidedContactStepProps) {
-  const activeCustomer = useActiveCustomerStore((s) => s.customer);
-
-  // Customer 360's product actions launch this same wizard for a customer
-  // already on screen — pre-fill from the active-customer bridge instead of
-  // asking the agent to re-key an ID lookup they already did to get here.
-  // Guarded on !value.idNumber so it only ever pre-fills a still-blank step
-  // (never overwrites an in-progress manual entry) and only fires once.
-  useEffect(() => {
-    if (value.idNumber || !activeCustomer) return;
-    onChange({
-      ...value,
-      idType: activeCustomer.idType,
-      idNumber: activeCustomer.qid,
-      email: activeCustomer.email,
-      moiResult: {
-        name: activeCustomer.name,
-        dob: activeCustomer.dob,
-        nationality: activeCustomer.nationality,
-        email: activeCustomer.email,
-      },
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeCustomer?.customerId]);
-
   return (
     <div className="space-y-4">
       <IdLookupStep
