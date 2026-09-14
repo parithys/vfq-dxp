@@ -2,9 +2,12 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { useEntityStore } from '../../stores/entityStore';
 import { useNotificationStore } from '../../stores/notificationStore';
+import { usePersonaStore } from '../../stores/personaStore';
 import { DEMO_LOGIN_PASSWORD } from '../../auth/staffIdRoleMap';
 import { passwordPolicyError } from '../../auth/passwordPolicy';
 import { downloadCsv } from '../../engines/csvExport';
+import { isInternalAgentPersona } from '../../engines/agentPrivilegeEngine';
+import { getRbacForPersona } from '../../engines/configEngine';
 import { Input } from '../../components/primitives/Input';
 import { Button } from '../../components/primitives/Button';
 import { Badge } from '../../components/primitives/Badge';
@@ -12,10 +15,12 @@ import { Select } from '../../components/primitives/Select';
 
 // Agent 360 AEX-03: "Order, Ticket until VFQ confirms the complete list"
 // (OI-AGN-07) — the entity kinds and their entityStore keys are the only
-// two named as examples anywhere in the BRSD.
+// two named as examples anywhere in the BRSD. `rbacKeyword` backs AEX-01:
+// an entity only appears as an export option if this persona's own RBAC
+// entries (rbac.json) mention a screen matching that keyword.
 const EXPORTABLE_ENTITIES = [
-  { value: 'orders', label: 'Orders' },
-  { value: 'trouble-tickets', label: 'Tickets' },
+  { value: 'orders', label: 'Orders', rbacKeyword: 'order' },
+  { value: 'trouble-tickets', label: 'Tickets', rbacKeyword: 'ticket' },
 ] as const;
 
 // Placeholder verification code — same open item as Forgot Password
@@ -47,8 +52,36 @@ export function AgentProfileWorkspace() {
   const loadKind = useEntityStore((s) => s.loadKind);
   const orders = useEntityStore((s) => s.records.orders) ?? [];
   const tickets = useEntityStore((s) => s.records['trouble-tickets']) ?? [];
+  const activePersonaId = usePersonaStore((s) => s.activePersonaId);
+  // APM-01/05/08, BR-01/BR-02: role-based view — password/MFA editing is
+  // restricted to genuine internal Vodafone agent personas (see
+  // agentPrivilegeEngine.ts for exactly which persona types this excludes
+  // and why). Identity display, language, and export stay available to
+  // everyone since those requirements carry no role-gating clause of their own.
+  const canEditProfile = isInternalAgentPersona(activePersonaId);
 
-  const [exportEntity, setExportEntity] = useState<(typeof EXPORTABLE_ENTITIES)[number]['value']>('orders');
+  // AEX-01: "Entity list displays as per access rights" — an entity type
+  // only appears as an export option if this persona's own RBAC entries
+  // grant access to a matching screen, reusing the same rbac.json data
+  // every other screen-gating check in this app already relies on, rather
+  // than a static list identical for every role.
+  const personaRbac = getRbacForPersona(activePersonaId);
+  const eligibleEntities = EXPORTABLE_ENTITIES.filter((entity) =>
+    personaRbac.some((r) => r.screenName.toLowerCase().includes(entity.rbacKeyword))
+  );
+
+  const [exportEntity, setExportEntity] = useState<(typeof EXPORTABLE_ENTITIES)[number]['value'] | ''>('orders');
+
+  useEffect(() => {
+    if (eligibleEntities.length === 0) {
+      setExportEntity('');
+      return;
+    }
+    if (!eligibleEntities.some((e) => e.value === exportEntity)) {
+      setExportEntity(eligibleEntities[0].value);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePersonaId]);
 
   useEffect(() => {
     loadKind('orders');
@@ -95,11 +128,11 @@ export function AgentProfileWorkspace() {
     pushToast('success', 'Password changed.');
   };
 
-  // BR-02 / APM-07/08: MFA change requires identity verification before it
-  // takes effect. "Privileges approved by VFQ Security" (BR-02) is left as
-  // self-service here since no distinct privilege matrix is confirmed for
-  // this action (OI-AGN-06) — every authenticated agent manages their own
-  // MFA, gated only by the verification-code step below.
+  // BR-02 / APM-07/08: MFA change requires identity verification (the OTP
+  // step below) AND now a role check (canEditProfile, see component top) —
+  // "privileges approved by VFQ Security" (BR-02) resolves to "genuine
+  // internal agent persona" per agentPrivilegeEngine.ts, pending a more
+  // specific matrix from VFQ Security (OI-AGN-06).
   const toggleMfa = () => {
     if (profile?.mfaEnabled) {
       setProfile({ ...profile, mfaEnabled: false });
@@ -132,7 +165,7 @@ export function AgentProfileWorkspace() {
     pushToast('success', language === 'English' ? 'Language set to English.' : 'تم تعيين اللغة إلى العربية.');
   };
 
-  const exportRecords = exportEntity === 'orders' ? orders : tickets;
+  const exportRecords = exportEntity === 'orders' ? orders : exportEntity === 'trouble-tickets' ? tickets : [];
 
   // AEX-02: "export all visible entity records... irrespective of whether
   // they are assigned to the logged-in agent" — every record this agent's
@@ -157,68 +190,80 @@ export function AgentProfileWorkspace() {
         </div>
       </div>
 
-      <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
-        <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Change password</h2>
-        <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
-          Requires your current password and a verification code. (Demo code: {DEMO_VERIFICATION_CODE} — pending VFQ Security's
-          real Authcode/OTP method.)
-        </p>
-        <div className="space-y-3">
-          <Input label="Current password" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
-          <Input label="New password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
-          <Input label="Confirm new password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-          <Input id="password-verification-code" label="Verification code" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} />
-          {error && <p className="text-danger text-[length:var(--fs-caption)]">{error}</p>}
-          {saved && <Badge variant="success">Password updated</Badge>}
-          <div className="pt-1">
-            <Button
-              variant="primary-rect"
-              onClick={submitPasswordChange}
-              disabled={!currentPassword || !newPassword || !confirmPassword || !verificationCode}
-            >
-              Save password
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mt-6">
-        <div className="flex items-center justify-between mb-1">
-          <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg">Multi-factor authentication</h2>
-          <Badge variant={profile?.mfaEnabled ? 'success' : 'filled-neutral'}>{profile?.mfaEnabled ? 'Enabled' : 'Disabled'}</Badge>
-        </div>
-        {profile?.mfaEnabled && (
-          <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">Method: {profile.mfaMethod}</p>
-        )}
-        {!mfaEditing && (
-          <Button variant="ghost-rect" onClick={toggleMfa}>
-            {profile?.mfaEnabled ? 'Disable MFA' : 'Enable MFA'}
-          </Button>
-        )}
-        {mfaEditing && (
-          <div className="space-y-3 mt-2">
-            <Select
-              label="Authenticator method"
-              value={mfaMethod}
-              onChange={(e) => setMfaMethod(e.target.value as 'Authenticator App' | 'SMS OTP')}
-              options={[
-                { value: 'Authenticator App', label: 'Authenticator App' },
-                { value: 'SMS OTP', label: 'SMS OTP' },
-              ]}
-            />
-            <Input id="mfa-verification-code" label="Verification code" value={mfaCode} onChange={(e) => setMfaCode(e.target.value)} />
-            {mfaError && <p className="text-danger text-[length:var(--fs-caption)]">{mfaError}</p>}
-            <div className="flex gap-2 pt-1">
-              <Button variant="ghost-rect" onClick={() => { setMfaEditing(false); setMfaCode(''); setMfaError(null); }}>
-                Cancel
-              </Button>
-              <Button variant="primary-rect" onClick={submitMfaEnable} disabled={!mfaCode}>
-                Save MFA settings
-              </Button>
+      {canEditProfile ? (
+        <>
+          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+            <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Change password</h2>
+            <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
+              Requires your current password and a verification code. (Demo code: {DEMO_VERIFICATION_CODE} — pending VFQ Security's
+              real Authcode/OTP method.)
+            </p>
+            <div className="space-y-3">
+              <Input label="Current password" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+              <Input label="New password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+              <Input label="Confirm new password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+              <Input id="password-verification-code" label="Verification code" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} />
+              {error && <p className="text-danger text-[length:var(--fs-caption)]">{error}</p>}
+              {saved && <Badge variant="success">Password updated</Badge>}
+              <div className="pt-1">
+                <Button
+                  variant="primary-rect"
+                  onClick={submitPasswordChange}
+                  disabled={!currentPassword || !newPassword || !confirmPassword || !verificationCode}
+                >
+                  Save password
+                </Button>
+              </div>
             </div>
           </div>
-        )}
-      </div>
+
+          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mt-6">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg">Multi-factor authentication</h2>
+              <Badge variant={profile?.mfaEnabled ? 'success' : 'filled-neutral'}>{profile?.mfaEnabled ? 'Enabled' : 'Disabled'}</Badge>
+            </div>
+            {profile?.mfaEnabled && (
+              <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">Method: {profile.mfaMethod}</p>
+            )}
+            {!mfaEditing && (
+              <Button variant="ghost-rect" onClick={toggleMfa}>
+                {profile?.mfaEnabled ? 'Disable MFA' : 'Enable MFA'}
+              </Button>
+            )}
+            {mfaEditing && (
+              <div className="space-y-3 mt-2">
+                <Select
+                  label="Authenticator method"
+                  value={mfaMethod}
+                  onChange={(e) => setMfaMethod(e.target.value as 'Authenticator App' | 'SMS OTP')}
+                  options={[
+                    { value: 'Authenticator App', label: 'Authenticator App' },
+                    { value: 'SMS OTP', label: 'SMS OTP' },
+                  ]}
+                />
+                <Input id="mfa-verification-code" label="Verification code" value={mfaCode} onChange={(e) => setMfaCode(e.target.value)} />
+                {mfaError && <p className="text-danger text-[length:var(--fs-caption)]">{mfaError}</p>}
+                <div className="flex gap-2 pt-1">
+                  <Button variant="ghost-rect" onClick={() => { setMfaEditing(false); setMfaCode(''); setMfaError(null); }}>
+                    Cancel
+                  </Button>
+                  <Button variant="primary-rect" onClick={submitMfaEnable} disabled={!mfaCode}>
+                    Save MFA settings
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      ) : (
+        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+          <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Change password &amp; MFA</h2>
+          <p className="text-fg-2 text-[length:var(--fs-caption)]">
+            Profile editing (password, MFA) is available to internal Vodafone agent roles. This persona is an external or
+            system-type contact (Agent 360 APM-01/05/08, BR-01/BR-02) and does not have edit access here.
+          </p>
+        </div>
+      )}
 
       <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mt-6">
         <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Language</h2>
@@ -240,21 +285,25 @@ export function AgentProfileWorkspace() {
         <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Export your data</h2>
         <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
           Download a CSV of every visible record for an entity type. (Entity list: Orders, Tickets — pending VFQ's confirmation
-          of the complete list, OI-AGN-07.)
+          of the complete list, OI-AGN-07. Which of these you can export depends on your role's access rights, Agent 360 AEX-01.)
         </p>
-        <div className="flex items-end gap-3">
-          <div className="flex-1">
-            <Select
-              label="Entity type"
-              value={exportEntity}
-              onChange={(e) => setExportEntity(e.target.value as (typeof EXPORTABLE_ENTITIES)[number]['value'])}
-              options={[...EXPORTABLE_ENTITIES]}
-            />
+        {eligibleEntities.length === 0 ? (
+          <p className="text-muted text-[length:var(--fs-body)]">No exportable entities are available for your current role.</p>
+        ) : (
+          <div className="flex items-end gap-3">
+            <div className="flex-1">
+              <Select
+                label="Entity type"
+                value={exportEntity}
+                onChange={(e) => setExportEntity(e.target.value as (typeof EXPORTABLE_ENTITIES)[number]['value'])}
+                options={eligibleEntities.map(({ value, label }) => ({ value, label }))}
+              />
+            </div>
+            <Button variant="primary-rect" onClick={exportEntities} disabled={exportRecords.length === 0}>
+              Export {exportRecords.length} record{exportRecords.length === 1 ? '' : 's'}
+            </Button>
           </div>
-          <Button variant="primary-rect" onClick={exportEntities} disabled={exportRecords.length === 0}>
-            Export {exportRecords.length} record{exportRecords.length === 1 ? '' : 's'}
-          </Button>
-        </div>
+        )}
       </div>
     </div>
   );

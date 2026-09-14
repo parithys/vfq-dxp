@@ -5,7 +5,22 @@ import { Button } from '../../components/primitives/Button';
 import { Select } from '../../components/primitives/Select';
 import { useEntityStore } from '../../stores/entityStore';
 import { usePersonaStore } from '../../stores/personaStore';
+import { useNotificationStore } from '../../stores/notificationStore';
 import * as mockDataEngine from '../../engines/mockDataEngine';
+
+// Agent 360 ATV-06 / Annex_02: Task status model — "Open -> Assigned/In
+// Progress/Closed -> (In Progress/Closed) -> Closed; no transition out of
+// Closed." Passed to mockDataEngine.transition() so this is a real,
+// falsifiable guard rather than the previous UI-only button-hiding (which
+// a direct store call could bypass entirely).
+const TASK_STATUS_TRANSITIONS: string[][] = [
+  ['Open', 'Assigned'],
+  ['Open', 'In Progress'],
+  ['Open', 'Closed'],
+  ['Assigned', 'In Progress'],
+  ['Assigned', 'Closed'],
+  ['In Progress', 'Closed'],
+];
 
 interface AgentDirectoryEntry {
   userId: string;
@@ -45,6 +60,7 @@ export function TaskDetailView() {
   const updateRecord = useEntityStore((s) => s.updateRecord);
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
   const isSupervisor = activePersonaId === 'PERSONA-024';
+  const pushToast = useNotificationStore((s) => s.pushToast);
 
   const [assignTo, setAssignTo] = useState('');
   const [agents, setAgents] = useState<AgentDirectoryEntry[]>([]);
@@ -66,11 +82,28 @@ export function TaskDetailView() {
     return <div className="p-8 text-fg-2">No task selected — go back to My Tasks and pick one from a category.</div>;
   }
 
-  const moveToInProgress = () => updateRecord('tasks', 'taskId', task.taskId, { taskStatus: 'In Progress' });
-  const closeTask = () => updateRecord('tasks', 'taskId', task.taskId, { taskStatus: 'Closed' });
+  const applyStatusTransition = (toState: string, patch: Record<string, unknown>) => {
+    const result = mockDataEngine.transition(TASK_STATUS_TRANSITIONS, task.taskStatus, toState);
+    if (!result.ok) {
+      pushToast('error', result.reason ?? `Cannot move task from ${task.taskStatus} to ${toState}.`);
+      return;
+    }
+    updateRecord('tasks', 'taskId', task.taskId, patch);
+  };
+
+  const moveToInProgress = () => applyStatusTransition('In Progress', { taskStatus: 'In Progress' });
+  const closeTask = () => applyStatusTransition('Closed', { taskStatus: 'Closed' });
   const assign = () => {
     if (!assignTo.trim()) return;
-    updateRecord('tasks', 'taskId', task.taskId, { assignedAgentId: assignTo.trim(), taskStatus: 'Assigned' });
+    // Assignment always sets the owner; it only drives the Open -> Assigned
+    // status transition for a still-open task. Reassigning a task already
+    // In Progress/Assigned changes the owner without illegally moving
+    // status sideways or backward per the Annex_02 model above.
+    if (task.taskStatus === 'Open') {
+      applyStatusTransition('Assigned', { assignedAgentId: assignTo.trim(), taskStatus: 'Assigned' });
+    } else {
+      updateRecord('tasks', 'taskId', task.taskId, { assignedAgentId: assignTo.trim() });
+    }
     setAssignTo('');
   };
 

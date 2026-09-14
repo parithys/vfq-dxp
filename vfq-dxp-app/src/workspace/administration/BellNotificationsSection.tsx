@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useEntityStore } from '../../stores/entityStore';
 import { useNotificationStore } from '../../stores/notificationStore';
+import { usePersonaStore } from '../../stores/personaStore';
 import { useBellNotificationExpirySweep } from '../../engines/bellNotificationExpiry';
+import { isBackofficeOrPrivilegedPersona } from '../../engines/agentPrivilegeEngine';
 import { Input } from '../../components/primitives/Input';
 import { Select } from '../../components/primitives/Select';
 import { Textarea } from '../../components/primitives/Textarea';
@@ -29,15 +31,17 @@ const TEMPLATES: Record<string, string> = {
 
 // Agent 360 BIN-01/02: Backoffice/privileged staff configure and publish
 // bell icon notifications against a customer, using a template + expiry
-// date. Not role-gated here — BR-03's "designated Backoffice or privileged
-// staff" has no confirmed role matrix (OI-AGN-11), so gating on an invented
-// persona would be less honest than leaving this open and visible, same
-// stance taken for MFA's BR-02 privilege clause.
+// date. Role-gated via agentPrivilegeEngine.ts's evidenced Backoffice/
+// Supervisory/Approval persona set (BR-03) — see that file for exactly
+// which personas qualify and why, pending a more specific matrix from VFQ
+// (OI-AGN-11).
 export function BellNotificationsSection() {
   const notifications = (useEntityStore((s) => s.records['bell-notifications']) ?? []) as unknown as BellNotification[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const createRecord = useEntityStore((s) => s.createRecord);
   const pushToast = useNotificationStore((s) => s.pushToast);
+  const activePersonaId = usePersonaStore((s) => s.activePersonaId);
+  const canConfigure = isBackofficeOrPrivilegedPersona(activePersonaId);
 
   const [customerId, setCustomerId] = useState('');
   const [templateId, setTemplateId] = useState('');
@@ -65,6 +69,11 @@ export function BellNotificationsSection() {
   };
 
   const save = async (status: 'Draft' | 'Published') => {
+    // BIN-01/BR-03: enforced here too, not just via disabled buttons — a
+    // non-privileged persona's call can never actually create a record.
+    if (!canConfigure) return;
+    // BR-04: publishing (not drafting) must confirm an expiry before going out.
+    if (status === 'Published' && !expiresAt) return;
     if (!customerId.trim() || !message.trim() || submittingRef.current) return;
     submittingRef.current = true;
     setSubmitting(true);
@@ -95,40 +104,60 @@ export function BellNotificationsSection() {
 
   return (
     <div>
-      <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mb-6">
-        <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Configure a notification</h2>
-        <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
-          Notifications appear as a banner on the customer's Customer 360 screen until they expire — agents cannot dismiss them
-          manually (BIN-06).
-        </p>
-        <div className="grid grid-cols-2 gap-3">
-          <Input label="Customer ID" placeholder="e.g. CUST-1001" value={customerId} onChange={(e) => setCustomerId(e.target.value)} />
-          <Input label="Expiry date" type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
-          <div className="col-span-2">
-            <Select
-              label="Template"
-              placeholder="Start from a template (optional)"
-              value={templateId}
-              onChange={(e) => {
-                setTemplateId(e.target.value);
-                setMessage(TEMPLATES[e.target.value] ?? '');
-              }}
-              options={Object.keys(TEMPLATES).map((id) => ({ value: id, label: id }))}
+      {canConfigure ? (
+        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mb-6">
+          <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Configure a notification</h2>
+          <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
+            Notifications appear as a banner on the customer's Customer 360 screen until they expire — agents cannot dismiss them
+            manually (BIN-06).
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Customer ID" placeholder="e.g. CUST-1001" value={customerId} onChange={(e) => setCustomerId(e.target.value)} />
+            <Input
+              label="Expiry date"
+              type="date"
+              value={expiresAt}
+              onChange={(e) => setExpiresAt(e.target.value)}
+              helperText="Required to publish (BR-04) — optional only while saving as a draft."
             />
+            <div className="col-span-2">
+              <Select
+                label="Template"
+                placeholder="Start from a template (optional)"
+                value={templateId}
+                onChange={(e) => {
+                  setTemplateId(e.target.value);
+                  setMessage(TEMPLATES[e.target.value] ?? '');
+                }}
+                options={Object.keys(TEMPLATES).map((id) => ({ value: id, label: id }))}
+              />
+            </div>
+            <div className="col-span-2">
+              <Textarea label="Message" value={message} onChange={(e) => setMessage(e.target.value)} />
+            </div>
           </div>
-          <div className="col-span-2">
-            <Textarea label="Message" value={message} onChange={(e) => setMessage(e.target.value)} />
+          <div className="flex gap-2 mt-4">
+            <Button variant="ghost-rect" onClick={() => save('Draft')} disabled={!customerId.trim() || !message.trim() || submitting}>
+              Save as draft
+            </Button>
+            <Button
+              variant="primary-rect"
+              onClick={() => save('Published')}
+              disabled={!customerId.trim() || !message.trim() || !expiresAt || submitting}
+            >
+              Publish
+            </Button>
           </div>
         </div>
-        <div className="flex gap-2 mt-4">
-          <Button variant="ghost-rect" onClick={() => save('Draft')} disabled={!customerId.trim() || !message.trim() || submitting}>
-            Save as draft
-          </Button>
-          <Button variant="primary-rect" onClick={() => save('Published')} disabled={!customerId.trim() || !message.trim() || submitting}>
-            Publish
-          </Button>
+      ) : (
+        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mb-6">
+          <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Configure a notification</h2>
+          <p className="text-fg-2 text-[length:var(--fs-caption)]">
+            Restricted to Backoffice and privileged staff roles (Agent 360 BIN-01, BR-03). This persona does not have
+            configuration access.
+          </p>
         </div>
-      </div>
+      )}
 
       <h3 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-2">All notifications</h3>
       <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg divide-y divide-border-soft">

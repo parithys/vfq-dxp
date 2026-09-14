@@ -46,6 +46,27 @@ const METRICS = [
 // sign-in with an inline error, instead of silently defaulting to a role.
 // The password check is against a placeholder demo credential
 // (DEMO_LOGIN_PASSWORD) — see staffIdRoleMap.ts for why.
+//
+// JSM-01 itself ("Reuse requirement TT-001-JSM-*") is a reuse-stub in the
+// BRSD's own requirements register — it names no inline Acceptance Criteria
+// and points at a source document (TT-001-JSM-*) that isn't present in this
+// corpus, which the compliance audit flagged as making the requirement
+// unverifiable as literally written, independent of whether login itself
+// works. Since no code change can supply a missing external document, this
+// comment records the concrete, testable behavior this screen actually
+// implements, so a future audit has a real AC to check against rather than
+// an unresolved stub:
+//   1. An agent submits a Staff ID and a password (both required).
+//   2. An unrecognised Staff ID is rejected with "Staff ID not recognised."
+//      and sign-in does not proceed (handleSignIn, below).
+//   3. A recognised Staff ID with the wrong password is rejected with
+//      "Incorrect password." and sign-in does not proceed.
+//   4. Only when both checks pass does the agent's persona/profile resolve
+//      and signIn() fire, matching Annex_02's Login Initiated -> Login
+//      Failed -> Login Initiated / Login Initiated -> Authenticated ->
+//      Session Active state model.
+// Closing this open item fully still requires either the actual TT-001-
+// JSM-* text or a formal business sign-off that the above satisfies intent.
 export function LoginPage() {
   const signIn = useAuthStore((s) => s.signIn);
   const setActivePersona = usePersonaStore((s) => s.setActivePersona);

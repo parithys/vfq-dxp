@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useEntityStore } from '../../stores/entityStore';
 import { useNotificationStore } from '../../stores/notificationStore';
+import { usePersonaStore } from '../../stores/personaStore';
+import { isBackofficeOrPrivilegedPersona } from '../../engines/agentPrivilegeEngine';
 import { Input } from '../../components/primitives/Input';
 import { Select } from '../../components/primitives/Select';
 import { Textarea } from '../../components/primitives/Textarea';
@@ -23,14 +25,17 @@ const TEMPLATES: Record<string, string> = {
 };
 
 // Agent 360 BNT-04: Backoffice configures a bulk note using a template and
-// applies it to one or more customer accounts at once (BNT-02). Same
-// non-gated stance as Bell Notifications — BR-03's role matrix is
-// unconfirmed (OI-AGN-13).
+// applies it to one or more customer accounts at once (BNT-02). Role-gated
+// via agentPrivilegeEngine.ts's evidenced Backoffice/Supervisory/Approval
+// persona set (BR-03), same mechanism as Bell Notifications, pending a more
+// specific matrix from VFQ (OI-AGN-13).
 export function BulkNotesConfigSection() {
   const notes = (useEntityStore((s) => s.records['bulk-notes']) ?? []) as unknown as BulkNote[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const createRecord = useEntityStore((s) => s.createRecord);
   const pushToast = useNotificationStore((s) => s.pushToast);
+  const activePersonaId = usePersonaStore((s) => s.activePersonaId);
+  const canConfigure = isBackofficeOrPrivilegedPersona(activePersonaId);
 
   const [templateId, setTemplateId] = useState('');
   const [content, setContent] = useState('');
@@ -45,6 +50,9 @@ export function BulkNotesConfigSection() {
   }, [loadKind]);
 
   const publish = async () => {
+    // BNT-04/BR-03: enforced here too, not just via a hidden form — a
+    // non-privileged persona's call can never actually create a record.
+    if (!canConfigure) return;
     const accountIds = accountIdsInput
       .split(',')
       .map((id) => id.trim())
@@ -73,36 +81,46 @@ export function BulkNotesConfigSection() {
 
   return (
     <div>
-      <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mb-6">
-        <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Configure a bulk note</h2>
-        <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
-          Applies to every account ID listed — agents will see this note when viewing any of those customers.
-        </p>
-        <div className="space-y-3">
-          <Select
-            label="Template"
-            placeholder="Start from a template (optional)"
-            value={templateId}
-            onChange={(e) => {
-              setTemplateId(e.target.value);
-              setContent(TEMPLATES[e.target.value] ?? '');
-            }}
-            options={Object.keys(TEMPLATES).map((id) => ({ value: id, label: id }))}
-          />
-          <Textarea label="Note content" value={content} onChange={(e) => setContent(e.target.value)} />
-          <Input
-            label="Account IDs (comma-separated)"
-            placeholder="e.g. ACC-5001, ACC-5002"
-            value={accountIdsInput}
-            onChange={(e) => setAccountIdsInput(e.target.value)}
-          />
+      {canConfigure ? (
+        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mb-6">
+          <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Configure a bulk note</h2>
+          <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
+            Applies to every account ID listed — agents will see this note when viewing any of those customers.
+          </p>
+          <div className="space-y-3">
+            <Select
+              label="Template"
+              placeholder="Start from a template (optional)"
+              value={templateId}
+              onChange={(e) => {
+                setTemplateId(e.target.value);
+                setContent(TEMPLATES[e.target.value] ?? '');
+              }}
+              options={Object.keys(TEMPLATES).map((id) => ({ value: id, label: id }))}
+            />
+            <Textarea label="Note content" value={content} onChange={(e) => setContent(e.target.value)} />
+            <Input
+              label="Account IDs (comma-separated)"
+              placeholder="e.g. ACC-5001, ACC-5002"
+              value={accountIdsInput}
+              onChange={(e) => setAccountIdsInput(e.target.value)}
+            />
+          </div>
+          <div className="pt-4">
+            <Button variant="primary-rect" onClick={publish} disabled={!content.trim() || !accountIdsInput.trim() || submitting}>
+              Post note
+            </Button>
+          </div>
         </div>
-        <div className="pt-4">
-          <Button variant="primary-rect" onClick={publish} disabled={!content.trim() || !accountIdsInput.trim() || submitting}>
-            Post note
-          </Button>
+      ) : (
+        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mb-6">
+          <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Configure a bulk note</h2>
+          <p className="text-fg-2 text-[length:var(--fs-caption)]">
+            Restricted to Backoffice and privileged staff roles (Agent 360 BNT-04, BR-03). This persona does not have
+            configuration access.
+          </p>
         </div>
-      </div>
+      )}
 
       <h3 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-2">All bulk notes</h3>
       <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg divide-y divide-border-soft">

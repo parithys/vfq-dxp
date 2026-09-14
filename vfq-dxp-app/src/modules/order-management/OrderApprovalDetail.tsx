@@ -11,6 +11,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { useNotificationStore } from '../../stores/notificationStore';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { getRequiredApproverRole } from '../../engines/configEngine';
+import { isVisibleToAgent } from '../../engines/agentTaskEngine';
 
 interface Order {
   orderId: string;
@@ -24,6 +25,9 @@ interface Order {
    * FWA orders still need WFM installation after approval (UJ-062), so they
    * carry 'Pending WFM Installation' here instead of jumping straight to Complete. */
   nextStatusOnApproval?: string;
+  /** Set by "Assign to Me" in the queue — governs both queue visibility and
+   * (AAV-00) whether this detail page may be opened at all by direct URL. */
+  assignedApproverId?: string | null;
 }
 interface RejectReason {
   reasonCode: string;
@@ -36,6 +40,31 @@ interface ApprovalHistoryEntry {
   actionTaken: string;
   notes?: string;
   transactionDate: string;
+}
+
+// AAV-05: "see task history before confirming Approval, Rejection, or
+// Return" — the Activities tab already shows this, but a Drawer overlays
+// the page, so this same list is repeated directly inside each confirmation
+// Drawer, immediately above the confirm button, rather than relying on the
+// agent having scrolled past the Activities tab earlier in the session.
+function HistoryPreview({ history, orderType }: { history: ApprovalHistoryEntry[]; orderType: string }) {
+  if (history.length === 0) return null;
+  return (
+    <div className="rounded-[var(--radius-card)] border border-border-soft divide-y divide-border-soft">
+      <p className="px-3 py-2 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted">Task history</p>
+      {history.map((entry) => (
+        <div key={entry.activityNumber} className="px-3 py-2">
+          <div className="flex items-center justify-between gap-3">
+            <span className="font-medium text-fg text-[length:var(--fs-caption)]">{entry.actionTaken}</span>
+            <span className="text-muted text-[length:var(--fs-micro)]">{new Date(entry.transactionDate).toLocaleString()}</span>
+          </div>
+          <div className="text-fg-2 text-[length:var(--fs-micro)] mt-0.5">
+            Task ID: {entry.orderId} · Task Name: {orderType}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 // SCR-061: Order Approval detail — header (Contact, Order #) + 4 tabs
@@ -57,6 +86,7 @@ export function OrderApprovalDetail() {
   const createRecord = useEntityStore((s) => s.createRecord);
   const pushToast = useNotificationStore((s) => s.pushToast);
   const currentJobTitle = useAuthStore((s) => s.profile?.jobTitle);
+  const currentAgentId = useAuthStore((s) => s.profile?.userId);
 
   const [reasons, setReasons] = useState<RejectReason[]>([]);
   const [modal, setModal] = useState<'approve' | 'reject-correction' | 'reject-drop' | 'return' | null>(null);
@@ -83,6 +113,22 @@ export function OrderApprovalDetail() {
   const order = orders.find((o) => o.orderId === orderId);
   if (!order) {
     return <div className="p-8 text-fg-2">No order selected — go back to the Approval Queue and Assign to Me first.</div>;
+  }
+
+  // AAV-00 clause (b): "if the task is not assigned or accessible to the
+  // agent, access is denied." Unassigned orders (assignedApproverId is null)
+  // are still open queue items anyone eligible can claim, so they remain
+  // accessible; once assigned, only that approver may open this page —
+  // matching the same isVisibleToAgent rule the queue itself already
+  // enforces (OrderApprovalQueue.tsx), so a direct URL can no longer bypass
+  // the queue's own visibility rule.
+  if (!isVisibleToAgent(order.assignedApproverId, currentAgentId)) {
+    return (
+      <div className="p-8 text-fg-2">
+        <p className="text-fg font-medium mb-1">Access denied.</p>
+        <p>This order is assigned to another approver and is not accessible from your account.</p>
+      </div>
+    );
   }
 
   const history = activities.filter((a) => a.orderId === order.orderId && a.actionTaken);
@@ -275,6 +321,7 @@ export function OrderApprovalDetail() {
 
       <Drawer open={modal === 'approve'} onClose={() => setModal(null)} title="Approve Order">
         <div className="space-y-3">
+          <HistoryPreview history={history} orderType={order.orderType} />
           <label className="flex items-start gap-2 text-[length:var(--fs-body)] text-fg">
             <input type="checkbox" checked={ackApprove} onChange={(e) => setAckApprove(e.target.checked)} className="mt-1" />
             By clicking submit, I agree that I have verified all the documents and details to proceed with submission.
@@ -289,6 +336,7 @@ export function OrderApprovalDetail() {
 
       <Drawer open={modal === 'reject-correction' || modal === 'reject-drop'} onClose={() => setModal(null)} title="Reject Order">
         <div className="space-y-3">
+          <HistoryPreview history={history} orderType={order.orderType} />
           <Select
             label="Reject Reason"
             value={rejectReason}
@@ -296,11 +344,15 @@ export function OrderApprovalDetail() {
             placeholder="Select a reason"
             options={reasons.map((r) => ({ value: r.reasonCode, label: r.reasonLabel }))}
           />
-          <Textarea label="Comments" value={rejectComment} onChange={(e) => setRejectComment(e.target.value)} />
+          <Textarea label="Comments (required — BR-06)" value={rejectComment} onChange={(e) => setRejectComment(e.target.value)} />
         </div>
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>
-          <Button variant="primary-rect" onClick={() => reject(modal === 'reject-drop')} disabled={!rejectReason || submitting}>
+          <Button
+            variant="primary-rect"
+            onClick={() => reject(modal === 'reject-drop')}
+            disabled={!rejectReason || !rejectComment.trim() || submitting}
+          >
             Reject Order
           </Button>
         </div>
@@ -308,6 +360,7 @@ export function OrderApprovalDetail() {
 
       <Drawer open={modal === 'return'} onClose={() => setModal(null)} title="Return Order">
         <div className="space-y-3">
+          <HistoryPreview history={history} orderType={order.orderType} />
           <p className="text-fg-2 text-[length:var(--fs-body)]">
             Returning sends this order back to the approval queue for correction, rather than rejecting it outright.
           </p>

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useEntityStore } from '../../stores/entityStore';
+import { usePersonaStore } from '../../stores/personaStore';
 import { Icon } from '../../components/primitives/Icon';
 import { useBellNotificationExpirySweep } from '../../engines/bellNotificationExpiry';
+import { isInternalAgentPersona } from '../../engines/agentPrivilegeEngine';
 
 interface BellNotification {
   notificationId: string;
@@ -29,9 +31,15 @@ const TEMPLATE_TITLE: Record<string, string> = {
 // customer only (BIN-04), latest-first (BIN-05), no dismiss/expire action
 // exposed to the agent (BIN-06) — it disappears on its own once expiresAt
 // passes (BIN-07), evaluated client-side against "now" on every render.
+// BIN-04's "access permissions" clause is more than customerId scoping: the
+// viewing persona must also be a genuine internal agent (see
+// agentPrivilegeEngine.ts) — external/customer-side/system-type personas
+// never see internal notification banners, regardless of which customer
+// record they're looking at.
 export function BellNotificationBanner({ customerId }: { customerId: string }) {
   const notifications = (useEntityStore((s) => s.records['bell-notifications']) ?? []) as unknown as BellNotification[];
   const loadKind = useEntityStore((s) => s.loadKind);
+  const activePersonaId = usePersonaStore((s) => s.activePersonaId);
   // Captured once per mount rather than read impurely during render — this
   // page is short-lived enough (an agent viewing one customer) that
   // re-evaluating expiry only on mount/data-change, not on every render, is
@@ -42,6 +50,8 @@ export function BellNotificationBanner({ customerId }: { customerId: string }) {
     loadKind('bell-notifications');
   }, [loadKind]);
   useBellNotificationExpirySweep();
+
+  if (!isInternalAgentPersona(activePersonaId)) return null;
 
   const active = notifications
     .filter(
