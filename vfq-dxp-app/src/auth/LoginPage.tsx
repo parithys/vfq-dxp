@@ -215,12 +215,11 @@ export function LoginPage() {
       </div>
 
       {/* Brand/metrics panel — background (public/brand/login-bg.jpg) is a
-          hand-generated illustration of a Gulf city skyline at dusk (lit
-          towers, palm silhouettes, warm horizon glow), evoking Doha/Qatar for
-          a Vodafone Qatar staff portal without claiming to be an actual photo
-          of any real building or location — no photographic asset exists
-          anywhere in this repo. A dark scrim sits between it and the content
-          so text/cards stay legible regardless of what's under them. */}
+          real photo of the Doha, Qatar skyline at night (West Bay towers incl.
+          Aspire Tower/Doha Tower), by Hongbin (@hbsun2013) on Unsplash
+          (unsplash.com/photos/a-city-skyline-at-night-5jvAmqV4W-c), used under
+          the Unsplash License. A dark scrim sits between it and the content so
+          text/cards stay legible over the photo. */}
       <div className="relative flex-1 px-8 md:px-16 py-10 flex flex-col justify-between text-white md:order-1 overflow-hidden bg-[#0a0a0d]">
         <img src="/brand/login-bg.jpg" alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-[image:linear-gradient(160deg,rgba(10,10,13,0.55)_0%,rgba(10,10,13,0.8)_100%)]" />
