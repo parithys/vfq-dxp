@@ -2,7 +2,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getAllModules, getAllRoutes } from '../engines/configEngine';
 import { useActiveCustomerStore } from '../stores/activeCustomerStore';
 import { Icon } from '../components/primitives/Icon';
-import { Tooltip } from '../components/primitives/Tooltip';
 
 const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
 const ARROW_LEFT = 'M19 12H5 M12 19l-7-7 7-7';
@@ -35,18 +34,20 @@ export function Breadcrumbs() {
        * scattered/inconsistent per-page "Go Back" buttons some screens
        * already have buried in their own action rows. Never rendered on the
        * Dashboard itself (component returns null there — see above), which
-       * doubles as "nowhere sensible to go back to" for this button too. */}
-      <Tooltip content="Go back" placement="bottom">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          aria-label="Go back"
-          className="flex items-center justify-center w-6 h-6 -ml-1 rounded-[var(--radius-pill)] text-fg-2 hover:bg-surface hover:text-fg transition-colors shrink-0"
-        >
-          <Icon path={ARROW_LEFT} className="w-4 h-4" />
-        </button>
-      </Tooltip>
-      <Link to="/" className="text-muted hover:text-fg transition-colors">
+       * doubles as "nowhere sensible to go back to" for this button too.
+       * Styled as a bordered pill in the same caption size/muted tone as the
+       * crumb trail beside it, rather than a bare icon circle, so it reads as
+       * part of the same navigation component instead of a separate control. */}
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        aria-label="Go back"
+        className="flex items-center gap-1 -ml-1 pl-2 pr-2.5 py-1 rounded-[var(--radius-pill)] border border-border-soft text-muted hover:border-border hover:text-fg transition-colors shrink-0"
+      >
+        <Icon path={ARROW_LEFT} className="w-3.5 h-3.5" />
+        Back
+      </button>
+      <Link to="/" className="ml-1 text-muted hover:text-fg transition-colors">
         Dashboard
       </Link>
       {module && !isCustomer360 && (
