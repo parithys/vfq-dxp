@@ -24,6 +24,30 @@ const ICONS = {
   helpCircle: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M9.2 9a2.8 2.8 0 1 1 3.9 2.6c-.9.4-1.4 1-1.4 2 M12 17h.01',
 };
 
+// Decorative network/coverage mark for the brand panel — no photo/illustration
+// asset exists anywhere in this repo (only the Vodafone wordmark + favicon),
+// so this is a hand-authored inline SVG rather than a fabricated stock photo.
+// Purely decorative chrome, not a claim about any real store/device/screenshot.
+function NetworkIllustration() {
+  return (
+    <svg viewBox="0 0 220 220" className="hidden lg:block w-44 h-44 xl:w-56 xl:h-56 shrink-0" aria-hidden="true">
+      <circle cx="110" cy="110" r="95" fill="white" fillOpacity="0.04" />
+      <circle cx="110" cy="110" r="70" fill="none" stroke="white" strokeOpacity="0.12" strokeWidth="1.5" />
+      <circle cx="110" cy="110" r="45" fill="none" stroke="white" strokeOpacity="0.18" strokeWidth="1.5" />
+      <line x1="110" y1="110" x2="60" y2="55" stroke="white" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="3 4" />
+      <line x1="110" y1="110" x2="168" y2="70" stroke="white" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="3 4" />
+      <line x1="110" y1="110" x2="150" y2="165" stroke="white" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="3 4" />
+      <line x1="110" y1="110" x2="48" y2="150" stroke="white" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="3 4" />
+      <circle cx="60" cy="55" r="5" fill="white" fillOpacity="0.5" />
+      <circle cx="168" cy="70" r="4" fill="white" fillOpacity="0.35" />
+      <circle cx="150" cy="165" r="4" fill="white" fillOpacity="0.35" />
+      <circle cx="48" cy="150" r="4" fill="white" fillOpacity="0.35" />
+      <circle cx="110" cy="110" r="10" fill="var(--accent)" />
+      <circle cx="110" cy="110" r="18" fill="none" stroke="var(--accent)" strokeOpacity="0.4" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
 const METRICS = [
   { icon: ICONS.shield, trend: 'up', value: '98.7%', label: 'SLA compliance', sub: 'vs 97.5% target' },
   { icon: ICONS.star, trend: 'up', value: '4.6 / 5', label: 'Customer satisfaction', sub: 'CSAT score today' },
@@ -217,16 +241,21 @@ export function LoginPage() {
       {/* Brand/metrics panel */}
       <div className="flex-1 px-8 md:px-16 py-10 flex flex-col justify-between text-white bg-[image:var(--gradient-brand-panel)] md:order-1">
         <div>
-          <div className="flex items-center gap-2 mb-4">
-            <span className="w-1.5 h-1.5 rounded-full bg-white inline-block" />
-            <span className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-white/80">
-              Today&rsquo;s store performance · {today}
-            </span>
+          <div className="flex items-start justify-between gap-6">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-white inline-block" />
+                <span className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-white/80">
+                  Today&rsquo;s store performance · {today}
+                </span>
+              </div>
+              <h2 className="text-[length:var(--fs-h1)] font-black leading-[1.02] mb-3">Operational overview</h2>
+              <p className="text-white/85 text-[length:var(--fs-lead)] max-w-xl">
+                Real-time store and operations metrics. Review your team&rsquo;s performance before entering the portal.
+              </p>
+            </div>
+            <NetworkIllustration />
           </div>
-          <h2 className="text-[length:var(--fs-h1)] font-black leading-[1.02] mb-3">Operational overview</h2>
-          <p className="text-white/85 text-[length:var(--fs-lead)] max-w-xl">
-            Real-time store and operations metrics. Review your team&rsquo;s performance before entering the portal.
-          </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
             {METRICS.map((m) => (
