@@ -214,9 +214,17 @@ export function LoginPage() {
         </div>
       </div>
 
-      {/* Brand/metrics panel */}
-      <div className="flex-1 px-8 md:px-16 py-10 flex flex-col justify-between text-white bg-[image:var(--gradient-brand-panel)] md:order-1">
-        <div>
+      {/* Brand/metrics panel — background (public/brand/login-bg.jpg) is a
+          hand-generated illustration of a Gulf city skyline at dusk (lit
+          towers, palm silhouettes, warm horizon glow), evoking Doha/Qatar for
+          a Vodafone Qatar staff portal without claiming to be an actual photo
+          of any real building or location — no photographic asset exists
+          anywhere in this repo. A dark scrim sits between it and the content
+          so text/cards stay legible regardless of what's under them. */}
+      <div className="relative flex-1 px-8 md:px-16 py-10 flex flex-col justify-between text-white md:order-1 overflow-hidden bg-[#0a0a0d]">
+        <img src="/brand/login-bg.jpg" alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-[image:linear-gradient(160deg,rgba(10,10,13,0.55)_0%,rgba(10,10,13,0.8)_100%)]" />
+        <div className="relative">
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-accent inline-block shrink-0" />
@@ -258,7 +266,7 @@ export function LoginPage() {
           </div>
         </div>
 
-        <div className="pt-6 mt-6 border-t border-white/20 flex items-center justify-between text-white/60 text-[length:var(--fs-caption)]">
+        <div className="relative pt-6 mt-6 border-t border-white/20 flex items-center justify-between text-white/60 text-[length:var(--fs-caption)]">
           <span>Metrics refresh every 5 minutes · Last updated just now</span>
           <span className="text-white/40">VFQ-DXP v3.4.1</span>
         </div>
