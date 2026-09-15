@@ -100,8 +100,8 @@ export function CustomerSearchPage() {
           {searching && <p className="text-muted text-[length:var(--fs-body)]">Searching…</p>}
           {!searching && results.length === 0 && (
             <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-6 text-center">
-              <p className="text-fg font-medium mb-1">No customer matches “{query}”.</p>
-              <p className="text-fg-2 text-[length:var(--fs-caption)]">Check the ID/number, or try searching by name or email instead.</p>
+              <p className="text-fg font-medium mb-1">Customer Data Not Found</p>
+              <p className="text-fg-2 text-[length:var(--fs-caption)]">No customer record matches “{query}”. Check the ID/number, or try searching by name or email instead.</p>
             </div>
           )}
           {!searching &&
