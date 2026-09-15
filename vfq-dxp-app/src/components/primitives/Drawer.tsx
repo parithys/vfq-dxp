@@ -8,33 +8,37 @@ interface DrawerProps {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
-  /** 'md' (28rem) fits signature capture and 1-2 field action forms; 'lg' (36rem) is for the two
-      content-heaviest forms (TicketCreationModal, ForgotPasswordFlow). Defaults to 'md'. */
-  size?: 'md' | 'lg';
 }
-
-const SIZE_CLASSES: Record<NonNullable<DrawerProps['size']>, string> = {
-  md: 'max-w-md',
-  lg: 'max-w-xl',
-};
 
 // Side drawer for everything that isn't a short confirmation message (see
 // Modal.tsx, which is reserved for those) — forms, signature capture, and
 // multi-step flows read as more seamless sliding in from the edge than
-// interrupting the whole screen with a centered dialog.
-export function Drawer({ open, onClose, title, children, footer, size = 'md' }: DrawerProps) {
+// interrupting the whole screen with a centered dialog. Width is 40% of the
+// viewport (with a floor so it doesn't get unusably narrow on small
+// screens) rather than a fixed size tier, so every drawer gets the same
+// extra breathing room for content.
+// Matches the transition-duration below (--motion-base) so unmount is
+// deferred exactly as long as the slide-out animation takes to finish.
+const EXIT_DURATION_MS = 220;
+
+export function Drawer({ open, onClose, title, children, footer }: DrawerProps) {
   // Mirrors Sidebar.tsx's mobile-drawer technique: mount first, then flip the
   // transform on the next tick so the slide-in transition actually plays
-  // instead of the panel just appearing already in place.
+  // instead of the panel just appearing already in place. `mounted` stays
+  // true for one extra transition-duration after `open` goes false, so the
+  // panel can slide back out before it's removed from the DOM.
+  const [mounted, setMounted] = useState(open);
   const [entered, setEntered] = useState(false);
 
   useEffect(() => {
-    if (!open) {
-      setEntered(false);
-      return;
+    if (open) {
+      setMounted(true);
+      const raf = requestAnimationFrame(() => setEntered(true));
+      return () => cancelAnimationFrame(raf);
     }
-    const raf = requestAnimationFrame(() => setEntered(true));
-    return () => cancelAnimationFrame(raf);
+    setEntered(false);
+    const timeout = setTimeout(() => setMounted(false), EXIT_DURATION_MS);
+    return () => clearTimeout(timeout);
   }, [open]);
 
   useEffect(() => {
@@ -46,17 +50,17 @@ export function Drawer({ open, onClose, title, children, footer, size = 'md' }: 
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!mounted) return null;
   return (
-    // cursor-default (not pointer): clicking the backdrop dismisses the
-    // drawer, but per UI cursor remediation guidance a full-screen dismiss
-    // surface should not read as "clickable" the way a button does.
-    <div className="fixed inset-0 z-50 bg-[var(--black-80)] cursor-default" onClick={onClose}>
+    // Backdrop no longer dismisses the drawer on click — only the explicit
+    // close button or Escape do (see the keydown handler above). Prevents
+    // losing in-progress form input from an accidental click outside the
+    // panel.
+    <div className="fixed inset-0 z-50 bg-[var(--black-80)]">
       <div
-        className={`fixed right-0 inset-y-0 z-50 w-full ${SIZE_CLASSES[size]} flex flex-col bg-bg border-l border-border-soft shadow-raised transform transition-transform duration-[var(--motion-base)] ease-[var(--ease-standard)] ${
+        className={`fixed right-0 inset-y-0 z-50 w-[40vw] min-w-[320px] max-w-full flex flex-col bg-bg border-l border-border-soft shadow-raised transform transition-transform duration-[var(--motion-base)] ease-[var(--ease-standard)] ${
           entered ? 'translate-x-0' : 'translate-x-full'
         }`}
-        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label={title}

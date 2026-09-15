@@ -5,6 +5,7 @@ import * as mockDataEngine from '../engines/mockDataEngine';
 import { Icon } from '../components/primitives/Icon';
 
 const SEARCH_ICON = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3';
+const CLEAR_ICON = 'M6 6l12 12 M18 6L6 18';
 
 interface RecordResult {
   key: string;
@@ -158,8 +159,22 @@ export function GlobalSearch() {
         }}
         placeholder="Search modules, screens, leads, orders, tickets…"
         aria-label="Global search"
-        className={`w-full rounded-[var(--field-radius)] border bg-bg pl-9 pr-9 py-2 text-fg text-[length:var(--fs-body)] text-center placeholder:text-muted focus:outline-none focus-visible:border-accent focus-visible:shadow-[var(--focus-ring)] ${query ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'}`}
+        className={`w-full rounded-[var(--field-radius)] border bg-bg pl-9 pr-9 py-2 text-fg text-[length:var(--fs-body)] placeholder:text-muted focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)] ${query ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'}`}
       />
+      {query && (
+        <button
+          type="button"
+          aria-label="Clear search"
+          onClick={() => {
+            setQuery('');
+            setOpen(false);
+            inputRef.current?.focus();
+          }}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-fg"
+        >
+          <Icon path={CLEAR_ICON} className="w-4 h-4" />
+        </button>
+      )}
       {open && q && (
         <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-96 overflow-y-auto rounded-[var(--radius-card)] border border-border-soft bg-bg shadow-raised">
           {!hasResults && <p className="px-4 py-6 text-center text-muted text-[length:var(--fs-body)]">No matches for &ldquo;{query}&rdquo;.</p>}

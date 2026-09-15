@@ -69,10 +69,14 @@
   --field-border-error: var(--danger);
   --field-border-filled: var(--accent);
   --field-divider: var(--border-soft);
+  --field-focus-border: var(--accent);
+  --field-focus-ring: 0 0 0 4px rgba(255,92,92,.3);
   --field-icon: var(--muted);
   --field-icon-active: var(--fg);
   --field-label: var(--fg-2);
   --field-label-disabled: var(--muted);
+  --field-selected: var(--accent);
+  --shadow-selected-ring: 0 0 0 3px rgba(230,0,0,.12);
 
   /* Status colors and elevation/shadow tokens were tuned against the light
      surfaces above and read as too saturated/low-contrast on the dark ones —
@@ -141,7 +145,16 @@ body {
   min-height: 100vh;
 }
 
-:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+/* In @layer base (not left unlayered like the rules above) so that
+   Tailwind's own focus-visible:/focus-within: utility variants — used
+   throughout the field components to set a field-specific focus color —
+   can actually override this default via normal layer ordering. Left
+   unlayered, this default previously beat those utilities outright
+   regardless of specificity, which happened to go unnoticed only because
+   every override used to resolve to the same red. */
+@layer base {
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
 }

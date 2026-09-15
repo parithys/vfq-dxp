@@ -132,6 +132,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true }: Gu
               type="checkbox"
               checked={value.isB2B2C ?? false}
               onChange={(e) => onChange({ ...value, isB2B2C: e.target.checked, companyName: e.target.checked ? value.companyName : undefined })}
+              className="accent-[var(--field-selected)]"
             />
             B2B2C order
           </label>

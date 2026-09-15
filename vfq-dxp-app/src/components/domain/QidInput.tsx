@@ -50,11 +50,11 @@ export function QidInput({ idType, onIdTypeChange, value, onChange, onFetch, fet
                 type="button"
                 onClick={() => onIdTypeChange(t.type)}
                 className={`relative flex flex-col items-center gap-2 rounded-[var(--radius-card)] border p-4 ${
-                  selected ? 'border-accent bg-surface-warm text-accent' : 'border-border-soft text-fg-2 enabled:hover:border-accent/50'
+                  selected ? 'border-[var(--field-selected)] bg-surface-warm text-[var(--field-selected)]' : 'border-border-soft text-fg-2 enabled:hover:border-[var(--field-selected)]/50'
                 }`}
               >
                 {selected && (
-                  <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-accent text-white flex items-center justify-center">
+                  <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[var(--field-selected)] text-white flex items-center justify-center">
                     <Icon path={CHECK} className="w-2.5 h-2.5" />
                   </span>
                 )}
@@ -78,7 +78,7 @@ export function QidInput({ idType, onIdTypeChange, value, onChange, onFetch, fet
             placeholder={current.placeholder}
             className={`flex-1 min-w-0 rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg
               ${error ? 'border-[var(--field-border-error)]' : value ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'}
-              focus:outline-none focus-visible:border-accent focus-visible:shadow-[var(--focus-ring)]`}
+              focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]`}
           />
           <Button variant="primary-rect" onClick={onFetch} disabled={!value || fetching}>
             <Icon path={SEARCH_ICON} className="w-4 h-4" />

@@ -160,7 +160,7 @@ export function ModuleScreenList() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search screen ID or name…"
-            className={`w-full rounded-[var(--field-radius)] border bg-bg pl-9 pr-3 py-2 text-fg text-[length:var(--fs-body)] placeholder:text-muted focus:outline-none focus-visible:border-accent focus-visible:shadow-[var(--focus-ring)] ${search ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'}`}
+            className={`w-full rounded-[var(--field-radius)] border bg-bg pl-9 pr-3 py-2 text-fg text-[length:var(--fs-body)] placeholder:text-muted focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)] ${search ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'}`}
           />
         </div>
         <div className="flex flex-wrap gap-2">

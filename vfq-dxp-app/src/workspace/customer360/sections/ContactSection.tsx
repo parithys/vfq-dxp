@@ -5,6 +5,7 @@ import { Button } from '../../../components/primitives/Button';
 import { Drawer } from '../../../components/primitives/Drawer';
 import { Input } from '../../../components/primitives/Input';
 import { Select } from '../../../components/primitives/Select';
+import { ContactPhoneInput } from '../../../components/domain/ContactPhoneInput';
 import { Tooltip } from '../../../components/primitives/Tooltip';
 import { useEntityStore } from '../../../stores/entityStore';
 import { usePersonaStore } from '../../../stores/personaStore';
@@ -190,7 +191,14 @@ function ContactEditDrawer({
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Cell Number" value={cellNumber} onChange={(e) => setCellNumber(e.target.value)} readOnly={readOnly} disabled={readOnly} />
+          <ContactPhoneInput
+            label="Cell Number"
+            value={cellNumber}
+            onChange={setCellNumber}
+            customerId={customerId}
+            disabled={readOnly}
+            helperText={readOnly ? undefined : "Pick from this customer's other numbers on file, or type a new one."}
+          />
           <Input label="Work Phone" value={workPhone} onChange={(e) => setWorkPhone(e.target.value)} readOnly={readOnly} disabled={readOnly} />
         </div>
         <Input label="Employer Email" value={employerEmail} onChange={(e) => setEmployerEmail(e.target.value)} readOnly={readOnly} disabled={readOnly} />

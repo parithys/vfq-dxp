@@ -172,7 +172,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
   };
 
   return (
-    <Drawer open={open} onClose={onClose} title="New Trouble Ticket" size="lg">
+    <Drawer open={open} onClose={onClose} title="New Trouble Ticket">
       <div className="space-y-4">
         <Input
           label="Customer ID"

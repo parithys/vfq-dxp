@@ -75,13 +75,13 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
                 <label
                   key={p.productId}
                   className={`flex items-start gap-3 rounded-[var(--radius-card)] border p-4 cursor-pointer ${
-                    selected ? 'border-accent bg-surface-warm' : 'border-border-soft hover:border-accent'
+                    selected ? 'border-[var(--field-selected)] bg-surface-warm' : 'border-border-soft hover:border-[var(--field-selected)]'
                   }`}
                 >
                   <input
                     type="radio"
                     name="prepaid-plan"
-                    className="mt-1"
+                    className="mt-1 accent-[var(--field-selected)]"
                     checked={selected}
                     onChange={() => onSelectProduct(p.productId)}
                   />
@@ -129,11 +129,11 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
             <div className="space-y-2">
               <label
                 className={`flex items-center justify-between gap-2 rounded-[var(--radius-card)] border p-3 cursor-pointer ${
-                  !discountId ? 'border-accent bg-surface-warm' : 'border-border-soft hover:border-accent'
+                  !discountId ? 'border-[var(--field-selected)] bg-surface-warm' : 'border-border-soft hover:border-[var(--field-selected)]'
                 }`}
               >
                 <span className="flex items-center gap-3">
-                  <input type="radio" name="prepaid-discount" checked={!discountId} onChange={() => onSelectDiscount(undefined)} />
+                  <input type="radio" name="prepaid-discount" checked={!discountId} onChange={() => onSelectDiscount(undefined)} className="accent-[var(--field-selected)]" />
                   <span>
                     <span className="text-fg">No discount</span>
                     <span className="block text-[length:var(--fs-caption)] text-muted">Continue without a discount</span>
@@ -145,7 +145,7 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
                 <label
                   key={d.addonDiscountId}
                   className={`flex items-center justify-between gap-2 rounded-[var(--radius-card)] border p-3 cursor-pointer ${
-                    discountId === d.addonDiscountId ? 'border-accent bg-surface-warm' : 'border-border-soft hover:border-accent'
+                    discountId === d.addonDiscountId ? 'border-[var(--field-selected)] bg-surface-warm' : 'border-border-soft hover:border-[var(--field-selected)]'
                   }`}
                 >
                   <span className="flex items-center gap-3">
@@ -154,6 +154,7 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
                       name="prepaid-discount"
                       checked={discountId === d.addonDiscountId}
                       onChange={() => onSelectDiscount(d.addonDiscountId)}
+                      className="accent-[var(--field-selected)]"
                     />
                     <span>
                       <span className="text-fg">{d.name}</span>

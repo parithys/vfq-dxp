@@ -604,6 +604,7 @@ export function TicketDetail() {
                     type="checkbox"
                     checked={resolutionHashtags.includes(h)}
                     onChange={(e) => setResolutionHashtags(e.target.checked ? [...resolutionHashtags, h] : resolutionHashtags.filter((x) => x !== h))}
+                    className="accent-[var(--field-selected)]"
                   />
                   {h}
                 </label>

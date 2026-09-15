@@ -1,14 +1,6 @@
 import { useEffect, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
-
-interface AddressRecord {
-  id: string;
-  zone: string;
-  streetNo: string;
-  buildingNo: string;
-  aptFlatUnit: string;
-  city: string;
-}
+import { LocationInput, type AddressRecord } from '../primitives/LocationInput';
 
 interface AddressSelectionStepProps {
   value: string | undefined;
@@ -23,6 +15,13 @@ interface AddressSelectionStepProps {
 // records), so this step lets the agent select/confirm a physical address; the
 // Service Point grid itself remains a documented gap (screens.md SCR-034 covers
 // the KID/lookup variant with the same limitation).
+//
+// Backed by LocationInput's search-as-you-type UX instead of the previous
+// list-every-seeded-address-as-a-card approach, which doesn't scale past a
+// handful of records. Prop contract (value: addressId, onChange: (id) =>
+// void) is unchanged, so neither wizard call site needs updating — this
+// still self-fetches `addresses` (now just to resolve `value` back to a
+// record for the confirmation summary below the search field).
 export function AddressSelectionStep({ value, onChange }: AddressSelectionStepProps) {
   const [addresses, setAddresses] = useState<AddressRecord[]>([]);
 
@@ -30,23 +29,19 @@ export function AddressSelectionStep({ value, onChange }: AddressSelectionStepPr
     mockDataEngine.list<AddressRecord>('addresses').then(setAddresses);
   }, []);
 
+  const selected = addresses.find((a) => a.id === value);
+
   return (
-    <div className="space-y-2">
-      {addresses.map((a) => (
-        <button
-          key={a.id}
-          onClick={() => onChange(a.id)}
-          className={`w-full text-left rounded-[var(--radius-card)] border p-3 ${
-            value === a.id ? 'border-accent bg-surface-warm' : 'border-border-soft hover:border-accent'
-          }`}
-        >
+    <div className="space-y-3">
+      <LocationInput label="Address" placeholder="Search by zone, street, building, or city…" onSelect={(a) => onChange(a.id)} />
+      {selected && (
+        <div className="rounded-[var(--radius-card)] border border-[var(--field-selected)] bg-surface-warm p-3">
           <div className="text-fg">
-            Zone {a.zone}, Street {a.streetNo}, Building {a.buildingNo}, {a.aptFlatUnit}
+            Zone {selected.zone}, Street {selected.streetNo}, Building {selected.buildingNo}, {selected.aptFlatUnit}
           </div>
-          <div className="text-[length:var(--fs-caption)] text-muted">{a.city}</div>
-        </button>
-      ))}
-      {addresses.length === 0 && <p className="text-muted">Loading addresses…</p>}
+          <div className="text-[length:var(--fs-caption)] text-muted">{selected.city}</div>
+        </div>
+      )}
     </div>
   );
 }

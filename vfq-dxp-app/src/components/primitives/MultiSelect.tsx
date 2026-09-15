@@ -117,7 +117,7 @@ export function MultiSelect({
           onKeyDown={onTriggerKeyDown}
           className={`w-full flex items-center justify-between gap-2 rounded-[var(--field-radius)] border pl-3 pr-3 py-2 text-[length:var(--fs-body)] text-left
             disabled:cursor-not-allowed
-            focus:outline-none focus-visible:border-accent focus-visible:shadow-[var(--focus-ring)]
+            focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]
             bg-bg text-fg disabled:border-[var(--field-border-disabled)]
             ${triggerBorderClass}
             ${className}`}
@@ -154,10 +154,10 @@ export function MultiSelect({
                   <span className="truncate">{opt.label}</span>
                   <span
                     className={`shrink-0 w-[19px] h-[19px] rounded-[2.5px] border flex items-center justify-center ${
-                      checked ? 'border-accent bg-accent' : 'border-[var(--field-border)] bg-bg'
+                      checked ? 'border-[var(--field-selected)] bg-[var(--field-selected)]' : 'border-[var(--field-border)] bg-bg'
                     }`}
                   >
-                    {checked && <Icon path={CHECK} className="w-3 h-3 text-accent-on" />}
+                    {checked && <Icon path={CHECK} className="w-3 h-3 text-white" />}
                   </span>
                 </li>
               );

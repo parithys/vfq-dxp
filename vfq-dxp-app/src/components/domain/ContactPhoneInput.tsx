@@ -95,7 +95,7 @@ export function ContactPhoneInput({
       )}
       <div ref={containerRef} className="relative">
         <div
-          className={`flex items-center gap-2 rounded-[var(--field-radius)] border bg-bg pl-3 pr-2 py-2 focus-within:border-accent focus-within:shadow-[var(--focus-ring)]
+          className={`flex items-center gap-2 rounded-[var(--field-radius)] border bg-bg pl-3 pr-2 py-2 focus-within:border-[var(--field-focus-border)] focus-within:shadow-[var(--field-focus-ring)]
             ${disabled ? 'border-[var(--field-border-disabled)]' : borderClass}
             ${className}`}
         >

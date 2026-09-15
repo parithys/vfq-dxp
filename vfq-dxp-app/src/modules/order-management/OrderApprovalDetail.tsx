@@ -323,7 +323,7 @@ export function OrderApprovalDetail() {
         <div className="space-y-3">
           <HistoryPreview history={history} orderType={order.orderType} />
           <label className="flex items-start gap-2 text-[length:var(--fs-body)] text-fg">
-            <input type="checkbox" checked={ackApprove} onChange={(e) => setAckApprove(e.target.checked)} className="mt-1" />
+            <input type="checkbox" checked={ackApprove} onChange={(e) => setAckApprove(e.target.checked)} className="mt-1 accent-[var(--field-selected)]" />
             By clicking submit, I agree that I have verified all the documents and details to proceed with submission.
           </label>
           <Textarea label="Comments" value={approveComment} onChange={(e) => setApproveComment(e.target.value)} />

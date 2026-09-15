@@ -36,7 +36,7 @@ export function AddonsPicker({ selectedIds, onChange }: AddonsPickerProps) {
           <label
             key={a.productId}
             className={`flex items-center justify-between gap-2 rounded-[var(--radius-card)] border p-3 cursor-pointer ${
-              selectedIds.includes(a.productId) ? 'border-accent bg-surface-warm' : 'border-border-soft hover:border-accent'
+              selectedIds.includes(a.productId) ? 'border-[var(--field-selected)] bg-surface-warm' : 'border-border-soft hover:border-[var(--field-selected)]'
             }`}
           >
             <span className="flex items-center gap-2">
@@ -44,7 +44,7 @@ export function AddonsPicker({ selectedIds, onChange }: AddonsPickerProps) {
                 type="checkbox"
                 checked={selectedIds.includes(a.productId)}
                 onChange={() => toggle(a.productId)}
-                className="w-[19px] h-[19px] rounded-[2.5px] border border-[var(--field-border)] accent-accent cursor-pointer shrink-0"
+                className="w-[19px] h-[19px] rounded-[2.5px] border border-[var(--field-border)] accent-[var(--field-selected)] cursor-pointer shrink-0"
               />
               <span>
                 <span className="text-fg">{a.name}</span>

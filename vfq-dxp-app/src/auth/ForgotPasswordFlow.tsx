@@ -90,7 +90,7 @@ export function ForgotPasswordFlow({ open, onClose, initialStaffId = '' }: Forgo
   };
 
   return (
-    <Drawer open={open} onClose={close} title={titleFor[step]} size="lg">
+    <Drawer open={open} onClose={close} title={titleFor[step]}>
       {step === 'identify' && (
         <div className="space-y-3">
           <p className="text-fg-2 text-[length:var(--fs-body)]">Enter your Staff ID to begin password recovery.</p>

@@ -37,7 +37,7 @@ export function CreditCheckPanel({ collectionStatus, acknowledged, onAcknowledge
       </div>
       <p className="text-[length:var(--fs-caption)] text-fg">{result.message}</p>
       <label className="flex items-center gap-2 text-[length:var(--fs-caption)] text-fg">
-        <input type="checkbox" checked={acknowledged} onChange={(e) => onAcknowledge(e.target.checked)} />
+        <input type="checkbox" checked={acknowledged} onChange={(e) => onAcknowledge(e.target.checked)} className="accent-[var(--field-selected)]" />
         I acknowledge this policy is unresolved (see conflict-report.md Conflict 1) and am proceeding without a
         definitive credit-check gate.
       </label>

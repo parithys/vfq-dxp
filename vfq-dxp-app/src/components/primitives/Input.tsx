@@ -36,7 +36,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         aria-describedby={describedBy}
         className={`rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg
           ${borderClass}
-          focus:outline-none focus-visible:border-accent focus-visible:shadow-[var(--focus-ring)]
+          focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]
           disabled:border-[var(--field-border-disabled)] disabled:text-[var(--field-label-disabled)]
           ${className}`}
         {...rest}

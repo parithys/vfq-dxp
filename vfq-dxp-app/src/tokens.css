@@ -46,6 +46,17 @@
   --field-calendar-range: #00b0ca;
   /* Divider between list rows in an open dropdown/results panel. */
   --field-divider: rgba(204,204,204,.5);
+  /* Explicit request (2026-09-15): focused/selected form controls must never
+     read as the brand red (--accent) — use this warm pink-brown instead,
+     the same #c09696 the field reference already uses for "filled". Covers
+     both the focus outline on text/search/dropdown/date fields AND the
+     checked/selected state on checkboxes and choice-card selectors
+     (installment term, plan, SIM type, MSISDN tile, etc). Dark mode keeps
+     the previous red behavior via the index.css override — this directive
+     was scoped to light mode like the rest of this field system. */
+  --field-focus-border: #c09696;
+  --field-focus-ring: 0 0 0 4px rgba(192,150,150,.35);
+  --field-selected: #c09696;
   --field-icon: #999999;
   --field-icon-active: #000000;
   --field-label: #333333;
@@ -53,10 +64,11 @@
   --field-pin: #007c92;
   --field-radius: 16px;
   --focus-ring: 0 0 0 4px rgba(230,0,0,.22);
-  /* Selected-card ring — same accent color as --focus-ring, softer opacity/
-     tighter spread for a persistent "this option is selected" state rather
-     than a transient keyboard-focus outline. */
-  --shadow-selected-ring: 0 0 0 3px rgba(230,0,0,.12);
+  /* Selected-card ring for choice-card selectors (installment term, plan,
+     handover method, etc). Uses --field-selected (#c09696), not --accent —
+     see the field-focus-*/field-selected note above. Dark mode keeps the
+     original red value via the index.css override. */
+  --shadow-selected-ring: 0 0 0 3px rgba(192,150,150,.4);
   /* Figtree is loaded via Google Fonts (index.html) — unlike the previous
      Space Grotesk/DM Sans targets, this one is real, not aspirational. Same
      system-font fallback chain stays in place for the pre-load flash and for
