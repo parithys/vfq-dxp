@@ -314,9 +314,6 @@ export function OrderApprovalDetail() {
         <Button variant="ghost-rect" onClick={() => setModal('return')} disabled={!isEligibleApprover}>
           Return
         </Button>
-        <Button variant="ghost-rect" onClick={() => navigate('/order-management')}>
-          Go Back
-        </Button>
       </div>
 
       <Drawer open={modal === 'approve'} onClose={() => setModal(null)} title="Approve Order">

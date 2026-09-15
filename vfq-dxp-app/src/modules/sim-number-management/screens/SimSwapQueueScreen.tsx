@@ -143,9 +143,6 @@ export function SimSwapQueueScreen() {
         <Button variant="ghost-rect" className="!text-danger !border-danger" onClick={() => setModal('reject')}>
           Reject
         </Button>
-        <Button variant="ghost-rect" onClick={() => navigate('/sim-number-management/sim-swap-queue-order-tasks-tab')}>
-          Go Back
-        </Button>
       </div>
 
       <Drawer open={modal === 'approve'} onClose={() => setModal(null)} title="Approve SIM Swap">

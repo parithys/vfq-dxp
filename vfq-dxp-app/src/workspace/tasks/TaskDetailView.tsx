@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Badge } from '../../components/primitives/Badge';
 import { Button } from '../../components/primitives/Button';
 import { Select } from '../../components/primitives/Select';
@@ -54,7 +54,6 @@ const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'filled-
 // "no cross-agent view exists" gap, which this closes for tasks specifically).
 export function TaskDetailView() {
   const { taskId } = useParams<{ taskId: string }>();
-  const navigate = useNavigate();
   const tasks = (useEntityStore((s) => s.records.tasks) ?? []) as unknown as AgentTask[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const updateRecord = useEntityStore((s) => s.updateRecord);
@@ -134,9 +133,6 @@ export function TaskDetailView() {
           )}
           <Button variant="primary-rect" onClick={closeTask}>
             Close task
-          </Button>
-          <Button variant="ghost-rect" onClick={() => navigate(-1)}>
-            Go Back
           </Button>
         </div>
       )}

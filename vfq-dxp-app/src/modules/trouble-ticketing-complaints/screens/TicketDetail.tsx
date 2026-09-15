@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
 import { Textarea } from '../../../components/primitives/Textarea';
@@ -92,7 +92,6 @@ interface AuditRecord {
 // per-action comments below for exact requirement/rule citations.
 export function TicketDetail() {
   const [params] = useSearchParams();
-  const navigate = useNavigate();
   const ticketId = params.get('id');
   const tickets = (useEntityStore((s) => s.records['trouble-tickets']) ?? []) as unknown as Ticket[];
   const loadKind = useEntityStore((s) => s.loadKind);
@@ -529,13 +528,6 @@ export function TicketDetail() {
                 </p>
               )}
               {ticket.cancelReason && <p className="text-[length:var(--fs-caption)] text-danger">Cancelled: {ticket.cancelReason}</p>}
-              <Button
-                variant="ghost-rect"
-                className="w-full justify-center !border-transparent"
-                onClick={() => navigate('/trouble-ticketing-complaints/tickets-dashboard')}
-              >
-                Go back
-              </Button>
             </div>
           </div>
 
