@@ -228,70 +228,72 @@ export function OrderApprovalDetail() {
         Contact: {order.customerName ?? '—'} · {order.orderType}
       </p>
 
-      <Tabs
-        items={[
-          {
-            key: 'attachments',
-            label: 'Attachments',
-            content: <p className="text-fg-2 text-[length:var(--fs-body)]">CAF, ID scans, and supplementary forms captured during the guided wizard.</p>,
-          },
-          {
-            key: 'order-details',
-            label: 'Order Details',
-            content: (
-              <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)]">
-                <div>
-                  <dt className="text-[length:var(--fs-caption)] text-muted">Product</dt>
-                  <dd className="text-fg">{order.productId ?? '—'}</dd>
-                </div>
-                <div>
-                  <dt className="text-[length:var(--fs-caption)] text-muted">MSISDN</dt>
-                  <dd className="text-fg">{order.msisdn ?? '—'}</dd>
-                </div>
-              </dl>
-            ),
-          },
-          {
-            key: 'activities',
-            label: 'Activities',
-            content: (
-              <div>
-                <p className="text-fg-2 text-[length:var(--fs-body)] mb-3">
-                  Task history — visible before you confirm a decision, per Agent 360 AAV-05.
-                </p>
-                {history.length === 0 && <p className="text-muted text-[length:var(--fs-body)]">No approval actions recorded yet for this order.</p>}
-                {history.length > 0 && (
-                  <div className="rounded-[var(--radius-card)] border border-border-soft divide-y divide-border-soft">
-                    {history.map((entry) => (
-                      <div key={entry.activityNumber} className="px-4 py-3">
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="font-medium text-fg text-[length:var(--fs-body)]">{entry.actionTaken}</span>
-                          <span className="text-muted text-[length:var(--fs-caption)]">{new Date(entry.transactionDate).toLocaleString()}</span>
-                        </div>
-                        <div className="text-fg-2 text-[length:var(--fs-caption)] mt-0.5">
-                          Task ID: {entry.orderId} · Task Name: {order.orderType}{entry.notes ? ` · ${entry.notes}` : ''}
-                        </div>
-                      </div>
-                    ))}
+      <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+        <Tabs
+          items={[
+            {
+              key: 'attachments',
+              label: 'Attachments',
+              content: <p className="text-fg-2 text-[length:var(--fs-body)]">CAF, ID scans, and supplementary forms captured during the guided wizard.</p>,
+            },
+            {
+              key: 'order-details',
+              label: 'Order Details',
+              content: (
+                <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)]">
+                  <div>
+                    <dt className="text-[length:var(--fs-caption)] text-muted">Product</dt>
+                    <dd className="text-fg">{order.productId ?? '—'}</dd>
                   </div>
-                )}
-              </div>
-            ),
-          },
-          {
-            key: 'agents-details',
-            label: 'Agents Details',
-            content: (
-              <p className="text-fg-2 text-[length:var(--fs-body)]">
-                Submitted by: {order.createdBy ?? '—'}
-              </p>
-            ),
-          },
-        ]}
-      />
+                  <div>
+                    <dt className="text-[length:var(--fs-caption)] text-muted">MSISDN</dt>
+                    <dd className="text-fg">{order.msisdn ?? '—'}</dd>
+                  </div>
+                </dl>
+              ),
+            },
+            {
+              key: 'activities',
+              label: 'Activities',
+              content: (
+                <div>
+                  <p className="text-fg-2 text-[length:var(--fs-body)] mb-3">
+                    Task history — visible before you confirm a decision, per Agent 360 AAV-05.
+                  </p>
+                  {history.length === 0 && <p className="text-muted text-[length:var(--fs-body)]">No approval actions recorded yet for this order.</p>}
+                  {history.length > 0 && (
+                    <div className="rounded-[var(--radius-card)] border border-border-soft divide-y divide-border-soft">
+                      {history.map((entry) => (
+                        <div key={entry.activityNumber} className="px-4 py-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="font-medium text-fg text-[length:var(--fs-body)]">{entry.actionTaken}</span>
+                            <span className="text-muted text-[length:var(--fs-caption)]">{new Date(entry.transactionDate).toLocaleString()}</span>
+                          </div>
+                          <div className="text-fg-2 text-[length:var(--fs-caption)] mt-0.5">
+                            Task ID: {entry.orderId} · Task Name: {order.orderType}{entry.notes ? ` · ${entry.notes}` : ''}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ),
+            },
+            {
+              key: 'agents-details',
+              label: 'Agents Details',
+              content: (
+                <p className="text-fg-2 text-[length:var(--fs-body)]">
+                  Submitted by: {order.createdBy ?? '—'}
+                </p>
+              ),
+            },
+          ]}
+        />
+      </div>
 
       {!isEligibleApprover && (
-        <div className="mb-4 rounded border border-[var(--warn)] px-4 py-3 text-[length:var(--fs-body)] text-[var(--warn-text)]">
+        <div className="mt-4 rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),white_92%)] px-4 py-3 text-[length:var(--fs-body)] text-[var(--warn-text)]">
           Only a {requiredRole} may approve, reject, or return this order (Agent 360 AAV-01/BR-06).
         </div>
       )}
