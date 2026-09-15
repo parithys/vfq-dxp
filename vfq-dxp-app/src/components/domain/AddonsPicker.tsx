@@ -40,7 +40,12 @@ export function AddonsPicker({ selectedIds, onChange }: AddonsPickerProps) {
             }`}
           >
             <span className="flex items-center gap-2">
-              <input type="checkbox" checked={selectedIds.includes(a.productId)} onChange={() => toggle(a.productId)} />
+              <input
+                type="checkbox"
+                checked={selectedIds.includes(a.productId)}
+                onChange={() => toggle(a.productId)}
+                className="w-[19px] h-[19px] rounded-[2.5px] border border-[var(--field-border)] accent-accent cursor-pointer shrink-0"
+              />
               <span>
                 <span className="text-fg">{a.name}</span>
                 {a.description && <span className="block text-[length:var(--fs-caption)] text-muted">{a.description}</span>}

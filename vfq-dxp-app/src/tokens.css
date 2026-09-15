@@ -38,10 +38,19 @@
   --field-border-disabled: #cccccc;
   --field-border-error: #e60000;
   --field-border-filled: #c09696;
+  /* Calendar range-picker + location-pin accent — from Date Specific-Open.svg
+     (#00b0ca in-range day fill, #007c92 start/end anchor day fill) and
+     Location-Open.svg (#007c92 result-row pin icon, same dark teal as the
+     calendar anchor color). */
+  --field-calendar-anchor: #007c92;
+  --field-calendar-range: #00b0ca;
+  /* Divider between list rows in an open dropdown/results panel. */
+  --field-divider: rgba(204,204,204,.5);
   --field-icon: #999999;
   --field-icon-active: #000000;
   --field-label: #333333;
   --field-label-disabled: #b2b2b2;
+  --field-pin: #007c92;
   --field-radius: 16px;
   --focus-ring: 0 0 0 4px rgba(230,0,0,.22);
   /* Selected-card ring — same accent color as --focus-ring, softer opacity/

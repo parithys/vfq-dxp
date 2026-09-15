@@ -68,6 +68,7 @@
   --field-border-disabled: var(--border-soft);
   --field-border-error: var(--danger);
   --field-border-filled: var(--accent);
+  --field-divider: var(--border-soft);
   --field-icon: var(--muted);
   --field-icon-active: var(--fg);
   --field-label: var(--fg-2);

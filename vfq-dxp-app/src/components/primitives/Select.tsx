@@ -115,7 +115,7 @@ export function Select({
       disabled:border-[var(--field-border-disabled)]`;
   const panelClasses = dark
     ? 'border-white/15 bg-[var(--charcoal-panel)] divide-y divide-white/10'
-    : 'border-border-soft bg-bg divide-y divide-border-soft';
+    : 'border-border-soft bg-bg divide-y divide-[var(--field-divider)]';
   const optionClasses = dark ? 'text-white' : 'text-fg';
 
   return (
@@ -160,7 +160,7 @@ export function Select({
             tabIndex={-1}
             onKeyDown={onListKeyDown}
             ref={(el) => el?.focus()}
-            className={`absolute z-50 top-full left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-[var(--radius-button)] border shadow-raised py-1 ${panelClasses}`}
+            className={`absolute z-50 top-full left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-[var(--radius-card)] border shadow-raised py-1 ${panelClasses}`}
           >
             {options.map((opt, i) => (
               <li
