@@ -105,7 +105,14 @@ export function Select({
 
   const triggerClasses = dark
     ? 'border-white/15 bg-white/5 text-white focus-visible:border-accent'
-    : `${error ? 'border-danger' : 'border-[var(--grey-form)] enabled:hover:border-accent/40'} bg-bg text-fg focus-visible:border-accent focus-visible:shadow-[var(--focus-ring)]`;
+    : `${
+        error
+          ? 'border-[var(--field-border-error)]'
+          : selected
+            ? 'border-[var(--field-border-filled)] enabled:hover:border-[var(--field-border-filled)]'
+            : 'border-[var(--field-border)] enabled:hover:border-accent/40'
+      } bg-bg text-fg focus-visible:border-accent focus-visible:shadow-[var(--focus-ring)]
+      disabled:border-[var(--field-border-disabled)]`;
   const panelClasses = dark
     ? 'border-white/15 bg-[var(--charcoal-panel)] divide-y divide-white/10'
     : 'border-border-soft bg-bg divide-y divide-border-soft';
@@ -114,7 +121,7 @@ export function Select({
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label htmlFor={selectId} className={`text-[length:var(--fs-label)] ${dark ? 'text-white/70' : 'text-fg-2'}`}>
+        <label htmlFor={selectId} className={`text-[length:var(--fs-label)] ${dark ? 'text-white/70' : disabled ? 'text-[var(--field-label-disabled)]' : 'text-fg-2'}`}>
           {label}
         </label>
       )}
@@ -130,16 +137,21 @@ export function Select({
           aria-label={ariaLabel}
           onClick={() => !disabled && setOpen((v) => !v)}
           onKeyDown={onTriggerKeyDown}
-          className={`w-full flex items-center justify-between gap-2 rounded-[var(--radius-button)] border pl-3 pr-3 py-2 text-[length:var(--fs-body)] text-left
-            disabled:opacity-40 disabled:cursor-not-allowed
+          className={`w-full flex items-center justify-between gap-2 rounded-[var(--field-radius)] border pl-3 pr-3 py-2 text-[length:var(--fs-body)] text-left
+            disabled:cursor-not-allowed
             focus:outline-none
             ${triggerClasses}
             ${className}`}
         >
-          <span className={`truncate ${!selected ? (dark ? 'text-white/35' : 'text-muted') : ''}`}>
+          <span className={`truncate ${disabled ? 'text-[var(--field-label-disabled)]' : !selected ? (dark ? 'text-white/35' : 'text-muted') : ''}`}>
             {selected ? selected.label : (placeholder ?? '')}
           </span>
-          <Icon path={CHEVRON_DOWN} className={`w-4 h-4 shrink-0 ${dark ? 'text-white/50' : 'text-muted'}`} />
+          <Icon
+            path={CHEVRON_DOWN}
+            className={`w-4 h-4 shrink-0 ${
+              dark ? 'text-white/50' : disabled ? 'text-muted' : selected ? 'text-[var(--field-icon-active)]' : 'text-muted'
+            }`}
+          />
         </button>
 
         {open && (
@@ -172,7 +184,7 @@ export function Select({
           {helperText}
         </span>
       )}
-      {error && <span className="text-[length:var(--fs-caption)] text-danger">{error}</span>}
+      {error && <span className="text-[length:var(--fs-caption)] text-[var(--field-border-error)]">{error}</span>}
     </div>
   );
 }

@@ -8,8 +8,8 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   readOnly?: boolean;
 }
 
-// Real Vodafone Input per design-system.md §7 (1px charcoal border, 2px radius) —
-// the source itself flags this component's spec as inferred, not confirmed.
+// Field chrome (border/radius/state colors) per the light-mode textbox
+// reference supplied 2026-09-15 — see the --field-* tokens in tokens.css.
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   { label, error, helperText, className = '', id, 'aria-describedby': ariaDescribedby, ...rest },
   ref
@@ -17,10 +17,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   const inputId = id ?? `input-${label?.replace(/\s+/g, '-').toLowerCase()}`;
   const helperId = `${inputId}-helper`;
   const describedBy = [ariaDescribedby, helperText && !error ? helperId : undefined].filter(Boolean).join(' ') || undefined;
+  const isFilled = rest.value !== undefined && rest.value !== null && rest.value !== '';
+  const borderClass = error
+    ? 'border-[var(--field-border-error)]'
+    : isFilled
+      ? 'border-[var(--field-border-filled)] enabled:hover:border-[var(--field-border-filled)]'
+      : 'border-[var(--field-border)] enabled:hover:border-accent/40';
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label htmlFor={inputId} className="text-[length:var(--fs-label)] text-fg-2">
+        <label htmlFor={inputId} className={`text-[length:var(--fs-label)] ${rest.disabled ? 'text-[var(--field-label-disabled)]' : 'text-fg-2'}`}>
           {label}
         </label>
       )}
@@ -28,10 +34,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         ref={ref}
         id={inputId}
         aria-describedby={describedBy}
-        className={`rounded-[var(--radius-button)] border px-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg
-          ${error ? 'border-danger' : 'border-[var(--grey-form)] enabled:hover:border-accent/40'}
+        className={`rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg
+          ${borderClass}
           focus:outline-none focus-visible:border-accent focus-visible:shadow-[var(--focus-ring)]
-          disabled:bg-surface disabled:text-muted
+          disabled:border-[var(--field-border-disabled)] disabled:text-[var(--field-label-disabled)]
           ${className}`}
         {...rest}
       />
@@ -40,7 +46,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           {helperText}
         </span>
       )}
-      {error && <span className="text-[length:var(--fs-caption)] text-danger">{error}</span>}
+      {error && <span className="text-[length:var(--fs-caption)] text-[var(--field-border-error)]">{error}</span>}
     </div>
   );
 });

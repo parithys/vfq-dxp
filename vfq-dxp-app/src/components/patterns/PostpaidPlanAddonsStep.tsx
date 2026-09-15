@@ -158,7 +158,7 @@ export function PostpaidPlanAddonsStep({
               <p className="text-muted text-[length:var(--fs-caption)] mb-2">
                 Derived from the eligibility check (BR-076) — not amendable.
               </p>
-              <div className="rounded-[var(--radius-button)] border border-border-soft bg-surface px-3 py-2 text-fg">
+              <div className="rounded-[var(--field-radius)] border border-[var(--field-border-disabled)] bg-bg px-3 py-2 text-[var(--field-label-disabled)]">
                 QAR {defaultCreditLimitQar.toLocaleString()}
               </div>
             </div>

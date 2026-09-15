@@ -230,8 +230,8 @@ export function DeviceInstallmentStep({
                   onChange={(e) => onChange({ ...value, imei: e.target.value })}
                 />
                 <div>
-                  <label className="text-[length:var(--fs-label)] text-fg-2 block mb-1">Upfront payment</label>
-                  <div className="rounded-[var(--radius-button)] border border-border-soft bg-surface px-3 py-2 text-fg">
+                  <label className="text-[length:var(--fs-label)] text-[var(--field-label-disabled)] block mb-1">Upfront payment</label>
+                  <div className="rounded-[var(--field-radius)] border border-[var(--field-border-disabled)] bg-bg px-3 py-2 text-[var(--field-label-disabled)]">
                     QAR {value.downPaymentQar}
                   </div>
                 </div>

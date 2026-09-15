@@ -76,16 +76,16 @@ export function QidInput({ idType, onIdTypeChange, value, onChange, onFetch, fet
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={current.placeholder}
-            className={`flex-1 min-w-0 rounded-[var(--radius-button)] border px-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg
-              ${error ? 'border-danger' : 'border-[var(--grey-form)]'}
-              focus:outline-none focus-visible:shadow-[var(--focus-ring)]`}
+            className={`flex-1 min-w-0 rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg
+              ${error ? 'border-[var(--field-border-error)]' : value ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'}
+              focus:outline-none focus-visible:border-accent focus-visible:shadow-[var(--focus-ring)]`}
           />
           <Button variant="primary-rect" onClick={onFetch} disabled={!value || fetching}>
             <Icon path={SEARCH_ICON} className="w-4 h-4" />
             {fetching ? 'Fetching…' : 'Fetch'}
           </Button>
         </div>
-        {error && <p className="text-danger text-[length:var(--fs-caption)] mt-1">{error}</p>}
+        {error && <p className="text-[var(--field-border-error)] text-[length:var(--fs-caption)] mt-1">{error}</p>}
       </div>
     </div>
   );

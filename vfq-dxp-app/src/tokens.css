@@ -22,6 +22,27 @@
   --elev-ring: 0 0 0 1px var(--border);
   --fg: #26262b;
   --fg-2: #4a4d4e;
+  /* Textbox/search/dropdown/currency field chrome — light-mode reference
+     supplied 2026-09-15, revised set ("Field Designs" folder: Dropdown-
+     {Normal,Filled,Disabled}.svg, PhoneNumber-{Normal,Filled,Disabled,
+     Error}.svg, Textbox-{Normal,Filled,Disabled,Error}.svg, Searchbox.svg).
+     "Filled" is the border a field takes once it holds a value (distinct
+     from the transient focus-ring). The revised Textbox-Disabled.svg now
+     matches Dropdown/PhoneNumber on the disabled border (#cccccc) — the
+     earlier asset that left it at the Normal color has been corrected
+     upstream. No dedicated currency-field mockup was supplied; currency
+     inputs share this same chrome via the shared Input component. Dark-mode
+     equivalents are set in index.css so this reference only touches the
+     light theme. */
+  --field-border: #cdbebe;
+  --field-border-disabled: #cccccc;
+  --field-border-error: #e60000;
+  --field-border-filled: #c09696;
+  --field-icon: #999999;
+  --field-icon-active: #000000;
+  --field-label: #333333;
+  --field-label-disabled: #b2b2b2;
+  --field-radius: 16px;
   --focus-ring: 0 0 0 4px rgba(230,0,0,.22);
   /* Selected-card ring — same accent color as --focus-ring, softer opacity/
      tighter spread for a persistent "this option is selected" state rather

@@ -61,6 +61,18 @@
   --grey-form: #6b6e72;
   --black-80: rgba(0,0,0,.6);
 
+  /* Field chrome (see tokens.css) has no dark-mode design of its own yet —
+     reuse the existing dark structural/status tokens so dark mode keeps
+     today's appearance unchanged by the light-mode field reference. */
+  --field-border: var(--border);
+  --field-border-disabled: var(--border-soft);
+  --field-border-error: var(--danger);
+  --field-border-filled: var(--accent);
+  --field-icon: var(--muted);
+  --field-icon-active: var(--fg);
+  --field-label: var(--fg-2);
+  --field-label-disabled: var(--muted);
+
   /* Status colors and elevation/shadow tokens were tuned against the light
      surfaces above and read as too saturated/low-contrast on the dark ones —
      brightened slightly for legibility; elevation shadows reduced in opacity

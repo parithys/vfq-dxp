@@ -158,7 +158,7 @@ export function GlobalSearch() {
         }}
         placeholder="Search modules, screens, leads, orders, tickets…"
         aria-label="Global search"
-        className="w-full rounded-[var(--radius-button)] border border-border-soft bg-surface pl-9 pr-9 py-2 text-fg text-[length:var(--fs-body)] text-center placeholder:text-muted focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+        className={`w-full rounded-[var(--field-radius)] border bg-bg pl-9 pr-9 py-2 text-fg text-[length:var(--fs-body)] text-center placeholder:text-muted focus:outline-none focus-visible:border-accent focus-visible:shadow-[var(--focus-ring)] ${query ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'}`}
       />
       {open && q && (
         <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-96 overflow-y-auto rounded-[var(--radius-card)] border border-border-soft bg-bg shadow-raised">
