@@ -24,26 +24,48 @@ const ICONS = {
   helpCircle: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M9.2 9a2.8 2.8 0 1 1 3.9 2.6c-.9.4-1.4 1-1.4 2 M12 17h.01',
 };
 
-// Decorative network/coverage mark for the brand panel — no photo/illustration
-// asset exists anywhere in this repo (only the Vodafone wordmark + favicon),
-// so this is a hand-authored inline SVG rather than a fabricated stock photo.
-// Purely decorative chrome, not a claim about any real store/device/screenshot.
-function NetworkIllustration() {
+// Business-relevant scene for the brand panel — a retail store, a connected
+// mobile device (signal + a live performance chart on its screen), and a
+// support headset, tying directly to the panel's own copy ("store
+// performance", "operations metrics", "before entering the portal"). No
+// photo/illustration asset exists anywhere in this repo (only the Vodafone
+// wordmark + favicon), so this is a hand-authored inline SVG rather than a
+// fabricated stock photo of a real store/device/screenshot.
+function StoreConnectivityIllustration() {
   return (
-    <svg viewBox="0 0 220 220" className="hidden lg:block w-44 h-44 xl:w-56 xl:h-56 shrink-0" aria-hidden="true">
-      <circle cx="110" cy="110" r="95" fill="white" fillOpacity="0.04" />
-      <circle cx="110" cy="110" r="70" fill="none" stroke="white" strokeOpacity="0.12" strokeWidth="1.5" />
-      <circle cx="110" cy="110" r="45" fill="none" stroke="white" strokeOpacity="0.18" strokeWidth="1.5" />
-      <line x1="110" y1="110" x2="60" y2="55" stroke="white" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="3 4" />
-      <line x1="110" y1="110" x2="168" y2="70" stroke="white" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="3 4" />
-      <line x1="110" y1="110" x2="150" y2="165" stroke="white" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="3 4" />
-      <line x1="110" y1="110" x2="48" y2="150" stroke="white" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="3 4" />
-      <circle cx="60" cy="55" r="5" fill="white" fillOpacity="0.5" />
-      <circle cx="168" cy="70" r="4" fill="white" fillOpacity="0.35" />
-      <circle cx="150" cy="165" r="4" fill="white" fillOpacity="0.35" />
-      <circle cx="48" cy="150" r="4" fill="white" fillOpacity="0.35" />
-      <circle cx="110" cy="110" r="10" fill="var(--accent)" />
-      <circle cx="110" cy="110" r="18" fill="none" stroke="var(--accent)" strokeOpacity="0.4" strokeWidth="1.5" />
+    <svg viewBox="0 0 300 240" className="hidden lg:block w-56 xl:w-72 h-auto shrink-0" aria-hidden="true">
+      <circle cx="150" cy="120" r="130" fill="white" fillOpacity="0.04" />
+
+      {/* Store */}
+      <rect x="15" y="118" width="100" height="14" rx="3" fill="var(--accent)" />
+      <rect x="20" y="132" width="90" height="68" rx="4" fill="white" fillOpacity="0.06" stroke="white" strokeOpacity="0.2" />
+      <rect x="30" y="144" width="18" height="18" rx="2" fill="white" fillOpacity="0.12" stroke="white" strokeOpacity="0.25" />
+      <rect x="82" y="144" width="18" height="18" rx="2" fill="white" fillOpacity="0.12" stroke="white" strokeOpacity="0.25" />
+      <rect x="56" y="168" width="22" height="32" fill="white" fillOpacity="0.15" />
+
+      {/* SLA/quality badge above the store */}
+      <circle cx="108" cy="110" r="13" fill="var(--accent)" />
+      <path d="M102 110l4 4 8-8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+
+      {/* Connection line: store to device */}
+      <line x1="110" y1="150" x2="155" y2="150" stroke="white" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="3 4" />
+
+      {/* Mobile device with live performance chart on screen */}
+      <rect x="155" y="45" width="72" height="150" rx="12" fill="white" fillOpacity="0.05" stroke="white" strokeOpacity="0.25" strokeWidth="1.5" />
+      <rect x="183" y="55" width="16" height="3" rx="1.5" fill="white" fillOpacity="0.3" />
+      <rect x="166" y="88" width="6" height="10" rx="1" fill="white" fillOpacity="0.5" />
+      <rect x="176" y="82" width="6" height="16" rx="1" fill="white" fillOpacity="0.6" />
+      <rect x="186" y="74" width="6" height="24" rx="1" fill="white" fillOpacity="0.75" />
+      <rect x="196" y="66" width="6" height="32" rx="1" fill="var(--accent)" />
+      <path d="M166 158l14-12 12 6 20-24" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <circle cx="212" cy="128" r="3.5" fill="var(--accent)" />
+
+      {/* Support headset, connected to the device */}
+      <line x1="227" y1="75" x2="252" y2="58" stroke="white" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="3 4" />
+      <circle cx="258" cy="52" r="16" fill="white" fillOpacity="0.06" stroke="white" strokeOpacity="0.2" />
+      <path d="M250 52a8 8 0 0 1 16 0" stroke="white" strokeOpacity="0.7" strokeWidth="2" strokeLinecap="round" fill="none" />
+      <rect x="248" y="51" width="5" height="8" rx="2" fill="white" fillOpacity="0.7" />
+      <rect x="263" y="51" width="5" height="8" rx="2" fill="white" fillOpacity="0.7" />
     </svg>
   );
 }
@@ -254,7 +276,7 @@ export function LoginPage() {
                 Real-time store and operations metrics. Review your team&rsquo;s performance before entering the portal.
               </p>
             </div>
-            <NetworkIllustration />
+            <StoreConnectivityIllustration />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
