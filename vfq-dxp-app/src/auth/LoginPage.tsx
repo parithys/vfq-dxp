@@ -24,52 +24,6 @@ const ICONS = {
   helpCircle: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M9.2 9a2.8 2.8 0 1 1 3.9 2.6c-.9.4-1.4 1-1.4 2 M12 17h.01',
 };
 
-// Business-relevant scene for the brand panel — a retail store, a connected
-// mobile device (signal + a live performance chart on its screen), and a
-// support headset, tying directly to the panel's own copy ("store
-// performance", "operations metrics", "before entering the portal"). No
-// photo/illustration asset exists anywhere in this repo (only the Vodafone
-// wordmark + favicon), so this is a hand-authored inline SVG rather than a
-// fabricated stock photo of a real store/device/screenshot.
-function StoreConnectivityIllustration() {
-  return (
-    <svg viewBox="0 0 300 240" className="hidden lg:block w-56 xl:w-72 h-auto shrink-0" aria-hidden="true">
-      <circle cx="150" cy="120" r="130" fill="white" fillOpacity="0.04" />
-
-      {/* Store */}
-      <rect x="15" y="118" width="100" height="14" rx="3" fill="var(--accent)" />
-      <rect x="20" y="132" width="90" height="68" rx="4" fill="white" fillOpacity="0.06" stroke="white" strokeOpacity="0.2" />
-      <rect x="30" y="144" width="18" height="18" rx="2" fill="white" fillOpacity="0.12" stroke="white" strokeOpacity="0.25" />
-      <rect x="82" y="144" width="18" height="18" rx="2" fill="white" fillOpacity="0.12" stroke="white" strokeOpacity="0.25" />
-      <rect x="56" y="168" width="22" height="32" fill="white" fillOpacity="0.15" />
-
-      {/* SLA/quality badge above the store */}
-      <circle cx="108" cy="110" r="13" fill="var(--accent)" />
-      <path d="M102 110l4 4 8-8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-
-      {/* Connection line: store to device */}
-      <line x1="110" y1="150" x2="155" y2="150" stroke="white" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="3 4" />
-
-      {/* Mobile device with live performance chart on screen */}
-      <rect x="155" y="45" width="72" height="150" rx="12" fill="white" fillOpacity="0.05" stroke="white" strokeOpacity="0.25" strokeWidth="1.5" />
-      <rect x="183" y="55" width="16" height="3" rx="1.5" fill="white" fillOpacity="0.3" />
-      <rect x="166" y="88" width="6" height="10" rx="1" fill="white" fillOpacity="0.5" />
-      <rect x="176" y="82" width="6" height="16" rx="1" fill="white" fillOpacity="0.6" />
-      <rect x="186" y="74" width="6" height="24" rx="1" fill="white" fillOpacity="0.75" />
-      <rect x="196" y="66" width="6" height="32" rx="1" fill="var(--accent)" />
-      <path d="M166 158l14-12 12 6 20-24" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      <circle cx="212" cy="128" r="3.5" fill="var(--accent)" />
-
-      {/* Support headset, connected to the device */}
-      <line x1="227" y1="75" x2="252" y2="58" stroke="white" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="3 4" />
-      <circle cx="258" cy="52" r="16" fill="white" fillOpacity="0.06" stroke="white" strokeOpacity="0.2" />
-      <path d="M250 52a8 8 0 0 1 16 0" stroke="white" strokeOpacity="0.7" strokeWidth="2" strokeLinecap="round" fill="none" />
-      <rect x="248" y="51" width="5" height="8" rx="2" fill="white" fillOpacity="0.7" />
-      <rect x="263" y="51" width="5" height="8" rx="2" fill="white" fillOpacity="0.7" />
-    </svg>
-  );
-}
-
 const METRICS = [
   { icon: ICONS.shield, trend: 'up', value: '98.7%', label: 'SLA compliance', sub: 'vs 97.5% target' },
   { icon: ICONS.star, trend: 'up', value: '4.6 / 5', label: 'Customer satisfaction', sub: 'CSAT score today' },
@@ -263,31 +217,37 @@ export function LoginPage() {
       {/* Brand/metrics panel */}
       <div className="flex-1 px-8 md:px-16 py-10 flex flex-col justify-between text-white bg-[image:var(--gradient-brand-panel)] md:order-1">
         <div>
-          <div className="flex items-start justify-between gap-6">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <span className="w-1.5 h-1.5 rounded-full bg-white inline-block" />
-                <span className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-white/80">
-                  Today&rsquo;s store performance · {today}
-                </span>
-              </div>
-              <h2 className="text-[length:var(--fs-h1)] font-black leading-[1.02] mb-3">Operational overview</h2>
-              <p className="text-white/85 text-[length:var(--fs-lead)] max-w-xl">
-                Real-time store and operations metrics. Review your team&rsquo;s performance before entering the portal.
-              </p>
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent inline-block shrink-0" />
+              <span className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-white/80">
+                Today&rsquo;s store performance · {today}
+              </span>
             </div>
-            <StoreConnectivityIllustration />
+            <span className="hidden sm:flex items-center gap-1.5 rounded-[var(--radius-pill)] bg-white/10 px-3 py-1 text-[length:var(--fs-caption)] text-white/80 shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-success inline-block" />
+              Live store data
+            </span>
           </div>
+          <h2 className="text-[length:var(--fs-h1)] font-black leading-[1.02] mb-3">Operational overview</h2>
+          <p className="text-white/85 text-[length:var(--fs-lead)] max-w-xl">
+            Real-time store and operations metrics. Review your team&rsquo;s performance before entering the portal.
+          </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
             {METRICS.map((m) => (
               <div key={m.label} className="rounded-[var(--radius-card)] border border-white/15 bg-white/5 p-5">
                 <div className="flex items-center justify-between mb-6">
-                  <span className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                  <span className="w-9 h-9 rounded-[10px] bg-white/10 flex items-center justify-center">
                     <Icon path={m.icon} className="w-4.5 h-4.5" />
                   </span>
-                  <span className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center">
-                    <Icon path={m.trend === 'up' ? ICONS.trendUp : ICONS.minus} className="w-3.5 h-3.5" />
+                  <span
+                    className={`flex items-center gap-1 rounded-[var(--radius-pill)] px-2 py-0.5 text-[length:var(--fs-caption)] font-medium ${
+                      m.trend === 'up' ? 'bg-success/15 text-success' : 'bg-white/10 text-white/70'
+                    }`}
+                  >
+                    <Icon path={m.trend === 'up' ? ICONS.trendUp : ICONS.minus} className="w-3 h-3" />
+                    {m.trend === 'up' ? 'Up' : 'Stable'}
                   </span>
                 </div>
                 <div className="text-[length:var(--fs-h3)] font-extrabold mb-1">{m.value}</div>

@@ -101,7 +101,12 @@
   --fw-light: 300;
   --fw-medium: 600;
   --fw-regular: 400;
-  --gradient-brand-panel: radial-gradient(120% 90% at 12% 8%, color-mix(in oklab, var(--accent) 40%, transparent) 0%, transparent 60%), radial-gradient(90% 70% at 92% 96%, color-mix(in oklab, var(--deep-red) 55%, transparent) 0%, transparent 62%), linear-gradient(160deg, var(--charcoal-panel) 0%, #15161b 100%);
+  /* No photographic asset exists anywhere in this repo (only the Vodafone
+     wordmark + favicon) — this layers several soft, off-center glows (brand
+     red, a cool blue, a teal) over a near-black base to approximate a moody,
+     abstract "data/city-at-night" backdrop for the login brand panel without
+     fabricating a stock photo. */
+  --gradient-brand-panel: radial-gradient(32% 38% at 16% 10%, color-mix(in oklab, var(--accent) 55%, transparent) 0%, transparent 72%), radial-gradient(40% 46% at 90% 15%, color-mix(in oklab, #3f7fc4 42%, transparent) 0%, transparent 74%), radial-gradient(48% 55% at 84% 94%, color-mix(in oklab, var(--deep-red) 60%, transparent) 0%, transparent 70%), radial-gradient(36% 42% at 6% 92%, color-mix(in oklab, #2a8f8a 38%, transparent) 0%, transparent 72%), linear-gradient(160deg, var(--charcoal-panel) 0%, #0b0c10 100%);
   --grey-body: #7e7e7e;
   --grey-disabled: #bebebe;
   --grey-form: #e5e5e5;
