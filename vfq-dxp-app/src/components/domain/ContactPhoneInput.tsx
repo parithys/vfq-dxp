@@ -130,14 +130,14 @@ export function ContactPhoneInput({
         {open && (
           <ul
             role="listbox"
-            className="absolute z-50 top-full left-0 right-0 mt-1 max-h-80 overflow-y-auto rounded-[var(--radius-card)] border border-border-soft bg-bg shadow-raised py-1 divide-y divide-[var(--field-divider)]"
+            className="absolute z-50 top-full left-0 right-0 max-h-80 overflow-y-auto rounded-[var(--field-radius)] border border-border-soft bg-bg shadow-raised py-1 divide-y divide-[var(--field-divider)]"
           >
             {contacts.map((c) => (
               <li
                 key={c.contactRecordId}
                 role="option"
                 onClick={() => pick(c)}
-                className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-surface"
+                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-surface"
               >
                 <span className="w-8 h-8 rounded-full bg-accent text-white text-[length:var(--fs-caption)] font-semibold flex items-center justify-center shrink-0">
                   {initials(c.firstName, c.lastName)}
@@ -148,7 +148,7 @@ export function ContactPhoneInput({
                 </span>
               </li>
             ))}
-            {contacts.length === 0 && <li className="px-3 py-3 text-[length:var(--fs-body)] text-muted">No saved contacts.</li>}
+            {contacts.length === 0 && <li className="px-4 py-3 text-[length:var(--fs-body)] text-muted">No saved contacts.</li>}
           </ul>
         )}
       </div>

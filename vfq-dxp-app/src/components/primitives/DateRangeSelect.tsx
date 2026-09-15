@@ -134,7 +134,7 @@ export function DateRangeSelect({ label, error, helperText, value, onChange, dis
         </button>
 
         {open && (
-          <div className="absolute z-50 top-full left-0 right-0 mt-1 rounded-[var(--radius-card)] border border-border-soft bg-bg shadow-raised overflow-hidden">
+          <div className="absolute z-50 top-full left-0 right-0 rounded-[var(--field-radius)] border border-border-soft bg-bg shadow-raised overflow-hidden">
             {pickingCustom ? (
               <DateRangeCalendar
                 value={value}
@@ -154,7 +154,7 @@ export function DateRangeSelect({ label, error, helperText, value, onChange, dis
                     role="option"
                     aria-selected={value.preset === preset}
                     onClick={() => commitPreset(preset)}
-                    className={`px-3 py-2 text-[length:var(--fs-body)] text-fg cursor-pointer hover:bg-surface ${value.preset === preset ? 'font-medium' : ''}`}
+                    className="px-4 py-3 text-[length:var(--fs-body)] text-fg-2 cursor-pointer hover:bg-surface"
                   >
                     {PRESET_LABELS[preset]}
                   </li>

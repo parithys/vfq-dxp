@@ -138,7 +138,7 @@ export function MultiSelect({
             tabIndex={-1}
             onKeyDown={onListKeyDown}
             ref={(el) => el?.focus()}
-            className="absolute z-50 top-full left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-[var(--radius-card)] border border-border-soft bg-bg shadow-raised py-1 divide-y divide-[var(--field-divider)]"
+            className="absolute z-50 top-full left-0 right-0 max-h-64 overflow-y-auto rounded-[var(--field-radius)] border border-border-soft bg-bg shadow-raised py-1 divide-y divide-[var(--field-divider)]"
           >
             {options.map((opt, i) => {
               const checked = values.includes(opt.value);
@@ -149,7 +149,7 @@ export function MultiSelect({
                   aria-selected={checked}
                   onMouseEnter={() => setHighlighted(i)}
                   onClick={() => toggle(opt.value)}
-                  className={`flex items-center justify-between gap-3 px-3 py-2 text-[length:var(--fs-body)] text-fg cursor-pointer ${i === highlighted ? 'bg-surface' : ''}`}
+                  className={`flex items-center justify-between gap-3 px-4 py-3 text-[length:var(--fs-body)] text-fg-2 cursor-pointer ${i === highlighted ? 'bg-surface' : ''}`}
                 >
                   <span className="truncate">{opt.label}</span>
                   <span

@@ -116,7 +116,7 @@ export function Select({
   const panelClasses = dark
     ? 'border-white/15 bg-[var(--charcoal-panel)] divide-y divide-white/10'
     : 'border-border-soft bg-bg divide-y divide-[var(--field-divider)]';
-  const optionClasses = dark ? 'text-white' : 'text-fg';
+  const optionClasses = dark ? 'text-white' : 'text-fg-2';
 
   return (
     <div className="flex flex-col gap-1">
@@ -160,7 +160,7 @@ export function Select({
             tabIndex={-1}
             onKeyDown={onListKeyDown}
             ref={(el) => el?.focus()}
-            className={`absolute z-50 top-full left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-[var(--radius-card)] border shadow-raised py-1 ${panelClasses}`}
+            className={`absolute z-50 top-full left-0 right-0 max-h-64 overflow-y-auto rounded-[var(--field-radius)] border shadow-raised py-1 ${panelClasses}`}
           >
             {options.map((opt, i) => (
               <li
@@ -169,9 +169,9 @@ export function Select({
                 aria-selected={opt.value === value}
                 onMouseEnter={() => setHighlighted(i)}
                 onClick={() => commit(opt.value)}
-                className={`px-3 py-2 text-[length:var(--fs-body)] cursor-pointer ${optionClasses} ${
+                className={`px-4 py-3 text-[length:var(--fs-body)] cursor-pointer ${optionClasses} ${
                   i === highlighted ? (dark ? 'bg-white/10' : 'bg-surface') : ''
-                } ${opt.value === value ? 'font-medium' : ''}`}
+                }`}
               >
                 {opt.label}
               </li>

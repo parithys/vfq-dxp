@@ -109,14 +109,14 @@ export function LocationInput({ label, error, helperText, placeholder, onSelect,
         {open && q && (
           <ul
             role="listbox"
-            className="absolute z-50 top-full left-0 right-0 mt-1 max-h-80 overflow-y-auto rounded-[var(--radius-card)] border border-border-soft bg-bg shadow-raised py-1 divide-y divide-[var(--field-divider)]"
+            className="absolute z-50 top-full left-0 right-0 max-h-80 overflow-y-auto rounded-[var(--field-radius)] border border-border-soft bg-bg shadow-raised py-1 divide-y divide-[var(--field-divider)]"
           >
             {results.map((a) => (
               <li
                 key={a.id}
                 role="option"
                 onClick={() => pick(a)}
-                className="flex items-start gap-3 px-3 py-2.5 cursor-pointer hover:bg-surface"
+                className="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-surface"
               >
                 <span className="mt-0.5 text-[var(--field-pin)] shrink-0">
                   <Icon path={PIN_ICON} className="w-5 h-5" />
@@ -127,7 +127,7 @@ export function LocationInput({ label, error, helperText, placeholder, onSelect,
                 </span>
               </li>
             ))}
-            {results.length === 0 && <li className="px-3 py-3 text-[length:var(--fs-body)] text-muted">No matching addresses.</li>}
+            {results.length === 0 && <li className="px-4 py-3 text-[length:var(--fs-body)] text-muted">No matching addresses.</li>}
           </ul>
         )}
       </div>
