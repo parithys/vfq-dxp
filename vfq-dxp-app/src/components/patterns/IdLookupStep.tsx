@@ -74,20 +74,22 @@ export function IdLookupStep({ value = {}, onChange }: IdLookupStepProps) {
       />
 
       {value.moiResult && (
-        <div className="space-y-3 pt-2 border-t border-border-soft">
-          <Badge variant="success">MOI Validated</Badge>
-          <div className="rounded-[var(--radius-card)] bg-surface p-4 grid grid-cols-3 gap-4 text-[length:var(--fs-body)]">
-            <div>
-              <div className="text-[length:var(--fs-caption)] text-muted">Name</div>
-              <div className="text-fg">{value.moiResult.name}</div>
-            </div>
-            <div>
-              <div className="text-[length:var(--fs-caption)] text-muted">Date of Birth</div>
-              <div className="text-fg">{value.moiResult.dob}</div>
-            </div>
-            <div>
-              <div className="text-[length:var(--fs-caption)] text-muted">Nationality</div>
-              <div className="text-fg">{value.moiResult.nationality}</div>
+        <div className="pt-2 border-t border-border-soft">
+          <div className="rounded-[var(--radius-card)] border border-success/30 bg-[color-mix(in_oklab,var(--success),white_92%)] shadow-raised p-4 space-y-3">
+            <Badge variant="success">MOI Validated</Badge>
+            <div className="grid grid-cols-3 gap-4 text-[length:var(--fs-body)]">
+              <div>
+                <div className="text-[length:var(--fs-caption)] text-muted">Name</div>
+                <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{value.moiResult.name}</div>
+              </div>
+              <div>
+                <div className="text-[length:var(--fs-caption)] text-muted">Date of Birth</div>
+                <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{value.moiResult.dob}</div>
+              </div>
+              <div>
+                <div className="text-[length:var(--fs-caption)] text-muted">Nationality</div>
+                <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{value.moiResult.nationality}</div>
+              </div>
             </div>
           </div>
         </div>

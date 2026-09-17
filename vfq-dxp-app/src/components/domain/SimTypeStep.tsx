@@ -43,6 +43,7 @@ export function SimTypeStep({ value, customerEmail, onChange }: SimTypeStepProps
   const [issuing, setIssuing] = useState(false);
   const [sending, setSending] = useState(false);
   const [email, setEmail] = useState(customerEmail ?? '');
+  const [sentTo, setSentTo] = useState<string | null>(null);
   const pushToast = useNotificationStore((s) => s.pushToast);
 
   const generateEsim = async () => {
@@ -57,6 +58,7 @@ export function SimTypeStep({ value, customerEmail, onChange }: SimTypeStepProps
     setSending(true);
     await new Promise((r) => setTimeout(r, 500));
     setSending(false);
+    setSentTo(email);
     pushToast('success', `eSIM activation details sent to ${email}.`);
   };
 
@@ -108,9 +110,15 @@ export function SimTypeStep({ value, customerEmail, onChange }: SimTypeStepProps
                   label="Send eSIM details to email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setSentTo(null);
+                  }}
                   placeholder="customer@example.com"
                 />
+                {sentTo && (
+                  <p className="text-success text-[length:var(--fs-caption)]">eSIM details sent successfully to {sentTo}.</p>
+                )}
                 <Button variant="ghost-rect" onClick={sendEmail} disabled={sending || !email}>
                   {sending ? 'Sending…' : 'Send to email'}
                 </Button>
