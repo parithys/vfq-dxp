@@ -1,7 +1,10 @@
 import { useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
+import { Input } from '../primitives/Input';
 import { SimSerialScanner } from './SimSerialScanner';
+import { useNotificationStore } from '../../stores/notificationStore';
 
 export type SimType = 'Physical' | 'eSIM';
 
@@ -10,6 +13,7 @@ export interface SimTypeValue {
   simSerial?: string;
   simValid?: boolean;
   esimIssued?: boolean;
+  esimActivationCode?: string;
 }
 
 interface SimTypeStepProps {
@@ -18,19 +22,42 @@ interface SimTypeStepProps {
   onChange: (value: SimTypeValue) => void;
 }
 
+// Mock GSMA SGP.22-style activation string (LPA:1$smdp-address$matching-id) —
+// not a real SM-DP+ call, see the note below on not fabricating an eSIM
+// provisioning API. Random per issuance so the QR code is distinct each time.
+function generateActivationCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let matchingId = '';
+  for (let i = 0; i < 16; i++) {
+    matchingId += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return `LPA:1$smdp.vodafone.qa$${matchingId}`;
+}
+
 // "SIM Type" (reference flow step 8) — Physical issuance keeps the existing,
 // evidenced real-time-inventory serial scan (Pattern 11). eSIM has no
-// evidenced inventory/serial check in this corpus — a QR/activation-code
-// issuance step to the customer's email is the standard telco pattern, kept
+// evidenced inventory/serial check in this corpus — generating a QR/activation
+// code and optionally emailing it is the standard telco pattern, kept
 // deliberately lightweight (no fabricated eSIM provisioning API).
 export function SimTypeStep({ value, customerEmail, onChange }: SimTypeStepProps) {
   const [issuing, setIssuing] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [email, setEmail] = useState(customerEmail ?? '');
+  const pushToast = useNotificationStore((s) => s.pushToast);
 
-  const issueEsim = async () => {
+  const generateEsim = async () => {
     setIssuing(true);
     await new Promise((r) => setTimeout(r, 500));
     setIssuing(false);
-    onChange({ ...value, esimIssued: true });
+    onChange({ ...value, esimIssued: true, esimActivationCode: generateActivationCode() });
+  };
+
+  const sendEmail = async () => {
+    if (!email) return;
+    setSending(true);
+    await new Promise((r) => setTimeout(r, 500));
+    setSending(false);
+    pushToast('success', `eSIM activation details sent to ${email}.`);
   };
 
   return (
@@ -58,20 +85,44 @@ export function SimTypeStep({ value, customerEmail, onChange }: SimTypeStepProps
 
       {value.simType === 'eSIM' && (
         <div className="space-y-3">
-          {value.esimIssued ? (
-            <div className="flex items-center gap-2">
+          {value.esimIssued && value.esimActivationCode ? (
+            <div className="space-y-4">
               <Badge variant="success">eSIM issued</Badge>
-              <span className="text-[length:var(--fs-caption)] text-fg-2">
-                Activation QR code and setup instructions sent to {customerEmail ?? 'the customer\'s email on file'}.
-              </span>
+
+              <div className="flex flex-col items-start gap-4 rounded-[var(--radius-card)] border border-border-soft bg-surface p-4 sm:flex-row sm:items-center">
+                <div className="rounded-[var(--radius-card)] bg-white p-2 shrink-0">
+                  <QRCodeSVG value={value.esimActivationCode} size={160} />
+                </div>
+                <div className="space-y-1.5 min-w-0">
+                  <p className="text-fg-2 text-[length:var(--fs-body)]">
+                    Scan this QR code on the customer's device to install the eSIM, or enter the activation code manually.
+                  </p>
+                  <code className="block break-all rounded-[var(--radius-button)] bg-surface-warm px-2 py-1 text-[length:var(--fs-caption)] text-fg">
+                    {value.esimActivationCode}
+                  </code>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Input
+                  label="Send eSIM details to email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="customer@example.com"
+                />
+                <Button variant="ghost-rect" onClick={sendEmail} disabled={sending || !email}>
+                  {sending ? 'Sending…' : 'Send to email'}
+                </Button>
+              </div>
             </div>
           ) : (
             <>
               <p className="text-fg-2 text-[length:var(--fs-body)]">
-                Issue an eSIM activation QR code and setup instructions to {customerEmail ?? 'the customer\'s email on file'}.
+                Generate an eSIM activation QR code for {customerEmail ?? 'the customer'}.
               </p>
-              <Button variant="primary-rect" onClick={issueEsim} disabled={issuing}>
-                {issuing ? 'Issuing eSIM…' : 'Issue eSIM'}
+              <Button variant="primary-rect" onClick={generateEsim} disabled={issuing}>
+                {issuing ? 'Generating eSIM…' : 'Generate eSIM'}
               </Button>
             </>
           )}
