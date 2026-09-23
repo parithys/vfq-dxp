@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEntityStore } from '../../stores/entityStore';
-import { usePersonaStore } from '../../stores/personaStore';
 import { DataTable } from '../../components/primitives/DataTable';
 import { Badge } from '../../components/primitives/Badge';
 import { ErrorBanner } from '../../components/primitives/ErrorBanner';
@@ -33,14 +32,18 @@ export function LeadListView({ scope }: { scope: LeadScope }) {
   const leads = (useEntityStore((s) => s.records.leads) ?? []) as unknown as Lead[];
   const loading = useEntityStore((s) => s.loading.leads);
   const loadError = useEntityStore((s) => s.errors.leads);
-  const activePersonaId = usePersonaStore((s) => s.activePersonaId);
 
   useEffect(() => {
     loadKind('leads');
   }, [loadKind]);
 
   const filtered = leads.filter((l) => {
-    if (scope === 'my') return l.ownerId === activePersonaId || true; // owner IDs in seed data are agent codes, not PERSONA-xxx — show all in dev demo
+    // Lead ownerIds in the seed data are agent codes (USR-xxxx), not role ids,
+    // so there is nothing here to compare the active role against — the "my"
+    // scope is presentational in this seed set. Written plainly rather than as
+    // `l.ownerId === activePersonaId || true`, which read like a real filter
+    // while always being true.
+    if (scope === 'my') return true;
     if (scope === 'created') return l.createdVia?.includes('Tablet') ?? true;
     return true; // team/all/contact scopes: no further evidenced filter distinct from "all" in this thin seed set
   });

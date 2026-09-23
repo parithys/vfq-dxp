@@ -3,7 +3,7 @@ import { useEntityStore } from '../../stores/entityStore';
 import { usePersonaStore } from '../../stores/personaStore';
 import { Icon } from '../../components/primitives/Icon';
 import { useBellNotificationExpirySweep } from '../../engines/bellNotificationExpiry';
-import { isInternalAgentPersona } from '../../engines/agentPrivilegeEngine';
+import { canViewBellNotifications } from '../../engines/agentPrivilegeEngine';
 
 interface BellNotification {
   notificationId: string;
@@ -51,7 +51,10 @@ export function BellNotificationBanner({ customerId }: { customerId: string }) {
   }, [loadKind]);
   useBellNotificationExpirySweep();
 
-  if (!isInternalAgentPersona(activePersonaId)) return null;
+  // BIN-04 now has its own capability rather than borrowing the
+  // agent-self-service check, which was the closest available proxy
+  // under the 66-persona model.
+  if (!canViewBellNotifications(activePersonaId)) return null;
 
   const active = notifications
     .filter(

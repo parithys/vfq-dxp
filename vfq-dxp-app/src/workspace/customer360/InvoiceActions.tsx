@@ -1,7 +1,7 @@
 import { Tooltip } from '../../components/primitives/Tooltip';
 import { Icon } from '../../components/primitives/Icon';
 import { usePersonaStore } from '../../stores/personaStore';
-import { canEditCustomerRecords } from '../../engines/agentPrivilegeEngine';
+import { canUseInvoiceActions } from '../../engines/agentPrivilegeEngine';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { downloadCsv } from '../../engines/csvExport';
 
@@ -20,7 +20,11 @@ const PRINT_ICON = 'M6 9V3h12v6 M6 18H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h16a1 1 0 
 export function InvoiceActions({ bill, customerName }: { bill: Record<string, unknown>; customerName: string }) {
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
   const pushToast = useNotificationStore((s) => s.pushToast);
-  const authorised = canEditCustomerRecords(activePersonaId);
+  // BR-06 now has its own capability (`invoice-actions`) instead of
+  // reusing the customer-record edit gate: billing and credit-control
+  // roles own invoice actions, which is narrower than "may edit a
+  // customer record".
+  const authorised = canUseInvoiceActions(activePersonaId);
 
   if (!authorised) {
     return (

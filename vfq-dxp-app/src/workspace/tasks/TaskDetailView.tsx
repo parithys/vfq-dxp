@@ -5,6 +5,7 @@ import { Button } from '../../components/primitives/Button';
 import { Select } from '../../components/primitives/Select';
 import { useEntityStore } from '../../stores/entityStore';
 import { usePersonaStore } from '../../stores/personaStore';
+import { canAssignTasks } from '../../engines/agentPrivilegeEngine';
 import { useNotificationStore } from '../../stores/notificationStore';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 
@@ -47,18 +48,19 @@ const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'filled-
 };
 
 // Agent 360 ATV-04/06 (detail view + status transitions) and ATV-03/BR-05
-// (supervisor-only assignment). The Assign control below only renders for
-// PERSONA-024 (Supervisor) — the one BRSD role with an existing, matching
-// persona record, so this gate is grounded rather than an invented role
-// check (see the validation report's note on PERSONA-024's own documented
-// "no cross-agent view exists" gap, which this closes for tasks specifically).
+// (supervisor-only assignment). The Assign control below renders for roles
+// carrying the `task-assign` capability: Supervisor and Manager/Approver
+// (whose "approval and escalation authority" is a superset of supervision),
+// plus Dispatcher, whose entire role is "work allocation and scheduling".
+// Previously a single PERSONA-024 id comparison — the only supervisor-shaped
+// record the 66-persona catalogue offered.
 export function TaskDetailView() {
   const { taskId } = useParams<{ taskId: string }>();
   const tasks = (useEntityStore((s) => s.records.tasks) ?? []) as unknown as AgentTask[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const updateRecord = useEntityStore((s) => s.updateRecord);
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
-  const isSupervisor = activePersonaId === 'PERSONA-024';
+  const isSupervisor = canAssignTasks(activePersonaId);
   const pushToast = useNotificationStore((s) => s.pushToast);
 
   const [assignTo, setAssignTo] = useState('');

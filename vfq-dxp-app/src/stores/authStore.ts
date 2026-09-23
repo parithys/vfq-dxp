@@ -43,6 +43,22 @@ export const useAuthStore = create<AuthState>()(
       signOut: () => set({ isAuthenticated: false, staffId: '', profile: null }),
       setProfile: (profile) => set({ profile }),
     }),
-    { name: 'vfq-auth-store' }
+    {
+      name: 'vfq-auth-store',
+      // Bumped alongside personaStore for the 2026-09-24 persona re-key. A
+      // persisted session carries a staffId whose meaning may have changed
+      // (VFQ12342-VFQ12347 all map to different roles now) and a profile
+      // resolved from the old 3-identity directory, so the only safe
+      // migration is to require a fresh sign-in.
+      version: 2,
+      migrate: () => ({
+        isAuthenticated: false,
+        staffId: '',
+        profile: null,
+        signIn: () => {},
+        signOut: () => {},
+        setProfile: () => {},
+      }),
+    }
   )
 );

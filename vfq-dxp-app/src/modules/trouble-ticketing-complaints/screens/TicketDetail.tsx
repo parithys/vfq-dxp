@@ -11,6 +11,11 @@ import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import { usePersonaStore } from '../../../stores/personaStore';
 import { evaluateRule } from '../../../engines/ruleEngine';
+import {
+  canResolveTicket,
+  canReassignTicketQueue,
+  canSeeTicketAuditTrail,
+} from '../../../engines/agentPrivilegeEngine';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import {
   STATUS_VARIANT,
@@ -130,16 +135,20 @@ export function TicketDetail() {
   }
 
   // BR-067 (config): "an audit trail exists on tickets... but is role-
-  // restricted from agents." PERSONA-001/066 are the frontline/FL-Agent
-  // personas in this app's persona list; the rest (Complaints Team,
-  // Supervisor, Back Office/Admin, Retention) can see it.
-  const isFrontline = activePersonaId === 'PERSONA-001' || activePersonaId === 'PERSONA-066';
-  const canSeeAudit = !isFrontline;
+  // restricted from agents." Withheld from the Sales & Acquisition group and
+  // the customer-side Authorized Officer; care, complaints, dispatch,
+  // oversight and platform-admin roles carry `ticket-audit-trail`.
+  // (Was a PERSONA-001/066 id comparison — the old model's only two
+  // frontline ids. "Frontline" stopped being the right word under the 26:
+  // Customer Care is front-line but is a legitimate audit-trail viewer.)
+  const canSeeAudit = canSeeTicketAuditTrail(activePersonaId);
   // RBAC-132/144: Resolution Code is a "Filled By Complaints Team"-designated
-  // field FL Agents cannot fill — resolution is routed to Complaints Team,
-  // Supervisor or Admin personas instead.
-  const canResolve = activePersonaId === 'PERSONA-059' || activePersonaId === 'PERSONA-024' || activePersonaId === 'PERSONA-044';
-  const canReassignQueue = activePersonaId === 'PERSONA-024' || activePersonaId === 'PERSONA-044';
+  // field that agents raising the ticket cannot fill. The 25-row role table
+  // had no Complaints Team successor, so a dedicated Complaints Agent role
+  // (ROLE-26) owns resolution alongside Supervisor/Manager — keeping the
+  // raise-vs-resolve separation rather than widening it to every care agent.
+  const canResolve = canResolveTicket(activePersonaId);
+  const canReassignQueue = canReassignTicketQueue(activePersonaId);
 
   const notes = ticket.publicNotes ?? [];
   const activities = ticket.activities ?? [];

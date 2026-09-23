@@ -186,7 +186,7 @@ export function PersonaSwitcher() {
                 <Select
                   value={activePersonaId}
                   onChange={(e) => handleRoleSwitch(e.target.value)}
-                  options={personas.map((p) => ({ value: p.id, label: p.name }))}
+                  options={personas.map((p) => ({ value: p.id, label: `${p.name} · ${p.businessUnitLabel}` }))}
                 />
               </div>
               <button

@@ -7,7 +7,7 @@ import { DEMO_LOGIN_PASSWORD } from '../../auth/staffIdRoleMap';
 import { passwordPolicyError } from '../../auth/passwordPolicy';
 import { downloadCsv } from '../../engines/csvExport';
 import { isInternalAgentPersona } from '../../engines/agentPrivilegeEngine';
-import { getRbacForPersona } from '../../engines/configEngine';
+import { grantedFeaturesFor } from '../../engines/personaEngine';
 import { Input } from '../../components/primitives/Input';
 import { Button } from '../../components/primitives/Button';
 import { Badge } from '../../components/primitives/Badge';
@@ -15,12 +15,14 @@ import { Select } from '../../components/primitives/Select';
 
 // Agent 360 AEX-03: "Order, Ticket until VFQ confirms the complete list"
 // (OI-AGN-07) — the entity kinds and their entityStore keys are the only
-// two named as examples anywhere in the BRSD. `rbacKeyword` backs AEX-01:
-// an entity only appears as an export option if this persona's own RBAC
-// entries (rbac.json) mention a screen matching that keyword.
+// two named as examples anywhere in the BRSD. `featureKeyPrefix` backs
+// AEX-01: an entity only appears as an export option if this role actually
+// holds a granted feature in that area. Previously this matched a keyword
+// against the persona's rbac.json screen names; grants are now the access
+// model, so it matches the feature-key namespace instead.
 const EXPORTABLE_ENTITIES = [
-  { value: 'orders', label: 'Orders', rbacKeyword: 'order' },
-  { value: 'trouble-tickets', label: 'Tickets', rbacKeyword: 'ticket' },
+  { value: 'orders', label: 'Orders', featureKeyPrefix: 'orders.' },
+  { value: 'trouble-tickets', label: 'Tickets', featureKeyPrefix: 'tickets.' },
 ] as const;
 
 // Placeholder verification code — same open item as Forgot Password
@@ -60,14 +62,13 @@ export function AgentProfileWorkspace() {
   // everyone since those requirements carry no role-gating clause of their own.
   const canEditProfile = isInternalAgentPersona(activePersonaId);
 
-  // AEX-01: "Entity list displays as per access rights" — an entity type
-  // only appears as an export option if this persona's own RBAC entries
-  // grant access to a matching screen, reusing the same rbac.json data
-  // every other screen-gating check in this app already relies on, rather
-  // than a static list identical for every role.
-  const personaRbac = getRbacForPersona(activePersonaId);
+  // AEX-01: "Entity list displays as per access rights" — an entity type only
+  // appears as an export option if this role holds a granted feature in that
+  // area, reusing the same grant data every other gating check relies on
+  // rather than a static list identical for every role.
+  const personaGrants = grantedFeaturesFor(activePersonaId);
   const eligibleEntities = EXPORTABLE_ENTITIES.filter((entity) =>
-    personaRbac.some((r) => r.screenName.toLowerCase().includes(entity.rbacKeyword))
+    personaGrants.some((g) => g.key.startsWith(entity.featureKeyPrefix))
   );
 
   const [exportEntity, setExportEntity] = useState<(typeof EXPORTABLE_ENTITIES)[number]['value'] | ''>('orders');

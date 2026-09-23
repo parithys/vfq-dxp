@@ -10,21 +10,25 @@ interface UserAgentRecord {
   team: string;
 }
 
-// No real login/session directory exists in the mock data — the 3 seeded
-// users-agents.json records stand in for "who's signed in," matched by a
-// loose keyword against the selected persona's name/type. Falls back to the
-// first seeded agent (a Sales Agent) when nothing matches or no role is
-// chosen. Shared by LoginPage (initial sign-in) and PersonaSwitcher
-// (switching role from the profile menu) so the displayed identity — name,
-// job title, team — always matches the active persona in both places,
-// instead of only being resolved once at login.
+// No real login/session directory exists in the mock data — the seeded
+// users-agents.json records stand in for "who's signed in". Each persona names
+// its own identity via `identityUserId`, so this is a deterministic 1:1 lookup.
+//
+// It replaced a keyword match against the persona's name/type, which existed
+// only because there were 3 seeded identities for 66 personas and so had to
+// guess. That guess collapsed every "manager"/"approver" persona onto one
+// record (Rachel Thompson) — documented at the time as an accepted quirk, but
+// really a symptom of the undersized directory. With one identity per role it
+// would have silently merged five distinct roles and broken the per-agent task
+// scoping that reads the same directory, so both the matcher and the quirk are
+// gone.
+//
+// Shared by LoginPage (initial sign-in) and PersonaSwitcher (switching role
+// from the profile menu) so the displayed identity always matches the active
+// persona in both places.
 export async function pickProfileForRole(personaId: string): Promise<AgentProfile> {
   const agents = await mockDataEngine.list<UserAgentRecord>('users-agents');
   const persona = getPersona(personaId);
-  const haystack = `${persona?.name ?? ''} ${persona?.type ?? ''}`.toLowerCase();
-  const match =
-    (haystack.includes('fulfilment') && agents.find((a) => a.team.toLowerCase().includes('fulfilment'))) ||
-    (/(manager|approver)/.test(haystack) && agents.find((a) => a.jobTitle.toLowerCase().includes('manager'))) ||
-    agents[0];
+  const match = agents.find((a) => a.userId === persona?.identityUserId) ?? agents[0];
   return { userId: match.userId, name: `${match.firstName} ${match.lastName}`, jobTitle: match.jobTitle, team: match.team };
 }

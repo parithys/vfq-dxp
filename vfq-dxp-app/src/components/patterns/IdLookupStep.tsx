@@ -24,9 +24,10 @@ interface IdLookupStepProps {
 // Type) after a result exists clears it immediately — a fetched result stays
 // pinned to the exact value it came from, never left showing stale
 // demographic data for a field the agent has since changed. The returned
-// name/DOB/nationality are still read-only display per PERSONA-001's
-// evidenced restriction ("cannot manually enter ID details, only
-// re-scan/search") — only the lookup ID number itself is directly editable.
+// name/DOB/nationality are still read-only display per the Retail Sales Agent
+// restriction carried over from the 66-persona model's PERSONA-001 ("cannot
+// manually enter ID details, only re-scan/search") — only the lookup ID
+// number itself is directly editable.
 export function IdLookupStep({ value = {}, onChange }: IdLookupStepProps) {
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);

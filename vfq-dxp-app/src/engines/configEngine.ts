@@ -7,11 +7,23 @@ import type {
   DomainEntity,
   ModuleHierarchyEntry,
   ApprovalMatrixEntry,
+  FeatureCatalogueEntry,
+  PermissionLevel,
+  PersonaFeatureGrant,
 } from '../types/config';
 
 interface ConfigData {
   routes: Route[];
   personas: Persona[];
+  featureCatalogue: FeatureCatalogueEntry[];
+  /** personaId -> featureKey -> granted level. Precomputed at boot. */
+  personaFeatureLevel: Record<string, Record<string, PermissionLevel>>;
+  /** personaId -> screenId -> highest granted level, expanded from the
+   * feature catalogue. Precomputed so permissionLevelFor() is an O(1) lookup
+   * rather than the O(n) scan the old rbac.json filter did once per screen
+   * row in ModuleScreenList. */
+  personaScreenLevel: Record<string, Record<string, PermissionLevel>>;
+  /** Archived 66-persona evidence. Display-only — see RbacEntry. */
   rbac: RbacEntry[];
   businessRules: BusinessRule[];
   validationRules: ValidationRule[];
@@ -49,17 +61,50 @@ async function fetchJson<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+/** Weakest → strongest. Shared with personaEngine.canPerformAction. */
+const LEVEL_ORDER: PermissionLevel[] = ['View', 'Create', 'Edit', 'Approve', 'Full'];
+
+function strongest(a: PermissionLevel | undefined, b: PermissionLevel): PermissionLevel {
+  if (!a) return b;
+  return LEVEL_ORDER.indexOf(b) > LEVEL_ORDER.indexOf(a) ? b : a;
+}
+
+/** Expands each persona's feature grants into per-feature and per-screen level
+ * maps. Where two granted features share a screen id, the stronger level wins
+ * (e.g. orders.approval-detail@Approve beats orders.my-sales-orders@View), so
+ * a screen is never accidentally downgraded by an unrelated grant. */
+function indexGrants(personas: Persona[], catalogue: FeatureCatalogueEntry[]) {
+  const screensByKey = new Map(catalogue.map((f) => [f.key, f.screenIds]));
+  const personaFeatureLevel: Record<string, Record<string, PermissionLevel>> = {};
+  const personaScreenLevel: Record<string, Record<string, PermissionLevel>> = {};
+  for (const persona of personas) {
+    const byFeature: Record<string, PermissionLevel> = {};
+    const byScreen: Record<string, PermissionLevel> = {};
+    for (const grant of persona.features) {
+      byFeature[grant.key] = strongest(byFeature[grant.key], grant.level);
+      for (const screenId of screensByKey.get(grant.key) ?? []) {
+        byScreen[screenId] = strongest(byScreen[screenId], grant.level);
+      }
+    }
+    personaFeatureLevel[persona.id] = byFeature;
+    personaScreenLevel[persona.id] = byScreen;
+  }
+  return { personaFeatureLevel, personaScreenLevel };
+}
+
 // Boot-time loader per frontend-architecture.md §10 — no screen/component
 // should fetch config/*.json directly; always go through the accessors below.
 export async function loadConfig(): Promise<ConfigData> {
   if (cache) return cache;
   if (loading) return loading;
   loading = (async () => {
-    const [routes, personas, rbac, businessRules, validationRules, domainSchema, moduleHierarchy, designTokens, reqToScreens] =
+    const [routes, personas, featureCatalogue, businessRules, validationRules, domainSchema, moduleHierarchy, designTokens, reqToScreens] =
       await Promise.all([
         fetchJson<Route[]>('/config/routes.json'),
         fetchJson<Persona[]>('/config/personas.json'),
-        fetchJson<RbacEntry[]>('/config/rbac.json'),
+        // Strict, not resilient: feature grants ARE the access model now, so a
+        // missing/broken copy would blank the whole app and read as a bug.
+        fetchJson<FeatureCatalogueEntry[]>('/config/feature-catalogue.json'),
         fetchJson<BusinessRule[]>('/config/business-rules.json'),
         fetchJson<ValidationRule[]>('/config/validation-rules.json'),
         fetchJson<DomainEntity[]>('/config/domain-schema.json'),
@@ -78,7 +123,17 @@ export async function loadConfig(): Promise<ConfigData> {
     // back to "no matrix configured" (open to any approver) rather than
     // failing app boot.
     const approvalMatrix = await fetchJson<ApprovalMatrixEntry[]>('/config/approval-matrix.json').catch(() => []);
-    cache = { routes, personas, rbac, businessRules, validationRules, domainSchema, moduleHierarchy, designTokens, reqToScreens, journeyCatalogueMap, approvalMatrix };
+    // Archived 66-persona RBAC evidence, retired from the access path on
+    // 2026-09-24. Resilient load for the same reason as the two above: it is
+    // now purely additive (the role/access viewer's evidence panel), so a
+    // missing copy must not fail boot.
+    const rbac = await fetchJson<RbacEntry[]>('/config/rbac-legacy-66.json').catch(() => []);
+    const { personaFeatureLevel, personaScreenLevel } = indexGrants(personas, featureCatalogue);
+    cache = {
+      routes, personas, featureCatalogue, personaFeatureLevel, personaScreenLevel, rbac,
+      businessRules, validationRules, domainSchema, moduleHierarchy, designTokens,
+      reqToScreens, journeyCatalogueMap, approvalMatrix,
+    };
     return cache;
   })();
   return loading;
@@ -113,12 +168,43 @@ export function getPersona(personaId: string): Persona | undefined {
   return requireConfig().personas.find((p) => p.id === personaId);
 }
 
-export function getRbacFor(personaId: string, screenId: string): RbacEntry | undefined {
-  return requireConfig().rbac.find((r) => r.personaId === personaId && r.screenId === screenId);
+export function getPersonaByStaffId(staffId: string): Persona | undefined {
+  return requireConfig().personas.find((p) => p.staffId === staffId);
 }
 
-export function getRbacForPersona(personaId: string): RbacEntry[] {
-  return requireConfig().rbac.filter((r) => r.personaId === personaId);
+export function getFeatureCatalogue(): FeatureCatalogueEntry[] {
+  return requireConfig().featureCatalogue;
+}
+
+export function getFeatureEntry(key: string): FeatureCatalogueEntry | undefined {
+  return requireConfig().featureCatalogue.find((f) => f.key === key);
+}
+
+/** The persona's granted features, in catalogue order. */
+export function getPersonaFeatureGrants(personaId: string): PersonaFeatureGrant[] {
+  const persona = getPersona(personaId);
+  if (!persona) return [];
+  const order = new Map(requireConfig().featureCatalogue.map((f, i) => [f.key, i]));
+  return [...persona.features].sort((a, b) => (order.get(a.key) ?? 0) - (order.get(b.key) ?? 0));
+}
+
+export function getPersonaFeatureLevel(personaId: string, featureKey: string): PermissionLevel | null {
+  return requireConfig().personaFeatureLevel[personaId]?.[featureKey] ?? null;
+}
+
+export function getPersonaScreenLevel(personaId: string, screenId: string): PermissionLevel | null {
+  return requireConfig().personaScreenLevel[personaId]?.[screenId] ?? null;
+}
+
+/** Archived 66-persona RBAC rows this role absorbs, resolved through the
+ * persona's legacyPersonaIds crosswalk. Feeds the role/access viewer's
+ * evidence panel ONLY — it grants nothing. Named "legacy" deliberately so a
+ * future reader can't mistake it for the live access path. */
+export function getLegacyRbacForRole(personaId: string): RbacEntry[] {
+  const persona = getPersona(personaId);
+  if (!persona || persona.legacyPersonaIds.length === 0) return [];
+  const legacy = new Set(persona.legacyPersonaIds);
+  return requireConfig().rbac.filter((r) => legacy.has(r.personaId));
 }
 
 export function getBusinessRule(ruleId: string): BusinessRule | undefined {

@@ -16,13 +16,18 @@ const ICONS = {
   openArrow: 'M7 17L17 7 M7 7h10v10',
 };
 
-type Filter = 'all' | 'built' | 'not-built' | 'not-rbac';
+type Filter = 'all' | 'built' | 'not-built' | 'no-access';
 
+// "No access" replaced "Not RBAC-evidenced" on 2026-09-24. Access now comes
+// from each role's explicit feature grants rather than sparse rbac.json
+// evidence, so a screen with no permission level is one this role was
+// deliberately not granted — not one the source corpus happened to be silent
+// about. The old label asserted an evidence stance that no longer exists.
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'built', label: 'Built' },
   { key: 'not-built', label: 'Not built' },
-  { key: 'not-rbac', label: 'Not RBAC-evidenced' },
+  { key: 'no-access', label: 'No access' },
 ];
 
 interface Enriched {
@@ -32,9 +37,10 @@ interface Enriched {
 }
 
 // Secondary navigation = a module's screens (frontend-architecture.md §9).
-// Screen-level RBAC is surfaced as a badge (permission level, or "not
-// evidenced") rather than hiding the row outright — see personaEngine.ts's
-// design note on why the sidebar/screen list itself isn't RBAC-gated.
+// Screen-level access is surfaced as a badge (granted permission level, or
+// "No access") rather than hiding the row outright, and `built` is computed
+// independently of it — which is what keeps a granted-but-unimplemented
+// screen visible as a planned placeholder instead of vanishing.
 //
 // Screens are grouped under their sub-module/feature via
 // screenGrouping.ts — real evidence (traceability-matrix.md) where it
@@ -67,7 +73,7 @@ export function ModuleScreenList() {
   const catalogued = enrichedByScreenId.size;
   const built = [...enrichedByScreenId.values()].filter((e) => e.built).length;
   const notBuilt = catalogued - built;
-  const rbacEvidenced = [...enrichedByScreenId.values()].filter((e) => e.permissionLevel).length;
+  const grantedToRole = [...enrichedByScreenId.values()].filter((e) => e.permissionLevel).length;
 
   const passesFilters = (e: Enriched) => {
     const q = search.toLowerCase();
@@ -75,7 +81,7 @@ export function ModuleScreenList() {
     if (!matchesSearch) return false;
     if (filter === 'built') return e.built;
     if (filter === 'not-built') return !e.built;
-    if (filter === 'not-rbac') return !e.permissionLevel;
+    if (filter === 'no-access') return !e.permissionLevel;
     return true;
   };
 
@@ -110,7 +116,7 @@ export function ModuleScreenList() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant={e.built ? 'success' : 'filled-neutral'}>{e.built ? 'Built' : 'Not built'}</Badge>
-          <Badge variant={e.permissionLevel ? 'outlined-red' : 'filled-neutral'}>{e.permissionLevel ?? 'Not RBAC-evidenced'}</Badge>
+          <Badge variant={e.permissionLevel ? 'outlined-red' : 'filled-neutral'}>{e.permissionLevel ?? 'No access'}</Badge>
         </div>
       </Link>
     );
@@ -146,8 +152,8 @@ export function ModuleScreenList() {
           <div className="text-[length:var(--fs-caption)] text-muted">Not built</div>
         </div>
         <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4">
-          <div className="text-[length:var(--fs-h4)] font-bold text-accent">{rbacEvidenced}</div>
-          <div className="text-[length:var(--fs-caption)] text-muted">RBAC-evidenced</div>
+          <div className="text-[length:var(--fs-h4)] font-bold text-accent">{grantedToRole}</div>
+          <div className="text-[length:var(--fs-caption)] text-muted">Granted to this role</div>
         </div>
       </div>
 
