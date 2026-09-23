@@ -1,3 +1,31 @@
+## Persona × feature matrix — MUST be updated with every new feature
+
+`reference/VFQ_DXP_Persona_Feature_Applicability_Matrix_Reference.xlsx` is the
+SSOT for which persona can use which implemented feature. It is **generated**,
+never hand-edited.
+
+**Whenever you add or remove a feature/screen in this app, update it in the
+same change** — it is not a follow-up task:
+
+1. Add the feature to `MODULE_FEATURES` (if it calls `registerScreen()` with
+   `SCR-` ids) or `WORKSPACE_FEATURES` (if routed directly in `router.tsx`) in
+   `reference/scripts/build_persona_feature_matrix.py`.
+2. Regenerate: `python3 reference/scripts/build_persona_feature_matrix.py`
+
+Rules the script enforces — do not work around them:
+
+- Only *implemented* features appear. The built set is discovered from
+  `registerScreen()` calls, the same registry the router uses to choose between
+  a real screen and `<ScreenNotYetBuilt>`.
+- A `✓` requires positive evidence: an `rbac.json` row on one of the feature's
+  screens, or an explicit persona gate in code. Never hand-tick a cell — pass a
+  persona set only when code actually gates the feature, otherwise pass `None`
+  and let `rbac.json` decide. Blank means "no evidence", not "denied".
+- The script re-reads the persona gate sets out of `agentPrivilegeEngine.ts` and
+  `TicketDetail.tsx` on each run and **aborts** if they drifted from its own
+  constants; it also aborts if a referenced `SCR-` id is no longer registered.
+  If it aborts, fix the constants — that abort is the feature working.
+
 ## Project structure
 
 This directory (`vfq-dxp-app/`) is the single source of truth for the

@@ -15,6 +15,38 @@ Every item cites its source document slug(s) and evidence quote(s); open `.knowl
 
 61 of 66 personas have at least one normalized RBAC entry (145 entries total).
 
+The remaining 5 are **not** a backfill gap in this matrix — they are the expected
+output of the derivation rule stated above (no accessible_screens /
+accessible_actions / permissions / restricted_features text to normalize). They
+are recorded as open items below rather than inferred, because the alternative
+is minting screen access the corpus does not support. See the next section.
+
+---
+
+## Open items — personas with no normalized RBAC entry (5)
+
+Each row below was catalogued in `personas.md` from a single passing mention in
+the source corpus — enough to establish that the role *exists*, not enough to
+establish which screens or actions it may reach. Three of the five additionally
+have **no candidate screen in `screens.md`** to point an entry at, and two are
+described by the corpus as working *outside* the CRM/DXP entirely (manual
+reconciliation, on-site survey). Assigning them screen access would not be a
+documentation-only act: `personaEngine.ts` derives module visibility from
+`rbac.json` screen IDs, so an invented row grants real navigation access in the
+running application.
+
+**Resolution owner:** VFQ Security / Business Process owners — the same open
+question as OI-AGN-06/11/13 (no confirmed privilege matrix). These items should
+be closed by confirmation, not inference.
+
+| ID | Persona | Why no entry exists | What would close it |
+|---|---|---|---|
+| RBAC-OI-01 | PERSONA-013 EBU PM (Project Manager) | Corpus places it as a node in an approval chain ("account manager request → EBU PM → order raised → acceptance by Fulfilment, ETS, EBU and SBN"), not at a screen. No DAPN / enterprise contract-document screen exists in `screens.md`. | Confirm whether EBU PM transacts in the DXP at all, or only receives documents off-system. If in-DXP, the screen must be catalogued first. |
+| RBAC-OI-02 | PERSONA-045 DSA / Store / Field Engineer (sales channel attribution) | Evidenced only as "checkboxes for DSA / Store / Field Engineer" — an **attribution field on a signed bilingual paper form**, not a logged-in actor. SCR-066/SCR-018 exist but are paper/PDF artefacts and no persona holds RBAC on either. | Confirm whether this is a system role at all, or purely a provenance field on the Acceptance Form. If the latter, reclassify in `personas.md` as an attribution value, not a persona. |
+| RBAC-OI-03 | PERSONA-053 Care / Telesales & Retention / Complaints / Direct Sales / Mass Market / Mini Store / Retail & Franchise (role families) | A list of functional areas read out in one workshop; `personas.md` records "not itemized per role in this transcript". It bundles many distinct roles, so any single entry would span dozens of screens arbitrarily. | Split into discrete personas per role family, then derive per-role entries. Requires a dedicated extraction pass against the source workshop. |
+| RBAC-OI-04 | PERSONA-054 Sales / Fulfilment (VFID-KID mapping team) | Corpus states the corner cases are "handled **manually** by sales plus fulfillment". No VFID/KID mapping screen exists in `screens.md`; `mock-data/vodafone-ids.json` carries the mapping fields (`mappedKidIds`, `mappingType`) but is loaded only by `mockDataEngine` with no UI consuming it. | Confirm whether manual reconciliation is expected to move into the DXP. If yes, catalogue the screen first, then derive the entry. |
+| RBAC-OI-05 | PERSONA-055 Field Survey Team | Maps VFIDs to KIDs **on-site, in UIM** — outside the DXP. Same absence of a candidate screen as RBAC-OI-04. | Confirm whether any DXP surface is in scope for field survey, or whether this role stays UIM-only (in which case it needs no RBAC entry, and that should be stated). |
+
 ---
 
 ## PERSONA-001: Retail/Sales Agent (Frontline/Cross-Sell/Front-Office) (20 entries)
