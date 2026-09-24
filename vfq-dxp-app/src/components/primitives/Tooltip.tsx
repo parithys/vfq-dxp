@@ -205,7 +205,7 @@ export function Tooltip({ content, children, placement = 'right', disabled = fal
             className={`tooltip-surface${wraps ? ' tooltip-surface--wrap' : ''}`}
             style={coords ? { top: coords.top, left: coords.left } : { top: -9999, left: -9999 }}
           >
-            {content}
+            <span className="tooltip-surface__label">{content}</span>
           </div>,
           document.body
         )}

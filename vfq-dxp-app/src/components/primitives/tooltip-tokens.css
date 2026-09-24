@@ -23,6 +23,11 @@
   --tooltip-offset: var(--space-2);
   --tooltip-max-width: 240px;
 
+  /* Half-height of the pointer triangle, so it protrudes this far from the
+   * surface edge and stands 2x this tall. Kept under --tooltip-offset (8px)
+   * so the tip stops just short of the trigger instead of touching it. */
+  --tooltip-arrow-size: 6px;
+
   --tooltip-show-delay: 400ms;
   --tooltip-show-delay-grouped: 0ms;
   --tooltip-group-window: 500ms;

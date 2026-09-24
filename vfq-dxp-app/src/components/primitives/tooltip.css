@@ -23,8 +23,6 @@
   box-shadow: var(--tooltip-shadow);
   pointer-events: none;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 
   opacity: 0;
   transform: translateY(0);
@@ -33,9 +31,60 @@
     transform var(--tooltip-transition-duration) var(--tooltip-transition-easing);
 }
 
+/* Truncation lives on an inner element, not the surface: the pointer below is
+ * drawn outside the surface's box, so the surface cannot clip its overflow. */
+.tooltip-surface__label {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .tooltip-surface--wrap {
   white-space: normal;
+}
+
+.tooltip-surface--wrap .tooltip-surface__label {
   text-overflow: initial;
+}
+
+/* Pointer triangle — a zero-size box with one filled border, so it needs no
+ * extra markup and stays out of layout (an absolutely positioned pseudo-
+ * element adds nothing to getBoundingClientRect, which Tooltip.tsx measures
+ * to place the surface). Always on the edge facing the trigger, so a
+ * collision flip re-aims it automatically. */
+.tooltip-surface::after {
+  content: '';
+  position: absolute;
+  border: var(--tooltip-arrow-size) solid transparent;
+}
+
+/* Surface sits right of the trigger → pointer on its left edge, facing left. */
+.tooltip-surface[data-placement='right']::after {
+  top: 50%;
+  right: 100%;
+  transform: translateY(-50%);
+  border-right-color: var(--tooltip-bg);
+}
+
+.tooltip-surface[data-placement='left']::after {
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  border-left-color: var(--tooltip-bg);
+}
+
+.tooltip-surface[data-placement='top']::after {
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  border-top-color: var(--tooltip-bg);
+}
+
+.tooltip-surface[data-placement='bottom']::after {
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%);
+  border-bottom-color: var(--tooltip-bg);
 }
 
 .tooltip-surface[data-state='visible'] {
