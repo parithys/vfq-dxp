@@ -1,9 +1,23 @@
+import glob
 import json
 import os
+import re
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
+# !! WARNING — THIS SCRIPT NO LONGER PRODUCES THE FULL WORKBOOK !!
+#
+# VFQ_DXP_Test_Data_Reference.xlsx now contains three sheets that this script
+# does NOT create, because they were added directly in Excel:
+#     "Persona", "Persona by Approach", "ID Lookup (MOI Fetch)"
+# Running this script rebuilds the workbook from scratch and WOULD DELETE THEM.
+#
+# Before regenerating, either port those three sheets into this script, or copy
+# them across afterwards from a backup. The Login Credentials sheet below is
+# derived from source and was patched into the live workbook in place on
+# 2026-09-24 precisely to avoid this destructive rebuild.
+#
 # Regenerate with: python3 reference/scripts/build_test_data_reference.py
 # (run from anywhere — paths are resolved relative to this script's location,
 # i.e. <repo>/vfq-dxp-app/reference/scripts/../.. )
@@ -116,33 +130,71 @@ ws.column_dimensions['B'].width = 95
 # Sheet 1: Login Credentials
 # ---------------------------------------------------------------------------
 ws = wb.create_sheet('Login Credentials')
-note = ('2026-09-11: Staff ID table replaced with the user-supplied Staff ID/Role/Channel/Context-card mapping — 7 '
-        'Staff IDs now (was 6); VFQ12347 is new, and every ID from VFQ12342 onward shifted role vs. the previous '
-        'table. Password is the SAME for every Staff ID: Vodafone@123 (placeholder — real VFQ credentials are not '
-        'confirmed, see D-02/OI-AGN-04). Channel and Context card are recorded for traceability only — no '
-        'context-card UI exists yet to consume them (Queue Number + Ticket Number for Retail, CTI Reference only '
-        'for Back-office/Telephonic, Hidden for Field/System). "Resulting agent identity" is who you actually '
-        'become after login (name/job title/team) — it is looked up from users-agents.json by matching keywords in '
-        'the persona name, NOT the Staff ID itself, so multiple Staff IDs can log you in as the same person. '
-        'VFQ12342, VFQ12344 and VFQ12345 all match on "Manager"/"Approver" and all three resolve to Rachel Thompson '
-        '— a real quirk of the matching logic (src/engines/agentProfileEngine.ts), not a typo here.')
-row = title_block(ws, 'Login Credentials', 'src/auth/staffIdRoleMap.ts + src/engines/agentProfileEngine.ts', note)
+note = ('2026-09-24: regenerated for the 26 operational roles (ROLE-01..ROLE-26, VFQ12341..VFQ12366). Every row '
+        'below is DERIVED from public/config/personas.json + public/mock-data/users-agents.json, with the password '
+        'parsed from src/auth/staffIdRoleMap.ts — nothing here is restated by hand, so it cannot drift from the app. '
+        'Password is the SAME for every Staff ID (placeholder — real VFQ credentials are not confirmed, see '
+        'D-02/OI-AGN-04). Staff ID entry is normalised, so "VFQ-12341", "vfq 12341" and "VFQ12341" all resolve to '
+        'the same role. Channel and Context card are no longer traceability-only: they drive the header context '
+        'chip via agentPrivilegeEngine. "Resulting agent identity" is now a deterministic 1:1 lookup via the role\'s '
+        'identityUserId, so each Staff ID logs you in as a distinct person — the previous keyword matcher, which '
+        'collapsed VFQ12342/12344/12345 onto Rachel Thompson, is gone.')
+row = title_block(ws, 'Login Credentials', 'public/config/personas.json + public/mock-data/users-agents.json', note)
 
-login_rows = [
-    ('VFQ12341', 'Vodafone@123', 'Retail Agent', 'Retail / in-store', 'Queue Number + Ticket Number', 'Fatima Al-Kuwari', 'Sales Agent', 'Retail Sales', 'USR-1101', 'Default frontline agent. Use for: Customer Search, Task View as an agent with assigned tasks, claiming un-role-gated approval items.'),
-    ('VFQ12342', 'Vodafone@123', 'Retail Store Manager / Approver', 'Retail / in-store', 'Queue Number + Ticket Number', 'Rachel Thompson', 'Sales Manager', 'Sales Management', 'USR-1103', 'Use for: approving "MNP Postpaid Port-In" orders (approval matrix requires this exact role); assigning tasks to team members (supervisor-only action).'),
-    ('VFQ12343', 'Vodafone@123', 'Back Office / Fulfilment', 'Back-office', 'CTI Reference only', 'Omar Hassan', 'Back Office Fulfilment Agent', 'Order Fulfilment', 'USR-1102', 'Use for: approving "New Postpaid Activation" B2B2C orders (approval matrix requires this exact role).'),
-    ('VFQ12344', 'Vodafone@123', 'Back Office Manager / Approver', 'Back-office', 'CTI Reference only', 'Rachel Thompson', 'Sales Manager', 'Sales Management', 'USR-1103', 'Resolves to the SAME identity as VFQ12342/12345 (see note above) — role label shown at login differs, but the signed-in agent is identical.'),
-    ('VFQ12345', 'Vodafone@123', 'Enterprise Account Manager', 'Telephonic / back-office', 'CTI Reference only', 'Rachel Thompson', 'Sales Manager', 'Sales Management', 'USR-1103', 'Resolves to the SAME identity as VFQ12342/12344 (see note above).'),
-    ('VFQ12346', 'Vodafone@123', 'Field Technician', 'Field (no queue, no CTI)', 'Hidden', 'Fatima Al-Kuwari', 'Sales Agent', 'Retail Sales', 'USR-1101', 'Falls back to the default agent — no seeded field-technician identity exists in users-agents.json.'),
-    ('VFQ12347', 'Vodafone@123', 'IT Operations', 'System / no customer interaction', 'Hidden', 'Fatima Al-Kuwari', 'Sales Agent', 'Retail Sales', 'USR-1101', 'Falls back to the default agent — no seeded IT-ops identity exists in users-agents.json.'),
-    ('anything else', 'any value', '—', '—', '—', '—', '—', '—', '—', 'Login is rejected with "Staff ID not recognised." — only the 7 Staff IDs above are recognised.'),
-    ('any of the above', 'wrong password', '—', '—', '—', '—', '—', '—', '—', 'Login is rejected with "Incorrect password." — use this to test the login failure state.'),
-]
+# Derived, not restated — see the note above.
+_pw = re.search(r"DEMO_LOGIN_PASSWORD\s*=\s*'([^']+)'",
+                open(os.path.join(APP_ROOT, 'src', 'auth', 'staffIdRoleMap.ts')).read()).group(1)
+_personas = load('personas', base=CONF)
+_agents = {a['userId']: a for a in load('users-agents')}
+_catalogue = {f['key']: f for f in load('feature-catalogue', base=CONF)}
+_built = set()
+for _p in glob.glob(os.path.join(APP_ROOT, 'src', 'modules', '*', 'screens', 'index.tsx')):
+    _built |= set(re.findall(r"'(SCR-\d+)'", open(_p).read()))
+
+_CAP_HINT = {
+    'ticket-resolve': 'set a Resolution Code and close a complaint',
+    'ticket-reassign-queue': 'reassign a ticket queue',
+    'task-assign': 'assign a task to another team member',
+    'backoffice-config': 'configure Bell Notifications and Bulk Notes',
+    'invoice-actions': 'download/print/resend invoices (BR-06)',
+    'edit-customer-records': 'edit customer contact/address/billing profile (BR-02)',
+    'agent-oversight': 'see BOTH session reference numbers',
+    'ticket-audit-trail': 'view the ticket audit trail (BR-067)',
+}
+
+
+def _what_to_test(p):
+    bits = [f"Approach: {p['approach']}"]
+    bits.append(f"header shows {p['contextCard']}" if p['contextCard'] != 'Hidden' else 'no header context card')
+    bits += ['can ' + _CAP_HINT[c] for c in p['capabilities'] if c in _CAP_HINT]
+    if 'edit-customer-records' not in p['capabilities']:
+        bits.append('CANNOT edit customer records — use to verify the read-only path')
+    planned = sum(1 for g in p['features']
+                  if _catalogue[g['key']]['screenIds']
+                  and not any(s in _built for s in _catalogue[g['key']]['screenIds']))
+    if planned:
+        bits.append(f'{planned} granted feature(s) show as Planned placeholders')
+    return '. '.join(bits[:6]) + '.'
+
+
+login_rows = []
+for p in _personas:
+    a = _agents[p['identityUserId']]
+    login_rows.append((
+        p['staffId'], _pw, p['name'], p['channel'], p['contextCard'],
+        f"{a['firstName']} {a['lastName']}", a['jobTitle'], a['team'], p['identityUserId'],
+        _what_to_test(p),
+    ))
+login_rows.append(('anything else', 'any value') + ('\u2014',) * 7 + (
+    f'Login is rejected with "Staff ID not recognised." \u2014 only the {len(_personas)} Staff IDs above are '
+    'recognised. Entry is normalised, so "VFQ-12341", "vfq 12341" and "VFQ12341" all resolve to the same role.',))
+login_rows.append(('any of the above', 'wrong password') + ('\u2014',) * 7 + (
+    'Login is rejected with "Incorrect password." \u2014 use this to test the login failure state.',))
+
 write_table(ws, row,
     ['Staff ID', 'Password', 'Role label shown at login', 'Channel', 'Context card', 'Resulting agent name', 'Resulting job title', 'Resulting team', 'Resulting userId', 'What to test with it'],
     login_rows,
-    [16, 14, 26, 22, 20, 18, 24, 18, 16, 60])
+    [16, 14, 33, 22, 20, 18, 24, 18, 16, 60])
 
 # ---------------------------------------------------------------------------
 # Sheet 2: Customer Search
@@ -255,7 +307,7 @@ tasks = load('tasks')
 ws = wb.create_sheet('Agent Task View')
 note = ('Tasks with no assigned agent (blank below) are visible to every logged-in agent. Tasks assigned to a specific '
         'userId are ONLY visible to that agent — log in as USR-1101 (Fatima, Staff ID VFQ12341) vs USR-1102 (Omar, '
-        'VFQ12343) to see the difference (ATV-02 per-agent scoping). Log in as VFQ12342/12344/12345 (Rachel, Sales '
+        'VFQ12355) to see the difference (ATV-02 per-agent scoping). Log in as VFQ12363 (Rachel, Sales '
         'Manager) to test assigning an unassigned task to a team member — that control only appears for the Manager persona.')
 row = title_block(ws, 'Agent Task View', 'public/mock-data/tasks.json', note)
 task_rows = [(t.get('taskId'), t.get('taskName'), t.get('taskType'), t.get('taskStatus'), 'Yes' if t.get('priorityFlag') else 'No', t.get('assignedAgentId') or '(unassigned — visible to everyone)') for t in tasks]

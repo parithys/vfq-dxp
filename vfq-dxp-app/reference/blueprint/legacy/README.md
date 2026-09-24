@@ -12,6 +12,7 @@ stays resolvable after the cut-over.
 | File | What it is |
 |---|---|
 | `personas-66-evidence.json` | The previous `public/config/personas.json`, byte-identical. 66 records with `type`, `responsibilities`, `permissions`, `restrictedFeatures` and a `confidence` rating (56 high, 10 medium). The per-persona prose is **not** reproduced in the new model — the new `description` is the role table's one-liner. |
+| `personas-66-descriptions.json` | The two columns that existed **only** in `reference/VFQ_DXP_Personas_Reference.xlsx` and in no JSON: `personaDescription` (a plain-English summary, often clearer than the raw `responsibilities` prose) and `systemRoleKey` (an 11-value role grouping). Extracted 2026-09-24 so that workbook's persona sheet became safely redundant rather than uniquely load-bearing. |
 | `staff-id-role-map-v1.ts.txt` | The previous `src/auth/staffIdRoleMap.ts`, including the 7-row Staff ID → Role → Channel → Context card table that existed only as a comment. |
 
 Also archived, but still loaded at runtime as display-only data:

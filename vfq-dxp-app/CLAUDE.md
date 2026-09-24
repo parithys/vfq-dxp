@@ -1,30 +1,45 @@
-## Persona × feature matrix — MUST be updated with every new feature
+## Role master workbook — MUST be updated with every new feature or role
 
 `reference/VFQ_DXP_Persona_Feature_Applicability_Matrix_Reference.xlsx` is the
-SSOT for which persona can use which implemented feature. It is **generated**,
-never hand-edited.
+**single source of truth** for the 26 operational roles: Staff IDs, the demo
+password, persona groups, business units, approach classification, capability
+(action) gates, and which implemented feature each role may reach. It is
+**generated**, never hand-edited — opening it in Excel and saving will silently
+rewrite it.
 
-**Whenever you add or remove a feature/screen in this app, update it in the
-same change** — it is not a follow-up task:
+**Whenever you add/remove a feature, screen or role, regenerate it in the same
+change** — it is not a follow-up task:
 
-1. Add the feature to `MODULE_FEATURES` (if it calls `registerScreen()` with
-   `SCR-` ids) or `WORKSPACE_FEATURES` (if routed directly in `router.tsx`) in
-   `reference/scripts/build_persona_feature_matrix.py`.
+1. Edit the source, not the workbook: roles, grants, capabilities and Staff IDs
+   live in `public/config/personas.json`; feature keys and their screen ids in
+   `public/config/feature-catalogue.json`.
 2. Regenerate: `python3 reference/scripts/build_persona_feature_matrix.py`
 
 Rules the script enforces — do not work around them:
 
-- Only *implemented* features appear. The built set is discovered from
+- Only *implemented* features appear as built. The built set is discovered from
   `registerScreen()` calls, the same registry the router uses to choose between
-  a real screen and `<ScreenNotYetBuilt>`.
-- A `✓` requires positive evidence: an `rbac.json` row on one of the feature's
-  screens, or an explicit persona gate in code. Never hand-tick a cell — pass a
-  persona set only when code actually gates the feature, otherwise pass `None`
-  and let `rbac.json` decide. Blank means "no evidence", not "denied".
-- The script re-reads the persona gate sets out of `agentPrivilegeEngine.ts` and
-  `TicketDetail.tsx` on each run and **aborts** if they drifted from its own
-  constants; it also aborts if a referenced `SCR-` id is no longer registered.
-  If it aborts, fix the constants — that abort is the feature working.
+  a real screen and `<ScreenNotYetBuilt>`. A granted feature whose screens
+  aren't registered shows as `Planned`, deliberately — it stays visible to
+  indicate planned functionality rather than disappearing.
+- A `✓` means `personas.json` actually grants that feature to that role.
+  Nothing is inferred and nothing is hand-ticked. **Blank means deliberately
+  not granted** — grants are exhaustive for the 26 roles. (This inverts the
+  pre-2026-09-24 model, where a tick required an `rbac.json` evidence row and
+  blank meant "the corpus never said".)
+- The script **aborts** rather than emit a misleading workbook if: a capability
+  is gated in code or granted in `personas.json` but missing from the
+  `PersonaCapability` union in `types/config.ts`; a grant references an unknown
+  feature key or permission level; a catalogue entry references a screen absent
+  from `routes.json`; a Staff ID or role id is duplicated; or a role binds an
+  identity absent from `users-agents.json`. If it aborts, fix the source —
+  that abort is the feature working.
+
+Superseded persona records (historical, **not** authoritative):
+`VFQ_DXP_Personas_Reference.xlsx` → "Personas" (the 66-persona model), and
+`VFQ_DXP_Test_Data_Reference.xlsx` → "Login Credentials" / "Persona" /
+"Persona by Approach". The 66-persona model, its RBAC evidence and the two
+columns unique to that workbook are archived under `reference/blueprint/legacy/`.
 
 ## Project structure
 
