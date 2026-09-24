@@ -8,9 +8,18 @@ interface SidebarState {
   mobileOpen: boolean;
   toggleMobileOpen: () => void;
   closeMobile: () => void;
-  /** Expanded nav groups (e.g. Products). A real preference, so persisted. */
+  /** Expanded nav groups (e.g. Mobile). A real preference, so persisted. */
   expandedNavKeys: string[];
   toggleNavGroup: (key: string) => void;
+  /** Idempotent "make sure this group is open" — NOT a toggle.
+   *
+   * Exists because the toggle cannot be called from an effect. Sidebar opens
+   * the group owning a deep-linked route on arrival, and StrictMode
+   * double-invokes effects in dev: the toggle opened the group, then the second
+   * invocation read the same stale `expandedNavKeys` from its render closure,
+   * concluded the group was still shut, and toggled it closed again. Net
+   * effect: nothing opened, and only in dev. */
+  expandNavGroup: (key: string) => void;
 }
 
 export const useSidebarStore = create<SidebarState>()(
@@ -22,9 +31,9 @@ export const useSidebarStore = create<SidebarState>()(
       toggleMobileOpen: () => set({ mobileOpen: !get().mobileOpen }),
       closeMobile: () => set({ mobileOpen: false }),
       // Everything collapsed by default. The rail then opens on a short list of
-      // primary destinations rather than 10+ rows of nested categories, and a
-      // group opens on click or automatically when you are inside one of its
-      // children (see Sidebar's childActive), so nothing becomes unreachable.
+      // primary destinations rather than 10+ rows of nested categories. A group
+      // opens when its row is clicked, or on arrival at a deep link inside it
+      // (Sidebar's expandNavGroup effect), so nothing becomes unreachable.
       expandedNavKeys: [],
       toggleNavGroup: (key) =>
         set({
@@ -32,6 +41,12 @@ export const useSidebarStore = create<SidebarState>()(
             ? get().expandedNavKeys.filter((k) => k !== key)
             : [...get().expandedNavKeys, key],
         }),
+      expandNavGroup: (key) =>
+        set(
+          get().expandedNavKeys.includes(key)
+            ? {}
+            : { expandedNavKeys: [...get().expandedNavKeys, key] }
+        ),
     }),
     {
       name: 'vfq-sidebar-store',

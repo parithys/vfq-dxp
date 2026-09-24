@@ -7,6 +7,7 @@ import { TooltipGroup } from '../components/primitives/TooltipContext';
 import { useSidebarStore } from '../stores/sidebarStore';
 import { usePersonaStore } from '../stores/personaStore';
 import { resolveNavFor } from '../engines/navigationEngine';
+import { NAV_MANIFEST } from './navManifest';
 
 const PANEL_TOGGLE_ICON = 'M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5z M9 4v16';
 // Points down when collapsed, rotated 180deg to point up when expanded —
@@ -49,6 +50,7 @@ export function Sidebar() {
     closeMobile,
     expandedNavKeys,
     toggleNavGroup,
+    expandNavGroup,
   } = useSidebarStore();
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
   const location = useLocation();
@@ -58,6 +60,35 @@ export function Sidebar() {
   // whenever the route changes so it doesn't stay open over the new screen.
   useEffect(() => {
     closeMobile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  // Reveal the group that owns the route when you arrive from OUTSIDE the rail
+  // — a breadcrumb, a dashboard quick action, a reload on a deep link. Landing
+  // on /mobile/sim-device with Mobile shut would hide where you are.
+  //
+  // Resolved against the STATIC manifest, not the role-filtered `navItems`.
+  // navItems comes from resolveNavFor, which returns [] until loadConfig()
+  // resolves, so on a cold deep-link load this effect ran once against an
+  // empty array, found no owner, and — keyed on pathname, which never changes
+  // — never ran again. The group stayed shut on exactly the arrival it exists
+  // for. The manifest is a module constant, so it is always populated.
+  // Expanding a group the role cannot reach is harmless: its row isn't
+  // rendered, so the key is inert.
+  //
+  // Deliberately an effect keyed on pathname alone, rather than deriving
+  // `expanded = isOpen || childActive`. That derivation was the previous
+  // behaviour and it made a group impossible to CLOSE while you stood on one
+  // of its children: the toggle flipped the stored key and the derivation
+  // forced it straight back open. Adding expandedNavKeys to the deps here
+  // would reintroduce exactly that — collapse, effect fires, re-opens.
+  //
+  // expandNavGroup, not toggleNavGroup: an effect must be idempotent. See the
+  // store — StrictMode's double invocation made the toggle open the group and
+  // then immediately close it.
+  useEffect(() => {
+    const owner = NAV_MANIFEST.find((i) => i.children?.some((c) => c.to === location.pathname));
+    if (owner) expandNavGroup(owner.key);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
@@ -130,64 +161,88 @@ export function Sidebar() {
           {navItems.map((item) => {
             const hasChildren = Boolean(item.children?.length);
             const childActive = item.children?.some((c) => location.pathname === c.to) ?? false;
-            const expanded = expandedNavKeys.includes(item.key) || childActive;
-            // A parent with children is `end`-matched so it stops claiming the
-            // active state once you are inside one of its children. Without
-            // this, NavLink's prefix matching lit up BOTH /fibre-home and
-            // /fibre-home/relocation — two red pills, and no way to tell which
-            // level you were actually on.
+            const expanded = expandedNavKeys.includes(item.key);
+            // A leaf parent is `end`-matched per the manifest. Parents WITH
+            // children no longer link at all, so NavLink's old prefix-matching
+            // problem (both /fibre-home and /fibre-home/relocation lighting up
+            // as red pills) can't arise.
             const parentEnd = item.end ?? hasChildren;
             const exactlyActive = location.pathname === item.to;
-            // The WHOLE row is one target — label, icon and chevron alike.
-            // Previously the chevron was its own <button> and the label was a
-            // bare link, so clicking "Mobile" navigated but left the group
-            // shut: the only way to reveal the categories was to hit a 14px
-            // arrow. Now one click both navigates to the line root and opens
-            // the group, and clicking the row again once you are already there
-            // collapses it. That keeps a collapse affordance without splitting
-            // the row into two hit areas (which also let you click *between*
-            // them and get nothing).
-            const onParentClick = () => {
-              if (!hasChildren) return;
-              const isOpen = expandedNavKeys.includes(item.key);
-              if (exactlyActive && isOpen) toggleNavGroup(item.key);
-              else if (!isOpen) toggleNavGroup(item.key);
-            };
+            // A parent with children is a DISCLOSURE, not a destination: one
+            // click opens or closes its sub-menu and nothing else. Only a
+            // sub-menu item navigates.
+            //
+            // So it renders as a <button>, not a link. That is the whole fix
+            // rather than an `e.preventDefault()` on a NavLink: an <a href>
+            // advertises a destination the keyboard, the screen reader and
+            // cmd-click all believe, and it is what put `aria-current="page"`
+            // and a real `href="/fibre-home"` on a control that must not
+            // navigate. A <button aria-expanded> states what it actually does.
+            //
+            // The whole row stays one hit target — icon, label and chevron
+            // alike. The chevron used to be a separate 14px button, which left
+            // dead space between it and the label.
+            const rowClass = `flex-1 min-w-0 flex items-center gap-2.5 h-11 mx-2 rounded-[var(--radius-sm)] text-[length:var(--fs-body)] ${collapsed ? 'justify-center px-2' : 'px-4'} `;
+            const activeClass = 'bg-accent text-accent-on font-medium shadow-[var(--shadow-brand)]';
+            // Open group holding the active child: a quiet tint, so the group
+            // reads as "you are in here" without competing with the child's
+            // own accent marker.
+            const inGroupClass = 'bg-white/8 text-white font-medium';
+            const idleClass = 'hover:bg-white/10 hover:text-white text-white/70';
+            const body = (
+              <>
+                <Icon path={item.icon} className="w-4.5 h-4.5 shrink-0" />
+                {!collapsed && <span className="truncate">{item.label}</span>}
+                {hasChildren && !collapsed && (
+                  <Icon
+                    path={CHEVRON_DOWN}
+                    className={`w-3.5 h-3.5 shrink-0 ml-auto opacity-70 transition-transform ${expanded ? 'rotate-180' : ''}`}
+                  />
+                )}
+              </>
+            );
             return (
               <li key={item.key}>
                 <div className="flex items-center">
                   <Tooltip content={item.label} placement="right" disabled={!collapsed}>
-                    <NavLink
-                      to={item.to}
-                      end={parentEnd}
-                      onClick={onParentClick}
-                      aria-expanded={hasChildren && !collapsed ? expanded : undefined}
-                      className={({ isActive }) =>
-                        `flex-1 min-w-0 flex items-center gap-2.5 h-11 mx-2 rounded-[var(--radius-sm)] text-[length:var(--fs-body)] ${collapsed ? 'justify-center px-2' : 'px-4'} ${
-                          isActive
-                            ? 'bg-accent text-accent-on font-medium shadow-[var(--shadow-brand)]'
-                            : expanded && childActive
-                              // Open group containing the active child: a quiet
-                              // tint, so the group reads as "you are in here"
-                              // without competing with the child's own marker.
-                              ? 'bg-white/8 text-white font-medium'
-                              : 'hover:bg-white/10 hover:text-white text-white/70'
-                        }`
-                      }
-                    >
-                      <Icon path={item.icon} className="w-4.5 h-4.5 shrink-0" />
-                      {!collapsed && <span className="truncate">{item.label}</span>}
-                      {hasChildren && !collapsed && (
-                        <Icon
-                          path={CHEVRON_DOWN}
-                          className={`w-3.5 h-3.5 shrink-0 ml-auto opacity-70 transition-transform ${expanded ? 'rotate-180' : ''}`}
-                        />
-                      )}
-                    </NavLink>
+                    {hasChildren ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // In the collapsed icon rail the sub-menu has nowhere
+                          // to render, so a pure toggle would be a dead icon —
+                          // it used to at least navigate to the line root.
+                          // Expand the rail first, then open the group, so one
+                          // click still reveals the categories.
+                          if (collapsed) {
+                            toggleCollapsed();
+                            if (!expanded) toggleNavGroup(item.key);
+                            return;
+                          }
+                          toggleNavGroup(item.key);
+                        }}
+                        aria-expanded={collapsed ? undefined : expanded}
+                        // The line root (/mobile) is still a real page, reached
+                        // from a child's breadcrumb. Keep marking the row when
+                        // you are standing on it so a deep link isn't orphaned
+                        // in the rail.
+                        className={rowClass + (exactlyActive ? activeClass : childActive ? inGroupClass : idleClass)}
+                      >
+                        {body}
+                      </button>
+                    ) : (
+                      <NavLink
+                        to={item.to}
+                        end={parentEnd}
+                        className={({ isActive }) => rowClass + (isActive ? activeClass : idleClass)}
+                      >
+                        {body}
+                      </NavLink>
+                    )}
                   </Tooltip>
                 </div>
                 {/* Children are hidden when collapsed — the icon rail has no
-                    room for them, and the parent link still navigates.
+                    room for them, so the parent icon expands the rail instead.
                     A single vertical connector line runs behind the group and
                     the active child draws an accent segment over it, instead of
                     each child being its own filled pill: with a pill, a

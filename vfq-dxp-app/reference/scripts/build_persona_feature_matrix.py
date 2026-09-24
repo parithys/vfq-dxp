@@ -679,7 +679,12 @@ for _k in NAV_ORDER:
     elif '.' in _k:
         GOVERNED_BY[_k] = 'journey grants in this category'
     elif _k in ('mobile', 'fibre-home'):
-        GOVERNED_BY[_k] = 'approach (always shown); categories gated by journey grants'
+        # Not a destination: the row is a disclosure control that only opens or
+        # closes its sub-menu (Sidebar renders it as a <button>, not a link).
+        # A tick means the role sees the GROUP. The line root page still exists
+        # and is reached from a child's breadcrumb.
+        GOVERNED_BY[_k] = ('approach (group always shown); row expands only, does not navigate; '
+                           'categories gated by journey grants')
     else:
         GOVERNED_BY[_k] = 'approach ordering (IA only)'
 for i in range(5, 5 + len(NAV_ORDER)):
