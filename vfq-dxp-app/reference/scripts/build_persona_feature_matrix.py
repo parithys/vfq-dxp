@@ -473,38 +473,66 @@ META = [('Feature ID', 11), ('Module / Area', 22), ('Feature', 40), ('Status', 1
         ('Screen IDs', 26), ('Levels granted', 20), ('Restrictions', 46)]
 NMETA = len(META)
 
+# Meta labels sit on row 2, not row 1, so they ARE the autofilter's header row
+# (ref starts at A2). Previously the filter's header row was the blank spacer
+# under the labels, which gave every dropdown an empty name. Row 1's meta cells
+# stay styled-but-empty as a band aligning with the rotated role names.
 for i, (label, width) in enumerate(META, start=1):
-    ws.cell(row=1, column=i, value=label)
+    ws.cell(row=2, column=i, value=label)
     ws.column_dimensions[get_column_letter(i)].width = width
+
+# Role name and Staff ID share ONE rotated header cell ("Channel Manager:
+# VFQ12348") rather than stacking across two rows. The two were only ever read
+# together — a column is identified by which person it is and what you log in
+# as — and splitting them cost a header row and made the pair easy to misread
+# when scrolled. The ROLE-xx id is dropped from the label rather than crammed
+# in: Staff ID is equally unique, is the value a reader actually types, and the
+# Role ID remains the first column of Roles & Credentials, Capabilities and
+# Navigation for joining.
+def col_label(p):
+    """Header label for a role column: "Channel Manager: VFQ12348".
+
+    A trailing parenthetical is dropped — "MNP Agent (Mobile Number Portability
+    Agent)" becomes "MNP Agent". Two names carry that expansion and, rotated
+    90 degrees, they alone forced the header row 40% taller than the other 24
+    needed. The expansion is not lost: Roles & Credentials prints the full name
+    verbatim, and the abbreviation is in the glossary. Derived from the name
+    rather than a second hand-kept short-name table.
+    """
+    return f"{re.sub(r'\s*\([^)]*\)$', '', p['name'])}: {p['staffId']}"
+
 
 for j, p in enumerate(PERSONAS):
     col = NMETA + 1 + j
-    ws.cell(row=1, column=col, value=p['name'])
-    ws.cell(row=2, column=col, value=f"{p['id']} · {p['staffId']}")
-    ws.cell(row=3, column=col, value=p['approach'])
+    ws.cell(row=1, column=col, value=col_label(p))
+    ws.cell(row=2, column=col, value=p['approach'])
     ws.column_dimensions[get_column_letter(col)].width = 5.5
 
 for col in range(1, NMETA + len(PERSONAS) + 1):
-    for row in (1, 2, 3):
+    for row in (1, 2):
         c = ws.cell(row=row, column=col)
         c.border = BORDER
         if col > NMETA:
             p = PERSONAS[col - NMETA - 1]
-            c.fill = GROUP_FILL if row == 1 else HEADER_FILL
-            c.font = HEADER_FONT
             c.alignment = Alignment(text_rotation=90, horizontal='center', vertical='bottom')
-            if row == 3:
+            if row == 1:
+                c.fill = GROUP_FILL
+                c.font = HEADER_FONT
+            else:
                 c.fill = APPROACH_FILL.get(p['approach'], META_FILL)
                 c.font = Font(size=9, color='333333')
         else:
             c.fill = HEADER_FILL
             c.font = HEADER_FONT
             c.alignment = Alignment(wrap_text=True, vertical='bottom')
-ws.row_dimensions[1].height = 190
-ws.row_dimensions[2].height = 78
-ws.row_dimensions[3].height = 74
+# Tallest label sets row 1: the longest "name: Staff ID" string rotated 90°.
+# Measured from the data rather than pinned to a number, so adding a role with
+# a longer name can't clip its own header.
+_longest = max(len(col_label(p)) for p in PERSONAS)
+ws.row_dimensions[1].height = max(190, _longest * 6.2)
+ws.row_dimensions[2].height = 74
 
-for r, row in enumerate(rows, start=4):
+for r, row in enumerate(rows, start=3):
     vals = [row['id'], row['area'], row['name'], 'Built' if row['built'] else 'Planned',
             row['screens'], row['levels'], '; '.join(row['restrictions'])]
     for i, v in enumerate(vals, start=1):
@@ -523,8 +551,8 @@ for r, row in enumerate(rows, start=4):
             c.font = Font(size=11, bold=True, color='1B5E20')
     ws.row_dimensions[r].height = 30
 
-ws.freeze_panes = ws.cell(row=4, column=NMETA + 1).coordinate
-ws.auto_filter.ref = f'A3:{get_column_letter(NMETA)}{len(rows) + 3}'
+ws.freeze_panes = ws.cell(row=3, column=NMETA + 1).coordinate
+ws.auto_filter.ref = f'A2:{get_column_letter(NMETA)}{len(rows) + 2}'
 
 # ============================================== Sheet 3: Capabilities
 caps = wb.create_sheet('Capabilities')
@@ -743,8 +771,9 @@ section('Sheets')
 kv('Roles & Credentials', 'The role master: all 26 roles with Staff ID, password, group, business '
                           'unit, approach, channel, context card, the identity each resolves to at '
                           'login, capability list and legacy crosswalk. Start here.')
-kv('Applicability Matrix', 'Feature x role grid. One column per role (row 1 name, row 2 role id + '
-                           'Staff ID, row 3 approach), one row per catalogued feature.')
+kv('Applicability Matrix', 'Feature x role grid. One column per role (row 1 "Persona: Staff ID", '
+                           'row 2 approach), one row per catalogued feature. Row 2 carries the '
+                           'feature-column headers and the autofilter.')
 kv('Capabilities', 'Role x action-gate grid. In-surface permissions (resolve a ticket, assign a '
                    'task, edit customer records) as opposed to "can reach this screen".')
 kv('Feature Inventory', 'Per feature: key, area, surface, built/planned, screen ids, how many '
