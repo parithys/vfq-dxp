@@ -1,9 +1,13 @@
 import type { FocusMode } from './dashboardLayout';
 
+// Order requested 2026-09-24: the two single-zone views first, the combined
+// view last. Display order only — `both` remains the DEFAULT focus (see
+// focusFromParam), so the initially-selected pill is now the third one rather
+// than the middle one.
 const OPTIONS: { key: FocusMode; label: string }[] = [
   { key: 'customer-ops', label: 'Customer Ops' },
-  { key: 'both', label: 'Both' },
   { key: 'product', label: 'Product' },
+  { key: 'both', label: 'Both' },
 ];
 
 // Reuses ModuleScreenList's filter-pill class strings verbatim, so this is a

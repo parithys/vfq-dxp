@@ -54,6 +54,18 @@ OUT = os.path.join(
 
 TICK = '✓'
 
+# FREEZE_PANES note — every sheet is emitted with panes UNFROZEN, deliberately.
+#
+# Requested 2026-09-24. Frozen panes are a viewing preference, and openpyxl
+# bakes them into the file: they follow the workbook into Excel, Numbers,
+# Sheets and any PDF export, and they cannot be undone by a reader who wants
+# the raw grid. A reader who wants them can freeze locally in two clicks; a
+# reader who does not had no way to remove them.
+#
+# Keep the assignments deleted rather than set to None — the sheet variables
+# (cs, ws, caps, fs, lx, ns) each carry a marker comment where the call was, so
+# this decision reads as intentional at the point someone would reintroduce it.
+
 # ---------------------------------------------------------------- load source
 
 with open(os.path.join(CONF, 'personas.json')) as f:
@@ -453,7 +465,7 @@ for r, p in enumerate(PERSONAS, start=2):
             c.fill = APPROACH_FILL.get(p['approach'], META_FILL)
     cs.row_dimensions[r].height = 30
 
-cs.freeze_panes = 'F2'
+# cs.freeze_panes intentionally unset — see FREEZE_PANES note
 cs.auto_filter.ref = f'A1:S{len(PERSONAS) + 1}'
 
 note = cs.cell(row=len(PERSONAS) + 3, column=1,
@@ -514,7 +526,13 @@ for col in range(1, NMETA + len(PERSONAS) + 1):
         c.border = BORDER
         if col > NMETA:
             p = PERSONAS[col - NMETA - 1]
-            c.alignment = Alignment(text_rotation=90, horizontal='center', vertical='bottom')
+            # Left-aligned with indent=1 rather than centred. Rotated 90
+            # degrees, "left" is the end nearest the grid, so every role label
+            # starts on the same line just above its column of ticks instead of
+            # floating at the centre of a 236pt cell — with 26 columns of
+            # differing name lengths, centring left them ragged.
+            c.alignment = Alignment(text_rotation=90, horizontal='left',
+                                    vertical='bottom', indent=1)
             if row == 1:
                 c.fill = GROUP_FILL
                 c.font = HEADER_FONT
@@ -551,7 +569,7 @@ for r, row in enumerate(rows, start=3):
             c.font = Font(size=11, bold=True, color='1B5E20')
     ws.row_dimensions[r].height = 30
 
-ws.freeze_panes = ws.cell(row=3, column=NMETA + 1).coordinate
+# ws.freeze_panes intentionally unset — see FREEZE_PANES note
 ws.auto_filter.ref = f'A2:{get_column_letter(NMETA)}{len(rows) + 2}'
 
 # ============================================== Sheet 3: Capabilities
@@ -581,7 +599,7 @@ for r, p in enumerate(PERSONAS, start=2):
             c.value = TICK
             c.fill = TICK_FILL
             c.font = Font(size=11, bold=True, color='1B5E20')
-caps.freeze_panes = 'E2'
+# caps.freeze_panes intentionally unset — see FREEZE_PANES note
 
 r_note = len(PERSONAS) + 3
 caps.cell(row=r_note, column=1, value=(
@@ -610,7 +628,7 @@ for r, row in enumerate(rows, start=2):
         c.font = Font(size=10)
         if i == 6 and not row['built']:
             c.fill = PLANNED_FILL
-fs.freeze_panes = 'A2'
+# fs.freeze_panes intentionally unset — see FREEZE_PANES note
 fs.auto_filter.ref = f'A1:J{len(rows) + 1}'
 
 # ============================================== Sheet 5: Legacy Crosswalk
@@ -659,7 +677,7 @@ for r, legacy in enumerate(legacy_ids, start=2):
         c.alignment = CENTER if i <= 2 else WRAP
         if not targets and i == 4:
             c.fill = PLANNED_FILL
-lx.freeze_panes = 'A2'
+# lx.freeze_panes intentionally unset — see FREEZE_PANES note
 lx.auto_filter.ref = f'A1:D{len(legacy_ids) + 1}'
 
 
@@ -728,7 +746,7 @@ for r, p in enumerate(PERSONAS, start=4):
             c.value = TICK
             c.fill = TICK_FILL
             c.font = Font(size=11, bold=True, color='1B5E20')
-ns.freeze_panes = 'E4'
+# ns.freeze_panes intentionally unset — see FREEZE_PANES note
 
 r_nav = len(PERSONAS) + 5
 ns.cell(row=r_nav, column=1, value=(
@@ -786,6 +804,9 @@ kv('Feature Inventory', 'Per feature: key, area, surface, built/planned, screen 
 kv('Navigation', 'Which sidebar destinations each role sees, including per product-line journey '
                  'category. Parsed from the navigation source rather than restated, so it cannot '
                  'drift from the app.')
+kv('Viewing', 'No sheet has frozen panes — the grids scroll freely, by request. Frozen panes are '
+              'baked into the file by the generator and would follow it into every viewer and PDF '
+              'export, so the choice is left to the reader (Excel: View > Freeze Panes).')
 kv('Legacy Crosswalk', 'The 66-persona -> 26-role mapping, including the 17 legacy personas with '
                        'no operational counterpart.')
 r += 1
