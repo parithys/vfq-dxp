@@ -1,3 +1,4 @@
+import type { Ref } from 'react';
 import { Icon } from '../primitives/Icon';
 import { Button } from '../primitives/Button';
 
@@ -11,6 +12,10 @@ interface QidInputProps {
   onFetch: () => void;
   fetching?: boolean;
   error?: string;
+  /** Lets the owner move the cursor into the number field — used after an ID
+   * Type switch clears it, so the agent lands on the field they must retype
+   * rather than on the chip they just clicked. */
+  inputRef?: Ref<HTMLInputElement>;
 }
 
 const CHECK = 'M20 6L9 17l-5-5';
@@ -34,7 +39,7 @@ const ID_TYPES: { type: QidType; label: string; numberLabel: string; icon: strin
 // seeded MOI matches yet) driving the label/placeholder of a single number
 // field with an inline Fetch action, replacing the earlier plain text input +
 // separate below-field submit button.
-export function QidInput({ idType, onIdTypeChange, value, onChange, onFetch, fetching, error }: QidInputProps) {
+export function QidInput({ idType, onIdTypeChange, value, onChange, onFetch, fetching, error, inputRef }: QidInputProps) {
   const current = ID_TYPES.find((t) => t.type === idType) ?? ID_TYPES[0];
 
   return (
@@ -73,6 +78,7 @@ export function QidInput({ idType, onIdTypeChange, value, onChange, onFetch, fet
         <div className="flex gap-2">
           <input
             id="qid-number-input"
+            ref={inputRef}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={current.placeholder}

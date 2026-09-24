@@ -160,7 +160,12 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
       }
     };
 
-    const raf = requestAnimationFrame(tryFocus);
+    // setTimeout, not requestAnimationFrame: this only needs to run after the
+    // step's own initial render has settled, which a macrotask gives it, and
+    // rAF does not fire at all while the document is hidden — so a journey
+    // opened in a background tab would never have had its first field focused.
+    // Focus needs no paint, so there is nothing rAF buys here.
+    const firstAttempt = setTimeout(tryFocus, 0);
     observer = new MutationObserver(tryFocus);
     // `attributes` matters as much as `childList`, and is what a first pass
     // missed. On the Address step all four inputs mount empty and enabled, so
@@ -182,7 +187,7 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
     const stopWatching = setTimeout(() => observer?.disconnect(), 4000);
 
     return () => {
-      cancelAnimationFrame(raf);
+      clearTimeout(firstAttempt);
       clearTimeout(stopWatching);
       observer?.disconnect();
     };
