@@ -18,3 +18,8 @@
 # Local session/tooling state
 .claude/
 .DS_Store
+
+# Excel lock files (created while a workbook is open; 165-byte stubs)
+~$*
+# Local export/zip artefacts
+*.zip

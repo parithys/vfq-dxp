@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Excel lock files (created while a workbook is open; 165-byte stubs)
+~$*
+# Local export/zip artefacts of the app itself
+*.zip
