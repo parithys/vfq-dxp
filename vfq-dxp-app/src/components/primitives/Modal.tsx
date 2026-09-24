@@ -12,14 +12,14 @@ interface ModalProps {
 
 // Was backing 32 Modal-type screens per component-catalogue.md §1 (no
 // design-system analog); reserved as of 2026-09-12 for short confirmation
-// messages only (e.g. GuidedActivationWizard's "Abandon this order?") —
+// messages only (e.g. GuidedActivationWizard's "Abandon this order?") -
 // every other former Modal usage (forms, signature capture, multi-step
 // flows) now renders via Drawer.tsx for a less disruptive, side-anchored
 // interaction.
 export function Modal({ open, onClose, title, children, footer }: ModalProps) {
   // Escape-to-close: the backdrop's click-to-dismiss below is a mouse-only
   // convenience (a full-screen div is intentionally not made focusable/
-  // keyboard-actionable — that would be a false affordance in the other
+  // keyboard-actionable - that would be a false affordance in the other
   // direction). Escape is the real accessible path to close without using
   // the dialog's own controls.
   useEffect(() => {

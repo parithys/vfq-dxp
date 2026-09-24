@@ -1,4 +1,4 @@
-// Extracted from OrderApprovalQueue's original inline error box — the one
+// Extracted from OrderApprovalQueue's original inline error box - the one
 // screen in the app that already distinguished "fetch failed" from "list is
 // genuinely empty". Shared here so every list screen reading
 // entityStore.errors[kind] renders it the same way.

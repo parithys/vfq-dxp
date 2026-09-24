@@ -6,7 +6,7 @@ interface SignaturePadProps {
 }
 
 // Backs the "Please Sign" pad modal per Pattern 6 (CAF/Contract Signature
-// Capture) — drawn signature, Clear/Done buttons (SCR-058, SCR-084, etc.).
+// Capture) - drawn signature, Clear/Done buttons (SCR-058, SCR-084, etc.).
 export function SignaturePad({ onDone }: SignaturePadProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);

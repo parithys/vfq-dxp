@@ -21,11 +21,11 @@ interface Order {
   msisdn?: string;
   productId?: string;
   createdBy?: string;
-  /** Where this order goes once approved — 'Complete' for most journeys, but
+  /** Where this order goes once approved - 'Complete' for most journeys, but
    * FWA orders still need WFM installation after approval (UJ-062), so they
    * carry 'Pending WFM Installation' here instead of jumping straight to Complete. */
   nextStatusOnApproval?: string;
-  /** Set by "Assign to Me" in the queue — governs both queue visibility and
+  /** Set by "Assign to Me" in the queue - governs both queue visibility and
    * (AAV-00) whether this detail page may be opened at all by direct URL. */
   assignedApproverId?: string | null;
 }
@@ -43,7 +43,7 @@ interface ApprovalHistoryEntry {
 }
 
 // AAV-05: "see task history before confirming Approval, Rejection, or
-// Return" — the Activities tab already shows this, but a Drawer overlays
+// Return" - the Activities tab already shows this, but a Drawer overlays
 // the page, so this same list is repeated directly inside each confirmation
 // Drawer, immediately above the confirm button, rather than relying on the
 // agent having scrolled past the Activities tab earlier in the session.
@@ -67,12 +67,12 @@ function HistoryPreview({ history, orderType }: { history: ApprovalHistoryEntry[
   );
 }
 
-// SCR-061: Order Approval detail — header (Contact, Order #) + 4 tabs
+// SCR-061: Order Approval detail - header (Contact, Order #) + 4 tabs
 // (Attachments/Order Details/Activities/Agents Details) + action buttons
 // (Approve, Reject - Correction, Reject - Drop Order, Return, Go Back),
 // evidenced identically across Fixed Line/FWA/Postpaid B2B2C-with-approval
 // journeys, extended with Agent 360 BRSD's Return action (AAV-03), real
-// task history (AAV-05 — `actionTaken` distinguishes an approval-decision
+// task history (AAV-05 - `actionTaken` distinguishes an approval-decision
 // record from the pre-seeded general `customer-activities` timeline, which
 // carries no such field), and approval-matrix role gating (AAV-01/BR-06).
 export function OrderApprovalDetail() {
@@ -99,7 +99,7 @@ export function OrderApprovalDetail() {
   // Guards against duplicate submission. Uses a ref, not just `submitting`
   // state: two click dispatches landing in the same synchronous tick both
   // read `submitting` as stale `false` (a state update isn't visible until
-  // the next render) — observed in practice as this handler otherwise
+  // the next render) - observed in practice as this handler otherwise
   // creating two near-identical history entries per single click.
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
@@ -112,13 +112,13 @@ export function OrderApprovalDetail() {
 
   const order = orders.find((o) => o.orderId === orderId);
   if (!order) {
-    return <div className="p-8 text-fg-2">No order selected — go back to the Approval Queue and Assign to Me first.</div>;
+    return <div className="p-8 text-fg-2">No order selected - go back to the Approval Queue and Assign to Me first.</div>;
   }
 
   // AAV-00 clause (b): "if the task is not assigned or accessible to the
   // agent, access is denied." Unassigned orders (assignedApproverId is null)
   // are still open queue items anyone eligible can claim, so they remain
-  // accessible; once assigned, only that approver may open this page —
+  // accessible; once assigned, only that approver may open this page -
   // matching the same isVisibleToAgent rule the queue itself already
   // enforces (OrderApprovalQueue.tsx), so a direct URL can no longer bypass
   // the queue's own visibility rule.
@@ -135,7 +135,7 @@ export function OrderApprovalDetail() {
 
   // AAV-01: reject/approve/return still require the matrix role even if an
   // agent reaches this page directly (e.g. by URL) rather than through the
-  // queue's own "Assign to Me" gate — see OrderApprovalQueue.tsx.
+  // queue's own "Assign to Me" gate - see OrderApprovalQueue.tsx.
   const requiredRole = getRequiredApproverRole(order.orderType);
   const isEligibleApprover = !requiredRole || requiredRole === currentJobTitle;
 
@@ -160,7 +160,7 @@ export function OrderApprovalDetail() {
         'success',
         nextStatus === 'Complete'
           ? `Order ${order.orderId} approved.`
-          : `Order ${order.orderId} approved — moved to ${nextStatus}.`
+          : `Order ${order.orderId} approved - moved to ${nextStatus}.`
       );
       navigate('/order-management');
     } catch (err) {
@@ -184,8 +184,8 @@ export function OrderApprovalDetail() {
         rejectReasonCode: rejectReason,
         rejectComment,
       });
-      await logActivity(`Rejected — ${drop ? 'Drop Order' : 'Correction'}`, `${reasonLabel}: ${rejectComment}`);
-      pushToast(drop ? 'warning' : 'warning', `Order ${order.orderId}: ${drop ? 'dropped as cancelled' : 'rejected — SMS sent to agent for correction'}.`);
+      await logActivity(`Rejected - ${drop ? 'Drop Order' : 'Correction'}`, `${reasonLabel}: ${rejectComment}`);
+      pushToast(drop ? 'warning' : 'warning', `Order ${order.orderId}: ${drop ? 'dropped as cancelled' : 'rejected - SMS sent to agent for correction'}.`);
       navigate('/order-management');
     } finally {
       submittingRef.current = false;
@@ -193,7 +193,7 @@ export function OrderApprovalDetail() {
     }
   };
 
-  // AAV-03/Annex_02: Return is distinct from Reject — it loops the order back
+  // AAV-03/Annex_02: Return is distinct from Reject - it loops the order back
   // to "Submitted for Approval" (permitted next status per the BRSD's own
   // status model) rather than terminating it, and per BR-06 requires a
   // reason + notes exactly like Reject does.
@@ -210,7 +210,7 @@ export function OrderApprovalDetail() {
         returnComment,
       });
       await logActivity('Returned', `${reasonLabel}: ${returnComment}`);
-      pushToast('warning', `Order ${order.orderId} returned for correction — back in the approval queue.`);
+      pushToast('warning', `Order ${order.orderId} returned for correction - back in the approval queue.`);
       navigate('/order-management');
     } finally {
       submittingRef.current = false;
@@ -225,7 +225,7 @@ export function OrderApprovalDetail() {
         <Badge variant="outlined-red">{order.status}</Badge>
       </div>
       <p className="text-fg-2 mb-6">
-        Contact: {order.customerName ?? '—'} · {order.orderType}
+        Contact: {order.customerName ?? '-'} · {order.orderType}
       </p>
 
       <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
@@ -243,11 +243,11 @@ export function OrderApprovalDetail() {
                 <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)]">
                   <div>
                     <dt className="text-[length:var(--fs-caption)] text-muted">Product</dt>
-                    <dd className="text-fg">{order.productId ?? '—'}</dd>
+                    <dd className="text-fg">{order.productId ?? '-'}</dd>
                   </div>
                   <div>
                     <dt className="text-[length:var(--fs-caption)] text-muted">MSISDN</dt>
-                    <dd className="text-fg">{order.msisdn ?? '—'}</dd>
+                    <dd className="text-fg">{order.msisdn ?? '-'}</dd>
                   </div>
                 </dl>
               ),
@@ -258,7 +258,7 @@ export function OrderApprovalDetail() {
               content: (
                 <div>
                   <p className="text-fg-2 text-[length:var(--fs-body)] mb-3">
-                    Task history — visible before you confirm a decision, per Agent 360 AAV-05.
+                    Task history - visible before you confirm a decision, per Agent 360 AAV-05.
                   </p>
                   {history.length === 0 && <p className="text-muted text-[length:var(--fs-body)]">No approval actions recorded yet for this order.</p>}
                   {history.length > 0 && (
@@ -284,7 +284,7 @@ export function OrderApprovalDetail() {
               label: 'Agents Details',
               content: (
                 <p className="text-fg-2 text-[length:var(--fs-body)]">
-                  Submitted by: {order.createdBy ?? '—'}
+                  Submitted by: {order.createdBy ?? '-'}
                 </p>
               ),
             },
@@ -343,7 +343,7 @@ export function OrderApprovalDetail() {
             placeholder="Select a reason"
             options={reasons.map((r) => ({ value: r.reasonCode, label: r.reasonLabel }))}
           />
-          <Textarea label="Comments (required — BR-06)" value={rejectComment} onChange={(e) => setRejectComment(e.target.value)} />
+          <Textarea label="Comments (required - BR-06)" value={rejectComment} onChange={(e) => setRejectComment(e.target.value)} />
         </div>
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>

@@ -26,7 +26,7 @@ const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'filled-
   Rejected: 'danger',
 };
 
-// SCR-179: Migration Offer tab (Complex Asset List Applet) — UJ-087 Autobase:
+// SCR-179: Migration Offer tab (Complex Asset List Applet) - UJ-087 Autobase:
 // "Migration Offers grid (system pre-populated, 1 of 1)... Accept / Interested
 // / Reject" (BR-272: Pre2Post offers are sourced from the Unica campaign
 // engine; agent may only disposition, never author, an offer).

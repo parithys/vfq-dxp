@@ -35,7 +35,7 @@ interface DeviceInstallmentStepProps {
   value: DoiSelection | undefined;
   defaultCreditLimitQar: number | undefined;
   onChange: (value: DoiSelection | undefined) => void;
-  /** For the "Plan + add-ons" / "Monthly total" summary rows — the plan step
+  /** For the "Plan + add-ons" / "Monthly total" summary rows - the plan step
    * runs earlier in this wizard, so these are already chosen by the time an
    * agent reaches this step. */
   planProductId: string | undefined;
@@ -52,9 +52,9 @@ const BOX_ICON = 'M21 8l-9-5-9 5 9 5 9-5z M3 8v8l9 5 9-5V8 M3 8l9 5 9-5';
 const TRUCK_ICON = 'M3 7h11v10H3z M14 10h4l3 3v4h-7z M7 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M17.5 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4z';
 const WARN_ICON = 'M12 3l9 16H3l9-16z M12 10v4 M12 17h.01';
 
-// "Device selection" & "Device on Installment (DOI) Declaration" — Mobile
+// "Device selection" & "Device on Installment (DOI) Declaration" - Mobile
 // Postpaid's Device & DOI step. DOI = Device on Installment (BR-114/BR-106/
-// BR-329, domain-model.md ENT-029) — not "Declaration of Intent"; no DXP
+// BR-329, domain-model.md ENT-029) - not "Declaration of Intent"; no DXP
 // layout is evidenced for this screen (it's explicitly greenfield per
 // gap-resolution-stage-k.md's DOI entry), whose own recommendation is to
 // model it on the evidenced Plan step's shape: catalogue tile grid -> detail/
@@ -199,8 +199,8 @@ export function DeviceInstallmentStep({
               <div className="flex flex-wrap gap-2">
                 {/* These three chips predate <Badge> and are styled inline.
                     They now carry the same outlined treatment it does per the
-                    2026-09-24 reference — --bg interior, tinted border, 4px
-                    corner — instead of a tinted fill on a fully-rounded pill.
+                    2026-09-24 reference - --bg interior, tinted border, 4px
+                    corner - instead of a tinted fill on a fully-rounded pill.
                     Their leading icons stay: the reference's pills are
                     label-only, but an icon here is content, not styling. */}
                 <span
@@ -284,7 +284,7 @@ export function DeviceInstallmentStep({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {(
                     [
-                      { method: 'Store pickup' as const, icon: BOX_ICON, note: 'Villaggio Mall — Doha' },
+                      { method: 'Store pickup' as const, icon: BOX_ICON, note: 'Villaggio Mall - Doha' },
                       { method: 'Courier delivery' as const, icon: TRUCK_ICON, note: 'Signature on receipt, 3–5 days' },
                     ]
                   ).map((h) => (

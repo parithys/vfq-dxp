@@ -23,7 +23,7 @@ interface ConfigData {
    * rather than the O(n) scan the old rbac.json filter did once per screen
    * row in ModuleScreenList. */
   personaScreenLevel: Record<string, Record<string, PermissionLevel>>;
-  /** Archived 66-persona evidence. Display-only — see RbacEntry. */
+  /** Archived 66-persona evidence. Display-only - see RbacEntry. */
   rbac: RbacEntry[];
   businessRules: BusinessRule[];
   validationRules: ValidationRule[];
@@ -32,7 +32,7 @@ interface ConfigData {
   designTokens: Record<string, string>;
   /** REQ-id -> evidenced screen ids, mechanically extracted from
    * traceability-matrix.md's "Screens:" lines. Only 70 of 295 requirements
-   * cite a screen — see screenGrouping.ts for how this partial evidence is
+   * cite a screen - see screenGrouping.ts for how this partial evidence is
    * used (and where it falls back to a heuristic). */
   reqToScreens: Record<string, string[]>;
   journeyCatalogueMap: JourneyCatalogueMap;
@@ -40,7 +40,7 @@ interface ConfigData {
 }
 
 /** Crosswalk between CRM_Journeys_Final_Updated_with_Type.xlsx (Page Type
- * sheet, Unique ID column) and this app's screens/modules — see that
+ * sheet, Unique ID column) and this app's screens/modules - see that
  * workbook's Mapping Report sheet for the full mapped/unmapped list and
  * rationale. Only screens/modules with a confident, manually-verified name
  * match are present; anything absent here simply has no journey ID to show. */
@@ -92,7 +92,7 @@ function indexGrants(personas: Persona[], catalogue: FeatureCatalogueEntry[]) {
   return { personaFeatureLevel, personaScreenLevel };
 }
 
-// Boot-time loader per frontend-architecture.md §10 — no screen/component
+// Boot-time loader per frontend-architecture.md §10 - no screen/component
 // should fetch config/*.json directly; always go through the accessors below.
 export async function loadConfig(): Promise<ConfigData> {
   if (cache) return cache;
@@ -112,13 +112,13 @@ export async function loadConfig(): Promise<ConfigData> {
         fetchJson<Record<string, string>>('/config/design-tokens.json'),
         fetchJson<Record<string, string[]>>('/config/req-to-screens.json'),
       ]);
-    // Fetched separately, with a silent fallback to "no mappings" — this file
+    // Fetched separately, with a silent fallback to "no mappings" - this file
     // is purely additive (traceability-ID badges), so a missing/broken copy
     // must never fail app boot the way a missing core config file should.
     const journeyCatalogueMap = await fetchJson<JourneyCatalogueMap>('/config/journey-catalogue-map.json').catch(
       () => EMPTY_JOURNEY_CATALOGUE_MAP
     );
-    // Same resilience stance — AAV-01's matrix is new and additive (gates
+    // Same resilience stance - AAV-01's matrix is new and additive (gates
     // approval assignment eligibility); a missing/broken copy should fall
     // back to "no matrix configured" (open to any approver) rather than
     // failing app boot.
@@ -141,7 +141,7 @@ export async function loadConfig(): Promise<ConfigData> {
 
 function requireConfig(): ConfigData {
   if (!cache) {
-    throw new Error('Config not loaded yet — call loadConfig() during app boot before using accessors.');
+    throw new Error('Config not loaded yet - call loadConfig() during app boot before using accessors.');
   }
   return cache;
 }
@@ -198,7 +198,7 @@ export function getPersonaScreenLevel(personaId: string, screenId: string): Perm
 
 /** Archived 66-persona RBAC rows this role absorbs, resolved through the
  * persona's legacyPersonaIds crosswalk. Feeds the role/access viewer's
- * evidence panel ONLY — it grants nothing. Named "legacy" deliberately so a
+ * evidence panel ONLY - it grants nothing. Named "legacy" deliberately so a
  * future reader can't mistake it for the live access path. */
 export function getLegacyRbacForRole(personaId: string): RbacEntry[] {
   const persona = getPersona(personaId);
@@ -231,7 +231,7 @@ export function getReqToScreens(): Record<string, string[]> {
 }
 
 /** Unique IDs from the CRM Journeys catalogue mapped onto this screen, if
- * any — empty when the screen has no confident match (see journey-catalogue-
+ * any - empty when the screen has no confident match (see journey-catalogue-
  * map.json's _comment and the workbook's Mapping Report sheet). */
 export function getJourneyIdsForScreen(screenId: string): string[] {
   return requireConfig().journeyCatalogueMap.screens[screenId] ?? [];
@@ -250,7 +250,7 @@ export function isConfigLoaded(): boolean {
   return cache !== null;
 }
 
-/** Agent 360 AAV-01 — the role required to be assigned/approve an approval
+/** Agent 360 AAV-01 - the role required to be assigned/approve an approval
  * task of this category, or undefined if the category has no matrix entry
  * (open to any approver, same "unconfigured = unrestricted" stance taken
  * elsewhere for unconfirmed RBAC in this app). */

@@ -12,13 +12,13 @@ interface QnomyQueueState {
   setAssignedQTicketId: (id: string | null) => void;
   /** The mobile number the customer typed on the Qnomy kiosk, carried for the
    * whole interaction. Held here rather than on activeCustomerStore because it
-   * belongs to the INTERACTION, not to a customer record — a walk-in whose
+   * belongs to the INTERACTION, not to a customer record - a walk-in whose
    * number matches nobody on file still has a kiosk number that the journey
    * needs to keep and pre-fill. */
   kioskMobileNumber: string | null;
   setKioskMobileNumber: (m: string | null) => void;
   /** True in the window between an agent clicking Finish and clicking Next
-   * Customer — the system must sit here and do nothing on its own; only an
+   * Customer - the system must sit here and do nothing on its own; only an
    * explicit Next Customer click may end this state. */
   awaitingNext: boolean;
   setAwaitingNext: (value: boolean) => void;

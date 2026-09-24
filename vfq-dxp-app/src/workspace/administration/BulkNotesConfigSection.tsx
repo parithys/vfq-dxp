@@ -21,7 +21,7 @@ interface BulkNote {
 const TEMPLATES: Record<string, string> = {
   'TMPL-BILLCYCLE': 'System-wide notice: billing cycle processing will run one day later than usual this month.',
   'TMPL-KYC': 'Reminder: please update KYC documents before the end of this month to avoid service interruption.',
-  'TMPL-OUTAGE': 'A service outage affected this account — a credit may be applied automatically.',
+  'TMPL-OUTAGE': 'A service outage affected this account - a credit may be applied automatically.',
 };
 
 // Agent 360 BNT-04: Backoffice configures a bulk note using a template and
@@ -50,7 +50,7 @@ export function BulkNotesConfigSection() {
   }, [loadKind]);
 
   const publish = async () => {
-    // BNT-04/BR-03: enforced here too, not just via a hidden form — a
+    // BNT-04/BR-03: enforced here too, not just via a hidden form - a
     // non-privileged persona's call can never actually create a record.
     if (!canConfigure) return;
     const accountIds = accountIdsInput
@@ -85,7 +85,7 @@ export function BulkNotesConfigSection() {
         <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mb-6">
           <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Configure a bulk note</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
-            Applies to every account ID listed — agents will see this note when viewing any of those customers.
+            Applies to every account ID listed - agents will see this note when viewing any of those customers.
           </p>
           <div className="space-y-3">
             <Select

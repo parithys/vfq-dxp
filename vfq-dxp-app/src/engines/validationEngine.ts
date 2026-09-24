@@ -1,6 +1,6 @@
 import { getValidationRulesForField } from './configEngine';
 
-// Validation Engine per frontend-architecture.md §5 — a React Hook Form resolver
+// Validation Engine per frontend-architecture.md §5 - a React Hook Form resolver
 // helper that looks up field-level validation by field label rather than
 // hardcoding per-field logic. Backed by config/validation-rules.json's
 // Field-Level entries (281 of 418), sourced from field-inventory.md.

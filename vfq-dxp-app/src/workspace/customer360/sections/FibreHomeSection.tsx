@@ -3,7 +3,7 @@ import { ProductActionGroups, type ProductActionGroup } from '../ProductActionGr
 
 // Fibre Activation (SCR-043) and FWA/5G Home (SCR-077, one shared wizard for
 // both per the FWA/5G Home module) are the only real entry points today.
-// Relocation/Upgrade/Suspend/Resume/Terminate have no dedicated screen —
+// Relocation/Upgrade/Suspend/Resume/Terminate have no dedicated screen -
 // Home Move (SCR-115/116) exists only as unregistered mid-flow steps, not a
 // launchable action, so it's listed honestly as not-yet-built rather than
 // stretched into a fit.
@@ -22,7 +22,7 @@ const GROUPS: ProductActionGroup[] = [
     title: 'New Activation',
     actions: [
       { label: 'Fibre Activation', description: "Install and activate a new fibre broadband connection at the customer's address.", screenId: 'SCR-043' },
-      { label: 'FWA', description: 'Activate Fixed Wireless Access — home broadband delivered over the mobile network, no fibre required.', screenId: 'SCR-077' },
+      { label: 'FWA', description: 'Activate Fixed Wireless Access - home broadband delivered over the mobile network, no fibre required.', screenId: 'SCR-077' },
       { label: '5G Home', description: 'Activate a 5G-based home broadband plan for addresses within 5G coverage.', screenId: 'SCR-077' },
       { label: 'IPTV', description: "Add IPTV channel packages on top of the customer's home broadband service." },
     ],

@@ -17,11 +17,11 @@ interface VerificationGateProps {
 }
 
 // CUS-001-KYC-02/03 / BR-01: re-confirms the identified customer's identity
-// before any demographic/contact/address/billing maintenance proceeds — both
+// before any demographic/contact/address/billing maintenance proceeds - both
 // by scanning the ID (front/back, same QidImageUpload pattern as the
 // Passport-to-QID wizard) and matching the ID number against that specific
 // customer's identity-documents record, not a generic MOI lookup. Once
-// verified, useCustomerVerificationStore never un-verifies — matches
+// verified, useCustomerVerificationStore never un-verifies - matches
 // Annex_02's Unverified -> Verified, no transition out of Verified.
 export function VerificationGate({ customerId, customerName, open, onClose, onVerified }: VerificationGateProps) {
   const verifyCustomer = useCustomerVerificationStore((s) => s.verifyCustomer);
@@ -88,7 +88,7 @@ export function VerificationGate({ customerId, customerName, open, onClose, onVe
   );
 }
 
-/** Shared gate hook — call requireVerification(action) at any edit-entry
+/** Shared gate hook - call requireVerification(action) at any edit-entry
  * point; action runs immediately if already verified this session,
  * otherwise the gate drawer opens and action runs once verification
  * succeeds. Render `gate` once per screen. */

@@ -1,6 +1,6 @@
 // Shared reference data for the Trouble Ticket journey (VFQ_Trouble_Ticket_BRSD_v1.0),
 // consumed by TicketCreationModal/TicketsDashboard/TicketDetail. Kept as inline
-// constants rather than new mock-data JSON files — this mirrors the existing
+// constants rather than new mock-data JSON files - this mirrors the existing
 // convention in this module (ISSUE_TYPES/TEMPLATES/QUEUES already live this
 // way in TicketCreationModal.tsx) rather than introducing a new persistence
 // shape for reference data the BRSD itself never gives concrete values for
@@ -9,7 +9,7 @@
 
 // MPRA-style status vocabulary correction (BRSD gap-analysis G-11): the
 // BRSD's own ticket lifecycle uses these terms in the Requirements register
-// (RES-01/08/09/10/11, ESC-01) — "Open"/"Reopened" appear nowhere in the
+// (RES-01/08/09/10/11, ESC-01) - "Open"/"Reopened" appear nowhere in the
 // source. Reopen returns a ticket to "Not Solved", it does not introduce a
 // new state.
 export const TICKET_STATUSES = ['Not Solved', 'Assigned', 'Escalate', 'Solved', 'Completed', 'Closed', 'Cancelled'] as const;
@@ -25,7 +25,7 @@ export const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | '
   Cancelled: 'danger',
 };
 
-// P-03 (Priority LOV, Confirmed) — 1-ASAP/2-High/3-Medium/4-Low, not a plain
+// P-03 (Priority LOV, Confirmed) - 1-ASAP/2-High/3-Medium/4-Low, not a plain
 // Low/Medium/High scale.
 export const PRIORITY_OPTIONS = ['1-ASAP', '2-High', '3-Medium', '4-Low'] as const;
 
@@ -44,7 +44,7 @@ export function derivePriorityFromSegment(segment: string | undefined): (typeof 
 // P-10/P-11 (Confirmed, AS-IS baseline): SLA target 24h non-Expatriate / 48h
 // Expatriate. customers.json has no literal "Expatriate" segment value, so
 // this reuses the same nationality-based expat detection already evidenced
-// and applied for BR-347 (Prepaid line cap) — non-Qatari nationality is
+// and applied for BR-347 (Prepaid line cap) - non-Qatari nationality is
 // treated as the Expatriate branch of the SLA matrix.
 export function slaTargetHours(nationality: string | undefined): number {
   return nationality === 'Qatari' ? 24 : 48;
@@ -95,7 +95,7 @@ export const ESCALATION_REASONS = [
 export const CANCELLATION_REASONS = ['Raised in Error', 'Customer Withdrew Complaint', 'Duplicate of Another Ticket'];
 
 // P-12 is explicitly "To be confirmed" in the source (the only reopen-window
-// parameter given) — 7 days is a placeholder pending VFQ confirmation, not a
+// parameter given) - 7 days is a placeholder pending VFQ confirmation, not a
 // sourced value.
 export const REOPEN_WINDOW_DAYS = 7;
 
@@ -112,7 +112,7 @@ export interface NewTicketRecordInput {
   createdBy: string;
 }
 
-// Shared by TicketsDashboard.tsx and Customer 360's TicketsSection.tsx — both
+// Shared by TicketsDashboard.tsx and Customer 360's TicketsSection.tsx - both
 // create the same entity shape from the same TicketCreationModal payload;
 // centralising it here means the ASG-15/RES-01/ESC-01 fields this schema now
 // carries only need to be listed once.

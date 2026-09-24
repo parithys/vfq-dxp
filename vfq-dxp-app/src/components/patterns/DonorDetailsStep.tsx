@@ -12,10 +12,10 @@ interface DonorDetailsStepProps {
   onChange: (value: DonorDetailsValue) => void;
 }
 
-// SCR-126: MNP wizard step: Donor Details — FLD-531–536 (guided-journeys-mnp-postpaid-open-ui-desktop-mnp-postpaid-6cb03f33,
+// SCR-126: MNP wizard step: Donor Details - FLD-531–536 (guided-journeys-mnp-postpaid-open-ui-desktop-mnp-postpaid-6cb03f33,
 // high confidence): Port-in Number and Donor ID/ID Type are agent-entered;
 // Donor Type, Donor Operator, and Subscription Type are evidenced read-only/
-// greyed once the port-in number resolves — no dedicated donor-operator
+// greyed once the port-in number resolves - no dedicated donor-operator
 // lookup dataset exists beyond the two evidenced examples (Qtel, Ooredoo
 // Qatar), so this derives them deterministically once both fields are filled
 // rather than fabricating a richer lookup than the corpus evidences.

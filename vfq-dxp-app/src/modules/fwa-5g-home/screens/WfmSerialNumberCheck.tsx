@@ -14,11 +14,11 @@ interface Order {
   msisdn?: string;
 }
 
-// SCR-093: Serial Number Check Screen (Dual Play) — technician-facing, per
+// SCR-093: Serial Number Check Screen (Dual Play) - technician-facing, per
 // UJ-061's post-submission WFM installation phase: "technician starts route ->
 // geolocation -> Kahramaa check -> Serial Number Check (Dual Play) -> Service
 // Activation Success." Field Technician persona, distinct from the Retail Sales
-// Agent who runs NewFwaWizard — separate screen, not a step of that wizard.
+// Agent who runs NewFwaWizard - separate screen, not a step of that wizard.
 export function WfmSerialNumberCheck() {
   const orders = (useEntityStore((s) => s.records.orders) ?? []) as unknown as Order[];
   const loadKind = useEntityStore((s) => s.loadKind);
@@ -48,7 +48,7 @@ export function WfmSerialNumberCheck() {
       status: 'Active',
       orderType: selectedOrder.orderType,
     });
-    pushToast('success', `Order ${selectedOrder.orderId}: Service Activation Success — installed assets now Active.`);
+    pushToast('success', `Order ${selectedOrder.orderId}: Service Activation Success - installed assets now Active.`);
     setSelectedOrderId(null);
     setSerials({});
   };
@@ -56,7 +56,7 @@ export function WfmSerialNumberCheck() {
   if (!selectedOrder) {
     return (
       <div className="p-8">
-        <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">WFM Installation — Serial Number Check</h1>
+        <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">WFM Installation - Serial Number Check</h1>
         <p className="text-fg-2 mb-6">Orders awaiting Dual-Play serial number check and service activation.</p>
         <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg divide-y divide-border-soft">
           {pending.map((o) => (
@@ -66,7 +66,7 @@ export function WfmSerialNumberCheck() {
               className="w-full text-left px-4 py-3 hover:bg-surface flex justify-between items-center"
             >
               <div>
-                <div className="text-fg">{o.orderId} — {o.customerName}</div>
+                <div className="text-fg">{o.orderId} - {o.customerName}</div>
                 <div className="text-[length:var(--fs-caption)] text-muted">{o.orderType} · {o.msisdn}</div>
               </div>
               <Badge variant="warning">Pending WFM Installation</Badge>
@@ -80,9 +80,9 @@ export function WfmSerialNumberCheck() {
 
   return (
     <div className="p-8 max-w-2xl">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Serial Number Check — Dual Play</h1>
+      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Serial Number Check - Dual Play</h1>
       <p className="text-fg-2 mb-6">
-        Order {selectedOrder.orderId} — {selectedOrder.customerName}
+        Order {selectedOrder.orderId} - {selectedOrder.customerName}
       </p>
       <DualPlaySerialCheckStep value={serials} onChange={(patch) => setSerials((prev) => ({ ...prev, ...patch }))} />
       <div className="flex gap-2 mt-6">
@@ -90,7 +90,7 @@ export function WfmSerialNumberCheck() {
           Back to list
         </Button>
         <Button variant="primary-rect" onClick={submit} disabled={!allValid}>
-          Submit — Trigger Service Activation
+          Submit - Trigger Service Activation
         </Button>
       </div>
     </div>

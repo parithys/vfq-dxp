@@ -17,29 +17,29 @@ import { NavFlyout } from './NavFlyout';
 const FLYOUT_CLOSE_DELAY = 140;
 
 const PANEL_TOGGLE_ICON = 'M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5z M9 4v16';
-// Points down when collapsed, rotated 180deg to point up when expanded —
+// Points down when collapsed, rotated 180deg to point up when expanded -
 // matching the reference disclosure pattern.
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 
 // The rail is now driven by navManifest.ts, filtered and reordered per role by
-// its approach (navigationEngine.resolveNavFor) — the same closed manifest for
+// its approach (navigationEngine.resolveNavFor) - the same closed manifest for
 // everyone, so a role never sees an item that doesn't belong to its IA.
 //
 // This replaced a hardcoded six-item array plus a comment asserting the rail
 // "can never grow past six". See navManifest.ts for why that cap moved to nine
 // (a Hybrid role legitimately spans both halves of the platform) and how the
-// load-bearing half of the rule — the manifest being a closed set — is now
+// load-bearing half of the rule - the manifest being a closed set - is now
 // enforced in code rather than by comment.
 //
 // Items applicable to the role but not yet implemented are styled EXACTLY like
-// the rest — no dimming, no disabled state, no special tooltip. They are real
+// the rest - no dimming, no disabled state, no special tooltip. They are real
 // destinations that navigate and render a Planned page explaining what is
 // coming; the page is where that belongs. Dimming them in the rail made a
 // planned area read as broken or forbidden rather than forthcoming, and split
 // the rail into two visual tiers for a distinction the user does not need while
 // navigating.
 //
-// `implemented` on the manifest is therefore declarative only — it records
+// `implemented` on the manifest is therefore declarative only - it records
 // which destinations are placeholder-backed (and pairs with the `planned` copy
 // that WorkspaceNotYetBuilt renders). It drives no styling here.
 
@@ -47,7 +47,7 @@ const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 // only (persisted via sidebarStore).
 //
 // Below `md:`, the sidebar instead renders as an off-canvas drawer (see
-// `mobileOpen` in sidebarStore) that's always shown expanded — the desktop
+// `mobileOpen` in sidebarStore) that's always shown expanded - the desktop
 // `collapsed` icon-rail preference only applies to the persistent md:+ rail.
 export function Sidebar() {
   const {
@@ -63,7 +63,7 @@ export function Sidebar() {
   const location = useLocation();
   const navItems = resolveNavFor(activePersonaId);
 
-  // Below `md:`, the sidebar is an off-canvas drawer — close it automatically
+  // Below `md:`, the sidebar is an off-canvas drawer - close it automatically
   // whenever the route changes so it doesn't stay open over the new screen.
   useEffect(() => {
     closeMobile();
@@ -71,14 +71,14 @@ export function Sidebar() {
   }, [location.pathname]);
 
   // Reveal the group that owns the route when you arrive from OUTSIDE the rail
-  // — a breadcrumb, a dashboard quick action, a reload on a deep link. Landing
+  // - a breadcrumb, a dashboard quick action, a reload on a deep link. Landing
   // on /mobile/sim-device with Mobile shut would hide where you are.
   //
   // Resolved against the STATIC manifest, not the role-filtered `navItems`.
   // navItems comes from resolveNavFor, which returns [] until loadConfig()
   // resolves, so on a cold deep-link load this effect ran once against an
-  // empty array, found no owner, and — keyed on pathname, which never changes
-  // — never ran again. The group stayed shut on exactly the arrival it exists
+  // empty array, found no owner, and - keyed on pathname, which never changes
+  // - never ran again. The group stayed shut on exactly the arrival it exists
   // for. The manifest is a module constant, so it is always populated.
   // Expanding a group the role cannot reach is harmless: its row isn't
   // rendered, so the key is inert.
@@ -88,10 +88,10 @@ export function Sidebar() {
   // behaviour and it made a group impossible to CLOSE while you stood on one
   // of its children: the toggle flipped the stored key and the derivation
   // forced it straight back open. Adding expandedNavKeys to the deps here
-  // would reintroduce exactly that — collapse, effect fires, re-opens.
+  // would reintroduce exactly that - collapse, effect fires, re-opens.
   //
   // expandNavGroup, not toggleNavGroup: an effect must be idempotent. See the
-  // store — StrictMode's double invocation made the toggle open the group and
+  // store - StrictMode's double invocation made the toggle open the group and
   // then immediately close it.
   useEffect(() => {
     const owner = NAV_MANIFEST.find((i) => i.children?.some((c) => c.to === location.pathname));
@@ -110,7 +110,7 @@ export function Sidebar() {
   const [flyout, setFlyout] = useState<{ key: NavKey; anchor: HTMLElement } | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Every hover overlay on the collapsed rail measures its gap from the RAIL's
-  // edge, not from the inset button it belongs to — so a leaf's tooltip and a
+  // edge, not from the inset button it belongs to - so a leaf's tooltip and a
   // parent's sub-menu flyout share one left edge instead of sitting 8px apart.
   // NavFlyout finds the rail itself via anchor.closest('nav'); Tooltip is a
   // generic primitive and has to be handed it.
@@ -179,7 +179,7 @@ export function Sidebar() {
         }`}
       >
       {/* Mobile drawer always renders the expanded header/nav regardless of
-          the desktop `collapsed` preference — collapsing to icon-only only
+          the desktop `collapsed` preference - collapsing to icon-only only
           makes sense for the persistent in-flow rail at md:+. */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-[var(--nav-border)] md:hidden">
         <NavLink to="/" className="flex items-center gap-2 min-w-0">
@@ -246,7 +246,7 @@ export function Sidebar() {
             // and a real `href="/fibre-home"` on a control that must not
             // navigate. A <button aria-expanded> states what it actually does.
             //
-            // The whole row stays one hit target — icon, label and chevron
+            // The whole row stays one hit target - icon, label and chevron
             // alike. The chevron used to be a separate 14px button, which left
             // dead space between it and the label.
             const rowClass = `flex-1 min-w-0 flex items-center gap-2.5 h-11 mx-2 rounded-[var(--radius-sm)] text-[length:var(--fs-body)] ${collapsed ? 'justify-center px-2' : 'px-4'} `;
@@ -274,7 +274,7 @@ export function Sidebar() {
                   {/* A parent's tooltip is suppressed in the collapsed rail:
                       its flyout already names the group in the panel header,
                       and two overlays on one hover is one too many. Leaf icons
-                      keep theirs — they have no panel. */}
+                      keep theirs - they have no panel. */}
                   <Tooltip
                     content={item.label}
                     placement="right"
@@ -294,7 +294,7 @@ export function Sidebar() {
                           // Hover peeks at the children; the click commits to
                           // the expanded rail, where they live permanently. A
                           // pure toggle would be a dead icon in the collapsed
-                          // rail — the sub-menu has nowhere in-rail to render.
+                          // rail - the sub-menu has nowhere in-rail to render.
                           if (collapsed) {
                             closeFlyout();
                             toggleCollapsed();
@@ -323,7 +323,7 @@ export function Sidebar() {
                     )}
                   </Tooltip>
                 </div>
-                {/* Children are not rendered IN the collapsed rail — 64px of
+                {/* Children are not rendered IN the collapsed rail - 64px of
                     icon has no room for them. They aren't unreachable there:
                     hovering the parent icon floats the same list beside the
                     rail (NavFlyout), and clicking expands the rail to show it

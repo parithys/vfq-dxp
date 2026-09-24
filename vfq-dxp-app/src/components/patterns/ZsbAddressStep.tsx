@@ -18,7 +18,7 @@ interface ZsbAddressStepProps {
   onChange: (value: ZsbAddressValue) => void;
   /** When the Contact step's ID lookup resolved a Qatari national, their
    * registered address is looked up and auto-filled (read-only) rather than
-   * re-typed by the agent — a Qatari ID is already tied to a Kahramaa-linked
+   * re-typed by the agent - a Qatari ID is already tied to a Kahramaa-linked
    * address record on file. Omitted/non-Qatari falls back to the existing
    * evidenced manual-entry + Skip Address flow unchanged. */
   idNumber?: string;
@@ -37,7 +37,7 @@ interface AddressRecord {
 
 // SCR-155/SCR-122 (MNP Postpaid Address, FLD-523–526): Zone/Street No./Building
 // No./Apt-Flat-Unit, all evidenced Mandatory: No, with "Save Address"/"Skip
-// Address"/"Go back"/"Cancel" buttons — a mobile-channel address step, distinct
+// Address"/"Go back"/"Cancel" buttons - a mobile-channel address step, distinct
 // from Fixed Line/FWA's AddressSelectionStep (which picks an existing
 // serviceable Address record). See ZsbConflictNotice for conflict-report.md
 // Conflict 2's unresolved-policy advisory.
@@ -102,7 +102,7 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
             label="Apt/Flat/Unit"
             value={value.aptFlatUnit ?? ''}
             disabled={value.fetchedFromMoi}
-            helperText={value.fetchedFromMoi ? 'Fetched from MOI — not editable.' : undefined}
+            helperText={value.fetchedFromMoi ? 'Fetched from MOI - not editable.' : undefined}
             onChange={(e) => onChange({ ...value, aptFlatUnit: e.target.value })}
           />
         </div>

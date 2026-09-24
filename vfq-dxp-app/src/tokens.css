@@ -6,7 +6,7 @@
      files rather than eyeballed: surface fills by area histogram, text
      greys and status colours from the export's declared fills, radii from
      rect geometry (Figma insets a stroked rect by 0.5px, so the recurring
-     rx="7.5" is an 8px corner — already what --radius-card/-button hold).
+     rx="7.5" is an 8px corner - already what --radius-card/-button hold).
 
      It supersedes the warm pink-grey field chrome of the 2026-09-15
      reference for NEUTRAL borders: that asset's --field-border #cdbebe and
@@ -22,7 +22,7 @@
      2026-09-24 to keep every screen's density and wrapping as-is. The
      --fs-* ramp below is therefore the app's own, not the reference's. */
   --accent: #e60000;
-  /* Primary button while disabled — the reference's "Next: Step 2
+  /* Primary button while disabled - the reference's "Next: Step 2
      Eligibility" and pre-selection scanner CTA. A flat tint, not the
      accent at reduced opacity, so it stays solid over both --bg and
      --surface. */
@@ -49,7 +49,7 @@
   --elev-ring: 0 0 0 1px var(--border);
   --fg: #313131;
   --fg-2: #5d5d5d;
-  /* Textbox/search/dropdown/currency field chrome — light-mode reference
+  /* Textbox/search/dropdown/currency field chrome - light-mode reference
      supplied 2026-09-15, revised set ("Field Designs" folder: Dropdown-
      {Normal,Filled,Disabled}.svg, PhoneNumber-{Normal,Filled,Disabled,
      Error}.svg, Textbox-{Normal,Filled,Disabled,Error}.svg, Searchbox.svg).
@@ -63,7 +63,7 @@
      (index.css maps filled to --accent), and collapsing it would mean
      editing every input to drop a branch the reference simply does not
      exercise. The revised Textbox-Disabled.svg now
-     matches Dropdown/PhoneNumber on the disabled border (#cccccc) — the
+     matches Dropdown/PhoneNumber on the disabled border (#cccccc) - the
      earlier asset that left it at the Normal color has been corrected
      upstream. No dedicated currency-field mockup was supplied; currency
      inputs share this same chrome via the shared Input component. Dark-mode
@@ -73,7 +73,7 @@
   --field-border-disabled: #cccccc;
   --field-border-error: #e60000;
   --field-border-filled: #e0e0e0;
-  /* Calendar range-picker + location-pin accent — from Date Specific-Open.svg
+  /* Calendar range-picker + location-pin accent - from Date Specific-Open.svg
      (#00b0ca in-range day fill, #007c92 start/end anchor day fill) and
      Location-Open.svg (#007c92 result-row pin icon, same dark teal as the
      calendar anchor color). */
@@ -82,16 +82,16 @@
   /* Divider between list rows in an open dropdown/results panel. */
   --field-divider: rgba(204,204,204,.5);
   /* Request (2026-09-15): focused/selected form controls must never read as
-     the brand red (--accent) — use this warm pink-brown instead, the same
+     the brand red (--accent) - use this warm pink-brown instead, the same
      #c09696 the field reference already uses for "filled".
 
      Superseded in part (2026-09-24): choice-CARD selectors were pulled back
-     to the brand red — see --field-card-selected below. The 2026-09-15 rule
+     to the brand red - see --field-card-selected below. The 2026-09-15 rule
      still governs the rest of what it covered and the values here are
      unchanged: the focus outline on text/search/dropdown/date fields, and
      the checked state on native checkboxes and radios, which tint from
      --field-selected via `accent-[…]`. Dark mode keeps the previous red
-     behavior via the index.css override — both directives were scoped to
+     behavior via the index.css override - both directives were scoped to
      light mode like the rest of this field system. */
   --field-focus-border: #c09696;
   --field-focus-ring: 0 0 0 4px rgba(192,150,150,.35);
@@ -99,7 +99,7 @@
   /* Choice-card selected state (2026-09-24, superseding the above for cards
      only): brand-red border, check badge and label on a near-white pink
      fill. Deliberately NOT --field-selected, so the checkbox/radio accent
-     can stay #c09696 — the two states sit side by side inside one card on
+     can stay #c09696 - the two states sit side by side inside one card on
      the plan and add-on steps, where the card is chosen but the radio in it
      is a separate control. --accent is not reused directly either: that
      would silently re-couple these cards to the brand ramp the 2026-09-15
@@ -114,24 +114,24 @@
   /* 12px, from the 2026-09-24 asset: its bordered text input is a 219x51 rect
      with rx="11.5", i.e. 12px once the 0.5px stroke inset is removed. Fields
      are the one element that does NOT share the 8px used by cards, buttons and
-     choice cards — worth not "tidying" to 8 for consistency, the asset is
+     choice cards - worth not "tidying" to 8 for consistency, the asset is
      deliberate about it. Was 16px. */
   --field-radius: 12px;
   /* The reference's topbar search is the one field that is filled rather
-     than outlined — a flat #eeeeee well with no border, which is what makes
+     than outlined - a flat #eeeeee well with no border, which is what makes
      it read as interactive against the white topbar that a white,
      hairline-bordered input would not. */
   --search-bg: #eeeeee;
   --focus-ring: 0 0 0 4px rgba(230,0,0,.22);
   /* Selected-card ring for choice-card selectors (installment term, plan,
      handover method, etc). Follows --field-card-selected red as of
-     2026-09-24 — it rings the same cards, so leaving it pink would have
+     2026-09-24 - it rings the same cards, so leaving it pink would have
      haloed a red border in the old color. Alpha drops .4 -> .22 to match
      --focus-ring, the established weight for a red ring here: red at .4
      reads as a second, brighter border rather than a halo. Dark mode keeps
      its own value via the index.css override. */
   --shadow-selected-ring: 0 0 0 3px rgba(230,0,0,.22);
-  /* Figtree is loaded via Google Fonts (index.html) — unlike the previous
+  /* Figtree is loaded via Google Fonts (index.html) - unlike the previous
      Space Grotesk/DM Sans targets, this one is real, not aspirational. Same
      system-font fallback chain stays in place for the pre-load flash and for
      any environment where the CDN request fails. */
@@ -254,7 +254,7 @@
   --space-8: 32px;
   --success: #388e3c;
   --surface: #f5f7f9;
-  /* Inset panels nested inside a card — the reference's liveliness-check
+  /* Inset panels nested inside a card - the reference's liveliness-check
      and scanner strips. One step off white, bordered in --border, so a
      panel reads as recessed without a shadow. */
   --surface-subtle: #fafafa;
@@ -265,7 +265,7 @@
      takes the same one-step-off-white used for inset panels (#fafafa)
      rather than the cooler #f3f5f9 it had. Kept as their own tokens so
      tables can still diverge from every other card/panel border later.
-     (These used to be "the same value as --border-soft" — no longer true,
+     (These used to be "the same value as --border-soft" - no longer true,
      that token is now #eeeeee for soft dividers.) */
   --table-border: #e0e0e0;
   --table-header-bg: #fafafa;
@@ -281,10 +281,10 @@
   --tracking-display: -0.015em;
   --warn: #f5b400;
   /* Advisory banner fill from the reference's "ID Document Unselected"
-     strip — a pale amber wash carrying --warn-text copy, distinct from
+     strip - a pale amber wash carrying --warn-text copy, distinct from
      --warn itself, which stays an icon/fill colour. */
   --warn-bg: #fff8e1;
-  /* Darkened amber tuned for >=4.5:1 text contrast on white/near-white —
+  /* Darkened amber tuned for >=4.5:1 text contrast on white/near-white -
      --warn itself (#f5b400) is ~1.84:1 as text and only meant for fills/icons. */
   --warn-text: #9a5b00;
   --white-80: rgba(255,255,255,.8);

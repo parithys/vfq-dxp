@@ -46,7 +46,7 @@ interface ConfirmedOrder {
   status: string;
 }
 
-// SCR-190/191/192: New Prepaid Tablet — the reference walkthrough only
+// SCR-190/191/192: New Prepaid Tablet - the reference walkthrough only
 // evidenced Contact (ID capture), Number Selection and SIM Serial
 // (guided-journeys-prepaid-open-ui-tablet-new-prepaid-0202dd13, confidence:
 // medium). The steps below extend that reference flow with every remaining
@@ -60,7 +60,7 @@ interface ConfirmedOrder {
 //   Address & Contact -> MPRA_001_CAM_05 (reuses ZsbAddressStep, non-blocking per FLD-523-526)
 //   Plan & Discount   -> MPRA_001_QPC_01-04
 //   Number Selection  -> MPRA_001_NUM_01
-//   SIM Type          -> MPRA_001_SIM_01 (Physical/eSIM — see SimTypeStep for why
+//   SIM Type          -> MPRA_001_SIM_01 (Physical/eSIM - see SimTypeStep for why
 //                        "Printed eSIM"/"Virtual eSIM" aren't modelled as distinct options)
 //   Checkout          -> MPRA_001_CVC_01-03 (BR-011 starter pack charge, BR-348/BR-013 SIM card charge)
 //   CAF & Key Info    -> MPRA_001_CAF_01-03 (BR-009 Key Information, reuses CafSignatureCapture)
@@ -70,7 +70,7 @@ interface ConfirmedOrder {
 // customers route to approval via the new "New Prepaid Activation"
 // approval-matrix entry, same mechanism as postpaid's BR-268), MPRA_001_NET_02-06
 // (a simulated fulfilment delay progressing the order from Open to Complete
-// — this app's status model previously jumped straight to a terminal state
+// - this app's status model previously jumped straight to a terminal state
 // with none of the intermediate states ever reachable), and MPRA_001_NOT_01
 // (an osb-notifications record, not just a toast).
 //
@@ -82,7 +82,7 @@ interface ConfirmedOrder {
 // for every journey, including postpaid, so email is captured/displayed but
 // not "verified" here either, for consistency. The BRSD's "Recipient List:
 // all active MSISDNs on the QID" for the activation notification isn't
-// modelled — this schema has no cross-line directory to resolve that from,
+// modelled - this schema has no cross-line directory to resolve that from,
 // so the notification below targets only the just-activated MSISDN.
 export function NewPrepaidWizard() {
   const navigate = useNavigate();
@@ -100,7 +100,7 @@ export function NewPrepaidWizard() {
             { label: 'Customer', value: confirmedOrder.customerName },
             { label: 'MSISDN', value: confirmedOrder.msisdn },
             { label: 'Pack', value: confirmedOrder.packName },
-            { label: 'SIM Type', value: confirmedOrder.simType ?? '—' },
+            { label: 'SIM Type', value: confirmedOrder.simType ?? '-' },
             { label: 'Total charged', value: `QR ${confirmedOrder.totalQar}` },
             { label: 'Status', value: confirmedOrder.status },
           ]}
@@ -256,7 +256,7 @@ export function NewPrepaidWizard() {
                     <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-2">Key Information</h3>
                     <ul className="list-disc list-inside space-y-1 text-fg-2 text-[length:var(--fs-body)]">
                       <li>No plan lock-in period applies to prepaid packs.</li>
-                      <li>No Device on Installment applies — this is a SIM/number activation only.</li>
+                      <li>No Device on Installment applies - this is a SIM/number activation only.</li>
                       <li>Pack validity and balance terms apply per the selected pack (see Plan &amp; Discount step).</li>
                     </ul>
                   </div>
@@ -295,7 +295,7 @@ export function NewPrepaidWizard() {
           const customerId = eligibility?.customerId;
 
           // MPRA_001_CAM_01: find-or-create the prepaid account for this
-          // customer. No billingProfileId/credit-limit field is set —
+          // customer. No billingProfileId/credit-limit field is set -
           // MPRA_001_CAM_02/BR-002/BR-005 require Prepaid Activation to
           // leave credit limit and bill cycle unpopulated.
           let accountId: string | undefined;
@@ -317,7 +317,7 @@ export function NewPrepaidWizard() {
               });
             }
             // Without this, the BR-347 line cap tested by CUST-1005/1002
-            // would never actually tighten after a successful order — the
+            // would never actually tighten after a successful order - the
             // cap would only ever reflect seed data, not real usage.
             await updateRecord('customers', 'customerId', customerId, {
               activePrepaidLines: (customerRecord?.activePrepaidLines ?? 0) + 1,
@@ -326,14 +326,14 @@ export function NewPrepaidWizard() {
 
           // MPRA_001_PAY_03: physical SIM stock is depleted on payment
           // completion. eSIM issuance has no backing inventory record to
-          // deplete (see SimTypeStep) — nothing fabricated for that path.
+          // deplete (see SimTypeStep) - nothing fabricated for that path.
           if (simType?.simType === 'Physical' && simType.simSerial) {
             await updateRecord('sims', 'simSerial', simType.simSerial, { stockStatus: 'Issued' });
           }
 
           // BR-004/BR-268-equivalent: HRN customers route to approval rather
           // than auto-completing, same mechanism already established for
-          // postpaid — see the new "New Prepaid Activation" approval-matrix entry.
+          // postpaid - see the new "New Prepaid Activation" approval-matrix entry.
           const pendingApproval = Boolean(eligibility?.requiresHrnAdvance);
           const orderId = `ORD-${Date.now().toString().slice(-6)}`;
           const totalQar = checkoutTotals?.totalDueQar ?? 0;
@@ -364,7 +364,7 @@ export function NewPrepaidWizard() {
           if (!pendingApproval) {
             // MPRA_001_NET_02-06: simulated downstream fulfilment (service
             // creation, charging-system account, plan/benefit activation,
-            // outcome sync to CRM order status) — the first place in this
+            // outcome sync to CRM order status) - the first place in this
             // codebase an order actually progresses through an intermediate
             // status rather than jumping straight to a terminal one.
             await new Promise((r) => setTimeout(r, 900));
@@ -372,7 +372,7 @@ export function NewPrepaidWizard() {
             finalStatus = 'Complete';
           }
 
-          // MPRA_001_NOT_01 — a real notification record, not just a toast.
+          // MPRA_001_NOT_01 - a real notification record, not just a toast.
           // Only the just-activated MSISDN is notified; see the file-level
           // comment for why "all active MSISDNs on the QID" isn't modelled.
           await createRecord('osb-notifications', {
@@ -388,7 +388,7 @@ export function NewPrepaidWizard() {
             operation: 'CreateCommunication',
             smsText: pendingApproval
               ? `Dear customer, your prepaid activation order ${orderId} has been submitted and is pending manager approval.`
-              : `Dear customer, your prepaid activation order ${orderId} is complete. Welcome to Vodafone Qatar prepaid — MSISDN ${values.msisdn}.`,
+              : `Dear customer, your prepaid activation order ${orderId} is complete. Welcome to Vodafone Qatar prepaid - MSISDN ${values.msisdn}.`,
           });
 
           const products = await mockDataEngine.list<{ productId: string; name: string }>('products');
@@ -397,8 +397,8 @@ export function NewPrepaidWizard() {
           setConfirmedOrder({
             orderId,
             pendingApproval,
-            customerName: contact?.moiResult?.name ?? '—',
-            msisdn: (values.msisdn as string) ?? '—',
+            customerName: contact?.moiResult?.name ?? '-',
+            msisdn: (values.msisdn as string) ?? '-',
             packName: pack?.name ?? 'SIM only',
             totalQar,
             simType: simType?.simType,

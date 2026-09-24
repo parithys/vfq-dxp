@@ -16,7 +16,7 @@ import type { Customer360Data } from '../../../engines/customer360Engine';
 const DOWNLOAD_ICON = 'M12 15V3 M7 10l5 5 5-5 M4 21h16';
 
 // CUS-001-ATT-01-B: one shared download affordance for every attachment
-// table — reuses the CSV-export pattern already established for Profile
+// table - reuses the CSV-export pattern already established for Profile
 // Export/Invoice Download rather than fabricating real file storage.
 function useAttachmentDownload() {
   const pushToast = useNotificationStore((s) => s.pushToast);
@@ -54,7 +54,7 @@ function ActiveArchivedToggle({ value, onChange }: { value: AttachmentFilter; on
 }
 
 // Seven of Customer 360's thirteen sections are single-purpose read-only
-// views over data customer360Engine already joined — no unique interaction
+// views over data customer360Engine already joined - no unique interaction
 // logic distinguishes them the way Mobile/Fibre/Billing/Orders/Tickets have
 // their own. Grouped in one file rather than seven near-identical
 // boilerplate files; each is still a real, independently reachable tab.
@@ -77,7 +77,7 @@ export function InteractionsSection({
 }: {
   data: Customer360Data;
   /** Customer360Layout's `data` state is a one-time fetch, not reactive to
-   * entityStore mutations — without this callback, a just-logged interaction
+   * entityStore mutations - without this callback, a just-logged interaction
    * would only appear after navigating away and back (the record is
    * correctly persisted either way, but the visible table would go stale
    * until then). Mirrors DemographicEditDrawer's onSaved pattern. */
@@ -170,7 +170,7 @@ export function InteractionsSection({
 
 // CUS-001-VEW-03: sent SMS/email communications tied directly to the
 // customer (customer-communications.json), not scoped to order-triggered
-// SMS the way NotificationsSection's osb-notifications join is — that join
+// SMS the way NotificationsSection's osb-notifications join is - that join
 // stays as-is for its own order-notification purpose; this is the general
 // "sent communications" view the requirement actually asks for.
 export function CommunicationsSection({ data }: { data: Customer360Data }) {
@@ -195,7 +195,7 @@ export function CommunicationsSection({ data }: { data: Customer360Data }) {
 }
 
 // CUS-001-ATT-01-A/B, ATT-03/ATT-01-C: one Active/Archived toggle serves
-// both attachment tables — this is the single implementation that satisfies
+// both attachment tables - this is the single implementation that satisfies
 // ATT-03 and its source-register duplicate ATT-01-C at once, per the audit's
 // Phase 3 finding that the BRSD's own redundancy should not be propagated
 // into two separate code paths. CAF forms carry `status`; identity documents
@@ -288,11 +288,11 @@ export function ConsentSection({ data }: { data: Customer360Data }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <div className="text-[length:var(--fs-caption)] text-muted">Preferred language</div>
-          <div className="text-fg text-[length:var(--fs-body)]">{data.customer.preferredLanguage ?? '—'}</div>
+          <div className="text-fg text-[length:var(--fs-body)]">{data.customer.preferredLanguage ?? '-'}</div>
         </div>
         <div>
           <div className="text-[length:var(--fs-caption)] text-muted">Bill medium</div>
-          <div className="text-fg text-[length:var(--fs-body)]">{String(profile?.billMedium ?? '—')}</div>
+          <div className="text-fg text-[length:var(--fs-body)]">{String(profile?.billMedium ?? '-')}</div>
         </div>
         <div>
           <div className="text-[length:var(--fs-caption)] text-muted">AutoPay</div>
@@ -333,9 +333,9 @@ export function ProductsAssetsSection({ data }: { data: Customer360Data }) {
 export function RecentActivitiesSection({ data }: { data: Customer360Data }) {
   type TimelineEntry = { at: string; label: string };
   const entries: TimelineEntry[] = [
-    ...data.activities.map((a) => ({ at: String(a.transactionDate ?? ''), label: `${a.topic ?? a.journey ?? 'Activity'} — ${a.comments ?? ''}` })),
-    ...data.payments.map((p) => ({ at: String(p.capturedAt ?? ''), label: `Payment captured — ${p.chargeType ?? ''} (${p.amountQar ?? ''} QAR)` })),
-    ...data.identityDocuments.map((d) => ({ at: String(d.scannedAt ?? ''), label: `Identity document scanned — ${d.documentType ?? ''}` })),
+    ...data.activities.map((a) => ({ at: String(a.transactionDate ?? ''), label: `${a.topic ?? a.journey ?? 'Activity'} - ${a.comments ?? ''}` })),
+    ...data.payments.map((p) => ({ at: String(p.capturedAt ?? ''), label: `Payment captured - ${p.chargeType ?? ''} (${p.amountQar ?? ''} QAR)` })),
+    ...data.identityDocuments.map((d) => ({ at: String(d.scannedAt ?? ''), label: `Identity document scanned - ${d.documentType ?? ''}` })),
   ]
     .filter((e) => e.at)
     .sort((a, b) => (a.at < b.at ? 1 : -1));

@@ -16,7 +16,7 @@
     "colourOptions": ["Onyx Black", "Marble Grey", "Cobalt Violet"],
     "storageOptions": ["128 GB", "256 GB"],
     "catalogStockStatus": "In Stock",
-    "catalogStockNote": "In stock — same-day store pickup",
+    "catalogStockNote": "In stock - same-day store pickup",
     "tradeInBonusQar": 300
   },
   {
@@ -36,7 +36,7 @@
     "colourOptions": ["Natural Titanium", "Black Titanium"],
     "storageOptions": ["128 GB", "256 GB", "512 GB"],
     "catalogStockStatus": "Delivery Only",
-    "catalogStockNote": "3–5 day delivery — no store stock",
+    "catalogStockNote": "3–5 day delivery - no store stock",
     "tradeInBonusQar": null
   },
   {
@@ -56,7 +56,7 @@
     "colourOptions": ["Graphite", "Silver"],
     "storageOptions": ["16 GB"],
     "catalogStockStatus": "In Stock",
-    "catalogStockNote": "In stock — same-day store pickup",
+    "catalogStockNote": "In stock - same-day store pickup",
     "tradeInBonusQar": null
   }
 ]

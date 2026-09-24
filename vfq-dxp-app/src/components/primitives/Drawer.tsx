@@ -11,7 +11,7 @@ interface DrawerProps {
 }
 
 // Side drawer for everything that isn't a short confirmation message (see
-// Modal.tsx, which is reserved for those) — forms, signature capture, and
+// Modal.tsx, which is reserved for those) - forms, signature capture, and
 // multi-step flows read as more seamless sliding in from the edge than
 // interrupting the whole screen with a centered dialog. Width is 40% of the
 // viewport (with a floor so it doesn't get unusably narrow on small
@@ -52,7 +52,7 @@ export function Drawer({ open, onClose, title, children, footer }: DrawerProps) 
 
   if (!mounted) return null;
   return (
-    // Backdrop no longer dismisses the drawer on click — only the explicit
+    // Backdrop no longer dismisses the drawer on click - only the explicit
     // close button or Escape do (see the keydown handler above). Prevents
     // losing in-progress form input from an accidental click outside the
     // panel.

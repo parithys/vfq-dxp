@@ -34,7 +34,7 @@ const METRICS = [
 ];
 
 
-// New auth gate — not evidenced in the source corpus (no SCR- id); implements
+// New auth gate - not evidenced in the source corpus (no SCR- id); implements
 // the split-panel login mock supplied directly by the user. The "Sign in with
 // SSO" action is fully mocked (no backend/IdP), consistent with every other
 // simulated action in this app. Role is not user-selectable: it's derived
@@ -45,10 +45,10 @@ const METRICS = [
 // state): an unrecognised Staff ID or wrong password now genuinely blocks
 // sign-in with an inline error, instead of silently defaulting to a role.
 // The password check is against a placeholder demo credential
-// (DEMO_LOGIN_PASSWORD) — see staffIdRoleMap.ts for why.
+// (DEMO_LOGIN_PASSWORD) - see staffIdRoleMap.ts for why.
 //
 // JSM-01 itself ("Reuse requirement TT-001-JSM-*") is a reuse-stub in the
-// BRSD's own requirements register — it names no inline Acceptance Criteria
+// BRSD's own requirements register - it names no inline Acceptance Criteria
 // and points at a source document (TT-001-JSM-*) that isn't present in this
 // corpus, which the compliance audit flagged as making the requirement
 // unverifiable as literally written, independent of whether login itself
@@ -109,7 +109,7 @@ export function LoginPage() {
     // Land every sign-in on the Dashboard.
     //
     // <BrowserRouter> is mounted by App only once isAuthenticated flips, so it
-    // reads window.location at that moment — whatever URL the browser happened
+    // reads window.location at that moment - whatever URL the browser happened
     // to be left on. Signing out at /mobile/sim-device and back in therefore
     // dropped you straight back there, skipping the landing page entirely, and
     // could drop a role onto a destination its approach doesn't even include.
@@ -129,7 +129,7 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row font-sans">
-      {/* Sign-in panel — ordered after the brand panel on md:+ to match the
+      {/* Sign-in panel - ordered after the brand panel on md:+ to match the
           reference layout (dark brand story left, focused form right); DOM
           order (and therefore tab order) is untouched, only visual order. */}
       <div className="w-full md:w-[420px] shrink-0 md:order-2 bg-charcoal-panel text-white flex flex-col justify-between px-10 py-10">
@@ -231,7 +231,7 @@ export function LoginPage() {
         </div>
       </div>
 
-      {/* Brand/metrics panel — background (public/brand/login-bg.jpg) is a
+      {/* Brand/metrics panel - background (public/brand/login-bg.jpg) is a
           real photo of the Doha, Qatar skyline at night (West Bay towers incl.
           Aspire Tower/Doha Tower), by Hongbin (@hbsun2013) on Unsplash
           (unsplash.com/photos/a-city-skyline-at-night-5jvAmqV4W-c), used under

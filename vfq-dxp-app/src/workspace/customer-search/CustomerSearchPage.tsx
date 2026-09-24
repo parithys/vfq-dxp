@@ -47,7 +47,7 @@ export function CustomerSearchPage() {
   // Product decision (2026-09-15, overrides the BRSD's own CUS-001-CAM-04-A/
   // BR-01 framing, which reads as gating Customer 360 *entry* itself): a
   // plain lookup is read-only and shouldn't require an ID scan up front.
-  // BR-01 verification still gates every actual mutation — Customer360Layout
+  // BR-01 verification still gates every actual mutation - Customer360Layout
   // (Edit profile), ContactSection, AddressSection, and BillingAccountPage
   // each carry their own independent useVerificationGate() at the point an
   // agent tries to change something, so this file no longer needs to gate
@@ -87,7 +87,7 @@ export function CustomerSearchPage() {
       </div>
 
       {!query.trim() && (
-        <p className="text-muted text-[length:var(--fs-caption)] mt-3">Start typing — results appear instantly as you type.</p>
+        <p className="text-muted text-[length:var(--fs-caption)] mt-3">Start typing - results appear instantly as you type.</p>
       )}
 
       {query.trim() && (

@@ -4,7 +4,7 @@ import type { PersonaCapability } from '../types/config';
 // Role-matrix gating for the Agent 360 / Customer 360 BRSD clauses
 // (APM-01/05/08, BIN-01, BIN-04, BNT-04, BR-01/02/03, BR-067, ATV-03).
 //
-// None of those clauses ship with a confirmed privilege matrix — OI-AGN-06/11/13
+// None of those clauses ship with a confirmed privilege matrix - OI-AGN-06/11/13
 // all leave "which role" open. Until 2026-09-24 each gate was therefore a
 // hand-curated Set of PERSONA-0xx ids, grounded in the 66-persona catalogue's
 // own name/type text and carrying a long justification for every inclusion and
@@ -22,14 +22,14 @@ import type { PersonaCapability } from '../types/config';
 //      capability instead of a negative exclusion list.
 //   2. canEditCustomerRecords is NO LONGER an alias of isInternalAgentPersona.
 //      It was one, which would now hand customer-record write access to
-//      Dispatcher, Field Engineer, System Administrator and View Only — the
+//      Dispatcher, Field Engineer, System Administrator and View Only - the
 //      four roles the new model explicitly separates from customer servicing.
 //   3. The retail-vs-back-office manager split the old comment apologised for
 //      being unevidenced is now named outright: Supervisor and Manager/Approver
 //      both carry `agent-oversight`.
 //
 // The Qnomy/CTI reference-number gates additionally derive from `contextCard`
-// — the Channel / Context-card column that previously existed only as a
+// - the Channel / Context-card column that previously existed only as a
 // comment table in staffIdRoleMap.ts with no consumer at all.
 
 function has(personaId: string | undefined, capability: PersonaCapability): boolean {
@@ -64,7 +64,7 @@ export function canSeeQnomyTicketNumber(personaId: string | undefined): boolean 
   return persona.contextCard === 'Queue Number + Ticket Number' || has(personaId, 'agent-oversight');
 }
 
-/** CTI Reference Number — the customer's active interaction reference,
+/** CTI Reference Number - the customer's active interaction reference,
  * available throughout the servicing journey. Deliberately NOT a
  * post-completion tracking/order number, which is a separate concept that does
  * not belong in the header (see SessionReferenceNumbers.tsx). Telephonic and
@@ -76,14 +76,14 @@ export function canSeeCtiReferenceNumber(personaId: string | undefined): boolean
 }
 
 /** RBAC-132/144: sets the Resolution Code and closes a complaint. Owned by the
- * Complaints Agent role plus Supervisor/Manager — raising a ticket and
+ * Complaints Agent role plus Supervisor/Manager - raising a ticket and
  * resolving it stay separate, which is what the 66-persona model encoded by
  * withholding resolution from frontline agents (PERSONA-059 vs 001/066). */
 export function canResolveTicket(personaId: string | undefined): boolean {
   return has(personaId, 'ticket-resolve');
 }
 
-/** Queue reassignment — Dispatcher ("work allocation and scheduling") plus
+/** Queue reassignment - Dispatcher ("work allocation and scheduling") plus
  * oversight roles. */
 export function canReassignTicketQueue(personaId: string | undefined): boolean {
   return has(personaId, 'ticket-reassign-queue');

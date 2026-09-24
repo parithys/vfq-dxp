@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface WizardDraft {
   currentStep: number;
-  /** Furthest step index ever reached this session — never decreases when
+  /** Furthest step index ever reached this session - never decreases when
    * navigating back, so a step already passed stays reachable/marked done
    * even after jumping to an earlier step to edit it. */
   maxStepReached: number;
@@ -20,7 +20,7 @@ interface WorkflowState {
 
 const emptyDraft: WizardDraft = { currentStep: 0, maxStepReached: 0, values: {} };
 
-// sessionStorage per frontend-architecture.md §4 — cleared on tab close, matching
+// sessionStorage per frontend-architecture.md §4 - cleared on tab close, matching
 // journeys.md's evidenced "milestone/draft-order persistence for resume" behavior
 // (resumable within a session, not permanently, absent a real backend).
 export const useWorkflowStore = create<WorkflowState>()(

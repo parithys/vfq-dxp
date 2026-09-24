@@ -31,7 +31,7 @@ function nextAvailableDate(): string {
   return d.toISOString().slice(0, 10);
 }
 
-// Pattern 9: Appointment Booking Modal — cluster selection (radio group) ->
+// Pattern 9: Appointment Booking Modal - cluster selection (radio group) ->
 // calendar grid (next available date pre-selected) -> time-slot pills showing
 // live capacity ("14/15") -> optional booking comments; bounded by the
 // location's SLA cluster (SCR-028/049/083/109/115). Book Appointment fields

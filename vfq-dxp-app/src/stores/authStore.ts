@@ -6,12 +6,12 @@ export interface AgentProfile {
   name: string;
   jobTitle: string;
   team: string;
-  /** Agent 360 BRSD APM-08/DF-AGT-006 — MFA is off by default; method values
+  /** Agent 360 BRSD APM-08/DF-AGT-006 - MFA is off by default; method values
    * are a placeholder LOV (OI-AGN-06 leaves the real allowed set open). */
   mfaEnabled?: boolean;
   mfaMethod?: 'Authenticator App' | 'SMS OTP';
   /** APM-09/DF-AGT-008: "English and/or Arabic options are available subject
-   * to VFQ confirmation" (D-03 — completeness open). Defaults to English. */
+   * to VFQ confirmation" (D-03 - completeness open). Defaults to English. */
   language?: 'English' | 'العربية';
 }
 
@@ -22,12 +22,12 @@ interface AuthState {
   signIn: (staffId: string, profile: AgentProfile) => void;
   signOut: () => void;
   /** Re-resolve the displayed identity (name/job title/team) when switching
-   * role from the profile menu, without a full sign-out/sign-in — staffId is
+   * role from the profile menu, without a full sign-out/sign-in - staffId is
    * unchanged since that's the logged-in user, not the active role. */
   setProfile: (profile: AgentProfile) => void;
 }
 
-// Mocked SSO gate — no real backend, so "signing in" just flips this flag.
+// Mocked SSO gate - no real backend, so "signing in" just flips this flag.
 // Persisted like personaStore so a page refresh doesn't force re-login.
 // `profile` is resolved from users-agents.json at sign-in time (see
 // LoginPage's pickProfileForRole) rather than typed in, matching how the

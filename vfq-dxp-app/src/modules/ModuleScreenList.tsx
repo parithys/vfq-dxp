@@ -21,7 +21,7 @@ type Filter = 'all' | 'built' | 'not-built' | 'no-access';
 // "No access" replaced "Not RBAC-evidenced" on 2026-09-24. Access now comes
 // from each role's explicit feature grants rather than sparse rbac.json
 // evidence, so a screen with no permission level is one this role was
-// deliberately not granted — not one the source corpus happened to be silent
+// deliberately not granted - not one the source corpus happened to be silent
 // about. The old label asserted an evidence stance that no longer exists.
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -39,11 +39,11 @@ interface Enriched {
 // Secondary navigation = a module's screens (frontend-architecture.md §9).
 // Screen-level access is surfaced as a badge (granted permission level, or
 // "No access") rather than hiding the row outright, and `built` is computed
-// independently of it — which is what keeps a granted-but-unimplemented
+// independently of it - which is what keeps a granted-but-unimplemented
 // screen visible as a planned placeholder instead of vanishing.
 //
 // Screens are grouped under their sub-module/feature via
-// screenGrouping.ts — real evidence (traceability-matrix.md) where it
+// screenGrouping.ts - real evidence (traceability-matrix.md) where it
 // exists, a keyword heuristic otherwise (~25% of screens have real
 // evidence; see that file's header comment for the coverage caveat and a
 // concrete example of evidence overriding the "obvious" grouping). Anything
@@ -92,7 +92,7 @@ export function ModuleScreenList() {
     const e = enrichedByScreenId.get(route.screenId);
     if (!e || !passesFilters(e)) return null;
     // Only present when this screen has a confident match in the CRM Journeys
-    // catalogue crosswalk (journey-catalogue-map.json) — absent for every
+    // catalogue crosswalk (journey-catalogue-map.json) - absent for every
     // other screen, which renders exactly as it did before this was added.
     const journeyIds = getJourneyIdsForScreen(route.screenId);
     return (

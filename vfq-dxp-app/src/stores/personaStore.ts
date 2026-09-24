@@ -6,7 +6,7 @@ interface PersonaState {
   setActivePersona: (id: string) => void;
 }
 
-/** ROLE-01 (Retail Sales Agent) — the broadest frontline grant set, so the
+/** ROLE-01 (Retail Sales Agent) - the broadest frontline grant set, so the
  * most usable starting demo view. */
 export const DEFAULT_PERSONA_ID = 'ROLE-01';
 
@@ -16,7 +16,7 @@ export const DEFAULT_PERSONA_ID = 'ROLE-01';
 // roles). Without the bump, a returning user boots holding a dead id:
 // getPersona() returns undefined, so the dashboard greeting silently
 // disappears, PersonaSwitcher's Select renders blank, and every capability
-// gate returns false — an app that never crashes and never works.
+// gate returns false - an app that never crashes and never works.
 //
 // The id scheme was deliberately changed rather than reusing PERSONA-0xx:
 // six of the seven old login personas fell inside 001-025, so a stale
@@ -39,7 +39,7 @@ export const usePersonaStore = create<PersonaState>()(
       // runs when the stored payload carries a `version` that differs from the
       // current one. State persisted before versioning was introduced has no
       // `version` key at all, and zustand rehydrates it as-is without calling
-      // migrate — so every genuine pre-existing user would have kept a dead
+      // migrate - so every genuine pre-existing user would have kept a dead
       // PERSONA-0xx id while a synthetic `version: 1` payload migrated fine.
       // This merge validates the id shape instead of trusting the version, so
       // it also catches any future renumbering.

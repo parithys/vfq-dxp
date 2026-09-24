@@ -2,13 +2,13 @@
 // role gets a filtered and reordered subset (see engines/navigationEngine.ts).
 //
 // This supersedes the previous "six fixed primary workspaces that can never
-// grow past six" rule. That cap was a Customer-First-only assumption — a
+// grow past six" rule. That cap was a Customer-First-only assumption - a
 // Hybrid role such as a Regional Manager or Supervisor legitimately spans both
 // the customer and product halves of the platform, which is nine items. The
 // load-bearing half of the old rule is kept and strengthened:
 //
 //   INV-1  The manifest is a CLOSED SET. Adding a journey or screen must never
-//          add a nav item — new journeys become actions inside a workspace or
+//          add a nav item - new journeys become actions inside a workspace or
 //          a Customer 360 product tab. NAV_MANIFEST_SIZE below is asserted in
 //          dev, so growing the rail is a deliberate edit, not an accident.
 //   INV-2  At most NAV_MAX_TOP_LEVEL top-level items per role. Extra depth is
@@ -16,7 +16,7 @@
 //
 // Why a TS module rather than config JSON: `icon` is SVG path geometry (code,
 // not data), `to` must match a literal <Route path> in router.tsx, and
-// router.tsx needs the manifest at module-eval time — before loadConfig()
+// router.tsx needs the manifest at module-eval time - before loadConfig()
 // resolves, which configEngine's accessors require. Precedent for IA-as-const
 // already exists here (QUICK_ACTIONS, MODULE_DESCRIPTIONS).
 
@@ -62,7 +62,7 @@ export interface NavItem {
   /** Workspace-level analogue of screenRegistry's getScreenComponent(): when
    * false the route exists and is navigable, but renders <WorkspaceNotYetBuilt>.
    *
-   * Declarative only — the Sidebar deliberately does NOT style unbuilt items
+   * Declarative only - the Sidebar deliberately does NOT style unbuilt items
    * differently (no dimming or disabled state); a planned destination looks and
    * behaves like any other, and its page carries the explanation. This field
    * records which destinations are placeholder-backed and pairs with `planned`
@@ -71,7 +71,7 @@ export interface NavItem {
   /** Required when implemented === false. */
   planned?: NavPlannedCopy;
   /** When set, the item additionally requires this feature grant. Used for
-   * destinations that are a genuine access boundary rather than plain IA —
+   * destinations that are a genuine access boundary rather than plain IA -
    * today only Administration. Everything else is IA: the label tells you the
    * platform has the area, the screens inside it are access-gated. */
   requiresFeature?: string;
@@ -102,7 +102,7 @@ const ICONS = {
 export const NAV_MANIFEST: readonly NavItem[] = [
   { key: 'dashboard', label: 'Dashboard', to: '/', end: true, icon: ICONS.dashboard, implemented: true },
   // Mobile and Fibre & Home are the two primary product lines. They replaced a
-  // single "Products" parent whose children were just the two line names — that
+  // single "Products" parent whose children were just the two line names - that
   // extra level added a click without adding information. Each line now owns its
   // journey categories directly, and each category is a real destination
   // (ProductLinePage) rather than a placeholder.
@@ -194,7 +194,7 @@ export const NAV_MAX_TOP_LEVEL = 10;
 if (import.meta.env.DEV && NAV_BY_KEY.size !== NAV_MANIFEST_SIZE) {
   throw new Error(
     `navManifest: expected ${NAV_MANIFEST_SIZE} entries, found ${NAV_BY_KEY.size}. `
-    + 'The manifest is a closed set (INV-1) — if you genuinely need another primary destination, '
+    + 'The manifest is a closed set (INV-1) - if you genuinely need another primary destination, '
     + 'update NAV_MANIFEST_SIZE deliberately. Otherwise the new journey belongs inside an '
     + 'existing workspace.'
   );

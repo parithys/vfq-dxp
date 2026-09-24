@@ -19,7 +19,7 @@ export interface ZonePlacement {
 
 export interface DashboardLayout {
   zones: ZonePlacement[];
-  /** Only Hybrid gets the control — the other approaches have one zone, so
+  /** Only Hybrid gets the control - the other approaches have one zone, so
    * there is nothing to focus between. */
   showFocusControl: boolean;
   /** View Only: suppress every quick action and make tiles non-navigating. */
@@ -29,8 +29,8 @@ export interface DashboardLayout {
 }
 
 /** Which flavour of work the product zone shows. Product-First covers five very
- * different roles — "product-first" for a Field Engineer means work-item-first,
- * not catalogue management — so the zone keeps one structure and swaps content
+ * different roles - "product-first" for a Field Engineer means work-item-first,
+ * not catalogue management - so the zone keeps one structure and swaps content
  * by persona group. */
 export type ProductZoneVariant = 'catalogue' | 'fulfilment' | 'field';
 

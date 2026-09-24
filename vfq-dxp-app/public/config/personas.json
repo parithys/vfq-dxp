@@ -124,7 +124,7 @@
     "staffId": "VFQ12344",
     "name": "Tablet / Field Sales Agent",
     "group": "Sales & Acquisition",
-    "businessUnitLabel": "—",
+    "businessUnitLabel": "-",
     "businessUnits": ["CBU", "EBU"],
     "approach": "Customer-First",
     "description": "Mobile sales force and field acquisition teams",
@@ -311,8 +311,8 @@
     "capabilities": [],
     "features": [
       { "key": "workspace.dashboard", "level": "View" },
-      { "key": "workspace.customer-search", "level": "View", "restrictions": "Own enterprise account only — INTENT ONLY: no record-level scoping engine exists in this build" },
-      { "key": "workspace.customer360-view", "level": "View", "restrictions": "Own enterprise account only — INTENT ONLY: no record-level scoping engine exists in this build" },
+      { "key": "workspace.customer-search", "level": "View", "restrictions": "Own enterprise account only - INTENT ONLY: no record-level scoping engine exists in this build" },
+      { "key": "workspace.customer360-view", "level": "View", "restrictions": "Own enterprise account only - INTENT ONLY: no record-level scoping engine exists in this build" },
       { "key": "orders.my-sales-orders", "level": "View" },
       { "key": "tickets.dashboard", "level": "View" },
       { "key": "tickets.detail-view", "level": "View" },
@@ -344,7 +344,7 @@
       { "key": "workspace.task-list", "level": "Edit" },
       { "key": "workspace.task-detail", "level": "Edit" },
       { "key": "tickets.dashboard", "level": "Create" },
-      { "key": "tickets.detail-view", "level": "Edit", "restrictions": "Cannot set Resolution Code — resolution is owned by the Complaints Agent role" },
+      { "key": "tickets.detail-view", "level": "Edit", "restrictions": "Cannot set Resolution Code - resolution is owned by the Complaints Agent role" },
       { "key": "tickets.field-templates", "level": "View" },
       { "key": "numbers.sim-swap-queue", "level": "Create" },
       { "key": "identity.passport-to-qid", "level": "Create" },
@@ -379,7 +379,7 @@
       { "key": "workspace.task-list", "level": "Edit" },
       { "key": "workspace.task-detail", "level": "Edit" },
       { "key": "tickets.dashboard", "level": "Create" },
-      { "key": "tickets.detail-view", "level": "Edit", "restrictions": "Cannot set Resolution Code — resolution is owned by the Complaints Agent role" },
+      { "key": "tickets.detail-view", "level": "Edit", "restrictions": "Cannot set Resolution Code - resolution is owned by the Complaints Agent role" },
       { "key": "tickets.field-templates", "level": "View" },
       { "key": "enterprise.billing-profile-grid", "level": "View" },
       { "key": "billing.statement-of-account", "level": "View" },
@@ -412,7 +412,7 @@
       { "key": "workspace.task-list", "level": "Edit" },
       { "key": "workspace.task-detail", "level": "Edit" },
       { "key": "tickets.dashboard", "level": "Create" },
-      { "key": "tickets.detail-view", "level": "Edit", "restrictions": "Cannot set Resolution Code — resolution is owned by the Complaints Agent role" },
+      { "key": "tickets.detail-view", "level": "Edit", "restrictions": "Cannot set Resolution Code - resolution is owned by the Complaints Agent role" },
       { "key": "numbers.sim-swap-queue", "level": "Create" },
       { "key": "numbers.ton-wizard", "level": "Create" },
       { "key": "identity.passport-to-qid", "level": "Create" },
@@ -451,7 +451,7 @@
       { "key": "leads.list-views", "level": "Edit" },
       { "key": "leads.detail-actions", "level": "Edit" },
       { "key": "tickets.dashboard", "level": "View" },
-      { "key": "tickets.detail-view", "level": "Edit", "restrictions": "Cannot set Resolution Code — resolution is owned by the Complaints Agent role" },
+      { "key": "tickets.detail-view", "level": "Edit", "restrictions": "Cannot set Resolution Code - resolution is owned by the Complaints Agent role" },
       { "key": "orders.my-sales-orders", "level": "Create" },
       { "key": "search.global-search-screen", "level": "View" }
     ],
@@ -887,6 +887,6 @@
       { "key": "search.global-search-screen", "level": "View" }
     ],
     "legacyPersonaIds": ["PERSONA-059"],
-    "provenance": "Added 2026-09-24 to own ticket resolution — the 25-row role table has no Complaints Team successor to PERSONA-059, and widening resolution to every care agent would have discarded the documented raise-vs-resolve separation (BR-067 / RBAC-132)"
+    "provenance": "Added 2026-09-24 to own ticket resolution - the 25-row role table has no Complaints Team successor to PERSONA-059, and widening resolution to every care agent would have discarded the documented raise-vs-resolve separation (BR-067 / RBAC-132)"
   }
 ]

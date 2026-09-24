@@ -14,14 +14,14 @@ interface WinCashPaymentStepProps {
   onChange: (value: WinCashPaymentValue) => void;
 }
 
-// Gate 3 of the reference activation flow — WinCash/POS + inventory sync,
+// Gate 3 of the reference activation flow - WinCash/POS + inventory sync,
 // evidenced as WinCash stock check/reservation + signature pad + WinCash
 // payment (business-workshop-day5-session-2-postpaid-service, UJ-042).
 // FLD-634/635 (Reason dropdown for FREE-type sales, Generate CAF button
-// triggering "Validating Order, please wait...") — CAF generation is a prior
+// triggering "Validating Order, please wait...") - CAF generation is a prior
 // wizard step now (Checkout -> CAF -> Payment, matching the reference order).
 // A real POS's decline path isn't reproducible client-side, so "Simulate
-// Decline" stands in for a genuinely failed authorization — Retry re-attempts
+// Decline" stands in for a genuinely failed authorization - Retry re-attempts
 // the same amount; per the reference's exception table, Cancel is handled by
 // the wizard's own Abandon Order control (top of the step panel), not
 // duplicated here, so a cancelled order still releases its SIM reservation
@@ -61,7 +61,7 @@ export function WinCashPaymentStep({ amountDueQAR, value, onChange }: WinCashPay
                 <Badge variant="danger">Payment declined</Badge>
               </div>
               <p className="text-[length:var(--fs-caption)] text-fg">
-                WinCash declined the authorization. Retry the same amount, or use Abandon Order above to cancel — abandoning releases the SIM
+                WinCash declined the authorization. Retry the same amount, or use Abandon Order above to cancel - abandoning releases the SIM
                 reservation.
               </p>
             </div>

@@ -6,7 +6,7 @@ import { resolveRoleFromStaffId } from './staffIdRoleMap';
 import { passwordPolicyError } from './passwordPolicy';
 import { useNotificationStore } from '../stores/notificationStore';
 
-// Placeholder verification code — VFQ Security has not confirmed whether an
+// Placeholder verification code - VFQ Security has not confirmed whether an
 // Authcode or OTP is used for forgot-password identification (OI-AGN-05).
 const DEMO_VERIFICATION_CODE = '123456';
 
@@ -79,13 +79,13 @@ export function ForgotPasswordFlow({ open, onClose, initialStaffId = '' }: Forgo
     }
     setPasswordError(null);
     setStep('done');
-    pushToast('success', 'Password reset — sign in with your new password.');
+    pushToast('success', 'Password reset - sign in with your new password.');
   };
 
   const titleFor: Record<Step, string> = {
-    identify: 'Forgot password — identify yourself',
-    verify: 'Forgot password — verify identity',
-    reset: 'Forgot password — create new password',
+    identify: 'Forgot password - identify yourself',
+    verify: 'Forgot password - verify identity',
+    reset: 'Forgot password - create new password',
     done: 'Password reset',
   };
 
@@ -104,7 +104,7 @@ export function ForgotPasswordFlow({ open, onClose, initialStaffId = '' }: Forgo
       {step === 'verify' && (
         <div className="space-y-3">
           <p className="text-fg-2 text-[length:var(--fs-body)]">
-            Enter the verification code sent to your registered contact. (Demo code: {DEMO_VERIFICATION_CODE} — pending VFQ
+            Enter the verification code sent to your registered contact. (Demo code: {DEMO_VERIFICATION_CODE} - pending VFQ
             Security's real Authcode/OTP method.)
           </p>
           <Input label="Verification code" value={code} onChange={(e) => setCode(e.target.value)} error={codeError ?? undefined} />

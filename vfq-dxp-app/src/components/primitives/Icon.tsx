@@ -1,4 +1,4 @@
-// Lightweight inline stroke-icon primitive — no icon library dependency.
+// Lightweight inline stroke-icon primitive - no icon library dependency.
 // Path data is hand-authored per icon, not pulled from a design-system spec.
 export function Icon({ path, className = 'w-5 h-5' }: { path: string; className?: string }) {
   return (

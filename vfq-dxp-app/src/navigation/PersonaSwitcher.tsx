@@ -26,7 +26,7 @@ const ICONS = {
 };
 
 // Top bar: theme toggle, notifications, help, and a profile chip (with
-// "Logged in as" role-switching moved into its dropdown) — replaces the
+// "Logged in as" role-switching moved into its dropdown) - replaces the
 // earlier plain "Logged in as [Select] · Sign out" bar. Persona switching
 // itself is unchanged (frontend-architecture.md §8's dev/demo "login-as"
 // control, not a real auth boundary); it's just relocated.
@@ -63,8 +63,8 @@ export function PersonaSwitcher() {
 
   const initials = profile ? `${profile.name.split(' ')[0][0]}${profile.name.split(' ').slice(-1)[0][0]}` : '??';
 
-  // Switching role must fully swap the displayed identity too — not just the
-  // RBAC-driving personaId — otherwise the profile chip keeps showing the
+  // Switching role must fully swap the displayed identity too - not just the
+  // RBAC-driving personaId - otherwise the profile chip keeps showing the
   // login-time agent even after picking a different role, which is what
   // made this look like it required a sign-out/sign-in to take effect.
   const handleRoleSwitch = async (personaId: string) => {
@@ -173,7 +173,7 @@ export function PersonaSwitcher() {
             </span>
             <span className="text-left">
               <span className="block text-fg text-[length:var(--fs-caption)] font-medium leading-tight">{profile?.name ?? staffId}</span>
-              <span className="block text-muted text-[length:var(--fs-micro)] leading-tight">{profile?.team ?? '—'}</span>
+              <span className="block text-muted text-[length:var(--fs-micro)] leading-tight">{profile?.team ?? '-'}</span>
             </span>
             <Icon path={ICONS.chevronDown} className="w-3.5 h-3.5 text-muted" />
           </button>
@@ -182,7 +182,7 @@ export function PersonaSwitcher() {
               <div className="px-4 py-3">
                 <p className="text-fg font-medium">{profile?.name ?? staffId}</p>
                 <p className="text-muted text-[length:var(--fs-caption)]">
-                  {staffId} · {profile?.jobTitle ?? '—'}
+                  {staffId} · {profile?.jobTitle ?? '-'}
                 </p>
               </div>
               <Link

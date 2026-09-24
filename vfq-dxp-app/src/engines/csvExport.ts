@@ -1,4 +1,4 @@
-// Agent 360 AEX-02: client-side CSV generation for entity export — no
+// Agent 360 AEX-02: client-side CSV generation for entity export - no
 // backend export endpoint exists (or is planned; INT-AGT-002 is still
 // "Open"), so this builds the file directly from whatever the agent already
 // has loaded via entityStore and triggers a browser download.

@@ -23,7 +23,7 @@ interface NotificationState {
 
 const HISTORY_LIMIT = 30;
 
-// In-memory only per frontend-architecture.md §4 — toasts (and their history)
+// In-memory only per frontend-architecture.md §4 - toasts (and their history)
 // don't survive reload. `history` backs the notification bell in the top bar,
 // keeping every toast this session ever pushed (capped) even after its
 // dismissible copy in `toasts` is closed.

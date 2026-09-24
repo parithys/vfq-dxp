@@ -24,7 +24,7 @@ interface CafValue {
 
 const WIZARD_ID = 'pre-to-post-manual';
 
-// SCR-177: Postpaid - Contact wizard step (Pre-to-Post) — UJ-086 manual
+// SCR-177: Postpaid - Contact wizard step (Pre-to-Post) - UJ-086 manual
 // conversion (agent-initiated, not system-recommended): "enter prepaid number,
 // confirm identity -> Plan step (manually search/apply postpaid promotion) ->
 // CAF auto-generated bilingual form, e-signature -> Sales Order created
@@ -97,7 +97,7 @@ export function NewPreToPostWizard() {
             comments: values.comments,
             status: 'Complete',
           });
-          pushToast('success', `Order ${orderId} created — prepaid to postpaid conversion complete.`);
+          pushToast('success', `Order ${orderId} created - prepaid to postpaid conversion complete.`);
           navigate('/pre-to-post-migration');
         }}
         onAbandon={() => navigate('/pre-to-post-migration')}

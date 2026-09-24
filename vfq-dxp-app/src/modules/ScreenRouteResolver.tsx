@@ -3,7 +3,7 @@ import { getAllRoutes } from '../engines/configEngine';
 import { getScreenComponent } from './screenRegistry';
 import { ScreenNotYetBuilt } from './ScreenNotYetBuilt';
 
-// router.tsx generated from config/routes.json (213 entries) — ScreenComponent
+// router.tsx generated from config/routes.json (213 entries) - ScreenComponent
 // resolved via the screenId -> component registry per folder-structure.md's
 // "Route generation" note, falling back to ScreenNotYetBuilt.
 export function ScreenRouteResolver() {

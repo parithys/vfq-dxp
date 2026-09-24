@@ -9,7 +9,7 @@ export interface TabItem {
 
 // Backs Customer 360 / Account 360 (Pattern 3) per component-catalogue.md §1.
 // `orientation` defaults to the original horizontal underline tab-bar (every
-// existing consumer keeps that look unchanged) — 'vertical' renders the same
+// existing consumer keeps that look unchanged) - 'vertical' renders the same
 // tokens/states (border-accent/text-accent active, border-transparent/text-fg-2
 // idle) as a left-hand nav list instead, for consumers with many tabs where a
 // side list reads better than a wide underline bar.
@@ -23,7 +23,7 @@ export function Tabs({
   items: TabItem[];
   defaultKey?: string;
   orientation?: 'horizontal' | 'vertical';
-  /** Controlled active tab — pass alongside onChange when a parent needs to
+  /** Controlled active tab - pass alongside onChange when a parent needs to
    * know/drive which tab is active (e.g. to reflect it in a breadcrumb).
    * Omit both for the original self-managed behavior. */
   activeKey?: string;

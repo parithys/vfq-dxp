@@ -30,7 +30,7 @@ interface PrepaidPlanStepProps {
 }
 
 // MPRA_001_QPC_01–04 (Product Catalogue and Cart: prepaid plan/add-on
-// selection, cart build, special discount) — the prepaid counterpart of
+// selection, cart build, special discount) - the prepaid counterpart of
 // PostpaidPlanAddonsStep. No Bill Limit / add-ons picker here: BR-002/BR-005
 // exclude credit limit and bill cycle entirely from Prepaid Activation, and
 // prepaid has no evidenced telco add-on catalogue distinct from the starter
@@ -97,7 +97,7 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
                       <div>
                         <div className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Data</div>
                         <div className="text-fg text-[length:var(--fs-caption)]">
-                          {p.dataAllowanceGB ? `${p.dataAllowanceGB} GB` : '—'}
+                          {p.dataAllowanceGB ? `${p.dataAllowanceGB} GB` : '-'}
                         </div>
                       </div>
                       <div>
@@ -107,7 +107,7 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
                       <div>
                         <div className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Validity</div>
                         <div className="text-fg text-[length:var(--fs-caption)]">
-                          {p.packValidityDays ? `${p.packValidityDays} days` : '—'}
+                          {p.packValidityDays ? `${p.packValidityDays} days` : '-'}
                         </div>
                       </div>
                     </div>
@@ -139,7 +139,7 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
                     <span className="block text-[length:var(--fs-caption)] text-muted">Continue without a discount</span>
                   </span>
                 </span>
-                <span className="text-muted">—</span>
+                <span className="text-muted">-</span>
               </label>
               {discounts.map((d) => (
                 <label

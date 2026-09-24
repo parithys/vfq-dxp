@@ -30,7 +30,7 @@ interface MigrationOffer {
 
 const WIZARD_ID = 'base-management';
 
-// SCR-180: Base Management wizard — UJ-087 Autobase, 3-step accordion
+// SCR-180: Base Management wizard - UJ-087 Autobase, 3-step accordion
 // ("1. Contact", "2. Offer Summary", "3. Activity"). Offer Summary's Bill
 // Limit follows the same evidenced "Default Smart Limit should be
 // communicated to the customer" behaviour as Postpaid/MNP (BR-AGENT-MIN-THRESHOLD),
@@ -45,7 +45,7 @@ export function BaseManagementWizard() {
   if (!offer) {
     return (
       <div className="p-8 text-fg-2">
-        No migration offer accepted yet — go to the Migration Offer tab and Accept an offer first.
+        No migration offer accepted yet - go to the Migration Offer tab and Accept an offer first.
       </div>
     );
   }
@@ -143,7 +143,7 @@ export function BaseManagementWizard() {
             overallStatus: 'Processed',
             updatedAt: new Date().toISOString(),
           });
-          pushToast('success', `Order ${orderId} created — migration handed off to Bulk Job ${bulkOrderId} (PreToPost).`);
+          pushToast('success', `Order ${orderId} created - migration handed off to Bulk Job ${bulkOrderId} (PreToPost).`);
           navigate('/pre-to-post-migration/bulk-jobs-bulk-processing-screen-tm-bulk-batch-list-applet');
         }}
         onAbandon={() => navigate('/pre-to-post-migration')}

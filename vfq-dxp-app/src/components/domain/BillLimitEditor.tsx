@@ -15,9 +15,9 @@ interface BillLimitEditorProps {
   onChange: (value: number, pass: boolean) => void;
 }
 
-// Pattern 8: Plan/Promotion Detail Modal with Limit Editing — "Edit Bill Limit"
+// Pattern 8: Plan/Promotion Detail Modal with Limit Editing - "Edit Bill Limit"
 // button revealing a constrained value; Validate fires when a limit falls below
-// the Agent Minimum guardrail (SCR-166/167/188) — the priority rule
+// the Agent Minimum guardrail (SCR-166/167/188) - the priority rule
 // implementation named in frontend-architecture.md §5, reused here via the
 // same BR-AGENT-MIN-THRESHOLD rule already exercised by the field-inventory's
 // evidenced Bill Limit Agent Minimum behavior.

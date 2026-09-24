@@ -19,7 +19,7 @@ interface ContactPhoneInputProps {
   value: string;
   onChange: (value: string) => void;
   /** Saved-contacts panel is scoped to this customer's own `customer-contacts`
-   * records — omitted entirely (chevron/panel not rendered) when there's no
+   * records - omitted entirely (chevron/panel not rendered) when there's no
    * active customer to source it from, rather than showing an empty panel. */
   customerId?: string;
   placeholder?: string;
@@ -37,7 +37,7 @@ function initials(firstName: string, lastName: string): string {
 
 // Mobile-number field with a saved-contacts picker, per Contact-Open.svg.
 // Sourced from the customer's real `customer-contacts` records (cellNumber +
-// name) — the mockup's per-row "Primary" badge and photo avatars have no
+// name) - the mockup's per-row "Primary" badge and photo avatars have no
 // backing field in that dataset, so this renders initials avatars and omits
 // the badge rather than fabricating either.
 export function ContactPhoneInput({

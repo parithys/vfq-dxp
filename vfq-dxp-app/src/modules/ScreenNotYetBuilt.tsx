@@ -2,7 +2,7 @@ import { useLocation } from 'react-router-dom';
 import { getAllRoutes } from '../engines/configEngine';
 import { NotYetBuiltPanel } from './NotYetBuiltPanel';
 
-// Honest placeholder per CLAUDE.md's evidence model — never silently invent a
+// Honest placeholder per CLAUDE.md's evidence model - never silently invent a
 // screen's behavior. Shows exactly what IS evidenced about this screen
 // (blueprint/screens.md) so a future build session knows where to pick up,
 // rather than a blank 404.

@@ -14,7 +14,7 @@ interface AddonsPickerProps {
   onChange: (ids: string[]) => void;
 }
 
-// "Plan & Add-ons" (reference flow step 5) — optional, non-gating multi-select
+// "Plan & Add-ons" (reference flow step 5) - optional, non-gating multi-select
 // of catalogue products where type === 'Add-on', alongside the mandatory
 // single-select Plan above it in ProductPlanStep.
 export function AddonsPicker({ selectedIds, onChange }: AddonsPickerProps) {

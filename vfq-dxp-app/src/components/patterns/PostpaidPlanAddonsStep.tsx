@@ -39,17 +39,17 @@ interface PostpaidPlanAddonsStepProps {
   onAddonsChange: (ids: string[]) => void;
   billLimit: number | undefined;
   onBillLimitChange: (amount: number, pass: boolean) => void;
-  /** Agent 360... no — Agent 360 doesn't apply here; this is BR-076's
+  /** Agent 360... no - Agent 360 doesn't apply here; this is BR-076's
    * eligibility-derived default (EligibilityGateStep), shown read-only so
    * the agent sees what limit this activation was pre-qualified against. */
   defaultCreditLimitQar: number | undefined;
 }
 
-// "RED Plan" & "Eligible Discounts" — Mobile Postpaid's Plan & Add-ons step
+// "RED Plan" & "Eligible Discounts" - Mobile Postpaid's Plan & Add-ons step
 // (SCR-156, reference 12-step flow position 5). Plan tiers use the evidenced
 // "Postpaid Red <price> Promotion" naming family (field-inventory.md's
 // Pre-to-Post guided-journey Plan step, stage-k-remining.md) rather than
-// inventing a naming scheme — the specific price/data/speed values per tier
+// inventing a naming scheme - the specific price/data/speed values per tier
 // aren't individually evidenced beyond that naming pattern, so they're
 // representative demo catalogue entries like the rest of products.json.
 // Discounts read the (previously unused) "Discount" category of
@@ -156,7 +156,7 @@ export function PostpaidPlanAddonsStep({
             <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4">
               <h4 className="text-fg font-semibold">Credit Limit</h4>
               <p className="text-muted text-[length:var(--fs-caption)] mb-2">
-                Derived from the eligibility check (BR-076) — not amendable.
+                Derived from the eligibility check (BR-076) - not amendable.
               </p>
               <div className="rounded-[var(--field-radius)] border border-[var(--field-border-disabled)] bg-bg px-3 py-2 text-[var(--field-label-disabled)]">
                 QAR {defaultCreditLimitQar.toLocaleString()}
@@ -186,7 +186,7 @@ export function PostpaidPlanAddonsStep({
                     <span className="block text-[length:var(--fs-caption)] text-muted">Continue without a discount</span>
                   </span>
                 </span>
-                <span className="text-muted">—</span>
+                <span className="text-muted">-</span>
               </label>
               {discounts.map((d) => (
                 <label

@@ -51,7 +51,7 @@ export function LeadDetailsView() {
   const lead = leads.find((l) => l.leadId === leadId) ?? leads[0];
 
   if (!lead) {
-    return <div className="p-8 text-fg-2">No lead selected — go back to a lead list and pick a row.</div>;
+    return <div className="p-8 text-fg-2">No lead selected - go back to a lead list and pick a row.</div>;
   }
 
   const filteredAgents = agents.filter((a) => a.lastName.toLowerCase().includes(ownerFilter.toLowerCase()));
@@ -80,7 +80,7 @@ export function LeadDetailsView() {
 
   const submitCallback = async () => {
     await updateRecord('leads', 'leadId', lead.leadId, { callbackDate: callbackDraft, status: 'In Progress', subStatus: 'Call Back' });
-    pushToast('success', `Callback set for ${callbackDraft} — Lead Status auto-transitioned to In Progress / Call Back.`);
+    pushToast('success', `Callback set for ${callbackDraft} - Lead Status auto-transitioned to In Progress / Call Back.`);
     setModal(null);
   };
 
@@ -93,17 +93,17 @@ export function LeadDetailsView() {
               <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">Lead {lead.leadId}</h1>
               <Badge variant={lead.status === 'Rejected' ? 'danger' : 'outlined-red'}>{lead.status}</Badge>
             </div>
-            <p className="text-fg-2">{lead.serviceNeeded} — owned by {lead.ownerId}</p>
+            <p className="text-fg-2">{lead.serviceNeeded} - owned by {lead.ownerId}</p>
           </div>
 
           <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)] rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
             <div>
               <dt className="text-[length:var(--fs-caption)] text-muted">Sub Status</dt>
-              <dd className="text-fg">{lead.subStatus ?? '—'}</dd>
+              <dd className="text-fg">{lead.subStatus ?? '-'}</dd>
             </div>
             <div>
               <dt className="text-[length:var(--fs-caption)] text-muted">Callback Date</dt>
-              <dd className="text-fg">{lead.callbackDate ?? '—'}</dd>
+              <dd className="text-fg">{lead.callbackDate ?? '-'}</dd>
             </div>
             <div>
               <dt className="text-[length:var(--fs-caption)] text-muted">Fixed Pre-Sales</dt>
@@ -115,7 +115,7 @@ export function LeadDetailsView() {
             </div>
             <div className="col-span-2">
               <dt className="text-[length:var(--fs-caption)] text-muted">Description</dt>
-              <dd className="text-fg">{lead.description ?? '—'}</dd>
+              <dd className="text-fg">{lead.description ?? '-'}</dd>
             </div>
           </dl>
         </div>

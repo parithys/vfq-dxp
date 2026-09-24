@@ -29,7 +29,7 @@ export default function App() {
   }, [theme]);
 
   // Agent 360 APM-09: the app's own strings aren't translated (no Arabic
-  // copy exists anywhere in the source corpus — D-03 leaves language
+  // copy exists anywhere in the source corpus - D-03 leaves language
   // completeness open), but layout mirroring is a real, honest effect of
   // an Arabic preference that doesn't require inventing translated text.
   useEffect(() => {

@@ -25,7 +25,7 @@
     "cancelReason": null,
     "excludedFromReporting": false,
     "publicNotes": [],
-    "_note": "Fresh, unassigned, well within SLA — the baseline happy-path ticket for assignment/resolution testing."
+    "_note": "Fresh, unassigned, well within SLA - the baseline happy-path ticket for assignment/resolution testing."
   },
   {
     "ticketId": "TT-40002",
@@ -55,7 +55,7 @@
     "cancelReason": null,
     "excludedFromReporting": false,
     "publicNotes": [],
-    "_note": "Closed 3 days before the 2026-09-11 demo date — within the 7-day reopen window (P-12 placeholder), so Reopen should succeed here."
+    "_note": "Closed 3 days before the 2026-09-11 demo date - within the 7-day reopen window (P-12 placeholder), so Reopen should succeed here."
   },
   {
     "ticketId": "TT-40003",
@@ -88,7 +88,7 @@
     "cancelReason": null,
     "excludedFromReporting": false,
     "publicNotes": [],
-    "_note": "HRN customer (CUST-1002, Expatriate SLA target 48h), createdAt in the past relative to 2026-09-11 so slaDueAt has already elapsed — a real, already-breached SLA/RAG-Red/auto-escalated demo ticket."
+    "_note": "HRN customer (CUST-1002, Expatriate SLA target 48h), createdAt in the past relative to 2026-09-11 so slaDueAt has already elapsed - a real, already-breached SLA/RAG-Red/auto-escalated demo ticket."
   },
   {
     "ticketId": "TT-40004",
@@ -116,7 +116,7 @@
     "cancelReason": null,
     "excludedFromReporting": false,
     "publicNotes": [],
-    "_note": "Closed well over 7 days before the 2026-09-11 demo date — outside the reopen window, so Reopen should be rejected with the RES-10 guidance message."
+    "_note": "Closed well over 7 days before the 2026-09-11 demo date - outside the reopen window, so Reopen should be rejected with the RES-10 guidance message."
   },
   {
     "ticketId": "TT-40005",
@@ -146,6 +146,6 @@
     "cancelReason": null,
     "excludedFromReporting": false,
     "publicNotes": [],
-    "_note": "Enterprise customer (CUST-2001, segment 'Enterprise (EBU)') — demonstrates CRE-16 priority derivation locking to 1-ASAP rather than the agent picking freely."
+    "_note": "Enterprise customer (CUST-2001, segment 'Enterprise (EBU)') - demonstrates CRE-16 priority derivation locking to 1-ASAP rather than the agent picking freely."
   }
 ]

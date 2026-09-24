@@ -4,7 +4,7 @@ import { Button } from '../../../components/primitives/Button';
 import { NewSimSwapWizard } from './NewSimSwapWizard';
 import { useEnterToSubmit } from '../../../hooks/useEnterToSubmit';
 
-// SCR-195: Global Search — UJ-090: "Click Global Search icon -> Enter MSISDN
+// SCR-195: Global Search - UJ-090: "Click Global Search icon -> Enter MSISDN
 // and click Go -> Click SIM Swap option." The SIM Swap wizard itself has no
 // separate evidenced screenId, so it's rendered inline here once "SIM Swap"
 // is clicked, matching the single-screen flow described in the journey.

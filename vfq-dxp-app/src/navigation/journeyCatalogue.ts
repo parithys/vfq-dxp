@@ -15,7 +15,7 @@
 //               roles (a Field Engineer should not be shown "Change Postpaid
 //               Plan" just because it is unbuilt).
 //
-//   status      Product judgement, authored — NOT derived from built-ness.
+//   status      Product judgement, authored - NOT derived from built-ness.
 //               'available' means the journey has a working end-to-end entry
 //               point; 'partly' means only part of it is reachable (e.g. the
 //               SIM swap QUEUE exists but the replacement journey does not);
@@ -23,7 +23,7 @@
 //               registerScreen() alone would over-promise: numbers.management-
 //               portal is built, but that does not make "Special / Gold Number"
 //               a finished journey. validateJourneyCatalogue() guards the one
-//               thing that must hold — an 'available' journey must resolve to a
+//               thing that must hold - an 'available' journey must resolve to a
 //               screen that is actually registered.
 
 export type JourneyStatus = 'available' | 'partly' | 'planned';
@@ -42,7 +42,7 @@ export interface Journey {
 
 export interface JourneyCategory {
   key: string;
-  /** Pill label — deliberately shorter than the section heading. */
+  /** Pill label - deliberately shorter than the section heading. */
   label: string;
   heading: string;
   description: string;
@@ -235,7 +235,7 @@ export const PRODUCT_LINE_BY_KEY = new Map(PRODUCT_LINES.map((l) => [l.key, l]))
  * Takes the predicate rather than importing personaEngine so this file stays
  * pure data + selectors, and so both the sidebar (navigationEngine) and the
  * page (ProductLinePage) filter through exactly the same rule. They diverged
- * once — the page hid empty categories while the rail still listed all five,
+ * once - the page hid empty categories while the rail still listed all five,
  * so a role could click a sub-menu item and land on someone else's content. */
 export function visibleJourneys(
   category: JourneyCategory,
@@ -257,8 +257,8 @@ export function visibleJourneys(
 /** Categories in this line the role can reach.
  *
  * A gated category needs at least one granted journey. A roadmap-only category
- * rides along with the line — the same rule as a roadmap journey within a
- * category, one level up — but only if the role reaches the line at all, so a
+ * rides along with the line - the same rule as a roadmap journey within a
+ * category, one level up - but only if the role reaches the line at all, so a
  * role with no business in Mobile doesn't inherit Mobile's roadmap. */
 export function reachableCategories(
   lineKey: ProductLine['key'],

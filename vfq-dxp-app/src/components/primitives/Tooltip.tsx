@@ -6,22 +6,22 @@ import { useTooltipGroup } from './TooltipContext';
 type Placement = 'top' | 'right' | 'bottom' | 'left';
 
 export interface TooltipProps {
-  /** The tooltip copy — a label (1-5 words), not documentation. */
+  /** The tooltip copy - a label (1-5 words), not documentation. */
   content: ReactNode;
   /** A single interactive element: icon button, control, chip, etc. */
   children: ReactElement;
-  /** Default "right" — matches sidebar/toolbar icon-row convention. */
+  /** Default "right" - matches sidebar/toolbar icon-row convention. */
   placement?: Placement;
   /** Skip wrapping when the control already has a visible, permanent label. */
   disabled?: boolean;
   /** Measure the gap from this element's edge instead of the trigger's, on
-   * the axis the tooltip extends along. Only the axis moves — the tooltip
+   * the axis the tooltip extends along. Only the axis moves - the tooltip
    * still centres on the trigger across it.
    *
    * For triggers that sit INSET inside a surface the tooltip should line up
    * with. The collapsed nav rail is the case: its icon buttons are inset by
    * 8px, so a tooltip measured from the button lands 8px left of the sub-menu
-   * flyouts, which measure from the rail edge — two hover overlays on the same
+   * flyouts, which measure from the rail edge - two hover overlays on the same
    * rail, at two different x positions.
    *
    * A ref, not an element: a leaf row's hover doesn't re-render the Sidebar,
@@ -32,7 +32,7 @@ export interface TooltipProps {
 
 const VIEWPORT_MARGIN = 8;
 
-// Portal-rendered hover/focus tooltip — see .claude/skills/hover-tooltip.
+// Portal-rendered hover/focus tooltip - see .claude/skills/hover-tooltip.
 // Never nested inline (would get clipped by ancestor overflow:hidden), never
 // a native title="" (inconsistent OS-level delay, no touch support).
 export function Tooltip({ content, children, placement = 'right', disabled = false, anchorRef }: TooltipProps) {

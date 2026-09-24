@@ -32,7 +32,7 @@ function subtitle(a: AddressRecord): string {
   return `Building ${a.buildingNo}, ${a.aptFlatUnit}, ${a.city}`;
 }
 
-// Searchable location field per Location-Open.svg — queries the app's real
+// Searchable location field per Location-Open.svg - queries the app's real
 // seeded `addresses` dataset (zone/street/building/city, the same ZSBU model
 // ZsbAddressStep/AddressSelectionStep already use) rather than a fabricated
 // landmark/POI list, since no such dataset exists in this project's corpus.

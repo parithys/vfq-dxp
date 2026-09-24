@@ -10,7 +10,7 @@ const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'filled-
 };
 
 // Same underlying `orders` records the cross-customer Orders workspace
-// shows, filtered to this customer by customer360Engine — not a separate
+// shows, filtered to this customer by customer360Engine - not a separate
 // data source, so there's nothing to keep in sync.
 export function OrdersSection({ data }: { data: Customer360Data }) {
   const navigate = useNavigate();

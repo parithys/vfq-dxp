@@ -5,20 +5,20 @@ const OPTIONS = [
   {
     type: 'postpaid',
     title: 'Postpaid Port-In',
-    description: 'Port an existing number onto a Vodafone postpaid plan — billing profile, bill limit and credit checks apply.',
+    description: 'Port an existing number onto a Vodafone postpaid plan - billing profile, bill limit and credit checks apply.',
   },
   {
     type: 'prepaid',
     title: 'Prepaid Port-In',
-    description: 'Port an existing number onto a Vodafone prepaid pack — balance-based, no billing profile or bill limit.',
+    description: 'Port an existing number onto a Vodafone prepaid pack - balance-based, no billing profile or bill limit.',
   },
 ] as const;
 
-// SCR-120: MNP Guided Process - Choose process — module-hierarchy.json's
+// SCR-120: MNP Guided Process - Choose process - module-hierarchy.json's
 // "MNP guided process presents Postpaid/Prepaid choice before data entry"
 // capability. Both options lead into the same guided wizard (SCR-121 etc.,
 // NewMnpWizard) via a `type` query param the wizard branches its step list
-// and submission logic on, rather than forking into two separate wizards —
+// and submission logic on, rather than forking into two separate wizards -
 // VAL-332–335's Donor Details fields are explicitly evidenced as shared
 // across "Postpaid/Prepaid MNP journeys," confirming this is one guided
 // process with a choice gate, not two.

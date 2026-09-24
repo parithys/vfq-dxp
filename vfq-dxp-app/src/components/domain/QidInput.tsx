@@ -12,7 +12,7 @@ interface QidInputProps {
   onFetch: () => void;
   fetching?: boolean;
   error?: string;
-  /** Lets the owner move the cursor into the number field — used after an ID
+  /** Lets the owner move the cursor into the number field - used after an ID
    * Type switch clears it, so the agent lands on the field they must retype
    * rather than on the chip they just clicked. */
   inputRef?: Ref<HTMLInputElement>;
@@ -33,7 +33,7 @@ const ID_TYPES: { type: QidType; label: string; numberLabel: string; icon: strin
 ];
 
 // QID/Passport/GCC/Diplomatic ID lookup control, per component-catalogue.md §2
-// (ENT-023/037 Customer/Contact) — a 4-way ID Type card selector (only QID and
+// (ENT-023/037 Customer/Contact) - a 4-way ID Type card selector (only QID and
 // Passport have evidenced identity-documents records to resolve against; GCC
 // ID/Diplomatic ID are included as selectable per the reference but have no
 // seeded MOI matches yet) driving the label/placeholder of a single number

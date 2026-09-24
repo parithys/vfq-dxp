@@ -11,7 +11,7 @@ interface EntityState {
   updateRecord: (kind: EntityKind, idField: string, id: string, patch: Record<string, unknown>) => Promise<void>;
 }
 
-// The "database" — IndexedDB-backed in a full build (frontend-architecture.md §4);
+// The "database" - IndexedDB-backed in a full build (frontend-architecture.md §4);
 // this in-memory-per-session version keeps the demo dependency-light while
 // preserving the same engine boundary (components never call mockDataEngine directly).
 export const useEntityStore = create<EntityState>((set, get) => ({

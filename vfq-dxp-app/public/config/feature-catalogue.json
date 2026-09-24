@@ -64,7 +64,7 @@
   },
   {
     "key": "workspace.admin-role-access-viewer",
-    "name": "Administration — roles & access viewer",
+    "name": "Administration - roles & access viewer",
     "area": "Administration",
     "surface": "workspace",
     "screenIds": []
@@ -79,7 +79,7 @@
   },
   {
     "key": "fixedline.wfm-activity-details",
-    "name": "WFM Activity Details — Admin/Technician view",
+    "name": "WFM Activity Details - Admin/Technician view",
     "area": "Fixed Line / Fibre",
     "surface": "module",
     "screenIds": ["SCR-110"]

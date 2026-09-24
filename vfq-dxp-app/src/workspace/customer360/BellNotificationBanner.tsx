@@ -18,7 +18,7 @@ interface BellNotification {
 const BELL_ICON = 'M6 8a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 12 6 8z M9.5 17a2.5 2.5 0 0 0 5 0';
 
 // Human-readable lead-in derived from the template a notification was
-// published from — turns one long sentence into a scannable title +
+// published from - turns one long sentence into a scannable title +
 // description, using data already on the record rather than inventing new
 // fields (e.g. a linked order, which no bell-notification record carries).
 const TEMPLATE_TITLE: Record<string, string> = {
@@ -29,18 +29,18 @@ const TEMPLATE_TITLE: Record<string, string> = {
 
 // Agent 360 BIN-03/04/05/06: banner visible across Customer 360 for this
 // customer only (BIN-04), latest-first (BIN-05), no dismiss/expire action
-// exposed to the agent (BIN-06) — it disappears on its own once expiresAt
+// exposed to the agent (BIN-06) - it disappears on its own once expiresAt
 // passes (BIN-07), evaluated client-side against "now" on every render.
 // BIN-04's "access permissions" clause is more than customerId scoping: the
 // viewing persona must also be a genuine internal agent (see
-// agentPrivilegeEngine.ts) — external/customer-side/system-type personas
+// agentPrivilegeEngine.ts) - external/customer-side/system-type personas
 // never see internal notification banners, regardless of which customer
 // record they're looking at.
 export function BellNotificationBanner({ customerId }: { customerId: string }) {
   const notifications = (useEntityStore((s) => s.records['bell-notifications']) ?? []) as unknown as BellNotification[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
-  // Captured once per mount rather than read impurely during render — this
+  // Captured once per mount rather than read impurely during render - this
   // page is short-lived enough (an agent viewing one customer) that
   // re-evaluating expiry only on mount/data-change, not on every render, is
   // an acceptable trade-off for a demo/mock environment.

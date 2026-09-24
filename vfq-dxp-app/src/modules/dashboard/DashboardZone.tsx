@@ -49,7 +49,7 @@ export interface ZoneSpec {
   tiles: ZoneTile[];
   cards: ZoneCard[];
   actions: ZoneAction[];
-  /** Rendered under the cards — recently viewed customers, or recently
+  /** Rendered under the cards - recently viewed customers, or recently
    * updated catalogue items. */
   listTitle?: string;
   listEmpty?: string;
@@ -81,7 +81,7 @@ export function DashboardZone({
   const clearActiveCustomer = useActiveCustomerStore((s) => s.clearActiveCustomer);
 
   // A collapsed zone still renders its heading so the Focus control's effect is
-  // legible — you can see what you de-emphasised rather than it vanishing.
+  // legible - you can see what you de-emphasised rather than it vanishing.
   if (size === 'collapsed') {
     return (
       <section className="rounded-[var(--radius-card)] border border-border-soft bg-bg px-5 py-4">
@@ -108,7 +108,7 @@ export function DashboardZone({
   };
 
   const value = (v: string | number, kind?: string) => {
-    if (kind && loading[kind]) return '—';
+    if (kind && loading[kind]) return '-';
     if (kind && errors[kind]) {
       return (
         <span className="text-danger text-[length:var(--fs-body)]" title={errors[kind]}>
@@ -174,7 +174,7 @@ export function DashboardZone({
       )}
 
       {/* Quick actions are suppressed entirely for a read-only role rather than
-          rendered disabled — a row of dead buttons is worse than their absence. */}
+          rendered disabled - a row of dead buttons is worse than their absence. */}
       {!readOnly && spec.actions.length > 0 && (
         <>
           <h3 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-3">Quick actions</h3>

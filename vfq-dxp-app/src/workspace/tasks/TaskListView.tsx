@@ -34,7 +34,7 @@ const FILTER_LABELS: Record<string, string> = {
 
 // Agent 360 ATV-01/04: the task dashboard's 5 category tiles drill into this
 // filtered list; selecting a row opens the task detail (ATV-04). Filtering
-// logic mirrors Dashboard.tsx's tile counts exactly — see that file's
+// logic mirrors Dashboard.tsx's tile counts exactly - see that file's
 // comment on how the 5 BRSD categories map onto taskStatus/taskType/
 // priorityFlag, since the BRSD itself leaves the derivation open (OI-AGN-14/18).
 export function TaskListView() {
@@ -51,7 +51,7 @@ export function TaskListView() {
     loadKind('tasks');
   }, [loadKind]);
 
-  // ATV-02 — see Dashboard.tsx's tile counts for the same rule; kept
+  // ATV-02 - see Dashboard.tsx's tile counts for the same rule; kept
   // consistent via the shared isVisibleToAgent() predicate.
   const openTasks = tasks
     .filter((t) => t.taskStatus !== 'Closed')
@@ -77,7 +77,7 @@ export function TaskListView() {
           {
             key: 'priorityFlag',
             header: 'Priority',
-            render: (t) => (t.priorityFlag ? <Badge variant="danger">Priority</Badge> : <span>—</span>),
+            render: (t) => (t.priorityFlag ? <Badge variant="danger">Priority</Badge> : <span>-</span>),
           },
           {
             key: 'taskStatus',

@@ -36,7 +36,7 @@ export function AccountHierarchySection({ data }: { data: Customer360Data }) {
         Account Hierarchy
       </h3>
 
-      {/* Level 1 — Customer Account */}
+      {/* Level 1 - Customer Account */}
       <div className="rounded-[var(--radius-card)] border border-accent bg-surface-warm p-4">
         <div className="flex items-center gap-3">
           <LevelBadge>Customer Account</LevelBadge>
@@ -45,7 +45,7 @@ export function AccountHierarchySection({ data }: { data: Customer360Data }) {
         </div>
       </div>
 
-      {/* Level 2 — Billing Account(s) */}
+      {/* Level 2 - Billing Account(s) */}
       <div className="pl-6 space-y-2 border-l-2 border-border-soft ml-4">
         {billingProfileIds.length === 0 && (
           <p className="text-muted text-[length:var(--fs-body)] py-2">No billing accounts on file.</p>
@@ -105,11 +105,11 @@ export function AccountHierarchySection({ data }: { data: Customer360Data }) {
                             </div>
                             <div>
                               <div className="text-[length:var(--fs-caption)] text-muted">Barring Type</div>
-                              <div className="text-fg">{String(acct.barringType ?? '—')}</div>
+                              <div className="text-fg">{String(acct.barringType ?? '-')}</div>
                             </div>
                             <div>
                               <div className="text-[length:var(--fs-caption)] text-muted">Barring Reason</div>
-                              <div className="text-fg">{String(acct.barringReason ?? '—')}</div>
+                              <div className="text-fg">{String(acct.barringReason ?? '-')}</div>
                             </div>
                             {account.parentAccountId && (
                               <div>

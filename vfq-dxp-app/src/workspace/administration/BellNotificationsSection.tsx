@@ -22,17 +22,17 @@ interface BellNotification {
 }
 
 // Canned templates an agent can start from and edit before publishing
-// (BIN-02) — VFQ hasn't provided the real template catalogue yet (OI-AGN-09).
+// (BIN-02) - VFQ hasn't provided the real template catalogue yet (OI-AGN-09).
 const TEMPLATES: Record<string, string> = {
-  'TMPL-INSTALL': 'Your fibre installation is scheduled — our technician will confirm the appointment time shortly.',
-  'TMPL-MAINTENANCE': 'Planned network maintenance in your area — brief service interruptions may occur.',
+  'TMPL-INSTALL': 'Your fibre installation is scheduled - our technician will confirm the appointment time shortly.',
+  'TMPL-MAINTENANCE': 'Planned network maintenance in your area - brief service interruptions may occur.',
   'TMPL-BILLING': 'A change to your billing cycle takes effect next period.',
 };
 
 // Agent 360 BIN-01/02: Backoffice/privileged staff configure and publish
 // bell icon notifications against a customer, using a template + expiry
 // date. Role-gated via agentPrivilegeEngine.ts's evidenced Backoffice/
-// Supervisory/Approval persona set (BR-03) — see that file for exactly
+// Supervisory/Approval persona set (BR-03) - see that file for exactly
 // which personas qualify and why, pending a more specific matrix from VFQ
 // (OI-AGN-11).
 export function BellNotificationsSection() {
@@ -51,7 +51,7 @@ export function BellNotificationsSection() {
   // A ref, not just the `submitting` state: two click dispatches landing in
   // the same synchronous tick both read `submitting` as stale `false`,
   // since a state update isn't visible until the next render. The ref
-  // updates immediately, so the second call sees it and bails out —
+  // updates immediately, so the second call sees it and bails out -
   // observed in practice as this handler otherwise creating two identical
   // records per single click.
   const submittingRef = useRef(false);
@@ -69,7 +69,7 @@ export function BellNotificationsSection() {
   };
 
   const save = async (status: 'Draft' | 'Published') => {
-    // BIN-01/BR-03: enforced here too, not just via disabled buttons — a
+    // BIN-01/BR-03: enforced here too, not just via disabled buttons - a
     // non-privileged persona's call can never actually create a record.
     if (!canConfigure) return;
     // BR-04: publishing (not drafting) must confirm an expiry before going out.
@@ -96,7 +96,7 @@ export function BellNotificationsSection() {
     }
   };
 
-  // Captured once per mount rather than read impurely during render — see
+  // Captured once per mount rather than read impurely during render - see
   // BellNotificationBanner.tsx for the same trade-off applied there.
   const [now] = useState(() => Date.now());
   const displayStatus = (n: BellNotification) =>
@@ -108,7 +108,7 @@ export function BellNotificationsSection() {
         <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mb-6">
           <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Configure a notification</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
-            Notifications appear as a banner on the customer's Customer 360 screen until they expire — agents cannot dismiss them
+            Notifications appear as a banner on the customer's Customer 360 screen until they expire - agents cannot dismiss them
             manually (BIN-06).
           </p>
           <div className="grid grid-cols-2 gap-3">
@@ -118,7 +118,7 @@ export function BellNotificationsSection() {
               type="date"
               value={expiresAt}
               onChange={(e) => setExpiresAt(e.target.value)}
-              helperText="Required to publish (BR-04) — optional only while saving as a draft."
+              helperText="Required to publish (BR-04) - optional only while saving as a draft."
             />
             <div className="col-span-2">
               <Select
@@ -166,7 +166,7 @@ export function BellNotificationsSection() {
           <div key={n.notificationId} className="px-4 py-3 flex items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="text-fg text-[length:var(--fs-body)]">
-                {n.customerId} — <span className="text-fg-2">{n.message}</span>
+                {n.customerId} - <span className="text-fg-2">{n.message}</span>
               </div>
               {n.expiresAt && (
                 <div className="text-muted text-[length:var(--fs-caption)] mt-0.5">Expires {new Date(n.expiresAt).toLocaleDateString()}</div>

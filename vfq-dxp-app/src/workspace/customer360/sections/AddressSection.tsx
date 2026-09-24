@@ -28,7 +28,7 @@ interface AddressRecord {
   activeFlag?: boolean;
 }
 
-// CUS-001-CAM-19: dynamic street/building filtering LOV — reasonable,
+// CUS-001-CAM-19: dynamic street/building filtering LOV - reasonable,
 // clearly-flagged placeholder (matches ticketReferenceData.ts's TT_AREAS
 // pattern) since Annex_01 doesn't enumerate a real Kahramaa zone catalogue.
 const ZONE_CATALOGUE: Record<string, { streets: string[]; buildingsByStreet: Record<string, string[]> }> = {
@@ -47,7 +47,7 @@ export function AddressSection({
   data: Customer360Data;
   onTicketCreated: (ticket: Record<string, unknown>) => void;
 }) {
-  // Seeded once, patched locally on save — see ContactSection.tsx's identical
+  // Seeded once, patched locally on save - see ContactSection.tsx's identical
   // comment: data.addresses is a one-time snapshot, not entityStore-reactive.
   const [addresses, setAddresses] = useState<AddressRecord[]>(() => data.addresses as unknown as AddressRecord[]);
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
@@ -74,7 +74,7 @@ export function AddressSection({
           {
             key: 'primaryStatus',
             header: 'Status',
-            render: (r) => <Badge variant={r.primaryStatus === 'Primary' ? 'success' : 'filled-neutral'}>{r.primaryStatus ?? '—'}</Badge>,
+            render: (r) => <Badge variant={r.primaryStatus === 'Primary' ? 'success' : 'filled-neutral'}>{r.primaryStatus ?? '-'}</Badge>,
           },
         ]}
       />

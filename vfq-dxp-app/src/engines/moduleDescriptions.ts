@@ -1,4 +1,4 @@
-// One-line summaries for each module — not sourced from the evidence corpus
+// One-line summaries for each module - not sourced from the evidence corpus
 // (module-hierarchy.json has no description field), authored from direct
 // familiarity with each module's built-out scope. Shared by Dashboard's
 // module-launcher cards and ModuleScreenList's page header.

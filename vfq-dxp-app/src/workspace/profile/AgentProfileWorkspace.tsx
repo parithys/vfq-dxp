@@ -14,7 +14,7 @@ import { Badge } from '../../components/primitives/Badge';
 import { Select } from '../../components/primitives/Select';
 
 // Agent 360 AEX-03: "Order, Ticket until VFQ confirms the complete list"
-// (OI-AGN-07) — the entity kinds and their entityStore keys are the only
+// (OI-AGN-07) - the entity kinds and their entityStore keys are the only
 // two named as examples anywhere in the BRSD. `featureKeyPrefix` backs
 // AEX-01: an entity only appears as an export option if this role actually
 // holds a granted feature in that area. Previously this matched a keyword
@@ -25,7 +25,7 @@ const EXPORTABLE_ENTITIES = [
   { value: 'trouble-tickets', label: 'Tickets', featureKeyPrefix: 'tickets.' },
 ] as const;
 
-// Placeholder verification code — same open item as Forgot Password
+// Placeholder verification code - same open item as Forgot Password
 // (OI-AGN-05/OI-AGN-06): VFQ Security has not confirmed the real
 // Authcode/OTP mechanism for either forgot-password or in-session
 // change-password/MFA identity verification.
@@ -35,14 +35,14 @@ function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="text-[length:var(--fs-caption)] text-muted">{label}</div>
-      <div className="text-fg text-[length:var(--fs-body)]">{value || '—'}</div>
+      <div className="text-fg text-[length:var(--fs-body)]">{value || '-'}</div>
     </div>
   );
 }
 
 // Agent 360 BRSD APM-01/05/06/07/10: role-based profile view, initiate edit,
 // change password (current/new/confirm), identity verification via
-// Authcode/OTP, save. Previously there was no profile screen at all — an
+// Authcode/OTP, save. Previously there was no profile screen at all - an
 // agent could only sign out or (as a demo affordance) switch role from the
 // top-bar menu. MFA settings live alongside this on the same screen (see
 // MfaSettingsSection).
@@ -55,14 +55,14 @@ export function AgentProfileWorkspace() {
   const orders = useEntityStore((s) => s.records.orders) ?? [];
   const tickets = useEntityStore((s) => s.records['trouble-tickets']) ?? [];
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
-  // APM-01/05/08, BR-01/BR-02: role-based view — password/MFA editing is
+  // APM-01/05/08, BR-01/BR-02: role-based view - password/MFA editing is
   // restricted to genuine internal Vodafone agent personas (see
   // agentPrivilegeEngine.ts for exactly which persona types this excludes
   // and why). Identity display, language, and export stay available to
   // everyone since those requirements carry no role-gating clause of their own.
   const canEditProfile = isInternalAgentPersona(activePersonaId);
 
-  // AEX-01: "Entity list displays as per access rights" — an entity type only
+  // AEX-01: "Entity list displays as per access rights" - an entity type only
   // appears as an export option if this role holds a granted feature in that
   // area, reusing the same grant data every other gating check relies on
   // rather than a static list identical for every role.
@@ -130,7 +130,7 @@ export function AgentProfileWorkspace() {
   };
 
   // BR-02 / APM-07/08: MFA change requires identity verification (the OTP
-  // step below) AND now a role check (canEditProfile, see component top) —
+  // step below) AND now a role check (canEditProfile, see component top) -
   // "privileges approved by VFQ Security" (BR-02) resolves to "genuine
   // internal agent persona" per agentPrivilegeEngine.ts, pending a more
   // specific matrix from VFQ Security (OI-AGN-06).
@@ -156,7 +156,7 @@ export function AgentProfileWorkspace() {
     pushToast('success', `MFA enabled via ${mfaMethod}.`);
   };
 
-  // APM-09: "change language from available options" — English/Arabic per
+  // APM-09: "change language from available options" - English/Arabic per
   // DF-AGT-008, subject to VFQ confirming completeness (D-03). Persisted on
   // the profile so it carries across sessions like MFA settings, and read
   // by App.tsx to mirror the layout (dir="rtl") for Arabic.
@@ -169,7 +169,7 @@ export function AgentProfileWorkspace() {
   const exportRecords = exportEntity === 'orders' ? orders : exportEntity === 'trouble-tickets' ? tickets : [];
 
   // AEX-02: "export all visible entity records... irrespective of whether
-  // they are assigned to the logged-in agent" — every record this agent's
+  // they are assigned to the logged-in agent" - every record this agent's
   // session has already loaded counts as visible, matching the app's
   // existing lack of per-agent row filtering on these two entities.
   const exportEntities = () => {
@@ -196,7 +196,7 @@ export function AgentProfileWorkspace() {
           <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
             <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Change password</h2>
             <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
-              Requires your current password and a verification code. (Demo code: {DEMO_VERIFICATION_CODE} — pending VFQ Security's
+              Requires your current password and a verification code. (Demo code: {DEMO_VERIFICATION_CODE} - pending VFQ Security's
               real Authcode/OTP method.)
             </p>
             <div className="space-y-3">
@@ -269,7 +269,7 @@ export function AgentProfileWorkspace() {
       <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mt-6">
         <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Language</h2>
         <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
-          Choose your preferred language. (English/Arabic — completeness pending VFQ confirmation, D-03.)
+          Choose your preferred language. (English/Arabic - completeness pending VFQ confirmation, D-03.)
         </p>
         <Select
           label="Language"
@@ -285,7 +285,7 @@ export function AgentProfileWorkspace() {
       <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mt-6">
         <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Export your data</h2>
         <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
-          Download a CSV of every visible record for an entity type. (Entity list: Orders, Tickets — pending VFQ's confirmation
+          Download a CSV of every visible record for an entity type. (Entity list: Orders, Tickets - pending VFQ's confirmation
           of the complete list, OI-AGN-07. Which of these you can export depends on your role's access rights, Agent 360 AEX-01.)
         </p>
         {eligibleEntities.length === 0 ? (

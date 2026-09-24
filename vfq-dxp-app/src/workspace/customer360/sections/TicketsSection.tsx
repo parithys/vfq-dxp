@@ -9,7 +9,7 @@ import { STATUS_VARIANT, buildNewTicketRecord } from '../../../modules/trouble-t
 import type { Customer360Data } from '../../../engines/customer360Engine';
 
 // Create Ticket and Track Ticket are the two real Support actions available
-// from Customer 360 — both reuse the exact same TicketCreationModal/entity
+// from Customer 360 - both reuse the exact same TicketCreationModal/entity
 // records the standalone Support workspace uses, just pre-scoped to this
 // customer. Escalation/Complaints/Service Requests are ticket *categories*
 // selected inside that same modal, not separate screens, so they aren't
@@ -21,7 +21,7 @@ export function TicketsSection({
   data: Customer360Data;
   /** Without this, a ticket created here would persist correctly but stay
    * invisible in this same table (and the header's Open Tickets count) until
-   * the agent navigated away and back — data.tickets is Customer360Layout's
+   * the agent navigated away and back - data.tickets is Customer360Layout's
    * one-time fetch snapshot, not entityStore-reactive. */
   onTicketCreated: (ticket: Record<string, unknown>) => void;
 }) {

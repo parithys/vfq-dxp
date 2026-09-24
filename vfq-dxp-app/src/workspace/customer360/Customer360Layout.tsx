@@ -39,7 +39,7 @@ import {
 // The central workspace the whole redesign pivots around: one customer, one
 // page, every product/action reachable in at most two more clicks (product
 // tab -> action group -> action). Reachable either from Customer Search
-// (which already set the active-customer bridge) or a direct URL/bookmark —
+// (which already set the active-customer bridge) or a direct URL/bookmark -
 // re-sets the bridge here too so a direct link still pre-fills downstream
 // wizards correctly.
 const CLOSED_TICKET_STATUSES = new Set(['Solved', 'Completed', 'Closed', 'Cancelled']);
@@ -90,12 +90,12 @@ export function Customer360Layout() {
     ? 'Blocked'
     : data.accounts.some((a) => a.status === 'Active')
       ? 'Active'
-      : (data.accounts[0]?.status ?? '—');
+      : (data.accounts[0]?.status ?? '-');
 
   // BR-04: shared by every ticket-creation path (demographic/contact/address
   // auto-tickets and Tickets tab's own manual "Create Ticket") so the new
-  // ticket is immediately reflected here — in the Tickets tab and in the
-  // header's Open Tickets count — rather than only after navigating away and
+  // ticket is immediately reflected here - in the Tickets tab and in the
+  // header's Open Tickets count - rather than only after navigating away and
   // back. data.tickets itself stays the single source of truth for both.
   const addTicket = (ticket: Record<string, unknown>) =>
     setData((prev) => (prev ? { ...prev, tickets: [ticket, ...prev.tickets] } : prev));
@@ -188,7 +188,7 @@ export function Customer360Layout() {
         <MetricCard label="Account status" value={accountStatus} subtext={`${data.accounts.length} account${data.accounts.length === 1 ? '' : 's'}`} />
         <MetricCard
           label="Current bill"
-          value={latestBill ? `${String(latestBill.totalAmount ?? '—')} QAR` : '—'}
+          value={latestBill ? `${String(latestBill.totalAmount ?? '-')} QAR` : '-'}
           subtext={latestBill ? capitalizeStatus(latestBill.status) : 'No bills on file'}
         />
         <MetricCard
@@ -220,5 +220,5 @@ export function Customer360Layout() {
 
 function capitalizeStatus(value: unknown): string {
   const s = String(value ?? '');
-  return s ? s.charAt(0).toUpperCase() + s.slice(1) : '—';
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : '-';
 }

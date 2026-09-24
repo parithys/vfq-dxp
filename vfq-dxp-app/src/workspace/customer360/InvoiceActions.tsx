@@ -11,7 +11,7 @@ const PRINT_ICON = 'M6 9V3h12v6 M6 18H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h16a1 1 0 
 
 // CUS-001-BIV-28, BR-06: no real Bill Formatter / Invoice Repository
 // integration exists (INT-C360-005 is a genuine Missing gap even as a mock,
-// unlike the other 7 interfaces) — Download produces the one real invoice
+// unlike the other 7 interfaces) - Download produces the one real invoice
 // artifact this app can honestly generate (a CSV export of the bill's own
 // fields, reusing the same csvExport engine as Profile Export); Print/Resend
 // are mocked as toast-confirmed actions rather than fabricating a print

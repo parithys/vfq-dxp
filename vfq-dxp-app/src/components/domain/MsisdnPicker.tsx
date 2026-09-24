@@ -20,14 +20,14 @@ interface MsisdnPickerProps {
 // A full Qatar MSISDN: +974 followed by an 8-digit local number starting
 // 3/5/6/7 (same shape as every seeded numbers.json record and the same
 // leading-digit rule GuidedContactStep's isValidAltPhone uses for a Qatar
-// local number) — stricter than that general validator since a number
+// local number) - stricter than that general validator since a number
 // being reserved here must be a complete, dialable MSISDN, not any
 // alternate-contact phone shape.
 function isValidMsisdn(raw: string): boolean {
   return /^\+974[3567]\d{7}$/.test(raw.replace(/[\s-]/g, ''));
 }
 
-// Pattern 10: Number Selection / Reservation Step — 8-digit search box + Free/Reserved
+// Pattern 10: Number Selection / Reservation Step - 8-digit search box + Free/Reserved
 // toggle, matching MSISDNs shown as selectable priced tiles; selecting triggers
 // immediate reservation with a confirmation token (SCR-024/048/082/104/157/191).
 export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
@@ -49,7 +49,7 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
     const normalized = customMsisdn.replace(/[\s-]/g, '');
     const existing = numbers.find((n) => n.msisdn === normalized);
     if (existing && existing.status !== 'AVAILABLE') {
-      setCustomError(`${normalized} is already ${existing.status.toLowerCase()} — choose a different number.`);
+      setCustomError(`${normalized} is already ${existing.status.toLowerCase()} - choose a different number.`);
       return;
     }
     setCustomError(null);
@@ -57,7 +57,7 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
   };
 
   // Category (Free vs Star/premium) and status (AVAILABLE/Reserved/BLOCKED)
-  // are independent axes — tabs must filter on category so a Star number
+  // are independent axes - tabs must filter on category so a Star number
   // that happens to be AVAILABLE rather than Reserved still surfaces
   // somewhere selectable, instead of falling into neither tab.
   const filtered = numbers.filter((n) => {

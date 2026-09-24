@@ -41,7 +41,7 @@ function bestHeuristicMatch(route: Route, module: ModuleHierarchyEntry): { subMo
 // possible, falling back to a keyword-overlap heuristic, and leaving
 // anything neither evidenced nor heuristically matched in `ungrouped`.
 //
-// This is NOT a fully evidenced mapping — module-hierarchy.json has no
+// This is NOT a fully evidenced mapping - module-hierarchy.json has no
 // direct screen-to-feature field. The best real link available is
 // Feature.relatedRequirementIds -> traceability-matrix.md's REQ "Screens:"
 // citations, but only 70 of 295 requirements cite a screen at all (~25%
@@ -50,7 +50,7 @@ function bestHeuristicMatch(route: Route, module: ModuleHierarchyEntry): { subMo
 // SCR-009 ("Bulk Activation Control Sheet") sits under FWA/5G Home in
 // routes.json's own coarse module bucketing, but traceability-matrix.md's
 // REQ-020 (its only requirement citation) is owned by Enterprise/IoT/B2B's
-// "Bulk Operations" feature — i.e. the module-level bucketing itself may be
+// "Bulk Operations" feature - i.e. the module-level bucketing itself may be
 // wrong for screens like this, a separate, larger issue from this grouping.
 export function groupRoutesByFeature(module: ModuleHierarchyEntry, routes: Route[]): { groups: FeatureGroup[]; ungrouped: Route[] } {
   const reqToScreens = getReqToScreens();

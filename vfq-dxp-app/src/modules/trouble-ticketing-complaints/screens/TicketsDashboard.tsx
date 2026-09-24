@@ -38,7 +38,7 @@ function ragVariant(ticket: Ticket): 'success' | 'warning' | 'danger' | 'filled-
 // SCR-211: Tickets Dashboard. Extended per the Trouble Ticket BRSD gap
 // analysis (2026-09-11) to close MPRA_001_VEW-01/02/03/06 (list filters,
 // Excel export, My/All Trouble Tickets views, RAG status indicator) and
-// ESC-09 ("escalated to me" filter) — "My Team's Trouble Tickets" is not
+// ESC-09 ("escalated to me" filter) - "My Team's Trouble Tickets" is not
 // modelled since no team-roster entity exists anywhere in this app to
 // resolve it from; only the two views this schema can actually support
 // (My / All) are built, rather than a fabricated team grouping.
@@ -189,12 +189,12 @@ export function TicketsDashboard() {
           { key: 'category', header: 'Category' },
           { key: 'queue', header: 'Queue' },
           { key: 'priority', header: 'Priority' },
-          { key: 'assignedTo', header: 'Assigned To', render: (r) => r.assignedTo ?? '—' },
+          { key: 'assignedTo', header: 'Assigned To', render: (r) => r.assignedTo ?? '-' },
           { key: 'status', header: 'Status', render: (r) => <Badge variant={STATUS_VARIANT[r.status] ?? 'filled-neutral'}>{r.status}</Badge> },
           {
             key: 'rag',
             header: 'SLA',
-            render: (r) => <Badge variant={ragVariant(r)}>{ragVariant(r) === 'danger' ? 'Red' : ragVariant(r) === 'warning' ? 'Amber' : ragVariant(r) === 'success' ? 'Green' : '—'}</Badge>,
+            render: (r) => <Badge variant={ragVariant(r)}>{ragVariant(r) === 'danger' ? 'Red' : ragVariant(r) === 'warning' ? 'Amber' : ragVariant(r) === 'success' ? 'Green' : '-'}</Badge>,
             sortValue: (r) => ({ danger: 0, warning: 1, success: 2, 'filled-neutral': 3 }[ragVariant(r)]),
           },
         ]}

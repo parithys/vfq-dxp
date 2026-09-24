@@ -78,6 +78,6 @@
     "installedAssetId": null,
     "actionLog": "Action=Create",
     "status": "Free",
-    "_note": "App-level demo addition (not in blueprint/reconstruction-package/mock-data) — the one evidenced Outdoor ODU record is already Sold/Assigned, leaving no available outdoor unit to demo a successful Dual-Play serial check end-to-end."
+    "_note": "App-level demo addition (not in blueprint/reconstruction-package/mock-data) - the one evidenced Outdoor ODU record is already Sold/Assigned, leaving no available outdoor unit to demo a successful Dual-Play serial check end-to-end."
   }
 ]

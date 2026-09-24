@@ -24,7 +24,7 @@ interface MultiSelectProps {
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 const CHECK = 'M20 6L9 17l-5-5';
 
-// Multi-select checklist dropdown per Checkbox-Open.svg — same custom-listbox
+// Multi-select checklist dropdown per Checkbox-Open.svg - same custom-listbox
 // mechanism as Select.tsx (absolutely positioned panel under the trigger, not
 // a native element) but each row toggles independently instead of closing the
 // panel on selection, and the trigger summarizes the current selection.

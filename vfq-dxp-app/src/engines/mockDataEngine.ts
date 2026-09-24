@@ -65,7 +65,7 @@ export async function seedMockData(): Promise<Store> {
 }
 
 function requireStore(): Store {
-  if (!store) throw new Error('Mock data not seeded yet — call seedMockData() during app boot.');
+  if (!store) throw new Error('Mock data not seeded yet - call seedMockData() during app boot.');
   return store;
 }
 

@@ -15,8 +15,8 @@ interface ChannelPerfRecord {
 // rather than inside it. That component owns the Qnomy/CTI reference numbers
 // and ~200 lines of live queue logic (call-next, finish, verification gate);
 // folding two static chips into it would have put unrelated concerns in the
-// same file for no gain. Both render the same chip shape — an uppercase caption
-// above a semibold value — so they read as one control strip.
+// same file for no gain. Both render the same chip shape - an uppercase caption
+// above a semibold value - so they read as one control strip.
 //
 //   Product-First  Catalog sync freshness + Publish
 //   Hybrid         Oversight region + Switch
@@ -32,7 +32,7 @@ export function HeaderContextChips() {
   const approach = persona?.approach;
   const showCatalogSync = approach === 'Product-First';
   // Only a role whose dashboard figures are actually region-scoped gets the
-  // chip — the same `agent-oversight` test the dashboard uses. Keying it on
+  // chip - the same `agent-oversight` test the dashboard uses. Keying it on
   // approach alone showed "REGION Doha Central" to a Retail Sales Agent whose
   // metrics were national, so the chip claimed a scope nothing applied.
   const showRegion = approach === 'Hybrid' && (persona?.capabilities.includes('agent-oversight') ?? false);
@@ -65,13 +65,13 @@ export function HeaderContextChips() {
             <div className="flex flex-col leading-tight">
               <span className="text-[length:var(--fs-caption)] uppercase tracking-wide text-muted">Catalog Sync</span>
               <span className="text-fg font-semibold text-[length:var(--fs-body)]">
-                {syncedMinutesAgo === null ? '—' : `${syncedMinutesAgo} min ago`}
+                {syncedMinutesAgo === null ? '-' : `${syncedMinutesAgo} min ago`}
               </span>
             </div>
           </Tooltip>
           {/* Publishing a catalogue change isn't built, so this is a link to
               where that work lives rather than a button that appears to act. */}
-          <Tooltip content="Catalogue publishing isn't built yet — opens the change queue" placement="bottom">
+          <Tooltip content="Catalogue publishing isn't built yet - opens the change queue" placement="bottom">
             <Button variant="primary-rect" compact onClick={() => { window.location.href = '/mobile'; }}>
               Publish
             </Button>
@@ -80,7 +80,7 @@ export function HeaderContextChips() {
       )}
       {showRegion && (
         <>
-          <Tooltip content="Oversight scope — drives the figures on your dashboard" placement="bottom">
+          <Tooltip content="Oversight scope - drives the figures on your dashboard" placement="bottom">
             <div className="flex flex-col leading-tight">
               <span className="text-[length:var(--fs-caption)] uppercase tracking-wide text-muted">Region</span>
               <span className="text-fg font-semibold text-[length:var(--fs-body)]">{regionLabel}</span>

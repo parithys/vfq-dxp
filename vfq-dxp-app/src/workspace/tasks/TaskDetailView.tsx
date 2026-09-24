@@ -9,7 +9,7 @@ import { canAssignTasks } from '../../engines/agentPrivilegeEngine';
 import { useNotificationStore } from '../../stores/notificationStore';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 
-// Agent 360 ATV-06 / Annex_02: Task status model — "Open -> Assigned/In
+// Agent 360 ATV-06 / Annex_02: Task status model - "Open -> Assigned/In
 // Progress/Closed -> (In Progress/Closed) -> Closed; no transition out of
 // Closed." Passed to mockDataEngine.transition() so this is a real,
 // falsifiable guard rather than the previous UI-only button-hiding (which
@@ -52,7 +52,7 @@ const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'filled-
 // carrying the `task-assign` capability: Supervisor and Manager/Approver
 // (whose "approval and escalation authority" is a superset of supervision),
 // plus Dispatcher, whose entire role is "work allocation and scheduling".
-// Previously a single PERSONA-024 id comparison — the only supervisor-shaped
+// Previously a single PERSONA-024 id comparison - the only supervisor-shaped
 // record the 66-persona catalogue offered.
 export function TaskDetailView() {
   const { taskId } = useParams<{ taskId: string }>();
@@ -70,7 +70,7 @@ export function TaskDetailView() {
     loadKind('tasks');
   }, [loadKind]);
 
-  // Real userIds, not free text — an assignment has to produce an ID that
+  // Real userIds, not free text - an assignment has to produce an ID that
   // actually matches the assignee's authStore.profile.userId on their next
   // login, or ATV-02's per-agent scoping (agentTaskEngine.ts) would never
   // show them this task.
@@ -80,7 +80,7 @@ export function TaskDetailView() {
 
   const task = tasks.find((t) => t.taskId === taskId);
   if (!task) {
-    return <div className="p-8 text-fg-2">No task selected — go back to My Tasks and pick one from a category.</div>;
+    return <div className="p-8 text-fg-2">No task selected - go back to My Tasks and pick one from a category.</div>;
   }
 
   const applyStatusTransition = (toState: string, patch: Record<string, unknown>) => {

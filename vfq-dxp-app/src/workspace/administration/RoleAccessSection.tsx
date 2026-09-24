@@ -111,7 +111,7 @@ export function RoleAccessSection() {
                       <div className="min-w-0">
                         <div className="text-fg text-[length:var(--fs-body)] truncate">{entry?.name ?? grant.key}</div>
                         <div className="text-fg-2 text-[length:var(--fs-caption)] truncate">
-                          {entry?.area ?? '—'}
+                          {entry?.area ?? '-'}
                           {screenIds.length > 0 && ` · ${screenIds.length} screen${screenIds.length > 1 ? 's' : ''}`}
                         </div>
                         {grant.restrictions && (
@@ -134,7 +134,7 @@ export function RoleAccessSection() {
                     className="w-full text-left px-4 py-3 flex items-center justify-between gap-3 hover:bg-surface"
                   >
                     <span className="text-[length:var(--fs-body)] text-fg">
-                      Source evidence — archived 66-persona RBAC matrix ({legacyRbac.length} rows)
+                      Source evidence - archived 66-persona RBAC matrix ({legacyRbac.length} rows)
                     </span>
                     <span className="text-fg-2 text-[length:var(--fs-caption)]">{evidenceOpen ? 'Hide' : 'Show'}</span>
                   </button>
@@ -143,13 +143,13 @@ export function RoleAccessSection() {
                       <p className="px-4 py-3 text-[length:var(--fs-caption)] text-fg-2">
                         Historical evidence from the pre-2026-09 66-persona model, resolved through this role's{' '}
                         {selected.legacyPersonaIds.join(', ')} crosswalk. Retained for traceability back to
-                        rbac-matrix.md's per-row source quotes — it no longer grants access.
+                        rbac-matrix.md's per-row source quotes - it no longer grants access.
                       </p>
                       <div className="divide-y divide-border-soft">
                         {legacyRbac.map((entry) => (
                           <div key={entry.id} className="px-4 py-3 flex items-start justify-between gap-4">
                             <div className="min-w-0">
-                              <div className="text-fg text-[length:var(--fs-body)] truncate">{entry.screenName || entry.screenId || '—'}</div>
+                              <div className="text-fg text-[length:var(--fs-body)] truncate">{entry.screenName || entry.screenId || '-'}</div>
                               <div className="text-fg-2 text-[length:var(--fs-caption)] truncate">
                                 {entry.id} · {entry.personaId} · confidence {entry.confidence}
                               </div>

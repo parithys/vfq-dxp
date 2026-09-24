@@ -35,7 +35,7 @@ import './modules/pre-to-post-migration/screens';
 // Generated from config/routes.json's module list (16) + config/routes.json's
 // 213 individual screen paths, per folder-structure.md's "Route generation" note.
 // A single dynamic `/:moduleSlug` route (not one static route per module) so
-// useParams() actually receives moduleSlug — react-router v6 ranks
+// useParams() actually receives moduleSlug - react-router v6 ranks
 // `/:moduleSlug/:screenSlug` as more specific automatically, so route order
 // here doesn't matter.
 export function AppRouter() {
@@ -44,17 +44,17 @@ export function AppRouter() {
       <Route path="/" element={<Dashboard />} />
       {/* Customer -> Product -> Action redesign: new customer-centric routes,
           added alongside the legacy module routes below (not replacing
-          them) — every existing screen stays reachable at its current URL. */}
+          them) - every existing screen stays reachable at its current URL. */}
       <Route path="/customer-search" element={<CustomerSearchPage />} />
       {/* Nav manifest destinations (navManifest.ts). Without these, /products,
           /operations fell through to `/:moduleSlug` and
-          rendered the bare string "Module not found." — they are nav
+          rendered the bare string "Module not found." - they are nav
           destinations, not module slugs. `/leads` needs no new UI: it renders
           the already-built LeadListView that SalesWorkspace uses. */}
       <Route path="/leads" element={<LeadListView scope="all" />} />
       <Route path="/operations" element={<WorkspaceNotYetBuilt navKey="operations" />} />
       {/* Product lines: the line root stacks every category the role can
-          reach, a category route shows just that section. Same component —
+          reach, a category route shows just that section. Same component -
           they are the same content at different scope. */}
       <Route path="/mobile" element={<ProductLinePage lineKey="mobile" />} />
       <Route path="/mobile/:category" element={<ProductLinePage lineKey="mobile" />} />
@@ -70,7 +70,7 @@ export function AppRouter() {
       <Route path="/tasks" element={<TaskListView />} />
       <Route path="/tasks/:taskId" element={<TaskDetailView />} />
       {/* Legacy: the 213-screen catalogue, kept mounted for direct-link
-          access and internal QA (ModuleScreenList's Built/Not-built view) —
+          access and internal QA (ModuleScreenList's Built/Not-built view) -
           no longer linked from the primary sidebar. */}
       <Route path="/:moduleSlug" element={<ModuleScreenList />} />
       <Route path="/:moduleSlug/:screenSlug" element={<ScreenRouteResolver />} />

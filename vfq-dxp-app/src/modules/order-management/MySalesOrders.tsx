@@ -19,12 +19,12 @@ const statusVariant = (status: string) => {
   return 'filled-neutral' as const;
 };
 
-// SCR-059: My Sales Orders / My Pending Approval Orders queue — agent view of
+// SCR-059: My Sales Orders / My Pending Approval Orders queue - agent view of
 // own submitted orders and their approval status (evidenced across Fixed
 // Line/FWA/Postpaid B2B2C guided journeys).
 interface MySalesOrdersProps {
   /** False when embedded in a parent that already provides the same padding
-   * (OrdersWorkspace's own p-8 around its Tabs) — true (self-padded) for the
+   * (OrdersWorkspace's own p-8 around its Tabs) - true (self-padded) for the
    * standalone legacy-route usage at SCR-059, which has no other padding
    * source. */
   padded?: boolean;
@@ -55,7 +55,7 @@ export function MySalesOrders({ padded = true }: MySalesOrdersProps) {
         ]}
         rows={orders}
         rowKey={(r) => r.orderId}
-        emptyMessage="No orders submitted yet — build one via a New Fixed Line/FWA/Postpaid wizard first."
+        emptyMessage="No orders submitted yet - build one via a New Fixed Line/FWA/Postpaid wizard first."
         loading={loading}
       />
     </div>

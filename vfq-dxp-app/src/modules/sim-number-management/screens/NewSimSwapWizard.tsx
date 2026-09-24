@@ -35,7 +35,7 @@ interface NewSimSwapWizardProps {
 // QID front & Bank statement -> Enter SIM Serial Number, select SIM Swap
 // Reason -> Attach SIM Swap Form -> Order routed to Approval -> Add comments,
 // Save and Finish." Reached from the Global Search screen (SCR-195) after
-// entering an MSISDN and clicking "SIM Swap" — that screen doesn't have its
+// entering an MSISDN and clicking "SIM Swap" - that screen doesn't have its
 // own separate evidenced screenId, so it's rendered inline here rather than
 // as a synthetic route.
 export function NewSimSwapWizard({ msisdn, onDone }: NewSimSwapWizardProps) {

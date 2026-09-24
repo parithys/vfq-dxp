@@ -12,7 +12,7 @@ interface SimSerialScannerProps {
   onChange: (value: string, valid: boolean) => void;
 }
 
-// Pattern 11: SIM/Device Serial Capture with Real-Time Inventory Validation —
+// Pattern 11: SIM/Device Serial Capture with Real-Time Inventory Validation -
 // barcode-scan input validated against UIM/inventory in real time; blocks
 // Continue with an inline error if blank/not-found/already-assigned
 // (SCR-093/099/124/158/192).

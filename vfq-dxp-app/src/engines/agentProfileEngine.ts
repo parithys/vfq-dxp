@@ -10,14 +10,14 @@ interface UserAgentRecord {
   team: string;
 }
 
-// No real login/session directory exists in the mock data — the seeded
+// No real login/session directory exists in the mock data - the seeded
 // users-agents.json records stand in for "who's signed in". Each persona names
 // its own identity via `identityUserId`, so this is a deterministic 1:1 lookup.
 //
 // It replaced a keyword match against the persona's name/type, which existed
 // only because there were 3 seeded identities for 66 personas and so had to
 // guess. That guess collapsed every "manager"/"approver" persona onto one
-// record (Rachel Thompson) — documented at the time as an accepted quirk, but
+// record (Rachel Thompson) - documented at the time as an accepted quirk, but
 // really a symptom of the undersized directory. With one identity per role it
 // would have silently merged five distinct roles and broken the per-agent task
 // scoping that reads the same directory, so both the matcher and the quirk are

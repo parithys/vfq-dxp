@@ -57,7 +57,7 @@ function rangeForPreset(preset: DatePreset, now: Date): DateRangeValue {
   }
 }
 
-// Preset date-range dropdown per Date-Open.svg — a plain preset list, except
+// Preset date-range dropdown per Date-Open.svg - a plain preset list, except
 // the last row ("Date Range") swaps the panel content to the full
 // DateRangeCalendar instead of committing immediately, matching
 // Date Specific-Open.svg.

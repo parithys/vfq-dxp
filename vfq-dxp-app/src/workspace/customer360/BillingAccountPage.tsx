@@ -36,7 +36,7 @@ interface BillingProfile {
 
 // BR-02: mirrors the disabled+Tooltip pattern already established in
 // Customer360Layout.tsx's "Edit profile" button and InvoiceActions.tsx's
-// "Restricted" state — a non-agent persona must never be able to open an
+// "Restricted" state - a non-agent persona must never be able to open an
 // edit drawer, not even a read-only one, since this page has no read-only
 // drawer variant (the cards already show the data as read-only).
 function EditButton({ canEdit, onClick }: { canEdit: boolean; onClick: () => void }) {
@@ -60,7 +60,7 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
       <div className="text-[length:var(--fs-caption)] text-muted">{label}</div>
-      <div className="text-fg text-[length:var(--fs-body)]">{value ?? '—'}</div>
+      <div className="text-fg text-[length:var(--fs-body)]">{value ?? '-'}</div>
     </div>
   );
 }
@@ -114,14 +114,14 @@ export function BillingAccountPage() {
   }
 
   // BR-02: only reachable via EditButton, which itself only wires onClick to
-  // this function when canEdit is true — non-agents never get a click
+  // this function when canEdit is true - non-agents never get a click
   // handler that could call openEdit at all.
   const openEdit = (field: typeof editField) => {
     requireVerification(() => setEditField(field));
   };
 
   // BR-05: billing-profile maintenance requires the customer/billing-account
-  // context to already be confirmed — satisfied structurally here, since
+  // context to already be confirmed - satisfied structurally here, since
   // this drawer only ever opens against the profile this page already
   // resolved and displayed (there's no path to editing an unselected
   // account). BR-04's ticket-on-change applies to demographic/contact/

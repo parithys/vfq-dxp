@@ -15,7 +15,7 @@ interface SimSwapFormStepProps {
 
 // UJ-090 (tablet variant): "Sign Contract -> capture signature -> Done ->
 // SIM Swap Request Form attached." Only one document type is evidenced here
-// (unlike CAF's 3 or MNP's 2 form-type options), so no Select dropdown —
+// (unlike CAF's 3 or MNP's 2 form-type options), so no Select dropdown -
 // just the attach-and-sign shape shared with DonorAttachmentStep/CafSignatureCapture.
 export function SimSwapFormStep({ value, onChange }: SimSwapFormStepProps) {
   const [padOpen, setPadOpen] = useState(false);

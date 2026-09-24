@@ -1,5 +1,5 @@
 /**
- * Tooltip design tokens — hover-tooltip skill, adapted to this app's token
+ * Tooltip design tokens - hover-tooltip skill, adapted to this app's token
  * scale. Colour is a dedicated dark-inverse pair (no existing app token for
  * "inverse surface"); radius/spacing/typography repoint to tokens.css so the
  * tooltip stays visually consistent with the rest of the design system.

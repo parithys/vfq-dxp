@@ -3,7 +3,7 @@ import { evaluateRule } from '../../engines/ruleEngine';
 import { Badge } from '../primitives/Badge';
 
 // Surfaces BR-ZSB-MANDATORY-FOR-MOBILE's evaluation (conflict-report.md
-// Conflict 2) as a visible advisory — never silently resolved either way.
+// Conflict 2) as a visible advisory - never silently resolved either way.
 export function ZsbConflictNotice() {
   const [message, setMessage] = useState<string | undefined>();
 

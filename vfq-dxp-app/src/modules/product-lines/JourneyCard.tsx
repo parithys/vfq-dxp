@@ -7,7 +7,7 @@ const ARROW_RIGHT = 'M5 12h14 M13 5l7 7-7 7';
 
 // Status drives the whole card treatment: badge variant, border, and whether
 // the card is a link at all. All three reuse existing Badge variants and
-// --warn / --success tokens — no new tokens or primitives.
+// --warn / --success tokens - no new tokens or primitives.
 const STATUS: Record<JourneyStatus, {
   label: string;
   variant: 'success' | 'warning' | 'filled-neutral';

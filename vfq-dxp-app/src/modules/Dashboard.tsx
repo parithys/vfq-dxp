@@ -27,7 +27,7 @@ interface CustomerRecord {
 // (zoneSpecs) rendered by one component (DashboardZone).
 //
 // The whole point is that this is not four dashboards. A Hybrid role's Focus
-// control re-orders and re-sizes the same two zones — it does not navigate, and
+// control re-orders and re-sizes the same two zones - it does not navigate, and
 // because useZoneMetrics loads every kind on mount it cannot refetch either.
 export function Dashboard() {
   const [params, setParams] = useSearchParams();
@@ -119,7 +119,7 @@ export function Dashboard() {
       {layout.showFocusControl && (
         <p className="mt-8 rounded-[var(--radius-card)] border border-border-soft bg-surface px-4 py-3 text-fg-2 text-[length:var(--fs-caption)]">
           This is the same dashboard route rendered for one role. Switching Focus re-orders and re-sizes the same two
-          zones — it doesn't navigate to a different screen or reload different data.
+          zones - it doesn't navigate to a different screen or reload different data.
         </p>
       )}
     </div>

@@ -5,7 +5,7 @@ import { BulkNotesConfigSection } from './BulkNotesConfigSection';
 
 // The home for backoffice/config-oriented capabilities: the role/access
 // directory (existing) plus Agent 360's Bell Notification (BIN) and Bulk
-// Notes (BNT) configuration screens — both genuinely new capabilities, not
+// Notes (BNT) configuration screens - both genuinely new capabilities, not
 // placeholders, added alongside the original viewer rather than replacing it.
 const TABS: TabItem[] = [
   { key: 'roles', label: 'Roles & Access', content: <RoleAccessSection /> },

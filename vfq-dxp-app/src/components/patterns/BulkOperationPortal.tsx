@@ -20,7 +20,7 @@ export interface BulkRow {
 interface BulkOperationPortalProps {
   rows: BulkRow[];
   /** Functional-updater style (like React's setState), NOT a plain array setter
-   * — submitBatch below awaits each row sequentially, so a plain `(rows) =>
+   * - submitBatch below awaits each row sequentially, so a plain `(rows) =>
    * void` closing over a `rows` snapshot captured once at submit time would
    * have every update in the loop overwrite the previous one's result (see
    * the bug note below). */
@@ -31,17 +31,17 @@ interface BulkOperationPortalProps {
 const BUCKETS = ['Rental', 'Usage', 'One-Time Charge', 'Penalty Waiver'];
 const UNITS = ['QAR', 'Minutes', 'GB'];
 
-// Pattern 17: Bulk Operation Portal — fixed-template rows (billing profile,
+// Pattern 17: Bulk Operation Portal - fixed-template rows (billing profile,
 // bucket, unit of measurement, free-text comment; FLD-009–013), async
 // processing, per-row success/failure reporting with re-upload of failed rows
 // only (SCR-001, UJ-001 "Bulk Adjustment Submission (Target State)," high
 // confidence). Row entry here stands in for the evidenced file-upload template
-// (no real file I/O in a front-end-only app) — same rows, same fields.
+// (no real file I/O in a front-end-only app) - same rows, same fields.
 //
 // Bug fixed here: submitBatch used to call a plain-array `updateRow` that
 // closed over the `rows` prop captured once when submitBatch started. Since
 // the loop awaits each row's async inventory-style check sequentially, every
-// updateRow call after the first recomputed from that same stale snapshot —
+// updateRow call after the first recomputed from that same stale snapshot -
 // each row's result overwrote all rows updated earlier in the same batch
 // (confirmed live: submitting 2 rows left row 1 stuck on "Pending" even
 // though it had actually succeeded, because row 2's update replaced the
@@ -117,7 +117,7 @@ export function BulkOperationPortal({ rows, onChange, onSubmitRow }: BulkOperati
 
   return (
     <div className="space-y-4">
-      <DataTable columns={columns} rows={rows} rowKey={(r) => r.rowId} emptyMessage="No rows in the template — Add Row to start." />
+      <DataTable columns={columns} rows={rows} rowKey={(r) => r.rowId} emptyMessage="No rows in the template - Add Row to start." />
       <div className="flex gap-2">
         <Button variant="ghost-rect" onClick={addRow}>
           Add Row

@@ -12,13 +12,13 @@ export interface Column<T> {
   header: string;
   render?: (row: T) => ReactNode;
   /** Renders this column's value as a real link to a specific destination,
-   * independent of any other column's link or the row's own onRowClick — use
+   * independent of any other column's link or the row's own onRowClick - use
    * this instead of onRowClick when different columns in the same row point
    * to different pages (e.g. a ticket # column linking to the ticket, a
    * customer column linking to that customer's 360 record). Return undefined
    * for a given row to fall back to plain text (e.g. no customerId on file). */
   linkTo?: (row: T) => string | undefined;
-  /** Opt out of sorting for this column — defaults to sortable whenever
+  /** Opt out of sorting for this column - defaults to sortable whenever
    * `header` is non-empty (action/remove columns conventionally use an empty
    * header and have nothing meaningful to sort by). */
   sortable?: boolean;
@@ -49,7 +49,7 @@ interface DataTableProps<T> {
 }
 
 // Backs every list/grid screen (Lead lists, Order queues, Asset grids) per
-// component-catalogue.md §1 — Assumed shape (no design-system analog).
+// component-catalogue.md §1 - Assumed shape (no design-system analog).
 export function DataTable<T>({
   columns,
   rows,
@@ -158,11 +158,11 @@ export function DataTable<T>({
                   className={`border-t border-[var(--table-border)] transition-colors ${onRowClick ? 'cursor-pointer hover:bg-surface' : ''}`}
                 >
                   {columns.map((col, colIndex) => {
-                    const value = (row as Record<string, unknown>)[col.key] ?? '—';
+                    const value = (row as Record<string, unknown>)[col.key] ?? '-';
                     const linkHref = col.linkTo?.(row);
                     // Falls back to the first-column link cue only when the table
                     // still uses whole-row onRowClick (no per-column linkTo defined
-                    // anywhere) — tables using linkTo get real per-column links
+                    // anywhere) - tables using linkTo get real per-column links
                     // instead, so this legacy heuristic doesn't double up with them.
                     const hasAnyColumnLink = columns.some((c) => c.linkTo);
                     const isLinkCol = colIndex === 0 && Boolean(onRowClick) && !hasAnyColumnLink;

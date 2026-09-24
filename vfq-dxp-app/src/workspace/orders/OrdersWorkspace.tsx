@@ -2,7 +2,7 @@ import { Tabs, type TabItem } from '../../components/primitives/Tabs';
 import { MySalesOrders } from '../../modules/order-management/MySalesOrders';
 import { OrderApprovalQueue } from '../../modules/order-management/OrderApprovalQueue';
 
-// Cross-customer order workspace — the standalone counterpart to Customer
+// Cross-customer order workspace - the standalone counterpart to Customer
 // 360's Orders tab. Wraps the two existing order-management screens
 // unchanged (own submitted orders vs. the approval queue) rather than
 // re-implementing their table/queue logic.

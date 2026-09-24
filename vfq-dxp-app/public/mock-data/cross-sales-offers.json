@@ -80,6 +80,6 @@
     ],
     "contactId": "CONT-3001",
     "journeyType": "PreToPost",
-    "_note": "App-level demo addition (not in blueprint/reconstruction-package/mock-data) — the three originally-evidenced cross-sales offers don't cover the Pre-to-Post Migration journey (UJ-087/BR-272); field values (OfferName, CampaignCode, PromotionId, MonthlyRental, AddOnMonthly, Channel, Status) are taken verbatim from the evidenced walkthrough in guided-journeys-pre-to-post-open-ui-desktop-pre-to-post-auto-7cb45c57. journeyType is an app-added discriminator, not part of the original schema."
+    "_note": "App-level demo addition (not in blueprint/reconstruction-package/mock-data) - the three originally-evidenced cross-sales offers don't cover the Pre-to-Post Migration journey (UJ-087/BR-272); field values (OfferName, CampaignCode, PromotionId, MonthlyRental, AddOnMonthly, Channel, Status) are taken verbatim from the evidenced walkthrough in guided-journeys-pre-to-post-open-ui-desktop-pre-to-post-auto-7cb45c57. journeyType is an app-added discriminator, not part of the original schema."
   }
 ]

@@ -29,7 +29,7 @@ export interface PrepaidCheckoutTotals {
 }
 
 // The BRSD doesn't name a SIM card charge amount anywhere (no P-parameter
-// covers it) — BR-348/BR-013 only decides whether a charge applies. QAR 15
+// covers it) - BR-348/BR-013 only decides whether a charge applies. QAR 15
 // is a placeholder pending VFQ confirmation, not sourced from the BRSD.
 const SIM_CARD_CHARGE_QAR = 15;
 
@@ -45,7 +45,7 @@ interface PrepaidCheckoutStepProps {
 }
 
 // MPRA_001_CVC_01–03 (Cart Validation & Check-Out, Starter pack & recharge
-// charge collection, Payment summary display) — a prepaid-specific
+// charge collection, Payment summary display) - a prepaid-specific
 // checkout/payment-summary screen. Deliberately not a reuse of
 // CheckoutSummaryStep: that component is wired to postpaid-only concepts
 // (Device on Installment, HRN advance payment) that don't apply here per
@@ -78,10 +78,10 @@ export function PrepaidCheckoutStep({
   const simCardChargeQar = simCardRule.pass ? 0 : SIM_CARD_CHARGE_QAR;
   const numberDelta = numberPriceQar ?? 0;
   const totalDueQar = starterPackChargeQar + simCardChargeQar + numberDelta;
-  // DF-16 (SIM data group) requires ICCID alongside SIM Type/Serial — resolved
+  // DF-16 (SIM data group) requires ICCID alongside SIM Type/Serial - resolved
   // from the same sims.json record SimSerialScanner already validated against.
   // eSIM has no backing inventory record to resolve an ICCID from (see
-  // SimTypeStep — no fabricated eSIM provisioning API), so it reads "Not
+  // SimTypeStep - no fabricated eSIM provisioning API), so it reads "Not
   // applicable" rather than a fabricated value.
   const resolvedIccid = simType?.simType === 'Physical' ? sims.find((s) => s.simSerial === simType.simSerial)?.iccid : undefined;
 
@@ -100,11 +100,11 @@ export function PrepaidCheckoutStep({
   return (
     <div className="space-y-4">
       <dl className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4">
-        <Row label="Customer" value={customerName ?? '—'} />
-        <Row label="Pack" value={plan ? `${plan.name} — QR ${starterPackChargeQar}` : 'SIM only, no pack selected'} />
-        <Row label="Number" value={msisdn ? `${msisdn}${numberDelta > 0 ? ` (premium, QR ${numberDelta} one-time)` : ''}` : '—'} />
-        <Row label="SIM Type" value={simType?.simType ?? '—'} />
-        <Row label="ICCID" value={simType?.simType === 'eSIM' ? 'Not applicable (eSIM)' : (resolvedIccid ?? '—')} />
+        <Row label="Customer" value={customerName ?? '-'} />
+        <Row label="Pack" value={plan ? `${plan.name} - QR ${starterPackChargeQar}` : 'SIM only, no pack selected'} />
+        <Row label="Number" value={msisdn ? `${msisdn}${numberDelta > 0 ? ` (premium, QR ${numberDelta} one-time)` : ''}` : '-'} />
+        <Row label="SIM Type" value={simType?.simType ?? '-'} />
+        <Row label="ICCID" value={simType?.simType === 'eSIM' ? 'Not applicable (eSIM)' : (resolvedIccid ?? '-')} />
         <Row label="SIM Card Charge" value={simCardChargeQar > 0 ? `QR ${simCardChargeQar}` : 'Waived'} />
       </dl>
 

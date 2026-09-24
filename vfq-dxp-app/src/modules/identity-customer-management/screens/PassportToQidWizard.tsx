@@ -93,9 +93,9 @@ export function PassportToQidWizard() {
                 <div className="rounded-[var(--radius-card)] border border-border-soft p-4 bg-surface">
                   <p className="text-fg font-medium">Identification Number Change Form</p>
                   <p className="text-fg-2 text-[length:var(--fs-caption)] mt-1">
-                    Customer: {(values.qid as QidValue | undefined)?.moiResult?.name ?? '—'} — updating identification
-                    from Passport {(values.passportNumber as string) ?? '—'} to QID{' '}
-                    {(values.qid as QidValue | undefined)?.idNumber ?? '—'}.
+                    Customer: {(values.qid as QidValue | undefined)?.moiResult?.name ?? '-'} - updating identification
+                    from Passport {(values.passportNumber as string) ?? '-'} to QID{' '}
+                    {(values.qid as QidValue | undefined)?.idNumber ?? '-'}.
                   </p>
                   {signatureDataUrl ? (
                     <div className="mt-3 flex items-center gap-3">
@@ -124,7 +124,7 @@ export function PassportToQidWizard() {
             eSignature: qid.moiResult?.name,
             status: 'Attached/Finished',
           });
-          pushToast('success', `Passport to QID update ${updateId} finished — identification change form attached.`);
+          pushToast('success', `Passport to QID update ${updateId} finished - identification change form attached.`);
           navigate('/identity-customer-management');
         }}
         onAbandon={() => navigate('/identity-customer-management')}

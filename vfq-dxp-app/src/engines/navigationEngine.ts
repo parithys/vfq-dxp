@@ -14,7 +14,7 @@ import type { PersonaApproach } from '../types/config';
 // closed manifest (navManifest.ts), four orderings, no per-role nav lists to
 // maintain across 26 roles.
 //
-// Order is meaningful — it IS the information architecture. Customer-First
+// Order is meaningful - it IS the information architecture. Customer-First
 // leads with the customer; Product-First leads with the product/work item and
 // treats the work item first; Hybrid is the union, interleaved so
 // each half stays contiguous.
@@ -46,7 +46,7 @@ const APPROACH_NAV: Record<PersonaApproach, NavKey[]> = {
 const FALLBACK_APPROACH: PersonaApproach = 'Customer-First';
 
 /** Never throws, never returns undefined. Falls back when the persona is
- * missing — a persisted role id can outlive a config change, and the whole
+ * missing - a persisted role id can outlive a config change, and the whole
  * shell must not disappear because of it. */
 export function approachFor(personaId: string | undefined): PersonaApproach {
   if (!personaId) return FALLBACK_APPROACH;
@@ -74,7 +74,7 @@ export function resolveNavFor(personaId: string | undefined): NavItem[] {
   );
 
   // Product lines: restrict the sub-menu to the categories this role can
-  // actually reach, so the rail and the page agree (they diverged once — the
+  // actually reach, so the rail and the page agree (they diverged once - the
   // page hid empty categories while the rail still listed all five, letting a
   // role click a sub-menu item and land on someone else's content).
   //
@@ -95,7 +95,7 @@ export function resolveNavFor(personaId: string | undefined): NavItem[] {
   const resolved = scoped;
 
   // Warn, never throw. This runs on every Sidebar render for every role, and
-  // an over-cap rail is a design smell, not a correctness fault — throwing
+  // an over-cap rail is a design smell, not a correctness fault - throwing
   // here took out the entire navigation rail with no visible message the first
   // time a Hybrid role also held the Administration grant (9 + 1 = 10).
   // Breaking navigation is strictly worse than the sprawl it guards against.
@@ -113,7 +113,7 @@ export function resolveNavFor(personaId: string | undefined): NavItem[] {
 /** One warning per role, so an over-cap rail doesn't spam every render. */
 const warnedOverCap = new Set<string>();
 
-/** Whether this role can reach a nav destination at all — used to decide
+/** Whether this role can reach a nav destination at all - used to decide
  * between rendering a workspace and redirecting away from it. */
 export function canReachNavKey(personaId: string | undefined, key: NavKey): boolean {
   return resolveNavFor(personaId).some((i) => i.key === key || i.children?.some((c) => c.key === key));

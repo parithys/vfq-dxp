@@ -5,7 +5,7 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
       <div className="text-[length:var(--fs-caption)] text-muted">{label}</div>
-      <div className="text-fg text-[length:var(--fs-body)]">{value ?? '—'}</div>
+      <div className="text-fg text-[length:var(--fs-body)]">{value ?? '-'}</div>
     </div>
   );
 }

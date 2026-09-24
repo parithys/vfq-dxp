@@ -41,12 +41,12 @@ export function Breadcrumbs() {
     // as a mistake. Same token, not the same literal, so they stay matched in
     // dark mode where --border-soft and --nav-border diverge.
     <div className="flex items-center gap-1.5 px-6 py-2.5 text-[length:var(--fs-caption)] text-muted border-b border-[var(--nav-border)] bg-bg">
-      {/* Single global back affordance — this bar is the one persistent
+      {/* Single global back affordance - this bar is the one persistent
        * element mounted above every routed page (App.tsx), so placing it
        * here guarantees it's always in the same spot, rather than the
        * scattered/inconsistent per-page "Go Back" buttons some screens
        * already have buried in their own action rows. Never rendered on the
-       * Dashboard itself (component returns null there — see above), which
+       * Dashboard itself (component returns null there - see above), which
        * doubles as "nowhere sensible to go back to" for this button too.
        * Styled as a bordered pill in the same caption size/muted tone as the
        * crumb trail beside it, rather than a bare icon circle, so it reads as

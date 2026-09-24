@@ -4,7 +4,7 @@ import { Badge } from '../components/primitives/Badge';
 // The presentational half of the not-yet-built placeholder, extracted verbatim
 // from ScreenNotYetBuilt so the screen-level and workspace-level placeholders
 // are the same component rather than two that drift apart. No token or
-// primitive change — same Badge, same --fs-h3 heading, same text-fg-2 body.
+// primitive change - same Badge, same --fs-h3 heading, same text-fg-2 body.
 export interface NotYetBuiltPanelProps {
   badge?: string;
   title: string;

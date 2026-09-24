@@ -4,9 +4,9 @@ import type { BulkRow } from '../../../components/patterns/BulkOperationPortal';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 
-// SCR-001: Bulk Adjustment Portal (DXP, Target State) — UJ-001 "Bulk Adjustment
+// SCR-001: Bulk Adjustment Portal (DXP, Target State) - UJ-001 "Bulk Adjustment
 // Submission (Target State)," high confidence: agent uses a bulk adjustment
-// portal in DXP integrated with BRM — fixed template, multi-bucket
+// portal in DXP integrated with BRM - fixed template, multi-bucket
 // adjustments, unit of measurement, free-text comment, billing profile
 // filtration, request status tracking, failure reports for re-upload.
 export function BulkAdjustmentPortal() {
@@ -20,7 +20,7 @@ export function BulkAdjustmentPortal() {
       return { ok: false, reason: 'Billing Profile and Amount are required.' };
     }
     if (!row.billingProfileId.startsWith('BILL-')) {
-      return { ok: false, reason: 'Billing Profile not found in BRM — expected format BILL-xxxx.' };
+      return { ok: false, reason: 'Billing Profile not found in BRM - expected format BILL-xxxx.' };
     }
     await createRecord('adjustments', {
       adjustmentId: `ADJ-${Date.now().toString().slice(-6)}-${row.rowId}`,

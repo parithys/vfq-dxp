@@ -27,7 +27,7 @@ const GENDER_OPTIONS = [
 
 // CUS-001-CAM-09/11, DF-DEMO-001-007: Customer Name/Age/Gender/Nationality/
 // Preferred Language are agent-editable; KYC Status and Account Status are
-// not (kept out of this form entirely, not just disabled — DF-DEMO-001-007
+// not (kept out of this form entirely, not just disabled - DF-DEMO-001-007
 // marks them Editable=No). Callers are responsible for the BR-01
 // verification gate and BR-02 role check before opening this drawer.
 export function DemographicEditDrawer({ open, onClose, customer, onSaved, onTicketCreated }: DemographicEditDrawerProps) {

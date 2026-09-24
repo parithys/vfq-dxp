@@ -34,7 +34,7 @@ function buildGrid(year: number, month: number): Date[] {
 }
 
 // Range calendar per Date Specific-Open.svg: month/year header with prev/next
-// nav, Mon-start weekday row, 6x7 day grid. Two-click range selection — first
+// nav, Mon-start weekday row, 6x7 day grid. Two-click range selection - first
 // click sets the start anchor, second sets the end (swapped if picked
 // earlier), both anchors render as filled --field-calendar-anchor circles
 // with the days between them washed in --field-calendar-range.

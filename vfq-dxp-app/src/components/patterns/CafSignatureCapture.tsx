@@ -22,18 +22,18 @@ interface CafSignatureCaptureProps {
   value: { cafType?: CafType; signatureDataUrl?: string };
   onChange: (value: { cafType?: CafType; signatureDataUrl?: string }) => void;
   customerName?: string;
-  /** Binds an ID Number line onto the CAF preview — module-hierarchy.json's
+  /** Binds an ID Number line onto the CAF preview - module-hierarchy.json's
    * "CAF form dynamically binds Qatari ID/Passport number field for prepaid
    * subscribers." Omit for flows where this binding isn't evidenced. */
   idLabel?: string;
   idValue?: string;
 }
 
-// Pattern 6: CAF/Contract Signature Capture — CAF Type card selector (Digital/
+// Pattern 6: CAF/Contract Signature Capture - CAF Type card selector (Digital/
 // Manual/Touch Screen, styled like the ID Type picker), bilingual (AR/EN)
 // document preview pre-populated from
 // applicant/billing/plan data, then a "Please Sign" pad modal (drawn signature,
-// Clear/Done) — reused identically for CAF, MNP application, Passport-to-QID
+// Clear/Done) - reused identically for CAF, MNP application, Passport-to-QID
 // forms (SCR-058, SCR-069/070, SCR-084, SCR-127/129, etc.).
 export function CafSignatureCapture({ value, onChange, customerName, idLabel, idValue }: CafSignatureCaptureProps) {
   const [padOpen, setPadOpen] = useState(false);
@@ -74,11 +74,11 @@ export function CafSignatureCapture({ value, onChange, customerName, idLabel, id
             <span dir="rtl">نموذج طلب عميل فودافون</span>
           </div>
           <p className="text-fg text-[length:var(--fs-body)]">
-            Applicant: <span className="font-medium">{customerName ?? '—'}</span>
+            Applicant: <span className="font-medium">{customerName ?? '-'}</span>
           </p>
           {idLabel && (
             <p className="text-fg text-[length:var(--fs-body)]">
-              {idLabel}: <span className="font-medium">{idValue ?? '—'}</span>
+              {idLabel}: <span className="font-medium">{idValue ?? '-'}</span>
             </p>
           )}
           <p className="text-fg-2 text-[length:var(--fs-caption)] mt-1">

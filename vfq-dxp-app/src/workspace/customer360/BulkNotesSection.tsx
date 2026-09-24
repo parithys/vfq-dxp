@@ -11,10 +11,10 @@ interface BulkNote {
 
 // Agent 360 BNT-01/02/03: an agent views notes pushed by the system with
 // posting date/time, including notes applied to multiple accounts at once
-// (BNT-02) — this view just needs to match any of the customer's own
+// (BNT-02) - this view just needs to match any of the customer's own
 // account IDs against a note's accountIds array. No expiry rule is applied
 // (BNT-03: "display irrespective of timeline... unless business confirms
-// an expiry rule" — none has been confirmed).
+// an expiry rule" - none has been confirmed).
 export function BulkNotesSection({ accountIds }: { accountIds: string[] }) {
   const notes = (useEntityStore((s) => s.records['bulk-notes']) ?? []) as unknown as BulkNote[];
   const loadKind = useEntityStore((s) => s.loadKind);

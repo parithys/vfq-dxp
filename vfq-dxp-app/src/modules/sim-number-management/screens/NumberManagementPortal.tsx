@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MsisdnPicker } from '../../../components/domain/MsisdnPicker';
 
-// SCR-024: Number Management Portal — "search experience needs to be
+// SCR-024: Number Management Portal - "search experience needs to be
 // defined" per screens.md; the only evidenced field-level behaviour is the
 // Free/Paid number category toggle, matching Pattern 10 (Number Selection/
 // Reservation Step) already built for the activation wizards. Presented here

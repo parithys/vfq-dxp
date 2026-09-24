@@ -1,4 +1,4 @@
-// Vodafone speech-mark logo — same path data as public/favicon.svg. Shared
+// Vodafone speech-mark logo - same path data as public/favicon.svg. Shared
 // between LoginPage and Sidebar rather than duplicated inline.
 export function VodafoneMark({ className = 'w-8 h-8' }: { className?: string }) {
   return (

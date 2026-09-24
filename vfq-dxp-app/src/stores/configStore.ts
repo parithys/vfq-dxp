@@ -16,7 +16,7 @@ interface ConfigStoreState {
  * Runs after loadConfig() so it can check the real source of truth rather than
  * guessing from the id shape. Needed because zustand's `migrate` only fires
  * for payloads that carry a `version`, and state persisted before versioning
- * was introduced has none (verified against zustand 5.0.15) — so a returning
+ * was introduced has none (verified against zustand 5.0.15) - so a returning
  * user could otherwise boot holding a Staff ID or role id that was removed in
  * the 2026-09-24 re-key. Symptoms would have been silent rather than loud:
  * a blank greeting, an empty role switcher, and every capability gate false.
@@ -38,7 +38,7 @@ function dropStaleSession(): void {
   }
 }
 
-// Boot-time loader (frontend-architecture.md §10) — reads all config/*.json and
+// Boot-time loader (frontend-architecture.md §10) - reads all config/*.json and
 // mock-data/*.json once; screens/components read through the engine accessors,
 // never these files directly.
 export const useConfigStore = create<ConfigStoreState>((set) => ({

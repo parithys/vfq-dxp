@@ -9,7 +9,7 @@ interface CreditCheckPanelProps {
 }
 
 // Surfaces BR-FIBRE-OUTSTANDING-THRESHOLD's evaluation (conflict-report.md
-// Conflict 1) as a visible, explicit decision point — never a silent pass/fail.
+// Conflict 1) as a visible, explicit decision point - never a silent pass/fail.
 // When the rule reports the threshold is genuinely unresolved, the agent must
 // tick an explicit override to proceed; this is a UX/business decision layered
 // on top of the rule engine, not the engine silently unblocking itself.

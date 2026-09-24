@@ -8,10 +8,10 @@ import { evaluateRule } from '../../../engines/ruleEngine';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 
-// SCR-007: Account Creation Screen (Enterprise) — FLD-023–028 (UJ-004, high
+// SCR-007: Account Creation Screen (Enterprise) - FLD-023–028 (UJ-004, high
 // confidence): Account/Company name, CR type/ID type, CR number (mandatory
 // search before creation), Agent ID (commission), Business type (incl.
-// B2B2C), Credit limit — no default for enterprise, requires Business Finance
+// B2B2C), Credit limit - no default for enterprise, requires Business Finance
 // approval (BR-ENTERPRISE-CREDIT-LIMIT-APPROVAL).
 export function EnterpriseAccountCreation() {
   const navigate = useNavigate();
@@ -101,7 +101,7 @@ export function EnterpriseAccountCreation() {
         />
 
         <Input
-          label="Credit Limit (QAR) — no default for enterprise"
+          label="Credit Limit (QAR) - no default for enterprise"
           type="number"
           value={creditLimit}
           onChange={(e) => setCreditLimit(e.target.value)}

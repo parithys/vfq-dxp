@@ -9,7 +9,7 @@ const OPEN_ARROW = 'M7 17L17 7 M7 7h10v10';
 // The workspace-level counterpart to ScreenNotYetBuilt, for nav destinations
 // that are applicable to a role but not yet implemented. Requirement: such a
 // feature must stay VISIBLE as a placeholder indicating planned functionality,
-// consistently across roles — not disappear from the rail.
+// consistently across roles - not disappear from the rail.
 //
 // Two things make it a signpost rather than a dead end:
 //   - it states what the workspace WILL do (from the manifest's planned copy)

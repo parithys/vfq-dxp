@@ -25,7 +25,7 @@ interface RejectReason {
   reasonLabel: string;
 }
 
-// SCR-196: SIM Swap Queue / Order tasks tab — UJ-091: "Open SIM Swap Queue ->
+// SCR-196: SIM Swap Queue / Order tasks tab - UJ-091: "Open SIM Swap Queue ->
 // Order tasks tab -> select order -> Assign to Me -> open via Order ID
 // hyperlink -> Approve or Reject." Only one evidenced screenId covers both
 // the queue and its detail/approval facet, so this single component switches
@@ -57,7 +57,7 @@ export function SimSwapQueueScreen() {
     return (
       <div className="p-8">
         <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">SIM Swap Queue</h1>
-        <p className="text-fg-2 mb-6">Order tasks tab — tasks awaiting SIM Swap approval.</p>
+        <p className="text-fg-2 mb-6">Order tasks tab - tasks awaiting SIM Swap approval.</p>
         <ErrorBanner message={loadError} />
         <DataTable<SimSwapOrder>
           columns={[
@@ -86,7 +86,7 @@ export function SimSwapQueueScreen() {
 
   const order = orders.find((o) => o.simSwapOrderId === orderId);
   if (!order) {
-    return <div className="p-8 text-fg-2">No SIM Swap order selected — go back to the queue and Assign to Me first.</div>;
+    return <div className="p-8 text-fg-2">No SIM Swap order selected - go back to the queue and Assign to Me first.</div>;
   }
 
   const approve = async () => {
@@ -94,7 +94,7 @@ export function SimSwapQueueScreen() {
       status: 'Approved/Completed',
       approveComment,
     });
-    pushToast('success', `SIM Swap ${order.simSwapOrderId} approved — order completed.`);
+    pushToast('success', `SIM Swap ${order.simSwapOrderId} approved - order completed.`);
     navigate('/sim-number-management/sim-swap-queue-order-tasks-tab');
   };
 
@@ -105,7 +105,7 @@ export function SimSwapQueueScreen() {
       rejectReasonCode: rejectReason,
       rejectComment,
     });
-    pushToast('warning', `SIM Swap ${order.simSwapOrderId} dropped as cancelled — ${reasonLabel}.`);
+    pushToast('warning', `SIM Swap ${order.simSwapOrderId} dropped as cancelled - ${reasonLabel}.`);
     navigate('/sim-number-management/sim-swap-queue-order-tasks-tab');
   };
 
@@ -120,19 +120,19 @@ export function SimSwapQueueScreen() {
       <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)] rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 mb-6">
         <div>
           <dt className="text-[length:var(--fs-caption)] text-muted">New SIM Serial</dt>
-          <dd className="text-fg">{order.newSimSerialNumber ?? '—'}</dd>
+          <dd className="text-fg">{order.newSimSerialNumber ?? '-'}</dd>
         </div>
         <div>
           <dt className="text-[length:var(--fs-caption)] text-muted">Reason</dt>
-          <dd className="text-fg">{order.simSwapReason ?? '—'}</dd>
+          <dd className="text-fg">{order.simSwapReason ?? '-'}</dd>
         </div>
         <div>
           <dt className="text-[length:var(--fs-caption)] text-muted">Charge</dt>
-          <dd className="text-fg">{order.chargeStatus ?? '—'}</dd>
+          <dd className="text-fg">{order.chargeStatus ?? '-'}</dd>
         </div>
         <div>
           <dt className="text-[length:var(--fs-caption)] text-muted">Comments</dt>
-          <dd className="text-fg">{order.comments ?? '—'}</dd>
+          <dd className="text-fg">{order.comments ?? '-'}</dd>
         </div>
       </dl>
 

@@ -17,7 +17,7 @@ interface CpeSerialScannerProps {
 
 // Barcode-scan input for CPE Indoor/Outdoor serial, validated in real time
 // against UIM/inventory (FLD-410/411, FWA Outdoor WFM - Serial Number Check
-// screen) — same real-time-inventory-validation shape as Pattern 11's
+// screen) - same real-time-inventory-validation shape as Pattern 11's
 // SimSerialScanner, applied to CPE devices instead of SIM cards.
 export function CpeSerialScanner({ label, deviceType, value, onChange }: CpeSerialScannerProps) {
   const [error, setError] = useState<string | null>(null);

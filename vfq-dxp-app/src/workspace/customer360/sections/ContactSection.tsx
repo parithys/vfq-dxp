@@ -43,7 +43,7 @@ const GENDER_OPTIONS = [
 
 // CUS-001-CAM-12/13: view all customer contacts + detail; CUS-001-CAM-14/15:
 // edit + auto-ticket. BR-03: ID Type/ID Number render read-only in the edit
-// drawer — any correction must go through the dedicated KYC identity-
+// drawer - any correction must go through the dedicated KYC identity-
 // correction wizard (Passport-to-QID), not this screen.
 export function ContactSection({
   data,
@@ -54,7 +54,7 @@ export function ContactSection({
    * visible in the Tickets tab / Open Tickets count, not just persisted. */
   onTicketCreated: (ticket: Record<string, unknown>) => void;
 }) {
-  // Seeded once from the data prop, then patched locally on save — data.contacts
+  // Seeded once from the data prop, then patched locally on save - data.contacts
   // is Customer360Layout's one-time fetch snapshot, not reactive to entityStore
   // mutations, so without this the table would show stale values until the
   // agent navigated away and back despite the edit having actually persisted.
@@ -167,10 +167,10 @@ function ContactEditDrawer({
           <Input label="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} readOnly={readOnly} disabled={readOnly} />
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <Tooltip content="ID Type cannot be changed here — BR-03. Use the KYC identity-correction wizard." placement="top">
+          <Tooltip content="ID Type cannot be changed here - BR-03. Use the KYC identity-correction wizard." placement="top">
             <Input label="ID Type" value={contact.idType} disabled readOnly />
           </Tooltip>
-          <Tooltip content="ID Number cannot be changed here — BR-03. Use the KYC identity-correction wizard." placement="top">
+          <Tooltip content="ID Number cannot be changed here - BR-03. Use the KYC identity-correction wizard." placement="top">
             <Input label="ID Number" value={contact.idNumber} disabled readOnly />
           </Tooltip>
         </div>

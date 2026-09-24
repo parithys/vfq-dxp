@@ -33,7 +33,7 @@ interface CampaignSearchRecord { campaignId: string; name: string; status: strin
 // can never advertise a scope the results don't actually cover.
 //
 // Customers are now included. They were previously excluded with the note that
-// "no customer-profile screen is registered anywhere in this build" — that
+// "no customer-profile screen is registered anywhere in this build" - that
 // stopped being true once /customer/:customerId -> Customer360Layout was
 // built, so excluding them was withholding the single most useful result type.
 //
@@ -211,7 +211,7 @@ export function GlobalSearch() {
         }}
         placeholder={scope.placeholder}
         aria-label="Global search"
-        // Filled rather than outlined, per the 2026-09-24 reference — the only
+        // Filled rather than outlined, per the 2026-09-24 reference - the only
         // field in it treated that way. The filled/normal border swap the other
         // inputs still do is dropped here rather than layered on top: a border
         // on a --search-bg well reads as a second edge around the fill. The

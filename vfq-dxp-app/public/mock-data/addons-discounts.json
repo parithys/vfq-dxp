@@ -97,7 +97,7 @@
     "durationMonths": null,
     "planId": "PROD-301",
     "isLockedReadOnly": false,
-    "_note": "App-level demo addition for MPRA_001_QPC_04 (Special discount) — no prepaid-scoped Discount record existed before; rate/naming follows the same -10%/-15% Loyalty Discount pattern already used elsewhere in this file, applied one-time to the starter pack charge rather than a recurring MRC."
+    "_note": "App-level demo addition for MPRA_001_QPC_04 (Special discount) - no prepaid-scoped Discount record existed before; rate/naming follows the same -10%/-15% Loyalty Discount pattern already used elsewhere in this file, applied one-time to the starter pack charge rather than a recurring MRC."
   },
   {
     "addonDiscountId": "ADO-7110",

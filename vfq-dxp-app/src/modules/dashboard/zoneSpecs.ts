@@ -4,7 +4,7 @@ import type { ZoneMetrics } from './useZoneMetrics';
 
 // Zone content, kept out of the renderer so the two zones are data and the
 // component is layout. `compact` trims the tile/card set for a half-width
-// Hybrid column — the same zone at lower density, not a different zone.
+// Hybrid column - the same zone at lower density, not a different zone.
 
 interface RecentCustomer {
   customerId: string;
@@ -14,7 +14,7 @@ interface RecentCustomer {
 
 /** `framing` is the role's relationship to the zone; `compact` is only density.
  * They were conflated at first, so a Hybrid role focusing on product saw the
- * zone retitled "My Portfolio" — a product-manager framing for someone who is
+ * zone retitled "My Portfolio" - a product-manager framing for someone who is
  * an oversight role. Size must never change what a zone claims to be. */
 export type ZoneFraming = 'primary' | 'one-of-two';
 
@@ -133,7 +133,7 @@ export function productWorkSpec(
     };
   }
 
-  // 'catalogue' — the product/channel view.
+  // 'catalogue' - the product/channel view.
   const allTiles = [
     { key: 'approvals', label: 'Pending Approvals', count: m.pendingApprovals, to: '/mobile', loadingKind: 'catalog-items' },
     { key: 'exceptions', label: 'Price Exceptions', count: m.priceExceptions, to: '/mobile', loadingKind: 'price-exceptions' },
@@ -143,14 +143,14 @@ export function productWorkSpec(
   ];
 
   const allCards: ZoneSpec['cards'] = [
-    { label: 'Mobile attach rate', sub: period, value: perf ? `${perf.mobileAttachRatePct}%` : '—', icon: I.mobile, loadingKind: 'channel-performance' },
-    { label: 'Fibre & Home take-up', sub: period, value: perf ? `${perf.fibreHomeTakeUpPct}%` : '—', icon: I.wifi, loadingKind: 'channel-performance' },
-    { label: 'Lead → activation', sub: 'last 30 days', value: perf ? `${perf.leadToActivationPct}%` : '—', icon: I.users, loadingKind: 'channel-performance' },
-    { label: 'Top-performing plan', sub: perf?.topPerformingPlan ?? '—', value: perf ? `+${perf.topPerformingPlanDeltaPct}%` : '—', icon: I.tag, loadingKind: 'channel-performance' },
+    { label: 'Mobile attach rate', sub: period, value: perf ? `${perf.mobileAttachRatePct}%` : '-', icon: I.mobile, loadingKind: 'channel-performance' },
+    { label: 'Fibre & Home take-up', sub: period, value: perf ? `${perf.fibreHomeTakeUpPct}%` : '-', icon: I.wifi, loadingKind: 'channel-performance' },
+    { label: 'Lead → activation', sub: 'last 30 days', value: perf ? `${perf.leadToActivationPct}%` : '-', icon: I.users, loadingKind: 'channel-performance' },
+    { label: 'Top-performing plan', sub: perf?.topPerformingPlan ?? '-', value: perf ? `+${perf.topPerformingPlanDeltaPct}%` : '-', icon: I.tag, loadingKind: 'channel-performance' },
     {
       label: 'Channel mix',
       sub: 'Retail vs Direct vs Tele',
-      value: perf ? `${perf.channelMixRetailPct}/${perf.channelMixDirectPct}/${perf.channelMixTelePct}` : '—',
+      value: perf ? `${perf.channelMixRetailPct}/${perf.channelMixDirectPct}/${perf.channelMixTelePct}` : '-',
       icon: I.chart,
       loadingKind: 'channel-performance',
     },

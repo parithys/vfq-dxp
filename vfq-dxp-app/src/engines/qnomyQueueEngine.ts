@@ -6,7 +6,7 @@ import { getPersona } from './configEngine';
 // is the Mobile Postpaid Activation journey named on the BRSD's J011 slide), so
 // "the relevant queue" is keyed to evidenced data rather than a new field
 // invented for it. Two further codes were seeded so the distinction is
-// demonstrable — with a single queue, "relevant" is unfalsifiable.
+// demonstrable - with a single queue, "relevant" is unfalsifiable.
 //
 // Role -> queues is derived from the persona's GROUP, which already exists,
 // rather than a per-role table that would need editing for all 26 roles:
@@ -17,7 +17,7 @@ import { getPersona } from './configEngine';
 //   Management, Approval & Gov.    -> all   oversight roles cover the floor
 //
 // Only roles whose contextCard is 'Queue Number + Ticket Number' (plus
-// oversight) ever see the control at all — see canSeeQnomyTicketNumber — so
+// oversight) ever see the control at all - see canSeeQnomyTicketNumber - so
 // this is about WHICH queue, not WHETHER.
 
 export const QUEUE_LABELS: Record<string, string> = {
@@ -35,7 +35,7 @@ const GROUP_QUEUES: Record<string, string[]> = {
 const ALL_QUEUES = Object.keys(QUEUE_LABELS);
 
 /** The journey codes this role may be served from. An oversight role, or a
- * group with no explicit mapping, gets the whole floor rather than nothing —
+ * group with no explicit mapping, gets the whole floor rather than nothing -
  * handing a supervisor an empty queue would read as a broken queue rather
  * than as a scoping decision. */
 export function queuesForRole(personaId: string | undefined): string[] {
@@ -81,7 +81,7 @@ export function waitingCountFor(personaId: string | undefined, tickets: QueueTic
   return tickets.filter((t) => t.status === 'Waiting' && t.journeyCode && mine.has(t.journeyCode)).length;
 }
 
-/** Normalises for comparison — a kiosk keypad entry may carry spaces or omit
+/** Normalises for comparison - a kiosk keypad entry may carry spaces or omit
  * the country code, while customers.json stores full E.164. Compared on the
  * last 8 digits, which is the national subscriber number in Qatar. */
 export function mobileMatches(kiosk: string | null | undefined, onFile: string | null | undefined): boolean {

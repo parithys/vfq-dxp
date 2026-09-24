@@ -10,7 +10,7 @@ registerScreen('SCR-147', () => <LeadListView scope="all" />);
 registerScreen('SCR-150', () => <LeadListView scope="contact" />);
 
 // SCR-141 is the detail view; SCR-145/146/148/149 are its evidenced sub-actions
-// (Reject modal / Reassignment picker / Description popup / Callback picker) —
+// (Reject modal / Reassignment picker / Description popup / Callback picker) -
 // all reachable as buttons from the same detail component, so all four route
 // entries resolve to it too (matching how they're triggered in-place in the
 // source screenshots, not as independently navigable pages).

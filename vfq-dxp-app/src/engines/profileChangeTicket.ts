@@ -10,12 +10,12 @@ const AREA_BY_KIND: Record<ProfileChangeKind, string> = {
   Address: 'Profile Update',
 };
 
-/** CUS-001-CAM-10/15/18, BR-04: fires exactly once per save call — callers
+/** CUS-001-CAM-10/15/18, BR-04: fires exactly once per save call - callers
  * invoke this a single time per edit-drawer submit, so a demographic save
  * never also fires a contact/address ticket and vice versa (no shared
  * "on customer save" handler exists to over- or under-generate). Returns the
  * full created record (not just the ID) so callers can bubble it into
- * Customer360Layout's local ticket list — without this, the new ticket would
+ * Customer360Layout's local ticket list - without this, the new ticket would
  * persist correctly but not actually be visible in the Tickets tab or the
  * header's Open Tickets count until the agent navigated away and back,
  * defeating BR-04's point of making it an immediately usable reference. */
@@ -38,7 +38,7 @@ export function useProfileChangeTicket() {
       createdBy,
     });
     await createRecord('trouble-tickets', record);
-    pushToast('success', `${kind} details saved — reference ticket ${ticketId} created for follow-up.`);
+    pushToast('success', `${kind} details saved - reference ticket ${ticketId} created for follow-up.`);
     return { ticketId, record };
   };
 }

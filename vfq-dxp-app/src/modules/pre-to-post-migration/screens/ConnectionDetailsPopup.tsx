@@ -6,7 +6,7 @@ interface InstalledAsset {
   status: string;
 }
 
-// SCR-075: Connection Details Popup — a shared pre-journey guardrail reused
+// SCR-075: Connection Details Popup - a shared pre-journey guardrail reused
 // identically across FWA, MNP, Postpaid Cross-Sales, and Pre-to-Post
 // journeys (screens.md, 6 source documents), not a Pre-to-Post-exclusive
 // screen. Shows Prepaid/Postpaid connection counts before the agent proceeds
@@ -30,7 +30,7 @@ export function ConnectionDetailsPopup() {
       </div>
       {postpaidCount >= 2 && (
         <p className="text-[length:var(--fs-caption)] text-danger mt-3">
-          Advisory: 2 or more postpaid connections on this account — review credit policy before proceeding.
+          Advisory: 2 or more postpaid connections on this account - review credit policy before proceeding.
         </p>
       )}
     </div>

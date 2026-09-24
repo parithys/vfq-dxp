@@ -27,7 +27,7 @@ interface ProductPlanStepProps {
   selectedProductId: string | undefined;
   onSelect: (productId: string) => void;
   /** Only Fixed Line/Fibre plans surface the unresolved credit-check conflict
-   * (conflict-report.md Conflict 1) — no equivalent conflict is evidenced for
+   * (conflict-report.md Conflict 1) - no equivalent conflict is evidenced for
    * other product types, so this defaults off. */
   showCreditCheck?: boolean;
   creditCheckAcknowledged?: boolean;
@@ -35,7 +35,7 @@ interface ProductPlanStepProps {
   onCreditCheckResult?: (pass: boolean) => void;
 }
 
-// SCR-046/SCR-080/SCR-156: Plan step — FLD-282: "Please Select a Plan." —
+// SCR-046/SCR-080/SCR-156: Plan step - FLD-282: "Please Select a Plan." -
 // searchable catalog grid of promotions, shared across New Fixed Line, New FWA,
 // and New Postpaid wizards (Pattern 1). Fixed Line's variant additionally
 // surfaces the unresolved fibre outstanding-dues threshold conflict via

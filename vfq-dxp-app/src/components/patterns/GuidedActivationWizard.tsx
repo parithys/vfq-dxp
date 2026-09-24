@@ -13,7 +13,7 @@ const CHECK = 'M20 6L9 17l-5-5';
 export interface WizardStep {
   key: string;
   label: string;
-  /** Short secondary line shown under the label in the step list (e.g. "Customer identification"). Optional — omitted steps just show the label. */
+  /** Short secondary line shown under the label in the step list (e.g. "Customer identification"). Optional - omitted steps just show the label. */
   description?: string;
   render: (ctx: { values: Record<string, unknown>; setValue: (field: string, value: unknown) => void }) => ReactNode;
   /** Return true to auto-skip this step given current draft values (e.g. appointment step skipped for instant activation). */
@@ -30,11 +30,11 @@ interface GuidedActivationWizardProps {
   onAbandon?: () => void;
 }
 
-// Pattern 1: Guided Multi-Step Wizard — the single most-repeated shape in the
+// Pattern 1: Guided Multi-Step Wizard - the single most-repeated shape in the
 // entire corpus (SCR-043–050, SCR-121–134, SCR-152–162, SCR-190–192, etc.).
 // Left-hand step list (numbered, with a secondary description line) + a
 // single content panel for the active step's fields and Back/Continue
-// footer — matches the reference layout supplied for this pattern.
+// footer - matches the reference layout supplied for this pattern.
 export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAbandon }: GuidedActivationWizardProps) {
   const draft = useWorkflowStore((s) => s.getDraft(wizardId));
   const setStep = useWorkflowStore((s) => s.setStep);
@@ -46,11 +46,11 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
   // async work committed would re-read the same not-yet-cleared draft and
   // create a byte-identical second order. Confirmed live: a rapid double
   // click on "Save & Finish" produced two orders with the same ID and fields.
-  // `submitting` state alone isn't enough — a second, genuinely-synchronous
+  // `submitting` state alone isn't enough - a second, genuinely-synchronous
   // invocation in the same tick still reads it as stale `false` (a state
   // update isn't visible until the next render), so `submittingRef` backs
   // it for the actual guard while `submitting` still drives the UI (button
-  // label/disabled) — same split used in OrderApprovalDetail.tsx et al.
+  // label/disabled) - same split used in OrderApprovalDetail.tsx et al.
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
   const [confirmingAbandon, setConfirmingAbandon] = useState(false);
@@ -63,13 +63,13 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
   const canProceed = currentStep?.isValid ? currentStep.isValid(draft.values) : true;
 
   // Focus management: put the cursor in the first field the agent must fill to
-  // get past this step — on arrival as well as on every step change, so a
+  // get past this step - on arrival as well as on every step change, so a
   // walk-in journey starts typing rather than starts hunting.
   //
   // "Mandatory" is resolved from the rendered panel, not from the step
   // definition: `isValid` is an opaque predicate over the draft values, so it
   // can say whether the step passes but not which control is responsible. The
-  // first EMPTY editable control in DOM order is that control in practice —
+  // first EMPTY editable control in DOM order is that control in practice -
   // DOM order is the visual sequence the agent reads, which is what "the first
   // required field in the sequence" means. Fields already carrying a value
   // (a resumed draft, an MOI-prefilled name) are skipped, so returning to a
@@ -77,23 +77,23 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
   //
   // Radios are INCLUDED: on a step like Plan & Add-ons the mandatory decision
   // IS the radio group, and focusing a radio neither selects it nor blocks
-  // anything — arrow keys then walk the options, which is the behaviour you
+  // anything - arrow keys then walk the options, which is the behaviour you
   // want. Excluded deliberately: [readonly] (the MOI-fetched email, "not
   // editable"), [disabled], hidden inputs, and type=checkbox, which in these
   // journeys is always an optional flag ("B2B2C order") and never the thing
-  // gating Continue. Button-group choices (ID Type) are excluded too — they
+  // gating Continue. Button-group choices (ID Type) are excluded too - they
   // arrive pre-selected, so they are not what is outstanding.
   //
-  // Falls back to the step heading when a step has no editable field at all —
-  // review, confirmation and summary steps — which preserves the previous
+  // Falls back to the step heading when a step has no editable field at all -
+  // review, confirmation and summary steps - which preserves the previous
   // behaviour where it still matters: a screen-reader user hears the new step
   // title rather than silence.
   //
   // A single attempt one frame after the step change is NOT enough, which cost
   // two steps before this was observed: Address and Plan & Add-ons build their
   // fields from data they fetch, so at that frame the panel held no focusable
-  // control at all. Address ended with focus on <body> — nothing focused, the
-  // cursor simply lost — and Plan & Add-ons fell through to the heading while
+  // control at all. Address ended with focus on <body> - nothing focused, the
+  // cursor simply lost - and Plan & Add-ons fell through to the heading while
   // its plan radios were still in flight. So the first attempt runs on the
   // next frame and a MutationObserver keeps watching the panel, claiming the
   // first field the moment it mounts.
@@ -107,7 +107,7 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
     // Without the distinction the "don't steal focus" check below tore the
     // observer down on its own success: it focused Zone, the next mutation saw
     // a real control focused, concluded the agent had taken over and stopped
-    // watching — so when Zone was disabled a moment later nothing was left to
+    // watching - so when Zone was disabled a moment later nothing was left to
     // recover the lost cursor.
     let ours: HTMLElement | null = null;
 
@@ -118,7 +118,7 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
           'input:not([type="hidden"]):not([type="checkbox"]):not([readonly]):not([disabled]),'
           + ' select:not([disabled]), textarea:not([readonly]):not([disabled])'
         ),
-        // offsetParent is null for anything display:none — a step that renders
+        // offsetParent is null for anything display:none - a step that renders
         // a collapsed branch must not pull focus into the hidden half.
       ].filter((el) => el.offsetParent !== null);
       // "Still outstanding" is per control type: a text/select control is
@@ -146,7 +146,7 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
         observer?.disconnect();
         return;
       }
-      // Already sitting in a field that is still editable — typing, most
+      // Already sitting in a field that is still editable - typing, most
       // likely. Don't reshuffle, but keep watching in case it gets disabled.
       if (active === ours && candidates.some((c) => c === ours)) return;
 
@@ -162,7 +162,7 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
 
     // setTimeout, not requestAnimationFrame: this only needs to run after the
     // step's own initial render has settled, which a macrotask gives it, and
-    // rAF does not fire at all while the document is hidden — so a journey
+    // rAF does not fire at all while the document is hidden - so a journey
     // opened in a background tab would never have had its first field focused.
     // Focus needs no paint, so there is nothing rAF buys here.
     const firstAttempt = setTimeout(tryFocus, 0);
@@ -217,7 +217,7 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
   };
 
   // Any step already reached this session (in either direction) stays
-  // reachable — jumping back to edit an earlier step must not strand the
+  // reachable - jumping back to edit an earlier step must not strand the
   // user; they can return to the furthest step, or any step in between,
   // without re-walking Continue through steps whose data hasn't changed.
   // Steps beyond maxReached stay unreachable so forward validation gating

@@ -15,7 +15,7 @@ export type PersonaApproach = 'Customer-First' | 'Product-First' | 'Hybrid' | 'N
 
 /** Which session reference number the persona's channel produces. Carried
  * forward from the Staff-ID/Channel/Context-card table that previously
- * existed only as a comment in staffIdRoleMap.ts with no consumer — it now
+ * existed only as a comment in staffIdRoleMap.ts with no consumer - it now
  * drives the header context chip. */
 export type PersonaContextCard =
   | 'Queue Number + Ticket Number'
@@ -57,7 +57,7 @@ export interface PersonaFeatureGrant {
 }
 
 /** The 26 VFQ operational roles. Replaced the previous 66 evidence-cited
- * personas on 2026-09-24 — those are archived, with their RBAC evidence, at
+ * personas on 2026-09-24 - those are archived, with their RBAC evidence, at
  * reference/blueprint/legacy/. Consequence worth knowing: grants here are
  * EXHAUSTIVE and AUTHORITATIVE, so absence of a grant means *deliberately
  * not granted*. That inverts the previous stance ("not evidenced, never
@@ -75,12 +75,12 @@ export interface Persona {
   description: string;
   channel: string;
   contextCard: PersonaContextCard;
-  /** users-agents.json userId — a deterministic 1:1 identity binding. */
+  /** users-agents.json userId - a deterministic 1:1 identity binding. */
   identityUserId: string;
   capabilities: PersonaCapability[];
   features: PersonaFeatureGrant[];
   /** 66-persona ids this role absorbs. Feeds the archived-evidence panel in
-   * the role/access viewer only — never an access decision. */
+   * the role/access viewer only - never an access decision. */
   legacyPersonaIds: string[];
   provenance: string;
 }
@@ -91,7 +91,7 @@ export interface FeatureCatalogueEntry {
   area: string;
   surface: 'module' | 'workspace';
   /** routes.json screen ids. Deliberately MAY include ids that are catalogued
-   * but not registered via registerScreen() — those render as visible
+   * but not registered via registerScreen() - those render as visible
    * "Not built" placeholder rows, which is how a granted-but-unimplemented
    * feature stays visible instead of disappearing. Empty for workspace
    * surfaces routed directly in router.tsx with no SCR- id. */
@@ -120,7 +120,7 @@ export interface BusinessRule {
 
 /** Agent 360 AAV-01: "maintain a configured approval matrix for each task
  * category." Neither the requirement nor its linked data field (DF-AGT-011,
- * which actually describes an unrelated Bell Notification field — one of
+ * which actually describes an unrelated Bell Notification field - one of
  * the BRSD's own known ID mismatches) specifies real category/role content,
  * so approval-matrix.json's mapping is a representative placeholder
  * pending VFQ's confirmed matrix, not sourced business truth. */

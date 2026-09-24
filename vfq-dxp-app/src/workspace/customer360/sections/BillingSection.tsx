@@ -6,14 +6,14 @@ import { InvoiceActions } from '../InvoiceActions';
 
 function capitalize(value: unknown): string {
   const s = String(value ?? '');
-  return s ? s.charAt(0).toUpperCase() + s.slice(1) : '—';
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : '-';
 }
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
       <div className="text-[length:var(--fs-caption)] text-muted">{label}</div>
-      <div className="text-fg text-[length:var(--fs-body)]">{value ?? '—'}</div>
+      <div className="text-fg text-[length:var(--fs-body)]">{value ?? '-'}</div>
     </div>
   );
 }
@@ -31,13 +31,13 @@ function SectionCard({ title, children, note }: { title: string; children: React
 }
 
 const DR_NOTE =
-  'Field shape assumed — BRSD v3.1 Annex_01 does not define this Data Ref; pending VFQ Business confirmation.';
+  'Field shape assumed - BRSD v3.1 Annex_01 does not define this Data Ref; pending VFQ Business confirmation.';
 
 // No billing screens exist anywhere in the 213-screen catalogue today (the
-// "Billing & Adjustments" module was never given a src/modules folder) — so
+// "Billing & Adjustments" module was never given a src/modules folder) - so
 // unlike Mobile/Fibre there's no wizard to launch here. This tab is
 // deliberately read-only for the core billing profile (BAM edits live on the
-// dedicated Billing Account page instead — BAM-01), but the BIV display
+// dedicated Billing Account page instead - BAM-01), but the BIV display
 // block (barring/PTP/collection/usage/balance/penalty/CDR) is fully wired
 // against the placeholder data documented in each SectionCard's note.
 export function BillingSection({ data }: { data: Customer360Data }) {
@@ -56,18 +56,18 @@ export function BillingSection({ data }: { data: Customer360Data }) {
           {creditLimit && (
             <MetricCard
               label="Credit limit"
-              value={`${String(creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR ?? '—')} QAR`}
+              value={`${String(creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR ?? '-')} QAR`}
               subtext={
                 Boolean(creditLimit.restrictionApplied)
                   ? 'Restriction applied'
-                  : String(account?.accountType ?? String(creditLimit.customerSegment ?? '—'))
+                  : String(account?.accountType ?? String(creditLimit.customerSegment ?? '-'))
               }
             />
           )}
           {latestBill && (
             <MetricCard
               label="Current bill"
-              value={`${String(latestBill.totalAmount ?? '—')} QAR`}
+              value={`${String(latestBill.totalAmount ?? '-')} QAR`}
               subtext={`${formattedBillPeriod} · ${capitalize(latestBill.status)}`}
             />
           )}
@@ -84,17 +84,17 @@ export function BillingSection({ data }: { data: Customer360Data }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <MetricCard
           label="Current charges"
-          value={latestBill ? `${String((latestBill as Record<string, unknown>).currentChargesQAR ?? '—')} QAR` : '—'}
+          value={latestBill ? `${String((latestBill as Record<string, unknown>).currentChargesQAR ?? '-')} QAR` : '-'}
           subtext="CUS-001-BIV-03"
         />
         <MetricCard
           label="Previous payment"
-          value={previousPayment ? `${String(previousPayment.amountQar ?? '—')} QAR` : '—'}
+          value={previousPayment ? `${String(previousPayment.amountQar ?? '-')} QAR` : '-'}
           subtext={previousPayment ? String(previousPayment.chargeType ?? 'CUS-001-BIV-04') : 'No payments on file'}
         />
         <MetricCard
           label="Previous outstanding"
-          value={profile ? `${String(profile.previousOutstandingQAR ?? 0)} QAR` : '—'}
+          value={profile ? `${String(profile.previousOutstandingQAR ?? 0)} QAR` : '-'}
           subtext="CUS-001-BIV-05"
         />
       </div>

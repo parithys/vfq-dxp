@@ -38,7 +38,7 @@ export interface CustomerSearchResult {
 }
 
 // Universal lookup shared by Customer Search, Support's "create ticket for a
-// customer" flow, and Orders — built once rather than re-implemented per
+// customer" flow, and Orders - built once rather than re-implemented per
 // consumer. "Service ID" has no dedicated field on the customer record
 // itself; it's matched via installed-assets.serviceId joined back through
 // the owning account.
@@ -99,7 +99,7 @@ export interface Customer360Data {
   communications: Record<string, unknown>[];
 }
 
-// Read-side aggregation — no unified "Customer 360" entity exists in the mock
+// Read-side aggregation - no unified "Customer 360" entity exists in the mock
 // data layer, so this joins across the entity kinds that already carry a
 // customerId (orders/bills/payments/adjustments/creditLimits/tickets/
 // cafForms/identityDocuments) or an indirect key (accounts.customerId for
@@ -195,7 +195,7 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
 
 function formatBillPeriod(period: unknown): string {
   const match = /^(\d{4})-(\d{2})$/.exec(String(period ?? ''));
-  if (!match) return String(period ?? '—');
+  if (!match) return String(period ?? '-');
   const date = new Date(Number(match[1]), Number(match[2]) - 1, 1);
   return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 }
@@ -213,7 +213,7 @@ export interface BillingSummary {
   previousPayment: Record<string, unknown> | undefined;
 }
 
-// CUS-001-BIV-26: hard 12-month boundary on billing history — "now" is the
+// CUS-001-BIV-26: hard 12-month boundary on billing history - "now" is the
 // fixed session date (2026-09-14) rather than a live Date.now() call, since
 // this mock app has no real clock-driven billing cycle.
 const BILL_HISTORY_MONTHS = 12;
@@ -221,14 +221,14 @@ const SESSION_TODAY = new Date(2026, 8, 14); // 2026-09-14
 
 export function withinBillHistoryWindow(billPeriod: unknown): boolean {
   const match = /^(\d{4})-(\d{2})$/.exec(String(billPeriod ?? ''));
-  if (!match) return true; // unparseable period — don't silently hide it
+  if (!match) return true; // unparseable period - don't silently hide it
   const period = new Date(Number(match[1]), Number(match[2]) - 1, 1);
   const cutoff = new Date(SESSION_TODAY.getFullYear(), SESSION_TODAY.getMonth() - BILL_HISTORY_MONTHS, 1);
   return period >= cutoff;
 }
 
 // Shared by the Billing tab (full detail) and the Customer 360 header's KPI
-// strip (headline numbers only) — one source of truth for "what does this
+// strip (headline numbers only) - one source of truth for "what does this
 // customer currently owe" rather than two divergent calculations.
 export function computeBillingSummary(data: Customer360Data): BillingSummary {
   const creditLimit = data.creditLimits[0];
@@ -253,7 +253,7 @@ export function computeBillingSummary(data: Customer360Data): BillingSummary {
     billedTotal,
     paidTotal,
     outstanding,
-    formattedBillPeriod: latestBill ? formatBillPeriod(latestBill.billPeriod) : '—',
+    formattedBillPeriod: latestBill ? formatBillPeriod(latestBill.billPeriod) : '-',
   };
 }
 

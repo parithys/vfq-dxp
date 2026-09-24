@@ -9,7 +9,7 @@ interface TooltipGroupContextValue {
 const TooltipGroupContext = createContext<TooltipGroupContextValue | null>(null);
 
 // Wrap an icon row/toolbar/nav in this so consecutive tooltips in the same
-// cluster skip the full show-delay after the first one appears — matches
+// cluster skip the full show-delay after the first one appears - matches
 // how sidebars and topbars actually get scanned by mouse. Optional; Tooltip
 // works standalone without a provider.
 export function TooltipGroup({ children }: { children: ReactNode }) {

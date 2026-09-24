@@ -7,14 +7,14 @@ import { Tooltip } from '../../components/primitives/Tooltip';
 
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
-// Clock face — a clearer, at-a-glance "not available yet" signal than the
+// Clock face - a clearer, at-a-glance "not available yet" signal than the
 // dashed-border/muted-text treatment alone, which was too subtle to notice
 // without hovering for the tooltip.
 const CLOCK_ICON = 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3.2 2';
 
 export interface ProductAction {
   label: string;
-  /** One or two plain-English sentences on what this action actually does —
+  /** One or two plain-English sentences on what this action actually does -
    * same style as the MNP Port-In choice screen's Postpaid/Prepaid cards
    * (MnpProcessChoiceScreen.tsx), so an agent can tell what an action means
    * without launching it first. */
@@ -32,10 +32,10 @@ export interface ProductActionGroup {
 // The progressive-disclosure layer for Customer 360's product tabs: groups
 // (Existing Customer Services / Number & SIM Services / New Connection,
 // etc.) all expand by default so an agent sees every action group at once
-// without expanding them one at a time — each group can still be collapsed
+// without expanding them one at a time - each group can still be collapsed
 // independently via its own header. Launching an action sets the
 // active-customer bridge then navigates to the EXISTING screen registered
-// for it — no wizard is rewritten to support this, per GuidedContactStep's
+// for it - no wizard is rewritten to support this, per GuidedContactStep's
 // pre-fill patch.
 export function ProductActionGroups({ groups, customer }: { groups: ProductActionGroup[]; customer: ActiveCustomerSummary }) {
   const navigate = useNavigate();

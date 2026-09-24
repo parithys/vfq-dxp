@@ -23,7 +23,7 @@ const ISSUE_TYPES = [
   'Human Error Complaints',
 ];
 
-// Slide 36's two named example templates — evidenced only for the two
+// Slide 36's two named example templates - evidenced only for the two
 // complaint categories ("200+ issue types" each); other issue types get a
 // free-text template field since no canned template is evidenced for them.
 const TEMPLATES: Record<string, string> = {
@@ -62,21 +62,21 @@ interface TicketCreationModalProps {
   onClose: () => void;
   onSubmit: (value: NewTicketValue) => void | Promise<void>;
   /** Pre-fills Customer ID when opened from Customer 360, where the customer
-   * is already on screen — the agent shouldn't have to re-type an ID they
+   * is already on screen - the agent shouldn't have to re-type an ID they
    * already looked up to get here. */
   initialCustomerId?: string;
 }
 
-// SCR-213: Open UI Tickets Fields (per-issue-type template) — modal where
+// SCR-213: Open UI Tickets Fields (per-issue-type template) - modal where
 // agents select the ticket's issue type and paste/edit the matching template
 // content; Confirm/Save commits, Cancel discards (screen-behaviour-catalogue.md).
-// BR-068 gates commit on Issue Type + template content both being present —
+// BR-068 gates commit on Issue Type + template content both being present -
 // an unsubmitted ticket never routes to a queue. Extended per the Trouble
 // Ticket BRSD gap analysis (2026-09-11) to close: MPRA_001_CRE-08/09 (Area
-// picklist, cascaded from Issue Type — BRSD's own Sub-Area tier isn't
+// picklist, cascaded from Issue Type - BRSD's own Sub-Area tier isn't
 // enumerated anywhere in the source, so this models the one confirmed level,
 // Area), CRE-01 (3-char smart search over the issue-type list, BR-002),
-// CRE-05 (Knowledge Base access — no real KB integration exists anywhere in
+// CRE-05 (Knowledge Base access - no real KB integration exists anywhere in
 // this app, so the button surfaces an honest "pending" message rather than
 // linking to a fabricated URL), CRE-16 (Priority derived and locked from
 // Customer Type, not freely picked), and ASC-02/04 (duplicate-ticket
@@ -98,7 +98,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
   const [submitting, setSubmitting] = useState(false);
 
   // CRE-16: resolve the customer once an ID is entered, to derive Priority
-  // and the SLA target — same identity-lookup shape as the rest of the app,
+  // and the SLA target - same identity-lookup shape as the rest of the app,
   // just keyed directly by customerId since this modal has no MOI/ID-scan
   // step of its own to resolve one from.
   useEffect(() => {
@@ -215,7 +215,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
             </p>
             <ul className="list-disc list-inside text-[length:var(--fs-caption)] text-fg-2">
               {duplicates.map((d) => (
-                <li key={d.customerId + d.category}>{d.category}{d.area ? ` — ${d.area}` : ''}</li>
+                <li key={d.customerId + d.category}>{d.category}{d.area ? ` - ${d.area}` : ''}</li>
               ))}
             </ul>
           </div>
@@ -253,14 +253,14 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
               {derivedPriority}
             </Badge>
             <span className="text-[length:var(--fs-caption)] text-muted">
-              {customer ? `Segment: ${customer.segment}` : 'Enter a Customer ID to derive priority'} — not overridable by a non-privileged agent.
+              {customer ? `Segment: ${customer.segment}` : 'Enter a Customer ID to derive priority'} - not overridable by a non-privileged agent.
             </span>
           </div>
         </div>
         <button
           type="button"
           className="text-[length:var(--fs-caption)] text-accent hover:underline"
-          onClick={() => pushToast('info', 'Knowledge Base integration is pending (BRSD dependency D-07) — this would open the KB in a new tab.')}
+          onClick={() => pushToast('info', 'Knowledge Base integration is pending (BRSD dependency D-07) - this would open the KB in a new tab.')}
         >
           Open Knowledge Base ↗
         </button>

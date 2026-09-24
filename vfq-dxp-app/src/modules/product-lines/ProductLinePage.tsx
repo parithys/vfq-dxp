@@ -26,7 +26,7 @@ import {
 //
 // One page serves both the line root (all categories stacked) and each
 // category route (that section only), because they are the same content at
-// different scope — the pill row switches between them.
+// different scope - the pill row switches between them.
 
 function resolveTarget(journey: Journey): string | undefined {
   if (journey.path) return journey.path;
@@ -104,10 +104,10 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
         {active ? active.description : `Journeys available to ${persona?.name ?? 'this role'} across ${line.label}.`}
       </p>
 
-      {/* Pill row — same class strings as ModuleScreenList's filter pills, so
+      {/* Pill row - same class strings as ModuleScreenList's filter pills, so
           this is a composition of the existing pattern, not a new control. */}
       {/* Global search can land a catalogue hit here. Naming the requested id
-          keeps the "no fabricated destinations" rule intact — the page says
+          keeps the "no fabricated destinations" rule intact - the page says
           plainly that an item detail is planned rather than silently showing
           the whole line as if it had honoured the link. */}
       {searchParams.get('id') && (

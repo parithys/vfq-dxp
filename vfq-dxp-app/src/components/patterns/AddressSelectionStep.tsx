@@ -10,7 +10,7 @@ interface AddressSelectionStepProps {
 // Address step shared across New Fixed Line (SCR-045), New FWA (SCR-079), and
 // New Postpaid (SCR-155) wizards. FLD-281 evidences a read-only Service Points
 // grid (Service Point ID / Status / Device Type) surfaced once an address
-// resolves to an existing serviceable point — no dedicated service-point mock
+// resolves to an existing serviceable point - no dedicated service-point mock
 // dataset exists in reconstruction-package/mock-data (only ENT-036 Address
 // records), so this step lets the agent select/confirm a physical address; the
 // Service Point grid itself remains a documented gap (screens.md SCR-034 covers
@@ -19,7 +19,7 @@ interface AddressSelectionStepProps {
 // Backed by LocationInput's search-as-you-type UX instead of the previous
 // list-every-seeded-address-as-a-card approach, which doesn't scale past a
 // handful of records. Prop contract (value: addressId, onChange: (id) =>
-// void) is unchanged, so neither wizard call site needs updating — this
+// void) is unchanged, so neither wizard call site needs updating - this
 // still self-fetches `addresses` (now just to resolve `value` back to a
 // record for the confirmation summary below the search field).
 export function AddressSelectionStep({ value, onChange }: AddressSelectionStepProps) {

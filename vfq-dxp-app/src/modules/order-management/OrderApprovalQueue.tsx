@@ -17,25 +17,25 @@ interface Order {
   assignedApproverId?: string | null;
 }
 
-// SCR-060/SCR-197: TM SR Queue View / Order Approval Queue — manager queue of
+// SCR-060/SCR-197: TM SR Queue View / Order Approval Queue - manager queue of
 // order-approval activities awaiting assignment ("Assign to Me" per
 // guided-journeys-fixed-line-open-ui-tablet-fixed-line-prepatc-aa41d84a).
-// Filters to orders in `Submitted for Approval` status — B2B2C orders from the
+// Filters to orders in `Submitted for Approval` status - B2B2C orders from the
 // New Fixed Line/FWA/Postpaid wizards route here (see those wizards' onSubmit).
 //
 // Agent 360 AAV-02: "display all approval tasks assigned to the specific
-// agent." Previously "Assign to Me" was a pure navigation button — it never
+// agent." Previously "Assign to Me" was a pure navigation button - it never
 // recorded who claimed the order, so every approver saw the same shared
 // queue forever. It now sets assignedApproverId on click, and the queue
-// hides orders claimed by someone else (isVisibleToAgent — same rule as
+// hides orders claimed by someone else (isVisibleToAgent - same rule as
 // Agent Task View's per-agent scoping).
 //
 // Also AAV-01: assignment eligibility is gated by the configured approval
-// matrix (getRequiredApproverRole) — see OrderApprovalDetail.tsx for the
+// matrix (getRequiredApproverRole) - see OrderApprovalDetail.tsx for the
 // matching enforcement on the action buttons themselves.
 interface OrderApprovalQueueProps {
   /** False when embedded in a parent that already provides the same padding
-   * (OrdersWorkspace's own p-8 around its Tabs) — true (self-padded) for the
+   * (OrdersWorkspace's own p-8 around its Tabs) - true (self-padded) for the
    * standalone legacy-route usage at SCR-060/SCR-197, which has no other
    * padding source. */
   padded?: boolean;
@@ -59,7 +59,7 @@ export function OrderApprovalQueue({ padded = true }: OrderApprovalQueueProps) {
     .filter((o) => o.status === 'Submitted for Approval')
     .filter((o) => isVisibleToAgent(o.assignedApproverId, currentAgentId));
 
-  // AAV-01: assignment must follow the configured approval matrix — an
+  // AAV-01: assignment must follow the configured approval matrix - an
   // order stays visible to everyone in the shared queue (so the right
   // approver can find it), but only an agent whose role matches the
   // category's required role can actually claim it.

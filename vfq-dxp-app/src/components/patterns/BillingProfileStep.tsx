@@ -11,8 +11,8 @@ interface BillingProfileStepProps {
   onChange: (value: BillingProfileValue) => void;
 }
 
-// SCR-156: Billing step (New Postpaid wizard) — FLD-624–627: Language (default
-// ENG), Payment Type (Postpaid, display-only — this wizard is postpaid-only so
+// SCR-156: Billing step (New Postpaid wizard) - FLD-624–627: Language (default
+// ENG), Payment Type (Postpaid, display-only - this wizard is postpaid-only so
 // it's not a user choice here), Payment Method (default Invoice), Bill Media
 // (default Email).
 export function BillingProfileStep({ value, onChange }: BillingProfileStepProps) {

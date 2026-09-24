@@ -27,7 +27,7 @@ import {
 } from '../ticketReferenceData';
 
 const CURRENT_AGENT = 'Current Agent';
-const MAX_ATTACHMENTS = 5; // P-15 is "To be confirmed" in the source — placeholder cap pending VFQ confirmation.
+const MAX_ATTACHMENTS = 5; // P-15 is "To be confirmed" in the source - placeholder cap pending VFQ confirmation.
 
 interface PublicNote {
   author: string;
@@ -88,12 +88,12 @@ interface AuditRecord {
 
 // SCR-029 (Ticket detail: public notes / bell icon notifications) + SCR-210
 // (Ticket Homepage: fields filled by which role is responsible, internal
-// Activities) — both describe the same central ticket-management page from
+// Activities) - both describe the same central ticket-management page from
 // two evidenced angles, so they share this one component. Extended per the
 // Trouble Ticket BRSD gap analysis (2026-09-11) to close the majority of the
 // journey's remaining capabilities: Assignment/Reassignment (ASG),
 // Escalation (ESC), Resolution/Completion/Closure/Cancellation/Reopen (RES),
-// Attachments (ATT), real Activities (VEW), and Audit Trail (AUD) — see the
+// Attachments (ATT), real Activities (VEW), and Audit Trail (AUD) - see the
 // per-action comments below for exact requirement/rule citations.
 export function TicketDetail() {
   const [params] = useSearchParams();
@@ -131,21 +131,21 @@ export function TicketDetail() {
 
   const ticket = tickets.find((t) => t.ticketId === ticketId);
   if (!ticket) {
-    return <div className="p-8 text-fg-2">No ticket selected — go back to the Tickets Dashboard.</div>;
+    return <div className="p-8 text-fg-2">No ticket selected - go back to the Tickets Dashboard.</div>;
   }
 
   // BR-067 (config): "an audit trail exists on tickets... but is role-
   // restricted from agents." Withheld from the Sales & Acquisition group and
   // the customer-side Authorized Officer; care, complaints, dispatch,
   // oversight and platform-admin roles carry `ticket-audit-trail`.
-  // (Was a PERSONA-001/066 id comparison — the old model's only two
+  // (Was a PERSONA-001/066 id comparison - the old model's only two
   // frontline ids. "Frontline" stopped being the right word under the 26:
   // Customer Care is front-line but is a legitimate audit-trail viewer.)
   const canSeeAudit = canSeeTicketAuditTrail(activePersonaId);
   // RBAC-132/144: Resolution Code is a "Filled By Complaints Team"-designated
   // field that agents raising the ticket cannot fill. The 25-row role table
   // had no Complaints Team successor, so a dedicated Complaints Agent role
-  // (ROLE-26) owns resolution alongside Supervisor/Manager — keeping the
+  // (ROLE-26) owns resolution alongside Supervisor/Manager - keeping the
   // raise-vs-resolve separation rather than widening it to every care agent.
   const canResolve = canResolveTicket(activePersonaId);
   const canReassignQueue = canReassignTicketQueue(activePersonaId);
@@ -157,7 +157,7 @@ export function TicketDetail() {
   const terminal = ticket.status === 'Closed' || ticket.status === 'Cancelled';
   const slaRule = evaluateRule('BR-349', { slaDueAt: ticket.slaDueAt, status: ticket.status });
   const ragVariant = terminal || !ticket.slaDueAt ? 'filled-neutral' : !slaRule.pass ? 'danger' : slaRule.message?.includes('Amber') ? 'warning' : 'success';
-  const ragLabel = terminal || !ticket.slaDueAt ? '—' : ragVariant === 'danger' ? 'Red' : ragVariant === 'warning' ? 'Amber' : 'Green';
+  const ragLabel = terminal || !ticket.slaDueAt ? '-' : ragVariant === 'danger' ? 'Red' : ragVariant === 'warning' ? 'Amber' : 'Green';
 
   const audit = async (fieldModified: string, newValue: string) => {
     await createRecord('audit-trail', {
@@ -245,10 +245,10 @@ export function TicketDetail() {
     await updateRecord('trouble-tickets', 'ticketId', ticket.ticketId, {
       status: 'Escalate',
       escalations: [...(ticket.escalations ?? []), entry],
-      activities: addActivity(`Escalated — reason: ${escalateReason}.`),
+      activities: addActivity(`Escalated - reason: ${escalateReason}.`),
     });
     await audit('Status', 'Escalate');
-    await notify(`Ticket ${ticket.ticketId} escalated (${escalateReason}) — distribution list and next-hierarchy-position notified (ESC-06/07).`);
+    await notify(`Ticket ${ticket.ticketId} escalated (${escalateReason}) - distribution list and next-hierarchy-position notified (ESC-06/07).`);
     pushToast('warning', `Ticket ${ticket.ticketId} escalated.`);
     setEscalateOpen(false);
     setEscalateReason('');
@@ -261,7 +261,7 @@ export function TicketDetail() {
       status: 'Solved',
       resolutionCode,
       hashtags: resolutionHashtags,
-      activities: addActivity(`Marked Solved — ${resolutionCode}.`),
+      activities: addActivity(`Marked Solved - ${resolutionCode}.`),
     });
     await audit('Status', 'Solved');
     pushToast('success', `Ticket ${ticket.ticketId} marked Solved.`);
@@ -283,7 +283,7 @@ export function TicketDetail() {
     const closedAt = new Date().toISOString();
     const closedActivities: Activity[] = [
       ...activities.map((a) => ({ ...a, open: false })),
-      { type: 'Auto', description: 'Ticket closed — all activities closed.', createdAt: closedAt, createdBy: CURRENT_AGENT, open: false },
+      { type: 'Auto', description: 'Ticket closed - all activities closed.', createdAt: closedAt, createdBy: CURRENT_AGENT, open: false },
     ];
     await updateRecord('trouble-tickets', 'ticketId', ticket.ticketId, { status: 'Closed', closedAt, activities: closedActivities });
     await audit('Status', 'Closed');
@@ -298,7 +298,7 @@ export function TicketDetail() {
       status: 'Cancelled',
       cancelReason,
       excludedFromReporting: true,
-      activities: addActivity(`Cancelled — reason: ${cancelReason}.`),
+      activities: addActivity(`Cancelled - reason: ${cancelReason}.`),
     });
     await audit('Status', 'Cancelled');
     pushToast('warning', `Ticket ${ticket.ticketId} cancelled.`);
@@ -306,7 +306,7 @@ export function TicketDetail() {
     setCancelReason('');
   };
 
-  // MPRA_001_RES-10: reopen only within the configured window (P-12 —
+  // MPRA_001_RES-10: reopen only within the configured window (P-12 -
   // placeholder pending VFQ confirmation), with a mandatory reason, returning
   // status to "Not Solved" (not a separate "Reopened" state) and incrementing
   // reopenCount.
@@ -316,7 +316,7 @@ export function TicketDetail() {
     await updateRecord('trouble-tickets', 'ticketId', ticket.ticketId, {
       status: 'Not Solved',
       reopenCount: (ticket.reopenCount ?? 0) + 1,
-      activities: addActivity(`Reopened — reason: ${reopenReason}.`),
+      activities: addActivity(`Reopened - reason: ${reopenReason}.`),
     });
     await audit('Status', 'Not Solved (Reopened)');
     pushToast('warning', `Ticket ${ticket.ticketId} reopened.`);
@@ -324,7 +324,7 @@ export function TicketDetail() {
     setReopenReason('');
   };
 
-  // MPRA_001_ATT-01–05: metadata-only capture (name/size) — no real file
+  // MPRA_001_ATT-01–05: metadata-only capture (name/size) - no real file
   // storage exists in this mock app, so nothing beyond the metadata a real
   // <input type="file"> gives us is fabricated.
   const attach = async (file: File) => {
@@ -354,7 +354,7 @@ export function TicketDetail() {
               </span>
             </div>
             <p className="text-fg-2 mb-1">
-              Customer: {ticket.customerId} · {ticket.category}{ticket.area ? ` — ${ticket.area}` : ''} · Queue <Badge variant="outlined-red">{ticket.queue}</Badge>
+              Customer: {ticket.customerId} · {ticket.category}{ticket.area ? ` - ${ticket.area}` : ''} · Queue <Badge variant="outlined-red">{ticket.queue}</Badge>
             </p>
             <p className="text-fg-2 text-[length:var(--fs-caption)]">
               Assigned to: {ticket.assignedTo ?? 'Unassigned'} · {slaRule.message}
@@ -368,7 +368,7 @@ export function TicketDetail() {
               {notes.map((n, i) => (
                 <div key={i} className="text-[length:var(--fs-body)] border-l-2 border-accent pl-3">
                   <p className="text-fg">{n.text}</p>
-                  <p className="text-[length:var(--fs-caption)] text-muted">{n.author} — {new Date(n.createdAt).toLocaleString()}</p>
+                  <p className="text-[length:var(--fs-caption)] text-muted">{n.author} - {new Date(n.createdAt).toLocaleString()}</p>
                 </div>
               ))}
             </div>
@@ -386,14 +386,14 @@ export function TicketDetail() {
                   label: 'Details',
                   content: (
                     <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)]">
-                      <div><dt className="text-[length:var(--fs-caption)] text-muted">Issue</dt><dd className="text-fg">{ticket.actualIssue ?? '—'}</dd></div>
+                      <div><dt className="text-[length:var(--fs-caption)] text-muted">Issue</dt><dd className="text-fg">{ticket.actualIssue ?? '-'}</dd></div>
                       <div><dt className="text-[length:var(--fs-caption)] text-muted">Priority</dt><dd className="text-fg">{ticket.priority}</dd></div>
-                      <div><dt className="text-[length:var(--fs-caption)] text-muted">Resolution Code</dt><dd className="text-fg">{ticket.resolutionCode ?? '—'}</dd></div>
-                      <div><dt className="text-[length:var(--fs-caption)] text-muted">Hashtags</dt><dd className="text-fg">{(ticket.hashtags ?? []).join(', ') || '—'}</dd></div>
-                      <div><dt className="text-[length:var(--fs-caption)] text-muted">SLA Target</dt><dd className="text-fg">{ticket.slaTargetHours ? `${ticket.slaTargetHours}h, due ${ticket.slaDueAt ? new Date(ticket.slaDueAt).toLocaleString() : '—'}` : '—'}</dd></div>
+                      <div><dt className="text-[length:var(--fs-caption)] text-muted">Resolution Code</dt><dd className="text-fg">{ticket.resolutionCode ?? '-'}</dd></div>
+                      <div><dt className="text-[length:var(--fs-caption)] text-muted">Hashtags</dt><dd className="text-fg">{(ticket.hashtags ?? []).join(', ') || '-'}</dd></div>
+                      <div><dt className="text-[length:var(--fs-caption)] text-muted">SLA Target</dt><dd className="text-fg">{ticket.slaTargetHours ? `${ticket.slaTargetHours}h, due ${ticket.slaDueAt ? new Date(ticket.slaDueAt).toLocaleString() : '-'}` : '-'}</dd></div>
                       <div><dt className="text-[length:var(--fs-caption)] text-muted">Reopen count</dt><dd className="text-fg">{ticket.reopenCount ?? 0}</dd></div>
                       <div className="col-span-2">
-                        <dt className="text-[length:var(--fs-caption)] text-muted mb-1">L3 Reference (RES-07 — editable while Not Solved)</dt>
+                        <dt className="text-[length:var(--fs-caption)] text-muted mb-1">L3 Reference (RES-07 - editable while Not Solved)</dt>
                         <Input
                           aria-label="L3 Reference"
                           placeholder="External L3 ticket reference"
@@ -407,7 +407,7 @@ export function TicketDetail() {
                           <dt className="text-[length:var(--fs-caption)] text-muted mb-1">Escalation History</dt>
                           <ul className="list-disc list-inside text-fg text-[length:var(--fs-caption)]">
                             {(ticket.escalations ?? []).map((e, i) => (
-                              <li key={i}>{e.reason} — {new Date(e.escalatedAt).toLocaleString()} by {e.escalatedBy}</li>
+                              <li key={i}>{e.reason} - {new Date(e.escalatedAt).toLocaleString()} by {e.escalatedBy}</li>
                             ))}
                           </ul>
                         </div>
@@ -508,7 +508,7 @@ export function TicketDetail() {
                 <Button variant="ghost-rect" className="w-full justify-center" onClick={() => setResolveOpen(true)}>Resolve</Button>
               )}
               {!canResolve && !terminal && ticket.status !== 'Solved' && ticket.status !== 'Completed' && (
-                <p className="text-[length:var(--fs-caption)] text-muted">Resolution requires Complaints Team — use Escalate to route it.</p>
+                <p className="text-[length:var(--fs-caption)] text-muted">Resolution requires Complaints Team - use Escalate to route it.</p>
               )}
               {ticket.status === 'Solved' && (
                 <Button variant="ghost-rect" className="w-full justify-center" onClick={complete} disabled={openActivities.length > 0}>
@@ -533,7 +533,7 @@ export function TicketDetail() {
               )}
               {ticket.status === 'Closed' && !withinReopenWindow && (
                 <p className="text-[length:var(--fs-caption)] text-danger">
-                  Outside the {REOPEN_WINDOW_DAYS}-day reopen window (RES-10) — raise a linked ticket instead.
+                  Outside the {REOPEN_WINDOW_DAYS}-day reopen window (RES-10) - raise a linked ticket instead.
                 </p>
               )}
               {ticket.cancelReason && <p className="text-[length:var(--fs-caption)] text-danger">Cancelled: {ticket.cancelReason}</p>}
@@ -597,7 +597,7 @@ export function TicketDetail() {
         <div className="space-y-3">
           <Select label="Resolution Code (mandatory, RES-01/02)" value={resolutionCode} onChange={(e) => setResolutionCode(e.target.value)} placeholder="Select one code" options={RESOLUTION_CODES.map((r) => ({ value: r, label: r }))} />
           <div>
-            <div className="text-[length:var(--fs-caption)] text-muted mb-1">Hashtags (mandatory, at least one — RES-03)</div>
+            <div className="text-[length:var(--fs-caption)] text-muted mb-1">Hashtags (mandatory, at least one - RES-03)</div>
             <div className="flex flex-wrap gap-2">
               {availableHashtags.map((h) => (
                 <label key={h} className="flex items-center gap-1 text-[length:var(--fs-caption)]">

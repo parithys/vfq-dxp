@@ -24,7 +24,7 @@ const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'filled-
   Error: 'danger',
 };
 
-// SCR-183: Bulk Jobs / Bulk Processing screen (TM Bulk Batch List Applet) —
+// SCR-183: Bulk Jobs / Bulk Processing screen (TM Bulk Batch List Applet) -
 // backend orchestration-status screen shared with the Enterprise/IoT bulk
 // adjustment screens (Pattern 17); BR-273: Pre2Post migration orders progress
 // asynchronously to Complete via this job queue (job type "PreToPost").
@@ -41,16 +41,16 @@ export function BulkJobsDashboard() {
   return (
     <div className="p-8">
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Bulk Jobs</h1>
-      <p className="text-fg-2 mb-6">TM Bulk Batch List Applet — backend bulk processing job status.</p>
+      <p className="text-fg-2 mb-6">TM Bulk Batch List Applet - backend bulk processing job status.</p>
       <ErrorBanner message={loadError} />
       <DataTable<BulkJob>
         columns={[
           { key: 'bulkOrderId', header: 'Job #' },
-          { key: 'jobType', header: 'Job Type', render: (r) => r.jobType ?? r.method ?? '—' },
-          { key: 'msisdn', header: 'MSISDN / Reference', render: (r) => r.msisdn ?? r.orderIdReference ?? '—' },
+          { key: 'jobType', header: 'Job Type', render: (r) => r.jobType ?? r.method ?? '-' },
+          { key: 'msisdn', header: 'MSISDN / Reference', render: (r) => r.msisdn ?? r.orderIdReference ?? '-' },
           { key: 'promotionId', header: 'Promotion' },
           { key: 'overallStatus', header: 'Status', render: (r) => <Badge variant={STATUS_VARIANT[r.overallStatus] ?? 'filled-neutral'}>{r.overallStatus}</Badge> },
-          { key: 'updatedAt', header: 'Updated', render: (r) => (r.updatedAt ? new Date(r.updatedAt).toLocaleString() : '—') },
+          { key: 'updatedAt', header: 'Updated', render: (r) => (r.updatedAt ? new Date(r.updatedAt).toLocaleString() : '-') },
         ]}
         rows={jobs}
         rowKey={(r) => r.bulkOrderId}

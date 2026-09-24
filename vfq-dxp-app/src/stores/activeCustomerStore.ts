@@ -27,7 +27,7 @@ interface ActiveCustomerState {
 // step). Customer 360 calls setActiveCustomer() before launching an existing
 // wizard; GuidedContactStep reads it to pre-fill instead of asking again.
 // Also doubles as the data source for Dashboard's "recently viewed
-// customers" — no separate history mechanism needed.
+// customers" - no separate history mechanism needed.
 export const useActiveCustomerStore = create<ActiveCustomerState>()(
   persist(
     (set) => ({

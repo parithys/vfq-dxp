@@ -3,7 +3,7 @@ import { NewFwaWizard } from './NewFwaWizard';
 import { WfmSerialNumberCheck } from './WfmSerialNumberCheck';
 
 // SCR-077/078/079/080/082/084/085 are the New FWA guided wizard's home tile and
-// steps — all resolve to the same single-page wizard component.
+// steps - all resolve to the same single-page wizard component.
 registerScreen('SCR-077', NewFwaWizard);
 registerScreen('SCR-078', NewFwaWizard);
 registerScreen('SCR-079', NewFwaWizard);

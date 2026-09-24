@@ -18,13 +18,13 @@ interface DonorAttachmentStepProps {
 }
 
 // SCR-127: MNP wizard step: Donor Attachment (FLD-986, Stage K recovered,
-// medium confidence) — empty Attachments grid ("No Records"), New File/
+// medium confidence) - empty Attachments grid ("No Records"), New File/
 // Continue/MNP Form/Abandon Order/Go Back buttons; clicking "MNP Form" opens a
 // dropdown with two options (MNP-Digital / MNP-Touch Screen) that, once
 // completed, populates the attachments grid with the signed Mobile Number
 // Portability Application Form. Same signature-capture shape as
 // CafSignatureCapture (Pattern 6) but for the MNP contract document
-// specifically, not the CAF — kept separate since the evidenced dropdown
+// specifically, not the CAF - kept separate since the evidenced dropdown
 // options and document differ (2 options here vs. CAF's 3).
 export function DonorAttachmentStep({ value, onChange }: DonorAttachmentStepProps) {
   const [padOpen, setPadOpen] = useState(false);

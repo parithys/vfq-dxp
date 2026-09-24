@@ -17,8 +17,8 @@ import { getAllPersonas, getPersonaByStaffId } from '../engines/configEngine';
 // header context chip via agentPrivilegeEngine.
 //
 // Archived: reference/blueprint/legacy/staff-id-role-map-v1.ts.txt. Note that
-// VFQ12342–VFQ12347 CHANGED MEANING in this cut-over — e.g. VFQ12343 was
-// "Back Office / Fulfilment" and is now "Direct Sales Agent" — so any older
+// VFQ12342–VFQ12347 CHANGED MEANING in this cut-over - e.g. VFQ12343 was
+// "Back Office / Fulfilment" and is now "Direct Sales Agent" - so any older
 // demo script or screenshot referring to them is stale.
 export interface StaffIdRoleEntry {
   personaId: string;
@@ -38,10 +38,10 @@ export function allStaffIds(): { staffId: string; roleLabel: string; personaId: 
   return getAllPersonas().map((p) => ({ staffId: p.staffId, roleLabel: p.name, personaId: p.id }));
 }
 
-// Placeholder demo credential — the Agent 360 BRSD leaves the real password
+// Placeholder demo credential - the Agent 360 BRSD leaves the real password
 // policy and IDAM credential source as open items (D-02, OI-AGN-04); this
 // exists only so the Login Failed state (Annex_02) is reachable in this mock
 // environment. One shared password across all 26 roles is deliberate for
 // demo/testing. Swap for real IDAM validation once VFQ Security confirms the
-// policy — do not treat this as a real credential scheme.
+// policy - do not treat this as a real credential scheme.
 export const DEMO_LOGIN_PASSWORD = 'Vodafone@123';

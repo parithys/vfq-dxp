@@ -11,9 +11,9 @@ export type LeadScope = 'my' | 'created' | 'team' | 'all' | 'contact';
 const SCOPE_TITLES: Record<LeadScope, string> = {
   my: 'My Leads',
   created: 'My Created Leads',
-  team: "Manage Leads — My Team's Leads",
+  team: "Manage Leads - My Team's Leads",
   all: 'All Leads Across Org',
-  contact: 'Contact Record — Leads Sub-Tab',
+  contact: 'Contact Record - Leads Sub-Tab',
 };
 
 const statusVariant = (status: string) => {
@@ -23,7 +23,7 @@ const statusVariant = (status: string) => {
   return 'filled-neutral' as const;
 };
 
-// Pattern 14: Lead List + Owner/Status Management — a family of scoped list
+// Pattern 14: Lead List + Owner/Status Management - a family of scoped list
 // views (My Leads / My Created Leads / Team Leads / All Leads / Contact-scoped)
 // over the same Lead entity, sharing a grid shape (SCR-141–150).
 export function LeadListView({ scope }: { scope: LeadScope }) {
@@ -39,7 +39,7 @@ export function LeadListView({ scope }: { scope: LeadScope }) {
 
   const filtered = leads.filter((l) => {
     // Lead ownerIds in the seed data are agent codes (USR-xxxx), not role ids,
-    // so there is nothing here to compare the active role against — the "my"
+    // so there is nothing here to compare the active role against - the "my"
     // scope is presentational in this seed set. Written plainly rather than as
     // `l.ownerId === activePersonaId || true`, which read like a real filter
     // while always being true.

@@ -12,14 +12,14 @@ export interface DualPlaySerialValue {
 
 interface DualPlaySerialCheckStepProps {
   value: DualPlaySerialValue;
-  /** Patch-based, not full-value — three independent async inventory checks
+  /** Patch-based, not full-value - three independent async inventory checks
    * (CPE Indoor/Outdoor/SIM) resolve out of order, so the caller MUST merge
    * via a functional state update (setX(prev => ({...prev, ...patch}))),
    * never by spreading a value captured at an earlier render (see below). */
   onChange: (patch: Partial<DualPlaySerialValue>) => void;
 }
 
-// "Serial Number Check - Dual Play" screen (SCR-093, FLD-410–412) — barcode-scan
+// "Serial Number Check - Dual Play" screen (SCR-093, FLD-410–412) - barcode-scan
 // triple capture (CPE Indoor, CPE Outdoor, SIM Card), each validated in real
 // time against inventory; blocks Continue until all three resolve, matching
 // the FWA Outdoor WFM installation flow (UJ-061).
@@ -28,7 +28,7 @@ interface DualPlaySerialCheckStepProps {
 // each child's onChange (`{...value, cpeIndoor: v, ...}`). Since each
 // scanner's inventory check is an independent async call, whichever resolved
 // last would overwrite sibling fields with a stale snapshot of `value` from
-// before they were set — e.g. filling CPE Outdoor while CPE Indoor's check
+// before they were set - e.g. filling CPE Outdoor while CPE Indoor's check
 // was still in flight silently erased the Outdoor value once Indoor resolved.
 // Passing a patch instead, merged by the parent via functional setState,
 // makes the fields independent regardless of resolution order.

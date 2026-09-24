@@ -11,7 +11,7 @@ interface SidebarState {
   /** Expanded nav groups (e.g. Mobile). A real preference, so persisted. */
   expandedNavKeys: string[];
   toggleNavGroup: (key: string) => void;
-  /** Idempotent "make sure this group is open" — NOT a toggle.
+  /** Idempotent "make sure this group is open" - NOT a toggle.
    *
    * Exists because the toggle cannot be called from an effect. Sidebar opens
    * the group owning a deep-linked route on arrival, and StrictMode
@@ -50,7 +50,7 @@ export const useSidebarStore = create<SidebarState>()(
     }),
     {
       name: 'vfq-sidebar-store',
-      // Only persist the genuine preferences — the mobile drawer's open/closed
+      // Only persist the genuine preferences - the mobile drawer's open/closed
       // state is ephemeral per-session.
       partialize: (state) => ({
         collapsed: state.collapsed,
@@ -60,7 +60,7 @@ export const useSidebarStore = create<SidebarState>()(
       // A `version` MUST be paired with a `migrate`, even a trivial one:
       // zustand logs "State loaded from storage couldn't be migrated since no
       // migrate function was provided" on every version mismatch otherwise.
-      // Removing the version instead is not an option — anyone who loaded an
+      // Removing the version instead is not an option - anyone who loaded an
       // intermediate build already has a version in localStorage, which would
       // then mismatch downwards and warn just the same.
       //
@@ -82,13 +82,13 @@ export const useSidebarStore = create<SidebarState>()(
         // Drop nav keys that no longer exist in the manifest (e.g. a persisted
         // 'products' from before Mobile/Fibre & Home were promoted to top
         // level). Fall back to the defaults only when the stored value is
-        // unusable — absent, or written against a nav scheme where NONE of the
-        // keys still exist — otherwise a returning user would get a rail with
+        // unusable - absent, or written against a nav scheme where NONE of the
+        // keys still exist - otherwise a returning user would get a rail with
         // every group collapsed and no hint the categories are there.
         //
         // An EMPTY stored array is deliberately respected rather than treated
         // as unusable: it means the user collapsed everything. Falling back
-        // there made "all collapsed" impossible to persist — the defaults
+        // there made "all collapsed" impossible to persist - the defaults
         // reopened both groups on every reload.
         const stored = p.expandedNavKeys;
         const valid = Array.isArray(stored) ? stored.filter((k) => NAV_BY_KEY.has(k as NavKey)) : undefined;
