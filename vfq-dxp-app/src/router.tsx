@@ -13,6 +13,9 @@ import { AdministrationWorkspace } from './workspace/administration/Administrati
 import { AgentProfileWorkspace } from './workspace/profile/AgentProfileWorkspace';
 import { TaskListView } from './workspace/tasks/TaskListView';
 import { TaskDetailView } from './workspace/tasks/TaskDetailView';
+import { WorkspaceNotYetBuilt } from './modules/WorkspaceNotYetBuilt';
+import { LeadListView } from './modules/lead-management/LeadListView';
+import { ProductLinePage } from './modules/product-lines/ProductLinePage';
 
 // Side-effect imports: each module's screens/index.ts calls registerScreen()
 // so router.tsx doesn't need to know which screens are implemented.
@@ -43,6 +46,21 @@ export function AppRouter() {
           added alongside the legacy module routes below (not replacing
           them) — every existing screen stays reachable at its current URL. */}
       <Route path="/customer-search" element={<CustomerSearchPage />} />
+      {/* Nav manifest destinations (navManifest.ts). Without these, /products,
+          /customers and /operations fell through to `/:moduleSlug` and
+          rendered the bare string "Module not found." — they are nav
+          destinations, not module slugs. `/leads` needs no new UI: it renders
+          the already-built LeadListView that SalesWorkspace uses. */}
+      <Route path="/leads" element={<LeadListView scope="all" />} />
+      <Route path="/customers" element={<WorkspaceNotYetBuilt navKey="customers" />} />
+      <Route path="/operations" element={<WorkspaceNotYetBuilt navKey="operations" />} />
+      {/* Product lines: the line root stacks every category the role can
+          reach, a category route shows just that section. Same component —
+          they are the same content at different scope. */}
+      <Route path="/mobile" element={<ProductLinePage lineKey="mobile" />} />
+      <Route path="/mobile/:category" element={<ProductLinePage lineKey="mobile" />} />
+      <Route path="/fibre-home" element={<ProductLinePage lineKey="fibre-home" />} />
+      <Route path="/fibre-home/:category" element={<ProductLinePage lineKey="fibre-home" />} />
       <Route path="/customer/:customerId" element={<Customer360Layout />} />
       <Route path="/billing-account/:billingProfileId" element={<BillingAccountPage />} />
       <Route path="/sales" element={<SalesWorkspace />} />

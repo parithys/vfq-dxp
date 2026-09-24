@@ -1,0 +1,137 @@
+import { Link, useParams } from 'react-router-dom';
+import { usePersonaStore } from '../../stores/personaStore';
+import { canUseFeature } from '../../engines/personaEngine';
+import { getAllRoutes, getPersona } from '../../engines/configEngine';
+import { getScreenComponent } from '../screenRegistry';
+import { Icon } from '../../components/primitives/Icon';
+import { NotYetBuiltPanel } from '../NotYetBuiltPanel';
+import { JourneyCard } from './JourneyCard';
+import {
+  PRODUCT_LINE_BY_KEY,
+  reachableCategories,
+  visibleJourneys,
+  type Journey,
+  type JourneyCategory,
+  type ProductLine,
+} from '../../navigation/journeyCatalogue';
+
+// A product line's journey catalogue, filtered to the active role.
+//
+// Visibility rules (see journeyCatalogue.ts for the reasoning):
+//   - a journey with a featureKey shows only if the role holds that grant
+//   - a journey without one is roadmap-only: it shows if the role already
+//     holds at least one journey in the same category, so the roadmap is
+//     visible to the people who work in that area and nobody else
+//   - a category with no visible journeys is omitted entirely
+//
+// One page serves both the line root (all categories stacked) and each
+// category route (that section only), because they are the same content at
+// different scope — the pill row switches between them.
+
+function resolveTarget(journey: Journey): string | undefined {
+  if (journey.path) return journey.path;
+  if (!journey.screenId) return undefined;
+  // Only link to a screen that is actually registered; a catalogued-but-unbuilt
+  // screen id would land on <ScreenNotYetBuilt>, which is a worse answer than
+  // presenting the journey as planned.
+  if (!getScreenComponent(journey.screenId)) return undefined;
+  return getAllRoutes().find((r) => r.screenId === journey.screenId)?.path;
+}
+
+function CategorySection({ category, personaId }: { category: JourneyCategory; personaId: string }) {
+  const journeys = visibleJourneys(category, (k) => canUseFeature(personaId, k));
+  if (journeys.length === 0) return null;
+  const availableCount = journeys.filter((j) => j.status === 'available').length;
+
+  return (
+    <section className="rounded-[var(--radius-card)] border border-border-soft overflow-hidden mb-6">
+      <header className="flex items-start gap-3 px-5 py-4 bg-surface border-b border-border-soft">
+        <span className="shrink-0 w-9 h-9 rounded-[var(--radius-sm)] bg-[color-mix(in_oklab,var(--accent)_10%,transparent)] flex items-center justify-center">
+          <Icon path={category.icon} className="w-4.5 h-4.5 text-accent" />
+        </span>
+        <div className="min-w-0">
+          <h2 className="font-medium text-fg text-[length:var(--fs-body-lg)]">{category.heading}</h2>
+          <p className="text-fg-2 text-[length:var(--fs-body)]">{category.description}</p>
+        </div>
+      </header>
+
+      <div className="p-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {journeys.map((journey, i) => (
+          <JourneyCard key={journey.id} journey={journey} index={i} to={resolveTarget(journey)} />
+        ))}
+      </div>
+
+      <footer className="flex items-center justify-between px-5 py-3 border-t border-border-soft text-[length:var(--fs-caption)] text-muted">
+        <span>
+          {availableCount} of {journeys.length} available
+        </span>
+      </footer>
+    </section>
+  );
+}
+
+export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
+  const { category: categoryParam } = useParams();
+  const activePersonaId = usePersonaStore((s) => s.activePersonaId);
+  const line = PRODUCT_LINE_BY_KEY.get(lineKey);
+  const persona = getPersona(activePersonaId);
+
+  if (!line) return <NotYetBuiltPanel title="Unknown product line" body="This product line is not in the catalogue." />;
+
+  const reachable = reachableCategories(lineKey, (k) => canUseFeature(activePersonaId, k));
+
+  if (reachable.length === 0) {
+    return (
+      <NotYetBuiltPanel
+        badge="No access"
+        title={line.label}
+        body={
+          `${persona?.name ?? 'This role'} holds no granted journeys in ${line.label}. `
+          + 'Journeys appear here only where the role is granted the underlying feature.'
+        }
+      />
+    );
+  }
+
+  const active = categoryParam ? reachable.find((c) => c.key === categoryParam) : undefined;
+  const shown = active ? [active] : reachable;
+
+  return (
+    <div className="p-8">
+      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">{line.label}</h1>
+      <p className="text-fg-2 mb-6">
+        {active ? active.description : `Journeys available to ${persona?.name ?? 'this role'} across ${line.label}.`}
+      </p>
+
+      {/* Pill row — same class strings as ModuleScreenList's filter pills, so
+          this is a composition of the existing pattern, not a new control. */}
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        <Link
+          to={line.to}
+          className={`rounded-[var(--radius-pill)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${
+            active ? 'border-border-soft text-fg-2 hover:bg-surface' : 'border-accent bg-accent text-accent-on'
+          }`}
+        >
+          All
+        </Link>
+        {reachable.map((c) => (
+          <Link
+            key={c.key}
+            to={`${line.to}/${c.key}`}
+            className={`rounded-[var(--radius-pill)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${
+              active?.key === c.key
+                ? 'border-accent bg-accent text-accent-on'
+                : 'border-border-soft text-fg-2 hover:bg-surface'
+            }`}
+          >
+            {c.label}
+          </Link>
+        ))}
+      </div>
+
+      {shown.map((c) => (
+        <CategorySection key={c.key} category={c} personaId={activePersonaId} />
+      ))}
+    </div>
+  );
+}

@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getAllModules, getAllRoutes } from '../engines/configEngine';
 import { useActiveCustomerStore } from '../stores/activeCustomerStore';
 import { Icon } from '../components/primitives/Icon';
+import { NAV_MANIFEST, navItemByPath } from './navManifest';
 
 const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
 const ARROW_LEFT = 'M19 12H5 M12 19l-7-7 7-7';
@@ -25,6 +26,13 @@ export function Breadcrumbs() {
   // newer primary workspace shell, built after routes.json's module catalogue),
   // so it needs its own crumb rather than falling through to a bare "Dashboard".
   const isCustomer360 = moduleSlug === 'customer' && Boolean(screenSlug);
+  // Nav manifest destinations (/products, /products/mobile, /customers,
+  // /operations, /leads) are likewise not module slugs, so without this they
+  // rendered a bare "Dashboard" crumb. Mirrors the isCustomer360 branch.
+  const navItem = navItemByPath(location.pathname);
+  const navParent = navItem
+    ? NAV_MANIFEST.find((i) => i.children?.some((c) => c.key === navItem.key))
+    : undefined;
 
   return (
     <div className="flex items-center gap-1.5 px-6 py-2.5 text-[length:var(--fs-caption)] text-muted border-b border-border-soft bg-bg">
@@ -50,7 +58,21 @@ export function Breadcrumbs() {
       <Link to="/" className="ml-1 text-muted hover:text-fg transition-colors">
         Dashboard
       </Link>
-      {module && !isCustomer360 && (
+      {navItem && (
+        <>
+          {navParent && (
+            <>
+              <Crumb />
+              <Link to={navParent.to} className="text-muted hover:text-fg transition-colors">
+                {navParent.label}
+              </Link>
+            </>
+          )}
+          <Crumb />
+          <span className="text-fg font-medium">{navItem.label}</span>
+        </>
+      )}
+      {module && !isCustomer360 && !navItem && (
         <>
           <Crumb />
           <Link to={`/${module.moduleSlug}`} className="text-muted hover:text-fg transition-colors">
