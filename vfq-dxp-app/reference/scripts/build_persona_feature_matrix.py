@@ -700,9 +700,12 @@ for _k in NAV_ORDER:
         # Not a destination: the row is a disclosure control that only opens or
         # closes its sub-menu (Sidebar renders it as a <button>, not a link).
         # A tick means the role sees the GROUP. The line root page still exists
-        # and is reached from a child's breadcrumb.
-        GOVERNED_BY[_k] = ('approach (group always shown); row expands only, does not navigate; '
-                           'categories gated by journey grants')
+        # and is reached from a child's breadcrumb. In the collapsed icon rail
+        # the sub-menu has no room in-rail, so hovering the icon floats the same
+        # categories beside it (NavFlyout) — same list, same order, no extra
+        # destinations.
+        GOVERNED_BY[_k] = ('approach (group always shown); row expands only, does not navigate '
+                           '(collapsed rail: hover flyout); categories gated by journey grants')
     else:
         GOVERNED_BY[_k] = 'approach ordering (IA only)'
 for i in range(5, 5 + len(NAV_ORDER)):
