@@ -179,3 +179,68 @@ No component families were invented beyond what the design-system source (`compo
 
 **What transfers directly:** color tokens, typography scale, spacing/radius/motion tokens (§2-5) — these are brand-level and apply everywhere.
 **What does NOT transfer directly:** the component set in §7 (Card/FeaturedCard/ShareTicker/ImpactMap are editorial/marketing components) — the DXP needs `component-catalogue.md`'s enterprise primitives (DataTable, Stepper, Modal-based wizards, form-heavy inputs) far more than it needs `ShareTicker` or `ImpactMap`. Use this file for **brand tokens** (§2-5) applied to `component-catalogue.md`'s enterprise component set — don't literally reuse `Card`/`FeaturedCard` for order/lead list screens without adapting them to the data density `screens.md` actually evidences.
+
+---
+
+## 10. Superseded as the app's colour source (2026-09-24) — this file is now a record, not the spec
+
+**§2's neutral tables no longer describe what the application renders.** On
+2026-09-24 a real, first-party design asset was supplied for the DXP itself —
+three SVG states of *New Postpaid Activation / Step 1 Contact Verification* —
+and the app's light palette was rebuilt from it. This is exactly the event §0
+anticipated: *"If the real Vodafone brand codebase, Figma file, logo, icon set,
+or font files become available, this entire document should be rebuilt from
+those instead."*
+
+It is **not** rebuilt here, deliberately. §0 binds this document to one
+specific third-party source (`nexu-io/open-design`, subtree
+`design-systems/vodafone/`), and overwriting §2-§5 with values from a different
+asset would make it assert that the brand-analysis package specified colours it
+never contained — destroying the provenance that is the whole point of §0. So
+this section records the divergence instead.
+
+**The live source of truth for implemented colour is `src/tokens.css`**, with
+dark-mode overrides in `src/index.css` and a generated mirror at
+`public/config/design-tokens.json`. Where this file and those disagree, they
+win.
+
+Overlapping neutrals, as implemented today:
+
+| Token | §2 (this file) | Implemented (2026-09-24) |
+|---|---|---|
+| `--fg` | `#1f1f1f` | `#313131` |
+| `--fg-2` | `#4a4d4e` | `#5d5d5d` |
+| `--surface` | `#f4f4f4` | `#f5f7f9` |
+| `--surface-warm` | `#fff1f1` | `#fff0f0` |
+| `--border` / `--border-soft` | `#d8d8d8` / `#eeeeee` | `#e0e0e0` / `#eeeeee` |
+| `--light-neutral` | `#f2f2f2` | `#f5f7f9` |
+| `--grey-form` | `#333333` | `#e0e0e0` |
+| `--success` / `--danger` | `#008a00` / `#bd0000` | `#388e3c` / `#d0342b` |
+| `--charcoal-panel` | `#25282b` | `#21232b` (dark-mode rail only) |
+
+`--accent` (`#e60000`), `--accent-on`, the hover/active mixes and `--focus-ring`
+are **unchanged** — the brand red survived the re-skin untouched, which is the
+strongest corroboration this file's §1 offers.
+
+**What this file is still authoritative for**, because the new asset covers one
+screen and says nothing about them: §1's brand idea and voice rules (casing,
+no-emoji, numbers-as-content), §3's typography scale *as brand intent* (the app
+deliberately kept its own, one step larger — see
+`VFQ_DXP_Design_Principles_Reference.md` §1), §4's spacing/grid, §6's
+placeholder inventory, and §7's component prop APIs.
+
+**Where the two sources independently agree** — worth more than either alone:
+§1's *"near-zero shadow… there is no drop-shadow-based elevation"* matches the
+supplied asset exactly, which contains zero `<filter>`/`feDropShadow` elements
+across all three states. Flatness is therefore a real brand property, not an
+artifact of one export, and the app now enforces it (elevation reserved for
+floating overlays only).
+
+**One §7 API has outgrown this file.** `TagPill`'s two variants
+(`outlined-red`, `filled-neutral`) are implemented as `Badge` with five more —
+`success`, `warning`, `danger`, `info`, `accent` — because lifecycle status
+(Order/Lead/Ticket states) has no analog in an editorial tag pill. As of
+2026-09-24 the status variants are **outlined**, matching the supplied asset's
+pills: a `--bg` interior, a 1px tinted border, a coloured label and a 4px
+corner (`--radius-tag`) rather than a fully-rounded tint fill. See
+`component-catalogue.md` §5.

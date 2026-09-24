@@ -77,32 +77,109 @@ first-class runtime output rather than a build-time guess. See
 
 ### Token architecture
 
-128 custom properties in one flat `:root` block (`src/tokens.css:1-172`), with a
+150 custom properties in one flat `:root` block (`src/tokens.css`), with a
 genuine semantic vocabulary (`--fg`, `--bg`, `--surface`, `--border`, `--accent`,
 `--danger`/`--success`/`--warn`) rather than raw palette names at call sites.
 
 ```css
-/* src/tokens.css:2-4 */
+/* src/tokens.css */
 --accent: #e60000;
 --accent-hover: color-mix(in oklab, var(--accent), black 8%);
 --accent-active: color-mix(in oklab, var(--accent), black 14%);
 ```
 
-27 of those tokens are bridged into Tailwind's utility namespace via
-`@theme inline` (`src/index.css:6-37`), which is what makes `bg-accent`,
+36 of those tokens are bridged into Tailwind's utility namespace via
+`@theme inline` (`src/index.css:6-46`), which is what makes `bg-accent`,
 `text-fg`, `border-border-soft` resolve. The remaining tokens are consumed as
 arbitrary values (`text-[length:var(--fs-body)]`).
 
-**Dark mode** overrides 35 tokens under `:root.dark` (`src/index.css:42-95`),
+**Dark mode** overrides 51 tokens under `:root.dark` (`src/index.css:51-139`),
 toggled by a class on `<html>`. The policy is structural-only, and the code
 documents its own exceptions — status colours are deliberately brightened for
-legibility on dark surfaces (`index.css:85-87`), elevation shadows reduced in
-opacity (`:89`), and field tokens re-aliased to structural ones (`:64-79`).
+legibility on dark surfaces, elevation shadows reduced in opacity, and field
+tokens re-aliased to structural ones.
+
+**The token layer is what made the 2026-09-24 re-skin possible at all.** That
+change repointed the entire light palette at a new visual standard (below) and
+reached all 149 components without a single layout, logic or content edit,
+because the app holds **zero raw Tailwind palette colours** — every colour is a
+token or a semantic utility. This is the clearest payoff the token discipline
+has produced, and the strongest argument for keeping it.
 
 **Elevation is a named 3-step scale**, not a shadow ramp: `--elev-flat`,
-`--elev-ring`, `--elev-raised` (`tokens.css:20-22`). Applied with discipline —
-cards use a hairline border at rest and reserve `shadow-raised` for hover lift
-(`Dashboard.tsx:183`) and overlays (`Drawer.tsx:61`, `Modal.tsx:41`).
+`--elev-ring`, `--elev-raised` (`tokens.css`). Applied with discipline — and as
+of 2026-09-24, more strictly. The reference asset contains **zero
+`<filter>`/`feDropShadow` elements**: every surface in it is separated by a 1px
+border. Elevation is now reserved for genuinely floating surfaces — the 12
+overlays (`Modal`, `Drawer`, `Toast`, `NavFlyout`, and the dropdown panels in
+`Select`/`MultiSelect`/`GlobalSearch`/`LocationInput`/`DateRangeSelect`/
+`ContactPhoneInput`/`PersonaSwitcher`) — plus hover lift on cards. Primary
+buttons lost their `--shadow-brand` glow and in-flow panels their static
+shadows. Hover lift was deliberately kept: the reference shows no hover state,
+so flattening it would have been invention rather than application.
+
+### The 2026-09-24 visual standard
+
+The light palette is no longer this app's own invention — it is read from a
+supplied reference (three SVG states of *New Postpaid Activation / Step 1
+Contact Verification*). Values were extracted from the asset rather than
+eyeballed: surface fills by area histogram, text greys and status colours from
+the export's declared fills, corner radii from rect geometry.
+
+| Role | Token | Value |
+| --- | --- | --- |
+| Page background | `--page-bg`, `--surface` | `#f5f7f9` |
+| Card / rail / topbar | `--bg` | `#ffffff` |
+| Inset panel | `--surface-subtle` | `#fafafa` |
+| Container border | `--border` | `#e0e0e0` |
+| Soft divider | `--border-soft` | `#eeeeee` |
+| Text ramp | `--fg` / `--fg-2` / `--muted` / `--muted-2` | `#313131` / `#5d5d5d` / `#757575` / `#9e9e9e` |
+| Brand | `--accent` | `#e60000` (unchanged) |
+| Disabled CTA | `--accent-disabled` | `#ffb3b3` |
+| Selected choice card | `--field-card-selected-bg` | `#fef9f9` |
+| Active step / nav tint | `--surface-warm` | `#fff0f0` |
+| Status | `--success` / `--info` / `--warn-text` | `#388e3c` / `#6926dc` / `#9a5b00` |
+| Advisory banner | `--warn-bg` | `#fff8e1` |
+| Search well | `--search-bg` | `#eeeeee` |
+
+Two deliberate non-adoptions, both recorded in `tokens.css`:
+
+- **The type scale was not changed.** The reference runs about one step denser
+  (body 14 vs 16, section heading 20 vs 24, page title 28 vs 32). Adopting it
+  was considered and declined on 2026-09-24 to keep every screen's density and
+  wrapping unchanged, so the `--fs-*` ramp remains the app's own.
+- **Radii mostly needed no change.** The reference's recurring `rx="7.5"` is an
+  8px corner once Figma's 0.5px stroke inset is accounted for — already what
+  `--radius-card`/`--radius-button` hold, and it covers cards, buttons and
+  choice cards alike. Two exceptions the asset is deliberate about, and which
+  a "tidy everything to 8" instinct would have destroyed:
+
+  | Element | Asset rect | Radius | Token |
+  | --- | --- | --- | --- |
+  | Card / button / choice card | `rx="7.5"` stroked | 8px | `--radius-card`, `--radius-button` |
+  | Text input | `219x51`, `rx="11.5"` stroked | **12px** | `--field-radius` (was 16px) |
+  | Status pill | `157x17`, `rx="3.5"` stroked | **4px** | `--radius-tag` (new) |
+
+  Fields are the one element that does *not* share the 8px corner, and pills
+  are explicitly **not** fully rounded — they were on `--radius-badge-pill`
+  (32px), which rounded their ends off completely.
+
+**Corroboration worth noting:** the flat, border-separated, near-shadowless
+model this asset implies is the same one `design-system.md` §1 derived
+independently from the upstream brand analysis — *"near-zero shadow… there is
+no drop-shadow-based elevation."* Two unrelated sources agreeing raises
+confidence that flatness is a real brand property, not an artifact of one
+export.
+
+**A theme-blindness bug the re-skin surfaced.** 17 tinted status panels across
+9 files mixed toward the literal keyword `white`
+(`color-mix(in oklab, var(--success), white 92%)`), which ignores the theme. In
+dark mode they rendered as near-white panels carrying near-white `--fg` text —
+the MOI-validated customer details were effectively invisible. All 17 now mix
+toward `var(--bg)`, which leaves light mode byte-identical and fixes dark mode.
+Worth recording as a failure mode: a hardcoded colour *keyword* inside an
+otherwise tokenised expression type-checks, lints clean, and breaks only in the
+theme nobody screenshots.
 
 ### Brand expression
 
@@ -116,20 +193,48 @@ aspirational choices:
 > Grotesk/DM Sans targets, this one is real, not aspirational."*
 > — `src/tokens.css:72-75`
 
-**Restraint is real and deliberate.** Brand red is confined to primary CTAs
-(`Button.tsx:21-22`), active tab indicators (`Tabs.tsx:46,65`), table links
-(`DataTable.tsx:177,184`), and outlined badges (`Badge.tsx:12`). The chrome is
-neutral. Most notably, an explicit product directive **removed red from form
-focus and selection states**:
+**Restraint is real and deliberate, but the line moved on 2026-09-24.** Brand
+red covers primary CTAs (`Button.tsx`), active tab indicators (`Tabs.tsx`),
+table links (`DataTable.tsx`), outlined badges (`Badge.tsx`) — and now two
+surfaces it previously did not: **selected choice cards** and the **active
+navigation row**. The chrome is otherwise still neutral.
 
-> *"Explicit request (2026-09-15): focused/selected form controls must never read
-> as the brand red (`--accent`) — use this warm pink-brown instead… Covers both
-> the focus outline on text/search/dropdown/date fields AND the checked/selected
-> state on checkboxes and choice-card selectors."*
-> — `src/tokens.css:49-56`
+This area has been governed by two directives that partly contradict each
+other, and the order matters:
 
-So `--field-focus-border`, `--field-selected` and `--field-border-filled` are all
-`#c09696` (`tokens.css:40,57,59`).
+1. **2026-09-15** — focused/selected form controls must never read as the brand
+   red; use the warm pink-brown `#c09696` instead. Scoped to light mode, and
+   covering both the focus outline on text/search/dropdown/date fields *and*
+   the checked/selected state on checkboxes and choice-card selectors.
+2. **2026-09-24** — choice *cards* return to brand red (`#e60000` border, check
+   badge and label on a `#fef9f9` fill), and the supplied reference borders
+   every neutral field in `#e0e0e0`, a colour the pink-brown ramp does not
+   contain.
+
+What each still governs today:
+
+| Surface | Token | Value | Directive |
+| --- | --- | --- | --- |
+| Choice-card selected | `--field-card-selected` | `#e60000` | 2026-09-24 |
+| Field focus outline | `--field-focus-border` | `#c09696` | 2026-09-15, still standing |
+| Checkbox / radio checked | `--field-selected` | `#c09696` | 2026-09-15, still standing |
+| Neutral field border | `--field-border` | `#e0e0e0` | 2026-09-24 (was `#cdbebe`) |
+| Field "filled" border | `--field-border-filled` | `#e0e0e0` | 2026-09-24 (was `#c09696`) |
+
+Two consequences worth knowing before touching this again:
+
+- **The "filled field" state is effectively retired in light mode.**
+  `--field-border-filled` now equals `--field-border`, so a field holding a
+  value looks identical to an empty one. The token and its call-site branches
+  are kept because dark mode still distinguishes the state (it maps filled to
+  `--accent`), which also means **the two themes now disagree**: a filled input
+  is neutral-bordered in light and red-bordered in dark. Open item, not a
+  settled decision.
+- **`#c09696` now survives in exactly two places** and appears nowhere in the
+  2026-09-24 palette. It was kept rather than reversed because the 2026-09-15
+  directive was explicit and was re-affirmed on 2026-09-24 when the red change
+  was deliberately scoped to cards only. It is the one colour in the app with
+  no backing in the current reference — flag it, don't quietly extend it.
 
 ### Gaps
 
@@ -226,12 +331,26 @@ exist app-wide, against 551 `--fs-*` references.
 
 ### Shell
 
-Three-region shell (`App.tsx:57-73`): dark sidebar, header, scrolling content.
+Three-region shell (`App.tsx:57-73`): sidebar, header, scrolling content.
 Spatial hierarchy is established by three devices, strongest first:
 
-1. **Value contrast** — the sidebar is the only dark surface in light theme
-   (`Sidebar.tsx:83`, `bg-[var(--charcoal-panel)]`). Navigation is
-   *chromatically* separated from work, not merely spatially.
+1. **Value contrast — retired in light mode on 2026-09-24.** The sidebar used
+   to be the only dark surface in the light theme (`bg-[var(--charcoal-panel)]`),
+   separating navigation from work *chromatically* rather than merely
+   spatially. The supplied reference puts the rail on **white** with dark
+   labels and a solid-red active row, so light mode now separates the rail with
+   a `--nav-border` hairline and the red active row alone. Dark mode keeps the
+   charcoal rail and therefore keeps the original device — the reference is a
+   light-mode asset, and inverting it would have meant inventing a dark design
+   rather than applying a supplied one. The rail's colours are now routed
+   through `--nav-*` tokens (`tokens.css`, dark values in `index.css`) instead
+   of the `white/NN` literals it used to carry, which is what let the two
+   themes diverge deliberately rather than by accident.
+
+   Retiring it also removed a real constraint: the rail previously *could not*
+   use `--accent` for its active row, because red on charcoal was too
+   low-contrast to read, which is why it marked the active child with a left
+   border. On white, the solid red row is the reference's own treatment.
 2. **A single scroll container** — `h-screen` + `overflow-hidden` +
    `overflow-y-auto` on `<main>` (`App.tsx:59-64`) pins sidebar, header and
    breadcrumbs permanently; only content scrolls.
@@ -820,9 +939,14 @@ components, undermined by a few high-impact structural gaps.**
 - **`outline-none` is never used without a replacement** in 18 of 20 cases, and
   the global `:focus-visible` default is correctly `@layer base`d so utilities
   can override it (`index.css:155-160`).
-- **Non-colour status cues** — `Badge.tsx:27-35` always renders status as *text*,
-  with an `aria-hidden` dot added only for lifecycle variants. No status anywhere
-  is colour-alone; **SC 1.4.1 looks satisfied.**
+- **Non-colour status cues** — `Badge.tsx` always renders status as *text*, so no
+  status anywhere is colour-alone; **SC 1.4.1 looks satisfied.** The pill also
+  carried an `aria-hidden` leading dot on lifecycle variants until 2026-09-24,
+  when the reference's label-only outlined pill replaced it. That did not weaken
+  this finding: the dot took its colour from the text and was hidden from
+  assistive tech, so the label was always what conveyed the status. The pill is
+  now a `--bg` interior with a tinted 1px border (`--success-border`,
+  `--warn-border`, `--danger-border`, `--info-border`) and a 4px corner.
 - `lang`/`dir` are set from the agent's language preference (`App.tsx:35-39`).
 
 ### Gaps — blocking, roughly by impact
@@ -872,10 +996,39 @@ components, undermined by a few high-impact structural gaps.**
     primary navigation becomes a list of unnamed links.
 
 **Measured contrast failures** (WCAG 2.x relative luminance against real token
-values): `--field-border #cdbebe` on white **1.79:1** (the only boundary of every
-text input, fails 1.4.11); `Badge` success **3.44:1** and danger **4.18:1** (the
-"Active"/"Complete" pill on every screen); `--success` as text **3.95:1**;
-dark-mode `text-accent` on `--bg` **3.72:1**.
+values, recomputed after the 2026-09-24 re-skin):
+
+*Text contrast improved.* Outlining the status pills moved their labels onto a
+white `--bg` interior instead of a 12% tint, and the new text ramp is darker
+than the old one. Every pill label now passes AA at small text: success
+`#388e3c` **4.12:1** (was 3.44:1), danger `#d0342b` **4.99:1** (was 4.18:1),
+`--warn-text` **5.43:1**, `--info` **7.21:1**, accent **4.81:1**. Body text
+`--fg #313131` is **13.01:1** and `--muted #757575` **4.61:1**, which is
+precisely why `--muted-2 #9e9e9e` (**2.68:1**) is restricted to placeholders
+and decorative glyphs and kept off body copy.
+
+*Non-text contrast got worse, and this is a regression to own.* SC 1.4.11
+requires **3:1** for the visual boundary of a UI component. The re-skin lowered
+every boundary in the app:
+
+| Boundary | Before | After | 1.4.11 |
+| --- | --- | --- | --- |
+| `--field-border` (every text input) | `#cdbebe` 1.79:1 | `#e0e0e0` **1.32:1** | fails, worse |
+| `--border` (cards, panels, tables) | `#e5e5e5` 1.27:1 | `#e0e0e0` **1.32:1** | fails, marginally better |
+| `--border-soft` (dividers) | `#e5e5e5` 1.27:1 | `#eeeeee` **1.16:1** | fails, worse |
+| Pill borders (`--success-border` etc.) | n/a (filled) | **1.39–1.73:1** | fails, new surface |
+
+This is a direct consequence of applying the supplied asset faithfully — those
+are its literal values, and it is a visual reference, not an accessibility
+audit. It is recorded here rather than silently "corrected" because quietly
+darkening the borders would mean shipping something the reference does not
+specify. **The fix is a product decision, not a code one**: either the asset
+gets an accessible-boundary revision, or the app deviates from it on purpose
+for field/pill borders. Until then, field and pill boundaries rely on the
+adjacent label and the focus ring to convey structure.
+
+*Unchanged:* dark-mode `text-accent` on `--bg` **3.72:1**; `--field-focus-border
+#c09696` **2.61:1** (still the 2026-09-15 directive's value — see §1).
 
 **Other serious gaps:** no `<header>`/`<aside>`/`<footer>` landmarks anywhere
 (only `main` and `nav`); breadcrumbs are a bare `<div>` with no
