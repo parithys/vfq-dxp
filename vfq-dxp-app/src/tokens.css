@@ -66,7 +66,7 @@
   --focus-ring: 0 0 0 4px rgba(230,0,0,.22);
   /* Selected-card ring for choice-card selectors (installment term, plan,
      handover method, etc). Uses --field-selected (#c09696), not --accent —
-     see the field-focus-*/field-selected note above. Dark mode keeps the
+     see the field-focus / field-selected note above. Dark mode keeps the
      original red value via the index.css override. */
   --shadow-selected-ring: 0 0 0 3px rgba(192,150,150,.4);
   /* Figtree is loaded via Google Fonts (index.html) — unlike the previous
