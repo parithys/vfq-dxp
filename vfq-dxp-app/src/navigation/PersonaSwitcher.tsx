@@ -13,6 +13,7 @@ import { TooltipGroup } from '../components/primitives/TooltipContext';
 import { useSidebarStore } from '../stores/sidebarStore';
 import { GlobalSearch } from './GlobalSearch';
 import { SessionReferenceNumbers } from './SessionReferenceNumbers';
+import { HeaderContextChips } from './HeaderContextChips';
 
 const ICONS = {
   moon: 'M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z',
@@ -84,8 +85,11 @@ export function PersonaSwitcher() {
       <div className="col-start-2 w-full">
         <GlobalSearch />
       </div>
-      <div className="col-start-3">
+      {/* One flex strip so the session reference numbers and the
+          approach-driven context chips sit side by side rather than stacking. */}
+      <div className="col-start-3 flex items-center gap-3">
         <SessionReferenceNumbers />
+        <HeaderContextChips />
       </div>
 
       <TooltipGroup>

@@ -1,96 +1,57 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { getPersona, getAllRoutes } from '../engines/configEngine';
+import { Link, useSearchParams } from 'react-router-dom';
+import { getPersona } from '../engines/configEngine';
 import { usePersonaStore } from '../stores/personaStore';
 import { useAuthStore } from '../stores/authStore';
-import { useEntityStore } from '../stores/entityStore';
 import { useActiveCustomerStore } from '../stores/activeCustomerStore';
+import { useRegionStore, REGIONS } from '../stores/regionStore';
+import { canUseFeature } from '../engines/personaEngine';
 import * as mockDataEngine from '../engines/mockDataEngine';
-import { isVisibleToAgent } from '../engines/agentTaskEngine';
 import { Icon } from '../components/primitives/Icon';
+import { DashboardZone } from './dashboard/DashboardZone';
+import { FocusControl } from './dashboard/FocusControl';
+import { useZoneMetrics } from './dashboard/useZoneMetrics';
+import { customerOpsSpec, productWorkSpec } from './dashboard/zoneSpecs';
+import { focusFromParam, layoutFor, productZoneVariantFor } from './dashboard/dashboardLayout';
 
-const ICONS = {
-  ticket: 'M4 9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1.5a1.5 1.5 0 0 0 0 3V15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1.5a1.5 1.5 0 0 0 0-3V9z',
-  checkCircle: 'M21 11.5a9 9 0 1 1-5.3-8.2 M21 4.5l-9 9-3-3',
-  users: 'M8 12a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M2.5 20c.6-3.4 3-5.5 5.5-5.5s4.9 2.1 5.5 5.5 M16.5 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M15.5 13.2c2.2.5 3.9 2.3 4.3 4.8',
-  simCard: 'M8 3h8l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z M9 12h6 M9 16h6',
-  refresh: 'M3 12a9 9 0 0 1 15.3-6.4L21 8 M21 3v5h-5 M21 12a9 9 0 0 1-15.3 6.4L3 16 M3 21v-5h5',
-  search: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3',
-  openArrow: 'M7 17L17 7 M7 7h10v10',
-};
+const SEARCH_ICON = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3';
 
-interface Ticket { status: string; }
-interface Order { status: string; }
-interface SimSwapOrder { status: string; }
-interface BulkJob { overallStatus: string; jobType?: string; }
-interface CustomerRecord { customerId: string; name: string; segment: string; }
-interface AgentTask { taskStatus: string; taskType: string; priorityFlag: boolean; assignedAgentId: string | null; }
-
-// Agent Workspace redesign: the KPI summary (real entityStore counts) is kept
-// unchanged, but the module-launcher grid it used to sit above is gone — the
-// whole point of the Customer -> Product -> Action model is that this page
-// no longer needs to list implementation modules. What replaces it: a
-// direct path into Customer Search, quick actions for the handful of things
-// an agent starts without a customer already in mind, and their recently
-// viewed customers (from the active-customer bridge's history) so returning
-// to someone they just helped is one click, not a re-search.
-interface QuickAction {
-  label: string;
-  screenId?: string;
-  path?: string;
+interface CustomerRecord {
+  customerId: string;
+  name: string;
+  segment: string;
 }
 
-const QUICK_ACTIONS: QuickAction[] = [
-  { label: 'New Postpaid Connection', screenId: 'SCR-037' },
-  { label: 'New Fixed Line', screenId: 'SCR-043' },
-  { label: 'Start a Lead', path: '/sales' },
-  { label: 'Create Ticket', path: '/support' },
-];
-
+// ONE dashboard route for all 26 roles. Approach chooses which zone(s) render
+// and in what order (dashboardLayout); the zones themselves are data
+// (zoneSpecs) rendered by one component (DashboardZone).
+//
+// The whole point is that this is not four dashboards. A Hybrid role's Focus
+// control re-orders and re-sizes the same two zones — it does not navigate, and
+// because useZoneMetrics loads every kind on mount it cannot refetch either.
 export function Dashboard() {
-  const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
   const persona = getPersona(activePersonaId);
-  const currentAgentId = useAuthStore((s) => s.profile?.userId);
+  const profileName = useAuthStore((s) => s.profile?.name);
   const recentCustomerIds = useActiveCustomerStore((s) => s.recentCustomerIds);
-  const clearActiveCustomer = useActiveCustomerStore((s) => s.clearActiveCustomer);
+  const regionId = useRegionStore((s) => s.regionId);
   const [recentCustomers, setRecentCustomers] = useState<CustomerRecord[]>([]);
 
-  const loadKind = useEntityStore((s) => s.loadKind);
-  const tickets = (useEntityStore((s) => s.records['trouble-tickets']) ?? []) as unknown as Ticket[];
-  const orders = (useEntityStore((s) => s.records.orders) ?? []) as unknown as Order[];
-  const leads = useEntityStore((s) => s.records.leads) ?? [];
-  const simSwaps = (useEntityStore((s) => s.records['sim-swap-orders']) ?? []) as unknown as SimSwapOrder[];
-  const customers = useEntityStore((s) => s.records.customers) ?? [];
-  const bulkJobs = (useEntityStore((s) => s.records['bulk-activation-orders']) ?? []) as unknown as BulkJob[];
-  const tasks = (useEntityStore((s) => s.records.tasks) ?? []) as unknown as AgentTask[];
-  const loadingMap = useEntityStore((s) => s.loading);
-  const errorMap = useEntityStore((s) => s.errors);
 
-  useEffect(() => {
-    ['trouble-tickets', 'orders', 'leads', 'sim-swap-orders', 'customers', 'bulk-activation-orders', 'tasks'].forEach((k) =>
-      loadKind(k as Parameters<typeof loadKind>[0])
-    );
-  }, [loadKind]);
 
-  // Agent 360 ATV-01: the BRSD names 5 dashboard categories without saying how
-  // they derive from a task's fields (OI-AGN-14/18 leave this open) — modeled
-  // here as: status-based (Open/In Progress), type-based (Payment/Draft
-  // Order), and flag-based (Priority), all excluding Closed tasks so the
-  // tiles reflect outstanding work, not history. ATV-02: "assigned tasks...
-  // only for the logged-in agent" — unassigned tasks stay visible to
-  // everyone (someone has to be able to pick them up); once assigned, only
-  // that agent sees them, via isVisibleToAgent().
-  const openTasks = tasks
-    .filter((t) => t.taskStatus !== 'Closed')
-    .filter((t) => isVisibleToAgent(t.assignedAgentId, currentAgentId));
-  const taskTiles = [
-    { key: 'open', label: 'Open Tasks', count: openTasks.filter((t) => t.taskStatus === 'Open').length },
-    { key: 'in-progress', label: 'In Progress Tasks', count: openTasks.filter((t) => t.taskStatus === 'In Progress').length },
-    { key: 'payments', label: 'Pending Payments', count: openTasks.filter((t) => t.taskType === 'Payment').length },
-    { key: 'priority', label: 'Priority Tasks', count: openTasks.filter((t) => t.priorityFlag).length },
-    { key: 'draft-orders', label: 'Draft Orders', count: openTasks.filter((t) => t.taskType === 'Draft Order').length },
-  ];
+  // Greeting uses the signed-in person's first name, falling back to the role
+  // label when no profile has resolved yet.
+  const firstName = profileName?.split(' ')[0] ?? persona?.name ?? 'there';
+  const approach = persona?.approach ?? 'Customer-First';
+  const focus = focusFromParam(params.get('focus'));
+  const layout = layoutFor(approach, focus, firstName);
+  const variant = productZoneVariantFor(persona);
+  const regionLabel = REGIONS.find((r) => r.id === regionId)?.label ?? 'Vodafone Qatar';
+  // Only an oversight role is scoped to a region; everyone else sees the
+  // national rollup and the real directory count.
+  const regional = persona?.capabilities.includes('agent-oversight') ?? false;
+  const m = useZoneMetrics(regional ? regionId : 'NATIONAL');
 
   useEffect(() => {
     if (recentCustomerIds.length === 0) {
@@ -103,166 +64,64 @@ export function Dashboard() {
     });
   }, [recentCustomerIds]);
 
-  const kpis = [
-    {
-      icon: ICONS.ticket,
-      kind: 'trouble-tickets' as const,
-      value: tickets.filter((t) => t.status === 'Open' || t.status === 'Reopened').length,
-      label: 'Open tickets',
-      sub: 'across all queues',
-    },
-    {
-      icon: ICONS.checkCircle,
-      kind: 'orders' as const,
-      value: orders.filter((o) => o.status === 'Submitted for Approval').length,
-      label: 'Orders pending approval',
-      sub: 'awaiting a manager',
-    },
-    {
-      icon: ICONS.users,
-      kind: 'leads' as const,
-      value: leads.length,
-      label: 'Total leads',
-      sub: 'created this session',
-    },
-    {
-      icon: ICONS.simCard,
-      kind: 'sim-swap-orders' as const,
-      value: simSwaps.filter((s) => s.status === 'Submitted for Approval').length,
-      label: 'SIM swaps pending',
-      sub: 'awaiting approval',
-    },
-    {
-      icon: ICONS.users,
-      kind: 'customers' as const,
-      value: customers.length,
-      label: 'Customers on file',
-      sub: 'in the mock directory',
-    },
-    {
-      icon: ICONS.refresh,
-      kind: 'bulk-activation-orders' as const,
-      value: bulkJobs.filter((j) => j.overallStatus === 'Processed' || j.overallStatus === 'Completed').length,
-      label: 'Bulk jobs processed',
-      sub: 'incl. Pre-to-Post migrations',
-    },
-  ];
-
-  const launchQuickAction = (action: QuickAction) => {
-    if (action.path) {
-      navigate(action.path);
-      return;
-    }
-    const route = action.screenId ? getAllRoutes().find((r) => r.screenId === action.screenId) : undefined;
-    if (!route) return;
-    clearActiveCustomer();
-    navigate(route.path);
+  const setFocus = (next: string) => {
+    const p = new URLSearchParams(params);
+    p.set('focus', next);
+    setParams(p, { replace: true });
   };
+
+  // A Hybrid role always has two zones, so its zones keep their two-zone
+  // framing regardless of which one Focus has enlarged.
+  const framing = layout.zones.length > 1 ? 'one-of-two' : 'primary';
+  const specFor = (id: string, compact: boolean) =>
+    id === 'customer-ops'
+      ? customerOpsSpec(m, { compact, framing, regional, regionLabel, recentCustomers })
+      : productWorkSpec(m, { variant, compact, framing, regionLabel, regional });
+
+  const twoUp = layout.zones.filter((z) => z.size === 'half').length === 2;
 
   return (
     <div className="p-8">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">
-        Welcome back{persona ? `, ${persona.name.split('(')[0].trim()}` : ''}!
-      </h1>
-      <p className="text-fg-2 mb-6">Here's what's happening across the platform right now.</p>
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-1">
+        <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">{layout.heading}</h1>
+        {layout.showFocusControl && <FocusControl focus={focus} onChange={setFocus} />}
+      </div>
+      <p className="text-fg-2 mb-6">
+        {layout.subtitle}
+        {regional && ` Scoped to ${regionLabel}.`}
+      </p>
 
-      <Link
-        to="/customer-search"
-        className="flex items-center gap-3 rounded-[var(--radius-pill)] border border-border-soft bg-bg px-5 py-3.5 mb-8 max-w-xl text-muted hover:border-accent hover:text-fg transition-colors"
-      >
-        <Icon path={ICONS.search} className="w-5 h-5" />
-        <span className="text-[length:var(--fs-body)]">Search a customer by mobile, QID, name, or account number…</span>
-      </Link>
+      {/* Customer search is the entry point for customer-centric work, so it
+          only leads for roles that hold it. */}
+      {canUseFeature(activePersonaId, 'workspace.customer-search') && (
+        <Link
+          to="/customer-search"
+          className="flex items-center gap-3 rounded-[var(--radius-pill)] border border-border-soft bg-bg px-5 py-3.5 mb-8 max-w-xl text-muted hover:border-accent hover:text-fg transition-colors"
+        >
+          <Icon path={SEARCH_ICON} className="w-5 h-5" />
+          <span className="text-[length:var(--fs-body)]">Search a customer by mobile, QID, name, or account number…</span>
+        </Link>
+      )}
 
-      <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-3">My Tasks</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
-        {taskTiles.map((tile) => (
-          <Link
-            key={tile.key}
-            to={`/tasks?filter=${tile.key}`}
-            className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 hover:border-accent hover:shadow-raised hover:-translate-y-0.5 transition-all"
-          >
-            <div className="text-[length:var(--fs-h3)] font-extrabold text-fg">
-              {loadingMap.tasks ? (
-                '—'
-              ) : errorMap.tasks ? (
-                <span className="text-danger text-[length:var(--fs-body)]" title={errorMap.tasks}>
-                  Failed to load
-                </span>
-              ) : (
-                tile.count
-              )}
-            </div>
-            <div className="text-fg-2 text-[length:var(--fs-caption)] mt-1">{tile.label}</div>
-          </Link>
+      <div className={twoUp ? 'grid grid-cols-1 xl:grid-cols-2 gap-8' : 'space-y-8'}>
+        {layout.zones.map((zone) => (
+          <DashboardZone
+            key={zone.id}
+            spec={specFor(zone.id, zone.size === 'half')}
+            size={zone.size}
+            readOnly={layout.readOnly}
+            loading={m.loading}
+            errors={m.errors}
+          />
         ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
-        {kpis.map((kpi) => (
-          <div key={kpi.label} className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
-            <div className="flex items-start justify-between gap-3 mb-4">
-              <div>
-                <div className="font-medium text-fg text-[length:var(--fs-body)]">{kpi.label}</div>
-                <div className="text-muted text-[length:var(--fs-caption)]">{kpi.sub}</div>
-              </div>
-              <span className="w-9 h-9 rounded-full bg-surface-warm text-accent flex items-center justify-center shrink-0">
-                <Icon path={kpi.icon} className="w-4.5 h-4.5" />
-              </span>
-            </div>
-            <div className="text-[length:var(--fs-h3)] font-extrabold text-fg">
-              {loadingMap[kpi.kind] ? (
-                '—'
-              ) : errorMap[kpi.kind] ? (
-                <span className="text-danger text-[length:var(--fs-body)]" title={errorMap[kpi.kind]}>
-                  Failed to load
-                </span>
-              ) : (
-                kpi.value
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div>
-          <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-3">Quick actions</h2>
-          <div className="flex flex-wrap gap-2">
-            {QUICK_ACTIONS.map((action) => (
-              <button
-                key={action.label}
-                onClick={() => launchQuickAction(action)}
-                className="rounded-[var(--radius-button)] border border-border px-4 py-2 text-[length:var(--fs-btn-compact)] text-fg hover:bg-surface hover:border-accent transition-colors"
-              >
-                {action.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-3">Recently viewed customers</h2>
-          {recentCustomers.length === 0 && (
-            <p className="text-muted text-[length:var(--fs-body)]">Customers you look up will show up here for quick return access.</p>
-          )}
-          <div className="space-y-2">
-            {recentCustomers.map((customer) => (
-              <Link
-                key={customer.customerId}
-                to={`/customer/${customer.customerId}`}
-                className="flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-border-soft bg-bg px-4 py-3 hover:border-accent hover:shadow-raised hover:-translate-y-0.5 transition-all"
-              >
-                <div>
-                  <div className="font-medium text-fg text-[length:var(--fs-body)]">{customer.name}</div>
-                  <div className="text-fg-2 text-[length:var(--fs-caption)]">{customer.customerId} · {customer.segment}</div>
-                </div>
-                <Icon path={ICONS.openArrow} className="w-4 h-4 text-muted shrink-0" />
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
+      {layout.showFocusControl && (
+        <p className="mt-8 rounded-[var(--radius-card)] border border-border-soft bg-surface px-4 py-3 text-fg-2 text-[length:var(--fs-caption)]">
+          This is the same dashboard route rendered for one role. Switching Focus re-orders and re-sizes the same two
+          zones — it doesn't navigate to a different screen or reload different data.
+        </p>
+      )}
     </div>
   );
 }

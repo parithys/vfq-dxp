@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { usePersonaStore } from '../../stores/personaStore';
 import { canUseFeature } from '../../engines/personaEngine';
 import { getAllRoutes, getPersona } from '../../engines/configEngine';
@@ -72,6 +72,7 @@ function CategorySection({ category, personaId }: { category: JourneyCategory; p
 
 export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
   const { category: categoryParam } = useParams();
+  const [searchParams] = useSearchParams();
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
   const line = PRODUCT_LINE_BY_KEY.get(lineKey);
   const persona = getPersona(activePersonaId);
@@ -105,6 +106,17 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
 
       {/* Pill row — same class strings as ModuleScreenList's filter pills, so
           this is a composition of the existing pattern, not a new control. */}
+      {/* Global search can land a catalogue hit here. Naming the requested id
+          keeps the "no fabricated destinations" rule intact — the page says
+          plainly that an item detail is planned rather than silently showing
+          the whole line as if it had honoured the link. */}
+      {searchParams.get('id') && (
+        <p className="mb-6 rounded-[var(--radius-card)] border border-border-soft bg-surface px-4 py-3 text-fg-2 text-[length:var(--fs-caption)]">
+          A detail view for <code>{searchParams.get('id')}</code> is planned here. Showing the {line.label} journey
+          catalogue in the meantime.
+        </p>
+      )}
+
       <div className="flex flex-wrap items-center gap-2 mb-6">
         <Link
           to={line.to}
