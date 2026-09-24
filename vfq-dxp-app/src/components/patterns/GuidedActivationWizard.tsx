@@ -235,7 +235,7 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
   const handleStepKeyDown = useEnterToSubmit(canProceed && !submitting, goNext);
 
   return (
-    <div className="max-w-5xl">
+    <div>
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-6">{title}</h1>
 
       <span className="sr-only" aria-live="polite">
