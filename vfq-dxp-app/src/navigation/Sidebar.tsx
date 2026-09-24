@@ -174,37 +174,37 @@ export function Sidebar() {
         ref={railRef}
         className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-200 ease-in-out ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:static md:inset-auto md:z-auto md:translate-x-0 md:transition-[width] md:duration-150 shrink-0 border-r border-white/10 bg-[var(--charcoal-panel)] h-full overflow-y-auto ${
+        } md:static md:inset-auto md:z-auto md:translate-x-0 md:transition-[width] md:duration-150 shrink-0 border-r border-[var(--nav-border)] bg-[var(--nav-bg)] h-full overflow-y-auto ${
           collapsed ? 'md:w-16' : 'md:w-64'
         }`}
       >
       {/* Mobile drawer always renders the expanded header/nav regardless of
           the desktop `collapsed` preference — collapsing to icon-only only
           makes sense for the persistent in-flow rail at md:+. */}
-      <div className="flex items-center justify-between h-16 px-4 border-b border-white/10 md:hidden">
+      <div className="flex items-center justify-between h-16 px-4 border-b border-[var(--nav-border)] md:hidden">
         <NavLink to="/" className="flex items-center gap-2 min-w-0">
           <VodafoneMark className="w-7 h-7 shrink-0" />
-          <span className="text-[length:var(--fs-h5)] font-bold text-white truncate">vodafone</span>
+          <span className="text-[length:var(--fs-h5)] font-bold text-[var(--nav-fg)] truncate">vodafone</span>
         </NavLink>
         <button
           onClick={closeMobile}
           aria-label="Close navigation"
-          className="text-white/60 hover:text-white shrink-0"
+          className="text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] shrink-0"
         >
           <Icon path={PANEL_TOGGLE_ICON} className="w-4.5 h-4.5" />
         </button>
       </div>
       {!collapsed && (
-        <div className="hidden md:flex items-center justify-between h-16 px-4 border-b border-white/10">
+        <div className="hidden md:flex items-center justify-between h-16 px-4 border-b border-[var(--nav-border)]">
           <NavLink to="/" className="flex items-center gap-2 min-w-0">
             <VodafoneMark className="w-7 h-7 shrink-0" />
-            <span className="text-[length:var(--fs-h5)] font-bold text-white truncate">vodafone</span>
+            <span className="text-[length:var(--fs-h5)] font-bold text-[var(--nav-fg)] truncate">vodafone</span>
           </NavLink>
           <Tooltip content="Collapse navigation" placement="bottom">
             <button
               onClick={toggleCollapsed}
               aria-label="Collapse navigation"
-              className="text-white/60 hover:text-white shrink-0"
+              className="text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] shrink-0"
             >
               <Icon path={PANEL_TOGGLE_ICON} className="w-4.5 h-4.5" />
             </button>
@@ -212,12 +212,12 @@ export function Sidebar() {
         </div>
       )}
       {collapsed && (
-        <div className="hidden md:flex items-center justify-center h-16 border-b border-white/10">
+        <div className="hidden md:flex items-center justify-center h-16 border-b border-[var(--nav-border)]">
           {/* Same rail-edge alignment as the item tooltips below it. This one
               was the furthest out of line: the button is centred in the rail,
               so measuring from it put the tooltip ~24px further left again. */}
           <Tooltip content="Expand navigation" placement="right" anchorRef={railRef}>
-            <button onClick={toggleCollapsed} aria-label="Expand navigation" className="text-white/60 hover:text-white">
+            <button onClick={toggleCollapsed} aria-label="Expand navigation" className="text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)]">
               <Icon path={PANEL_TOGGLE_ICON} className="w-4.5 h-4.5" />
             </button>
           </Tooltip>
@@ -254,8 +254,8 @@ export function Sidebar() {
             // Open group holding the active child: a quiet tint, so the group
             // reads as "you are in here" without competing with the child's
             // own accent marker.
-            const inGroupClass = 'bg-white/8 text-white font-medium';
-            const idleClass = 'hover:bg-white/10 hover:text-white text-white/70';
+            const inGroupClass = 'bg-[var(--nav-group-bg)] text-[var(--nav-fg)] font-medium';
+            const idleClass = 'hover:bg-[var(--nav-hover-bg)] hover:text-[var(--nav-fg)] text-[var(--nav-fg-muted)]';
             const body = (
               <>
                 <Icon path={item.icon} className="w-4.5 h-4.5 shrink-0" />
@@ -333,11 +333,16 @@ export function Sidebar() {
                     each child being its own filled pill: with a pill, a
                     selected child looked identical in weight to a selected
                     top-level item, so the hierarchy was invisible.
-                    The label stays white rather than accent-coloured — accent
-                    red on the charcoal rail is too low-contrast to read, so the
-                    bar carries the accent and the text carries the weight. */}
+                    The rail's colours are now tokenised (--nav-* in tokens.css
+                    / index.css), so the active child's fill follows the theme:
+                    in light mode --nav-active-bg is the solid red row the
+                    2026-09-24 reference specifies, and in dark mode it stays a
+                    subtle white fill with the accent border doing the work,
+                    because accent red on the charcoal rail still reads poorly
+                    there. Either way the left border is what keeps the
+                    hierarchy legible, so the mechanism is unchanged. */}
                 {hasChildren && expanded && !collapsed && (
-                  <ul className="mt-0.5 ml-[26px] border-l border-white/15">
+                  <ul className="mt-0.5 ml-[26px] border-l border-[var(--nav-border)]">
                     {item.children!.map((child) => (
                       <li key={child.key}>
                         <NavLink
@@ -345,8 +350,8 @@ export function Sidebar() {
                           className={({ isActive }) =>
                             `flex items-center gap-2.5 h-9 -ml-px pl-4 pr-3 border-l-2 text-[length:var(--fs-caption)] ${
                               isActive
-                                ? 'border-accent text-white font-medium'
-                                : 'border-transparent text-white/60 hover:text-white hover:border-white/30'
+                                ? 'border-accent bg-[var(--nav-active-bg)] text-[var(--nav-active-fg)] font-medium'
+                                : 'border-transparent text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] hover:border-[var(--nav-section)]'
                             }`
                           }
                         >

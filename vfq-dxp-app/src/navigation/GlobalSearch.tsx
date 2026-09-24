@@ -211,7 +211,12 @@ export function GlobalSearch() {
         }}
         placeholder={scope.placeholder}
         aria-label="Global search"
-        className={`w-full rounded-[var(--field-radius)] border bg-bg pl-9 pr-9 py-2 text-fg text-[length:var(--fs-body)] placeholder:text-muted focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)] ${query ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'}`}
+        // Filled rather than outlined, per the 2026-09-24 reference — the only
+        // field in it treated that way. The filled/normal border swap the other
+        // inputs still do is dropped here rather than layered on top: a border
+        // on a --search-bg well reads as a second edge around the fill. The
+        // focus ring stays, so the focus affordance is unchanged.
+        className="w-full rounded-[var(--field-radius)] border border-transparent bg-[var(--search-bg)] pl-9 pr-9 py-2 text-fg text-[length:var(--fs-body)] placeholder:text-[var(--muted-2)] focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]"
       />
       {query && (
         <button

@@ -112,7 +112,10 @@ export function IdLookupStep({ value = {}, onChange }: IdLookupStepProps) {
 
       {value.moiResult && (
         <div className="pt-2 border-t border-border-soft">
-          <div className="rounded-[var(--radius-card)] border border-success/30 bg-[color-mix(in_oklab,var(--success),white_92%)] shadow-raised p-4 space-y-3">
+          {/* Flat: bordered tint, no elevation. This panel sits in the page
+              flow inside a card, and the 2026-09-24 reference elevates
+              nothing — only floating overlays keep their shadow. */}
+          <div className="rounded-[var(--radius-card)] border border-success/30 bg-[color-mix(in_oklab,var(--success),var(--bg)_92%)] p-4 space-y-3">
             <Badge variant="success">MOI Validated</Badge>
             <div className="grid grid-cols-3 gap-4 text-[length:var(--fs-body)]">
               <div>

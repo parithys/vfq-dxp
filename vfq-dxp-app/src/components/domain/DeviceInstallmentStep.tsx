@@ -197,26 +197,32 @@ export function DeviceInstallmentStep({
               </div>
 
               <div className="flex flex-wrap gap-2">
+                {/* These three chips predate <Badge> and are styled inline.
+                    They now carry the same outlined treatment it does per the
+                    2026-09-24 reference — --bg interior, tinted border, 4px
+                    corner — instead of a tinted fill on a fully-rounded pill.
+                    Their leading icons stay: the reference's pills are
+                    label-only, but an icon here is content, not styling. */}
                 <span
-                  className={`inline-flex items-center gap-1.5 rounded-[var(--radius-badge-pill)] px-2.5 py-1 text-[length:var(--fs-tag)] font-medium ${
+                  className={`inline-flex items-center gap-1.5 rounded-[var(--radius-tag)] px-2.5 py-1 text-[length:var(--fs-tag)] font-medium bg-bg border ${
                     selectedDevice.catalogStockStatus === 'In Stock'
-                      ? 'bg-[color-mix(in_oklab,var(--success),white_85%)] text-success'
-                      : 'bg-[color-mix(in_oklab,var(--warn),white_80%)] text-[var(--warn-text)]'
+                      ? 'border-[var(--success-border)] text-success'
+                      : 'border-[var(--warn-border)] text-[var(--warn-text)]'
                   }`}
                 >
                   <Icon path={selectedDevice.catalogStockStatus === 'In Stock' ? BOX_ICON : TRUCK_ICON} className="w-3.5 h-3.5" />
                   {selectedDevice.catalogStockNote}
                 </span>
                 <span
-                  className={`inline-flex items-center gap-1.5 rounded-[var(--radius-badge-pill)] px-2.5 py-1 text-[length:var(--fs-tag)] font-medium ${
-                    eligible ? 'border border-accent text-accent' : 'bg-[color-mix(in_oklab,var(--danger),white_85%)] text-danger'
+                  className={`inline-flex items-center gap-1.5 rounded-[var(--radius-tag)] px-2.5 py-1 text-[length:var(--fs-tag)] font-medium bg-bg border ${
+                    eligible ? 'border-accent text-accent' : 'border-[var(--danger-border)] text-danger'
                   }`}
                 >
                   <Icon path={CHECK_ICON} className="w-3.5 h-3.5" />
                   {eligible ? 'Eligible for instalment' : 'Not eligible'}
                 </span>
                 {selectedDevice.tradeInBonusQar && (
-                  <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-badge-pill)] px-2.5 py-1 text-[length:var(--fs-tag)] font-medium bg-[color-mix(in_oklab,var(--accent),white_85%)] text-accent">
+                  <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-tag)] px-2.5 py-1 text-[length:var(--fs-tag)] font-medium bg-bg border border-[var(--accent-disabled)] text-accent">
                     QAR {selectedDevice.tradeInBonusQar} trade-in bonus applied
                   </span>
                 )}
@@ -315,7 +321,7 @@ export function DeviceInstallmentStep({
             <span className="text-muted text-[length:var(--fs-caption)]">BR-114</span>
           </div>
           <div className="p-5 space-y-3">
-            <div className="flex items-start gap-2 rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),white_88%)] px-4 py-3">
+            <div className="flex items-start gap-2 rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_88%)] px-4 py-3">
               <Icon path={WARN_ICON} className="w-4.5 h-4.5 text-[var(--warn-text)] shrink-0 mt-0.5" />
               <div>
                 <p className="text-fg font-medium text-[length:var(--fs-body)]">Customer must confirm the DOI terms before continuing</p>

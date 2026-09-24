@@ -1,13 +1,40 @@
 :root {
+  /* ── Visual standard ──────────────────────────────────────────────────
+     Light-mode palette is derived from the Mobile Postpaid reference
+     supplied 2026-09-24 (three SVG states of New Postpaid Activation /
+     Step 1 Contact Verification). Values below were read out of those
+     files rather than eyeballed: surface fills by area histogram, text
+     greys and status colours from the export's declared fills, radii from
+     rect geometry (Figma insets a stroked rect by 0.5px, so the recurring
+     rx="7.5" is an 8px corner — already what --radius-card/-button hold).
+
+     It supersedes the warm pink-grey field chrome of the 2026-09-15
+     reference for NEUTRAL borders: that asset's --field-border #cdbebe and
+     --field-border-filled #c09696 are absent from this palette, which
+     borders every field, card and panel in #e0e0e0. Still standing from
+     2026-09-15, because the new reference shows neither state and so
+     cannot contradict them: the #c09696 focus ring and the checkbox/radio
+     accent (see the --field-focus-border note below).
+
+     Type scale is deliberately NOT changed. The reference runs about one
+     step denser than this app (body 14 vs 16, section heading 20 vs 24,
+     page title 28 vs 32); adopting it was considered and declined on
+     2026-09-24 to keep every screen's density and wrapping as-is. The
+     --fs-* ramp below is therefore the app's own, not the reference's. */
   --accent: #e60000;
+  /* Primary button while disabled — the reference's "Next: Step 2
+     Eligibility" and pre-selection scanner CTA. A flat tint, not the
+     accent at reduced opacity, so it stays solid over both --bg and
+     --surface. */
+  --accent-disabled: #ffb3b3;
   --accent-active: color-mix(in oklab, var(--accent), black 14%);
   --accent-hover: color-mix(in oklab, var(--accent), black 8%);
   --accent-on: #ffffff;
   --bg: #ffffff;
   --black-80: rgba(0,0,0,.8);
   --black-glass-5: rgba(0,0,0,.05);
-  --border: #e5e5e5;
-  --border-soft: #e5e5e5;
+  --border: #e0e0e0;
+  --border-soft: #eeeeee;
   --charcoal-panel: #21232b;
   --container-gutter-desktop: 36px;
   --container-gutter-phone: 16px;
@@ -20,24 +47,32 @@
   --elev-flat: none;
   --elev-raised: 0 1px 2px rgba(38,38,43,.06), 0 24px 60px -24px rgba(38,38,43,.28);
   --elev-ring: 0 0 0 1px var(--border);
-  --fg: #26262b;
-  --fg-2: #4a4d4e;
+  --fg: #313131;
+  --fg-2: #5d5d5d;
   /* Textbox/search/dropdown/currency field chrome — light-mode reference
      supplied 2026-09-15, revised set ("Field Designs" folder: Dropdown-
      {Normal,Filled,Disabled}.svg, PhoneNumber-{Normal,Filled,Disabled,
      Error}.svg, Textbox-{Normal,Filled,Disabled,Error}.svg, Searchbox.svg).
-     "Filled" is the border a field takes once it holds a value (distinct
-     from the transient focus-ring). The revised Textbox-Disabled.svg now
+     "Filled" was the border a field took once it held a value, distinct
+     from the transient focus-ring. As of 2026-09-24 it is no longer
+     distinct in light mode: the new reference borders every field
+     #e0e0e0 whatever its contents, so --field-border-filled now equals
+     --field-border and the filled state is effectively retired here. The
+     token is kept rather than deleted because the call sites that branch
+     on it are still correct, dark mode still distinguishes the state
+     (index.css maps filled to --accent), and collapsing it would mean
+     editing every input to drop a branch the reference simply does not
+     exercise. The revised Textbox-Disabled.svg now
      matches Dropdown/PhoneNumber on the disabled border (#cccccc) — the
      earlier asset that left it at the Normal color has been corrected
      upstream. No dedicated currency-field mockup was supplied; currency
      inputs share this same chrome via the shared Input component. Dark-mode
      equivalents are set in index.css so this reference only touches the
      light theme. */
-  --field-border: #cdbebe;
+  --field-border: #e0e0e0;
   --field-border-disabled: #cccccc;
   --field-border-error: #e60000;
-  --field-border-filled: #c09696;
+  --field-border-filled: #e0e0e0;
   /* Calendar range-picker + location-pin accent — from Date Specific-Open.svg
      (#00b0ca in-range day fill, #007c92 start/end anchor day fill) and
      Location-Open.svg (#007c92 result-row pin icon, same dark teal as the
@@ -73,10 +108,20 @@
   --field-card-selected-bg: #fef9f9;
   --field-icon: #999999;
   --field-icon-active: #000000;
-  --field-label: #333333;
+  --field-label: #313131;
   --field-label-disabled: #b2b2b2;
   --field-pin: #007c92;
-  --field-radius: 16px;
+  /* 12px, from the 2026-09-24 asset: its bordered text input is a 219x51 rect
+     with rx="11.5", i.e. 12px once the 0.5px stroke inset is removed. Fields
+     are the one element that does NOT share the 8px used by cards, buttons and
+     choice cards — worth not "tidying" to 8 for consistency, the asset is
+     deliberate about it. Was 16px. */
+  --field-radius: 12px;
+  /* The reference's topbar search is the one field that is filled rather
+     than outlined — a flat #eeeeee well with no border, which is what makes
+     it read as interactive against the white topbar that a white,
+     hairline-bordered input would not. */
+  --search-bg: #eeeeee;
   --focus-ring: 0 0 0 4px rgba(230,0,0,.22);
   /* Selected-card ring for choice-card selectors (installment term, plan,
      handover method, etc). Follows --field-card-selected red as of
@@ -120,20 +165,62 @@
   --fw-regular: 400;
   --grey-body: #7e7e7e;
   --grey-disabled: #bebebe;
-  --grey-form: #e5e5e5;
+  --grey-form: #e0e0e0;
+  /* Status pills in the reference ("Eligible - No Approval Needed",
+     "Requires Approval") are outlined, not filled: white interior, 1px
+     tinted border, coloured label, 4px corner. So each status needs a
+     border tone alongside its text tone -- the fill is --bg. --info is
+     new; the reference uses violet for "needs approval / in review",
+     which this app had no colour for.
+
+     Only the success and info borders are read from the asset. The warn
+     and danger borders are derived by extension (same lightness step off
+     their text tone) so all four statuses can share one pill treatment --
+     the reference never shows a warning or error pill. */
+  --info: #6926dc;
+  --info-border: #d9c5fb;
+  --success-border: #ade2ae;
+  --warn-border: #f0d9a1;
+  --danger-border: #f5b5b0;
   --leading-body: 1.48;
   --leading-h1: 1.0;
   --leading-h4: 1.0;
   --leading-tight: 1.08;
-  --light-neutral: #f7f6f9;
+  --light-neutral: #f5f7f9;
   --meta: #a61218;
   --motion-base: 220ms;
   --motion-fast: 150ms;
-  --muted: #6e7180;
+  /* Navigation rail surface. The 2026-09-24 reference puts the sidebar on
+     white with dark labels and a solid-red active row, where this app had
+     a charcoal panel with white labels -- the single largest departure in
+     the whole re-skin. Routed through tokens rather than swapping literals
+     in Sidebar.tsx, so dark mode can keep the charcoal it already has
+     (see index.css) instead of inverting to an unreferenced design.
+     Replacing the white/X utilities the rail used also retires a real
+     constraint: the rail could not use --accent for the active row,
+     because red on charcoal was too low-contrast to read. On white it is
+     the reference's own treatment. */
+  --nav-bg: #ffffff;
+  --nav-border: #e0e0e0;
+  --nav-fg: #313131;
+  --nav-fg-muted: #757575;
+  --nav-section: #9e9e9e;
+  --nav-hover-bg: #f5f7f9;
+  --nav-active-bg: #e60000;
+  --nav-active-fg: #ffffff;
+  --nav-group-bg: #fff0f0;
+  --muted: #757575;
+  /* The reference runs two greys below --fg-2 where this app had one:
+     #757575 for meta/secondary copy (4.6:1 on white, AA at small sizes)
+     and #9e9e9e for placeholders and decorative glyphs (2.8:1, which is
+     why it is kept off body text). --muted takes the darker of the two so
+     nothing already using it loses contrast. */
+  --muted-2: #9e9e9e;
   /* Distinct from --surface (which still drives hover states elsewhere) so
      the main content background and table header rows can be tuned
-     independently. */
-  --page-bg: #f7f6f9;
+     independently. Both now carry the reference's cool #f5f7f9 page fill,
+     replacing the warmer #f7f6f9 they shared before. */
+  --page-bg: #f5f7f9;
   --radius-asymmetric: 0px 6px 0px 0px;
   --radius-badge-pill: 32px;
   --radius-button: 8px;
@@ -147,6 +234,10 @@
   --radius-pill: 9999px;
   --radius-portrait: 100%;
   --radius-sm: 8px;
+  /* Status-pill corner from the reference (rect rx="3.5" + 0.5px stroke
+     inset = 4px). Notably NOT a full pill: --radius-badge-pill (32px) is
+     what these chips used before, which rounded their ends off entirely. */
+  --radius-tag: 4px;
   --section-y-desktop: 96px;
   --section-y-phone: 48px;
   --section-y-tablet: 68px;
@@ -161,15 +252,23 @@
   --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
-  --success: #2e9159;
-  --surface: #f7f6f9;
-  --surface-warm: #fceeec;
-  /* Same value as --border-soft today (both #e5e5e5, the app-wide card/
-     container/panel border color), but kept as its own token so table
-     borders can still be tuned independently of every other card/container/
-     panel border in the app if they ever need to diverge again. */
-  --table-border: #e5e5e5;
-  --table-header-bg: #f3f5f9;
+  --success: #388e3c;
+  --surface: #f5f7f9;
+  /* Inset panels nested inside a card — the reference's liveliness-check
+     and scanner strips. One step off white, bordered in --border, so a
+     panel reads as recessed without a shadow. */
+  --surface-subtle: #fafafa;
+  --surface-warm: #fff0f0;
+  /* Tables are not in the 2026-09-24 reference, so these are derived from
+     its structural rules rather than read off it: a table is a bordered
+     container, so its border takes --border's #e0e0e0, and its header row
+     takes the same one-step-off-white used for inset panels (#fafafa)
+     rather than the cooler #f3f5f9 it had. Kept as their own tokens so
+     tables can still diverge from every other card/panel border later.
+     (These used to be "the same value as --border-soft" — no longer true,
+     that token is now #eeeeee for soft dividers.) */
+  --table-border: #e0e0e0;
+  --table-header-bg: #fafafa;
   --text-2xl: 36px;
   --text-3xl: 48px;
   --text-4xl: 68px;
@@ -181,9 +280,13 @@
   --tracking-btn: 0.144px;
   --tracking-display: -0.015em;
   --warn: #f5b400;
+  /* Advisory banner fill from the reference's "ID Document Unselected"
+     strip — a pale amber wash carrying --warn-text copy, distinct from
+     --warn itself, which stays an icon/fill colour. */
+  --warn-bg: #fff8e1;
   /* Darkened amber tuned for >=4.5:1 text contrast on white/near-white —
      --warn itself (#f5b400) is ~1.84:1 as text and only meant for fills/icons. */
-  --warn-text: #8a5a00;
+  --warn-text: #9a5b00;
   --white-80: rgba(255,255,255,.8);
   --white-glass-10: rgba(255,255,255,.1);
 }

@@ -293,7 +293,7 @@ export function OrderApprovalDetail() {
       </div>
 
       {!isEligibleApprover && (
-        <div className="mt-4 rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),white_92%)] px-4 py-3 text-[length:var(--fs-body)] text-[var(--warn-text)]">
+        <div className="mt-4 rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_92%)] px-4 py-3 text-[length:var(--fs-body)] text-[var(--warn-text)]">
           Only a {requiredRole} may approve, reject, or return this order (Agent 360 AAV-01/BR-06).
         </div>
       )}

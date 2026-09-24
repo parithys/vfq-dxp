@@ -74,7 +74,14 @@ export function PersonaSwitcher() {
   };
 
   return (
-    <div className="grid grid-cols-[auto_minmax(0,28rem)_auto_minmax(0,1fr)] items-center gap-3 h-16 px-4 border-b border-border-soft bg-[color-mix(in_oklab,var(--bg)_85%,transparent)] backdrop-blur">
+    // Bottom border is --nav-border, not --border-soft: this bar and the
+    // sidebar's logo header are both h-16 with a bottom border, sitting side
+    // by side, so they read as ONE horizontal rule across the shell. At
+    // --border-soft (#eeeeee) against the rail's #e0e0e0 the line visibly
+    // stepped where they met. Sharing the token rather than copying the value
+    // keeps them joined in dark mode too, where the two resolve differently
+    // (#3a3d42 vs rgba(255,255,255,.1)).
+    <div className="grid grid-cols-[auto_minmax(0,28rem)_auto_minmax(0,1fr)] items-center gap-3 h-16 px-4 border-b border-[var(--nav-border)] bg-[color-mix(in_oklab,var(--bg)_85%,transparent)] backdrop-blur">
       <button
         onClick={toggleMobileOpen}
         aria-label="Open navigation"

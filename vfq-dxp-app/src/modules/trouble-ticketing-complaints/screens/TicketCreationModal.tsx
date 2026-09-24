@@ -209,7 +209,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
           />
         )}
         {duplicates.length > 0 && (
-          <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),white_92%)] p-3">
+          <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_92%)] p-3">
             <p className="text-[length:var(--fs-caption)] text-fg font-medium">
               {duplicates.length} potential duplicate {duplicates.length === 1 ? 'ticket' : 'tickets'} found for this customer/category/area (ASC-02/04):
             </p>

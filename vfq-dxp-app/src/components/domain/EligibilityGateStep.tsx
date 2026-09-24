@@ -145,7 +145,7 @@ export function EligibilityGateStep({ idNumber, onResult, journeyType = 'postpai
     <div className="space-y-3">
       <div
         className={`rounded-[var(--radius-card)] border p-3 flex items-center gap-2 ${
-          blacklist.pass ? 'border-success/30 bg-[color-mix(in_oklab,var(--success),white_92%)]' : 'border-danger/30 bg-[color-mix(in_oklab,var(--danger),white_92%)]'
+          blacklist.pass ? 'border-success/30 bg-[color-mix(in_oklab,var(--success),var(--bg)_92%)]' : 'border-danger/30 bg-[color-mix(in_oklab,var(--danger),var(--bg)_92%)]'
         }`}
       >
         <Badge variant={blacklist.pass ? 'success' : 'danger'}>Blacklist check</Badge>
@@ -154,7 +154,7 @@ export function EligibilityGateStep({ idNumber, onResult, journeyType = 'postpai
 
       <div
         className={`rounded-[var(--radius-card)] border p-3 flex items-center gap-2 ${
-          lineCap.pass ? 'border-success/30 bg-[color-mix(in_oklab,var(--success),white_92%)]' : 'border-danger/30 bg-[color-mix(in_oklab,var(--danger),white_92%)]'
+          lineCap.pass ? 'border-success/30 bg-[color-mix(in_oklab,var(--success),var(--bg)_92%)]' : 'border-danger/30 bg-[color-mix(in_oklab,var(--danger),var(--bg)_92%)]'
         }`}
       >
         <Badge variant={lineCap.pass ? 'success' : 'danger'}>Connection limit</Badge>
@@ -162,7 +162,7 @@ export function EligibilityGateStep({ idNumber, onResult, journeyType = 'postpai
       </div>
 
       {journeyType !== 'prepaid' && hrnFlag && (
-        <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),white_92%)] p-3 flex items-center gap-2">
+        <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_92%)] p-3 flex items-center gap-2">
           <Badge variant="warning">HRN</Badge>
           <span className="text-[length:var(--fs-caption)] text-fg">{hrn.message}</span>
         </div>

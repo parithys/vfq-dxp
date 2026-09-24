@@ -14,7 +14,7 @@ export function ZsbConflictNotice() {
   if (!message) return null;
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),white_92%)] p-3 space-y-1">
+    <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_92%)] p-3 space-y-1">
       <Badge variant="warning">Unresolved policy conflict</Badge>
       <p className="text-[length:var(--fs-caption)] text-fg">{message}</p>
     </div>

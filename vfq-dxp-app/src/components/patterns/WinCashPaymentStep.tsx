@@ -56,7 +56,7 @@ export function WinCashPaymentStep({ amountDueQAR, value, onChange }: WinCashPay
       ) : (
         <div className="space-y-3">
           {value.declined && (
-            <div className="rounded-[var(--radius-card)] border border-danger/30 bg-[color-mix(in_oklab,var(--danger),white_92%)] p-3 space-y-1">
+            <div className="rounded-[var(--radius-card)] border border-danger/30 bg-[color-mix(in_oklab,var(--danger),var(--bg)_92%)] p-3 space-y-1">
               <div className="flex items-center gap-2">
                 <Badge variant="danger">Payment declined</Badge>
               </div>

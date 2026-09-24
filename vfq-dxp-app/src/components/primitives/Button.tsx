@@ -17,9 +17,22 @@ const base =
 // Hover/active use the `enabled:` variant so disabled buttons never shift
 // color on hover — the visual affordance must match the cursor (not-allowed)
 // and the lack of a real click handler (UI cursor remediation, Phase 6).
+//
+// Two changes from the 2026-09-24 reference, both on the primary variants:
+//
+// - No --shadow-brand glow. That asset contains zero <filter>/feDropShadow
+//   elements anywhere: every surface in it is separated by a 1px border, not
+//   elevation. Floating overlays (dropdown, modal, drawer, toast, tooltip)
+//   deliberately keep their shadows — the reference shows no overlay, so
+//   there is nothing in it to copy, and a panel over content needs the
+//   separation that an in-flow button does not.
+// - Disabled is a flat --accent-disabled fill instead of inheriting the
+//   base `disabled:opacity-40`. The reference's disabled CTAs are solid
+//   #ffb3b3, which holds up over both --bg and --surface where a 40%
+//   translucent red shifts with whatever sits behind it.
 const variantClasses: Record<ButtonVariant, string> = {
-  'primary-rect': 'bg-accent text-accent-on enabled:hover:bg-accent-hover enabled:active:bg-accent-active enabled:active:scale-[0.99] shadow-[var(--shadow-brand)] rounded-[var(--radius-button)] px-4 py-2',
-  'primary-pill': 'bg-accent text-accent-on enabled:hover:bg-accent-hover enabled:active:bg-accent-active enabled:active:scale-[0.99] shadow-[var(--shadow-brand)] rounded-[var(--radius-cta-pill)] px-6 py-2.5',
+  'primary-rect': 'bg-accent text-accent-on enabled:hover:bg-accent-hover enabled:active:bg-accent-active enabled:active:scale-[0.99] disabled:opacity-100 disabled:bg-[var(--accent-disabled)] rounded-[var(--radius-button)] px-4 py-2',
+  'primary-pill': 'bg-accent text-accent-on enabled:hover:bg-accent-hover enabled:active:bg-accent-active enabled:active:scale-[0.99] disabled:opacity-100 disabled:bg-[var(--accent-disabled)] rounded-[var(--radius-cta-pill)] px-6 py-2.5',
   'ghost-rect': 'bg-transparent text-fg border border-border enabled:hover:bg-surface rounded-[var(--radius-button)] px-4 py-2',
   'glass-pill': 'bg-[var(--white-glass-10)] backdrop-blur text-fg rounded-[var(--radius-glass-pill)] px-5 py-2',
   'content-ghost-pill': 'bg-transparent text-accent enabled:hover:bg-surface-warm rounded-[var(--radius-glass-pill)] px-4 py-1.5',

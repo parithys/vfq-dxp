@@ -35,7 +35,12 @@ export function Breadcrumbs() {
     : undefined;
 
   return (
-    <div className="flex items-center gap-1.5 px-6 py-2.5 text-[length:var(--fs-caption)] text-muted border-b border-border-soft bg-bg">
+    // --nav-border (#e0e0e0), matching the topbar's divider directly above
+    // rather than the softer --border-soft this carried. The two are stacked
+    // rules in the same column, so an #eeeeee line under an #e0e0e0 one read
+    // as a mistake. Same token, not the same literal, so they stay matched in
+    // dark mode where --border-soft and --nav-border diverge.
+    <div className="flex items-center gap-1.5 px-6 py-2.5 text-[length:var(--fs-caption)] text-muted border-b border-[var(--nav-border)] bg-bg">
       {/* Single global back affordance — this bar is the one persistent
        * element mounted above every routed page (App.tsx), so placing it
        * here guarantees it's always in the same spot, rather than the

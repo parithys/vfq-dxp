@@ -123,7 +123,7 @@ export function NavFlyout({
         ref={panelRef}
         role="group"
         aria-label={item.label}
-        className="min-w-52 py-2 rounded-[var(--radius-card)] border border-white/10 bg-[var(--charcoal-panel)] shadow-[var(--elev-raised)]"
+        className="min-w-52 py-2 rounded-[var(--radius-card)] border border-[var(--nav-border)] bg-[var(--nav-bg)] shadow-[var(--elev-raised)]"
       >
         {/* The parent's label as a quiet heading — the icon that opened this
             carries no visible text, so without it the panel is a list of
@@ -131,7 +131,7 @@ export function NavFlyout({
             ("Support" appears under both product lines). It also replaces the
             row's hover tooltip, which the Sidebar suppresses for these rows so
             the two don't stack up on each other. */}
-        <p className="px-3 pb-1.5 text-[length:var(--fs-caption)] text-white/45">{item.label}</p>
+        <p className="px-3 pb-1.5 text-[length:var(--fs-caption)] text-[var(--nav-section)]">{item.label}</p>
         <ul>
           {item.children!.map((child) => (
             <li key={child.key}>
@@ -140,8 +140,8 @@ export function NavFlyout({
                 onClick={onDismiss}
                 className={`flex items-center gap-2.5 h-9 px-3 text-[length:var(--fs-body)] ${
                   currentPath === child.to
-                    ? 'bg-white/10 text-white font-medium'
-                    : 'text-white/70 hover:bg-white/8 hover:text-white'
+                    ? 'bg-[var(--nav-active-bg)] text-[var(--nav-active-fg)] font-medium'
+                    : 'text-[var(--nav-fg-muted)] hover:bg-[var(--nav-hover-bg)] hover:text-[var(--nav-fg)]'
                 }`}
               >
                 <Icon path={child.icon} className="w-4 h-4 shrink-0" />
