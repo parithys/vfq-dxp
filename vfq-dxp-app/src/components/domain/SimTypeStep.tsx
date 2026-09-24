@@ -70,7 +70,7 @@ export function SimTypeStep({ value, customerEmail, onChange }: SimTypeStepProps
             key={t}
             onClick={() => onChange({ simType: t })}
             className={`px-3 py-1.5 text-[length:var(--fs-body)] border-b-2 -mb-px ${
-              value.simType === t ? 'border-[var(--field-selected)] text-[var(--field-selected)] font-medium' : 'border-transparent text-fg-2'
+              value.simType === t ? 'border-[var(--field-card-selected)] text-[var(--field-card-selected)] font-medium' : 'border-transparent text-fg-2'
             }`}
           >
             {t}

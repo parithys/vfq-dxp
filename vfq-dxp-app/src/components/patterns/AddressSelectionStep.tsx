@@ -35,7 +35,7 @@ export function AddressSelectionStep({ value, onChange }: AddressSelectionStepPr
     <div className="space-y-3">
       <LocationInput label="Address" placeholder="Search by zone, street, building, or city…" onSelect={(a) => onChange(a.id)} />
       {selected && (
-        <div className="rounded-[var(--radius-card)] border border-[var(--field-selected)] bg-surface-warm p-3">
+        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] p-3">
           <div className="text-fg">
             Zone {selected.zone}, Street {selected.streetNo}, Building {selected.buildingNo}, {selected.aptFlatUnit}
           </div>

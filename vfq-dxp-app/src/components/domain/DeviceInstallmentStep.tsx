@@ -141,7 +141,7 @@ export function DeviceInstallmentStep({
             <button
               onClick={() => selectDevice(null)}
               className={`text-left rounded-[var(--radius-card)] border p-4 ${
-                !value ? 'border-[var(--field-selected)] bg-surface-warm shadow-[var(--shadow-selected-ring)]' : 'border-border-soft hover:border-[var(--field-selected)]'
+                !value ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -149,7 +149,7 @@ export function DeviceInstallmentStep({
                   <Icon path={SIM_ONLY_ICON} className="w-4.5 h-4.5 text-accent" />
                   SIM only
                 </span>
-                {!value && <Icon path={CHECK_ICON} className="w-4 h-4 text-[var(--field-selected)]" />}
+                {!value && <Icon path={CHECK_ICON} className="w-4 h-4 text-[var(--field-card-selected)]" />}
               </div>
               <p className="text-muted text-[length:var(--fs-caption)] mt-1">No device on this contract</p>
             </button>
@@ -160,7 +160,7 @@ export function DeviceInstallmentStep({
                   key={d.deviceName}
                   onClick={() => selectDevice(d)}
                   className={`text-left rounded-[var(--radius-card)] border p-4 ${
-                    selected ? 'border-[var(--field-selected)] bg-surface-warm shadow-[var(--shadow-selected-ring)]' : 'border-border-soft hover:border-[var(--field-selected)]'
+                    selected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -168,7 +168,7 @@ export function DeviceInstallmentStep({
                       <Icon path={PHONE_ICON} className="w-4.5 h-4.5 text-accent" />
                       {d.deviceName}
                     </span>
-                    {selected && <Icon path={CHECK_ICON} className="w-4 h-4 text-[var(--field-selected)]" />}
+                    {selected && <Icon path={CHECK_ICON} className="w-4 h-4 text-[var(--field-card-selected)]" />}
                   </div>
                   <p className="text-muted text-[length:var(--fs-caption)] mt-1">
                     From {d.storageOptions[0]} · {d.installmentMonths}-month instalment
@@ -245,7 +245,7 @@ export function DeviceInstallmentStep({
                       key={m}
                       onClick={() => setMonths(m)}
                       className={`px-3 py-1 rounded-[var(--radius-button)] border text-[length:var(--fs-caption)] ${
-                        value.installmentMonths === m ? 'border-[var(--field-selected)] bg-[var(--field-selected)] text-white' : 'border-border-soft text-fg-2'
+                        value.installmentMonths === m ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected)] text-white' : 'border-border-soft text-fg-2'
                       }`}
                     >
                       {m} mo
@@ -287,8 +287,8 @@ export function DeviceInstallmentStep({
                       onClick={() => onChange({ ...value, handoverMethod: h.method })}
                       className={`text-left rounded-[var(--radius-card)] border p-3 flex items-center justify-between gap-2 ${
                         value.handoverMethod === h.method
-                          ? 'border-[var(--field-selected)] bg-surface-warm shadow-[var(--shadow-selected-ring)]'
-                          : 'border-border-soft hover:border-[var(--field-selected)]'
+                          ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]'
+                          : 'border-border-soft hover:border-[var(--field-card-selected)]'
                       }`}
                     >
                       <span className="flex items-center gap-2">
@@ -298,7 +298,7 @@ export function DeviceInstallmentStep({
                           <span className="block text-muted text-[length:var(--fs-caption)]">{h.note}</span>
                         </span>
                       </span>
-                      {value.handoverMethod === h.method && <Icon path={CHECK_ICON} className="w-4 h-4 text-[var(--field-selected)] shrink-0" />}
+                      {value.handoverMethod === h.method && <Icon path={CHECK_ICON} className="w-4 h-4 text-[var(--field-card-selected)] shrink-0" />}
                     </button>
                   ))}
                 </div>

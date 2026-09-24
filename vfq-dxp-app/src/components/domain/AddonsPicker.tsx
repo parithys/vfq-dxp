@@ -36,7 +36,7 @@ export function AddonsPicker({ selectedIds, onChange }: AddonsPickerProps) {
           <label
             key={a.productId}
             className={`flex items-center justify-between gap-2 rounded-[var(--radius-card)] border p-3 cursor-pointer ${
-              selectedIds.includes(a.productId) ? 'border-[var(--field-selected)] bg-surface-warm' : 'border-border-soft hover:border-[var(--field-selected)]'
+              selectedIds.includes(a.productId) ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
             }`}
           >
             <span className="flex items-center gap-2">

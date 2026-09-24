@@ -58,7 +58,7 @@ export function AppointmentBookingStep({ value, onChange }: AppointmentBookingSt
               key={c}
               onClick={() => onChange({ ...value, cluster: c })}
               className={`px-3 py-1.5 rounded-[var(--radius-pill)] border text-[length:var(--fs-body)] ${
-                value.cluster === c ? 'border-[var(--field-selected)] bg-surface-warm text-[var(--field-selected)]' : 'border-border-soft text-fg-2'
+                value.cluster === c ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] text-[var(--field-card-selected)]' : 'border-border-soft text-fg-2'
               }`}
             >
               {c}
@@ -93,7 +93,7 @@ export function AppointmentBookingStep({ value, onChange }: AppointmentBookingSt
                   disabled={full}
                   onClick={() => onChange({ ...value, timeSlot: slot })}
                   className={`px-3 py-1.5 rounded-[var(--radius-pill)] border text-[length:var(--fs-body)] disabled:opacity-40 disabled:cursor-not-allowed
-                    ${selected ? 'border-[var(--field-selected)] bg-surface-warm text-[var(--field-selected)]' : 'border-border-soft text-fg-2'}`}
+                    ${selected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] text-[var(--field-card-selected)]' : 'border-border-soft text-fg-2'}`}
                 >
                   {slot} <Badge variant={full ? 'danger' : 'filled-neutral'}>{used}/{SLOT_CAPACITY}</Badge>
                 </button>

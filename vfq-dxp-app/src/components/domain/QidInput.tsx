@@ -55,11 +55,11 @@ export function QidInput({ idType, onIdTypeChange, value, onChange, onFetch, fet
                 type="button"
                 onClick={() => onIdTypeChange(t.type)}
                 className={`relative flex flex-col items-center gap-2 rounded-[var(--radius-card)] border p-4 ${
-                  selected ? 'border-[var(--field-selected)] bg-surface-warm text-[var(--field-selected)]' : 'border-border-soft text-fg-2 enabled:hover:border-[var(--field-selected)]/50'
+                  selected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] text-[var(--field-card-selected)]' : 'border-border-soft text-fg-2 enabled:hover:border-[var(--field-card-selected)]/50'
                 }`}
               >
                 {selected && (
-                  <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[var(--field-selected)] text-white flex items-center justify-center">
+                  <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[var(--field-card-selected)] text-white flex items-center justify-center">
                     <Icon path={CHECK} className="w-2.5 h-2.5" />
                   </span>
                 )}

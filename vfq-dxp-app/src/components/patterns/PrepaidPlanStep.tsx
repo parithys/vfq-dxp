@@ -75,7 +75,7 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
                 <label
                   key={p.productId}
                   className={`flex items-start gap-3 rounded-[var(--radius-card)] border p-4 cursor-pointer ${
-                    selected ? 'border-[var(--field-selected)] bg-surface-warm' : 'border-border-soft hover:border-[var(--field-selected)]'
+                    selected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
                   }`}
                 >
                   <input
@@ -129,7 +129,7 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
             <div className="space-y-2">
               <label
                 className={`flex items-center justify-between gap-2 rounded-[var(--radius-card)] border p-3 cursor-pointer ${
-                  !discountId ? 'border-[var(--field-selected)] bg-surface-warm' : 'border-border-soft hover:border-[var(--field-selected)]'
+                  !discountId ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
                 }`}
               >
                 <span className="flex items-center gap-3">
@@ -145,7 +145,7 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
                 <label
                   key={d.addonDiscountId}
                   className={`flex items-center justify-between gap-2 rounded-[var(--radius-card)] border p-3 cursor-pointer ${
-                    discountId === d.addonDiscountId ? 'border-[var(--field-selected)] bg-surface-warm' : 'border-border-soft hover:border-[var(--field-selected)]'
+                    discountId === d.addonDiscountId ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
                   }`}
                 >
                   <span className="flex items-center gap-3">

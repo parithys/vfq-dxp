@@ -46,17 +46,31 @@
   --field-calendar-range: #00b0ca;
   /* Divider between list rows in an open dropdown/results panel. */
   --field-divider: rgba(204,204,204,.5);
-  /* Explicit request (2026-09-15): focused/selected form controls must never
-     read as the brand red (--accent) — use this warm pink-brown instead,
-     the same #c09696 the field reference already uses for "filled". Covers
-     both the focus outline on text/search/dropdown/date fields AND the
-     checked/selected state on checkboxes and choice-card selectors
-     (installment term, plan, SIM type, MSISDN tile, etc). Dark mode keeps
-     the previous red behavior via the index.css override — this directive
-     was scoped to light mode like the rest of this field system. */
+  /* Request (2026-09-15): focused/selected form controls must never read as
+     the brand red (--accent) — use this warm pink-brown instead, the same
+     #c09696 the field reference already uses for "filled".
+
+     Superseded in part (2026-09-24): choice-CARD selectors were pulled back
+     to the brand red — see --field-card-selected below. The 2026-09-15 rule
+     still governs the rest of what it covered and the values here are
+     unchanged: the focus outline on text/search/dropdown/date fields, and
+     the checked state on native checkboxes and radios, which tint from
+     --field-selected via `accent-[…]`. Dark mode keeps the previous red
+     behavior via the index.css override — both directives were scoped to
+     light mode like the rest of this field system. */
   --field-focus-border: #c09696;
   --field-focus-ring: 0 0 0 4px rgba(192,150,150,.35);
   --field-selected: #c09696;
+  /* Choice-card selected state (2026-09-24, superseding the above for cards
+     only): brand-red border, check badge and label on a near-white pink
+     fill. Deliberately NOT --field-selected, so the checkbox/radio accent
+     can stay #c09696 — the two states sit side by side inside one card on
+     the plan and add-on steps, where the card is chosen but the radio in it
+     is a separate control. --accent is not reused directly either: that
+     would silently re-couple these cards to the brand ramp the 2026-09-15
+     note was written to break them off. */
+  --field-card-selected: #e60000;
+  --field-card-selected-bg: #fef9f9;
   --field-icon: #999999;
   --field-icon-active: #000000;
   --field-label: #333333;
@@ -65,10 +79,13 @@
   --field-radius: 16px;
   --focus-ring: 0 0 0 4px rgba(230,0,0,.22);
   /* Selected-card ring for choice-card selectors (installment term, plan,
-     handover method, etc). Uses --field-selected (#c09696), not --accent —
-     see the field-focus / field-selected note above. Dark mode keeps the
-     original red value via the index.css override. */
-  --shadow-selected-ring: 0 0 0 3px rgba(192,150,150,.4);
+     handover method, etc). Follows --field-card-selected red as of
+     2026-09-24 — it rings the same cards, so leaving it pink would have
+     haloed a red border in the old color. Alpha drops .4 -> .22 to match
+     --focus-ring, the established weight for a red ring here: red at .4
+     reads as a second, brighter border rather than a halo. Dark mode keeps
+     its own value via the index.css override. */
+  --shadow-selected-ring: 0 0 0 3px rgba(230,0,0,.22);
   /* Figtree is loaded via Google Fonts (index.html) — unlike the previous
      Space Grotesk/DM Sans targets, this one is real, not aspirational. Same
      system-font fallback chain stays in place for the pre-load flash and for

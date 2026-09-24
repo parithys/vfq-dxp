@@ -92,7 +92,7 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
               disabled={!available}
               onClick={() => onSelect(n.msisdn, n.priceQAR)}
               className={`text-left rounded-[var(--radius-card)] border p-3 disabled:opacity-40 disabled:cursor-not-allowed
-                ${isSelected ? 'border-[var(--field-selected)] bg-surface-warm' : 'border-border-soft bg-bg enabled:hover:border-[var(--field-selected)]'}`}
+                ${isSelected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft bg-bg enabled:hover:border-[var(--field-card-selected)]'}`}
             >
               <div className="text-fg font-medium">{n.msisdn}</div>
               <div className="text-[length:var(--fs-caption)] text-muted flex items-center gap-2 mt-1">

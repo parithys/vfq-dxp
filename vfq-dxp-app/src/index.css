@@ -76,6 +76,12 @@
   --field-label: var(--fg-2);
   --field-label-disabled: var(--muted);
   --field-selected: var(--accent);
+  /* Choice cards split off from --field-selected in light mode (2026-09-24);
+     dark mode was already red for both, so these keep it that way. The fill
+     stays --surface-warm (#241a1a here) rather than the light mode's
+     near-white #fef9f9, which would be a white card on a dark surface. */
+  --field-card-selected: var(--accent);
+  --field-card-selected-bg: var(--surface-warm);
   --shadow-selected-ring: 0 0 0 3px rgba(230,0,0,.12);
 
   /* Status colors and elevation/shadow tokens were tuned against the light
