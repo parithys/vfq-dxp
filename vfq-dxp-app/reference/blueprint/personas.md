@@ -1,5 +1,28 @@
 # Persona Catalogue (Phase 4)
 
+> ## ⚠ SUPERSEDED AT RUNTIME — 2026-09-24
+>
+> These 66 personas no longer drive the application. It runs on **26
+> operational roles** (`public/config/personas.json`), each with its own Staff
+> ID, approach classification and explicit feature grants.
+>
+> | Looking for | Go to |
+> |---|---|
+> | The current roles | `reference/VFQ_DXP_Persona_Feature_Applicability_Matrix_Reference.xlsx` (the SSOT) |
+> | 66 → 26 mapping | that workbook → **Legacy Crosswalk**. 17 personas below have no operational counterpart and are archive-only |
+> | The archived records | `reference/blueprint/legacy/personas-66-evidence.json`, plus `personas-66-descriptions.json` for the two columns that existed only in `VFQ_DXP_Personas_Reference.xlsx` |
+>
+> Still the authoritative record of **what the source corpus evidenced**, and
+> the reason each legacy id exists — the citations here are what
+> `rbac-matrix.md` and the workbook's evidence panel join back to. It is no
+> longer a description of the running system.
+>
+> Note that several entries below are named workshop participants
+> (PERSONA-031 Rana, 032 Marishi, 033 Giri, 035 Anwar, 036 Ali) or bundles of
+> many roles in one record (053, 062) rather than operational roles — an
+> artefact of distilling the catalogue from transcripts, and part of why the
+> 26-role model replaced it.
+
 Roles/actors evidenced across workshops, guided journeys, and BRSDs. Screen/journey/action lists reflect only what each source document actually demonstrates for that persona — absence of a field means the corpus does not evidence it, not that the persona lacks it.
 
 **Canonical items:** 66 (deduplicated from 115 raw extracted mentions across the 83-document corpus)

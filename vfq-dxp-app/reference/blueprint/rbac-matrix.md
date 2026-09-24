@@ -1,5 +1,32 @@
 # RBAC Matrix (Phase 18)
 
+> ## ⚠ SUPERSEDED AT RUNTIME — 2026-09-24
+>
+> This document describes the **66-persona model**, which no longer drives the
+> application. The app now runs on **26 operational roles** whose access comes
+> from explicit feature grants in `public/config/personas.json`, expanded
+> through `public/config/feature-catalogue.json`.
+>
+> | Looking for | Go to |
+> |---|---|
+> | Who can do what **today** | `reference/VFQ_DXP_Persona_Feature_Applicability_Matrix_Reference.xlsx` (the SSOT) |
+> | Staff IDs / password / approach | that workbook → **Roles & Credentials** |
+> | 66 → 26 mapping | that workbook → **Legacy Crosswalk**, or `legacyPersonaIds` on each role in `personas.json` |
+> | The archived 66-persona records | `reference/blueprint/legacy/` |
+>
+> The 145 rows below survive verbatim as `public/config/rbac-legacy-66.json` and
+> are still loaded at runtime — but **display-only**, feeding the collapsed
+> "Source evidence" panel in Administration → Roles & Access. They grant
+> nothing; see `configEngine.getLegacyRbacForRole()`.
+>
+> **The access stance inverted.** Here, absence of a row means *not evidenced*
+> and is treated as hidden. Under the 26 roles, grants are exhaustive, so
+> absence means *deliberately not granted*. Do not carry conclusions from this
+> document into the current model without checking the workbook.
+>
+> Retained because it is the only place the per-row evidence quotes and source
+> slugs live, and the workbook's evidence panel joins back to it.
+
 Role → Permission → Screen Access → Action Access, derived strictly from each persona's accessible_screens/accessible_actions/restricted_features/permissions text in `personas.md` cross-referenced against `screens.md`. Personas with no RBAC entries below had no screen/action-level evidence to normalize (their general responsibilities are still documented in `personas.md`).
 
 **Canonical items:** 145

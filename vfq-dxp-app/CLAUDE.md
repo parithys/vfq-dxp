@@ -3,17 +3,30 @@
 `reference/VFQ_DXP_Persona_Feature_Applicability_Matrix_Reference.xlsx` is the
 **single source of truth** for the 26 operational roles: Staff IDs, the demo
 password, persona groups, business units, approach classification, capability
-(action) gates, and which implemented feature each role may reach. It is
-**generated**, never hand-edited — opening it in Excel and saving will silently
-rewrite it.
+(action) gates, which implemented feature each role may reach, and which
+sidebar destinations each role sees. It is **generated**, never hand-edited —
+opening it in Excel and saving will silently rewrite it.
 
-**Whenever you add/remove a feature, screen or role, regenerate it in the same
-change** — it is not a follow-up task:
+Seven sheets: **Roles & Credentials** (start here), **Applicability Matrix**
+(feature × role), **Capabilities** (action gates), **Feature Inventory**,
+**Navigation** (sidebar destinations per role, incl. product-line journey
+categories), **Legacy Crosswalk** (66 → 26), **Legend & Method**.
+
+**Whenever you add/remove a feature, screen, role or nav destination,
+regenerate it in the same change** — it is not a follow-up task:
 
 1. Edit the source, not the workbook: roles, grants, capabilities and Staff IDs
    live in `public/config/personas.json`; feature keys and their screen ids in
-   `public/config/feature-catalogue.json`.
+   `public/config/feature-catalogue.json`; nav destinations in
+   `src/navigation/navManifest.ts` + `src/engines/navigationEngine.ts`, and
+   product-line journeys in `src/navigation/journeyCatalogue.ts`.
 2. Regenerate: `python3 reference/scripts/build_persona_feature_matrix.py`
+
+Nothing in the workbook is restated by hand — the demo password is parsed out
+of `staffIdRoleMap.ts`, the capability vocabulary out of `types/config.ts`, the
+built-screen set out of `registerScreen()` calls, and the Navigation sheet out
+of the nav manifest + approach map + journey catalogue. If you find yourself
+typing a value into the script that already exists in source, parse it instead.
 
 Rules the script enforces — do not work around them:
 
@@ -31,8 +44,10 @@ Rules the script enforces — do not work around them:
   is gated in code or granted in `personas.json` but missing from the
   `PersonaCapability` union in `types/config.ts`; a grant references an unknown
   feature key or permission level; a catalogue entry references a screen absent
-  from `routes.json`; a Staff ID or role id is duplicated; or a role binds an
-  identity absent from `users-agents.json`. If it aborts, fix the source —
+  from `routes.json`; a Staff ID or role id is duplicated; a role binds an
+  identity absent from `users-agents.json`; or the navigation source no longer
+  parses to the expected shape (4 approaches, 21 manifest entries, 5 categories
+  per product line). If it aborts, fix the source —
   that abort is the feature working.
 
 Superseded persona records (historical, **not** authoritative):

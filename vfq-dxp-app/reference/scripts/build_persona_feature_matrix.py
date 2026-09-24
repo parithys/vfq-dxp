@@ -203,6 +203,86 @@ for i, feature in enumerate(CATALOGUE, start=1):
         'restrictions': restrictions,
     })
 
+
+# ---------------------------------------------- navigation (parsed from source)
+# The Navigation sheet answers the question the whole approach classification
+# exists to answer: what does this role actually SEE in the rail? That is
+# decided by TypeScript (navigationEngine + navManifest + journeyCatalogue), so
+# it is parsed out of those files rather than restated here — restating it would
+# create a second source of truth for the one thing the redesign is about.
+
+
+def parse_navigation():
+    nav_src = open(os.path.join(SRC, 'engines', 'navigationEngine.ts')).read()
+    man_src = open(os.path.join(SRC, 'navigation', 'navManifest.ts')).read()
+    jc_src = open(os.path.join(SRC, 'navigation', 'journeyCatalogue.ts')).read()
+
+    block = nav_src[nav_src.index('const APPROACH_NAV'):]
+    block = block[:block.index('\n};')]
+    approach_nav = {}
+    for m in re.finditer(r"(?:'([\w-]+)'|(\w+))\s*:\s*\[([^\]]*)\]", block, re.S):
+        approach_nav[m.group(1) or m.group(2)] = re.findall(r"'([\w.-]+)'", m.group(3))
+
+    items = re.findall(r"key:\s*'([\w.-]+)',\s*label:\s*'([^']+)'", man_src)
+    gated = re.search(r"key:\s*'(\w[\w.-]*)',[^}]*?requiresFeature:\s*'([\w.-]+)'", man_src, re.S)
+
+    # category key -> the feature keys its journeys are gated on
+    lines = {}
+    for line_key in ('mobile', 'fibre-home'):
+        start = jc_src.index(f"key: '{line_key}',")
+        end = jc_src.index("key: 'fibre-home',") if line_key == 'mobile' else len(jc_src)
+        body = jc_src[start:end]
+        cats = [(m.group(1), m.start()) for m in re.finditer(r"key:\s*'([\w-]+)',\s*\n\s*label:", body)]
+        # The first match is the product line's own key, not a category.
+        cats = [c for c in cats if c[0] != line_key]
+        per_cat = {}
+        for n, (cat_key, pos) in enumerate(cats):
+            stop = cats[n + 1][1] if n + 1 < len(cats) else len(body)
+            per_cat[cat_key] = set(re.findall(r"featureKey:\s*'([\w.-]+)'", body[pos:stop]))
+        lines[line_key] = per_cat
+
+    problems = []
+    if set(approach_nav) != {'Customer-First', 'Product-First', 'Hybrid', 'None'}:
+        problems.append(f'APPROACH_NAV keys parsed as {sorted(approach_nav)}')
+    if len(items) != 21:
+        problems.append(f'navManifest parsed {len(items)} items, expected 21')
+    if not gated:
+        problems.append('no requiresFeature found in navManifest')
+    for lk, cats in lines.items():
+        if len(cats) != 5:
+            problems.append(f'{lk} parsed {len(cats)} categories, expected 5')
+    if problems:
+        raise SystemExit(
+            'Could not parse navigation out of source — refusing to emit a Navigation sheet '
+            'that might not match the app:\n  - ' + '\n  - '.join(problems)
+        )
+    return approach_nav, dict(items), (gated.group(1), gated.group(2)), lines
+
+
+APPROACH_NAV, NAV_LABELS, (GATED_NAV_KEY, GATED_NAV_FEATURE), JOURNEY_LINES = parse_navigation()
+
+
+def nav_reach(persona):
+    """Mirrors navigationEngine.resolveNavFor + reachableCategories."""
+    keys = set(APPROACH_NAV.get(persona['approach'], []))
+    granted = {g['key'] for g in persona['features']}
+    if GATED_NAV_FEATURE in granted:
+        keys.add(GATED_NAV_KEY)
+    reached = set(keys)
+    for line_key, cats in JOURNEY_LINES.items():
+        if line_key not in keys:
+            continue
+        gated_cats = {c: fks for c, fks in cats.items() if fks}
+        live = {c for c, fks in gated_cats.items() if fks & granted}
+        if not live:
+            continue  # line still renders, but no categories
+        for cat in cats:
+            # A roadmap-only category (no gated journeys) rides along with the line.
+            if cat in live or cat not in gated_cats:
+                reached.add(f'{line_key}.{cat}')
+    return reached
+
+
 # --------------------------------------------------------------- styling
 
 VF_RED = 'E60000'
@@ -461,7 +541,61 @@ for r, legacy in enumerate(legacy_ids, start=2):
 lx.freeze_panes = 'A2'
 lx.auto_filter.ref = f'A1:D{len(legacy_ids) + 1}'
 
-# ============================================== Sheet 6: Legend & Method
+
+# ============================================== Sheet: Navigation
+ns = wb.create_sheet('Navigation')
+NAV_ORDER = [k for k in NAV_LABELS if '.' not in k] + [k for k in NAV_LABELS if '.' in k]
+header_row(ns, ['Role ID', 'Staff ID', 'Persona', 'Approach'] + [NAV_LABELS[k] for k in NAV_ORDER],
+           [9, 11, 34, 15] + [5.5] * len(NAV_ORDER), height=150)
+for i in range(5, 5 + len(NAV_ORDER)):
+    ns.cell(row=1, column=i).alignment = Alignment(
+        text_rotation=90, horizontal='center', vertical='bottom')
+# Row 2 names the key, so a tick is traceable to the manifest entry.
+for i, k in enumerate(NAV_ORDER, start=5):
+    c = ns.cell(row=2, column=i, value=k)
+    c.fill = HEADER_FILL
+    c.font = Font(color='FFFFFF', size=8)
+    c.alignment = Alignment(text_rotation=90, horizontal='center', vertical='bottom')
+    c.border = BORDER
+for i in range(1, 5):
+    ns.cell(row=2, column=i).fill = HEADER_FILL
+    ns.cell(row=2, column=i).border = BORDER
+ns.row_dimensions[2].height = 58
+
+for r, p in enumerate(PERSONAS, start=3):
+    reached = nav_reach(p)
+    vals = [p['id'], p['staffId'], p['name'], p['approach']]
+    for i, v in enumerate(vals, start=1):
+        c = ns.cell(row=r, column=i, value=v)
+        c.border = BORDER
+        c.font = Font(size=10, bold=(i <= 2))
+        c.alignment = WRAP if i == 3 else CENTER
+        if i == 4:
+            c.fill = APPROACH_FILL.get(p['approach'], META_FILL)
+    for i, k in enumerate(NAV_ORDER, start=5):
+        c = ns.cell(row=r, column=i)
+        c.border = BORDER
+        c.alignment = CENTER
+        if k in reached:
+            c.value = TICK
+            c.fill = TICK_FILL
+            c.font = Font(size=11, bold=True, color='1B5E20')
+ns.freeze_panes = 'E3'
+
+r_nav = len(PERSONAS) + 4
+ns.cell(row=r_nav, column=1, value=(
+    'Which primary destinations each role sees in the sidebar. Parsed from '
+    'src/engines/navigationEngine.ts (approach -> ordered subset), '
+    'src/navigation/navManifest.ts (the closed set of destinations) and '
+    'src/navigation/journeyCatalogue.ts (which product-line categories a role can reach) — '
+    'not restated, so it cannot drift from the running app. Indented keys (mobile.*, '
+    'fibre-home.*) are journey categories inside a product line; both product lines always '
+    'appear in the rail even where a role reaches none of their categories.'
+)).font = SUB_FONT
+ns.cell(row=r_nav, column=1).alignment = WRAP
+ns.merge_cells(start_row=r_nav, start_column=1, end_row=r_nav + 2, end_column=12)
+
+# ============================================== Sheet: Legend & Method
 ls = wb.create_sheet('Legend & Method')
 ls.column_dimensions['A'].width = 32
 ls.column_dimensions['B'].width = 112
@@ -500,6 +634,9 @@ kv('Capabilities', 'Role x action-gate grid. In-surface permissions (resolve a t
                    'task, edit customer records) as opposed to "can reach this screen".')
 kv('Feature Inventory', 'Per feature: key, area, surface, built/planned, screen ids, how many '
                         'roles hold it, levels granted, and any documented restrictions.')
+kv('Navigation', 'Which sidebar destinations each role sees, including per product-line journey '
+                 'category. Parsed from the navigation source rather than restated, so it cannot '
+                 'drift from the app.')
 kv('Legacy Crosswalk', 'The 66-persona -> 26-role mapping, including the 17 legacy personas with '
                        'no operational counterpart.')
 r += 1
