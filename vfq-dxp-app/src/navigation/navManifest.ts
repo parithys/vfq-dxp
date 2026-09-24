@@ -34,7 +34,6 @@ export type NavKey =
   | 'fibre-home.relocation'
   | 'fibre-home.equipment'
   | 'fibre-home.support'
-  | 'customers'
   | 'customer-search'
   | 'sales'
   | 'operations'
@@ -89,7 +88,6 @@ const ICONS = {
   relocation: 'M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11z M12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',
   equipment: 'M14.7 6.3a4 4 0 0 1 5 5L21 12l-9 9-3-3 9-9z M7 17l-3 3',
   lifebuoy: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M5.6 5.6l3.2 3.2 M15.2 15.2l3.2 3.2 M18.4 5.6l-3.2 3.2 M8.8 15.2l-3.2 3.2',
-  customers: 'M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1 M9.5 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M17 11a3 3 0 1 0 0-6 M21 19v-1a4 4 0 0 0-3-3.8',
   search: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3',
   sales: 'M4 16l6-6 4 4 6-8 M14 6h6v6',
   operations: 'M3 12h3l2.5 6 3-13 3 9 2-3h4',
@@ -135,24 +133,6 @@ export const NAV_MANIFEST: readonly NavItem[] = [
       { key: 'fibre-home.equipment', label: 'Equipment', to: '/fibre-home/equipment', icon: ICONS.equipment, implemented: true },
       { key: 'fibre-home.support', label: 'Support', to: '/fibre-home/support', icon: ICONS.lifebuoy, implemented: true },
     ],
-  },
-  {
-    key: 'customers',
-    label: 'Customers',
-    to: '/customers',
-    icon: ICONS.customers,
-    implemented: false,
-    planned: {
-      summary:
-        'A customer directory — your book of business as a browsable, filterable list. Distinct '
-        + 'from Customer Search, which looks up one customer by a known identifier.',
-      capabilities: [
-        'Browse and filter customers by segment, status and account',
-        'Saved views for your own portfolio',
-        'Bulk selection for campaigns and notifications',
-      ],
-      relatedWorkspaces: [{ label: 'Customer Search', to: '/customer-search' }],
-    },
   },
   { key: 'customer-search', label: 'Customer Search', to: '/customer-search', icon: ICONS.search, implemented: true },
   { key: 'sales', label: 'Sales', to: '/sales', icon: ICONS.sales, implemented: true },
@@ -203,14 +183,13 @@ export const NAV_BY_KEY: ReadonlyMap<NavKey, NavItem> = new Map(
 );
 
 /** Closed-set guard (INV-1). Growing the rail must be a deliberate edit here.
- * 21 = 11 top-level destinations (including the 2 product lines) + the 10
+ * 20 = 10 top-level destinations (including the 2 product lines) + the 10
  * product-line journey categories. */
-export const NAV_MANIFEST_SIZE = 21;
-/** Top-level cap per role (INV-2). 11 is the maximum reachable by
- * construction: the widest approach ordering is Hybrid at 10 (Mobile and
- * Fibre & Home replaced the single Products entry), plus Administration for
- * the three roles that hold its feature grant. */
-export const NAV_MAX_TOP_LEVEL = 11;
+export const NAV_MANIFEST_SIZE = 20;
+/** Top-level cap per role (INV-2). 10 is the maximum reachable by
+ * construction: the widest approach ordering is Hybrid at 9, plus
+ * Administration for the three roles that hold its feature grant. */
+export const NAV_MAX_TOP_LEVEL = 10;
 
 if (import.meta.env.DEV && NAV_BY_KEY.size !== NAV_MANIFEST_SIZE) {
   throw new Error(

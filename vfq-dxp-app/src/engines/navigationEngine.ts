@@ -16,7 +16,7 @@ import type { PersonaApproach } from '../types/config';
 //
 // Order is meaningful — it IS the information architecture. Customer-First
 // leads with the customer; Product-First leads with the product/work item and
-// treats customers as a lookup at the end; Hybrid is the union, interleaved so
+// treats the work item first; Hybrid is the union, interleaved so
 // each half stays contiguous.
 //
 // Deliberately NOT access control. Screen- and action-level gating lives in
@@ -26,12 +26,11 @@ import type { PersonaApproach } from '../types/config';
 // boundary rather than IA.
 const APPROACH_NAV: Record<PersonaApproach, NavKey[]> = {
   'Customer-First': ['dashboard', 'customer-search', 'sales', 'support', 'orders'],
-  'Product-First': ['dashboard', 'mobile', 'fibre-home', 'operations', 'leads', 'customers'],
+  'Product-First': ['dashboard', 'mobile', 'fibre-home', 'operations', 'leads'],
   Hybrid: [
     'dashboard',
     'mobile',
     'fibre-home',
-    'customers',
     'customer-search',
     'sales',
     'operations',

@@ -204,6 +204,98 @@ for i, feature in enumerate(CATALOGUE, start=1):
     })
 
 
+
+# ------------------------------------------- app referential integrity
+# These are SYNC guards, not workbook guards. The workbook is generated from
+# source, so it is only as truthful as the source is self-consistent: a journey
+# pointing at a feature key that no longer exists, or a quick action targeting
+# an unregistered screen, would be faithfully reported as working. Each check
+# below is something that was verified by hand once and is now enforced, so the
+# app and this workbook cannot silently drift apart again.
+
+
+def verify_app_integrity():
+    problems = []
+    jc = open(os.path.join(SRC, 'navigation', 'journeyCatalogue.ts')).read()
+    zs = open(os.path.join(SRC, 'modules', 'dashboard', 'zoneSpecs.ts')).read()
+    man = open(os.path.join(SRC, 'navigation', 'navManifest.ts')).read()
+    rtr = open(os.path.join(SRC, 'router.tsx')).read()
+    ss = open(os.path.join(SRC, 'engines', 'searchScopeEngine.ts')).read()
+    gs = open(os.path.join(SRC, 'navigation', 'GlobalSearch.tsx')).read()
+
+    # 1. every journey's featureKey must be a real catalogue key, or its
+    #    visibility rule silently never matches and the card never renders.
+    for k in sorted(set(re.findall(r"featureKey:\s*'([\w.-]+)'", jc)) - set(FEATURE_BY_KEY)):
+        problems.append(f"journeyCatalogue gates a journey on '{k}', absent from feature-catalogue.json")
+
+    # 2. journey entry screens must be catalogued, and a journey claiming
+    #    'available' must resolve to a screen that is actually registered —
+    #    otherwise the card offers "Start now" into <ScreenNotYetBuilt>.
+    for sid in sorted(set(re.findall(r"screenId:\s*'(SCR-\d+)'", jc)) - set(ROUTES)):
+        problems.append(f"journeyCatalogue references screen {sid}, absent from routes.json")
+    for block in re.findall(r"\{[^{}]*?status:\s*'available'[^{}]*?\}", jc):
+        sid = re.search(r"screenId:\s*'(SCR-\d+)'", block)
+        if sid and sid.group(1) not in BUILT:
+            problems.append(
+                f"journeyCatalogue marks a journey 'available' but its screen {sid.group(1)} is not registered"
+            )
+
+    # 3. a dashboard quick action pointing at an unregistered screen renders a
+    #    button that does nothing when clicked.
+    for sid in sorted(set(re.findall(r"screenId:\s*'(SCR-\d+)'", zs)) - BUILT):
+        problems.append(f"dashboard quick action targets screen {sid}, which is not registered")
+
+    # 4. every nav destination needs a matching <Route path>, or it falls
+    #    through to /:moduleSlug and renders "Module not found."
+    routes = set(re.findall(r'<Route path="([^"]+)"', rtr))
+    # A dynamic route only counts as coverage if it has at least one LITERAL
+    # segment that matches — e.g. /mobile/:category covers /mobile/sim-device.
+    # The module catch-all /:moduleSlug has none, so it must never count:
+    # being "covered" by it is exactly the broken case this guard exists for.
+    # /products and /customers previously fell through to it and rendered the
+    # bare string "Module not found.", and a naive pattern match called that
+    # covered.
+    dynamic = []
+    for r in routes:
+        if ':' not in r:
+            continue
+        segs = [seg for seg in r.strip('/').split('/') if seg]
+        if not any(not seg.startswith(':') for seg in segs):
+            continue  # all-parameter route — a catch-all, not coverage
+        dynamic.append(re.compile('^/' + '/'.join(
+            '[^/]+' if seg.startswith(':') else re.escape(seg) for seg in segs) + '$'))
+    for dest in sorted(set(re.findall(r"to:\s*'(/[\w./-]*)'", man))):
+        if dest not in routes and not any(rx.match(dest) for rx in dynamic):
+            problems.append(
+                f"nav destination '{dest}' has no matching <Route path> — it would fall through "
+                'to /:moduleSlug and render "Module not found."'
+            )
+
+    # 5. a declared search group with no searcher contributes nothing, so the
+    #    placeholder would advertise a scope the results never cover.
+    union = ss.split('SearchGroup =')[1].split(';')[0]
+    declared_groups = set(re.findall(r"'([\w-]+)'", union))
+    implemented = set(re.findall(r"^\s*'?([\w-]+)'?:\s*async \(\)", gs, re.M))
+    for g in sorted(declared_groups - implemented):
+        problems.append(f"search group '{g}' is declared but GlobalSearch implements no searcher for it")
+
+    # 6. dead vocabulary in either direction.
+    granted_anywhere = {g['key'] for p in PERSONAS for g in p['features']}
+    for k in sorted(set(FEATURE_BY_KEY) - granted_anywhere):
+        problems.append(f"feature key '{k}' is catalogued but granted to no role")
+    for p in PERSONAS:
+        if not p['features']:
+            problems.append(f"{p['id']} has zero feature grants")
+
+    if problems:
+        raise SystemExit(
+            'App is not internally consistent — the workbook would report broken wiring as working:\n  - '
+            + '\n  - '.join(problems)
+        )
+
+
+verify_app_integrity()
+
 # ---------------------------------------------- navigation (parsed from source)
 # The Navigation sheet answers the question the whole approach classification
 # exists to answer: what does this role actually SEE in the rail? That is
@@ -244,8 +336,8 @@ def parse_navigation():
     problems = []
     if set(approach_nav) != {'Customer-First', 'Product-First', 'Hybrid', 'None'}:
         problems.append(f'APPROACH_NAV keys parsed as {sorted(approach_nav)}')
-    if len(items) != 21:
-        problems.append(f'navManifest parsed {len(items)} items, expected 21')
+    if len(items) != 20:
+        problems.append(f'navManifest parsed {len(items)} items, expected 20')
     if not gated:
         problems.append('no requiresFeature found in navManifest')
     for lk, cats in lines.items():
@@ -466,7 +558,8 @@ caps.freeze_panes = 'E2'
 r_note = len(PERSONAS) + 3
 caps.cell(row=r_note, column=1, value=(
     'Capabilities are in-surface ACTION gates, distinct from the feature grants on the '
-    'Applicability Matrix sheet: a feature key exists for every navigable surface, a capability '
+    'Applicability Matrix sheet: a feature key exists for every surface carrying its own access '
+                   'decision, a capability '
     'for every action gate inside one. Enforced by src/engines/agentPrivilegeEngine.ts.'
 )).font = SUB_FONT
 caps.cell(row=r_note, column=1).alignment = WRAP
@@ -547,6 +640,20 @@ ns = wb.create_sheet('Navigation')
 NAV_ORDER = [k for k in NAV_LABELS if '.' not in k] + [k for k in NAV_LABELS if '.' in k]
 header_row(ns, ['Role ID', 'Staff ID', 'Persona', 'Approach'] + [NAV_LABELS[k] for k in NAV_ORDER],
            [9, 11, 34, 15] + [5.5] * len(NAV_ORDER), height=150)
+# Row 3 records what actually decides each destination, because it is NOT
+# uniform: most are plain IA (approach ordering only), Administration is the
+# one feature-gated item, and the product-line pages inherit their gating from
+# the journeys inside them rather than from a feature key of their own.
+GOVERNED_BY = {}
+for _k in NAV_ORDER:
+    if _k == GATED_NAV_KEY:
+        GOVERNED_BY[_k] = f'feature grant: {GATED_NAV_FEATURE}'
+    elif '.' in _k:
+        GOVERNED_BY[_k] = 'journey grants in this category'
+    elif _k in ('mobile', 'fibre-home'):
+        GOVERNED_BY[_k] = 'approach (always shown); categories gated by journey grants'
+    else:
+        GOVERNED_BY[_k] = 'approach ordering (IA only)'
 for i in range(5, 5 + len(NAV_ORDER)):
     ns.cell(row=1, column=i).alignment = Alignment(
         text_rotation=90, horizontal='center', vertical='bottom')
@@ -557,12 +664,20 @@ for i, k in enumerate(NAV_ORDER, start=5):
     c.font = Font(color='FFFFFF', size=8)
     c.alignment = Alignment(text_rotation=90, horizontal='center', vertical='bottom')
     c.border = BORDER
+    g = ns.cell(row=3, column=i, value=GOVERNED_BY[k])
+    g.fill = META_FILL
+    g.font = Font(size=7, color='555555')
+    g.alignment = Alignment(text_rotation=90, horizontal='center', vertical='bottom')
+    g.border = BORDER
 for i in range(1, 5):
-    ns.cell(row=2, column=i).fill = HEADER_FILL
-    ns.cell(row=2, column=i).border = BORDER
+    for rr in (2, 3):
+        ns.cell(row=rr, column=i).fill = HEADER_FILL if rr == 2 else META_FILL
+        ns.cell(row=rr, column=i).border = BORDER
+ns.cell(row=3, column=1, value='governed by →').font = Font(size=8, italic=True, color='555555')
 ns.row_dimensions[2].height = 58
+ns.row_dimensions[3].height = 120
 
-for r, p in enumerate(PERSONAS, start=3):
+for r, p in enumerate(PERSONAS, start=4):
     reached = nav_reach(p)
     vals = [p['id'], p['staffId'], p['name'], p['approach']]
     for i, v in enumerate(vals, start=1):
@@ -580,9 +695,9 @@ for r, p in enumerate(PERSONAS, start=3):
             c.value = TICK
             c.fill = TICK_FILL
             c.font = Font(size=11, bold=True, color='1B5E20')
-ns.freeze_panes = 'E3'
+ns.freeze_panes = 'E4'
 
-r_nav = len(PERSONAS) + 4
+r_nav = len(PERSONAS) + 5
 ns.cell(row=r_nav, column=1, value=(
     'Which primary destinations each role sees in the sidebar. Parsed from '
     'src/engines/navigationEngine.ts (approach -> ordered subset), '

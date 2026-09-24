@@ -47,12 +47,11 @@ export function AppRouter() {
           them) — every existing screen stays reachable at its current URL. */}
       <Route path="/customer-search" element={<CustomerSearchPage />} />
       {/* Nav manifest destinations (navManifest.ts). Without these, /products,
-          /customers and /operations fell through to `/:moduleSlug` and
+          /operations fell through to `/:moduleSlug` and
           rendered the bare string "Module not found." — they are nav
           destinations, not module slugs. `/leads` needs no new UI: it renders
           the already-built LeadListView that SalesWorkspace uses. */}
       <Route path="/leads" element={<LeadListView scope="all" />} />
-      <Route path="/customers" element={<WorkspaceNotYetBuilt navKey="customers" />} />
       <Route path="/operations" element={<WorkspaceNotYetBuilt navKey="operations" />} />
       {/* Product lines: the line root stacks every category the role can
           reach, a category route shows just that section. Same component —

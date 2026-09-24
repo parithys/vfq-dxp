@@ -105,6 +105,23 @@ export function LoginPage() {
 
     setActivePersona(resolvedRole.personaId);
     const profile = await pickProfileForRole(resolvedRole.personaId);
+
+    // Land every sign-in on the Dashboard.
+    //
+    // <BrowserRouter> is mounted by App only once isAuthenticated flips, so it
+    // reads window.location at that moment — whatever URL the browser happened
+    // to be left on. Signing out at /mobile/sim-device and back in therefore
+    // dropped you straight back there, skipping the landing page entirely, and
+    // could drop a role onto a destination its approach doesn't even include.
+    //
+    // This uses the History API rather than useNavigate deliberately: LoginPage
+    // renders OUTSIDE the router (App returns it before <BrowserRouter>), so no
+    // router hook is available here. Rewriting the URL before signIn() means the
+    // router mounts already pointing at '/', so there is no visible redirect.
+    if (window.location.pathname !== '/' || window.location.search) {
+      window.history.replaceState(null, '', '/');
+    }
+
     signIn(staffId, profile);
   };
 

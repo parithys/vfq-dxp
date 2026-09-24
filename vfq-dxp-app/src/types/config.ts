@@ -26,8 +26,16 @@ export type PersonaContextCard =
 export type PermissionLevel = 'View' | 'Create' | 'Edit' | 'Approve' | 'Full';
 
 /** In-surface action gates. Distinct from a feature key by design:
- * a feature key exists for every *navigable surface*, a capability for every
- * *action gate inside* one. A capability never duplicates a feature key. */
+ * a feature key exists for every surface that carries its OWN access decision,
+ * a capability for every *action gate inside* one. A capability never
+ * duplicates a feature key.
+ *
+ * Not every navigable destination has a key, and deliberately so: the
+ * product-line pages (/mobile, /fibre-home and their 10 journey categories)
+ * inherit their gating from the journey grants inside them, and /leads renders
+ * content already covered by `leads.list-views`. Giving them keys as well would
+ * create a second, competing gate for the same surface. The Navigation sheet of
+ * the SSOT workbook records what governs each destination. */
 export type PersonaCapability =
   | 'agent-self-service'
   | 'edit-customer-records'

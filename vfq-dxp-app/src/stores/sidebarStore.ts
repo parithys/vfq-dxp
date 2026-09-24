@@ -21,10 +21,11 @@ export const useSidebarStore = create<SidebarState>()(
       mobileOpen: false,
       toggleMobileOpen: () => set({ mobileOpen: !get().mobileOpen }),
       closeMobile: () => set({ mobileOpen: false }),
-      // Both product lines open by default — their categories ARE the primary
-      // way into a journey, so hiding them behind a chevron would bury the
-      // main navigation path.
-      expandedNavKeys: ['mobile', 'fibre-home'],
+      // Everything collapsed by default. The rail then opens on a short list of
+      // primary destinations rather than 10+ rows of nested categories, and a
+      // group opens on click or automatically when you are inside one of its
+      // children (see Sidebar's childActive), so nothing becomes unreachable.
+      expandedNavKeys: [],
       toggleNavGroup: (key) =>
         set({
           expandedNavKeys: get().expandedNavKeys.includes(key)
@@ -40,14 +41,24 @@ export const useSidebarStore = create<SidebarState>()(
         collapsed: state.collapsed,
         expandedNavKeys: state.expandedNavKeys,
       }),
-      version: 2,
+      version: 3,
       // A `version` MUST be paired with a `migrate`, even a trivial one:
       // zustand logs "State loaded from storage couldn't be migrated since no
       // migrate function was provided" on every version mismatch otherwise.
       // Removing the version instead is not an option — anyone who loaded an
-      // intermediate build already has version 2 in localStorage, which would
+      // intermediate build already has a version in localStorage, which would
       // then mismatch downwards and warn just the same.
-      migrate: (persisted) => persisted as SidebarState,
+      //
+      // v3 drops any persisted expandedNavKeys. Collapsed-by-default would
+      // otherwise only apply to brand-new sessions: everyone who had already
+      // loaded the app carried the previous DEFAULT of ['mobile','fibre-home'],
+      // and there is no way to tell that apart from a deliberate choice of the
+      // same two groups. Resetting once is the only way to make the new default
+      // actually take effect.
+      migrate: (persisted) => {
+        const p = (persisted ?? {}) as Partial<SidebarState>;
+        return { ...p, expandedNavKeys: [] } as SidebarState;
+      },
       // Older persisted state has no expandedNavKeys; without a default the
       // Sidebar would read undefined and crash on .includes(). Applies after
       // migrate, so it normalises both paths.

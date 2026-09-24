@@ -46,9 +46,19 @@ Rules the script enforces — do not work around them:
   feature key or permission level; a catalogue entry references a screen absent
   from `routes.json`; a Staff ID or role id is duplicated; a role binds an
   identity absent from `users-agents.json`; or the navigation source no longer
-  parses to the expected shape (4 approaches, 21 manifest entries, 5 categories
-  per product line). If it aborts, fix the source —
-  that abort is the feature working.
+  parses to the expected shape (4 approaches, 20 manifest entries, 5 categories
+  per product line).
+- It **also aborts on app wiring that is broken rather than merely
+  undocumented**, because a generated workbook would otherwise report broken
+  wiring as working: a journey gated on a feature key that doesn't exist; a
+  journey marked `available` whose screen isn't registered; a dashboard quick
+  action targeting an unregistered screen; a nav destination with no matching
+  `<Route path>` (it would fall through to `/:moduleSlug` and render "Module
+  not found."); a declared search group with no searcher; a catalogued feature
+  key granted to no role; or a role with zero grants.
+
+  If it aborts, fix the source — that abort is the feature working. Every one
+  of these guards has been negative-tested by deliberately breaking the source.
 
 Superseded persona records (historical, **not** authoritative):
 `VFQ_DXP_Personas_Reference.xlsx` → "Personas" (the 66-persona model), and

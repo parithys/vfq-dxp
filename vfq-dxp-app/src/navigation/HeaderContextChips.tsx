@@ -31,7 +31,11 @@ export function HeaderContextChips() {
 
   const approach = persona?.approach;
   const showCatalogSync = approach === 'Product-First';
-  const showRegion = approach === 'Hybrid';
+  // Only a role whose dashboard figures are actually region-scoped gets the
+  // chip — the same `agent-oversight` test the dashboard uses. Keying it on
+  // approach alone showed "REGION Doha Central" to a Retail Sales Agent whose
+  // metrics were national, so the chip claimed a scope nothing applied.
+  const showRegion = approach === 'Hybrid' && (persona?.capabilities.includes('agent-oversight') ?? false);
 
   useEffect(() => {
     if (!showCatalogSync) return;
