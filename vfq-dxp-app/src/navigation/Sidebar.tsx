@@ -109,6 +109,12 @@ export function Sidebar() {
   // instead of leaving the panel pinned beside the first icon.
   const [flyout, setFlyout] = useState<{ key: NavKey; anchor: HTMLElement } | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Every hover overlay on the collapsed rail measures its gap from the RAIL's
+  // edge, not from the inset button it belongs to — so a leaf's tooltip and a
+  // parent's sub-menu flyout share one left edge instead of sitting 8px apart.
+  // NavFlyout finds the rail itself via anchor.closest('nav'); Tooltip is a
+  // generic primitive and has to be handed it.
+  const railRef = useRef<HTMLElement>(null);
 
   const cancelClose = useCallback(() => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
@@ -165,6 +171,7 @@ export function Sidebar() {
         />
       )}
       <nav
+        ref={railRef}
         className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-200 ease-in-out ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         } md:static md:inset-auto md:z-auto md:translate-x-0 md:transition-[width] md:duration-150 shrink-0 border-r border-white/10 bg-[var(--charcoal-panel)] h-full overflow-y-auto ${
@@ -206,7 +213,10 @@ export function Sidebar() {
       )}
       {collapsed && (
         <div className="hidden md:flex items-center justify-center h-16 border-b border-white/10">
-          <Tooltip content="Expand navigation" placement="right">
+          {/* Same rail-edge alignment as the item tooltips below it. This one
+              was the furthest out of line: the button is centred in the rail,
+              so measuring from it put the tooltip ~24px further left again. */}
+          <Tooltip content="Expand navigation" placement="right" anchorRef={railRef}>
             <button onClick={toggleCollapsed} aria-label="Expand navigation" className="text-white/60 hover:text-white">
               <Icon path={PANEL_TOGGLE_ICON} className="w-4.5 h-4.5" />
             </button>
@@ -265,7 +275,12 @@ export function Sidebar() {
                       its flyout already names the group in the panel header,
                       and two overlays on one hover is one too many. Leaf icons
                       keep theirs — they have no panel. */}
-                  <Tooltip content={item.label} placement="right" disabled={!collapsed || hasChildren}>
+                  <Tooltip
+                    content={item.label}
+                    placement="right"
+                    disabled={!collapsed || hasChildren}
+                    anchorRef={railRef}
+                  >
                     {hasChildren ? (
                       <button
                         type="button"

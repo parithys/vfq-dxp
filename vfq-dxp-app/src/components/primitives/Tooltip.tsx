@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useId, cloneElement, isValidElement } from 'react';
-import type { ReactElement, ReactNode } from 'react';
+import { useState, useRef, useEffect, useCallback, useId, cloneElement, isValidElement } from 'react';
+import type { ReactElement, ReactNode, RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { useTooltipGroup } from './TooltipContext';
 
@@ -14,6 +14,20 @@ export interface TooltipProps {
   placement?: Placement;
   /** Skip wrapping when the control already has a visible, permanent label. */
   disabled?: boolean;
+  /** Measure the gap from this element's edge instead of the trigger's, on
+   * the axis the tooltip extends along. Only the axis moves — the tooltip
+   * still centres on the trigger across it.
+   *
+   * For triggers that sit INSET inside a surface the tooltip should line up
+   * with. The collapsed nav rail is the case: its icon buttons are inset by
+   * 8px, so a tooltip measured from the button lands 8px left of the sub-menu
+   * flyouts, which measure from the rail edge — two hover overlays on the same
+   * rail, at two different x positions.
+   *
+   * A ref, not an element: a leaf row's hover doesn't re-render the Sidebar,
+   * so a plain element prop would stay frozen at the `null` it held on the
+   * first render. */
+  anchorRef?: RefObject<HTMLElement | null>;
 }
 
 const VIEWPORT_MARGIN = 8;
@@ -21,7 +35,7 @@ const VIEWPORT_MARGIN = 8;
 // Portal-rendered hover/focus tooltip — see .claude/skills/hover-tooltip.
 // Never nested inline (would get clipped by ancestor overflow:hidden), never
 // a native title="" (inconsistent OS-level delay, no touch support).
-export function Tooltip({ content, children, placement = 'right', disabled = false }: TooltipProps) {
+export function Tooltip({ content, children, placement = 'right', disabled = false, anchorRef }: TooltipProps) {
   const [visible, setVisible] = useState(false);
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
   const [resolvedPlacement, setResolvedPlacement] = useState<Placement>(placement);
@@ -35,25 +49,31 @@ export function Tooltip({ content, children, placement = 'right', disabled = fal
 
   const group = useTooltipGroup();
 
-  const computePosition = (place: Placement) => {
+  // useCallback so the two effects below can list it as a dependency: it now
+  // closes over the anchorRef prop, so it is no longer trivially stable.
+  const computePosition = useCallback((place: Placement) => {
     const trigger = triggerRef.current;
     if (!trigger) return null;
 
     const triggerRect = trigger.getBoundingClientRect();
+    // The offset axis comes from the anchor when one is given, the centring
+    // axis always from the trigger. Read at measure time, not render time, so
+    // it reflects the rail's current width rather than a stale collapsed one.
+    const offsetRect = anchorRef?.current?.getBoundingClientRect() ?? triggerRect;
     const tooltipRect = tooltipRef.current?.getBoundingClientRect();
     const tw = tooltipRect?.width ?? 0;
     const th = tooltipRect?.height ?? 0;
     const offset = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tooltip-offset') || '8', 10);
 
     const positions: Record<Placement, { top: number; left: number }> = {
-      right: { top: triggerRect.top + triggerRect.height / 2 - th / 2, left: triggerRect.right + offset },
-      left: { top: triggerRect.top + triggerRect.height / 2 - th / 2, left: triggerRect.left - tw - offset },
-      top: { top: triggerRect.top - th - offset, left: triggerRect.left + triggerRect.width / 2 - tw / 2 },
-      bottom: { top: triggerRect.bottom + offset, left: triggerRect.left + triggerRect.width / 2 - tw / 2 },
+      right: { top: triggerRect.top + triggerRect.height / 2 - th / 2, left: offsetRect.right + offset },
+      left: { top: triggerRect.top + triggerRect.height / 2 - th / 2, left: offsetRect.left - tw - offset },
+      top: { top: offsetRect.top - th - offset, left: triggerRect.left + triggerRect.width / 2 - tw / 2 },
+      bottom: { top: offsetRect.bottom + offset, left: triggerRect.left + triggerRect.width / 2 - tw / 2 },
     };
 
     return { pos: positions[place], tw, th };
-  };
+  }, [anchorRef]);
 
   // Collision-aware placement: flip if the preferred side would clip the
   // viewport. Runs after first paint once the tooltip has real dimensions.
@@ -88,7 +108,7 @@ export function Tooltip({ content, children, placement = 'right', disabled = fal
 
     const maxWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tooltip-max-width') || '240', 10);
     setWraps(tw >= maxWidth - 1);
-  }, [visible, placement]);
+  }, [visible, placement, computePosition]);
 
   const clearTimers = () => {
     if (showTimer.current) clearTimeout(showTimer.current);
@@ -137,7 +157,7 @@ export function Tooltip({ content, children, placement = 'right', disabled = fal
       window.removeEventListener('scroll', reposition, true);
       window.removeEventListener('resize', reposition);
     };
-  }, [visible, resolvedPlacement]);
+  }, [visible, resolvedPlacement, computePosition]);
 
   useEffect(() => clearTimers, []);
 
