@@ -41,7 +41,7 @@ function mostRecentFor<T extends { customerId: string }>(records: T[], customerI
 }
 
 // Header placement, immediately following the search box, read-only display
-// (plain text stat / Badge — never an editable input). Both reference
+// (plain text stat / Badge - never an editable input). Both reference
 // numbers are scoped to the customer currently loaded into
 // activeCustomerStore. Persistence across every page/screen is structural:
 // PersonaSwitcher (this component's parent) is mounted once in App.tsx
@@ -58,14 +58,14 @@ function mostRecentFor<T extends { customerId: string }>(records: T[], customerI
 // Number (e.g. the confirmation number issued only once a Mobile Postpaid
 // Connection has actually been provisioned). That number doesn't exist for
 // most of the servicing journey, so unlike the two above it can't function
-// as a persistent "which interaction am I in" header reference — it belongs
+// as a persistent "which interaction am I in" header reference - it belongs
 // on the completed order/journey screen itself, not here.
 //
 // Next Customer -> Finish: nothing is ever assigned automatically. Clicking
 // Next Customer pulls the oldest 'Waiting' ticket from a queue THIS ROLE
 // SERVES (qnomyQueueEngine), marks it fed to this agent's session, retains the
-// kiosk-entered mobile number for the interaction, and — if that number
-// resolves to a customer on file — opens Customer 360 on their record.
+// kiosk-entered mobile number for the interaction, and - if that number
+// resolves to a customer on file - opens Customer 360 on their record.
 // Clicking Finish completes the ticket, releases both the assignment and the
 // retained number, and parks the queue in an explicit "awaiting next" state;
 // the system does NOT auto-advance.
@@ -95,6 +95,11 @@ export function SessionReferenceNumbers() {
   const [ctiTicket, setCtiTicket] = useState<TroubleTicketRecord | undefined>();
   const [refreshKey, setRefreshKey] = useState(0);
   const [finishing, setFinishing] = useState(false);
+  const [abandoning, setAbandoning] = useState(false);
+  // Which way the last ticket left the session. `completedQTicket` holds the
+  // just-released ticket for either outcome, so without this the post-release
+  // chip would report a green "Completed" for a ticket the agent abandoned.
+  const [releasedAs, setReleasedAs] = useState<'completed' | 'abandoned'>('completed');
   const [callingNext, setCallingNext] = useState(false);
   const [waitingCount, setWaitingCount] = useState<number | null>(null);
 
@@ -108,7 +113,7 @@ export function SessionReferenceNumbers() {
     // status alone would let a pre-fed seed record for whichever customer
     // happened to be open look like an assignment made to this agent. And
     // requiring a matching customer meant a ticket for a walk-in whose kiosk
-    // number resolves to NOBODY on file rendered nothing at all — the agent
+    // number resolves to NOBODY on file rendered nothing at all - the agent
     // held a ticket and a retained number, and the header showed an idle
     // queue, which is the one case where that number is the whole point.
     if (!showQnomy || !assignedQTicketId) {
@@ -157,12 +162,39 @@ export function SessionReferenceNumbers() {
     setFinishing(true);
     await updateRecord('qtickets', 'qTicketId', activeQTicket.qTicketId, { status: 'Completed', agentInDxpSessionId: null });
     setFinishing(false);
+    setReleasedAs('completed');
     setCompletedQTicket(activeQTicket);
     setActiveQTicket(undefined);
     setAssignedQTicketId(null);
     setKioskMobileNumber(null);
     setAwaitingNext(true);
     pushToast('success', `Customer servicing for ticket ${activeQTicket.qTicketId} completed.`);
+  };
+
+  // Same release path as handleFinish - completes the servicing session,
+  // clears the assignment and retained number, and parks the queue in
+  // "awaiting next" without auto-advancing. The only difference is the
+  // outcome written to the ticket: the customer left before servicing
+  // finished, so the ticket is not 'Completed'.
+  //
+  // 'Abandoned' is a NEW status value. The corpus only evidences 'Waiting',
+  // and this component writes 'Fed to Agent-in-DXP' and 'Completed'; the
+  // qticket `status` field is a free-form string with no enum to validate
+  // against, so nothing rejected it. Flagged rather than presented as
+  // evidenced - if the real Qnomy vocabulary calls this "No Show" or
+  // similar, this is the one string to change.
+  const handleAbandon = async () => {
+    if (!activeQTicket) return;
+    setAbandoning(true);
+    await updateRecord('qtickets', 'qTicketId', activeQTicket.qTicketId, { status: 'Abandoned', agentInDxpSessionId: null });
+    setAbandoning(false);
+    setReleasedAs('abandoned');
+    setCompletedQTicket(activeQTicket);
+    setActiveQTicket(undefined);
+    setAssignedQTicketId(null);
+    setKioskMobileNumber(null);
+    setAwaitingNext(true);
+    pushToast('warning', `Ticket ${activeQTicket.qTicketId} marked abandoned.`);
   };
 
   const assignTicket = async (waiting: QTicketRecord) => {
@@ -173,7 +205,7 @@ export function SessionReferenceNumbers() {
     });
     setAssignedQTicketId(waiting.qTicketId);
     // Retained for the whole interaction, whether or not it resolves to an
-    // existing customer — a new walk-in's number is exactly the value the
+    // existing customer - a new walk-in's number is exactly the value the
     // activation journey needs to carry forward.
     setKioskMobileNumber(waiting.kioskMobileNumber ?? null);
     setAwaitingNext(false);
@@ -207,7 +239,7 @@ export function SessionReferenceNumbers() {
 
     if (matched) {
       // Existing customer: open Customer 360 on their record automatically.
-      // NOT gated behind identity verification — BR-01 governs "demographic,
+      // NOT gated behind identity verification - BR-01 governs "demographic,
       // contact, address or billing maintenance", and Customer360Layout /
       // ContactSection / AddressSection each already call requireVerification
       // before any such edit. Blocking the mere act of opening the record made
@@ -216,7 +248,7 @@ export function SessionReferenceNumbers() {
       setActiveCustomer(toActiveCustomerSummary(matched));
       pushToast(
         'success',
-        `${waiting.queueName ?? 'Queue'} ticket ${waiting.qTicketId} assigned — ${matched.name} (${waiting.kioskMobileNumber ?? 'no number'}).`
+        `${waiting.queueName ?? 'Queue'} ticket ${waiting.qTicketId} assigned - ${matched.name} (${waiting.kioskMobileNumber ?? 'no number'}).`
       );
       navigate(`/customer/${matched.customerId}`);
       return;
@@ -229,21 +261,21 @@ export function SessionReferenceNumbers() {
     // Navigating away matters as much as clearing the store. Customer360Layout
     // reads the route param, not activeCustomer, so staying put left the
     // PREVIOUS customer's record on screen while the header announced a new
-    // one — the agent would be reading Mohammed's file while serving someone
+    // one - the agent would be reading Mohammed's file while serving someone
     // else. The Dashboard is the honest landing: the retained kiosk number is
     // in the header, and the activation quick actions are right there.
     clearActiveCustomer();
     navigate('/');
     pushToast(
       'info',
-      `${waiting.queueName ?? 'Queue'} ticket ${waiting.qTicketId} assigned — no customer on file for ${waiting.kioskMobileNumber ?? 'this number'}. Treat as a new customer.`
+      `${waiting.queueName ?? 'Queue'} ticket ${waiting.qTicketId} assigned - no customer on file for ${waiting.kioskMobileNumber ?? 'this number'}. Treat as a new customer.`
     );
   };
 
   // A Qnomy-eligible agent ALWAYS has something here: a held ticket, a just-
   // finished one, or the idle queue control. Previously this bailed out
   // whenever no ticket was held, which made the idle "Next Customer" control
-  // unreachable — a freshly logged-in agent had no way to call anyone.
+  // unreachable - a freshly logged-in agent had no way to call anyone.
   const showIdleQueue = showQnomy && !activeQTicket && !(awaitingNext && completedQTicket);
   if (!showQnomy && !(showCti && ctiTicket)) return null;
 
@@ -255,7 +287,7 @@ export function SessionReferenceNumbers() {
             content={
               activeCustomer
                 ? `Qnomy queue ticket for ${activeCustomer.name} (read-only)`
-                : `Qnomy queue ticket — no customer on file for ${kioskMobileNumber ?? 'this number'}; treat as a new customer`
+                : `Qnomy queue ticket - no customer on file for ${kioskMobileNumber ?? 'this number'}; treat as a new customer`
             }
             placement="bottom"
           >
@@ -271,17 +303,25 @@ export function SessionReferenceNumbers() {
               </span>
             </div>
           </Tooltip>
-          {/* A walk-in with no record is a normal outcome, not an error — the
+          {/* A walk-in with no record is a normal outcome, not an error - the
               agent needs to see it, keep the number, and start an activation. */}
           {!activeCustomer && <Badge variant="warning">New customer</Badge>}
-          <Button variant="primary-rect" compact disabled={finishing} onClick={handleFinish}>
+          <Button variant="primary-rect" compact disabled={finishing || abandoning} onClick={handleFinish}>
             {finishing ? 'Finishing…' : 'Finish'}
+          </Button>
+          {/* Secondary style (`ghost-rect`) - the same variant the completed
+              state's Next Customer already uses in this component, so the
+              two outcomes are not competing primaries. Both buttons disable
+              during either action: they write to the same ticket, and the
+              release is not idempotent. */}
+          <Button variant="ghost-rect" compact disabled={finishing || abandoning} onClick={handleAbandon}>
+            {abandoning ? 'Abandoning…' : 'Abandoned'}
           </Button>
         </>
       )}
       {/* Idle: no ticket held by this session and nothing just finished. The
           agent is at the front desk with the queue in front of them, so this
-          is where Next Customer lives — previously it only appeared after a
+          is where Next Customer lives - previously it only appeared after a
           Finish, which left a freshly-logged-in agent with no way to call
           anyone at all. */}
       {showIdleQueue && (
@@ -290,7 +330,7 @@ export function SessionReferenceNumbers() {
             <div className="flex flex-col leading-tight">
               <span className="text-[length:var(--fs-caption)] uppercase tracking-wide text-muted">Queue</span>
               <span className="text-fg font-semibold text-[length:var(--fs-body)]">
-                {waitingCount === null ? '—' : `${waitingCount} waiting`}
+                {waitingCount === null ? '-' : `${waitingCount} waiting`}
               </span>
             </div>
           </Tooltip>
@@ -307,13 +347,24 @@ export function SessionReferenceNumbers() {
       )}
       {showQnomy && !activeQTicket && awaitingNext && completedQTicket && (
         <>
-          <Tooltip content={`Qnomy queue ticket for the previous customer — servicing completed (read-only)`} placement="bottom">
+          <Tooltip
+            content={
+              releasedAs === 'abandoned'
+                ? 'Qnomy queue ticket for the previous customer - abandoned before servicing finished (read-only)'
+                : 'Qnomy queue ticket for the previous customer - servicing completed (read-only)'
+            }
+            placement="bottom"
+          >
             <div className="flex flex-col leading-tight opacity-40">
               <span className="text-[length:var(--fs-caption)] uppercase tracking-wide text-muted">Qnomy Ticket</span>
               <span className="text-fg font-semibold text-[length:var(--fs-body)]">{completedQTicket.qTicketId}</span>
             </div>
           </Tooltip>
-          <Badge variant="success">Completed</Badge>
+          {releasedAs === 'abandoned' ? (
+            <Badge variant="warning">Abandoned</Badge>
+          ) : (
+            <Badge variant="success">Completed</Badge>
+          )}
           <Button variant="ghost-rect" compact disabled={callingNext} onClick={handleNextCustomer}>
             <Icon path={REFRESH_ICON_PATH} className="w-4 h-4" />
             {callingNext ? 'Calling…' : 'Next Customer'}
