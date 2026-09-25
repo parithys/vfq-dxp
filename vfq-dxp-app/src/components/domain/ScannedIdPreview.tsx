@@ -1,29 +1,65 @@
+import { useState } from 'react';
+
 interface ScannedIdPreviewProps {
   side: 'front' | 'back';
-  /** A real captured image, when one exists. Falls back to the stand-in. */
+  /** A real captured image, when one exists. Falls back to the specimen. */
   src?: string;
 }
 
+/**
+ * Specimen Qatar ID artwork, used when no real capture exists.
+ *
+ * ONE FILE PER FACE. The supplied assets arrived as separate front and back
+ * images, which is simpler than the stacked single file this briefly
+ * expected: there is no crop, so nothing depends on the two faces being an
+ * exact 50/50 split of one image.
+ *
+ * Their aspect is ~1.59:1, effectively the ID-1 ratio the frame already uses
+ * (85.6 x 54mm = 1.585), so they fill it without meaningful cropping.
+ *
+ * NOT COMMITTED to this repo - both files have to be saved by hand, alongside
+ * the only other brand asset (public/brand/login-bg.jpg). Nothing breaks
+ * while they are missing: a failed load falls back to the drawn stand-in
+ * below, per side independently.
+ */
+const QID_SPECIMEN_SRC: Record<'front' | 'back', string> = {
+  front: '/brand/qid-front.png',
+  back: '/brand/qid-back.png',
+};
+
 // The captured document, as shown back to the agent after a scan.
 //
-// There is no scanner and no file I/O in this app, so there is no photograph
-// to show. Rather than leave the card empty or invent a specific person's ID,
-// this renders a DOCUMENT-SHAPED STAND-IN: correct 85.6 x 54mm ID-1 aspect,
-// a portrait block, redacted data lines, and the Qatar maroon band on the
-// front. It is captioned as simulated at the call site so nobody mistakes it
-// for a real capture.
+// Three sources, in order of preference:
 //
-// `src` is honoured first, so the day a real scanner or file upload lands,
-// passing a data URL here is the only change needed - the surrounding card,
-// the badge and the gating all stay as they are.
+//   1. `src` - a real capture. Nothing sets this yet (there is no scanner and
+//      no file input), but the day one lands, passing a data URL here is the
+//      only change needed.
+//   2. The specimen file for this side.
+//   3. A DRAWN STAND-IN - correct 85.6 x 54mm ID-1 aspect, a portrait block,
+//      redacted data lines and the Qatar maroon band. Deliberately abstract:
+//      it is obviously not a real document, which is the point.
+//
+// The fallback is driven by the image's own onError, not by a build-time check
+// of whether the file exists, because the app cannot know. That keeps the
+// preview working whether or not the specimen has been added, instead of
+// showing a broken-image icon in a step the agent has to trust.
 export function ScannedIdPreview({ side, src }: ScannedIdPreviewProps) {
-  if (src) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const resolvedSrc = src ?? QID_SPECIMEN_SRC[side];
+
+  if (!imageFailed) {
     return (
-      <img
-        src={src}
-        alt={`Scanned Qatar ID, ${side} side`}
-        className="w-full rounded-[var(--radius-button)] border border-border-soft object-cover"
-      />
+      // A fixed ID-1 frame, so the two previews are the same size whatever the
+      // source images measure, and object-cover rather than fill so a slightly
+      // different aspect crops instead of stretching the card.
+      <span className="block w-full overflow-hidden rounded-[var(--radius-button)] border border-border-soft aspect-[214/135]">
+        <img
+          src={resolvedSrc}
+          onError={() => setImageFailed(true)}
+          alt={`Scanned Qatar ID, ${side} side`}
+          className="w-full h-full object-cover"
+        />
+      </span>
     );
   }
 
