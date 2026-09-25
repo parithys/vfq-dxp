@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
 import { Input } from './Input';
 import { Icon } from './Icon';
+import { CountryMarker } from './CountryMarker';
 import { COUNTRY_DIAL_CODES, DEFAULT_COUNTRY_ISO, countryByIso, countryFromNumber } from './countryDialCodes';
 
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
@@ -162,6 +163,7 @@ export function PhoneNumberInput({
               onKeyDown={onTriggerKeyDown}
               className="flex items-center gap-1 text-fg-2 focus:outline-none focus-visible:underline"
             >
+              <CountryMarker iso={country.iso} />
               {country.dial}
               <Icon path={CHEVRON_DOWN} className="w-3.5 h-3.5 text-muted" />
             </button>
@@ -190,7 +192,10 @@ export function PhoneNumberInput({
                       i === highlighted ? 'bg-surface' : ''
                     }`}
                   >
-                    <span className="truncate">{c.name}</span>
+                    <span className="flex items-center gap-2 min-w-0">
+                      <CountryMarker iso={c.iso} />
+                      <span className="truncate">{c.name}</span>
+                    </span>
                     <span className="text-muted shrink-0">{c.dial}</span>
                   </li>
                 ))}
