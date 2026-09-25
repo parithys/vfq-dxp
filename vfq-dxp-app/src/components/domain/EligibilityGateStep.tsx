@@ -35,13 +35,13 @@ interface EligibilityGateStepProps {
   // Defaults to 'postpaid' so the existing New Postpaid Activation call site
   // is unaffected. 'prepaid' switches the line-cap check from BR-288
   // (postpaid-specific expat-QID cap of 2) to BR-347 (the Mobile Prepaid
-  // Activation BRSD's own BR-003 — Passport/GCC ID capped at 2 prepaid
+  // Activation BRSD's own BR-003 - Passport/GCC ID capped at 2 prepaid
   // lines, Qatari unrestricted, expat QID capped at 5 combined
   // postpaid+prepaid lines), and hides the HRN-advance-payment banner and
   // credit-limit badge, since MPRA_001_CAM_04 and MPRA_001_ECC_03/BAM_01
   // explicitly exclude both from the Prepaid Activation journey. The HRN
   // flag itself is still derived and returned on the result
-  // (MPRA_001_CAM_03) — it's just never displayed as a payment prompt here.
+  // (MPRA_001_CAM_03) - it's just never displayed as a payment prompt here.
   journeyType?: 'postpaid' | 'prepaid';
 }
 
@@ -49,7 +49,7 @@ interface EligibilityGateStepProps {
 // HRN-advance-payment checks, run once the customer's identity is resolved
 // from Contact/MOI (Gate 1). Re-looks up the customer via the same
 // identity-documents -> customers chain IdLookupStep uses, since MOI results
-// don't carry a customerId forward. BR-113/BR-288/BR-187/BR-076 — see
+// don't carry a customerId forward. BR-113/BR-288/BR-187/BR-076 - see
 // ruleEngine.ts for the evidenced business-rules.json citations.
 export function EligibilityGateStep({ idNumber, onResult, journeyType = 'postpaid' }: EligibilityGateStepProps) {
   const [customer, setCustomer] = useState<CustomerRecord | null | undefined>(undefined);
@@ -112,19 +112,19 @@ export function EligibilityGateStep({ idNumber, onResult, journeyType = 'postpai
     };
     // onResult is deliberately excluded: NewPostpaidWizard passes a fresh
     // inline arrow function on every render, so including it here retriggers
-    // this effect every time onResult fires — an infinite update loop caught
+    // this effect every time onResult fires - an infinite update loop caught
     // live via the ErrorBoundary ("Maximum update depth exceeded").
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idNumber, journeyType]);
 
   if (!idNumber) {
-    return <p className="text-muted text-[length:var(--fs-body)]">Complete the Contact step first — eligibility depends on the validated identity.</p>;
+    return <p className="text-muted text-[length:var(--fs-body)]">Complete the Contact step first - eligibility depends on the validated identity.</p>;
   }
   if (customer === undefined) {
     return <p className="text-muted text-[length:var(--fs-body)]">Checking eligibility…</p>;
   }
   if (customer === null) {
-    return <p className="text-danger text-[length:var(--fs-body)]">No customer record found for this identity — cannot evaluate eligibility.</p>;
+    return <p className="text-danger text-[length:var(--fs-body)]">No customer record found for this identity - cannot evaluate eligibility.</p>;
   }
 
   const blacklist = evaluateRule('BR-113', { blacklisted: customer.blacklisted, blacklistReason: customer.blacklistReason });
@@ -161,12 +161,34 @@ export function EligibilityGateStep({ idNumber, onResult, journeyType = 'postpai
         <span className="text-[length:var(--fs-caption)] text-fg">{lineCap.message}</span>
       </div>
 
-      {journeyType !== 'prepaid' && hrnFlag && (
-        <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_92%)] p-3 flex items-center gap-2">
-          <Badge variant="warning">HRN</Badge>
-          <span className="text-[length:var(--fs-caption)] text-fg">{hrn.message}</span>
-        </div>
-      )}
+      {/* The HRN classification gets its own row either way. It used to show
+          only for HRN customers, with the non-HRN case buried in the credit
+          limit's parenthetical ("expat, non-HRN new account") - so the
+          classification that decides the QR 1000 vs QR 50 limit was only
+          legible in one of its two states. Non-HRN is neutral, not a pass/fail
+          check, so it takes the same quiet treatment as Credit limit rather
+          than a green success row. */}
+      {journeyType !== 'prepaid' &&
+        (hrnFlag ? (
+          <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_92%)] p-3 flex items-center gap-2">
+            <Badge variant="warning">HRN</Badge>
+            <span className="text-[length:var(--fs-caption)] text-fg">{hrn.message}</span>
+          </div>
+        ) : (
+          <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-3 flex items-center gap-2">
+            <Badge variant="filled-neutral">Non-HRN new account</Badge>
+            {/* Deliberately does NOT repeat the old message's "expat". The
+                only fact in evidence is hrnAdvancePaymentRequired === false;
+                nothing here establishes residency, and BR-076's description
+                conflates "expat" with "non-HRN" even though the flag driving
+                it is the HRN one alone. The previous wording asserted "expat,
+                non-HRN" for this Qatari customer, which the Connection limit
+                row directly above contradicts. */}
+            <span className="text-[length:var(--fs-caption)] text-fg-2">
+              Not a high-risk nationality - no advance payment required (BR-187).
+            </span>
+          </div>
+        ))}
 
       {journeyType !== 'prepaid' && (
         <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-3 flex items-center gap-2">
@@ -177,7 +199,7 @@ export function EligibilityGateStep({ idNumber, onResult, journeyType = 'postpai
 
       {!blacklist.pass || !lineCap.pass ? (
         <p className="text-danger text-[length:var(--fs-caption)]">
-          This customer is not eligible for a new {journeyType === 'prepaid' ? 'prepaid' : 'postpaid'} activation — Continue is blocked.
+          This customer is not eligible for a new {journeyType === 'prepaid' ? 'prepaid' : 'postpaid'} activation - Continue is blocked.
         </p>
       ) : null}
     </div>

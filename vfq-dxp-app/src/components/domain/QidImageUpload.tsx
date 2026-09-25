@@ -12,7 +12,7 @@ interface QidImageUploadProps {
 }
 
 // FLD (Passport to QID journey, UJ-076): "scan/upload QID Front & Back" required
-// before Continue — no real file I/O in a front-end-only app, so scanning is
+// before Continue - no real file I/O in a front-end-only app, so scanning is
 // simulated with a button per side, matching the mandatory-gating shape
 // evidenced elsewhere (Pattern 12).
 export function QidImageUpload({ value, onChange }: QidImageUploadProps) {
@@ -24,7 +24,7 @@ export function QidImageUpload({ value, onChange }: QidImageUploadProps) {
           <div key={side} className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 flex flex-col items-center gap-2">
             <span className="text-fg-2 text-[length:var(--fs-body)] capitalize">QID {side}</span>
             {scanned ? (
-              <Badge variant="success">Scanned</Badge>
+              <Badge variant="success">Successfully scanned</Badge>
             ) : (
               <Button
                 variant="ghost-rect"

@@ -16,11 +16,13 @@ interface SelectProps {
   value?: string;
   onChange?: (e: ChangeEvent<HTMLSelectElement>) => void;
   disabled?: boolean;
+  /** Required marker + aria-required, mirroring Input's prop of the same name. */
+  required?: boolean;
   className?: string;
   id?: string;
-  /** Dark-panel styling for the login page (Role field) — same mechanism, different trigger/panel skin. */
+  /** Dark-panel styling for the login page (Role field) - same mechanism, different trigger/panel skin. */
   dark?: boolean;
-  /** For call sites with no visible `label` (e.g. a dense table-cell filter) —
+  /** For call sites with no visible `label` (e.g. a dense table-cell filter) -
    * gives the trigger an accessible name without rendering visible text. */
   'aria-label'?: string;
 }
@@ -29,11 +31,11 @@ const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 
 // A custom-positioned listbox, not a native <select>. Native <select> option
 // popups are rendered by the browser/OS and their placement relative to the
-// trigger can't be controlled via CSS — that's what produced the
+// trigger can't be controlled via CSS - that's what produced the
 // inconsistent gap this replaces. This panel is a normal absolutely
 // positioned DOM node (`top-full` + a small `mt-1`), so it opens directly
 // under the trigger's bottom edge identically everywhere the component is
-// used. `onChange` synthesizes a minimal `{ target: { value } }` event —
+// used. `onChange` synthesizes a minimal `{ target: { value } }` event -
 // every call site in the app only ever reads `e.target.value`, so this is a
 // drop-in replacement with no caller changes required.
 export function Select({
@@ -45,6 +47,7 @@ export function Select({
   value,
   onChange,
   disabled,
+  required,
   className = '',
   id,
   dark = false,
@@ -123,6 +126,13 @@ export function Select({
       {label && (
         <label htmlFor={selectId} className={`text-[length:var(--fs-label)] ${dark ? 'text-white/70' : disabled ? 'text-[var(--field-label-disabled)]' : 'text-fg-2'}`}>
           {label}
+          {/* Same treatment as Input's required marker - aria-hidden, with the
+              state carried by aria-required on the combobox below. */}
+          {required && (
+            <span className="text-[var(--field-border-error)]" aria-hidden="true">
+              {' *'}
+            </span>
+          )}
         </label>
       )}
       <div ref={containerRef} className="relative">
@@ -133,6 +143,7 @@ export function Select({
           role="combobox"
           aria-haspopup="listbox"
           aria-expanded={open}
+          aria-required={required || undefined}
           aria-describedby={describedBy}
           aria-label={ariaLabel}
           onClick={() => !disabled && setOpen((v) => !v)}

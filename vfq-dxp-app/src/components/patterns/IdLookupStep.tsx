@@ -1,5 +1,7 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { QidInput } from '../domain/QidInput';
+import { QidImageUpload } from '../domain/QidImageUpload';
+import type { QidImageUploadValue } from '../domain/QidImageUpload';
 import type { QidType } from '../domain/QidInput';
 import { Badge } from '../primitives/Badge';
 import * as mockDataEngine from '../../engines/mockDataEngine';
@@ -10,27 +12,45 @@ interface MoiResult {
   dob: string;
   nationality: string;
   email?: string;
+  // Added 2026-09-24 so Gender can be registry-sourced. It has to be: the
+  // identity fields are non-editable, and a mandatory field with no source
+  // and no way to type into it would block Continue forever. customers.json
+  // has carried `gender` all along; only MoiResult was not passing it on.
+  gender?: string;
 }
+
+type IdLookupValue = { idType?: QidType; idNumber?: string; moiResult?: MoiResult; qidScans?: QidImageUploadValue };
 
 interface IdLookupStepProps {
-  value?: { idType?: QidType; idNumber?: string; moiResult?: MoiResult };
-  onChange: (value: { idType?: QidType; idNumber?: string; moiResult?: MoiResult }) => void;
+  value?: IdLookupValue;
+  onChange: (value: IdLookupValue) => void;
+  /**
+   * Render the Name/DOB/Nationality read-out inside the MOI panel. Default
+   * true, which is what the six other journeys using this step rely on.
+   *
+   * GuidedContactStep passes false: as of 2026-09-24 it renders those three
+   * as editable, prefilled fields of its own, so showing them read-only here
+   * as well would put the same data on screen twice with only one copy
+   * editable. The "MOI Validated" badge still renders either way - the fetch
+   * succeeding is a separate fact from where the data is displayed.
+   */
+  showMoiDetails?: boolean;
 }
 
-// Pattern 2: Customer/Contact Lookup Step (QID/Kahramaa ID Scan + MOI Validation) —
+// Pattern 2: Customer/Contact Lookup Step (QID/Kahramaa ID Scan + MOI Validation) -
 // the ID Type selector, number field, and Fetch action stay on screen at all
 // times; the MOI result renders directly beneath them once resolved, rather
 // than replacing the input entirely. Editing the number after a result exists
-// clears that result immediately — a fetched result stays pinned to the exact
+// clears that result immediately - a fetched result stays pinned to the exact
 // value it came from, never left showing stale demographic data for a field
 // the agent has since changed. Switching ID Type clears the result AND the
 // number, since a number entered under one scheme is never valid under
 // another. The returned
 // name/DOB/nationality are still read-only display per the Retail Sales Agent
 // restriction carried over from the 66-persona model's PERSONA-001 ("cannot
-// manually enter ID details, only re-scan/search") — only the lookup ID
+// manually enter ID details, only re-scan/search") - only the lookup ID
 // number itself is directly editable.
-export function IdLookupStep({ value = {}, onChange }: IdLookupStepProps) {
+export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: IdLookupStepProps) {
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const numberInputRef = useRef<HTMLInputElement>(null);
@@ -44,25 +64,28 @@ export function IdLookupStep({ value = {}, onChange }: IdLookupStepProps) {
     setNotFound(false);
     // Clear the NUMBER, not just the MOI result. The two ID schemes have
     // nothing in common, so a number carried across a type switch is always
-    // wrong for the field it now sits in — the reported case was a QID,
+    // wrong for the field it now sits in - the reported case was a QID,
     // 28456701234, left sitting under a "Diplomatic ID Number" label whose
     // own placeholder reads "e.g. DIP-QA-004521". Fetch would then either miss
     // or, worse, resolve the OLD document and show demographics that have
     // nothing to do with the selected type.
     //
     // `email` needs no clearing here: GuidedContactStep re-derives it from
-    // moiResult on every change. `altPhone` is deliberately kept — switching
+    // moiResult on every change. `altPhone` is deliberately kept - switching
     // type normally means the same walk-in presenting a different document,
     // and discarding a contact number the agent typed would be the bigger
     // loss.
-    onChange({ ...value, idType: nextType, idNumber: '', moiResult: undefined });
+    // qidScans clears with the rest: a scan belongs to the document that was
+    // in the reader, so retaining it across a type switch would let a QID
+    // scan satisfy a Passport journey.
+    onChange({ ...value, idType: nextType, idNumber: '', moiResult: undefined, qidScans: undefined });
     // The number field is now the outstanding one and typing it is the
     // unambiguous next action, so move the cursor there rather than leaving it
     // on the chip the agent just clicked.
     //
     // Synchronous, NOT wrapped in requestAnimationFrame. The input node
     // already exists and React reuses it across this re-render, so there is
-    // nothing to wait for — and rAF never fires while the document is hidden,
+    // nothing to wait for - and rAF never fires while the document is hidden,
     // so an agent returning to a backgrounded tab would have found the field
     // cleared but the cursor still on the chip.
     numberInputRef.current?.focus();
@@ -79,7 +102,7 @@ export function IdLookupStep({ value = {}, onChange }: IdLookupStepProps) {
       setLoading(false);
       return;
     }
-    const customers = await mockDataEngine.list<{ customerId: string; name: string; dob: string; nationality: string; email?: string }>(
+    const customers = await mockDataEngine.list<{ customerId: string; name: string; dob: string; nationality: string; email?: string; gender?: string }>(
       'customers'
     );
     const customer = customers.find((c) => c.customerId === match.customerId);
@@ -87,10 +110,44 @@ export function IdLookupStep({ value = {}, onChange }: IdLookupStepProps) {
     if (customer) {
       onChange({
         ...value,
-        moiResult: { name: customer.name, dob: customer.dob, nationality: customer.nationality, email: customer.email },
+        moiResult: {
+          name: customer.name,
+          dob: customer.dob,
+          nationality: customer.nationality,
+          email: customer.email,
+          gender: customer.gender,
+        },
       });
     }
   };
+
+  // Completing both scans IS the fetch trigger for a QID - the agent doesn't
+  // press Fetch separately. The button stays on screen as a retry: an
+  // auto-fetch that finds no record, or a corrected number after one, still
+  // needs a way to run again without re-scanning the document.
+  //
+  // Guarded by a ref keyed on the number that was fetched, not by a boolean,
+  // because the effect re-runs on every keystroke in the number field. Without
+  // the key, correcting a digit after a failed auto-fetch would never retry;
+  // with a plain boolean it would fire on every render while both scans stayed
+  // complete. `notFound` is deliberately NOT a dependency - re-running on it
+  // would loop a failing lookup forever.
+  const autoFetchedNumber = useRef<string | null>(null);
+  const bothSidesScanned = Boolean(value.qidScans?.frontScanned && value.qidScans?.backScanned);
+
+  useEffect(() => {
+    if (idType !== 'QID' || !bothSidesScanned) {
+      // Reset so re-scanning after a type switch or a cleared scan fetches again.
+      autoFetchedNumber.current = null;
+      return;
+    }
+    const number = value.idNumber?.trim();
+    if (!number || value.moiResult || loading) return;
+    if (autoFetchedNumber.current === number) return;
+    autoFetchedNumber.current = number;
+    void runMoiValidation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idType, bothSidesScanned, value.idNumber, value.moiResult, loading]);
 
   const handleKeyDown = useEnterToSubmit(Boolean(value.idNumber) && !loading, runMoiValidation);
 
@@ -107,33 +164,63 @@ export function IdLookupStep({ value = {}, onChange }: IdLookupStepProps) {
         }}
         onFetch={runMoiValidation}
         fetching={loading}
-        error={notFound ? 'No MOI record found for this ID — try again.' : undefined}
+        error={notFound ? 'No MOI record found for this ID - try again.' : undefined}
       />
 
-      {value.moiResult && (
-        <div className="pt-2 border-t border-border-soft">
-          {/* Flat: bordered tint, no elevation. This panel sits in the page
-              flow inside a card, and the 2026-09-24 reference elevates
-              nothing — only floating overlays keep their shadow. */}
-          <div className="rounded-[var(--radius-card)] border border-success/30 bg-[color-mix(in_oklab,var(--success),var(--bg)_92%)] p-4 space-y-3">
-            <Badge variant="success">MOI Validated</Badge>
-            <div className="grid grid-cols-3 gap-4 text-[length:var(--fs-body)]">
-              <div>
-                <div className="text-[length:var(--fs-caption)] text-muted">Name</div>
-                <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{value.moiResult.name}</div>
-              </div>
-              <div>
-                <div className="text-[length:var(--fs-caption)] text-muted">Date of Birth</div>
-                <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{value.moiResult.dob}</div>
-              </div>
-              <div>
-                <div className="text-[length:var(--fs-caption)] text-muted">Nationality</div>
-                <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{value.moiResult.nationality}</div>
+      {/* Front/back capture, shown only for a Qatar ID. The other three
+          document types are single-sided in this corpus (a passport is
+          scanned at its photo page, GCC/Diplomatic IDs have no evidenced
+          reverse capture), so offering two sides for them would invent a
+          step. Reuses the same QidImageUpload the Passport-to-QID and SIM
+          Swap journeys already gate on, rather than a second scanner with
+          its own shape. */}
+      {idType === 'QID' && (
+        <div className="space-y-2">
+          <p className="text-[length:var(--fs-label)] text-fg-2">Scan Qatar ID</p>
+          <QidImageUpload
+            value={value.qidScans ?? {}}
+            onChange={(qidScans) => onChange({ ...value, qidScans })}
+          />
+        </div>
+      )}
+
+      {/* Two shapes, chosen by showMoiDetails.
+          - false (GuidedContactStep): the badge alone. The bordered green
+            container and its "Registry details prefilled..." line were
+            removed on 2026-09-24 - with the identity fields directly below
+            read-only and obviously registry-sourced, the panel was restating
+            what the fields already show.
+          - true (the six other journeys): the original bordered panel with
+            the Name/DOB/Nationality read-out, which is the ONLY place those
+            journeys display it. Collapsing both branches to a bare badge
+            would silently strip identity data from Passport-to-QID, SIM Swap,
+            Pre-to-Post and the rest. */}
+      {value.moiResult &&
+        (showMoiDetails ? (
+          <div className="pt-2 border-t border-border-soft">
+            <div className="rounded-[var(--radius-card)] border border-success/30 bg-[color-mix(in_oklab,var(--success),var(--bg)_92%)] p-4 space-y-3">
+              <Badge variant="success">MOI validated successfully</Badge>
+              <div className="grid grid-cols-3 gap-4 text-[length:var(--fs-body)]">
+                <div>
+                  <div className="text-[length:var(--fs-caption)] text-muted">Name</div>
+                  <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{value.moiResult.name}</div>
+                </div>
+                <div>
+                  <div className="text-[length:var(--fs-caption)] text-muted">Date of Birth</div>
+                  <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{value.moiResult.dob}</div>
+                </div>
+                <div>
+                  <div className="text-[length:var(--fs-caption)] text-muted">Nationality</div>
+                  <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">
+                    {value.moiResult.nationality}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <Badge variant="success">MOI validated successfully</Badge>
+        ))}
     </div>
   );
 }

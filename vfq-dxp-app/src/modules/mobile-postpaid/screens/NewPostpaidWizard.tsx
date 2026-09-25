@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
-import { GuidedContactStep, isValidAltPhone } from '../../../components/patterns/GuidedContactStep';
+import { GuidedContactStep, isValidAltPhone, isValidEmail, hasIdentityDetails } from '../../../components/patterns/GuidedContactStep';
 import type { GuidedContactValue } from '../../../components/patterns/GuidedContactStep';
 import { ZsbAddressStep } from '../../../components/patterns/ZsbAddressStep';
 import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
@@ -15,6 +15,7 @@ import { DeviceInstallmentStep } from '../../../components/domain/DeviceInstallm
 import type { DoiSelection } from '../../../components/domain/DeviceInstallmentStep';
 import { SimTypeStep } from '../../../components/domain/SimTypeStep';
 import type { SimTypeValue } from '../../../components/domain/SimTypeStep';
+import { EsimActivationPanel } from '../../../components/domain/EsimActivationPanel';
 import { CheckoutSummaryStep } from '../../../components/patterns/CheckoutSummaryStep';
 import { WinCashPaymentStep } from '../../../components/patterns/WinCashPaymentStep';
 import type { WinCashPaymentValue } from '../../../components/patterns/WinCashPaymentStep';
@@ -43,9 +44,12 @@ interface ConfirmedOrder {
   monthlyRecurringQar: number;
   simType?: string;
   deviceName?: string;
+  /** Set only for eSIM orders - drives the QR handover panel below. */
+  esimActivationCode?: string;
+  customerEmail?: string;
 }
 
-// SCR-154/155/156/159/157/158/160/161/162 — the New Postpaid guided wizard
+// SCR-154/155/156/159/157/158/160/161/162 - the New Postpaid guided wizard
 // (UJ-042 "New Postpaid Connection," high confidence), aligned to the
 // reference 12-step activation flow (Queue Token/ID Scan are pre-wizard;
 // this covers ID Scan's MOI result onward): Contact -> Eligibility Gate ->
@@ -53,7 +57,7 @@ interface ConfirmedOrder {
 // guardrail) -> Number Selection -> Device & DOI -> SIM Type -> Checkout ->
 // CAF/Signature -> Payment (WinCash) -> Activity -> Confirmation.
 // The Address step surfaces conflict-report.md Conflict 2 (ZSB-mandatory-for-
-// mobile) rather than silently resolving it — see ZsbAddressStep/ruleEngine.ts.
+// mobile) rather than silently resolving it - see ZsbAddressStep/ruleEngine.ts.
 export function NewPostpaidWizard() {
   const navigate = useNavigate();
   const createRecord = useEntityStore((s) => s.createRecord);
@@ -65,12 +69,23 @@ export function NewPostpaidWizard() {
         <OrderConfirmationScreen
           heading={confirmedOrder.pendingApproval ? 'Order submitted for approval' : 'Postpaid activation complete'}
           orderId={confirmedOrder.orderId}
+          // Shown here rather than on the SIM Type step: by this point the
+          // order is submitted, so the code the customer scans belongs to an
+          // activation that actually exists.
+          handoverPanel={
+            confirmedOrder.esimActivationCode ? (
+              <EsimActivationPanel
+                activationCode={confirmedOrder.esimActivationCode}
+                customerEmail={confirmedOrder.customerEmail}
+              />
+            ) : undefined
+          }
           summaryLines={[
             { label: 'Customer', value: confirmedOrder.customerName },
             { label: 'MSISDN', value: confirmedOrder.msisdn },
             { label: 'Plan', value: confirmedOrder.planName },
             ...(confirmedOrder.deviceName ? [{ label: 'Device', value: confirmedOrder.deviceName }] : []),
-            { label: 'SIM Type', value: confirmedOrder.simType ?? '—' },
+            { label: 'SIM Type', value: confirmedOrder.simType ?? '-' },
             { label: 'Due today', value: `QR ${confirmedOrder.dueTodayQar}` },
             { label: 'Monthly recurring', value: `QR ${confirmedOrder.monthlyRecurringQar}/mo` },
             { label: 'Status', value: confirmedOrder.pendingApproval ? 'Submitted for Approval' : 'Complete' },
@@ -122,7 +137,7 @@ export function NewPostpaidWizard() {
             ),
             isValid: (values) => {
               const c = values.contact as GuidedContactValue | undefined;
-              return Boolean(c?.moiResult && c?.email && isValidAltPhone(c?.altPhone));
+              return Boolean(c?.moiResult && hasIdentityDetails(c ?? {}) && isValidEmail(c?.email) && isValidAltPhone(c?.altPhone));
             },
           },
           {
@@ -149,7 +164,7 @@ export function NewPostpaidWizard() {
                 />
               );
             },
-            // Mandatory: No per FLD-523–526 — never gates progression, matching the evidenced Skip Address affordance.
+            // Mandatory: No per FLD-523–526 - never gates progression, matching the evidenced Skip Address affordance.
             isValid: () => true,
           },
           {
@@ -247,6 +262,9 @@ export function NewPostpaidWizard() {
               return (
                 <CheckoutSummaryStep
                   customerName={contact?.moiResult?.name}
+                  idNumber={contact?.idNumber}
+                  mobile={contact?.altPhone}
+                  billingMethod={(values.billing as { paymentMethod?: string } | undefined)?.paymentMethod}
                   productId={values.productId as string | undefined}
                   addonIds={(values.addonIds as string[] | undefined) ?? []}
                   msisdn={values.msisdn as string | undefined}
@@ -354,13 +372,15 @@ export function NewPostpaidWizard() {
           setConfirmedOrder({
             orderId,
             pendingApproval,
-            customerName: contact.moiResult?.name ?? '—',
-            msisdn: (values.msisdn as string) ?? '—',
-            planName: plan?.name ?? '—',
+            customerName: contact.moiResult?.name ?? '-',
+            msisdn: (values.msisdn as string) ?? '-',
+            planName: plan?.name ?? '-',
             dueTodayQar,
             monthlyRecurringQar,
             simType: simType?.simType,
             deviceName: doi?.deviceName,
+            esimActivationCode: simType?.esimActivationCode,
+            customerEmail: contact.email,
           });
         }}
         onAbandon={() => navigate('/mobile-postpaid')}

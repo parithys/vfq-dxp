@@ -18,6 +18,10 @@ export interface CheckoutTotals {
 
 interface CheckoutSummaryStepProps {
   customerName: string | undefined;
+  /** Echoed onto the read-back summary - see the row-order note in the body. */
+  idNumber: string | undefined;
+  mobile: string | undefined;
+  billingMethod: string | undefined;
   productId: string | undefined;
   addonIds: string[];
   msisdn: string | undefined;
@@ -29,12 +33,15 @@ interface CheckoutSummaryStepProps {
 }
 
 // "Checkout" (reference flow step 9, evidenced as SCR "checkout-screen-retail-
-// new-postpaid") — read-only order summary presented before CAF generation,
+// new-postpaid") - read-only order summary presented before CAF generation,
 // consolidating every prior step's selections and computing what's due today
 // (premium-number delta + device down payment + HRN advance) versus the
 // ongoing monthly recurring charge (plan + add-ons + device installment).
 export function CheckoutSummaryStep({
   customerName,
+  idNumber,
+  mobile,
+  billingMethod,
   productId,
   addonIds,
   msisdn,
@@ -73,14 +80,25 @@ export function CheckoutSummaryStep({
   return (
     <div className="space-y-4">
       <dl className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4">
-        <Row label="Customer" value={customerName ?? '—'} />
-        <Row label="Plan" value={plan ? `${plan.name} — QR ${plan.mrcQAR}/mo` : '—'} />
-        {addons.map((a) => (
-          <Row key={a.productId} label={`Add-on: ${a.name}`} value={`QR ${a.mrcQAR}/mo`} />
-        ))}
-        <Row label="Number" value={msisdn ? `${msisdn}${numberDelta > 0 ? ` (premium, QR ${numberDelta} one-time)` : ''}` : '—'} />
-        {doi && <Row label="Device" value={`${doi.deviceName} — QR ${doi.downPaymentQar} down, QR ${doi.monthlyInstallmentQar}/mo x ${doi.installmentMonths}`} />}
-        <Row label="SIM Type" value={simType?.simType ?? '—'} />
+        {/* Row order follows the supplied summary mockup: who they are, how we
+            identify and reach them, what they bought, how they pay, then
+            hardware. ID/Mobile/Billing are echoed here because Checkout is the
+            last screen before signature - the agent reads this back to the
+            customer, so the identifiers belong on it, not just the
+            commercials. Add-ons always renders, showing "None" rather than
+            disappearing: an absent row reads as an unanswered question. */}
+        <Row label="Customer" value={customerName ?? '-'} />
+        <Row label="ID" value={idNumber ?? '-'} />
+        <Row label="Mobile" value={mobile ?? '-'} />
+        <Row label="Plan" value={plan ? `${plan.name} - QR ${plan.mrcQAR}/mo` : '-'} />
+        <Row label="Number" value={msisdn ? `${msisdn}${numberDelta > 0 ? ` (premium, QR ${numberDelta} one-time)` : ''}` : '-'} />
+        <Row label="SIM Type" value={simType?.simType ?? '-'} />
+        <Row label="Billing" value={billingMethod ?? '-'} />
+        {doi && <Row label="Device" value={`${doi.deviceName} - QR ${doi.downPaymentQar} down, QR ${doi.monthlyInstallmentQar}/mo x ${doi.installmentMonths}`} />}
+        <Row
+          label="Add-ons"
+          value={addons.length ? addons.map((a) => `${a.name} (QR ${a.mrcQAR}/mo)`).join(', ') : 'None'}
+        />
         {hrnAdvance > 0 && <Row label="HRN advance payment" value={`QR ${hrnAdvance} (BR-187)`} />}
       </dl>
 

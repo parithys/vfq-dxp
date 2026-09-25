@@ -5,7 +5,7 @@ import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCa
 import { ActivityCommentsStep } from '../../../components/patterns/ActivityCommentsStep';
 import { AppointmentBookingStep } from '../../../components/patterns/AppointmentBookingStep';
 import type { AppointmentBookingValue } from '../../../components/patterns/AppointmentBookingStep';
-import { GuidedContactStep, isValidAltPhone } from '../../../components/patterns/GuidedContactStep';
+import { GuidedContactStep, isValidAltPhone, isValidEmail, hasIdentityDetails } from '../../../components/patterns/GuidedContactStep';
 import type { GuidedContactValue } from '../../../components/patterns/GuidedContactStep';
 import { AddressSelectionStep } from '../../../components/patterns/AddressSelectionStep';
 import { ProductPlanStep } from '../../../components/patterns/ProductPlanStep';
@@ -16,7 +16,7 @@ import { useNotificationStore } from '../../../stores/notificationStore';
 const WIZARD_ID = 'new-fixed-line';
 
 // SCR-043/045/046/048/050 (+ SCR-058 CAF preview, book-appointment/activity
-// steps) — the New Fixed Line guided wizard, the richest-evidenced journey in
+// steps) - the New Fixed Line guided wizard, the richest-evidenced journey in
 // this module (UJ-047/049/050, journeys.md). Contact -> Address -> Plan ->
 // Number Selection -> Book Appointment -> CAF/Signature -> Activity -> Submit,
 // matching Pattern 1's canonical step sequence.
@@ -42,7 +42,7 @@ export function NewFixedLineWizard() {
             ),
             isValid: (values) => {
               const c = values.contact as GuidedContactValue | undefined;
-              return Boolean(c?.moiResult && c?.email && isValidAltPhone(c?.altPhone));
+              return Boolean(c?.moiResult && hasIdentityDetails(c ?? {}) && isValidEmail(c?.email) && isValidAltPhone(c?.altPhone));
             },
           },
           {
@@ -128,7 +128,7 @@ export function NewFixedLineWizard() {
             orderType: 'New Fixed Line Activation',
             orderSubType: contact.isB2B2C ? 'B2B2C' : 'Consumer',
             // B2B2C orders route to manager approval per UJ-081/UJ-082 (New Postpaid/FWA/Fixed
-            // Line B2B2C "With Approval" variants) — see order-management's OrderApprovalQueue.
+            // Line B2B2C "With Approval" variants) - see order-management's OrderApprovalQueue.
             status: contact.isB2B2C ? 'Submitted for Approval' : 'Complete',
             customerName: contact.moiResult?.name,
             addressId: values.addressId,
@@ -149,8 +149,8 @@ export function NewFixedLineWizard() {
           pushToast(
             'success',
             contact.isB2B2C
-              ? `Fixed Line order ${orderId} submitted for manager approval (B2B2C) — appointment booked for ${appointment.date} (${appointment.timeSlot}).`
-              : `Fixed Line order ${orderId} submitted — appointment booked for ${appointment.date} (${appointment.timeSlot}).`
+              ? `Fixed Line order ${orderId} submitted for manager approval (B2B2C) - appointment booked for ${appointment.date} (${appointment.timeSlot}).`
+              : `Fixed Line order ${orderId} submitted - appointment booked for ${appointment.date} (${appointment.timeSlot}).`
           );
           navigate('/fixed-line-fibre');
         }}

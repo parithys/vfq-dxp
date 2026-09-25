@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Icon } from '../primitives/Icon';
 import { Button } from '../primitives/Button';
 
@@ -20,15 +21,30 @@ interface OrderConfirmationScreenProps {
   summaryLines: ConfirmationSummaryLine[];
   nextSteps: string[];
   actions: ConfirmationAction[];
+  /**
+   * Optional block between the summary and "What happens next", for anything
+   * the customer has to act on before leaving the counter - currently the
+   * eSIM QR panel. A slot rather than an eSIM-shaped prop, because this
+   * screen is shared with the prepaid wizard and shouldn't know what a
+   * postpaid order happens to need handed over.
+   */
+  handoverPanel?: ReactNode;
 }
 
-// Dedicated post-submit confirmation experience — replaces a toast-only
+// Dedicated post-submit confirmation experience - replaces a toast-only
 // completion signal for milestone/transaction outcomes. A toast is a
 // transient, easily-missed strip; an order confirmation is exactly the kind
 // of "important milestone" that needs a persistent screen with the result,
-// the details that back it up, what happens next, and clear navigation —
+// the details that back it up, what happens next, and clear navigation -
 // not something the agent has to catch before it fades.
-export function OrderConfirmationScreen({ heading, orderId, summaryLines, nextSteps, actions }: OrderConfirmationScreenProps) {
+export function OrderConfirmationScreen({
+  heading,
+  orderId,
+  summaryLines,
+  nextSteps,
+  actions,
+  handoverPanel,
+}: OrderConfirmationScreenProps) {
   return (
     <div className="max-w-2xl mx-auto text-center py-8">
       <div className="w-16 h-16 rounded-full bg-success text-white flex items-center justify-center mx-auto mb-6">
@@ -47,6 +63,8 @@ export function OrderConfirmationScreen({ heading, orderId, summaryLines, nextSt
           </div>
         ))}
       </dl>
+
+      {handoverPanel && <div className="text-left mb-6">{handoverPanel}</div>}
 
       {nextSteps.length > 0 && (
         <div className="text-left rounded-[var(--radius-card)] border border-border-soft bg-surface p-5 mb-8">

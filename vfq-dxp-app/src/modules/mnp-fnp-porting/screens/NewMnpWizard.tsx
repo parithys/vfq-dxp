@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getAllRoutes } from '../../../engines/configEngine';
 import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
 import type { WizardStep } from '../../../components/patterns/GuidedActivationWizard';
-import { GuidedContactStep, isValidAltPhone } from '../../../components/patterns/GuidedContactStep';
+import { GuidedContactStep, isValidAltPhone, isValidEmail, hasIdentityDetails } from '../../../components/patterns/GuidedContactStep';
 import type { GuidedContactValue } from '../../../components/patterns/GuidedContactStep';
 import { ZsbAddressStep } from '../../../components/patterns/ZsbAddressStep';
 import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
@@ -25,8 +25,8 @@ import { useNotificationStore } from '../../../stores/notificationStore';
 
 type ProcessType = 'postpaid' | 'prepaid';
 
-// SCR-121–134 — the MNP guided wizard, entered only after SCR-120's Postpaid/
-// Prepaid choice gate (MnpProcessChoiceScreen) sets the `type` query param —
+// SCR-121–134 - the MNP guided wizard, entered only after SCR-120's Postpaid/
+// Prepaid choice gate (MnpProcessChoiceScreen) sets the `type` query param -
 // module-hierarchy.json: "MNP guided process presents Postpaid/Prepaid
 // choice before data entry." Both variants share this one wizard component
 // rather than forking into two, since VAL-332–335's Donor Details fields are
@@ -41,15 +41,15 @@ type ProcessType = 'postpaid' | 'prepaid';
 // discount, VAL-337) -> Donor Details -> Donor Attachment -> CAF (BR-233
 // balance-forfeiture declaration + module-hierarchy's "CAF form dynamically
 // binds Qatari ID/Passport number field for prepaid subscribers") -> Activity.
-// No Billing/Bill Limit step — prepaid carries no credit limit or bill cycle,
+// No Billing/Bill Limit step - prepaid carries no credit limit or bill cycle,
 // same reasoning NewPrepaidWizard already applies (BR-002/BR-005).
 //
 // UJ-069 itself (a Consumer/HRN case) ends with Status Pending, not
 // auto-completed like a direct activation, since a real port request depends
-// on the donor operator's response — unchanged for both variants below.
+// on the donor operator's response - unchanged for both variants below.
 //
 // Postpaid B2B2C orders additionally route to manager approval, generalizing
-// UJ-081/UJ-082 the same way the Fixed Line and FWA wizards already do — no
+// UJ-081/UJ-082 the same way the Fixed Line and FWA wizards already do - no
 // MNP-specific "B2B2C With Approval" journey is evidenced, but the Contact
 // step's B2B2C checkbox is itself evidenced here (guided-journeys-mnp-postpaid-
 // open-ui-tablet-mnp-postpaid-hrn-10ba9743 shows a "Company Name/B2B2C" field
@@ -87,7 +87,7 @@ export function NewMnpWizard() {
       ),
       isValid: (values) => {
         const c = values.contact as GuidedContactValue | undefined;
-        return Boolean(c?.moiResult && c?.email && isValidAltPhone(c?.altPhone));
+        return Boolean(c?.moiResult && hasIdentityDetails(c ?? {}) && isValidEmail(c?.email) && isValidAltPhone(c?.altPhone));
       },
     },
     {
@@ -207,14 +207,14 @@ export function NewMnpWizard() {
         }
         return (
           <div className="space-y-6">
-            {/* BR-233: prepaid MNP declaration — unused balance is forfeited on
+            {/* BR-233: prepaid MNP declaration - unused balance is forfeited on
                 switching, shown before signature the same way NewPrepaidWizard
                 surfaces its own Key Information panel at this stage. */}
             <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4">
               <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-2">Key Information</h3>
               <ul className="list-disc list-inside space-y-1 text-fg-2 text-[length:var(--fs-body)]">
-                <li>Any unused prepaid balance must be used before the number is switched — remaining balance is forfeited once porting completes.</li>
-                <li>Porting is a request, not an instant switch — the donor operator's response determines the final port date.</li>
+                <li>Any unused prepaid balance must be used before the number is switched - remaining balance is forfeited once porting completes.</li>
+                <li>Porting is a request, not an instant switch - the donor operator's response determines the final port date.</li>
               </ul>
             </div>
             <CafSignatureCapture
@@ -260,7 +260,7 @@ export function NewMnpWizard() {
             orderType: isPrepaid ? 'MNP Prepaid Port-In' : 'MNP Postpaid Port-In',
             orderSubType: isB2B2C ? 'B2B2C' : 'Port-In',
             // B2B2C orders route to manager approval per the generalized UJ-081/UJ-082
-            // pattern (see file-level comment) — every other case, prepaid included,
+            // pattern (see file-level comment) - every other case, prepaid included,
             // keeps UJ-069's evidenced Pending status (a real port request awaits the
             // donor operator regardless of approval).
             status: isB2B2C ? 'Submitted for Approval' : 'Pending',
@@ -283,8 +283,8 @@ export function NewMnpWizard() {
           pushToast(
             'success',
             isB2B2C
-              ? `MNP Port-In order ${orderId} submitted for manager approval (B2B2C) — porting ${donorDetails.portInNumber} from Ooredoo Qatar.`
-              : `MNP ${isPrepaid ? 'Prepaid' : 'Postpaid'} Port-In order ${orderId} submitted — porting ${donorDetails.portInNumber} from Ooredoo Qatar (Status: Pending).`
+              ? `MNP Port-In order ${orderId} submitted for manager approval (B2B2C) - porting ${donorDetails.portInNumber} from Ooredoo Qatar.`
+              : `MNP ${isPrepaid ? 'Prepaid' : 'Postpaid'} Port-In order ${orderId} submitted - porting ${donorDetails.portInNumber} from Ooredoo Qatar (Status: Pending).`
           );
           navigate('/mnp-fnp-porting');
         }}
