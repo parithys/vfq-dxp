@@ -277,7 +277,13 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
                   {isDone ? <Icon path={CHECK} className="w-3.5 h-3.5" /> : i + 1}
                 </span>
                 <div className="min-w-0">
-                  <div className={`truncate ${isActive ? 'text-fg font-semibold' : 'text-fg-2 font-medium'}`}>{step.label}</div>
+                  {/* Every step label is --fg; weight alone marks the active
+                      one. The inactive labels were --fg-2, which on the rail's
+                      white card read as disabled rather than merely
+                      not-current - and reachable steps are clickable, so
+                      looking unavailable was wrong. The step's description
+                      below stays --muted, so the two lines still separate. */}
+                  <div className={`truncate text-fg ${isActive ? 'font-semibold' : 'font-medium'}`}>{step.label}</div>
                   {step.description && (
                     <div className="text-[length:var(--fs-caption)] text-muted mt-0.5 truncate">{step.description}</div>
                   )}
