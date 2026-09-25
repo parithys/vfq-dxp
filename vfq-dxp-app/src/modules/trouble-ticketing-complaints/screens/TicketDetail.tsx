@@ -17,6 +17,7 @@ import {
   canSeeTicketAuditTrail,
 } from '../../../engines/agentPrivilegeEngine';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
+import { Checkbox } from '../../../components/primitives/Checkbox';
 import {
   STATUS_VARIANT,
   RESOLUTION_CODES,
@@ -601,11 +602,9 @@ export function TicketDetail() {
             <div className="flex flex-wrap gap-2">
               {availableHashtags.map((h) => (
                 <label key={h} className="flex items-center gap-1 text-[length:var(--fs-caption)]">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={resolutionHashtags.includes(h)}
                     onChange={(e) => setResolutionHashtags(e.target.checked ? [...resolutionHashtags, h] : resolutionHashtags.filter((x) => x !== h))}
-                    className="accent-[var(--field-selected)]"
                   />
                   {h}
                 </label>

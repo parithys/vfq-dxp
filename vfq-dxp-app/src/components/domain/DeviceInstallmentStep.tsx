@@ -3,6 +3,7 @@ import { Input } from '../primitives/Input';
 import { Select } from '../primitives/Select';
 import { Icon } from '../primitives/Icon';
 import * as mockDataEngine from '../../engines/mockDataEngine';
+import { Checkbox } from '../primitives/Checkbox';
 
 export interface DoiSelection {
   deviceName: string;
@@ -331,9 +332,8 @@ export function DeviceInstallmentStep({
               </div>
             </div>
             <label className="flex items-start gap-2 text-[length:var(--fs-body)] text-fg cursor-pointer">
-              <input
-                type="checkbox"
-                className="mt-1 accent-[var(--field-selected)]"
+              <Checkbox
+                className="mt-1"
                 checked={value.doiRead ?? false}
                 onChange={(e) => onChange({ ...value, doiRead: e.target.checked })}
               />
@@ -343,9 +343,8 @@ export function DeviceInstallmentStep({
               </span>
             </label>
             <label className="flex items-start gap-2 text-[length:var(--fs-body)] text-fg cursor-pointer">
-              <input
-                type="checkbox"
-                className="mt-1 accent-[var(--field-selected)]"
+              <Checkbox
+                className="mt-1"
                 checked={value.doiAccepted ?? false}
                 onChange={(e) => onChange({ ...value, doiAccepted: e.target.checked })}
               />

@@ -12,6 +12,7 @@ import { useNotificationStore } from '../../stores/notificationStore';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { getRequiredApproverRole } from '../../engines/configEngine';
 import { isVisibleToAgent } from '../../engines/agentTaskEngine';
+import { Checkbox } from '../../components/primitives/Checkbox';
 
 interface Order {
   orderId: string;
@@ -322,7 +323,7 @@ export function OrderApprovalDetail() {
         <div className="space-y-3">
           <HistoryPreview history={history} orderType={order.orderType} />
           <label className="flex items-start gap-2 text-[length:var(--fs-body)] text-fg">
-            <input type="checkbox" checked={ackApprove} onChange={(e) => setAckApprove(e.target.checked)} className="mt-1 accent-[var(--field-selected)]" />
+            <Checkbox className="mt-1" checked={ackApprove} onChange={(e) => setAckApprove(e.target.checked)} />
             By clicking submit, I agree that I have verified all the documents and details to proceed with submission.
           </label>
           <Textarea label="Comments" value={approveComment} onChange={(e) => setApproveComment(e.target.value)} />

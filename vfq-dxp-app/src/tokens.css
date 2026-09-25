@@ -106,6 +106,20 @@
      note was written to break them off. */
   --field-card-selected: #e60000;
   --field-card-selected-bg: #fef9f9;
+  /* CHECKBOXES, 2026-09-25. Superseding the 2026-09-15 rule above for
+     checkboxes only: a checked box is a solid brand-red tile with a white
+     tick, per the supplied asset. The note above is now accurate for RADIOS
+     alone, which still tint from --field-selected at #c09696.
+     Split into its own token rather than pointed at --field-card-selected so
+     that split survives: a checkbox and a choice card are different controls,
+     and the plan/add-on steps put a checkbox INSIDE a selectable card, where
+     one token driving both would make the inner control invisible against
+     the outer one whenever the card is chosen. */
+  --field-checkbox-selected: #e60000;
+  /* 4px on an 18px box - the asset's corner is 21.6% of its side, and the
+     radius is measured off that ratio rather than copied from the 496px
+     artboard, where the literal value would have been a 100px corner. */
+  --radius-checkbox: 4px;
   --field-icon: #999999;
   --field-icon-active: #000000;
   --field-label: #313131;

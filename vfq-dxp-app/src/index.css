@@ -120,6 +120,10 @@
      near-white #fef9f9, which would be a white card on a dark surface. */
   --field-card-selected: var(--accent);
   --field-card-selected-bg: var(--surface-warm);
+  /* Checkboxes were already red here before the light-mode change, since dark
+     mode never adopted the #c09696 accent - this keeps that, and the white
+     tick reads on --accent in both themes. */
+  --field-checkbox-selected: var(--accent);
   --shadow-selected-ring: 0 0 0 3px rgba(230,0,0,.12);
 
   /* Status colors and elevation/shadow tokens were tuned against the light

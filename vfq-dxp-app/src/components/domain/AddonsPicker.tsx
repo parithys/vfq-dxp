@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Checkbox } from '../primitives/Checkbox';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 
 interface AddonProduct {
@@ -40,12 +41,11 @@ export function AddonsPicker({ selectedIds, onChange }: AddonsPickerProps) {
             }`}
           >
             <span className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={selectedIds.includes(a.productId)}
-                onChange={() => toggle(a.productId)}
-                className="w-[19px] h-[19px] rounded-[2.5px] border border-[var(--field-border)] accent-[var(--field-selected)] cursor-pointer shrink-0"
-              />
+              {/* Sizing, radius and border classes dropped - the primitive
+                  owns them. This was the one call site that had already
+                  hand-rolled a 19px tile, which is what --radius-checkbox and
+                  the 18px box now express for all ten. */}
+              <Checkbox checked={selectedIds.includes(a.productId)} onChange={() => toggle(a.productId)} />
               <span>
                 <span className="text-fg">{a.name}</span>
                 {a.description && <span className="block text-[length:var(--fs-caption)] text-muted">{a.description}</span>}

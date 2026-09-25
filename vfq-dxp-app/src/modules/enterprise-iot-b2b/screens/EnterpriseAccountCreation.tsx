@@ -7,6 +7,7 @@ import { Badge } from '../../../components/primitives/Badge';
 import { evaluateRule } from '../../../engines/ruleEngine';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
+import { Checkbox } from '../../../components/primitives/Checkbox';
 
 // SCR-007: Account Creation Screen (Enterprise) - FLD-023–028 (UJ-004, high
 // confidence): Account/Company name, CR type/ID type, CR number (mandatory
@@ -110,7 +111,7 @@ export function EnterpriseAccountCreation() {
         {creditLimit && (
           <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-3">
             <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg">
-              <input type="checkbox" checked={financeApproved} onChange={(e) => setFinanceApproved(e.target.checked)} className="accent-[var(--field-selected)]" />
+              <Checkbox checked={financeApproved} onChange={(e) => setFinanceApproved(e.target.checked)} />
               Business Finance has approved this credit limit
             </label>
             {!approvalResult.pass && <p className="text-danger text-[length:var(--fs-caption)] mt-2">{approvalResult.message}</p>}
