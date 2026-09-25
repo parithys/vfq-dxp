@@ -1,6 +1,8 @@
 import { IdLookupStep } from './IdLookupStep';
 import type { QidType } from '../domain/QidInput';
 import type { QidImageUploadValue } from '../domain/QidImageUpload';
+import { CompanySearchInput } from '../domain/CompanySearchInput';
+import { Checkbox } from '../primitives/Checkbox';
 import { Input } from '../primitives/Input';
 import { PhoneNumberInput } from '../primitives/PhoneNumberInput';
 import { Select } from '../primitives/Select';
@@ -41,7 +43,15 @@ export interface GuidedContactValue {
   /** Boolean since 2026-09-24 - was a 'Yes'|'No' Select, now a checkbox. */
   digitalLeadSale?: boolean;
   isB2B2C?: boolean;
+  /** The chosen employer. Committed only by a pick or an explicit "Add new
+   * company" - never by typing. See CompanySearchInput. */
   companyName?: string;
+  /** Set when companyName came from the `enterprise-accounts` registry, so a
+   * linked employer is distinguishable from one that still has to be created.
+   * The two were indistinguishable while this was a free-text box. */
+  companyAccountId?: string;
+  /** Set when the agent chose "Add new company" instead. */
+  companyIsNew?: boolean;
 }
 
 interface GuidedContactStepProps {
@@ -219,9 +229,19 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true }: Gu
 
       {value.moiResult && (
         <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border-soft">
-          {/* Field order per the 2026-09-24 direction: First/Last, Alt phone,
-              DOB/Gender, Nationality, then Email LAST (moved down from beside
-              Alt phone), then the two flags.
+          {/* Field order per the 2026-09-25 direction, which happens to fall
+              into clean rows of the 2-column grid:
+
+                First Name    | Last Name      read-only
+                Date of Birth | Nationality    read-only
+                Email         | Alt phone      EDITABLE
+                Gender        |                read-only
+
+              So the two fields the agent can actually change now share a row
+              instead of being scattered between read-only ones, and the
+              registry-owned fields sit above and below them. Gender ends the
+              set alone; it is not padded with a spacer, because the two flag
+              checkboxes that follow are full-width and close the block.
 
               The five identity fields are READ-ONLY. This re-reverses the
               2026-09-24 decision that made them agent-editable and restores
@@ -237,6 +257,17 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true }: Gu
               customer actually contests at the counter. */}
           <Input label="First Name" required readOnly value={value.firstName ?? ''} onChange={() => {}} />
           <Input label="Last Name" required readOnly value={value.lastName ?? ''} onChange={() => {}} />
+          <Input label="Date of Birth" required readOnly value={value.dob ?? ''} onChange={() => {}} />
+          <Input label="Nationality" required readOnly value={value.nationality ?? ''} onChange={() => {}} />
+          <Input
+            label="Email Address"
+            type="email"
+            required
+            value={value.email ?? ''}
+            placeholder="customer@example.qa"
+            error={value.email && !isValidEmail(value.email) ? 'Please enter a valid email address.' : undefined}
+            onChange={(e) => onChange({ ...value, email: e.target.value })}
+          />
           <PhoneNumberInput
             label="Alternate phone #"
             required
@@ -249,7 +280,6 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true }: Gu
             }
             onChange={(e) => onChange({ ...value, altPhone: e.target.value })}
           />
-          <Input label="Date of Birth" required readOnly value={value.dob ?? ''} onChange={() => {}} />
           {/* Kept as a fieldset/legend radio group rather than swapped for a
               read-only text box, so the control's shape does not change with
               its editability - the radios are simply disabled. */}
@@ -280,16 +310,6 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true }: Gu
               ))}
             </div>
           </fieldset>
-          <Input label="Nationality" required readOnly value={value.nationality ?? ''} onChange={() => {}} />
-          <Input
-            label="Email Address"
-            type="email"
-            required
-            value={value.email ?? ''}
-            placeholder="customer@example.qa"
-            error={value.email && !isValidEmail(value.email) ? 'Please enter a valid email address.' : undefined}
-            onChange={(e) => onChange({ ...value, email: e.target.value })}
-          />
           {/* Fixed Line evidences a "Get IPTV?" field at Contact; FWA's
               evidenced set does not, hence the prop. Restored here after a
               field reorder briefly dropped it - postpaid passes
@@ -315,29 +335,45 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true }: Gu
               engine or screen referenced it. */}
           <div className="col-span-2 flex items-center gap-6">
             <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg-2">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={value.digitalLeadSale ?? false}
                 onChange={(e) => onChange({ ...value, digitalLeadSale: e.target.checked })}
-                className="accent-[var(--field-selected)]"
               />
               Digital Lead / Sale
             </label>
             <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg-2">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={value.isB2B2C ?? false}
-                onChange={(e) => onChange({ ...value, isB2B2C: e.target.checked, companyName: e.target.checked ? value.companyName : undefined })}
-                className="accent-[var(--field-selected)]"
+                // Unticking clears all three company fields together, not just
+                // the name. Leaving companyAccountId or companyIsNew behind on
+                // a non-B2B2C order would keep an employer link alive on an
+                // order that no longer has an employer.
+                onChange={(e) =>
+                  onChange(
+                    e.target.checked
+                      ? { ...value, isB2B2C: true }
+                      : {
+                          ...value,
+                          isB2B2C: false,
+                          companyName: undefined,
+                          companyAccountId: undefined,
+                          companyIsNew: undefined,
+                        }
+                  )
+                }
               />
               B2B2C Order
             </label>
           </div>
           {value.isB2B2C && (
-            <Input
+            <CompanySearchInput
               label="Company Name (B2B2C)"
-              value={value.companyName ?? ''}
-              onChange={(e) => onChange({ ...value, companyName: e.target.value })}
+              value={{
+                companyName: value.companyName,
+                companyAccountId: value.companyAccountId,
+                companyIsNew: value.companyIsNew,
+              }}
+              onChange={(next) => onChange({ ...value, ...next })}
             />
           )}
         </div>
