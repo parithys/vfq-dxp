@@ -16,6 +16,16 @@ interface QidInputProps {
    * Type switch clears it, so the agent lands on the field they must retype
    * rather than on the chip they just clicked. */
   inputRef?: Ref<HTMLInputElement>;
+  /**
+   * Locks the number field and Fetch. Set while a QID's manual-entry
+   * fallback is still closed - see IdLookupStep, which opens it after four
+   * failed scan attempts. Optional and defaulting to false, so the document
+   * types with no scan path (and the six other journeys using this step)
+   * keep an always-usable field.
+   */
+  numberEntryLocked?: boolean;
+  /** Sits under the field to explain why it is locked. */
+  numberEntryHint?: string;
 }
 
 const CHECK = 'M20 6L9 17l-5-5';
@@ -39,7 +49,18 @@ const ID_TYPES: { type: QidType; label: string; numberLabel: string; icon: strin
 // seeded MOI matches yet) driving the label/placeholder of a single number
 // field with an inline Fetch action, replacing the earlier plain text input +
 // separate below-field submit button.
-export function QidInput({ idType, onIdTypeChange, value, onChange, onFetch, fetching, error, inputRef }: QidInputProps) {
+export function QidInput({
+  idType,
+  onIdTypeChange,
+  value,
+  onChange,
+  onFetch,
+  fetching,
+  error,
+  inputRef,
+  numberEntryLocked = false,
+  numberEntryHint,
+}: QidInputProps) {
   const current = ID_TYPES.find((t) => t.type === idType) ?? ID_TYPES[0];
 
   return (
@@ -72,7 +93,10 @@ export function QidInput({ idType, onIdTypeChange, value, onChange, onFetch, fet
       </div>
 
       <div>
-        <label htmlFor="qid-number-input" className="block text-[length:var(--fs-label)] text-fg-2 mb-1">
+        <label
+          htmlFor="qid-number-input"
+          className={`block text-[length:var(--fs-label)] mb-1 ${numberEntryLocked ? 'text-[var(--field-label-disabled)]' : 'text-fg-2'}`}
+        >
           {current.numberLabel}
         </label>
         <div className="flex gap-2">
@@ -82,16 +106,21 @@ export function QidInput({ idType, onIdTypeChange, value, onChange, onFetch, fet
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={current.placeholder}
+            disabled={numberEntryLocked}
             className={`flex-1 min-w-0 rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg
               ${error ? 'border-[var(--field-border-error)]' : value ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'}
-              focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]`}
+              focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]
+              disabled:border-[var(--field-border-disabled)] disabled:bg-surface disabled:text-[var(--field-label-disabled)] disabled:cursor-not-allowed`}
           />
-          <Button variant="primary-rect" onClick={onFetch} disabled={!value || fetching}>
+          <Button variant="primary-rect" onClick={onFetch} disabled={numberEntryLocked || !value || fetching}>
             <Icon path={SEARCH_ICON} className="w-4 h-4" />
             {fetching ? 'Fetching…' : 'Fetch'}
           </Button>
         </div>
         {error && <p className="text-[var(--field-border-error)] text-[length:var(--fs-caption)] mt-1">{error}</p>}
+        {!error && numberEntryHint && (
+          <p className="text-muted text-[length:var(--fs-caption)] mt-1">{numberEntryHint}</p>
+        )}
       </div>
     </div>
   );

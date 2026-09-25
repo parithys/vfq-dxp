@@ -4,6 +4,7 @@ import { QidImageUpload } from '../domain/QidImageUpload';
 import type { QidImageUploadValue } from '../domain/QidImageUpload';
 import type { QidType } from '../domain/QidInput';
 import { Badge } from '../primitives/Badge';
+import { Button } from '../primitives/Button';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
 
@@ -18,6 +19,9 @@ interface MoiResult {
   // has carried `gender` all along; only MoiResult was not passing it on.
   gender?: string;
 }
+
+// Four, per the reference asset's "Scan Attempts: 0 / 4".
+const MAX_SCAN_ATTEMPTS = 4;
 
 type IdLookupValue = { idType?: QidType; idNumber?: string; moiResult?: MoiResult; qidScans?: QidImageUploadValue };
 
@@ -79,6 +83,10 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: Id
     // in the reader, so retaining it across a type switch would let a QID
     // scan satisfy a Passport journey.
     onChange({ ...value, idType: nextType, idNumber: '', moiResult: undefined, qidScans: undefined });
+    // Attempts belong to the document that was being scanned, so a new type
+    // starts from zero. Without this, switching away from an exhausted QID and
+    // back would leave manual entry already unlocked for a fresh card.
+    setScanFailures(0);
     // The number field is now the outstanding one and typing it is the
     // unambiguous next action, so move the cursor there rather than leaving it
     // on the chip the agent just clicked.
@@ -135,6 +143,30 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: Id
   const autoFetchedNumber = useRef<string | null>(null);
   const bothSidesScanned = Boolean(value.qidScans?.frontScanned && value.qidScans?.backScanned);
 
+  // Failed scan attempts, capped at MAX_SCAN_ATTEMPTS. Reaching the cap is
+  // what unlocks manual number entry - the reference asset's "Manual Fallback
+  // Entry", gated behind its "Scan Attempts: n / 4" counter.
+  //
+  // Local state, not draft state: an attempt count describes this sitting at
+  // the counter, not the order. Re-entering the step should offer the scanner
+  // again rather than resuming someone else's exhausted attempts.
+  const [scanFailures, setScanFailures] = useState(0);
+  const manualEntryUnlocked = idType !== 'QID' || scanFailures >= MAX_SCAN_ATTEMPTS;
+
+  // Simulated OCR. A real scanner reads the number off the card, which is the
+  // only reason the number field can be locked at all - with no scanner and no
+  // typing, nothing could ever be looked up.
+  //
+  // It resolves against the seeded identity documents rather than inventing a
+  // literal, so it stays correct if the seed changes. DEMO LIMITATION, stated
+  // plainly: it takes the first QID-type document, so every successful scan
+  // resolves to the same customer. A real integration would return whatever
+  // card is physically in the reader.
+  const readNumberFromScan = async (): Promise<string | undefined> => {
+    const docs = await mockDataEngine.list<{ documentType: string; documentNumber: string }>('identity-documents');
+    return docs.find((d) => d.documentType === 'QID')?.documentNumber;
+  };
+
   useEffect(() => {
     if (idType !== 'QID' || !bothSidesScanned) {
       // Reset so re-scanning after a type switch or a cleared scan fetches again.
@@ -142,7 +174,16 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: Id
       return;
     }
     const number = value.idNumber?.trim();
-    if (!number || value.moiResult || loading) return;
+    // Nothing typed (the field may well be locked), so the scan supplies it.
+    // Setting idNumber re-runs this effect, which then fetches.
+    if (!number) {
+      if (value.moiResult || loading) return;
+      void readNumberFromScan().then((scanned) => {
+        if (scanned) onChange({ ...value, idNumber: scanned });
+      });
+      return;
+    }
+    if (value.moiResult || loading) return;
     if (autoFetchedNumber.current === number) return;
     autoFetchedNumber.current = number;
     void runMoiValidation();
@@ -165,6 +206,14 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: Id
         onFetch={runMoiValidation}
         fetching={loading}
         error={notFound ? 'No MOI record found for this ID - try again.' : undefined}
+        numberEntryLocked={!manualEntryUnlocked}
+        numberEntryHint={
+          manualEntryUnlocked
+            ? idType === 'QID' && scanFailures >= MAX_SCAN_ATTEMPTS
+              ? `Manual entry unlocked after ${MAX_SCAN_ATTEMPTS} failed scan attempts.`
+              : undefined
+            : `Scan the document below to read this automatically. Manual entry unlocks after ${MAX_SCAN_ATTEMPTS} failed attempts.`
+        }
       />
 
       {/* Front/back capture, shown only for a Qatar ID. The other three
@@ -181,6 +230,31 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: Id
             value={value.qidScans ?? {}}
             onChange={(qidScans) => onChange({ ...value, qidScans })}
           />
+          {/* Attempt counter and a way to fail a scan, both from the reference
+              asset ("Scan Attempts: 0 / 4", "Simulate Scan Failure (0/4)").
+              A simulated scanner cannot fail on its own, so without an
+              explicit control the fallback would be unreachable and the
+              locked field would be a dead end. */}
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <span className="text-[length:var(--fs-caption)] text-muted">
+              Scan attempts: {scanFailures} / {MAX_SCAN_ATTEMPTS}
+            </span>
+            {scanFailures < MAX_SCAN_ATTEMPTS && (
+              <Button
+                variant="ghost-rect"
+                compact
+                onClick={() => {
+                  // A failed read clears whatever was captured, so the agent
+                  // re-presents the document rather than retrying against a
+                  // half-scanned one.
+                  setScanFailures((n) => n + 1);
+                  onChange({ ...value, qidScans: undefined });
+                }}
+              >
+                Simulate scan failure
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
