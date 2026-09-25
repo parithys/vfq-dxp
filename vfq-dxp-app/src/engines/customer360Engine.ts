@@ -15,6 +15,19 @@ export interface CustomerRecord {
   moiValidationStatus?: string;
   hrnAdvancePaymentRequired?: boolean;
   activePostpaidLines?: number;
+  /** Present in customers.json all along; the type was simply not carrying it. */
+  activePrepaidLines?: number;
+  /**
+   * The relationship of the line `phone` identifies - i.e. of the single
+   * number, not of the customer. Seeded 2026-09-25 because the two line
+   * COUNTS above describe a whole customer and so cannot answer "is this
+   * number prepaid or postpaid", which is what the queue notification asks:
+   * a customer holding both kinds made them report both at once.
+   *
+   * Absent for a customer with no active lines, which is a real state here -
+   * four of the eight seeded customers are registered with no line at all.
+   */
+  lineType?: 'Prepaid' | 'Postpaid';
   /** DF-DEMO-001-007 completeness (CUS-001-CAM-08) */
   age?: number;
   gender?: string;

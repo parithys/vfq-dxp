@@ -22,6 +22,19 @@ export interface ProductAction {
   /** Existing screen this action launches, if one exists yet. Omit to show
    * an honest "not yet built" state instead of a fabricated screen. */
   screenId?: string;
+  /**
+   * Whether this action needs the customer to already hold a service on this
+   * tab. Drives the default filter; omit for an action that applies either
+   * way, which is then always shown.
+   *
+   * Per ACTION rather than per group, because the groups genuinely mix the
+   * two: "Number & SIM Services" holds SIM Replacement (needs a line) next to
+   * MNP Port-In (how a customer with NO line brings one in), and "New
+   * Activation" holds Fibre Activation next to IPTV, whose own description
+   * says it goes "on top of the customer's home broadband service". Filtering
+   * by group would have hidden exactly the action a new customer came in for.
+   */
+  appliesWhen?: 'has-service' | 'no-service';
 }
 
 export interface ProductActionGroup {
@@ -37,10 +50,25 @@ export interface ProductActionGroup {
 // active-customer bridge then navigates to the EXISTING screen registered
 // for it - no wizard is rewritten to support this, per GuidedContactStep's
 // pre-fill patch.
-export function ProductActionGroups({ groups, customer }: { groups: ProductActionGroup[]; customer: ActiveCustomerSummary }) {
+export function ProductActionGroups({
+  groups,
+  customer,
+  hasExistingService,
+}: {
+  groups: ProductActionGroup[];
+  customer: ActiveCustomerSummary;
+  /**
+   * Whether the customer holds a service on this tab. `undefined` means NOT
+   * YET KNOWN - the service inventory is still loading - and suppresses
+   * filtering entirely rather than defaulting to false, which would briefly
+   * hide every existing-customer action and then flip them back in.
+   */
+  hasExistingService?: boolean;
+}) {
   const navigate = useNavigate();
   const setActiveCustomer = useActiveCustomerStore((s) => s.setActiveCustomer);
   const [openTitles, setOpenTitles] = useState<Set<string>>(() => new Set(groups.map((g) => g.title)));
+  const [showAll, setShowAll] = useState(false);
 
   const toggleGroup = (title: string) => {
     setOpenTitles((prev) => {
@@ -58,9 +86,48 @@ export function ProductActionGroups({ groups, customer }: { groups: ProductActio
     navigate(route.path);
   };
 
+  // An action applies if it is unmarked, or if its marker matches what the
+  // customer actually holds. Unknown state applies everything.
+  const applies = (action: ProductAction) =>
+    hasExistingService === undefined ||
+    action.appliesWhen === undefined ||
+    (action.appliesWhen === 'has-service') === hasExistingService;
+
+  // Groups are filtered by their ACTIONS, and a group left with none drops
+  // out entirely - so a mobile-only customer does not see an empty "New
+  // Activation" header on the Fibre tab.
+  const applicableGroups = groups
+    .map((group) => ({ ...group, actions: group.actions.filter(applies) }))
+    .filter((group) => group.actions.length > 0);
+
+  const totalActions = groups.reduce((n, g) => n + g.actions.length, 0);
+  const applicableActions = applicableGroups.reduce((n, g) => n + g.actions.length, 0);
+  const hiddenCount = totalActions - applicableActions;
+  const visibleGroups = showAll ? groups : applicableGroups;
+
   return (
     <div className="space-y-2.5">
-      {groups.map((group) => {
+      {/* Only when something is actually hidden. A permanent toggle that
+          sometimes changes nothing is worse than no toggle: the agent cannot
+          tell whether they are seeing everything. */}
+      {hiddenCount > 0 && (
+        <div className="flex items-center justify-between gap-3 pb-1">
+          <p className="text-muted text-[length:var(--fs-caption)]">
+            {showAll
+              ? `Showing all ${totalActions} services.`
+              : `Showing ${applicableActions} services for this customer's connection.`}
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowAll((prev) => !prev)}
+            aria-pressed={showAll}
+            className="text-accent text-[length:var(--fs-caption)] font-medium underline underline-offset-2 shrink-0"
+          >
+            {showAll ? 'Show applicable only' : `Show all (${hiddenCount} more)`}
+          </button>
+        </div>
+      )}
+      {visibleGroups.map((group) => {
         const isOpen = openTitles.has(group.title);
         return (
           <div key={group.title} className="rounded-[var(--radius-card)] border border-border-soft bg-bg overflow-hidden">

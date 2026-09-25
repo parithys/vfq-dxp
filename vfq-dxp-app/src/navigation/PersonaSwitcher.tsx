@@ -121,7 +121,20 @@ export function PersonaSwitcher() {
               {history.length === 0 && <p className="px-4 py-6 text-fg-2 text-[length:var(--fs-body)]">No notifications yet.</p>}
               {history.map((h) => (
                 <div key={h.id} className="px-4 py-3 border-b border-border-soft last:border-0">
-                  <p className="text-fg text-[length:var(--fs-body)]">{h.message}</p>
+                  {/* The reference is rendered here too, not just in the
+                      toast. A keyed notification stores its number separately
+                      from its headline so the toast can colour it, so a bell
+                      entry that printed `message` alone would read "Assigned
+                      Ticket Number:" with the number missing entirely.
+                      --field-calendar-range raw, not the toast's white-lifted
+                      mix: this panel is a light --bg surface, where that mix
+                      would be near-invisible. */}
+                  <p className="text-fg text-[length:var(--fs-body)]">
+                    {h.message}
+                    {h.reference && (
+                      <span className="ml-1 font-semibold text-[var(--field-calendar-range)]">{h.reference}</span>
+                    )}
+                  </p>
                   {/* History shares the toast model, so a toast that split its
                       subject onto a detail line would otherwise lose it here. */}
                   {h.detail && <p className="text-fg-2 text-[length:var(--fs-caption)]">{h.detail}</p>}

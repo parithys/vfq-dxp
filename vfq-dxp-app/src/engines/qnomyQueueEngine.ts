@@ -44,6 +44,25 @@ export const JOURNEY_PURPOSE_LABELS: Record<string, string> = {
   J030: 'Billing & Payment',
 };
 
+// The screen a purpose LAUNCHES, so the agent can start the journey straight
+// from the assignment notification instead of re-finding it in the nav.
+//
+// Keyed by screenId rather than by path, matching SalesWorkspace: SCR-037 is
+// filed under the sim-number-management module route in routes.json despite
+// being the Mobile Postpaid wizard, so resolving it avoids baking in that
+// quirk. The caller looks the path up via getAllRoutes().
+//
+// ONLY J011 IS MAPPED, deliberately. Its label is literally the title of a
+// built, registered journey ('mob-new-postpaid' -> SCR-037 in
+// journeyCatalogue.ts), so the destination is evidenced rather than chosen.
+// J020 "Care & Complaint" and J030 "Billing & Payment" name QUEUES, not
+// journeys - there is no one screen either obviously means, and picking one
+// would send an agent somewhere plausible but wrong. A purpose with no entry
+// here is simply not a link.
+export const JOURNEY_LAUNCH_SCREENS: Record<string, string> = {
+  J011: 'SCR-037',
+};
+
 const GROUP_QUEUES: Record<string, string[]> = {
   'Sales & Acquisition': ['J011'],
   'Customer Service & Retention': ['J020'],

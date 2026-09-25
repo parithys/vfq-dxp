@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { getCustomer360, toActiveCustomerSummary, computeBillingSummary, type Customer360Data } from '../../engines/customer360Engine';
+import { useLocation, useParams } from 'react-router-dom';
+import { getCustomer360, toActiveCustomerSummary, computeBillingSummary, type AccountRecord, type Customer360Data } from '../../engines/customer360Engine';
+import { listCustomerServices, type ServiceSources } from '../../engines/customerServicesEngine';
+import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useActiveCustomerStore } from '../../stores/activeCustomerStore';
 import { useCustomerVerificationStore } from '../../stores/customerVerificationStore';
 import { usePersonaStore } from '../../stores/personaStore';
@@ -50,8 +52,65 @@ export function Customer360Layout() {
   const setActiveCustomer = useActiveCustomerStore((s) => s.setActiveCustomer);
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
   const [data, setData] = useState<Customer360Data | undefined | null>(null);
-  const [activeTab, setActiveTab] = useState('profile');
   const [demoDrawerOpen, setDemoDrawerOpen] = useState(false);
+
+  // Deep link from a service link elsewhere in the app - currently the queue
+  // notification's Active lines breakdown. `tab` picks the tab, `serviceRef`
+  // names which service that tab should load.
+  //
+  // Seeded as the initial state AND re-applied per navigation, because
+  // neither alone is enough:
+  //
+  //   - Initial state alone breaks the common case. The links live in the
+  //     queue notification, which usually sits on top of the very record it
+  //     links into, so the target path is the path already open. React Router
+  //     does not remount for that, useState keeps its first value, and the tab
+  //     never moved. This was the actual observed failure.
+  //   - An effect alone flashes Profile for a frame before switching.
+  //
+  // Keyed on location.key, which React Router changes once per navigation.
+  // That is what keeps this from fighting the agent: clicking a tab by hand
+  // does not change the key, so the effect does not re-run and drag them back
+  // to the linked tab.
+  //
+  // Location state rather than a URL segment, matching how nav-origin context
+  // already travels in this app (see resolveActiveNavPath). The consequence is
+  // deliberate: it survives history navigation but is dropped on reload, so a
+  // reloaded page falls back to Profile with nothing selected rather than to a
+  // half-restored selection.
+  const location = useLocation();
+  const linked = (location.state ?? {}) as { tab?: string; serviceRef?: string };
+  const [activeTab, setActiveTab] = useState(linked.tab ?? 'profile');
+  const [selectedServiceRef, setSelectedServiceRef] = useState(linked.serviceRef);
+
+  useEffect(() => {
+    if (!linked.tab) return;
+    setActiveTab(linked.tab);
+    setSelectedServiceRef(linked.serviceRef);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
+
+  // Service sources Customer360Data does not carry. Loaded here rather than
+  // folded into getCustomer360 so that aggregation keeps its existing shape -
+  // these four feed the service inventory only.
+  const [serviceSources, setServiceSources] = useState<ServiceSources | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      mockDataEngine.list<AccountRecord>('accounts'),
+      mockDataEngine.list<Record<string, unknown>>('installed-assets'),
+      mockDataEngine.list<Record<string, unknown>>('gigahome-osntv-subscriptions'),
+      mockDataEngine.list<Record<string, unknown>>('iptv-stb-bundles'),
+      mockDataEngine.list<Record<string, unknown>>('smart-devices'),
+    ]).then(([accounts, installedAssets, gigahome, iptvBundles, smartDevices]) => {
+      if (cancelled) return;
+      setServiceSources({ accounts, installedAssets, gigahome, iptvBundles, smartDevices });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!customerId) return;
@@ -119,12 +178,43 @@ export function Customer360Layout() {
     ]);
   };
 
+  // Empty until the sources land, so the tabs render their own empty state
+  // for a moment rather than briefly claiming the customer has no services.
+  const services = serviceSources ? listCustomerServices(data.customer, serviceSources) : [];
+  const servicesFor = (tab: 'mobile' | 'fibre' | 'assets') => services.filter((s) => s.tab === tab);
+  // undefined until the sources land, so the product tabs show every action
+  // rather than asserting "no services" before anything has been read.
+  const hasServiceOn = (tab: 'mobile' | 'fibre' | 'assets') =>
+    serviceSources ? servicesFor(tab).length > 0 : undefined;
+
   const tabs: TabItem[] = [
     { key: 'profile', label: 'Profile', content: <ProfileSection customer={data.customer} accounts={data.accounts} /> },
     { key: 'contacts', label: 'Contacts', content: <ContactSection data={data} onTicketCreated={addTicket} /> },
     { key: 'addresses', label: 'Addresses', content: <AddressSection data={data} onTicketCreated={addTicket} /> },
-    { key: 'mobile', label: 'Mobile', content: <MobileSection customer={customer} activePostpaidLines={data.customer.activePostpaidLines ?? 0} /> },
-    { key: 'fibre', label: 'Fibre & Home', content: <FibreHomeSection customer={customer} /> },
+    {
+      key: 'mobile',
+      label: 'Mobile',
+      content: (
+        <MobileSection
+          customer={customer}
+          services={servicesFor('mobile')}
+          selectedServiceRef={selectedServiceRef}
+          hasExistingService={hasServiceOn('mobile')}
+        />
+      ),
+    },
+    {
+      key: 'fibre',
+      label: 'Fibre & Home',
+      content: (
+        <FibreHomeSection
+          customer={customer}
+          services={servicesFor('fibre')}
+          selectedServiceRef={selectedServiceRef}
+          hasExistingService={hasServiceOn('fibre')}
+        />
+      ),
+    },
     { key: 'enterprise', label: 'Enterprise', content: <EnterpriseSection customer={customer} /> },
     { key: 'billing', label: 'Billing', content: <BillingSection data={data} /> },
     { key: 'orders', label: 'Orders', content: <OrdersSection data={data} /> },
@@ -204,7 +294,18 @@ export function Customer360Layout() {
       </div>
 
       <BellNotificationBanner customerId={data.customer.customerId} />
-      <Tabs items={tabs} orientation="vertical" activeKey={activeTab} onChange={setActiveTab} />
+      {/* Choosing a tab by hand clears the deep-linked selection. Without
+          this, the "Selected" marker would stay on a service in a tab the
+          agent has navigated away from and back to for their own reasons. */}
+      <Tabs
+        items={tabs}
+        orientation="vertical"
+        activeKey={activeTab}
+        onChange={(key) => {
+          setActiveTab(key);
+          setSelectedServiceRef(undefined);
+        }}
+      />
 
       {verificationGate}
       <DemographicEditDrawer

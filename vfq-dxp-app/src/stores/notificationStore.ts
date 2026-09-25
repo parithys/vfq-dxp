@@ -3,17 +3,86 @@ import { create } from 'zustand';
 export type ToastKind = 'success' | 'error' | 'warning' | 'info';
 
 /**
+ * A service the agent can open from inside a notification. A DESCRIPTOR, not
+ * a rendered <Link>: this store is plain data that `history` retains for the
+ * session, so it holds where to go rather than the element that goes there.
+ */
+export interface ToastServiceLink {
+  /** Link text - an MSISDN, service id, bundle id or device number. */
+  label: string;
+  /** Whose Customer 360 to open. */
+  customerId: string;
+  /** Which Customer 360 tab to activate on arrival. */
+  tab: string;
+  /** Which service that tab should load - matched against CustomerService.ref. */
+  serviceRef: string;
+  /**
+   * Product name. NOT displayed - the breakdown shows identifiers only as of
+   * 2026-09-25. It survives as the link's accessible name, which is the one
+   * place the name is still needed: a bare identifier read aloud conveys
+   * nothing about where the link leads.
+   */
+  note?: string;
+}
+
+/**
  * A label/value row in a structured toast. `tone` picks the value's colour:
  * 'id' for a reference the agent will quote back, 'success' for a positive
  * state, default for plain facts.
+ *
+ * `links` renders BENEATH the value as a breakdown - the value stays the
+ * headline figure (a count) and each link is one of the things it counts.
  */
 export interface ToastRow {
   label: string;
   value: string;
   tone?: 'default' | 'id' | 'success';
+  links?: ToastServiceLink[];
+  /**
+   * Makes the VALUE ITSELF a link to this path - distinct from `links`, which
+   * renders a list beneath it. For a row whose value names something the
+   * agent can act on, e.g. the purpose of visit launching its journey.
+   *
+   * A resolved path, not a screen id: the store holds no engine lookups, so
+   * whoever pushes the toast resolves the route.
+   */
+  to?: string;
+}
+
+/**
+ * Which operator the person this notification is about belongs to, and - for
+ * a Vodafone customer - what kind of relationship they hold.
+ *
+ * A DESCRIPTOR, not a rendered logo: this store is plain data that `history`
+ * retains for the session, so putting a ReactNode in it would park React
+ * elements in global state and make a history entry unserialisable. The Toast
+ * maps `operator` to a mark.
+ *
+ * `relationship` is deliberately optional and NOT defaulted. A registered
+ * customer with no active lines has no Prepaid/Postpaid relationship yet, and
+ * three of the eight seeded customers are in exactly that state - including
+ * the one queued for a new postpaid connection. Guessing "Prepaid" there
+ * would state a fact the data does not contain.
+ */
+export interface ToastBrand {
+  operator: 'vodafone' | 'other';
+  /** Only meaningful for 'vodafone'. */
+  relationship?: string;
 }
 
 export interface ToastOptions {
+  /**
+   * Stable identity for a notification that can be raised more than once -
+   * currently the queue ticket, which the agent can reopen from the header's
+   * info icon after dismissing it.
+   *
+   * Pushing with a key that is already present REPLACES rather than appends,
+   * in both the visible stack and history. Without it, reopening pushes a
+   * fresh notification every time: the stack grows a duplicate per click and
+   * the bell counts each one as unread, so "reopen the message" silently
+   * became "create another message".
+   */
+  key?: string;
   /** Quieter second line under the headline. Ignored when `rows` is set. */
   detail?: string;
   /**
@@ -23,10 +92,23 @@ export interface ToastOptions {
    * assignment is five separate facts, and a sentence made them compete.
    */
   rows?: ToastRow[];
+  /** Operator mark, right-aligned on the header line. Structured toasts only. */
+  brand?: ToastBrand;
+  /**
+   * A reference number belonging to the headline, rendered after `message` in
+   * the same colour a `tone: 'id'` row value gets.
+   *
+   * Separate from `message` because it has to be styled separately, and the
+   * store holds strings rather than markup - concatenating it into the
+   * headline would make the number unstyleable, which is what it was when the
+   * ticket id first moved out of the rows and into the message.
+   */
+  reference?: string;
 }
 
 export interface Toast {
   id: string;
+  key?: string;
   kind: ToastKind;
   message: string;
   /**
@@ -37,6 +119,8 @@ export interface Toast {
    */
   detail?: string;
   rows?: ToastRow[];
+  brand?: ToastBrand;
+  reference?: string;
 }
 
 export interface NotificationHistoryEntry extends Toast {
@@ -65,12 +149,29 @@ export const useNotificationStore = create<NotificationState>((set) => ({
   history: [],
   pushToast: (kind, message, options) =>
     set((state) => {
-      const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      const entry = { id, kind, message, detail: options?.detail, rows: options?.rows };
-      return {
-        toasts: [...state.toasts, entry],
-        history: [{ ...entry, at: Date.now(), read: false }, ...state.history].slice(0, HISTORY_LIMIT),
+      const key = options?.key;
+      // A keyed re-push reuses the id, so React keeps the same element and the
+      // toast does not flicker out and back in when it is reopened.
+      const existing = key ? state.toasts.find((t) => t.key === key) : undefined;
+      const id = existing?.id ?? `toast-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const entry = {
+        id,
+        key,
+        kind,
+        message,
+        detail: options?.detail,
+        rows: options?.rows,
+        brand: options?.brand,
+        reference: options?.reference,
       };
+      const toasts = existing
+        ? state.toasts.map((t) => (t.key === key ? entry : t))
+        : [...state.toasts, entry];
+      const historyEntry = { ...entry, at: Date.now(), read: false };
+      const history = key
+        ? [historyEntry, ...state.history.filter((h) => h.key !== key)].slice(0, HISTORY_LIMIT)
+        : [historyEntry, ...state.history].slice(0, HISTORY_LIMIT);
+      return { toasts, history };
     }),
   dismissToast: (id) => set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
   dismissAllToasts: () => set({ toasts: [] }),

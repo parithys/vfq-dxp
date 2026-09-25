@@ -1,7 +1,10 @@
 import { Fragment, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useNotificationStore } from '../../stores/notificationStore';
-import type { ToastKind, ToastRow } from '../../stores/notificationStore';
+import type { ToastBrand, ToastKind, ToastRow } from '../../stores/notificationStore';
 import { Icon } from './Icon';
+import { OoredooMark } from './OoredooMark';
+import { VodafoneMark } from './VodafoneMark';
 
 const CLOSE_ICON = 'M18 6L6 18 M6 6l12 12';
 
@@ -14,11 +17,56 @@ const CLOSE_ICON = 'M18 6L6 18 M6 6l12 12';
 // so a reference number reads as a distinct class of value from a status
 // without introducing a new hue. Lifted 45% to land on the mint the reference
 // uses rather than the saturated cyan the raw token gives.
+// One definition, used by BOTH the 'id' row tone and the headline reference,
+// so a reference number looks the same wherever it appears. The ticket id
+// moved from a row into the headline on 2026-09-25 and lost this treatment in
+// the move; naming it is what stops the two drifting again.
+const ID_TONE = 'text-[color-mix(in_oklab,var(--field-calendar-range),white_45%)]';
+
 const rowToneClass: Record<NonNullable<ToastRow['tone']>, string> = {
   default: 'text-white',
-  id: 'text-[color-mix(in_oklab,var(--field-calendar-range),white_45%)]',
+  id: ID_TONE,
   success: 'text-[color-mix(in_oklab,var(--success),white_35%)]',
 };
+
+// Maps the store's serialisable ToastBrand to a mark. The store holds
+// 'vodafone' | 'other' and a relationship string; deciding what those LOOK
+// like is this layer's job, which is why no ReactNode crosses into state.
+//
+// The Vodafone case shows the mark AND the relationship, because for an
+// existing customer "which operator" is not the useful half - the agent
+// already knows they are at a Vodafone counter. What they need before they
+// speak is whether this is a prepaid or a postpaid customer.
+//
+// The 'other' case shows the mark alone. There is no relationship to state: a
+// competitor's customer has no Vodafone prepaid/postpaid standing, and
+// printing one would be an invention rather than a blank.
+//
+// A Vodafone customer with no line on that number ALSO shows the mark alone.
+// This slot briefly read "No active lines", which was wrong twice over:
+//
+// - It answered a question the slot does not ask. The slot is the
+//   relationship type for the number Qnomy handed over; how many lines the
+//   customer holds is a different fact and now has its own row.
+// - It over-claimed. The two source fields count MOBILE lines only, so it
+//   announced "No active lines" for a customer whose fixed-line service is
+//   active - CUST-1003 holds GigaHome account ACC-5003.
+//
+// An empty slot is no longer ambiguous now that "Active lines" is a labelled
+// row, which is what made the filler look necessary in the first place.
+function ToastBrandMark({ brand }: { brand: ToastBrand }) {
+  if (brand.operator !== 'vodafone') return <OoredooMark />;
+  return (
+    <span className="flex items-center gap-2">
+      <VodafoneMark className="w-4 h-4 shrink-0" />
+      {brand.relationship && (
+        <span className="text-[length:var(--fs-caption)] font-medium whitespace-nowrap text-white">
+          {brand.relationship}
+        </span>
+      )}
+    </span>
+  );
+}
 
 const dotColour: Record<ToastKind, string> = {
   success: 'color-mix(in oklab, var(--success), white 30%)',
@@ -130,15 +178,27 @@ export function ToastContainer() {
                     />
                     <span className="text-white font-semibold text-[length:var(--fs-caption)] uppercase tracking-[0.12em] truncate">
                       {t.message}
+                      {/* The reference keeps the headline's uppercase and
+                          tracking - it inherits them - and changes only
+                          colour, so it reads as the same line rather than as
+                          a separate chip. */}
+                      {t.reference && <span className={`ml-1.5 ${ID_TONE}`}>{t.reference}</span>}
                     </span>
                   </span>
-                  <button
-                    onClick={() => dismissToast(t.id)}
-                    aria-label="Dismiss notification"
-                    className="text-white/45 hover:text-white shrink-0"
-                  >
-                    <Icon path={CLOSE_ICON} className="w-5 h-5" />
-                  </button>
+                  {/* Operator mark and the dismiss button share the right end,
+                      so the mark lands inside the header row rather than
+                      becoming a third justify-between column floating in the
+                      middle of it. */}
+                  <span className="flex items-center gap-4 shrink-0">
+                    {t.brand && <ToastBrandMark brand={t.brand} />}
+                    <button
+                      onClick={() => dismissToast(t.id)}
+                      aria-label="Dismiss notification"
+                      className="text-white/45 hover:text-white"
+                    >
+                      <Icon path={CLOSE_ICON} className="w-5 h-5" />
+                    </button>
+                  </span>
                 </div>
 
                 {/* Full-bleed: a sibling of the header, not a child of it. */}
@@ -168,7 +228,56 @@ export function ToastContainer() {
                         <dd
                           className={`text-[length:var(--fs-body)] font-semibold leading-snug ${rowToneClass[row.tone ?? 'default']}`}
                         >
-                          {row.value}
+                          {/* An actionable value launches on click - the
+                              purpose of visit starting its journey. Underlined
+                              rather than merely coloured, because the value
+                              keeps its row colour and colour alone would not
+                              distinguish it from the three values that are
+                              only text. */}
+                          {row.to ? (
+                            <Link
+                              to={row.to}
+                              onClick={() => dismissToast(t.id)}
+                              className="underline decoration-white/30 underline-offset-2 hover:decoration-current"
+                            >
+                              {row.value}
+                            </Link>
+                          ) : (
+                            row.value
+                          )}
+                          {/* The breakdown, under the count. Each identifier
+                              opens the owning Customer 360 tab with that
+                              service loaded.
+
+                              Dismissing on click is deliberate: the toast
+                              overlays the page it is navigating to, so leaving
+                              it up would cover the record the agent just asked
+                              to see. Clicking a link does NOT trigger the
+                              outside-click dismissal - the link is inside the
+                              stack - so this is the only thing that closes
+                              it. */}
+                          {row.links && row.links.length > 0 && (
+                            <span className="mt-1.5 flex flex-col gap-1 font-normal">
+                              {row.links.map((link) => (
+                                <Link
+                                  key={link.serviceRef}
+                                  to={`/customer/${link.customerId}`}
+                                  state={{ tab: link.tab, serviceRef: link.serviceRef }}
+                                  onClick={() => dismissToast(t.id)}
+                                  // The product name is NOT displayed (2026-09-25 -
+                                  // identifiers only), but it is still the link's
+                                  // accessible name. "SVC-30011" read aloud on its own
+                                  // says nothing about where the link goes, and an
+                                  // aria-label is announced without being rendered, so
+                                  // this costs the visual design nothing.
+                                  aria-label={link.note ? `${link.label} - ${link.note}` : link.label}
+                                  className={`block text-[length:var(--fs-caption)] font-medium underline decoration-white/30 underline-offset-2 hover:decoration-current ${ID_TONE}`}
+                                >
+                                  {link.label}
+                                </Link>
+                              ))}
+                            </span>
+                          )}
                         </dd>
                       </Fragment>
                     ))}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as mockDataEngine from '../engines/mockDataEngine';
+import { getAllRoutes } from '../engines/configEngine';
 import { useEntityStore } from '../stores/entityStore';
 import { useNotificationStore } from '../stores/notificationStore';
 import { useActiveCustomerStore } from '../stores/activeCustomerStore';
@@ -11,14 +12,17 @@ import {
   queueLabelsForRole,
   mobileMatches,
   JOURNEY_PURPOSE_LABELS,
+  JOURNEY_LAUNCH_SCREENS,
 } from '../engines/qnomyQueueEngine';
 import { usePersonaStore } from '../stores/personaStore';
 import { canSeeQnomyTicketNumber, canSeeCtiReferenceNumber } from '../engines/agentPrivilegeEngine';
-import { toActiveCustomerSummary, type CustomerRecord } from '../engines/customer360Engine';
+import { toActiveCustomerSummary, type AccountRecord, type CustomerRecord } from '../engines/customer360Engine';
+import { listCustomerServices, type ServiceSources } from '../engines/customerServicesEngine';
 import { Badge } from '../components/primitives/Badge';
 import { Button } from '../components/primitives/Button';
 import { Icon } from '../components/primitives/Icon';
 import { Tooltip } from '../components/primitives/Tooltip';
+import type { ToastBrand, ToastKind, ToastOptions, ToastRow, ToastServiceLink } from '../stores/notificationStore';
 
 interface QTicketRecord {
   qTicketId: string;
@@ -31,12 +35,248 @@ interface QTicketRecord {
   agentInDxpSessionId: string | null;
 }
 
+const INFO_ICON_PATH = 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 11v5 M12 7.5h.01';
 const REFRESH_ICON_PATH = 'M3 12a9 9 0 0 1 15.3-6.4L21 8 M21 3v5h-5 M21 12a9 9 0 0 1-15.3 6.4L3 16 M3 21v-5h5';
 interface TroubleTicketRecord {
   ticketId: string;
   customerId: string;
   category: string;
   createdAt: string;
+}
+
+// Everything the notification says about WHO is at the counter: which
+// operator they belong to, their relationship on this number, and how many
+// lines they hold.
+//
+// Resolved from the KIOSK-ENTERED MOBILE NUMBER, not the ticket's customerId,
+// per the 2026-09-25 direction ("determined based on the customer number
+// received from Qnomy"). That is also the honest source: the kiosk only knows
+// what the walk-in typed, and matching it is the step that decides whether
+// this is a Vodafone customer at all. It reuses the same mobileMatches() the
+// assignment path already resolves identity with, so the mark can never
+// disagree with the record the agent is shown.
+//
+// One resolution returns BOTH facts, so the operator mark and the Active lines
+// row cannot end up describing different people.
+//
+// Yields operator 'other' - the Ooredoo mark - for a number with no Vodafone
+// record. Reachable with the current seed: QTK-7006 carries +97455519999 and a
+// null customerId, which matches nobody in customers.json.
+interface KioskCustomerFacts {
+  brand: ToastBrand;
+  /** One link per active service. Empty for a customer holding none. */
+  links: ToastServiceLink[];
+}
+
+// The Active lines row. The COUNT lives in the label - "Active lines (4)" -
+// so the value cell holds the breakdown alone rather than a number with a
+// list hanging under it, which read as two separate values stacked in one
+// cell.
+//
+// Three link-less shapes, each a different claim and none of them "0":
+//
+//   - 'Not applicable' - a competitor's customer. The question does not apply
+//     to them; they do not hold zero Vodafone services.
+//   - 'None'           - a Vodafone customer who genuinely holds nothing.
+//   - 'Not recorded'   - facts never resolved, so nothing is known either way.
+function activeLinesRow(facts: KioskCustomerFacts | undefined): ToastRow {
+  if (!facts) return { label: 'Active lines', value: 'Not recorded' };
+  if (facts.brand.operator === 'other') return { label: 'Active lines', value: 'Not applicable' };
+  if (facts.links.length === 0) return { label: 'Active lines', value: 'None' };
+  // Empty value, not a repeat of the count: it is in the label now.
+  return { label: `Active lines (${facts.links.length})`, value: '', links: facts.links };
+}
+
+function factsForKioskNumber(
+  mobile: string | null,
+  customers: CustomerRecord[],
+  sources: ServiceSources
+): KioskCustomerFacts {
+  const matched = mobile ? customers.find((c) => mobileMatches(mobile, c.phone)) : undefined;
+  if (!matched) {
+    // Not "None": a competitor's customer does not hold zero Vodafone
+    // services, the question does not apply to them. Zero is a different
+    // claim.
+    return { brand: { operator: 'other' }, links: [] };
+  }
+
+  // The customer's WHOLE relationship, not their mobile lines - mobile,
+  // GigaHome, OSNtv, IPTV, smart devices, installed services. This replaced
+  // activePostpaidLines + activePrepaidLines, which are mobile-only and so
+  // reported "None" for CUST-1003 (active GigaHome) and CUST-1004 (GigaHome
+  // plus a smart plug).
+  //
+  // The count shown is the length of this list, so the figure and the
+  // breakdown can never disagree. That does mean it no longer echoes the two
+  // count fields on the customer record:
+  // CUST-1005 carries 4 lines by count but has no account and therefore no
+  // enumerable service records, so only the one line his own number
+  // identifies is listed. Counting 4 while showing 1 would be worse - the
+  // three others have no number to link to and cannot be opened.
+  const services = listCustomerServices(matched, sources);
+  return {
+    brand: { operator: 'vodafone', relationship: relationshipOf(matched) },
+    links: services.map((service) => ({
+      label: service.identifier,
+      customerId: matched.customerId,
+      tab: service.tab,
+      serviceRef: service.ref,
+      note: service.label,
+    })),
+  };
+}
+
+// Resolves a journey code to the route its screen lives at, or undefined when
+// the code has no mapped screen or the screen is not in routes.json.
+function launchPathFor(journeyCode: string | null): string | undefined {
+  if (!journeyCode) return undefined;
+  const screenId = JOURNEY_LAUNCH_SCREENS[journeyCode];
+  if (!screenId) return undefined;
+  return getAllRoutes().find((r) => r.screenId === screenId)?.path;
+}
+
+// The four datasets the service inventory needs beyond `customers`. Bundled
+// into one helper because both entry points - the queue assignment and the
+// info-icon reopen - need exactly the same set, and listing them twice is how
+// the two would come to disagree about what counts as a service.
+function loadServiceSources(): Promise<ServiceSources> {
+  return Promise.all([
+    mockDataEngine.list<AccountRecord>('accounts'),
+    mockDataEngine.list<Record<string, unknown>>('installed-assets'),
+    mockDataEngine.list<Record<string, unknown>>('gigahome-osntv-subscriptions'),
+    mockDataEngine.list<Record<string, unknown>>('iptv-stb-bundles'),
+    mockDataEngine.list<Record<string, unknown>>('smart-devices'),
+  ]).then(([accounts, installedAssets, gigahome, iptvBundles, smartDevices]) => ({
+    accounts,
+    installedAssets,
+    gigahome,
+    iptvBundles,
+    smartDevices,
+  }));
+}
+
+// Prepaid or Postpaid for THE NUMBER Qnomy handed over - never both.
+//
+// Reads `lineType`, which describes the single line `phone` identifies, and
+// NOT activePostpaidLines/activePrepaidLines. Those are counts across the
+// whole customer, so they cannot answer the question this notification asks:
+// a customer holding lines of both kinds made them report "Prepaid +
+// Postpaid", which is a fact about the customer and not about the walk-in's
+// number. Reading one field rather than comparing two also means "both" is
+// now unrepresentable rather than merely unreached.
+//
+// `undefined` when the customer has no line, which is a REAL state: four of
+// the eight seeded customers are registered with none, and CUST-1004 is the
+// one queued for a new postpaid connection. Defaulting those to either value
+// would put a relationship on screen that the customer does not have.
+function relationshipOf(customer: CustomerRecord): string | undefined {
+  return customer.lineType;
+}
+
+// The facts an agent reads off the ticket, built in ONE place.
+//
+// Three call sites want them: the two assignment toasts and the header's info
+// button, which re-shows the notification after it has been dismissed. Three
+// inline copies would drift, and the one most likely to drift is the re-show -
+// the copy nobody looks at until a customer is standing at the counter.
+//
+// "Customer status" ("Existing registered customer" / "New customer") was
+// removed on 2026-09-25. The operator mark on the header line now carries the
+// same distinction and carries it better: a Vodafone mark IS "existing
+// registered", and the Ooredoo mark says "not ours" more directly than the
+// word "New" did. Keeping both put the same fact on screen twice, in two
+// vocabularies, one of which called a competitor's customer "New".
+//
+// With no name to show, the fallback is chosen by the OPERATOR, not merely by
+// the name being absent - the two are not the same condition, and conflating
+// them would mislabel people. `brand` comes from resolving the kiosk number,
+// while `customerName` can be null for a Vodafone customer whose record
+// simply is not loaded: the info-icon reopen reads the active customer store,
+// which Finish clears. Keying "Ooredoo Customer" off a missing name would
+// therefore have relabelled a Vodafone walk-in as a competitor's customer the
+// moment the agent reopened the notification.
+//
+//   - no name, operator 'other'    -> "Ooredoo Customer" (2026-09-25)
+//   - no name, operator 'vodafone' -> "Not on file", as before
+function ticketToastRows(
+  ticket: QTicketRecord,
+  customerName: string | null,
+  mobile: string | null,
+  facts: KioskCustomerFacts | undefined
+): ToastRow[] {
+  return [
+    // "Ticket number" is no longer a row (2026-09-25): the id moved into the
+    // headline, where it names the notification rather than sitting as the
+    // first of five equal-weight facts. It keeps its 'id' tone nowhere now,
+    // so the cyan value treatment only appears if another row asks for it.
+    {
+      label: 'Customer name',
+      value: customerName ?? (facts?.brand.operator === 'other' ? 'Ooredoo Customer' : 'Not on file'),
+    },
+    { label: 'Mobile number', value: mobile ?? 'Not captured' },
+    activeLinesRow(facts),
+    {
+      label: 'Purpose of visit',
+      // The journey the kiosk code stands for, not the queue the customer is
+      // queuing in. Falls back to the queue name for an unmapped code rather
+      // than inventing a purpose.
+      value:
+        (ticket.journeyCode ? JOURNEY_PURPOSE_LABELS[ticket.journeyCode] : undefined) ??
+        ticket.queueName ??
+        'Not recorded',
+      // Clicking the purpose LAUNCHES it (2026-09-25), so the agent starts the
+      // journey from the greeting rather than re-finding it in the nav.
+      //
+      // Undefined for a purpose with no mapped screen, which leaves the value
+      // as plain text - see JOURNEY_LAUNCH_SCREENS for why only J011 is
+      // mapped. Resolved here rather than stored as a screen id because the
+      // notification store holds no engine lookups.
+      //
+      // The active customer is deliberately NOT cleared first, unlike
+      // SalesWorkspace's blank-start acquisition buttons: the queue has
+      // already put this walk-in in the bridge, and the wizard prefilling
+      // with the person standing at the counter is the entire point.
+      to: launchPathFor(ticket.journeyCode),
+    },
+  ];
+}
+
+// The whole notification, not just its rows: kind, headline and key together.
+//
+// Both entry points - the queue assigning a ticket, and the header info icon
+// reopening it - call this, so they cannot drift. They previously built the
+// kind separately and disagreed: an assignment for a customer on file was
+// 'success' (green dot) while the reopen was always 'info' (grey), so the
+// same notification looked like two different ones.
+//
+// The key is the ticket, so reopening REPLACES the notification rather than
+// pushing another. Without it, four clicks of the info icon meant four
+// stacked toasts and four unread items in the bell.
+function ticketToast(
+  ticket: QTicketRecord,
+  customerName: string | null,
+  mobile: string | null,
+  facts: KioskCustomerFacts | undefined
+): [ToastKind, string, ToastOptions] {
+  return [
+    customerName ? 'success' : 'info',
+    // The ticket id is IN the headline as of 2026-09-25, replacing "New ticket
+    // assigned" and the Ticket number row both. The structured header renders
+    // uppercase and tracked, which is left as-is: it is the shared treatment
+    // for every structured toast, and the id is uppercase already, so only its
+    // letter-spacing changes.
+    //
+    // The id goes in `reference`, NOT interpolated into this string, so it can
+    // keep the colour it had as a `tone: 'id'` row. Interpolating it is exactly
+    // what made it plain white when it first moved up here.
+    'Assigned Ticket Number:',
+    {
+      rows: ticketToastRows(ticket, customerName, mobile, facts),
+      key: `qticket-${ticket.qTicketId}`,
+      brand: facts?.brand,
+      reference: ticket.qTicketId,
+    },
+  ];
 }
 
 function mostRecentFor<T extends { customerId: string }>(records: T[], customerId: string, dateField: keyof T): T | undefined {
@@ -106,6 +346,9 @@ export function SessionReferenceNumbers() {
   // just-released ticket for either outcome, so without this the post-release
   // chip would report a green "Completed" for a ticket the agent abandoned.
   const [releasedAs, setReleasedAs] = useState<'completed' | 'abandoned'>('completed');
+  // Operator mark AND active-line count for the ticket in hand, both
+  // resolved from its kiosk number in one pass.
+  const [ticketFacts, setTicketFacts] = useState<KioskCustomerFacts | undefined>(undefined);
   const [callingNext, setCallingNext] = useState(false);
   const [waitingCount, setWaitingCount] = useState<number | null>(null);
 
@@ -124,12 +367,24 @@ export function SessionReferenceNumbers() {
     // queue, which is the one case where that number is the whole point.
     if (!showQnomy || !assignedQTicketId) {
       setActiveQTicket(undefined);
+      setTicketFacts(undefined);
       return;
     }
     let cancelled = false;
-    mockDataEngine.list<QTicketRecord>('qtickets').then((qTickets) => {
+    // Customers alongside the tickets so the operator mark is available to the
+    // info-icon reopen, which is a plain click handler with no list of its own.
+    // Resolving it here rather than inside that handler keeps the handler
+    // synchronous and keeps the mark derived from the SESSION'S ticket, which
+    // is what the reopen is meant to re-show.
+    Promise.all([
+      mockDataEngine.list<QTicketRecord>('qtickets'),
+      mockDataEngine.list<CustomerRecord>('customers'),
+      loadServiceSources(),
+    ]).then(([qTickets, customers, sources]) => {
       if (cancelled) return;
-      setActiveQTicket(qTickets.find((t) => t.qTicketId === assignedQTicketId));
+      const ticket = qTickets.find((t) => t.qTicketId === assignedQTicketId);
+      setActiveQTicket(ticket);
+      setTicketFacts(ticket ? factsForKioskNumber(ticket.kioskMobileNumber, customers, sources) : undefined);
     });
     return () => {
       cancelled = true;
@@ -162,6 +417,21 @@ export function SessionReferenceNumbers() {
       cancelled = true;
     };
   }, [showQnomy, refreshKey, activeQTicket, activePersonaId]);
+
+  // Re-shows the assignment notification for the ticket in hand.
+  //
+  // The toast is transient and now also clears on any outside click, so the
+  // five facts an agent greets a walk-in with could be gone before they have
+  // read them. The header shows the ticket id and number but not the customer
+  // name, status or purpose, so without this the only way back to them was to
+  // open the bell and hunt through history.
+  //
+  // Rebuilt from current state rather than replaying the original toast: the
+  // customer may have been resolved, or cleared, since it was pushed.
+  const showTicketDetails = () => {
+    if (!activeQTicket) return;
+    pushToast(...ticketToast(activeQTicket, activeCustomer?.name ?? null, kioskMobileNumber, ticketFacts));
+  };
 
   const handleFinish = async () => {
     if (!activeQTicket) return;
@@ -221,9 +491,10 @@ export function SessionReferenceNumbers() {
 
   const handleNextCustomer = async () => {
     setCallingNext(true);
-    const [qTickets, customers] = await Promise.all([
+    const [qTickets, customers, serviceSources] = await Promise.all([
       mockDataEngine.list<QTicketRecord>('qtickets'),
       mockDataEngine.list<CustomerRecord>('customers'),
+      loadServiceSources(),
     ]);
     // Only from a queue this role serves (qnomyQueueEngine), oldest first.
     const waiting = nextTicketFor(activePersonaId, qTickets);
@@ -252,31 +523,14 @@ export function SessionReferenceNumbers() {
       // calling a customer impossible until you had verified someone you
       // could not yet see.
       setActiveCustomer(toActiveCustomerSummary(matched));
-      // Headline says what happened; who it happened to goes on the detail
-      // line. One sentence carrying both made the ticket id compete with the
-      // customer name for the same glance.
-      // Structured rather than a sentence: these are five separate facts the
-      // agent reads off the screen while greeting a walk-in, and "Purpose of
-      // visit" is the queue the customer chose at the kiosk - queueName, not
-      // an interpretation of journeyCode.
-      pushToast('success', 'New ticket assigned', {
-        rows: [
-          { label: 'Ticket number', value: waiting.qTicketId, tone: 'id' },
-          { label: 'Customer name', value: matched.name },
-          { label: 'Mobile number', value: waiting.kioskMobileNumber ?? 'Not captured' },
-          { label: 'Customer status', value: 'Existing registered customer', tone: 'success' },
-          {
-            label: 'Purpose of visit',
-            // The journey the kiosk code stands for, not the queue the
-            // customer is queuing in. Falls back to the queue name for a code
-            // with no mapped journey rather than inventing a purpose.
-            value:
-              (waiting.journeyCode ? JOURNEY_PURPOSE_LABELS[waiting.journeyCode] : undefined) ??
-              waiting.queueName ??
-              'Not recorded',
-          },
-        ],
-      });
+      pushToast(
+        ...ticketToast(
+          waiting,
+          matched.name,
+          waiting.kioskMobileNumber,
+          factsForKioskNumber(waiting.kioskMobileNumber, customers, serviceSources)
+        )
+      );
       // A queue walk-in arrives through the New Connections journey, so that
       // is what the rail should show rather than Customer Search - the agent
       // did not search for this customer, the queue handed them over.
@@ -296,28 +550,13 @@ export function SessionReferenceNumbers() {
     // in the header, and the activation quick actions are right there.
     clearActiveCustomer();
     navigate('/');
-    // Same shape for a walk-in with no record, so the agent reads the same
-    // five rows either way. Customer status carries the difference and is
-    // deliberately NOT toned 'success': there is nothing to confirm here, and
-    // a green row would suggest a match was found.
-    pushToast('info', 'New ticket assigned', {
-      rows: [
-        { label: 'Ticket number', value: waiting.qTicketId, tone: 'id' },
-        { label: 'Customer name', value: 'Not on file' },
-        { label: 'Mobile number', value: waiting.kioskMobileNumber ?? 'Not captured' },
-        { label: 'Customer status', value: 'New customer' },
-        {
-            label: 'Purpose of visit',
-            // The journey the kiosk code stands for, not the queue the
-            // customer is queuing in. Falls back to the queue name for a code
-            // with no mapped journey rather than inventing a purpose.
-            value:
-              (waiting.journeyCode ? JOURNEY_PURPOSE_LABELS[waiting.journeyCode] : undefined) ??
-              waiting.queueName ??
-              'Not recorded',
-          },
-      ],
-    });
+    // factsForKioskNumber over the same list re-derives 'other' here rather
+    // than hard-coding it: `matched` being absent means no record for the
+    // number, which is exactly what that function tests. Passing a literal
+    // would duplicate the rule and let the two drift.
+    pushToast(
+      ...ticketToast(waiting, null, waiting.kioskMobileNumber, factsForKioskNumber(waiting.kioskMobileNumber, customers, serviceSources))
+    );
   };
 
   // A Qnomy-eligible agent ALWAYS has something here: a held ticket, a just-
@@ -331,6 +570,18 @@ export function SessionReferenceNumbers() {
     <div className="flex items-center gap-2 shrink-0">
       {showQnomy && activeQTicket && (
         <>
+          {/* Before the ticket text, so it reads as "info about this ticket"
+              rather than another action alongside Finish and Abandoned. */}
+          <Tooltip content="Show ticket details" placement="bottom">
+            <button
+              type="button"
+              onClick={showTicketDetails}
+              aria-label={`Show details for ticket ${activeQTicket.qTicketId}`}
+              className="shrink-0 text-muted hover:text-fg transition-colors"
+            >
+              <Icon path={INFO_ICON_PATH} className="w-4.5 h-4.5" />
+            </button>
+          </Tooltip>
           <Tooltip
             content={
               activeCustomer
@@ -340,15 +591,19 @@ export function SessionReferenceNumbers() {
             placement="bottom"
           >
             <div className="flex flex-col leading-tight">
-              <span className="text-[length:var(--fs-caption)] uppercase tracking-wide text-muted">
-                {activeQTicket.queueName ?? 'Qnomy Ticket'}
-              </span>
-              <span className="text-fg font-semibold text-[length:var(--fs-body)]">
-                {activeQTicket.qTicketId}
-                {kioskMobileNumber && (
-                  <span className="text-fg-2 font-normal"> · {kioskMobileNumber}</span>
-                )}
-              </span>
+              {/* The TICKET ONLY, as of 2026-09-25. The queue name was the
+                  label ("NEW CONNECTIONS") and the kiosk number trailed the
+                  id; both are gone and the label is a fixed "Qnomy #".
+
+                  Neither fact is lost - both are rows in the assignment
+                  notification, which the info button immediately to the left
+                  reopens on demand. That reopen is what made this safe to
+                  trim: the number used to be recoverable ONLY from here,
+                  which is why it was pinned in the header in the first
+                  place, and it matters most for a walk-in with no record on
+                  file. The tooltip still names that case. */}
+              <span className="text-[length:var(--fs-caption)] uppercase tracking-wide text-muted">Qnomy #</span>
+              <span className="text-fg font-semibold text-[length:var(--fs-body)]">{activeQTicket.qTicketId}</span>
             </div>
           </Tooltip>
           {/* A walk-in with no record is a normal outcome, not an error - the
@@ -403,16 +658,39 @@ export function SessionReferenceNumbers() {
             }
             placement="bottom"
           >
-            <div className="flex flex-col leading-tight opacity-40">
-              <span className="text-[length:var(--fs-caption)] uppercase tracking-wide text-muted">Qnomy Ticket</span>
-              <span className="text-fg font-semibold text-[length:var(--fs-body)]">{completedQTicket.qTicketId}</span>
+            {/* The released ticket's OUTCOME is carried by this chip's own
+                colour as of 2026-09-25, replacing the "Completed" /
+                "Abandoned" badge that sat beside it.
+
+                The abandoned colour is not optional. The badge existed
+                because the two outcomes were otherwise identical, and
+                colouring every released ticket green would have reported a
+                completed handover for a customer the agent gave up on - the
+                exact defect `releasedAs` was added to prevent. Green for
+                completed, amber for abandoned, and the tooltip still spells
+                out which in words for anyone who cannot use the colour.
+
+                opacity-40 is gone with the badge: it dimmed the chip to mark
+                it read-only, which would have left the outcome colour washed
+                out and unreadable. Read-only is already conveyed by there
+                being no control here and by the tooltip saying so. */}
+            <div className="flex flex-col leading-tight">
+              <span
+                className={`text-[length:var(--fs-caption)] uppercase tracking-wide ${
+                  releasedAs === 'abandoned' ? 'text-[var(--warn-text)]' : 'text-success'
+                }`}
+              >
+                Qnomy #
+              </span>
+              <span
+                className={`font-semibold text-[length:var(--fs-body)] ${
+                  releasedAs === 'abandoned' ? 'text-[var(--warn-text)]' : 'text-success'
+                }`}
+              >
+                {completedQTicket.qTicketId}
+              </span>
             </div>
           </Tooltip>
-          {releasedAs === 'abandoned' ? (
-            <Badge variant="warning">Abandoned</Badge>
-          ) : (
-            <Badge variant="success">Completed</Badge>
-          )}
           <Button variant="ghost-rect" compact disabled={callingNext} onClick={handleNextCustomer}>
             <Icon path={REFRESH_ICON_PATH} className="w-4 h-4" />
             {callingNext ? 'Calling…' : 'Next Customer'}
