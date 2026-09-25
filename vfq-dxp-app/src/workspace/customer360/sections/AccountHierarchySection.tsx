@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Badge } from '../../../components/primitives/Badge';
 import { Icon } from '../../../components/primitives/Icon';
 import type { Customer360Data } from '../../../engines/customer360Engine';
@@ -23,6 +23,7 @@ function LevelBadge({ children }: { children: React.ReactNode }) {
 // detail plus CAM-05/06/07 barring status, so the tier a field belongs to is
 // never ambiguous.
 export function AccountHierarchySection({ data }: { data: Customer360Data }) {
+  const location = useLocation();
   const [expandedBillingId, setExpandedBillingId] = useState<string | null>(
     data.billingProfiles[0] ? String(data.billingProfiles[0].billingProfileId) : null
   );
@@ -67,6 +68,11 @@ export function AccountHierarchySection({ data }: { data: Customer360Data }) {
                 <span className="ml-auto">
                   <Link
                     to={`/billing-account/${billingProfileId}`}
+                    // Forwards whatever origin brought the agent to this
+                    // record, so the rail keeps showing the same destination
+                    // one level deeper instead of falling back to Customer
+                    // Search halfway through a queue-driven interaction.
+                    state={location.state}
                     onClick={(e) => e.stopPropagation()}
                     className="text-accent text-[length:var(--fs-caption)] font-medium hover:underline"
                   >

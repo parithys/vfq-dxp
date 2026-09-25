@@ -203,3 +203,47 @@ if (import.meta.env.DEV && NAV_BY_KEY.size !== NAV_MANIFEST_SIZE) {
 export function navItemByPath(pathname: string): NavItem | undefined {
   return flatten(NAV_MANIFEST).find((i) => i.to === pathname);
 }
+
+/**
+ * Which nav destination should light up for the current location.
+ *
+ * The rail matches on exact equality, so every route that is not itself a nav
+ * destination used to highlight nothing at all: Customer 360, a billing
+ * account, the task list and the task detail. An agent deep in a record saw a
+ * rail with no indication of where they were.
+ *
+ * `fromNavKey` is the nav item the agent navigated FROM, passed through React
+ * Router's location state at the call site. Customer 360 has two legitimate
+ * parents - the Customer Search destination, and a product-line journey when
+ * the Qnomy queue assigns a walk-in - so which one is correct depends on how
+ * the agent got there, and nothing in the URL records that. Location state is
+ * used rather than a store because it travels with history (back and forward
+ * stay correct) and is dropped on a hard reload, which is exactly the point
+ * at which the origin is genuinely unknown and the fallback should apply.
+ *
+ * Returns null where no highlight is right: /profile is reached from the
+ * profile menu, not the rail, so lighting a rail item for it would be a lie.
+ */
+export function resolveActiveNavPath(pathname: string, fromNavKey?: NavKey | string): string | null {
+  if (navItemByPath(pathname)) return pathname;
+
+  // Customer-record routes. The billing account is a child of the same record
+  // reached from Customer 360's account hierarchy, so it inherits the same
+  // origin rather than getting a mapping of its own.
+  if (pathname.startsWith('/customer/') || pathname.startsWith('/billing-account/')) {
+    // Narrowed through the manifest rather than cast: an unknown key coming
+    // back from location state falls through to the default instead of
+    // pretending to be a NavKey.
+    const from = flatten(NAV_MANIFEST).find((i) => i.key === fromNavKey)?.to;
+    return from ?? '/customer-search';
+  }
+
+  // Tasks have no nav destination of their own and are only ever reached from
+  // the dashboard's Open Activities zone, so that is what stays lit. They are
+  // deliberately NOT mapped to Operations: that item is a planned placeholder
+  // (implemented: false), and highlighting an unbuilt destination would
+  // suggest the agent is somewhere they cannot actually be.
+  if (pathname === '/tasks' || pathname.startsWith('/tasks/')) return '/';
+
+  return null;
+}

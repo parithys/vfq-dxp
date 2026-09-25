@@ -7,7 +7,7 @@ import { TooltipGroup } from '../components/primitives/TooltipContext';
 import { useSidebarStore } from '../stores/sidebarStore';
 import { usePersonaStore } from '../stores/personaStore';
 import { resolveNavFor } from '../engines/navigationEngine';
-import { NAV_MANIFEST } from './navManifest';
+import { NAV_MANIFEST, resolveActiveNavPath } from './navManifest';
 import type { NavKey } from './navManifest';
 import { NavFlyout } from './NavFlyout';
 
@@ -61,6 +61,13 @@ export function Sidebar() {
   } = useSidebarStore();
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
   const location = useLocation();
+  // The nav destination the rail should highlight for wherever we are. For a
+  // nav destination this is just the pathname; for a record or task route it
+  // is resolved, using the origin the navigation carried in location state.
+  const activeNavPath = resolveActiveNavPath(
+    location.pathname,
+    (location.state as { navKey?: string } | null)?.navKey
+  );
   const navItems = resolveNavFor(activePersonaId);
 
   // Below `md:`, the sidebar is an off-canvas drawer - close it automatically
@@ -227,14 +234,14 @@ export function Sidebar() {
         <ul className="py-1.5 space-y-0.5">
           {navItems.map((item) => {
             const hasChildren = Boolean(item.children?.length);
-            const childActive = item.children?.some((c) => location.pathname === c.to) ?? false;
+            const childActive = item.children?.some((c) => c.to === activeNavPath) ?? false;
             const expanded = expandedNavKeys.includes(item.key);
             // A leaf parent is `end`-matched per the manifest. Parents WITH
             // children no longer link at all, so NavLink's old prefix-matching
             // problem (both /fibre-home and /fibre-home/relocation lighting up
             // as red pills) can't arise.
             const parentEnd = item.end ?? hasChildren;
-            const exactlyActive = location.pathname === item.to;
+            const exactlyActive = item.to === activeNavPath;
             // A parent with children is a DISCLOSURE, not a destination: one
             // click opens or closes its sub-menu and nothing else. Only a
             // sub-menu item navigates.
@@ -313,10 +320,17 @@ export function Sidebar() {
                         {body}
                       </button>
                     ) : (
+                      // Highlight comes from activeNavPath, not NavLink's own
+                      // isActive: isActive only knows the URL, so a record or
+                      // task route - which is not a nav destination - lit
+                      // nothing. NavLink still owns navigation and its own
+                      // aria-current, which stays URL-accurate: on a record
+                      // screen this row is the SECTION, not the current page,
+                      // so claiming aria-current="page" for it would be false.
                       <NavLink
                         to={item.to}
                         end={parentEnd}
-                        className={({ isActive }) => rowClass + (isActive ? activeClass : idleClass)}
+                        className={rowClass + (exactlyActive ? activeClass : idleClass)}
                       >
                         {body}
                       </NavLink>
@@ -347,9 +361,9 @@ export function Sidebar() {
                       <li key={child.key}>
                         <NavLink
                           to={child.to}
-                          className={({ isActive }) =>
+                          className={() =>
                             `flex items-center gap-2.5 h-9 -ml-px pl-4 pr-3 border-l-2 text-[length:var(--fs-caption)] ${
-                              isActive
+                              child.to === activeNavPath
                                 ? 'border-accent bg-[var(--nav-active-bg)] text-[var(--nav-active-fg)] font-medium'
                                 : 'border-transparent text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] hover:border-[var(--nav-section)]'
                             }`

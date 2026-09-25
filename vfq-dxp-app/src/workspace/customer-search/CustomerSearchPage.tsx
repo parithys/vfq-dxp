@@ -54,7 +54,9 @@ export function CustomerSearchPage() {
   // navigation at all.
   const openCustomer = (result: CustomerSearchResult) => {
     setActiveCustomer(toActiveCustomerSummary(result.customer));
-    navigate(`/customer/${result.customer.customerId}`);
+    // Origin recorded so the rail keeps Customer Search lit on the record
+    // screen, which has no nav destination of its own.
+    navigate(`/customer/${result.customer.customerId}`, { state: { navKey: 'customer-search' } });
   };
 
   return (
