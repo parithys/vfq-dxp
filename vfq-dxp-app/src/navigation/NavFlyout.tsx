@@ -6,7 +6,7 @@ import type { NavItem } from './navManifest';
 
 /** Distance between the rail's right edge and the panel. It is padding on the
  * wrapper rather than an offset on the panel, so the pointer crosses no dead
- * gap on its way from the icon into the menu — the single most common way a
+ * gap on its way from the icon into the menu - the single most common way a
  * flyout like this "flickers shut while I was reaching for it". */
 const BRIDGE = 8;
 const VIEWPORT_MARGIN = 8;
@@ -20,9 +20,9 @@ interface NavFlyoutProps {
   /** The collapsed rail button this menu belongs to. Measured, not styled. */
   anchor: HTMLElement;
   currentPath: string;
-  /** Pointer entered the panel — cancel any pending close. */
+  /** Pointer entered the panel - cancel any pending close. */
   onPointerEnter: () => void;
-  /** Pointer left the panel — start the close delay. */
+  /** Pointer left the panel - start the close delay. */
   onPointerLeave: () => void;
   /** Escape, or a child was chosen. */
   onDismiss: () => void;
@@ -32,7 +32,7 @@ interface NavFlyoutProps {
 // right of the rail, titled with the parent's label.
 //
 // It exists because collapsing the rail to icons leaves a parent with nowhere
-// to put its children — before this, the only way to reach Mobile › SIM &
+// to put its children - before this, the only way to reach Mobile › SIM &
 // Device from the icon rail was to expand the whole rail first. The panel is
 // the collapsed counterpart of the in-rail disclosure list, not a second
 // navigation model: same manifest, same children, same order.
@@ -43,7 +43,7 @@ interface NavFlyoutProps {
 //
 // Pointer-only, deliberately. Portaled content keeps its DOM tab order (end of
 // body), not its React-tree order, so a keyboard user tabbing off the parent
-// button would land on the next rail icon, not in here — revealing menu items
+// button would land on the next rail icon, not in here - revealing menu items
 // that focus can't reach. Keyboard and screen-reader users get the parent
 // button's click behaviour instead (expand the rail, open the group inline),
 // which is fully traversable. Nothing here is reachable only by hover.
@@ -112,7 +112,7 @@ export function NavFlyout({
         left: pos?.left ?? 0,
         paddingLeft: pos?.bridge ?? BRIDGE,
         // Measured on the first commit at (0,0); hidden until placed so it is
-        // never seen in the corner. `visibility`, not conditional rendering —
+        // never seen in the corner. `visibility`, not conditional rendering -
         // the panel has to be in the DOM to have a height to measure.
         visibility: pos ? 'visible' : 'hidden',
       }}
@@ -123,9 +123,29 @@ export function NavFlyout({
         ref={panelRef}
         role="group"
         aria-label={item.label}
-        className="min-w-52 py-2 rounded-[var(--radius-card)] border border-[var(--nav-border)] bg-[var(--nav-bg)] shadow-[var(--elev-raised)]"
+        className="relative min-w-52 py-2 rounded-[var(--radius-card)] border border-[var(--nav-border)] bg-[var(--nav-bg)] shadow-[var(--elev-raised)]"
       >
-        {/* The parent's label as a quiet heading — the icon that opened this
+        {/* Left-pointing arrow, matching the one Tooltip draws for its
+            data-placement="right" case. The collapsed rail's leaf rows get a
+            tooltip with an arrow, but this panel - which replaces the tooltip
+            for parent rows - had none, so the two hover overlays on the same
+            rail disagreed about whether they point at anything.
+
+            Two stacked triangles rather than one: unlike the tooltip, this
+            panel has a 1px border, so a single fill-coloured triangle would
+            float free of it. The outer triangle is --nav-border and the inner
+            one --nav-bg, offset by 1px, which continues the border around the
+            point. Sized from --tooltip-arrow-size so the two overlays stay in
+            step if that token is ever retuned. */}
+        <span
+          aria-hidden="true"
+          className="absolute right-full top-3.5 border-[length:var(--tooltip-arrow-size)] border-transparent border-r-[var(--nav-border)]"
+        />
+        <span
+          aria-hidden="true"
+          className="absolute right-full top-3.5 -mr-px border-[length:var(--tooltip-arrow-size)] border-transparent border-r-[var(--nav-bg)]"
+        />
+        {/* The parent's label as a quiet heading - the icon that opened this
             carries no visible text, so without it the panel is a list of
             categories with no statement of what they are categories OF
             ("Support" appears under both product lines). It also replaces the
