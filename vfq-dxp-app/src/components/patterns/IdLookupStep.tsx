@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { QidInput } from '../domain/QidInput';
+import { QidNumberField, QidTypeSelector } from '../domain/QidInput';
 import { QidImageUpload } from '../domain/QidImageUpload';
 import type { QidImageUploadValue } from '../domain/QidImageUpload';
 import type { QidType } from '../domain/QidInput';
 import { Badge } from '../primitives/Badge';
-import { Button } from '../primitives/Button';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
 
@@ -20,7 +19,10 @@ interface MoiResult {
   gender?: string;
 }
 
-// Four, per the reference asset's "Scan Attempts: 0 / 4".
+// Four, per the reference asset's "Scan Attempts: 0 / 4". Attempts 1-4 read
+// the card; the fifth is where the reader gives up and the manual fallback
+// opens. Nothing in the UI names this number or shows a count - see the
+// scanner block below.
 const MAX_SCAN_ATTEMPTS = 4;
 
 type IdLookupValue = { idType?: QidType; idNumber?: string; moiResult?: MoiResult; qidScans?: QidImageUploadValue };
@@ -86,7 +88,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: Id
     // Attempts belong to the document that was being scanned, so a new type
     // starts from zero. Without this, switching away from an exhausted QID and
     // back would leave manual entry already unlocked for a fresh card.
-    setScanFailures(0);
+    setScanAttempts(0);
     // The number field is now the outstanding one and typing it is the
     // unambiguous next action, so move the cursor there rather than leaving it
     // on the chip the agent just clicked.
@@ -129,29 +131,55 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: Id
     }
   };
 
-  // Completing both scans IS the fetch trigger for a QID - the agent doesn't
-  // press Fetch separately. The button stays on screen as a retry: an
-  // auto-fetch that finds no record, or a corrected number after one, still
-  // needs a way to run again without re-scanning the document.
+  // A completed scan IS the fetch trigger for a QID - the agent doesn't press
+  // Fetch separately, and as of 2026-09-25 there is no Fetch button to press
+  // in this state at all. If the auto-fetch finds no record, the recourse is
+  // Retake scan, which is the right action anyway: a number the registry does
+  // not recognise means the read was wrong or the document is not in MOI, and
+  // neither is fixed by pressing the same lookup again on the same digits.
+  // Once the scan budget is spent the field turns editable and Fetch returns
+  // with it, so a bad read is never a dead end.
   //
   // Guarded by a ref keyed on the number that was fetched, not by a boolean,
   // because the effect re-runs on every keystroke in the number field. Without
   // the key, correcting a digit after a failed auto-fetch would never retry;
-  // with a plain boolean it would fire on every render while both scans stayed
+  // with a plain boolean it would fire on every render while the scan stayed
   // complete. `notFound` is deliberately NOT a dependency - re-running on it
   // would loop a failing lookup forever.
   const autoFetchedNumber = useRef<string | null>(null);
-  const bothSidesScanned = Boolean(value.qidScans?.frontScanned && value.qidScans?.backScanned);
+  // Both flags, even though one operation now sets them together: this is the
+  // contract QidImageUpload's other three consumers also read, and checking
+  // only one would quietly accept a half-written value.
+  const scanComplete = Boolean(value.qidScans?.frontScanned && value.qidScans?.backScanned);
 
-  // Failed scan attempts, capped at MAX_SCAN_ATTEMPTS. Reaching the cap is
-  // what unlocks manual number entry - the reference asset's "Manual Fallback
-  // Entry", gated behind its "Scan Attempts: n / 4" counter.
+  // Scan attempts. Counted when the agent INITIATES a scan, not when they
+  // press Retake - Retake only returns the card to the insert prompt, so
+  // counting it would charge an attempt for a gesture that never touched the
+  // reader. The first scan on arrival is therefore attempt 1, and the three
+  // retakes after it are 2, 3 and 4.
+  //
+  // Going past the budget is what unlocks manual number entry - the reference
+  // asset's "Manual Fallback Entry". The exhausting attempt FAILS rather than
+  // being blocked: a disabled scan button with a fallback appearing beside it
+  // would tell the agent the app had decided to stop trying, where a failed
+  // read tells them the document is the problem. It also means the simulated
+  // reader is the thing that opens the fallback, which is how a real one
+  // would.
   //
   // Local state, not draft state: an attempt count describes this sitting at
   // the counter, not the order. Re-entering the step should offer the scanner
   // again rather than resuming someone else's exhausted attempts.
-  const [scanFailures, setScanFailures] = useState(0);
-  const manualEntryUnlocked = idType !== 'QID' || scanFailures >= MAX_SCAN_ATTEMPTS;
+  const [scanAttempts, setScanAttempts] = useState(0);
+  const scanExhausted = scanAttempts > MAX_SCAN_ATTEMPTS;
+  const manualEntryUnlocked = idType !== 'QID' || scanExhausted;
+
+  // Returns whether this attempt read the card. QidImageUpload leaves its
+  // value untouched on false, so a failed attempt keeps the insert prompt up.
+  const handleScanAttempt = () => {
+    const attempt = scanAttempts + 1;
+    setScanAttempts(attempt);
+    return attempt <= MAX_SCAN_ATTEMPTS;
+  };
 
   // Simulated OCR. A real scanner reads the number off the card, which is the
   // only reason the number field can be locked at all - with no scanner and no
@@ -168,7 +196,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: Id
   };
 
   useEffect(() => {
-    if (idType !== 'QID' || !bothSidesScanned) {
+    if (idType !== 'QID' || !scanComplete) {
       // Reset so re-scanning after a type switch or a cleared scan fetches again.
       autoFetchedNumber.current = null;
       return;
@@ -188,115 +216,165 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: Id
     autoFetchedNumber.current = number;
     void runMoiValidation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idType, bothSidesScanned, value.idNumber, value.moiResult, loading]);
+  }, [idType, scanComplete, value.idNumber, value.moiResult, loading]);
 
   const handleKeyDown = useEnterToSubmit(Boolean(value.idNumber) && !loading, runMoiValidation);
 
   return (
     <div className="space-y-4" onKeyDown={handleKeyDown}>
-      <QidInput
-        idType={idType}
-        onIdTypeChange={handleIdTypeChange}
-        inputRef={numberInputRef}
-        value={value.idNumber ?? ''}
-        onChange={(idNumber) => {
-          setNotFound(false);
-          onChange({ ...value, idNumber, moiResult: undefined });
-        }}
-        onFetch={runMoiValidation}
-        fetching={loading}
-        error={notFound ? 'No MOI record found for this ID - try again.' : undefined}
-        numberEntryLocked={!manualEntryUnlocked}
-        // The hint says what to do, never what unlocks the field. The fallback
-        // threshold is deliberately NOT disclosed to the agent (direction,
-        // 2026-09-25): telling them manual entry opens after four failures
-        // invites burning four failures to reach it, which is the opposite of
-        // a scan-first flow. So the locked state reads as an instruction and
-        // the unlock is silent - the field simply becomes usable.
-        // MAX_SCAN_ATTEMPTS still drives the behaviour, it is just no longer
-        // quoted at the agent.
-        numberEntryHint={manualEntryUnlocked ? undefined : 'Scan the document below to read this automatically.'}
-      />
+      <QidTypeSelector idType={idType} onIdTypeChange={handleIdTypeChange} />
 
-      {/* Front/back capture, shown only for a Qatar ID. The other three
-          document types are single-sided in this corpus (a passport is
-          scanned at its photo page, GCC/Diplomatic IDs have no evidenced
-          reverse capture), so offering two sides for them would invent a
-          step. Reuses the same QidImageUpload the Passport-to-QID and SIM
-          Swap journeys already gate on, rather than a second scanner with
-          its own shape. */}
+      {/* The scanner, shown only for a Qatar ID. The other three document
+          types are single-sided in this corpus (a passport is scanned at its
+          photo page, GCC/Diplomatic IDs have no evidenced reverse capture),
+          so offering a two-face capture for them would invent a step. Reuses
+          the same QidImageUpload the Passport-to-QID and SIM Swap journeys
+          already gate on, rather than a second scanner with its own shape.
+
+          NOTHING HERE EXPOSES THE SIMULATION. The counter ("Scan attempts:
+          n / 4") and the "Simulate scan failure" button that used to sit
+          under this card are both gone as of 2026-09-25. They were debug
+          affordances: the counter published the exact budget the agent was
+          told not to be shown, and the button described the app to itself.
+          The budget now shows up the only way it should - as a scan that
+          fails - and the failure message says what the agent can do about it
+          without mentioning attempts. */}
       {idType === 'QID' && (
         <div className="space-y-2">
           <p className="text-[length:var(--fs-label)] text-fg-2">Scan Qatar ID</p>
           <QidImageUpload
             value={value.qidScans ?? {}}
-            onChange={(qidScans) => onChange({ ...value, qidScans })}
+            onChange={(qidScans) => {
+              // A Retake DISCARDS the previous read - the number that was
+              // extracted and the MOI result fetched from it. Without this the
+              // screen contradicted itself: the scanner sat back on "insert
+              // card" while "MOI validated successfully" and the prefilled
+              // identity fields stayed on display, for a document the agent
+              // had just decided to scan again. GuidedContactStep clears its
+              // six identity fields from a cleared moiResult on its own, and
+              // the step's isValid gate goes back to failing, so Continue is
+              // no longer available against a discarded read.
+              const stillComplete = Boolean(qidScans.frontScanned && qidScans.backScanned);
+              if (scanComplete && !stillComplete) {
+                setNotFound(false);
+                onChange({ ...value, qidScans, idNumber: '', moiResult: undefined });
+                return;
+              }
+              onChange({ ...value, qidScans });
+            }}
+            onScan={handleScanAttempt}
+            error={
+              scanExhausted
+                ? 'The reader could not read this document. Enter the Qatar ID number below to continue.'
+                : undefined
+            }
           />
-          {/* Attempt counter and a way to fail a scan, both from the reference
-              asset ("Scan Attempts: 0 / 4", "Simulate Scan Failure (0/4)").
-              A simulated scanner cannot fail on its own, so without an
-              explicit control the fallback would be unreachable and the
-              locked field would be a dead end. */}
-          <div className="flex items-center justify-between gap-3 pt-1">
-            <span className="text-[length:var(--fs-caption)] text-muted">
-              Scan attempts: {scanFailures} / {MAX_SCAN_ATTEMPTS}
-            </span>
-            {scanFailures < MAX_SCAN_ATTEMPTS && (
-              <Button
-                variant="ghost-rect"
-                compact
-                onClick={() => {
-                  // A failed read clears whatever was captured, so the agent
-                  // re-presents the document rather than retrying against a
-                  // half-scanned one.
-                  setScanFailures((n) => n + 1);
-                  onChange({ ...value, qidScans: undefined });
-                }}
-              >
-                Simulate scan failure
-              </Button>
-            )}
-          </div>
         </div>
       )}
 
-      {/* Two shapes, chosen by showMoiDetails.
-          - false (GuidedContactStep): the badge alone. The bordered green
-            container and its "Registry details prefilled..." line were
-            removed on 2026-09-24 - with the identity fields directly below
-            read-only and obviously registry-sourced, the panel was restating
-            what the fields already show.
-          - true (the six other journeys): the original bordered panel with
-            the Name/DOB/Nationality read-out, which is the ONLY place those
-            journeys display it. Collapsing both branches to a bare badge
-            would silently strip identity data from Passport-to-QID, SIM Swap,
-            Pre-to-Post and the rest. */}
-      {value.moiResult &&
-        (showMoiDetails ? (
-          <div className="pt-2 border-t border-border-soft">
-            <div className="rounded-[var(--radius-card)] border border-success/30 bg-[color-mix(in_oklab,var(--success),var(--bg)_92%)] p-4 space-y-3">
+      {/* The number field comes AFTER the scanner and only once there is a
+          number to show. Scanning is the primary path, so leading with an
+          empty, locked text box asked the agent to read past the thing they
+          cannot use to reach the thing they can.
+
+          Three states:
+          - non-QID: no scanner exists for these documents, so the field is
+            the only way in and is always editable, with Fetch.
+          - QID, scan complete AND a number extracted: shown read-only, no
+            Fetch - the scan already triggered the lookup.
+          - QID, scan budget exhausted: the manual fallback opens, editable
+            and empty, and Fetch returns with it. Nothing announces the
+            threshold - see the note above.
+
+          The `idNumber` half of the second condition matters: a completed
+          scan and an extracted number are NOT simultaneous. Reading the
+          number is its own mock call, so for up to 600ms after the capture
+          there is a scan but no digits - and rendering then put an EMPTY
+          read-only box on screen under the hint "Read from the scanned
+          document.", which is a claim about a value that had not arrived.
+          Waiting for the number means the field appears already populated.
+
+          Before any of those, for a QID, it is not rendered at all. */}
+      {(idType !== 'QID' || (scanComplete && Boolean(value.idNumber)) || manualEntryUnlocked) && (
+        <QidNumberField
+          idType={idType}
+          inputRef={numberInputRef}
+          value={value.idNumber ?? ''}
+          onChange={(idNumber: string) => {
+            setNotFound(false);
+            onChange({ ...value, idNumber, moiResult: undefined });
+          }}
+          onFetch={runMoiValidation}
+          fetching={loading}
+          error={notFound ? 'No MOI record found for this ID - try again.' : undefined}
+          readOnly={idType === 'QID' && scanComplete}
+          // The scanned path has no Fetch button, so it also lost the
+          // "Fetching…" label that button carried - and the MOI lookup this
+          // step fires automatically takes two mock calls at 200-600ms each.
+          // Without this line the number simply appears and the screen sits
+          // still for up to a second before the MOI badge shows up, which
+          // reads as nothing happening. The hint is the only thing left in
+          // that state that can say otherwise.
+          hint={
+            idType === 'QID' && scanComplete
+              ? loading
+                ? 'Checking the MOI registry…'
+                : 'Read from the scanned document.'
+              : undefined
+          }
+          // The MOI badge, on the label line rather than in a row of its own
+          // below the field (2026-09-25). Only for the showMoiDetails={false}
+          // shape - the other journeys keep their badge inside the bordered
+          // panel it heads, where it introduces the identity read-out and is
+          // not a loose status.
+          //
+          // Safe to move INTO the field: moiResult cannot outlive the field
+          // that produced it. Setting it requires an idNumber, and everything
+          // that hides the field again - Retake, an ID Type switch - clears
+          // moiResult in the same update. Verified across all three.
+          status={
+            !showMoiDetails && value.moiResult ? (
               <Badge variant="success">MOI validated successfully</Badge>
-              <div className="grid grid-cols-3 gap-4 text-[length:var(--fs-body)]">
-                <div>
-                  <div className="text-[length:var(--fs-caption)] text-muted">Name</div>
-                  <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{value.moiResult.name}</div>
-                </div>
-                <div>
-                  <div className="text-[length:var(--fs-caption)] text-muted">Date of Birth</div>
-                  <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{value.moiResult.dob}</div>
-                </div>
-                <div>
-                  <div className="text-[length:var(--fs-caption)] text-muted">Nationality</div>
-                  <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">
-                    {value.moiResult.nationality}
-                  </div>
+            ) : undefined
+          }
+        />
+      )}
+
+      {/* Only the showMoiDetails={true} shape renders here now: the bordered
+          panel with the Name/DOB/Nationality read-out, which is the ONLY
+          place the six other journeys (Passport-to-QID, SIM Swap,
+          Pre-to-Post and the rest) display that identity data. Its badge
+          stays inside the panel, heading the read-out it introduces.
+
+          The showMoiDetails={false} shape used to render a bare badge in this
+          slot, a row of its own under the field. It moved onto the number
+          field's label line on 2026-09-25 and is passed as `status` above.
+          GuidedContactStep needs nothing else here: its own identity fields
+          already show what the panel would restate, which is why the bordered
+          container went on 2026-09-24. */}
+      {value.moiResult && showMoiDetails && (
+        <div className="pt-2 border-t border-border-soft">
+          <div className="rounded-[var(--radius-card)] border border-success/30 bg-[color-mix(in_oklab,var(--success),var(--bg)_92%)] p-4 space-y-3">
+            <Badge variant="success">MOI validated successfully</Badge>
+            <div className="grid grid-cols-3 gap-4 text-[length:var(--fs-body)]">
+              <div>
+                <div className="text-[length:var(--fs-caption)] text-muted">Name</div>
+                <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{value.moiResult.name}</div>
+              </div>
+              <div>
+                <div className="text-[length:var(--fs-caption)] text-muted">Date of Birth</div>
+                <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{value.moiResult.dob}</div>
+              </div>
+              <div>
+                <div className="text-[length:var(--fs-caption)] text-muted">Nationality</div>
+                <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">
+                  {value.moiResult.nationality}
                 </div>
               </div>
             </div>
           </div>
-        ) : (
-          <Badge variant="success">MOI validated successfully</Badge>
-        ))}
+        </div>
+      )}
     </div>
   );
 }
