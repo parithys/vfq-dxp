@@ -207,13 +207,15 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: Id
         fetching={loading}
         error={notFound ? 'No MOI record found for this ID - try again.' : undefined}
         numberEntryLocked={!manualEntryUnlocked}
-        numberEntryHint={
-          manualEntryUnlocked
-            ? idType === 'QID' && scanFailures >= MAX_SCAN_ATTEMPTS
-              ? `Manual entry unlocked after ${MAX_SCAN_ATTEMPTS} failed scan attempts.`
-              : undefined
-            : `Scan the document below to read this automatically. Manual entry unlocks after ${MAX_SCAN_ATTEMPTS} failed attempts.`
-        }
+        // The hint says what to do, never what unlocks the field. The fallback
+        // threshold is deliberately NOT disclosed to the agent (direction,
+        // 2026-09-25): telling them manual entry opens after four failures
+        // invites burning four failures to reach it, which is the opposite of
+        // a scan-first flow. So the locked state reads as an instruction and
+        // the unlock is silent - the field simply becomes usable.
+        // MAX_SCAN_ATTEMPTS still drives the behaviour, it is just no longer
+        // quoted at the agent.
+        numberEntryHint={manualEntryUnlocked ? undefined : 'Scan the document below to read this automatically.'}
       />
 
       {/* Front/back capture, shown only for a Qatar ID. The other three
