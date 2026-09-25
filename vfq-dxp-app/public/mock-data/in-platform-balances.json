@@ -8,8 +8,8 @@
     "voiceBalanceMinutes": null,
     "smsBalanceCount": null,
     "asOf": "2026-09-14T08:00:00+03:00",
-    "_note": "Postpaid line \u2014 main/voice/SMS balance not applicable (bundled, not prepaid-metered); dataBalanceGB mirrors service-usage.",
-    "_dataRefNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
+    "_note": "Postpaid line - main/voice/SMS balance not applicable (bundled, not prepaid-metered); dataBalanceGB mirrors service-usage.",
+    "_dataRefNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   },
   {
     "balanceId": "INB-1002",
@@ -20,6 +20,6 @@
     "voiceBalanceMinutes": null,
     "smsBalanceCount": null,
     "asOf": "2026-09-14T08:00:00+03:00",
-    "_dataRefNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
+    "_dataRefNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   }
 ]

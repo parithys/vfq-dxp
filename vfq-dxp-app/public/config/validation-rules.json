@@ -387,7 +387,7 @@
     "id": "VAL-049",
     "validationType": "Business Rule",
     "name": "QID immutable after Cross Sales redirect",
-    "description": "When a Cross Sales order redirects into the journey, the QID (e.g. 28335628851) carries over automatically and is greyed out/read-only \u2014 the agent cannot re-enter or edit it.",
+    "description": "When a Cross Sales order redirects into the journey, the QID (e.g. 28335628851) carries over automatically and is greyed out/read-only - the agent cannot re-enter or edit it.",
     "sourceRef": "BR-155",
     "confidence": "high"
   },
@@ -411,7 +411,7 @@
     "id": "VAL-052",
     "validationType": "Business Rule",
     "name": "Rejection reason drives which evidence must be re-collected on correction",
-    "description": "On order correction after rejection, the specific rejection reason determines which evidence must be re-collected \u2014 e.g. for \"ID image not clear\", the Qatari ID-Front/Back fields reset to empty upload placeholders, requiring re-upload of the flagged ID images.",
+    "description": "On order correction after rejection, the specific rejection reason determines which evidence must be re-collected - e.g. for \"ID image not clear\", the Qatari ID-Front/Back fields reset to empty upload placeholders, requiring re-upload of the flagged ID images.",
     "sourceRef": "BR-161",
     "confidence": "high"
   },
@@ -587,7 +587,7 @@
     "id": "VAL-074",
     "validationType": "Business Rule",
     "name": "Appointment Once Booked Cannot Be Cancelled",
-    "description": "Once an installation appointment (including unscheduled appointments) is booked, it cannot be cancelled \u2014 either at all, or specifically not within the current journey. The agent must confirm ('OK') to proceed with booking or cancel to pick another slot.",
+    "description": "Once an installation appointment (including unscheduled appointments) is booked, it cannot be cancelled - either at all, or specifically not within the current journey. The agent must confirm ('OK') to proceed with booking or cancel to pick another slot.",
     "sourceRef": "BR-196",
     "confidence": "high"
   },
@@ -1171,7 +1171,7 @@
     "id": "VAL-147",
     "validationType": "Field-Level",
     "name": "DAPN (dedicated APN) order - Static IP",
-    "description": "Static IPs must be found manually in the pool (search does not work) \u2014 noted pain point",
+    "description": "Static IPs must be found manually in the pool (search does not work) - noted pain point",
     "sourceRef": "FLD-042",
     "confidence": "medium"
   },
@@ -1347,7 +1347,7 @@
     "id": "VAL-169",
     "validationType": "Field-Level",
     "name": "TON - Retail Flow (existing/new customer validation) - Number Price",
-    "description": "A null/blank value causes unnecessary CDM queue tickets \u2014 identified as a legacy data/design gap",
+    "description": "A null/blank value causes unnecessary CDM queue tickets - identified as a legacy data/design gap",
     "sourceRef": "FLD-092",
     "confidence": "high"
   },
@@ -1683,7 +1683,7 @@
     "id": "VAL-211",
     "validationType": "Field-Level",
     "name": "Postpaid-to-Prepaid Migration - Migration Fee",
-    "description": "100 Riyal migration fee applied on final bill; in retail must be MANUALLY added by agent customizing the order (approved by managers) \u2014 not automated, flagged as revenue-leakage risk if forgotten",
+    "description": "100 Riyal migration fee applied on final bill; in retail must be MANUALLY added by agent customizing the order (approved by managers) - not automated, flagged as revenue-leakage risk if forgotten",
     "sourceRef": "FLD-141",
     "confidence": "high"
   },
@@ -1715,7 +1715,7 @@
     "id": "VAL-215",
     "validationType": "Field-Level",
     "name": "Number Management - Number Category (Free/Paid)",
-    "description": "Two categories only \u2014 free and paid (paid can become free depending on plan)",
+    "description": "Two categories only - free and paid (paid can become free depending on plan)",
     "sourceRef": "FLD-145",
     "confidence": "high"
   },
@@ -1723,7 +1723,7 @@
     "id": "VAL-216",
     "validationType": "Field-Level",
     "name": "Credit Limit - Credit Limit (default)",
-    "description": "Default 1,000 for expat on new account, dropped to 50 for HRN customers (agent-selected or system-enforced depending on nationality config); no system restriction today preventing any agent selecting any value \u2014 flagged as uncontrolled credit exposure risk",
+    "description": "Default 1,000 for expat on new account, dropped to 50 for HRN customers (agent-selected or system-enforced depending on nationality config); no system restriction today preventing any agent selecting any value - flagged as uncontrolled credit exposure risk",
     "sourceRef": "FLD-146",
     "confidence": "high"
   },
@@ -1763,7 +1763,7 @@
     "id": "VAL-221",
     "validationType": "Field-Level",
     "name": "Fixed Line - IPTV Selection - IPTV Add-on (Basic/Premium)",
-    "description": "Default triple-play bundle includes IPTV; optional/removable \u2014 if removed, dual-play order created with no set-top box and no OSM IPTV provisioning; IPTV basic free, only premium charged",
+    "description": "Default triple-play bundle includes IPTV; optional/removable - if removed, dual-play order created with no set-top box and no OSM IPTV provisioning; IPTV basic free, only premium charged",
     "sourceRef": "FLD-152",
     "confidence": "high"
   },
@@ -1947,7 +1947,7 @@
     "id": "VAL-244",
     "validationType": "Field-Level",
     "name": "FWA New Connection - Address/ZSP entry - ZSP entry",
-    "description": "presence-only validation (not format) on email/address fields \u2014 flagged as data-quality gap",
+    "description": "presence-only validation (not format) on email/address fields - flagged as data-quality gap",
     "sourceRef": "FLD-230",
     "confidence": "high"
   },
@@ -1955,7 +1955,7 @@
     "id": "VAL-245",
     "validationType": "Field-Level",
     "name": "Address/Service Point entry (Siebel) - ZSB - ZSB (zone/street/building)",
-    "description": "mandatory only for FWA 5G and fixed/fiber \u2014 NOT for mobile, which uses a shared dummy address record",
+    "description": "mandatory only for FWA 5G and fixed/fiber - NOT for mobile, which uses a shared dummy address record",
     "sourceRef": "FLD-238",
     "confidence": "high"
   },
@@ -2259,7 +2259,7 @@
     "id": "VAL-283",
     "validationType": "Field-Level",
     "name": "FWA negative scenarios - Address step / FWA Address (Step 2) - Zone",
-    "description": "required field; required to save address Error message: \"Please enter required fields Zone, Street No., Building No., Apt/Flat/Unit.,Area / Please enter required fields \u2014 Zone, Street No., Building No., Apt/Flat/Unit, Area \u2014 or click Skip Address to proceed without Saving Address.\"",
+    "description": "required field; required to save address Error message: \"Please enter required fields Zone, Street No., Building No., Apt/Flat/Unit.,Area / Please enter required fields - Zone, Street No., Building No., Apt/Flat/Unit, Area - or click Skip Address to proceed without Saving Address.\"",
     "sourceRef": "FLD-421",
     "confidence": "high"
   },
@@ -2338,7 +2338,7 @@
   {
     "id": "VAL-293",
     "validationType": "Field-Level",
-    "name": "Open UI Desktop FWA Indoor - Step 1 Contact / FWA Contact \u2014 Connection Details popup - Connection Details popup (Total Prepaid/Postpaid Connections)",
+    "name": "Open UI Desktop FWA Indoor - Step 1 Contact / FWA Contact - Connection Details popup - Connection Details popup (Total Prepaid/Postpaid Connections)",
     "description": "Triggers advisory note when Postpaid connections count >=2 Error message: \"Note - Customer already has 2 or more Post-paid connections. Please check the credit policy or seek credit control approval before proceeding\"",
     "sourceRef": "FLD-431",
     "confidence": "high"
@@ -2354,7 +2354,7 @@
   {
     "id": "VAL-295",
     "validationType": "Field-Level",
-    "name": "FWA Contact (Step 1) / Open UI Desktop FWA Indoor - Step 1 Contact Attachments - Attachment upload \u2014 Qatari ID-Front / Qatari ID-Back",
+    "name": "FWA Contact (Step 1) / Open UI Desktop FWA Indoor - Step 1 Contact Attachments - Attachment upload - Qatari ID-Front / Qatari ID-Back",
     "description": "Green check on successful upload",
     "sourceRef": "FLD-434",
     "confidence": "high"
@@ -2474,7 +2474,7 @@
   {
     "id": "VAL-310",
     "validationType": "Field-Level",
-    "name": "FWA CAF (Step 8) \u2014 Section 4 Superfast Broadband & Home Phone - Landline Number / Plan Name / Appointment Details / Signature",
+    "name": "FWA CAF (Step 8) - Section 4 Superfast Broadband & Home Phone - Landline Number / Plan Name / Appointment Details / Signature",
     "description": "Must be signed before continuing (Sign Contract flow)",
     "sourceRef": "FLD-469",
     "confidence": "high"
@@ -2522,7 +2522,7 @@
   {
     "id": "VAL-316",
     "validationType": "Field-Level",
-    "name": "WFM Assess Activity \u2014 Kahramaa check - Kahrama ID duplicate check result",
+    "name": "WFM Assess Activity - Kahramaa check - Kahrama ID duplicate check result",
     "description": "Checks last 30 days Error message: \"No previous records are found based on Kahrama ID in last 30 days.\"",
     "sourceRef": "FLD-484",
     "confidence": "high"
@@ -2562,7 +2562,7 @@
   {
     "id": "VAL-321",
     "validationType": "Field-Level",
-    "name": "Home Move \u2014 KID entry screen - KID (location identifier the user is moving to)",
+    "name": "Home Move - KID entry screen - KID (location identifier the user is moving to)",
     "description": "Triggers Fiber-readiness check",
     "sourceRef": "FLD-508",
     "confidence": "high"
@@ -2570,7 +2570,7 @@
   {
     "id": "VAL-322",
     "validationType": "Field-Level",
-    "name": "Home Move \u2014 Activity Portal - Comments",
+    "name": "Home Move - Activity Portal - Comments",
     "description": "Comments field should have more than 5 characters Error message: \"comments >5 characters\"",
     "sourceRef": "FLD-510",
     "confidence": "high"
@@ -2578,7 +2578,7 @@
   {
     "id": "VAL-323",
     "validationType": "Field-Level",
-    "name": "Home Move \u2014 WFM Assess Activity - KID eligibility for Home Move (validation popup)",
+    "name": "Home Move - WFM Assess Activity - KID eligibility for Home Move (validation popup)",
     "description": "Checks whether KID is eligible for Home Move",
     "sourceRef": "FLD-513",
     "confidence": "high"
@@ -2931,7 +2931,7 @@
     "id": "VAL-367",
     "validationType": "Field-Level",
     "name": "B2B2C With Approval - Step5 Number Selection - Reserve button / confirmation alert",
-    "description": "Error message: \"10.162.53.100:4443 says \u2014 SUCCESS:Reservation Token:13757449(SBL-EXL-00151)\"",
+    "description": "Error message: \"10.162.53.100:4443 says - SUCCESS:Reservation Token:13757449(SBL-EXL-00151)\"",
     "sourceRef": "FLD-696",
     "confidence": "high"
   },

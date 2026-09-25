@@ -8,7 +8,7 @@
     "currentDataUsageGB": 18.4,
     "availableDataBalanceGB": 6.6,
     "currentSpendQAR": 142.5,
-    "_dataRefNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
+    "_dataRefNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   },
   {
     "serviceUsageId": "USG-1002",
@@ -19,7 +19,7 @@
     "currentDataUsageGB": 22.1,
     "availableDataBalanceGB": 2.9,
     "currentSpendQAR": 210.0,
-    "_dataRefNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
+    "_dataRefNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   },
   {
     "serviceUsageId": "USG-1003",
@@ -30,7 +30,7 @@
     "currentDataUsageGB": 310.0,
     "availableDataBalanceGB": null,
     "currentSpendQAR": 300.0,
-    "_dataRefNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
+    "_dataRefNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   },
   {
     "serviceUsageId": "USG-1004",
@@ -41,7 +41,7 @@
     "currentDataUsageGB": 950.0,
     "availableDataBalanceGB": null,
     "currentSpendQAR": 950.0,
-    "_dataRefNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
+    "_dataRefNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   },
   {
     "serviceUsageId": "USG-1005",
@@ -52,6 +52,6 @@
     "currentDataUsageGB": 9.8,
     "availableDataBalanceGB": 5.2,
     "currentSpendQAR": 85.0,
-    "_dataRefNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
+    "_dataRefNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   }
 ]

@@ -21,7 +21,7 @@
     "billingContactPhone": "+97455512001",
     "billingContactEmail": "ahmed.alsulaiti@example.qa",
     "previousOutstandingQAR": 0.0,
-    "_dataRefNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation.",
+    "_dataRefNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation.",
     "paymentMethod": "AutoPay",
     "billingLanguage": "Arabic"
   },
@@ -48,7 +48,7 @@
     "billingContactPhone": "+97455512002",
     "billingContactEmail": "bimal.thapa@example.com",
     "previousOutstandingQAR": 273.0,
-    "_dataRefNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation.",
+    "_dataRefNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation.",
     "paymentMethod": "Invoice",
     "billingLanguage": "English"
   },
@@ -73,7 +73,7 @@
     "billingContactPhone": "+97455512003",
     "billingContactEmail": "fatima.alkuwari@example.qa",
     "previousOutstandingQAR": 0.0,
-    "_dataRefNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation.",
+    "_dataRefNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation.",
     "paymentMethod": "Invoice",
     "billingLanguage": "Arabic"
   },
@@ -98,7 +98,7 @@
     "billingContactPhone": "+97455512008",
     "billingContactEmail": "rashid.marri@lulugroup.qa",
     "previousOutstandingQAR": 0.0,
-    "_dataRefNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation.",
+    "_dataRefNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation.",
     "paymentMethod": "Invoice",
     "billingLanguage": "English"
   }

@@ -317,7 +317,7 @@
   {
     "id": "ENT-036",
     "name": "Address",
-    "description": "Maintained as a separate entity with history \u2014 old address marked discontinued/replaced with effective from/to dates, new address created as primary. Zone/street/building (ZSB) attributes with auto-formatted lookup.",
+    "description": "Maintained as a separate entity with history - old address marked discontinued/replaced with effective from/to dates, new address created as primary. Zone/street/building (ZSB) attributes with auto-formatted lookup.",
     "attributes": "zone/street/building (ZSB), effective from/to dates, discontinued/primary status, Zone, Street No., Building No., Apt/Flat/Unit, City, Country, Postal Code, Start Date, Active flag",
     "relationships": "linked to service point/KID and customer; belongs to Contact/Account; belongs to Lead/Contact",
     "lifecycleStates": "primary, discontinued/replaced; Active",
@@ -452,7 +452,7 @@
   {
     "id": "ENT-051",
     "name": "Audit Trail",
-    "description": "Tracks changes on Account and Contact records \u2014 employee/user, field modified, new value, timestamp.",
+    "description": "Tracks changes on Account and Contact records - employee/user, field modified, new value, timestamp.",
     "attributes": "employee/user, field modified, new value, timestamp",
     "relationships": "tracks changes on Account and Contact records",
     "lifecycleStates": "",
@@ -695,7 +695,7 @@
   {
     "id": "ENT-078",
     "name": "IPTV / STB (Set-Top Box) bundle",
-    "description": "IPTV bundled by default with base plan in fibre BRSD, removable \u2014 flagged in Open Items as contested.",
+    "description": "IPTV bundled by default with base plan in fibre BRSD, removable - flagged in Open Items as contested.",
     "attributes": "bundled-by-default flag, removability",
     "relationships": "",
     "lifecycleStates": "",

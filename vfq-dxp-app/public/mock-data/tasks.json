@@ -2,7 +2,7 @@
   {
     "taskId": "TASK-70001",
     "taskName": "Verify customer ID mismatch",
-    "taskDescription": "Customer-reported ID document does not match the on-file MOI record \u2014 needs manual review.",
+    "taskDescription": "Customer-reported ID document does not match the on-file MOI record - needs manual review.",
     "taskType": "General",
     "taskStatus": "Open",
     "priorityFlag": false,
@@ -12,7 +12,7 @@
   {
     "taskId": "TASK-70002",
     "taskName": "Escalated billing dispute",
-    "taskDescription": "Customer disputes a large one-off charge on their latest bill \u2014 flagged for priority handling.",
+    "taskDescription": "Customer disputes a large one-off charge on their latest bill - flagged for priority handling.",
     "taskType": "General",
     "taskStatus": "Open",
     "priorityFlag": true,
@@ -51,7 +51,7 @@
   },
   {
     "taskId": "TASK-70006",
-    "taskName": "Complete draft order \u2014 GigaHome upgrade",
+    "taskName": "Complete draft order - GigaHome upgrade",
     "taskDescription": "Draft order started but not submitted; customer plan upgrade awaiting completion.",
     "taskType": "Draft Order",
     "taskStatus": "Open",
@@ -82,7 +82,7 @@
   {
     "taskId": "TASK-70009",
     "taskName": "Payment retry needed",
-    "taskDescription": "Initial payment attempt failed for CUST-1003 \u2014 needs a retry or alternate method.",
+    "taskDescription": "Initial payment attempt failed for CUST-1003 - needs a retry or alternate method.",
     "taskType": "Payment",
     "taskStatus": "Open",
     "priorityFlag": false,

@@ -363,7 +363,7 @@
     "routeId": "RT-SCR-041",
     "path": "/lead-management/cross-sales-contact-qid-entry",
     "screenId": "SCR-041",
-    "screenName": "Cross Sales \u2014 Contact/QID entry",
+    "screenName": "Cross Sales - Contact/QID entry",
     "screenType": "Screen",
     "module": "Lead Management",
     "personaAccess": ""
@@ -381,7 +381,7 @@
     "routeId": "RT-SCR-043",
     "path": "/fixed-line-fibre/new-fixed-line-wizard-contact-step",
     "screenId": "SCR-043",
-    "screenName": "New Fixed Line wizard \u2014 Contact step",
+    "screenName": "New Fixed Line wizard - Contact step",
     "screenType": "Wizard",
     "module": "Fixed Line / Fibre",
     "personaAccess": ""
@@ -399,7 +399,7 @@
     "routeId": "RT-SCR-045",
     "path": "/fixed-line-fibre/new-fixed-line-wizard-address-step",
     "screenId": "SCR-045",
-    "screenName": "New Fixed Line wizard \u2014 Address step",
+    "screenName": "New Fixed Line wizard - Address step",
     "screenType": "Wizard",
     "module": "Fixed Line / Fibre",
     "personaAccess": ""
@@ -408,7 +408,7 @@
     "routeId": "RT-SCR-046",
     "path": "/fixed-line-fibre/new-fixed-line-wizard-plan-step",
     "screenId": "SCR-046",
-    "screenName": "New Fixed Line wizard \u2014 Plan step",
+    "screenName": "New Fixed Line wizard - Plan step",
     "screenType": "Wizard",
     "module": "Fixed Line / Fibre",
     "personaAccess": ""
@@ -417,7 +417,7 @@
     "routeId": "RT-SCR-047",
     "path": "/lead-management/new-fixed-line-wizard-addon-discount-step",
     "screenId": "SCR-047",
-    "screenName": "New Fixed Line wizard \u2014 Addon & Discount step",
+    "screenName": "New Fixed Line wizard - Addon & Discount step",
     "screenType": "Wizard",
     "module": "Lead Management",
     "personaAccess": ""
@@ -426,7 +426,7 @@
     "routeId": "RT-SCR-048",
     "path": "/fixed-line-fibre/new-fixed-line-wizard-number-selection-step",
     "screenId": "SCR-048",
-    "screenName": "New Fixed Line wizard \u2014 Number Selection step",
+    "screenName": "New Fixed Line wizard - Number Selection step",
     "screenType": "Wizard",
     "module": "Fixed Line / Fibre",
     "personaAccess": ""
@@ -444,7 +444,7 @@
     "routeId": "RT-SCR-050",
     "path": "/fixed-line-fibre/new-fixed-line-wizard-caf-attachments-step",
     "screenId": "SCR-050",
-    "screenName": "New Fixed Line wizard \u2014 CAF/Attachments step",
+    "screenName": "New Fixed Line wizard - CAF/Attachments step",
     "screenType": "Wizard",
     "module": "Fixed Line / Fibre",
     "personaAccess": ""
@@ -462,7 +462,7 @@
     "routeId": "RT-SCR-052",
     "path": "/lead-management/sales-order-detail-header-and-line-items-tab",
     "screenId": "SCR-052",
-    "screenName": "Sales Order detail \u2014 header and Line Items tab",
+    "screenName": "Sales Order detail - header and Line Items tab",
     "screenType": "Screen",
     "module": "Lead Management",
     "personaAccess": ""
@@ -534,7 +534,7 @@
     "routeId": "RT-SCR-060",
     "path": "/order-management/tm-sr-queue-view-order-activities-queue",
     "screenId": "SCR-060",
-    "screenName": "TM SR Queue View \u2014 Order Activities Queue",
+    "screenName": "TM SR Queue View - Order Activities Queue",
     "screenType": "Dashboard",
     "module": "Order Management",
     "personaAccess": ""
@@ -804,7 +804,7 @@
     "routeId": "RT-SCR-090",
     "path": "/fwa-5g-home/inventory-management-non-serialized-inventory-transfer",
     "screenId": "SCR-090",
-    "screenName": "Inventory Management \u2014 Non-Serialized Inventory Transfer",
+    "screenName": "Inventory Management - Non-Serialized Inventory Transfer",
     "screenType": "Screen",
     "module": "FWA / 5G Home",
     "personaAccess": "Dispatcher/Back-Office WFM user"
@@ -849,7 +849,7 @@
     "routeId": "RT-SCR-095",
     "path": "/mobile-postpaid/customer-portal-billing-profile-unbilled-usage-surepay-bucke",
     "screenId": "SCR-095",
-    "screenName": "Customer Portal \u2014 Billing Profile / Unbilled Usage / Surepay Bucket View",
+    "screenName": "Customer Portal - Billing Profile / Unbilled Usage / Surepay Bucket View",
     "screenType": "Screen",
     "module": "Mobile Postpaid",
     "personaAccess": "Back office/agent"
@@ -984,7 +984,7 @@
     "routeId": "RT-SCR-110",
     "path": "/fixed-line-fibre/wfm-activity-details-admin-technician-view",
     "screenId": "SCR-110",
-    "screenName": "WFM Activity Details \u2014 Admin/Technician View",
+    "screenName": "WFM Activity Details - Admin/Technician View",
     "screenType": "Screen",
     "module": "Fixed Line / Fibre",
     "personaAccess": "Field Technician"
@@ -1047,7 +1047,7 @@
     "routeId": "RT-SCR-117",
     "path": "/caf-attachments-forms/product-promotions-admin-more-info-tab",
     "screenId": "SCR-117",
-    "screenName": "Product Promotions admin \u2014 More Info tab",
+    "screenName": "Product Promotions admin - More Info tab",
     "screenType": "Screen",
     "module": "CAF, Attachments & Forms",
     "personaAccess": "Admin"
@@ -1056,7 +1056,7 @@
     "routeId": "RT-SCR-118",
     "path": "/mobile-postpaid/product-promotions-admin-bill-limit-mapping-spend-limit-mapp",
     "screenId": "SCR-118",
-    "screenName": "Product Promotions admin \u2014 Bill Limit Mapping / Spend Limit Mapping tab",
+    "screenName": "Product Promotions admin - Bill Limit Mapping / Spend Limit Mapping tab",
     "screenType": "Screen",
     "module": "Mobile Postpaid",
     "personaAccess": "Admin"
@@ -1488,7 +1488,7 @@
     "routeId": "RT-SCR-166",
     "path": "/mobile-postpaid/bill-limit-mobile-plus-customize-detail-panel",
     "screenId": "SCR-166",
-    "screenName": "Bill Limit Mobile Plus \u2014 Customize detail panel",
+    "screenName": "Bill Limit Mobile Plus - Customize detail panel",
     "screenType": "Modal",
     "module": "Mobile Postpaid",
     "personaAccess": "Retail/CRM Agent"
@@ -1686,7 +1686,7 @@
     "routeId": "RT-SCR-188",
     "path": "/mobile-postpaid/step-2-plan-edit-credit-limit-dropdown",
     "screenId": "SCR-188",
-    "screenName": "Step 2 Plan \u2014 Edit Credit Limit dropdown",
+    "screenName": "Step 2 Plan - Edit Credit Limit dropdown",
     "screenType": "Modal",
     "module": "Mobile Postpaid",
     "personaAccess": ""
@@ -1704,7 +1704,7 @@
     "routeId": "RT-SCR-190",
     "path": "/mobile-prepaid/new-prepaid-tablet-step-1-contact-id-capture",
     "screenId": "SCR-190",
-    "screenName": "New Prepaid Tablet \u2014 Step 1 Contact (ID capture)",
+    "screenName": "New Prepaid Tablet - Step 1 Contact (ID capture)",
     "screenType": "Wizard",
     "module": "Mobile Prepaid",
     "personaAccess": ""
@@ -1713,7 +1713,7 @@
     "routeId": "RT-SCR-191",
     "path": "/mobile-prepaid/new-prepaid-tablet-step-3-number-selection",
     "screenId": "SCR-191",
-    "screenName": "New Prepaid Tablet \u2014 Step 3 Number Selection",
+    "screenName": "New Prepaid Tablet - Step 3 Number Selection",
     "screenType": "Wizard",
     "module": "Mobile Prepaid",
     "personaAccess": ""
@@ -1722,7 +1722,7 @@
     "routeId": "RT-SCR-192",
     "path": "/mobile-prepaid/new-prepaid-tablet-step-4-sim-serial",
     "screenId": "SCR-192",
-    "screenName": "New Prepaid Tablet \u2014 Step 4 SIM Serial",
+    "screenName": "New Prepaid Tablet - Step 4 SIM Serial",
     "screenType": "Wizard",
     "module": "Mobile Prepaid",
     "personaAccess": ""
@@ -1740,7 +1740,7 @@
     "routeId": "RT-SCR-194",
     "path": "/mobile-postpaid/sales-order-line-items-tab-new-prepaid",
     "screenId": "SCR-194",
-    "screenName": "Sales Order \u2014 Line Items tab (New Prepaid)",
+    "screenName": "Sales Order - Line Items tab (New Prepaid)",
     "screenType": "Screen",
     "module": "Mobile Postpaid",
     "personaAccess": ""

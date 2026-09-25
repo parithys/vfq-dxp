@@ -49,7 +49,7 @@
     "status": "Validated",
     "scanCompleted": true,
     "scannedAt": "2026-08-05T11:10:00+03:00",
-    "_note": "App-level demo addition \u2014 customers.json's blacklisted test customer (CUST-1004) had no matching identity-documents record, so the Eligibility Gate's blacklist hard-block could never actually be reached via ID lookup. Document number matches CUST-1004's own qid field for consistency.",
+    "_note": "App-level demo addition - customers.json's blacklisted test customer (CUST-1004) had no matching identity-documents record, so the Eligibility Gate's blacklist hard-block could never actually be reached via ID lookup. Document number matches CUST-1004's own qid field for consistency.",
     "docStatus": "Active",
     "uploadDateTime": "2026-08-05T11:10:00+03:00",
     "serviceReference": "CUST-1004"
@@ -64,7 +64,7 @@
     "status": "Validated",
     "scanCompleted": true,
     "scannedAt": "2026-08-12T10:05:00+03:00",
-    "_note": "App-level demo addition \u2014 gives the GCC ID Contact/ID Type card a resolvable test identity (see customers.json CUST-1005).",
+    "_note": "App-level demo addition - gives the GCC ID Contact/ID Type card a resolvable test identity (see customers.json CUST-1005).",
     "docStatus": "Active",
     "uploadDateTime": "2026-08-12T10:05:00+03:00",
     "serviceReference": "CUST-1005"
@@ -79,7 +79,7 @@
     "status": "Validated",
     "scanCompleted": true,
     "scannedAt": "2026-08-14T14:30:00+03:00",
-    "_note": "App-level demo addition \u2014 gives the Diplomatic ID Contact/ID Type card a resolvable test identity (see customers.json CUST-1006).",
+    "_note": "App-level demo addition - gives the Diplomatic ID Contact/ID Type card a resolvable test identity (see customers.json CUST-1006).",
     "docStatus": "Active",
     "uploadDateTime": "2026-08-14T14:30:00+03:00",
     "serviceReference": "CUST-1006"
@@ -93,7 +93,7 @@
     "status": "Validated",
     "scanCompleted": true,
     "scannedAt": "2026-08-24T09:00:00+03:00",
-    "_note": "App-level demo addition \u2014 fixed QA test ID (see customers.json CUST-9001) so this value resolves everywhere IdLookupStep/QidInput is used.",
+    "_note": "App-level demo addition - fixed QA test ID (see customers.json CUST-9001) so this value resolves everywhere IdLookupStep/QidInput is used.",
     "docStatus": "Active",
     "uploadDateTime": "2026-08-24T09:00:00+03:00",
     "serviceReference": "CUST-9001"
@@ -107,7 +107,7 @@
     "status": "Validated",
     "scanCompleted": true,
     "scannedAt": "2026-08-24T09:00:00+03:00",
-    "_note": "App-level demo addition \u2014 fixed QA test ID (see customers.json CUST-9001) so this value resolves everywhere IdLookupStep/QidInput is used.",
+    "_note": "App-level demo addition - fixed QA test ID (see customers.json CUST-9001) so this value resolves everywhere IdLookupStep/QidInput is used.",
     "docStatus": "Archived",
     "uploadDateTime": "2026-08-24T09:00:00+03:00",
     "serviceReference": "CUST-9001"
@@ -121,6 +121,6 @@
     "status": "Validated",
     "scanCompleted": true,
     "scannedAt": "2026-08-15T09:00:00+03:00",
-    "_note": "App-level demo addition \u2014 this customer had no identity-documents record, which would make the new Customer 360 VerificationGate (BR-01/KYC-02) permanently unable to verify them. documentNumber mirrors customers.json qid for consistency."
+    "_note": "App-level demo addition - this customer had no identity-documents record, which would make the new Customer 360 VerificationGate (BR-01/KYC-02) permanently unable to verify them. documentNumber mirrors customers.json qid for consistency."
   }
 ]

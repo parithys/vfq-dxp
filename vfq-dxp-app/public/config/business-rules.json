@@ -75,7 +75,7 @@
     "id": "BR-009",
     "name": "BRM 6-Plus-1 Event Purge Policy",
     "ruleType": "Derivation",
-    "description": "BRM's \"6 plus 1\" event purge policy causes the adjustment reason to be lost after 6 months \u2014 the underlying item data remains but the reason text is purged.",
+    "description": "BRM's \"6 plus 1\" event purge policy causes the adjustment reason to be lost after 6 months - the underlying item data remains but the reason text is purged.",
     "engineHint": "procedural",
     "sourceRuleIds": "raw:BRM 6-Plus-1 Event Purge Policy",
     "confidence": "high"
@@ -192,7 +192,7 @@
     "id": "BR-022",
     "name": "Account Affiliation Grants Privileges Rule",
     "ruleType": "Permission",
-    "description": "Account affiliation \u2014 an attached form plus account manager approval \u2014 is what actually grants privileges and Web Self-Care access; the attachment must be named \"QID_subaccount\".",
+    "description": "Account affiliation - an attached form plus account manager approval - is what actually grants privileges and Web Self-Care access; the attachment must be named \"QID_subaccount\".",
     "engineHint": "procedural",
     "sourceRuleIds": "raw:Account Affiliation Grants Privileges Rule",
     "confidence": "high"
@@ -219,7 +219,7 @@
     "id": "BR-025",
     "name": "Volumetric Discount Minimum Threshold Rule",
     "ruleType": "Eligibility",
-    "description": "The volumetric discount has a minimum threshold of 50 numbers, is slab-based, and comes in revenue and service-count variants; it is evaluated at runtime and has no automatic downgrade when connection counts drop \u2014 flagged as a key revenue-leakage pain point.",
+    "description": "The volumetric discount has a minimum threshold of 50 numbers, is slab-based, and comes in revenue and service-count variants; it is evaluated at runtime and has no automatic downgrade when connection counts drop - flagged as a key revenue-leakage pain point.",
     "engineHint": "threshold",
     "sourceRuleIds": "raw:Volumetric Discount Minimum Threshold Rule",
     "confidence": "high"
@@ -246,7 +246,7 @@
     "id": "BR-028",
     "name": "Fibre Precedence Over 5G Rule",
     "ruleType": "Routing",
-    "description": "Fibre takes precedence over 5G as a business rule. This rule, along with other key rules for lead creation, approvals, and validation, is currently enforced manually via offline email processes rather than by the system \u2014 the first system entry occurs only when the request reaches fulfilment.",
+    "description": "Fibre takes precedence over 5G as a business rule. This rule, along with other key rules for lead creation, approvals, and validation, is currently enforced manually via offline email processes rather than by the system - the first system entry occurs only when the request reaches fulfilment.",
     "engineHint": "procedural",
     "sourceRuleIds": "raw:Fibre Precedence Over 5G Rule; raw:Manual Enforcement of Offline Approvals Rule",
     "confidence": "high"
@@ -345,7 +345,7 @@
     "id": "BR-039",
     "name": "MNP Porting Window Rule",
     "ruleType": "Routing",
-    "description": "The MNP porting window runs Sunday-Thursday, 11am-12pm \u2014 a shared one-hour window in which the donor disconnects and Vodafone connects; requests accepted before 10:45am make that day's window.",
+    "description": "The MNP porting window runs Sunday-Thursday, 11am-12pm - a shared one-hour window in which the donor disconnects and Vodafone connects; requests accepted before 10:45am make that day's window.",
     "engineHint": "procedural",
     "sourceRuleIds": "raw:MNP Porting Window Rule",
     "confidence": "high"
@@ -381,7 +381,7 @@
     "id": "BR-043",
     "name": "FNP Dual Technician Visit Rule",
     "ruleType": "Routing",
-    "description": "FNP porting operates at the service level (versus MNP's number level) and always requires two technician visits \u2014 one for installation per WFM, and one on the porting date for MSISDN configuration/testing.",
+    "description": "FNP porting operates at the service level (versus MNP's number level) and always requires two technician visits - one for installation per WFM, and one on the porting date for MSISDN configuration/testing.",
     "engineHint": "procedural",
     "sourceRuleIds": "raw:FNP Dual Technician Visit Rule",
     "confidence": "high"
@@ -750,7 +750,7 @@
     "id": "BR-084",
     "name": "Fixed Plan Default Triple-Play with Optional IPTV",
     "ruleType": "Derivation",
-    "description": "Fixed plans default to a triple-play bundle including IPTV; IPTV is optional and removable \u2014 if removed, a dual-play order is created at the backend with no set-top box and no IPTV provisioning in OSM; IPTV basic is free, only premium is charged.",
+    "description": "Fixed plans default to a triple-play bundle including IPTV; IPTV is optional and removable - if removed, a dual-play order is created at the backend with no set-top box and no IPTV provisioning in OSM; IPTV basic is free, only premium is charged.",
     "engineHint": "procedural",
     "sourceRuleIds": "",
     "confidence": "high"
@@ -795,7 +795,7 @@
     "id": "BR-089",
     "name": "Self-Serve Instant Activation Restricted to Standard Customers",
     "ruleType": "Eligibility",
-    "description": "Self-serve instant activation is restricted to 'standard' customers only \u2014 non-standard customers get a lead created instead.",
+    "description": "Self-serve instant activation is restricted to 'standard' customers only - non-standard customers get a lead created instead.",
     "engineHint": "restriction",
     "sourceRuleIds": "",
     "confidence": "high"
@@ -804,7 +804,7 @@
     "id": "BR-090",
     "name": "Devices Sold Are Not Recovered on Disconnection",
     "ruleType": "Derivation",
-    "description": "Devices once sold are not returned or recovered on disconnection \u2014 the CPE serial simply becomes free in UIM for reassignment.",
+    "description": "Devices once sold are not returned or recovered on disconnection - the CPE serial simply becomes free in UIM for reassignment.",
     "engineHint": "procedural",
     "sourceRuleIds": "",
     "confidence": "high"
@@ -840,7 +840,7 @@
     "id": "BR-094",
     "name": "FWA-to-Fiber Automatic Migration Rule (stated but not implemented)",
     "ruleType": "Routing",
-    "description": "Once a location becomes fiber-covered, the customer is stated to be 'moved' from 5G to fiber, but the actual process today is only a BI report \u2014 it is NOT automated.",
+    "description": "Once a location becomes fiber-covered, the customer is stated to be 'moved' from 5G to fiber, but the actual process today is only a BI report - it is NOT automated.",
     "engineHint": "procedural",
     "sourceRuleIds": "",
     "confidence": "high"
@@ -894,7 +894,7 @@
     "id": "BR-100",
     "name": "Address change creates new record with history, no in-place update",
     "ruleType": "Derivation",
-    "description": "When a customer's address changes, the old address record is marked discontinued/replaced with effective from/to dates and a new address record is created as primary, rather than updating the existing address record in place \u2014 preserving address history.",
+    "description": "When a customer's address changes, the old address record is marked discontinued/replaced with effective from/to dates and a new address record is created as primary, rather than updating the existing address record in place - preserving address history.",
     "engineHint": "procedural",
     "sourceRuleIds": "",
     "confidence": "high"
@@ -1380,7 +1380,7 @@
     "id": "BR-154",
     "name": "Cross-sell offer locks plan and add-on/discount selection",
     "ruleType": "Permission",
-    "description": "On a cross-sell order journey, no plan-selection control is exposed to the agent \u2014 the journey auto-applies the plan tied to the accepted offer. There is also no editable add-on control, confirming the agent cannot add extra discounts/add-ons on a cross-sell order.",
+    "description": "On a cross-sell order journey, no plan-selection control is exposed to the agent - the journey auto-applies the plan tied to the accepted offer. There is also no editable add-on control, confirming the agent cannot add extra discounts/add-ons on a cross-sell order.",
     "engineHint": "restriction",
     "sourceRuleIds": "9",
     "confidence": "high"
@@ -1389,7 +1389,7 @@
     "id": "BR-155",
     "name": "QID immutable after Cross Sales redirect",
     "ruleType": "Validation",
-    "description": "When a Cross Sales order redirects into the journey, the QID (e.g. 28335628851) carries over automatically and is greyed out/read-only \u2014 the agent cannot re-enter or edit it.",
+    "description": "When a Cross Sales order redirects into the journey, the QID (e.g. 28335628851) carries over automatically and is greyed out/read-only - the agent cannot re-enter or edit it.",
     "engineHint": "restriction",
     "sourceRuleIds": "10",
     "confidence": "high"
@@ -1443,7 +1443,7 @@
     "id": "BR-161",
     "name": "Rejection reason drives which evidence must be re-collected on correction",
     "ruleType": "Validation",
-    "description": "On order correction after rejection, the specific rejection reason determines which evidence must be re-collected \u2014 e.g. for \"ID image not clear\", the Qatari ID-Front/Back fields reset to empty upload placeholders, requiring re-upload of the flagged ID images.",
+    "description": "On order correction after rejection, the specific rejection reason determines which evidence must be re-collected - e.g. for \"ID image not clear\", the Qatari ID-Front/Back fields reset to empty upload placeholders, requiring re-upload of the flagged ID images.",
     "engineHint": "procedural",
     "sourceRuleIds": "16,29",
     "confidence": "high"
@@ -1461,7 +1461,7 @@
     "id": "BR-163",
     "name": "Prepatched Non Combo Box topology skips shared-infrastructure step",
     "ruleType": "Derivation",
-    "description": "When the KID is Prepatched (per backend SOAP trace: PatchingType=Prepatched, KIDStatus=Available), no separate Combo Box selection or shared-infrastructure step appears in the journey \u2014 it goes directly from Address confirmation to Plan selection.",
+    "description": "When the KID is Prepatched (per backend SOAP trace: PatchingType=Prepatched, KIDStatus=Available), no separate Combo Box selection or shared-infrastructure step appears in the journey - it goes directly from Address confirmation to Plan selection.",
     "engineHint": "procedural",
     "sourceRuleIds": "18",
     "confidence": "medium"
@@ -1686,7 +1686,7 @@
     "id": "BR-188",
     "name": "FWA/GigaHome Plan Minimum Subscription Period of 3 Months",
     "ruleType": "Eligibility",
-    "description": "FWA and GigaHome fixed-line plans carry a minimum subscription period of 3 months \u2014 e.g. \"GigaHome 5G Classic New Indoor - FWA\" plan and \"Gigahome 5Gbps\" fixed-line plan both specify a minimum 3-month subscription.",
+    "description": "FWA and GigaHome fixed-line plans carry a minimum subscription period of 3 months - e.g. \"GigaHome 5G Classic New Indoor - FWA\" plan and \"Gigahome 5Gbps\" fixed-line plan both specify a minimum 3-month subscription.",
     "engineHint": "threshold",
     "sourceRuleIds": "48,49",
     "confidence": "high"
@@ -1758,7 +1758,7 @@
     "id": "BR-196",
     "name": "Appointment Once Booked Cannot Be Cancelled",
     "ruleType": "Validation",
-    "description": "Once an installation appointment (including unscheduled appointments) is booked, it cannot be cancelled \u2014 either at all, or specifically not within the current journey. The agent must confirm ('OK') to proceed with booking or cancel to pick another slot.",
+    "description": "Once an installation appointment (including unscheduled appointments) is booked, it cannot be cancelled - either at all, or specifically not within the current journey. The agent must confirm ('OK') to proceed with booking or cancel to pick another slot.",
     "engineHint": "restriction",
     "sourceRuleIds": "",
     "confidence": "high"
@@ -1875,7 +1875,7 @@
     "id": "BR-209",
     "name": "Employer/Special Management Fields Populate Only After Order Approval/Completion",
     "ruleType": "Derivation",
-    "description": "The Employer field (and related special management fields) on the Contact record remain blank while the order is Pending and only populate after the order is approved/completed \u2014 indicating no provisioning occurs until approval.",
+    "description": "The Employer field (and related special management fields) on the Contact record remain blank while the order is Pending and only populate after the order is approved/completed - indicating no provisioning occurs until approval.",
     "engineHint": "procedural",
     "sourceRuleIds": "",
     "confidence": "high"
@@ -1893,7 +1893,7 @@
     "id": "BR-211",
     "name": "2+ Postpaid Connections Triggers Credit-Policy Advisory",
     "ruleType": "Eligibility",
-    "description": "When a customer already has 2 or more postpaid connections, an advisory note appears instructing the agent to check the credit policy or seek credit control approval before proceeding. In the 'without approval' journey variant, this advisory is confirmed to be informational-only (not a hard gate) \u2014 no approval request, queue, or manager sign-off screen appears. A related Connection Details modal surfaces the customer's total prepaid/postpaid connection counts (e.g. 1 prepaid, 1 postpaid) with a 'Show Postpaid Plan Details' option before MNP proceeds.",
+    "description": "When a customer already has 2 or more postpaid connections, an advisory note appears instructing the agent to check the credit policy or seek credit control approval before proceeding. In the 'without approval' journey variant, this advisory is confirmed to be informational-only (not a hard gate) - no approval request, queue, or manager sign-off screen appears. A related Connection Details modal surfaces the customer's total prepaid/postpaid connection counts (e.g. 1 prepaid, 1 postpaid) with a 'Show Postpaid Plan Details' option before MNP proceeds.",
     "engineHint": "procedural",
     "sourceRuleIds": "",
     "confidence": "high"
@@ -1947,7 +1947,7 @@
     "id": "BR-217",
     "name": "Order Can Reach Complete Without Approved Checkbox Being Set",
     "ruleType": "Derivation",
-    "description": "In the 'without approval' journey variant, the final order record can reach Status: Complete / Fulfillment Status: Complete even though the Approved checkbox remains unchecked and Approved By is blank \u2014 confirming that approval is not universally required to complete an order.",
+    "description": "In the 'without approval' journey variant, the final order record can reach Status: Complete / Fulfillment Status: Complete even though the Approved checkbox remains unchecked and Approved By is blank - confirming that approval is not universally required to complete an order.",
     "engineHint": "mandatory-field",
     "sourceRuleIds": "",
     "confidence": "high"
@@ -2190,7 +2190,7 @@
     "id": "BR-244",
     "name": "Lead created via mobile number attaches to existing matching Contact rather than creating a duplicate",
     "ruleType": "Derivation",
-    "description": "When a new lead is created using a mobile number that matches an existing Contact record, the system attaches the new lead to that existing contact instead of creating a duplicate contact \u2014 expected Siebel/CRM matching behavior.",
+    "description": "When a new lead is created using a mobile number that matches an existing Contact record, the system attaches the new lead to that existing contact instead of creating a duplicate contact - expected Siebel/CRM matching behavior.",
     "engineHint": "procedural",
     "sourceRuleIds": "",
     "confidence": "high"
@@ -2370,7 +2370,7 @@
     "id": "BR-264",
     "name": "B2B2C without pre-existing Special Management completes without approval",
     "ruleType": "Routing",
-    "description": "When a B2B2C order is placed on an account that has no pre-existing Special Management flag, the order reaches Complete status (both order and fulfillment) automatically, with the Approved checkbox left unchecked and no hold applied \u2014 it is never routed to anyone for sign-off.",
+    "description": "When a B2B2C order is placed on an account that has no pre-existing Special Management flag, the order reaches Complete status (both order and fulfillment) automatically, with the Approved checkbox left unchecked and no hold applied - it is never routed to anyone for sign-off.",
     "engineHint": "procedural",
     "sourceRuleIds": "",
     "confidence": "high"
@@ -2406,7 +2406,7 @@
     "id": "BR-268",
     "name": "HRN/Credit-Limit variant routes order to manager approval rather than auto-completion",
     "ruleType": "Routing",
-    "description": "For the HRN Customer / Credit Limit variant of the postpaid journey, the resulting activation order is submitted for manager approval rather than completing automatically \u2014 the defining characteristic distinguishing this variant from the standard flow.",
+    "description": "For the HRN Customer / Credit Limit variant of the postpaid journey, the resulting activation order is submitted for manager approval rather than completing automatically - the defining characteristic distinguishing this variant from the standard flow.",
     "engineHint": "threshold",
     "sourceRuleIds": "",
     "confidence": "high"
@@ -2541,7 +2541,7 @@
     "id": "BR-283",
     "name": "Disconnection FDO can only be raised via Siebel, cancellable only by retention team",
     "ruleType": "Permission",
-    "description": "A Disconnection FDO can only be raised via Siebel (not via MVA); it cannot be cancelled through the app \u2014 only the retention team has authority to cancel it.",
+    "description": "A Disconnection FDO can only be raised via Siebel (not via MVA); it cannot be cancelled through the app - only the retention team has authority to cancel it.",
     "engineHint": "restriction",
     "sourceRuleIds": "",
     "confidence": "high"
@@ -2973,7 +2973,7 @@
     "id": "BR-331",
     "name": "Plan display logic conditional on ID type",
     "ruleType": "Visibility",
-    "description": "Which plans are displayed to the agent depends on the customer's ID type \u2014 e.g. Postpaid and Prepaid plans are shown if the ID type is QID, otherwise only Prepaid Type is shown (J011 onboarding flow).",
+    "description": "Which plans are displayed to the agent depends on the customer's ID type - e.g. Postpaid and Prepaid plans are shown if the ID type is QID, otherwise only Prepaid Type is shown (J011 onboarding flow).",
     "engineHint": "procedural",
     "sourceRuleIds": "",
     "confidence": "high"

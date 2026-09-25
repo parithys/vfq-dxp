@@ -13,7 +13,7 @@
     "status": "billed",
     "isTaxInvoice": true,
     "currentChargesQAR": 205,
-    "_currentChargesNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
+    "_currentChargesNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   },
   {
     "billId": "BILL-9002",
@@ -30,7 +30,7 @@
     "isTaxInvoice": false,
     "note": "Reflects current unbilled usage plus outstanding balance; item statuses unchanged.",
     "currentChargesQAR": 260,
-    "_currentChargesNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
+    "_currentChargesNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   },
   {
     "billId": "BILL-9003",
@@ -49,7 +49,7 @@
     "disconnectionPenalty": 500,
     "note": "Explicitly not a tax invoice; shows disconnection penalty impact without affecting upcoming bill.",
     "currentChargesQAR": 1070,
-    "_currentChargesNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
+    "_currentChargesNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   },
   {
     "billId": "BILL-9004",
@@ -68,6 +68,6 @@
     "disconnectionPenalty": 0,
     "note": "On-demand simulation with no penalty applicable; regular upgrade scenario.",
     "currentChargesQAR": 315,
-    "_currentChargesNote": "App-level placeholder \u2014 BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
+    "_currentChargesNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
   }
 ]
