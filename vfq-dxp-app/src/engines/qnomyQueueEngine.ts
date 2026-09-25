@@ -26,6 +26,24 @@ export const QUEUE_LABELS: Record<string, string> = {
   J030: 'Billing & Payments',
 };
 
+// What the customer is at the counter FOR, as opposed to which queue they are
+// standing in. QUEUE_LABELS above answers "which queue" ("New Connections");
+// this answers "why" ("New Postpaid Connection").
+//
+// Both are needed because they are different questions and the ticket only
+// carries the code. The labels are the app's own journey names, not invented:
+// J011 is the Mobile Postpaid Activation journey named on the BRSD's J011
+// slide (see the note at the top of this file), and "New Postpaid Connection"
+// is exactly what journeyCatalogue.ts titles that journey.
+//
+// Unknown codes fall back to the queue label at the call site rather than
+// guessing a purpose.
+export const JOURNEY_PURPOSE_LABELS: Record<string, string> = {
+  J011: 'New Postpaid Connection',
+  J020: 'Care & Complaint',
+  J030: 'Billing & Payment',
+};
+
 const GROUP_QUEUES: Record<string, string[]> = {
   'Sales & Acquisition': ['J011'],
   'Customer Service & Retention': ['J020'],

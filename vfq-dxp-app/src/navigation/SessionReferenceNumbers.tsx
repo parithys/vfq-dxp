@@ -5,7 +5,13 @@ import { useEntityStore } from '../stores/entityStore';
 import { useNotificationStore } from '../stores/notificationStore';
 import { useActiveCustomerStore } from '../stores/activeCustomerStore';
 import { useQnomyQueueStore } from '../stores/qnomyQueueStore';
-import { nextTicketFor, waitingCountFor, queueLabelsForRole, mobileMatches } from '../engines/qnomyQueueEngine';
+import {
+  nextTicketFor,
+  waitingCountFor,
+  queueLabelsForRole,
+  mobileMatches,
+  JOURNEY_PURPOSE_LABELS,
+} from '../engines/qnomyQueueEngine';
 import { usePersonaStore } from '../stores/personaStore';
 import { canSeeQnomyTicketNumber, canSeeCtiReferenceNumber } from '../engines/agentPrivilegeEngine';
 import { toActiveCustomerSummary, type CustomerRecord } from '../engines/customer360Engine';
@@ -246,11 +252,35 @@ export function SessionReferenceNumbers() {
       // calling a customer impossible until you had verified someone you
       // could not yet see.
       setActiveCustomer(toActiveCustomerSummary(matched));
-      pushToast(
-        'success',
-        `${waiting.queueName ?? 'Queue'} ticket ${waiting.qTicketId} assigned - ${matched.name} (${waiting.kioskMobileNumber ?? 'no number'}).`
-      );
-      navigate(`/customer/${matched.customerId}`);
+      // Headline says what happened; who it happened to goes on the detail
+      // line. One sentence carrying both made the ticket id compete with the
+      // customer name for the same glance.
+      // Structured rather than a sentence: these are five separate facts the
+      // agent reads off the screen while greeting a walk-in, and "Purpose of
+      // visit" is the queue the customer chose at the kiosk - queueName, not
+      // an interpretation of journeyCode.
+      pushToast('success', 'New ticket assigned', {
+        rows: [
+          { label: 'Ticket number', value: waiting.qTicketId, tone: 'id' },
+          { label: 'Customer name', value: matched.name },
+          { label: 'Mobile number', value: waiting.kioskMobileNumber ?? 'Not captured' },
+          { label: 'Customer status', value: 'Existing registered customer', tone: 'success' },
+          {
+            label: 'Purpose of visit',
+            // The journey the kiosk code stands for, not the queue the
+            // customer is queuing in. Falls back to the queue name for a code
+            // with no mapped journey rather than inventing a purpose.
+            value:
+              (waiting.journeyCode ? JOURNEY_PURPOSE_LABELS[waiting.journeyCode] : undefined) ??
+              waiting.queueName ??
+              'Not recorded',
+          },
+        ],
+      });
+      // A queue walk-in arrives through the New Connections journey, so that
+      // is what the rail should show rather than Customer Search - the agent
+      // did not search for this customer, the queue handed them over.
+      navigate(`/customer/${matched.customerId}`, { state: { navKey: 'mobile.new-connections' } });
       return;
     }
 
@@ -266,10 +296,28 @@ export function SessionReferenceNumbers() {
     // in the header, and the activation quick actions are right there.
     clearActiveCustomer();
     navigate('/');
-    pushToast(
-      'info',
-      `${waiting.queueName ?? 'Queue'} ticket ${waiting.qTicketId} assigned - no customer on file for ${waiting.kioskMobileNumber ?? 'this number'}. Treat as a new customer.`
-    );
+    // Same shape for a walk-in with no record, so the agent reads the same
+    // five rows either way. Customer status carries the difference and is
+    // deliberately NOT toned 'success': there is nothing to confirm here, and
+    // a green row would suggest a match was found.
+    pushToast('info', 'New ticket assigned', {
+      rows: [
+        { label: 'Ticket number', value: waiting.qTicketId, tone: 'id' },
+        { label: 'Customer name', value: 'Not on file' },
+        { label: 'Mobile number', value: waiting.kioskMobileNumber ?? 'Not captured' },
+        { label: 'Customer status', value: 'New customer' },
+        {
+            label: 'Purpose of visit',
+            // The journey the kiosk code stands for, not the queue the
+            // customer is queuing in. Falls back to the queue name for a code
+            // with no mapped journey rather than inventing a purpose.
+            value:
+              (waiting.journeyCode ? JOURNEY_PURPOSE_LABELS[waiting.journeyCode] : undefined) ??
+              waiting.queueName ??
+              'Not recorded',
+          },
+      ],
+    });
   };
 
   // A Qnomy-eligible agent ALWAYS has something here: a held ticket, a just-
