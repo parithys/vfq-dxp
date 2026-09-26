@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
-import { getCustomer360, toActiveCustomerSummary, computeBillingSummary, type AccountRecord, type Customer360Data } from '../../engines/customer360Engine';
+import { accountHolderStatus, getCustomer360, toActiveCustomerSummary, computeBillingSummary, type AccountRecord, type Customer360Data } from '../../engines/customer360Engine';
 import { listCustomerServices, type ServiceSources } from '../../engines/customerServicesEngine';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useActiveCustomerStore } from '../../stores/activeCustomerStore';
@@ -143,6 +143,7 @@ export function Customer360Layout() {
   }
 
   const customer = toActiveCustomerSummary(data.customer);
+  const holderStatus = accountHolderStatus(data.accounts);
   const { outstanding, latestBill } = computeBillingSummary(data);
   const openTicketCount = data.tickets.filter((t) => !CLOSED_TICKET_STATUSES.has(String(t.status))).length;
   const accountStatus = data.customer.blacklisted
@@ -188,7 +189,7 @@ export function Customer360Layout() {
     serviceSources ? servicesFor(tab).length > 0 : undefined;
 
   const tabs: TabItem[] = [
-    { key: 'profile', label: 'Profile', content: <ProfileSection customer={data.customer} accounts={data.accounts} /> },
+    { key: 'profile', label: 'Profile', content: <ProfileSection customer={data.customer} accounts={data.accounts} services={services} /> },
     { key: 'contacts', label: 'Contacts', content: <ContactSection data={data} onTicketCreated={addTicket} /> },
     { key: 'addresses', label: 'Addresses', content: <AddressSection data={data} onTicketCreated={addTicket} /> },
     {
@@ -246,7 +247,20 @@ export function Customer360Layout() {
           <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">{data.customer.name}</h1>
           {data.customer.blacklisted && <Badge variant="danger">Blacklisted</Badge>}
           {data.customer.moiValidationStatus === 'Verified' && <Badge variant="success">Verified</Badge>}
-          {isSessionVerified && <Badge variant="filled-neutral">Session Verified (BR-01)</Badge>}
+          {isSessionVerified && <Badge variant="filled-neutral">Session Verified</Badge>}
+          {/* Account-holder standing, beside the name - the most prominent
+              slot on the page and the one an agent reads before anything
+              else. It governs what they may do on the account, so it does not
+              belong buried in a tab.
+
+              Absent for a customer with no accounts rather than defaulted to
+              either label: a new-connection walk-in is neither primary nor
+              secondary yet. See accountHolderStatus. */}
+          {holderStatus && (
+            <Badge variant={holderStatus === 'Primary' ? 'accent' : 'filled-neutral'}>
+              {holderStatus} Account Holder
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Button variant="ghost-rect" compact onClick={exportProfile}>
@@ -262,7 +276,7 @@ export function Customer360Layout() {
               Edit profile
             </Button>
           ) : (
-            <Tooltip content="Not authorised to edit customer records (BR-02)" placement="bottom">
+            <Tooltip content="Not authorised to edit customer records" placement="bottom">
               <Button variant="primary-rect" compact className="opacity-40 cursor-not-allowed" onClick={(e) => e.preventDefault()}>
                 Edit profile
               </Button>

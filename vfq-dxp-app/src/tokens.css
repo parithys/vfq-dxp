@@ -116,6 +116,13 @@
      one token driving both would make the inner control invisible against
      the outer one whenever the card is chosen. */
   --field-checkbox-selected: #e60000;
+  /* RADIOS, 2026-09-25. Same red as the checkbox and for the same reason, but
+     its OWN token rather than a reuse: a radio and a checkbox are different
+     controls, and the plan/add-on steps put a radio inside a selectable card
+     exactly as the checkbox note describes - so if either ever needs to move
+     off the brand red, it must be able to without dragging the other with it.
+     The duplicated value is the cheap half of that trade. */
+  --field-radio-selected: #e60000;
   /* 4px on an 18px box - the asset's corner is 21.6% of its side, and the
      radius is measured off that ratio rather than copied from the 496px
      artboard, where the literal value would have been a 100px corner. */

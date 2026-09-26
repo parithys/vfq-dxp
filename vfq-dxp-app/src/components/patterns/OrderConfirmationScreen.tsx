@@ -19,7 +19,6 @@ interface OrderConfirmationScreenProps {
   heading: string;
   orderId: string;
   summaryLines: ConfirmationSummaryLine[];
-  nextSteps: string[];
   actions: ConfirmationAction[];
   /**
    * Optional block between the summary and "What happens next", for anything
@@ -41,43 +40,63 @@ export function OrderConfirmationScreen({
   heading,
   orderId,
   summaryLines,
-  nextSteps,
   actions,
   handoverPanel,
 }: OrderConfirmationScreenProps) {
   return (
-    <div className="max-w-2xl mx-auto text-center py-8">
-      <div className="w-16 h-16 rounded-full bg-success text-white flex items-center justify-center mx-auto mb-6">
-        <Icon path={CHECK} className="w-8 h-8" />
-      </div>
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-2">{heading}</h1>
-      <p className="text-fg-2 mb-8">
-        Order <span className="font-medium text-fg">{orderId}</span>
-      </p>
-
-      <dl className="text-left rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mb-6">
-        {summaryLines.map((line) => (
-          <div key={line.label} className="flex justify-between py-2 border-b border-border-soft last:border-0">
-            <dt className="text-fg-2">{line.label}</dt>
-            <dd className="text-fg font-medium">{line.value}</dd>
-          </div>
-        ))}
-      </dl>
-
-      {handoverPanel && <div className="text-left mb-6">{handoverPanel}</div>}
-
-      {nextSteps.length > 0 && (
-        <div className="text-left rounded-[var(--radius-card)] border border-border-soft bg-surface p-5 mb-8">
-          <p className="text-fg font-medium mb-2">What happens next</p>
-          <ul className="list-disc list-inside space-y-1 text-fg-2 text-[length:var(--fs-body)]">
-            {nextSteps.map((step) => (
-              <li key={step}>{step}</li>
-            ))}
-          </ul>
+    // TWO COLUMNS as of 2026-09-25: the outcome and its receipt on the left,
+    // everything the agent has to hand over or do next on the right.
+    //
+    // The split is by JOB, not by length. The left column is the record of
+    // what happened - read once, quoted if the customer asks. The right is
+    // the work still outstanding at the counter: scan the QR, send the email,
+    // know what follows. Stacked in one column, that work sat below the fold
+    // on a laptop, under a summary the agent had already finished reading.
+    //
+    // Collapses to a single column under lg, where side-by-side would leave
+    // both halves too narrow to read - the summary rows are label/value pairs
+    // that need width to stay on one line.
+    //
+    // max-w widened from 2xl to 6xl to give the two columns room; a 2xl
+    // container split in two would be narrower per column than the original
+    // single column was.
+    <div className="max-w-6xl mx-auto py-8">
+      {/* The heading block stays centred over BOTH columns. It announces the
+          outcome, which belongs to the whole screen rather than to the
+          left-hand receipt. */}
+      <div className="text-center">
+        <div className="w-16 h-16 rounded-full bg-success text-white flex items-center justify-center mx-auto mb-6">
+          <Icon path={CHECK} className="w-8 h-8" />
         </div>
-      )}
+        <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-2">{heading}</h1>
+        <p className="text-fg-2 mb-8">
+          Order <span className="font-medium text-fg">{orderId}</span>
+        </p>
+      </div>
 
-      <div className="flex items-center justify-center gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Column 1 - the receipt. */}
+        <dl className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+          {summaryLines.map((line) => (
+            <div key={line.label} className="flex justify-between gap-4 py-2 border-b border-border-soft last:border-0">
+              <dt className="text-fg-2">{line.label}</dt>
+              <dd className="text-fg font-medium text-right">{line.value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        {/* Column 2 - the handover. "What happens next" sat here until
+            2026-09-25; with it gone this column holds only the eSIM panel,
+            and space-y is kept so a future handover block stacks correctly
+            rather than needing the wrapper rebuilt. */}
+        <div className="space-y-6">
+          {handoverPanel}
+        </div>
+      </div>
+
+      {/* Actions span both columns: they act on the order as a whole, so
+          anchoring them under one column would imply otherwise. */}
+      <div className="flex items-center justify-center gap-3 mt-8">
         {actions.map((action) => (
           <Button key={action.label} variant={action.variant ?? 'ghost-rect'} onClick={action.onClick}>
             {action.label}

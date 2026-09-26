@@ -5,8 +5,6 @@ import { GuidedContactStep, isValidAltPhone, isValidEmail, hasIdentityDetails } 
 import type { GuidedContactValue } from '../../../components/patterns/GuidedContactStep';
 import { ZsbAddressStep } from '../../../components/patterns/ZsbAddressStep';
 import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
-import { BillingProfileStep } from '../../../components/patterns/BillingProfileStep';
-import type { BillingProfileValue } from '../../../components/patterns/BillingProfileStep';
 import { PostpaidPlanAddonsStep } from '../../../components/patterns/PostpaidPlanAddonsStep';
 import { MsisdnPicker } from '../../../components/domain/MsisdnPicker';
 import { EligibilityGateStep } from '../../../components/domain/EligibilityGateStep';
@@ -90,21 +88,6 @@ export function NewPostpaidWizard() {
             { label: 'Monthly recurring', value: `QR ${confirmedOrder.monthlyRecurringQar}/mo` },
             { label: 'Status', value: confirmedOrder.pendingApproval ? 'Submitted for Approval' : 'Complete' },
           ]}
-          nextSteps={
-            confirmedOrder.pendingApproval
-              ? [
-                  'A manager reviews this order in the Order Approval queue.',
-                  'The customer is notified once a decision is made.',
-                  'Track its status from Order Management at any time.',
-                ]
-              : [
-                  'The SIM activates on the network within a few minutes.',
-                  'A copy of the CAF has been stored against this account.',
-                  confirmedOrder.simType === 'eSIM'
-                    ? 'The customer can install the eSIM using the QR code sent to their email.'
-                    : 'Hand the physical SIM to the customer.',
-                ]
-          }
           actions={[
             {
               label: 'View Order',
@@ -130,6 +113,12 @@ export function NewPostpaidWizard() {
             label: 'Contact',
             render: ({ values, setValue }) => (
               <GuidedContactStep
+                // Direct postpaid sale is limited to a valid QID or
+                // Diplomatic ID (2026-09-25). Passport, GCC ID and other
+                // exception identification go through CBM approval, so they
+                // are not offered here at all - the eligibility engine still
+                // routes them if one reaches it via another journey.
+                allowedIdTypes={['QID', 'Diplomatic ID']}
                 value={(values.contact as GuidedContactValue) ?? {}}
                 onChange={(v) => setValue('contact', v)}
                 showIptvToggle={false}
@@ -146,9 +135,31 @@ export function NewPostpaidWizard() {
             description: 'Blacklist, line cap & HRN',
             render: ({ values, setValue }) => {
               const contact = values.contact as GuidedContactValue | undefined;
-              return <EligibilityGateStep idNumber={contact?.idNumber} onResult={(r) => setValue('eligibility', r)} />;
+              return (
+                <EligibilityGateStep
+                  idNumber={contact?.idNumber}
+                  // Feeding the previous result back in is what makes this a
+                  // one-time check across re-entries to the step.
+                  result={values.eligibility as EligibilityResult | undefined}
+                  onResult={(r) => setValue('eligibility', r)}
+                />
+              );
             },
             isValid: (values) => (values.eligibility as EligibilityResult | undefined)?.pass === true,
+            // No hard stop (and no soft stop) means there is nothing for the
+            // agent to do here, so the step reports and moves on rather than
+            // asking them to acknowledge seven green rows with a click.
+            //
+            // Requires the result to EXIST first: while the checks are still
+            // resolving `eligibility` is undefined, and advancing then would
+            // skip the step before it had evaluated anything.
+            //
+            // A check that routes for approval still advances - the matrix
+            // classes that as a diversion, not a stop.
+            autoAdvanceWhen: (values) => {
+              const result = values.eligibility as EligibilityResult | undefined;
+              return Boolean(result) && result!.pass === true;
+            },
           },
           {
             key: 'address',
@@ -167,17 +178,11 @@ export function NewPostpaidWizard() {
             // Mandatory: No per FLD-523–526 - never gates progression, matching the evidenced Skip Address affordance.
             isValid: () => true,
           },
-          {
-            key: 'billing',
-            label: 'Billing',
-            render: ({ values, setValue }) => (
-              <BillingProfileStep
-                value={(values.billing as BillingProfileValue) ?? {}}
-                onChange={(v) => setValue('billing', v)}
-              />
-            ),
-            isValid: () => true,
-          },
+          // The Billing step (Language / Payment Type / Payment Method / Bill
+          // Media) was removed on 2026-09-25 as not required. Nothing is
+          // orphaned by it: the order record this wizard writes never carried
+          // those fields, and Checkout's "Billing" row is now conditional
+          // rather than rendering a permanent "-".
           {
             key: 'plan',
             label: 'Plan & Add-ons',
@@ -189,15 +194,13 @@ export function NewPostpaidWizard() {
                 onSelectDiscount={(id) => setValue('discountId', id)}
                 addonIds={(values.addonIds as string[] | undefined) ?? []}
                 onAddonsChange={(ids) => setValue('addonIds', ids)}
-                billLimit={values.billLimit as number | undefined}
-                onBillLimitChange={(amount, pass) => {
-                  setValue('billLimit', amount);
-                  setValue('billLimitPass', pass);
-                }}
-                defaultCreditLimitQar={(values.eligibility as EligibilityResult | undefined)?.defaultCreditLimitQar}
               />
             ),
-            isValid: (values) => Boolean(values.productId) && values.billLimitPass !== false,
+            // Was `&& values.billLimitPass !== false`. The Bill Limit editor
+            // was removed from this step on 2026-09-25, so nothing sets that
+            // flag any more and the clause could only ever pass - a gate that
+            // cannot fail is worse than no gate, because it reads as one.
+            isValid: (values) => Boolean(values.productId),
           },
           {
             key: 'number',
@@ -264,7 +267,6 @@ export function NewPostpaidWizard() {
                   customerName={contact?.moiResult?.name}
                   idNumber={contact?.idNumber}
                   mobile={contact?.altPhone}
-                  billingMethod={(values.billing as { paymentMethod?: string } | undefined)?.paymentMethod}
                   productId={values.productId as string | undefined}
                   addonIds={(values.addonIds as string[] | undefined) ?? []}
                   msisdn={values.msisdn as string | undefined}
@@ -353,7 +355,6 @@ export function NewPostpaidWizard() {
             productId: values.productId,
             discountId: values.discountId,
             addonIds,
-            billLimitQAR: values.billLimit,
             msisdn: values.msisdn,
             numberPriceQAR: numberDelta,
             deviceName: doi?.deviceName,

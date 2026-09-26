@@ -481,7 +481,7 @@ export function TicketDetail() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-fg-2 text-[length:var(--fs-body)]">Audit trail is role-restricted from this persona (BR-067).</p>
+                    <p className="text-fg-2 text-[length:var(--fs-body)]">Audit trail is role-restricted from this persona.</p>
                   ),
                 },
               ]}

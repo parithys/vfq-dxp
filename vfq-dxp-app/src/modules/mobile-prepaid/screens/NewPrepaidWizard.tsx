@@ -104,21 +104,6 @@ export function NewPrepaidWizard() {
             { label: 'Total charged', value: `QR ${confirmedOrder.totalQar}` },
             { label: 'Status', value: confirmedOrder.status },
           ]}
-          nextSteps={
-            confirmedOrder.pendingApproval
-              ? [
-                  'A back office fulfilment agent reviews this order in the Order Approval queue (BR-004).',
-                  'The customer is notified once a decision is made.',
-                  'Track its status from Order Management at any time.',
-                ]
-              : [
-                  'The prepaid service, MSISDN and balance are now active on the network.',
-                  'A copy of the CAF has been stored against this account.',
-                  confirmedOrder.simType === 'eSIM'
-                    ? 'The customer can install the eSIM using the QR code sent to their email.'
-                    : 'Hand the physical SIM to the customer.',
-                ]
-          }
           actions={[
             {
               label: 'View Order',
@@ -154,7 +139,12 @@ export function NewPrepaidWizard() {
             render: ({ values, setValue }) => {
               const contact = values.contact as ContactValue | undefined;
               return (
-                <EligibilityGateStep idNumber={contact?.idNumber} journeyType="prepaid" onResult={(r) => setValue('eligibility', r)} />
+                <EligibilityGateStep
+                  idNumber={contact?.idNumber}
+                  journeyType="prepaid"
+                  result={values.eligibility as EligibilityResult | undefined}
+                  onResult={(r) => setValue('eligibility', r)}
+                />
               );
             },
             isValid: (values) => (values.eligibility as EligibilityResult | undefined)?.pass === true,

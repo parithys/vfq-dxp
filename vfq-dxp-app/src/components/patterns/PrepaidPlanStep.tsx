@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { Badge } from '../primitives/Badge';
+import { Radio } from '../primitives/Radio';
 
 interface PrepaidPlan {
   productId: string;
@@ -62,8 +63,12 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-6">
-        <div className="space-y-4">
+      {/* Header row + content row, adopted as a subgrid by both columns so the
+          pack cards and the discount cards start at the same y despite the left
+          heading carrying a second line and the right not - same reasoning as
+          PostpaidPlanAddonsStep, which has the identical pairing. */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] lg:grid-rows-[auto_auto] gap-6">
+        <div className="grid gap-4 lg:row-span-2 lg:grid-rows-subgrid">
           <div>
             <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Prepaid Pack</h3>
             <p className="text-muted text-[length:var(--fs-caption)]">Select a starter pack, or continue SIM-only</p>
@@ -78,10 +83,9 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
                     selected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
                   }`}
                 >
-                  <input
-                    type="radio"
+                  <Radio
                     name="prepaid-plan"
-                    className="mt-1 accent-[var(--field-selected)]"
+                    className="mt-1"
                     checked={selected}
                     onChange={() => onSelectProduct(p.productId)}
                   />
@@ -119,7 +123,7 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="grid gap-4 lg:row-span-2 lg:grid-rows-subgrid">
           <div>
             <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Eligible Discounts</h3>
           </div>
@@ -133,7 +137,7 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
                 }`}
               >
                 <span className="flex items-center gap-3">
-                  <input type="radio" name="prepaid-discount" checked={!discountId} onChange={() => onSelectDiscount(undefined)} className="accent-[var(--field-selected)]" />
+                  <Radio name="prepaid-discount" checked={!discountId} onChange={() => onSelectDiscount(undefined)} />
                   <span>
                     <span className="text-fg">No discount</span>
                     <span className="block text-[length:var(--fs-caption)] text-muted">Continue without a discount</span>
@@ -149,12 +153,10 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
                   }`}
                 >
                   <span className="flex items-center gap-3">
-                    <input
-                      type="radio"
+                    <Radio
                       name="prepaid-discount"
                       checked={discountId === d.addonDiscountId}
                       onChange={() => onSelectDiscount(d.addonDiscountId)}
-                      className="accent-[var(--field-selected)]"
                     />
                     <span>
                       <span className="text-fg">{d.name}</span>

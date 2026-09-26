@@ -12,6 +12,16 @@ export interface CustomerRecord {
   phone?: string;
   preferredLanguage?: string;
   blacklisted: boolean;
+  /** Free-text reason, present in customers.json but previously untyped. */
+  blacklistReason?: string;
+  /**
+   * Which KIND of block, seeded 2026-09-25. The eligibility matrix treats a
+   * collections block (soft stop for postpaid, prepaid offered) and a security
+   * block (hard stop) as different outcomes, which `blacklisted` alone cannot
+   * express. Absent means the block is unclassified, which the eligibility
+   * engine treats as a hard stop rather than guessing the lenient branch.
+   */
+  blacklistCategory?: 'collections' | 'security';
   moiValidationStatus?: string;
   hrnAdvancePaymentRequired?: boolean;
   activePostpaidLines?: number;
@@ -41,6 +51,24 @@ export interface AccountRecord {
   billingProfileId?: string;
   subAccountIds?: string[];
   parentAccountId?: string;
+}
+
+/**
+ * Whether the customer HOLDS an account in their own right or sits under
+ * someone else's.
+ *
+ * Read off accounts.json's `parentAccountId`: an account with none is a
+ * top-level account, one with a parent is a sub-account. A customer who holds
+ * at least one top-level account is the primary holder; one whose accounts are
+ * all sub-accounts is a secondary holder on another account.
+ *
+ * `undefined` for a customer with no accounts at all - that is not "secondary",
+ * it is "not an account holder yet", which is exactly the state a new-connection
+ * walk-in is in. Claiming either label there would be wrong.
+ */
+export function accountHolderStatus(accounts: AccountRecord[]): 'Primary' | 'Secondary' | undefined {
+  if (accounts.length === 0) return undefined;
+  return accounts.some((a) => !a.parentAccountId) ? 'Primary' : 'Secondary';
 }
 
 export type CustomerSearchField = 'mobile' | 'qid' | 'customerNumber' | 'accountNumber' | 'name' | 'email' | 'serviceId';

@@ -118,7 +118,7 @@ export function BellNotificationsSection() {
               type="date"
               value={expiresAt}
               onChange={(e) => setExpiresAt(e.target.value)}
-              helperText="Required to publish (BR-04) - optional only while saving as a draft."
+              helperText="Required to publish - optional only while saving as a draft."
             />
             <div className="col-span-2">
               <Select
@@ -153,7 +153,7 @@ export function BellNotificationsSection() {
         <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mb-6">
           <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Configure a notification</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)]">
-            Restricted to Backoffice and privileged staff roles (Agent 360 BIN-01, BR-03). This persona does not have
+            Restricted to Backoffice and privileged staff roles (Agent 360 BIN-01). This persona does not have
             configuration access.
           </p>
         </div>

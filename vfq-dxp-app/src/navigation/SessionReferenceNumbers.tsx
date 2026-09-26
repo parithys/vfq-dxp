@@ -17,7 +17,7 @@ import {
 import { usePersonaStore } from '../stores/personaStore';
 import { canSeeQnomyTicketNumber, canSeeCtiReferenceNumber } from '../engines/agentPrivilegeEngine';
 import { toActiveCustomerSummary, type AccountRecord, type CustomerRecord } from '../engines/customer360Engine';
-import { listCustomerServices, type ServiceSources } from '../engines/customerServicesEngine';
+import { groupServicesByCategory, listCustomerServices, type ServiceSources } from '../engines/customerServicesEngine';
 import { Badge } from '../components/primitives/Badge';
 import { Button } from '../components/primitives/Button';
 import { Icon } from '../components/primitives/Icon';
@@ -64,8 +64,15 @@ interface TroubleTicketRecord {
 // null customerId, which matches nobody in customers.json.
 interface KioskCustomerFacts {
   brand: ToastBrand;
-  /** One link per active service. Empty for a customer holding none. */
+  /** One link per service CATEGORY the customer holds. Empty for none. */
   links: ToastServiceLink[];
+  /**
+   * Total services across those categories. Carried explicitly rather than
+   * summed back out of the link labels - those are formatted display strings
+   * ("Postpaid (2)"), and re-parsing a number out of presentation text is a
+   * dependency on the wording that would break the moment it changed.
+   */
+  serviceCount: number;
 }
 
 // The Active lines row. The COUNT lives in the label - "Active lines (4)" -
@@ -82,9 +89,12 @@ interface KioskCustomerFacts {
 function activeLinesRow(facts: KioskCustomerFacts | undefined): ToastRow {
   if (!facts) return { label: 'Active lines', value: 'Not recorded' };
   if (facts.brand.operator === 'other') return { label: 'Active lines', value: 'Not applicable' };
-  if (facts.links.length === 0) return { label: 'Active lines', value: 'None' };
+  if (facts.serviceCount === 0) return { label: 'Active lines', value: 'None' };
   // Empty value, not a repeat of the count: it is in the label now.
-  return { label: `Active lines (${facts.links.length})`, value: '', links: facts.links };
+  // The count is SERVICES, not category rows: facts.links.length would have
+  // read "Active lines (2)" for a customer holding four services across two
+  // categories.
+  return { label: `Active lines (${facts.serviceCount})`, value: '', links: facts.links };
 }
 
 function factsForKioskNumber(
@@ -97,7 +107,7 @@ function factsForKioskNumber(
     // Not "None": a competitor's customer does not hold zero Vodafone
     // services, the question does not apply to them. Zero is a different
     // claim.
-    return { brand: { operator: 'other' }, links: [] };
+    return { brand: { operator: 'other' }, links: [], serviceCount: 0 };
   }
 
   // The customer's WHOLE relationship, not their mobile lines - mobile,
@@ -114,14 +124,24 @@ function factsForKioskNumber(
   // identifies is listed. Counting 4 while showing 1 would be worse - the
   // three others have no number to link to and cannot be opened.
   const services = listCustomerServices(matched, sources);
+  // GROUPED BY CATEGORY as of 2026-09-25, not one row per service. Four
+  // identifiers under a count told the agent what the services ARE called,
+  // which is not a question they have at the moment of greeting; the shape of
+  // the relationship is. "Postpaid (2), GigaHome Fibre (1)" answers that in
+  // one glance where "+97455512001 / SVC-30011 / GHO-15001 / IPTV-2001" did
+  // not.
+  const groups = groupServicesByCategory(services);
   return {
-    brand: { operator: 'vodafone', relationship: relationshipOf(matched) },
-    links: services.map((service) => ({
-      label: service.identifier,
+    brand: { operator: 'vodafone', segment: segmentOf(matched), relationship: relationshipOf(matched) },
+    serviceCount: services.length,
+    links: groups.map((group) => ({
+      label: `${group.category} (${group.count})`,
       customerId: matched.customerId,
-      tab: service.tab,
-      serviceRef: service.ref,
-      note: service.label,
+      tab: group.tab,
+      // No serviceRef: a category opens its tab, it does not select one
+      // service. Customer360Layout leaves nothing highlighted, which is right
+      // - the agent asked for the category, not a row in it.
+      note: `${group.count} ${group.count === 1 ? 'service' : 'services'}`,
     })),
   };
 }
@@ -153,6 +173,24 @@ function loadServiceSources(): Promise<ServiceSources> {
     iptvBundles,
     smartDevices,
   }));
+}
+
+// Consumer or Business, collapsed from customers.json's three segment values:
+// 'Consumer', 'Consumer (HRN)' and 'Enterprise (EBU)'.
+//
+// HRN stays CONSUMER on purpose. It is a risk classification layered on top
+// of a consumer account - it drives an advance payment, not a different line
+// of business - and the Eligibility step already reports it in its own row.
+// Folding it into "Business" would misfile a consumer as an enterprise.
+//
+// Anything unrecognised returns undefined rather than defaulting to Consumer,
+// so a new segment value surfaces as a missing label instead of being
+// silently filed as the commoner of the two.
+function segmentOf(customer: CustomerRecord): string | undefined {
+  const segment = customer.segment ?? '';
+  if (/enterprise|business|b2b|ebu/i.test(segment)) return 'Business';
+  if (/consumer/i.test(segment)) return 'Consumer';
+  return undefined;
 }
 
 // Prepaid or Postpaid for THE NUMBER Qnomy handed over - never both.
@@ -213,7 +251,15 @@ function ticketToastRows(
       label: 'Customer name',
       value: customerName ?? (facts?.brand.operator === 'other' ? 'Ooredoo Customer' : 'Not on file'),
     },
-    { label: 'Mobile number', value: mobile ?? 'Not captured' },
+    {
+      label: 'Mobile number',
+      value: mobile ?? 'Not captured',
+      // The relationship on THIS number, in brackets beneath it (2026-09-25).
+      // Absent rather than guessed for a competitor's customer and for a
+      // Vodafone customer with no active line - neither has a prepaid or
+      // postpaid standing on this number to state.
+      sub: facts?.brand.relationship ? `(${facts.brand.relationship})` : undefined,
+    },
     activeLinesRow(facts),
     {
       label: 'Purpose of visit',
@@ -331,6 +377,7 @@ export function SessionReferenceNumbers() {
   const pushToast = useNotificationStore((s) => s.pushToast);
   const awaitingNext = useQnomyQueueStore((s) => s.awaitingNext);
   const setAwaitingNext = useQnomyQueueStore((s) => s.setAwaitingNext);
+  const recordCustomerServed = useQnomyQueueStore((s) => s.recordCustomerServed);
   const assignedQTicketId = useQnomyQueueStore((s) => s.assignedQTicketId);
   const kioskMobileNumber = useQnomyQueueStore((s) => s.kioskMobileNumber);
   const setKioskMobileNumber = useQnomyQueueStore((s) => s.setKioskMobileNumber);
@@ -444,6 +491,8 @@ export function SessionReferenceNumbers() {
     setAssignedQTicketId(null);
     setKioskMobileNumber(null);
     setAwaitingNext(true);
+    // Counted here and not in handleAbandon - see the store's note.
+    recordCustomerServed();
     pushToast('success', `Customer servicing for ticket ${activeQTicket.qTicketId} completed.`);
   };
 

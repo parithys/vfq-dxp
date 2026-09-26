@@ -182,7 +182,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
         />
         <Input
           label="Search ticket category"
-          placeholder="Type at least 3 characters to filter (BR-002)…"
+          placeholder="Type at least 3 characters to filter…"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           helperText="Knowledge-base-assisted category search (MPRA_001_CRE-01)."

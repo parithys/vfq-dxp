@@ -21,7 +21,8 @@ interface CheckoutSummaryStepProps {
   /** Echoed onto the read-back summary - see the row-order note in the body. */
   idNumber: string | undefined;
   mobile: string | undefined;
-  billingMethod: string | undefined;
+  /** Optional - the postpaid journey no longer collects one. */
+  billingMethod?: string;
   productId: string | undefined;
   addonIds: string[];
   msisdn: string | undefined;
@@ -93,13 +94,16 @@ export function CheckoutSummaryStep({
         <Row label="Plan" value={plan ? `${plan.name} - QR ${plan.mrcQAR}/mo` : '-'} />
         <Row label="Number" value={msisdn ? `${msisdn}${numberDelta > 0 ? ` (premium, QR ${numberDelta} one-time)` : ''}` : '-'} />
         <Row label="SIM Type" value={simType?.simType ?? '-'} />
-        <Row label="Billing" value={billingMethod ?? '-'} />
+        {/* Conditional: the postpaid journey dropped its Billing step on
+            2026-09-25, so there is nothing to report there. Other journeys
+            that still collect one are unaffected. */}
+        {billingMethod && <Row label="Billing" value={billingMethod} />}
         {doi && <Row label="Device" value={`${doi.deviceName} - QR ${doi.downPaymentQar} down, QR ${doi.monthlyInstallmentQar}/mo x ${doi.installmentMonths}`} />}
         <Row
           label="Add-ons"
           value={addons.length ? addons.map((a) => `${a.name} (QR ${a.mrcQAR}/mo)`).join(', ') : 'None'}
         />
-        {hrnAdvance > 0 && <Row label="HRN advance payment" value={`QR ${hrnAdvance} (BR-187)`} />}
+        {hrnAdvance > 0 && <Row label="HRN advance payment" value={`QR ${hrnAdvance}`} />}
       </dl>
 
       <div className="rounded-[var(--radius-card)] border border-accent/40 bg-surface-warm p-4 space-y-1">

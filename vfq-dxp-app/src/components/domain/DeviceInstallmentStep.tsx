@@ -317,9 +317,11 @@ export function DeviceInstallmentStep({
 
       {value && (
         <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg overflow-hidden">
+          {/* justify-between kept though only one child remains: the rule-id
+              chip that sat on the right was removed with the rest of the BRSD
+              references, and nothing else belongs in that corner. */}
           <div className="px-5 py-4 border-b border-border-soft bg-surface flex items-center justify-between">
             <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Device on Installment (DOI) Declaration</h3>
-            <span className="text-muted text-[length:var(--fs-caption)]">BR-114</span>
           </div>
           <div className="p-5 space-y-3">
             <div className="flex items-start gap-2 rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_88%)] px-4 py-3">
@@ -327,7 +329,7 @@ export function DeviceInstallmentStep({
               <div>
                 <p className="text-fg font-medium text-[length:var(--fs-body)]">Customer must confirm the DOI terms before continuing</p>
                 <p className="text-fg-2 text-[length:var(--fs-caption)] mt-0.5">
-                  Confirms the customer understands the instalment term, monthly payments, and early-settlement terms (BR-114).
+                  Confirms the customer understands the instalment term, monthly payments, and early-settlement terms.
                 </p>
               </div>
             </div>

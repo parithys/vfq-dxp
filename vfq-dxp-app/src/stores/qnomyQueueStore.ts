@@ -22,6 +22,20 @@ interface QnomyQueueState {
    * explicit Next Customer click may end this state. */
   awaitingNext: boolean;
   setAwaitingNext: (value: boolean) => void;
+  /**
+   * How many customers this login session has finished servicing.
+   *
+   * Incremented by Finish only, NOT by Abandoned: a walk-in who left before
+   * servicing completed was not served, and counting them would overstate the
+   * agent's throughput with the one outcome they did not achieve.
+   *
+   * Held here rather than derived from qtickets.json because the release path
+   * writes `agentInDxpSessionId: null` when it completes a ticket - the record
+   * keeps the 'Completed' status but loses the link to who completed it, so
+   * the dataset cannot answer "how many did I serve".
+   */
+  customersServed: number;
+  recordCustomerServed: () => void;
 }
 
 // Not persisted deliberately: both fields are live front-desk state for the
@@ -36,4 +50,6 @@ export const useQnomyQueueStore = create<QnomyQueueState>((set) => ({
   setKioskMobileNumber: (m) => set({ kioskMobileNumber: m }),
   awaitingNext: false,
   setAwaitingNext: (value) => set({ awaitingNext: value }),
+  customersServed: 0,
+  recordCustomerServed: () => set((state) => ({ customersServed: state.customersServed + 1 })),
 }));

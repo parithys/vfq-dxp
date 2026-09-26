@@ -11,7 +11,9 @@
     "orderId": null,
     "quoteRequiresOrder": true,
     "calculatedAt": "2026-08-20T10:15:00+03:00",
-    "status": "Pending"
+    "status": "Pending",
+    "blocksNewConnection": false,
+    "_blockingNote": "App-level demo addition (2026-09-25) - the eligibility matrix checks for a deal that prevents a new connection, and nothing here recorded that. Seeded true on this one record only so the hard stop is reachable; a pending penalty does NOT block by itself, or CUST-1001 (PEN-8101, Pending) would be unable to open the standard journey."
   },
   {
     "penaltyId": "PEN-8102",
@@ -25,7 +27,9 @@
     "orderId": "ORD-90003",
     "quoteRequiresOrder": true,
     "calculatedAt": "2026-08-19T14:40:00+03:00",
-    "status": "Applied"
+    "status": "Applied",
+    "blocksNewConnection": true,
+    "_blockingNote": "App-level demo addition (2026-09-25) - the eligibility matrix checks for a deal that prevents a new connection, and nothing here recorded that. Seeded true on this one record only so the hard stop is reachable; a pending penalty does NOT block by itself, or CUST-1001 (PEN-8101, Pending) would be unable to open the standard journey."
   },
   {
     "penaltyId": "PEN-8103",
@@ -39,6 +43,8 @@
     "orderId": "ORD-90002",
     "quoteRequiresOrder": true,
     "calculatedAt": "2026-08-18T09:05:00+03:00",
-    "status": "Waived"
+    "status": "Waived",
+    "blocksNewConnection": false,
+    "_blockingNote": "App-level demo addition (2026-09-25) - the eligibility matrix checks for a deal that prevents a new connection, and nothing here recorded that. Seeded true on this one record only so the hard stop is reachable; a pending penalty does NOT block by itself, or CUST-1001 (PEN-8101, Pending) would be unable to open the standard journey."
   }
 ]

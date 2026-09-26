@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { Badge } from '../primitives/Badge';
+import { Radio } from '../primitives/Radio';
 import { AddonsPicker } from '../domain/AddonsPicker';
-import { BillLimitEditor } from '../domain/BillLimitEditor';
 
 interface PostpaidPlan {
   productId: string;
@@ -37,12 +37,9 @@ interface PostpaidPlanAddonsStepProps {
   onSelectDiscount: (discountId: string | undefined) => void;
   addonIds: string[];
   onAddonsChange: (ids: string[]) => void;
-  billLimit: number | undefined;
-  onBillLimitChange: (amount: number, pass: boolean) => void;
   /** Agent 360... no - Agent 360 doesn't apply here; this is BR-076's
    * eligibility-derived default (EligibilityGateStep), shown read-only so
    * the agent sees what limit this activation was pre-qualified against. */
-  defaultCreditLimitQar: number | undefined;
 }
 
 // "RED Plan" & "Eligible Discounts" - Mobile Postpaid's Plan & Add-ons step
@@ -63,9 +60,6 @@ export function PostpaidPlanAddonsStep({
   onSelectDiscount,
   addonIds,
   onAddonsChange,
-  billLimit,
-  onBillLimitChange,
-  defaultCreditLimitQar,
 }: PostpaidPlanAddonsStepProps) {
   const [plans, setPlans] = useState<PostpaidPlan[]>([]);
   const [addonProducts, setAddonProducts] = useState<AddonProduct[]>([]);
@@ -97,9 +91,16 @@ export function PostpaidPlanAddonsStep({
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-6">
-        {/* Left column: plan tiers + credit limit */}
-        <div className="space-y-4">
+      {/* Two explicit rows - header, then content - that each column adopts as
+          a subgrid, so the headers share one row and the cards below them start
+          at the same y in both columns. The left header is two lines ("RED
+          Plan" + "Select your plan") and the right is one, so columns sized
+          independently would each start their cards wherever their own header
+          happened to end. A spacer in the short header would align today's
+          pixels and drift the moment either heading wraps or gains a line. */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] lg:grid-rows-[auto_auto] gap-6">
+        {/* Left column: plan tiers */}
+        <div className="grid gap-4 lg:row-span-2 lg:grid-rows-subgrid">
           <div>
             <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">RED Plan</h3>
             <p className="text-muted text-[length:var(--fs-caption)]">Select your plan</p>
@@ -114,10 +115,9 @@ export function PostpaidPlanAddonsStep({
                     selected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
                   }`}
                 >
-                  <input
-                    type="radio"
+                  <Radio
                     name="postpaid-plan"
-                    className="mt-1 accent-[var(--field-selected)]"
+                    className="mt-1"
                     checked={selected}
                     onChange={() => onSelectProduct(p.productId)}
                   />
@@ -151,75 +151,63 @@ export function PostpaidPlanAddonsStep({
             })}
             {plans.length === 0 && <p className="text-muted">No Postpaid Plan products in the mock catalogue.</p>}
           </div>
-
-          {defaultCreditLimitQar !== undefined && (
-            <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4">
-              <h4 className="text-fg font-semibold">Credit Limit</h4>
-              <p className="text-muted text-[length:var(--fs-caption)] mb-2">
-                Derived from the eligibility check (BR-076) - not amendable.
-              </p>
-              <div className="rounded-[var(--field-radius)] border border-[var(--field-border-disabled)] bg-bg px-3 py-2 text-[var(--field-label-disabled)]">
-                QAR {defaultCreditLimitQar.toLocaleString()}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Right column: discounts, add-ons, bill limit */}
-        <div className="space-y-4">
+        {/* Right column: discounts, add-ons */}
+        <div className="grid gap-4 lg:row-span-2 lg:grid-rows-subgrid">
           <div>
             <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Eligible Discounts</h3>
           </div>
-          {!selectedProductId ? (
-            <p className="text-muted text-[length:var(--fs-caption)]">Select a plan to see eligible discounts.</p>
-          ) : (
-            <div className="space-y-2">
-              <label
-                className={`flex items-center justify-between gap-2 rounded-[var(--radius-card)] border p-3 cursor-pointer ${
-                  !discountId ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
-                }`}
-              >
-                <span className="flex items-center gap-3">
-                  <input type="radio" name="postpaid-discount" checked={!discountId} onChange={() => onSelectDiscount(undefined)} className="accent-[var(--field-selected)]" />
-                  <span>
-                    <span className="text-fg">No discount</span>
-                    <span className="block text-[length:var(--fs-caption)] text-muted">Continue without a discount</span>
-                  </span>
-                </span>
-                <span className="text-muted">-</span>
-              </label>
-              {discounts.map((d) => (
+          {/* Both blocks share the content row - a subgrid column spanning two
+              rows must have exactly two children, or the extra ones spill into
+              implicit rows the parent knows nothing about. */}
+          <div className="space-y-4">
+            {!selectedProductId ? (
+              <p className="text-muted text-[length:var(--fs-caption)]">Select a plan to see eligible discounts.</p>
+            ) : (
+              <div className="space-y-2">
                 <label
-                  key={d.addonDiscountId}
                   className={`flex items-center justify-between gap-2 rounded-[var(--radius-card)] border p-3 cursor-pointer ${
-                    discountId === d.addonDiscountId ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
+                    !discountId ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
                   }`}
                 >
                   <span className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name="postpaid-discount"
-                      checked={discountId === d.addonDiscountId}
-                      onChange={() => onSelectDiscount(d.addonDiscountId)}
-                      className="accent-[var(--field-selected)]"
-                    />
+                    <Radio name="postpaid-discount" checked={!discountId} onChange={() => onSelectDiscount(undefined)} />
                     <span>
-                      <span className="text-fg">{d.name}</span>
-                      <span className="block text-[length:var(--fs-caption)] text-muted">{d.description}</span>
+                      <span className="text-fg">No discount</span>
+                      <span className="block text-[length:var(--fs-caption)] text-muted">Continue without a discount</span>
                     </span>
                   </span>
-                  <span className="text-success font-medium shrink-0">{Math.round(d.price * 100)}%</span>
+                  <span className="text-muted">-</span>
                 </label>
-              ))}
-              {discounts.length === 0 && (
-                <p className="text-muted text-[length:var(--fs-caption)]">No discounts configured for this plan.</p>
-              )}
+                {discounts.map((d) => (
+                  <label
+                    key={d.addonDiscountId}
+                    className={`flex items-center justify-between gap-2 rounded-[var(--radius-card)] border p-3 cursor-pointer ${
+                      discountId === d.addonDiscountId ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
+                    }`}
+                  >
+                    <span className="flex items-center gap-3">
+                      <Radio
+                        name="postpaid-discount"
+                        checked={discountId === d.addonDiscountId}
+                        onChange={() => onSelectDiscount(d.addonDiscountId)}
+                      />
+                      <span>
+                        <span className="text-fg">{d.name}</span>
+                        <span className="block text-[length:var(--fs-caption)] text-muted">{d.description}</span>
+                      </span>
+                    </span>
+                    <span className="text-success font-medium shrink-0">{Math.round(d.price * 100)}%</span>
+                  </label>
+                ))}
+                {discounts.length === 0 && (
+                  <p className="text-muted text-[length:var(--fs-caption)]">No discounts configured for this plan.</p>
+                )}
             </div>
           )}
-
-          <AddonsPicker selectedIds={addonIds} onChange={onAddonsChange} />
-
-          {selectedProductId && <BillLimitEditor product="Mobile" value={billLimit} onChange={onBillLimitChange} />}
+            <AddonsPicker selectedIds={addonIds} onChange={onAddonsChange} />
+          </div>
         </div>
       </div>
 

@@ -7,6 +7,9 @@ import { Icon } from '../components/primitives/Icon';
 import { Tooltip } from '../components/primitives/Tooltip';
 import { TooltipGroup } from '../components/primitives/TooltipContext';
 import { useSidebarStore } from '../stores/sidebarStore';
+import { useQnomyQueueStore } from '../stores/qnomyQueueStore';
+import { usePersonaStore } from '../stores/personaStore';
+import { canSeeQnomyTicketNumber } from '../engines/agentPrivilegeEngine';
 import { GlobalSearch } from './GlobalSearch';
 import { SessionReferenceNumbers } from './SessionReferenceNumbers';
 import { HeaderContextChips } from './HeaderContextChips';
@@ -35,6 +38,11 @@ export function PersonaSwitcher() {
   const history = useNotificationStore((s) => s.history);
   const markAllRead = useNotificationStore((s) => s.markAllRead);
   const toggleMobileOpen = useSidebarStore((s) => s.toggleMobileOpen);
+  const customersServed = useQnomyQueueStore((s) => s.customersServed);
+  const activePersonaId = usePersonaStore((s) => s.activePersonaId);
+  // Same gate the Qnomy ticket control uses, so the counter appears exactly
+  // for the roles that can actually finish a walk-in.
+  const showQnomy = canSeeQnomyTicketNumber(activePersonaId);
   const unreadCount = history.filter((h) => !h.read).length;
 
   const [open, setOpen] = useState<'notifications' | 'help' | 'profile' | null>(null);
@@ -92,6 +100,40 @@ export function PersonaSwitcher() {
 
       <TooltipGroup>
       <div ref={containerRef} className="col-start-4 justify-self-end ml-auto flex items-center gap-2">
+        {/* Customers served this session. The COUNT alone is on screen and
+            "Customers Served" is the tooltip, per direction - the topbar is
+            already dense, and a bare figure beside the icon row reads as a
+            counter without a label competing with the search box and the
+            profile chip for width.
+
+            Only for roles that work the walk-in queue: the same gate the
+            Qnomy ticket control uses. A back-office or oversight role never
+            clicks Finish, so their count could only ever read 0, and a
+            permanent zero looks like a broken stat rather than a role that
+            does not serve customers at a counter. */}
+        {showQnomy && (
+          <Tooltip content="Customers Served" placement="bottom">
+            <span
+              tabIndex={0}
+              // Focusable and labelled, so the meaning is reachable without a
+              // hover - the tooltip is the only place the words appear.
+              aria-label={`Customers Served: ${customersServed}`}
+              // Filled --accent with white text, matching the profile-initials
+              // avatar at the other end of this same strip rather than
+              // inventing a colour for it. No border: the fill defines the
+              // pill, and keeping --border-soft as well left a pale ring
+              // around a solid shape.
+              //
+              // White on #e60000 is 5.25:1, so it clears SC 1.4.3 for normal
+              // text - which matters because the digit IS the content here,
+              // not decoration.
+              className="min-w-10 h-10 px-2 rounded-[var(--radius-pill)] bg-accent text-accent-on flex items-center justify-center font-semibold text-[length:var(--fs-body)] cursor-default"
+            >
+              {customersServed}
+            </span>
+          </Tooltip>
+        )}
+
         <Tooltip content={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} placement="bottom">
           <button
             onClick={toggleTheme}

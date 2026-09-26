@@ -220,7 +220,7 @@ export function OrderApprovalDetail() {
   };
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-8">
       <div className="flex items-center gap-3 mb-1">
         <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">Order {order.orderId}</h1>
         <Badge variant="outlined-red">{order.status}</Badge>
@@ -295,7 +295,7 @@ export function OrderApprovalDetail() {
 
       {!isEligibleApprover && (
         <div className="mt-4 rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_92%)] px-4 py-3 text-[length:var(--fs-body)] text-[var(--warn-text)]">
-          Only a {requiredRole} may approve, reject, or return this order (Agent 360 AAV-01/BR-06).
+          Only a {requiredRole} may approve, reject, or return this order (Agent 360 AAV-01).
         </div>
       )}
 
@@ -344,7 +344,7 @@ export function OrderApprovalDetail() {
             placeholder="Select a reason"
             options={reasons.map((r) => ({ value: r.reasonCode, label: r.reasonLabel }))}
           />
-          <Textarea label="Comments (required - BR-06)" value={rejectComment} onChange={(e) => setRejectComment(e.target.value)} />
+          <Textarea label="Comments (required)" value={rejectComment} onChange={(e) => setRejectComment(e.target.value)} />
         </div>
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>

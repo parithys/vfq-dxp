@@ -50,7 +50,7 @@ const ruleImplementations: Record<string, RuleImplementation> = {
     return {
       pass: false,
       message:
-        `Unresolved: the fibre outstanding-dues threshold is contradictorily specified (BRSD Open Item OI-04 / BR-033) - ` +
+        `Unresolved: the fibre outstanding-dues threshold is contradictorily specified - ` +
         `one position requires a fibre-specific QAR limit, another says it must equal the mobile/postpaid threshold. No value is agreed. ` +
         `Escalate to VFQ Collections/Credit Control before this account (collection status: ${collectionStatus}) can proceed on a definitive rule.`,
     };
@@ -137,13 +137,13 @@ const ruleImplementations: Record<string, RuleImplementation> = {
   // in-journey bypass - so this never exposes an override control here.
   'BR-288': (ctx) => {
     const { nationality, activePostpaidLines } = ctx as { nationality: string; activePostpaidLines: number };
-    if (nationality === 'Qatari') return { pass: true, message: 'Qatari nationals have no line cap (BR-110).' };
+    if (nationality === 'Qatari') return { pass: true, message: 'Qatari nationals have no line cap.' };
     const cap = 2;
     return activePostpaidLines < cap
-      ? { pass: true, message: `${activePostpaidLines}/${cap} postpaid mobile lines used (expat cap, BR-288).` }
+      ? { pass: true, message: `${activePostpaidLines}/${cap} postpaid mobile lines used (expat cap).` }
       : {
           pass: false,
-          message: `Expat QID cap of ${cap} postpaid mobile lines reached (BR-288 - a business-policy cap tighter than the system's technical 5-line/operator limit, BR-110). Overriding requires an authorized-officer role flag on the account (BR-111), not an in-journey bypass.`,
+          message: `Expat QID cap of ${cap} postpaid mobile lines reached - a business-policy cap tighter than the system's technical 5-line/operator limit. Overriding requires an authorized-officer role flag on the account, not an in-journey bypass.`,
         };
   },
 
@@ -171,28 +171,28 @@ const ruleImplementations: Record<string, RuleImplementation> = {
       activePostpaidLines: number;
     };
     if (nationality === 'Qatari') {
-      return { pass: true, message: 'Qatari nationals have no prepaid connection cap (BR-003).' };
+      return { pass: true, message: 'Qatari nationals have no prepaid connection cap.' };
     }
     if (idType === 'Passport' || idType === 'GCC ID') {
       const cap = 2;
       return activePrepaidLines < cap
-        ? { pass: true, message: `${activePrepaidLines}/${cap} prepaid mobile lines used (${idType} cap, BR-003).` }
+        ? { pass: true, message: `${activePrepaidLines}/${cap} prepaid mobile lines used (${idType} cap).` }
         : {
             pass: false,
-            message: `${idType} holders are capped at ${cap} prepaid mobile lines (BR-003) - this customer already has ${activePrepaidLines}.`,
+            message: `${idType} holders are capped at ${cap} prepaid mobile lines - this customer already has ${activePrepaidLines}.`,
           };
     }
     if (idType === 'QID') {
       const cap = 5;
       const total = activePrepaidLines + activePostpaidLines;
       return total < cap
-        ? { pass: true, message: `${total}/${cap} combined postpaid+prepaid mobile lines used (expat QID cap, BR-003).` }
+        ? { pass: true, message: `${total}/${cap} combined postpaid+prepaid mobile lines used (expat QID cap).` }
         : {
             pass: false,
-            message: `Expatriate QID holders are capped at ${cap} combined postpaid+prepaid mobile lines (BR-003) - this customer already has ${total}.`,
+            message: `Expatriate QID holders are capped at ${cap} combined postpaid+prepaid mobile lines - this customer already has ${total}.`,
           };
     }
-    return { pass: true, message: `BR-003 does not specify a line cap for ID type "${idType ?? 'unknown'}" - not blocking.` };
+    return { pass: true, message: `No line cap is specified for ID type "${idType ?? 'unknown'}" - not blocking.` };
   },
 
   // Prepaid SIM card charge threshold by ID type - again the Prepaid BRSD's
@@ -218,14 +218,14 @@ const ruleImplementations: Record<string, RuleImplementation> = {
     if (threshold === undefined) {
       return {
         pass: true,
-        message: `BR-013 defines a recharge threshold only for QID/Passport - no SIM card charge applies for ID type "${idType ?? 'unknown'}".`,
+        message: `A recharge threshold is defined only for QID/Passport - no SIM card charge applies for ID type "${idType ?? 'unknown'}".`,
       };
     }
     return rechargeAmountQar >= threshold
-      ? { pass: true, message: `Recharge of QR ${rechargeAmountQar} meets the ${idType} threshold of QR ${threshold} - no SIM card charge (BR-013).` }
+      ? { pass: true, message: `Recharge of QR ${rechargeAmountQar} meets the ${idType} threshold of QR ${threshold} - no SIM card charge.` }
       : {
           pass: false,
-          message: `Recharge of QR ${rechargeAmountQar} is below the ${idType} threshold of QR ${threshold} - a SIM card charge applies (BR-013).`,
+          message: `Recharge of QR ${rechargeAmountQar} is below the ${idType} threshold of QR ${threshold} - a SIM card charge applies.`,
         };
   },
 
@@ -248,7 +248,7 @@ const ruleImplementations: Record<string, RuleImplementation> = {
     const terminal = status === 'Closed' || status === 'Cancelled';
     if (terminal) return { pass: true, message: 'Ticket is in a terminal status - SLA clock stopped.' };
     if (now >= due) {
-      return { pass: false, message: 'SLA target breached - RAG Red (P-18). Ticket auto-escalates (BR-015/ESC-01).' };
+      return { pass: false, message: 'SLA target breached - RAG Red (P-18). Ticket auto-escalates.' };
     }
     const firstNotify = firstNotifyAt ? new Date(firstNotifyAt).getTime() : undefined;
     if (firstNotify && now >= firstNotify) {
@@ -264,7 +264,7 @@ const ruleImplementations: Record<string, RuleImplementation> = {
   'BR-187': (ctx) => {
     const { hrnFlag } = ctx as { hrnFlag: boolean };
     return hrnFlag
-      ? { pass: true, message: 'HRN customer - QR 100 advance payment required at checkout (BR-187/194/252); routes to manager approval (BR-268) rather than auto-completing.' }
+      ? { pass: true, message: 'HRN customer - QR 100 advance payment required at checkout; routes to manager approval rather than auto-completing.' }
       : { pass: true };
   },
 
@@ -279,7 +279,7 @@ const ruleImplementations: Record<string, RuleImplementation> = {
   'BR-076': (ctx) => {
     const { hrnFlag } = ctx as { hrnFlag: boolean };
     const amount = hrnFlag ? 50 : 1000;
-    return { pass: true, message: `Default credit limit: QR ${amount} on a new account (BR-076).` };
+    return { pass: true, message: `Default credit limit: QR ${amount} on a new account.` };
   },
 
   // Unsubmitted ticket never routes to a queue (BR-068) - gates queue

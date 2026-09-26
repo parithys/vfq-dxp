@@ -3,6 +3,34 @@ import type { AccountRecord, CustomerRecord } from './customer360Engine';
 /** Which Customer 360 tab owns a service type - the tab a link opens. */
 export type ServiceTab = 'mobile' | 'fibre' | 'assets';
 
+/**
+ * Display categories for the grouped view, in display order.
+ *
+ * Derived from the 2026-09-25 example list, restricted to what this corpus
+ * can actually evidence. Two of that list's categories are deliberately
+ * absent rather than rendered as zero:
+ *
+ *   - 'GigaHome 5G' - nothing distinguishes an FWA/5G home service from fibre
+ *     in any dataset here. There is no field to read.
+ *   - 'Fixed Line' - accounts.json has "Consumer Fixed Line (GigaHome)", but
+ *     that is the fibre account, not a separate fixed-voice service; counting
+ *     it would double-count the GigaHome subscription hanging off it.
+ *
+ * Both are left in this list so the order is stable if the data arrives later
+ * - a category with no services simply never renders.
+ */
+export const SERVICE_CATEGORY_ORDER = [
+  'Prepaid',
+  'Postpaid',
+  'GigaHome Fibre',
+  'GigaHome 5G',
+  'TV / Entertainment',
+  'Fixed Line',
+  'Smart Devices',
+] as const;
+
+export type ServiceCategory = (typeof SERVICE_CATEGORY_ORDER)[number];
+
 export interface CustomerService {
   /**
    * Identifies this service in a deep link. The target tab matches on it to
@@ -11,6 +39,8 @@ export interface CustomerService {
    */
   ref: string;
   tab: ServiceTab;
+  /** Which grouped row this service counts towards. */
+  category: ServiceCategory;
   /** What the agent reads: "GigaHome 300 + OSNtv Basic", "Postpaid mobile line". */
   label: string;
   /** The clickable identifier, shown as the link text. */
@@ -53,14 +83,16 @@ export interface ServiceSources {
   smartDevices: SmartDevice[];
 }
 
-// Which tab an installed asset belongs under, from its product name. The
-// dataset has no service-type field, so the name is the only signal - matched
-// on rather than guessed at, and anything unrecognised lands in Products &
-// Assets instead of being forced into Mobile or Fibre.
-function tabForProductName(name: string): ServiceTab {
-  if (/mobile|sim|postpaid|prepaid/i.test(name)) return 'mobile';
-  if (/broadband|fibre|fiber|gigahome|iptv|osn|home/i.test(name)) return 'fibre';
-  return 'assets';
+// Which tab and category an installed asset belongs under, from its product
+// name. The dataset has no service-type field, so the name is the only signal
+// - matched on rather than guessed at, and anything unrecognised lands in
+// Products & Assets rather than being forced into Mobile or Fibre.
+function classifyProductName(name: string): { tab: ServiceTab; category: ServiceCategory } {
+  if (/prepaid/i.test(name)) return { tab: 'mobile', category: 'Prepaid' };
+  if (/postpaid|mobile|sim/i.test(name)) return { tab: 'mobile', category: 'Postpaid' };
+  if (/iptv|osn|\btv\b/i.test(name)) return { tab: 'fibre', category: 'TV / Entertainment' };
+  if (/broadband|fibre|fiber|gigahome|home/i.test(name)) return { tab: 'fibre', category: 'GigaHome Fibre' };
+  return { tab: 'assets', category: 'Smart Devices' };
 }
 
 // Every active Vodafone service a customer holds, across the datasets that
@@ -103,6 +135,8 @@ export function listCustomerServices(customer: CustomerRecord, sources: ServiceS
     services.push({
       ref: customer.phone,
       tab: 'mobile',
+      // lineType IS the category for the customer's own number.
+      category: customer.lineType === 'Prepaid' ? 'Prepaid' : 'Postpaid',
       label: `${customer.lineType} mobile line`,
       identifier: customer.phone,
     });
@@ -114,9 +148,11 @@ export function listCustomerServices(customer: CustomerRecord, sources: ServiceS
     // one that can be filtered on "Active" honestly.
     if (asset.status !== 'Active') continue;
     const name = asset.productServiceName ?? 'Installed service';
+    const { tab, category } = classifyProductName(name);
     services.push({
       ref: asset.serviceId ?? asset.installedAssetId ?? name,
-      tab: tabForProductName(name),
+      tab,
+      category,
       label: name,
       identifier: asset.serviceId ?? asset.installedAssetId ?? '-',
       status: asset.status,
@@ -132,6 +168,11 @@ export function listCustomerServices(customer: CustomerRecord, sources: ServiceS
     services.push({
       ref: sub.id ?? 'gigahome',
       tab: 'fibre',
+      // Counted as FIBRE, not also as TV, even though the plan name bundles
+      // OSNtv ("GigaHome 500 + OSNtv Premium"). It is one subscription; the
+      // TV package rides on it. Counting it twice would make the category
+      // totals sum to more services than the customer holds.
+      category: 'GigaHome Fibre',
       label: sub.acceptanceForm?.planName ?? 'GigaHome / OSNtv',
       identifier: sub.id ?? '-',
       status: sub.status,
@@ -144,6 +185,7 @@ export function listCustomerServices(customer: CustomerRecord, sources: ServiceS
     services.push({
       ref: bundle.iptvBundleId ?? 'iptv',
       tab: 'fibre',
+      category: 'TV / Entertainment',
       label: bundle.stbCount ? `IPTV (${bundle.stbCount} STB)` : 'IPTV',
       identifier: bundle.iptvBundleId ?? '-',
     });
@@ -154,6 +196,7 @@ export function listCustomerServices(customer: CustomerRecord, sources: ServiceS
     services.push({
       ref: device.assignedNumber ?? device.id ?? 'device',
       tab: 'assets',
+      category: 'Smart Devices',
       // Capitalised at the boundary: the source stores 'smart plug' and
       // 'indoor tracker' lower-case, mid-sentence style.
       label: device.deviceCategory
@@ -164,4 +207,30 @@ export function listCustomerServices(customer: CustomerRecord, sources: ServiceS
   }
 
   return services;
+}
+
+export interface ServiceCategoryGroup {
+  category: ServiceCategory;
+  /** How many services the customer holds in this category. */
+  count: number;
+  /** Which Customer 360 tab the category opens. */
+  tab: ServiceTab;
+}
+
+// The grouped view: one row per category the customer actually holds, in
+// SERVICE_CATEGORY_ORDER, with a count.
+//
+// Empty categories are omitted rather than shown as "(0)" - a zero is not a
+// fact about this customer, it is the absence of one, and six zero rows would
+// bury the one or two that matter.
+//
+// The tab comes from the category's own services rather than a second
+// category->tab table, so a category can never be shown against a tab none of
+// its services live on.
+export function groupServicesByCategory(services: CustomerService[]): ServiceCategoryGroup[] {
+  return SERVICE_CATEGORY_ORDER.flatMap((category) => {
+    const inCategory = services.filter((s) => s.category === category);
+    if (inCategory.length === 0) return [];
+    return [{ category, count: inCategory.length, tab: inCategory[0].tab }];
+  });
 }

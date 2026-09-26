@@ -28,7 +28,7 @@ export function InvoiceActions({ bill, customerName }: { bill: Record<string, un
 
   if (!authorised) {
     return (
-      <Tooltip content="Not authorised to download/print/resend invoices (BR-06)" placement="top">
+      <Tooltip content="Not authorised to download/print/resend invoices" placement="top">
         <span className="text-muted text-[length:var(--fs-caption)] cursor-not-allowed">Restricted</span>
       </Tooltip>
     );

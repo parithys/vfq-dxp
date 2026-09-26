@@ -14,8 +14,14 @@ export interface ToastServiceLink {
   customerId: string;
   /** Which Customer 360 tab to activate on arrival. */
   tab: string;
-  /** Which service that tab should load - matched against CustomerService.ref. */
-  serviceRef: string;
+  /**
+   * Which service that tab should load, matched against CustomerService.ref.
+   *
+   * Optional since 2026-09-25: the breakdown groups services by CATEGORY, and
+   * a category link opens its tab without singling out one service. Left in
+   * place because a single-service link is still the right shape elsewhere.
+   */
+  serviceRef?: string;
   /**
    * Product name. NOT displayed - the breakdown shows identifiers only as of
    * 2026-09-25. It survives as the link's accessible name, which is the one
@@ -37,6 +43,13 @@ export interface ToastRow {
   label: string;
   value: string;
   tone?: 'default' | 'id' | 'success';
+  /**
+   * A quieter second line under the value - for a qualifier that belongs to
+   * the value rather than being a fact of its own, e.g. "(Postpaid)" under a
+   * mobile number. Distinct from `links`, which renders a list of navigable
+   * items, and from a separate row, which would imply a separate field.
+   */
+  sub?: string;
   links?: ToastServiceLink[];
   /**
    * Makes the VALUE ITSELF a link to this path - distinct from `links`, which
@@ -66,7 +79,20 @@ export interface ToastRow {
  */
 export interface ToastBrand {
   operator: 'vodafone' | 'other';
-  /** Only meaningful for 'vodafone'. */
+  /**
+   * Consumer or Business - what the header shows beside the mark as of
+   * 2026-09-25, replacing the relationship that used to sit there.
+   */
+  segment?: string;
+  /**
+   * Prepaid or Postpaid on the walk-in's number. Only meaningful for
+   * 'vodafone'.
+   *
+   * Still carried even though the header no longer shows it: the Mobile
+   * number row renders it as its "(Postpaid)" sub-line, so this is the field
+   * that feeds it. The two are deliberately separate - one describes the
+   * CUSTOMER, the other a single line they hold.
+   */
   relationship?: string;
 }
 

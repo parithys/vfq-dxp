@@ -4,6 +4,12 @@ interface ScannedIdPreviewProps {
   side: 'front' | 'back';
   /** A real captured image, when one exists. Falls back to the specimen. */
   src?: string;
+  /**
+   * Which document this depicts. The specimen files are Qatar ID artwork, so
+   * anything else falls through to the drawn stand-in rather than showing a
+   * QID card captioned as a Diplomatic ID.
+   */
+  documentType?: string;
 }
 
 /**
@@ -43,21 +49,35 @@ const QID_SPECIMEN_SRC: Record<'front' | 'back', string> = {
 // of whether the file exists, because the app cannot know. That keeps the
 // preview working whether or not the specimen has been added, instead of
 // showing a broken-image icon in a step the agent has to trust.
-export function ScannedIdPreview({ side, src }: ScannedIdPreviewProps) {
+export function ScannedIdPreview({ side, src, documentType = 'QID' }: ScannedIdPreviewProps) {
   const [imageFailed, setImageFailed] = useState(false);
-  const resolvedSrc = src ?? QID_SPECIMEN_SRC[side];
+  // A real capture always wins. Otherwise the specimen is only correct for the
+  // document it actually shows.
+  const resolvedSrc = src ?? (documentType === 'QID' ? QID_SPECIMEN_SRC[side] : undefined);
 
-  if (!imageFailed) {
+  if (resolvedSrc && !imageFailed) {
     return (
-      // A fixed ID-1 frame, so the two previews are the same size whatever the
-      // source images measure, and object-cover rather than fill so a slightly
-      // different aspect crops instead of stretching the card.
-      <span className="block w-full overflow-hidden rounded-[var(--radius-button)] border border-border-soft aspect-[214/135]">
+      // A fixed ID-1 frame, so the two previews stay the same size whatever
+      // the source images measure.
+      //
+      // object-CONTAIN, not cover. The specimen images are 593x344 (1.72:1)
+      // because they include white margin around the card, while this frame
+      // is the card's own 85.6 x 54mm ratio (1.585:1). Cover cropped about 4%
+      // off each side, which ate the rounded card corners and clipped the
+      // front's left-hand watermark edge. Contain shows the whole document,
+      // which is the entire point of showing it back to the agent.
+      //
+      // The resulting letterbox is invisible rather than merely tolerated:
+      // both images are pure white (255,255,255) in all four corners, so a
+      // white frame continues their own margin. Fixed white rather than a
+      // theme token because it is matching the ARTWORK, not the page - a
+      // --bg-coloured frame would band visibly in dark mode.
+      <span className="block w-full overflow-hidden rounded-[var(--radius-button)] border border-border-soft aspect-[214/135] bg-white">
         <img
           src={resolvedSrc}
           onError={() => setImageFailed(true)}
-          alt={`Scanned Qatar ID, ${side} side`}
-          className="w-full h-full object-cover"
+          alt={`Scanned ${documentType}, ${side} side`}
+          className="w-full h-full object-contain"
         />
       </span>
     );
@@ -67,7 +87,7 @@ export function ScannedIdPreview({ side, src }: ScannedIdPreviewProps) {
     <svg
       viewBox="0 0 214 135"
       role="img"
-      aria-label={`Simulated capture of the Qatar ID ${side} side`}
+      aria-label={`Simulated capture of the ${documentType} ${side} side`}
       className="w-full rounded-[var(--radius-button)] border border-border-soft"
     >
       <rect width="214" height="135" fill="#fafafa" />

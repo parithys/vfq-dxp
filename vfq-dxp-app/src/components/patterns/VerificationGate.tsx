@@ -69,7 +69,7 @@ export function VerificationGate({ customerId, customerName, open, onClose, onVe
     >
       <div className="space-y-4" onKeyDown={handleKeyDown}>
         <p className="text-fg-2 text-[length:var(--fs-body)]">
-          BR-01: {customerName}'s identity must be verified before any demographic, contact, address, or billing
+          {customerName}'s identity must be verified before any demographic, contact, address, or billing
           maintenance action can proceed.
         </p>
         <QidImageUpload value={scan} onChange={setScan} />

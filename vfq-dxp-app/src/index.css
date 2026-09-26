@@ -124,6 +124,7 @@
      mode never adopted the #c09696 accent - this keeps that, and the white
      tick reads on --accent in both themes. */
   --field-checkbox-selected: var(--accent);
+  --field-radio-selected: var(--accent);
   --shadow-selected-ring: 0 0 0 3px rgba(230,0,0,.12);
 
   /* Status colors and elevation/shadow tokens were tuned against the light

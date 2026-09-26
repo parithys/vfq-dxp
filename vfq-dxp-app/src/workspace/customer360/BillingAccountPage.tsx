@@ -42,7 +42,7 @@ interface BillingProfile {
 function EditButton({ canEdit, onClick }: { canEdit: boolean; onClick: () => void }) {
   if (!canEdit) {
     return (
-      <Tooltip content="Not authorised to edit billing records (BR-02)" placement="top">
+      <Tooltip content="Not authorised to edit billing records" placement="top">
         <Button variant="ghost-rect" compact className="opacity-40 cursor-not-allowed" onClick={(e) => e.preventDefault()}>
           Edit
         </Button>

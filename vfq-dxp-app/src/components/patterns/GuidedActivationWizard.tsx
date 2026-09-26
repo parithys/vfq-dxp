@@ -20,6 +20,18 @@ export interface WizardStep {
   skip?: (values: Record<string, unknown>) => boolean;
   /** Return false to block Continue/Save & Finish (e.g. SIM Serial not found/already-assigned per Pattern 11). Defaults to true (no gate) if omitted. */
   isValid?: (values: Record<string, unknown>) => boolean;
+  /**
+   * Return true to move straight on to the next step without the agent
+   * pressing Continue - for a step that only REPORTS a result and needs no
+   * input, such as Eligibility, whose seven checks either clear or stop the
+   * journey.
+   *
+   * Fires at most ONCE per step per mount. That matters because the agent can
+   * still walk back to the step: without the guard they would be bounced
+   * forward again the instant they arrived, making Back unusable for every
+   * step behind it.
+   */
+  autoAdvanceWhen?: (values: Record<string, unknown>) => boolean;
 }
 
 interface GuidedActivationWizardProps {
@@ -194,6 +206,36 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
   }, [currentIndex]);
 
   const setValue = (field: string, value: unknown) => setFieldValue(wizardId, field, value);
+
+  // Auto-advance for report-only steps.
+  //
+  // ONLY ON FIRST FORWARD ARRIVAL, which `maxReached <= currentIndex` is what
+  // tests: reaching a step for the first time means nothing further has been
+  // reached yet. Walking BACK to it later leaves maxReached ahead of
+  // currentIndex, so the agent is not bounced forward again.
+  //
+  // That condition replaced a per-mount Set of step keys, which looked
+  // equivalent and was not: the ref resets on remount, so after any reload or
+  // navigation away and back, clicking Eligibility in the step rail threw the
+  // agent straight to Address again and the step could never be re-read.
+  // maxStepReached lives in the persisted draft, so this guard survives both.
+  // Caught by walking back to the step after a reload.
+  //
+  // The ref is kept as well, purely to stop a double-fire inside one mount
+  // while setStep's state update is in flight.
+  const autoAdvancedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const step = activeSteps[currentIndex];
+    if (!step?.autoAdvanceWhen) return;
+    if (maxReached > currentIndex) return;
+    if (autoAdvancedRef.current.has(step.key)) return;
+    if (!step.autoAdvanceWhen(draft.values)) return;
+    autoAdvancedRef.current.add(step.key);
+    void goNext();
+    // goNext is recreated each render; the two guards above are what bound
+    // this, not the dependency list.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex, maxReached, draft.values, activeSteps]);
 
   const goNext = async () => {
     if (currentIndex < activeSteps.length - 1) {

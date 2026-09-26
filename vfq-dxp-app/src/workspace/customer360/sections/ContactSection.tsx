@@ -167,14 +167,14 @@ function ContactEditDrawer({
           <Input label="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} readOnly={readOnly} disabled={readOnly} />
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <Tooltip content="ID Type cannot be changed here - BR-03. Use the KYC identity-correction wizard." placement="top">
+          <Tooltip content="ID Type cannot be changed here. Use the KYC identity-correction wizard." placement="top">
             <Input label="ID Type" value={contact.idType} disabled readOnly />
           </Tooltip>
-          <Tooltip content="ID Number cannot be changed here - BR-03. Use the KYC identity-correction wizard." placement="top">
+          <Tooltip content="ID Number cannot be changed here. Use the KYC identity-correction wizard." placement="top">
             <Input label="ID Number" value={contact.idNumber} disabled readOnly />
           </Tooltip>
         </div>
-        <Badge variant="filled-neutral">BR-03: ID Type / ID Number are protected fields</Badge>
+        <Badge variant="filled-neutral">ID Type / ID Number are protected fields</Badge>
         <Input label="ID Expiration Date" type="date" value={contact.idExpirationDate ?? ''} disabled readOnly />
         <div className="grid grid-cols-2 gap-4">
           <Input label="Nationality" value={nationality} onChange={(e) => setNationality(e.target.value)} readOnly={readOnly} disabled={readOnly} />

@@ -142,7 +142,7 @@ export function TaskDetailView() {
       {isSupervisor && task.taskStatus !== 'Closed' && (
         <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
           <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Assign to a team member</h2>
-          <p className="text-fg-2 text-[length:var(--fs-caption)] mb-3">Supervisor-only action (BR-05).</p>
+          <p className="text-fg-2 text-[length:var(--fs-caption)] mb-3">Supervisor-only action.</p>
           <div className="flex gap-2">
             <div className="flex-1">
               <Select

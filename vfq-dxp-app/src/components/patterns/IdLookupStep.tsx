@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { QidNumberField, QidTypeSelector } from '../domain/QidInput';
+import { QidNumberField, QidTypeSelector, idTypeLabel } from '../domain/QidInput';
 import { QidImageUpload } from '../domain/QidImageUpload';
 import type { QidImageUploadValue } from '../domain/QidImageUpload';
 import type { QidType } from '../domain/QidInput';
@@ -25,6 +25,21 @@ interface MoiResult {
 // scanner block below.
 const MAX_SCAN_ATTEMPTS = 4;
 
+/**
+ * ID types with a physical card the reader can capture, and therefore the
+ * scan-first workflow: both faces in one operation, the number read off the
+ * document, a four-attempt budget and a manual fallback behind it.
+ *
+ * Diplomatic ID joined QID on 2026-09-25 - a postpaid connection may be sold
+ * directly against either, so both get the same process rather than QID
+ * getting a scanner and its equal being typed in by hand.
+ *
+ * Passport and GCC ID are deliberately absent. A passport is a booklet
+ * scanned at its photo page and GCC/Diplomatic reverse capture is not
+ * evidenced for them, so offering a two-face card capture would invent a step.
+ */
+const SCANNABLE_ID_TYPES = new Set<QidType>(['QID', 'Diplomatic ID']);
+
 type IdLookupValue = { idType?: QidType; idNumber?: string; moiResult?: MoiResult; qidScans?: QidImageUploadValue };
 
 interface IdLookupStepProps {
@@ -41,6 +56,11 @@ interface IdLookupStepProps {
    * succeeding is a separate fact from where the data is displayed.
    */
   showMoiDetails?: boolean;
+  /**
+   * Which ID types this journey offers. Defaults to all four; New Postpaid
+   * narrows it to QID and Diplomatic ID. See QidTypeSelector.allowedTypes.
+   */
+  allowedIdTypes?: QidType[];
 }
 
 // Pattern 2: Customer/Contact Lookup Step (QID/Kahramaa ID Scan + MOI Validation) -
@@ -56,11 +76,12 @@ interface IdLookupStepProps {
 // restriction carried over from the 66-persona model's PERSONA-001 ("cannot
 // manually enter ID details, only re-scan/search") - only the lookup ID
 // number itself is directly editable.
-export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: IdLookupStepProps) {
+export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allowedIdTypes }: IdLookupStepProps) {
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const numberInputRef = useRef<HTMLInputElement>(null);
   const idType = value.idType ?? 'QID';
+  const scannable = SCANNABLE_ID_TYPES.has(idType);
 
   const handleIdTypeChange = (nextType: QidType) => {
     // Re-clicking the type you are already on is a no-op, not a reset. These
@@ -171,7 +192,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: Id
   // again rather than resuming someone else's exhausted attempts.
   const [scanAttempts, setScanAttempts] = useState(0);
   const scanExhausted = scanAttempts > MAX_SCAN_ATTEMPTS;
-  const manualEntryUnlocked = idType !== 'QID' || scanExhausted;
+  const manualEntryUnlocked = !scannable || scanExhausted;
 
   // Returns whether this attempt read the card. QidImageUpload leaves its
   // value untouched on false, so a failed attempt keeps the insert prompt up.
@@ -191,12 +212,31 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: Id
   // resolves to the same customer. A real integration would return whatever
   // card is physically in the reader.
   const readNumberFromScan = async (): Promise<string | undefined> => {
-    const docs = await mockDataEngine.list<{ documentType: string; documentNumber: string }>('identity-documents');
-    return docs.find((d) => d.documentType === 'QID')?.documentNumber;
+    const docs = await mockDataEngine.list<{ documentType: string; documentNumber: string; expiryDate?: string }>(
+      'identity-documents'
+    );
+    // Matches the SELECTED type, so scanning a Diplomatic ID resolves a
+    // Diplomatic ID document rather than falling back to the first QID.
+    const ofType = docs.filter((d) => d.documentType === idType);
+    // Prefers an UNEXPIRED document rather than simply the first of its type.
+    //
+    // Not cosmetic: two Diplomatic IDs are seeded and the first in file order
+    // is deliberately expired (CUST-1006, the hard-stop fixture), so
+    // first-match made every Diplomatic scan resolve to an expired card and
+    // the direct-sale path could never be exercised. Depending on array order
+    // to fix that would be worse - a reorder of the JSON would silently break
+    // it again.
+    //
+    // The expired document is still reachable: it is the one the manual
+    // fallback accepts, and it is what any other journey offering Diplomatic
+    // ID resolves when it is the only candidate.
+    const now = Date.now();
+    const unexpired = ofType.find((d) => !d.expiryDate || new Date(d.expiryDate).getTime() >= now);
+    return (unexpired ?? ofType[0])?.documentNumber;
   };
 
   useEffect(() => {
-    if (idType !== 'QID' || !scanComplete) {
+    if (!scannable || !scanComplete) {
       // Reset so re-scanning after a type switch or a cleared scan fetches again.
       autoFetchedNumber.current = null;
       return;
@@ -216,13 +256,19 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: Id
     autoFetchedNumber.current = number;
     void runMoiValidation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idType, scanComplete, value.idNumber, value.moiResult, loading]);
+  }, [idType, scannable, scanComplete, value.idNumber, value.moiResult, loading]);
 
   const handleKeyDown = useEnterToSubmit(Boolean(value.idNumber) && !loading, runMoiValidation);
 
+  // Built once and placed by ID type below. Only the showMoiDetails={false}
+  // shape gets a loose badge at all - the other journeys keep theirs inside
+  // the bordered panel it heads, where it introduces the identity read-out.
+  const moiBadge =
+    !showMoiDetails && value.moiResult ? <Badge variant="success">MOI validated successfully</Badge> : undefined;
+
   return (
     <div className="space-y-4" onKeyDown={handleKeyDown}>
-      <QidTypeSelector idType={idType} onIdTypeChange={handleIdTypeChange} />
+      <QidTypeSelector idType={idType} onIdTypeChange={handleIdTypeChange} allowedTypes={allowedIdTypes} />
 
       {/* The scanner, shown only for a Qatar ID. The other three document
           types are single-sided in this corpus (a passport is scanned at its
@@ -239,9 +285,9 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: Id
           The budget now shows up the only way it should - as a scan that
           fails - and the failure message says what the agent can do about it
           without mentioning attempts. */}
-      {idType === 'QID' && (
+      {scannable && (
         <div className="space-y-2">
-          <p className="text-[length:var(--fs-label)] text-fg-2">Scan Qatar ID</p>
+          <p className="text-[length:var(--fs-label)] text-fg-2">Scan {idTypeLabel(idType)}</p>
           <QidImageUpload
             value={value.qidScans ?? {}}
             onChange={(qidScans) => {
@@ -262,10 +308,14 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: Id
               }
               onChange({ ...value, qidScans });
             }}
+            // Names the document in the card's captions and picks its
+            // artwork - the QID specimen must not stand in for a Diplomatic
+            // ID.
+            documentType={idType}
             onScan={handleScanAttempt}
             error={
               scanExhausted
-                ? 'The reader could not read this document. Enter the Qatar ID number below to continue.'
+                ? `The reader could not read this document. Enter the ${idTypeLabel(idType)} number below to continue.`
                 : undefined
             }
           />
@@ -295,7 +345,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: Id
           Waiting for the number means the field appears already populated.
 
           Before any of those, for a QID, it is not rendered at all. */}
-      {(idType !== 'QID' || (scanComplete && Boolean(value.idNumber)) || manualEntryUnlocked) && (
+      {(!scannable || (scanComplete && Boolean(value.idNumber)) || manualEntryUnlocked) && (
         <QidNumberField
           idType={idType}
           inputRef={numberInputRef}
@@ -307,7 +357,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: Id
           onFetch={runMoiValidation}
           fetching={loading}
           error={notFound ? 'No MOI record found for this ID - try again.' : undefined}
-          readOnly={idType === 'QID' && scanComplete}
+          readOnly={scannable && scanComplete}
           // The scanned path has no Fetch button, so it also lost the
           // "Fetching…" label that button carried - and the MOI lookup this
           // step fires automatically takes two mock calls at 200-600ms each.
@@ -316,27 +366,27 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true }: Id
           // reads as nothing happening. The hint is the only thing left in
           // that state that can say otherwise.
           hint={
-            idType === 'QID' && scanComplete
+            scannable && scanComplete
               ? loading
                 ? 'Checking the MOI registry…'
                 : 'Read from the scanned document.'
               : undefined
           }
-          // The MOI badge, on the label line rather than in a row of its own
-          // below the field (2026-09-25). Only for the showMoiDetails={false}
-          // shape - the other journeys keep their badge inside the bordered
-          // panel it heads, where it introduces the identity read-out and is
-          // not a loose status.
+          // The MOI badge, right-aligned on this field's label row - the
+          // "Qatar ID (QID) Number" line, or "Passport Number" and so on for
+          // the other types.
           //
-          // Safe to move INTO the field: moiResult cannot outlive the field
-          // that produced it. Setting it requires an idNumber, and everything
-          // that hides the field again - Retake, an ID Type switch - clears
-          // moiResult in the same update. Verified across all three.
-          status={
-            !showMoiDetails && value.moiResult ? (
-              <Badge variant="success">MOI validated successfully</Badge>
-            ) : undefined
-          }
+          // One placement for all four ID types, which is why there is no
+          // per-type routing here any more. It briefly sat on the scanner
+          // card's "Qatar ID" header instead, but that card only exists for a
+          // QID, so the other three needed a second home and the badge had
+          // two possible parents.
+          //
+          // Safe to live inside the field: moiResult cannot outlive it.
+          // Setting it requires an idNumber, and everything that hides the
+          // field again - Retake, an ID Type switch - clears moiResult in the
+          // same update.
+          status={moiBadge}
         />
       )}
 

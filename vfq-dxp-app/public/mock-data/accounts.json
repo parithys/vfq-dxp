@@ -57,5 +57,17 @@
     "barringType": null,
     "barringReason": null,
     "_barringNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
+  },
+  {
+    "accountId": "ACC-5006",
+    "customerId": "CUST-1006",
+    "accountType": "Consumer Mobile Postpaid (Secondary)",
+    "status": "Active",
+    "billingProfileId": "BILL-7001",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null,
+    "parentAccountId": "ACC-5001",
+    "_note": "App-level demo addition (2026-09-25) - every seeded account had parentAccountId null, so every customer resolved to Primary Account Holder and the Secondary branch was unreachable. Added as a sub-account of ACC-5001 rather than reassigning ACC-5005, whose ownership feeds the account-keyed half of the service inventory. CUST-1006 is the security-block fixture and sits on no happy path."
   }
 ]

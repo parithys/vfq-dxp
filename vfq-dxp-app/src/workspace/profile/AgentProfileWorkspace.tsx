@@ -261,7 +261,7 @@ export function AgentProfileWorkspace() {
           <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Change password &amp; MFA</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)]">
             Profile editing (password, MFA) is available to internal Vodafone agent roles. This persona is an external or
-            system-type contact (Agent 360 APM-01/05/08, BR-01/BR-02) and does not have edit access here.
+            system-type contact (Agent 360 APM-01/05/08) and does not have edit access here.
           </p>
         </div>
       )}

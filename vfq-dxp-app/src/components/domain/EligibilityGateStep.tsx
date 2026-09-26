@@ -1,24 +1,119 @@
 import { useEffect, useState } from 'react';
 import { Badge } from '../primitives/Badge';
+import { Icon } from '../primitives/Icon';
 import { evaluateRule } from '../../engines/ruleEngine';
+import { useNotificationStore } from '../../stores/notificationStore';
+import {
+  evaluateEligibilityChecks,
+  hasHardStop,
+  type EligibilityCheck,
+  type EligibilityOutcome,
+} from '../../engines/eligibilityEngine';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 
+// Row treatment per outcome, for the divided-list layout adopted 2026-09-25.
+//
+// Each row is a tinted band in ONE bordered panel rather than its own card:
+// the seven checks are a single report, and eight separate cards with gaps
+// between them read as eight unrelated results.
+const ROW_TONE: Record<RowTone, string> = {
+  pass: 'bg-[color-mix(in_oklab,var(--success),var(--bg)_94%)]',
+  'hard-stop': 'bg-[color-mix(in_oklab,var(--danger),var(--bg)_94%)]',
+  'soft-stop': 'bg-[color-mix(in_oklab,var(--warn),var(--bg)_94%)]',
+  'approval-routing': 'bg-surface',
+  advisory: 'bg-surface',
+};
+
+const ICON_TONE: Record<RowTone, string> = {
+  pass: 'text-success',
+  'hard-stop': 'text-danger',
+  'soft-stop': 'text-[var(--warn-text)]',
+  'approval-routing': 'text-muted',
+  advisory: 'text-muted',
+};
+
+// Circled glyphs, so the outcome is legible without relying on colour alone -
+// SC 1.4.1. A tick, a cross, a warning triangle and a clock are four distinct
+// shapes, not four shades of one.
+const ROW_ICON: Record<RowTone, string> = {
+  pass: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M8.4 12.3l2.4 2.4 4.8-5.2',
+  'hard-stop': 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M15 9l-6 6 M9 9l6 6',
+  'soft-stop': 'M12 3l9 16H3l9-16z M12 10v4 M12 17h.01',
+  'approval-routing': 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3.2 2',
+  advisory: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 11v5 M12 7.5h.01',
+};
+
+// The right-hand pill. "Passed" is the attached layout's wording; the other
+// three say what actually happens, because "Failed" would be wrong for a
+// diversion that lets the order proceed once approved.
+const STATUS_LABEL: Record<RowTone, string> = {
+  pass: 'Passed',
+  'hard-stop': 'Failed',
+  'soft-stop': 'Blocked',
+  'approval-routing': 'Approval required',
+  advisory: 'For information',
+};
+
+const STATUS_BADGE: Record<RowTone, 'success' | 'danger' | 'warning' | 'filled-neutral'> = {
+  pass: 'success',
+  'hard-stop': 'danger',
+  'soft-stop': 'warning',
+  'approval-routing': 'filled-neutral',
+  advisory: 'filled-neutral',
+};
+
+/**
+ * 'advisory' is not an eligibility outcome - it is the HRN classification,
+ * which reports a property of the customer rather than passing or failing.
+ * It shares the row layout so the panel reads as one list, but it is never
+ * counted as a check.
+ */
+type RowTone = EligibilityOutcome | 'advisory';
+
+interface EligibilityRow {
+  id: string;
+  title: string;
+  detail: string;
+  tone: RowTone;
+}
+
 export interface EligibilityResult {
+  /**
+   * Whether the journey may continue. False for a hard stop AND for a soft
+   * stop: a collections block means postpaid cannot be issued, so continuing
+   * would create exactly the order the rule withholds. See the note on
+   * `hardStop` for why the two are still distinguished.
+   */
   pass: boolean;
+  /** Any 'hard-stop' outcome - the journey ends at this counter. */
+  hardStop: boolean;
+  /** Any 'soft-stop' - this product is unavailable but a fallback exists. */
+  softStop: boolean;
+  /** Every check that ran, for display and for downstream steps. */
+  checks: EligibilityCheck[];
   blacklisted: boolean;
   blacklistReason?: string;
   lineCapExceeded: boolean;
   requiresHrnAdvance: boolean;
   defaultCreditLimitQar: number;
   customerId?: string;
+  /**
+   * The ID number these checks were run against. Lets a re-entry to this step
+   * tell a still-valid cached result from a stale one: change the ID on the
+   * Contact step and the cached eligibility no longer describes the person in
+   * front of the agent, so it must be recomputed rather than reused.
+   */
+  idNumber: string;
 }
 
 interface CustomerRecord {
   customerId: string;
   idType?: string;
+  dob?: string;
   nationality: string;
   blacklisted: boolean;
   blacklistReason?: string;
+  blacklistCategory?: 'collections' | 'security';
   hrnAdvancePaymentRequired?: boolean;
   activePostpaidLines?: number;
   activePrepaidLines?: number;
@@ -27,11 +122,26 @@ interface CustomerRecord {
 interface IdentityDocRecord {
   documentNumber: string;
   customerId: string;
+  documentType?: string;
+  expiryDate?: string;
+  docStatus?: string;
 }
 
 interface EligibilityGateStepProps {
   idNumber: string | undefined;
   onResult: (result: EligibilityResult | undefined) => void;
+  /**
+   * A result already computed earlier in this journey, from the wizard draft.
+   *
+   * The eligibility check is a ONE-TIME task: leaving the step and coming
+   * back re-mounts this component, and without this it would re-read four
+   * datasets and flash "Checking eligibility..." before redrawing the same
+   * seven rows. Passing the previous result back in lets the step render
+   * immediately from it.
+   *
+   * Reused only when its `idNumber` still matches - see EligibilityResult.
+   */
+  result?: EligibilityResult;
   // Defaults to 'postpaid' so the existing New Postpaid Activation call site
   // is unaffected. 'prepaid' switches the line-cap check from BR-288
   // (postpaid-specific expat-QID cap of 2) to BR-347 (the Mobile Prepaid
@@ -51,12 +161,27 @@ interface EligibilityGateStepProps {
 // identity-documents -> customers chain IdLookupStep uses, since MOI results
 // don't carry a customerId forward. BR-113/BR-288/BR-187/BR-076 - see
 // ruleEngine.ts for the evidenced business-rules.json citations.
-export function EligibilityGateStep({ idNumber, onResult, journeyType = 'postpaid' }: EligibilityGateStepProps) {
-  const [customer, setCustomer] = useState<CustomerRecord | null | undefined>(undefined);
+export function EligibilityGateStep({ idNumber, onResult, result, journeyType = 'postpaid' }: EligibilityGateStepProps) {
+  // A cached result for THIS identity. Computed during render rather than in
+  // an effect so the first paint on re-entry already shows the rows.
+  const cached = result && idNumber && result.idNumber === idNumber ? result : undefined;
+
+  // undefined = still resolving, null = no customer for this identity,
+  // object = resolved. One piece of state rather than a customer record plus a
+  // separate check list, because a cached result carries the checks and the
+  // HRN flag but not the customer row they came from - and the render only
+  // ever needed those two things.
+  const [resolved, setResolved] = useState<{ checks: EligibilityCheck[]; hrnFlag: boolean } | null | undefined>(
+    cached ? { checks: cached.checks, hrnFlag: cached.requiresHrnAdvance } : undefined
+  );
+  const pushToast = useNotificationStore((s) => s.pushToast);
 
   useEffect(() => {
+    // The one-time guarantee. Nothing is re-read and onResult is not called
+    // again - the draft already holds exactly this result.
+    if (cached) return;
     if (!idNumber) {
-      setCustomer(undefined);
+      setResolved(undefined);
       onResult(undefined);
       return;
     }
@@ -66,7 +191,7 @@ export function EligibilityGateStep({ idNumber, onResult, journeyType = 'postpai
       const doc = docs.find((d) => d.documentNumber === idNumber);
       if (!doc) {
         if (!cancelled) {
-          setCustomer(null);
+          setResolved(null);
           onResult(undefined);
         }
         return;
@@ -74,8 +199,8 @@ export function EligibilityGateStep({ idNumber, onResult, journeyType = 'postpai
       const customers = await mockDataEngine.list<CustomerRecord>('customers');
       const match = customers.find((c) => c.customerId === doc.customerId) ?? null;
       if (cancelled) return;
-      setCustomer(match);
       if (!match) {
+        setResolved(null);
         onResult(undefined);
         return;
       }
@@ -94,16 +219,73 @@ export function EligibilityGateStep({ idNumber, onResult, journeyType = 'postpai
             });
       const hrnFlag = Boolean(match.hrnAdvancePaymentRequired);
       evaluateRule('BR-187', { hrnFlag });
+      // Still computed though the Credit limit ROW was removed from this step
+      // on 2026-09-25: the amount is not display-only. DeviceInstallmentStep
+      // reads defaultCreditLimitQar off this result to judge instalment
+      // affordability, so dropping it from the result would silently change
+      // that step's behaviour rather than just hide a row.
       const creditLimit = evaluateRule('BR-076', { hrnFlag });
       const creditLimitAmount = hrnFlag ? 50 : 1000;
+
+      // The seven matrix checks. Deals and the outstanding balance are the
+      // only extra reads: the line cap comes from the rule already evaluated
+      // above, so the cap logic stays in one place rather than being restated
+      // inside the eligibility engine.
+      const [deals, bills] = await Promise.all([
+        mockDataEngine.list<{ customerId?: string; status?: string; blocksNewConnection?: boolean }>('commitment-penalties'),
+        mockDataEngine.list<{ customerId?: string; totalAmount?: number; status?: string }>('bills'),
+      ]);
+      if (cancelled) return;
+      const outstandingQar = bills
+        .filter((b) => b.customerId === match.customerId && b.status !== 'Paid')
+        .reduce((sum, b) => sum + (Number(b.totalAmount) || 0), 0);
+
+      const resolvedChecks = evaluateEligibilityChecks(
+        {
+          customer: match,
+          doc,
+          deals,
+          outstandingQar,
+          lineCapReached: !lineCap.pass,
+        },
+        new Date()
+      );
+
+      setResolved({ checks: resolvedChecks, hrnFlag });
+      const hardStop = hasHardStop(resolvedChecks);
+      const softStop = resolvedChecks.some((c) => c.outcome === 'soft-stop');
+      // Confirmation toast on a clear pass (2026-09-25). It is pushed HERE,
+      // in the branch that computes the result, for two reasons:
+      //
+      // - The step auto-advances the moment it clears, so this component is
+      //   unmounting as the agent reads it. A message rendered inside the
+      //   step would vanish with it; a toast outlives the step and follows
+      //   them to Address.
+      // - The cached path returns before this point, so re-entering the step
+      //   cannot re-announce a check it did not re-run.
+      //
+      // Keyed on the identity so a recompute after an ID change replaces the
+      // previous confirmation rather than stacking a second one.
+      if (!hardStop && !softStop) {
+        pushToast('success', 'Eligibility confirmed', {
+          key: `eligibility-${idNumber}`,
+          detail: `Customer is eligible for a ${journeyType === 'prepaid' ? 'prepaid' : 'postpaid'} connection. Continuing to the next step.`,
+        });
+      }
+
       onResult({
-        pass: blacklist.pass && lineCap.pass,
+        // Soft stop blocks too - see the note on EligibilityResult.pass.
+        pass: !hardStop && !softStop,
+        hardStop,
+        softStop,
+        checks: resolvedChecks,
         blacklisted: !blacklist.pass,
         blacklistReason: match.blacklistReason,
         lineCapExceeded: !lineCap.pass,
         requiresHrnAdvance: hrnFlag,
         defaultCreditLimitQar: creditLimitAmount,
         customerId: match.customerId,
+        idNumber,
       });
       void creditLimit;
     })();
@@ -115,93 +297,82 @@ export function EligibilityGateStep({ idNumber, onResult, journeyType = 'postpai
     // this effect every time onResult fires - an infinite update loop caught
     // live via the ErrorBoundary ("Maximum update depth exceeded").
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idNumber, journeyType]);
+  }, [idNumber, journeyType, cached]);
 
   if (!idNumber) {
     return <p className="text-muted text-[length:var(--fs-body)]">Complete the Contact step first - eligibility depends on the validated identity.</p>;
   }
-  if (customer === undefined) {
+  if (resolved === undefined) {
     return <p className="text-muted text-[length:var(--fs-body)]">Checking eligibility…</p>;
   }
-  if (customer === null) {
+  if (resolved === null) {
     return <p className="text-danger text-[length:var(--fs-body)]">No customer record found for this identity - cannot evaluate eligibility.</p>;
   }
 
-  const blacklist = evaluateRule('BR-113', { blacklisted: customer.blacklisted, blacklistReason: customer.blacklistReason });
-  const lineCap =
-    journeyType === 'prepaid'
-      ? evaluateRule('BR-347', {
-          idType: customer.idType,
-          nationality: customer.nationality,
-          activePrepaidLines: customer.activePrepaidLines ?? 0,
-          activePostpaidLines: customer.activePostpaidLines ?? 0,
-        })
-      : evaluateRule('BR-288', { nationality: customer.nationality, activePostpaidLines: customer.activePostpaidLines ?? 0 });
-  const hrnFlag = Boolean(customer.hrnAdvancePaymentRequired);
+  const { checks, hrnFlag } = resolved;
   const hrn = evaluateRule('BR-187', { hrnFlag });
-  const credit = evaluateRule('BR-076', { hrnFlag });
+  const hardStop = hasHardStop(checks);
+  const softStop = checks.some((c) => c.outcome === 'soft-stop');
+  const routed = checks.filter((c) => c.outcome === 'approval-routing');
+
+  // One list, built from the checks plus the HRN advisory. Folding HRN in here
+  // rather than rendering it as a separate block below is what keeps the panel
+  // reading as a single report - it was previously a lone card floating under
+  // the seven, which implied it was an eighth verdict.
+  const rows: EligibilityRow[] = [
+    ...checks.map((check) => ({ id: check.id, title: check.label, detail: check.message, tone: check.outcome })),
+    ...(journeyType !== 'prepaid'
+      ? [
+          {
+            id: 'hrn',
+            title: hrnFlag ? 'HRN (High Network Risk)' : 'Non-HRN new account',
+            detail: (hrnFlag ? hrn.message : undefined) ?? 'Not a high-risk nationality - no advance payment required.',
+            // HRN is amber because an advance payment is outstanding, but it
+            // is NOT a soft stop: the product can still be issued.
+            tone: (hrnFlag ? 'soft-stop' : 'pass') as RowTone,
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div className="space-y-3">
-      <div
-        className={`rounded-[var(--radius-card)] border p-3 flex items-center gap-2 ${
-          blacklist.pass ? 'border-success/30 bg-[color-mix(in_oklab,var(--success),var(--bg)_92%)]' : 'border-danger/30 bg-[color-mix(in_oklab,var(--danger),var(--bg)_92%)]'
-        }`}
-      >
-        <Badge variant={blacklist.pass ? 'success' : 'danger'}>Blacklist check</Badge>
-        <span className="text-[length:var(--fs-caption)] text-fg">{blacklist.pass ? 'Not on blacklist.' : blacklist.message}</span>
-      </div>
-
-      <div
-        className={`rounded-[var(--radius-card)] border p-3 flex items-center gap-2 ${
-          lineCap.pass ? 'border-success/30 bg-[color-mix(in_oklab,var(--success),var(--bg)_92%)]' : 'border-danger/30 bg-[color-mix(in_oklab,var(--danger),var(--bg)_92%)]'
-        }`}
-      >
-        <Badge variant={lineCap.pass ? 'success' : 'danger'}>Connection limit</Badge>
-        <span className="text-[length:var(--fs-caption)] text-fg">{lineCap.message}</span>
-      </div>
-
-      {/* The HRN classification gets its own row either way. It used to show
-          only for HRN customers, with the non-HRN case buried in the credit
-          limit's parenthetical ("expat, non-HRN new account") - so the
-          classification that decides the QR 1000 vs QR 50 limit was only
-          legible in one of its two states. Non-HRN is neutral, not a pass/fail
-          check, so it takes the same quiet treatment as Credit limit rather
-          than a green success row. */}
-      {journeyType !== 'prepaid' &&
-        (hrnFlag ? (
-          <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_92%)] p-3 flex items-center gap-2">
-            <Badge variant="warning">HRN</Badge>
-            <span className="text-[length:var(--fs-caption)] text-fg">{hrn.message}</span>
-          </div>
-        ) : (
-          <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-3 flex items-center gap-2">
-            <Badge variant="filled-neutral">Non-HRN new account</Badge>
-            {/* Deliberately does NOT repeat the old message's "expat". The
-                only fact in evidence is hrnAdvancePaymentRequired === false;
-                nothing here establishes residency, and BR-076's description
-                conflates "expat" with "non-HRN" even though the flag driving
-                it is the HRN one alone. The previous wording asserted "expat,
-                non-HRN" for this Qatari customer, which the Connection limit
-                row directly above contradicts. */}
-            <span className="text-[length:var(--fs-caption)] text-fg-2">
-              Not a high-risk nationality - no advance payment required (BR-187).
+      <ul className="rounded-[var(--radius-card)] border border-border-soft overflow-hidden divide-y divide-border-soft">
+        {rows.map((row) => (
+          <li key={row.id} className={`flex items-start gap-3 px-4 py-3 ${ROW_TONE[row.tone]}`}>
+            <Icon path={ROW_ICON[row.tone]} className={`w-5 h-5 shrink-0 mt-0.5 ${ICON_TONE[row.tone]}`} />
+            <div className="min-w-0 flex-1">
+              <p className="text-fg font-semibold text-[length:var(--fs-body)]">{row.title}</p>
+              {/* The RESULT, not a static description of what the check does.
+                  A passed check states what it verified ("valid through
+                  30/11/2029", "1/2 lines used") and a failed one states what
+                  to do about it - boilerplate would waste the line. */}
+              <p className="text-fg-2 text-[length:var(--fs-caption)] leading-snug">{row.detail}</p>
+            </div>
+            <span className="shrink-0">
+              <Badge variant={STATUS_BADGE[row.tone]}>{STATUS_LABEL[row.tone]}</Badge>
             </span>
-          </div>
+          </li>
         ))}
+      </ul>
 
-      {journeyType !== 'prepaid' && (
-        <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-3 flex items-center gap-2">
-          <Badge variant="filled-neutral">Credit limit</Badge>
-          <span className="text-[length:var(--fs-caption)] text-fg-2">{credit.message}</span>
-        </div>
-      )}
-
-      {!blacklist.pass || !lineCap.pass ? (
+      {hardStop && (
         <p className="text-danger text-[length:var(--fs-caption)]">
-          This customer is not eligible for a new {journeyType === 'prepaid' ? 'prepaid' : 'postpaid'} activation - Continue is blocked.
+          This journey cannot continue for this customer - resolve the blocking check above before retrying.
         </p>
-      ) : null}
+      )}
+      {!hardStop && softStop && (
+        <p className="text-[var(--warn-text)] text-[length:var(--fs-caption)]">
+          A {journeyType === 'prepaid' ? 'prepaid' : 'postpaid'} connection cannot be issued for this customer - see the
+          fallback offered above.
+        </p>
+      )}
+      {!hardStop && !softStop && routed.length > 0 && (
+        <p className="text-fg-2 text-[length:var(--fs-caption)]">
+          {routed.length === 1 ? 'One check routes' : `${routed.length} checks route`} this order for approval. The
+          journey continues; the order completes once approval is granted.
+        </p>
+      )}
     </div>
   );
 }

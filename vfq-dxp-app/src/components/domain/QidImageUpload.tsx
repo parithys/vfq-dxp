@@ -29,6 +29,14 @@ interface QidImageUploadProps {
   onScan?: () => boolean;
   /** Rendered inside the insert zone, after a failed scan. */
   error?: string;
+  /**
+   * Which document is in the reader. Defaults to 'QID', which is what the
+   * three journeys other than IdLookupStep capture.
+   *
+   * Drives the face captions and, in ScannedIdPreview, which specimen artwork
+   * is used - the Qatar ID images must not stand in for a Diplomatic ID.
+   */
+  documentType?: string;
 }
 
 // FLD (Passport to QID journey, UJ-076): "scan/upload QID Front & Back" required
@@ -49,15 +57,15 @@ interface QidImageUploadProps {
 // NewSimSwapWizard or PassportToQidWizard - they each require both flags, and
 // both flags now flip together.
 //
-// Three blocks: title, capture area, action.
+// Two blocks: capture area, action. No header of its own.
 //
-// - Title: names the document. No state chip. A "WAITING..." / "CAPTURED"
-//   pill was added on 2026-09-25 from the reference image and removed the
-//   same day as not required: with one card and one operation, the capture
-//   area already IS the state - an insert prompt or two photographs - so the
-//   pill only restated what filled the largest block on screen. It earned its
-//   place in the two-card build, where a half-scanned pair needed reading at a
-//   glance; that ambiguity no longer exists.
+// The card carried a "Qatar ID" title and, briefly, a "WAITING..." /
+// "CAPTURED" state pill beside it. Both are gone, for the same reason: the
+// caller already labels this section ("Scan Qatar ID" in IdLookupStep), the
+// capture area IS the state - an insert prompt or two photographs - and the
+// MOI badge that sat here for one revision now lives on the number field's
+// label row. A header with nothing left to say is just an indent.
+//
 // - Capture area: a dashed insert zone before the scan, both faces after it.
 //   Dashed, not solid, because the border is around an EMPTY target rather
 //   than around content - the same distinction the rest of the re-skin draws
@@ -81,7 +89,7 @@ interface QidImageUploadProps {
 // - The prompt sits at --fg-2, not the asset's light grey. --muted on
 //   --surface-subtle is 4.33:1, just under SC 1.4.3's 4.5:1 at this size.
 //   --fg-2 is 6.37:1 and still reads as secondary beside the --fg title.
-export function QidImageUpload({ value, onChange, onScan, error }: QidImageUploadProps) {
+export function QidImageUpload({ value, onChange, onScan, error, documentType = 'QID' }: QidImageUploadProps) {
   const scanned = Boolean(value.frontScanned && value.backScanned);
   const simulated = !value.frontImage && !value.backImage;
 
@@ -96,8 +104,6 @@ export function QidImageUpload({ value, onChange, onScan, error }: QidImageUploa
 
   return (
     <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 flex flex-col gap-3">
-      <span className="text-fg font-semibold text-[length:var(--fs-body)]">Qatar ID</span>
-
       {scanned ? (
         <>
           {/* Both faces, side by side, from the one operation. Captioned per
@@ -108,8 +114,14 @@ export function QidImageUpload({ value, onChange, onScan, error }: QidImageUploa
           <div className="grid grid-cols-2 gap-4">
             {(['front', 'back'] as const).map((side) => (
               <figure key={side} className="flex flex-col items-center gap-2">
-                <ScannedIdPreview side={side} src={side === 'front' ? value.frontImage : value.backImage} />
-                <figcaption className="text-fg-2 text-[length:var(--fs-caption)] capitalize">QID {side}</figcaption>
+                <ScannedIdPreview
+                  side={side}
+                  documentType={documentType}
+                  src={side === 'front' ? value.frontImage : value.backImage}
+                />
+                <figcaption className="text-fg-2 text-[length:var(--fs-caption)] capitalize">
+                  {documentType === 'QID' ? 'QID' : documentType} {side}
+                </figcaption>
               </figure>
             ))}
           </div>

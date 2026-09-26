@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Input } from '../primitives/Input';
 import { Button } from '../primitives/Button';
-import { ZsbConflictNotice } from '../domain/ZsbConflictNotice';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 
 export interface ZsbAddressValue {
@@ -9,6 +8,15 @@ export interface ZsbAddressValue {
   streetNo?: string;
   buildingNo?: string;
   aptFlatUnit?: string;
+  /** District, e.g. West Bay. Prefills from the address record's `city`. */
+  area?: string;
+  /**
+   * Kahramaa / location ID. OPTIONAL for postpaid activation (2026-09-25) -
+   * a mobile line needs no serviceable premises, unlike the fibre journeys
+   * where a KID is what makes an address installable. Prefills from the
+   * address record's `kahramaaId` when one is on file.
+   */
+  kidLocationId?: string;
   skipped?: boolean;
   fetchedFromMoi?: boolean;
 }
@@ -31,6 +39,8 @@ interface AddressRecord {
   streetNo: string;
   buildingNo: string;
   aptFlatUnit: string;
+  city?: string;
+  kahramaaId?: string;
   primaryStatus: string;
   activeFlag: boolean;
 }
@@ -39,8 +49,16 @@ interface AddressRecord {
 // No./Apt-Flat-Unit, all evidenced Mandatory: No, with "Save Address"/"Skip
 // Address"/"Go back"/"Cancel" buttons - a mobile-channel address step, distinct
 // from Fixed Line/FWA's AddressSelectionStep (which picks an existing
-// serviceable Address record). See ZsbConflictNotice for conflict-report.md
-// Conflict 2's unresolved-policy advisory.
+// serviceable Address record).
+//
+// The on-screen "Unresolved policy conflict" advisory was removed on
+// 2026-09-25. The conflict itself is NOT resolved by removing it - the
+// Consumer Activation Process Manual requires ZSB for mobile while a Day 7
+// workshop says it is FWA/fixed-only, and the evidenced screen marks these
+// fields Mandatory: No with a Skip Address option. It stays recorded in
+// reference/blueprint conflict-report.md (Conflict 2) and in ruleEngine's
+// BR-ZSB-MANDATORY-FOR-MOBILE, which still evaluates; it simply no longer
+// addresses the agent, who cannot action it.
 export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAddressStepProps) {
   const [fetching, setFetching] = useState(false);
 
@@ -64,6 +82,11 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
           streetNo: onFile.streetNo,
           buildingNo: onFile.buildingNo,
           aptFlatUnit: onFile.aptFlatUnit,
+          // `city` is the nearest thing on file to the mockup's Area, and
+          // `kahramaaId` is the KID itself - both were already in
+          // addresses.json and simply unused here.
+          area: onFile.city,
+          kidLocationId: onFile.kahramaaId,
           fetchedFromMoi: true,
         });
       }
@@ -76,35 +99,68 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
 
   return (
     <div className="space-y-4">
-      <ZsbConflictNotice />
       {fetching && <p className="text-muted text-[length:var(--fs-body)]">Checking for an address on file…</p>}
       {!value.skipped && (
         <div className="grid grid-cols-2 gap-4">
           <Input
             label="Zone"
+            placeholder="e.g. Zone 38"
             value={value.zone ?? ''}
             disabled={value.fetchedFromMoi}
             onChange={(e) => onChange({ ...value, zone: e.target.value })}
           />
           <Input
-            label="Street No."
+            label="Street"
+            placeholder="e.g. Al Corniche Street"
             value={value.streetNo ?? ''}
             disabled={value.fetchedFromMoi}
             onChange={(e) => onChange({ ...value, streetNo: e.target.value })}
           />
           <Input
-            label="Building No."
+            label="Building"
+            placeholder="e.g. Tower A"
             value={value.buildingNo ?? ''}
             disabled={value.fetchedFromMoi}
             onChange={(e) => onChange({ ...value, buildingNo: e.target.value })}
           />
           <Input
-            label="Apt/Flat/Unit"
+            label="Unit / Apartment"
+            placeholder="e.g. Apt 4B"
             value={value.aptFlatUnit ?? ''}
             disabled={value.fetchedFromMoi}
-            helperText={value.fetchedFromMoi ? 'Fetched from MOI - not editable.' : undefined}
             onChange={(e) => onChange({ ...value, aptFlatUnit: e.target.value })}
           />
+          {/* Area and KID span the full width, matching the mockup - they are
+              single fields per row rather than a pair. */}
+          <div className="col-span-2">
+            <Input
+              label="Area"
+              placeholder="e.g. West Bay"
+              value={value.area ?? ''}
+              disabled={value.fetchedFromMoi}
+              onChange={(e) => onChange({ ...value, area: e.target.value })}
+            />
+          </div>
+          <div className="col-span-2">
+            {/* Explicitly labelled optional. Every field on this step is
+                Mandatory: No per FLD-523-526, but KID is the one an agent
+                would reasonably expect to be required - it IS required in the
+                fibre journeys, where it identifies a serviceable premises. A
+                postpaid mobile line needs no premises, so saying so here
+                saves the agent hunting for a value they do not need. */}
+            <Input
+              label="KID (Location ID)"
+              placeholder="e.g. KID-00123456"
+              value={value.kidLocationId ?? ''}
+              disabled={value.fetchedFromMoi}
+              helperText={
+                value.fetchedFromMoi
+                  ? 'Fetched from MOI - not editable.'
+                  : 'Optional for postpaid activation.'
+              }
+              onChange={(e) => onChange({ ...value, kidLocationId: e.target.value })}
+            />
+          </div>
         </div>
       )}
       {!value.fetchedFromMoi && (

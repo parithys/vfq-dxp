@@ -33,16 +33,22 @@ const rowToneClass: Record<NonNullable<ToastRow['tone']>, string> = {
 // 'vodafone' | 'other' and a relationship string; deciding what those LOOK
 // like is this layer's job, which is why no ReactNode crosses into state.
 //
-// The Vodafone case shows the mark AND the relationship, because for an
-// existing customer "which operator" is not the useful half - the agent
-// already knows they are at a Vodafone counter. What they need before they
-// speak is whether this is a prepaid or a postpaid customer.
+// The Vodafone case shows the mark AND the SEGMENT (Consumer / Business),
+// because for an existing customer "which operator" is not the useful half -
+// the agent already knows they are at a Vodafone counter. What they need
+// before they speak is which kind of customer this is.
+//
+// Prepaid/Postpaid used to occupy this slot and moved to the Mobile number
+// row on 2026-09-25, where it reads as "(Postpaid)" directly under the
+// number it describes. Keeping it here as well put the same fact on the card
+// twice; and the two are different in kind anyway - a segment describes the
+// customer, a relationship describes one line.
 //
 // The 'other' case shows the mark alone. There is no relationship to state: a
 // competitor's customer has no Vodafone prepaid/postpaid standing, and
 // printing one would be an invention rather than a blank.
 //
-// A Vodafone customer with no line on that number ALSO shows the mark alone.
+// A Vodafone customer with no segment on file ALSO shows the mark alone.
 // This slot briefly read "No active lines", which was wrong twice over:
 //
 // - It answered a question the slot does not ask. The slot is the
@@ -59,9 +65,9 @@ function ToastBrandMark({ brand }: { brand: ToastBrand }) {
   return (
     <span className="flex items-center gap-2">
       <VodafoneMark className="w-4 h-4 shrink-0" />
-      {brand.relationship && (
+      {brand.segment && (
         <span className="text-[length:var(--fs-caption)] font-medium whitespace-nowrap text-white">
-          {brand.relationship}
+          {brand.segment}
         </span>
       )}
     </span>
@@ -245,6 +251,14 @@ export function ToastContainer() {
                           ) : (
                             row.value
                           )}
+                          {/* Own line, at caption size and dimmed, so it
+                              qualifies the value above without competing with
+                              it for the row's visual weight. */}
+                          {row.sub && (
+                            <span className="block text-white/60 text-[length:var(--fs-caption)] font-normal leading-snug">
+                              {row.sub}
+                            </span>
+                          )}
                           {/* The breakdown, under the count. Each identifier
                               opens the owning Customer 360 tab with that
                               service loaded.
@@ -260,7 +274,7 @@ export function ToastContainer() {
                             <span className="mt-1.5 flex flex-col gap-1 font-normal">
                               {row.links.map((link) => (
                                 <Link
-                                  key={link.serviceRef}
+                                  key={link.label}
                                   to={`/customer/${link.customerId}`}
                                   state={{ tab: link.tab, serviceRef: link.serviceRef }}
                                   onClick={() => dismissToast(t.id)}

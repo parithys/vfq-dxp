@@ -7,6 +7,17 @@ export type QidType = 'QID' | 'Passport' | 'GCC ID' | 'Diplomatic ID';
 interface QidTypeSelectorProps {
   idType: QidType;
   onIdTypeChange: (type: QidType) => void;
+  /**
+   * Which types this journey offers. Defaults to all four, which is what the
+   * six journeys other than New Postpaid rely on - Passport-to-QID in
+   * particular exists to handle a passport, so this could not be narrowed
+   * globally.
+   *
+   * New Postpaid passes ['QID', 'Diplomatic ID']: a postpaid connection may
+   * be sold directly only against one of those, and Passport / GCC ID route
+   * to CBM approval instead of this flow.
+   */
+  allowedTypes?: QidType[];
 }
 
 interface QidNumberFieldProps {
@@ -57,16 +68,24 @@ const ID_TYPES: { type: QidType; label: string; numberLabel: string; icon: strin
 // seeded MOI matches yet) driving the label/placeholder of a single number
 // field with an inline Fetch action, replacing the earlier plain text input +
 // separate below-field submit button.
-// The 4-way ID Type card selector. Split out from the number field on
+/** Display name for an ID type, e.g. 'Qatar ID (QID)'. */
+export function idTypeLabel(type: QidType): string {
+  return ID_TYPES.find((t) => t.type === type)?.label ?? type;
+}
+
+// The ID Type card selector. Split out from the number field on
 // 2026-09-25 so a caller can put content BETWEEN them - IdLookupStep now
 // renders the QID scanner in that gap, and only reveals the number once a
 // scan has produced one.
-export function QidTypeSelector({ idType, onIdTypeChange }: QidTypeSelectorProps) {
+export function QidTypeSelector({ idType, onIdTypeChange, allowedTypes }: QidTypeSelectorProps) {
+  const offered = allowedTypes ? ID_TYPES.filter((t) => allowedTypes.includes(t.type)) : ID_TYPES;
   return (
     <div>
       <p className="text-[length:var(--fs-label)] text-fg-2 mb-2">ID Type</p>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {ID_TYPES.map((t) => {
+      {/* Columns follow the count offered, so two cards fill the row rather
+          than leaving two empty quarter-width gaps. */}
+      <div className={`grid grid-cols-2 gap-3 ${offered.length > 2 ? 'sm:grid-cols-4' : ''}`}>
+        {offered.map((t) => {
           const selected = t.type === idType;
           return (
             <button

@@ -18,5 +18,192 @@
     "category": "Free",
     "status": "BLOCKED",
     "priceQAR": 0
+  },
+  {
+    "msisdn": "+97433002011",
+    "category": "Free",
+    "status": "AVAILABLE",
+    "priceQAR": 0,
+    "_note": "App-level demo addition (2026-09-25) - the inventory held three numbers, of which the only two in the Free category were Reserved and BLOCKED, so the Number Selection step had nothing selectable. Seeded 18 Free/AVAILABLE numbers so an agent can actually choose. The original three are kept untouched: they are what demonstrate the Reserved and BLOCKED states, and multi-sim-lines.json references them as primaryMsisdn."
+  },
+  {
+    "msisdn": "+97433002012",
+    "category": "Free",
+    "status": "AVAILABLE",
+    "priceQAR": 0
+  },
+  {
+    "msisdn": "+97433002013",
+    "category": "Free",
+    "status": "AVAILABLE",
+    "priceQAR": 0
+  },
+  {
+    "msisdn": "+97433002014",
+    "category": "Free",
+    "status": "AVAILABLE",
+    "priceQAR": 0
+  },
+  {
+    "msisdn": "+97433002015",
+    "category": "Free",
+    "status": "AVAILABLE",
+    "priceQAR": 0
+  },
+  {
+    "msisdn": "+97433002016",
+    "category": "Free",
+    "status": "AVAILABLE",
+    "priceQAR": 0
+  },
+  {
+    "msisdn": "+97455610021",
+    "category": "Free",
+    "status": "AVAILABLE",
+    "priceQAR": 0
+  },
+  {
+    "msisdn": "+97455610022",
+    "category": "Free",
+    "status": "AVAILABLE",
+    "priceQAR": 0
+  },
+  {
+    "msisdn": "+97455610023",
+    "category": "Free",
+    "status": "AVAILABLE",
+    "priceQAR": 0
+  },
+  {
+    "msisdn": "+97455610024",
+    "category": "Free",
+    "status": "AVAILABLE",
+    "priceQAR": 0
+  },
+  {
+    "msisdn": "+97455610025",
+    "category": "Free",
+    "status": "AVAILABLE",
+    "priceQAR": 0
+  },
+  {
+    "msisdn": "+97455610026",
+    "category": "Free",
+    "status": "AVAILABLE",
+    "priceQAR": 0
+  },
+  {
+    "msisdn": "+97477320031",
+    "category": "Free",
+    "status": "AVAILABLE",
+    "priceQAR": 0
+  },
+  {
+    "msisdn": "+97477320032",
+    "category": "Free",
+    "status": "AVAILABLE",
+    "priceQAR": 0
+  },
+  {
+    "msisdn": "+97477320033",
+    "category": "Free",
+    "status": "AVAILABLE",
+    "priceQAR": 0
+  },
+  {
+    "msisdn": "+97477320034",
+    "category": "Free",
+    "status": "AVAILABLE",
+    "priceQAR": 0
+  },
+  {
+    "msisdn": "+97477320035",
+    "category": "Free",
+    "status": "AVAILABLE",
+    "priceQAR": 0
+  },
+  {
+    "msisdn": "+97477320036",
+    "category": "Free",
+    "status": "AVAILABLE",
+    "priceQAR": 0
+  },
+  {
+    "msisdn": "+97477778888",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 5000,
+    "valueTier": "Platinum",
+    "_note": "App-level demo addition (2026-09-25) - the Star Number (Premium) tab held a single number, so the tab could not demonstrate tiers or price variation. Seeded 11 more across Gold/Silver/Platinum with prices that rise with the pattern strength (repeating digits, sequences, round endings), which is how a premium number inventory is actually priced."
+  },
+  {
+    "msisdn": "+97466666666",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 4500,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97455555000",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 3000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97433334444",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 2000,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477712345",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 1500,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97455510000",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 1200,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97466612321",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 900,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97433221100",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 700,
+    "valueTier": "Silver"
+  },
+  {
+    "msisdn": "+97477654321",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 600,
+    "valueTier": "Silver"
+  },
+  {
+    "msisdn": "+97455566677",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 450,
+    "valueTier": "Silver"
+  },
+  {
+    "msisdn": "+97466650005",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 300,
+    "valueTier": "Silver"
   }
 ]

@@ -116,7 +116,7 @@ export function BulkNotesConfigSection() {
         <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mb-6">
           <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Configure a bulk note</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)]">
-            Restricted to Backoffice and privileged staff roles (Agent 360 BNT-04, BR-03). This persona does not have
+            Restricted to Backoffice and privileged staff roles (Agent 360 BNT-04). This persona does not have
             configuration access.
           </p>
         </div>

@@ -3,6 +3,7 @@ import type { QidType } from '../domain/QidInput';
 import type { QidImageUploadValue } from '../domain/QidImageUpload';
 import { CompanySearchInput } from '../domain/CompanySearchInput';
 import { Checkbox } from '../primitives/Checkbox';
+import { Radio } from '../primitives/Radio';
 import { Input } from '../primitives/Input';
 import { PhoneNumberInput } from '../primitives/PhoneNumberInput';
 import { Select } from '../primitives/Select';
@@ -60,6 +61,11 @@ interface GuidedContactStepProps {
   /** Fixed Line evidences a "Get IPTV?" field at Contact; FWA's evidenced Contact
    * fields (FLD-430–450) don't include it - default true for Fixed Line callers. */
   showIptvToggle?: boolean;
+  /**
+   * Which ID types the journey offers. Forwarded to IdLookupStep; omitted
+   * means all four. New Postpaid narrows it to QID and Diplomatic ID.
+   */
+  allowedIdTypes?: QidType[];
 }
 
 // Single source of truth for "is this a valid Alternate phone #" - exported
@@ -211,7 +217,7 @@ function identityFromMoi(moi: MoiResult | undefined) {
 // agent always performs (or at least sees) an explicit Fetch rather than
 // silently trusting cached active-customer state. The number field shows
 // a format-example placeholder instead (see QidInput.tsx).
-export function GuidedContactStep({ value, onChange, showIptvToggle = true }: GuidedContactStepProps) {
+export function GuidedContactStep({ value, onChange, showIptvToggle = true, allowedIdTypes }: GuidedContactStepProps) {
   return (
     <div className="space-y-4">
       <IdLookupStep
@@ -219,6 +225,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true }: Gu
         // The identity read-out is suppressed here because this step renders
         // those three as editable fields below - see the prop's own note.
         showMoiDetails={false}
+        allowedIdTypes={allowedIdTypes}
         // Every MOI-derived field is re-seeded from the result whenever it
         // changes, and cleared with it when the ID is edited/re-typed. A new
         // ID is a new person, so carrying over the previous one's name or
@@ -293,17 +300,17 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true }: Gu
             <div className="flex items-center gap-6 py-2">
               {['Male', 'Female'].map((g) => (
                 <label key={g} className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg-2">
-                  <input
-                    type="radio"
+                  <Radio
                     name="contact-gender"
                     value={g}
                     checked={value.gender === g}
                     // Radios have no readOnly, so this one genuinely needs
                     // disabled - there is no other way to make a radio
                     // uncheckable. The label colour is left at --fg-2 rather
-                    // than the disabled grey so the answer stays legible.
+                    // than the disabled grey so the answer stays legible, and
+                    // Radio dims its own centre dot to --field-label-disabled
+                    // so a disabled-but-checked answer still reads as chosen.
                     disabled
-                    className="accent-[var(--field-selected)]"
                   />
                   {g}
                 </label>
