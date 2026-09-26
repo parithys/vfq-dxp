@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
+import { monthlyCharges } from '../../../engines/postpaidPricing';
 import { GuidedContactStep, isValidAltPhone, isValidEmail, hasIdentityDetails } from '../../../components/patterns/GuidedContactStep';
 import type { GuidedContactValue } from '../../../components/patterns/GuidedContactStep';
 import { ZsbAddressStep } from '../../../components/patterns/ZsbAddressStep';
@@ -268,6 +269,7 @@ export function NewPostpaidWizard() {
                   idNumber={contact?.idNumber}
                   mobile={contact?.altPhone}
                   productId={values.productId as string | undefined}
+                  discountId={values.discountId as string | undefined}
                   addonIds={(values.addonIds as string[] | undefined) ?? []}
                   msisdn={values.msisdn as string | undefined}
                   numberPriceQar={values.numberPriceQAR as number | undefined}
@@ -337,8 +339,16 @@ export function NewPostpaidWizard() {
           const addons = products.filter((p) => addonIds.includes(p.productId));
           const discounts = await mockDataEngine.list<{ addonDiscountId: string; price: number }>('addons-discounts');
           const discount = discounts.find((d) => d.addonDiscountId === values.discountId);
-          const discountedPlanQar = (plan?.mrcQAR ?? 0) * (1 + (discount?.price ?? 0));
-          const monthlyRecurringQar = discountedPlanQar + addons.reduce((sum, a) => sum + a.mrcQAR, 0) + (doi?.monthlyInstallmentQar ?? 0);
+          // The same itemisation the two display surfaces render, so what the
+          // order records is by construction what the agent quoted. See
+          // engines/postpaidPricing.ts.
+          const charges = monthlyCharges({
+            planQar: plan?.mrcQAR ?? 0,
+            discountRate: discount?.price,
+            addonsQar: addons.reduce((sum, a) => sum + a.mrcQAR, 0),
+            installmentQar: doi?.monthlyInstallmentQar,
+          });
+          const monthlyRecurringQar = charges.totalQar;
 
           // BR-268: HRN/credit-limit variant routes to manager approval rather
           // than auto-completing, same mechanism as the pre-existing B2B2C

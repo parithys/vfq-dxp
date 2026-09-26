@@ -5,6 +5,7 @@ import { Radio } from '../primitives/Radio';
 import { AddonsPicker } from '../domain/AddonsPicker';
 import { Drawer } from '../primitives/Drawer';
 import { Icon } from '../primitives/Icon';
+import { monthlyCharges, formatQar, VAT_RATE } from '../../engines/postpaidPricing';
 
 const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
 
@@ -96,8 +97,17 @@ export function PostpaidPlanAddonsStep({
   const selectedPlan = plans.find((p) => p.productId === selectedProductId);
   const selectedDiscount = discounts.find((d) => d.addonDiscountId === discountId);
   const addonsMonthlyQar = addonProducts.filter((a) => addonIds.includes(a.productId)).reduce((sum, a) => sum + a.mrcQAR, 0);
-  const totalMonthly = selectedPlan
-    ? Math.round(selectedPlan.mrcQAR * (1 + (selectedDiscount?.price ?? 0)) + addonsMonthlyQar)
+  // One itemisation, shared with Checkout and with the order payload - see
+  // engines/postpaidPricing.ts for why that is a module and not three copies.
+  // No device instalment here: this step has not reached Device & DOI yet, so
+  // the figure it shows is the service subtotal, and Checkout adds the
+  // instalment once there is one.
+  const charges = selectedPlan
+    ? monthlyCharges({
+        planQar: selectedPlan.mrcQAR,
+        discountRate: selectedDiscount?.price,
+        addonsQar: addonsMonthlyQar,
+      })
     : undefined;
 
   return (
@@ -147,26 +157,74 @@ export function PostpaidPlanAddonsStep({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <span className="flex items-center gap-2 min-w-0">
-                        <span className="text-fg font-medium truncate">{p.name}</span>
+                        {/* font-bold, not font-medium: the plan name is the
+                            thing being chosen between, so it should carry the
+                            same weight as the price beside it rather than
+                            read lighter than it. */}
+                        <span className="text-fg font-bold truncate">{p.name}</span>
                         {p.popular && <Badge variant="accent">POPULAR</Badge>}
                       </span>
                       <span className="text-fg font-semibold shrink-0">QAR {p.mrcQAR}/mo</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-4 mt-2">
-                      <div>
-                        <div className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Data</div>
-                        <div className="text-fg text-[length:var(--fs-caption)]">
-                          {p.dataAllowanceGB ? `${p.dataAllowanceGB} GB` : 'Unlimited'}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Voice</div>
-                        <div className="text-fg text-[length:var(--fs-caption)]">{p.minutesAllowance}</div>
-                      </div>
-                      <div>
-                        <div className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Speed</div>
-                        <div className="text-fg text-[length:var(--fs-caption)]">{p.speedTier}</div>
-                      </div>
+                    {/* Allowances as a table, per the 2026-09-26 asset: a
+                        header row of labels over a row of values, with the
+                        columns ruled apart. It was three loose divs in a
+                        grid, each stacking its own label over its own value -
+                        the same information, but with nothing tying "Data" to
+                        the figure under it except proximity, and no cue that
+                        the three are one set being compared across plans.
+                        
+                        A real table also makes it navigable: each value
+                        announces with its column header rather than as a bare
+                        "30 GB". Borders use the app's own --border-soft rather
+                        than the asset's full grid, which is a spreadsheet's
+                        chrome.
+
+                        BORDERED ON ALL FOUR SIDES as of 2026-09-26, per the
+                        asset - it previously bordered only between rows/
+                        columns, open on its own perimeter. The outer border
+                        lives on the wrapping div rather than the <table>
+                        itself: a border on <table> draws outside its cells'
+                        padding, so the header text would sit flush against
+                        it, which is why the wrapper also carries the padding
+                        this is now bordered enough to need. overflow-hidden
+                        clips the header's bottom rule to the wrapper's
+                        rounded corners instead of the rule poking past them
+                        square. */}
+                    <div className="mt-2 rounded-[var(--radius-sm)] border border-border-soft overflow-hidden">
+                      <table className="w-full text-[length:var(--fs-caption)] table-fixed">
+                        <thead>
+                          <tr className="border-b border-border-soft">
+                            {['Data', 'Voice', 'Speed'].map((h, i) => (
+                              <th
+                                key={h}
+                                scope="col"
+                                className={`text-muted uppercase tracking-wide font-normal text-left px-3 py-1.5 ${
+                                  i > 0 ? 'border-l border-border-soft' : ''
+                                }`}
+                              >
+                                {h}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            {[
+                              p.dataAllowanceGB ? `${p.dataAllowanceGB} GB` : 'Unlimited',
+                              p.minutesAllowance,
+                              p.speedTier,
+                            ].map((v, i) => (
+                              <td
+                                key={v}
+                                className={`text-fg px-3 py-1.5 ${i > 0 ? 'border-l border-border-soft' : ''}`}
+                              >
+                                {v}
+                              </td>
+                            ))}
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                   </label>
@@ -248,7 +306,7 @@ export function PostpaidPlanAddonsStep({
         </div>
       </div>
 
-      {selectedPlan && (
+      {selectedPlan && charges && (
         <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 flex items-start justify-between flex-wrap gap-4">
           {/* Left: an itemised breakdown under a label, per the 2026-09-26
               asset. Was one run-on caption line - "Live Cart Total · Base plan
@@ -274,11 +332,26 @@ export function PostpaidPlanAddonsStep({
             </caption>
             <tbody className="divide-y divide-border-soft">
               {[
-                ['Plan', `QAR ${selectedPlan.mrcQAR}`],
+                ['Plan', formatQar(charges.planQar)],
+                // The RATE moves into the label and the AMOUNT into the value,
+                // so the value column is money throughout and therefore adds
+                // up. It read "-15%", which told the agent the rate but left
+                // them to work out what it was worth against a 750 plan - and
+                // put a percentage in a column of currency.
                 ...(selectedDiscount
-                  ? [[selectedDiscount.name, `${Math.round(selectedDiscount.price * 100)}%`]]
+                  ? [
+                      [
+                        `${selectedDiscount.name} (${Math.round(Math.abs(selectedDiscount.price) * 100)}%)`,
+                        `-${formatQar(charges.discountQar)}`,
+                      ],
+                    ]
                   : []),
-                ...(addonsMonthlyQar > 0 ? [['Add-ons', `QAR ${addonsMonthlyQar}`]] : []),
+                ...(charges.addonsQar > 0 ? [['Add-ons', formatQar(charges.addonsQar)]] : []),
+                // VAT last and always shown, even at zero: a tax line that
+                // appears only sometimes reads as a surcharge the agent has
+                // triggered. It is charged on the net of everything above it,
+                // which is why it cannot simply be a footnote on the total.
+                [`VAT (${Math.round(VAT_RATE * 100)}%)`, formatQar(charges.vatQar)],
               ].map(([label, value]) => (
                 <tr key={label}>
                   <th scope="row" className="text-fg-2 font-normal text-left py-1.5 pr-4">
@@ -296,7 +369,7 @@ export function PostpaidPlanAddonsStep({
           <div className="text-right">
             <p className="text-fg-2 text-[length:var(--fs-caption)]">Total monthly</p>
             <p className="text-accent font-bold text-[length:var(--fs-h3)] leading-tight">
-              QAR {totalMonthly}
+              {formatQar(charges.totalQar)}
               <span className="text-[length:var(--fs-caption)] font-bold">/mo</span>
             </p>
           </div>

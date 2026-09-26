@@ -33,6 +33,15 @@ interface PhoneNumberInputProps {
   className?: string;
   required?: boolean;
   helperText?: string;
+  /**
+   * Pin the dial code and hide the country picker.
+   *
+   * For a field whose rule names ONE country: the Alternate phone # must be
+   * +974 followed by 8 digits (FLD-352), so offering 200 other dial codes
+   * would present a choice where every alternative fails validation. The
+   * picker stays for consumers that genuinely accept an international number.
+   */
+  fixedIso?: string;
 }
 
 // Shared phone-number field: a country-code dropdown locked inside the field's
@@ -60,8 +69,9 @@ export function PhoneNumberInput({
   className,
   required,
   helperText,
+  fixedIso,
 }: PhoneNumberInputProps) {
-  const [iso, setIso] = useState(() => countryFromNumber(value)?.iso ?? DEFAULT_COUNTRY_ISO);
+  const [iso, setIso] = useState(() => fixedIso ?? countryFromNumber(value)?.iso ?? DEFAULT_COUNTRY_ISO);
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -74,6 +84,7 @@ export function PhoneNumberInput({
   useEffect(() => {
     if (userPickedCountry.current) return;
     const detected = countryFromNumber(value);
+    if (fixedIso) return;
     if (detected && detected.iso !== iso) setIso(detected.iso);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
@@ -153,6 +164,17 @@ export function PhoneNumberInput({
       autoComplete="tel-national"
       leadingAddon={
         <span ref={containerRef} className="contents">
+            {/* Pinned: a plain, non-focusable label. Not a disabled button -
+                a disabled control still says "there is a choice here, just not
+                for you", where the point is that this field has one country by
+                rule. Nothing to tab through either. */}
+            {fixedIso ? (
+              <span className="flex items-center gap-1 text-fg-2">
+                <CountryMarker iso={country.iso} />
+                {country.dial}
+              </span>
+            ) : (
+            <>
             <button
               type="button"
               role="combobox"
@@ -200,6 +222,8 @@ export function PhoneNumberInput({
                   </li>
                 ))}
               </ul>
+            )}
+            </>
             )}
         </span>
       }

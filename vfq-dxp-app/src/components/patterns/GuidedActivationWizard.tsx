@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useWorkflowStore } from '../../stores/workflowStore';
+import * as mockDataEngine from '../../engines/mockDataEngine';
 import { Button } from '../primitives/Button';
 import { Icon } from '../primitives/Icon';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
@@ -8,6 +10,13 @@ import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
 const CHEVRON_LEFT = 'M15 18l-6-6 6-6';
 const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
 const CHECK = 'M20 6L9 17l-5-5';
+
+/** The draft-specific half of an order record - see orders.json's _note. */
+interface DraftOrderRecord {
+  orderId: string;
+  draftStepKey?: string;
+  draftValues?: Record<string, unknown>;
+}
 
 export interface WizardStep {
   key: string;
@@ -50,6 +59,7 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit }: Gui
   const setStep = useWorkflowStore((s) => s.setStep);
   const setFieldValue = useWorkflowStore((s) => s.setFieldValue);
   const clearDraft = useWorkflowStore((s) => s.clearDraft);
+  const hydrateDraft = useWorkflowStore((s) => s.hydrateDraft);
   // Guards against duplicate order submission: onSubmit is async (mock CRUD +
   // navigation) but goNext used to fire-and-forget it without disabling the
   // button, so a second click landing before the first submission's own
@@ -63,6 +73,100 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit }: Gui
   // label/disabled) - same split used in OrderApprovalDetail.tsx et al.
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
+
+  // STARTING a journey discards whatever draft was left behind; RESUMING one
+  // does not. A journey card navigates with state.startFresh (see
+  // JourneyCard), which is the only thing that triggers this - so a
+  // mid-journey reload, a step click in the rail, or a back-navigation all
+  // still find the agent's work where they left it.
+  //
+  // The flag is CONSUMED, not just acted on: cleared from history the moment
+  // it is honoured, by replacing the current entry with a state-less one.
+  //
+  // Necessary because React Router persists location.state into
+  // history.state, so it survives a page reload - and an in-memory "already
+  // handled" ref does not. A reload mid-journey therefore re-read
+  // startFresh=true and wiped the agent's work, which is the exact opposite of
+  // what this is for. Verified: without the replace, reloading on step 3
+  // dropped back to step 1 with the scan gone.
+  //
+  // Replacing rather than pushing, so Back does not land on an entry that
+  // would clear the draft all over again. Same path, so no remount.
+  //
+  // Runs in an effect because it writes to the store and to history; the ref
+  // still guards against a double-fire within one navigation.
+  const location = useLocation();
+  const navigate = useNavigate();
+  const freshenedFor = useRef<string | null>(null);
+  useEffect(() => {
+    const nav = location.state as { startFresh?: boolean; resumeOrderId?: string } | null;
+    if (!nav?.startFresh && !nav?.resumeOrderId) return;
+    if (freshenedFor.current === location.key) return;
+    freshenedFor.current = location.key;
+
+    const consume = () => navigate(location.pathname + location.search, { replace: true, state: null });
+
+    if (nav.resumeOrderId) {
+      // RESUME a stored Draft Order. Its values and step replace the working
+      // copy, so the agent lands exactly where that order was left - not
+      // wherever this journey's last session happened to stop.
+      void mockDataEngine
+        .get<DraftOrderRecord>('orders', nav.resumeOrderId)
+        .then((order) => {
+          if (!order?.draftValues) return;
+          // Key, not index: active steps are filtered by each step's skip(),
+          // so an index saved against one customer's journey can point at a
+          // different step in another's.
+          const stepIndex = Math.max(
+            steps.filter((st) => !st.skip?.(order.draftValues ?? {})).findIndex((st) => st.key === order.draftStepKey),
+            0
+          );
+          hydrateDraft(wizardId, {
+            currentStep: stepIndex,
+            maxStepReached: stepIndex,
+            values: order.draftValues,
+            draftOrderId: order.orderId,
+          });
+        })
+        .finally(consume);
+      return;
+    }
+
+    clearDraft(wizardId);
+    consume();
+  }, [
+    location.key,
+    location.state,
+    location.pathname,
+    location.search,
+    clearDraft,
+    hydrateDraft,
+    navigate,
+    steps,
+    wizardId,
+  ]);
+
+  // Progress back to the order, on STEP CHANGE rather than on every keystroke.
+  // "Resume from the last saved stage" is a statement about steps, and writing
+  // on each character would put a mock-store write behind every letter the
+  // agent types into a name field.
+  const draftOrderId = draft.draftOrderId;
+  const savedStepRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!draftOrderId) return;
+    if (savedStepRef.current === draft.currentStep) return;
+    savedStepRef.current = draft.currentStep;
+    const activeKey = steps.filter((st) => !st.skip?.(draft.values))[draft.currentStep]?.key;
+    if (!activeKey) return;
+    void mockDataEngine.update('orders', draftOrderId, {
+      draftStepKey: activeKey,
+      draftValues: draft.values,
+    });
+    // draft.values is deliberately absent from the deps: it changes on every
+    // keystroke, and this effect only has anything to do when the STEP moves.
+    // The values written are still the current ones, read at that moment.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftOrderId, draft.currentStep, steps]);
 
   const activeSteps = steps.filter((s) => !s.skip?.(draft.values));
   const currentIndex = Math.min(draft.currentStep, activeSteps.length - 1);
@@ -276,7 +380,22 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit }: Gui
       </span>
 
       <div className="flex items-start gap-6">
-        <ol className="w-72 shrink-0 rounded-[var(--radius-card)] border border-border-soft divide-y divide-border-soft bg-bg overflow-hidden">
+        {/* The rail holds its position while the step panel scrolls past it
+            (2026-09-26). Sticky rather than fixed, so it still participates in
+            the layout and cannot overlap the panel at narrow widths.
+            
+            It anchors to <main>, which is the scrolling ancestor (App.tsx
+            gives it overflow-y-auto) - not to the viewport, so the header and
+            breadcrumbs above it scroll away normally.
+            
+            `self-start` matters: the row is `items-start`, but a flex item
+            that stretched to the row's height would have nothing left to
+            stick within, and the rail would simply sit still because it was
+            already as tall as its container. max-h + its own overflow keep a
+            long rail usable on a short viewport instead of clipping its last
+            steps out of reach. */}
+        <ol className="w-72 shrink-0 self-start sticky top-8 max-h-[calc(100vh-8rem)] overflow-y-auto
+          rounded-[var(--radius-card)] border border-border-soft divide-y divide-border-soft bg-bg">
           {activeSteps.map((step, i) => {
             const isActive = i === currentIndex;
             const isDone = i < maxReached;

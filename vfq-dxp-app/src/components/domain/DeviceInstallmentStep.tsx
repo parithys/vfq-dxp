@@ -4,6 +4,7 @@ import { Select } from '../primitives/Select';
 import { Icon } from '../primitives/Icon';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { Checkbox } from '../primitives/Checkbox';
+import { Badge } from '../primitives/Badge';
 
 export interface DoiSelection {
   deviceName: string;
@@ -49,6 +50,9 @@ const INSTALLMENT_OPTIONS = [6, 12, 24];
 const PHONE_ICON = 'M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z M11 18h2';
 const SIM_ONLY_ICON = 'M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z M14 3v4h4 M4 4l16 16';
 const CHECK_ICON = 'M20 6L9 17l-5-5';
+// For the ineligible chip, which carried the TICK - a checkmark beside the
+// words "Not eligible", which is the icon contradicting the label it sits on.
+const CROSS_ICON = 'M18 6L6 18 M6 6l12 12';
 const BOX_ICON = 'M21 8l-9-5-9 5 9 5 9-5z M3 8v8l9 5 9-5V8 M3 8l9 5 9-5';
 const TRUCK_ICON = 'M3 7h11v10H3z M14 10h4l3 3v4h-7z M7 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M17.5 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4z';
 const WARN_ICON = 'M12 3l9 16H3l9-16z M12 10v4 M12 17h.01';
@@ -198,34 +202,33 @@ export function DeviceInstallmentStep({
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {/* These three chips predate <Badge> and are styled inline.
-                    They now carry the same outlined treatment it does per the
-                    2026-09-24 reference - --bg interior, tinted border, 4px
-                    corner - instead of a tinted fill on a fully-rounded pill.
-                    Their leading icons stay: the reference's pills are
-                    label-only, but an icon here is content, not styling. */}
-                <span
-                  className={`inline-flex items-center gap-1.5 rounded-[var(--radius-tag)] px-2.5 py-1 text-[length:var(--fs-tag)] font-medium bg-bg border ${
-                    selectedDevice.catalogStockStatus === 'In Stock'
-                      ? 'border-[var(--success-border)] text-success'
-                      : 'border-[var(--warn-border)] text-[var(--warn-text)]'
-                  }`}
-                >
+                {/* COLOUR CARRIES MEANING HERE, as of 2026-09-26: green for a
+                    fact in the customer's favour, amber for a caveat, red for
+                    a refusal. Two of these three were red regardless of what
+                    they said.
+                    
+                    "Eligible for instalment" was brand red and "Not eligible"
+                    danger red - two states a hue apart, on a row the agent
+                    scans rather than reads, where the whole job of a chip is to
+                    be legible at a glance. And the trade-in bonus, which is
+                    money off, was red on a pink border.
+                    
+                    Now <Badge> rather than three inline copies of its class
+                    string: these predated the primitive, and hand-rolled
+                    duplicates are exactly how the eligible/not-eligible pair
+                    drifted into the same colour. Icons pass through as
+                    children - Badge's own gap-1.5 spaces them - because an
+                    icon here is content, not decoration. */}
+                <Badge variant={selectedDevice.catalogStockStatus === 'In Stock' ? 'success' : 'warning'}>
                   <Icon path={selectedDevice.catalogStockStatus === 'In Stock' ? BOX_ICON : TRUCK_ICON} className="w-3.5 h-3.5" />
                   {selectedDevice.catalogStockNote}
-                </span>
-                <span
-                  className={`inline-flex items-center gap-1.5 rounded-[var(--radius-tag)] px-2.5 py-1 text-[length:var(--fs-tag)] font-medium bg-bg border ${
-                    eligible ? 'border-accent text-accent' : 'border-[var(--danger-border)] text-danger'
-                  }`}
-                >
-                  <Icon path={CHECK_ICON} className="w-3.5 h-3.5" />
+                </Badge>
+                <Badge variant={eligible ? 'success' : 'danger'}>
+                  <Icon path={eligible ? CHECK_ICON : CROSS_ICON} className="w-3.5 h-3.5" />
                   {eligible ? 'Eligible for instalment' : 'Not eligible'}
-                </span>
+                </Badge>
                 {selectedDevice.tradeInBonusQar && (
-                  <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-tag)] px-2.5 py-1 text-[length:var(--fs-tag)] font-medium bg-bg border border-[var(--accent-disabled)] text-accent">
-                    QAR {selectedDevice.tradeInBonusQar} trade-in bonus applied
-                  </span>
+                  <Badge variant="success">QAR {selectedDevice.tradeInBonusQar} trade-in bonus applied</Badge>
                 )}
               </div>
 

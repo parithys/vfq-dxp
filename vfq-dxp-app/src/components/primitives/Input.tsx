@@ -38,10 +38,30 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   // readOnly is NOT disabled. A disabled input drops its text to
   // --field-label-disabled (#b2b2b2, about 2.3:1 on white), which is fine for
   // "this control is unavailable" and wrong for "this is registry data you
-  // must read back to the customer". readOnly keeps --fg text and stays
-  // focusable and selectable, so the value can be read and copied; the
-  // recessed --surface fill is what signals it cannot be typed into.
-  const readOnlyClass = rest.readOnly && !rest.disabled ? 'bg-surface cursor-default' : 'bg-bg';
+  // must read back to the customer". readOnly keeps --fg text and its value
+  // stays selectable; the recessed --surface fill signals it cannot be typed
+  // into.
+  const isReadOnly = Boolean(rest.readOnly) && !rest.disabled;
+  const readOnlyClass = isReadOnly ? 'bg-surface cursor-default' : 'bg-bg';
+  // OUT OF THE TAB ORDER, and no focus ring (2026-09-26).
+  //
+  // A read-only field used to take focus and draw the same pink ring an
+  // editable one does - which is the ring announcing "type here" on a field
+  // that will refuse every keystroke. Worse on the Contact step, where six
+  // consecutive registry fields sat between the agent and the two they can
+  // actually edit: eight tab presses to reach Email.
+  //
+  // Skipping them costs nothing in accessibility terms. tabindex=-1 removes a
+  // control from SEQUENTIAL navigation only; the input keeps its role, name
+  // and value in the accessibility tree, so a screen reader still reaches and
+  // reads it in browse mode. `disabled` inputs are already unfocusable by
+  // the browser, so this only changes the readOnly case.
+  //
+  // A caller can still opt back in by passing its own tabIndex, since `rest`
+  // spreads after this.
+  const focusClass = isReadOnly
+    ? ''
+    : 'focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]';
   const borderClass = error
     ? 'border-[var(--field-border-error)]'
     : isFilled
@@ -101,9 +121,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           className={`rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-fg
             ${readOnlyClass}
             ${borderClass}
-            focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]
+            focus:outline-none ${focusClass}
             disabled:border-[var(--field-border-disabled)] disabled:text-[var(--field-label-disabled)]
             ${className}`}
+          tabIndex={isReadOnly ? -1 : undefined}
           {...rest}
         />
       )}

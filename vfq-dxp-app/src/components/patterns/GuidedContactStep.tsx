@@ -91,21 +91,37 @@ interface GuidedContactStepProps {
 // so every wizard's Contact step isValid gate checks the exact same rule as
 // the field's own inline error.
 //
-// Deliberately accepts any plausible mobile number, not just a Qatar-local
-// one, per explicit product direction: field-inventory/business-rules.json
-// evidence says this field "must be a local mobile number" (repeated across
-// 5+ journeys, FLD-352 et al.) since it's used as an SMS notification
-// contact - but a postpaid customer may only have a foreign number on file
-// (e.g. a GCC/expat/diplomatic customer), so hard-blocking on Qatar's format
-// specifically was judged too restrictive for this rebuild. Accepts either
-// an 8-digit Qatar mobile (optionally +974/974-prefixed, 3/5/6/7 leading
-// digit) or a general international number (optional "+", 7–15 digits).
+// QATAR ONLY: +974 followed by exactly 8 digits, e.g. +97474018245.
+//
+// This reverses the previous direction and returns to the evidenced rule.
+// field-inventory/business-rules.json says this field "must be a local mobile
+// number" - repeated across 5+ journeys, FLD-352 et al. - because it is the
+// SMS notification contact. That was overridden during the rebuild on the
+// reasoning that a postpaid customer might only have a foreign number on file
+// (a GCC, expat or diplomatic customer), so the validator accepted any
+// 7-to-15-digit international number. Direction on 2026-09-26 is the
+// documented rule after all, so the override is gone.
+//
+// Consequence worth knowing: a customer who genuinely has no Qatar mobile can
+// no longer be given one here, and the Contact step of all four journeys that
+// share this gate will hold until a +974 number is entered. That was the
+// exact objection the override existed to answer, so it is recorded in
+// reference/VFQ_DXP_Postpaid_Activation_Open_Questions_Reference.md rather
+// than only in this comment.
+//
+// Separators and an optional 974/+974 prefix are tolerated on INPUT, because
+// the field displays itself grouped ("5551 2345") and the stored value is
+// E.164 - so the same digits arrive here in several shapes and none of them
+// is the agent making a mistake.
 export function isValidAltPhone(raw: string | undefined): boolean {
   if (!raw) return false;
-  const digits = raw.replace(/[\s-]/g, '');
-  const isQatarLocal = /^[3567]\d{7}$/.test(digits.replace(/^\+?974/, ''));
-  const isInternational = /^(\+[1-9]\d{7,14}|\d{7,15})$/.test(digits);
-  return isQatarLocal || isInternational;
+  const local = raw.replace(/[\s-]/g, '').replace(/^\+?974/, '');
+  // Exactly 8 digits, per the stated format. Deliberately NOT also requiring a
+  // 3/5/6/7 leading digit, which is the mobile-prefix rule MsisdnPicker
+  // applies to inventory numbers: the instruction said "exactly 8 digits", and
+  // rejecting a number the agent was told to type would be worse than
+  // accepting a landline here.
+  return /^\d{8}$/.test(local);
 }
 
 // Same contract as isValidAltPhone - one rule shared by the field's inline
@@ -334,11 +350,15 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
           <PhoneNumberInput
             label="Alternate phone #"
             required
+            // Dial code pinned to Qatar: the rule names one country, so a
+            // picker offering 200 others would present a choice in which every
+            // alternative fails validation.
+            fixedIso="QA"
             value={value.altPhone ?? ''}
             placeholder="5566 7766"
             error={
               value.altPhone && !isValidAltPhone(value.altPhone)
-                ? 'Please enter a valid mobile number.'
+                ? 'Enter a Qatar mobile number: +974 followed by 8 digits.'
                 : undefined
             }
             onChange={(e) => onChange({ ...value, altPhone: e.target.value })}

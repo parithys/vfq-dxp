@@ -1,0 +1,105 @@
+/**
+ * Monthly pricing for a postpaid order: one itemisation, consumed by every
+ * surface that shows or stores it.
+ *
+ * WHY THIS EXISTS. The same arithmetic was written three times - in the Plan &
+ * Add-ons summary, in the Checkout read-back, and in NewPostpaidWizard's
+ * onSubmit - and the three had already drifted. Checkout omitted the discount
+ * entirely, so a 15% loyalty discount on a QAR 750 plan showed the agent QAR
+ * 800/mo for an order the wizard then created at 687.50: the customer was
+ * quoted a price their order did not carry. One of the three also rounded and
+ * the others did not, so the itemised rows failed to sum to their own total.
+ *
+ * Adding VAT was what made a shared module unavoidable rather than merely
+ * tidy: a tax visible on one surface and absent from the other two is the same
+ * bug again, with a bigger number attached.
+ */
+
+/**
+ * Qatar VAT, as a rate.
+ *
+ * ASSUMED, NOT EVIDENCED. Requested at 5% on 2026-09-26. No document in the
+ * corpus states a VAT rate, or whether postpaid charges are quoted inclusive
+ * or exclusive of it, or how it applies to a device instalment - which is a
+ * financing arrangement rather than a service charge and may well be treated
+ * differently. Logged in
+ * reference/VFQ_DXP_Postpaid_Activation_Open_Questions_Reference.md rather
+ * than left implied here.
+ */
+export const VAT_RATE = 0.05;
+
+export interface MonthlyChargeInput {
+  /** Plan monthly recurring charge. */
+  planQar: number;
+  /**
+   * The discount's stored rate, e.g. -0.15. Sign is ignored - see the note on
+   * `discountQar` below.
+   */
+  discountRate?: number;
+  addonsQar?: number;
+  /** Device-on-instalment monthly amount, when one was taken. */
+  installmentQar?: number;
+}
+
+export interface MonthlyCharges {
+  planQar: number;
+  /**
+   * What the discount is worth in riyals, as a POSITIVE magnitude to be
+   * subtracted.
+   *
+   * Derived with Math.abs rather than the `plan * (1 + rate)` form this
+   * replaced. Every seeded Discount row stores a negative rate, and that form
+   * silently depended on it: a row entered as +0.15 would have ADDED 15% in
+   * the wizard while the two display surfaces subtracted it. Subtracting a
+   * magnitude cannot invert whichever sign the catalogue happens to use.
+   */
+  discountQar: number;
+  addonsQar: number;
+  installmentQar: number;
+  /** Charges before tax. */
+  netQar: number;
+  vatQar: number;
+  /** netQar + vatQar. What the customer pays monthly. */
+  totalQar: number;
+}
+
+/** Two decimal places, the smallest unit these figures are quoted in. */
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+/**
+ * VAT is rounded BEFORE the total is derived from it, so the itemised rows add
+ * up to the total exactly as displayed. Rounding only at the end let 5% of
+ * 687.50 print as 34.38 beside a total computed from 34.375, leaving a column
+ * of figures that does not sum to its own last line - which is worse than
+ * showing no breakdown at all, because it invites the agent to check it.
+ */
+export function monthlyCharges(input: MonthlyChargeInput): MonthlyCharges {
+  const planQar = input.planQar;
+  const discountQar = round2(planQar * Math.abs(input.discountRate ?? 0));
+  const addonsQar = input.addonsQar ?? 0;
+  const installmentQar = input.installmentQar ?? 0;
+  const netQar = round2(planQar - discountQar + addonsQar + installmentQar);
+  const vatQar = round2(netQar * VAT_RATE);
+  return {
+    planQar,
+    discountQar,
+    addonsQar,
+    installmentQar,
+    netQar,
+    vatQar,
+    totalQar: round2(netQar + vatQar),
+  };
+}
+
+/**
+ * Riyals, with decimals only where the figure has any.
+ *
+ * A percentage discount produces halves (15% of 750 is 112.50) while the rest
+ * of the catalogue is whole, so a blanket 2dp would print "QAR 750.00" on
+ * every plan to accommodate one row.
+ */
+export function formatQar(amount: number, currency: 'QAR' | 'QR' = 'QAR'): string {
+  return `${currency} ${Number.isInteger(amount) ? amount : amount.toFixed(2)}`;
+}

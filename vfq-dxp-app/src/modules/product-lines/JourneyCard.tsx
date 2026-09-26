@@ -75,7 +75,19 @@ export function JourneyCard({ journey, index, to }: { journey: Journey; index: n
 
   if (!interactive) return <div className={shell}>{body}</div>;
   return (
-    <Link to={to!} className={`group block ${shell}`}>
+    // `startFresh` marks this as STARTING a journey rather than returning to
+    // one. GuidedActivationWizard discards any saved draft when it sees it, so
+    // a card click always opens step 1 with nothing filled in - an agent who
+    // reaches for "New Postpaid Connection" has a new customer at the counter,
+    // and resuming the previous one's half-finished order is worse than
+    // useless: it starts them on a step they never visited, against an ID they
+    // never scanned.
+    //
+    // Carried in location.state, NOT read from the route, so that RESUMING
+    // still works. The draft persists deliberately, and a mid-journey reload
+    // or a step click in the rail must not wipe it - only an explicit start
+    // does.
+    <Link to={to!} state={{ startFresh: true }} className={`group block ${shell}`}>
       {body}
     </Link>
   );

@@ -57,7 +57,8 @@
     "taskStatus": "Open",
     "priorityFlag": false,
     "assignedAgentId": null,
-    "createdAt": "2026-09-08T16:20:00+03:00"
+    "createdAt": "2026-09-08T16:20:00+03:00",
+    "_relatedOrderNote": "Deliberately NOT linked to a draft order. This task describes a GigaHome upgrade, and no fixed-line draft order is seeded - inventing a postpaid one to make the row clickable would have it resume a journey the task is not about. It stays a task-detail row, which is the honest behaviour for a draft whose order is not in this app."
   },
   {
     "taskId": "TASK-70007",
@@ -67,7 +68,8 @@
     "taskStatus": "Assigned",
     "priorityFlag": true,
     "assignedAgentId": "USR-1101",
-    "createdAt": "2026-09-09T09:00:00+03:00"
+    "createdAt": "2026-09-09T09:00:00+03:00",
+    "relatedOrderId": "ORD-90020"
   },
   {
     "taskId": "TASK-70008",
@@ -97,6 +99,7 @@
     "taskStatus": "In Progress",
     "priorityFlag": false,
     "assignedAgentId": "USR-1101",
-    "createdAt": "2026-09-05T12:00:00+03:00"
+    "createdAt": "2026-09-05T12:00:00+03:00",
+    "relatedOrderId": "ORD-90021"
   }
 ]

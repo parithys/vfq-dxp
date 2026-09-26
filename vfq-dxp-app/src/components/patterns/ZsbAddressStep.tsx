@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Input } from '../primitives/Input';
-import { Button } from '../primitives/Button';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 
 export interface ZsbAddressValue {
@@ -17,7 +16,6 @@ export interface ZsbAddressValue {
    * address record's `kahramaaId` when one is on file.
    */
   kidLocationId?: string;
-  skipped?: boolean;
   fetchedFromMoi?: boolean;
 }
 
@@ -59,6 +57,15 @@ interface AddressRecord {
 // Address"/"Go back"/"Cancel" buttons - a mobile-channel address step, distinct
 // from Fixed Line/FWA's AddressSelectionStep (which picks an existing
 // serviceable Address record).
+//
+// The Save Address / Skip Address pair was removed on 2026-09-26, along with
+// the `skipped` flag they were the only thing that set. Save committed nothing
+// - every field already writes on change, so it re-submitted the value it had
+// - and Skip is no longer needed to decline the step: all six fields are
+// evidenced Mandatory: No, so leaving them empty and pressing Continue is the
+// same outcome the flag used to record. Worth noting the departure: the
+// evidenced screen (SCR-155/SCR-122) does show Save Address / Skip Address /
+// Go back / Cancel, so the journey no longer mirrors that button row.
 //
 // The on-screen "Unresolved policy conflict" advisory was removed on
 // 2026-09-25. The conflict itself is NOT resolved by removing it - the
@@ -113,13 +120,12 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
           It used to sit on KID alone, saying "Fetched from MOI - not
           editable." - which was true of all six fields, not just that one,
           and is no longer true of any of them. */}
-      {value.fetchedFromMoi && !value.skipped && (
+      {value.fetchedFromMoi && (
         <p className="text-muted text-[length:var(--fs-caption)]">
           Retrieved from the customer's Qatar ID. Edit any field if the customer confirms a change.
         </p>
       )}
-      {!value.skipped && (
-        <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4">
           <Input
             label="Zone"
             placeholder="e.g. Zone 38"
@@ -165,33 +171,9 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
               label="KID (Location ID)"
               placeholder="e.g. KID-00123456"
               value={value.kidLocationId ?? ''}
-              helperText="Optional for postpaid activation."
               onChange={(e) => onChange({ ...value, kidLocationId: e.target.value })}
             />
           </div>
-        </div>
-      )}
-      {/* Shown for a prefilled address too, as of 2026-09-26. These were
-          gated on !fetchedFromMoi while the prefilled fields were read-only -
-          there was nothing to save and nothing to skip. Now that the agent can
-          correct the retrieved address, they need the action that commits it,
-          and Skip stays available because an address on file is not
-          automatically the one this order should carry. */}
-      <div className="flex gap-2">
-        {value.skipped ? (
-          <Button variant="ghost-rect" onClick={() => onChange({ ...value, skipped: false })}>
-            Enter Address
-          </Button>
-        ) : (
-          <>
-            <Button variant="primary-rect" onClick={() => onChange(value)}>
-              Save Address
-            </Button>
-            <Button variant="ghost-rect" onClick={() => onChange({ skipped: true })}>
-              Skip Address
-            </Button>
-          </>
-        )}
       </div>
     </div>
   );

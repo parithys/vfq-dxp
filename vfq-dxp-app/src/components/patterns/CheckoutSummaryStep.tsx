@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
+import { monthlyCharges, formatQar, VAT_RATE } from '../../engines/postpaidPricing';
 import type { DoiSelection } from '../domain/DeviceInstallmentStep';
 import type { SimTypeValue } from '../domain/SimTypeStep';
 import type { EligibilityResult } from '../domain/EligibilityGateStep';
@@ -24,6 +25,15 @@ interface CheckoutSummaryStepProps {
   /** Optional - the postpaid journey no longer collects one. */
   billingMethod?: string;
   productId: string | undefined;
+  /**
+   * The chosen discount, if any. Added 2026-09-26 because this step did not
+   * receive one and so priced every order at full plan rate: with a 15%
+   * loyalty discount on a QAR 750 plan it read QAR 800/mo and reported that
+   * through onTotalsComputed, while NewPostpaidWizard's onSubmit applied the
+   * discount and created the order at 687.50. The agent read the customer a
+   * monthly price the order did not carry.
+   */
+  discountId: string | undefined;
   addonIds: string[];
   msisdn: string | undefined;
   numberPriceQar: number | undefined;
@@ -44,6 +54,7 @@ export function CheckoutSummaryStep({
   mobile,
   billingMethod,
   productId,
+  discountId,
   addonIds,
   msisdn,
   numberPriceQar,
@@ -53,18 +64,34 @@ export function CheckoutSummaryStep({
   onTotalsComputed,
 }: CheckoutSummaryStepProps) {
   const [products, setProducts] = useState<Product[]>([]);
+  const [discounts, setDiscounts] = useState<{ addonDiscountId: string; name: string; price: number }[]>([]);
 
   useEffect(() => {
     mockDataEngine.list<Product>('products').then(setProducts);
+    mockDataEngine
+      .list<{ addonDiscountId: string; name: string; price: number }>('addons-discounts')
+      .then(setDiscounts);
   }, []);
 
   const plan = products.find((p) => p.productId === productId);
   const addons = products.filter((p) => addonIds.includes(p.productId));
+  const discount = discounts.find((d) => d.addonDiscountId === discountId);
   const numberDelta = numberPriceQar ?? 0;
   const hrnAdvance = eligibility?.requiresHrnAdvance ? 100 : 0;
 
   const dueTodayQar = numberDelta + (doi?.downPaymentQar ?? 0) + hrnAdvance;
-  const monthlyRecurringQar = (plan?.mrcQAR ?? 0) + addons.reduce((sum, a) => sum + a.mrcQAR, 0) + (doi?.monthlyInstallmentQar ?? 0);
+  // One shared itemisation with the Plan step and the order payload - see
+  // engines/postpaidPricing.ts. Derived here rather than restated, because
+  // this figure is what the agent reads to the customer and the order's is
+  // what they are billed, and the two diverging is exactly the bug this
+  // module was extracted to end.
+  const charges = monthlyCharges({
+    planQar: plan?.mrcQAR ?? 0,
+    discountRate: discount?.price,
+    addonsQar: addons.reduce((sum, a) => sum + a.mrcQAR, 0),
+    installmentQar: doi?.monthlyInstallmentQar,
+  });
+  const monthlyRecurringQar = charges.totalQar;
 
   useEffect(() => {
     onTotalsComputed({ dueTodayQar, monthlyRecurringQar, hrnAdvanceQar: hrnAdvance });
@@ -103,6 +130,22 @@ export function CheckoutSummaryStep({
           label="Add-ons"
           value={addons.length ? addons.map((a) => `${a.name} (QR ${a.mrcQAR}/mo)`).join(', ') : 'None'}
         />
+        {/* Shown so the monthly figure below can be arrived at from the rows
+            above it. Without this the total was simply lower than Plan plus
+            Add-ons with nothing on screen accounting for the difference. */}
+        {discount && (
+          <Row
+            label="Discount"
+            value={`${discount.name} (${Math.round(Math.abs(discount.price) * 100)}%) - ${formatQar(
+              charges.discountQar,
+              'QR'
+            )}/mo`}
+          />
+        )}
+        {/* The tax is on the read-back because the monthly figure below
+            includes it - an agent reading out a total they cannot account for
+            from the rows above has nothing to answer "why?" with. */}
+        <Row label={`VAT (${Math.round(VAT_RATE * 100)}%)`} value={`${formatQar(charges.vatQar, 'QR')}/mo`} />
         {hrnAdvance > 0 && <Row label="HRN advance payment" value={`QR ${hrnAdvance}`} />}
       </dl>
 

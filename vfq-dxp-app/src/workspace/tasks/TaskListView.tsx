@@ -15,6 +15,15 @@ interface AgentTask {
   priorityFlag: boolean;
   assignedAgentId: string | null;
   createdAt: string;
+  /** Set on a Draft Order task whose order is stored - see orders.json. */
+  relatedOrderId?: string;
+}
+
+/** The fields a Draft Order row needs to resume into its journey. */
+interface DraftOrder {
+  orderId: string;
+  status: string;
+  draftResumePath?: string;
 }
 
 const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'filled-neutral' | 'outlined-red'> = {
@@ -47,8 +56,18 @@ export function TaskListView() {
   const loadError = useEntityStore((s) => s.errors.tasks);
   const currentAgentId = useAuthStore((s) => s.profile?.userId);
 
+  // Orders too, so a Draft Order row knows where its journey resumes. Read
+  // from the store the rest of this screen already uses rather than a separate
+  // fetch, so the row click has the path in hand and does not have to await
+  // anything mid-navigation.
+  const orders = (useEntityStore((s) => s.records.orders) ?? []) as unknown as DraftOrder[];
+  const draftOrders = Object.fromEntries(
+    orders.filter((o) => o.status === 'Draft').map((o) => [o.orderId, o])
+  );
+
   useEffect(() => {
     loadKind('tasks');
+    loadKind('orders');
   }, [loadKind]);
 
   // ATV-02 - see Dashboard.tsx's tile counts for the same rule; kept
@@ -88,7 +107,23 @@ export function TaskListView() {
         ]}
         rows={filtered}
         rowKey={(t) => t.taskId}
-        onRowClick={(t) => navigate(`/tasks/${t.taskId}`)}
+        // A Draft Order row RESUMES its journey; every other task opens its
+        // detail view. This is the only way back into an unfinished journey -
+        // the product-line cards always start a new one - so the row has to
+        // land the agent in the wizard rather than on a page describing it.
+        //
+        // Falls back to task detail when the task carries no relatedOrderId:
+        // TASK-70006 is a GigaHome draft with no seeded fixed-line order, and
+        // sending it into a postpaid journey would resume something it is not
+        // about.
+        onRowClick={(t) => {
+          const order = t.relatedOrderId ? draftOrders[t.relatedOrderId] : undefined;
+          if (order?.draftResumePath) {
+            navigate(order.draftResumePath, { state: { resumeOrderId: order.orderId } });
+            return;
+          }
+          navigate(`/tasks/${t.taskId}`);
+        }}
         emptyMessage="No tasks in this category."
         loading={loading}
       />

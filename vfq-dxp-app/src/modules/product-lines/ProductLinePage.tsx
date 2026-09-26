@@ -117,11 +117,25 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
         </p>
       )}
 
+      {/* Unselected chips sit on --surface-warm (#fff0f0), the palette's own
+          soft pink, per the 2026-09-26 asset - they were a grey outline on the
+          page background, which read as disabled next to the solid-red
+          selected one rather than as the rest of one set.
+          
+          Their label is --deep-red, NOT --accent. Measured: #e60000 on #fff0f0
+          is 4.35:1, which misses SC 1.4.3's 4.5:1 at --fs-caption. #7a1f1c is
+          9.30:1 on the same fill and still unmistakably red.
+          
+          Border is transparent rather than absent, so the pill keeps the same
+          box as the selected one and the row does not shift by 2px as
+          selection moves. Hover brings the accent border in - a second, deeper
+          pink would need a token this palette does not have, and the outline
+          says "clickable" more plainly than a 4% fill change. */}
       <div className="flex flex-wrap items-center gap-2 mb-6">
         <Link
           to={line.to}
           className={`rounded-[var(--radius-pill)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${
-            active ? 'border-border-soft text-fg-2 hover:bg-surface' : 'border-accent bg-accent text-accent-on'
+            active ? 'border-transparent bg-surface-warm text-[var(--deep-red)] hover:border-accent' : 'border-accent bg-accent text-accent-on'
           }`}
         >
           All
@@ -133,7 +147,7 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
             className={`rounded-[var(--radius-pill)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${
               active?.key === c.key
                 ? 'border-accent bg-accent text-accent-on'
-                : 'border-border-soft text-fg-2 hover:bg-surface'
+                : 'border-transparent bg-surface-warm text-[var(--deep-red)] hover:border-accent'
             }`}
           >
             {c.label}

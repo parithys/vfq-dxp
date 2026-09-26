@@ -8,6 +8,16 @@ interface WizardDraft {
    * even after jumping to an earlier step to edit it. */
   maxStepReached: number;
   values: Record<string, unknown>;
+  /**
+   * The Draft Order this session is working on, when it was opened from one.
+   *
+   * The store holds ONE draft per wizardId, which is the working copy at the
+   * counter. The durable record is the order itself (status 'Draft' in
+   * orders.json), and this is the link back to it - so progress is written
+   * there on every step change and several draft orders can exist at once
+   * without this store needing a slot for each.
+   */
+  draftOrderId?: string;
 }
 
 interface WorkflowState {
@@ -16,6 +26,16 @@ interface WorkflowState {
   setStep: (wizardId: string, step: number) => void;
   setFieldValue: (wizardId: string, field: string, value: unknown) => void;
   clearDraft: (wizardId: string) => void;
+  /**
+   * Replace a draft wholesale, from a stored Draft Order.
+   *
+   * A single set rather than a clearDraft + N setFieldValue calls, so the
+   * resumed order lands in one render. Done field-by-field, the wizard would
+   * re-render against a half-restored draft and its step gates would evaluate
+   * against values that had not arrived yet - which, on a resume to step 7,
+   * means a Continue gate failing on a field the order does in fact carry.
+   */
+  hydrateDraft: (wizardId: string, draft: WizardDraft) => void;
 }
 
 const emptyDraft: WizardDraft = { currentStep: 0, maxStepReached: 0, values: {} };
@@ -43,6 +63,8 @@ export const useWorkflowStore = create<WorkflowState>()(
           const draft = state.drafts[wizardId] ?? emptyDraft;
           return { drafts: { ...state.drafts, [wizardId]: { ...draft, values: { ...draft.values, [field]: value } } } };
         }),
+      hydrateDraft: (wizardId, draft) =>
+        set((state) => ({ drafts: { ...state.drafts, [wizardId]: draft } })),
       clearDraft: (wizardId) =>
         set((state) => {
           const { [wizardId]: _removed, ...rest } = state.drafts;

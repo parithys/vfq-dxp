@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Input } from '../primitives/Input';
 import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
+import { Select } from '../primitives/Select';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 
 interface MsisdnRecord {
@@ -31,6 +32,45 @@ const TAB_LABELS: Record<NumberTab, string> = {
   Reserved: 'Reserved Numbers',
 };
 
+/**
+ * Sort orders, offered on the STAR TAB ONLY.
+ *
+ * Star is the only tab where any of them does anything. Its numbers are priced
+ * 300 to 5000, and the agent works down from the best one the customer's plan
+ * entitles them to. Every Free number is QR 0, so both price orders are no-ops
+ * there, which would leave a dropdown whose only working option is Number -
+ * and a one-option dropdown is a control that looks like a choice. Reserved is
+ * a short held-numbers list an agent scans rather than ranks.
+ *
+ * Both of those tabs therefore sort by NUMBER_ASC implicitly, with no control
+ * on screen. An earlier revision showed the dropdown everywhere on the
+ * reasoning that a control changing its options per tab is hard to trust; the
+ * better answer is not to show a control that cannot act.
+ */
+type SortKey = 'price-desc' | 'price-asc' | 'number-asc' | 'number-desc';
+
+// Both directions for BOTH keys. Offering "Number: ascending" without its
+// descending counterpart made the one key asymmetric against the other - price
+// had two directions and number one - so the menu implied number order was
+// somehow one-way.
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: 'price-desc', label: 'Price: high to low' },
+  { value: 'price-asc', label: 'Price: low to high' },
+  { value: 'number-asc', label: 'Number: ascending' },
+  { value: 'number-desc', label: 'Number: descending' },
+];
+
+const SORTERS: Record<SortKey, (a: MsisdnRecord, b: MsisdnRecord) => number> = {
+  // Ties broken by number, so a page of equally-priced numbers holds a stable
+  // order instead of reshuffling on every render.
+  'price-desc': (a, b) => b.priceQAR - a.priceQAR || a.msisdn.localeCompare(b.msisdn),
+  'price-asc': (a, b) => a.priceQAR - b.priceQAR || a.msisdn.localeCompare(b.msisdn),
+  'number-asc': (a, b) => a.msisdn.localeCompare(b.msisdn),
+  'number-desc': (a, b) => b.msisdn.localeCompare(a.msisdn),
+};
+
+const ALL_TIERS = 'All';
+
 interface MsisdnPickerProps {
   selected?: string;
   onSelect: (msisdn: string, priceQAR: number) => void;
@@ -53,6 +93,8 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
   const [numbers, setNumbers] = useState<MsisdnRecord[]>([]);
   const [tab, setTab] = useState<NumberTab>('Free');
   const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<SortKey>('price-desc');
+  const [tier, setTier] = useState<string>(ALL_TIERS);
   const [customMsisdn, setCustomMsisdn] = useState('');
   const [customError, setCustomError] = useState<string | null>(null);
 
@@ -87,11 +129,40 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
   // They are NOT forgotten: reserveCustom below still rejects a Reserved or
   // BLOCKED number typed into Manual MSISDN Entry by name, so the inventory
   // is still enforced where an agent could otherwise ask for one.
-  const filtered = numbers.filter((n) => {
-    const matchesTab = tab === 'Reserved' ? n.status === 'Reserved' : n.category === tab && n.status === 'AVAILABLE';
-    const matchesSearch = search ? n.msisdn.includes(search) : true;
-    return matchesTab && matchesSearch;
-  });
+  const inTab = numbers.filter((n) =>
+    tab === 'Reserved' ? n.status === 'Reserved' : n.category === tab && n.status === 'AVAILABLE'
+  );
+
+  // Tier chips and Sort are STAR-ONLY.
+  //
+  // Free has no tiers at all and no price spread, so neither control has
+  // anything to do. Reserved does contain tiered numbers - a reserved Star
+  // number stays visible there by design - so the chips would render if this
+  // were driven by tier presence alone; they are suppressed anyway, because
+  // that tab is a short list of what is already held rather than an inventory
+  // to narrow, and filtering it by tier answers a question nobody asks of it.
+  const showControls = tab === 'Star';
+
+  // Still derived from the data rather than a hardcoded Gold/Platinum/Silver
+  // list, so the chips match whatever the catalogue actually holds.
+  const tiers = showControls
+    ? [...new Set(inTab.map((n) => n.valueTier).filter((t): t is string => Boolean(t)))].sort()
+    : [];
+
+  // Without a control on screen, the order must not depend on whatever the
+  // agent last chose on the Star tab.
+  const effectiveSort: SortKey = showControls ? sort : 'number-asc';
+
+  const filtered = inTab
+    .filter((n) => {
+      const matchesSearch = search ? n.msisdn.includes(search) : true;
+      // Only applied where the chips are on screen. A tier left selected
+      // while switching to a tab that has no tiers would otherwise empty the
+      // list with no visible control to explain why.
+      const matchesTier = tiers.length === 0 || tier === ALL_TIERS || n.valueTier === tier;
+      return matchesSearch && matchesTier;
+    })
+    .sort(SORTERS[effectiveSort]);
 
   return (
     <div className="space-y-3">
@@ -99,7 +170,13 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
         {(['Free', 'Star', 'Reserved'] as const).map((t) => (
           <button
             key={t}
-            onClick={() => setTab(t)}
+            onClick={() => {
+              setTab(t);
+              // A tier chosen on Star means nothing on Free. Reset rather than
+              // carry it across, so no tab ever opens pre-filtered by a
+              // control the agent cannot see.
+              setTier(ALL_TIERS);
+            }}
             className={`px-3 py-1.5 text-[length:var(--fs-body)] border-b-2 -mb-px ${
               tab === t ? 'border-accent text-accent font-medium' : 'border-transparent text-fg-2'
             }`}
@@ -109,21 +186,82 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
         ))}
       </div>
       <Input aria-label="Search 8-digit number" placeholder="Search 8-digit number" value={search} onChange={(e) => setSearch(e.target.value)} />
+
+      {/* Tier filter left, sort right, on one row - per the 2026-09-26 asset.
+          Both narrow the same list the search box above them does, so they sit
+          with it rather than over the results.
+          
+          The WHOLE ROW is absent on Free and Reserved (see showControls), not
+          just its contents: neither control can act on those tabs, and an
+          empty control row would leave a gap the agent reads as something
+          having failed to load. */}
+      {showControls && (
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        {/* Chips, not a second dropdown: there are at most three tiers and the
+            agent switches between them repeatedly while quoting, so each is
+            one click away and the current one is visible without opening
+            anything. */}
+        {tiers.length > 0 ? (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Tier</span>
+            {[ALL_TIERS, ...tiers].map((t) => {
+              const active = tier === t;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setTier(t)}
+                  aria-pressed={active}
+                  className={`px-3 py-1 rounded-[var(--radius-pill)] text-[length:var(--fs-caption)] border transition-colors ${
+                    active
+                      ? 'bg-accent text-accent-on border-accent font-medium'
+                      : 'bg-bg text-fg-2 border-border hover:border-[var(--field-card-selected)]'
+                  }`}
+                >
+                  {t}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          // Keeps the sort control at the row's right edge if a Star tab ever
+          // holds untiered numbers, instead of letting it slide left.
+          <span />
+        )}
+        <div className="flex items-center gap-2">
+          <span className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Sort</span>
+          <Select
+            aria-label="Sort numbers"
+            options={SORT_OPTIONS}
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+          />
+        </div>
+      </div>
+      )}
       {/* Capped and scrollable as of 2026-09-25, when the Free inventory went
           from 2 numbers to 18. Seven rows of cards pushed Continue below the
           fold on every visit; the search box above narrows the list for an
           agent who knows what they want, and this keeps the step navigable for
           one who is browsing. */}
-      {/* ONE COLUMN ON EVERY TAB as of 2026-09-26, per the supplied card
-          design: a full-width row with the number on the left and its price on
-          the right. Free and Star were a two/three-across grid of tiles that
-          stacked the number over its price; Reserved was already one-per-row,
-          and the two shapes are now the same one.
+      {/* TWO COLUMNS on Free and Star, ONE on Reserved.
           
-          The longer list this produces was already provided for: the container
-          caps at 22rem and scrolls, and the search box above it narrows the
-          list for an agent who knows the number they want. */}
-      <div className="grid grid-cols-1 gap-3 max-h-[22rem] overflow-y-auto pr-1">
+          Every card keeps the number-left / price-right row adopted on
+          2026-09-26; only how many sit side by side differs. Free and Star are
+          browsable inventories where two columns halve the scrolling, and at
+          this width a number and its price still sit comfortably on one line.
+          Reserved stays full width for the reason it always has: it is a short
+          list, so a second column would leave a card stranded beside an empty
+          half-row, and its rows carry an extra fact - who holds the number -
+          that reads better across a full width than wrapped into half of one.
+          
+          Capped at 22rem and scrollable either way, with the search above it
+          for an agent who already knows the number they want. */}
+      <div
+        className={`grid gap-3 max-h-[22rem] overflow-y-auto pr-1 ${
+          tab === 'Reserved' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'
+        }`}
+      >
         {filtered.map((n) => {
           const isSelected = selected === n.msisdn;
           // No disabled state: everything listed is selectable. An AVAILABLE
@@ -141,21 +279,30 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
               className={`text-left rounded-[var(--radius-card)] border p-3
                 ${isSelected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft bg-bg hover:border-[var(--field-card-selected)]'}`}
             >
-              {/* Number left, price right, on one line - no longer branching
-                  on the tab, since all three now share this row. */}
+              {/* TIER FIRST, then the number, with the price alone on the
+                  right (2026-09-26). The tier led the badge group beside the
+                  price until now, which read the number before saying what
+                  KIND of number it was - and on a tier-sorted list the tier is
+                  what the agent is scanning down.
+                  
+                  The price stays in its own right-hand slot so the figures
+                  share a right edge down the column; a tier badge between them
+                  and the number would have pushed each price to a different x.
+                  
+                  Shared by all three tabs - only the column count differs. */}
               <div className="flex items-center justify-between gap-4">
-                <span className="text-fg font-medium">{n.msisdn}</span>
-                {/* The price carries --fg weight rather than the muted caption
-                    it used to, per the design: on a Star number it is the fact
-                    the agent is choosing between, so it should not be the
-                    quietest thing in the row. */}
-                <span className="text-fg font-semibold shrink-0 flex items-center gap-2">
+                <span className="flex items-center gap-2 min-w-0">
                   {n.valueTier && <Badge variant="outlined-red">{n.valueTier}</Badge>}
                   {tab === 'Reserved' && (
                     <Badge variant="filled-neutral">{n.reservedBy ? `Held by ${n.reservedBy}` : 'Reserved'}</Badge>
                   )}
-                  QR {n.priceQAR}
+                  <span className="text-fg font-medium truncate">{n.msisdn}</span>
                 </span>
+                {/* --fg weight rather than the muted caption it used to carry:
+                    on a Star number the price is the fact being chosen
+                    between, so it should not be the quietest thing in the
+                    row. */}
+                <span className="text-fg font-semibold shrink-0">QR {n.priceQAR}</span>
               </div>
             </button>
           );

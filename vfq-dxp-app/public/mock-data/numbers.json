@@ -3,8 +3,9 @@
     "msisdn": "+97433001001",
     "category": "Free",
     "status": "Reserved",
-    "reservedBy": "AGENT-KARTHIKK",
-    "priceQAR": 0
+    "reservedBy": "Fatima Al-Kuwari",
+    "priceQAR": 0,
+    "_reservedByNote": "Was 'AGENT-KARTHIKK', an id matching no record in users-agents.json - the same invented placeholder NewPostpaidWizard stamps as an order's createdBy. Repointed at USR-1101 (Fatima Al-Kuwari, the demo login) so every Held-by badge names a real, resolvable person instead of one row reading an id and the rest reading names."
   },
   {
     "msisdn": "+97433001002",
@@ -204,6 +205,37 @@
     "category": "Star",
     "status": "AVAILABLE",
     "priceQAR": 300,
+    "valueTier": "Silver"
+  },
+  {
+    "msisdn": "+97433002051",
+    "category": "Free",
+    "status": "Reserved",
+    "reservedBy": "Omar Hassan",
+    "priceQAR": 0,
+    "_note": "App-level demo addition (2026-09-26) - the inventory held exactly ONE Reserved number, so the Reserved Numbers tab could not show a list, its one-per-row layout had nothing to justify it, and the tab's whole purpose - that it cuts ACROSS categories, so a reserved Star number stays visible instead of falling out of the UI - was undemonstrable with no reserved Star number in the seed. Held-by names are real users-agents.json records (USR-1102 Omar Hassan, USR-1205 Saira Rahman, USR-1208 Reem Al-Sulaiti, USR-1207 Tariq Haddad) rather than invented ids, so the badge names someone an agent could actually go and ask."
+  },
+  {
+    "msisdn": "+97455610091",
+    "category": "Free",
+    "status": "Reserved",
+    "reservedBy": "Saira Rahman",
+    "priceQAR": 0
+  },
+  {
+    "msisdn": "+97477700007",
+    "category": "Star",
+    "status": "Reserved",
+    "reservedBy": "Reem Al-Sulaiti",
+    "priceQAR": 2500,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97466644004",
+    "category": "Star",
+    "status": "Reserved",
+    "reservedBy": "Tariq Haddad",
+    "priceQAR": 800,
     "valueTier": "Silver"
   }
 ]

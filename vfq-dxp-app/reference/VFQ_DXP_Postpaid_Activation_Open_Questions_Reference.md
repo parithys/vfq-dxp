@@ -265,11 +265,15 @@ journeys.
   pending order cannot be submitted if an open order exists") does not define
   "open".
   Source: `order-validation-business-rules-45d0e9f0`
-- **[GAP] Is the alternate contact number required to be a Qatar-local mobile?**
-  The documented rule (FLD-352) says it must be local. Product direction during
-  the build was the opposite, on the grounds that an expat, GCC or diplomatic
-  customer may only have a foreign number on file. The app follows the product
-  direction. Worth confirming with the rule owner.
+- **[GAP] What is captured when a customer has no Qatar mobile number?** The
+  alternate contact number is now validated as +974 plus exactly 8 digits, per
+  the documented rule (FLD-352, "must be a local mobile number", repeated
+  across 5+ journeys) and per direction on 2026-09-26. An earlier override
+  accepted any international number on the grounds that an expat, GCC or
+  diplomatic customer may only have a foreign number on file; that override has
+  been removed, so the open question is what the counter does in exactly that
+  case. The field is mandatory and gates the Contact step of all four journeys
+  that share it, so today the answer is that the journey stops.
 - **[GAP] Is gender available from the MOI registry?** The app makes it mandatory
   and read-only, sourced from MOI. A mandatory read-only field with no registry
   source can never be satisfied, so this depends on MOI actually returning it.
