@@ -80,16 +80,24 @@ export function Dashboard() {
 
   const twoUp = layout.zones.filter((z) => z.size === 'half').length === 2;
 
+  // Joined rather than concatenated in the markup: the region scoping notice
+  // used to be appended to the subtitle with a leading space, which now that
+  // most approaches carry no subtitle would have opened the line with one.
+  // Both parts are optional, and for most roles neither is present.
+  const headerNote = [layout.subtitle, regional ? `Scoped to ${regionLabel}.` : undefined]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <div className="p-8">
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-1">
+      {/* The heading owns the gap to whatever follows when there is no note
+          under it, so removing the note does not pull the search bar up
+          against the greeting. */}
+      <div className={`flex flex-wrap items-start justify-between gap-4 ${headerNote ? 'mb-1' : 'mb-6'}`}>
         <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">{layout.heading}</h1>
         {layout.showFocusControl && <FocusControl focus={focus} onChange={setFocus} />}
       </div>
-      <p className="text-fg-2 mb-6">
-        {layout.subtitle}
-        {regional && ` Scoped to ${regionLabel}.`}
-      </p>
+      {headerNote && <p className="text-fg-2 mb-6">{headerNote}</p>}
 
       {/* Customer search is the entry point for customer-centric work, so it
           only leads for roles that hold it. */}

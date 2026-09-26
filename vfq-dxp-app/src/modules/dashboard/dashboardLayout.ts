@@ -25,7 +25,11 @@ export interface DashboardLayout {
   /** View Only: suppress every quick action and make tiles non-navigating. */
   readOnly: boolean;
   heading: string;
-  subtitle: string;
+  /** Optional, and carried only where it tells the agent something the page
+   * does not already show them - currently just View Only, where it explains
+   * why the tiles refuse to navigate. The other three approaches restated the
+   * page to someone already looking at it, so they no longer set it. */
+  subtitle?: string;
 }
 
 /** Which flavour of work the product zone shows. Product-First covers five very
@@ -59,7 +63,6 @@ export function layoutFor(
         showFocusControl: false,
         readOnly: false,
         heading: `Welcome back, ${firstName}!`,
-        subtitle: "Here's how your queues and portfolio are performing today.",
       };
 
     case 'Hybrid':
@@ -74,7 +77,6 @@ export function layoutFor(
         showFocusControl: true,
         readOnly: false,
         heading: `Welcome back, ${firstName}!`,
-        subtitle: 'Customer operations and product performance, in one view.',
       };
 
     case 'None':
@@ -93,7 +95,6 @@ export function layoutFor(
         showFocusControl: false,
         readOnly: false,
         heading: `Welcome back, ${firstName}!`,
-        subtitle: "Here's what's happening across the platform right now.",
       };
   }
 }
