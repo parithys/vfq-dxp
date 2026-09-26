@@ -1,19 +1,24 @@
 import { IdLookupStep } from './IdLookupStep';
 import type { QidType } from '../domain/QidInput';
 import type { QidImageUploadValue } from '../domain/QidImageUpload';
-import { CompanySearchInput } from '../domain/CompanySearchInput';
-import { Checkbox } from '../primitives/Checkbox';
 import { Radio } from '../primitives/Radio';
 import { Input } from '../primitives/Input';
 import { PhoneNumberInput } from '../primitives/PhoneNumberInput';
 import { Select } from '../primitives/Select';
 
+// Mirrors IdLookupStep's MoiResult - this step receives the value that step
+// produces. Kept as a local shape rather than imported because it is a subset:
+// only the fields this step reads appear here.
 interface MoiResult {
   name: string;
   dob: string;
   nationality: string;
   email?: string;
   gender?: string;
+  /** Sponsoring employer, when on file. What isB2B2C is derived from. */
+  companyName?: string;
+  /** That employer's enterprise-accounts row, when it has one. */
+  companyAccountId?: string;
 }
 
 export interface GuidedContactValue {
@@ -41,8 +46,22 @@ export interface GuidedContactValue {
   altPhone?: string;
   language?: string;
   getIptv?: 'Yes' | 'No';
-  /** Boolean since 2026-09-24 - was a 'Yes'|'No' Select, now a checkbox. */
-  digitalLeadSale?: boolean;
+  /**
+   * DERIVED, never agent-entered (2026-09-26). True when the customer the ID
+   * lookup resolved has a sponsoring employer on file.
+   *
+   * This was a "B2B2C Order" checkbox, removed along with "Digital Lead /
+   * Sale". The corpus is clear that B2B2C is an ACCOUNT-level classification -
+   * completing one stamps Special Management "B2B2C Consumer" on the account,
+   * and a later order against that account makes the agent confirm before
+   * proceeding without B2B2C. A per-order checkbox modelled it as a choice the
+   * agent makes fresh each time, which is the wrong shape: whether a walk-in
+   * is sponsored by their employer is a fact about them, not a decision at the
+   * counter.
+   *
+   * Still carried on the value (four wizards read it to set orderSubType and
+   * to route to manager approval) - only its source changed.
+   */
   isB2B2C?: boolean;
   /** The chosen employer. Committed only by a pick or an explicit "Add new
    * company" - never by typing. See CompanySearchInput. */
@@ -100,6 +119,12 @@ export function isValidAltPhone(raw: string | undefined): boolean {
 // this file's own header comment always claimed ("Email/Alt Phone/Language/
 // Digital Lead-Sale/B2B2C are agent-entered in both"), and the gates check
 // this instead of mere truthiness, so "x" no longer passes.
+//
+// That quote is the evidenced field set, and as of 2026-09-26 this app no
+// longer matches the last two entries: Digital Lead-Sale is gone entirely and
+// B2B2C is derived from the resolved customer's employer rather than entered.
+// Email, Alt Phone and Language are still agent-entered, which is the part
+// this paragraph relies on.
 //
 // Deliberately a shape check, not RFC 5322: one @, no whitespace, a dot-led
 // TLD of 2+ letters. Over-strict email regexes reject valid addresses, and
@@ -189,9 +214,28 @@ function identityFromMoi(moi: MoiResult | undefined) {
       nationality: undefined,
       email: undefined,
       gender: undefined,
+      // Cleared with the rest. An employer link belongs to the resolved
+      // customer, so losing the customer has to lose the link - otherwise
+      // re-typing an ID would leave the previous person's employer attached,
+      // and with it a B2B2C order subtype and an approval route.
+      isB2B2C: undefined,
+      companyName: undefined,
+      companyAccountId: undefined,
+      companyIsNew: undefined,
     };
   const parts = moi.name.trim().split(/\s+/);
+  const employer = moi.companyName?.trim();
   return {
+    // An employer on file IS the B2B2C signal - there is nothing else for the
+    // flag to key off now the checkbox is gone. companyAccountId is resolved
+    // separately against the enterprise-accounts registry (see the effect
+    // below) because that needs a dataset read this pure function cannot do.
+    isB2B2C: employer ? true : undefined,
+    companyName: employer || undefined,
+    companyAccountId: employer ? moi.companyAccountId : undefined,
+    // Nothing can create a company from this step any more - the only control
+    // that could is gone - so a derived employer is never a new one.
+    companyIsNew: undefined,
     firstName: parts[0] ?? '',
     lastName: parts.slice(1).join(' '),
     // MOI returns ISO (1985-03-12); the field is masked DD/MM/YYYY. Without
@@ -211,6 +255,18 @@ function identityFromMoi(moi: MoiResult | undefined) {
 // evidenced field sets overlap almost entirely (ID Expiry/Nationality/Gender/
 // Name/DOB auto-populate from the ID scan; Email/Alt Phone/Language/Digital
 // Lead-Sale/B2B2C are agent-entered in both).
+//
+// Two of those evidenced fields are no longer rendered as agent input, per
+// explicit product direction on 2026-09-26:
+//
+// - Digital Lead / Sale is REMOVED. It appears in 26 corpus documents, every
+//   one a guided-journey screenshot, and in all of them it reads No - never
+//   once Yes. No BRSD, business rule, workshop or CAF defines it, so nothing
+//   says what ticking it would mean, and nothing in this app read the value it
+//   wrote. A control that captures a flag no one consumes, for a decision no
+//   one can describe, is worse than its absence: it implies a choice that
+//   matters. Logged as an open question rather than quietly reproduced.
+// - B2B2C is DERIVED, not ticked. See GuidedContactValue.isB2B2C.
 // Per explicit product direction, the ID Type/Number fields must never
 // auto-populate with a real value - even when Customer 360's product
 // actions launch this step for a customer already on screen - so the
@@ -335,52 +391,28 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
             />
           )}
 
-          {/* Both flags on one full-width row, per the mockup. Digital Lead /
-              Sale was a Yes/No Select; as a checkbox its stored value is now a
-              boolean rather than the string 'Yes'|'No'. Safe to change shape:
-              nothing outside this component read the field - no order payload,
-              engine or screen referenced it. */}
-          <div className="col-span-2 flex items-center gap-6">
-            <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg-2">
-              <Checkbox
-                checked={value.digitalLeadSale ?? false}
-                onChange={(e) => onChange({ ...value, digitalLeadSale: e.target.checked })}
-              />
-              Digital Lead / Sale
-            </label>
-            <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg-2">
-              <Checkbox
-                checked={value.isB2B2C ?? false}
-                // Unticking clears all three company fields together, not just
-                // the name. Leaving companyAccountId or companyIsNew behind on
-                // a non-B2B2C order would keep an employer link alive on an
-                // order that no longer has an employer.
-                onChange={(e) =>
-                  onChange(
-                    e.target.checked
-                      ? { ...value, isB2B2C: true }
-                      : {
-                          ...value,
-                          isB2B2C: false,
-                          companyName: undefined,
-                          companyAccountId: undefined,
-                          companyIsNew: undefined,
-                        }
-                  )
-                }
-              />
-              B2B2C Order
-            </label>
-          </div>
-          {value.isB2B2C && (
-            <CompanySearchInput
-              label="Company Name (B2B2C)"
-              value={{
-                companyName: value.companyName,
-                companyAccountId: value.companyAccountId,
-                companyIsNew: value.companyIsNew,
-              }}
-              onChange={(next) => onChange({ ...value, ...next })}
+          {/* The employer, read-only, and only for a customer who has one.
+              Where the "B2B2C Order" checkbox and its company typeahead used
+              to be.
+              
+              Read-only because the agent no longer decides this - the registry
+              does. It sits with the other registry-sourced identity fields and
+              is styled like them, so its provenance reads the same way theirs
+              does. An agent who believes it is wrong has the same recourse as
+              for a wrong name: the record is corrected upstream, not typed
+              over here.
+              
+              Absent, not empty, for an unsponsored customer. A blank "Employer"
+              box on every ordinary consumer sale would imply a field someone
+              forgot to fill in. */}
+          {value.isB2B2C && value.companyName && (
+            <Input
+              id="contact-employer"
+              label="Employer (B2B2C)"
+              value={value.companyName}
+              readOnly
+              onChange={() => {}}
+              helperText="On file with the sponsoring employer. This order routes for approval."
             />
           )}
         </div>

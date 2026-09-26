@@ -1,4 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '../primitives/Button';
+import { Spinner } from '../primitives/Spinner';
 import { ScannedIdPreview } from './ScannedIdPreview';
 
 export interface QidImageUploadValue {
@@ -17,10 +19,16 @@ interface QidImageUploadProps {
   value: QidImageUploadValue;
   onChange: (value: QidImageUploadValue) => void;
   /**
-   * Called when the agent initiates a scan, BEFORE the value is written.
-   * Return false to fail the scan: the value is left untouched and the card
-   * stays on the insert prompt, so the caller can render `error` and open
-   * whatever fallback it owns.
+   * Called once per pass over the reader - an Initiate AND every Retake, both
+   * of which drive the reader - when the pass COMPLETES, before any value is
+   * written. One charge per physical pass either way, but adjudicating at the
+   * end means a consumer's "budget spent" state, and any fallback it gates on
+   * that, arrives with the failure rather than while the card is still
+   * visibly reading.
+   *
+   * Return false to fail the pass: no capture is written, the card lands back
+   * on the insert prompt once the pass ends, and the caller can render `error`
+   * and open whatever fallback it owns.
    *
    * Optional, defaulting to always succeeding, because only IdLookupStep has
    * an attempt budget and a manual-entry fallback. The Verification Gate, SIM
@@ -29,6 +37,17 @@ interface QidImageUploadProps {
   onScan?: () => boolean;
   /** Rendered inside the insert zone, after a failed scan. */
   error?: string;
+  /**
+   * Whether the reader can still be driven. Default true.
+   *
+   * Pass false once the consumer's attempt budget is spent: the insert zone
+   * keeps the prompt and the `error`, but drops the Initiate button. A scan
+   * that can never succeed should not be offered - left live it spun for
+   * 900ms and returned to the same prompt, which reads as a broken button
+   * rather than as a reader that has given up, and the agent can sit there
+   * pressing it. The same reason Retake is absent before the first capture.
+   */
+  canScan?: boolean;
   /**
    * Which document is in the reader. Defaults to 'QID', which is what the
    * three journeys other than IdLookupStep capture.
@@ -70,9 +89,14 @@ interface QidImageUploadProps {
 //   Dashed, not solid, because the border is around an EMPTY target rather
 //   than around content - the same distinction the rest of the re-skin draws
 //   with its 1px solid borders.
-// - Action: Initiate before, Retake after. Retake returns the card to the
-//   insert prompt rather than re-scanning immediately, so the agent re-seats
-//   the document and initiates deliberately.
+// - Action: Initiate before, Retake after. RETAKE DRIVES THE READER ITSELF as
+//   of 2026-09-26 - one press rescans, where it used to clear the card back to
+//   the insert prompt and wait for a second press on Initiate. The card in
+//   this journey never leaves the reader between reads, so sending the agent
+//   back to "Insert card and initiate scan" asked them to re-seat a document
+//   that was already seated, and cost two presses for one physical action.
+//   Retake also carries the number of completed retakes, so the agent can see
+//   how many reads this document has taken without counting them.
 //
 // Departures from the 2026-09-25 reference image, which showed the two-card
 // shape. The first two are direct instructions, the rest are so the card obeys
@@ -89,22 +113,95 @@ interface QidImageUploadProps {
 // - The prompt sits at --fg-2, not the asset's light grey. --muted on
 //   --surface-subtle is 4.33:1, just under SC 1.4.3's 4.5:1 at this size.
 //   --fg-2 is 6.37:1 and still reads as secondary beside the --fg title.
-export function QidImageUpload({ value, onChange, onScan, error, documentType = 'QID' }: QidImageUploadProps) {
+
+// How long the simulated reader takes. In the same 200-600ms family as
+// mockDataEngine's artificial latency, at the top of it because this stands in
+// for a physical pass over a card rather than a data read.
+const SCAN_DURATION_MS = 900;
+
+export function QidImageUpload({ value, onChange, onScan, error, canScan = true, documentType = 'QID' }: QidImageUploadProps) {
   const scanned = Boolean(value.frontScanned && value.backScanned);
   const simulated = !value.frontImage && !value.backImage;
 
-  const initiate = () => {
-    // Explicit === false: an undefined onScan must not read as a rejection.
-    if (onScan?.() === false) return;
-    onChange({ ...value, frontScanned: true, backScanned: true });
-  };
+  // Which pass is running, or null when the reader is idle. One state rather
+  // than a boolean plus a separate "was this a retake" flag, because a retake
+  // clears the capture before its pass starts - so `scanned` cannot answer
+  // which kind of pass this is once it is under way.
+  const [pass, setPass] = useState<'first' | 'retake' | null>(null);
+  const scanning = pass !== null;
+  // Completed retakes, for the button's label. Counted on success, because the
+  // label reports reads the agent GOT - an attempt the reader refused produced
+  // no scan to number.
+  //
+  // Local, like IdLookupStep's attempt budget and for the same reason: this
+  // describes one sitting at the counter, not the order. It is deliberately
+  // NOT the same number as that budget, which counts attempts including the
+  // failed one; these answer different questions and neither can be derived
+  // from the other.
+  const [retakes, setRetakes] = useState(0);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const retake = () =>
-    onChange({ ...value, frontScanned: false, backScanned: false, frontImage: undefined, backImage: undefined });
+  // The reader is mid-pass when the step unmounts - an ID Type switch, or the
+  // agent leaving the journey. Without this the timer still fires and writes a
+  // completed scan into a step that is gone.
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const runScan = () => {
+    if (scanning || !canScan) return;
+
+    // Whether this pass is a retake has to be read BEFORE the value is
+    // cleared, since clearing is what makes `scanned` false.
+    const isRetake = scanned;
+
+    // A retake discards the previous read immediately rather than at the end
+    // of the pass. The old capture, and whatever the consumer derived from it,
+    // describe a document the agent has just decided to read again - leaving
+    // them up beside a spinner would have the card claiming a validated
+    // identity while the reader was busy disagreeing with it.
+    if (isRetake) {
+      onChange({ ...value, frontScanned: false, backScanned: false, frontImage: undefined, backImage: undefined });
+    }
+
+    setPass(isRetake ? 'retake' : 'first');
+    timer.current = setTimeout(() => {
+      setPass(null);
+      // The attempt is counted and adjudicated when the pass ENDS, not when it
+      // starts. Both are one charge per physical pass, so the budget arithmetic
+      // is identical - but charging up front flipped the consumer's "budget
+      // spent" state while the spinner was still turning, which put an
+      // editable number field and a Fetch button on screen underneath a card
+      // that was visibly still reading. The fallback has to arrive with the
+      // failure, not ahead of it, or the reader is not the thing that opened
+      // it.
+      //
+      // Explicit === false: an undefined onScan must not read as a rejection.
+      //
+      // Refused: leave the value cleared. The insert prompt returns with
+      // whatever `error` the consumer renders, which is the honest state -
+      // there is no capture, and the way forward is the fallback the consumer
+      // owns rather than this card.
+      if (onScan?.() === false) return;
+      if (isRetake) setRetakes((n) => n + 1);
+      onChange({ ...value, frontScanned: true, backScanned: true });
+    }, SCAN_DURATION_MS);
+  };
 
   return (
     <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 flex flex-col gap-3">
-      {scanned ? (
+      {/* Scanning FIRST, so a retake shows the reader working rather than the
+          insert prompt. A retake clears the capture to start its pass, which
+          without this branch would drop the card straight back to "Insert card
+          and initiate scan" - telling the agent to re-seat a document that
+          never left the reader, and losing them the place they were at.
+          Same height as the insert zone so the step does not jump. */}
+      {scanning ? (
+        <div className="min-h-[9rem] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
+          <Spinner size={28} label={`${pass === 'retake' ? 'Rescanning' : 'Scanning'} the ${documentType}`} />
+          <span className="text-fg-2 text-[length:var(--fs-caption)] uppercase tracking-[0.14em] text-center">
+            {pass === 'retake' ? 'Rescanning' : 'Scanning'} {documentType === 'QID' ? 'QID' : documentType}
+          </span>
+        </div>
+      ) : scanned ? (
         <>
           {/* Both faces, side by side, from the one operation. Captioned per
               face so the agent can tell which is which when judging whether a
@@ -131,18 +228,32 @@ export function QidImageUpload({ value, onChange, onScan, error, documentType = 
           {simulated && (
             <span className="text-muted text-[length:var(--fs-caption)] text-center">Simulated capture</span>
           )}
-          <Button variant="ghost-rect" compact className="w-full" onClick={retake}>
-            Retake scan
+          {/* The count is of retakes DONE, so it appears only once there has
+              been one - a fresh capture's button reads "Retake scan", not
+              "Retake scan (0)". Parenthesised rather than spelled out because
+              it sits inside a control label, where "Retake scan, 2 so far"
+              would be a sentence on a button. The screen-reader name spells it
+              out instead, since "(2)" read aloud is just a number. */}
+          <Button
+            variant="ghost-rect"
+            compact
+            className="w-full"
+            onClick={runScan}
+            aria-label={retakes > 0 ? `Retake scan, ${retakes} so far` : undefined}
+          >
+            Retake scan{retakes > 0 && ` (${retakes})`}
           </Button>
         </>
       ) : (
         <div className="min-h-[9rem] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
           <span className="text-fg-2 text-[length:var(--fs-caption)] uppercase tracking-[0.14em] text-center">
-            Insert card and initiate scan
+            {canScan ? 'Insert card and initiate scan' : 'Card could not be read'}
           </span>
-          <Button variant="primary-rect" compact onClick={initiate}>
-            Initiate scan
-          </Button>
+          {canScan && (
+            <Button variant="primary-rect" compact onClick={runScan}>
+              Initiate scan
+            </Button>
+          )}
           {/* role="alert" so the failure is announced: the agent's attention is
               on the physical reader, not the screen, and nothing else about
               the card changes when a scan fails. */}

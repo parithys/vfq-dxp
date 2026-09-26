@@ -30,8 +30,15 @@ export function AddonsPicker({ selectedIds, onChange }: AddonsPickerProps) {
   const toggle = (id: string) => onChange(selectedIds.includes(id) ? selectedIds.filter((i) => i !== id) : [...selectedIds, id]);
 
   return (
-    <div className="space-y-2">
-      <p className="text-fg-2 text-[length:var(--fs-caption)]">Add-ons (optional)</p>
+    // Heading and spacing match the "Eligible Discounts" section this now sits
+    // above (2026-09-26). It was a muted caption at --fs-caption, which read as
+    // a field label rather than as one of the step's three sections - so the
+    // agent saw two headings and a label where there are three equal choices to
+    // make. Same element, size and weight as its sibling; the "(optional)"
+    // stays because it is the one thing that distinguishes this section from
+    // the other two, both of which require an answer.
+    <div className="space-y-4">
+      <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Add-ons (optional)</h3>
       <div className="grid grid-cols-1 gap-2">
         {addons.map((a) => (
           <label

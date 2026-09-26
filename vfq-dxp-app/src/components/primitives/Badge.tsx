@@ -1,7 +1,15 @@
 // Real Vodafone TagPill per design-system.md §7 has 2 variants; broader status-pill
 // usage (Order/Lead/Ticket lifecycle states) needs more - extended per
 // component-catalogue.md §5 rather than replaced.
-export type BadgeVariant = 'outlined-red' | 'filled-neutral' | 'success' | 'warning' | 'danger' | 'info' | 'accent';
+export type BadgeVariant =
+  | 'outlined-red'
+  | 'filled-neutral'
+  | 'success'
+  | 'success-solid'
+  | 'warning'
+  | 'danger'
+  | 'info'
+  | 'accent';
 
 interface BadgeProps {
   variant?: BadgeVariant;
@@ -22,6 +30,18 @@ const variantClasses: Record<BadgeVariant, string> = {
   'outlined-red': 'border border-accent text-accent bg-transparent',
   'filled-neutral': 'bg-light-neutral text-fg-2',
   success: 'bg-bg border border-[var(--success-border)] text-success',
+  // Solid green, white label, per the 2026-09-26 asset. A SEPARATE variant
+  // rather than a change to `success` because the two are used for different
+  // jobs: `success` is a status readout that appears many-at-a-time (the
+  // eligibility report puts eight in a column, where eight solid green
+  // blocks would shout), while this is a single confirmation of an action
+  // that just succeeded. Changing the shared variant would have restyled all
+  // fourteen call sites, including those columns.
+  //
+  // Its own --badge-success-solid token: --success is tuned as a TEXT and
+  // border colour on a light surface, and is too light to carry white text
+  // at this size.
+  'success-solid': 'bg-[var(--badge-success-solid)] text-white border border-transparent',
   warning: 'bg-bg border border-[var(--warn-border)] text-[var(--warn-text)]',
   danger: 'bg-bg border border-[var(--danger-border)] text-danger',
   info: 'bg-bg border border-[var(--info-border)] text-[var(--info)]',

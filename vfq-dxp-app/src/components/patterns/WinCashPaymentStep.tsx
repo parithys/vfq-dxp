@@ -22,10 +22,14 @@ interface WinCashPaymentStepProps {
 // wizard step now (Checkout -> CAF -> Payment, matching the reference order).
 // A real POS's decline path isn't reproducible client-side, so "Simulate
 // Decline" stands in for a genuinely failed authorization - Retry re-attempts
-// the same amount; per the reference's exception table, Cancel is handled by
-// the wizard's own Abandon Order control (top of the step panel), not
-// duplicated here, so a cancelled order still releases its SIM reservation
-// through the same path as any other abandoned order.
+// the same amount.
+//
+// The reference's exception table also has a Cancel path, which used to be
+// served by the wizard's Abandon Order control rather than duplicated here.
+// That control was removed on 2026-09-26, so there is now NO cancel action on
+// a declined payment - only Retry. Recorded here rather than silently
+// reinstated locally: putting a cancel button on this one step would be
+// deciding the removal was wrong, which is not this file's call.
 export function WinCashPaymentStep({ amountDueQAR, value, onChange }: WinCashPaymentStepProps) {
   const [processing, setProcessing] = useState(false);
 
@@ -61,8 +65,7 @@ export function WinCashPaymentStep({ amountDueQAR, value, onChange }: WinCashPay
                 <Badge variant="danger">Payment declined</Badge>
               </div>
               <p className="text-[length:var(--fs-caption)] text-fg">
-                WinCash declined the authorization. Retry the same amount, or use Abandon Order above to cancel - abandoning releases the SIM
-                reservation.
+                WinCash declined the authorization. Retry the same amount, or take payment by another method.
               </p>
             </div>
           )}

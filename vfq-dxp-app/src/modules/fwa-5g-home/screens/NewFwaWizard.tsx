@@ -154,7 +154,6 @@ export function NewFwaWizard() {
           );
           navigate('/fwa-5g-home');
         }}
-        onAbandon={() => navigate('/fwa-5g-home')}
       />
     </div>
   );

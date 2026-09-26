@@ -395,7 +395,6 @@ export function NewPrepaidWizard() {
             status: finalStatus,
           });
         }}
-        onAbandon={() => navigate('/mobile-prepaid')}
       />
     </div>
   );

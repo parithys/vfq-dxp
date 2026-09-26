@@ -127,7 +127,6 @@ export function PassportToQidWizard() {
           pushToast('success', `Passport to QID update ${updateId} finished - identification change form attached.`);
           navigate('/identity-customer-management');
         }}
-        onAbandon={() => navigate('/identity-customer-management')}
       />
       <Drawer open={padOpen} onClose={() => setPadOpen(false)} title="Please Sign">
         <SignaturePad

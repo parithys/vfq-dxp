@@ -98,6 +98,17 @@ export interface EligibilityResult {
   defaultCreditLimitQar: number;
   customerId?: string;
   /**
+   * The resolved customer's nationality, which the HRN row names.
+   *
+   * On the result rather than recomputed at render because this step is
+   * one-shot: re-entering it reuses the cached result without re-reading the
+   * customer, so anything the display needs has to survive in here. Without
+   * it the HRN row silently fell back to the unqualified wording the moment
+   * the agent walked back to this step - correct on first arrival, degraded
+   * on every return, which is the worst kind of bug to notice.
+   */
+  nationality?: string;
+  /**
    * The ID number these checks were run against. Lets a re-entry to this step
    * tell a still-valid cached result from a stale one: change the ID on the
    * Contact step and the cached eligibility no longer describes the person in
@@ -171,8 +182,11 @@ export function EligibilityGateStep({ idNumber, onResult, result, journeyType = 
   // separate check list, because a cached result carries the checks and the
   // HRN flag but not the customer row they came from - and the render only
   // ever needed those two things.
-  const [resolved, setResolved] = useState<{ checks: EligibilityCheck[]; hrnFlag: boolean } | null | undefined>(
-    cached ? { checks: cached.checks, hrnFlag: cached.requiresHrnAdvance } : undefined
+  const [resolved, setResolved] = useState<
+    { checks: EligibilityCheck[]; hrnFlag: boolean; nationality?: string } | null | undefined
+  >(cached
+      ? { checks: cached.checks, hrnFlag: cached.requiresHrnAdvance, nationality: cached.nationality }
+      : undefined
   );
   const pushToast = useNotificationStore((s) => s.pushToast);
 
@@ -251,7 +265,7 @@ export function EligibilityGateStep({ idNumber, onResult, result, journeyType = 
         new Date()
       );
 
-      setResolved({ checks: resolvedChecks, hrnFlag });
+      setResolved({ checks: resolvedChecks, hrnFlag, nationality: match.nationality });
       const hardStop = hasHardStop(resolvedChecks);
       const softStop = resolvedChecks.some((c) => c.outcome === 'soft-stop');
       // Confirmation toast on a clear pass (2026-09-25). It is pushed HERE,
@@ -283,6 +297,7 @@ export function EligibilityGateStep({ idNumber, onResult, result, journeyType = 
         blacklistReason: match.blacklistReason,
         lineCapExceeded: !lineCap.pass,
         requiresHrnAdvance: hrnFlag,
+        nationality: match.nationality,
         defaultCreditLimitQar: creditLimitAmount,
         customerId: match.customerId,
         idNumber,
@@ -309,7 +324,7 @@ export function EligibilityGateStep({ idNumber, onResult, result, journeyType = 
     return <p className="text-danger text-[length:var(--fs-body)]">No customer record found for this identity - cannot evaluate eligibility.</p>;
   }
 
-  const { checks, hrnFlag } = resolved;
+  const { checks, hrnFlag, nationality } = resolved;
   const hrn = evaluateRule('BR-187', { hrnFlag });
   const hardStop = hasHardStop(checks);
   const softStop = checks.some((c) => c.outcome === 'soft-stop');
@@ -326,7 +341,17 @@ export function EligibilityGateStep({ idNumber, onResult, result, journeyType = 
           {
             id: 'hrn',
             title: hrnFlag ? 'HRN (High Network Risk)' : 'Non-HRN new account',
-            detail: (hrnFlag ? hrn.message : undefined) ?? 'Not a high-risk nationality - no advance payment required.',
+            // Names the nationality the classification was made on, per
+            // 2026-09-26 direction - "not a high-risk nationality" alone does
+            // not say which nationality was assessed, and that is the whole
+            // input to the rule. Falls back to the unqualified wording when
+            // the record carries no nationality, rather than printing
+            // "undefined Citizen".
+            detail:
+              (hrnFlag ? hrn.message : undefined) ??
+              (nationality
+                ? `${nationality} Citizen - not a high-risk nationality`
+                : 'Not a high-risk nationality'),
             // HRN is amber because an advance payment is outstanding, but it
             // is NOT a soft stop: the product can still be issued.
             tone: (hrnFlag ? 'soft-stop' : 'pass') as RowTone,

@@ -288,7 +288,6 @@ export function NewMnpWizard() {
           );
           navigate('/mnp-fnp-porting');
         }}
-        onAbandon={() => navigate('/mnp-fnp-porting')}
       />
     </div>
   );

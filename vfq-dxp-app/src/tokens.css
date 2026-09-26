@@ -31,6 +31,12 @@
   --accent-hover: color-mix(in oklab, var(--accent), black 8%);
   --accent-on: #ffffff;
   --bg: #ffffff;
+  /* Solid-fill success pill (Badge variant 'success-solid'). Darker than
+     --success (#2e7d32-family) because that value is tuned to be read AS
+     text on a light surface; inverted to carry white text it drops under
+     the 4.5:1 that white-on-fill needs at --fs-tag. This is the same hue,
+     taken down until white on it clears that. */
+  --badge-success-solid: #2a5d2e;
   --black-80: rgba(0,0,0,.8);
   --black-glass-5: rgba(0,0,0,.05);
   --border: #e0e0e0;
@@ -211,6 +217,12 @@
   --meta: #a61218;
   --motion-base: 220ms;
   --motion-fast: 150ms;
+  /* One full rotation of Spinner. Its own token rather than --motion-base,
+     which paces state CHANGES (a hover, a panel opening) and is far too quick
+     for a continuous loop - at 220ms a ring reads as a flicker rather than as
+     something turning. Long enough to look calm, short enough to still look
+     alive while a scan or a fetch resolves. */
+  --motion-spin: 800ms;
   /* Navigation rail surface. The 2026-09-24 reference puts the sidebar on
      white with dark labels and a solid-red active row, where this app had
      a charcoal panel with white labels -- the single largest departure in

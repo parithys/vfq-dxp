@@ -114,17 +114,16 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
           fold on every visit; the search box above narrows the list for an
           agent who knows what they want, and this keeps the step navigable for
           one who is browsing. */}
-      {/* ONE COLUMN on the Reserved tab, three on the others.
-          Reserved is inherently a short list - it holds only the numbers an
-          agent has already put aside - so a three-across grid left a single
-          card stranded beside two thirds of empty row. It also carries an
-          extra fact per row (who holds it), which reads better across a full
-          width than wrapped inside a third of one. */}
-      <div
-        className={`grid gap-3 max-h-[22rem] overflow-y-auto pr-1 ${
-          tab === 'Reserved' ? 'grid-cols-1' : 'grid-cols-2 sm:grid-cols-3'
-        }`}
-      >
+      {/* ONE COLUMN ON EVERY TAB as of 2026-09-26, per the supplied card
+          design: a full-width row with the number on the left and its price on
+          the right. Free and Star were a two/three-across grid of tiles that
+          stacked the number over its price; Reserved was already one-per-row,
+          and the two shapes are now the same one.
+          
+          The longer list this produces was already provided for: the container
+          caps at 22rem and scrolls, and the search box above it narrows the
+          list for an agent who knows the number they want. */}
+      <div className="grid grid-cols-1 gap-3 max-h-[22rem] overflow-y-auto pr-1">
         {filtered.map((n) => {
           const isSelected = selected === n.msisdn;
           // No disabled state: everything listed is selectable. An AVAILABLE
@@ -142,24 +141,20 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
               className={`text-left rounded-[var(--radius-card)] border p-3
                 ${isSelected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft bg-bg hover:border-[var(--field-card-selected)]'}`}
             >
-              {/* A full-width row puts the number and its detail side by side;
-                  a grid tile stacks them. Same data either way. */}
-              <div
-                className={
-                  tab === 'Reserved' ? 'flex items-center justify-between gap-4' : 'flex flex-col'
-                }
-              >
+              {/* Number left, price right, on one line - no longer branching
+                  on the tab, since all three now share this row. */}
+              <div className="flex items-center justify-between gap-4">
                 <span className="text-fg font-medium">{n.msisdn}</span>
-                <span
-                  className={`text-[length:var(--fs-caption)] text-muted flex items-center gap-2 ${
-                    tab === 'Reserved' ? '' : 'mt-1'
-                  }`}
-                >
-                  QR {n.priceQAR}
+                {/* The price carries --fg weight rather than the muted caption
+                    it used to, per the design: on a Star number it is the fact
+                    the agent is choosing between, so it should not be the
+                    quietest thing in the row. */}
+                <span className="text-fg font-semibold shrink-0 flex items-center gap-2">
                   {n.valueTier && <Badge variant="outlined-red">{n.valueTier}</Badge>}
                   {tab === 'Reserved' && (
                     <Badge variant="filled-neutral">{n.reservedBy ? `Held by ${n.reservedBy}` : 'Reserved'}</Badge>
                   )}
+                  QR {n.priceQAR}
                 </span>
               </div>
             </button>

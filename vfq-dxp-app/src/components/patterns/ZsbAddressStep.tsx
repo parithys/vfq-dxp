@@ -25,10 +25,19 @@ interface ZsbAddressStepProps {
   value: ZsbAddressValue;
   onChange: (value: ZsbAddressValue) => void;
   /** When the Contact step's ID lookup resolved a Qatari national, their
-   * registered address is looked up and auto-filled (read-only) rather than
-   * re-typed by the agent - a Qatari ID is already tied to a Kahramaa-linked
-   * address record on file. Omitted/non-Qatari falls back to the existing
-   * evidenced manual-entry + Skip Address flow unchanged. */
+   * registered address is looked up and prefilled rather than re-typed by the
+   * agent - a Qatari ID is already tied to a Kahramaa-linked address record on
+   * file. Omitted/non-Qatari falls back to the existing evidenced manual-entry
+   * + Skip Address flow unchanged.
+   *
+   * Prefilled but EDITABLE as of 2026-09-26. These fields were disabled once
+   * fetched, on the reasoning that a registry address should not be typed
+   * over. That is wrong for the case it is most likely to meet: the record on
+   * file is the customer's REGISTERED address, and a walk-in moving house has
+   * no way to tell the agent so. The fetch is a head start, not a verdict.
+   *
+   * `fetchedFromMoi` still guards against re-fetching, so an agent's
+   * correction is never clobbered by the effect running again. */
   idNumber?: string;
   nationality?: string;
 }
@@ -100,34 +109,39 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
   return (
     <div className="space-y-4">
       {fetching && <p className="text-muted text-[length:var(--fs-body)]">Checking for an address on file…</p>}
+      {/* Provenance for the whole panel rather than a note under one field.
+          It used to sit on KID alone, saying "Fetched from MOI - not
+          editable." - which was true of all six fields, not just that one,
+          and is no longer true of any of them. */}
+      {value.fetchedFromMoi && !value.skipped && (
+        <p className="text-muted text-[length:var(--fs-caption)]">
+          Retrieved from the customer's Qatar ID. Edit any field if the customer confirms a change.
+        </p>
+      )}
       {!value.skipped && (
         <div className="grid grid-cols-2 gap-4">
           <Input
             label="Zone"
             placeholder="e.g. Zone 38"
             value={value.zone ?? ''}
-            disabled={value.fetchedFromMoi}
             onChange={(e) => onChange({ ...value, zone: e.target.value })}
           />
           <Input
             label="Street"
             placeholder="e.g. Al Corniche Street"
             value={value.streetNo ?? ''}
-            disabled={value.fetchedFromMoi}
             onChange={(e) => onChange({ ...value, streetNo: e.target.value })}
           />
           <Input
             label="Building"
             placeholder="e.g. Tower A"
             value={value.buildingNo ?? ''}
-            disabled={value.fetchedFromMoi}
             onChange={(e) => onChange({ ...value, buildingNo: e.target.value })}
           />
           <Input
             label="Unit / Apartment"
             placeholder="e.g. Apt 4B"
             value={value.aptFlatUnit ?? ''}
-            disabled={value.fetchedFromMoi}
             onChange={(e) => onChange({ ...value, aptFlatUnit: e.target.value })}
           />
           {/* Area and KID span the full width, matching the mockup - they are
@@ -137,7 +151,6 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
               label="Area"
               placeholder="e.g. West Bay"
               value={value.area ?? ''}
-              disabled={value.fetchedFromMoi}
               onChange={(e) => onChange({ ...value, area: e.target.value })}
             />
           </div>
@@ -152,35 +165,34 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
               label="KID (Location ID)"
               placeholder="e.g. KID-00123456"
               value={value.kidLocationId ?? ''}
-              disabled={value.fetchedFromMoi}
-              helperText={
-                value.fetchedFromMoi
-                  ? 'Fetched from MOI - not editable.'
-                  : 'Optional for postpaid activation.'
-              }
+              helperText="Optional for postpaid activation."
               onChange={(e) => onChange({ ...value, kidLocationId: e.target.value })}
             />
           </div>
         </div>
       )}
-      {!value.fetchedFromMoi && (
-        <div className="flex gap-2">
-          {value.skipped ? (
-            <Button variant="ghost-rect" onClick={() => onChange({ ...value, skipped: false })}>
-              Enter Address
+      {/* Shown for a prefilled address too, as of 2026-09-26. These were
+          gated on !fetchedFromMoi while the prefilled fields were read-only -
+          there was nothing to save and nothing to skip. Now that the agent can
+          correct the retrieved address, they need the action that commits it,
+          and Skip stays available because an address on file is not
+          automatically the one this order should carry. */}
+      <div className="flex gap-2">
+        {value.skipped ? (
+          <Button variant="ghost-rect" onClick={() => onChange({ ...value, skipped: false })}>
+            Enter Address
+          </Button>
+        ) : (
+          <>
+            <Button variant="primary-rect" onClick={() => onChange(value)}>
+              Save Address
             </Button>
-          ) : (
-            <>
-              <Button variant="primary-rect" onClick={() => onChange(value)}>
-                Save Address
-              </Button>
-              <Button variant="ghost-rect" onClick={() => onChange({ skipped: true })}>
-                Skip Address
-              </Button>
-            </>
-          )}
-        </div>
-      )}
+            <Button variant="ghost-rect" onClick={() => onChange({ skipped: true })}>
+              Skip Address
+            </Button>
+          </>
+        )}
+      </div>
     </div>
   );
 }

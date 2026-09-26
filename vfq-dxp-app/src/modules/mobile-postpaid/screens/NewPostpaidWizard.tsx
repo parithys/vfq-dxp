@@ -384,7 +384,6 @@ export function NewPostpaidWizard() {
             customerEmail: contact.email,
           });
         }}
-        onAbandon={() => navigate('/mobile-postpaid')}
       />
     </div>
   );

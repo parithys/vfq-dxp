@@ -20,8 +20,10 @@ interface ScannedIdPreviewProps {
  * expected: there is no crop, so nothing depends on the two faces being an
  * exact 50/50 split of one image.
  *
- * Their aspect is ~1.59:1, effectively the ID-1 ratio the frame already uses
- * (85.6 x 54mm = 1.585), so they fill it without meaningful cropping.
+ * Their aspect is 1.72:1 (593x344 front, 593x343 back) - NOT the ID-1 ratio
+ * of the card itself (85.6 x 54mm = 1.585), because they carry white margin
+ * around the document. The frame is sized to the artwork rather than to ID-1
+ * for exactly that reason; see the frame's own note.
  *
  * NOT COMMITTED to this repo - both files have to be saved by hand, alongside
  * the only other brand asset (public/brand/login-bg.jpg). Nothing breaks
@@ -57,22 +59,27 @@ export function ScannedIdPreview({ side, src, documentType = 'QID' }: ScannedIdP
 
   if (resolvedSrc && !imageFailed) {
     return (
-      // A fixed ID-1 frame, so the two previews stay the same size whatever
-      // the source images measure.
+      // The frame is the ARTWORK's aspect (593x344), not the card's ID-1 ratio
+      // (1.585). It was ID-1 until 2026-09-26, which left object-contain
+      // letterboxing the image inside it: ~8% of the frame's height was white
+      // bar above and below the document, so the border sat visibly wide of
+      // the card it was framing.
       //
-      // object-CONTAIN, not cover. The specimen images are 593x344 (1.72:1)
-      // because they include white margin around the card, while this frame
-      // is the card's own 85.6 x 54mm ratio (1.585:1). Cover cropped about 4%
-      // off each side, which ate the rounded card corners and clipped the
-      // front's left-hand watermark edge. Contain shows the whole document,
-      // which is the entire point of showing it back to the agent.
+      // Matching the artwork means contain has nothing left to letterbox and
+      // the border lands on the document's own edge. Still object-CONTAIN
+      // rather than cover: cover at the correct ratio is a no-op for the
+      // front, but the back is 593x343 - one pixel shorter - and cover would
+      // crop it rather than absorb that into a sub-pixel gap. Contain also
+      // keeps a REAL capture, at whatever aspect the scanner produces, whole
+      // rather than cropped, which is the entire point of showing it back.
       //
-      // The resulting letterbox is invisible rather than merely tolerated:
-      // both images are pure white (255,255,255) in all four corners, so a
-      // white frame continues their own margin. Fixed white rather than a
-      // theme token because it is matching the ARTWORK, not the page - a
-      // --bg-coloured frame would band visibly in dark mode.
-      <span className="block w-full overflow-hidden rounded-[var(--radius-button)] border border-border-soft aspect-[214/135] bg-white">
+      // The two previews still match each other's size: both frames are
+      // width-driven and share this one ratio.
+      //
+      // bg-white for the residual sub-pixel gap, and fixed rather than
+      // tokenised because it is continuing the ARTWORK's own white margin, not
+      // the page - a --bg-coloured frame would band visibly in dark mode.
+      <span className="block w-full overflow-hidden rounded-[var(--radius-button)] border border-border-soft aspect-[593/344] bg-white">
         <img
           src={resolvedSrc}
           onError={() => setImageFailed(true)}

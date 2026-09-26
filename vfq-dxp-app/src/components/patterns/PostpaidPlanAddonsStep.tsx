@@ -3,6 +3,10 @@ import * as mockDataEngine from '../../engines/mockDataEngine';
 import { Badge } from '../primitives/Badge';
 import { Radio } from '../primitives/Radio';
 import { AddonsPicker } from '../domain/AddonsPicker';
+import { Drawer } from '../primitives/Drawer';
+import { Icon } from '../primitives/Icon';
+
+const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
 
 interface PostpaidPlan {
   productId: string;
@@ -12,6 +16,9 @@ interface PostpaidPlan {
   dataAllowanceGB: number | null;
   minutesAllowance: string;
   speedTier: string;
+  /** Contract term. On every seeded plan; surfaced only in the details
+   * drawer, since it is the one figure the cards have no room for. */
+  commitmentMonths?: number;
   popular?: boolean;
 }
 
@@ -64,6 +71,10 @@ export function PostpaidPlanAddonsStep({
   const [plans, setPlans] = useState<PostpaidPlan[]>([]);
   const [addonProducts, setAddonProducts] = useState<AddonProduct[]>([]);
   const [discounts, setDiscounts] = useState<Discount[]>([]);
+  // The plan whose details are open, or null. Holds the plan OBJECT rather
+  // than an id, so the drawer cannot render a heading for one plan and
+  // figures for another.
+  const [detailPlan, setDetailPlan] = useState<PostpaidPlan | null>(null);
 
   useEffect(() => {
     mockDataEngine.list<PostpaidPlan & AddonProduct>('products').then((all) => {
@@ -91,16 +102,19 @@ export function PostpaidPlanAddonsStep({
 
   return (
     <div className="space-y-6">
-      {/* Two explicit rows - header, then content - that each column adopts as
-          a subgrid, so the headers share one row and the cards below them start
-          at the same y in both columns. The left header is two lines ("RED
-          Plan" + "Select your plan") and the right is one, so columns sized
-          independently would each start their cards wherever their own header
-          happened to end. A spacer in the short header would align today's
-          pixels and drift the moment either heading wraps or gains a line. */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] lg:grid-rows-[auto_auto] gap-6">
-        {/* Left column: plan tiers */}
-        <div className="grid gap-4 lg:row-span-2 lg:grid-rows-subgrid">
+      {/* One column, three sections in order: plan, add-ons, discounts
+          (2026-09-26). This was a two-column grid with the plan tiers on the
+          left and discounts + add-ons on the right, held in alignment by a
+          subgrid so both headers shared a row. Stacking makes that machinery
+          unnecessary - there is no second column left to align to - so it is
+          gone rather than left in place doing nothing.
+          
+          The order is the order the agent decides in: which plan, then what to
+          add to it, then what comes off the price. Discounts last because a
+          discount applies to the total the first two produce. */}
+      <div className="space-y-6">
+        {/* 1. Plan tiers */}
+        <div className="space-y-4">
           <div>
             <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">RED Plan</h3>
             <p className="text-muted text-[length:var(--fs-caption)]">Select your plan</p>
@@ -109,12 +123,21 @@ export function PostpaidPlanAddonsStep({
             {plans.map((p) => {
               const selected = selectedProductId === p.productId;
               return (
-                <label
+                // The row is a DIV wrapping a label and a button, not one big
+                // label. A <button> inside a <label> is still part of that
+                // label's activation target, so the details chevron would have
+                // selected the plan on its way to opening the drawer - the
+                // agent asks "what is in this?" and the app answers by
+                // choosing it for them. Splitting them keeps the whole card
+                // clickable for selection while the chevron does only its own
+                // job.
+                <div
                   key={p.productId}
-                  className={`flex items-start gap-3 rounded-[var(--radius-card)] border p-4 cursor-pointer ${
+                  className={`flex items-start gap-3 rounded-[var(--radius-card)] border p-4 ${
                     selected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
                   }`}
                 >
+                  <label className="flex items-start gap-3 flex-1 min-w-0 cursor-pointer">
                   <Radio
                     name="postpaid-plan"
                     className="mt-1"
@@ -146,21 +169,36 @@ export function PostpaidPlanAddonsStep({
                       </div>
                     </div>
                   </div>
-                </label>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setDetailPlan(p)}
+                    aria-label={`View details for ${p.name}`}
+                    className="shrink-0 -mr-1 mt-0.5 p-1.5 rounded-[var(--radius-button)] text-muted
+                      hover:text-fg hover:bg-surface
+                      focus:outline-none focus-visible:shadow-[var(--field-focus-ring)]"
+                  >
+                    <Icon path={CHEVRON_RIGHT} className="w-5 h-5" />
+                  </button>
+                </div>
               );
             })}
             {plans.length === 0 && <p className="text-muted">No Postpaid Plan products in the mock catalogue.</p>}
           </div>
         </div>
 
-        {/* Right column: discounts, add-ons */}
-        <div className="grid gap-4 lg:row-span-2 lg:grid-rows-subgrid">
+        {/* 2. Add-ons, between plan and discounts. It used to sit UNDER the
+            discounts in the right-hand column, i.e. after the thing it is
+            priced into. AddonsPicker renders its own "Add-ons (optional)"
+            heading. */}
+        <AddonsPicker selectedIds={addonIds} onChange={onAddonsChange} />
+
+        {/* 3. Discounts last: a discount comes off the total the plan and
+            add-ons above it produce. */}
+        <div className="space-y-4">
           <div>
             <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Eligible Discounts</h3>
           </div>
-          {/* Both blocks share the content row - a subgrid column spanning two
-              rows must have exactly two children, or the extra ones spill into
-              implicit rows the parent knows nothing about. */}
           <div className="space-y-4">
             {!selectedProductId ? (
               <p className="text-muted text-[length:var(--fs-caption)]">Select a plan to see eligible discounts.</p>
@@ -206,24 +244,99 @@ export function PostpaidPlanAddonsStep({
                 )}
             </div>
           )}
-            <AddonsPicker selectedIds={addonIds} onChange={onAddonsChange} />
           </div>
         </div>
       </div>
 
       {selectedPlan && (
-        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 flex items-center justify-between flex-wrap gap-3">
-          <div className="text-fg-2 text-[length:var(--fs-caption)]">
-            Live Cart Total · Base plan <span className="text-fg font-medium">QAR {selectedPlan.mrcQAR}/mo</span>
-            {selectedDiscount && <span> · {selectedDiscount.name} ({Math.round(selectedDiscount.price * 100)}%)</span>}
-            {addonsMonthlyQar > 0 && <span> · Add-ons QAR {addonsMonthlyQar}/mo</span>}
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-fg-2 text-[length:var(--fs-caption)]">Total Monthly</span>
-            <span className="text-accent font-bold text-[length:var(--fs-h4)]">QAR {totalMonthly}/mo</span>
+        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 flex items-start justify-between flex-wrap gap-4">
+          {/* Left: an itemised breakdown under a label, per the 2026-09-26
+              asset. Was one run-on caption line - "Live Cart Total · Base plan
+              QAR 500/mo · Loyalty Discount (-15%) · Add-ons QAR 50/mo" - where
+              the middot-joined items ran together as prose and the label sat
+              inline with the first of them. A stacked label over one line per
+              charge reads as a summary; the label also drops "Live Cart Total",
+              which described the widget rather than its contents. */}
+          {/* A two-column table, per the 2026-09-26 asset. These were inline
+              "label value" sentences, so each amount started wherever its own
+              label happened to end - QAR 750, -15% and QAR 50 at three
+              different x positions, which is the one thing a column of figures
+              must not do. A real <table> rather than stacked divs: it IS
+              tabular, and scope="row" makes each amount announce with the
+              charge it belongs to instead of as a loose number.
+              
+              Width is fixed rather than fitted to content so the right column
+              does not move as the rows change - adding an add-on or a discount
+              would otherwise re-align every amount above it. */}
+          <table className="w-[17rem] text-[length:var(--fs-caption)]">
+            <caption className="text-fg-2 text-[length:var(--fs-caption)] font-semibold uppercase tracking-wide text-left pb-1">
+              Monthly summary
+            </caption>
+            <tbody className="divide-y divide-border-soft">
+              {[
+                ['Plan', `QAR ${selectedPlan.mrcQAR}`],
+                ...(selectedDiscount
+                  ? [[selectedDiscount.name, `${Math.round(selectedDiscount.price * 100)}%`]]
+                  : []),
+                ...(addonsMonthlyQar > 0 ? [['Add-ons', `QAR ${addonsMonthlyQar}`]] : []),
+              ].map(([label, value]) => (
+                <tr key={label}>
+                  <th scope="row" className="text-fg-2 font-normal text-left py-1.5 pr-4">
+                    {label}
+                  </th>
+                  <td className="text-fg font-medium text-right py-1.5">{value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {/* Right: label above the figure, not beside it, per the asset - and
+              "/mo" set small against the amount so the number carries the
+              weight rather than the unit. text-right so the stack aligns to
+              the card's edge instead of to its own longest line. */}
+          <div className="text-right">
+            <p className="text-fg-2 text-[length:var(--fs-caption)]">Total monthly</p>
+            <p className="text-accent font-bold text-[length:var(--fs-h3)] leading-tight">
+              QAR {totalMonthly}
+              <span className="text-[length:var(--fs-caption)] font-bold">/mo</span>
+            </p>
           </div>
         </div>
       )}
+
+      {/* Plan details, on demand. A drawer rather than a modal: it is reference
+          material read while choosing, so it slides in beside the list instead
+          of covering it and forcing a dismissal to compare the next tier.
+          
+          Everything in it is real catalogue data. commitmentMonths in
+          particular is on every seeded plan and was displayed nowhere - the
+          cards show data/voice/speed only, so the contract term the customer is
+          signing up to was the one figure an agent could not see. */}
+      <Drawer
+        open={detailPlan !== null}
+        onClose={() => setDetailPlan(null)}
+        title={detailPlan?.name ?? 'Plan details'}
+      >
+        {detailPlan && (
+          <dl className="divide-y divide-border-soft">
+            {[
+              ['Monthly charge', `QAR ${detailPlan.mrcQAR}/mo`],
+              ['Data', detailPlan.dataAllowanceGB ? `${detailPlan.dataAllowanceGB} GB` : 'Unlimited'],
+              ['Voice', detailPlan.minutesAllowance],
+              ['Speed', detailPlan.speedTier],
+              [
+                'Commitment',
+                detailPlan.commitmentMonths ? `${detailPlan.commitmentMonths} months` : 'No commitment',
+              ],
+              ['Product code', detailPlan.productId],
+            ].map(([label, value]) => (
+              <div key={label} className="flex items-baseline justify-between gap-4 py-3">
+                <dt className="text-fg-2 text-[length:var(--fs-caption)]">{label}</dt>
+                <dd className="text-fg font-medium text-right">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </Drawer>
     </div>
   );
 }

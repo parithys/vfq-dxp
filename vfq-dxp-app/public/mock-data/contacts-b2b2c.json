@@ -2,9 +2,12 @@
   {
     "contactId": "CONT-3001",
     "employer": "Acme Trading Qatar W.L.L.",
-    "employeeName": "Youssef Nasser",
-    "employeeQid": "29144455566",
+    "employeeName": "Bimal Thapa",
+    "employeeQid": "P0998812",
     "b2b2cEligible": true,
-    "planEligibility": "Postpaid Extra Promotion"
+    "planEligibility": "Postpaid Extra Promotion",
+    "employerAccountId": "ENT-ACC-7705",
+    "_note": "employeeQid was 29144455566 and employeeName 'Youssef Nasser' - a person present in no other file: no customer, no identity document, nothing. The row was unreachable and so was every path depending on an employer link. Repointed at CUST-1002 (Bimal Thapa), whose Passport P0998812 IS in identity-documents, so the sponsored party can actually be resolved. Not pointed at CUST-2001 despite that record carrying the same employer: 'Layla Hassan (Employer Contact)' is the EMPLOYER's representative (segment Enterprise (EBU)), not a sponsored consumer, and her only document is an 'Other ID' - a type the ID selector does not offer, so she is unreachable by lookup regardless. employerAccountId added so the employer resolves to a registry account rather than by matching a name string.",
+    "employeeCustomerId": "CUST-1002"
   }
 ]

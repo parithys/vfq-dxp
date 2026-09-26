@@ -39,7 +39,9 @@
     "activePrepaidLines": 1,
     "_note": "activePrepaidLines set to 1 (one below the BR-347/BR-003 Passport cap of 2) so a new prepaid activation for this customer lands exactly at the boundary - a real, testable pass-at-the-edge case.",
     "age": 36,
-    "gender": "Male"
+    "gender": "Male",
+    "companyName": "Acme Trading Qatar W.L.L.",
+    "_companyNameNote": "App-level demo addition (2026-09-26) - this field is what the Contact step now derives B2B2C from, replacing the agent-ticked 'B2B2C Order' checkbox. Only CUST-2001 carried a companyName before, and that record is the employer's own contact rather than a sponsored consumer, so no consumer resolved as B2B2C and the derived flag could never fire - which would have left FWA, MNP and Fixed Line with no way to route an order for approval. Bimal Thapa is an expat consumer on a Passport, the plausible sponsored-employee shape, and Passport is offered by exactly those three journeys. New Postpaid deliberately does NOT offer Passport, so its scan path stays an ordinary consumer sale and B2B2C does not silently start routing every postpaid order to approval."
   },
   {
     "customerId": "CUST-1003",

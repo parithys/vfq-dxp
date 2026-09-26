@@ -100,7 +100,6 @@ export function NewPreToPostWizard() {
           pushToast('success', `Order ${orderId} created - prepaid to postpaid conversion complete.`);
           navigate('/pre-to-post-migration');
         }}
-        onAbandon={() => navigate('/pre-to-post-migration')}
       />
     </div>
   );

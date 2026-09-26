@@ -3,7 +3,6 @@ import type { ReactNode } from 'react';
 import { useWorkflowStore } from '../../stores/workflowStore';
 import { Button } from '../primitives/Button';
 import { Icon } from '../primitives/Icon';
-import { Modal } from '../primitives/Modal';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
 
 const CHEVRON_LEFT = 'M15 18l-6-6 6-6';
@@ -39,7 +38,6 @@ interface GuidedActivationWizardProps {
   title: string;
   steps: WizardStep[];
   onSubmit: (values: Record<string, unknown>) => void | Promise<void>;
-  onAbandon?: () => void;
 }
 
 // Pattern 1: Guided Multi-Step Wizard - the single most-repeated shape in the
@@ -47,7 +45,7 @@ interface GuidedActivationWizardProps {
 // Left-hand step list (numbered, with a secondary description line) + a
 // single content panel for the active step's fields and Back/Continue
 // footer - matches the reference layout supplied for this pattern.
-export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAbandon }: GuidedActivationWizardProps) {
+export function GuidedActivationWizard({ wizardId, title, steps, onSubmit }: GuidedActivationWizardProps) {
   const draft = useWorkflowStore((s) => s.getDraft(wizardId));
   const setStep = useWorkflowStore((s) => s.setStep);
   const setFieldValue = useWorkflowStore((s) => s.setFieldValue);
@@ -65,7 +63,6 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
   // label/disabled) - same split used in OrderApprovalDetail.tsx et al.
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
-  const [confirmingAbandon, setConfirmingAbandon] = useState(false);
 
   const activeSteps = steps.filter((s) => !s.skip?.(draft.values));
   const currentIndex = Math.min(draft.currentStep, activeSteps.length - 1);
@@ -268,12 +265,6 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
     if (index !== currentIndex && index <= maxReached) setStep(wizardId, index);
   };
 
-  const abandon = () => {
-    clearDraft(wizardId);
-    setConfirmingAbandon(false);
-    onAbandon?.();
-  };
-
   const handleStepKeyDown = useEnterToSubmit(canProceed && !submitting, goNext);
 
   return (
@@ -348,16 +339,12 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
             >
               {currentStep?.label}
             </h2>
-            {/* Secondary/destructive action, deliberately understated (plain
-                text, no border/fill) and placed top-right so it doesn't
-                compete with the primary Continue action in the footer. */}
-            <button
-              type="button"
-              onClick={() => setConfirmingAbandon(true)}
-              className="shrink-0 text-[length:var(--fs-caption)] text-muted hover:text-danger transition-colors"
-            >
-              Abandon Order
-            </button>
+            {/* "Abandon Order" sat here, with a confirm modal behind it -
+                removed 2026-09-26 per direction, along with the onAbandon
+                prop every wizard was passing a navigate() into. No
+                replacement: the draft is still discarded by clearDraft on
+                submit, and a half-entered order is left where it is rather
+                than needing an explicit throw-away action. */}
           </div>
           {currentStep?.render({ values: draft.values, setValue })}
           <div className="flex items-center justify-between mt-6 pt-6 border-t border-border-soft">
@@ -376,24 +363,6 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
           </div>
         </div>
       </div>
-
-      <Modal
-        open={confirmingAbandon}
-        onClose={() => setConfirmingAbandon(false)}
-        title="Abandon this order?"
-        footer={
-          <>
-            <Button variant="ghost-rect" onClick={() => setConfirmingAbandon(false)}>
-              Cancel
-            </Button>
-            <Button variant="primary-rect" onClick={abandon} className="bg-danger enabled:hover:bg-danger enabled:active:bg-danger">
-              Discard order
-            </Button>
-          </>
-        }
-      >
-        <p className="text-fg-2">This will discard everything entered in this order so far. This cannot be undone.</p>
-      </Modal>
     </div>
   );
 }

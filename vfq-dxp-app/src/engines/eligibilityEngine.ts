@@ -123,7 +123,7 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
       outcome: expired ? 'hard-stop' : 'pass',
       message: expired
         ? `This ID expired on ${formatDate(expiry)}. Please request a valid, unexpired ID to continue.`
-        : `ID verified - valid through ${formatDate(expiry)}.`,
+        : `Valid through ${formatDate(expiry)}`,
     });
   } else {
     // No expiry on the record is NOT a pass. Saying "ID verified" with nothing
@@ -147,7 +147,14 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
     outcome: underage ? 'hard-stop' : 'pass',
     message: underage
       ? 'MOI records indicate this applicant is under 18. This journey cannot continue for this customer.'
-      : 'Age verified - eligible to proceed.',
+      // The age itself, per 2026-09-26 direction. An agent judging a
+      // borderline applicant against the document in their hand needs the
+      // number the check used, not just its verdict. Falls back to the plain
+      // wording when dob is absent, since "age is undefined years" is worse
+      // than saying less.
+      : age === undefined
+        ? 'Age verified - eligible to proceed'
+        : `Customer's age is ${age} years - eligible to proceed`,
   });
 
   // 3. ID-type exception routing. Not a failure - a diversion.
@@ -159,7 +166,7 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
     outcome: routed ? 'approval-routing' : 'pass',
     message: routed
       ? 'This ID type cannot be sold directly. Routing to CBM approval workflow.'
-      : 'ID type accepted - proceeding directly.',
+      : 'Accepted ID type - eligible to proceed',
   });
 
   // 4/5. The blacklist splits by CATEGORY, because the two halves do different
@@ -177,7 +184,7 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
     outcome: collectionsBlocked ? 'soft-stop' : 'pass',
     message: collectionsBlocked
       ? `This account has an outstanding balance of QR ${outstandingQar}. Postpaid cannot be issued. Prepaid is available on this QID.`
-      : 'No collections block on this account.',
+      : 'No collections block on this account',
   });
 
   checks.push({
@@ -187,7 +194,7 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
     outcome: securityBlocked ? 'hard-stop' : 'pass',
     message: securityBlocked
       ? 'This customer is restricted from new connections. No further action available at this counter.'
-      : 'No security block on this account.',
+      : 'No security block on this account',
   });
 
   // A blacklisted customer whose category is absent is treated as a hard stop
@@ -213,7 +220,7 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
     outcome: blockingDeal ? 'hard-stop' : 'pass',
     message: blockingDeal
       ? 'An existing deal on this account prevents this connection.'
-      : 'No blocking deal conflicts.',
+      : 'No blocking deal conflicts',
   });
 
   // 7. Active lines. A diversion, not a stop - the order proceeds once the
@@ -226,7 +233,7 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
     outcome: lineCapReached ? 'approval-routing' : 'pass',
     message: lineCapReached
       ? 'This customer has reached their active-line limit. An approval task has been raised - the connection can proceed once approved.'
-      : 'Within permitted active line count.',
+      : 'Within permitted active line count',
   });
 
   return checks;

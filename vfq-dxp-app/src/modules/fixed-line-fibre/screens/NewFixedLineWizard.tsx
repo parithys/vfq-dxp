@@ -154,7 +154,6 @@ export function NewFixedLineWizard() {
           );
           navigate('/fixed-line-fibre');
         }}
-        onAbandon={() => navigate('/fixed-line-fibre')}
       />
     </div>
   );

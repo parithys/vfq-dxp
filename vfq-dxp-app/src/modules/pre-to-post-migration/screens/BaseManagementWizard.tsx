@@ -146,7 +146,6 @@ export function BaseManagementWizard() {
           pushToast('success', `Order ${orderId} created - migration handed off to Bulk Job ${bulkOrderId} (PreToPost).`);
           navigate('/pre-to-post-migration/bulk-jobs-bulk-processing-screen-tm-bulk-batch-list-applet');
         }}
-        onAbandon={() => navigate('/pre-to-post-migration')}
       />
     </div>
   );

@@ -146,7 +146,6 @@ export function NewSimSwapWizard({ msisdn, onDone }: NewSimSwapWizardProps) {
           pushToast('success', `SIM Swap request ${simSwapOrderId} submitted for approval.`);
           onDone();
         }}
-        onAbandon={onDone}
       />
     </div>
   );
