@@ -29,7 +29,7 @@ export function BillingProfileStep({ value, onChange }: BillingProfileStepProps)
       />
       <div className="flex flex-col gap-1">
         <label className="text-[length:var(--fs-label)] text-[var(--field-label-disabled)]">Payment Type</label>
-        <div className="rounded-[var(--field-radius)] border border-[var(--field-border-disabled)] px-3 py-2 text-[var(--field-label-disabled)] bg-bg">Postpaid</div>
+        <div className="rounded-[var(--field-radius)] border border-[var(--field-border-disabled)] px-3 py-2 text-[var(--field-label-disabled)] bg-[var(--field-bg-disabled)]">Postpaid</div>
       </div>
       <Select
         label="Payment Method"

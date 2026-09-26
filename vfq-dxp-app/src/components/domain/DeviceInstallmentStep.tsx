@@ -241,7 +241,7 @@ export function DeviceInstallmentStep({
                 />
                 <div>
                   <label className="text-[length:var(--fs-label)] text-[var(--field-label-disabled)] block mb-1">Upfront payment</label>
-                  <div className="rounded-[var(--field-radius)] border border-[var(--field-border-disabled)] bg-bg px-3 py-2 text-[var(--field-label-disabled)]">
+                  <div className="rounded-[var(--field-radius)] border border-[var(--field-border-disabled)] bg-[var(--field-bg-disabled)] px-3 py-2 text-[var(--field-label-disabled)]">
                     QAR {value.downPaymentQar}
                   </div>
                 </div>

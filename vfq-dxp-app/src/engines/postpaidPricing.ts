@@ -103,3 +103,54 @@ export function monthlyCharges(input: MonthlyChargeInput): MonthlyCharges {
 export function formatQar(amount: number, currency: 'QAR' | 'QR' = 'QAR'): string {
   return `${currency} ${Number.isInteger(amount) ? amount : amount.toFixed(2)}`;
 }
+
+/**
+ * The FIRST invoice, distinct from the recurring monthly charge that starts
+ * from the second one.
+ *
+ * EVIDENCED WORDING, ASSUMED CYCLE DAY. Four independent CAF/guided-journey
+ * documents (consumer-postpaid-caf-v4, both MNP-postpaid walkthroughs, the
+ * Pre-to-Post desktop walkthrough) all carry the same disclaimer: "your first
+ * month's charges will be prorated, plus the full charge of your plan for the
+ * following month." That sentence is the evidence for the SHAPE of a first
+ * bill - a prorated part-month plus one full month charged in advance - and it
+ * is followed exactly here.
+ *
+ * What it does not supply is a billing-cycle day for a BRAND NEW connection.
+ * billing-profiles.json shows every value from 1 to 12 across four existing
+ * accounts, with no rule for what a new activation is assigned - and this
+ * journey creates no billing profile of its own (orders.json's billingProfileId
+ * is null on every seeded order). Defaulting the cycle to the 1st of each
+ * calendar month is this function's own assumption, not a business rule -
+ * chosen because it is the one value already present in two of those four
+ * seeded profiles, and it is the only cycle boundary that needs no per-customer
+ * data this journey has never collected. Logged in
+ * reference/VFQ_DXP_Postpaid_Activation_Open_Questions_Reference.md rather
+ * than left implied here.
+ *
+ * `asOf` is injected, matching eligibilityEngine's evaluateEligibilityChecks -
+ * the proration is a pure function of the activation date, not of the clock
+ * inside this file, so it stays testable against a fixed date.
+ */
+export interface FirstBillCharges {
+  /** Charge for the partial first cycle, from activation to month end. */
+  proratedQar: number;
+  /** Days of service counted in that partial cycle, inclusive of today. */
+  proratedDays: number;
+  /** Days in the calendar month activation falls in - what proratedDays is a fraction of. */
+  cycleDays: number;
+  /** proratedQar + one full recurring charge, billed in advance for month two. */
+  totalQar: number;
+}
+
+export function firstBillCharges(recurring: MonthlyCharges, asOf: Date): FirstBillCharges {
+  const cycleDays = new Date(asOf.getFullYear(), asOf.getMonth() + 1, 0).getDate();
+  const proratedDays = cycleDays - asOf.getDate() + 1;
+  const proratedQar = round2((recurring.totalQar * proratedDays) / cycleDays);
+  return {
+    proratedQar,
+    proratedDays,
+    cycleDays,
+    totalQar: round2(proratedQar + recurring.totalQar),
+  };
+}

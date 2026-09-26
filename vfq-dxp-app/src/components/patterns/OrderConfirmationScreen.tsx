@@ -61,11 +61,13 @@ export function OrderConfirmationScreen({
     // container split in two would be narrower per column than the original
     // single column was.
     <div className="max-w-6xl mx-auto py-8">
-      {/* The heading block stays centred over BOTH columns. It announces the
-          outcome, which belongs to the whole screen rather than to the
-          left-hand receipt. */}
-      <div className="text-center">
-        <div className="w-16 h-16 rounded-full bg-success text-white flex items-center justify-center mx-auto mb-6">
+      {/* Left-aligned as of 2026-09-26, matching every other step's heading in
+          this wizard rather than being the one screen in it that centres.
+          Still spans BOTH columns below it - it announces the outcome, which
+          belongs to the whole screen rather than to the left-hand receipt -
+          just no longer centred while doing so. */}
+      <div>
+        <div className="w-16 h-16 rounded-full bg-success text-white flex items-center justify-center mb-6">
           <Icon path={CHECK} className="w-8 h-8" />
         </div>
         <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-2">{heading}</h1>

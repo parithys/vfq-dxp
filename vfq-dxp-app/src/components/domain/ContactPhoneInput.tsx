@@ -95,8 +95,10 @@ export function ContactPhoneInput({
       )}
       <div ref={containerRef} className="relative">
         <div
-          className={`flex items-center gap-2 rounded-[var(--field-radius)] border bg-bg pl-3 pr-2 py-2 focus-within:border-[var(--field-focus-border)] focus-within:shadow-[var(--field-focus-ring)]
-            ${disabled ? 'border-[var(--field-border-disabled)]' : borderClass}
+          // bg set via this JS ternary, not Tailwind's disabled: pseudo-class:
+          // `disabled` sits on the <input> below, not on this wrapper div.
+          className={`flex items-center gap-2 rounded-[var(--field-radius)] border pl-3 pr-2 py-2 focus-within:border-[var(--field-focus-border)] focus-within:shadow-[var(--field-focus-ring)]
+            ${disabled ? 'bg-[var(--field-bg-disabled)] border-[var(--field-border-disabled)]' : 'bg-bg ' + borderClass}
             ${className}`}
         >
           <span aria-hidden="true" className="text-base leading-none">🇶🇦</span>

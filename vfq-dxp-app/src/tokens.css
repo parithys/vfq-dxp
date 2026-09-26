@@ -77,6 +77,19 @@
      light theme. */
   --field-border: #e0e0e0;
   --field-border-disabled: #cccccc;
+  /* Fill for a DISABLED field (2026-09-26) - none existed, so every disabled
+     control across the app kept the same white --bg an enabled one uses and
+     read as identical to it apart from a slightly paler border, which several
+     screens surfaced as ad-hoc bg-bg divs standing in for a disabled input
+     (DeviceInstallmentStep's Upfront payment, BillingProfileStep's Payment
+     Type). Deliberately NOT --surface (#f5f7f9), which readOnly fields
+     already use: disabled and readOnly are documented elsewhere in this file
+     as different states - readOnly is real data the agent reads back,
+     disabled is a control that is unavailable - and giving them the same
+     fill would erase that distinction. #eeeeee is --border-soft's own value,
+     already used as a neutral fill (Badge's 'filled-neutral'), one step
+     greyer than --surface. */
+  --field-bg-disabled: #eeeeee;
   --field-border-error: #e60000;
   --field-border-filled: #e0e0e0;
   /* Calendar range-picker + location-pin accent - from Date Specific-Open.svg

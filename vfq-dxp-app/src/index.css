@@ -104,6 +104,7 @@
      today's appearance unchanged by the light-mode field reference. */
   --field-border: var(--border);
   --field-border-disabled: var(--border-soft);
+  --field-bg-disabled: var(--border-soft);
   --field-border-error: var(--danger);
   --field-border-filled: var(--accent);
   --field-divider: var(--border-soft);

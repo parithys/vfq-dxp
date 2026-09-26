@@ -90,7 +90,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         // focus-within, not focus-visible: the outline belongs to the wrapper
         // now, but the thing being focused is the inner input.
         <div
-          className={`relative flex items-center rounded-[var(--field-radius)] border bg-bg
+          // bg set here, not via Tailwind's disabled: pseudo-class - that only
+          // matches the element it is written on, and `disabled` sits on the
+          // <input> inside this wrapper, not on this div.
+          className={`relative flex items-center rounded-[var(--field-radius)] border
+            ${rest.disabled ? 'bg-[var(--field-bg-disabled)]' : 'bg-bg'}
             ${borderClass}
             focus-within:border-[var(--field-focus-border)] focus-within:shadow-[var(--field-focus-ring)]
             ${rest.disabled ? 'border-[var(--field-border-disabled)]' : ''}`}
@@ -122,7 +126,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             ${readOnlyClass}
             ${borderClass}
             focus:outline-none ${focusClass}
-            disabled:border-[var(--field-border-disabled)] disabled:text-[var(--field-label-disabled)]
+            disabled:border-[var(--field-border-disabled)] disabled:text-[var(--field-label-disabled)] disabled:bg-[var(--field-bg-disabled)]
             ${className}`}
           tabIndex={isReadOnly ? -1 : undefined}
           {...rest}

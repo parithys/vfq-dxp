@@ -71,6 +71,11 @@ const SORTERS: Record<SortKey, (a: MsisdnRecord, b: MsisdnRecord) => number> = {
 
 const ALL_TIERS = 'All';
 
+// The tier chip order, per direction: Platinum, Gold, Silver - the metal
+// ranking, not the alphabet. Values not listed here sort after everything
+// that is.
+const TIER_RANK: Record<string, number> = { Platinum: 0, Gold: 1, Silver: 2 };
+
 interface MsisdnPickerProps {
   selected?: string;
   onSelect: (msisdn: string, priceQAR: number) => void;
@@ -97,6 +102,10 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
   const [tier, setTier] = useState<string>(ALL_TIERS);
   const [customMsisdn, setCustomMsisdn] = useState('');
   const [customError, setCustomError] = useState<string | null>(null);
+  // Whether the manual-entry FORM is open. Only consulted once a number is
+  // already selected - see the render below - so this starts false with no
+  // effect on the unselected case, where the form is always shown inline.
+  const [manualEntryOpen, setManualEntryOpen] = useState(false);
 
   useEffect(() => {
     mockDataEngine.list<MsisdnRecord>('numbers').then(setNumbers);
@@ -115,6 +124,10 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
     }
     setCustomError(null);
     onSelect(normalized, existing?.priceQAR ?? 0);
+    // Collapse back to the link now that this custom entry succeeded - the
+    // same reasoning that hides the form in the first place: nothing left to
+    // fill in, so nothing to keep open.
+    setManualEntryOpen(false);
   };
 
   // Category (Free vs Star/premium) and status (AVAILABLE/Reserved/BLOCKED)
@@ -143,10 +156,18 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
   // to narrow, and filtering it by tier answers a question nobody asks of it.
   const showControls = tab === 'Star';
 
-  // Still derived from the data rather than a hardcoded Gold/Platinum/Silver
-  // list, so the chips match whatever the catalogue actually holds.
+  // WHICH tiers exist is still derived from the data, so the chips match
+  // whatever the catalogue actually holds rather than a hardcoded list. Their
+  // ORDER is not derived, though - alphabetical put them Gold, Platinum,
+  // Silver, which is not the tier ranking, and .sort() has no way to know
+  // Platinum outranks Gold. TIER_RANK is the one place that ordering is
+  // spelled out; a tier absent from it (there shouldn't be one) sorts last
+  // rather than throwing, so an unrecognised value still renders instead of
+  // vanishing.
   const tiers = showControls
-    ? [...new Set(inTab.map((n) => n.valueTier).filter((t): t is string => Boolean(t)))].sort()
+    ? [...new Set(inTab.map((n) => n.valueTier).filter((t): t is string => Boolean(t)))].sort(
+        (a, b) => (TIER_RANK[a] ?? 99) - (TIER_RANK[b] ?? 99)
+      )
     : [];
 
   // Without a control on screen, the order must not depend on whatever the
@@ -325,23 +346,44 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
         </p>
       )}
 
-      <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4 space-y-2">
-        <h4 className="text-fg font-semibold">Manual MSISDN Entry</h4>
-        <Input
-          label="Custom MSISDN"
-          placeholder="+974 XXXX XXXX"
-          value={customMsisdn}
-          onChange={(e) => {
-            setCustomMsisdn(e.target.value);
-            setCustomError(null);
-          }}
-          error={customError ?? undefined}
-          helperText="Enter a full international format MSISDN"
-        />
-        <Button variant="primary-rect" className="w-full" disabled={!isValidMsisdn(customMsisdn)} onClick={reserveCustom}>
-          Reserve Custom Number
-        </Button>
-      </div>
+      {/* Manual entry is the ALTERNATIVE to picking from the list above, not
+          a second required step - but with a number already selected, an
+          always-visible form sitting right under "SUCCESS" read as exactly
+          that: live, empty, and asking for something. ("Why do I need this?"
+          after already choosing a number.)
+
+          Collapsed to a link once `selected` is set, rather than removed -
+          the agent may still want to override a list pick with a specific
+          number, and that has to stay reachable. Before a selection exists
+          there is nothing to collapse: the form is simply the other of two
+          equal ways to get a number, so it renders inline as it always has. */}
+      {selected && !manualEntryOpen ? (
+        <button
+          type="button"
+          onClick={() => setManualEntryOpen(true)}
+          className="text-accent text-[length:var(--fs-caption)] font-medium hover:underline"
+        >
+          Enter a different MSISDN manually
+        </button>
+      ) : (
+        <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4 space-y-2">
+          <h4 className="text-fg font-semibold">Manual MSISDN Entry</h4>
+          <Input
+            label="Custom MSISDN"
+            placeholder="+974 XXXX XXXX"
+            value={customMsisdn}
+            onChange={(e) => {
+              setCustomMsisdn(e.target.value);
+              setCustomError(null);
+            }}
+            error={customError ?? undefined}
+            helperText="Enter a full international format MSISDN"
+          />
+          <Button variant="primary-rect" className="w-full" disabled={!isValidMsisdn(customMsisdn)} onClick={reserveCustom}>
+            Reserve Custom Number
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

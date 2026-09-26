@@ -20,7 +20,6 @@ import { WinCashPaymentStep } from '../../../components/patterns/WinCashPaymentS
 import type { WinCashPaymentValue } from '../../../components/patterns/WinCashPaymentStep';
 import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCapture';
 import type { CafType } from '../../../components/patterns/CafSignatureCapture';
-import { ActivityCommentsStep } from '../../../components/patterns/ActivityCommentsStep';
 import { OrderConfirmationScreen } from '../../../components/patterns/OrderConfirmationScreen';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { useEntityStore } from '../../../stores/entityStore';
@@ -316,14 +315,14 @@ export function NewPostpaidWizard() {
             },
             isValid: (values) => Boolean((values.payment as WinCashPaymentValue | undefined)?.paid),
           },
-          {
-            key: 'activity',
-            label: 'Activity',
-            render: ({ values, setValue }) => (
-              <ActivityCommentsStep value={(values.comments as string) ?? ''} onChange={(v) => setValue('comments', v)} />
-            ),
-            isValid: (values) => Boolean((values.comments as string)?.trim()),
-          },
+          // Activity (a free-text comment box) was removed from this journey
+          // on 2026-09-26. Payment is now the last step, so it carries the
+          // "Save & Finish" label - that label follows currentIndex ===
+          // activeSteps.length - 1 in GuidedActivationWizard, not a step key,
+          // so nothing there needed to change. `comments` was never written
+          // onto the order payload below - it existed only for this step - so
+          // removing the step drops the field cleanly with nothing left over
+          // to clean out of onSubmit.
         ]}
         onSubmit={async (values) => {
           const contact = values.contact as GuidedContactValue;

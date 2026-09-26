@@ -115,7 +115,7 @@ export function Select({
             ? 'border-[var(--field-border-filled)] enabled:hover:border-[var(--field-border-filled)]'
             : 'border-[var(--field-border)] enabled:hover:border-accent/40'
       } bg-bg text-fg focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]
-      disabled:border-[var(--field-border-disabled)]`;
+      disabled:border-[var(--field-border-disabled)] disabled:bg-[var(--field-bg-disabled)]`;
   const panelClasses = dark
     ? 'border-white/15 bg-[var(--charcoal-panel)] divide-y divide-white/10'
     : 'border-border-soft bg-bg divide-y divide-[var(--field-divider)]';

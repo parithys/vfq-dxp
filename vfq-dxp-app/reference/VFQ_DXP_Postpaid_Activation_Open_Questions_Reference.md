@@ -1,7 +1,7 @@
 # New Postpaid Activation - Open Questions for VFQ Business Stakeholders
 
 Generated 2026-09-26. Scope: the New Postpaid Activation journey as implemented
-in `src/modules/mobile-postpaid/screens/NewPostpaidWizard.tsx` (11 steps),
+in `src/modules/mobile-postpaid/screens/NewPostpaidWizard.tsx` (10 steps),
 checked against `reference/.knowledge/` (83 indexed source documents).
 
 Every item below is a question the corpus does **not** answer. Two kinds are
@@ -286,6 +286,19 @@ journeys.
   placeholder shapes "pending VFQ Business confirmation". Any postpaid billing,
   charge calculation or usage-based credit tiering is unverifiable until this is
   filled in.
+- **[GAP] What billing-cycle day does a brand-new postpaid connection get
+  assigned?** Four independent CAF/guided-journey documents agree on the SHAPE
+  of a first invoice - "your first month's charges will be prorated, plus the
+  full charge of your plan for the following month" - but none gives the rule
+  for which day of the month a new activation's cycle starts on.
+  `billing-profiles.json` shows every value from 1 to 12 across four existing
+  accounts, with no pattern tying a value to how or when that account was
+  opened, and this journey creates no billing profile of its own to inherit one
+  from. The app defaults new activations to a 1st-of-month cycle boundary so
+  the first-bill figure it shows the agent is a real, computed number rather
+  than an unlabelled placeholder - logged in
+  `src/engines/postpaidPricing.ts` (`firstBillCharges`) as an assumption, not a
+  business rule.
 
 ---
 

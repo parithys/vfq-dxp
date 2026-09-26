@@ -101,7 +101,7 @@ export function LocationInput({ label, error, helperText, placeholder, onSelect,
           autoComplete="off"
           className={`w-full rounded-[var(--field-radius)] border pl-10 pr-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg
             focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]
-            disabled:border-[var(--field-border-disabled)] disabled:text-[var(--field-label-disabled)]
+            disabled:border-[var(--field-border-disabled)] disabled:text-[var(--field-label-disabled)] disabled:bg-[var(--field-bg-disabled)]
             ${borderClass}
             ${className}`}
         />

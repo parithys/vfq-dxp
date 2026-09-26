@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
-import { monthlyCharges, formatQar, VAT_RATE } from '../../engines/postpaidPricing';
+import { monthlyCharges, firstBillCharges, formatQar, VAT_RATE } from '../../engines/postpaidPricing';
 import type { DoiSelection } from '../domain/DeviceInstallmentStep';
 import type { SimTypeValue } from '../domain/SimTypeStep';
 import type { EligibilityResult } from '../domain/EligibilityGateStep';
@@ -92,6 +92,13 @@ export function CheckoutSummaryStep({
     installmentQar: doi?.monthlyInstallmentQar,
   });
   const monthlyRecurringQar = charges.totalQar;
+  // The first INVOICE, distinct from dueTodayQar (paid at the counter today)
+  // and from monthlyRecurringQar (the exact figure from month two onward).
+  // See firstBillCharges' own note for the evidenced shape and the assumed
+  // cycle day it depends on. new Date() here, not injected: this is app
+  // runtime rendering for an agent at the counter right now, not a workflow
+  // script - "today" IS the activation date being priced.
+  const firstBill = firstBillCharges(charges, new Date());
 
   useEffect(() => {
     onTotalsComputed({ dueTodayQar, monthlyRecurringQar, hrnAdvanceQar: hrnAdvance });
@@ -154,8 +161,25 @@ export function CheckoutSummaryStep({
           <span>Due today</span>
           <span>QR {dueTodayQar}</span>
         </div>
+        {/* First bill and ongoing recurring are two different numbers on a
+            postpaid line, and this panel used to show only the second one -
+            "Monthly recurring, going forward" was already the ongoing figure,
+            but nothing distinguished it from what the FIRST invoice actually
+            carries. The CAF disclaimer this journey's own signature step
+            shows the customer is explicit that those differ: the first bill
+            is a prorated part-month plus one full month billed in advance,
+            not the plain recurring charge. */}
         <div className="flex justify-between text-fg-2 text-[length:var(--fs-caption)]">
-          <span>Monthly recurring, going forward</span>
+          <span>
+            First month's bill
+            <span className="block text-muted">
+              {firstBill.proratedDays} of {firstBill.cycleDays} days this cycle, plus one month in advance
+            </span>
+          </span>
+          <span className="shrink-0">QR {firstBill.totalQar}</span>
+        </div>
+        <div className="flex justify-between text-fg-2 text-[length:var(--fs-caption)]">
+          <span>Recurring monthly bill, from month 2</span>
           <span>QR {monthlyRecurringQar}/mo</span>
         </div>
       </div>
