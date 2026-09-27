@@ -222,6 +222,91 @@ Overlapping neutrals, as implemented today:
 are **unchanged** — the brand red survived the re-skin untouched, which is the
 strongest corroboration this file's §1 offers.
 
+**That last claim needs one qualifier as of 2026-09-27.** The token `--accent`
+is still `#e60000` and still drives every border, icon, link, focus ring and
+red text in the app — but it is **no longer the fill of a primary button**.
+Primary fills are now a supplied gradient:
+
+| Token | Value |
+|---|---|
+| `--accent-gradient` | `linear-gradient(90deg, #FF000E 0%, #C10004 100%)` |
+| `--accent-gradient-hover` | `linear-gradient(90deg, #D00004 0%, #6A0001 100%)` |
+
+These are read from the supplied `Normal.svg` / `hover.svg`, which superseded a
+written spec issued the same day; both the stop pairs and the geometry differ,
+so no part of the earlier values survives. The SVG axis runs
+`x1=0,y1=22.5 → x2=199,y2=22.5` — equal `y`, so a purely horizontal gradient,
+which is CSS `90deg` rather than the `68deg` first specified, with stops at
+`0%`/`100%` rather than inset at `6.6%`/`92.22%`.
+
+**Hover darkens, it does not brighten.** The written spec lightened on hover;
+these assets invert that — hover's `#6A0001` end is far deeper than normal's
+`#C10004`. Taken as intentional, being what both files actually contain.
+
+Neither normal stop is `#e60000`; they straddle it (`#FF000E` brighter,
+`#C10004` deeper), so this is a genuine departure from the flat brand red for
+fills and is recorded here rather than folded into §2, which never specified
+it. Both are constant across themes, like every other brand colour. Three
+consequences worth knowing, all of them traps:
+
+- They are background-**images**, not colours. Anything setting only
+  `background-color` on top of one paints *underneath* it and is invisible.
+  `Button`'s disabled state therefore needs `disabled:bg-none` to clear the
+  image before its flat `--accent-disabled` tint can show; without it a
+  disabled primary renders at full strength and reads as enabled.
+- The press state lost its colour shift. `--accent-active` set a
+  background-color and so became dead code the moment the fill became an image;
+  the spec defines only normal and hover, so rather than invent a third
+  gradient the primary variants keep `scale-[0.99]` alone for press feedback.
+- Hover does not ease. CSS cannot interpolate between two `linear-gradient`s,
+  so the swap is instant no matter what the transition list says.
+
+The specified border is `0px solid #e60000`; the implementation uses **1px
+transparent**. These are visually identical — `background-clip` defaults to
+`border-box`, so the gradient paints through a transparent border, and a
+0-width border is invisible regardless. The 1px is retained because dropping it
+makes a filled button 2px shorter than `ghost-rect`, whose border sits outside
+the padding box, so the two stop sitting level side by side.
+
+As with `SECONDARY_SURFACE`, the fill is exported as `PRIMARY_SURFACE` because
+the selected state of every chip/toggle group uses it and none of those is a
+`<Button>`: category chips, module filter chips, the Customer 360
+Active/Archived toggle, and the number picker's tier selector. Flat `--accent`
+remains correct for things that are *not* buttons — sidebar active rows, wizard
+step circles, avatars, unread dots and `Badge`'s `accent` variant.
+
+**The secondary button is defined by `secondary-normal.svg` /
+`secondary-hover.svg`** (2026-09-27). Both are a 1px `#E60000` stroke around a
+fill, and the fill is the only thing that moves between states:
+
+| State | Fill | Border | Label |
+|---|---|---|---|
+| Normal | `#FFFFFF` — `--bg` | `#E60000` — `--accent` | `--deep-red` |
+| Hover | `#FFF0F0` — `--surface-warm` | `#E60000` — `--accent` | `--deep-red` |
+
+**No new token was minted**: every value the assets specify already existed in
+this palette, which is itself a decent signal the palette is the right shape.
+
+**The label is the one value that does not follow the assets.** They specify
+`#E60000`; the implementation keeps `--deep-red`. On the white resting fill the
+asset's own choice is fine (`4.81:1`), but on the `#FFF0F0` hover fill it
+measures `4.35:1` — under SC 1.4.3's `4.5:1` for the 14px (`--fs-caption`)
+these render at. `--deep-red` is `10.29:1` on white and `9.30:1` on `#FFF0F0`.
+Raised with the user and confirmed 2026-09-27; it is a deliberate, single-value
+deviation, not an oversight.
+
+This **inverted** the previous model, which had `--surface-warm` as the resting
+fill and hovered the *border* from transparent to accent. A short-lived
+`--surface-warm-border` token (`#ffc9c1`) existed purely to be that resting
+border; the inversion left it with no consumer and it was deleted the same day
+rather than kept as debt.
+
+⚠️ **Dark mode is not addressed by these assets and does not work today.**
+`--deep-red` has no dark override, so the secondary label sits at `1.65:1` on
+the old fill and `1.74:1` on the new one — unreadable either way. This is
+pre-existing and the 2026-09-27 change marginally improves it, but it needs a
+dark `--deep-red` value to actually be fixed.
+
 **What this file is still authoritative for**, because the new asset covers one
 screen and says nothing about them: §1's brand idea and voice rules (casing,
 no-emoji, numbers-as-content), §3's typography scale *as brand intent* (the app
@@ -244,3 +329,22 @@ floating overlays only).
 pills: a `--bg` interior, a 1px tinted border, a coloured label and a 4px
 corner (`--radius-tag`) rather than a fully-rounded tint fill. See
 `component-catalogue.md` §5.
+
+**A second §7 API has, as of 2026-09-27.** `Button` implements a sixth variant,
+`secondary-rect`, alongside this file's five. It is the red-outlined secondary
+defined by `secondary-normal.svg`/`secondary-hover.svg` above — `--accent`
+border in both states, `--bg` fill warming to `--surface-warm` on hover,
+`--deep-red` label — and it exists because the app turned out to have *two*
+secondary roles where §7 names one:
+
+| Variant | Role |
+|---|---|
+| `ghost-rect` (§7) | Neutral, recedes. Cancel / Back / Close — the control you press to **not** do the thing. |
+| `secondary-rect` (app) | Warm, invites. A genuine action that simply isn't the page's primary one — dashboard quick actions, category chips. |
+
+Its colours are exported separately as `SECONDARY_SURFACE`, because three of the
+four places this treatment appears cannot be a `<Button>`: two are `<Link>`s and
+one is a two-line action tile on `--radius-card`. They compose the constant for
+colour and keep their own geometry, so a link can never drift from the button.
+Note the hover is *not* in that constant — `enabled:hover:` compiles to
+`:enabled`, which matches form controls only and would never fire on an `<a>`.

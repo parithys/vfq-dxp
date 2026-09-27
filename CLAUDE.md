@@ -9,11 +9,28 @@ consumed by it at runtime — treat it as background material, not part of the
 active implementation, unless a task explicitly asks you to consult it.
 
 The distilled documentation that used to live at this root
-(`blueprint/`, `.knowledge/`, `diagrams/`, `BRSD/`, and the loose
+(`blueprint/`, `.knowledge/`, `diagrams/`, and the loose
 `VFQ_*`/`CRM_Journeys_*` files) now lives under `vfq-dxp-app/reference/`.
+A stale leftover copy of `.knowledge/` remained at this root until
+2026-09-27 — it claimed 93 indexed documents but held only one, and was
+deleted; `vfq-dxp-app/reference/.knowledge/` (83 documents) is the only
+knowledge base.
+
+`BRSD/` is NOT under `vfq-dxp-app/reference/` — it moved to
+`vfq-diagram-engine/BRSD/` on 2026-09-27, because it is that engine's input
+corpus rather than the app's: `vfq-diagram-engine/manifest.json` records
+every entry as `BRSD/<file>.xlsx`, which now resolves relative to the engine.
+The app's own reconstruction indexed a *different* set of BRSD versions
+(e.g. Fibre v1.2, Postpaid V2.0) from the `data/` folder described below,
+not the workbooks that were sitting in this root's `BRSD/`.
+
 Citations inside those documents of the form `data/<file>` refer to this
 root's `data/` folder, i.e. `../../data/<file>` relative to a file's new
-location under `vfq-dxp-app/reference/`.
+location under `vfq-dxp-app/reference/`. **Note (2026-09-27): that `data/`
+folder no longer exists** — its contents appear to have been reorganised
+into the topical folders at this root (`Business Documents/`,
+`Guided Journeys/`, `Workshop Recordings/`, …), so those citations record
+provenance but no longer resolve as paths.
 
 ## Knowledge base
 

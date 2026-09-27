@@ -3,6 +3,7 @@ import { getAllRoutes } from '../../engines/configEngine';
 import { useActiveCustomerStore } from '../../stores/activeCustomerStore';
 import { Icon } from '../../components/primitives/Icon';
 import { Badge } from '../../components/primitives/Badge';
+import { Button } from '../../components/primitives/Button';
 import type { ZoneSize } from './dashboardLayout';
 
 const ICONS = {
@@ -183,17 +184,18 @@ export function DashboardZone({
               // The palette's soft pink fill (2026-09-27), standardised across
               // every secondary/clickable button in the app - see
               // ProductLinePage.tsx's category chips, the first place this
-              // treatment landed, for the same reasoning: --deep-red text
-              // clears 4.5:1 on --surface-warm where --accent measures short
-              // of it. This was an outlined, unfilled button before, the one
-              // shape in this family that had never picked up the fill.
-              <button
+              // treatment landed. This was an outlined, unfilled button before,
+              // the one shape in this family that had never picked up the fill.
+              // It is the only one of the four that is a real <button> on a
+              // button-shaped box, so it is the one that became the variant.
+              <Button
                 key={action.label}
+                variant="secondary-rect"
+                compact
                 onClick={() => launch(action)}
-                className="rounded-[var(--radius-button)] border border-transparent bg-surface-warm px-4 py-2 text-[length:var(--fs-btn-compact)] text-[var(--deep-red)] hover:border-accent transition-colors"
               >
                 {action.label}
-              </button>
+              </Button>
             ))}
           </div>
         </>

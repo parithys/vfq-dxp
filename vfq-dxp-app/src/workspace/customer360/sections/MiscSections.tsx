@@ -3,7 +3,7 @@ import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
 import { Tooltip } from '../../../components/primitives/Tooltip';
 import { Icon } from '../../../components/primitives/Icon';
-import { Button } from '../../../components/primitives/Button';
+import { Button, PRIMARY_SURFACE } from '../../../components/primitives/Button';
 import { Drawer } from '../../../components/primitives/Drawer';
 import { Select } from '../../../components/primitives/Select';
 import { Input } from '../../../components/primitives/Input';
@@ -44,7 +44,7 @@ function ActiveArchivedToggle({ value, onChange }: { value: AttachmentFilter; on
         <button
           key={opt}
           onClick={() => onChange(opt)}
-          className={`px-3 py-1.5 font-medium ${value === opt ? 'bg-accent text-accent-on' : 'bg-bg text-fg-2 hover:bg-surface'}`}
+          className={`px-3 py-1.5 font-medium ${value === opt ? `${PRIMARY_SURFACE} enabled:hover:bg-[image:var(--accent-gradient-hover)]` : 'bg-bg text-fg-2 hover:bg-surface'}`}
         >
           {opt}
         </button>

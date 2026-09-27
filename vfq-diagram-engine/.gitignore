@@ -2,3 +2,10 @@ __pycache__/
 *.pyc
 .DS_Store
 node_modules/
+
+# Source BRSD workbooks - this engine's input corpus, moved here from the
+# project root 2026-09-27 (manifest.json has always recorded them as
+# "BRSD/<file>.xlsx", which now resolves correctly relative to this
+# directory). Kept out of git for the same reason the root .gitignore kept
+# them out: ~9.6MB of binary workbooks that are source material, not code.
+BRSD/

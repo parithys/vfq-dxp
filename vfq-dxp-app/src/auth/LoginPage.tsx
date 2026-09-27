@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Icon } from '../components/primitives/Icon';
 import { VodafoneMark } from '../components/primitives/VodafoneMark';
 import { Tooltip } from '../components/primitives/Tooltip';
+import { PRIMARY_SURFACE } from '../components/primitives/Button';
 import { useAuthStore } from '../stores/authStore';
 import { usePersonaStore } from '../stores/personaStore';
 import { pickProfileForRole } from '../engines/agentProfileEngine';
@@ -199,7 +200,7 @@ export function LoginPage() {
             <button
               onClick={handleSignIn}
               disabled={signingIn}
-              className="w-full flex items-center justify-center gap-2 rounded-[var(--radius-btn)] bg-accent hover:bg-accent-hover active:bg-accent-active active:scale-[0.99] disabled:opacity-60 text-white font-medium py-3 shadow-[var(--shadow-brand)] transition-[color,background-color,transform]"
+              className={`w-full flex items-center justify-center gap-2 rounded-[var(--radius-btn)] border ${PRIMARY_SURFACE} enabled:hover:bg-[image:var(--accent-gradient-hover)] enabled:active:scale-[0.99] disabled:opacity-60 font-medium py-3 shadow-[var(--shadow-brand)] transition-[color,border-color,transform]`}
             >
               {signingIn ? 'Signing in…' : 'Sign in with SSO'}
               {!signingIn && <Icon path={ICONS.arrowRight} className="w-4 h-4" />}

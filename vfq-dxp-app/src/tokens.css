@@ -29,6 +29,34 @@
   --accent-disabled: #ffb3b3;
   --accent-active: color-mix(in oklab, var(--accent), black 14%);
   --accent-hover: color-mix(in oklab, var(--accent), black 8%);
+  /* Primary-fill gradient for every primary CTA in the app. Read straight
+     out of the supplied Normal.svg / hover.svg (2026-09-27), which replace
+     the first written spec of the same day - both stop pairs AND the
+     geometry changed, so nothing here is carried over from it.
+
+     Geometry: each SVG's linearGradient runs x1=0,y1=22.5 -> x2=199,y2=22.5.
+     Equal y means a purely horizontal axis, which is CSS `90deg` (0deg is
+     to-top, 90deg to-right) - not the 68deg the written spec asked for. The
+     two <stop>s sit at offset 0 and 1, hence 0%/100% rather than the
+     earlier 6.6%/92.22% insets.
+
+     Hover now DARKENS. The first spec brightened on hover; these assets
+     invert that - hover's #6A0001 end is far deeper than normal's #C10004.
+     Taken as intentional, since it is what both files actually contain.
+
+     NOT derived from --accent and deliberately not reconciled with it:
+     neither normal stop is #e60000 (they straddle it, #FF000E brighter and
+     #C10004 deeper), so the flat accent is no longer the primary button's
+     fill. --accent itself is unchanged and still drives borders, icons,
+     links and text.
+
+     These are background-IMAGEs, not colours: anything that sets only
+     background-color on top of one (a disabled tint, an active shade)
+     paints UNDER it and is invisible unless background-image is cleared
+     first - see Button.tsx's disabled:bg-none.
+     Constant across themes, like every other brand colour here. */
+  --accent-gradient: linear-gradient(90deg, #FF000E 0%, #C10004 100%);
+  --accent-gradient-hover: linear-gradient(90deg, #D00004 0%, #6A0001 100%);
   --accent-on: #ffffff;
   --bg: #ffffff;
   /* Solid-fill success pill (Badge variant 'success-solid'). Darker than
@@ -311,6 +339,12 @@
      panel reads as recessed without a shadow. */
   --surface-subtle: #fafafa;
   --surface-warm: #fff0f0;
+  /* --surface-warm-border lived here from 2026-09-27 until later the same day.
+     It was the resting border of the secondary button back when --surface-warm
+     was that button's resting FILL and the border hovered from transparent to
+     accent. secondary-normal.svg/secondary-hover.svg inverted that - the border
+     is --accent in both states and the fill is what moves - which left the
+     token with no consumer, so it was removed rather than kept as debt. */
   /* Tables are not in the 2026-09-24 reference, so these are derived from
      its structural rules rather than read off it: a table is a bordered
      container, so its border takes --border's #e0e0e0, and its header row

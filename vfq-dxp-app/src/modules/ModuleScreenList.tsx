@@ -7,6 +7,7 @@ import { screensVisibleFor } from '../engines/personaEngine';
 import { groupRoutesByFeature } from '../engines/screenGrouping';
 import { Badge } from '../components/primitives/Badge';
 import { Icon } from '../components/primitives/Icon';
+import { PRIMARY_SURFACE } from '../components/primitives/Button';
 import { getScreenComponent } from './screenRegistry';
 import type { Route } from '../types/config';
 
@@ -175,7 +176,7 @@ export function ModuleScreenList() {
               key={f.key}
               onClick={() => setFilter(f.key)}
               className={`rounded-[var(--radius-button)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${
-                filter === f.key ? 'border-accent bg-accent text-accent-on' : 'border-border-soft text-fg-2 hover:bg-surface'
+                filter === f.key ? `${PRIMARY_SURFACE} enabled:hover:bg-[image:var(--accent-gradient-hover)]` : 'border-border-soft text-fg-2 hover:bg-surface'
               }`}
             >
               {f.label}

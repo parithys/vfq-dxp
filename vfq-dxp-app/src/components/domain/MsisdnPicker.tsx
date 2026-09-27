@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Input } from '../primitives/Input';
-import { Button } from '../primitives/Button';
+import { Button, PRIMARY_SURFACE } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
 import { Select } from '../primitives/Select';
 import * as mockDataEngine from '../../engines/mockDataEngine';
@@ -235,7 +235,7 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
                   aria-pressed={active}
                   className={`px-3 py-1 rounded-[var(--radius-button)] text-[length:var(--fs-caption)] border transition-colors ${
                     active
-                      ? 'bg-accent text-accent-on border-accent font-medium'
+                      ? `${PRIMARY_SURFACE} enabled:hover:bg-[image:var(--accent-gradient-hover)] font-medium`
                       : 'bg-bg text-fg-2 border-border hover:border-[var(--field-card-selected)]'
                   }`}
                 >

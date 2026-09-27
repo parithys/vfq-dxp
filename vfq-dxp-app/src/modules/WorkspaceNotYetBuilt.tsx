@@ -3,6 +3,7 @@ import { getAllModules } from '../engines/configEngine';
 import { NAV_BY_KEY, type NavKey } from '../navigation/navManifest';
 import { NotYetBuiltPanel } from './NotYetBuiltPanel';
 import { Icon } from '../components/primitives/Icon';
+import { SECONDARY_SURFACE } from '../components/primitives/Button';
 
 const OPEN_ARROW = 'M7 17L17 7 M7 7h10v10';
 
@@ -79,7 +80,7 @@ export function WorkspaceNotYetBuilt({ navKey }: { navKey: NavKey }) {
               <Link
                 key={l.to}
                 to={l.to}
-                className="group inline-flex items-center gap-1.5 rounded-[var(--radius-button)] border border-transparent bg-surface-warm px-3 py-1.5 text-[length:var(--fs-caption)] text-[var(--deep-red)] hover:border-accent"
+                className={`group inline-flex items-center gap-1.5 rounded-[var(--radius-button)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${SECONDARY_SURFACE} hover:bg-surface-warm`}
               >
                 {l.label}
                 <Icon path={OPEN_ARROW} className="w-3.5 h-3.5 text-muted group-hover:text-accent" />

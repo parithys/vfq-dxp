@@ -4,6 +4,7 @@ import { getAllRoutes } from '../../engines/configEngine';
 import { useActiveCustomerStore, type ActiveCustomerSummary } from '../../stores/activeCustomerStore';
 import { Icon } from '../../components/primitives/Icon';
 import { Tooltip } from '../../components/primitives/Tooltip';
+import { SECONDARY_SURFACE } from '../../components/primitives/Button';
 
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
@@ -169,7 +170,7 @@ export function ProductActionGroups({
                     <button
                       key={action.label}
                       onClick={() => launch(action)}
-                      className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-transparent bg-surface-warm p-4 text-left text-[var(--deep-red)] hover:border-accent transition-colors"
+                      className={`flex flex-col gap-2 rounded-[var(--radius-card)] border p-4 text-left ${SECONDARY_SURFACE} enabled:hover:bg-surface-warm transition-colors`}
                     >
                       <span className="text-[length:var(--fs-btn-compact)] font-medium uppercase tracking-wide">{action.label}</span>
                       <p className="text-[length:var(--fs-caption)] text-fg-2 leading-snug">{action.description}</p>

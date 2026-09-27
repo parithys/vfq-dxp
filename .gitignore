@@ -6,7 +6,9 @@
 # Reference-only source corpus (screenshots, recordings, raw docs) — not consumed at runtime
 /Application Screenshots/
 /BRD/
-/BRSD/
+# /BRSD/ moved into vfq-diagram-engine/ on 2026-09-27 - it is that engine's
+# input corpus (its manifest.json records every entry as "BRSD/<file>.xlsx").
+# Now ignored by vfq-diagram-engine/.gitignore instead of here.
 /Business Documents/
 /CAF (Customer Application Form)/
 /CRM Journeys/

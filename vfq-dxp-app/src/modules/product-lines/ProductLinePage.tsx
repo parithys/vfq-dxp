@@ -4,6 +4,7 @@ import { canUseFeature } from '../../engines/personaEngine';
 import { getAllRoutes, getPersona } from '../../engines/configEngine';
 import { getScreenComponent } from '../screenRegistry';
 import { Icon } from '../../components/primitives/Icon';
+import { SECONDARY_SURFACE, PRIMARY_SURFACE } from '../../components/primitives/Button';
 import { NotYetBuiltPanel } from '../NotYetBuiltPanel';
 import { JourneyCard } from './JourneyCard';
 import {
@@ -119,25 +120,24 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
         </p>
       )}
 
-      {/* Unselected chips sit on --surface-warm (#fff0f0), the palette's own
-          soft pink, per the 2026-09-26 asset - they were a grey outline on the
-          page background, which read as disabled next to the solid-red
-          selected one rather than as the rest of one set.
-          
-          Their label is --deep-red, NOT --accent. Measured: #e60000 on #fff0f0
-          is 4.35:1, which misses SC 1.4.3's 4.5:1 at --fs-caption. #7a1f1c is
-          9.30:1 on the same fill and still unmistakably red.
-          
-          Border is transparent rather than absent, so the chip keeps the same
-          box as the selected one and the row does not shift by 2px as
-          selection moves. Hover brings the accent border in - a second, deeper
-          pink would need a token this palette does not have, and the outline
-          says "clickable" more plainly than a 4% fill change. */}
+      {/* Both chip states come from shared constants (see Button.tsx), so the
+          colours here are whatever the current asset says and are not restated
+          at this call site. Unselected is SECONDARY_SURFACE - a 1px --accent
+          edge around --bg, warming to --surface-warm on hover; selected is
+          PRIMARY_SURFACE's gradient.
+
+          The one thing worth keeping local: BOTH states carry a 1px border, so
+          the row never shifts by 2px as selection moves between them.
+
+          The chip label is --deep-red, not the secondary asset's #E60000.
+          Measured: #e60000 on the #fff0f0 hover fill is 4.35:1, which misses
+          SC 1.4.3's 4.5:1 at --fs-caption (14px); #7a1f1c is 9.30:1 there and
+          10.29:1 on the white resting fill, and still unmistakably red. */}
       <div className="flex flex-wrap items-center gap-2 mb-6">
         <Link
           to={line.to}
           className={`rounded-[var(--radius-button)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${
-            active ? 'border-transparent bg-surface-warm text-[var(--deep-red)] hover:border-accent' : 'border-accent bg-accent text-accent-on'
+            active ? `${SECONDARY_SURFACE} hover:bg-surface-warm` : `${PRIMARY_SURFACE} hover:bg-[image:var(--accent-gradient-hover)]`
           }`}
         >
           All
@@ -148,8 +148,8 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
             to={`${line.to}/${c.key}`}
             className={`rounded-[var(--radius-button)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${
               active?.key === c.key
-                ? 'border-accent bg-accent text-accent-on'
-                : 'border-transparent bg-surface-warm text-[var(--deep-red)] hover:border-accent'
+                ? `${PRIMARY_SURFACE} hover:bg-[image:var(--accent-gradient-hover)]`
+                : `${SECONDARY_SURFACE} hover:bg-surface-warm`
             }`}
           >
             {c.label}

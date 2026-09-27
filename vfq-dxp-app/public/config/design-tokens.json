@@ -3,6 +3,8 @@
   "--accent-active": "color-mix(in oklab, var(--accent), black 14%)",
   "--accent-disabled": "#ffb3b3",
   "--accent-hover": "color-mix(in oklab, var(--accent), black 8%)",
+  "--accent-gradient": "linear-gradient(90deg, #FF000E 0%, #C10004 100%)",
+  "--accent-gradient-hover": "linear-gradient(90deg, #D00004 0%, #6A0001 100%)",
   "--accent-on": "#ffffff",
   "--bg": "#ffffff",
   "--black-80": "rgba(0,0,0,.8)",
