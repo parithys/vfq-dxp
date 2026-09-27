@@ -104,8 +104,10 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
         {active ? active.description : `Journeys available to ${persona?.name ?? 'this role'} across ${line.label}.`}
       </p>
 
-      {/* Pill row - same class strings as ModuleScreenList's filter pills, so
-          this is a composition of the existing pattern, not a new control. */}
+      {/* Chip row - same class strings as ModuleScreenList's filter chips, so
+          this is a composition of the existing pattern, not a new control.
+          8px corner (--radius-button) as of 2026-09-27, not a pill - see
+          this file's button-radius note below and Button.tsx's own. */}
       {/* Global search can land a catalogue hit here. Naming the requested id
           keeps the "no fabricated destinations" rule intact - the page says
           plainly that an item detail is planned rather than silently showing
@@ -126,7 +128,7 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
           is 4.35:1, which misses SC 1.4.3's 4.5:1 at --fs-caption. #7a1f1c is
           9.30:1 on the same fill and still unmistakably red.
           
-          Border is transparent rather than absent, so the pill keeps the same
+          Border is transparent rather than absent, so the chip keeps the same
           box as the selected one and the row does not shift by 2px as
           selection moves. Hover brings the accent border in - a second, deeper
           pink would need a token this palette does not have, and the outline
@@ -134,7 +136,7 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
       <div className="flex flex-wrap items-center gap-2 mb-6">
         <Link
           to={line.to}
-          className={`rounded-[var(--radius-pill)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${
+          className={`rounded-[var(--radius-button)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${
             active ? 'border-transparent bg-surface-warm text-[var(--deep-red)] hover:border-accent' : 'border-accent bg-accent text-accent-on'
           }`}
         >
@@ -144,7 +146,7 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
           <Link
             key={c.key}
             to={`${line.to}/${c.key}`}
-            className={`rounded-[var(--radius-pill)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${
+            className={`rounded-[var(--radius-button)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${
               active?.key === c.key
                 ? 'border-accent bg-accent text-accent-on'
                 : 'border-transparent bg-surface-warm text-[var(--deep-red)] hover:border-accent'

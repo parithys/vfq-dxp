@@ -36,12 +36,20 @@ const base =
 // (Finish / Abandoned in the topbar) rendered 37px against 39px. Declaring the
 // border everywhere equalises the box model instead of tuning padding per
 // variant, which would have shifted the label rather than the edge.
+// The three pill variants used --radius-cta-pill (60px) / --radius-glass-pill
+// (24px) until 2026-09-27, then briefly --radius-pill (9999px) for an
+// app-wide pill-radius pass. As of the SAME day, every button variant in the
+// app - including these - was flattened to --radius-button (8px) for radius
+// consistency: nothing currently uses these three variants (grepped: zero
+// call sites), so their "-pill" suffix is now a naming leftover, not a
+// rendered shape - they are visually identical to primary-rect/ghost-rect,
+// distinguished only by fill/padding.
 const variantClasses: Record<ButtonVariant, string> = {
   'primary-rect': 'bg-accent text-accent-on border border-transparent enabled:hover:bg-accent-hover enabled:active:bg-accent-active enabled:active:scale-[0.99] disabled:opacity-100 disabled:bg-[var(--accent-disabled)] rounded-[var(--radius-button)] px-4 py-2',
-  'primary-pill': 'bg-accent text-accent-on border border-transparent enabled:hover:bg-accent-hover enabled:active:bg-accent-active enabled:active:scale-[0.99] disabled:opacity-100 disabled:bg-[var(--accent-disabled)] rounded-[var(--radius-cta-pill)] px-6 py-2.5',
+  'primary-pill': 'bg-accent text-accent-on border border-transparent enabled:hover:bg-accent-hover enabled:active:bg-accent-active enabled:active:scale-[0.99] disabled:opacity-100 disabled:bg-[var(--accent-disabled)] rounded-[var(--radius-button)] px-6 py-2.5',
   'ghost-rect': 'bg-transparent text-fg border border-border enabled:hover:bg-surface rounded-[var(--radius-button)] px-4 py-2',
-  'glass-pill': 'bg-[var(--white-glass-10)] backdrop-blur text-fg border border-transparent rounded-[var(--radius-glass-pill)] px-5 py-2',
-  'content-ghost-pill': 'bg-transparent text-accent border border-transparent enabled:hover:bg-surface-warm rounded-[var(--radius-glass-pill)] px-4 py-1.5',
+  'glass-pill': 'bg-[var(--white-glass-10)] backdrop-blur text-fg border border-transparent rounded-[var(--radius-button)] px-5 py-2',
+  'content-ghost-pill': 'bg-transparent text-accent border border-transparent enabled:hover:bg-surface-warm rounded-[var(--radius-button)] px-4 py-1.5',
 };
 
 export function Button({ variant = 'primary-rect', compact, className = '', children, ...rest }: ButtonProps) {

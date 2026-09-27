@@ -268,22 +268,28 @@
      replacing the warmer #f7f6f9 they shared before. */
   --page-bg: #f5f7f9;
   --radius-asymmetric: 0px 6px 0px 0px;
-  --radius-badge-pill: 32px;
   --radius-button: 8px;
   --radius-card: 8px;
   --radius-circle: 50%;
-  --radius-cta-pill: 60px;
-  --radius-glass-pill: 24px;
   --radius-hairline: 1px;
   --radius-lg: 24px;
   --radius-md: 16px;
+  /* THE pill radius, used by every pill-shaped control app-wide as of
+     2026-09-27 - status badges, the Ooredoo mark, nav/filter/category chips,
+     and Button's pill variants. It absorbed three other radii that had
+     each been carrying a fixed pixel value for one corner of the app's pill
+     family: --radius-tag (4px, badges - a deliberate 2026-09-24 reference
+     decision to NOT round pill ends off fully, now superseded), and
+     --radius-cta-pill (60px) / --radius-glass-pill (24px), both on Button's
+     unused pill variants and already visually full capsules at those
+     buttons' height - a border-radius past half the box height clamps to a
+     capsule regardless of the literal value, so folding them into this one
+     token changed no rendered pixel. --radius-badge-pill (32px) predated all
+     of this, was already an orphaned token with zero consumers, and is
+     removed rather than folded in for the same reason. */
   --radius-pill: 9999px;
   --radius-portrait: 100%;
   --radius-sm: 8px;
-  /* Status-pill corner from the reference (rect rx="3.5" + 0.5px stroke
-     inset = 4px). Notably NOT a full pill: --radius-badge-pill (32px) is
-     what these chips used before, which rounded their ends off entirely. */
-  --radius-tag: 4px;
   --section-y-desktop: 96px;
   --section-y-phone: 48px;
   --section-y-tablet: 68px;

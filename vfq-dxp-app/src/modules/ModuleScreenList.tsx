@@ -128,7 +128,7 @@ export function ModuleScreenList() {
         <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">{module.module}</h1>
         <Link
           to="/"
-          className="shrink-0 flex items-center gap-1 rounded-[var(--radius-pill)] border border-border-soft px-3 py-1.5 text-[length:var(--fs-caption)] text-fg-2 hover:bg-surface hover:text-fg"
+          className="shrink-0 flex items-center gap-1 rounded-[var(--radius-button)] border border-border-soft px-3 py-1.5 text-[length:var(--fs-caption)] text-fg-2 hover:bg-surface hover:text-fg"
         >
           <Icon path={ICONS.chevronLeft} className="w-3.5 h-3.5" />
           All modules
@@ -174,7 +174,7 @@ export function ModuleScreenList() {
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`rounded-[var(--radius-pill)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${
+              className={`rounded-[var(--radius-button)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${
                 filter === f.key ? 'border-accent bg-accent text-accent-on' : 'border-border-soft text-fg-2 hover:bg-surface'
               }`}
             >

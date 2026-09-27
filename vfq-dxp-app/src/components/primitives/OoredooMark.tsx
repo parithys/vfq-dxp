@@ -15,12 +15,16 @@
 // The light chip is fixed rather than tokenised because its only host is the
 // toast's --charcoal-panel surface, which is dark in BOTH themes: a mark that
 // followed --bg would vanish into that panel in light mode.
+//
+// --radius-pill as of 2026-09-27, matching Badge's own corner change - see
+// that file's note. This chip and Badge were the last two consumers of the
+// now-removed --radius-tag.
 export function OoredooMark({ className = '' }: { className?: string }) {
   return (
     <span
       role="img"
       aria-label="Ooredoo customer"
-      className={`inline-flex items-center rounded-[var(--radius-tag)] bg-white px-1.5 py-0.5 text-[length:var(--fs-micro)] font-bold leading-none tracking-tight text-[#ED1B2E] ${className}`}
+      className={`inline-flex items-center rounded-[var(--radius-pill)] bg-white px-1.5 py-0.5 text-[length:var(--fs-micro)] font-bold leading-none tracking-tight text-[#ED1B2E] ${className}`}
     >
       ooredoo
     </span>

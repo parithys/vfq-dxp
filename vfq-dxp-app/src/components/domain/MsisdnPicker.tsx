@@ -233,7 +233,7 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
                   type="button"
                   onClick={() => setTier(t)}
                   aria-pressed={active}
-                  className={`px-3 py-1 rounded-[var(--radius-pill)] text-[length:var(--fs-caption)] border transition-colors ${
+                  className={`px-3 py-1 rounded-[var(--radius-button)] text-[length:var(--fs-caption)] border transition-colors ${
                     active
                       ? 'bg-accent text-accent-on border-accent font-medium'
                       : 'bg-bg text-fg-2 border-border hover:border-[var(--field-card-selected)]'

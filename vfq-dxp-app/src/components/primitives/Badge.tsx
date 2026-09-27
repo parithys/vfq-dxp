@@ -25,7 +25,16 @@ interface BadgeProps {
 // The leading status dot went with it - the reference's pills are label-only.
 // It cost nothing in accessibility terms: the dot was aria-hidden and took
 // its colour from the text, so the pill's own label was always what conveyed
-// the status, not the colour. Corner drops 32px -> 4px for the same reason.
+// the status, not the colour.
+//
+// CORNER IS --radius-pill AGAIN as of 2026-09-27, reversing the 2026-09-24
+// reference's own 32px -> 4px drop. That reference measured its pills at
+// rx="3.5" (4px) specifically because it did NOT round the ends off fully -
+// see the now-removed --radius-tag token's own comment, and
+// VFQ_DXP_Design_Principles_Reference.md's matching note. Direction on
+// 2026-09-27 is a single consistent pill radius across every pill-shaped
+// control app-wide, badges included, which is a deliberate supersession of
+// that reference's corner - not a rediscovery of the shape it replaced.
 const variantClasses: Record<BadgeVariant, string> = {
   'outlined-red': 'border border-accent text-accent bg-transparent',
   'filled-neutral': 'bg-light-neutral text-fg-2',
@@ -51,7 +60,7 @@ const variantClasses: Record<BadgeVariant, string> = {
 export function Badge({ variant = 'filled-neutral', children }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-[var(--radius-tag)] px-2.5 py-0.5 text-[length:var(--fs-tag)] font-medium ${variantClasses[variant]}`}
+      className={`inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] px-2.5 py-0.5 text-[length:var(--fs-tag)] font-medium ${variantClasses[variant]}`}
     >
       {children}
     </span>
