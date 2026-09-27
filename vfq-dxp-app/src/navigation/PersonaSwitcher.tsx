@@ -110,14 +110,21 @@ export function PersonaSwitcher() {
             Qnomy ticket control uses. A back-office or oversight role never
             clicks Finish, so their count could only ever read 0, and a
             permanent zero looks like a broken stat rather than a role that
-            does not serve customers at a counter. */}
+            does not serve customers at a counter.
+
+            CLICKABLE as of 2026-09-27, opening the Ticket History page
+            (QnomyTicketHistory) - the count answers "how many", and this is
+            where "which ones" lives. A <Link>, not a button + navigate(): the
+            destination is a real page with its own URL, so it should behave
+            like any other link (open in a new tab, show in the status bar on
+            hover, etc.) rather than only ever working via a click handler. */}
         {showQnomy && (
           <Tooltip content="Customers Served" placement="bottom">
-            <span
-              tabIndex={0}
-              // Focusable and labelled, so the meaning is reachable without a
-              // hover - the tooltip is the only place the words appear.
-              aria-label={`Customers Served: ${customersServed}`}
+            <Link
+              to="/ticket-history"
+              // aria-label carries the count, same as before - the tooltip
+              // text alone would announce "Customers Served" with no number.
+              aria-label={`Customers Served: ${customersServed}. View ticket history.`}
               // Filled --accent with white text, matching the profile-initials
               // avatar at the other end of this same strip rather than
               // inventing a colour for it. No border: the fill defines the
@@ -127,10 +134,15 @@ export function PersonaSwitcher() {
               // White on #e60000 is 5.25:1, so it clears SC 1.4.3 for normal
               // text - which matters because the digit IS the content here,
               // not decoration.
-              className="min-w-10 h-10 px-2 rounded-[var(--radius-pill)] bg-accent text-accent-on flex items-center justify-center font-semibold text-[length:var(--fs-body)] cursor-default"
+              //
+              // cursor-pointer, not cursor-default: this is now a real
+              // navigation target, and the base-layer button/link cursor rule
+              // in index.css does not reach a <Link> with no href-shaped
+              // ancestor styling of its own.
+              className="min-w-10 h-10 px-2 rounded-[var(--radius-pill)] bg-accent text-accent-on flex items-center justify-center font-semibold text-[length:var(--fs-body)] cursor-pointer"
             >
               {customersServed}
-            </span>
+            </Link>
           </Tooltip>
         )}
 

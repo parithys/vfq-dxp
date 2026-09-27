@@ -49,6 +49,13 @@
     "screenIds": []
   },
   {
+    "key": "workspace.qnomy-ticket-history",
+    "name": "My Ticket History (Qnomy)",
+    "area": "Front Desk",
+    "surface": "workspace",
+    "screenIds": []
+  },
+  {
     "key": "workspace.task-detail",
     "name": "Task detail",
     "area": "Tasks",

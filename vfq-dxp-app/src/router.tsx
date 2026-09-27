@@ -13,6 +13,7 @@ import { AdministrationWorkspace } from './workspace/administration/Administrati
 import { AgentProfileWorkspace } from './workspace/profile/AgentProfileWorkspace';
 import { TaskListView } from './workspace/tasks/TaskListView';
 import { TaskDetailView } from './workspace/tasks/TaskDetailView';
+import { QnomyTicketHistory } from './workspace/tickets/QnomyTicketHistory';
 import { WorkspaceNotYetBuilt } from './modules/WorkspaceNotYetBuilt';
 import { LeadListView } from './modules/lead-management/LeadListView';
 import { ProductLinePage } from './modules/product-lines/ProductLinePage';
@@ -69,6 +70,10 @@ export function AppRouter() {
       <Route path="/profile" element={<AgentProfileWorkspace />} />
       <Route path="/tasks" element={<TaskListView />} />
       <Route path="/tasks/:taskId" element={<TaskDetailView />} />
+      {/* Reached from the "Customers Served" pill (PersonaSwitcher.tsx), the
+          same family as /tasks and /profile above - a personal-activity page
+          with no product-module home, not a registered SCR screen. */}
+      <Route path="/ticket-history" element={<QnomyTicketHistory />} />
       {/* Legacy: the 213-screen catalogue, kept mounted for direct-link
           access and internal QA (ModuleScreenList's Built/Not-built view) -
           no longer linked from the primary sidebar. */}

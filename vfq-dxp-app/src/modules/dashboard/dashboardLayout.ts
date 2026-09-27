@@ -1,16 +1,20 @@
 import type { Persona, PersonaApproach } from '../../types/config';
 
-// The dashboard is ONE route rendering one or two zones. Approach decides which
-// zones and in what order; a Hybrid role additionally gets a Focus control that
-// re-orders and re-sizes the same two zones.
+// The dashboard is ONE route rendering one or two zones. Approach - the
+// persona's own configured value, resolved automatically at login - decides
+// which zones and in what order. There is no agent-facing override: a Hybrid
+// role always gets both zones, half and half, rather than a Focus control
+// that could narrow to one.
 //
-// Crucially it does NOT navigate or refetch: both zones mount and load their
-// data unconditionally, so switching Focus is pure layout. That is what makes
-// "the same dashboard route, re-ordered" true rather than merely claimed.
+// Removed 2026-09-27. Focus let an agent collapse a Hybrid dashboard to a
+// single zone, which meant the KPI set on screen was no longer purely a
+// function of the signed-in agent's configured approach - two Hybrid agents
+// looking at the same role could see different things depending on a filter
+// neither of their persona records mentioned. Approach alone deciding the
+// view is the whole point of the requirement this satisfies.
 
 export type ZoneId = 'customer-ops' | 'product-work';
 export type ZoneSize = 'full' | 'half' | 'collapsed';
-export type FocusMode = 'customer-ops' | 'both' | 'product';
 
 export interface ZonePlacement {
   id: ZoneId;
@@ -19,9 +23,6 @@ export interface ZonePlacement {
 
 export interface DashboardLayout {
   zones: ZonePlacement[];
-  /** Only Hybrid gets the control - the other approaches have one zone, so
-   * there is nothing to focus between. */
-  showFocusControl: boolean;
   /** View Only: suppress every quick action and make tiles non-navigating. */
   readOnly: boolean;
   heading: string;
@@ -47,34 +48,18 @@ export function productZoneVariantFor(persona: Persona | undefined): ProductZone
   return 'catalogue';
 }
 
-export function focusFromParam(raw: string | null): FocusMode {
-  return raw === 'customer-ops' || raw === 'product' ? raw : 'both';
-}
-
-export function layoutFor(
-  approach: PersonaApproach,
-  focus: FocusMode,
-  firstName: string
-): DashboardLayout {
+export function layoutFor(approach: PersonaApproach, firstName: string): DashboardLayout {
   switch (approach) {
     case 'Product-First':
       return {
         zones: [{ id: 'product-work', size: 'full' }],
-        showFocusControl: false,
         readOnly: false,
         heading: `Welcome back, ${firstName}!`,
       };
 
     case 'Hybrid':
       return {
-        zones:
-          focus === 'customer-ops'
-            ? [{ id: 'customer-ops', size: 'full' }, { id: 'product-work', size: 'collapsed' }]
-            : focus === 'product'
-              // Reversed, so the focused zone leads rather than merely growing.
-              ? [{ id: 'product-work', size: 'full' }, { id: 'customer-ops', size: 'collapsed' }]
-              : [{ id: 'customer-ops', size: 'half' }, { id: 'product-work', size: 'half' }],
-        showFocusControl: true,
+        zones: [{ id: 'customer-ops', size: 'half' }, { id: 'product-work', size: 'half' }],
         readOnly: false,
         heading: `Welcome back, ${firstName}!`,
       };
@@ -82,7 +67,6 @@ export function layoutFor(
     case 'None':
       return {
         zones: [{ id: 'customer-ops', size: 'full' }],
-        showFocusControl: false,
         readOnly: true,
         heading: `Welcome back, ${firstName}!`,
         subtitle: 'Read-only view. You can review records and approve or reject orders.',
@@ -92,7 +76,6 @@ export function layoutFor(
     default:
       return {
         zones: [{ id: 'customer-ops', size: 'full' }],
-        showFocusControl: false,
         readOnly: false,
         heading: `Welcome back, ${firstName}!`,
       };

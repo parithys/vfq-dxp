@@ -180,10 +180,17 @@ export function DashboardZone({
           <h3 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-3">Quick actions</h3>
           <div className="flex flex-wrap gap-2 mb-6">
             {spec.actions.map((action) => (
+              // The palette's soft pink fill (2026-09-27), standardised across
+              // every secondary/clickable button in the app - see
+              // ProductLinePage.tsx's category chips, the first place this
+              // treatment landed, for the same reasoning: --deep-red text
+              // clears 4.5:1 on --surface-warm where --accent measures short
+              // of it. This was an outlined, unfilled button before, the one
+              // shape in this family that had never picked up the fill.
               <button
                 key={action.label}
                 onClick={() => launch(action)}
-                className="rounded-[var(--radius-button)] border border-border px-4 py-2 text-[length:var(--fs-btn-compact)] text-fg hover:bg-surface hover:border-accent transition-colors"
+                className="rounded-[var(--radius-button)] border border-transparent bg-surface-warm px-4 py-2 text-[length:var(--fs-btn-compact)] text-[var(--deep-red)] hover:border-accent transition-colors"
               >
                 {action.label}
               </button>

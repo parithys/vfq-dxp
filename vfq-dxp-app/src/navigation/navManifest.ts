@@ -245,5 +245,11 @@ export function resolveActiveNavPath(pathname: string, fromNavKey?: NavKey | str
   // suggest the agent is somewhere they cannot actually be.
   if (pathname === '/tasks' || pathname.startsWith('/tasks/')) return '/';
 
+  // Ticket History is reached from the "Customers Served" pill in the top
+  // bar, not from the rail - same reasoning as /profile above. Written
+  // explicitly rather than left to the closing `return null` so a future
+  // reader sees this was decided, not missed.
+  if (pathname === '/ticket-history') return null;
+
   return null;
 }

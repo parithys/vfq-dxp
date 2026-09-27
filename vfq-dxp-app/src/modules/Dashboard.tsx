@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { getPersona } from '../engines/configEngine';
 import { usePersonaStore } from '../stores/personaStore';
 import { useAuthStore } from '../stores/authStore';
@@ -9,10 +9,9 @@ import { canUseFeature } from '../engines/personaEngine';
 import * as mockDataEngine from '../engines/mockDataEngine';
 import { Icon } from '../components/primitives/Icon';
 import { DashboardZone } from './dashboard/DashboardZone';
-import { FocusControl } from './dashboard/FocusControl';
 import { useZoneMetrics } from './dashboard/useZoneMetrics';
 import { customerOpsSpec, productWorkSpec } from './dashboard/zoneSpecs';
-import { focusFromParam, layoutFor, productZoneVariantFor } from './dashboard/dashboardLayout';
+import { layoutFor, productZoneVariantFor } from './dashboard/dashboardLayout';
 
 const SEARCH_ICON = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3';
 
@@ -30,7 +29,6 @@ interface CustomerRecord {
 // control re-orders and re-sizes the same two zones - it does not navigate, and
 // because useZoneMetrics loads every kind on mount it cannot refetch either.
 export function Dashboard() {
-  const [params, setParams] = useSearchParams();
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
   const persona = getPersona(activePersonaId);
   const profileName = useAuthStore((s) => s.profile?.name);
@@ -38,14 +36,14 @@ export function Dashboard() {
   const regionId = useRegionStore((s) => s.regionId);
   const [recentCustomers, setRecentCustomers] = useState<CustomerRecord[]>([]);
 
-
-
   // Greeting uses the signed-in person's first name, falling back to the role
   // label when no profile has resolved yet.
   const firstName = profileName?.split(' ')[0] ?? persona?.name ?? 'there';
+  // Auto-detected from the signed-in agent's own persona record - see
+  // dashboardLayout.ts's header note on why there is no agent-facing override
+  // of this any more (Focus, removed 2026-09-27).
   const approach = persona?.approach ?? 'Customer-First';
-  const focus = focusFromParam(params.get('focus'));
-  const layout = layoutFor(approach, focus, firstName);
+  const layout = layoutFor(approach, firstName);
   const variant = productZoneVariantFor(persona);
   const regionLabel = REGIONS.find((r) => r.id === regionId)?.label ?? 'Vodafone Qatar';
   // Only an oversight role is scoped to a region; everyone else sees the
@@ -64,14 +62,9 @@ export function Dashboard() {
     });
   }, [recentCustomerIds]);
 
-  const setFocus = (next: string) => {
-    const p = new URLSearchParams(params);
-    p.set('focus', next);
-    setParams(p, { replace: true });
-  };
-
-  // A Hybrid role always has two zones, so its zones keep their two-zone
-  // framing regardless of which one Focus has enlarged.
+  // A Hybrid role always has two zones (dashboardLayout.ts no longer offers a
+  // way to collapse to one), so this is just "does this approach have one
+  // zone or two" now, not a Focus-dependent computation.
   const framing = layout.zones.length > 1 ? 'one-of-two' : 'primary';
   const specFor = (id: string, compact: boolean) =>
     id === 'customer-ops'
@@ -92,11 +85,13 @@ export function Dashboard() {
     <div className="p-8">
       {/* The heading owns the gap to whatever follows when there is no note
           under it, so removing the note does not pull the search bar up
-          against the greeting. */}
-      <div className={`flex flex-wrap items-start justify-between gap-4 ${headerNote ? 'mb-1' : 'mb-6'}`}>
-        <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">{layout.heading}</h1>
-        {layout.showFocusControl && <FocusControl focus={focus} onChange={setFocus} />}
-      </div>
+          against the greeting. No Focus control sits beside it any more
+          (removed 2026-09-27) - see dashboardLayout.ts's header note - so
+          this is just the heading now, not a row splitting space with a
+          control that no longer exists. */}
+      <h1 className={`text-[length:var(--fs-h3)] font-medium text-fg ${headerNote ? 'mb-1' : 'mb-6'}`}>
+        {layout.heading}
+      </h1>
       {headerNote && <p className="text-fg-2 mb-6">{headerNote}</p>}
 
       {/* Customer search is the entry point for customer-centric work, so it
@@ -123,13 +118,6 @@ export function Dashboard() {
           />
         ))}
       </div>
-
-      {layout.showFocusControl && (
-        <p className="mt-8 rounded-[var(--radius-card)] border border-border-soft bg-surface px-4 py-3 text-fg-2 text-[length:var(--fs-caption)]">
-          This is the same dashboard route rendered for one role. Switching Focus re-orders and re-sizes the same two
-          zones - it doesn't navigate to a different screen or reload different data.
-        </p>
-      )}
     </div>
   );
 }

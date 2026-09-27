@@ -67,10 +67,17 @@ export function WorkspaceNotYetBuilt({ navKey }: { navKey: NavKey }) {
           </h2>
           <div className="flex flex-wrap gap-2">
             {launchers.map((l) => (
+              // Soft-pink fill (2026-09-27), matching every other secondary/
+              // clickable button in the app - see ProductLinePage.tsx's
+              // category chips, the first place this treatment landed. Was
+              // an outlined, unfilled pill; the arrow icon keeps its own
+              // --muted/group-hover:accent colouring rather than following
+              // the label into deep-red, since it is a directional cue, not
+              // part of the link's own text.
               <Link
                 key={l.to}
                 to={l.to}
-                className="group inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-border-soft px-3 py-1.5 text-[length:var(--fs-caption)] text-fg-2 hover:bg-surface hover:text-fg"
+                className="group inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-transparent bg-surface-warm px-3 py-1.5 text-[length:var(--fs-caption)] text-[var(--deep-red)] hover:border-accent"
               >
                 {l.label}
                 <Icon path={OPEN_ARROW} className="w-3.5 h-3.5 text-muted group-hover:text-accent" />

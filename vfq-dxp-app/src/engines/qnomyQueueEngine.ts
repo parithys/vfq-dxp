@@ -63,6 +63,33 @@ export const JOURNEY_LAUNCH_SCREENS: Record<string, string> = {
   J011: 'SCR-037',
 };
 
+/**
+ * What the customer is at the counter FOR, on a specific ticket - the single
+ * place both the assignment notification and the Ticket History page derive
+ * this from, so a ticket cannot read one purpose live and a different one in
+ * history.
+ *
+ * `taskType` is a per-TICKET refinement, added 2026-09-27 for Ticket History:
+ * a Care & Complaints ticket can be a technical issue or a service request
+ * without that needing a new queue, so it takes priority over the QUEUE-level
+ * label when a ticket carries one. Most tickets don't - the fallback to
+ * JOURNEY_PURPOSE_LABELS is exactly the pre-existing behaviour, unchanged. See
+ * qtickets.json's own note on why this taxonomy is a demo convenience, not an
+ * evidenced Qnomy vocabulary.
+ */
+export function purposeOfVisit(ticket: {
+  journeyCode: string | null;
+  taskType?: string | null;
+  queueName: string | null;
+}): string {
+  return (
+    ticket.taskType ??
+    (ticket.journeyCode ? JOURNEY_PURPOSE_LABELS[ticket.journeyCode] : undefined) ??
+    ticket.queueName ??
+    'Not recorded'
+  );
+}
+
 const GROUP_QUEUES: Record<string, string[]> = {
   'Sales & Acquisition': ['J011'],
   'Customer Service & Retention': ['J020'],

@@ -158,10 +158,18 @@ export function ProductActionGroups({
                     );
                   }
                   return (
+                    // Same soft-pink treatment as every other secondary/
+                    // clickable button in the app (2026-09-27) - see
+                    // DashboardZone's Quick actions for the identical change
+                    // and the same reasoning. The description line keeps its
+                    // own --fg-2 explicitly, so only the action label itself
+                    // takes the deep-red - a card that turned entirely one
+                    // colour would lose the label/description hierarchy this
+                    // already had.
                     <button
                       key={action.label}
                       onClick={() => launch(action)}
-                      className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-border bg-bg p-4 text-left text-fg hover:bg-surface hover:border-accent transition-colors"
+                      className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-transparent bg-surface-warm p-4 text-left text-[var(--deep-red)] hover:border-accent transition-colors"
                     >
                       <span className="text-[length:var(--fs-btn-compact)] font-medium uppercase tracking-wide">{action.label}</span>
                       <p className="text-[length:var(--fs-caption)] text-fg-2 leading-snug">{action.description}</p>
