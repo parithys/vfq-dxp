@@ -5,6 +5,7 @@ import { Radio } from '../primitives/Radio';
 import { Input } from '../primitives/Input';
 import { PhoneNumberInput } from '../primitives/PhoneNumberInput';
 import { Select } from '../primitives/Select';
+import { Badge } from '../primitives/Badge';
 
 // Mirrors IdLookupStep's MoiResult - this step receives the value that step
 // produces. Kept as a local shape rather than imported because it is a subset:
@@ -38,6 +39,13 @@ export interface GuidedContactValue {
    * only, so it is always agent-entered even for a customer on file.
    */
   firstName?: string;
+  /**
+   * Added 2026-09-27. Positional, from the middle tokens of MOI's single
+   * `name` string - see identityFromMoi. Optional by design: a two-token name
+   * has no middle, and a mandatory read-only field with no source deadlocks
+   * Continue (the exact failure `gender` was added to fix).
+   */
+  middleName?: string;
   lastName?: string;
   dob?: string;
   gender?: string;
@@ -85,6 +93,8 @@ interface GuidedContactStepProps {
    * means all four. New Postpaid narrows it to QID and Diplomatic ID.
    */
   allowedIdTypes?: QidType[];
+  unavailableIdTypes?: QidType[];
+  unavailableIdTypesHint?: string;
 }
 
 // Single source of truth for "is this a valid Alternate phone #" - exported
@@ -221,10 +231,32 @@ export function hasIdentityDetails(v: {
 // read-only now, so a mandatory Gender with no registry source and no way to
 // type into it would block Continue permanently. customers.json has always
 // carried the field; only MoiResult was failing to pass it through.
+/**
+ * Email verification state (2026-09-27 walkthrough).
+ *
+ * There is no email-verification service in this app, so this reports only
+ * what can actually be known and does not claim a check that never ran:
+ *
+ *   Verified             - unchanged from what the MOI registry returned
+ *   Verification Pending - agent typed a different, well-formed address
+ *   Unverified           - no registry address, or the current value is not
+ *                          a valid address yet
+ */
+function EmailStatusChip({ email, registryEmail }: { email?: string; registryEmail?: string }) {
+  if (!email || !isValidEmail(email)) {
+    return <Badge variant="filled-neutral">Unverified</Badge>;
+  }
+  if (registryEmail && email.trim().toLowerCase() === registryEmail.trim().toLowerCase()) {
+    return <Badge variant="success">Verified</Badge>;
+  }
+  return <Badge variant="warning">Verification Pending</Badge>;
+}
+
 function identityFromMoi(moi: MoiResult | undefined) {
   if (!moi)
     return {
       firstName: undefined,
+      middleName: undefined,
       lastName: undefined,
       dob: undefined,
       nationality: undefined,
@@ -252,8 +284,15 @@ function identityFromMoi(moi: MoiResult | undefined) {
     // Nothing can create a company from this step any more - the only control
     // that could is gone - so a derived employer is never a new one.
     companyIsNew: undefined,
+    // Split three ways as of 2026-09-27, when Middle Name was added as its own
+    // field. MOI returns ONE `name` string, so first/middle/last are positional:
+    // first token, last token, and whatever sits between them. Arabic names in
+    // this corpus routinely carry 3-4 tokens ("Ahmed Abdulla Al-Sulaiti"), which
+    // the old two-way split folded entirely into Last Name.
+    // A two-token name yields an empty middle rather than a guessed one.
     firstName: parts[0] ?? '',
-    lastName: parts.slice(1).join(' '),
+    middleName: parts.length > 2 ? parts.slice(1, -1).join(' ') : '',
+    lastName: parts.length > 1 ? parts[parts.length - 1] : '',
     // MOI returns ISO (1985-03-12); the field is masked DD/MM/YYYY. Without
     // this the prefilled value would fail isValidDob and block Continue for
     // exactly the customers the registry DID find - reformatted, not
@@ -289,7 +328,7 @@ function identityFromMoi(moi: MoiResult | undefined) {
 // agent always performs (or at least sees) an explicit Fetch rather than
 // silently trusting cached active-customer state. The number field shows
 // a format-example placeholder instead (see QidInput.tsx).
-export function GuidedContactStep({ value, onChange, showIptvToggle = true, allowedIdTypes }: GuidedContactStepProps) {
+export function GuidedContactStep({ value, onChange, showIptvToggle = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint }: GuidedContactStepProps) {
   return (
     <div className="space-y-4">
       <IdLookupStep
@@ -298,6 +337,8 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
         // those three as editable fields below - see the prop's own note.
         showMoiDetails={false}
         allowedIdTypes={allowedIdTypes}
+        unavailableIdTypes={unavailableIdTypes}
+        unavailableIdTypesHint={unavailableIdTypesHint}
         // Every MOI-derived field is re-seeded from the result whenever it
         // changes, and cleared with it when the ID is edited/re-typed. A new
         // ID is a new person, so carrying over the previous one's name or
@@ -335,18 +376,43 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
               editable, so the agent can still correct the two fields a
               customer actually contests at the counter. */}
           <Input label="First Name" required readOnly value={value.firstName ?? ''} onChange={() => {}} />
+          {/* Middle Name added 2026-09-27. Not `required`: MOI returns a single
+              name string and plenty of records are two tokens, so a mandatory
+              middle name would block Continue for every customer who has none
+              on file - the one failure mode the read-only identity fields were
+              already shown to cause. */}
+          <Input label="Middle Name" readOnly value={value.middleName ?? ''} onChange={() => {}} />
           <Input label="Last Name" required readOnly value={value.lastName ?? ''} onChange={() => {}} />
-          <Input label="Date of Birth" required readOnly value={value.dob ?? ''} onChange={() => {}} />
-          <Input label="Nationality" required readOnly value={value.nationality ?? ''} onChange={() => {}} />
           <Input
-            label="Email Address"
-            type="email"
+            label="Date of Birth"
             required
-            value={value.email ?? ''}
-            placeholder="customer@example.qa"
-            error={value.email && !isValidEmail(value.email) ? 'Please enter a valid email address.' : undefined}
-            onChange={(e) => onChange({ ...value, email: e.target.value })}
+            readOnly
+            helperText="DD/MM/YYYY"
+            value={value.dob ?? ''}
+            onChange={() => {}}
           />
+          <Input label="Nationality" required readOnly value={value.nationality ?? ''} onChange={() => {}} />
+          <div className="flex flex-col gap-1">
+            <Input
+              label="Email Address"
+              type="email"
+              required
+              value={value.email ?? ''}
+              placeholder="customer@example.qa"
+              error={value.email && !isValidEmail(value.email) ? 'Please enter a valid email address.' : undefined}
+              onChange={(e) => onChange({ ...value, email: e.target.value })}
+            />
+            {/* Verification state, per the 2026-09-27 walkthrough. Derived, not
+                stored: an address the registry supplied is Verified; one the
+                agent has typed over is Unverified until it is re-checked; a
+                syntactically complete edit sits at Verification Pending. No
+                verification service exists in this app, so this reports what is
+                actually known rather than asserting a check that never ran. */}
+            <EmailStatusChip
+              email={value.email}
+              registryEmail={value.moiResult?.email}
+            />
+          </div>
           <PhoneNumberInput
             label="Alternate phone #"
             required
@@ -354,6 +420,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
             // picker offering 200 others would present a choice in which every
             // alternative fails validation.
             fixedIso="QA"
+            helperText="Service notifications will be sent to this Qatar mobile number."
             value={value.altPhone ?? ''}
             placeholder="5566 7766"
             error={

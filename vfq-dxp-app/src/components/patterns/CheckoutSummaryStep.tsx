@@ -1,14 +1,27 @@
 import { useEffect, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { monthlyCharges, firstBillCharges, formatQar, VAT_RATE } from '../../engines/postpaidPricing';
-import type { DoiSelection } from '../domain/DeviceInstallmentStep';
-import type { SimTypeValue } from '../domain/SimTypeStep';
 import type { EligibilityResult } from '../domain/EligibilityGateStep';
 
 interface Product {
   productId: string;
   name: string;
   mrcQAR: number;
+  /** Plan lock-in, straight off the catalogue row. */
+  commitmentMonths?: number;
+}
+
+/**
+ * Star-number lock-in, banded by the number's one-time price. Real catalogue
+ * data (public/mock-data/star-number-tiers.json) - a premium number carries its
+ * own commitment independent of the plan's, and the 2026-09-27 walkthrough asks
+ * for both on the read-back.
+ */
+interface StarNumberTier {
+  tierId: string;
+  valueRangeMin: number;
+  valueRangeMax: number;
+  lockInDurationMonths: number;
 }
 
 export interface CheckoutTotals {
@@ -21,7 +34,6 @@ interface CheckoutSummaryStepProps {
   customerName: string | undefined;
   /** Echoed onto the read-back summary - see the row-order note in the body. */
   idNumber: string | undefined;
-  mobile: string | undefined;
   /** Optional - the postpaid journey no longer collects one. */
   billingMethod?: string;
   productId: string | undefined;
@@ -37,10 +49,15 @@ interface CheckoutSummaryStepProps {
   addonIds: string[];
   msisdn: string | undefined;
   numberPriceQar: number | undefined;
-  doi: DoiSelection | undefined;
-  simType: SimTypeValue | undefined;
   eligibility: EligibilityResult | undefined;
   onTotalsComputed: (totals: CheckoutTotals) => void;
+  /**
+   * The same facts, as label/value rows, for the CAF step to read back to the
+   * customer before signature. Published from HERE rather than rebuilt there
+   * so both surfaces derive from one calculation - the drift this component's
+   * own discount bug (2026-09-26) was caused by.
+   */
+  onSummaryComputed?: (rows: { label: string; value: string }[]) => void;
 }
 
 // "Checkout" (reference flow step 9, evidenced as SCR "checkout-screen-retail-
@@ -51,26 +68,26 @@ interface CheckoutSummaryStepProps {
 export function CheckoutSummaryStep({
   customerName,
   idNumber,
-  mobile,
   billingMethod,
   productId,
   discountId,
   addonIds,
   msisdn,
   numberPriceQar,
-  doi,
-  simType,
   eligibility,
   onTotalsComputed,
+  onSummaryComputed,
 }: CheckoutSummaryStepProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [discounts, setDiscounts] = useState<{ addonDiscountId: string; name: string; price: number }[]>([]);
+  const [starTiers, setStarTiers] = useState<StarNumberTier[]>([]);
 
   useEffect(() => {
     mockDataEngine.list<Product>('products').then(setProducts);
     mockDataEngine
       .list<{ addonDiscountId: string; name: string; price: number }>('addons-discounts')
       .then(setDiscounts);
+    mockDataEngine.list<StarNumberTier>('star-number-tiers').then(setStarTiers);
   }, []);
 
   const plan = products.find((p) => p.productId === productId);
@@ -79,7 +96,20 @@ export function CheckoutSummaryStep({
   const numberDelta = numberPriceQar ?? 0;
   const hrnAdvance = eligibility?.requiresHrnAdvance ? 100 : 0;
 
-  const dueTodayQar = numberDelta + (doi?.downPaymentQar ?? 0) + hrnAdvance;
+  const dueTodayQar = numberDelta + hrnAdvance;
+  // A priced number is a Star number; a zero-priced one is Free. The picker
+  // already encodes that distinction in the price it hands back, so this reads
+  // it rather than plumbing a second "category" value through the wizard.
+  const isStarNumber = numberDelta > 0;
+  const starTier = isStarNumber
+    ? starTiers.find((t) => numberDelta >= t.valueRangeMin && numberDelta <= t.valueRangeMax)
+    : undefined;
+  // "Maximum Bill Limit equals account Credit Limit" (business-rules.json).
+  // This journey dropped its Bill Limit editor on 2026-09-25, so there is no
+  // agent-set value to show - what the customer must be told is the cap, which
+  // that rule defines as the credit limit. Stated as a cap, not invented as a
+  // figure, because no default bill limit exists in the data for this plan.
+  const creditLimitQar = eligibility?.defaultCreditLimitQar;
   // One shared itemisation with the Plan step and the order payload - see
   // engines/postpaidPricing.ts. Derived here rather than restated, because
   // this figure is what the agent reads to the customer and the order's is
@@ -89,7 +119,6 @@ export function CheckoutSummaryStep({
     planQar: plan?.mrcQAR ?? 0,
     discountRate: discount?.price,
     addonsQar: addons.reduce((sum, a) => sum + a.mrcQAR, 0),
-    installmentQar: doi?.monthlyInstallmentQar,
   });
   const monthlyRecurringQar = charges.totalQar;
   // The first INVOICE, distinct from dueTodayQar (paid at the counter today)
@@ -104,6 +133,48 @@ export function CheckoutSummaryStep({
     onTotalsComputed({ dueTodayQar, monthlyRecurringQar, hrnAdvanceQar: hrnAdvance });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dueTodayQar, monthlyRecurringQar, hrnAdvance]);
+
+  // Customer-facing rows for CAF. Only published once the catalogue reads have
+  // landed, so CAF never shows a summary with "-" where a plan name belongs.
+  useEffect(() => {
+    if (!onSummaryComputed || !plan) return;
+    onSummaryComputed([
+      { label: 'Number', value: msisdn ? `${msisdn} (${isStarNumber ? 'Star' : 'Free'})` : '-' },
+      { label: 'Plan', value: `${plan.name} - QR ${plan.mrcQAR}/mo` },
+      { label: 'Add-ons', value: addons.length ? addons.map((a) => `${a.name} (QR ${a.mrcQAR}/mo)`).join(', ') : 'None' },
+      {
+        label: 'Discount',
+        value: discount
+          ? `${discount.name} (${Math.round(Math.abs(discount.price) * 100)}%) - ${formatQar(charges.discountQar, 'QR')}/mo`
+          : 'None',
+      },
+      ...(isStarNumber ? [{ label: 'Star-number value', value: `QR ${numberDelta} one-time` }] : []),
+      {
+        label: 'Lock-in period',
+        value: [
+          plan.commitmentMonths ? `Plan ${plan.commitmentMonths} months` : null,
+          starTier ? `Star number ${starTier.lockInDurationMonths} months` : null,
+        ]
+          .filter(Boolean)
+          .join(' · ') || 'None',
+      },
+      {
+        label: 'Key charges',
+        value: `QR ${dueTodayQar} today · QR ${firstBill.totalQar} first bill · QR ${monthlyRecurringQar}/mo thereafter`,
+      },
+      ...(creditLimitQar !== undefined
+        ? [
+            { label: 'Credit limit', value: `QR ${creditLimitQar}` },
+            { label: 'Bill limit', value: `Up to QR ${creditLimitQar}` },
+          ]
+        : []),
+      {
+        label: 'Important terms',
+        value: 'VAT included in the monthly figure. Cancelling inside any lock-in ends the agreement early.',
+      },
+    ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan?.productId, discount?.addonDiscountId, addons.length, msisdn, numberDelta, dueTodayQar, monthlyRecurringQar, starTier?.tierId, creditLimitQar]);
 
   const Row = ({ label, value }: { label: string; value: string }) => (
     <div className="flex justify-between py-2 border-b border-border-soft last:border-0">
@@ -124,15 +195,26 @@ export function CheckoutSummaryStep({
             disappearing: an absent row reads as an unanswered question. */}
         <Row label="Customer" value={customerName ?? '-'} />
         <Row label="ID" value={idNumber ?? '-'} />
-        <Row label="Mobile" value={mobile ?? '-'} />
         <Row label="Plan" value={plan ? `${plan.name} - QR ${plan.mrcQAR}/mo` : '-'} />
-        <Row label="Number" value={msisdn ? `${msisdn}${numberDelta > 0 ? ` (premium, QR ${numberDelta} one-time)` : ''}` : '-'} />
-        <Row label="SIM Type" value={simType?.simType ?? '-'} />
+        {/* The number now carries its status (Free / Star) on the same row,
+            which is what the 2026-09-27 walkthrough asks the agent to read
+            back. Mobile and SIM Type rows were removed in the same pass. */}
+        <Row
+          label="Number"
+          value={
+            msisdn
+              ? `${msisdn} - ${isStarNumber ? `Star, QR ${numberDelta} one-time` : 'Free'}`
+              : '-'
+          }
+        />
+        {creditLimitQar !== undefined && <Row label="Credit limit" value={`QR ${creditLimitQar}`} />}
+        {creditLimitQar !== undefined && (
+          <Row label="Bill limit" value={`Up to QR ${creditLimitQar} (capped at the credit limit)`} />
+        )}
         {/* Conditional: the postpaid journey dropped its Billing step on
             2026-09-25, so there is nothing to report there. Other journeys
             that still collect one are unaffected. */}
         {billingMethod && <Row label="Billing" value={billingMethod} />}
-        {doi && <Row label="Device" value={`${doi.deviceName} - QR ${doi.downPaymentQar} down, QR ${doi.monthlyInstallmentQar}/mo x ${doi.installmentMonths}`} />}
         <Row
           label="Add-ons"
           value={addons.length ? addons.map((a) => `${a.name} (QR ${a.mrcQAR}/mo)`).join(', ') : 'None'}
@@ -182,6 +264,54 @@ export function CheckoutSummaryStep({
           <span>Recurring monthly bill, from month 2</span>
           <span>QR {monthlyRecurringQar}/mo</span>
         </div>
+      </div>
+
+      {/* Order summary (2026-09-27 walkthrough). Everything here is derived
+          from catalogue data the order already carries - plan commitmentMonths
+          and star-number-tiers' lockInDurationMonths - rather than restated, so
+          it cannot drift from what was actually sold. The cancellation line is
+          phrased from the lock-in it reads, and deliberately does NOT quote an
+          early-termination fee: no such figure exists in the corpus, and
+          inventing one on a document the customer is about to sign would be
+          worse than pointing at the full terms. */}
+      <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4 space-y-2">
+        <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Order summary</h4>
+        <dl className="text-[length:var(--fs-caption)]">
+          <Row
+            label="Plan lock-in"
+            value={plan?.commitmentMonths ? `${plan.commitmentMonths} months` : 'No lock-in'}
+          />
+          {isStarNumber && (
+            <Row
+              label="Star-number commitment"
+              value={
+                starTier
+                  ? `${starTier.lockInDurationMonths} months (${starTier.tierId})`
+                  : 'Not banded - confirm before signature'
+              }
+            />
+          )}
+          <Row
+            label="Key charges"
+            value={`QR ${dueTodayQar} today, QR ${firstBill.totalQar} first bill, QR ${monthlyRecurringQar}/mo thereafter`}
+          />
+          <Row
+            label="Cancellation"
+            value={
+              plan?.commitmentMonths || starTier
+                ? 'Cancelling inside the lock-in ends the agreement early - charges apply per the full terms'
+                : 'No lock-in applies to this order'
+            }
+          />
+        </dl>
+        <a
+          href="https://www.vodafone.qa/en/terms-and-conditions"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-block text-[length:var(--fs-caption)] text-accent underline"
+        >
+          Read the complete terms and conditions
+        </a>
       </div>
     </div>
   );

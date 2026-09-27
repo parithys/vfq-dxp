@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Input } from '../primitives/Input';
-import { Button, PRIMARY_SURFACE } from '../primitives/Button';
+import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
 import { Select } from '../primitives/Select';
 import * as mockDataEngine from '../../engines/mockDataEngine';
+import { usePersonaStore } from '../../stores/personaStore';
+import { getPersona } from '../../engines/configEngine';
 
 interface MsisdnRecord {
   msisdn: string;
@@ -28,9 +30,36 @@ type NumberTab = 'Free' | 'Star' | 'Reserved';
 
 const TAB_LABELS: Record<NumberTab, string> = {
   Free: 'Free Number',
-  Star: 'Star Number (Premium)',
+  Star: 'Star Numbers',
   Reserved: 'Reserved Numbers',
 };
+
+/**
+ * Tab ORDER follows the channel (2026-09-27 walkthrough):
+ *   Retail  - Reserved, Star, Free
+ *   Tablet  - Free, Star, Reserved
+ *
+ * A retail agent is usually working a number the customer already holds or is
+ * paying for, so those lead; a tablet/field agent is usually handing out
+ * whatever is free. The channel comes off the signed-in persona rather than a
+ * prop, because it is a fact about who is serving, not about this step.
+ */
+const TAB_ORDER_RETAIL: NumberTab[] = ['Reserved', 'Star', 'Free'];
+const TAB_ORDER_TABLET: NumberTab[] = ['Free', 'Star', 'Reserved'];
+
+/**
+ * Qatar MSISDNs are stored E.164 (+9743300...) but shown as the bare 8-digit
+ * local number: every number in this picker is Qatari, so the country code is
+ * the same eleven characters on every row and carries no information the agent
+ * is choosing between. Grouped 4+4, which is how they are read aloud.
+ */
+function toLocalMsisdn(msisdn: string): string {
+  const local = msisdn.replace(/[\s-]/g, '').replace(/^\+?974/, '');
+  return /^\d{8}$/.test(local) ? `${local.slice(0, 4)} ${local.slice(4)}` : msisdn;
+}
+
+/** How many rows are shown at once before Next/Previous (walkthrough: 10). */
+const PAGE_SIZE = 10;
 
 /**
  * Sort orders, offered on the STAR TAB ONLY.
@@ -69,12 +98,9 @@ const SORTERS: Record<SortKey, (a: MsisdnRecord, b: MsisdnRecord) => number> = {
   'number-desc': (a, b) => b.msisdn.localeCompare(a.msisdn),
 };
 
-const ALL_TIERS = 'All';
 
-// The tier chip order, per direction: Platinum, Gold, Silver - the metal
 // ranking, not the alphabet. Values not listed here sort after everything
 // that is.
-const TIER_RANK: Record<string, number> = { Platinum: 0, Gold: 1, Silver: 2 };
 
 interface MsisdnPickerProps {
   selected?: string;
@@ -99,13 +125,18 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
   const [tab, setTab] = useState<NumberTab>('Free');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('price-desc');
-  const [tier, setTier] = useState<string>(ALL_TIERS);
+  const [page, setPage] = useState(0);
+  // Tab order is a property of the CHANNEL the agent is serving on, read off
+  // the signed-in persona. Anything that is not an in-store retail channel
+  // (tablet, field, telesales) gets the Free-first order.
+  const activePersonaId = usePersonaStore((s) => s.activePersonaId);
+  const channel = getPersona(activePersonaId)?.channel ?? '';
+  const tabOrder = /retail|in-store/i.test(channel) ? TAB_ORDER_RETAIL : TAB_ORDER_TABLET;
   const [customMsisdn, setCustomMsisdn] = useState('');
   const [customError, setCustomError] = useState<string | null>(null);
   // Whether the manual-entry FORM is open. Only consulted once a number is
   // already selected - see the render below - so this starts false with no
   // effect on the unselected case, where the form is always shown inline.
-  const [manualEntryOpen, setManualEntryOpen] = useState(false);
 
   useEffect(() => {
     mockDataEngine.list<MsisdnRecord>('numbers').then(setNumbers);
@@ -127,7 +158,6 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
     // Collapse back to the link now that this custom entry succeeded - the
     // same reasoning that hides the form in the first place: nothing left to
     // fill in, so nothing to keep open.
-    setManualEntryOpen(false);
   };
 
   // Category (Free vs Star/premium) and status (AVAILABLE/Reserved/BLOCKED)
@@ -156,47 +186,36 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
   // to narrow, and filtering it by tier answers a question nobody asks of it.
   const showControls = tab === 'Star';
 
-  // WHICH tiers exist is still derived from the data, so the chips match
-  // whatever the catalogue actually holds rather than a hardcoded list. Their
-  // ORDER is not derived, though - alphabetical put them Gold, Platinum,
-  // Silver, which is not the tier ranking, and .sort() has no way to know
-  // Platinum outranks Gold. TIER_RANK is the one place that ordering is
-  // spelled out; a tier absent from it (there shouldn't be one) sorts last
-  // rather than throwing, so an unrecognised value still renders instead of
-  // vanishing.
-  const tiers = showControls
-    ? [...new Set(inTab.map((n) => n.valueTier).filter((t): t is string => Boolean(t)))].sort(
-        (a, b) => (TIER_RANK[a] ?? 99) - (TIER_RANK[b] ?? 99)
-      )
-    : [];
-
   // Without a control on screen, the order must not depend on whatever the
   // agent last chose on the Star tab.
   const effectiveSort: SortKey = showControls ? sort : 'number-asc';
 
   const filtered = inTab
     .filter((n) => {
-      const matchesSearch = search ? n.msisdn.includes(search) : true;
-      // Only applied where the chips are on screen. A tier left selected
-      // while switching to a tab that has no tiers would otherwise empty the
-      // list with no visible control to explain why.
-      const matchesTier = tiers.length === 0 || tier === ALL_TIERS || n.valueTier === tier;
-      return matchesSearch && matchesTier;
+      // Matches the stored E.164 OR the displayed local form, so typing the
+      // 8 digits the agent can see on screen finds the row.
+      return search ? n.msisdn.includes(search) || toLocalMsisdn(n.msisdn).replace(/\s/g, '').includes(search.replace(/\s/g, '')) : true;
     })
     .sort(SORTERS[effectiveSort]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  // Clamped rather than reset: deleting a search term can shrink the list
+  // under the current page, and snapping to page 0 would lose the agent's
+  // place every time they edited the box.
+  const safePage = Math.min(page, pageCount - 1);
+  const paged = filtered.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
 
   return (
     <div className="space-y-3">
       <div className="flex gap-1 border-b border-border-soft">
-        {(['Free', 'Star', 'Reserved'] as const).map((t) => (
+        {tabOrder.map((t) => (
           <button
             key={t}
             onClick={() => {
               setTab(t);
-              // A tier chosen on Star means nothing on Free. Reset rather than
-              // carry it across, so no tab ever opens pre-filtered by a
-              // control the agent cannot see.
-              setTier(ALL_TIERS);
+              // Back to the first page: a tab switch is a new list, and
+              // landing on page 3 of it would look like missing inventory.
+              setPage(0);
             }}
             className={`px-3 py-1.5 text-[length:var(--fs-body)] border-b-2 -mb-px ${
               tab === t ? 'border-accent text-accent font-medium' : 'border-transparent text-fg-2'
@@ -206,7 +225,15 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
           </button>
         ))}
       </div>
-      <Input aria-label="Search 8-digit number" placeholder="Search 8-digit number" value={search} onChange={(e) => setSearch(e.target.value)} />
+      <Input
+        aria-label="Search 8-digit number"
+        placeholder="Search 8-digit number"
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(0);
+        }}
+      />
 
       {/* Tier filter left, sort right, on one row - per the 2026-09-26 asset.
           Both narrow the same list the search box above them does, so they sit
@@ -216,40 +243,12 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
           just its contents: neither control can act on those tabs, and an
           empty control row would leave a gap the agent reads as something
           having failed to load. */}
+      {/* Tier chips (Platinum / Gold / Silver) and the TIER filter were removed
+          on 2026-09-27 per the annotated walkthrough. Sort stays: it is the one
+          control that still acts on the Star list, which spans QR 300-5000 and
+          is what the agent works down. */}
       {showControls && (
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        {/* Chips, not a second dropdown: there are at most three tiers and the
-            agent switches between them repeatedly while quoting, so each is
-            one click away and the current one is visible without opening
-            anything. */}
-        {tiers.length > 0 ? (
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Tier</span>
-            {[ALL_TIERS, ...tiers].map((t) => {
-              const active = tier === t;
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setTier(t)}
-                  aria-pressed={active}
-                  className={`px-3 py-1 rounded-[var(--radius-button)] text-[length:var(--fs-caption)] border transition-colors ${
-                    active
-                      ? `${PRIMARY_SURFACE} enabled:hover:bg-[image:var(--accent-gradient-hover)] font-medium`
-                      : 'bg-bg text-fg-2 border-border hover:border-[var(--field-card-selected)]'
-                  }`}
-                >
-                  {t}
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          // Keeps the sort control at the row's right edge if a Star tab ever
-          // holds untiered numbers, instead of letting it slide left.
-          <span />
-        )}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-end gap-2">
           <span className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Sort</span>
           <Select
             aria-label="Sort numbers"
@@ -258,7 +257,6 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
             onChange={(e) => setSort(e.target.value as SortKey)}
           />
         </div>
-      </div>
       )}
       {/* Capped and scrollable as of 2026-09-25, when the Free inventory went
           from 2 numbers to 18. Seven rows of cards pushed Continue below the
@@ -283,7 +281,7 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
           tab === 'Reserved' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'
         }`}
       >
-        {filtered.map((n) => {
+        {paged.map((n) => {
           const isSelected = selected === n.msisdn;
           // No disabled state: everything listed is selectable. An AVAILABLE
           // number can be taken, and a Reserved one is a held number the
@@ -311,19 +309,25 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
                   and the number would have pushed each price to a different x.
                   
                   Shared by all three tabs - only the column count differs. */}
+              {/* 2026-09-27: the tier badge (Platinum/Gold/Silver) and the
+                  "Held by <agent>" name are both gone. Reserved rows keep a
+                  plain "Reserved" marker so they are still distinguishable
+                  from an available number - what was dropped is WHO holds it,
+                  not THAT it is held. */}
               <div className="flex items-center justify-between gap-4">
                 <span className="flex items-center gap-2 min-w-0">
-                  {n.valueTier && <Badge variant="outlined-red">{n.valueTier}</Badge>}
-                  {tab === 'Reserved' && (
-                    <Badge variant="filled-neutral">{n.reservedBy ? `Held by ${n.reservedBy}` : 'Reserved'}</Badge>
-                  )}
-                  <span className="text-fg font-medium truncate">{n.msisdn}</span>
+                  {tab === 'Reserved' && <Badge variant="filled-neutral">Reserved</Badge>}
+                  <span className="text-fg font-medium truncate">{toLocalMsisdn(n.msisdn)}</span>
                 </span>
-                {/* --fg weight rather than the muted caption it used to carry:
-                    on a Star number the price is the fact being chosen
-                    between, so it should not be the quietest thing in the
-                    row. */}
-                <span className="text-fg font-semibold shrink-0">QR {n.priceQAR}</span>
+                {/* A free number shows a "Free" badge rather than "QR 0": the
+                    zero was the same on every row and read as a price the
+                    agent had to account for. Priced numbers keep the figure at
+                    --fg weight - on Star it is the fact being chosen between. */}
+                {n.priceQAR > 0 ? (
+                  <span className="text-fg font-semibold shrink-0">QR {n.priceQAR}</span>
+                ) : (
+                  <Badge variant="success">Free</Badge>
+                )}
               </div>
             </button>
           );
@@ -340,32 +344,46 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
           </p>
         )}
       </div>
+      {/* Ten at a time with Next/Previous (2026-09-27). The list was capped
+          and scrollable, which hid how much inventory there was and gave the
+          agent no way to say where they had got to. Hidden entirely on a
+          single page so a one-page list carries no dead controls. */}
+      {pageCount > 1 && (
+        <div className="flex items-center justify-between gap-4">
+          <Button variant="ghost-rect" compact disabled={safePage === 0} onClick={() => setPage((n) => n - 1)}>
+            Previous
+          </Button>
+          <span className="text-muted text-[length:var(--fs-caption)]">
+            Showing {filtered.length === 0 ? 0 : safePage * PAGE_SIZE + 1}-
+            {Math.min((safePage + 1) * PAGE_SIZE, filtered.length)} of {filtered.length}
+          </span>
+          <Button
+            variant="ghost-rect"
+            compact
+            disabled={safePage >= pageCount - 1}
+            onClick={() => setPage((n) => n + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
+
+      {/* Plain-language confirmation instead of the internal reservation token
+          (2026-09-27). "SBL-EXL-02011" was a system artefact the agent could
+          not act on and would not read to a customer. */}
       {selected && (
         <p className="text-success text-[length:var(--fs-caption)]">
-          SUCCESS: Reservation Token: SBL-EXL-{selected.slice(-5)}
+          Number selected and reserved for this order.
         </p>
       )}
 
-      {/* Manual entry is the ALTERNATIVE to picking from the list above, not
-          a second required step - but with a number already selected, an
-          always-visible form sitting right under "SUCCESS" read as exactly
-          that: live, empty, and asking for something. ("Why do I need this?"
-          after already choosing a number.)
-
-          Collapsed to a link once `selected` is set, rather than removed -
-          the agent may still want to override a list pick with a specific
-          number, and that has to stay reachable. Before a selection exists
-          there is nothing to collapse: the form is simply the other of two
-          equal ways to get a number, so it renders inline as it always has. */}
-      {selected && !manualEntryOpen ? (
-        <button
-          type="button"
-          onClick={() => setManualEntryOpen(true)}
-          className="text-accent text-[length:var(--fs-caption)] font-medium hover:underline"
-        >
-          Enter a different MSISDN manually
-        </button>
-      ) : (
+      {/* Manual MSISDN entry. The "Enter a different MSISDN manually" link
+          that used to collapse this once a number was picked was removed on
+          2026-09-27 per the walkthrough. The form itself stays, but only
+          BEFORE a selection exists: with a number already chosen there is
+          nothing for it to do, and it read as a second required step sitting
+          under the confirmation. */}
+      {!selected && (
         <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4 space-y-2">
           <h4 className="text-fg font-semibold">Manual MSISDN Entry</h4>
           <Input

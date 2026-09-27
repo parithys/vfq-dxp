@@ -10,20 +10,26 @@ single, self-contained source of truth for the active implementation.
 | `blueprint/` | Reconstructed requirements, business rules, journeys, personas, screen catalogue, RBAC, traceability docs |
 | `.knowledge/` | Indexed summaries of the raw workshop/BRSD/form corpus, with per-document confidence scoring |
 | `diagrams/` | Standalone HTML process-flow diagrams for individual journeys/workflows |
-| `scripts/` | Generators for the `VFQ_DXP_*_Reference.xlsx` workbooks listed below. Each writes its output to **this folder's root** (`Path(__file__).parents[1] / "<name>.xlsx"`), which is why those workbooks are not filed into a subfolder — moving one without editing its script would make the next regeneration recreate it here and leave a stale copy behind |
-| `audit/` | Phase 1.5 gap-remediation and confidence-verification reports, Actions 1–6. Historical audit trail — the work they scheduled has been done. Moved here 2026-09-27; they are cited by filename rather than path, so nothing resolves through their old location |
+| `scripts/` | Generators for the four workbooks in `outputs/`. Each writes to `outputs/`, not to this folder's root — if you move one of its products, update the script's `OUT` in the same change or the next regeneration recreates the file at the old path and leaves a stale copy behind |
+| `outputs/` | **Script-generated** workbooks, and the only things here that are. Never hand-edit: the next regeneration overwrites. `VFQ_DXP_Persona_Feature_Applicability_Matrix_Reference.xlsx` (role × feature SSOT — see `../CLAUDE.md`), `VFQ_DXP_Test_Data_Reference.xlsx`, `VFQ_DXP_Mobile_Postpaid_Activation_Reference.xlsx`, `VFQ_DXP_Postpaid_Activation_Open_Questions_Reference.xlsx` |
+| `data/` | Source data the documentation was built from. `CRM_Journeys_Final_Updated_with_Type.xlsx` — the 165-row journey/workflow/view/action/access catalogue with Unique ID + Mapping Report; see `configEngine.ts`'s `journeyCatalogueMap` for how a subset of these IDs surface on module/screen cards |
+| `docs/` | Curated reference documents — written and maintained by hand, **not** generated. Abbreviations, Design Principles, the 66-persona record, the Postpaid open-questions source markdown (which `build_postpaid_open_questions.py` reads as its input), and `VFQ_Phase1.5_Action7_Source_Confidence_Handling_Policy.md` — live policy cited by six `blueprint/` documents, which is why it sits here and not in `audit/` |
+| `audit/` | Completed audit trail: Phase 1.5 Actions 1–6, plus the Customer 360 BRSD audit. The work these scheduled is done; they are cited by filename rather than path, so nothing resolves through their old location |
 | `deliverables/` | Client-facing documents produced from this material |
-| `VFQ_Phase1.5_Action7_Source_Confidence_Handling_Policy.md` | Deliberately **not** in `audit/`: unlike Actions 1–6 this is live policy, cited by six `blueprint/` documents as the governing rule for single-source and unverified claims |
-| `CRM_Journeys_Final_Updated_with_Type.xlsx` | The 165-row journey/workflow/view/action/access catalogue, with the Unique ID + Mapping Report added — see `configEngine.ts`'s `journeyCatalogueMap` for how a subset of these IDs surface on module/screen cards |
-| `VFQ_DXP_Test_Data_Reference.xlsx` | Standing test-data reference workbook (login credentials, seeded records, mock scenarios) — regenerated via `scripts/build_test_data_reference.py` after every functional change |
-| `VFQ_DXP_Personas_Reference.xlsx` | All 66 `public/config/personas.json` entries, full raw schema (ID, Name, Type, Responsibilities, Permissions, Restricted Features, Confidence) plus two derived columns (a concise Persona Description and an 11-bucket System Role Key grouping); plus a user-maintained `Abbreviations` sheet for corpus jargon (DSA, TON, WFM, KID, etc.) and an `Approval Routing Note` sheet recording the evidence-grounded decision that retail-store and back-office approval requests share one generic Manager/Approver role rather than distinct personas |
-| `VFQ_DXP_Abbreviations_Reference.xlsx` | 275 project abbreviations/acronyms (Abbreviation, Full Form, Alias, Description, Category, Context/Usage, Status) — merged and deduplicated from `../Glossary.xlsx` (132 terms, project root), 9 corpus-search terms added earlier (DSA, OFS/OFSC, MCCR, BSA, PSA, GWC, OMS, SADMIN, RBAC), and a user-supplied 199-term list (mostly generic IT/TM-Forum-API terms with no per-term citation). One genuine cross-source conflict (OSM) is flagged in its own highlighted row rather than silently resolved — see its `Sourcing Note` sheet for full merge methodology |
 
 **Generated documentation/analysis artifacts** (gap analyses, RBAC reviews, persona/reference
-exports, and similar deliverables produced on request) are saved directly in this folder, named
-`VFQ_DXP_<Topic>_Reference.<ext>` or `VFQ_DXP_<Topic>_<Report type>.<ext>` to match the existing
-files above — not left only in a scratch/temp location — so they stay discoverable for future
-analysis, design, requirements validation, and RBAC review work.
+exports, and similar deliverables produced on request) belong in this tree — not left only in a
+scratch/temp location — so they stay discoverable for future analysis, design, requirements
+validation, and RBAC review work. Keep the `VFQ_DXP_<Topic>_Reference.<ext>` /
+`VFQ_DXP_<Topic>_<Report type>.<ext>` naming, and file by *provenance* rather than dropping
+everything at this folder's root (which is how it used to work, until 2026-09-27):
+
+- produced by a script in `scripts/` → `outputs/`
+- written and maintained by hand → `docs/`
+- a source workbook the documentation was built from → `data/`
+- a finished, point-in-time review → `audit/`
+
+Only `README.md` lives at this folder's root now.
 
 **Raw source corpus lives one level up, at the project root** —
 `Guided Journeys/`, `Workshop Recordings/`, `Application Screenshots/`,

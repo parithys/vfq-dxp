@@ -18,6 +18,18 @@ interface QidTypeSelectorProps {
    * to CBM approval instead of this flow.
    */
   allowedTypes?: QidType[];
+  /**
+   * Types shown but NOT selectable, with `unavailableHint` underneath
+   * (2026-09-27 walkthrough: "keep visibly disabled until approval workflows
+   * designed"). Rendering them greyed rather than omitting them is the point -
+   * an agent holding a passport needs to see that the option exists and why it
+   * is closed, which an absent card cannot tell them.
+   *
+   * These are additive to `allowedTypes`: a type named here is offered even
+   * when `allowedTypes` excludes it.
+   */
+  unavailableTypes?: QidType[];
+  unavailableHint?: string;
 }
 
 interface QidNumberFieldProps {
@@ -77,8 +89,17 @@ export function idTypeLabel(type: QidType): string {
 // 2026-09-25 so a caller can put content BETWEEN them - IdLookupStep now
 // renders the QID scanner in that gap, and only reveals the number once a
 // scan has produced one.
-export function QidTypeSelector({ idType, onIdTypeChange, allowedTypes }: QidTypeSelectorProps) {
-  const offered = allowedTypes ? ID_TYPES.filter((t) => allowedTypes.includes(t.type)) : ID_TYPES;
+export function QidTypeSelector({
+  idType,
+  onIdTypeChange,
+  allowedTypes,
+  unavailableTypes,
+  unavailableHint,
+}: QidTypeSelectorProps) {
+  const unavailable = new Set(unavailableTypes ?? []);
+  const offered = allowedTypes
+    ? ID_TYPES.filter((t) => allowedTypes.includes(t.type) || unavailable.has(t.type))
+    : ID_TYPES;
   return (
     <div>
       <p className="text-[length:var(--fs-label)] text-fg-2 mb-2">ID Type</p>
@@ -86,16 +107,21 @@ export function QidTypeSelector({ idType, onIdTypeChange, allowedTypes }: QidTyp
           than leaving two empty quarter-width gaps. */}
       <div className={`grid grid-cols-2 gap-3 ${offered.length > 2 ? 'sm:grid-cols-4' : ''}`}>
         {offered.map((t) => {
-          const selected = t.type === idType;
+          const isUnavailable = unavailable.has(t.type);
+          const selected = !isUnavailable && t.type === idType;
           return (
             <button
               key={t.type}
               type="button"
-              onClick={() => onIdTypeChange(t.type)}
+              disabled={isUnavailable}
+              aria-disabled={isUnavailable || undefined}
+              onClick={() => !isUnavailable && onIdTypeChange(t.type)}
               className={`relative flex flex-col items-center gap-2 rounded-[var(--radius-card)] border p-4 ${
-                selected
-                  ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] text-[var(--field-card-selected)]'
-                  : 'border-border-soft text-fg-2 enabled:hover:border-[var(--field-card-selected)]/50'
+                isUnavailable
+                  ? 'border-border-soft text-muted opacity-60'
+                  : selected
+                    ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] text-[var(--field-card-selected)]'
+                    : 'border-border-soft text-fg-2 enabled:hover:border-[var(--field-card-selected)]/50'
               }`}
             >
               {selected && (
@@ -109,6 +135,9 @@ export function QidTypeSelector({ idType, onIdTypeChange, allowedTypes }: QidTyp
           );
         })}
       </div>
+      {unavailable.size > 0 && unavailableHint && (
+        <p className="mt-2 text-[length:var(--fs-caption)] text-muted">{unavailableHint}</p>
+      )}
     </div>
   );
 }

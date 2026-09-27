@@ -49,7 +49,7 @@ CONF = os.path.join(APP_ROOT, 'public', 'config')
 DATA = os.path.join(APP_ROOT, 'public', 'mock-data')
 SRC = os.path.join(APP_ROOT, 'src')
 OUT = os.path.join(
-    APP_ROOT, 'reference', 'VFQ_DXP_Persona_Feature_Applicability_Matrix_Reference.xlsx'
+    APP_ROOT, 'reference', 'outputs', 'VFQ_DXP_Persona_Feature_Applicability_Matrix_Reference.xlsx'
 )
 
 TICK = '✓'

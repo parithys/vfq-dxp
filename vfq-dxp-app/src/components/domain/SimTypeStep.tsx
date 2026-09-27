@@ -78,14 +78,22 @@ export function SimTypeStep({ value, customerEmail, onChange }: SimTypeStepProps
               submitted. What stays is the confirmation that it was issued. */}
           {value.esimIssued && value.esimActivationCode ? (
             <>
-              <Badge variant="success">eSIM issued</Badge>
+              {/* "eSIM selected", not "eSIM issued" (2026-09-27). Nothing has
+                  been handed over at this point and the profile is not live -
+                  the walkthrough is explicit that an eSIM must not reach the
+                  customer before payment. Calling it "issued" four steps early
+                  described a handover that has not happened. */}
+              <Badge variant="success">eSIM selected</Badge>
               <p className="text-fg-2 text-[length:var(--fs-body)]">
                 An eSIM activation QR code will be generated and sent to {customerEmail ?? 'the customer'}.
+              </p>
+              <p className="text-muted text-[length:var(--fs-caption)]">
+                The eSIM QR code will be available after successful payment and order submission.
               </p>
             </>
           ) : (
             <Button variant="primary-rect" onClick={generateEsim} disabled={issuing}>
-              {issuing ? 'Generating eSIM…' : 'Generate eSIM'}
+              {issuing ? 'Selecting eSIM…' : 'Select eSIM'}
             </Button>
           )}
         </div>

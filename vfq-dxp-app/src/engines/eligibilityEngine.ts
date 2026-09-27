@@ -144,9 +144,14 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
     id: 'age',
     label: 'Age Check',
     passed: !underage,
-    outcome: underage ? 'hard-stop' : 'pass',
+    // Under-18 was a HARD STOP until 2026-09-27, when the annotated
+    // walkthrough reclassified it as "Approval required - Under 18 approval".
+    // That is a real behavioural change, not a wording one: an under-age
+    // applicant now reaches the rest of the journey behind an approval task
+    // instead of ending at this counter.
+    outcome: underage ? 'approval-routing' : 'pass',
     message: underage
-      ? 'MOI records indicate this applicant is under 18. This journey cannot continue for this customer.'
+      ? 'MOI records indicate this applicant is under 18. An approval task has been raised - the connection can proceed once approved.'
       // The age itself, per 2026-09-26 direction. An agent judging a
       // borderline applicant against the document in their hand needs the
       // number the check used, not just its verdict. Falls back to the plain
@@ -189,12 +194,16 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
 
   checks.push({
     id: 'blacklist-security',
-    label: 'Security Check',
+    // Named for what it actually is, per the 2026-09-27 walkthrough's
+    // "Hard Stop - Corporate Security Blacklist". Already a hard stop; only
+    // the label and message changed, so the agent can see WHICH list blocked
+    // this rather than a generic "Security Check".
+    label: 'Corporate Security Blacklist',
     passed: !securityBlocked,
     outcome: securityBlocked ? 'hard-stop' : 'pass',
     message: securityBlocked
-      ? 'This customer is restricted from new connections. No further action available at this counter.'
-      : 'No security block on this account',
+      ? 'This customer is on the corporate security blacklist and is restricted from new connections. No further action available at this counter.'
+      : 'Not on the corporate security blacklist',
   });
 
   // A blacklisted customer whose category is absent is treated as a hard stop

@@ -116,15 +116,11 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
   return (
     <div className="space-y-4">
       {fetching && <p className="text-muted text-[length:var(--fs-body)]">Checking for an address on file…</p>}
-      {/* Provenance for the whole panel rather than a note under one field.
-          It used to sit on KID alone, saying "Fetched from MOI - not
-          editable." - which was true of all six fields, not just that one,
-          and is no longer true of any of them. */}
-      {value.fetchedFromMoi && (
-        <p className="text-muted text-[length:var(--fs-caption)]">
-          Retrieved from the customer's Qatar ID. Edit any field if the customer confirms a change.
-        </p>
-      )}
+      {/* The provenance line ("Retrieved from the customer's Qatar ID. Edit any
+          field if the customer confirms a change.") was removed on 2026-09-27
+          per the annotated walkthrough. The fields remain prefilled from MOI
+          and editable exactly as before - only the caption is gone, so
+          `fetchedFromMoi` still drives the prefill, just nothing on screen. */}
       <div className="grid grid-cols-2 gap-4">
           <Input
             label="Zone"

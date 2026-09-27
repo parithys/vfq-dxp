@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Icon } from '../primitives/Icon';
 import { Checkbox } from '../primitives/Checkbox';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 
@@ -18,8 +19,16 @@ interface AddonsPickerProps {
 // "Plan & Add-ons" (reference flow step 5) - optional, non-gating multi-select
 // of catalogue products where type === 'Add-on', alongside the mandatory
 // single-select Plan above it in ProductPlanStep.
+const CHEVRON = 'M9 18l6-6-6-6';
+
 export function AddonsPicker({ selectedIds, onChange }: AddonsPickerProps) {
   const [addons, setAddons] = useState<AddonProduct[]>([]);
+  // Collapsed by default (2026-09-27). Add-ons are optional and most orders
+  // take none, so the list was occupying the step for a decision usually
+  // answered "no" - but the count in the header means a collapsed section
+  // still reports what is inside it, which is the part that makes collapsing
+  // safe rather than hiding state.
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     mockDataEngine.list<AddonProduct>('products').then((all) => setAddons(all.filter((p) => p.type === 'Add-on')));
@@ -38,8 +47,18 @@ export function AddonsPicker({ selectedIds, onChange }: AddonsPickerProps) {
     // stays because it is the one thing that distinguishes this section from
     // the other two, both of which require an answer.
     <div className="space-y-4">
-      <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Add-ons (optional)</h3>
-      <div className="grid grid-cols-1 gap-2">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-2 text-left"
+      >
+        <Icon path={CHEVRON} className={`w-4 h-4 text-muted transition-transform ${open ? 'rotate-90' : ''}`} />
+        <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">
+          Add-ons{selectedIds.length > 0 ? ` (${selectedIds.length} selected)` : ' (optional)'}
+        </h3>
+      </button>
+      <div className={`grid grid-cols-1 gap-2 ${open ? '' : 'hidden'}`}>
         {addons.map((a) => (
           <label
             key={a.productId}

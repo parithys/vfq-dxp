@@ -225,6 +225,13 @@ export function QidImageUpload({ value, onChange, onScan, error, canScan = true,
           {/* Once, for the pair - they come from a single capture. Only when
               the images are stand-ins; a real capture needs no disclaimer and
               labelling one would be wrong. */}
+          {/* What the reader concluded, stated before the disclaimer about the
+              images being stand-ins (2026-09-27: 'After Scan - "Document
+              detected: Qatar ID"'). It names the type the scan actually
+              resolved, so a Diplomatic ID does not report as a Qatar ID. */}
+          <span className="text-fg-2 text-[length:var(--fs-caption)] text-center">
+            Document detected: {documentType === 'QID' ? 'Qatar ID' : documentType}
+          </span>
           {simulated && (
             <span className="text-muted text-[length:var(--fs-caption)] text-center">Simulated capture</span>
           )}
@@ -247,7 +254,7 @@ export function QidImageUpload({ value, onChange, onScan, error, canScan = true,
       ) : (
         <div className="min-h-[9rem] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
           <span className="text-fg-2 text-[length:var(--fs-caption)] uppercase tracking-[0.14em] text-center">
-            {canScan ? 'Insert card and initiate scan' : 'Card could not be read'}
+            {canScan ? "Insert or scan the customer's identity document" : 'Card could not be read'}
           </span>
           {canScan && (
             <Button variant="primary-rect" compact onClick={runScan}>

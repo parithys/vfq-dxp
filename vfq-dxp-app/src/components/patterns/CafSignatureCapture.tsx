@@ -27,6 +27,17 @@ interface CafSignatureCaptureProps {
    * subscribers." Omit for flows where this binding isn't evidenced. */
   idLabel?: string;
   idValue?: string;
+  /**
+   * Customer-facing order summary, rendered under the signature block
+   * (2026-09-27 walkthrough). The agent reads this to the customer BEFORE
+   * they sign, so it is the same set of facts Checkout showed - passed in
+   * already derived, so the two surfaces cannot disagree about what was sold.
+   * Omitted by the other five journeys that share this component, which
+   * render the CAF without a commercial summary exactly as before.
+   */
+  orderSummary?: { label: string; value: string }[];
+  /** Link target for "the complete terms", shown beneath the summary. */
+  termsUrl?: string;
 }
 
 // Pattern 6: CAF/Contract Signature Capture - CAF Type card selector (Digital/
@@ -35,7 +46,7 @@ interface CafSignatureCaptureProps {
 // applicant/billing/plan data, then a "Please Sign" pad modal (drawn signature,
 // Clear/Done) - reused identically for CAF, MNP application, Passport-to-QID
 // forms (SCR-058, SCR-069/070, SCR-084, SCR-127/129, etc.).
-export function CafSignatureCapture({ value, onChange, customerName, idLabel, idValue }: CafSignatureCaptureProps) {
+export function CafSignatureCapture({ value, onChange, customerName, idLabel, idValue, orderSummary, termsUrl }: CafSignatureCaptureProps) {
   const [padOpen, setPadOpen] = useState(false);
 
   return (
@@ -94,6 +105,34 @@ export function CafSignatureCapture({ value, onChange, customerName, idLabel, id
             <Button variant="primary-rect" className="mt-3" onClick={() => setPadOpen(true)}>
               Please Sign
             </Button>
+          )}
+        </div>
+      )}
+
+      {/* Read to the customer before signature. Deliberately BELOW the CAF
+          preview and above the pad: it is the plain-language version of what
+          the form commits them to, and it is the last thing on screen before
+          they sign. */}
+      {orderSummary && orderSummary.length > 0 && (
+        <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4 space-y-2">
+          <h4 className="text-fg font-medium text-[length:var(--fs-body)]">What the customer is agreeing to</h4>
+          <dl className="text-[length:var(--fs-caption)]">
+            {orderSummary.map((row) => (
+              <div key={row.label} className="flex justify-between gap-4 py-1.5 border-b border-border-soft last:border-0">
+                <dt className="text-fg-2">{row.label}</dt>
+                <dd className="text-fg text-right">{row.value}</dd>
+              </div>
+            ))}
+          </dl>
+          {termsUrl && (
+            <a
+              href={termsUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-block text-[length:var(--fs-caption)] text-accent underline"
+            >
+              Read the full terms and conditions
+            </a>
           )}
         </div>
       )}

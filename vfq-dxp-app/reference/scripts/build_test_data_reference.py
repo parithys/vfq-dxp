@@ -550,6 +550,6 @@ write_table(ws, row, ['Where it is used', 'Value to enter', 'Notes'], code_rows,
 for name in wb.sheetnames:
     wb[name].sheet_view.showGridLines = False
 
-out_path = os.path.join(APP_ROOT, 'reference', 'VFQ_DXP_Test_Data_Reference.xlsx')
+out_path = os.path.join(APP_ROOT, 'reference', 'outputs', 'VFQ_DXP_Test_Data_Reference.xlsx')
 wb.save(out_path)
 print('Saved:', out_path)

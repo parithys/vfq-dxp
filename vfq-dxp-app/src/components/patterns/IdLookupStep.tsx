@@ -84,6 +84,9 @@ interface IdLookupStepProps {
    * narrows it to QID and Diplomatic ID. See QidTypeSelector.allowedTypes.
    */
   allowedIdTypes?: QidType[];
+  /** Shown greyed and unselectable, with `unavailableIdTypesHint` beneath. */
+  unavailableIdTypes?: QidType[];
+  unavailableIdTypesHint?: string;
 }
 
 // Pattern 2: Customer/Contact Lookup Step (QID/Kahramaa ID Scan + MOI Validation) -
@@ -99,7 +102,7 @@ interface IdLookupStepProps {
 // restriction carried over from the 66-persona model's PERSONA-001 ("cannot
 // manually enter ID details, only re-scan/search") - only the lookup ID
 // number itself is directly editable.
-export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allowedIdTypes }: IdLookupStepProps) {
+export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint }: IdLookupStepProps) {
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const numberInputRef = useRef<HTMLInputElement>(null);
@@ -336,7 +339,13 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
 
   return (
     <div className="space-y-4" onKeyDown={handleKeyDown}>
-      <QidTypeSelector idType={idType} onIdTypeChange={handleIdTypeChange} allowedTypes={allowedIdTypes} />
+      <QidTypeSelector
+        idType={idType}
+        onIdTypeChange={handleIdTypeChange}
+        allowedTypes={allowedIdTypes}
+        unavailableTypes={unavailableIdTypes}
+        unavailableHint={unavailableIdTypesHint}
+      />
 
       {/* The scanner, shown only for a Qatar ID. The other three document
           types are single-sided in this corpus (a passport is scanned at its
@@ -394,9 +403,13 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
             // is the one way back to scanning - a different document deserves
             // its own attempts.
             canScan={!scanExhausted}
+            // Wording per the 2026-09-27 walkthrough. It names the barcode as
+            // well as manual entry because both are real fallbacks at the
+            // counter, and says "after the permitted attempts" so the agent
+            // knows the reader is out of tries rather than merely unlucky.
             error={
               scanExhausted
-                ? `The reader could not read this document. Enter the ${idTypeLabel(idType)} number below to continue.`
+                ? `We could not read the document after the permitted attempts. Scan the barcode or enter the ${idTypeLabel(idType)} number manually to continue.`
                 : undefined
             }
           />

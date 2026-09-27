@@ -9,7 +9,7 @@ Opening the workbook in Excel and saving will silently rewrite it.
 The MARKDOWN IS THE SOURCE. Every question, its status, body text, source
 citation and priority is parsed out of
 
-    reference/VFQ_DXP_Postpaid_Activation_Open_Questions_Reference.md
+    reference/docs/VFQ_DXP_Postpaid_Activation_Open_Questions_Reference.md
 
 and nothing is restated here, per the house rule: if a value already exists in
 source, parse it rather than retype it. Edit the markdown and re-run this to
@@ -37,8 +37,8 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / 'VFQ_DXP_Postpaid_Activation_Open_Questions_Reference.md'
-OUT = ROOT / 'VFQ_DXP_Postpaid_Activation_Open_Questions_Reference.xlsx'
+SRC = ROOT / 'docs' / 'VFQ_DXP_Postpaid_Activation_Open_Questions_Reference.md'
+OUT = ROOT / 'outputs' / 'VFQ_DXP_Postpaid_Activation_Open_Questions_Reference.xlsx'
 
 
 def die(msg):

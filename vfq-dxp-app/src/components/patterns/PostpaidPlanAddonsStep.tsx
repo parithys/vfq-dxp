@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { Badge } from '../primitives/Badge';
+import { Input } from '../primitives/Input';
 import { Radio } from '../primitives/Radio';
 import { AddonsPicker } from '../domain/AddonsPicker';
 import { Drawer } from '../primitives/Drawer';
@@ -50,6 +51,37 @@ interface PostpaidPlanAddonsStepProps {
    * the agent sees what limit this activation was pre-qualified against. */
 }
 
+/**
+ * The three offer groups asked for on 2026-09-27.
+ *
+ * Membership is DERIVED from catalogue data, not a new hand-maintained field:
+ * `popular` already exists on products.json and already drove the POPULAR
+ * badge, and commitmentMonths is the only other commercial axis the catalogue
+ * carries. So:
+ *
+ *   Today's Specials - flagged `popular` in the catalogue
+ *   Offers for You   - carries a commitment (the plans a discount attaches to)
+ *   Standard Plans   - everything else
+ *
+ * Deliberately derived rather than invented: no "offerGroup" field exists in
+ * the corpus, and adding one would have meant assigning every plan to a group
+ * by guesswork. If the business later supplies real groupings, this is the one
+ * function to change.
+ */
+type PlanGroupKey = 'specials' | 'for-you' | 'standard';
+
+const PLAN_GROUPS: { key: PlanGroupKey; label: string; describe: string }[] = [
+  { key: 'specials', label: "Today's Specials", describe: 'Promoted this month' },
+  { key: 'for-you', label: 'Offers for You', describe: 'Matched to this customer' },
+  { key: 'standard', label: 'Standard Plans', describe: 'The full RED range' },
+];
+
+function planGroupOf(p: { popular?: boolean; commitmentMonths?: number }): PlanGroupKey {
+  if (p.popular) return 'specials';
+  if (p.commitmentMonths) return 'for-you';
+  return 'standard';
+}
+
 // "RED Plan" & "Eligible Discounts" - Mobile Postpaid's Plan & Add-ons step
 // (SCR-156, reference 12-step flow position 5). Plan tiers use the evidenced
 // "Postpaid Red <price> Promotion" naming family (field-inventory.md's
@@ -76,6 +108,16 @@ export function PostpaidPlanAddonsStep({
   // than an id, so the drawer cannot render a heading for one plan and
   // figures for another.
   const [detailPlan, setDetailPlan] = useState<PostpaidPlan | null>(null);
+  const [planSearch, setPlanSearch] = useState('');
+
+  // Name OR price. The price side matches the raw number anywhere in the
+  // figure, so "35" finds 350 - narrowing as the agent types rather than
+  // requiring the exact charge.
+  const visiblePlans = plans.filter((p) => {
+    const q = planSearch.trim().toLowerCase();
+    if (!q) return true;
+    return p.name.toLowerCase().includes(q) || String(p.mrcQAR).includes(q);
+  });
 
   useEffect(() => {
     mockDataEngine.list<PostpaidPlan & AddonProduct>('products').then((all) => {
@@ -129,8 +171,30 @@ export function PostpaidPlanAddonsStep({
             <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">RED Plan</h3>
             <p className="text-muted text-[length:var(--fs-caption)]">Select your plan</p>
           </div>
-          <div className="space-y-3">
-            {plans.map((p) => {
+          {/* Search by plan NAME or PRICE (2026-09-27). Price matching is on
+              the raw figure, so "350" finds Postpaid Red 350 whether the agent
+              is thinking of the name or the monthly charge - which is how the
+              two are used interchangeably at the counter. */}
+          <Input
+            aria-label="Search plans by name or price"
+            placeholder="Search plans by name or price"
+            value={planSearch}
+            onChange={(e) => setPlanSearch(e.target.value)}
+          />
+          {visiblePlans.length === 0 && (
+            <p className="text-muted text-[length:var(--fs-body)]">No plans match that search.</p>
+          )}
+          {PLAN_GROUPS.map(({ key, label, describe }) => {
+            const group = visiblePlans.filter((p) => planGroupOf(p) === key);
+            if (group.length === 0) return null;
+            return (
+              <div key={key} className="space-y-3">
+                <div>
+                  <h4 className="text-fg font-medium text-[length:var(--fs-body)]">{label}</h4>
+                  <p className="text-muted text-[length:var(--fs-caption)]">{describe}</p>
+                </div>
+                <div className="space-y-3">
+            {group.map((p) => {
               const selected = selectedProductId === p.productId;
               return (
                 // The row is a DIV wrapping a label and a button, not one big
@@ -241,8 +305,11 @@ export function PostpaidPlanAddonsStep({
                 </div>
               );
             })}
-            {plans.length === 0 && <p className="text-muted">No Postpaid Plan products in the mock catalogue.</p>}
-          </div>
+                </div>
+              </div>
+            );
+          })}
+          {plans.length === 0 && <p className="text-muted">No Postpaid Plan products in the mock catalogue.</p>}
         </div>
 
         {/* 2. Add-ons, between plan and discounts. It used to sit UNDER the

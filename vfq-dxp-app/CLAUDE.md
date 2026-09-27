@@ -1,6 +1,6 @@
 ## Role master workbook — MUST be updated with every new feature or role
 
-`reference/VFQ_DXP_Persona_Feature_Applicability_Matrix_Reference.xlsx` is the
+`reference/outputs/VFQ_DXP_Persona_Feature_Applicability_Matrix_Reference.xlsx` is the
 **single source of truth** for the 26 operational roles: Staff IDs, the demo
 password, persona groups, business units, approach classification, capability
 (action) gates, which implemented feature each role may reach, and which
@@ -61,10 +61,20 @@ Rules the script enforces — do not work around them:
   of these guards has been negative-tested by deliberately breaking the source.
 
 Superseded persona records (historical, **not** authoritative):
-`VFQ_DXP_Personas_Reference.xlsx` → "Personas" (the 66-persona model), and
-`VFQ_DXP_Test_Data_Reference.xlsx` → "Login Credentials" / "Persona" /
-"Persona by Approach". The 66-persona model, its RBAC evidence and the two
-columns unique to that workbook are archived under `reference/blueprint/legacy/`.
+`reference/docs/VFQ_DXP_Personas_Reference.xlsx` → "Personas" (the 66-persona
+model), and `reference/outputs/VFQ_DXP_Test_Data_Reference.xlsx` → "Login
+Credentials" / "Persona (Original)" / "Persona by Approach". The 66-persona
+model, its RBAC evidence and the two columns unique to that workbook are
+archived under `reference/blueprint/legacy/`.
+
+⚠️ Those three sheets in `VFQ_DXP_Test_Data_Reference.xlsx` — "Persona
+(Original)", "Persona by Approach" and "ID Lookup (MOI Fetch)" — are **not
+produced by `scripts/build_test_data_reference.py`**. The workbook on disk has
+19 sheets; a regeneration writes 16 and silently drops those three. So despite
+the "generated, never hand-edited" rule that applies to the role matrix above,
+this particular workbook currently carries content the script cannot rebuild.
+Re-create those sheets in the script before regenerating it, or the history
+goes.
 
 ## Project structure
 

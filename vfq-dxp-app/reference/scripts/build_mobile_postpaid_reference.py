@@ -33,7 +33,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
-OUT = Path(__file__).resolve().parents[1] / "VFQ_DXP_Mobile_Postpaid_Activation_Reference.xlsx"
+OUT = Path(__file__).resolve().parents[1] / "outputs" / "VFQ_DXP_Mobile_Postpaid_Activation_Reference.xlsx"
 
 VF_RED = "E60000"
 HDR_BG = "313131"

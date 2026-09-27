@@ -10,8 +10,6 @@ import { PostpaidPlanAddonsStep } from '../../../components/patterns/PostpaidPla
 import { MsisdnPicker } from '../../../components/domain/MsisdnPicker';
 import { EligibilityGateStep } from '../../../components/domain/EligibilityGateStep';
 import type { EligibilityResult } from '../../../components/domain/EligibilityGateStep';
-import { DeviceInstallmentStep } from '../../../components/domain/DeviceInstallmentStep';
-import type { DoiSelection } from '../../../components/domain/DeviceInstallmentStep';
 import { SimTypeStep } from '../../../components/domain/SimTypeStep';
 import type { SimTypeValue } from '../../../components/domain/SimTypeStep';
 import { EsimActivationPanel } from '../../../components/domain/EsimActivationPanel';
@@ -41,7 +39,6 @@ interface ConfirmedOrder {
   dueTodayQar: number;
   monthlyRecurringQar: number;
   simType?: string;
-  deviceName?: string;
   /** Set only for eSIM orders - drives the QR handover panel below. */
   esimActivationCode?: string;
   customerEmail?: string;
@@ -51,9 +48,10 @@ interface ConfirmedOrder {
 // (UJ-042 "New Postpaid Connection," high confidence), aligned to the
 // reference 12-step activation flow (Queue Token/ID Scan are pre-wizard;
 // this covers ID Scan's MOI result onward): Contact -> Eligibility Gate ->
-// Address -> Billing -> Plan & Add-ons (with Bill Limit Agent Minimum
-// guardrail) -> Number Selection -> Device & DOI -> SIM Type -> Checkout ->
-// CAF/Signature -> Payment (WinCash) -> Activity -> Confirmation.
+// Address -> Plan & Add-ons -> Number Selection -> SIM Type -> Checkout ->
+// CAF/Signature -> Payment (WinCash) -> Confirmation. Billing, Device & DOI
+// and Activity have each been removed since that reference flow was written
+// (2026-09-25 and -27); the nine steps above are what the wizard renders.
 // The Address step surfaces conflict-report.md Conflict 2 (ZSB-mandatory-for-
 // mobile) rather than silently resolving it - see ZsbAddressStep/ruleEngine.ts.
 export function NewPostpaidWizard() {
@@ -82,7 +80,6 @@ export function NewPostpaidWizard() {
             { label: 'Customer', value: confirmedOrder.customerName },
             { label: 'MSISDN', value: confirmedOrder.msisdn },
             { label: 'Plan', value: confirmedOrder.planName },
-            ...(confirmedOrder.deviceName ? [{ label: 'Device', value: confirmedOrder.deviceName }] : []),
             { label: 'SIM Type', value: confirmedOrder.simType ?? '-' },
             { label: 'Due today', value: `QR ${confirmedOrder.dueTodayQar}` },
             { label: 'Monthly recurring', value: `QR ${confirmedOrder.monthlyRecurringQar}/mo` },
@@ -119,6 +116,12 @@ export function NewPostpaidWizard() {
                 // are not offered here at all - the eligibility engine still
                 // routes them if one reaches it via another journey.
                 allowedIdTypes={['QID', 'Diplomatic ID']}
+                // Shown greyed rather than omitted (2026-09-27): an agent
+                // holding a passport needs to see the option exists and why it
+                // is closed. Selecting one stays impossible until the exception
+                // approval workflow behind it is designed.
+                unavailableIdTypes={['Passport', 'GCC ID']}
+                unavailableIdTypesHint="Passport and GCC ID are available through the exception approval flow."
                 value={(values.contact as GuidedContactValue) ?? {}}
                 onChange={(v) => setValue('contact', v)}
                 showIptvToggle={false}
@@ -216,27 +219,14 @@ export function NewPostpaidWizard() {
             ),
             isValid: (values) => Boolean(values.msisdn),
           },
-          {
-            key: 'device',
-            label: 'Device & DOI',
-            render: ({ values, setValue }) => (
-              <DeviceInstallmentStep
-                value={values.doi as DoiSelection | undefined}
-                defaultCreditLimitQar={(values.eligibility as EligibilityResult | undefined)?.defaultCreditLimitQar}
-                onChange={(v) => setValue('doi', v)}
-                planProductId={values.productId as string | undefined}
-                planDiscountId={values.discountId as string | undefined}
-                planAddonIds={(values.addonIds as string[] | undefined) ?? []}
-              />
-            ),
-            // No device chosen: nothing to gate. A device chosen: BR-114's DOI
-            // declaration must be read and accepted before proceeding.
-            isValid: (values) => {
-              const doi = values.doi as DoiSelection | undefined;
-              if (!doi) return true;
-              return Boolean(doi.doiRead) && Boolean(doi.doiAccepted);
-            },
-          },
+          // Device & DOI was removed from this journey on 2026-09-27 per the
+          // annotated walkthrough ("Remove this screen completed"). Device
+          // bundling and the BR-114 DOI declaration are therefore out of scope
+          // for a new postpaid activation; nothing else set `values.doi`, so
+          // the down-payment term of Due Today, the monthly installment term of
+          // the recurring charge, and the five device_* fields on the order
+          // record all went with it rather than being left to read as
+          // permanently absent.
           {
             key: 'simType',
             label: 'SIM Type',
@@ -266,16 +256,14 @@ export function NewPostpaidWizard() {
                 <CheckoutSummaryStep
                   customerName={contact?.moiResult?.name}
                   idNumber={contact?.idNumber}
-                  mobile={contact?.altPhone}
                   productId={values.productId as string | undefined}
                   discountId={values.discountId as string | undefined}
                   addonIds={(values.addonIds as string[] | undefined) ?? []}
                   msisdn={values.msisdn as string | undefined}
                   numberPriceQar={values.numberPriceQAR as number | undefined}
-                  doi={values.doi as DoiSelection | undefined}
-                  simType={values.simType as SimTypeValue | undefined}
                   eligibility={values.eligibility as EligibilityResult | undefined}
                   onTotalsComputed={(totals) => setValue('checkoutTotals', totals)}
+                  onSummaryComputed={(rows) => setValue('cafSummary', rows)}
                 />
               );
             },
@@ -289,6 +277,12 @@ export function NewPostpaidWizard() {
                 value={(values.caf as { cafType?: CafType; signatureDataUrl?: string }) ?? {}}
                 onChange={(v) => setValue('caf', v)}
                 customerName={(values.contact as GuidedContactValue | undefined)?.moiResult?.name}
+                // Built from the totals CHECKOUT computed (checkoutTotals) plus
+                // the plan/number facts already on `values`, so the figures the
+                // customer signs against are the same objects the previous step
+                // displayed - not a second calculation that could drift.
+                orderSummary={values.cafSummary as { label: string; value: string }[] | undefined}
+                termsUrl="https://www.vodafone.qa/en/terms-and-conditions"
               />
             ),
             isValid: (values) => {
@@ -301,10 +295,9 @@ export function NewPostpaidWizard() {
             key: 'payment',
             label: 'Payment',
             render: ({ values, setValue }) => {
-              const doi = values.doi as DoiSelection | undefined;
               const eligibility = values.eligibility as EligibilityResult | undefined;
               const numberDelta = (values.numberPriceQAR as number | undefined) ?? 0;
-              const dueTodayQar = numberDelta + (doi?.downPaymentQar ?? 0) + (eligibility?.requiresHrnAdvance ? 100 : 0);
+              const dueTodayQar = numberDelta + (eligibility?.requiresHrnAdvance ? 100 : 0);
               return (
                 <WinCashPaymentStep
                   amountDueQAR={dueTodayQar}
@@ -327,11 +320,10 @@ export function NewPostpaidWizard() {
         onSubmit={async (values) => {
           const contact = values.contact as GuidedContactValue;
           const eligibility = values.eligibility as EligibilityResult | undefined;
-          const doi = values.doi as DoiSelection | undefined;
           const simType = values.simType as SimTypeValue | undefined;
           const addonIds = (values.addonIds as string[] | undefined) ?? [];
           const numberDelta = (values.numberPriceQAR as number | undefined) ?? 0;
-          const dueTodayQar = numberDelta + (doi?.downPaymentQar ?? 0) + (eligibility?.requiresHrnAdvance ? 100 : 0);
+          const dueTodayQar = numberDelta + (eligibility?.requiresHrnAdvance ? 100 : 0);
 
           const products = await mockDataEngine.list<Product>('products');
           const plan = products.find((p) => p.productId === values.productId);
@@ -345,7 +337,6 @@ export function NewPostpaidWizard() {
             planQar: plan?.mrcQAR ?? 0,
             discountRate: discount?.price,
             addonsQar: addons.reduce((sum, a) => sum + a.mrcQAR, 0),
-            installmentQar: doi?.monthlyInstallmentQar,
           });
           const monthlyRecurringQar = charges.totalQar;
 
@@ -366,11 +357,6 @@ export function NewPostpaidWizard() {
             addonIds,
             msisdn: values.msisdn,
             numberPriceQAR: numberDelta,
-            deviceName: doi?.deviceName,
-            deviceColour: doi?.colour,
-            deviceStorage: doi?.storage,
-            deviceImei: doi?.imei,
-            deviceHandoverMethod: doi?.handoverMethod,
             simType: simType?.simType,
             simSerial: simType?.simSerial,
             dueTodayQAR: dueTodayQar,
@@ -388,7 +374,6 @@ export function NewPostpaidWizard() {
             dueTodayQar,
             monthlyRecurringQar,
             simType: simType?.simType,
-            deviceName: doi?.deviceName,
             esimActivationCode: simType?.esimActivationCode,
             customerEmail: contact.email,
           });
