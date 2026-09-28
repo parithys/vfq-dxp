@@ -76,7 +76,18 @@ export function OrderConfirmationScreen({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      {/* TWO columns only when there is a handover panel to put in the second
+          one. A physical-SIM order has no eSIM profile and therefore no QR to
+          show, and the empty column it used to leave beside the receipt read
+          as content that had failed to load rather than as content that does
+          not exist for this order. Centred and width-capped in the one-column
+          case so the receipt reads as a whole card instead of the left half of
+          a layout with something missing from it. */}
+      <div
+        className={`grid grid-cols-1 gap-6 items-start ${
+          handoverPanel ? 'lg:grid-cols-2' : 'max-w-xl mx-auto'
+        }`}
+      >
         {/* Column 1 - the receipt. */}
         <dl className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
           {summaryLines.map((line) => (
@@ -91,9 +102,7 @@ export function OrderConfirmationScreen({
             2026-09-25; with it gone this column holds only the eSIM panel,
             and space-y is kept so a future handover block stacks correctly
             rather than needing the wrapper rebuilt. */}
-        <div className="space-y-6">
-          {handoverPanel}
-        </div>
+        {handoverPanel && <div className="space-y-6">{handoverPanel}</div>}
       </div>
 
       {/* Actions span both columns: they act on the order as a whole, so
