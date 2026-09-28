@@ -128,6 +128,10 @@ export function NewPostpaidWizard() {
                 // approval workflow behind it is designed.
                 unavailableIdTypes={['Passport', 'GCC ID']}
                 unavailableIdTypesHint="Passport and GCC ID are available through the exception approval flow."
+                // Scan-first: the reader identifies the document, so no type is
+                // chosen up front. Opt-in, so the eight other journeys sharing
+                // this step keep their selector-led flow (2026-09-28).
+                autoDetectIdType
                 value={(values.contact as GuidedContactValue) ?? {}}
                 onChange={(v) => setValue('contact', v)}
                 showIptvToggle={false}

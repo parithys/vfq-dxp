@@ -52,10 +52,24 @@ interface QidImageUploadProps {
    * Which document is in the reader. Defaults to 'QID', which is what the
    * three journeys other than IdLookupStep capture.
    *
-   * Drives the face captions and, in ScannedIdPreview, which specimen artwork
-   * is used - the Qatar ID images must not stand in for a Diplomatic ID.
+   * Drives the face captions and, in ScannedIdPreview, whether the back face
+   * carries a barcode - only the Qatar ID does.
    */
   documentType?: string;
+  /**
+   * DEMO ONLY (2026-09-28, requested as such). Document types offered as text
+   * links under the Initiate button; clicking one names the card and runs the
+   * scan.
+   *
+   * This deliberately re-opens a door closed on 2026-09-25, when a
+   * "Simulate scan failure" button and a "Scan attempts: n / 4" counter were
+   * removed from this card for exposing the simulation. Those were debug
+   * leftovers; these are an explicit demo affordance, labelled as such on
+   * screen so nobody mistakes them for production. Omit both props and the
+   * card renders exactly as before.
+   */
+  demoTypes?: { value: string; label: string }[];
+  onDemoScan?: (type: string) => void;
 }
 
 // FLD (Passport to QID journey, UJ-076): "scan/upload QID Front & Back" required
@@ -119,7 +133,7 @@ interface QidImageUploadProps {
 // for a physical pass over a card rather than a data read.
 const SCAN_DURATION_MS = 900;
 
-export function QidImageUpload({ value, onChange, onScan, error, canScan = true, documentType = 'QID' }: QidImageUploadProps) {
+export function QidImageUpload({ value, onChange, onScan, error, canScan = true, documentType = 'QID', demoTypes, onDemoScan }: QidImageUploadProps) {
   const scanned = Boolean(value.frontScanned && value.backScanned);
   const simulated = !value.frontImage && !value.backImage;
 
@@ -254,12 +268,41 @@ export function QidImageUpload({ value, onChange, onScan, error, canScan = true,
       ) : (
         <div className="min-h-[9rem] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
           <span className="text-fg-2 text-[length:var(--fs-caption)] uppercase tracking-[0.14em] text-center">
-            {canScan ? "Insert or scan the customer's identity document" : 'Card could not be read'}
+            {canScan ? "Scan customer's identity document" : 'Card could not be read'}
           </span>
           {canScan && (
             <Button variant="primary-rect" compact onClick={runScan}>
               Initiate scan
             </Button>
+          )}
+          {/* DEMO ONLY - labelled on screen, because an unlabelled row of
+              document types under the scanner is indistinguishable from the ID
+              Type selector this flow deliberately removed, and an agent would
+              reasonably read it as "choose the document type first".
+              A real reader offers no such choice. */}
+          {canScan && demoTypes && demoTypes.length > 0 && onDemoScan && (
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-muted text-[length:var(--fs-micro)] uppercase tracking-wide">
+                Demo only - simulate inserting
+              </span>
+              <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+                {demoTypes.map((t) => (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => {
+                      onDemoScan(t.value);
+                      runScan();
+                    }}
+                    className="text-[length:var(--fs-caption)] text-accent underline
+                      hover:text-[var(--deep-red)] focus:outline-none
+                      focus-visible:shadow-[var(--focus-ring)] rounded-[var(--radius-button)] px-0.5"
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
           {/* role="alert" so the failure is announced: the agent's attention is
               on the physical reader, not the screen, and nothing else about

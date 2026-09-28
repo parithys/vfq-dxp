@@ -325,14 +325,18 @@ export function EligibilityGateStep({ idNumber, onResult, result, journeyType = 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idNumber, journeyType, cached]);
 
+  // FIRST of the returns, and after the hooks. Evaluation still happens - only
+  // the output is suppressed - but it must short-circuit before the branches
+  // below, which is where this originally sat and got it wrong: the "Complete
+  // the Contact step first" line rendered from the HEADLESS mount inside the
+  // Contact step, putting an eligibility message on a screen that has no
+  // eligibility panel and telling the agent to complete the step they were
+  // already on.
+  if (headless) return null;
+
   if (!idNumber) {
     return <p className="text-muted text-[length:var(--fs-body)]">Complete the Contact step first - eligibility depends on the validated identity.</p>;
   }
-  // After the hooks, so evaluation still happens - only the output is
-  // suppressed. Returning early here (not before the hooks) keeps hook order
-  // identical between headless and visible mounts.
-  if (headless) return null;
-
   if (resolved === undefined) {
     return <p className="text-muted text-[length:var(--fs-body)]">Checking eligibility…</p>;
   }

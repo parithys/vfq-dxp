@@ -95,6 +95,8 @@ interface GuidedContactStepProps {
   allowedIdTypes?: QidType[];
   unavailableIdTypes?: QidType[];
   unavailableIdTypesHint?: string;
+  /** Scan-first with automatic type detection - see IdLookupStep. */
+  autoDetectIdType?: boolean;
 }
 
 // Single source of truth for "is this a valid Alternate phone #" - exported
@@ -331,7 +333,7 @@ function identityFromMoi(moi: MoiResult | undefined) {
 // agent always performs (or at least sees) an explicit Fetch rather than
 // silently trusting cached active-customer state. The number field shows
 // a format-example placeholder instead (see QidInput.tsx).
-export function GuidedContactStep({ value, onChange, showIptvToggle = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint }: GuidedContactStepProps) {
+export function GuidedContactStep({ value, onChange, showIptvToggle = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint, autoDetectIdType }: GuidedContactStepProps) {
   return (
     <div className="space-y-4">
       <IdLookupStep
@@ -342,6 +344,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
         allowedIdTypes={allowedIdTypes}
         unavailableIdTypes={unavailableIdTypes}
         unavailableIdTypesHint={unavailableIdTypesHint}
+        autoDetectIdType={autoDetectIdType}
         // Every MOI-derived field is re-seeded from the result whenever it
         // changes, and cleared with it when the ID is edited/re-typed. A new
         // ID is a new person, so carrying over the previous one's name or

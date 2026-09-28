@@ -2,86 +2,80 @@ import { useState } from 'react';
 
 interface ScannedIdPreviewProps {
   side: 'front' | 'back';
-  /** A real captured image, when one exists. Falls back to the specimen. */
+  /** A real captured image, when one exists. Falls back to the drawn card. */
   src?: string;
   /**
-   * Which document this depicts. The specimen files are Qatar ID artwork, so
-   * anything else falls through to the drawn stand-in rather than showing a
-   * QID card captioned as a Diplomatic ID.
+   * Which document this depicts. Drives the alt text and, on a Qatar ID back,
+   * the barcode that card carries and the others do not.
    */
   documentType?: string;
 }
 
 /**
- * Specimen Qatar ID artwork, used when no real capture exists.
+ * Bar widths for the drawn barcode on the back of a Qatar ID, in viewBox
+ * units. Even indices are bars, odd indices the gaps between them, which is
+ * why the array alternates rather than listing bars alone.
  *
- * ONE FILE PER FACE. The supplied assets arrived as separate front and back
- * images, which is simpler than the stacked single file this briefly
- * expected: there is no crop, so nothing depends on the two faces being an
- * exact 50/50 split of one image.
- *
- * Their aspect is 1.72:1 (593x344 front, 593x343 back) - NOT the ID-1 ratio
- * of the card itself (85.6 x 54mm = 1.585), because they carry white margin
- * around the document. The frame is sized to the artwork rather than to ID-1
- * for exactly that reason; see the frame's own note.
- *
- * NOT COMMITTED to this repo - both files have to be saved by hand, alongside
- * the only other brand asset (public/brand/login-bg.jpg). Nothing breaks
- * while they are missing: a failed load falls back to the drawn stand-in
- * below, per side independently.
+ * FIXED, not random. `Math.random()` here would re-lay the pattern on every
+ * render - a barcode that reshuffles while you look at it - and would make
+ * screenshots of this step differ run to run for no reason. The widths sum to
+ * 51 units, which is what BARCODE_W below has to agree with.
  */
-const QID_SPECIMEN_SRC: Record<'front' | 'back', string> = {
-  front: '/brand/qid-front.png',
-  back: '/brand/qid-back.png',
-};
+const BARCODE_BARS = [
+  2, 1, 1, 3, 1, 2, 1, 1, 2, 3, 1, 1, 2, 1, 3, 1, 1, 2, 2, 1, 1, 3, 1, 1, 2, 1, 2, 1, 3, 1, 1, 2,
+];
+const BARCODE_W = 51;
+/** Right-aligned to the same 18-unit margin the data lines use on the left. */
+const BARCODE_X = 214 - 18 - BARCODE_W;
+const BARCODE_Y = 46;
+
+// Laid out once at module load: the offsets never change, so recomputing them
+// per render would buy nothing.
+const BARCODE_RECTS = (() => {
+  const rects: { x: number; w: number }[] = [];
+  let cursor = 0;
+  BARCODE_BARS.forEach((w, i) => {
+    if (i % 2 === 0) rects.push({ x: cursor, w });
+    cursor += w;
+  });
+  return rects;
+})();
 
 // The captured document, as shown back to the agent after a scan.
 //
-// Three sources, in order of preference:
+// ALWAYS DRAWN, never a photograph of a real card (2026-09-28 direction).
+// Until then the Qatar ID faces rendered from specimen PNGs in public/brand/ -
+// a photorealistic card, complete with a plausible-looking name, ID number and
+// portrait. That is the wrong thing to put on screen in a demo: it reads as a
+// real person's document, and nothing in the frame says otherwise. The drawn
+// stand-in cannot be mistaken for one.
 //
-//   1. `src` - a real capture. Nothing sets this yet (there is no scanner and
-//      no file input), but the day one lands, passing a data URL here is the
-//      only change needed.
-//   2. The specimen file for this side.
-//   3. A DRAWN STAND-IN - correct 85.6 x 54mm ID-1 aspect, a portrait block,
-//      redacted data lines and the Qatar maroon band. Deliberately abstract:
-//      it is obviously not a real document, which is the point.
+// Two sources remain, in order of preference:
 //
-// The fallback is driven by the image's own onError, not by a build-time check
-// of whether the file exists, because the app cannot know. That keeps the
-// preview working whether or not the specimen has been added, instead of
-// showing a broken-image icon in a step the agent has to trust.
+//   1. `src` - a genuine capture from a scanner. Nothing sets this yet (there
+//      is no scanner and no file input), but the day one lands, passing a data
+//      URL here is the only change needed. A real capture is the customer's
+//      own document, which is a different thing from shipping artwork of one.
+//   2. The DRAWN STAND-IN - correct 85.6 x 54mm ID-1 aspect, a portrait block,
+//      redacted data lines, the Qatar maroon band, and on a Qatar ID back the
+//      barcode the real card carries. Deliberately abstract: it is obviously
+//      not a real document, which is the point.
 export function ScannedIdPreview({ side, src, documentType = 'QID' }: ScannedIdPreviewProps) {
   const [imageFailed, setImageFailed] = useState(false);
-  // A real capture always wins. Otherwise the specimen is only correct for the
-  // document it actually shows.
-  const resolvedSrc = src ?? (documentType === 'QID' ? QID_SPECIMEN_SRC[side] : undefined);
 
-  if (resolvedSrc && !imageFailed) {
+  if (src && !imageFailed) {
     return (
-      // The frame is the ARTWORK's aspect (593x344), not the card's ID-1 ratio
-      // (1.585). It was ID-1 until 2026-09-26, which left object-contain
-      // letterboxing the image inside it: ~8% of the frame's height was white
-      // bar above and below the document, so the border sat visibly wide of
-      // the card it was framing.
+      // object-CONTAIN, and the frame takes the ID-1 ratio the card itself
+      // has: a scanner produces whatever aspect it produces, and cropping the
+      // capture to fit would defeat the entire point of showing it back for
+      // the agent to judge.
       //
-      // Matching the artwork means contain has nothing left to letterbox and
-      // the border lands on the document's own edge. Still object-CONTAIN
-      // rather than cover: cover at the correct ratio is a no-op for the
-      // front, but the back is 593x343 - one pixel shorter - and cover would
-      // crop it rather than absorb that into a sub-pixel gap. Contain also
-      // keeps a REAL capture, at whatever aspect the scanner produces, whole
-      // rather than cropped, which is the entire point of showing it back.
-      //
-      // The two previews still match each other's size: both frames are
-      // width-driven and share this one ratio.
-      //
-      // bg-white for the residual sub-pixel gap, and fixed rather than
-      // tokenised because it is continuing the ARTWORK's own white margin, not
-      // the page - a --bg-coloured frame would band visibly in dark mode.
-      <span className="block w-full overflow-hidden rounded-[var(--radius-button)] border border-border-soft aspect-[593/344] bg-white">
+      // bg-white rather than a token because it is backing a photograph, not
+      // continuing the page - a --bg-coloured frame would band visibly against
+      // the image in dark mode.
+      <span className="block w-full overflow-hidden rounded-[var(--radius-button)] border border-border-soft aspect-[1.585] bg-white">
         <img
-          src={resolvedSrc}
+          src={src}
           onError={() => setImageFailed(true)}
           alt={`Scanned ${documentType}, ${side} side`}
           className="w-full h-full object-contain"
@@ -89,6 +83,11 @@ export function ScannedIdPreview({ side, src, documentType = 'QID' }: ScannedIdP
       </span>
     );
   }
+
+  // The real Qatar ID carries a machine-readable code on its reverse; no other
+  // document type here does, so drawing one on a passport back would be
+  // inventing a feature of a document this app does not know.
+  const showBarcode = side === 'back' && documentType === 'QID';
 
   return (
     <svg
@@ -124,9 +123,27 @@ export function ScannedIdPreview({ side, src, documentType = 'QID' }: ScannedIdP
 
       {side === 'back' && (
         <>
-          <rect x="18" y="52" width="130" height="6" rx="3" fill="#d8d8d8" />
-          <rect x="18" y="64" width="104" height="6" rx="3" fill="#e4e4e4" />
-          <rect x="18" y="76" width="118" height="6" rx="3" fill="#e4e4e4" />
+          {/* Redacted data lines. They stop short of the barcode column when
+              there is one, rather than running under it. */}
+          <rect x="18" y="52" width={showBarcode ? 106 : 130} height="6" rx="3" fill="#d8d8d8" />
+          <rect x="18" y="64" width={showBarcode ? 84 : 104} height="6" rx="3" fill="#e4e4e4" />
+          <rect x="18" y="76" width={showBarcode ? 96 : 118} height="6" rx="3" fill="#e4e4e4" />
+          {showBarcode && (
+            <g transform={`translate(${BARCODE_X} ${BARCODE_Y})`}>
+              {/* Quiet zone: a barcode reads against its own white ground, not
+                  the card's off-white, so the bars keep their contrast
+                  wherever this sits. */}
+              <rect x="-3" y="-3" width={BARCODE_W + 6} height="38" rx="1" fill="#ffffff" />
+              {BARCODE_RECTS.map((bar) => (
+                <rect key={bar.x} x={bar.x} y="0" width={bar.w} height="26" fill="#313131" />
+              ))}
+              {/* Stands in for the digits printed beneath a real symbol. A
+                  redacted bar, like every other field here - printing an
+                  actual ID number would put a fake identity on screen, which
+                  is the thing this component exists to avoid. */}
+              <rect x="6" y="30" width={BARCODE_W - 12} height="4" rx="2" fill="#c9c9c9" />
+            </g>
+          )}
           {/* Machine-readable zone */}
           <rect x="18" y="96" width="178" height="8" rx="2" fill="#e0e0e0" />
           <rect x="18" y="108" width="178" height="8" rx="2" fill="#e0e0e0" />

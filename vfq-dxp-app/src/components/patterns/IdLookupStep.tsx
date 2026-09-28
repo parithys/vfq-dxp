@@ -42,11 +42,16 @@ interface MoiResult {
   companyAccountId?: string;
 }
 
-// Four, per the reference asset's "Scan Attempts: 0 / 4". Attempts 1-4 read
-// the card; the fifth is where the reader gives up and the manual fallback
-// opens. Nothing in the UI names this number or shows a count - see the
-// scanner block below.
-const MAX_SCAN_ATTEMPTS = 4;
+// TWO, per 2026-09-28 direction ("Allow a maximum of two scanning attempts").
+// Was four, from the reference asset's "Scan Attempts: 0 / 4".
+//
+// Both attempts pass over the reader; after the second the scanner locks and
+// the manual fallback opens. Nothing in the UI names this number or shows a
+// count - see the scanner block below.
+const MAX_SCAN_ATTEMPTS = 2;
+// The original budget, still used by the eight journeys that lead with a type
+// selector rather than auto-detection.
+const LEGACY_MAX_SCAN_ATTEMPTS = 4;
 
 /**
  * ID types with a physical card the reader can capture, and therefore the
@@ -87,6 +92,21 @@ interface IdLookupStepProps {
   /** Shown greyed and unselectable, with `unavailableIdTypesHint` beneath. */
   unavailableIdTypes?: QidType[];
   unavailableIdTypesHint?: string;
+  /**
+   * Scan-first with AUTOMATIC document-type detection (2026-09-28 direction).
+   *
+   * OPT-IN, and off by default on purpose. Only New Postpaid passes it. The
+   * other eight journeys sharing this step offer all four ID types and never
+   * narrow them, so hiding their selector behind a spent scan budget would
+   * leave an agent who needs Passport or GCC ID unable to reach it without
+   * first failing two scans they never wanted to run.
+   *
+   * When on:
+   *   - the type selector is hidden until the fallback opens
+   *   - the scan identifies the document rather than trusting a prior choice
+   *   - the attempt budget is two rather than four
+   */
+  autoDetectIdType?: boolean;
 }
 
 // Pattern 2: Customer/Contact Lookup Step (QID/Kahramaa ID Scan + MOI Validation) -
@@ -102,7 +122,7 @@ interface IdLookupStepProps {
 // restriction carried over from the 66-persona model's PERSONA-001 ("cannot
 // manually enter ID details, only re-scan/search") - only the lookup ID
 // number itself is directly editable.
-export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint }: IdLookupStepProps) {
+export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint, autoDetectIdType = false }: IdLookupStepProps) {
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const numberInputRef = useRef<HTMLInputElement>(null);
@@ -121,7 +141,23 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
   const latest = useRef(value);
   latest.current = value;
   const idType = value.idType ?? 'QID';
+  /**
+   * DEMO ONLY (2026-09-28, explicitly requested as such).
+   *
+   * Which card the demo links below the scanner say was put in the reader.
+   * Null in the real flow, where the reader identifies the document itself.
+   *
+   * It exists because the four links must be able to produce a Passport or a
+   * GCC ID - neither of which is in SCANNABLE_ID_TYPES, so without this the
+   * scanner would unmount mid-demo and the "scanned" document would never be
+   * shown. Kept OUT of the draft value: this is a property of the person
+   * demonstrating the app, not of the order.
+   */
+  const [demoType, setDemoType] = useState<QidType | null>(null);
   const scannable = SCANNABLE_ID_TYPES.has(idType);
+  // Everything that asks "is there a reader on this screen" must accept a demo
+  // scan too, or the capture disappears the moment a non-scannable type wins.
+  const effectiveScannable = scannable || demoType !== null;
 
   const handleIdTypeChange = (nextType: QidType) => {
     // Re-clicking the type you are already on is a no-op, not a reset. These
@@ -257,15 +293,53 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
   // the counter, not the order. Re-entering the step should offer the scanner
   // again rather than resuming someone else's exhausted attempts.
   const [scanAttempts, setScanAttempts] = useState(0);
-  const scanExhausted = scanAttempts > MAX_SCAN_ATTEMPTS;
-  const manualEntryUnlocked = !scannable || scanExhausted;
+  /**
+   * LATCHED, and deliberately separate from the attempt count.
+   *
+   * handleIdTypeChange resets scanAttempts to zero - correct, because a new
+   * document deserves fresh attempts. But the fallback's whole purpose is to
+   * let the agent pick a type by hand, so deriving its visibility from the
+   * count meant the selector vanished the instant it was used. This latches
+   * once the budget is spent and stays open for the rest of the sitting.
+   */
+  const [fallbackUnlocked, setFallbackUnlocked] = useState(false);
+  // Two for the scan-first flow, four for the journeys that still lead with a
+  // type selector - see autoDetectIdType.
+  const maxScanAttempts = autoDetectIdType ? MAX_SCAN_ATTEMPTS : LEGACY_MAX_SCAN_ATTEMPTS;
+  const manualEntryUnlocked = !effectiveScannable || fallbackUnlocked;
+
+  /**
+   * DEMO ONLY. Says which card was "inserted", then lets the normal scan run:
+   * the reader animates, detection resolves that document, and the number and
+   * type land exactly as they would from a real pass. Deliberately routed
+   * through the same path rather than writing the result directly, so what the
+   * demo shows is the real flow and not a parallel one.
+   */
+  const handleDemoScan = (type: QidType) => {
+    setDemoType(type);
+    setNotFound(false);
+    // Clear any previous read so the new card resolves from scratch - without
+    // this the effect sees an idNumber already present and never re-fetches.
+    onChange({ ...latest.current, idType: type, idNumber: '', moiResult: undefined, qidScans: undefined });
+  };
 
   // Returns whether this attempt read the card. QidImageUpload leaves its
   // value untouched on false, so a failed attempt keeps the insert prompt up.
   const handleScanAttempt = () => {
     const attempt = scanAttempts + 1;
     setScanAttempts(attempt);
-    return attempt <= MAX_SCAN_ATTEMPTS;
+    // The fallback is NOT opened merely because the budget is spent. A second
+    // attempt that reads the card successfully must leave the agent on the
+    // scanned path - manual entry is a fallback, never an alternative to a
+    // successful scan. It opens in exactly two places:
+    //   - here, when a pass is refused because the budget is gone
+    //   - in the scan effect, when a completed pass identifies no document
+    //     and no attempts remain
+    if (attempt > maxScanAttempts) {
+      setFallbackUnlocked(true);
+      return false;
+    }
+    return true;
   };
 
   // Simulated OCR. A real scanner reads the number off the card, which is the
@@ -277,32 +351,45 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
   // plainly: it takes the first QID-type document, so every successful scan
   // resolves to the same customer. A real integration would return whatever
   // card is physically in the reader.
-  const readNumberFromScan = async (): Promise<string | undefined> => {
+  const readDocumentFromScan = async (): Promise<{ documentType: QidType; documentNumber: string } | undefined> => {
     const docs = await mockDataEngine.list<{ documentType: string; documentNumber: string; expiryDate?: string }>(
       'identity-documents'
     );
-    // Matches the SELECTED type, so scanning a Diplomatic ID resolves a
-    // Diplomatic ID document rather than falling back to the first QID.
-    const ofType = docs.filter((d) => d.documentType === idType);
-    // Prefers an UNEXPIRED document rather than simply the first of its type.
+    // AUTOMATIC DETECTION (2026-09-28). The reader identifies what was put in
+    // it, so this no longer filters by a type the agent picked beforehand -
+    // there is no such selection during the normal flow any more. It considers
+    // every type this journey accepts AND can physically capture, and returns
+    // the type along with the number so the caller can record what was found.
+    // Auto-detect considers every type this journey accepts AND can capture.
+    // Without it, the original behaviour stands: resolve a document of the
+    // type the agent already selected, so a Diplomatic scan does not fall back
+    // to the first QID on file.
+    const detectable = demoType
+      ? // A demo link names the card, so the "detection" resolves that one.
+        [demoType]
+      : autoDetectIdType
+        ? (allowedIdTypes ?? [...SCANNABLE_ID_TYPES]).filter((t) => SCANNABLE_ID_TYPES.has(t))
+        : [idType];
+    const candidates = docs.filter((d) => detectable.includes(d.documentType as QidType));
+    // Prefers an UNEXPIRED document rather than simply the first match.
     //
     // Not cosmetic: two Diplomatic IDs are seeded and the first in file order
     // is deliberately expired (CUST-1006, the hard-stop fixture), so
-    // first-match made every Diplomatic scan resolve to an expired card and
-    // the direct-sale path could never be exercised. Depending on array order
-    // to fix that would be worse - a reorder of the JSON would silently break
-    // it again.
+    // first-match made that scan resolve to an expired card and the
+    // direct-sale path could never be exercised. Depending on array order to
+    // fix that would be worse - a reorder of the JSON would silently break it.
     //
     // The expired document is still reachable: it is the one the manual
-    // fallback accepts, and it is what any other journey offering Diplomatic
-    // ID resolves when it is the only candidate.
+    // fallback accepts once the scan budget is spent.
     const now = Date.now();
-    const unexpired = ofType.find((d) => !d.expiryDate || new Date(d.expiryDate).getTime() >= now);
-    return (unexpired ?? ofType[0])?.documentNumber;
+    const found =
+      candidates.find((d) => !d.expiryDate || new Date(d.expiryDate).getTime() >= now) ?? candidates[0];
+    if (!found) return undefined;
+    return { documentType: found.documentType as QidType, documentNumber: found.documentNumber };
   };
 
   useEffect(() => {
-    if (!scannable || !scanComplete) {
+    if (!effectiveScannable || !scanComplete) {
       // Reset so re-scanning after a type switch or a cleared scan fetches again.
       autoFetchedNumber.current = null;
       return;
@@ -312,13 +399,23 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
     // Setting idNumber re-runs this effect, which then fetches.
     if (!number) {
       if (value.moiResult || loading) return;
-      void readNumberFromScan().then((scanned) => {
+      void readDocumentFromScan().then((scanned) => {
         const now = latest.current;
         // The scan this number was read off must still be the one on screen,
         // and nothing must have supplied a number meanwhile.
         const stillComplete = Boolean(now.qidScans?.frontScanned && now.qidScans?.backScanned);
-        if (!scanned || !stillComplete || now.idNumber) return;
-        onChange({ ...now, idNumber: scanned });
+        if (!scanned) {
+          // The reader captured something it could not identify. That is an
+          // unsuccessful attempt; once none remain, hand over to manual entry.
+          if (scanAttempts >= maxScanAttempts) setFallbackUnlocked(true);
+          return;
+        }
+        if (!stillComplete || now.idNumber) return;
+        // Records the DETECTED type alongside the number, so everything
+        // downstream - the field label, the MOI lookup, the eligibility ID-type
+        // check - keys off what was actually in the reader rather than off the
+        // 'QID' default this step starts on.
+        onChange({ ...now, idType: scanned.documentType, idNumber: scanned.documentNumber });
       });
       return;
     }
@@ -327,7 +424,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
     autoFetchedNumber.current = number;
     void runMoiValidation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idType, scannable, scanComplete, value.idNumber, value.moiResult, loading]);
+  }, [idType, effectiveScannable, scanComplete, value.idNumber, value.moiResult, loading]);
 
   const handleKeyDown = useEnterToSubmit(Boolean(value.idNumber) && !loading, runMoiValidation);
 
@@ -339,13 +436,22 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
 
   return (
     <div className="space-y-4" onKeyDown={handleKeyDown}>
-      <QidTypeSelector
-        idType={idType}
-        onIdTypeChange={handleIdTypeChange}
-        allowedTypes={allowedIdTypes}
-        unavailableTypes={unavailableIdTypes}
-        unavailableHint={unavailableIdTypesHint}
-      />
+      {/* FALLBACK ONLY as of 2026-09-28. Automatic detection is the primary
+          path: the reader identifies the document, so asking the agent to
+          classify it first was asking a question the scanner answers. The
+          selector is therefore hidden during the normal flow and appears only
+          once the scan budget is spent (or for a journey whose types are not
+          scannable at all, where there is nothing to detect).
+          `manualEntryUnlocked` is latched - see fallbackUnlocked. */}
+      {(!autoDetectIdType || manualEntryUnlocked) && (
+        <QidTypeSelector
+          idType={idType}
+          onIdTypeChange={handleIdTypeChange}
+          allowedTypes={allowedIdTypes}
+          unavailableTypes={unavailableIdTypes}
+          unavailableHint={unavailableIdTypesHint}
+        />
+      )}
 
       {/* The scanner, shown only for a Qatar ID. The other three document
           types are single-sided in this corpus (a passport is scanned at its
@@ -362,9 +468,16 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
           The budget now shows up the only way it should - as a scan that
           fails - and the failure message says what the agent can do about it
           without mentioning attempts. */}
-      {scannable && (
+      {effectiveScannable && (
         <div className="space-y-2">
-          <p className="text-[length:var(--fs-label)] text-fg-2">Scan {idTypeLabel(idType)}</p>
+          {/* Neutral until the reader has identified the document. Naming a
+              type here ("Scan Qatar ID (QID)") before anything has been read
+              asserts the answer to the question the scan exists to answer -
+              and would be simply wrong for the Diplomatic ID the same reader
+              detects. Once a scan has resolved, it names what was found. */}
+          <p className="text-[length:var(--fs-label)] text-fg-2">
+            {value.idNumber ? `Scan ${idTypeLabel(idType)}` : 'Scan identity document'}
+          </p>
           <QidImageUpload
             value={value.qidScans ?? {}}
             onChange={(qidScans) => {
@@ -395,21 +508,37 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
             // Names the document in the card's captions and picks its
             // artwork - the QID specimen must not stand in for a Diplomatic
             // ID.
-            documentType={idType}
+            documentType={demoType ?? idType}
             onScan={handleScanAttempt}
+            // DEMO ONLY - see QidImageUpload.demoTypes. All four are offered,
+            // including the two this journey cannot sell against, because the
+            // point is to show what each document looks like coming off the
+            // reader.
+            //
+            // Scoped to the scan-first flow. The eight journeys that still lead
+            // with a type selector would otherwise show two ways to pick a type
+            // on one screen, one of them labelled "demo" - which reads as a
+            // broken duplicate rather than as a demo aid.
+            demoTypes={!autoDetectIdType ? undefined : (['QID', 'Passport', 'GCC ID', 'Diplomatic ID'] as QidType[]).map((t) => ({
+              value: t,
+              // idTypeLabel, not the raw union member, so the link reads
+              // "Qatar ID" rather than "QID" while still carrying the type.
+              label: idTypeLabel(t),
+            }))}
+            onDemoScan={(t) => handleDemoScan(t as QidType)}
             // Budget spent: the reader is done, so the card stops offering to
             // drive it and the error below becomes the only instruction.
             // Switching ID type resets the budget (handleIdTypeChange), which
             // is the one way back to scanning - a different document deserves
             // its own attempts.
-            canScan={!scanExhausted}
+            canScan={!fallbackUnlocked}
             // Wording per the 2026-09-27 walkthrough. It names the barcode as
             // well as manual entry because both are real fallbacks at the
             // counter, and says "after the permitted attempts" so the agent
             // knows the reader is out of tries rather than merely unlucky.
             error={
-              scanExhausted
-                ? `We could not read the document after the permitted attempts. Scan the barcode or enter the ${idTypeLabel(idType)} number manually to continue.`
+              fallbackUnlocked
+                ? 'We could not read the document after the permitted attempts. Select the ID type and enter the number manually to continue.'
                 : undefined
             }
           />
@@ -439,7 +568,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
           Waiting for the number means the field appears already populated.
 
           Before any of those, for a QID, it is not rendered at all. */}
-      {(!scannable || (scanComplete && Boolean(value.idNumber)) || manualEntryUnlocked) && (
+      {(!effectiveScannable || (scanComplete && Boolean(value.idNumber)) || manualEntryUnlocked) && (
         <QidNumberField
           idType={idType}
           inputRef={numberInputRef}
@@ -451,7 +580,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
           onFetch={runMoiValidation}
           fetching={loading}
           error={notFound ? 'No MOI record found for this ID - try again.' : undefined}
-          readOnly={scannable && scanComplete}
+          readOnly={effectiveScannable && scanComplete}
           // The scanned path has no Fetch button, so it also lost the
           // "Fetching…" label that button carried - and the MOI lookup this
           // step fires automatically takes two mock calls at 200-600ms each.
@@ -460,7 +589,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
           // reads as nothing happening. The hint is the only thing left in
           // that state that can say otherwise.
           hint={
-            scannable && scanComplete
+            effectiveScannable && scanComplete
               ? loading
                 ? 'Checking the MOI registry…'
                 : 'Read from the scanned document.'
