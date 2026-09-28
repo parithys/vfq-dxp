@@ -136,6 +136,15 @@ interface MsisdnPickerProps {
    * this component has no other dependency on the Plan & Add-ons step.
    */
   planMrcQar?: number;
+  /**
+   * Set to false by New Postpaid Activation only (2026-09-28 "This section is
+   * not required") - the other four journeys sharing this component (FWA,
+   * Fixed Line Fibre, SIM & Number Management, Prepaid) keep the Manual
+   * MSISDN Entry form exactly as before, since nothing was said about them.
+   * Defaults to true so every existing call site is unaffected by omitting
+   * this prop.
+   */
+  allowManualEntry?: boolean;
 }
 
 // A full Qatar MSISDN: +974 followed by an 8-digit mobile local number
@@ -151,7 +160,7 @@ function isValidMsisdn(raw: string): boolean {
 // Pattern 10: Number Selection / Reservation Step - 8-digit search box + Free/Reserved
 // toggle, matching MSISDNs shown as selectable priced tiles; selecting triggers
 // immediate reservation with a confirmation token (SCR-024/048/082/104/157/191).
-export function MsisdnPicker({ selected, onSelect, planMrcQar }: MsisdnPickerProps) {
+export function MsisdnPicker({ selected, onSelect, planMrcQar, allowManualEntry = true }: MsisdnPickerProps) {
   const [numbers, setNumbers] = useState<MsisdnRecord[]>([]);
   const [tab, setTab] = useState<NumberTab>('Free');
   const [search, setSearch] = useState('');
@@ -242,15 +251,16 @@ export function MsisdnPicker({ selected, onSelect, planMrcQar }: MsisdnPickerPro
   // however many they have.
   const atReservationCap = myReserved.length >= MAX_RESERVATIONS_PER_AGENT;
 
-  // Sort is Free-and-Star now, not Star-only (2026-09-28): Free stopped being
-  // a flat QR0 list the moment the price-band split moved the 300-900
-  // formerly-Star rows into it, so a price sort now has something to do
-  // there too. Reserved stays excluded - see the SortKey doc comment above.
-  const showControls = tab === 'Free' || tab === 'Star';
+  // Star-only (2026-09-28 revision): every Free number is free to the
+  // customer regardless of its catalogue price, so ranking them by price
+  // answers a question a Free-tab agent never asks - unlike Star, where the
+  // price spread is exactly what the customer pays extra against. Reserved
+  // stays excluded too - see the SortKey doc comment above.
+  const showSort = tab === 'Star';
 
   // Without a control on screen, the order must not depend on whatever the
-  // agent last chose on Free or Star.
-  const effectiveSort: SortKey = showControls ? sort : 'number-asc';
+  // agent last chose on Star.
+  const effectiveSort: SortKey = showSort ? sort : 'number-asc';
 
   const filtered = inTab
     .filter((n) => {
@@ -304,8 +314,8 @@ export function MsisdnPicker({ selected, onSelect, planMrcQar }: MsisdnPickerPro
       )}
       {/* Hidden on Reserved (2026-09-28): a customer can hold at most
           MAX_RESERVATIONS_PER_AGENT numbers, so there is nothing to search -
-          same reasoning as showControls just below, applied to this box
-          instead of the tier/sort row. */}
+          shown on both Free and Star still, since search narrows by number
+          regardless of whether that tab also offers a price sort. */}
       {tab !== 'Reserved' && (
         <Input
           aria-label="Search 8-digit number"
@@ -322,15 +332,13 @@ export function MsisdnPicker({ selected, onSelect, planMrcQar }: MsisdnPickerPro
           the same list the search box above it does, so it sits with it
           rather than over the results.
 
-          The WHOLE ROW is absent on Reserved (see showControls): that tab is
-          a short held-numbers list an agent scans rather than ranks, and an
-          empty control row would leave a gap the agent reads as something
-          having failed to load. */}
+          Star only (2026-09-28 revision) - see showSort's own note. Absent on
+          Free and Reserved alike now: neither has a price ranking worth
+          showing a control for, and an empty control row would leave a gap
+          the agent reads as something having failed to load. */}
       {/* Tier chips (Platinum / Gold / Silver) and the TIER filter were removed
-          on 2026-09-27 per the annotated walkthrough. Sort stays, and as of
-          2026-09-28 acts on Free as well as Star, now that Free is a real
-          price band (0-999) rather than a flat QR0 list. */}
-      {showControls && (
+          on 2026-09-27 per the annotated walkthrough. */}
+      {showSort && (
         <div className="flex items-center justify-end gap-2">
           <span className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Sort</span>
           <Select
@@ -429,20 +437,22 @@ export function MsisdnPicker({ selected, onSelect, planMrcQar }: MsisdnPickerPro
                       direction - CheckoutSummaryStep's isStarNumber uses the
                       identical threshold, so a number that reads plain here
                       never turns into a Star line with a lock-in there. */}
-                  {planMrcQar !== undefined && n.priceQAR >= FREE_NUMBER_PRICE_CEILING_QAR && (
+                  {/* Only rendered when there IS an overage to report
+                      (2026-09-28: "'No extra charge' text is not required to
+                      be displayed. Display only if there is any extra amount
+                      to be paid") - a number within the plan's entitlement
+                      now shows nothing extra under its price at all, the same
+                      way a Free-tab number never did. */}
+                  {planMrcQar !== undefined &&
+                    n.priceQAR >= FREE_NUMBER_PRICE_CEILING_QAR &&
                     (() => {
                       const overage = starNumberOverageQar(planMrcQar, n.priceQAR);
                       return overage > 0 ? (
                         <span className="block text-[length:var(--fs-caption)] text-[var(--warn-text)]">
                           +QR {overage} extra
                         </span>
-                      ) : (
-                        <span className="block text-[length:var(--fs-caption)] text-success">
-                          No extra charge
-                        </span>
-                      );
-                    })()
-                  )}
+                      ) : null;
+                    })()}
                 </span>
               </div>
             </button>
@@ -496,8 +506,10 @@ export function MsisdnPicker({ selected, onSelect, planMrcQar }: MsisdnPickerPro
           2026-09-27 per the walkthrough. The form itself stays, but only
           BEFORE a selection exists: with a number already chosen there is
           nothing for it to do, and it read as a second required step sitting
-          under the confirmation. */}
-      {!selected && (
+          under the confirmation. Omitted entirely for Postpaid (2026-09-28
+          "This section is not required") via allowManualEntry - see that
+          prop's own note. */}
+      {allowManualEntry && !selected && (
         <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4 space-y-2">
           <h4 className="text-fg font-semibold">Manual MSISDN Entry</h4>
           <Input

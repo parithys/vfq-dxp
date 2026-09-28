@@ -367,6 +367,10 @@ export function NewPostpaidWizard() {
                   setValue('numberPriceQAR', priceQAR);
                 }}
                 planMrcQar={products.find((p) => p.productId === values.productId)?.mrcQAR}
+                // "This section is not required" (2026-09-28) - Postpaid only;
+                // the other four journeys sharing MsisdnPicker keep Manual
+                // MSISDN Entry, since nothing was said about them.
+                allowManualEntry={false}
               />
             ),
             isValid: (values) => Boolean(values.msisdn),
