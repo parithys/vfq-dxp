@@ -5,6 +5,7 @@ import { Badge } from '../primitives/Badge';
 import { Select } from '../primitives/Select';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { usePersonaStore } from '../../stores/personaStore';
+import { useAuthStore } from '../../stores/authStore';
 import { getPersona } from '../../engines/configEngine';
 
 interface MsisdnRecord {
@@ -57,6 +58,13 @@ function toLocalMsisdn(msisdn: string): string {
   const local = msisdn.replace(/[\s-]/g, '').replace(/^\+?974/, '');
   return /^\d{8}$/.test(local) ? `${local.slice(0, 4)} ${local.slice(4)}` : msisdn;
 }
+
+/**
+ * How many numbers one agent may hold at a time (2026-09-28 direction).
+ * Applied to the action that creates a hold, not to selecting one already
+ * held - re-picking your own reservation is not a new one.
+ */
+const MAX_RESERVATIONS_PER_AGENT = 2;
 
 /** How many rows are shown at once before Next/Previous (walkthrough: 10). */
 const PAGE_SIZE = 10;
@@ -130,7 +138,13 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
   // the signed-in persona. Anything that is not an in-store retail channel
   // (tablet, field, telesales) gets the Free-first order.
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
-  const channel = getPersona(activePersonaId)?.channel ?? '';
+  const persona = getPersona(activePersonaId);
+  const channel = persona?.channel ?? '';
+  // numbers.json records a reservation against the agent's DISPLAY NAME
+  // ("Fatima Al-Kuwari"), which is the identity resolved from
+  // users-agents.json at sign-in - NOT persona.name, which is the role label
+  // ("Retail Sales Agent") and matches no reservedBy value.
+  const agentName = useAuthStore((s) => s.profile?.name) ?? '';
   const tabOrder = /retail|in-store/i.test(channel) ? TAB_ORDER_RETAIL : TAB_ORDER_TABLET;
   const [customMsisdn, setCustomMsisdn] = useState('');
   const [customError, setCustomError] = useState<string | null>(null);
@@ -143,6 +157,12 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
   }, []);
 
   const reserveCustom = () => {
+    if (atReservationCap) {
+      setCustomError(
+        `You already hold ${MAX_RESERVATIONS_PER_AGENT} reserved numbers. Release one before reserving another.`
+      );
+      return;
+    }
     if (!isValidMsisdn(customMsisdn)) {
       setCustomError('Enter a full international format MSISDN (e.g. +974 3300 1234).');
       return;
@@ -172,9 +192,21 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
   // They are NOT forgotten: reserveCustom below still rejects a Reserved or
   // BLOCKED number typed into Manual MSISDN Entry by name, so the inventory
   // is still enforced where an agent could otherwise ask for one.
-  const inTab = numbers.filter((n) =>
-    tab === 'Reserved' ? n.status === 'Reserved' : n.category === tab && n.status === 'AVAILABLE'
-  );
+  // The Reserved tab is THIS AGENT'S holds, not everyone's (2026-09-28). It
+  // used to list all five reservations in the dataset, including four held by
+  // other agents that this one cannot use - a list where most rows were
+  // unusable and nothing on screen said why.
+  const myReserved = numbers.filter((n) => n.status === 'Reserved' && n.reservedBy === agentName);
+  const inTab =
+    tab === 'Reserved'
+      ? myReserved
+      : numbers.filter((n) => n.category === tab && n.status === 'AVAILABLE');
+
+  // An agent may hold at most two numbers at a time. Enforced on the action
+  // that CREATES a hold (manual reservation); picking one of their own
+  // existing holds off this tab is not a new reservation and stays allowed
+  // however many they have.
+  const atReservationCap = myReserved.length >= MAX_RESERVATIONS_PER_AGENT;
 
   // Tier chips and Sort are STAR-ONLY.
   //
@@ -225,6 +257,15 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
           </button>
         ))}
       </div>
+      {/* States the cap up front rather than only on the error that hitting it
+          produces - an agent planning a second reservation should be able to
+          see they are at the limit before they try. */}
+      {tab === 'Reserved' && (
+        <p className={`text-[length:var(--fs-caption)] ${atReservationCap ? 'text-[var(--warn-text)]' : 'text-muted'}`}>
+          You hold {myReserved.length} of {MAX_RESERVATIONS_PER_AGENT} reserved numbers.
+          {atReservationCap && ' Release one before reserving another.'}
+        </p>
+      )}
       <Input
         aria-label="Search 8-digit number"
         placeholder="Search 8-digit number"
@@ -336,8 +377,8 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
           <p className="text-muted text-[length:var(--fs-body)] col-span-full">
             {tab === 'Reserved'
               ? search
-                ? 'No reserved numbers match that search.'
-                : 'No reserved numbers.'
+                ? 'None of your reserved numbers match that search.'
+                : 'You have no reserved numbers.'
               : search
                 ? 'No available numbers match that search.'
                 : 'No available numbers in this category.'}

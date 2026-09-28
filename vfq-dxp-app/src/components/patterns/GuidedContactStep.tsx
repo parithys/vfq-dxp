@@ -432,6 +432,11 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
             // picker offering 200 others would present a choice in which every
             // alternative fails validation.
             fixedIso="QA"
+            // Qatar numbers are 8 digits after the dial code. Without this the
+            // cap is E.164's 15-minus-dial-code, i.e. 12, so the field happily
+            // took "777777777777" and only the validator underneath objected.
+            // The 9th keystroke now simply does not land.
+            maxNationalDigits={8}
             helperText="Service notifications will be sent to this Qatar mobile number."
             value={value.altPhone ?? ''}
             placeholder="5566 7766"

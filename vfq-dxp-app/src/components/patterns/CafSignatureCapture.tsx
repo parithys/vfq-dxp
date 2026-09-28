@@ -4,6 +4,8 @@ import { Button } from '../primitives/Button';
 import { Drawer } from '../primitives/Drawer';
 import { SignaturePad } from '../primitives/SignaturePad';
 import { Badge } from '../primitives/Badge';
+import { CafDocumentUpload } from '../domain/CafDocumentUpload';
+import type { CafDocument } from '../domain/CafDocumentUpload';
 
 export type CafType = 'Digital' | 'Manual' | 'Touch Screen';
 
@@ -19,8 +21,8 @@ const CAF_TYPES: { type: CafType; label: string; icon: string }[] = [
 ];
 
 interface CafSignatureCaptureProps {
-  value: { cafType?: CafType; signatureDataUrl?: string };
-  onChange: (value: { cafType?: CafType; signatureDataUrl?: string }) => void;
+  value: { cafType?: CafType; signatureDataUrl?: string; documents?: CafDocument[] };
+  onChange: (value: { cafType?: CafType; signatureDataUrl?: string; documents?: CafDocument[] }) => void;
   customerName?: string;
   /** Binds an ID Number line onto the CAF preview - module-hierarchy.json's
    * "CAF form dynamically binds Qatari ID/Passport number field for prepaid
@@ -107,6 +109,18 @@ export function CafSignatureCapture({ value, onChange, customerName, idLabel, id
             </Button>
           )}
         </div>
+      )}
+
+      {/* Upload of the signed paperwork. Gated on the CAF actually being
+          signed: for CAF-Digital that is the in-app signature; for Manual and
+          Touch Screen the signing happens off-screen, so choosing either type
+          IS the point at which there is paper to scan back in - which is why
+          those two do not wait for signatureDataUrl, which they never set. */}
+      {value.cafType && (value.cafType !== 'Digital' || value.signatureDataUrl) && (
+        <CafDocumentUpload
+          documents={value.documents ?? []}
+          onChange={(documents) => onChange({ ...value, documents })}
+        />
       )}
 
       {/* Read to the customer before signature. Deliberately BELOW the CAF
