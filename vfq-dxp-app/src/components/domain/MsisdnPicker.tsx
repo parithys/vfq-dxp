@@ -1,12 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Input } from '../primitives/Input';
 import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
 import { Select } from '../primitives/Select';
 import * as mockDataEngine from '../../engines/mockDataEngine';
-import { usePersonaStore } from '../../stores/personaStore';
 import { useAuthStore } from '../../stores/authStore';
-import { getPersona } from '../../engines/configEngine';
+import { isQatarMobileLocalNumber } from '../primitives/countryDialCodes';
 
 interface MsisdnRecord {
   msisdn: string;
@@ -30,23 +29,22 @@ interface MsisdnRecord {
 type NumberTab = 'Free' | 'Star' | 'Reserved';
 
 const TAB_LABELS: Record<NumberTab, string> = {
-  Free: 'Free Number',
+  Free: 'Free Numbers',
   Star: 'Star Numbers',
   Reserved: 'Reserved Numbers',
 };
 
 /**
- * Tab ORDER follows the channel (2026-09-27 walkthrough):
- *   Retail  - Reserved, Star, Free
- *   Tablet  - Free, Star, Reserved
- *
- * A retail agent is usually working a number the customer already holds or is
- * paying for, so those lead; a tablet/field agent is usually handing out
- * whatever is free. The channel comes off the signed-in persona rather than a
- * prop, because it is a fact about who is serving, not about this step.
+ * Tab ORDER is fixed for every channel as of 2026-09-28: Free, Star,
+ * Reserved. This replaces the channel-based order used until then (Retail -
+ * Reserved, Star, Free; Tablet/field - Free, Star, Reserved), which existed
+ * so a retail agent working a number the customer already held would see it
+ * first. That job now belongs to the auto-select-on-load effect below
+ * instead of the tab ORDER itself - an agent whose customer holds a reserved
+ * number lands on the Reserved tab regardless of channel, while the tabs
+ * themselves stay in one predictable order for everyone.
  */
-const TAB_ORDER_RETAIL: NumberTab[] = ['Reserved', 'Star', 'Free'];
-const TAB_ORDER_TABLET: NumberTab[] = ['Free', 'Star', 'Reserved'];
+const TAB_ORDER: NumberTab[] = ['Free', 'Star', 'Reserved'];
 
 /**
  * Qatar MSISDNs are stored E.164 (+9743300...) but shown as the bare 8-digit
@@ -115,14 +113,14 @@ interface MsisdnPickerProps {
   onSelect: (msisdn: string, priceQAR: number) => void;
 }
 
-// A full Qatar MSISDN: +974 followed by an 8-digit local number starting
-// 3/5/6/7 (same shape as every seeded numbers.json record and the same
-// leading-digit rule GuidedContactStep's isValidAltPhone uses for a Qatar
-// local number) - stricter than that general validator since a number
-// being reserved here must be a complete, dialable MSISDN, not any
-// alternate-contact phone shape.
+// A full Qatar MSISDN: +974 followed by an 8-digit mobile local number
+// (isQatarMobileLocalNumber - same leading-digit rule GuidedContactStep's
+// isValidAltPhone uses) - stricter than that general validator since a
+// number being reserved here must be a complete, dialable MSISDN with the
+// +974 prefix present, not any alternate-contact phone shape.
 function isValidMsisdn(raw: string): boolean {
-  return /^\+974[3567]\d{7}$/.test(raw.replace(/[\s-]/g, ''));
+  const digits = raw.replace(/[\s-]/g, '');
+  return digits.startsWith('+974') && isQatarMobileLocalNumber(digits.slice(4));
 }
 
 // Pattern 10: Number Selection / Reservation Step - 8-digit search box + Free/Reserved
@@ -134,18 +132,11 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('price-desc');
   const [page, setPage] = useState(0);
-  // Tab order is a property of the CHANNEL the agent is serving on, read off
-  // the signed-in persona. Anything that is not an in-store retail channel
-  // (tablet, field, telesales) gets the Free-first order.
-  const activePersonaId = usePersonaStore((s) => s.activePersonaId);
-  const persona = getPersona(activePersonaId);
-  const channel = persona?.channel ?? '';
   // numbers.json records a reservation against the agent's DISPLAY NAME
   // ("Fatima Al-Kuwari"), which is the identity resolved from
   // users-agents.json at sign-in - NOT persona.name, which is the role label
   // ("Retail Sales Agent") and matches no reservedBy value.
   const agentName = useAuthStore((s) => s.profile?.name) ?? '';
-  const tabOrder = /retail|in-store/i.test(channel) ? TAB_ORDER_RETAIL : TAB_ORDER_TABLET;
   const [customMsisdn, setCustomMsisdn] = useState('');
   const [customError, setCustomError] = useState<string | null>(null);
   // Whether the manual-entry FORM is open. Only consulted once a number is
@@ -155,6 +146,20 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
   useEffect(() => {
     mockDataEngine.list<MsisdnRecord>('numbers').then(setNumbers);
   }, []);
+
+  // Auto-open Reserved on load if this customer already has one, else the
+  // Free default stands (2026-09-28 request). Guarded to fire only once: it
+  // runs the first time `numbers` arrives from the mock data engine and must
+  // not re-fire on every later change to that list - reserving a NEW number
+  // later in this same session (reserveCustom below) must not yank the agent
+  // back to a tab they have since navigated away from.
+  const hasAutoSelectedTab = useRef(false);
+  useEffect(() => {
+    if (hasAutoSelectedTab.current || numbers.length === 0) return;
+    hasAutoSelectedTab.current = true;
+    const alreadyReserved = numbers.some((n) => n.status === 'Reserved' && n.reservedBy === agentName);
+    if (alreadyReserved) setTab('Reserved');
+  }, [numbers, agentName]);
 
   const reserveCustom = () => {
     if (atReservationCap) {
@@ -224,6 +229,12 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
 
   const filtered = inTab
     .filter((n) => {
+      // No search on Reserved (2026-09-28): an agent holds at most
+      // MAX_RESERVATIONS_PER_AGENT numbers, so there is nothing there worth
+      // narrowing, and the search box is hidden below - filtering against a
+      // leftover query typed on another tab would silently hide a held
+      // number with no visible control on screen to explain why.
+      if (tab === 'Reserved') return true;
       // Matches the stored E.164 OR the displayed local form, so typing the
       // 8 digits the agent can see on screen finds the row.
       return search ? n.msisdn.includes(search) || toLocalMsisdn(n.msisdn).replace(/\s/g, '').includes(search.replace(/\s/g, '')) : true;
@@ -240,7 +251,7 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
   return (
     <div className="space-y-3">
       <div className="flex gap-1 border-b border-border-soft">
-        {tabOrder.map((t) => (
+        {TAB_ORDER.map((t) => (
           <button
             key={t}
             onClick={() => {
@@ -266,15 +277,21 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
           {atReservationCap && ' Release one before reserving another.'}
         </p>
       )}
-      <Input
-        aria-label="Search 8-digit number"
-        placeholder="Search 8-digit number"
-        value={search}
-        onChange={(e) => {
-          setSearch(e.target.value);
-          setPage(0);
-        }}
-      />
+      {/* Hidden on Reserved (2026-09-28): a customer can hold at most
+          MAX_RESERVATIONS_PER_AGENT numbers, so there is nothing to search -
+          same reasoning as showControls just below, applied to this box
+          instead of the tier/sort row. */}
+      {tab !== 'Reserved' && (
+        <Input
+          aria-label="Search 8-digit number"
+          placeholder="Search 8-digit number"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(0);
+          }}
+        />
+      )}
 
       {/* Tier filter left, sort right, on one row - per the 2026-09-26 asset.
           Both narrow the same list the search box above them does, so they sit
@@ -376,9 +393,7 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
         {filtered.length === 0 && (
           <p className="text-muted text-[length:var(--fs-body)] col-span-full">
             {tab === 'Reserved'
-              ? search
-                ? 'None of your reserved numbers match that search.'
-                : 'You have no reserved numbers.'
+              ? 'You have no reserved numbers.'
               : search
                 ? 'No available numbers match that search.'
                 : 'No available numbers in this category.'}

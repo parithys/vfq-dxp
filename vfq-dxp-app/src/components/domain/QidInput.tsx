@@ -65,6 +65,9 @@ const CARD_ICON = 'M3 6h18v12H3z M3 10h18 M6 15h3';
 const BOOK_ICON = 'M12 6.5c-1.6-1.1-4-1.6-6-1.2v12.8c2-0.4 4.4 0.1 6 1.2 M12 6.5c1.6-1.1 4-1.6 6-1.2v12.8c-2-0.4-4.4 0.1-6 1.2 M12 6.5v12.8';
 const GLOBE_ICON = 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M3 12h18 M12 3c2.4 2.6 2.4 15.4 0 18 M12 3c-2.4 2.6-2.4 15.4 0 18';
 const SHIELD_ICON = 'M12 3l7 3v5.5c0 5-3 8.3-7 9.5-4-1.2-7-4.5-7-9.5V6z';
+/** A row of bars of varying width, standing in for a 1D barcode symbol at the
+ * small size this renders at (the field's trailing icon, ~16px). */
+const BARCODE_ICON = 'M3 4v16 M6 4v16 M8 4v16 M11 4v16 M13 4v16 M14 4v16 M17 4v16 M19 4v16 M21 4v16';
 
 const ID_TYPES: { type: QidType; label: string; numberLabel: string; icon: string; placeholder: string }[] = [
   { type: 'QID', label: 'Qatar ID (QID)', numberLabel: 'Qatar ID (QID) Number', icon: CARD_ICON, placeholder: 'e.g. 28456701234' },
@@ -72,6 +75,30 @@ const ID_TYPES: { type: QidType; label: string; numberLabel: string; icon: strin
   { type: 'GCC ID', label: 'GCC ID', numberLabel: 'GCC ID Number', icon: GLOBE_ICON, placeholder: 'e.g. 784202312345678' },
   { type: 'Diplomatic ID', label: 'Diplomatic ID', numberLabel: 'Diplomatic ID Number', icon: SHIELD_ICON, placeholder: 'e.g. DIP-QA-004521' },
 ];
+
+/**
+ * DEMO ONLY (2026-09-28, requested as such): the barcode icon inside this
+ * field simulates reading the number off a physical barcode rather than
+ * requiring the agent to type it. There is no real scanner integration -
+ * same simulated shape as every other "scan" in this app - so the click
+ * fills a fixed, realistic number per type instead of reading one.
+ *
+ * Grounded in the SAME four identity-documents.json records the auto-detect
+ * scan flow resolves (see ScannedIdPreview's SPECIMENS, and its note on why
+ * Diplomatic ID resolves to Henrik Lindqvist/DIP-QA-004977 rather than the
+ * array-first, but expired, Sophie Laurent/DIP-QA-004521 record) - not the
+ * DIFFERENT numbers this file's own placeholder text shows. A barcode-filled
+ * QID or Passport number was already going to match its placeholder (both
+ * happen to be the same record), but Diplomatic ID's placeholder is
+ * Sophie's - keeping the two demo paths pointed at the same identity per type
+ * matters more than matching the placeholder text.
+ */
+const BARCODE_DEMO_NUMBERS: Record<QidType, string> = {
+  QID: '28456701234',
+  Passport: 'P0998812',
+  'GCC ID': '784202312345678',
+  'Diplomatic ID': 'DIP-QA-004977',
+};
 
 // QID/Passport/GCC/Diplomatic ID lookup control, per component-catalogue.md §2
 // (ENT-023/037 Customer/Contact) - a 4-way ID Type card selector (only QID and
@@ -108,7 +135,17 @@ export function QidTypeSelector({
       <div className={`grid grid-cols-2 gap-3 ${offered.length > 2 ? 'sm:grid-cols-4' : ''}`}>
         {offered.map((t) => {
           const isUnavailable = unavailable.has(t.type);
-          const selected = !isUnavailable && t.type === idType;
+          // NOT gated on availability (2026-09-28) - `idType` is the type
+          // the app actually detected or was last attempting, regardless of
+          // whether that type can be clicked into here. Gating this on
+          // `!isUnavailable` used to hide the checkmark entirely whenever the
+          // detected type was one requiring exception approval (Passport/GCC
+          // ID in Postpaid): a scan could correctly resolve to "Passport" and
+          // drive the number field below with Passport's label and
+          // placeholder, while this selector showed nothing chosen at all -
+          // the one card that WAS the answer looked identical to the three
+          // that weren't.
+          const selected = t.type === idType;
           return (
             <button
               key={t.type}
@@ -175,20 +212,59 @@ export function QidNumberField({
       <div className="flex gap-2">
         {/* readOnly, not disabled: a scanned number is data the agent reads
             back off the screen, and disabled styling drops it to
-            --field-label-disabled at about 2.3:1. readOnly keeps --fg and
-            stays selectable so it can be copied. */}
-        <input
-          id="qid-number-input"
-          ref={inputRef}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={readOnly ? undefined : current.placeholder}
-          readOnly={readOnly}
-          className={`flex-1 min-w-0 rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-fg
-            ${readOnly ? 'bg-surface cursor-default' : 'bg-bg'}
-            ${error ? 'border-[var(--field-border-error)]' : value ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'}
-            focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]`}
-        />
+            --field-label-disabled at about 2.3:1. readOnly keeps --fg.
+            NOT selectable/focusable/clickable as of 2026-09-28, matching
+            Input.tsx's primitive - select-none plus blocking focus-on-click
+            below. This reverses the "stays selectable so it can be copied"
+            note that used to sit here; see Input.tsx for the fuller
+            rationale and the tradeoff this gives up. */}
+        {/* Relative wrapper so the barcode icon sits INSIDE the field's
+            border rather than beside it - it fills the same box the agent
+            would otherwise type into, the way a real barcode reader's output
+            lands in the field it's wired to. Only wrapped (not a plain
+            input) when the icon can actually render, so the readOnly/scanned
+            state keeps its original markup untouched. */}
+        {readOnly ? (
+          <input
+            id="qid-number-input"
+            ref={inputRef}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            readOnly
+            tabIndex={-1}
+            onMouseDown={(e) => e.preventDefault()}
+            className={`flex-1 min-w-0 rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-fg
+              bg-surface cursor-default select-none
+              ${error ? 'border-[var(--field-border-error)]' : value ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'}
+              focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]`}
+          />
+        ) : (
+          <div className="relative flex-1 min-w-0">
+            <input
+              id="qid-number-input"
+              ref={inputRef}
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder={current.placeholder}
+              className={`w-full rounded-[var(--field-radius)] border py-2 pl-3 pr-9 text-[length:var(--fs-body)] text-fg bg-bg
+                ${error ? 'border-[var(--field-border-error)]' : value ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'}
+                focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]`}
+            />
+            {/* DEMO ONLY - see BARCODE_DEMO_NUMBERS. Real hardware would push
+                a read into this same field; this simulates that push with a
+                fixed number for whichever ID type is currently selected. */}
+            <button
+              type="button"
+              onClick={() => onChange(BARCODE_DEMO_NUMBERS[idType])}
+              aria-label={`Simulate scanning the ${current.numberLabel.replace(/ Number$/, '')} barcode`}
+              title="Scan barcode"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-[var(--radius-button)] text-muted
+                hover:text-accent focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+            >
+              <Icon path={BARCODE_ICON} className="w-4 h-4" />
+            </button>
+          </div>
+        )}
         {/* Only when the number is typeable. A scanned number has already
             been looked up by the act of scanning, so a Fetch beside it asked
             the agent to perform an action that had no effect they could

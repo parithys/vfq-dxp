@@ -90,6 +90,24 @@ export const COUNTRY_DIAL_CODES: CountryDialCode[] = [
 
 export const DEFAULT_COUNTRY_ISO = 'QA';
 
+/**
+ * Qatar's mobile numbering plan: a local (post-+974) number is mobile only
+ * when it leads with 3, 5, 6 or 7. Fixed-line/landline numbers lead with 4
+ * (e.g. 44xxxxxx) and are the same 8-digit length, so length alone cannot
+ * tell the two apart - confirmed against every seeded public/mock-data/
+ * numbers.json MSISDN, which are all mobile inventory and all lead with one
+ * of these four digits.
+ *
+ * Shared by isValidAltPhone (GuidedContactStep) and isValidMsisdn
+ * (MsisdnPicker) so the two never drift onto different rules for what counts
+ * as a Qatar mobile number.
+ */
+export const QATAR_MOBILE_LOCAL_PATTERN = /^[3567]\d{7}$/;
+
+export function isQatarMobileLocalNumber(local: string): boolean {
+  return QATAR_MOBILE_LOCAL_PATTERN.test(local);
+}
+
 export function countryByIso(iso: string): CountryDialCode {
   return COUNTRY_DIAL_CODES.find((c) => c.iso === iso) ?? COUNTRY_DIAL_CODES[0];
 }

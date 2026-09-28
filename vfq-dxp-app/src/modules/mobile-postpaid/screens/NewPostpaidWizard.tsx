@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
 import { monthlyCharges } from '../../../engines/postpaidPricing';
-import { GuidedContactStep, isValidAltPhone, isValidEmail, hasIdentityDetails } from '../../../components/patterns/GuidedContactStep';
+import { GuidedContactStep, isValidAltPhone, isValidEmail, hasIdentityDetails, emailVerification } from '../../../components/patterns/GuidedContactStep';
 import type { GuidedContactValue } from '../../../components/patterns/GuidedContactStep';
 import { ZsbAddressStep } from '../../../components/patterns/ZsbAddressStep';
 import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
@@ -14,15 +14,26 @@ import { SimTypeStep } from '../../../components/domain/SimTypeStep';
 import type { SimTypeValue } from '../../../components/domain/SimTypeStep';
 import { EsimActivationPanel } from '../../../components/domain/EsimActivationPanel';
 import { CheckoutSummaryStep } from '../../../components/patterns/CheckoutSummaryStep';
+import type { TncLegalFacts } from '../../../components/patterns/CheckoutSummaryStep';
 import { WinCashPaymentStep } from '../../../components/patterns/WinCashPaymentStep';
 import type { WinCashPaymentValue } from '../../../components/patterns/WinCashPaymentStep';
 import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCapture';
 import type { CafType } from '../../../components/patterns/CafSignatureCapture';
+import type { AdditionalDocument } from '../../../components/domain/AdditionalDocumentsUpload';
 import { OrderConfirmationScreen } from '../../../components/patterns/OrderConfirmationScreen';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { useEntityStore } from '../../../stores/entityStore';
 
 const WIZARD_ID = 'new-postpaid';
+
+// Placeholder pending business confirmation (2026-09-28: "Do not assume
+// Agent 360 as the destination, as this has not been finalised. Keep the
+// post-exit destination configurable until confirmed"). A single named
+// constant rather than a config-engine entry: the value itself is explicitly
+// unconfirmed, so a whole schema/file for it would be structure built for a
+// requirement that does not exist yet. Change this one line - used by both
+// Save & Exit and Abandon - once the real destination is decided.
+const POST_EXIT_DESTINATION = '/';
 
 interface Product {
   productId: string;
@@ -108,100 +119,101 @@ export function NewPostpaidWizard() {
         // ready for the next customer. Matters most on a hard-stopped
         // Eligibility: the order cannot advance, so without this the agent is
         // left holding a draft with nothing to do about it.
-        onAbandon={() => navigate('/')}
+        onAbandon={() => navigate(POST_EXIT_DESTINATION)}
+        // "Keep Cancel available after CAF signing and until payment starts"
+        // (2026-09-28) - Abandon disappears once the agent reaches Payment,
+        // where WinCash may already hold the transaction outside this app's
+        // own reach. See WinCashPaymentStep's own note on this.
+        hideAbandonFrom="payment"
+        // Save & Exit (2026-09-28), distinct from Abandon: keeps the draft
+        // for later resumption. GuidedActivationWizard does the actual save;
+        // this only says where to go afterward.
+        onSaveExit={() => navigate(POST_EXIT_DESTINATION)}
         steps={[
           {
             key: 'contact',
             label: 'Contact',
-            render: ({ values, setValue }) => (
-              <>
-              <GuidedContactStep
-                // Direct postpaid sale is limited to a valid QID or
-                // Diplomatic ID (2026-09-25). Passport, GCC ID and other
-                // exception identification go through CBM approval, so they
-                // are not offered here at all - the eligibility engine still
-                // routes them if one reaches it via another journey.
-                allowedIdTypes={['QID', 'Diplomatic ID']}
-                // Shown greyed rather than omitted (2026-09-27): an agent
-                // holding a passport needs to see the option exists and why it
-                // is closed. Selecting one stays impossible until the exception
-                // approval workflow behind it is designed.
-                unavailableIdTypes={['Passport', 'GCC ID']}
-                unavailableIdTypesHint="Passport and GCC ID are available through the exception approval flow."
-                // Scan-first: the reader identifies the document, so no type is
-                // chosen up front. Opt-in, so the eight other journeys sharing
-                // this step keep their selector-led flow (2026-09-28).
-                autoDetectIdType
-                value={(values.contact as GuidedContactValue) ?? {}}
-                onChange={(v) => setValue('contact', v)}
-                showIptvToggle={false}
-              />
-              {/* Headless: runs the eligibility checks as soon as MOI resolves,
-                  so `values.eligibility` exists before the agent leaves this
-                  step. That is what lets the Eligibility step be SKIPPED on a
-                  clean run instead of flashing eight green rows and
-                  auto-advancing (2026-09-27). */}
-              <EligibilityGateStep
-                headless
-                idNumber={(values.contact as GuidedContactValue | undefined)?.idNumber}
-                result={values.eligibility as EligibilityResult | undefined}
-                onResult={(r) => setValue('eligibility', r)}
-              />
-              </>
-            ),
-            isValid: (values) => {
-              const c = values.contact as GuidedContactValue | undefined;
-              return Boolean(c?.moiResult && hasIdentityDetails(c ?? {}) && isValidEmail(c?.email) && isValidAltPhone(c?.altPhone));
-            },
-          },
-          {
-            key: 'eligibility',
-            label: 'Eligibility',
-            description: 'Blacklist, line cap & HRN',
-            // Hidden entirely - not just auto-advanced past - when every check
-            // passes (2026-09-27). `skip` removes it from activeSteps, so it
-            // leaves the rail, stops consuming a step number, and Back from
-            // Address returns to Contact.
-            //
-            // "Everything passed" means no check reported anything other than
-            // 'pass'. Approval-routing counts as needing attention even though
-            // it does not block: an order diverted for approval with nothing
-            // said about it is worse than one extra screen.
-            skip: (values) => {
-              const r = values.eligibility as EligibilityResult | undefined;
-              return Boolean(r) && r!.checks.every((c) => c.outcome === 'pass') && !r!.requiresHrnAdvance;
-            },
-            render: ({ values, setValue }) => {
+            // 2026-09-28: the separate 'eligibility' step is GONE - no more
+            // rail entry, no more skip()/autoAdvanceWhen() dance to hide it on
+            // a clean run. Eligibility now lives permanently as a stacked
+            // panel at the foot of THIS step, still driven by the same
+            // MOI-resolved idNumber, still evaluated the moment MOI resolves
+            // (not gated on a Continue click - see the note above isValid).
+            // Passing checks render nothing at all (EligibilityGateStep
+            // returns null); only what needs the agent's attention appears.
+            render: ({ values, setValue, goNext }) => {
               const contact = values.contact as GuidedContactValue | undefined;
+              const eligibility = values.eligibility as EligibilityResult | undefined;
               return (
-                <EligibilityGateStep
-                  idNumber={contact?.idNumber}
-                  // Feeding the previous result back in is what makes this a
-                  // one-time check across re-entries to the step.
-                  result={values.eligibility as EligibilityResult | undefined}
-                  onResult={(r) => setValue('eligibility', r)}
+                <>
+                <GuidedContactStep
+                  // Direct postpaid sale is limited to a valid QID or
+                  // Diplomatic ID (2026-09-25). Passport, GCC ID and other
+                  // exception identification go through CBM approval, so they
+                  // are not offered here at all - the eligibility engine still
+                  // routes them if one reaches it via another journey.
+                  allowedIdTypes={['QID', 'Diplomatic ID']}
+                  // Shown greyed rather than omitted (2026-09-27): an agent
+                  // holding a passport needs to see the option exists and why it
+                  // is closed. Selecting one stays impossible until the exception
+                  // approval workflow behind it is designed.
+                  unavailableIdTypes={['Passport', 'GCC ID']}
+                  unavailableIdTypesHint="Passport and GCC ID are available through the exception approval flow."
+                  // Scan-first: the reader identifies the document, so no type is
+                  // chosen up front. Opt-in, so the eight other journeys sharing
+                  // this step keep their selector-led flow (2026-09-28).
+                  autoDetectIdType
+                  value={(values.contact as GuidedContactValue) ?? {}}
+                  onChange={(v) => setValue('contact', v)}
+                  showIptvToggle={false}
                 />
+                <div className="mt-6 pt-6 border-t border-border-soft">
+                  <EligibilityGateStep
+                    idNumber={contact?.idNumber}
+                    // Feeding the previous result back in is what makes this a
+                    // one-time check across re-entries to the step.
+                    result={eligibility}
+                    onResult={(r) => setValue('eligibility', r)}
+                    // Pattern 2 (Approval Workflow): this step's own isValid
+                    // blocks the ordinary Continue whenever an approval-routing
+                    // check applies, so this button is the only forward path in
+                    // that state - it goes to the exact same next step Continue
+                    // would have, `goNext` unguarded by isValid deliberately.
+                    onProceedToApproval={goNext}
+                    // Pattern 3 (Alternative Product): a collections soft-stop
+                    // has no forward path within this wizard at all - Postpaid
+                    // cannot be issued for this customer - so this leaves the
+                    // journey entirely rather than advancing it.
+                    onSwitchToPrepaid={() => navigate('/mobile-prepaid/new-prepaid-tablet-step-1-contact-id-capture')}
+                  />
+                </div>
+                </>
               );
             },
-            isValid: (values) => (values.eligibility as EligibilityResult | undefined)?.pass === true,
-            // No hard stop (and no soft stop) means there is nothing for the
-            // agent to do here, so the step reports and moves on rather than
-            // asking them to acknowledge seven green rows with a click.
-            //
-            // Requires the result to EXIST first: while the checks are still
-            // resolving `eligibility` is undefined, and advancing then would
-            // skip the step before it had evaluated anything.
-            //
-            // A check that routes for approval still advances - the matrix
-            // classes that as a diversion, not a stop.
-            autoAdvanceWhen: (values) => {
-              const result = values.eligibility as EligibilityResult | undefined;
-              return Boolean(result) && result!.pass === true;
+            // Continue is the MOI-driven gate, unchanged in kind (2026-09-28):
+            // it was always contingent on MOI resolving; it now ALSO requires
+            // eligibility to have resolved and cleared. "Cleared" excludes a
+            // hard stop (no path exists), a soft stop (Switch to Prepaid is
+            // the only path, and that button leaves this wizard rather than
+            // calling Continue), and approval-routing (Proceed to Approval is
+            // the only path - see onProceedToApproval above). Advisory-only
+            // (HRN with no other issue) is NOT excluded: it never sets
+            // hardStop/softStop and contributes no 'approval-routing' check,
+            // so Continue stays available exactly as a clean pass would.
+            isValid: (values) => {
+              const c = values.contact as GuidedContactValue | undefined;
+              const e = values.eligibility as EligibilityResult | undefined;
+              const identityOk = Boolean(
+                c?.moiResult && hasIdentityDetails(c ?? {}) && isValidEmail(c?.email) && isValidAltPhone(c?.altPhone)
+              );
+              if (!identityOk || !e) return false;
+              if (e.hardStop || e.softStop) return false;
+              return !e.checks.some((check) => check.outcome === 'approval-routing');
             },
           },
           {
             key: 'address',
-            label: 'Address',
+            label: 'Communication Address',
             render: ({ values, setValue }) => {
               const contact = values.contact as GuidedContactValue | undefined;
               return (
@@ -232,13 +244,19 @@ export function NewPostpaidWizard() {
                 onSelectDiscount={(id) => setValue('discountId', id)}
                 addonIds={(values.addonIds as string[] | undefined) ?? []}
                 onAddonsChange={(ids) => setValue('addonIds', ids)}
+                discountSupportingId={values.discountSupportingId as string | undefined}
+                onDiscountSupportingIdChange={(id) => setValue('discountSupportingId', id)}
+                billLimit={values.billLimit as number | undefined}
+                onBillLimitChange={(amount, pass) => {
+                  setValue('billLimit', amount);
+                  setValue('billLimitPass', pass);
+                }}
               />
             ),
-            // Was `&& values.billLimitPass !== false`. The Bill Limit editor
-            // was removed from this step on 2026-09-25, so nothing sets that
-            // flag any more and the clause could only ever pass - a gate that
-            // cannot fail is worse than no gate, because it reads as one.
-            isValid: (values) => Boolean(values.productId),
+            // Restored 2026-09-28: Bill Limit is back in this step (see the
+            // component's own note), so billLimitPass is a real flag again
+            // rather than the dead one this comment used to explain away.
+            isValid: (values) => Boolean(values.productId) && values.billLimitPass !== false,
           },
           {
             key: 'number',
@@ -285,20 +303,23 @@ export function NewPostpaidWizard() {
           {
             key: 'checkout',
             label: 'Checkout',
-            render: ({ values, setValue }) => {
+            render: ({ values, setValue, goToStepKey }) => {
               const contact = values.contact as GuidedContactValue | undefined;
               return (
                 <CheckoutSummaryStep
                   customerName={contact?.moiResult?.name}
-                  idNumber={contact?.idNumber}
+                  altPhone={contact?.altPhone}
                   productId={values.productId as string | undefined}
                   discountId={values.discountId as string | undefined}
                   addonIds={(values.addonIds as string[] | undefined) ?? []}
                   msisdn={values.msisdn as string | undefined}
                   numberPriceQar={values.numberPriceQAR as number | undefined}
                   eligibility={values.eligibility as EligibilityResult | undefined}
+                  billLimit={values.billLimit as number | undefined}
                   onTotalsComputed={(totals) => setValue('checkoutTotals', totals)}
                   onSummaryComputed={(rows) => setValue('cafSummary', rows)}
+                  onLegalFactsComputed={(facts) => setValue('legalFacts', facts)}
+                  onEdit={() => goToStepKey('plan')}
                 />
               );
             },
@@ -309,7 +330,13 @@ export function NewPostpaidWizard() {
             label: 'CAF & Signature',
             render: ({ values, setValue }) => (
               <CafSignatureCapture
-                value={(values.caf as { cafType?: CafType; signatureDataUrl?: string }) ?? {}}
+                value={
+                  (values.caf as {
+                    cafType?: CafType;
+                    signatureDataUrl?: string;
+                    additionalDocuments?: AdditionalDocument[];
+                  }) ?? {}
+                }
                 onChange={(v) => setValue('caf', v)}
                 customerName={(values.contact as GuidedContactValue | undefined)?.moiResult?.name}
                 // Built from the totals CHECKOUT computed (checkoutTotals) plus
@@ -318,12 +345,35 @@ export function NewPostpaidWizard() {
                 // displayed - not a second calculation that could drift.
                 orderSummary={values.cafSummary as { label: string; value: string }[] | undefined}
                 termsUrl="https://www.vodafone.qa/en/terms-and-conditions"
+                // Auto device detection + customer-facing signing + dynamic
+                // T&C bullets + locked-after-signing behaviour, all opted
+                // into here only (2026-09-28) - the other five journeys
+                // sharing this component keep the original manual picker.
+                autoDetectDeviceType
+                legalFacts={values.legalFacts as TncLegalFacts | undefined}
               />
             ),
             isValid: (values) => {
               const c = values.caf as { cafType?: CafType; signatureDataUrl?: string } | undefined;
               if (!c?.cafType) return false;
               return c.cafType !== 'Digital' || Boolean(c.signatureDataUrl);
+            },
+            // "The first and only step where the customer-facing view is
+            // presented" (2026-09-28) - true only while awaiting signature;
+            // flips off within this SAME step the instant one exists, so the
+            // agent's post-signature review (CAF preview, Additional
+            // Documents) renders with the normal wizard chrome back.
+            customerFacing: (values) => {
+              const c = values.caf as { cafType?: CafType; signatureDataUrl?: string } | undefined;
+              if (!c?.cafType) return true; // detecting device type; nothing to show yet either way
+              return !(c.cafType !== 'Digital' || Boolean(c.signatureDataUrl));
+            },
+            // "Once CAF is signed, disable/remove Back navigation and prevent
+            // all edits" (2026-09-28) - the SAME signed predicate as isValid
+            // above, reused rather than restated.
+            locksAfter: (values) => {
+              const c = values.caf as { cafType?: CafType; signatureDataUrl?: string } | undefined;
+              return Boolean(c?.cafType) && (c?.cafType !== 'Digital' || Boolean(c?.signatureDataUrl));
             },
           },
           {
@@ -342,6 +392,13 @@ export function NewPostpaidWizard() {
               );
             },
             isValid: (values) => Boolean((values.payment as WinCashPaymentValue | undefined)?.paid),
+            // "On successful WinCash confirmation, return to DXP, submit the
+            // order, and create the interaction activity" (2026-09-28) - the
+            // Return moment (WinCashPaymentStep setting `paid: true`) submits
+            // immediately rather than waiting for a separate Continue click,
+            // since Payment is the wizard's last step and Continue here would
+            // only ever mean "submit" anyway.
+            autoAdvanceWhen: (values) => Boolean((values.payment as WinCashPaymentValue | undefined)?.paid),
           },
           // Activity (a free-text comment box) was removed from this journey
           // on 2026-09-26. Payment is now the last step, so it carries the
@@ -377,8 +434,17 @@ export function NewPostpaidWizard() {
 
           // BR-268: HRN/credit-limit variant routes to manager approval rather
           // than auto-completing, same mechanism as the pre-existing B2B2C
-          // approval routing (UJ-081).
-          const pendingApproval = Boolean(contact.isB2B2C) || Boolean(eligibility?.requiresHrnAdvance);
+          // approval routing (UJ-081). Extended 2026-09-28 to cover the
+          // eligibility matrix's OWN approval-routing outcomes (under-18,
+          // active-line cap exceeded, exception ID type) - reaching this point
+          // with one of those set means the agent used "Proceed to Approval"
+          // rather than Continue (see the Contact step's isValid), and the
+          // order this submits has to carry that through to its final status,
+          // not silently complete as if nothing had been diverted.
+          const pendingApproval =
+            Boolean(contact.isB2B2C) ||
+            Boolean(eligibility?.requiresHrnAdvance) ||
+            Boolean(eligibility?.checks.some((c) => c.outcome === 'approval-routing'));
 
           const orderId = `ORD-${Date.now().toString().slice(-6)}`;
           await createRecord('orders', {
@@ -400,6 +466,27 @@ export function NewPostpaidWizard() {
             sourceChannel: 'Desktop',
           });
 
+          // "On successful WinCash confirmation ... create the interaction
+          // activity" (2026-09-28) - same shape OrderApprovalDetail.tsx's own
+          // logActivity already writes (activityNumber/orderId/actionTaken/
+          // notes/transactionDate), so this order's history reads consistently
+          // with one that picked up an activity later during approval.
+          const payment = values.payment as WinCashPaymentValue | undefined;
+          await createRecord('customer-activities', {
+            activityNumber: `ACT-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+            orderId,
+            actionTaken: 'New Postpaid Activation Submitted',
+            notes: `Order ${orderId} submitted via WinCash${payment?.reference ? ` (ref ${payment.reference})` : ''}.`,
+            transactionDate: new Date().toISOString(),
+          });
+
+          // "Send the confirmation email only to a verified email address"
+          // (2026-09-28) - verified per the SAME definition the Contact step's
+          // own tick uses (emailVerification: unchanged from the MOI registry
+          // value), not merely "well-formed". An unverified address gets no
+          // confirmation email rather than one sent on a guess.
+          const emailVerified = emailVerification(contact.email, contact.moiResult?.email).verified;
+
           setConfirmedOrder({
             orderId,
             pendingApproval,
@@ -410,7 +497,7 @@ export function NewPostpaidWizard() {
             monthlyRecurringQar,
             simType: simType?.simType,
             esimActivationCode: simType?.esimActivationCode,
-            customerEmail: contact.email,
+            customerEmail: emailVerified ? contact.email : undefined,
           });
         }}
       />

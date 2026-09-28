@@ -20,7 +20,7 @@ const SEED_FILES = [
   'payments', 'port-out-tickets', 'price-exceptions', 'products', 'qtickets', 'reject-reasons',
   'rfs-records',
   'service-usage', 'sim-swap-orders', 'sims', 'smart-devices', 'sms-templates', 'star-number-tiers',
-  'statements-of-account', 'tasks', 'technician-resources', 'ton-cases', 'trouble-tickets',
+  'statements-of-account', 'tasks', 'technician-resources', 'tnc-summary-bullets', 'ton-cases', 'trouble-tickets',
   'uim-inventory-records', 'users-agents', 'vodafone-ids', 'volumetric-discounts', 'wfm-activities',
 ] as const;
 

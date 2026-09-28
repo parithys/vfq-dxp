@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, ReactNode } from 'react';
+import type { InputHTMLAttributes, MouseEvent, ReactNode } from 'react';
 import { forwardRef } from 'react';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -53,7 +53,17 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   // stays selectable; the recessed --surface fill signals it cannot be typed
   // into.
   const isReadOnly = Boolean(rest.readOnly) && !rest.disabled;
-  const readOnlyClass = isReadOnly ? 'bg-surface cursor-default' : 'bg-bg';
+  // 2026-09-28: readOnly fields must be as inert as disabled ones - not just
+  // unable to accept a keystroke, but unfocusable, unselectable and
+  // unclickable too. HTML readOnly alone doesn't get you there: the input can
+  // still take focus on click, still shows a text cursor, and its value can
+  // still be drag-selected. select-none stops the selection; the mousedown
+  // handler below stops the focus (preventing the default on mousedown is the
+  // standard way to block focus-on-click without reaching for `disabled`,
+  // which would also drop the text to the greyed disabled colour - wrong for
+  // registry data the agent still has to read, just not touch).
+  const readOnlyClass = isReadOnly ? 'bg-surface cursor-default select-none' : 'bg-bg';
+  const blockReadOnlyFocus = isReadOnly ? (e: MouseEvent<HTMLInputElement>) => e.preventDefault() : undefined;
   // OUT OF THE TAB ORDER, and no focus ring (2026-09-26).
   //
   // A read-only field used to take focus and draw the same pink ring an
@@ -126,7 +136,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             aria-describedby={describedBy}
             className={`flex-1 min-w-0 bg-transparent px-3 py-2 text-[length:var(--fs-body)] text-fg
               focus:outline-none disabled:text-[var(--field-label-disabled)]
+              ${isReadOnly ? 'select-none' : ''}
               ${className}`}
+            tabIndex={isReadOnly ? -1 : undefined}
+            onMouseDown={blockReadOnlyFocus}
             {...rest}
           />
           {trailingAddon && (
@@ -147,6 +160,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             disabled:border-[var(--field-border-disabled)] disabled:text-[var(--field-label-disabled)] disabled:bg-[var(--field-bg-disabled)]
             ${className}`}
           tabIndex={isReadOnly ? -1 : undefined}
+          onMouseDown={blockReadOnlyFocus}
           {...rest}
         />
       )}

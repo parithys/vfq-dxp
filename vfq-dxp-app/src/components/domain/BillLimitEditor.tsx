@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Input } from '../primitives/Input';
 import { Button } from '../primitives/Button';
 import { evaluateRule } from '../../engines/ruleEngine';
@@ -24,6 +24,15 @@ interface BillLimitEditorProps {
 export function BillLimitEditor({ product, value, onChange }: BillLimitEditorProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(value ?? ''));
+  // Resync while NOT editing (2026-09-28), so a caller that changes `value`
+  // out from under this component - e.g. Plan & Add-ons re-deriving the
+  // default from a newly selected plan's MRC - is reflected the next time
+  // the agent opens the editor. Without this, draft stayed pinned to
+  // whatever `value` was on first mount, so switching plans before ever
+  // clicking "Edit Bill Limit" would open the editor on a stale figure.
+  useEffect(() => {
+    if (!editing) setDraft(String(value ?? ''));
+  }, [value, editing]);
   const agentMinimum = AGENT_MINIMUMS[product];
   const result = value !== undefined ? evaluateRule('BR-AGENT-MIN-THRESHOLD', { limitAmount: value, agentMinimum }) : null;
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { monthlyCharges, firstBillCharges, formatQar, VAT_RATE } from '../../engines/postpaidPricing';
+import { Button } from '../primitives/Button';
 import type { EligibilityResult } from '../domain/EligibilityGateStep';
 
 interface Product {
@@ -9,6 +10,11 @@ interface Product {
   mrcQAR: number;
   /** Plan lock-in, straight off the catalogue row. */
   commitmentMonths?: number;
+  /** Add-on data allowance, where the catalogue carries one (2026-09-28) -
+   * optional because none of the seeded Add-on products currently do
+   * (International 50 is minutes-only), but an add-on that does gets its
+   * allowance read back here rather than only its price. */
+  dataAllowanceGB?: number | null;
 }
 
 /**
@@ -30,10 +36,30 @@ export interface CheckoutTotals {
   hrnAdvanceQar: number;
 }
 
+/**
+ * Raw order facts for the CAF step's dynamic T&C bullets (2026-09-28) -
+ * separate from `onSummaryComputed`'s label/value rows, which are already
+ * formatted for display ("Plan 12 months - Star number 24 months") and so
+ * cannot be substituted back into a wording template without re-parsing a
+ * sentence. These are the same underlying numbers, published as numbers.
+ */
+export interface TncLegalFacts {
+  planCommitmentMonths?: number;
+  starLockInMonths?: number;
+  discountName?: string;
+  discountDurationMonths?: number | null;
+  hrnAdvanceQar: number;
+}
+
 interface CheckoutSummaryStepProps {
   customerName: string | undefined;
-  /** Echoed onto the read-back summary - see the row-order note in the body. */
-  idNumber: string | undefined;
+  /**
+   * Service-notification contact, echoed here under the SAME label the
+   * Contact step uses ("Alternate phone #" - GuidedContactStep.tsx) rather
+   * than a re-worded "Alternate Number", so the agent reads the same phrase
+   * on both screens (2026-09-28 request).
+   */
+  altPhone: string | undefined;
   /** Optional - the postpaid journey no longer collects one. */
   billingMethod?: string;
   productId: string | undefined;
@@ -50,6 +76,13 @@ interface CheckoutSummaryStepProps {
   msisdn: string | undefined;
   numberPriceQar: number | undefined;
   eligibility: EligibilityResult | undefined;
+  /**
+   * The agent-set value from Plan & Add-ons' BillLimitEditor (2026-09-28
+   * re-integration) - undefined when the agent never touched it, in which
+   * case this screen falls back to stating the credit-limit cap rather than
+   * a figure nobody actually set.
+   */
+  billLimit: number | undefined;
   onTotalsComputed: (totals: CheckoutTotals) => void;
   /**
    * The same facts, as label/value rows, for the CAF step to read back to the
@@ -58,6 +91,15 @@ interface CheckoutSummaryStepProps {
    * own discount bug (2026-09-26) was caused by.
    */
   onSummaryComputed?: (rows: { label: string; value: string }[]) => void;
+  /**
+   * Returns the agent to Plan & Add-ons (2026-09-28 "Edit" action). The
+   * agent then walks Continue forward through Number/SIM Type as normal -
+   * both retain their prior values, so this only re-opens the plan/discount/
+   * add-ons/bill-limit choice, not a special skip-back-to-Checkout path.
+   */
+  onEdit: () => void;
+  /** See TncLegalFacts - powers the CAF step's dynamic bullet summary. */
+  onLegalFactsComputed?: (facts: TncLegalFacts) => void;
 }
 
 // "Checkout" (reference flow step 9, evidenced as SCR "checkout-screen-retail-
@@ -67,7 +109,7 @@ interface CheckoutSummaryStepProps {
 // ongoing monthly recurring charge (plan + add-ons + device installment).
 export function CheckoutSummaryStep({
   customerName,
-  idNumber,
+  altPhone,
   billingMethod,
   productId,
   discountId,
@@ -75,17 +117,24 @@ export function CheckoutSummaryStep({
   msisdn,
   numberPriceQar,
   eligibility,
+  billLimit,
   onTotalsComputed,
   onSummaryComputed,
+  onEdit,
+  onLegalFactsComputed,
 }: CheckoutSummaryStepProps) {
   const [products, setProducts] = useState<Product[]>([]);
-  const [discounts, setDiscounts] = useState<{ addonDiscountId: string; name: string; price: number }[]>([]);
+  const [discounts, setDiscounts] = useState<
+    { addonDiscountId: string; name: string; price: number; durationMonths: number | null }[]
+  >([]);
   const [starTiers, setStarTiers] = useState<StarNumberTier[]>([]);
 
   useEffect(() => {
     mockDataEngine.list<Product>('products').then(setProducts);
     mockDataEngine
-      .list<{ addonDiscountId: string; name: string; price: number }>('addons-discounts')
+      .list<{ addonDiscountId: string; name: string; price: number; durationMonths: number | null }>(
+        'addons-discounts'
+      )
       .then(setDiscounts);
     mockDataEngine.list<StarNumberTier>('star-number-tiers').then(setStarTiers);
   }, []);
@@ -134,6 +183,18 @@ export function CheckoutSummaryStep({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dueTodayQar, monthlyRecurringQar, hrnAdvance]);
 
+  useEffect(() => {
+    if (!onLegalFactsComputed || !plan) return;
+    onLegalFactsComputed({
+      planCommitmentMonths: plan.commitmentMonths,
+      starLockInMonths: isStarNumber ? starTier?.lockInDurationMonths : undefined,
+      discountName: discount?.name,
+      discountDurationMonths: discount?.durationMonths,
+      hrnAdvanceQar: hrnAdvance,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan?.commitmentMonths, isStarNumber, starTier?.lockInDurationMonths, discount?.name, discount?.durationMonths, hrnAdvance]);
+
   // Customer-facing rows for CAF. Only published once the catalogue reads have
   // landed, so CAF never shows a summary with "-" where a plan name belongs.
   useEffect(() => {
@@ -165,7 +226,11 @@ export function CheckoutSummaryStep({
       ...(creditLimitQar !== undefined
         ? [
             { label: 'Credit limit', value: `QR ${creditLimitQar}` },
-            { label: 'Bill limit', value: `Up to QR ${creditLimitQar}` },
+            // Mirrors the visible screen's own fallback (2026-09-28): the
+            // agent's actual Bill Limit figure once one has been set, the
+            // credit-limit cap otherwise - keeping this recap and the screen
+            // it is read straight off unable to disagree with each other.
+            { label: 'Bill limit', value: billLimit !== undefined ? `QR ${billLimit}` : `Up to QR ${creditLimitQar}` },
           ]
         : []),
       {
@@ -174,50 +239,83 @@ export function CheckoutSummaryStep({
       },
     ]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plan?.productId, discount?.addonDiscountId, addons.length, msisdn, numberDelta, dueTodayQar, monthlyRecurringQar, starTier?.tierId, creditLimitQar]);
+  }, [
+    plan?.productId,
+    discount?.addonDiscountId,
+    addons.length,
+    msisdn,
+    numberDelta,
+    dueTodayQar,
+    monthlyRecurringQar,
+    starTier?.tierId,
+    creditLimitQar,
+    billLimit,
+  ]);
 
-  const Row = ({ label, value }: { label: string; value: string }) => (
-    <div className="flex justify-between py-2 border-b border-border-soft last:border-0">
+  const Row = ({ label, value, detail }: { label: string; value: string; detail?: string }) => (
+    <div className="flex justify-between gap-4 py-2 border-b border-border-soft last:border-0">
       <dt className="text-fg-2">{label}</dt>
-      <dd className="text-fg">{value}</dd>
+      <dd className="text-fg text-right">
+        {value}
+        {detail && <span className="block text-[length:var(--fs-caption)] text-muted">{detail}</span>}
+      </dd>
     </div>
   );
 
+  // Number's own detail line (2026-09-28): status, Star value, the number's
+  // OWN discount and its lock-in all together, rather than scattered across a
+  // separate "Order summary" recap box (now retired - see below). "Discount:
+  // None" is stated explicitly rather than omitted: no per-number discount
+  // concept exists anywhere in the catalogue (numbers.json/star-number-
+  // tiers.json carry no discount field), and the plan discount above applies
+  // to the recurring MRC, not this one-time figure - so the honest answer is
+  // "none", not silence that could read as an unanswered question.
+  const numberDetail = msisdn
+    ? [
+        isStarNumber ? `Star value QR ${numberDelta} one-time` : null,
+        'Discount: None',
+        isStarNumber
+          ? starTier
+            ? `${starTier.lockInDurationMonths}-month lock-in`
+            : 'Lock-in not banded - confirm before signature'
+          : 'No lock-in',
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    : undefined;
+
   return (
     <div className="space-y-4">
+      {/* Edit (2026-09-28): returns to Plan & Add-ons via the wizard's
+          goToStepKey rather than a bespoke navigation path - the agent then
+          walks Continue back through Number/SIM Type as normal, both of
+          which keep their prior values, landing back here unchanged. */}
+      <div className="flex items-center justify-between">
+        <p className="text-fg-2 text-[length:var(--fs-caption)]">Review with the customer before generating the CAF.</p>
+        <Button variant="ghost-rect" compact onClick={onEdit}>
+          Edit
+        </Button>
+      </div>
+
       <dl className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4">
         {/* Row order follows the supplied summary mockup: who they are, how we
             identify and reach them, what they bought, how they pay, then
-            hardware. ID/Mobile/Billing are echoed here because Checkout is the
-            last screen before signature - the agent reads this back to the
-            customer, so the identifiers belong on it, not just the
-            commercials. Add-ons always renders, showing "None" rather than
-            disappearing: an absent row reads as an unanswered question. */}
-        <Row label="Customer" value={customerName ?? '-'} />
-        <Row label="ID" value={idNumber ?? '-'} />
-        <Row label="Plan" value={plan ? `${plan.name} - QR ${plan.mrcQAR}/mo` : '-'} />
-        {/* The number now carries its status (Free / Star) on the same row,
-            which is what the 2026-09-27 walkthrough asks the agent to read
-            back. Mobile and SIM Type rows were removed in the same pass. */}
+            hardware. Add-ons always renders, showing "None" rather than
+            disappearing: an absent row reads as an unanswered question.
+
+            Customer ID Number, Customer Contact Number and SIM Type are
+            deliberately absent (2026-09-28 request) - only Customer Name and
+            the Alternate phone # (the service-notification contact, labelled
+            to match the Contact step exactly) identify the customer here. */}
+        <Row label="Customer Name" value={customerName ?? '-'} />
+        <Row label="Alternate phone #" value={altPhone ?? '-'} />
+        {/* Plan and Discount are separate line items (2026-09-28), each
+            carrying its own validity period as a detail line rather than
+            leaving lock-in/duration to a separate recap box. */}
         <Row
-          label="Number"
-          value={
-            msisdn
-              ? `${msisdn} - ${isStarNumber ? `Star, QR ${numberDelta} one-time` : 'Free'}`
-              : '-'
-          }
-        />
-        {creditLimitQar !== undefined && <Row label="Credit limit" value={`QR ${creditLimitQar}`} />}
-        {creditLimitQar !== undefined && (
-          <Row label="Bill limit" value={`Up to QR ${creditLimitQar} (capped at the credit limit)`} />
-        )}
-        {/* Conditional: the postpaid journey dropped its Billing step on
-            2026-09-25, so there is nothing to report there. Other journeys
-            that still collect one are unaffected. */}
-        {billingMethod && <Row label="Billing" value={billingMethod} />}
-        <Row
-          label="Add-ons"
-          value={addons.length ? addons.map((a) => `${a.name} (QR ${a.mrcQAR}/mo)`).join(', ') : 'None'}
+          label="Plan"
+          value={plan ? `${plan.name} - QR ${plan.mrcQAR}/mo` : '-'}
+          detail={plan ? (plan.commitmentMonths ? `${plan.commitmentMonths}-month lock-in` : 'No lock-in') : undefined}
         />
         {/* Shown so the monthly figure below can be arrived at from the rows
             above it. Without this the total was simply lower than Plan plus
@@ -229,20 +327,78 @@ export function CheckoutSummaryStep({
               charges.discountQar,
               'QR'
             )}/mo`}
+            detail={discount.durationMonths ? `Valid ${discount.durationMonths} months` : 'No expiry'}
           />
         )}
+        {/* Every activated add-on, its price, AND its data allowance where the
+            catalogue carries one (2026-09-28) - none of the seeded Add-on
+            products currently do (International 50 is minutes-only), so
+            nothing visibly changes today, but an add-on that does carry one
+            reads it back here rather than only its price. */}
+        <Row
+          label="Add-ons"
+          value={
+            addons.length
+              ? addons
+                  .map((a) => `${a.name} (QR ${a.mrcQAR}/mo${a.dataAllowanceGB ? `, ${a.dataAllowanceGB} GB` : ''})`)
+                  .join(', ')
+              : 'None'
+          }
+        />
+        {/* The number now carries everything about it in one place: status
+            (Free/Star), its own value, its own discount, and its own
+            lock-in - see numberDetail above. */}
+        <Row label="Number" value={msisdn ? `${msisdn} - ${isStarNumber ? 'Star' : 'Free'}` : '-'} detail={numberDetail} />
+        {creditLimitQar !== undefined && <Row label="Credit limit" value={`QR ${creditLimitQar}`} />}
+        {/* Bill limit (2026-09-28): the agent's own figure from Plan &
+            Add-ons' BillLimitEditor once they have set one, falling back to
+            stating the credit-limit cap when they have not - never a made-up
+            number, and never silently absent. */}
+        {creditLimitQar !== undefined && (
+          <Row
+            label="Bill limit"
+            value={billLimit !== undefined ? `QR ${billLimit}` : `Up to QR ${creditLimitQar}`}
+            detail={`Capped at the QR ${creditLimitQar} credit limit`}
+          />
+        )}
+        {/* Conditional: the postpaid journey dropped its Billing step on
+            2026-09-25, so there is nothing to report there. Other journeys
+            that still collect one are unaffected. */}
+        {billingMethod && <Row label="Billing" value={billingMethod} />}
         {/* The tax is on the read-back because the monthly figure below
             includes it - an agent reading out a total they cannot account for
             from the rows above has nothing to answer "why?" with. */}
         <Row label={`VAT (${Math.round(VAT_RATE * 100)}%)`} value={`${formatQar(charges.vatQar, 'QR')}/mo`} />
+        {/* HRN (High Risk Nationality) advance payment - system-derived from
+            the customer's nationality, not agent- or customer-entered, and
+            surfaced here (rather than a separate customer-input placeholder)
+            because there is nothing for either party to fill in: this is the
+            consequence of that classification, not a form field. */}
         {hrnAdvance > 0 && <Row label="HRN advance payment" value={`QR ${hrnAdvance}`} />}
       </dl>
 
       <div className="rounded-[var(--radius-card)] border border-accent/40 bg-surface-warm p-4 space-y-1">
+        {/* Due today itemised (2026-09-28): the bold total, then its two
+            possible components broken out underneath, so the figure above is
+            never one number the agent cannot account for. Either line is
+            absent when it contributes nothing - a QR 0 row would answer a
+            question nobody asked. */}
         <div className="flex justify-between text-fg font-semibold">
           <span>Due today</span>
           <span>QR {dueTodayQar}</span>
         </div>
+        {isStarNumber && (
+          <div className="flex justify-between text-fg-2 text-[length:var(--fs-caption)]">
+            <span>Star Number charge</span>
+            <span>QR {numberDelta}</span>
+          </div>
+        )}
+        {hrnAdvance > 0 && (
+          <div className="flex justify-between text-fg-2 text-[length:var(--fs-caption)]">
+            <span>Upfront / HRN fee</span>
+            <span>QR {hrnAdvance}</span>
+          </div>
+        )}
         {/* First bill and ongoing recurring are two different numbers on a
             postpaid line, and this panel used to show only the second one -
             "Monthly recurring, going forward" was already the ongoing figure,
@@ -253,7 +409,7 @@ export function CheckoutSummaryStep({
             not the plain recurring charge. */}
         <div className="flex justify-between text-fg-2 text-[length:var(--fs-caption)]">
           <span>
-            First month's bill
+            First month's bill (approximate)
             <span className="block text-muted">
               {firstBill.proratedDays} of {firstBill.cycleDays} days this cycle, plus one month in advance
             </span>
@@ -264,54 +420,15 @@ export function CheckoutSummaryStep({
           <span>Recurring monthly bill, from month 2</span>
           <span>QR {monthlyRecurringQar}/mo</span>
         </div>
-      </div>
-
-      {/* Order summary (2026-09-27 walkthrough). Everything here is derived
-          from catalogue data the order already carries - plan commitmentMonths
-          and star-number-tiers' lockInDurationMonths - rather than restated, so
-          it cannot drift from what was actually sold. The cancellation line is
-          phrased from the lock-in it reads, and deliberately does NOT quote an
-          early-termination fee: no such figure exists in the corpus, and
-          inventing one on a document the customer is about to sign would be
-          worse than pointing at the full terms. */}
-      <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4 space-y-2">
-        <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Order summary</h4>
-        <dl className="text-[length:var(--fs-caption)]">
-          <Row
-            label="Plan lock-in"
-            value={plan?.commitmentMonths ? `${plan.commitmentMonths} months` : 'No lock-in'}
-          />
-          {isStarNumber && (
-            <Row
-              label="Star-number commitment"
-              value={
-                starTier
-                  ? `${starTier.lockInDurationMonths} months (${starTier.tierId})`
-                  : 'Not banded - confirm before signature'
-              }
-            />
-          )}
-          <Row
-            label="Key charges"
-            value={`QR ${dueTodayQar} today, QR ${firstBill.totalQar} first bill, QR ${monthlyRecurringQar}/mo thereafter`}
-          />
-          <Row
-            label="Cancellation"
-            value={
-              plan?.commitmentMonths || starTier
-                ? 'Cancelling inside the lock-in ends the agreement early - charges apply per the full terms'
-                : 'No lock-in applies to this order'
-            }
-          />
-        </dl>
-        <a
-          href="https://www.vodafone.qa/en/terms-and-conditions"
-          target="_blank"
-          rel="noreferrer"
-          className="inline-block text-[length:var(--fs-caption)] text-accent underline"
-        >
-          Read the complete terms and conditions
-        </a>
+        {/* Reserved space (2026-09-28 request) for a full second-bill
+            breakdown - deliberately NOT designed yet. This is a placeholder
+            marking where that content will go, not a stand-in figure: no
+            itemisation is invented here the way the rows above never invent
+            one either. */}
+        <div className="rounded-[var(--radius-sm)] border border-dashed border-border-soft p-3 mt-1">
+          <p className="text-fg-2 text-[length:var(--fs-caption)] font-medium">Full second-bill breakdown</p>
+          <p className="text-muted text-[length:var(--fs-caption)]">Reserved - detailed content not yet designed.</p>
+        </div>
       </div>
     </div>
   );

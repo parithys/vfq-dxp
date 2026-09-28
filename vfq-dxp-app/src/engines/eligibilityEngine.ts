@@ -60,6 +60,16 @@ export interface EligibilityContext {
   outstandingQar: number;
   /** Postpaid line cap for this customer, from the line-cap rules. */
   lineCapReached: boolean;
+  /**
+   * The line-cap rule's OWN message (BR-288/BR-347 in ruleEngine.ts), which
+   * already states the customer's actual active-connections count against
+   * the cap - e.g. "1/2 postpaid mobile lines used (expat cap)" or "Qatari
+   * nationals have no line cap." Passed through rather than recomputed here:
+   * the count and the cap the Active Lines check must report are exactly
+   * what that rule already worked out, and restating the arithmetic in a
+   * second place risks the two disagreeing.
+   */
+  activeLinesDetail: string;
 }
 
 /**
@@ -109,7 +119,7 @@ function formatDate(iso: string): string {
 // `asOf` is injected rather than read from the clock inside, so expiry and age
 // are testable and so the whole result is a pure function of its inputs.
 export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): EligibilityCheck[] {
-  const { customer, doc, deals, outstandingQar, lineCapReached } = ctx;
+  const { customer, doc, deals, outstandingQar, lineCapReached, activeLinesDetail } = ctx;
   const checks: EligibilityCheck[] = [];
 
   // 1. ID validity / expiry.
@@ -194,16 +204,19 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
 
   checks.push({
     id: 'blacklist-security',
-    // Named for what it actually is, per the 2026-09-27 walkthrough's
-    // "Hard Stop - Corporate Security Blacklist". Already a hard stop; only
-    // the label and message changed, so the agent can see WHICH list blocked
-    // this rather than a generic "Security Check".
-    label: 'Corporate Security Blacklist',
+    // Label/pass-message reverted to "Security Check" / "No security block on
+    // this account" (2026-09-28), matching the reference eligibility panel
+    // exactly. This reverses the 2026-09-27 rename to "Corporate Security
+    // Blacklist" - the fail MESSAGE still names the corporate security
+    // blacklist explicitly (and that exact phrase is what the hard-stop
+    // exception pattern names), so which list blocked the customer is still
+    // on screen; only the row's own title changed back.
+    label: 'Security Check',
     passed: !securityBlocked,
     outcome: securityBlocked ? 'hard-stop' : 'pass',
     message: securityBlocked
       ? 'This customer is on the corporate security blacklist and is restricted from new connections. No further action available at this counter.'
-      : 'Not on the corporate security blacklist',
+      : 'No security block on this account',
   });
 
   // A blacklisted customer whose category is absent is treated as a hard stop
@@ -237,12 +250,16 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
   // though the underlying cap rule reports `pass: false`.
   checks.push({
     id: 'active-lines',
+    // 2026-09-28: reports the customer's ACTUAL active-connections count
+    // against the cap (activeLinesDetail), not just a pass/fail verdict -
+    // "Within permitted active line count" said nothing an agent could check
+    // the reasoning behind.
     label: 'Active Lines',
     passed: !lineCapReached,
     outcome: lineCapReached ? 'approval-routing' : 'pass',
     message: lineCapReached
-      ? 'This customer has reached their active-line limit. An approval task has been raised - the connection can proceed once approved.'
-      : 'Within permitted active line count',
+      ? `${activeLinesDetail} An approval task has been raised - the connection can proceed once approved.`
+      : activeLinesDetail,
   });
 
   return checks;

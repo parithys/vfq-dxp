@@ -120,5 +120,29 @@
     "durationMonths": null,
     "planId": "PROD-303",
     "isLockedReadOnly": false
+  },
+  {
+    "addonDiscountId": "ADO-7112",
+    "addonType": "MADA Discount",
+    "name": "MADA Discount",
+    "description": "Discount for MADA cardholders - requires the MADA card/reference number",
+    "price": -0.10,
+    "category": "Discount",
+    "durationMonths": 6,
+    "planId": "PROD-104",
+    "isLockedReadOnly": false,
+    "_note": "App-level demo addition (2026-09-28) to exercise the Plan & Add-ons 'supporting ID' prompt requested this date for MADA discounts. No MADA discount record, rate or definition is evidenced in the corpus - MADA appears only as an unglossed term in the BRSD's glossary index (vfq-mobile-postpaid-activation-brsd-v2-0). Rate/duration follow the existing -10%/-15% Discount pattern already used elsewhere in this file rather than inventing an unevidenced figure."
+  },
+  {
+    "addonDiscountId": "ADO-7113",
+    "addonType": "B2B2C Discount",
+    "name": "B2B2C Discount",
+    "description": "Discount for B2B2C-sponsored lines - requires the sponsor/employer reference ID",
+    "price": -0.10,
+    "category": "Discount",
+    "durationMonths": 6,
+    "planId": "PROD-105",
+    "isLockedReadOnly": false,
+    "_note": "App-level demo addition (2026-09-28) to exercise the Plan & Add-ons 'supporting ID' prompt requested this date for B2B2C discounts. Elsewhere in this app B2B2C is an order-classification derived from the contact's employer (GuidedContactStep.isB2B2C -> NewPostpaidWizard's orderSubType), not a discount category - no B2B2C discount rate is evidenced in the corpus, so this follows the existing Discount rate pattern rather than inventing an unevidenced figure."
   }
 ]

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Input } from '../primitives/Input';
 import { Autocomplete } from '../primitives/Autocomplete';
+import { FibreReadinessBanner } from '../domain/FibreReadinessBanner';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 
 export interface ZsbAddressValue {
@@ -197,6 +198,12 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
             />
           </div>
       </div>
+      {/* Read-only, checked against the ZSB (Zone/Street/Building) the agent
+          just typed above - see FibreReadinessBanner's own note on why "NAS"
+          isn't a term this corpus evidences and what this reads the request
+          as instead. Renders nothing until Zone/Street/Building are all
+          filled in, so it never reports on a half-typed address. */}
+      <FibreReadinessBanner zone={value.zone} street={value.streetNo} building={value.buildingNo} />
     </div>
   );
 }

@@ -4,8 +4,8 @@ import type { QidImageUploadValue } from '../domain/QidImageUpload';
 import { Radio } from '../primitives/Radio';
 import { Input } from '../primitives/Input';
 import { PhoneNumberInput } from '../primitives/PhoneNumberInput';
+import { isQatarMobileLocalNumber } from '../primitives/countryDialCodes';
 import { Select } from '../primitives/Select';
-import { Icon } from '../primitives/Icon';
 
 // Mirrors IdLookupStep's MoiResult - this step receives the value that step
 // produces. Kept as a local shape rather than imported because it is a subset:
@@ -20,6 +20,9 @@ interface MoiResult {
   companyName?: string;
   /** That employer's enterprise-accounts row, when it has one. */
   companyAccountId?: string;
+  /** The scanned document's own expiry date (ISO), off the identity-documents
+   * match rather than the customer record. */
+  expiryDate?: string;
 }
 
 export interface GuidedContactValue {
@@ -48,6 +51,13 @@ export interface GuidedContactValue {
   middleName?: string;
   lastName?: string;
   dob?: string;
+  /**
+   * ID Expiry - the header comment's evidenced field set ("ID Expiry/
+   * Nationality/Gender/Name/DOB auto-populate from the ID scan") always named
+   * this one, but nothing rendered it until 2026-09-28. Masked DD/MM/YYYY,
+   * same as `dob` - see identityFromMoi.
+   */
+  idExpiryDate?: string;
   gender?: string;
   nationality?: string;
   email?: string;
@@ -128,12 +138,14 @@ interface GuidedContactStepProps {
 export function isValidAltPhone(raw: string | undefined): boolean {
   if (!raw) return false;
   const local = raw.replace(/[\s-]/g, '').replace(/^\+?974/, '');
-  // Exactly 8 digits, per the stated format. Deliberately NOT also requiring a
-  // 3/5/6/7 leading digit, which is the mobile-prefix rule MsisdnPicker
-  // applies to inventory numbers: the instruction said "exactly 8 digits", and
-  // rejecting a number the agent was told to type would be worse than
-  // accepting a landline here.
-  return /^\d{8}$/.test(local);
+  // 8 digits is necessary but not sufficient - Qatar landline numbers are
+  // also 8 digits (leading 4), so length alone would accept a landline in a
+  // field the helper text and error copy both call a mobile number
+  // (2026-09-28 direction, reversing the 2026-09-26 note that used to sit
+  // here). isQatarMobileLocalNumber applies the same 3/5/6/7 leading-digit
+  // rule MsisdnPicker's isValidMsisdn uses for inventory MSISDNs, so a
+  // landline is rejected the same way here as it always was there.
+  return isQatarMobileLocalNumber(local);
 }
 
 // Same contract as isValidAltPhone - one rule shared by the field's inline
@@ -212,9 +224,19 @@ export function hasIdentityDetails(v: {
   dob?: string;
   gender?: string;
   nationality?: string;
+  idExpiryDate?: string;
 }): boolean {
   return Boolean(
-    v.firstName?.trim() && v.lastName?.trim() && isValidDob(v.dob ?? '') && v.gender?.trim() && v.nationality?.trim()
+    v.firstName?.trim() &&
+      v.lastName?.trim() &&
+      isValidDob(v.dob ?? '') &&
+      v.gender?.trim() &&
+      v.nationality?.trim() &&
+      // A presence check, not isValidDob - unlike DOB, an expiry date is
+      // routinely in the future, which isValidDob rejects by design. This
+      // field is read-only and registry-sourced, so "did MOI return one" is
+      // the only thing worth asking here.
+      v.idExpiryDate?.trim()
   );
 }
 
@@ -233,7 +255,27 @@ export function hasIdentityDetails(v: {
 // read-only now, so a mandatory Gender with no registry source and no way to
 // type into it would block Continue permanently. customers.json has always
 // carried the field; only MoiResult was failing to pass it through.
-const TICK_ICON = 'M20 6L9 17l-5-5';
+// Filled-badge style (2026-09-28), replacing the plain outline tick: a solid
+// success-coloured circle with a white check, rather than a currentColor
+// stroke path. That two-tone look doesn't fit the shared Icon primitive
+// (single-colour stroke on a 24x24 viewBox), so this is a small dedicated
+// SVG local to this one call site instead of a change to Icon itself, which
+// renders every stroke icon in the app.
+function VerifiedBadge({ label }: { label: string }) {
+  return (
+    <svg viewBox="0 0 24 24" role="img" aria-label={label} className="w-4 h-4 shrink-0">
+      <circle cx="12" cy="12" r="12" className="text-success" fill="currentColor" />
+      <path
+        d="M7.5 12.5l3 3 6-6.5"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 /**
  * Email verification state (2026-09-27 walkthrough).
@@ -248,8 +290,13 @@ const TICK_ICON = 'M20 6L9 17l-5-5';
  * Only `verified` earns the tick. The other two are said in words underneath
  * rather than marked, because a tick is a claim and neither state supports
  * one - an absent tick is the honest rendering of "not confirmed".
+ *
+ * Exported 2026-09-28 so NewPostpaidWizard's onSubmit can gate the
+ * confirmation email on the SAME definition of "verified" this screen
+ * already uses, rather than re-deriving a second one that could drift from
+ * what the tick on screen actually promised.
  */
-function emailVerification(email: string | undefined, registryEmail: string | undefined) {
+export function emailVerification(email: string | undefined, registryEmail: string | undefined) {
   if (!email || !isValidEmail(email)) return { verified: false, hint: undefined };
   if (registryEmail && email.trim().toLowerCase() === registryEmail.trim().toLowerCase()) {
     return { verified: true, hint: undefined };
@@ -264,6 +311,7 @@ function identityFromMoi(moi: MoiResult | undefined) {
       middleName: undefined,
       lastName: undefined,
       dob: undefined,
+      idExpiryDate: undefined,
       nationality: undefined,
       email: undefined,
       gender: undefined,
@@ -303,6 +351,10 @@ function identityFromMoi(moi: MoiResult | undefined) {
     // exactly the customers the registry DID find - reformatted, not
     // reinterpreted, so the date itself is unchanged.
     dob: isoToMaskedDob(moi.dob),
+    // Same ISO -> masked reformatting as dob, and the same reason: a raw ISO
+    // value sitting in a DD/MM/YYYY-shaped field would just be wrong to read,
+    // even though nothing here validates it the way isValidDob does.
+    idExpiryDate: moi.expiryDate ? isoToMaskedDob(moi.expiryDate) : undefined,
     nationality: moi.nationality,
     email: moi.email,
     gender: moi.gender,
@@ -354,19 +406,19 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
       />
 
       {value.moiResult && (
-        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border-soft">
-          {/* Field order per the 2026-09-25 direction, which happens to fall
-              into clean rows of the 2-column grid:
+        <div className="grid grid-cols-3 gap-4 pt-2 border-t border-border-soft">
+          {/* Three columns as of 2026-09-28 (was two, per the 2026-09-25
+              direction below). Field order falls into clean rows either way:
 
-                First Name    | Last Name      read-only
-                Date of Birth | Nationality    read-only
-                Email         | Alt phone      EDITABLE
-                Gender        |                read-only
+                First Name  | Middle Name   | Last Name      read-only
+                Expiry Date | Date of Birth | Nationality    read-only
+                Email       | Alt phone     | Notif. Language EDITABLE-ish
+                Gender        |             |                read-only
 
-              So the two fields the agent can actually change now share a row
-              instead of being scattered between read-only ones, and the
-              registry-owned fields sit above and below them. Gender ends the
-              set alone; it is not padded with a spacer, because the two flag
+              So the two fields the agent can actually change (Email, Alt
+              phone) still share a row, the registry-owned identity fields
+              (name/DOB/nationality/expiry) group above them, and Gender ends
+              the set alone rather than padded with a spacer - the two flag
               checkboxes that follow are full-width and close the block.
 
               The five identity fields are READ-ONLY. This re-reverses the
@@ -395,6 +447,21 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
               cannot type into anyway; inside the box it does the one job a
               format hint has - telling you what to write when there is
               nothing there yet. */}
+          {/* ID Expiry - evidenced alongside Nationality/DOB/Name in this
+              file's own header comment as a field that "auto-populate[s] from
+              the ID scan", but nothing rendered it until 2026-09-28. Same
+              masked DD/MM/YYYY shape as Date of Birth, and the same read-only
+              registry-sourced treatment as every other identity field on this
+              row - see identityFromMoi. Leads the row (2026-09-28 order),
+              ahead of Date of Birth and Nationality. */}
+          <Input
+            label="Expiry Date"
+            required
+            readOnly
+            placeholder="DD/MM/YYYY"
+            value={value.idExpiryDate ?? ''}
+            onChange={() => {}}
+          />
           <Input
             label="Date of Birth"
             required
@@ -419,11 +486,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
             helperText={emailVerification(value.email, value.moiResult?.email).hint}
             trailingAddon={
               emailVerification(value.email, value.moiResult?.email).verified ? (
-                <Icon
-                  path={TICK_ICON}
-                  className="w-4 h-4 text-success"
-                  aria-label="Email address verified"
-                />
+                <VerifiedBadge label="Email address verified" />
               ) : undefined
             }
             onChange={(e) => onChange({ ...value, email: e.target.value })}
@@ -445,10 +508,38 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
             placeholder="5566 7766"
             error={
               value.altPhone && !isValidAltPhone(value.altPhone)
-                ? 'Enter a Qatar mobile number: +974 followed by 8 digits.'
+                ? 'Enter a valid Qatar mobile number.'
                 : undefined
             }
             onChange={(e) => onChange({ ...value, altPhone: e.target.value })}
+          />
+          {/* Evidenced agent-entered field (see isValidEmail's header note:
+              "Email/Alt Phone/Language ... are agent-entered"), added to the
+              form here for the first time - `language` has held a slot on
+              GuidedContactValue since this step's interface was written, but
+              nothing rendered it. Defaults to English, matching every other
+              Language control in the app (BillingProfileStep, Base
+              Management's Contact step).
+
+              Options expanded 2026-09-28 from English/Arabic to also offer
+              Hindi, Malayalam and Filipino, matching Qatar's expat customer
+              base. English/Arabic/Hindi/Malayalam are the four languages the
+              CRM's actual SMS notification templates are evidenced in
+              (sms-templates - Locale codes ENU/ARA/HIN/MAL); Filipino has no
+              such template evidence but was requested explicitly for this
+              field, so it is included as a demo-catalogue addition rather
+              than an evidenced one. */}
+          <Select
+            label="Notification Language"
+            value={value.language ?? 'English'}
+            onChange={(e) => onChange({ ...value, language: e.target.value })}
+            options={[
+              { value: 'English', label: 'English' },
+              { value: 'Arabic', label: 'Arabic' },
+              { value: 'Hindi', label: 'Hindi' },
+              { value: 'Malayalam', label: 'Malayalam' },
+              { value: 'Filipino', label: 'Filipino' },
+            ]}
           />
           {/* Kept as a fieldset/legend radio group rather than swapped for a
               read-only text box, so the control's shape does not change with

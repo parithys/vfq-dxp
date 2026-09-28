@@ -24,11 +24,59 @@ export interface WizardStep {
   label: string;
   /** Short secondary line shown under the label in the step list (e.g. "Customer identification"). Optional - omitted steps just show the label. */
   description?: string;
-  render: (ctx: { values: Record<string, unknown>; setValue: (field: string, value: unknown) => void }) => ReactNode;
+  render: (ctx: {
+    values: Record<string, unknown>;
+    setValue: (field: string, value: unknown) => void;
+    /**
+     * Advance to the next step (or submit, on the last one) - the SAME
+     * function the footer's own Continue/Save & Finish button calls,
+     * unguarded by `isValid` (2026-09-28). For a step that offers its own
+     * distinct forward action instead of - not beside - a disabled ordinary
+     * Continue, e.g. Eligibility's "Proceed to Approval": that action exists
+     * BECAUSE the plain-Continue path is blocked, so calling straight
+     * through to `goNext` rather than re-deriving the footer button's gate
+     * is correct here, not a bypass of it.
+     */
+    goNext: () => void;
+    /**
+     * Jump to an earlier step by its `key` (2026-09-28) - e.g. an "Edit"
+     * action on Checkout returning the agent to Plan & Add-ons. Keyed rather
+     * than indexed for the same reason the draft-resume logic above is: a
+     * step's position can shift under skip(), so a key survives that where a
+     * raw index would not. Reaches only steps already visited this session
+     * (the same `maxReached` rule the step rail itself enforces) and
+     * silently no-ops on an unknown or unreached key, matching the rail's
+     * own behaviour for a step it will not let you click.
+     */
+    goToStepKey: (key: string) => void;
+  }) => ReactNode;
   /** Return true to auto-skip this step given current draft values (e.g. appointment step skipped for instant activation). */
   skip?: (values: Record<string, unknown>) => boolean;
   /** Return false to block Continue/Save & Finish (e.g. SIM Serial not found/already-assigned per Pattern 11). Defaults to true (no gate) if omitted. */
   isValid?: (values: Record<string, unknown>) => boolean;
+  /**
+   * Return true while this step is the one moment a customer looks at and
+   * acts on the screen directly - e.g. reviewing the T&C summary and signing
+   * the CAF (2026-09-28 request: "the first and only step where the
+   * customer-facing view is presented"). While true for the CURRENT step,
+   * the wizard renders ONLY that step's own content - no rail, no other
+   * step's label, no Abandon/Save & Exit, no Back/Continue footer - so
+   * nothing about the rest of the journey is visible on a screen handed to a
+   * customer. Re-evaluated every render, not a static flag: the SAME 'caf'
+   * step is customer-facing while awaiting a signature and agent-facing
+   * again the moment one exists, without a step transition in between.
+   */
+  customerFacing?: (values: Record<string, unknown>) => boolean;
+  /**
+   * Return true once this step's own condition makes the journey
+   * irreversible from here - e.g. the CAF has been signed (2026-09-28: "once
+   * CAF is signed, disable/remove Back navigation and prevent all edits").
+   * Checked against every step up to and including the current one: once ANY
+   * of them reports true, the Back button disappears and the step rail
+   * stops accepting clicks entirely, for the rest of the session. Forward-
+   * only from that point - Continue is unaffected.
+   */
+  locksAfter?: (values: Record<string, unknown>) => boolean;
   /**
    * Return true to move straight on to the next step without the agent
    * pressing Continue - for a step that only REPORTS a result and needs no
@@ -59,6 +107,26 @@ interface GuidedActivationWizardProps {
    * cannot advance and, without this, no way to be rid of it.
    */
   onAbandon?: () => void;
+  /**
+   * Step key from which "Abandon Order" stops appearing (2026-09-28: "Keep
+   * Cancel available after CAF signing and until payment starts"). Abandon
+   * still shows on every step before it - this only narrows the window it
+   * had by default (every step) to end at Payment, where WinCash may already
+   * have taken money outside this app's own reach.
+   */
+  hideAbandonFrom?: string;
+  /**
+   * Where to go after saving the journey as a resumable draft (2026-09-28
+   * "Save & Exit"), distinct from onAbandon - that one deletes the draft
+   * order row and the in-memory draft; this one writes/creates the Draft
+   * order row (reusing `title` as orderType and the current route as
+   * draftResumePath, so no per-wizard shape needs threading through), THEN
+   * clears the in-memory session draft (so starting a fresh journey of this
+   * same wizardId later does not resume this one by accident) before calling
+   * back. Providing this is what puts "Save & Exit" on the header, mirroring
+   * onAbandon's own optionality.
+   */
+  onSaveExit?: () => void;
 }
 
 // Pattern 1: Guided Multi-Step Wizard - the single most-repeated shape in the
@@ -66,7 +134,15 @@ interface GuidedActivationWizardProps {
 // Left-hand step list (numbered, with a secondary description line) + a
 // single content panel for the active step's fields and Back/Continue
 // footer - matches the reference layout supplied for this pattern.
-export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAbandon }: GuidedActivationWizardProps) {
+export function GuidedActivationWizard({
+  wizardId,
+  title,
+  steps,
+  onSubmit,
+  onAbandon,
+  hideAbandonFrom,
+  onSaveExit,
+}: GuidedActivationWizardProps) {
   const draft = useWorkflowStore((s) => s.getDraft(wizardId));
   const setStep = useWorkflowStore((s) => s.setStep);
   const setFieldValue = useWorkflowStore((s) => s.setFieldValue);
@@ -187,6 +263,18 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
   const maxReached = Math.min(Math.max(draft.maxStepReached ?? draft.currentStep, currentIndex), activeSteps.length - 1);
   const currentStep = activeSteps[currentIndex];
   const canProceed = currentStep?.isValid ? currentStep.isValid(draft.values) : true;
+  // True while THIS render's active step wants the stripped-down, no-chrome
+  // presentation - re-evaluated every render (see the WizardStep doc above),
+  // not cached, so it can flip back off within the same step once signed.
+  const isCustomerFacing = Boolean(currentStep?.customerFacing?.(draft.values));
+  // True once ANY step up to and including the current one has crossed its
+  // own locksAfter condition - checked over the whole prefix, not just the
+  // current step, so the lock persists once the agent has moved past it
+  // (e.g. into Payment) rather than only applying while sitting on the step
+  // that triggered it.
+  const isLocked = activeSteps.slice(0, currentIndex + 1).some((s) => s.locksAfter?.(draft.values));
+  const hideAbandonFromIndex = hideAbandonFrom ? activeSteps.findIndex((s) => s.key === hideAbandonFrom) : -1;
+  const abandonHidden = hideAbandonFromIndex !== -1 && currentIndex >= hideAbandonFromIndex;
 
   // Focus management: put the cursor in the first field the agent must fill to
   // get past this step - on arrival as well as on every step change, so a
@@ -380,6 +468,40 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
     onAbandon?.();
   };
 
+  // Explicitly distinct from abandonOrder (2026-09-28 "keep this distinct
+  // from saving a draft"): this KEEPS the draft order row rather than
+  // deleting it, creating one first if the journey never had one (a brand
+  // new, never-resumed journey has no draftOrderId at all - see the
+  // step-change effect above, which only ever UPDATES an existing row). No
+  // per-wizard order shape is needed here: `title` and `wizardId` are
+  // already this component's own props, and `location.pathname` is already
+  // the route this wizard is mounted at, so a minimal-but-resumable Draft
+  // order row falls out of data this component already has, rather than
+  // requiring every wizard to hand it a bespoke record shape.
+  const saveAndExit = async () => {
+    const activeKey = activeSteps[currentIndex]?.key;
+    if (!activeKey) return;
+    if (draftOrderId) {
+      await mockDataEngine.update('orders', draftOrderId, {
+        draftStepKey: activeKey,
+        draftValues: draft.values,
+      });
+    } else {
+      const newOrderId = `ORD-${Date.now().toString().slice(-6)}`;
+      await mockDataEngine.create('orders', {
+        orderId: newOrderId,
+        orderType: title,
+        status: 'Draft',
+        draftWizardId: wizardId,
+        draftResumePath: location.pathname,
+        draftStepKey: activeKey,
+        draftValues: draft.values,
+      });
+    }
+    clearDraft(wizardId);
+    onSaveExit?.();
+  };
+
   const goBack = () => {
     if (currentIndex > 0) setStep(wizardId, currentIndex - 1);
   };
@@ -394,7 +516,26 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
     if (index !== currentIndex && index <= maxReached) setStep(wizardId, index);
   };
 
+  const goToStepKey = (key: string) => {
+    const index = activeSteps.findIndex((s) => s.key === key);
+    if (index !== -1) goToStep(index);
+  };
+
   const handleStepKeyDown = useEnterToSubmit(canProceed && !submitting, goNext);
+
+  // Customer-facing: ONLY this step's own render() output, full stop. No
+  // rail (which names every other step and product discussed), no Abandon/
+  // Save & Exit, no wizard Back/Continue footer - the step's own content is
+  // responsible for whatever action it needs (e.g. CafSignatureCapture's own
+  // "Please Sign"), because nothing here should invite the customer to
+  // interact with wizard chrome meant for the agent.
+  if (isCustomerFacing) {
+    return (
+      <div className="max-w-2xl mx-auto" onKeyDown={handleStepKeyDown}>
+        {currentStep?.render({ values: draft.values, setValue, goNext: () => void goNext(), goToStepKey })}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -424,7 +565,12 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
           {activeSteps.map((step, i) => {
             const isActive = i === currentIndex;
             const isDone = i < maxReached;
-            const isReachable = !isActive && i <= maxReached;
+            // Locked (2026-09-28): the rail stops accepting clicks entirely
+            // once the journey has crossed a locksAfter step, regardless of
+            // maxReached - "prevent all edits" means the agent cannot jump
+            // back to Contact/Plan/etc. to change what was signed against,
+            // not merely that Back is hidden.
+            const isReachable = !isLocked && !isActive && i <= maxReached;
             return (
               <li
                 key={step.key}
@@ -483,28 +629,53 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAba
             >
               {currentStep?.label}
             </h2>
-            {/* "Abandon Order" - removed 2026-09-26, restored 2026-09-27 on
-                direction. A plain text action rather than a Button: it is
-                destructive and secondary, and giving it button weight next to
-                the step heading would set it against Continue as an equal
-                choice. Confirmed before it fires, because it discards
-                everything the agent has entered. */}
-            {onAbandon && (
-              <button
-                type="button"
-                onClick={() => setAbandonOpen(true)}
-                className="shrink-0 text-[length:var(--fs-caption)] text-muted underline
-                  hover:text-danger focus:outline-none focus-visible:shadow-[var(--focus-ring)]
-                  rounded-[var(--radius-button)] px-1"
-              >
-                Abandon Order
-              </button>
-            )}
+            <div className="shrink-0 flex items-center gap-3">
+              {/* "Save & Exit" (2026-09-28) - distinct from Abandon: this
+                  keeps the draft for later resumption rather than deleting
+                  it. No confirmation modal, unlike Abandon - it is not
+                  destructive, so it should not carry the same weight. Stays
+                  available even once locked: a signed-but-unpaid order is
+                  exactly the kind of thing an agent needs to be able to set
+                  aside and come back to. */}
+              {onSaveExit && (
+                <button
+                  type="button"
+                  onClick={() => void saveAndExit()}
+                  className="text-[length:var(--fs-caption)] text-muted underline
+                    hover:text-accent focus:outline-none focus-visible:shadow-[var(--focus-ring)]
+                    rounded-[var(--radius-button)] px-1"
+                >
+                  Save & Exit
+                </button>
+              )}
+              {/* "Abandon Order" - removed 2026-09-26, restored 2026-09-27 on
+                  direction. A plain text action rather than a Button: it is
+                  destructive and secondary, and giving it button weight next to
+                  the step heading would set it against Continue as an equal
+                  choice. Confirmed before it fires, because it discards
+                  everything the agent has entered. Hidden from hideAbandonFrom
+                  onward (2026-09-28) - see that prop's own note. */}
+              {onAbandon && !abandonHidden && (
+                <button
+                  type="button"
+                  onClick={() => setAbandonOpen(true)}
+                  className="text-[length:var(--fs-caption)] text-muted underline
+                    hover:text-danger focus:outline-none focus-visible:shadow-[var(--focus-ring)]
+                    rounded-[var(--radius-button)] px-1"
+                >
+                  Abandon Order
+                </button>
+              )}
+            </div>
           </div>
-          {currentStep?.render({ values: draft.values, setValue })}
+          {currentStep?.render({ values: draft.values, setValue, goNext: () => void goNext(), goToStepKey })}
           <div className="flex items-center justify-between mt-6 pt-6 border-t border-border-soft">
             <div>
-              {currentIndex > 0 && (
+              {/* Locked (2026-09-28): Back disappears entirely alongside the
+                  rail going unclickable - "disable/remove Back navigation".
+                  currentIndex > 0 alone would still show it on Payment even
+                  though the rail behind it is frozen. */}
+              {currentIndex > 0 && !isLocked && (
                 <Button variant="ghost-rect" onClick={goBack}>
                   <Icon path={CHEVRON_LEFT} className="w-4 h-4" />
                   Back

@@ -13,6 +13,13 @@ export interface QidImageUploadValue {
    */
   frontImage?: string;
   backImage?: string;
+  /**
+   * Whether the completed scan is sharp enough to read. Set by this
+   * component, not the caller: true unless `blurFirstScan` is on AND this
+   * was the first pass over the reader. See ScannedIdPreview.clear for what
+   * it drives visually.
+   */
+  clear?: boolean;
 }
 
 interface QidImageUploadProps {
@@ -70,6 +77,22 @@ interface QidImageUploadProps {
    */
   demoTypes?: { value: string; label: string }[];
   onDemoScan?: (type: string) => void;
+  /**
+   * DEMO ONLY (2026-09-28, requested as such). When on, the FIRST pass over
+   * the reader always comes back blurred - unreadable, forcing a Retake -
+   * and every pass after that is clear. Defaults to false/undefined, which
+   * reproduces the exact prior behaviour (every pass clear) for
+   * VerificationGate, SIM Swap and Passport-to-QID, none of which this was
+   * requested for and none of which have an OCR-extraction step for a blur
+   * to plausibly block.
+   *
+   * Scoped in IdLookupStep to `autoDetectIdType` - the scan-first flow this
+   * was asked for - rather than passed unconditionally to every IdLookupStep
+   * caller, for the same reason: the eight selector-led journeys have no
+   * "Document detected" auto-extraction either, so a forced blur-then-retake
+   * there would be a new hurdle with nothing behind it to demonstrate.
+   */
+  blurFirstScan?: boolean;
 }
 
 // FLD (Passport to QID journey, UJ-076): "scan/upload QID Front & Back" required
@@ -133,9 +156,18 @@ interface QidImageUploadProps {
 // for a physical pass over a card rather than a data read.
 const SCAN_DURATION_MS = 900;
 
-export function QidImageUpload({ value, onChange, onScan, error, canScan = true, documentType = 'QID', demoTypes, onDemoScan }: QidImageUploadProps) {
+export function QidImageUpload({
+  value,
+  onChange,
+  onScan,
+  error,
+  canScan = true,
+  documentType = 'QID',
+  demoTypes,
+  onDemoScan,
+  blurFirstScan = false,
+}: QidImageUploadProps) {
   const scanned = Boolean(value.frontScanned && value.backScanned);
-  const simulated = !value.frontImage && !value.backImage;
 
   // Which pass is running, or null when the reader is idle. One state rather
   // than a boolean plus a separate "was this a retake" flag, because a retake
@@ -173,7 +205,14 @@ export function QidImageUpload({ value, onChange, onScan, error, canScan = true,
     // them up beside a spinner would have the card claiming a validated
     // identity while the reader was busy disagreeing with it.
     if (isRetake) {
-      onChange({ ...value, frontScanned: false, backScanned: false, frontImage: undefined, backImage: undefined });
+      onChange({
+        ...value,
+        frontScanned: false,
+        backScanned: false,
+        frontImage: undefined,
+        backImage: undefined,
+        clear: undefined,
+      });
     }
 
     setPass(isRetake ? 'retake' : 'first');
@@ -196,7 +235,12 @@ export function QidImageUpload({ value, onChange, onScan, error, canScan = true,
       // owns rather than this card.
       if (onScan?.() === false) return;
       if (isRetake) setRetakes((n) => n + 1);
-      onChange({ ...value, frontScanned: true, backScanned: true });
+      // Blurred only on a first pass, and only when the caller asked for the
+      // simulation. Every retake is clear - once the agent has re-seated the
+      // card, the demo has made its point, and a card that stays unreadable
+      // forever would just look broken rather than illustrative.
+      const clear = !blurFirstScan || isRetake;
+      onChange({ ...value, frontScanned: true, backScanned: true, clear });
     }, SCAN_DURATION_MS);
   };
 
@@ -229,6 +273,7 @@ export function QidImageUpload({ value, onChange, onScan, error, canScan = true,
                   side={side}
                   documentType={documentType}
                   src={side === 'front' ? value.frontImage : value.backImage}
+                  clear={value.clear ?? true}
                 />
                 <figcaption className="text-fg-2 text-[length:var(--fs-caption)] capitalize">
                   {documentType === 'QID' ? 'QID' : documentType} {side}
@@ -236,18 +281,21 @@ export function QidImageUpload({ value, onChange, onScan, error, canScan = true,
               </figure>
             ))}
           </div>
-          {/* Once, for the pair - they come from a single capture. Only when
-              the images are stand-ins; a real capture needs no disclaimer and
-              labelling one would be wrong. */}
-          {/* What the reader concluded, stated before the disclaimer about the
-              images being stand-ins (2026-09-27: 'After Scan - "Document
-              detected: Qatar ID"'). It names the type the scan actually
-              resolved, so a Diplomatic ID does not report as a Qatar ID. */}
-          <span className="text-fg-2 text-[length:var(--fs-caption)] text-center">
-            Document detected: {documentType === 'QID' ? 'Qatar ID' : documentType}
-          </span>
-          {simulated && (
-            <span className="text-muted text-[length:var(--fs-caption)] text-center">Simulated capture</span>
+          {/* "Document detected: X" moved out of this card and up to the
+              heading IdLookupStep renders above it (2026-09-28), so it is not
+              duplicated here. "Simulated capture" removed the same round -
+              see the 2026-09-27 note this replaced, now gone along with the
+              text. */}
+          {/* role="alert": the blur is the ONLY signal a first-pass scan
+              failed - IdLookupStep's OCR-extraction effect deliberately skips
+              a blurred pass rather than trying and failing it, so no number
+              or MOI result ever appears to explain the silence. Without this
+              line the agent would see two blurry photos and a Retake button
+              with nothing saying why nothing else happened. */}
+          {value.clear === false && (
+            <p role="alert" className="text-danger text-[length:var(--fs-caption)] text-center">
+              Image unclear - the reader could not read this capture. Retake the scan for a clear image.
+            </p>
           )}
           {/* The count is of retakes DONE, so it appears only once there has
               been one - a fresh capture's button reads "Retake scan", not

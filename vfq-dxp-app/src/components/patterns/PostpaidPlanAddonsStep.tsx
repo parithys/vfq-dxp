@@ -1,14 +1,50 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { Badge } from '../primitives/Badge';
 import { Input } from '../primitives/Input';
 import { Radio } from '../primitives/Radio';
 import { AddonsPicker } from '../domain/AddonsPicker';
+import { BillLimitEditor } from '../domain/BillLimitEditor';
 import { Drawer } from '../primitives/Drawer';
 import { Icon } from '../primitives/Icon';
 import { monthlyCharges, formatQar, VAT_RATE } from '../../engines/postpaidPricing';
 
 const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
+
+// Small Levenshtein distance for typo-tolerant ranking - the app has no fuzzy-
+// search dependency, and plan names are short enough that a plain O(n*m) DP
+// table is cheap.
+function levenshtein(a: string, b: string): number {
+  const dp: number[][] = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+  for (let i = 0; i <= a.length; i++) dp[i][0] = i;
+  for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] =
+        a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] : 1 + Math.min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+  return dp[a.length][b.length];
+}
+
+// Closest-match suggestions for the type-ahead dropdown (2026-09-28): a
+// prefix or substring hit ranks first (score 0/1) exactly like the list
+// filter below it; anything else ranks by edit distance so a mistyped plan
+// name ("Postpaid Re 550") still surfaces its nearest neighbour instead of an
+// empty dropdown.
+function closestPlans<T extends { name: string }>(query: string, plans: T[], limit = 5): T[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  return plans
+    .map((p) => {
+      const name = p.name.toLowerCase();
+      const score = name.startsWith(q) ? 0 : name.includes(q) ? 1 : 2 + levenshtein(q, name) / Math.max(q.length, name.length);
+      return { plan: p, score };
+    })
+    .sort((a, b) => a.score - b.score)
+    .slice(0, limit)
+    .map((r) => r.plan);
+}
 
 interface PostpaidPlan {
   productId: string;
@@ -26,6 +62,7 @@ interface PostpaidPlan {
 
 interface Discount {
   addonDiscountId: string;
+  addonType: string;
   name: string;
   description: string;
   price: number;
@@ -39,6 +76,11 @@ interface AddonProduct {
   mrcQAR: number;
 }
 
+/** Discount types that require a supporting ID captured here and a document
+ * uploaded later at the CAF step (2026-09-28 request) - not a file upload
+ * here, just the reference number the CAF attachment will be matched to. */
+const SUPPORTING_ID_DISCOUNT_TYPES = new Set(['MADA Discount', 'B2B2C Discount']);
+
 interface PostpaidPlanAddonsStepProps {
   selectedProductId: string | undefined;
   onSelectProduct: (productId: string) => void;
@@ -46,34 +88,41 @@ interface PostpaidPlanAddonsStepProps {
   onSelectDiscount: (discountId: string | undefined) => void;
   addonIds: string[];
   onAddonsChange: (ids: string[]) => void;
+  discountSupportingId: string | undefined;
+  onDiscountSupportingIdChange: (id: string) => void;
+  billLimit: number | undefined;
+  onBillLimitChange: (value: number, pass: boolean) => void;
   /** Agent 360... no - Agent 360 doesn't apply here; this is BR-076's
    * eligibility-derived default (EligibilityGateStep), shown read-only so
    * the agent sees what limit this activation was pre-qualified against. */
 }
 
 /**
- * The three offer groups asked for on 2026-09-27.
- *
- * Membership is DERIVED from catalogue data, not a new hand-maintained field:
+ * The three offer groups, renamed 2026-09-28 to "Today's Special Promotions",
+ * "Offers for this QID" and "Standard BAU Catalogue" per that day's request -
+ * this only relabels the three groups introduced 2026-09-27; membership is
+ * still DERIVED from catalogue data, not a new hand-maintained field:
  * `popular` already exists on products.json and already drove the POPULAR
  * badge, and commitmentMonths is the only other commercial axis the catalogue
  * carries. So:
  *
- *   Today's Specials - flagged `popular` in the catalogue
- *   Offers for You   - carries a commitment (the plans a discount attaches to)
- *   Standard Plans   - everything else
+ *   Today's Special Promotions - flagged `popular` in the catalogue
+ *   Offers for this QID        - carries a commitment (the plans a discount attaches to)
+ *   Standard BAU Catalogue     - everything else
  *
- * Deliberately derived rather than invented: no "offerGroup" field exists in
- * the corpus, and adding one would have meant assigning every plan to a group
- * by guesswork. If the business later supplies real groupings, this is the one
- * function to change.
+ * Deliberately derived rather than invented: no per-QID offer-eligibility
+ * field exists in the corpus (eligibilityEngine.ts computes customer
+ * eligibility outcomes - age, ID type, and the like - not plan-level offer
+ * matching), and adding one would have meant assigning every plan to a group
+ * by guesswork. If the business later supplies a real per-QID offer feed,
+ * this is the one function to change.
  */
 type PlanGroupKey = 'specials' | 'for-you' | 'standard';
 
 const PLAN_GROUPS: { key: PlanGroupKey; label: string; describe: string }[] = [
-  { key: 'specials', label: "Today's Specials", describe: 'Promoted this month' },
-  { key: 'for-you', label: 'Offers for You', describe: 'Matched to this customer' },
-  { key: 'standard', label: 'Standard Plans', describe: 'The full RED range' },
+  { key: 'specials', label: "Today's Special Promotions", describe: 'Promoted this month' },
+  { key: 'for-you', label: 'Offers for this QID', describe: "Matched to this customer's QID" },
+  { key: 'standard', label: 'Standard BAU Catalogue', describe: 'The full RED range' },
 ];
 
 function planGroupOf(p: { popular?: boolean; commitmentMonths?: number }): PlanGroupKey {
@@ -100,6 +149,10 @@ export function PostpaidPlanAddonsStep({
   onSelectDiscount,
   addonIds,
   onAddonsChange,
+  discountSupportingId,
+  onDiscountSupportingIdChange,
+  billLimit,
+  onBillLimitChange,
 }: PostpaidPlanAddonsStepProps) {
   const [plans, setPlans] = useState<PostpaidPlan[]>([]);
   const [addonProducts, setAddonProducts] = useState<AddonProduct[]>([]);
@@ -109,6 +162,11 @@ export function PostpaidPlanAddonsStep({
   // figures for another.
   const [detailPlan, setDetailPlan] = useState<PostpaidPlan | null>(null);
   const [planSearch, setPlanSearch] = useState('');
+  // Type-ahead suggestions dropdown (2026-09-28), separate from the substring
+  // filter below - see CompanySearchInput.tsx for the same combobox shape
+  // (click-outside close, listbox/option roles).
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   // Name OR price. The price side matches the raw number anywhere in the
   // figure, so "35" finds 350 - narrowing as the agent types rather than
@@ -118,6 +176,17 @@ export function PostpaidPlanAddonsStep({
     if (!q) return true;
     return p.name.toLowerCase().includes(q) || String(p.mrcQAR).includes(q);
   });
+
+  const suggestions = closestPlans(planSearch, plans);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    const onClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setSearchOpen(false);
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [searchOpen]);
 
   useEffect(() => {
     mockDataEngine.list<PostpaidPlan & AddonProduct>('products').then((all) => {
@@ -138,6 +207,17 @@ export function PostpaidPlanAddonsStep({
 
   const selectedPlan = plans.find((p) => p.productId === selectedProductId);
   const selectedDiscount = discounts.find((d) => d.addonDiscountId === discountId);
+  const requiresSupportingId = selectedDiscount ? SUPPORTING_ID_DISCOUNT_TYPES.has(selectedDiscount.addonType) : false;
+
+  // Switching to a discount that doesn't need one (or to no discount at all)
+  // invalidates whatever ID was captured for a previous MADA/B2B2C pick - the
+  // same "an edit invalidates a stale link" reasoning CompanySearchInput and
+  // IdLookupStep apply to their own committed values.
+  useEffect(() => {
+    if (!requiresSupportingId && discountSupportingId) onDiscountSupportingIdChange('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discountId]);
+
   const addonsMonthlyQar = addonProducts.filter((a) => addonIds.includes(a.productId)).reduce((sum, a) => sum + a.mrcQAR, 0);
   // One itemisation, shared with Checkout and with the order payload - see
   // engines/postpaidPricing.ts for why that is a module and not three copies.
@@ -171,16 +251,56 @@ export function PostpaidPlanAddonsStep({
             <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">RED Plan</h3>
             <p className="text-muted text-[length:var(--fs-caption)]">Select your plan</p>
           </div>
-          {/* Search by plan NAME or PRICE (2026-09-27). Price matching is on
-              the raw figure, so "350" finds Postpaid Red 350 whether the agent
-              is thinking of the name or the monthly charge - which is how the
-              two are used interchangeably at the counter. */}
-          <Input
-            aria-label="Search plans by name or price"
-            placeholder="Search plans by name or price"
-            value={planSearch}
-            onChange={(e) => setPlanSearch(e.target.value)}
-          />
+          {/* Search by plan NAME or PRICE (2026-09-27), narrowing the grouped
+              list below as the agent types. The type-ahead dropdown added
+              2026-09-28 is a separate, faster path on top of that same box:
+              closest-match suggestions the agent can click straight into a
+              selection without scanning the grouped list at all - useful once
+              typos or partial names stop substring-matching anything. */}
+          <div ref={searchRef} className="relative">
+            <Input
+              aria-label="Search plans by name or price"
+              role="combobox"
+              aria-expanded={searchOpen}
+              aria-controls="plan-search-listbox"
+              autoComplete="off"
+              placeholder="Search plans by name or price"
+              value={planSearch}
+              onChange={(e) => {
+                setPlanSearch(e.target.value);
+                setSearchOpen(true);
+              }}
+              onFocus={() => setSearchOpen(true)}
+            />
+            {searchOpen && planSearch.trim() && (
+              <ul
+                id="plan-search-listbox"
+                role="listbox"
+                aria-label="Plan suggestions"
+                className="absolute z-50 top-full left-0 right-0 mt-1 max-h-72 overflow-y-auto rounded-[var(--field-radius)] border border-border-soft bg-bg shadow-raised py-1 divide-y divide-[var(--field-divider)]"
+              >
+                {suggestions.map((p) => (
+                  <li
+                    key={p.productId}
+                    role="option"
+                    aria-selected={selectedProductId === p.productId}
+                    onClick={() => {
+                      onSelectProduct(p.productId);
+                      setPlanSearch(p.name);
+                      setSearchOpen(false);
+                    }}
+                    className="flex items-center justify-between gap-3 px-4 py-2.5 cursor-pointer hover:bg-surface"
+                  >
+                    <span className="text-fg text-[length:var(--fs-body)] truncate">{p.name}</span>
+                    <span className="text-muted text-[length:var(--fs-caption)] shrink-0">QAR {p.mrcQAR}/mo</span>
+                  </li>
+                ))}
+                {suggestions.length === 0 && (
+                  <li className="px-4 py-2.5 text-muted text-[length:var(--fs-caption)]">No matching plans.</li>
+                )}
+              </ul>
+            )}
+          </div>
           {visiblePlans.length === 0 && (
             <p className="text-muted text-[length:var(--fs-body)]">No plans match that search.</p>
           )}
@@ -318,6 +438,19 @@ export function PostpaidPlanAddonsStep({
             heading. */}
         <AddonsPicker selectedIds={addonIds} onChange={onAddonsChange} />
 
+        {/* 2b. Bill Limit, re-added 2026-09-28 as an editable add-on
+            defaulted from the selected plan's MRC. It was removed from this
+            step entirely on 2026-09-25 when the Billing step it lived beside
+            went away (see NewPostpaidWizard's note on that removal) - this
+            does not restore the Billing step, just gives the agent back a
+            way to cap the line's monthly charge, now scoped to Plan &
+            Add-ons where the figure it defaults from lives. Hidden until a
+            plan is chosen, same as Eligible Discounts below it, since there
+            is no MRC to default from before then. */}
+        {selectedPlan && (
+          <BillLimitEditor product="Mobile" value={billLimit ?? selectedPlan.mrcQAR} onChange={onBillLimitChange} />
+        )}
+
         {/* 3. Discounts last: a discount comes off the total the plan and
             add-ons above it produce. */}
         <div className="space-y-4">
@@ -366,6 +499,25 @@ export function PostpaidPlanAddonsStep({
                 ))}
                 {discounts.length === 0 && (
                   <p className="text-muted text-[length:var(--fs-caption)]">No discounts configured for this plan.</p>
+                )}
+                {/* MADA/B2B2C discounts need a supporting ID captured here
+                    (2026-09-28 request) - the ID this discount will be
+                    matched against, not the document itself. The document
+                    photo/scan is uploaded later at the CAF step, same as
+                    every other identity attachment in this app; this field
+                    exists so that later step has something to attach it to. */}
+                {requiresSupportingId && (
+                  <Input
+                    label="Supporting ID"
+                    placeholder={
+                      selectedDiscount?.addonType === 'MADA Discount'
+                        ? 'MADA card / reference number'
+                        : 'Sponsor / employer reference ID'
+                    }
+                    value={discountSupportingId ?? ''}
+                    onChange={(e) => onDiscountSupportingIdChange(e.target.value)}
+                    helperText="The supporting document is uploaded later, at the CAF step."
+                  />
                 )}
             </div>
           )}

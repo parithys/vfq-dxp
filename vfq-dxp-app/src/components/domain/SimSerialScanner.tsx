@@ -1,13 +1,19 @@
 import { useState } from 'react';
 import { Input } from '../primitives/Input';
-import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
+import { Icon } from '../primitives/Icon';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 
 interface SimRecord {
   simSerial: string;
   stockStatus: string;
 }
+
+/** A row of bars of varying width, standing in for a 1D barcode symbol at the
+ * small size this renders at (the field's trailing icon, ~16px) - same icon
+ * as QidInput.tsx's barcode scan trigger, for the same control elsewhere in
+ * the app. */
+const BARCODE_ICON = 'M3 4v16 M6 4v16 M8 4v16 M11 4v16 M13 4v16 M14 4v16 M17 4v16 M19 4v16 M21 4v16';
 
 interface SimSerialScannerProps {
   value: string;
@@ -81,20 +87,42 @@ export function SimSerialScanner({ value, onChange }: SimSerialScannerProps) {
 
   return (
     <div>
+      {/* Barcode scan trigger moved INSIDE the field as a trailing icon
+          (2026-09-28), replacing the separate "Scan SIM" button below it -
+          the icon fills the same box the agent would otherwise type into,
+          the way a real barcode reader's output lands in the field it's
+          wired to. scanSim's simulated-scan logic is unchanged; only where
+          the trigger sits has moved. */}
       <Input
         label="SIM Serial Number"
-        placeholder="Enter the SIM serial number, or use Scan SIM"
+        placeholder="Enter the SIM serial number, or use the barcode scanner"
         value={value}
         onChange={(e) => onChange(e.target.value, false)}
         onBlur={(e) => validate(e.target.value)}
         error={error ?? undefined}
+        trailingAddon={
+          <button
+            type="button"
+            onClick={scanSim}
+            disabled={scanning || checking}
+            aria-label="Scan SIM barcode"
+            title={scanning ? 'Scanning…' : 'Scan SIM barcode'}
+            className="p-1.5 -mr-1.5 rounded-[var(--radius-button)] text-muted
+              hover:text-accent disabled:opacity-50 disabled:hover:text-muted
+              focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+          >
+            <Icon path={BARCODE_ICON} className="w-4 h-4" />
+          </button>
+        }
       />
       <div className="mt-2 flex items-center gap-3">
-        <Button variant="ghost-rect" compact onClick={scanSim} disabled={scanning || checking}>
-          {scanning ? 'Scanning…' : 'Scan SIM'}
-        </Button>
-        {checking && <span className="text-[length:var(--fs-caption)] text-muted">Checking stock…</span>}
-        {inStock && !checking && <Badge variant="success">SIM available in this store's stock</Badge>}
+        {/* "Scanning…" used to be the button's own label; now that the
+            trigger is an icon, this line is what carries that same visible
+            feedback (the icon itself only shows it via a disabled state and
+            hover title). */}
+        {scanning && <span className="text-[length:var(--fs-caption)] text-muted">Scanning…</span>}
+        {checking && !scanning && <span className="text-[length:var(--fs-caption)] text-muted">Checking stock…</span>}
+        {inStock && !checking && !scanning && <Badge variant="success">SIM available in this store's stock</Badge>}
       </div>
     </div>
   );

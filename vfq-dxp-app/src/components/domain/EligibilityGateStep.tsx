@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Badge } from '../primitives/Badge';
+import { Button } from '../primitives/Button';
 import { Icon } from '../primitives/Icon';
 import { evaluateRule } from '../../engines/ruleEngine';
 import { useNotificationStore } from '../../stores/notificationStore';
@@ -154,16 +155,21 @@ interface EligibilityGateStepProps {
    */
   result?: EligibilityResult;
   /**
-   * Evaluate but render NOTHING.
-   *
-   * Mounted this way inside the Contact step, the checks run the moment MOI
-   * resolves, so `values.eligibility` already exists by the time the agent
-   * presses Continue. That is what lets the wizard SKIP the Eligibility step
-   * outright on a clean run (2026-09-27: "do not display an Eligibility page
-   * or tab and proceed directly to the next step") rather than showing it
-   * briefly and auto-advancing out of it.
+   * Pattern 2 (Approval Workflow), rendered as a "Proceed to Approval" button
+   * when an approval-routing check applies and nothing harder blocks the
+   * order (2026-09-28). Omit to render no button at all - NewPrepaidWizard's
+   * separate Eligibility step still relies on the plain-text routing message
+   * below rather than this action.
    */
-  headless?: boolean;
+  onProceedToApproval?: () => void;
+  /**
+   * Pattern 3 (Alternative Product), rendered as a "Switch to Prepaid" button
+   * when a collections block soft-stops the order (2026-09-28). Only makes
+   * sense for `journeyType: 'postpaid'` - Prepaid customers hitting this same
+   * collections block have no "switch to Prepaid" to offer, since that is
+   * already the product they are on.
+   */
+  onSwitchToPrepaid?: () => void;
   // Defaults to 'postpaid' so the existing New Postpaid Activation call site
   // is unaffected. 'prepaid' switches the line-cap check from BR-288
   // (postpaid-specific expat-QID cap of 2) to BR-347 (the Mobile Prepaid
@@ -183,7 +189,14 @@ interface EligibilityGateStepProps {
 // identity-documents -> customers chain IdLookupStep uses, since MOI results
 // don't carry a customerId forward. BR-113/BR-288/BR-187/BR-076 - see
 // ruleEngine.ts for the evidenced business-rules.json citations.
-export function EligibilityGateStep({ idNumber, onResult, result, journeyType = 'postpaid', headless = false }: EligibilityGateStepProps) {
+export function EligibilityGateStep({
+  idNumber,
+  onResult,
+  result,
+  journeyType = 'postpaid',
+  onProceedToApproval,
+  onSwitchToPrepaid,
+}: EligibilityGateStepProps) {
   // A cached result for THIS identity. Computed during render rather than in
   // an effect so the first paint on re-entry already shows the rows.
   const cached = result && idNumber && result.idNumber === idNumber ? result : undefined;
@@ -272,6 +285,9 @@ export function EligibilityGateStep({ idNumber, onResult, result, journeyType = 
           deals,
           outstandingQar,
           lineCapReached: !lineCap.pass,
+          // The line-cap rule's own message already has the count - see the
+          // note on EligibilityContext.activeLinesDetail.
+          activeLinesDetail: lineCap.message ?? '',
         },
         new Date()
       );
@@ -325,18 +341,13 @@ export function EligibilityGateStep({ idNumber, onResult, result, journeyType = 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idNumber, journeyType, cached]);
 
-  // FIRST of the returns, and after the hooks. Evaluation still happens - only
-  // the output is suppressed - but it must short-circuit before the branches
-  // below, which is where this originally sat and got it wrong: the "Complete
-  // the Contact step first" line rendered from the HEADLESS mount inside the
-  // Contact step, putting an eligibility message on a screen that has no
-  // eligibility panel and telling the agent to complete the step they were
-  // already on.
-  if (headless) return null;
-
-  if (!idNumber) {
-    return <p className="text-muted text-[length:var(--fs-body)]">Complete the Contact step first - eligibility depends on the validated identity.</p>;
-  }
+  // Nothing to show before an identity is resolved - this panel lives
+  // permanently inside the Contact step now (2026-09-28, no more separate
+  // Eligibility step to mount a HEADLESS instance ahead of), so there is no
+  // "go back and complete Contact first" to say: the agent is already there,
+  // simply not far enough into it yet for eligibility to have anything to
+  // report. Silence is the correct state, same as the clean-pass case below.
+  if (!idNumber) return null;
   if (resolved === undefined) {
     return <p className="text-muted text-[length:var(--fs-body)]">Checking eligibility…</p>;
   }
@@ -372,9 +383,17 @@ export function EligibilityGateStep({ idNumber, onResult, result, journeyType = 
               (nationality
                 ? `${nationality} Citizen - not a high-risk nationality`
                 : 'Not a high-risk nationality'),
-            // HRN is amber because an advance payment is outstanding, but it
-            // is NOT a soft stop: the product can still be issued.
-            tone: (hrnFlag ? 'soft-stop' : 'pass') as RowTone,
+            // 'advisory', not 'soft-stop' (2026-09-28 direction: HRN is a
+            // blocker no longer, purely informational). It previously
+            // borrowed the amber "soft-stop" tone and its "Blocked" badge for
+            // styling only - the order was never actually gated on it (HRN
+            // never enters `checks`, so `pass`/`hardStop`/`softStop` were
+            // always computed without it) - but LABELLING an unblocking row
+            // "Blocked" was the bug: it read as a stop that wasn't one.
+            // 'advisory' is a distinct, pre-existing RowTone built for exactly
+            // this (see ROW_TONE/STATUS_LABEL.advisory = 'For information')
+            // that was never wired up until now.
+            tone: (hrnFlag ? 'advisory' : 'pass') as RowTone,
           },
         ]
       : []),
@@ -392,16 +411,14 @@ export function EligibilityGateStep({ idNumber, onResult, result, journeyType = 
   // nobody mentioned would be worse than one extra screen.
   const unresolved = rows.filter((row) => row.tone !== 'pass');
 
-  // Defensive: the wizard skips this step when everything passes, so reaching
-  // here with nothing unresolved means the two disagreed. Say so rather than
-  // rendering an empty card.
-  if (unresolved.length === 0) {
-    return (
-      <p className="text-muted text-[length:var(--fs-body)]">
-        All eligibility checks passed - continuing to the next step.
-      </p>
-    );
-  }
+  // NOTHING rendered on a clean pass (2026-09-28: "advance automatically
+  // without showing pass indicators"). This panel now lives inside the
+  // Contact step rather than a separate Eligibility step the wizard could
+  // skip past, so a clean run has to be silence here, not even a one-line
+  // confirmation - the toast pushed above already told the agent it cleared,
+  // and Continue simply becomes available. Any text here, however muted,
+  // is still a pass indicator the agent has to read past.
+  if (unresolved.length === 0) return null;
 
   return (
     <div className="space-y-3">
@@ -429,22 +446,51 @@ export function EligibilityGateStep({ idNumber, onResult, result, journeyType = 
         ))}
       </ul>
 
+      {/* Pattern 1: Hard Stop. No button of any kind - "no option to proceed"
+          means exactly that, not a disabled one sitting here as a tease. */}
       {hardStop && (
         <p className="text-danger text-[length:var(--fs-caption)]">
           This journey cannot continue for this customer - resolve the blocking check above before retrying.
         </p>
       )}
+      {/* Pattern 3: Alternative Product. Only a collections soft-stop reaches
+          here (the engine's only 'soft-stop' outcome), and only Postpaid has
+          an alternative to offer - a Prepaid customer hitting the same block
+          has nowhere else to switch to. onSwitchToPrepaid is left unset by
+          NewPrepaidWizard for exactly that reason, so the button is absent
+          there even though the message above still applies. */}
       {!hardStop && softStop && (
-        <p className="text-[var(--warn-text)] text-[length:var(--fs-caption)]">
-          A {journeyType === 'prepaid' ? 'prepaid' : 'postpaid'} connection cannot be issued for this customer - see the
-          fallback offered above.
-        </p>
+        <div className="space-y-2">
+          <p className="text-[var(--warn-text)] text-[length:var(--fs-caption)]">
+            A {journeyType === 'prepaid' ? 'prepaid' : 'postpaid'} connection cannot be issued for this customer - see the
+            fallback offered above.
+          </p>
+          {onSwitchToPrepaid && (
+            <Button variant="secondary-rect" compact onClick={onSwitchToPrepaid}>
+              Switch to Prepaid
+            </Button>
+          )}
+        </div>
       )}
+      {/* Pattern 2: Approval Workflow. "Proceed to Approval" replaces the
+          ordinary Continue action for this order - the wizard still gathers
+          plan/number/SIM/CAF/payment normally, but the order that eventually
+          submits is held for approval rather than completing outright (see
+          NewPostpaidWizard's pendingApproval). The plain-text fallback below
+          the button covers NewPrepaidWizard, whose separate Eligibility step
+          still auto-advances on its own rather than taking this action. */}
       {!hardStop && !softStop && routed.length > 0 && (
-        <p className="text-fg-2 text-[length:var(--fs-caption)]">
-          {routed.length === 1 ? 'One check routes' : `${routed.length} checks route`} this order for approval. The
-          journey continues; the order completes once approval is granted.
-        </p>
+        <div className="space-y-2">
+          <p className="text-fg-2 text-[length:var(--fs-caption)]">
+            {routed.length === 1 ? 'One check routes' : `${routed.length} checks route`} this order for approval. The
+            journey continues; the order completes once approval is granted.
+          </p>
+          {onProceedToApproval && (
+            <Button variant="primary-rect" compact onClick={onProceedToApproval}>
+              Proceed to Approval
+            </Button>
+          )}
+        </div>
       )}
     </div>
   );
