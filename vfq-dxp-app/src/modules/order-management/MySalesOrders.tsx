@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DataTable } from '../../components/primitives/DataTable';
 import { Badge } from '../../components/primitives/Badge';
 import { ErrorBanner } from '../../components/primitives/ErrorBanner';
@@ -31,6 +32,7 @@ interface MySalesOrdersProps {
 }
 
 export function MySalesOrders({ padded = true }: MySalesOrdersProps) {
+  const navigate = useNavigate();
   const orders = (useEntityStore((s) => s.records.orders) ?? []) as unknown as Order[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const loading = useEntityStore((s) => s.loading.orders);
@@ -55,6 +57,11 @@ export function MySalesOrders({ padded = true }: MySalesOrdersProps) {
         ]}
         rows={orders}
         rowKey={(r) => r.orderId}
+        // Matches Customer 360's OrdersSection - same detail route, same
+        // whole-row click. This table never wired it, so a row here was
+        // read-only where the identical list on a customer's own page
+        // already opened the order.
+        onRowClick={(r) => navigate(`/order-management/order-approval-detail-attachments-order-details-activities-a?id=${r.orderId}`)}
         emptyMessage="No orders submitted yet - build one via a New Fixed Line/FWA/Postpaid wizard first."
         loading={loading}
       />
