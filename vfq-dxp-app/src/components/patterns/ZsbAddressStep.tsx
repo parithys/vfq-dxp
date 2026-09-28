@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Input } from '../primitives/Input';
+import { Autocomplete } from '../primitives/Autocomplete';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 
 export interface ZsbAddressValue {
@@ -77,6 +78,23 @@ interface AddressRecord {
 // addresses the agent, who cannot action it.
 export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAddressStepProps) {
   const [fetching, setFetching] = useState(false);
+  // Area suggestions. kid-address-records is the only dataset in this corpus
+  // carrying Qatari area names; addresses.json has `city` (always "Doha"),
+  // which is why the prefill above lands a city in this field. Both feed the
+  // list so a prefilled value is also offered back as a suggestion.
+  const [areaOptions, setAreaOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    Promise.all([
+      mockDataEngine.list<{ area?: string }>('kid-address-records'),
+      mockDataEngine.list<{ city?: string }>('addresses'),
+    ]).then(([kid, addr]) => {
+      const names = [...kid.map((k) => k.area), ...addr.map((a) => a.city)].filter(
+        (n): n is string => Boolean(n && n.trim())
+      );
+      setAreaOptions([...new Set(names)].sort());
+    });
+  }, []);
 
   useEffect(() => {
     if (nationality !== 'Qatari' || !idNumber || value.fetchedFromMoi || value.zone) return;
@@ -149,11 +167,19 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
           {/* Area and KID span the full width, matching the mockup - they are
               single fields per row rather than a pair. */}
           <div className="col-span-2">
-            <Input
+            {/* Autocomplete, not a plain text box (2026-09-27). Suggestions
+                come from the `area` values on kid-address-records - the only
+                dataset in this corpus that carries Qatari area names - so the
+                list is real rather than a fabricated gazetteer.
+                Still FREE TEXT: three records cannot cover Qatar, so
+                restricting entry to them would block most addresses. The list
+                speeds up the common ones; anything else can still be typed. */}
+            <Autocomplete
               label="Area"
               placeholder="e.g. West Bay"
+              options={areaOptions}
               value={value.area ?? ''}
-              onChange={(e) => onChange({ ...value, area: e.target.value })}
+              onChange={(area) => onChange({ ...value, area })}
             />
           </div>
           <div className="col-span-2">

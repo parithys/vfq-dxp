@@ -5,7 +5,7 @@ import { Radio } from '../primitives/Radio';
 import { Input } from '../primitives/Input';
 import { PhoneNumberInput } from '../primitives/PhoneNumberInput';
 import { Select } from '../primitives/Select';
-import { Badge } from '../primitives/Badge';
+import { Icon } from '../primitives/Icon';
 
 // Mirrors IdLookupStep's MoiResult - this step receives the value that step
 // produces. Kept as a local shape rather than imported because it is a subset:
@@ -231,25 +231,28 @@ export function hasIdentityDetails(v: {
 // read-only now, so a mandatory Gender with no registry source and no way to
 // type into it would block Continue permanently. customers.json has always
 // carried the field; only MoiResult was failing to pass it through.
+const TICK_ICON = 'M20 6L9 17l-5-5';
+
 /**
  * Email verification state (2026-09-27 walkthrough).
  *
  * There is no email-verification service in this app, so this reports only
- * what can actually be known and does not claim a check that never ran:
+ * what can actually be known and never asserts a check that did not run:
  *
- *   Verified             - unchanged from what the MOI registry returned
- *   Verification Pending - agent typed a different, well-formed address
- *   Unverified           - no registry address, or the current value is not
- *                          a valid address yet
+ *   verified  - unchanged from what the MOI registry returned (tick shown)
+ *   pending   - agent typed a different, well-formed address
+ *   unverified- no registry address, or the value is not a valid address yet
+ *
+ * Only `verified` earns the tick. The other two are said in words underneath
+ * rather than marked, because a tick is a claim and neither state supports
+ * one - an absent tick is the honest rendering of "not confirmed".
  */
-function EmailStatusChip({ email, registryEmail }: { email?: string; registryEmail?: string }) {
-  if (!email || !isValidEmail(email)) {
-    return <Badge variant="filled-neutral">Unverified</Badge>;
-  }
+function emailVerification(email: string | undefined, registryEmail: string | undefined) {
+  if (!email || !isValidEmail(email)) return { verified: false, hint: undefined };
   if (registryEmail && email.trim().toLowerCase() === registryEmail.trim().toLowerCase()) {
-    return <Badge variant="success">Verified</Badge>;
+    return { verified: true, hint: undefined };
   }
-  return <Badge variant="warning">Verification Pending</Badge>;
+  return { verified: false, hint: 'Verification pending - address differs from the registry record.' };
 }
 
 function identityFromMoi(moi: MoiResult | undefined) {
@@ -383,36 +386,45 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
               already shown to cause. */}
           <Input label="Middle Name" readOnly value={value.middleName ?? ''} onChange={() => {}} />
           <Input label="Last Name" required readOnly value={value.lastName ?? ''} onChange={() => {}} />
+          {/* The DD/MM/YYYY hint is the field's PLACEHOLDER, not a caption
+              beneath it (2026-09-27). As a caption it sat under a field that
+              is already populated from MOI, describing a format the agent
+              cannot type into anyway; inside the box it does the one job a
+              format hint has - telling you what to write when there is
+              nothing there yet. */}
           <Input
             label="Date of Birth"
             required
             readOnly
-            helperText="DD/MM/YYYY"
+            placeholder="DD/MM/YYYY"
             value={value.dob ?? ''}
             onChange={() => {}}
           />
           <Input label="Nationality" required readOnly value={value.nationality ?? ''} onChange={() => {}} />
-          <div className="flex flex-col gap-1">
-            <Input
-              label="Email Address"
-              type="email"
-              required
-              value={value.email ?? ''}
-              placeholder="customer@example.qa"
-              error={value.email && !isValidEmail(value.email) ? 'Please enter a valid email address.' : undefined}
-              onChange={(e) => onChange({ ...value, email: e.target.value })}
-            />
-            {/* Verification state, per the 2026-09-27 walkthrough. Derived, not
-                stored: an address the registry supplied is Verified; one the
-                agent has typed over is Unverified until it is re-checked; a
-                syntactically complete edit sits at Verification Pending. No
-                verification service exists in this app, so this reports what is
-                actually known rather than asserting a check that never ran. */}
-            <EmailStatusChip
-              email={value.email}
-              registryEmail={value.moiResult?.email}
-            />
-          </div>
+          {/* Verification state rides INSIDE the field as a tick on its right
+              edge (2026-09-27), replacing the badge that sat underneath. The
+              badge was as wide as the input and read as a second control; the
+              status belongs to the value, so it now sits with it.
+              Only the VERIFIED state gets a mark - see emailVerification. */}
+          <Input
+            label="Email Address"
+            type="email"
+            required
+            value={value.email ?? ''}
+            placeholder="customer@example.qa"
+            error={value.email && !isValidEmail(value.email) ? 'Please enter a valid email address.' : undefined}
+            helperText={emailVerification(value.email, value.moiResult?.email).hint}
+            trailingAddon={
+              emailVerification(value.email, value.moiResult?.email).verified ? (
+                <Icon
+                  path={TICK_ICON}
+                  className="w-4 h-4 text-success"
+                  aria-label="Email address verified"
+                />
+              ) : undefined
+            }
+            onChange={(e) => onChange({ ...value, email: e.target.value })}
+          />
           <PhoneNumberInput
             label="Alternate phone #"
             required

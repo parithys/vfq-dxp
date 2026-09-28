@@ -104,11 +104,17 @@ export function NewPostpaidWizard() {
       <GuidedActivationWizard
         wizardId={WIZARD_ID}
         title="New Postpaid Activation"
+        // Abandoning drops the draft and returns the agent to the dashboard,
+        // ready for the next customer. Matters most on a hard-stopped
+        // Eligibility: the order cannot advance, so without this the agent is
+        // left holding a draft with nothing to do about it.
+        onAbandon={() => navigate('/')}
         steps={[
           {
             key: 'contact',
             label: 'Contact',
             render: ({ values, setValue }) => (
+              <>
               <GuidedContactStep
                 // Direct postpaid sale is limited to a valid QID or
                 // Diplomatic ID (2026-09-25). Passport, GCC ID and other
@@ -126,6 +132,18 @@ export function NewPostpaidWizard() {
                 onChange={(v) => setValue('contact', v)}
                 showIptvToggle={false}
               />
+              {/* Headless: runs the eligibility checks as soon as MOI resolves,
+                  so `values.eligibility` exists before the agent leaves this
+                  step. That is what lets the Eligibility step be SKIPPED on a
+                  clean run instead of flashing eight green rows and
+                  auto-advancing (2026-09-27). */}
+              <EligibilityGateStep
+                headless
+                idNumber={(values.contact as GuidedContactValue | undefined)?.idNumber}
+                result={values.eligibility as EligibilityResult | undefined}
+                onResult={(r) => setValue('eligibility', r)}
+              />
+              </>
             ),
             isValid: (values) => {
               const c = values.contact as GuidedContactValue | undefined;
@@ -136,6 +154,19 @@ export function NewPostpaidWizard() {
             key: 'eligibility',
             label: 'Eligibility',
             description: 'Blacklist, line cap & HRN',
+            // Hidden entirely - not just auto-advanced past - when every check
+            // passes (2026-09-27). `skip` removes it from activeSteps, so it
+            // leaves the rail, stops consuming a step number, and Back from
+            // Address returns to Contact.
+            //
+            // "Everything passed" means no check reported anything other than
+            // 'pass'. Approval-routing counts as needing attention even though
+            // it does not block: an order diverted for approval with nothing
+            // said about it is worse than one extra screen.
+            skip: (values) => {
+              const r = values.eligibility as EligibilityResult | undefined;
+              return Boolean(r) && r!.checks.every((c) => c.outcome === 'pass') && !r!.requiresHrnAdvance;
+            },
             render: ({ values, setValue }) => {
               const contact = values.contact as GuidedContactValue | undefined;
               return (

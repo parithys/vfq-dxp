@@ -5,6 +5,7 @@ import { useWorkflowStore } from '../../stores/workflowStore';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { Button } from '../primitives/Button';
 import { Icon } from '../primitives/Icon';
+import { Modal } from '../primitives/Modal';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
 
 const CHEVRON_LEFT = 'M15 18l-6-6 6-6';
@@ -47,6 +48,17 @@ interface GuidedActivationWizardProps {
   title: string;
   steps: WizardStep[];
   onSubmit: (values: Record<string, unknown>) => void | Promise<void>;
+  /**
+   * Where to go once the order is thrown away. Providing this is what puts
+   * "Abandon Order" on the header; wizards that omit it render no such action.
+   *
+   * Restored 2026-09-27. This existed until 2026-09-26, when it was removed on
+   * direction ("a half-entered order is left where it is rather than needing an
+   * explicit throw-away action") - reinstated on direction again, because a
+   * journey that HARD-STOPS at Eligibility leaves the agent with a draft they
+   * cannot advance and, without this, no way to be rid of it.
+   */
+  onAbandon?: () => void;
 }
 
 // Pattern 1: Guided Multi-Step Wizard - the single most-repeated shape in the
@@ -54,11 +66,12 @@ interface GuidedActivationWizardProps {
 // Left-hand step list (numbered, with a secondary description line) + a
 // single content panel for the active step's fields and Back/Continue
 // footer - matches the reference layout supplied for this pattern.
-export function GuidedActivationWizard({ wizardId, title, steps, onSubmit }: GuidedActivationWizardProps) {
+export function GuidedActivationWizard({ wizardId, title, steps, onSubmit, onAbandon }: GuidedActivationWizardProps) {
   const draft = useWorkflowStore((s) => s.getDraft(wizardId));
   const setStep = useWorkflowStore((s) => s.setStep);
   const setFieldValue = useWorkflowStore((s) => s.setFieldValue);
   const clearDraft = useWorkflowStore((s) => s.clearDraft);
+  const [abandonOpen, setAbandonOpen] = useState(false);
   const hydrateDraft = useWorkflowStore((s) => s.hydrateDraft);
   // Guards against duplicate order submission: onSubmit is async (mock CRUD +
   // navigation) but goNext used to fire-and-forget it without disabling the
@@ -355,6 +368,18 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit }: Gui
     }
   };
 
+  // Throw the order away: delete the persisted draft ORDER row (if one was
+  // ever created - it only exists once the journey has been saved/resumed),
+  // then clear the in-memory/session draft, then hand control back to the
+  // caller to navigate away. Order matters: clearing the draft first would
+  // lose the draftOrderId this needs.
+  const abandonOrder = async () => {
+    if (draftOrderId) await mockDataEngine.remove('orders', draftOrderId);
+    clearDraft(wizardId);
+    setAbandonOpen(false);
+    onAbandon?.();
+  };
+
   const goBack = () => {
     if (currentIndex > 0) setStep(wizardId, currentIndex - 1);
   };
@@ -458,12 +483,23 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit }: Gui
             >
               {currentStep?.label}
             </h2>
-            {/* "Abandon Order" sat here, with a confirm modal behind it -
-                removed 2026-09-26 per direction, along with the onAbandon
-                prop every wizard was passing a navigate() into. No
-                replacement: the draft is still discarded by clearDraft on
-                submit, and a half-entered order is left where it is rather
-                than needing an explicit throw-away action. */}
+            {/* "Abandon Order" - removed 2026-09-26, restored 2026-09-27 on
+                direction. A plain text action rather than a Button: it is
+                destructive and secondary, and giving it button weight next to
+                the step heading would set it against Continue as an equal
+                choice. Confirmed before it fires, because it discards
+                everything the agent has entered. */}
+            {onAbandon && (
+              <button
+                type="button"
+                onClick={() => setAbandonOpen(true)}
+                className="shrink-0 text-[length:var(--fs-caption)] text-muted underline
+                  hover:text-danger focus:outline-none focus-visible:shadow-[var(--focus-ring)]
+                  rounded-[var(--radius-button)] px-1"
+              >
+                Abandon Order
+              </button>
+            )}
           </div>
           {currentStep?.render({ values: draft.values, setValue })}
           <div className="flex items-center justify-between mt-6 pt-6 border-t border-border-soft">
@@ -482,6 +518,30 @@ export function GuidedActivationWizard({ wizardId, title, steps, onSubmit }: Gui
           </div>
         </div>
       </div>
+
+      {/* Confirmed, not immediate: this discards every field the agent has
+          entered and, once a draft order exists, deletes that row. Modal
+          rather than Drawer per Modal.tsx's own note - it is reserved for
+          exactly this short confirmation. */}
+      <Modal
+        open={abandonOpen}
+        onClose={() => setAbandonOpen(false)}
+        title="Abandon this order?"
+        footer={
+          <>
+            <Button variant="ghost-rect" onClick={() => setAbandonOpen(false)}>
+              Keep working
+            </Button>
+            <Button variant="primary-rect" onClick={() => void abandonOrder()}>
+              Abandon Order
+            </Button>
+          </>
+        }
+      >
+        <p className="text-fg-2 text-[length:var(--fs-body)]">
+          Everything entered for this customer will be discarded and the saved draft deleted. This cannot be undone.
+        </p>
+      </Modal>
     </div>
   );
 }

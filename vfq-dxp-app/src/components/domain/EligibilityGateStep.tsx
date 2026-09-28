@@ -153,6 +153,17 @@ interface EligibilityGateStepProps {
    * Reused only when its `idNumber` still matches - see EligibilityResult.
    */
   result?: EligibilityResult;
+  /**
+   * Evaluate but render NOTHING.
+   *
+   * Mounted this way inside the Contact step, the checks run the moment MOI
+   * resolves, so `values.eligibility` already exists by the time the agent
+   * presses Continue. That is what lets the wizard SKIP the Eligibility step
+   * outright on a clean run (2026-09-27: "do not display an Eligibility page
+   * or tab and proceed directly to the next step") rather than showing it
+   * briefly and auto-advancing out of it.
+   */
+  headless?: boolean;
   // Defaults to 'postpaid' so the existing New Postpaid Activation call site
   // is unaffected. 'prepaid' switches the line-cap check from BR-288
   // (postpaid-specific expat-QID cap of 2) to BR-347 (the Mobile Prepaid
@@ -172,7 +183,7 @@ interface EligibilityGateStepProps {
 // identity-documents -> customers chain IdLookupStep uses, since MOI results
 // don't carry a customerId forward. BR-113/BR-288/BR-187/BR-076 - see
 // ruleEngine.ts for the evidenced business-rules.json citations.
-export function EligibilityGateStep({ idNumber, onResult, result, journeyType = 'postpaid' }: EligibilityGateStepProps) {
+export function EligibilityGateStep({ idNumber, onResult, result, journeyType = 'postpaid', headless = false }: EligibilityGateStepProps) {
   // A cached result for THIS identity. Computed during render rather than in
   // an effect so the first paint on re-entry already shows the rows.
   const cached = result && idNumber && result.idNumber === idNumber ? result : undefined;
@@ -317,6 +328,11 @@ export function EligibilityGateStep({ idNumber, onResult, result, journeyType = 
   if (!idNumber) {
     return <p className="text-muted text-[length:var(--fs-body)]">Complete the Contact step first - eligibility depends on the validated identity.</p>;
   }
+  // After the hooks, so evaluation still happens - only the output is
+  // suppressed. Returning early here (not before the hooks) keeps hook order
+  // identical between headless and visible mounts.
+  if (headless) return null;
+
   if (resolved === undefined) {
     return <p className="text-muted text-[length:var(--fs-body)]">Checking eligibility…</p>;
   }
@@ -360,10 +376,38 @@ export function EligibilityGateStep({ idNumber, onResult, result, journeyType = 
       : []),
   ];
 
+  // ONLY the rows that did not pass (2026-09-27). A clean run is not reported
+  // here at all - the step is skipped outright by the wizard (see
+  // NewPostpaidWizard's `skip`), so eight green "Passed" rows the agent had to
+  // read past and then dismiss are gone. What remains on screen is only ever
+  // something that needs a decision.
+  //
+  // "Did not pass" deliberately includes approval-routing as well as the two
+  // stops. Routing is not a failure, but it IS a diversion the agent must know
+  // about - an under-18 applicant silently proceeding behind an approval task
+  // nobody mentioned would be worse than one extra screen.
+  const unresolved = rows.filter((row) => row.tone !== 'pass');
+
+  // Defensive: the wizard skips this step when everything passes, so reaching
+  // here with nothing unresolved means the two disagreed. Say so rather than
+  // rendering an empty card.
+  if (unresolved.length === 0) {
+    return (
+      <p className="text-muted text-[length:var(--fs-body)]">
+        All eligibility checks passed - continuing to the next step.
+      </p>
+    );
+  }
+
   return (
     <div className="space-y-3">
+      <p className="text-fg-2 text-[length:var(--fs-body)]">
+        {unresolved.length === 1
+          ? 'One eligibility check needs attention before this order can proceed.'
+          : `${unresolved.length} eligibility checks need attention before this order can proceed.`}
+      </p>
       <ul className="rounded-[var(--radius-card)] border border-border-soft overflow-hidden divide-y divide-border-soft">
-        {rows.map((row) => (
+        {unresolved.map((row) => (
           <li key={row.id} className={`flex items-start gap-3 px-4 py-3 ${ROW_TONE[row.tone]}`}>
             <Icon path={ROW_ICON[row.tone]} className={`w-5 h-5 shrink-0 mt-0.5 ${ICON_TONE[row.tone]}`} />
             <div className="min-w-0 flex-1">

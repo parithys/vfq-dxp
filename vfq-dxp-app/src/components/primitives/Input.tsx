@@ -18,12 +18,23 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
    * ~60 inputs in the app.
    */
   leadingAddon?: ReactNode;
+  /**
+   * Fixed content locked inside the field's RIGHT edge - a status tick, a
+   * unit, a small action. Same wrapper mechanics as leadingAddon (the border
+   * moves onto a wrapper so the addon sits inside the outline), and the two
+   * compose: a field may carry both.
+   *
+   * No divider rule, unlike leadingAddon: that divider separates a prefix the
+   * user is reading BEFORE the value (a dial code), whereas a trailing status
+   * belongs to the value it follows and a rule would read as a second field.
+   */
+  trailingAddon?: ReactNode;
 }
 
 // Field chrome (border/radius/state colors) per the light-mode textbox
 // reference supplied 2026-09-15 - see the --field-* tokens in tokens.css.
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { label, error, helperText, leadingAddon, className = '', id, 'aria-describedby': ariaDescribedby, ...rest },
+  { label, error, helperText, leadingAddon, trailingAddon, className = '', id, 'aria-describedby': ariaDescribedby, ...rest },
   ref
 ) {
   const inputId = id ?? `input-${label?.replace(/\s+/g, '-').toLowerCase()}`;
@@ -86,7 +97,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           )}
         </label>
       )}
-      {leadingAddon ? (
+      {leadingAddon || trailingAddon ? (
         // focus-within, not focus-visible: the outline belongs to the wrapper
         // now, but the thing being focused is the inner input.
         <div
@@ -99,10 +110,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             focus-within:border-[var(--field-focus-border)] focus-within:shadow-[var(--field-focus-ring)]
             ${rest.disabled ? 'border-[var(--field-border-disabled)]' : ''}`}
         >
-          <span className="flex items-center gap-2 pl-3 pr-2 text-[length:var(--fs-body)] text-fg-2 shrink-0 select-none">
-            {leadingAddon}
-          </span>
-          <span className="self-stretch my-2 w-px bg-[var(--field-border)] shrink-0" aria-hidden="true" />
+          {leadingAddon && (
+            <>
+              <span className="flex items-center gap-2 pl-3 pr-2 text-[length:var(--fs-body)] text-fg-2 shrink-0 select-none">
+                {leadingAddon}
+              </span>
+              <span className="self-stretch my-2 w-px bg-[var(--field-border)] shrink-0" aria-hidden="true" />
+            </>
+          )}
           <input
             ref={ref}
             id={inputId}
@@ -114,6 +129,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
               ${className}`}
             {...rest}
           />
+          {trailingAddon && (
+            <span className="flex items-center gap-2 pr-3 pl-2 shrink-0 select-none">{trailingAddon}</span>
+          )}
         </div>
       ) : (
         <input

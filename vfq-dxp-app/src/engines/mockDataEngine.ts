@@ -99,6 +99,28 @@ export async function update<T extends Record<string, unknown>>(
   return latency(records[idx] as T);
 }
 
+/**
+ * Delete a record outright. Added 2026-09-27 for "Abandon Order", which
+ * discards a DRAFT order the agent has decided not to place.
+ *
+ * Deliberately a real delete and not a status flip: a draft was never an order
+ * anyone placed, so leaving an 'Abandoned' row behind would put records in the
+ * order list for activations that never happened. A SUBMITTED order should
+ * still be cancelled via its own lifecycle (see `transition`) rather than
+ * removed - this is for the pre-submission draft only.
+ *
+ * Returns whether anything was removed, so a caller can tell a real deletion
+ * from a no-op on an id that had already gone.
+ */
+export async function remove(kind: EntityKind, id: string): Promise<boolean> {
+  const records = requireStore()[kind] ?? [];
+  const field = idFieldFor(records);
+  const idx = records.findIndex((r) => r[field] === id);
+  if (idx === -1) return latency(false);
+  records.splice(idx, 1);
+  return latency(true);
+}
+
 // Validates an entity's lifecycle transition against domain-model.md's evidenced
 // state machine (frontend-architecture.md §7) rather than allowing any-to-any state change.
 export function transition(

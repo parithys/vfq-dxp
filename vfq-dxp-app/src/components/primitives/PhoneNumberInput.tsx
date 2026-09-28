@@ -30,6 +30,16 @@ interface PhoneNumberInputProps {
   value: string;
   placeholder?: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  /**
+   * Hard cap on NATIONAL digits, below the E.164 ceiling.
+   *
+   * Without this the limit is 15 minus the dial code - 12 digits on +974 -
+   * so a Qatar-pinned field happily accepted "777777777777". A field that is
+   * fixed to one country has a known length, and the keystroke that would
+   * exceed it should simply not land rather than being typed and then
+   * rejected by a validator underneath.
+   */
+  maxNationalDigits?: number;
   className?: string;
   required?: boolean;
   helperText?: string;
@@ -66,6 +76,7 @@ export function PhoneNumberInput({
   value,
   placeholder,
   onChange,
+  maxNationalDigits,
   className,
   required,
   helperText,
@@ -103,7 +114,7 @@ export function PhoneNumberInput({
 
   // E.164 allows 15 digits including the country code, so the national cap
   // depends on which country is selected rather than being Qatar's 8.
-  const maxNational = 15 - (country.dial.length - 1);
+  const maxNational = Math.min(maxNationalDigits ?? Infinity, 15 - (country.dial.length - 1));
 
   const handleDigits = (e: ChangeEvent<HTMLInputElement>) => {
     const digits = e.target.value.replace(/\D/g, '').slice(0, maxNational);
