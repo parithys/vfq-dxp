@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
 import { monthlyCharges } from '../../../engines/postpaidPricing';
@@ -6,15 +6,17 @@ import { GuidedContactStep, isValidAltPhone, isValidEmail, hasIdentityDetails, e
 import type { GuidedContactValue } from '../../../components/patterns/GuidedContactStep';
 import { ZsbAddressStep } from '../../../components/patterns/ZsbAddressStep';
 import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
-import { PostpaidPlanAddonsStep } from '../../../components/patterns/PostpaidPlanAddonsStep';
+import { BillingAccountStep, isBillingAccountValid } from '../../../components/patterns/BillingAccountStep';
+import type { BillingAccountValue } from '../../../components/patterns/BillingAccountStep';
+import { PostpaidPlanAddonsStep, SUPPORTING_ID_DISCOUNT_TYPES } from '../../../components/patterns/PostpaidPlanAddonsStep';
 import { MsisdnPicker } from '../../../components/domain/MsisdnPicker';
-import { EligibilityGateStep } from '../../../components/domain/EligibilityGateStep';
+import { EligibilityGateStep, EligibilityChecksLink } from '../../../components/domain/EligibilityGateStep';
 import type { EligibilityResult } from '../../../components/domain/EligibilityGateStep';
 import { SimTypeStep } from '../../../components/domain/SimTypeStep';
 import type { SimTypeValue } from '../../../components/domain/SimTypeStep';
 import { EsimActivationPanel } from '../../../components/domain/EsimActivationPanel';
 import { CheckoutSummaryStep } from '../../../components/patterns/CheckoutSummaryStep';
-import type { TncLegalFacts } from '../../../components/patterns/CheckoutSummaryStep';
+import type { TncLegalFacts, CheckoutTotals } from '../../../components/patterns/CheckoutSummaryStep';
 import { WinCashPaymentStep } from '../../../components/patterns/WinCashPaymentStep';
 import type { WinCashPaymentValue } from '../../../components/patterns/WinCashPaymentStep';
 import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCapture';
@@ -35,10 +37,24 @@ const WIZARD_ID = 'new-postpaid';
 // Save & Exit and Abandon - once the real destination is decided.
 const POST_EXIT_DESTINATION = '/';
 
+/**
+ * "Back to Dashboard" on the confirmation screen, once the order is already
+ * submitted - a different destination from POST_EXIT_DESTINATION above,
+ * which stands in for wherever mid-order Save & Exit/Abandon SHOULD land
+ * once business confirms it. This one names itself: the button says
+ * "Dashboard", and router.tsx routes '/' to <Dashboard /> - so unlike the
+ * placeholder above, there is nothing left to confirm here (2026-09-28
+ * "Define the correct destination for Back to Dashboard").
+ */
+const DASHBOARD_ROUTE = '/';
+
 interface Product {
   productId: string;
   name: string;
   mrcQAR: number;
+  /** See PostpaidPlanAddonsStep's PostpaidPlan.preBundledOffer for what this
+   * drives - the 'plan' step's autoAdvanceWhen below is the other half. */
+  preBundledOffer?: boolean;
 }
 
 interface ConfirmedOrder {
@@ -52,7 +68,15 @@ interface ConfirmedOrder {
   simType?: string;
   /** Set only for eSIM orders - drives the QR handover panel below. */
   esimActivationCode?: string;
+  /**
+   * The account's own contact email, whatever it is - no longer gated on
+   * verification (2026-09-28: "populate it only from existing account
+   * contact emails," shown even when unverified so the agent can see why
+   * sending is blocked). See customerEmailVerified for the gate itself.
+   */
   customerEmail?: string;
+  /** Same definition as GuidedContactStep's own emailVerification tick. */
+  customerEmailVerified: boolean;
 }
 
 // SCR-154/155/156/159/157/158/160/161/162 - the New Postpaid guided wizard
@@ -69,6 +93,14 @@ export function NewPostpaidWizard() {
   const navigate = useNavigate();
   const createRecord = useEntityStore((s) => s.createRecord);
   const [confirmedOrder, setConfirmedOrder] = useState<ConfirmedOrder | null>(null);
+  // Fetched once at the wizard level (2026-09-28) rather than inside a single
+  // step, so Number Selection can resolve the selected plan's MRC for BR-115's
+  // star-number entitlement without re-fetching the same catalogue
+  // PostpaidPlanAddonsStep already reads for itself.
+  const [products, setProducts] = useState<Product[]>([]);
+  useEffect(() => {
+    mockDataEngine.list<Product>('products').then(setProducts);
+  }, []);
 
   if (confirmedOrder) {
     return (
@@ -84,6 +116,7 @@ export function NewPostpaidWizard() {
               <EsimActivationPanel
                 activationCode={confirmedOrder.esimActivationCode}
                 customerEmail={confirmedOrder.customerEmail}
+                verified={confirmedOrder.customerEmailVerified}
               />
             ) : undefined
           }
@@ -103,7 +136,7 @@ export function NewPostpaidWizard() {
               onClick: () => navigate(`/order-management/order-approval-detail-attachments-order-details-activities-a?id=${confirmedOrder.orderId}`),
             },
             { label: 'Start Another Activation', onClick: () => setConfirmedOrder(null) },
-            { label: 'Back to Dashboard', onClick: () => navigate('/') },
+            { label: 'Back to Dashboard', onClick: () => navigate(DASHBOARD_ROUTE) },
           ]}
         />
       </div>
@@ -210,6 +243,16 @@ export function NewPostpaidWizard() {
               if (e.hardStop || e.softStop) return false;
               return !e.checks.some((check) => check.outcome === 'approval-routing');
             },
+            // "Add a text link on the left side. On click, open a popup
+            // showing all eligibility checks performed and their results"
+            // (2026-09-28) - the inline panel above goes silent the moment
+            // every check clears, so this is the only way back to the full
+            // seven-check report once that happens. Renders nothing until
+            // eligibility has actually run (EligibilityChecksLink's own
+            // guard on `eligibility` being set).
+            footerLeft: ({ values }) => (
+              <EligibilityChecksLink eligibility={values.eligibility as EligibilityResult | undefined} />
+            ),
           },
           {
             key: 'address',
@@ -227,36 +270,91 @@ export function NewPostpaidWizard() {
             },
             // Mandatory: No per FLD-523–526 - never gates progression, matching the evidenced Skip Address affordance.
             isValid: () => true,
+            // Auto-skipped for every Mobile Postpaid activation (2026-09-28):
+            // a mobile line needs no serviceable premises (see
+            // ZsbAddressStep's own notes on why every field here is already
+            // optional), so the agent now lands straight on Plan & Add-ons
+            // rather than walking through a step that never blocked them
+            // anyway. "Return and complete it later" is the SAME mechanism
+            // Eligibility's own auto-advance already relies on: this only
+            // fires once per step per mount (autoAdvancedRef) and never
+            // refires once maxReached has passed it, so clicking
+            // "Communication Address" in the rail afterward opens the real
+            // form - unfilled, exactly as if the agent had walked through it
+            // normally - rather than skipping a second time.
+            autoAdvanceWhen: () => true,
           },
-          // The Billing step (Language / Payment Type / Payment Method / Bill
-          // Media) was removed on 2026-09-25 as not required. Nothing is
-          // orphaned by it: the order record this wizard writes never carried
-          // those fields, and Checkout's "Billing" row is now conditional
-          // rather than rendering a permanent "-".
+          // "Billing Profile" (2026-09-28 request) - Step 3, immediately
+          // after Communication Address. NOT a revival of the old Billing
+          // step removed 2026-09-25 (Language/Payment Type/Payment Method/
+          // Bill Media, SCR-156) - that component (BillingProfileStep.tsx)
+          // still exists and is still used by NewMnpWizard, untouched. This
+          // is a different, much larger step: pick one of the customer's
+          // existing billing accounts, or create one (contact, address,
+          // card-on-file tokenization, bill cycle, and the profile's own
+          // name/media/schedule) - see BillingAccountStep.tsx's own notes on
+          // which parts of this are evidenced business rule versus an
+          // app-level demo assumption (the "Gatan" gateway name and the
+          // "VIP" segment/7th-of-month default have no evidence anywhere in
+          // this corpus).
+          {
+            key: 'billingAccount',
+            label: 'Billing Profile',
+            render: ({ values, setValue }) => {
+              const eligibility = values.eligibility as EligibilityResult | undefined;
+              const address = values.address as ZsbAddressValue | undefined;
+              const defaultAddressLine =
+                [address?.streetNo && `Street ${address.streetNo}`, address?.zone && `Zone ${address.zone}`, address?.area, address?.addressLine]
+                  .filter(Boolean)
+                  .join(', ') || undefined;
+              return (
+                <BillingAccountStep
+                  customerId={eligibility?.customerId}
+                  defaultAddressLine={defaultAddressLine}
+                  value={(values.billingAccount as BillingAccountValue) ?? {}}
+                  onChange={(v) => setValue('billingAccount', v)}
+                />
+              );
+            },
+            isValid: (values) => isBillingAccountValid((values.billingAccount as BillingAccountValue) ?? {}),
+          },
           {
             key: 'plan',
             label: 'Plan & Add-ons',
-            render: ({ values, setValue }) => (
-              <PostpaidPlanAddonsStep
-                selectedProductId={values.productId as string | undefined}
-                onSelectProduct={(id) => setValue('productId', id)}
-                discountId={values.discountId as string | undefined}
-                onSelectDiscount={(id) => setValue('discountId', id)}
-                addonIds={(values.addonIds as string[] | undefined) ?? []}
-                onAddonsChange={(ids) => setValue('addonIds', ids)}
-                discountSupportingId={values.discountSupportingId as string | undefined}
-                onDiscountSupportingIdChange={(id) => setValue('discountSupportingId', id)}
-                billLimit={values.billLimit as number | undefined}
-                onBillLimitChange={(amount, pass) => {
-                  setValue('billLimit', amount);
-                  setValue('billLimitPass', pass);
-                }}
-              />
-            ),
+            render: ({ values, setValue }) => {
+              const eligibility = values.eligibility as EligibilityResult | undefined;
+              return (
+                <PostpaidPlanAddonsStep
+                  selectedProductId={values.productId as string | undefined}
+                  onSelectProduct={(id) => setValue('productId', id)}
+                  discountId={values.discountId as string | undefined}
+                  onSelectDiscount={(id) => setValue('discountId', id)}
+                  addonIds={(values.addonIds as string[] | undefined) ?? []}
+                  onAddonsChange={(ids) => setValue('addonIds', ids)}
+                  discountSupportingId={values.discountSupportingId as string | undefined}
+                  onDiscountSupportingIdChange={(id) => setValue('discountSupportingId', id)}
+                  billLimit={values.billLimit as number | undefined}
+                  onBillLimitChange={(amount, pass) => {
+                    setValue('billLimit', amount);
+                    setValue('billLimitPass', pass);
+                  }}
+                  requiresHrnAdvance={Boolean(eligibility?.requiresHrnAdvance)}
+                  discountProofDocument={values.discountProofDocument as { fileName: string; sizeBytes: number } | undefined}
+                  onDiscountProofDocumentChange={(doc) => setValue('discountProofDocument', doc)}
+                />
+              );
+            },
             // Restored 2026-09-28: Bill Limit is back in this step (see the
             // component's own note), so billLimitPass is a real flag again
             // rather than the dead one this comment used to explain away.
             isValid: (values) => Boolean(values.productId) && values.billLimitPass !== false,
+            // "For pre-bundled eligible offers, skip Plan/Add-on Selection
+            // and proceed to Number Selection" (2026-09-28) - re-evaluates on
+            // every value change (see GuidedActivationWizard's own note on
+            // autoAdvanceWhen), so it fires the moment such a plan is picked,
+            // not only on arrival at this step.
+            autoAdvanceWhen: (values) =>
+              Boolean(products.find((p) => p.productId === values.productId)?.preBundledOffer),
           },
           {
             key: 'number',
@@ -268,6 +366,7 @@ export function NewPostpaidWizard() {
                   setValue('msisdn', msisdn);
                   setValue('numberPriceQAR', priceQAR);
                 }}
+                planMrcQar={products.find((p) => p.productId === values.productId)?.mrcQAR}
               />
             ),
             isValid: (values) => Boolean(values.msisdn),
@@ -299,16 +398,36 @@ export function NewPostpaidWizard() {
               if (s?.simType === 'eSIM') return s.esimIssued === true;
               return false;
             },
+            // "On a successful complete scan ... automatically continue"
+            // (2026-09-28) - Physical only. eSIM's "Select eSIM" is a choice
+            // to review (QR-after-payment messaging, customer email), not a
+            // validation result to act on immediately, so it stays a manual
+            // Continue like every other non-scan step.
+            autoAdvanceWhen: (values) => {
+              const s = values.simType as SimTypeValue | undefined;
+              return s?.simType === 'Physical' && s.simValid === true;
+            },
           },
           {
             key: 'checkout',
             label: 'Checkout',
             render: ({ values, setValue, goToStepKey }) => {
               const contact = values.contact as GuidedContactValue | undefined;
+              const billingAccount = values.billingAccount as BillingAccountValue | undefined;
+              // Feeds CheckoutSummaryStep's own `billingMethod` prop, dormant
+              // since the old Billing step was removed 2026-09-25 - this
+              // step's replacement (Billing Profile) is what gives it
+              // something to report again.
+              const billingMethod = billingAccount?.selectedProfileId
+                ? `Existing account ending …${billingAccount.selectedProfileId.slice(-4)}`
+                : billingAccount?.newAccount?.profileName
+                  ? `${billingAccount.newAccount.profileName} (${billingAccount.newAccount.billMedia ?? 'Email'})`
+                  : undefined;
               return (
                 <CheckoutSummaryStep
                   customerName={contact?.moiResult?.name}
                   altPhone={contact?.altPhone}
+                  billingMethod={billingMethod}
                   productId={values.productId as string | undefined}
                   discountId={values.discountId as string | undefined}
                   addonIds={(values.addonIds as string[] | undefined) ?? []}
@@ -316,6 +435,7 @@ export function NewPostpaidWizard() {
                   numberPriceQar={values.numberPriceQAR as number | undefined}
                   eligibility={values.eligibility as EligibilityResult | undefined}
                   billLimit={values.billLimit as number | undefined}
+                  simType={values.simType as SimTypeValue | undefined}
                   onTotalsComputed={(totals) => setValue('checkoutTotals', totals)}
                   onSummaryComputed={(rows) => setValue('cafSummary', rows)}
                   onLegalFactsComputed={(facts) => setValue('legalFacts', facts)}
@@ -380,9 +500,14 @@ export function NewPostpaidWizard() {
             key: 'payment',
             label: 'Payment',
             render: ({ values, setValue }) => {
-              const eligibility = values.eligibility as EligibilityResult | undefined;
-              const numberDelta = (values.numberPriceQAR as number | undefined) ?? 0;
-              const dueTodayQar = numberDelta + (eligibility?.requiresHrnAdvance ? 100 : 0);
+              // Reads the SAME figure Checkout already computed and read back
+              // to the customer (values.checkoutTotals, published by its
+              // onTotalsComputed) rather than re-deriving it from the
+              // number's raw sticker price - that second derivation is what
+              // used to skip BR-115's entitlement/overage logic entirely,
+              // since it never had the selected plan's MRC to apply it with.
+              const checkoutTotals = values.checkoutTotals as CheckoutTotals | undefined;
+              const dueTodayQar = checkoutTotals?.dueTodayQar ?? 0;
               return (
                 <WinCashPaymentStep
                   amountDueQAR={dueTodayQar}
@@ -414,13 +539,20 @@ export function NewPostpaidWizard() {
           const eligibility = values.eligibility as EligibilityResult | undefined;
           const simType = values.simType as SimTypeValue | undefined;
           const addonIds = (values.addonIds as string[] | undefined) ?? [];
+          // numberDelta stays the number's raw sticker price (recorded on the
+          // order for reference); dueTodayQar reuses Checkout's own figure,
+          // which already applied BR-115's entitlement/overage - see the
+          // Payment step's render just above for the fuller note.
           const numberDelta = (values.numberPriceQAR as number | undefined) ?? 0;
-          const dueTodayQar = numberDelta + (eligibility?.requiresHrnAdvance ? 100 : 0);
+          const checkoutTotals = values.checkoutTotals as CheckoutTotals | undefined;
+          const dueTodayQar = checkoutTotals?.dueTodayQar ?? 0;
 
           const products = await mockDataEngine.list<Product>('products');
           const plan = products.find((p) => p.productId === values.productId);
           const addons = products.filter((p) => addonIds.includes(p.productId));
-          const discounts = await mockDataEngine.list<{ addonDiscountId: string; price: number }>('addons-discounts');
+          const discounts = await mockDataEngine.list<{ addonDiscountId: string; addonType: string; price: number }>(
+            'addons-discounts'
+          );
           const discount = discounts.find((d) => d.addonDiscountId === values.discountId);
           // The same itemisation the two display surfaces render, so what the
           // order records is by construction what the agent quoted. See
@@ -441,10 +573,50 @@ export function NewPostpaidWizard() {
           // rather than Continue (see the Contact step's isValid), and the
           // order this submits has to carry that through to its final status,
           // not silently complete as if nothing had been diverted.
+          // "For MADA/special offers, require proof-document upload before
+          // finalisation; approval workflow remains pending" (2026-09-28) -
+          // added as a fourth trigger alongside the three above. The agent
+          // is NOT blocked from submitting without the ID/document (no
+          // isValid gate was requested), but the order always lands in
+          // Submitted for Approval when one of these discounts was chosen,
+          // same as the other three approval-routing reasons - reusing
+          // SUPPORTING_ID_DISCOUNT_TYPES rather than repeating the two
+          // literal discount-type strings here.
           const pendingApproval =
             Boolean(contact.isB2B2C) ||
             Boolean(eligibility?.requiresHrnAdvance) ||
-            Boolean(eligibility?.checks.some((c) => c.outcome === 'approval-routing'));
+            Boolean(eligibility?.checks.some((c) => c.outcome === 'approval-routing')) ||
+            Boolean(discount && SUPPORTING_ID_DISCOUNT_TYPES.has(discount.addonType));
+
+          // Attachments (2026-09-28) - built from data this wizard already
+          // collected but, until now, discarded at submission: the CAF
+          // signature, any agent-defined Additional Documents, the MADA/
+          // B2B2C proof document, and the QID scans from Contact. Each entry
+          // only appears when the fact it names is actually true - an order
+          // with no discount proof document gets no row claiming one exists.
+          const caf = values.caf as
+            | { cafType?: CafType; signatureDataUrl?: string; additionalDocuments?: AdditionalDocument[] }
+            | undefined;
+          const discountProofDocument = values.discountProofDocument as
+            | { fileName: string; sizeBytes: number }
+            | undefined;
+          const attachments: { label: string; detail?: string }[] = [
+            ...(contact.qidScans?.frontScanned ? [{ label: 'Qatar ID (QID) - Front', detail: 'Scanned during Contact' }] : []),
+            ...(contact.qidScans?.backScanned ? [{ label: 'Qatar ID (QID) - Back', detail: 'Scanned during Contact' }] : []),
+            ...(caf?.signatureDataUrl ? [{ label: 'Signed CAF', detail: `${caf.cafType ?? 'Digital'} signature` }] : []),
+            ...(discountProofDocument
+              ? [{ label: `${discount?.addonType ?? 'Discount'} supporting document`, detail: discountProofDocument.fileName }]
+              : []),
+            ...(caf?.additionalDocuments ?? []).map((d) => ({ label: d.label, detail: d.fileName })),
+          ];
+
+          // Billing Profile (2026-09-28) - whichever of the two mutually
+          // exclusive paths the agent took, recorded the same way `attachments`
+          // above is: only the fact that applies, nothing invented for the
+          // other branch.
+          const billingAccount = values.billingAccount as BillingAccountValue | undefined;
+          const billingProfileId = billingAccount?.selectedProfileId;
+          const newBillingAccount = billingAccount?.newAccount;
 
           const orderId = `ORD-${Date.now().toString().slice(-6)}`;
           await createRecord('orders', {
@@ -460,10 +632,14 @@ export function NewPostpaidWizard() {
             numberPriceQAR: numberDelta,
             simType: simType?.simType,
             simSerial: simType?.simSerial,
+            billingProfileId,
+            newBillingProfileName: newBillingAccount?.profileName,
+            billCardLast4: newBillingAccount?.cardLast4,
             dueTodayQAR: dueTodayQar,
             monthlyRecurringQAR: monthlyRecurringQar,
             createdBy: 'AGENT-KARTHIKK',
             sourceChannel: 'Desktop',
+            attachments,
           });
 
           // "On successful WinCash confirmation ... create the interaction
@@ -480,11 +656,14 @@ export function NewPostpaidWizard() {
             transactionDate: new Date().toISOString(),
           });
 
-          // "Send the confirmation email only to a verified email address"
-          // (2026-09-28) - verified per the SAME definition the Contact step's
-          // own tick uses (emailVerification: unchanged from the MOI registry
-          // value), not merely "well-formed". An unverified address gets no
-          // confirmation email rather than one sent on a guess.
+          // Verified per the SAME definition the Contact step's own tick uses
+          // (emailVerification: does the account's contact email match the
+          // MOI registry value), not merely "well-formed". This still gates
+          // the ONLY email-sending action this screen has (eSIM details, via
+          // EsimActivationPanel's `verified` prop) - it no longer also hides
+          // the address itself (2026-09-28 "populate it only from existing
+          // account contact emails"): the agent sees the real on-file email
+          // and why sending is blocked, rather than a blank field.
           const emailVerified = emailVerification(contact.email, contact.moiResult?.email).verified;
 
           setConfirmedOrder({
@@ -497,7 +676,8 @@ export function NewPostpaidWizard() {
             monthlyRecurringQar,
             simType: simType?.simType,
             esimActivationCode: simType?.esimActivationCode,
-            customerEmail: emailVerified ? contact.email : undefined,
+            customerEmail: contact.email,
+            customerEmailVerified: emailVerified,
           });
         }}
       />

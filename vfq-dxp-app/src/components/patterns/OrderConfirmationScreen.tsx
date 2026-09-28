@@ -12,7 +12,7 @@ export interface ConfirmationSummaryLine {
 export interface ConfirmationAction {
   label: string;
   onClick: () => void;
-  variant?: 'primary-rect' | 'ghost-rect';
+  variant?: 'primary-rect' | 'secondary-rect';
 }
 
 interface OrderConfirmationScreenProps {
@@ -61,12 +61,14 @@ export function OrderConfirmationScreen({
     // container split in two would be narrower per column than the original
     // single column was.
     <div className="max-w-6xl mx-auto py-8">
-      {/* Left-aligned as of 2026-09-26, matching every other step's heading in
-          this wizard rather than being the one screen in it that centres.
+      {/* Centred again as of 2026-09-28, on explicit direction - reverses the
+          2026-09-26 left-align (which matched every other step's heading in
+          this wizard). This screen is the one moment in the journey that
+          isn't a step to fill in but an outcome to announce, which is the
+          case for centring it rather than following the rest of the wizard.
           Still spans BOTH columns below it - it announces the outcome, which
-          belongs to the whole screen rather than to the left-hand receipt -
-          just no longer centred while doing so. */}
-      <div>
+          belongs to the whole screen rather than to the left-hand receipt. */}
+      <div className="flex flex-col items-center text-center">
         <div className="w-16 h-16 rounded-full bg-success text-white flex items-center justify-center mb-6">
           <Icon path={CHECK} className="w-8 h-8" />
         </div>
@@ -109,7 +111,12 @@ export function OrderConfirmationScreen({
           anchoring them under one column would imply otherwise. */}
       <div className="flex items-center justify-center gap-3 mt-8">
         {actions.map((action) => (
-          <Button key={action.label} variant={action.variant ?? 'ghost-rect'} onClick={action.onClick}>
+          // secondary-rect, not ghost-rect (2026-09-28) - per Button.tsx's own
+          // documented rule, ghost-rect is for the thing you press to NOT do
+          // the action (Cancel/Back), while every action here (Start Another
+          // Activation, Back to Dashboard, ...) is a real next step the agent
+          // can take, just not the page's primary one (View Order).
+          <Button key={action.label} variant={action.variant ?? 'secondary-rect'} onClick={action.onClick}>
             {action.label}
           </Button>
         ))}

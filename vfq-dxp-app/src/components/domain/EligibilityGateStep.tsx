@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Badge } from '../primitives/Badge';
 import { Button } from '../primitives/Button';
+import { Drawer } from '../primitives/Drawer';
 import { Icon } from '../primitives/Icon';
 import { evaluateRule } from '../../engines/ruleEngine';
 import { useNotificationStore } from '../../stores/notificationStore';
@@ -71,11 +72,105 @@ const STATUS_BADGE: Record<RowTone, 'success' | 'danger' | 'warning' | 'filled-n
  */
 type RowTone = EligibilityOutcome | 'advisory';
 
-interface EligibilityRow {
+export interface EligibilityRow {
   id: string;
   title: string;
   detail: string;
   tone: RowTone;
+}
+
+/**
+ * One list, built from the checks plus the HRN advisory - the same
+ * construction the main component's own inline panel uses below, extracted
+ * (2026-09-28) so the "View eligibility checks" popup can build the exact
+ * same rows from a stored EligibilityResult without duplicating this logic a
+ * second time and risking the two drifting apart.
+ */
+export function buildEligibilityRows(
+  checks: EligibilityCheck[],
+  hrnFlag: boolean,
+  nationality: string | undefined,
+  journeyType: 'postpaid' | 'prepaid' = 'postpaid'
+): EligibilityRow[] {
+  const hrn = evaluateRule('BR-187', { hrnFlag });
+  return [
+    ...checks.map((check) => ({ id: check.id, title: check.label, detail: check.message, tone: check.outcome as RowTone })),
+    ...(journeyType !== 'prepaid'
+      ? [
+          {
+            id: 'hrn',
+            title: hrnFlag ? 'HRN (High Network Risk)' : 'Non-HRN new account',
+            detail:
+              (hrnFlag ? hrn.message : undefined) ??
+              (nationality ? `${nationality} Citizen - not a high-risk nationality` : 'Not a high-risk nationality'),
+            tone: (hrnFlag ? 'advisory' : 'pass') as RowTone,
+          },
+        ]
+      : []),
+  ];
+}
+
+/** The divided-list row treatment, shared between the inline "needs
+ * attention" panel (unresolved rows only) and the "View eligibility checks"
+ * popup (every row) - see buildEligibilityRows' own note on why this is one
+ * function rather than two near-identical blocks. */
+export function EligibilityChecksList({ rows }: { rows: EligibilityRow[] }) {
+  return (
+    <ul className="rounded-[var(--radius-card)] border border-border-soft overflow-hidden divide-y divide-border-soft">
+      {rows.map((row) => (
+        <li key={row.id} className={`flex items-start gap-3 px-4 py-3 ${ROW_TONE[row.tone]}`}>
+          <Icon path={ROW_ICON[row.tone]} className={`w-5 h-5 shrink-0 mt-0.5 ${ICON_TONE[row.tone]}`} />
+          <div className="min-w-0 flex-1">
+            <p className="text-fg font-semibold text-[length:var(--fs-body)]">{row.title}</p>
+            {/* The RESULT, not a static description of what the check does -
+                see the inline panel's own note on this below. */}
+            <p className="text-fg-2 text-[length:var(--fs-caption)] leading-snug">{row.detail}</p>
+          </div>
+          <span className="shrink-0">
+            <Badge variant={STATUS_BADGE[row.tone]}>{STATUS_LABEL[row.tone]}</Badge>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * Footer-left link (2026-09-28: "Add a text link on the left side. On click,
+ * open a popup showing all eligibility checks performed and their results.")
+ *
+ * The inline panel below renders NOTHING once every check passes (a
+ * deliberate silence - see its own note on `unresolved.length === 0`), so a
+ * clean run leaves no on-screen trace of what actually ran beyond a toast
+ * that has already faded. This is the way back to that full list, available
+ * regardless of whether anything needs attention.
+ */
+export function EligibilityChecksLink({
+  eligibility,
+  journeyType = 'postpaid',
+}: {
+  eligibility: EligibilityResult | undefined;
+  journeyType?: 'postpaid' | 'prepaid';
+}) {
+  const [open, setOpen] = useState(false);
+  if (!eligibility) return null;
+  const rows = buildEligibilityRows(eligibility.checks, eligibility.requiresHrnAdvance, eligibility.nationality, journeyType);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="text-[length:var(--fs-caption)] text-accent underline
+          hover:text-accent-hover focus:outline-none focus-visible:shadow-[var(--focus-ring)]
+          rounded-[var(--radius-button)] px-1"
+      >
+        View eligibility checks
+      </button>
+      <Drawer open={open} onClose={() => setOpen(false)} title="Eligibility Checks">
+        <EligibilityChecksList rows={rows} />
+      </Drawer>
+    </>
+  );
 }
 
 export interface EligibilityResult {
@@ -356,48 +451,16 @@ export function EligibilityGateStep({
   }
 
   const { checks, hrnFlag, nationality } = resolved;
-  const hrn = evaluateRule('BR-187', { hrnFlag });
   const hardStop = hasHardStop(checks);
   const softStop = checks.some((c) => c.outcome === 'soft-stop');
   const routed = checks.filter((c) => c.outcome === 'approval-routing');
 
-  // One list, built from the checks plus the HRN advisory. Folding HRN in here
-  // rather than rendering it as a separate block below is what keeps the panel
-  // reading as a single report - it was previously a lone card floating under
-  // the seven, which implied it was an eighth verdict.
-  const rows: EligibilityRow[] = [
-    ...checks.map((check) => ({ id: check.id, title: check.label, detail: check.message, tone: check.outcome })),
-    ...(journeyType !== 'prepaid'
-      ? [
-          {
-            id: 'hrn',
-            title: hrnFlag ? 'HRN (High Network Risk)' : 'Non-HRN new account',
-            // Names the nationality the classification was made on, per
-            // 2026-09-26 direction - "not a high-risk nationality" alone does
-            // not say which nationality was assessed, and that is the whole
-            // input to the rule. Falls back to the unqualified wording when
-            // the record carries no nationality, rather than printing
-            // "undefined Citizen".
-            detail:
-              (hrnFlag ? hrn.message : undefined) ??
-              (nationality
-                ? `${nationality} Citizen - not a high-risk nationality`
-                : 'Not a high-risk nationality'),
-            // 'advisory', not 'soft-stop' (2026-09-28 direction: HRN is a
-            // blocker no longer, purely informational). It previously
-            // borrowed the amber "soft-stop" tone and its "Blocked" badge for
-            // styling only - the order was never actually gated on it (HRN
-            // never enters `checks`, so `pass`/`hardStop`/`softStop` were
-            // always computed without it) - but LABELLING an unblocking row
-            // "Blocked" was the bug: it read as a stop that wasn't one.
-            // 'advisory' is a distinct, pre-existing RowTone built for exactly
-            // this (see ROW_TONE/STATUS_LABEL.advisory = 'For information')
-            // that was never wired up until now.
-            tone: (hrnFlag ? 'advisory' : 'pass') as RowTone,
-          },
-        ]
-      : []),
-  ];
+  // Folding HRN into the same list rather than rendering it as a separate
+  // block below is what keeps the panel reading as a single report - it was
+  // previously a lone card floating under the seven, which implied it was an
+  // eighth verdict. See buildEligibilityRows' own note on why this
+  // construction lives there now, not inline here.
+  const rows = buildEligibilityRows(checks, hrnFlag, nationality, journeyType);
 
   // ONLY the rows that did not pass (2026-09-27). A clean run is not reported
   // here at all - the step is skipped outright by the wizard (see
@@ -427,24 +490,7 @@ export function EligibilityGateStep({
           ? 'One eligibility check needs attention before this order can proceed.'
           : `${unresolved.length} eligibility checks need attention before this order can proceed.`}
       </p>
-      <ul className="rounded-[var(--radius-card)] border border-border-soft overflow-hidden divide-y divide-border-soft">
-        {unresolved.map((row) => (
-          <li key={row.id} className={`flex items-start gap-3 px-4 py-3 ${ROW_TONE[row.tone]}`}>
-            <Icon path={ROW_ICON[row.tone]} className={`w-5 h-5 shrink-0 mt-0.5 ${ICON_TONE[row.tone]}`} />
-            <div className="min-w-0 flex-1">
-              <p className="text-fg font-semibold text-[length:var(--fs-body)]">{row.title}</p>
-              {/* The RESULT, not a static description of what the check does.
-                  A passed check states what it verified ("valid through
-                  30/11/2029", "1/2 lines used") and a failed one states what
-                  to do about it - boilerplate would waste the line. */}
-              <p className="text-fg-2 text-[length:var(--fs-caption)] leading-snug">{row.detail}</p>
-            </div>
-            <span className="shrink-0">
-              <Badge variant={STATUS_BADGE[row.tone]}>{STATUS_LABEL[row.tone]}</Badge>
-            </span>
-          </li>
-        ))}
-      </ul>
+      <EligibilityChecksList rows={unresolved} />
 
       {/* Pattern 1: Hard Stop. No button of any kind - "no option to proceed"
           means exactly that, not a disabled one sitting here as a tease. */}

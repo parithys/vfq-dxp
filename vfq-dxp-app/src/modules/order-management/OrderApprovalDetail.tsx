@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Tabs } from '../../components/primitives/Tabs';
 import { Button } from '../../components/primitives/Button';
 import { Badge } from '../../components/primitives/Badge';
+import { Icon } from '../../components/primitives/Icon';
 import { Drawer } from '../../components/primitives/Drawer';
 import { Select } from '../../components/primitives/Select';
 import { Textarea } from '../../components/primitives/Textarea';
@@ -13,6 +14,11 @@ import * as mockDataEngine from '../../engines/mockDataEngine';
 import { getRequiredApproverRole } from '../../engines/configEngine';
 import { isVisibleToAgent } from '../../engines/agentTaskEngine';
 import { Checkbox } from '../../components/primitives/Checkbox';
+
+// Same document-icon path CafDocumentUpload.tsx/AdditionalDocumentsUpload.tsx
+// already use for their own file rows - reused here for visual consistency
+// rather than a second icon meaning the same thing.
+const DOC_ICON = 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6';
 
 interface Order {
   orderId: string;
@@ -29,6 +35,16 @@ interface Order {
   /** Set by "Assign to Me" in the queue - governs both queue visibility and
    * (AAV-00) whether this detail page may be opened at all by direct URL. */
   assignedApproverId?: string | null;
+  /**
+   * CAF/ID-scan/supporting-document references captured during the guided
+   * wizard (2026-09-28) - previously this tab showed one static paragraph
+   * with no actual list, because nothing was ever saved onto the order
+   * record for it to read (see NewPostpaidWizard's onSubmit, which now
+   * builds this array from the same values.caf/qidScans/discountProofDocument
+   * data the wizard already collected). Not every order type populates
+   * this yet - other journeys' onSubmit are unchanged - so it stays optional.
+   */
+  attachments?: { label: string; detail?: string }[];
 }
 interface RejectReason {
   reasonCode: string;
@@ -48,7 +64,13 @@ interface ApprovalHistoryEntry {
 // the page, so this same list is repeated directly inside each confirmation
 // Drawer, immediately above the confirm button, rather than relying on the
 // agent having scrolled past the Activities tab earlier in the session.
-function HistoryPreview({ history, orderType }: { history: ApprovalHistoryEntry[]; orderType: string }) {
+//
+// `orderType` param dropped 2026-09-28 (see the matching Activities-tab
+// change below) - "Task Name: {orderType}" only ever repeated the order type
+// already sitting in the page's own Contact line, and "Task ID: {orderId}"
+// repeated the order id already in the page's own H1, so neither told the
+// agent anything the label/notes below did not already say better.
+function HistoryPreview({ history }: { history: ApprovalHistoryEntry[] }) {
   if (history.length === 0) return null;
   return (
     <div className="rounded-[var(--radius-card)] border border-border-soft divide-y divide-border-soft">
@@ -59,9 +81,7 @@ function HistoryPreview({ history, orderType }: { history: ApprovalHistoryEntry[
             <span className="font-medium text-fg text-[length:var(--fs-caption)]">{entry.actionTaken}</span>
             <span className="text-muted text-[length:var(--fs-micro)]">{new Date(entry.transactionDate).toLocaleString()}</span>
           </div>
-          <div className="text-fg-2 text-[length:var(--fs-micro)] mt-0.5">
-            Task ID: {entry.orderId} · Task Name: {orderType}
-          </div>
+          {entry.notes && <div className="text-fg-2 text-[length:var(--fs-micro)] mt-0.5">{entry.notes}</div>}
         </div>
       ))}
     </div>
@@ -225,9 +245,15 @@ export function OrderApprovalDetail() {
         <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">Order {order.orderId}</h1>
         <Badge variant="outlined-red">{order.status}</Badge>
       </div>
-      <p className="text-fg-2 mb-6">
+      <p className="text-fg-2">
         Contact: {order.customerName ?? '-'} · {order.orderType}
       </p>
+      {/* Below Contact, not only in the Agents Details tab (2026-09-28
+          request) - who submitted the order is read together with who it is
+          for, rather than requiring a tab click to find out. Left in Agents
+          Details too; one fact worth seeing twice is cheaper than a tab that
+          would otherwise read as broken/empty. */}
+      <p className="text-fg-2 mb-6">Submitted by: {order.createdBy ?? '-'}</p>
 
       <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
         <Tabs
@@ -235,7 +261,29 @@ export function OrderApprovalDetail() {
             {
               key: 'attachments',
               label: 'Attachments',
-              content: <p className="text-fg-2 text-[length:var(--fs-body)]">CAF, ID scans, and supplementary forms captured during the guided wizard.</p>,
+              // Dedicated rows (2026-09-28), not a single descriptive
+              // paragraph - matches the icon/label/detail list shape
+              // CafDocumentUpload.tsx and AdditionalDocumentsUpload.tsx
+              // already use for the same kind of list, just display-only
+              // here rather than editable.
+              content:
+                order.attachments && order.attachments.length > 0 ? (
+                  <ul className="divide-y divide-border-soft rounded-[var(--radius-card)] border border-border-soft">
+                    {order.attachments.map((a) => (
+                      <li key={a.label} className="flex items-center gap-3 px-4 py-3">
+                        <Icon path={DOC_ICON} className="w-4 h-4 text-muted shrink-0" />
+                        <span className="min-w-0">
+                          <span className="block text-fg text-[length:var(--fs-body)] truncate">{a.label}</span>
+                          {a.detail && <span className="block text-muted text-[length:var(--fs-caption)] truncate">{a.detail}</span>}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-fg-2 text-[length:var(--fs-body)]">
+                    No attachments were recorded for this order.
+                  </p>
+                ),
             },
             {
               key: 'order-details',
@@ -270,9 +318,14 @@ export function OrderApprovalDetail() {
                             <span className="font-medium text-fg text-[length:var(--fs-body)]">{entry.actionTaken}</span>
                             <span className="text-muted text-[length:var(--fs-caption)]">{new Date(entry.transactionDate).toLocaleString()}</span>
                           </div>
-                          <div className="text-fg-2 text-[length:var(--fs-caption)] mt-0.5">
-                            Task ID: {entry.orderId} · Task Name: {order.orderType}{entry.notes ? ` · ${entry.notes}` : ''}
-                          </div>
+                          {/* "Task ID: {orderId} · Task Name: {orderType}"
+                              dropped 2026-09-28 - both already sit on this
+                              page (the H1 and the Contact line respectively),
+                              so the notes text below is the only part of this
+                              row that actually said something new. */}
+                          {entry.notes && (
+                            <div className="text-fg-2 text-[length:var(--fs-caption)] mt-0.5">{entry.notes}</div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -321,7 +374,7 @@ export function OrderApprovalDetail() {
 
       <Drawer open={modal === 'approve'} onClose={() => setModal(null)} title="Approve Order">
         <div className="space-y-3">
-          <HistoryPreview history={history} orderType={order.orderType} />
+          <HistoryPreview history={history} />
           <label className="flex items-start gap-2 text-[length:var(--fs-body)] text-fg">
             <Checkbox className="mt-1" checked={ackApprove} onChange={(e) => setAckApprove(e.target.checked)} />
             By clicking submit, I agree that I have verified all the documents and details to proceed with submission.
@@ -336,7 +389,7 @@ export function OrderApprovalDetail() {
 
       <Drawer open={modal === 'reject-correction' || modal === 'reject-drop'} onClose={() => setModal(null)} title="Reject Order">
         <div className="space-y-3">
-          <HistoryPreview history={history} orderType={order.orderType} />
+          <HistoryPreview history={history} />
           <Select
             label="Reject Reason"
             value={rejectReason}
@@ -360,7 +413,7 @@ export function OrderApprovalDetail() {
 
       <Drawer open={modal === 'return'} onClose={() => setModal(null)} title="Return Order">
         <div className="space-y-3">
-          <HistoryPreview history={history} orderType={order.orderType} />
+          <HistoryPreview history={history} />
           <p className="text-fg-2 text-[length:var(--fs-body)]">
             Returning sends this order back to the approval queue for correction, rather than rejecting it outright.
           </p>

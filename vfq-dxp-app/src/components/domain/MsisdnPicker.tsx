@@ -6,6 +6,11 @@ import { Select } from '../primitives/Select';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useAuthStore } from '../../stores/authStore';
 import { isQatarMobileLocalNumber } from '../primitives/countryDialCodes';
+import {
+  FREE_NUMBER_PRICE_CEILING_QAR,
+  STAR_NUMBER_ENTITLEMENT_MULTIPLIER,
+  starNumberOverageQar,
+} from '../../engines/postpaidPricing';
 
 interface MsisdnRecord {
   msisdn: string;
@@ -21,10 +26,19 @@ interface MsisdnRecord {
  * The three tabs, which do NOT all filter on the same axis - and that is the
  * point rather than an inconsistency.
  *
- * 'Free' and 'Star' are CATEGORIES (pricing tiers) and each shows only its
- * AVAILABLE numbers. 'Reserved' is a STATUS and cuts across both categories,
- * so a reserved Star number appears there rather than falling out of the UI
- * entirely - which is what happened when Reserved numbers were simply hidden.
+ * 'Free' and 'Star' are now PRICE BANDS (2026-09-28 direction: "show only
+ * numbers priced from QAR 0 up to, but not including, QAR 1,000" under Free),
+ * not the stored `category` field - see FREE_NUMBER_PRICE_CEILING_QAR
+ * (postpaidPricing.ts) for why this is also a correctness fix, not just a
+ * rename: star-number-tiers.json's own lowest tier starts at 1000
+ * (STAR-TIER-01, valueRangeMin 1000), so a handful of seeded numbers
+ * category='Star' priced 300-900 already matched no tier at all - "Not
+ * banded" on a number that was never going to be. Pricing the tabs
+ * themselves means those numbers now land where they actually behave: no
+ * lock-in, no tier, same as every other number under 1000. 'Reserved' is a
+ * STATUS and cuts across both bands, so a reserved Star number appears there
+ * rather than falling out of the UI entirely - which is what happened when
+ * Reserved numbers were simply hidden.
  */
 type NumberTab = 'Free' | 'Star' | 'Reserved';
 
@@ -68,17 +82,18 @@ const MAX_RESERVATIONS_PER_AGENT = 2;
 const PAGE_SIZE = 10;
 
 /**
- * Sort orders, offered on the STAR TAB ONLY.
+ * Sort orders, offered on Free and Star, NOT Reserved.
  *
- * Star is the only tab where any of them does anything. Its numbers are priced
- * 300 to 5000, and the agent works down from the best one the customer's plan
- * entitles them to. Every Free number is QR 0, so both price orders are no-ops
- * there, which would leave a dropdown whose only working option is Number -
- * and a one-option dropdown is a control that looks like a choice. Reserved is
- * a short held-numbers list an agent scans rather than ranks.
+ * Both bands now have real price spread to sort by: Star is 1000 and up,
+ * and Free (2026-09-28's price-band split moved the 300-900 rows that used
+ * to read category='Star' in here) runs 0-999 - no longer the flat QR0 list
+ * it used to be, so a price sort is no longer a no-op there either. Reserved
+ * stays excluded: it is a short held-numbers list an agent scans rather than
+ * ranks, capped at MAX_RESERVATIONS_PER_AGENT, where a sort control would
+ * answer a question nobody asks of it.
  *
- * Both of those tabs therefore sort by NUMBER_ASC implicitly, with no control
- * on screen. An earlier revision showed the dropdown everywhere on the
+ * Reserved therefore sorts by NUMBER_ASC implicitly, with no control on
+ * screen. An earlier revision showed the dropdown everywhere on the
  * reasoning that a control changing its options per tab is hard to trust; the
  * better answer is not to show a control that cannot act.
  */
@@ -111,6 +126,16 @@ const SORTERS: Record<SortKey, (a: MsisdnRecord, b: MsisdnRecord) => number> = {
 interface MsisdnPickerProps {
   selected?: string;
   onSelect: (msisdn: string, priceQAR: number) => void;
+  /**
+   * The selected plan's MRC, for BR-115's star-number entitlement note
+   * (2026-09-28) - MRC x STAR_NUMBER_ENTITLEMENT_MULTIPLIER is what a star
+   * number costs nothing extra up to; only the amount above it is ever
+   * billed (see engines/postpaidPricing.ts's starNumberOverageQar, the same
+   * function Checkout uses so the two surfaces cannot disagree). Undefined
+   * simply omits the entitlement note rather than assuming a plan exists -
+   * this component has no other dependency on the Plan & Add-ons step.
+   */
+  planMrcQar?: number;
 }
 
 // A full Qatar MSISDN: +974 followed by an 8-digit mobile local number
@@ -126,7 +151,7 @@ function isValidMsisdn(raw: string): boolean {
 // Pattern 10: Number Selection / Reservation Step - 8-digit search box + Free/Reserved
 // toggle, matching MSISDNs shown as selectable priced tiles; selecting triggers
 // immediate reservation with a confirmation token (SCR-024/048/082/104/157/191).
-export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
+export function MsisdnPicker({ selected, onSelect, planMrcQar }: MsisdnPickerProps) {
   const [numbers, setNumbers] = useState<MsisdnRecord[]>([]);
   const [tab, setTab] = useState<NumberTab>('Free');
   const [search, setSearch] = useState('');
@@ -205,7 +230,11 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
   const inTab =
     tab === 'Reserved'
       ? myReserved
-      : numbers.filter((n) => n.category === tab && n.status === 'AVAILABLE');
+      : numbers.filter(
+          (n) =>
+            n.status === 'AVAILABLE'
+              && (tab === 'Free' ? n.priceQAR < FREE_NUMBER_PRICE_CEILING_QAR : n.priceQAR >= FREE_NUMBER_PRICE_CEILING_QAR)
+        );
 
   // An agent may hold at most two numbers at a time. Enforced on the action
   // that CREATES a hold (manual reservation); picking one of their own
@@ -213,18 +242,14 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
   // however many they have.
   const atReservationCap = myReserved.length >= MAX_RESERVATIONS_PER_AGENT;
 
-  // Tier chips and Sort are STAR-ONLY.
-  //
-  // Free has no tiers at all and no price spread, so neither control has
-  // anything to do. Reserved does contain tiered numbers - a reserved Star
-  // number stays visible there by design - so the chips would render if this
-  // were driven by tier presence alone; they are suppressed anyway, because
-  // that tab is a short list of what is already held rather than an inventory
-  // to narrow, and filtering it by tier answers a question nobody asks of it.
-  const showControls = tab === 'Star';
+  // Sort is Free-and-Star now, not Star-only (2026-09-28): Free stopped being
+  // a flat QR0 list the moment the price-band split moved the 300-900
+  // formerly-Star rows into it, so a price sort now has something to do
+  // there too. Reserved stays excluded - see the SortKey doc comment above.
+  const showControls = tab === 'Free' || tab === 'Star';
 
   // Without a control on screen, the order must not depend on whatever the
-  // agent last chose on the Star tab.
+  // agent last chose on Free or Star.
   const effectiveSort: SortKey = showControls ? sort : 'number-asc';
 
   const filtered = inTab
@@ -293,18 +318,18 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
         />
       )}
 
-      {/* Tier filter left, sort right, on one row - per the 2026-09-26 asset.
-          Both narrow the same list the search box above them does, so they sit
-          with it rather than over the results.
-          
-          The WHOLE ROW is absent on Free and Reserved (see showControls), not
-          just its contents: neither control can act on those tabs, and an
+      {/* Sort, right-aligned on its own row - per the 2026-09-26 asset. Narrows
+          the same list the search box above it does, so it sits with it
+          rather than over the results.
+
+          The WHOLE ROW is absent on Reserved (see showControls): that tab is
+          a short held-numbers list an agent scans rather than ranks, and an
           empty control row would leave a gap the agent reads as something
           having failed to load. */}
       {/* Tier chips (Platinum / Gold / Silver) and the TIER filter were removed
-          on 2026-09-27 per the annotated walkthrough. Sort stays: it is the one
-          control that still acts on the Star list, which spans QR 300-5000 and
-          is what the agent works down. */}
+          on 2026-09-27 per the annotated walkthrough. Sort stays, and as of
+          2026-09-28 acts on Free as well as Star, now that Free is a real
+          price band (0-999) rather than a flat QR0 list. */}
       {showControls && (
         <div className="flex items-center justify-end gap-2">
           <span className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Sort</span>
@@ -315,6 +340,17 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
             onChange={(e) => setSort(e.target.value as SortKey)}
           />
         </div>
+      )}
+      {/* BR-115 entitlement, stated once up front rather than only on each
+          card that exceeds it (2026-09-28) - the agent should know the cap
+          before scanning individual prices, not discover it row by row.
+          Shown on Free too, not just Star: the price-band split above means
+          Free can carry priced (300-999) numbers now, not only QR0 ones. */}
+      {tab !== 'Reserved' && planMrcQar !== undefined && (
+        <p className="text-muted text-[length:var(--fs-caption)]">
+          This plan entitles a Star Number up to QR {planMrcQar * STAR_NUMBER_ENTITLEMENT_MULTIPLIER} at no extra charge.
+          Anything above that is billed the difference.
+        </p>
       )}
       {/* Capped and scrollable as of 2026-09-25, when the Free inventory went
           from 2 numbers to 18. Seven rows of cards pushed Continue below the
@@ -377,15 +413,37 @@ export function MsisdnPicker({ selected, onSelect }: MsisdnPickerProps) {
                   {tab === 'Reserved' && <Badge variant="filled-neutral">Reserved</Badge>}
                   <span className="text-fg font-medium truncate">{toLocalMsisdn(n.msisdn)}</span>
                 </span>
-                {/* A free number shows a "Free" badge rather than "QR 0": the
-                    zero was the same on every row and read as a price the
-                    agent had to account for. Priced numbers keep the figure at
-                    --fg weight - on Star it is the fact being chosen between. */}
-                {n.priceQAR > 0 ? (
-                  <span className="text-fg font-semibold shrink-0">QR {n.priceQAR}</span>
-                ) : (
-                  <Badge variant="success">Free</Badge>
-                )}
+                {/* The Free badge is gone as of 2026-09-28 - every number now
+                    shows its actual catalogue price (QAR 0, 300, 500, 700,
+                    900...) rather than a pill that hid the figure entirely
+                    for the QR0 rows. "Free to the customer" is still true for
+                    anything under FREE_NUMBER_PRICE_CEILING_QAR - that is exactly
+                    what puts a number in this tab at all - but it is now
+                    stated by showing QR 0 alongside QR 300/500/700/900
+                    rather than by a badge some rows got and others didn't. */}
+                <span className="text-right shrink-0">
+                  <span className="text-fg font-semibold block">QR {n.priceQAR}</span>
+                  {/* BR-115 entitlement/overage readout - Star-range only
+                      (>= FREE_NUMBER_PRICE_CEILING_QAR). Everything below that is
+                      "free to the customer" outright per the same 2026-09-28
+                      direction - CheckoutSummaryStep's isStarNumber uses the
+                      identical threshold, so a number that reads plain here
+                      never turns into a Star line with a lock-in there. */}
+                  {planMrcQar !== undefined && n.priceQAR >= FREE_NUMBER_PRICE_CEILING_QAR && (
+                    (() => {
+                      const overage = starNumberOverageQar(planMrcQar, n.priceQAR);
+                      return overage > 0 ? (
+                        <span className="block text-[length:var(--fs-caption)] text-[var(--warn-text)]">
+                          +QR {overage} extra
+                        </span>
+                      ) : (
+                        <span className="block text-[length:var(--fs-caption)] text-success">
+                          No extra charge
+                        </span>
+                      );
+                    })()
+                  )}
+                </span>
               </div>
             </button>
           );

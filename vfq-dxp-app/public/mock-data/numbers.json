@@ -237,5 +237,21 @@
     "reservedBy": "Tariq Haddad",
     "priceQAR": 800,
     "valueTier": "Silver"
+  },
+  {
+    "msisdn": "+97488887777",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 7500,
+    "valueTier": "Platinum",
+    "_note": "App-level demo addition (2026-09-28) for BR-115's star-number entitlement/overage rule - every other seeded number topped out at QR 5000, which the cheapest plan's own entitlement (QR 250 x 25 = QR 6250) already covers in full, so the 'customer pays the delta' path could never actually trigger. Seeded above every plan's entitlement cap (max QR 750 x 25 = QR 18750 still leaves this one within reach for the priciest plan, while the cheaper ones now show a real overage) so the behaviour is demonstrable, not just implemented."
+  },
+  {
+    "msisdn": "+97499990000",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 20000,
+    "valueTier": "Platinum",
+    "_note": "App-level demo addition (2026-09-28), alongside +97488887777 - priced above even the most expensive seeded plan's entitlement (QR 750 x 25 = QR 18750), so every plan shows SOME overage on this one, not just the cheaper ones."
   }
 ]

@@ -7,7 +7,11 @@
     "dataAllowanceGB": 30,
     "minutesAllowance": "Unlimited local",
     "speedTier": "5G Ready",
-    "commitmentMonths": 12
+    "commitmentMonths": 3,
+    "benefits": ["Free 10GB roaming data", "Free caller tune"],
+    "preBundledOffer": true,
+    "_benefitsNote": "App-level demo addition (2026-09-28) for the 'display each plan's free bundles and benefits' request - no evidenced per-plan benefits/bundles field exists in the corpus (products.json previously carried only data/voice/speed/commitment). preBundledOffer is the SAME kind of addition for 'pre-bundled eligible offers skip Plan/Add-on Selection' - marked on this one plan only, as a representative demo rather than assuming every 'Offers for this QID' plan qualifies.",
+    "_commitmentNote": "Corrected 2026-09-28 from an invented 12 to the evidenced BR-120 figure ('Postpaid plans carry a minimum subscription period (lock-in) of 3 months')."
   },
   {
     "productId": "PROD-101",
@@ -24,8 +28,10 @@
     "dataAllowanceGB": 100,
     "minutesAllowance": "Unlimited local",
     "speedTier": "5G Ready",
-    "commitmentMonths": 12,
-    "popular": true
+    "commitmentMonths": 3,
+    "popular": true,
+    "benefits": ["Free GigaHome TV Basic Pack for 3 months", "Free International 50 Add-on for 1 month"],
+    "_commitmentNote": "Corrected 2026-09-28 from an invented 12 to the evidenced BR-269 figure - this exact plan ('Red 350') is BR-269's own named example of a postpaid plan disclosing a 3-month Minimum Subscription Period."
   },
   {
     "productId": "PROD-105",
@@ -35,7 +41,9 @@
     "dataAllowanceGB": 250,
     "minutesAllowance": "Unlimited local",
     "speedTier": "5G Ready",
-    "commitmentMonths": 12
+    "commitmentMonths": 3,
+    "benefits": ["Free GigaHome TV Basic Pack for 6 months", "Free 20GB roaming data"],
+    "_commitmentNote": "Corrected 2026-09-28 from an invented 12 to the evidenced BR-120 figure ('Postpaid plans carry a minimum subscription period (lock-in) of 3 months')."
   },
   {
     "productId": "PROD-106",
@@ -45,7 +53,9 @@
     "dataAllowanceGB": null,
     "minutesAllowance": "Unlimited local",
     "speedTier": "5G Priority",
-    "commitmentMonths": 24
+    "commitmentMonths": 3,
+    "benefits": ["Free GigaHome TV Premium Pack", "Free international roaming pack", "Priority customer support"],
+    "_commitmentNote": "Corrected 2026-09-28 from an invented 24 to the evidenced BR-120 figure ('Postpaid plans carry a minimum subscription period (lock-in) of 3 months') - BR-120 states this as a blanket rule for postpaid plans generally, with no evidenced exception for a premium/VIP tier's own plan commitment (BR-289's 2-year figure is the STAR NUMBER's lock-in on a VIP plan, not the plan's own)."
   },
   {
     "productId": "PROD-200",

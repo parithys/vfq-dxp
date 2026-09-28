@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { Badge } from '../primitives/Badge';
+import { Button } from '../primitives/Button';
 import { Input } from '../primitives/Input';
 import { Radio } from '../primitives/Radio';
 import { AddonsPicker } from '../domain/AddonsPicker';
 import { BillLimitEditor } from '../domain/BillLimitEditor';
 import { Drawer } from '../primitives/Drawer';
 import { Icon } from '../primitives/Icon';
-import { monthlyCharges, formatQar, VAT_RATE } from '../../engines/postpaidPricing';
+import { monthlyCharges, formatQar, VAT_RATE, HRN_ADVANCE_QAR } from '../../engines/postpaidPricing';
 
 const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
+const CHECK = 'M20 6L9 17l-5-5';
 
 // Small Levenshtein distance for typo-tolerant ranking - the app has no fuzzy-
 // search dependency, and plan names are short enough that a plain O(n*m) DP
@@ -58,6 +60,18 @@ interface PostpaidPlan {
    * drawer, since it is the one figure the cards have no room for. */
   commitmentMonths?: number;
   popular?: boolean;
+  /** Free bundles/benefits included with the plan (2026-09-28 request) -
+   * app-level demo data, no evidenced per-plan benefits field existed before
+   * (see products.json's own note on these entries). */
+  benefits?: string[];
+  /**
+   * True for a plan that already comes with its add-ons/discount decided
+   * (2026-09-28 "pre-bundled eligible offers"). Selecting one auto-advances
+   * past the rest of THIS step straight to Number Selection - see
+   * NewPostpaidWizard's autoAdvanceWhen on the 'plan' step, which is where
+   * that skip actually happens; this component only renders a note saying so.
+   */
+  preBundledOffer?: boolean;
 }
 
 interface Discount {
@@ -72,14 +86,29 @@ interface Discount {
 
 interface AddonProduct {
   productId: string;
+  name: string;
   type: string;
   mrcQAR: number;
 }
 
-/** Discount types that require a supporting ID captured here and a document
- * uploaded later at the CAF step (2026-09-28 request) - not a file upload
- * here, just the reference number the CAF attachment will be matched to. */
-const SUPPORTING_ID_DISCOUNT_TYPES = new Set(['MADA Discount', 'B2B2C Discount']);
+/**
+ * Discount types that require a supporting ID AND a proof document here
+ * (2026-09-28 request supersedes the original "document uploaded later at
+ * the CAF step" note below - the proof itself now moves to this step,
+ * required before finalisation; CAF still gets a signed-paperwork upload of
+ * its own, which is a different artefact). Exported so NewPostpaidWizard's
+ * pendingApproval computation reads the SAME set rather than duplicating the
+ * two literal strings.
+ */
+export const SUPPORTING_ID_DISCOUNT_TYPES = new Set(['MADA Discount', 'B2B2C Discount']);
+
+const PROOF_DOCUMENT_MAX_BYTES = 5 * 1024 * 1024;
+const PROOF_DOCUMENT_ACCEPT = '.pdf,.jpg,.jpeg,.png';
+
+function formatDocSize(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
 
 interface PostpaidPlanAddonsStepProps {
   selectedProductId: string | undefined;
@@ -95,6 +124,15 @@ interface PostpaidPlanAddonsStepProps {
   /** Agent 360... no - Agent 360 doesn't apply here; this is BR-076's
    * eligibility-derived default (EligibilityGateStep), shown read-only so
    * the agent sees what limit this activation was pre-qualified against. */
+  /** From eligibility - true for an HRN (High Risk Nationality) customer
+   * (2026-09-28 request: "show 'Please collect QAR [configurable amount]
+   * from the customer.'"). */
+  requiresHrnAdvance: boolean;
+  /** The proof document a MADA/B2B2C discount requires before finalisation
+   * (2026-09-28) - a single file, distinct from the CAF step's own signed-
+   * paperwork upload. Undefined until one is attached. */
+  discountProofDocument: { fileName: string; sizeBytes: number } | undefined;
+  onDiscountProofDocumentChange: (doc: { fileName: string; sizeBytes: number } | undefined) => void;
 }
 
 /**
@@ -153,6 +191,9 @@ export function PostpaidPlanAddonsStep({
   onDiscountSupportingIdChange,
   billLimit,
   onBillLimitChange,
+  requiresHrnAdvance,
+  discountProofDocument,
+  onDiscountProofDocumentChange,
 }: PostpaidPlanAddonsStepProps) {
   const [plans, setPlans] = useState<PostpaidPlan[]>([]);
   const [addonProducts, setAddonProducts] = useState<AddonProduct[]>([]);
@@ -167,6 +208,8 @@ export function PostpaidPlanAddonsStep({
   // (click-outside close, listbox/option roles).
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const [proofDocError, setProofDocError] = useState<string | null>(null);
+  const proofDocRef = useRef<HTMLInputElement>(null);
 
   // Name OR price. The price side matches the raw number anywhere in the
   // figure, so "35" finds 350 - narrowing as the agent types rather than
@@ -210,15 +253,29 @@ export function PostpaidPlanAddonsStep({
   const requiresSupportingId = selectedDiscount ? SUPPORTING_ID_DISCOUNT_TYPES.has(selectedDiscount.addonType) : false;
 
   // Switching to a discount that doesn't need one (or to no discount at all)
-  // invalidates whatever ID was captured for a previous MADA/B2B2C pick - the
-  // same "an edit invalidates a stale link" reasoning CompanySearchInput and
-  // IdLookupStep apply to their own committed values.
+  // invalidates whatever ID and proof document were captured for a previous
+  // MADA/B2B2C pick - the same "an edit invalidates a stale link" reasoning
+  // CompanySearchInput and IdLookupStep apply to their own committed values.
   useEffect(() => {
-    if (!requiresSupportingId && discountSupportingId) onDiscountSupportingIdChange('');
+    if (requiresSupportingId) return;
+    if (discountSupportingId) onDiscountSupportingIdChange('');
+    if (discountProofDocument) onDiscountProofDocumentChange(undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [discountId]);
 
-  const addonsMonthlyQar = addonProducts.filter((a) => addonIds.includes(a.productId)).reduce((sum, a) => sum + a.mrcQAR, 0);
+  const handleProofDocFile = (file: File | undefined) => {
+    if (!file) return;
+    if (file.size > PROOF_DOCUMENT_MAX_BYTES) {
+      setProofDocError(`${file.name} is ${formatDocSize(file.size)}. The limit is 5 MB.`);
+      return;
+    }
+    setProofDocError(null);
+    onDiscountProofDocumentChange({ fileName: file.name, sizeBytes: file.size });
+    if (proofDocRef.current) proofDocRef.current.value = '';
+  };
+
+  const selectedAddons = addonProducts.filter((a) => addonIds.includes(a.productId));
+  const addonsMonthlyQar = selectedAddons.reduce((sum, a) => sum + a.mrcQAR, 0);
   // One itemisation, shared with Checkout and with the order payload - see
   // engines/postpaidPricing.ts for why that is a module and not three copies.
   // No device instalment here: this step has not reached Device & DOI yet, so
@@ -234,6 +291,17 @@ export function PostpaidPlanAddonsStep({
 
   return (
     <div className="space-y-6">
+      {/* HRN collection message (2026-09-28 request), shown regardless of
+          which plan is chosen - it is a fact about the CUSTOMER (nationality-
+          derived, per BR-112), not about the plan. The amount is the one
+          centralised constant (postpaidPricing.ts) rather than a value typed
+          here, so "configurable" means changing that one line, not hunting
+          for every place QAR 100 appears. */}
+      {requiresHrnAdvance && (
+        <div className="rounded-[var(--radius-card)] border border-accent/40 bg-surface-warm p-4">
+          <p className="text-fg font-medium">Please collect QAR {HRN_ADVANCE_QAR} from the customer.</p>
+        </div>
+      )}
       {/* One column, three sections in order: plan, add-ons, discounts
           (2026-09-26). This was a two-column grid with the plan tiers on the
           left and discounts + add-ons on the right, held in alignment by a
@@ -410,6 +478,28 @@ export function PostpaidPlanAddonsStep({
                         </tbody>
                       </table>
                     </div>
+                    {/* Free bundles/benefits (2026-09-28 request) - only
+                        rendered when the catalogue actually carries any, so a
+                        plan with none does not show an empty heading. */}
+                    {p.benefits && p.benefits.length > 0 && (
+                      <ul className="mt-2 space-y-0.5">
+                        {p.benefits.map((b) => (
+                          <li key={b} className="flex items-start gap-1.5 text-[length:var(--fs-caption)] text-fg-2">
+                            <Icon path={CHECK} className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
+                            {b}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {/* Pre-bundled eligible offer (2026-09-28) - stated on the
+                        card itself, since choosing one skips straight to
+                        Number Selection with no further chance to review
+                        add-ons/discount for THIS plan. */}
+                    {p.preBundledOffer && (
+                      <p className="mt-2 text-[length:var(--fs-caption)] text-accent">
+                        Pre-bundled offer - selecting this skips add-ons/discount and goes straight to Number Selection.
+                      </p>
+                    )}
                   </div>
                   </label>
                   <button
@@ -460,6 +550,16 @@ export function PostpaidPlanAddonsStep({
           <div className="space-y-4">
             {!selectedProductId ? (
               <p className="text-muted text-[length:var(--fs-caption)]">Select a plan to see eligible discounts.</p>
+            ) : selectedPlan?.preBundledOffer ? (
+              // A pre-bundled plan already comes with its own offer decided
+              // (see PostpaidPlan.preBundledOffer's own note) - the agent
+              // reaches this text at all only by walking back to a step the
+              // wizard's autoAdvanceWhen already carried them past once, so
+              // it explains why there is nothing left to choose here rather
+              // than showing a "No discount" picker with nothing behind it.
+              <p className="text-muted text-[length:var(--fs-caption)]">
+                This pre-bundled plan already includes its offer and does not accept extra discounts.
+              </p>
             ) : (
               <div className="space-y-2">
                 <label
@@ -500,24 +600,59 @@ export function PostpaidPlanAddonsStep({
                 {discounts.length === 0 && (
                   <p className="text-muted text-[length:var(--fs-caption)]">No discounts configured for this plan.</p>
                 )}
-                {/* MADA/B2B2C discounts need a supporting ID captured here
-                    (2026-09-28 request) - the ID this discount will be
-                    matched against, not the document itself. The document
-                    photo/scan is uploaded later at the CAF step, same as
-                    every other identity attachment in this app; this field
-                    exists so that later step has something to attach it to. */}
+                {/* MADA/B2B2C discounts need a supporting ID AND a proof
+                    document here (2026-09-28 direction, superseding the
+                    original "uploaded later at CAF" plan) - required before
+                    the order can be finalised; NewPostpaidWizard routes the
+                    order to pending approval regardless, per that same
+                    request ("approval workflow remains pending"). */}
                 {requiresSupportingId && (
-                  <Input
-                    label="Supporting ID"
-                    placeholder={
-                      selectedDiscount?.addonType === 'MADA Discount'
-                        ? 'MADA card / reference number'
-                        : 'Sponsor / employer reference ID'
-                    }
-                    value={discountSupportingId ?? ''}
-                    onChange={(e) => onDiscountSupportingIdChange(e.target.value)}
-                    helperText="The supporting document is uploaded later, at the CAF step."
-                  />
+                  <div className="space-y-2">
+                    <Input
+                      label="Supporting ID"
+                      required
+                      placeholder={
+                        selectedDiscount?.addonType === 'MADA Discount'
+                          ? 'MADA card / reference number'
+                          : 'Sponsor / employer reference ID'
+                      }
+                      value={discountSupportingId ?? ''}
+                      onChange={(e) => onDiscountSupportingIdChange(e.target.value)}
+                      helperText="Required, along with a proof document below, before this order can be finalised."
+                    />
+                    <div>
+                      <p className="text-[length:var(--fs-label)] text-fg-2 mb-1">Proof document</p>
+                      {discountProofDocument ? (
+                        <div className="flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-border-soft bg-bg px-3 py-2">
+                          <span className="min-w-0 text-[length:var(--fs-body)] text-fg truncate">
+                            {discountProofDocument.fileName}
+                            <span className="text-muted"> · {formatDocSize(discountProofDocument.sizeBytes)}</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => onDiscountProofDocumentChange(undefined)}
+                            className="shrink-0 text-[length:var(--fs-caption)] text-muted hover:text-danger underline"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <input
+                            ref={proofDocRef}
+                            type="file"
+                            accept={PROOF_DOCUMENT_ACCEPT}
+                            className="sr-only"
+                            onChange={(e) => handleProofDocFile(e.target.files?.[0])}
+                          />
+                          <Button variant="ghost-rect" onClick={() => proofDocRef.current?.click()}>
+                            Browse…
+                          </Button>
+                        </>
+                      )}
+                      {proofDocError && <p className="text-danger text-[length:var(--fs-caption)] mt-1">{proofDocError}</p>}
+                    </div>
+                  </div>
                 )}
             </div>
           )}
@@ -525,8 +660,43 @@ export function PostpaidPlanAddonsStep({
         </div>
       </div>
 
+      {/* "Clearly summarise the selected plan, benefits, and add-ons"
+          (2026-09-28) - descriptive, not financial: the Monthly summary table
+          just below already covers the money side (plan/discount/add-ons/VAT/
+          total); this covers WHAT was chosen rather than what it costs, so an
+          agent reading the two together gets the full picture without either
+          one trying to do the other's job. */}
+      {selectedPlan && (
+        <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4 space-y-3">
+          <h4 className="text-fg font-medium text-[length:var(--fs-body)]">What's included</h4>
+          <div>
+            <p className="text-fg font-semibold">{selectedPlan.name}</p>
+            {selectedPlan.benefits && selectedPlan.benefits.length > 0 && (
+              <ul className="mt-1 space-y-0.5">
+                {selectedPlan.benefits.map((b) => (
+                  <li key={b} className="flex items-start gap-1.5 text-[length:var(--fs-caption)] text-fg-2">
+                    <Icon path={CHECK} className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
+                    {b}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div>
+            <p className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Add-ons</p>
+            <p className="text-fg text-[length:var(--fs-body)]">
+              {selectedAddons.length > 0 ? selectedAddons.map((a) => a.name).join(', ') : 'None selected - optional'}
+            </p>
+          </div>
+        </div>
+      )}
+
       {selectedPlan && charges && (
-        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 flex items-start justify-between flex-wrap gap-4">
+        // Left accent bar (2026-09-28 mockup) - the one box on this step that
+        // is a running total rather than a choice to make, so it reads as a
+        // callout the same way Checkout's own "Due today" panel does, not as
+        // a fourth option card.
+        <div className="rounded-[var(--radius-card)] border border-border-soft border-l-4 border-l-accent bg-bg p-4 flex items-start justify-between flex-wrap gap-4">
           {/* Left: an itemised breakdown under a label, per the 2026-09-26
               asset. Was one run-on caption line - "Live Cart Total · Base plan
               QAR 500/mo · Loyalty Discount (-15%) · Add-ons QAR 50/mo" - where
@@ -627,6 +797,21 @@ export function PostpaidPlanAddonsStep({
               </div>
             ))}
           </dl>
+        )}
+        {/* Benefits are a LIST, not a single label/value pair, so they sit
+            below the dl rather than inside it (2026-09-28). */}
+        {detailPlan?.benefits && detailPlan.benefits.length > 0 && (
+          <div className="pt-3">
+            <p className="text-fg-2 text-[length:var(--fs-caption)] mb-1.5">Included benefits</p>
+            <ul className="space-y-1">
+              {detailPlan.benefits.map((b) => (
+                <li key={b} className="flex items-start gap-1.5 text-[length:var(--fs-body)] text-fg">
+                  <Icon path={CHECK} className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                  {b}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </Drawer>
     </div>

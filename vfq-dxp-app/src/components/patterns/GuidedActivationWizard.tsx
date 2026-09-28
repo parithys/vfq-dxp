@@ -89,6 +89,15 @@ export interface WizardStep {
    * step behind it.
    */
   autoAdvanceWhen?: (values: Record<string, unknown>) => boolean;
+  /**
+   * Extra content for the LEFT side of the step footer, alongside Back
+   * (2026-09-28: Contact's "View eligibility checks" link) - rendered
+   * whenever this is the current step, independent of whether Back itself
+   * is showing (Contact is step one, so Back never is). A render prop
+   * rather than a fixed slot: a step that needs this owns its own state
+   * (e.g. the popup's open/closed flag) entirely within whatever it returns.
+   */
+  footerLeft?: (ctx: { values: Record<string, unknown> }) => ReactNode;
 }
 
 interface GuidedActivationWizardProps {
@@ -670,7 +679,7 @@ export function GuidedActivationWizard({
           </div>
           {currentStep?.render({ values: draft.values, setValue, goNext: () => void goNext(), goToStepKey })}
           <div className="flex items-center justify-between mt-6 pt-6 border-t border-border-soft">
-            <div>
+            <div className="flex items-center gap-3">
               {/* Locked (2026-09-28): Back disappears entirely alongside the
                   rail going unclickable - "disable/remove Back navigation".
                   currentIndex > 0 alone would still show it on Payment even
@@ -681,6 +690,7 @@ export function GuidedActivationWizard({
                   Back
                 </Button>
               )}
+              {currentStep?.footerLeft?.({ values: draft.values })}
             </div>
             <Button variant="primary-rect" onClick={goNext} disabled={!canProceed || submitting}>
               {submitting ? 'Submitting…' : currentIndex === activeSteps.length - 1 ? 'Save & Finish' : 'Continue'}

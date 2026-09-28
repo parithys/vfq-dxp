@@ -28,6 +28,50 @@
  */
 export const VAT_RATE = 0.05;
 
+/**
+ * HRN (High Risk Nationality) upfront advance, in QAR - BR-112 ("HRN customers
+ * pay an upfront advance whose amount is driven by nationality and sales
+ * channel; explicitly confirmed to NOT be driven by plan value"). Centralised
+ * here as of 2026-09-28: this was a bare `100` duplicated independently in
+ * CheckoutSummaryStep.tsx and NewPostpaidWizard.tsx, which is exactly the
+ * "same arithmetic written more than once" problem this module exists to
+ * prevent for the rest of the pricing surface - and BR-112 itself only
+ * narrates the rule, it does not define the figure as a named, changeable
+ * value anywhere. One constant now; changing the amount means changing this
+ * line, not finding every place `100` appears in an HRN context.
+ */
+export const HRN_ADVANCE_QAR = 100;
+
+/**
+ * Free/Star price boundary, exclusive on the Free side (2026-09-28 direction:
+ * "Treat all numbers below QAR 1,000 as free to the customer"). Centralised
+ * here rather than living only in MsisdnPicker.tsx, because CheckoutSummaryStep
+ * needs the SAME threshold to decide whether a number is a Star number at all
+ * (isStarNumber) - a number under this price gets plain "no lock-in" treatment,
+ * never a star-tier lock-in or an entitlement calculation, in both places.
+ */
+export const FREE_NUMBER_PRICE_CEILING_QAR = 1000;
+
+/**
+ * Star-number entitlement multiplier - BR-115 ("Star number entitlement by
+ * plan value": a plan's MRC entitles the customer to a star number worth up
+ * to MRC x this multiplier at no extra one-time charge; a pricier number is
+ * billed only the DELTA above that entitlement, not its full sticker price).
+ * BR-115's own worked example (a 200 QAR plan entitles ~5,000 QAR of star
+ * number) is the source of the 25x figure - confirmed 2026-09-28 as the
+ * ratio to implement over a competing 50x figure that surfaced in the same
+ * request, so this is the one place that choice lives.
+ */
+export const STAR_NUMBER_ENTITLEMENT_MULTIPLIER = 25;
+
+/** The one-time charge for a star number after BR-115's entitlement is
+ * applied - zero if the number is within what the plan already entitles,
+ * otherwise only the amount above it. Never negative. */
+export function starNumberOverageQar(planMrcQar: number, numberPriceQar: number): number {
+  const entitlementQar = planMrcQar * STAR_NUMBER_ENTITLEMENT_MULTIPLIER;
+  return Math.max(0, round2(numberPriceQar - entitlementQar));
+}
+
 export interface MonthlyChargeInput {
   /** Plan monthly recurring charge. */
   planQar: number;

@@ -6,8 +6,23 @@ import { useNotificationStore } from '../../stores/notificationStore';
 
 interface EsimActivationPanelProps {
   activationCode: string;
-  /** Prefills the send-to field - the address captured on the Contact step. */
+  /**
+   * The account's own contact email - the address captured on the Contact
+   * step, i.e. an "existing account contact email," not something typed
+   * here. Read-only (2026-09-28 request): this panel no longer lets the
+   * agent retype or substitute an address at send time - the whole point of
+   * gating Send on `verified` below is that ONLY the address already on the
+   * account, checked against the ID registry, is ever sent to.
+   */
   customerEmail: string | undefined;
+  /**
+   * Same definition GuidedContactStep's own tick and the order-confirmation
+   * email use (emailVerification: does `customerEmail` match the MOI
+   * registry's email for this customer). Send to email is blocked whenever
+   * this is false - an unverified address is shown, so the agent can see
+   * why it's blocked, but never something eSIM details are sent to.
+   */
+  verified: boolean;
 }
 
 // The scannable half of eSIM issuance: QR, the LPA string to key in by hand,
@@ -19,17 +34,18 @@ interface EsimActivationPanelProps {
 // order that was then abandoned at Payment. On the confirmation screen the
 // provisioning has happened, so the code it shows is one that will work.
 //
-// The email state is local and intentionally not lifted: "did the agent send
-// it" is a UI affordance for this screen, not part of the order record, and
-// nothing downstream reads it.
-export function EsimActivationPanel({ activationCode, customerEmail }: EsimActivationPanelProps) {
+// `sentTo` is local and intentionally not lifted: "did the agent send it" is
+// a UI affordance for this screen, not part of the order record, and nothing
+// downstream reads it.
+export function EsimActivationPanel({ activationCode, customerEmail, verified }: EsimActivationPanelProps) {
   const [sending, setSending] = useState(false);
-  const [email, setEmail] = useState(customerEmail ?? '');
   const [sentTo, setSentTo] = useState<string | null>(null);
   const pushToast = useNotificationStore((s) => s.pushToast);
+  const email = customerEmail ?? '';
+  const canSend = Boolean(email) && verified;
 
   const sendEmail = async () => {
-    if (!email) return;
+    if (!canSend) return;
     setSending(true);
     await new Promise((r) => setTimeout(r, 500));
     setSending(false);
@@ -56,18 +72,28 @@ export function EsimActivationPanel({ activationCode, customerEmail }: EsimActiv
       </div>
 
       <div className="space-y-2">
+        {/* Read-only (2026-09-28): this is the account's own contact email,
+            not a field the agent fills in here - see the prop's own note. */}
         <Input
           label="Send eSIM details to email"
           type="email"
           value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            setSentTo(null);
-          }}
-          placeholder="customer@example.com"
+          readOnly
+          placeholder="No contact email on file"
         />
+        {/* Shown, not hidden - the agent should see WHY sending is blocked
+            rather than find a dead button with no explanation. Only appears
+            when there's actually an address to explain; no email at all
+            already reads as nothing-to-send from the placeholder above. */}
+        {email && !verified && (
+          <p className="text-[var(--warn-text)] text-[length:var(--fs-caption)]">
+            This email could not be verified against the customer's ID record, so eSIM details cannot be sent to it.
+          </p>
+        )}
         {sentTo && <p className="text-success text-[length:var(--fs-caption)]">eSIM details sent successfully to {sentTo}.</p>}
-        <Button variant="ghost-rect" onClick={sendEmail} disabled={sending || !email}>
+        {/* secondary-rect (2026-09-28): a real action, not a cancel/dismiss -
+            see OrderConfirmationScreen's own note on the same distinction. */}
+        <Button variant="secondary-rect" onClick={sendEmail} disabled={sending || !canSend}>
           {sending ? 'Sending…' : 'Send to email'}
         </Button>
       </div>

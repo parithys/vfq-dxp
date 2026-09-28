@@ -49,6 +49,15 @@ interface MoiResult {
    * exists on that dataset at all.
    */
   expiryDate?: string;
+  /**
+   * When this lookup last resolved (ISO), stamped by runMoiValidation below.
+   * Evidenced as "MOI Update Time" on the backend Contact/Account record
+   * across multiple guided-journey walkthroughs (e.g. "MOI Update Time
+   * 8/18/2025 03:58:20") - not previously carried into this app. Overwritten
+   * on every fresh validation, so it always reads the latest one, not the
+   * first.
+   */
+  moiUpdateTime?: string;
 }
 
 // TWO, per 2026-09-28 direction ("Allow a maximum of two scanning attempts").
@@ -256,6 +265,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
           companyName: customer.companyName,
           companyAccountId,
           expiryDate: match.expiryDate,
+          moiUpdateTime: new Date().toISOString(),
         },
       });
     }
@@ -452,6 +462,14 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
   // the bordered panel it heads, where it introduces the identity read-out.
   const moiBadge =
     !showMoiDetails && value.moiResult ? <Badge variant="success-solid">MOI validated successfully</Badge> : undefined;
+
+  // "MOI Update Time" (2026-09-28) - see MoiResult.moiUpdateTime's own note
+  // for the evidenced field name. toLocaleString() rather than a hand-rolled
+  // formatter, matching how this app already renders absolute timestamps
+  // elsewhere (TaskDetailView.tsx, BulkNotesSection.tsx).
+  const moiUpdateTimeText = value.moiResult?.moiUpdateTime
+    ? `MOI Update Time: ${new Date(value.moiResult.moiUpdateTime).toLocaleString()}`
+    : undefined;
 
   // The scanner, shown only for a Qatar ID. The other three document
   // types are single-sided in this corpus (a passport is scanned at its
@@ -657,6 +675,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
           // field again - Retake, an ID Type switch - clears moiResult in the
           // same update.
           status={moiBadge}
+          statusDetail={moiUpdateTimeText}
         />
       )}
 
@@ -675,7 +694,10 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
       {value.moiResult && showMoiDetails && (
         <div className="pt-2 border-t border-border-soft">
           <div className="rounded-[var(--radius-card)] border border-success/30 bg-[color-mix(in_oklab,var(--success),var(--bg)_92%)] p-4 space-y-3">
-            <Badge variant="success-solid">MOI validated successfully</Badge>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant="success-solid">MOI validated successfully</Badge>
+              {moiUpdateTimeText && <span className="text-[length:var(--fs-caption)] text-muted">{moiUpdateTimeText}</span>}
+            </div>
             <div className="grid grid-cols-3 gap-4 text-[length:var(--fs-body)]">
               <div>
                 <div className="text-[length:var(--fs-caption)] text-muted">Name</div>

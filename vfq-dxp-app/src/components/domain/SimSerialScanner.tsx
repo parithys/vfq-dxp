@@ -6,6 +6,7 @@ import * as mockDataEngine from '../../engines/mockDataEngine';
 
 interface SimRecord {
   simSerial: string;
+  iccid: string;
   stockStatus: string;
 }
 
@@ -17,7 +18,28 @@ const BARCODE_ICON = 'M3 4v16 M6 4v16 M8 4v16 M11 4v16 M13 4v16 M14 4v16 M17 4v1
 
 interface SimSerialScannerProps {
   value: string;
-  onChange: (value: string, valid: boolean) => void;
+  /**
+   * `details` carries ICCID/Stock Status the moment validation succeeds
+   * (2026-09-28 request: "display SIM Type, SIM Serial Number, ICCID, and
+   * Stock Status") - undefined on every other call, including a failed
+   * validation, since there is nothing confirmed to report then.
+   */
+  onChange: (value: string, valid: boolean, details?: { iccid: string; stockStatus: string }) => void;
+  /** Set by SimTypeStep only (2026-09-28 "Default focus to the Physical SIM
+   * Serial Number scan field") - other callers of this same component keep
+   * their existing behaviour, since this defaults to false/unset. */
+  autoFocus?: boolean;
+  /**
+   * Set by SimTypeStep only, true while eSIM is the agent's current choice
+   * (2026-09-28: "Require either eSIM selection or SIM Serial Number. If
+   * eSIM is selected, suppress the 'SIM Serial is required' validation
+   * error."). The wizard step's own isValid already treats the two paths as
+   * alternatives - this fixes the display bug where the unused Physical
+   * panel still ran its own blur validation and showed an error for a field
+   * the agent was never going to fill in. Other callers omit this and keep
+   * validating normally.
+   */
+  suppressValidation?: boolean;
 }
 
 // Pattern 11: SIM/Device Serial Capture with Real-Time Inventory Validation -
@@ -31,7 +53,7 @@ interface SimSerialScannerProps {
 // stock readout - the step used to say nothing at all when a serial was good,
 // so "available in this store's stock" was indistinguishable from "not checked
 // yet".
-export function SimSerialScanner({ value, onChange }: SimSerialScannerProps) {
+export function SimSerialScanner({ value, onChange, autoFocus, suppressValidation }: SimSerialScannerProps) {
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   const [inStock, setInStock] = useState(false);
@@ -39,6 +61,12 @@ export function SimSerialScanner({ value, onChange }: SimSerialScannerProps) {
 
   const validate = async (serial: string) => {
     setInStock(false);
+    // eSIM is the agent's current choice - this panel is not the one being
+    // filled in, so it has nothing to validate or complain about yet.
+    if (suppressValidation) {
+      setError(null);
+      return;
+    }
     if (!serial) {
       setError('SIM Serial is required.');
       onChange(serial, false);
@@ -63,7 +91,7 @@ export function SimSerialScanner({ value, onChange }: SimSerialScannerProps) {
     }
     setError(null);
     setInStock(true);
-    onChange(serial, true);
+    onChange(serial, true, { iccid: found.iccid, stockStatus: found.stockStatus });
   };
 
   // Simulated barcode read. Picks a serial that is genuinely available in
@@ -95,11 +123,19 @@ export function SimSerialScanner({ value, onChange }: SimSerialScannerProps) {
           the trigger sits has moved. */}
       <Input
         label="SIM Serial Number"
+        // Not required while eSIM is the agent's chosen alternative
+        // (2026-09-28 asterisk sweep) - same condition as the error
+        // suppression above, so the label never asserts a requirement this
+        // panel isn't actually enforcing right now. Callers that never set
+        // suppressValidation (every other journey sharing this component)
+        // get `required` unconditionally, unchanged from before.
+        required={!suppressValidation}
         placeholder="Enter the SIM serial number, or use the barcode scanner"
         value={value}
         onChange={(e) => onChange(e.target.value, false)}
         onBlur={(e) => validate(e.target.value)}
-        error={error ?? undefined}
+        error={suppressValidation ? undefined : (error ?? undefined)}
+        autoFocus={autoFocus}
         trailingAddon={
           <button
             type="button"

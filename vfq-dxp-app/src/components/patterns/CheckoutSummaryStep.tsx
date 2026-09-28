@@ -1,8 +1,18 @@
 import { useEffect, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
-import { monthlyCharges, firstBillCharges, formatQar, VAT_RATE } from '../../engines/postpaidPricing';
+import {
+  monthlyCharges,
+  firstBillCharges,
+  formatQar,
+  VAT_RATE,
+  HRN_ADVANCE_QAR,
+  FREE_NUMBER_PRICE_CEILING_QAR,
+  STAR_NUMBER_ENTITLEMENT_MULTIPLIER,
+  starNumberOverageQar,
+} from '../../engines/postpaidPricing';
 import { Button } from '../primitives/Button';
 import type { EligibilityResult } from '../domain/EligibilityGateStep';
+import type { SimTypeValue } from '../domain/SimTypeStep';
 
 interface Product {
   productId: string;
@@ -83,6 +93,16 @@ interface CheckoutSummaryStepProps {
    * a figure nobody actually set.
    */
   billLimit: number | undefined;
+  /**
+   * SIM Type's own selection (2026-09-28 "Update the Customer Confirmation
+   * screen" request) - needed only for the customer-facing Key Information
+   * recap below, which reads back what was issued. The agent's own <dl>
+   * on this screen has never shown SIM details (2026-09-28 "Customer ID
+   * Number, Customer Contact Number and SIM Type are deliberately absent");
+   * that decision stands for the agent view, this is a second, separate
+   * surface with its own requirements.
+   */
+  simType: SimTypeValue | undefined;
   onTotalsComputed: (totals: CheckoutTotals) => void;
   /**
    * The same facts, as label/value rows, for the CAF step to read back to the
@@ -118,6 +138,7 @@ export function CheckoutSummaryStep({
   numberPriceQar,
   eligibility,
   billLimit,
+  simType,
   onTotalsComputed,
   onSummaryComputed,
   onEdit,
@@ -142,17 +163,30 @@ export function CheckoutSummaryStep({
   const plan = products.find((p) => p.productId === productId);
   const addons = products.filter((p) => addonIds.includes(p.productId));
   const discount = discounts.find((d) => d.addonDiscountId === discountId);
+  // The number's own sticker price - kept separate from what is actually
+  // CHARGED (numberChargeQar below), so "Star value QR 5000 one-time" can
+  // still be read back in full even when BR-115's entitlement covers most or
+  // all of it.
   const numberDelta = numberPriceQar ?? 0;
-  const hrnAdvance = eligibility?.requiresHrnAdvance ? 100 : 0;
-
-  const dueTodayQar = numberDelta + hrnAdvance;
-  // A priced number is a Star number; a zero-priced one is Free. The picker
-  // already encodes that distinction in the price it hands back, so this reads
-  // it rather than plumbing a second "category" value through the wizard.
-  const isStarNumber = numberDelta > 0;
+  const hrnAdvance = eligibility?.requiresHrnAdvance ? HRN_ADVANCE_QAR : 0;
+  // A number priced at or above FREE_NUMBER_PRICE_CEILING_QAR is a Star
+  // number; anything below it is "free to the customer" (2026-09-28
+  // direction), regardless of its exact catalogue price - the picker already
+  // encodes this same boundary, so Checkout reads the identical threshold
+  // rather than drifting from it with its own `> 0` cutoff.
+  const isStarNumber = numberDelta >= FREE_NUMBER_PRICE_CEILING_QAR;
   const starTier = isStarNumber
     ? starTiers.find((t) => numberDelta >= t.valueRangeMin && numberDelta <= t.valueRangeMax)
     : undefined;
+  // BR-115: the plan's MRC entitles the customer to a star number worth up to
+  // MRC x 25 with no extra one-time charge - only the amount ABOVE that
+  // entitlement is actually billed. Falls back to the full sticker price when
+  // there is no plan yet to derive an entitlement from (shouldn't happen in
+  // practice - Plan & Add-ons runs before Number Selection - but this avoids
+  // a NaN entitlement rather than assuming the order of steps holds forever).
+  const starEntitlementQar = plan ? plan.mrcQAR * STAR_NUMBER_ENTITLEMENT_MULTIPLIER : undefined;
+  const numberChargeQar = isStarNumber && plan ? starNumberOverageQar(plan.mrcQAR, numberDelta) : numberDelta;
+  const dueTodayQar = numberChargeQar + hrnAdvance;
   // "Maximum Bill Limit equals account Credit Limit" (business-rules.json).
   // This journey dropped its Bill Limit editor on 2026-09-25, so there is no
   // agent-set value to show - what the customer must be told is the cap, which
@@ -195,61 +229,138 @@ export function CheckoutSummaryStep({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan?.commitmentMonths, isStarNumber, starTier?.lockInDurationMonths, discount?.name, discount?.durationMonths, hrnAdvance]);
 
-  // Customer-facing rows for CAF. Only published once the catalogue reads have
-  // landed, so CAF never shows a summary with "-" where a plan name belongs.
+  // Customer-facing rows for the CAF step's "Key Information" panel - the
+  // screen the CUSTOMER actually reviews before signing, distinct from the
+  // agent-only <dl> below. Only published once the catalogue reads have
+  // landed, so that panel never shows a summary with "-" where a plan name
+  // belongs.
+  //
+  // Reworked 2026-09-28 ("Ensure all relevant commercial and billing
+  // information is visible to the customer in the confirmation view, not
+  // only in the agent view") - this used to be a shorter recap (no SIM
+  // details, no split-out lock-ins/charges, and it carried Credit limit/Bill
+  // limit, which are operational figures for the agent to manage, not facts
+  // the customer signs against). Customer ID Number and VAT stay off this
+  // panel for the same reason the agent's own <dl> omits the first and never
+  // itemises the second as a standalone figure: every quoted price here is
+  // already VAT-inclusive (see monthlyCharges), so a separate VAT line would
+  // assert a second, uninclusive number alongside it.
   useEffect(() => {
     if (!onSummaryComputed || !plan) return;
+    const simSerial = simType?.simSerial;
+    const simIccid = simType?.simIccid;
     onSummaryComputed([
-      { label: 'Number', value: msisdn ? `${msisdn} (${isStarNumber ? 'Star' : 'Free'})` : '-' },
-      { label: 'Plan', value: `${plan.name} - QR ${plan.mrcQAR}/mo` },
-      { label: 'Add-ons', value: addons.length ? addons.map((a) => `${a.name} (QR ${a.mrcQAR}/mo)`).join(', ') : 'None' },
+      { label: 'Customer Name', value: customerName ?? '-' },
+      { label: 'Selected Number', value: msisdn ? `${msisdn} (${isStarNumber ? 'Star' : 'Free'})` : '-' },
+      // The number's own catalogue value, separate from what it's actually
+      // BILLED at (that's Star Number Charges below, net of BR-115's
+      // entitlement) - a free-tier number still has a real catalogue price
+      // (2026-09-28 "show its actual price"), it's simply not charged.
+      {
+        label: 'Number Value',
+        value: msisdn ? (isStarNumber ? `QR ${numberDelta} one-time` : `QR ${numberDelta} (no charge to customer)`) : '-',
+      },
+      { label: 'Plan', value: plan.name },
+      { label: 'Plan Price', value: `QR ${plan.mrcQAR}/mo` },
       {
         label: 'Discount',
         value: discount
           ? `${discount.name} (${Math.round(Math.abs(discount.price) * 100)}%) - ${formatQar(charges.discountQar, 'QR')}/mo`
           : 'None',
       },
-      ...(isStarNumber ? [{ label: 'Star-number value', value: `QR ${numberDelta} one-time` }] : []),
       {
-        label: 'Lock-in period',
-        value: [
-          plan.commitmentMonths ? `Plan ${plan.commitmentMonths} months` : null,
-          starTier ? `Star number ${starTier.lockInDurationMonths} months` : null,
-        ]
-          .filter(Boolean)
-          .join(' · ') || 'None',
+        label: 'Discount Duration',
+        value: discount ? (discount.durationMonths ? `${discount.durationMonths} months` : 'No expiry') : 'N/A',
       },
+      { label: 'Add-ons', value: addons.length ? addons.map((a) => `${a.name} (QR ${a.mrcQAR}/mo)`).join(', ') : 'None' },
+      { label: 'SIM Type', value: simType?.simType ?? '-' },
       {
-        label: 'Key charges',
-        value: `QR ${dueTodayQar} today · QR ${firstBill.totalQar} first bill · QR ${monthlyRecurringQar}/mo thereafter`,
+        label: 'SIM Number / ICCID',
+        value:
+          simType?.simType === 'Physical'
+            ? simSerial
+              ? `${simSerial}${simIccid ? ` (ICCID: ${simIccid})` : ''}`
+              : '-'
+            : // The eSIM's activation code is deliberately NOT read back here -
+              // it is the same string that generates the QR, and this journey's
+              // own rule is that nothing eSIM-shaped is shown active before
+              // payment (SimTypeStep's own note). Confirming issuance without
+              // printing the code keeps that true on this panel too.
+              simType?.simType === 'eSIM'
+              ? 'eSIM - active after payment and order submission'
+              : '-',
       },
-      ...(creditLimitQar !== undefined
+      { label: 'Plan Lock-in', value: plan.commitmentMonths ? `${plan.commitmentMonths} months` : 'No lock-in' },
+      ...(isStarNumber
         ? [
-            { label: 'Credit limit', value: `QR ${creditLimitQar}` },
-            // Mirrors the visible screen's own fallback (2026-09-28): the
-            // agent's actual Bill Limit figure once one has been set, the
-            // credit-limit cap otherwise - keeping this recap and the screen
-            // it is read straight off unable to disagree with each other.
-            { label: 'Bill limit', value: billLimit !== undefined ? `QR ${billLimit}` : `Up to QR ${creditLimitQar}` },
+            {
+              label: 'Star Number Lock-in',
+              value: starTier ? `${starTier.lockInDurationMonths} months` : 'Not yet banded - confirm before signature',
+            },
+            {
+              label: 'Star Number Charges',
+              value:
+                starEntitlementQar !== undefined && numberChargeQar > 0
+                  ? `QR ${numberChargeQar} (QR ${numberDelta} sticker price, QR ${starEntitlementQar} entitled on this plan)`
+                  : `No extra charge${starEntitlementQar !== undefined ? ` - within the QR ${starEntitlementQar} plan entitlement` : ''}`,
+            },
           ]
         : []),
       {
-        label: 'Important terms',
-        value: 'VAT included in the monthly figure. Cancelling inside any lock-in ends the agreement early.',
+        label: 'Key Charges',
+        value: `QR ${dueTodayQar} today · QR ${firstBill.totalQar} first bill · QR ${monthlyRecurringQar}/mo thereafter`,
       },
+      {
+        label: 'Cancellation Implications',
+        value:
+          [
+            plan.commitmentMonths
+              ? `Ending the plan before ${plan.commitmentMonths} months incurs early-termination charges.`
+              : null,
+            isStarNumber && starTier?.lockInDurationMonths
+              ? `The star number carries a separate ${starTier.lockInDurationMonths}-month lock-in.`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(' ') || 'No lock-in - this order can be cancelled anytime without early-termination charges.',
+      },
+      {
+        label: 'Total Payable Today',
+        value: `QR ${dueTodayQar}${
+          [
+            hrnAdvance > 0 ? `QR ${hrnAdvance} HRN advance` : null,
+            isStarNumber && numberChargeQar > 0 ? `QR ${numberChargeQar} Star Number charge` : null,
+          ].filter(Boolean).length
+            ? ` (includes ${[
+                hrnAdvance > 0 ? `QR ${hrnAdvance} HRN advance` : null,
+                isStarNumber && numberChargeQar > 0 ? `QR ${numberChargeQar} Star Number charge` : null,
+              ]
+                .filter(Boolean)
+                .join(' + ')})`
+            : ''
+        }`,
+      },
+      {
+        label: 'Prorated First Bill',
+        value: `QR ${firstBill.totalQar} (${firstBill.proratedDays} of ${firstBill.cycleDays} days this cycle, plus one month in advance)`,
+      },
+      { label: 'Approximate Subsequent Bill', value: `QR ${monthlyRecurringQar}/mo` },
     ]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    customerName,
     plan?.productId,
     discount?.addonDiscountId,
+    discount?.durationMonths,
     addons.length,
     msisdn,
     numberDelta,
     dueTodayQar,
     monthlyRecurringQar,
     starTier?.tierId,
-    creditLimitQar,
-    billLimit,
+    simType?.simType,
+    simType?.simSerial,
+    simType?.simIccid,
   ]);
 
   const Row = ({ label, value, detail }: { label: string; value: string; detail?: string }) => (
@@ -273,6 +384,14 @@ export function CheckoutSummaryStep({
   const numberDetail = msisdn
     ? [
         isStarNumber ? `Star value QR ${numberDelta} one-time` : null,
+        // BR-115 entitlement/overage, stated either way rather than only when
+        // it bites - "no extra charge" is as much a fact the agent should be
+        // able to read back as "QR X extra" is.
+        isStarNumber && starEntitlementQar !== undefined
+          ? numberChargeQar > 0
+            ? `QR ${numberChargeQar} extra beyond the QR ${starEntitlementQar} plan entitlement`
+            : `Within the QR ${starEntitlementQar} plan entitlement - no extra charge`
+          : null,
         'Discount: None',
         isStarNumber
           ? starTier
@@ -389,8 +508,18 @@ export function CheckoutSummaryStep({
         </div>
         {isStarNumber && (
           <div className="flex justify-between text-fg-2 text-[length:var(--fs-caption)]">
-            <span>Star Number charge</span>
-            <span>QR {numberDelta}</span>
+            <span>
+              Star Number charge
+              {/* BR-115: only shown when there actually IS an overage - a QR 0
+                  caption under a QR 0 charge answers a question nobody asked,
+                  same reasoning as the rest of this itemisation. */}
+              {starEntitlementQar !== undefined && numberChargeQar > 0 && (
+                <span className="block text-muted">
+                  QR {numberDelta} sticker price, QR {starEntitlementQar} entitled on this plan
+                </span>
+              )}
+            </span>
+            <span>QR {numberChargeQar}</span>
           </div>
         )}
         {hrnAdvance > 0 && (

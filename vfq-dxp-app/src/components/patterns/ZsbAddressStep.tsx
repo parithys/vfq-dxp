@@ -8,16 +8,41 @@ export interface ZsbAddressValue {
   zone?: string;
   streetNo?: string;
   buildingNo?: string;
+  /** Added 2026-09-28, alongside Floor - no evidenced source prefills this;
+   * free text like every other field on this step. */
+  floor?: string;
   aptFlatUnit?: string;
-  /** District, e.g. West Bay. Prefills from the address record's `city`. */
+  /** District/city, e.g. West Bay. Prefills from the address record's `city`
+   * - displayed as "Area/City" (2026-09-28) since that field is exactly what
+   * it holds either way. */
   area?: string;
+  /**
+   * A free-text catch-all line for anything the granular fields above don't
+   * capture (a landmark, a combined description) - added 2026-09-28,
+   * mirroring the `addressLine`/`addressLine1` concept already used by
+   * kid-address-records.json and Customer 360's own Address section, neither
+   * of which this step reads from; this is its own independent field.
+   */
+  addressLine?: string;
   /**
    * Kahramaa / location ID. OPTIONAL for postpaid activation (2026-09-25) -
    * a mobile line needs no serviceable premises, unlike the fibre journeys
    * where a KID is what makes an address installable. Prefills from the
-   * address record's `kahramaaId` when one is on file.
+   * address record's `kahramaaId` when one is on file. Field key unchanged
+   * from before - only the visible label became "Kahramaa ID" (2026-09-28),
+   * dropping the "(Location ID)" gloss now that the label just says what it
+   * is directly.
    */
   kidLocationId?: string;
+  /**
+   * Added 2026-09-28. A DIFFERENT identifier from Kahramaa ID - VFID is
+   * Vodafone's own location code (public/mock-data/vodafone-ids.json, format
+   * like "WKR-0231-A"), which maps to one or more Kahramaa IDs rather than
+   * being one. Free text here, same as every other field on this step: nothing
+   * in this component validates or resolves it against that dataset, matching
+   * how Kahramaa ID itself is captured (evidenced free entry, not a lookup).
+   */
+  vodafoneId?: string;
   fetchedFromMoi?: boolean;
 }
 
@@ -159,42 +184,63 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
             value={value.buildingNo ?? ''}
             onChange={(e) => onChange({ ...value, buildingNo: e.target.value })}
           />
+          {/* Floor, added 2026-09-28 between Building and Unit/Apartment -
+              the natural order an agent reads a premises out in (building,
+              then floor, then unit). No evidenced source prefills it; free
+              text like the rest of this step. */}
+          <Input
+            label="Floor"
+            placeholder="e.g. 4th Floor"
+            value={value.floor ?? ''}
+            onChange={(e) => onChange({ ...value, floor: e.target.value })}
+          />
           <Input
             label="Unit / Apartment"
             placeholder="e.g. Apt 4B"
             value={value.aptFlatUnit ?? ''}
             onChange={(e) => onChange({ ...value, aptFlatUnit: e.target.value })}
           />
-          {/* Area and KID span the full width, matching the mockup - they are
-              single fields per row rather than a pair. */}
+          {/* Area/City paired with Unit/Apartment (2026-09-28 swap - was
+              paired with Kahramaa ID below, and Vodafone ID sat here). */}
+          <Autocomplete
+            label="Area/City"
+            placeholder="e.g. West Bay"
+            options={areaOptions}
+            value={value.area ?? ''}
+            onChange={(area) => onChange({ ...value, area })}
+          />
+          {/* Kahramaa ID paired with Vodafone ID (2026-09-28 swap - order
+              reversed again; was Vodafone ID then Kahramaa ID). Explicitly
+              labelled optional. Every field on this step is Mandatory: No
+              per FLD-523-526, but KID is the one an agent would reasonably
+              expect to be required - it IS required in the fibre journeys,
+              where it identifies a serviceable premises. A postpaid mobile
+              line needs no premises, so saying so here saves the agent
+              hunting for a value they do not need. */}
+          <Input
+            label="Kahramaa ID"
+            placeholder="e.g. KID-00123456"
+            value={value.kidLocationId ?? ''}
+            onChange={(e) => onChange({ ...value, kidLocationId: e.target.value })}
+          />
+          {/* Vodafone ID paired with Kahramaa ID. Both are location
+              identifiers, sharing this row per the original 2026-09-28
+              "same row" direction that still applies. */}
+          <Input
+            label="Vodafone ID"
+            placeholder="e.g. WKR-0231-A"
+            value={value.vodafoneId ?? ''}
+            onChange={(e) => onChange({ ...value, vodafoneId: e.target.value })}
+          />
           <div className="col-span-2">
-            {/* Autocomplete, not a plain text box (2026-09-27). Suggestions
-                come from the `area` values on kid-address-records - the only
-                dataset in this corpus that carries Qatari area names - so the
-                list is real rather than a fabricated gazetteer.
-                Still FREE TEXT: three records cannot cover Qatar, so
-                restricting entry to them would block most addresses. The list
-                speeds up the common ones; anything else can still be typed. */}
-            <Autocomplete
-              label="Area"
-              placeholder="e.g. West Bay"
-              options={areaOptions}
-              value={value.area ?? ''}
-              onChange={(area) => onChange({ ...value, area })}
-            />
-          </div>
-          <div className="col-span-2">
-            {/* Explicitly labelled optional. Every field on this step is
-                Mandatory: No per FLD-523-526, but KID is the one an agent
-                would reasonably expect to be required - it IS required in the
-                fibre journeys, where it identifies a serviceable premises. A
-                postpaid mobile line needs no premises, so saying so here
-                saves the agent hunting for a value they do not need. */}
+            {/* Free-text catch-all, added 2026-09-28 - see ZsbAddressValue's
+                own note on why this exists alongside the granular fields
+                rather than instead of them. */}
             <Input
-              label="KID (Location ID)"
-              placeholder="e.g. KID-00123456"
-              value={value.kidLocationId ?? ''}
-              onChange={(e) => onChange({ ...value, kidLocationId: e.target.value })}
+              label="Address Line"
+              placeholder="e.g. Near City Center Mall, opposite Al Rayyan park"
+              value={value.addressLine ?? ''}
+              onChange={(e) => onChange({ ...value, addressLine: e.target.value })}
             />
           </div>
       </div>

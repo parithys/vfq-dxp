@@ -58,6 +58,14 @@ interface QidNumberFieldProps {
    * caller owns what the status says; this component knows nothing about MOI.
    */
   status?: ReactNode;
+  /**
+   * A second, smaller line under the label row, right-aligned under `status`
+   * (2026-09-28) - for a fact ABOUT that status, such as when a lookup was
+   * last refreshed (e.g. "MOI Update Time: ..."). Same slot philosophy as
+   * `status`: this component only positions it and still knows nothing about
+   * MOI specifically.
+   */
+  statusDetail?: ReactNode;
 }
 const CHECK = 'M20 6L9 17l-5-5';
 const SEARCH_ICON = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3';
@@ -192,6 +200,7 @@ export function QidNumberField({
   readOnly = false,
   hint,
   status,
+  statusDetail,
 }: QidNumberFieldProps) {
   const current = ID_TYPES.find((t) => t.type === idType) ?? ID_TYPES[0];
 
@@ -209,6 +218,10 @@ export function QidNumberField({
         </label>
         {status}
       </div>
+      {/* Right-aligned under `status`, same reasoning as that slot - a fact
+          about the lookup, not about the field itself, so it reads as an
+          annex to the badge above it rather than a second label. */}
+      {statusDetail && <p className="text-[length:var(--fs-caption)] text-muted text-right -mt-0.5 mb-1">{statusDetail}</p>}
       <div className="flex gap-2">
         {/* readOnly, not disabled: a scanned number is data the agent reads
             back off the screen, and disabled styling drops it to

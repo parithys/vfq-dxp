@@ -47,6 +47,11 @@ export interface GuidedContactValue {
    * `name` string - see identityFromMoi. Optional by design: a two-token name
    * has no middle, and a mandatory read-only field with no source deadlocks
    * Continue (the exact failure `gender` was added to fix).
+   *
+   * Displayed as "Middle Name(s)" (2026-09-28): this can hold up to three
+   * combined tokens (the 2nd-4th names), not a single middle name, and the
+   * plural label says so rather than implying one name where several may
+   * sit.
    */
   middleName?: string;
   lastName?: string;
@@ -343,8 +348,17 @@ function identityFromMoi(moi: MoiResult | undefined) {
     // this corpus routinely carry 3-4 tokens ("Ahmed Abdulla Al-Sulaiti"), which
     // the old two-way split folded entirely into Last Name.
     // A two-token name yields an empty middle rather than a guessed one.
+    //
+    // Capped to the 2nd-4th name specifically as of 2026-09-28 (Qatar ID's own
+    // five-slot convention: given name, up to three father's/grandfather's
+    // names, then family name) rather than "everything between first and
+    // last" - the old slice(1, -1) would have folded a hypothetical 6th token
+    // into Middle Name(s) too. No name in this corpus actually reaches five
+    // tokens, so this only changes behaviour nothing here has ever exercised;
+    // it does not invent a rule for a sixth name, which stays uncaptured
+    // rather than guessed at.
     firstName: parts[0] ?? '',
-    middleName: parts.length > 2 ? parts.slice(1, -1).join(' ') : '',
+    middleName: parts.length > 2 ? parts.slice(1, Math.min(4, parts.length - 1)).join(' ') : '',
     lastName: parts.length > 1 ? parts[parts.length - 1] : '',
     // MOI returns ISO (1985-03-12); the field is masked DD/MM/YYYY. Without
     // this the prefilled value would fail isValidDob and block Continue for
@@ -434,12 +448,15 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
               editable, so the agent can still correct the two fields a
               customer actually contests at the counter. */}
           <Input label="First Name" required readOnly value={value.firstName ?? ''} onChange={() => {}} />
-          {/* Middle Name added 2026-09-27. Not `required`: MOI returns a single
+          {/* Middle Name(s) added 2026-09-27, relabelled with the "(s)"
+              2026-09-28 - identityFromMoi combines the 2nd-4th name tokens
+              here, so the label says plural rather than implying one name
+              where up to three may sit. Not `required`: MOI returns a single
               name string and plenty of records are two tokens, so a mandatory
               middle name would block Continue for every customer who has none
               on file - the one failure mode the read-only identity fields were
               already shown to cause. */}
-          <Input label="Middle Name" readOnly value={value.middleName ?? ''} onChange={() => {}} />
+          <Input label="Middle Name(s)" readOnly value={value.middleName ?? ''} onChange={() => {}} />
           <Input label="Last Name" required readOnly value={value.lastName ?? ''} onChange={() => {}} />
           {/* The DD/MM/YYYY hint is the field's PLACEHOLDER, not a caption
               beneath it (2026-09-27). As a caption it sat under a field that

@@ -230,7 +230,12 @@ export function CafSignatureCapture({
             facts, not the same one restated. */}
         {!signed && (bullets.length > 0 || (orderSummary && orderSummary.length > 0)) && (
           <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4 space-y-3">
-            <h4 className="text-fg font-medium text-[length:var(--fs-body)]">What the customer is agreeing to</h4>
+            {/* Renamed from "What the customer is agreeing to" (2026-09-28
+                request) to match the heading BR-009's Key Information panel
+                already uses elsewhere (NewMnpWizard, NewPrepaidWizard) -
+                Postpaid-only; the other five journeys sharing this component
+                keep their own heading below, unaffected. */}
+            <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Key Information</h4>
             {bullets.length > 0 && (
               <ul className="list-disc pl-5 space-y-1 text-[length:var(--fs-caption)] text-fg-2">
                 {bullets.map((b) => (
