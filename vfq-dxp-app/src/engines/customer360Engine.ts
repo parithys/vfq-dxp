@@ -51,6 +51,15 @@ export interface AccountRecord {
   billingProfileId?: string;
   subAccountIds?: string[];
   parentAccountId?: string;
+  /** Account Information's AM name/mobile/email/escalation-contact fields -
+   * seeded on ACC-5001 only (accounts.json's own _amNote), not every
+   * account, since Business Care is the only department the source marks
+   * Real Time for these. Absent on every other account. */
+  accountManagerName?: string;
+  accountManagerMobile?: string;
+  accountManagerEmail?: string;
+  backupAccountManagerName?: string;
+  escalationContact?: string;
 }
 
 /**
@@ -157,6 +166,21 @@ export interface Customer360Data {
   /** Device-on-installment plans (device-installments.json), joined by
    * accountId - also feeds "Contact/Assets Information". */
   deviceInstallments: Record<string, unknown>[];
+  /** Add-on/discount catalogue entries (addons-discounts.json), joined by
+   * planId against this customer's own installedAssets[].promotion values -
+   * Assets' Pending Discounts/Active Add-on/Active Discount/Discount Expiry
+   * fields. Verified real overlap (PROD-100/200/201 appear in both files),
+   * unlike leads/crossSalesOffers above. */
+  addonsDiscounts: Record<string, unknown>[];
+  /** Authorized third parties on an account (authorised-contacts.json),
+   * joined by accountId - Contact Information's "Authorized person(s)/
+   * Role/email" fields. Carries no phone/mobile field, so "Authorized
+   * Mobile" stays unbacked even where this join has rows. */
+  authorisedContacts: Record<string, unknown>[];
+  /** Transfer-of-ownership cases (ton-cases.json), joined by this customer
+   * appearing as partyA or partyB - Account Information's "Pending TON
+   * requests" field. */
+  tonCases: Record<string, unknown>[];
 }
 
 // Read-side aggregation - no unified "Customer 360" entity exists in the mock
@@ -194,6 +218,9 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     leads,
     crossSalesOffers,
     deviceInstallments,
+    addonsDiscounts,
+    authorisedContacts,
+    tonCases,
   ] = await Promise.all([
     mockDataEngine.list<CustomerRecord>('customers'),
     mockDataEngine.list<AccountRecord>('accounts'),
@@ -222,6 +249,9 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     mockDataEngine.list<Record<string, unknown>>('leads'),
     mockDataEngine.list<Record<string, unknown>>('cross-sales-offers'),
     mockDataEngine.list<Record<string, unknown>>('device-installments'),
+    mockDataEngine.list<Record<string, unknown>>('addons-discounts'),
+    mockDataEngine.list<Record<string, unknown>>('authorised-contacts'),
+    mockDataEngine.list<Record<string, unknown>>('ton-cases'),
   ]);
 
   const customer = customers.find((c) => c.customerId === customerId);
@@ -236,6 +266,8 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
   const customerContacts = contacts.filter((c) => c.customerId === customerId);
   const contactIds = new Set(customerContacts.map((c) => c.contactRecordId));
   const recordIds = new Set([...accountIds, ...contactIds]);
+  const customerInstalledAssets = installedAssets.filter((ia) => accountIds.has(ia.accountId as string));
+  const promotionIds = new Set(customerInstalledAssets.map((ia) => ia.promotion).filter(Boolean));
 
   return {
     customer,
@@ -249,7 +281,7 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     deposits: deposits.filter((d) => accountIds.has(d.accountId as string)),
     tickets: tickets.filter((t) => t.customerId === customerId),
     simSwapOrders: simSwapOrders.filter((s) => customerMsisdns.has(s.msisdn as string)),
-    installedAssets: installedAssets.filter((ia) => accountIds.has(ia.accountId as string)),
+    installedAssets: customerInstalledAssets,
     cafForms: cafForms.filter((f) => f.customerId === customerId),
     identityDocuments: identityDocuments.filter((d) => d.customerId === customerId),
     activities: activities.filter((a) => accountIds.has(a.accountId as string)),
@@ -265,6 +297,13 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     leads: leads.filter((l) => l.mobileNumber && l.mobileNumber === customer.phone),
     crossSalesOffers: crossSalesOffers.filter((o) => contactIds.has(o.contactId as string)),
     deviceInstallments: deviceInstallments.filter((d) => accountIds.has(d.accountId as string)),
+    addonsDiscounts: addonsDiscounts.filter((ad) => promotionIds.has(ad.planId as string)),
+    authorisedContacts: authorisedContacts.filter((ac) => accountIds.has(ac.accountId as string)),
+    tonCases: tonCases.filter((t) => {
+      const partyA = t.partyA as { customerId?: string } | undefined;
+      const partyB = t.partyB as { customerId?: string } | undefined;
+      return partyA?.customerId === customerId || partyB?.customerId === customerId;
+    }),
   };
 }
 

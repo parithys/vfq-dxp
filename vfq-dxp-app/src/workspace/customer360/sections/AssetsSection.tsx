@@ -7,6 +7,8 @@ import { MobileSection } from './MobileSection';
 import { FibreHomeSection } from './FibreHomeSection';
 import { EnterpriseSection } from './EnterpriseSection';
 import { ProductsAssetsSection } from './MiscSections';
+import { TopicFieldsSection } from './TopicFieldsSection';
+import { buildAssetsFieldResolver } from './assetsResolvers';
 
 export type AssetsSubView = 'overview' | ServiceTab | 'enterprise';
 
@@ -26,6 +28,7 @@ export function AssetsSection({
   selectedServiceRef,
   initialSubView,
   data,
+  personaId,
 }: {
   customer: ActiveCustomerSummary;
   services: CustomerService[];
@@ -36,6 +39,7 @@ export function AssetsSection({
   selectedServiceRef?: string;
   initialSubView: AssetsSubView;
   data: Customer360Data;
+  personaId: string | undefined;
 }) {
   const [subView, setSubView] = useState<AssetsSubView>(initialSubView);
 
@@ -50,7 +54,20 @@ export function AssetsSection({
   const hasServiceOn = (tab: ServiceTab) => (servicesLoaded ? servicesFor(tab).length > 0 : undefined);
 
   const tabs: TabItem[] = [
-    { key: 'overview', label: 'Overview', content: <ProductsAssetsSection data={data} /> },
+    {
+      key: 'overview',
+      label: 'Overview',
+      content: (
+        <div className="space-y-6">
+          <ProductsAssetsSection data={data} />
+          {/* Assets fields this corpus tracks per ACCOUNT rather than per
+              individual line (balance, usage, device-installment) - shown
+              once here rather than repeated identically on every line's
+              expandable panel. */}
+          <TopicFieldsSection personaId={personaId} topic="Assets" resolveValue={buildAssetsFieldResolver(undefined, data)} />
+        </div>
+      ),
+    },
     {
       key: 'mobile',
       label: 'Mobile',
@@ -60,6 +77,8 @@ export function AssetsSection({
           services={servicesFor('mobile')}
           selectedServiceRef={selectedServiceRef}
           hasExistingService={hasServiceOn('mobile')}
+          personaId={personaId}
+          data={data}
         />
       ),
     },
@@ -72,6 +91,8 @@ export function AssetsSection({
           services={servicesFor('fibre')}
           selectedServiceRef={selectedServiceRef}
           hasExistingService={hasServiceOn('fibre')}
+          personaId={personaId}
+          data={data}
         />
       ),
     },

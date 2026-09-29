@@ -2,6 +2,8 @@ import type { ActiveCustomerSummary } from '../../../stores/activeCustomerStore'
 import { ProductActionGroups, type ProductActionGroup } from '../ProductActionGroups';
 import { ServiceList } from '../ServiceList';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
+import type { Customer360Data } from '../../../engines/customer360Engine';
+import { buildAssetsFieldResolver } from './assetsResolvers';
 
 // Product taxonomy per the redesign brief. Only MNP/FNP Porting and New
 // Connection map to screens that actually exist in the 213-screen catalogue
@@ -46,18 +48,31 @@ export function MobileSection({
   services,
   selectedServiceRef,
   hasExistingService,
+  personaId,
+  data,
 }: {
   customer: ActiveCustomerSummary;
   services: CustomerService[];
   selectedServiceRef?: string;
   hasExistingService?: boolean;
+  /** Backs each line's expandable Assets field panel (2026-09-29 rebuild) -
+   * see ServiceList's own note on why this is per-service, not one flat
+   * panel for the tab. */
+  personaId: string | undefined;
+  data: Customer360Data;
 }) {
   return (
     <div>
       {/* The lines themselves, replacing an "N active postpaid lines on file"
           count that named none of them - and that was mobile-only, so a
           fibre-or-IoT customer read as having nothing. */}
-      <ServiceList services={services} selectedRef={selectedServiceRef} emptyMessage="No mobile services on file." />
+      <ServiceList
+        services={services}
+        selectedRef={selectedServiceRef}
+        emptyMessage="No mobile services on file."
+        personaId={personaId}
+        resolveField={(service, details) => buildAssetsFieldResolver(service, data)(details)}
+      />
       <ProductActionGroups groups={GROUPS} customer={customer} hasExistingService={hasExistingService} />
     </div>
   );

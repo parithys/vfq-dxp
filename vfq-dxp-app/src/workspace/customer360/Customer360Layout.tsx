@@ -18,18 +18,20 @@ import { MetricCard } from './MetricCard';
 import { downloadCsv } from '../../engines/csvExport';
 import { BellNotificationBanner } from './BellNotificationBanner';
 import { DemographicEditDrawer } from './DemographicEditDrawer';
-import { AccountInformationSection } from './sections/AccountInformationSection';
-import { AddressSection } from './sections/AddressSection';
+import { AssetsSection, type AssetsSubView } from './sections/AssetsSection';
+import { TopicFieldsSection } from './sections/TopicFieldsSection';
+import { accountInformationResolvers, accountInformationRichFields } from './sections/accountInformationResolvers';
+import { billingResolvers } from './sections/billingResolvers';
 import { BillingSection } from './sections/BillingSection';
+import { contactInformationResolvers, contactInformationRichFields } from './sections/contactInformationResolvers';
+import { accountAddressResolvers } from './sections/accountAddressResolvers';
+import { blacklistResolvers } from './sections/blacklistResolvers';
+import { contactAssetsResolvers } from './sections/contactAssetsResolvers';
+import { leadResolvers } from './sections/leadResolvers';
 import { AlertsRisksSection } from './sections/AlertsRisksSection';
 import { AuditTrailSection } from './sections/AuditTrailSection';
-import { AssetsSection, type AssetsSubView } from './sections/AssetsSection';
-import { BlacklistViewSection } from './sections/BlacklistViewSection';
-import { ContactInformationSection } from './sections/ContactInformationSection';
-import { ContactAssetsInformationSection } from './sections/ContactAssetsInformationSection';
-import { TopicFieldsSection } from './sections/TopicFieldsSection';
-import { AccountContactLeadSection } from './sections/AccountContactLeadSection';
-import { PenaltyViewSection } from './sections/PenaltyViewSection';
+import { AddressSection } from './sections/AddressSection';
+import { ContactSection } from './sections/ContactSection';
 
 // Deep links from elsewhere in the app (queue notification, toasts, the
 // Linked Services panel) only ever name one of these three ServiceTab
@@ -190,10 +192,16 @@ export function Customer360Layout() {
     setData((prev) => (prev ? { ...prev, activities: [record, ...prev.activities] } : prev));
 
   // Customer 360's 13 approved tab sections - each is one of
-  // customer360-fields.json's own `topic` values (see
-  // customer360VisibilityEngine.ts), so the visibility engine's department
-  // lookups keep working unchanged even though the *labels* below use the
-  // business's requested wording rather than the JSON's own spelling.
+  // customer360-fields.json's own `topic` values, rendered field-by-field
+  // via TopicFieldsSection against the exact field list
+  // customer360VisibilityEngine.ts returns for the active persona (2026-09-29
+  // full rebuild - see the rebuild plan for the complete field-by-field
+  // provenance). Every tab is gated by isTopicVisible uniformly now,
+  // including the 7 broad ones that were previously always-on - confirmed
+  // with the user this means EBU Operations (VFQ12348) sees zero tabs, since
+  // the source data grants that department no access to any of the 13
+  // topics; the empty-tabs case is handled below rather than passed to
+  // <Tabs>.
   //
   // Ordered by usage/frequency/importance, derived from that same JSON's
   // per-department real-time vs. drill-down density (2026-09-29 request):
@@ -203,37 +211,147 @@ export function Customer360Layout() {
   // topics that are only opened when directly relevant, with EBU last since
   // it touches only 2 of 11 departments and is real-time for none of them.
   const tabs: TabItem[] = [
-    {
-      key: 'account-info',
-      label: 'Account Information',
-      content: <AccountInformationSection customer={data.customer} accounts={data.accounts} services={services} data={data} />,
-    },
-    {
-      key: 'assets',
-      label: 'Assets',
-      content: (
-        <AssetsSection
-          customer={customer}
-          services={services}
-          servicesLoaded={serviceSources !== undefined}
-          selectedServiceRef={selectedServiceRef}
-          initialSubView={assetsSubView}
-          data={data}
-        />
-      ),
-    },
-    { key: 'contact-info', label: 'Contact Information', content: <ContactInformationSection data={data} onTicketCreated={addTicket} /> },
-    { key: 'billing', label: 'Billing & Payments', content: <BillingSection data={data} /> },
-    { key: 'account-address', label: 'Account Address', content: <AddressSection data={data} onTicketCreated={addTicket} /> },
-    { key: 'alerts-risks', label: 'Alert & Risks', content: <AlertsRisksSection data={data} /> },
+    ...(isTopicVisible(activePersonaId, 'Account Information')
+      ? [
+          {
+            key: 'account-info',
+            label: 'Account Information',
+            content: (
+              <TopicFieldsSection
+                personaId={activePersonaId}
+                topic="Account Information"
+                resolveValue={(details) => accountInformationResolvers[details]?.({ data, services })}
+                richFields={accountInformationRichFields({ data, onTicketCreated: addTicket })}
+              />
+            ),
+          },
+        ]
+      : []),
+    ...(isTopicVisible(activePersonaId, 'Assets')
+      ? [
+          {
+            key: 'assets',
+            label: 'Assets',
+            content: (
+              <AssetsSection
+                customer={customer}
+                services={services}
+                servicesLoaded={serviceSources !== undefined}
+                selectedServiceRef={selectedServiceRef}
+                initialSubView={assetsSubView}
+                data={data}
+                personaId={activePersonaId}
+              />
+            ),
+          },
+        ]
+      : []),
+    ...(isTopicVisible(activePersonaId, 'Contact Information')
+      ? [
+          {
+            key: 'contact-info',
+            label: 'Contact Information',
+            content: (
+              <TopicFieldsSection
+                personaId={activePersonaId}
+                topic="Contact Information"
+                resolveValue={(details) => contactInformationResolvers[details]?.({ data, services })}
+                richFields={{
+                  ...contactInformationRichFields({ data }),
+                  // The full editable contacts table/drawer, anchored on the
+                  // one field it most directly answers - re-anchored, not
+                  // removed, from the pre-rebuild Contact Information tab.
+                  'First Name & Last Name (Full Name)': <ContactSection data={data} onTicketCreated={addTicket} />,
+                }}
+              />
+            ),
+          },
+        ]
+      : []),
+    ...(isTopicVisible(activePersonaId, 'Billing & Payments')
+      ? [
+          {
+            key: 'billing',
+            label: 'Billing & Payments',
+            content: (
+              <TopicFieldsSection
+                personaId={activePersonaId}
+                topic="Billing & Payments"
+                resolveValue={(details) => billingResolvers[details]?.(data)}
+                // The full bill/payment/adjustment/deposit history tables and
+                // invoice download action, anchored on Latest Bill - re-anchored,
+                // not removed, from the pre-rebuild Billing & Payments tab.
+                richFields={{ 'Latest Bill': <BillingSection data={data} /> }}
+              />
+            ),
+          },
+        ]
+      : []),
+    ...(isTopicVisible(activePersonaId, 'Account Address')
+      ? [
+          {
+            key: 'account-address',
+            label: 'Account Address',
+            content: (
+              <TopicFieldsSection
+                personaId={activePersonaId}
+                topic="Account Address"
+                resolveValue={(details) => accountAddressResolvers[details]?.(data)}
+                // The full editable address table/drawer, anchored on Zone -
+                // re-anchored, not removed, from the pre-rebuild tab.
+                richFields={{ Zone: <AddressSection data={data} onTicketCreated={addTicket} /> }}
+              />
+            ),
+          },
+        ]
+      : []),
+    ...(isTopicVisible(activePersonaId, 'Alerts & Risks')
+      ? [
+          {
+            key: 'alerts-risks',
+            label: 'Alert & Risks',
+            content: (
+              <TopicFieldsSection
+                personaId={activePersonaId}
+                topic="Alerts & Risks"
+                richFields={{ 'Bell Icon/Bulk Notes': <AlertsRisksSection data={data} /> }}
+              />
+            ),
+          },
+        ]
+      : []),
     ...(isTopicVisible(activePersonaId, 'Contact/Assets Information')
-      ? [{ key: 'contact-assets-info', label: 'Contact/Assets Information', content: <ContactAssetsInformationSection data={data} /> }]
+      ? [
+          {
+            key: 'contact-assets-info',
+            label: 'Contact/Assets Information',
+            content: (
+              <TopicFieldsSection
+                personaId={activePersonaId}
+                topic="Contact/Assets Information"
+                resolveValue={(details) => contactAssetsResolvers[details]?.(data)}
+              />
+            ),
+          },
+        ]
       : []),
     ...(isTopicVisible(activePersonaId, 'Blacklist View')
-      ? [{ key: 'blacklist', label: 'Blacklist View', content: <BlacklistViewSection data={data} /> }]
+      ? [
+          {
+            key: 'blacklist',
+            label: 'Blacklist View',
+            content: <TopicFieldsSection personaId={activePersonaId} topic="Blacklist View" resolveValue={(details) => blacklistResolvers[details]?.(data)} />,
+          },
+        ]
       : []),
     ...(isTopicVisible(activePersonaId, 'Account/Contact Lead')
-      ? [{ key: 'account-contact-lead', label: 'Account/Contact Lead', content: <AccountContactLeadSection data={data} /> }]
+      ? [
+          {
+            key: 'account-contact-lead',
+            label: 'Account/Contact Lead',
+            content: <TopicFieldsSection personaId={activePersonaId} topic="Account/Contact Lead" resolveValue={(details) => leadResolvers[details]?.(data)} />,
+          },
+        ]
       : []),
     ...(isTopicVisible(activePersonaId, 'Activation/Modification Sidebar')
       ? [
@@ -245,13 +363,40 @@ export function Customer360Layout() {
         ]
       : []),
     ...(isTopicVisible(activePersonaId, 'Penalty View')
-      ? [{ key: 'penalty-view', label: 'Penalty View', content: <PenaltyViewSection data={data} /> }]
+      ? [
+          {
+            key: 'penalty-view',
+            label: 'Penalty View',
+            // Both of the spec's two named fields (Star number Penalty,
+            // Device Penalty) are genuinely unbacked - the real
+            // commitment-penalties.json records this corpus has are
+            // disconnection/MNP-port-out penalties, a different category
+            // than either named field, so mapping them here would
+            // misrepresent what kind of penalty they are. Renders both as
+            // an honest "Not available" rather than a mislabeled value.
+            content: <TopicFieldsSection personaId={activePersonaId} topic="Penalty View" />,
+          },
+        ]
       : []),
-    {
-      key: 'audit-trail',
-      label: 'Audit Trail',
-      content: <AuditTrailSection data={data} onTicketCreated={addTicket} onInteractionLogged={onInteractionLogged} />,
-    },
+    ...(isTopicVisible(activePersonaId, 'Audit Trail')
+      ? [
+          {
+            key: 'audit-trail',
+            label: 'Audit Trail',
+            content: (
+              <TopicFieldsSection
+                personaId={activePersonaId}
+                topic="Audit Trail"
+                richFields={{
+                  'Audit Trail (Orders,Contact, Account, Activity,TT)': (
+                    <AuditTrailSection data={data} onTicketCreated={addTicket} onInteractionLogged={onInteractionLogged} />
+                  ),
+                }}
+              />
+            ),
+          },
+        ]
+      : []),
     ...(isTopicVisible(activePersonaId, 'EBU')
       ? [{ key: 'ebu', label: 'EBU', content: <TopicFieldsSection personaId={activePersonaId} topic="EBU" /> }]
       : []),
@@ -325,18 +470,28 @@ export function Customer360Layout() {
       </div>
 
       <BellNotificationBanner customerId={data.customer.customerId} />
-      {/* Choosing a tab by hand clears the deep-linked selection. Without
-          this, the "Selected" marker would stay on a service in a tab the
-          agent has navigated away from and back to for their own reasons. */}
-      <Tabs
-        items={tabs}
-        orientation="vertical"
-        activeKey={activeTab}
-        onChange={(key) => {
-          setActiveTab(key);
-          setSelectedServiceRef(undefined);
-        }}
-      />
+      {tabs.length === 0 ? (
+        // Deliberate strict compliance with the source visibility data
+        // (2026-09-29 decision): a department granted no real-time or
+        // drill-down access to any of the 13 topics (e.g. EBU Operations)
+        // sees this rather than a crash or a blank/broken tab strip.
+        <p className="text-fg-2 text-[length:var(--fs-body)] rounded-[var(--radius-card)] border border-border-soft bg-bg p-6">
+          No Customer 360 sections are visible for your role.
+        </p>
+      ) : (
+        // Choosing a tab by hand clears the deep-linked selection. Without
+        // this, the "Selected" marker would stay on a service in a tab the
+        // agent has navigated away from and back to for their own reasons.
+        <Tabs
+          items={tabs}
+          orientation="vertical"
+          activeKey={activeTab}
+          onChange={(key) => {
+            setActiveTab(key);
+            setSelectedServiceRef(undefined);
+          }}
+        />
+      )}
 
       {verificationGate}
       <DemographicEditDrawer

@@ -1,57 +1,14 @@
 import { useState } from 'react';
 import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
-import { Tooltip } from '../../../components/primitives/Tooltip';
-import { Icon } from '../../../components/primitives/Icon';
-import { Button, PRIMARY_SURFACE } from '../../../components/primitives/Button';
+import { Button } from '../../../components/primitives/Button';
 import { Drawer } from '../../../components/primitives/Drawer';
 import { Select } from '../../../components/primitives/Select';
 import { Input } from '../../../components/primitives/Input';
 import { Textarea } from '../../../components/primitives/Textarea';
-import { downloadCsv } from '../../../engines/csvExport';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import { useEntityStore } from '../../../stores/entityStore';
 import type { Customer360Data } from '../../../engines/customer360Engine';
-
-const DOWNLOAD_ICON = 'M12 15V3 M7 10l5 5 5-5 M4 21h16';
-
-// CUS-001-ATT-01-B: one shared download affordance for every attachment
-// table - reuses the CSV-export pattern already established for Profile
-// Export/Invoice Download rather than fabricating real file storage.
-function useAttachmentDownload() {
-  const pushToast = useNotificationStore((s) => s.pushToast);
-  return (label: string, id: string, row: Record<string, unknown>) => {
-    downloadCsv(`${label}-${id}.csv`, [row]);
-    pushToast('success', `${label} ${id} downloaded.`);
-  };
-}
-
-function DownloadButton({ onClick }: { onClick: () => void }) {
-  return (
-    <Tooltip content="Download" placement="top">
-      <button onClick={(e) => { e.stopPropagation(); onClick(); }} aria-label="Download attachment" className="text-muted hover:text-fg p-1">
-        <Icon path={DOWNLOAD_ICON} className="w-4 h-4" />
-      </button>
-    </Tooltip>
-  );
-}
-
-type AttachmentFilter = 'Active' | 'Archived';
-function ActiveArchivedToggle({ value, onChange }: { value: AttachmentFilter; onChange: (v: AttachmentFilter) => void }) {
-  return (
-    <div className="inline-flex rounded-[var(--radius-button)] border border-border-soft overflow-hidden text-[length:var(--fs-caption)]">
-      {(['Active', 'Archived'] as const).map((opt) => (
-        <button
-          key={opt}
-          onClick={() => onChange(opt)}
-          className={`px-3 py-1.5 font-medium ${value === opt ? `${PRIMARY_SURFACE} enabled:hover:bg-[image:var(--accent-gradient-hover)]` : 'bg-bg text-fg-2 hover:bg-surface'}`}
-        >
-          {opt}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 // Seven of Customer 360's thirteen sections are single-purpose read-only
 // views over data customer360Engine already joined - no unique interaction
@@ -194,76 +151,6 @@ export function CommunicationsSection({ data }: { data: Customer360Data }) {
   );
 }
 
-// CUS-001-ATT-01-A/B, ATT-03/ATT-01-C: one Active/Archived toggle serves
-// both attachment tables - this is the single implementation that satisfies
-// ATT-03 and its source-register duplicate ATT-01-C at once, per the audit's
-// Phase 3 finding that the BRSD's own redundancy should not be propagated
-// into two separate code paths. CAF forms carry `status`; identity documents
-// carry `docStatus` (kept distinct from their pre-existing `status` field,
-// which is a *validation* status, not an archival one).
-export function DocumentsSection({ data }: { data: Customer360Data }) {
-  const [filter, setFilter] = useState<AttachmentFilter>('Active');
-  const download = useAttachmentDownload();
-  const cafRows = data.cafForms.filter((r) => (r.status ?? 'Active') === filter);
-  const idRows = data.identityDocuments.filter((r) => (r.docStatus ?? 'Active') === filter);
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <SectionTitle>Attachments</SectionTitle>
-        <ActiveArchivedToggle value={filter} onChange={setFilter} />
-      </div>
-      <section>
-        <SectionTitle>Signed forms (CAF)</SectionTitle>
-        <DataTable
-          rows={cafRows}
-          rowKey={(r) => String(r.cafId)}
-          emptyMessage={`No ${filter.toLowerCase()} signed forms on file.`}
-          columns={[
-            { key: 'formId', header: 'Form' },
-            { key: 'signedDate', header: 'Signed' },
-            { key: 'uploadDateTime', header: 'Upload Date/Time' },
-            { key: 'serviceReference', header: 'Service Reference' },
-            { key: 'signatureMethod', header: 'Method' },
-            {
-              key: 'status',
-              header: 'Status',
-              render: (r) => <Badge variant={r.status === 'Archived' ? 'filled-neutral' : 'success'}>{String(r.status ?? 'Active')}</Badge>,
-            },
-            { key: 'download', header: '', sortable: false, render: (r) => <DownloadButton onClick={() => download('CAF', String(r.cafId), r)} /> },
-          ]}
-        />
-      </section>
-      <section>
-        <SectionTitle>Identity documents</SectionTitle>
-        <DataTable
-          rows={idRows}
-          rowKey={(r) => String(r.identityDocumentId)}
-          emptyMessage={`No ${filter.toLowerCase()} identity documents on file.`}
-          columns={[
-            { key: 'documentType', header: 'Type' },
-            { key: 'documentNumber', header: 'Number' },
-            { key: 'uploadDateTime', header: 'Upload Date/Time' },
-            { key: 'serviceReference', header: 'Service Reference' },
-            { key: 'validationPath', header: 'Validation path' },
-            {
-              key: 'status',
-              header: 'Validation Status',
-              render: (r) => <Badge variant={r.status === 'Validated' ? 'success' : 'filled-neutral'}>{String(r.status)}</Badge>,
-            },
-            {
-              key: 'docStatus',
-              header: 'Archive Status',
-              render: (r) => <Badge variant={r.docStatus === 'Archived' ? 'filled-neutral' : 'success'}>{String(r.docStatus ?? 'Active')}</Badge>,
-            },
-            { key: 'download', header: '', sortable: false, render: (r) => <DownloadButton onClick={() => download('Identity-Document', String(r.identityDocumentId), r)} /> },
-          ]}
-        />
-      </section>
-    </div>
-  );
-}
-
 export function NotificationsSection({ data }: { data: Customer360Data }) {
   return (
     <DataTable
@@ -277,33 +164,6 @@ export function NotificationsSection({ data }: { data: Customer360Data }) {
         { key: 'state', header: 'Delivery state' },
       ]}
     />
-  );
-}
-
-export function ConsentSection({ data }: { data: Customer360Data }) {
-  const profile = data.billingProfiles[0];
-  return (
-    <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
-      <SectionTitle>Consent &amp; Preferences</SectionTitle>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <div className="text-[length:var(--fs-caption)] text-muted">Preferred language</div>
-          <div className="text-fg text-[length:var(--fs-body)]">{data.customer.preferredLanguage ?? '-'}</div>
-        </div>
-        <div>
-          <div className="text-[length:var(--fs-caption)] text-muted">Bill medium</div>
-          <div className="text-fg text-[length:var(--fs-body)]">{String(profile?.billMedium ?? '-')}</div>
-        </div>
-        <div>
-          <div className="text-[length:var(--fs-caption)] text-muted">AutoPay</div>
-          <div className="text-fg text-[length:var(--fs-body)]">
-            <Badge variant={profile?.autoPayStatus === 'Enrolled' ? 'success' : 'filled-neutral'}>
-              {String(profile?.autoPayStatus ?? 'Not on file')}
-            </Badge>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
 

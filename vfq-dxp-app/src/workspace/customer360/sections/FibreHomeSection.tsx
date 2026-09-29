@@ -2,6 +2,8 @@ import type { ActiveCustomerSummary } from '../../../stores/activeCustomerStore'
 import { ProductActionGroups, type ProductActionGroup } from '../ProductActionGroups';
 import { ServiceList } from '../ServiceList';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
+import type { Customer360Data } from '../../../engines/customer360Engine';
+import { buildAssetsFieldResolver } from './assetsResolvers';
 
 // Fibre Activation (SCR-043) and FWA/5G Home (SCR-077, one shared wizard for
 // both per the FWA/5G Home module) are the only real entry points today.
@@ -36,11 +38,15 @@ export function FibreHomeSection({
   services,
   selectedServiceRef,
   hasExistingService,
+  personaId,
+  data,
 }: {
   customer: ActiveCustomerSummary;
   services: CustomerService[];
   selectedServiceRef?: string;
   hasExistingService?: boolean;
+  personaId: string | undefined;
+  data: Customer360Data;
 }) {
   return (
     <div>
@@ -49,6 +55,8 @@ export function FibreHomeSection({
         services={services}
         selectedRef={selectedServiceRef}
         emptyMessage="No fibre or home services on file."
+        personaId={personaId}
+        resolveField={(service, details) => buildAssetsFieldResolver(service, data)(details)}
       />
       <ProductActionGroups groups={GROUPS} customer={customer} hasExistingService={hasExistingService} />
     </div>
