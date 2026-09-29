@@ -27,3 +27,8 @@ dist-ssr
 ~$*
 # Local export/zip artefacts of the app itself
 *.zip
+
+# Playwright browser binaries downloaded for doc-generation screenshot
+# capture tooling (docs/**/_data) - large, machine-specific, reproducible
+# via `npx playwright install chromium`.
+.playwright-browsers
