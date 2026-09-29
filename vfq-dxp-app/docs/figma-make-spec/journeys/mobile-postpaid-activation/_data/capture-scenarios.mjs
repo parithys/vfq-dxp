@@ -3,7 +3,6 @@
 import { chromium } from 'playwright';
 
 const BASE = 'http://localhost:5173';
-const JOURNEY_URL = `${BASE}/sim-number-management/new-postpaid-connection-journey-single-scroll-flow`;
 const OUT = '/Users/parithimalsaravanan/claude-projects/vfq/vfq-dxp-app/docs/figma-make-spec/journeys/mobile-postpaid-activation/screenshots';
 
 async function shot(page, id, note = '') {
@@ -28,117 +27,142 @@ async function clickContinue(page) {
 
 async function login(page) {
   await page.goto(BASE);
-  await page.waitForSelector('#staff-id', { timeout: 15000 });
+  await page.waitForSelector('#staff-id', { timeout: 30000 });
   await page.fill('#staff-id', 'VFQ12341');
   await page.fill('#login-password', 'Vodafone@123');
   await page.locator('button', { hasText: 'Sign in with SSO' }).click();
-  await page.waitForSelector('text=Welcome back', { timeout: 15000 });
+  await page.waitForSelector('text=Welcome back', { timeout: 30000 });
 }
 
 async function toJourney(page) {
-  await page.goto(JOURNEY_URL, { state: { startFresh: true } });
-  await page.waitForSelector('text=Step 1 of 9', { timeout: 15000 });
+  // A hard page.goto() straight to the deep route doesn't reliably bring up
+  // the wizard in this environment (confirmed by direct debugging - it hangs
+  // waiting for "Step 1 of 9"); a real client-side navigation, the same way
+  // capture-happy-path.mjs reaches it (clicking the dashboard's quick
+  // action from wherever login() left off), does. page.goto() also has no
+  // `state` option - React Router's location.state can only be set via
+  // client-side navigation anyway, so the startFresh intent from the removed
+  // goto call was never actually reaching the app.
+  const quickAction = page.locator('button', { hasText: 'New Postpaid Connection' });
+  await quickAction.first().click();
+  await page.waitForSelector('text=Step 1 of 9', { timeout: 30000 });
   await page.waitForTimeout(500);
 }
 
-// Enters an ID number directly via manual fallback (typing rather than the
-// scan animation) so eligibility-branch screenshots don't depend on the
-// scan-retake timing loop. GuidedContactStep's autoDetectIdType scan path
-// requires exhausting scan attempts before manual entry unlocks; QidInput's
-// manual number field becomes available after that. We drive it via the
-// "Enter details manually instead" fallback if present, else fall back to
-// clicking an ID type button first (QID) then filling any visible text input
-// in that section.
-async function enterIdManually(page, idNumber) {
-  // Exhaust the two scan attempts quickly by clicking Retake scan twice if the
-  // scanner UI appears; then a manual entry link/button should unlock.
-  await page.locator('button', { hasText: 'Qatar ID (QID)' }).click({ timeout: 5000 }).catch(() => {});
-  await page.waitForTimeout(1000);
-  for (let i = 0; i < 3; i++) {
-    const manualLink = page.getByText('Enter details manually', { exact: false });
-    if (await manualLink.count()) {
-      await manualLink.first().click();
-      break;
+// Resolves a specific identity-documents record by documentNumber, via
+// whichever of the scan simulation's two outcomes actually occurs. Confirmed
+// by direct DOM inspection across multiple runs: the simulated scan is NOT
+// deterministic - it either (a) "successfully reads" a document and
+// auto-fills #qid-number-input as a READ-ONLY resolved value (which one
+// depends on which IDs are unexpired for the searched types - with
+// autoDetectIdType on, QID and Diplomatic ID are searched together, so a
+// success always resolves the same fixed candidate, in practice CUST-1001),
+// or (b) reports "CARD COULD NOT BE READ" after exhausting the 2-attempt
+// budget, at which point #qid-number-input is a genuinely empty, EDITABLE
+// field with a "Fetch" button - this is the real manual-entry path, and
+// IdLookupStep.tsx's own lookup matches by documentNumber regardless of
+// which ID-type button is selected, so any target document can be reached
+// here once this state is hit. Because which outcome occurs is random, this
+// retries the whole Contact step (clearing sessionStorage + reloading) up to
+// maxRestarts times until either outcome resolves to the target number.
+async function resolveIdentity(page, targetIdNumber, { maxRestarts = 5 } = {}) {
+  for (let restart = 0; restart < maxRestarts; restart++) {
+    await page.locator('button', { hasText: 'Qatar ID (QID)' }).click();
+    for (let i = 0; i < 4; i++) {
+      await page.waitForTimeout(1500);
+      const manualField = page.locator('#qid-number-input');
+      if (await manualField.count()) {
+        const isReadonly = await manualField.getAttribute('readonly');
+        if (isReadonly === null) {
+          // Genuinely empty, editable manual-entry field - type our target.
+          await manualField.fill(targetIdNumber);
+          await page.locator('button', { hasText: 'Fetch' }).click();
+          await page.waitForTimeout(1500);
+          return true;
+        }
+        const resolvedValue = await manualField.inputValue();
+        if (resolvedValue === targetIdNumber) return true; // scan happened to match
+        break; // locked to the wrong customer this attempt - restart
+      }
+      const retake = page.locator('button', { hasText: 'Retake scan' });
+      if (await retake.count()) await retake.first().click();
     }
-    const retake = page.locator('button', { hasText: 'Retake scan' });
-    if (await retake.count()) {
-      await retake.first().click();
-      await page.waitForTimeout(1200);
-    } else {
-      await page.waitForTimeout(800);
+    if (restart < maxRestarts - 1) {
+      await page.evaluate(() => sessionStorage.clear());
+      await page.reload();
+      await page.waitForSelector('button:has-text("New Postpaid Connection")', { timeout: 15000 }).catch(() => {});
+      await page.locator('button', { hasText: 'New Postpaid Connection' }).first().click().catch(() => {});
+      await page.waitForSelector('text=Step 1 of 9', { timeout: 15000 }).catch(() => {});
+      await page.waitForTimeout(500);
     }
   }
-  const idField = page.locator('input#id-number, input[placeholder*="ID" i], input[name*="idNumber" i]').first();
-  if (await idField.count()) {
-    await idField.fill(idNumber);
-    await page.keyboard.press('Enter');
-  } else {
-    // Fallback: any empty visible text input in the contact panel.
-    const anyInput = page.locator('main input[type="text"]:visible').first();
-    await anyInput.fill(idNumber);
-    await page.keyboard.press('Enter');
-  }
-  await page.waitForTimeout(1200);
+  return false;
 }
+
+// Convenience wrapper for the happy-path customer, reachable via either
+// scan outcome (success resolves straight to it; failure lands on manual
+// entry, which we then fill with the same number) - see resolveIdentity.
+async function resolveCust1001(page) {
+  await resolveIdentity(page, '28456701234');
+}
+
+// Run one scenario per process invocation: node capture-scenarios.mjs <A-G|all> [port]
+// Each scenario opening then closing its own page against a shared daemon
+// reliably breaks the CDP session for the NEXT browser.newPage() call in
+// this sandbox (confirmed by direct testing - not zero-tabs, not a
+// cross-script issue, just repeated open/close cycles on one connection).
+// One scenario per fresh process+daemon, mirroring capture-happy-path.mjs's
+// single continuous page for its whole run, is the pattern that's actually
+// reliable here.
+const SCENARIO = process.argv[2] || 'all';
+const PORT = process.argv[3] || '9333';
 
 (async () => {
   // See capture-happy-path.mjs's note: attach to the manually-started
   // chrome-headless-shell daemon over CDP rather than launching our own.
-  const browser = await chromium.connectOverCDP('http://127.0.0.1:9333');
+  const browser = await chromium.connectOverCDP(`http://127.0.0.1:${PORT}`);
 
   // --- Scenario A: hard-stop (expired Diplomatic ID + security blacklist), CUST-1006 ---
-  await safe('SCN hard-stop CUST-1006', async () => {
+  if (SCENARIO === 'A' || SCENARIO === 'all') await safe('SCN hard-stop CUST-1006', async () => {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     await login(page);
     await toJourney(page);
-    await page.locator('button', { hasText: 'Diplomatic ID' }).click({ timeout: 5000 }).catch(() => {});
-    await page.waitForTimeout(800);
-    // Try manual entry unlock via retake loop, then fill DIP-QA-004521.
-    for (let i = 0; i < 3; i++) {
-      const manualLink = page.getByText('Enter details manually', { exact: false });
-      if (await manualLink.count()) { await manualLink.first().click(); break; }
-      const retake = page.locator('button', { hasText: 'Retake scan' });
-      if (await retake.count()) { await retake.first().click(); await page.waitForTimeout(1200); }
-      else await page.waitForTimeout(800);
-    }
-    const idField = page.locator('input#id-number, input[placeholder*="ID" i]').first();
-    if (await idField.count()) {
-      await idField.fill('DIP-QA-004521');
-      await page.keyboard.press('Enter');
-    }
-    await page.waitForTimeout(1500);
+    const ok = await resolveIdentity(page, 'DIP-QA-004521');
+    if (!ok) throw new Error('could not reach CUST-1006 within retry budget');
     await shot(page, 'MPA-SCR-01-ST05', 'expired ID + security blacklist compound hard-stop');
     await page.close();
   });
 
   // --- Scenario B: soft-stop (collections blacklist), CUST-1004 / 29011122233 ---
-  await safe('SCN soft-stop CUST-1004', async () => {
+  if (SCENARIO === 'B' || SCENARIO === 'all') await safe('SCN soft-stop CUST-1004', async () => {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     await login(page);
     await toJourney(page);
-    await enterIdManually(page, '29011122233');
+    const ok = await resolveIdentity(page, '29011122233');
+    if (!ok) throw new Error('could not reach CUST-1004 within retry budget');
     await page.waitForTimeout(1000);
     await shot(page, 'MPA-SCR-01-ST06', 'collections soft-stop with Switch to Prepaid button');
     await page.close();
   });
 
   // --- Scenario C: approval-routing (under-18), CUST-9001 / P1234567 ---
-  await safe('SCN approval-routing CUST-9001', async () => {
+  if (SCENARIO === 'C' || SCENARIO === 'all') await safe('SCN approval-routing CUST-9001', async () => {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     await login(page);
     await toJourney(page);
-    await enterIdManually(page, 'P1234567');
+    const ok = await resolveIdentity(page, 'P1234567');
+    if (!ok) throw new Error('could not reach CUST-9001 within retry budget');
     await page.waitForTimeout(1000);
     await shot(page, 'MPA-SCR-01-ST07', 'under-18 approval-routing with Proceed to Approval button');
     await page.close();
   });
 
   // --- Scenario D: validation errors (malformed email / alt phone) ---
-  await safe('SCN validation errors', async () => {
+  if (SCENARIO === 'D' || SCENARIO === 'all') await safe('SCN validation errors', async () => {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     await login(page);
     await toJourney(page);
-    await enterIdManually(page, '28456701234');
+    await resolveCust1001(page);
     await page.waitForTimeout(1000);
     const emailInput = page.getByPlaceholder('customer@example.qa');
     if (await emailInput.count()) {
@@ -157,7 +181,7 @@ async function enterIdManually(page, idNumber) {
   });
 
   // --- Scenario E: Abandon confirmation modal ---
-  await safe('SCN abandon modal', async () => {
+  if (SCENARIO === 'E' || SCENARIO === 'all') await safe('SCN abandon modal', async () => {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     await login(page);
     await toJourney(page);
@@ -168,16 +192,18 @@ async function enterIdManually(page, idNumber) {
   });
 
   // --- Scenario F: Physical SIM path + Plan Details drawer + Billing Setup drawer ---
-  await safe('SCN physical SIM + drawers', async () => {
+  if (SCENARIO === 'F' || SCENARIO === 'all') await safe('SCN physical SIM + drawers', async () => {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     await login(page);
     await toJourney(page);
-    await enterIdManually(page, '28456701234');
+    await resolveCust1001(page);
     const emailInput = page.getByPlaceholder('customer@example.qa');
     if (await emailInput.count()) await emailInput.fill('ahmed.alsulaiti@example.qa');
     const altPhoneInput = page.getByPlaceholder('5566 7766');
     if (await altPhoneInput.count()) await altPhoneInput.fill('55667766');
-    await page.waitForTimeout(600);
+    // Eligibility clears asynchronously after MOI resolves, gating Continue;
+    // give it real margin rather than the earlier fixed 600ms.
+    await page.waitForTimeout(3000);
     await clickContinue(page); // -> billing (address auto-skipped)
     await page.waitForTimeout(1000);
 
@@ -256,16 +282,18 @@ async function enterIdManually(page, idNumber) {
   });
 
   // --- Scenario G: Payment declined + session-expired ---
-  await safe('SCN payment declined + session expired', async () => {
+  if (SCENARIO === 'G' || SCENARIO === 'all') await safe('SCN payment declined + session expired', async () => {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     await login(page);
     await toJourney(page);
-    await enterIdManually(page, '28456701234');
+    await resolveCust1001(page);
     const emailInput = page.getByPlaceholder('customer@example.qa');
     if (await emailInput.count()) await emailInput.fill('ahmed.alsulaiti@example.qa');
     const altPhoneInput = page.getByPlaceholder('5566 7766');
     if (await altPhoneInput.count()) await altPhoneInput.fill('55667766');
-    await page.waitForTimeout(600);
+    // Eligibility clears asynchronously after MOI resolves, gating Continue;
+    // give it real margin rather than the earlier fixed 600ms.
+    await page.waitForTimeout(3000);
     await clickContinue(page); // billing
     await page.waitForTimeout(1000);
     await clickContinue(page); // plan (existing acct path skipped if blocked; best-effort)
@@ -324,5 +352,8 @@ async function enterIdManually(page, idNumber) {
 
   // Do NOT browser.close() here - shared CDP-attached daemon, closed
   // externally by chrome-daemon.sh's caller once all capture scripts finish.
+  // The open CDP websocket otherwise keeps Node's event loop alive forever,
+  // so exit explicitly once the work is done.
   console.log('DONE scenarios');
+  process.exit(0);
 })().catch((e) => { console.error('SCRIPT ERROR', e); process.exit(1); });

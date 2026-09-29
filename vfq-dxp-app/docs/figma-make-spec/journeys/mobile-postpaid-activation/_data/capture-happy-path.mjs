@@ -53,24 +53,28 @@ async function clickContinue(page) {
     await page.locator('button', { hasText: 'Qatar ID (QID)' }).click();
     await page.waitForTimeout(1200);
     await shot(page, 'MPA-SCR-01-ST02', 'scan blurred / mid-scan');
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 8; i++) {
       const moiBadge = page.locator('text=MOI validated successfully');
       if (await moiBadge.count()) break;
       const retake = page.locator('button', { hasText: 'Retake scan' });
       if (await retake.count()) {
         await retake.first().click();
-        await page.waitForTimeout(1400);
+        await page.waitForTimeout(1600);
       } else {
-        await page.waitForTimeout(800);
+        await page.waitForTimeout(1000);
       }
     }
+    // Give the MOI lookup itself room to resolve once scanning succeeds -
+    // the badge appearing and the email/phone fields mounting are two
+    // separate renders, not the same one.
+    await page.getByPlaceholder('customer@example.qa').waitFor({ state: 'visible', timeout: 15000 });
   });
   await page.waitForTimeout(500);
   await shot(page, 'MPA-SCR-01-ST04', 'clean pass, MOI resolved');
 
   await safe('fill email + phone', async () => {
     const emailInput = page.getByPlaceholder('customer@example.qa');
-    await emailInput.waitFor({ state: 'visible', timeout: 5000 });
+    await emailInput.waitFor({ state: 'visible', timeout: 10000 });
     await emailInput.fill('ahmed.alsulaiti@example.qa');
     const altPhoneInput = page.getByPlaceholder('5566 7766');
     await altPhoneInput.fill('55667766');
@@ -201,8 +205,11 @@ async function clickContinue(page) {
     }
   });
 
-  // Do NOT browser.close() here - it's a shared CDP-attached daemon another
-  // script (capture-scenarios.mjs) may still need; just drop this page.
-  await page.close();
+  // Do NOT browser.close() OR page.close() here - it's a shared CDP-attached
+  // chrome-headless-shell daemon another script (capture-scenarios.mjs) may
+  // still need, and that binary exits the instant its last open tab closes.
+  // Leaving this page open keeps the daemon alive. The open CDP websocket
+  // otherwise keeps Node's event loop alive forever too, so exit explicitly.
   console.log('DONE happy path');
+  process.exit(0);
 })().catch((e) => { console.error('SCRIPT ERROR', e); process.exit(1); });
