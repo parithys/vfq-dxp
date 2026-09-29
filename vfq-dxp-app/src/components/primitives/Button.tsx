@@ -122,9 +122,17 @@ const variantClasses: Record<ButtonVariant, string> = {
   // regardless of the transition list in `base`.
   'primary-rect': `${PRIMARY_SURFACE} border enabled:hover:bg-[image:var(--accent-gradient-hover)] enabled:active:scale-[0.99] disabled:opacity-100 disabled:bg-none disabled:bg-[var(--accent-disabled)] rounded-[var(--radius-button)] px-4 py-2`,
   'primary-pill': `${PRIMARY_SURFACE} border enabled:hover:bg-[image:var(--accent-gradient-hover)] enabled:active:scale-[0.99] disabled:opacity-100 disabled:bg-none disabled:bg-[var(--accent-disabled)] rounded-[var(--radius-button)] px-6 py-2.5`,
-  'ghost-rect': 'bg-transparent text-fg border border-border enabled:hover:bg-surface rounded-[var(--radius-button)] px-4 py-2',
+  // `bg-bg` (white) at rest, not `bg-transparent`: a transparent fill on
+  // --page-bg (#f5f7f9) left only a 1px border to read the button by, which
+  // measured no different resting-vs-disabled since `disabled:opacity-40`
+  // had no fill to fade - an enabled Cancel/Back/Close read as inactive.
+  // White-at-rest / --surface-on-hover mirrors secondary-rect's own
+  // resting/hover pair below.
+  'ghost-rect': 'bg-bg text-fg border border-border enabled:hover:bg-surface rounded-[var(--radius-button)] px-4 py-2',
   'glass-pill': 'bg-[var(--white-glass-10)] backdrop-blur text-fg border border-transparent rounded-[var(--radius-button)] px-5 py-2',
-  'content-ghost-pill': 'bg-transparent text-accent border border-transparent enabled:hover:bg-surface-warm rounded-[var(--radius-button)] px-4 py-1.5',
+  // Same fix as ghost-rect above - was bg-transparent AND border-transparent,
+  // i.e. no visible chrome at all until hover.
+  'content-ghost-pill': 'bg-bg text-accent border border-border enabled:hover:bg-surface-warm rounded-[var(--radius-button)] px-4 py-1.5',
   // Same px-4 py-2 box as primary-rect, so the two sit level side by side.
   'secondary-rect': `${SECONDARY_SURFACE} border enabled:hover:bg-surface-warm transition-colors rounded-[var(--radius-button)] px-4 py-2`,
 };
