@@ -8,7 +8,13 @@
     "barringStatus": "Not Barred",
     "barringType": null,
     "barringReason": null,
-    "_barringNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
+    "_barringNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation.",
+    "accountManagerName": "Layla Al-Sada",
+    "accountManagerMobile": "+97455502201",
+    "accountManagerEmail": "layla.alsada@vodafone.qa",
+    "backupAccountManagerName": "Yousef Al-Kaabi",
+    "escalationContact": "+97444100200 (Business Care Escalation Desk)",
+    "_amNote": "App-level demo addition (2026-09-28, Customer 360 redesign) - Account Information's AM name/mobile/email/backup-AM/escalation-contact fields have no evidenced source anywhere in this corpus for a Consumer account; added on this one demo account rather than every account, since Business Care is the only department the source marks Real Time for these fields."
   },
   {
     "accountId": "ACC-5002",

@@ -164,3 +164,19 @@ export interface ModuleHierarchyEntry {
   screenCount: number;
   subModules: SubModule[];
 }
+
+/** One field-level row from "Customer & Agent 360 View_Overall_Draft.xlsx",
+ * sheet "Customer 360 List - FINAL" (2026-09-28 Customer 360 redesign) - see
+ * customer360VisibilityEngine.ts for how `departments` resolves to what an
+ * agent actually sees. `departments` values are 'real-time' | 'drill-down' |
+ * 'n-a' straight from that sheet; a department key absent entirely means the
+ * source left that cell blank (treated the same as 'n-a' by the engine, but
+ * kept distinct here since it traces back to a literal gap in the source
+ * rather than an explicit "not applicable"). */
+export interface Customer360Field {
+  sourceId: number | null;
+  topic: string;
+  component: string | null;
+  details: string;
+  departments: Record<string, 'real-time' | 'drill-down' | 'n-a'>;
+}

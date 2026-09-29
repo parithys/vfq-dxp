@@ -11,7 +11,13 @@
     "creditLimit": null,
     "creditLimitNeedsFinanceApproval": true,
     "parentAccountId": null,
-    "contactsOnly": true
+    "contactsOnly": true,
+    "contractStartDate": "2024-03-01",
+    "contractEndDate": "2027-02-28",
+    "accountManagerName": "Rashid Al-Marri",
+    "accountManagerMobile": "+97455501201",
+    "accountManagerEmail": "rashid.almarri@vodafone.qa",
+    "_ebuNote": "contractStartDate/contractEndDate and the accountManager* fields are an app-level demo addition (2026-09-28, Customer 360 redesign) - the EBU topic's own field ('Contract start and end date') and Account Information's AM fields have no evidenced source in this corpus's enterprise-accounts data; agentId ('AGT-2201') itself resolves to no record in users-agents.json (a pre-existing gap, not created here), so a fresh, clearly-marked name/mobile/email was added rather than reusing an id that goes nowhere."
   },
   {
     "enterpriseAccountId": "ACC-5003",
@@ -53,7 +59,10 @@
     "creditLimit": null,
     "creditLimitNeedsFinanceApproval": true,
     "parentAccountId": null,
-    "contactsOnly": true
+    "contactsOnly": true,
+    "contractStartDate": "2025-01-15",
+    "contractEndDate": "2026-01-14",
+    "_ebuNote": "See ENT-ACC-7701's own note - same app-level demo addition."
   },
   {
     "enterpriseAccountId": "ENT-ACC-7705",

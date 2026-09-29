@@ -138,6 +138,25 @@ export interface Customer360Data {
   inPlatformBalances: Record<string, unknown>[];
   callDetailRecords: Record<string, unknown>[];
   communications: Record<string, unknown>[];
+  /** Field-level change history (audit-trail.json), joined by recordId
+   * against this customer's own account/contact ids - Customer 360's
+   * "Audit Trail" tab. */
+  auditTrail: Record<string, unknown>[];
+  /** Pre-sale leads (leads.json), joined by mobileNumber against the
+   * customer's phone - Customer 360's "Account/Contact Lead" tab. The two
+   * seeded leads don't match any of this corpus's customers, so this is
+   * legitimately empty today rather than a broken join. */
+  leads: Record<string, unknown>[];
+  /** Targeted cross-sell offers (cross-sales-offers.json), joined by
+   * contactId against this customer's own contact record ids - Customer
+   * 360's "Contact/Assets Information" tab. The seeded offers' contactId
+   * (CONT-3001) doesn't match this corpus's contactRecordId values
+   * (CTC-40xx), so this is legitimately empty today rather than a broken
+   * join. */
+  crossSalesOffers: Record<string, unknown>[];
+  /** Device-on-installment plans (device-installments.json), joined by
+   * accountId - also feeds "Contact/Assets Information". */
+  deviceInstallments: Record<string, unknown>[];
 }
 
 // Read-side aggregation - no unified "Customer 360" entity exists in the mock
@@ -171,6 +190,10 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     inPlatformBalances,
     callDetailRecords,
     communications,
+    auditTrail,
+    leads,
+    crossSalesOffers,
+    deviceInstallments,
   ] = await Promise.all([
     mockDataEngine.list<CustomerRecord>('customers'),
     mockDataEngine.list<AccountRecord>('accounts'),
@@ -195,6 +218,10 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     mockDataEngine.list<Record<string, unknown>>('in-platform-balances'),
     mockDataEngine.list<Record<string, unknown>>('call-detail-records'),
     mockDataEngine.list<Record<string, unknown>>('customer-communications'),
+    mockDataEngine.list<Record<string, unknown>>('audit-trail'),
+    mockDataEngine.list<Record<string, unknown>>('leads'),
+    mockDataEngine.list<Record<string, unknown>>('cross-sales-offers'),
+    mockDataEngine.list<Record<string, unknown>>('device-installments'),
   ]);
 
   const customer = customers.find((c) => c.customerId === customerId);
@@ -206,6 +233,9 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
   const customerOrders = orders.filter((o) => o.customerId === customerId);
   const orderIds = new Set(customerOrders.map((o) => o.orderId));
   const customerMsisdns = new Set(customerOrders.map((o) => o.msisdn).filter(Boolean));
+  const customerContacts = contacts.filter((c) => c.customerId === customerId);
+  const contactIds = new Set(customerContacts.map((c) => c.contactRecordId));
+  const recordIds = new Set([...accountIds, ...contactIds]);
 
   return {
     customer,
@@ -224,13 +254,17 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     identityDocuments: identityDocuments.filter((d) => d.customerId === customerId),
     activities: activities.filter((a) => accountIds.has(a.accountId as string)),
     notifications: notifications.filter((n) => orderIds.has(n.orderId as string)),
-    contacts: contacts.filter((c) => c.customerId === customerId),
+    contacts: customerContacts,
     addresses: addresses.filter((a) => a.customerId === customerId),
     penalties: penalties.filter((p) => p.customerId === customerId),
     serviceUsage: serviceUsage.filter((u) => accountIds.has(u.accountId as string)),
     inPlatformBalances: inPlatformBalances.filter((b) => accountIds.has(b.accountId as string)),
     callDetailRecords: callDetailRecords.filter((c) => accountIds.has(c.accountId as string)),
     communications: communications.filter((c) => c.customerId === customerId),
+    auditTrail: auditTrail.filter((r) => recordIds.has(r.recordId as string)),
+    leads: leads.filter((l) => l.mobileNumber && l.mobileNumber === customer.phone),
+    crossSalesOffers: crossSalesOffers.filter((o) => contactIds.has(o.contactId as string)),
+    deviceInstallments: deviceInstallments.filter((d) => accountIds.has(d.accountId as string)),
   };
 }
 

@@ -7,6 +7,7 @@ import { useActiveCustomerStore } from '../../stores/activeCustomerStore';
 import { useCustomerVerificationStore } from '../../stores/customerVerificationStore';
 import { usePersonaStore } from '../../stores/personaStore';
 import { canEditCustomerRecords } from '../../engines/agentPrivilegeEngine';
+import { isTopicVisible } from '../../engines/customer360VisibilityEngine';
 import { useVerificationGate } from '../../components/patterns/VerificationGate';
 import { Badge } from '../../components/primitives/Badge';
 import { Button } from '../../components/primitives/Button';
@@ -16,27 +17,27 @@ import { Tabs, type TabItem } from '../../components/primitives/Tabs';
 import { MetricCard } from './MetricCard';
 import { downloadCsv } from '../../engines/csvExport';
 import { BellNotificationBanner } from './BellNotificationBanner';
-import { BulkNotesSection } from './BulkNotesSection';
 import { DemographicEditDrawer } from './DemographicEditDrawer';
-import { ProfileSection } from './sections/ProfileSection';
-import { ContactSection } from './sections/ContactSection';
+import { AccountInformationSection } from './sections/AccountInformationSection';
 import { AddressSection } from './sections/AddressSection';
-import { AccountHierarchySection } from './sections/AccountHierarchySection';
-import { MobileSection } from './sections/MobileSection';
-import { FibreHomeSection } from './sections/FibreHomeSection';
-import { EnterpriseSection } from './sections/EnterpriseSection';
 import { BillingSection } from './sections/BillingSection';
-import { OrdersSection } from './sections/OrdersSection';
-import { TicketsSection } from './sections/TicketsSection';
-import {
-  InteractionsSection,
-  CommunicationsSection,
-  DocumentsSection,
-  NotificationsSection,
-  ConsentSection,
-  ProductsAssetsSection,
-  RecentActivitiesSection,
-} from './sections/MiscSections';
+import { AlertsRisksSection } from './sections/AlertsRisksSection';
+import { AuditTrailSection } from './sections/AuditTrailSection';
+import { AssetsSection, type AssetsSubView } from './sections/AssetsSection';
+import { BlacklistViewSection } from './sections/BlacklistViewSection';
+import { ContactInformationSection } from './sections/ContactInformationSection';
+import { ContactAssetsInformationSection } from './sections/ContactAssetsInformationSection';
+import { TopicFieldsSection } from './sections/TopicFieldsSection';
+import { AccountContactLeadSection } from './sections/AccountContactLeadSection';
+import { PenaltyViewSection } from './sections/PenaltyViewSection';
+
+// Deep links from elsewhere in the app (queue notification, toasts, the
+// Linked Services panel) only ever name one of these three ServiceTab
+// values - see AssetsSection's own note on why 'assets' lands on Overview.
+const SERVICE_TABS = new Set<string>(['mobile', 'fibre', 'assets']);
+function toAssetsSubView(tab: string | undefined): AssetsSubView {
+  return tab === 'mobile' || tab === 'fibre' ? tab : 'overview';
+}
 
 // The central workspace the whole redesign pivots around: one customer, one
 // page, every product/action reachable in at most two more clicks (product
@@ -80,12 +81,14 @@ export function Customer360Layout() {
   // half-restored selection.
   const location = useLocation();
   const linked = (location.state ?? {}) as { tab?: string; serviceRef?: string };
-  const [activeTab, setActiveTab] = useState(linked.tab ?? 'profile');
+  const [activeTab, setActiveTab] = useState(linked.tab && SERVICE_TABS.has(linked.tab) ? 'assets' : 'account-info');
+  const [assetsSubView, setAssetsSubView] = useState<AssetsSubView>(toAssetsSubView(linked.tab));
   const [selectedServiceRef, setSelectedServiceRef] = useState(linked.serviceRef);
 
   useEffect(() => {
-    if (!linked.tab) return;
-    setActiveTab(linked.tab);
+    if (!linked.tab || !SERVICE_TABS.has(linked.tab)) return;
+    setActiveTab('assets');
+    setAssetsSubView(toAssetsSubView(linked.tab));
     setSelectedServiceRef(linked.serviceRef);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.key]);
@@ -182,62 +185,68 @@ export function Customer360Layout() {
   // Empty until the sources land, so the tabs render their own empty state
   // for a moment rather than briefly claiming the customer has no services.
   const services = serviceSources ? listCustomerServices(data.customer, serviceSources) : [];
-  const servicesFor = (tab: 'mobile' | 'fibre' | 'assets') => services.filter((s) => s.tab === tab);
-  // undefined until the sources land, so the product tabs show every action
-  // rather than asserting "no services" before anything has been read.
-  const hasServiceOn = (tab: 'mobile' | 'fibre' | 'assets') =>
-    serviceSources ? servicesFor(tab).length > 0 : undefined;
 
+  const onInteractionLogged = (record: Record<string, unknown>) =>
+    setData((prev) => (prev ? { ...prev, activities: [record, ...prev.activities] } : prev));
+
+  // Customer 360's 13 approved tab sections - each is one of
+  // customer360-fields.json's own `topic` values (see
+  // customer360VisibilityEngine.ts), so the visibility engine's department
+  // lookups keep working unchanged even though the *labels* below use the
+  // business's requested wording rather than the JSON's own spelling.
   const tabs: TabItem[] = [
-    { key: 'profile', label: 'Profile', content: <ProfileSection customer={data.customer} accounts={data.accounts} services={services} /> },
-    { key: 'contacts', label: 'Contacts', content: <ContactSection data={data} onTicketCreated={addTicket} /> },
-    { key: 'addresses', label: 'Addresses', content: <AddressSection data={data} onTicketCreated={addTicket} /> },
     {
-      key: 'mobile',
-      label: 'Mobile',
-      content: (
-        <MobileSection
-          customer={customer}
-          services={servicesFor('mobile')}
-          selectedServiceRef={selectedServiceRef}
-          hasExistingService={hasServiceOn('mobile')}
-        />
-      ),
+      key: 'account-info',
+      label: 'Account Information',
+      content: <AccountInformationSection customer={data.customer} accounts={data.accounts} services={services} data={data} />,
+    },
+    { key: 'billing', label: 'Billing & Payments', content: <BillingSection data={data} /> },
+    { key: 'alerts-risks', label: 'Alert & Risks', content: <AlertsRisksSection data={data} /> },
+    {
+      key: 'audit-trail',
+      label: 'Audit Trail',
+      content: <AuditTrailSection data={data} onTicketCreated={addTicket} onInteractionLogged={onInteractionLogged} />,
     },
     {
-      key: 'fibre',
-      label: 'Fibre & Home',
+      key: 'assets',
+      label: 'Assets',
       content: (
-        <FibreHomeSection
+        <AssetsSection
           customer={customer}
-          services={servicesFor('fibre')}
+          services={services}
+          servicesLoaded={serviceSources !== undefined}
           selectedServiceRef={selectedServiceRef}
-          hasExistingService={hasServiceOn('fibre')}
-        />
-      ),
-    },
-    { key: 'enterprise', label: 'Enterprise', content: <EnterpriseSection customer={customer} /> },
-    { key: 'billing', label: 'Billing', content: <BillingSection data={data} /> },
-    { key: 'orders', label: 'Orders', content: <OrdersSection data={data} /> },
-    { key: 'tickets', label: 'Tickets', content: <TicketsSection data={data} onTicketCreated={addTicket} /> },
-    {
-      key: 'interactions',
-      label: 'Interactions',
-      content: (
-        <InteractionsSection
+          initialSubView={assetsSubView}
           data={data}
-          onLogged={(record) => setData((prev) => (prev ? { ...prev, activities: [record, ...prev.activities] } : prev))}
         />
       ),
     },
-    { key: 'communications', label: 'Communications', content: <CommunicationsSection data={data} /> },
-    { key: 'documents', label: 'Documents', content: <DocumentsSection data={data} /> },
-    { key: 'notifications', label: 'Notifications', content: <NotificationsSection data={data} /> },
-    { key: 'bulk-notes', label: 'Bulk Notes', content: <BulkNotesSection accountIds={data.accounts.map((a) => a.accountId)} /> },
-    { key: 'consent', label: 'Consent & Preferences', content: <ConsentSection data={data} /> },
-    { key: 'assets', label: 'Products & Assets', content: <ProductsAssetsSection data={data} /> },
-    { key: 'relationships', label: 'Account Hierarchy', content: <AccountHierarchySection data={data} /> },
-    { key: 'activity', label: 'Recent Activities', content: <RecentActivitiesSection data={data} /> },
+    ...(isTopicVisible(activePersonaId, 'Blacklist View')
+      ? [{ key: 'blacklist', label: 'Blacklist View', content: <BlacklistViewSection data={data} /> }]
+      : []),
+    { key: 'contact-info', label: 'Contact Information', content: <ContactInformationSection data={data} onTicketCreated={addTicket} /> },
+    ...(isTopicVisible(activePersonaId, 'Contact/Assets Information')
+      ? [{ key: 'contact-assets-info', label: 'Contact/Assets Information', content: <ContactAssetsInformationSection data={data} /> }]
+      : []),
+    { key: 'account-address', label: 'Account Address', content: <AddressSection data={data} onTicketCreated={addTicket} /> },
+    ...(isTopicVisible(activePersonaId, 'Activation/Modification Sidebar')
+      ? [
+          {
+            key: 'activation-modification',
+            label: 'Activation/Modification Side Bar',
+            content: <TopicFieldsSection personaId={activePersonaId} topic="Activation/Modification Sidebar" />,
+          },
+        ]
+      : []),
+    ...(isTopicVisible(activePersonaId, 'Account/Contact Lead')
+      ? [{ key: 'account-contact-lead', label: 'Account/Contact Lead', content: <AccountContactLeadSection data={data} /> }]
+      : []),
+    ...(isTopicVisible(activePersonaId, 'Penalty View')
+      ? [{ key: 'penalty-view', label: 'Penalty View', content: <PenaltyViewSection data={data} /> }]
+      : []),
+    ...(isTopicVisible(activePersonaId, 'EBU')
+      ? [{ key: 'ebu', label: 'EBU', content: <TopicFieldsSection personaId={activePersonaId} topic="EBU" /> }]
+      : []),
   ];
 
   return (

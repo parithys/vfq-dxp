@@ -10,6 +10,7 @@ import type {
   FeatureCatalogueEntry,
   PermissionLevel,
   PersonaFeatureGrant,
+  Customer360Field,
 } from '../types/config';
 
 interface ConfigData {
@@ -37,6 +38,13 @@ interface ConfigData {
   reqToScreens: Record<string, string[]>;
   journeyCatalogueMap: JourneyCatalogueMap;
   approvalMatrix: ApprovalMatrixEntry[];
+  /** Customer 360 redesign (2026-09-28) - see Customer360Field's own note. */
+  customer360Fields: Customer360Field[];
+  /** Staff ID -> one of customer360Fields' department keys, or null for a
+   * persona the source spreadsheet's Mapping sheet names but that has no
+   * matching column in "Customer 360 List - FINAL" - see
+   * customer360-department-mapping.json's own _gaps note. */
+  customer360DepartmentMapping: Record<string, string | null>;
 }
 
 /** Crosswalk between CRM_Journeys_Final_Updated_with_Type.xlsx (Page Type
@@ -128,11 +136,21 @@ export async function loadConfig(): Promise<ConfigData> {
     // now purely additive (the role/access viewer's evidence panel), so a
     // missing copy must not fail boot.
     const rbac = await fetchJson<RbacEntry[]>('/config/rbac-legacy-66.json').catch(() => []);
+    // Customer 360 field/visibility registry (2026-09-28) - same resilience
+    // stance as the three above: additive to an already-working workspace
+    // page, so a missing/broken copy degrades to "show nothing extra" rather
+    // than failing boot.
+    const customer360Fields = await fetchJson<Customer360Field[]>('/config/customer360-fields.json').catch(() => []);
+    const customer360DepartmentMapping = await fetchJson<{ staffIdToDepartment: Record<string, string | null> }>(
+      '/config/customer360-department-mapping.json'
+    )
+      .then((d) => d.staffIdToDepartment)
+      .catch(() => ({}));
     const { personaFeatureLevel, personaScreenLevel } = indexGrants(personas, featureCatalogue);
     cache = {
       routes, personas, featureCatalogue, personaFeatureLevel, personaScreenLevel, rbac,
       businessRules, validationRules, domainSchema, moduleHierarchy, designTokens,
-      reqToScreens, journeyCatalogueMap, approvalMatrix,
+      reqToScreens, journeyCatalogueMap, approvalMatrix, customer360Fields, customer360DepartmentMapping,
     };
     return cache;
   })();
@@ -256,4 +274,18 @@ export function isConfigLoaded(): boolean {
  * elsewhere for unconfirmed RBAC in this app). */
 export function getRequiredApproverRole(category: string): string | undefined {
   return requireConfig().approvalMatrix.find((m) => m.category === category)?.requiredRole;
+}
+
+/** Every field row for one Customer 360 topic, in source order - see
+ * customer360VisibilityEngine.ts for turning these into what a given persona
+ * actually sees. */
+export function getCustomer360FieldsForTopic(topic: string): Customer360Field[] {
+  return requireConfig().customer360Fields.filter((f) => f.topic === topic);
+}
+
+/** Staff ID -> department column name in customer360Fields' own department
+ * keys, or null for a persona the Mapping sheet names but that has no
+ * matching column (see customer360-department-mapping.json's _gaps note). */
+export function getCustomer360Department(staffId: string): string | null | undefined {
+  return requireConfig().customer360DepartmentMapping[staffId];
 }
