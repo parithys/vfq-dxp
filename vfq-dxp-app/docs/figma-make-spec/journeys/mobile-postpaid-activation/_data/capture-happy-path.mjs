@@ -25,7 +25,10 @@ async function clickContinue(page) {
 }
 
 (async () => {
-  const browser = await chromium.launch();
+  // Sandbox cannot spawn/kill Chrome subprocesses via Playwright's own
+  // launch(); a manually-started chrome-headless-shell daemon (single-process,
+  // no-zygote) is attached to instead via CDP - see _data/chrome-daemon.sh.
+  const browser = await chromium.connectOverCDP('http://127.0.0.1:9333');
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 
   await safe('login', async () => {
@@ -198,6 +201,8 @@ async function clickContinue(page) {
     }
   });
 
-  await browser.close();
+  // Do NOT browser.close() here - it's a shared CDP-attached daemon another
+  // script (capture-scenarios.mjs) may still need; just drop this page.
+  await page.close();
   console.log('DONE happy path');
 })().catch((e) => { console.error('SCRIPT ERROR', e); process.exit(1); });

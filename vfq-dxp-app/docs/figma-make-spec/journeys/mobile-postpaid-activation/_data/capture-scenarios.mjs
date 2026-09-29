@@ -82,7 +82,9 @@ async function enterIdManually(page, idNumber) {
 }
 
 (async () => {
-  const browser = await chromium.launch();
+  // See capture-happy-path.mjs's note: attach to the manually-started
+  // chrome-headless-shell daemon over CDP rather than launching our own.
+  const browser = await chromium.connectOverCDP('http://127.0.0.1:9333');
 
   // --- Scenario A: hard-stop (expired Diplomatic ID + security blacklist), CUST-1006 ---
   await safe('SCN hard-stop CUST-1006', async () => {
@@ -320,6 +322,7 @@ async function enterIdManually(page, idNumber) {
     await page.close();
   });
 
-  await browser.close();
+  // Do NOT browser.close() here - shared CDP-attached daemon, closed
+  // externally by chrome-daemon.sh's caller once all capture scripts finish.
   console.log('DONE scenarios');
 })().catch((e) => { console.error('SCRIPT ERROR', e); process.exit(1); });
