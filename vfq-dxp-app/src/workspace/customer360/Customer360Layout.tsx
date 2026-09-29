@@ -194,18 +194,19 @@ export function Customer360Layout() {
   // customer360VisibilityEngine.ts), so the visibility engine's department
   // lookups keep working unchanged even though the *labels* below use the
   // business's requested wording rather than the JSON's own spelling.
+  //
+  // Ordered by usage/frequency/importance, derived from that same JSON's
+  // per-department real-time vs. drill-down density (2026-09-29 request):
+  // broad, everyday topics first (Account Information, Assets, Contact
+  // Information, Billing & Payments, Account Address), then topics that are
+  // frequently glanced but narrow in scope, then the situational/compliance
+  // topics that are only opened when directly relevant, with EBU last since
+  // it touches only 2 of 11 departments and is real-time for none of them.
   const tabs: TabItem[] = [
     {
       key: 'account-info',
       label: 'Account Information',
       content: <AccountInformationSection customer={data.customer} accounts={data.accounts} services={services} data={data} />,
-    },
-    { key: 'billing', label: 'Billing & Payments', content: <BillingSection data={data} /> },
-    { key: 'alerts-risks', label: 'Alert & Risks', content: <AlertsRisksSection data={data} /> },
-    {
-      key: 'audit-trail',
-      label: 'Audit Trail',
-      content: <AuditTrailSection data={data} onTicketCreated={addTicket} onInteractionLogged={onInteractionLogged} />,
     },
     {
       key: 'assets',
@@ -221,14 +222,19 @@ export function Customer360Layout() {
         />
       ),
     },
-    ...(isTopicVisible(activePersonaId, 'Blacklist View')
-      ? [{ key: 'blacklist', label: 'Blacklist View', content: <BlacklistViewSection data={data} /> }]
-      : []),
     { key: 'contact-info', label: 'Contact Information', content: <ContactInformationSection data={data} onTicketCreated={addTicket} /> },
+    { key: 'billing', label: 'Billing & Payments', content: <BillingSection data={data} /> },
+    { key: 'account-address', label: 'Account Address', content: <AddressSection data={data} onTicketCreated={addTicket} /> },
+    { key: 'alerts-risks', label: 'Alert & Risks', content: <AlertsRisksSection data={data} /> },
     ...(isTopicVisible(activePersonaId, 'Contact/Assets Information')
       ? [{ key: 'contact-assets-info', label: 'Contact/Assets Information', content: <ContactAssetsInformationSection data={data} /> }]
       : []),
-    { key: 'account-address', label: 'Account Address', content: <AddressSection data={data} onTicketCreated={addTicket} /> },
+    ...(isTopicVisible(activePersonaId, 'Blacklist View')
+      ? [{ key: 'blacklist', label: 'Blacklist View', content: <BlacklistViewSection data={data} /> }]
+      : []),
+    ...(isTopicVisible(activePersonaId, 'Account/Contact Lead')
+      ? [{ key: 'account-contact-lead', label: 'Account/Contact Lead', content: <AccountContactLeadSection data={data} /> }]
+      : []),
     ...(isTopicVisible(activePersonaId, 'Activation/Modification Sidebar')
       ? [
           {
@@ -238,12 +244,14 @@ export function Customer360Layout() {
           },
         ]
       : []),
-    ...(isTopicVisible(activePersonaId, 'Account/Contact Lead')
-      ? [{ key: 'account-contact-lead', label: 'Account/Contact Lead', content: <AccountContactLeadSection data={data} /> }]
-      : []),
     ...(isTopicVisible(activePersonaId, 'Penalty View')
       ? [{ key: 'penalty-view', label: 'Penalty View', content: <PenaltyViewSection data={data} /> }]
       : []),
+    {
+      key: 'audit-trail',
+      label: 'Audit Trail',
+      content: <AuditTrailSection data={data} onTicketCreated={addTicket} onInteractionLogged={onInteractionLogged} />,
+    },
     ...(isTopicVisible(activePersonaId, 'EBU')
       ? [{ key: 'ebu', label: 'EBU', content: <TopicFieldsSection personaId={activePersonaId} topic="EBU" /> }]
       : []),
