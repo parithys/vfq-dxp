@@ -3,7 +3,10 @@ import { Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
 import { useNotificationStore } from '../stores/notificationStore';
+import { getAllPersonas } from '../engines/configEngine';
+import { pickProfileForRole } from '../engines/agentProfileEngine';
 import { Icon } from '../components/primitives/Icon';
+import { Select } from '../components/primitives/Select';
 import { Tooltip } from '../components/primitives/Tooltip';
 import { TooltipGroup } from '../components/primitives/TooltipContext';
 import { useSidebarStore } from '../stores/sidebarStore';
@@ -29,17 +32,27 @@ const ICONS = {
 // earlier plain "Logged in as [Select] · Sign out" bar. Persona switching
 // itself is unchanged (frontend-architecture.md §8's dev/demo "login-as"
 // control, not a real auth boundary); it's just relocated.
+//
+// The in-menu "Switch role" control was removed on 2026-09-25 in favour of
+// signing out and back in as a different Staff ID, then restored on
+// 2026-09-29 at the user's request so a persona/department comparison
+// (e.g. seeing which Customer 360 tabs a given department can see) doesn't
+// require a full re-login per role. setActivePersona/pickProfileForRole were
+// deliberately kept wired for exactly this reuse across both removals.
 export function PersonaSwitcher() {
+  const activePersonaId = usePersonaStore((s) => s.activePersonaId);
+  const setActivePersona = usePersonaStore((s) => s.setActivePersona);
   const staffId = useAuthStore((s) => s.staffId);
   const profile = useAuthStore((s) => s.profile);
   const signOut = useAuthStore((s) => s.signOut);
+  const setProfile = useAuthStore((s) => s.setProfile);
   const theme = useThemeStore((s) => s.theme);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
   const history = useNotificationStore((s) => s.history);
   const markAllRead = useNotificationStore((s) => s.markAllRead);
   const toggleMobileOpen = useSidebarStore((s) => s.toggleMobileOpen);
   const customersServed = useQnomyQueueStore((s) => s.customersServed);
-  const activePersonaId = usePersonaStore((s) => s.activePersonaId);
+  const personas = getAllPersonas();
   // Same gate the Qnomy ticket control uses, so the counter appears exactly
   // for the roles that can actually finish a walk-in.
   const showQnomy = canSeeQnomyTicketNumber(activePersonaId);
@@ -63,14 +76,15 @@ export function PersonaSwitcher() {
 
   const initials = profile ? `${profile.name.split(' ')[0][0]}${profile.name.split(' ').slice(-1)[0][0]}` : '??';
 
-  // The in-menu role switcher was removed on 2026-09-25. Role is now set once,
-  // at sign-in, from the Staff ID (LoginPage -> setActivePersona), which is
-  // the path the 26 documented Staff IDs already support. Switching role
-  // therefore means signing out and back in as a different ID.
-  //
-  // setActivePersona/pickProfileForRole are deliberately NOT removed from the
-  // store and engine: LoginPage and configStore still call the former, and the
-  // latter is what resolves a role's bound identity at login.
+  // Switching role must fully swap the displayed identity too - not just the
+  // RBAC-driving personaId - otherwise the profile chip keeps showing the
+  // login-time agent even after picking a different role, which is what
+  // made this look like it required a sign-out/sign-in to take effect.
+  const handleRoleSwitch = async (personaId: string) => {
+    setActivePersona(personaId);
+    const newProfile = await pickProfileForRole(personaId);
+    setProfile(newProfile);
+  };
 
   return (
     // Bottom border is --nav-border, not --border-soft: this bar and the
@@ -253,6 +267,14 @@ export function PersonaSwitcher() {
               >
                 Edit profile
               </Link>
+              <div className="px-4 py-3 border-t border-border-soft">
+                <label className="text-[length:var(--fs-caption)] text-muted mb-1 block">Switch role</label>
+                <Select
+                  value={activePersonaId}
+                  onChange={(e) => handleRoleSwitch(e.target.value)}
+                  options={personas.map((p) => ({ value: p.id, label: `${p.name} · ${p.businessUnitLabel}` }))}
+                />
+              </div>
               <button
                 onClick={signOut}
                 className="w-full flex items-center gap-2 px-4 py-3 border-t border-border-soft text-danger hover:bg-surface text-left"
