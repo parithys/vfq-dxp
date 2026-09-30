@@ -1,71 +1,104 @@
 [
   {
-    "templateId": "SMT-6001",
-    "keyword": "TT_OPEN_CONFIRM",
-    "language": "English",
-    "languageCode": "EN",
-    "locale": "en-QA",
-    "script": "English",
-    "templateType": "Automatic",
-    "systemTemplateFlag": true,
-    "linkedTtSource": "Web Self-Service",
-    "linkedTtCategory": "Billing",
-    "linkedTtArea": "Postpaid",
-    "linkedTtSubArea": "Invoice Dispute",
-    "linkedTtStatus": "Open",
-    "description": "Sent to customer when a billing trouble ticket is opened",
-    "mergeFields": [
-      "{customerName}",
-      "{ticketNumber}"
-    ],
-    "createdDate": "2026-01-10",
-    "createdBy": "system.admin",
-    "updatedDate": "2026-05-02",
-    "updatedBy": "fatima.alkuwari"
+    "templateId": "SMT-TT-01",
+    "keyword": "5G Outdoor TT",
+    "ttSource": "Customer",
+    "ttCategory": "Fixed_QA",
+    "ttArea": "Fixed - Installation",
+    "ttSubArea": "New Activation",
+    "bodyEn": null,
+    "bodyAr": null,
+    "_note": "Corrected 2026-09-30 (Trouble Ticket CBU journey, Screens 8-13/15 gap-fix pass): replaces 3 fully fabricated rows (invented keywords TT_OPEN_CONFIRM/LEAD_FOLLOWUP_AR/TT_RESOLVED, invented {customerName}/{ticketNumber}-style merge fields) with the real Automatic SMS Templates sheet from data/SMS Templates.xlsx, recovered verbatim in reference/blueprint/notification-catalogue.md (NOTIF-001 to NOTIF-010). Real merge-field syntax is [Service Request.SR Number] / [Service Request.Serial Number], not {customerName}. Only 10 of the sheet's 12 rows are recoverable from this corpus (2 rows and the entire 1,236-row Manual SMS Templates sheet have no verbatim content anywhere in reference/.knowledge/ - not included, flagged as a gap rather than invented). This row (5G Outdoor TT) has no English/Arabic body populated in the source workbook itself, per the knowledge doc - null here reflects that, not a missing extraction."
   },
   {
-    "templateId": "SMT-6002",
-    "keyword": "LEAD_FOLLOWUP_AR",
-    "language": "Arabic",
-    "languageCode": "AR",
-    "locale": "ar-QA",
-    "script": "Arabic",
-    "templateType": "Lead",
-    "systemTemplateFlag": false,
-    "linkedServiceNeeded": "Fibre Broadband",
-    "description": "Follow-up SMS for fibre broadband leads not yet converted",
-    "mergeFields": [
-      "{leadName}",
-      "{agentName}"
-    ],
-    "createdDate": "2026-02-14",
-    "createdBy": "ahmed.almansoori",
-    "updatedDate": "2026-06-20",
-    "updatedBy": "ahmed.almansoori"
+    "templateId": "SMT-TT-02",
+    "keyword": "Automatic TON SMS",
+    "ttSource": "System",
+    "ttCategory": "Request",
+    "ttArea": "Account Management",
+    "ttSubArea": "Transfer of Number",
+    "bodyEn": "We have received your request for 'Transfer of ownership' Your request number is [Service Request.SR Number] . Thank You.",
+    "bodyAr": "قد استلمنا طلبك لنقل الملكية. رقم الطلب الخاص بك هو  [Service Request.SR Number]. شكرا لكم"
   },
   {
-    "templateId": "SMT-6003",
-    "keyword": "TT_RESOLVED",
-    "language": "Malayalam",
-    "languageCode": "ML",
-    "locale": "ml-IN",
-    "script": "Malayalam",
-    "templateType": "Automatic",
-    "systemTemplateFlag": true,
-    "linkedTtSource": "Call Centre",
-    "linkedTtCategory": "Technical",
-    "linkedTtArea": "Mobile",
-    "linkedTtSubArea": "Network Issue",
-    "linkedTtStatus": "Resolved",
-    "description": "Notifies customer their technical trouble ticket is resolved",
-    "mergeFields": [
-      "{customerName}",
-      "{ticketNumber}",
-      "{resolutionDate}"
-    ],
-    "createdDate": "2026-03-05",
-    "createdBy": "system.admin",
-    "updatedDate": "2026-03-05",
-    "updatedBy": "system.admin"
+    "templateId": "SMT-TT-03",
+    "keyword": "BC Change Request",
+    "ttSource": "System",
+    "ttCategory": "Requests",
+    "ttArea": "Billing Request",
+    "ttSubArea": "Other",
+    "bodyEn": "Your request to change your bill cycle has been submitted successfully. It will be processed within 72 hours. We will keep you updated on the progress of your request. Thank you for choosing Vodafone.",
+    "bodyAr": null
+  },
+  {
+    "templateId": "SMT-TT-04",
+    "keyword": "DEFAULT TT SMS TEMPLATE",
+    "ttSource": "Customer",
+    "ttCategory": null,
+    "ttArea": null,
+    "ttSubArea": null,
+    "bodyEn": "We have received your complaint, and your tracking number is [Service Request.SR Number]. You can easily track your complaint status and check updates through My Vodafone App or our chatbot https://mva.qa/chatbot/deeplink/MOD_CHATBOT?labeeb=TrackComplaints.",
+    "bodyAr": "لقد استلمنا شكواك، ورقم التتبع هو [Service Request.SR Number]. يمكنك بسهولة متابعة حالة الشكوى والتحقق من التحديثات من خلال تطبيق My Vodafone  أو عبر المحادثة الآلية  https://mva.qa/chatbot/deeplink/MOD_CHATBOT?labeeb=TrackComplaints."
+  },
+  {
+    "templateId": "SMT-TT-05",
+    "keyword": "DEFAULT TT SMS TEMPLATE_ReOpen",
+    "ttSource": null,
+    "ttCategory": null,
+    "ttArea": null,
+    "ttSubArea": null,
+    "bodyEn": "We have re-opened your complaint for further investigation. Your complaint tracking number is [Service Request.SR Number]. You can now track your complaint through MyVodafone App (www.mva.qa/deeplink/TROUBLE_TICKETS). Thank You.",
+    "bodyAr": "لقد قمنا باعادة فتح شكواك لاعادة التحقق. الرقم الجديد لتتبع الشكوى هو [Service Request.SR Number]. يمكنك الاطلاع على أخر مستجدات الشكوى عن طريق تطبيق فودافون www.mva.qa/deeplink/TROUBLE_TICKETS. شكرا لك"
+  },
+  {
+    "templateId": "SMT-TT-06",
+    "keyword": "Disconnection",
+    "ttSource": "Customer",
+    "ttCategory": "Requests",
+    "ttArea": "Account Management",
+    "ttSubArea": "Disconnection",
+    "bodyEn": "Your request to discontinue your postpaid plan has been received. Our team will contact you within 3 working days.  Please ensure any outstanding bills are settled to avoid rejection of your request. Any renewal charges incurred during this period will be adjusted.  Track your request via My Vodafone App: https://mva.qa/deeplink/COMPLAINTS  For faster assistance, call 40051126 (9 AM - 10 PM).  Ticket Number: [Service Request.SR Number] Vodafone Number: [Service Request.Serial Number]",
+    "bodyAr": "لقد استلمنا طلبكم لإلغاء الباقة الشهرية، وسيتم التواصل معكم خلال 3 أيام عمل.  يرجى سداد أي فواتير مستحقة لتجنب رفض الطلب. سيتم تعديل أي رسوم تجديد تُحتسب خلال هذه الفترة.  يمكنكم متابعة الطلب عبر تطبيق MyVodafone: https://mva.qa/deeplink/COMPLAINTS  للمساعدة السريعة يرجى الاتصال على 40051126 (من 9 صباحًا إلى 10 مساءً)."
+  },
+  {
+    "templateId": "SMT-TT-07",
+    "keyword": "Migration to Prepay",
+    "ttSource": "Customer",
+    "ttCategory": "Requests",
+    "ttArea": "Account Management",
+    "ttSubArea": "Migration to Prepay",
+    "bodyEn": "Your request to migrate your number to prepaid has been successfully received. Our team will contact you within 3 working days. Please ensure all outstanding bills are cleared and the QAR 100 migration fee is paid to avoid rejection of your request. Any renewal charges applied during this period will be adjusted accordingly.  Track your request via My Vodafone App: https://mva.qa/deeplink/COMPLAINTS  For faster assistance, call 40051126 (9 AM - 10 PM).  Ticket Number: [Service Request.SR Number] Vodafone Number: [Service Request.Serial Number]",
+    "bodyAr": "تم استلام طلبكم لتحويل رقمكم إلى باقة مسبقة الدفع. سيتواصل معكم فريقنا خلال 3 أيام عمل.  يرجى سداد أي فواتير مستحقة ودفع رسوم التحويل البالغة 100 ر.ق لتجنب رفض طلبك. سيتم تعديل أي رسوم تجديد تُحتسب خلال هذه الفترة.  يمكنكم متابعة الطلب عبر تطبيق MyVodafone: https://mva.qa/deeplink/COMPLAINTS  للمساعدة السريعة يرجى الاتصال على 40051126 (من 9 صباحًا إلى 10 مساءً)."
+  },
+  {
+    "templateId": "SMT-TT-08",
+    "keyword": "Plan Downgrade",
+    "ttSource": "Customer",
+    "ttCategory": "Requests",
+    "ttArea": "Account Management",
+    "ttSubArea": "Plan Downgrade",
+    "bodyEn": "Your request to downgrade your postpaid plan has been received. Our team will contact you within 3 working days. Please ensure all outstanding bills are paid as soon as possible to avoid rejection of your request. Any charges generated due to plan renewal during this period will be waived. You can track your request anytime via My Vodafone App. https://mva.qa/deeplink/COMPLAINTS  Ticket Number: [Service Request.SR Number] Vodafone Number: [Service Request.Serial Number]",
+    "bodyAr": "لقد تلقينا طلبك لتخفيض باقة الاشتراك الشهري الخاصة بك، وسيقوم فريقنا بالتواصل معك خلال ثلاثة أيام عمل. نرجو منك سداد أي فواتير مستحقة في أقرب وقت لتجنب رفض الطلب. يرجى الملاحظة بأنه سيتم إلغاء أي رسوم ناتجة عن تجديد الباقة خلال هذه الفترة. يمكنك متابعة حالة طلبك من خلال تطبيق My Vodafone. https://mva.qa/deeplink/COMPLAINTS"
+  },
+  {
+    "templateId": "SMT-TT-09",
+    "keyword": "Refund Request",
+    "ttSource": "Customer",
+    "ttCategory": "Requests",
+    "ttArea": "Refunds",
+    "ttSubArea": "Duplicate Payments",
+    "bodyEn": "Your refund request for refund has been received and validation is in progress. We will keep you updated on the progress of the request.  Ticket Number: [Service Request.SR Number] Vodafone Number: [Service Request.Serial Number]",
+    "bodyAr": "تم استلام طلبك لاسترداد المبلغ وجارٍ التحقق منه. سنبقيك على اطلاع بمستجدات طلبك. رقم الطلب: [Service Request.SR Number] رقم فودافون:  [Service Request.Serial Number]"
+  },
+  {
+    "templateId": "SMT-TT-10",
+    "keyword": "Retention",
+    "ttSource": "Customer",
+    "ttCategory": "Requests",
+    "ttArea": "Account Management",
+    "ttSubArea": "Retention",
+    "bodyEn": "Your request to discontinue your postpaid plan has been received. Our team will contact you within 3 working days.  Please ensure any outstanding bills are settled to avoid rejection of your request. Any renewal charges incurred during this period will be adjusted.  Track your request via My Vodafone App: https://mva.qa/deeplink/COMPLAINTS  For faster assistance, call 40051126 (9 AM - 10 PM).  Ticket Number: [Service Request.SR Number] Vodafone Number: [Service Request.Serial Number]",
+    "bodyAr": "لقد استلمنا طلبكم لإلغاء الباقة الشهرية، وسيتم التواصل معكم خلال 3 أيام عمل.  يرجى سداد أي فواتير مستحقة لتجنب رفض الطلب. سيتم تعديل أي رسوم تجديد تُحتسب خلال هذه الفترة.  يمكنكم متابعة الطلب عبر تطبيق MyVodafone: https://mva.qa/deeplink/COMPLAINTS  للمساعدة السريعة يرجى الاتصال على 40051126 (من 9 صباحًا إلى 10 مساءً).",
+    "_note": "Source data-quality artifact, reported as-is: this row's body text is identical to SMT-TT-06 (Disconnection) in the source workbook - not a transcription error on this side."
   }
 ]

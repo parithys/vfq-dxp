@@ -23,9 +23,12 @@ import {
   RESOLUTION_CODES,
   ESCALATION_REASONS,
   CANCELLATION_REASONS,
-  HASHTAGS_BY_CATEGORY,
+  TT_HASHTAGS,
   REOPEN_WINDOW_DAYS,
+  RETENTION_RESOLUTION_CODES,
 } from '../ticketReferenceData';
+import { useTicketSlaEscalationSweep } from '../slaEscalationSweep';
+import { TicketCommunicationTab } from './TicketCommunicationTab';
 
 const CURRENT_AGENT = 'Current Agent';
 const MAX_ATTACHMENTS = 5; // P-15 is "To be confirmed" in the source - placeholder cap pending VFQ confirmation.
@@ -76,6 +79,12 @@ interface Ticket {
   cancelReason?: string | null;
   publicNotes?: PublicNote[];
   hashtags?: string[];
+  assignedApproverId?: string | null;
+  approvalDecision?: 'Approved' | 'Rejected' | 'Returned' | null;
+  approvalReasonCode?: string | null;
+  approvalNotes?: string | null;
+  approvalDecidedAt?: string | null;
+  retentionResolutionCode?: string | null;
 }
 interface AuditRecord {
   auditId: string;
@@ -85,6 +94,11 @@ interface AuditRecord {
   fieldModified: string;
   newValue: string;
   timestamp: string;
+}
+interface OsbNotification {
+  orderId: string;
+  dbTimestamp: string;
+  smsText: string;
 }
 
 // SCR-029 (Ticket detail: public notes / bell icon notifications) + SCR-210
@@ -115,9 +129,13 @@ export function TicketDetail() {
   const [resolutionHashtags, setResolutionHashtags] = useState<string[]>([]);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [retentionCloseOpen, setRetentionCloseOpen] = useState(false);
+  const [retentionResolutionCode, setRetentionResolutionCode] = useState('');
   const [reopenOpen, setReopenOpen] = useState(false);
   const [reopenReason, setReopenReason] = useState('');
   const [reassignQueue, setReassignQueue] = useState('');
+  const [surveyNotifications, setSurveyNotifications] = useState<OsbNotification[]>([]);
+  useTicketSlaEscalationSweep();
 
   useEffect(() => {
     loadKind('trouble-tickets');
@@ -127,6 +145,17 @@ export function TicketDetail() {
     if (!ticketId) return;
     mockDataEngine.list<AuditRecord>('audit-trail').then((all) => {
       setAuditRecords(all.filter((a) => a.recordType === 'Ticket' && a.recordId === ticketId).sort((a, b) => b.timestamp.localeCompare(a.timestamp)));
+    });
+  }, [ticketId, tickets]);
+
+  // Screen 14 (System Event: Customer Feedback Status) - surfaces the
+  // survey-triggered notify() call closeTicket() already makes (see its own
+  // comment below) directly on the ticket, instead of it only showing up
+  // generically under Customer 360 -> Notifications.
+  useEffect(() => {
+    if (!ticketId) return;
+    mockDataEngine.list<OsbNotification>('osb-notifications').then((all) => {
+      setSurveyNotifications(all.filter((n) => n.orderId === ticketId && n.smsText.includes('satisfaction survey')));
     });
   }, [ticketId, tickets]);
 
@@ -156,6 +185,7 @@ export function TicketDetail() {
   const attachments = ticket.attachments ?? [];
   const openActivities = activities.filter((a) => a.open);
   const terminal = ticket.status === 'Closed' || ticket.status === 'Cancelled';
+  const pendingApproval = ticket.status === 'Pending Approval';
   const slaRule = evaluateRule('BR-349', { slaDueAt: ticket.slaDueAt, status: ticket.status });
   const ragVariant = terminal || !ticket.slaDueAt ? 'filled-neutral' : !slaRule.pass ? 'danger' : slaRule.message?.includes('Amber') ? 'warning' : 'success';
   const ragLabel = terminal || !ticket.slaDueAt ? '-' : ragVariant === 'danger' ? 'Red' : ragVariant === 'warning' ? 'Amber' : 'Green';
@@ -280,16 +310,38 @@ export function TicketDetail() {
   // MPRA_001_RES-09: closes all activities on ticket closure. MPRA_001_CSA-01/02:
   // Medallia (spelled inconsistently across the BRSD as Medilia/Medelia/Medallia)
   // survey trigger fires only on reaching this terminal state.
-  const closeTicket = async () => {
+  //
+  // Reconciliation note (Trouble Ticket CBU journey, Wave 1, Screen 14): a
+  // separate build-plan pass assumed this trigger fires on "Resolved" (i.e.
+  // resolve()'s `Solved` status) rather than `Closed`. The VFQ_Trouble_Ticket
+  // _BRSD_v1.0 source that would arbitrate this isn't available in
+  // reference/.knowledge/ - the only evidenced anchor is this file's own
+  // MPRA_001_CSA-01/02 comment, which ties the trigger to Closed. Kept as-is
+  // rather than moved to resolve(), since there's nothing to verify a change
+  // against - not a decision that Closed is "correct," just that it's the
+  // only evidenced behaviour.
+  // R2 (Retention Request Capture) / BR-060: a Disconnection-category
+  // ticket must be closed with a Resolution Code (retention) value before
+  // it can close at all - the general (non-Disconnection) close path below
+  // is unchanged.
+  const closeTicket = async (retentionCode?: string) => {
     const closedAt = new Date().toISOString();
     const closedActivities: Activity[] = [
       ...activities.map((a) => ({ ...a, open: false })),
       { type: 'Auto', description: 'Ticket closed - all activities closed.', createdAt: closedAt, createdBy: CURRENT_AGENT, open: false },
     ];
-    await updateRecord('trouble-tickets', 'ticketId', ticket.ticketId, { status: 'Closed', closedAt, activities: closedActivities });
+    await updateRecord('trouble-tickets', 'ticketId', ticket.ticketId, {
+      status: 'Closed',
+      closedAt,
+      activities: closedActivities,
+      ...(retentionCode ? { retentionResolutionCode: retentionCode } : {}),
+    });
     await audit('Status', 'Closed');
+    if (retentionCode) await audit('Resolution Code (retention)', retentionCode);
     await notify(`Ticket ${ticket.ticketId} closed. A customer satisfaction survey has been triggered (CSA-01/02, Medallia).`);
     pushToast('success', `Ticket ${ticket.ticketId} closed.`);
+    setRetentionCloseOpen(false);
+    setRetentionResolutionCode('');
   };
 
   // MPRA_001_RES-11: mandatory reason code, excluded from performance reporting.
@@ -305,6 +357,24 @@ export function TicketDetail() {
     pushToast('warning', `Ticket ${ticket.ticketId} cancelled.`);
     setCancelOpen(false);
     setCancelReason('');
+  };
+
+  // Screen 16 (Approval Queue & Ticket Review) - no Approval Matrix routes a
+  // ticket into approval automatically (zero source evidence exists for
+  // one), so this is the only way to reach that screen at all. Same
+  // convention as WinCashPaymentStep.tsx's "Simulate session expiry (test)":
+  // a small, always-visible text-link standing in for a real trigger this
+  // mock app has no mechanism to produce.
+  const sendToApproval = async () => {
+    await updateRecord('trouble-tickets', 'ticketId', ticket.ticketId, {
+      status: 'Pending Approval',
+      approvalDecision: null,
+      approvalReasonCode: null,
+      approvalNotes: null,
+      activities: addActivity('Sent to approval (test).'),
+    });
+    await audit('Status', 'Pending Approval');
+    pushToast('warning', `Ticket ${ticket.ticketId} sent to approval.`);
   };
 
   // MPRA_001_RES-10: reopen only within the configured window (P-12 -
@@ -339,7 +409,10 @@ export function TicketDetail() {
     await audit('Attachment', file.name);
   };
 
-  const availableHashtags = HASHTAGS_BY_CATEGORY[ticket.category] ?? [];
+  // Flat, real (partial-sample) list - see ticketReferenceData.ts's own
+  // comment on TT_HASHTAGS. No category filter, since the source LOV export
+  // carries no category grouping to filter by.
+  const availableHashtags = TT_HASHTAGS;
 
   return (
     <div className="p-8 max-w-6xl">
@@ -359,6 +432,14 @@ export function TicketDetail() {
             </p>
             <p className="text-fg-2 text-[length:var(--fs-caption)]">
               Assigned to: {ticket.assignedTo ?? 'Unassigned'} · {slaRule.message}
+            </p>
+            <p className="text-fg-2 text-[length:var(--fs-caption)] mt-1">
+              Customer feedback survey:{' '}
+              {surveyNotifications.length > 0 ? (
+                <span>Triggered on {new Date(surveyNotifications[surveyNotifications.length - 1].dbTimestamp).toLocaleString()}</span>
+              ) : (
+                <span className="italic text-muted">Not yet triggered</span>
+              )}
             </p>
           </div>
 
@@ -393,6 +474,9 @@ export function TicketDetail() {
                       <div><dt className="text-[length:var(--fs-caption)] text-muted">Hashtags</dt><dd className="text-fg">{(ticket.hashtags ?? []).join(', ') || '-'}</dd></div>
                       <div><dt className="text-[length:var(--fs-caption)] text-muted">SLA Target</dt><dd className="text-fg">{ticket.slaTargetHours ? `${ticket.slaTargetHours}h, due ${ticket.slaDueAt ? new Date(ticket.slaDueAt).toLocaleString() : '-'}` : '-'}</dd></div>
                       <div><dt className="text-[length:var(--fs-caption)] text-muted">Reopen count</dt><dd className="text-fg">{ticket.reopenCount ?? 0}</dd></div>
+                      {ticket.category === 'Disconnection' && (
+                        <div><dt className="text-[length:var(--fs-caption)] text-muted">Resolution Code (retention)</dt><dd className="text-fg">{ticket.retentionResolutionCode ?? '-'}</dd></div>
+                      )}
                       <div className="col-span-2">
                         <dt className="text-[length:var(--fs-caption)] text-muted mb-1">L3 Reference (RES-07 - editable while Not Solved)</dt>
                         <Input
@@ -468,6 +552,11 @@ export function TicketDetail() {
                   ),
                 },
                 {
+                  key: 'communication',
+                  label: 'Communication',
+                  content: <TicketCommunicationTab ticketId={ticket.ticketId} onSend={notify} />,
+                },
+                {
                   key: 'audit',
                   label: 'Audit Trail',
                   content: canSeeAudit ? (
@@ -493,22 +582,32 @@ export function TicketDetail() {
           <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
             <h2 className="text-[length:var(--fs-body-lg)] text-fg font-medium mb-3">Actions</h2>
             <div className="flex flex-col gap-2">
-              {!ticket.assignedTo && !terminal && (
+              {pendingApproval && (
+                <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-3 text-[length:var(--fs-body)] text-fg-2">
+                  Pending approval decision - see the Approval Queue.
+                  {ticket.approvalDecision && (
+                    <p className="mt-1 text-[length:var(--fs-caption)]">
+                      Last decision: {ticket.approvalDecision}{ticket.approvalNotes ? ` - ${ticket.approvalNotes}` : ''}
+                    </p>
+                  )}
+                </div>
+              )}
+              {!ticket.assignedTo && !terminal && !pendingApproval && (
                 <Button variant="ghost-rect" className="w-full justify-center" onClick={assignToMe}>Assign to me</Button>
               )}
-              {canReassignQueue && !terminal && (
+              {canReassignQueue && !terminal && !pendingApproval && (
                 <div className="flex flex-col gap-2">
                   <Select value={reassignQueue} onChange={(e) => setReassignQueue(e.target.value)} placeholder="Reassign queue…" options={['FL Agents', 'Complaints Team'].map((q) => ({ value: q, label: q }))} />
                   <Button variant="ghost-rect" className="w-full justify-center" onClick={reassignQueueSubmit} disabled={!reassignQueue}>Reassign</Button>
                 </div>
               )}
-              {!terminal && ticket.status !== 'Escalate' && (
+              {!terminal && !pendingApproval && ticket.status !== 'Escalate' && (
                 <Button variant="ghost-rect" className="w-full justify-center" onClick={() => setEscalateOpen(true)}>Escalate</Button>
               )}
-              {canResolve && !terminal && ticket.status !== 'Solved' && ticket.status !== 'Completed' && (
+              {canResolve && !terminal && !pendingApproval && ticket.status !== 'Solved' && ticket.status !== 'Completed' && (
                 <Button variant="ghost-rect" className="w-full justify-center" onClick={() => setResolveOpen(true)}>Resolve</Button>
               )}
-              {!canResolve && !terminal && ticket.status !== 'Solved' && ticket.status !== 'Completed' && (
+              {!canResolve && !terminal && !pendingApproval && ticket.status !== 'Solved' && ticket.status !== 'Completed' && (
                 <p className="text-[length:var(--fs-caption)] text-muted">Resolution requires Complaints Team - use Escalate to route it.</p>
               )}
               {ticket.status === 'Solved' && (
@@ -516,11 +615,23 @@ export function TicketDetail() {
                   {openActivities.length > 0 ? `Complete (${openActivities.length} open)` : 'Complete'}
                 </Button>
               )}
-              {ticket.status === 'Completed' && (
-                <Button variant="primary-rect" className="w-full justify-center" onClick={closeTicket}>Close Ticket</Button>
+              {ticket.status === 'Completed' && ticket.category === 'Disconnection' && (
+                <Button variant="primary-rect" className="w-full justify-center" onClick={() => setRetentionCloseOpen(true)}>Close Ticket</Button>
               )}
-              {!terminal && (
+              {ticket.status === 'Completed' && ticket.category !== 'Disconnection' && (
+                <Button variant="primary-rect" className="w-full justify-center" onClick={() => closeTicket()}>Close Ticket</Button>
+              )}
+              {!terminal && !pendingApproval && (
                 <Button variant="ghost-rect" className="w-full justify-center" onClick={() => setCancelOpen(true)}>Cancel</Button>
+              )}
+              {!terminal && !pendingApproval && (
+                <button
+                  type="button"
+                  onClick={sendToApproval}
+                  className="text-[length:var(--fs-caption)] text-muted hover:text-accent transition-colors self-center mt-1"
+                >
+                  Simulate → send to approval (test)
+                </button>
               )}
               {ticket.status === 'Closed' && (
                 <Button
@@ -632,6 +743,20 @@ export function TicketDetail() {
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="ghost-rect" onClick={() => setReopenOpen(false)}>Cancel</Button>
           <Button variant="primary-rect" onClick={reopen} disabled={!reopenReason.trim()}>Reopen</Button>
+        </div>
+      </Drawer>
+
+      <Drawer open={retentionCloseOpen} onClose={() => setRetentionCloseOpen(false)} title="Close Disconnection Ticket">
+        <Select
+          label="Resolution Code (retention) - mandatory, BR-060"
+          value={retentionResolutionCode}
+          onChange={(e) => setRetentionResolutionCode(e.target.value)}
+          placeholder="Select an outcome"
+          options={RETENTION_RESOLUTION_CODES.map((r) => ({ value: r, label: r }))}
+        />
+        <div className="flex justify-end gap-2 mt-6">
+          <Button variant="ghost-rect" onClick={() => setRetentionCloseOpen(false)}>Cancel</Button>
+          <Button variant="primary-rect" onClick={() => closeTicket(retentionResolutionCode)} disabled={!retentionResolutionCode}>Close Ticket</Button>
         </div>
       </Drawer>
     </div>

@@ -8,7 +8,7 @@ import { Badge } from '../../../components/primitives/Badge';
 import { evaluateRule } from '../../../engines/ruleEngine';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { useNotificationStore } from '../../../stores/notificationStore';
-import { TT_AREAS, derivePriorityFromSegment, slaTargetHours } from '../ticketReferenceData';
+import { TT_AREAS, TT_ACTUAL_ISSUES, derivePriorityFromSegment, slaTargetHours } from '../ticketReferenceData';
 
 // Slide 15 "Type of Tickets" taxonomy (vodafone-process-overview-290626-ec-1ed338b9).
 const ISSUE_TYPES = [
@@ -52,6 +52,7 @@ export interface NewTicketValue {
   area: string;
   template: string;
   templateContent: string;
+  actualIssue: string;
   queue: string;
   priority: string;
   slaTargetHours: number;
@@ -88,6 +89,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
   const [area, setArea] = useState('');
   const [template, setTemplate] = useState('');
   const [templateContent, setTemplateContent] = useState('');
+  const [actualIssue, setActualIssue] = useState('');
   const [queue, setQueue] = useState('');
   const [customer, setCustomer] = useState<CustomerRecord | null>(null);
   const [duplicates, setDuplicates] = useState<TicketRecord[]>([]);
@@ -157,6 +159,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
     setArea('');
     setTemplate('');
     setTemplateContent('');
+    setActualIssue('');
     setQueue('');
   };
 
@@ -164,7 +167,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
     if (submitting) return;
     setSubmitting(true);
     try {
-      await onSubmit({ customerId, issueType, area, template, templateContent, queue, priority: derivedPriority, slaTargetHours: derivedSlaHours });
+      await onSubmit({ customerId, issueType, area, template, templateContent, actualIssue, queue, priority: derivedPriority, slaTargetHours: derivedSlaHours });
       reset();
     } finally {
       setSubmitting(false);
@@ -208,6 +211,14 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
             options={areaOptions.map((a) => ({ value: a, label: a }))}
           />
         )}
+        <Select
+          label="Actual Issue (optional)"
+          value={actualIssue}
+          onChange={(e) => setActualIssue(e.target.value)}
+          placeholder="Select the real root-cause classification"
+          options={TT_ACTUAL_ISSUES.map((i) => ({ value: i, label: i }))}
+          helperText="Real (partial sample) Siebel VFQA_TT_ACTUAL_ISSUE values - see ticketReferenceData.ts."
+        />
         {duplicates.length > 0 && (
           <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_92%)] p-3">
             <p className="text-[length:var(--fs-caption)] text-fg font-medium">

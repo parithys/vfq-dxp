@@ -1998,6 +1998,14 @@
         "level": "Edit"
       },
       {
+        "key": "tickets.approval-queue",
+        "level": "Approve"
+      },
+      {
+        "key": "tickets.approval-detail",
+        "level": "Approve"
+      },
+      {
         "key": "leads.list-views",
         "level": "Edit"
       },
@@ -2135,6 +2143,14 @@
       {
         "key": "tickets.field-templates",
         "level": "Edit"
+      },
+      {
+        "key": "tickets.approval-queue",
+        "level": "Approve"
+      },
+      {
+        "key": "tickets.approval-detail",
+        "level": "Approve"
       },
       {
         "key": "leads.list-views",

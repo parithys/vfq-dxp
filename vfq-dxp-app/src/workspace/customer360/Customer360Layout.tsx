@@ -32,6 +32,7 @@ import { AlertsRisksSection } from './sections/AlertsRisksSection';
 import { AuditTrailSection } from './sections/AuditTrailSection';
 import { AddressSection } from './sections/AddressSection';
 import { ContactSection } from './sections/ContactSection';
+import { DevicePenaltyPolicy, StarNumberPenaltyPolicy } from './sections/penaltyViewResolvers';
 
 // Deep links from elsewhere in the app (queue notification, toasts, the
 // Linked Services panel) only ever name one of these three ServiceTab
@@ -368,13 +369,25 @@ export function Customer360Layout() {
             key: 'penalty-view',
             label: 'Penalty View',
             // Both of the spec's two named fields (Star number Penalty,
-            // Device Penalty) are genuinely unbacked - the real
-            // commitment-penalties.json records this corpus has are
-            // disconnection/MNP-port-out penalties, a different category
-            // than either named field, so mapping them here would
-            // misrepresent what kind of penalty they are. Renders both as
-            // an honest "Not available" rather than a mislabeled value.
-            content: <TopicFieldsSection personaId={activePersonaId} topic="Penalty View" />,
+            // Device Penalty) have no matching per-customer record - the
+            // real commitment-penalties.json dataset only covers
+            // disconnection/MNP-port-out/upgrade penalties, a different
+            // category. Rather than the honest-but-empty "Not available"
+            // default, each renders the actual evidenced lock-in/penalty
+            // policy rules (BR-* ids, reference/blueprint/business-rules.md)
+            // as a richField, with explicit gap notes for what no source
+            // document actually supports (a unified plan table, a
+            // per-customer computed amount).
+            content: (
+              <TopicFieldsSection
+                personaId={activePersonaId}
+                topic="Penalty View"
+                richFields={{
+                  'Star number Penalty': <StarNumberPenaltyPolicy />,
+                  'Device Penalty (Fiber & 5G)': <DevicePenaltyPolicy />,
+                }}
+              />
+            ),
           },
         ]
       : []),

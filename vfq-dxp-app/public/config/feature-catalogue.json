@@ -273,6 +273,20 @@
     "screenIds": ["SCR-213"]
   },
   {
+    "key": "tickets.approval-queue",
+    "name": "Ticket Approval Queue",
+    "area": "Trouble Ticketing / Complaints",
+    "surface": "workspace",
+    "screenIds": []
+  },
+  {
+    "key": "tickets.approval-detail",
+    "name": "Ticket approval review + approve/reject/return",
+    "area": "Trouble Ticketing / Complaints",
+    "surface": "workspace",
+    "screenIds": []
+  },
+  {
     "key": "identity.passport-to-qid",
     "name": "Passport-to-QID update wizard",
     "area": "Identity / Customer Management",

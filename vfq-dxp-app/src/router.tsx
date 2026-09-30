@@ -17,6 +17,8 @@ import { QnomyTicketHistory } from './workspace/tickets/QnomyTicketHistory';
 import { WorkspaceNotYetBuilt } from './modules/WorkspaceNotYetBuilt';
 import { LeadListView } from './modules/lead-management/LeadListView';
 import { ProductLinePage } from './modules/product-lines/ProductLinePage';
+import { TicketApprovalQueue } from './modules/trouble-ticketing-complaints/screens/TicketApprovalQueue';
+import { TicketApprovalReview } from './modules/trouble-ticketing-complaints/screens/TicketApprovalReview';
 
 // Side-effect imports: each module's screens/index.ts calls registerScreen()
 // so router.tsx doesn't need to know which screens are implemented.
@@ -65,6 +67,12 @@ export function AppRouter() {
       <Route path="/billing-account/:billingProfileId" element={<BillingAccountPage />} />
       <Route path="/sales" element={<SalesWorkspace />} />
       <Route path="/support" element={<SupportWorkspace />} />
+      {/* Screen 16 (Approval Queue & Ticket Review) - no SCR- id, same
+          workspace-style direct routing as /support/orders/LoginPage above:
+          routes.json is a closed SCR-001-SCR-213 catalogue with no free
+          slot for a screen with zero source evidence. */}
+      <Route path="/trouble-ticketing-complaints/approval-queue" element={<TicketApprovalQueue />} />
+      <Route path="/trouble-ticketing-complaints/approval-review" element={<TicketApprovalReview />} />
       <Route path="/orders" element={<OrdersWorkspace />} />
       <Route path="/administration" element={<AdministrationWorkspace />} />
       <Route path="/profile" element={<AgentProfileWorkspace />} />

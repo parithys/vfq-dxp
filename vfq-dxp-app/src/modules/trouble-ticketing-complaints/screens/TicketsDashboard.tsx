@@ -4,6 +4,7 @@ import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
 import { Input } from '../../../components/primitives/Input';
 import { Select } from '../../../components/primitives/Select';
+import { Checkbox } from '../../../components/primitives/Checkbox';
 import { ErrorBanner } from '../../../components/primitives/ErrorBanner';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
@@ -12,9 +13,17 @@ import { downloadCsv } from '../../../engines/csvExport';
 import { TicketCreationModal } from './TicketCreationModal';
 import type { NewTicketValue } from './TicketCreationModal';
 import { STATUS_VARIANT, TICKET_STATUSES, buildNewTicketRecord } from '../ticketReferenceData';
+import { useTicketSlaEscalationSweep } from '../slaEscalationSweep';
 
 const CURRENT_AGENT = 'Current Agent';
 
+interface Activity {
+  type: 'Manual' | 'Auto';
+  description: string;
+  createdAt: string;
+  createdBy: string;
+  open: boolean;
+}
 interface Ticket {
   ticketId: string;
   customerId: string;
@@ -24,8 +33,11 @@ interface Ticket {
   queue: string;
   priority: string;
   assignedTo?: string | null;
+  assignedAt?: string | null;
   slaDueAt?: string;
   escalations?: { escalatedBy: string }[];
+  activities?: Activity[];
+  closedAt?: string | null;
 }
 
 function ragVariant(ticket: Ticket): 'success' | 'warning' | 'danger' | 'filled-neutral' {
@@ -42,12 +54,20 @@ function ragVariant(ticket: Ticket): 'success' | 'warning' | 'danger' | 'filled-
 // modelled since no team-roster entity exists anywhere in this app to
 // resolve it from; only the two views this schema can actually support
 // (My / All) are built, rather than a fabricated team grouping.
-export function TicketsDashboard() {
+interface TicketsDashboardProps {
+  /** False when embedded in a parent that already provides padding
+   * (SupportWorkspace's Tabs) - mirrors OrderApprovalQueue/MySalesOrders'
+   * own `padded` prop convention. */
+  padded?: boolean;
+}
+
+export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
   const tickets = (useEntityStore((s) => s.records['trouble-tickets']) ?? []) as unknown as Ticket[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const loading = useEntityStore((s) => s.loading['trouble-tickets']);
   const loadError = useEntityStore((s) => s.errors['trouble-tickets']);
   const createRecord = useEntityStore((s) => s.createRecord);
+  const updateRecord = useEntityStore((s) => s.updateRecord);
   const pushToast = useNotificationStore((s) => s.pushToast);
   const [modalOpen, setModalOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -55,6 +75,8 @@ export function TicketsDashboard() {
   const [priorityFilter, setPriorityFilter] = useState('');
   const [queueFilter, setQueueFilter] = useState('');
   const [view, setView] = useState<'all' | 'mine' | 'escalated'>('all');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  useTicketSlaEscalationSweep();
 
   useEffect(() => {
     loadKind('trouble-tickets');
@@ -80,6 +102,74 @@ export function TicketsDashboard() {
     });
   }, [tickets, search, statusFilter, priorityFilter, queueFilter, view]);
 
+  // Drops selections that scrolled out of the current filter/search rather
+  // than carrying them along invisibly - there's no existing selection
+  // precedent anywhere else in this codebase to follow here (research
+  // confirmed this is the first row-selection UI in the app).
+  const filteredIds = filtered.map((t) => t.ticketId).join(',');
+  useEffect(() => {
+    const visible = new Set(filteredIds ? filteredIds.split(',') : []);
+    setSelectedIds((prev) => {
+      const next = new Set([...prev].filter((id) => visible.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [filteredIds]);
+
+  const toggleSelected = (ticketId: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(ticketId);
+      else next.delete(ticketId);
+      return next;
+    });
+  };
+
+  const addBulkActivity = (ticket: Ticket, description: string): Activity[] => [
+    ...(ticket.activities ?? []),
+    { type: 'Auto', description, createdAt: new Date().toISOString(), createdBy: CURRENT_AGENT, open: false },
+  ];
+
+  // Reuses assignToMe's exact rule from TicketDetail.tsx (unassigned + not
+  // terminal -> assign to CURRENT_AGENT, Not Solved -> Assigned) and its
+  // ungated-ness - single-ticket assign has no capability gate today, so
+  // bulk stays consistent rather than introducing a new, unevidenced one.
+  const bulkAssign = async () => {
+    const targets = filtered.filter((t) => selectedIds.has(t.ticketId));
+    const terminal = (t: Ticket) => t.status === 'Closed' || t.status === 'Cancelled';
+    const eligible = targets.filter((t) => !t.assignedTo && !terminal(t));
+    await Promise.all(
+      eligible.map((t) =>
+        updateRecord('trouble-tickets', 'ticketId', t.ticketId, {
+          assignedTo: CURRENT_AGENT,
+          assignedAt: new Date().toISOString(),
+          status: t.status === 'Not Solved' ? 'Assigned' : t.status,
+          activities: addBulkActivity(t, `Ticket assigned to ${CURRENT_AGENT} (bulk action).`),
+        })
+      )
+    );
+    const skipped = targets.length - eligible.length;
+    pushToast('success', `Assigned ${eligible.length} of ${targets.length} selected ticket(s)${skipped ? ` (${skipped} skipped - already assigned or terminal)` : ''}.`);
+  };
+
+  // Reuses closeTicket's exact precondition (status === 'Completed' only)
+  // for the same consistency reason as bulkAssign above.
+  const bulkClose = async () => {
+    const targets = filtered.filter((t) => selectedIds.has(t.ticketId));
+    const eligible = targets.filter((t) => t.status === 'Completed');
+    const closedAt = new Date().toISOString();
+    await Promise.all(
+      eligible.map((t) =>
+        updateRecord('trouble-tickets', 'ticketId', t.ticketId, {
+          status: 'Closed',
+          closedAt,
+          activities: addBulkActivity(t, 'Ticket closed (bulk action) - all activities closed.').map((a) => ({ ...a, open: false })),
+        })
+      )
+    );
+    const skipped = targets.length - eligible.length;
+    pushToast('success', `Closed ${eligible.length} of ${targets.length} selected ticket(s)${skipped ? ` (${skipped} skipped - not yet Completed)` : ''}.`);
+  };
+
   const createTicket = async (value: NewTicketValue) => {
     const ticketId = `TT-${Date.now().toString().slice(-6)}`;
     await createRecord('trouble-tickets', buildNewTicketRecord({ ticketId, ...value, createdBy: 'AGENT-VINODHINIR' }));
@@ -103,7 +193,7 @@ export function TicketsDashboard() {
   };
 
   return (
-    <div className="p-8">
+    <div className={padded ? 'p-8' : ''}>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Tickets Dashboard</h1>
@@ -177,9 +267,31 @@ export function TicketsDashboard() {
         </div>
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 mb-3 rounded-[var(--radius-card)] border border-border-soft bg-bg p-3">
+          <span className="text-[length:var(--fs-body)] text-fg">{selectedIds.size} selected</span>
+          <Button variant="ghost-rect" compact onClick={bulkAssign}>Bulk Assign to me</Button>
+          <Button variant="ghost-rect" compact onClick={bulkClose}>Bulk Close</Button>
+          <Button variant="ghost-rect" compact className="ml-auto" onClick={() => setSelectedIds(new Set())}>Clear selection</Button>
+        </div>
+      )}
+
       <ErrorBanner message={loadError} />
       <DataTable<Ticket>
         columns={[
+          {
+            key: 'select',
+            header: '',
+            sortable: false,
+            render: (r) => (
+              <Checkbox
+                aria-label={`Select ticket ${r.ticketId}`}
+                checked={selectedIds.has(r.ticketId)}
+                onChange={(e) => toggleSelected(r.ticketId, e.target.checked)}
+                onClick={(e) => e.stopPropagation()}
+              />
+            ),
+          },
           {
             key: 'ticketId',
             header: 'Ticket #',
