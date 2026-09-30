@@ -38,15 +38,13 @@ const WIZARD_ID = 'new-postpaid';
 const POST_EXIT_DESTINATION = '/';
 
 /**
- * "Back to Dashboard" on the confirmation screen, once the order is already
- * submitted - a different destination from POST_EXIT_DESTINATION above,
- * which stands in for wherever mid-order Save & Exit/Abandon SHOULD land
- * once business confirms it. This one names itself: the button says
- * "Dashboard", and router.tsx routes '/' to <Dashboard /> - so unlike the
- * placeholder above, there is nothing left to confirm here (2026-09-28
- * "Define the correct destination for Back to Dashboard").
+ * "Start Fibre Activation" on the confirmation screen (2026-09-30) - a
+ * cross-sell into the Fixed Line/Fibre wizard for the same counter visit,
+ * replacing the previous same-wizard "Start Another Activation" reset.
+ * SCR-043, the same registered New Fibre Connection entry point
+ * journeyCatalogue.ts and FibreHomeSection's own product action use.
  */
-const DASHBOARD_ROUTE = '/';
+const FIBRE_ACTIVATION_ROUTE = '/fixed-line-fibre/new-fixed-line-wizard-contact-step';
 
 interface Product {
   productId: string;
@@ -135,8 +133,7 @@ export function NewPostpaidWizard() {
               variant: 'primary-rect',
               onClick: () => navigate(`/order-management/order-approval-detail-attachments-order-details-activities-a?id=${confirmedOrder.orderId}`),
             },
-            { label: 'Start Another Activation', onClick: () => setConfirmedOrder(null) },
-            { label: 'Back to Dashboard', onClick: () => navigate(DASHBOARD_ROUTE) },
+            { label: 'Start Fibre Activation', onClick: () => navigate(FIBRE_ACTIVATION_ROUTE) },
           ]}
         />
       </div>
@@ -256,7 +253,7 @@ export function NewPostpaidWizard() {
           },
           {
             key: 'address',
-            label: 'Communication Address',
+            label: 'Address',
             render: ({ values, setValue }) => {
               const contact = values.contact as GuidedContactValue | undefined;
               return (
@@ -452,7 +449,7 @@ export function NewPostpaidWizard() {
           {
             key: 'caf',
             label: 'CAF & Signature',
-            render: ({ values, setValue }) => (
+            render: ({ values, setValue, goNext }) => (
               <CafSignatureCapture
                 value={
                   (values.caf as {
@@ -475,6 +472,12 @@ export function NewPostpaidWizard() {
                 // sharing this component keep the original manual picker.
                 autoDetectDeviceType
                 legalFacts={values.legalFacts as TncLegalFacts | undefined}
+                // Wizard chrome (rail, Back/Continue footer) is hidden AFTER
+                // signing now, not before (2026-09-30 - see customerFacing
+                // below) - so once signed, this step's own content is the
+                // only way forward, and it needs the same goNext the wizard
+                // footer would otherwise have called.
+                onContinue={goNext}
               />
             ),
             isValid: (values) => {
@@ -483,14 +486,19 @@ export function NewPostpaidWizard() {
               return c.cafType !== 'Digital' || Boolean(c.signatureDataUrl);
             },
             // "The first and only step where the customer-facing view is
-            // presented" (2026-09-28) - true only while awaiting signature;
-            // flips off within this SAME step the instant one exists, so the
-            // agent's post-signature review (CAF preview, Additional
-            // Documents) renders with the normal wizard chrome back.
+            // presented" - reversed 2026-09-30: the rail/footer now stay up
+            // WHILE awaiting signature (the agent is still driving; Continue
+            // is simply disabled by isValid until signed) and disappear only
+            // once signed, the instant this same "signed" predicate flips
+            // true - the same one isValid/locksAfter already use, so the
+            // three cannot disagree about what "signed" means. The signed
+            // customer-facing view supplies its own way forward (the
+            // Continue button CafSignatureCapture renders when `signed`,
+            // calling the `onContinue` this step wires to goNext) since the
+            // wizard's own footer is gone at that point.
             customerFacing: (values) => {
               const c = values.caf as { cafType?: CafType; signatureDataUrl?: string } | undefined;
-              if (!c?.cafType) return true; // detecting device type; nothing to show yet either way
-              return !(c.cafType !== 'Digital' || Boolean(c.signatureDataUrl));
+              return Boolean(c?.cafType) && (c?.cafType !== 'Digital' || Boolean(c?.signatureDataUrl));
             },
             // "Once CAF is signed, disable/remove Back navigation and prevent
             // all edits" (2026-09-28) - the SAME signed predicate as isValid

@@ -43,14 +43,15 @@ export const VAT_RATE = 0.05;
 export const HRN_ADVANCE_QAR = 100;
 
 /**
- * Free/Star price boundary, exclusive on the Free side (2026-09-28 direction:
- * "Treat all numbers below QAR 1,000 as free to the customer"). Centralised
- * here rather than living only in MsisdnPicker.tsx, because CheckoutSummaryStep
- * needs the SAME threshold to decide whether a number is a Star number at all
- * (isStarNumber) - a number under this price gets plain "no lock-in" treatment,
- * never a star-tier lock-in or an entitlement calculation, in both places.
+ * Free/Star price boundary, exclusive on the Free side (raised 2026-09-30 from
+ * QAR 1,000 to QAR 1,500 - numbers below this are free to the customer).
+ * Centralised here rather than living only in MsisdnPicker.tsx, because
+ * CheckoutSummaryStep needs the SAME threshold to decide whether a number is
+ * a Star number at all (isStarNumber) - a number under this price gets plain
+ * "no lock-in" treatment, never a star-tier lock-in or an entitlement
+ * calculation, in both places.
  */
-export const FREE_NUMBER_PRICE_CEILING_QAR = 1000;
+export const FREE_NUMBER_PRICE_CEILING_QAR = 1500;
 
 /**
  * Star-number entitlement multiplier - BR-115 ("Star number entitlement by

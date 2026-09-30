@@ -1,4 +1,5 @@
 import { IdLookupStep } from './IdLookupStep';
+import { idTypeLabel } from '../domain/QidInput';
 import type { QidType } from '../domain/QidInput';
 import type { QidImageUploadValue } from '../domain/QidImageUpload';
 import { Radio } from '../primitives/Radio';
@@ -420,216 +421,241 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
       />
 
       {value.moiResult && (
-        <div className="grid grid-cols-3 gap-4 pt-2 border-t border-border-soft">
-          {/* Three columns as of 2026-09-28 (was two, per the 2026-09-25
-              direction below). Field order falls into clean rows either way:
+        <div className="space-y-6 pt-2 border-t border-border-soft">
+          {/* Two labelled groups (2026-09-30 regroup) - the registry-owned
+              identity facts together, the two agent-editable contact fields
+              (plus the notification/service preferences that ride with them)
+              in their own group below. Heading style matches
+              BillingAccountStep's "Existing Billing Accounts" - the
+              established in-step sub-heading in this same design system,
+              reused rather than inventing a new one. */}
+          <div>
+            <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-3">Identity Details</h3>
+            {/* Three columns as of 2026-09-28 (was two, per the 2026-09-25
+                direction below). Field order falls into clean rows:
 
-                First Name  | Middle Name   | Last Name      read-only
-                Expiry Date | Date of Birth | Nationality    read-only
-                Email       | Alt phone     | Notif. Language EDITABLE-ish
-                Gender        |             |                read-only
+                  First Name    | Middle Name    | Last Name      read-only
+                  Date of Birth | Expiry Date    | Nationality    read-only
+                  Document Type | Gender         |                read-only
 
-              So the two fields the agent can actually change (Email, Alt
-              phone) still share a row, the registry-owned identity fields
-              (name/DOB/nationality/expiry) group above them, and Gender ends
-              the set alone rather than padded with a spacer - the two flag
-              checkboxes that follow are full-width and close the block.
+                The five identity fields are READ-ONLY. This re-reverses the
+                2026-09-24 decision that made them agent-editable and restores
+                the supplied asset's "State MOI Registry Records (Read Only)"
+                rule. They stay `required` and still gate Continue, but the
+                only thing that can fill them is the registry.
 
-              The five identity fields are READ-ONLY. This re-reverses the
-              2026-09-24 decision that made them agent-editable and restores
-              the supplied asset's "State MOI Registry Records (Read Only)"
-              rule. They stay `required` and still gate Continue, but the only
-              thing that can fill them is the registry.
+                That is exactly why MoiResult now carries `gender` (see
+                identityFromMoi). A mandatory field that is read-only AND has
+                no registry source can never be satisfied, and Continue would
+                be dead for every customer. */}
+            <div className="grid grid-cols-3 gap-4">
+              <Input label="First Name" required readOnly value={value.firstName ?? ''} onChange={() => {}} />
+              {/* Middle Name(s) added 2026-09-27, relabelled with the "(s)"
+                  2026-09-28 - identityFromMoi combines the 2nd-4th name tokens
+                  here, so the label says plural rather than implying one name
+                  where up to three may sit. Not `required`: MOI returns a
+                  single name string and plenty of records are two tokens, so
+                  a mandatory middle name would block Continue for every
+                  customer who has none on file - the one failure mode the
+                  read-only identity fields were already shown to cause. */}
+              <Input label="Middle Name(s)" readOnly value={value.middleName ?? ''} onChange={() => {}} />
+              <Input label="Last Name" required readOnly value={value.lastName ?? ''} onChange={() => {}} />
+              {/* The DD/MM/YYYY hint is the field's PLACEHOLDER, not a caption
+                  beneath it (2026-09-27). As a caption it sat under a field
+                  that is already populated from MOI, describing a format the
+                  agent cannot type into anyway; inside the box it does the
+                  one job a format hint has - telling you what to write when
+                  there is nothing there yet. */}
+              <Input
+                label="Date of Birth"
+                required
+                readOnly
+                placeholder="DD/MM/YYYY"
+                value={value.dob ?? ''}
+                onChange={() => {}}
+              />
+              {/* ID Expiry - evidenced alongside Nationality/DOB/Name in this
+                  file's own header comment as a field that "auto-populate[s]
+                  from the ID scan", but nothing rendered it until 2026-09-28.
+                  Same masked DD/MM/YYYY shape as Date of Birth, and the same
+                  read-only registry-sourced treatment as every other identity
+                  field on this row - see identityFromMoi. Follows Date of
+                  Birth (2026-09-30 order), ahead of Nationality. */}
+              <Input
+                label="Expiry Date"
+                required
+                readOnly
+                placeholder="DD/MM/YYYY"
+                value={value.idExpiryDate ?? ''}
+                onChange={() => {}}
+              />
+              <Input label="Nationality" required readOnly value={value.nationality ?? ''} onChange={() => {}} />
+              {/* Document Type - which of the four ID Type cards resolved
+                  this record (2026-09-30). Read-only for the same reason
+                  every other field on this row is: it is what the scanner
+                  identified, not something the agent chooses here - the ID
+                  Type selector further up is the only place that changes it,
+                  and doing so clears this whole panel and starts over. */}
+              <Input
+                label="Document Type"
+                readOnly
+                value={value.idType ? idTypeLabel(value.idType) : ''}
+                onChange={() => {}}
+              />
+              {/* Kept as a fieldset/legend radio group rather than swapped for
+                  a read-only text box, so the control's shape does not change
+                  with its editability - the radios are simply disabled. */}
+              <fieldset className="flex flex-col gap-1">
+                <legend className="text-[length:var(--fs-label)] text-fg-2">
+                  Gender
+                  <span className="text-[var(--field-border-error)]" aria-hidden="true">
+                    {' *'}
+                  </span>
+                </legend>
+                <div className="flex items-center gap-6 py-2">
+                  {['Male', 'Female'].map((g) => (
+                    <label key={g} className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg-2">
+                      <Radio
+                        name="contact-gender"
+                        value={g}
+                        checked={value.gender === g}
+                        // Radios have no readOnly, so this one genuinely needs
+                        // disabled - there is no other way to make a radio
+                        // uncheckable. The label colour is left at --fg-2
+                        // rather than the disabled grey so the answer stays
+                        // legible, and Radio dims its own centre dot to
+                        // --field-label-disabled so a disabled-but-checked
+                        // answer still reads as chosen.
+                        disabled
+                      />
+                      {g}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              {/* The employer, read-only, and only for a customer who has
+                  one. Where the "B2B2C Order" checkbox and its company
+                  typeahead used to be.
 
-              That is exactly why MoiResult now carries `gender` (see
-              identityFromMoi). A mandatory field that is read-only AND has no
-              registry source can never be satisfied, and Continue would be
-              dead for every customer. Email and Alternate phone remain
-              editable, so the agent can still correct the two fields a
-              customer actually contests at the counter. */}
-          <Input label="First Name" required readOnly value={value.firstName ?? ''} onChange={() => {}} />
-          {/* Middle Name(s) added 2026-09-27, relabelled with the "(s)"
-              2026-09-28 - identityFromMoi combines the 2nd-4th name tokens
-              here, so the label says plural rather than implying one name
-              where up to three may sit. Not `required`: MOI returns a single
-              name string and plenty of records are two tokens, so a mandatory
-              middle name would block Continue for every customer who has none
-              on file - the one failure mode the read-only identity fields were
-              already shown to cause. */}
-          <Input label="Middle Name(s)" readOnly value={value.middleName ?? ''} onChange={() => {}} />
-          <Input label="Last Name" required readOnly value={value.lastName ?? ''} onChange={() => {}} />
-          {/* The DD/MM/YYYY hint is the field's PLACEHOLDER, not a caption
-              beneath it (2026-09-27). As a caption it sat under a field that
-              is already populated from MOI, describing a format the agent
-              cannot type into anyway; inside the box it does the one job a
-              format hint has - telling you what to write when there is
-              nothing there yet. */}
-          {/* ID Expiry - evidenced alongside Nationality/DOB/Name in this
-              file's own header comment as a field that "auto-populate[s] from
-              the ID scan", but nothing rendered it until 2026-09-28. Same
-              masked DD/MM/YYYY shape as Date of Birth, and the same read-only
-              registry-sourced treatment as every other identity field on this
-              row - see identityFromMoi. Leads the row (2026-09-28 order),
-              ahead of Date of Birth and Nationality. */}
-          <Input
-            label="Expiry Date"
-            required
-            readOnly
-            placeholder="DD/MM/YYYY"
-            value={value.idExpiryDate ?? ''}
-            onChange={() => {}}
-          />
-          <Input
-            label="Date of Birth"
-            required
-            readOnly
-            placeholder="DD/MM/YYYY"
-            value={value.dob ?? ''}
-            onChange={() => {}}
-          />
-          <Input label="Nationality" required readOnly value={value.nationality ?? ''} onChange={() => {}} />
-          {/* Verification state rides INSIDE the field as a tick on its right
-              edge (2026-09-27), replacing the badge that sat underneath. The
-              badge was as wide as the input and read as a second control; the
-              status belongs to the value, so it now sits with it.
-              Only the VERIFIED state gets a mark - see emailVerification. */}
-          <Input
-            label="Email Address"
-            type="email"
-            required
-            value={value.email ?? ''}
-            placeholder="customer@example.qa"
-            error={value.email && !isValidEmail(value.email) ? 'Please enter a valid email address.' : undefined}
-            helperText={emailVerification(value.email, value.moiResult?.email).hint}
-            trailingAddon={
-              emailVerification(value.email, value.moiResult?.email).verified ? (
-                <VerifiedBadge label="Email address verified" />
-              ) : undefined
-            }
-            onChange={(e) => onChange({ ...value, email: e.target.value })}
-          />
-          <PhoneNumberInput
-            label="Alternate phone #"
-            required
-            // Dial code pinned to Qatar: the rule names one country, so a
-            // picker offering 200 others would present a choice in which every
-            // alternative fails validation.
-            fixedIso="QA"
-            // Qatar numbers are 8 digits after the dial code. Without this the
-            // cap is E.164's 15-minus-dial-code, i.e. 12, so the field happily
-            // took "777777777777" and only the validator underneath objected.
-            // The 9th keystroke now simply does not land.
-            maxNationalDigits={8}
-            helperText="Service notifications will be sent to this Qatar mobile number."
-            value={value.altPhone ?? ''}
-            placeholder="5566 7766"
-            error={
-              value.altPhone && !isValidAltPhone(value.altPhone)
-                ? 'Enter a valid Qatar mobile number.'
-                : undefined
-            }
-            onChange={(e) => onChange({ ...value, altPhone: e.target.value })}
-          />
-          {/* Evidenced agent-entered field (see isValidEmail's header note:
-              "Email/Alt Phone/Language ... are agent-entered"), added to the
-              form here for the first time - `language` has held a slot on
-              GuidedContactValue since this step's interface was written, but
-              nothing rendered it. Defaults to English, matching every other
-              Language control in the app (BillingProfileStep, Base
-              Management's Contact step).
+                  Read-only because the agent no longer decides this - the
+                  registry does. It sits with the other registry-sourced
+                  identity fields and is styled like them, so its provenance
+                  reads the same way theirs does. An agent who believes it is
+                  wrong has the same recourse as for a wrong name: the record
+                  is corrected upstream, not typed over here.
 
-              Options expanded 2026-09-28 from English/Arabic to also offer
-              Hindi, Malayalam and Filipino, matching Qatar's expat customer
-              base. English/Arabic/Hindi/Malayalam are the four languages the
-              CRM's actual SMS notification templates are evidenced in
-              (sms-templates - Locale codes ENU/ARA/HIN/MAL); Filipino has no
-              such template evidence but was requested explicitly for this
-              field, so it is included as a demo-catalogue addition rather
-              than an evidenced one. */}
-          <Select
-            label="Notification Language"
-            value={value.language ?? 'English'}
-            onChange={(e) => onChange({ ...value, language: e.target.value })}
-            options={[
-              { value: 'English', label: 'English' },
-              { value: 'Arabic', label: 'Arabic' },
-              { value: 'Hindi', label: 'Hindi' },
-              { value: 'Malayalam', label: 'Malayalam' },
-              { value: 'Filipino', label: 'Filipino' },
-            ]}
-          />
-          {/* Kept as a fieldset/legend radio group rather than swapped for a
-              read-only text box, so the control's shape does not change with
-              its editability - the radios are simply disabled. */}
-          <fieldset className="flex flex-col gap-1">
-            <legend className="text-[length:var(--fs-label)] text-fg-2">
-              Gender
-              <span className="text-[var(--field-border-error)]" aria-hidden="true">
-                {' *'}
-              </span>
-            </legend>
-            <div className="flex items-center gap-6 py-2">
-              {['Male', 'Female'].map((g) => (
-                <label key={g} className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg-2">
-                  <Radio
-                    name="contact-gender"
-                    value={g}
-                    checked={value.gender === g}
-                    // Radios have no readOnly, so this one genuinely needs
-                    // disabled - there is no other way to make a radio
-                    // uncheckable. The label colour is left at --fg-2 rather
-                    // than the disabled grey so the answer stays legible, and
-                    // Radio dims its own centre dot to --field-label-disabled
-                    // so a disabled-but-checked answer still reads as chosen.
-                    disabled
-                  />
-                  {g}
-                </label>
-              ))}
+                  Absent, not empty, for an unsponsored customer. A blank
+                  "Employer" box on every ordinary consumer sale would imply a
+                  field someone forgot to fill in. */}
+              {value.isB2B2C && value.companyName && (
+                <Input
+                  id="contact-employer"
+                  label="Employer (B2B2C)"
+                  value={value.companyName}
+                  readOnly
+                  onChange={() => {}}
+                  helperText="On file with the sponsoring employer. This order routes for approval."
+                />
+              )}
             </div>
-          </fieldset>
-          {/* Fixed Line evidences a "Get IPTV?" field at Contact; FWA's
-              evidenced set does not, hence the prop. Restored here after a
-              field reorder briefly dropped it - postpaid passes
-              showIptvToggle={false} so it never appeared in that journey,
-              which is exactly why losing it would not have shown up in
-              postpaid testing. */}
-          {showIptvToggle && (
-            <Select
-              label="Get IPTV?"
-              value={value.getIptv ?? 'No'}
-              onChange={(e) => onChange({ ...value, getIptv: e.target.value as 'Yes' | 'No' })}
-              options={[
-                { value: 'No', label: 'No' },
-                { value: 'Yes', label: 'Yes' },
-              ]}
-            />
-          )}
+          </div>
 
-          {/* The employer, read-only, and only for a customer who has one.
-              Where the "B2B2C Order" checkbox and its company typeahead used
-              to be.
-              
-              Read-only because the agent no longer decides this - the registry
-              does. It sits with the other registry-sourced identity fields and
-              is styled like them, so its provenance reads the same way theirs
-              does. An agent who believes it is wrong has the same recourse as
-              for a wrong name: the record is corrected upstream, not typed
-              over here.
-              
-              Absent, not empty, for an unsponsored customer. A blank "Employer"
-              box on every ordinary consumer sale would imply a field someone
-              forgot to fill in. */}
-          {value.isB2B2C && value.companyName && (
-            <Input
-              id="contact-employer"
-              label="Employer (B2B2C)"
-              value={value.companyName}
-              readOnly
-              onChange={() => {}}
-              helperText="On file with the sponsoring employer. This order routes for approval."
-            />
-          )}
+          <div>
+            <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-3">Contact &amp; Notification</h3>
+            {/* The two fields the agent can actually change (Email, Alt
+                phone) share a row with the one preference field evidenced
+                alongside them - see isValidEmail's header note: "Email/Alt
+                Phone/Language ... are agent-entered". */}
+            <div className="grid grid-cols-3 gap-4">
+              {/* Verification state rides INSIDE the field as a tick on its
+                  right edge (2026-09-27), replacing the badge that sat
+                  underneath. The badge was as wide as the input and read as a
+                  second control; the status belongs to the value, so it now
+                  sits with it. Only the VERIFIED state gets a mark - see
+                  emailVerification. */}
+              <Input
+                label="Email Address"
+                type="email"
+                required
+                value={value.email ?? ''}
+                placeholder="customer@example.qa"
+                error={value.email && !isValidEmail(value.email) ? 'Please enter a valid email address.' : undefined}
+                helperText={emailVerification(value.email, value.moiResult?.email).hint}
+                trailingAddon={
+                  emailVerification(value.email, value.moiResult?.email).verified ? (
+                    <VerifiedBadge label="Email address verified" />
+                  ) : undefined
+                }
+                onChange={(e) => onChange({ ...value, email: e.target.value })}
+              />
+              <PhoneNumberInput
+                label="Alternate phone #"
+                required
+                // Dial code pinned to Qatar: the rule names one country, so a
+                // picker offering 200 others would present a choice in which
+                // every alternative fails validation.
+                fixedIso="QA"
+                // Qatar numbers are 8 digits after the dial code. Without this
+                // the cap is E.164's 15-minus-dial-code, i.e. 12, so the field
+                // happily took "777777777777" and only the validator
+                // underneath objected. The 9th keystroke now simply does not
+                // land.
+                maxNationalDigits={8}
+                helperText="Service notifications will be sent to this Qatar mobile number."
+                value={value.altPhone ?? ''}
+                placeholder="5566 7766"
+                error={
+                  value.altPhone && !isValidAltPhone(value.altPhone)
+                    ? 'Enter a valid Qatar mobile number.'
+                    : undefined
+                }
+                onChange={(e) => onChange({ ...value, altPhone: e.target.value })}
+              />
+              {/* Evidenced agent-entered field - `language` has held a slot on
+                  GuidedContactValue since this step's interface was written,
+                  but nothing rendered it until 2026-09-28. Defaults to
+                  English, matching every other Language control in the app
+                  (BillingProfileStep, Base Management's Contact step).
+
+                  Options expanded 2026-09-28 from English/Arabic to also
+                  offer Hindi, Malayalam and Filipino, matching Qatar's expat
+                  customer base. English/Arabic/Hindi/Malayalam are the four
+                  languages the CRM's actual SMS notification templates are
+                  evidenced in (sms-templates - Locale codes
+                  ENU/ARA/HIN/MAL); Filipino has no such template evidence but
+                  was requested explicitly for this field, so it is included
+                  as a demo-catalogue addition rather than an evidenced one. */}
+              <Select
+                label="Notification Language"
+                value={value.language ?? 'English'}
+                onChange={(e) => onChange({ ...value, language: e.target.value })}
+                options={[
+                  { value: 'English', label: 'English' },
+                  { value: 'Arabic', label: 'Arabic' },
+                  { value: 'Hindi', label: 'Hindi' },
+                  { value: 'Malayalam', label: 'Malayalam' },
+                  { value: 'Filipino', label: 'Filipino' },
+                ]}
+              />
+              {/* Fixed Line evidences a "Get IPTV?" field at Contact; FWA's
+                  evidenced set does not, hence the prop. Restored here after a
+                  field reorder briefly dropped it - postpaid passes
+                  showIptvToggle={false} so it never appeared in that journey,
+                  which is exactly why losing it would not have shown up in
+                  postpaid testing. */}
+              {showIptvToggle && (
+                <Select
+                  label="Get IPTV?"
+                  value={value.getIptv ?? 'No'}
+                  onChange={(e) => onChange({ ...value, getIptv: e.target.value as 'Yes' | 'No' })}
+                  options={[
+                    { value: 'No', label: 'No' },
+                    { value: 'Yes', label: 'Yes' },
+                  ]}
+                />
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -202,7 +202,7 @@ export function LoginPage() {
               disabled={signingIn}
               className={`w-full flex items-center justify-center gap-2 rounded-[var(--radius-btn)] border ${PRIMARY_SURFACE} enabled:hover:bg-[image:var(--accent-gradient-hover)] enabled:active:scale-[0.99] disabled:opacity-60 font-medium py-3 shadow-[var(--shadow-brand)] transition-[color,border-color,transform]`}
             >
-              {signingIn ? 'Signing in…' : 'Sign in with SSO'}
+              {signingIn ? 'Signing in…' : 'Sign In'}
               {!signingIn && <Icon path={ICONS.arrowRight} className="w-4 h-4" />}
             </button>
           </div>

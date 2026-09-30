@@ -52,5 +52,41 @@
     "orderNumber": "ORD-90004",
     "orderType": "Upgrade",
     "postpaidActivationDate": "2026-08-01"
+  },
+  {
+    "installedAssetId": "IA-9004",
+    "accountId": "ACC-5001",
+    "billingProfileId": "BILL-7001",
+    "productServiceName": "Prepaid Red 25",
+    "serviceId": "SVC-30012",
+    "status": "Active",
+    "effectiveFrom": "2026-09-01",
+    "effectiveTo": null,
+    "serviceAccount": "SA-40012",
+    "price": 25,
+    "billingProfile": "BILL-7001",
+    "promotion": "PROD-301",
+    "orderDate": "2026-08-29",
+    "orderNumber": "ORD-90022",
+    "orderType": "New Connection",
+    "postpaidActivationDate": null
+  },
+  {
+    "installedAssetId": "IA-9005",
+    "accountId": "ACC-5001",
+    "billingProfileId": "BILL-7001",
+    "productServiceName": "Prepaid Red 50",
+    "serviceId": "SVC-30013",
+    "status": "Active",
+    "effectiveFrom": "2026-09-01",
+    "effectiveTo": null,
+    "serviceAccount": "SA-40013",
+    "price": 50,
+    "billingProfile": "BILL-7001",
+    "promotion": "PROD-302",
+    "orderDate": "2026-08-29",
+    "orderNumber": "ORD-90023",
+    "orderType": "New Connection",
+    "postpaidActivationDate": null
   }
 ]

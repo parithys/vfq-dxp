@@ -27,10 +27,11 @@ interface MsisdnRecord {
  * point rather than an inconsistency.
  *
  * 'Free' and 'Star' are now PRICE BANDS (2026-09-28 direction: "show only
- * numbers priced from QAR 0 up to, but not including, QAR 1,000" under Free),
- * not the stored `category` field - see FREE_NUMBER_PRICE_CEILING_QAR
- * (postpaidPricing.ts) for why this is also a correctness fix, not just a
- * rename: star-number-tiers.json's own lowest tier starts at 1000
+ * numbers priced from QAR 0 up to, but not including, QAR 1,000" under Free -
+ * the ceiling itself moved to QAR 1,500 on 2026-09-30), not the stored
+ * `category` field - see FREE_NUMBER_PRICE_CEILING_QAR (postpaidPricing.ts)
+ * for why this is also a correctness fix, not just a rename: star-number-
+ * tiers.json's own lowest tier starts at 1000
  * (STAR-TIER-01, valueRangeMin 1000), so a handful of seeded numbers
  * category='Star' priced 300-900 already matched no tier at all - "Not
  * banded" on a number that was never going to be. Pricing the tabs
@@ -110,6 +111,17 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'number-desc', label: 'Number: descending' },
 ];
 
+/**
+ * Free's own sort menu (2026-09-30), number-only - deliberately NOT the same
+ * four options Star offers. Every Free number is free to the customer
+ * regardless of its catalogue price (see showSort's own note below), so a
+ * price sort here would rank rows by a figure the customer never pays -
+ * exactly the reasoning that kept Free without a sort control at all until
+ * now. Restricted to a subset of SORT_OPTIONS rather than a second literal
+ * list, so the wording can never drift from Star's.
+ */
+const FREE_SORT_OPTIONS = SORT_OPTIONS.filter((o) => o.value === 'number-asc' || o.value === 'number-desc');
+
 const SORTERS: Record<SortKey, (a: MsisdnRecord, b: MsisdnRecord) => number> = {
   // Ties broken by number, so a page of equally-priced numbers holds a stable
   // order instead of reshuffling on every render.
@@ -165,6 +177,13 @@ export function MsisdnPicker({ selected, onSelect, planMrcQar, allowManualEntry 
   const [tab, setTab] = useState<NumberTab>('Free');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('price-desc');
+  // Free's own sort state, separate from Star's `sort` above - see
+  // FREE_SORT_OPTIONS. Kept apart rather than sharing one variable so each
+  // tab's control always shows a value that is actually one of ITS options;
+  // a shared variable defaulting to 'price-desc' would render Free's menu on
+  // a value absent from its own list the moment the agent opened it without
+  // having touched Star's first.
+  const [freeSort, setFreeSort] = useState<'number-asc' | 'number-desc'>('number-asc');
   const [page, setPage] = useState(0);
   // numbers.json records a reservation against the agent's DISPLAY NAME
   // ("Fatima Al-Kuwari"), which is the identity resolved from
@@ -251,16 +270,15 @@ export function MsisdnPicker({ selected, onSelect, planMrcQar, allowManualEntry 
   // however many they have.
   const atReservationCap = myReserved.length >= MAX_RESERVATIONS_PER_AGENT;
 
-  // Star-only (2026-09-28 revision): every Free number is free to the
-  // customer regardless of its catalogue price, so ranking them by price
-  // answers a question a Free-tab agent never asks - unlike Star, where the
-  // price spread is exactly what the customer pays extra against. Reserved
-  // stays excluded too - see the SortKey doc comment above.
-  const showSort = tab === 'Star';
+  // Star and Free both get a sort control (Free joined 2026-09-30, number-
+  // only - see FREE_SORT_OPTIONS). Reserved still gets none: an agent holds
+  // at most MAX_RESERVATIONS_PER_AGENT numbers, so there is nothing there
+  // worth ranking - see the SortKey doc comment above.
+  const showSort = tab === 'Star' || tab === 'Free';
 
   // Without a control on screen, the order must not depend on whatever the
-  // agent last chose on Star.
-  const effectiveSort: SortKey = showSort ? sort : 'number-asc';
+  // agent last chose on Star or Free.
+  const effectiveSort: SortKey = tab === 'Star' ? sort : tab === 'Free' ? freeSort : 'number-asc';
 
   const filtered = inTab
     .filter((n) => {
@@ -332,21 +350,32 @@ export function MsisdnPicker({ selected, onSelect, planMrcQar, allowManualEntry 
           the same list the search box above it does, so it sits with it
           rather than over the results.
 
-          Star only (2026-09-28 revision) - see showSort's own note. Absent on
-          Free and Reserved alike now: neither has a price ranking worth
-          showing a control for, and an empty control row would leave a gap
-          the agent reads as something having failed to load. */}
+          Star and Free both show this now (2026-09-30) - see showSort's own
+          note. Free's own menu is number-only (FREE_SORT_OPTIONS): a price
+          sort would rank Free rows by a figure the customer never pays.
+          Reserved still has none: no price ranking worth showing a control
+          for, and an empty control row would leave a gap the agent reads as
+          something having failed to load. */}
       {/* Tier chips (Platinum / Gold / Silver) and the TIER filter were removed
           on 2026-09-27 per the annotated walkthrough. */}
       {showSort && (
         <div className="flex items-center justify-end gap-2">
           <span className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Sort</span>
-          <Select
-            aria-label="Sort numbers"
-            options={SORT_OPTIONS}
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortKey)}
-          />
+          {tab === 'Star' ? (
+            <Select
+              aria-label="Sort numbers"
+              options={SORT_OPTIONS}
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortKey)}
+            />
+          ) : (
+            <Select
+              aria-label="Sort numbers"
+              options={FREE_SORT_OPTIONS}
+              value={freeSort}
+              onChange={(e) => setFreeSort(e.target.value as 'number-asc' | 'number-desc')}
+            />
+          )}
         </div>
       )}
       {/* BR-115 entitlement, stated once up front rather than only on each

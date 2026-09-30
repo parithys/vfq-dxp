@@ -139,6 +139,16 @@ interface CafSignatureCaptureProps {
   autoDetectDeviceType?: boolean;
   /** Raw order figures for the dynamic T&C bullets - see TncLegalFacts. */
   legalFacts?: TncLegalFacts;
+  /**
+   * Advances the wizard past this step (2026-09-30). Only read once `signed`
+   * - the wizard's own Back/Continue footer is hidden at that point (see
+   * NewPostpaidWizard's `customerFacing` on the 'caf' step, now true AFTER
+   * signing rather than before), so the Continue button below is the only
+   * way forward and this is what it calls. Omitted by the other five
+   * journeys sharing this component, none of which flip customerFacing this
+   * way.
+   */
+  onContinue?: () => void;
 }
 
 // Pattern 6: CAF/Contract Signature Capture - CAF Type card selector (Digital/
@@ -157,6 +167,7 @@ export function CafSignatureCapture({
   termsUrl,
   autoDetectDeviceType,
   legalFacts,
+  onContinue,
 }: CafSignatureCaptureProps) {
   const [padOpen, setPadOpen] = useState(false);
   const [bulletTemplates, setBulletTemplates] = useState<TncBulletTemplate[]>([]);
@@ -190,41 +201,19 @@ export function CafSignatureCapture({
         {/* The wizard's own step heading is not rendered while this step is
             customer-facing (GuidedActivationWizard hides all of its chrome
             for that render, including <h2>{label}</h2>) - this stands in so
-            the screen is not handed to a customer with no heading at all. */}
-        {!signed && <h2 className="text-[length:var(--fs-h4)] font-bold text-fg">Please review and sign</h2>}
-
-        <div className="rounded-[var(--radius-card)] border border-border-soft p-4 bg-surface">
-          <div className="flex justify-between text-[length:var(--fs-caption)] text-muted mb-2">
-            <span>Vodafone Customer Application Form</span>
-            <span dir="rtl">نموذج طلب عميل فودافون</span>
-          </div>
-          <p className="text-fg text-[length:var(--fs-body)]">
-            Applicant: <span className="font-medium">{customerName ?? '-'}</span>
-          </p>
-          {idLabel && (
-            <p className="text-fg text-[length:var(--fs-body)]">
-              {idLabel}: <span className="font-medium">{idValue ?? '-'}</span>
-            </p>
-          )}
-          <p className="text-fg-2 text-[length:var(--fs-caption)] mt-1">
-            By signing below, the applicant accepts the General Terms and Conditions of Vodafone Qatar.
-          </p>
-
-          {signed ? (
-            <div className="mt-3 flex items-center gap-3">
-              <Badge variant="success">Signed</Badge>
-              <img src={value.signatureDataUrl} alt="Signature" className="h-10 border border-border-soft rounded" />
-            </div>
-          ) : (
-            <Button variant="primary-rect" className="mt-3" onClick={() => setPadOpen(true)}>
-              Please Sign
-            </Button>
-          )}
-        </div>
+            the screen is not handed to a customer with no heading at all.
+            Shown when `signed` now (2026-09-30, reversed along with
+            customerFacing): the wizard's own "CAF & Signature" heading is
+            present for the whole unsigned review, so repeating one here
+            would say the same thing twice; once signed, that chrome - and
+            its heading - disappears, and this is what fills the gap. */}
+        {signed && <h2 className="text-[length:var(--fs-h4)] font-bold text-fg">Signed</h2>}
 
         {/* Concise, dynamic, business-maintained bullets (2026-09-28 request),
-            read to the customer before signature - same placement the
-            original static order-summary card held. The commercial recap
+            read to the customer before signature. Moved above the CAF card
+            (2026-09-30): the customer reads what they're agreeing to FIRST,
+            then signs the form below it, rather than being asked to sign
+            ahead of the terms that follow. The commercial recap
             (orderSummary) stays alongside rather than being replaced: what
             was bought and what terms bind the customer are complementary
             facts, not the same one restated. */}
@@ -268,6 +257,35 @@ export function CafSignatureCapture({
           </div>
         )}
 
+        <div className="rounded-[var(--radius-card)] border border-border-soft p-4 bg-surface">
+          <div className="flex justify-between text-[length:var(--fs-caption)] text-muted mb-2">
+            <span>Vodafone Customer Application Form</span>
+            <span dir="rtl">نموذج طلب عميل فودافون</span>
+          </div>
+          <p className="text-fg text-[length:var(--fs-body)]">
+            Applicant: <span className="font-medium">{customerName ?? '-'}</span>
+          </p>
+          {idLabel && (
+            <p className="text-fg text-[length:var(--fs-body)]">
+              {idLabel}: <span className="font-medium">{idValue ?? '-'}</span>
+            </p>
+          )}
+          <p className="text-fg-2 text-[length:var(--fs-caption)] mt-1">
+            By signing below, the applicant accepts the General Terms and Conditions of Vodafone Qatar.
+          </p>
+
+          {signed ? (
+            <div className="mt-3 flex items-center gap-3">
+              <Badge variant="success">Signed</Badge>
+              <img src={value.signatureDataUrl} alt="Signature" className="h-10 border border-border-soft rounded" />
+            </div>
+          ) : (
+            <Button variant="primary-rect" className="mt-3" onClick={() => setPadOpen(true)}>
+              Please Sign
+            </Button>
+          )}
+        </div>
+
         {/* Post-signature, agent view: the signed CAF preview above stays on
             screen (2026-09-28 "preview of the signed CAF"), and whatever
             else this order needs attached - no signature required for any
@@ -279,6 +297,18 @@ export function CafSignatureCapture({
             documents={value.additionalDocuments ?? []}
             onChange={(documents) => onChange({ ...value, additionalDocuments: documents })}
           />
+        )}
+
+        {/* The wizard's own Continue is gone along with the rest of its
+            chrome once signed (customerFacing flips true) - this is the
+            replacement, same reasoning as the "Please Sign" button above:
+            the step's own content owns whatever action it needs. Additional
+            documents are optional (isValid never required them), so nothing
+            gates this beyond having signed at all. */}
+        {signed && onContinue && (
+          <Button variant="primary-rect" className="w-full" onClick={onContinue}>
+            Continue
+          </Button>
         )}
 
         <Drawer open={padOpen} onClose={() => setPadOpen(false)} title="Please Sign">

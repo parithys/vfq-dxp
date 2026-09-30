@@ -6,8 +6,8 @@
     "basePlanProductId": "PROD-300",
     "bundledByDefaultFlag": true,
     "removable": true,
-    "removedByCustomer": false,
-    "stbCount": 1,
+    "removedByCustomer": true,
+    "stbCount": 0,
     "openItemStatus": "Contested"
   },
   {

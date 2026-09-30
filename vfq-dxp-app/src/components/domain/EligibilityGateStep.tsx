@@ -135,6 +135,53 @@ export function EligibilityChecksList({ rows }: { rows: EligibilityRow[] }) {
   );
 }
 
+// Reference text for the drawer only - the four EligibilityOutcome values
+// (RowTone above), named as the checks engine names them, each with a
+// plain-language explanation of what it means for the order. Static copy,
+// not derived from `rows`: it describes the four possible outcomes in
+// general, not which ones this particular customer hit.
+const OUTCOME_LEGEND: { title: string; example: string; detail: string }[] = [
+  {
+    title: 'Hard Stop',
+    example: 'e.g. the customer is on the security blacklist.',
+    detail:
+      "There's nothing the agent can do here - the order stops. The block has to be resolved somewhere else before trying again.",
+  },
+  {
+    title: 'Soft Stop',
+    example: 'e.g. the customer has an unpaid collections balance.',
+    detail: "Postpaid isn't available for this customer, but prepaid is. The agent can switch the order to prepaid instead.",
+  },
+  {
+    title: 'Approval Routing',
+    example: 'e.g. the customer is under 18.',
+    detail: 'Not a failure - the order can go ahead, but a manager has to approve it before it can be completed.',
+  },
+  {
+    title: 'Advisory Only',
+    example: 'e.g. the customer is flagged as a High-Risk Nationality (HRN).',
+    detail: "Nothing is blocked and the order continues as normal. It's just a note that a different payment or credit rule applies.",
+  },
+];
+
+function EligibilityOutcomeLegend() {
+  return (
+    <div className="mt-6 pt-4 border-t border-border-soft">
+      <h4 className="text-fg font-semibold text-[length:var(--fs-body)] mb-2">What these outcomes mean</h4>
+      <ul className="list-disc pl-5 space-y-2">
+        {OUTCOME_LEGEND.map((item) => (
+          <li key={item.title} className="text-[length:var(--fs-caption)] leading-snug">
+            <span className="font-semibold text-fg">{item.title}</span>{' '}
+            <span className="text-fg-2">{item.detail}</span>
+            <br />
+            <span className="text-muted italic">{item.example}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 /**
  * Footer-left link (2026-09-28: "Add a text link on the left side. On click,
  * open a popup showing all eligibility checks performed and their results.")
@@ -168,6 +215,7 @@ export function EligibilityChecksLink({
       </button>
       <Drawer open={open} onClose={() => setOpen(false)} title="Eligibility Checks">
         <EligibilityChecksList rows={rows} />
+        <EligibilityOutcomeLegend />
       </Drawer>
     </>
   );

@@ -158,8 +158,8 @@ interface PostpaidPlanAddonsStepProps {
 type PlanGroupKey = 'specials' | 'for-you' | 'standard';
 
 const PLAN_GROUPS: { key: PlanGroupKey; label: string }[] = [
-  { key: 'specials', label: "Today's Special Promotions" },
-  { key: 'for-you', label: 'Offers for this QID' },
+  { key: 'specials', label: 'Offers' },
+  { key: 'for-you', label: 'Other Plans' },
   { key: 'standard', label: 'Standard BAU Catalogue' },
 ];
 
@@ -279,6 +279,15 @@ export function PostpaidPlanAddonsStep({
   }, [selectedProductId]);
 
   const selectedPlan = plans.find((p) => p.productId === selectedProductId);
+  // "Offers" is the specials group (2026-09-30 rule): every plan there is
+  // pre-bundled, so it gets the same add-ons/discounts lockout a plan
+  // individually flagged `preBundledOffer` already got - see the two panels
+  // below. Derived from the group rather than a second per-plan flag: the
+  // business rule is "this WHOLE TAB is pre-bundled", not "some plans in it
+  // are", and planGroupOf is already the one place that decides tab
+  // membership.
+  const isOffersPlan = selectedPlan ? planGroupOf(selectedPlan) === 'specials' : false;
+  const preBundled = Boolean(selectedPlan?.preBundledOffer) || isOffersPlan;
   const selectedDiscount = discounts.find((d) => d.addonDiscountId === discountId);
   const requiresSupportingId = selectedDiscount ? SUPPORTING_ID_DISCOUNT_TYPES.has(selectedDiscount.addonType) : false;
 
@@ -292,6 +301,25 @@ export function PostpaidPlanAddonsStep({
     if (discountProofDocument) onDiscountProofDocumentChange(undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [discountId]);
+
+  // Max ONE discount, and it is scoped to the plan it was picked against
+  // (Discount.planId) - so a plan change retires whatever discount the
+  // PREVIOUS plan had, rather than leaving a stale id in the order that no
+  // longer names a discount on the current plan at all (Checkout/the order
+  // payload read `discountId` directly, so an orphaned one would silently
+  // ride along with the new plan). The radio group already guarantees at
+  // most one discount for a GIVEN plan; this is what still guarantees it
+  // across a plan switch. Keyed on the previous product id, not just "did a
+  // discount exist", so it fires only on an actual plan change, not on
+  // mount.
+  const prevProductId = useRef(selectedProductId);
+  useEffect(() => {
+    if (prevProductId.current !== selectedProductId) {
+      prevProductId.current = selectedProductId;
+      if (discountId) onSelectDiscount(undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProductId]);
 
   const handleProofDocFile = (file: File | undefined) => {
     if (!file) return;
@@ -573,12 +601,12 @@ export function PostpaidPlanAddonsStep({
 
             {/* Add-ons panel */}
             {activeTab === 'addons' &&
-              (selectedPlan?.preBundledOffer ? (
+              (preBundled ? (
                 <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_92%)] px-4 py-3">
                   <p className="text-fg font-semibold text-[length:var(--fs-body)]">Add-ons unavailable for this plan</p>
                   <p className="text-[var(--warn-text)] text-[length:var(--fs-caption)] mt-1">
-                    The selected pre-bundled offer already includes its extras and does not accept add-ons. Choose
-                    another plan to add extras.
+                    The selected plan is pre-bundled and already includes its extras, so it does not accept add-ons.
+                    Choose another plan to add extras.
                   </p>
                 </div>
               ) : (
@@ -600,18 +628,21 @@ export function PostpaidPlanAddonsStep({
             {activeTab === 'discounts' &&
               (!selectedProductId ? (
                 <p className="text-muted text-[length:var(--fs-caption)]">Select a plan to see eligible discounts.</p>
-              ) : selectedPlan?.preBundledOffer ? (
+              ) : preBundled ? (
                 // A pre-bundled plan already comes with its own offer decided
-                // (see PostpaidPlan.preBundledOffer's own note) - the agent
-                // reaches this at all only by walking back to a tab the
-                // wizard's autoAdvanceWhen already carried them past once, so
-                // it explains why there is nothing left to choose here rather
+                // - either individually flagged (PostpaidPlan.preBundledOffer)
+                // or, as of 2026-09-30, simply because it lives on the Offers
+                // tab (isOffersPlan). A flagged plan is reached at all only by
+                // walking back to a tab the wizard's autoAdvanceWhen already
+                // carried the agent past once; an Offers-tab plan without that
+                // flag stays on this step normally, it just has nothing to
+                // choose on this panel. Either way this explains why, rather
                 // than showing a "No discount" picker with nothing behind it.
                 <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_92%)] px-4 py-3">
                   <p className="text-fg font-semibold text-[length:var(--fs-body)]">Discounts unavailable for this plan</p>
                   <p className="text-[var(--warn-text)] text-[length:var(--fs-caption)] mt-1">
-                    The selected pre-bundled offer already includes its offer and does not accept extra discounts.
-                    Choose another plan to apply a discount.
+                    The selected plan is pre-bundled and already includes its offer, so it does not accept extra
+                    discounts. Choose another plan to apply a discount.
                   </p>
                 </div>
               ) : (
