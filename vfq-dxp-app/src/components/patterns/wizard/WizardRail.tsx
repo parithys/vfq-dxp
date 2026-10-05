@@ -1,9 +1,25 @@
 import { useState } from 'react';
 import { PANEL_ICON, RAIL_KEY } from '../../primitives/Tabs';
+import { IC } from '../../../workspace/customer360/sections/C360Kit';
 import type { WizardStep } from './guidedWizardTypes';
 import { Icon } from '../../primitives/Icon';
 
-const CHECK = 'M20 6L9 17l-5-5';
+// Rail icon for a step: its own `icon`, else inferred from the label so every journey gets one.
+const STEP_ICON_RULES: [RegExp, string][] = [
+  [/eligib/i, IC.shieldCheck],
+  [/appointment/i, IC.calendar],
+  [/caf|signature|form|document|attach|bank|supporting/i, IC.file],
+  [/offer|discount/i, IC.tag],
+  [/plan|add-on|product/i, IC.box],
+  [/address/i, IC.pin],
+  [/billing/i, IC.wallet],
+  [/number|msisdn/i, IC.phone],
+  [/sim|serial/i, IC.card],
+  [/checkout|summary|order|total/i, IC.cart],
+  [/payment|charge/i, IC.card],
+  [/identif|contact|customer|qid|passport|donor|agent/i, IC.user],
+];
+const stepIcon = (step: WizardStep) => step.icon ?? STEP_ICON_RULES.find(([re]) => re.test(step.label))?.[1] ?? IC.checkCircle;
 
 /**
  * The step rail. Done steps get a tick, the active step is highlighted, and steps already reached are
@@ -87,9 +103,7 @@ export function WizardRail({
               isActive ? 'bg-accent text-accent-on' : 'text-fg-2'
             } ${isReachable ? 'cursor-pointer hover:bg-surface-warm hover:text-accent focus:outline-none focus-visible:shadow-[var(--focus-ring)]' : ''}`}
           >
-            <span className={`w-5 shrink-0 text-center text-[length:var(--fs-body)] font-medium ${isDone && !isActive ? 'text-success' : ''}`}>
-              {isDone ? <Icon path={CHECK} className="w-5 h-5" strokeWidth={3} /> : i + 1}
-            </span>
+            <Icon path={stepIcon(step)} className={`w-5 h-5 shrink-0 ${isDone && !isActive ? 'text-success' : ''}`} />
             {expanded && (
               <div className="min-w-0 py-2">
                 <div className={`truncate text-[length:var(--fs-body)] ${isActive ? 'font-semibold' : 'font-medium text-fg'}`}>{step.label}</div>
@@ -106,7 +120,7 @@ export function WizardRail({
                   isActive ? 'bg-accent text-accent-on font-semibold border-transparent' : 'bg-surface-warm text-fg font-medium'
                 }`}
               >
-                <span className="w-5 text-center">{isDone ? <Icon path={CHECK} className="w-5 h-5" strokeWidth={3} /> : i + 1}</span>
+                <Icon path={stepIcon(step)} className={`w-5 h-5 shrink-0 ${isActive ? '' : isDone ? 'text-success' : 'text-accent'}`} />
                 {step.label}
               </span>
             )}

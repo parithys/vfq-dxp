@@ -10,6 +10,8 @@ export interface DraftOrderRecord {
 export interface WizardStep {
   key: string;
   label: string;
+  /** Rail icon (SVG path data). Defaults to one inferred from the label. */
+  icon?: string;
   /** Heading shown above the step content, when it should differ from the rail label. */
   heading?: string;
   /** One line of explanatory text under the heading. Optional. */
