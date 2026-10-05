@@ -8,8 +8,6 @@ import {
   GridTable,
   IC,
   IconTile,
-  KpiGrid,
-  KpiTile,
   LinkAction,
   Pager,
   Panel,
@@ -155,7 +153,6 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
     return n.sort((a, b) => b.at - a.at);
   })();
 
-  const count = (s: Severity) => alerts.filter((a) => a.severity === s).length;
   const rows = alerts.filter((a) => {
     if (severity !== 'all' && a.severity !== severity) return false;
     if (type !== 'all' && a.type !== type) return false;
@@ -166,10 +163,6 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
   const first = rows.length === 0 ? 0 : (paging.page - 1) * PAGE_SIZE + 1;
   const last = Math.min(paging.page * PAGE_SIZE, rows.length);
 
-  const filterBy = (s: Severity) => () => {
-    setSeverity(s);
-    paging.setPage(1);
-  };
   const typeOptions = [{ value: 'all', label: 'All' }, ...Array.from(new Set(alerts.map((a) => a.type))).map((v) => ({ value: v, label: v }))];
   const statusOptions = [{ value: 'all', label: 'All' }, ...Array.from(new Set(alerts.map((a) => a.status))).map((v) => ({ value: v, label: v }))];
 
@@ -179,21 +172,6 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
 
   return (
     <TabPage icon={IC.alert} tone="red" title="Alerts & Risks" subtitle="View customer alerts, risks, notifications and important indicators">
-      <KpiGrid>
-        <KpiTile icon={IC.alert} tone="red" label="Critical Alerts" value={count('High')} chevron onClick={filterBy('High')} />
-        <KpiTile icon={IC.alert} tone="amber" label="Medium Alerts" value={count('Medium')} chevron onClick={filterBy('Medium')} />
-        <KpiTile icon={IC.info} tone="blue" label="Informational" value={count('Low')} chevron onClick={filterBy('Low')} />
-        <KpiTile icon={IC.flag} tone="purple" label="Special Management" value={<Dv k="specialManagement" />} />
-        <KpiTile
-          icon={IC.ban}
-          tone="grey"
-          label="Blacklist Status"
-          value={blacklisted ? 'Blacklisted' : 'Clear'}
-          chevron={Boolean(goToTab)}
-          onClick={goToTab ? () => goToTab('contact-identity') : undefined}
-        />
-      </KpiGrid>
-
       <div className="space-y-4">
         <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 space-y-4 min-w-0">
           <div className="flex flex-wrap items-center justify-between gap-3">
