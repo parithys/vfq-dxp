@@ -1,0 +1,95 @@
+{
+  "_note": "Customer 360 'How can we help today?' query-issue catalogue. Each entry gives a Query Issue its predefined Query Category and default Query Service Type (the service type decides Complaints vs Requests; the customer's MSISDN decides Mobile vs Fixed/5G). SOURCE: the 12 'Calls' entries are the ones shown in the Customer 360 Trouble Ticket flow reference image (6 steps, 2026-10-05). `ticketActualIssue` is the matching real value in the Siebel VFQA_TT_ACTUAL_ISSUE list (reference/.knowledge tt-hashtags-and-actual-issue) where one exists; entries without one are left unset rather than guessed. OPEN ITEM: the full issue-to-category mapping beyond these 12 has not been supplied - add entries here and they appear in search with no code change.",
+  "categories": [
+    "Network Related",
+    "Service Related"
+  ],
+  "examples": [
+    "Calls",
+    "Roaming"
+  ],
+  "issues": [
+    {
+      "id": "QI-DROPPED-CALLS",
+      "name": "Dropped Calls",
+      "category": "Network Related",
+      "serviceType": "Mobile Complaints",
+      "ticketActualIssue": "Dropped Calls"
+    },
+    {
+      "id": "QI-MAKE-INT",
+      "name": "Can't Make Calls (Int)",
+      "category": "Service Related",
+      "serviceType": "Mobile Complaints",
+      "ticketActualIssue": "Make Calls International"
+    },
+    {
+      "id": "QI-MAKE-LOCAL",
+      "name": "Can't Make Calls (Local)",
+      "category": "Service Related",
+      "serviceType": "Mobile Complaints",
+      "ticketActualIssue": "Make Calls Local All"
+    },
+    {
+      "id": "QI-MAKE-LOCAL-INT",
+      "name": "Can't Make Calls (Local/Int)",
+      "category": "Service Related",
+      "serviceType": "Mobile Complaints",
+      "ticketActualIssue": "Make Calls Local/Int"
+    },
+    {
+      "id": "QI-MAKE-OOREDOO",
+      "name": "Can't Make Calls (Ooredoo)",
+      "category": "Service Related",
+      "serviceType": "Mobile Complaints",
+      "ticketActualIssue": "Make Calls Ooredoo"
+    },
+    {
+      "id": "QI-MAKE-OTHERS",
+      "name": "Can't Make Calls (Others)",
+      "category": "Service Related",
+      "serviceType": "Mobile Complaints"
+    },
+    {
+      "id": "QI-ROAMING-CALLS",
+      "name": "Roaming Calls",
+      "category": "Service Related",
+      "serviceType": "Mobile Complaints",
+      "ticketActualIssue": "Roaming Calls"
+    },
+    {
+      "id": "QI-RECEIVE-INT-OTP",
+      "name": "Can't Receive Calls (Int - OTP)",
+      "category": "Service Related",
+      "serviceType": "Mobile Complaints"
+    },
+    {
+      "id": "QI-RECEIVE-LOCAL",
+      "name": "Can't Receive Calls (Local)",
+      "category": "Service Related",
+      "serviceType": "Mobile Complaints",
+      "ticketActualIssue": "Receive Calls Local All"
+    },
+    {
+      "id": "QI-RECEIVE-OOREDOO",
+      "name": "Can't Receive Calls (Ooredoo)",
+      "category": "Service Related",
+      "serviceType": "Mobile Complaints",
+      "ticketActualIssue": "Receive Calls Ooredoo"
+    },
+    {
+      "id": "QI-RECEIVE-INT",
+      "name": "Can't Receive Calls (Int)",
+      "category": "Service Related",
+      "serviceType": "Mobile Complaints",
+      "ticketActualIssue": "Receive Calls International"
+    },
+    {
+      "id": "QI-RECEIVE-LOCAL-INT",
+      "name": "Can't Receive Calls (Local/Int)",
+      "category": "Service Related",
+      "serviceType": "Mobile Complaints",
+      "ticketActualIssue": "Receive Calls Local/Int"
+    }
+  ]
+}

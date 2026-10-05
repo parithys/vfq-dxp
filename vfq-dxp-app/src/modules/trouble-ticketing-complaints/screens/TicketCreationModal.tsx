@@ -66,6 +66,9 @@ interface TicketCreationModalProps {
    * is already on screen - the agent shouldn't have to re-type an ID they
    * already looked up to get here. */
   initialCustomerId?: string;
+  /** Pre-filled when the ticket is started from a Customer 360 query (the agent can still change them). */
+  initialIssueType?: string;
+  initialActualIssue?: string;
 }
 
 // SCR-213: Open UI Tickets Fields (per-issue-type template) - modal where
@@ -82,14 +85,14 @@ interface TicketCreationModalProps {
 // linking to a fabricated URL), CRE-16 (Priority derived and locked from
 // Customer Type, not freely picked), and ASC-02/04 (duplicate-ticket
 // candidate detection by Customer + Category + Area match).
-export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId = '' }: TicketCreationModalProps) {
+export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId = '', initialIssueType = '', initialActualIssue = '' }: TicketCreationModalProps) {
   const [customerId, setCustomerId] = useState(initialCustomerId);
   const [searchQuery, setSearchQuery] = useState('');
-  const [issueType, setIssueType] = useState('');
+  const [issueType, setIssueType] = useState(initialIssueType);
   const [area, setArea] = useState('');
   const [template, setTemplate] = useState('');
   const [templateContent, setTemplateContent] = useState('');
-  const [actualIssue, setActualIssue] = useState('');
+  const [actualIssue, setActualIssue] = useState(initialActualIssue);
   const [queue, setQueue] = useState('');
   const [customer, setCustomer] = useState<CustomerRecord | null>(null);
   const [duplicates, setDuplicates] = useState<TicketRecord[]>([]);

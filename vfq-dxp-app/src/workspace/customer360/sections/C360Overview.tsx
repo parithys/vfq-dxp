@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { QueryFlowCard } from '../queryFlow/QueryFlowCard';
 import type { ReactNode } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
 import { computeBillingSummary, type Customer360Data } from '../../../engines/customer360Engine';
@@ -54,7 +55,7 @@ interface FeedRow {
   icon: string;
 }
 
-export function C360Overview({ data, services, goToTab }: { data: Customer360Data; services: CustomerService[]; goToTab?: (key: string) => void }) {
+export function C360Overview({ data, services, goToTab, onTicketCreated }: { data: Customer360Data; services: CustomerService[]; goToTab?: (key: string) => void; onTicketCreated?: (ticket: Record<string, unknown>) => void }) {
   const go = (key: string) => (goToTab ? () => goToTab(key) : undefined);
   const [usageTab, setUsageTab] = useState('balance');
   const [copied, setCopied] = useState(false);
@@ -160,6 +161,7 @@ export function C360Overview({ data, services, goToTab }: { data: Customer360Dat
 
   return (
     <div className="space-y-4">
+      <QueryFlowCard data={data} services={services} onTicketCreated={onTicketCreated} />
       <KpiGrid cols={3}>
         <KpiTile icon={IC.users} tone="blue" label="Total Connections" value={services.length} chevron onClick={goToTab ? () => goToTab('products-services') : undefined} />
         <KpiTile icon={IC.shieldCheck} tone="green" label="Active Services" value={services.filter(isActive).length} chevron onClick={goToTab ? () => goToTab('products-services') : undefined} />

@@ -153,6 +153,10 @@ export const TT_ACTUAL_ISSUES = [
   'CCT-MNP Request', 'CCT-No Issue Mentioned', 'CCT-Number Not Activated', 'CCT-PYN Request',
   'CCT-Plan Change with Consent', 'CCT-Post/Pre migration with Consent', 'CCT-Promised benefit not added',
   'CCT-Rude Behavior', 'CCT-TON Request',
+  // Added with the Customer 360 query flow: values the Query Issues map to, verbatim from the real Siebel
+  // VFQA_TT_ACTUAL_ISSUE export (Business Documents/TT Hashtags and Actual Issue.xlsx).
+  'Dropped Calls', 'Make Calls International', 'Make Calls Local All', 'Make Calls Local/Int', 'Make Calls Ooredoo',
+  'Receive Calls International', 'Receive Calls Local All', 'Receive Calls Local/Int', 'Receive Calls Ooredoo', 'Roaming Calls',
 ];
 
 export const RESOLUTION_CODES = [

@@ -8,6 +8,8 @@ interface ModalProps {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
+  /** Width cap of the dialog. Defaults to the short-confirmation size. */
+  widthClassName?: string;
 }
 
 // Was backing 32 Modal-type screens per component-catalogue.md §1 (no
@@ -16,7 +18,7 @@ interface ModalProps {
 // every other former Modal usage (forms, signature capture, multi-step
 // flows) now renders via Drawer.tsx for a less disruptive, side-anchored
 // interaction.
-export function Modal({ open, onClose, title, children, footer }: ModalProps) {
+export function Modal({ open, onClose, title, children, footer, widthClassName = 'max-w-lg' }: ModalProps) {
   // Escape-to-close: the backdrop's click-to-dismiss below is a mouse-only
   // convenience (a full-screen div is intentionally not made focusable/
   // keyboard-actionable - that would be a false affordance in the other
@@ -38,7 +40,7 @@ export function Modal({ open, onClose, title, children, footer }: ModalProps) {
     // surface should not read as "clickable" the way a button does.
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--black-80)] cursor-default" onClick={onClose}>
       <div
-        className="w-full max-w-lg rounded-[var(--radius-card)] bg-bg shadow-raised p-6"
+        className={`w-full ${widthClassName} max-h-[90vh] overflow-y-auto rounded-[var(--radius-card)] bg-bg shadow-raised p-6`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"

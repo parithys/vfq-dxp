@@ -442,7 +442,7 @@ export function Customer360Layout() {
   const tabProps = { data, services, goToTab: openTab };
   const tabs: TabItem[] = headerOnly
     ? [
-        ...retailTab('overview', 'Overview', ['Account Information'], <C360Overview {...tabProps} />),
+        ...retailTab('overview', 'Overview', ['Account Information'], <C360Overview {...tabProps} onTicketCreated={addTicket} />),
         ...retailTab('account-info', 'Account Information', ['Account Information'], <C360AccountInformation {...tabProps} onEdit={editContact} />),
         ...retailTab('products-services', 'Products & Services', ['Assets'], <C360ProductsServices {...tabProps} />),
         ...retailTab('billing', 'Billing & Payments', ['Billing & Payments'], <C360BillingPayments {...tabProps} />),
