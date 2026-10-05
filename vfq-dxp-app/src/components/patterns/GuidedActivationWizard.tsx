@@ -218,7 +218,7 @@ export function GuidedActivationWizard({
   const clearDraft = useWorkflowStore((s) => s.clearDraft);
   const [abandonOpen, setAbandonOpen] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
-  // Optional agent note for the Abandoned / Save & Exit activity. Blank never blocks the action.
+  // Agent note for the Abandoned (required) / Save & Exit (optional) activity.
   const [activityComments, setActivityComments] = useState('');
   // A step's own Abandon action (e.g. a hard stop) may confirm without offering to keep working.
   const [abandonNoKeep, setAbandonNoKeep] = useState(false);
@@ -637,7 +637,7 @@ export function GuidedActivationWizard({
   // caller to navigate away. Order matters: clearing the draft first would
   // lose the draftOrderId this needs.
   // The activity is created here, automatically - the agent only supplies the optional comment.
-  const recordActivity = (trigger: 'abandoned' | 'saved-exit', orderId: string | undefined, comments?: string) =>
+  const recordActivity = (trigger: 'abandoned' | 'saved-exit' | 'hard-stop', orderId: string | undefined, comments?: string) =>
     logActivity({
       trigger,
       journey: title,
@@ -650,7 +650,22 @@ export function GuidedActivationWizard({
       comments,
     });
 
+  // Hard Stop: the activity is written automatically as soon as the hard stop is shown, once per stop.
+  const hardStopLogged = useRef(false);
+  const hardStopShown = Boolean((draft.values.eligibility as { hardStop?: boolean } | undefined)?.hardStop);
+  useEffect(() => {
+    if (!hardStopShown) {
+      hardStopLogged.current = false;
+      return;
+    }
+    if (hardStopLogged.current || isMirror) return;
+    hardStopLogged.current = true;
+    void recordActivity('hard-stop', draftOrderId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hardStopShown]);
+
   const abandonOrder = async () => {
+    if (!activityComments.trim()) return;
     await recordActivity('abandoned', draftOrderId, activityComments);
     useJourneyCustomer.getState().end(wizardId);
     setActivityComments('');
@@ -772,6 +787,7 @@ export function GuidedActivationWizard({
               variant="primary-rect"
               // The step-initiated variant (hard stop) only dismisses the modal.
               onClick={() => (abandonNoKeep ? setAbandonOpen(false) : void abandonOrder())}
+              disabled={!abandonNoKeep && !activityComments.trim()}
             >
               Abandon Order
             </Button>
@@ -784,11 +800,12 @@ export function GuidedActivationWizard({
         {!abandonNoKeep && (
           <div className="mt-4">
             <Textarea
-              label="Comments (optional)"
+              label="Comments (required)"
               rows={3}
               value={activityComments}
               onChange={(e) => setActivityComments(e.target.value)}
-              helperText="Recorded on the activity that is created automatically."
+              error={activityComments.length > 0 && !activityComments.trim() ? 'Enter a comment to abandon this order.' : undefined}
+              helperText="Required. Recorded on the activity that is created automatically."
             />
           </div>
         )}

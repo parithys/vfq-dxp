@@ -631,15 +631,27 @@ export function NewPostpaidWizard() {
 
           // Activity is created automatically (activityEngine); its ID is shown on the confirmation.
           const payment = values.payment as WinCashPaymentValue | undefined;
-          const activityId = await logActivity({
-            trigger: 'completed',
+          const activityCtx = {
             journey: 'New Postpaid Activation',
             orderId,
+            customerId: eligibility?.customerId,
             customerName: contact.moiResult?.name,
+            idNumber: contact.idNumber,
+          };
+          const activityId = await logActivity({
+            ...activityCtx,
+            trigger: 'completed',
             reason: pendingApproval
               ? `Order ${orderId} submitted and is awaiting approval.`
               : `Order ${orderId} submitted and activated${payment?.reference ? ` (WinCash ref ${payment.reference})` : ''}.`,
           });
+          if (pendingApproval) {
+            await logActivity({
+              ...activityCtx,
+              trigger: 'workflow-event',
+              reason: `Order ${orderId} routed for approval before it can complete.`,
+            });
+          }
 
           // Verified per the SAME definition the Contact step's own tick uses
           // (emailVerification: does the account's contact email match the

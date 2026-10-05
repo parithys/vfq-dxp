@@ -3,16 +3,17 @@ import { useAuthStore } from '../stores/authStore';
 
 // One place that writes the activity a customer journey leaves behind, so an agent never has to
 // log it by hand. Every activity gets a generated unique ID; its name and reason come from the
-// journey and the event that triggered it. Only Abandoned and Save & Exit carry agent comments
-// (optional - blank never blocks the action).
+// journey and the event that triggered it. Only Abandoned and Save & Exit carry agent comments;
+// an Abandoned comment is mandatory (blank or whitespace-only is rejected), Save & Exit's is optional.
 
-export type ActivityTrigger = 'completed' | 'abandoned' | 'saved-exit' | 'workflow-event';
+export type ActivityTrigger = 'completed' | 'abandoned' | 'saved-exit' | 'workflow-event' | 'hard-stop';
 
-const OUTCOME: Record<ActivityTrigger, { verb: string; status: string }> = {
-  completed: { verb: 'Completed', status: 'Solved' },
-  abandoned: { verb: 'Abandoned', status: 'Abandoned' },
-  'saved-exit': { verb: 'Saved & Exited', status: 'Open' },
-  'workflow-event': { verb: 'Workflow Event', status: 'Open' },
+const OUTCOME: Record<ActivityTrigger, { verb: string; status: string; outcome: string }> = {
+  completed: { verb: 'Completed', status: 'Solved', outcome: 'Order Created' },
+  abandoned: { verb: 'Abandoned', status: 'Abandoned', outcome: 'Abandoned' },
+  'saved-exit': { verb: 'Saved & Exited', status: 'Open', outcome: 'Save & Exit' },
+  'workflow-event': { verb: 'Workflow Approval', status: 'Open', outcome: 'Workflow Approval' },
+  'hard-stop': { verb: 'Hard Stop', status: 'Closed', outcome: 'Hard Stop' },
 };
 
 export interface ActivityInput {
@@ -38,7 +39,10 @@ export function newActivityId(): string {
 }
 
 export function buildActivity(input: ActivityInput): Record<string, unknown> {
-  const { verb, status } = OUTCOME[input.trigger];
+  const { verb, status, outcome } = OUTCOME[input.trigger];
+  if (input.trigger === 'abandoned' && !input.comments?.trim()) {
+    throw new Error('A comment is required before an abandoned journey can be saved.');
+  }
   const name = input.name ?? `${input.journey} - ${verb}`;
   const reason =
     input.reason ??
@@ -48,7 +52,9 @@ export function buildActivity(input: ActivityInput): Record<string, unknown> {
         ? `Agent abandoned ${input.journey}${input.stepLabel ? ` at the ${input.stepLabel} step` : ''}; the order was not placed.`
         : input.trigger === 'saved-exit'
           ? `Agent saved ${input.journey}${input.stepLabel ? ` at the ${input.stepLabel} step` : ''} to finish later.`
-          : `${input.journey} workflow event.`);
+          : input.trigger === 'hard-stop'
+            ? `${input.journey} ended at a hard stop; the customer is not eligible.`
+            : `${input.journey} routed for approval.`);
   const comments = input.trigger === 'abandoned' || input.trigger === 'saved-exit' ? input.comments?.trim() : '';
   const profile = useAuthStore.getState().profile;
   return {
@@ -56,6 +62,7 @@ export function buildActivity(input: ActivityInput): Record<string, unknown> {
     activityName: name,
     activityReason: reason,
     trigger: input.trigger,
+    outcome,
     journey: input.journey,
     status,
     ...(comments ? { comments } : {}),
@@ -64,6 +71,7 @@ export function buildActivity(input: ActivityInput): Record<string, unknown> {
     customerName: input.customerName,
     idNumber: input.idNumber,
     agentId: profile?.userId,
+    agentName: profile?.name,
     transactionDate: new Date().toISOString(),
   };
 }

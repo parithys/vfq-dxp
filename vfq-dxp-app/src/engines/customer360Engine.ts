@@ -314,7 +314,7 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     installedAssets: customerInstalledAssets,
     cafForms: cafForms.filter((f) => f.customerId === customerId),
     identityDocuments: identityDocuments.filter((d) => d.customerId === customerId),
-    activities: activities.filter((a) => accountIds.has(a.accountId as string)),
+    activities: activities.filter((a) => accountIds.has(a.accountId as string) || a.customerId === customerId),
     notifications: notifications.filter((n) => orderIds.has(n.orderId as string)),
     contacts: customerContacts,
     addresses: addresses.filter((a) => a.customerId === customerId),

@@ -22,7 +22,7 @@ const SCOPES: Record<PersonaApproach, SearchScope> = {
     groups: ['catalog', 'orders', 'leads', 'customers'],
   },
   Hybrid: {
-    placeholder: 'Search customers, products, tickets, campaigns…',
+    placeholder: 'Search products, tickets, leads, orders, campaigns…',
     groups: ['customers', 'catalog', 'tickets', 'orders', 'leads', 'sim-swaps'],
   },
   None: {
