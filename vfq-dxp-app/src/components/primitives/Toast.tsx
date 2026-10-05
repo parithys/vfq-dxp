@@ -245,6 +245,7 @@ export function ToastContainer() {
                           {row.to ? (
                             <Link
                               to={row.to}
+                              state={row.state}
                               onClick={() => dismissToast(t.id)}
                               className="underline decoration-white/30 underline-offset-2 hover:decoration-current"
                             >

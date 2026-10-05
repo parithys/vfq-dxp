@@ -1,5 +1,6 @@
 import * as mockDataEngine from '../engines/mockDataEngine';
 import { getAllRoutes } from '../engines/configEngine';
+import { existingCustomerPath } from '../modules/new-connection/existingCustomer';
 import { mobileMatches, purposeOfVisit, JOURNEY_LAUNCH_SCREENS } from '../engines/qnomyQueueEngine';
 import { type AccountRecord, type CustomerRecord } from '../engines/customer360Engine';
 import { groupServicesByCategory, listCustomerServices, type ServiceSources } from '../engines/customerServicesEngine';
@@ -129,6 +130,18 @@ export function factsForKioskNumber(
 
 // Resolves a journey code to the route its screen lives at, or undefined when
 // the code has no mapped screen or the screen is not in routes.json.
+/**
+ * Where a queue ticket's purpose of visit launches, for this customer. A purpose that opens the New Connection
+ * journey goes to the Existing Customer flow when the walk-in IS a Vodafone customer on file (their record is
+ * resolved), and to the New Customer flow when they are not. Every launch is a fresh start.
+ */
+export function launchTargetFor(journeyCode: string | null, customerId: string | null): { to: string; state: Record<string, unknown> } | undefined {
+  const to = launchPathFor(journeyCode);
+  if (!to) return undefined;
+  const opensNewConnection = Boolean(journeyCode) && JOURNEY_LAUNCH_SCREENS[journeyCode!] === 'SCR-037';
+  return { to: opensNewConnection && customerId ? existingCustomerPath(customerId) : to, state: { startFresh: true } };
+}
+
 export function launchPathFor(journeyCode: string | null): string | undefined {
   if (!journeyCode) return undefined;
   const screenId = JOURNEY_LAUNCH_SCREENS[journeyCode];
@@ -224,6 +237,7 @@ function ticketToastRows(
   mobile: string | null,
   facts: KioskCustomerFacts | undefined
 ): ToastRow[] {
+  const launchTarget = launchTargetFor(ticket.journeyCode, customerId);
   return [
     // "Ticket number" is no longer a row (2026-09-25): the id moved into the
     // headline, where it names the notification rather than sitting as the
@@ -269,7 +283,8 @@ function ticketToastRows(
       // SalesWorkspace's blank-start acquisition buttons: the queue has
       // already put this walk-in in the bridge, and the wizard prefilling
       // with the person standing at the counter is the entire point.
-      to: launchPathFor(ticket.journeyCode),
+      to: launchTarget?.to,
+      state: launchTarget?.state,
     },
   ];
 }

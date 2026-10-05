@@ -60,6 +60,8 @@ export interface ToastRow {
    * whoever pushes the toast resolves the route.
    */
   to?: string;
+  /** Router state sent with `to` (e.g. { startFresh: true } when the link starts a journey). */
+  state?: Record<string, unknown>;
 }
 
 /**

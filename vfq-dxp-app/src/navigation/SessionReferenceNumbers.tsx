@@ -14,7 +14,7 @@ import { Badge } from '../components/primitives/Badge';
 import { Button } from '../components/primitives/Button';
 import { Icon } from '../components/primitives/Icon';
 import { Tooltip } from '../components/primitives/Tooltip';
-import { factsForKioskNumber, launchPathFor, loadServiceSources, ticketToast, mostRecentFor } from './sessionReferenceLookups';
+import { factsForKioskNumber, launchTargetFor, loadServiceSources, ticketToast, mostRecentFor } from './sessionReferenceLookups';
 import type { QTicketRecord, TroubleTicketRecord, KioskCustomerFacts } from './sessionReferenceLookups';
 
 
@@ -299,9 +299,9 @@ export function SessionReferenceNumbers() {
     // Matched and unmatched are treated alike here: a walk-in with no
     // Vodafone record wanting a new connection is the ordinary case for this
     // journey, not an exception that should dead-end at the Dashboard.
-    const launchPath = launchPathFor(waiting.journeyCode);
-    if (launchPath) {
-      navigate(launchPath, { state: { startFresh: true } });
+    const launch = launchTargetFor(waiting.journeyCode, matched?.customerId ?? null);
+    if (launch) {
+      navigate(launch.to, { state: launch.state });
       return;
     }
 
