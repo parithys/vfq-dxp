@@ -219,7 +219,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
           value={actualIssue}
           onChange={(e) => setActualIssue(e.target.value)}
           placeholder="Select the real root-cause classification"
-          options={TT_ACTUAL_ISSUES.map((i) => ({ value: i, label: i }))}
+          options={[...new Set([...TT_ACTUAL_ISSUES, ...(initialActualIssue ? [initialActualIssue] : [])])].map((i) => ({ value: i, label: i }))}
           helperText="Real (partial sample) Siebel VFQA_TT_ACTUAL_ISSUE values - see ticketReferenceData.ts."
         />
         {duplicates.length > 0 && (

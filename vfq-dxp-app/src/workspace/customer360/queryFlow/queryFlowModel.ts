@@ -5,9 +5,10 @@ import type { CustomerService } from '../../../engines/customerServicesEngine';
 export interface QueryIssue {
   id: string;
   name: string;
-  category: string;
-  /** The issue's default Query Service Type - decides Complaints vs Requests. */
-  serviceType: string;
+  /** Absent until the issue-to-category mapping is supplied. */
+  category?: string;
+  /** The issue's default Query Service Type - decides Complaints vs Requests. Absent = Complaints. */
+  serviceType?: string;
   /** The matching real Siebel VFQA_TT_ACTUAL_ISSUE value, where one exists. */
   ticketActualIssue?: string;
   keywords?: string[];
@@ -45,7 +46,7 @@ export function useQueryIssueCatalogue(): QueryIssueCatalogue | undefined {
 export const searchQueryIssues = (issues: QueryIssue[], term: string): QueryIssue[] => {
   const q = term.trim().toLowerCase();
   if (!q) return [];
-  return issues.filter((i) => [i.name, i.category, ...(i.keywords ?? [])].some((t) => t.toLowerCase().includes(q)));
+  return issues.filter((i) => [i.name, i.category ?? '', ...(i.keywords ?? [])].some((t) => t.toLowerCase().includes(q)));
 };
 
 /**
@@ -56,7 +57,7 @@ export function deriveQueryServiceType(issue: QueryIssue, service: CustomerServi
   if (!service) return undefined;
   const line = service.tab === 'mobile' ? 'Mobile' : service.tab === 'fibre' ? 'Fixed/5G' : undefined;
   if (!line) return undefined;
-  return `${line} ${/request/i.test(issue.serviceType) ? 'Requests' : 'Complaints'}`;
+  return `${line} ${/request/i.test(issue.serviceType ?? '') ? 'Requests' : 'Complaints'}`;
 }
 
 /** The Trouble Ticket issue types the existing ticket form accepts; other service types leave the choice to the agent. */

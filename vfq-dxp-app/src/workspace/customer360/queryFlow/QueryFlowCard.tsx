@@ -16,7 +16,8 @@ import type { QueryIssue } from './queryFlowModel';
 const BACK_ICON = 'M19 12H5 M12 19l-7-7 7-7';
 const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
 
-const categoryTone = (c: string) => (/network/i.test(c) ? 'red' : 'blue');
+const categoryTone = (c: string | undefined) => (/network/i.test(c ?? '') ? 'red' : c ? 'blue' : 'grey');
+const PENDING = 'Category pending';
 
 function Banner({ tone, children }: { tone: 'info' | 'success' | 'warn'; children: React.ReactNode }) {
   const bg = tone === 'info' ? 'bg-[color-mix(in_oklab,var(--signal-blue),var(--bg)_90%)] text-[var(--signal-blue)]' : tone === 'success' ? 'bg-[color-mix(in_oklab,var(--success),var(--bg)_90%)] text-success' : 'bg-[var(--warn-bg)] text-[var(--warn-text)]';
@@ -113,8 +114,8 @@ export function QueryFlowCard({
                         className="w-full flex flex-wrap items-center gap-3 px-4 py-2.5 text-left hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
                       >
                         <span className="flex-1 min-w-48 text-fg text-[length:var(--fs-body)]">{r.name}</span>
-                        <Pill tone={categoryTone(r.category)}>{r.category}</Pill>
-                        <Pill tone="blue">{r.serviceType}</Pill>
+                        <Pill tone={categoryTone(r.category)}>{r.category ?? PENDING}</Pill>
+                        {r.serviceType && <Pill tone="blue">{r.serviceType}</Pill>}
                         <Icon path={CHEVRON_RIGHT} className="w-4 h-4 text-fg shrink-0" />
                       </button>
                     </li>
@@ -143,11 +144,11 @@ export function QueryFlowCard({
             </div>
             <dl className="grid grid-cols-1 sm:grid-cols-[12rem_1fr] gap-x-4 gap-y-2 items-center text-[length:var(--fs-body)]">
               <dt className="text-fg-2">Query Category</dt>
-              <dd><Pill tone={categoryTone(issue.category)}>{issue.category}</Pill></dd>
+              <dd><Pill tone={categoryTone(issue.category)}>{issue.category ?? PENDING}</Pill></dd>
               <dt className="text-fg-2">Query Issue</dt>
               <dd className="text-fg">{issue.name}</dd>
             </dl>
-            <Banner tone="success">Query Category is auto-derived based on predefined mapping.</Banner>
+            {issue.category ? <Banner tone="success">Query Category is auto-derived based on predefined mapping.</Banner> : <Banner tone="warn">No Query Category is mapped for this issue yet.</Banner>}
           </div>
 
           <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4 space-y-3">

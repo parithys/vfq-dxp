@@ -1,95 +1,1815 @@
 {
-  "_note": "Customer 360 'How can we help today?' query-issue catalogue. Each entry gives a Query Issue its predefined Query Category and default Query Service Type (the service type decides Complaints vs Requests; the customer's MSISDN decides Mobile vs Fixed/5G). SOURCE: the 12 'Calls' entries are the ones shown in the Customer 360 Trouble Ticket flow reference image (6 steps, 2026-10-05). `ticketActualIssue` is the matching real value in the Siebel VFQA_TT_ACTUAL_ISSUE list (reference/.knowledge tt-hashtags-and-actual-issue) where one exists; entries without one are left unset rather than guessed. OPEN ITEM: the full issue-to-category mapping beyond these 12 has not been supplied - add entries here and they appear in search with no code change.",
-  "categories": [
-    "Network Related",
-    "Service Related"
-  ],
-  "examples": [
-    "Calls",
-    "Roaming"
-  ],
-  "issues": [
-    {
-      "id": "QI-DROPPED-CALLS",
-      "name": "Dropped Calls",
-      "category": "Network Related",
-      "serviceType": "Mobile Complaints",
-      "ticketActualIssue": "Dropped Calls"
-    },
-    {
-      "id": "QI-MAKE-INT",
-      "name": "Can't Make Calls (Int)",
-      "category": "Service Related",
-      "serviceType": "Mobile Complaints",
-      "ticketActualIssue": "Make Calls International"
-    },
-    {
-      "id": "QI-MAKE-LOCAL",
-      "name": "Can't Make Calls (Local)",
-      "category": "Service Related",
-      "serviceType": "Mobile Complaints",
-      "ticketActualIssue": "Make Calls Local All"
-    },
-    {
-      "id": "QI-MAKE-LOCAL-INT",
-      "name": "Can't Make Calls (Local/Int)",
-      "category": "Service Related",
-      "serviceType": "Mobile Complaints",
-      "ticketActualIssue": "Make Calls Local/Int"
-    },
-    {
-      "id": "QI-MAKE-OOREDOO",
-      "name": "Can't Make Calls (Ooredoo)",
-      "category": "Service Related",
-      "serviceType": "Mobile Complaints",
-      "ticketActualIssue": "Make Calls Ooredoo"
-    },
-    {
-      "id": "QI-MAKE-OTHERS",
-      "name": "Can't Make Calls (Others)",
-      "category": "Service Related",
-      "serviceType": "Mobile Complaints"
-    },
-    {
-      "id": "QI-ROAMING-CALLS",
-      "name": "Roaming Calls",
-      "category": "Service Related",
-      "serviceType": "Mobile Complaints",
-      "ticketActualIssue": "Roaming Calls"
-    },
-    {
-      "id": "QI-RECEIVE-INT-OTP",
-      "name": "Can't Receive Calls (Int - OTP)",
-      "category": "Service Related",
-      "serviceType": "Mobile Complaints"
-    },
-    {
-      "id": "QI-RECEIVE-LOCAL",
-      "name": "Can't Receive Calls (Local)",
-      "category": "Service Related",
-      "serviceType": "Mobile Complaints",
-      "ticketActualIssue": "Receive Calls Local All"
-    },
-    {
-      "id": "QI-RECEIVE-OOREDOO",
-      "name": "Can't Receive Calls (Ooredoo)",
-      "category": "Service Related",
-      "serviceType": "Mobile Complaints",
-      "ticketActualIssue": "Receive Calls Ooredoo"
-    },
-    {
-      "id": "QI-RECEIVE-INT",
-      "name": "Can't Receive Calls (Int)",
-      "category": "Service Related",
-      "serviceType": "Mobile Complaints",
-      "ticketActualIssue": "Receive Calls International"
-    },
-    {
-      "id": "QI-RECEIVE-LOCAL-INT",
-      "name": "Can't Receive Calls (Local/Int)",
-      "category": "Service Related",
-      "serviceType": "Mobile Complaints",
-      "ticketActualIssue": "Receive Calls Local/Int"
-    }
-  ]
+ "_note": "Customer 360 'How can we help today?' query-issue catalogue. Each entry gives a Query Issue its predefined Query Category and default Query Service Type (the service type decides Complaints vs Requests; the customer's MSISDN decides Mobile vs Fixed/5G). SOURCE: the 12 'Calls' entries are the ones shown in the Customer 360 Trouble Ticket flow reference image (6 steps, 2026-10-05). `ticketActualIssue` is the matching real value in the Siebel VFQA_TT_ACTUAL_ISSUE list (reference/.knowledge tt-hashtags-and-actual-issue) where one exists; entries without one are left unset rather than guessed. OPEN ITEM: the full issue-to-category mapping beyond these 12 has not been supplied - add entries here and they appear in search with no code change. UPDATE 2026-10-05: every remaining active value of the real Siebel VFQA_TT_ACTUAL_ISSUE list was added as a Query Issue with NO category and NO service type, because no mapping exists in the corpus; they show 'Category pending' and default to Complaints until a mapping is supplied (set 'category' / 'serviceType' on an entry).",
+ "categories": [
+  "Network Related",
+  "Service Related"
+ ],
+ "examples": [
+  "Calls",
+  "Roaming"
+ ],
+ "issues": [
+  {
+   "id": "QI-DROPPED-CALLS",
+   "name": "Dropped Calls",
+   "category": "Network Related",
+   "serviceType": "Mobile Complaints",
+   "ticketActualIssue": "Dropped Calls"
+  },
+  {
+   "id": "QI-MAKE-INT",
+   "name": "Can't Make Calls (Int)",
+   "category": "Service Related",
+   "serviceType": "Mobile Complaints",
+   "ticketActualIssue": "Make Calls International"
+  },
+  {
+   "id": "QI-MAKE-LOCAL",
+   "name": "Can't Make Calls (Local)",
+   "category": "Service Related",
+   "serviceType": "Mobile Complaints",
+   "ticketActualIssue": "Make Calls Local All"
+  },
+  {
+   "id": "QI-MAKE-LOCAL-INT",
+   "name": "Can't Make Calls (Local/Int)",
+   "category": "Service Related",
+   "serviceType": "Mobile Complaints",
+   "ticketActualIssue": "Make Calls Local/Int"
+  },
+  {
+   "id": "QI-MAKE-OOREDOO",
+   "name": "Can't Make Calls (Ooredoo)",
+   "category": "Service Related",
+   "serviceType": "Mobile Complaints",
+   "ticketActualIssue": "Make Calls Ooredoo"
+  },
+  {
+   "id": "QI-MAKE-OTHERS",
+   "name": "Can't Make Calls (Others)",
+   "category": "Service Related",
+   "serviceType": "Mobile Complaints"
+  },
+  {
+   "id": "QI-ROAMING-CALLS",
+   "name": "Roaming Calls",
+   "category": "Service Related",
+   "serviceType": "Mobile Complaints",
+   "ticketActualIssue": "Roaming Calls"
+  },
+  {
+   "id": "QI-RECEIVE-INT-OTP",
+   "name": "Can't Receive Calls (Int - OTP)",
+   "category": "Service Related",
+   "serviceType": "Mobile Complaints"
+  },
+  {
+   "id": "QI-RECEIVE-LOCAL",
+   "name": "Can't Receive Calls (Local)",
+   "category": "Service Related",
+   "serviceType": "Mobile Complaints",
+   "ticketActualIssue": "Receive Calls Local All"
+  },
+  {
+   "id": "QI-RECEIVE-OOREDOO",
+   "name": "Can't Receive Calls (Ooredoo)",
+   "category": "Service Related",
+   "serviceType": "Mobile Complaints",
+   "ticketActualIssue": "Receive Calls Ooredoo"
+  },
+  {
+   "id": "QI-RECEIVE-INT",
+   "name": "Can't Receive Calls (Int)",
+   "category": "Service Related",
+   "serviceType": "Mobile Complaints",
+   "ticketActualIssue": "Receive Calls International"
+  },
+  {
+   "id": "QI-RECEIVE-LOCAL-INT",
+   "name": "Can't Receive Calls (Local/Int)",
+   "category": "Service Related",
+   "serviceType": "Mobile Complaints",
+   "ticketActualIssue": "Receive Calls Local/Int"
+  },
+  {
+   "id": "QI-ACTIVATE-INTERNET-SETTINGS",
+   "name": "Activate Internet Settings",
+   "ticketActualIssue": "Activate Internet Settings"
+  },
+  {
+   "id": "QI-ADJUST-WRONG-CREDIT-RECHARGED",
+   "name": "Adjust Wrong Credit Recharged",
+   "ticketActualIssue": "Adjust Wrong Credit Recharged"
+  },
+  {
+   "id": "QI-ADJUSTMENT-FAIL-NOT-REFLECTING",
+   "name": "Adjustment Fail/Not Reflecting",
+   "ticketActualIssue": "Adjustment Fail/Not Reflecting"
+  },
+  {
+   "id": "QI-ADVANCE-CREDIT-ISSUES",
+   "name": "Advance Credit Issues",
+   "ticketActualIssue": "Advance Credit Issues"
+  },
+  {
+   "id": "QI-AUTO-PAY-UNPOSTED-PAYMENT",
+   "name": "Auto-Pay Unposted Payment",
+   "ticketActualIssue": "Auto-Pay Unposted Payment"
+  },
+  {
+   "id": "QI-BILL-DELIVERY-ISSUES",
+   "name": "Bill Delivery Issues",
+   "ticketActualIssue": "Bill Delivery Issues"
+  },
+  {
+   "id": "QI-BILLING-PROFILE-ISSUES",
+   "name": "Billing Profile Issues",
+   "ticketActualIssue": "Billing Profile Issues"
+  },
+  {
+   "id": "QI-BILLING-AND-RENEWAL-MISMATCH",
+   "name": "Billing and Renewal Mismatch",
+   "ticketActualIssue": "Billing and Renewal Mismatch"
+  },
+  {
+   "id": "QI-CCT-ADJUSTMENT-REQUEST",
+   "name": "CCT-Adjustment Request",
+   "ticketActualIssue": "CCT-Adjustment Request"
+  },
+  {
+   "id": "QI-CCT-BILLING-DISPUTE",
+   "name": "CCT-Billing Dispute",
+   "ticketActualIssue": "CCT-Billing Dispute"
+  },
+  {
+   "id": "QI-CCT-CONTACT-DETAILS-ISSUE",
+   "name": "CCT-Contact Details Issue",
+   "ticketActualIssue": "CCT-Contact Details Issue"
+  },
+  {
+   "id": "QI-CCT-DISCONNECTION-REQUEST",
+   "name": "CCT-Disconnection Request",
+   "ticketActualIssue": "CCT-Disconnection Request"
+  },
+  {
+   "id": "QI-CCT-DISCOUNT-NOT-GIVEN",
+   "name": "CCT-Discount Not Given",
+   "ticketActualIssue": "CCT-Discount Not Given"
+  },
+  {
+   "id": "QI-CCT-FRAUD-ACTIVATION",
+   "name": "CCT-Fraud Activation",
+   "ticketActualIssue": "CCT-Fraud Activation"
+  },
+  {
+   "id": "QI-CCT-INCOMPLETE-INFO-SHARED",
+   "name": "CCT-Incomplete Info shared",
+   "ticketActualIssue": "CCT-Incomplete Info shared"
+  },
+  {
+   "id": "QI-CCT-LOCK-IN-PERIOD-NOT-INFORM",
+   "name": "CCT-Lock-in Period Not Inform",
+   "ticketActualIssue": "CCT-Lock-in Period Not Inform"
+  },
+  {
+   "id": "QI-CCT-MNP-REQUEST",
+   "name": "CCT-MNP Request",
+   "ticketActualIssue": "CCT-MNP Request"
+  },
+  {
+   "id": "QI-CCT-NO-ISSUE-MENTIONED",
+   "name": "CCT-No Issue Mentioned",
+   "ticketActualIssue": "CCT-No Issue Mentioned"
+  },
+  {
+   "id": "QI-CCT-NUMBER-NOT-ACTIVATED",
+   "name": "CCT-Number Not Activated",
+   "ticketActualIssue": "CCT-Number Not Activated"
+  },
+  {
+   "id": "QI-CCT-PYN-REQUEST",
+   "name": "CCT-PYN Request",
+   "ticketActualIssue": "CCT-PYN Request"
+  },
+  {
+   "id": "QI-CCT-PLAN-CHANGE-WITH-CONSENT",
+   "name": "CCT-Plan Change with Consent",
+   "ticketActualIssue": "CCT-Plan Change with Consent"
+  },
+  {
+   "id": "QI-CCT-POST-ACTIVATION-INSTD-PRE",
+   "name": "CCT-Post Activation instd Pre",
+   "ticketActualIssue": "CCT-Post Activation instd Pre"
+  },
+  {
+   "id": "QI-CCT-POST-TO-PRE-WITH-CONSENT",
+   "name": "CCT-Post to Pre with Consent",
+   "ticketActualIssue": "CCT-Post to Pre with Consent"
+  },
+  {
+   "id": "QI-CCT-PRE-TO-POST-WITH-CONSENT",
+   "name": "CCT-Pre to Post with Consent",
+   "ticketActualIssue": "CCT-Pre to Post with Consent"
+  },
+  {
+   "id": "QI-CCT-PROMISED-BENEFIT-NOT-ADDED",
+   "name": "CCT-Promised benefit not added",
+   "ticketActualIssue": "CCT-Promised benefit not added"
+  },
+  {
+   "id": "QI-CCT-RUDE-BEHAVIOR",
+   "name": "CCT-Rude Behavior",
+   "ticketActualIssue": "CCT-Rude Behavior"
+  },
+  {
+   "id": "QI-CCT-TON-REQUEST",
+   "name": "CCT-TON Request",
+   "ticketActualIssue": "CCT-TON Request"
+  },
+  {
+   "id": "QI-CCT-WRONG-PLAN-ACTIVATION",
+   "name": "CCT-Wrong Plan Activation",
+   "ticketActualIssue": "CCT-Wrong Plan Activation"
+  },
+  {
+   "id": "QI-CCT-WRONG-MISLEADING-INFO",
+   "name": "CCT-Wrong/Misleading Info",
+   "ticketActualIssue": "CCT-Wrong/Misleading Info"
+  },
+  {
+   "id": "QI-CRA-AE-AGENT-BEHAVIOUR",
+   "name": "CRA-AE-Agent Behaviour",
+   "ticketActualIssue": "CRA-AE-Agent Behaviour"
+  },
+  {
+   "id": "QI-CRA-BD-ADDONCHARGE",
+   "name": "CRA-BD-AddonCharge",
+   "ticketActualIssue": "CRA-BD-AddonCharge"
+  },
+  {
+   "id": "QI-CRA-BD-ADJREQ",
+   "name": "CRA-BD-AdjReq",
+   "ticketActualIssue": "CRA-BD-AdjReq"
+  },
+  {
+   "id": "QI-CRA-BD-DISCHARGES",
+   "name": "CRA-BD-DisCharges",
+   "ticketActualIssue": "CRA-BD-DisCharges"
+  },
+  {
+   "id": "QI-CRA-BD-DISCISSUE",
+   "name": "CRA-BD-DiscIssue",
+   "ticketActualIssue": "CRA-BD-DiscIssue"
+  },
+  {
+   "id": "QI-CRA-BD-DISPISSUE",
+   "name": "CRA-BD-DispIssue",
+   "ticketActualIssue": "CRA-BD-DispIssue"
+  },
+  {
+   "id": "QI-CRA-BD-MISSING-CREDITS",
+   "name": "CRA-BD-Missing Credits",
+   "ticketActualIssue": "CRA-BD-Missing Credits"
+  },
+  {
+   "id": "QI-CRA-BD-OOBCHARGES",
+   "name": "CRA-BD-OOBCharges",
+   "ticketActualIssue": "CRA-BD-OOBCharges"
+  },
+  {
+   "id": "QI-CRA-BD-OLDCHARGES",
+   "name": "CRA-BD-OldCharges",
+   "ticketActualIssue": "CRA-BD-OldCharges"
+  },
+  {
+   "id": "QI-CRA-BD-PCPC-LOCKIN",
+   "name": "CRA-BD-PCPC-Lockin",
+   "ticketActualIssue": "CRA-BD-PCPC-Lockin"
+  },
+  {
+   "id": "QI-CRA-BD-PENCHAR-SN",
+   "name": "CRA-BD-PenChar-SN",
+   "ticketActualIssue": "CRA-BD-PenChar-SN"
+  },
+  {
+   "id": "QI-CRA-BD-PLANCHARGE",
+   "name": "CRA-BD-PlanCharge",
+   "ticketActualIssue": "CRA-BD-PlanCharge"
+  },
+  {
+   "id": "QI-CRA-BD-PLANLOCKIN",
+   "name": "CRA-BD-PlanLockin",
+   "ticketActualIssue": "CRA-BD-PlanLockin"
+  },
+  {
+   "id": "QI-CRA-BD-PLANWAIVER",
+   "name": "CRA-BD-PlanWaiver",
+   "ticketActualIssue": "CRA-BD-PlanWaiver"
+  },
+  {
+   "id": "QI-CRA-BD-UNPOSTED-PAYMENT",
+   "name": "CRA-BD-Unposted Payment",
+   "ticketActualIssue": "CRA-BD-Unposted Payment"
+  },
+  {
+   "id": "QI-CRA-BD-VASCHARGES",
+   "name": "CRA-BD-VASCharges",
+   "ticketActualIssue": "CRA-BD-VASCharges"
+  },
+  {
+   "id": "QI-CRA-DR-CAF-REQUEST",
+   "name": "CRA-DR-CAF Request",
+   "ticketActualIssue": "CRA-DR-CAF Request"
+  },
+  {
+   "id": "QI-CRA-DR-HOMEMOVE",
+   "name": "CRA-DR-HomeMove",
+   "ticketActualIssue": "CRA-DR-HomeMove"
+  },
+  {
+   "id": "QI-CRA-DR-NUMBERACT",
+   "name": "CRA-DR-NumberAct",
+   "ticketActualIssue": "CRA-DR-NumberAct"
+  },
+  {
+   "id": "QI-CRA-DR-NUMBERDISCON",
+   "name": "CRA-DR-NumberDiscon",
+   "ticketActualIssue": "CRA-DR-NumberDiscon"
+  },
+  {
+   "id": "QI-CRA-DR-ONLINE-ORDER",
+   "name": "CRA-DR-Online Order",
+   "ticketActualIssue": "CRA-DR-Online Order"
+  },
+  {
+   "id": "QI-CRA-DR-PORT-IN",
+   "name": "CRA-DR-Port-In",
+   "ticketActualIssue": "CRA-DR-Port-In"
+  },
+  {
+   "id": "QI-CRA-DR-PORT-OUT",
+   "name": "CRA-DR-Port-Out",
+   "ticketActualIssue": "CRA-DR-Port-Out"
+  },
+  {
+   "id": "QI-CRA-DR-POSTMIGRATION",
+   "name": "CRA-DR-PostMigration",
+   "ticketActualIssue": "CRA-DR-PostMigration"
+  },
+  {
+   "id": "QI-CRA-DR-PREPPREP-MIGRATION",
+   "name": "CRA-DR-PrepPrep-Migration",
+   "ticketActualIssue": "CRA-DR-PrepPrep-Migration"
+  },
+  {
+   "id": "QI-CRA-DR-REFUNDREQUEST",
+   "name": "CRA-DR-RefundRequest",
+   "ticketActualIssue": "CRA-DR-RefundRequest"
+  },
+  {
+   "id": "QI-CRA-DR-STOPCAMPSMS",
+   "name": "CRA-DR-StopCampSMS",
+   "ticketActualIssue": "CRA-DR-StopCampSMS"
+  },
+  {
+   "id": "QI-CRA-DR-TON",
+   "name": "CRA-DR-TON",
+   "ticketActualIssue": "CRA-DR-TON"
+  },
+  {
+   "id": "QI-CRA-DR-UNATHORIZEDDISC",
+   "name": "CRA-DR-UnathorizedDisc",
+   "ticketActualIssue": "CRA-DR-UnathorizedDisc"
+  },
+  {
+   "id": "QI-CRA-FR-CONDETUP",
+   "name": "CRA-FR-ConDetUp",
+   "ticketActualIssue": "CRA-FR-ConDetUp"
+  },
+  {
+   "id": "QI-CRA-FR-NUM-ACT",
+   "name": "CRA-FR-Num Act",
+   "ticketActualIssue": "CRA-FR-Num Act"
+  },
+  {
+   "id": "QI-CRA-FR-OTP",
+   "name": "CRA-FR-OTP",
+   "ticketActualIssue": "CRA-FR-OTP"
+  },
+  {
+   "id": "QI-CRA-FR-PRE2POSTMIG",
+   "name": "CRA-FR-Pre2PostMig",
+   "ticketActualIssue": "CRA-FR-Pre2PostMig"
+  },
+  {
+   "id": "QI-CRA-FR-SIM-SWAP",
+   "name": "CRA-FR-Sim Swap",
+   "ticketActualIssue": "CRA-FR-Sim Swap"
+  },
+  {
+   "id": "QI-CRA-FR-TON",
+   "name": "CRA-FR-TON",
+   "ticketActualIssue": "CRA-FR-TON"
+  },
+  {
+   "id": "QI-CRA-FR-VAS-CHA",
+   "name": "CRA-FR-VAS Cha",
+   "ticketActualIssue": "CRA-FR-VAS Cha"
+  },
+  {
+   "id": "QI-CRA-MI-CAMPPROMO",
+   "name": "CRA-MI-CampPromo",
+   "ticketActualIssue": "CRA-MI-CampPromo"
+  },
+  {
+   "id": "QI-CRA-MI-LOCKIN",
+   "name": "CRA-MI-LockIn",
+   "ticketActualIssue": "CRA-MI-LockIn"
+  },
+  {
+   "id": "QI-CRA-MI-MVAOFFER",
+   "name": "CRA-MI-MVAOffer",
+   "ticketActualIssue": "CRA-MI-MVAOffer"
+  },
+  {
+   "id": "QI-CRA-MI-MVAPROMO",
+   "name": "CRA-MI-MVAPromo",
+   "ticketActualIssue": "CRA-MI-MVAPromo"
+  },
+  {
+   "id": "QI-CRA-MI-PLANBEN",
+   "name": "CRA-MI-PlanBen",
+   "ticketActualIssue": "CRA-MI-PlanBen"
+  },
+  {
+   "id": "QI-CRA-MI-PLANCHAR",
+   "name": "CRA-MI-PlanChar",
+   "ticketActualIssue": "CRA-MI-PlanChar"
+  },
+  {
+   "id": "QI-CRA-MI-SMSOFFER",
+   "name": "CRA-MI-SMSOffer",
+   "ticketActualIssue": "CRA-MI-SMSOffer"
+  },
+  {
+   "id": "QI-CRA-MI-T-C",
+   "name": "CRA-MI-T & C",
+   "ticketActualIssue": "CRA-MI-T & C"
+  },
+  {
+   "id": "QI-CRA-MI-T-C",
+   "name": "CRA-MI-T&C",
+   "ticketActualIssue": "CRA-MI-T&C"
+  },
+  {
+   "id": "QI-CRA-MI-TRY-BUY",
+   "name": "CRA-MI-Try & Buy",
+   "ticketActualIssue": "CRA-MI-Try & Buy"
+  },
+  {
+   "id": "QI-CRA-MI-WEBINFO",
+   "name": "CRA-MI-WebInfo",
+   "ticketActualIssue": "CRA-MI-WebInfo"
+  },
+  {
+   "id": "QI-CRA-MI-WEBPOMO",
+   "name": "CRA-MI-WebPomo",
+   "ticketActualIssue": "CRA-MI-WebPomo"
+  },
+  {
+   "id": "QI-CRA-MI-WEBPROMO",
+   "name": "CRA-MI-WebPromo",
+   "ticketActualIssue": "CRA-MI-WebPromo"
+  },
+  {
+   "id": "QI-CRA-NR-FREQDISC",
+   "name": "CRA-NR-FreqDisc",
+   "ticketActualIssue": "CRA-NR-FreqDisc"
+  },
+  {
+   "id": "QI-CRA-NR-IDCOV",
+   "name": "CRA-NR-IDCov",
+   "ticketActualIssue": "CRA-NR-IDCov"
+  },
+  {
+   "id": "QI-CRA-NR-NON-PAY",
+   "name": "CRA-NR-Non-Pay",
+   "ticketActualIssue": "CRA-NR-Non-Pay"
+  },
+  {
+   "id": "QI-CRA-NR-NON-RECH",
+   "name": "CRA-NR-Non-Rech",
+   "ticketActualIssue": "CRA-NR-Non-Rech"
+  },
+  {
+   "id": "QI-CRA-NR-ODCOV",
+   "name": "CRA-NR-ODCov",
+   "ticketActualIssue": "CRA-NR-ODCov"
+  },
+  {
+   "id": "QI-CRA-NR-SLOWDATA",
+   "name": "CRA-NR-SlowData",
+   "ticketActualIssue": "CRA-NR-SlowData"
+  },
+  {
+   "id": "QI-CRA-NR-VOICEQUAL",
+   "name": "CRA-NR-VoiceQual",
+   "ticketActualIssue": "CRA-NR-VoiceQual"
+  },
+  {
+   "id": "QI-CRA-PD-PAYMENT-DISPUTE",
+   "name": "CRA-PD-Payment Dispute",
+   "ticketActualIssue": "CRA-PD-Payment Dispute"
+  },
+  {
+   "id": "QI-CRA-PR-PROCESS-RELATED",
+   "name": "CRA-PR-Process Related",
+   "ticketActualIssue": "CRA-PR-Process Related"
+  },
+  {
+   "id": "QI-CRA-PROMBENNOTADD",
+   "name": "CRA-PromBenNotAdd",
+   "ticketActualIssue": "CRA-PromBenNotAdd"
+  },
+  {
+   "id": "QI-CRA-SR-FIXEDSERV",
+   "name": "CRA-SR-FixedServ",
+   "ticketActualIssue": "CRA-SR-FixedServ"
+  },
+  {
+   "id": "QI-CRA-SR-ROAMING",
+   "name": "CRA-SR-Roaming",
+   "ticketActualIssue": "CRA-SR-Roaming"
+  },
+  {
+   "id": "QI-CRA-SR-VOICECALL",
+   "name": "CRA-SR-VoiceCall",
+   "ticketActualIssue": "CRA-SR-VoiceCall"
+  },
+  {
+   "id": "QI-CALL-FORWARDING-ISSUE",
+   "name": "Call Forwarding Issue",
+   "ticketActualIssue": "Call Forwarding Issue"
+  },
+  {
+   "id": "QI-CALL-WAITING-ISSUE",
+   "name": "Call Waiting Issue",
+   "ticketActualIssue": "Call Waiting Issue"
+  },
+  {
+   "id": "QI-CALLING-OFFER-NOT-APPLIED",
+   "name": "Calling Offer not Applied",
+   "ticketActualIssue": "Calling Offer not Applied"
+  },
+  {
+   "id": "QI-CAMPAIGN-FREE-DATA-BILL-PAYMNT",
+   "name": "Campaign Free Data Bill Paymnt",
+   "ticketActualIssue": "Campaign Free Data Bill Paymnt"
+  },
+  {
+   "id": "QI-CAMPAIGN-FREE-INBOUND-OFFER",
+   "name": "Campaign Free Inbound Offer",
+   "ticketActualIssue": "Campaign Free Inbound Offer"
+  },
+  {
+   "id": "QI-CAMPAIGN-FREE-OUTBOUND-OFFER",
+   "name": "Campaign Free Outbound Offer",
+   "ticketActualIssue": "Campaign Free Outbound Offer"
+  },
+  {
+   "id": "QI-CAMPAIGN-INCIDENT-RELATED",
+   "name": "Campaign Incident Related",
+   "ticketActualIssue": "Campaign Incident Related"
+  },
+  {
+   "id": "QI-CAMPAIGN-PAID-INBOUND-OFFER",
+   "name": "Campaign Paid Inbound Offer",
+   "ticketActualIssue": "Campaign Paid Inbound Offer"
+  },
+  {
+   "id": "QI-CAMPAIGN-PAID-OUTBOUND-OFFER",
+   "name": "Campaign Paid Outbound Offer",
+   "ticketActualIssue": "Campaign Paid Outbound Offer"
+  },
+  {
+   "id": "QI-CANNOT-RECEIVE-OTP-SMS-BOTH",
+   "name": "Cannot Receive OTP SMS - Both",
+   "ticketActualIssue": "Cannot Receive OTP SMS - Both"
+  },
+  {
+   "id": "QI-CANNOT-RECEIVE-OTP-SMS-INTL",
+   "name": "Cannot Receive OTP SMS - Intl",
+   "ticketActualIssue": "Cannot Receive OTP SMS - Intl"
+  },
+  {
+   "id": "QI-CANNOT-RECEIVE-OTP-SMS-LOCAL",
+   "name": "Cannot Receive OTP SMS - Local",
+   "ticketActualIssue": "Cannot Receive OTP SMS - Local"
+  },
+  {
+   "id": "QI-CREDIT-TRANSFER-ISSUES",
+   "name": "Credit Transfer Issues",
+   "ticketActualIssue": "Credit Transfer Issues"
+  },
+  {
+   "id": "QI-CUSTOMER-DEVICE-ISSUE",
+   "name": "Customer device Issue",
+   "ticketActualIssue": "Customer device Issue"
+  },
+  {
+   "id": "QI-DAMAGED-FIBER-CABLE",
+   "name": "Damaged Fiber Cable",
+   "ticketActualIssue": "Damaged Fiber Cable"
+  },
+  {
+   "id": "QI-DISCOUNT-NOT-REFLECTED-ON-BILL",
+   "name": "Discount not Reflected on Bill",
+   "ticketActualIssue": "Discount not Reflected on Bill"
+  },
+  {
+   "id": "QI-FAILED-ORDER-ICB",
+   "name": "Failed Order - ICB",
+   "ticketActualIssue": "Failed Order - ICB"
+  },
+  {
+   "id": "QI-FAILED-ORDER-MULTISIM",
+   "name": "Failed Order - MultiSIM",
+   "ticketActualIssue": "Failed Order - MultiSIM"
+  },
+  {
+   "id": "QI-FAILED-ORDER-MUTE",
+   "name": "Failed Order - Mute",
+   "ticketActualIssue": "Failed Order - Mute"
+  },
+  {
+   "id": "QI-FAILED-REQUEST-ADD-ON-RELATED",
+   "name": "Failed Request Add-on Related",
+   "ticketActualIssue": "Failed Request Add-on Related"
+  },
+  {
+   "id": "QI-FAILED-REQUEST-DISCONNECTION",
+   "name": "Failed Request Disconnection",
+   "ticketActualIssue": "Failed Request Disconnection"
+  },
+  {
+   "id": "QI-FAILED-REQUEST-MIGRATION",
+   "name": "Failed Request Migration",
+   "ticketActualIssue": "Failed Request Migration"
+  },
+  {
+   "id": "QI-FAILED-REQUEST-OTHER",
+   "name": "Failed Request Other",
+   "ticketActualIssue": "Failed Request Other"
+  },
+  {
+   "id": "QI-FAILED-REQUEST-PARK-SUSPENSION",
+   "name": "Failed Request Park/Suspension",
+   "ticketActualIssue": "Failed Request Park/Suspension"
+  },
+  {
+   "id": "QI-FAILED-REQUEST-PLAN-CHANGE",
+   "name": "Failed Request Plan Change",
+   "ticketActualIssue": "Failed Request Plan Change"
+  },
+  {
+   "id": "QI-FAILED-REQUEST-SIM-SWAP",
+   "name": "Failed Request SIM Swap",
+   "ticketActualIssue": "Failed Request SIM Swap"
+  },
+  {
+   "id": "QI-FAILED-REQUEST-TON",
+   "name": "Failed Request TON",
+   "ticketActualIssue": "Failed Request TON"
+  },
+  {
+   "id": "QI-FAILED-REQUEST-UNBARRING-DELAY",
+   "name": "Failed Request Unbarring Delay",
+   "ticketActualIssue": "Failed Request Unbarring Delay"
+  },
+  {
+   "id": "QI-FLUCTUATION",
+   "name": "Fluctuation",
+   "ticketActualIssue": "Fluctuation"
+  },
+  {
+   "id": "QI-I-WATCH-ACTIVATION-FAILURE",
+   "name": "I-Watch Activation Failure",
+   "ticketActualIssue": "I-Watch Activation Failure"
+  },
+  {
+   "id": "QI-ICB-OFF-BUT-BLOCKING-ACTIVE",
+   "name": "ICB off but blocking Active",
+   "ticketActualIssue": "ICB off but blocking Active"
+  },
+  {
+   "id": "QI-ICB-ON-BUT-NOT-WORKING",
+   "name": "ICB on but not working",
+   "ticketActualIssue": "ICB on but not working"
+  },
+  {
+   "id": "QI-INCORRECT-CHARGES-ADDON-DSPUTE",
+   "name": "Incorrect Charges Addon Dspute",
+   "ticketActualIssue": "Incorrect Charges Addon Dspute"
+  },
+  {
+   "id": "QI-INCORRECT-CHARGES-BILL-LIMIT",
+   "name": "Incorrect Charges Bill Limit",
+   "ticketActualIssue": "Incorrect Charges Bill Limit"
+  },
+  {
+   "id": "QI-INCORRECT-CHARGES-MSISDN-DISCD",
+   "name": "Incorrect Charges MSISDN Discd",
+   "ticketActualIssue": "Incorrect Charges MSISDN Discd"
+  },
+  {
+   "id": "QI-INCORRECT-CHARGES-MSISDN-SUSPD",
+   "name": "Incorrect Charges MSISDN Suspd",
+   "ticketActualIssue": "Incorrect Charges MSISDN Suspd"
+  },
+  {
+   "id": "QI-INCORRECT-CHARGES-ORDER-DELAY",
+   "name": "Incorrect Charges Order Delay",
+   "ticketActualIssue": "Incorrect Charges Order Delay"
+  },
+  {
+   "id": "QI-INCORRECT-CHARGES-OTHER",
+   "name": "Incorrect Charges Other",
+   "ticketActualIssue": "Incorrect Charges Other"
+  },
+  {
+   "id": "QI-INCORRECT-CHARGES-PENALTY-FEE",
+   "name": "Incorrect Charges Penalty Fee",
+   "ticketActualIssue": "Incorrect Charges Penalty Fee"
+  },
+  {
+   "id": "QI-INCORRECT-CHARGES-QNB-VFPP",
+   "name": "Incorrect Charges QNB VFPP",
+   "ticketActualIssue": "Incorrect Charges QNB VFPP"
+  },
+  {
+   "id": "QI-INCORRECT-CHARGES-ROAMING",
+   "name": "Incorrect Charges Roaming",
+   "ticketActualIssue": "Incorrect Charges Roaming"
+  },
+  {
+   "id": "QI-INCORRECT-CHARGES-TEMP-MSISDN",
+   "name": "Incorrect Charges Temp MSISDN",
+   "ticketActualIssue": "Incorrect Charges Temp MSISDN"
+  },
+  {
+   "id": "QI-INCORRECT-LNDLINE-CALL-CHARGES",
+   "name": "Incorrect Lndline Call Charges",
+   "ticketActualIssue": "Incorrect Lndline Call Charges"
+  },
+  {
+   "id": "QI-INCORRECT-PRICE-PLAN-ON-BILL",
+   "name": "Incorrect Price Plan on Bill",
+   "ticketActualIssue": "Incorrect Price Plan on Bill"
+  },
+  {
+   "id": "QI-INDOOR-COVERAGE",
+   "name": "Indoor Coverage",
+   "ticketActualIssue": "Indoor Coverage"
+  },
+  {
+   "id": "QI-INSTANT-SIM-POST-ACT-ORDER",
+   "name": "Instant SIM-Post: Act Order",
+   "ticketActualIssue": "Instant SIM-Post: Act Order"
+  },
+  {
+   "id": "QI-INSTANT-SIM-POST-DISC-ORDER",
+   "name": "Instant SIM-Post: Disc Order",
+   "ticketActualIssue": "Instant SIM-Post: Disc Order"
+  },
+  {
+   "id": "QI-INSTANT-SIM-POST-EMAIL-CAF",
+   "name": "Instant SIM-Post: Email CAF",
+   "ticketActualIssue": "Instant SIM-Post: Email CAF"
+  },
+  {
+   "id": "QI-INSTANT-SIM-POST-EMAIL-QRCODE",
+   "name": "Instant SIM-Post: Email QRCode",
+   "ticketActualIssue": "Instant SIM-Post: Email QRCode"
+  },
+  {
+   "id": "QI-INSTANT-SIM-POST-JOURNEYISSUE",
+   "name": "Instant SIM-Post: JourneyIssue",
+   "ticketActualIssue": "Instant SIM-Post: JourneyIssue"
+  },
+  {
+   "id": "QI-INSTANT-SIM-POST-TON-FAILED",
+   "name": "Instant SIM-Post: TON failed",
+   "ticketActualIssue": "Instant SIM-Post: TON failed"
+  },
+  {
+   "id": "QI-INSTANT-SIM-POST-URL-ACCESS",
+   "name": "Instant SIM-Post: URL Access",
+   "ticketActualIssue": "Instant SIM-Post: URL Access"
+  },
+  {
+   "id": "QI-INSTANT-SIM-PRE-EMAIL-CAF",
+   "name": "Instant SIM-Pre: Email CAF",
+   "ticketActualIssue": "Instant SIM-Pre: Email CAF"
+  },
+  {
+   "id": "QI-INSTANT-SIM-PRE-EMAIL-QRCODE",
+   "name": "Instant SIM-Pre: Email QRCode",
+   "ticketActualIssue": "Instant SIM-Pre: Email QRCode"
+  },
+  {
+   "id": "QI-INSTANT-SIM-PRE-JOURNEY-ISSUE",
+   "name": "Instant SIM-Pre: Journey Issue",
+   "ticketActualIssue": "Instant SIM-Pre: Journey Issue"
+  },
+  {
+   "id": "QI-INSTANT-SIM-PRE-SWAP-FAILED",
+   "name": "Instant SIM-Pre: Swap Failed",
+   "ticketActualIssue": "Instant SIM-Pre: Swap Failed"
+  },
+  {
+   "id": "QI-INSTANT-SIM-PRE-TON-FAILED",
+   "name": "Instant SIM-Pre: TON failed",
+   "ticketActualIssue": "Instant SIM-Pre: TON failed"
+  },
+  {
+   "id": "QI-INSTANT-SIM-PRE-URL-ACCESS",
+   "name": "Instant SIM-Pre: URL Access",
+   "ticketActualIssue": "Instant SIM-Pre: URL Access"
+  },
+  {
+   "id": "QI-LANGUAGE-CHANGE",
+   "name": "Language Change",
+   "ticketActualIssue": "Language Change"
+  },
+  {
+   "id": "QI-LOYALTYPOINTS-UNABLE-TO-SEE",
+   "name": "LoyaltyPoints-Unable to see",
+   "ticketActualIssue": "LoyaltyPoints-Unable to see"
+  },
+  {
+   "id": "QI-LOYALTYPOINTS-UNABLETOREGISTER",
+   "name": "LoyaltyPoints-UnabletoRegister",
+   "ticketActualIssue": "LoyaltyPoints-UnabletoRegister"
+  },
+  {
+   "id": "QI-LOYALTYPOINTS-UNRECEIVED",
+   "name": "LoyaltyPoints-Unreceived",
+   "ticketActualIssue": "LoyaltyPoints-Unreceived"
+  },
+  {
+   "id": "QI-MAKE-CALLS-OOB",
+   "name": "Make Calls OOB",
+   "ticketActualIssue": "Make Calls OOB"
+  },
+  {
+   "id": "QI-MIGRATION-SUCCESSFUL",
+   "name": "Migration successful",
+   "ticketActualIssue": "Migration successful"
+  },
+  {
+   "id": "QI-MIGRATIONFAILED-IBC-ISSUE",
+   "name": "MigrationFailed - IBC Issue",
+   "ticketActualIssue": "MigrationFailed - IBC Issue"
+  },
+  {
+   "id": "QI-MIGRATIONFAILED-ACCESS-ISSUE",
+   "name": "MigrationFailed-Access Issue",
+   "ticketActualIssue": "MigrationFailed-Access Issue"
+  },
+  {
+   "id": "QI-MIGRATIONFAILED-BLOCKAGE-ISSUE",
+   "name": "MigrationFailed-Blockage Issue",
+   "ticketActualIssue": "MigrationFailed-Blockage Issue"
+  },
+  {
+   "id": "QI-MIGRATIONFAILED-CXCANCELLED",
+   "name": "MigrationFailed-CXCancelled",
+   "ticketActualIssue": "MigrationFailed-CXCancelled"
+  },
+  {
+   "id": "QI-MIGRATIONFAILED-ZSB-IS-NONRFS",
+   "name": "MigrationFailed-ZSB is nonRFS",
+   "ticketActualIssue": "MigrationFailed-ZSB is nonRFS"
+  },
+  {
+   "id": "QI-MIGRATIONFAILED-5GCPENORETURN",
+   "name": "MigrationFailed\u20135GCPENoreturn",
+   "ticketActualIssue": "MigrationFailed\u20135GCPENoreturn"
+  },
+  {
+   "id": "QI-MIGRATIONPENDING-CIVIL-WORK",
+   "name": "MigrationPending-Civil Work",
+   "ticketActualIssue": "MigrationPending-Civil Work"
+  },
+  {
+   "id": "QI-MIGRATIONPENDING-SPLITTER-FULL",
+   "name": "MigrationPending-Splitter Full",
+   "ticketActualIssue": "MigrationPending-Splitter Full"
+  },
+  {
+   "id": "QI-MIGRATIONPENDING-F3F8",
+   "name": "MigrationPending\u2013F3F8",
+   "ticketActualIssue": "MigrationPending\u2013F3F8"
+  },
+  {
+   "id": "QI-MISSED-CALL-ALERT-ISSUE",
+   "name": "Missed Call Alert Issue",
+   "ticketActualIssue": "Missed Call Alert Issue"
+  },
+  {
+   "id": "QI-MISSING-CREDITS-DATA",
+   "name": "Missing Credits Data",
+   "ticketActualIssue": "Missing Credits Data"
+  },
+  {
+   "id": "QI-MISSING-CREDITS-FLEX",
+   "name": "Missing Credits Flex",
+   "ticketActualIssue": "Missing Credits Flex"
+  },
+  {
+   "id": "QI-MISSING-CREDITS-INT-MINS",
+   "name": "Missing Credits Int Mins",
+   "ticketActualIssue": "Missing Credits Int Mins"
+  },
+  {
+   "id": "QI-MISSING-CREDITS-LOCAL-MINS",
+   "name": "Missing Credits Local Mins",
+   "ticketActualIssue": "Missing Credits Local Mins"
+  },
+  {
+   "id": "QI-MISSING-CREDITS-QAR",
+   "name": "Missing Credits QAR",
+   "ticketActualIssue": "Missing Credits QAR"
+  },
+  {
+   "id": "QI-MISSING-CREDITS-SMS",
+   "name": "Missing Credits SMS",
+   "ticketActualIssue": "Missing Credits SMS"
+  },
+  {
+   "id": "QI-MISSING-PROMOTIONAL-LINE-ITEM",
+   "name": "Missing Promotional line Item",
+   "ticketActualIssue": "Missing Promotional line Item"
+  },
+  {
+   "id": "QI-MIXED-ASSETS",
+   "name": "Mixed Assets",
+   "ticketActualIssue": "Mixed Assets"
+  },
+  {
+   "id": "QI-MOBILE-BROADBAND-HOME-INTERNET",
+   "name": "Mobile Broadband/Home Internet",
+   "ticketActualIssue": "Mobile Broadband/Home Internet"
+  },
+  {
+   "id": "QI-MOBILE-INCIDENT-RELATED",
+   "name": "Mobile Incident Related",
+   "ticketActualIssue": "Mobile Incident Related"
+  },
+  {
+   "id": "QI-MOBILE-INTERNET-DATA",
+   "name": "Mobile Internet/Data",
+   "ticketActualIssue": "Mobile Internet/Data"
+  },
+  {
+   "id": "QI-MULTISIM-INCORRECT-CHARGES",
+   "name": "MultiSIM- Incorrect Charges",
+   "ticketActualIssue": "MultiSIM- Incorrect Charges"
+  },
+  {
+   "id": "QI-MULTISIM-DATA-NOT-WORKING",
+   "name": "MultiSIM-Data not working",
+   "ticketActualIssue": "MultiSIM-Data not working"
+  },
+  {
+   "id": "QI-MULTISIM-SIMSWAP-NOTREFLECTING",
+   "name": "MultiSIM-SIMSwap notreflecting",
+   "ticketActualIssue": "MultiSIM-SIMSwap notreflecting"
+  },
+  {
+   "id": "QI-MULTISIM-SLOW-DATA-PERFORMANCE",
+   "name": "MultiSIM-Slow Data Performance",
+   "ticketActualIssue": "MultiSIM-Slow Data Performance"
+  },
+  {
+   "id": "QI-MUTE-OFF-BUT-BLOCKING-ACTIVE",
+   "name": "Mute off but blocking Active",
+   "ticketActualIssue": "Mute off but blocking Active"
+  },
+  {
+   "id": "QI-MUTE-ON-BUT-NOT-WORKING",
+   "name": "Mute on but not working",
+   "ticketActualIssue": "Mute on but not working"
+  },
+  {
+   "id": "QI-MUTE-TOGGLE-ISSUE-ON-OFF-MVA",
+   "name": "Mute toggle Issue (On/Off)MVA",
+   "ticketActualIssue": "Mute toggle Issue (On/Off)MVA"
+  },
+  {
+   "id": "QI-MUTETOGGLEISSUE-ON-OFF-WIDGET",
+   "name": "MutetoggleIssue (On/Off)Widget",
+   "ticketActualIssue": "MutetoggleIssue (On/Off)Widget"
+  },
+  {
+   "id": "QI-NEGATIVE-PRIMARY-BALANCE",
+   "name": "Negative Primary Balance",
+   "ticketActualIssue": "Negative Primary Balance"
+  },
+  {
+   "id": "QI-NO-ISSUE-FOUND",
+   "name": "No Issue Found",
+   "ticketActualIssue": "No Issue Found"
+  },
+  {
+   "id": "QI-NO-NETWORK-COVERAGE",
+   "name": "No Network Coverage",
+   "ticketActualIssue": "No Network Coverage"
+  },
+  {
+   "id": "QI-NONRENEWAL-DATA-FREE-ADDON",
+   "name": "NonRenewal Data Free Addon",
+   "ticketActualIssue": "NonRenewal Data Free Addon"
+  },
+  {
+   "id": "QI-NONRENEWAL-DATA-PAID-ADDON",
+   "name": "NonRenewal Data Paid Addon",
+   "ticketActualIssue": "NonRenewal Data Paid Addon"
+  },
+  {
+   "id": "QI-NONRENEWAL-INT-MINS-ADDON",
+   "name": "NonRenewal Int Mins Addon",
+   "ticketActualIssue": "NonRenewal Int Mins Addon"
+  },
+  {
+   "id": "QI-NONRENEWAL-LM-FREE-ADDON",
+   "name": "NonRenewal LM Free Addon",
+   "ticketActualIssue": "NonRenewal LM Free Addon"
+  },
+  {
+   "id": "QI-NONRENEWAL-OTHER-ADDON",
+   "name": "NonRenewal Other Addon",
+   "ticketActualIssue": "NonRenewal Other Addon"
+  },
+  {
+   "id": "QI-NONRENEWAL-PLAN-BENEFITS",
+   "name": "NonRenewal Plan Benefits",
+   "ticketActualIssue": "NonRenewal Plan Benefits"
+  },
+  {
+   "id": "QI-NOTIFICATION-SMS-ISSUES",
+   "name": "Notification SMS Issues",
+   "ticketActualIssue": "Notification SMS Issues"
+  },
+  {
+   "id": "QI-ORDER-OF-CONSUMPTION",
+   "name": "Order of Consumption",
+   "ticketActualIssue": "Order of Consumption"
+  },
+  {
+   "id": "QI-OUTDOOR-COVERAGE",
+   "name": "Outdoor Coverage",
+   "ticketActualIssue": "Outdoor Coverage"
+  },
+  {
+   "id": "QI-PAYMENT-NOT-REFLECTING",
+   "name": "Payment Not Reflecting",
+   "ticketActualIssue": "Payment Not Reflecting"
+  },
+  {
+   "id": "QI-PAYMENT-INSTEAD-OF-RECHARGED",
+   "name": "Payment instead of Recharged",
+   "ticketActualIssue": "Payment instead of Recharged"
+  },
+  {
+   "id": "QI-RMS-CARD-RESERVATION",
+   "name": "RMS Card Reservation",
+   "ticketActualIssue": "RMS Card Reservation"
+  },
+  {
+   "id": "QI-RECEIVE-SMS-INTERNATIONAL",
+   "name": "Receive SMS International",
+   "ticketActualIssue": "Receive SMS International"
+  },
+  {
+   "id": "QI-RECEIVE-SMS-LOCAL",
+   "name": "Receive SMS Local",
+   "ticketActualIssue": "Receive SMS Local"
+  },
+  {
+   "id": "QI-RECEIVE-SMS-LOCAL-INT",
+   "name": "Receive SMS Local/Int",
+   "ticketActualIssue": "Receive SMS Local/Int"
+  },
+  {
+   "id": "QI-RECHARGED-WRONG-MSISDN",
+   "name": "Recharged Wrong MSISDN",
+   "ticketActualIssue": "Recharged Wrong MSISDN"
+  },
+  {
+   "id": "QI-RECHRGD-INSTD-PYMNT-KEYBS",
+   "name": "Rechrgd instd Pymnt KeyBS",
+   "ticketActualIssue": "Rechrgd instd Pymnt KeyBS"
+  },
+  {
+   "id": "QI-RECHRGD-INSTD-PYMNT-BANK",
+   "name": "Rechrgd instd Pymnt_Bank",
+   "ticketActualIssue": "Rechrgd instd Pymnt_Bank"
+  },
+  {
+   "id": "QI-RECHRGD-INSTD-PYMNT-ETOPUP",
+   "name": "Rechrgd instd Pymnt_Etopup",
+   "ticketActualIssue": "Rechrgd instd Pymnt_Etopup"
+  },
+  {
+   "id": "QI-RECHRGD-INSTD-PYMNT-MVA",
+   "name": "Rechrgd instd Pymnt_MVA",
+   "ticketActualIssue": "Rechrgd instd Pymnt_MVA"
+  },
+  {
+   "id": "QI-RECHRGD-INSTD-PYMNT-OTHER",
+   "name": "Rechrgd instd Pymnt_Other",
+   "ticketActualIssue": "Rechrgd instd Pymnt_Other"
+  },
+  {
+   "id": "QI-RECHRGD-INSTD-PYMNT-SSM",
+   "name": "Rechrgd instd Pymnt_SSM",
+   "ticketActualIssue": "Rechrgd instd Pymnt_SSM"
+  },
+  {
+   "id": "QI-RECHRGD-INSTD-PYMNT-VOUCHER",
+   "name": "Rechrgd instd Pymnt_Voucher",
+   "ticketActualIssue": "Rechrgd instd Pymnt_Voucher"
+  },
+  {
+   "id": "QI-RECHRGD-INSTD-PYMNT-WEB",
+   "name": "Rechrgd instd Pymnt_Web",
+   "ticketActualIssue": "Rechrgd instd Pymnt_Web"
+  },
+  {
+   "id": "QI-RECHRGD-INSTD-PYMNT-WINCASH",
+   "name": "Rechrgd instd Pymnt_Wincash",
+   "ticketActualIssue": "Rechrgd instd Pymnt_Wincash"
+  },
+  {
+   "id": "QI-RECHRGD-INSTD-PYMNT-IPAY",
+   "name": "Rechrgd instd Pymnt_iPay",
+   "ticketActualIssue": "Rechrgd instd Pymnt_iPay"
+  },
+  {
+   "id": "QI-REFUND-BP-TO-CREDIT-CARD-MVA",
+   "name": "Refund BP to Credit Card MVA",
+   "ticketActualIssue": "Refund BP to Credit Card MVA"
+  },
+  {
+   "id": "QI-REFUND-BILL-PAYMENT-ONLINE",
+   "name": "Refund Bill Payment online",
+   "ticketActualIssue": "Refund Bill Payment online"
+  },
+  {
+   "id": "QI-REFUND-BILL-PAYMENT-IN-RETAIL",
+   "name": "Refund Bill payment in Retail",
+   "ticketActualIssue": "Refund Bill payment in Retail"
+  },
+  {
+   "id": "QI-REFUND-BILL-PAYMENT-IN-CASH",
+   "name": "Refund Bill payment in cash",
+   "ticketActualIssue": "Refund Bill payment in cash"
+  },
+  {
+   "id": "QI-REFUND-DEVICE-RETURN-ONLINE",
+   "name": "Refund Device Return online",
+   "ticketActualIssue": "Refund Device Return online"
+  },
+  {
+   "id": "QI-REFUND-RECHARGE-ONLINE",
+   "name": "Refund Recharge online",
+   "ticketActualIssue": "Refund Recharge online"
+  },
+  {
+   "id": "QI-REVERSAL-KEYBS",
+   "name": "Reversal_KeyBS",
+   "ticketActualIssue": "Reversal_KeyBS"
+  },
+  {
+   "id": "QI-REVERSAL-WINCASH",
+   "name": "Reversal_Wincash",
+   "ticketActualIssue": "Reversal_Wincash"
+  },
+  {
+   "id": "QI-ROAMING-BAR",
+   "name": "Roaming Bar",
+   "ticketActualIssue": "Roaming Bar"
+  },
+  {
+   "id": "QI-ROAMING-DATA",
+   "name": "Roaming Data",
+   "ticketActualIssue": "Roaming Data"
+  },
+  {
+   "id": "QI-ROAMING-REGISTRATION-FAILURE",
+   "name": "Roaming Registration Failure",
+   "ticketActualIssue": "Roaming Registration Failure"
+  },
+  {
+   "id": "QI-ROAMING-SMS",
+   "name": "Roaming SMS",
+   "ticketActualIssue": "Roaming SMS"
+  },
+  {
+   "id": "QI-SMS-CAMPAIGN-OPT-OUT",
+   "name": "SMS Campaign Opt-Out",
+   "ticketActualIssue": "SMS Campaign Opt-Out"
+  },
+  {
+   "id": "QI-SOA-REQUEST",
+   "name": "SOA Request",
+   "ticketActualIssue": "SOA Request"
+  },
+  {
+   "id": "QI-SEND-SMS-INTERNATIONAL",
+   "name": "Send SMS International",
+   "ticketActualIssue": "Send SMS International"
+  },
+  {
+   "id": "QI-SEND-SMS-LOCAL",
+   "name": "Send SMS Local",
+   "ticketActualIssue": "Send SMS Local"
+  },
+  {
+   "id": "QI-SEND-SMS-LOCAL-INT",
+   "name": "Send SMS Local/Int",
+   "ticketActualIssue": "Send SMS Local/Int"
+  },
+  {
+   "id": "QI-SLOW-DATA-PERFORMANCE",
+   "name": "Slow Data Performance",
+   "ticketActualIssue": "Slow Data Performance"
+  },
+  {
+   "id": "QI-SMART-TRACKER",
+   "name": "Smart Tracker",
+   "ticketActualIssue": "Smart Tracker"
+  },
+  {
+   "id": "QI-SUREPAY-ADJUSTMENT",
+   "name": "Surepay Adjustment",
+   "ticketActualIssue": "Surepay Adjustment"
+  },
+  {
+   "id": "QI-TRANSFER-BANK",
+   "name": "Transfer_Bank",
+   "ticketActualIssue": "Transfer_Bank"
+  },
+  {
+   "id": "QI-TRANSFER-KEYBS",
+   "name": "Transfer_KeyBS",
+   "ticketActualIssue": "Transfer_KeyBS"
+  },
+  {
+   "id": "QI-TRANSFER-MVA",
+   "name": "Transfer_MVA",
+   "ticketActualIssue": "Transfer_MVA"
+  },
+  {
+   "id": "QI-TRANSFER-OTHER-CHANNEL",
+   "name": "Transfer_Other Channel",
+   "ticketActualIssue": "Transfer_Other Channel"
+  },
+  {
+   "id": "QI-TRANSFER-SSM",
+   "name": "Transfer_SSM",
+   "ticketActualIssue": "Transfer_SSM"
+  },
+  {
+   "id": "QI-TRANSFER-VOUCHER",
+   "name": "Transfer_Voucher",
+   "ticketActualIssue": "Transfer_Voucher"
+  },
+  {
+   "id": "QI-TRANSFER-WEB",
+   "name": "Transfer_Web",
+   "ticketActualIssue": "Transfer_Web"
+  },
+  {
+   "id": "QI-TRANSFER-WINCASH",
+   "name": "Transfer_Wincash",
+   "ticketActualIssue": "Transfer_Wincash"
+  },
+  {
+   "id": "QI-TRANSFER-IPAY",
+   "name": "Transfer_iPay",
+   "ticketActualIssue": "Transfer_iPay"
+  },
+  {
+   "id": "QI-USSD-100",
+   "name": "USSD *100#",
+   "ticketActualIssue": "USSD *100#"
+  },
+  {
+   "id": "QI-USSD-123",
+   "name": "USSD *123#",
+   "ticketActualIssue": "USSD *123#"
+  },
+  {
+   "id": "QI-USSD-127",
+   "name": "USSD *127#",
+   "ticketActualIssue": "USSD *127#"
+  },
+  {
+   "id": "QI-USSD-129",
+   "name": "USSD *129#",
+   "ticketActualIssue": "USSD *129#"
+  },
+  {
+   "id": "QI-USSD-130",
+   "name": "USSD *130#",
+   "ticketActualIssue": "USSD *130#"
+  },
+  {
+   "id": "QI-USSD-ACTIVATION-DEACTIVATION",
+   "name": "USSD Activation Deactivation",
+   "ticketActualIssue": "USSD Activation Deactivation"
+  },
+  {
+   "id": "QI-USSD-RELOAD-VOUCHER",
+   "name": "USSD Reload Voucher",
+   "ticketActualIssue": "USSD Reload Voucher"
+  },
+  {
+   "id": "QI-UNSUBMIT-ORDR-BP-IN-COLLECTION",
+   "name": "UnSubmit Ordr BP in Collection",
+   "ticketActualIssue": "UnSubmit Ordr BP in Collection"
+  },
+  {
+   "id": "QI-UNSUBMIT-ORDR-BARRED-SERVICES",
+   "name": "UnSubmit Ordr Barred Services",
+   "ticketActualIssue": "UnSubmit Ordr Barred Services"
+  },
+  {
+   "id": "QI-UNSUBMIT-ORDR-BILL-LIMIT-ISSUE",
+   "name": "UnSubmit Ordr Bill Limit issue",
+   "ticketActualIssue": "UnSubmit Ordr Bill Limit issue"
+  },
+  {
+   "id": "QI-UNSUBMIT-ORDR-CRDT-LIMIT-ISSUE",
+   "name": "UnSubmit Ordr Crdt Limit Issue",
+   "ticketActualIssue": "UnSubmit Ordr Crdt Limit Issue"
+  },
+  {
+   "id": "QI-UNSUBMIT-ORDR-E-CONFIGURATOR",
+   "name": "UnSubmit Ordr E-Configurator",
+   "ticketActualIssue": "UnSubmit Ordr E-Configurator"
+  },
+  {
+   "id": "QI-UNSUBMIT-ORDR-INCRT-ORDR-ACTNS",
+   "name": "UnSubmit Ordr Incrt Ordr Actns",
+   "ticketActualIssue": "UnSubmit Ordr Incrt Ordr Actns"
+  },
+  {
+   "id": "QI-UNSUBMIT-ORDR-MAX-CONNECTIONS",
+   "name": "UnSubmit Ordr Max Connections",
+   "ticketActualIssue": "UnSubmit Ordr Max Connections"
+  },
+  {
+   "id": "QI-UNSUBMIT-ORDR-MISSING-LINE-ITM",
+   "name": "UnSubmit Ordr Missing Line Itm",
+   "ticketActualIssue": "UnSubmit Ordr Missing Line Itm"
+  },
+  {
+   "id": "QI-UNSUBMIT-ORDR-NO-BP-LINKED",
+   "name": "UnSubmit Ordr No BP Linked",
+   "ticketActualIssue": "UnSubmit Ordr No BP Linked"
+  },
+  {
+   "id": "QI-UNSUBMIT-ORDR-OTHER",
+   "name": "UnSubmit Ordr Other",
+   "ticketActualIssue": "UnSubmit Ordr Other"
+  },
+  {
+   "id": "QI-UNSUBMIT-ORDR-PREV-OPEN-ORDR",
+   "name": "UnSubmit Ordr Prev Open Ordr",
+   "ticketActualIssue": "UnSubmit Ordr Prev Open Ordr"
+  },
+  {
+   "id": "QI-UNSUBMIT-ORDR-PRIMARY-NUMBER",
+   "name": "UnSubmit Ordr Primary Number",
+   "ticketActualIssue": "UnSubmit Ordr Primary Number"
+  },
+  {
+   "id": "QI-UNSUBMIT-ORDR-PROVIDE-SIM-ID",
+   "name": "UnSubmit Ordr Provide SIM ID",
+   "ticketActualIssue": "UnSubmit Ordr Provide SIM ID"
+  },
+  {
+   "id": "QI-UNSUBMIT-ORDR-RSRVTN-TOKN-NULL",
+   "name": "UnSubmit Ordr Rsrvtn Tokn Null",
+   "ticketActualIssue": "UnSubmit Ordr Rsrvtn Tokn Null"
+  },
+  {
+   "id": "QI-UNSUBMIT-ORDR-ZERO-BALANCE",
+   "name": "UnSubmit Ordr Zero Balance",
+   "ticketActualIssue": "UnSubmit Ordr Zero Balance"
+  },
+  {
+   "id": "QI-UNABLE-TO-ACTIVE-ICB-MVA",
+   "name": "Unable to Active ICB-MVA",
+   "ticketActualIssue": "Unable to Active ICB-MVA"
+  },
+  {
+   "id": "QI-UNABLE-TO-ACTIVE-ICB-USSD",
+   "name": "Unable to Active ICB-USSD",
+   "ticketActualIssue": "Unable to Active ICB-USSD"
+  },
+  {
+   "id": "QI-UNABLE-TO-ACTIVE-MUTE-MVA",
+   "name": "Unable to Active Mute-MVA",
+   "ticketActualIssue": "Unable to Active Mute-MVA"
+  },
+  {
+   "id": "QI-UNABLE-TO-ACTIVE-MUTE-USSD",
+   "name": "Unable to Active Mute-USSD",
+   "ticketActualIssue": "Unable to Active Mute-USSD"
+  },
+  {
+   "id": "QI-UNABLE-TO-DEACTIVE-ICB-MVA",
+   "name": "Unable to Deactive ICB-MVA",
+   "ticketActualIssue": "Unable to Deactive ICB-MVA"
+  },
+  {
+   "id": "QI-UNABLE-TO-DEACTIVE-ICB-USSD",
+   "name": "Unable to Deactive ICB-USSD",
+   "ticketActualIssue": "Unable to Deactive ICB-USSD"
+  },
+  {
+   "id": "QI-UNABLE-TO-DEACTIVE-MUTE-MVA",
+   "name": "Unable to Deactive Mute-MVA",
+   "ticketActualIssue": "Unable to Deactive Mute-MVA"
+  },
+  {
+   "id": "QI-UNABLE-TO-DEACTIVE-MUTE-USSD",
+   "name": "Unable to Deactive Mute-USSD",
+   "ticketActualIssue": "Unable to Deactive Mute-USSD"
+  },
+  {
+   "id": "QI-UNBARRING-NOT-TRIGGERED",
+   "name": "Unbarring Not Triggered",
+   "ticketActualIssue": "Unbarring Not Triggered"
+  },
+  {
+   "id": "QI-UNPOSTED-PAYMENT-AUTO-DEBIT",
+   "name": "Unposted Payment Auto Debit",
+   "ticketActualIssue": "Unposted Payment Auto Debit"
+  },
+  {
+   "id": "QI-UNPOSTED-PAYMENT-CBQ",
+   "name": "Unposted Payment CBQ",
+   "ticketActualIssue": "Unposted Payment CBQ"
+  },
+  {
+   "id": "QI-UNPOSTED-PAYMENT-DOHA-BANK",
+   "name": "Unposted Payment Doha Bank",
+   "ticketActualIssue": "Unposted Payment Doha Bank"
+  },
+  {
+   "id": "QI-UNPOSTED-PAYMENT-KEYBS-DEALER",
+   "name": "Unposted Payment KeyBS/Dealer",
+   "ticketActualIssue": "Unposted Payment KeyBS/Dealer"
+  },
+  {
+   "id": "QI-UNPOSTED-PAYMENT-MVA",
+   "name": "Unposted Payment MVA",
+   "ticketActualIssue": "Unposted Payment MVA"
+  },
+  {
+   "id": "QI-UNPOSTED-PAYMENT-OTHER",
+   "name": "Unposted Payment Other",
+   "ticketActualIssue": "Unposted Payment Other"
+  },
+  {
+   "id": "QI-UNPOSTED-PAYMENT-OTHER-BANKS",
+   "name": "Unposted Payment Other Banks",
+   "ticketActualIssue": "Unposted Payment Other Banks"
+  },
+  {
+   "id": "QI-UNPOSTED-PAYMENT-QIB",
+   "name": "Unposted Payment QIB",
+   "ticketActualIssue": "Unposted Payment QIB"
+  },
+  {
+   "id": "QI-UNPOSTED-PAYMENT-QNB",
+   "name": "Unposted Payment QNB",
+   "ticketActualIssue": "Unposted Payment QNB"
+  },
+  {
+   "id": "QI-UNPOSTED-PAYMENT-SSM",
+   "name": "Unposted Payment SSM",
+   "ticketActualIssue": "Unposted Payment SSM"
+  },
+  {
+   "id": "QI-UNPOSTED-PAYMENT-STORE-WINCASH",
+   "name": "Unposted Payment Store/Wincash",
+   "ticketActualIssue": "Unposted Payment Store/Wincash"
+  },
+  {
+   "id": "QI-UNPOSTED-PAYMENT-VF-WEBSITE",
+   "name": "Unposted Payment VF Website",
+   "ticketActualIssue": "Unposted Payment VF Website"
+  },
+  {
+   "id": "QI-UNPOSTED-PAYMENT-VOUCHER",
+   "name": "Unposted Payment Voucher",
+   "ticketActualIssue": "Unposted Payment Voucher"
+  },
+  {
+   "id": "QI-UNRECEIVED-CRDT-AFTR-MIGRATION",
+   "name": "Unreceived Crdt Aftr Migration",
+   "ticketActualIssue": "Unreceived Crdt Aftr Migration"
+  },
+  {
+   "id": "QI-UNRECEIVED-CRDT-BONUS",
+   "name": "Unreceived Crdt Bonus",
+   "ticketActualIssue": "Unreceived Crdt Bonus"
+  },
+  {
+   "id": "QI-UNRECEIVED-CRDT-NEW-PROD-ACTVN",
+   "name": "Unreceived Crdt New Prod Actvn",
+   "ticketActualIssue": "Unreceived Crdt New Prod Actvn"
+  },
+  {
+   "id": "QI-UNRECEIVED-CRDT-ONLINE-BANK",
+   "name": "Unreceived Crdt Online Bank",
+   "ticketActualIssue": "Unreceived Crdt Online Bank"
+  },
+  {
+   "id": "QI-UNRECEIVED-CRDT-ONLINE-ETOPUP",
+   "name": "Unreceived Crdt Online ETopUp",
+   "ticketActualIssue": "Unreceived Crdt Online ETopUp"
+  },
+  {
+   "id": "QI-UNRECEIVED-CRDT-ONLINE-MVA",
+   "name": "Unreceived Crdt Online MVA",
+   "ticketActualIssue": "Unreceived Crdt Online MVA"
+  },
+  {
+   "id": "QI-UNRECEIVED-CRDT-ONLINE-SSM",
+   "name": "Unreceived Crdt Online SSM",
+   "ticketActualIssue": "Unreceived Crdt Online SSM"
+  },
+  {
+   "id": "QI-UNRECEIVED-CRDT-ONLINE-VFWEB",
+   "name": "Unreceived Crdt Online VFWeb",
+   "ticketActualIssue": "Unreceived Crdt Online VFWeb"
+  },
+  {
+   "id": "QI-UNRECEIVED-CRDT-ONLINE-IPAY",
+   "name": "Unreceived Crdt Online iPay",
+   "ticketActualIssue": "Unreceived Crdt Online iPay"
+  },
+  {
+   "id": "QI-UNRECEIVED-CRDT-OTHER",
+   "name": "Unreceived Crdt Other",
+   "ticketActualIssue": "Unreceived Crdt Other"
+  },
+  {
+   "id": "QI-UNRECEIVED-CRDT-VOUCHER-USSD",
+   "name": "Unreceived Crdt Voucher/USSD",
+   "ticketActualIssue": "Unreceived Crdt Voucher/USSD"
+  },
+  {
+   "id": "QI-VAS-APPLE-PLAY-STORE-PURCHASES",
+   "name": "VAS Apple/Play Store Purchases",
+   "ticketActualIssue": "VAS Apple/Play Store Purchases"
+  },
+  {
+   "id": "QI-VAS-CHARGES-DISPUTE",
+   "name": "VAS Charges Dispute",
+   "ticketActualIssue": "VAS Charges Dispute"
+  },
+  {
+   "id": "QI-VAS-DETAILED-LOGS-REQUEST",
+   "name": "VAS Detailed Logs Request",
+   "ticketActualIssue": "VAS Detailed Logs Request"
+  },
+  {
+   "id": "QI-VAS-PROOF-OF-ACTIVATION",
+   "name": "VAS Proof of Activation",
+   "ticketActualIssue": "VAS Proof of Activation"
+  },
+  {
+   "id": "QI-VAS-SERVICE-NOT-WORKING",
+   "name": "VAS Service Not Working",
+   "ticketActualIssue": "VAS Service Not Working"
+  },
+  {
+   "id": "QI-VAS-UNSUBSCRIBE-BLACKLIST",
+   "name": "VAS Unsubscribe/Blacklist",
+   "ticketActualIssue": "VAS Unsubscribe/Blacklist"
+  },
+  {
+   "id": "QI-VF-APP-ADD-ON-EXTRA-ERROR",
+   "name": "VF App Add-on/Extra Error",
+   "ticketActualIssue": "VF App Add-on/Extra Error"
+  },
+  {
+   "id": "QI-VF-APP-AUTOBILL-PAY-SETUP",
+   "name": "VF App AutoBill Pay setup",
+   "ticketActualIssue": "VF App AutoBill Pay setup"
+  },
+  {
+   "id": "QI-VF-APP-BILL-CRDT-DISPLAY-ISSUE",
+   "name": "VF App Bill/Crdt Display Issue",
+   "ticketActualIssue": "VF App Bill/Crdt Display Issue"
+  },
+  {
+   "id": "QI-VF-APP-CHANGE-UNLINK-EMAIL",
+   "name": "VF App Change/Unlink Email",
+   "ticketActualIssue": "VF App Change/Unlink Email"
+  },
+  {
+   "id": "QI-VF-APP-HOME-PAGE-NOT-LOADING",
+   "name": "VF App Home Page not Loading",
+   "ticketActualIssue": "VF App Home Page not Loading"
+  },
+  {
+   "id": "QI-VF-APP-MY-LIFESTYLE-3RD-PARTY",
+   "name": "VF App My Lifestyle/3rd Party",
+   "ticketActualIssue": "VF App My Lifestyle/3rd Party"
+  },
+  {
+   "id": "QI-VF-APP-OTP-ERROR",
+   "name": "VF App OTP Error",
+   "ticketActualIssue": "VF App OTP Error"
+  },
+  {
+   "id": "QI-VF-APP-OTHER",
+   "name": "VF App Other",
+   "ticketActualIssue": "VF App Other"
+  },
+  {
+   "id": "QI-VF-APP-PACKAGES-OFFERS-ERROR",
+   "name": "VF App Packages & Offers Error",
+   "ticketActualIssue": "VF App Packages & Offers Error"
+  },
+  {
+   "id": "QI-VF-APP-PAYMENT-RECHARGE-ERROR",
+   "name": "VF App Payment/Recharge Error",
+   "ticketActualIssue": "VF App Payment/Recharge Error"
+  },
+  {
+   "id": "QI-VF-APP-UNABLE-TO-LOG-IN",
+   "name": "VF App Unable to Log-in",
+   "ticketActualIssue": "VF App Unable to Log-in"
+  },
+  {
+   "id": "QI-VF-APP-ESIM-SWAP",
+   "name": "VF App eSIM Swap",
+   "ticketActualIssue": "VF App eSIM Swap"
+  },
+  {
+   "id": "QI-VF-APP-ESIM-TRANSFER",
+   "name": "VF App eSIM Transfer",
+   "ticketActualIssue": "VF App eSIM Transfer"
+  },
+  {
+   "id": "QI-VALET-MERCHANT-DENIED-QR-CODE",
+   "name": "Valet-Merchant Denied QR Code",
+   "ticketActualIssue": "Valet-Merchant Denied QR Code"
+  },
+  {
+   "id": "QI-VALET-MERCHANT-UNABLE-TOREDEEM",
+   "name": "Valet-Merchant Unable toRedeem",
+   "ticketActualIssue": "Valet-Merchant Unable toRedeem"
+  },
+  {
+   "id": "QI-VALET-NOT-ACTIVE-IN-MSISDN",
+   "name": "Valet-Not Active in MSISDN",
+   "ticketActualIssue": "Valet-Not Active in MSISDN"
+  },
+  {
+   "id": "QI-VALET-UNABLE-TO-SEE-IN-MVA",
+   "name": "Valet-Unable to See in MVA",
+   "ticketActualIssue": "Valet-Unable to See in MVA"
+  },
+  {
+   "id": "QI-VALET-UNABLE-TO-SUBSCRIBE",
+   "name": "Valet-Unable to Subscribe",
+   "ticketActualIssue": "Valet-Unable to Subscribe"
+  },
+  {
+   "id": "QI-VALET-VOUCHER-SHOWING-0",
+   "name": "Valet-Voucher Showing-0",
+   "ticketActualIssue": "Valet-Voucher Showing-0"
+  },
+  {
+   "id": "QI-VOICE-QUALITY-INTERNATIONAL",
+   "name": "Voice Quality International",
+   "ticketActualIssue": "Voice Quality International"
+  },
+  {
+   "id": "QI-VOICE-QUALITY-LOCAL",
+   "name": "Voice Quality Local",
+   "ticketActualIssue": "Voice Quality Local"
+  },
+  {
+   "id": "QI-VOICEMAIL-ISSUE",
+   "name": "Voicemail Issue",
+   "ticketActualIssue": "Voicemail Issue"
+  },
+  {
+   "id": "QI-WRONG-CREDIT-EXPIRY-DATE",
+   "name": "Wrong Credit Expiry Date",
+   "ticketActualIssue": "Wrong Credit Expiry Date"
+  },
+  {
+   "id": "QI-WRONG-RESUMPTION-DATE",
+   "name": "Wrong Resumption Date",
+   "ticketActualIssue": "Wrong Resumption Date"
+  },
+  {
+   "id": "QI-EKYC-ACTVTN-FAIL-ORDR-CANCEL",
+   "name": "eKYC Actvtn Fail/Ordr Cancel",
+   "ticketActualIssue": "eKYC Actvtn Fail/Ordr Cancel"
+  },
+  {
+   "id": "QI-EKYC-EMAIL-NOT-RECEIVED",
+   "name": "eKYC Email not Received",
+   "ticketActualIssue": "eKYC Email not Received"
+  },
+  {
+   "id": "QI-EKYC-ORDER-NOT-PRESENT-IN-OMS",
+   "name": "eKYC Order not Present in OMS",
+   "ticketActualIssue": "eKYC Order not Present in OMS"
+  },
+  {
+   "id": "QI-ESHOP-APP-ORDER-TRACKING",
+   "name": "eShop App Order Tracking",
+   "ticketActualIssue": "eShop App Order Tracking"
+  },
+  {
+   "id": "QI-ESHOP-CANCELLATION-REFUND",
+   "name": "eShop Cancellation/Refund",
+   "ticketActualIssue": "eShop Cancellation/Refund"
+  },
+  {
+   "id": "QI-ESHOP-DELAY-DELIVERY-DEVICE",
+   "name": "eShop Delay Delivery (Device)",
+   "ticketActualIssue": "eShop Delay Delivery (Device)"
+  },
+  {
+   "id": "QI-ESHOP-DELAY-DELIVERY-SIM",
+   "name": "eShop Delay Delivery (SIM)",
+   "ticketActualIssue": "eShop Delay Delivery (SIM)"
+  },
+  {
+   "id": "QI-ESHOP-NOT-PRESENT-OMS-DEVICE",
+   "name": "eShop Not Present OMS (Device)",
+   "ticketActualIssue": "eShop Not Present OMS (Device)"
+  },
+  {
+   "id": "QI-ESHOP-NOT-PRESENT-OMS-SIM",
+   "name": "eShop Not Present OMS (SIM)",
+   "ticketActualIssue": "eShop Not Present OMS (SIM)"
+  },
+  {
+   "id": "QI-ESHOP-SIM-NOT-ACTIVATED",
+   "name": "eShop SIM not Activated",
+   "ticketActualIssue": "eShop SIM not Activated"
+  },
+  {
+   "id": "QI-ESHOP-WEB-ORDER-TRACKING",
+   "name": "eShop Web Order Tracking",
+   "ticketActualIssue": "eShop Web Order Tracking"
+  },
+  {
+   "id": "QI-ESHOP-WRONG-DEVICE-DELIVERED",
+   "name": "eShop Wrong Device Delivered",
+   "ticketActualIssue": "eShop Wrong Device Delivered"
+  },
+  {
+   "id": "QI-IPASS-UNABLE-TO-ACTIVATE",
+   "name": "iPass-Unable to Activate",
+   "ticketActualIssue": "iPass-Unable to Activate"
+  },
+  {
+   "id": "QI-IPASS-UNABLE-TO-CHANGE",
+   "name": "iPass-Unable to Change",
+   "ticketActualIssue": "iPass-Unable to Change"
+  },
+  {
+   "id": "QI-IPASS-UNABLE-TO-CHANGE-IN-MVA",
+   "name": "iPass-Unable to Change in MVA",
+   "ticketActualIssue": "iPass-Unable to Change in MVA"
+  },
+  {
+   "id": "QI-IPASSMERCHANT-DENIED-VOUCHER",
+   "name": "iPassMerchant Denied Voucher",
+   "ticketActualIssue": "iPassMerchant Denied Voucher"
+  },
+  {
+   "id": "QI-IPASSMERCHANT-UNABLE-TO-REDEEM",
+   "name": "iPassMerchant Unable to Redeem",
+   "ticketActualIssue": "iPassMerchant Unable to Redeem"
+  }
+ ]
 }

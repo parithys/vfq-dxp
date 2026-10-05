@@ -49,7 +49,7 @@ export function QueryPreviewModal({
 
   const summary = [
     { label: 'Query Issue', value: issue.name },
-    { label: 'Query Category', value: issue.category },
+    { label: 'Query Category', value: issue.category ?? 'Category pending' },
     { label: 'Query Service Type', value: serviceType },
     { label: 'MSISDN', value: service?.identifier ?? 'Not selected' },
     { label: 'Plan Name', value: service?.label ?? NOT_ON_FILE },
@@ -88,7 +88,7 @@ export function QueryPreviewModal({
         <IconTile icon={IC.phone} tone="red" />
         <span className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{issue.name}</span>
         <span className="ml-auto flex flex-wrap gap-2">
-          <Pill tone="red">{issue.category}</Pill>
+          {issue.category && <Pill tone="red">{issue.category}</Pill>}
           <Pill tone="blue">{serviceType}</Pill>
         </span>
       </div>
