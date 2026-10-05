@@ -259,12 +259,12 @@ export function Sidebar() {
             // The whole row stays one hit target - icon, label and chevron
             // alike. The chevron used to be a separate 14px button, which left
             // dead space between it and the label.
-            const rowClass = `flex-1 min-w-0 flex items-center gap-2.5 h-11 mx-2 rounded-[var(--radius-sm)] text-[length:var(--fs-body)] px-4 `;
-            const activeClass = 'bg-[var(--nav-active-bg)] text-[var(--nav-active-fg)] font-medium';
+            const rowClass = `flex-1 min-w-0 flex items-center gap-2.5 h-11 mx-2 rounded-[var(--radius-sm)] text-[length:var(--fs-body)] px-4 font-bold `;
+            const activeClass = 'bg-[var(--nav-active-bg)] text-[var(--nav-active-fg)]';
             // Open group holding the active child: a quiet tint, so the group
             // reads as "you are in here" without competing with the child's
             // own accent marker.
-            const inGroupClass = 'bg-[var(--nav-group-bg)] text-[var(--nav-fg)] font-medium';
+            const inGroupClass = 'bg-[var(--nav-group-bg)] text-[var(--nav-fg)]';
             const idleClass = 'hover:bg-[var(--nav-hover-bg)] hover:text-[var(--nav-fg)] text-[var(--nav-fg-muted)]';
             const body = (
               <>
