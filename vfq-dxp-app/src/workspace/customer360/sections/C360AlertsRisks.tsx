@@ -215,6 +215,7 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
               {
                 key: 'type',
                 header: 'Alert Type',
+                strong: true,
                 render: (a) => <span className="break-words">{a.type}</span>,
               },
               { key: 'description', header: 'Description', className: 'min-w-44 break-words' },
