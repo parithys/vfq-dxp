@@ -69,13 +69,11 @@ export function useFieldAccess(): ModeOf {
   return useContext(AccessContext);
 }
 
-/** A Drill Down value: a View link that shows the value in place when opened. */
+/**
+ * A Drill Down value. These used to sit behind a "View" link that revealed the value on click; they are now shown
+ * directly (2026-10-05, at the product owner's direction), so the field-access sheet still marks which fields are
+ * Drill Down but the screen no longer hides them.
+ */
 export function RevealValue({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  if (open) return <>{children}</>;
-  return (
-    <button type="button" onClick={() => setOpen(true)} className="text-accent font-medium hover:underline">
-      View
-    </button>
-  );
+  return <>{children}</>;
 }
