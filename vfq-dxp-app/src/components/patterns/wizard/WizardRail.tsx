@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { PANEL_ICON, RAIL_KEY } from '../../primitives/Tabs';
 import type { WizardStep } from './guidedWizardTypes';
 import { Icon } from '../../primitives/Icon';
 
@@ -34,9 +36,26 @@ export function WizardRail({
   // already as tall as its container. max-h + its own overflow keep a
   // long rail usable on a short viewport instead of clipping its last
   // steps out of reach.
+  // Same remembered expanded/collapsed choice as the Customer 360 icon rail.
+  const [expanded, setExpanded] = useState(() => localStorage.getItem(RAIL_KEY) !== '0');
+  const toggle = () =>
+    setExpanded((v) => {
+      localStorage.setItem(RAIL_KEY, v ? '0' : '1');
+      return !v;
+    });
   return (
-    <nav aria-label="Journey steps" className="w-72 shrink-0 self-stretch bg-bg border-r border-[var(--field-card-border)]">
-    <ol className="sticky top-0">
+    <nav aria-label="Journey steps" className={`${expanded ? 'w-72' : 'w-16'} shrink-0 self-stretch bg-bg border-r border-[var(--field-card-border)]`}>
+    <div className="sticky top-0">
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={expanded ? 'Collapse steps' : 'Expand steps'}
+      title={expanded ? 'Collapse steps' : 'Expand steps'}
+      className={`h-12 w-full flex items-center border-b border-border-soft text-fg-2 hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${expanded ? 'justify-end px-5' : 'justify-center'}`}
+    >
+      <Icon path={PANEL_ICON} className="w-5 h-5" />
+    </button>
+    <ol>
       {steps.map((step, i) => {
         const isActive = i === currentIndex;
         const isDone = i < maxReached;
@@ -64,7 +83,8 @@ export function WizardRail({
                   }
                 : undefined
             }
-            className={`flex items-start gap-3 px-4 py-4 border-l-2 ${isActive ? 'bg-surface-warm border-l-accent' : 'border-l-transparent'} ${
+            title={expanded ? undefined : step.label}
+            className={`flex items-start gap-3 py-4 border-l-2 ${expanded ? 'px-4' : 'justify-center px-0'} ${isActive ? 'bg-surface-warm border-l-accent' : 'border-l-transparent'} ${
               isReachable ? 'cursor-pointer hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)]' : ''
             }`}
           >
@@ -74,7 +94,7 @@ export function WizardRail({
             >
               {isDone ? <Icon path={CHECK} className="w-3.5 h-3.5" strokeWidth={3.5} /> : i + 1}
             </span>
-            <div className="min-w-0">
+            {expanded && <div className="min-w-0">
               {/* Every step label is --fg; weight alone marks the active
                   one. The inactive labels were --fg-2, which on the rail's
                   white card read as disabled rather than merely
@@ -85,11 +105,12 @@ export function WizardRail({
               {step.description && (
                 <div className="text-[length:var(--fs-caption)] text-muted mt-0.5 truncate">{step.description}</div>
               )}
-            </div>
+            </div>}
           </li>
         );
       })}
     </ol>
+    </div>
     </nav>
   );
 }

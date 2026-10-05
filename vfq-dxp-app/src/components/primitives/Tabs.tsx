@@ -90,8 +90,8 @@ export function Tabs({
 }
 
 const FALLBACK_ICON = 'M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01';
-const PANEL_ICON = 'M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5z M9 4v16';
-const RAIL_KEY = 'vfq-rail-expanded';
+export const PANEL_ICON = 'M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5z M9 4v16';
+export const RAIL_KEY = 'vfq-rail-expanded';
 
 /**
  * Vertical icon rail, flush against the left / top / bottom of its area (the page supplies no padding around it).
