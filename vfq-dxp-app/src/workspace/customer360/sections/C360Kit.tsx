@@ -387,16 +387,31 @@ export function UnderlineTabs({ items, active, onChange }: { items: { key: strin
 }
 
 export function SearchBox({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+  const inputRef = useRef<HTMLInputElement>(null);
   return (
     <label className="flex items-center gap-2 rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg px-3 py-2 flex-1 min-w-48">
       <Icon path={IC.search} className="w-4 h-4 text-muted shrink-0" />
       <input
+        ref={inputRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
         className="bg-transparent outline-none flex-1 min-w-0 text-[length:var(--fs-body)] text-fg placeholder:text-muted"
       />
+      {value && (
+        <button
+          type="button"
+          onClick={() => {
+            onChange('');
+            inputRef.current?.focus();
+          }}
+          aria-label="Clear search"
+          className="shrink-0 text-muted hover:text-fg rounded-[var(--radius-sm)] focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+        >
+          <Icon path={IC.x} className="w-4 h-4" />
+        </button>
+      )}
     </label>
   );
 }
