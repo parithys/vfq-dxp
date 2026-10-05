@@ -10,6 +10,9 @@ const FIXED_LINE_CONFIG: InstallationWizardConfig = {
   wizardId: 'new-fixed-line',
   title: 'New Fixed Line Activation',
   planType: 'Fixed Line Plan',
+  addressUsesIdentity: true,
+  creditCheck: true,
+  autoDetectCafDevice: true,
   // Digital and Touch Screen are both signed on this device.
   cafNeedsSignature: (type) => type !== 'Manual',
   order: {

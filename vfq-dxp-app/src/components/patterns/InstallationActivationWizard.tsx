@@ -24,12 +24,22 @@ export interface InstallationWizardConfig {
   title: string;
   /** ProductPlanStep's plan type, e.g. "Fixed Line Plan". */
   planType: string;
+  /** The contact step omits the "Get IPTV?" field. */
+  hideIptvToggle?: boolean;
+  /** Address step is told the customer's ID number and can clear its selection. */
+  addressUsesIdentity: boolean;
+  /** Run the credit check on the Plan step and require it (or its acknowledgement) to continue. */
+  creditCheck: boolean;
+  /** CAF type follows the device in use (touch-capable -> Touch Screen, otherwise Digital). */
+  autoDetectCafDevice: boolean;
   /** CAF types that need a captured signature before Continue. */
   cafNeedsSignature: (type: CafType) => boolean;
   order: {
     orderType: string;
     /** The order's status once submitted. */
     status: (contact: GuidedContactValue) => string;
+    /** The status approval moves the order to (set on the order when it is routed for approval). */
+    nextStatusOnApproval?: string;
     createdBy: string;
     sourceChannel: string;
   };
@@ -59,6 +69,7 @@ export function InstallationActivationWizard({ config }: { config: InstallationW
               <GuidedContactStep
                 value={(values.contact as GuidedContactValue) ?? {}}
                 onChange={(v) => setValue('contact', v)}
+                showIptvToggle={config.hideIptvToggle ? false : undefined}
               />
             ),
             isValid: (values) => {
@@ -73,8 +84,12 @@ export function InstallationActivationWizard({ config }: { config: InstallationW
               <AddressSelectionStep
                 value={values.addressId as string | undefined}
                 onChange={(id) => setValue('addressId', id)}
-                idNumber={(values.contact as GuidedContactValue | undefined)?.idNumber}
-                onClear={() => setValue('addressId', undefined)}
+                {...(config.addressUsesIdentity
+                  ? {
+                      idNumber: (values.contact as GuidedContactValue | undefined)?.idNumber,
+                      onClear: () => setValue('addressId', undefined),
+                    }
+                  : {})}
               />
             ),
             isValid: (values) => Boolean(values.addressId),
@@ -85,15 +100,20 @@ export function InstallationActivationWizard({ config }: { config: InstallationW
             render: ({ values, setValue }) => (
               <ProductPlanStep
                 planType={config.planType}
-                showCreditCheck
                 selectedProductId={values.productId as string | undefined}
                 onSelect={(id) => setValue('productId', id)}
-                creditCheckAcknowledged={values.creditCheckAcknowledged === true}
-                onAcknowledgeCreditCheck={(v) => setValue('creditCheckAcknowledged', v)}
-                onCreditCheckResult={(pass) => setValue('creditCheckPass', pass)}
+                {...(config.creditCheck
+                  ? {
+                      showCreditCheck: true,
+                      creditCheckAcknowledged: values.creditCheckAcknowledged === true,
+                      onAcknowledgeCreditCheck: (v: boolean) => setValue('creditCheckAcknowledged', v),
+                      onCreditCheckResult: (pass: boolean) => setValue('creditCheckPass', pass),
+                    }
+                  : {})}
               />
             ),
-            isValid: (values) => Boolean(values.productId) && (values.creditCheckPass === true || values.creditCheckAcknowledged === true),
+            isValid: (values) =>
+              Boolean(values.productId) && (!config.creditCheck || values.creditCheckPass === true || values.creditCheckAcknowledged === true),
           },
           {
             key: 'number',
@@ -133,7 +153,7 @@ export function InstallationActivationWizard({ config }: { config: InstallationW
                 customerName={(values.contact as GuidedContactValue | undefined)?.moiResult?.name}
                 // The CAF type follows the device in use (touch-capable -> Touch Screen,
                 // otherwise Digital) instead of the agent picking one; both sign in-app.
-                autoDetectDeviceType
+                autoDetectDeviceType={config.autoDetectCafDevice ? true : undefined}
               />
             ),
             isValid: (values) => {
@@ -160,6 +180,7 @@ export function InstallationActivationWizard({ config }: { config: InstallationW
             orderType: config.order.orderType,
             orderSubType: contact.isB2B2C ? 'B2B2C' : 'Consumer',
             status: config.order.status(contact),
+            ...(config.order.nextStatusOnApproval ? { nextStatusOnApproval: config.order.nextStatusOnApproval } : {}),
             customerName: contact.moiResult?.name,
             addressId: values.addressId,
             productId: values.productId,
