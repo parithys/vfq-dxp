@@ -8,6 +8,12 @@ interface SidebarState {
   mobileOpen: boolean;
   toggleMobileOpen: () => void;
   closeMobile: () => void;
+  /** Desktop only: while the panel is collapsed, hovering the top-bar menu button shows it as an overlay. Ephemeral. */
+  peeking: boolean;
+  openPeek: () => void;
+  /** Closes the peek after a short delay, so the pointer can cross from the button onto the panel. */
+  closePeekSoon: () => void;
+  closePeek: () => void;
   /** Expanded nav groups (e.g. Mobile). A real preference, so persisted. */
   expandedNavKeys: string[];
   toggleNavGroup: (key: string) => void;
@@ -22,14 +28,37 @@ interface SidebarState {
   expandNavGroup: (key: string) => void;
 }
 
+const PEEK_CLOSE_DELAY = 180;
+let peekTimer: ReturnType<typeof setTimeout> | null = null;
+const clearPeekTimer = () => {
+  if (peekTimer) clearTimeout(peekTimer);
+  peekTimer = null;
+};
+
 export const useSidebarStore = create<SidebarState>()(
   persist(
     (set, get) => ({
       collapsed: false,
-      toggleCollapsed: () => set({ collapsed: !get().collapsed }),
+      toggleCollapsed: () => {
+        clearPeekTimer();
+        set({ collapsed: !get().collapsed, peeking: false });
+      },
       mobileOpen: false,
       toggleMobileOpen: () => set({ mobileOpen: !get().mobileOpen }),
       closeMobile: () => set({ mobileOpen: false }),
+      peeking: false,
+      openPeek: () => {
+        clearPeekTimer();
+        set({ peeking: true });
+      },
+      closePeekSoon: () => {
+        clearPeekTimer();
+        peekTimer = setTimeout(() => set({ peeking: false }), PEEK_CLOSE_DELAY);
+      },
+      closePeek: () => {
+        clearPeekTimer();
+        set({ peeking: false });
+      },
       // Everything collapsed by default. The rail then opens on a short list of
       // primary destinations rather than 10+ rows of nested categories. A group
       // opens when its row is clicked, or on arrival at a deep link inside it
