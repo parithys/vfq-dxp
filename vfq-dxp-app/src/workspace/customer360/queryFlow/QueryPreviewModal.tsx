@@ -152,6 +152,7 @@ export function QueryPreviewModal({
       open={open}
       onClose={onClose}
       title="Preview Details"
+      widthClassName="w-[48vw] min-w-[560px]"
       header={
         <div className="flex items-start gap-3 px-6 py-4 border-b border-border-soft shrink-0">
           <IconTile icon={IC.phone} tone="red" />
