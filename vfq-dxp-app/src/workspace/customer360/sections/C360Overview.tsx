@@ -55,7 +55,7 @@ interface FeedRow {
   icon: string;
 }
 
-export function C360Overview({ data, services, goToTab, onTicketCreated }: { data: Customer360Data; services: CustomerService[]; goToTab?: (key: string) => void; onTicketCreated?: (ticket: Record<string, unknown>) => void }) {
+export function C360Overview({ data, services, goToTab, onTicketCreated, queryFocus }: { data: Customer360Data; services: CustomerService[]; goToTab?: (key: string) => void; onTicketCreated?: (ticket: Record<string, unknown>) => void; queryFocus?: number }) {
   const go = (key: string) => (goToTab ? () => goToTab(key) : undefined);
   const [usageTab, setUsageTab] = useState('balance');
   const [copied, setCopied] = useState(false);
@@ -161,7 +161,7 @@ export function C360Overview({ data, services, goToTab, onTicketCreated }: { dat
 
   return (
     <div className="space-y-4">
-      <QueryFlowCard data={data} services={services} onTicketCreated={onTicketCreated} />
+      <QueryFlowCard data={data} services={services} onTicketCreated={onTicketCreated} focusSignal={queryFocus} />
       <KpiGrid cols={3}>
         <KpiTile icon={IC.users} tone="blue" label="Total Connections" value={services.length} chevron onClick={goToTab ? () => goToTab('products-services') : undefined} />
         <KpiTile icon={IC.shieldCheck} tone="green" label="Active Services" value={services.filter(isActive).length} chevron onClick={goToTab ? () => goToTab('products-services') : undefined} />

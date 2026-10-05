@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PageHeader } from '../../../components/patterns/PageHeader';
 import { useEffect, useMemo, useState } from 'react';
 import { DataTable } from '../../../components/primitives/DataTable';
@@ -73,6 +73,7 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
   const pushToast = useNotificationStore((s) => s.pushToast);
   // Opened from a customer (Customer 360 actions): the creation form is already open for that customer.
   const [params] = useSearchParams();
+  const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(params.get('create') === '1');
   const createForCustomer = params.get('customerId') ?? undefined;
   const [search, setSearch] = useState('');
@@ -204,7 +205,7 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
         title="Tickets Dashboard"
         description="Trouble tickets and complaints across all queues."
         actions={
-          <Button variant="primary-rect" onClick={() => setModalOpen(true)}>
+          <Button variant="primary-rect" onClick={() => navigate('/customer-search', { state: { newTicket: true } })}>
             New Ticket
           </Button>
         }

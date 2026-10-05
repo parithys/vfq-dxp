@@ -57,7 +57,10 @@ export function CustomerSearchPage() {
   const navigate = useNavigate();
   const setActiveCustomer = useCustomerContext((s) => s.setActiveCustomer);
   // The Dashboard search hands its text over here, so it opens already searched.
-  const handedOver = (useLocation().state as { query?: string } | null)?.query ?? '';
+  const locationState = useLocation().state as { query?: string; newTicket?: boolean } | null;
+  const handedOver = locationState?.query ?? '';
+  // Arrived from a "New Ticket" button: the customer opened next starts on the "How can we help today?" search.
+  const newTicket = Boolean(locationState?.newTicket);
   const [query, setQuery] = useState(handedOver);
   // The query the results on screen belong to - set only by pressing Enter.
   const [submitted, setSubmitted] = useState(handedOver.length >= MIN_QUERY_LENGTH ? handedOver : '');
@@ -106,7 +109,7 @@ export function CustomerSearchPage() {
     setActiveCustomer(toActiveCustomerSummary(result.customer));
     // Origin recorded so the rail keeps Customer Search lit on the record
     // screen, which has no nav destination of its own.
-    navigate(`/customer/${result.customer.customerId}`, { state: { navKey: 'customer-search' } });
+    navigate(`/customer/${result.customer.customerId}`, { state: { navKey: 'customer-search', ...(newTicket ? { newTicket: true } : {}) } });
   };
 
   return (

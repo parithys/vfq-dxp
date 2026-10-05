@@ -113,10 +113,18 @@ export function Customer360Layout() {
   // reloaded page falls back to Profile with nothing selected rather than to a
   // half-restored selection.
   const location = useLocation();
-  const linked = (location.state ?? {}) as { tab?: string; serviceRef?: string };
+  const linked = (location.state ?? {}) as { tab?: string; serviceRef?: string; newTicket?: boolean };
   const [activeTab, setActiveTab] = useState(linked.tab && SERVICE_TABS.has(linked.tab) ? 'assets' : '');
   const [assetsSubView, setAssetsSubView] = useState<AssetsSubView>(toAssetsSubView(linked.tab));
   const [selectedServiceRef, setSelectedServiceRef] = useState(linked.serviceRef);
+  // "New Ticket" from anywhere starts the Overview's "How can we help today?" search: each bump moves focus to it.
+  const [queryFocus, setQueryFocus] = useState(linked.newTicket ? 1 : 0);
+  useEffect(() => {
+    if (!linked.newTicket) return;
+    setActiveTab('overview');
+    setQueryFocus((n) => n + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
 
   useEffect(() => {
     if (!linked.tab || !SERVICE_TABS.has(linked.tab)) return;
@@ -434,15 +442,19 @@ export function Customer360Layout() {
     setActiveTab(key);
     setSelectedServiceRef(undefined);
   };
+  const startNewTicket = () => {
+    openTab('overview');
+    setQueryFocus((n) => n + 1);
+  };
   const editContact = canEdit ? () => requireVerification(() => setDemoDrawerOpen(true)) : undefined;
   const retailTab = (key: string, label: string, topics: string[], content: ReactNode): TabItem[] =>
     topics.some((t) => isTopicVisible(activePersonaId, t))
       ? [{ key, label, icon: RAIL_ICONS[key], content: <FieldAccessProvider personaId={activePersonaId} page={key}>{content}</FieldAccessProvider> }]
       : [];
-  const tabProps = { data, services, goToTab: openTab };
+  const tabProps = { data, services, goToTab: openTab, startNewTicket };
   const tabs: TabItem[] = headerOnly
     ? [
-        ...retailTab('overview', 'Overview', ['Account Information'], <C360Overview {...tabProps} onTicketCreated={addTicket} />),
+        ...retailTab('overview', 'Overview', ['Account Information'], <C360Overview {...tabProps} onTicketCreated={addTicket} queryFocus={queryFocus} />),
         ...retailTab('account-info', 'Account Information', ['Account Information'], <C360AccountInformation {...tabProps} onEdit={editContact} />),
         ...retailTab('products-services', 'Products & Services', ['Assets'], <C360ProductsServices {...tabProps} />),
         ...retailTab('billing', 'Billing & Payments', ['Billing & Payments'], <C360BillingPayments {...tabProps} />),

@@ -120,11 +120,14 @@ function activityFor(t: Ticket): ActivityRow[] {
 export function C360TicketsSupport({
   data,
   goToTab,
+  startNewTicket,
   onTicketCreated,
 }: {
   data: Customer360Data;
   services: CustomerService[];
   goToTab?: (key: string) => void;
+  /** Starts the Overview's "How can we help today?" search; absent where that search is not shown. */
+  startNewTicket?: () => void;
   onTicketCreated?: (ticket: Record<string, unknown>) => void;
 }) {
   const navigate = useNavigate();
@@ -246,7 +249,7 @@ export function C360TicketsSupport({
       subtitle="View and manage all customer support tickets, service requests and related cases"
       actions={
         <>
-          <ActionButton primary icon={IC.plus} onClick={() => setModalOpen(true)}>
+          <ActionButton primary icon={IC.plus} onClick={startNewTicket ?? (() => setModalOpen(true))}>
             Create Ticket
           </ActionButton>
           <KebabButton />

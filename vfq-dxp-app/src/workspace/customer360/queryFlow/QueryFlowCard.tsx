@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../../../components/primitives/Button';
 import { Icon } from '../../../components/primitives/Icon';
 import { Select } from '../../../components/primitives/Select';
@@ -33,10 +33,13 @@ export function QueryFlowCard({
   data,
   services,
   onTicketCreated,
+  focusSignal = 0,
 }: {
   data: Customer360Data;
   services: CustomerService[];
   onTicketCreated?: (ticket: Record<string, unknown>) => void;
+  /** Bumped by "New Ticket" elsewhere: returns to the search step, focuses the box and brings the card into view. */
+  focusSignal?: number;
 }) {
   const catalogue = useQueryIssueCatalogue();
   const createRecord = useEntityStore((s) => s.createRecord);
@@ -47,6 +50,19 @@ export function QueryFlowCard({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [note, setNote] = useState<string | undefined>();
+
+  const cardRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!focusSignal || !catalogue) return;
+    setIssue(null);
+    setPreviewOpen(false);
+    setCreating(false);
+    const t = window.setTimeout(() => {
+      cardRef.current?.scrollIntoView({ block: 'center' });
+      cardRef.current?.querySelector('input')?.focus();
+    }, 50);
+    return () => window.clearTimeout(t);
+  }, [focusSignal, catalogue]);
 
   const results = useMemo(() => (catalogue ? searchQueryIssues(catalogue.issues, query) : []), [catalogue, query]);
   const lines = useMemo(() => services.filter((s) => s.tab === 'mobile' || s.tab === 'fibre'), [services]);
@@ -76,7 +92,7 @@ export function QueryFlowCard({
   if (!catalogue) return null;
 
   return (
-    <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 space-y-4" aria-label="How can we help today?">
+    <section ref={cardRef} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 space-y-4" aria-label="How can we help today?">
       {!issue ? (
         <>
           <div>
