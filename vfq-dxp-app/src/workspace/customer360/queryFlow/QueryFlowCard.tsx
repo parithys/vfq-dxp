@@ -10,7 +10,7 @@ import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { IC, IconTile, Pill, SearchBox } from '../sections/C360Kit';
 import { QueryPreviewModal } from './QueryPreviewModal';
-import { QUERY_SERVICE_TYPES, TICKET_ISSUE_TYPES, deriveQueryServiceType, searchQueryIssues, useQueryIssueCatalogue } from './queryFlowModel';
+import { QUERY_SERVICE_TYPES, TICKET_ISSUE_TYPES, deriveQueryServiceType, routeTicket, searchQueryIssues, useQueryIssueCatalogue } from './queryFlowModel';
 import type { QueryIssue } from './queryFlowModel';
 
 const BACK_ICON = 'M19 12H5 M12 19l-7-7 7-7';
@@ -53,6 +53,7 @@ export function QueryFlowCard({
   const service = lines.find((s) => s.ref === msisdnRef);
   const derivedType = issue ? deriveQueryServiceType(issue, service) : undefined;
   const serviceType = derivedType ?? (manualType || undefined);
+  const routing = issue ? routeTicket(issue, data.customer, (data.contacts[0] as { preferredLanguage?: string } | undefined)?.preferredLanguage) : undefined;
 
   const reset = (message?: string) => {
     setQuery('');
@@ -212,6 +213,9 @@ export function QueryFlowCard({
               initialCustomerId={data.customer.customerId}
               initialIssueType={TICKET_ISSUE_TYPES.includes(serviceType) ? serviceType : ''}
               initialActualIssue={issue.ticketActualIssue ?? ''}
+              initialQueue={routing?.queue}
+              routingNote={routing?.basis}
+              severity={issue.severity}
             />
           )}
         </>

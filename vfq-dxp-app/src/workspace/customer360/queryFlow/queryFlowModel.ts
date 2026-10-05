@@ -16,6 +16,10 @@ export interface QueryIssue {
   subSummary?: string;
   area?: string;
   subArea?: string;
+  routing?: 'onshore-offshore' | 'collections' | 'number-management' | 'outlet';
+  /** Primary severity from the workbook (BAU, Critical, Minor, Network, Non-Critical). */
+  severity?: string;
+  severityComment?: string;
   keywords?: string[];
 }
 
@@ -86,4 +90,39 @@ export function previewFieldsFor(catalogue: QueryIssueCatalogue, category: strin
   const line = /fixed/i.test(serviceType) ? /fixed/i : /mobile/i;
   const hit = cols.find((c) => c.serviceType === serviceType) ?? cols.find((c) => c.serviceType === 'Any') ?? cols.find((c) => line.test(c.serviceType)) ?? cols[0];
   return hit.fields;
+}
+
+export interface TicketRouting {
+  /** The queue to pre-select; absent when the workbook leaves the choice to the team / outlet. */
+  queue?: string;
+  /** Why, in the agent's words. */
+  basis: string;
+}
+
+const ONSHORE_SEGMENT = /vvip|vip|black|public|government|large/i;
+
+/**
+ * Queue routing from the categorization workbook. Collections and Number Management issues go to their own queues.
+ * "Onshore / Offshore" issues follow the workbook's rule: Qatari, Arabic-speaking, and VVIP / VIP / Black / Public /
+ * Government / Large customers are ONSHORE; expat, non-Arabic and SME / SOHO / other customers are OFFSHORE. The
+ * workbook lists both sets without saying which wins when they overlap, so a priority segment is checked first, then
+ * Qatari or Arabic (onshore), else offshore. Issues routed "based on outlet ID/team" have no queue to derive.
+ */
+export function routeTicket(issue: QueryIssue, customer: { segment?: string; nationality?: string } | undefined, language: string | undefined): TicketRouting | undefined {
+  switch (issue.routing) {
+    case 'collections':
+      return { queue: 'Collections Queue', basis: 'Collections issues are routed to the Collections Queue.' };
+    case 'number-management':
+      return { queue: 'Number Management Queue', basis: 'Number requests are routed to the Number Management Queue.' };
+    case 'outlet':
+      return { basis: 'This issue is routed by the outlet ID / team - choose the queue.' };
+    case 'onshore-offshore': {
+      const segment = customer?.segment ?? '';
+      const onshore = ONSHORE_SEGMENT.test(segment) || customer?.nationality === 'Qatari' || /arabic/i.test(language ?? '');
+      const why = ONSHORE_SEGMENT.test(segment) ? `${segment} segment` : customer?.nationality === 'Qatari' ? 'Qatari customer' : /arabic/i.test(language ?? '') ? 'Arabic-speaking customer' : 'expat / non-Arabic customer';
+      return { queue: onshore ? 'Onshore Queue' : 'Offshore Queue', basis: `${onshore ? 'Onshore' : 'Offshore'} routing: ${why}.` };
+    }
+    default:
+      return undefined;
+  }
 }

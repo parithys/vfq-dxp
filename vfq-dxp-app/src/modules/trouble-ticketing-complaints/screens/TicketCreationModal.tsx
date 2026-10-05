@@ -56,6 +56,7 @@ export interface NewTicketValue {
   queue: string;
   priority: string;
   slaTargetHours: number;
+  severity?: string;
 }
 
 interface TicketCreationModalProps {
@@ -69,6 +70,11 @@ interface TicketCreationModalProps {
   /** Pre-filled when the ticket is started from a Customer 360 query (the agent can still change them). */
   initialIssueType?: string;
   initialActualIssue?: string;
+  /** Queue chosen by the Customer 360 routing rules, with the reason shown under the field. */
+  initialQueue?: string;
+  routingNote?: string;
+  /** Primary severity from the categorization workbook, stored on the ticket. */
+  severity?: string;
 }
 
 // SCR-213: Open UI Tickets Fields (per-issue-type template) - modal where
@@ -85,7 +91,7 @@ interface TicketCreationModalProps {
 // linking to a fabricated URL), CRE-16 (Priority derived and locked from
 // Customer Type, not freely picked), and ASC-02/04 (duplicate-ticket
 // candidate detection by Customer + Category + Area match).
-export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId = '', initialIssueType = '', initialActualIssue = '' }: TicketCreationModalProps) {
+export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId = '', initialIssueType = '', initialActualIssue = '', initialQueue = '', routingNote, severity }: TicketCreationModalProps) {
   const [customerId, setCustomerId] = useState(initialCustomerId);
   const [searchQuery, setSearchQuery] = useState('');
   const [issueType, setIssueType] = useState(initialIssueType);
@@ -93,7 +99,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
   const [template, setTemplate] = useState('');
   const [templateContent, setTemplateContent] = useState('');
   const [actualIssue, setActualIssue] = useState(initialActualIssue);
-  const [queue, setQueue] = useState('');
+  const [queue, setQueue] = useState(initialQueue);
   const [customer, setCustomer] = useState<CustomerRecord | null>(null);
   const [duplicates, setDuplicates] = useState<TicketRecord[]>([]);
   const pushToast = useNotificationStore((s) => s.pushToast);
@@ -170,7 +176,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
     if (submitting) return;
     setSubmitting(true);
     try {
-      await onSubmit({ customerId, issueType, area, template, templateContent, actualIssue, queue, priority: derivedPriority, slaTargetHours: derivedSlaHours });
+      await onSubmit({ customerId, issueType, area, template, templateContent, actualIssue, queue, priority: derivedPriority, slaTargetHours: derivedSlaHours, severity });
       reset();
     } finally {
       setSubmitting(false);
@@ -258,7 +264,8 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
           value={queue}
           onChange={(e) => setQueue(e.target.value)}
           placeholder="Select a queue"
-          options={QUEUES.map((q) => ({ value: q, label: q }))}
+          options={[...new Set([...QUEUES, ...(initialQueue ? [initialQueue] : [])])].map((q) => ({ value: q, label: q }))}
+          helperText={routingNote}
         />
         <div>
           <div className="text-[length:var(--fs-caption)] text-muted mb-1">Priority (derived from Customer Type, CRE-16)</div>

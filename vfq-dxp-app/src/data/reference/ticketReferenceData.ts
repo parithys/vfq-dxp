@@ -224,6 +224,8 @@ export interface NewTicketRecordInput {
   queue: string;
   priority: string;
   slaTargetHours: number;
+  /** Primary severity from the Ticket Type Categorization workbook, when the ticket came from a Customer 360 query. */
+  severity?: string;
   createdBy: string;
 }
 
@@ -261,6 +263,7 @@ export function buildNewTicketRecord(input: NewTicketRecordInput): Record<string
     closedAt: null,
     cancelReason: null,
     excludedFromReporting: false,
+    ...(input.severity ? { severity: input.severity } : {}),
     hashtags: [],
     publicNotes: [],
     retentionResolutionCode: null,

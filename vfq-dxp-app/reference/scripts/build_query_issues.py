@@ -15,8 +15,13 @@ for r in list(wb['List of Issue,SLA,LOV'].iter_rows(values_only=True))[1:]:
     base = 'QI-' + re.sub(r'[^A-Z0-9]+', '-', r[2].upper()).strip('-')
     n = seen.get(base, 0); seen[base] = n + 1
     e = {'id': base if n == 0 else f'{base}-{n+1}', 'name': r[2], 'category': r[0], 'serviceType': norm_type(r[1])}
-    for k, i in (('summary', 3), ('subSummary', 4), ('ticketCategory', 9), ('area', 10), ('subArea', 11)):
-        if r[i]: e[k] = r[i]
+    # Routing: the workbook's own words become a rule kind the app can evaluate.
+    rt = (r[16] or r[17] or '').strip()
+    kind = ('onshore-offshore' if rt.startswith('Expat') else 'collections' if rt.startswith('Collections') else 'number-management' if rt.startswith('Number Management')
+            else 'outlet' if rt.startswith('based on outlet') else None)
+    if kind: e['routing'] = kind
+    for k, i in (('severity', 5), ('severityComment', 7), ('summary', 3), ('subSummary', 4), ('ticketCategory', 9), ('area', 10), ('subArea', 11)):
+        if r[i] and r[i] != 'N/A': e[k] = r[i]
     actual = r[18] or (r[2] if r[2] in siebel else None)
     if actual: e['ticketActualIssue'] = actual
     issues.append(e)
