@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchListNav } from '../hooks/useSearchListNav';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '../components/primitives/Icon';
 import { VodafoneMark } from '../components/primitives/VodafoneMark';
@@ -9,6 +10,8 @@ import { resolveNavFor } from '../engines/navigationEngine';
 import { NAV_MANIFEST, resolveActiveNavPath } from './navManifest';
 
 const SEARCH_ICON = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3';
+// The row the keyboard has reached while searching the menu.
+const KBD_ACTIVE = 'data-[kbd-active=true]:bg-[var(--nav-hover-bg)] data-[kbd-active=true]:text-[var(--nav-fg)] data-[kbd-active=true]:ring-2 data-[kbd-active=true]:ring-inset data-[kbd-active=true]:ring-[var(--nav-fg-muted)]';
 const PANEL_TOGGLE_ICON = 'M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5z M9 4v16';
 // Points down when collapsed, rotated 180deg to point up when expanded -
 // matching the reference disclosure pattern.
@@ -83,7 +86,43 @@ export function Sidebar() {
         return kids.length ? [{ ...item, children: kids }] : [];
       })
     : navItems;
-  const firstTarget = visibleItems[0] && (visibleItems[0].children?.length ? visibleItems[0].children[0].to : visibleItems[0].to);
+  // Every navigable row in the filtered menu, in display order: leaf items, categories and journeys (groups only open
+  // and close, so they are skipped). The shared search hook walks this list.
+  const searchEntries: { id: string; to: string }[] = visibleItems.flatMap((item) =>
+    item.children?.length
+      ? item.children.flatMap((c) => [
+          { id: `child:${c.key}`, to: c.to },
+          ...(c.journeys ?? []).map((j) => ({ id: `journey:${c.key}:${j.id}`, to: j.to ?? c.to })),
+        ])
+      : [{ id: `item:${item.key}`, to: item.to }]
+  );
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const listNav = useSearchListNav({
+    idPrefix: 'nav-search-opt',
+    count: searchEntries.length,
+    enabled: Boolean(q),
+    resetKey: q,
+    inputRef: searchInputRef,
+    onSelect: (i) => {
+      navigate(searchEntries[i].to);
+      setQuery('');
+    },
+    onEnterWithoutSelection: () => {
+      if (!searchEntries[0]) return false;
+      navigate(searchEntries[0].to);
+      setQuery('');
+      return true;
+    },
+    onEscape: () => setQuery(''),
+  });
+  // id + highlight for a row while the menu is being searched.
+  const optProps = (rowId: string) => {
+    const i = q ? searchEntries.findIndex((e) => e.id === rowId) : -1;
+    return {
+      id: i >= 0 ? `nav-search-opt-${i}` : undefined,
+      'data-kbd-active': i >= 0 && i === listNav.active ? 'true' : undefined,
+    };
+  };
 
   // Below `md:`, the sidebar is an off-canvas drawer - close it automatically
   // whenever the route changes so it doesn't stay open over the new screen.
@@ -181,16 +220,11 @@ export function Sidebar() {
         <label className="flex items-center gap-2 h-10 px-3 rounded-[var(--radius-sm)] border border-[var(--nav-border)] text-[var(--nav-fg-muted)] focus-within:border-[var(--nav-fg-muted)] focus-within:text-[var(--nav-fg)]">
           <Icon path={SEARCH_ICON} className="w-4 h-4 shrink-0" />
           <input
+            ref={searchInputRef}
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') setQuery('');
-              if (e.key === 'Enter' && firstTarget) {
-                navigate(firstTarget);
-                setQuery('');
-              }
-            }}
+            {...listNav.inputProps}
             placeholder="Search menu"
             aria-label="Search menu"
             className="min-w-0 flex-1 bg-transparent text-[length:var(--fs-body)] text-[var(--nav-fg)] placeholder:text-[var(--nav-fg-muted)] focus:outline-none [&::-webkit-search-cancel-button]:appearance-none"
@@ -271,7 +305,8 @@ export function Sidebar() {
                       <NavLink
                         to={item.to}
                         end={parentEnd}
-                        className={rowClass + (exactlyActive ? activeClass : idleClass)}
+                        {...optProps(`item:${item.key}`)}
+                        className={rowClass + KBD_ACTIVE + ' ' + (exactlyActive ? activeClass : idleClass)}
                       >
                         {body}
                       </NavLink>
@@ -301,8 +336,9 @@ export function Sidebar() {
                         <div className="flex items-center">
                           <NavLink
                             to={child.to}
+                            {...optProps(`child:${child.key}`)}
                             className={() =>
-                              `flex-1 min-w-0 flex items-center gap-2.5 h-9 -ml-px pl-4 pr-3 border-l-2 text-[length:var(--fs-caption)] ${
+                              `${KBD_ACTIVE} flex-1 min-w-0 flex items-center gap-2.5 h-9 -ml-px pl-4 pr-3 border-l-2 text-[length:var(--fs-caption)] ${
                                 child.to === activeNavPath
                                   ? 'border-accent bg-[var(--nav-active-bg)] text-[var(--nav-active-fg)] font-medium'
                                   : 'border-transparent text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] hover:border-[var(--nav-section)]'
@@ -332,7 +368,8 @@ export function Sidebar() {
                               <li key={j.id}>
                                 <NavLink
                                   to={j.to ?? child.to}
-                                  className="flex items-center h-8 pl-5 pr-3 text-[length:var(--fs-caption)] text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] hover:bg-[var(--nav-hover-bg)] rounded-[var(--radius-sm)]"
+                                  {...optProps(`journey:${child.key}:${j.id}`)}
+                                  className={`${KBD_ACTIVE} flex items-center h-8 pl-5 pr-3 text-[length:var(--fs-caption)] text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] hover:bg-[var(--nav-hover-bg)] rounded-[var(--radius-sm)]`}
                                 >
                                   <span className="truncate">{j.label}</span>
                                 </NavLink>

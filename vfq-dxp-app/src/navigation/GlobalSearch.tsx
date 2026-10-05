@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchListNav } from '../hooks/useSearchListNav';
 import { useNavigate } from 'react-router-dom';
 import { getAllModules, getAllRoutes, getPersona } from '../engines/configEngine';
 import { usePersonaStore } from '../stores/personaStore';
@@ -43,7 +44,6 @@ export function GlobalSearch() {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   // Keyboard-highlighted row across Modules, Screens and Records (in display order); -1 = none.
-  const [active, setActive] = useState(-1);
   const [recordResults, setRecordResults] = useState<RecordResult[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -188,19 +188,37 @@ export function GlobalSearch() {
   ];
   const screenBase = moduleMatches.length;
   const recordBase = moduleMatches.length + screenMatches.length;
-  useEffect(() => setActive(-1), [q, recordResults]);
-  useEffect(() => {
-    if (active >= 0) document.getElementById(`global-search-opt-${active}`)?.scrollIntoView({ block: 'nearest' });
-  }, [active]);
-
-  const hasResults = moduleMatches.length > 0 || screenMatches.length > 0 || recordResults.length > 0;
-
   const go = (path: string) => {
     navigate(path);
     setQuery('');
     setOpen(false);
     inputRef.current?.blur();
   };
+
+  const nav = useSearchListNav({
+    idPrefix: 'global-search-opt',
+    count: flat.length,
+    enabled: Boolean(q),
+    resetKey: `${q}|${recordResults.length}`,
+    inputRef,
+    onSelect: (i) => go(flat[i]),
+    // Enter with nothing highlighted opens the best match: an exact record id/label first, then the first record, screen or module.
+    onEnterWithoutSelection: () => {
+      if (!q) return false;
+      const exact = recordResults.find((r) => r.label.toLowerCase() === q);
+      const target = exact?.path ?? recordResults[0]?.path ?? screenMatches[0]?.path ?? (moduleMatches[0] ? `/${moduleMatches[0].moduleSlug}` : undefined);
+      if (!target) return false;
+      go(target);
+      return true;
+    },
+    onEscape: () => {
+      setQuery('');
+      setOpen(false);
+    },
+  });
+  const { active } = nav;
+
+  const hasResults = moduleMatches.length > 0 || screenMatches.length > 0 || recordResults.length > 0;
 
   return (
     <SearchField
@@ -214,36 +232,9 @@ export function GlobalSearch() {
         setOpen(true);
       }}
       onFocus={() => setOpen(true)}
-      onKeyDown={(e) => {
-        if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && q && flat.length > 0) {
-          e.preventDefault();
-          setOpen(true);
-          setActive((i) => (e.key === 'ArrowDown' ? (i + 1) % flat.length : (i <= 0 ? flat.length - 1 : i - 1)));
-          return;
-        }
-        // Enter opens the highlighted row; with none highlighted, the best match: an exact record id/label first, then the first record, screen or module.
-        if (e.key === 'Enter' && q) {
-          if (active >= 0 && flat[active]) {
-            e.preventDefault();
-            go(flat[active]);
-            return;
-          }
-          const exact = recordResults.find((r) => r.label.toLowerCase() === q);
-          const target = exact?.path ?? recordResults[0]?.path ?? screenMatches[0]?.path ?? (moduleMatches[0] ? `/${moduleMatches[0].moduleSlug}` : undefined);
-          if (target) {
-            e.preventDefault();
-            go(target);
-          }
-          return;
-        }
-        if (e.key === 'Escape') {
-          setOpen(false);
-          inputRef.current?.blur();
-        }
-      }}
+      {...nav.inputProps}
       placeholder={scope.placeholder}
       aria-label="Global search"
-      aria-activedescendant={active >= 0 ? `global-search-opt-${active}` : undefined}
       onClear={() => {
         setQuery('');
         setOpen(false);
