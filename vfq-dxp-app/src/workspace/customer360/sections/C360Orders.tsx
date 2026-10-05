@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../../components/primitives/Icon';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
-import { ActionButton, DetailRows, FilterSelect, GridTable, IC, KpiGrid, KpiTile, Pager, Panel, Pill, SearchBox, TabPage, UnderlineTabs, ViewPill, fmtDate, fmtDateTime, usePaging } from './C360Kit';
+import { ActionButton, DetailRows, FilterSelect, GridTable, IC, Pager, Panel, Pill, SearchBox, TabPage, UnderlineTabs, ViewPill, fmtDate, fmtDateTime, usePaging } from './C360Kit';
 import type { Tone } from './C360Kit';
 import { Dv } from '../demoValues';
 import { str } from '../../../lib/values';
@@ -155,14 +155,6 @@ export function C360Orders({ data }: { data: Customer360Data; services: Customer
         </>
       }
     >
-      <KpiGrid>
-        <KpiTile icon={IC.file} tone="blue" label="Total Orders" value={counts.all} caption="All time" />
-        <KpiTile icon={IC.clock} tone="amber" label="In Progress" value={counts.progress} link="View all" onLink={() => goTab('progress')} />
-        <KpiTile icon={IC.checkCircle} tone="green" label="Completed" value={counts.completed} link="View all" onLink={() => goTab('completed')} />
-        <KpiTile icon={IC.xCircle} tone="red" label="Cancelled / Rejected" value={counts.cancelled} link="View all" onLink={() => goTab('cancelled')} />
-        <KpiTile icon={IC.swap} tone="purple" label="Pending Actions (TON / SIM Swap)" value={counts.pending} link="View all" onLink={() => goTab('pending')} />
-      </KpiGrid>
-
       <div className="grid grid-cols-1 @6xl:grid-cols-[minmax(0,1fr)_22rem] gap-4 items-start">
         <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg min-w-0">
           <div className="px-4 pt-2">
