@@ -243,7 +243,7 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
         <KpiTile icon={IC.bars} tone="red" label="Unbilled Usage" value={qar(unbilled) ?? DASH} chevron onClick={() => setTab('unbilled')} />
       </KpiGrid>
 
-      <div className="grid grid-cols-1 @6xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4 items-start">
+      <div className="space-y-4">
         <div className="space-y-4 min-w-0">
           <Panel
             icon={IC.bars}
@@ -280,27 +280,44 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
           </section>
         </div>
 
-        <div className="space-y-4 min-w-0">
-          <Panel
-            icon={IC.shield}
-            title="Dunning & Barring"
-            action={goToTab ? <button type="button" onClick={() => goToTab('alerts-risks')} className="text-accent font-medium text-[length:var(--fs-body)] hover:underline whitespace-nowrap">View Details &rarr;</button> : undefined}
-          >
-            <dl>
-              {[
-                { label: 'Current Dunning Stage', value: str(stageProfile?.collectionStage) ? <Pill tone="amber">{String(stageProfile?.collectionStage)}</Pill> : DASH },
-                { label: 'Amount Required to Avoid Barring', value: <Dv k="amountAvoidBarring" /> },
-                { label: 'OG Barring Date', value: <Dv k="ogBarringDate" /> },
-                { label: 'IC Barring Date', value: <Dv k="icBarringDate" /> },
-                { label: 'Eligible for PTP', value: ptpEligible ? <Pill tone={ptpEligible === 'Yes' ? 'green' : 'grey'}>{ptpEligible}</Pill> : DASH },
-              ].map((r) => (
-                <div key={r.label} className="flex items-center justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
-                  <dt className="text-fg-2">{r.label}</dt>
-                  <dd className="text-fg font-medium text-right min-w-0 break-words">{r.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </Panel>
+        <div className="grid grid-cols-1 @4xl:grid-cols-2 gap-4 items-stretch">
+            <Panel
+              icon={IC.shield}
+              title="Dunning & Barring"
+              action={goToTab ? <button type="button" onClick={() => goToTab('alerts-risks')} className="text-accent font-medium text-[length:var(--fs-body)] hover:underline whitespace-nowrap">View Details &rarr;</button> : undefined}
+            >
+              <dl>
+                {[
+                  { label: 'Current Dunning Stage', value: str(stageProfile?.collectionStage) ? <Pill tone="amber">{String(stageProfile?.collectionStage)}</Pill> : DASH },
+                  { label: 'Amount Required to Avoid Barring', value: <Dv k="amountAvoidBarring" /> },
+                  { label: 'OG Barring Date', value: <Dv k="ogBarringDate" /> },
+                  { label: 'IC Barring Date', value: <Dv k="icBarringDate" /> },
+                  { label: 'Eligible for PTP', value: ptpEligible ? <Pill tone={ptpEligible === 'Yes' ? 'green' : 'grey'}>{ptpEligible}</Pill> : DASH },
+                ].map((r) => (
+                  <div key={r.label} className="flex items-center justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
+                    <dt className="text-fg-2">{r.label}</dt>
+                    <dd className="text-fg font-medium text-right min-w-0 break-words">{r.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </Panel>
+
+            <Panel icon={IC.settings} title="Bill Settings" action={<InertLink>Manage</InertLink>}>
+              <dl>
+                {[
+                  { label: 'Bill Email', value: str(stageProfile?.billingContactEmail) ?? DASH },
+                  { label: 'Bill Type', value: str(stageProfile?.billingType) ?? DASH },
+                  { label: 'Bill Cycle', value: str(stageProfile?.billingCycle) ?? DASH },
+                  { label: 'eBill / Paperless', value: ebill ? <Pill tone={/email|ebill|e-bill|paperless/i.test(ebill) ? 'green' : 'grey'}>{/email|ebill|e-bill|paperless/i.test(ebill) ? 'Enabled' : 'Disabled'}</Pill> : DASH },
+                ].map((r) => (
+                  <div key={r.label} className="flex items-center justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
+                    <dt className="text-fg-2">{r.label}</dt>
+                    <dd className="text-fg font-medium text-right min-w-0 break-words">{r.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </Panel>
+        </div>
 
           <Panel icon={IC.card} title="Payment Methods" action={<InertLink>Manage</InertLink>}>
             {str(stageProfile?.paymentMethod) ? (
@@ -317,23 +334,6 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
               <p className="text-muted text-[length:var(--fs-body)] py-2">No payment method on file.</p>
             )}
           </Panel>
-
-          <Panel icon={IC.settings} title="Bill Settings" action={<InertLink>Manage</InertLink>}>
-            <dl>
-              {[
-                { label: 'Bill Email', value: str(stageProfile?.billingContactEmail) ?? DASH },
-                { label: 'Bill Type', value: str(stageProfile?.billingType) ?? DASH },
-                { label: 'Bill Cycle', value: str(stageProfile?.billingCycle) ?? DASH },
-                { label: 'eBill / Paperless', value: ebill ? <Pill tone={/email|ebill|e-bill|paperless/i.test(ebill) ? 'green' : 'grey'}>{/email|ebill|e-bill|paperless/i.test(ebill) ? 'Enabled' : 'Disabled'}</Pill> : DASH },
-              ].map((r) => (
-                <div key={r.label} className="flex items-center justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
-                  <dt className="text-fg-2">{r.label}</dt>
-                  <dd className="text-fg font-medium text-right min-w-0 break-words">{r.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </Panel>
-        </div>
       </div>
     </TabPage>
   );
