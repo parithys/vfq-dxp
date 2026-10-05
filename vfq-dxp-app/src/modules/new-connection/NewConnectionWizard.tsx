@@ -63,8 +63,9 @@ export function NewConnectionWizard({ flow = 'new' }: { flow?: NewConnectionFlow
   }
 
   return (
-    <div>
+    <div className="min-h-full flex flex-col">
       <GuidedActivationWizard
+        belowPanel={(draftStep ?? 0) === 0 && !isMirrorWindow ? <DemoFaultPanel /> : undefined}
         wizardId={WIZARD_ID}
         allowCustomerView
         title={flow === 'existing' ? 'New Connection - Existing Customer' : 'New Connection - New Customer'}
@@ -98,13 +99,6 @@ export function NewConnectionWizard({ flow = 'new' }: { flow?: NewConnectionFlow
           useCustomerContext.getState().patchJourney(WIZARD_ID, { finalOrder: confirmed as unknown as Record<string, unknown> });
         }}
       />
-      {/* Demo-only failure simulator: outside the wizard card, and only on Customer Identification,
-          where the lookups it affects run. */}
-      {(draftStep ?? 0) === 0 && !isMirrorWindow && (
-        <div className="mt-6 px-8 pb-8">
-          <DemoFaultPanel />
-        </div>
-      )}
       <Modal
         open={createdLead !== null}
         onClose={() => setCreatedLead(null)}

@@ -22,7 +22,7 @@ export function NewPreToPostWizard() {
   const pushToast = useNotificationStore((s) => s.pushToast);
 
   return (
-    <div>
+    <div className="min-h-full flex flex-col">
       <GuidedActivationWizard
         wizardId={WIZARD_ID}
         title="Prepaid to Postpaid Conversion"

@@ -34,7 +34,7 @@ export function NewSimSwapWizard({ msisdn, onDone }: NewSimSwapWizardProps) {
   const [bankStatementAttached, setBankStatementAttached] = useState(false);
 
   return (
-    <div>
+    <div className="flex-1 flex flex-col">
       <p className="text-fg-2 px-8 pt-8 mb-4">
         MSISDN: <span className="text-fg font-medium">{msisdn}</span>
       </p>

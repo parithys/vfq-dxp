@@ -21,7 +21,7 @@ export function GlobalSearchScreen() {
 
   if (swapping) {
     return (
-      <div>
+      <div className="min-h-full flex flex-col">
         <NewSimSwapWizard msisdn={msisdn} onDone={() => setSwapping(false)} />
       </div>
     );

@@ -26,6 +26,7 @@ export function GuidedActivationWizard({
   wizardId,
   title,
   titleAside,
+  belowPanel,
   allowCustomerView,
   draftActionLabel,
   steps,
@@ -150,7 +151,7 @@ export function GuidedActivationWizard({
 
 
   return (
-    <div>
+    <div className="flex-1 min-h-full flex flex-col">
       <WizardTitleBand
         title={title}
         titleAside={titleAside}
@@ -175,14 +176,15 @@ export function GuidedActivationWizard({
         {currentStep && `Step ${currentIndex + 1} of ${activeSteps.length}: ${currentStep.label}`}
       </span>
 
-      <div className="flex items-stretch">
+      <div className="flex-1 flex items-stretch">
         {!currentStep?.hideRail && (
           <WizardRail steps={activeSteps} currentIndex={currentIndex} maxReached={maxReached} isLocked={isLocked} onGoToStep={goToStep} />
         )}
 
+        <div className="flex-1 min-w-0">
         <div
           ref={stepPanelRef}
-          className={`flex-1 min-w-0 m-8 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-6 ${viewOpen ? 'outline outline-2 outline-accent' : ''}`}
+          className={`m-8 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-6 ${viewOpen ? 'outline outline-2 outline-accent' : ''}`}
           onKeyDown={handleStepKeyDown}
         >
           <WizardStepHeader
@@ -209,6 +211,8 @@ export function GuidedActivationWizard({
               setAbandonOpen(true);
             }}
           />
+        </div>
+        {belowPanel && <div className="px-8 pb-8">{belowPanel}</div>}
         </div>
       </div>
 

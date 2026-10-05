@@ -130,6 +130,8 @@ export interface GuidedActivationWizardProps {
   title: string;
   /** Shown at the right end of the title row (e.g. a status indicator). */
   titleAside?: ReactNode;
+  /** Rendered under the step card, aligned with it (e.g. a demo-only panel). */
+  belowPanel?: ReactNode;
   /** Offers a "Customer view" toggle: the screen shows only the step content (no step list, no agent buttons), for handing it to the customer. */
   allowCustomerView?: boolean;
   /** The action named in a saved draft's task, e.g. "Postpaid Activation" -> "<Customer> – Postpaid Activation". Falls back to `title`. */

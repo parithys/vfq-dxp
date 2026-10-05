@@ -25,7 +25,7 @@ export function PassportToQidWizard() {
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | undefined>();
 
   return (
-    <div>
+    <div className="min-h-full flex flex-col">
       <GuidedActivationWizard
         wizardId={WIZARD_ID}
         title="Passport to QID Update"

@@ -43,7 +43,7 @@ export function BaseManagementWizard() {
   }
 
   return (
-    <div>
+    <div className="min-h-full flex flex-col">
       <GuidedActivationWizard
         wizardId={WIZARD_ID}
         title="Base Management"
