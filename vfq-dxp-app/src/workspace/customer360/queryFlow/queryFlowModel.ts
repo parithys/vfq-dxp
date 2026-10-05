@@ -11,12 +11,25 @@ export interface QueryIssue {
   serviceType?: string;
   /** The matching real Siebel VFQA_TT_ACTUAL_ISSUE value, where one exists. */
   ticketActualIssue?: string;
+  /** Ticket classification from the categorization workbook. */
+  summary?: string;
+  subSummary?: string;
+  area?: string;
+  subArea?: string;
   keywords?: string[];
 }
 
-interface QueryIssueCatalogue {
+/** Which Details fields the Preview shows for one Query Category + Query Service Type, in order. */
+export interface PreviewColumn {
+  category: string;
+  serviceType: string;
+  fields: string[];
+}
+
+export interface QueryIssueCatalogue {
   examples: string[];
   issues: QueryIssue[];
+  preview: PreviewColumn[];
 }
 
 /** The six choices offered when no MSISDN is selected. */
@@ -62,3 +75,15 @@ export function deriveQueryServiceType(issue: QueryIssue, service: CustomerServi
 
 /** The Trouble Ticket issue types the existing ticket form accepts; other service types leave the choice to the agent. */
 export const TICKET_ISSUE_TYPES = ['Mobile Complaints', 'Fixed/5G Complaints'];
+
+/**
+ * The Details fields for a category + service type. Exact match first; then the category's "Any" column; then a
+ * column of the same category on the same line (Mobile / Fixed); then the category's first column.
+ */
+export function previewFieldsFor(catalogue: QueryIssueCatalogue, category: string | undefined, serviceType: string): string[] {
+  const cols = catalogue.preview.filter((c) => c.category === category);
+  if (cols.length === 0) return ['Account Number', 'MSISDN', 'Plan Name'];
+  const line = /fixed/i.test(serviceType) ? /fixed/i : /mobile/i;
+  const hit = cols.find((c) => c.serviceType === serviceType) ?? cols.find((c) => c.serviceType === 'Any') ?? cols.find((c) => line.test(c.serviceType)) ?? cols[0];
+  return hit.fields;
+}

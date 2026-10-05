@@ -2,8 +2,9 @@ import { Modal } from '../../../components/primitives/Modal';
 import { Button } from '../../../components/primitives/Button';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
-import { DetailRows, IC, IconTile, Pill, qar } from '../sections/C360Kit';
-import type { QueryIssue } from './queryFlowModel';
+import { DetailRows, IC, IconTile, Pill, fmtDate, qar } from '../sections/C360Kit';
+import { previewFieldsFor } from './queryFlowModel';
+import type { QueryIssue, QueryIssueCatalogue } from './queryFlowModel';
 
 type Rec = Record<string, unknown>;
 const NOT_ON_FILE = 'Not on file';
@@ -17,6 +18,8 @@ export function QueryPreviewModal({
   serviceType,
   service,
   data,
+  services,
+  catalogue,
   onClose,
   onCloseInteraction,
   onCreateTicket,
@@ -27,6 +30,8 @@ export function QueryPreviewModal({
   /** The selected MSISDN's service, when one was chosen. */
   service: CustomerService | undefined;
   data: Customer360Data;
+  services: CustomerService[];
+  catalogue: QueryIssueCatalogue;
   onClose: () => void;
   onCloseInteraction: () => void;
   onCreateTicket: () => void;
@@ -35,9 +40,13 @@ export function QueryPreviewModal({
   const billingProfile = data.billingProfiles[0] as Rec | undefined;
   const creditLimit = data.creditLimits[0] as Rec | undefined;
   const balance = data.inPlatformBalances[0] as Rec | undefined;
+  const engagement = data.digitalEngagement[0] as Rec | undefined;
+  const contact = data.contacts[0] as Rec | undefined;
 
   const openTickets = data.tickets.filter((t) => !CLOSED.test(String(t.status ?? '')));
   const openOrders = data.orders.filter((o) => !CLOSED.test(String(o.status ?? '')));
+  const latestOrder = [...data.orders].sort((a, b) => String(b.createdAt ?? '').localeCompare(String(a.createdAt ?? '')))[0] as Rec | undefined;
+  const latestPayment = [...data.payments].sort((a, b) => String(b.capturedAt ?? '').localeCompare(String(a.capturedAt ?? '')))[0] as Rec | undefined;
   const barring = account?.barringType ?? (account?.barringStatus === 'Not Barred' ? 'No' : text(account?.barringStatus));
   const balanceParts = [
     balance?.mainBalanceQAR != null ? qar(Number(balance.mainBalanceQAR)) : undefined,
@@ -46,26 +55,49 @@ export function QueryPreviewModal({
     balance?.smsBalanceCount != null ? `${balance.smsBalanceCount} SMS` : undefined,
   ].filter(Boolean);
   const limit = (v: unknown) => (v != null ? qar(Number(v)) : undefined);
+  const date = (v: unknown) => (v ? fmtDate(v) : undefined);
+  const yn = (b: boolean) => (b ? 'Yes' : 'No');
+  const outstanding = data.bills.reduce((sum, b) => sum + (Number(b.outstandingAmountQar ?? b.outstandingQar ?? 0) || 0), 0);
 
+  // One resolver per Details field named in the categorization workbook. A field with no source in the customer's
+  // records resolves to nothing and shows "Not on file" - nothing is invented.
+  const resolve: Record<string, () => string | undefined> = {
+    'Account Number': () => account?.accountId,
+    'Plan Name': () => service?.label,
+    MSISDN: () => service?.identifier,
+    'Billing Profile': () => text(billingProfile?.billingType) ?? text(billingProfile?.name),
+    'Surepay Balance (Data, SMS, Voice, Text, QR Balance)': () => (balanceParts.length ? balanceParts.join(' | ') : undefined),
+    'Asset Barring including OG/IC Bar (Y/N)': () => barring,
+    'Credit Limit': () => limit(billingProfile?.creditLimitQAR),
+    'SIM State': () => (service ? (service.status ?? 'Active') : undefined),
+    'Bill Limit': () => limit(creditLimit?.creditLimitQar ?? creditLimit?.creditLimitQAR),
+    'In Progress Ticket (Y/N)': () => yn(openTickets.length > 0),
+    'Open Order': () => yn(openOrders.length > 0),
+    'Recent Payment amount & date': () => (latestPayment ? [qar(Number(latestPayment.amountQar)), date(latestPayment.capturedAt)].filter(Boolean).join(' on ') : undefined),
+    'Last Recharge Date & Amount': () => (engagement?.lastRechargeAmountQar != null ? [qar(Number(engagement.lastRechargeAmountQar)), date(engagement.lastRechargeAt)].filter(Boolean).join(' on ') : undefined),
+    'Recent Order': () => text(latestOrder?.orderId),
+    'Recent Order Created By': () => text(latestOrder?.createdBy),
+    'Recent Order Created On': () => date(latestOrder?.createdAt),
+    'Recent Order Type': () => [text(latestOrder?.orderType), text(latestOrder?.orderSubType)].filter(Boolean).join(' / ') || undefined,
+    'Open Order Type (PYN, FNP, Home Move, Plan Change, Device Replacement, Add-ons, Subscription)': () => openOrders.map((o) => text(o.orderType)).filter(Boolean).join(', ') || undefined,
+    'App Version': () => text(engagement?.appVersion),
+    'App Last/Recent Login Date & Time': () => (engagement?.appLastLoginAt ? date(engagement.appLastLoginAt) : undefined),
+    'Preferred Language': () => text(contact?.preferredLanguage),
+    Nationality: () => text(contact?.nationality ?? data.customer.nationality),
+    'QID Number': () => (contact?.idType === 'QID' ? text(contact.idNumber) : undefined),
+    'Total Number of Connections Prepaid + Postpaid': () => String(services.length),
+    'Total Outstanding Amount': () => (outstanding > 0 ? qar(outstanding) : data.bills.length ? 'QAR 0' : undefined),
+    'Reason for Blacklist': () => (data.customer.blacklisted ? text(data.customer.blacklistReason) : undefined),
+    'Previous Mobile Tickets (Last 3 Months)': () => String(data.tickets.filter((t) => /mobile/i.test(String(t.category ?? ''))).length),
+    'Previous Fixed Tickets (Last 3 Months)': () => String(data.tickets.filter((t) => /fixed/i.test(String(t.category ?? ''))).length),
+  };
+  const fields = previewFieldsFor(catalogue, issue.category, serviceType);
   const summary = [
     { label: 'Query Issue', value: issue.name },
     { label: 'Query Category', value: issue.category ?? 'Category pending' },
     { label: 'Query Service Type', value: serviceType },
-    { label: 'MSISDN', value: service?.identifier ?? 'Not selected' },
-    { label: 'Plan Name', value: service?.label ?? NOT_ON_FILE },
-    // A service with no status recorded is shown as Active everywhere else in Customer 360; same here.
-    { label: 'SIM State', value: service ? (service.status ?? 'Active') : NOT_ON_FILE },
-    { label: 'Account Number', value: account?.accountId ?? NOT_ON_FILE },
   ];
-  const additional = [
-    { label: 'Asset Barring (incl. OG/IC)', value: barring ?? NOT_ON_FILE },
-    { label: 'Bill Limit', value: limit(creditLimit?.creditLimitQar ?? creditLimit?.creditLimitQAR) ?? NOT_ON_FILE },
-    { label: 'Billing Profile', value: text(billingProfile?.billingType) ?? text(billingProfile?.name) ?? NOT_ON_FILE },
-    { label: 'Credit Limit', value: limit(billingProfile?.creditLimitQAR) ?? NOT_ON_FILE },
-    { label: 'In Progress Ticket', value: openTickets.length > 0 ? 'Yes' : 'No' },
-    { label: 'Open Order', value: openOrders.length > 0 ? 'Yes' : 'No' },
-    { label: 'Balance (QAR, Data, Voice, SMS)', value: balanceParts.length ? balanceParts.join(' | ') : NOT_ON_FILE },
-  ];
+  const additional = fields.map((f) => ({ label: f, value: resolve[f]?.() ?? NOT_ON_FILE }));
 
   return (
     <Modal

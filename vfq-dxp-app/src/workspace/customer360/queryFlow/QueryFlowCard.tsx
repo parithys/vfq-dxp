@@ -194,6 +194,8 @@ export function QueryFlowCard({
               serviceType={serviceType}
               service={service}
               data={data}
+              services={services}
+              catalogue={catalogue}
               onClose={() => setPreviewOpen(false)}
               onCloseInteraction={() => reset('Interaction closed without raising a ticket.')}
               onCreateTicket={() => {
