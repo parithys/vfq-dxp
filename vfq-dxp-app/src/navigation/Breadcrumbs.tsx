@@ -57,7 +57,7 @@ export function Breadcrumbs() {
         type="button"
         onClick={() => navigate(-1)}
         aria-label="Go back"
-        className="flex items-center gap-1 -ml-1 pl-2 pr-2.5 py-1 rounded-[var(--radius-button)] border border-border-soft bg-surface text-muted hover:bg-border-soft hover:border-border hover:text-fg transition-colors shrink-0"
+        className="flex items-center gap-1 -ml-1 pl-2 pr-2.5 py-1 rounded-[var(--radius-button)] border border-transparent bg-charcoal-panel text-white hover:bg-[color-mix(in_oklab,var(--charcoal-panel),white_14%)] transition-colors shrink-0"
       >
         <Icon path={ARROW_LEFT} className="w-3.5 h-3.5" />
         Back
