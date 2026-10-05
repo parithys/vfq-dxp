@@ -8,108 +8,13 @@ import { AddonsPicker } from '../domain/AddonsPicker';
 import { BillLimitEditor } from '../domain/BillLimitEditor';
 import { Drawer } from '../primitives/Drawer';
 import { Icon } from '../primitives/Icon';
-import { CARD_HIGHLIGHT, CARD_IDLE, CARD_SELECTED, CARD_SELECTED_SURFACE, ICON_CARD, OfferArtwork, SelectedCardTexture, POSTPAID_PILL, STAR_ICON, planFeatureRows } from './offerCardParts';
+import { CARD_HIGHLIGHT, CARD_IDLE, CARD_SELECTED, ICON_CARD, OfferArtwork, POSTPAID_PILL, STAR_ICON, planFeatureRows } from './offerCardParts';
 import { monthlyCharges, formatQar, VAT_RATE, HRN_ADVANCE_QAR } from '../../engines/postpaidPricing';
 import { SearchField } from '../../components/primitives/SearchField';
+import { CHECK, closestPlans, SUPPORTING_ID_DISCOUNT_TYPES, PROOF_DOCUMENT_MAX_BYTES, PROOF_DOCUMENT_ACCEPT, formatDocSize, PLAN_GROUPS, planGroupOf } from './postpaidPlanModel';
+import type { PostpaidPlan, Discount, AddonProduct, PlanGroupKey, TabKey } from './postpaidPlanModel';
+import { DiscountCard } from './DiscountCard';
 
-const CHECK = 'M20 6L9 17l-5-5';
-
-// Small Levenshtein distance for typo-tolerant ranking - the app has no fuzzy-
-// search dependency, and plan names are short enough that a plain O(n*m) DP
-// table is cheap.
-function levenshtein(a: string, b: string): number {
-  const dp: number[][] = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
-  for (let i = 0; i <= a.length; i++) dp[i][0] = i;
-  for (let j = 0; j <= b.length; j++) dp[0][j] = j;
-  for (let i = 1; i <= a.length; i++) {
-    for (let j = 1; j <= b.length; j++) {
-      dp[i][j] =
-        a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] : 1 + Math.min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]);
-    }
-  }
-  return dp[a.length][b.length];
-}
-
-// Closest-match suggestions for the type-ahead dropdown (2026-09-28): a
-// prefix or substring hit ranks first (score 0/1) exactly like the list
-// filter below it; anything else ranks by edit distance so a mistyped plan
-// name ("Postpaid Re 550") still surfaces its nearest neighbour instead of an
-// empty dropdown.
-function closestPlans<T extends { name: string }>(query: string, plans: T[], limit = 5): T[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return [];
-  return plans
-    .map((p) => {
-      const name = p.name.toLowerCase();
-      const score = name.startsWith(q) ? 0 : name.includes(q) ? 1 : 2 + levenshtein(q, name) / Math.max(q.length, name.length);
-      return { plan: p, score };
-    })
-    .sort((a, b) => a.score - b.score)
-    .slice(0, limit)
-    .map((r) => r.plan);
-}
-
-interface PostpaidPlan {
-  productId: string;
-  name: string;
-  type: string;
-  mrcQAR: number;
-  dataAllowanceGB: number | null;
-  minutesAllowance: string;
-  speedTier: string;
-  /** Contract term. On every seeded plan; surfaced only in the details
-   * drawer, since it is the one figure the cards have no room for. */
-  commitmentMonths?: number;
-  popular?: boolean;
-  /** Free bundles/benefits included with the plan (2026-09-28 request) -
-   * app-level demo data, no evidenced per-plan benefits field existed before
-   * (see products.json's own note on these entries). */
-  benefits?: string[];
-  /**
-   * True for a plan that already comes with its add-ons/discount decided
-   * (2026-09-28 "pre-bundled eligible offers"). Selecting one auto-advances
-   * past the rest of THIS step straight to Number Selection - see
-   * NewPostpaidWizard's autoAdvanceWhen on the 'plan' step, which is where
-   * that skip actually happens; this component only renders a note saying so.
-   */
-  preBundledOffer?: boolean;
-}
-
-interface Discount {
-  addonDiscountId: string;
-  addonType: string;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  planId: string;
-}
-
-interface AddonProduct {
-  productId: string;
-  name: string;
-  type: string;
-  mrcQAR: number;
-}
-
-/**
- * Discount types that require a supporting ID AND a proof document here
- * (2026-09-28 request supersedes the original "document uploaded later at
- * the CAF step" note below - the proof itself now moves to this step,
- * required before finalisation; CAF still gets a signed-paperwork upload of
- * its own, which is a different artefact). Exported so NewPostpaidWizard's
- * pendingApproval computation reads the SAME set rather than duplicating the
- * two literal strings.
- */
-export const SUPPORTING_ID_DISCOUNT_TYPES = new Set(['MADA Discount', 'B2B2C Discount']);
-
-const PROOF_DOCUMENT_MAX_BYTES = 5 * 1024 * 1024;
-const PROOF_DOCUMENT_ACCEPT = '.pdf,.jpg,.jpeg,.png';
-
-function formatDocSize(bytes: number): string {
-  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-}
 
 interface PostpaidPlanAddonsStepProps {
   selectedProductId: string | undefined;
@@ -143,85 +48,6 @@ interface PostpaidPlanAddonsStepProps {
   discountProofDocument: { fileName: string; sizeBytes: number } | undefined;
   onDiscountProofDocumentChange: (doc: { fileName: string; sizeBytes: number } | undefined) => void;
 }
-
-/**
- * The three offer groups, renamed 2026-09-28 to "Today's Special Promotions",
- * "Offers for this QID" and "Standard BAU Catalogue" per that day's request -
- * this only relabels the three groups introduced 2026-09-27; membership is
- * still DERIVED from catalogue data, not a new hand-maintained field:
- * `popular` already exists on products.json and already drove the POPULAR
- * badge, and commitmentMonths is the only other commercial axis the catalogue
- * carries. So:
- *
- *   Today's Special Promotions - flagged `popular` in the catalogue
- *   Offers for this QID        - carries a commitment (the plans a discount attaches to)
- *   Standard BAU Catalogue     - everything else
- *
- * Deliberately derived rather than invented: no per-QID offer-eligibility
- * field exists in the corpus (eligibilityEngine.ts computes customer
- * eligibility outcomes - age, ID type, and the like - not plan-level offer
- * matching), and adding one would have meant assigning every plan to a group
- * by guesswork. If the business later supplies a real per-QID offer feed,
- * this is the one function to change.
- */
-type PlanGroupKey = 'specials' | 'for-you' | 'standard';
-
-const PLAN_GROUPS: { key: PlanGroupKey; label: string }[] = [
-  { key: 'specials', label: 'Offers' },
-  { key: 'for-you', label: 'Other Plans' },
-  { key: 'standard', label: 'Standard BAU Catalogue' },
-];
-
-function planGroupOf(p: { popular?: boolean; commitmentMonths?: number }): PlanGroupKey {
-  if (p.popular) return 'specials';
-  if (p.commitmentMonths) return 'for-you';
-  return 'standard';
-}
-
-/**
- * A plan-group key, or one of this step's other two tabs (2026-09-28 tabbed
- * redesign - replaces the previous single stacked column of plan groups,
- * Add-ons and Eligible Discounts with one tab strip covering all of them).
- * "describe" subtitles the stacked layout used per section are gone: the
- * active tab's own label already names the section, so repeating it as a
- * second line under the tab strip would say the same thing twice.
- */
-type TabKey = PlanGroupKey | 'addons' | 'discounts';
-
-/** One choice in the Eligible Discounts tab, on the shared selectable-card standard. */
-function DiscountCard({ title, description, value, selected, onToggle }: { title: string; description?: string; value: string; selected: boolean; onToggle: () => void }) {
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      aria-pressed={selected}
-      onClick={onToggle}
-      onKeyDown={(e) => {
-        if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
-          e.preventDefault();
-          onToggle();
-        }
-      }}
-      className={`relative isolate flex flex-col gap-3 rounded-[var(--radius-card)] border p-5 cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
-        selected ? `${CARD_SELECTED} ${CARD_SELECTED_SURFACE}` : CARD_IDLE
-      }`}
-    >
-      {selected && <SelectedCardTexture />}
-      {selected && (
-        <span aria-hidden="true" className="absolute -right-2 -top-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-accent text-white ring-2 ring-bg">
-          <Icon path="M20 6L9 17l-5-5" className="w-3.5 h-3.5" strokeWidth={3} />
-        </span>
-      )}
-      {/* Name on the left, the discount on the right, on one row. */}
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-fg font-bold text-[length:var(--fs-h5)] leading-snug">{title}</p>
-        <p className={`shrink-0 font-bold text-[length:var(--fs-h5)] ${value === '-' ? 'text-muted' : 'text-success'}`}>{value}</p>
-      </div>
-      {description && <p className="text-fg-2 text-[length:var(--fs-caption)]">{description}</p>}
-    </div>
-  );
-}
-
 
 // "RED Plan" & "Eligible Discounts" - Mobile Postpaid's Plan & Add-ons step
 // (SCR-156, reference 12-step flow position 5). Plan tiers use the evidenced

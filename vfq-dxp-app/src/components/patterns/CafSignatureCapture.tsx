@@ -1,6 +1,6 @@
-import { SummaryTables } from './CheckoutSummaryStep';
-import type { SummaryTable } from './CheckoutSummaryStep';
-import { useEffect, useState, type ReactNode } from 'react';
+import { SummaryTables } from './CheckoutSummaryTables';
+import type { SummaryTable } from './CheckoutSummaryTables';
+import { useEffect, useState } from 'react';
 import { Icon } from '../primitives/Icon';
 import { Button } from '../primitives/Button';
 import { Checkbox } from '../primitives/Checkbox';
@@ -11,140 +11,13 @@ import type { CafDocument } from '../domain/CafDocumentUpload';
 import { AdditionalDocumentsUpload } from '../domain/AdditionalDocumentsUpload';
 import type { AdditionalDocument } from '../domain/AdditionalDocumentsUpload';
 import * as mockDataEngine from '../../engines/mockDataEngine';
-import type { TncLegalFacts } from './CheckoutSummaryStep';
-import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
+import type { TncLegalFacts } from './checkoutSummaryModel';
+import { buildTncBullets } from './cafTermsModel';
+import type { TncBulletTemplate } from './cafTermsModel';
+import { FullTerms } from './cafTerms';
+import { CHECK_ICON, CAF_TYPES, detectCafType } from './cafTypes';
+import type { CafType } from './cafTypes';
 
-interface TncSection {
-  sectionId: string;
-  title: string;
-  body: string;
-}
-
-/**
- * The complete Terms & Conditions, in their own bordered, scrollable panel directly above the
- * signature block, so the customer can read all of it before signing and it stays in view while
- * they sign. A fixed-height panel keeps the page usable however long the terms are: the panel
- * scrolls, the page does not grow.
- */
-function FullTerms({ termsUrl, enabled, signed, children }: { termsUrl?: string; enabled: boolean; signed?: boolean; children: ReactNode }) {
-  const [sections, setSections] = useState<TncSection[] | undefined>();
-  useEffect(() => {
-    mockDataEngine.list<TncSection>('tnc-full-text').then(setSections);
-  }, []);
-  // Without the terms (not the customer-facing page, or none loaded) the form stands alone.
-  if (!enabled || !sections || sections.length === 0) return <>{children}</>;
-  // Once signed there is nothing left to read: show just the signed form (applicant, signed
-  // badge and signature) not the whole scrolling document or its link.
-  if (signed) {
-    return (
-      <section aria-label="Signed application form" className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
-        <div className="px-4 py-3">{children}</div>
-      </section>
-    );
-  }
-  return (
-    <section aria-label="Full Terms and Conditions" className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
-      <div className="flex items-center justify-between gap-3 border-b border-border-soft px-4 py-3">
-        <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Terms &amp; Conditions</h3>
-        <span className={`${SYNTHETIC_CLASS} text-[length:var(--fs-micro)] uppercase tracking-wide`}>Sample text - replace with approved wording</span>
-      </div>
-      {/* tabIndex so the panel can be scrolled with the keyboard. */}
-      <div tabIndex={0} className="max-h-[34rem] overflow-y-auto px-4 py-3 space-y-4 focus:outline-none focus-visible:shadow-[var(--focus-ring)]">
-        {sections.map((s) => (
-          <div key={s.sectionId}>
-            <h4 className="text-fg font-medium text-[length:var(--fs-body)]">{s.title}</h4>
-            <p className="text-fg-2 text-[length:var(--fs-caption)] leading-relaxed mt-1">{s.body}</p>
-          </div>
-        ))}
-        {/* The application form (agreement checkbox and signature) is the LAST thing in the
-            scroll area, so the customer has to scroll through every section to reach it. */}
-        <div className="border-t border-border-soft mt-2 pt-2">{children}</div>
-      </div>
-      {termsUrl && (
-        <div className="border-t border-border-soft px-4 py-2">
-          <a href={termsUrl} target="_blank" rel="noreferrer" className="text-link underline text-[length:var(--fs-caption)]">
-            Open the full Terms &amp; Conditions on vodafone.qa
-          </a>
-        </div>
-      )}
-    </section>
-  );
-}
-
-export type CafType = 'Digital' | 'Manual' | 'Touch Screen';
-
-const CHECK_ICON = 'M20 6L9 17l-5-5';
-const MONITOR_ICON = 'M3 4h18v12H3z M9 20h6 M12 16v4';
-const PEN_ICON = 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z';
-const TOUCH_ICON = 'M17 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z M12 18h.01';
-
-const CAF_TYPES: { type: CafType; label: string; icon: string }[] = [
-  { type: 'Digital', label: 'CAF-Digital', icon: MONITOR_ICON },
-  { type: 'Manual', label: 'CAF-Manual', icon: PEN_ICON },
-  { type: 'Touch Screen', label: 'CAF-Touch Screen', icon: TOUCH_ICON },
-];
-
-/**
- * Runtime touch-capability check (2026-09-28), standing in for the manual
- * CAF-Type picker on a call site that opts into `autoDetectDeviceType`. Real
- * hardware capability, not a persona/channel guess - a touch-capable device
- * (tablet) resolves to CAF-Touch Screen, everything else to CAF-Digital.
- *
- * CAF-Manual (paper) drops out of the reachable set entirely under
- * auto-detection: it was always an agent override for an edge case (e.g. a
- * system outage), not a device type, so there is nothing for a device check
- * to detect it FROM - per the 2026-09-28 direction confirming this reading.
- */
-function detectCafType(): CafType {
-  if (typeof window === 'undefined' || typeof navigator === 'undefined') return 'Digital';
-  const touchCapable = navigator.maxTouchPoints > 0 || (window.matchMedia?.('(pointer: coarse)').matches ?? false);
-  return touchCapable ? 'Touch Screen' : 'Digital';
-}
-
-interface TncBulletTemplate {
-  scenarioKey: string;
-  template: string;
-}
-
-/**
- * Fills the applicable business-maintained templates (tnc-summary-
- * bullets.json) from THIS order's own figures. Only a scenario the order
- * actually carries produces a bullet - a plan with no commitment does not
- * get a "no lock-in" line invented for it alongside real ones; that filler
- * only appears when NOTHING else applies, so the customer is never shown a
- * blank summary.
- */
-function buildTncBullets(facts: TncLegalFacts | undefined, templates: TncBulletTemplate[]): string[] {
-  if (!facts || templates.length === 0) return [];
-  const byKey = (key: string) => templates.find((t) => t.scenarioKey === key)?.template;
-  const fill = (template: string | undefined, vars: Record<string, string | number>) =>
-    template ? Object.entries(vars).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, String(v)), template) : undefined;
-
-  const bullets: string[] = [];
-  if (facts.planCommitmentMonths) {
-    const b = fill(byKey('plan-lockin'), { months: facts.planCommitmentMonths });
-    if (b) bullets.push(b);
-  }
-  if (facts.starLockInMonths) {
-    const b = fill(byKey('star-lockin'), { months: facts.starLockInMonths });
-    if (b) bullets.push(b);
-  }
-  if (facts.discountName) {
-    const b = facts.discountDurationMonths
-      ? fill(byKey('discount-expiry'), { name: facts.discountName, months: facts.discountDurationMonths })
-      : fill(byKey('discount-no-expiry'), { name: facts.discountName });
-    if (b) bullets.push(b);
-  }
-  if (facts.hrnAdvanceQar > 0) {
-    const b = fill(byKey('hrn-advance'), { amount: facts.hrnAdvanceQar });
-    if (b) bullets.push(b);
-  }
-  if (bullets.length === 0) {
-    const b = byKey('no-lockin');
-    if (b) bullets.push(b);
-  }
-  return bullets;
-}
 
 interface CafSignatureCaptureProps {
   value: {

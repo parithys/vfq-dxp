@@ -1,141 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
-import { QidNumberField, QidTypeSelector, idTypeLabel } from '../domain/QidInput';
+import { QidNumberField, QidTypeSelector } from '../domain/QidInput';
 import type { SpecimenIdentity } from '../domain/ScannedIdPreview';
 import { callService, ServiceError, takeDuplicateFault, VALIDATION_TTL_MS, type FailureKind, type ServiceName } from '../../engines/serviceCall';
 import { TechnicalFailure, ValidationStatus } from './ValidationStatus';
 import { Button } from '../primitives/Button';
-import { QidImageUpload } from '../domain/QidImageUpload';
-import type { QidImageUploadValue } from '../domain/QidImageUpload';
 import type { QidType } from '../domain/QidInput';
+import { IdScannerPanel } from './IdScannerPanel';
 import { Badge } from '../primitives/Badge';
 import { Input } from '../primitives/Input';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
+import { MAX_SCAN_ATTEMPTS, LEGACY_MAX_SCAN_ATTEMPTS, SCANNABLE_ID_TYPES, misread, isoToDmy } from './idLookupModel';
+import type { DuplicateCandidate, IdLookupValue } from './idLookupModel';
 
-/** A customer record that shares the scanned ID with others - offered to the agent to choose from. */
-export interface DuplicateCandidate {
-  customerId: string;
-  name: string;
-  dob: string;
-}
-
-export interface MoiResult {
-  /** Mobile number and notification language on the customer record - shown by
-   * the verify-then-fetch flow only. */
-  phone?: string;
-  preferredLanguage?: string;
-  name: string;
-  /** Set when the ID resolved to an existing Vodafone customer (Siebel); absent for a NAS-only new customer. */
-  customerId?: string;
-  /** The registry's own name parts, when it returns them. The Contact step prefers these over splitting `name` by position, so a middle name of several tokens is never guessed at. */
-  firstName?: string;
-  middleName?: string;
-  lastName?: string;
-  dob: string;
-  nationality: string;
-  email?: string;
-  /** Where `email` came from: Siebel for an existing customer, NAS for a new one. */
-  emailSource?: 'Siebel' | 'NAS' | 'Billing Profile';
-  /** No customer record exists for this ID - details come from NAS, not Siebel. */
-  isNewCustomer?: boolean;
-  // Added 2026-09-24 so Gender can be registry-sourced. It has to be: the
-  // identity fields are non-editable, and a mandatory field with no source
-  // and no way to type into it would block Continue forever. customers.json
-  // has carried `gender` all along; only MoiResult was not passing it on.
-  gender?: string;
-  // The sponsoring employer, when the registry has one on file. Added
-  // 2026-09-26 so B2B2C can be DERIVED rather than ticked: the Contact step's
-  // "B2B2C Order" checkbox was removed, and this is what replaces it.
-  //
-  // Strictly this is not MOI data - an employment relationship is not held by
-  // the interior ministry - but it travels with the customer record the lookup
-  // resolves, and inventing a second round trip to a system this app has no
-  // evidence of would be pretending to know more about the integration than
-  // the corpus says. Named companyName to match the field it comes from.
-  companyName?: string;
-  /**
-   * The employer's row in `enterprise-accounts`, resolved here rather than by
-   * the Contact step.
-   *
-   * Resolved at the same point the customer is, because this is where the data
-   * layer already is - GuidedContactStep is a pure presentational component
-   * with no state, no effects and no dataset reads, and giving it one just to
-   * turn a name into an id would change its character for no gain. Carrying
-   * the id matters because a NAME is not a link: two Lulu branches share a CR
-   * prefix and differ only by suffix, so downstream needs the id to know which
-   * account sponsors the line.
-   */
-  companyAccountId?: string;
-  /**
-   * The scanned document's own expiry date (ISO), not a customer-record field -
-   * it comes off the `identity-documents` match, not `customers`. This is the
-   * same date eligibilityEngine already reads off that record to run its ID
-   * validity check; it just never travelled any further than that engine
-   * until now. See identity-documents.json's `_expiryNote` for why the field
-   * exists on that dataset at all.
-   */
-  expiryDate?: string;
-  /**
-   * When this lookup last resolved (ISO), stamped by runMoiValidation below.
-   * Evidenced as "MOI Update Time" on the backend Contact/Account record
-   * across multiple guided-journey walkthroughs (e.g. "MOI Update Time
-   * 8/18/2025 03:58:20") - not previously carried into this app. Overwritten
-   * on every fresh validation, so it always reads the latest one, not the
-   * first.
-   */
-  moiUpdateTime?: string;
-}
-
-// TWO, per 2026-09-28 direction ("Allow a maximum of two scanning attempts").
-// Was four, from the reference asset's "Scan Attempts: 0 / 4".
-//
-// Both attempts pass over the reader; after the second the scanner locks and
-// the manual fallback opens. Nothing in the UI names this number or shows a
-// count - see the scanner block below.
-const MAX_SCAN_ATTEMPTS = 2;
-// The original budget, still used by the eight journeys that lead with a type
-// selector rather than auto-detection.
-const LEGACY_MAX_SCAN_ATTEMPTS = 4;
-
-/**
- * ID types with a physical card the reader can capture, and therefore the
- * scan-first workflow: both faces in one operation, the number read off the
- * document, a four-attempt budget and a manual fallback behind it.
- *
- * Diplomatic ID joined QID on 2026-09-25 - a postpaid connection may be sold
- * directly against either, so both get the same process rather than QID
- * getting a scanner and its equal being typed in by hand.
- *
- * All four supported ID types (Qatar ID, Passport, GCC ID, Diplomatic ID) are scanned before the
- * journey can proceed (2026-10-04): the number is read from the scan, not typed in.
- */
-const SCANNABLE_ID_TYPES = new Set<QidType>(['QID', 'Passport', 'GCC ID', 'Diplomatic ID']);
-
-type IdLookupValue = {
-  idType?: QidType;
-  idNumber?: string;
-  moiResult?: MoiResult;
-  qidScans?: QidImageUploadValue;
-  /** verifyThenFetch only: the expiry read off the scan (DD/MM/YYYY), editable so the agent can correct it after comparing with the card. */
-  scannedExpiry?: string;
-  /** The number was typed after the scan budget ran out, not read from a scan: the order needs Store Manager approval. */
-  manualEntry?: boolean;
-};
-
-// ISO (YYYY-MM-DD) -> DD/MM/YYYY, the format the card shows and the field takes.
-// Simulated OCR misread for the blurred first pass: swaps look-alike digits
-// (3/8, 1/7, 0/6), guaranteed to differ from the real number.
-const misread = (n: string) => {
-  const swap: Record<string, string> = { '3': '8', '8': '3', '1': '7', '7': '1', '0': '6', '6': '0' };
-  const i = [...n].findIndex((c) => c in swap);
-  if (i < 0) return n.slice(0, -1) + (n.endsWith('9') ? '8' : '9');
-  return n.slice(0, i) + swap[n[i]] + n.slice(i + 1);
-};
-
-const isoToDmy = (iso: string) => {
-  const [y, m, d] = iso.split('-');
-  return y && m && d ? `${d}/${m}/${y}` : iso;
-};
 
 interface IdLookupStepProps {
   value?: IdLookupValue;
@@ -797,106 +674,23 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
   const correctionUnlocked = verifyThenFetch && scanAttempts >= 3;
 
   const scannerBlock = effectiveScannable && (
-    <div className="space-y-2">
-      {/* Neutral until the reader has identified the document. Naming a
-          type here ("Scan Qatar ID (QID)") before anything has been read
-          asserts the answer to the question the scan exists to answer -
-          and would be simply wrong for the Diplomatic ID the same reader
-          detects. Once a scan has resolved, it names what was found -
-          "Document detected: X" (2026-09-28), moved up from inside
-          QidImageUpload's card to replace this heading rather than
-          duplicate it. Same wording QidImageUpload used to show: "Qatar
-          ID" for QID, the type itself for the other three. */}
-      <p className="text-[length:var(--fs-label)] text-fg-2">
-        {value.idNumber && !verifyThenFetch ? `Document detected: ${idType === 'QID' ? 'Qatar ID' : idType}` : 'Scan identity document'}
-      </p>
-      {contextNoDocument ? (
-        <div role="status" className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-6 text-center space-y-1">
-          <p className="text-fg font-semibold">No identity document on file for {contextNoDocument}</p>
-          <p className="text-fg-2 text-[length:var(--fs-caption)]">There is no card to read for this customer. Enter the ID number manually.</p>
-        </div>
-      ) : (
-      <QidImageUpload
-        identity={contextIdentity}
-        value={value.qidScans ?? {}}
-        onChange={(qidScans) => {
-          // A Retake DISCARDS the previous read - the number that was
-          // extracted and the MOI result fetched from it. Without this the
-          // screen contradicted itself: the scanner showed a rescan in
-          // progress while "MOI validated successfully" and the prefilled
-          // identity fields stayed on display, for a document the reader
-          // was at that moment re-reading. (Before retakes drove the
-          // reader, the same contradiction showed the insert prompt
-          // instead of a spinner.)
-          //
-          // This fires on the clear QidImageUpload performs at the START
-          // of a retake pass, which is also what keeps the auto-fetch
-          // effect below from re-reading the number mid-pass: scanComplete
-          // goes false, so it resets and waits for the new capture. GuidedContactStep clears its
-          // six identity fields from a cleared moiResult on its own, and
-          // the step's isValid gate goes back to failing, so Continue is
-          // no longer available against a discarded read.
-          const stillComplete = Boolean(qidScans.frontScanned && qidScans.backScanned);
-          if (scanComplete && !stillComplete) {
-            setNotFound(false);
-            setExpiryMismatch(false);
-            onChange({ ...value, qidScans, idNumber: '', scannedExpiry: undefined, moiResult: undefined });
-            return;
-          }
-          // latest, not the closure: a retake's completion fires ~900ms after it
-          // started, through the onChange captured THEN - spreading that stale
-          // `value` restored the number the retake had just cleared.
-          onChange({ ...latest.current, qidScans });
-        }}
-        // Names the document in the card's captions and picks its
-        // artwork - the QID specimen must not stand in for a Diplomatic
-        // ID.
-        documentType={demoType ?? idType}
-        onScan={handleScanAttempt}
-        // DEMO ONLY - see QidImageUpload.demoTypes. All four are offered,
-        // including the two this journey cannot sell against, because the
-        // point is to show what each document looks like coming off the
-        // reader.
-        //
-        // Scoped to the scan-first flow. The eight journeys that still lead
-        // with a type selector would otherwise show two ways to pick a type
-        // on one screen, one of them labelled "demo" - which reads as a
-        // broken duplicate rather than as a demo aid.
-        demoTypes={!autoDetectIdType ? undefined : (['QID', 'Passport', 'GCC ID', 'Diplomatic ID'] as QidType[]).map((t) => ({
-          value: t,
-          // idTypeLabel, not the raw union member, so the link reads
-          // "Qatar ID" rather than "QID" while still carrying the type.
-          label: idTypeLabel(t),
-        }))}
-        onDemoScan={(t) => handleDemoScan(t as QidType)}
-        // DEMO ONLY, same scope as demoTypes above and for the same reason:
-        // the eight selector-led journeys have no "Document detected"
-        // auto-extraction step for a forced blur-then-retake to demonstrate,
-        // so only the scan-first flow gets the blurred-first-pass behaviour.
-        blurFirstScan={autoDetectIdType || verifyThenFetch}
-        hideUnclearNotice={verifyThenFetch}
-        // Budget spent: the reader is done, so the card stops offering to
-        // drive it and the error below becomes the only instruction.
-        // Switching ID type resets the budget (handleIdTypeChange), which
-        // is the one way back to scanning - a different document deserves
-        // its own attempts.
-        canScan={!fallbackUnlocked}
-        // Wording per the 2026-09-27 walkthrough. It names the barcode as
-        // well as manual entry because both are real fallbacks at the
-        // counter, and says "after the permitted attempts" so the agent
-        // knows the reader is out of tries rather than merely unlucky.
-        error={
-          fallbackUnlocked
-            ? [
-                'We could not read the document after the permitted attempts.',
-                'Select the ID type and enter the number manually to continue.',
-                "Manual entry requires Store Manager's approval for activation.",
-              ]
-            : undefined
-        }
-      />
-      )}
-    </div>
+    <IdScannerPanel
+      value={value}
+      onChange={onChange}
+      latest={latest}
+      idType={idType}
+      verifyThenFetch={Boolean(verifyThenFetch)}
+      autoDetectIdType={Boolean(autoDetectIdType)}
+      contextNoDocument={contextNoDocument}
+      contextIdentity={contextIdentity}
+      scanComplete={scanComplete}
+      setNotFound={setNotFound}
+      setExpiryMismatch={setExpiryMismatch}
+      demoType={demoType}
+      handleScanAttempt={handleScanAttempt}
+      handleDemoScan={handleDemoScan}
+      fallbackUnlocked={fallbackUnlocked}
+    />
   );
 
   // FALLBACK ONLY as of 2026-09-28 for the scan-first flow. Automatic

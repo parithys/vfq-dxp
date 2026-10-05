@@ -5,7 +5,8 @@ import { Drawer } from '../primitives/Drawer';
 import { Input } from '../primitives/Input';
 import { Button } from '../primitives/Button';
 import { ErrorBanner } from '../primitives/ErrorBanner';
-import { QidImageUpload, type QidImageUploadValue } from '../domain/QidImageUpload';
+import { QidImageUpload } from '../domain/QidImageUpload';
+import { type QidImageUploadValue } from '../domain/qidImageUploadModel';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
 
 interface VerificationGateProps {

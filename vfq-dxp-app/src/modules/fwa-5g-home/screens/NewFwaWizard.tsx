@@ -1,14 +1,15 @@
 import { useNavigate } from 'react-router-dom';
 import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
-import { GuidedContactStep, isValidAltPhone, isValidEmail, hasIdentityDetails } from '../../../components/patterns/GuidedContactStep';
-import type { GuidedContactValue } from '../../../components/patterns/GuidedContactStep';
+import { GuidedContactStep } from '../../../components/patterns/GuidedContactStep';
+import { isValidAltPhone, isValidEmail, hasIdentityDetails } from '../../../components/patterns/guidedContactModel';
+import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
 import { AddressSelectionStep } from '../../../components/patterns/AddressSelectionStep';
 import { ProductPlanStep } from '../../../components/patterns/ProductPlanStep';
 import { MsisdnPicker } from '../../../components/domain/MsisdnPicker';
 import { AppointmentBookingStep } from '../../../components/patterns/AppointmentBookingStep';
 import type { AppointmentBookingValue } from '../../../components/patterns/AppointmentBookingStep';
 import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCapture';
-import type { CafType } from '../../../components/patterns/CafSignatureCapture';
+import type { CafType } from '../../../components/patterns/cafTypes';
 import { ActivityCommentsStep } from '../../../components/patterns/ActivityCommentsStep';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';

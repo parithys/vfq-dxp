@@ -3,7 +3,7 @@ import { GuidedActivationWizard } from '../../../components/patterns/GuidedActiv
 import { IdLookupStep } from '../../../components/patterns/IdLookupStep';
 import { ProductPlanStep } from '../../../components/patterns/ProductPlanStep';
 import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCapture';
-import type { CafType } from '../../../components/patterns/CafSignatureCapture';
+import type { CafType } from '../../../components/patterns/cafTypes';
 import { ActivityCommentsStep } from '../../../components/patterns/ActivityCommentsStep';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';

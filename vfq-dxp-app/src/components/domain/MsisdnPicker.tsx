@@ -9,142 +9,12 @@ import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useAuthStore } from '../../stores/authStore';
 import { usePersonaStore } from '../../stores/personaStore';
 import { Checkbox } from '../primitives/Checkbox';
-import { isQatarMobileLocalNumber } from '../primitives/countryDialCodes';
 import { SearchField } from '../../components/primitives/SearchField';
-import {
-  FREE_NUMBER_PRICE_CEILING_QAR,
-  STAR_NUMBER_ENTITLEMENT_MULTIPLIER,
-  starNumberOverageQar,
-} from '../../engines/postpaidPricing';
+import { FREE_NUMBER_PRICE_CEILING_QAR, STAR_NUMBER_ENTITLEMENT_MULTIPLIER, starNumberOverageQar } from '../../engines/postpaidPricing';
+import { TAB_LABELS, TAB_ORDER, RETAIL_SALES_PERSONA_ID, toLocalMsisdn, MAX_RESERVATIONS_PER_AGENT, PAGE_SIZE, SORT_OPTIONS, FREE_SORT_OPTIONS, SORTERS, isValidMsisdn, STAT_ICONS } from './msisdnPickerModel';
+import type { MsisdnRecord, NumberTab, SortKey } from './msisdnPickerModel';
+import { StarStat } from './StarStat';
 
-interface MsisdnRecord {
-  msisdn: string;
-  category: string;
-  status: string;
-  priceQAR: number;
-  valueTier?: string;
-  /** Who holds the reservation, on a Reserved record. */
-  reservedBy?: string;
-  /** When the reservation was made (ISO), on a Reserved record. */
-  reservedAt?: string;
-}
-
-/**
- * The three tabs, which do NOT all filter on the same axis - and that is the
- * point rather than an inconsistency.
- *
- * 'Free' and 'Star' are now PRICE BANDS (2026-09-28 direction: "show only
- * numbers priced from QAR 0 up to, but not including, QAR 1,000" under Free -
- * the ceiling itself moved to QAR 1,500 on 2026-09-30), not the stored
- * `category` field - see FREE_NUMBER_PRICE_CEILING_QAR (postpaidPricing.ts)
- * for why this is also a correctness fix, not just a rename: star-number-
- * tiers.json's own lowest tier starts at 1000
- * (STAR-TIER-01, valueRangeMin 1000), so a handful of seeded numbers
- * category='Star' priced 300-900 already matched no tier at all - "Not
- * banded" on a number that was never going to be. Pricing the tabs
- * themselves means those numbers now land where they actually behave: no
- * lock-in, no tier, same as every other number under 1000. 'Reserved' is a
- * STATUS and cuts across both bands, so a reserved Star number appears there
- * rather than falling out of the UI entirely - which is what happened when
- * Reserved numbers were simply hidden.
- */
-type NumberTab = 'Free' | 'Star' | 'Reserved';
-
-const TAB_LABELS: Record<NumberTab, string> = {
-  Free: 'Free Numbers',
-  Star: 'Star Numbers',
-  Reserved: 'Reserved Numbers',
-};
-
-/**
- * Tab ORDER is fixed for every channel as of 2026-09-28: Free, Star,
- * Reserved. This replaces the channel-based order used until then (Retail -
- * Reserved, Star, Free; Tablet/field - Free, Star, Reserved), which existed
- * so a retail agent working a number the customer already held would see it
- * first. That job now belongs to the auto-select-on-load effect below
- * instead of the tab ORDER itself - an agent whose customer holds a reserved
- * number lands on the Reserved tab regardless of channel, while the tabs
- * themselves stay in one predictable order for everyone.
- */
-// Reserved, Star, Free (VFQ business, 2026-10-02) - reversing the 2026-09-28 Free, Star, Reserved order.
-const TAB_ORDER: NumberTab[] = ['Reserved', 'Star', 'Free'];
-
-/** The Retail Sales Agent persona (personas.json ROLE-01): Reserved opens first when numbers are held, and is hidden - Star opens instead - when none are. */
-const RETAIL_SALES_PERSONA_ID = 'ROLE-01';
-
-/**
- * Qatar MSISDNs are stored E.164 (+9743300...) but shown as the bare 8-digit
- * local number: every number in this picker is Qatari, so the country code is
- * the same eleven characters on every row and carries no information the agent
- * is choosing between. Grouped 4+4, which is how they are read aloud.
- */
-function toLocalMsisdn(msisdn: string): string {
-  const local = msisdn.replace(/[\s-]/g, '').replace(/^\+?974/, '');
-  return /^\d{8}$/.test(local) ? `${local.slice(0, 4)} ${local.slice(4)}` : msisdn;
-}
-
-/**
- * How many numbers one agent may hold at a time (2026-09-28 direction).
- * Applied to the action that creates a hold, not to selecting one already
- * held - re-picking your own reservation is not a new one.
- */
-const MAX_RESERVATIONS_PER_AGENT = 2;
-
-/** How many numbers are shown at once before Next/Previous: 20, four rows of five (was 10, 2026-10-04). */
-const PAGE_SIZE = 20;
-
-/**
- * Sort orders, offered on Free and Star, NOT Reserved.
- *
- * Both bands now have real price spread to sort by: Star is 1000 and up,
- * and Free (2026-09-28's price-band split moved the 300-900 rows that used
- * to read category='Star' in here) runs 0-999 - no longer the flat QR0 list
- * it used to be, so a price sort is no longer a no-op there either. Reserved
- * stays excluded: it is a short held-numbers list an agent scans rather than
- * ranks, capped at MAX_RESERVATIONS_PER_AGENT, where a sort control would
- * answer a question nobody asks of it.
- *
- * Reserved therefore sorts by NUMBER_ASC implicitly, with no control on
- * screen. An earlier revision showed the dropdown everywhere on the
- * reasoning that a control changing its options per tab is hard to trust; the
- * better answer is not to show a control that cannot act.
- */
-type SortKey = 'price-desc' | 'price-asc' | 'number-asc' | 'number-desc';
-
-// Both directions for BOTH keys. Offering "Number: ascending" without its
-// descending counterpart made the one key asymmetric against the other - price
-// had two directions and number one - so the menu implied number order was
-// somehow one-way.
-const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: 'price-desc', label: 'Price: high to low' },
-  { value: 'price-asc', label: 'Price: low to high' },
-  { value: 'number-asc', label: 'Number: ascending' },
-  { value: 'number-desc', label: 'Number: descending' },
-];
-
-/**
- * Free's own sort menu (2026-09-30), number-only - deliberately NOT the same
- * four options Star offers. Every Free number is free to the customer
- * regardless of its catalogue price (see showSort's own note below), so a
- * price sort here would rank rows by a figure the customer never pays -
- * exactly the reasoning that kept Free without a sort control at all until
- * now. Restricted to a subset of SORT_OPTIONS rather than a second literal
- * list, so the wording can never drift from Star's.
- */
-const FREE_SORT_OPTIONS = SORT_OPTIONS.filter((o) => o.value === 'number-asc' || o.value === 'number-desc');
-
-const SORTERS: Record<SortKey, (a: MsisdnRecord, b: MsisdnRecord) => number> = {
-  // Ties broken by number, so a page of equally-priced numbers holds a stable
-  // order instead of reshuffling on every render.
-  'price-desc': (a, b) => b.priceQAR - a.priceQAR || a.msisdn.localeCompare(b.msisdn),
-  'price-asc': (a, b) => a.priceQAR - b.priceQAR || a.msisdn.localeCompare(b.msisdn),
-  'number-asc': (a, b) => a.msisdn.localeCompare(b.msisdn),
-  'number-desc': (a, b) => b.msisdn.localeCompare(a.msisdn),
-};
-
-
-// ranking, not the alphabet. Values not listed here sort after everything
-// that is.
 
 interface MsisdnPickerProps {
   selected?: string;
@@ -181,40 +51,6 @@ interface MsisdnPickerProps {
   /** No longer read: the Reserved tab always shows its green "Reserved" pill (2026-10-04 design). Kept so existing callers still compile. */
   hideReservedBadge?: boolean;
 }
-
-// A full Qatar MSISDN: +974 followed by an 8-digit mobile local number
-// (isQatarMobileLocalNumber - same leading-digit rule GuidedContactStep's
-// isValidAltPhone uses) - stricter than that general validator since a
-// number being reserved here must be a complete, dialable MSISDN with the
-// +974 prefix present, not any alternate-contact phone shape.
-function isValidMsisdn(raw: string): boolean {
-  const digits = raw.replace(/[\s-]/g, '');
-  return digits.startsWith('+974') && isQatarMobileLocalNumber(digits.slice(4));
-}
-
-const STAT_ICONS = {
-  wallet: 'M3 6h15a3 3 0 0 1 3 3v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6z M3 6a2 2 0 0 1 2-2h11 M16 13h5',
-  tag: 'M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z M7.5 7.5h.01',
-  lock: 'M6 11h12v10H6z M8 11V8a4 4 0 0 1 8 0v3 M12 15v2',
-};
-
-/** One fact on a Star-number card: an icon tile, a muted label and a bold value. `alert` is the red upfront charge. */
-function StarStat({ icon, label, value, alert = false }: { icon: string; label: string; value: string; alert?: boolean }) {
-  return (
-    <div className="flex items-center gap-3 min-w-0">
-      <span
-        className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-button)] ${alert ? 'bg-surface-warm text-accent' : 'bg-surface text-fg-2'}`}
-      >
-        <Icon path={icon} className="w-5 h-5" />
-      </span>
-      <div className="min-w-0">
-        <p className={`text-[length:var(--fs-caption)] ${alert ? 'text-accent' : 'text-fg-2'}`}>{label}</p>
-        <p className={`font-bold text-[length:var(--fs-body)] leading-tight ${alert ? 'text-accent' : 'text-fg'}`}>{value}</p>
-      </div>
-    </div>
-  );
-}
-
 
 // Pattern 10: Number Selection / Reservation Step - 8-digit search box + Free/Reserved
 // toggle, matching MSISDNs shown as selectable priced tiles; selecting triggers

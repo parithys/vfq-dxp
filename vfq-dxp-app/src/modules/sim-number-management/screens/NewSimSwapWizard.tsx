@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
 import { IdLookupStep } from '../../../components/patterns/IdLookupStep';
 import { QidImageUpload } from '../../../components/domain/QidImageUpload';
-import type { QidImageUploadValue } from '../../../components/domain/QidImageUpload';
+import type { QidImageUploadValue } from '../../../components/domain/qidImageUploadModel';
 import { SimSerialScanner } from '../../../components/domain/SimSerialScanner';
 import { SimSwapFormStep } from '../../../components/patterns/SimSwapFormStep';
 import type { SimSwapFormValue } from '../../../components/patterns/SimSwapFormStep';

@@ -1,35 +1,46 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useJourneyCustomerLock } from './useJourneyCustomerLock';
 import { useCustomerContext } from '../../stores/customerContextStore';
 import { useCustomerBenefits } from './useCustomerBenefits';
-import { useNotificationStore } from '../../stores/notificationStore';
 import { GuidedActivationWizard } from '../../components/patterns/GuidedActivationWizard';
 import { monthlyCharges, starEntitlementQar } from '../../engines/postpaidPricing';
-import { GuidedContactStep, isValidAltPhone, isValidEmail, hasIdentityDetails, emailVerification, maskEmail } from '../../components/patterns/GuidedContactStep';
-import type { GuidedContactValue } from '../../components/patterns/GuidedContactStep';
+import { GuidedContactStep } from '../../components/patterns/GuidedContactStep';
+import { isValidAltPhone, isValidEmail, hasIdentityDetails, emailVerification, maskEmail } from '../../components/patterns/guidedContactModel';
+import type { GuidedContactValue } from '../../components/patterns/guidedContactModel';
 import { ZsbAddressStep } from '../../components/patterns/ZsbAddressStep';
 import type { ZsbAddressValue } from '../../components/patterns/ZsbAddressStep';
-import { BillingAccountAutoResolver, BillingAccountStep, isBillingAccountValid } from '../../components/patterns/BillingAccountStep';
-import type { BillingAccountValue } from '../../components/patterns/BillingAccountStep';
-import { PostpaidPlanAddonsStep, SUPPORTING_ID_DISCOUNT_TYPES } from '../../components/patterns/PostpaidPlanAddonsStep';
+import { BillingAccountAutoResolver } from '../../components/patterns/BillingAccountAutoResolver';
+import { BillingAccountStep } from '../../components/patterns/BillingAccountStep';
+import { isBillingAccountValid } from '../../components/patterns/billingAccountModel';
+import type { BillingAccountValue } from '../../components/patterns/billingAccountModel';
+import { PostpaidPlanAddonsStep } from '../../components/patterns/PostpaidPlanAddonsStep';
+import { SUPPORTING_ID_DISCOUNT_TYPES } from '../../components/patterns/postpaidPlanModel';
 import { MsisdnPicker } from '../../components/domain/MsisdnPicker';
 import { EligibilityGateStep } from '../../components/domain/EligibilityGateStep';
-import type { EligibilityResult } from '../../components/domain/EligibilityGateStep';
+import type { EligibilityResult } from '../../components/domain/eligibilityTypes';
 import { SimTypeStep } from '../../components/domain/SimTypeStep';
 import type { SimTypeValue } from '../../components/domain/SimTypeStep';
 import { CheckoutSummaryStep } from '../../components/patterns/CheckoutSummaryStep';
-import type { TncLegalFacts, CheckoutTotals, SummaryTable } from '../../components/patterns/CheckoutSummaryStep';
+import type { TncLegalFacts, CheckoutTotals } from '../../components/patterns/checkoutSummaryModel';
+import type { SummaryTable } from '../../components/patterns/CheckoutSummaryTables';
 import { WinCashPaymentStep } from '../../components/patterns/WinCashPaymentStep';
 import type { WinCashPaymentValue } from '../../components/patterns/WinCashPaymentStep';
 import { CafSignatureCapture } from '../../components/patterns/CafSignatureCapture';
-import type { CafType } from '../../components/patterns/CafSignatureCapture';
+import type { CafType } from '../../components/patterns/cafTypes';
 import type { AdditionalDocument } from '../../components/domain/AdditionalDocumentsUpload';
 import { ActivationCompleteScreen } from '../../components/patterns/ActivationCompleteScreen';
-import {
-  EligibilityOutcomePanel, OutcomeActions, OfferDecisionActions, journeyLabel, CustomerStatusBanner, CustomerTypeStep, isCustomerTypeValid, CrossSalesStep, isCrossSalesValid, PlanSourceBanner, 
-} from './steps';
-import type { CustomerTypeValue, CrossSalesValue } from './steps';
-import { STORE_MANAGER_ROLE, COLLECTION_TEAM_ROLE } from './steps';
+import { EligibilityOutcomePanel, OutcomeActions } from './eligibilityOutcomes';
+import { OfferDecisionActions } from './journeyActions';
+import { journeyLabel } from './serviceJourneys';
+import { CustomerStatusBanner, PlanSourceBanner } from './steps';
+import { CustomerTypeStep } from './customerTypeStep';
+import { isCustomerTypeValid } from './customerTypeModel';
+import { CrossSalesStep } from './crossSalesStep';
+import { isCrossSalesValid } from './crossSalesModel';
+import type { CustomerTypeValue } from './customerTypeModel';
+import type { CrossSalesValue } from './crossSalesModel';
+import { STORE_MANAGER_ROLE, COLLECTION_TEAM_ROLE } from './customerTypeModel';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { logActivity } from '../../engines/activityEngine';
 import { useEntityStore } from '../../stores/entityStore';
@@ -38,64 +49,8 @@ import { useWorkflowStore } from '../../stores/workflowStore';
 import { Modal } from '../../components/primitives/Modal';
 import { DemoFaultPanel } from '../../components/patterns/DemoFaultPanel';
 import { Button } from '../../components/primitives/Button';
-
-// Two flows, chosen by where the journey was started (2026-10-02):
-//  - 'new'      Agent 360 (Dashboard) or Mobile Connections: the customer is
-//               ALWAYS treated as NEW. Full scan -> NAS lookup; even an ID that
-//               has a Siebel record proceeds as a new customer.
-//  - 'existing' Customer Details: the customer is already identified, so the
-//               Customer Identification step opens pre-resolved with the ID
-//               locked (read-only); eligibility still runs.
-// Separate wizard ids keep their drafts from overwriting each other.
-export type NewConnectionFlow = 'new' | 'existing';
-const WIZARD_ID_BY_FLOW: Record<NewConnectionFlow, string> = { new: 'new-connection', existing: 'new-connection-existing' };
-
-// Placeholder pending business confirmation (2026-09-28: "Do not assume
-// Agent 360 as the destination, as this has not been finalised. Keep the
-// post-exit destination configurable until confirmed"). A single named
-// constant rather than a config-engine entry: the value itself is explicitly
-// unconfirmed, so a whole schema/file for it would be structure built for a
-// requirement that does not exist yet. Change this one line - used by both
-// Save & Exit and Abandon - once the real destination is decided.
-const POST_EXIT_DESTINATION = '/';
-// Save & Exit lands on the agent's Draft Orders list.
-const DRAFT_ORDERS_PATH = '/tasks?filter=draft-orders';
-
-
-interface Product {
-  productId: string;
-  name: string;
-  mrcQAR: number;
-  starNumberEntitlementQar?: number;
-  /** See PostpaidPlanAddonsStep's PostpaidPlan.preBundledOffer for what this
-   * drives - the 'plan' step's autoAdvanceWhen below is the other half. */
-  preBundledOffer?: boolean;
-}
-
-interface ConfirmedOrder {
-  orderId: string;
-  activityId?: string;
-  pendingApproval: boolean;
-  customerName: string;
-  msisdn: string;
-  planName: string;
-  dueTodayQar: number;
-  monthlyRecurringQar: number;
-  simType?: string;
-  /** Set only for eSIM orders - drives the QR handover panel below. */
-  esimActivationCode?: string;
-  /**
-   * The account's own contact email, whatever it is - no longer gated on
-   * verification (2026-09-28: "populate it only from existing account
-   * contact emails," shown even when unverified so the agent can see why
-   * sending is blocked). See customerEmailVerified for the gate itself.
-   */
-  customerEmail?: string;
-  /** The address as Customer Identification shows it (masked for a new customer). */
-  customerEmailDisplay?: string;
-  /** Same definition as GuidedContactStep's own emailVerification tick. */
-  customerEmailVerified: boolean;
-}
+import { WIZARD_ID_BY_FLOW, POST_EXIT_DESTINATION, DRAFT_ORDERS_PATH } from './newConnectionModel';
+import type { NewConnectionFlow, Product, ConfirmedOrder } from './newConnectionModel';
 
 
 // New Connection: the end-to-end activation journey - Customer Identification
@@ -124,93 +79,22 @@ export function NewConnectionWizard({ flow = 'new' }: { flow?: NewConnectionFlow
   // ---- Active customer context -------------------------------------------------------------
   // Once the customer is identified, the journey is bound to them until it is explicitly ended
   // (Close Activity, Save & Exit, Abandon Order, session end). See customerContextStore.
-  const active = useCustomerContext((s) => s.journey);
   const isMirrorWindow = new URLSearchParams(location.search).get('mirror') === '1';
   const draftValues = useWorkflowStore((s) => s.drafts[WIZARD_ID]?.values);
   const draftStep = useWorkflowStore((s) => s.drafts[WIZARD_ID]?.currentStep);
   const draftContact = draftValues?.contact as GuidedContactValue | undefined;
   const draftCustomerId = (draftValues?.eligibility as EligibilityResult | undefined)?.customerId;
+  const { active, heldByAnotherJourney, guardedContactChange } = useJourneyCustomerLock({
+    flow,
+    wizardId: WIZARD_ID,
+    existingCustomerId,
+    isMirrorWindow,
+    draftContact,
+    draftCustomerId,
+    draftStep,
+  });
   // Discounts follow the customer this journey is for: the route's customer, or the one the identity check resolved.
   const customerBenefits = useCustomerBenefits(flow === 'existing' ? existingCustomerId : draftCustomerId);
-  // The entry point decides the customer type: opened from Customer 360 for customer X, this IS the
-  // Existing Customer journey, even if X is still held by a New Customer journey left from earlier
-  // (e.g. started at the Dashboard and abandoned). That stale hold is released, not obeyed.
-  const staleSameCustomer = Boolean(
-    flow === 'existing' && existingCustomerId && active && active.wizardId !== WIZARD_ID && active.customerId === existingCustomerId
-  );
-  // Likewise a New Customer entry (Dashboard, Mobile > New Connections) with nobody identified yet starts
-  // a New Customer journey; a hold left by another journey does not redirect it.
-  const freshNewEntry = Boolean(flow === 'new' && active && active.wizardId !== WIZARD_ID && !draftContact?.moiResult);
-  const releaseStale = staleSameCustomer || freshNewEntry;
-  const heldByAnotherJourney = Boolean(active && active.wizardId !== WIZARD_ID) && !releaseStale;
-  useEffect(() => {
-    if (isMirrorWindow) return; // the customer's pop-up only displays
-    const store = useCustomerContext.getState();
-    if (releaseStale) store.endJourney();
-    if (heldByAnotherJourney) {
-      // A different customer's journey is in progress: this entry point cannot take over.
-      useNotificationStore.getState().pushToast('warning', `A journey for ${active?.customerName} is in progress`, {
-        key: 'customer-context-locked',
-        detail: 'Close Activity, Save & Exit or Abandon Order to start another customer.',
-      });
-      navigate(active!.path, { replace: true });
-      return;
-    }
-    if (draftContact?.moiResult && draftContact.idNumber) {
-      store.beginJourney({
-        wizardId: WIZARD_ID,
-        path: location.pathname,
-        journey: flow === 'existing' ? 'New Connection - Existing Customer' : 'New Connection - New Customer',
-        customerName: draftContact.moiResult.name,
-        idNumber: draftContact.idNumber,
-        customerId: draftCustomerId,
-        startedAt: new Date().toISOString(),
-      });
-      if (draftCustomerId) store.patchJourney(WIZARD_ID, { customerId: draftCustomerId });
-    } else if (store.journey?.wizardId === WIZARD_ID && !store.journey.finalOrder) {
-      store.endJourney(WIZARD_ID); // nothing identified in this draft (e.g. started fresh): no stale hold
-    }
-  }, [isMirrorWindow, heldByAnotherJourney, releaseStale, active, draftContact?.moiResult, draftContact?.idNumber, draftContact?.moiResult?.name, draftCustomerId, WIZARD_ID, flow, location.pathname, navigate]);
-  // The held customer's segment, once their record is known: from the customer being viewed when it is the
-  // same person, else from their record.
-  const heldCustomerId = active?.wizardId === WIZARD_ID ? active.customerId : undefined;
-  const heldSegment = active?.wizardId === WIZARD_ID ? active.segment : undefined;
-  useEffect(() => {
-    if (isMirrorWindow || !heldCustomerId || heldSegment) return;
-    const viewed = useCustomerContext.getState().customer;
-    if (viewed?.customerId === heldCustomerId) {
-      useCustomerContext.getState().patchJourney(WIZARD_ID, { segment: viewed.segment });
-      return;
-    }
-    let cancelled = false;
-    void mockDataEngine.list<{ customerId: string; segment: string }>('customers').then((all) => {
-      const segment = all.find((c) => c.customerId === heldCustomerId)?.segment;
-      if (!cancelled && segment) useCustomerContext.getState().patchJourney(WIZARD_ID, { segment });
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [isMirrorWindow, heldCustomerId, heldSegment, WIZARD_ID]);
-  // Identity is fixed once fetched: nothing may change which customer this journey is for.
-  const guardedContactChange = (v: GuidedContactValue, setValue: (f: string, val: unknown) => void) => {
-    const held = useCustomerContext.getState().journey;
-    if (held?.wizardId === WIZARD_ID && !isMirrorWindow) {
-      const changesIdentity = v.idNumber !== held.idNumber || Boolean(v.moiResult && v.moiResult.name !== held.customerName);
-      // On the Customer Identification page itself the agent may change the document type (and so the
-      // identity) at any time: the hold is released and re-taken when the new document resolves. From the
-      // next step on, the customer is fixed.
-      if (changesIdentity && (draftStep ?? 0) === 0) {
-        useCustomerContext.getState().endJourney(WIZARD_ID);
-      } else if (changesIdentity) {
-        useNotificationStore.getState().pushToast('warning', `This journey is for ${held.customerName}`, {
-          key: 'customer-context-locked',
-          detail: 'The customer cannot be changed mid-journey. Save & Exit or Abandon Order to start again.',
-        });
-        return;
-      }
-    }
-    setValue('contact', v);
-  };
   // Set when the agent records an Interested outcome: shows the "Lead Created"
   // confirmation: Go to Leads leaves for the Leads page, Close just dismisses it.
   const [createdLead, setCreatedLead] = useState<{ leadId: string; offerName?: string } | null>(null);
@@ -246,7 +130,6 @@ export function NewConnectionWizard({ flow = 'new' }: { flow?: NewConnectionFlow
   if (confirmedOrder) {
     return <ActivationCompleteScreen order={confirmedOrder} />;
   }
-
 
   return (
     <div className="p-8">

@@ -11,7 +11,7 @@ import { buildAssetsFieldResolver } from './sections/assetsResolvers';
 import type { TelesalesContext } from './telesalesTabs';
 
 // Shared pieces of the Telesales Overview page (card shell, rows, pills, masonry grid) and its Additional
-// Information strip. The page's sections live in telesalesSectionsA/B/C.
+// Information strip. The page's sections live in the telesales*Section.tsx files.
 
 export const I = {
   user: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',

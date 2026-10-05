@@ -4,7 +4,7 @@ import { Input } from '../../../components/primitives/Input';
 import { PhoneNumberInput } from '../../../components/primitives/PhoneNumberInput';
 import { IdLookupStep } from '../../../components/patterns/IdLookupStep';
 import { QidImageUpload } from '../../../components/domain/QidImageUpload';
-import type { QidImageUploadValue } from '../../../components/domain/QidImageUpload';
+import type { QidImageUploadValue } from '../../../components/domain/qidImageUploadModel';
 import { SignatureCapture } from '../../../components/patterns/SignatureCapture';
 import { Badge } from '../../../components/primitives/Badge';
 import { useState } from 'react';
