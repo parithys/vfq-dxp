@@ -144,8 +144,10 @@ export function C360AddressService({
             longitude={(primary as unknown as { longitude?: number } | undefined)?.longitude}
           />
         </Panel>
+      </div>
 
-        <Panel icon={IC.signalTower} title="Service Availability" action={<ActionButton onClick={undefined} disabled>Check Another Address</ActionButton>} className="@6xl:col-span-3">
+      <div className="grid grid-cols-1 @4xl:grid-cols-2 gap-4 items-stretch">
+        <Panel icon={IC.signalTower} title="Service Availability" action={<ActionButton onClick={undefined} disabled>Check Another Address</ActionButton>}>
           <ul>
             {AVAILABILITY.map((a) => {
               const has = labels.filter((l) => a.match.test(l));
@@ -174,26 +176,6 @@ export function C360AddressService({
             </li>
           </ul>
         </Panel>
-      </div>
-
-      <div className="grid grid-cols-1 @4xl:grid-cols-2 gap-4 items-start">
-        <Panel icon={IC.pin} title={`Other Addresses (${others.length})`} action={<ActionButton disabled>Add Address</ActionButton>} flush>
-          <div className="px-2 pb-3">
-            <GridTable
-              cols={[
-                { key: 'n', header: '#', render: (_r, i) => i + 1 },
-                { key: 'type', header: 'Address Type', render: (a) => (a.primaryStatus ? String(a.primaryStatus) : 'Other') },
-                { key: 'address', header: 'Address', render: (a) => addressLine(a) || '-' },
-                { key: 'source', header: 'Source', render: () => <Dv k="addressSource" /> },
-                { key: 'status', header: 'Status', render: (a) => <StatusPill status={a.activeFlag === false ? 'Inactive' : 'Active'} /> },
-                { key: 'actions', header: 'Actions', render: () => <KebabButton /> },
-              ]}
-              rows={others}
-              rowKey={(a) => a.id}
-              empty="No other addresses on file."
-            />
-          </div>
-        </Panel>
 
         <Panel icon={IC.calendar} title="Installation / Service Information">
           <DetailRows
@@ -216,6 +198,26 @@ export function C360AddressService({
               },
             ]}
           />
+        </Panel>
+      </div>
+
+      <div>
+        <Panel icon={IC.pin} title={`Other Addresses (${others.length})`} action={<ActionButton disabled>Add Address</ActionButton>} flush>
+          <div className="px-2 pb-3">
+            <GridTable
+              cols={[
+                { key: 'n', header: '#', render: (_r, i) => i + 1 },
+                { key: 'type', header: 'Address Type', render: (a) => (a.primaryStatus ? String(a.primaryStatus) : 'Other') },
+                { key: 'address', header: 'Address', render: (a) => addressLine(a) || '-' },
+                { key: 'source', header: 'Source', render: () => <Dv k="addressSource" /> },
+                { key: 'status', header: 'Status', render: (a) => <StatusPill status={a.activeFlag === false ? 'Inactive' : 'Active'} /> },
+                { key: 'actions', header: 'Actions', render: () => <KebabButton /> },
+              ]}
+              rows={others}
+              rowKey={(a) => a.id}
+              empty="No other addresses on file."
+            />
+          </div>
         </Panel>
       </div>
 
