@@ -173,15 +173,15 @@ export function Sidebar() {
         />
       )}
       <nav
-        className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-200 ease-in-out ${
+        className={`fixed inset-y-0 left-0 z-50 w-[280px] transform transition-transform duration-200 ease-in-out ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         } ${
           // Expanded: an in-flow rail. Collapsed: gone, except while the top-bar menu button is hovered, when it
           // floats over the page (still fixed, above the content) without taking any width.
           !collapsedPref
-            ? 'md:static md:inset-auto md:z-auto md:translate-x-0 md:w-64'
+            ? 'md:static md:inset-auto md:z-auto md:translate-x-0 md:w-[280px]'
             : peeking
-              ? 'md:translate-x-0 md:w-64 md:shadow-xl'
+              ? 'md:translate-x-0 md:w-[280px] md:shadow-xl'
               : 'md:hidden'
         } shrink-0 border-r border-[var(--nav-border)] bg-[var(--nav-bg)] h-full overflow-y-auto`}
         onMouseEnter={collapsedPref ? openPeek : undefined}
