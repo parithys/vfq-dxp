@@ -5,7 +5,7 @@ import { computeBillingSummary, type Customer360Data } from '../../../engines/cu
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { overdueTicketCount } from './accountInformationResolvers';
 import { leadResolvers } from './leadResolvers';
-import { IC, IconTile, KpiGrid, KpiTile, LinkAction, Panel, Pill, StatusPill, UnderlineTabs, Donut, fmtDate, fmtDateTime, qar, toneFor } from './C360Kit';
+import { IC, IconTile, KpiGrid, KpiTile, LinkAction, Panel, Pill, StatusPill, UnderlineTabs, UsageBar, fmtDate, fmtDateTime, qar, toneFor } from './C360Kit';
 import type { Tone } from './C360Kit';
 import { RevealValue, useFieldAccess } from '../fieldAccess';
 import { Dv } from '../demoValues';
@@ -327,15 +327,13 @@ export function C360Overview({ data, services, goToTab }: { data: Customer360Dat
           />
           {usageTab === 'balance' ? (
             <>
-              <div className="grid grid-cols-4 gap-1 pt-3 pb-2 items-start">
-                <Donut pct={pct(dataLeft, dataTotal)} value={dataLeft !== undefined ? `${dataLeft} GB` : '-'} unit={dataTotal ? `of ${dataTotal} GB` : undefined} caption="Data" />
-                <Donut pct={pct(voiceLeft, voiceTotal)} value={voiceLeft ?? '-'} unit={voiceTotal ? `of ${voiceTotal} Mins` : undefined} caption="Voice" />
-                <Donut pct={pct(smsLeft, smsTotal)} value={smsLeft ?? '-'} unit={smsTotal ? `of ${smsTotal} SMS` : undefined} caption="Text" />
-                <div className="flex flex-col items-center gap-1">
-                  <div className="w-20 h-20 rounded-full border border-[var(--danger-border)] bg-[color-mix(in_oklab,var(--accent),var(--bg)_94%)] flex items-center justify-center text-accent font-bold text-[length:var(--fs-body)] text-center leading-tight px-1">
-                    {balance?.mainBalanceQAR != null ? qar(balance.mainBalanceQAR) : '-'}
-                  </div>
-                  <span className="text-fg-2 text-[length:var(--fs-caption)] text-center">Primary Balance</span>
+              <div className="space-y-4 pt-4 pb-3">
+                <UsageBar label="Data" pct={pct(dataLeft, dataTotal)} value={dataLeft !== undefined ? `${dataLeft} GB` : '-'} unit={dataTotal ? `of ${dataTotal} GB` : undefined} />
+                <UsageBar label="Voice" pct={pct(voiceLeft, voiceTotal)} value={voiceLeft ?? '-'} unit={voiceTotal ? `of ${voiceTotal} Mins` : undefined} />
+                <UsageBar label="Text" pct={pct(smsLeft, smsTotal)} value={smsLeft ?? '-'} unit={smsTotal ? `of ${smsTotal} SMS` : undefined} />
+                <div className="flex items-baseline justify-between gap-3 text-[length:var(--fs-body)]">
+                  <span className="text-fg-2">Primary Balance</span>
+                  <span className="font-bold text-accent">{balance?.mainBalanceQAR != null ? qar(balance.mainBalanceQAR) : '-'}</span>
                 </div>
               </div>
               <div className="divide-y divide-border-soft">

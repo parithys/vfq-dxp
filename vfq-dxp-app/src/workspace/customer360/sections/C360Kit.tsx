@@ -428,6 +428,22 @@ export function Progress({ pct, tone = 'red' }: { pct: number; tone?: Tone }) {
   );
 }
 
+/** One allowance as a labelled bar: the label on the left, "value of total" on the right, the fill underneath. */
+export function UsageBar({ pct, value, unit, label }: { pct: number; value: ReactNode; unit?: string; label: string }) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-baseline justify-between gap-3 text-[length:var(--fs-body)]">
+        <span className="text-fg-2">{label}</span>
+        <span className="text-right">
+          <span className="font-bold text-fg">{value}</span>
+          {unit && <span className="text-muted text-[length:var(--fs-caption)]"> {unit}</span>}
+        </span>
+      </div>
+      <Progress pct={pct} />
+    </div>
+  );
+}
+
 /** Ring gauge: value over unit, with a caption underneath (12 GB of 50 GB / Data). */
 export function Donut({ pct, value, unit, caption }: { pct: number; value: ReactNode; unit?: string; caption?: string }) {
   const r = 34;
