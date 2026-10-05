@@ -44,7 +44,7 @@ export function WizardRail({
       return !v;
     });
   return (
-    <nav aria-label="Journey steps" className={`${expanded ? 'w-72' : 'w-16'} shrink-0 self-stretch bg-bg border-r border-[var(--field-card-border)]`}>
+    <nav aria-label="Journey steps" className={`${expanded ? 'w-64' : 'w-16'} shrink-0 self-stretch bg-bg border-r border-[var(--field-card-border)]`}>
     <div className="sticky top-0">
     <button
       type="button"
@@ -83,29 +83,33 @@ export function WizardRail({
                   }
                 : undefined
             }
-            title={expanded ? undefined : step.label}
-            className={`flex items-start gap-3 py-4 border-l-2 ${expanded ? 'px-4' : 'justify-center px-0'} ${isActive ? 'bg-surface-warm border-l-accent' : 'border-l-transparent'} ${
-              isReachable ? 'cursor-pointer hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)]' : ''
-            }`}
+            className={`group relative min-h-12 flex items-center border-l-2 border-l-transparent transition-colors ${expanded ? 'px-5 gap-3' : 'justify-center'} ${
+              isActive ? 'bg-accent text-accent-on' : 'text-fg-2'
+            } ${isReachable ? 'cursor-pointer hover:bg-surface-warm hover:text-accent focus:outline-none focus-visible:shadow-[var(--focus-ring)]' : ''}`}
           >
-            <span
-              className={`flex items-center justify-center w-7 h-7 rounded-[var(--radius-circle)] text-[length:var(--fs-caption)] font-medium shrink-0
-                ${isDone ? 'bg-success text-white' : isActive ? 'bg-accent text-accent-on' : 'bg-light-neutral text-muted'}`}
-            >
-              {isDone ? <Icon path={CHECK} className="w-3.5 h-3.5" strokeWidth={3.5} /> : i + 1}
+            <span className={`w-5 shrink-0 text-center text-[length:var(--fs-body)] font-medium ${isDone && !isActive ? 'text-success' : ''}`}>
+              {isDone ? <Icon path={CHECK} className="w-5 h-5" strokeWidth={3} /> : i + 1}
             </span>
-            {expanded && <div className="min-w-0">
-              {/* Every step label is --fg; weight alone marks the active
-                  one. The inactive labels were --fg-2, which on the rail's
-                  white card read as disabled rather than merely
-                  not-current - and reachable steps are clickable, so
-                  looking unavailable was wrong. The step's description
-                  below stays --muted, so the two lines still separate. */}
-              <div className={`truncate text-fg ${isActive ? 'font-semibold' : 'font-medium'}`}>{step.label}</div>
-              {step.description && (
-                <div className="text-[length:var(--fs-caption)] text-muted mt-0.5 truncate">{step.description}</div>
-              )}
-            </div>}
+            {expanded && (
+              <div className="min-w-0 py-2">
+                <div className={`truncate text-[length:var(--fs-body)] ${isActive ? 'font-semibold' : 'font-medium text-fg'}`}>{step.label}</div>
+                {step.description && (
+                  <div className={`text-[length:var(--fs-caption)] mt-0.5 truncate ${isActive ? 'text-accent-on' : 'text-muted'}`}>{step.description}</div>
+                )}
+              </div>
+            )}
+            {!expanded && (
+              // Overlay label, same as the Customer 360 rail: over the page, never shifts the layout.
+              <span
+                aria-hidden="true"
+                className={`pointer-events-none absolute left-0 top-0 z-30 hidden h-full items-center gap-3 pl-[18px] pr-5 whitespace-nowrap rounded-r-[var(--radius-sm)] border border-l-0 border-[var(--field-card-border)] shadow-raised text-[length:var(--fs-body)] opacity-0 transition-opacity duration-100 lg:flex group-hover:opacity-100 group-focus-within:opacity-100 ${
+                  isActive ? 'bg-accent text-accent-on font-semibold border-transparent' : 'bg-surface-warm text-fg font-medium'
+                }`}
+              >
+                <span className="w-5 text-center">{isDone ? <Icon path={CHECK} className="w-5 h-5" strokeWidth={3} /> : i + 1}</span>
+                {step.label}
+              </span>
+            )}
           </li>
         );
       })}
