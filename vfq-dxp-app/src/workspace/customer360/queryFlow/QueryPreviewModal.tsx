@@ -129,26 +129,26 @@ export function QueryPreviewModal({
           <DetailRows rows={summary} />
         </section>
         <section>
+          <h3 className="text-fg font-semibold text-[length:var(--fs-body)] mb-2">Recent Tickets</h3>
+          {openTickets.length === 0 ? (
+            <p className="rounded-[var(--radius-card)] bg-[color-mix(in_oklab,var(--success),var(--bg)_90%)] text-success px-4 py-3 text-[length:var(--fs-body)]">No open tickets found.</p>
+          ) : (
+            <ul className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] divide-y divide-border-soft">
+              {openTickets.slice(0, 3).map((t) => (
+                <li key={String(t.ticketId)} className="flex items-center gap-3 px-4 py-2.5 text-[length:var(--fs-body)]">
+                  <span className="text-fg font-medium">{String(t.ticketId)}</span>
+                  <span className="flex-1 min-w-0 truncate text-fg-2">{text(t.actualIssue) ?? text(t.category)}</span>
+                  <Pill tone="amber">{String(t.status)}</Pill>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+        <section>
           <h3 className="text-fg font-semibold text-[length:var(--fs-body)] mb-1">Additional Details</h3>
           <DetailRows rows={additional} />
         </section>
       </div>
-      <section className="mt-6">
-        <h3 className="flex items-center gap-2 text-fg font-semibold text-[length:var(--fs-body)] mb-2">Recent Tickets</h3>
-        {openTickets.length === 0 ? (
-          <p className="rounded-[var(--radius-card)] bg-[color-mix(in_oklab,var(--success),var(--bg)_90%)] text-success px-4 py-3 text-[length:var(--fs-body)]">No open tickets found.</p>
-        ) : (
-          <ul className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] divide-y divide-border-soft">
-            {openTickets.slice(0, 3).map((t) => (
-              <li key={String(t.ticketId)} className="flex items-center gap-3 px-4 py-2.5 text-[length:var(--fs-body)]">
-                <span className="text-fg font-medium">{String(t.ticketId)}</span>
-                <span className="flex-1 min-w-0 truncate text-fg-2">{text(t.actualIssue) ?? text(t.category)}</span>
-                <Pill tone="amber">{String(t.status)}</Pill>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
     </Drawer>
   );
 }
