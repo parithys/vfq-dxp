@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../../components/primitives/Icon';
+import { OsmEmbed } from '../../../components/domain/OsmEmbed';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
@@ -135,11 +136,12 @@ export function C360AddressService({
           icon={IC.pin}
           title="Map View"
         >
-          <div className="h-52 rounded-[var(--radius-card)] bg-[var(--surface)] border border-border-soft flex flex-col items-center justify-center gap-2 text-center px-4">
-            <Icon path={IC.pin} className="w-8 h-8 text-accent" />
-            <p className="text-fg-2 text-[length:var(--fs-body)]">{primary ? addressLine(primary) : 'No address selected'}</p>
-            <p className="text-muted text-[length:var(--fs-caption)]">A map preview isn't available in this app.</p>
-          </div>
+          <p className="text-fg-2 text-[length:var(--fs-body)] mb-3">{primary ? addressLine(primary) : 'No address selected'}</p>
+          <OsmEmbed
+            title="Map of the customer's address"
+            latitude={(primary as unknown as { latitude?: number } | undefined)?.latitude}
+            longitude={(primary as unknown as { longitude?: number } | undefined)?.longitude}
+          />
         </Panel>
 
         <Panel icon={IC.signalTower} title="Service Availability" action={<ActionButton onClick={undefined} disabled>Check Another Address</ActionButton>}>
