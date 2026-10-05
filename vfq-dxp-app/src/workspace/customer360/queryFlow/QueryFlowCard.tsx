@@ -52,12 +52,14 @@ export function QueryFlowCard({
   services,
   onTicketCreated,
   focusSignal = 0,
+  goToTab,
 }: {
   data: Customer360Data;
   services: CustomerService[];
   onTicketCreated?: (ticket: Record<string, unknown>) => void;
   /** Bumped by "New Ticket" elsewhere: returns to the search step, focuses the box and brings the card into view. */
   focusSignal?: number;
+  goToTab?: (key: string) => void;
 }) {
   const catalogue = useQueryIssueCatalogue();
   const createRecord = useEntityStore((s) => s.createRecord);
@@ -229,6 +231,10 @@ export function QueryFlowCard({
               catalogue={catalogue}
               onClose={() => setPreviewOpen(false)}
               onCloseInteraction={() => reset('Interaction closed without raising a ticket.')}
+              onOpenTickets={() => {
+                setPreviewOpen(false);
+                goToTab?.('tickets-support');
+              }}
               onCreateTicket={() => {
                 setPreviewOpen(false);
                 setCreating(true);

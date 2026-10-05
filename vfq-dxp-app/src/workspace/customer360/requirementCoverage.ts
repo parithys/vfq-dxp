@@ -36,7 +36,8 @@ export function useRequirementCoverage(root: RefObject<HTMLElement | null>, pers
         if (labels.size === 0) return;
         el.querySelectorAll('*').forEach((n) => {
           // The tab rail is navigation, not content.
-          if (n.children.length === 0 && !n.closest('ol') && labels.has(norm((n as HTMLElement).dataset?.req ?? n.textContent))) n.classList.add('req-met');
+          // Side drawers that carry their own (non-audit) labels opt out with data-coverage-ignore.
+          if (n.children.length === 0 && !n.closest('ol') && !n.closest('[data-coverage-ignore]') && labels.has(norm((n as HTMLElement).dataset?.req ?? n.textContent))) n.classList.add('req-met');
         });
       };
       apply();

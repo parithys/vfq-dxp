@@ -1,8 +1,11 @@
+import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { Drawer } from '../../../components/primitives/Drawer';
+import { Icon } from '../../../components/primitives/Icon';
 import { Button } from '../../../components/primitives/Button';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
-import { DetailRows, IC, IconTile, Pill, fmtDate, qar } from '../sections/C360Kit';
+import { IC, IconTile, Pill, StatusPill, fmtDate, qar } from '../sections/C360Kit';
 import { previewFieldsFor, serviceTypeLabel } from './queryFlowModel';
 import type { QueryIssue, QueryIssueCatalogue } from './queryFlowModel';
 
@@ -10,6 +13,39 @@ type Rec = Record<string, unknown>;
 const NOT_ON_FILE = 'Not on file';
 const text = (v: unknown): string | undefined => (v === undefined || v === null || v === '' ? undefined : String(v));
 const CLOSED = /closed|cancel|solved|complete|reject/i;
+
+/** A contained section: icon + title header, optionally collapsible. */
+function SectionCard({ icon, title, open = true, onToggle, children }: { icon: string; title: string; open?: boolean; onToggle?: () => void; children: ReactNode }) {
+  const head = (
+    <>
+      <Icon path={icon} className="w-5 h-5 shrink-0 text-fg" />
+      <h3 className="flex-1 min-w-0 text-fg font-semibold text-[length:var(--fs-body-lg)] text-left">{title}</h3>
+      {onToggle && <Icon path={IC.chevDown} className={`w-4 h-4 shrink-0 text-fg-2 transition-transform ${open ? 'rotate-180' : ''}`} />}
+    </>
+  );
+  return (
+    <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
+      {onToggle ? (
+        <button type="button" onClick={onToggle} aria-expanded={open} className="w-full flex items-center gap-2.5 px-4 py-3 rounded-[var(--radius-card)] focus:outline-none focus-visible:shadow-[var(--focus-ring)]">
+          {head}
+        </button>
+      ) : (
+        <div className="flex items-center gap-2.5 px-4 py-3">{head}</div>
+      )}
+      {open && <div className="px-4 pb-4">{children}</div>}
+    </section>
+  );
+}
+
+/** One label / value row. Labels are always the secondary text colour; a missing value reads muted. */
+function FieldRow({ label, value, strong = false, muted = false }: { label: string; value: string; strong?: boolean; muted?: boolean }) {
+  return (
+    <div className="flex items-start justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
+      <dt className="text-fg-2">{label}</dt>
+      <dd className={`min-w-0 break-words text-right ${muted ? 'text-muted' : strong ? 'text-fg font-semibold' : 'text-fg'}`}>{value}</dd>
+    </div>
+  );
+}
 
 /** Preview of what the agent should know before raising the ticket - every value read from the customer's own records. */
 export function QueryPreviewModal({
@@ -23,6 +59,7 @@ export function QueryPreviewModal({
   onClose,
   onCloseInteraction,
   onCreateTicket,
+  onOpenTickets,
 }: {
   open: boolean;
   issue: QueryIssue;
@@ -35,6 +72,8 @@ export function QueryPreviewModal({
   onClose: () => void;
   onCloseInteraction: () => void;
   onCreateTicket: () => void;
+  /** Opens the Tickets & Support tab (the preview closes). */
+  onOpenTickets: () => void;
 }) {
   const account = data.accounts[0] as (Customer360Data['accounts'][number] & { barringStatus?: string; barringType?: string | null }) | undefined;
   const billingProfile = data.billingProfiles[0] as Rec | undefined;
@@ -97,7 +136,16 @@ export function QueryPreviewModal({
     { label: 'Query Category', value: issue.category ?? 'Category pending' },
     { label: 'Query Service Type', value: serviceTypeLabel(serviceType) },
   ];
-  const additional = fields.map((f) => ({ label: f, value: resolve[f]?.() ?? NOT_ON_FILE }));
+  const rows = fields.map((f) => ({ label: f, value: resolve[f]?.() }));
+  // Additional Details sub-groups. A field the workbook lists that fits none of them falls under "Other Details".
+  const GROUPS: { title: string; match: RegExp }[] = [
+    { title: 'Account & Plan', match: /^(Account Number|Plan Name|MSISDN|SIM State|Billing Profile)$/ },
+    { title: 'Limits & Balance', match: /^(Credit Limit|Bill Limit|Surepay Balance|Advance Credit Taken)/ },
+    { title: 'Recent Activity', match: /^(In Progress Ticket|Recent OOB Charge|Recent Payment|Last Recharge)/ },
+  ];
+  const grouped = [...GROUPS.map((g) => ({ title: g.title, rows: rows.filter((r) => g.match.test(r.label)) })), { title: 'Other Details', rows: rows.filter((r) => !GROUPS.some((g) => g.match.test(r.label))) }].filter((g) => g.rows.length > 0);
+  const [detailsOpen, setDetailsOpen] = useState(true);
+  const recentTickets = openTickets.slice(0, 3);
 
   return (
     <Drawer
@@ -130,31 +178,53 @@ export function QueryPreviewModal({
         </>
       }
     >
-      <div className="space-y-6">
-        <section>
-          <h3 className="text-fg font-semibold text-[length:var(--fs-body)] mb-1">Query Summary</h3>
-          <DetailRows rows={summary} />
-        </section>
-        <section>
-          <h3 className="text-fg font-semibold text-[length:var(--fs-body)] mb-2">Recent Tickets</h3>
-          {openTickets.length === 0 ? (
-            <p className="rounded-[var(--radius-card)] bg-[color-mix(in_oklab,var(--success),var(--bg)_90%)] text-success px-4 py-3 text-[length:var(--fs-body)]">No open tickets found.</p>
+      <div className="space-y-6" data-coverage-ignore>
+        <SectionCard icon={IC.info} title="Query Summary">
+          <dl>
+            {summary.map((r) => (
+              <FieldRow key={r.label} label={r.label} value={r.value} strong />
+            ))}
+          </dl>
+        </SectionCard>
+
+        <SectionCard icon={IC.headset} title={`Recent Tickets (${openTickets.length})`}>
+          {recentTickets.length === 0 ? (
+            <p className="text-muted text-[length:var(--fs-body)] py-2">No recent tickets</p>
           ) : (
-            <ul className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] divide-y divide-border-soft">
-              {openTickets.slice(0, 3).map((t) => (
-                <li key={String(t.ticketId)} className="flex items-center gap-3 px-4 py-2.5 text-[length:var(--fs-body)]">
-                  <span className="text-fg font-medium">{String(t.ticketId)}</span>
-                  <span className="flex-1 min-w-0 truncate text-fg-2">{text(t.actualIssue) ?? text(t.category)}</span>
-                  <Pill tone="amber">{String(t.status)}</Pill>
+            <ul>
+              {recentTickets.map((t) => (
+                <li key={String(t.ticketId)} className="border-b border-border-soft last:border-0">
+                  <button
+                    type="button"
+                    onClick={onOpenTickets}
+                    aria-label={`Open ${String(t.ticketId)} in Tickets & Support`}
+                    className="w-full flex items-center gap-3 py-2.5 text-left text-[length:var(--fs-body)] rounded-[var(--radius-sm)] focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+                  >
+                    <span className="text-fg font-semibold shrink-0">{String(t.ticketId)}</span>
+                    <span className="flex-1 min-w-0 truncate text-fg-2">{text(t.actualIssue) ?? text(t.category)}</span>
+                    <StatusPill status={String(t.status)} />
+                    <Icon path={IC.chevRight} className="w-4 h-4 text-fg shrink-0" />
+                  </button>
                 </li>
               ))}
             </ul>
           )}
-        </section>
-        <section>
-          <h3 className="text-fg font-semibold text-[length:var(--fs-body)] mb-1">Additional Details</h3>
-          <DetailRows rows={additional} />
-        </section>
+        </SectionCard>
+
+        <SectionCard icon={IC.clipboard} title="Additional Details" open={detailsOpen} onToggle={() => setDetailsOpen((o) => !o)}>
+          <div className="space-y-4">
+            {grouped.map((g) => (
+              <div key={g.title}>
+                <h4 className="text-fg font-semibold text-[length:var(--fs-caption)] mb-1">{g.title}</h4>
+                <dl>
+                  {g.rows.map((r) => (
+                    <FieldRow key={r.label} label={r.label} value={r.value ?? NOT_ON_FILE} muted={r.value === undefined} />
+                  ))}
+                </dl>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
       </div>
     </Drawer>
   );

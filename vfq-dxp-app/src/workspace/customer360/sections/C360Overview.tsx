@@ -161,7 +161,7 @@ export function C360Overview({ data, services, goToTab, onTicketCreated, queryFo
 
   return (
     <div className="space-y-4">
-      <QueryFlowCard data={data} services={services} onTicketCreated={onTicketCreated} focusSignal={queryFocus} />
+      <QueryFlowCard data={data} services={services} onTicketCreated={onTicketCreated} focusSignal={queryFocus} goToTab={goToTab} />
       <KpiGrid cols={3}>
         <KpiTile icon={IC.users} tone="blue" label="Total Connections" value={services.length} chevron onClick={goToTab ? () => goToTab('products-services') : undefined} />
         <KpiTile icon={IC.shieldCheck} tone="green" label="Active Services" value={services.filter(isActive).length} chevron onClick={goToTab ? () => goToTab('products-services') : undefined} />
