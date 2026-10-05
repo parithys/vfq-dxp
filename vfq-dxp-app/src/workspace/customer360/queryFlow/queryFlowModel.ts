@@ -166,3 +166,47 @@ export function routeTicket(issue: QueryIssue, customer: { segment?: string; nat
 
 /** How a service type reads on a tag: the workbook's "Any" is shown as "Others". */
 export const serviceTypeLabel = (t: string): string => (t === 'Any' ? 'Others' : t);
+
+/**
+ * Customer 360 areas the search also finds, so the agent can jump to a feature as well as raise a query. `tab` is the
+ * Customer 360 tab that holds it; `label` is how it is named on screen; `also` are other names for it (panel titles on
+ * the Overview, common wording). Shown only for tabs the signed-in role actually has.
+ */
+export interface C360Section {
+  label: string;
+  tab: string;
+  also?: string[];
+}
+export const C360_SECTIONS: C360Section[] = [
+  { label: 'Overview', tab: 'overview' },
+  { label: 'Account Information', tab: 'account-info', also: ['Account Summary', 'Account Hierarchy', 'Account Manager', 'Pending Work & Actions', 'Contact Hierarchy', 'Recent Milestones'] },
+  { label: 'Products & Services', tab: 'products-services', also: ['Connections', 'Services', 'Add-ons', 'Usage & Behaviour', 'Plan & Usage', 'Service Types'] },
+  { label: 'Billing & Payments', tab: 'billing', also: ['Bills', 'Payment Methods', 'Dunning & Barring', 'Bill Settings', 'Outstanding'] },
+  { label: 'Offers & Leads', tab: 'offers-leads', also: ['Offers & Opportunities', 'Next Best Offer', 'Your Eligibility', 'Active Leads', 'Lead History', 'Lead Information'] },
+  { label: 'Contact & Identity', tab: 'contact-identity', also: ['Identity Information', 'Contact Information', 'Contact Role & Relationship', 'Addresses', 'Additional Information'] },
+  { label: 'Orders', tab: 'orders', also: ['Order History', 'Pending Actions'] },
+  { label: 'Tickets & Support', tab: 'tickets-support', also: ['Tickets', 'Trouble Tickets', 'Support'] },
+  { label: 'Activities', tab: 'activities', also: ['Recent Activity', 'Interactions'] },
+  { label: 'Alerts & Risks', tab: 'alerts-risks', also: ['Alerts', 'Risk & Eligibility Indicators', 'Notifications / Notes', 'Blacklist'] },
+  { label: 'Address & Service', tab: 'address-service', also: ['Customer Address', 'Map View', 'Service Availability', 'Installation / Service Information', 'Other Addresses'] },
+];
+
+export interface C360Hit {
+  /** What matched, as written (the section itself or one of its other names). */
+  text: string;
+  section: C360Section;
+}
+
+/** Sections whose name, or one of their other names, contains every keyword (word-start match), best name first. */
+export function searchC360Sections(term: string, hasTab: (tab: string) => boolean): C360Hit[] {
+  const keywords = queryKeywords(term);
+  if (keywords.length === 0) return [];
+  const hits: C360Hit[] = [];
+  for (const section of C360_SECTIONS) {
+    if (!hasTab(section.tab)) continue;
+    const names = [section.label, ...(section.also ?? [])];
+    const text = names.find((n) => matchRanges(n, keywords));
+    if (text) hits.push({ text, section });
+  }
+  return hits;
+}

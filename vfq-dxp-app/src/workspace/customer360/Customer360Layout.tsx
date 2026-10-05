@@ -454,7 +454,7 @@ export function Customer360Layout() {
   const tabProps = { data, services, goToTab: openTab, startNewTicket };
   const tabs: TabItem[] = headerOnly
     ? [
-        ...retailTab('overview', 'Overview', ['Account Information'], <C360Overview {...tabProps} onTicketCreated={addTicket} queryFocus={queryFocus} />),
+        ...retailTab('overview', 'Overview', ['Account Information'], <C360Overview {...tabProps} onTicketCreated={addTicket} queryFocus={queryFocus} hasTab={(key) => tabs.some((t) => t.key === key)} />),
         ...retailTab('account-info', 'Account Information', ['Account Information'], <C360AccountInformation {...tabProps} onEdit={editContact} />),
         ...retailTab('products-services', 'Products & Services', ['Assets'], <C360ProductsServices {...tabProps} />),
         ...retailTab('billing', 'Billing & Payments', ['Billing & Payments'], <C360BillingPayments {...tabProps} />),

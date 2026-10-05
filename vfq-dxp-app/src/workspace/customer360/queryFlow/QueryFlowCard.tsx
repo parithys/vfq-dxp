@@ -10,7 +10,7 @@ import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { IC, IconTile, Pill, SearchBox } from '../sections/C360Kit';
 import { QueryPreviewModal } from './QueryPreviewModal';
-import { QUERY_SERVICE_TYPES, TICKET_ISSUE_TYPES, deriveQueryServiceType, matchRanges, queryKeywords, routeTicket, searchQueryIssues, serviceTypeLabel, useQueryIssueCatalogue } from './queryFlowModel';
+import { QUERY_SERVICE_TYPES, TICKET_ISSUE_TYPES, deriveQueryServiceType, matchRanges, queryKeywords, routeTicket, searchC360Sections, searchQueryIssues, serviceTypeLabel, useQueryIssueCatalogue } from './queryFlowModel';
 import type { QueryIssue } from './queryFlowModel';
 
 const BACK_ICON = 'M19 12H5 M12 19l-7-7 7-7';
@@ -54,6 +54,7 @@ export function QueryFlowCard({
   onTicketCreated,
   focusSignal = 0,
   goToTab,
+  hasTab,
 }: {
   data: Customer360Data;
   services: CustomerService[];
@@ -61,6 +62,8 @@ export function QueryFlowCard({
   /** Bumped by "New Ticket" elsewhere: returns to the search step, focuses the box and brings the card into view. */
   focusSignal?: number;
   goToTab?: (key: string) => void;
+  /** Whether this role has the Customer 360 tab; sections of tabs it lacks are not offered. */
+  hasTab?: (key: string) => boolean;
 }) {
   const catalogue = useQueryIssueCatalogue();
   const createRecord = useEntityStore((s) => s.createRecord);
@@ -86,6 +89,7 @@ export function QueryFlowCard({
   }, [focusSignal, catalogue]);
 
   const keywords = useMemo(() => queryKeywords(query), [query]);
+  const sectionHits = useMemo(() => (goToTab ? searchC360Sections(query, hasTab ?? (() => true)) : []), [query, goToTab, hasTab]);
   const results = useMemo(() => (catalogue ? searchQueryIssues(catalogue.issues, query) : []), [catalogue, query]);
   const lines = useMemo(() => services.filter((s) => s.tab === 'mobile' || s.tab === 'fibre'), [services]);
   const service = lines.find((s) => s.ref === msisdnRef);
@@ -141,7 +145,9 @@ export function QueryFlowCard({
           {query.trim() && (
             <div aria-live="polite">
               <p className="text-fg font-semibold text-[length:var(--fs-body)] mb-2">Query Issues ({results.length})</p>
-              {results.length === 0 ? (
+              {results.length === 0 && sectionHits.length > 0 ? (
+                <p className="text-muted text-[length:var(--fs-body)]">No Query Issues match "{query.trim()}".</p>
+              ) : results.length === 0 ? (
                 <p className="text-muted text-[length:var(--fs-body)]">No Query Issues match "{query.trim()}". Try fewer or different keywords.</p>
               ) : (
                 <ul className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] divide-y divide-border-soft overflow-hidden">
@@ -160,6 +166,26 @@ export function QueryFlowCard({
                     </li>
                   ))}
                 </ul>
+              )}
+              {sectionHits.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-fg font-semibold text-[length:var(--fs-body)] mb-2">Customer 360 ({sectionHits.length})</p>
+                  <ul className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] divide-y divide-border-soft overflow-hidden">
+                    {sectionHits.map((h) => (
+                      <li key={h.section.tab + h.text}>
+                        <button
+                          type="button"
+                          onClick={() => goToTab?.(h.section.tab)}
+                          className="w-full flex flex-wrap items-center gap-3 px-4 py-2.5 text-left hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+                        >
+                          <span className="flex-1 min-w-48 text-fg text-[length:var(--fs-body)]"><Highlighted text={h.text} keywords={keywords} /></span>
+                          {h.text !== h.section.label && <span className="text-muted text-[length:var(--fs-caption)]">in {h.section.label}</span>}
+                          <Icon path={CHEVRON_RIGHT} className="w-4 h-4 text-fg shrink-0" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </div>
           )}
