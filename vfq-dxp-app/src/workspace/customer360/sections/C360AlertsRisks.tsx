@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Icon } from '../../../components/primitives/Icon';
 import { computeBillingSummary, type Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { useEntityStore } from '../../../stores/entityStore';
@@ -238,14 +237,7 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
               {
                 key: 'type',
                 header: 'Alert Type',
-                render: (a) => (
-                  <span className="flex items-center gap-2.5">
-                    <span className={`shrink-0 ${a.tone === 'red' ? 'text-accent' : a.tone === 'amber' ? 'text-[var(--warn-text)]' : a.tone === 'purple' ? 'text-[var(--info)]' : 'text-[var(--signal-blue)]'}`}>
-                      <Icon path={a.icon} className="w-4 h-4" />
-                    </span>
-                    <span className="break-words">{a.type}</span>
-                  </span>
-                ),
+                render: (a) => <span className="break-words">{a.type}</span>,
               },
               { key: 'description', header: 'Description', className: 'min-w-44 break-words' },
               { key: 'severity', header: 'Severity', render: (a) => <Pill tone={SEV_TONE[a.severity]}>{a.severity}</Pill> },
@@ -256,10 +248,7 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
                 header: 'Actions',
                 render: (a) =>
                   a.tab && goToTab ? (
-                    <span className="flex items-center gap-3">
-                      <ViewPill onClick={() => goToTab(a.tab as string)} />
-                      <Icon path={IC.chevRight} className="w-4 h-4 text-fg" />
-                    </span>
+                    <ViewPill onClick={() => goToTab(a.tab as string)} />
                   ) : (
                     '-'
                   ),

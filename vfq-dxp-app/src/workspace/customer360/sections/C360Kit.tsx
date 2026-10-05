@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import type { ReactNode } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
 import { RevealValue, useFieldAccess } from '../fieldAccess';
 
@@ -401,20 +401,91 @@ export function SearchBox({ value, onChange, placeholder }: { value: string; onC
   );
 }
 
-/** Compact labelled select used in filter rows (small caption over the value). */
+/**
+ * Compact labelled select used in filter rows (small caption over the value). A custom listbox rather than a native
+ * <select>: the browser draws a native popup over the field with the chosen option aligned to it, which is where the
+ * misplaced options came from. This one always opens directly under the field.
+ */
 export function FilterSelect({ label, value, options, onChange }: { label: string; value: string; options: { value: string; label: string }[]; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
+  const ref = useRef<HTMLDivElement>(null);
+  const selectedIndex = Math.max(0, options.findIndex((o) => o.value === value));
+  const selected = options[selectedIndex];
+  const id = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
+
+  const choose = (i: number) => {
+    onChange(options[i].value);
+    setOpen(false);
+  };
+  const onKeyDown = (e: ReactKeyboardEvent) => {
+    if (e.key === 'Escape' && open) {
+      e.stopPropagation();
+      setOpen(false);
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!open) {
+        setActive(selectedIndex);
+        setOpen(true);
+      } else {
+        setActive((i) => (e.key === 'ArrowDown' ? Math.min(options.length - 1, i + 1) : Math.max(0, i - 1)));
+      }
+    } else if ((e.key === 'Enter' || e.key === ' ') && open && active >= 0) {
+      e.preventDefault();
+      choose(active);
+    }
+  };
+
   return (
-    <label className="relative rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg px-3 pt-1 pb-1.5 min-w-36">
-      <span className="block text-muted text-[length:var(--fs-caption)] leading-tight">{label}</span>
-      <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full bg-transparent outline-none appearance-none pr-6 text-fg text-[length:var(--fs-body)] cursor-pointer">
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-      <Icon path={IC.chevDown} className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-fg-2" />
-    </label>
+    <div ref={ref} className="relative min-w-36" onKeyDown={onKeyDown}>
+      <button
+        type="button"
+        role="combobox"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={`${id}-list`}
+        onClick={() => {
+          setActive(selectedIndex);
+          setOpen((o) => !o);
+        }}
+        className="w-full text-left rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg px-3 pt-1 pb-1.5 pr-10 focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+      >
+        <span className="block text-muted text-[length:var(--fs-caption)] leading-tight">{label}</span>
+        <span className="block truncate text-fg text-[length:var(--fs-body)]">{selected?.label}</span>
+        <Icon path={IC.chevDown} className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-fg-2" />
+      </button>
+      {open && (
+        <ul
+          id={`${id}-list`}
+          role="listbox"
+          aria-label={label}
+          className="absolute left-0 top-full z-30 mt-1 min-w-full max-h-64 overflow-y-auto rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg py-1 shadow-raised"
+        >
+          {options.map((o, i) => (
+            <li
+              key={o.value}
+              role="option"
+              aria-selected={o.value === value}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => choose(i)}
+              onMouseEnter={() => setActive(i)}
+              className={`cursor-pointer whitespace-nowrap px-3 py-2 text-[length:var(--fs-body)] text-fg ${i === active ? 'bg-surface' : ''} ${o.value === value ? 'font-medium text-accent' : ''}`}
+            >
+              {o.label}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
