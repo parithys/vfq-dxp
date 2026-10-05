@@ -42,6 +42,8 @@ export function GlobalSearch() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
+  // Keyboard-highlighted row across Modules, Screens and Records (in display order); -1 = none.
+  const [active, setActive] = useState(-1);
   const [recordResults, setRecordResults] = useState<RecordResult[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -179,6 +181,18 @@ export function GlobalSearch() {
     return () => document.removeEventListener('mousedown', onClickOutside);
   }, []);
 
+  const flat = [
+    ...moduleMatches.map((m) => `/${m.moduleSlug}`),
+    ...screenMatches.map((r) => r.path),
+    ...recordResults.map((r) => r.path),
+  ];
+  const screenBase = moduleMatches.length;
+  const recordBase = moduleMatches.length + screenMatches.length;
+  useEffect(() => setActive(-1), [q, recordResults]);
+  useEffect(() => {
+    if (active >= 0) document.getElementById(`global-search-opt-${active}`)?.scrollIntoView({ block: 'nearest' });
+  }, [active]);
+
   const hasResults = moduleMatches.length > 0 || screenMatches.length > 0 || recordResults.length > 0;
 
   const go = (path: string) => {
@@ -193,6 +207,7 @@ export function GlobalSearch() {
       ref={inputRef}
       wrapperRef={containerRef}
       wrapperClassName="w-full max-w-md min-w-0"
+      className="py-2!"
       value={query}
       onChange={(e) => {
         setQuery(e.target.value);
@@ -200,6 +215,27 @@ export function GlobalSearch() {
       }}
       onFocus={() => setOpen(true)}
       onKeyDown={(e) => {
+        if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && q && flat.length > 0) {
+          e.preventDefault();
+          setOpen(true);
+          setActive((i) => (e.key === 'ArrowDown' ? (i + 1) % flat.length : (i <= 0 ? flat.length - 1 : i - 1)));
+          return;
+        }
+        // Enter opens the highlighted row; with none highlighted, the best match: an exact record id/label first, then the first record, screen or module.
+        if (e.key === 'Enter' && q) {
+          if (active >= 0 && flat[active]) {
+            e.preventDefault();
+            go(flat[active]);
+            return;
+          }
+          const exact = recordResults.find((r) => r.label.toLowerCase() === q);
+          const target = exact?.path ?? recordResults[0]?.path ?? screenMatches[0]?.path ?? (moduleMatches[0] ? `/${moduleMatches[0].moduleSlug}` : undefined);
+          if (target) {
+            e.preventDefault();
+            go(target);
+          }
+          return;
+        }
         if (e.key === 'Escape') {
           setOpen(false);
           inputRef.current?.blur();
@@ -207,6 +243,7 @@ export function GlobalSearch() {
       }}
       placeholder={scope.placeholder}
       aria-label="Global search"
+      aria-activedescendant={active >= 0 ? `global-search-opt-${active}` : undefined}
       onClear={() => {
         setQuery('');
         setOpen(false);
@@ -220,11 +257,12 @@ export function GlobalSearch() {
           {moduleMatches.length > 0 && (
             <div>
               <p className="px-4 pt-3 pb-1 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted">Modules</p>
-              {moduleMatches.map((m) => (
+              {moduleMatches.map((m, i) => (
                 <button
                   key={m.moduleId}
+                  id={`global-search-opt-${i}`}
                   onClick={() => go(`/${m.moduleSlug}`)}
-                  className="w-full flex items-center justify-between gap-2 px-4 py-2 text-left hover:bg-surface"
+                  className={`w-full flex items-center justify-between gap-2 px-4 py-2 text-left hover:bg-surface ${active === i ? 'bg-surface' : ''}`}
                 >
                   <span className="text-fg truncate">{m.module}</span>
                   <span className="text-muted text-[length:var(--fs-caption)] shrink-0">{m.screenCount} screens</span>
@@ -236,11 +274,12 @@ export function GlobalSearch() {
           {screenMatches.length > 0 && (
             <div className="border-t border-border-soft">
               <p className="px-4 pt-3 pb-1 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted">Screens</p>
-              {screenMatches.map((r) => (
+              {screenMatches.map((r, i) => (
                 <button
                   key={r.routeId}
+                  id={`global-search-opt-${screenBase + i}`}
                   onClick={() => go(r.path)}
-                  className="w-full flex items-center justify-between gap-2 px-4 py-2 text-left hover:bg-surface"
+                  className={`w-full flex items-center justify-between gap-2 px-4 py-2 text-left hover:bg-surface ${active === screenBase + i ? 'bg-surface' : ''}`}
                 >
                   <span className="text-fg truncate">{r.screenName}</span>
                   <span className="text-muted text-[length:var(--fs-caption)] shrink-0">{r.screenId}</span>
@@ -252,11 +291,12 @@ export function GlobalSearch() {
           {recordResults.length > 0 && (
             <div className="border-t border-border-soft">
               <p className="px-4 pt-3 pb-1 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted">Records</p>
-              {recordResults.map((r) => (
+              {recordResults.map((r, i) => (
                 <button
                   key={r.key}
+                  id={`global-search-opt-${recordBase + i}`}
                   onClick={() => go(r.path)}
-                  className="w-full flex items-center justify-between gap-2 px-4 py-2 text-left hover:bg-surface"
+                  className={`w-full flex items-center justify-between gap-2 px-4 py-2 text-left hover:bg-surface ${active === recordBase + i ? 'bg-surface' : ''}`}
                 >
                   <span className="text-fg truncate">
                     {r.label} <span className="text-muted text-[length:var(--fs-caption)]">· {r.kind}</span>

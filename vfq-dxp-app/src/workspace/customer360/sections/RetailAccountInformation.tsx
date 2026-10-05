@@ -42,9 +42,9 @@ export function RetailAccountInformation({ data, services }: { data: Customer360
         <Card icon={DETAILS_ICON} title="Account Details">
           <dl>
             <Row label="Primary MSISDN" value={info('Primary MSISDN')} />
-            <Row label="AM name" value={info('AM name')} />
-            <Row label="AM mobile" value={info('AM mobile')} />
-            <Row label="AM Email" value={info('AM Email')} />
+            <Row label="Account Manager Name" requirement="AM name" value={info('AM name')} />
+            <Row label="Account Manager Mobile" requirement="AM mobile" value={info('AM mobile')} />
+            <Row label="Account Manager Email" requirement="AM Email" value={info('AM Email')} />
             <Row label="Availability / escalation contact" value={info('Availability/escalation contact')} />
             <Row label="Segment" value={data.customer.segment} />
           </dl>

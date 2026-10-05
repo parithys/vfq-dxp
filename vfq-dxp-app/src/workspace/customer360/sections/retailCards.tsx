@@ -16,11 +16,11 @@ export function Card({ icon, title, children }: { icon: string; title: string; c
 }
 
 /** A label / value row; a row whose value is absent is not rendered. */
-export function Row({ label, value, end = false }: { label: string; value: ReactNode | undefined; end?: boolean }) {
+export function Row({ label, requirement, value, end = false }: { label: string; /** The requirement's own name, when the display label differs from it. */ requirement?: string; value: ReactNode | undefined; end?: boolean }) {
   if (value === undefined || value === null || value === '') return null;
   return (
     <div className="grid grid-cols-2 gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
-      <dt className="text-fg-2">{label}</dt>
+      <dt className="text-fg-2" data-req={requirement}>{label}</dt>
       <dd className={`text-fg font-medium min-w-0 break-words ${end ? 'text-right' : ''}`}>{value}</dd>
     </div>
   );
