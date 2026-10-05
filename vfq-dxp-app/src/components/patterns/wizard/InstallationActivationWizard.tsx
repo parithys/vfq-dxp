@@ -1,4 +1,6 @@
 import { useNavigate } from 'react-router-dom';
+import * as sums from './commonSummaries';
+import { attachSummaries } from './stepSummary';
 import { GuidedActivationWizard } from './GuidedActivationWizard';
 import { activityStep, contactStep, isCafValid, type CafValue } from './wizardSteps';
 import { MsisdnPicker } from '../../domain/MsisdnPicker';
@@ -57,7 +59,7 @@ export function InstallationActivationWizard({ config }: { config: InstallationW
       <GuidedActivationWizard
         wizardId={config.wizardId}
         title={config.title}
-        steps={[
+        steps={attachSummaries([
           contactStep({ hideIptvToggle: config.hideIptvToggle }),
           {
             key: 'address',
@@ -141,7 +143,14 @@ export function InstallationActivationWizard({ config }: { config: InstallationW
             isValid: (values) => isCafValid(values.caf as CafValue | undefined, config.cafNeedsSignature),
           },
           activityStep(),
-        ]}
+        ], {
+          contact: sums.contactFormSummary(),
+          address: sums.addressPickSummary(),
+          plan: sums.planSummary(),
+          number: sums.numberSummary(),
+          appointment: sums.appointmentSummary,
+          caf: sums.cafSummary,
+        })}
         onSubmit={async (values) => {
           const contact = values.contact as GuidedContactValue;
           const appointment = values.appointment as AppointmentBookingValue;

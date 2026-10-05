@@ -1,4 +1,6 @@
 import type { WizardStep } from '../../../components/patterns/wizard/guidedWizardTypes';
+import * as sums from '../../../components/patterns/wizard/commonSummaries';
+import { attachSummaries } from '../../../components/patterns/wizard/stepSummary';
 import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
 import { activityStep, contactStep, isCafValid, type CafValue } from '../../../components/patterns/wizard/wizardSteps';
 import { ZsbAddressStep } from '../../../components/patterns/ZsbAddressStep';
@@ -21,7 +23,7 @@ import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCa
 // pack + discount, and adds the BR-233 balance-forfeiture declaration to the CAF step (see NewMnpWizard.tsx
 // for the evidence behind each).
 export function buildMnpSteps(isPrepaid: boolean): WizardStep[] {
-  return [
+  return attachSummaries([
     contactStep({ hideIptvToggle: true }),
     {
       key: 'address',
@@ -162,5 +164,16 @@ export function buildMnpSteps(isPrepaid: boolean): WizardStep[] {
       isValid: (values) => isCafValid(values.caf as CafValue | undefined),
     },
     activityStep(),
-  ];
+  ], {
+    address: sums.addressFormSummary(),
+    billing: sums.billingProfileSummary,
+    sim: [
+      { key: 'serial', label: 'SIM Serial Number', type: 'text', sensitive: true, value: (v) => v.simSerial },
+      { key: 'valid', label: 'Validated', type: 'toggle', value: (v) => Boolean(v.simValid) },
+    ],
+    plan: sums.planDetailSummary,
+    'donor-details': sums.donorSummary,
+    'donor-attachment': sums.donorAttachmentSummary,
+    caf: sums.cafSummary,
+  });
 }

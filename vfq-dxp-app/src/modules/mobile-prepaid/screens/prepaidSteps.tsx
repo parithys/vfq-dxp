@@ -1,4 +1,6 @@
 import type { WizardStep } from '../../../components/patterns/wizard/guidedWizardTypes';
+import * as sums from '../../../components/patterns/wizard/commonSummaries';
+import { attachSummaries } from '../../../components/patterns/wizard/stepSummary';
 import type { IdLookupValue } from '../../../components/patterns/idLookupModel';
 import { MsisdnPicker } from '../../../components/domain/MsisdnPicker';
 import { EligibilityGateStep } from '../../../components/domain/EligibilityGateStep';
@@ -19,7 +21,7 @@ import type { WinCashPaymentValue } from '../../../components/patterns/WinCashPa
 // The New Prepaid Activation steps (Contact -> Eligibility -> Address -> Plan & Discount -> Number -> SIM Type ->
 // Checkout -> CAF & Key Information -> Payment). The step-to-requirement map is in NewPrepaidWizard.tsx.
 export function buildPrepaidSteps(): WizardStep[] {
-  return [
+  return attachSummaries([
     idLookupStep({ key: 'contact', label: 'Contact (ID capture)', field: 'contact' }),
     {
       key: 'eligibility',
@@ -166,5 +168,14 @@ export function buildPrepaidSteps(): WizardStep[] {
       ),
       isValid: (values) => Boolean((values.payment as WinCashPaymentValue | undefined)?.paid),
     },
-        ];
+        ], {
+    contact: sums.identitySummary('contact'),
+    address: sums.addressFormSummary(),
+    plan: [...sums.planSummary(), { key: 'discount', label: 'Discount', type: 'select', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.discountId }],
+    number: sums.numberSummary('priceQAR'),
+    simType: sums.simTypeFormSummary(),
+    checkout: [{ key: 'due', label: 'Total Payable Today', type: 'text', value: (v) => ((v.checkoutTotals as { totalDueQar?: number } | undefined)?.totalDueQar != null ? `QAR ${(v.checkoutTotals as { totalDueQar: number }).totalDueQar.toLocaleString('en-GB')}` : undefined) }],
+    caf: sums.cafSummary,
+    payment: sums.paymentSummary,
+  });
 }

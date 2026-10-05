@@ -1,4 +1,6 @@
 import { useNavigate } from 'react-router-dom';
+import * as sums from '../../../components/patterns/wizard/commonSummaries';
+import { attachSummaries } from '../../../components/patterns/wizard/stepSummary';
 import { idLookupStep } from '../../../components/patterns/wizard/wizardSteps';
 import type { IdLookupValue } from '../../../components/patterns/idLookupModel';
 import { GuidedActivationWizard } from '../../../components/patterns/wizard/GuidedActivationWizard';
@@ -29,7 +31,7 @@ export function PassportToQidWizard() {
       <GuidedActivationWizard
         wizardId={WIZARD_ID}
         title="Passport to QID Update"
-        steps={[
+        steps={attachSummaries([
           {
             key: 'msisdn-passport',
             label: 'MSISDN & Passport',
@@ -91,7 +93,14 @@ export function PassportToQidWizard() {
             ),
             isValid: () => Boolean(signatureDataUrl),
           },
-        ]}
+        ], {
+          'msisdn-passport': [
+            { key: 'msisdn', label: 'MSISDN', type: 'text', value: (v) => v.msisdn },
+            { key: 'passport', label: 'Passport Number', type: 'text', sensitive: true, value: (v) => v.passportNumber },
+          ],
+          'qid-entry': sums.identitySummary('qid'),
+          'qid-images': sums.idImagesSummary('qidImages'),
+        })}
         onSubmit={async (values) => {
           const qid = values.qid as IdLookupValue;
           const updateId = `PQU-${Date.now().toString().slice(-6)}`;

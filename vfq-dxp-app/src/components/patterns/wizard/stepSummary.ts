@@ -85,3 +85,8 @@ export function formatSummaryValue(
       return { text: mask(String(raw).trim()), empty: false };
   }
 }
+
+/** Sets each step's `summary` from a map keyed by step key (steps absent from the map keep none). */
+export function attachSummaries<S extends { key: string; summary?: SummaryField[] }>(steps: S[], summaries: Record<string, SummaryField[]>): S[] {
+  return steps.map((s) => (summaries[s.key] ? { ...s, summary: summaries[s.key] } : s));
+}

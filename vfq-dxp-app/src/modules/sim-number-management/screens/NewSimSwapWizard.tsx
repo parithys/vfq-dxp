@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import * as sums from '../../../components/patterns/wizard/commonSummaries';
+import { attachSummaries } from '../../../components/patterns/wizard/stepSummary';
 import { idLookupStep } from '../../../components/patterns/wizard/wizardSteps';
 import { GuidedActivationWizard } from '../../../components/patterns/wizard/GuidedActivationWizard';
 import { QidImageUpload } from '../../../components/domain/QidImageUpload';
@@ -41,7 +43,7 @@ export function NewSimSwapWizard({ msisdn, onDone }: NewSimSwapWizardProps) {
       <GuidedActivationWizard
         wizardId={`sim-swap-${msisdn}`}
         title="SIM Swap Request"
-        steps={[
+        steps={attachSummaries([
           idLookupStep({ key: 'contact-verification', label: 'Verify Contact', field: 'qid' }),
           {
             key: 'documents',
@@ -112,7 +114,16 @@ export function NewSimSwapWizard({ msisdn, onDone }: NewSimSwapWizardProps) {
               <ActivityCommentsStep value={(values.comments as string) ?? ''} onChange={(v) => setValue('comments', v)} />
             ),
           },
-        ]}
+        ], {
+          'contact-verification': sums.identitySummary('qid'),
+          documents: sums.idImagesSummary('qidImages'),
+          'sim-serial-reason': [
+            { key: 'serial', label: 'New SIM Serial', type: 'text', sensitive: true, value: (v) => v.newSimSerial },
+            { key: 'reason', label: 'Reason', type: 'text', value: (v) => v.simSwapReason },
+          ],
+          'sim-swap-form': [{ key: 'signed', label: 'Signed', type: 'toggle', value: (v) => Boolean((v.simSwapForm as { signatureDataUrl?: string } | undefined)?.signatureDataUrl) }],
+          comments: sums.commentsSummary,
+        })}
         onSubmit={async (values) => {
           const simSwapOrderId = `SSW-${Date.now().toString().slice(-6)}`;
           const reason = values.simSwapReason as string;

@@ -1,4 +1,6 @@
 import { useNavigate } from 'react-router-dom';
+import * as sums from '../../../components/patterns/wizard/commonSummaries';
+import { attachSummaries } from '../../../components/patterns/wizard/stepSummary';
 import { GuidedActivationWizard } from '../../../components/patterns/wizard/GuidedActivationWizard';
 import { ProductPlanStep } from '../../../components/patterns/ProductPlanStep';
 import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCapture';
@@ -26,7 +28,7 @@ export function NewPreToPostWizard() {
       <GuidedActivationWizard
         wizardId={WIZARD_ID}
         title="Prepaid to Postpaid Conversion"
-        steps={[
+        steps={attachSummaries([
           idLookupStep({ key: 'contact', label: 'Contact', field: 'qid' }),
           {
             key: 'plan',
@@ -59,7 +61,12 @@ export function NewPreToPostWizard() {
               <ActivityCommentsStep value={(values.comments as string) ?? ''} onChange={(v) => setValue('comments', v)} />
             ),
           },
-        ]}
+        ], {
+          contact: sums.identitySummary('qid'),
+          plan: sums.planSummary(),
+          caf: sums.cafSummary,
+          activity: sums.commentsSummary,
+        })}
         onSubmit={async (values) => {
           const qid = values.qid as IdLookupValue;
           const orderId = `ORD-${Date.now().toString().slice(-6)}`;

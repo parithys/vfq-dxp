@@ -1,4 +1,6 @@
 import { useNavigate } from 'react-router-dom';
+import * as sums from '../../../components/patterns/wizard/commonSummaries';
+import { attachSummaries } from '../../../components/patterns/wizard/stepSummary';
 import { GuidedActivationWizard } from '../../../components/patterns/wizard/GuidedActivationWizard';
 import { IdLookupStep } from '../../../components/patterns/IdLookupStep';
 import type { IdLookupValue } from '../../../components/patterns/idLookupModel';
@@ -47,7 +49,7 @@ export function BaseManagementWizard() {
       <GuidedActivationWizard
         wizardId={WIZARD_ID}
         title="Base Management"
-        steps={[
+        steps={attachSummaries([
           {
             key: 'contact',
             label: 'Contact',
@@ -108,7 +110,19 @@ export function BaseManagementWizard() {
               </div>
             ),
           },
-        ]}
+        ], {
+          contact: [
+            ...sums.identitySummary('qid'),
+            { key: 'email', label: 'Email', type: 'text', optional: true, value: (v) => v.email },
+            { key: 'language', label: 'Language', type: 'text', optional: true, value: (v) => v.language },
+          ],
+          'offer-summary': [
+            { key: 'offer', label: 'Offer', type: 'text', value: () => offer?.offerName },
+            { key: 'rental', label: 'Monthly Rental', type: 'text', value: () => (offer ? `QAR ${offer.monthlyRental.toLocaleString('en-GB')}` : undefined) },
+            { key: 'billLimit', label: 'Bill Limit', type: 'text', optional: true, value: (v) => (typeof v.billLimit === 'number' ? `QAR ${v.billLimit.toLocaleString('en-GB')}` : undefined) },
+          ],
+          activity: [{ key: 'channel', label: 'Channel', type: 'text', value: (v) => v.channel ?? 'Appointment' }],
+        })}
         onSubmit={async (values) => {
           const qid = values.qid as IdLookupValue;
           const orderId = `ORD-${Date.now().toString().slice(-6)}`;
