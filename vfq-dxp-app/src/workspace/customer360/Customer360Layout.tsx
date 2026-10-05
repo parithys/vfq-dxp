@@ -8,6 +8,7 @@ import { useCustomerContext } from '../../stores/customerContextStore';
 import { usePersonaStore } from '../../stores/personaStore';
 import { getPersona } from '../../engines/configEngine';
 import { buildTelesalesTabs } from './telesales/TelesalesTabs';
+import { CustomerActionsMenu } from './CustomerActionsMenu';
 import { CustomerProfileHeader, type HeaderAlert } from './CustomerProfileHeader';
 import { useRequirementCoverage } from './requirementCoverage';
 import { FieldAccessProvider } from './fieldAccess';
@@ -509,9 +510,13 @@ export function Customer360Layout() {
           onViewAlerts={tabs.some((t) => t.key === 'alerts-risks') ? () => setActiveTab('alerts-risks') : undefined}
           // Header-only layouts edit the profile from the Contact Information tab, so the header carries no button.
           actions={
-            headerOnly ? undefined : (
             <>
-              {canEdit ? (
+              <CustomerActionsMenu
+                customerId={data.customer.customerId}
+                personaId={activePersonaId}
+                onSupport={tabs.some((t) => t.key === 'tickets-support') ? () => setActiveTab('tickets-support') : undefined}
+              />
+              {headerOnly ? null : canEdit ? (
                 <Button variant="primary-rect" compact onClick={() => requireVerification(() => setDemoDrawerOpen(true))}>
                   Edit profile
                 </Button>
@@ -523,7 +528,6 @@ export function Customer360Layout() {
                 </Tooltip>
               )}
             </>
-            )
           }
         />
       </FieldAccessProvider>
