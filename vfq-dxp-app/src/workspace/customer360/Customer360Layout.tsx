@@ -499,7 +499,6 @@ export function Customer360Layout() {
           idType={data.customer.idType}
           blacklisted={Boolean(data.customer.blacklisted)}
           dob={data.customer.dob}
-          gender={data.contacts[0]?.gender as string | undefined}
           preferredLanguage={data.customer.preferredLanguage}
           segment={data.customer.segment}
           phone={data.customer.phone}

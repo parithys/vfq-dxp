@@ -16,13 +16,13 @@ const num = (v: unknown): number | undefined => (v === undefined || v === null |
 const str = (v: unknown): string | undefined => (v === undefined || v === null || v === '' ? undefined : String(v));
 
 /** A label / value row in the design's grey-label, dark-value style; a missing value reads "-". */
-function Field({ label, value, strong = true }: { label: string; value: ReactNode | undefined | null; strong?: boolean }) {
-  const mode = useFieldAccess()(label);
+function Field({ label, requirement, value, strong = true }: { label: string; /** The requirement's own name, when the display label differs from it. */ requirement?: string; value: ReactNode | undefined | null; strong?: boolean }) {
+  const mode = useFieldAccess()(requirement ?? label);
   if (mode === 'hidden') return null;
   const empty = value === undefined || value === null || value === '';
   return (
     <div className="flex items-center justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
-      <dt className="text-fg-2 shrink-0">{label}</dt>
+      <dt className="text-fg-2 shrink-0" data-req={requirement}>{label}</dt>
       <dd className={`text-fg min-w-0 break-words text-right ${strong ? 'font-medium' : ''}`}>{empty ? '-' : mode === 'drill-down' ? <RevealValue>{value}</RevealValue> : value}</dd>
     </div>
   );
@@ -226,6 +226,7 @@ export function C360AccountInformation({
           >
             <dl>
               <Field label="Account Name" value={data.customer.name} />
+              <Field label="Gender" value={data.contacts[0]?.gender as string | undefined} />
               <Field
                 label="Account Number"
                 value={
@@ -243,9 +244,9 @@ export function C360AccountInformation({
               <Field label="Segment" value={data.customer.segment} />
               <Field label="Credit Limit" value={qar(creditLimit)} />
               <Field label="Primary MSISDN" value={data.customer.phone} />
-              <Field label="AM name" value={account?.accountManagerName} />
-              <Field label="AM mobile" value={account?.accountManagerMobile} />
-              <Field label="AM Email" value={account?.accountManagerEmail} />
+              <Field label="Account Manager Name" requirement="AM name" value={account?.accountManagerName} />
+              <Field label="Account Manager Mobile" requirement="AM mobile" value={account?.accountManagerMobile} />
+              <Field label="Account Manager Email" requirement="AM Email" value={account?.accountManagerEmail} />
               <Field label="Account Status" value={account?.status ? <Pill tone={toneFor(account.status)}>{account.status}</Pill> : undefined} />
               <Field label="Customer Since" value={<Dv k="customerSince" />} />
             </dl>

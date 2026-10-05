@@ -20,7 +20,7 @@ function loadCoverage(): Promise<Coverage> {
 
 const norm = (t: string | null) => (t ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
 
-/** Applies the pink `req-met` class to leaf elements whose text is a covered label for `personaId`, on the header and `pageKey`. */
+/** Applies the pink `req-met` class to leaf elements whose text (or `data-req`, when the display label differs from the requirement's) is a covered label for `personaId`, on the header and `pageKey`. */
 export function useRequirementCoverage(root: RefObject<HTMLElement | null>, personaId: string | undefined, pageKey: string, ready: boolean) {
   useEffect(() => {
     if (!SHOW_REQUIREMENT_COVERAGE || !ready || !personaId) return;
@@ -36,7 +36,7 @@ export function useRequirementCoverage(root: RefObject<HTMLElement | null>, pers
         if (labels.size === 0) return;
         el.querySelectorAll('*').forEach((n) => {
           // The tab rail is navigation, not content.
-          if (n.children.length === 0 && !n.closest('ol') && labels.has(norm(n.textContent))) n.classList.add('req-met');
+          if (n.children.length === 0 && !n.closest('ol') && labels.has(norm((n as HTMLElement).dataset?.req ?? n.textContent))) n.classList.add('req-met');
         });
       };
       apply();
