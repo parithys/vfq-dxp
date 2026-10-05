@@ -1,10 +1,12 @@
 import { ZsbAddressStep } from '../../../components/patterns/ZsbAddressStep';
+import { addressSummary } from './stepSummaries';
 import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
 import type { WizardStep } from '../../../components/patterns/wizard/guidedWizardTypes';
 
 export function addressStep(): WizardStep {
   return {
     key: 'address',
+    summary: addressSummary,
     // 2026-10-01: the address is not fetched from NAS and starts blank.
     // The step stays in the rail but Continue passes over it
     // (autoPass), so Plan & Add-ons goes on to Number Selection; the

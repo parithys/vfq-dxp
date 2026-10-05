@@ -6,6 +6,7 @@ import { WizardRail } from './WizardRail';
 import { WizardTitleBand } from './WizardTitleBand';
 import { WizardStepHeader } from './WizardStepHeader';
 import { WizardFooter } from './WizardFooter';
+import { StepSummaryPanel } from './StepSummaryPanel';
 import { useEnterToSubmit } from '../../../hooks/useEnterToSubmit';
 import { useJourneyStartResume } from './useJourneyStartResume';
 import { useDraftStepSync } from './useDraftStepSync';
@@ -150,6 +151,19 @@ export function GuidedActivationWizard({
   }
 
 
+  // Running summary: steps the user has moved past (never the active one, never ones not yet reached) that declare a
+  // summary. Derived from the draft values on render - nothing is stored for it.
+  const hasSummary = activeSteps.some((s) => s.summary?.length);
+  const completedSummarySteps = activeSteps
+    .map((step, index) => ({ step, index }))
+    .filter(({ step, index }) => index < maxReached && index !== currentIndex && Boolean(step.summary?.length));
+  const summaryProps = {
+    completed: completedSummarySteps,
+    totalSteps: activeSteps.length,
+    values: draft.values,
+    onEdit: isLocked ? undefined : goToStep,
+  };
+
   return (
     <div className="flex-1 min-h-full flex flex-col">
       <WizardTitleBand
@@ -195,6 +209,7 @@ export function GuidedActivationWizard({
             stepHeadingRef={stepHeadingRef}
           />
           {currentStep?.render({ values: draft.values, setValue, goNext: () => void goNext(), goToStepKey, saveDraft, saveAndExit, requestAbandon })}
+          {hasSummary && <StepSummaryPanel {...summaryProps} variant="accordion" />}
           <WizardFooter
             currentStep={currentStep}
             currentIndex={currentIndex}
@@ -214,6 +229,8 @@ export function GuidedActivationWizard({
         </div>
         {belowPanel && <div className="px-8 pb-8">{belowPanel}</div>}
         </div>
+
+        {hasSummary && <StepSummaryPanel {...summaryProps} />}
       </div>
 
       {/* Confirmed, not immediate: this discards every field the agent has

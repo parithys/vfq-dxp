@@ -1,4 +1,5 @@
 import { MsisdnPicker } from '../../../components/domain/MsisdnPicker';
+import { numberSummary } from './stepSummaries';
 import { starEntitlementQar } from '../../../engines/postpaidPricing';
 import type { WizardStep } from '../../../components/patterns/wizard/guidedWizardTypes';
 import type { NewConnectionStepContext } from './stepContext';
@@ -6,6 +7,7 @@ import type { NewConnectionStepContext } from './stepContext';
 export function numberStep({ products }: NewConnectionStepContext): WizardStep {
   return {
     key: 'number',
+    summary: numberSummary,
     label: 'Number Selection',
     hideCustomerView: true,
     render: ({ values, setValue }) => (

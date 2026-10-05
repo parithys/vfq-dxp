@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { SummaryField } from './stepSummary';
 
 /** The draft-specific half of an order record - see orders.json's _note. */
 export interface DraftOrderRecord {
@@ -60,6 +61,11 @@ export interface WizardStep {
    * Back lands on it, and Continue from it goes on to the next step as normal.
    */
   autoPass?: (values: Record<string, unknown>) => boolean;
+  /**
+   * What the running Summary panel shows for this step once it is completed: the ordered fields, each read from the
+   * draft values. Omit for a step with nothing worth echoing back; a journey with no summary on any step shows no panel.
+   */
+  summary?: SummaryField[];
   /** Hide the step-progress rail while this step is showing (e.g. the final Payment page). */
   hideRail?: boolean;
   /** Hides the header's Customer view button on this step. */

@@ -1,4 +1,5 @@
 import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
+import { crossSalesSummary } from './stepSummaries';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import type { WizardStep } from '../../../components/patterns/wizard/guidedWizardTypes';
 import { useAuthStore } from '../../../stores/authStore';
@@ -12,6 +13,7 @@ import type { NewConnectionStepContext } from './stepContext';
 export function offersStep({ applyCrossSales, navigate, createRecord, setCreatedLead }: NewConnectionStepContext): WizardStep {
   return {
     key: 'crossSales',
+    summary: crossSalesSummary,
     label: 'Offers',
     heading: 'Recommended offers',
     subheading: 'Personalised using the customer\u2019s profile and eligibility.',

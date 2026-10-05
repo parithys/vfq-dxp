@@ -1,4 +1,5 @@
 import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
+import { simTypeSummary } from './stepSummaries';
 import { maskEmail } from '../../../components/patterns/guidedContactModel';
 import { SimTypeStep } from '../../../components/domain/SimTypeStep';
 import type { SimTypeValue } from '../../../components/domain/SimTypeStep';
@@ -15,6 +16,7 @@ import type { WizardStep } from '../../../components/patterns/wizard/guidedWizar
 export function simTypeStep(): WizardStep {
   return {
     key: 'simType',
+    summary: simTypeSummary,
     label: 'SIM Type',
     render: ({ values, setValue }) => {
       const contact = values.contact as GuidedContactValue | undefined;

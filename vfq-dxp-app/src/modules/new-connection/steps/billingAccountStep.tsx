@@ -1,4 +1,5 @@
 import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
+import { billingAccountSummary } from './stepSummaries';
 import { maskEmail } from '../../../components/patterns/guidedContactModel';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
@@ -23,6 +24,7 @@ import type { WizardStep } from '../../../components/patterns/wizard/guidedWizar
 export function billingAccountStep(): WizardStep {
   return {
     key: 'billingAccount',
+    summary: billingAccountSummary,
     // 2026-10-01: passed over on the way forward. An existing billing
     // account is selected automatically, or one is created when there
     // is none, by BillingAccountAutoResolver (mounted on the Customer

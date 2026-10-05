@@ -1,4 +1,5 @@
 import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
+import { planSummary } from './stepSummaries';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import { PostpaidPlanAddonsStep } from '../../../components/patterns/PostpaidPlanAddonsStep';
 import type { WizardStep } from '../../../components/patterns/wizard/guidedWizardTypes';
@@ -10,6 +11,7 @@ import type { NewConnectionStepContext } from './stepContext';
 export function planStep({ customerBenefits, products }: NewConnectionStepContext): WizardStep {
   return {
     key: 'plan',
+    summary: planSummary,
     // An accepted offer already fixes the plan, so the agent goes straight
     // from Offers to Number Selection; Skip (no offer) runs the full path.
     skip: (values) => (values.crossSales as CrossSalesValue | undefined)?.decision === 'accepted',

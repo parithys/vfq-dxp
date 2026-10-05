@@ -1,4 +1,5 @@
 import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
+import { checkoutSummary } from './stepSummaries';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import type { BillingAccountValue } from '../../../components/patterns/billingAccountModel';
 import type { SimTypeValue } from '../../../components/domain/SimTypeStep';
@@ -9,6 +10,7 @@ import type { CrossSalesValue } from './crossSalesModel';
 export function checkoutStep(): WizardStep {
   return {
     key: 'checkout',
+    summary: checkoutSummary,
     label: 'Checkout',
     render: ({ values, setValue, goToStepKey }) => {
       const contact = values.contact as GuidedContactValue | undefined;

@@ -1,4 +1,5 @@
 import { GuidedContactStep } from '../../../components/patterns/GuidedContactStep';
+import { contactSummary } from './stepSummaries';
 import { idTypesFor } from '../../../data/idTypes';
 import { hasIdentityDetails, isValidAltPhone, isValidEmail } from '../../../components/patterns/guidedContactModel';
 import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
@@ -17,6 +18,7 @@ import type { NewConnectionStepContext } from './stepContext';
 export function contactStep({ flow, existingCustomerId, guardedContactChange }: NewConnectionStepContext): WizardStep {
   return {
     key: 'contact',
+    summary: contactSummary,
     label: 'Customer Identification',
     hideCustomerView: true,
     // 2026-09-28: the separate 'eligibility' step is GONE - no more

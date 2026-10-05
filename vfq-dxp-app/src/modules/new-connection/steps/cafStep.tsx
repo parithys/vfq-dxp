@@ -1,4 +1,5 @@
 import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
+import { cafSummary } from './stepSummaries';
 import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCapture';
 import type { CafType } from '../../../components/patterns/cafTypes';
 import type { AdditionalDocument } from '../../../components/domain/AdditionalDocumentsUpload';
@@ -9,6 +10,7 @@ import type { WizardStep } from '../../../components/patterns/wizard/guidedWizar
 export function cafStep(): WizardStep {
   return {
     key: 'caf',
+    summary: cafSummary,
     label: 'CAF & Signature',
     render: ({ values, setValue, goNext }) => (
       <CafSignatureCapture
