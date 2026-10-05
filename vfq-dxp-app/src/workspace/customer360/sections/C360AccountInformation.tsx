@@ -4,8 +4,10 @@ import { Icon } from '../../../components/primitives/Icon';
 import { computeBillingSummary, withinBillHistoryWindow, type Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { overdueTicketCount } from './accountInformationResolvers';
+import { RevealValue, useFieldAccess } from '../fieldAccess';
 import { fmtDate, fmtDateTime, IC, IconTile, KpiGrid, KpiTile, LinkAction, Panel, Pill, Progress, qar, TabPage, toneFor } from './c360Kit';
 import type { Tone } from './c360Kit';
+import { Dv } from '../demoValues';
 
 const TON_TERMINAL = new Set(['completed']);
 const ADJUSTMENT_TERMINAL = new Set(['Approved', 'Rejected', 'Failed']);
@@ -15,11 +17,13 @@ const str = (v: unknown): string | undefined => (v === undefined || v === null |
 
 /** A label / value row in the design's grey-label, dark-value style; a missing value reads "-". */
 function Field({ label, value, strong = true }: { label: string; value: ReactNode | undefined | null; strong?: boolean }) {
+  const mode = useFieldAccess()(label);
+  if (mode === 'hidden') return null;
   const empty = value === undefined || value === null || value === '';
   return (
     <div className="flex items-center justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
       <dt className="text-fg-2 shrink-0">{label}</dt>
-      <dd className={`text-fg min-w-0 break-words text-right ${strong ? 'font-medium' : ''}`}>{empty ? '-' : value}</dd>
+      <dd className={`text-fg min-w-0 break-words text-right ${strong ? 'font-medium' : ''}`}>{empty ? '-' : mode === 'drill-down' ? <RevealValue>{value}</RevealValue> : value}</dd>
     </div>
   );
 }
@@ -138,15 +142,15 @@ export function C360AccountInformation({
           { label: 'Average Revenue (Last 6 Months)', value: qar(average) },
           { label: 'Outstanding Amount', value: qar(outstanding), red: true },
           { label: 'Total Number of Connections', value: services.length > 0 ? String(postpaidN) : undefined },
-          { label: 'Top Recharge Type', value: undefined },
-          { label: 'Primary Balance', value: undefined },
+          { label: 'Top Recharge Type', value: <Dv k="topRechargeType" /> },
+          { label: 'Primary Balance', value: <Dv k="primaryBalance" /> },
         ]
       : [
           { label: 'Last Recharge Amount', value: qar(num(digital?.lastRechargeAmountQar)) },
           { label: 'Last Recharge Date', value: fmtDate(digital?.lastRechargeAt) },
-          { label: 'Top Recharge Type', value: str(digital?.lastRechargeType) },
+          { label: 'Top Recharge Type', value: str(digital?.lastRechargeType) ?? <Dv k="topRechargeType" /> },
           { label: 'Total Number of Connections', value: services.length > 0 ? String(prepaidN) : undefined },
-          { label: 'Primary Balance', value: qar(num(balance?.mainBalanceQAR)) },
+          { label: 'Primary Balance', value: qar(num(balance?.mainBalanceQAR)) ?? <Dv k="primaryBalance" /> },
           { label: 'Data Balance', value: num(balance?.dataBalanceGB) !== undefined ? `${String(balance?.dataBalanceGB)} GB` : undefined },
         ]
   ) as { label: string; value: string | undefined; red?: boolean }[];
@@ -235,14 +239,15 @@ export function C360AccountInformation({
                   )
                 }
               />
-              <Field label="Customer Type" value={undefined} />
+              <Field label="Customer Type" value={<Dv k="customerType" />} />
               <Field label="Segment" value={data.customer.segment} />
               <Field label="Credit Limit" value={qar(creditLimit)} />
               <Field label="Primary MSISDN" value={data.customer.phone} />
-              <Field label="Agent ID" value={undefined} />
-              <Field label="Agent Email" value={account?.accountManagerEmail} />
+              <Field label="AM name" value={account?.accountManagerName} />
+              <Field label="AM mobile" value={account?.accountManagerMobile} />
+              <Field label="AM Email" value={account?.accountManagerEmail} />
               <Field label="Account Status" value={account?.status ? <Pill tone={toneFor(account.status)}>{account.status}</Pill> : undefined} />
-              <Field label="Customer Since" value={undefined} />
+              <Field label="Customer Since" value={<Dv k="customerSince" />} />
             </dl>
             {overdue > 0 && <p className="text-[var(--warn-text)] text-[length:var(--fs-caption)] pt-2">{overdue} trouble ticket{overdue === 1 ? '' : 's'} past SLA.</p>}
           </Panel>

@@ -26,6 +26,7 @@ import {
   usePaging,
   type Tone,
 } from './c360Kit';
+import { Dv } from '../demoValues';
 
 const ORDER_DETAIL_ROUTE = '/order-management/order-approval-detail-attachments-order-details-activities-a';
 const DAY = 86_400_000;
@@ -289,7 +290,7 @@ export function C360Activities({ data }: { data: Customer360Data; services: Cust
                 header: 'Date & Time',
                 className: 'whitespace-nowrap',
                 render: (a) => {
-                  if (!a.at) return '-';
+                  if (!a.at) return <Dv k="activityDateTime" row={{ id: a.id, type: a.type }} />;
                   const d = fmtDateTime(new Date(a.at).toISOString());
                   return (
                     <div className="leading-tight">
@@ -310,9 +311,9 @@ export function C360Activities({ data }: { data: Customer360Data; services: Cust
                 ),
               },
               { key: 'description', header: 'Description', className: 'min-w-44 break-words' },
-              { key: 'user', header: 'User ID', className: 'break-words', render: (a) => a.user ?? '-' },
-              { key: 'channel', header: 'Channel', render: (a) => a.channel ?? '-' },
-              { key: 'location', header: 'Location', render: (a) => a.location ?? '-' },
+              { key: 'user', header: 'User ID', className: 'break-words', render: (a) => a.user ?? <Dv k="activityUser" row={{ type: a.type }} /> },
+              { key: 'channel', header: 'Channel', render: (a) => a.channel ?? <Dv k="activityChannel" row={{ type: a.type }} /> },
+              { key: 'location', header: 'Location', render: (a) => a.location ?? <Dv k="activityLocation" row={{ type: a.type }} /> },
               {
                 key: 'actions',
                 header: 'Actions',
@@ -383,13 +384,13 @@ export function C360Activities({ data }: { data: Customer360Data; services: Cust
                     { label: 'Order ID', value: selected.orderId ?? '-', strong: false },
                     { label: 'Description', value: selected.description, strong: false },
                     { label: 'MSISDN', value: selected.msisdn ?? '-', strong: false },
-                    { label: 'User ID', value: selected.user ?? '-', strong: false },
-                    { label: 'Channel', value: selected.channel ?? '-', strong: false },
-                    { label: 'Location', value: selected.location ?? '-', strong: false },
+                    { label: 'User ID', value: selected.user ?? <Dv k="activityUser" row={{ type: selected.type }} />, strong: false },
+                    { label: 'Channel', value: selected.channel ?? <Dv k="activityChannel" row={{ type: selected.type }} />, strong: false },
+                    { label: 'Location', value: selected.location ?? <Dv k="activityLocation" row={{ type: selected.type }} />, strong: false },
                     { label: 'Status', value: selected.status ? <StatusPill status={selected.status} /> : '-', strong: false },
-                    { label: 'Related Ticket', value: selected.ticketId ?? '-', strong: false },
-                    { label: 'Related Offer', value: '-', strong: false },
-                    { label: 'Remarks', value: selected.remarks ?? '-', strong: false },
+                    { label: 'Related Ticket', value: selected.ticketId ?? <Dv k="relatedTicket" />, strong: false },
+                    { label: 'Related Offer', value: <Dv k="relatedOffer" />, strong: false },
+                    { label: 'Remarks', value: selected.remarks ?? <Dv k="activityRemarks" row={{ type: selected.type }} />, strong: false },
                   ]}
                 />
                 <button

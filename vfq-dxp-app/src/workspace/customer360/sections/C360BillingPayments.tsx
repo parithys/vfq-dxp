@@ -3,6 +3,7 @@ import { Icon } from '../../../components/primitives/Icon';
 import { computeBillingSummary, withinBillHistoryWindow, type Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { GridTable, IC, KpiGrid, KpiTile, Panel, Pill, StatusPill, TabPage, UnderlineTabs, fmtDate, qar, type GridCol } from './c360Kit';
+import { Dv } from '../demoValues';
 
 type Rec = Record<string, unknown>;
 const str = (v: unknown): string | undefined => (v === undefined || v === null || v === '' ? undefined : String(v));
@@ -91,7 +92,7 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
     { key: '#', header: '#', render: (_r, i) => i + 1 },
     { key: 'billId', header: 'Bill Number', render: (r) => str(r.billId) ?? DASH },
     { key: 'period', header: 'Bill Period', render: (r) => periodRange(r.billPeriod) },
-    { key: 'billDate', header: 'Bill Date', render: () => DASH },
+    { key: 'billDate', header: 'Bill Date', render: (r) => <Dv k="billDate" row={{ period: str(r.billPeriod) }} /> },
     { key: 'amt', header: 'Amount (QAR)', render: (r) => str(r.totalAmount) ?? DASH },
     { key: 'status', header: 'Status', render: (r) => (r.status ? <StatusPill status={billStatusLabel(r.status)} /> : DASH) },
     { key: 'act', header: 'Actions', className: 'text-center', render: () => <Chevron /> },
@@ -288,9 +289,9 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
             <dl>
               {[
                 { label: 'Current Dunning Stage', value: str(stageProfile?.collectionStage) ? <Pill tone="amber">{String(stageProfile?.collectionStage)}</Pill> : DASH },
-                { label: 'Amount Required to Avoid Barring', value: DASH },
-                { label: 'OG Barring Date', value: DASH },
-                { label: 'IC Barring Date', value: DASH },
+                { label: 'Amount Required to Avoid Barring', value: <Dv k="amountAvoidBarring" /> },
+                { label: 'OG Barring Date', value: <Dv k="ogBarringDate" /> },
+                { label: 'IC Barring Date', value: <Dv k="icBarringDate" /> },
                 { label: 'Eligible for PTP', value: ptpEligible ? <Pill tone={ptpEligible === 'Yes' ? 'green' : 'grey'}>{ptpEligible}</Pill> : DASH },
               ].map((r) => (
                 <div key={r.label} className="flex items-center justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">

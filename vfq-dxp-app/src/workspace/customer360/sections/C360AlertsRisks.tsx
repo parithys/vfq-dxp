@@ -24,6 +24,7 @@ import {
   usePaging,
   type Tone,
 } from './c360Kit';
+import { Dv } from '../demoValues';
 
 const CLOSED_STAGE = /^(none|no dunning|current)$/i;
 const CLOSED_TICKET = new Set(['Solved', 'Completed', 'Closed', 'Cancelled']);
@@ -186,7 +187,7 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
         <KpiTile icon={IC.alert} tone="red" label="Critical Alerts" value={count('High')} chevron onClick={filterBy('High')} />
         <KpiTile icon={IC.alert} tone="amber" label="Medium Alerts" value={count('Medium')} chevron onClick={filterBy('Medium')} />
         <KpiTile icon={IC.info} tone="blue" label="Informational" value={count('Low')} chevron onClick={filterBy('Low')} />
-        <KpiTile icon={IC.flag} tone="purple" label="Special Management" value="-" />
+        <KpiTile icon={IC.flag} tone="purple" label="Special Management" value={<Dv k="specialManagement" />} />
         <KpiTile
           icon={IC.ban}
           tone="grey"
@@ -265,7 +266,7 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
               { key: 'description', header: 'Description', className: 'min-w-44 break-words' },
               { key: 'severity', header: 'Severity', render: (a) => <Pill tone={SEV_TONE[a.severity]}>{a.severity}</Pill> },
               { key: 'status', header: 'Status', render: (a) => <StatusPill status={a.status} /> },
-              { key: 'at', header: 'Raised On', className: 'whitespace-nowrap', render: (a) => (a.at ? fmtDate(new Date(a.at).toISOString()) : '-') },
+              { key: 'at', header: 'Raised On', className: 'whitespace-nowrap', render: (a) => (a.at ? fmtDate(new Date(a.at).toISOString()) : <Dv k="alertRaisedOn" />) },
               {
                 key: 'actions',
                 header: 'Actions',
@@ -294,14 +295,14 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
             <DetailRows
               rows={[
                 { label: 'Blacklist Status', value: <Pill tone={blacklisted ? 'red' : 'green'}>{blacklisted ? 'Blacklisted' : 'Clear'}</Pill> },
-                { label: 'Credit Score', value: '-' },
-                { label: 'Eligibility for PTP', value: '-' },
+                { label: 'Credit Score', value: <Dv k="creditScore" /> },
+                { label: 'Eligibility for PTP', value: <Dv k="eligibilityPtp" /> },
                 { label: 'About to be Barred', value: barring === '-' ? '-' : <Pill tone={/^yes/i.test(barring) ? 'red' : 'green'}>{barring}</Pill> },
-                { label: 'OG Barring Date', value: '-' },
-                { label: 'IC Barring Date', value: '-' },
-                { label: 'Amount Required to Avoid Barring', value: /^yes/i.test(barring) && outstanding > 0 ? qar(outstanding) : '-' },
-                { label: 'Special Management Flag', value: '-' },
-                { label: 'Fraud Risk Indicator', value: '-' },
+                { label: 'OG Barring Date', value: <Dv k="ogBarringDate" /> },
+                { label: 'IC Barring Date', value: <Dv k="icBarringDate" /> },
+                { label: 'Amount Required to Avoid Barring', value: /^yes/i.test(barring) && outstanding > 0 ? qar(outstanding) : <Dv k="amountAvoidBarring" /> },
+                { label: 'Special Management Flag', value: <Dv k="specialManagement" /> },
+                { label: 'Fraud Risk Indicator', value: <Dv k="fraudRisk" /> },
               ]}
             />
           </Panel>

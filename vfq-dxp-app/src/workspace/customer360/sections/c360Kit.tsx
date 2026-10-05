@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
+import { RevealValue, useFieldAccess } from '../fieldAccess';
 
 /**
  * Building blocks shared by the Customer 360 tab pages (Overview, Account Information, Products & Services,
@@ -217,6 +218,8 @@ export function KpiTile({
   chevron?: boolean;
   onClick?: () => void;
 }) {
+  const modeOf = useFieldAccess();
+  if (modeOf(label) === 'hidden') return null;
   const body = (
     <>
       <IconTile icon={icon} tone={tone} size="lg" />
@@ -260,8 +263,11 @@ export function KpiGrid({ children, cols = 5 }: { children: ReactNode; cols?: 3 
 
 /** A titled card (icon + title, optional right-hand action) holding rows, lists or a table. */
 export function Panel({ icon, title, action, children, className = '', flush = false }: { icon?: string; title: ReactNode; action?: ReactNode; children: ReactNode; className?: string; flush?: boolean }) {
+  const modeOf = useFieldAccess();
+  if (typeof title === 'string' && modeOf(title) === 'hidden') return null;
   return (
-    <section className={`rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg min-w-0 ${className}`}>
+    // A panel whose rows were all withheld by field access (empty body) is not drawn.
+    <section className={`rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg min-w-0 has-[>.panel-body:empty]:hidden ${className}`}>
       <header className="flex items-center justify-between gap-3 px-4 pt-4 pb-3">
         <h3 className="flex items-center gap-2.5 text-fg font-semibold text-[length:var(--fs-body-lg)] min-w-0">
           {icon && <Icon path={icon} className="w-5 h-5 shrink-0" />}
@@ -269,23 +275,26 @@ export function Panel({ icon, title, action, children, className = '', flush = f
         </h3>
         {action}
       </header>
-      <div className={flush ? '' : 'px-4 pb-4'}>{children}</div>
+      <div className={`panel-body empty:hidden ${flush ? '' : 'px-4 pb-4'}`}>{children}</div>
     </section>
   );
 }
 
 /** Label / value rows. A row whose value is undefined, null or '' is left out. */
 export function DetailRows({ rows, align = 'right' }: { rows: { label: string; value: ReactNode | undefined | null; strong?: boolean }[]; align?: 'left' | 'right' }) {
+  const modeOf = useFieldAccess();
+  const shown = rows.filter((r) => r.value !== undefined && r.value !== null && r.value !== '' && modeOf(r.label) !== 'hidden');
+  if (shown.length === 0) return null;
   return (
     <dl>
-      {rows
-        .filter((r) => r.value !== undefined && r.value !== null && r.value !== '')
-        .map((r) => (
-          <div key={r.label} className="flex items-center justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
-            <dt className="text-fg-2">{r.label}</dt>
-            <dd className={`text-fg min-w-0 break-words ${r.strong === false ? '' : 'font-medium'} ${align === 'right' ? 'text-right' : ''}`}>{r.value}</dd>
-          </div>
-        ))}
+      {shown.map((r) => (
+        <div key={r.label} className="flex items-center justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
+          <dt className="text-fg-2">{r.label}</dt>
+          <dd className={`text-fg min-w-0 break-words ${r.strong === false ? '' : 'font-medium'} ${align === 'right' ? 'text-right' : ''}`}>
+            {modeOf(r.label) === 'drill-down' ? <RevealValue>{r.value}</RevealValue> : r.value}
+          </dd>
+        </div>
+      ))}
     </dl>
   );
 }
@@ -315,6 +324,8 @@ export function GridTable<T>({
   empty?: string;
   dense?: boolean;
 }) {
+  const modeOf = useFieldAccess();
+  cols = cols.filter((c) => modeOf(c.header) !== 'hidden');
   if (rows.length === 0) return <p className="text-muted text-[length:var(--fs-body)] py-4 text-center">{empty}</p>;
   return (
     <div className="overflow-x-auto">

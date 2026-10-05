@@ -6,6 +6,7 @@ import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { ActionButton, DetailRows, IC, IconTile, KebabButton, LinkAction, Panel, Pill, TabPage, fmtDate } from './c360Kit';
 import type { Tone } from './c360Kit';
 import { contactInformationResolvers } from './contactInformationResolvers';
+import { Dv } from '../demoValues';
 
 type Rec = Record<string, unknown>;
 const str = (v: unknown): string | undefined => (v === undefined || v === null || v === '' ? undefined : String(v));
@@ -125,7 +126,7 @@ export function C360ContactIdentity({ data, services, goToTab, onEdit }: { data:
               { label: 'Nationality', value: dash(str(customer.nationality) ?? str(contact?.nationality)) },
               { label: 'ID Status', value: idStatus ? <Pill tone={flagTone(idStatus)}>{idStatus}</Pill> : dash(undefined) },
               { label: 'Blacklist Status', value: <Pill tone={customer.blacklisted ? 'red' : 'green'}>{customer.blacklisted ? 'Blacklisted' : 'Whitelisted'}</Pill> },
-              { label: 'Credit Score', value: dash(str(meta.creditScore)) },
+              { label: 'Credit Score', value: str(meta.creditScore) ?? <Dv k="creditScore" /> },
               { label: 'Employer', value: dash(str(meta.employer)) },
             ]}
           />
@@ -135,13 +136,13 @@ export function C360ContactIdentity({ data, services, goToTab, onEdit }: { data:
           <DetailRows
             rows={[
               { label: 'Primary MSISDN', value: dash(customer.phone) },
-              { label: 'Secondary MSISDN', value: dash(undefined) },
+              { label: 'Secondary MSISDN', value: <Dv k="secondaryMsisdn" /> },
               { label: 'Email', value: dash(customer.email) },
-              { label: 'Alternate Email', value: dash(undefined) },
+              { label: 'Alternate Email', value: <Dv k="alternateEmail" /> },
               { label: 'Preferred Language', value: dash(f('Preferred Language')) },
               { label: 'Communication Preference', value: dash(commPref) },
               { label: 'Marketing Communication', value: prefs ? <Pill tone={prefs.marketing ? 'green' : 'grey'}>{prefs.marketing ? 'Allowed' : 'Not Allowed'}</Pill> : dash(undefined) },
-              { label: 'Email Validation Status', value: dash(undefined) },
+              { label: 'Email Validation Status', value: <Dv k="emailValidation" /> },
             ]}
           />
         </Panel>
@@ -149,10 +150,10 @@ export function C360ContactIdentity({ data, services, goToTab, onEdit }: { data:
         <Panel title={<CardTitle icon={IC.users}>Contact Role & Relationship</CardTitle>}>
           <DetailRows
             rows={[
-              { label: 'Customer Type', value: dash(undefined) },
+              { label: 'Customer Type', value: <Dv k="customerType" /> },
               { label: 'Segment', value: dash(customer.segment) },
-              { label: 'Account Role', value: dash(undefined) },
-              { label: 'Contact Role', value: dash(undefined) },
+              { label: 'Account Role', value: <Dv k="accountRole" /> },
+              { label: 'Contact Role', value: <Dv k="contactRole" /> },
               {
                 label: 'Authorized Person(s)',
                 value: (
@@ -166,7 +167,7 @@ export function C360ContactIdentity({ data, services, goToTab, onEdit }: { data:
                   </span>
                 ),
               },
-              { label: 'Contact Since', value: dash(meta.tenure) },
+              { label: 'Contact Since', value: meta.tenure ?? <Dv k="customerSince" /> },
               { label: 'Last Updated', value: dash(lastUpdated) },
             ]}
           />
@@ -248,10 +249,8 @@ export function C360ContactIdentity({ data, services, goToTab, onEdit }: { data:
         <Panel title={<CardTitle icon={IC.info}>Additional Information</CardTitle>}>
           <DetailRows
             rows={[
-              { label: 'Customer Since', value: dash(meta.tenure) },
+              { label: 'Customer Since', value: meta.tenure ?? <Dv k="customerSince" /> },
               { label: 'Total Number of Connections', value: dash(services.length > 0 ? String(services.length) : undefined) },
-              { label: 'Agent ID', value: dash(undefined) },
-              { label: 'Agent Email', value: dash(undefined) },
               { label: 'Sales Enhancement Offers Flag', value: flag(offers) },
               { label: 'Cross Sale Offers Flag', value: flag(offers) },
               { label: 'QCB Check', value: qcb ? flag(qcb) : dash(undefined) },

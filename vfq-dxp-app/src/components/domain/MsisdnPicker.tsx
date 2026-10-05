@@ -209,7 +209,7 @@ function StarStat({ icon, label, value, alert = false }: { icon: string; label: 
       </span>
       <div className="min-w-0">
         <p className={`text-[length:var(--fs-caption)] ${alert ? 'text-accent' : 'text-fg-2'}`}>{label}</p>
-        <p className={`font-bold text-[length:var(--fs-h5,20px)] whitespace-nowrap ${alert ? 'text-accent' : 'text-fg'}`}>{value}</p>
+        <p className={`font-bold text-[length:var(--fs-body)] leading-tight ${alert ? 'text-accent' : 'text-fg'}`}>{value}</p>
       </div>
     </div>
   );
@@ -581,7 +581,8 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
           if (tab === 'Star') {
             // Star-number card (2026-10-04 design): the number and a state mark on top, then a 2x2 grid of
             // icon-tile facts - Price, Upfront charge (only when there is one), Plan entitlement, Lock-in.
-            const money = (v: number) => `QR ${v.toLocaleString('en-US')}`;
+            // Non-breaking spaces keep "QR 8,750" and "24 months" together: a long value wraps between words, never inside one.
+            const money = (v: number) => `QR\u00a0${v.toLocaleString('en-US')}`;
             const facts = [
               { icon: STAT_ICONS.wallet, label: 'Price', value: money(n.priceQAR), alert: false },
               ...(planMrcQar !== undefined && upfront > 0
@@ -590,7 +591,7 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
               ...(planMrcQar !== undefined && entitlementQar !== undefined
                 ? [{ icon: ICON_GIFT, label: 'Plan entitlement', value: `Up to ${money(entitlementQar)}`, alert: false }]
                 : []),
-              ...(lockIn !== undefined ? [{ icon: STAT_ICONS.lock, label: 'Lock-in period', value: `${lockIn} months`, alert: false }] : []),
+              ...(lockIn !== undefined ? [{ icon: STAT_ICONS.lock, label: 'Lock-in period', value: `${lockIn}\u00a0months`, alert: false }] : []),
             ];
             return (
               <div

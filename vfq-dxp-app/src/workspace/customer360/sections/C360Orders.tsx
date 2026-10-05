@@ -6,6 +6,7 @@ import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { ActionButton, DetailRows, FilterSelect, GridTable, IC, KpiGrid, KpiTile, Pager, Panel, Pill, SearchBox, TabPage, UnderlineTabs, ViewPill, fmtDate, fmtDateTime, usePaging } from './c360Kit';
 import type { Tone } from './c360Kit';
+import { Dv } from '../demoValues';
 
 type Rec = Record<string, unknown>;
 const str = (v: unknown): string | undefined => (v === undefined || v === null || v === '' ? undefined : String(v));
@@ -249,9 +250,9 @@ export function C360Orders({ data }: { data: Customer360Data; services: Customer
                   { label: 'Order Date & Time', value: dash([when.date, when.time].filter(Boolean).join(', ')) },
                   { label: 'Created By', value: dash(selected.createdBy) },
                   { label: 'Sales Channel', value: dash(selected.channel) },
-                  { label: 'Related Offers', value: '-' },
-                  { label: 'Delivery / Fulfilment', value: dash(selected.fulfilment) },
-                  { label: 'Notes', value: '-' },
+                  { label: 'Related Offers', value: <Dv k="orderRelatedOffers" /> },
+                  { label: 'Delivery / Fulfilment', value: selected.fulfilment ?? <Dv k="orderFulfilment" row={{ status: selected.status }} /> },
+                  { label: 'Notes', value: <Dv k="orderNotes" row={{ status: selected.status }} /> },
                 ]}
               />
               <div className="grid grid-cols-2 gap-3 pt-1">

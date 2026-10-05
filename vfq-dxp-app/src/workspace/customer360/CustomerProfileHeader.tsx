@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Badge, type BadgeVariant } from '../../components/primitives/Badge';
 import { Icon } from '../../components/primitives/Icon';
+import { RevealValue, useFieldAccess } from './fieldAccess';
 
 const PHONE_ICON = 'M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z';
 const MAIL_ICON = 'M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M22 6l-10 7L2 6';
@@ -65,11 +66,13 @@ function formatDob(dob?: string) {
 
 /** One identity fact: icon, value over a caption. Facts sit in a row separated by thin vertical rules. */
 function Fact({ icon, value, caption }: { icon: string; value: string; caption: string }) {
+  const mode = useFieldAccess()(caption);
+  if (mode === 'hidden') return null;
   return (
     <div className="flex items-center gap-3 min-w-0 px-3 first:pl-0 border-l border-border-soft first:border-l-0">
       <Icon path={icon} className="w-5 h-5 text-fg-2 shrink-0" />
       <div className="min-w-0">
-        <div className="text-fg font-medium text-[length:var(--fs-body)] break-words">{value}</div>
+        <div className="text-fg font-medium text-[length:var(--fs-body)] break-words">{mode === 'drill-down' ? <RevealValue>{value}</RevealValue> : value}</div>
         <div className="text-muted text-[length:var(--fs-caption)]">{caption}</div>
       </div>
     </div>
@@ -77,10 +80,12 @@ function Fact({ icon, value, caption }: { icon: string; value: string; caption: 
 }
 
 function Stat({ label, value }: { label: string; value: ReactNode }) {
+  const mode = useFieldAccess()(label);
+  if (mode === 'hidden') return null;
   return (
     <div className="py-2.5 first:pt-0 last:pb-0 border-b border-border-soft last:border-0">
       <div className="text-[length:var(--fs-micro)] uppercase tracking-wide text-muted font-semibold whitespace-nowrap">{label}</div>
-      <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{value}</div>
+      <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{mode === 'drill-down' ? <RevealValue>{value}</RevealValue> : value}</div>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { AddressEditDrawer, type AddressRecord } from './AddressSection';
 import { ActionButton, DetailRows, FilterSelect, GridTable, IC, IconTile, KebabButton, LinkAction, Panel, StatusPill, TabPage, fmtDate } from './c360Kit';
 import type { Tone } from './c360Kit';
+import { Dv } from '../demoValues';
 
 const TICKET_DETAIL_ROUTE = '/trouble-ticketing-complaints/ticket-homepage';
 const CLOSED_TICKET = /^(solved|completed|closed|cancelled)$/i;
@@ -125,12 +126,12 @@ export function C360AddressService({
                 { label: 'Street', value: primary.streetNo ? `Street ${primary.streetNo}` : '-' },
                 { label: 'Building', value: primary.buildingNo ? `Building ${primary.buildingNo}` : '-' },
                 { label: 'Zone', value: primary.zone ? `Zone ${primary.zone}` : '-' },
-                { label: 'Area', value: '-' },
+                { label: 'Area', value: <Dv k="area" /> },
                 { label: 'City', value: primary.city || '-' },
-                { label: 'State / Province', value: '-' },
+                { label: 'State / Province', value: <Dv k="stateProvince" /> },
                 { label: 'Postal Code', value: primary.poBox || (primary as unknown as { postalCode?: string }).postalCode || '-' },
                 { label: 'Country', value: primary.country || '-' },
-                { label: 'Source', value: '-' },
+                { label: 'Source', value: <Dv k="addressSource" /> },
                 { label: 'Last Updated', value: fmtDate((primary as unknown as { effectiveFrom?: string }).effectiveFrom) ?? '-' },
               ]}
             />
@@ -168,14 +169,14 @@ export function C360AddressService({
                       </span>
                     </>
                   ) : (
-                    <span className="w-36 text-muted">-</span>
+                    <span className="w-36"><Dv k="serviceAvailability" /></span>
                   )}
                 </li>
               );
             })}
             <li className="flex items-center justify-between gap-3 pt-3 text-[length:var(--fs-body)]">
               <span className="text-fg-2">Last Checked</span>
-              <span className="text-fg font-medium">-</span>
+              <span className="text-fg font-medium"><Dv k="lastChecked" /></span>
             </li>
           </ul>
         </Panel>
@@ -189,7 +190,7 @@ export function C360AddressService({
                 { key: 'n', header: '#', render: (_r, i) => i + 1 },
                 { key: 'type', header: 'Address Type', render: (a) => (a.primaryStatus ? String(a.primaryStatus) : 'Other') },
                 { key: 'address', header: 'Address', render: (a) => addressLine(a) || '-' },
-                { key: 'source', header: 'Source', render: () => '-' },
+                { key: 'source', header: 'Source', render: () => <Dv k="addressSource" /> },
                 { key: 'status', header: 'Status', render: (a) => <StatusPill status={a.activeFlag === false ? 'Inactive' : 'Active'} /> },
                 { key: 'actions', header: 'Actions', render: () => <KebabButton /> },
               ]}

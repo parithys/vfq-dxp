@@ -7,6 +7,8 @@ import { overdueTicketCount } from './accountInformationResolvers';
 import { leadResolvers } from './leadResolvers';
 import { IC, IconTile, KpiGrid, KpiTile, LinkAction, Panel, Pill, StatusPill, UnderlineTabs, Donut, fmtDate, fmtDateTime, qar, toneFor } from './c360Kit';
 import type { Tone } from './c360Kit';
+import { RevealValue, useFieldAccess } from '../fieldAccess';
+import { Dv } from '../demoValues';
 
 type Rec = Record<string, unknown>;
 const str = (v: unknown) => (v === undefined || v === null || v === '' ? '' : String(v));
@@ -20,10 +22,12 @@ const isActive = (s: CustomerService) => !s.status || /^active$/i.test(s.status)
 
 /** A label / value row; the value cell wraps and aligns right. */
 function Row({ label, children, top }: { label: string; children: ReactNode; top?: boolean }) {
+  const mode = useFieldAccess()(label);
+  if (mode === 'hidden') return null;
   return (
     <div className={`flex justify-between gap-4 py-2 text-[length:var(--fs-body)] ${top ? 'items-start' : 'items-center'}`}>
       <span className="text-fg-2 shrink-0">{label}</span>
-      <span className="text-fg font-medium text-right min-w-0 break-words">{children}</span>
+      <span className="text-fg font-medium text-right min-w-0 break-words">{mode === 'drill-down' ? <RevealValue>{children}</RevealValue> : children}</span>
     </div>
   );
 }
@@ -52,6 +56,7 @@ interface FeedRow {
 
 export function C360Overview({ data, services, goToTab }: { data: Customer360Data; services: CustomerService[]; goToTab?: (key: string) => void }) {
   const go = (key: string) => (goToTab ? () => goToTab(key) : undefined);
+  const modeOf = useFieldAccess();
   const [usageTab, setUsageTab] = useState('balance');
   const [copied, setCopied] = useState(false);
 
@@ -153,7 +158,6 @@ export function C360Overview({ data, services, goToTab }: { data: Customer360Dat
   };
 
   const isBusiness = /enterprise|ebu|business|corporate/i.test(str(data.customer.segment));
-  const agentId = [...data.activities].sort((a, b) => str(b.transactionDate).localeCompare(str(a.transactionDate))).find((a) => a.agentId)?.agentId;
 
   const quickLinks: { label: string; icon: string; tab: string }[] = [
     { label: 'Account Hierarchy', icon: IC.users, tab: 'account-info' },
@@ -205,8 +209,7 @@ export function C360Overview({ data, services, goToTab }: { data: Customer360Dat
             <Row label="Segment">{dash(data.customer.segment)}</Row>
             <Row label="Credit Limit">{dash(creditLimit ? qar(creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR) : undefined)}</Row>
             <Row label="Account Status">{account?.status ? <StatusPill status={account.status} /> : '-'}</Row>
-            <Row label="Customer Since">-</Row>
-            <Row label="Agent ID">{dash(str(agentId))}</Row>
+            <Row label="Customer Since"><Dv k="customerSince" /></Row>
           </div>
         </Panel>
 
@@ -430,7 +433,7 @@ export function C360Overview({ data, services, goToTab }: { data: Customer360Dat
               <Row label="Created By">{dash(lr('Created By'))}</Row>
               <Row label="Lead Status">{lr('Lead Status') ? <StatusPill status={lr('Lead Status')} /> : '-'}</Row>
               <Row label="Comments">{dash(lr('Comments'))}</Row>
-              <Row label="Created On">-</Row>
+              <Row label="Created On"><Dv k="leadCreatedOn" /></Row>
             </div>
           ) : (
             <Empty>No lead on file for this customer.</Empty>
@@ -439,13 +442,13 @@ export function C360Overview({ data, services, goToTab }: { data: Customer360Dat
       </div>
 
       {/* Quick Links */}
-      <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-4 min-w-0">
+      <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-4 min-w-0 has-[>div:empty]:hidden">
         <h3 className="flex items-center gap-2.5 text-fg font-semibold text-[length:var(--fs-body-lg)] mb-3">
           <Icon path={IC.layers} className="w-5 h-5" />
           Quick Links
         </h3>
         <div className="grid grid-cols-2 @lg:grid-cols-3 gap-2">
-          {quickLinks.map((q) => (
+          {quickLinks.filter((q) => modeOf(q.label) !== 'hidden').map((q) => (
             <button
               key={q.label}
               type="button"

@@ -27,6 +27,7 @@ import {
   fmtDateTime,
   type Tone,
 } from './c360Kit';
+import { Dv } from '../demoValues';
 
 const TICKET_DETAIL_ROUTE = '/trouble-ticketing-complaints/ticket-homepage';
 const RESOLVED = new Set(['Solved', 'Completed', 'Closed']);
@@ -291,7 +292,7 @@ export function C360TicketsSupport({
                 { key: 'id', header: 'Ticket ID', className: 'whitespace-nowrap' },
                 { key: 'type', header: 'Ticket Type', className: 'min-w-28' },
                 { key: 'issue', header: 'Actual Issue', className: 'min-w-36 break-words' },
-                { key: 'service', header: 'Service / MSISDN', render: () => '-' },
+                { key: 'service', header: 'Service / MSISDN', render: () => <Dv k="ticketService" /> },
                 { key: 'status', header: 'Status', render: (t) => <StatusPill status={t.status} /> },
                 { key: 'priority', header: 'Priority', render: (t) => (t.priority === '-' ? '-' : <Pill tone={priorityTone(t.priority)}>{priorityLabel(t.priority)}</Pill>) },
                 { key: 'createdAt', header: 'Created On', className: 'whitespace-nowrap', render: (t) => fmtDate(new Date(t.createdAt).toISOString()) ?? '-' },
@@ -364,15 +365,15 @@ export function C360TicketsSupport({
                   { label: 'Ticket Type', value: selected.type, strong: false },
                   { label: 'Sub Type', value: selected.subType ?? '-', strong: false },
                   { label: 'Actual Issue', value: selected.issue, strong: false },
-                  { label: 'Service / MSISDN', value: '-', strong: false },
+                  { label: 'Service / MSISDN', value: <Dv k="ticketService" />, strong: false },
                   { label: 'Status', value: <StatusPill status={selected.status} />, strong: false },
                   { label: 'Priority', value: selected.priority === '-' ? '-' : <Pill tone={priorityTone(selected.priority)}>{priorityLabel(selected.priority)}</Pill>, strong: false },
                   { label: 'Created On', value: created.date ? `${created.date}${created.time ? `  |  ${created.time}` : ''}` : '-', strong: false },
                   { label: 'Created By', value: selected.createdBy ?? '-', strong: false },
-                  { label: 'Assigned To', value: selected.assignedTo ?? '-', strong: false },
+                  { label: 'Assigned To', value: selected.assignedTo ?? <Dv k="ticketAssignedTo" row={{ queue: selected.raw.queue }} />, strong: false },
                   { label: 'SLA', value: selected.slaHours !== undefined ? `Response within ${selected.slaHours} hours` : '-', strong: false },
                   { label: 'Last Updated', value: fmtStamp(lastUpdated(selected.raw)) ?? '-', strong: false },
-                  { label: 'Notes', value: noteText(((selected.raw.publicNotes as unknown[] | undefined) ?? []).at(-1)) ?? '-', strong: false },
+                  { label: 'Notes', value: noteText(((selected.raw.publicNotes as unknown[] | undefined) ?? []).at(-1)) ?? <Dv k="ticketNotes" row={{ issue: selected.issue }} />, strong: false },
                 ]}
               />
               <div className="grid grid-cols-1 @lg:grid-cols-2 gap-3">

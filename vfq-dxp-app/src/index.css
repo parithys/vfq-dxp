@@ -259,3 +259,12 @@ body {
     background: #fff;
   }
 }
+
+/* Requirement-coverage overlay (src/workspace/customer360/requirementCoverage.ts): a label that satisfies a persona's
+   requirement. An audit marker, not a design-system colour. */
+:root {
+  --audit-pink: #FF1493;
+}
+.req-met {
+  color: var(--audit-pink) !important;
+}

@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useStartNewConnection } from '../useStartNewConnection';
+import { RevealValue, useFieldAccess } from '../fieldAccess';
 import { Icon } from '../../../components/primitives/Icon';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { buildAssetsFieldResolver } from './assetsResolvers';
 import { ActionButton, Donut, fmtDate, fmtDateTime, FilterSelect, GridTable, IC, IconTile, KpiTile, Panel, Pill, Progress, qar, SearchBox, StatusPill, TabPage, UnderlineTabs } from './c360Kit';
 import type { GridCol, Tone } from './c360Kit';
+import { Dv } from '../demoValues';
 
 const str = (v: unknown): string | undefined => (v === undefined || v === null || v === '' ? undefined : String(v));
 const num = (v: unknown): number | undefined => (v === undefined || v === null || v === '' || Number.isNaN(Number(v)) ? undefined : Number(v));
@@ -70,10 +72,12 @@ function BalanceCircle({ value }: { value: string }) {
 }
 
 function Field({ label, value }: { label: string; value: ReactNode | undefined | null }) {
+  const mode = useFieldAccess()(label);
+  if (mode === 'hidden') return null;
   return (
     <div className="flex items-center justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
       <dt className="text-fg-2 shrink-0">{label}</dt>
-      <dd className="text-fg font-medium min-w-0 break-words text-right">{dash(value)}</dd>
+      <dd className="text-fg font-medium min-w-0 break-words text-right">{mode === 'drill-down' ? <RevealValue>{dash(value)}</RevealValue> : dash(value)}</dd>
     </div>
   );
 }
@@ -187,11 +191,11 @@ export function C360ProductsServices({ data, services }: { data: Customer360Data
             <Progress pct={pct(dataUsed, dataTotal)} />
           </div>
         ) : (
-          '-'
+          <Dv k="serviceBalance" row={{ category: s.category }} />
         ),
     },
-    { key: 'limit', header: 'Bill Limit', render: (s) => (isMobile(s) ? dash(billLimit) : '-') },
-    { key: 'addons', header: 'Add-ons', render: (s) => (get(s).asset ? get(s).addons.length : '-') },
+    { key: 'limit', header: 'Bill Limit', render: (s) => (isMobile(s) ? dash(billLimit) : <Dv k="serviceBillLimit" row={{ category: s.category }} />) },
+    { key: 'addons', header: 'Add-ons', render: (s) => (get(s).asset ? get(s).addons.length : <Dv k="serviceAddons" />) },
     {
       key: 'actions',
       header: 'Actions',
@@ -453,9 +457,9 @@ export function C360ProductsServices({ data, services }: { data: Customer360Data
                     <dl className="flex-1 min-w-48">
                       <Field label="Plan Name" value={sel.plan ?? selected.label} />
                       <Field label="Plan Type" value={planType} />
-                      <Field label="Activation Date" value={fmtDate(sel.asset?.effectiveFrom)} />
-                      <Field label="Contract End Date" value={fmtDate(sel.asset?.effectiveTo)} />
-                      <Field label="Customer Since" value={undefined} />
+                      <Field label="Activation Date" value={fmtDate(sel.asset?.effectiveFrom) ?? <Dv k="activationDate" />} />
+                      <Field label="Contract End Date" value={fmtDate(sel.asset?.effectiveTo) ?? <Dv k="contractEnd" row={{ from: sel.asset?.effectiveFrom }} />} />
+                      <Field label="Customer Since" value={<Dv k="customerSince" />} />
                     </dl>
                     {mobileSel && (
                       <div className="flex flex-wrap gap-3 justify-center">
@@ -474,8 +478,8 @@ export function C360ProductsServices({ data, services }: { data: Customer360Data
                       <Field label="Service Status" value={sel.status ? <StatusPill status={sel.status} /> : undefined} />
                       <Field label="Barrings" value={mobileSel ? (barringType ?? (barringStatus === 'Not Barred' ? 'None' : barringStatus)) : undefined} />
                       <Field label="Bill Limit" value={mobileSel ? billLimit : undefined} />
-                      <Field label="Discount" value={discount ? `${String(discount.name)}${num(discount.durationMonths) !== undefined ? ` (${String(discount.durationMonths)} months)` : ''}` : undefined} />
-                      <Field label="SIM Serial Number" value={sel.simSerial} />
+                      <Field label="Discount" value={discount ? `${String(discount.name)}${num(discount.durationMonths) !== undefined ? ` (${String(discount.durationMonths)} months)` : ''}` : <Dv k="discount" />} />
+                      <Field label="SIM Serial Number" value={sel.simSerial ?? <Dv k="simSerial" />} />
                     </dl>
                   </Panel>
                   <div className="space-y-4 min-w-0">

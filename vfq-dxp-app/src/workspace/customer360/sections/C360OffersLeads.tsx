@@ -4,6 +4,7 @@ import { Icon } from '../../../components/primitives/Icon';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { ActionButton, GridTable, IC, IconTile, KpiGrid, KpiTile, Panel, Pill, StatusPill, TabPage, fmtDate, qar, type GridCol, type Tone } from './c360Kit';
+import { Dv } from '../demoValues';
 
 type Rec = Record<string, unknown>;
 const str = (v: unknown): string | undefined => (v === undefined || v === null || v === '' ? undefined : String(v));
@@ -117,7 +118,7 @@ export function C360OffersLeads({ data }: { data: Customer360Data; services: Cus
     },
     { key: 'type', header: 'Offer Type', render: (r) => r.type ?? DASH },
     { key: 'elig', header: 'Eligibility', render: (r) => (r.eligibility ? <StatusPill status={r.eligibility} /> : DASH) },
-    { key: 'valid', header: 'Validity', render: (r) => fmtDate(r.validity) ?? DASH },
+    { key: 'valid', header: 'Validity', render: (r) => fmtDate(r.validity) ?? <Dv k="offerValidity" /> },
     { key: 'act', header: 'Actions', render: (r) => <button type="button" onClick={() => setOpenOffer(openOffer === r.key ? undefined : r.key)} className="rounded-[var(--radius-sm)] px-2.5 py-0.5 text-[length:var(--fs-caption)] font-medium text-accent bg-[color-mix(in_oklab,var(--accent),var(--bg)_92%)] hover:bg-[color-mix(in_oklab,var(--accent),var(--bg)_85%)]">{openOffer === r.key ? 'Hide' : 'View'}</button> },
     { key: 'chev', header: '', render: (r) => <Chev label="Toggle offer details" onClick={() => setOpenOffer(openOffer === r.key ? undefined : r.key)} /> },
   ];
@@ -129,7 +130,7 @@ export function C360OffersLeads({ data }: { data: Customer360Data; services: Cus
     { key: 'msisdn', header: 'MSISDN', render: (r) => str(r.mobileNumber) ?? DASH },
     { key: 'status', header: 'Status', render: (r) => (str(r.status) ? <StatusPill status={String(r.status)} /> : DASH) },
     { key: 'by', header: 'Created By', render: (r) => str(r.ownerId) ?? DASH },
-    { key: 'on', header: 'Created On', render: () => DASH },
+    { key: 'on', header: 'Created On', render: () => <Dv k="leadCreatedOn" /> },
     { key: 'act', header: 'Actions', render: () => <InertView /> },
     { key: 'chev', header: '', render: () => <Chev label="Open lead" /> },
   ];
@@ -139,7 +140,7 @@ export function C360OffersLeads({ data }: { data: Customer360Data; services: Cus
     { key: 'id', header: 'Lead ID', render: (r) => str(r.leadId) ?? DASH },
     { key: 'type', header: 'Lead Type', render: (r) => str(r.serviceNeeded) ?? DASH },
     { key: 'status', header: 'Status', render: (r) => (str(r.status) ? <StatusPill status={String(r.status)} /> : DASH) },
-    { key: 'closed', header: 'Closed On', render: () => DASH },
+    { key: 'closed', header: 'Closed On', render: () => <Dv k="leadClosedOn" /> },
   ];
 
   return (
@@ -214,7 +215,7 @@ export function C360OffersLeads({ data }: { data: Customer360Data; services: Cus
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-muted text-[length:var(--fs-body)]">Benefits: {DASH}</p>
+                    <p className="text-muted text-[length:var(--fs-body)]">Benefits: <Dv k="offerBenefits" row={{ name: nbo.name }} /></p>
                   )}
                   <div className="text-right shrink-0 text-fg-2 text-[length:var(--fs-body)]">
                     <span className="text-fg font-bold">{qar(nbo.price) ?? DASH}</span>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { getCustomer360, toActiveCustomerSummary, computeBillingSummary, type AccountRecord, type Customer360Data } from '../../engines/customer360Engine';
@@ -9,6 +9,9 @@ import { usePersonaStore } from '../../stores/personaStore';
 import { getPersona } from '../../engines/configEngine';
 import { buildTelesalesTabs } from './telesalesTabs';
 import { CustomerProfileHeader, type HeaderAlert } from './CustomerProfileHeader';
+import { useRequirementCoverage } from './requirementCoverage';
+import { FieldAccessProvider } from './fieldAccess';
+import { DemoProvider } from './demoValues';
 import { canEditCustomerRecords } from '../../engines/agentPrivilegeEngine';
 import { isTopicVisible } from '../../engines/customer360VisibilityEngine';
 import { useVerificationGate } from '../../components/patterns/VerificationGate';
@@ -142,6 +145,8 @@ export function Customer360Layout() {
     data && data !== null ? data.customer.name : 'this customer'
   );
   const canEdit = canEditCustomerRecords(activePersonaId);
+  const coverageRoot = useRef<HTMLDivElement>(null);
+  useRequirementCoverage(coverageRoot, activePersonaId, activeTab || 'overview', Boolean(data));
 
   if (data === null) {
     return <div className="p-8 text-fg-2">Loading customer…</div>;
@@ -414,7 +419,9 @@ export function Customer360Layout() {
   };
   const editContact = canEdit ? () => requireVerification(() => setDemoDrawerOpen(true)) : undefined;
   const retailTab = (key: string, label: string, topics: string[], content: ReactNode): TabItem[] =>
-    topics.some((t) => isTopicVisible(activePersonaId, t)) ? [{ key, label, content }] : [];
+    topics.some((t) => isTopicVisible(activePersonaId, t))
+      ? [{ key, label, content: <FieldAccessProvider personaId={activePersonaId} page={key}>{content}</FieldAccessProvider> }]
+      : [];
   const tabProps = { data, services, goToTab: openTab };
   const tabs: TabItem[] = headerOnly
     ? [
@@ -469,55 +476,58 @@ export function Customer360Layout() {
   ];
 
   return (
-    <div className="p-8">
-      <CustomerProfileHeader
-        {...(telesales
-          ? {
-              accountNumber: data.accounts[0]?.accountId ? String(data.accounts[0].accountId) : undefined,
-              // The full ID number stays masked until the agent passes the same verification gate that guards
-              // profile edits.
-              maskId: true,
-              onRequestReveal: (reveal: () => void) => requireVerification(reveal),
-              pinIdentity: true,
-            }
-          : {})}
-        name={data.customer.name}
-        tags={[
-          ...(/vip|premium/i.test(data.customer.segment) ? [{ label: 'VIP', variant: 'tag-amber' as const }] : []),
-          ...(/postpaid/i.test(String(data.accounts[0]?.accountType ?? '')) ? [{ label: 'Postpaid', variant: 'tag-red' as const }] : []),
-        ]}
-        qid={data.customer.qid}
-        idType={data.customer.idType}
-        blacklisted={Boolean(data.customer.blacklisted)}
-        dob={data.customer.dob}
-        gender={data.contacts[0]?.gender as string | undefined}
-        preferredLanguage={data.customer.preferredLanguage}
-        segment={data.customer.segment}
-        phone={data.customer.phone}
-        email={data.customer.email}
-        totalConnections={services.length > 0 ? services.length : undefined}
-        creditLimit={data.creditLimits[0] ? `QAR ${String(data.creditLimits[0].creditLimitQar ?? data.creditLimits[0].creditLimitQAR ?? '-')}` : undefined}
-        alerts={headerAlerts}
-        onViewAlerts={tabs.some((t) => t.key === 'alerts-risks') ? () => setActiveTab('alerts-risks') : undefined}
-        // Header-only layouts edit the profile from the Contact Information tab, so the header carries no button.
-        actions={
-          headerOnly ? undefined : (
-          <>
-            {canEdit ? (
-              <Button variant="primary-rect" compact onClick={() => requireVerification(() => setDemoDrawerOpen(true))}>
-                Edit profile
-              </Button>
-            ) : (
-              <Tooltip content="Not authorised to edit customer records" placement="bottom">
-                <Button variant="primary-rect" compact className="opacity-40 cursor-not-allowed" onClick={(e) => e.preventDefault()}>
+    <div className="p-8" ref={coverageRoot}>
+      <DemoProvider value={{ data, services }}>
+      <FieldAccessProvider personaId={headerOnly ? activePersonaId : undefined} page="header">
+        <CustomerProfileHeader
+          {...(telesales
+            ? {
+                accountNumber: data.accounts[0]?.accountId ? String(data.accounts[0].accountId) : undefined,
+                // The full ID number stays masked until the agent passes the same verification gate that guards
+                // profile edits.
+                maskId: true,
+                onRequestReveal: (reveal: () => void) => requireVerification(reveal),
+                pinIdentity: true,
+              }
+            : {})}
+          name={data.customer.name}
+          tags={[
+            ...(/vip|premium/i.test(data.customer.segment) ? [{ label: 'VIP', variant: 'tag-amber' as const }] : []),
+            ...(/postpaid/i.test(String(data.accounts[0]?.accountType ?? '')) ? [{ label: 'Postpaid', variant: 'tag-red' as const }] : []),
+          ]}
+          qid={data.customer.qid}
+          idType={data.customer.idType}
+          blacklisted={Boolean(data.customer.blacklisted)}
+          dob={data.customer.dob}
+          gender={data.contacts[0]?.gender as string | undefined}
+          preferredLanguage={data.customer.preferredLanguage}
+          segment={data.customer.segment}
+          phone={data.customer.phone}
+          email={data.customer.email}
+          totalConnections={services.length > 0 ? services.length : undefined}
+          creditLimit={data.creditLimits[0] ? `QAR ${String(data.creditLimits[0].creditLimitQar ?? data.creditLimits[0].creditLimitQAR ?? '-')}` : undefined}
+          alerts={headerAlerts}
+          onViewAlerts={tabs.some((t) => t.key === 'alerts-risks') ? () => setActiveTab('alerts-risks') : undefined}
+          // Header-only layouts edit the profile from the Contact Information tab, so the header carries no button.
+          actions={
+            headerOnly ? undefined : (
+            <>
+              {canEdit ? (
+                <Button variant="primary-rect" compact onClick={() => requireVerification(() => setDemoDrawerOpen(true))}>
                   Edit profile
                 </Button>
-              </Tooltip>
-            )}
-          </>
-          )
-        }
-      />
+              ) : (
+                <Tooltip content="Not authorised to edit customer records" placement="bottom">
+                  <Button variant="primary-rect" compact className="opacity-40 cursor-not-allowed" onClick={(e) => e.preventDefault()}>
+                    Edit profile
+                  </Button>
+                </Tooltip>
+              )}
+            </>
+            )
+          }
+        />
+      </FieldAccessProvider>
 
       {!telesales && !headerOnly && (
       <div className="grid grid-cols-2 gap-4 mb-4">
@@ -573,6 +583,7 @@ export function Customer360Layout() {
         onSaved={(patch) => setData((prev) => (prev ? { ...prev, customer: { ...prev.customer, ...patch } } : prev))}
         onTicketCreated={addTicket}
       />
+      </DemoProvider>
     </div>
   );
 }
