@@ -2,7 +2,7 @@ import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { usePersonaStore } from '../../stores/personaStore';
 import { canUseFeature } from '../../engines/personaEngine';
 import { getAllRoutes, getPersona } from '../../engines/configEngine';
-import { getScreenComponent } from '../screenRegistry';
+import { resolveJourneyTarget } from '../../navigation/journeyTarget';
 import { Icon } from '../../components/primitives/Icon';
 import { SECONDARY_SURFACE, PRIMARY_SURFACE } from '../../components/primitives/Button';
 import { NotYetBuiltPanel } from '../NotYetBuiltPanel';
@@ -12,7 +12,6 @@ import {
   PRODUCT_LINE_BY_KEY,
   reachableCategories,
   visibleJourneys,
-  type Journey,
   type JourneyCategory,
   type ProductLine,
 } from '../../navigation/journeyCatalogue';
@@ -30,16 +29,6 @@ import { PageHeader } from '../../components/patterns/PageHeader';
 // One page serves both the line root (all categories stacked) and each
 // category route (that section only), because they are the same content at
 // different scope - the pill row switches between them.
-
-function resolveTarget(journey: Journey): string | undefined {
-  if (journey.path) return journey.path;
-  if (!journey.screenId) return undefined;
-  // Only link to a screen that is actually registered; a catalogued-but-unbuilt
-  // screen id would land on <ScreenNotYetBuilt>, which is a worse answer than
-  // presenting the journey as planned.
-  if (!getScreenComponent(journey.screenId)) return undefined;
-  return getAllRoutes().find((r) => r.screenId === journey.screenId)?.path;
-}
 
 function CategorySection({ category, personaId, launch }: { category: JourneyCategory; personaId: string; launch?: LaunchContext }) {
   const journeys = visibleJourneys(category, (k) => canUseFeature(personaId, k));
@@ -60,7 +49,7 @@ function CategorySection({ category, personaId, launch }: { category: JourneyCat
 
       <div className="p-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {journeys.map((journey, i) => {
-          const target = resolveTarget(journey);
+          const target = resolveJourneyTarget(journey);
           // Opened from a customer (Customer 360): journeys with a customer-aware destination go straight to it.
           const launched = launch && target ? launchJourney(journey, target, launch, (id) => getAllRoutes().find((r) => r.screenId === id)?.path) : undefined;
           return <JourneyCard key={journey.id} journey={journey} index={i} to={launched?.to ?? target} state={launched?.state} />;

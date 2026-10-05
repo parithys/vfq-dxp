@@ -74,9 +74,13 @@ export function Sidebar() {
   const q = query.trim().toLowerCase();
   const visibleItems = q
     ? navItems.flatMap((item) => {
-        const groupMatch = item.label.toLowerCase().includes(q);
-        const kids = groupMatch ? item.children : item.children?.filter((c) => c.label.toLowerCase().includes(q));
-        return groupMatch || kids?.length ? [{ ...item, children: kids }] : [];
+        if (item.label.toLowerCase().includes(q)) return [item];
+        const kids = (item.children ?? []).flatMap((c) => {
+          if (c.label.toLowerCase().includes(q)) return [c];
+          const js = c.journeys?.filter((j) => j.label.toLowerCase().includes(q));
+          return js?.length ? [{ ...c, journeys: js }] : [];
+        });
+        return kids.length ? [{ ...item, children: kids }] : [];
       })
     : navItems;
   const firstTarget = visibleItems[0] && (visibleItems[0].children?.length ? visibleItems[0].children[0].to : visibleItems[0].to);
@@ -289,23 +293,56 @@ export function Sidebar() {
                     hierarchy legible, so the mechanism is unchanged. */}
                 {hasChildren && expanded && (
                   <ul className="mt-0.5 ml-[26px] border-l border-[var(--nav-border)]">
-                    {item.children!.map((child) => (
+                    {item.children!.map((child) => {
+                      const hasJourneys = Boolean(child.journeys?.length);
+                      const childOpen = Boolean(q) || expandedNavKeys.includes(child.key);
+                      return (
                       <li key={child.key}>
-                        <NavLink
-                          to={child.to}
-                          className={() =>
-                            `flex items-center gap-2.5 h-9 -ml-px pl-4 pr-3 border-l-2 text-[length:var(--fs-caption)] ${
-                              child.to === activeNavPath
-                                ? 'border-accent bg-[var(--nav-active-bg)] text-[var(--nav-active-fg)] font-medium'
-                                : 'border-transparent text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] hover:border-[var(--nav-section)]'
-                            }`
-                          }
-                        >
-                          <Icon path={child.icon} className="w-4 h-4 shrink-0" />
-                          <span className="truncate">{child.label}</span>
-                        </NavLink>
+                        <div className="flex items-center">
+                          <NavLink
+                            to={child.to}
+                            className={() =>
+                              `flex-1 min-w-0 flex items-center gap-2.5 h-9 -ml-px pl-4 pr-3 border-l-2 text-[length:var(--fs-caption)] ${
+                                child.to === activeNavPath
+                                  ? 'border-accent bg-[var(--nav-active-bg)] text-[var(--nav-active-fg)] font-medium'
+                                  : 'border-transparent text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] hover:border-[var(--nav-section)]'
+                              }`
+                            }
+                          >
+                            <Icon path={child.icon} className="w-4 h-4 shrink-0" />
+                            <span className="truncate">{child.label}</span>
+                          </NavLink>
+                          {hasJourneys && (
+                            <button
+                              type="button"
+                              onClick={() => toggleNavGroup(child.key)}
+                              aria-expanded={childOpen}
+                              aria-label={`${childOpen ? 'Collapse' : 'Expand'} ${child.label}`}
+                              className="shrink-0 h-9 w-8 flex items-center justify-center text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)]"
+                            >
+                              <Icon path={CHEVRON_DOWN} className={`w-3.5 h-3.5 transition-transform ${childOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                          )}
+                        </div>
+                        {hasJourneys && childOpen && (
+                          // Third level: the journeys this role can see in the category. A planned journey has no
+                          // entry point yet and opens its category page, which carries the explanation.
+                          <ul className="ml-[22px] border-l border-[var(--nav-border)]">
+                            {child.journeys!.map((j) => (
+                              <li key={j.id}>
+                                <NavLink
+                                  to={j.to ?? child.to}
+                                  className="flex items-center h-8 pl-5 pr-3 text-[length:var(--fs-caption)] text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] hover:bg-[var(--nav-hover-bg)] rounded-[var(--radius-sm)]"
+                                >
+                                  <span className="truncate">{j.label}</span>
+                                </NavLink>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </li>
-                    ))}
+                      );
+                    })}
                   </ul>
                 )}
               </li>

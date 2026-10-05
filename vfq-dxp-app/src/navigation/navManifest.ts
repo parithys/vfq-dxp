@@ -51,6 +51,16 @@ export interface NavPlannedCopy {
   relatedWorkspaces?: { label: string; to: string }[];
 }
 
+/** Third level: a journey inside a product-line category. Built per role by navigationEngine from the journey
+ * catalogue - never listed in the manifest, so adding a journey does not add a nav item (INV-1). */
+export interface NavJourney {
+  id: string;
+  label: string;
+  /** Entry point; absent for a planned journey, which links to its category page instead. */
+  to?: string;
+  status: 'available' | 'partly' | 'planned';
+}
+
 export interface NavItem {
   key: NavKey;
   label: string;
@@ -59,6 +69,8 @@ export interface NavItem {
   /** SVG path data for <Icon path=…>. */
   icon: string;
   children?: NavItem[];
+  /** Third level, on a product-line category item: the journeys this role can see in it. */
+  journeys?: NavJourney[];
   /** Workspace-level analogue of screenRegistry's getScreenComponent(): when
    * false the route exists and is navigable, but renders <WorkspaceNotYetBuilt>.
    *

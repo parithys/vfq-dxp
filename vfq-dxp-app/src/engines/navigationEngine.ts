@@ -6,7 +6,8 @@ import {
   type NavItem,
   type NavKey,
 } from '../navigation/navManifest';
-import { reachableCategories } from '../navigation/journeyCatalogue';
+import { reachableCategories, visibleJourneys } from '../navigation/journeyCatalogue';
+import { resolveJourneyTarget } from '../navigation/journeyTarget';
 import type { PersonaApproach } from '../types/config';
 
 
@@ -90,7 +91,21 @@ export function resolveNavFor(personaId: string | undefined): NavItem[] {
       personaId ? canUseFeature(personaId, featureKey) : false
     );
     const reachableKeys = new Set(reachable.map((c) => `${item.key}.${c.key}`));
-    return { ...item, children: item.children?.filter((c) => reachableKeys.has(c.key)) };
+    const can = (featureKey: string) => (personaId ? canUseFeature(personaId, featureKey) : false);
+    return {
+      ...item,
+      children: item.children
+        ?.filter((c) => reachableKeys.has(c.key))
+        .map((c) => {
+          const category = reachable.find((r) => `${item.key}.${r.key}` === c.key);
+          return category
+            ? {
+                ...c,
+                journeys: visibleJourneys(category, can).map((j) => ({ id: j.id, label: j.title, to: resolveJourneyTarget(j), status: j.status })),
+              }
+            : c;
+        }),
+    };
   });
 
   const resolved = scoped;
