@@ -50,19 +50,22 @@
    brand/status colors (accent, success, warn, danger) stay constant across
    themes. Toggled via themeStore adding/removing `.dark` on <html>. */
 :root.dark {
-  --bg: #16171c;
-  --surface: #111319;
-  --surface-warm: #241a1a;
+  /* Header and body follow the side navigation's scheme: every structural colour below is derived from the --nav-*
+     tokens (set further down) so the three regions stay one palette. Cards and the header sit one step above the
+     page, mixed from --nav-bg toward --nav-fg rather than a separate hex. */
+  --bg: color-mix(in oklab, var(--nav-bg), var(--nav-fg) 5%);
+  --surface: var(--nav-bg);
+  --surface-warm: color-mix(in oklab, var(--nav-bg), var(--accent) 12%);
   /* --page-bg/--table-header-bg have no separate dark-mode design of their
      own yet - fall back to --surface's existing dark value so they don't
      resolve to nothing (transparent) when the theme toggles. */
-  --page-bg: #111319;
-  --table-header-bg: #111319;
-  --fg: #f2f2f2;
-  --fg-2: #c7c9cb;
-  --muted: #9a9da0;
-  --border: #3a3d42;
-  --border-soft: #2a2c30;
+  --page-bg: var(--nav-bg);
+  --table-header-bg: var(--nav-bg);
+  --fg: var(--nav-fg);
+  --fg-2: color-mix(in oklab, var(--nav-fg), var(--nav-fg-muted) 40%);
+  --muted: var(--nav-fg-muted);
+  --border: color-mix(in oklab, var(--nav-bg), var(--nav-fg) 22%);
+  --border-soft: var(--nav-border);
   /* Tokens introduced by the 2026-09-24 light-mode reference. That asset is
      light-only, so each maps to an existing dark value rather than a new
      shade: the pale fills it specifies (#fafafa, #fff8e1, #ffb3b3) would
@@ -70,7 +73,7 @@
      light values on purpose - they sit on --bg, read fine against it in
      both themes, and are the only thing distinguishing the four statuses
      once the fill is transparent. */
-  --surface-subtle: #1b1d23;
+  --surface-subtle: color-mix(in oklab, var(--nav-bg), var(--nav-fg) 3%);
   --muted-2: var(--muted);
   /* The nav rail stays charcoal in dark mode - the reference is a
      light-mode asset, and inverting it to white here would be inventing a
@@ -93,12 +96,12 @@
   --nav-group-bg: rgba(187,183,255,.12);
   --accent-disabled: color-mix(in oklab, var(--accent), var(--bg) 55%);
   --warn-bg: color-mix(in oklab, var(--warn), var(--bg) 82%);
-  --search-bg: rgba(255,255,255,.08);
+  --search-bg: var(--nav-hover-bg);
   /* No separate dark-mode design of its own yet - light-mode #e0e0e0 is
      --border's own light value, so reuse --border's dark value rather than
      introducing a new dark shade. */
-  --table-border: #3a3d42;
-  --light-neutral: #2a2c30;
+  --table-border: var(--border);
+  --light-neutral: var(--border-soft);
   --grey-form: #6b6e72;
   --black-80: rgba(0,0,0,.6);
 
