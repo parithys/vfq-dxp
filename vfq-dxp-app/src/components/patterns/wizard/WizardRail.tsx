@@ -62,72 +62,72 @@ export function WizardRail({
   return (
     <nav aria-label="Journey steps" className={`${expanded ? 'w-64' : 'w-16'} shrink-0 self-stretch bg-bg border-r border-[var(--field-card-border)]`}>
     <div className="sticky top-0">
-    <button
-      type="button"
-      onClick={toggle}
-      aria-label={expanded ? 'Collapse steps' : 'Expand steps'}
-      title={expanded ? 'Collapse steps' : 'Expand steps'}
-      className={`h-12 w-full flex items-center border-b border-border-soft text-fg-2 hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${expanded ? 'justify-end px-5' : 'justify-center'}`}
-    >
-      <Icon path={PANEL_ICON} className="w-5 h-5" />
-    </button>
-    <ol>
-      {steps.map((step, i) => {
-        const isActive = i === currentIndex;
-        const isDone = i < maxReached;
-        // Locked (2026-09-28): the rail stops accepting clicks entirely
-        // once the journey has crossed a locksAfter step, regardless of
-        // maxReached - "prevent all edits" means the agent cannot jump
-        // back to Contact/Plan/etc. to change what was signed against,
-        // not merely that Back is hidden.
-        const isReachable = !isLocked && !isActive && i <= maxReached;
-        return (
-          <li
-            key={step.key}
-            aria-current={isActive ? 'step' : undefined}
-            role={isReachable ? 'button' : undefined}
-            tabIndex={isReachable ? 0 : undefined}
-            aria-label={isReachable ? `Go to ${step.label} step` : undefined}
-            onClick={isReachable ? () => onGoToStep(i) : undefined}
-            onKeyDown={
-              isReachable
-                ? (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      onGoToStep(i);
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label={expanded ? 'Collapse steps' : 'Expand steps'}
+        title={expanded ? 'Collapse steps' : 'Expand steps'}
+        className={`h-12 w-full flex items-center border-b border-border-soft text-fg-2 hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${expanded ? 'justify-end px-5' : 'justify-center'}`}
+      >
+        <Icon path={PANEL_ICON} className="w-5 h-5" />
+      </button>
+      <ol>
+        {steps.map((step, i) => {
+          const isActive = i === currentIndex;
+          const isDone = i < maxReached;
+          // Locked (2026-09-28): the rail stops accepting clicks entirely
+          // once the journey has crossed a locksAfter step, regardless of
+          // maxReached - "prevent all edits" means the agent cannot jump
+          // back to Contact/Plan/etc. to change what was signed against,
+          // not merely that Back is hidden.
+          const isReachable = !isLocked && !isActive && i <= maxReached;
+          return (
+            <li
+              key={step.key}
+              aria-current={isActive ? 'step' : undefined}
+              role={isReachable ? 'button' : undefined}
+              tabIndex={isReachable ? 0 : undefined}
+              aria-label={isReachable ? `Go to ${step.label} step` : undefined}
+              onClick={isReachable ? () => onGoToStep(i) : undefined}
+              onKeyDown={
+                isReachable
+                  ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onGoToStep(i);
+                      }
                     }
-                  }
-                : undefined
-            }
-            className={`group relative min-h-12 flex items-center border-l-2 border-l-transparent transition-colors ${expanded ? 'px-5 gap-3' : 'justify-center'} ${
-              isActive ? 'bg-accent text-accent-on' : 'text-fg-2'
-            } ${isReachable ? 'cursor-pointer hover:bg-surface-warm hover:text-accent focus:outline-none focus-visible:shadow-[var(--focus-ring)]' : ''}`}
-          >
-            <Icon path={stepIcon(step)} className={`w-5 h-5 shrink-0 ${isDone && !isActive ? 'text-success' : ''}`} />
-            {expanded && (
-              <div className="min-w-0 py-2">
-                <div className={`truncate text-[length:var(--fs-body)] ${isActive ? 'font-semibold' : 'font-medium text-fg'}`}>{step.label}</div>
-                {step.description && (
-                  <div className={`text-[length:var(--fs-caption)] mt-0.5 truncate ${isActive ? 'text-accent-on' : 'text-muted'}`}>{step.description}</div>
-                )}
-              </div>
-            )}
-            {!expanded && (
-              // Overlay label, same as the Customer 360 rail: over the page, never shifts the layout.
-              <span
-                aria-hidden="true"
-                className={`pointer-events-none absolute left-0 top-0 z-30 hidden h-full items-center gap-3 pl-[18px] pr-5 whitespace-nowrap rounded-r-[var(--radius-sm)] border border-l-0 border-[var(--field-card-border)] shadow-raised text-[length:var(--fs-body)] opacity-0 transition-opacity duration-100 lg:flex group-hover:opacity-100 group-focus-within:opacity-100 ${
-                  isActive ? 'bg-accent text-accent-on font-semibold border-transparent' : 'bg-surface-warm text-fg font-medium'
-                }`}
-              >
-                <Icon path={stepIcon(step)} className={`w-5 h-5 shrink-0 ${isActive ? '' : isDone ? 'text-success' : 'text-accent'}`} />
-                {step.label}
-              </span>
-            )}
-          </li>
-        );
-      })}
-    </ol>
+                  : undefined
+              }
+              className={`group relative min-h-12 flex items-center border-l-2 border-l-transparent transition-colors ${expanded ? 'px-5 gap-3' : 'justify-center'} ${
+                isActive ? 'bg-accent text-accent-on' : 'text-fg-2'
+              } ${isReachable ? 'cursor-pointer hover:bg-surface-warm hover:text-accent focus:outline-none focus-visible:shadow-[var(--focus-ring)]' : ''}`}
+            >
+              <Icon path={stepIcon(step)} className={`w-5 h-5 shrink-0 ${isDone && !isActive ? 'text-success' : ''}`} />
+              {expanded && (
+                <div className="min-w-0 py-2">
+                  <div className={`truncate text-[length:var(--fs-body)] ${isActive ? 'font-semibold' : 'font-medium text-fg'}`}>{step.label}</div>
+                  {step.description && (
+                    <div className={`text-[length:var(--fs-caption)] mt-0.5 truncate ${isActive ? 'text-accent-on' : 'text-muted'}`}>{step.description}</div>
+                  )}
+                </div>
+              )}
+              {!expanded && (
+                // Overlay label, same as the Customer 360 rail: over the page, never shifts the layout.
+                <span
+                  aria-hidden="true"
+                  className={`pointer-events-none absolute left-0 top-0 z-30 hidden h-full items-center gap-3 pl-[18px] pr-5 whitespace-nowrap rounded-r-[var(--radius-sm)] border border-l-0 border-[var(--field-card-border)] shadow-raised text-[length:var(--fs-body)] opacity-0 transition-opacity duration-100 lg:flex group-hover:opacity-100 group-focus-within:opacity-100 ${
+                    isActive ? 'bg-accent text-accent-on font-semibold border-transparent' : 'bg-surface-warm text-fg font-medium'
+                  }`}
+                >
+                  <Icon path={stepIcon(step)} className={`w-5 h-5 shrink-0 ${isActive ? '' : isDone ? 'text-success' : 'text-accent'}`} />
+                  {step.label}
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ol>
     </div>
     </nav>
   );

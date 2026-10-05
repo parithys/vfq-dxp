@@ -11,95 +11,17 @@ import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import { usePersonaStore } from '../../../stores/personaStore';
 import { evaluateRule } from '../../../engines/ruleEngine';
-import {
-  canResolveTicket,
-  canReassignTicketQueue,
-  canSeeTicketAuditTrail,
-} from '../../../engines/agentPrivilegeEngine';
+import { canResolveTicket, canReassignTicketQueue, canSeeTicketAuditTrail } from '../../../engines/agentPrivilegeEngine';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { Checkbox } from '../../../components/primitives/Checkbox';
-import {
-  STATUS_VARIANT,
-  RESOLUTION_CODES,
-  ESCALATION_REASONS,
-  CANCELLATION_REASONS,
-  TT_HASHTAGS,
-  REOPEN_WINDOW_DAYS,
-  RETENTION_RESOLUTION_CODES,
-} from '../../../data/reference/ticketReferenceData';
+import { STATUS_VARIANT, RESOLUTION_CODES, ESCALATION_REASONS, CANCELLATION_REASONS, TT_HASHTAGS, REOPEN_WINDOW_DAYS, RETENTION_RESOLUTION_CODES } from '../../../data/reference/ticketReferenceData';
 import { useTicketSlaEscalationSweep } from '../slaEscalationSweep';
 import { TicketCommunicationTab } from './TicketCommunicationTab';
+import type { Activity, Escalation, Attachment, Ticket, AuditRecord, OsbNotification } from './ticketDetailModel';
+
 
 const CURRENT_AGENT = 'Current Agent';
 const MAX_ATTACHMENTS = 5; // P-15 is "To be confirmed" in the source - placeholder cap pending VFQ confirmation.
-
-interface PublicNote {
-  author: string;
-  text: string;
-  createdAt: string;
-}
-interface Activity {
-  type: 'Manual' | 'Auto';
-  description: string;
-  createdAt: string;
-  createdBy: string;
-  open: boolean;
-}
-interface Escalation {
-  reason: string;
-  escalatedAt: string;
-  escalatedBy: string;
-}
-interface Attachment {
-  name: string;
-  size: number;
-  uploadedAt: string;
-}
-interface Ticket {
-  ticketId: string;
-  customerId: string;
-  status: string;
-  category: string;
-  area?: string;
-  actualIssue?: string;
-  queue: string;
-  priority: string;
-  createdAt?: string;
-  assignedTo?: string | null;
-  assignedAt?: string | null;
-  slaTargetHours?: number;
-  slaDueAt?: string;
-  resolutionCode?: string | null;
-  l3Reference?: string | null;
-  escalations?: Escalation[];
-  activities?: Activity[];
-  attachments?: Attachment[];
-  reopenCount?: number;
-  closedAt?: string | null;
-  cancelReason?: string | null;
-  publicNotes?: PublicNote[];
-  hashtags?: string[];
-  assignedApproverId?: string | null;
-  approvalDecision?: 'Approved' | 'Rejected' | 'Returned' | null;
-  approvalReasonCode?: string | null;
-  approvalNotes?: string | null;
-  approvalDecidedAt?: string | null;
-  retentionResolutionCode?: string | null;
-}
-interface AuditRecord {
-  auditId: string;
-  recordType: string;
-  recordId: string;
-  employeeUser: string;
-  fieldModified: string;
-  newValue: string;
-  timestamp: string;
-}
-interface OsbNotification {
-  orderId: string;
-  dbTimestamp: string;
-  smsText: string;
-}
 
 // SCR-029 (Ticket detail: public notes / bell icon notifications) + SCR-210
 // (Ticket Homepage: fields filled by which role is responsible, internal
