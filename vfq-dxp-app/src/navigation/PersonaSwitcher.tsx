@@ -98,7 +98,7 @@ export function PersonaSwitcher() {
     // stepped where they met. Sharing the token rather than copying the value
     // keeps them joined in dark mode too, where the two resolve differently
     // (#3a3d42 vs rgba(255,255,255,.1)).
-    <div className="relative z-30 grid grid-cols-[auto_minmax(0,28rem)_auto_minmax(0,1fr)] items-center gap-3 h-16 px-4 border-b border-[var(--nav-border)] bg-[color-mix(in_oklab,var(--bg)_85%,transparent)] backdrop-blur">
+    <div className="relative z-30 grid grid-cols-[auto_minmax(0,28rem)_minmax(0,1fr)_auto] items-center gap-3 h-16 px-4 border-b border-[var(--nav-border)] bg-[color-mix(in_oklab,var(--bg)_85%,transparent)] backdrop-blur">
       <button
         onClick={toggleMobileOpen}
         aria-label="Open navigation"
@@ -125,7 +125,7 @@ export function PersonaSwitcher() {
       </div>
       {/* One flex strip so the session reference numbers and the
           approach-driven context chips sit side by side rather than stacking. */}
-      <div className="col-start-3 flex items-center gap-3">
+      <div className="col-start-3 justify-self-center flex items-center gap-3">
         <SessionReferenceNumbers />
         <HeaderContextChips />
       </div>
