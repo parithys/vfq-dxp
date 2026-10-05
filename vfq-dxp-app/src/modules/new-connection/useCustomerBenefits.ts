@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { benefitsFor, type CustomerBenefit } from '../../engines/customerBenefitEngine';
 import type { CustomerRecord } from '../../engines/customer360Engine';
-import { useActiveCustomerStore } from '../../stores/activeCustomerStore';
+import { useCustomerContext } from '../../stores/customerContextStore';
 
 /**
  * The benefits (retired, MADA, B2B2C, loyalty, prepaid-welcome) the journey's customer holds, for choosing which
@@ -11,7 +11,7 @@ import { useActiveCustomerStore } from '../../stores/activeCustomerStore';
  * customer's data. `undefined` while loading or when no customer is known (nothing is filtered then).
  */
 export function useCustomerBenefits(customerId: string | undefined): CustomerBenefit[] | undefined {
-  const active = useActiveCustomerStore((s) => s.customer);
+  const active = useCustomerContext((s) => s.customer);
   const fromContext = customerId && active?.customerId === customerId && active.benefitEligibility !== undefined ? benefitsFor(active) : undefined;
   const [loaded, setLoaded] = useState<{ id: string; benefits: CustomerBenefit[] } | undefined>();
 

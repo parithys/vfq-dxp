@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { getAllRoutes } from '../../engines/configEngine';
 import { LeadListView } from '../../modules/lead-management/LeadListView';
-import { useActiveCustomerStore } from '../../stores/activeCustomerStore';
+import { useCustomerContext } from '../../stores/customerContextStore';
 import { Button } from '../../components/primitives/Button';
 import { Icon } from '../../components/primitives/Icon';
 
@@ -15,7 +15,7 @@ const SWAP_ICON = 'M8 3L4 7l4 4 M4 7h16 M16 21l4-4-4-4 M20 17H4';
 // Mobile Postpaid wizard, so looking it up avoids baking in that quirk.
 //
 // Every genuinely blank-start "new customer" wizard belongs here (none of
-// these read activeCustomerStore) - Prepaid and MNP Port-In were previously
+// these read customerContextStore) - Prepaid and MNP Port-In were previously
 // missing even though both are fully built. Pre-to-Post Migration and SIM
 // Swap are deliberately NOT included: both act on a line/service the
 // customer already has, so they're Customer 360 product actions, not new
@@ -38,7 +38,7 @@ const ACQUISITION_ACTIONS = [
 // looking at a different customer's Customer 360.
 export function SalesWorkspace() {
   const navigate = useNavigate();
-  const clearActiveCustomer = useActiveCustomerStore((s) => s.clearActiveCustomer);
+  const clearActiveCustomer = useCustomerContext((s) => s.clearActiveCustomer);
 
   const startAcquisition = (screenId: string) => {
     const route = getAllRoutes().find((r) => r.screenId === screenId);

@@ -8,7 +8,7 @@ import { getPersona } from '../../engines/configEngine';
 import { useEntityStore } from '../../stores/entityStore';
 import { useAuthStore } from '../../stores/authStore';
 import { closeOrderActivities } from '../../engines/activityEngine';
-import { useJourneyCustomer } from '../../stores/journeyCustomerStore';
+import { useCustomerContext } from '../../stores/customerContextStore';
 
 /**
  * The standard "Activation complete" page, for every activation journey.
@@ -122,7 +122,7 @@ export function ActivationCompleteScreen({ order }: { order: ActivationCompleteO
     setClosing(true);
     await closeOrderActivities(order.orderId);
     // The journey is over: the customer context is released.
-    useJourneyCustomer.getState().end();
+    useCustomerContext.getState().endJourney();
     pushToast('success', 'Activity closed', { key: `activity-closed-${order.orderId}` });
     navigate('/');
   };

@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getAllModules, getAllRoutes } from '../engines/configEngine';
-import { useActiveCustomerStore } from '../stores/activeCustomerStore';
+import { useCustomerContext } from '../stores/customerContextStore';
 import { Icon } from '../components/primitives/Icon';
 import { NAV_MANIFEST, navItemByPath } from './navManifest';
 
@@ -16,7 +16,7 @@ function Crumb() {
 export function Breadcrumbs() {
   const location = useLocation();
   const navigate = useNavigate();
-  const activeCustomerName = useActiveCustomerStore((s) => s.customer?.name);
+  const activeCustomerName = useCustomerContext((s) => s.customer?.name);
   const [, moduleSlug, screenSlug] = location.pathname.split('/');
   if (!moduleSlug) return null;
 

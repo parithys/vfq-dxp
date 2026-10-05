@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { searchCustomers, toActiveCustomerSummary, type CustomerSearchResult } from '../../engines/customer360Engine';
-import { useActiveCustomerStore } from '../../stores/activeCustomerStore';
+import { useCustomerContext } from '../../stores/customerContextStore';
 import { Badge } from '../../components/primitives/Badge';
 import { SearchField } from '../../components/primitives/SearchField';
 import { Button } from '../../components/primitives/Button';
@@ -54,7 +54,7 @@ function Highlight({ text, query, words }: { text: string | undefined; query: st
 
 export function CustomerSearchPage() {
   const navigate = useNavigate();
-  const setActiveCustomer = useActiveCustomerStore((s) => s.setActiveCustomer);
+  const setActiveCustomer = useCustomerContext((s) => s.setActiveCustomer);
   // The Dashboard search hands its text over here, so it opens already searched.
   const handedOver = (useLocation().state as { query?: string } | null)?.query ?? '';
   const [query, setQuery] = useState(handedOver);

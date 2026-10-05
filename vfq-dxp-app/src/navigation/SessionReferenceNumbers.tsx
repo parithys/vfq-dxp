@@ -4,7 +4,7 @@ import * as mockDataEngine from '../engines/mockDataEngine';
 import { getAllRoutes } from '../engines/configEngine';
 import { useEntityStore } from '../stores/entityStore';
 import { useNotificationStore } from '../stores/notificationStore';
-import { useActiveCustomerStore } from '../stores/activeCustomerStore';
+import { useCustomerContext } from '../stores/customerContextStore';
 import { useQnomyQueueStore } from '../stores/qnomyQueueStore';
 import { useAuthStore } from '../stores/authStore';
 import {
@@ -345,7 +345,7 @@ function mostRecentFor<T extends { customerId: string }>(records: T[], customerI
 // Header placement, immediately following the search box, read-only display
 // (plain text stat / Badge - never an editable input). Both reference
 // numbers are scoped to the customer currently loaded into
-// activeCustomerStore. Persistence across every page/screen is structural:
+// customerContextStore. Persistence across every page/screen is structural:
 // PersonaSwitcher (this component's parent) is mounted once in App.tsx
 // outside <AppRouter/>, so it never unmounts on navigation.
 //
@@ -380,9 +380,9 @@ function mostRecentFor<T extends { customerId: string }>(records: T[], customerI
 export function SessionReferenceNumbers() {
   const navigate = useNavigate();
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
-  const activeCustomer = useActiveCustomerStore((s) => s.customer);
-  const setActiveCustomer = useActiveCustomerStore((s) => s.setActiveCustomer);
-  const clearActiveCustomer = useActiveCustomerStore((s) => s.clearActiveCustomer);
+  const activeCustomer = useCustomerContext((s) => s.customer);
+  const setActiveCustomer = useCustomerContext((s) => s.setActiveCustomer);
+  const clearActiveCustomer = useCustomerContext((s) => s.clearActiveCustomer);
   const updateRecord = useEntityStore((s) => s.updateRecord);
   // Whose history this release belongs to, for the Ticket History page - the
   // stable per-login identity (users-agents.json's userId), not the active

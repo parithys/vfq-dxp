@@ -11,7 +11,7 @@ import { Tooltip } from '../primitives/Tooltip';
 import { Modal } from '../primitives/Modal';
 import { Textarea } from '../primitives/Textarea';
 import { logActivity } from '../../engines/activityEngine';
-import { useJourneyCustomer } from '../../stores/journeyCustomerStore';
+import { useCustomerContext } from '../../stores/customerContextStore';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
 
 const CHEVRON_LEFT = 'M15 18l-6-6 6-6';
@@ -642,10 +642,10 @@ export function GuidedActivationWizard({
       trigger,
       journey: title,
       orderId,
-      // The identified customer for this journey (see activeCustomerStore), not re-derived.
-      customerId: useJourneyCustomer.getState().active?.customerId ?? wizardId.match(/existing-(.+)$/)?.[1],
-      customerName: useJourneyCustomer.getState().active?.customerName ?? draftCustomerName(draft.values),
-      idNumber: useJourneyCustomer.getState().active?.idNumber,
+      // The identified customer for this journey (see customerContextStore), not re-derived.
+      customerId: useCustomerContext.getState().journey?.customerId ?? wizardId.match(/existing-(.+)$/)?.[1],
+      customerName: useCustomerContext.getState().journey?.customerName ?? draftCustomerName(draft.values),
+      idNumber: useCustomerContext.getState().journey?.idNumber,
       stepLabel: activeSteps[currentIndex]?.label,
       comments,
     });
@@ -667,7 +667,7 @@ export function GuidedActivationWizard({
   const abandonOrder = async () => {
     if (!activityComments.trim()) return;
     await recordActivity('abandoned', draftOrderId, activityComments);
-    useJourneyCustomer.getState().end(wizardId);
+    useCustomerContext.getState().endJourney(wizardId);
     setActivityComments('');
     if (draftOrderId) await mockDataEngine.remove('orders', draftOrderId);
     clearDraft(wizardId);
@@ -728,7 +728,7 @@ export function GuidedActivationWizard({
     const id = await persistDraft();
     if (!id) return;
     await recordActivity('saved-exit', id, comments);
-    useJourneyCustomer.getState().end(wizardId);
+    useCustomerContext.getState().endJourney(wizardId);
     clearDraft(wizardId);
     onSaveExit?.();
   };
@@ -739,7 +739,7 @@ export function GuidedActivationWizard({
     const id = await persistDraft();
     if (!id) return;
     await recordActivity('saved-exit', id);
-    useJourneyCustomer.getState().end(wizardId);
+    useCustomerContext.getState().endJourney(wizardId);
     clearDraft(wizardId);
     useNotificationStore.getState().pushToast('success', 'Draft saved', { key: `draft-saved-${wizardId}`, detail: 'This order can be resumed from Draft Orders.' });
   };

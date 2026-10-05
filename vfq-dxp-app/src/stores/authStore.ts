@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { useJourneyCustomer } from './journeyCustomerStore';
+import { useCustomerContext } from './customerContextStore';
 import { persist } from 'zustand/middleware';
 import { resetApplicationState } from '../auth/resetSession';
 
@@ -46,7 +46,7 @@ export const useAuthStore = create<AuthState>()(
       // store is cleared and the page reloads, so the next login starts from the code's defaults
       // (see resetApplicationState).
       signOut: () => {
-        useJourneyCustomer.getState().end();
+        useCustomerContext.getState().endJourney();
         set({ isAuthenticated: false, staffId: '', profile: null });
         resetApplicationState();
       },

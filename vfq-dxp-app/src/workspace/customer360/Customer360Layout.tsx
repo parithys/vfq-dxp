@@ -4,7 +4,7 @@ import { useLocation, useParams } from 'react-router-dom';
 import { getCustomer360, toActiveCustomerSummary, computeBillingSummary, type AccountRecord, type Customer360Data } from '../../engines/customer360Engine';
 import { listCustomerServices, type ServiceSources } from '../../engines/customerServicesEngine';
 import * as mockDataEngine from '../../engines/mockDataEngine';
-import { useActiveCustomerStore } from '../../stores/activeCustomerStore';
+import { useCustomerContext } from '../../stores/customerContextStore';
 import { usePersonaStore } from '../../stores/personaStore';
 import { getPersona } from '../../engines/configEngine';
 import { buildTelesalesTabs } from './telesalesTabs';
@@ -66,7 +66,7 @@ const CLOSED_TICKET_STATUSES = new Set(['Solved', 'Completed', 'Closed', 'Cancel
 
 export function Customer360Layout() {
   const { customerId } = useParams<{ customerId: string }>();
-  const setActiveCustomer = useActiveCustomerStore((s) => s.setActiveCustomer);
+  const setActiveCustomer = useCustomerContext((s) => s.setActiveCustomer);
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
   const [data, setData] = useState<Customer360Data | undefined | null>(null);
   const [demoDrawerOpen, setDemoDrawerOpen] = useState(false);

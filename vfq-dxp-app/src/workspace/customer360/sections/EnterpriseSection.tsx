@@ -1,4 +1,4 @@
-import type { ActiveCustomerSummary } from '../../../stores/activeCustomerStore';
+import type { ActiveCustomerSummary } from '../../../stores/customerContextStore';
 import { ProductActionGroups, type ProductActionGroup } from '../ProductActionGroups';
 
 // Account Setup (SCR-007) is the one real enterprise screen in the catalogue

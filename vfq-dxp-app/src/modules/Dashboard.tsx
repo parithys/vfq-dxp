@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getPersona } from '../engines/configEngine';
 import { usePersonaStore } from '../stores/personaStore';
 import { useAuthStore } from '../stores/authStore';
-import { useActiveCustomerStore } from '../stores/activeCustomerStore';
+import { useCustomerContext } from '../stores/customerContextStore';
 import { useRegionStore, REGIONS } from '../stores/regionStore';
 import { canUseFeature } from '../engines/personaEngine';
 import * as mockDataEngine from '../engines/mockDataEngine';
@@ -33,7 +33,7 @@ export function Dashboard() {
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
   const persona = getPersona(activePersonaId);
   const profileName = useAuthStore((s) => s.profile?.name);
-  const recentCustomerIds = useActiveCustomerStore((s) => s.recentCustomerIds);
+  const recentCustomerIds = useCustomerContext((s) => s.recentCustomerIds);
   const regionId = useRegionStore((s) => s.regionId);
   const [recentCustomers, setRecentCustomers] = useState<CustomerRecord[]>([]);
 

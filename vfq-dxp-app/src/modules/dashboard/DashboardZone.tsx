@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { getAllRoutes } from '../../engines/configEngine';
-import { useActiveCustomerStore } from '../../stores/activeCustomerStore';
+import { useCustomerContext } from '../../stores/customerContextStore';
 import { Icon } from '../../components/primitives/Icon';
 import { Badge } from '../../components/primitives/Badge';
 import { Button } from '../../components/primitives/Button';
@@ -79,7 +79,7 @@ export function DashboardZone({
   errors: Record<string, string | undefined>;
 }) {
   const navigate = useNavigate();
-  const clearActiveCustomer = useActiveCustomerStore((s) => s.clearActiveCustomer);
+  const clearActiveCustomer = useCustomerContext((s) => s.clearActiveCustomer);
 
   // A collapsed zone still renders its heading so the Focus control's effect is
   // legible - you can see what you de-emphasised rather than it vanishing.

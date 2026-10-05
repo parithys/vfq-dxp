@@ -11,7 +11,7 @@ interface QnomyQueueState {
   assignedQTicketId: string | null;
   setAssignedQTicketId: (id: string | null) => void;
   /** The mobile number the customer typed on the Qnomy kiosk, carried for the
-   * whole interaction. Held here rather than on activeCustomerStore because it
+   * whole interaction. Held here rather than on customerContextStore because it
    * belongs to the INTERACTION, not to a customer record - a walk-in whose
    * number matches nobody on file still has a kiosk number that the journey
    * needs to keep and pre-fill. */

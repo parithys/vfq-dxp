@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import type { Customer360Data } from '../../engines/customer360Engine';
 import type { CustomerService } from '../../engines/customerServicesEngine';
-import type { ActiveCustomerSummary } from '../../stores/activeCustomerStore';
+import type { ActiveCustomerSummary } from '../../stores/customerContextStore';
 import { getVisibleTopicFields } from '../../engines/customer360VisibilityEngine';
 import { Icon } from '../../components/primitives/Icon';
 import type { TabItem } from '../../components/primitives/Tabs';

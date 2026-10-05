@@ -1,4 +1,4 @@
-import type { ActiveCustomerSummary } from '../../../stores/activeCustomerStore';
+import type { ActiveCustomerSummary } from '../../../stores/customerContextStore';
 import { ProductActionGroups, type ProductActionGroup } from '../ProductActionGroups';
 import { ServiceList } from '../ServiceList';
 import type { CustomerService } from '../../../engines/customerServicesEngine';

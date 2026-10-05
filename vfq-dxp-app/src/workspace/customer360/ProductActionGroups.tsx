@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllRoutes } from '../../engines/configEngine';
-import { useActiveCustomerStore, type ActiveCustomerSummary } from '../../stores/activeCustomerStore';
+import { useCustomerContext, type ActiveCustomerSummary } from '../../stores/customerContextStore';
 import { Icon } from '../../components/primitives/Icon';
 import { Tooltip } from '../../components/primitives/Tooltip';
 import { SECONDARY_SURFACE } from '../../components/primitives/Button';
@@ -73,7 +73,7 @@ export function ProductActionGroups({
   hasExistingService?: boolean;
 }) {
   const navigate = useNavigate();
-  const setActiveCustomer = useActiveCustomerStore((s) => s.setActiveCustomer);
+  const setActiveCustomer = useCustomerContext((s) => s.setActiveCustomer);
   const [openTitles, setOpenTitles] = useState<Set<string>>(() => new Set(groups.map((g) => g.title)));
   const [showAll, setShowAll] = useState(false);
 

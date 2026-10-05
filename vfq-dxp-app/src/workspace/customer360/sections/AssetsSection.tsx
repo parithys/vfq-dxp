@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Tabs, type TabItem } from '../../../components/primitives/Tabs';
-import type { ActiveCustomerSummary } from '../../../stores/activeCustomerStore';
+import type { ActiveCustomerSummary } from '../../../stores/customerContextStore';
 import type { CustomerService, ServiceTab } from '../../../engines/customerServicesEngine';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import { MobileSection } from './MobileSection';
