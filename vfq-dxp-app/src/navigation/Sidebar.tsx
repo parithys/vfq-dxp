@@ -361,7 +361,7 @@ export function Sidebar() {
                               onClick={() => toggleNavGroup(child.key)}
                               aria-expanded={childOpen}
                               aria-label={`${childOpen ? 'Collapse' : 'Expand'} ${child.label}`}
-                              className="shrink-0 h-9 w-8 flex items-center justify-center text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)]"
+                              className="shrink-0 h-9 w-8 mr-4 flex items-center justify-center text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)]"
                             >
                               <Icon path={CHEVRON_DOWN} className={`w-3.5 h-3.5 transition-transform ${childOpen ? 'rotate-180' : ''}`} />
                             </button>
