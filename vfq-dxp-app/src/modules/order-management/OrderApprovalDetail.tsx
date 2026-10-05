@@ -14,6 +14,7 @@ import * as mockDataEngine from '../../engines/mockDataEngine';
 import { getRequiredApproverRole } from '../../engines/configEngine';
 import { isVisibleToAgent } from '../../engines/agentTaskEngine';
 import { Checkbox } from '../../components/primitives/Checkbox';
+import { PageHeader } from '../../components/patterns/PageHeader';
 
 // Same document-icon path CafDocumentUpload.tsx/AdditionalDocumentsUpload.tsx
 // already use for their own file rows - reused here for visual consistency
@@ -243,13 +244,13 @@ export function OrderApprovalDetail() {
 
   return (
     <div className="p-8">
-      <div className="flex items-center gap-3 mb-1">
-        <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">Order {order.orderId}</h1>
-        <Badge variant="outlined-red">{order.status}</Badge>
-      </div>
-      <p className="text-fg-2">
+      <PageHeader
+        title={<>Order {order.orderId}</>}
+        badges={<><Badge variant="outlined-red">{order.status}</Badge></>}
+        description={<>
         Contact: {order.customerName ?? '-'} · {order.orderType}
-      </p>
+      </>}
+      />
       {/* Below Contact, not only in the Agents Details tab (2026-09-28
           request) - who submitted the order is read together with who it is
           for, rather than requiring a tab click to find out. Left in Agents

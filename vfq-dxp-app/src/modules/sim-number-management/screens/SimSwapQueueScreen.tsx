@@ -10,6 +10,7 @@ import { Textarea } from '../../../components/primitives/Textarea';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
+import { PageHeader } from '../../../components/patterns/PageHeader';
 
 interface SimSwapOrder {
   simSwapOrderId: string;
@@ -56,8 +57,7 @@ export function SimSwapQueueScreen() {
     const pending = orders.filter((o) => o.status === 'Submitted for Approval');
     return (
       <div className="p-8">
-        <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">SIM Swap Queue</h1>
-        <p className="text-fg-2 mb-6">Order tasks tab - tasks awaiting SIM Swap approval.</p>
+        <PageHeader title={<>SIM Swap Queue</>} description={<>Order tasks tab - tasks awaiting SIM Swap approval.</>} />
         <ErrorBanner message={loadError} />
         <DataTable<SimSwapOrder>
           columns={[
@@ -111,11 +111,11 @@ export function SimSwapQueueScreen() {
 
   return (
     <div className="p-8 w-full">
-      <div className="flex items-center gap-3 mb-1">
-        <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">SIM Swap {order.simSwapOrderId}</h1>
-        <Badge variant="outlined-red">{order.status}</Badge>
-      </div>
-      <p className="text-fg-2 mb-6">MSISDN: {order.msisdn}</p>
+      <PageHeader
+        title={<>SIM Swap {order.simSwapOrderId}</>}
+        badges={<><Badge variant="outlined-red">{order.status}</Badge></>}
+        description={<>MSISDN: {order.msisdn}</>}
+      />
 
       <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)] rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 mb-6">
         <div>

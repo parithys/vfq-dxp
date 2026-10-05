@@ -35,7 +35,7 @@ export function NewSimSwapWizard({ msisdn, onDone }: NewSimSwapWizardProps) {
 
   return (
     <div>
-      <p className="text-fg-2 mb-4">
+      <p className="text-fg-2 px-8 pt-8 mb-4">
         MSISDN: <span className="text-fg font-medium">{msisdn}</span>
       </p>
       <GuidedActivationWizard

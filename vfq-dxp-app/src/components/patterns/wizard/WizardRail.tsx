@@ -35,8 +35,8 @@ export function WizardRail({
   // long rail usable on a short viewport instead of clipping its last
   // steps out of reach.
   return (
-    <ol className="w-72 shrink-0 self-start sticky top-8 max-h-[calc(100vh-8rem)] overflow-y-auto
-      rounded-[var(--radius-card)] border border-[var(--field-card-border)] divide-y divide-border-soft bg-bg">
+    <nav aria-label="Journey steps" className="w-72 shrink-0 self-stretch bg-bg">
+    <ol className="sticky top-0">
       {steps.map((step, i) => {
         const isActive = i === currentIndex;
         const isDone = i < maxReached;
@@ -90,5 +90,6 @@ export function WizardRail({
         );
       })}
     </ol>
+    </nav>
   );
 }

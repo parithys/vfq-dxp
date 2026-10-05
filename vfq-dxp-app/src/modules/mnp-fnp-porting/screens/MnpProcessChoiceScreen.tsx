@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { getAllRoutes } from '../../../engines/configEngine';
+import { PageHeader } from '../../../components/patterns/PageHeader';
 
 const OPTIONS = [
   {
@@ -33,8 +34,7 @@ export function MnpProcessChoiceScreen() {
 
   return (
     <div className="p-8 w-full">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">MNP Port-In</h1>
-      <p className="text-fg-2 mb-6">Choose the subscription type being ported in before starting the guided process.</p>
+      <PageHeader title={<>MNP Port-In</>} description={<>Choose the subscription type being ported in before starting the guided process.</>} />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {OPTIONS.map((opt) => (
           <button

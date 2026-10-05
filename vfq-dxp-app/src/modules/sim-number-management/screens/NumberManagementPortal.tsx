@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MsisdnPicker } from '../../../components/domain/MsisdnPicker';
+import { PageHeader } from '../../../components/patterns/PageHeader';
 
 // SCR-024: Number Management Portal - "search experience needs to be
 // defined" per screens.md; the only evidenced field-level behaviour is the
@@ -11,8 +12,7 @@ export function NumberManagementPortal() {
 
   return (
     <div className="p-8 w-full">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Number Management Portal</h1>
-      <p className="text-fg-2 mb-6">Search and reserve fixed/mobile numbers.</p>
+      <PageHeader title={<>Number Management Portal</>} description={<>Search and reserve fixed/mobile numbers.</>} />
       <MsisdnPicker selected={selected} onSelect={(msisdn) => setSelected(msisdn)} />
     </div>
   );

@@ -53,7 +53,7 @@ export function InstallationActivationWizard({ config }: { config: InstallationW
   const pushToast = useNotificationStore((s) => s.pushToast);
 
   return (
-    <div className="p-8">
+    <div>
       <GuidedActivationWizard
         wizardId={config.wizardId}
         title={config.title}

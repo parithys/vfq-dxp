@@ -12,6 +12,7 @@ import { Input } from '../../components/primitives/Input';
 import { Button } from '../../components/primitives/Button';
 import { Badge } from '../../components/primitives/Badge';
 import { Select } from '../../components/primitives/Select';
+import { PageHeader } from '../../components/patterns/PageHeader';
 
 // Agent 360 AEX-03: "Order, Ticket until VFQ confirms the complete list"
 // (OI-AGN-07) - the entity kinds and their entityStore keys are the only
@@ -179,8 +180,7 @@ export function AgentProfileWorkspace() {
 
   return (
     <div className="p-8 w-full">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Agent Profile</h1>
-      <p className="text-fg-2 mb-6">View your details and manage your password and MFA settings.</p>
+      <PageHeader title={<>Agent Profile</>} description={<>View your details and manage your password and MFA settings.</>} />
 
       <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-6">
         <div className="grid grid-cols-2 gap-4">

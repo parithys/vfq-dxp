@@ -6,6 +6,7 @@ import { ErrorBanner } from '../../components/primitives/ErrorBanner';
 import { useEntityStore } from '../../stores/entityStore';
 import { useAuthStore } from '../../stores/authStore';
 import { isVisibleToAgent } from '../../engines/agentTaskEngine';
+import { PageHeader } from '../../components/patterns/PageHeader';
 
 interface AgentTask {
   taskId: string;
@@ -85,8 +86,7 @@ export function TaskListView() {
 
   return (
     <div className="p-8">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">{FILTER_LABELS[filter] ?? 'My Tasks'}</h1>
-      <p className="text-fg-2 mb-6">{filtered.length} task(s).</p>
+      <PageHeader title={<>{FILTER_LABELS[filter] ?? 'My Tasks'}</>} description={<>{filtered.length} task(s).</>} />
       <ErrorBanner message={loadError} />
       <DataTable<AgentTask>
         columns={[

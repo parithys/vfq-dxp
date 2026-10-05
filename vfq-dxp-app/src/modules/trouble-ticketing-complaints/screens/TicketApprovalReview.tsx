@@ -11,6 +11,7 @@ import { useNotificationStore } from '../../../stores/notificationStore';
 import { isVisibleToAgent } from '../../../engines/agentTaskEngine';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { TICKET_APPROVAL_ELIGIBLE_JOB_TITLES, APPROVAL_REJECT_REASONS, APPROVAL_RETURN_REASONS } from '../../../data/reference/ticketReferenceData';
+import { PageHeader } from '../../../components/patterns/PageHeader';
 
 const CURRENT_AGENT = 'Current Agent';
 
@@ -206,14 +207,14 @@ export function TicketApprovalReview() {
 
   return (
     <div className="p-8 w-full">
-      <div className="flex items-center gap-3 mb-1">
-        <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">Ticket {ticket.ticketId}</h1>
-        <Badge variant="outlined-red">{ticket.status}</Badge>
-      </div>
-      <p className="text-fg-2 mb-6">
+      <PageHeader
+        title={<>Ticket {ticket.ticketId}</>}
+        badges={<><Badge variant="outlined-red">{ticket.status}</Badge></>}
+        description={<>
         Customer: {ticket.customerId} · {ticket.category} · Priority {ticket.priority}
         {ticket.actualIssue ? ` · ${ticket.actualIssue}` : ''}
-      </p>
+      </>}
+      />
 
       <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-4">
         <p className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted mb-2">Decision history</p>

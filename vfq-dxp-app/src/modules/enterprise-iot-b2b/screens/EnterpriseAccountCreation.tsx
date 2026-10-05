@@ -8,6 +8,7 @@ import { evaluateRule } from '../../../engines/ruleEngine';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import { Checkbox } from '../../../components/primitives/Checkbox';
+import { PageHeader } from '../../../components/patterns/PageHeader';
 
 // SCR-007: Account Creation Screen (Enterprise) - FLD-023–028 (UJ-004, high
 // confidence): Account/Company name, CR type/ID type, CR number (mandatory
@@ -54,7 +55,7 @@ export function EnterpriseAccountCreation() {
 
   return (
     <div className="p-8 w-full">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-6">Enterprise Account Creation</h1>
+      <PageHeader title={<>Enterprise Account Creation</>} />
 
       <div className="space-y-4">
         <Input label="Account/Company Name" value={name} onChange={(e) => setName(e.target.value)} />

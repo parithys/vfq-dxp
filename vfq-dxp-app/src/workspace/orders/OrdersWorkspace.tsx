@@ -1,6 +1,7 @@
 import { Tabs, type TabItem } from '../../components/primitives/Tabs';
 import { MySalesOrders } from '../../modules/order-management/MySalesOrders';
 import { OrderApprovalQueue } from '../../modules/order-management/OrderApprovalQueue';
+import { PageHeader } from '../../components/patterns/PageHeader';
 
 // Cross-customer order workspace - the standalone counterpart to Customer
 // 360's Orders tab. Wraps the two existing order-management screens
@@ -14,7 +15,7 @@ const TABS: TabItem[] = [
 export function OrdersWorkspace() {
   return (
     <div className="p-8">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-6">Orders</h1>
+      <PageHeader title={<>Orders</>} />
       <Tabs items={TABS} />
     </div>
   );

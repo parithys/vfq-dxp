@@ -13,6 +13,7 @@ import { Input } from '../../components/primitives/Input';
 import { Select } from '../../components/primitives/Select';
 import { Icon } from '../../components/primitives/Icon';
 import { Tooltip } from '../../components/primitives/Tooltip';
+import { PageHeader } from '../../components/patterns/PageHeader';
 
 const BACK_ICON = 'M15 18l-6-6 6-6';
 
@@ -136,6 +137,17 @@ export function BillingAccountPage() {
 
   return (
     <div className="p-8 w-full">
+      <PageHeader
+        title={<>{profile.name}</>}
+        badges={<Badge variant="filled-neutral">{profile.billingProfileId}</Badge>}
+        description={<>
+          {customerName} · {customerId} ·{' '}
+          <Link to={`/customer/${customerId}`} className="text-link hover:underline">
+            View Customer 360
+          </Link>
+        </>}
+      />
+
       <button
         onClick={() => navigate(customerId ? `/customer/${customerId}` : -1 as unknown as string)}
         className="flex items-center gap-1.5 text-fg-2 hover:text-fg text-[length:var(--fs-caption)] mb-4"
@@ -143,17 +155,6 @@ export function BillingAccountPage() {
         <Icon path={BACK_ICON} className="w-3.5 h-3.5" />
         Back to Customer 360
       </button>
-
-      <div className="flex items-center gap-3 mb-1">
-        <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">{profile.name}</h1>
-        <Badge variant="filled-neutral">{profile.billingProfileId}</Badge>
-      </div>
-      <p className="text-fg-2 mb-6">
-        {customerName} · {customerId} ·{' '}
-        <Link to={`/customer/${customerId}`} className="text-link hover:underline">
-          View Customer 360
-        </Link>
-      </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">

@@ -129,7 +129,7 @@ export function NewConnectionWizard({ flow = 'new' }: { flow?: NewConnectionFlow
   }
 
   return (
-    <div className="p-8">
+    <div>
       <GuidedActivationWizard
         wizardId={WIZARD_ID}
         allowCustomerView
@@ -665,7 +665,7 @@ export function NewConnectionWizard({ flow = 'new' }: { flow?: NewConnectionFlow
       {/* Demo-only failure simulator: outside the wizard card, and only on Customer Identification,
           where the lookups it affects run. */}
       {(draftStep ?? 0) === 0 && !isMirrorWindow && (
-        <div className="mt-6">
+        <div className="mt-6 px-8 pb-8">
           <DemoFaultPanel />
         </div>
       )}

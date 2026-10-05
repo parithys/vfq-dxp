@@ -1,6 +1,7 @@
 import { Tabs, type TabItem } from '../../components/primitives/Tabs';
 import { TicketsDashboard } from '../../modules/trouble-ticketing-complaints/screens/TicketsDashboard';
 import { TicketApprovalQueue } from '../../modules/trouble-ticketing-complaints/screens/TicketApprovalQueue';
+import { PageHeader } from '../../components/patterns/PageHeader';
 
 // Cross-customer ticket queue - the standalone counterpart to Customer 360's
 // Tickets tab (same `trouble-tickets` records, unfiltered here vs. filtered
@@ -15,7 +16,7 @@ const TABS: TabItem[] = [
 export function SupportWorkspace() {
   return (
     <div className="p-8">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-6">Support</h1>
+      <PageHeader title={<>Support</>} />
       <Tabs items={TABS} />
     </div>
   );

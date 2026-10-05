@@ -5,6 +5,7 @@ import { DataTable } from '../../components/primitives/DataTable';
 import { Badge } from '../../components/primitives/Badge';
 import { ErrorBanner } from '../../components/primitives/ErrorBanner';
 import type { Lead } from './types';
+import { PageHeader } from '../../components/patterns/PageHeader';
 
 export type LeadScope = 'my' | 'created' | 'team' | 'all' | 'contact';
 
@@ -50,8 +51,7 @@ export function LeadListView({ scope }: { scope: LeadScope }) {
 
   return (
     <div className="p-8">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">{SCOPE_TITLES[scope]}</h1>
-      <p className="text-fg-2 mb-6">{filtered.length} lead(s).</p>
+      <PageHeader title={<>{SCOPE_TITLES[scope]}</>} description={<>{filtered.length} lead(s).</>} />
       <ErrorBanner message={loadError} />
       <DataTable<Lead>
         columns={[

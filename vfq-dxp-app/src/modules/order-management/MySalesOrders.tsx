@@ -4,6 +4,7 @@ import { DataTable } from '../../components/primitives/DataTable';
 import { Badge } from '../../components/primitives/Badge';
 import { ErrorBanner } from '../../components/primitives/ErrorBanner';
 import { useEntityStore } from '../../stores/entityStore';
+import { PageHeader } from '../../components/patterns/PageHeader';
 
 interface Order {
   orderId: string;
@@ -44,8 +45,7 @@ export function MySalesOrders({ padded = true }: MySalesOrdersProps) {
 
   return (
     <div className={padded ? 'p-8' : ''}>
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">My Sales Orders</h1>
-      <p className="text-fg-2 mb-6">{orders.length} order(s).</p>
+      <PageHeader title={<>My Sales Orders</>} description={<>{orders.length} order(s).</>} bleed={padded} />
       <ErrorBanner message={loadError} />
       <DataTable<Order>
         columns={[

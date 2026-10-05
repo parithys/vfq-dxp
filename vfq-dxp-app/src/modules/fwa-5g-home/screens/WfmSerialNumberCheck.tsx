@@ -5,6 +5,7 @@ import { Button } from '../../../components/primitives/Button';
 import { Badge } from '../../../components/primitives/Badge';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
+import { PageHeader } from '../../../components/patterns/PageHeader';
 
 interface Order {
   orderId: string;
@@ -56,8 +57,7 @@ export function WfmSerialNumberCheck() {
   if (!selectedOrder) {
     return (
       <div className="p-8">
-        <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">WFM Installation - Serial Number Check</h1>
-        <p className="text-fg-2 mb-6">Orders awaiting Dual-Play serial number check and service activation.</p>
+        <PageHeader title={<>WFM Installation - Serial Number Check</>} description={<>Orders awaiting Dual-Play serial number check and service activation.</>} />
         <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg divide-y divide-border-soft">
           {pending.map((o) => (
             <button
@@ -80,10 +80,9 @@ export function WfmSerialNumberCheck() {
 
   return (
     <div className="p-8 w-full">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Serial Number Check - Dual Play</h1>
-      <p className="text-fg-2 mb-6">
+      <PageHeader title={<>Serial Number Check - Dual Play</>} description={<>
         Order {selectedOrder.orderId} - {selectedOrder.customerName}
-      </p>
+      </>} />
       <DualPlaySerialCheckStep value={serials} onChange={(patch) => setSerials((prev) => ({ ...prev, ...patch }))} />
       <div className="flex gap-2 mt-6">
         <Button variant="ghost-rect" onClick={() => setSelectedOrderId(null)}>

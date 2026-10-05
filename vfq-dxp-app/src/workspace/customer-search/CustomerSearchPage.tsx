@@ -6,6 +6,7 @@ import { Badge } from '../../components/primitives/Badge';
 import { SearchField } from '../../components/primitives/SearchField';
 import { Button } from '../../components/primitives/Button';
 import { Icon } from '../../components/primitives/Icon';
+import { PageHeader } from '../../components/patterns/PageHeader';
 
 
 const MATCH_LABEL: Record<string, string> = {
@@ -110,8 +111,7 @@ export function CustomerSearchPage() {
 
   return (
     <div className="p-8 w-full">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Customer Search</h1>
-      <p className="text-fg-2 mb-6">Look up a customer by mobile number, QID, customer number, account number, name, email, or service ID.</p>
+      <PageHeader title={<>Customer Search</>} description={<>Look up a customer by mobile number, QID, customer number, account number, name, email, or service ID.</>} />
 
       {/* Field and Search button on one row (the field shrinks, the button keeps its width); Enter in the
           field and the button run the same search. The text stays in the field after a search. */}

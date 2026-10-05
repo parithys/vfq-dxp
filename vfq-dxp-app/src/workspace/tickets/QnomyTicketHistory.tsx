@@ -8,6 +8,7 @@ import { Badge } from '../../components/primitives/Badge';
 import { ErrorBanner } from '../../components/primitives/ErrorBanner';
 import { Tabs } from '../../components/primitives/Tabs';
 import type { TabItem } from '../../components/primitives/Tabs';
+import { PageHeader } from '../../components/patterns/PageHeader';
 
 interface QTicketHistoryRecord {
   qTicketId: string;
@@ -194,11 +195,10 @@ export function QnomyTicketHistory() {
 
   return (
     <div className="p-8">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">My Ticket History</h1>
-      <p className="text-fg-2 mb-6">
+      <PageHeader title={<>My Ticket History</>} description={<>
         Qnomy queue tickets you have completed or abandoned. Defaults to today; switch to Last 30 Days for the
         fuller record.
-      </p>
+      </>} />
       <ErrorBanner message={loadError} />
       <Tabs items={tabs} activeKey={view} onChange={(key) => setView(key as 'today' | '30days')} />
     </div>

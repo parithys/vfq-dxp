@@ -645,11 +645,15 @@ export function GuidedActivationWizard({
       setFieldValue(wizardId, field, value);
       mirrorCh.current?.postMessage({ type: 'set', field, value });
     };
-    return <CustomerMirrorPanel step={currentStep} values={draft.values} interactive={interactive} onSetValue={mirrorSetValue} />;
+    return (
+      <div className="p-8">
+        <CustomerMirrorPanel step={currentStep} values={draft.values} interactive={interactive} onSetValue={mirrorSetValue} />
+      </div>
+    );
   }
   if (isCustomerFacing) {
     return (
-      <div className="max-w-2xl mx-auto" onKeyDown={handleStepKeyDown}>
+      <div className="max-w-2xl mx-auto p-8" onKeyDown={handleStepKeyDown}>
         {currentStep?.render({ values: draft.values, setValue, goNext: () => void goNext(), goToStepKey, saveDraft, saveAndExit, requestAbandon })}
         {abandonModal}
       </div>
@@ -700,19 +704,22 @@ export function GuidedActivationWizard({
 
   return (
     <div>
-      <div className={`flex items-start justify-between gap-4 ${titleAside ? 'mb-1' : 'mb-6'}`}>
-        <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">{title}</h1>
-        <div className="flex items-center gap-3">
-          {exitLinks}
+      {/* Title area: carries the page's own padding and a bottom border, so the step rail below it can sit flush against the left edge. */}
+      <div className="px-8 pt-8 pb-6 bg-bg">
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">{title}</h1>
+          <div className="flex items-center gap-3">
+            {exitLinks}
+          </div>
         </div>
+        {/* The fixed customer for this journey sits under the title. */}
+        {titleAside && <div className="mt-3">{titleAside}</div>}
+        {popupBlocked && (
+          <p role="alert" className="text-[var(--warn-text)] text-[length:var(--fs-caption)] mt-3">
+            The browser blocked the customer view pop-up. Allow pop-ups for this site and try again.
+          </p>
+        )}
       </div>
-      {/* The fixed customer for this journey sits under the title. */}
-      {titleAside && <div className="mb-6">{titleAside}</div>}
-      {popupBlocked && (
-        <p role="alert" className="text-[var(--warn-text)] text-[length:var(--fs-caption)] -mt-3 mb-4">
-          The browser blocked the customer view pop-up. Allow pop-ups for this site and try again.
-        </p>
-      )}
 
       <span className="sr-only" aria-live="polite" role="status">
         {shareAnnouncement}
@@ -721,14 +728,14 @@ export function GuidedActivationWizard({
         {currentStep && `Step ${currentIndex + 1} of ${activeSteps.length}: ${currentStep.label}`}
       </span>
 
-      <div className="flex items-start gap-6">
+      <div className="flex items-stretch">
         {!currentStep?.hideRail && (
           <WizardRail steps={activeSteps} currentIndex={currentIndex} maxReached={maxReached} isLocked={isLocked} onGoToStep={goToStep} />
         )}
 
         <div
           ref={stepPanelRef}
-          className={`flex-1 min-w-0 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-6 ${viewOpen ? 'outline outline-2 outline-accent' : ''}`}
+          className={`flex-1 min-w-0 m-8 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-6 ${viewOpen ? 'outline outline-2 outline-accent' : ''}`}
           onKeyDown={handleStepKeyDown}
         >
           {/* Title left, Customer view right and vertically centred with it; the button wraps below the title when the row is too narrow. */}

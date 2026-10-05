@@ -62,7 +62,7 @@ export function NewMnpWizard() {
   const steps = buildMnpSteps(isPrepaid);
 
   return (
-    <div className="p-8">
+    <div>
       <GuidedActivationWizard
         wizardId={`new-mnp-${processType}`}
         title={isPrepaid ? 'MNP Prepaid Port-In' : 'MNP Postpaid Port-In'}

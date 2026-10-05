@@ -2,6 +2,7 @@ import { Tabs, type TabItem } from '../../components/primitives/Tabs';
 import { RoleAccessSection } from './RoleAccessSection';
 import { BellNotificationsSection } from './BellNotificationsSection';
 import { BulkNotesConfigSection } from './BulkNotesConfigSection';
+import { PageHeader } from '../../components/patterns/PageHeader';
 
 // The home for backoffice/config-oriented capabilities: the role/access
 // directory (existing) plus Agent 360's Bell Notification (BIN) and Bulk
@@ -16,8 +17,7 @@ const TABS: TabItem[] = [
 export function AdministrationWorkspace() {
   return (
     <div className="p-8">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Administration</h1>
-      <p className="text-fg-2 mb-6">Operational role directory, feature-grant matrix, and backoffice notification tools.</p>
+      <PageHeader title={<>Administration</>} description={<>Operational role directory, feature-grant matrix, and backoffice notification tools.</>} />
       <Tabs items={TABS} />
     </div>
   );

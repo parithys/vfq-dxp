@@ -3,6 +3,7 @@ import { BulkOperationPortal } from '../../../components/patterns/BulkOperationP
 import type { BulkRow } from '../../../components/patterns/BulkOperationPortal';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
+import { PageHeader } from '../../../components/patterns/PageHeader';
 
 // SCR-001: Bulk Adjustment Portal (DXP, Target State) - UJ-001 "Bulk Adjustment
 // Submission (Target State)," high confidence: agent uses a bulk adjustment
@@ -37,8 +38,7 @@ export function BulkAdjustmentPortal() {
 
   return (
     <div className="p-8">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Bulk Adjustment Portal</h1>
-      <p className="text-fg-2 mb-6">DXP target-state bulk adjustment submission, integrated with BRM.</p>
+      <PageHeader title={<>Bulk Adjustment Portal</>} description={<>DXP target-state bulk adjustment submission, integrated with BRM.</>} />
       <BulkOperationPortal
         rows={rows}
         onChange={setRows}

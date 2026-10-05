@@ -8,6 +8,7 @@ import { useEntityStore } from '../../stores/entityStore';
 import { useAuthStore } from '../../stores/authStore';
 import { isVisibleToAgent } from '../../engines/agentTaskEngine';
 import { getRequiredApproverRole } from '../../engines/configEngine';
+import { PageHeader } from '../../components/patterns/PageHeader';
 
 interface Order {
   orderId: string;
@@ -80,8 +81,7 @@ export function OrderApprovalQueue({ padded = true }: OrderApprovalQueueProps) {
 
   return (
     <div className={padded ? 'p-8' : ''}>
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Order Approval Queue</h1>
-      <p className="text-fg-2 mb-6">Queues: ADJ_APPR_QUEUE_BUSI_1000, VFQA_DSA_ORDER_APPROVAL_QUEUE_DSQ/JAGUAR/TESTING/VISTAS</p>
+      <PageHeader title={<>Order Approval Queue</>} description={<>Queues: ADJ_APPR_QUEUE_BUSI_1000, VFQA_DSA_ORDER_APPROVAL_QUEUE_DSQ/JAGUAR/TESTING/VISTAS</>} bleed={padded} />
       <ErrorBanner message={loadError} />
       <DataTable<Order>
         columns={[

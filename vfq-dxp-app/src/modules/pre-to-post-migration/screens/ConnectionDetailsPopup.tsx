@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { PageHeader } from '../../../components/patterns/PageHeader';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 
 interface InstalledAsset {
@@ -23,7 +24,7 @@ export function ConnectionDetailsPopup() {
 
   return (
     <div className="p-8 max-w-md">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Connection Details</h1>
+      <PageHeader title="Connection Details" />
       <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 mt-4 space-y-2">
         <p className="text-fg">Total Number of Prepaid Connections: {prepaidCount}</p>
         <p className="text-fg">Total Number of Postpaid Connections: {postpaidCount}</p>

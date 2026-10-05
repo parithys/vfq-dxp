@@ -68,7 +68,7 @@ export function NewPrepaidWizard() {
   }
 
   return (
-    <div className="p-8">
+    <div>
       <GuidedActivationWizard
         wizardId={WIZARD_ID}
         title="New Prepaid Activation (Tablet)"

@@ -1,4 +1,5 @@
 import { SearchField } from '../components/primitives/SearchField';
+import { PageHeader } from '../components/patterns/PageHeader';
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getAllModules, getAllRoutes, getJourneyIdsForScreen, getJourneyMeta } from '../engines/configEngine';
@@ -126,19 +127,19 @@ export function ModuleScreenList() {
 
   return (
     <div className="p-8">
-      <div className="flex items-start justify-between gap-4 mb-1">
-        <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">{module.module}</h1>
-        <Link
-          to="/"
-          className="shrink-0 flex items-center gap-1 rounded-[var(--radius-button)] border border-border-soft px-3 py-1.5 text-[length:var(--fs-caption)] text-fg-2 hover:bg-surface hover:text-fg"
-        >
-          <Icon path={ICONS.chevronLeft} className="w-3.5 h-3.5" />
-          All modules
-        </Link>
-      </div>
-      <p className="text-fg-2 mb-6">
-        {module.screenCount} screens evidenced in this module. {MODULE_DESCRIPTIONS[module.module] ?? ''}
-      </p>
+      <PageHeader
+        title={module.module}
+        actions={
+          <Link
+            to="/"
+            className="shrink-0 flex items-center gap-1 rounded-[var(--radius-button)] border border-border-soft px-3 py-1.5 text-[length:var(--fs-caption)] text-fg-2 hover:bg-surface hover:text-fg"
+          >
+            <Icon path={ICONS.chevronLeft} className="w-3.5 h-3.5" />
+            All modules
+          </Link>
+        }
+        description={<>{module.screenCount} screens evidenced in this module. {MODULE_DESCRIPTIONS[module.module] ?? ''}</>}
+      />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">

@@ -5,6 +5,7 @@ import { Button } from '../../../components/primitives/Button';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useWorkflowStore } from '../../../stores/workflowStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
+import { PageHeader } from '../../../components/patterns/PageHeader';
 
 interface CrossSalesOffer {
   offerId: string;
@@ -57,8 +58,7 @@ export function MigrationOfferTab() {
 
   return (
     <div className="p-8 w-full">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Migration Offer</h1>
-      <p className="text-fg-2 mb-6">System-recommended prepaid-to-postpaid migration offers (Unica campaign engine).</p>
+      <PageHeader title={<>Migration Offer</>} description={<>System-recommended prepaid-to-postpaid migration offers (Unica campaign engine).</>} />
 
       <div className="space-y-4">
         {migrationOffers.map((o) => {

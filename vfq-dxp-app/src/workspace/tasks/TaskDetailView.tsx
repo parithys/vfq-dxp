@@ -8,6 +8,7 @@ import { usePersonaStore } from '../../stores/personaStore';
 import { canAssignTasks } from '../../engines/agentPrivilegeEngine';
 import { useNotificationStore } from '../../stores/notificationStore';
 import * as mockDataEngine from '../../engines/mockDataEngine';
+import { PageHeader } from '../../components/patterns/PageHeader';
 
 // Agent 360 ATV-06 / Annex_02: Task status model - "Open -> Assigned/In
 // Progress/Closed -> (In Progress/Closed) -> Closed; no transition out of
@@ -110,14 +111,14 @@ export function TaskDetailView() {
 
   return (
     <div className="p-8">
-      <div className="flex items-center gap-3 mb-1">
-        <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">{task.taskName}</h1>
-        <Badge variant={STATUS_VARIANT[task.taskStatus] ?? 'filled-neutral'}>{task.taskStatus}</Badge>
-        {task.priorityFlag && <Badge variant="danger">Priority</Badge>}
-      </div>
-      <p className="text-fg-2 mb-6">
+      <PageHeader
+        title={<>{task.taskName}</>}
+        badges={<><Badge variant={STATUS_VARIANT[task.taskStatus] ?? 'filled-neutral'}>{task.taskStatus}</Badge>
+        {task.priorityFlag && <Badge variant="danger">Priority</Badge>}</>}
+        description={<>
         {task.taskId} · {task.taskType} · Created {new Date(task.createdAt).toLocaleString()}
-      </p>
+      </>}
+      />
 
       <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-6">
         <div className="text-[length:var(--fs-caption)] text-muted mb-1">Description</div>

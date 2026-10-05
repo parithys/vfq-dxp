@@ -1,4 +1,5 @@
 import { useSearchParams } from 'react-router-dom';
+import { PageHeader } from '../../../components/patterns/PageHeader';
 import { useEffect, useMemo, useState } from 'react';
 import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
@@ -198,15 +199,16 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
 
   return (
     <div className={padded ? 'p-8' : ''}>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Tickets Dashboard</h1>
-          <p className="text-fg-2">Trouble tickets and complaints across all queues.</p>
-        </div>
-        <Button variant="primary-rect" onClick={() => setModalOpen(true)}>
-          New Ticket
-        </Button>
-      </div>
+      <PageHeader
+        bleed={padded}
+        title="Tickets Dashboard"
+        description="Trouble tickets and complaints across all queues."
+        actions={
+          <Button variant="primary-rect" onClick={() => setModalOpen(true)}>
+            New Ticket
+          </Button>
+        }
+      />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         {TICKET_STATUSES.map((status) => (

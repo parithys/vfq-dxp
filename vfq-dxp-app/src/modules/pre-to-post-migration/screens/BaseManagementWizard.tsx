@@ -43,7 +43,7 @@ export function BaseManagementWizard() {
   }
 
   return (
-    <div className="p-8">
+    <div>
       <GuidedActivationWizard
         wizardId={WIZARD_ID}
         title="Base Management"

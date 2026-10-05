@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { PageHeader } from '../components/patterns/PageHeader';
 import { useNavigate } from 'react-router-dom';
 import { getPersona } from '../engines/configEngine';
 import { usePersonaStore } from '../stores/personaStore';
@@ -90,10 +91,7 @@ export function Dashboard() {
           (removed 2026-09-27) - see dashboardLayout.ts's header note - so
           this is just the heading now, not a row splitting space with a
           control that no longer exists. */}
-      <h1 className={`text-[length:var(--fs-h3)] font-medium text-fg ${headerNote ? 'mb-1' : 'mb-6'}`}>
-        {layout.heading}
-      </h1>
-      {headerNote && <p className="text-fg-2 mb-6">{headerNote}</p>}
+      <PageHeader title={layout.heading} description={headerNote || undefined} />
 
       {/* Customer search is the entry point for customer-centric work, so it
           only leads for roles that hold it. */}

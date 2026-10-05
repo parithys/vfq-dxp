@@ -4,6 +4,7 @@ import { Input } from '../../../components/primitives/Input';
 import { Button } from '../../../components/primitives/Button';
 import { NewSimSwapWizard } from './NewSimSwapWizard';
 import { useEnterToSubmit } from '../../../hooks/useEnterToSubmit';
+import { PageHeader } from '../../../components/patterns/PageHeader';
 
 // SCR-195: Global Search - UJ-090: "Click Global Search icon -> Enter MSISDN
 // and click Go -> Click SIM Swap option." The SIM Swap wizard itself has no
@@ -20,7 +21,7 @@ export function GlobalSearchScreen() {
 
   if (swapping) {
     return (
-      <div className="p-8">
+      <div>
         <NewSimSwapWizard msisdn={msisdn} onDone={() => setSwapping(false)} />
       </div>
     );
@@ -28,8 +29,7 @@ export function GlobalSearchScreen() {
 
   return (
     <div className="p-8 w-full">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Global Search</h1>
-      <p className="text-fg-2 mb-6">Search for a customer by MSISDN.</p>
+      <PageHeader title={<>Global Search</>} description={<>Search for a customer by MSISDN.</>} />
       <div className="flex gap-2" onKeyDown={handleKeyDown}>
         <Input aria-label="Enter MSISDN" placeholder="Enter MSISDN" value={msisdn} onChange={(e) => { setMsisdn(e.target.value); setSearched(false); }} />
         <Button variant="primary-rect" onClick={() => setSearched(true)} disabled={!msisdn}>

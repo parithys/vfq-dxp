@@ -16,6 +16,7 @@ import {
   type JourneyCategory,
   type ProductLine,
 } from '../../navigation/journeyCatalogue';
+import { PageHeader } from '../../components/patterns/PageHeader';
 
 // A product line's journey catalogue, filtered to the active role.
 //
@@ -105,10 +106,9 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
 
   return (
     <div className="p-8">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">{line.label}</h1>
-      <p className="text-fg-2 mb-6">
+      <PageHeader title={<>{line.label}</>} description={<>
         {active ? active.description : `Journeys available to ${persona?.name ?? 'this role'} across ${line.label}.`}
-      </p>
+      </>} />
 
       {launch && (
         <p className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface px-4 py-3 text-fg-2 text-[length:var(--fs-body)]">

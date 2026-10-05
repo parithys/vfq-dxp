@@ -8,6 +8,7 @@ import { useEntityStore } from '../../../stores/entityStore';
 import { useAuthStore } from '../../../stores/authStore';
 import { isVisibleToAgent } from '../../../engines/agentTaskEngine';
 import { TICKET_APPROVAL_ELIGIBLE_JOB_TITLES } from '../../../data/reference/ticketReferenceData';
+import { PageHeader } from '../../../components/patterns/PageHeader';
 
 interface Ticket {
   ticketId: string;
@@ -60,8 +61,7 @@ export function TicketApprovalQueue({ padded = true }: TicketApprovalQueueProps)
 
   return (
     <div className={padded ? 'p-8' : ''}>
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Ticket Approval Queue</h1>
-      <p className="text-fg-2 mb-6">Trouble tickets awaiting an approval decision.</p>
+      <PageHeader title={<>Ticket Approval Queue</>} description={<>Trouble tickets awaiting an approval decision.</>} bleed={padded} />
       <ErrorBanner message={loadError} />
       <DataTable<Ticket>
         columns={[

@@ -3,6 +3,7 @@ import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
 import { ErrorBanner } from '../../../components/primitives/ErrorBanner';
 import { useEntityStore } from '../../../stores/entityStore';
+import { PageHeader } from '../../../components/patterns/PageHeader';
 
 interface BulkJob {
   bulkOrderId: string;
@@ -40,8 +41,7 @@ export function BulkJobsDashboard() {
 
   return (
     <div className="p-8">
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Bulk Jobs</h1>
-      <p className="text-fg-2 mb-6">TM Bulk Batch List Applet - backend bulk processing job status.</p>
+      <PageHeader title={<>Bulk Jobs</>} description={<>TM Bulk Batch List Applet - backend bulk processing job status.</>} />
       <ErrorBanner message={loadError} />
       <DataTable<BulkJob>
         columns={[

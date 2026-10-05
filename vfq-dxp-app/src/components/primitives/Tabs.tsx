@@ -95,12 +95,12 @@ const RAIL_KEY = 'vfq-rail-expanded';
 
 /**
  * Vertical icon rail, flush against the left / top / bottom of its area (the page supplies no padding around it).
- * Collapsed (the default) it shows icons only; hovering an item - or focusing it - reveals ITS label over the
+ * Collapsed it shows icons only; hovering an item - or focusing it - reveals ITS label over the
  * content without moving anything. The toggle at the top pins the rail open so every label is shown in place;
  * that choice is remembered.
  */
 function IconRail({ items, active, onSelect }: { items: TabItem[]; active: string | undefined; onSelect: (key: string) => void }) {
-  const [expanded, setExpanded] = useState(() => localStorage.getItem(RAIL_KEY) === '1');
+  const [expanded, setExpanded] = useState(() => localStorage.getItem(RAIL_KEY) !== '0');
   const toggle = () =>
     setExpanded((v) => {
       localStorage.setItem(RAIL_KEY, v ? '0' : '1');
@@ -110,7 +110,7 @@ function IconRail({ items, active, onSelect }: { items: TabItem[]; active: strin
   return (
     <nav
       aria-label="Customer sections"
-      className={`shrink-0 self-stretch border-b lg:border-b-0 lg:border-r border-[var(--field-card-border)] bg-bg ${expanded ? 'lg:w-64' : 'lg:w-16'}`}
+      className={`shrink-0 self-stretch bg-bg ${expanded ? 'lg:w-64' : 'lg:w-16'}`}
     >
       <div className="lg:sticky lg:top-0">
         <button
