@@ -80,15 +80,17 @@
      charcoal was too low-contrast for the active row, which is why the
      rail marked it with a left border instead, so dark keeps the subtle
      fill and the border does the work. */
-  --nav-bg: var(--charcoal-panel);
-  --nav-border: rgba(255,255,255,.1);
-  --nav-fg: #ffffff;
-  --nav-fg-muted: rgba(255,255,255,.7);
-  --nav-section: rgba(255,255,255,.5);
-  --nav-hover-bg: rgba(255,255,255,.1);
-  --nav-active-bg: rgba(255,255,255,.08);
-  --nav-active-fg: #ffffff;
-  --nav-group-bg: rgba(255,255,255,.08);
+  /* Side navigation dark scheme (Collapsible Sidebar / Dark.svg): #0F172A rail, #A3A7AC idle icons and labels,
+     #F8FAFC on the active item, the active pill a #BBB7FF tint at 25%, and #E2E8F0 at 10% for dividers and borders. */
+  --nav-bg: #0f172a;
+  --nav-border: rgba(226,232,240,.1);
+  --nav-fg: #f8fafc;
+  --nav-fg-muted: #a3a7ac;
+  --nav-section: #a3a7ac;
+  --nav-hover-bg: rgba(187,183,255,.12);
+  --nav-active-bg: rgba(187,183,255,.25);
+  --nav-active-fg: #f8fafc;
+  --nav-group-bg: rgba(187,183,255,.12);
   --accent-disabled: color-mix(in oklab, var(--accent), var(--bg) 55%);
   --warn-bg: color-mix(in oklab, var(--warn), var(--bg) 82%);
   --search-bg: rgba(255,255,255,.08);
