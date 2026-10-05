@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
 import { IdLookupStep } from '../../../components/patterns/IdLookupStep';
+import type { IdLookupValue } from '../../../components/patterns/idLookupModel';
 import { ActivityCommentsStep } from '../../../components/patterns/ActivityCommentsStep';
 import { BillLimitEditor } from '../../../components/domain/BillLimitEditor';
 import { Input } from '../../../components/primitives/Input';
@@ -9,15 +10,6 @@ import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import { useWorkflowStore } from '../../../stores/workflowStore';
 
-interface MoiResult {
-  name: string;
-  dob: string;
-  nationality: string;
-}
-interface QidValue {
-  idNumber?: string;
-  moiResult?: MoiResult;
-}
 interface MigrationOffer {
   offerId: string;
   offerName: string;
@@ -61,7 +53,7 @@ export function BaseManagementWizard() {
             label: 'Contact',
             render: ({ values, setValue }) => (
               <div className="space-y-4">
-                <IdLookupStep value={(values.qid as QidValue) ?? {}} onChange={(v) => setValue('qid', v)} />
+                <IdLookupStep value={(values.qid as IdLookupValue) ?? {}} onChange={(v) => setValue('qid', v)} />
                 <div className="grid grid-cols-2 gap-4">
                   <Input label="Email" value={(values.email as string) ?? ''} onChange={(e) => setValue('email', e.target.value)} />
                   <Select
@@ -74,7 +66,7 @@ export function BaseManagementWizard() {
                 </div>
               </div>
             ),
-            isValid: (values) => Boolean((values.qid as QidValue | undefined)?.moiResult),
+            isValid: (values) => Boolean((values.qid as IdLookupValue | undefined)?.moiResult),
           },
           {
             key: 'offer-summary',
@@ -118,7 +110,7 @@ export function BaseManagementWizard() {
           },
         ]}
         onSubmit={async (values) => {
-          const qid = values.qid as QidValue;
+          const qid = values.qid as IdLookupValue;
           const orderId = `ORD-${Date.now().toString().slice(-6)}`;
           await createRecord('orders', {
             orderId,

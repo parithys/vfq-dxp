@@ -3,24 +3,11 @@ import { GuidedActivationWizard } from '../../../components/patterns/GuidedActiv
 import { IdLookupStep } from '../../../components/patterns/IdLookupStep';
 import { ProductPlanStep } from '../../../components/patterns/ProductPlanStep';
 import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCapture';
-import type { CafType } from '../../../components/patterns/cafTypes';
+import type { IdLookupValue } from '../../../components/patterns/idLookupModel';
+import { isCafValid, type CafValue } from '../../../components/patterns/wizardSteps';
 import { ActivityCommentsStep } from '../../../components/patterns/ActivityCommentsStep';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
-
-interface MoiResult {
-  name: string;
-  dob: string;
-  nationality: string;
-}
-interface QidValue {
-  idNumber?: string;
-  moiResult?: MoiResult;
-}
-interface CafValue {
-  cafType?: CafType;
-  signatureDataUrl?: string;
-}
 
 const WIZARD_ID = 'pre-to-post-manual';
 
@@ -45,9 +32,9 @@ export function NewPreToPostWizard() {
             key: 'contact',
             label: 'Contact',
             render: ({ values, setValue }) => (
-              <IdLookupStep value={(values.qid as QidValue) ?? {}} onChange={(v) => setValue('qid', v)} />
+              <IdLookupStep value={(values.qid as IdLookupValue) ?? {}} onChange={(v) => setValue('qid', v)} />
             ),
-            isValid: (values) => Boolean((values.qid as QidValue | undefined)?.moiResult),
+            isValid: (values) => Boolean((values.qid as IdLookupValue | undefined)?.moiResult),
           },
           {
             key: 'plan',
@@ -68,14 +55,10 @@ export function NewPreToPostWizard() {
               <CafSignatureCapture
                 value={(values.caf as CafValue) ?? {}}
                 onChange={(v) => setValue('caf', v)}
-                customerName={(values.qid as QidValue | undefined)?.moiResult?.name}
+                customerName={(values.qid as IdLookupValue | undefined)?.moiResult?.name}
               />
             ),
-            isValid: (values) => {
-              const c = values.caf as CafValue | undefined;
-              if (!c?.cafType) return false;
-              return c.cafType !== 'Digital' || Boolean(c.signatureDataUrl);
-            },
+            isValid: (values) => isCafValid(values.caf as CafValue | undefined),
           },
           {
             key: 'activity',
@@ -86,7 +69,7 @@ export function NewPreToPostWizard() {
           },
         ]}
         onSubmit={async (values) => {
-          const qid = values.qid as QidValue;
+          const qid = values.qid as IdLookupValue;
           const orderId = `ORD-${Date.now().toString().slice(-6)}`;
           await createRecord('orders', {
             orderId,
