@@ -104,6 +104,21 @@ export function QueryPreviewModal({
       open={open}
       onClose={onClose}
       title="Preview Details"
+      header={
+        <div className="flex items-start gap-3 px-6 py-4 border-b border-border-soft shrink-0">
+          <IconTile icon={IC.phone} tone="red" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <h2 className="text-fg font-semibold text-[length:var(--fs-h5)] break-words">{issue.name}</h2>
+            <div className="flex flex-wrap gap-2">
+              {issue.category && <Pill tone="red">{issue.category}</Pill>}
+              <Pill tone="blue">{serviceType}</Pill>
+            </div>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="text-muted hover:text-fg text-xl leading-none shrink-0">
+            ×
+          </button>
+        </div>
+      }
       footer={
         <>
           <Button variant="ghost-rect" onClick={onCloseInteraction}>
@@ -115,14 +130,6 @@ export function QueryPreviewModal({
         </>
       }
     >
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <IconTile icon={IC.phone} tone="red" />
-        <span className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{issue.name}</span>
-        <span className="ml-auto flex flex-wrap gap-2">
-          {issue.category && <Pill tone="red">{issue.category}</Pill>}
-          <Pill tone="blue">{serviceType}</Pill>
-        </span>
-      </div>
       <div className="space-y-6">
         <section>
           <h3 className="text-fg font-semibold text-[length:var(--fs-body)] mb-1">Query Summary</h3>
