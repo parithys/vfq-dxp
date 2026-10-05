@@ -1,20 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Icon } from '../components/primitives/Icon';
 import { VodafoneMark } from '../components/primitives/VodafoneMark';
 import { Tooltip } from '../components/primitives/Tooltip';
-import { TooltipGroup } from '../components/primitives/TooltipContext';
 import { useSidebarStore } from '../stores/sidebarStore';
 import { usePersonaStore } from '../stores/personaStore';
 import { resolveNavFor } from '../engines/navigationEngine';
 import { NAV_MANIFEST, resolveActiveNavPath } from './navManifest';
-import type { NavKey } from './navManifest';
-import { NavFlyout } from './NavFlyout';
-
-/** How long the flyout survives the pointer leaving it. Enough to cross the
- * icon→panel corner on a diagonal without the menu snapping shut; short
- * enough that it doesn't linger over the page after you've moved on. */
-const FLYOUT_CLOSE_DELAY = 140;
 
 const PANEL_TOGGLE_ICON = 'M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5z M9 4v16';
 // Points down when collapsed, rotated 180deg to point up when expanded -
@@ -43,12 +35,13 @@ const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 // which destinations are placeholder-backed (and pairs with the `planned` copy
 // that WorkspaceNotYetBuilt renders). It drives no styling here.
 
-// Collapsible per the provided design: collapsing shrinks the rail to icons
-// only (persisted via sidebarStore).
+// Fully collapsible: the collapse button in the rail's header hides the whole
+// panel at md:+ (background, icons, labels and its width), so the main content
+// takes the full width; the top bar's menu button brings it back. The
+// preference is persisted via sidebarStore.
 //
 // Below `md:`, the sidebar instead renders as an off-canvas drawer (see
-// `mobileOpen` in sidebarStore) that's always shown expanded - the desktop
-// `collapsed` icon-rail preference only applies to the persistent md:+ rail.
+// `mobileOpen` in sidebarStore); the desktop collapse preference does not apply to it.
 export function Sidebar() {
   const {
     collapsed: collapsedPref,
@@ -106,66 +99,6 @@ export function Sidebar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
-  // The mobile drawer ignores the desktop collapse preference (it's always
-  // shown fully expanded); only the md:+ in-flow rail respects it.
-  const collapsed = mobileOpen ? false : collapsedPref;
-
-  // Which parent's children are floating beside the collapsed rail, and which
-  // button they hang off. The anchor element is held in STATE, not a ref, so
-  // sliding straight from one parent icon to another re-measures the position
-  // instead of leaving the panel pinned beside the first icon.
-  const [flyout, setFlyout] = useState<{ key: NavKey; anchor: HTMLElement } | null>(null);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Every hover overlay on the collapsed rail measures its gap from the RAIL's
-  // edge, not from the inset button it belongs to - so a leaf's tooltip and a
-  // parent's sub-menu flyout share one left edge instead of sitting 8px apart.
-  // NavFlyout finds the rail itself via anchor.closest('nav'); Tooltip is a
-  // generic primitive and has to be handed it.
-  const railRef = useRef<HTMLElement>(null);
-
-  const cancelClose = useCallback(() => {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-    closeTimer.current = null;
-  }, []);
-
-  const openFlyout = useCallback(
-    (key: NavKey, anchor: HTMLElement) => {
-      cancelClose();
-      setFlyout({ key, anchor });
-    },
-    [cancelClose]
-  );
-
-  const closeFlyoutSoon = useCallback(
-    (key: NavKey) => {
-      cancelClose();
-      // Closes only if THIS key is still the open one. Leaving Mobile fires
-      // mouseleave after entering Fibre & Home fires mouseenter, so an
-      // unconditional close would shut the menu the pointer just arrived at.
-      closeTimer.current = setTimeout(
-        () => setFlyout((f) => (f?.key === key ? null : f)),
-        FLYOUT_CLOSE_DELAY
-      );
-    },
-    [cancelClose]
-  );
-
-  const closeFlyout = useCallback(() => {
-    cancelClose();
-    setFlyout(null);
-  }, [cancelClose]);
-
-  // Expanding the rail re-homes the children into the rail itself, and the
-  // anchor the panel was measured against moves. Drop it rather than leave a
-  // duplicate menu floating over the now-open group.
-  useEffect(() => {
-    if (!collapsed) closeFlyout();
-  }, [collapsed, closeFlyout]);
-
-  useEffect(() => cancelClose, [cancelClose]);
-
-  const flyoutItem = flyout ? navItems.find((i) => i.key === flyout.key) : undefined;
-
   return (
     <>
       {/* Mobile-only backdrop: sits below the drawer, above the page content,
@@ -178,16 +111,13 @@ export function Sidebar() {
         />
       )}
       <nav
-        ref={railRef}
         className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-200 ease-in-out ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:static md:inset-auto md:z-auto md:translate-x-0 md:transition-[width] md:duration-150 shrink-0 border-r border-[var(--nav-border)] bg-[var(--nav-bg)] h-full overflow-y-auto ${
-          collapsed ? 'md:w-16' : 'md:w-64'
+        } md:static md:inset-auto md:z-auto md:translate-x-0 shrink-0 border-r border-[var(--nav-border)] bg-[var(--nav-bg)] h-full overflow-y-auto ${
+          collapsedPref ? 'md:hidden' : 'md:w-64'
         }`}
       >
-      {/* Mobile drawer always renders the expanded header/nav regardless of
-          the desktop `collapsed` preference - collapsing to icon-only only
-          makes sense for the persistent in-flow rail at md:+. */}
+      {/* Mobile drawer header: the drawer ignores the desktop collapse preference. */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-[var(--nav-border)] md:hidden">
         <NavLink to="/" className="flex items-center gap-2 min-w-0">
           <VodafoneMark className="w-7 h-7 shrink-0" />
@@ -201,37 +131,22 @@ export function Sidebar() {
           <Icon path={PANEL_TOGGLE_ICON} className="w-4.5 h-4.5" />
         </button>
       </div>
-      {!collapsed && (
-        <div className="hidden md:flex items-center justify-between h-16 px-4 border-b border-[var(--nav-border)]">
-          <NavLink to="/" className="flex items-center gap-2 min-w-0">
-            <VodafoneMark className="w-7 h-7 shrink-0" />
-            <span className="text-[length:var(--fs-h5)] font-bold text-[var(--nav-fg)] truncate">vodafone</span>
-          </NavLink>
-          <Tooltip content="Collapse navigation" placement="bottom">
-            <button
-              onClick={toggleCollapsed}
-              aria-label="Collapse navigation"
-              className="text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] shrink-0"
-            >
-              <Icon path={PANEL_TOGGLE_ICON} className="w-4.5 h-4.5" />
-            </button>
-          </Tooltip>
-        </div>
-      )}
-      {collapsed && (
-        <div className="hidden md:flex items-center justify-center h-16 border-b border-[var(--nav-border)]">
-          {/* Same rail-edge alignment as the item tooltips below it. This one
-              was the furthest out of line: the button is centred in the rail,
-              so measuring from it put the tooltip ~24px further left again. */}
-          <Tooltip content="Expand navigation" placement="right" anchorRef={railRef}>
-            <button onClick={toggleCollapsed} aria-label="Expand navigation" className="text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)]">
-              <Icon path={PANEL_TOGGLE_ICON} className="w-4.5 h-4.5" />
-            </button>
-          </Tooltip>
-        </div>
-      )}
-      <TooltipGroup>
-        <ul className="py-1.5 space-y-0.5">
+      <div className="hidden md:flex items-center justify-between h-16 px-4 border-b border-[var(--nav-border)]">
+        <NavLink to="/" className="flex items-center gap-2 min-w-0">
+          <VodafoneMark className="w-7 h-7 shrink-0" />
+          <span className="text-[length:var(--fs-h5)] font-bold text-[var(--nav-fg)] truncate">vodafone</span>
+        </NavLink>
+        <Tooltip content="Collapse navigation" placement="bottom">
+          <button
+            onClick={toggleCollapsed}
+            aria-label="Collapse navigation"
+            className="text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] shrink-0"
+          >
+            <Icon path={PANEL_TOGGLE_ICON} className="w-4.5 h-4.5" />
+          </button>
+        </Tooltip>
+      </div>
+      <ul className="py-1.5 space-y-0.5">
           {navItems.map((item) => {
             const hasChildren = Boolean(item.children?.length);
             const childActive = item.children?.some((c) => c.to === activeNavPath) ?? false;
@@ -256,7 +171,7 @@ export function Sidebar() {
             // The whole row stays one hit target - icon, label and chevron
             // alike. The chevron used to be a separate 14px button, which left
             // dead space between it and the label.
-            const rowClass = `flex-1 min-w-0 flex items-center gap-2.5 h-11 mx-2 rounded-[var(--radius-sm)] text-[length:var(--fs-body)] ${collapsed ? 'justify-center px-2' : 'px-4'} `;
+            const rowClass = `flex-1 min-w-0 flex items-center gap-2.5 h-11 mx-2 rounded-[var(--radius-sm)] text-[length:var(--fs-body)] px-4`;
             const activeClass = 'bg-accent text-accent-on font-medium';
             // Open group holding the active child: a quiet tint, so the group
             // reads as "you are in here" without competing with the child's
@@ -266,8 +181,8 @@ export function Sidebar() {
             const body = (
               <>
                 <Icon path={item.icon} className="w-4.5 h-4.5 shrink-0" />
-                {!collapsed && <span className="truncate">{item.label}</span>}
-                {hasChildren && !collapsed && (
+                <span className="truncate">{item.label}</span>
+                {hasChildren && (
                   <Icon
                     path={CHEVRON_DOWN}
                     className={`w-3.5 h-3.5 shrink-0 ml-auto opacity-70 transition-transform ${expanded ? 'rotate-180' : ''}`}
@@ -278,39 +193,11 @@ export function Sidebar() {
             return (
               <li key={item.key}>
                 <div className="flex items-center">
-                  {/* A parent's tooltip is suppressed in the collapsed rail:
-                      its flyout already names the group in the panel header,
-                      and two overlays on one hover is one too many. Leaf icons
-                      keep theirs - they have no panel. */}
-                  <Tooltip
-                    content={item.label}
-                    placement="right"
-                    disabled={!collapsed || hasChildren}
-                    anchorRef={railRef}
-                  >
                     {hasChildren ? (
                       <button
                         type="button"
-                        onMouseEnter={(e) => {
-                          if (collapsed) openFlyout(item.key, e.currentTarget);
-                        }}
-                        onMouseLeave={() => {
-                          if (collapsed) closeFlyoutSoon(item.key);
-                        }}
-                        onClick={() => {
-                          // Hover peeks at the children; the click commits to
-                          // the expanded rail, where they live permanently. A
-                          // pure toggle would be a dead icon in the collapsed
-                          // rail - the sub-menu has nowhere in-rail to render.
-                          if (collapsed) {
-                            closeFlyout();
-                            toggleCollapsed();
-                            if (!expanded) toggleNavGroup(item.key);
-                            return;
-                          }
-                          toggleNavGroup(item.key);
-                        }}
-                        aria-expanded={collapsed ? undefined : expanded}
+                        onClick={() => toggleNavGroup(item.key)}
+                        aria-expanded={expanded}
                         // The line root (/mobile) is still a real page, reached
                         // from a child's breadcrumb. Keep marking the row when
                         // you are standing on it so a deep link isn't orphaned
@@ -335,14 +222,9 @@ export function Sidebar() {
                         {body}
                       </NavLink>
                     )}
-                  </Tooltip>
                 </div>
-                {/* Children are not rendered IN the collapsed rail - 64px of
-                    icon has no room for them. They aren't unreachable there:
-                    hovering the parent icon floats the same list beside the
-                    rail (NavFlyout), and clicking expands the rail to show it
-                    inline.
-                    A single vertical connector line runs behind the group and
+                {/* Sub-menu items hang off a single vertical connector line.
+                    The line runs behind the group and
                     the active child draws an accent segment over it, instead of
                     each child being its own filled pill: with a pill, a
                     selected child looked identical in weight to a selected
@@ -355,7 +237,7 @@ export function Sidebar() {
                     because accent red on the charcoal rail still reads poorly
                     there. Either way the left border is what keeps the
                     hierarchy legible, so the mechanism is unchanged. */}
-                {hasChildren && expanded && !collapsed && (
+                {hasChildren && expanded && (
                   <ul className="mt-0.5 ml-[26px] border-l border-[var(--nav-border)]">
                     {item.children!.map((child) => (
                       <li key={child.key}>
@@ -379,22 +261,8 @@ export function Sidebar() {
               </li>
             );
           })}
-        </ul>
-      </TooltipGroup>
+      </ul>
     </nav>
-    {collapsed && flyout && flyoutItem?.children?.length ? (
-      <NavFlyout
-        // Remount when the parent changes so the panel re-measures from its
-        // own content height rather than animating between two anchors.
-        key={flyout.key}
-        item={flyoutItem}
-        anchor={flyout.anchor}
-        currentPath={location.pathname}
-        onPointerEnter={cancelClose}
-        onPointerLeave={() => closeFlyoutSoon(flyout.key)}
-        onDismiss={closeFlyout}
-      />
-    ) : null}
     </>
   );
 }

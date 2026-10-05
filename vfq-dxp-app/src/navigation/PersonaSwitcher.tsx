@@ -51,6 +51,8 @@ export function PersonaSwitcher() {
   const history = useNotificationStore((s) => s.history);
   const markAllRead = useNotificationStore((s) => s.markAllRead);
   const toggleMobileOpen = useSidebarStore((s) => s.toggleMobileOpen);
+  const sidebarCollapsed = useSidebarStore((s) => s.collapsed);
+  const toggleSidebarCollapsed = useSidebarStore((s) => s.toggleCollapsed);
   const customersServed = useQnomyQueueStore((s) => s.customersServed);
   const personas = getAllPersonas();
   // Same gate the Qnomy ticket control uses, so the counter appears exactly
@@ -102,6 +104,17 @@ export function PersonaSwitcher() {
       >
         <Icon path={ICONS.menu} className="w-5 h-5" />
       </button>
+      {/* Desktop: the side navigation is fully hidden while collapsed, so this brings it back. */}
+      {sidebarCollapsed && (
+        <button
+          onClick={toggleSidebarCollapsed}
+          aria-label="Open side navigation"
+          title="Open side navigation"
+          className="hidden md:flex col-start-1 w-9 h-9 -ml-1 rounded-[var(--radius-pill)] items-center justify-center text-fg-2 hover:bg-surface shrink-0"
+        >
+          <Icon path={ICONS.menu} className="w-5 h-5" />
+        </button>
+      )}
       <div className="col-start-2 w-full">
         <GlobalSearch />
       </div>
