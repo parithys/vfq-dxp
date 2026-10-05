@@ -23,7 +23,8 @@ export const contactSummary: SummaryField[] = [
   { key: 'mobile', label: 'Mobile Number', type: 'text', optional: true, value: (v) => at(v, 'contact', 'mobileNumber') },
   { key: 'altPhone', label: 'Alternate Number', type: 'text', optional: true, value: (v) => at(v, 'contact', 'altPhone') },
   { key: 'email', label: 'Email', type: 'text', optional: true, value: (v) => at(v, 'contact', 'email') },
-  { key: 'language', label: 'Preferred Language', type: 'text', optional: true, value: (v) => at(v, 'contact', 'language') },
+  // The form shows English when none was chosen (it is not stored until changed), so the summary does too.
+  { key: 'language', label: 'Preferred Language', type: 'text', value: (v) => at(v, 'contact', 'language') ?? 'English' },
   {
     key: 'customerType',
     label: 'Customer Type',
