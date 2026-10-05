@@ -239,11 +239,6 @@ export function C360Overview({ data, services, goToTab }: { data: Customer360Dat
                   );
                 })}
               </ul>
-              {goToTab && (
-                <div className="pt-3">
-                  <LinkAction onClick={() => goToTab('products-services')}>View all connections</LinkAction>
-                </div>
-              )}
             </>
           )}
         </Panel>
