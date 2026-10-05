@@ -184,20 +184,14 @@ export function QueryFlowCard({
               <dd><Pill tone={categoryTone(issue.category)}>{issue.category ?? PENDING}</Pill></dd>
               <dt className="text-fg-2">Query Issue</dt>
               <dd className="text-fg">{issue.name}</dd>
+              <dt className="text-fg-2">Query Service Type</dt>
+              <dd>{serviceType ? <Pill tone="blue">{serviceTypeLabel(serviceType)}</Pill> : <span className="text-muted">Not selected</span>}</dd>
             </dl>
             {issue.category ? <Banner tone="success">Query Category is auto-derived based on predefined mapping.</Banner> : <Banner tone="warn">No Query Category is mapped for this issue yet.</Banner>}
           </div>
 
           <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4 space-y-3">
-            <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Query Service Type</h3>
-            {service ? (
-              <div className="flex flex-col gap-1">
-                <span className="text-[length:var(--fs-label)] text-fg-2">Query Service Type</span>
-                <div className="rounded-[var(--field-radius)] border border-[var(--field-border-disabled)] bg-[var(--field-bg-disabled)] px-3 py-2 text-[length:var(--fs-body)] text-muted">
-                  {derivedType ?? 'Not derivable for this line - choose below'}
-                </div>
-              </div>
-            ) : null}
+            <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Service Line</h3>
             <Select
               label="Selected MSISDN"
               value={msisdnRef}
