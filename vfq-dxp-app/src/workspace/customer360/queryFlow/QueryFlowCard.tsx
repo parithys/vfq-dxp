@@ -16,7 +16,8 @@ import type { QueryIssue } from './queryFlowModel';
 const BACK_ICON = 'M19 12H5 M12 19l-7-7 7-7';
 const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
 
-const categoryTone = (c: string | undefined) => (/network/i.test(c ?? '') ? 'red' : c ? 'blue' : 'grey');
+// Service type is always blue, so a category never uses blue: Network Related red, every other category purple.
+const categoryTone = (c: string | undefined) => (/network/i.test(c ?? '') ? 'red' : c ? 'purple' : 'grey');
 const PENDING = 'Category pending';
 
 /** The issue name with every matched keyword wrapped in <mark> (the app's search-match highlight). */
