@@ -1,12 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { GuidedActivationWizard } from './GuidedActivationWizard';
+import { activityStep, contactStep, isCafValid, type CafValue } from './wizardSteps';
 import { MsisdnPicker } from '../domain/MsisdnPicker';
 import { CafSignatureCapture } from './CafSignatureCapture';
-import { ActivityCommentsStep } from './ActivityCommentsStep';
 import { AppointmentBookingStep } from './AppointmentBookingStep';
 import type { AppointmentBookingValue } from './AppointmentBookingStep';
-import { GuidedContactStep } from './GuidedContactStep';
-import { isValidAltPhone, isValidEmail, hasIdentityDetails } from './guidedContactModel';
 import type { GuidedContactValue } from './guidedContactModel';
 import { AddressSelectionStep } from './AddressSelectionStep';
 import { ProductPlanStep } from './ProductPlanStep';
@@ -49,8 +47,6 @@ export interface InstallationWizardConfig {
   successRoute: string;
 }
 
-type CafValue = { cafType?: CafType; signatureDataUrl?: string };
-
 export function InstallationActivationWizard({ config }: { config: InstallationWizardConfig }) {
   const navigate = useNavigate();
   const createRecord = useEntityStore((s) => s.createRecord);
@@ -62,21 +58,7 @@ export function InstallationActivationWizard({ config }: { config: InstallationW
         wizardId={config.wizardId}
         title={config.title}
         steps={[
-          {
-            key: 'contact',
-            label: 'Contact',
-            render: ({ values, setValue }) => (
-              <GuidedContactStep
-                value={(values.contact as GuidedContactValue) ?? {}}
-                onChange={(v) => setValue('contact', v)}
-                showIptvToggle={config.hideIptvToggle ? false : undefined}
-              />
-            ),
-            isValid: (values) => {
-              const c = values.contact as GuidedContactValue | undefined;
-              return Boolean(c?.moiResult && hasIdentityDetails(c ?? {}) && isValidEmail(c?.email) && isValidAltPhone(c?.altPhone));
-            },
-          },
+          contactStep({ hideIptvToggle: config.hideIptvToggle }),
           {
             key: 'address',
             label: 'Address',
@@ -156,20 +138,9 @@ export function InstallationActivationWizard({ config }: { config: InstallationW
                 autoDetectDeviceType={config.autoDetectCafDevice ? true : undefined}
               />
             ),
-            isValid: (values) => {
-              const c = values.caf as CafValue | undefined;
-              if (!c?.cafType) return false;
-              return !config.cafNeedsSignature(c.cafType) || Boolean(c.signatureDataUrl);
-            },
+            isValid: (values) => isCafValid(values.caf as CafValue | undefined, config.cafNeedsSignature),
           },
-          {
-            key: 'activity',
-            label: 'Activity',
-            render: ({ values, setValue }) => (
-              <ActivityCommentsStep value={(values.comments as string) ?? ''} onChange={(v) => setValue('comments', v)} />
-            ),
-            isValid: (values) => Boolean((values.comments as string)?.trim()),
-          },
+          activityStep(),
         ]}
         onSubmit={async (values) => {
           const contact = values.contact as GuidedContactValue;
