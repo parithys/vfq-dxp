@@ -408,8 +408,8 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
                 </div>
 
                 <Panel icon={IC.box} title="Plan & Usage" className="bg-[color-mix(in_oklab,var(--surface),var(--bg)_50%)]">
-                  <div className="flex flex-wrap items-center gap-4">
-                    <dl className="flex-1 min-w-48">
+                  <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,6fr)_minmax(0,4fr)] items-center gap-6">
+                    <dl className="min-w-0">
                       <Field label="Plan Name" value={sel.plan ?? selected.label} />
                       <Field label="Plan Type" value={planType} />
                       <Field label="Activation Date" value={fmtDate(sel.asset?.effectiveFrom) ?? <Dv k="activationDate" />} />
@@ -417,7 +417,7 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
                       <Field label="Customer Since" value={<Dv k="customerSince" />} />
                     </dl>
                     {mobileSel && (
-                      <div className="w-full sm:w-72 shrink-0 space-y-4">
+                      <div className="min-w-0 space-y-4">
                         <UsageBar label="Data" pct={sMobilePrimary ? pct(dataUsed, dataTotal) : 0} value={sMobilePrimary && dataUsed !== undefined ? `${dataUsed} GB` : '-'} unit={sMobilePrimary && dataTotal ? `of ${Number(dataTotal.toFixed(1))} GB` : undefined} />
                         <UsageBar label="Voice" pct={sMobilePrimary ? pct(voiceUsed, voiceTotal) : 0} value={sMobilePrimary && voiceUsed !== undefined ? voiceUsed : '-'} unit={sMobilePrimary && voiceTotal ? `of ${voiceTotal} Mins` : undefined} />
                         <UsageBar label="Text" pct={sMobilePrimary ? pct(smsUsed, smsTotal) : 0} value={sMobilePrimary && smsUsed !== undefined ? smsUsed : '-'} unit={sMobilePrimary && smsTotal ? `of ${smsTotal} SMS` : undefined} />

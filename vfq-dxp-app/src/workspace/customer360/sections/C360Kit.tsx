@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { containerId } from '../queryFlow/containerIndex';
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
 import { RevealValue, useFieldAccess } from '../fieldAccess';
@@ -263,12 +264,12 @@ export function KpiGrid({ children, cols = 5 }: { children: ReactNode; cols?: 3 
 }
 
 /** A titled card (icon + title, optional right-hand action) holding rows, lists or a table. */
-export function Panel({ icon, title, action, children, className = '', flush = false, bodyClassName = '' }: { icon?: string; title: ReactNode; action?: ReactNode; children: ReactNode; className?: string; flush?: boolean; bodyClassName?: string }) {
+export function Panel({ icon, title, action, children, className = '', flush = false, bodyClassName = '', id }: { icon?: string; title: ReactNode; action?: ReactNode; children: ReactNode; className?: string; flush?: boolean; bodyClassName?: string; /** Container id for in-page search; derived from a text title when omitted. */ id?: string }) {
   const modeOf = useFieldAccess();
   if (typeof title === 'string' && modeOf(title) === 'hidden') return null;
   return (
     // A panel whose rows were all withheld by field access (empty body) is not drawn.
-    <section className={`rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg min-w-0 has-[>.panel-body:empty]:hidden ${className}`}>
+    <section data-container-id={id ?? (typeof title === 'string' ? containerId(title) : undefined)} className={`rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg min-w-0 has-[>.panel-body:empty]:hidden ${className}`}>
       <header className="flex items-center justify-between gap-3 px-4 pt-4 pb-3">
         <h3 className="flex items-center gap-2.5 text-fg font-semibold text-[length:var(--fs-body-lg)] min-w-0">
           {icon && <Icon path={icon} className="w-5 h-5 shrink-0" />}

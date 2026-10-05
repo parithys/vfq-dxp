@@ -116,7 +116,7 @@ export function C360ContactIdentity({ data, services, goToTab, onEdit }: { data:
     >
       {/* Masonry: panels flow down three columns by height instead of sharing rows. */}
       <div className="columns-1 @4xl:columns-3 gap-4 [&>*]:mb-4 [&>*]:break-inside-avoid">
-        <Panel icon={undefined} title={<CardTitle icon={IC.card}>Identity Information</CardTitle>} action={idStatus ? <Pill tone={flagTone(idStatus)}>{idStatus}</Pill> : undefined}>
+        <Panel id="c360-identity-information" icon={undefined} title={<CardTitle icon={IC.card}>Identity Information</CardTitle>} action={idStatus ? <Pill tone={flagTone(idStatus)}>{idStatus}</Pill> : undefined}>
           <DetailRows
             rows={[
               { label: 'Full Name', value: dash(f('First Name & Last Name (Full Name)')) },
@@ -133,7 +133,7 @@ export function C360ContactIdentity({ data, services, goToTab, onEdit }: { data:
           />
         </Panel>
 
-        <Panel title={<CardTitle icon={IC.user}>Contact Information</CardTitle>} action={contact ? <Pill tone="green">Primary</Pill> : undefined}>
+        <Panel id="c360-contact-information" title={<CardTitle icon={IC.user}>Contact Information</CardTitle>} action={contact ? <Pill tone="green">Primary</Pill> : undefined}>
           <DetailRows
             rows={[
               { label: 'Primary MSISDN', value: dash(customer.phone) },
@@ -148,7 +148,7 @@ export function C360ContactIdentity({ data, services, goToTab, onEdit }: { data:
           />
         </Panel>
 
-        <Panel title={<CardTitle icon={IC.users}>Contact Role & Relationship</CardTitle>}>
+        <Panel id="c360-contact-role-relationship" title={<CardTitle icon={IC.users}>Contact Role & Relationship</CardTitle>}>
           <DetailRows
             rows={[
               { label: 'Customer Type', value: <Dv k="customerType" /> },
@@ -187,6 +187,7 @@ export function C360ContactIdentity({ data, services, goToTab, onEdit }: { data:
         </Panel>
 
         <Panel
+          id="c360-contact-hierarchy"
           title={<CardTitle icon={IC.users}>{`Contact Hierarchy (${hierarchy.length})`}</CardTitle>}
           action={hierarchy.length > 3 ? <LinkAction onClick={() => setAllContacts((s) => !s)}>{allContacts ? 'Show less' : 'View All'}</LinkAction> : undefined}
         >
@@ -220,7 +221,7 @@ export function C360ContactIdentity({ data, services, goToTab, onEdit }: { data:
           )}
         </Panel>
 
-        <Panel title={<CardTitle icon={IC.pin}>{`Addresses (${addresses.length})`}</CardTitle>} action={<LinkAction onClick={goToTab ? () => goToTab('address-service') : undefined}>View All</LinkAction>}>
+        <Panel id="c360-addresses" title={<CardTitle icon={IC.pin}>{`Addresses (${addresses.length})`}</CardTitle>} action={<LinkAction onClick={goToTab ? () => goToTab('address-service') : undefined}>View All</LinkAction>}>
           {addresses.length === 0 ? (
             <p className="text-muted text-[length:var(--fs-body)] py-2">No addresses on file.</p>
           ) : (
@@ -247,7 +248,7 @@ export function C360ContactIdentity({ data, services, goToTab, onEdit }: { data:
           )}
         </Panel>
 
-        <Panel title={<CardTitle icon={IC.info}>Additional Information</CardTitle>}>
+        <Panel id="c360-additional-information" title={<CardTitle icon={IC.info}>Additional Information</CardTitle>}>
           <DetailRows
             rows={[
               { label: 'Customer Since', value: meta.tenure ?? <Dv k="customerSince" /> },

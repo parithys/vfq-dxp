@@ -205,10 +205,13 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
           tone="red"
           label="Outstanding Amount"
           value={<span className="text-accent">{qar(outstanding)}</span>}
+          // Pay Now is offered only when there is an amount to pay.
           caption={
+            outstanding > 0 ? (
             <button type="button" disabled className="mt-1 rounded-[var(--radius-sm)] bg-accent text-accent-on px-6 py-1 text-[length:var(--fs-btn-compact)] font-medium opacity-40 cursor-not-allowed">
               Pay Now
             </button>
+            ) : undefined
           }
         />
         <KpiTile

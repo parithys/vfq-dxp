@@ -10,7 +10,8 @@ import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { IC, IconTile, Pill, SearchBox } from '../sections/C360Kit';
 import { QueryPreviewModal } from './QueryPreviewModal';
-import { QUERY_SERVICE_TYPES, TICKET_ISSUE_TYPES, deriveQueryServiceType, matchRanges, queryKeywords, routeTicket, searchC360Sections, searchQueryIssues, serviceTypeLabel, useQueryIssueCatalogue } from './queryFlowModel';
+import { TAB_LABELS, revealContainer, searchContainers } from './containerIndex';
+import { QUERY_SERVICE_TYPES, TICKET_ISSUE_TYPES, deriveQueryServiceType, matchRanges, queryKeywords, routeTicket, searchQueryIssues, serviceTypeLabel, useQueryIssueCatalogue } from './queryFlowModel';
 import type { QueryIssue } from './queryFlowModel';
 
 const BACK_ICON = 'M19 12H5 M12 19l-7-7 7-7';
@@ -89,7 +90,7 @@ export function QueryFlowCard({
   }, [focusSignal, catalogue]);
 
   const keywords = useMemo(() => queryKeywords(query), [query]);
-  const sectionHits = useMemo(() => (goToTab ? searchC360Sections(query, hasTab ?? (() => true)) : []), [query, goToTab, hasTab]);
+  const sectionHits = useMemo(() => (goToTab ? searchContainers(query, hasTab ?? (() => true)) : []), [query, goToTab, hasTab]);
   const results = useMemo(() => (catalogue ? searchQueryIssues(catalogue.issues, query) : []), [catalogue, query]);
   const lines = useMemo(() => services.filter((s) => s.tab === 'mobile' || s.tab === 'fibre'), [services]);
   const service = lines.find((s) => s.ref === msisdnRef);
@@ -145,9 +146,7 @@ export function QueryFlowCard({
           {query.trim() && (
             <div aria-live="polite">
               <p className="text-fg font-semibold text-[length:var(--fs-body)] mb-2">Query Issues ({results.length})</p>
-              {results.length === 0 && sectionHits.length > 0 ? (
-                <p className="text-muted text-[length:var(--fs-body)]">No Query Issues match "{query.trim()}".</p>
-              ) : results.length === 0 ? (
+              {results.length === 0 ? (
                 <p className="text-muted text-[length:var(--fs-body)]">No Query Issues match "{query.trim()}". Try fewer or different keywords.</p>
               ) : (
                 <ul className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] divide-y divide-border-soft overflow-hidden">
@@ -167,24 +166,31 @@ export function QueryFlowCard({
                   ))}
                 </ul>
               )}
-              {sectionHits.length > 0 && (
+              {goToTab && (
                 <div className="mt-4">
-                  <p className="text-fg font-semibold text-[length:var(--fs-body)] mb-2">Customer 360 ({sectionHits.length})</p>
-                  <ul className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] divide-y divide-border-soft overflow-hidden">
-                    {sectionHits.map((h) => (
-                      <li key={h.section.tab + h.text}>
-                        <button
-                          type="button"
-                          onClick={() => goToTab?.(h.section.tab)}
-                          className="w-full flex flex-wrap items-center gap-3 px-4 py-2.5 text-left hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
-                        >
-                          <span className="flex-1 min-w-48 text-fg text-[length:var(--fs-body)]"><Highlighted text={h.text} keywords={keywords} /></span>
-                          {h.text !== h.section.label && <span className="text-muted text-[length:var(--fs-caption)]">in {h.section.label}</span>}
-                          <Icon path={CHEVRON_RIGHT} className="w-4 h-4 text-fg shrink-0" />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+                  <p className="text-fg font-semibold text-[length:var(--fs-body)] mb-2">Sections ({sectionHits.length})</p>
+                  {sectionHits.length === 0 ? (
+                    <p className="text-muted text-[length:var(--fs-body)]">No sections match "{query.trim()}". Search by section title, e.g., Account Details.</p>
+                  ) : (
+                    <ul className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] divide-y divide-border-soft overflow-hidden">
+                      {sectionHits.map((h) => (
+                        <li key={h.tab + h.id}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              goToTab(h.tab);
+                              revealContainer(h.id);
+                            }}
+                            className="w-full flex flex-wrap items-center gap-3 px-4 py-2.5 text-left hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+                          >
+                            <span className="flex-1 min-w-48 text-fg text-[length:var(--fs-body)]"><Highlighted text={h.title} keywords={keywords} /></span>
+                            <span className="text-muted text-[length:var(--fs-caption)]">{TAB_LABELS[h.tab]}</span>
+                            <Icon path={CHEVRON_RIGHT} className="w-4 h-4 text-fg shrink-0" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               )}
             </div>
