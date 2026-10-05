@@ -3,6 +3,8 @@ import { GuidedContactStep } from './GuidedContactStep';
 import { isValidAltPhone, isValidEmail, hasIdentityDetails } from './guidedContactModel';
 import type { GuidedContactValue } from './guidedContactModel';
 import { ActivityCommentsStep } from './ActivityCommentsStep';
+import { IdLookupStep } from './IdLookupStep';
+import type { IdLookupValue } from './idLookupModel';
 import type { CafType } from './cafTypes';
 
 // Step definitions several guided journeys share. Each journey still lists its own steps, in its own order;
@@ -48,5 +50,17 @@ export function activityStep(): WizardStep {
       <ActivityCommentsStep value={(values.comments as string) ?? ''} onChange={(v) => setValue('comments', v)} />
     ),
     isValid: (values) => Boolean((values.comments as string)?.trim()),
+  };
+}
+
+/** Identity lookup (ID type, number, MOI fetch) stored under `field`; continues once MOI has resolved. */
+export function idLookupStep(opts: { key: string; label: string; field: string }): WizardStep {
+  return {
+    key: opts.key,
+    label: opts.label,
+    render: ({ values, setValue }) => (
+      <IdLookupStep value={(values[opts.field] as IdLookupValue) ?? {}} onChange={(v) => setValue(opts.field, v)} />
+    ),
+    isValid: (values) => Boolean((values[opts.field] as IdLookupValue | undefined)?.moiResult),
   };
 }

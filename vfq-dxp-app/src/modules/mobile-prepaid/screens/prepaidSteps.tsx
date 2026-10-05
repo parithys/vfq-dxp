@@ -1,5 +1,4 @@
 import type { WizardStep } from '../../../components/patterns/guidedWizardTypes';
-import { IdLookupStep } from '../../../components/patterns/IdLookupStep';
 import type { IdLookupValue } from '../../../components/patterns/idLookupModel';
 import { MsisdnPicker } from '../../../components/domain/MsisdnPicker';
 import { EligibilityGateStep } from '../../../components/domain/EligibilityGateStep';
@@ -13,7 +12,7 @@ import { PrepaidCheckoutStep } from '../../../components/patterns/PrepaidCheckou
 import type { PrepaidCheckoutTotals } from '../../../components/patterns/PrepaidCheckoutStep';
 import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCapture';
 import { KeyInformationPanel } from '../../../components/patterns/KeyInformationPanel';
-import { isCafValid, type CafValue } from '../../../components/patterns/wizardSteps';
+import { idLookupStep, isCafValid, type CafValue } from '../../../components/patterns/wizardSteps';
 import { WinCashPaymentStep } from '../../../components/patterns/WinCashPaymentStep';
 import type { WinCashPaymentValue } from '../../../components/patterns/WinCashPaymentStep';
 
@@ -21,14 +20,7 @@ import type { WinCashPaymentValue } from '../../../components/patterns/WinCashPa
 // Checkout -> CAF & Key Information -> Payment). The step-to-requirement map is in NewPrepaidWizard.tsx.
 export function buildPrepaidSteps(): WizardStep[] {
   return [
-    {
-      key: 'contact',
-      label: 'Contact (ID capture)',
-      render: ({ values, setValue }) => (
-        <IdLookupStep value={(values.contact as IdLookupValue) ?? {}} onChange={(v) => setValue('contact', v)} />
-      ),
-      isValid: (values) => Boolean((values.contact as IdLookupValue | undefined)?.moiResult),
-    },
+    idLookupStep({ key: 'contact', label: 'Contact (ID capture)', field: 'contact' }),
     {
       key: 'eligibility',
       label: 'Eligibility',

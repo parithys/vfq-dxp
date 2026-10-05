@@ -1,6 +1,6 @@
 import { useState } from 'react';
+import { idLookupStep } from '../../../components/patterns/wizardSteps';
 import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
-import { IdLookupStep } from '../../../components/patterns/IdLookupStep';
 import { QidImageUpload } from '../../../components/domain/QidImageUpload';
 import type { QidImageUploadValue } from '../../../components/domain/qidImageUploadModel';
 import { SimSerialScanner } from '../../../components/domain/SimSerialScanner';
@@ -13,16 +13,6 @@ import { Badge } from '../../../components/primitives/Badge';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import { evaluateRule } from '../../../engines/ruleEngine';
-
-interface MoiResult {
-  name: string;
-  dob: string;
-  nationality: string;
-}
-interface QidValue {
-  idNumber?: string;
-  moiResult?: MoiResult;
-}
 
 const SWAP_REASONS = ['Lost SIM', 'Damaged SIM', 'eSIM to eSIM', 'eSIM to Physical'];
 
@@ -52,14 +42,7 @@ export function NewSimSwapWizard({ msisdn, onDone }: NewSimSwapWizardProps) {
         wizardId={`sim-swap-${msisdn}`}
         title="SIM Swap Request"
         steps={[
-          {
-            key: 'contact-verification',
-            label: 'Verify Contact',
-            render: ({ values, setValue }) => (
-              <IdLookupStep value={(values.qid as QidValue) ?? {}} onChange={(v) => setValue('qid', v)} />
-            ),
-            isValid: (values) => Boolean((values.qid as QidValue | undefined)?.moiResult),
-          },
+          idLookupStep({ key: 'contact-verification', label: 'Verify Contact', field: 'qid' }),
           {
             key: 'documents',
             label: 'QID & Bank Statement',

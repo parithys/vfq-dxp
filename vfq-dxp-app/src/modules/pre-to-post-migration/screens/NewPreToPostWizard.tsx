@@ -1,10 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
-import { IdLookupStep } from '../../../components/patterns/IdLookupStep';
 import { ProductPlanStep } from '../../../components/patterns/ProductPlanStep';
 import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCapture';
 import type { IdLookupValue } from '../../../components/patterns/idLookupModel';
-import { isCafValid, type CafValue } from '../../../components/patterns/wizardSteps';
+import { idLookupStep, isCafValid, type CafValue } from '../../../components/patterns/wizardSteps';
 import { ActivityCommentsStep } from '../../../components/patterns/ActivityCommentsStep';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
@@ -28,14 +27,7 @@ export function NewPreToPostWizard() {
         wizardId={WIZARD_ID}
         title="Prepaid to Postpaid Conversion"
         steps={[
-          {
-            key: 'contact',
-            label: 'Contact',
-            render: ({ values, setValue }) => (
-              <IdLookupStep value={(values.qid as IdLookupValue) ?? {}} onChange={(v) => setValue('qid', v)} />
-            ),
-            isValid: (values) => Boolean((values.qid as IdLookupValue | undefined)?.moiResult),
-          },
+          idLookupStep({ key: 'contact', label: 'Contact', field: 'qid' }),
           {
             key: 'plan',
             label: 'Plan',

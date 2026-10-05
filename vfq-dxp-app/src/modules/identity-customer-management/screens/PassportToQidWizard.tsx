@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
+import { idLookupStep } from '../../../components/patterns/wizardSteps';
+import type { IdLookupValue } from '../../../components/patterns/idLookupModel';
 import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
 import { Input } from '../../../components/primitives/Input';
 import { PhoneNumberInput } from '../../../components/primitives/PhoneNumberInput';
-import { IdLookupStep } from '../../../components/patterns/IdLookupStep';
 import { QidImageUpload } from '../../../components/domain/QidImageUpload';
 import type { QidImageUploadValue } from '../../../components/domain/qidImageUploadModel';
 import { SignatureCapture } from '../../../components/patterns/SignatureCapture';
@@ -10,16 +11,6 @@ import { Badge } from '../../../components/primitives/Badge';
 import { useState } from 'react';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
-
-interface MoiResult {
-  name: string;
-  dob: string;
-  nationality: string;
-}
-interface QidValue {
-  idNumber?: string;
-  moiResult?: MoiResult;
-}
 
 const WIZARD_ID = 'passport-to-qid';
 
@@ -60,14 +51,7 @@ export function PassportToQidWizard() {
             ),
             isValid: (values) => Boolean(values.msisdn && values.passportNumber),
           },
-          {
-            key: 'qid-entry',
-            label: 'QID Number',
-            render: ({ values, setValue }) => (
-              <IdLookupStep value={(values.qid as QidValue) ?? {}} onChange={(v) => setValue('qid', v)} />
-            ),
-            isValid: (values) => Boolean((values.qid as QidValue | undefined)?.moiResult),
-          },
+          idLookupStep({ key: 'qid-entry', label: 'QID Number', field: 'qid' }),
           {
             key: 'qid-images',
             label: 'QID Front & Back',
@@ -90,9 +74,9 @@ export function PassportToQidWizard() {
                 <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4 bg-surface">
                   <p className="text-fg font-medium">Identification Number Change Form</p>
                   <p className="text-fg-2 text-[length:var(--fs-caption)] mt-1">
-                    Customer: {(values.qid as QidValue | undefined)?.moiResult?.name ?? '-'} - updating identification
+                    Customer: {(values.qid as IdLookupValue | undefined)?.moiResult?.name ?? '-'} - updating identification
                     from Passport {(values.passportNumber as string) ?? '-'} to QID{' '}
-                    {(values.qid as QidValue | undefined)?.idNumber ?? '-'}.
+                    {(values.qid as IdLookupValue | undefined)?.idNumber ?? '-'}.
                   </p>
                   {signatureDataUrl ? (
                     <div className="mt-3 flex items-center gap-3">
@@ -109,7 +93,7 @@ export function PassportToQidWizard() {
           },
         ]}
         onSubmit={async (values) => {
-          const qid = values.qid as QidValue;
+          const qid = values.qid as IdLookupValue;
           const updateId = `PQU-${Date.now().toString().slice(-6)}`;
           await createRecord('passport-to-qid-updates', {
             updateId,
