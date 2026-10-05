@@ -172,6 +172,7 @@ export function QueryFlowCard({
             Back to Search
           </button>
 
+          <div className="grid grid-cols-1 @4xl:grid-cols-2 gap-4 items-stretch">
           <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4 space-y-3">
             <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Selected Query Issue</h3>
             <div className="flex items-center gap-3">
@@ -221,6 +222,7 @@ export function QueryFlowCard({
                 Preview Details
               </Button>
             </div>
+          </div>
           </div>
 
           {serviceType && (
