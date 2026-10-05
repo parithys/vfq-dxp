@@ -81,7 +81,7 @@ export function Drawer({ open, onClose, title, children, footer, header, widthCl
             </Tooltip>
           </div>
         )}
-        <div className={`flex-1 overflow-y-auto ${bodyClassName}`}>{children}</div>
+        <div className={`flex-1 overflow-y-auto bg-[var(--surface)] ${bodyClassName}`}>{children}</div>
         {footer && <div className="flex justify-end gap-2 px-6 py-4 border-t border-border-soft shrink-0">{footer}</div>}
       </div>
     </div>
