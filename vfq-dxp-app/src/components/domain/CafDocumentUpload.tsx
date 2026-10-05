@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { ID_TYPES } from '../../data/idTypes';
 import { Button } from '../primitives/Button';
 import { Select } from '../primitives/Select';
 import { Icon } from '../primitives/Icon';
@@ -25,14 +26,7 @@ interface CafDocumentUploadProps {
  * exists to collect. No CAF-attachment taxonomy exists in the corpus, so this
  * reuses the one that does rather than minting a parallel set of labels.
  */
-const DOC_TYPES = [
-  'Signed CAF',
-  'Qatar ID (QID)',
-  'Passport',
-  'GCC ID',
-  'Diplomatic ID',
-  'Other ID',
-];
+const DOC_TYPES = ['Signed CAF', ...ID_TYPES.map((t) => t.label), 'Other ID'];
 
 /** 2026-09-28 direction. Note this DIVERGES from the corpus's only evidenced
  * attachment limit - the MNP rule specifies "file size under 2 MB, in PDF or

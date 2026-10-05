@@ -1,9 +1,11 @@
 import { BARCODE_DEMO_NUMBERS } from '../../data/synthetic/idScanSamples';
+import { ID_TYPES, idTypeLabel, type IdType } from '../../data/idTypes';
 import type { ReactNode, Ref } from 'react';
 import { Icon } from '../primitives/Icon';
 import { Button } from '../primitives/Button';
 
-export type QidType = 'QID' | 'Passport' | 'GCC ID' | 'Diplomatic ID';
+export type QidType = IdType;
+export { idTypeLabel };
 
 interface QidTypeSelectorProps {
   /** Undefined = nothing chosen yet (verify-then-fetch flow: the agent picks first). */
@@ -81,20 +83,10 @@ interface QidNumberFieldProps {
 }
 const CHECK = 'M20 6L9 17l-5-5';
 const SEARCH_ICON = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3';
-const CARD_ICON = 'M3 6h18v12H3z M3 10h18 M6 15h3';
-const BOOK_ICON = 'M12 6.5c-1.6-1.1-4-1.6-6-1.2v12.8c2-0.4 4.4 0.1 6 1.2 M12 6.5c1.6-1.1 4-1.6 6-1.2v12.8c-2-0.4-4.4 0.1-6 1.2 M12 6.5v12.8';
-const GLOBE_ICON = 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M3 12h18 M12 3c2.4 2.6 2.4 15.4 0 18 M12 3c-2.4 2.6-2.4 15.4 0 18';
-const SHIELD_ICON = 'M12 3l7 3v5.5c0 5-3 8.3-7 9.5-4-1.2-7-4.5-7-9.5V6z';
 /** A row of bars of varying width, standing in for a 1D barcode symbol at the
  * small size this renders at (the field's trailing icon, ~16px). */
 const BARCODE_ICON = 'M3 4v16 M6 4v16 M8 4v16 M11 4v16 M13 4v16 M14 4v16 M17 4v16 M19 4v16 M21 4v16';
 
-const ID_TYPES: { type: QidType; label: string; numberLabel: string; icon: string; placeholder: string }[] = [
-  { type: 'QID', label: 'Qatar ID (QID)', numberLabel: 'Qatar ID (QID) Number', icon: CARD_ICON, placeholder: 'e.g. 28456701234' },
-  { type: 'Passport', label: 'Passport', numberLabel: 'Passport Number', icon: BOOK_ICON, placeholder: 'e.g. P0998812' },
-  { type: 'GCC ID', label: 'GCC ID', numberLabel: 'GCC ID Number', icon: GLOBE_ICON, placeholder: 'e.g. 784202312345678' },
-  { type: 'Diplomatic ID', label: 'Diplomatic ID', numberLabel: 'Diplomatic ID Number', icon: SHIELD_ICON, placeholder: 'e.g. DIP-QA-004521' },
-];
 
 /**
  * DEMO ONLY (2026-09-28, requested as such): the barcode icon inside this
@@ -121,10 +113,6 @@ const ID_TYPES: { type: QidType; label: string; numberLabel: string; icon: strin
 // seeded MOI matches yet) driving the label/placeholder of a single number
 // field with an inline Fetch action, replacing the earlier plain text input +
 // separate below-field submit button.
-/** Display name for an ID type, e.g. 'Qatar ID (QID)'. */
-export function idTypeLabel(type: QidType): string {
-  return ID_TYPES.find((t) => t.type === type)?.label ?? type;
-}
 
 // The ID Type card selector. Split out from the number field on
 // 2026-09-25 so a caller can put content BETWEEN them - IdLookupStep now

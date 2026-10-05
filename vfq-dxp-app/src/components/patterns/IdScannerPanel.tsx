@@ -1,5 +1,6 @@
 import type { MutableRefObject } from 'react';
 import { QidImageUpload } from '../domain/QidImageUpload';
+import { idTypesFor } from '../../data/idTypes';
 import { idTypeLabel, type QidType } from '../domain/QidInput';
 import type { SpecimenIdentity } from '../domain/ScannedIdPreview';
 import type { IdLookupValue } from './idLookupModel';
@@ -108,7 +109,7 @@ export function IdScannerPanel({
         // with a type selector would otherwise show two ways to pick a type
         // on one screen, one of them labelled "demo" - which reads as a
         // broken duplicate rather than as a demo aid.
-        demoTypes={!autoDetectIdType ? undefined : (['QID', 'Passport', 'GCC ID', 'Diplomatic ID'] as QidType[]).map((t) => ({
+        demoTypes={!autoDetectIdType ? undefined : idTypesFor('all').map((t) => ({
           value: t,
           // idTypeLabel, not the raw union member, so the link reads
           // "Qatar ID" rather than "QID" while still carrying the type.

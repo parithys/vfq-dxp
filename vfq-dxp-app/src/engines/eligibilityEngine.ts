@@ -1,3 +1,4 @@
+import { EXCEPTION_ROUTED_ID_TYPES } from '../data/idTypes';
 /**
  * The customer fields these checks read - a structural shape rather than an
  * import of the full CustomerRecord, so both that type and the narrower local
@@ -90,7 +91,6 @@ export interface EligibilityContext {
  * still accept the wider set, and a customer can reach eligibility with a
  * Passport on record through them.
  */
-const EXCEPTION_ROUTED_ID_TYPES = new Set(['Passport', 'GCC ID', 'Other ID']);
 
 const MINIMUM_AGE = 18;
 

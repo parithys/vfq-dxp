@@ -99,7 +99,7 @@ export const LEGACY_MAX_SCAN_ATTEMPTS = 4;
  * All four supported ID types (Qatar ID, Passport, GCC ID, Diplomatic ID) are scanned before the
  * journey can proceed (2026-10-04): the number is read from the scan, not typed in.
  */
-export const SCANNABLE_ID_TYPES = new Set<QidType>(['QID', 'Passport', 'GCC ID', 'Diplomatic ID']);
+export { SCANNABLE_ID_TYPES } from '../../data/idTypes';
 
 export type IdLookupValue = {
   idType?: QidType;

@@ -1,4 +1,5 @@
 import { GuidedContactStep } from '../../../components/patterns/GuidedContactStep';
+import { idTypesFor } from '../../../data/idTypes';
 import { hasIdentityDetails, isValidAltPhone, isValidEmail } from '../../../components/patterns/guidedContactModel';
 import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
 import { BillingAccountAutoResolver } from '../../../components/patterns/BillingAccountAutoResolver';
@@ -38,7 +39,7 @@ export function contactStep({ flow, existingCustomerId, guardedContactChange }: 
           asCustomerId={flow === 'existing' ? existingCustomerId : undefined}
           // All four ID types are offered (2026-10-04). Passport, GCC ID and Diplomatic ID are exception
           // identification: the eligibility engine routes them to approval rather than blocking them here.
-          allowedIdTypes={['QID', 'Passport', 'GCC ID', 'Diplomatic ID']}
+          allowedIdTypes={idTypesFor('new-connection')}
           unavailableIdTypes={[]}
           // ID type chosen first, then scan -> agent verifies number + expiry against the card -> Fetch (MOI).
           verifyThenFetch

@@ -1,3 +1,4 @@
+import { PREPAID_CAPPED_ID_TYPES } from '../data/idTypes';
 
 
 // Rule Engine per frontend-architecture.md §5. 346 business rules are catalogued
@@ -209,7 +210,7 @@ const ruleImplementations: Record<string, RuleImplementation> = {
     if (nationality === 'Qatari') {
       return { pass: true, message: 'Qatari nationals have no prepaid connection cap.' };
     }
-    if (idType === 'Passport' || idType === 'GCC ID') {
+    if (PREPAID_CAPPED_ID_TYPES.has(String(idType))) {
       const cap = 2;
       return activePrepaidLines < cap
         ? { pass: true, message: `${activePrepaidLines}/${cap} prepaid mobile lines used (${idType} cap).` }

@@ -1,4 +1,5 @@
 import { Input } from '../primitives/Input';
+import { idTypesFor, idTypeLabel } from '../../data/idTypes';
 import { Select } from '../primitives/Select';
 
 export interface DonorDetailsValue {
@@ -36,11 +37,7 @@ export function DonorDetailsStep({ value, onChange }: DonorDetailsStepProps) {
           label="Donor ID Type"
           value={value.donorIdType ?? 'Passport'}
           onChange={(e) => onChange({ ...value, donorIdType: e.target.value })}
-          options={[
-            { value: 'QID', label: 'QID' },
-            { value: 'Passport', label: 'Passport' },
-            { value: 'GCC ID', label: 'GCC ID' },
-          ]}
+          options={idTypesFor('donor').map((t) => ({ value: t, label: idTypeLabel(t) }))}
         />
       </div>
 
