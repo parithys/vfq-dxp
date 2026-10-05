@@ -8,6 +8,7 @@ import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { buildAssetsFieldResolver } from './assetsResolvers';
 import { ActionButton, Donut, fmtDate, fmtDateTime, FilterSelect, GridTable, IC, IconTile, KpiTile, Panel, Pill, Progress, qar, SearchBox, StatusPill, TabPage, UnderlineTabs } from './C360Kit';
 import type { GridCol, Tone } from './C360Kit';
+import { ServiceActionsMenu } from '../CustomerActionsMenu';
 import { Dv } from '../demoValues';
 import { str, num } from '../../../lib/values';
 
@@ -85,7 +86,7 @@ function Field({ label, value }: { label: string; value: ReactNode | undefined |
  * Customer 360 "Products & Services" tab: KPI strip, searchable / sortable service table, the selected service's
  * detail panel and the per-service sub-tabs. Everything is bound to Customer360Data; a missing value shows "-".
  */
-export function C360ProductsServices({ data, services }: { data: Customer360Data; services: CustomerService[]; goToTab?: (key: string) => void }) {
+export function C360ProductsServices({ data, services, goToTab }: { data: Customer360Data; services: CustomerService[]; goToTab?: (key: string) => void }) {
   const startNewConnection = useStartNewConnection(data.customer.customerId);
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -199,9 +200,17 @@ export function C360ProductsServices({ data, services }: { data: Customer360Data
       key: 'actions',
       header: 'Actions',
       render: (s) => (
-        <button type="button" aria-label={`View ${s.identifier}`} onClick={() => select(s)} className="text-fg">
-          <Icon path={IC.chevRight} className="w-4 h-4" />
-        </button>
+        <span className="inline-flex items-center gap-1">
+          <ServiceActionsMenu
+            customerId={data.customer.customerId}
+            customerName={data.customer.name}
+            service={s}
+            onSupport={goToTab ? () => goToTab('tickets-support') : undefined}
+          />
+          <button type="button" aria-label={`View ${s.identifier}`} onClick={() => select(s)} className="text-fg">
+            <Icon path={IC.chevRight} className="w-4 h-4" />
+          </button>
+        </span>
       ),
     },
   ];

@@ -36,7 +36,7 @@ const STATUS: Record<JourneyStatus, {
   },
 };
 
-export function JourneyCard({ journey, index, to }: { journey: Journey; index: number; to?: string }) {
+export function JourneyCard({ journey, index, to, state }: { journey: Journey; index: number; to?: string; state?: Record<string, unknown> }) {
   const s = STATUS[journey.status];
   const interactive = Boolean(to) && journey.status !== 'planned';
 
@@ -87,7 +87,7 @@ export function JourneyCard({ journey, index, to }: { journey: Journey; index: n
     // still works. The draft persists deliberately, and a mid-journey reload
     // or a step click in the rail must not wipe it - only an explicit start
     // does.
-    <Link to={to!} state={{ startFresh: true }} className={`group block ${shell}`}>
+    <Link to={to!} state={state ?? { startFresh: true }} className={`group block ${shell}`}>
       {body}
     </Link>
   );

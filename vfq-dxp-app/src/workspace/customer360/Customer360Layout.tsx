@@ -513,7 +513,8 @@ export function Customer360Layout() {
             <>
               <CustomerActionsMenu
                 customerId={data.customer.customerId}
-                personaId={activePersonaId}
+                customerName={data.customer.name}
+                services={serviceSources ? services : undefined}
                 onSupport={tabs.some((t) => t.key === 'tickets-support') ? () => setActiveTab('tickets-support') : undefined}
               />
               {headerOnly ? null : canEdit ? (

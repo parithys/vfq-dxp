@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Input } from '../../../components/primitives/Input';
 import { Button } from '../../../components/primitives/Button';
 import { NewSimSwapWizard } from './NewSimSwapWizard';
@@ -9,8 +10,10 @@ import { useEnterToSubmit } from '../../../hooks/useEnterToSubmit';
 // separate evidenced screenId, so it's rendered inline here once "SIM Swap"
 // is clicked, matching the single-screen flow described in the journey.
 export function GlobalSearchScreen() {
-  const [msisdn, setMsisdn] = useState('');
-  const [searched, setSearched] = useState(false);
+  // Opened from a customer's line (Customer 360 actions): the number arrives prefilled and already searched.
+  const prefill = useSearchParams()[0].get('msisdn') ?? '';
+  const [msisdn, setMsisdn] = useState(prefill);
+  const [searched, setSearched] = useState(Boolean(prefill));
   const [swapping, setSwapping] = useState(false);
 
   const handleKeyDown = useEnterToSubmit(Boolean(msisdn), () => setSearched(true));

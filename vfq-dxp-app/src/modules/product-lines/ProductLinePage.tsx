@@ -1,4 +1,4 @@
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { usePersonaStore } from '../../stores/personaStore';
 import { canUseFeature } from '../../engines/personaEngine';
 import { getAllRoutes, getPersona } from '../../engines/configEngine';
@@ -7,6 +7,7 @@ import { Icon } from '../../components/primitives/Icon';
 import { SECONDARY_SURFACE, PRIMARY_SURFACE } from '../../components/primitives/Button';
 import { NotYetBuiltPanel } from '../NotYetBuiltPanel';
 import { JourneyCard } from './JourneyCard';
+import { launchJourney, readLaunch, type LaunchContext } from '../../workspace/customer360/customerActions';
 import {
   PRODUCT_LINE_BY_KEY,
   reachableCategories,
@@ -39,7 +40,7 @@ function resolveTarget(journey: Journey): string | undefined {
   return getAllRoutes().find((r) => r.screenId === journey.screenId)?.path;
 }
 
-function CategorySection({ category, personaId }: { category: JourneyCategory; personaId: string }) {
+function CategorySection({ category, personaId, launch }: { category: JourneyCategory; personaId: string; launch?: LaunchContext }) {
   const journeys = visibleJourneys(category, (k) => canUseFeature(personaId, k));
   if (journeys.length === 0) return null;
   const availableCount = journeys.filter((j) => j.status === 'available').length;
@@ -57,9 +58,12 @@ function CategorySection({ category, personaId }: { category: JourneyCategory; p
       </header>
 
       <div className="p-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {journeys.map((journey, i) => (
-          <JourneyCard key={journey.id} journey={journey} index={i} to={resolveTarget(journey)} />
-        ))}
+        {journeys.map((journey, i) => {
+          const target = resolveTarget(journey);
+          // Opened from a customer (Customer 360): journeys with a customer-aware destination go straight to it.
+          const launched = launch && target ? launchJourney(journey, target, launch, (id) => getAllRoutes().find((r) => r.screenId === id)?.path) : undefined;
+          return <JourneyCard key={journey.id} journey={journey} index={i} to={launched?.to ?? target} state={launched?.state} />;
+        })}
       </div>
 
       <footer className="flex items-center justify-between px-5 py-3 border-t border-border-soft text-[length:var(--fs-caption)] text-muted">
@@ -74,6 +78,7 @@ function CategorySection({ category, personaId }: { category: JourneyCategory; p
 export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
   const { category: categoryParam } = useParams();
   const [searchParams] = useSearchParams();
+  const launch = readLaunch(useLocation().state);
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
   const line = PRODUCT_LINE_BY_KEY.get(lineKey);
   const persona = getPersona(activePersonaId);
@@ -104,6 +109,24 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
       <p className="text-fg-2 mb-6">
         {active ? active.description : `Journeys available to ${persona?.name ?? 'this role'} across ${line.label}.`}
       </p>
+
+      {launch && (
+        <p className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface px-4 py-3 text-fg-2 text-[length:var(--fs-body)]">
+          <span>
+            Acting for <span className="text-fg font-medium">{launch.customerName ?? launch.customerId}</span>
+            {launch.serviceLabel && (
+              <>
+                {' '}
+                on <span className="text-fg font-medium">{launch.serviceLabel}</span>
+              </>
+            )}
+            .
+          </span>
+          <Link to={`/customer/${launch.customerId}`} className="text-accent font-medium hover:underline">
+            Back to Customer 360
+          </Link>
+        </p>
+      )}
 
       {/* Chip row - same class strings as ModuleScreenList's filter chips, so
           this is a composition of the existing pattern, not a new control.
@@ -136,6 +159,7 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
       <div className="flex flex-wrap items-center gap-2 mb-6">
         <Link
           to={line.to}
+          state={launch ? { launch } : undefined}
           className={`rounded-[var(--radius-button)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${
             active ? `${SECONDARY_SURFACE} hover:bg-surface-warm` : `${PRIMARY_SURFACE} hover:bg-[image:var(--accent-gradient-hover)]`
           }`}
@@ -146,6 +170,7 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
           <Link
             key={c.key}
             to={`${line.to}/${c.key}`}
+            state={launch ? { launch } : undefined}
             className={`rounded-[var(--radius-button)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${
               active?.key === c.key
                 ? `${PRIMARY_SURFACE} hover:bg-[image:var(--accent-gradient-hover)]`
@@ -158,7 +183,7 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
       </div>
 
       {shown.map((c) => (
-        <CategorySection key={c.key} category={c} personaId={activePersonaId} />
+        <CategorySection key={c.key} category={c} personaId={activePersonaId} launch={launch} />
       ))}
     </div>
   );

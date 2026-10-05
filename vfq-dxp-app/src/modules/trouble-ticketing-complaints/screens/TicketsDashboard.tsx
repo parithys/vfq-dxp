@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
@@ -69,7 +70,10 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
   const createRecord = useEntityStore((s) => s.createRecord);
   const updateRecord = useEntityStore((s) => s.updateRecord);
   const pushToast = useNotificationStore((s) => s.pushToast);
-  const [modalOpen, setModalOpen] = useState(false);
+  // Opened from a customer (Customer 360 actions): the creation form is already open for that customer.
+  const [params] = useSearchParams();
+  const [modalOpen, setModalOpen] = useState(params.get('create') === '1');
+  const createForCustomer = params.get('customerId') ?? undefined;
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
@@ -317,7 +321,7 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
         loading={loading}
       />
 
-      <TicketCreationModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={createTicket} />
+      <TicketCreationModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={createTicket} initialCustomerId={createForCustomer} />
     </div>
   );
 }
