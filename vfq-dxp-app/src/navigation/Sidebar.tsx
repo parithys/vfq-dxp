@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '../components/primitives/Icon';
 import { VodafoneMark } from '../components/primitives/VodafoneMark';
 import { Tooltip } from '../components/primitives/Tooltip';
@@ -8,6 +8,7 @@ import { usePersonaStore } from '../stores/personaStore';
 import { resolveNavFor } from '../engines/navigationEngine';
 import { NAV_MANIFEST, resolveActiveNavPath } from './navManifest';
 
+const SEARCH_ICON = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3';
 const PANEL_TOGGLE_ICON = 'M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5z M9 4v16';
 // Points down when collapsed, rotated 180deg to point up when expanded -
 // matching the reference disclosure pattern.
@@ -66,6 +67,19 @@ export function Sidebar() {
     (location.state as { navKey?: string } | null)?.navKey
   );
   const navItems = resolveNavFor(activePersonaId);
+  const navigate = useNavigate();
+  // Menu search: filters this menu only. A group whose own label matches keeps all its sub-items; otherwise just the
+  // matching sub-items are shown, with the group forced open.
+  const [query, setQuery] = useState('');
+  const q = query.trim().toLowerCase();
+  const visibleItems = q
+    ? navItems.flatMap((item) => {
+        const groupMatch = item.label.toLowerCase().includes(q);
+        const kids = groupMatch ? item.children : item.children?.filter((c) => c.label.toLowerCase().includes(q));
+        return groupMatch || kids?.length ? [{ ...item, children: kids }] : [];
+      })
+    : navItems;
+  const firstTarget = visibleItems[0] && (visibleItems[0].children?.length ? visibleItems[0].children[0].to : visibleItems[0].to);
 
   // Below `md:`, the sidebar is an off-canvas drawer - close it automatically
   // whenever the route changes so it doesn't stay open over the new screen.
@@ -159,11 +173,34 @@ export function Sidebar() {
           </button>
         </Tooltip>
       </div>
+      <div className="px-2 pt-3 pb-1">
+        <label className="flex items-center gap-2 h-10 px-3 rounded-[var(--radius-sm)] border border-[var(--nav-border)] text-[var(--nav-fg-muted)] focus-within:border-[var(--nav-fg-muted)] focus-within:text-[var(--nav-fg)]">
+          <Icon path={SEARCH_ICON} className="w-4 h-4 shrink-0" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setQuery('');
+              if (e.key === 'Enter' && firstTarget) {
+                navigate(firstTarget);
+                setQuery('');
+              }
+            }}
+            placeholder="Search menu"
+            aria-label="Search menu"
+            className="min-w-0 flex-1 bg-transparent text-[length:var(--fs-body)] text-[var(--nav-fg)] placeholder:text-[var(--nav-fg-muted)] focus:outline-none [&::-webkit-search-cancel-button]:appearance-none"
+          />
+        </label>
+      </div>
+      {q && visibleItems.length === 0 && (
+        <p className="px-4 py-3 text-[length:var(--fs-caption)] text-[var(--nav-fg-muted)]">No menu items match “{query.trim()}”.</p>
+      )}
       <ul className="py-1.5 space-y-0.5">
-          {navItems.map((item) => {
+          {visibleItems.map((item) => {
             const hasChildren = Boolean(item.children?.length);
             const childActive = item.children?.some((c) => c.to === activeNavPath) ?? false;
-            const expanded = expandedNavKeys.includes(item.key);
+            const expanded = Boolean(q) || expandedNavKeys.includes(item.key);
             // A leaf parent is `end`-matched per the manifest. Parents WITH
             // children no longer link at all, so NavLink's old prefix-matching
             // problem (both /fibre-home and /fibre-home/relocation lighting up
