@@ -13,6 +13,7 @@ import { DonorDetailsStep } from '../../../components/patterns/DonorDetailsStep'
 import type { DonorDetailsValue } from '../../../components/patterns/DonorDetailsStep';
 import { DonorAttachmentStep } from '../../../components/patterns/DonorAttachmentStep';
 import type { DonorAttachmentValue } from '../../../components/patterns/DonorAttachmentStep';
+import { KeyInformationPanel } from '../../../components/patterns/KeyInformationPanel';
 import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCapture';
 
 // The MNP port-in steps. Postpaid: Contact -> Address -> Billing -> SIM Serial -> Plan (Bill Limit) -> Donor
@@ -142,13 +143,12 @@ export function buildMnpSteps(isPrepaid: boolean): WizardStep[] {
             {/* BR-233: prepaid MNP declaration - unused balance is forfeited on
                 switching, shown before signature the same way NewPrepaidWizard
                 surfaces its own Key Information panel at this stage. */}
-            <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-4">
-              <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-2">Key Information</h3>
-              <ul className="list-disc list-inside space-y-1 text-fg-2 text-[length:var(--fs-body)]">
-                <li>Any unused prepaid balance must be used before the number is switched - remaining balance is forfeited once porting completes.</li>
-                <li>Porting is a request, not an instant switch - the donor operator's response determines the final port date.</li>
-              </ul>
-            </div>
+            <KeyInformationPanel
+              items={[
+                'Any unused prepaid balance must be used before the number is switched - remaining balance is forfeited once porting completes.',
+                "Porting is a request, not an instant switch - the donor operator's response determines the final port date.",
+              ]}
+            />
             <CafSignatureCapture
               value={caf}
               onChange={(v) => setValue('caf', v)}
