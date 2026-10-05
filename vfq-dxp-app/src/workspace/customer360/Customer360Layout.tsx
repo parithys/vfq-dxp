@@ -18,6 +18,7 @@ import { isTopicVisible } from '../../engines/customer360VisibilityEngine';
 import { useVerificationGate } from '../../components/patterns/VerificationGate';
 import { Button } from '../../components/primitives/Button';
 import { Tooltip } from '../../components/primitives/Tooltip';
+import { IC } from './sections/C360Kit';
 import { Tabs, type TabItem } from '../../components/primitives/Tabs';
 import { MetricCard } from './MetricCard';
 import { BellNotificationBanner } from './BellNotificationBanner';
@@ -64,6 +65,21 @@ function toAssetsSubView(tab: string | undefined): AssetsSubView {
 // re-sets the bridge here too so a direct link still pre-fills downstream
 // wizards correctly.
 const CLOSED_TICKET_STATUSES = new Set(['Solved', 'Completed', 'Closed', 'Cancelled']);
+
+// Icons for the Retail icon rail, by tab key.
+const RAIL_ICONS: Record<string, string> = {
+  overview: IC.bars,
+  'account-info': IC.user,
+  'products-services': IC.box,
+  billing: IC.wallet,
+  'offers-leads': IC.tag,
+  'contact-identity': IC.users,
+  orders: IC.cart,
+  'tickets-support': IC.headset,
+  activities: IC.activity,
+  'alerts-risks': IC.alert,
+  'address-service': IC.pin,
+};
 
 export function Customer360Layout() {
   const { customerId } = useParams<{ customerId: string }>();
@@ -421,7 +437,7 @@ export function Customer360Layout() {
   const editContact = canEdit ? () => requireVerification(() => setDemoDrawerOpen(true)) : undefined;
   const retailTab = (key: string, label: string, topics: string[], content: ReactNode): TabItem[] =>
     topics.some((t) => isTopicVisible(activePersonaId, t))
-      ? [{ key, label, content: <FieldAccessProvider personaId={activePersonaId} page={key}>{content}</FieldAccessProvider> }]
+      ? [{ key, label, icon: RAIL_ICONS[key], content: <FieldAccessProvider personaId={activePersonaId} page={key}>{content}</FieldAccessProvider> }]
       : [];
   const tabProps = { data, services, goToTab: openTab };
   const tabs: TabItem[] = headerOnly
@@ -477,10 +493,11 @@ export function Customer360Layout() {
   ];
 
   return (
-    <div className="p-8" ref={coverageRoot}>
+    <div className={headerOnly ? '' : 'p-8'} ref={coverageRoot}>
       <DemoProvider value={{ data, services }}>
       <FieldAccessProvider personaId={headerOnly ? activePersonaId : undefined} page="header">
         <CustomerProfileHeader
+          flush={headerOnly}
           {...(telesales
             ? {
                 accountNumber: data.accounts[0]?.accountId ? String(data.accounts[0].accountId) : undefined,
@@ -560,7 +577,7 @@ export function Customer360Layout() {
         // (2026-09-29 decision): a department granted no real-time or
         // drill-down access to any of the 13 topics (e.g. EBU Operations)
         // sees this rather than a crash or a blank/broken tab strip.
-        <p className="text-fg-2 text-[length:var(--fs-body)] rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-6">
+        <p className={`text-fg-2 text-[length:var(--fs-body)] rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-6 ${headerOnly ? 'm-8' : ''}`}>
           No Customer 360 sections are visible for your role.
         </p>
       ) : (

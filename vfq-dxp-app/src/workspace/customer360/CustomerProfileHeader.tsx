@@ -18,6 +18,8 @@ export interface HeaderAlert {
 }
 
 export interface CustomerProfileHeaderProps {
+  /** Full-bleed: no card around it - only a bottom border, and no space outside it. */
+  flush?: boolean;
   name: string;
   qid: string;
   idType: string;
@@ -142,7 +144,10 @@ export function CustomerProfileHeader(p: CustomerProfileHeaderProps) {
         )}
       </div>
     )}
-    <section ref={sectionRef} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-4">
+    <section
+      ref={sectionRef}
+      className={p.flush ? 'border-b border-[var(--field-card-border)] bg-bg p-5' : 'rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-4'}
+    >
       <div className="flex flex-wrap lg:flex-nowrap items-stretch gap-6">
         <div className="flex items-start gap-4 min-w-0 flex-1">
           <div className="w-16 h-16 rounded-full bg-accent text-accent-on flex items-center justify-center text-[length:var(--fs-h4)] font-bold shrink-0" aria-hidden>
