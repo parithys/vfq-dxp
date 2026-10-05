@@ -27,6 +27,8 @@ interface SelectProps {
   'aria-label'?: string;
   /** Adds a search box at the top of the dropdown that filters the options as the user types. */
   searchable?: boolean;
+  /** Opens the option list above the field - for a select at the bottom of a panel, where a list below would be cut off. */
+  openUp?: boolean;
 }
 
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
@@ -55,6 +57,7 @@ export function Select({
   dark = false,
   'aria-label': ariaLabel,
   searchable = false,
+  openUp = false,
 }: SelectProps) {
   const selectId = id ?? `select-${label?.replace(/\s+/g, '-').toLowerCase()}`;
   const helperId = `${selectId}-helper`;
@@ -175,7 +178,7 @@ export function Select({
         </button>
 
         {open && (
-          <div className={`absolute z-50 top-full left-0 right-0 rounded-[var(--field-radius)] border shadow-raised overflow-hidden ${panelClasses}`}>
+          <div className={`absolute z-50 ${openUp ? 'bottom-full mb-1' : 'top-full'} left-0 right-0 rounded-[var(--field-radius)] border shadow-raised overflow-hidden ${panelClasses}`}>
           {searchable && (
             <div className="p-2 border-b border-border-soft">
               <input

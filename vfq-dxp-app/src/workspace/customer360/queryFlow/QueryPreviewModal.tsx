@@ -188,6 +188,7 @@ export function QueryPreviewModal({
             <div className="mr-auto min-w-44">
               <Select
                 aria-label="Queue"
+                openUp
                 value={chosenQueue}
                 onChange={(e) => setChosenQueue(e.target.value)}
                 placeholder="Select a queue"
