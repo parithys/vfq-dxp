@@ -60,8 +60,10 @@ export function useQueryIssueCatalogue(): QueryIssueCatalogue | undefined {
   return cat;
 }
 
-/** The agent's input as keywords: split on whitespace, extra spaces and edges ignored, case-insensitive. */
-export const queryKeywords = (term: string): string[] => term.toLowerCase().split(/\s+/).filter(Boolean);
+/** The agent's input as keywords: split on whitespace (and '+' / ','), extra spaces and edges ignored, case-insensitive. */
+export const queryKeywords = (term: string): string[] =>
+  // '+' and ',' separate keywords like a space does; a token with no letter or digit (a stray '+', '-', '&') is dropped.
+  term.toLowerCase().split(/[\s+,]+/).filter((k) => /[a-z0-9]/.test(k));
 
 /** Start index of every word in the text (a word starts after any non-alphanumeric character). */
 const wordStarts = (lower: string): number[] => {
