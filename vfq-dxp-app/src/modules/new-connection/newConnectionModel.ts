@@ -37,6 +37,8 @@ export interface ConfirmedOrder {
   activityId?: string;
   pendingApproval: boolean;
   customerName: string;
+  customerId?: string;
+  address?: { zone?: string; streetNo?: string; buildingNo?: string; aptFlatUnit?: string };
   msisdn: string;
   planName: string;
   dueTodayQar: number;

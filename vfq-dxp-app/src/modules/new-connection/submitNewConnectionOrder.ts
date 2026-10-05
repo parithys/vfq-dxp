@@ -227,6 +227,8 @@ export async function submitNewConnectionOrder(
         activityId,
         pendingApproval,
         customerName: contact.moiResult?.name ?? '-',
+        customerId: eligibility?.customerId,
+        address: values.address as ConfirmedOrder['address'],
         msisdn: (values.msisdn as string) ?? '-',
         planName: plan?.name ?? '-',
         dueTodayQar,

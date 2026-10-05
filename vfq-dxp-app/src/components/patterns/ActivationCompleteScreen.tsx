@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { resolveFibreServiceability } from '../../engines/fibreServiceability';
+import type { AddressParts, FibreServiceability } from '../../engines/fibreServiceability';
 import { useNavigate } from 'react-router-dom';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { OrderConfirmationScreen } from './OrderConfirmationScreen';
@@ -30,6 +32,10 @@ export interface ActivationCompleteOrder {
   activityId?: string;
   pendingApproval: boolean;
   customerName: string;
+  /** Customer on file, when there is one - used to read the location's fibre serviceability. */
+  customerId?: string;
+  /** The address entered in the journey, when one was. */
+  address?: AddressParts;
   msisdn: string;
   planName: string;
   simType?: string;
@@ -64,6 +70,15 @@ export function ActivationCompleteScreen({ order }: { order: ActivationCompleteO
   // 'sent' | 'blocked' (address missing or not verified) - never assumed sent.
   const [leadId, setLeadId] = useState<string | undefined>();
   const [closing, setClosing] = useState(false);
+  // Fibre serviceability of the customer's location: undefined while it is being read.
+  const [fibre, setFibre] = useState<FibreServiceability | undefined>();
+  useEffect(() => {
+    let cancelled = false;
+    void resolveFibreServiceability(order.customerId, order.address).then((r) => !cancelled && setFibre(r));
+    return () => {
+      cancelled = true;
+    };
+  }, [order.customerId, order.address]);
   const [emailStatus, setEmailStatus] = useState<'sent' | 'blocked'>(emailedOrders.has(order.orderId) ? 'sent' : 'blocked');
   // Automatically send the order details - and, for an eSIM order, the QR code / activation code -
   // to the customer's VERIFIED email address as soon as the order is submitted. An address that is
@@ -164,15 +179,17 @@ export function ActivationCompleteScreen({ order }: { order: ActivationCompleteO
             ? [{ label: 'Monthly recurring', value: `QR ${order.monthlyRecurringQar}/mo` }]
             : []),
           { label: 'Status', value: order.pendingApproval ? 'Submitted for Approval' : 'Complete' },
-          // The cue for "Continue with Fibre" below: the customer's location can be served by fibre (RFS = Ready For Service).
-          { label: 'Customer location', value: 'RFS (Ready For Service)' },
+          // The cue for the fibre actions below: whether the customer's location can be served by fibre.
+          { label: 'Customer location', value: fibre === 'rfs' ? 'RFS (Ready For Service)' : fibre === 'not-rfs' ? 'Not RFS (not ready for service)' : fibre === 'unknown' ? 'Not on file' : 'Checking...' },
         ]}
         actions={[
           { label: 'View Order', variant: 'primary-rect', onClick: () => navigate(`${ORDER_DETAIL_ROUTE}?id=${order.orderId}`) },
           { label: 'Print', onClick: () => window.print(), endRow: true },
           { label: 'Close Activity', onClick: () => void closeActivity(), endRow: true },
-          { label: leadId ? `Lead ${leadId} created` : 'Create Lead', onClick: () => void createLead() },
-          { label: 'Continue with Fibre', onClick: () => navigate(FIBRE_ACTIVATION_ROUTE) },
+          // Contextual: a location that is ready for service goes on to fibre activation; any other location (not ready,
+          // or no address to check) offers capturing the fibre interest as a lead instead. Neither shows while it is read.
+          ...(fibre === 'rfs' ? [{ label: 'Continue with Fibre', onClick: () => navigate(FIBRE_ACTIVATION_ROUTE) }] : []),
+          ...(fibre === 'not-rfs' || fibre === 'unknown' ? [{ label: leadId ? `Lead ${leadId} created` : 'Create Lead', onClick: () => void createLead() }] : []),
         ]}
       />
       {!order.esimActivationCode &&
