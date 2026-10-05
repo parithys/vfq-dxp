@@ -171,7 +171,7 @@ export function Sidebar() {
             // The whole row stays one hit target - icon, label and chevron
             // alike. The chevron used to be a separate 14px button, which left
             // dead space between it and the label.
-            const rowClass = `flex-1 min-w-0 flex items-center gap-2.5 h-11 mx-2 rounded-[var(--radius-sm)] text-[length:var(--fs-body)] px-4`;
+            const rowClass = `flex-1 min-w-0 flex items-center gap-2.5 h-11 mx-2 rounded-[var(--radius-sm)] text-[length:var(--fs-body)] px-4 `;
             const activeClass = 'bg-accent text-accent-on font-medium';
             // Open group holding the active child: a quiet tint, so the group
             // reads as "you are in here" without competing with the child's
