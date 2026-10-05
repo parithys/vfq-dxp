@@ -65,7 +65,6 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
   const [severity, setSeverity] = useState('all');
   const [type, setType] = useState('all');
   const [status, setStatus] = useState('all');
-  const [query, setQuery] = useState('');
   const [showAllNotes, setShowAllNotes] = useState(false);
 
   const bell = (useEntityStore((s) => s.records['bell-notifications']) ?? []) as Record<string, unknown>[];
@@ -158,12 +157,10 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
   })();
 
   const count = (s: Severity) => alerts.filter((a) => a.severity === s).length;
-  const q = query.trim().toLowerCase();
   const rows = alerts.filter((a) => {
     if (severity !== 'all' && a.severity !== severity) return false;
     if (type !== 'all' && a.type !== type) return false;
     if (status !== 'all' && a.status !== status) return false;
-    if (q && ![a.type, a.description, a.id].some((v) => v.toLowerCase().includes(q))) return false;
     return true;
   });
   const paging = usePaging(rows, PAGE_SIZE);
@@ -230,19 +227,6 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
                   paging.setPage(1);
                 }}
               />
-              <label className="flex items-center gap-2 rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg px-3 py-2 min-w-48">
-                <Icon path={IC.search} className="w-4 h-4 text-muted shrink-0" />
-                <input
-                  value={query}
-                  onChange={(e) => {
-                    setQuery(e.target.value);
-                    paging.setPage(1);
-                  }}
-                  placeholder="Search by alert, description or reference"
-                  aria-label="Search by alert, description or reference"
-                  className="bg-transparent outline-none flex-1 min-w-0 text-[length:var(--fs-body)] text-fg placeholder:text-muted"
-                />
-              </label>
             </div>
           </div>
           <GridTable
