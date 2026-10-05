@@ -148,6 +148,7 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
     {
       key: 'msisdn',
       header: 'MSISDN / Service ID',
+      strong: true,
       render: (s) => (
         <div className="min-w-0">
           <div className="font-semibold break-words">{s.identifier}</div>
@@ -161,6 +162,7 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
     {
       key: 'balance',
       header: 'Current Balance',
+      numeric: true,
       render: (s) =>
         get(s).primary && isMobile(s) && dataUsed !== undefined && dataTotal ? (
           <div className="min-w-28">
@@ -173,8 +175,8 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
           <Dv k="serviceBalance" row={{ category: s.category }} />
         ),
     },
-    { key: 'limit', header: 'Bill Limit', render: (s) => (isMobile(s) ? dash(billLimit) : <Dv k="serviceBillLimit" row={{ category: s.category }} />) },
-    { key: 'addons', header: 'Add-ons', render: (s) => (get(s).asset ? get(s).addons.length : <Dv k="serviceAddons" />) },
+    { key: 'limit', header: 'Bill Limit', numeric: true, render: (s) => (isMobile(s) ? dash(billLimit) : <Dv k="serviceBillLimit" row={{ category: s.category }} />) },
+    { key: 'addons', header: 'Add-ons', numeric: true, render: (s) => (get(s).asset ? get(s).addons.length : <Dv k="serviceAddons" />) },
     {
       key: 'actions',
       header: 'Actions',

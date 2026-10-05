@@ -306,6 +306,10 @@ export interface GridCol<T> {
   header: string;
   render?: (row: T, index: number) => ReactNode;
   className?: string;
+  /** Numeric column: right-aligned in the header and every row, and its values never wrap. */
+  numeric?: boolean;
+  /** The identifier column: its values are semibold (the only emphasised column). */
+  strong?: boolean;
 }
 
 /** Plain data grid in the design's style: light header row, row dividers, optional selectable rows. */
@@ -330,12 +334,13 @@ export function GridTable<T>({
   cols = cols.filter((c) => modeOf(c.header) !== 'hidden');
   if (rows.length === 0) return <p className="text-muted text-[length:var(--fs-body)] py-4 text-center">{empty}</p>;
   return (
-    <div className="overflow-x-auto">
+    // Scrolls inside itself past ~70vh so the header can stay in view (sticky) on a long table.
+    <div className="overflow-auto max-h-[70vh]">
       <table className="w-full text-left text-[length:var(--fs-body)]">
-        <thead>
+        <thead className="sticky top-0 z-10">
           <tr className="bg-[var(--table-header-bg)] text-fg-2">
             {cols.map((c) => (
-              <th key={c.key} className={`px-3 py-2.5 font-medium whitespace-nowrap ${c.className ?? ''}`}>
+              <th key={c.key} className={`px-3 py-2.5 text-[length:var(--fs-caption)] font-semibold whitespace-nowrap border-b border-[var(--border)] ${c.numeric ? 'text-right' : ''} ${c.className ?? ''}`}>
                 {c.header}
               </th>
             ))}
@@ -352,7 +357,7 @@ export function GridTable<T>({
                 className={`border-b border-border-soft last:border-0 ${onSelect ? 'cursor-pointer hover:bg-surface' : ''} ${selected ? 'bg-[color-mix(in_oklab,var(--accent),var(--bg)_95%)] outline outline-1 -outline-offset-1 outline-[var(--danger-border)]' : ''}`}
               >
                 {cols.map((c) => (
-                  <td key={c.key} className={`px-3 ${dense ? 'py-2' : 'py-3'} align-middle text-fg ${c.className ?? ''}`}>
+                  <td key={c.key} className={`px-3 ${dense ? 'py-2' : 'py-3'} align-middle text-fg ${c.numeric ? 'text-right whitespace-nowrap tabular-nums' : ''} ${c.strong ? 'font-semibold' : ''} ${c.className ?? ''}`}>
                     {c.render ? c.render(r, i) : String((r as Record<string, unknown>)[c.key] ?? '-')}
                   </td>
                 ))}

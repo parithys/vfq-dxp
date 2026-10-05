@@ -10,7 +10,6 @@ import { appliesToCustomer, appliesToService, launchFor, resolveAction, serviceK
 import { useStartNewConnection } from './useStartNewConnection';
 
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
-const KEBAB = 'M12 5h.01 M12 12h.01 M12 19h.01';
 const PRODUCT_LINES = new Set(['mobile', 'fibre-home']);
 
 /** Closes the menu on an outside click or Escape. */
@@ -161,8 +160,9 @@ export function ServiceActionsMenu({
   const launch = launchFor(customerId, customerName, service);
   return (
     <div ref={ref} className="relative inline-block">
-      <button
-        type="button"
+      <Button
+        variant="secondary-rect"
+        compact
         aria-label={`Actions for ${service.identifier}`}
         aria-haspopup="menu"
         aria-expanded={open}
@@ -170,10 +170,10 @@ export function ServiceActionsMenu({
           e.stopPropagation();
           setOpen((v) => !v);
         }}
-        className="w-7 h-7 rounded-[var(--radius-pill)] flex items-center justify-center text-fg-2 hover:bg-surface"
       >
-        <Icon path={KEBAB} className="w-4 h-4" strokeWidth={3} />
-      </button>
+        Actions
+        <Icon path={CHEVRON_DOWN} className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </Button>
       {open && (
         <div onClick={(e) => e.stopPropagation()}>
           <MenuPanel

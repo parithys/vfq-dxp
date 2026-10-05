@@ -295,3 +295,7 @@ select:not([multiple]):not([size]):not(.appearance-none) {
 .req-met {
   color: var(--audit-pink) !important;
 }
+/* Table header labels stay one colour; the coverage overlay marks fields, not columns. */
+thead .req-met {
+  color: inherit !important;
+}
