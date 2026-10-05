@@ -1,0 +1,216 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import * as mockDataEngine from '../../engines/mockDataEngine';
+import { discountsForCustomer, type CustomerBenefit } from '../../engines/customerBenefitEngine';
+import { monthlyCharges } from '../../engines/postpaidPricing';
+import { closestPlans, SUPPORTING_ID_DISCOUNT_TYPES, PROOF_DOCUMENT_MAX_BYTES, formatDocSize, PLAN_GROUPS, planGroupOf } from './postpaidPlanModel';
+import type { PostpaidPlan, Discount, AddonProduct, PlanGroupKey, TabKey } from './postpaidPlanModel';
+
+interface UsePostpaidPlanAddonsArgs {
+  selectedProductId: string | undefined;
+  discountId: string | undefined;
+  onSelectDiscount: (discountId: string | undefined) => void;
+  addonIds: string[];
+  discountSupportingId: string | undefined;
+  onDiscountSupportingIdChange: (id: string) => void;
+  customerBenefit?: 'mada' | 'b2b2c' | 'retired' | 'none';
+  customerBenefits?: CustomerBenefit[];
+  discountProofDocument: { fileName: string; sizeBytes: number } | undefined;
+  onDiscountProofDocumentChange: (doc: { fileName: string; sizeBytes: number } | undefined) => void;
+}
+
+export function usePostpaidPlanAddons({
+  selectedProductId,
+  discountId,
+  onSelectDiscount,
+  addonIds,
+  discountSupportingId,
+  onDiscountSupportingIdChange,
+  customerBenefit,
+  customerBenefits,
+  discountProofDocument,
+  onDiscountProofDocumentChange,
+}: UsePostpaidPlanAddonsArgs) {
+  const [plans, setPlans] = useState<PostpaidPlan[]>([]);
+  const [addonProducts, setAddonProducts] = useState<AddonProduct[]>([]);
+  const [planDiscounts, setPlanDiscounts] = useState<Discount[]>([]);
+  const discounts = useMemo(
+    () => discountsForCustomer(planDiscounts, customerBenefits, customerBenefit && customerBenefit !== 'none' ? customerBenefit : undefined),
+    [planDiscounts, customerBenefits, customerBenefit]
+  );
+  // The plan whose details are open, or null. Holds the plan OBJECT rather
+  // than an id, so the drawer cannot render a heading for one plan and
+  // figures for another.
+  const [detailPlan, setDetailPlan] = useState<PostpaidPlan | null>(null);
+  const [planSearch, setPlanSearch] = useState('');
+  // Type-ahead suggestions dropdown (2026-09-28), separate from the substring
+  // filter below - see CompanySearchInput.tsx for the same combobox shape
+  // (click-outside close, listbox/option roles).
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const [proofDocError, setProofDocError] = useState<string | null>(null);
+  const proofDocRef = useRef<HTMLInputElement>(null);
+  const [activeTab, setActiveTab] = useState<TabKey>('specials');
+  // Set once, the moment the catalogue first has something in it - not on
+  // every load, which would snap the agent back to the first tab if the
+  // catalogue ever refetched while they were on "Add-ons". Guards against
+  // landing on an empty "Today's Special Promotions" tab when nothing in the
+  // catalogue happens to be flagged popular.
+  const defaultTabSet = useRef(false);
+
+  // Name OR price. The price side matches the raw number anywhere in the
+  // figure, so "35" finds 350 - narrowing as the agent types rather than
+  // requiring the exact charge.
+  const visiblePlans = plans.filter((p) => {
+    const q = planSearch.trim().toLowerCase();
+    if (!q) return true;
+    return p.name.toLowerCase().includes(q) || String(p.mrcQAR).includes(q);
+  });
+  // Tabs themselves are stable while the agent types a search - built from
+  // the FULL catalogue, not the filtered one, so a query that empties the
+  // active tab's matches doesn't also make its own tab disappear out from
+  // under it. Each tab's CONTENT still reads the filtered list below.
+  const planGroupTabs = PLAN_GROUPS.filter((g) => plans.some((p) => planGroupOf(p) === g.key));
+  const groupPlans = (key: PlanGroupKey) => visiblePlans.filter((p) => planGroupOf(p) === key);
+
+  useEffect(() => {
+    if (defaultTabSet.current || plans.length === 0) return;
+    defaultTabSet.current = true;
+    const firstNonEmpty = PLAN_GROUPS.find((g) => plans.some((p) => planGroupOf(p) === g.key));
+    if (firstNonEmpty) setActiveTab(firstNonEmpty.key);
+  }, [plans]);
+
+  const suggestions = closestPlans(planSearch, plans);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    const onClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setSearchOpen(false);
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [searchOpen]);
+
+  useEffect(() => {
+    mockDataEngine.list<PostpaidPlan & AddonProduct>('products').then((all) => {
+      setPlans(all.filter((p) => p.type === 'Postpaid Plan').sort((a, b) => a.mrcQAR - b.mrcQAR));
+      setAddonProducts(all.filter((p) => p.type === 'Add-on'));
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!selectedProductId) {
+      setPlanDiscounts([]);
+      return;
+    }
+    mockDataEngine
+      .list<Discount>('addons-discounts')
+      .then((all) => setPlanDiscounts(all.filter((d) => d.category === 'Discount' && d.planId === selectedProductId)));
+  }, [selectedProductId]);
+
+  const selectedPlan = plans.find((p) => p.productId === selectedProductId);
+  // "Offers" is the specials group (2026-09-30 rule): every plan there is
+  // pre-bundled, so it gets the same add-ons/discounts lockout a plan
+  // individually flagged `preBundledOffer` already got - see the two panels
+  // below. Derived from the group rather than a second per-plan flag: the
+  // business rule is "this WHOLE TAB is pre-bundled", not "some plans in it
+  // are", and planGroupOf is already the one place that decides tab
+  // membership.
+  const isOffersPlan = selectedPlan ? planGroupOf(selectedPlan) === 'specials' : false;
+  const preBundled = Boolean(selectedPlan?.preBundledOffer) || isOffersPlan;
+  const selectedDiscount = discounts.find((d) => d.addonDiscountId === discountId);
+  // Accepted benefit -> its discount on the chosen plan, applied once (the agent
+  // can still change it afterwards). Retired: ADO-7114..7117 (demo catalogue entries, see their _note).
+  const benefitType = customerBenefit === 'mada' ? 'MADA Discount' : customerBenefit === 'b2b2c' ? 'B2B2C Discount' : customerBenefit === 'retired' ? 'Retired Discount' : undefined;
+  const benefitAppliedFor = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!benefitType || discountId || !selectedProductId || benefitAppliedFor.current === selectedProductId) return;
+    const match = discounts.find((d) => d.addonType === benefitType);
+    if (match) {
+      benefitAppliedFor.current = selectedProductId; // once per plan: choosing "No discount" afterwards sticks
+      onSelectDiscount(match.addonDiscountId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [benefitType, selectedProductId, discounts, discountId]);
+  const requiresSupportingId = selectedDiscount ? SUPPORTING_ID_DISCOUNT_TYPES.has(selectedDiscount.addonType) : false;
+
+  // Switching to a discount that doesn't need one (or to no discount at all)
+  // invalidates whatever ID and proof document were captured for a previous
+  // MADA/B2B2C pick - the same "an edit invalidates a stale link" reasoning
+  // CompanySearchInput and IdLookupStep apply to their own committed values.
+  useEffect(() => {
+    if (requiresSupportingId) return;
+    if (discountSupportingId) onDiscountSupportingIdChange('');
+    if (discountProofDocument) onDiscountProofDocumentChange(undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discountId]);
+
+  // Max ONE discount, and it is scoped to the plan it was picked against
+  // (Discount.planId) - so a plan change retires whatever discount the
+  // PREVIOUS plan had, rather than leaving a stale id in the order that no
+  // longer names a discount on the current plan at all (Checkout/the order
+  // payload read `discountId` directly, so an orphaned one would silently
+  // ride along with the new plan). The radio group already guarantees at
+  // most one discount for a GIVEN plan; this is what still guarantees it
+  // across a plan switch. Keyed on the previous product id, not just "did a
+  // discount exist", so it fires only on an actual plan change, not on
+  // mount.
+  const prevProductId = useRef(selectedProductId);
+  useEffect(() => {
+    if (prevProductId.current !== selectedProductId) {
+      prevProductId.current = selectedProductId;
+      if (discountId) onSelectDiscount(undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProductId]);
+
+  const handleProofDocFile = (file: File | undefined) => {
+    if (!file) return;
+    if (file.size > PROOF_DOCUMENT_MAX_BYTES) {
+      setProofDocError(`${file.name} is ${formatDocSize(file.size)}. The limit is 5 MB.`);
+      return;
+    }
+    setProofDocError(null);
+    onDiscountProofDocumentChange({ fileName: file.name, sizeBytes: file.size });
+    if (proofDocRef.current) proofDocRef.current.value = '';
+  };
+
+  const selectedAddons = addonProducts.filter((a) => addonIds.includes(a.productId));
+  const addonsMonthlyQar = selectedAddons.reduce((sum, a) => sum + a.mrcQAR, 0);
+  // One itemisation, shared with Checkout and with the order payload - see
+  // engines/postpaidPricing.ts for why that is a module and not three copies.
+  // No device instalment here: this step has not reached Device & DOI yet, so
+  // the figure it shows is the service subtotal, and Checkout adds the
+  // instalment once there is one.
+  const charges = selectedPlan
+    ? monthlyCharges({
+        planQar: selectedPlan.mrcQAR,
+        discountRate: selectedDiscount?.price,
+        addonsQar: addonsMonthlyQar,
+      })
+    : undefined;
+
+  return {
+    plans,
+    discounts,
+    detailPlan,
+    setDetailPlan,
+    planSearch,
+    setPlanSearch,
+    searchOpen,
+    setSearchOpen,
+    searchRef,
+    proofDocError,
+    proofDocRef,
+    activeTab,
+    setActiveTab,
+    planGroupTabs,
+    groupPlans,
+    suggestions,
+    selectedPlan,
+    preBundled,
+    selectedDiscount,
+    requiresSupportingId,
+    handleProofDocFile,
+    charges,
+  };
+}
