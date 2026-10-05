@@ -336,6 +336,13 @@ export function Sidebar() {
                         <div className="flex items-center">
                           <NavLink
                             to={child.to}
+                            // The whole row opens the sub-menu: a click on a category that is not the current page
+                            // navigates AND opens its journeys; a click on the current page toggles them.
+                            onClick={() => {
+                              if (!hasJourneys) return;
+                              if (child.to === activeNavPath) toggleNavGroup(child.key);
+                              else expandNavGroup(child.key);
+                            }}
                             {...optProps(`child:${child.key}`)}
                             className={() =>
                               `${KBD_ACTIVE} flex-1 min-w-0 flex items-center gap-2.5 h-9 -ml-px pl-4 pr-3 border-l-2 text-[length:var(--fs-caption)] ${
