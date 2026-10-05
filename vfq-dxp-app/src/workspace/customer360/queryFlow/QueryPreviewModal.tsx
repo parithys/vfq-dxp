@@ -1,4 +1,4 @@
-import { Modal } from '../../../components/primitives/Modal';
+import { Drawer } from '../../../components/primitives/Drawer';
 import { Button } from '../../../components/primitives/Button';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
@@ -100,11 +100,10 @@ export function QueryPreviewModal({
   const additional = fields.map((f) => ({ label: f, value: resolve[f]?.() ?? NOT_ON_FILE }));
 
   return (
-    <Modal
+    <Drawer
       open={open}
       onClose={onClose}
       title="Preview Details"
-      widthClassName="max-w-4xl"
       footer={
         <>
           <Button variant="ghost-rect" onClick={onCloseInteraction}>
@@ -124,7 +123,7 @@ export function QueryPreviewModal({
           <Pill tone="blue">{serviceType}</Pill>
         </span>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-6">
         <section>
           <h3 className="text-fg font-semibold text-[length:var(--fs-body)] mb-1">Query Summary</h3>
           <DetailRows rows={summary} />
@@ -150,6 +149,6 @@ export function QueryPreviewModal({
           </ul>
         )}
       </section>
-    </Modal>
+    </Drawer>
   );
 }
