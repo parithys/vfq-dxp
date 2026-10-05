@@ -34,14 +34,6 @@ function InertView() {
   );
 }
 
-function Chev({ onClick, label }: { onClick?: () => void; label: string }) {
-  return (
-    <button type="button" aria-label={label} onClick={onClick} disabled={!onClick} className="text-fg hover:text-accent disabled:opacity-60 disabled:cursor-not-allowed">
-      <Icon path={IC.chevRight} className="w-4 h-4" />
-    </button>
-  );
-}
-
 function SectionLink({ children, onClick }: { children: string; onClick?: () => void }) {
   if (!onClick) return null;
   return (
@@ -120,7 +112,6 @@ export function C360OffersLeads({ data }: { data: Customer360Data; services: Cus
     { key: 'elig', header: 'Eligibility', render: (r) => (r.eligibility ? <StatusPill status={r.eligibility} /> : DASH) },
     { key: 'valid', header: 'Validity', render: (r) => fmtDate(r.validity) ?? <Dv k="offerValidity" /> },
     { key: 'act', header: 'Actions', render: (r) => <button type="button" onClick={() => setOpenOffer(openOffer === r.key ? undefined : r.key)} className="rounded-[var(--radius-sm)] px-2.5 py-0.5 text-[length:var(--fs-caption)] font-medium text-accent bg-[color-mix(in_oklab,var(--accent),var(--bg)_92%)] hover:bg-[color-mix(in_oklab,var(--accent),var(--bg)_85%)]">{openOffer === r.key ? 'Hide' : 'View'}</button> },
-    { key: 'chev', header: '', render: (r) => <Chev label="Toggle offer details" onClick={() => setOpenOffer(openOffer === r.key ? undefined : r.key)} /> },
   ];
 
   const leadCols: GridCol<Rec>[] = [
@@ -132,7 +123,6 @@ export function C360OffersLeads({ data }: { data: Customer360Data; services: Cus
     { key: 'by', header: 'Created By', render: (r) => str(r.ownerId) ?? DASH },
     { key: 'on', header: 'Created On', render: () => <Dv k="leadCreatedOn" /> },
     { key: 'act', header: 'Actions', render: () => <InertView /> },
-    { key: 'chev', header: '', render: () => <Chev label="Open lead" /> },
   ];
 
   const historyCols: GridCol<Rec>[] = [
@@ -238,7 +228,7 @@ export function C360OffersLeads({ data }: { data: Customer360Data; services: Cus
           </Panel>
         </div>
 
-        <div id="c360-all-offers" className="@6xl:col-span-5 min-w-0">
+        <div id="c360-all-offers" className="@6xl:col-span-8 min-w-0">
           <Panel
             icon={IC.gift}
             title="All Offers"
@@ -254,8 +244,18 @@ export function C360OffersLeads({ data }: { data: Customer360Data; services: Cus
             )}
           </Panel>
         </div>
+      </div>
 
-        <div id="c360-eligibility" className="@6xl:col-span-3 min-w-0">
+      <div>
+        <div id="c360-leads" className="min-w-0">
+          <Panel icon={IC.users} title={`Active Leads (${activeLeads.length})`} flush>
+            <GridTable cols={leadCols} rows={activeLeads} rowKey={(r) => String(r.leadId)} empty="No active leads." />
+          </Panel>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 @4xl:grid-cols-2 gap-4 items-stretch">
+        <div id="c360-eligibility" className="min-w-0">
           <Panel icon={IC.target} title="Your Eligibility">
             <ul>
               {eligibility.map((e) => (
@@ -266,14 +266,6 @@ export function C360OffersLeads({ data }: { data: Customer360Data; services: Cus
                 </li>
               ))}
             </ul>
-          </Panel>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 @6xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] gap-4 items-start">
-        <div id="c360-leads" className="min-w-0">
-          <Panel icon={IC.users} title={`Active Leads (${activeLeads.length})`} flush>
-            <GridTable cols={leadCols} rows={activeLeads} rowKey={(r) => String(r.leadId)} empty="No active leads." />
           </Panel>
         </div>
         <Panel icon={IC.clock} title="Lead History" flush>
