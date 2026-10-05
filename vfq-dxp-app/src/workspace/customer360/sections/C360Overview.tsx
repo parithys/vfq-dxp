@@ -276,15 +276,6 @@ export function C360Overview({ data, services, goToTab }: { data: Customer360Dat
             <Row label="Bill Cycle">{dash(str(billingProfile?.billingCycle))}</Row>
             <Row label="PTP Eligible">{billingProfile?.promiseToPayStatus ? <StatusPill status={str(billingProfile.promiseToPayStatus)} /> : '-'}</Row>
           </div>
-          {goToTab && (
-            <button
-              type="button"
-              onClick={() => goToTab('billing')}
-              className="mt-3 w-full rounded-[var(--radius-button)] border border-[var(--danger-border)] bg-bg py-2 text-accent font-medium text-[length:var(--fs-btn-compact)] hover:bg-surface"
-            >
-              View Bill
-            </button>
-          )}
         </Panel>
 
         {/* Offers & Opportunities */}
