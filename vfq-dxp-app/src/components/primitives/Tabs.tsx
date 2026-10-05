@@ -132,11 +132,11 @@ function IconRail({ items, active, onSelect }: { items: TabItem[]; active: strin
                   onClick={() => onSelect(item.key)}
                   aria-label={item.label}
                   className={`${row} w-12 lg:w-full border-l-2 transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
-                    isActive ? 'bg-surface-warm border-l-accent text-accent' : 'border-l-transparent text-fg-2 hover:bg-surface hover:text-fg'
+                    isActive ? 'bg-accent text-accent-on border-l-transparent' : 'border-l-transparent text-fg-2 hover:bg-surface-warm hover:text-accent'
                   } ${expanded ? 'lg:px-5 lg:gap-3' : 'justify-center'}`}
                 >
                   <Icon path={item.icon ?? FALLBACK_ICON} className="w-5 h-5 shrink-0" />
-                  {expanded && <span className={`hidden lg:inline min-w-0 truncate text-[length:var(--fs-body)] ${isActive ? 'font-semibold text-fg' : 'font-medium text-fg'}`}>{item.label}</span>}
+                  {expanded && <span className={`hidden lg:inline min-w-0 truncate text-[length:var(--fs-body)] ${isActive ? 'font-semibold' : 'font-medium text-fg'}`}>{item.label}</span>}
                 </button>
                 {!expanded && (
                   // Overlay label: absolutely positioned from the item's own left edge, over the page, so the layout
@@ -144,10 +144,10 @@ function IconRail({ items, active, onSelect }: { items: TabItem[]; active: strin
                   <span
                     aria-hidden="true"
                     className={`pointer-events-none absolute left-0 top-0 z-30 hidden lg:flex h-12 items-center gap-3 pl-[18px] pr-5 whitespace-nowrap rounded-r-[var(--radius-sm)] border border-l-0 border-[var(--field-card-border)] shadow-raised text-[length:var(--fs-body)] opacity-0 transition-opacity duration-100 group-hover:opacity-100 group-focus-within:opacity-100 ${
-                      isActive ? 'bg-surface-warm text-fg font-semibold' : 'bg-bg text-fg font-medium'
+                      isActive ? 'bg-accent text-accent-on font-semibold border-transparent' : 'bg-surface-warm text-fg font-medium'
                     }`}
                   >
-                    <Icon path={item.icon ?? FALLBACK_ICON} className={`w-5 h-5 shrink-0 ${isActive ? 'text-accent' : 'text-fg-2'}`} />
+                    <Icon path={item.icon ?? FALLBACK_ICON} className={`w-5 h-5 shrink-0 ${isActive ? '' : 'text-accent'}`} />
                     {item.label}
                   </span>
                 )}
