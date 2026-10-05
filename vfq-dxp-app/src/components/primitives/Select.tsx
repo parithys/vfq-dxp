@@ -121,9 +121,9 @@ export function Select({
         error
           ? 'border-[var(--field-border-error)]'
           : selected
-            ? 'border-[var(--field-border-filled)] enabled:hover:border-[var(--field-focus-border)]'
-            : 'border-[var(--field-border)] enabled:hover:border-[var(--field-focus-border)]'
-      } bg-bg text-fg focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)]
+            ? 'border-[var(--field-border-filled)] enabled:hover:border-[var(--field-hover-border)]'
+            : 'border-[var(--field-border)] enabled:hover:border-[var(--field-hover-border)]'
+      } bg-bg text-[var(--color-field-text-filled)] focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)]
       disabled:border-[var(--field-border-disabled)] disabled:bg-[var(--field-bg-disabled)]`;
   const panelClasses = dark
     ? 'border-white/15 bg-[var(--charcoal-panel)] divide-y divide-white/10'
@@ -189,7 +189,7 @@ export function Select({
                 onKeyDown={onListKeyDown as unknown as (e: KeyboardEvent<HTMLInputElement>) => void}
                 placeholder="Search…"
                 aria-label="Search options"
-                className="w-full rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-3 py-2 text-[length:var(--fs-body)] text-fg focus:outline-none focus-visible:border-[var(--field-focus-border)]"
+                className="w-full rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-3 py-2 text-[length:var(--fs-body)] text-[var(--color-field-text-filled)] focus:outline-none focus-visible:border-[var(--field-focus-border)]"
               />
             </div>
           )}

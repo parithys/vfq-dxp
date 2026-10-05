@@ -84,8 +84,8 @@ export function ContactPhoneInput({
   const borderClass = error
     ? 'border-[var(--field-border-error)]'
     : isFilled
-      ? 'border-[var(--field-border-filled)] hover:border-[var(--field-focus-border)]'
-      : 'border-[var(--field-border)] hover:border-[var(--field-focus-border)]';
+      ? 'border-[var(--field-border-filled)] hover:border-[var(--field-hover-border)]'
+      : 'border-[var(--field-border)] hover:border-[var(--field-hover-border)]';
 
   return (
     <div className="flex flex-col gap-1">
@@ -114,7 +114,7 @@ export function ContactPhoneInput({
             onBlur={() => setFocused(false)}
             placeholder={placeholder}
             aria-describedby={describedBy}
-            className="flex-1 min-w-0 bg-transparent text-[length:var(--fs-body)] text-fg focus:outline-none focus-visible:shadow-none disabled:text-[var(--field-label-disabled)]"
+            className="flex-1 min-w-0 bg-transparent text-[length:var(--fs-body)] text-[var(--color-field-text-filled)] focus:outline-none focus-visible:shadow-none disabled:text-[var(--field-label-disabled)]"
           />
           {customerId && (
             <button

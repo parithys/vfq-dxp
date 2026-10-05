@@ -86,7 +86,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   // No hover border on a read-only field: it cannot be edited, so the hover
   // highlight (which signals "this is interactive") would be misleading.
   // Disabled fields are already excluded by the `enabled:` variant.
-  const hoverBorder = isReadOnly ? '' : ' enabled:hover:border-[var(--field-focus-border)]';
+  const hoverBorder = isReadOnly ? '' : ' enabled:hover:border-[var(--field-hover-border)]';
   const borderClass = error
     ? 'border-[var(--field-border-error)]'
     : isFilled && !isReadOnly
@@ -122,7 +122,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             ${rest.disabled ? 'bg-[var(--field-bg-disabled)]' : 'bg-bg'}
             ${/* `enabled:` matches form controls only, so on this wrapper <div> the
                  hover border never fired - use plain hover (and none when disabled). */ ''}
-            ${rest.disabled ? borderClass.replace(' enabled:hover:border-[var(--field-focus-border)]', '') : borderClass.replace('enabled:hover:', 'hover:')}
+            ${rest.disabled ? borderClass.replace(' enabled:hover:border-[var(--field-hover-border)]', '') : borderClass.replace('enabled:hover:', 'hover:')}
             focus-within:border-[var(--field-focus-border)]! focus-within:bg-[var(--field-focus-bg)] focus-within:shadow-[var(--field-focus-ring)]
             ${rest.disabled ? 'border-[var(--field-border-disabled)]' : ''}`}
         >
@@ -140,7 +140,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             aria-required={rest.required || undefined}
             aria-invalid={error ? true : undefined}
             aria-describedby={describedBy}
-            className={`flex-1 min-w-0 bg-transparent px-3 py-2 text-[length:var(--fs-body)] text-fg
+            className={`flex-1 min-w-0 bg-transparent px-3 py-2 text-[length:var(--fs-body)] text-[var(--color-field-text-filled)]
               focus:outline-none focus-visible:shadow-none disabled:text-[var(--field-label-disabled)]
               ${isReadOnly ? 'select-none' : ''}
               ${className}`}
@@ -159,7 +159,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           aria-required={rest.required || undefined}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
-          className={`rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-fg
+          className={`rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-[var(--color-field-text-filled)]
             ${readOnlyClass}
             ${borderClass}
             focus:outline-none ${focusClass}

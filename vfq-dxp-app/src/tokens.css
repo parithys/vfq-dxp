@@ -142,13 +142,22 @@
      --field-selected via `accent-[…]`. Dark mode keeps the previous red
      behavior via the index.css override - both directives were scoped to
      light mode like the rest of this field system. */
+  /* Form-field state colours (2026-10-05). Every field primitive reads these, so a
+     screen never hardcodes them: the focused border + inset ring, and the colour
+     of the text an agent has entered. Placeholder, label, error and disabled
+     colours are separate tokens and unchanged. */
+  --color-field-border-focus: #007e91;
+  --color-field-text-filled: #212121;
+  /* Hover keeps the dark text colour (it used to share --field-focus-border,
+     which is now the teal focus colour). */
+  --field-hover-border: var(--fg);
   /* 2026-10-01: focused fields are a dark 2px outline (1px border + 1px inset
      ring), no outer glow - per the large-input reference. */
-  --field-focus-border: var(--fg);
+  --field-focus-border: var(--color-field-border-focus);
   /* Deliberately darker than --surface (#f5f7f9): that was invisible on a white
      field and on the pale-grey cards some fields sit on. */
   --field-focus-bg: #e6eaef;
-  --field-focus-ring: inset 0 0 0 1px var(--fg);
+  --field-focus-ring: inset 0 0 0 1px var(--color-field-border-focus);
   --field-selected: #c09696;
   /* Choice-card selected state (2026-09-24, superseding the above for cards
      only): brand-red border, check badge and label on a near-white pink

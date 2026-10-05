@@ -93,8 +93,8 @@ export function MultiSelect({
   const triggerBorderClass = error
     ? 'border-[var(--field-border-error)]'
     : hasSelection
-      ? 'border-[var(--field-border-filled)] enabled:hover:border-[var(--field-focus-border)]'
-      : 'border-[var(--field-border)] enabled:hover:border-[var(--field-focus-border)]';
+      ? 'border-[var(--field-border-filled)] enabled:hover:border-[var(--field-hover-border)]'
+      : 'border-[var(--field-border)] enabled:hover:border-[var(--field-hover-border)]';
 
   return (
     <div className="flex flex-col gap-1">
@@ -118,7 +118,7 @@ export function MultiSelect({
           className={`w-full flex items-center justify-between gap-2 rounded-[var(--field-radius)] border pl-3 pr-3 py-2 text-[length:var(--fs-body)] text-left
             disabled:cursor-not-allowed
             focus:outline-none focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)]
-            bg-bg text-fg disabled:border-[var(--field-border-disabled)] disabled:bg-[var(--field-bg-disabled)]
+            bg-bg text-[var(--color-field-text-filled)] disabled:border-[var(--field-border-disabled)] disabled:bg-[var(--field-bg-disabled)]
             ${triggerBorderClass}
             ${className}`}
         >

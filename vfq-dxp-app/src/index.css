@@ -109,6 +109,9 @@
   --field-border-error: var(--danger);
   --field-border-filled: var(--fg);
   --field-divider: var(--border-soft);
+  --color-field-border-focus: var(--fg);
+  --color-field-text-filled: var(--fg);
+  --field-hover-border: var(--fg);
   --field-focus-border: var(--fg);
   --field-focus-bg: var(--surface);
   --field-focus-ring: inset 0 0 0 1px var(--fg);

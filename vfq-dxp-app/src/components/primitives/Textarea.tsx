@@ -14,8 +14,8 @@ export function Textarea({ label, error, helperText, className = '', id, 'aria-d
   const borderClass = error
     ? 'border-[var(--field-border-error)]'
     : isFilled
-      ? 'border-[var(--field-border-filled)] enabled:hover:border-[var(--field-focus-border)]'
-      : 'border-[var(--field-border)] enabled:hover:border-[var(--field-focus-border)]';
+      ? 'border-[var(--field-border-filled)] enabled:hover:border-[var(--field-hover-border)]'
+      : 'border-[var(--field-border)] enabled:hover:border-[var(--field-hover-border)]';
   return (
     <div className="flex flex-col gap-1">
       {label && (
@@ -27,7 +27,7 @@ export function Textarea({ label, error, helperText, className = '', id, 'aria-d
         id={textareaId}
         rows={4}
         aria-describedby={describedBy}
-        className={`rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg
+        className={`rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-[var(--color-field-text-filled)] bg-bg
           ${borderClass}
           focus:outline-none focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)]
           disabled:border-[var(--field-border-disabled)] disabled:text-[var(--field-label-disabled)] disabled:bg-[var(--field-bg-disabled)]

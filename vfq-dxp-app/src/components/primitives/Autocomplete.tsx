@@ -102,7 +102,7 @@ export function Autocomplete({
             setOpen(false);
           }
         }}
-        className={`rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg
+        className={`rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-[var(--color-field-text-filled)] bg-bg
           ${error ? 'border-[var(--field-border-error)]' : value ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'}
           focus:outline-none focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)]`}
       />

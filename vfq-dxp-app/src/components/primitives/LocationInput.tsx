@@ -73,8 +73,8 @@ export function LocationInput({ label, error, helperText, placeholder, onSelect,
   const borderClass = error
     ? 'border-[var(--field-border-error)]'
     : isFilled
-      ? 'border-[var(--field-border-filled)] enabled:hover:border-[var(--field-focus-border)]'
-      : 'border-[var(--field-border)] enabled:hover:border-[var(--field-focus-border)]';
+      ? 'border-[var(--field-border-filled)] enabled:hover:border-[var(--field-hover-border)]'
+      : 'border-[var(--field-border)] enabled:hover:border-[var(--field-hover-border)]';
 
   return (
     <div className="flex flex-col gap-1">
@@ -99,7 +99,7 @@ export function LocationInput({ label, error, helperText, placeholder, onSelect,
           placeholder={placeholder}
           aria-describedby={describedBy}
           autoComplete="off"
-          className={`w-full rounded-[var(--field-radius)] border pl-10 pr-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg
+          className={`w-full rounded-[var(--field-radius)] border pl-10 pr-3 py-2 text-[length:var(--fs-body)] text-[var(--color-field-text-filled)] bg-bg
             focus:outline-none focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)]
             disabled:border-[var(--field-border-disabled)] disabled:text-[var(--field-label-disabled)] disabled:bg-[var(--field-bg-disabled)]
             ${borderClass}

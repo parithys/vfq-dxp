@@ -73,7 +73,7 @@ export function AppointmentBookingStep({ value, onChange }: AppointmentBookingSt
           type="date"
           value={value.date ?? ''}
           onChange={(e) => onChange({ ...value, date: e.target.value })}
-          className={`rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg focus:outline-none focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)] ${
+          className={`rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-[var(--color-field-text-filled)] bg-bg focus:outline-none focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)] ${
             value.date ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'
           }`}
         />
