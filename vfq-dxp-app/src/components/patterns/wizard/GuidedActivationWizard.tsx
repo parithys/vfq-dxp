@@ -705,7 +705,7 @@ export function GuidedActivationWizard({
   return (
     <div>
       {/* Title area: carries the page's own padding and a bottom border, so the step rail below it can sit flush against the left edge. */}
-      <div className="px-8 pt-8 pb-6 bg-bg">
+      <div className="px-8 pt-8 pb-6 bg-bg border-b border-[var(--field-card-border)]">
         <div className="flex items-start justify-between gap-4">
           <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">{title}</h1>
           <div className="flex items-center gap-3">
