@@ -10,7 +10,7 @@ import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { IC, IconTile, Pill, SearchBox } from '../sections/C360Kit';
 import { QueryPreviewModal } from './QueryPreviewModal';
-import { QUERY_SERVICE_TYPES, TICKET_ISSUE_TYPES, deriveQueryServiceType, routeTicket, searchQueryIssues, useQueryIssueCatalogue } from './queryFlowModel';
+import { QUERY_SERVICE_TYPES, TICKET_ISSUE_TYPES, deriveQueryServiceType, matchRanges, queryKeywords, routeTicket, searchQueryIssues, serviceTypeLabel, useQueryIssueCatalogue } from './queryFlowModel';
 import type { QueryIssue } from './queryFlowModel';
 
 const BACK_ICON = 'M19 12H5 M12 19l-7-7 7-7';
@@ -18,6 +18,24 @@ const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
 
 const categoryTone = (c: string | undefined) => (/network/i.test(c ?? '') ? 'red' : c ? 'blue' : 'grey');
 const PENDING = 'Category pending';
+
+/** The issue name with every matched keyword wrapped in <mark> (the app's search-match highlight). */
+function Highlighted({ text, keywords }: { text: string; keywords: string[] }) {
+  const ranges = matchRanges(text, keywords) ?? [];
+  const parts: React.ReactNode[] = [];
+  let pos = 0;
+  ranges.forEach(([a, b], i) => {
+    if (a > pos) parts.push(text.slice(pos, a));
+    parts.push(
+      <mark key={i} className="rounded-[var(--radius-sm)] bg-[var(--highlight-bg)] text-inherit font-semibold">
+        {text.slice(a, b)}
+      </mark>
+    );
+    pos = b;
+  });
+  if (pos < text.length) parts.push(text.slice(pos));
+  return <>{parts}</>;
+}
 
 function Banner({ tone, children }: { tone: 'info' | 'success' | 'warn'; children: React.ReactNode }) {
   const bg = tone === 'info' ? 'bg-[color-mix(in_oklab,var(--signal-blue),var(--bg)_90%)] text-[var(--signal-blue)]' : tone === 'success' ? 'bg-[color-mix(in_oklab,var(--success),var(--bg)_90%)] text-success' : 'bg-[var(--warn-bg)] text-[var(--warn-text)]';
@@ -64,6 +82,7 @@ export function QueryFlowCard({
     return () => window.clearTimeout(t);
   }, [focusSignal, catalogue]);
 
+  const keywords = useMemo(() => queryKeywords(query), [query]);
   const results = useMemo(() => (catalogue ? searchQueryIssues(catalogue.issues, query) : []), [catalogue, query]);
   const lines = useMemo(() => services.filter((s) => s.tab === 'mobile' || s.tab === 'fibre'), [services]);
   const service = lines.find((s) => s.ref === msisdnRef);
@@ -120,7 +139,7 @@ export function QueryFlowCard({
             <div aria-live="polite">
               <p className="text-fg font-semibold text-[length:var(--fs-body)] mb-2">Query Issues ({results.length})</p>
               {results.length === 0 ? (
-                <p className="text-muted text-[length:var(--fs-body)]">No Query Issues match "{query.trim()}".</p>
+                <p className="text-muted text-[length:var(--fs-body)]">No Query Issues match "{query.trim()}". Try fewer or different keywords.</p>
               ) : (
                 <ul className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] divide-y divide-border-soft overflow-hidden">
                   {results.map((r) => (
@@ -130,9 +149,9 @@ export function QueryFlowCard({
                         onClick={() => setIssue(r)}
                         className="w-full flex flex-wrap items-center gap-3 px-4 py-2.5 text-left hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
                       >
-                        <span className="flex-1 min-w-48 text-fg text-[length:var(--fs-body)]">{r.name}</span>
+                        <span className="flex-1 min-w-48 text-fg text-[length:var(--fs-body)]"><Highlighted text={r.name} keywords={keywords} /></span>
+                        {r.serviceType && <Pill tone="blue">{serviceTypeLabel(r.serviceType)}</Pill>}
                         <Pill tone={categoryTone(r.category)}>{r.category ?? PENDING}</Pill>
-                        {r.serviceType && <Pill tone="blue">{r.serviceType}</Pill>}
                         <Icon path={CHEVRON_RIGHT} className="w-4 h-4 text-fg shrink-0" />
                       </button>
                     </li>

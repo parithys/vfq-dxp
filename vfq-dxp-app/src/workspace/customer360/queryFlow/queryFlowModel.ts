@@ -60,10 +60,45 @@ export function useQueryIssueCatalogue(): QueryIssueCatalogue | undefined {
   return cat;
 }
 
+/** The agent's input as keywords: split on whitespace, extra spaces and edges ignored, case-insensitive. */
+export const queryKeywords = (term: string): string[] => term.toLowerCase().split(/\s+/).filter(Boolean);
+
+/** Start index of every word in the text (a word starts after any non-alphanumeric character). */
+const wordStarts = (lower: string): number[] => {
+  const out: number[] = [];
+  for (let i = 0; i < lower.length; i++) if (/[a-z0-9]/.test(lower[i]) && (i === 0 || !/[a-z0-9]/.test(lower[i - 1]))) out.push(i);
+  return out;
+};
+
+/**
+ * Character ranges of `text` matched by the keywords, or undefined when any keyword is missing. A keyword matches the
+ * beginning of a word ("incorr" matches "Incorrect"); each keyword may sit anywhere and in any order.
+ */
+export function matchRanges(text: string, keywords: string[]): [number, number][] | undefined {
+  if (keywords.length === 0) return undefined;
+  const lower = text.toLowerCase();
+  const starts = wordStarts(lower);
+  const ranges: [number, number][] = [];
+  for (const k of keywords) {
+    const at = starts.find((i) => lower.startsWith(k, i));
+    if (at === undefined) return undefined;
+    ranges.push([at, at + k.length]);
+  }
+  // Merge overlaps so every character is marked once.
+  ranges.sort((a, b) => a[0] - b[0]);
+  const merged: [number, number][] = [];
+  for (const r of ranges) {
+    const last = merged[merged.length - 1];
+    if (last && r[0] <= last[1]) last[1] = Math.max(last[1], r[1]);
+    else merged.push([...r]);
+  }
+  return merged;
+}
+
+/** Query Issues whose name contains every keyword (see matchRanges). */
 export const searchQueryIssues = (issues: QueryIssue[], term: string): QueryIssue[] => {
-  const q = term.trim().toLowerCase();
-  if (!q) return [];
-  return issues.filter((i) => [i.name, i.category ?? '', ...(i.keywords ?? [])].some((t) => t.toLowerCase().includes(q)));
+  const keywords = queryKeywords(term);
+  return keywords.length === 0 ? [] : issues.filter((i) => matchRanges(i.name, keywords));
 };
 
 /**
@@ -126,3 +161,6 @@ export function routeTicket(issue: QueryIssue, customer: { segment?: string; nat
       return undefined;
   }
 }
+
+/** How a service type reads on a tag: the workbook's "Any" is shown as "Others". */
+export const serviceTypeLabel = (t: string): string => (t === 'Any' ? 'Others' : t);

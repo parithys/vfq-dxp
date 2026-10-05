@@ -222,6 +222,13 @@ body {
     outline: none;
     box-shadow: var(--focus-ring);
   }
+  /* No focus box around text-entry controls (2026-10-05): the field's own border / fill change already marks focus,
+     and a second ring inside it read as a stray rectangle. Buttons, links and tabs keep their keyboard ring. */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    box-shadow: none;
+  }
 }
 
 /* Native dropdowns: the browser draws the arrow flush against the right edge. Draw it ourselves with clear space

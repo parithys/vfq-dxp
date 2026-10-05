@@ -3,7 +3,7 @@ import { Button } from '../../../components/primitives/Button';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { DetailRows, IC, IconTile, Pill, fmtDate, qar } from '../sections/C360Kit';
-import { previewFieldsFor } from './queryFlowModel';
+import { previewFieldsFor, serviceTypeLabel } from './queryFlowModel';
 import type { QueryIssue, QueryIssueCatalogue } from './queryFlowModel';
 
 type Rec = Record<string, unknown>;
@@ -95,7 +95,7 @@ export function QueryPreviewModal({
   const summary = [
     { label: 'Query Issue', value: issue.name },
     { label: 'Query Category', value: issue.category ?? 'Category pending' },
-    { label: 'Query Service Type', value: serviceType },
+    { label: 'Query Service Type', value: serviceTypeLabel(serviceType) },
   ];
   const additional = fields.map((f) => ({ label: f, value: resolve[f]?.() ?? NOT_ON_FILE }));
 
@@ -110,7 +110,7 @@ export function QueryPreviewModal({
           <div className="min-w-0 flex-1 space-y-2">
             <h2 className="text-fg font-semibold text-[length:var(--fs-h5)] break-words">{issue.name}</h2>
             <div className="flex flex-wrap gap-2">
-              <Pill tone="blue">{serviceType}</Pill>
+              <Pill tone="blue">{serviceTypeLabel(serviceType)}</Pill>
               {issue.category && <Pill tone="red">{issue.category}</Pill>}
             </div>
           </div>
