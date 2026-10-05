@@ -2,7 +2,6 @@ import { useLocation } from 'react-router-dom';
 import { useWorkflowStore } from '../../../stores/workflowStore';
 import { AbandonDialog, SaveExitDialog } from './WizardDialogs';
 import { CustomerMirrorPanel } from './CustomerMirrorPanel';
-import { WizardRail } from './WizardRail';
 import { WizardTitleBand } from './WizardTitleBand';
 import { WizardStepHeader } from './WizardStepHeader';
 import { WizardFooter } from './WizardFooter';
@@ -191,10 +190,6 @@ export function GuidedActivationWizard({
       </span>
 
       <div className="flex-1 flex items-stretch">
-        {!currentStep?.hideRail && (
-          <WizardRail steps={activeSteps} currentIndex={currentIndex} maxReached={maxReached} isLocked={isLocked} onGoToStep={goToStep} />
-        )}
-
         <div className="flex-1 min-w-0">
         <div
           ref={stepPanelRef}

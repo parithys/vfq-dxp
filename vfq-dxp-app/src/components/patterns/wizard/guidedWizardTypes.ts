@@ -66,8 +66,6 @@ export interface WizardStep {
    * draft values. Omit for a step with nothing worth echoing back; a journey with no summary on any step shows no panel.
    */
   summary?: SummaryField[];
-  /** Hide the step-progress rail while this step is showing (e.g. the final Payment page). */
-  hideRail?: boolean;
   /** Hides the header's Customer view button on this step. */
   hideCustomerView?: boolean;
   /** Return false to block Continue/Save & Finish (e.g. SIM Serial not found/already-assigned per Pattern 11). Defaults to true (no gate) if omitted. */

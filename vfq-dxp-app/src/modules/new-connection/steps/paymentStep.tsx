@@ -6,7 +6,6 @@ import type { WizardStep } from '../../../components/patterns/wizard/guidedWizar
 export function paymentStep(): WizardStep {
   return {
     key: 'payment',
-    hideRail: true,
     label: 'Payment',
     render: ({ values, setValue }) => {
       // Reads the SAME figure Checkout already computed and read back
