@@ -194,7 +194,7 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
         />
       </KpiGrid>
 
-      <div className="grid grid-cols-1 @6xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] gap-4 items-start">
+      <div className="space-y-4">
         <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 space-y-4 min-w-0">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">All Alerts &amp; Risks ({alerts.length})</h3>
@@ -263,7 +263,7 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
           </div>
         </section>
 
-        <div className="space-y-4 min-w-0">
+        <div className="grid grid-cols-1 @4xl:grid-cols-2 gap-4 items-start">
           <Panel icon={IC.clipboard} title="Risk & Eligibility Indicators">
             <DetailRows
               rows={[
