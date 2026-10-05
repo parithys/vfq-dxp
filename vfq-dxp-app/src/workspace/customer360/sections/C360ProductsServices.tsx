@@ -139,7 +139,6 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
   const pct = (used: number | undefined, total: number | undefined) => (used !== undefined && total ? (used / total) * 100 : 0);
 
   const active = services.filter((s) => get(s).status === 'Active').length;
-  const suspended = services.filter((s) => /suspend/i.test(get(s).status ?? '')).length;
   const statuses = Array.from(new Set(services.map((s) => get(s).status).filter((x): x is string => Boolean(x))));
   const types = Array.from(new Set(services.map(typeLabel)));
 
@@ -350,11 +349,10 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
         </>
       }
     >
-      <div className="grid grid-cols-1 @lg:grid-cols-3 @4xl:grid-cols-[repeat(3,minmax(0,1fr))_minmax(0,2.2fr)] gap-3">
+      <div className="grid grid-cols-1 @lg:grid-cols-2 @4xl:grid-cols-[repeat(2,minmax(0,1fr))_minmax(0,3.2fr)] gap-3">
         <KpiTile icon={IC.box} tone="blue" label="Total Connections" value={services.length} />
         <KpiTile icon={IC.shieldCheck} tone="green" label="Active Services" value={active} />
-        <KpiTile icon={IC.ban} tone="red" label="Suspended Services" value={suspended} />
-        <section className="@lg:col-span-3 @4xl:col-span-1 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 min-w-0">
+        <section className="@lg:col-span-2 @4xl:col-span-1 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 min-w-0">
           <h3 className="text-fg font-semibold text-[length:var(--fs-body)] mb-2">Service Types</h3>
           <ul className="grid grid-cols-2 @lg:grid-cols-5 gap-3">
             {TYPE_TILES.map((t) => (
