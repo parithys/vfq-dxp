@@ -190,7 +190,6 @@ export function QueryFlowCard({
 
           <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4 space-y-3">
             <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Query Service Type</h3>
-            {service && <Banner tone="info">MSISDN is selected. Query Service Type is auto-derived.</Banner>}
             {service ? (
               <div className="flex flex-col gap-1">
                 <span className="text-[length:var(--fs-label)] text-fg-2">Query Service Type</span>
