@@ -343,9 +343,6 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
           <ActionButton primary icon={IC.plus} onClick={startNewConnection}>
             Add Service
           </ActionButton>
-          <button type="button" disabled aria-label="More actions" className="w-9 h-9 rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg flex items-center justify-center opacity-40 cursor-not-allowed">
-            <Icon path={IC.dots} className="w-4 h-4" />
-          </button>
         </>
       }
     >
