@@ -12,8 +12,6 @@ import {
   GridTable,
   IC,
   KebabButton,
-  KpiGrid,
-  KpiTile,
   LinkAction,
   Pill,
   Panel,
@@ -170,14 +168,6 @@ export function C360TicketsSupport({
     [data.tickets, now],
   );
 
-  const kpi = {
-    total: tickets.length,
-    open: tickets.filter((t) => t.open).length,
-    resolved: tickets.filter((t) => t.resolved).length,
-    overdue: tickets.filter((t) => t.overdue).length,
-    pending: tickets.filter((t) => t.pendingCustomer).length,
-  };
-
   const days = RANGES.find((r) => r.value === range)?.days ?? 0;
   const inRange = tickets.filter((t) => days === 0 || t.createdAt >= now - days * DAY);
   const tabCount = {
@@ -212,10 +202,6 @@ export function C360TicketsSupport({
   };
 
   const openFull = (id: string) => navigate(`${TICKET_DETAIL_ROUTE}?id=${id}`);
-  const showTab = (key: string) => {
-    setTab(key);
-    setRange('all');
-  };
 
   const complaints = tickets.filter((t) => /complaint/i.test(t.type)).length;
   const related = [
@@ -256,14 +242,6 @@ export function C360TicketsSupport({
         </>
       }
     >
-      <KpiGrid>
-        <KpiTile icon={IC.file} tone="blue" label="Total Tickets" value={kpi.total} caption="All time" />
-        <KpiTile icon={IC.clock} tone="amber" label="Open Tickets" value={kpi.open} link="View all" onLink={() => showTab('open')} />
-        <KpiTile icon={IC.checkCircle} tone="green" label="Resolved Tickets" value={kpi.resolved} link="View all" onLink={() => showTab('resolved')} />
-        <KpiTile icon={IC.xCircle} tone="red" label="Overdue Tickets" value={kpi.overdue} link="View all" onLink={() => showTab('overdue')} />
-        <KpiTile icon={IC.users} tone="purple" label="Pending Customer Action" value={kpi.pending} link="View all" onLink={() => showTab('pending')} />
-      </KpiGrid>
-
       <div className="grid grid-cols-1 @6xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] gap-4 items-start">
         <div className="space-y-4 min-w-0">
           <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 space-y-4 min-w-0">
