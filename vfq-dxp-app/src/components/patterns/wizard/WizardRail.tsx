@@ -61,7 +61,7 @@ export function WizardRail({
     });
   return (
     <nav aria-label="Journey steps" className={`${expanded ? 'w-64' : 'w-16'} shrink-0 self-stretch bg-bg border-r border-[var(--field-card-border)]`}>
-    <div className="sticky top-0">
+    <div className="sticky top-0 z-30">
       <button
         type="button"
         onClick={toggle}

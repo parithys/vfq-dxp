@@ -112,7 +112,7 @@ function IconRail({ items, active, onSelect }: { items: TabItem[]; active: strin
       aria-label="Customer sections"
       className={`shrink-0 self-stretch bg-bg ${expanded ? 'lg:w-64' : 'lg:w-16'}`}
     >
-      <div className="lg:sticky lg:top-0">
+      <div className="lg:sticky lg:top-0 lg:z-30">
         <button
           type="button"
           onClick={toggle}
