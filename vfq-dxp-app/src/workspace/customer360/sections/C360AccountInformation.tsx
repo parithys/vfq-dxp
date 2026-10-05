@@ -180,7 +180,6 @@ export function C360AccountInformation({
             </span>
           }
         />
-        <KpiTile icon={IC.bars} tone="purple" label="Monthly Revenue" value={qar(latestTotal) ?? '-'} caption={average !== undefined ? `Avg. (Last 6 Months): ${qar(average)}` : undefined} />
         <KpiTile
           icon={IC.card}
           tone="blue"
@@ -197,6 +196,7 @@ export function C360AccountInformation({
             )
           }
         />
+        <KpiTile icon={IC.bars} tone="purple" label="Monthly Revenue" value={qar(latestTotal) ?? '-'} caption={average !== undefined ? `Avg. (Last 6 Months): ${qar(average)}` : undefined} />
         <KpiTile
           icon={IC.alert}
           tone="red"
