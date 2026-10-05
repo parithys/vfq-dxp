@@ -17,7 +17,7 @@ import { Checkbox } from '../../../components/primitives/Checkbox';
 import { STATUS_VARIANT, RESOLUTION_CODES, ESCALATION_REASONS, CANCELLATION_REASONS, TT_HASHTAGS, REOPEN_WINDOW_DAYS, RETENTION_RESOLUTION_CODES } from '../../../data/reference/ticketReferenceData';
 import { useTicketSlaEscalationSweep } from '../slaEscalationSweep';
 import { TicketCommunicationTab } from './TicketCommunicationTab';
-import type { Activity, Escalation, Attachment, Ticket, AuditRecord, OsbNotification } from './ticketDetailModel';
+import type { Activity, Ticket, AuditRecord, OsbNotification } from './ticketDetailModel';
 
 
 const CURRENT_AGENT = 'Current Agent';
