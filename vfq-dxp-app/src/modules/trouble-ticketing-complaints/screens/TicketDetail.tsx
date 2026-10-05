@@ -26,7 +26,7 @@ import {
   TT_HASHTAGS,
   REOPEN_WINDOW_DAYS,
   RETENTION_RESOLUTION_CODES,
-} from '../ticketReferenceData';
+} from '../../../data/reference/ticketReferenceData';
 import { useTicketSlaEscalationSweep } from '../slaEscalationSweep';
 import { TicketCommunicationTab } from './TicketCommunicationTab';
 

@@ -5,7 +5,7 @@ import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
 import { useEntityStore } from '../../../stores/entityStore';
 import { TicketCreationModal, type NewTicketValue } from '../../../modules/trouble-ticketing-complaints/screens/TicketCreationModal';
-import { STATUS_VARIANT, buildNewTicketRecord } from '../../../modules/trouble-ticketing-complaints/ticketReferenceData';
+import { STATUS_VARIANT, buildNewTicketRecord } from '../../../data/reference/ticketReferenceData';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 
 // Create Ticket and Track Ticket are the two real Support actions available

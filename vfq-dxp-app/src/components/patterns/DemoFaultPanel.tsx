@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '../primitives/Button';
 import { SERVICE_LABEL, useServiceFaults, type FaultKind, type ServiceName } from '../../engines/serviceCall';
+import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
 
 const KINDS: { value: FaultKind; label: string }[] = [
   { value: 'timeout', label: 'Timeout' },
@@ -27,7 +28,7 @@ export function DemoFaultPanel() {
   const armed = Object.entries(faults).filter(([, f]) => f && f.remaining > 0);
   const select = 'rounded-[var(--radius-button)] border border-border bg-bg px-2 py-1 text-[length:var(--fs-caption)]';
   return (
-    <div className="demo-only rounded-[var(--radius-card)] border border-dashed border-current p-3 space-y-2">
+    <div className={`${SYNTHETIC_CLASS} rounded-[var(--radius-card)] border border-dashed border-current p-3 space-y-2`}>
       <p className="text-[length:var(--fs-micro)] uppercase tracking-wide font-semibold">Demo only - simulate a system failure</p>
       <div className="flex flex-wrap items-center gap-2">
         <select aria-label="System" className={select} value={service} onChange={(e) => setService(e.target.value as ServiceName | '')}>

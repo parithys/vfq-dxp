@@ -7,6 +7,7 @@ import { Input } from '../primitives/Input';
 import { PhoneNumberInput } from '../primitives/PhoneNumberInput';
 import { isQatarMobileLocalNumber } from '../primitives/countryDialCodes';
 import { Select } from '../primitives/Select';
+import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
 
 // Mirrors IdLookupStep's MoiResult - this step receives the value that step
 // produces. Kept as a local shape rather than imported because it is a subset:
@@ -651,7 +652,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                 error={value.email && !isValidEmail(value.email) ? 'Please enter a valid email address.' : undefined}
                 helperText={
                   emailVerification(value.email, value.moiResult?.email).hint ??
-                  (value.moiResult?.emailSource && value.email ? <span className="demo-only">{`Fetched from ${value.moiResult.emailSource}`}</span> : undefined)
+                  (value.moiResult?.emailSource && value.email ? <span className={SYNTHETIC_CLASS}>{`Fetched from ${value.moiResult.emailSource}`}</span> : undefined)
                 }
                 trailingAddon={
                   !verifyThenFetch && emailVerification(value.email, value.moiResult?.email).verified ? (

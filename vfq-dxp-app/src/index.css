@@ -225,7 +225,7 @@ body {
   color: inherit;
 }
 
-/* Demo-only content (see src/demoContent.ts): violet, and hidden everywhere at
+/* Demo-only content (see src/data/synthetic/syntheticMarker.ts): violet, and hidden everywhere at
    once when SHOW_DEMO_CONTENT is false. `!important` so it wins over the
    element's own colour utilities. */
 .demo-only {

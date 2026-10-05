@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../../components/primitives/Icon';
 import { useEntityStore } from '../../../stores/entityStore';
 import { TicketCreationModal, type NewTicketValue } from '../../../modules/trouble-ticketing-complaints/screens/TicketCreationModal';
-import { buildNewTicketRecord } from '../../../modules/trouble-ticketing-complaints/ticketReferenceData';
+import { buildNewTicketRecord } from '../../../data/reference/ticketReferenceData';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import {

@@ -7,7 +7,7 @@ import { ErrorBanner } from '../../../components/primitives/ErrorBanner';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useAuthStore } from '../../../stores/authStore';
 import { isVisibleToAgent } from '../../../engines/agentTaskEngine';
-import { TICKET_APPROVAL_ELIGIBLE_JOB_TITLES } from '../ticketReferenceData';
+import { TICKET_APPROVAL_ELIGIBLE_JOB_TITLES } from '../../../data/reference/ticketReferenceData';
 
 interface Ticket {
   ticketId: string;

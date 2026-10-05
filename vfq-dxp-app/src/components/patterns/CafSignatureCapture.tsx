@@ -12,6 +12,7 @@ import { AdditionalDocumentsUpload } from '../domain/AdditionalDocumentsUpload';
 import type { AdditionalDocument } from '../domain/AdditionalDocumentsUpload';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import type { TncLegalFacts } from './CheckoutSummaryStep';
+import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
 
 interface TncSection {
   sectionId: string;
@@ -45,7 +46,7 @@ function FullTerms({ termsUrl, enabled, signed, children }: { termsUrl?: string;
     <section aria-label="Full Terms and Conditions" className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
       <div className="flex items-center justify-between gap-3 border-b border-border-soft px-4 py-3">
         <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Terms &amp; Conditions</h3>
-        <span className="demo-only text-[length:var(--fs-micro)] uppercase tracking-wide">Sample text - replace with approved wording</span>
+        <span className={`${SYNTHETIC_CLASS} text-[length:var(--fs-micro)] uppercase tracking-wide`}>Sample text - replace with approved wording</span>
       </div>
       {/* tabIndex so the panel can be scrolled with the keyboard. */}
       <div tabIndex={0} className="max-h-[34rem] overflow-y-auto px-4 py-3 space-y-4 focus:outline-none focus-visible:shadow-[var(--focus-ring)]">

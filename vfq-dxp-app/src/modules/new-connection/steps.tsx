@@ -24,6 +24,7 @@ import { useNotificationStore } from '../../stores/notificationStore';
 import type { EligibilityResult } from '../../components/domain/EligibilityGateStep';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { mockDataUrl } from '../../engines/mockDataEngine';
+import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
 
 // Building blocks for the New Connection journey. Everything here is a
 // journey-level decision (who the customer is, which offer, which service);
@@ -800,7 +801,7 @@ const useOutcomePreview = create<{ open: OutcomeKey | null; toggle: (k: OutcomeK
 export function EligibilityOutcomeLinks() {
   const { open, toggle } = useOutcomePreview();
   return (
-    <div className="demo-only flex flex-wrap items-center gap-x-3">
+    <div className={`${SYNTHETIC_CLASS} flex flex-wrap items-center gap-x-3`}>
       {OUTCOME_KEYS.map((k) => (
         <button
           key={k}

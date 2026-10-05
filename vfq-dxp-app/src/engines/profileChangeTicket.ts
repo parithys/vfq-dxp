@@ -1,6 +1,6 @@
 import { useEntityStore } from '../stores/entityStore';
 import { useNotificationStore } from '../stores/notificationStore';
-import { buildNewTicketRecord } from '../modules/trouble-ticketing-complaints/ticketReferenceData';
+import { buildNewTicketRecord } from '../data/reference/ticketReferenceData';
 
 export type ProfileChangeKind = 'Demographic' | 'Contact' | 'Address';
 

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '../primitives/Button';
 import { Spinner } from '../primitives/Spinner';
 import { ScannedIdPreview, type IdVariant, type SpecimenIdentity } from './ScannedIdPreview';
+import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
 
 export interface QidImageUploadValue {
   frontScanned?: boolean;
@@ -383,7 +384,7 @@ export function QidImageUpload({
               reasonably read it as "choose the document type first".
               A real reader offers no such choice. */}
           {canScan && demoTypes && demoTypes.length > 0 && onDemoScan && (
-            <div className="demo-only flex flex-col items-center gap-1">
+            <div className={`${SYNTHETIC_CLASS} flex flex-col items-center gap-1`}>
               <span className="text-[length:var(--fs-micro)] uppercase tracking-wide">
                 Demo only - simulate inserting
               </span>
@@ -521,7 +522,7 @@ function PassportScanSections({ value, onChange, onScan, error, canScan = true, 
               </Button>
             )}
             {side === 'front' && !anyScanned && canScan && demoTypes && demoTypes.length > 0 && onDemoScan && (
-              <div className="demo-only flex flex-col items-center gap-1">
+              <div className={`${SYNTHETIC_CLASS} flex flex-col items-center gap-1`}>
                 <span className="text-[length:var(--fs-micro)] uppercase tracking-wide">Demo only - simulate inserting</span>
                 <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
                   {demoTypes.map((t) => (

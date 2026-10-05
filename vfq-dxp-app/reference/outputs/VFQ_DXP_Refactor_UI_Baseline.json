@@ -1,5 +1,5 @@
 {
- "_note": "Captured 2026-10-05 as Retail Sales Agent (Fatima Al-Kuwari), immediately after a fresh page load, on commit 8c7177e (before Phase 1 deletions) via reference/scripts/refactor_ui_capture.js; reproduced identically on a second run and after the Phase 1 deletions. CAUTION: app state changes over a session (e.g. TT-40001 auto-escalates, which alters CUST-1001 Overview/Tickets/Activities/Alerts), so always reload the page before capturing. Tab keys have no space after the number.",
+ "_note": "Captured 2026-10-05 as Retail Sales Agent (Fatima Al-Kuwari), immediately after a fresh page load, on commit 8c7177e (before Phase 1 deletions) via reference/scripts/refactor_ui_capture.js; reproduced identically on a second run and after the Phase 1 deletions. CAUTION: app state changes over a session (e.g. TT-40001 auto-escalates, which alters CUST-1001 Overview/Tickets/Activities/Alerts), so always reload the page before capturing. Tab keys have no space after the number. /mobile/new-connection depends on the tab's persisted wizard draft (sessionStorage 'vfq-workflow-store'): with a clean tab it is text b7005352 / style a14ca0fa / 119 nodes. Clear sessionStorage before capturing that route.",
  "routes": [
   "/",
   "/customer-search",
@@ -30,9 +30,9 @@
    "nodes": 271
   },
   "/mobile/new-connection": {
-   "text": "88d82055",
-   "style": "b4b85982",
-   "nodes": 199
+   "text": "b7005352",
+   "style": "a14ca0fa",
+   "nodes": 119
   },
   "/fibre-home": {
    "text": "ea6ac8fb",

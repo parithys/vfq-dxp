@@ -10,7 +10,7 @@ import { useAuthStore } from '../../../stores/authStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import { isVisibleToAgent } from '../../../engines/agentTaskEngine';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
-import { TICKET_APPROVAL_ELIGIBLE_JOB_TITLES, APPROVAL_REJECT_REASONS, APPROVAL_RETURN_REASONS } from '../ticketReferenceData';
+import { TICKET_APPROVAL_ELIGIBLE_JOB_TITLES, APPROVAL_REJECT_REASONS, APPROVAL_RETURN_REASONS } from '../../../data/reference/ticketReferenceData';
 
 const CURRENT_AGENT = 'Current Agent';
 

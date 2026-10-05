@@ -9,6 +9,7 @@ import { pickProfileForRole } from '../engines/agentProfileEngine';
 import { useEnterToSubmit } from '../hooks/useEnterToSubmit';
 import { DEMO_LOGIN_PASSWORD, resolveRoleFromStaffId } from './staffIdRoleMap';
 import { ForgotPasswordFlow } from './ForgotPasswordFlow';
+import { LOGIN_METRICS } from '../data/synthetic/loginMetrics';
 
 const ICONS = {
   shield: 'M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z M9.5 12l1.8 1.8L15 10',
@@ -25,14 +26,6 @@ const ICONS = {
   helpCircle: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M9.2 9a2.8 2.8 0 1 1 3.9 2.6c-.9.4-1.4 1-1.4 2 M12 17h.01',
 };
 
-const METRICS = [
-  { icon: ICONS.shield, trend: 'up', value: '98.7%', label: 'SLA compliance', sub: 'vs 97.5% target' },
-  { icon: ICONS.star, trend: 'up', value: '4.6 / 5', label: 'Customer satisfaction', sub: 'CSAT score today' },
-  { icon: ICONS.users, trend: 'up', value: '287', label: 'Requests processed', sub: 'customer requests today' },
-  { icon: ICONS.clock, trend: 'flat', value: '14', label: 'Work orders pending', sub: 'awaiting assignment' },
-  { icon: ICONS.checkCircle, trend: 'up', value: '56', label: 'Work orders closed', sub: 'completed today' },
-  { icon: ICONS.gift, trend: 'up', value: '18', label: 'Sales opportunities', sub: 'created today' },
-];
 
 
 // New auth gate - not evidenced in the source corpus (no SCR- id); implements
@@ -263,11 +256,11 @@ export function LoginPage() {
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
-            {METRICS.map((m) => (
+            {LOGIN_METRICS.map((m) => (
               <div key={m.label} className="rounded-[var(--radius-card)] border border-white/15 bg-white/10 backdrop-blur-md shadow-[var(--shadow-login-card)] p-5">
                 <div className="flex items-center justify-between mb-6">
                   <span className="w-9 h-9 rounded-[10px] bg-white/10 flex items-center justify-center">
-                    <Icon path={m.icon} className="w-4.5 h-4.5" />
+                    <Icon path={ICONS[m.icon]} className="w-4.5 h-4.5" />
                   </span>
                   <span
                     className={`flex items-center gap-1 rounded-[var(--radius-pill)] px-2 py-0.5 text-[length:var(--fs-caption)] font-medium ${

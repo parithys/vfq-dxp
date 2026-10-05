@@ -11,7 +11,7 @@ import { evaluateRule } from '../../../engines/ruleEngine';
 import { downloadCsv } from '../../../engines/csvExport';
 import { TicketCreationModal } from './TicketCreationModal';
 import type { NewTicketValue } from './TicketCreationModal';
-import { STATUS_VARIANT, TICKET_STATUSES, buildNewTicketRecord } from '../ticketReferenceData';
+import { STATUS_VARIANT, TICKET_STATUSES, buildNewTicketRecord } from '../../../data/reference/ticketReferenceData';
 import { useTicketSlaEscalationSweep } from '../slaEscalationSweep';
 import { SearchField } from '../../../components/primitives/SearchField';
 

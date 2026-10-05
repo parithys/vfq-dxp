@@ -8,7 +8,7 @@ import { Badge } from '../../../components/primitives/Badge';
 import { evaluateRule } from '../../../engines/ruleEngine';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { useNotificationStore } from '../../../stores/notificationStore';
-import { TT_AREAS, TT_ACTUAL_ISSUES, derivePriorityFromSegment, slaTargetHours } from '../ticketReferenceData';
+import { TT_AREAS, TT_ACTUAL_ISSUES, derivePriorityFromSegment, slaTargetHours } from '../../../data/reference/ticketReferenceData';
 
 // Slide 15 "Type of Tickets" taxonomy (vodafone-process-overview-290626-ec-1ed338b9).
 const ISSUE_TYPES = [

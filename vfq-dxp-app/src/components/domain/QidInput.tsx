@@ -1,3 +1,4 @@
+import { BARCODE_DEMO_NUMBERS } from '../../data/synthetic/idScanSamples';
 import type { ReactNode, Ref } from 'react';
 import { Icon } from '../primitives/Icon';
 import { Button } from '../primitives/Button';
@@ -112,12 +113,6 @@ const ID_TYPES: { type: QidType; label: string; numberLabel: string; icon: strin
  * Sophie's - keeping the two demo paths pointed at the same identity per type
  * matters more than matching the placeholder text.
  */
-const BARCODE_DEMO_NUMBERS: Record<QidType, string> = {
-  QID: '28456701234',
-  Passport: 'P0998812',
-  'GCC ID': '784202312345678',
-  'Diplomatic ID': 'DIP-QA-004977',
-};
 
 // QID/Passport/GCC/Diplomatic ID lookup control, per component-catalogue.md §2
 // (ENT-023/037 Customer/Contact) - a 4-way ID Type card selector (only QID and
