@@ -6,7 +6,7 @@ import { Icon } from '../../../components/primitives/Icon';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { buildAssetsFieldResolver } from './assetsResolvers';
-import { ActionButton, Donut, fmtDate, fmtDateTime, GridTable, IC, IconTile, KpiTile, Panel, Pill, Progress, qar, SearchBox, StatusPill, TabPage, UnderlineTabs } from './C360Kit';
+import { ActionButton, UsageBar, fmtDate, fmtDateTime, GridTable, IC, IconTile, KpiTile, Panel, Pill, Progress, qar, SearchBox, StatusPill, TabPage, UnderlineTabs } from './C360Kit';
 import type { GridCol, Tone } from './C360Kit';
 import { ServiceActionsMenu } from '../CustomerActionsMenu';
 import { Dv } from '../demoValues';
@@ -58,18 +58,6 @@ const SUB_TABS = [
   { key: 'assets', label: 'Installed Assets' },
   { key: 'related', label: 'Related Orders & Tickets' },
 ];
-
-/** One tinted gauge-less circle used for the Primary Balance. */
-function BalanceCircle({ value }: { value: string }) {
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <div className="w-20 h-20 rounded-full border-[3px] border-accent bg-[color-mix(in_oklab,var(--accent),var(--bg)_92%)] flex items-center justify-center text-center">
-        <span className="font-bold text-accent text-[length:var(--fs-body)] px-1 break-words">{value}</span>
-      </div>
-      <span className="text-fg-2 text-[length:var(--fs-caption)]">Primary Balance</span>
-    </div>
-  );
-}
 
 function Field({ label, value }: { label: string; value: ReactNode | undefined | null }) {
   const mode = useFieldAccess()(label);
@@ -429,11 +417,14 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
                       <Field label="Customer Since" value={<Dv k="customerSince" />} />
                     </dl>
                     {mobileSel && (
-                      <div className="flex flex-wrap gap-3 justify-center">
-                        <Donut pct={sMobilePrimary ? pct(dataUsed, dataTotal) : 0} value={sMobilePrimary && dataUsed !== undefined ? `${dataUsed} GB` : '-'} unit={sMobilePrimary && dataTotal ? `of ${Number(dataTotal.toFixed(1))} GB` : undefined} caption="Data" />
-                        <Donut pct={sMobilePrimary ? pct(voiceUsed, voiceTotal) : 0} value={sMobilePrimary && voiceUsed !== undefined ? voiceUsed : '-'} unit={sMobilePrimary && voiceTotal ? `of ${voiceTotal} Mins` : undefined} caption="Voice" />
-                        <Donut pct={sMobilePrimary ? pct(smsUsed, smsTotal) : 0} value={sMobilePrimary && smsUsed !== undefined ? smsUsed : '-'} unit={sMobilePrimary && smsTotal ? `of ${smsTotal} SMS` : undefined} caption="Text" />
-                        <BalanceCircle value={sMobilePrimary ? (qar(num(balance?.mainBalanceQAR)) ?? '-') : '-'} />
+                      <div className="w-full sm:w-72 shrink-0 space-y-4">
+                        <UsageBar label="Data" pct={sMobilePrimary ? pct(dataUsed, dataTotal) : 0} value={sMobilePrimary && dataUsed !== undefined ? `${dataUsed} GB` : '-'} unit={sMobilePrimary && dataTotal ? `of ${Number(dataTotal.toFixed(1))} GB` : undefined} />
+                        <UsageBar label="Voice" pct={sMobilePrimary ? pct(voiceUsed, voiceTotal) : 0} value={sMobilePrimary && voiceUsed !== undefined ? voiceUsed : '-'} unit={sMobilePrimary && voiceTotal ? `of ${voiceTotal} Mins` : undefined} />
+                        <UsageBar label="Text" pct={sMobilePrimary ? pct(smsUsed, smsTotal) : 0} value={sMobilePrimary && smsUsed !== undefined ? smsUsed : '-'} unit={sMobilePrimary && smsTotal ? `of ${smsTotal} SMS` : undefined} />
+                        <div className="flex items-baseline justify-between gap-3 text-[length:var(--fs-body)]">
+                          <span className="text-fg-2">Primary Balance</span>
+                          <span className="font-bold text-accent">{sMobilePrimary ? (qar(num(balance?.mainBalanceQAR)) ?? '-') : '-'}</span>
+                        </div>
                       </div>
                     )}
                   </div>

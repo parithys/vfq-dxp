@@ -136,25 +136,25 @@ export const dateTime = (iso: unknown) => {
 
 // ---------------------------------------------------------------- Usage & Behaviour
 export function Ring({ value, unit, sub, fraction, label, wide }: { value: string; unit?: string; sub?: string; fraction?: number; label: string; wide?: boolean }) {
-  const r = 26;
-  const c = 2 * Math.PI * r;
+  // A labelled bar (the rings this replaced are no longer used anywhere). `wide` marks a plain figure with no allowance.
   const f = Math.max(0, Math.min(1, fraction ?? 0));
   return (
-    <div className="text-center min-w-0">
-      <div className={`relative mx-auto ${wide ? 'w-24 h-24' : 'w-20 h-20'}`}>
-        <svg viewBox="0 0 64 64" className="w-full h-full -rotate-90">
-          <circle cx="32" cy="32" r={r} fill="none" strokeWidth="6" className="stroke-[var(--border-soft,#eee)]" />
-          {fraction !== undefined && <circle cx="32" cy="32" r={r} fill="none" strokeWidth="6" strokeLinecap="round" strokeDasharray={`${c * f} ${c}`} className="stroke-[var(--accent)]" />}
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center leading-tight">
-          <span className="text-fg font-bold text-[length:var(--fs-body)]">
+    <div className="space-y-1.5 min-w-0">
+      <div className="flex items-baseline justify-between gap-3 text-[length:var(--fs-body)]">
+        <span className="text-fg-2">{label}</span>
+        <span className="text-right">
+          <span className="font-bold text-fg">
             {value}
             {unit ? ` ${unit}` : ''}
           </span>
-          {sub && <span className="text-muted text-[length:var(--fs-micro)]">{sub}</span>}
-        </div>
+          {sub && <span className="text-muted text-[length:var(--fs-caption)]"> {sub}</span>}
+        </span>
       </div>
-      <div className="text-fg-2 text-[length:var(--fs-caption)] mt-1">{label}</div>
+      {!wide && fraction !== undefined && (
+        <div className="h-1.5 rounded-full bg-border-soft overflow-hidden" role="progressbar" aria-valuenow={Math.round(f * 100)} aria-valuemin={0} aria-valuemax={100}>
+          <div className="h-full rounded-full bg-accent" style={{ width: `${f * 100}%` }} />
+        </div>
+      )}
     </div>
   );
 }

@@ -149,18 +149,18 @@ export function UsageSection({ ctx }: { ctx: Ctx }) {
       </div>
       <div className="contents">
         <Card title="Current Balances" icon={ICON.card} link="View Details">
-          <div className="p-5 grid grid-cols-4 gap-2 items-end">
-            <div className="text-center">
+          <div className="p-5 space-y-4">
+            <div>
               <Ring value={String(dataLeft)} unit="GB" sub={`of ${Math.round(dataTotal)} GB`} fraction={dataTotal ? dataLeft / dataTotal : undefined} label="Data" />
-              <div className="text-muted text-[length:var(--fs-caption)]">{used(dataLeft, dataTotal)}</div>
+              <div className="text-muted text-[length:var(--fs-caption)] text-right">{used(dataLeft, dataTotal)}</div>
             </div>
-            <div className="text-center">
+            <div>
               <Ring value={String(voiceLeft)} sub={`of ${voiceTotal} Mins`} fraction={voiceTotal ? voiceLeft / voiceTotal : undefined} label="Voice" />
-              <div className="text-muted text-[length:var(--fs-caption)]">{used(voiceLeft, voiceTotal)}</div>
+              <div className="text-muted text-[length:var(--fs-caption)] text-right">{used(voiceLeft, voiceTotal)}</div>
             </div>
-            <div className="text-center">
+            <div>
               <Ring value={String(smsLeft)} sub={`of ${smsTotal} SMS`} fraction={smsTotal ? smsLeft / smsTotal : undefined} label="SMS" />
-              <div className="text-muted text-[length:var(--fs-caption)]">{used(smsLeft, smsTotal)}</div>
+              <div className="text-muted text-[length:var(--fs-caption)] text-right">{used(smsLeft, smsTotal)}</div>
             </div>
             <Ring value={qar(Number(bal?.mainBalanceQAR ?? 0))} fraction={1} label="Primary Balance" wide />
           </div>

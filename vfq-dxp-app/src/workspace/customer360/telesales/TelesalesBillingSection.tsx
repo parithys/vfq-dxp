@@ -183,7 +183,7 @@ export function BillingSection({ ctx }: { ctx: Ctx }) {
               View Usage Details →
             </button>
           </div>
-          <div className="px-5 pb-5 grid grid-cols-4 gap-2 items-end">
+          <div className="px-5 pb-5 space-y-4">
             <Ring value={String(dataLeft)} unit="GB" sub={`of ${Math.round(dataTotal)} GB`} fraction={dataTotal ? dataLeft / dataTotal : undefined} label="Data" />
             <Ring value={String(voiceLeft)} sub={`of ${voiceTotal} Mins`} fraction={voiceTotal ? voiceLeft / voiceTotal : undefined} label="Voice" />
             <Ring value={String(smsLeft)} sub={`of ${smsTotal} SMS`} fraction={smsTotal ? smsLeft / smsTotal : undefined} label="SMS" />

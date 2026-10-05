@@ -515,28 +515,6 @@ export function UsageBar({ pct, value, unit, label }: { pct: number; value: Reac
   );
 }
 
-/** Ring gauge: value over unit, with a caption underneath (12 GB of 50 GB / Data). */
-export function Donut({ pct, value, unit, caption }: { pct: number; value: ReactNode; unit?: string; caption?: string }) {
-  const r = 34;
-  const c = 2 * Math.PI * r;
-  const clamped = Math.max(0, Math.min(100, pct));
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <div className="relative w-20 h-20">
-        <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90" aria-hidden>
-          <circle cx="40" cy="40" r={r} fill="none" strokeWidth="7" className="stroke-[var(--border)]" />
-          <circle cx="40" cy="40" r={r} fill="none" strokeWidth="7" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - clamped / 100)} className="stroke-[var(--accent)]" />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center leading-tight text-center">
-          <span className="font-bold text-fg text-[length:var(--fs-body)]">{value}</span>
-          {unit && <span className="text-muted text-[length:var(--fs-micro)]">{unit}</span>}
-        </div>
-      </div>
-      {caption && <span className="text-fg-2 text-[length:var(--fs-caption)]">{caption}</span>}
-    </div>
-  );
-}
-
 /** Small pager (‹ 1 2 3 ›) used by the Activities and Alerts lists. */
 export function usePaging<T>(rows: T[], pageSize: number) {
   const [page, setPage] = useState(1);
