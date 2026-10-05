@@ -108,13 +108,7 @@ export function ActivationCompleteScreen({ order }: { order: ActivationCompleteO
       key: `order-email-${order.orderId}`,
     });
   }
-  // Tells the agent, as the order completes, that the customer's location can
-  // be served by fibre (RFS = Ready For Service) - the cue for the "Continue
-  // Fibre Activation" action below. Keyed on the order so it shows once.
   const pushToast = useNotificationStore((s) => s.pushToast);
-  useEffect(() => {
-    pushToast('success', 'Customer location is RFS', { key: `customer-rfs-${order.orderId}`, tinted: true });
-  }, [order.orderId, pushToast]);
   // Close Activity: the journey has ended (this page only exists after submit), so the activities
   // it created are closed and the agent returns to Agent 360.
   const closeActivity = async () => {
@@ -170,6 +164,8 @@ export function ActivationCompleteScreen({ order }: { order: ActivationCompleteO
             ? [{ label: 'Monthly recurring', value: `QR ${order.monthlyRecurringQar}/mo` }]
             : []),
           { label: 'Status', value: order.pendingApproval ? 'Submitted for Approval' : 'Complete' },
+          // The cue for "Continue with Fibre" below: the customer's location can be served by fibre (RFS = Ready For Service).
+          { label: 'Customer location', value: 'RFS (Ready For Service)' },
         ]}
         actions={[
           { label: 'View Order', variant: 'primary-rect', onClick: () => navigate(`${ORDER_DETAIL_ROUTE}?id=${order.orderId}`) },
