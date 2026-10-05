@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useSearchListNav } from '../hooks/useSearchListNav';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '../components/primitives/Icon';
@@ -86,7 +86,14 @@ export function Sidebar() {
   // exactly as much as the panel occupies - and by nothing while it is unpinned.
   const navRef = useRef<HTMLElement>(null);
   const [navWidth, setNavWidth] = useState(0);
+  // Animate width changes only once the first paint is done, so a reload while pinned shows the docked layout at
+  // once rather than sliding the body over from full width.
+  const [animateDock, setAnimateDock] = useState(false);
   useEffect(() => {
+    const id = requestAnimationFrame(() => setAnimateDock(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+  useLayoutEffect(() => {
     const el = navRef.current;
     if (!el) return;
     const measure = () => setNavWidth(el.offsetWidth);
@@ -202,7 +209,7 @@ export function Sidebar() {
           width and animates, so the body container shrinks and grows smoothly as the panel is pinned and unpinned. */}
       <div
         aria-hidden="true"
-        className="hidden md:block shrink-0 transition-[width] duration-200 ease-in-out"
+        className={`hidden md:block shrink-0 ${animateDock ? 'transition-[width] duration-200 ease-in-out' : ''}`}
         style={{ width: pinnedDesktop ? navWidth : 0 }}
       />
       <nav
