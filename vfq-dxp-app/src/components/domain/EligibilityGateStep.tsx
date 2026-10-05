@@ -24,7 +24,7 @@ const ROW_TONE: Record<RowTone, string> = {
   'hard-stop': 'bg-[color-mix(in_oklab,var(--danger),var(--bg)_94%)]',
   'soft-stop': 'bg-[color-mix(in_oklab,var(--warn),var(--bg)_94%)]',
   // Orange wash (distinct from the soft-stop amber): a diversion for approval, not a stop.
-  'approval-routing': 'bg-[color-mix(in_oklab,#ff8a00,var(--bg)_88%)]',
+  'approval-routing': 'bg-[color-mix(in_oklab,var(--approval-routing),var(--bg)_88%)]',
   advisory: 'bg-surface',
 };
 

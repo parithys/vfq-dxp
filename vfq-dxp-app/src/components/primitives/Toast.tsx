@@ -78,7 +78,7 @@ const dotColour: Record<ToastKind, string> = {
   success: 'color-mix(in oklab, var(--success), white 30%)',
   error: 'color-mix(in oklab, var(--danger), white 30%)',
   warning: 'color-mix(in oklab, var(--warn), white 15%)',
-  info: 'rgba(255,255,255,.55)',
+  info: 'var(--toast-dot-info)',
 };
 
 // Toast/Alert/ConfirmDialog per notification-catalogue.md section 4's evidenced

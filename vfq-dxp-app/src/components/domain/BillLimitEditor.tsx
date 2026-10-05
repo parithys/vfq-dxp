@@ -61,14 +61,14 @@ export function BillLimitEditor({ product, value, onChange }: BillLimitEditorPro
       </div>
       {editing ? (
         <div className="flex items-end gap-2 mt-2">
-          <Button variant="ghost-rect" compact className="h-[42px]" aria-label="Decrease by 50 QR" onClick={() => step(-50)}>
+          <Button variant="ghost-rect" compact className="h-[var(--size-btn-compact-h)]" aria-label="Decrease by 50 QR" onClick={() => step(-50)}>
             −50
           </Button>
           <Input label={`QR (Agent Min ${agentMinimum})`} type="number" value={draft} onChange={(e) => setDraft(e.target.value)} />
-          <Button variant="ghost-rect" compact className="h-[42px]" aria-label="Increase by 50 QR" onClick={() => step(50)}>
+          <Button variant="ghost-rect" compact className="h-[var(--size-btn-compact-h)]" aria-label="Increase by 50 QR" onClick={() => step(50)}>
             +50
           </Button>
-          <Button variant="primary-rect" className="h-[42px]" onClick={apply}>
+          <Button variant="primary-rect" className="h-[var(--size-btn-compact-h)]" onClick={apply}>
             Apply
           </Button>
         </div>

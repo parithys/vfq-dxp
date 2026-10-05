@@ -409,4 +409,41 @@
   --warn-text: #9a5b00;
   --white-80: rgba(255,255,255,.8);
   --white-glass-10: rgba(255,255,255,.1);
+
+  /* ---- Component palette & sizes (refactor Phase 3) --------------------------------
+     Values that used to be hard-coded in screens and components. Each keeps its exact
+     original value; dark mode inherits them unchanged, as it did when they were literals. */
+  /* Soft journey / service tints: pale fill + same-hue label (journey pills, offer pills). */
+  --tint-blue-bg: #e3effd;   --tint-blue-fg: #0b4a99;
+  --tint-green-bg: #e3f4e6;  --tint-green-fg: #1f6b2c;
+  --tint-teal-bg: #dcf3f1;   --tint-teal-fg: #0b5f5b;
+  --tint-amber-bg: #fff1d6;  --tint-amber-fg: #8a5200;
+  --tint-pink-bg: #fde4f1;   --tint-pink-fg: #9b1c63;
+  --tint-indigo-bg: #e6e9f5; --tint-indigo-fg: #3a4486;
+  /* Badge 'tag-blue' (number-card category tag). */
+  --tag-blue-bg: #e6f0fd;    --tag-blue-fg: #2f6fcc;
+  --tag-amber-bg: #fff3d9;   /* 'tag-amber' fill; its label is --warn-text */
+  /* Info banner (e.g. MSISDN picker notice). */
+  --info-banner-bg: #eaf4fd; --info-banner-border: #b9d8f5;
+  /* Eligibility 'approval-routing' wash. */
+  --approval-routing: #ff8a00;
+  /* Ooredoo partner mark. */
+  --brand-ooredoo: #ed1b2e;
+  /* Telesales Customer 360: chart series, status dots, module tag, map placeholder. */
+  --telesales-chart-slate: #546a91;
+  --telesales-blue: #2563eb;
+  --telesales-amber: #d97706;
+  --telesales-module-tag-bg: #e3e8ff; --telesales-module-tag-fg: #3b3fb5;
+  --telesales-map-from: #d5f7e3;      --telesales-map-to: #a7f0c8;
+  /* Login page: dark hero, its scrim, and the glass card shadow. */
+  --login-bg: #0a0a0d;
+  --login-scrim: linear-gradient(160deg, rgba(10,10,13,0.42) 0%, rgba(10,10,13,0.68) 100%);
+  --shadow-login-card: 0 8px 24px rgba(0,0,0,0.35);
+  /* Toast 'info' status dot. */
+  --toast-dot-info: rgba(255,255,255,.55);
+  /* Control and container sizes used in more than one place. */
+  --size-choice-box: 18px;          /* checkbox / radio box */
+  --size-btn-compact-h: 42px;       /* stepper buttons beside a 42px field */
+  --size-dropzone-min-h: 9rem;      /* upload drop zones */
+  --size-field-message-max-w: 24rem;/* wrapped error lists under an upload zone */
 }

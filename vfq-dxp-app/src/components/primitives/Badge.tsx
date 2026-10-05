@@ -63,8 +63,8 @@ const variantClasses: Record<BadgeVariant, string> = {
   // Soft-filled category tags (2026-10-01, number cards): RESERVED / STAR / FREE.
   // Tint + same-hue label, no border - they label a kind of thing rather than
   // report a status, so they sit quieter than the outlined status pills above.
-  'tag-blue': 'bg-[#e6f0fd] text-[#2f6fcc] border border-transparent',
-  'tag-amber': 'bg-[#fff3d9] text-[var(--warn-text)] border border-transparent',
+  'tag-blue': 'bg-[var(--tag-blue-bg)] text-[var(--tag-blue-fg)] border border-transparent',
+  'tag-amber': 'bg-[var(--tag-amber-bg)] text-[var(--warn-text)] border border-transparent',
   'tag-green': 'bg-[color-mix(in_oklab,var(--success),var(--bg)_88%)] text-success border border-transparent',
   'tag-violet': 'bg-[color-mix(in_oklab,var(--info),var(--bg)_90%)] text-[var(--info)] border border-transparent',
   'tag-red': 'bg-[color-mix(in_oklab,var(--accent),var(--bg)_90%)] text-accent border border-transparent',

@@ -34,7 +34,7 @@ export function Checkbox({ className = '', ...rest }: CheckboxProps) {
     <span className={`relative inline-flex shrink-0 ${className}`}>
       <input
         type="checkbox"
-        className="peer appearance-none m-0 w-[18px] h-[18px] rounded-[var(--radius-checkbox)] border border-[var(--field-border)] bg-bg cursor-pointer
+        className="peer appearance-none m-0 w-[var(--size-choice-box)] h-[var(--size-choice-box)] rounded-[var(--radius-checkbox)] border border-[var(--field-border)] bg-bg cursor-pointer
           checked:bg-[var(--field-checkbox-selected)] checked:border-[var(--field-checkbox-selected)]
           disabled:cursor-not-allowed disabled:border-[var(--field-border-disabled)] disabled:bg-surface
           focus:outline-none focus-visible:border-[var(--field-focus-border)]! focus-visible:shadow-[var(--field-focus-ring)]"
@@ -47,7 +47,7 @@ export function Checkbox({ className = '', ...rest }: CheckboxProps) {
       <svg
         viewBox="0 0 18 18"
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 w-[18px] h-[18px] text-white opacity-0 peer-checked:opacity-100"
+        className="pointer-events-none absolute inset-0 w-[var(--size-choice-box)] h-[var(--size-choice-box)] text-white opacity-0 peer-checked:opacity-100"
       >
         <path
           d="M4.5 9.25l3 3 6-6.5"

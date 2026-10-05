@@ -24,7 +24,7 @@ export function OoredooMark({ className = '' }: { className?: string }) {
     <span
       role="img"
       aria-label="Ooredoo customer"
-      className={`inline-flex items-center rounded-[var(--radius-pill)] bg-white px-1.5 py-0.5 text-[length:var(--fs-micro)] font-bold leading-none tracking-tight text-[#ED1B2E] ${className}`}
+      className={`inline-flex items-center rounded-[var(--radius-pill)] bg-white px-1.5 py-0.5 text-[length:var(--fs-micro)] font-bold leading-none tracking-tight text-[var(--brand-ooredoo)] ${className}`}
     >
       ooredoo
     </span>

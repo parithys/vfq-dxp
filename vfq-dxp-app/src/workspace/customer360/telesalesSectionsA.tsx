@@ -33,7 +33,7 @@ export function activityEntries(ctx: Ctx) {
     .sort((a, b) => str(b.at).localeCompare(str(a.at)));
 }
 
-const toneColor = { blue: 'bg-[#2563eb]', green: 'bg-success', red: 'bg-danger', amber: 'bg-[#d97706]' } as const;
+const toneColor = { blue: 'bg-[var(--telesales-blue)]', green: 'bg-success', red: 'bg-danger', amber: 'bg-[var(--telesales-amber)]' } as const;
 
 // ============================================================================ Account
 export function AccountSection({ ctx }: { ctx: Ctx }) {

@@ -296,7 +296,7 @@ function VerifiedBadge({ label }: { label: string }) {
       <path
         d="M7.5 12.5l3 3 6-6.5"
         fill="none"
-        stroke="#fff"
+        className="stroke-white"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"

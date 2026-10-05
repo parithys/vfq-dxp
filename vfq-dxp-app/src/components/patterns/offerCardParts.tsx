@@ -37,7 +37,7 @@ export const ICON_CARD = 'M3 6h18v12H3z M3 10h18 M6 15h4';
 export const STAR_ICON = 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9L12 3z';
 
 /** The service pill's colour for postpaid plans (the same blue the New Postpaid offer pill uses). */
-export const POSTPAID_PILL = 'bg-[#e3effd] text-[#0b4a99]';
+export const POSTPAID_PILL = 'bg-[var(--tint-blue-bg)] text-[var(--tint-blue-fg)]';
 
 /** The plan fields a card draws its feature list from (public/mock-data/products.json). */
 export interface OfferProduct {

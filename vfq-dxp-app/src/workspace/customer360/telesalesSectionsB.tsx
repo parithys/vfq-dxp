@@ -332,7 +332,7 @@ export function OffersSection({ ctx }: { ctx: Ctx }) {
           <div className="px-5 pb-5 grid grid-cols-2 gap-4">
             {cards.map((o, i) => (
               <div key={o.name} className={`rounded-[var(--radius-card)] border p-4 ${i === 0 ? 'border-accent border-2' : 'border-[var(--field-card-border)]'}`}>
-                <span className={`inline-block rounded-[var(--radius-button)] px-2 py-0.5 text-[length:var(--fs-caption)] font-bold text-white ${i === 0 ? 'bg-accent' : 'bg-[#2563eb]'}`}>{o.badge}</span>
+                <span className={`inline-block rounded-[var(--radius-button)] px-2 py-0.5 text-[length:var(--fs-caption)] font-bold text-white ${i === 0 ? 'bg-accent' : 'bg-[var(--telesales-blue)]'}`}>{o.badge}</span>
                 <div className="text-fg font-bold text-[length:var(--fs-h4)] mt-8">{o.name}</div>
                 <div className="text-fg-2 text-[length:var(--fs-body)] mb-2">{o.tagline}</div>
                 <ul className="text-fg-2 text-[length:var(--fs-body)] space-y-1 mb-3">
@@ -492,7 +492,7 @@ export function UsageSection({ ctx }: { ctx: Ctx }) {
               Regular Usage
             </span>
             <span>
-              <span className="inline-block w-2 h-2 rounded-full bg-[#546a91] mr-1" />
+              <span className="inline-block w-2 h-2 rounded-full bg-[var(--telesales-chart-slate)] mr-1" />
               Out of Bundle
             </span>
           </div>

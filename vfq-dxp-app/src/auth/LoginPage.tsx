@@ -241,9 +241,9 @@ export function LoginPage() {
           (rather than a heavy opaque fill) so they read as sitting in the
           scene instead of pasted flat on top of it, while still staying
           legible against whatever's directly behind them. */}
-      <div className="relative flex-1 px-8 md:px-16 py-10 flex flex-col justify-between text-white md:order-1 overflow-hidden bg-[#0a0a0d]">
+      <div className="relative flex-1 px-8 md:px-16 py-10 flex flex-col justify-between text-white md:order-1 overflow-hidden bg-[var(--login-bg)]">
         <img src="/brand/login-bg.jpg" alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-[image:linear-gradient(160deg,rgba(10,10,13,0.42)_0%,rgba(10,10,13,0.68)_100%)]" />
+        <div className="absolute inset-0 bg-[image:var(--login-scrim)]" />
         <div className="relative">
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <div className="flex items-center gap-2">
@@ -264,7 +264,7 @@ export function LoginPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
             {METRICS.map((m) => (
-              <div key={m.label} className="rounded-[var(--radius-card)] border border-white/15 bg-white/10 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.35)] p-5">
+              <div key={m.label} className="rounded-[var(--radius-card)] border border-white/15 bg-white/10 backdrop-blur-md shadow-[var(--shadow-login-card)] p-5">
                 <div className="flex items-center justify-between mb-6">
                   <span className="w-9 h-9 rounded-[10px] bg-white/10 flex items-center justify-center">
                     <Icon path={m.icon} className="w-4.5 h-4.5" />

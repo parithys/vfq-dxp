@@ -59,7 +59,7 @@ export function SupportingDocumentUpload({
           </div>
         </>
       ) : (
-        <div className="min-h-[9rem] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
+        <div className="min-h-[var(--size-dropzone-min-h)] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
           <span className="text-fg-2 text-[length:var(--fs-caption)] uppercase tracking-[0.14em] text-center">Upload the supporting document</span>
           <Button variant="primary-rect" compact onClick={() => input.current?.click()}>
             Browse…

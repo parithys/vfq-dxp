@@ -58,12 +58,12 @@ export const SERVICE_JOURNEYS: { key: ServiceJourney; label: string; description
  * tint + dark text pairs (each text/background >= 4.5:1), so they hold in the dark theme too. Red is
  * left out: it already marks the Recommended flag and the selected card. */
 const JOURNEY_PILL: Record<ServiceJourney, string> = {
-  'new-postpaid': 'bg-[#e3effd] text-[#0b4a99]',
-  'new-prepaid': 'bg-[#e3f4e6] text-[#1f6b2c]',
-  'mnp-postpaid': 'bg-[#dcf3f1] text-[#0b5f5b]',
-  'mnp-prepaid': 'bg-[#fff1d6] text-[#8a5200]',
-  'new-fixed-line': 'bg-[#fde4f1] text-[#9b1c63]',
-  'new-fwa': 'bg-[#e6e9f5] text-[#3a4486]',
+  'new-postpaid': 'bg-[var(--tint-blue-bg)] text-[var(--tint-blue-fg)]',
+  'new-prepaid': 'bg-[var(--tint-green-bg)] text-[var(--tint-green-fg)]',
+  'mnp-postpaid': 'bg-[var(--tint-teal-bg)] text-[var(--tint-teal-fg)]',
+  'mnp-prepaid': 'bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)]',
+  'new-fixed-line': 'bg-[var(--tint-pink-bg)] text-[var(--tint-pink-fg)]',
+  'new-fwa': 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)]',
 };
 
 export const journeyLabel = (k: ServiceJourney | undefined) => SERVICE_JOURNEYS.find((j) => j.key === k)?.label;

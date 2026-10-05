@@ -65,7 +65,7 @@ export function AddressSection({ ctx }: { ctx: Ctx }) {
         </Card>
         <Card title="Location Map" icon={ICON.globe}>
           <div className="p-5">
-            <div className="relative h-44 rounded-[var(--radius-card)] bg-gradient-to-br from-[#d5f7e3] to-[#a7f0c8] overflow-hidden">
+            <div className="relative h-44 rounded-[var(--radius-card)] bg-gradient-to-br from-[var(--telesales-map-from)] to-[var(--telesales-map-to)] overflow-hidden">
               <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-accent text-accent-on flex items-center justify-center">
                 <Icon path={ICON.globe} className="w-5 h-5" />
               </span>
@@ -480,7 +480,7 @@ export function AuditSection({ ctx }: { ctx: Ctx }) {
   const filtered = inRange.filter((r) => (module === 'All Modules' || r.module === module) && (action === 'All Actions' || r.action === action) && (user === 'All Users' || r.by === user) && `${r.field} ${r.new} ${r.ref} ${r.module}`.toLowerCase().includes(query.toLowerCase()));
   const uniq = (k: 'module' | 'action' | 'by') => Array.from(new Set(rows.map((r) => r[k]).filter(Boolean)));
   const count = (re: RegExp) => rows.filter((r) => re.test(r.module)).length;
-  const moduleTone = (m: string) => (/order/i.test(m) ? 'bg-[#e3e8ff] text-[#3b3fb5]' : 'bg-[#e3e8ff] text-[#3b3fb5]');
+  const moduleTone = (m: string) => (/order/i.test(m) ? 'bg-[var(--telesales-module-tag-bg)] text-[var(--telesales-module-tag-fg)]' : 'bg-[var(--telesales-module-tag-bg)] text-[var(--telesales-module-tag-fg)]');
   const summary: [string, number][] = [
     ['Orders', count(/order/i)],
     ['Trouble Tickets', count(/ticket/i)],

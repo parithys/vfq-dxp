@@ -231,7 +231,7 @@ export function BarChart({ data, unit = '', height = 150 }: { data: { label: str
         <div className="flex items-end gap-3" style={{ height }}>
           {data.map((d) => (
             <div key={d.label} className="flex-1 flex flex-col justify-end h-full" title={`${d.label}: ${d.value}${d.extra ? ` + ${d.extra}` : ''}`}>
-              {d.extra ? <div className="bg-[#546a91] rounded-t-sm" style={{ height: `${(d.extra / max) * 100}%` }} /> : null}
+              {d.extra ? <div className="bg-[var(--telesales-chart-slate)] rounded-t-sm" style={{ height: `${(d.extra / max) * 100}%` }} /> : null}
               <div className={`bg-accent ${d.extra ? '' : 'rounded-t-sm'}`} style={{ height: `${(d.value / max) * 100}%` }} />
             </div>
           ))}

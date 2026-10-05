@@ -289,7 +289,7 @@ export function QidImageUpload({
           never left the reader, and losing them the place they were at.
           Same height as the insert zone so the step does not jump. */}
       {scanning ? (
-        <div className="min-h-[9rem] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
+        <div className="min-h-[var(--size-dropzone-min-h)] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
           <Spinner size={28} label={`${pass === 'retake' ? 'Rescanning' : 'Scanning'} the ${documentType}`} />
           <span className="text-fg-2 text-[length:var(--fs-caption)] uppercase tracking-[0.14em] text-center">
             {pass === 'retake' ? 'Rescanning' : 'Scanning'} {documentType === 'QID' ? 'QID' : documentType}
@@ -368,7 +368,7 @@ export function QidImageUpload({
           </div>
         </>
       ) : (
-        <div className="min-h-[9rem] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
+        <div className="min-h-[var(--size-dropzone-min-h)] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
           <span className="text-fg-2 text-[length:var(--fs-caption)] uppercase tracking-[0.14em] text-center">
             {canScan ? "Scan customer's identity document" : 'Card could not be read'}
           </span>
@@ -411,13 +411,13 @@ export function QidImageUpload({
               the card changes when a scan fails. */}
           {error && (
             Array.isArray(error) ? (
-              <ul role="alert" className="text-danger text-[length:var(--fs-caption)] text-left max-w-[24rem] list-disc pl-5 space-y-1">
+              <ul role="alert" className="text-danger text-[length:var(--fs-caption)] text-left max-w-[var(--size-field-message-max-w)] list-disc pl-5 space-y-1">
                 {error.map((line) => (
                   <li key={line}>{line}</li>
                 ))}
               </ul>
             ) : (
-              <p role="alert" className="text-danger text-[length:var(--fs-caption)] text-center max-w-[24rem]">
+              <p role="alert" className="text-danger text-[length:var(--fs-caption)] text-center max-w-[var(--size-field-message-max-w)]">
                 {error}
               </p>
             )
@@ -484,7 +484,7 @@ function PassportScanSections({ value, onChange, onScan, error, canScan = true, 
       <div key={side} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 flex flex-col gap-3">
         <p className="text-fg font-medium text-[length:var(--fs-body)]">{title}</p>
         {scanning === side ? (
-          <div className="min-h-[9rem] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
+          <div className="min-h-[var(--size-dropzone-min-h)] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
             <Spinner size={28} label={`Scanning the Passport ${side} side`} />
             <span className="text-fg-2 text-[length:var(--fs-caption)] uppercase tracking-[0.14em] text-center">Scanning Passport {side} side</span>
           </div>
@@ -511,7 +511,7 @@ function PassportScanSections({ value, onChange, onScan, error, canScan = true, 
             </Button>
           </>
         ) : (
-          <div className="min-h-[9rem] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
+          <div className="min-h-[var(--size-dropzone-min-h)] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
             <span className="text-fg-2 text-[length:var(--fs-caption)] uppercase tracking-[0.14em] text-center">
               {canScan ? `Place the passport ${side} side` : 'Card could not be read'}
             </span>
@@ -542,13 +542,13 @@ function PassportScanSections({ value, onChange, onScan, error, canScan = true, 
             )}
             {error &&
               (Array.isArray(error) ? (
-                <ul role="alert" className="text-danger text-[length:var(--fs-caption)] text-left max-w-[24rem] list-disc pl-5 space-y-1">
+                <ul role="alert" className="text-danger text-[length:var(--fs-caption)] text-left max-w-[var(--size-field-message-max-w)] list-disc pl-5 space-y-1">
                   {error.map((line) => (
                     <li key={line}>{line}</li>
                   ))}
                 </ul>
               ) : (
-                <p role="alert" className="text-danger text-[length:var(--fs-caption)] text-center max-w-[24rem]">
+                <p role="alert" className="text-danger text-[length:var(--fs-caption)] text-center max-w-[var(--size-field-message-max-w)]">
                   {error}
                 </p>
               ))}

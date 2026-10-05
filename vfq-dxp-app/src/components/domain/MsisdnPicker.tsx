@@ -462,7 +462,7 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
       {tab === 'Reserved' && (
         <div
           role="note"
-          className="flex items-center gap-2 rounded-[var(--radius-card)] border border-[#b9d8f5] bg-[#eaf4fd] px-3 py-2 text-[#0b4a99] text-[length:var(--fs-caption)]"
+          className="flex items-center gap-2 rounded-[var(--radius-card)] border border-[var(--info-banner-border)] bg-[var(--info-banner-bg)] px-3 py-2 text-[var(--tint-blue-fg)] text-[length:var(--fs-caption)]"
         >
           <Icon path="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 11v5 M12 7.5h.01" className="w-4 h-4 shrink-0" />
           You can hold a maximum of {MAX_RESERVATIONS_PER_AGENT} reserved numbers at a time.
@@ -658,7 +658,7 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
                 </span>
               )}
               {/* On the selected surface the green FREE pill text is darkened (#1f6b2c, about 6:1) to keep 4.5:1. */}
-              <div className={`relative flex flex-wrap items-center justify-between gap-x-3 gap-y-1 ${isSelected ? '[&_.text-success]:text-[#1f6b2c]' : ''}`}>
+              <div className={`relative flex flex-wrap items-center justify-between gap-x-3 gap-y-1 ${isSelected ? '[&_.text-success]:text-[var(--tint-green-fg)]' : ''}`}>
                 <p className="font-bold text-[length:var(--fs-h5,20px)] text-fg whitespace-nowrap">{toLocalMsisdn(n.msisdn)}</p>
                 {tag}
               </div>

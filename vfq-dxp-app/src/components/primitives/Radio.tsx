@@ -28,7 +28,7 @@ export function Radio({ className = '', ...rest }: RadioProps) {
     <span className={`relative inline-flex shrink-0 ${className}`}>
       <input
         type="radio"
-        className="peer appearance-none m-0 w-[18px] h-[18px] rounded-full border border-[var(--field-border)] bg-bg cursor-pointer
+        className="peer appearance-none m-0 w-[var(--size-choice-box)] h-[var(--size-choice-box)] rounded-full border border-[var(--field-border)] bg-bg cursor-pointer
           checked:bg-[var(--field-radio-selected)] checked:border-[var(--field-radio-selected)]
           disabled:cursor-not-allowed disabled:border-[var(--field-border-disabled)] disabled:bg-surface
           focus:outline-none focus-visible:border-[var(--field-focus-border)]! focus-visible:shadow-[var(--field-focus-ring)]"
