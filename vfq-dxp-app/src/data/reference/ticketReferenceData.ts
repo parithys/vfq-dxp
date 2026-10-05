@@ -81,6 +81,9 @@ export const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | '
 
 // P-03 (Priority LOV, Confirmed) - 1-ASAP/2-High/3-Medium/4-Low, not a plain
 // Low/Medium/High scale.
+/** Queues a ticket can be routed to when no routing rule picks one. */
+export const TICKET_QUEUES = ['FL Agents', 'Complaints Team'] as const;
+
 export const PRIORITY_OPTIONS = ['1-ASAP', '2-High', '3-Medium', '4-Low'] as const;
 
 // MPRA_001_CRE-16: priority is derived from Customer Type, not freely chosen.

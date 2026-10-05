@@ -7,7 +7,9 @@ import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { IC, IconTile, Pill, StatusPill, fmtDate, qar } from '../sections/C360Kit';
 import { previewFieldsFor, serviceTypeLabel } from './queryFlowModel';
-import type { QueryIssue, QueryIssueCatalogue } from './queryFlowModel';
+import type { QueryIssue, QueryIssueCatalogue, TicketRouting } from './queryFlowModel';
+import { TICKET_QUEUES } from '../../../data/reference/ticketReferenceData';
+import { Select } from '../../../components/primitives/Select';
 
 type Rec = Record<string, unknown>;
 const NOT_ON_FILE = 'Not on file';
@@ -58,6 +60,7 @@ export function QueryPreviewModal({
   catalogue,
   onClose,
   onCloseInteraction,
+  routing,
   onCreateTicket,
   onOpenTickets,
 }: {
@@ -71,7 +74,10 @@ export function QueryPreviewModal({
   catalogue: QueryIssueCatalogue;
   onClose: () => void;
   onCloseInteraction: () => void;
-  onCreateTicket: () => void;
+  /** The routing rule's result for this issue (queue and why), when there is one. */
+  routing?: TicketRouting;
+  /** Raises the ticket with this queue and the auto-stamped description. */
+  onCreateTicket: (queue: string, description: string) => void | Promise<void>;
   /** Opens the Tickets & Support tab (the preview closes). */
   onOpenTickets: () => void;
 }) {
@@ -145,6 +151,12 @@ export function QueryPreviewModal({
   ];
   const grouped = [...GROUPS.map((g) => ({ title: g.title, rows: rows.filter((r) => g.match.test(r.label)) })), { title: 'Other Details', rows: rows.filter((r) => !GROUPS.some((g) => g.match.test(r.label))) }].filter((g) => g.rows.length > 0);
   const [detailsOpen, setDetailsOpen] = useState(true);
+  // The routing rule picks the queue where it has one; otherwise the agent chooses it here.
+  const [chosenQueue, setChosenQueue] = useState('');
+  const [creating, setCreating] = useState(false);
+  const queue = routing?.queue ?? chosenQueue;
+  // Auto-stamped ticket description: the query and every detail the preview shows that has a value.
+  const description = [...summary, ...rows.filter((r) => r.value !== undefined).map((r) => ({ label: r.label, value: r.value as string }))].map((r) => `${r.label}: ${r.value}`).join('\n');
   const recentTickets = openTickets.slice(0, 3);
 
   return (
@@ -169,14 +181,35 @@ export function QueryPreviewModal({
         </div>
       }
       footer={
-        <>
+        <div className="flex w-full flex-wrap items-center justify-end gap-3">
+          {routing?.queue ? (
+            <span className="mr-auto text-fg-2 text-[length:var(--fs-caption)]">{routing.queue}: {routing.basis}</span>
+          ) : (
+            <div className="mr-auto min-w-44">
+              <Select
+                aria-label="Queue"
+                value={chosenQueue}
+                onChange={(e) => setChosenQueue(e.target.value)}
+                placeholder="Select a queue"
+                options={TICKET_QUEUES.map((q) => ({ value: q, label: q }))}
+              />
+            </div>
+          )}
           <Button variant="ghost-rect" onClick={onCloseInteraction}>
             Close Interaction
           </Button>
-          <Button variant="primary-rect" onClick={onCreateTicket}>
+          <Button
+            variant="primary-rect"
+            disabled={!queue || creating}
+            onClick={async () => {
+              setCreating(true);
+              await onCreateTicket(queue, description);
+              setCreating(false);
+            }}
+          >
             Create Ticket
           </Button>
-        </>
+        </div>
       }
     >
       <div className="space-y-6" data-coverage-ignore>

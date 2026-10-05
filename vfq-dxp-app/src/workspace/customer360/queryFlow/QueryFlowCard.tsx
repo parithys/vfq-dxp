@@ -2,16 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../../../components/primitives/Button';
 import { Icon } from '../../../components/primitives/Icon';
 import { Select } from '../../../components/primitives/Select';
-import { buildNewTicketRecord } from '../../../data/reference/ticketReferenceData';
-import { TicketCreationModal } from '../../../modules/trouble-ticketing-complaints/screens/TicketCreationModal';
-import type { NewTicketValue } from '../../../modules/trouble-ticketing-complaints/screens/TicketCreationModal';
+import { buildNewTicketRecord, derivePriorityFromSegment, slaTargetHours } from '../../../data/reference/ticketReferenceData';
 import { useEntityStore } from '../../../stores/entityStore';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { IC, IconTile, Pill, SearchBox } from '../sections/C360Kit';
 import { QueryPreviewModal } from './QueryPreviewModal';
 import { TAB_LABELS, revealContainer, searchContainers } from './containerIndex';
-import { QUERY_SERVICE_TYPES, TICKET_ISSUE_TYPES, deriveQueryServiceType, matchRanges, queryKeywords, routeTicket, searchQueryIssues, serviceTypeLabel, useQueryIssueCatalogue } from './queryFlowModel';
+import { QUERY_SERVICE_TYPES, deriveQueryServiceType, matchRanges, queryKeywords, routeTicket, searchQueryIssues, serviceTypeLabel, useQueryIssueCatalogue } from './queryFlowModel';
 import type { QueryIssue } from './queryFlowModel';
 
 const BACK_ICON = 'M19 12H5 M12 19l-7-7 7-7';
@@ -73,7 +71,6 @@ export function QueryFlowCard({
   const [msisdnRef, setMsisdnRef] = useState('');
   const [manualType, setManualType] = useState('');
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [creating, setCreating] = useState(false);
   const [note, setNote] = useState<string | undefined>();
 
   const cardRef = useRef<HTMLElement>(null);
@@ -81,7 +78,6 @@ export function QueryFlowCard({
     if (!focusSignal || !catalogue) return;
     setIssue(null);
     setPreviewOpen(false);
-    setCreating(false);
     const t = window.setTimeout(() => {
       cardRef.current?.scrollIntoView({ block: 'center' });
       cardRef.current?.querySelector('input')?.focus();
@@ -104,16 +100,30 @@ export function QueryFlowCard({
     setMsisdnRef('');
     setManualType('');
     setPreviewOpen(false);
-    setCreating(false);
     setNote(message);
   };
 
-  const createTicket = async (value: NewTicketValue) => {
+  // Raises the ticket straight from the Preview: everything it needs is already known from the query and the customer.
+  const createTicket = async (queue: string, description: string) => {
+    if (!issue || !serviceType) return;
     const ticketId = `TT-${Date.now().toString().slice(-6)}`;
-    const record = buildNewTicketRecord({ ticketId, ...value, createdBy: 'AGENT-VINODHINIR' });
+    const record = buildNewTicketRecord({
+      ticketId,
+      customerId: data.customer.customerId,
+      issueType: serviceType,
+      area: [issue.area, issue.subArea].filter(Boolean).join(' - '),
+      template: issue.name,
+      templateContent: description,
+      actualIssue: issue.ticketActualIssue,
+      queue,
+      priority: derivePriorityFromSegment(data.customer.segment),
+      slaTargetHours: slaTargetHours(data.customer.nationality),
+      severity: issue.severity,
+      createdBy: 'AGENT-VINODHINIR',
+    });
     await createRecord('trouble-tickets', record);
     onTicketCreated?.(record);
-    reset(`Ticket ${ticketId} was created for "${issue?.name}".`);
+    reset(`Ticket ${ticketId} was created for "${issue.name}".`);
   };
 
   if (!catalogue) return null;
@@ -268,23 +278,8 @@ export function QueryFlowCard({
                 setPreviewOpen(false);
                 goToTab?.('tickets-support');
               }}
-              onCreateTicket={() => {
-                setPreviewOpen(false);
-                setCreating(true);
-              }}
-            />
-          )}
-          {creating && serviceType && (
-            <TicketCreationModal
-              open
-              onClose={() => setCreating(false)}
-              onSubmit={createTicket}
-              initialCustomerId={data.customer.customerId}
-              initialIssueType={TICKET_ISSUE_TYPES.includes(serviceType) ? serviceType : ''}
-              initialActualIssue={issue.ticketActualIssue ?? ''}
-              initialQueue={routing?.queue}
-              routingNote={routing?.basis}
-              severity={issue.severity}
+              routing={routing}
+              onCreateTicket={createTicket}
             />
           )}
         </>
