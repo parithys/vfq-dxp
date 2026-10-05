@@ -49,6 +49,7 @@ export function StepSummaryPanel({
   totalSteps,
   values,
   onEdit,
+  returnTo,
   variant = 'aside',
 }: {
   /** Completed steps that declare a summary, in step order. */
@@ -58,6 +59,8 @@ export function StepSummaryPanel({
   values: Record<string, unknown>;
   /** Go back to a step. Absent when editing is not allowed. */
   onEdit?: (index: number) => void;
+  /** Shown after going back to edit: jumps to the furthest step reached. */
+  returnTo?: { label: string; onReturn: () => void };
   /** 'aside': the fixed side panel. 'accordion': the collapsible block shown above the action buttons on small screens. */
   variant?: 'aside' | 'accordion';
 }) {
@@ -71,6 +74,18 @@ export function StepSummaryPanel({
 
   const heading = `Summary`;
   const count = `${completed.length} of ${totalSteps} steps completed`;
+
+  const returnButton = returnTo ? (
+    <div className="px-4 py-3 border-b border-border-soft">
+      <button
+        type="button"
+        onClick={returnTo.onReturn}
+        className="w-full rounded-[var(--radius-button)] border border-[var(--accent-secondary)] bg-bg px-4 py-2 text-[var(--accent-secondary)] font-semibold text-[length:var(--fs-btn-compact)] hover:bg-surface-warm focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+      >
+        Return to {returnTo.label}
+      </button>
+    </div>
+  ) : null;
 
   const body =
     completed.length === 0 ? (
@@ -116,7 +131,7 @@ export function StepSummaryPanel({
           <span className="text-fg-2 text-[length:var(--fs-caption)]">{count}</span>
         </button>
         {live}
-        {accordionOpen && <div className="border-t border-border-soft max-h-96 overflow-y-auto">{body}</div>}
+        {accordionOpen && <div className="border-t border-border-soft max-h-96 overflow-y-auto">{returnButton}{body}</div>}
       </aside>
     );
   }
@@ -131,6 +146,7 @@ export function StepSummaryPanel({
         <p className="text-fg-2 text-[length:var(--fs-caption)]">{count}</p>
       </header>
       {live}
+      {returnButton}
       {body}
     </aside>
   );

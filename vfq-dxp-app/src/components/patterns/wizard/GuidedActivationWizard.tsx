@@ -161,6 +161,8 @@ export function GuidedActivationWizard({
     totalSteps: activeSteps.length,
     values: draft.values,
     onEdit: isLocked ? undefined : goToStep,
+    // After going back to edit, one click returns to the furthest step reached.
+    returnTo: !isLocked && currentIndex < maxReached && activeSteps[maxReached] ? { label: activeSteps[maxReached].label, onReturn: () => goToStep(maxReached) } : undefined,
   };
 
   return (
