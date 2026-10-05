@@ -95,7 +95,7 @@ export function SimTypeStep({ value, customerEmail, onChange }: SimTypeStepProps
             forward - the same "flash then advance" shape Eligibility's own
             auto-advance already has. */}
         {value.simType === 'Physical' && value.simValid && (
-          <dl className="rounded-[var(--radius-card)] border border-success/30 bg-[color-mix(in_oklab,var(--success),var(--bg)_92%)] p-3 space-y-1 text-[length:var(--fs-caption)]">
+          <dl className="rounded-[var(--radius-card)] border border-success bg-[color-mix(in_oklab,var(--success),var(--bg)_88%)] p-3 space-y-1 text-[length:var(--fs-caption)]">
             <div className="flex justify-between gap-3">
               <dt className="text-fg-2">SIM Type</dt>
               <dd className="text-fg font-medium">Physical</dd>

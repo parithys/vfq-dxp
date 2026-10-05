@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
 import { IdLookupStep } from '../../../components/patterns/IdLookupStep';
 import type { QidType } from '../../../components/domain/QidInput';
@@ -17,7 +16,8 @@ import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCa
 import type { CafType } from '../../../components/patterns/CafSignatureCapture';
 import { WinCashPaymentStep } from '../../../components/patterns/WinCashPaymentStep';
 import type { WinCashPaymentValue } from '../../../components/patterns/WinCashPaymentStep';
-import { OrderConfirmationScreen } from '../../../components/patterns/OrderConfirmationScreen';
+import { logActivity } from '../../../engines/activityEngine';
+import { ActivationCompleteScreen } from '../../../components/patterns/ActivationCompleteScreen';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { useEntityStore } from '../../../stores/entityStore';
 
@@ -37,6 +37,7 @@ interface AccountRecord {
 
 interface ConfirmedOrder {
   orderId: string;
+  activityId?: string;
   pendingApproval: boolean;
   customerName: string;
   msisdn: string;
@@ -85,36 +86,24 @@ interface ConfirmedOrder {
 // modelled - this schema has no cross-line directory to resolve that from,
 // so the notification below targets only the just-activated MSISDN.
 export function NewPrepaidWizard() {
-  const navigate = useNavigate();
   const createRecord = useEntityStore((s) => s.createRecord);
   const updateRecord = useEntityStore((s) => s.updateRecord);
   const [confirmedOrder, setConfirmedOrder] = useState<ConfirmedOrder | null>(null);
 
   if (confirmedOrder) {
     return (
-      <div className="p-8">
-        <OrderConfirmationScreen
-          heading={confirmedOrder.pendingApproval ? 'Order submitted for approval' : 'Prepaid activation complete'}
-          orderId={confirmedOrder.orderId}
-          summaryLines={[
-            { label: 'Customer', value: confirmedOrder.customerName },
-            { label: 'MSISDN', value: confirmedOrder.msisdn },
-            { label: 'Pack', value: confirmedOrder.packName },
-            { label: 'SIM Type', value: confirmedOrder.simType ?? '-' },
-            { label: 'Total charged', value: `QR ${confirmedOrder.totalQar}` },
-            { label: 'Status', value: confirmedOrder.status },
-          ]}
-          actions={[
-            {
-              label: 'View Order',
-              variant: 'primary-rect',
-              onClick: () => navigate(`/order-management/order-approval-detail-attachments-order-details-activities-a?id=${confirmedOrder.orderId}`),
-            },
-            { label: 'Start Another Activation', onClick: () => setConfirmedOrder(null) },
-            { label: 'Back to Dashboard', onClick: () => navigate('/') },
-          ]}
-        />
-      </div>
+      <ActivationCompleteScreen
+        order={{
+          orderId: confirmedOrder.orderId,
+          activityId: confirmedOrder.activityId,
+          pendingApproval: confirmedOrder.pendingApproval,
+          customerName: confirmedOrder.customerName,
+          msisdn: confirmedOrder.msisdn,
+          planName: confirmedOrder.packName,
+          simType: confirmedOrder.simType,
+          dueTodayQar: confirmedOrder.totalQar,
+        }}
+      />
     );
   }
 
@@ -189,6 +178,12 @@ export function NewPrepaidWizard() {
                   setValue('msisdn', msisdn);
                   setValue('priceQAR', priceQAR);
                 }}
+                inlineToolbar
+                hideReservedBadge
+                onDeselect={() => {
+                  setValue('msisdn', undefined);
+                  setValue('priceQAR', undefined);
+                }}
               />
             ),
             isValid: (values) => Boolean(values.msisdn),
@@ -242,7 +237,7 @@ export function NewPrepaidWizard() {
                 <div className="space-y-6">
                   {/* MPRA_001_CAF_02 (BR-009): displayed before CAF submission, refreshed
                       on any cart amendment since it's derived live from the selected pack. */}
-                  <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4">
+                  <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-4">
                     <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-2">Key Information</h3>
                     <ul className="list-disc list-inside space-y-1 text-fg-2 text-[length:var(--fs-body)]">
                       <li>No plan lock-in period applies to prepaid packs.</li>
@@ -384,8 +379,17 @@ export function NewPrepaidWizard() {
           const products = await mockDataEngine.list<{ productId: string; name: string }>('products');
           const pack = products.find((p) => p.productId === values.productId);
 
+          const activityId = await logActivity({
+            trigger: 'completed',
+            journey: 'New Prepaid Activation',
+            orderId,
+            customerName: contact?.moiResult?.name,
+            reason: pendingApproval ? `Order ${orderId} submitted and is awaiting approval.` : `Order ${orderId} submitted and activated.`,
+          });
+
           setConfirmedOrder({
             orderId,
+            activityId,
             pendingApproval,
             customerName: contact?.moiResult?.name ?? '-',
             msisdn: (values.msisdn as string) ?? '-',

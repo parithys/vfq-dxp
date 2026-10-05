@@ -1,16 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
+import { discountsForCustomer, type CustomerBenefit } from '../../engines/customerBenefitEngine';
 import { Badge } from '../primitives/Badge';
 import { Button } from '../primitives/Button';
 import { Input } from '../primitives/Input';
-import { Radio } from '../primitives/Radio';
 import { AddonsPicker } from '../domain/AddonsPicker';
 import { BillLimitEditor } from '../domain/BillLimitEditor';
 import { Drawer } from '../primitives/Drawer';
 import { Icon } from '../primitives/Icon';
+import { CARD_HIGHLIGHT, CARD_IDLE, CARD_SELECTED, CARD_SELECTED_SURFACE, ICON_CARD, OfferArtwork, SelectedCardTexture, POSTPAID_PILL, STAR_ICON, planFeatureRows } from './offerCardParts';
 import { monthlyCharges, formatQar, VAT_RATE, HRN_ADVANCE_QAR } from '../../engines/postpaidPricing';
+import { SearchField } from '../../components/primitives/SearchField';
 
-const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
 const CHECK = 'M20 6L9 17l-5-5';
 
 // Small Levenshtein distance for typo-tolerant ranking - the app has no fuzzy-
@@ -113,6 +114,8 @@ function formatDocSize(bytes: number): string {
 interface PostpaidPlanAddonsStepProps {
   selectedProductId: string | undefined;
   onSelectProduct: (productId: string) => void;
+  /** Clicking the already-selected plan card unselects it. Omit to make a chosen plan sticky. */
+  onDeselectProduct?: () => void;
   discountId: string | undefined;
   onSelectDiscount: (discountId: string | undefined) => void;
   addonIds: string[];
@@ -128,6 +131,12 @@ interface PostpaidPlanAddonsStepProps {
    * (2026-09-28 request: "show 'Please collect QAR [configurable amount]
    * from the customer.'"). */
   requiresHrnAdvance: boolean;
+  /** Benefit the agent accepted on Customer Identification (office ID confirmed): the plan's matching discount is applied automatically. */
+  customerBenefit?: 'mada' | 'b2b2c' | 'retired' | 'none';
+  /** Benefits the customer's record lists (see customerBenefitEngine). Only discounts they unlock are offered; undefined = customer not known, nothing is filtered. */
+  customerBenefits?: CustomerBenefit[];
+  /** Who the customer is, for deciding which add-ons they are eligible for. */
+  customerContext?: { nationality?: string; customerType?: string; idType?: string };
   /** The proof document a MADA/B2B2C discount requires before finalisation
    * (2026-09-28) - a single file, distinct from the CAF step's own signed-
    * paperwork upload. Undefined until one is attached. */
@@ -179,6 +188,41 @@ function planGroupOf(p: { popular?: boolean; commitmentMonths?: number }): PlanG
  */
 type TabKey = PlanGroupKey | 'addons' | 'discounts';
 
+/** One choice in the Eligible Discounts tab, on the shared selectable-card standard. */
+function DiscountCard({ title, description, value, selected, onToggle }: { title: string; description?: string; value: string; selected: boolean; onToggle: () => void }) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+      onClick={onToggle}
+      onKeyDown={(e) => {
+        if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onToggle();
+        }
+      }}
+      className={`relative isolate flex flex-col gap-3 rounded-[var(--radius-card)] border p-5 cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+        selected ? `${CARD_SELECTED} ${CARD_SELECTED_SURFACE}` : CARD_IDLE
+      }`}
+    >
+      {selected && <SelectedCardTexture />}
+      {selected && (
+        <span aria-hidden="true" className="absolute -right-2 -top-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-accent text-white ring-2 ring-bg">
+          <Icon path="M20 6L9 17l-5-5" className="w-3.5 h-3.5" strokeWidth={3} />
+        </span>
+      )}
+      {/* Name on the left, the discount on the right, on one row. */}
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-fg font-bold text-[length:var(--fs-h5)] leading-snug">{title}</p>
+        <p className={`shrink-0 font-bold text-[length:var(--fs-h5)] ${value === '-' ? 'text-muted' : 'text-success'}`}>{value}</p>
+      </div>
+      {description && <p className="text-fg-2 text-[length:var(--fs-caption)]">{description}</p>}
+    </div>
+  );
+}
+
+
 // "RED Plan" & "Eligible Discounts" - Mobile Postpaid's Plan & Add-ons step
 // (SCR-156, reference 12-step flow position 5). Plan tiers use the evidenced
 // "Postpaid Red <price> Promotion" naming family (field-inventory.md's
@@ -193,6 +237,7 @@ type TabKey = PlanGroupKey | 'addons' | 'discounts';
 export function PostpaidPlanAddonsStep({
   selectedProductId,
   onSelectProduct,
+  onDeselectProduct,
   discountId,
   onSelectDiscount,
   addonIds,
@@ -202,12 +247,19 @@ export function PostpaidPlanAddonsStep({
   billLimit,
   onBillLimitChange,
   requiresHrnAdvance,
+  customerBenefit,
+  customerBenefits,
+  customerContext,
   discountProofDocument,
   onDiscountProofDocumentChange,
 }: PostpaidPlanAddonsStepProps) {
   const [plans, setPlans] = useState<PostpaidPlan[]>([]);
   const [addonProducts, setAddonProducts] = useState<AddonProduct[]>([]);
-  const [discounts, setDiscounts] = useState<Discount[]>([]);
+  const [planDiscounts, setPlanDiscounts] = useState<Discount[]>([]);
+  const discounts = useMemo(
+    () => discountsForCustomer(planDiscounts, customerBenefits, customerBenefit && customerBenefit !== 'none' ? customerBenefit : undefined),
+    [planDiscounts, customerBenefits, customerBenefit]
+  );
   // The plan whose details are open, or null. Holds the plan OBJECT rather
   // than an id, so the drawer cannot render a heading for one plan and
   // figures for another.
@@ -270,12 +322,12 @@ export function PostpaidPlanAddonsStep({
 
   useEffect(() => {
     if (!selectedProductId) {
-      setDiscounts([]);
+      setPlanDiscounts([]);
       return;
     }
     mockDataEngine
       .list<Discount>('addons-discounts')
-      .then((all) => setDiscounts(all.filter((d) => d.category === 'Discount' && d.planId === selectedProductId)));
+      .then((all) => setPlanDiscounts(all.filter((d) => d.category === 'Discount' && d.planId === selectedProductId)));
   }, [selectedProductId]);
 
   const selectedPlan = plans.find((p) => p.productId === selectedProductId);
@@ -289,6 +341,19 @@ export function PostpaidPlanAddonsStep({
   const isOffersPlan = selectedPlan ? planGroupOf(selectedPlan) === 'specials' : false;
   const preBundled = Boolean(selectedPlan?.preBundledOffer) || isOffersPlan;
   const selectedDiscount = discounts.find((d) => d.addonDiscountId === discountId);
+  // Accepted benefit -> its discount on the chosen plan, applied once (the agent
+  // can still change it afterwards). Retired: ADO-7114..7117 (demo catalogue entries, see their _note).
+  const benefitType = customerBenefit === 'mada' ? 'MADA Discount' : customerBenefit === 'b2b2c' ? 'B2B2C Discount' : customerBenefit === 'retired' ? 'Retired Discount' : undefined;
+  const benefitAppliedFor = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!benefitType || discountId || !selectedProductId || benefitAppliedFor.current === selectedProductId) return;
+    const match = discounts.find((d) => d.addonType === benefitType);
+    if (match) {
+      benefitAppliedFor.current = selectedProductId; // once per plan: choosing "No discount" afterwards sticks
+      onSelectDiscount(match.addonDiscountId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [benefitType, selectedProductId, discounts, discountId]);
   const requiresSupportingId = selectedDiscount ? SUPPORTING_ID_DISCOUNT_TYPES.has(selectedDiscount.addonType) : false;
 
   // Switching to a discount that doesn't need one (or to no discount at all)
@@ -379,7 +444,7 @@ export function PostpaidPlanAddonsStep({
             closest-match suggestions the agent can click straight into a
             selection without switching tabs at all. */}
         <div ref={searchRef} className="relative">
-          <Input
+          <SearchField
             aria-label="Search plans by name or price"
             role="combobox"
             aria-expanded={searchOpen}
@@ -469,132 +534,97 @@ export function PostpaidPlanAddonsStep({
                 {groupPlans(activeTab as PlanGroupKey).length === 0 ? (
                   <p className="text-muted text-[length:var(--fs-body)]">No plans match that search.</p>
                 ) : (
-                  groupPlans(activeTab as PlanGroupKey).map((p) => {
-                    const selected = selectedProductId === p.productId;
-                    return (
-                      // The row is a DIV wrapping a label and a button, not one big
-                      // label. A <button> inside a <label> is still part of that
-                      // label's activation target, so the details chevron would have
-                      // selected the plan on its way to opening the drawer - the
-                      // agent asks "what is in this?" and the app answers by
-                      // choosing it for them. Splitting them keeps the whole card
-                      // clickable for selection while the chevron does only its own
-                      // job.
-                      <div
-                        key={p.productId}
-                        className={`flex items-start gap-3 rounded-[var(--radius-card)] border p-4 ${
-                          selected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
-                        }`}
-                      >
-                        <label className="flex items-start gap-3 flex-1 min-w-0 cursor-pointer">
-                          <Radio
-                            name="postpaid-plan"
-                            className="mt-1"
-                            checked={selected}
-                            onChange={() => onSelectProduct(p.productId)}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="flex items-center gap-2 min-w-0">
-                                {/* font-bold, not font-medium: the plan name is the
-                                    thing being chosen between, so it should carry the
-                                    same weight as the price beside it rather than
-                                    read lighter than it. */}
-                                <span className="text-fg font-bold truncate">{p.name}</span>
-                                {p.popular && <Badge variant="accent">POPULAR</Badge>}
-                              </span>
-                              <span className="text-fg font-semibold shrink-0">QAR {p.mrcQAR}/mo</span>
-                            </div>
-                            {/* Allowances and benefits side by side (2026-09-28
-                                request) - one column each rather than stacked, so
-                                "what it includes" and "what's free with it" read as
-                                two halves of the same fact instead of one under the
-                                other. Single column when there are no benefits to
-                                show beside it: the table still gets the full width
-                                rather than leaving an empty second column. */}
-                            <div
-                              className={`mt-2 grid gap-3 ${
-                                p.benefits && p.benefits.length > 0 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'
-                              }`}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {groupPlans(activeTab as PlanGroupKey).map((p) => {
+                      const selected = selectedProductId === p.productId;
+                      // Card per plan: name, price, bill limit, one Select button.
+                      // The full allowance table, benefits and contract term live in
+                      // the details drawer ("View details", which stops propagation
+                      // so opening it never selects the plan), so the cards stay
+                      // comparable at a glance.
+                      // The limit shown is what the Bill Limit editor will start at
+                      // for this plan (its MRC), or the agent's own figure once this
+                      // plan is the selected one.
+                      // Whole card selects; clicking it again unselects.
+                      const toggle = () => (selected && onDeselectProduct ? onDeselectProduct() : onSelectProduct(p.productId));
+                      const shownLimit = selected ? billLimit ?? p.mrcQAR : p.mrcQAR;
+                      return (
+                        <div
+                          key={p.productId}
+                          role="button"
+                          tabIndex={0}
+                          aria-pressed={selected}
+                          onClick={toggle}
+                          onKeyDown={(e) => {
+                            if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                              e.preventDefault();
+                              toggle();
+                            }
+                          }}
+                          className={`relative flex flex-col gap-3 rounded-[var(--radius-card)] border p-5 cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+                            selected ? CARD_SELECTED : p.popular ? CARD_HIGHLIGHT : CARD_IDLE
+                          }`}
+                        >
+                          {/* Same card as Recommended offers: the flag (hidden, not removed, when absent so
+                              titles line up) on the left, the service on the right. */}
+                          <div className="flex items-center justify-between gap-3">
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-accent text-white px-2.5 py-0.5 text-[length:var(--fs-tag)] font-medium ${p.popular ? '' : 'invisible'}`}
+                              aria-hidden={!p.popular}
                             >
-                              {/* Allowances as a table, per the 2026-09-26 asset: a
-                                  header row of labels over a row of values, with the
-                                  columns ruled apart. A real table makes it navigable:
-                                  each value announces with its column header rather
-                                  than as a bare "30 GB". */}
-                              <div className="rounded-[var(--radius-sm)] border border-border-soft overflow-hidden self-start">
-                                <table className="w-full text-[length:var(--fs-caption)] table-fixed">
-                                  <thead>
-                                    <tr className="border-b border-border-soft">
-                                      {['Data', 'Voice', 'Speed'].map((h, i) => (
-                                        <th
-                                          key={h}
-                                          scope="col"
-                                          className={`text-muted uppercase tracking-wide font-normal text-left px-3 py-1.5 ${
-                                            i > 0 ? 'border-l border-border-soft' : ''
-                                          }`}
-                                        >
-                                          {h}
-                                        </th>
-                                      ))}
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    <tr>
-                                      {[
-                                        p.dataAllowanceGB ? `${p.dataAllowanceGB} GB` : 'Unlimited',
-                                        p.minutesAllowance,
-                                        p.speedTier,
-                                      ].map((v, i) => (
-                                        <td
-                                          key={v}
-                                          className={`text-fg px-3 py-1.5 ${i > 0 ? 'border-l border-border-soft' : ''}`}
-                                        >
-                                          {v}
-                                        </td>
-                                      ))}
-                                    </tr>
-                                  </tbody>
-                                </table>
-                              </div>
-                              {/* Free bundles/benefits (2026-09-28 request) - only
-                                  rendered when the catalogue actually carries any, so a
-                                  plan with none does not show an empty second column. */}
-                              {p.benefits && p.benefits.length > 0 && (
-                                <ul className="space-y-0.5">
-                                  {p.benefits.map((b) => (
-                                    <li key={b} className="flex items-start gap-1.5 text-[length:var(--fs-caption)] text-fg-2">
-                                      <Icon path={CHECK} className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
-                                      {b}
-                                    </li>
-                                  ))}
-                                </ul>
-                              )}
-                            </div>
+                              <Icon path={STAR_ICON} className="w-3 h-3" />
+                              Popular
+                            </span>
+                            <span className={`rounded-[var(--radius-pill)] px-2.5 py-0.5 text-[length:var(--fs-tag)] font-medium ${POSTPAID_PILL}`}>Postpaid</span>
+                          </div>
+                          <OfferArtwork />
+                          <div className="flex-1 space-y-2">
+                            <p className="text-fg font-bold text-[length:var(--fs-h5)] leading-snug pr-20">{p.name}</p>
+                            <p className="text-accent pt-1">
+                              <span className="text-[length:var(--fs-body)] font-semibold">QAR </span>
+                              <span className="text-[length:var(--fs-h3)] font-bold">{p.mrcQAR}</span>
+                              <span className="text-fg-2 text-[length:var(--fs-caption)]"> /month</span>
+                            </p>
+                            <ul className="space-y-1.5">
+                              {[...planFeatureRows(p), { icon: ICON_CARD, text: `Bill limit: QR ${shownLimit}` }].map((f) => (
+                                <li key={f.text} className="flex items-center gap-2 text-fg-2 text-[length:var(--fs-caption)]">
+                                  <Icon path={f.icon} className="w-4 h-4 shrink-0 text-accent" />
+                                  {f.text}
+                                </li>
+                              ))}
+                            </ul>
                             {/* Pre-bundled eligible offer (2026-09-28) - stated on the
                                 card itself, since choosing one skips straight to
                                 Number Selection with no further chance to review
                                 add-ons/discount for THIS plan. */}
                             {p.preBundledOffer && (
-                              <p className="mt-2 text-[length:var(--fs-caption)] text-accent">
+                              <p className="text-[length:var(--fs-caption)] text-accent">
                                 Pre-bundled offer - selecting this skips add-ons/discount and goes straight to Number Selection.
                               </p>
                             )}
                           </div>
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setDetailPlan(p)}
-                          aria-label={`View details for ${p.name}`}
-                          className="shrink-0 -mr-1 mt-0.5 p-1.5 rounded-[var(--radius-button)] text-muted
-                            hover:text-fg hover:bg-surface
-                            focus:outline-none focus-visible:shadow-[var(--field-focus-ring)]"
-                        >
-                          <Icon path={CHEVRON_RIGHT} className="w-5 h-5" />
-                        </button>
-                      </div>
-                    );
-                  })
+                          <div className="flex items-center justify-between gap-3 pt-1">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDetailPlan(p);
+                              }}
+                              aria-label={`View details for ${p.name}`}
+                              className="inline-flex items-center gap-1 rounded-[var(--radius-button)] text-fg hover:text-accent focus:outline-none focus-visible:shadow-[var(--focus-ring)] text-[length:var(--fs-caption)] font-medium"
+                            >
+                              View details
+                              <Icon path="M9 18l6-6-6-6" className="w-4 h-4" />
+                            </button>
+                            {/* Presentational: the card is the control, so this must not take focus or fire a second toggle. */}
+                            <Button variant={selected ? 'primary-rect' : 'ghost-rect'} tabIndex={-1} aria-hidden className="pointer-events-none">
+                              {selected ? 'Selected' : 'Select plan'}
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             )}
@@ -611,7 +641,12 @@ export function PostpaidPlanAddonsStep({
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <AddonsPicker selectedIds={addonIds} onChange={onAddonsChange} hideHeader />
+                  <AddonsPicker
+                    selectedIds={addonIds}
+                    onChange={onAddonsChange}
+                    hideHeader
+                    eligibilityContext={{ planId: selectedProductId, ...customerContext }}
+                  />
                   {/* Bill Limit, re-added 2026-09-28 as an editable add-on
                       defaulted from the selected plan's MRC - lives in this
                       same tab since it is scoped to the figure it defaults
@@ -647,41 +682,28 @@ export function PostpaidPlanAddonsStep({
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <label
-                    className={`flex items-center justify-between gap-2 rounded-[var(--radius-card)] border p-3 cursor-pointer ${
-                      !discountId ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
-                    }`}
-                  >
-                    <span className="flex items-center gap-3">
-                      <Radio name="postpaid-discount" checked={!discountId} onChange={() => onSelectDiscount(undefined)} />
-                      <span>
-                        <span className="text-fg">No discount</span>
-                        <span className="block text-[length:var(--fs-caption)] text-muted">Continue without a discount</span>
-                      </span>
-                    </span>
-                    <span className="text-muted">-</span>
-                  </label>
-                  {discounts.map((d) => (
-                    <label
-                      key={d.addonDiscountId}
-                      className={`flex items-center justify-between gap-2 rounded-[var(--radius-card)] border p-3 cursor-pointer ${
-                        discountId === d.addonDiscountId ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
-                      }`}
-                    >
-                      <span className="flex items-center gap-3">
-                        <Radio
-                          name="postpaid-discount"
-                          checked={discountId === d.addonDiscountId}
-                          onChange={() => onSelectDiscount(d.addonDiscountId)}
-                        />
-                        <span>
-                          <span className="text-fg">{d.name}</span>
-                          <span className="block text-[length:var(--fs-caption)] text-muted">{d.description}</span>
-                        </span>
-                      </span>
-                      <span className="text-success font-medium shrink-0">{Math.round(d.price * 100)}%</span>
-                    </label>
-                  ))}
+                  {/* Same card standard as the plan and add-on cards (shared idle / selected states, texture, tick).
+                      Single choice: "No discount" is selected whenever no discount is, and clicking a selected
+                      discount again clears it back to "No discount" - the same outcomes the radios gave. */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <DiscountCard
+                      title="No discount"
+                      description="Continue without a discount"
+                      value="-"
+                      selected={!discountId}
+                      onToggle={() => onSelectDiscount(undefined)}
+                    />
+                    {discounts.map((d) => (
+                      <DiscountCard
+                        key={d.addonDiscountId}
+                        title={d.name}
+                        description={d.description}
+                        value={`${Math.round(d.price * 100)}%`}
+                        selected={discountId === d.addonDiscountId}
+                        onToggle={() => onSelectDiscount(discountId === d.addonDiscountId ? undefined : d.addonDiscountId)}
+                      />
+                    ))}
+                  </div>
                   {discounts.length === 0 && (
                     <p className="text-muted text-[length:var(--fs-caption)]">No discounts configured for this plan.</p>
                   )}
@@ -708,7 +730,7 @@ export function PostpaidPlanAddonsStep({
                       <div>
                         <p className="text-[length:var(--fs-label)] text-fg-2 mb-1">Proof document</p>
                         {discountProofDocument ? (
-                          <div className="flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-border-soft bg-bg px-3 py-2">
+                          <div className="flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg px-3 py-2">
                             <span className="min-w-0 text-[length:var(--fs-body)] text-fg truncate">
                               {discountProofDocument.fileName}
                               <span className="text-muted"> · {formatDocSize(discountProofDocument.sizeBytes)}</span>
@@ -745,43 +767,12 @@ export function PostpaidPlanAddonsStep({
         )}
       </div>
 
-      {/* "Clearly summarise the selected plan, benefits, and add-ons"
-          (2026-09-28) - descriptive, not financial: the Monthly summary table
-          just below already covers the money side (plan/discount/add-ons/VAT/
-          total); this covers WHAT was chosen rather than what it costs, so an
-          agent reading the two together gets the full picture without either
-          one trying to do the other's job. */}
-      {selectedPlan && (
-        <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4 space-y-3">
-          <h4 className="text-fg font-medium text-[length:var(--fs-body)]">What's included</h4>
-          <div>
-            <p className="text-fg font-semibold">{selectedPlan.name}</p>
-            {selectedPlan.benefits && selectedPlan.benefits.length > 0 && (
-              <ul className="mt-1 space-y-0.5">
-                {selectedPlan.benefits.map((b) => (
-                  <li key={b} className="flex items-start gap-1.5 text-[length:var(--fs-caption)] text-fg-2">
-                    <Icon path={CHECK} className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
-                    {b}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div>
-            <p className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Add-ons</p>
-            <p className="text-fg text-[length:var(--fs-body)]">
-              {selectedAddons.length > 0 ? selectedAddons.map((a) => a.name).join(', ') : 'None selected - optional'}
-            </p>
-          </div>
-        </div>
-      )}
-
       {selectedPlan && charges && (
         // Left accent bar (2026-09-28 mockup) - the one box on this step that
         // is a running total rather than a choice to make, so it reads as a
         // callout the same way Checkout's own "Due today" panel does, not as
         // a fourth option card.
-        <div className="rounded-[var(--radius-card)] border border-border-soft border-l-4 border-l-accent bg-bg p-4 flex items-start justify-between flex-wrap gap-4">
+        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] border-l-4 border-l-accent bg-bg p-4 flex items-start justify-between flex-wrap gap-4">
           {/* Left: an itemised breakdown under a label, per the 2026-09-26
               asset. Was one run-on caption line - "Live Cart Total · Base plan
               QAR 500/mo · Loyalty Discount (-15%) · Add-ons QAR 50/mo" - where

@@ -85,10 +85,10 @@ export function LeadDetailsView() {
   };
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-8 w-full">
       <div className="flex flex-col lg:flex-row items-start gap-6">
         <div className="flex-1 min-w-0 space-y-6">
-          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
             <div className="flex items-center gap-3 mb-1">
               <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">Lead {lead.leadId}</h1>
               <Badge variant={lead.status === 'Rejected' ? 'danger' : 'outlined-red'}>{lead.status}</Badge>
@@ -96,7 +96,7 @@ export function LeadDetailsView() {
             <p className="text-fg-2">{lead.serviceNeeded} - owned by {lead.ownerId}</p>
           </div>
 
-          <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)] rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+          <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)] rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
             <div>
               <dt className="text-[length:var(--fs-caption)] text-muted">Sub Status</dt>
               <dd className="text-fg">{lead.subStatus ?? '-'}</dd>
@@ -121,7 +121,7 @@ export function LeadDetailsView() {
         </div>
 
         <div className="w-full lg:w-72 shrink-0 space-y-6">
-          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
             <h2 className="text-[length:var(--fs-body-lg)] text-fg font-medium mb-3">Actions</h2>
             <div className="flex flex-col gap-2">
               <Button
@@ -151,7 +151,7 @@ export function LeadDetailsView() {
             </div>
           </div>
 
-          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
             <h2 className="text-[length:var(--fs-body-lg)] text-fg font-medium mb-3">Overview</h2>
             <div className="space-y-3 text-[length:var(--fs-body)]">
               <div className="flex items-center justify-between gap-2">

@@ -12,7 +12,7 @@ import { useProfileChangeTicket } from '../../../engines/profileChangeTicket';
 import { useVerificationGate } from '../../../components/patterns/VerificationGate';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 
-interface AddressRecord {
+export interface AddressRecord {
   id: string;
   customerId: string;
   addressLine1?: string;
@@ -93,7 +93,7 @@ export function AddressSection({
   );
 }
 
-function AddressEditDrawer({
+export function AddressEditDrawer({
   address,
   customerId,
   readOnly,

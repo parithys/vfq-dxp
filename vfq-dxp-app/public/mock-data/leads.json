@@ -15,5 +15,55 @@
     "ownerId": "AGENT-HEMANTHKUMAR",
     "createdVia": "New Lead Mobile",
     "mobileNumber": "+97455590001"
+  },
+  {
+    "leadId": "LEAD-20301",
+    "serviceNeeded": "Home",
+    "status": "New",
+    "ownerId": "AGENT-VINODHINIR",
+    "createdVia": "Tele-sales call",
+    "mobileNumber": "+97455512001",
+    "comments": "Asked about GigaHome Fibre for a second address; call back after the weekend.",
+    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+  },
+  {
+    "leadId": "LEAD-20302",
+    "serviceNeeded": "MNP",
+    "status": "Callback Scheduled",
+    "ownerId": "AGENT-VINODHINIR",
+    "createdVia": "Tele-sales call",
+    "mobileNumber": "+97455512003",
+    "comments": "Considering porting a family line from another operator.",
+    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+  },
+  {
+    "leadId": "LEAD-20303",
+    "serviceNeeded": "Home",
+    "status": "Contacted",
+    "ownerId": "AGENT-VINODHINIR",
+    "createdVia": "Tele-sales call",
+    "mobileNumber": "+97455513001",
+    "comments": "Interested in a fibre upgrade; waiting on coverage check.",
+    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+  },
+  {
+    "leadId": "LEAD-20304",
+    "serviceNeeded": "Mobile",
+    "status": "New",
+    "ownerId": "AGENT-VINODHINIR",
+    "createdVia": "Tele-sales call",
+    "mobileNumber": "+97455513005",
+    "comments": "Wants a plan for a second SIM; sent offer details.",
+    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+  },
+  {
+    "leadId": "LEAD-20305",
+    "serviceNeeded": "Device",
+    "status": "Qualified",
+    "ownerId": "AGENT-VINODHINIR",
+    "createdVia": "Tele-sales call",
+    "mobileNumber": "+97455512004",
+    "comments": "Asked about a handset instalment plan.",
+    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
   }
 ]

@@ -15,6 +15,7 @@ function capitalize(value: unknown): string {
  * matching field anywhere in this corpus - left unmapped, renders "Not
  * available". */
 export const billingResolvers: Record<string, Resolver> = {
+  'Due Date': (data) => computeBillingSummary(data).latestBill?.dueDate as string | undefined,
   'Postpaid - Monthly Recurring Charge': (data) => {
     const { latestBill } = computeBillingSummary(data);
     return latestBill?.mrc !== undefined ? `${String(latestBill.mrc)} QAR` : undefined;

@@ -169,9 +169,11 @@ export function ToastContainer() {
             key={t.id}
             role={t.kind === 'error' ? 'alert' : 'status'}
             aria-live={t.kind === 'error' ? 'assertive' : 'polite'}
-            className={`pointer-events-auto w-full overflow-hidden rounded-[var(--radius-card)] bg-[var(--charcoal-panel)] shadow-raised ${
-              structured ? 'max-w-[60rem]' : 'max-w-[34rem]'
-            }`}
+            className={`pointer-events-auto w-full overflow-hidden rounded-[var(--radius-card)] shadow-raised ${
+              !structured && t.tinted
+                ? 'border border-success bg-[color-mix(in_oklab,var(--success),var(--bg)_88%)]'
+                : 'bg-[var(--charcoal-panel)]'
+            } ${structured ? 'max-w-[60rem]' : 'max-w-[34rem]'}`}
           >
             {structured ? (
               <>
@@ -302,19 +304,19 @@ export function ToastContainer() {
               <div className="flex items-start gap-2.5 px-3.5 py-3">
                 <span
                   className="mt-[0.3rem] w-2 h-2 rounded-full shrink-0"
-                  style={{ backgroundColor: dotColour[t.kind] }}
+                  style={{ backgroundColor: t.tinted ? 'var(--success)' : dotColour[t.kind] }}
                   aria-hidden="true"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-white font-medium text-[length:var(--fs-caption)] leading-snug">{t.message}</p>
+                  <p className={`font-medium text-[length:var(--fs-caption)] leading-snug ${t.tinted ? 'text-fg' : 'text-white'}`}>{t.message}</p>
                   {t.detail && (
-                    <p className="text-white/60 text-[length:var(--fs-caption)] leading-snug mt-0.5">{t.detail}</p>
+                    <p className={`text-[length:var(--fs-caption)] leading-snug mt-0.5 ${t.tinted ? 'text-fg-2' : 'text-white/60'}`}>{t.detail}</p>
                   )}
                 </div>
                 <button
                   onClick={() => dismissToast(t.id)}
                   aria-label="Dismiss notification"
-                  className="text-white/45 hover:text-white shrink-0"
+                  className={`shrink-0 ${t.tinted ? 'text-muted hover:text-fg' : 'text-white/45 hover:text-white'}`}
                 >
                   <Icon path={CLOSE_ICON} className="w-4 h-4" />
                 </button>

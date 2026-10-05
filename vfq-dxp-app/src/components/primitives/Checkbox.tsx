@@ -37,7 +37,7 @@ export function Checkbox({ className = '', ...rest }: CheckboxProps) {
         className="peer appearance-none m-0 w-[18px] h-[18px] rounded-[var(--radius-checkbox)] border border-[var(--field-border)] bg-bg cursor-pointer
           checked:bg-[var(--field-checkbox-selected)] checked:border-[var(--field-checkbox-selected)]
           disabled:cursor-not-allowed disabled:border-[var(--field-border-disabled)] disabled:bg-surface
-          focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]"
+          focus:outline-none focus-visible:border-[var(--field-focus-border)]! focus-visible:shadow-[var(--field-focus-ring)]"
         {...rest}
       />
       {/* Sized and positioned over the tile, never hit-testable - a click that

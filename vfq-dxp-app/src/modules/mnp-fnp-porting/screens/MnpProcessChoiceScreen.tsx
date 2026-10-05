@@ -32,7 +32,7 @@ export function MnpProcessChoiceScreen() {
   };
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-8 w-full">
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">MNP Port-In</h1>
       <p className="text-fg-2 mb-6">Choose the subscription type being ported in before starting the guided process.</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -40,7 +40,7 @@ export function MnpProcessChoiceScreen() {
           <button
             key={opt.type}
             onClick={() => choose(opt.type)}
-            className="text-left rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 hover:border-accent hover:shadow-raised transition-all"
+            className="text-left rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)] transition-all"
           >
             <div className="font-medium text-fg text-[length:var(--fs-body-lg)] mb-1">{opt.title}</div>
             <p className="text-fg-2 text-[length:var(--fs-body)]">{opt.description}</p>

@@ -11,6 +11,8 @@ export interface CustomerRecord {
   email?: string;
   phone?: string;
   preferredLanguage?: string;
+  /** Benefits the customer holds (retired | mada | b2b2c | loyalty | prepaid-welcome) - see customerBenefitEngine. */
+  benefitEligibility?: string[];
   blacklisted: boolean;
   /** Free-text reason, present in customers.json but previously untyped. */
   blacklistReason?: string;
@@ -80,11 +82,13 @@ export function accountHolderStatus(accounts: AccountRecord[]): 'Primary' | 'Sec
   return accounts.some((a) => !a.parentAccountId) ? 'Primary' : 'Secondary';
 }
 
-export type CustomerSearchField = 'mobile' | 'qid' | 'customerNumber' | 'accountNumber' | 'name' | 'email' | 'serviceId';
+export type CustomerSearchField = 'mobile' | 'qid' | 'customerNumber' | 'accountNumber' | 'name' | 'email' | 'serviceId' | 'idDocument';
 
 export interface CustomerSearchResult {
   customer: CustomerRecord;
   matchedOn: CustomerSearchField[];
+  /** Set when the query matched an identity document number (which can differ from the customer record's own `qid`). */
+  matchedDocumentNumber?: string;
 }
 
 // Universal lookup shared by Customer Search, Support's "create ticket for a
@@ -95,10 +99,11 @@ export interface CustomerSearchResult {
 export async function searchCustomers(query: string): Promise<CustomerSearchResult[]> {
   const q = query.trim().toLowerCase();
   if (!q) return [];
-  const [customers, accounts, installedAssets] = await Promise.all([
+  const [customers, accounts, installedAssets, identityDocs] = await Promise.all([
     mockDataEngine.list<CustomerRecord>('customers'),
     mockDataEngine.list<AccountRecord>('accounts'),
     mockDataEngine.list<{ accountId: string; serviceId?: string }>('installed-assets'),
+    mockDataEngine.list<{ customerId: string; documentNumber: string }>('identity-documents'),
   ]);
 
   const results: CustomerSearchResult[] = [];
@@ -107,8 +112,17 @@ export async function searchCustomers(query: string): Promise<CustomerSearchResu
     if (customer.phone?.toLowerCase().includes(q)) matched.push('mobile');
     if (customer.qid?.toLowerCase().includes(q)) matched.push('qid');
     if (customer.customerId.toLowerCase().includes(q)) matched.push('customerNumber');
-    if (customer.name?.toLowerCase().includes(q)) matched.push('name');
+    // Every typed word must appear in the full name, in any position: a
+    // multi-part name ("Ahmed Abdulla Hassan Al-Sulaiti") must still be found by
+    // "first + last" ("Ahmed Al-Sulaiti"), which a plain substring match misses.
+    const nameLower = customer.name?.toLowerCase() ?? '';
+    if (nameLower && q.split(/\s+/).filter(Boolean).every((w) => nameLower.includes(w))) matched.push('name');
     if (customer.email?.toLowerCase().includes(q)) matched.push('email');
+    // The ID an agent reads off a card is the identity DOCUMENT's number, which
+    // is what the ID lookup steps resolve on; the customer record's own `qid`
+    // can differ from it, so match the documents too.
+    const doc = identityDocs.find((d) => d.customerId === customer.customerId && d.documentNumber.toLowerCase().includes(q));
+    if (doc && !customer.qid?.toLowerCase().includes(q)) matched.push('idDocument');
 
     const customerAccounts = accounts.filter((a) => a.customerId === customer.customerId);
     if (customerAccounts.some((a) => a.accountId.toLowerCase().includes(q))) matched.push('accountNumber');
@@ -118,7 +132,7 @@ export async function searchCustomers(query: string): Promise<CustomerSearchResu
       matched.push('serviceId');
     }
 
-    if (matched.length > 0) results.push({ customer, matchedOn: matched });
+    if (matched.length > 0) results.push({ customer, matchedOn: matched, matchedDocumentNumber: matched.includes('idDocument') ? doc?.documentNumber : undefined });
   }
   return results;
 }
@@ -181,6 +195,14 @@ export interface Customer360Data {
    * appearing as partyA or partyB - Account Information's "Pending TON
    * requests" field. */
   tonCases: Record<string, unknown>[];
+  /** Last recharge and app login / adoption (digital-engagement.json, a DEMO seed), joined by customerId. */
+  digitalEngagement: Record<string, unknown>[];
+  /** About-to-bar, eligible discount, phone version, allowances (customer-overview-extras.json, a DEMO seed). */
+  overviewExtras: Record<string, unknown>[];
+  /** Per-customer demo rows for the Telesales Overview sections (customer-overview-demo.json), used where real records are missing. */
+  overviewDemo: Record<string, unknown>[];
+  /** Shared demo offer catalogue (telesales-demo-catalog.json). */
+  demoCatalog: Record<string, unknown>[];
 }
 
 // Read-side aggregation - no unified "Customer 360" entity exists in the mock
@@ -221,6 +243,10 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     addonsDiscounts,
     authorisedContacts,
     tonCases,
+    digitalEngagement,
+    overviewExtras,
+    overviewDemo,
+    demoCatalog,
   ] = await Promise.all([
     mockDataEngine.list<CustomerRecord>('customers'),
     mockDataEngine.list<AccountRecord>('accounts'),
@@ -252,6 +278,10 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     mockDataEngine.list<Record<string, unknown>>('addons-discounts'),
     mockDataEngine.list<Record<string, unknown>>('authorised-contacts'),
     mockDataEngine.list<Record<string, unknown>>('ton-cases'),
+    mockDataEngine.list<Record<string, unknown>>('digital-engagement'),
+    mockDataEngine.list<Record<string, unknown>>('customer-overview-extras'),
+    mockDataEngine.list<Record<string, unknown>>('customer-overview-demo'),
+    mockDataEngine.list<Record<string, unknown>>('telesales-demo-catalog'),
   ]);
 
   const customer = customers.find((c) => c.customerId === customerId);
@@ -304,6 +334,10 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
       const partyB = t.partyB as { customerId?: string } | undefined;
       return partyA?.customerId === customerId || partyB?.customerId === customerId;
     }),
+    digitalEngagement: digitalEngagement.filter((d) => d.customerId === customerId),
+    overviewExtras: overviewExtras.filter((d) => d.customerId === customerId),
+    overviewDemo: overviewDemo.filter((d) => d.customerId === customerId),
+    demoCatalog,
   };
 }
 
@@ -383,5 +417,6 @@ export function toActiveCustomerSummary(customer: CustomerRecord) {
     phone: customer.phone,
     segment: customer.segment,
     blacklisted: customer.blacklisted,
+    benefitEligibility: customer.benefitEligibility ?? [],
   };
 }

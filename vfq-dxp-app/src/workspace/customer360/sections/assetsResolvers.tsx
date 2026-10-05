@@ -1,5 +1,6 @@
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
+import { DataTable } from '../../../components/primitives/DataTable';
 
 /**
  * customer360-fields.json's Assets topic is per-line (MSISDN Status, Plan
@@ -26,6 +27,7 @@ export function buildAssetsFieldResolver(service: CustomerService | undefined, d
   const balance = data.inPlatformBalances[0];
   const usage = data.serviceUsage[0];
   const doi = data.deviceInstallments[0];
+  const digital = data.digitalEngagement[0];
 
   return (details: string): React.ReactNode | undefined => {
     switch (details) {
@@ -58,6 +60,8 @@ export function buildAssetsFieldResolver(service: CustomerService | undefined, d
         return usage
           ? `Data ${String(usage.currentDataUsageGB ?? '-')} GB · Voice ${String(usage.currentVoiceUsageMinutes ?? '-')} min this period`
           : undefined;
+      case '10 Recent Usages (Data, Calls, Text, OOB)':
+        return data.callDetailRecords.length > 0 ? `${Math.min(10, data.callDetailRecords.length)} most recent` : undefined;
       case 'DOI Handset Type':
         return doi?.deviceName as string | undefined;
       case 'DOI Price':
@@ -70,8 +74,68 @@ export function buildAssetsFieldResolver(service: CustomerService | undefined, d
       }
       case 'DOI Tennure':
         return doi?.installmentMonths !== undefined ? `${String(doi.installmentMonths)} months` : undefined;
+      case 'Last Recharge Amount':
+        return digital?.lastRechargeAmountQar != null ? `${String(digital.lastRechargeAmountQar)} QAR on ${String(digital.lastRechargeAt ?? '').slice(0, 10)}` : undefined;
+      case 'Last Recharge Type':
+        return digital?.lastRechargeType as string | undefined;
+      case 'App Recent/Last Login (Date & Time)':
+        return digital?.appLastLoginAt as string | undefined;
+      case 'App Active User (Y/N)':
+        return digital ? (digital.appActiveUser ? 'Yes' : 'No') : undefined;
+      case 'App Digital Adoption %':
+        return digital?.appDigitalAdoptionPct != null ? `${String(digital.appDigitalAdoptionPct)}%` : undefined;
+      case 'App Version':
+        return digital?.appVersion as string | undefined;
       default:
         return undefined;
     }
+  };
+}
+
+/** Detail views for Assets fields that are real-time tiles with a table behind them (opened inline on click). */
+export function assetsRichFields(data: Customer360Data): Record<string, React.ReactNode> {
+  return {
+    '10 Recent Usages (Data, Calls, Text, OOB)': (
+      <DataTable
+        rows={[...data.callDetailRecords].sort((a, b) => String(b.callDate ?? '').localeCompare(String(a.callDate ?? ''))).slice(0, 10)}
+        rowKey={(r) => String(r.cdrId)}
+        emptyMessage="No recent usage on file for this customer."
+        columns={[
+          { key: 'callDate', header: 'Date' },
+          { key: 'callType', header: 'Type' },
+          { key: 'destination', header: 'Destination' },
+          { key: 'durationSeconds', header: 'Duration (s)' },
+          { key: 'chargeQAR', header: 'Charge (QAR)' },
+        ]}
+      />
+    ),
+    'Current Balance (Data,Voice, Text, Primary Balance)': (
+      <DataTable
+        rows={data.inPlatformBalances}
+        rowKey={(r) => String(r.balanceId)}
+        emptyMessage="No balance on file."
+        columns={[
+          { key: 'dataBalanceGB', header: 'Data (GB)' },
+          { key: 'voiceBalanceMinutes', header: 'Voice (min)' },
+          { key: 'smsBalanceCount', header: 'SMS' },
+          { key: 'mainBalanceQAR', header: 'Main (QAR)' },
+          { key: 'asOf', header: 'As of' },
+        ]}
+      />
+    ),
+    'Usage Behaviour (High Data, High Roaming, High Local Call, High International Calls)': (
+      <DataTable
+        rows={data.serviceUsage}
+        rowKey={(r) => String(r.serviceUsageId)}
+        emptyMessage="No usage on file."
+        columns={[
+          { key: 'period', header: 'Period' },
+          { key: 'currentDataUsageGB', header: 'Data used (GB)' },
+          { key: 'availableDataBalanceGB', header: 'Data left (GB)' },
+          { key: 'currentVoiceUsageMinutes', header: 'Voice (min)' },
+          { key: 'currentSpendQAR', header: 'Spend (QAR)' },
+        ]}
+      />
+    ),
   };
 }

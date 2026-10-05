@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Input } from '../primitives/Input';
+import { Select } from '../primitives/Select';
 import { Button } from '../primitives/Button';
 import { Icon } from '../primitives/Icon';
 
@@ -18,6 +19,14 @@ export interface AdditionalDocument {
 interface AdditionalDocumentsUploadProps {
   documents: AdditionalDocument[];
   onChange: (documents: AdditionalDocument[]) => void;
+  /** When given, the label is picked from this list of values instead of typed. */
+  labelOptions?: string[];
+  /** Overrides the default 10-document cap. */
+  maxDocuments?: number;
+  /** White card instead of the grey surface. */
+  whiteBackground?: boolean;
+  /** Called with true while a document type is chosen but its document has not been uploaded yet. */
+  onPendingChange?: (pending: boolean) => void;
 }
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -41,17 +50,23 @@ function formatSize(bytes: number): string {
 // CafDocumentUpload's own interaction shape (label chosen before the file,
 // hidden native input driven by a Button) so the two feel like the same
 // control despite the label being free text here.
-export function AdditionalDocumentsUpload({ documents, onChange }: AdditionalDocumentsUploadProps) {
+export function AdditionalDocumentsUpload({ documents, onChange, labelOptions, maxDocuments = MAX_DOCUMENTS, whiteBackground = false, onPendingChange }: AdditionalDocumentsUploadProps) {
   const [label, setLabel] = useState('');
+  // A type picked with no file yet is an unfinished upload: the caller blocks Continue until it is uploaded.
+  useEffect(() => {
+    onPendingChange?.(Boolean(label.trim()));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [label]);
+  useEffect(() => () => onPendingChange?.(false), []);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const atLimit = documents.length >= MAX_DOCUMENTS;
+  const atLimit = documents.length >= maxDocuments;
 
   const handleFile = (file: File | undefined) => {
     if (!file) return;
     const trimmed = label.trim();
     if (!trimmed) {
-      setError('Enter a label for this document before uploading.');
+      setError(labelOptions ? 'Select a document type before uploading.' : 'Enter a label for this document before uploading.');
       return;
     }
     if (file.size > MAX_FILE_BYTES) {
@@ -65,16 +80,16 @@ export function AdditionalDocumentsUpload({ documents, onChange }: AdditionalDoc
   };
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4 space-y-3">
+    <div className={`rounded-[var(--radius-card)] border border-[var(--field-card-border)] ${whiteBackground ? 'bg-bg' : 'bg-surface'} p-4 space-y-3`}>
       <div>
         <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Additional documents</h4>
         <p className="text-muted text-[length:var(--fs-caption)]">
-          Optional - label and attach anything else this order needs. No signature required. Up to {MAX_DOCUMENTS} files, 5 MB each.
+          Optional - label and attach anything else this order needs. No signature required. Up to {maxDocuments} files, 5 MB each.
         </p>
       </div>
 
       {documents.length > 0 && (
-        <ul className="divide-y divide-border-soft rounded-[var(--radius-card)] border border-border-soft bg-bg">
+        <ul className="divide-y divide-border-soft rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
           {documents.map((doc) => (
             <li key={doc.id} className="flex items-center gap-3 px-3 py-2">
               <Icon path={DOC} className="w-4 h-4 text-muted shrink-0" />
@@ -100,27 +115,44 @@ export function AdditionalDocumentsUpload({ documents, onChange }: AdditionalDoc
 
       {atLimit ? (
         <p className="text-muted text-[length:var(--fs-caption)]">
-          Maximum of {MAX_DOCUMENTS} documents reached. Remove one to upload another.
+          Maximum of {maxDocuments} documents reached. Remove one to upload another.
         </p>
       ) : (
         <div className="flex items-end gap-3">
           <div className="flex-1 min-w-0">
-            <Input
-              label="Document label"
-              placeholder="e.g. Employer Letter"
-              value={label}
-              onChange={(e) => {
-                setLabel(e.target.value);
-                setError(null);
-              }}
-            />
+            {labelOptions ? (
+              <Select
+                label="Document Type"
+                // "Choose document type" is the default first option (no type chosen).
+                // A type already uploaded is not offered again.
+                options={[
+                  { value: '', label: 'Choose document type' },
+                  ...labelOptions.filter((o) => !documents.some((d) => d.label === o)).map((o) => ({ value: o, label: o })),
+                ]}
+                value={label}
+                onChange={(e) => {
+                  setLabel(e.target.value);
+                  setError(null);
+                }}
+              />
+            ) : (
+              <Input
+                label="Document label"
+                placeholder="e.g. Employer Letter"
+                value={label}
+                onChange={(e) => {
+                  setLabel(e.target.value);
+                  setError(null);
+                }}
+              />
+            )}
           </div>
           <input ref={fileRef} type="file" accept={ACCEPTED} className="sr-only" onChange={(e) => handleFile(e.target.files?.[0])} />
           <Button
             variant="ghost-rect"
             onClick={() => fileRef.current?.click()}
             disabled={!label.trim()}
-            title={!label.trim() ? 'Enter a label first' : undefined}
+            title={!label.trim() ? (labelOptions ? 'Select a document type first' : 'Enter a label first') : undefined}
           >
             Browse…
           </Button>

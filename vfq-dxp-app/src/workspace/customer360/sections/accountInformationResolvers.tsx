@@ -27,6 +27,13 @@ function last(n: number, rows: Record<string, unknown>[], dateKey: string) {
   return [...rows].sort((a, b) => String(b[dateKey] ?? '').localeCompare(String(a[dateKey] ?? ''))).slice(0, n);
 }
 
+/** Open tickets already past their SLA due date - shared by the Overdue TT field and the profile header. */
+export function overdueTicketCount(data: Customer360Data): number {
+  return data.tickets.filter(
+    (t) => !CLOSED_TICKET_STATUSES.has(String(t.status)) && t.slaDueAt && new Date(String(t.slaDueAt)) < SESSION_TODAY
+  ).length;
+}
+
 /** customer360-fields.json's Account Information topic, resolved against
  * real Customer 360 data. Keys are the field's exact `details` string from
  * the source JSON. */
@@ -50,11 +57,22 @@ export const accountInformationResolvers: Record<string, Resolver> = {
     data.billingProfiles[0]?.billingContactEmail as string | undefined,
   'Current Dunning Stage': ({ data }) => data.billingProfiles[0]?.collectionStage as string | undefined,
   'Overdue TT': ({ data }) => {
-    const overdue = data.tickets.filter(
-      (t) => !CLOSED_TICKET_STATUSES.has(String(t.status)) && t.slaDueAt && new Date(String(t.slaDueAt)) < SESSION_TODAY
-    );
-    return overdue.length > 0 ? `${overdue.length} overdue (past SLA)` : '0 overdue';
+    const overdue = overdueTicketCount(data);
+    return overdue > 0 ? `${overdue} overdue (past SLA)` : '0 overdue';
   },
+  'Special Management': ({ data }) => (data.accounts[0] as unknown as { specialManagement?: string } | undefined)?.specialManagement,
+  // Count summaries for the fields whose detail is a table (shown on the tile;
+  // the table itself opens inline on click - see TopicFieldsSection).
+  'All Orders': ({ data }) => (data.orders.length > 0 ? `${data.orders.length} order${data.orders.length === 1 ? '' : 's'}` : undefined),
+  'Last 5 Orders': ({ data }) => (data.orders.length > 0 ? `Latest: ${last(1, data.orders, 'orderId')[0]?.orderId as string} (${last(1, data.orders, 'orderId')[0]?.status as string})` : undefined),
+  'All Trouble Tickets': ({ data }) => `${data.tickets.length} ticket${data.tickets.length === 1 ? '' : 's'}`,
+  'All Billing Profiles': ({ data }) => (data.billingProfiles.length > 0 ? `${data.billingProfiles.length} profile${data.billingProfiles.length === 1 ? '' : 's'}` : undefined),
+  'Installed Assets': ({ data }) => (data.installedAssets.length > 0 ? `${data.installedAssets.length} asset${data.installedAssets.length === 1 ? '' : 's'}` : undefined),
+  'Contact Hierarchy': ({ data }) => (data.contacts.length > 0 ? `${data.contacts.length} contact${data.contacts.length === 1 ? '' : 's'}` : undefined),
+  'Pending TON requests': ({ data }) => `${data.tonCases.filter((t) => !TON_TERMINAL_STATUSES.has(String(t.status))).length} pending`,
+  'Pending Adjustments': ({ data }) => `${data.adjustments.filter((a) => !ADJUSTMENT_TERMINAL_STATUSES.has(String(a.status))).length} pending`,
+  'Pending Sim swap': ({ data }) => `${data.simSwapOrders.filter((s) => String(s.status).includes('Pending')).length} pending`,
+  'Actiivity (last 5)': ({ data }) => (data.activities.length > 0 ? `${Math.min(5, data.activities.length)} most recent` : undefined),
   'Credit Limit': ({ data }) => {
     const cl = data.creditLimits[0];
     if (!cl) return undefined;
@@ -69,16 +87,19 @@ export const accountInformationResolvers: Record<string, Resolver> = {
 export function accountInformationRichFields({
   data,
   onTicketCreated,
+  expandAll = false,
 }: {
   data: Customer360Data;
   onTicketCreated: (ticket: Record<string, unknown>) => void;
+  /** Show nested detail open, with no expand / collapse controls. */
+  expandAll?: boolean;
 }): Record<string, ReactNode> {
   const pendingAdjustments = data.adjustments.filter((a) => !ADJUSTMENT_TERMINAL_STATUSES.has(String(a.status)));
   const pendingSimSwaps = data.simSwapOrders.filter((s) => String(s.status).includes('Pending'));
   const pendingTon = data.tonCases.filter((t) => !TON_TERMINAL_STATUSES.has(String(t.status)));
 
   return {
-    'Account Hierarchy': <AccountHierarchySection data={data} />,
+    'Account Hierarchy': <AccountHierarchySection data={data} expandAll={expandAll} />,
     'Contact Hierarchy': (
       <DataTable
         rows={data.contacts}
@@ -86,6 +107,7 @@ export function accountInformationRichFields({
         emptyMessage="No contacts on file for this customer. (No hierarchy relationship data exists in this corpus - contacts are flat records, not a tree.)"
         columns={[
           { key: 'firstName', header: 'First Name' },
+          { key: 'middleName', header: 'Middle Name' },
           { key: 'lastName', header: 'Last Name' },
           { key: 'idType', header: 'ID Type' },
         ]}

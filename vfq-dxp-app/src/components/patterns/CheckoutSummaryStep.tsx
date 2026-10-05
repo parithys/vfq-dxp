@@ -7,8 +7,8 @@ import {
   VAT_RATE,
   HRN_ADVANCE_QAR,
   FREE_NUMBER_PRICE_CEILING_QAR,
-  STAR_NUMBER_ENTITLEMENT_MULTIPLIER,
   starNumberOverageQar,
+  starEntitlementQar as planStarEntitlementQar,
 } from '../../engines/postpaidPricing';
 import { Button } from '../primitives/Button';
 import type { EligibilityResult } from '../domain/EligibilityGateStep';
@@ -18,6 +18,8 @@ interface Product {
   productId: string;
   name: string;
   mrcQAR: number;
+  /** The plan's own Star Number entitlement limit, where it defines one - see starEntitlementQar. */
+  starNumberEntitlementQar?: number;
   /** Plan lock-in, straight off the catalogue row. */
   commitmentMonths?: number;
   /** Add-on data allowance, where the catalogue carries one (2026-09-28) -
@@ -59,6 +61,54 @@ export interface TncLegalFacts {
   discountName?: string;
   discountDurationMonths?: number | null;
   hrnAdvanceQar: number;
+}
+
+export interface SummaryTable {
+  /** Red heading row; omit for the first, untitled table. */
+  title?: string;
+  /** Bold row labels (the summary table) vs plain (Due today / Bill Explainer). */
+  boldLabels?: boolean;
+  rows: { label?: string; value: string; detail?: string; boldLabel?: boolean; boldValue?: boolean }[];
+}
+
+/** The bordered two-column tables shared by Checkout and the CAF read-back. */
+export function SummaryTables({ tables }: { tables: SummaryTable[] }) {
+  const cell = 'border border-border-soft px-3 py-2 align-top';
+  return (
+    // Two columns on wide screens, stacked on narrow ones. With three or more tables the first sits
+    // in the left column and the rest stack in the right one (Due today, then the bill explainer).
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-start">
+      {tables.map((t, ti) => (
+        <table
+          key={ti}
+          className={`w-full border-collapse text-[length:var(--fs-body)] text-fg ${tables.length > 2 ? (ti === 0 ? 'lg:col-start-1 lg:row-span-2' : 'lg:col-start-2') : ''}`}
+        >
+          {t.title && (
+            <thead>
+              <tr>
+                <th colSpan={2} className={`${cell} text-left font-semibold text-accent`}>
+                  {t.title}
+                </th>
+              </tr>
+            </thead>
+          )}
+          <tbody>
+            {t.rows.map((row, i) => (
+              <tr key={i}>
+                <th scope="row" className={`${cell} bg-surface w-2/5 text-left ${row.boldLabel ?? t.boldLabels ? 'font-semibold' : 'font-normal'}`}>
+                  {row.label ?? ''}
+                </th>
+                <td className={`${cell} ${row.boldValue ? 'font-semibold' : ''}`}>
+                  {row.value}
+                  {row.detail && <span className="block text-[length:var(--fs-caption)] text-muted">{row.detail}</span>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ))}
+    </div>
+  );
 }
 
 interface CheckoutSummaryStepProps {
@@ -118,6 +168,13 @@ interface CheckoutSummaryStepProps {
    * add-ons/bill-limit choice, not a special skip-back-to-Checkout path.
    */
   onEdit: () => void;
+  /**
+   * 'detailed' renders the three-table read-back (summary, Due today, Approximate
+   * Bill Explainer) used by New Connection. Default keeps the original layout.
+   */
+  layout?: 'default' | 'detailed';
+  /** detailed layout only: the same tables, for the CAF step to read back. */
+  onTablesComputed?: (tables: SummaryTable[]) => void;
   /** See TncLegalFacts - powers the CAF step's dynamic bullet summary. */
   onLegalFactsComputed?: (facts: TncLegalFacts) => void;
 }
@@ -143,6 +200,8 @@ export function CheckoutSummaryStep({
   onSummaryComputed,
   onEdit,
   onLegalFactsComputed,
+  layout = 'default',
+  onTablesComputed,
 }: CheckoutSummaryStepProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [discounts, setDiscounts] = useState<
@@ -184,8 +243,8 @@ export function CheckoutSummaryStep({
   // there is no plan yet to derive an entitlement from (shouldn't happen in
   // practice - Plan & Add-ons runs before Number Selection - but this avoids
   // a NaN entitlement rather than assuming the order of steps holds forever).
-  const starEntitlementQar = plan ? plan.mrcQAR * STAR_NUMBER_ENTITLEMENT_MULTIPLIER : undefined;
-  const numberChargeQar = isStarNumber && plan ? starNumberOverageQar(plan.mrcQAR, numberDelta) : numberDelta;
+  const starEntitlementQar = plan ? planStarEntitlementQar(plan) : undefined;
+  const numberChargeQar = isStarNumber && plan ? starNumberOverageQar(plan.mrcQAR, numberDelta, planStarEntitlementQar(plan)) : numberDelta;
   const dueTodayQar = numberChargeQar + hrnAdvance;
   // "Maximum Bill Limit equals account Credit Limit" (business-rules.json).
   // This journey dropped its Bill Limit editor on 2026-09-25, so there is no
@@ -403,6 +462,136 @@ export function CheckoutSummaryStep({
         .join(' · ')
     : undefined;
 
+  if (layout === 'detailed') {
+    const ratio = firstBill.cycleDays ? firstBill.proratedDays / firstBill.cycleDays : 0;
+    // Both partial lines are VAT-inclusive, like every other quoted figure, and
+    // add up to the prorated part of the first bill.
+    const partialPlanQar = Math.round((charges.planQar - charges.discountQar) * (1 + VAT_RATE) * ratio * 100) / 100;
+    const partialAddonQar = Math.round((firstBill.proratedQar - partialPlanQar) * 100) / 100;
+    // BR-115: the entitlement waives up to this much of the number's value; what
+    // is waived is also the part the lock-in is held against.
+    // Star numbers only: a non-star number is charged at its own price here, so no
+    // entitlement discount is shown against it.
+    const discountValueQar = isStarNumber && starEntitlementQar !== undefined ? Math.min(numberDelta, starEntitlementQar) : 0;
+    const lockInValueQar = isStarNumber ? discountValueQar : 0;
+    const q = (n: number) => formatQar(n, 'QAR');
+    const numberRows: { label?: string; value: string }[] = msisdn
+      ? [
+          { label: 'Number', value: `${msisdn} (${isStarNumber ? 'Star' : 'Free'})` },
+          { value: `Number Value ${q(numberDelta)}` },
+          { value: `Discount Value: ${q(discountValueQar)}` },
+          { value: `Lock-in Value: ${q(lockInValueQar)}` },
+          {
+            value: isStarNumber
+              ? starTier
+                ? `lock-in: ${starTier.lockInDurationMonths}-months`
+                : 'lock-in: not yet banded - confirm before signature'
+              : 'lock-in: none',
+          },
+        ]
+      : [{ label: 'Number', value: '-' }];
+    const summaryRows: { label?: string; value: string }[] = [
+      { label: 'Customer Name', value: customerName ?? '-' },
+      { label: 'Alternate phone #', value: altPhone || '-' },
+      { label: 'Plan', value: plan?.name ?? '-' },
+      {
+        label: 'Add-ons',
+        value: addons.length ? addons.map((a) => `${a.name} (QR ${a.mrcQAR}/mo)`).join(', ') : 'None',
+      },
+      ...numberRows,
+      ...(creditLimitQar !== undefined
+        ? [
+            { label: 'Credit limit', value: `QR ${creditLimitQar}` },
+            { label: 'Bill limit', value: billLimit !== undefined ? `QR ${billLimit}` : `Up to QR ${creditLimitQar}` },
+          ]
+        : []),
+      ...(billingMethod ? [{ label: 'Billing', value: billingMethod }] : []),
+      { label: `VAT (${Math.round(VAT_RATE * 100)}%)`, value: `${formatQar(charges.vatQar, 'QR')}/mo` },
+    ];
+    const dueRows: { label: string; value: string }[] = [
+      ...(isStarNumber || numberChargeQar > 0
+        ? [{ label: isStarNumber ? 'Star Number charge:' : 'Number charge:', value: `Due value ${q(numberChargeQar)}` }]
+        : []),
+      ...(hrnAdvance > 0 ? [{ label: 'HRN Fee', value: q(hrnAdvance) }] : []),
+    ];
+    if (dueRows.length === 0) dueRows.push({ label: 'Due value', value: q(0) });
+    const billRows: { label: string; value: string; detail?: string }[] = [
+      { label: 'Plan value', value: q(charges.planQar) },
+      {
+        label: 'Discount Value',
+        value: discount
+          ? `${q(charges.discountQar)}${discount.durationMonths ? ` for first ${discount.durationMonths} months` : ' (no expiry)'}`
+          : 'None',
+      },
+      { label: 'Partial Plan Charge', value: q(partialPlanQar) },
+      { label: 'Partial Add-on Charge', value: q(partialAddonQar) },
+      { label: 'Monthly Bill Cycle', value: '1st of every-month' },
+      {
+        label: 'Approximate first bill amount',
+        value: q(firstBill.totalQar),
+        detail: 'Partial charges plus one month in advance',
+      },
+      { label: 'Approximate second bill amount', value: q(monthlyRecurringQar) },
+    ];
+    const tables: SummaryTable[] = [
+      { boldLabels: true, rows: summaryRows },
+      { title: 'Due today', rows: dueRows },
+      { title: 'Approximate Bill Explainer', rows: billRows },
+    ];
+    // The customer-facing read-back for the CAF step: its own row set (no
+    // alternate phone, plan/number lock-ins spelled out, Total Payable Today).
+    const cafTables: SummaryTable[] = [
+      {
+        title: 'Order Summary',
+        rows: [
+          { label: 'Customer Name', value: customerName ?? '-' },
+          { label: 'Selected Number', value: msisdn ? `${msisdn} (${isStarNumber ? 'Star' : 'Free'})` : '-', boldValue: true },
+          { label: 'Number Value', value: q(numberDelta) },
+          { label: 'Number Discount Value', value: q(discountValueQar) },
+          { label: 'Number Lock-in Value:', value: q(lockInValueQar) },
+          ...(isStarNumber
+            ? [{ label: 'Star Number Lock-in', value: starTier ? `${starTier.lockInDurationMonths} months` : 'Not yet banded - confirm before signature' }]
+            : []),
+          { label: 'Plan', value: plan?.name ?? '-' },
+          { label: 'Plan Lock-in', value: plan?.commitmentMonths ? `${plan.commitmentMonths} months` : 'No lock-in' },
+          { label: 'Add-ons', value: addons.length ? addons.map((a) => `${a.name} (QR ${a.mrcQAR}/mo)`).join(', ') : 'None' },
+          { label: 'SIM Type', value: simType?.simType ?? '-' },
+          ...(creditLimitQar !== undefined
+            ? [
+                { label: 'Credit limit', value: `QR ${creditLimitQar}`, boldLabel: true },
+                { label: 'Bill limit', value: billLimit !== undefined ? `QR ${billLimit}` : `Up to QR ${creditLimitQar}`, boldLabel: true },
+              ]
+            : []),
+          { label: `VAT (${Math.round(VAT_RATE * 100)}%)`, value: `${formatQar(charges.vatQar, 'QR')}/mo`, boldLabel: true },
+        ],
+      },
+      {
+        title: 'Approximate Bill Explainer',
+        rows: [
+          ...billRows,
+          {
+            label: 'Total Payable Today',
+            value: `Due value ${q(numberChargeQar)}${hrnAdvance > 0 ? `, Upfront Charges: ${q(hrnAdvance)}` : ''}`,
+          },
+        ],
+      },
+    ];
+    // Published from an effect (hooks cannot sit below the early returns, so
+    // this one is keyed on the serialised content instead).
+    const tablesKey = JSON.stringify(cafTables);
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useEffect(() => {
+      onTablesComputed?.(cafTables);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tablesKey]);
+    return (
+      <div className="space-y-6">
+        <p className="text-fg-2 text-[length:var(--fs-caption)]">Review with the customer before generating the CAF.</p>
+        <SummaryTables tables={tables} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Edit (2026-09-28): returns to Plan & Add-ons via the wizard's
@@ -416,7 +605,7 @@ export function CheckoutSummaryStep({
         </Button>
       </div>
 
-      <dl className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4">
+      <dl className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-4">
         {/* Row order follows the supplied summary mockup: who they are, how we
             identify and reach them, what they bought, how they pay, then
             hardware. Add-ons always renders, showing "None" rather than

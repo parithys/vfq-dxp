@@ -6,7 +6,7 @@ import { Button } from '../components/primitives/Button';
 // renders an on-brand empty state instead of a blank content pane.
 export function NotFound() {
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-8 w-full">
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mt-3 mb-2">Page not found</h1>
       <p className="text-fg-2 mb-4">The page you're looking for doesn't exist or may have been moved.</p>
       <Link to="/">

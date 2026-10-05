@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Badge } from '../primitives/Badge';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '../primitives/Button';
 import { Drawer } from '../primitives/Drawer';
 import { Icon } from '../primitives/Icon';
-import { evaluateRule } from '../../engines/ruleEngine';
+import { evaluateRule, isHrnNationality } from '../../engines/ruleEngine';
 import { useNotificationStore } from '../../stores/notificationStore';
 import {
   evaluateEligibilityChecks,
@@ -12,6 +11,8 @@ import {
   type EligibilityOutcome,
 } from '../../engines/eligibilityEngine';
 import * as mockDataEngine from '../../engines/mockDataEngine';
+import { callService, ServiceError, type FailureKind, type ServiceName } from '../../engines/serviceCall';
+import { TechnicalFailure } from '../patterns/ValidationStatus';
 
 // Row treatment per outcome, for the divided-list layout adopted 2026-09-25.
 //
@@ -22,7 +23,8 @@ const ROW_TONE: Record<RowTone, string> = {
   pass: 'bg-[color-mix(in_oklab,var(--success),var(--bg)_94%)]',
   'hard-stop': 'bg-[color-mix(in_oklab,var(--danger),var(--bg)_94%)]',
   'soft-stop': 'bg-[color-mix(in_oklab,var(--warn),var(--bg)_94%)]',
-  'approval-routing': 'bg-surface',
+  // Orange wash (distinct from the soft-stop amber): a diversion for approval, not a stop.
+  'approval-routing': 'bg-[color-mix(in_oklab,#ff8a00,var(--bg)_88%)]',
   advisory: 'bg-surface',
 };
 
@@ -30,7 +32,7 @@ const ICON_TONE: Record<RowTone, string> = {
   pass: 'text-success',
   'hard-stop': 'text-danger',
   'soft-stop': 'text-[var(--warn-text)]',
-  'approval-routing': 'text-muted',
+  'approval-routing': 'text-[var(--warn-text)]',
   advisory: 'text-muted',
 };
 
@@ -43,25 +45,6 @@ const ROW_ICON: Record<RowTone, string> = {
   'soft-stop': 'M12 3l9 16H3l9-16z M12 10v4 M12 17h.01',
   'approval-routing': 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3.2 2',
   advisory: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 11v5 M12 7.5h.01',
-};
-
-// The right-hand pill. "Passed" is the attached layout's wording; the other
-// three say what actually happens, because "Failed" would be wrong for a
-// diversion that lets the order proceed once approved.
-const STATUS_LABEL: Record<RowTone, string> = {
-  pass: 'Passed',
-  'hard-stop': 'Failed',
-  'soft-stop': 'Blocked',
-  'approval-routing': 'Approval required',
-  advisory: 'For information',
-};
-
-const STATUS_BADGE: Record<RowTone, 'success' | 'danger' | 'warning' | 'filled-neutral'> = {
-  pass: 'success',
-  'hard-stop': 'danger',
-  'soft-stop': 'warning',
-  'approval-routing': 'filled-neutral',
-  advisory: 'filled-neutral',
 };
 
 /**
@@ -90,19 +73,35 @@ export function buildEligibilityRows(
   checks: EligibilityCheck[],
   hrnFlag: boolean,
   nationality: string | undefined,
-  journeyType: 'postpaid' | 'prepaid' = 'postpaid'
+  journeyType: 'postpaid' | 'prepaid' = 'postpaid',
+  existingCustomer = false
 ): EligibilityRow[] {
   const hrn = evaluateRule('BR-187', { hrnFlag });
   return [
-    ...checks.map((check) => ({ id: check.id, title: check.label, detail: check.message, tone: check.outcome as RowTone })),
-    ...(journeyType !== 'prepaid'
+    ...checks.map((check) => {
+      // Active Lines has no row heading of its own: the cap message ("Qatari limit of 5 active
+      // postpaid lines reached (5 active).") is the title, and any following line is the detail.
+      if (check.id === 'active-lines') {
+        const [first, ...rest] = check.message.split('\n');
+        return { id: check.id, title: first, detail: rest.join('\n'), tone: check.outcome as RowTone };
+      }
+      return { id: check.id, title: check.label, detail: check.message, tone: check.outcome as RowTone };
+    }),
+    // The upfront requirement is reported as exactly that - an advance payment -
+    // and never as the customer's risk classification. The "Non-HRN new account"
+    // pass row belongs to NEW accounts only.
+    ...(journeyType !== 'prepaid' && (hrnFlag || !existingCustomer)
       ? [
           {
             id: 'hrn',
-            title: hrnFlag ? 'HRN (High Network Risk)' : 'Non-HRN new account',
-            detail:
-              (hrnFlag ? hrn.message : undefined) ??
-              (nationality ? `${nationality} Citizen - not a high-risk nationality` : 'Not a high-risk nationality'),
+            title: hrnFlag ? 'Upfront payment required' : 'Non-HRN new account',
+            detail: hrnFlag
+              ? hrn.message
+                  ? 'An advance payment of QAR 100 is required at checkout.'
+                  : 'An advance payment is required at checkout.'
+              : nationality
+                ? `${nationality} Citizen - not a high-risk nationality`
+                : 'Not a high-risk nationality',
             tone: (hrnFlag ? 'advisory' : 'pass') as RowTone,
           },
         ]
@@ -116,7 +115,7 @@ export function buildEligibilityRows(
  * function rather than two near-identical blocks. */
 export function EligibilityChecksList({ rows }: { rows: EligibilityRow[] }) {
   return (
-    <ul className="rounded-[var(--radius-card)] border border-border-soft overflow-hidden divide-y divide-border-soft">
+    <ul className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] overflow-hidden divide-y divide-border-soft">
       {rows.map((row) => (
         <li key={row.id} className={`flex items-start gap-3 px-4 py-3 ${ROW_TONE[row.tone]}`}>
           <Icon path={ROW_ICON[row.tone]} className={`w-5 h-5 shrink-0 mt-0.5 ${ICON_TONE[row.tone]}`} />
@@ -124,11 +123,10 @@ export function EligibilityChecksList({ rows }: { rows: EligibilityRow[] }) {
             <p className="text-fg font-semibold text-[length:var(--fs-body)]">{row.title}</p>
             {/* The RESULT, not a static description of what the check does -
                 see the inline panel's own note on this below. */}
-            <p className="text-fg-2 text-[length:var(--fs-caption)] leading-snug">{row.detail}</p>
+            {row.detail && (
+              <p className="text-fg-2 text-[length:var(--fs-caption)] leading-snug whitespace-pre-line">{row.detail}</p>
+            )}
           </div>
-          <span className="shrink-0">
-            <Badge variant={STATUS_BADGE[row.tone]}>{STATUS_LABEL[row.tone]}</Badge>
-          </span>
         </li>
       ))}
     </ul>
@@ -140,7 +138,7 @@ export function EligibilityChecksList({ rows }: { rows: EligibilityRow[] }) {
 // plain-language explanation of what it means for the order. Static copy,
 // not derived from `rows`: it describes the four possible outcomes in
 // general, not which ones this particular customer hit.
-const OUTCOME_LEGEND: { title: string; example: string; detail: string }[] = [
+export const OUTCOME_LEGEND: { title: string; example: string; detail: string }[] = [
   {
     title: 'Hard Stop',
     example: 'e.g. the customer is on the security blacklist.',
@@ -195,25 +193,28 @@ function EligibilityOutcomeLegend() {
 export function EligibilityChecksLink({
   eligibility,
   journeyType = 'postpaid',
+  label = 'View eligibility checks',
 }: {
   eligibility: EligibilityResult | undefined;
   journeyType?: 'postpaid' | 'prepaid';
+  /** Link text, also used as the drawer title when overridden. */
+  label?: string;
 }) {
   const [open, setOpen] = useState(false);
   if (!eligibility) return null;
-  const rows = buildEligibilityRows(eligibility.checks, eligibility.requiresHrnAdvance, eligibility.nationality, journeyType);
+  const rows = buildEligibilityRows(eligibility.checks, eligibility.requiresHrnAdvance, eligibility.nationality, journeyType, eligibility.isExistingCustomer);
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-[length:var(--fs-caption)] text-accent underline
+        className="text-[length:var(--fs-caption)] text-link underline
           hover:text-accent-hover focus:outline-none focus-visible:shadow-[var(--focus-ring)]
           rounded-[var(--radius-button)] px-1"
       >
-        View eligibility checks
+        {label}
       </button>
-      <Drawer open={open} onClose={() => setOpen(false)} title="Eligibility Checks">
+      <Drawer open={open} onClose={() => setOpen(false)} title={label === 'View eligibility checks' ? 'Eligibility Checks' : label}>
         <EligibilityChecksList rows={rows} />
         <EligibilityOutcomeLegend />
       </Drawer>
@@ -239,6 +240,8 @@ export interface EligibilityResult {
   blacklistReason?: string;
   lineCapExceeded: boolean;
   requiresHrnAdvance: boolean;
+  /** The result is for an existing customer's record (not a new customer). */
+  isExistingCustomer?: boolean;
   defaultCreditLimitQar: number;
   customerId?: string;
   /**
@@ -305,6 +308,12 @@ interface EligibilityGateStepProps {
    * below rather than this action.
    */
   onProceedToApproval?: () => void;
+  /** Set false to skip the dark "Eligibility confirmed" toast on a clean pass (New Connection shows only the Existing customer toast). Defaults to true. */
+  announcePass?: boolean;
+  /** New Customer journey: check whoever this ID belongs to as a genuine new customer. */
+  asNewCustomer?: boolean;
+  /** Journey started from Customer 360: check this customer (and their own ID document), whatever ID the scan returned. */
+  asCustomerId?: string;
   /**
    * Pattern 3 (Alternative Product), rendered as a "Switch to Prepaid" button
    * when a collections block soft-stops the order (2026-09-28). Only makes
@@ -339,6 +348,9 @@ export function EligibilityGateStep({
   journeyType = 'postpaid',
   onProceedToApproval,
   onSwitchToPrepaid,
+  announcePass = true,
+  asNewCustomer = false,
+  asCustomerId,
 }: EligibilityGateStepProps) {
   // A cached result for THIS identity. Computed during render rather than in
   // an effect so the first paint on re-entry already shows the rows.
@@ -350,12 +362,20 @@ export function EligibilityGateStep({
   // HRN flag but not the customer row they came from - and the render only
   // ever needed those two things.
   const [resolved, setResolved] = useState<
-    { checks: EligibilityCheck[]; hrnFlag: boolean; nationality?: string } | null | undefined
+    { checks: EligibilityCheck[]; hrnFlag: boolean; nationality?: string; existing?: boolean } | null | undefined
   >(cached
-      ? { checks: cached.checks, hrnFlag: cached.requiresHrnAdvance, nationality: cached.nationality }
+      ? { checks: cached.checks, hrnFlag: cached.requiresHrnAdvance, nationality: cached.nationality, existing: cached.isExistingCustomer }
       : undefined
   );
   const pushToast = useNotificationStore((s) => s.pushToast);
+  // A failure to RUN the checks (a lookup or the eligibility service failed) is not a
+  // verdict: it leaves eligibility UNRESOLVED - neither eligible nor ineligible - with
+  // Retry, then a controlled recovery once attempts are spent. Continue stays
+  // unavailable because no result is ever reported.
+  const [failure, setFailure] = useState<{ service: ServiceName; kind: FailureKind; attempts: number } | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const [retryNonce, setRetryNonce] = useState(0);
+  const attemptsRef = useRef<{ id: string; n: number }>({ id: '', n: 0 });
 
   useEffect(() => {
     // The one-time guarantee. Nothing is re-read and onResult is not called
@@ -368,8 +388,25 @@ export function EligibilityGateStep({
     }
     let cancelled = false;
     (async () => {
-      const docs = await mockDataEngine.list<IdentityDocRecord>('identity-documents');
-      const doc = docs.find((d) => d.documentNumber === idNumber);
+     try {
+      const docs = await callService('moi', () => mockDataEngine.list<IdentityDocRecord>('identity-documents'));
+      let doc: IdentityDocRecord | undefined = asCustomerId
+        ? (docs.find((d) => d.customerId === asCustomerId) ?? docs.find((d) => d.documentNumber === idNumber))
+        : docs.find((d) => d.documentNumber === idNumber);
+      // Known to NAS but with no customer record = a NEW customer. Nothing on
+      // file to block them: no blacklist, no lines, no deals, no balance.
+      let nasCustomer: CustomerRecord | undefined;
+      if (!doc) {
+        const nas = (
+          await callService('nas', () =>
+            mockDataEngine.list<{ documentNumber: string; documentType?: string; expiryDate?: string; nationality: string; dob?: string }>('nas-records')
+          )
+        ).find((r) => r.documentNumber === idNumber);
+        if (nas) {
+          doc = { documentNumber: nas.documentNumber, customerId: '', documentType: nas.documentType, expiryDate: nas.expiryDate };
+          nasCustomer = { customerId: '', idType: nas.documentType, dob: nas.dob, nationality: nas.nationality, blacklisted: false };
+        }
+      }
       if (!doc) {
         if (!cancelled) {
           setResolved(null);
@@ -377,14 +414,14 @@ export function EligibilityGateStep({
         }
         return;
       }
-      const customers = await mockDataEngine.list<CustomerRecord>('customers');
-      const match = customers.find((c) => c.customerId === doc.customerId) ?? null;
+      const customers = await callService('customer-lookup', () => mockDataEngine.list<CustomerRecord>('customers'));
+      const match = nasCustomer ?? customers.find((c) => c.customerId === doc.customerId) ?? null;
       if (cancelled) return;
-      if (!match) {
-        setResolved(null);
-        onResult(undefined);
-        return;
-      }
+      // The identity points at a customer record the lookup cannot return: a lookup
+      // failure to retry, not "no customer" and not "new".
+      if (!match) throw new ServiceError('customer-lookup', 'partial');
+      // A record without the details the checks need cannot be judged either way.
+      if (!match.nationality || (!nasCustomer && !match.dob)) throw new ServiceError('customer-lookup', 'partial');
       const blacklist = evaluateRule('BR-113', { blacklisted: match.blacklisted, blacklistReason: match.blacklistReason });
       const lineCap =
         journeyType === 'prepaid'
@@ -398,7 +435,14 @@ export function EligibilityGateStep({
               nationality: match.nationality,
               activePostpaidLines: match.activePostpaidLines ?? 0,
             });
-      const hrnFlag = Boolean(match.hrnAdvancePaymentRequired);
+      // Derived from nationality (VFQ list in ruleEngine.ts), not read from a
+      // per-record flag, so a NAS-only new customer is classified too.
+      // The QAR 100 advance applies to new AND existing customers (VFQ business,
+      // 2026-10-02). What differs: an existing customer gets no separate
+      // "Non-HRN new account" row (that check is for new accounts), and neither
+      // is ever told they are HRN - see buildEligibilityRows.
+      const isExistingCustomer = !nasCustomer && !asNewCustomer;
+      const hrnFlag = isHrnNationality(match.nationality);
       evaluateRule('BR-187', { hrnFlag });
       // Still computed though the Credit limit ROW was removed from this step
       // on 2026-09-25: the amount is not display-only. DeviceInstallmentStep
@@ -412,10 +456,12 @@ export function EligibilityGateStep({
       // only extra reads: the line cap comes from the rule already evaluated
       // above, so the cap logic stays in one place rather than being restated
       // inside the eligibility engine.
-      const [deals, bills] = await Promise.all([
-        mockDataEngine.list<{ customerId?: string; status?: string; blocksNewConnection?: boolean }>('commitment-penalties'),
-        mockDataEngine.list<{ customerId?: string; totalAmount?: number; status?: string }>('bills'),
-      ]);
+      const [deals, bills] = await callService('eligibility', () =>
+        Promise.all([
+          mockDataEngine.list<{ customerId?: string; status?: string; blocksNewConnection?: boolean }>('commitment-penalties'),
+          mockDataEngine.list<{ customerId?: string; totalAmount?: number; status?: string }>('bills'),
+        ])
+      );
       if (cancelled) return;
       const outstandingQar = bills
         .filter((b) => b.customerId === match.customerId && b.status !== 'Paid')
@@ -428,6 +474,7 @@ export function EligibilityGateStep({
           deals,
           outstandingQar,
           lineCapReached: !lineCap.pass,
+          lineCapHardStop: Boolean(lineCap.hardStop),
           // The line-cap rule's own message already has the count - see the
           // note on EligibilityContext.activeLinesDetail.
           activeLinesDetail: lineCap.message ?? '',
@@ -435,7 +482,10 @@ export function EligibilityGateStep({
         new Date()
       );
 
-      setResolved({ checks: resolvedChecks, hrnFlag, nationality: match.nationality });
+      attemptsRef.current = { id: idNumber, n: 0 };
+      setFailure(null);
+      setRetrying(false);
+      setResolved({ checks: resolvedChecks, hrnFlag, nationality: match.nationality, existing: isExistingCustomer });
       const hardStop = hasHardStop(resolvedChecks);
       const softStop = resolvedChecks.some((c) => c.outcome === 'soft-stop');
       // Confirmation toast on a clear pass (2026-09-25). It is pushed HERE,
@@ -450,7 +500,7 @@ export function EligibilityGateStep({
       //
       // Keyed on the identity so a recompute after an ID change replaces the
       // previous confirmation rather than stacking a second one.
-      if (!hardStop && !softStop) {
+      if (!hardStop && !softStop && announcePass) {
         pushToast('success', 'Eligibility confirmed', {
           key: `eligibility-${idNumber}`,
           detail: `Customer is eligible for a ${journeyType === 'prepaid' ? 'prepaid' : 'postpaid'} connection. Continuing to the next step.`,
@@ -467,12 +517,24 @@ export function EligibilityGateStep({
         blacklistReason: match.blacklistReason,
         lineCapExceeded: !lineCap.pass,
         requiresHrnAdvance: hrnFlag,
+        isExistingCustomer,
         nationality: match.nationality,
         defaultCreditLimitQar: creditLimitAmount,
-        customerId: match.customerId,
+        // The checks above ran on the real record whoever the journey treats the person as;
+        // a New Customer journey just does not carry that customer's id forward.
+        customerId: nasCustomer || asNewCustomer ? undefined : match.customerId,
         idNumber,
       });
       void creditLimit;
+     } catch (err) {
+      if (cancelled) return;
+      const e = err instanceof ServiceError ? err : new ServiceError('eligibility', 'unexpected');
+      attemptsRef.current = { id: idNumber, n: attemptsRef.current.id === idNumber ? attemptsRef.current.n + 1 : 1 };
+      setFailure({ service: e.service, kind: e.kind, attempts: attemptsRef.current.n });
+      setRetrying(false);
+      setResolved(undefined);
+      onResult(undefined);
+     }
     })();
     return () => {
       cancelled = true;
@@ -482,7 +544,7 @@ export function EligibilityGateStep({
     // this effect every time onResult fires - an infinite update loop caught
     // live via the ErrorBoundary ("Maximum update depth exceeded").
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idNumber, journeyType, cached]);
+  }, [idNumber, journeyType, cached, retryNonce]);
 
   // Nothing to show before an identity is resolved - this panel lives
   // permanently inside the Contact step now (2026-09-28, no more separate
@@ -491,6 +553,21 @@ export function EligibilityGateStep({
   // simply not far enough into it yet for eligibility to have anything to
   // report. Silence is the correct state, same as the clean-pass case below.
   if (!idNumber) return null;
+  if (failure || retrying) {
+    return (
+      <TechnicalFailure
+        service={failure?.service ?? 'eligibility'}
+        kind={failure?.kind ?? 'unexpected'}
+        attempts={failure?.attempts ?? 0}
+        retrying={retrying}
+        onRetry={() => {
+          setRetrying(true);
+          setRetryNonce((n) => n + 1);
+        }}
+        exhaustedHint="Eligibility has not been checked, so this order cannot continue. Use Save & Exit to resume later."
+      />
+    );
+  }
   if (resolved === undefined) {
     return <p className="text-muted text-[length:var(--fs-body)]">Checking eligibility…</p>;
   }
@@ -498,7 +575,7 @@ export function EligibilityGateStep({
     return <p className="text-danger text-[length:var(--fs-body)]">No customer record found for this identity - cannot evaluate eligibility.</p>;
   }
 
-  const { checks, hrnFlag, nationality } = resolved;
+  const { checks, hrnFlag, nationality, existing } = resolved;
   const hardStop = hasHardStop(checks);
   const softStop = checks.some((c) => c.outcome === 'soft-stop');
   const routed = checks.filter((c) => c.outcome === 'approval-routing');
@@ -508,7 +585,7 @@ export function EligibilityGateStep({
   // previously a lone card floating under the seven, which implied it was an
   // eighth verdict. See buildEligibilityRows' own note on why this
   // construction lives there now, not inline here.
-  const rows = buildEligibilityRows(checks, hrnFlag, nationality, journeyType);
+  const rows = buildEligibilityRows(checks, hrnFlag, nationality, journeyType, existing);
 
   // ONLY the rows that did not pass (2026-09-27). A clean run is not reported
   // here at all - the step is skipped outright by the wizard (see
@@ -533,11 +610,6 @@ export function EligibilityGateStep({
 
   return (
     <div className="space-y-3">
-      <p className="text-fg-2 text-[length:var(--fs-body)]">
-        {unresolved.length === 1
-          ? 'One eligibility check needs attention before this order can proceed.'
-          : `${unresolved.length} eligibility checks need attention before this order can proceed.`}
-      </p>
       <EligibilityChecksList rows={unresolved} />
 
       {/* Pattern 1: Hard Stop. No button of any kind - "no option to proceed"
@@ -575,10 +647,6 @@ export function EligibilityGateStep({
           still auto-advances on its own rather than taking this action. */}
       {!hardStop && !softStop && routed.length > 0 && (
         <div className="space-y-2">
-          <p className="text-fg-2 text-[length:var(--fs-caption)]">
-            {routed.length === 1 ? 'One check routes' : `${routed.length} checks route`} this order for approval. The
-            journey continues; the order completes once approval is granted.
-          </p>
           {onProceedToApproval && (
             <Button variant="primary-rect" compact onClick={onProceedToApproval}>
               Proceed to Approval

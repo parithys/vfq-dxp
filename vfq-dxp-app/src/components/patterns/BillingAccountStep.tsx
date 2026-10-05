@@ -29,6 +29,7 @@ interface ContactRecord {
   contactRecordId: string;
   customerId: string;
   firstName: string;
+  middleName?: string;
   lastName: string;
 }
 
@@ -66,6 +67,9 @@ export interface BillingAccountValue {
   selectedProfileId?: string;
   creatingNew?: boolean;
   newAccount?: NewBillingAccountValue;
+  /** Set by BillingAccountAutoResolver: the customer this value was resolved
+   * for ('new' when there is no customer record yet). */
+  autoResolvedFor?: string;
 }
 
 interface BillingAccountStepProps {
@@ -75,6 +79,12 @@ interface BillingAccountStepProps {
   defaultAddressLine: string | undefined;
   value: BillingAccountValue;
   onChange: (value: BillingAccountValue) => void;
+  /**
+   * The customer's email as captured on Customer Identification (masked for a new customer).
+   * It is the single source of truth for the journey: when given, it is shown in place of the
+   * address stored on each billing profile, never a second lookup.
+   */
+  customerEmail?: string;
 }
 
 /**
@@ -212,6 +222,7 @@ export function BillingAccountStep({
   defaultAddressLine,
   value,
   onChange,
+  customerEmail,
 }: BillingAccountStepProps) {
   const [profiles, setProfiles] = useState<(BillingProfileRecord & { accountType: string })[]>([]);
   const [contacts, setContacts] = useState<ContactRecord[]>([]);
@@ -292,8 +303,8 @@ export function BillingAccountStep({
                   onClick={() => onChange({ selectedProfileId: p.billingProfileId, creatingNew: false })}
                   className={`text-left rounded-[var(--radius-card)] border p-4 ${
                     selected
-                      ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]'
-                      : 'border-border-soft hover:border-[var(--field-card-selected)]/50'
+                      ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]'
+                      : 'border-[var(--field-card-border)] bg-bg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
@@ -302,7 +313,7 @@ export function BillingAccountStep({
                   </div>
                   <p className="text-fg-2 text-[length:var(--fs-caption)]">Primary contact: {p.billingContactName}</p>
                   <p className="text-muted text-[length:var(--fs-caption)]">
-                    {p.billingAddress} · {p.billingContactEmail}
+                    {p.billingAddress} · {customerEmail ?? p.billingContactEmail}
                   </p>
                 </button>
               );
@@ -320,7 +331,7 @@ export function BillingAccountStep({
           This customer already holds the maximum of two billing profiles for a Consumer account - select one above.
         </p>
       ) : (
-        <div className="border border-border-soft rounded-[var(--radius-card)]">
+        <div className="border border-[var(--field-card-border)] rounded-[var(--radius-card)]">
           <button
             type="button"
             onClick={() => onChange({ ...value, creatingNew: !value.creatingNew, selectedProfileId: undefined })}
@@ -342,7 +353,7 @@ export function BillingAccountStep({
                   placeholder="Select contact"
                   options={contacts.map((c) => ({
                     value: c.contactRecordId,
-                    label: `${c.firstName} ${c.lastName}`,
+                    label: [c.firstName, c.middleName, c.lastName].filter(Boolean).join(' '),
                   }))}
                 />
                 <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg cursor-pointer">
@@ -475,7 +486,7 @@ export function BillingAccountStep({
                   </Button>
                 </div>
                 {newAccount.profileName ? (
-                  <dl className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-3 text-[length:var(--fs-caption)]">
+                  <dl className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-3 text-[length:var(--fs-caption)]">
                     <div className="flex justify-between gap-3 py-1">
                       <dt className="text-fg-2">Billing Profile Name</dt>
                       <dd className="text-fg font-medium">{newAccount.profileName}</dd>
@@ -523,4 +534,75 @@ export function isBillingAccountValid(value: BillingAccountValue): boolean {
   if (!a.cardToken) return false;
   if (!a.profileName?.trim()) return false;
   return true;
+}
+
+
+/**
+ * Headless replacement for the Billing Profile page (2026-10-01 request): an
+ * existing billing account is selected automatically, and when the customer
+ * has none one is created, so the agent never has to visit the step.
+ *
+ * Mounts anywhere before checkout and renders nothing. It re-resolves only
+ * when the customer changes, so an agent who later overrides the value is not
+ * overwritten.
+ *
+ * The auto-created account carries no card: card-on-file tokenisation needs
+ * the agent to key a card number, which an automatic step cannot do, so
+ * `cardToken`/`cardLast4` stay unset and the order records none.
+ */
+export function BillingAccountAutoResolver({
+  customerId,
+  customerName,
+  value,
+  onChange,
+}: {
+  customerId: string | undefined;
+  customerName?: string;
+  value: BillingAccountValue;
+  onChange: (value: BillingAccountValue) => void;
+}) {
+  const key = customerId ?? 'new';
+  useEffect(() => {
+    if (value.autoResolvedFor === key) return;
+    let cancelled = false;
+    (async () => {
+      const [accounts, allProfiles, allContacts, allCustomers] = customerId
+        ? await Promise.all([
+            mockDataEngine.list<AccountRecord>('accounts'),
+            mockDataEngine.list<BillingProfileRecord>('billing-profiles'),
+            mockDataEngine.list<ContactRecord>('customer-contacts'),
+            mockDataEngine.list<CustomerRecord>('customers'),
+          ])
+        : [[], [], [], []];
+      if (cancelled) return;
+      const own = (accounts as AccountRecord[])
+        .filter((a) => a.customerId === customerId)
+        .map((a) => allProfiles.find((pr) => pr.billingProfileId === a.billingProfileId))
+        .filter((p): p is BillingProfileRecord => Boolean(p));
+      if (own.length > 0) {
+        onChange({ selectedProfileId: own[0].billingProfileId, autoResolvedFor: key });
+        return;
+      }
+      const segment = (allCustomers as CustomerRecord[]).find((c) => c.customerId === customerId)?.segment;
+      const contact = (allContacts as ContactRecord[]).find((c) => c.customerId === customerId);
+      onChange({
+        creatingNew: true,
+        autoResolvedFor: key,
+        newAccount: {
+          primaryContactId: contact?.contactRecordId,
+          useSameAddress: true,
+          preferredInvoiceRecipient: 'Primary Contact',
+          billCycleDay: computeBillCycleDay(segment, new Date()),
+          profileName: `${customerName ?? 'New customer'} - Postpaid`,
+          billMedia: 'Email',
+          billingSchedule: 'Immediate',
+        },
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  return null;
 }

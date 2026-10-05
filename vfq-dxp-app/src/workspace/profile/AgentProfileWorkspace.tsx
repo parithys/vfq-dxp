@@ -178,11 +178,11 @@ export function AgentProfileWorkspace() {
   };
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-8 w-full">
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Agent Profile</h1>
       <p className="text-fg-2 mb-6">View your details and manage your password and MFA settings.</p>
 
-      <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mb-6">
+      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-6">
         <div className="grid grid-cols-2 gap-4">
           <Field label="Name" value={profile?.name ?? ''} />
           <Field label="Staff ID" value={staffId} />
@@ -193,7 +193,7 @@ export function AgentProfileWorkspace() {
 
       {canEditProfile ? (
         <>
-          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
             <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Change password</h2>
             <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
               Requires your current password and a verification code. (Demo code: {DEMO_VERIFICATION_CODE} - pending VFQ Security's
@@ -218,7 +218,7 @@ export function AgentProfileWorkspace() {
             </div>
           </div>
 
-          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mt-6">
+          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mt-6">
             <div className="flex items-center justify-between mb-1">
               <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg">Multi-factor authentication</h2>
               <Badge variant={profile?.mfaEnabled ? 'success' : 'filled-neutral'}>{profile?.mfaEnabled ? 'Enabled' : 'Disabled'}</Badge>
@@ -257,7 +257,7 @@ export function AgentProfileWorkspace() {
           </div>
         </>
       ) : (
-        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
           <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Change password &amp; MFA</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)]">
             Profile editing (password, MFA) is available to internal Vodafone agent roles. This persona is an external or
@@ -266,7 +266,7 @@ export function AgentProfileWorkspace() {
         </div>
       )}
 
-      <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mt-6">
+      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mt-6">
         <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Language</h2>
         <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
           Choose your preferred language. (English/Arabic - completeness pending VFQ confirmation, D-03.)
@@ -282,7 +282,7 @@ export function AgentProfileWorkspace() {
         />
       </div>
 
-      <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mt-6">
+      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mt-6">
         <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Export your data</h2>
         <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
           Download a CSV of every visible record for an entity type. (Entity list: Orders, Tickets - pending VFQ's confirmation

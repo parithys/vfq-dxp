@@ -4,7 +4,7 @@ import { forwardRef } from 'react';
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
-  helperText?: string;
+  helperText?: ReactNode;
   readOnly?: boolean;
   /**
    * Fixed content locked inside the field's left edge - currently the country
@@ -82,12 +82,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   // spreads after this.
   const focusClass = isReadOnly
     ? ''
-    : 'focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]';
+    : 'focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)]';
+  // No hover border on a read-only field: it cannot be edited, so the hover
+  // highlight (which signals "this is interactive") would be misleading.
+  // Disabled fields are already excluded by the `enabled:` variant.
+  const hoverBorder = isReadOnly ? '' : ' enabled:hover:border-[var(--field-focus-border)]';
   const borderClass = error
     ? 'border-[var(--field-border-error)]'
-    : isFilled
-      ? 'border-[var(--field-border-filled)] enabled:hover:border-[var(--field-border-filled)]'
-      : 'border-[var(--field-border)] enabled:hover:border-accent/40';
+    : isFilled && !isReadOnly
+      ? `border-[var(--field-border-filled)]${hoverBorder}`
+      : `border-[var(--field-border)]${hoverBorder}`;
   return (
     <div className="flex flex-col gap-1">
       {label && (
@@ -116,8 +120,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           // <input> inside this wrapper, not on this div.
           className={`relative flex items-center rounded-[var(--field-radius)] border
             ${rest.disabled ? 'bg-[var(--field-bg-disabled)]' : 'bg-bg'}
-            ${borderClass}
-            focus-within:border-[var(--field-focus-border)] focus-within:shadow-[var(--field-focus-ring)]
+            ${/* `enabled:` matches form controls only, so on this wrapper <div> the
+                 hover border never fired - use plain hover (and none when disabled). */ ''}
+            ${rest.disabled ? borderClass.replace(' enabled:hover:border-[var(--field-focus-border)]', '') : borderClass.replace('enabled:hover:', 'hover:')}
+            focus-within:border-[var(--field-focus-border)]! focus-within:bg-[var(--field-focus-bg)] focus-within:shadow-[var(--field-focus-ring)]
             ${rest.disabled ? 'border-[var(--field-border-disabled)]' : ''}`}
         >
           {leadingAddon && (
@@ -135,7 +141,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             aria-invalid={error ? true : undefined}
             aria-describedby={describedBy}
             className={`flex-1 min-w-0 bg-transparent px-3 py-2 text-[length:var(--fs-body)] text-fg
-              focus:outline-none disabled:text-[var(--field-label-disabled)]
+              focus:outline-none focus-visible:shadow-none disabled:text-[var(--field-label-disabled)]
               ${isReadOnly ? 'select-none' : ''}
               ${className}`}
             tabIndex={isReadOnly ? -1 : undefined}

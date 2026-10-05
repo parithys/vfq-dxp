@@ -68,7 +68,7 @@ export function FibreReadinessBanner({ zone, street, building }: FibreReadinessB
     <div
       className={`flex items-center gap-3 rounded-[var(--radius-card)] border px-4 py-3 ${
         ready
-          ? 'border-[var(--success-border)] bg-[color-mix(in_oklab,var(--success),var(--bg)_94%)]'
+          ? 'border-success bg-[color-mix(in_oklab,var(--success),var(--bg)_88%)]'
           : 'border-border-soft bg-surface'
       }`}
     >

@@ -9,12 +9,12 @@ import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressSte
 import { BillingAccountStep, isBillingAccountValid } from '../../../components/patterns/BillingAccountStep';
 import type { BillingAccountValue } from '../../../components/patterns/BillingAccountStep';
 import { PostpaidPlanAddonsStep, SUPPORTING_ID_DISCOUNT_TYPES } from '../../../components/patterns/PostpaidPlanAddonsStep';
+import { useCustomerBenefits } from '../../new-connection/useCustomerBenefits';
 import { MsisdnPicker } from '../../../components/domain/MsisdnPicker';
 import { EligibilityGateStep, EligibilityChecksLink } from '../../../components/domain/EligibilityGateStep';
 import type { EligibilityResult } from '../../../components/domain/EligibilityGateStep';
 import { SimTypeStep } from '../../../components/domain/SimTypeStep';
 import type { SimTypeValue } from '../../../components/domain/SimTypeStep';
-import { EsimActivationPanel } from '../../../components/domain/EsimActivationPanel';
 import { CheckoutSummaryStep } from '../../../components/patterns/CheckoutSummaryStep';
 import type { TncLegalFacts, CheckoutTotals } from '../../../components/patterns/CheckoutSummaryStep';
 import { WinCashPaymentStep } from '../../../components/patterns/WinCashPaymentStep';
@@ -22,7 +22,8 @@ import type { WinCashPaymentValue } from '../../../components/patterns/WinCashPa
 import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCapture';
 import type { CafType } from '../../../components/patterns/CafSignatureCapture';
 import type { AdditionalDocument } from '../../../components/domain/AdditionalDocumentsUpload';
-import { OrderConfirmationScreen } from '../../../components/patterns/OrderConfirmationScreen';
+import { logActivity } from '../../../engines/activityEngine';
+import { ActivationCompleteScreen } from '../../../components/patterns/ActivationCompleteScreen';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { useEntityStore } from '../../../stores/entityStore';
 
@@ -36,15 +37,9 @@ const WIZARD_ID = 'new-postpaid';
 // requirement that does not exist yet. Change this one line - used by both
 // Save & Exit and Abandon - once the real destination is decided.
 const POST_EXIT_DESTINATION = '/';
+// Save & Exit lands on the agent's Draft Orders list.
+const DRAFT_ORDERS_PATH = '/tasks?filter=draft-orders';
 
-/**
- * "Start Fibre Activation" on the confirmation screen (2026-09-30) - a
- * cross-sell into the Fixed Line/Fibre wizard for the same counter visit,
- * replacing the previous same-wizard "Start Another Activation" reset.
- * SCR-043, the same registered New Fibre Connection entry point
- * journeyCatalogue.ts and FibreHomeSection's own product action use.
- */
-const FIBRE_ACTIVATION_ROUTE = '/fixed-line-fibre/new-fixed-line-wizard-contact-step';
 
 interface Product {
   productId: string;
@@ -57,6 +52,7 @@ interface Product {
 
 interface ConfirmedOrder {
   orderId: string;
+  activityId?: string;
   pendingApproval: boolean;
   customerName: string;
   msisdn: string;
@@ -87,6 +83,12 @@ interface ConfirmedOrder {
 // (2026-09-25 and -27); the nine steps above are what the wizard renders.
 // The Address step surfaces conflict-report.md Conflict 2 (ZSB-mandatory-for-
 // mobile) rather than silently resolving it - see ZsbAddressStep/ruleEngine.ts.
+/** The plan step, offering only the discounts the identified customer's record unlocks (none filtered while no customer is known). */
+function BenefitAwarePlanStep({ customerId, ...props }: { customerId?: string } & React.ComponentProps<typeof PostpaidPlanAddonsStep>) {
+  const customerBenefits = useCustomerBenefits(customerId);
+  return <PostpaidPlanAddonsStep {...props} customerBenefits={customerBenefits} />;
+}
+
 export function NewPostpaidWizard() {
   const navigate = useNavigate();
   const createRecord = useEntityStore((s) => s.createRecord);
@@ -101,43 +103,7 @@ export function NewPostpaidWizard() {
   }, []);
 
   if (confirmedOrder) {
-    return (
-      <div className="p-8">
-        <OrderConfirmationScreen
-          heading={confirmedOrder.pendingApproval ? 'Order submitted for approval' : 'Postpaid activation complete'}
-          orderId={confirmedOrder.orderId}
-          // Shown here rather than on the SIM Type step: by this point the
-          // order is submitted, so the code the customer scans belongs to an
-          // activation that actually exists.
-          handoverPanel={
-            confirmedOrder.esimActivationCode ? (
-              <EsimActivationPanel
-                activationCode={confirmedOrder.esimActivationCode}
-                customerEmail={confirmedOrder.customerEmail}
-                verified={confirmedOrder.customerEmailVerified}
-              />
-            ) : undefined
-          }
-          summaryLines={[
-            { label: 'Customer', value: confirmedOrder.customerName },
-            { label: 'MSISDN', value: confirmedOrder.msisdn },
-            { label: 'Plan', value: confirmedOrder.planName },
-            { label: 'SIM Type', value: confirmedOrder.simType ?? '-' },
-            { label: 'Due today', value: `QR ${confirmedOrder.dueTodayQar}` },
-            { label: 'Monthly recurring', value: `QR ${confirmedOrder.monthlyRecurringQar}/mo` },
-            { label: 'Status', value: confirmedOrder.pendingApproval ? 'Submitted for Approval' : 'Complete' },
-          ]}
-          actions={[
-            {
-              label: 'View Order',
-              variant: 'primary-rect',
-              onClick: () => navigate(`/order-management/order-approval-detail-attachments-order-details-activities-a?id=${confirmedOrder.orderId}`),
-            },
-            { label: 'Start Fibre Activation', onClick: () => navigate(FIBRE_ACTIVATION_ROUTE) },
-          ]}
-        />
-      </div>
-    );
+    return <ActivationCompleteScreen order={confirmedOrder} />;
   }
 
   return (
@@ -145,6 +111,7 @@ export function NewPostpaidWizard() {
       <GuidedActivationWizard
         wizardId={WIZARD_ID}
         title="New Postpaid Activation"
+        draftActionLabel="Postpaid Activation"
         // Abandoning drops the draft and returns the agent to the dashboard,
         // ready for the next customer. Matters most on a hard-stopped
         // Eligibility: the order cannot advance, so without this the agent is
@@ -158,7 +125,7 @@ export function NewPostpaidWizard() {
         // Save & Exit (2026-09-28), distinct from Abandon: keeps the draft
         // for later resumption. GuidedActivationWizard does the actual save;
         // this only says where to go afterward.
-        onSaveExit={() => navigate(POST_EXIT_DESTINATION)}
+        onSaveExit={() => navigate(DRAFT_ORDERS_PATH)}
         steps={[
           {
             key: 'contact',
@@ -321,9 +288,11 @@ export function NewPostpaidWizard() {
             render: ({ values, setValue }) => {
               const eligibility = values.eligibility as EligibilityResult | undefined;
               return (
-                <PostpaidPlanAddonsStep
+                <BenefitAwarePlanStep
+                  customerId={eligibility?.customerId}
                   selectedProductId={values.productId as string | undefined}
                   onSelectProduct={(id) => setValue('productId', id)}
+                  onDeselectProduct={() => setValue('productId', undefined)}
                   discountId={values.discountId as string | undefined}
                   onSelectDiscount={(id) => setValue('discountId', id)}
                   addonIds={(values.addonIds as string[] | undefined) ?? []}
@@ -368,6 +337,12 @@ export function NewPostpaidWizard() {
                 // the other four journeys sharing MsisdnPicker keep Manual
                 // MSISDN Entry, since nothing was said about them.
                 allowManualEntry={false}
+                inlineToolbar
+                hideReservedBadge
+                onDeselect={() => {
+                  setValue('msisdn', undefined);
+                  setValue('numberPriceQAR', undefined);
+                }}
               />
             ),
             isValid: (values) => Boolean(values.msisdn),
@@ -654,18 +629,16 @@ export function NewPostpaidWizard() {
             attachments,
           });
 
-          // "On successful WinCash confirmation ... create the interaction
-          // activity" (2026-09-28) - same shape OrderApprovalDetail.tsx's own
-          // logActivity already writes (activityNumber/orderId/actionTaken/
-          // notes/transactionDate), so this order's history reads consistently
-          // with one that picked up an activity later during approval.
+          // Activity is created automatically (activityEngine); its ID is shown on the confirmation.
           const payment = values.payment as WinCashPaymentValue | undefined;
-          await createRecord('customer-activities', {
-            activityNumber: `ACT-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+          const activityId = await logActivity({
+            trigger: 'completed',
+            journey: 'New Postpaid Activation',
             orderId,
-            actionTaken: 'New Postpaid Activation Submitted',
-            notes: `Order ${orderId} submitted via WinCash${payment?.reference ? ` (ref ${payment.reference})` : ''}.`,
-            transactionDate: new Date().toISOString(),
+            customerName: contact.moiResult?.name,
+            reason: pendingApproval
+              ? `Order ${orderId} submitted and is awaiting approval.`
+              : `Order ${orderId} submitted and activated${payment?.reference ? ` (WinCash ref ${payment.reference})` : ''}.`,
           });
 
           // Verified per the SAME definition the Contact step's own tick uses
@@ -680,6 +653,7 @@ export function NewPostpaidWizard() {
 
           setConfirmedOrder({
             orderId,
+            activityId,
             pendingApproval,
             customerName: contact.moiResult?.name ?? '-',
             msisdn: (values.msisdn as string) ?? '-',

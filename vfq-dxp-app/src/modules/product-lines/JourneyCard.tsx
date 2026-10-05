@@ -17,13 +17,13 @@ const STATUS: Record<JourneyStatus, {
   available: {
     label: 'Available',
     variant: 'success',
-    border: 'border-border-soft hover:border-accent hover:shadow-raised',
+    border: 'border-[var(--field-card-border)] hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]',
     cta: 'Start now',
   },
   partly: {
     label: 'Partly available',
     variant: 'warning',
-    border: 'border-[var(--warn)] hover:shadow-raised',
+    border: 'border-[var(--field-card-border)] hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]',
     cta: 'Check compatibility',
   },
   planned: {
@@ -31,7 +31,7 @@ const STATUS: Record<JourneyStatus, {
     variant: 'filled-neutral',
     // Dashed = nothing to click. The border itself carries the affordance,
     // so a planned card never looks interactive.
-    border: 'border-dashed border-border-soft',
+    border: 'border-dashed border-[var(--field-card-border)]',
     cta: 'Not yet open',
   },
 };

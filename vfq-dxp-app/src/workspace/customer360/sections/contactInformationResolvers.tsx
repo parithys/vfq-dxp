@@ -25,8 +25,10 @@ export const contactInformationResolvers: Record<string, Resolver> = {
     const emails = data.authorisedContacts.map((c) => c.email).filter(Boolean);
     return emails.length > 0 ? emails.join(', ') : undefined;
   },
-  // Authorized Mobile has no matching field - authorised-contacts.json
-  // carries name/email/roles/jobTitle but no phone number.
+  'Authorized Mobile': ({ data }) => {
+    const mobiles = data.authorisedContacts.map((c) => c.mobile).filter(Boolean);
+    return mobiles.length > 0 ? mobiles.join(', ') : undefined;
+  },
   'QCB Check': ({ data }) => data.deviceInstallments[0]?.qcbCreditCheckStatus as string | undefined,
   'ID Number': ({ data }) => data.contacts[0]?.idNumber as string | undefined,
   'ID Status (Blacklisted/Whitelisted)': ({ data }) => (
@@ -37,7 +39,7 @@ export const contactInformationResolvers: Record<string, Resolver> = {
   'Preferred Language': ({ data }) => (data.contacts[0]?.preferredLanguage as string | undefined) ?? data.customer.preferredLanguage,
   'First Name & Last Name (Full Name)': ({ data }) => {
     const c = data.contacts[0];
-    return c ? `${String(c.firstName ?? '')} ${String(c.lastName ?? '')}`.trim() || undefined : data.customer.name;
+    return c ? [c.firstName, c.middleName, c.lastName].filter(Boolean).join(' ').trim() || undefined : data.customer.name;
   },
   Email: ({ data }) => data.customer.email,
   'Cross sale offers flag': ({ data }) => (data.crossSalesOffers.length > 0 ? 'Yes' : 'No'),

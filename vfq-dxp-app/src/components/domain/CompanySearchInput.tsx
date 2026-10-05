@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { Icon } from '../primitives/Icon';
 import * as mockDataEngine from '../../engines/mockDataEngine';
+import { SearchField } from '../primitives/SearchField';
 
 interface EnterpriseAccount {
   enterpriseAccountId: string;
   name: string;
-  crNumber: string;
+  crNumber?: string;
   businessType: string;
   level: string;
 }
@@ -24,9 +26,12 @@ interface CompanySearchInputProps {
   value: CompanySelection;
   onChange: (next: CompanySelection) => void;
   id?: string;
+  /** Offer "Add new company" for text no registry row matches. Default true. */
+  allowAddNew?: boolean;
+  /** Shown in the same row as the "Linked to …" line once a company is picked. */
+  statusNote?: ReactNode;
 }
 
-const SEARCH_ICON = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3';
 const BUILDING_ICON = 'M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16 M15 21V9h4a1 1 0 0 1 1 1v11 M8 8h3 M8 12h3 M8 16h3';
 const PLUS_ICON = 'M12 5v14 M5 12h14';
 
@@ -48,7 +53,7 @@ const PLUS_ICON = 'M12 5v14 M5 12h14';
 // and leave `companyAccountId` pointing at Al Waab - the same stale-link class
 // of bug that switching ID Type without clearing the number produced in
 // IdLookupStep.
-export function CompanySearchInput({ label, value, onChange, id }: CompanySearchInputProps) {
+export function CompanySearchInput({ label, value, onChange, id, allowAddNew = true, statusNote }: CompanySearchInputProps) {
   const inputId = id ?? 'company-search';
   const [accounts, setAccounts] = useState<EnterpriseAccount[]>([]);
   const [query, setQuery] = useState(value.companyName ?? '');
@@ -72,7 +77,7 @@ export function CompanySearchInput({ label, value, onChange, id }: CompanySearch
   // Name AND CR number, because a B2B2C employer is as often identified by its
   // commercial registration as by a name the agent would have to spell.
   const results = q
-    ? accounts.filter((a) => a.name.toLowerCase().includes(q) || a.crNumber.toLowerCase().includes(q)).slice(0, 8)
+    ? accounts.filter((a) => a.name.toLowerCase().includes(q) || (a.crNumber ?? '').toLowerCase().includes(q)).slice(0, 20)
     : [];
 
   // An exact name match means "Add new company" would create a duplicate of a
@@ -95,10 +100,6 @@ export function CompanySearchInput({ label, value, onChange, id }: CompanySearch
     ? accounts.find((a) => a.enterpriseAccountId === value.companyAccountId)
     : undefined;
 
-  const borderClass = committed
-    ? 'border-[var(--field-border-filled)] hover:border-[var(--field-border-filled)]'
-    : 'border-[var(--field-border)] hover:border-accent/40';
-
   return (
     <div className="flex flex-col gap-1">
       {label && (
@@ -106,30 +107,23 @@ export function CompanySearchInput({ label, value, onChange, id }: CompanySearch
           {label}
         </label>
       )}
-      <div ref={containerRef} className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--field-icon)] pointer-events-none">
-          <Icon path={SEARCH_ICON} className="w-4 h-4" />
-        </span>
-        <input
-          id={inputId}
-          value={query}
-          role="combobox"
-          aria-expanded={open}
-          aria-controls={`${inputId}-listbox`}
-          autoComplete="off"
-          placeholder="Search by company name or CR number"
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setOpen(true);
-            // Any edit invalidates a previous selection - see the note above.
-            if (committed) onChange({ companyName: undefined, companyAccountId: undefined, companyIsNew: undefined });
-          }}
-          onFocus={() => setOpen(true)}
-          className={`w-full rounded-[var(--field-radius)] border pl-10 pr-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg
-            focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]
-            ${borderClass}`}
-        />
-
+      <SearchField
+        wrapperRef={containerRef}
+        id={inputId}
+        value={query}
+        role="combobox"
+        aria-expanded={open}
+        aria-controls={`${inputId}-listbox`}
+        autoComplete="off"
+        placeholder="Search by company name or CR number"
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setOpen(true);
+          // Any edit invalidates a previous selection - see the note above.
+          if (committed) onChange({ companyName: undefined, companyAccountId: undefined, companyIsNew: undefined });
+        }}
+        onFocus={() => setOpen(true)}
+      >
         {open && q && (
           <ul
             id={`${inputId}-listbox`}
@@ -150,7 +144,7 @@ export function CompanySearchInput({ label, value, onChange, id }: CompanySearch
                 <span className="min-w-0">
                   <span className="block text-[length:var(--fs-body)] font-semibold text-fg truncate">{a.name}</span>
                   <span className="block text-[length:var(--fs-caption)] text-muted truncate">
-                    {a.crNumber} · {a.businessType} · {a.level === 'parent' ? 'Parent account' : 'Sub-account'}
+                    {[a.crNumber, a.businessType, a.level === 'parent' ? 'Parent account' : 'Sub-account'].filter(Boolean).join(' · ')}
                   </span>
                 </span>
               </li>
@@ -168,7 +162,10 @@ export function CompanySearchInput({ label, value, onChange, id }: CompanySearch
                 case, not an error, and the seed shows it - the one seeded
                 B2B2C contact's employer is deliberately absent from
                 enterprise-accounts. */}
-            {!exactMatch && (
+            {!allowAddNew && results.length === 0 && (
+              <li className="px-4 py-3 text-[length:var(--fs-caption)] text-muted">No matching company.</li>
+            )}
+            {allowAddNew && !exactMatch && (
               <li
                 role="option"
                 aria-selected={false}
@@ -190,7 +187,7 @@ export function CompanySearchInput({ label, value, onChange, id }: CompanySearch
             )}
           </ul>
         )}
-      </div>
+      </SearchField>
 
       {/* What was actually committed. Without this the two outcomes look
           identical in the input - the same name sits there whether it links to
@@ -201,9 +198,10 @@ export function CompanySearchInput({ label, value, onChange, id }: CompanySearch
         </span>
       )}
       {committed && selectedAccount && (
-        <span className="text-[length:var(--fs-caption)] text-muted">
-          Linked to {selectedAccount.enterpriseAccountId} · {selectedAccount.crNumber}
-        </span>
+        <div className="flex flex-wrap items-center gap-x-3">
+          {statusNote}
+          <span className="text-[length:var(--fs-caption)] text-success">Linked to <strong className="font-semibold">{selectedAccount.enterpriseAccountId}</strong></span>
+        </div>
       )}
     </div>
   );

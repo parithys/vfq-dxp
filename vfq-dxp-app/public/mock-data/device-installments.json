@@ -13,8 +13,15 @@
     "stockReservationStatus": "Reserved",
     "accountStanding": "Good Standing",
     "status": "Approved",
-    "colourOptions": ["Onyx Black", "Marble Grey", "Cobalt Violet"],
-    "storageOptions": ["128 GB", "256 GB"],
+    "colourOptions": [
+      "Onyx Black",
+      "Marble Grey",
+      "Cobalt Violet"
+    ],
+    "storageOptions": [
+      "128 GB",
+      "256 GB"
+    ],
     "catalogStockStatus": "In Stock",
     "catalogStockNote": "In stock - same-day store pickup",
     "tradeInBonusQar": 300
@@ -33,8 +40,15 @@
     "stockReservationStatus": "Not Reserved",
     "accountStanding": "Good Standing",
     "status": "Rejected",
-    "colourOptions": ["Natural Titanium", "Black Titanium"],
-    "storageOptions": ["128 GB", "256 GB", "512 GB"],
+    "colourOptions": [
+      "Natural Titanium",
+      "Black Titanium"
+    ],
+    "storageOptions": [
+      "128 GB",
+      "256 GB",
+      "512 GB"
+    ],
     "catalogStockStatus": "Delivery Only",
     "catalogStockNote": "3–5 day delivery - no store stock",
     "tradeInBonusQar": null
@@ -53,8 +67,39 @@
     "stockReservationStatus": "Released",
     "accountStanding": "Good Standing",
     "status": "Declined",
-    "colourOptions": ["Graphite", "Silver"],
-    "storageOptions": ["16 GB"],
+    "colourOptions": [
+      "Graphite",
+      "Silver"
+    ],
+    "storageOptions": [
+      "16 GB"
+    ],
+    "catalogStockStatus": "In Stock",
+    "catalogStockNote": "In stock - same-day store pickup",
+    "tradeInBonusQar": null
+  },
+  {
+    "_note": "Customer-Inventory seed (2026-10-02)",
+    "id": "DOI-3101",
+    "accountId": "ACC-5625",
+    "qid": "28707063400052",
+    "deviceName": "Samsung Galaxy S24",
+    "devicePriceQar": 3200,
+    "downPaymentQar": 500,
+    "installmentMonths": 12,
+    "monthlyInstallmentQar": 225,
+    "eligibilityListMembership": "Eligible",
+    "qcbCreditCheckStatus": "Passed",
+    "stockReservationStatus": "Reserved",
+    "accountStanding": "Good Standing",
+    "status": "Approved",
+    "colourOptions": [
+      "Onyx Black"
+    ],
+    "storageOptions": [
+      "128 GB",
+      "256 GB"
+    ],
     "catalogStockStatus": "In Stock",
     "catalogStockNote": "In stock - same-day store pickup",
     "tradeInBonusQar": null

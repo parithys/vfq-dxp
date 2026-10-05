@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Icon } from '../primitives/Icon';
-import { Checkbox } from '../primitives/Checkbox';
+import { CARD_IDLE, CARD_SELECTED, CARD_SELECTED_SURFACE, SelectedCardTexture } from '../patterns/offerCardParts';
 import * as mockDataEngine from '../../engines/mockDataEngine';
+import { isAddonEligible, type AddonEligibilityContext, type AddonEligibilityRule } from '../../engines/addonEligibility';
 
 interface AddonProduct {
   productId: string;
@@ -9,6 +10,8 @@ interface AddonProduct {
   type: string;
   mrcQAR: number;
   description?: string;
+  /** Optional conditions for being offered this add-on - see addonEligibility.ts. */
+  eligibility?: AddonEligibilityRule;
 }
 
 interface AddonsPickerProps {
@@ -24,6 +27,8 @@ interface AddonsPickerProps {
    * simply omitting this prop.
    */
   hideHeader?: boolean;
+  /** Who the add-ons are for. Only add-ons this customer is eligible for are shown. */
+  eligibilityContext?: AddonEligibilityContext;
 }
 
 // "Plan & Add-ons" (reference flow step 5) - optional, non-gating multi-select
@@ -31,8 +36,11 @@ interface AddonsPickerProps {
 // single-select Plan above it in ProductPlanStep.
 const CHEVRON = 'M9 18l6-6-6-6';
 
-export function AddonsPicker({ selectedIds, onChange, hideHeader }: AddonsPickerProps) {
-  const [addons, setAddons] = useState<AddonProduct[]>([]);
+export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityContext }: AddonsPickerProps) {
+  const [allAddons, setAllAddons] = useState<AddonProduct[]>([]);
+  // Eligibility is evaluated BEFORE anything renders: an add-on the customer is not
+  // eligible for is not in the list at all, so it can be neither seen nor selected.
+  const addons = eligibilityContext ? allAddons.filter((a) => isAddonEligible(a, eligibilityContext)) : allAddons;
   // Collapsed by default (2026-09-27). Add-ons are optional and most orders
   // take none, so the list was occupying the step for a decision usually
   // answered "no" - but the count in the header means a collapsed section
@@ -42,8 +50,17 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader }: AddonsPicker
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    mockDataEngine.list<AddonProduct>('products').then((all) => setAddons(all.filter((p) => p.type === 'Add-on')));
+    mockDataEngine.list<AddonProduct>('products').then((all) => setAllAddons(all.filter((p) => p.type === 'Add-on')));
   }, []);
+
+  // A selection that stopped being eligible (the plan or customer type changed) is dropped.
+  const eligibleIds = addons.map((a) => a.productId).join(',');
+  useEffect(() => {
+    if (allAddons.length === 0) return;
+    const kept = selectedIds.filter((id) => addons.some((a) => a.productId === id));
+    if (kept.length !== selectedIds.length) onChange(kept);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eligibleIds, allAddons.length]);
 
   if (addons.length === 0) return null;
 
@@ -71,28 +88,44 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader }: AddonsPicker
           </h3>
         </button>
       )}
-      <div className={`grid grid-cols-1 gap-2 ${open || hideHeader ? '' : 'hidden'}`}>
-        {addons.map((a) => (
-          <label
-            key={a.productId}
-            className={`flex items-center justify-between gap-2 rounded-[var(--radius-card)] border p-3 cursor-pointer ${
-              selectedIds.includes(a.productId) ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              {/* Sizing, radius and border classes dropped - the primitive
-                  owns them. This was the one call site that had already
-                  hand-rolled a 19px tile, which is what --radius-checkbox and
-                  the 18px box now express for all ten. */}
-              <Checkbox checked={selectedIds.includes(a.productId)} onChange={() => toggle(a.productId)} />
-              <span>
-                <span className="text-fg">{a.name}</span>
-                {a.description && <span className="block text-[length:var(--fs-caption)] text-muted">{a.description}</span>}
-              </span>
-            </span>
-            <span className="text-fg shrink-0">QR {a.mrcQAR}/mo</span>
-          </label>
-        ))}
+      {/* Add-on cards share the plan cards' standard (shared idle / selected states, selected texture, tick).
+          Multi-select: each card toggles only itself, so choosing one never clears another. */}
+      <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 ${open || hideHeader ? '' : 'hidden'}`}>
+        {addons.map((a) => {
+          const selected = selectedIds.includes(a.productId);
+          return (
+            <div
+              key={a.productId}
+              role="button"
+              tabIndex={0}
+              aria-pressed={selected}
+              onClick={() => toggle(a.productId)}
+              onKeyDown={(e) => {
+                if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault();
+                  toggle(a.productId);
+                }
+              }}
+              className={`relative isolate flex flex-col gap-3 rounded-[var(--radius-card)] border p-5 cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+                selected ? `${CARD_SELECTED} ${CARD_SELECTED_SURFACE}` : CARD_IDLE
+              }`}
+            >
+              {selected && <SelectedCardTexture />}
+              {selected && (
+                <span aria-hidden="true" className="absolute -right-2 -top-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-accent text-white ring-2 ring-bg">
+                  <Icon path="M20 6L9 17l-5-5" className="w-3.5 h-3.5" strokeWidth={3} />
+                </span>
+              )}
+              <p className="text-fg font-bold text-[length:var(--fs-h5)] leading-snug">{a.name}</p>
+              {a.description && <p className="text-fg-2 text-[length:var(--fs-caption)]">{a.description}</p>}
+              <p className="text-accent mt-auto">
+                <span className="text-[length:var(--fs-body)] font-semibold">QR </span>
+                <span className="text-[length:var(--fs-h3)] font-bold">{a.mrcQAR}</span>
+                <span className="text-fg-2 text-[length:var(--fs-caption)]"> /mo</span>
+              </p>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -8,7 +8,7 @@ import { FibreHomeSection } from './FibreHomeSection';
 import { EnterpriseSection } from './EnterpriseSection';
 import { ProductsAssetsSection } from './MiscSections';
 import { TopicFieldsSection } from './TopicFieldsSection';
-import { buildAssetsFieldResolver } from './assetsResolvers';
+import { buildAssetsFieldResolver, assetsRichFields } from './assetsResolvers';
 
 export type AssetsSubView = 'overview' | ServiceTab | 'enterprise';
 
@@ -64,7 +64,7 @@ export function AssetsSection({
               individual line (balance, usage, device-installment) - shown
               once here rather than repeated identically on every line's
               expandable panel. */}
-          <TopicFieldsSection personaId={personaId} topic="Assets" resolveValue={buildAssetsFieldResolver(undefined, data)} />
+          <TopicFieldsSection personaId={personaId} topic="Assets" resolveValue={buildAssetsFieldResolver(undefined, data)} richFields={assetsRichFields(data)} />
         </div>
       ),
     },

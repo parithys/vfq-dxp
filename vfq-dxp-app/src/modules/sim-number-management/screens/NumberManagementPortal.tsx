@@ -10,7 +10,7 @@ export function NumberManagementPortal() {
   const [selected, setSelected] = useState<string | undefined>();
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-8 w-full">
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Number Management Portal</h1>
       <p className="text-fg-2 mb-6">Search and reserve fixed/mobile numbers.</p>
       <MsisdnPicker selected={selected} onSelect={(msisdn) => setSelected(msisdn)} />

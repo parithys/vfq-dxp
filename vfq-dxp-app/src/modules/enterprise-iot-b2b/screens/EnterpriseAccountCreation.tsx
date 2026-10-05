@@ -53,7 +53,7 @@ export function EnterpriseAccountCreation() {
   };
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-8 w-full">
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-6">Enterprise Account Creation</h1>
 
       <div className="space-y-4">
@@ -109,7 +109,7 @@ export function EnterpriseAccountCreation() {
         />
 
         {creditLimit && (
-          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-3">
+          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-3">
             <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg">
               <Checkbox checked={financeApproved} onChange={(e) => setFinanceApproved(e.target.checked)} />
               Business Finance has approved this credit limit

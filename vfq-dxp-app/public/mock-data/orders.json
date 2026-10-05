@@ -18,7 +18,8 @@
     "nrcTotalQAR": 0,
     "approvalStatus": "Not Required",
     "createdBy": "AGENT-KARTHIKK",
-    "sourceChannel": "Retail Store"
+    "sourceChannel": "Retail Store",
+    "createdAt": "2026-09-01T10:00:00+03:00"
   },
   {
     "orderId": "ORD-90002",
@@ -36,7 +37,8 @@
     "createdBy": "AGENT-VINODHINIR",
     "sourceChannel": "Retail Store (Tablet)",
     "holdFlag": true,
-    "holdReason": "HRN advance payment outstanding"
+    "holdReason": "HRN advance payment outstanding",
+    "createdAt": "2026-09-04T10:07:00+03:00"
   },
   {
     "orderId": "ORD-90003",
@@ -53,7 +55,8 @@
     "approvalStatus": "Approved",
     "createdBy": "AGENT-VINODHINIR",
     "sourceChannel": "Retail Store (Tablet)",
-    "fulfillmentStatus": "Awaiting WFM Appointment"
+    "fulfillmentStatus": "Awaiting WFM Appointment",
+    "createdAt": "2026-09-07T10:14:00+03:00"
   },
   {
     "orderId": "ORD-90004",
@@ -70,7 +73,8 @@
     "approvalStatus": "Not Required",
     "createdBy": "AGENT-HALEEMI",
     "sourceChannel": "Retail Store (Tablet)",
-    "kidUsed": "KID-334455"
+    "kidUsed": "KID-334455",
+    "createdAt": "2026-09-10T10:21:00+03:00"
   },
   {
     "orderId": "ORD-90005",
@@ -84,7 +88,8 @@
     ],
     "approvalStatus": "Not Required",
     "createdBy": "AGENT-HEMANTHKUMAR",
-    "portingWindowDays": 5
+    "portingWindowDays": 5,
+    "createdAt": "2026-09-13T10:28:00+03:00"
   },
   {
     "orderId": "ORD-90020",
@@ -105,15 +110,18 @@
     "approvalStatus": "Not Required",
     "createdBy": "USR-1101",
     "sourceChannel": "Retail Store",
-    "draftWizardId": "new-postpaid",
-    "draftResumePath": "/sim-number-management/new-postpaid-connection-journey-single-scroll-flow",
-    "draftStepKey": "simType",
+    "draftWizardId": "new-connection",
+    "draftResumePath": "/mobile/new-connection",
+    "draftStepKey": "contact",
     "draftValues": {
       "contact": {
         "idType": "QID",
         "idNumber": "28456701234",
         "moiResult": {
-          "name": "Ahmed Al-Sulaiti",
+          "name": "Ahmed Abdulla Hassan Al-Sulaiti",
+          "firstName": "Ahmed",
+          "middleName": "Abdulla Hassan",
+          "lastName": "Al-Sulaiti",
           "dob": "1985-03-12",
           "nationality": "Qatari",
           "email": "ahmed.alsulaiti@example.qa",
@@ -131,7 +139,13 @@
         "email": "ahmed.alsulaiti@example.qa",
         "altPhone": "+97455512345"
       },
-      "zsbAddress": {
+      "productId": "PROD-106",
+      "discountId": "ADO-7108",
+      "addonIds": [
+        "PROD-200"
+      ],
+      "msisdn": "+97433002011",
+      "address": {
         "zone": "55",
         "streetNo": "12",
         "buildingNo": "34",
@@ -140,15 +154,13 @@
         "kidLocationId": "KID-1101",
         "fetchedFromMoi": true
       },
-      "productId": "PROD-106",
-      "discountId": "ADO-7108",
-      "addonIds": [
-        "PROD-200"
-      ],
-      "msisdn": "+97433002011",
-      "numberPriceQar": 0
+      "numberPriceQAR": 0,
+      "crossSales": {
+        "decision": "declined"
+      }
     },
-    "_note": "App-level demo addition (2026-09-26) - Draft Orders had no order behind them. The three Draft Order tasks named a half-finished order in prose but carried no journey, no step and no captured values, so 'resume' had nothing to resume FROM. These records are that missing state: status 'Draft', plus draftWizardId / draftResumePath / draftStepKey / draftValues. The wizard hydrates its working copy from here and writes progress back on every step change, which is what lets several drafts coexist while the store still holds one working copy per journey. draftStepKey is a STEP KEY, not an index, because a wizard's active steps are filtered by each step's skip() - an index would resume at the wrong step for any customer whose journey skips one."
+    "_note": "App-level demo addition (2026-09-26) - Draft Orders had no order behind them. The three Draft Order tasks named a half-finished order in prose but carried no journey, no step and no captured values, so 'resume' had nothing to resume FROM. These records are that missing state: status 'Draft', plus draftWizardId / draftResumePath / draftStepKey / draftValues. The wizard hydrates its working copy from here and writes progress back on every step change, which is what lets several drafts coexist while the store still holds one working copy per journey. draftStepKey is a STEP KEY, not an index, because a wizard's active steps are filtered by each step's skip() - an index would resume at the wrong step for any customer whose journey skips one.",
+    "createdAt": "2026-09-16T10:35:00+03:00"
   },
   {
     "orderId": "ORD-90021",
@@ -169,15 +181,18 @@
     "approvalStatus": "Not Required",
     "createdBy": "USR-1101",
     "sourceChannel": "Retail Store",
-    "draftWizardId": "new-postpaid",
-    "draftResumePath": "/sim-number-management/new-postpaid-connection-journey-single-scroll-flow",
-    "draftStepKey": "plan",
+    "draftWizardId": "new-connection",
+    "draftResumePath": "/mobile/new-connection",
+    "draftStepKey": "contact",
     "draftValues": {
       "contact": {
         "idType": "QID",
         "idNumber": "27798765432",
         "moiResult": {
-          "name": "Fatima Al-Kuwari",
+          "name": "Fatima Saud Hamad Al-Kuwari",
+          "firstName": "Fatima",
+          "middleName": "Saud Hamad",
+          "lastName": "Al-Kuwari",
           "dob": "1990-07-22",
           "nationality": "Qatari",
           "email": "fatima.alkuwari@example.qa",
@@ -195,7 +210,8 @@
         "email": "fatima.alkuwari@example.qa",
         "altPhone": "+97455512345"
       },
-      "zsbAddress": {
+      "productId": "PROD-104",
+      "address": {
         "zone": "55",
         "streetNo": "12",
         "buildingNo": "34",
@@ -204,7 +220,50 @@
         "kidLocationId": "KID-1101",
         "fetchedFromMoi": true
       },
-      "productId": "PROD-104"
-    }
+      "crossSales": {
+        "decision": "declined"
+      }
+    },
+    "createdAt": "2026-09-19T10:42:00+03:00"
+  },
+  {
+    "_note": "Customer-Inventory seed (2026-10-02)",
+    "orderId": "ORD-91001",
+    "orderType": "New Postpaid Activation",
+    "orderSubType": "Consumer",
+    "status": "Complete",
+    "customerId": "CUST-3004",
+    "accountId": "ACC-5603",
+    "billingProfileId": "BILL-7103",
+    "productIds": [
+      "PROD-100"
+    ],
+    "totalQAR": 250,
+    "mrcTotalQAR": 250,
+    "nrcTotalQAR": 0,
+    "approvalStatus": "Approved",
+    "createdBy": "USR-1101",
+    "sourceChannel": "Retail Store",
+    "createdAt": "2026-09-22T10:49:00+03:00"
+  },
+  {
+    "_note": "Customer-Inventory seed (2026-10-02)",
+    "orderId": "ORD-91002",
+    "orderType": "New Postpaid Activation",
+    "orderSubType": "Consumer",
+    "status": "Complete",
+    "customerId": "CUST-3013",
+    "accountId": "ACC-5607",
+    "billingProfileId": "BILL-7107",
+    "productIds": [
+      "PROD-100"
+    ],
+    "totalQAR": 250,
+    "mrcTotalQAR": 250,
+    "nrcTotalQAR": 0,
+    "approvalStatus": "Approved",
+    "createdBy": "USR-1101",
+    "sourceChannel": "Retail Store",
+    "createdAt": "2026-09-25T10:56:00+03:00"
   }
 ]

@@ -415,10 +415,10 @@ export function TicketDetail() {
   const availableHashtags = TT_HASHTAGS;
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-8 w-full">
       <div className="flex flex-col lg:flex-row items-start gap-6">
         <div className="flex-1 min-w-0 space-y-6">
-          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
             <div className="flex items-center gap-3 mb-1">
               <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">Ticket {ticket.ticketId}</h1>
               <Badge variant={STATUS_VARIANT[ticket.status] ?? 'filled-neutral'}>{ticket.status}</Badge>
@@ -443,7 +443,7 @@ export function TicketDetail() {
             </p>
           </div>
 
-          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
             <h2 className="text-[length:var(--fs-h5)] text-fg font-medium mb-3">Public Notes</h2>
             <div className="space-y-2 mb-3">
               {notes.length === 0 && <p className="text-fg-2 text-[length:var(--fs-body)]">No public notes yet.</p>}
@@ -460,7 +460,7 @@ export function TicketDetail() {
             </Button>
           </div>
 
-          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
             <Tabs
               items={[
                 {
@@ -579,11 +579,11 @@ export function TicketDetail() {
         </div>
 
         <div className="w-full lg:w-72 shrink-0 space-y-6">
-          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
             <h2 className="text-[length:var(--fs-body-lg)] text-fg font-medium mb-3">Actions</h2>
             <div className="flex flex-col gap-2">
               {pendingApproval && (
-                <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-3 text-[length:var(--fs-body)] text-fg-2">
+                <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-3 text-[length:var(--fs-body)] text-fg-2">
                   Pending approval decision - see the Approval Queue.
                   {ticket.approvalDecision && (
                     <p className="mt-1 text-[length:var(--fs-caption)]">
@@ -652,7 +652,7 @@ export function TicketDetail() {
             </div>
           </div>
 
-          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
             <h2 className="text-[length:var(--fs-body-lg)] text-fg font-medium mb-3">Overview</h2>
             <div className="space-y-3 text-[length:var(--fs-body)]">
               <div className="flex items-center justify-between gap-2">

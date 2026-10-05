@@ -99,7 +99,7 @@ export function PrepaidCheckoutStep({
 
   return (
     <div className="space-y-4">
-      <dl className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4">
+      <dl className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-4">
         <Row label="Customer" value={customerName ?? '-'} />
         <Row label="Pack" value={plan ? `${plan.name} - QR ${starterPackChargeQar}` : 'SIM only, no pack selected'} />
         <Row label="Number" value={msisdn ? `${msisdn}${numberDelta > 0 ? ` (premium, QR ${numberDelta} one-time)` : ''}` : '-'} />

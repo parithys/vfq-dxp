@@ -136,7 +136,7 @@ export function DeviceInstallmentStep({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg overflow-hidden">
+      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg overflow-hidden">
         <div className="px-5 py-4 border-b border-border-soft bg-surface">
           <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Device selection</h3>
         </div>
@@ -146,7 +146,7 @@ export function DeviceInstallmentStep({
             <button
               onClick={() => selectDevice(null)}
               className={`text-left rounded-[var(--radius-card)] border p-4 ${
-                !value ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
+                !value ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]' : 'border-[var(--field-card-border)] bg-bg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -165,7 +165,7 @@ export function DeviceInstallmentStep({
                   key={d.deviceName}
                   onClick={() => selectDevice(d)}
                   className={`text-left rounded-[var(--radius-card)] border p-4 ${
-                    selected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
+                    selected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]' : 'border-[var(--field-card-border)] bg-bg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -255,7 +255,7 @@ export function DeviceInstallmentStep({
                       key={m}
                       onClick={() => setMonths(m)}
                       className={`px-3 py-1 rounded-[var(--radius-button)] border text-[length:var(--fs-caption)] ${
-                        value.installmentMonths === m ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected)] text-white' : 'border-border-soft text-fg-2'
+                        value.installmentMonths === m ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected)] text-white' : 'border-border-soft bg-bg text-fg'
                       }`}
                     >
                       {m} mo
@@ -264,7 +264,7 @@ export function DeviceInstallmentStep({
                 </div>
               </div>
 
-              <div className="rounded-[var(--radius-card)] border border-border-soft divide-y divide-border-soft">
+              <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] divide-y divide-border-soft">
                 {[
                   ['Instalment term', `${value.installmentMonths} months`],
                   ['Device instalment', `QAR ${value.monthlyInstallmentQar}/mo`],
@@ -298,7 +298,7 @@ export function DeviceInstallmentStep({
                       className={`text-left rounded-[var(--radius-card)] border p-3 flex items-center justify-between gap-2 ${
                         value.handoverMethod === h.method
                           ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]'
-                          : 'border-border-soft hover:border-[var(--field-card-selected)]'
+                          : 'border-[var(--field-card-border)] bg-bg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
                       }`}
                     >
                       <span className="flex items-center gap-2">
@@ -319,7 +319,7 @@ export function DeviceInstallmentStep({
       </div>
 
       {value && (
-        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg overflow-hidden">
+        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg overflow-hidden">
           {/* justify-between kept though only one child remains: the rule-id
               chip that sat on the right was removed with the rest of the BRSD
               references, and nothing else belongs in that corner. */}

@@ -5,9 +5,7 @@ import { PhoneNumberInput } from '../../../components/primitives/PhoneNumberInpu
 import { IdLookupStep } from '../../../components/patterns/IdLookupStep';
 import { QidImageUpload } from '../../../components/domain/QidImageUpload';
 import type { QidImageUploadValue } from '../../../components/domain/QidImageUpload';
-import { SignaturePad } from '../../../components/primitives/SignaturePad';
-import { Drawer } from '../../../components/primitives/Drawer';
-import { Button } from '../../../components/primitives/Button';
+import { SignatureCapture } from '../../../components/patterns/SignatureCapture';
 import { Badge } from '../../../components/primitives/Badge';
 import { useState } from 'react';
 import { useEntityStore } from '../../../stores/entityStore';
@@ -34,7 +32,6 @@ export function PassportToQidWizard() {
   const createRecord = useEntityStore((s) => s.createRecord);
   const pushToast = useNotificationStore((s) => s.pushToast);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | undefined>();
-  const [padOpen, setPadOpen] = useState(false);
 
   return (
     <div className="p-8">
@@ -90,7 +87,7 @@ export function PassportToQidWizard() {
             label: 'Identification Number Change Form',
             render: ({ values }) => (
               <div className="space-y-4">
-                <div className="rounded-[var(--radius-card)] border border-border-soft p-4 bg-surface">
+                <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4 bg-surface">
                   <p className="text-fg font-medium">Identification Number Change Form</p>
                   <p className="text-fg-2 text-[length:var(--fs-caption)] mt-1">
                     Customer: {(values.qid as QidValue | undefined)?.moiResult?.name ?? '-'} - updating identification
@@ -103,9 +100,7 @@ export function PassportToQidWizard() {
                       <img src={signatureDataUrl} alt="Signature" className="h-10 border border-border-soft rounded" />
                     </div>
                   ) : (
-                    <Button variant="primary-rect" className="mt-3" onClick={() => setPadOpen(true)}>
-                      Please Sign
-                    </Button>
+                    <SignatureCapture onSave={(dataUrl) => setSignatureDataUrl(dataUrl)} />
                   )}
                 </div>
               </div>
@@ -128,14 +123,6 @@ export function PassportToQidWizard() {
           navigate('/identity-customer-management');
         }}
       />
-      <Drawer open={padOpen} onClose={() => setPadOpen(false)} title="Please Sign">
-        <SignaturePad
-          onDone={(dataUrl) => {
-            setSignatureDataUrl(dataUrl);
-            setPadOpen(false);
-          }}
-        />
-      </Drawer>
     </div>
   );
 }

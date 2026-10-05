@@ -34,12 +34,11 @@ export type ButtonVariant = 'primary-rect' | 'primary-pill' | 'ghost-rect' | 'gl
 // The short-lived --surface-warm-border token existed only to be that resting
 // border, so it was deleted with this change rather than left orphaned.
 //
-// Label is --deep-red, NOT the assets' #E60000. That is the one value here that
-// does not follow the SVGs, and it is deliberate: #e60000 on the #FFF0F0 hover
-// fill measures 4.35:1, under SC 1.4.3's 4.5:1 for the 14px these render at
-// (it passes on the white resting fill, at 4.81:1 - it is only the hover state
-// that fails). --deep-red is 10.29:1 on white and 9.30:1 on #FFF0F0, and still
-// reads unmistakably red. Confirmed with the user 2026-09-27.
+// Update 2026-10-01: border and label are the SAME red, --accent-secondary
+// (#FF4D4D), per direction - red label, red outline, white fill. This
+// supersedes the earlier --accent-hover and the 2026-09-27 --deep-red label.
+// NOTE: #FF4D4D on white is about 3.3:1, under SC 1.4.3's 4.5:1 for 14px text
+// (a deliberate trade for the requested colour; revisit if contrast is audited).
 //
 // Resting colour only - the hover is deliberately NOT bundled in, because the
 // two element families need different selectors for it. `enabled:hover:` (what
@@ -48,7 +47,7 @@ export type ButtonVariant = 'primary-rect' | 'primary-pill' | 'ghost-rect' | 'gl
 // <a> it silently never fires, so folding it in here would have left the links
 // with no hover at all. Buttons add `enabled:hover:`, links add plain `hover:`.
 export const SECONDARY_SURFACE =
-  'border-accent bg-bg text-[var(--deep-red)]';
+  'border-[var(--accent-secondary)] bg-bg text-[var(--accent-secondary)]';
 
 // The primary fill, standardised 2026-09-27: --accent-gradient, white label,
 // no visible border. Exported for the same reason as SECONDARY_SURFACE - the
@@ -132,9 +131,9 @@ const variantClasses: Record<ButtonVariant, string> = {
   'glass-pill': 'bg-[var(--white-glass-10)] backdrop-blur text-fg border border-transparent rounded-[var(--radius-button)] px-5 py-2',
   // Same fix as ghost-rect above - was bg-transparent AND border-transparent,
   // i.e. no visible chrome at all until hover.
-  'content-ghost-pill': 'bg-bg text-accent border border-border enabled:hover:bg-surface-warm rounded-[var(--radius-button)] px-4 py-1.5',
+  'content-ghost-pill': `${SECONDARY_SURFACE} font-semibold border enabled:hover:bg-surface-warm rounded-[var(--radius-button)] px-4 py-1.5`,
   // Same px-4 py-2 box as primary-rect, so the two sit level side by side.
-  'secondary-rect': `${SECONDARY_SURFACE} border enabled:hover:bg-surface-warm transition-colors rounded-[var(--radius-button)] px-4 py-2`,
+  'secondary-rect': `${SECONDARY_SURFACE} font-semibold border enabled:hover:bg-surface-warm transition-colors rounded-[var(--radius-button)] px-4 py-2`,
 };
 
 export function Button({ variant = 'primary-rect', compact, className = '', children, ...rest }: ButtonProps) {

@@ -56,7 +56,7 @@ export function MigrationOfferTab() {
   };
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-8 w-full">
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Migration Offer</h1>
       <p className="text-fg-2 mb-6">System-recommended prepaid-to-postpaid migration offers (Unica campaign engine).</p>
 
@@ -64,7 +64,7 @@ export function MigrationOfferTab() {
         {migrationOffers.map((o) => {
           const status = dispositioned[o.offerId] ?? o.status;
           return (
-            <div key={o.offerId} className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4">
+            <div key={o.offerId} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-fg font-medium">{o.offerName}</span>
                 <Badge variant={STATUS_VARIANT[status] ?? 'filled-neutral'}>{status}</Badge>

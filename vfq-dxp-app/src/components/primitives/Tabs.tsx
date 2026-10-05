@@ -17,12 +17,15 @@ export function Tabs({
   items,
   defaultKey,
   orientation = 'horizontal',
+  rail = false,
   activeKey,
   onChange,
 }: {
   items: TabItem[];
   defaultKey?: string;
   orientation?: 'horizontal' | 'vertical';
+  /** Vertical only: the numbered step-rail look used by the guided wizards (stacked rows, number badge, warm active row). */
+  rail?: boolean;
   /** Controlled active tab - pass alongside onChange when a parent needs to
    * know/drive which tab is active (e.g. to reflect it in a breadcrumb).
    * Omit both for the original self-managed behavior. */
@@ -34,10 +37,43 @@ export function Tabs({
   const setActive = onChange ?? setUncontrolledActive;
   const activeItem = items.find((i) => i.key === active);
 
+  if (orientation === 'vertical' && rail) {
+    return (
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        <ol className="w-full lg:w-72 shrink-0 self-start lg:sticky lg:top-8 lg:max-h-[calc(100vh-8rem)] overflow-y-auto rounded-[var(--radius-card)] border border-[var(--field-card-border)] divide-y divide-border-soft bg-bg">
+          {items.map((item, i) => {
+            const isActive = active === item.key;
+            return (
+              <li key={item.key} aria-current={isActive ? 'step' : undefined}>
+                <button
+                  type="button"
+                  onClick={() => setActive(item.key)}
+                  className={`w-full flex items-center gap-3 px-4 py-4 border-l-2 text-left transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+                    isActive ? 'bg-surface-warm border-l-accent' : 'border-l-transparent hover:bg-surface'
+                  }`}
+                >
+                  <span
+                    className={`flex items-center justify-center w-7 h-7 rounded-[var(--radius-circle)] text-[length:var(--fs-caption)] font-medium shrink-0 ${
+                      isActive ? 'bg-accent text-accent-on' : 'bg-light-neutral text-muted'
+                    }`}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className={`min-w-0 text-fg ${isActive ? 'font-semibold' : 'font-medium'}`}>{item.label}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+        <div className="@container flex-1 min-w-0 w-full">{activeItem?.content}</div>
+      </div>
+    );
+  }
+
   if (orientation === 'vertical') {
     return (
       <div className="flex gap-6 items-start">
-        <div className="w-56 shrink-0 rounded-[var(--radius-card)] border border-border-soft bg-bg overflow-hidden">
+        <div className="w-56 shrink-0 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg overflow-hidden">
           {items.map((item) => (
             <button
               key={item.key}
@@ -56,12 +92,13 @@ export function Tabs({
 
   return (
     <div>
-      <div className="flex gap-1 border-b border-border-soft">
+      {/* Scrolls sideways rather than wrapping when there are more tabs than the width allows. */}
+      <div className="flex gap-1 border-b border-border-soft overflow-x-auto">
         {items.map((item) => (
           <button
             key={item.key}
             onClick={() => setActive(item.key)}
-            className={`px-4 py-2 text-[length:var(--fs-body)] border-b-2 -mb-px transition-colors
+            className={`px-4 py-2 text-[length:var(--fs-body)] border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0
               ${active === item.key ? 'border-accent text-accent font-medium' : 'border-transparent text-fg-2 hover:text-fg'}`}
           >
             {item.label}

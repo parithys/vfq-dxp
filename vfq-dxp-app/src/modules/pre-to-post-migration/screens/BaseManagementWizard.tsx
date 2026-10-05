@@ -81,7 +81,7 @@ export function BaseManagementWizard() {
             label: 'Offer Summary',
             render: ({ values, setValue }) => (
               <div className="space-y-4">
-                <div className="rounded-[var(--radius-card)] border border-border-soft p-4 bg-surface">
+                <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4 bg-surface">
                   <p className="text-fg font-medium">{offer.offerName}</p>
                   <p className="text-fg-2 text-[length:var(--fs-body)] mt-1">{offer.offerDescription}</p>
                   <p className="text-fg text-[length:var(--fs-body)] mt-2">
@@ -93,7 +93,7 @@ export function BaseManagementWizard() {
                   value={values.billLimit as number | undefined}
                   onChange={(v, pass) => { setValue('billLimit', v); setValue('billLimitValid', pass); }}
                 />
-                <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-3">
+                <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-3">
                   <span className="text-fg">Credit Limit</span>
                   <div className="text-fg mt-1">QR 1000</div>
                 </div>

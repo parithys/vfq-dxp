@@ -119,3 +119,18 @@ procedural detail — 38 are `high` confidence, 1 `medium`. If new files are
 added to this folder later, or a fresh corpus has the same screenshot-only
 problem, use this same image-extraction + direct visual reading approach
 rather than relying on text extraction alone.
+
+## Customer inventory - kept in sync with the app's data
+
+`reference/outputs/Customer-Inventory.xlsx` is the test-customer contract: every customer on
+its **Customers** sheet must be findable in the running app (Customer Search, ID lookup) with the
+same name, nationality, segment, date of birth, mobile, ID type/number/expiry, and every customer
+the app can find must be on the sheet. It is **generated**, never hand-edited.
+
+Whenever you add or change customers (`public/mock-data/customers.json`,
+`identity-documents.json`, `customer-contacts.json`, `nas-records.json`):
+
+1. Seed from the script, not by hand: `python3 reference/scripts/build_customer_inventory.py --seed`
+2. Regenerate the workbook: `python3 reference/scripts/build_customer_inventory.py`
+3. Check they agree: `python3 reference/scripts/verify_customer_inventory_sync.py`
+   (exits 1 and lists each difference; must print "In sync.")

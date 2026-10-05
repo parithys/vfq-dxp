@@ -28,5 +28,21 @@
     "stockStatus": "Available",
     "swapStatus": "Original",
     "_note": "App-level QA test addition - a memorable, always-available SIM Serial Number for consistent testing across every SIM-capture step in the app (New Postpaid, New Prepaid, MNP Port-In, FWA/Fixed-Line Dual-Play install, SIM Swap), all of which validate against this same sims.json via SimSerialScanner."
+  },
+  {
+    "_note": "Customer-Inventory seed (2026-10-02)",
+    "simSerial": "8974412009900130001",
+    "iccid": "8974412009900130001",
+    "type": "Physical",
+    "stockStatus": "Issued",
+    "swapStatus": "Original"
+  },
+  {
+    "_note": "Customer-Inventory seed (2026-10-02)",
+    "simSerial": "8974412009900130002",
+    "iccid": "8974412009900130002",
+    "type": "Printed eSIM",
+    "stockStatus": "Issued",
+    "swapStatus": "Original"
   }
 ]

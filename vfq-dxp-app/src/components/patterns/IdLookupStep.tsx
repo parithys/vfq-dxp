@@ -1,17 +1,43 @@
 import { useEffect, useRef, useState } from 'react';
 import { QidNumberField, QidTypeSelector, idTypeLabel } from '../domain/QidInput';
+import type { SpecimenIdentity } from '../domain/ScannedIdPreview';
+import { callService, ServiceError, takeDuplicateFault, VALIDATION_TTL_MS, type FailureKind, type ServiceName } from '../../engines/serviceCall';
+import { TechnicalFailure, ValidationStatus } from './ValidationStatus';
+import { Button } from '../primitives/Button';
 import { QidImageUpload } from '../domain/QidImageUpload';
 import type { QidImageUploadValue } from '../domain/QidImageUpload';
 import type { QidType } from '../domain/QidInput';
 import { Badge } from '../primitives/Badge';
+import { Input } from '../primitives/Input';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
 
-interface MoiResult {
+/** A customer record that shares the scanned ID with others - offered to the agent to choose from. */
+export interface DuplicateCandidate {
+  customerId: string;
   name: string;
+  dob: string;
+}
+
+export interface MoiResult {
+  /** Mobile number and notification language on the customer record - shown by
+   * the verify-then-fetch flow only. */
+  phone?: string;
+  preferredLanguage?: string;
+  name: string;
+  /** Set when the ID resolved to an existing Vodafone customer (Siebel); absent for a NAS-only new customer. */
+  customerId?: string;
+  /** The registry's own name parts, when it returns them. The Contact step prefers these over splitting `name` by position, so a middle name of several tokens is never guessed at. */
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
   dob: string;
   nationality: string;
   email?: string;
+  /** Where `email` came from: Siebel for an existing customer, NAS for a new one. */
+  emailSource?: 'Siebel' | 'NAS' | 'Billing Profile';
+  /** No customer record exists for this ID - details come from NAS, not Siebel. */
+  isNewCustomer?: boolean;
   // Added 2026-09-24 so Gender can be registry-sourced. It has to be: the
   // identity fields are non-editable, and a mandatory field with no source
   // and no way to type into it would block Continue forever. customers.json
@@ -80,13 +106,36 @@ const LEGACY_MAX_SCAN_ATTEMPTS = 4;
  * directly against either, so both get the same process rather than QID
  * getting a scanner and its equal being typed in by hand.
  *
- * Passport and GCC ID are deliberately absent. A passport is a booklet
- * scanned at its photo page and GCC/Diplomatic reverse capture is not
- * evidenced for them, so offering a two-face card capture would invent a step.
+ * All four supported ID types (Qatar ID, Passport, GCC ID, Diplomatic ID) are scanned before the
+ * journey can proceed (2026-10-04): the number is read from the scan, not typed in.
  */
-const SCANNABLE_ID_TYPES = new Set<QidType>(['QID', 'Diplomatic ID']);
+const SCANNABLE_ID_TYPES = new Set<QidType>(['QID', 'Passport', 'GCC ID', 'Diplomatic ID']);
 
-type IdLookupValue = { idType?: QidType; idNumber?: string; moiResult?: MoiResult; qidScans?: QidImageUploadValue };
+type IdLookupValue = {
+  idType?: QidType;
+  idNumber?: string;
+  moiResult?: MoiResult;
+  qidScans?: QidImageUploadValue;
+  /** verifyThenFetch only: the expiry read off the scan (DD/MM/YYYY), editable so the agent can correct it after comparing with the card. */
+  scannedExpiry?: string;
+  /** The number was typed after the scan budget ran out, not read from a scan: the order needs Store Manager approval. */
+  manualEntry?: boolean;
+};
+
+// ISO (YYYY-MM-DD) -> DD/MM/YYYY, the format the card shows and the field takes.
+// Simulated OCR misread for the blurred first pass: swaps look-alike digits
+// (3/8, 1/7, 0/6), guaranteed to differ from the real number.
+const misread = (n: string) => {
+  const swap: Record<string, string> = { '3': '8', '8': '3', '1': '7', '7': '1', '0': '6', '6': '0' };
+  const i = [...n].findIndex((c) => c in swap);
+  if (i < 0) return n.slice(0, -1) + (n.endsWith('9') ? '8' : '9');
+  return n.slice(0, i) + swap[n[i]] + n.slice(i + 1);
+};
+
+const isoToDmy = (iso: string) => {
+  const [y, m, d] = iso.split('-');
+  return y && m && d ? `${d}/${m}/${y}` : iso;
+};
 
 interface IdLookupStepProps {
   value?: IdLookupValue;
@@ -125,6 +174,26 @@ interface IdLookupStepProps {
    *   - the attempt budget is two rather than four
    */
   autoDetectIdType?: boolean;
+  /**
+   * Scan -> verify -> Fetch (2026-09-30), OPT-IN for the same reason as
+   * autoDetectIdType. The scan populates the QID number AND expiry date as
+   * editable fields and does NOT call MOI; the agent compares them with the
+   * physical card and presses Fetch, which submits both for validation.
+   */
+  verifyThenFetch?: boolean;
+  /**
+   * Whoever this ID belongs to is handled as a genuine NEW customer (New
+   * Connection - New Customer): identity from NAS where NAS has it, the
+   * Siebel customerId/employer/phone are NOT carried, and the email is the
+   * NAS one (masked by the Contact step).
+   */
+  asNewCustomer?: boolean;
+  /**
+   * Prototype rule (journey started from Customer 360): the customer is the one
+   * the journey was opened for, whatever number the scan returned - the demo
+   * scanner returns the same QID every time. Identity is taken from this record.
+   */
+  asCustomerId?: string;
 }
 
 // Pattern 2: Customer/Contact Lookup Step (QID/Kahramaa ID Scan + MOI Validation) -
@@ -140,9 +209,10 @@ interface IdLookupStepProps {
 // restriction carried over from the 66-persona model's PERSONA-001 ("cannot
 // manually enter ID details, only re-scan/search") - only the lookup ID
 // number itself is directly editable.
-export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint, autoDetectIdType = false }: IdLookupStepProps) {
+export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint, autoDetectIdType = false, verifyThenFetch = false, asNewCustomer = false, asCustomerId }: IdLookupStepProps) {
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [expiryMismatch, setExpiryMismatch] = useState(false);
   const numberInputRef = useRef<HTMLInputElement>(null);
   // The current value, readable from an async continuation that was started
   // under an older one.
@@ -159,6 +229,12 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
   const latest = useRef(value);
   latest.current = value;
   const idType = value.idType ?? 'QID';
+  // verifyThenFetch is selector-led with NOTHING preselected (2026-10-04). A
+  // QID default (2026-10-02) meant a Diplomatic ID, Passport or GCC ID presented
+  // at the reader was read as a QID unless the agent noticed and switched first.
+  // The agent now names the document type, and the scanner, the document read
+  // and the MOI lookup all follow that type - each type its own flow.
+  const typeChosen = !verifyThenFetch || Boolean(value.idType);
   /**
    * DEMO ONLY (2026-09-28, explicitly requested as such).
    *
@@ -172,7 +248,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
    * demonstrating the app, not of the order.
    */
   const [demoType, setDemoType] = useState<QidType | null>(null);
-  const scannable = SCANNABLE_ID_TYPES.has(idType);
+  const scannable = typeChosen && SCANNABLE_ID_TYPES.has(idType);
   // Everything that asks "is there a reader on this screen" must accept a demo
   // scan too, or the capture disappears the moment a non-scannable type wins.
   const effectiveScannable = scannable || demoType !== null;
@@ -181,7 +257,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
     // Re-clicking the type you are already on is a no-op, not a reset. These
     // are plain buttons rather than radios, so without this a stray second
     // click on the selected chip would wipe a number the agent had just typed.
-    if (nextType === idType) return;
+    if (nextType === idType && typeChosen) return;
     setNotFound(false);
     // Clear the NUMBER, not just the MOI result. The two ID schemes have
     // nothing in common, so a number carried across a type switch is always
@@ -216,58 +292,259 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
     numberInputRef.current?.focus();
   };
 
-  const runMoiValidation = async () => {
-    if (!value.idNumber) return;
-    const requested = value.idNumber;
-    setLoading(true);
-    setNotFound(false);
-    const identityDocs = await mockDataEngine.list<{ documentNumber: string; customerId: string; expiryDate?: string }>(
-      'identity-documents'
-    );
-    const match = identityDocs.find((d) => d.documentNumber === value.idNumber);
-    if (!match) {
-      setNotFound(true);
-      setLoading(false);
+  // Customer 360 context: the card drawn in the reader shows this customer.
+  const [contextIdentity, setContextIdentity] = useState<SpecimenIdentity | undefined>();
+  /** Set (to the customer's name, or the id) when the journey's customer has no identity document on file: nothing to draw in the reader. */
+  const [contextNoDocument, setContextNoDocument] = useState<string | undefined>();
+  useEffect(() => {
+    setContextNoDocument(undefined);
+    if (!asCustomerId) {
+      setContextIdentity(undefined);
       return;
     }
-    const customers = await mockDataEngine.list<{ customerId: string; name: string; dob: string; nationality: string; email?: string; gender?: string; companyName?: string }>(
-      'customers'
-    );
-    const customer = customers.find((c) => c.customerId === match.customerId);
-    setLoading(false);
-    // Superseded while in flight - the agent retook the scan, switched ID
-    // type, or edited the number. Applying this now would attach one
-    // document's demographics to another's number.
-    if (latest.current.idNumber !== requested) return;
-    if (customer) {
-      // Only for a customer who has an employer, so an ordinary consumer sale
-      // costs no extra dataset read.
-      let companyAccountId: string | undefined;
-      if (customer.companyName) {
-        const accounts = await mockDataEngine.list<{ enterpriseAccountId: string; name: string }>(
-          'enterprise-accounts'
-        );
-        companyAccountId = accounts.find((a) => a.name === customer.companyName)?.enterpriseAccountId;
-        // Left undefined when the employer is not in the registry, rather than
-        // faked. The order still carries the name and still routes for
-        // approval; the approver is the one who can see that the sponsoring
-        // account does not exist yet, which is exactly the kind of thing they
-        // are there to catch.
+    let cancelled = false;
+    void Promise.all([
+      mockDataEngine.list<{ customerId: string; name: string; nationality: string; dob: string }>('customers'),
+      mockDataEngine.list<{ customerId: string; documentType: string; documentNumber: string; expiryDate?: string }>('identity-documents'),
+    ]).then(([customers, docs]) => {
+      const c = customers.find((x) => x.customerId === asCustomerId);
+      const own = docs.filter((d) => d.customerId === asCustomerId);
+      const d = own.find((x) => x.documentType === 'QID') ?? own[0];
+      if (cancelled) return;
+      if (!c || !d) {
+        // Never fall back to another customer's specimen card: say there is no document.
+        setContextIdentity(undefined);
+        setContextNoDocument(c?.name ?? asCustomerId);
+        return;
       }
-      onChange({
-        ...latest.current,
-        moiResult: {
-          name: customer.name,
-          dob: customer.dob,
-          nationality: customer.nationality,
-          email: customer.email,
-          gender: customer.gender,
-          companyName: customer.companyName,
-          companyAccountId,
-          expiryDate: match.expiryDate,
-          moiUpdateTime: new Date().toISOString(),
-        },
-      });
+      setContextIdentity({ name: c.name, idNo: d.documentNumber, nationality: c.nationality, dob: isoToDmy(c.dob), expiry: d.expiryDate ? isoToDmy(d.expiryDate) : '' });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [asCustomerId]);
+
+  // ---- Failure handling ------------------------------------------------------
+  // A lookup that cannot complete is UNRESOLVED: it never becomes "not found",
+  // "new customer", "validated" or "eligible". The failure is held here, shown
+  // with Retry while attempts remain, and a controlled recovery once they are
+  // spent. `requestSeq` makes every result belong to exactly one request, so a
+  // retry, a retake or an edited number can never be answered by an older call.
+  const [failure, setFailure] = useState<{ service: ServiceName; kind: FailureKind; attempts: number } | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const [duplicates, setDuplicates] = useState<DuplicateCandidate[] | null>(null);
+  const [expiredNotice, setExpiredNotice] = useState(false);
+  const attemptsRef = useRef<{ number: string; n: number }>({ number: '', n: 0 });
+  const requestSeq = useRef(0);
+
+  // A different number is a different question: forget the old answer's trouble.
+  useEffect(() => {
+    setFailure(null);
+    setDuplicates(null);
+    setRetrying(false);
+  }, [value.idNumber]);
+
+  // A successful MOI validation does not last forever. Once it is older than the
+  // TTL it is dropped (the identity fields clear with it) and the agent must
+  // validate again - the journey never continues on a stale result.
+  const validatedAt = value.moiResult?.moiUpdateTime;
+  useEffect(() => {
+    if (!validatedAt) return;
+    const left = new Date(validatedAt).getTime() + VALIDATION_TTL_MS - Date.now();
+    const drop = () => {
+      setExpiredNotice(true);
+      onChange({ ...latest.current, moiResult: undefined });
+    };
+    if (left <= 0) {
+      drop();
+      return;
+    }
+    const t = setTimeout(drop, left);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [validatedAt]);
+  useEffect(() => {
+    if (value.moiResult) setExpiredNotice(false);
+  }, [value.moiResult]);
+
+  const runMoiValidation = async (opts: { forceCustomerId?: string; retry?: boolean } = {}) => {
+    if (!value.idNumber) return;
+    const requested = value.idNumber;
+    const seq = ++requestSeq.current;
+    const stale = () => seq !== requestSeq.current || latest.current.idNumber !== requested;
+    if (attemptsRef.current.number !== requested) attemptsRef.current = { number: requested, n: 0 };
+    setLoading(true);
+    setNotFound(false);
+    setExpiryMismatch(false);
+    setDuplicates(null);
+    setExpiredNotice(false);
+    setRetrying(Boolean(opts.retry));
+    if (!opts.retry) setFailure(null);
+    try {
+      // MOI: the identity document registry.
+      const identityDocs = await callService('moi', () =>
+        mockDataEngine.list<{ documentNumber: string; customerId: string; expiryDate?: string }>('identity-documents')
+      );
+      if (stale()) return;
+      const docMatches = identityDocs.filter((d) => d.documentNumber === requested);
+      const docMatch = docMatches[0];
+      // NAS: the person may be known there without a customer record. In the New
+      // Customer journey it is consulted even when a record exists.
+      const nasRecord =
+        docMatch && !asNewCustomer
+          ? undefined
+          : (
+              await callService('nas', () =>
+                mockDataEngine.list<{ documentNumber: string; expiryDate?: string; name: string; firstName?: string; middleName?: string; lastName?: string; dob: string; nationality: string; gender?: string; email?: string }>(
+                  'nas-records'
+                )
+              )
+            ).find((r) => r.documentNumber === requested);
+      if (stale()) return;
+      const match = docMatch ?? (nasRecord && { customerId: undefined, expiryDate: nasRecord.expiryDate });
+      if (!match) {
+        // Every system ANSWERED and none knows this number: a business result.
+        setNotFound(true);
+        return;
+      }
+      // MOI validates the number AND the expiry together. Only when the agent
+      // verified a scanned expiry; the other journeys never supply one.
+      if (verifyThenFetch && match.expiryDate && latest.current.scannedExpiry !== isoToDmy(match.expiryDate)) {
+        setExpiryMismatch(true);
+        return;
+      }
+      const customers = await callService('customer-lookup', () =>
+        mockDataEngine.list<{ customerId: string; name: string; firstName?: string; middleName?: string; lastName?: string; dob: string; nationality: string; email?: string; gender?: string; companyName?: string; phone?: string; preferredLanguage?: string }>(
+          'customers'
+        )
+      );
+      if (stale()) return;
+
+      // More than one record for this ID: never pick one silently. (The Customer
+      // 360 journey is already fixed to its customer, and an explicit choice from
+      // the agent resolves it.)
+      if (!asCustomerId && !opts.forceCustomerId) {
+        const ids = [...new Set(docMatches.map((d) => d.customerId).filter(Boolean))];
+        if (takeDuplicateFault('customer-lookup') && ids.length === 1) {
+          const other = customers.find((c) => c.customerId !== ids[0]);
+          if (other) ids.push(other.customerId);
+        }
+        if (ids.length > 1) {
+          setDuplicates(
+            ids
+              .map((id) => customers.find((c) => c.customerId === id))
+              .filter((c): c is NonNullable<typeof c> => Boolean(c))
+              .map((c) => ({ customerId: c.customerId, name: c.name, dob: c.dob }))
+          );
+          return;
+        }
+      }
+
+      const wantedId = opts.forceCustomerId ?? asCustomerId ?? match.customerId;
+      const customer = wantedId ? customers.find((c) => c.customerId === wantedId) : undefined;
+      // The record this ID points at is missing from the lookup: that is a
+      // lookup failure, NOT evidence that the person is new.
+      if (wantedId && !customer) throw new ServiceError('customer-lookup', 'partial');
+
+      if ((!customer && nasRecord) || (asNewCustomer && (nasRecord || customer))) {
+        // NEW customer: identity and email come from NAS, not Siebel. In the New
+        // Customer journey (asNewCustomer) an ID that also has a Siebel record is
+        // still treated as new - its demographics are used only as the fallback
+        // when NAS holds none, and no customerId is carried.
+        const src = (nasRecord ?? customer)!;
+        // An answer missing the details the journey is built on cannot be used.
+        if (!src.name || !src.dob || !src.nationality) throw new ServiceError(nasRecord ? 'nas' : 'customer-lookup', 'partial');
+        if (stale()) return;
+        attemptsRef.current = { number: requested, n: 0 };
+        onChange({
+          ...latest.current,
+          manualEntry: fallbackUnlocked && !scanComplete,
+          moiResult: {
+            name: src.name,
+            firstName: src.firstName,
+            middleName: src.middleName,
+            lastName: src.lastName,
+            dob: src.dob,
+            nationality: src.nationality,
+            email: src.email,
+            emailSource: 'NAS',
+            isNewCustomer: true,
+            gender: src.gender,
+            expiryDate: match.expiryDate,
+            moiUpdateTime: new Date().toISOString(),
+          },
+        });
+        return;
+      }
+      if (customer) {
+        if (!customer.name || !customer.dob || !customer.nationality) throw new ServiceError('customer-lookup', 'partial');
+        // Only for a customer who has an employer, so an ordinary consumer sale
+        // costs no extra dataset read.
+        let companyAccountId: string | undefined;
+        if (customer.companyName) {
+          const accounts = await callService('customer-lookup', () =>
+            mockDataEngine.list<{ enterpriseAccountId: string; name: string }>('enterprise-accounts')
+          );
+          companyAccountId = accounts.find((a) => a.name === customer.companyName)?.enterpriseAccountId;
+          // Left undefined when the employer is not in the registry, rather than
+          // faked. The order still carries the name and still routes for
+          // approval; the approver is the one who can see that the sponsoring
+          // account does not exist yet, which is exactly the kind of thing they
+          // are there to catch.
+        }
+        // Existing customer's email: the one on their Billing Profile, whenever the
+        // account has one - also when the account carries several addresses (the
+        // customer record, billing contact and so on). Where the Billing Profile has
+        // none, the single address on file (the customer record's) is used.
+        const [accountsAll, profilesAll] = await callService('customer-lookup', () =>
+          Promise.all([
+            mockDataEngine.list<{ accountId: string; customerId: string; billingProfileId?: string }>('accounts'),
+            mockDataEngine.list<{ billingProfileId: string; billingContactEmail?: string }>('billing-profiles'),
+          ])
+        );
+        const profileIds = new Set(accountsAll.filter((a) => a.customerId === customer.customerId).map((a) => a.billingProfileId));
+        const billingEmail = profilesAll.find((p) => profileIds.has(p.billingProfileId) && p.billingContactEmail)?.billingContactEmail;
+        // Superseded while in flight - the agent retook the scan, switched ID
+        // type, or edited the number. Applying this now would attach one
+        // document's demographics to another's number.
+        if (stale()) return;
+        attemptsRef.current = { number: requested, n: 0 };
+        onChange({
+          ...latest.current,
+          manualEntry: fallbackUnlocked && !scanComplete,
+          moiResult: {
+            customerId: customer.customerId,
+            name: customer.name,
+            firstName: customer.firstName,
+            middleName: customer.middleName,
+            lastName: customer.lastName,
+            dob: customer.dob,
+            nationality: customer.nationality,
+            email: billingEmail ?? customer.email,
+            emailSource: billingEmail ? 'Billing Profile' : 'Siebel',
+            gender: customer.gender,
+            phone: customer.phone,
+            preferredLanguage: customer.preferredLanguage,
+            companyName: customer.companyName,
+            companyAccountId,
+            expiryDate: match.expiryDate,
+            moiUpdateTime: new Date().toISOString(),
+          },
+        });
+      }
+    } catch (err) {
+      if (stale()) return; // interrupted by a newer request: not this one's to report
+      const e = err instanceof ServiceError ? err : new ServiceError('moi', 'unexpected');
+      attemptsRef.current = { number: requested, n: attemptsRef.current.n + 1 };
+      setFailure({ service: e.service, kind: e.kind, attempts: attemptsRef.current.n });
+      // A failed check leaves the validation unresolved: drop any earlier result so the identity
+      // details below never read as validated while the failure banner is showing.
+      onChange({ ...latest.current, moiResult: undefined });
+    } finally {
+      if (seq === requestSeq.current) {
+        setLoading(false);
+        setRetrying(false);
+      }
     }
   };
 
@@ -325,6 +602,10 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
    * once the budget is spent and stays open for the rest of the sitting.
    */
   const [fallbackUnlocked, setFallbackUnlocked] = useState(false);
+  // No document to read for this customer: the reader cannot help, so manual entry is available straight away.
+  useEffect(() => {
+    if (contextNoDocument) setFallbackUnlocked(true);
+  }, [contextNoDocument]);
   // Two for the scan-first flow, four for the journeys that still lead with a
   // type selector - see autoDetectIdType.
   const maxScanAttempts = autoDetectIdType ? MAX_SCAN_ATTEMPTS : LEGACY_MAX_SCAN_ATTEMPTS;
@@ -373,7 +654,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
   // plainly: it takes the first QID-type document, so every successful scan
   // resolves to the same customer. A real integration would return whatever
   // card is physically in the reader.
-  const readDocumentFromScan = async (): Promise<{ documentType: QidType; documentNumber: string } | undefined> => {
+  const readDocumentFromScan = async (): Promise<{ documentType: QidType; documentNumber: string; expiryDate?: string } | undefined> => {
     const docs = await mockDataEngine.list<{ documentType: string; documentNumber: string; expiryDate?: string }>(
       'identity-documents'
     );
@@ -392,7 +673,14 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
       : autoDetectIdType
         ? (allowedIdTypes ?? [...SCANNABLE_ID_TYPES]).filter((t) => SCANNABLE_ID_TYPES.has(t))
         : [idType];
-    const candidates = docs.filter((d) => detectable.includes(d.documentType as QidType));
+    // Journey started from Customer 360: the reader returns THAT customer's own
+    // document, never another customer's. (Their QID where they hold one.)
+    const ownDocs = asCustomerId
+      ? docs.filter((d) => (d as { customerId?: string }).customerId === asCustomerId)
+      : undefined;
+    const candidates = ownDocs
+      ? [...ownDocs].sort((a, b) => Number(b.documentType === 'QID') - Number(a.documentType === 'QID'))
+      : docs.filter((d) => detectable.includes(d.documentType as QidType));
     // Prefers an UNEXPIRED document rather than simply the first match.
     //
     // Not cosmetic: two Diplomatic IDs are seeded and the first in file order
@@ -407,7 +695,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
     const found =
       candidates.find((d) => !d.expiryDate || new Date(d.expiryDate).getTime() >= now) ?? candidates[0];
     if (!found) return undefined;
-    return { documentType: found.documentType as QidType, documentNumber: found.documentNumber };
+    return { documentType: found.documentType as QidType, documentNumber: found.documentNumber, expiryDate: found.expiryDate };
   };
 
   useEffect(() => {
@@ -427,7 +715,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
       // this is not "no match found" (which counts toward the fallback
       // threshold below), it is "nothing was even attempted yet" - the agent
       // has to Retake, which arrives clear and re-runs this effect.
-      if (value.qidScans?.clear === false) return;
+      if (value.qidScans?.clear === false && !verifyThenFetch) return;
       void readDocumentFromScan().then((scanned) => {
         const now = latest.current;
         // The scan this number was read off must still be the one on screen,
@@ -444,11 +732,21 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
         // downstream - the field label, the MOI lookup, the eligibility ID-type
         // check - keys off what was actually in the reader rather than off the
         // 'QID' default this step starts on.
-        onChange({ ...now, idType: scanned.documentType, idNumber: scanned.documentNumber });
+        // Blurred first pass (verifyThenFetch): OCR captures a WRONG number. The
+        // agent must Retake; nothing here can be fetched until they do.
+        const blurred = verifyThenFetch && now.qidScans?.clear === false;
+        onChange({
+          ...now,
+          idType: scanned.documentType,
+          idNumber: blurred ? misread(scanned.documentNumber) : scanned.documentNumber,
+          scannedExpiry: verifyThenFetch && scanned.expiryDate ? isoToDmy(scanned.expiryDate) : undefined,
+        });
       });
       return;
     }
     if (value.moiResult || loading) return;
+    // verifyThenFetch: the agent verifies against the card and presses Fetch.
+    if (verifyThenFetch) return;
     if (autoFetchedNumber.current === number) return;
     autoFetchedNumber.current = number;
     void runMoiValidation();
@@ -461,7 +759,14 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
   // shape gets a loose badge at all - the other journeys keep theirs inside
   // the bordered panel it heads, where it introduces the identity read-out.
   const moiBadge =
-    !showMoiDetails && value.moiResult ? <Badge variant="success-solid">MOI validated successfully</Badge> : undefined;
+    !showMoiDetails && value.moiResult ? (
+      <Badge variant="success-solid">
+        {/* verifyThenFetch: one line, the time folded into the badge. */}
+        {verifyThenFetch && value.moiResult.moiUpdateTime
+          ? `MOI validated successfully at ${new Date(value.moiResult.moiUpdateTime).toLocaleString()}`
+          : 'MOI validated successfully'}
+      </Badge>
+    ) : undefined;
 
   // "MOI Update Time" (2026-09-28) - see MoiResult.moiUpdateTime's own note
   // for the evidenced field name. toLocaleString() rather than a hand-rolled
@@ -486,6 +791,11 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
   // The budget now shows up the only way it should - as a scan that
   // fails - and the failure message says what the agent can do about it
   // without mentioning attempts.
+  // verifyThenFetch: the scanned number and expiry are locked - a bad read is
+  // fixed by Retake - until the SECOND rescan (third pass over the reader) has
+  // completed. From then on the agent may correct them by hand.
+  const correctionUnlocked = verifyThenFetch && scanAttempts >= 3;
+
   const scannerBlock = effectiveScannable && (
     <div className="space-y-2">
       {/* Neutral until the reader has identified the document. Naming a
@@ -498,9 +808,16 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
           duplicate it. Same wording QidImageUpload used to show: "Qatar
           ID" for QID, the type itself for the other three. */}
       <p className="text-[length:var(--fs-label)] text-fg-2">
-        {value.idNumber ? `Document detected: ${idType === 'QID' ? 'Qatar ID' : idType}` : 'Scan identity document'}
+        {value.idNumber && !verifyThenFetch ? `Document detected: ${idType === 'QID' ? 'Qatar ID' : idType}` : 'Scan identity document'}
       </p>
+      {contextNoDocument ? (
+        <div role="status" className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-6 text-center space-y-1">
+          <p className="text-fg font-semibold">No identity document on file for {contextNoDocument}</p>
+          <p className="text-fg-2 text-[length:var(--fs-caption)]">There is no card to read for this customer. Enter the ID number manually.</p>
+        </div>
+      ) : (
       <QidImageUpload
+        identity={contextIdentity}
         value={value.qidScans ?? {}}
         onChange={(qidScans) => {
           // A Retake DISCARDS the previous read - the number that was
@@ -522,10 +839,14 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
           const stillComplete = Boolean(qidScans.frontScanned && qidScans.backScanned);
           if (scanComplete && !stillComplete) {
             setNotFound(false);
-            onChange({ ...value, qidScans, idNumber: '', moiResult: undefined });
+            setExpiryMismatch(false);
+            onChange({ ...value, qidScans, idNumber: '', scannedExpiry: undefined, moiResult: undefined });
             return;
           }
-          onChange({ ...value, qidScans });
+          // latest, not the closure: a retake's completion fires ~900ms after it
+          // started, through the onChange captured THEN - spreading that stale
+          // `value` restored the number the retake had just cleared.
+          onChange({ ...latest.current, qidScans });
         }}
         // Names the document in the card's captions and picks its
         // artwork - the QID specimen must not stand in for a Diplomatic
@@ -552,7 +873,8 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
         // the eight selector-led journeys have no "Document detected"
         // auto-extraction step for a forced blur-then-retake to demonstrate,
         // so only the scan-first flow gets the blurred-first-pass behaviour.
-        blurFirstScan={autoDetectIdType}
+        blurFirstScan={autoDetectIdType || verifyThenFetch}
+        hideUnclearNotice={verifyThenFetch}
         // Budget spent: the reader is done, so the card stops offering to
         // drive it and the error below becomes the only instruction.
         // Switching ID type resets the budget (handleIdTypeChange), which
@@ -565,10 +887,15 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
         // knows the reader is out of tries rather than merely unlucky.
         error={
           fallbackUnlocked
-            ? 'We could not read the document after the permitted attempts. Select the ID type and enter the number manually to continue.'
+            ? [
+                'We could not read the document after the permitted attempts.',
+                'Select the ID type and enter the number manually to continue.',
+                "Manual entry requires Store Manager's approval for activation.",
+              ]
             : undefined
         }
       />
+      )}
     </div>
   );
 
@@ -582,7 +909,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
   // `manualEntryUnlocked` is latched - see fallbackUnlocked.
   const selectorBlock = (!autoDetectIdType || manualEntryUnlocked) && (
     <QidTypeSelector
-      idType={idType}
+      idType={typeChosen ? idType : undefined}
       onIdTypeChange={handleIdTypeChange}
       allowedTypes={allowedIdTypes}
       unavailableTypes={unavailableIdTypes}
@@ -633,19 +960,48 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
           Waiting for the number means the field appears already populated.
 
           Before any of those, for a QID, it is not rendered at all. */}
-      {(!effectiveScannable || (scanComplete && Boolean(value.idNumber)) || manualEntryUnlocked) && (
+      {typeChosen && (!effectiveScannable || (scanComplete && Boolean(value.idNumber)) || manualEntryUnlocked) && (
         <QidNumberField
           idType={idType}
           inputRef={numberInputRef}
           value={value.idNumber ?? ''}
           onChange={(idNumber: string) => {
             setNotFound(false);
+            setExpiryMismatch(false);
             onChange({ ...value, idNumber, moiResult: undefined });
           }}
           onFetch={runMoiValidation}
           fetching={loading}
-          error={notFound ? 'No MOI record found for this ID - try again.' : undefined}
-          readOnly={effectiveScannable && scanComplete}
+          error={
+            notFound
+              ? 'No MOI record found for this ID - try again.'
+              : expiryMismatch
+                ? 'The expiry date does not match the MOI record - check the card and try again.'
+                : undefined
+          }
+          inlineField={
+            verifyThenFetch && effectiveScannable && (scanComplete || manualEntryUnlocked) ? (
+              <Input
+                label="Expiry Date"
+                value={value.scannedExpiry ?? ''}
+                placeholder="DD/MM/YYYY"
+                inputMode="numeric"
+                maxLength={10}
+                // Locked with the number until the second rescan has completed.
+                readOnly={!correctionUnlocked && !manualEntryUnlocked}
+                onChange={(e) => {
+                  setExpiryMismatch(false);
+                  onChange({ ...value, scannedExpiry: e.target.value, moiResult: undefined });
+                }}
+              />
+            ) : undefined
+          }
+          readOnly={effectiveScannable && scanComplete && !correctionUnlocked}
+          // Also disabled once the fetch has succeeded (moiResult set). Editing
+          // the number or expiry clears moiResult, which re-enables it.
+          fetchDisabled={Boolean(value.moiResult) || (verifyThenFetch && !value.scannedExpiry)}
+          // verifyThenFetch: the scanned values are locked, Fetch stays available.
+          showFetch={verifyThenFetch}
           // The scanned path has no Fetch button, so it also lost the
           // "Fetching…" label that button carried - and the MOI lookup this
           // step fires automatically takes two mock calls at 200-600ms each.
@@ -657,7 +1013,9 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
             effectiveScannable && scanComplete
               ? loading
                 ? 'Checking the MOI registry…'
-                : 'Read from the scanned document.'
+                : verifyThenFetch
+                  ? 'Read from the scanned document - verify with the original document, then select Fetch.'
+                  : 'Read from the scanned document.'
               : undefined
           }
           // The MOI badge, right-aligned on this field's label row - the
@@ -675,8 +1033,53 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
           // field again - Retake, an ID Type switch - clears moiResult in the
           // same update.
           status={moiBadge}
-          statusDetail={moiUpdateTimeText}
+          statusDetail={verifyThenFetch ? undefined : moiUpdateTimeText}
         />
+      )}
+
+      {/* ---- Validation status. Each state looks different (see ValidationStatus):
+          technical failure = amber and unresolved, business result = red, pending
+          = neutral, success = green. A technical failure never reads as "not found". */}
+      {loading && !failure && !retrying && !value.moiResult && (
+        <ValidationStatus variant="pending" title="Validating the identity document…">
+          Checking MOI and the customer records. Nothing is decided until this completes.
+        </ValidationStatus>
+      )}
+      {(failure || retrying) && (
+        <TechnicalFailure
+          service={failure?.service ?? 'moi'}
+          kind={failure?.kind ?? 'unexpected'}
+          attempts={failure?.attempts ?? 0}
+          retrying={retrying}
+          onRetry={() => void runMoiValidation({ retry: true })}
+          exhaustedHint="Retake the scan to read the document again, or use Save & Exit to resume later."
+        />
+      )}
+      {expiredNotice && !value.moiResult && (
+        <TechnicalFailure
+          service="moi"
+          kind="expired"
+          attempts={0}
+          onRetry={() => void runMoiValidation()}
+        />
+      )}
+      {duplicates && (
+        <ValidationStatus variant="technical" tag="Needs a decision" title="More than one customer record matches this ID">
+          <p>No customer has been selected automatically. Choose the record that belongs to this person, or ask Customer Data Management to merge the duplicates.</p>
+          <ul className="mt-2 space-y-2">
+            {duplicates.map((d) => (
+              <li key={d.customerId} className="flex items-center justify-between gap-3 rounded-[var(--radius-button)] border border-border-soft bg-bg px-3 py-2">
+                <span className="min-w-0">
+                  <span className="block text-fg font-medium truncate">{d.name}</span>
+                  <span className="block text-muted text-[length:var(--fs-caption)]">{d.customerId} - born {isoToDmy(d.dob)}</span>
+                </span>
+                <Button variant="ghost-rect" compact onClick={() => void runMoiValidation({ forceCustomerId: d.customerId })}>
+                  Use this record
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </ValidationStatus>
       )}
 
       {/* Only the showMoiDetails={true} shape renders here now: the bordered
@@ -693,7 +1096,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
           container went on 2026-09-24. */}
       {value.moiResult && showMoiDetails && (
         <div className="pt-2 border-t border-border-soft">
-          <div className="rounded-[var(--radius-card)] border border-success/30 bg-[color-mix(in_oklab,var(--success),var(--bg)_92%)] p-4 space-y-3">
+          <div className="rounded-[var(--radius-card)] border border-success bg-[color-mix(in_oklab,var(--success),var(--bg)_88%)] p-4 space-y-3">
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="success-solid">MOI validated successfully</Badge>
               {moiUpdateTimeText && <span className="text-[length:var(--fs-caption)] text-muted">{moiUpdateTimeText}</span>}

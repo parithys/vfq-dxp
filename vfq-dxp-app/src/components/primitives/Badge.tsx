@@ -9,7 +9,12 @@ export type BadgeVariant =
   | 'warning'
   | 'danger'
   | 'info'
-  | 'accent';
+  | 'accent'
+  | 'tag-blue'
+  | 'tag-amber'
+  | 'tag-green'
+  | 'tag-violet'
+  | 'tag-red';
 
 interface BadgeProps {
   variant?: BadgeVariant;
@@ -55,12 +60,20 @@ const variantClasses: Record<BadgeVariant, string> = {
   danger: 'bg-bg border border-[var(--danger-border)] text-danger',
   info: 'bg-bg border border-[var(--info-border)] text-[var(--info)]',
   accent: 'bg-accent text-accent-on',
+  // Soft-filled category tags (2026-10-01, number cards): RESERVED / STAR / FREE.
+  // Tint + same-hue label, no border - they label a kind of thing rather than
+  // report a status, so they sit quieter than the outlined status pills above.
+  'tag-blue': 'bg-[#e6f0fd] text-[#2f6fcc] border border-transparent',
+  'tag-amber': 'bg-[#fff3d9] text-[var(--warn-text)] border border-transparent',
+  'tag-green': 'bg-[color-mix(in_oklab,var(--success),var(--bg)_88%)] text-success border border-transparent',
+  'tag-violet': 'bg-[color-mix(in_oklab,var(--info),var(--bg)_90%)] text-[var(--info)] border border-transparent',
+  'tag-red': 'bg-[color-mix(in_oklab,var(--accent),var(--bg)_90%)] text-accent border border-transparent',
 };
 
 export function Badge({ variant = 'filled-neutral', children }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] px-2.5 py-0.5 text-[length:var(--fs-tag)] font-medium ${variantClasses[variant]}`}
+      className={`inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] px-2.5 py-0.5 text-[length:var(--fs-tag)] font-medium whitespace-nowrap shrink-0 ${variantClasses[variant]}`}
     >
       {children}
     </span>

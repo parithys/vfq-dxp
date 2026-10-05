@@ -9,6 +9,7 @@
       "CBU"
     ],
     "approach": "Hybrid",
+    "customer360Layout": "header-only",
     "description": "Retail stores, franchise stores, mini stores",
     "channel": "Retail / in-store",
     "contextCard": "Queue Number + Ticket Number",
@@ -155,6 +156,7 @@
       "CBU"
     ],
     "approach": "Customer-First",
+    "customer360Layout": "header-only",
     "description": "Tele-sales and assisted sales channels",
     "channel": "Telephonic / assisted",
     "contextCard": "CTI Reference only",
@@ -265,6 +267,7 @@
       "EBU"
     ],
     "approach": "Customer-First",
+    "customer360Layout": "header-only",
     "description": "Enterprise/direct sales representatives",
     "channel": "Direct / field enterprise",
     "contextCard": "CTI Reference only",
@@ -901,6 +904,7 @@
       "CBU"
     ],
     "approach": "Customer-First",
+    "customer360Layout": "header-only",
     "description": "Care, complaints, assisted care, desktop agents",
     "channel": "Telephonic / assisted care",
     "contextCard": "CTI Reference only",
@@ -1000,6 +1004,7 @@
       "EBU"
     ],
     "approach": "Customer-First",
+    "customer360Layout": "header-only",
     "description": "Enterprise customer support",
     "channel": "Telephonic / enterprise care",
     "contextCard": "CTI Reference only",
@@ -1088,6 +1093,7 @@
       "CBU"
     ],
     "approach": "Customer-First",
+    "customer360Layout": "header-only",
     "description": "Premium/VIP customer servicing",
     "channel": "Retail / in-store premium desk",
     "contextCard": "Queue Number + Ticket Number",
@@ -1707,6 +1713,7 @@
       "EBU"
     ],
     "approach": "Customer-First",
+    "customer360Layout": "header-only",
     "description": "Collection and credit management",
     "channel": "Back-office",
     "contextCard": "CTI Reference only",
@@ -2348,6 +2355,7 @@
       "CBU"
     ],
     "approach": "Customer-First",
+    "customer360Layout": "header-only",
     "description": "Complaint handling and resolution (mobile and fixed)",
     "channel": "Back-office complaints",
     "contextCard": "CTI Reference only",

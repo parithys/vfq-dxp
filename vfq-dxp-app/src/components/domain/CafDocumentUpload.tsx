@@ -38,7 +38,8 @@ const DOC_TYPES = [
  * attachment limit - the MNP rule specifies "file size under 2 MB, in PDF or
  * JPG format" - so MNP is not governed by this constant. */
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
-const MAX_DOCUMENTS = 3;
+// 5, matching the New Connection journey's document upload.
+const MAX_DOCUMENTS = 5;
 /** PDF/JPG is the evidenced format pair (same MNP rule); PNG added because a
  * counter scanner producing one would otherwise be rejected for no reason. */
 const ACCEPTED = '.pdf,.jpg,.jpeg,.png';
@@ -88,7 +89,7 @@ export function CafDocumentUpload({ documents, onChange }: CafDocumentUploadProp
   };
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4 space-y-3">
+    <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 space-y-3">
       <div>
         <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Signed documents</h4>
         <p className="text-muted text-[length:var(--fs-caption)]">
@@ -97,7 +98,7 @@ export function CafDocumentUpload({ documents, onChange }: CafDocumentUploadProp
       </div>
 
       {documents.length > 0 && (
-        <ul className="divide-y divide-border-soft rounded-[var(--radius-card)] border border-border-soft bg-bg">
+        <ul className="divide-y divide-border-soft rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
           {documents.map((doc) => (
             <li key={doc.id} className="flex items-center gap-3 px-3 py-2">
               <Icon path={DOC} className="w-4 h-4 text-muted shrink-0" />
@@ -130,7 +131,8 @@ export function CafDocumentUpload({ documents, onChange }: CafDocumentUploadProp
           <div className="flex-1 min-w-0">
             <Select
               label="Document type"
-              options={DOC_TYPES.map((t) => ({ value: t, label: t }))}
+              // A type already uploaded is not offered again (as in New Connection).
+              options={DOC_TYPES.filter((t) => !documents.some((d) => d.docType === t)).map((t) => ({ value: t, label: t }))}
               placeholder="Select a document type"
               value={docType}
               onChange={(e) => {

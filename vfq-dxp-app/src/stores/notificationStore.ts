@@ -130,6 +130,10 @@ export interface ToastOptions {
    * ticket id first moved out of the rows and into the message.
    */
   reference?: string;
+  /** Plain toasts only: render on the tinted success surface (green fill and
+   * border, dark text) instead of the dark charcoal card. Only meaningful with
+   * kind 'success'. */
+  tinted?: boolean;
 }
 
 export interface Toast {
@@ -147,6 +151,7 @@ export interface Toast {
   rows?: ToastRow[];
   brand?: ToastBrand;
   reference?: string;
+  tinted?: boolean;
 }
 
 export interface NotificationHistoryEntry extends Toast {
@@ -189,6 +194,7 @@ export const useNotificationStore = create<NotificationState>((set) => ({
         rows: options?.rows,
         brand: options?.brand,
         reference: options?.reference,
+        tinted: options?.tinted,
       };
       const toasts = existing
         ? state.toasts.map((t) => (t.key === key ? entry : t))

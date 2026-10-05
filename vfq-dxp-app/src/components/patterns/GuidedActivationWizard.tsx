@@ -2,10 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useWorkflowStore } from '../../stores/workflowStore';
+import { useNotificationStore } from '../../stores/notificationStore';
+import { useAuthStore } from '../../stores/authStore';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { Button } from '../primitives/Button';
 import { Icon } from '../primitives/Icon';
+import { Tooltip } from '../primitives/Tooltip';
 import { Modal } from '../primitives/Modal';
+import { Textarea } from '../primitives/Textarea';
+import { logActivity } from '../../engines/activityEngine';
+import { useJourneyCustomer } from '../../stores/journeyCustomerStore';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
 
 const CHEVRON_LEFT = 'M15 18l-6-6 6-6';
@@ -19,9 +25,15 @@ interface DraftOrderRecord {
   draftValues?: Record<string, unknown>;
 }
 
+const EYE_ICON = 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z';
+
 export interface WizardStep {
   key: string;
   label: string;
+  /** Heading shown above the step content, when it should differ from the rail label. */
+  heading?: string;
+  /** One line of explanatory text under the heading. Optional. */
+  subheading?: string;
   /** Short secondary line shown under the label in the step list (e.g. "Customer identification"). Optional - omitted steps just show the label. */
   description?: string;
   render: (ctx: {
@@ -49,9 +61,27 @@ export interface WizardStep {
      * own behaviour for a step it will not let you click.
      */
     goToStepKey: (key: string) => void;
+    /** Save the draft order and show a confirmation toast; the caller then navigates away. */
+    saveDraft: () => Promise<void>;
+    /** Save the draft order and leave the journey (what the header's Save & Exit does). */
+    saveAndExit: (comments?: string) => Promise<void>;
+    /** Opens the "Abandon this order?" confirmation (what the header's Abandon Order does). */
+    requestAbandon: () => void;
   }) => ReactNode;
   /** Return true to auto-skip this step given current draft values (e.g. appointment step skipped for instant activation). */
   skip?: (values: Record<string, unknown>) => boolean;
+  /**
+   * Return true to have Continue pass OVER this step: it stays in the rail and
+   * stays reachable with Back or a rail click (so the agent can return and edit
+   * it), but moving forward from the step before does not stop here. Unlike
+   * skip(), the step is not removed. Only forward moves pass over it - going
+   * Back lands on it, and Continue from it goes on to the next step as normal.
+   */
+  autoPass?: (values: Record<string, unknown>) => boolean;
+  /** Hide the step-progress rail while this step is showing (e.g. the final Payment page). */
+  hideRail?: boolean;
+  /** Hides the header's Customer view button on this step. */
+  hideCustomerView?: boolean;
   /** Return false to block Continue/Save & Finish (e.g. SIM Serial not found/already-assigned per Pattern 11). Defaults to true (no gate) if omitted. */
   isValid?: (values: Record<string, unknown>) => boolean;
   /**
@@ -98,11 +128,30 @@ export interface WizardStep {
    * (e.g. the popup's open/closed flag) entirely within whatever it returns.
    */
   footerLeft?: (ctx: { values: Record<string, unknown> }) => ReactNode;
+  /**
+   * Replaces the footer's primary Continue button for this step. Receives the
+   * default button (already wired to canProceed/submitting) so a step can keep
+   * it for some states and swap it for others; `abandon` opens the same
+   * confirmation the header's Abandon Order link does.
+   */
+  primaryAction?: (ctx: {
+    values: Record<string, unknown>;
+    setValue: (field: string, value: unknown) => void;
+    goNext: () => void;
+    abandon: (opts?: { hideKeepWorking?: boolean }) => void;
+    defaultButton: ReactNode;
+  }) => ReactNode;
 }
 
 interface GuidedActivationWizardProps {
   wizardId: string;
   title: string;
+  /** Shown at the right end of the title row (e.g. a status indicator). */
+  titleAside?: ReactNode;
+  /** Offers a "Customer view" toggle: the screen shows only the step content (no step list, no agent buttons), for handing it to the customer. */
+  allowCustomerView?: boolean;
+  /** The action named in a saved draft's task, e.g. "Postpaid Activation" -> "<Customer> – Postpaid Activation". Falls back to `title`. */
+  draftActionLabel?: string;
   steps: WizardStep[];
   onSubmit: (values: Record<string, unknown>) => void | Promise<void>;
   /**
@@ -143,9 +192,20 @@ interface GuidedActivationWizardProps {
 // Left-hand step list (numbered, with a secondary description line) + a
 // single content panel for the active step's fields and Back/Continue
 // footer - matches the reference layout supplied for this pattern.
+/** The customer a draft is for, from whatever the Contact step has captured by now. */
+function draftCustomerName(values: Record<string, unknown>): string {
+  const c = values.contact as
+    | { moiResult?: { name?: string }; firstName?: string; lastName?: string }
+    | undefined;
+  return c?.moiResult?.name || [c?.firstName, c?.lastName].filter(Boolean).join(' ') || 'New Customer';
+}
+
 export function GuidedActivationWizard({
   wizardId,
   title,
+  titleAside,
+  allowCustomerView,
+  draftActionLabel,
   steps,
   onSubmit,
   onAbandon,
@@ -157,6 +217,11 @@ export function GuidedActivationWizard({
   const setFieldValue = useWorkflowStore((s) => s.setFieldValue);
   const clearDraft = useWorkflowStore((s) => s.clearDraft);
   const [abandonOpen, setAbandonOpen] = useState(false);
+  const [exitOpen, setExitOpen] = useState(false);
+  // Optional agent note for the Abandoned / Save & Exit activity. Blank never blocks the action.
+  const [activityComments, setActivityComments] = useState('');
+  // A step's own Abandon action (e.g. a hard stop) may confirm without offering to keep working.
+  const [abandonNoKeep, setAbandonNoKeep] = useState(false);
   const hydrateDraft = useWorkflowStore((s) => s.hydrateDraft);
   // Guards against duplicate order submission: onSubmit is async (mock CRUD +
   // navigation) but goNext used to fire-and-forget it without disabling the
@@ -219,10 +284,13 @@ export function GuidedActivationWizard({
             steps.filter((st) => !st.skip?.(order.draftValues ?? {})).findIndex((st) => st.key === order.draftStepKey),
             0
           );
+          // Eligibility is NEVER carried over from a saved draft: the customer's
+          // status may have changed since, so it is re-evaluated on resume.
+          const { eligibility: _staleEligibility, ...resumedValues } = order.draftValues;
           hydrateDraft(wizardId, {
             currentStep: stepIndex,
             maxStepReached: stepIndex,
-            values: order.draftValues,
+            values: resumedValues,
             draftOrderId: order.orderId,
           });
         })
@@ -251,6 +319,7 @@ export function GuidedActivationWizard({
   const draftOrderId = draft.draftOrderId;
   const savedStepRef = useRef<number | null>(null);
   useEffect(() => {
+    if (isMirror) return; // the pop-up only displays; it never writes the order
     if (!draftOrderId) return;
     if (savedStepRef.current === draft.currentStep) return;
     savedStepRef.current = draft.currentStep;
@@ -276,6 +345,99 @@ export function GuidedActivationWizard({
   // presentation - re-evaluated every render (see the WizardStep doc above),
   // not cached, so it can flip back off within the same step once signed.
   const isCustomerFacing = Boolean(currentStep?.customerFacing?.(draft.values));
+  // ---- Customer view as a pop-up window --------------------------------------------------
+  // "Customer view" opens THIS journey in a second window (?mirror=1) that follows the agent's
+  // screen: the agent window broadcasts its draft (current step and every value) over a
+  // BroadcastChannel, and the pop-up shows the step content only, read-only, with none of the
+  // agent's chrome. Prototype scope: one browser, one-way (the customer cannot type or sign in
+  // the pop-up; the signature is still captured in the agent window).
+  const isMirror = allowCustomerView && new URLSearchParams(location.search).get('mirror') === '1';
+  const channelName = `vfq-mirror-${wizardId}`;
+  const [popupBlocked, setPopupBlocked] = useState(false);
+  const popupRef = useRef<Window | null>(null);
+  // Toggle: open the pop-up (button shows active), or close it again from the same button.
+  const [viewOpen, setViewOpen] = useState(false);
+  // Spoken by the polite live region below whenever sharing starts or stops.
+  const [shareAnnouncement, setShareAnnouncement] = useState('');
+  const stopCustomerView = () => {
+    popupRef.current?.close();
+    popupRef.current = null;
+    setViewOpen(false);
+    setShareAnnouncement('Customer view stopped');
+  };
+  const toggleCustomerView = () => {
+    if (viewOpen) {
+      stopCustomerView();
+      return;
+    }
+    const url = `${location.pathname}?mirror=1`;
+    const w = window.open(url, 'vfq-customer-view', 'popup=yes,width=1100,height=820');
+    popupRef.current = w;
+    setPopupBlocked(!w);
+    setViewOpen(Boolean(w));
+    if (w) setShareAnnouncement('Now showing to customer');
+  };
+  // The customer view can also be closed from its own window: return the button to its default state.
+  useEffect(() => {
+    if (!viewOpen) return;
+    const t = setInterval(() => {
+      if (!popupRef.current || popupRef.current.closed) {
+        popupRef.current = null;
+        setViewOpen(false);
+        setShareAnnouncement('Customer view stopped');
+      }
+    }, 500);
+    return () => clearInterval(t);
+  }, [viewOpen]);
+  // Sharing is for ONE screen: moving to another step stops it and clears the customer's window,
+  // so nothing from the next screen is ever shown without the agent choosing to share it.
+  const sharedStepKey = currentStep?.key;
+  useEffect(() => {
+    if (viewOpen) stopCustomerView();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sharedStepKey]);
+  // Leaving the journey closes the customer view with it - and so does anything that ends the page:
+  // closing the tab, a reload, signing out or a session timeout (both reload, see resetApplicationState).
+  useEffect(() => {
+    const closeCustomerWindow = () => popupRef.current?.close();
+    window.addEventListener('pagehide', closeCustomerWindow);
+    return () => {
+      window.removeEventListener('pagehide', closeCustomerWindow);
+      popupRef.current?.close();
+    };
+  }, []);
+  // Agent window: send the draft whenever it changes, and answer a newly opened pop-up.
+  useEffect(() => {
+    if (!allowCustomerView || isMirror) return;
+    const ch = new BroadcastChannel(channelName);
+    const send = () => ch.postMessage({ type: 'draft', draft: useWorkflowStore.getState().getDraft(wizardId) });
+    ch.onmessage = (e) => {
+      if (e.data?.type === 'hello') send();
+      // The customer's pop-up edited a field (the signature step): apply it here.
+      else if (e.data?.type === 'set') setFieldValue(wizardId, e.data.field, e.data.value);
+    };
+    send();
+    const unsub = useWorkflowStore.subscribe(send);
+    return () => {
+      unsub();
+      ch.close();
+    };
+  }, [allowCustomerView, isMirror, channelName, wizardId, setFieldValue]);
+  // Pop-up window: follow the agent's draft.
+  const mirrorCh = useRef<BroadcastChannel | null>(null);
+  useEffect(() => {
+    if (!isMirror) return;
+    const ch = new BroadcastChannel(channelName);
+    mirrorCh.current = ch;
+    ch.onmessage = (e) => {
+      if (e.data?.type === 'draft' && e.data.draft) hydrateDraft(wizardId, e.data.draft);
+    };
+    ch.postMessage({ type: 'hello' });
+    return () => {
+      ch.close();
+      mirrorCh.current = null;
+    };
+  }, [isMirror, channelName, wizardId, hydrateDraft]);
   // True once ANY step up to and including the current one has crossed its
   // own locksAfter condition - checked over the whole prefix, not just the
   // current step, so the lock persists once the agent has moved past it
@@ -338,8 +500,8 @@ export function GuidedActivationWizard({
       const active = document.activeElement;
       const candidates = [
         ...panel.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
-          'input:not([type="hidden"]):not([type="checkbox"]):not([readonly]):not([disabled]),'
-          + ' select:not([disabled]), textarea:not([readonly]):not([disabled])'
+          'input:not([type="hidden"]):not([type="checkbox"]):not([readonly]):not([disabled]):not([data-no-autofocus]),'
+          + ' select:not([disabled]):not([data-no-autofocus]), textarea:not([readonly]):not([disabled]):not([data-no-autofocus])'
         ),
         // offsetParent is null for anything display:none - a step that renders
         // a collapsed branch must not pull focus into the hidden half.
@@ -436,6 +598,7 @@ export function GuidedActivationWizard({
   // while setStep's state update is in flight.
   const autoAdvancedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
+    if (isMirror) return; // the agent's window drives the steps
     const step = activeSteps[currentIndex];
     if (!step?.autoAdvanceWhen) return;
     if (maxReached > currentIndex) return;
@@ -450,7 +613,10 @@ export function GuidedActivationWizard({
 
   const goNext = async () => {
     if (currentIndex < activeSteps.length - 1) {
-      setStep(wizardId, currentIndex + 1);
+      // Pass over autoPass steps (never past the last step, which submits).
+      let next = currentIndex + 1;
+      while (next < activeSteps.length - 1 && activeSteps[next].autoPass?.(draft.values)) next++;
+      setStep(wizardId, next);
       return;
     }
     if (submittingRef.current) return;
@@ -470,7 +636,24 @@ export function GuidedActivationWizard({
   // then clear the in-memory/session draft, then hand control back to the
   // caller to navigate away. Order matters: clearing the draft first would
   // lose the draftOrderId this needs.
+  // The activity is created here, automatically - the agent only supplies the optional comment.
+  const recordActivity = (trigger: 'abandoned' | 'saved-exit', orderId: string | undefined, comments?: string) =>
+    logActivity({
+      trigger,
+      journey: title,
+      orderId,
+      // The identified customer for this journey (see activeCustomerStore), not re-derived.
+      customerId: useJourneyCustomer.getState().active?.customerId ?? wizardId.match(/existing-(.+)$/)?.[1],
+      customerName: useJourneyCustomer.getState().active?.customerName ?? draftCustomerName(draft.values),
+      idNumber: useJourneyCustomer.getState().active?.idNumber,
+      stepLabel: activeSteps[currentIndex]?.label,
+      comments,
+    });
+
   const abandonOrder = async () => {
+    await recordActivity('abandoned', draftOrderId, activityComments);
+    useJourneyCustomer.getState().end(wizardId);
+    setActivityComments('');
     if (draftOrderId) await mockDataEngine.remove('orders', draftOrderId);
     clearDraft(wizardId);
     setAbandonOpen(false);
@@ -487,9 +670,10 @@ export function GuidedActivationWizard({
   // the route this wizard is mounted at, so a minimal-but-resumable Draft
   // order row falls out of data this component already has, rather than
   // requiring every wizard to hand it a bespoke record shape.
-  const saveAndExit = async () => {
+  // Writes the draft order (creating it on first save) and returns its id.
+  const persistDraft = async (): Promise<string | undefined> => {
     const activeKey = activeSteps[currentIndex]?.key;
-    if (!activeKey) return;
+    if (!activeKey) return undefined;
     if (draftOrderId) {
       await mockDataEngine.update('orders', draftOrderId, {
         draftStepKey: activeKey,
@@ -506,9 +690,48 @@ export function GuidedActivationWizard({
         draftStepKey: activeKey,
         draftValues: draft.values,
       });
+      // A saved draft shows up in the agent's Draft Orders list (a task of type
+      // 'Draft Order' linked to the order - the list is built from tasks, and
+      // its row click resumes the journey via the order's draftResumePath).
+      await mockDataEngine.create('tasks', {
+        taskId: `TASK-${Date.now().toString().slice(-6)}`,
+        taskName: `${draftCustomerName(draft.values)} – ${draftActionLabel ?? title}`,
+        taskDescription: 'Draft order saved but not submitted.',
+        taskType: 'Draft Order',
+        taskStatus: 'Open',
+        priorityFlag: false,
+        assignedAgentId: useAuthStore.getState().profile?.userId ?? null,
+        relatedOrderId: newOrderId,
+        createdAt: new Date().toISOString(),
+      });
+      return newOrderId;
     }
+    return draftOrderId;
+  };
+
+  const saveAndExit = async (comments?: string) => {
+    const id = await persistDraft();
+    if (!id) return;
+    await recordActivity('saved-exit', id, comments);
+    useJourneyCustomer.getState().end(wizardId);
     clearDraft(wizardId);
     onSaveExit?.();
+  };
+
+  // Save: writes the draft order, confirms with a toast and clears the in-memory draft (the saved
+  // order now holds it). The caller decides where to go next.
+  const saveDraft = async () => {
+    const id = await persistDraft();
+    if (!id) return;
+    await recordActivity('saved-exit', id);
+    useJourneyCustomer.getState().end(wizardId);
+    clearDraft(wizardId);
+    useNotificationStore.getState().pushToast('success', 'Draft saved', { key: `draft-saved-${wizardId}`, detail: 'This order can be resumed from Draft Orders.' });
+  };
+
+  const requestAbandon = () => {
+    setAbandonNoKeep(false);
+    setAbandonOpen(true);
   };
 
   const goBack = () => {
@@ -532,24 +755,190 @@ export function GuidedActivationWizard({
 
   const handleStepKeyDown = useEnterToSubmit(canProceed && !submitting, goNext);
 
+  // The abandon confirmation, shared by the normal layout and the customer-facing one.
+  const abandonModal = (
+      <Modal
+        open={abandonOpen}
+        onClose={() => setAbandonOpen(false)}
+        title="Abandon this order?"
+        footer={
+          <>
+            {!abandonNoKeep && (
+              <Button variant="ghost-rect" onClick={() => setAbandonOpen(false)}>
+                Keep working
+              </Button>
+            )}
+            <Button
+              variant="primary-rect"
+              // The step-initiated variant (hard stop) only dismisses the modal.
+              onClick={() => (abandonNoKeep ? setAbandonOpen(false) : void abandonOrder())}
+            >
+              Abandon Order
+            </Button>
+          </>
+        }
+      >
+        <p className="text-fg-2 text-[length:var(--fs-body)]">
+          Everything entered for this customer will be discarded and the saved draft deleted. This cannot be undone.
+        </p>
+        {!abandonNoKeep && (
+          <div className="mt-4">
+            <Textarea
+              label="Comments (optional)"
+              rows={3}
+              value={activityComments}
+              onChange={(e) => setActivityComments(e.target.value)}
+              helperText="Recorded on the activity that is created automatically."
+            />
+          </div>
+        )}
+      </Modal>
+  );
+
+  // Save & Exit: confirms with an optional comment, then saves the draft and records the activity.
+  const exitModal = (
+    <Modal
+      open={exitOpen}
+      onClose={() => setExitOpen(false)}
+      title="Save & Exit"
+      footer={
+        <>
+          <Button variant="ghost-rect" onClick={() => setExitOpen(false)}>
+            Keep working
+          </Button>
+          <Button
+            variant="primary-rect"
+            onClick={() => {
+              setExitOpen(false);
+              void saveAndExit(activityComments).then(() => setActivityComments(''));
+            }}
+          >
+            Save & Exit
+          </Button>
+        </>
+      }
+    >
+      <p className="text-fg-2 text-[length:var(--fs-body)]">This order is saved as a draft and can be resumed from Draft Orders.</p>
+      <div className="mt-4">
+        <Textarea
+          label="Comments (optional)"
+          rows={3}
+          value={activityComments}
+          onChange={(e) => setActivityComments(e.target.value)}
+          helperText="Recorded on the activity that is created automatically."
+        />
+      </div>
+    </Modal>
+  );
+
   // Customer-facing: ONLY this step's own render() output, full stop. No
   // rail (which names every other step and product discussed), no Abandon/
   // Save & Exit, no wizard Back/Continue footer - the step's own content is
   // responsible for whatever action it needs (e.g. CafSignatureCapture's own
   // "Please Sign"), because nothing here should invite the customer to
   // interact with wizard chrome meant for the agent.
+  if (isMirror) {
+    // The customer's pop-up. Scrollable everywhere. Read-only on every step except CAF & Signature,
+    // where the customer reads the terms, ticks the agreement and signs: those edits are sent to the
+    // agent's window, which owns the order.
+    const interactive = currentStep?.key === 'caf';
+    const mirrorSetValue = (field: string, value: unknown) => {
+      setFieldValue(wizardId, field, value);
+      mirrorCh.current?.postMessage({ type: 'set', field, value });
+    };
+    return (
+      // The same container as the agent's step panel - same surface, border, radius, padding and heading
+      // styles - so the customer sees the design the agent sees. Only the agent's controls are left out:
+      // no Customer view button, no "Visible to customer" label, no sharing outline, no rail or footer.
+      <div
+        className={`w-full rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-6 ${interactive ? '' : '[&_button]:pointer-events-none [&_input]:pointer-events-none [&_select]:pointer-events-none [&_textarea]:pointer-events-none [&_a]:pointer-events-none select-none'}`}
+      >
+        <div className="mb-4">
+          <h2 className="text-[length:var(--fs-h4)] font-bold text-fg">{currentStep?.heading ?? currentStep?.label}</h2>
+          {currentStep?.subheading && <p className="text-fg-2 text-[length:var(--fs-body)] mt-1">{currentStep.subheading}</p>}
+        </div>
+        {currentStep?.render({
+          values: draft.values,
+          setValue: interactive ? mirrorSetValue : () => {},
+          goNext: () => {},
+          goToStepKey: () => {},
+          saveDraft: async () => {},
+          saveAndExit: async () => {},
+          requestAbandon: () => {},
+        })}
+      </div>
+    );
+  }
   if (isCustomerFacing) {
     return (
       <div className="max-w-2xl mx-auto" onKeyDown={handleStepKeyDown}>
-        {currentStep?.render({ values: draft.values, setValue, goNext: () => void goNext(), goToStepKey })}
+        {currentStep?.render({ values: draft.values, setValue, goNext: () => void goNext(), goToStepKey, saveDraft, saveAndExit, requestAbandon })}
+        {abandonModal}
       </div>
     );
   }
 
+  // Save & Exit and Abandon Order sit in the page's title row, at the right.
+  const exitLinks = (
+    <>
+              {/* "Save & Exit" (2026-09-28) - distinct from Abandon: this
+                  keeps the draft for later resumption rather than deleting
+                  it. No confirmation modal, unlike Abandon - it is not
+                  destructive, so it should not carry the same weight. Stays
+                  available even once locked: a signed-but-unpaid order is
+                  exactly the kind of thing an agent needs to be able to set
+                  aside and come back to. */}
+              {onSaveExit && (
+                <Button
+                  variant="secondary-rect"
+                  compact
+                  onClick={() => {
+                    setActivityComments('');
+                    setExitOpen(true);
+                  }}
+                >
+                  Save & Exit
+                </Button>
+              )}
+              {/* "Abandon Order" - removed 2026-09-26, restored 2026-09-27 on
+                  direction. A ghost (tertiary) button as of 2026-10-04, with Save & Exit as
+                  the secondary button; neither is primary, so neither competes with Continue. Confirmed before it fires, because it discards
+                  everything the agent has entered. Hidden from hideAbandonFrom
+                  onward (2026-09-28) - see that prop's own note. */}
+              {onAbandon && !abandonHidden && (
+                <Button
+                  variant="ghost-rect"
+                  compact
+                  onClick={() => {
+                    setAbandonNoKeep(false);
+                    setAbandonOpen(true);
+                  }}
+                >
+                  Abandon Order
+                </Button>
+              )}
+    </>
+  );
+
   return (
     <div>
-      <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-6">{title}</h1>
+      <div className={`flex items-start justify-between gap-4 ${titleAside ? 'mb-1' : 'mb-6'}`}>
+        <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">{title}</h1>
+        <div className="flex items-center gap-3">
+          {exitLinks}
+        </div>
+      </div>
+      {/* The fixed customer for this journey sits under the title. */}
+      {titleAside && <div className="mb-6">{titleAside}</div>}
+      {popupBlocked && (
+        <p role="alert" className="text-[var(--warn-text)] text-[length:var(--fs-caption)] -mt-3 mb-4">
+          The browser blocked the customer view pop-up. Allow pop-ups for this site and try again.
+        </p>
+      )}
 
+      <span className="sr-only" aria-live="polite" role="status">
+        {shareAnnouncement}
+      </span>
       <span className="sr-only" aria-live="polite">
         {currentStep && `Step ${currentIndex + 1} of ${activeSteps.length}: ${currentStep.label}`}
       </span>
@@ -569,8 +958,9 @@ export function GuidedActivationWizard({
             already as tall as its container. max-h + its own overflow keep a
             long rail usable on a short viewport instead of clipping its last
             steps out of reach. */}
+        {!currentStep?.hideRail && (
         <ol className="w-72 shrink-0 self-start sticky top-8 max-h-[calc(100vh-8rem)] overflow-y-auto
-          rounded-[var(--radius-card)] border border-border-soft divide-y divide-border-soft bg-bg">
+          rounded-[var(--radius-card)] border border-[var(--field-card-border)] divide-y divide-border-soft bg-bg">
           {activeSteps.map((step, i) => {
             const isActive = i === currentIndex;
             const isDone = i < maxReached;
@@ -606,7 +996,7 @@ export function GuidedActivationWizard({
                   className={`flex items-center justify-center w-7 h-7 rounded-[var(--radius-circle)] text-[length:var(--fs-caption)] font-medium shrink-0
                     ${isDone ? 'bg-success text-white' : isActive ? 'bg-accent text-accent-on' : 'bg-light-neutral text-muted'}`}
                 >
-                  {isDone ? <Icon path={CHECK} className="w-3.5 h-3.5" /> : i + 1}
+                  {isDone ? <Icon path={CHECK} className="w-3.5 h-3.5" strokeWidth={3.5} /> : i + 1}
                 </span>
                 <div className="min-w-0">
                   {/* Every step label is --fg; weight alone marks the active
@@ -624,60 +1014,55 @@ export function GuidedActivationWizard({
             );
           })}
         </ol>
+        )}
 
         <div
           ref={stepPanelRef}
-          className="flex-1 min-w-0 rounded-[var(--radius-card)] border border-border-soft bg-bg p-6"
+          className={`flex-1 min-w-0 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-6 ${viewOpen ? 'outline outline-2 outline-accent' : ''}`}
           onKeyDown={handleStepKeyDown}
         >
-          <div className="flex items-start justify-between gap-4 mb-4">
-            <h2
-              ref={stepHeadingRef}
-              tabIndex={-1}
-              className="text-[length:var(--fs-h4)] font-bold text-fg focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
-            >
-              {currentStep?.label}
-            </h2>
-            <div className="shrink-0 flex items-center gap-3">
-              {/* "Save & Exit" (2026-09-28) - distinct from Abandon: this
-                  keeps the draft for later resumption rather than deleting
-                  it. No confirmation modal, unlike Abandon - it is not
-                  destructive, so it should not carry the same weight. Stays
-                  available even once locked: a signed-but-unpaid order is
-                  exactly the kind of thing an agent needs to be able to set
-                  aside and come back to. */}
-              {onSaveExit && (
-                <button
-                  type="button"
-                  onClick={() => void saveAndExit()}
-                  className="text-[length:var(--fs-caption)] text-muted underline
-                    hover:text-accent focus:outline-none focus-visible:shadow-[var(--focus-ring)]
-                    rounded-[var(--radius-button)] px-1"
-                >
-                  Save & Exit
-                </button>
-              )}
-              {/* "Abandon Order" - removed 2026-09-26, restored 2026-09-27 on
-                  direction. A plain text action rather than a Button: it is
-                  destructive and secondary, and giving it button weight next to
-                  the step heading would set it against Continue as an equal
-                  choice. Confirmed before it fires, because it discards
-                  everything the agent has entered. Hidden from hideAbandonFrom
-                  onward (2026-09-28) - see that prop's own note. */}
-              {onAbandon && !abandonHidden && (
-                <button
-                  type="button"
-                  onClick={() => setAbandonOpen(true)}
-                  className="text-[length:var(--fs-caption)] text-muted underline
-                    hover:text-danger focus:outline-none focus-visible:shadow-[var(--focus-ring)]
-                    rounded-[var(--radius-button)] px-1"
-                >
-                  Abandon Order
-                </button>
+          {/* Title left, Customer view right and vertically centred with it; the button wraps below the title when the row is too narrow. */}
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mb-4">
+            <div>
+              <h2
+                ref={stepHeadingRef}
+                tabIndex={-1}
+                className="text-[length:var(--fs-h4)] font-bold text-fg focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+              >
+                {currentStep?.heading ?? currentStep?.label}
+              </h2>
+              {currentStep?.subheading && (
+                <p className="text-fg-2 text-[length:var(--fs-body)] mt-1">{currentStep.subheading}</p>
               )}
             </div>
+            {allowCustomerView && !currentStep?.hideCustomerView && (
+              <div className="flex items-center gap-3">
+                {/* Says which content the customer can see; the container's outline says where it ends. */}
+                {viewOpen && (
+                  <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] bg-surface-warm px-2.5 py-0.5 text-accent text-[length:var(--fs-tag)] font-medium">
+                    <Icon path={EYE_ICON} className="w-3.5 h-3.5" />
+                    Visible to customer
+                  </span>
+                )}
+                <Tooltip
+                  content={viewOpen ? 'The customer can see this section. Click to stop sharing.' : 'Show this section to the customer'}
+                  placement="bottom"
+                >
+                  <Button variant={viewOpen ? 'primary-rect' : 'secondary-rect'} compact onClick={toggleCustomerView} aria-pressed={viewOpen}>
+                    {viewOpen && (
+                      <span aria-hidden="true" className="relative flex h-2 w-2">
+                        <span className="absolute inline-flex h-full w-full rounded-full bg-white opacity-75 motion-safe:animate-ping" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+                      </span>
+                    )}
+                    <Icon path={EYE_ICON} className="w-4 h-4" />
+                    {viewOpen ? 'Showing to customer' : 'Customer view'}
+                  </Button>
+                </Tooltip>
+              </div>
+            )}
           </div>
-          {currentStep?.render({ values: draft.values, setValue, goNext: () => void goNext(), goToStepKey })}
+          {currentStep?.render({ values: draft.values, setValue, goNext: () => void goNext(), goToStepKey, saveDraft, saveAndExit, requestAbandon })}
           <div className="flex items-center justify-between mt-6 pt-6 border-t border-border-soft">
             <div className="flex items-center gap-3">
               {/* Locked (2026-09-28): Back disappears entirely alongside the
@@ -692,10 +1077,26 @@ export function GuidedActivationWizard({
               )}
               {currentStep?.footerLeft?.({ values: draft.values })}
             </div>
-            <Button variant="primary-rect" onClick={goNext} disabled={!canProceed || submitting}>
-              {submitting ? 'Submitting…' : currentIndex === activeSteps.length - 1 ? 'Save & Finish' : 'Continue'}
-              {!submitting && <Icon path={CHEVRON_RIGHT} className="w-4 h-4" />}
-            </Button>
+            {(() => {
+              const defaultButton = (
+                <Button variant="primary-rect" onClick={goNext} disabled={!canProceed || submitting}>
+                  {submitting ? 'Submitting…' : currentIndex === activeSteps.length - 1 ? 'Save & Finish' : 'Continue'}
+                  {!submitting && <Icon path={CHEVRON_RIGHT} className="w-4 h-4" />}
+                </Button>
+              );
+              return (
+                currentStep?.primaryAction?.({
+                  values: draft.values,
+                  setValue,
+                  goNext: () => void goNext(),
+                  abandon: (opts) => {
+                    setAbandonNoKeep(Boolean(opts?.hideKeepWorking));
+                    setAbandonOpen(true);
+                  },
+                  defaultButton,
+                }) ?? defaultButton
+              );
+            })()}
           </div>
         </div>
       </div>
@@ -704,25 +1105,8 @@ export function GuidedActivationWizard({
           entered and, once a draft order exists, deletes that row. Modal
           rather than Drawer per Modal.tsx's own note - it is reserved for
           exactly this short confirmation. */}
-      <Modal
-        open={abandonOpen}
-        onClose={() => setAbandonOpen(false)}
-        title="Abandon this order?"
-        footer={
-          <>
-            <Button variant="ghost-rect" onClick={() => setAbandonOpen(false)}>
-              Keep working
-            </Button>
-            <Button variant="primary-rect" onClick={() => void abandonOrder()}>
-              Abandon Order
-            </Button>
-          </>
-        }
-      >
-        <p className="text-fg-2 text-[length:var(--fs-body)]">
-          Everything entered for this customer will be discarded and the saved draft deleted. This cannot be undone.
-        </p>
-      </Modal>
+      {abandonModal}
+      {exitModal}
     </div>
   );
 }

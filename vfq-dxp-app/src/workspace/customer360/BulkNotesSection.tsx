@@ -40,7 +40,7 @@ export function BulkNotesSection({ accountIds }: { accountIds: string[] }) {
       {!loading && applicable.length > 0 && (
         <div className="space-y-2">
           {applicable.map((note) => (
-            <div key={note.noteId} className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4">
+            <div key={note.noteId} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">
               <p className="text-fg font-medium text-[length:var(--fs-body)]">{note.content}</p>
               <p className="text-muted text-[length:var(--fs-caption-upper)] uppercase tracking-wide mt-1.5">
                 Posted {new Date(note.postedAt).toLocaleString()} · applies to {note.accountIds.length} account

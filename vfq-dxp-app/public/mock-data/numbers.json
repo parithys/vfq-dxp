@@ -5,7 +5,9 @@
     "status": "Reserved",
     "reservedBy": "Fatima Al-Kuwari",
     "priceQAR": 0,
-    "_reservedByNote": "Was 'AGENT-KARTHIKK', an id matching no record in users-agents.json - the same invented placeholder NewPostpaidWizard stamps as an order's createdBy. Repointed at USR-1101 (Fatima Al-Kuwari, the demo login) so every Held-by badge names a real, resolvable person instead of one row reading an id and the rest reading names."
+    "_reservedByNote": "Was 'AGENT-KARTHIKK', an id matching no record in users-agents.json - the same invented placeholder NewPostpaidWizard stamps as an order's createdBy. Repointed at USR-1101 (Fatima Al-Kuwari, the demo login) so every Held-by badge names a real, resolvable person instead of one row reading an id and the rest reading names.",
+    "reservedAt": "2026-10-04T09:15:00+03:00",
+    "reservedForQid": "27801063400071"
   },
   {
     "msisdn": "+97433001002",
@@ -213,14 +215,16 @@
     "status": "Reserved",
     "reservedBy": "Omar Hassan",
     "priceQAR": 0,
-    "_note": "App-level demo addition (2026-09-26) - the inventory held exactly ONE Reserved number, so the Reserved Numbers tab could not show a list, its one-per-row layout had nothing to justify it, and the tab's whole purpose - that it cuts ACROSS categories, so a reserved Star number stays visible instead of falling out of the UI - was undemonstrable with no reserved Star number in the seed. Held-by names are real users-agents.json records (USR-1102 Omar Hassan, USR-1205 Saira Rahman, USR-1208 Reem Al-Sulaiti, USR-1207 Tariq Haddad) rather than invented ids, so the badge names someone an agent could actually go and ask."
+    "_note": "App-level demo addition (2026-09-26) - the inventory held exactly ONE Reserved number, so the Reserved Numbers tab could not show a list, its one-per-row layout had nothing to justify it, and the tab's whole purpose - that it cuts ACROSS categories, so a reserved Star number stays visible instead of falling out of the UI - was undemonstrable with no reserved Star number in the seed. Held-by names are real users-agents.json records (USR-1102 Omar Hassan, USR-1205 Saira Rahman, USR-1208 Reem Al-Sulaiti, USR-1207 Tariq Haddad) rather than invented ids, so the badge names someone an agent could actually go and ask.",
+    "reservedAt": "2026-10-03T16:40:00+03:00"
   },
   {
     "msisdn": "+97455610091",
     "category": "Free",
     "status": "Reserved",
     "reservedBy": "Saira Rahman",
-    "priceQAR": 0
+    "priceQAR": 0,
+    "reservedAt": "2026-10-03T11:05:00+03:00"
   },
   {
     "msisdn": "+97477700007",
@@ -228,7 +232,8 @@
     "status": "Reserved",
     "reservedBy": "Reem Al-Sulaiti",
     "priceQAR": 2500,
-    "valueTier": "Platinum"
+    "valueTier": "Platinum",
+    "reservedAt": "2026-10-02T15:30:00+03:00"
   },
   {
     "msisdn": "+97466644004",
@@ -236,7 +241,8 @@
     "status": "Reserved",
     "reservedBy": "Tariq Haddad",
     "priceQAR": 800,
-    "valueTier": "Silver"
+    "valueTier": "Silver",
+    "reservedAt": "2026-10-02T10:20:00+03:00"
   },
   {
     "msisdn": "+97488887777",
@@ -253,5 +259,15 @@
     "priceQAR": 20000,
     "valueTier": "Platinum",
     "_note": "App-level demo addition (2026-09-28), alongside +97488887777 - priced above even the most expensive seeded plan's entitlement (QR 750 x 25 = QR 18750), so every plan shows SOME overage on this one, not just the cheaper ones."
+  },
+  {
+    "msisdn": "+97455610140",
+    "category": "Free",
+    "status": "Reserved",
+    "reservedBy": "Fatima Al-Kuwari",
+    "priceQAR": 0,
+    "reservedAt": "2026-10-04T14:35:00+03:00",
+    "reservedForQid": "27801063400071",
+    "_note": "Demo seed (2026-10-04): second number reserved for the same customer (CUST-3071), made later than +97433001001, so the picker's most-recent-reserved default can be shown."
   }
 ]

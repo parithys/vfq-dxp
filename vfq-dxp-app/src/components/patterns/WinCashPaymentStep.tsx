@@ -97,7 +97,7 @@ export function WinCashPaymentStep({ amountDueQAR, value, onChange }: WinCashPay
 
   return (
     <div className="space-y-4">
-      <div className="rounded-[var(--radius-card)] border border-border-soft p-4 bg-surface">
+      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4 bg-surface">
         <div className="flex justify-between text-fg">
           <span>Amount Due (WinCash)</span>
           <span className="font-medium">QR {amountDueQAR}</span>

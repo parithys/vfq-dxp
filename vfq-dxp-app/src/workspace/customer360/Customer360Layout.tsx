@@ -1,24 +1,35 @@
 import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
-import { accountHolderStatus, getCustomer360, toActiveCustomerSummary, computeBillingSummary, type AccountRecord, type Customer360Data } from '../../engines/customer360Engine';
+import { getCustomer360, toActiveCustomerSummary, computeBillingSummary, type AccountRecord, type Customer360Data } from '../../engines/customer360Engine';
 import { listCustomerServices, type ServiceSources } from '../../engines/customerServicesEngine';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useActiveCustomerStore } from '../../stores/activeCustomerStore';
-import { useCustomerVerificationStore } from '../../stores/customerVerificationStore';
 import { usePersonaStore } from '../../stores/personaStore';
+import { getPersona } from '../../engines/configEngine';
+import { buildTelesalesTabs } from './telesalesTabs';
+import { CustomerProfileHeader, type HeaderAlert } from './CustomerProfileHeader';
 import { canEditCustomerRecords } from '../../engines/agentPrivilegeEngine';
 import { isTopicVisible } from '../../engines/customer360VisibilityEngine';
 import { useVerificationGate } from '../../components/patterns/VerificationGate';
-import { Badge } from '../../components/primitives/Badge';
 import { Button } from '../../components/primitives/Button';
-import { Icon } from '../../components/primitives/Icon';
 import { Tooltip } from '../../components/primitives/Tooltip';
 import { Tabs, type TabItem } from '../../components/primitives/Tabs';
 import { MetricCard } from './MetricCard';
-import { downloadCsv } from '../../engines/csvExport';
 import { BellNotificationBanner } from './BellNotificationBanner';
 import { DemographicEditDrawer } from './DemographicEditDrawer';
 import { AssetsSection, type AssetsSubView } from './sections/AssetsSection';
+import { C360AddressService } from './sections/C360AddressService';
+import { C360AccountInformation } from './sections/C360AccountInformation';
+import { C360Activities } from './sections/C360Activities';
+import { C360AlertsRisks } from './sections/C360AlertsRisks';
+import { C360BillingPayments } from './sections/C360BillingPayments';
+import { C360ContactIdentity } from './sections/C360ContactIdentity';
+import { C360OffersLeads } from './sections/C360OffersLeads';
+import { C360Orders } from './sections/C360Orders';
+import { C360Overview } from './sections/C360Overview';
+import { C360ProductsServices } from './sections/C360ProductsServices';
+import { C360TicketsSupport } from './sections/C360TicketsSupport';
 import { TopicFieldsSection } from './sections/TopicFieldsSection';
 import { accountInformationResolvers, accountInformationRichFields } from './sections/accountInformationResolvers';
 import { billingResolvers } from './sections/billingResolvers';
@@ -49,7 +60,6 @@ function toAssetsSubView(tab: string | undefined): AssetsSubView {
 // re-sets the bridge here too so a direct link still pre-fills downstream
 // wizards correctly.
 const CLOSED_TICKET_STATUSES = new Set(['Solved', 'Completed', 'Closed', 'Cancelled']);
-const EXPORT_ICON = 'M12 15V3 M7 10l5 5 5-5 M4 21h16';
 
 export function Customer360Layout() {
   const { customerId } = useParams<{ customerId: string }>();
@@ -84,7 +94,7 @@ export function Customer360Layout() {
   // half-restored selection.
   const location = useLocation();
   const linked = (location.state ?? {}) as { tab?: string; serviceRef?: string };
-  const [activeTab, setActiveTab] = useState(linked.tab && SERVICE_TABS.has(linked.tab) ? 'assets' : 'account-info');
+  const [activeTab, setActiveTab] = useState(linked.tab && SERVICE_TABS.has(linked.tab) ? 'assets' : '');
   const [assetsSubView, setAssetsSubView] = useState<AssetsSubView>(toAssetsSubView(linked.tab));
   const [selectedServiceRef, setSelectedServiceRef] = useState(linked.serviceRef);
 
@@ -127,9 +137,6 @@ export function Customer360Layout() {
     });
   }, [customerId, setActiveCustomer]);
 
-  const isSessionVerified = useCustomerVerificationStore((s) =>
-    customerId ? s.isVerified(customerId) : false
-  );
   const { requireVerification, gate: verificationGate } = useVerificationGate(
     customerId ?? '',
     data && data !== null ? data.customer.name : 'this customer'
@@ -149,7 +156,6 @@ export function Customer360Layout() {
   }
 
   const customer = toActiveCustomerSummary(data.customer);
-  const holderStatus = accountHolderStatus(data.accounts);
   const { outstanding, latestBill } = computeBillingSummary(data);
   const openTicketCount = data.tickets.filter((t) => !CLOSED_TICKET_STATUSES.has(String(t.status))).length;
   const accountStatus = data.customer.blacklisted
@@ -165,25 +171,6 @@ export function Customer360Layout() {
   // back. data.tickets itself stays the single source of truth for both.
   const addTicket = (ticket: Record<string, unknown>) =>
     setData((prev) => (prev ? { ...prev, tickets: [ticket, ...prev.tickets] } : prev));
-
-  const exportProfile = () => {
-    downloadCsv(`${data.customer.customerId}-profile.csv`, [
-      {
-        customerId: data.customer.customerId,
-        name: data.customer.name,
-        idType: data.customer.idType,
-        qid: data.customer.qid,
-        dob: data.customer.dob,
-        nationality: data.customer.nationality,
-        segment: data.customer.segment,
-        email: data.customer.email ?? '',
-        phone: data.customer.phone ?? '',
-        preferredLanguage: data.customer.preferredLanguage ?? '',
-        moiValidationStatus: data.customer.moiValidationStatus ?? '',
-        blacklisted: data.customer.blacklisted,
-      },
-    ]);
-  };
 
   // Empty until the sources land, so the tabs render their own empty state
   // for a moment rather than briefly claiming the customer has no services.
@@ -211,7 +198,11 @@ export function Customer360Layout() {
   // frequently glanced but narrow in scope, then the situational/compliance
   // topics that are only opened when directly relevant, with EBU last since
   // it touches only 2 of 11 departments and is real-time for none of them.
-  const tabs: TabItem[] = [
+  // Persona-specific layout (personas.json `customer360Layout`): the Telesales Agent gets task-shaped
+  // tabs over the same field sections; every other persona keeps the standard tabs below.
+  const telesales = getPersona(activePersonaId)?.customer360Layout === 'telesales';
+  const headerOnly = getPersona(activePersonaId)?.customer360Layout === 'header-only';
+  const standardTabs: TabItem[] = [
     ...(isTopicVisible(activePersonaId, 'Account Information')
       ? [
           {
@@ -414,56 +405,122 @@ export function Customer360Layout() {
       ? [{ key: 'ebu', label: 'EBU', content: <TopicFieldsSection personaId={activePersonaId} topic="EBU" /> }]
       : []),
   ];
+  // Header-only layout (the Retail module): the eleven agreed tabs. A tab appears only where the persona can see
+  // its Customer 360 topic (Customer360 List - FINAL), so e.g. Direct Sales drops Products & Services,
+  // Activities and Alerts & Risks.
+  const openTab = (key: string) => {
+    setActiveTab(key);
+    setSelectedServiceRef(undefined);
+  };
+  const editContact = canEdit ? () => requireVerification(() => setDemoDrawerOpen(true)) : undefined;
+  const retailTab = (key: string, label: string, topics: string[], content: ReactNode): TabItem[] =>
+    topics.some((t) => isTopicVisible(activePersonaId, t)) ? [{ key, label, content }] : [];
+  const tabProps = { data, services, goToTab: openTab };
+  const tabs: TabItem[] = headerOnly
+    ? [
+        ...retailTab('overview', 'Overview', ['Account Information'], <C360Overview {...tabProps} />),
+        ...retailTab('account-info', 'Account Information', ['Account Information'], <C360AccountInformation {...tabProps} onEdit={editContact} />),
+        ...retailTab('products-services', 'Products & Services', ['Assets'], <C360ProductsServices {...tabProps} />),
+        ...retailTab('billing', 'Billing & Payments', ['Billing & Payments'], <C360BillingPayments {...tabProps} />),
+        ...retailTab('offers-leads', 'Offers & Leads', ['Contact/Assets Information', 'Account/Contact Lead'], <C360OffersLeads {...tabProps} />),
+        ...retailTab('contact-identity', 'Contact & Identity', ['Contact Information'], <C360ContactIdentity {...tabProps} onEdit={editContact} />),
+        ...retailTab('orders', 'Orders', ['Account Information'], <C360Orders {...tabProps} />),
+        ...retailTab('tickets-support', 'Tickets & Support', ['Account Information'], <C360TicketsSupport {...tabProps} onTicketCreated={addTicket} />),
+        ...retailTab('activities', 'Activities', ['Audit Trail'], <C360Activities {...tabProps} />),
+        ...retailTab('alerts-risks', 'Alerts & Risks', ['Alerts & Risks'], <C360AlertsRisks {...tabProps} />),
+        ...retailTab('address-service', 'Address & Service', ['Account Address'], <C360AddressService {...tabProps} canEdit={canEdit} requireVerification={requireVerification} onTicketCreated={addTicket} />),
+      ]
+    : telesales
+    ? buildTelesalesTabs({
+        personaId: activePersonaId,
+        data,
+        services,
+        customer,
+        servicesLoaded: serviceSources !== undefined,
+        selectedServiceRef,
+        assetsSubView,
+        onTicketCreated: addTicket,
+        goToTab: (key) => {
+          setActiveTab(key);
+          setSelectedServiceRef(undefined);
+        },
+      })
+    : standardTabs;
+
+  // The deep-linked / default tab key belongs to the standard layout; map it onto this one.
+  const shownTab = tabs.some((t) => t.key === activeTab)
+    ? activeTab
+    : telesales && activeTab === 'assets'
+      ? 'ts-products'
+      : (tabs[0]?.key ?? activeTab);
+
+  // Telesales header extras (C360-HDR-01..06). Every value is read from data already on the record and is
+  // omitted when absent - nothing is derived or estimated.
+
+  // Alerts & Attention card: customer-level indicators an agent must see first.
+  const dunning = data.billingProfiles[0]?.collectionStage as string | undefined;
+  const pendingSimSwap = data.simSwapOrders.some((o) => /pending/i.test(String(o.status)));
+  const headerAlerts: HeaderAlert[] = [
+    ...(data.customer.blacklisted ? [{ label: 'Blacklisted', tone: 'danger' as const }] : []),
+    ...(outstanding > 0 ? [{ label: 'Outstanding balance', tone: 'danger' as const }] : []),
+    ...(dunning && !/^(none|no dunning|current)$/i.test(dunning) ? [{ label: `Dunning: ${dunning}`, tone: 'danger' as const }] : []),
+    ...(openTicketCount > 0 ? [{ label: `${openTicketCount} open ticket${openTicketCount === 1 ? '' : 's'}`, tone: 'warning' as const }] : []),
+    ...(pendingSimSwap ? [{ label: 'Pending SIM swap', tone: 'warning' as const }] : []),
+  ];
 
   return (
     <div className="p-8">
-      <div className="flex items-start justify-between gap-4 mb-1">
-        <div className="flex items-center gap-3">
-          <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">{data.customer.name}</h1>
-          {data.customer.blacklisted && <Badge variant="danger">Blacklisted</Badge>}
-          {data.customer.moiValidationStatus === 'Verified' && <Badge variant="success">Verified</Badge>}
-          {isSessionVerified && <Badge variant="filled-neutral">Session Verified</Badge>}
-          {/* Account-holder standing, beside the name - the most prominent
-              slot on the page and the one an agent reads before anything
-              else. It governs what they may do on the account, so it does not
-              belong buried in a tab.
-
-              Absent for a customer with no accounts rather than defaulted to
-              either label: a new-connection walk-in is neither primary nor
-              secondary yet. See accountHolderStatus. */}
-          {holderStatus && (
-            <Badge variant={holderStatus === 'Primary' ? 'accent' : 'filled-neutral'}>
-              {holderStatus} Account Holder
-            </Badge>
-          )}
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Button variant="ghost-rect" compact onClick={exportProfile}>
-            <Icon path={EXPORT_ICON} className="w-4 h-4" />
-            Export
-          </Button>
-          {canEdit ? (
-            <Button
-              variant="primary-rect"
-              compact
-              onClick={() => requireVerification(() => setDemoDrawerOpen(true))}
-            >
-              Edit profile
-            </Button>
-          ) : (
-            <Tooltip content="Not authorised to edit customer records" placement="bottom">
-              <Button variant="primary-rect" compact className="opacity-40 cursor-not-allowed" onClick={(e) => e.preventDefault()}>
+      <CustomerProfileHeader
+        {...(telesales
+          ? {
+              accountNumber: data.accounts[0]?.accountId ? String(data.accounts[0].accountId) : undefined,
+              // The full ID number stays masked until the agent passes the same verification gate that guards
+              // profile edits.
+              maskId: true,
+              onRequestReveal: (reveal: () => void) => requireVerification(reveal),
+              pinIdentity: true,
+            }
+          : {})}
+        name={data.customer.name}
+        tags={[
+          ...(/vip|premium/i.test(data.customer.segment) ? [{ label: 'VIP', variant: 'tag-amber' as const }] : []),
+          ...(/postpaid/i.test(String(data.accounts[0]?.accountType ?? '')) ? [{ label: 'Postpaid', variant: 'tag-red' as const }] : []),
+        ]}
+        qid={data.customer.qid}
+        idType={data.customer.idType}
+        blacklisted={Boolean(data.customer.blacklisted)}
+        dob={data.customer.dob}
+        gender={data.contacts[0]?.gender as string | undefined}
+        preferredLanguage={data.customer.preferredLanguage}
+        segment={data.customer.segment}
+        phone={data.customer.phone}
+        email={data.customer.email}
+        totalConnections={services.length > 0 ? services.length : undefined}
+        creditLimit={data.creditLimits[0] ? `QAR ${String(data.creditLimits[0].creditLimitQar ?? data.creditLimits[0].creditLimitQAR ?? '-')}` : undefined}
+        alerts={headerAlerts}
+        onViewAlerts={tabs.some((t) => t.key === 'alerts-risks') ? () => setActiveTab('alerts-risks') : undefined}
+        // Header-only layouts edit the profile from the Contact Information tab, so the header carries no button.
+        actions={
+          headerOnly ? undefined : (
+          <>
+            {canEdit ? (
+              <Button variant="primary-rect" compact onClick={() => requireVerification(() => setDemoDrawerOpen(true))}>
                 Edit profile
               </Button>
-            </Tooltip>
-          )}
-        </div>
-      </div>
-      <p className="text-fg-2 mb-4">
-        {data.customer.customerId} · {data.customer.idType} {data.customer.qid} · {data.customer.segment}
-      </p>
+            ) : (
+              <Tooltip content="Not authorised to edit customer records" placement="bottom">
+                <Button variant="primary-rect" compact className="opacity-40 cursor-not-allowed" onClick={(e) => e.preventDefault()}>
+                  Edit profile
+                </Button>
+              </Tooltip>
+            )}
+          </>
+          )
+        }
+      />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      {!telesales && !headerOnly && (
+      <div className="grid grid-cols-2 gap-4 mb-4">
         <MetricCard label="Account status" value={accountStatus} subtext={`${data.accounts.length} account${data.accounts.length === 1 ? '' : 's'}`} />
         <MetricCard
           label="Current bill"
@@ -481,14 +538,15 @@ export function Customer360Layout() {
           subtext={openTicketCount > 0 ? 'Needs attention' : 'All resolved'}
         />
       </div>
+      )}
 
-      <BellNotificationBanner customerId={data.customer.customerId} />
+      {!headerOnly && <BellNotificationBanner customerId={data.customer.customerId} />}
       {tabs.length === 0 ? (
         // Deliberate strict compliance with the source visibility data
         // (2026-09-29 decision): a department granted no real-time or
         // drill-down access to any of the 13 topics (e.g. EBU Operations)
         // sees this rather than a crash or a blank/broken tab strip.
-        <p className="text-fg-2 text-[length:var(--fs-body)] rounded-[var(--radius-card)] border border-border-soft bg-bg p-6">
+        <p className="text-fg-2 text-[length:var(--fs-body)] rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-6">
           No Customer 360 sections are visible for your role.
         </p>
       ) : (
@@ -497,8 +555,9 @@ export function Customer360Layout() {
         // agent has navigated away from and back to for their own reasons.
         <Tabs
           items={tabs}
-          orientation="vertical"
-          activeKey={activeTab}
+          orientation={headerOnly ? 'vertical' : 'horizontal'}
+          rail={headerOnly}
+          activeKey={shownTab}
           onChange={(key) => {
             setActiveTab(key);
             setSelectedServiceRef(undefined);

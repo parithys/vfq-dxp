@@ -1,4 +1,4 @@
-"""Generate VFQ_DXP_Mobile_Postpaid_Activation_Reference.xlsx.
+"""Generate VFQ_DXP_Validation_Integration.xlsx.
 
 Regenerate with: python3 reference/scripts/build_mobile_postpaid_reference.py
 (run from anywhere - paths resolve relative to this script's location.)
@@ -33,7 +33,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
-OUT = Path(__file__).resolve().parents[1] / "outputs" / "VFQ_DXP_Mobile_Postpaid_Activation_Reference.xlsx"
+OUT = Path(__file__).resolve().parents[1] / "outputs" / "VFQ_DXP_Validation_Integration.xlsx"
 
 VF_RED = "E60000"
 HDR_BG = "313131"

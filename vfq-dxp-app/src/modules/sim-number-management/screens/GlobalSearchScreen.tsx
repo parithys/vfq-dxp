@@ -24,7 +24,7 @@ export function GlobalSearchScreen() {
   }
 
   return (
-    <div className="p-8 max-w-md">
+    <div className="p-8 w-full">
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Global Search</h1>
       <p className="text-fg-2 mb-6">Search for a customer by MSISDN.</p>
       <div className="flex gap-2" onKeyDown={handleKeyDown}>
@@ -34,7 +34,7 @@ export function GlobalSearchScreen() {
         </Button>
       </div>
       {searched && msisdn && (
-        <div className="mt-6 rounded-[var(--radius-card)] border border-border-soft bg-bg p-4">
+        <div className="mt-6 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">
           <p className="text-fg font-medium mb-3">{msisdn}</p>
           <Button variant="primary-rect" onClick={() => setSwapping(true)}>
             SIM Swap

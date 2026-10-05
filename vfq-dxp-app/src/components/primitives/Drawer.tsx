@@ -8,6 +8,12 @@ interface DrawerProps {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
+  /** Replaces the default title bar entirely (the caller then supplies its own close control). `title` is still the dialog's accessible name. */
+  header?: ReactNode;
+  /** Replaces the default width (40vw, min 320px). */
+  widthClassName?: string;
+  /** Replaces the default body padding. */
+  bodyClassName?: string;
 }
 
 // Side drawer for everything that isn't a short confirmation message (see
@@ -21,7 +27,7 @@ interface DrawerProps {
 // deferred exactly as long as the slide-out animation takes to finish.
 const EXIT_DURATION_MS = 220;
 
-export function Drawer({ open, onClose, title, children, footer }: DrawerProps) {
+export function Drawer({ open, onClose, title, children, footer, header, widthClassName = 'w-[40vw] min-w-[320px]', bodyClassName = 'px-6 py-6' }: DrawerProps) {
   // Mirrors Sidebar.tsx's mobile-drawer technique: mount first, then flip the
   // transform on the next tick so the slide-in transition actually plays
   // instead of the panel just appearing already in place. `mounted` stays
@@ -58,22 +64,24 @@ export function Drawer({ open, onClose, title, children, footer }: DrawerProps) 
     // panel.
     <div className="fixed inset-0 z-50 bg-[var(--black-80)]">
       <div
-        className={`fixed right-0 inset-y-0 z-50 w-[40vw] min-w-[320px] max-w-full flex flex-col bg-bg border-l border-border-soft shadow-raised transform transition-transform duration-[var(--motion-base)] ease-[var(--ease-standard)] ${
+        className={`fixed right-0 inset-y-0 z-50 ${widthClassName} max-w-full flex flex-col bg-bg border-l border-border-soft shadow-raised transform transition-transform duration-[var(--motion-base)] ease-[var(--ease-standard)] ${
           entered ? 'translate-x-0' : 'translate-x-full'
         }`}
         role="dialog"
         aria-modal="true"
         aria-label={title}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border-soft shrink-0">
-          <h2 className="text-[length:var(--fs-h5)] font-medium text-fg">{title}</h2>
-          <Tooltip content="Close" placement="left">
-            <button onClick={onClose} aria-label="Close" className="text-muted hover:text-fg text-xl leading-none">
-              ×
-            </button>
-          </Tooltip>
-        </div>
-        <div className="flex-1 overflow-y-auto px-6 py-6">{children}</div>
+        {header ?? (
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border-soft shrink-0">
+            <h2 className="text-[length:var(--fs-h5)] font-medium text-fg">{title}</h2>
+            <Tooltip content="Close" placement="left">
+              <button onClick={onClose} aria-label="Close" className="text-muted hover:text-fg text-xl leading-none">
+                ×
+              </button>
+            </Tooltip>
+          </div>
+        )}
+        <div className={`flex-1 overflow-y-auto ${bodyClassName}`}>{children}</div>
         {footer && <div className="flex justify-end gap-2 px-6 py-4 border-t border-border-soft shrink-0">{footer}</div>}
       </div>
     </div>

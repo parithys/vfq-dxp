@@ -94,7 +94,7 @@ export function PersonaSwitcher() {
     // stepped where they met. Sharing the token rather than copying the value
     // keeps them joined in dark mode too, where the two resolve differently
     // (#3a3d42 vs rgba(255,255,255,.1)).
-    <div className="grid grid-cols-[auto_minmax(0,28rem)_auto_minmax(0,1fr)] items-center gap-3 h-16 px-4 border-b border-[var(--nav-border)] bg-[color-mix(in_oklab,var(--bg)_85%,transparent)] backdrop-blur">
+    <div className="relative z-30 grid grid-cols-[auto_minmax(0,28rem)_auto_minmax(0,1fr)] items-center gap-3 h-16 px-4 border-b border-[var(--nav-border)] bg-[color-mix(in_oklab,var(--bg)_85%,transparent)] backdrop-blur">
       <button
         onClick={toggleMobileOpen}
         aria-label="Open navigation"
@@ -184,7 +184,7 @@ export function PersonaSwitcher() {
             </button>
           </Tooltip>
           {open === 'notifications' && (
-            <div className="absolute right-0 mt-2 w-80 rounded-[var(--radius-card)] border border-border-soft bg-bg shadow-raised z-50 max-h-96 overflow-y-auto">
+            <div className="absolute right-0 mt-2 w-80 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg shadow-raised z-50 max-h-96 overflow-y-auto">
               <p className="px-4 py-3 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted border-b border-border-soft">Notifications</p>
               {history.length === 0 && <p className="px-4 py-6 text-fg-2 text-[length:var(--fs-body)]">No notifications yet.</p>}
               {history.map((h) => (
@@ -226,10 +226,10 @@ export function PersonaSwitcher() {
             </button>
           </Tooltip>
           {open === 'help' && (
-            <div className="absolute right-0 mt-2 w-72 rounded-[var(--radius-card)] border border-border-soft bg-bg shadow-raised z-50 p-4">
+            <div className="absolute right-0 mt-2 w-72 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg shadow-raised z-50 p-4">
               <p className="text-fg font-medium mb-1">Help &amp; support</p>
               <p className="text-fg-2 text-[length:var(--fs-body)]">
-                Contact the IT Service Desk at <span className="text-accent">servicedesk@vodafone.qa</span> or extension 4100 for platform issues.
+                Contact the IT Service Desk at <span className="text-link">servicedesk@vodafone.qa</span> or extension 4100 for platform issues.
               </p>
             </div>
           )}
@@ -253,7 +253,7 @@ export function PersonaSwitcher() {
             <Icon path={ICONS.chevronDown} className="w-3.5 h-3.5 text-muted" />
           </button>
           {open === 'profile' && (
-            <div className="absolute right-0 mt-2 w-72 rounded-[var(--radius-card)] border border-border-soft bg-bg shadow-raised z-50">
+            <div className="absolute right-0 mt-2 w-72 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg shadow-raised z-50">
               <div className="px-4 py-3">
                 <p className="text-fg font-medium">{profile?.name ?? staffId}</p>
                 <p className="text-muted text-[length:var(--fs-caption)]">

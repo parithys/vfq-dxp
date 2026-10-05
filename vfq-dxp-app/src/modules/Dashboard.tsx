@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { getPersona } from '../engines/configEngine';
 import { usePersonaStore } from '../stores/personaStore';
 import { useAuthStore } from '../stores/authStore';
@@ -7,13 +7,12 @@ import { useActiveCustomerStore } from '../stores/activeCustomerStore';
 import { useRegionStore, REGIONS } from '../stores/regionStore';
 import { canUseFeature } from '../engines/personaEngine';
 import * as mockDataEngine from '../engines/mockDataEngine';
-import { Icon } from '../components/primitives/Icon';
+import { SearchField } from '../components/primitives/SearchField';
 import { DashboardZone } from './dashboard/DashboardZone';
 import { useZoneMetrics } from './dashboard/useZoneMetrics';
 import { customerOpsSpec, productWorkSpec } from './dashboard/zoneSpecs';
 import { layoutFor, productZoneVariantFor } from './dashboard/dashboardLayout';
 
-const SEARCH_ICON = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3';
 
 interface CustomerRecord {
   customerId: string;
@@ -29,6 +28,8 @@ interface CustomerRecord {
 // control re-orders and re-sizes the same two zones - it does not navigate, and
 // because useZoneMetrics loads every kind on mount it cannot refetch either.
 export function Dashboard() {
+  const navigate = useNavigate();
+  const [customerQuery, setCustomerQuery] = useState('');
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
   const persona = getPersona(activePersonaId);
   const profileName = useAuthStore((s) => s.profile?.name);
@@ -97,13 +98,21 @@ export function Dashboard() {
       {/* Customer search is the entry point for customer-centric work, so it
           only leads for roles that hold it. */}
       {canUseFeature(activePersonaId, 'workspace.customer-search') && (
-        <Link
-          to="/customer-search"
-          className="flex items-center gap-3 rounded-[var(--radius-pill)] border border-border-soft bg-bg px-5 py-3.5 mb-8 max-w-xl text-muted hover:border-accent hover:text-fg transition-colors"
-        >
-          <Icon path={SEARCH_ICON} className="w-5 h-5" />
-          <span className="text-[length:var(--fs-body)]">Search a customer by mobile, QID, name, or account number…</span>
-        </Link>
+        <SearchField
+          aria-label="Search a customer"
+          value={customerQuery}
+          onChange={(e) => setCustomerQuery(e.target.value)}
+          // Clicking (or tabbing into) the box opens Customer Search, which is where the lookup runs.
+          onClick={() => navigate('/customer-search', { state: { query: customerQuery.trim() } })}
+          onFocus={() => navigate('/customer-search', { state: { query: customerQuery.trim() } })}
+          onKeyDown={(e) => {
+            // Hands the typed text to Customer Search, which runs it.
+            if (e.key === 'Enter') navigate('/customer-search', { state: { query: customerQuery.trim() } });
+          }}
+          onClear={() => setCustomerQuery('')}
+          placeholder="Search a customer by mobile, QID, account number…"
+          wrapperClassName="mb-8"
+        />
       )}
 
       <div className={twoUp ? 'grid grid-cols-1 xl:grid-cols-2 gap-8' : 'space-y-8'}>

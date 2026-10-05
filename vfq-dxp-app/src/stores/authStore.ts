@@ -1,5 +1,7 @@
 import { create } from 'zustand';
+import { useJourneyCustomer } from './journeyCustomerStore';
 import { persist } from 'zustand/middleware';
+import { resetApplicationState } from '../auth/resetSession';
 
 export interface AgentProfile {
   userId: string;
@@ -40,7 +42,14 @@ export const useAuthStore = create<AuthState>()(
       staffId: '',
       profile: null,
       signIn: (staffId, profile) => set({ isAuthenticated: true, staffId, profile }),
-      signOut: () => set({ isAuthenticated: false, staffId: '', profile: null }),
+      // Signing out (or a session timeout, which signs out) ends the session: every persisted
+      // store is cleared and the page reloads, so the next login starts from the code's defaults
+      // (see resetApplicationState).
+      signOut: () => {
+        useJourneyCustomer.getState().end();
+        set({ isAuthenticated: false, staffId: '', profile: null });
+        resetApplicationState();
+      },
       setProfile: (profile) => set({ profile }),
     }),
     {

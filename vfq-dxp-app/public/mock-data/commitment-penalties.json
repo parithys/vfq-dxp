@@ -46,5 +46,21 @@
     "status": "Waived",
     "blocksNewConnection": false,
     "_blockingNote": "App-level demo addition (2026-09-25) - the eligibility matrix checks for a deal that prevents a new connection, and nothing here recorded that. Seeded true on this one record only so the hard stop is reachable; a pending penalty does NOT block by itself, or CUST-1001 (PEN-8101, Pending) would be unable to open the standard journey."
+  },
+  {
+    "_note": "Customer-Inventory seed (2026-10-02)",
+    "penaltyId": "PEN-8201",
+    "accountId": "ACC-5625",
+    "customerId": "CUST-3052",
+    "actionType": "disconnection",
+    "calculatedValue": 320,
+    "currency": "QAR",
+    "valueStoredPersistently": false,
+    "calculationSource": "guided journey - disconnection (8 of 12 lock-in months done)",
+    "orderId": null,
+    "quoteRequiresOrder": true,
+    "calculatedAt": "2026-09-30T10:15:00+03:00",
+    "status": "Pending",
+    "blocksNewConnection": false
   }
 ]

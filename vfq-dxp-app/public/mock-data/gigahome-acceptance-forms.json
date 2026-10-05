@@ -1,7 +1,7 @@
 [
   {
     "formId": "GHF-9001",
-    "customerName": "Ahmed Al-Kuwari",
+    "customerName": "Ahmed Saud Hamad Al-Kuwari",
     "customerQid": "28456789012",
     "orderId": "ORD-90001",
     "upfrontFee": 500,
@@ -23,7 +23,7 @@
   },
   {
     "formId": "GHF-9002",
-    "customerName": "Fatima Al-Sulaiti",
+    "customerName": "Fatima Ali Rashid Al-Sulaiti",
     "customerQid": "27891234567",
     "orderId": "ORD-90003",
     "upfrontFee": 0,
@@ -45,7 +45,7 @@
   },
   {
     "formId": "GHF-9003",
-    "customerName": "Rashid Al-Mannai",
+    "customerName": "Rashid Khalid Saeed Al-Mannai",
     "customerQid": "29012345678",
     "orderId": "ORD-90004",
     "upfrontFee": 250,

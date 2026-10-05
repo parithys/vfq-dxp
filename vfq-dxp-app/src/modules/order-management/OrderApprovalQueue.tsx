@@ -12,6 +12,9 @@ import { getRequiredApproverRole } from '../../engines/configEngine';
 interface Order {
   orderId: string;
   orderType: string;
+  /** Set when the order needs a specific approver regardless of its category (e.g. manually entered identity). */
+  approverRole?: string;
+  approvalReason?: string;
   status: string;
   customerName?: string;
   assignedApproverId?: string | null;
@@ -64,7 +67,7 @@ export function OrderApprovalQueue({ padded = true }: OrderApprovalQueueProps) {
   // approver can find it), but only an agent whose role matches the
   // category's required role can actually claim it.
   const isEligible = (order: Order) => {
-    const requiredRole = getRequiredApproverRole(order.orderType);
+    const requiredRole = order.approverRole ?? getRequiredApproverRole(order.orderType);
     return !requiredRole || requiredRole === currentJobTitle;
   };
 
@@ -96,7 +99,7 @@ export function OrderApprovalQueue({ padded = true }: OrderApprovalQueueProps) {
                 </Button>
               ) : (
                 <span className="text-muted text-[length:var(--fs-caption)]">
-                  Requires: {getRequiredApproverRole(r.orderType)}
+                  Requires: {r.approverRole ?? getRequiredApproverRole(r.orderType)}
                 </span>
               ),
           },

@@ -3,11 +3,15 @@ import { Button } from './Button';
 
 interface SignaturePadProps {
   onDone: (dataUrl: string) => void;
+  /** Label of the confirm button. Default "Done". */
+  doneLabel?: string;
+  /** When given, a Cancel button is shown beside Clear and Save. */
+  onCancel?: () => void;
 }
 
 // Backs the "Please Sign" pad modal per Pattern 6 (CAF/Contract Signature
 // Capture) - drawn signature, Clear/Done buttons (SCR-058, SCR-084, etc.).
-export function SignaturePad({ onDone }: SignaturePadProps) {
+export function SignaturePad({ onDone, doneLabel = 'Done', onCancel }: SignaturePadProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
   const [hasDrawn, setHasDrawn] = useState(false);
@@ -66,8 +70,13 @@ export function SignaturePad({ onDone }: SignaturePadProps) {
         <Button variant="ghost-rect" onClick={clear}>
           Clear
         </Button>
+        {onCancel && (
+          <Button variant="ghost-rect" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
         <Button variant="primary-rect" onClick={done} disabled={!hasDrawn}>
-          Done
+          {doneLabel}
         </Button>
       </div>
     </div>

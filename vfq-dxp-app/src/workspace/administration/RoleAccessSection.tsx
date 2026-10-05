@@ -1,3 +1,4 @@
+import { SearchField } from '../../components/primitives/SearchField';
 import { useState } from 'react';
 import { getAllPersonas, getFeatureEntry, getLegacyRbacForRole } from '../../engines/configEngine';
 import { grantedFeaturesFor } from '../../engines/personaEngine';
@@ -40,18 +41,20 @@ export function RoleAccessSection() {
     <div>
       <div className="flex gap-6 items-start">
         <div className="w-80 shrink-0">
-          <input
+          <SearchField
+            aria-label="Search roles, groups, Staff IDs"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onClear={() => setQuery('')}
             placeholder="Search roles, groups, Staff IDs…"
-            className={`w-full rounded-[var(--field-radius)] border bg-bg px-3 py-2 text-fg text-[length:var(--fs-body)] placeholder:text-muted focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)] mb-3 ${query ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'}`}
+            wrapperClassName="mb-3"
           />
-          <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg max-h-[60vh] overflow-y-auto divide-y divide-border-soft">
+          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg max-h-[60vh] overflow-y-auto divide-y divide-border-soft">
             {filtered.map((persona) => (
               <button
                 key={persona.id}
                 onClick={() => setSelectedId(persona.id)}
-                className={`w-full text-left px-4 py-3 hover:bg-surface ${selectedId === persona.id ? 'bg-surface-warm' : ''}`}
+                className={`w-full text-left px-4 py-3 hover:bg-surface ${selectedId === persona.id ? 'bg-[var(--highlight-bg)]' : ''}`}
               >
                 <div className="font-medium text-fg text-[length:var(--fs-body)] truncate">{persona.name}</div>
                 <div className="text-fg-2 text-[length:var(--fs-caption)] truncate">
@@ -66,7 +69,7 @@ export function RoleAccessSection() {
         <div className="flex-1 min-w-0">
           {selected && (
             <>
-              <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mb-4">
+              <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-4">
                 <div className="flex items-start justify-between gap-4 mb-1">
                   <h2 className="text-[length:var(--fs-h5)] font-medium text-fg">{selected.name}</h2>
                   <Badge variant={APPROACH_VARIANT[selected.approach] ?? 'filled-neutral'}>{selected.approach}</Badge>
@@ -95,7 +98,7 @@ export function RoleAccessSection() {
               </div>
 
               <h3 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-2">Granted features ({grants.length})</h3>
-              <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg divide-y divide-border-soft">
+              <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg divide-y divide-border-soft">
                 {grants.length === 0 && (
                   <p className="px-4 py-6 text-center text-muted">No features granted to this role.</p>
                 )}
@@ -128,7 +131,7 @@ export function RoleAccessSection() {
               </div>
 
               {legacyRbac.length > 0 && (
-                <div className="mt-4 rounded-[var(--radius-card)] border border-border-soft bg-bg">
+                <div className="mt-4 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
                   <button
                     onClick={() => setEvidenceOpen((v) => !v)}
                     className="w-full text-left px-4 py-3 flex items-center justify-between gap-3 hover:bg-surface"
@@ -167,7 +170,7 @@ export function RoleAccessSection() {
         </div>
       </div>
 
-      <div className="mt-8 rounded-[var(--radius-card)] border border-dashed border-border-soft p-5">
+      <div className="mt-8 rounded-[var(--radius-card)] border border-dashed border-[var(--field-card-border)] p-5">
         <Badge variant="filled-neutral">Not yet built</Badge>
         <p className="text-fg-2 text-[length:var(--fs-body)] mt-2">
           User management, system configuration, and audit logging aren't implemented in this build. This directory is

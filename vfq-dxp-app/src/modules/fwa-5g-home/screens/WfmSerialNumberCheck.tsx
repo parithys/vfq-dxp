@@ -58,7 +58,7 @@ export function WfmSerialNumberCheck() {
       <div className="p-8">
         <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">WFM Installation - Serial Number Check</h1>
         <p className="text-fg-2 mb-6">Orders awaiting Dual-Play serial number check and service activation.</p>
-        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg divide-y divide-border-soft">
+        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg divide-y divide-border-soft">
           {pending.map((o) => (
             <button
               key={o.orderId}
@@ -79,7 +79,7 @@ export function WfmSerialNumberCheck() {
   }
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-8 w-full">
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-1">Serial Number Check - Dual Play</h1>
       <p className="text-fg-2 mb-6">
         Order {selectedOrder.orderId} - {selectedOrder.customerName}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Input } from '../primitives/Input';
 import { Badge } from '../primitives/Badge';
 import { Icon } from '../primitives/Icon';
@@ -58,6 +58,12 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
   const [checking, setChecking] = useState(false);
   const [inStock, setInStock] = useState(false);
   const [scanning, setScanning] = useState(false);
+  // True from the moment the scan icon is pressed until the scan has filled the
+  // field. Pressing the icon moves focus off the (empty) input, and that blur
+  // would otherwise validate the blank value and flash "SIM Serial is required."
+  // until the scan populates it - an error about a field the agent is in the
+  // middle of filling. Set on pointer-down, i.e. BEFORE the blur fires.
+  const scanIntent = useRef(false);
 
   const validate = async (serial: string) => {
     setInStock(false);
@@ -68,7 +74,9 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
       return;
     }
     if (!serial) {
-      setError('SIM Serial is required.');
+      // No inline message for an empty field: Continue is already unavailable until a
+      // serial is entered or scanned (or eSIM chosen), so the block explains itself.
+      setError(null);
       onChange(serial, false);
       return;
     }
@@ -99,18 +107,22 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
   // the same path a real reader would produce - and if the store holds nothing
   // available, it reports that instead of fabricating a SIM.
   const scanSim = async () => {
+    scanIntent.current = true;
+    setError(null);
     setScanning(true);
     const sims = await mockDataEngine.list<SimRecord>('sims');
     await new Promise((r) => setTimeout(r, 600));
     setScanning(false);
     const available = sims.find((s) => s.stockStatus !== 'Issued');
     if (!available) {
+      scanIntent.current = false;
       setError("SIM not found in this store's stock.");
       onChange('', false);
       return;
     }
     onChange(available.simSerial, false);
     await validate(available.simSerial);
+    scanIntent.current = false;
   };
 
   return (
@@ -133,12 +145,21 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
         placeholder="Enter the SIM serial number, or use the barcode scanner"
         value={value}
         onChange={(e) => onChange(e.target.value, false)}
-        onBlur={(e) => validate(e.target.value)}
+        onBlur={(e) => {
+          if (scanIntent.current) return;
+          void validate(e.target.value);
+        }}
         error={suppressValidation ? undefined : (error ?? undefined)}
         autoFocus={autoFocus}
         trailingAddon={
           <button
             type="button"
+            onPointerDown={() => {
+              scanIntent.current = true;
+            }}
+            onPointerLeave={() => {
+              if (!scanning) scanIntent.current = false;
+            }}
             onClick={scanSim}
             disabled={scanning || checking}
             aria-label="Scan SIM barcode"

@@ -135,7 +135,7 @@ export function BillingAccountPage() {
   };
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-8 w-full">
       <button
         onClick={() => navigate(customerId ? `/customer/${customerId}` : -1 as unknown as string)}
         className="flex items-center gap-1.5 text-fg-2 hover:text-fg text-[length:var(--fs-caption)] mb-4"
@@ -150,13 +150,13 @@ export function BillingAccountPage() {
       </div>
       <p className="text-fg-2 mb-6">
         {customerName} · {customerId} ·{' '}
-        <Link to={`/customer/${customerId}`} className="text-accent hover:underline">
+        <Link to={`/customer/${customerId}`} className="text-link hover:underline">
           View Customer 360
         </Link>
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <section className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+        <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg">
               Billing Profile
@@ -170,7 +170,7 @@ export function BillingAccountPage() {
           </div>
         </section>
 
-        <section className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+        <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg">
               Billing Contact
@@ -184,7 +184,7 @@ export function BillingAccountPage() {
           </div>
         </section>
 
-        <section className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+        <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg">
               Billing Address
@@ -194,7 +194,7 @@ export function BillingAccountPage() {
           <Field label="Address" value={profile.billingAddress} />
         </section>
 
-        <section className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+        <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg">
               Billing Language
@@ -204,7 +204,7 @@ export function BillingAccountPage() {
           <Field label="Language" value={profile.billingLanguage} />
         </section>
 
-        <section className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+        <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg">
               Payment Mode

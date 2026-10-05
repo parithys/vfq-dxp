@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Input } from '../primitives/Input';
-import { Autocomplete } from '../primitives/Autocomplete';
+import { Select } from '../primitives/Select';
 import { FibreReadinessBanner } from '../domain/FibreReadinessBanner';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 
@@ -109,13 +109,26 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
   // which is why the prefill above lands a city in this field. Both feed the
   // list so a prefilled value is also offered back as a suggestion.
   const [areaOptions, setAreaOptions] = useState<string[]>([]);
+  // Vodafone ID follows from the Kahramaa ID: vodafone-ids.json maps each VFID
+  // to the KIDs it covers (mappedKidIds, from UIM). Used to prefill the field.
+  const [vfidMap, setVfidMap] = useState<{ format: string; mappedKidIds: string[]; status?: string }[]>([]);
+  useEffect(() => {
+    mockDataEngine.list<{ format: string; mappedKidIds: string[]; status?: string }>('vodafone-ids').then(setVfidMap);
+  }, []);
+  const vfidFor = (kid: string | undefined) => {
+    const k = kid?.trim().toUpperCase();
+    if (!k) return undefined;
+    return (vfidMap.find((v) => v.status === 'Active' && v.mappedKidIds.some((m) => m.toUpperCase() === k)) ??
+      vfidMap.find((v) => v.mappedKidIds.some((m) => m.toUpperCase() === k)))?.format;
+  };
 
   useEffect(() => {
     Promise.all([
       mockDataEngine.list<{ area?: string }>('kid-address-records'),
       mockDataEngine.list<{ city?: string }>('addresses'),
-    ]).then(([kid, addr]) => {
-      const names = [...kid.map((k) => k.area), ...addr.map((a) => a.city)].filter(
+      mockDataEngine.list<{ area?: string }>('qatar-areas'),
+    ]).then(([kid, addr, areas]) => {
+      const names = [...kid.map((k) => k.area), ...addr.map((a) => a.city), ...areas.map((a) => a.area)].filter(
         (n): n is string => Boolean(n && n.trim())
       );
       setAreaOptions([...new Set(names)].sort());
@@ -202,12 +215,15 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
           />
           {/* Area/City paired with Unit/Apartment (2026-09-28 swap - was
               paired with Kahramaa ID below, and Vodafone ID sat here). */}
-          <Autocomplete
+          <Select
             label="Area/City"
-            placeholder="e.g. West Bay"
-            options={areaOptions}
+            placeholder="Select an area"
+            searchable
+            // A dropdown with search. A value already on the address that is not in the list
+            // (typed earlier, or from a lookup) stays selectable so it is never lost.
+            options={[...new Set([...(value.area ? [value.area] : []), ...areaOptions])].map((a) => ({ value: a, label: a }))}
             value={value.area ?? ''}
-            onChange={(area) => onChange({ ...value, area })}
+            onChange={(e) => onChange({ ...value, area: e.target.value })}
           />
           {/* Kahramaa ID paired with Vodafone ID (2026-09-28 swap - order
               reversed again; was Vodafone ID then Kahramaa ID). Explicitly
@@ -221,7 +237,19 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
             label="Kahramaa ID"
             placeholder="e.g. KID-00123456"
             value={value.kidLocationId ?? ''}
-            onChange={(e) => onChange({ ...value, kidLocationId: e.target.value })}
+            onChange={(e) => {
+              const kid = e.target.value;
+              const mapped = vfidFor(kid);
+              // Prefill when the KID maps to a Vodafone ID; if it stops mapping,
+              // clear only a value this lookup put there (never something the
+              // agent typed). The field stays editable either way.
+              const wasAuto = value.vodafoneId !== undefined && value.vodafoneId === vfidFor(value.kidLocationId);
+              onChange({
+                ...value,
+                kidLocationId: kid,
+                vodafoneId: mapped ?? (wasAuto ? '' : value.vodafoneId),
+              });
+            }}
           />
           {/* Vodafone ID paired with Kahramaa ID. Both are location
               identifiers, sharing this row per the original 2026-09-28

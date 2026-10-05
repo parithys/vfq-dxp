@@ -110,14 +110,14 @@ export function SimSwapQueueScreen() {
   };
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-8 w-full">
       <div className="flex items-center gap-3 mb-1">
         <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">SIM Swap {order.simSwapOrderId}</h1>
         <Badge variant="outlined-red">{order.status}</Badge>
       </div>
       <p className="text-fg-2 mb-6">MSISDN: {order.msisdn}</p>
 
-      <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)] rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 mb-6">
+      <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)] rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 mb-6">
         <div>
           <dt className="text-[length:var(--fs-caption)] text-muted">New SIM Serial</dt>
           <dd className="text-fg">{order.newSimSerialNumber ?? '-'}</dd>

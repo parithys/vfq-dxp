@@ -208,7 +208,7 @@ export function RecentActivitiesSection({ data }: { data: Customer360Data }) {
       <SectionTitle>Recent Activities</SectionTitle>
       <ul className="space-y-2">
         {entries.map((entry, i) => (
-          <li key={i} className="flex gap-3 rounded-[var(--radius-card)] border border-border-soft bg-bg p-3">
+          <li key={i} className="flex gap-3 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-3">
             <span className="text-muted text-[length:var(--fs-caption)] shrink-0 w-40">{entry.at}</span>
             <span className="text-fg text-[length:var(--fs-body)]">{entry.label}</span>
           </li>

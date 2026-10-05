@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { SummaryTables } from './CheckoutSummaryStep';
+import type { SummaryTable } from './CheckoutSummaryStep';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Icon } from '../primitives/Icon';
 import { Button } from '../primitives/Button';
-import { Drawer } from '../primitives/Drawer';
-import { SignaturePad } from '../primitives/SignaturePad';
+import { Checkbox } from '../primitives/Checkbox';
+import { SignatureCapture } from './SignatureCapture';
 import { Badge } from '../primitives/Badge';
 import { CafDocumentUpload } from '../domain/CafDocumentUpload';
 import type { CafDocument } from '../domain/CafDocumentUpload';
@@ -10,6 +12,63 @@ import { AdditionalDocumentsUpload } from '../domain/AdditionalDocumentsUpload';
 import type { AdditionalDocument } from '../domain/AdditionalDocumentsUpload';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import type { TncLegalFacts } from './CheckoutSummaryStep';
+
+interface TncSection {
+  sectionId: string;
+  title: string;
+  body: string;
+}
+
+/**
+ * The complete Terms & Conditions, in their own bordered, scrollable panel directly above the
+ * signature block, so the customer can read all of it before signing and it stays in view while
+ * they sign. A fixed-height panel keeps the page usable however long the terms are: the panel
+ * scrolls, the page does not grow.
+ */
+function FullTerms({ termsUrl, enabled, signed, children }: { termsUrl?: string; enabled: boolean; signed?: boolean; children: ReactNode }) {
+  const [sections, setSections] = useState<TncSection[] | undefined>();
+  useEffect(() => {
+    mockDataEngine.list<TncSection>('tnc-full-text').then(setSections);
+  }, []);
+  // Without the terms (not the customer-facing page, or none loaded) the form stands alone.
+  if (!enabled || !sections || sections.length === 0) return <>{children}</>;
+  // Once signed there is nothing left to read: show just the signed form (applicant, signed
+  // badge and signature) not the whole scrolling document or its link.
+  if (signed) {
+    return (
+      <section aria-label="Signed application form" className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
+        <div className="px-4 py-3">{children}</div>
+      </section>
+    );
+  }
+  return (
+    <section aria-label="Full Terms and Conditions" className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
+      <div className="flex items-center justify-between gap-3 border-b border-border-soft px-4 py-3">
+        <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Terms &amp; Conditions</h3>
+        <span className="demo-only text-[length:var(--fs-micro)] uppercase tracking-wide">Sample text - replace with approved wording</span>
+      </div>
+      {/* tabIndex so the panel can be scrolled with the keyboard. */}
+      <div tabIndex={0} className="max-h-[34rem] overflow-y-auto px-4 py-3 space-y-4 focus:outline-none focus-visible:shadow-[var(--focus-ring)]">
+        {sections.map((s) => (
+          <div key={s.sectionId}>
+            <h4 className="text-fg font-medium text-[length:var(--fs-body)]">{s.title}</h4>
+            <p className="text-fg-2 text-[length:var(--fs-caption)] leading-relaxed mt-1">{s.body}</p>
+          </div>
+        ))}
+        {/* The application form (agreement checkbox and signature) is the LAST thing in the
+            scroll area, so the customer has to scroll through every section to reach it. */}
+        <div className="border-t border-border-soft mt-2 pt-2">{children}</div>
+      </div>
+      {termsUrl && (
+        <div className="border-t border-border-soft px-4 py-2">
+          <a href={termsUrl} target="_blank" rel="noreferrer" className="text-link underline text-[length:var(--fs-caption)]">
+            Open the full Terms &amp; Conditions on vodafone.qa
+          </a>
+        </div>
+      )}
+    </section>
+  );
+}
 
 export type CafType = 'Digital' | 'Manual' | 'Touch Screen';
 
@@ -90,6 +149,8 @@ interface CafSignatureCaptureProps {
   value: {
     cafType?: CafType;
     signatureDataUrl?: string;
+    /** The customer has ticked "I have read and agree to the Terms and Conditions." */
+    termsAccepted?: boolean;
     documents?: CafDocument[];
     /** Post-signature supporting documents - see AdditionalDocumentsUpload. */
     additionalDocuments?: AdditionalDocument[];
@@ -110,6 +171,18 @@ interface CafSignatureCaptureProps {
    * render the CAF without a commercial summary exactly as before.
    */
   orderSummary?: { label: string; value: string }[];
+  /**
+   * Tables to read back instead of the orderSummary rows (New Connection): the
+   * grey Key Information panel keeps its heading, bullets and terms link, and
+   * these render beneath it in the same table style as Checkout.
+   */
+  summaryTables?: SummaryTable[];
+  /** Open the signature pad inline, under the Please Sign button, instead of in a drawer. */
+  inlineSignaturePad?: boolean;
+  /** Post-signature document labels as a list of values instead of free text. */
+  documentLabelOptions?: string[];
+  /** Cap on post-signature documents (default 10). */
+  maxAdditionalDocuments?: number;
   /** Link target for "the complete terms", shown beneath the summary. */
   termsUrl?: string;
   /**
@@ -149,6 +222,10 @@ interface CafSignatureCaptureProps {
    * way.
    */
   onContinue?: () => void;
+  /** Save the draft, confirm with a toast and go to the dashboard (customer-facing action row). */
+  onSave?: () => void;
+  /** Show the "I have read and agree" checkbox and keep Please Sign disabled until it is ticked. */
+  requireTermsAgreement?: boolean;
 }
 
 // Pattern 6: CAF/Contract Signature Capture - CAF Type card selector (Digital/
@@ -164,12 +241,19 @@ export function CafSignatureCapture({
   idLabel,
   idValue,
   orderSummary,
+  summaryTables,
+  inlineSignaturePad = false,
+  documentLabelOptions,
+  maxAdditionalDocuments,
   termsUrl,
   autoDetectDeviceType,
   legalFacts,
   onContinue,
+  onSave,
+  requireTermsAgreement = false,
 }: CafSignatureCaptureProps) {
-  const [padOpen, setPadOpen] = useState(false);
+  // A document type is chosen but its file is not uploaded yet: Continue waits.
+  const [documentPending, setDocumentPending] = useState(false);
   const [bulletTemplates, setBulletTemplates] = useState<TncBulletTemplate[]>([]);
 
   useEffect(() => {
@@ -194,7 +278,9 @@ export function CafSignatureCapture({
     // check, not the agent, is what chose it.
     const showsInAppSignature = value.cafType === 'Digital' || value.cafType === 'Touch Screen';
     const signed = showsInAppSignature && Boolean(value.signatureDataUrl);
-    const bullets = buildTncBullets(legalFacts, bulletTemplates);
+    // With the tables read-back each sentence is its own bullet.
+    const built = buildTncBullets(legalFacts, bulletTemplates);
+    const bullets = summaryTables?.length ? built.flatMap((b) => b.split(/(?<=[.!?])\s+/).filter(Boolean)) : built;
 
     return (
       <div className="space-y-4">
@@ -217,14 +303,18 @@ export function CafSignatureCapture({
             (orderSummary) stays alongside rather than being replaced: what
             was bought and what terms bind the customer are complementary
             facts, not the same one restated. */}
-        {!signed && (bullets.length > 0 || (orderSummary && orderSummary.length > 0)) && (
-          <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4 space-y-3">
+        {!signed && (bullets.length > 0 || (orderSummary && orderSummary.length > 0) || (summaryTables && summaryTables.length > 0)) && (
+          <>
+          {/* Key Information is the part the customer must not skip, so it is a tinted panel with 4px
+              brand-accent left and right edges and an uppercase heading (2026-10-04). Existing tokens only: --surface-warm
+              fill, --accent edge; text stays --fg / --fg-2 (about 12:1 and 6:1 on that fill). */}
+          <div className="my-2 rounded-[var(--radius-card)] border border-[var(--field-card-border)] border-x-4 border-x-accent bg-surface-warm p-6 space-y-3">
             {/* Renamed from "What the customer is agreeing to" (2026-09-28
                 request) to match the heading BR-009's Key Information panel
                 already uses elsewhere (NewMnpWizard, NewPrepaidWizard) -
                 Postpaid-only; the other five journeys sharing this component
                 keep their own heading below, unaffected. */}
-            <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Key Information</h4>
+            <h4 className="text-fg font-bold uppercase tracking-wide text-[length:var(--fs-body-lg)]">Key Information</h4>
             {bullets.length > 0 && (
               <ul className="list-disc pl-5 space-y-1 text-[length:var(--fs-caption)] text-fg-2">
                 {bullets.map((b) => (
@@ -232,7 +322,7 @@ export function CafSignatureCapture({
                 ))}
               </ul>
             )}
-            {orderSummary && orderSummary.length > 0 && (
+            {!summaryTables && orderSummary && orderSummary.length > 0 && (
               <dl className={bullets.length > 0 ? 'pt-2 border-t border-border-soft' : undefined}>
                 {orderSummary.map((row) => (
                   <div key={row.label} className="flex justify-between gap-4 py-1.5 border-b border-border-soft last:border-0">
@@ -245,19 +335,22 @@ export function CafSignatureCapture({
             {/* Fallback, not the primary route (2026-09-28 request): the
                 bullets above are the concise answer for the common cases;
                 this is for anything they do not cover. */}
-            {termsUrl && (
+            {termsUrl && !summaryTables && (
               <p className="text-[length:var(--fs-caption)] text-muted">
                 For anything not covered above,{' '}
-                <a href={termsUrl} target="_blank" rel="noreferrer" className="text-accent underline">
+                <a href={termsUrl} target="_blank" rel="noreferrer" className="text-link underline">
                   View Full Terms & Conditions
                 </a>
                 .
               </p>
             )}
           </div>
+          {summaryTables && summaryTables.length > 0 && <SummaryTables tables={summaryTables} />}
+          </>
         )}
 
-        <div className="rounded-[var(--radius-card)] border border-border-soft p-4 bg-surface">
+        <FullTerms termsUrl={termsUrl} enabled={Boolean(summaryTables && summaryTables.length > 0)} signed={signed}>
+        <div className={`${summaryTables && summaryTables.length > 0 ? 'py-4 pr-4' : 'rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4'} ${inlineSignaturePad ? 'bg-bg' : 'bg-surface'}`}>
           <div className="flex justify-between text-[length:var(--fs-caption)] text-muted mb-2">
             <span>Vodafone Customer Application Form</span>
             <span dir="rtl">نموذج طلب عميل فودافون</span>
@@ -280,11 +373,34 @@ export function CafSignatureCapture({
               <img src={value.signatureDataUrl} alt="Signature" className="h-10 border border-border-soft rounded" />
             </div>
           ) : (
-            <Button variant="primary-rect" className="mt-3" onClick={() => setPadOpen(true)}>
-              Please Sign
-            </Button>
+            <>
+              {requireTermsAgreement && (
+                <label className="mt-3 flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={Boolean(value.termsAccepted)}
+                    onChange={(e) => onChange({ ...value, termsAccepted: e.target.checked })}
+                  />
+                  <span className="text-fg text-[length:var(--fs-body)]">
+                    I have read and agree to the{' '}
+                    {termsUrl ? (
+                      <a href={termsUrl} target="_blank" rel="noreferrer" className="text-link underline">
+                        Terms and Conditions
+                      </a>
+                    ) : (
+                      'Terms and Conditions'
+                    )}
+                    .
+                  </span>
+                </label>
+              )}
+              <SignatureCapture
+                disabled={requireTermsAgreement && !value.termsAccepted}
+                onSave={(dataUrl) => onChange({ ...value, signatureDataUrl: dataUrl })}
+              />
+            </>
           )}
         </div>
+        </FullTerms>
 
         {/* Post-signature, agent view: the signed CAF preview above stays on
             screen (2026-09-28 "preview of the signed CAF"), and whatever
@@ -292,11 +408,18 @@ export function CafSignatureCapture({
             of it - goes here instead of the legacy "Signed documents"
             uploader, which had nothing left to collect once signing always
             happens in-app. */}
+        {/* agent-only: hidden in the customer's pop-up - attaching documents is the agent's job. */}
         {signed && (
-          <AdditionalDocumentsUpload
-            documents={value.additionalDocuments ?? []}
-            onChange={(documents) => onChange({ ...value, additionalDocuments: documents })}
-          />
+          <div className="agent-only">
+            <AdditionalDocumentsUpload
+              documents={value.additionalDocuments ?? []}
+              onChange={(documents) => onChange({ ...value, additionalDocuments: documents })}
+              labelOptions={documentLabelOptions}
+              whiteBackground={inlineSignaturePad}
+              maxDocuments={maxAdditionalDocuments}
+              onPendingChange={setDocumentPending}
+            />
+          </div>
         )}
 
         {/* The wizard's own Continue is gone along with the rest of its
@@ -305,20 +428,44 @@ export function CafSignatureCapture({
             the step's own content owns whatever action it needs. Additional
             documents are optional (isValid never required them), so nothing
             gates this beyond having signed at all. */}
-        {signed && onContinue && (
-          <Button variant="primary-rect" className="w-full" onClick={onContinue}>
-            Continue
-          </Button>
+        {onSave ? (
+          // Save and Continue on the right. Continue appears once signed.
+          <div className="agent-only flex items-center justify-between gap-3">
+            <div />
+            <div className="flex items-center gap-3">
+              {onSave && (
+                <Button variant="secondary-rect" onClick={onSave}>
+                  Save
+                </Button>
+              )}
+              {signed && onContinue && (
+                <Button
+                  variant="primary-rect"
+                  onClick={onContinue}
+                  disabled={documentPending}
+                  title={documentPending ? 'Upload the selected document first' : undefined}
+                >
+                  Continue
+                </Button>
+              )}
+            </div>
+          </div>
+        ) : (
+          signed && onContinue && (
+            <div className={`agent-only ${inlineSignaturePad ? 'flex justify-end' : ''}`}>
+              <Button
+                variant="primary-rect"
+                className={inlineSignaturePad ? undefined : 'w-full'}
+                onClick={onContinue}
+                disabled={documentPending}
+                title={documentPending ? 'Upload the selected document first' : undefined}
+              >
+                Continue
+              </Button>
+            </div>
+          )
         )}
 
-        <Drawer open={padOpen} onClose={() => setPadOpen(false)} title="Please Sign">
-          <SignaturePad
-            onDone={(dataUrl) => {
-              onChange({ ...value, signatureDataUrl: dataUrl });
-              setPadOpen(false);
-            }}
-          />
-        </Drawer>
       </div>
     );
   }
@@ -338,7 +485,7 @@ export function CafSignatureCapture({
                 type="button"
                 onClick={() => onChange({ ...value, cafType: t.type })}
                 className={`relative flex flex-col items-center gap-2 rounded-[var(--radius-card)] border p-4 ${
-                  selected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] text-[var(--field-card-selected)]' : 'border-border-soft text-fg-2 enabled:hover:border-[var(--field-card-selected)]/50'
+                  selected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)] text-[var(--field-card-selected)]' : 'border-[var(--field-card-border)] bg-bg text-fg enabled:hover:border-[var(--field-card-hover-border)] enabled:hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
                 }`}
               >
                 {selected && (
@@ -355,7 +502,7 @@ export function CafSignatureCapture({
       </div>
 
       {value.cafType === 'Digital' && (
-        <div className="rounded-[var(--radius-card)] border border-border-soft p-4 bg-surface">
+        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4 bg-surface">
           <div className="flex justify-between text-[length:var(--fs-caption)] text-muted mb-2">
             <span>Vodafone Customer Application Form</span>
             <span dir="rtl">نموذج طلب عميل فودافون</span>
@@ -378,9 +525,7 @@ export function CafSignatureCapture({
               <img src={value.signatureDataUrl} alt="Signature" className="h-10 border border-border-soft rounded" />
             </div>
           ) : (
-            <Button variant="primary-rect" className="mt-3" onClick={() => setPadOpen(true)}>
-              Please Sign
-            </Button>
+            <SignatureCapture onSave={(dataUrl) => onChange({ ...value, signatureDataUrl: dataUrl })} />
           )}
         </div>
       )}
@@ -402,7 +547,7 @@ export function CafSignatureCapture({
           the form commits them to, and it is the last thing on screen before
           they sign. */}
       {orderSummary && orderSummary.length > 0 && (
-        <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4 space-y-2">
+        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-4 space-y-2">
           <h4 className="text-fg font-medium text-[length:var(--fs-body)]">What the customer is agreeing to</h4>
           <dl className="text-[length:var(--fs-caption)]">
             {orderSummary.map((row) => (
@@ -417,7 +562,7 @@ export function CafSignatureCapture({
               href={termsUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-block text-[length:var(--fs-caption)] text-accent underline"
+              className="inline-block text-[length:var(--fs-caption)] text-link underline"
             >
               Read the full terms and conditions
             </a>
@@ -425,14 +570,6 @@ export function CafSignatureCapture({
         </div>
       )}
 
-      <Drawer open={padOpen} onClose={() => setPadOpen(false)} title="Please Sign">
-        <SignaturePad
-          onDone={(dataUrl) => {
-            onChange({ ...value, signatureDataUrl: dataUrl });
-            setPadOpen(false);
-          }}
-        />
-      </Drawer>
     </div>
   );
 }

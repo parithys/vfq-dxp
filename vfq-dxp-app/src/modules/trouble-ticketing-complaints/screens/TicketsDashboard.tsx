@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
-import { Input } from '../../../components/primitives/Input';
 import { Select } from '../../../components/primitives/Select';
 import { Checkbox } from '../../../components/primitives/Checkbox';
 import { ErrorBanner } from '../../../components/primitives/ErrorBanner';
@@ -14,6 +13,7 @@ import { TicketCreationModal } from './TicketCreationModal';
 import type { NewTicketValue } from './TicketCreationModal';
 import { STATUS_VARIANT, TICKET_STATUSES, buildNewTicketRecord } from '../ticketReferenceData';
 import { useTicketSlaEscalationSweep } from '../slaEscalationSweep';
+import { SearchField } from '../../../components/primitives/SearchField';
 
 const CURRENT_AGENT = 'Current Agent';
 
@@ -206,7 +206,7 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         {TICKET_STATUSES.map((status) => (
-          <div key={status} className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4">
+          <div key={status} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">
             <div className="text-[length:var(--fs-caption)] text-muted">{status}</div>
             <div className="text-[length:var(--fs-h3)] text-fg font-medium">{counts[status] ?? 0}</div>
           </div>
@@ -234,12 +234,13 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
           ))}
         </div>
         <div className="ml-auto flex flex-wrap items-end gap-2">
-          <Input
+          <SearchField
             aria-label="Search ticket #, customer, category, issue"
             placeholder="Search ticket #, customer, category, issue…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-64"
+            onClear={() => setSearch('')}
+            wrapperClassName="w-80"
           />
           <div className="w-40">
             <Select
@@ -268,7 +269,7 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
       </div>
 
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 mb-3 rounded-[var(--radius-card)] border border-border-soft bg-bg p-3">
+        <div className="flex items-center gap-3 mb-3 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-3">
           <span className="text-[length:var(--fs-body)] text-fg">{selectedIds.size} selected</span>
           <Button variant="ghost-rect" compact onClick={bulkAssign}>Bulk Assign to me</Button>
           <Button variant="ghost-rect" compact onClick={bulkClose}>Bulk Close</Button>

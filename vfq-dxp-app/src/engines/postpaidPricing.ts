@@ -68,9 +68,23 @@ export const STAR_NUMBER_ENTITLEMENT_MULTIPLIER = 25;
 /** The one-time charge for a star number after BR-115's entitlement is
  * applied - zero if the number is within what the plan already entitles,
  * otherwise only the amount above it. Never negative. */
-export function starNumberOverageQar(planMrcQar: number, numberPriceQar: number): number {
-  const entitlementQar = planMrcQar * STAR_NUMBER_ENTITLEMENT_MULTIPLIER;
+export function starNumberOverageQar(
+  planMrcQar: number,
+  numberPriceQar: number,
+  entitlementQar: number = planMrcQar * STAR_NUMBER_ENTITLEMENT_MULTIPLIER
+): number {
   return Math.max(0, round2(numberPriceQar - entitlementQar));
+}
+
+/**
+ * A plan's Star Number entitlement limit. A plan defines it with an optional
+ * `starNumberEntitlementQar` on its catalogue row (products.json); a plan that does
+ * not falls back to the MRC x STAR_NUMBER_ENTITLEMENT_MULTIPLIER rule above, so no
+ * existing plan changes. A Star Number priced at or below the limit costs nothing
+ * extra; above it the customer pays the difference (starNumberOverageQar).
+ */
+export function starEntitlementQar(plan: { mrcQAR: number; starNumberEntitlementQar?: number }): number {
+  return plan.starNumberEntitlementQar ?? plan.mrcQAR * STAR_NUMBER_ENTITLEMENT_MULTIPLIER;
 }
 
 export interface MonthlyChargeInput {

@@ -14,9 +14,9 @@
     "id": "CRL-4002",
     "accountId": "ACC-5002",
     "customerId": "CUST-1002",
-    "customerSegment": "HRN",
-    "creditLimitQar": 50,
-    "isHrn": true,
+    "customerSegment": "Expat New Account",
+    "creditLimitQar": 1000,
+    "isHrn": false,
     "setByAgentId": "AGT-8802",
     "restrictionApplied": false,
     "lastUpdated": "2026-07-02"

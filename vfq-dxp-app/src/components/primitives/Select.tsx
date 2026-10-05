@@ -25,6 +25,8 @@ interface SelectProps {
   /** For call sites with no visible `label` (e.g. a dense table-cell filter) -
    * gives the trigger an accessible name without rendering visible text. */
   'aria-label'?: string;
+  /** Adds a search box at the top of the dropdown that filters the options as the user types. */
+  searchable?: boolean;
 }
 
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
@@ -52,15 +54,19 @@ export function Select({
   id,
   dark = false,
   'aria-label': ariaLabel,
+  searchable = false,
 }: SelectProps) {
   const selectId = id ?? `select-${label?.replace(/\s+/g, '-').toLowerCase()}`;
   const helperId = `${selectId}-helper`;
   const describedBy = helperText && !error ? helperId : undefined;
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
+  const [query, setQuery] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selected = options.find((o) => o.value === value);
+  // Options shown in the open panel: filtered by the search box when searchable.
+  const shown = searchable && query.trim() ? options.filter((o) => o.label.toLowerCase().includes(query.trim().toLowerCase())) : options;
 
   useEffect(() => {
     if (!open) return;
@@ -72,8 +78,10 @@ export function Select({
   }, [open]);
 
   const commit = (optionValue: string) => {
+    if (optionValue === undefined) return;
     onChange?.({ target: { value: optionValue } } as ChangeEvent<HTMLSelectElement>);
     setOpen(false);
+    setQuery('');
   };
 
   const onTriggerKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
@@ -82,9 +90,10 @@ export function Select({
       e.preventDefault();
       if (!open) {
         setHighlighted(Math.max(0, options.findIndex((o) => o.value === value)));
+        setQuery('');
         setOpen(true);
       } else if (e.key === 'Enter') {
-        commit(options[highlighted]?.value);
+        commit(shown[highlighted]?.value);
       }
     } else if (e.key === 'Escape') {
       setOpen(false);
@@ -94,13 +103,13 @@ export function Select({
   const onListKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setHighlighted((i) => Math.min(options.length - 1, i + 1));
+      setHighlighted((i) => Math.min(shown.length - 1, i + 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setHighlighted((i) => Math.max(0, i - 1));
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      commit(options[highlighted]?.value);
+      commit(shown[highlighted]?.value);
     } else if (e.key === 'Escape' || e.key === 'Tab') {
       setOpen(false);
     }
@@ -112,9 +121,9 @@ export function Select({
         error
           ? 'border-[var(--field-border-error)]'
           : selected
-            ? 'border-[var(--field-border-filled)] enabled:hover:border-[var(--field-border-filled)]'
-            : 'border-[var(--field-border)] enabled:hover:border-accent/40'
-      } bg-bg text-fg focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]
+            ? 'border-[var(--field-border-filled)] enabled:hover:border-[var(--field-focus-border)]'
+            : 'border-[var(--field-border)] enabled:hover:border-[var(--field-focus-border)]'
+      } bg-bg text-fg focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)]
       disabled:border-[var(--field-border-disabled)] disabled:bg-[var(--field-bg-disabled)]`;
   const panelClasses = dark
     ? 'border-white/15 bg-[var(--charcoal-panel)] divide-y divide-white/10'
@@ -166,14 +175,35 @@ export function Select({
         </button>
 
         {open && (
+          <div className={`absolute z-50 top-full left-0 right-0 rounded-[var(--field-radius)] border shadow-raised overflow-hidden ${panelClasses}`}>
+          {searchable && (
+            <div className="p-2 border-b border-border-soft">
+              <input
+                autoFocus
+                type="text"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setHighlighted(0);
+                }}
+                onKeyDown={onListKeyDown as unknown as (e: KeyboardEvent<HTMLInputElement>) => void}
+                placeholder="Search…"
+                aria-label="Search options"
+                className="w-full rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-3 py-2 text-[length:var(--fs-body)] text-fg focus:outline-none focus-visible:border-[var(--field-focus-border)]"
+              />
+            </div>
+          )}
           <ul
             role="listbox"
             tabIndex={-1}
             onKeyDown={onListKeyDown}
-            ref={(el) => el?.focus()}
-            className={`absolute z-50 top-full left-0 right-0 max-h-64 overflow-y-auto rounded-[var(--field-radius)] border shadow-raised py-1 ${panelClasses}`}
+            ref={(el) => {
+              if (!searchable) el?.focus();
+            }}
+            className="max-h-64 overflow-y-auto py-1"
           >
-            {options.map((opt, i) => (
+            {shown.length === 0 && <li className="px-4 py-3 text-muted text-[length:var(--fs-body)]">No matches</li>}
+            {shown.map((opt, i) => (
               <li
                 key={opt.value}
                 role="option"
@@ -188,6 +218,7 @@ export function Select({
               </li>
             ))}
           </ul>
+          </div>
         )}
       </div>
       {helperText && !error && (

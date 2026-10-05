@@ -4,7 +4,7 @@ import { Icon } from '../../components/primitives/Icon';
 import type { CustomerService } from '../../engines/customerServicesEngine';
 import { TopicFieldsSection } from './sections/TopicFieldsSection';
 
-const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
+const CHEVRON_UP = 'M18 15l-6-6-6 6';
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 
 interface ServiceListProps {
@@ -59,7 +59,7 @@ export function ServiceList({ services, selectedRef, emptyMessage, personaId, re
             aria-current={selected ? 'true' : undefined}
             className={`rounded-[var(--radius-card)] border ${
               selected
-                ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]'
+                ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]'
                 : 'border-border-soft bg-bg'
             }`}
           >
@@ -70,7 +70,7 @@ export function ServiceList({ services, selectedRef, emptyMessage, personaId, re
               className={`flex items-center justify-between gap-3 p-3 ${expandable ? 'cursor-pointer' : ''}`}
             >
               <span className="flex items-center gap-2 min-w-0">
-                {expandable && <Icon path={isOpen ? CHEVRON_DOWN : CHEVRON_RIGHT} className="w-4 h-4 text-muted shrink-0" />}
+                {expandable && <Icon path={isOpen ? CHEVRON_UP : CHEVRON_DOWN} className="w-4 h-4 text-muted shrink-0" />}
                 <span className="min-w-0">
                   <span className="block text-fg text-[length:var(--fs-body)] font-semibold truncate">{service.label}</span>
                   <span className="block text-muted text-[length:var(--fs-caption)] truncate">{service.identifier}</span>

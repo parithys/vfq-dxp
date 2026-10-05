@@ -51,7 +51,7 @@
   },
   {
     "taskId": "TASK-70006",
-    "taskName": "Complete draft order - GigaHome upgrade",
+    "taskName": "New Customer – GigaHome Upgrade",
     "taskDescription": "Draft order started but not submitted; customer plan upgrade awaiting completion.",
     "taskType": "Draft Order",
     "taskStatus": "Open",
@@ -62,7 +62,7 @@
   },
   {
     "taskId": "TASK-70007",
-    "taskName": "Finalize draft order before promo expiry",
+    "taskName": "Ahmed Abdulla Hassan Al-Sulaiti – Postpaid Activation",
     "taskDescription": "Draft order must be submitted before the current promotion window closes.",
     "taskType": "Draft Order",
     "taskStatus": "Assigned",
@@ -93,7 +93,7 @@
   },
   {
     "taskId": "TASK-70010",
-    "taskName": "Draft order review pending",
+    "taskName": "Fatima Saud Hamad Al-Kuwari – Postpaid Activation",
     "taskDescription": "Draft order line items need a second review before submission.",
     "taskType": "Draft Order",
     "taskStatus": "In Progress",

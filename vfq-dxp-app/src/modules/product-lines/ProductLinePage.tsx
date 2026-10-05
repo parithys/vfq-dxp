@@ -45,7 +45,7 @@ function CategorySection({ category, personaId }: { category: JourneyCategory; p
   const availableCount = journeys.filter((j) => j.status === 'available').length;
 
   return (
-    <section className="rounded-[var(--radius-card)] border border-border-soft overflow-hidden mb-6">
+    <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] overflow-hidden mb-6">
       <header className="flex items-start gap-3 px-5 py-4 bg-surface border-b border-border-soft">
         <span className="shrink-0 w-9 h-9 rounded-[var(--radius-sm)] bg-[color-mix(in_oklab,var(--accent)_10%,transparent)] flex items-center justify-center">
           <Icon path={category.icon} className="w-4.5 h-4.5 text-accent" />
@@ -114,7 +114,7 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
           plainly that an item detail is planned rather than silently showing
           the whole line as if it had honoured the link. */}
       {searchParams.get('id') && (
-        <p className="mb-6 rounded-[var(--radius-card)] border border-border-soft bg-surface px-4 py-3 text-fg-2 text-[length:var(--fs-caption)]">
+        <p className="mb-6 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface px-4 py-3 text-fg-2 text-[length:var(--fs-caption)]">
           A detail view for <code>{searchParams.get('id')}</code> is planned here. Showing the {line.label} journey
           catalogue in the meantime.
         </p>

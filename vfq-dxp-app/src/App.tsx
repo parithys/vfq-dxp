@@ -57,10 +57,14 @@ export default function App() {
   return (
     <BrowserRouter>
       <div className="flex h-screen">
-        <Sidebar />
+        <div className="no-print contents">
+          <Sidebar />
+        </div>
         <div className="flex-1 flex flex-col overflow-hidden">
-          <PersonaSwitcher />
-          <Breadcrumbs />
+          <div className="no-print contents">
+            <PersonaSwitcher />
+            <Breadcrumbs />
+          </div>
           <main className="flex-1 overflow-y-auto bg-[var(--page-bg)]">
             <ErrorBoundary>
               <AppRouter />
@@ -68,7 +72,9 @@ export default function App() {
           </main>
         </div>
       </div>
-      <ToastContainer />
+      <div className="no-print contents">
+        <ToastContainer />
+      </div>
     </BrowserRouter>
   );
 }

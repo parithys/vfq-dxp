@@ -210,7 +210,7 @@ export function NewMnpWizard() {
             {/* BR-233: prepaid MNP declaration - unused balance is forfeited on
                 switching, shown before signature the same way NewPrepaidWizard
                 surfaces its own Key Information panel at this stage. */}
-            <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-4">
+            <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-4">
               <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-2">Key Information</h3>
               <ul className="list-disc list-inside space-y-1 text-fg-2 text-[length:var(--fs-body)]">
                 <li>Any unused prepaid balance must be used before the number is switched - remaining balance is forfeited once porting completes.</li>

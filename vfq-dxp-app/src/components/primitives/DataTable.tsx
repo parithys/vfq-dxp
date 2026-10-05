@@ -174,14 +174,14 @@ export function DataTable<T>({
                           <Link
                             to={linkHref}
                             onClick={(event) => event.stopPropagation()}
-                            className="block max-w-xs truncate text-accent font-medium hover:underline"
+                            className="block max-w-xs truncate text-link font-medium hover:underline"
                             title={String(value)}
                           >
                             {String(value)}
                           </Link>
                         ) : (
                           <span
-                            className={`block max-w-xs truncate ${isLinkCol ? 'text-accent font-medium hover:underline' : ''}`}
+                            className={`block max-w-xs truncate ${isLinkCol ? 'text-link font-medium hover:underline' : ''}`}
                             title={String(value)}
                           >
                             {String(value)}

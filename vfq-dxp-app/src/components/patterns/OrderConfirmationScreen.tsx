@@ -13,11 +13,15 @@ export interface ConfirmationAction {
   label: string;
   onClick: () => void;
   variant?: 'primary-rect' | 'secondary-rect';
+  /** Put this action on a second row below the others, right-aligned (the last such action is right-most). */
+  endRow?: boolean;
 }
 
 interface OrderConfirmationScreenProps {
   heading: string;
   orderId: string;
+  /** The activity this journey created automatically, when there is one. */
+  activityId?: string;
   summaryLines: ConfirmationSummaryLine[];
   actions: ConfirmationAction[];
   /**
@@ -39,6 +43,7 @@ interface OrderConfirmationScreenProps {
 export function OrderConfirmationScreen({
   heading,
   orderId,
+  activityId,
   summaryLines,
   actions,
   handoverPanel,
@@ -75,6 +80,12 @@ export function OrderConfirmationScreen({
         <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-2">{heading}</h1>
         <p className="text-fg-2 mb-8">
           Order <span className="font-medium text-fg">{orderId}</span>
+          {activityId && (
+            <>
+              <span className="mx-2 text-muted">|</span>
+              Activity <span className="font-medium text-fg">{activityId}</span>
+            </>
+          )}
         </p>
       </div>
 
@@ -87,11 +98,12 @@ export function OrderConfirmationScreen({
           a layout with something missing from it. */}
       <div
         className={`grid grid-cols-1 gap-6 items-start ${
-          handoverPanel ? 'lg:grid-cols-2' : 'max-w-xl mx-auto'
+          // One column, receipt above the eSIM panel, at every width: the page then prints on one A4 sheet.
+          handoverPanel ? 'max-w-3xl mx-auto' : 'max-w-xl mx-auto'
         }`}
       >
         {/* Column 1 - the receipt. */}
-        <dl className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+        <dl className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
           {summaryLines.map((line) => (
             <div key={line.label} className="flex justify-between gap-4 py-2 border-b border-border-soft last:border-0">
               <dt className="text-fg-2">{line.label}</dt>
@@ -109,8 +121,8 @@ export function OrderConfirmationScreen({
 
       {/* Actions span both columns: they act on the order as a whole, so
           anchoring them under one column would imply otherwise. */}
-      <div className="flex items-center justify-center gap-3 mt-8">
-        {actions.map((action) => (
+      <div className="no-print flex items-center justify-center gap-3 mt-8">
+        {actions.filter((a) => !a.endRow).map((action) => (
           // secondary-rect, not ghost-rect (2026-09-28) - per Button.tsx's own
           // documented rule, ghost-rect is for the thing you press to NOT do
           // the action (Cancel/Back), while every action here (Start Another
@@ -121,6 +133,17 @@ export function OrderConfirmationScreen({
           </Button>
         ))}
       </div>
+      {/* Actions marked `endRow` (Print, Close Activity) sit on their own row below, centred under the main
+          actions, in the order given. On narrow screens they stack at full width, in the same order. */}
+      {actions.some((a) => a.endRow) && (
+        <div className="no-print flex flex-col gap-3 mt-4 sm:flex-row sm:justify-center [&>button]:w-full sm:[&>button]:w-auto">
+          {actions.filter((a) => a.endRow).map((action) => (
+            <Button key={action.label} variant={action.variant ?? 'secondary-rect'} onClick={action.onClick}>
+              {action.label}
+            </Button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

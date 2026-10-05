@@ -119,7 +119,9 @@
      greyer than --surface. */
   --field-bg-disabled: #eeeeee;
   --field-border-error: #e60000;
-  --field-border-filled: #e0e0e0;
+  /* 2026-10-01: filled, hover and focus all share one colour (the dark text
+     colour), so a text box reads the same in every state but resting-empty. */
+  --field-border-filled: var(--fg);
   /* Calendar range-picker + location-pin accent - from Date Specific-Open.svg
      (#00b0ca in-range day fill, #007c92 start/end anchor day fill) and
      Location-Open.svg (#007c92 result-row pin icon, same dark teal as the
@@ -140,8 +142,13 @@
      --field-selected via `accent-[…]`. Dark mode keeps the previous red
      behavior via the index.css override - both directives were scoped to
      light mode like the rest of this field system. */
-  --field-focus-border: #c09696;
-  --field-focus-ring: 0 0 0 4px rgba(192,150,150,.35);
+  /* 2026-10-01: focused fields are a dark 2px outline (1px border + 1px inset
+     ring), no outer glow - per the large-input reference. */
+  --field-focus-border: var(--fg);
+  /* Deliberately darker than --surface (#f5f7f9): that was invisible on a white
+     field and on the pale-grey cards some fields sit on. */
+  --field-focus-bg: #e6eaef;
+  --field-focus-ring: inset 0 0 0 1px var(--fg);
   --field-selected: #c09696;
   /* Choice-card selected state (2026-09-24, superseding the above for cards
      only): brand-red border, check badge and label on a near-white pink
@@ -151,8 +158,24 @@
      is a separate control. --accent is not reused directly either: that
      would silently re-couple these cards to the brand ramp the 2026-09-15
      note was written to break them off. */
+  /* 2026-10-04: one selected-card look for every selectable card, taken from the Recommended-offers
+     cards: the full brand red (#e60000) border/ring on the pale --surface-warm fill. Was #ff4d4d on
+     --highlight-bg (#ffd6d6), which made number, plan, ID-type and discount cards read as a different,
+     heavier red from the offer cards. --highlight-bg itself is unchanged (selected rows, text selection). */
   --field-card-selected: #e60000;
-  --field-card-selected-bg: #fef9f9;
+  /* Label + border of the secondary (outlined) button. */
+  --accent-secondary: #ff4d4d;
+  /* Text links (inline links, linked table cells, "read more" links). */
+  --link: #c60000;
+  /* Default highlight: selected cards/rows, active options, text selection. */
+  --highlight-bg: #ffd6d6;
+  --field-card-selected-bg: var(--surface-warm);
+  /* Hover on a selectable card: a lighter wash of the selected fill. */
+  --field-card-hover-bg: #fff4f4;
+  /* Hover border/ring of a selectable card: softer than the selected #ff4d4d. */
+  --field-card-hover-border: #ff9a9a;
+  /* Resting border of an unselected selectable card (darker than --border-soft). */
+  --field-card-border: #c9ced4;
   /* CHECKBOXES, 2026-09-25. Superseding the 2026-09-15 rule above for
      checkboxes only: a checked box is a solid brand-red tile with a white
      tick, per the supplied asset. The note above is now accurate for RADIOS
@@ -198,7 +221,7 @@
      --focus-ring, the established weight for a red ring here: red at .4
      reads as a second, brighter border rather than a halo. Dark mode keeps
      its own value via the index.css override. */
-  --shadow-selected-ring: 0 0 0 3px rgba(230,0,0,.22);
+  --shadow-selected-ring: inset 0 0 0 1px var(--field-card-selected);
   /* Figtree is loaded via Google Fonts (index.html) - unlike the previous
      Space Grotesk/DM Sans targets, this one is real, not aspirational. Same
      system-font fallback chain stays in place for the pre-load flash and for
@@ -247,7 +270,9 @@
      the reference never shows a warning or error pill. */
   --info: #6926dc;
   --info-border: #d9c5fb;
-  --success-border: #ade2ae;
+  /* Same green as --success (was a pale #ade2ae), so outlined success pills and
+     the success banners share one border colour. */
+  --success-border: var(--success);
   --warn-border: #f0d9a1;
   --danger-border: #f5b5b0;
   --leading-body: 1.48;
@@ -297,7 +322,7 @@
   --page-bg: #f5f7f9;
   --radius-asymmetric: 0px 6px 0px 0px;
   --radius-button: 8px;
-  --radius-card: 8px;
+  --radius-card: 16px;
   --radius-circle: 50%;
   --radius-hairline: 1px;
   --radius-lg: 24px;
@@ -321,7 +346,7 @@
   --section-y-desktop: 96px;
   --section-y-phone: 48px;
   --section-y-tablet: 68px;
-  --shadow-brand: 0 12px 32px -12px color-mix(in oklab, var(--accent) 60%, transparent);
+  --shadow-brand: none;
   --signal-blue: #3860be;
   --space-1: 4px;
   --space-12: 48px;

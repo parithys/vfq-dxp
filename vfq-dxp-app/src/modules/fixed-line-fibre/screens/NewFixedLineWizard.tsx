@@ -49,7 +49,12 @@ export function NewFixedLineWizard() {
             key: 'address',
             label: 'Address',
             render: ({ values, setValue }) => (
-              <AddressSelectionStep value={values.addressId as string | undefined} onChange={(id) => setValue('addressId', id)} />
+              <AddressSelectionStep
+                value={values.addressId as string | undefined}
+                onChange={(id) => setValue('addressId', id)}
+                idNumber={(values.contact as GuidedContactValue | undefined)?.idNumber}
+                onClear={() => setValue('addressId', undefined)}
+              />
             ),
             isValid: (values) => Boolean(values.addressId),
           },
@@ -76,6 +81,9 @@ export function NewFixedLineWizard() {
               <MsisdnPicker
                 selected={values.msisdn as string | undefined}
                 onSelect={(msisdn) => setValue('msisdn', msisdn)}
+                inlineToolbar
+                hideReservedBadge
+                onDeselect={() => setValue('msisdn', undefined)}
               />
             ),
             isValid: (values) => Boolean(values.msisdn),
@@ -102,12 +110,16 @@ export function NewFixedLineWizard() {
                 value={(values.caf as { cafType?: CafType; signatureDataUrl?: string }) ?? {}}
                 onChange={(v) => setValue('caf', v)}
                 customerName={(values.contact as GuidedContactValue | undefined)?.moiResult?.name}
+                // The CAF type follows the device in use (touch-capable -> Touch Screen,
+                // otherwise Digital) instead of the agent picking one; both sign in-app.
+                autoDetectDeviceType
               />
             ),
             isValid: (values) => {
               const c = values.caf as { cafType?: CafType; signatureDataUrl?: string } | undefined;
               if (!c?.cafType) return false;
-              return c.cafType !== 'Digital' || Boolean(c.signatureDataUrl);
+              // Digital and Touch Screen are both signed on this device.
+              return c.cafType === 'Manual' || Boolean(c.signatureDataUrl);
             },
           },
           {

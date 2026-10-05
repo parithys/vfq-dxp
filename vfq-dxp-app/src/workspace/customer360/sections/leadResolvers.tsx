@@ -13,4 +13,5 @@ export const leadResolvers: Record<string, Resolver> = {
   MSISDN: (data) => data.leads[0]?.mobileNumber as string | undefined,
   'Created By': (data) => data.leads[0]?.ownerId as string | undefined,
   'Lead Status': (data) => data.leads[0]?.status as string | undefined,
+  Comments: (data) => data.leads[0]?.comments as string | undefined,
 };

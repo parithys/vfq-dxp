@@ -81,6 +81,7 @@ export const PRODUCT_LINES: readonly ProductLine[] = [
         description: 'Activate new mobile lines, SIMs, and numbers for postpaid and prepaid customers.',
         icon: CAT_ICONS.newConnection,
         journeys: [
+          { id: 'mob-new-connection', title: 'New Connection', description: 'Start a new mobile connection for a customer', status: 'available', path: '/mobile/new-connection' },
           { id: 'mob-new-postpaid', title: 'New Postpaid Connection', description: 'Activate a new postpaid line with plan and SIM', status: 'available', featureKey: 'postpaid.new-postpaid-wizard', screenId: 'SCR-037' },
           { id: 'mob-new-prepaid', title: 'New Prepaid Connection', description: 'Activate a new prepaid SIM and starter bundle', status: 'available', featureKey: 'prepaid.new-prepaid-tablet-wizard', screenId: 'SCR-190' },
           { id: 'mob-portin-new', title: 'Port-In as New Connection', description: 'Bring a number from another operator (MNP)', status: 'available', featureKey: 'mnp.port-in-wizard', screenId: 'SCR-121' },

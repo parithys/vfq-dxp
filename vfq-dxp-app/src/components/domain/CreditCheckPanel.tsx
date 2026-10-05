@@ -25,7 +25,7 @@ export function CreditCheckPanel({ collectionStatus, acknowledged, onAcknowledge
 
   if (result.pass) {
     return (
-      <div className="rounded-[var(--radius-card)] border border-success/30 bg-[color-mix(in_oklab,var(--success),var(--bg)_92%)] p-3 text-[length:var(--fs-caption)] text-fg">
+      <div className="rounded-[var(--radius-card)] border border-success bg-[color-mix(in_oklab,var(--success),var(--bg)_88%)] p-3 text-[length:var(--fs-caption)] text-fg">
         <Badge variant="success">Credit check</Badge> <span className="ml-2">{result.message}</span>
       </div>
     );

@@ -7,7 +7,7 @@ import { Tooltip } from '../../components/primitives/Tooltip';
 import { SECONDARY_SURFACE } from '../../components/primitives/Button';
 
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
-const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
+const CHEVRON_UP = 'M18 15l-6-6-6 6';
 // Clock face - a clearer, at-a-glance "not available yet" signal than the
 // dashed-border/muted-text treatment alone, which was too subtle to notice
 // without hovering for the tooltip.
@@ -23,6 +23,12 @@ export interface ProductAction {
   /** Existing screen this action launches, if one exists yet. Omit to show
    * an honest "not yet built" state instead of a fabricated screen. */
   screenId?: string;
+  /**
+   * Launches a route computed from the customer instead of a registered screen
+   * - for a journey that needs the customer's identity in its URL (the
+   * Existing Customer flow of New Connection). Counts as built.
+   */
+  path?: (customer: ActiveCustomerSummary) => string;
   /**
    * Whether this action needs the customer to already hold a service on this
    * tab. Drives the default filter; omit for an action that applies either
@@ -81,6 +87,12 @@ export function ProductActionGroups({
   };
 
   const launch = (action: ProductAction) => {
+    if (action.path) {
+      setActiveCustomer(customer);
+      // startFresh: starting a journey from Customer Details never resumes an old draft.
+      navigate(action.path(customer), { state: { startFresh: true } });
+      return;
+    }
     const route = action.screenId ? getAllRoutes().find((r) => r.screenId === action.screenId) : undefined;
     if (!route) return;
     setActiveCustomer(customer);
@@ -122,7 +134,7 @@ export function ProductActionGroups({
             type="button"
             onClick={() => setShowAll((prev) => !prev)}
             aria-pressed={showAll}
-            className="text-accent text-[length:var(--fs-caption)] font-medium underline underline-offset-2 shrink-0"
+            className="text-link text-[length:var(--fs-caption)] font-medium underline underline-offset-2 shrink-0"
           >
             {showAll ? 'Show applicable only' : `Show all (${hiddenCount} more)`}
           </button>
@@ -131,19 +143,19 @@ export function ProductActionGroups({
       {visibleGroups.map((group) => {
         const isOpen = openTitles.has(group.title);
         return (
-          <div key={group.title} className="rounded-[var(--radius-card)] border border-border-soft bg-bg overflow-hidden">
+          <div key={group.title} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg overflow-hidden">
             <button
               onClick={() => toggleGroup(group.title)}
               aria-expanded={isOpen}
               className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-surface"
             >
               <span className="font-medium text-fg text-[length:var(--fs-body)]">{group.title}</span>
-              <Icon path={isOpen ? CHEVRON_DOWN : CHEVRON_RIGHT} className="w-4 h-4 text-muted shrink-0" />
+              <Icon path={isOpen ? CHEVRON_UP : CHEVRON_DOWN} className="w-4 h-4 text-muted shrink-0" />
             </button>
             {isOpen && (
-              <div className="px-4 pb-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 border-t border-border-soft pt-3">
+              <div className="px-4 pb-4 grid grid-cols-2 sm:grid-cols-3 gap-3 border-t border-border-soft pt-3">
                 {group.actions.map((action) => {
-                  const available = Boolean(action.screenId && getAllRoutes().find((r) => r.screenId === action.screenId));
+                  const available = Boolean(action.path || (action.screenId && getAllRoutes().find((r) => r.screenId === action.screenId)));
                   if (!available) {
                     return (
                       <Tooltip key={action.label} content="Not yet built for this action" placement="top">
@@ -153,7 +165,6 @@ export function ProductActionGroups({
                             <Icon path={CLOCK_ICON} className="w-3.5 h-3.5 shrink-0" />
                           </div>
                           <p className="text-[length:var(--fs-caption)] leading-snug">{action.description}</p>
-                          <span className="text-[length:var(--fs-micro)] uppercase tracking-wide">Coming soon</span>
                         </div>
                       </Tooltip>
                     );

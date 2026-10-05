@@ -200,7 +200,7 @@ export function LoginPage() {
             <button
               onClick={handleSignIn}
               disabled={signingIn}
-              className={`w-full flex items-center justify-center gap-2 rounded-[var(--radius-btn)] border ${PRIMARY_SURFACE} enabled:hover:bg-[image:var(--accent-gradient-hover)] enabled:active:scale-[0.99] disabled:opacity-60 font-medium py-3 shadow-[var(--shadow-brand)] transition-[color,border-color,transform]`}
+              className={`w-full flex items-center justify-center gap-2 rounded-[var(--radius-btn)] border ${PRIMARY_SURFACE} enabled:hover:bg-[image:var(--accent-gradient-hover)] enabled:active:scale-[0.99] disabled:opacity-60 font-medium py-3 transition-[color,border-color,transform]`}
             >
               {signingIn ? 'Signing in…' : 'Sign In'}
               {!signingIn && <Icon path={ICONS.arrowRight} className="w-4 h-4" />}
@@ -221,7 +221,7 @@ export function LoginPage() {
               <div className="absolute bottom-full left-0 mb-2 w-64 rounded-[var(--radius-card)] border border-white/15 bg-charcoal-panel shadow-raised z-50 p-4">
                 <p className="text-white font-medium mb-1">Help &amp; support</p>
                 <p className="text-white/70 text-[length:var(--fs-body)]">
-                  Contact the IT Service Desk at <span className="text-accent">servicedesk@vodafone.qa</span> or extension 4100 for platform issues.
+                  Contact the IT Service Desk at <span className="text-link">servicedesk@vodafone.qa</span> or extension 4100 for platform issues.
                 </p>
               </div>
             )}

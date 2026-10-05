@@ -60,11 +60,13 @@ export interface EligibilityContext {
   outstandingQar: number;
   /** Postpaid line cap for this customer, from the line-cap rules. */
   lineCapReached: boolean;
+  /** The line-cap rule says no further line can be added at all (expat at the 5-line maximum). */
+  lineCapHardStop?: boolean;
   /**
    * The line-cap rule's OWN message (BR-288/BR-347 in ruleEngine.ts), which
    * already states the customer's actual active-connections count against
-   * the cap - e.g. "1/2 postpaid mobile lines used (expat cap)" or "Qatari
-   * nationals have no line cap." Passed through rather than recomputed here:
+   * the cap - e.g. "1/2 postpaid mobile lines used (expat cap)" or "2/5
+   * postpaid mobile lines used (Qatari cap)." Passed through rather than recomputed here:
    * the count and the cap the Active Lines check must report are exactly
    * what that rule already worked out, and restating the arithmetic in a
    * second place risks the two disagreeing.
@@ -119,7 +121,7 @@ function formatDate(iso: string): string {
 // `asOf` is injected rather than read from the clock inside, so expiry and age
 // are testable and so the whole result is a pure function of its inputs.
 export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): EligibilityCheck[] {
-  const { customer, doc, deals, outstandingQar, lineCapReached, activeLinesDetail } = ctx;
+  const { customer, doc, deals, outstandingQar, lineCapReached, lineCapHardStop, activeLinesDetail } = ctx;
   const checks: EligibilityCheck[] = [];
 
   // 1. ID validity / expiry.
@@ -154,14 +156,12 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
     id: 'age',
     label: 'Age Check',
     passed: !underage,
-    // Under-18 was a HARD STOP until 2026-09-27, when the annotated
-    // walkthrough reclassified it as "Approval required - Under 18 approval".
-    // That is a real behavioural change, not a wording one: an under-age
-    // applicant now reaches the rest of the journey behind an approval task
-    // instead of ending at this counter.
-    outcome: underage ? 'approval-routing' : 'pass',
+    // Under-18 is a HARD STOP (VFQ business, 2026-10-02, for new and existing
+    // customers alike). It was briefly Approval Routing ("Under 18 approval")
+    // after the 2026-09-27 walkthrough; that is superseded.
+    outcome: underage ? 'hard-stop' : 'pass',
     message: underage
-      ? 'MOI records indicate this applicant is under 18. An approval task has been raised - the connection can proceed once approved.'
+      ? 'MOI records indicate this applicant is under 18. The connection cannot proceed.'
       // The age itself, per 2026-09-26 direction. An agent judging a
       // borderline applicant against the document in their hand needs the
       // number the check used, not just its verdict. Falls back to the plain
@@ -173,10 +173,13 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
   });
 
   // 3. ID-type exception routing. Not a failure - a diversion.
-  const routed = EXCEPTION_ROUTED_ID_TYPES.has(doc?.documentType ?? customer.idType ?? '');
+  const presentedIdType = doc?.documentType ?? customer.idType ?? '';
+  const routed = EXCEPTION_ROUTED_ID_TYPES.has(presentedIdType);
   checks.push({
     id: 'id-type-routing',
-    label: 'ID Type',
+    // A passport holder cannot be sold postpaid directly (CBM approval), and the row says so
+    // in those words. GCC ID / Other ID keep the plain check name.
+    label: routed && presentedIdType === 'Passport' ? 'Postpaid connection for passport holder' : 'ID Type',
     passed: !routed,
     outcome: routed ? 'approval-routing' : 'pass',
     message: routed
@@ -189,7 +192,10 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
   // security block ends the interaction. One boolean could not express that.
   const blocked = Boolean(customer.blacklisted);
   const category = customer.blacklistCategory;
-  const collectionsBlocked = blocked && category === 'collections';
+  // A collections block needs an actual amount owed: a balance of QAR 0 is no
+  // outstanding amount, so it triggers no block, stop or restriction (VFQ
+  // business, 2026-10-02). The flag alone is not enough.
+  const collectionsBlocked = blocked && category === 'collections' && outstandingQar > 0;
   const securityBlocked = blocked && category === 'security';
 
   checks.push({
@@ -256,10 +262,15 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
     // the reasoning behind.
     label: 'Active Lines',
     passed: !lineCapReached,
-    outcome: lineCapReached ? 'approval-routing' : 'pass',
-    message: lineCapReached
-      ? `${activeLinesDetail} An approval task has been raised - the connection can proceed once approved.`
-      : activeLinesDetail,
+    // Reaching the limit is Approval Routing - the journey continues and the order
+    // goes to the Collection Team once submitted. Only the expat's absolute
+    // maximum is a hard stop. Never a Soft Stop.
+    outcome: lineCapHardStop ? 'hard-stop' : lineCapReached ? 'approval-routing' : 'pass',
+    message: lineCapHardStop
+      ? activeLinesDetail
+      : lineCapReached
+        ? `${activeLinesDetail}\nApproval Routing: the journey continues, and the order goes to the Collection Team for approval once submitted.`
+        : activeLinesDetail,
   });
 
   return checks;

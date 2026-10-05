@@ -23,7 +23,7 @@ export function NotYetBuiltPanel({
   children,
 }: NotYetBuiltPanelProps) {
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-8 w-full">
       <Badge variant="filled-neutral">{badge}</Badge>
       <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mt-3 mb-2">{title}</h1>
       <p className="text-fg-2 mb-4">{body}</p>

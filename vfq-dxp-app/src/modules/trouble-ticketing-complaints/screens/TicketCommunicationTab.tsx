@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Input } from '../../../components/primitives/Input';
 import { Button } from '../../../components/primitives/Button';
 import { Badge } from '../../../components/primitives/Badge';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
+import { SearchField } from '../../../components/primitives/SearchField';
 
 interface SmsTemplate {
   templateId: string;
@@ -73,12 +73,13 @@ export function TicketCommunicationTab({ ticketId, onSend }: { ticketId: string;
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <Input
+        <SearchField
           aria-label="Search templates"
           placeholder="Search by keyword, category, area…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="mb-2"
+          onClear={() => setSearch('')}
+          wrapperClassName="mb-2"
         />
         <div className="space-y-1 max-h-72 overflow-y-auto">
           {matches.length === 0 && <p className="text-fg-2 text-[length:var(--fs-body)]">No matching templates.</p>}
@@ -87,7 +88,7 @@ export function TicketCommunicationTab({ ticketId, onSend }: { ticketId: string;
               key={t.templateId}
               onClick={() => setSelected(t)}
               className={`w-full text-left rounded-[var(--radius-card)] border p-2 text-[length:var(--fs-body)] ${
-                selected?.templateId === t.templateId ? 'border-accent bg-[color-mix(in_oklab,var(--accent),var(--bg)_92%)]' : 'border-border-soft bg-bg'
+                selected?.templateId === t.templateId ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]' : 'border-border-soft bg-bg'
               }`}
             >
               <div className="text-fg">{t.keyword}</div>
@@ -99,7 +100,7 @@ export function TicketCommunicationTab({ ticketId, onSend }: { ticketId: string;
           ))}
         </div>
       </div>
-      <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-3">
+      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-3">
         {!selected && <p className="text-fg-2 text-[length:var(--fs-body)]">Select a template to preview.</p>}
         {selected && (
           <div className="space-y-2">

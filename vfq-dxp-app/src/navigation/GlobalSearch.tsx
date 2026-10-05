@@ -4,10 +4,8 @@ import { getAllModules, getAllRoutes, getPersona } from '../engines/configEngine
 import { usePersonaStore } from '../stores/personaStore';
 import { searchScopeFor, type SearchGroup } from '../engines/searchScopeEngine';
 import * as mockDataEngine from '../engines/mockDataEngine';
-import { Icon } from '../components/primitives/Icon';
+import { SearchField } from '../components/primitives/SearchField';
 
-const SEARCH_ICON = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3';
-const CLEAR_ICON = 'M6 6l12 12 M18 6L6 18';
 
 interface RecordResult {
   key: string;
@@ -191,49 +189,32 @@ export function GlobalSearch() {
   };
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-md min-w-0">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
-        <Icon path={SEARCH_ICON} className="w-4 h-4" />
-      </span>
-      <input
-        ref={inputRef}
-        value={query}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          setOpen(true);
-        }}
-        onFocus={() => setOpen(true)}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') {
-            setOpen(false);
-            inputRef.current?.blur();
-          }
-        }}
-        placeholder={scope.placeholder}
-        aria-label="Global search"
-        // Filled rather than outlined, per the 2026-09-24 reference - the only
-        // field in it treated that way. The filled/normal border swap the other
-        // inputs still do is dropped here rather than layered on top: a border
-        // on a --search-bg well reads as a second edge around the fill. The
-        // focus ring stays, so the focus affordance is unchanged.
-        className="w-full rounded-[var(--field-radius)] border border-transparent bg-[var(--search-bg)] pl-9 pr-9 py-2 text-fg text-[length:var(--fs-body)] placeholder:text-[var(--muted-2)] focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]"
-      />
-      {query && (
-        <button
-          type="button"
-          aria-label="Clear search"
-          onClick={() => {
-            setQuery('');
-            setOpen(false);
-            inputRef.current?.focus();
-          }}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-fg"
-        >
-          <Icon path={CLEAR_ICON} className="w-4 h-4" />
-        </button>
-      )}
+    <SearchField
+      ref={inputRef}
+      wrapperRef={containerRef}
+      wrapperClassName="w-full max-w-md min-w-0"
+      value={query}
+      onChange={(e) => {
+        setQuery(e.target.value);
+        setOpen(true);
+      }}
+      onFocus={() => setOpen(true)}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          setOpen(false);
+          inputRef.current?.blur();
+        }
+      }}
+      placeholder={scope.placeholder}
+      aria-label="Global search"
+      onClear={() => {
+        setQuery('');
+        setOpen(false);
+        inputRef.current?.focus();
+      }}
+    >
       {open && q && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-96 overflow-y-auto rounded-[var(--radius-card)] border border-border-soft bg-bg shadow-raised">
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-96 overflow-y-auto rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg shadow-raised">
           {!hasResults && <p className="px-4 py-6 text-center text-muted text-[length:var(--fs-body)]">No matches for &ldquo;{query}&rdquo;.</p>}
 
           {moduleMatches.length > 0 && (
@@ -287,6 +268,6 @@ export function GlobalSearch() {
           )}
         </div>
       )}
-    </div>
+    </SearchField>
   );
 }

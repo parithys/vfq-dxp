@@ -76,7 +76,7 @@ export function ProductPlanStep({
             key={p.productId}
             onClick={() => onSelect(p.productId)}
             className={`text-left rounded-[var(--radius-card)] border p-4 ${
-              selectedProductId === p.productId ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
+              selectedProductId === p.productId ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]' : 'border-[var(--field-card-border)] bg-bg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
             }`}
           >
             <div className="flex justify-between">

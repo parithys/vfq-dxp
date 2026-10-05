@@ -105,7 +105,7 @@ export function BellNotificationsSection() {
   return (
     <div>
       {canConfigure ? (
-        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mb-6">
+        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-6">
           <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Configure a notification</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
             Notifications appear as a banner on the customer's Customer 360 screen until they expire - agents cannot dismiss them
@@ -150,7 +150,7 @@ export function BellNotificationsSection() {
           </div>
         </div>
       ) : (
-        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mb-6">
+        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-6">
           <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Configure a notification</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)]">
             Restricted to Backoffice and privileged staff roles (Agent 360 BIN-01). This persona does not have
@@ -160,7 +160,7 @@ export function BellNotificationsSection() {
       )}
 
       <h3 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-2">All notifications</h3>
-      <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg divide-y divide-border-soft">
+      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg divide-y divide-border-soft">
         {notifications.length === 0 && <p className="px-4 py-6 text-center text-muted">No notifications configured yet.</p>}
         {notifications.map((n) => (
           <div key={n.notificationId} className="px-4 py-3 flex items-start justify-between gap-4">

@@ -205,7 +205,7 @@ export function TicketApprovalReview() {
   };
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-8 w-full">
       <div className="flex items-center gap-3 mb-1">
         <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">Ticket {ticket.ticketId}</h1>
         <Badge variant="outlined-red">{ticket.status}</Badge>
@@ -215,7 +215,7 @@ export function TicketApprovalReview() {
         {ticket.actualIssue ? ` · ${ticket.actualIssue}` : ''}
       </p>
 
-      <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mb-4">
+      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-4">
         <p className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted mb-2">Decision history</p>
         {auditRecords.length === 0 && <p className="text-fg-2 text-[length:var(--fs-body)]">No approval actions recorded yet for this ticket.</p>}
         {auditRecords.length > 0 && (

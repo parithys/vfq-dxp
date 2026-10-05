@@ -50,7 +50,7 @@ export function BillLimitEditor({ product, value, onChange }: BillLimitEditorPro
   };
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-3">
+    <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-3">
       <div className="flex items-center justify-between">
         <span className="text-fg">Bill Limit ({product})</span>
         {!editing && (

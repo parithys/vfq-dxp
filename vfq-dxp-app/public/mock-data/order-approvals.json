@@ -49,5 +49,41 @@
     "serviceAccount": "SA-40011",
     "orderApprovalStatus": "Approved",
     "orderCreatedDate": "2026-07-10"
+  },
+  {
+    "_note": "Customer-Inventory seed (2026-10-02)",
+    "activityId": "APR-3401",
+    "orderId": "ORD-91001",
+    "approvalStatus": "Approved",
+    "activityStatus": "Done",
+    "owner": "USR-1103",
+    "channel": "Retail Store",
+    "type": "Order Approval",
+    "topic": "New Connection",
+    "subTopic": "Postpaid Mobile",
+    "area": "Sales",
+    "journeyName": "New Postpaid Connection",
+    "mobileNumber": "+97455513003",
+    "serviceAccount": "SA-3401",
+    "orderApprovalStatus": "Approved",
+    "orderCreatedDate": "2026-09-15"
+  },
+  {
+    "_note": "Customer-Inventory seed (2026-10-02)",
+    "activityId": "APR-3402",
+    "orderId": "ORD-91002",
+    "approvalStatus": "Approved",
+    "activityStatus": "Done",
+    "owner": "USR-1103",
+    "channel": "Retail Store",
+    "type": "Order Approval",
+    "topic": "New Connection",
+    "subTopic": "Postpaid Mobile",
+    "area": "Sales",
+    "journeyName": "New Postpaid Connection",
+    "mobileNumber": "+97455513007",
+    "serviceAccount": "SA-3402",
+    "orderApprovalStatus": "Approved",
+    "orderCreatedDate": "2026-09-15"
   }
 ]

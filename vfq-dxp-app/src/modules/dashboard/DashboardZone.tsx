@@ -85,7 +85,7 @@ export function DashboardZone({
   // legible - you can see what you de-emphasised rather than it vanishing.
   if (size === 'collapsed') {
     return (
-      <section className="rounded-[var(--radius-card)] border border-border-soft bg-bg px-5 py-4">
+      <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg px-5 py-4">
         <div className="flex items-center gap-2.5 text-fg-2">
           <Icon path={spec.headingIcon} className="w-4.5 h-4.5 text-accent shrink-0" />
           <span className="font-medium text-[length:var(--fs-body)]">{spec.heading}</span>
@@ -138,13 +138,13 @@ export function DashboardZone({
                 <div className="text-fg-2 text-[length:var(--fs-caption)] mt-1">{tile.label}</div>
               </>
             );
-            const shell = 'rounded-[var(--radius-card)] border border-border-soft bg-bg p-4';
+            const shell = 'rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4';
             if (readOnly || !tile.to) return <div key={tile.key} className={shell}>{body}</div>;
             return (
               <Link
                 key={tile.key}
                 to={tile.to}
-                className={`${shell} hover:border-accent hover:shadow-raised hover:-translate-y-0.5 transition-all`}
+                className={`${shell} hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)] hover:-translate-y-0.5 transition-all`}
               >
                 {body}
               </Link>
@@ -156,7 +156,8 @@ export function DashboardZone({
       {spec.cards.length > 0 && (
         <div className={`grid gap-4 mb-6 ${gridCols(size, 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3', 'grid-cols-1 sm:grid-cols-2')}`}>
           {spec.cards.map((card) => (
-            <div key={card.label} className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+            // Fixed height so every card is the same size whatever its title length, with the figure pinned to the bottom.
+            <div key={card.label} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 h-[11.5rem] flex flex-col">
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div className="min-w-0">
                   <div className="font-medium text-fg text-[length:var(--fs-body)]">{card.label}</div>
@@ -166,7 +167,7 @@ export function DashboardZone({
                   <Icon path={card.icon} className="w-4.5 h-4.5" />
                 </span>
               </div>
-              <div className="text-[length:var(--fs-h3)] font-extrabold text-fg">
+              <div className="mt-auto text-[length:var(--fs-h3)] font-extrabold text-fg">
                 {value(card.value, card.loadingKind)}
               </div>
             </div>
@@ -223,13 +224,13 @@ export function DashboardZone({
                 </>
               );
               const shell =
-                'flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-border-soft bg-bg px-4 py-3';
+                'flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg px-4 py-3';
               if (readOnly || !item.to) return <div key={item.id} className={shell}>{body}</div>;
               return (
                 <Link
                   key={item.id}
                   to={item.to}
-                  className={`${shell} hover:border-accent hover:shadow-raised hover:-translate-y-0.5 transition-all`}
+                  className={`${shell} hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)] hover:-translate-y-0.5 transition-all`}
                 >
                   {body}
                 </Link>

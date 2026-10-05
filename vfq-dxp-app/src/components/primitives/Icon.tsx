@@ -12,13 +12,13 @@
 // its own <svg>, or that consistency is gone immediately.
 const STROKE_WIDTH = 2;
 
-export function Icon({ path, className = 'w-5 h-5' }: { path: string; className?: string }) {
+export function Icon({ path, className = 'w-5 h-5', strokeWidth = STROKE_WIDTH }: { path: string; className?: string; strokeWidth?: number }) {
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={STROKE_WIDTH}
+      strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}

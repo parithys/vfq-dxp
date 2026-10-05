@@ -43,7 +43,7 @@ export function ProfileSection({
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 items-start">
-      <div className="flex-1 min-w-0 rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+      <div className="flex-1 min-w-0 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
         <SectionHeader title="Personal Information" right={<span className="text-[length:var(--fs-caption)] text-muted">ID: {customer.customerId}</span>} />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Field label={customer.idType} value={customer.qid} />
@@ -71,7 +71,7 @@ export function ProfileSection({
         </div>
       </div>
 
-      <div className="w-full lg:w-72 shrink-0 rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+      <div className="w-full lg:w-72 shrink-0 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
         <SectionHeader
           title="Linked Services"
           right={serviceCount > 0 ? <Badge variant="success">{serviceCount} ACTIVE</Badge> : undefined}
@@ -105,7 +105,7 @@ export function ProfileSection({
               >
                 <span className="flex items-center gap-2.5 min-w-0">
                   <span className="w-2 h-2 rounded-full shrink-0 bg-success" aria-hidden="true" />
-                  <span className="text-accent text-[length:var(--fs-body)] truncate underline decoration-accent/30 underline-offset-2 group-hover:decoration-accent">
+                  <span className="text-link text-[length:var(--fs-body)] truncate underline decoration-[var(--link)]/30 underline-offset-2 group-hover:decoration-accent">
                     {group.category}
                   </span>
                 </span>

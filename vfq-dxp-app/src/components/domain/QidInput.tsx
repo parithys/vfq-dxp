@@ -5,7 +5,8 @@ import { Button } from '../primitives/Button';
 export type QidType = 'QID' | 'Passport' | 'GCC ID' | 'Diplomatic ID';
 
 interface QidTypeSelectorProps {
-  idType: QidType;
+  /** Undefined = nothing chosen yet (verify-then-fetch flow: the agent picks first). */
+  idType: QidType | undefined;
   onIdTypeChange: (type: QidType) => void;
   /**
    * Which types this journey offers. Defaults to all four, which is what the
@@ -52,6 +53,16 @@ interface QidNumberFieldProps {
   readOnly?: boolean;
   /** Sits under the field. */
   hint?: string;
+  /** Extra reason Fetch cannot be pressed yet (beyond an empty number). */
+  fetchDisabled?: boolean;
+  /**
+   * A second, labelled field placed in the SAME row between the number and
+   * Fetch (verify-then-fetch: QID | Expiry Date | Fetch). The caller supplies
+   * the complete field including its own label.
+   */
+  inlineField?: ReactNode;
+  /** Show Fetch even though the number is read-only. */
+  showFetch?: boolean;
   /**
    * Right-aligned on the label line - for a lookup status that belongs to
    * this number (the MOI badge). Kept as a slot rather than a boolean so the
@@ -137,7 +148,12 @@ export function QidTypeSelector({
     : ID_TYPES;
   return (
     <div>
-      <p className="text-[length:var(--fs-label)] text-fg-2 mb-2">ID Type</p>
+      <p className="text-[length:var(--fs-label)] text-fg-2">ID Type</p>
+      {/* Sub-title: the types that cannot be picked here without pre-approval. */}
+      <p className={`text-[length:var(--fs-caption)] text-muted ${unavailable.size > 0 ? 'mt-0.5 mb-2' : 'mb-2'}`}>
+        {unavailable.size > 0 &&
+          `Required pre-approval: ${offered.filter((t) => unavailable.has(t.type)).map((t) => t.label).join(', ')}`}
+      </p>
       {/* Columns follow the count offered, so two cards fill the row rather
           than leaving two empty quarter-width gaps. */}
       <div className={`grid grid-cols-2 gap-3 ${offered.length > 2 ? 'sm:grid-cols-4' : ''}`}>
@@ -163,10 +179,10 @@ export function QidTypeSelector({
               onClick={() => !isUnavailable && onIdTypeChange(t.type)}
               className={`relative flex flex-col items-center gap-2 rounded-[var(--radius-card)] border p-4 ${
                 isUnavailable
-                  ? 'border-border-soft text-muted opacity-60'
+                  ? 'border-border-soft bg-bg text-muted opacity-60'
                   : selected
-                    ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] text-[var(--field-card-selected)]'
-                    : 'border-border-soft text-fg-2 enabled:hover:border-[var(--field-card-selected)]/50'
+                    ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)] text-[var(--field-card-selected)]'
+                    : 'border-[var(--field-card-border)] bg-bg text-fg enabled:hover:border-[var(--field-card-hover-border)] enabled:hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
               }`}
             >
               {selected && (
@@ -174,8 +190,16 @@ export function QidTypeSelector({
                   <Icon path={CHECK} className="w-2.5 h-2.5" />
                 </span>
               )}
-              <Icon path={t.icon} className="w-6 h-6" />
+              {/* White tile behind the icon when selected. Padding is always
+                  present so the card does not change size between states. */}
+              <span className={`inline-flex p-2 rounded-[var(--radius-card)] ${selected && !isUnavailable ? 'bg-white' : ''}`}>
+                <Icon path={t.icon} className="w-6 h-6" />
+              </span>
               <span className="text-[length:var(--fs-caption)] font-medium">{t.label}</span>
+              {/* Shown only while the card is selected: these documents need approval to proceed. */}
+              {selected && (t.type === 'Passport' || t.type === 'GCC ID') && (
+                <span className="text-[length:var(--fs-micro)] -mt-1.5">Requires Approval</span>
+              )}
             </button>
           );
         })}
@@ -199,6 +223,9 @@ export function QidNumberField({
   inputRef,
   readOnly = false,
   hint,
+  fetchDisabled = false,
+  inlineField,
+  showFetch = false,
   status,
   statusDetail,
 }: QidNumberFieldProps) {
@@ -212,17 +239,19 @@ export function QidNumberField({
           HAS a status to show. min-h keeps the line the same height with and
           without a badge, so the field below does not shift when the lookup
           resolves. */}
-      <div className="flex items-center justify-between gap-3 min-h-7 mb-1">
-        <label htmlFor="qid-number-input" className="block text-[length:var(--fs-label)] text-fg-2">
-          {current.numberLabel}
-        </label>
+      <div className={`flex items-center gap-3 min-h-7 mb-1 ${inlineField ? 'justify-start' : 'justify-between'}`}>
+        {inlineField ? null : (
+          <label htmlFor="qid-number-input" className="block text-[length:var(--fs-label)] text-fg-2">
+            {current.numberLabel}
+          </label>
+        )}
         {status}
       </div>
       {/* Right-aligned under `status`, same reasoning as that slot - a fact
           about the lookup, not about the field itself, so it reads as an
           annex to the badge above it rather than a second label. */}
       {statusDetail && <p className="text-[length:var(--fs-caption)] text-muted text-right -mt-0.5 mb-1">{statusDetail}</p>}
-      <div className="flex gap-2">
+      <div className={`flex gap-2 ${inlineField ? 'items-end' : ''}`}>
         {/* readOnly, not disabled: a scanned number is data the agent reads
             back off the screen, and disabled styling drops it to
             --field-label-disabled at about 2.3:1. readOnly keeps --fg.
@@ -237,6 +266,14 @@ export function QidNumberField({
             lands in the field it's wired to. Only wrapped (not a plain
             input) when the icon can actually render, so the readOnly/scanned
             state keeps its original markup untouched. */}
+        <div className={inlineField ? 'flex-1 min-w-0 flex flex-col gap-1' : 'contents'}>
+          {inlineField && (
+            <label htmlFor="qid-number-input" className="block text-[length:var(--fs-label)] text-fg-2">
+              {current.numberLabel}
+            </label>
+          )}
+        {/* Read-only: resting border only - no filled/hover/focus styling, the
+            same as every other read-only field. */}
         {readOnly ? (
           <input
             id="qid-number-input"
@@ -248,8 +285,8 @@ export function QidNumberField({
             onMouseDown={(e) => e.preventDefault()}
             className={`flex-1 min-w-0 rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-fg
               bg-surface cursor-default select-none
-              ${error ? 'border-[var(--field-border-error)]' : value ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'}
-              focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]`}
+              ${error ? 'border-[var(--field-border-error)]' : 'border-[var(--field-border)]'}
+              focus:outline-none`}
           />
         ) : (
           <div className="relative flex-1 min-w-0">
@@ -261,7 +298,7 @@ export function QidNumberField({
               placeholder={current.placeholder}
               className={`w-full rounded-[var(--field-radius)] border py-2 pl-3 pr-9 text-[length:var(--fs-body)] text-fg bg-bg
                 ${error ? 'border-[var(--field-border-error)]' : value ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'}
-                focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]`}
+                focus:outline-none focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)]`}
             />
             {/* DEMO ONLY - see BARCODE_DEMO_NUMBERS. Real hardware would push
                 a read into this same field; this simulates that push with a
@@ -278,6 +315,8 @@ export function QidNumberField({
             </button>
           </div>
         )}
+        </div>
+        {inlineField && <div className="w-48 shrink-0">{inlineField}</div>}
         {/* Only when the number is typeable. A scanned number has already
             been looked up by the act of scanning, so a Fetch beside it asked
             the agent to perform an action that had no effect they could
@@ -285,8 +324,8 @@ export function QidNumberField({
             need submitting. Hidden rather than disabled: there is no state
             from which it becomes usable without the field becoming editable
             first, so a greyed-out button would never light up in place. */}
-        {!readOnly && (
-          <Button variant="primary-rect" onClick={onFetch} disabled={!value || fetching}>
+        {(!readOnly || showFetch) && (
+          <Button variant="primary-rect" onClick={onFetch} disabled={!value || fetching || fetchDisabled}>
             <Icon path={SEARCH_ICON} className="w-4 h-4" />
             {fetching ? 'Fetching…' : 'Fetch'}
           </Button>

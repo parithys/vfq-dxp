@@ -52,6 +52,8 @@ interface PhoneNumberInputProps {
    * picker stays for consumers that genuinely accept an international number.
    */
   fixedIso?: string;
+  /** Keep the wizard's arrival auto-focus off this field (an optional one). */
+  noAutoFocus?: boolean;
 }
 
 // Shared phone-number field: a country-code dropdown locked inside the field's
@@ -81,6 +83,7 @@ export function PhoneNumberInput({
   required,
   helperText,
   fixedIso,
+  noAutoFocus,
 }: PhoneNumberInputProps) {
   const [iso, setIso] = useState(() => fixedIso ?? countryFromNumber(value)?.iso ?? DEFAULT_COUNTRY_ISO);
   const [open, setOpen] = useState(false);
@@ -171,6 +174,7 @@ export function PhoneNumberInput({
       error={error}
       required={required}
       helperText={helperText}
+      data-no-autofocus={noAutoFocus ? '' : undefined}
       inputMode="tel"
       autoComplete="tel-national"
       leadingAddon={

@@ -13,7 +13,8 @@
     "status": "billed",
     "isTaxInvoice": true,
     "currentChargesQAR": 205,
-    "_currentChargesNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
+    "_currentChargesNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation.",
+    "dueDate": "2026-08-14"
   },
   {
     "billId": "BILL-9002",
@@ -30,7 +31,8 @@
     "isTaxInvoice": false,
     "note": "Reflects current unbilled usage plus outstanding balance; item statuses unchanged.",
     "currentChargesQAR": 260,
-    "_currentChargesNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
+    "_currentChargesNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation.",
+    "dueDate": "2026-09-14"
   },
   {
     "billId": "BILL-9003",
@@ -49,7 +51,8 @@
     "disconnectionPenalty": 500,
     "note": "Explicitly not a tax invoice; shows disconnection penalty impact without affecting upcoming bill.",
     "currentChargesQAR": 1070,
-    "_currentChargesNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
+    "_currentChargesNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation.",
+    "dueDate": "2026-09-14"
   },
   {
     "billId": "BILL-9004",
@@ -68,6 +71,33 @@
     "disconnectionPenalty": 0,
     "note": "On-demand simulation with no penalty applicable; regular upgrade scenario.",
     "currentChargesQAR": 315,
-    "_currentChargesNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation."
+    "_currentChargesNote": "App-level placeholder - BRSD v3.1 Section 2.13 leaves this field's Data Ref (DR-01..07) undefined in Annex_01; shape/values assumed pending VFQ Business confirmation.",
+    "dueDate": "2026-09-14"
+  },
+  {
+    "_note": "Customer-Inventory seed (2026-10-02)",
+    "billId": "BILL-9101",
+    "type": "bill",
+    "accountId": null,
+    "customerId": "CUST-1004",
+    "billPeriod": "2026-08",
+    "totalAmount": 450.0,
+    "status": "overdue",
+    "dueDate": "2026-09-14",
+    "isTaxInvoice": true,
+    "note": "Overdue balance seeded so the Collections Check soft-stop is reachable for this collections-blacklisted customer."
+  },
+  {
+    "_note": "Customer-Inventory seed (2026-10-02)",
+    "billId": "BILL-9102",
+    "type": "bill",
+    "accountId": "ACC-5623",
+    "customerId": "CUST-3046",
+    "billPeriod": "2026-08",
+    "totalAmount": 310.5,
+    "status": "overdue",
+    "dueDate": "2026-09-14",
+    "isTaxInvoice": true,
+    "note": "Overdue balance seeded so the Collections Check soft-stop is reachable for this collections-blacklisted customer."
   }
 ]

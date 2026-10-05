@@ -72,6 +72,8 @@ export interface Persona {
   businessUnitLabel: string;
   businessUnits: ('CBU' | 'EBU' | 'Shared' | 'Corporate')[];
   approach: PersonaApproach;
+  /** Selects a persona-specific Customer 360 layout; absent = the standard one. 'header-only' shows the profile header (with its detail groups) and nothing below it. */
+  customer360Layout?: 'telesales' | 'header-only';
   description: string;
   channel: string;
   contextCard: PersonaContextCard;

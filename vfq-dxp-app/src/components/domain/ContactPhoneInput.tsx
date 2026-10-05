@@ -7,6 +7,7 @@ interface ContactRecord {
   contactRecordId: string;
   customerId: string;
   firstName: string;
+  middleName?: string;
   lastName: string;
   cellNumber?: string;
   workPhone?: string;
@@ -83,8 +84,8 @@ export function ContactPhoneInput({
   const borderClass = error
     ? 'border-[var(--field-border-error)]'
     : isFilled
-      ? 'border-[var(--field-border-filled)] enabled:hover:border-[var(--field-border-filled)]'
-      : 'border-[var(--field-border)] enabled:hover:border-accent/40';
+      ? 'border-[var(--field-border-filled)] hover:border-[var(--field-focus-border)]'
+      : 'border-[var(--field-border)] hover:border-[var(--field-focus-border)]';
 
   return (
     <div className="flex flex-col gap-1">
@@ -97,7 +98,7 @@ export function ContactPhoneInput({
         <div
           // bg set via this JS ternary, not Tailwind's disabled: pseudo-class:
           // `disabled` sits on the <input> below, not on this wrapper div.
-          className={`flex items-center gap-2 rounded-[var(--field-radius)] border pl-3 pr-2 py-2 focus-within:border-[var(--field-focus-border)] focus-within:shadow-[var(--field-focus-ring)]
+          className={`flex items-center gap-2 rounded-[var(--field-radius)] border pl-3 pr-2 py-2 focus-within:border-[var(--field-focus-border)]! focus-within:bg-[var(--field-focus-bg)] focus-within:shadow-[var(--field-focus-ring)]
             ${disabled ? 'bg-[var(--field-bg-disabled)] border-[var(--field-border-disabled)]' : 'bg-bg ' + borderClass}
             ${className}`}
         >
@@ -113,7 +114,7 @@ export function ContactPhoneInput({
             onBlur={() => setFocused(false)}
             placeholder={placeholder}
             aria-describedby={describedBy}
-            className="flex-1 min-w-0 bg-transparent text-[length:var(--fs-body)] text-fg focus:outline-none disabled:text-[var(--field-label-disabled)]"
+            className="flex-1 min-w-0 bg-transparent text-[length:var(--fs-body)] text-fg focus:outline-none focus-visible:shadow-none disabled:text-[var(--field-label-disabled)]"
           />
           {customerId && (
             <button
@@ -146,7 +147,7 @@ export function ContactPhoneInput({
                 </span>
                 <span className="min-w-0">
                   <span className="block text-[length:var(--fs-body)] text-fg truncate">{formatQatarPhoneForDisplay(c.cellNumber ?? '')}</span>
-                  <span className="block text-[length:var(--fs-caption)] text-muted truncate">{c.firstName} {c.lastName}</span>
+                  <span className="block text-[length:var(--fs-caption)] text-muted truncate">{[c.firstName, c.middleName, c.lastName].filter(Boolean).join(' ')}</span>
                 </span>
               </li>
             ))}

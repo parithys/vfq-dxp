@@ -16,6 +16,7 @@ import { TaskDetailView } from './workspace/tasks/TaskDetailView';
 import { QnomyTicketHistory } from './workspace/tickets/QnomyTicketHistory';
 import { WorkspaceNotYetBuilt } from './modules/WorkspaceNotYetBuilt';
 import { LeadListView } from './modules/lead-management/LeadListView';
+import { NewConnectionWizard } from './modules/new-connection/NewConnectionWizard';
 import { ProductLinePage } from './modules/product-lines/ProductLinePage';
 import { TicketApprovalQueue } from './modules/trouble-ticketing-complaints/screens/TicketApprovalQueue';
 import { TicketApprovalReview } from './modules/trouble-ticketing-complaints/screens/TicketApprovalReview';
@@ -60,6 +61,8 @@ export function AppRouter() {
           reach, a category route shows just that section. Same component -
           they are the same content at different scope. */}
       <Route path="/mobile" element={<ProductLinePage lineKey="mobile" />} />
+      <Route path="/mobile/new-connection" element={<NewConnectionWizard flow="new" />} />
+      <Route path="/mobile/new-connection/existing/:customerId" element={<NewConnectionWizard flow="existing" />} />
       <Route path="/mobile/:category" element={<ProductLinePage lineKey="mobile" />} />
       <Route path="/fibre-home" element={<ProductLinePage lineKey="fibre-home" />} />
       <Route path="/fibre-home/:category" element={<ProductLinePage lineKey="fibre-home" />} />

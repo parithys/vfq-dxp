@@ -18,6 +18,7 @@ interface ContactRecord {
   contactRecordId: string;
   customerId: string;
   firstName: string;
+  middleName?: string;
   lastName: string;
   idType: string;
   idNumber: string;
@@ -78,6 +79,7 @@ export function ContactSection({
         onRowClick={(r) => (canEdit ? requireVerification(() => setEditing(r)) : setEditing(r))}
         columns={[
           { key: 'firstName', header: 'First Name' },
+          { key: 'middleName', header: 'Middle Name' },
           { key: 'lastName', header: 'Last Name' },
           { key: 'idType', header: 'ID Type' },
           { key: 'cellNumber', header: 'Cell Number' },
@@ -119,6 +121,7 @@ function ContactEditDrawer({
   const updateRecord = useEntityStore((s) => s.updateRecord);
   const createChangeTicket = useProfileChangeTicket();
   const [firstName, setFirstName] = useState(contact.firstName);
+  const [middleName, setMiddleName] = useState(contact.middleName ?? '');
   const [lastName, setLastName] = useState(contact.lastName);
   const [nationality, setNationality] = useState(contact.nationality ?? '');
   const [dob, setDob] = useState(contact.dob ?? '');
@@ -131,7 +134,7 @@ function ContactEditDrawer({
 
   const save = async () => {
     setSaving(true);
-    const patch = { firstName, lastName, nationality, dob, gender, preferredLanguage, cellNumber, workPhone, employerEmail };
+    const patch = { firstName, middleName, lastName, nationality, dob, gender, preferredLanguage, cellNumber, workPhone, employerEmail };
     const changed = (Object.keys(patch) as (keyof typeof patch)[]).filter((k) => patch[k] !== (contact as unknown as Record<string, unknown>)[k]);
     await updateRecord('customer-contacts', 'contactRecordId', contact.contactRecordId, patch);
     if (changed.length > 0) {
@@ -162,8 +165,9 @@ function ContactEditDrawer({
       }
     >
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <Input label="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} readOnly={readOnly} disabled={readOnly} />
+          <Input label="Middle Name(s)" value={middleName} onChange={(e) => setMiddleName(e.target.value)} readOnly={readOnly} disabled={readOnly} />
           <Input label="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} readOnly={readOnly} disabled={readOnly} />
         </div>
         <div className="grid grid-cols-2 gap-4">

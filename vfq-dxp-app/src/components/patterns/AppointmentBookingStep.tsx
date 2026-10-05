@@ -58,7 +58,7 @@ export function AppointmentBookingStep({ value, onChange }: AppointmentBookingSt
               key={c}
               onClick={() => onChange({ ...value, cluster: c })}
               className={`px-3 py-1.5 rounded-[var(--radius-pill)] border text-[length:var(--fs-body)] ${
-                value.cluster === c ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] text-[var(--field-card-selected)]' : 'border-border-soft text-fg-2'
+                value.cluster === c ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)] text-[var(--field-card-selected)]' : 'border-border-soft bg-bg text-fg'
               }`}
             >
               {c}
@@ -73,7 +73,7 @@ export function AppointmentBookingStep({ value, onChange }: AppointmentBookingSt
           type="date"
           value={value.date ?? ''}
           onChange={(e) => onChange({ ...value, date: e.target.value })}
-          className={`rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)] ${
+          className={`rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg focus:outline-none focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)] ${
             value.date ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'
           }`}
         />
@@ -93,7 +93,7 @@ export function AppointmentBookingStep({ value, onChange }: AppointmentBookingSt
                   disabled={full}
                   onClick={() => onChange({ ...value, timeSlot: slot })}
                   className={`px-3 py-1.5 rounded-[var(--radius-pill)] border text-[length:var(--fs-body)] disabled:opacity-40 disabled:cursor-not-allowed
-                    ${selected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] text-[var(--field-card-selected)]' : 'border-border-soft text-fg-2'}`}
+                    ${selected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)] text-[var(--field-card-selected)]' : 'border-border-soft bg-bg text-fg'}`}
                 >
                   {slot} <Badge variant={full ? 'danger' : 'filled-neutral'}>{used}/{SLOT_CAPACITY}</Badge>
                 </button>

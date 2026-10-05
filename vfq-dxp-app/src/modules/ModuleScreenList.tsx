@@ -1,3 +1,4 @@
+import { SearchField } from '../components/primitives/SearchField';
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getAllModules, getAllRoutes, getJourneyIdsForScreen, getJourneyMeta } from '../engines/configEngine';
@@ -100,7 +101,7 @@ export function ModuleScreenList() {
       <Link
         key={route.routeId}
         to={route.path}
-        className="group rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 hover:shadow-raised hover:border-accent transition-all"
+        className="group rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)] transition-all"
       >
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="font-medium text-fg text-[length:var(--fs-body-lg)]">{route.screenName}</div>
@@ -140,36 +141,33 @@ export function ModuleScreenList() {
       </p>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4">
+        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">
           <div className="text-[length:var(--fs-h4)] font-bold text-accent">{catalogued}</div>
           <div className="text-[length:var(--fs-caption)] text-muted">Catalogued screens</div>
         </div>
-        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4">
+        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">
           <div className="text-[length:var(--fs-h4)] font-bold text-success">{built}</div>
           <div className="text-[length:var(--fs-caption)] text-muted">Built</div>
         </div>
-        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4">
+        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">
           <div className="text-[length:var(--fs-h4)] font-bold text-fg-2">{notBuilt}</div>
           <div className="text-[length:var(--fs-caption)] text-muted">Not built</div>
         </div>
-        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4">
+        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">
           <div className="text-[length:var(--fs-h4)] font-bold text-accent">{grantedToRole}</div>
           <div className="text-[length:var(--fs-caption)] text-muted">Granted to this role</div>
         </div>
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
-        <div className="relative flex-1 max-w-sm">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted">
-            <Icon path={ICONS.search} className="w-4 h-4" />
-          </span>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search screen ID or name…"
-            className={`w-full rounded-[var(--field-radius)] border bg-bg pl-9 pr-3 py-2 text-fg text-[length:var(--fs-body)] placeholder:text-muted focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)] ${search ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'}`}
-          />
-        </div>
+        <SearchField
+          aria-label="Search screen ID or name"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onClear={() => setSearch('')}
+          placeholder="Search screen ID or name…"
+          wrapperClassName="flex-1 max-w-sm"
+        />
         <div className="flex flex-wrap gap-2">
           {FILTERS.map((f) => (
             <button

@@ -12,6 +12,8 @@ export interface ActiveCustomerSummary {
   phone?: string;
   segment: string;
   blacklisted: boolean;
+  /** Benefits the customer holds (retired | mada | b2b2c | loyalty | prepaid-welcome); journeys read it to choose which discounts to offer. */
+  benefitEligibility?: string[];
 }
 
 interface ActiveCustomerState {

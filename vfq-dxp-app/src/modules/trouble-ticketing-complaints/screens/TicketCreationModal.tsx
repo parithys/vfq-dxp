@@ -270,7 +270,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
         </div>
         <button
           type="button"
-          className="text-[length:var(--fs-caption)] text-accent hover:underline"
+          className="text-[length:var(--fs-caption)] text-link hover:underline"
           onClick={() => pushToast('info', 'Knowledge Base integration is pending (BRSD dependency D-07) - this would open the KB in a new tab.')}
         >
           Open Knowledge Base ↗

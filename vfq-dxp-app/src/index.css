@@ -22,6 +22,7 @@
   --color-danger: var(--danger);
   --color-danger-border: var(--danger-border);
   --color-success: var(--success);
+  --color-link: var(--link);
   --color-success-border: var(--success-border);
   --color-info: var(--info);
   --color-info-border: var(--info-border);
@@ -106,10 +107,11 @@
   --field-border-disabled: var(--border-soft);
   --field-bg-disabled: var(--border-soft);
   --field-border-error: var(--danger);
-  --field-border-filled: var(--accent);
+  --field-border-filled: var(--fg);
   --field-divider: var(--border-soft);
-  --field-focus-border: var(--accent);
-  --field-focus-ring: 0 0 0 4px rgba(255,92,92,.3);
+  --field-focus-border: var(--fg);
+  --field-focus-bg: var(--surface);
+  --field-focus-ring: inset 0 0 0 1px var(--fg);
   --field-icon: var(--muted);
   --field-icon-active: var(--fg);
   --field-label: var(--fg-2);
@@ -119,14 +121,20 @@
      dark mode was already red for both, so these keep it that way. The fill
      stays --surface-warm (#241a1a here) rather than the light mode's
      near-white #fef9f9, which would be a white card on a dark surface. */
-  --field-card-selected: var(--accent);
-  --field-card-selected-bg: var(--surface-warm);
+  --field-card-selected: #ff4d4d;
+  --accent-secondary: #ff4d4d;
+  --link: #ff6b6b;
+  --highlight-bg: var(--surface-warm);
+  --field-card-selected-bg: var(--highlight-bg);
+  --field-card-hover-bg: var(--surface-warm);
+  --field-card-hover-border: #ff9a9a;
+  --field-card-border: var(--border);
   /* Checkboxes were already red here before the light-mode change, since dark
      mode never adopted the #c09696 accent - this keeps that, and the white
      tick reads on --accent in both themes. */
   --field-checkbox-selected: var(--accent);
   --field-radio-selected: var(--accent);
-  --shadow-selected-ring: 0 0 0 3px rgba(230,0,0,.12);
+  --shadow-selected-ring: inset 0 0 0 1px var(--field-card-selected);
 
   /* Status colors and elevation/shadow tokens were tuned against the light
      surfaces above and read as too saturated/low-contrast on the dark ones -
@@ -139,9 +147,8 @@
   --elev-raised: 0 1px 2px rgba(0,0,0,.3), 0 24px 60px -24px rgba(0,0,0,.55);
   --elev-ring: 0 0 0 1px var(--border);
   --focus-ring: 0 0 0 4px rgba(255,92,92,.3);
-  /* Colored CTA glow reads hotter on dark backgrounds at equal alpha, so this
-     is dimmer than the light-mode --shadow-brand mix. */
-  --shadow-brand: 0 12px 32px -12px color-mix(in oklab, var(--accent) 45%, transparent);
+  /* No coloured CTA glow anywhere in the app. */
+  --shadow-brand: none;
 }
 
 /* Cursor affordance baseline (UI cursor remediation). Tailwind v4 removed the
@@ -206,5 +213,49 @@ body {
   :focus-visible {
     outline: none;
     box-shadow: var(--focus-ring);
+  }
+}
+
+/* Text selection uses the default highlight colour. */
+::selection {
+  background: var(--highlight-bg);
+  color: inherit;
+}
+
+/* Demo-only content (see src/demoContent.ts): violet, and hidden everywhere at
+   once when SHOW_DEMO_CONTENT is false. `!important` so it wins over the
+   element's own colour utilities. */
+.demo-only {
+  color: var(--info) !important;
+  fill: var(--info) !important;
+}
+.hide-demo .demo-only {
+  display: none !important;
+}
+
+/* Customer-view pop-up window: hide the app chrome (sidebar, header, breadcrumbs, toasts). */
+.mirror-window .no-print,
+.mirror-window .agent-only {
+  display: none !important;
+}
+
+/* Printing (e.g. the order confirmation's Print button): only the page content
+   is printed - never the sidebar, top bar, breadcrumbs, toasts or action
+   buttons (all marked .no-print). The app shell is a fixed-height flex row with
+   a scrolling <main>; that is released here so the content flows onto the
+   page instead of being clipped to the viewport. */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .flex.h-screen,
+  .flex.h-screen > .flex-1,
+  .flex.h-screen main {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  body {
+    background: #fff;
   }
 }

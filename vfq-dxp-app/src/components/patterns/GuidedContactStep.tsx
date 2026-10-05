@@ -12,10 +12,20 @@ import { Select } from '../primitives/Select';
 // produces. Kept as a local shape rather than imported because it is a subset:
 // only the fields this step reads appear here.
 interface MoiResult {
+  phone?: string;
+  preferredLanguage?: string;
   name: string;
+  customerId?: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
   dob: string;
   nationality: string;
   email?: string;
+  /** Siebel for an existing customer, NAS for a new one. */
+  emailSource?: 'Siebel' | 'NAS' | 'Billing Profile';
+  /** No customer record exists for this ID (details came from NAS). */
+  isNewCustomer?: boolean;
   gender?: string;
   /** Sponsoring employer, when on file. What isB2B2C is derived from. */
   companyName?: string;
@@ -32,6 +42,10 @@ export interface GuidedContactValue {
   moiResult?: MoiResult;
   /** Front/back QID capture - only collected when idType is 'QID'. */
   qidScans?: QidImageUploadValue;
+  /** verifyThenFetch: the scanned expiry the agent verifies before Fetch (DD/MM/YYYY). */
+  scannedExpiry?: string;
+  /** verifyThenFetch: the mobile number on the customer record (read-only). */
+  mobileNumber?: string;
   /**
    * Identity fields, agent-editable as of 2026-09-24 and prefilled from the
    * MOI result when one is found. This reverses the supplied asset's "State
@@ -87,6 +101,8 @@ export interface GuidedContactValue {
    * to route to manager approval) - only its source changed.
    */
   isB2B2C?: boolean;
+  /** Identity number was entered manually (scan failed): routes the order to Store Manager approval. */
+  manualEntry?: boolean;
   /** The chosen employer. Committed only by a pick or an explicit "Add new
    * company" - never by typing. See CompanySearchInput. */
   companyName?: string;
@@ -113,6 +129,12 @@ interface GuidedContactStepProps {
   unavailableIdTypesHint?: string;
   /** Scan-first with automatic type detection - see IdLookupStep. */
   autoDetectIdType?: boolean;
+  /** Scan -> verify -> Fetch, with mobile number shown - see IdLookupStep. */
+  verifyThenFetch?: boolean;
+  /** Handle whoever the scanned ID belongs to as a genuine new customer (New Connection - New Customer). */
+  asNewCustomer?: boolean;
+  /** Journey started from Customer 360: the customer is this one, whatever ID the scan returned. */
+  asCustomerId?: string;
 }
 
 // Single source of truth for "is this a valid Alternate phone #" - exported
@@ -310,7 +332,25 @@ export function emailVerification(email: string | undefined, registryEmail: stri
   return { verified: false, hint: 'Verification pending - address differs from the registry record.' };
 }
 
-function identityFromMoi(moi: MoiResult | undefined) {
+/**
+ * A new customer's NAS email is never shown in full: first and last character of the name
+ * and of the domain are kept, the rest hidden, and the domain ending stays - j***e@e****e.com.
+ * The number of stars is fixed, so it does not reveal the length of the address.
+ */
+export function maskEmail(email: string | undefined): string {
+  if (!email) return '';
+  const at = email.lastIndexOf('@');
+  if (at < 1) return 'xxx@xxx.xx';
+  const part = (text: string, stars: string) => (text.length <= 1 ? `${text}${stars}` : `${text[0]}${stars}${text[text.length - 1]}`);
+  const local = email.slice(0, at);
+  const domain = email.slice(at + 1);
+  const dot = domain.indexOf('.');
+  const name = dot === -1 ? domain : domain.slice(0, dot);
+  const ending = dot === -1 ? '' : domain.slice(dot);
+  return `${part(local, '***')}@${part(name, '****')}${ending}`;
+}
+
+export function identityFromMoi(moi: MoiResult | undefined) {
   if (!moi)
     return {
       firstName: undefined,
@@ -358,9 +398,13 @@ function identityFromMoi(moi: MoiResult | undefined) {
     // tokens, so this only changes behaviour nothing here has ever exercised;
     // it does not invent a rule for a sixth name, which stays uncaptured
     // rather than guessed at.
-    firstName: parts[0] ?? '',
-    middleName: parts.length > 2 ? parts.slice(1, Math.min(4, parts.length - 1)).join(' ') : '',
-    lastName: parts.length > 1 ? parts[parts.length - 1] : '',
+    // The registry's own parts win when it supplies them (customers.json and
+    // nas-records.json carry firstName/middleName/lastName since 2026-10-02);
+    // the positional split above is the fallback for a record that has only a
+    // single `name` string.
+    firstName: moi.firstName ?? parts[0] ?? '',
+    middleName: moi.middleName ?? (parts.length > 2 ? parts.slice(1, Math.min(4, parts.length - 1)).join(' ') : ''),
+    lastName: moi.lastName ?? (parts.length > 1 ? parts[parts.length - 1] : ''),
     // MOI returns ISO (1985-03-12); the field is masked DD/MM/YYYY. Without
     // this the prefilled value would fail isValidDob and block Continue for
     // exactly the customers the registry DID find - reformatted, not
@@ -400,11 +444,11 @@ function identityFromMoi(moi: MoiResult | undefined) {
 // agent always performs (or at least sees) an explicit Fetch rather than
 // silently trusting cached active-customer state. The number field shows
 // a format-example placeholder instead (see QidInput.tsx).
-export function GuidedContactStep({ value, onChange, showIptvToggle = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint, autoDetectIdType }: GuidedContactStepProps) {
+export function GuidedContactStep({ value, onChange, showIptvToggle = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint, autoDetectIdType, verifyThenFetch, asNewCustomer, asCustomerId }: GuidedContactStepProps) {
   return (
     <div className="space-y-4">
       <IdLookupStep
-        value={{ idType: value.idType, idNumber: value.idNumber, moiResult: value.moiResult, qidScans: value.qidScans }}
+        value={{ idType: value.idType, idNumber: value.idNumber, moiResult: value.moiResult, qidScans: value.qidScans, scannedExpiry: value.scannedExpiry }}
         // The identity read-out is suppressed here because this step renders
         // those three as editable fields below - see the prop's own note.
         showMoiDetails={false}
@@ -412,12 +456,29 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
         unavailableIdTypes={unavailableIdTypes}
         unavailableIdTypesHint={unavailableIdTypesHint}
         autoDetectIdType={autoDetectIdType}
+        verifyThenFetch={verifyThenFetch}
+        asNewCustomer={asNewCustomer}
+        asCustomerId={asCustomerId}
         // Every MOI-derived field is re-seeded from the result whenever it
         // changes, and cleared with it when the ID is edited/re-typed. A new
         // ID is a new person, so carrying over the previous one's name or
         // email would be worse than clearing. Agent edits survive anything
         // that is not an ID/MOI change, since this only fires for those.
-        onChange={(v) => onChange({ ...value, ...v, ...identityFromMoi(v.moiResult) })}
+        onChange={(v) =>
+          onChange({
+            ...value,
+            ...v,
+            ...identityFromMoi(v.moiResult),
+            // verifyThenFetch only: the record's mobile number arrives with the
+            // MOI result. The communication language is NOT seeded from the
+            // record - it defaults to English and the agent chooses.
+            ...(verifyThenFetch
+              ? {
+                  mobileNumber: v.moiResult?.phone,
+                }
+              : {}),
+          })
+        }
       />
 
       {value.moiResult && (
@@ -496,12 +557,15 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                   identified, not something the agent chooses here - the ID
                   Type selector further up is the only place that changes it,
                   and doing so clears this whole panel and starts over. */}
-              <Input
-                label="Document Type"
-                readOnly
-                value={value.idType ? idTypeLabel(value.idType) : ''}
-                onChange={() => {}}
-              />
+              {/* verifyThenFetch: the agent already chose the type, so it is not repeated. */}
+              {!verifyThenFetch && (
+                <Input
+                  label="Document Type"
+                  readOnly
+                  value={value.idType ? idTypeLabel(value.idType) : ''}
+                  onChange={() => {}}
+                />
+              )}
               {/* Kept as a fieldset/legend radio group rather than swapped for
                   a read-only text box, so the control's shape does not change
                   with its editability - the radios are simply disabled. */}
@@ -577,12 +641,20 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                 label="Email Address"
                 type="email"
                 required
-                value={value.email ?? ''}
+                // New customer: the address comes from NAS and is shown masked
+                // (read-only - the stored value stays the real address). Existing
+                // customer: the address from Siebel is shown as available and
+                // stays editable.
+                value={value.moiResult?.isNewCustomer && value.email ? maskEmail(value.email) : (value.email ?? '')}
+                readOnly={Boolean(value.moiResult?.isNewCustomer && value.email)}
                 placeholder="customer@example.qa"
                 error={value.email && !isValidEmail(value.email) ? 'Please enter a valid email address.' : undefined}
-                helperText={emailVerification(value.email, value.moiResult?.email).hint}
+                helperText={
+                  emailVerification(value.email, value.moiResult?.email).hint ??
+                  (value.moiResult?.emailSource && value.email ? <span className="demo-only">{`Fetched from ${value.moiResult.emailSource}`}</span> : undefined)
+                }
                 trailingAddon={
-                  emailVerification(value.email, value.moiResult?.email).verified ? (
+                  !verifyThenFetch && emailVerification(value.email, value.moiResult?.email).verified ? (
                     <VerifiedBadge label="Email address verified" />
                   ) : undefined
                 }
@@ -590,7 +662,10 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
               />
               <PhoneNumberInput
                 label="Alternate phone #"
-                required
+                // Optional in verifyThenFetch (New Connection); still validated when entered.
+                required={!verifyThenFetch}
+                // Optional in verifyThenFetch, so it must not pull the cursor on arrival.
+                noAutoFocus={verifyThenFetch}
                 // Dial code pinned to Qatar: the rule names one country, so a
                 // picker offering 200 others would present a choice in which
                 // every alternative fails validation.
@@ -626,7 +701,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                   was requested explicitly for this field, so it is included
                   as a demo-catalogue addition rather than an evidenced one. */}
               <Select
-                label="Notification Language"
+                label={verifyThenFetch ? 'Preferred Language' : 'Notification Language'}
                 value={value.language ?? 'English'}
                 onChange={(e) => onChange({ ...value, language: e.target.value })}
                 options={[

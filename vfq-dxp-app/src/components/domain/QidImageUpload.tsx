@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '../primitives/Button';
 import { Spinner } from '../primitives/Spinner';
-import { ScannedIdPreview } from './ScannedIdPreview';
+import { ScannedIdPreview, type IdVariant, type SpecimenIdentity } from './ScannedIdPreview';
 
 export interface QidImageUploadValue {
   frontScanned?: boolean;
@@ -23,6 +23,15 @@ export interface QidImageUploadValue {
 }
 
 interface QidImageUploadProps {
+  /** Whose document the drawn capture shows - see ScannedIdPreview.identity. */
+  identity?: SpecimenIdentity;
+  /** Layout of the drawn capture - see ScannedIdPreview.variant (the B2B2C / Retired / MADA office ID cards). */
+  variant?: IdVariant;
+  /** Adds Accept and Reject beside Retake once a scan is complete: Retake on the left, Accept + Reject grouped on the right. */
+  onAccept?: () => void;
+  onReject?: () => void;
+  /** The agent has accepted this scan (Accept shows as done and is disabled). */
+  accepted?: boolean;
   value: QidImageUploadValue;
   onChange: (value: QidImageUploadValue) => void;
   /**
@@ -43,7 +52,8 @@ interface QidImageUploadProps {
    */
   onScan?: () => boolean;
   /** Rendered inside the insert zone, after a failed scan. */
-  error?: string;
+  /** A string, or a list of lines (an array renders as bullet points). */
+  error?: string | string[];
   /**
    * Whether the reader can still be driven. Default true.
    *
@@ -93,6 +103,8 @@ interface QidImageUploadProps {
    * there would be a new hurdle with nothing behind it to demonstrate.
    */
   blurFirstScan?: boolean;
+  /** Omit the "Image unclear" line under a blurred capture - for a flow where the agent spots the bad read themselves. */
+  hideUnclearNotice?: boolean;
 }
 
 // FLD (Passport to QID journey, UJ-076): "scan/upload QID Front & Back" required
@@ -166,6 +178,12 @@ export function QidImageUpload({
   demoTypes,
   onDemoScan,
   blurFirstScan = false,
+  hideUnclearNotice = false,
+  onAccept,
+  onReject,
+  accepted,
+  variant,
+  identity,
 }: QidImageUploadProps) {
   const scanned = Boolean(value.frontScanned && value.backScanned);
 
@@ -244,8 +262,26 @@ export function QidImageUpload({
     }, SCAN_DURATION_MS);
   };
 
+  if (documentType === 'Passport') {
+    return (
+      <PassportScanSections
+        value={value}
+        onChange={onChange}
+        onScan={onScan}
+        error={error}
+        canScan={canScan}
+        demoTypes={demoTypes}
+        onDemoScan={onDemoScan}
+        blurFirstScan={blurFirstScan}
+        hideUnclearNotice={hideUnclearNotice}
+        variant={variant}
+        identity={identity}
+      />
+    );
+  }
+
   return (
-    <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 flex flex-col gap-3">
+    <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 flex flex-col gap-3">
       {/* Scanning FIRST, so a retake shows the reader working rather than the
           insert prompt. A retake clears the capture to start its pass, which
           without this branch would drop the card straight back to "Insert card
@@ -266,17 +302,19 @@ export function QidImageUpload({
               capture is usable - the previews are deliberately similar
               (same document, same crop) and the maroon band alone is a thin
               cue to hang that on. */}
-          <div className="grid grid-cols-2 gap-4">
-            {(['front', 'back'] as const).map((side) => (
+          <div className={documentType === 'Passport' ? 'grid grid-cols-1 gap-4 max-w-xs mx-auto' : 'grid grid-cols-2 gap-4'}>
+            {(documentType === 'Passport' ? (['front'] as const) : (['front', 'back'] as const)).map((side) => (
               <figure key={side} className="flex flex-col items-center gap-2">
                 <ScannedIdPreview
                   side={side}
                   documentType={documentType}
+                  variant={variant}
+                  identity={identity}
                   src={side === 'front' ? value.frontImage : value.backImage}
                   clear={value.clear ?? true}
                 />
                 <figcaption className="text-fg-2 text-[length:var(--fs-caption)] capitalize">
-                  {documentType === 'QID' ? 'QID' : documentType} {side}
+                  {documentType === 'Passport' ? 'Passport data page' : `${documentType === 'QID' ? 'QID' : documentType} ${side}`}
                 </figcaption>
               </figure>
             ))}
@@ -292,7 +330,7 @@ export function QidImageUpload({
               or MOI result ever appears to explain the silence. Without this
               line the agent would see two blurry photos and a Retake button
               with nothing saying why nothing else happened. */}
-          {value.clear === false && (
+          {value.clear === false && !hideUnclearNotice && (
             <p role="alert" className="text-danger text-[length:var(--fs-caption)] text-center">
               Image unclear - the reader could not read this capture. Retake the scan for a clear image.
             </p>
@@ -303,15 +341,31 @@ export function QidImageUpload({
               it sits inside a control label, where "Retake scan, 2 so far"
               would be a sentence on a button. The screen-reader name spells it
               out instead, since "(2)" read aloud is just a number. */}
-          <Button
-            variant="ghost-rect"
-            compact
-            className="w-full"
-            onClick={runScan}
-            aria-label={retakes > 0 ? `Retake scan, ${retakes} so far` : undefined}
-          >
-            Retake scan{retakes > 0 && ` (${retakes})`}
-          </Button>
+          <div className={onAccept || onReject ? 'flex items-center justify-between gap-3' : ''}>
+            <Button
+              variant="ghost-rect"
+              compact
+              className={onAccept || onReject ? '' : 'w-full'}
+              onClick={runScan}
+              aria-label={retakes > 0 ? `Retake scan, ${retakes} so far` : undefined}
+            >
+              Retake scan{retakes > 0 && ` (${retakes})`}
+            </Button>
+            {(onAccept || onReject) && (
+              <div className="flex items-center gap-2">
+                {onAccept && (
+                  <Button variant="primary-rect" compact onClick={onAccept} disabled={accepted || value.clear === false}>
+                    {accepted ? 'Accepted' : 'Accept'}
+                  </Button>
+                )}
+                {onReject && (
+                  <Button variant="ghost-rect" compact onClick={onReject}>
+                    Reject
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
         </>
       ) : (
         <div className="min-h-[9rem] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
@@ -329,8 +383,8 @@ export function QidImageUpload({
               reasonably read it as "choose the document type first".
               A real reader offers no such choice. */}
           {canScan && demoTypes && demoTypes.length > 0 && onDemoScan && (
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-muted text-[length:var(--fs-micro)] uppercase tracking-wide">
+            <div className="demo-only flex flex-col items-center gap-1">
+              <span className="text-[length:var(--fs-micro)] uppercase tracking-wide">
                 Demo only - simulate inserting
               </span>
               <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
@@ -342,8 +396,8 @@ export function QidImageUpload({
                       onDemoScan(t.value);
                       runScan();
                     }}
-                    className="text-[length:var(--fs-caption)] text-accent underline
-                      hover:text-[var(--deep-red)] focus:outline-none
+                    className="text-[length:var(--fs-caption)] underline
+                      hover:opacity-80 focus:outline-none
                       focus-visible:shadow-[var(--focus-ring)] rounded-[var(--radius-button)] px-0.5"
                   >
                     {t.label}
@@ -356,12 +410,158 @@ export function QidImageUpload({
               on the physical reader, not the screen, and nothing else about
               the card changes when a scan fails. */}
           {error && (
-            <p role="alert" className="text-danger text-[length:var(--fs-caption)] text-center max-w-[24rem]">
-              {error}
-            </p>
+            Array.isArray(error) ? (
+              <ul role="alert" className="text-danger text-[length:var(--fs-caption)] text-left max-w-[24rem] list-disc pl-5 space-y-1">
+                {error.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            ) : (
+              <p role="alert" className="text-danger text-[length:var(--fs-caption)] text-center max-w-[24rem]">
+                {error}
+              </p>
+            )
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Passport: two separate scanning sections, one per side, each captured on the flatbed scanner.
+// The attempt budget is charged once per document pass (the first side to complete), not once per side.
+// ---------------------------------------------------------------------------------------------------------
+type PassportProps = Pick<QidImageUploadProps, 'value' | 'onChange' | 'onScan' | 'error' | 'canScan' | 'demoTypes' | 'onDemoScan' | 'blurFirstScan' | 'hideUnclearNotice' | 'variant' | 'identity'>;
+
+function PassportScanSections({ value, onChange, onScan, error, canScan = true, demoTypes, onDemoScan, blurFirstScan = false, hideUnclearNotice = false, variant, identity }: PassportProps) {
+  const [scanning, setScanning] = useState<'front' | 'back' | null>(null);
+  const [blurred, setBlurred] = useState({ front: false, back: false });
+  const [retakes, setRetakes] = useState({ front: 0, back: 0 });
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const latest = useRef(value);
+  latest.current = value;
+  const charged = useRef(false);
+  const anyScanned = Boolean(value.frontScanned || value.backScanned);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  // A fresh document (both sides cleared from outside) starts a new pass.
+  useEffect(() => {
+    if (!anyScanned) {
+      charged.current = false;
+      setBlurred({ front: false, back: false });
+    }
+  }, [anyScanned]);
+
+  const scanSide = (side: 'front' | 'back') => {
+    if (scanning || !canScan) return;
+    const scannedKey = side === 'front' ? 'frontScanned' : 'backScanned';
+    const imageKey = side === 'front' ? 'frontImage' : 'backImage';
+    const isRetake = Boolean(latest.current[scannedKey]);
+    if (isRetake) onChange({ ...latest.current, [scannedKey]: false, [imageKey]: undefined, clear: undefined });
+    setScanning(side);
+    timer.current = setTimeout(() => {
+      setScanning(null);
+      if (!charged.current) {
+        charged.current = true;
+        if (onScan?.() === false) {
+          charged.current = false;
+          return;
+        }
+      }
+      if (isRetake) setRetakes((r) => ({ ...r, [side]: r[side] + 1 }));
+      // The first pass over each side comes back blurred when the demo asks for it; a retake is clear.
+      const nextBlurred = { ...blurred, [side]: blurFirstScan && !isRetake };
+      setBlurred(nextBlurred);
+      onChange({ ...latest.current, [scannedKey]: true, clear: !(nextBlurred.front || nextBlurred.back) });
+    }, SCAN_DURATION_MS);
+  };
+
+  const section = (side: 'front' | 'back') => {
+    const done = Boolean(side === 'front' ? value.frontScanned : value.backScanned);
+    const title = side === 'front' ? 'Scan Front Side' : 'Scan Back Side';
+    const n = retakes[side];
+    return (
+      <div key={side} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 flex flex-col gap-3">
+        <p className="text-fg font-medium text-[length:var(--fs-body)]">{title}</p>
+        {scanning === side ? (
+          <div className="min-h-[9rem] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
+            <Spinner size={28} label={`Scanning the Passport ${side} side`} />
+            <span className="text-fg-2 text-[length:var(--fs-caption)] uppercase tracking-[0.14em] text-center">Scanning Passport {side} side</span>
+          </div>
+        ) : done ? (
+          <>
+            <figure className="flex flex-col items-center gap-2 max-w-[15rem] mx-auto w-full">
+              <ScannedIdPreview
+                side={side}
+                documentType="Passport"
+                variant={variant}
+                identity={identity}
+                src={side === 'front' ? value.frontImage : value.backImage}
+                clear={!blurred[side]}
+              />
+              <figcaption className="text-fg-2 text-[length:var(--fs-caption)]">Passport {side}</figcaption>
+            </figure>
+            {blurred[side] && !hideUnclearNotice && (
+              <p role="alert" className="text-danger text-[length:var(--fs-caption)] text-center">
+                Image unclear - the reader could not read this capture. Retake the scan for a clear image.
+              </p>
+            )}
+            <Button variant="ghost-rect" compact className="w-full" onClick={() => scanSide(side)} aria-label={n > 0 ? `Retake ${side} side scan, ${n} so far` : undefined}>
+              Retake scan{n > 0 && ` (${n})`}
+            </Button>
+          </>
+        ) : (
+          <div className="min-h-[9rem] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
+            <span className="text-fg-2 text-[length:var(--fs-caption)] uppercase tracking-[0.14em] text-center">
+              {canScan ? `Place the passport ${side} side` : 'Card could not be read'}
+            </span>
+            {canScan && (
+              <Button variant="primary-rect" compact onClick={() => scanSide(side)}>
+                Scan {side} side
+              </Button>
+            )}
+            {side === 'front' && !anyScanned && canScan && demoTypes && demoTypes.length > 0 && onDemoScan && (
+              <div className="demo-only flex flex-col items-center gap-1">
+                <span className="text-[length:var(--fs-micro)] uppercase tracking-wide">Demo only - simulate inserting</span>
+                <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+                  {demoTypes.map((t) => (
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => {
+                        onDemoScan(t.value);
+                        scanSide('front');
+                      }}
+                      className="text-[length:var(--fs-caption)] underline hover:opacity-80 focus:outline-none focus-visible:shadow-[var(--focus-ring)] rounded-[var(--radius-button)] px-0.5"
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {error &&
+              (Array.isArray(error) ? (
+                <ul role="alert" className="text-danger text-[length:var(--fs-caption)] text-left max-w-[24rem] list-disc pl-5 space-y-1">
+                  {error.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p role="alert" className="text-danger text-[length:var(--fs-caption)] text-center max-w-[24rem]">
+                  {error}
+                </p>
+              ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {section('front')}
+      {section('back')}
     </div>
   );
 }

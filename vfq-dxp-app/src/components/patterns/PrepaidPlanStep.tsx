@@ -80,7 +80,7 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
                 <label
                   key={p.productId}
                   className={`flex items-start gap-3 rounded-[var(--radius-card)] border p-4 cursor-pointer ${
-                    selected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
+                    selected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]' : 'border-[var(--field-card-border)] bg-bg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
                   }`}
                 >
                   <Radio
@@ -133,7 +133,7 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
             <div className="space-y-2">
               <label
                 className={`flex items-center justify-between gap-2 rounded-[var(--radius-card)] border p-3 cursor-pointer ${
-                  !discountId ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
+                  !discountId ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]' : 'border-[var(--field-card-border)] bg-bg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
                 }`}
               >
                 <span className="flex items-center gap-3">
@@ -149,7 +149,7 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
                 <label
                   key={d.addonDiscountId}
                   className={`flex items-center justify-between gap-2 rounded-[var(--radius-card)] border p-3 cursor-pointer ${
-                    discountId === d.addonDiscountId ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-border-soft hover:border-[var(--field-card-selected)]'
+                    discountId === d.addonDiscountId ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]' : 'border-[var(--field-card-border)] bg-bg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
                   }`}
                 >
                   <span className="flex items-center gap-3">
@@ -175,7 +175,7 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
       </div>
 
       {selectedPlan && (
-        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-4 flex items-center justify-between flex-wrap gap-3">
+        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 flex items-center justify-between flex-wrap gap-3">
           <div className="text-fg-2 text-[length:var(--fs-caption)]">
             {selectedPlan.name}
             {selectedDiscount && <span> · {selectedDiscount.name} ({Math.round(selectedDiscount.price * 100)}%)</span>}

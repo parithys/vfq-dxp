@@ -56,9 +56,14 @@ export function customerOpsSpec(
     tiles: tiles.map((t) => ({ ...t, to: `/tasks?filter=${t.key}`, loadingKind: 'tasks' })),
     cards: opts.compact ? allCards.slice(0, 2) : allCards,
     actions: opts.compact
-      ? [{ label: 'New Postpaid Connection', screenId: 'SCR-037' }, { label: 'Create Ticket', path: '/support' }]
+      ? [
+          { label: 'New Connection', path: '/mobile/new-connection' },
+          { label: 'New Postpaid Connection', path: '/mobile/new-connection' },
+          { label: 'Create Ticket', path: '/support' },
+        ]
       : [
-          { label: 'New Postpaid Connection', screenId: 'SCR-037' },
+          { label: 'New Connection', path: '/mobile/new-connection' },
+          { label: 'New Postpaid Connection', path: '/mobile/new-connection' },
           { label: 'New Fixed Line', screenId: 'SCR-043' },
           { label: 'Start a Lead', path: '/sales' },
           { label: 'Create Ticket', path: '/support' },

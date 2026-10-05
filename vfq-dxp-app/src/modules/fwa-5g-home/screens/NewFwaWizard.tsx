@@ -73,7 +73,13 @@ export function NewFwaWizard() {
             key: 'number',
             label: 'Number Selection',
             render: ({ values, setValue }) => (
-              <MsisdnPicker selected={values.msisdn as string | undefined} onSelect={(msisdn) => setValue('msisdn', msisdn)} />
+              <MsisdnPicker
+                selected={values.msisdn as string | undefined}
+                onSelect={(msisdn) => setValue('msisdn', msisdn)}
+                inlineToolbar
+                hideReservedBadge
+                onDeselect={() => setValue('msisdn', undefined)}
+              />
             ),
             isValid: (values) => Boolean(values.msisdn),
           },

@@ -4,6 +4,7 @@ import { ServiceList } from '../ServiceList';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import { buildAssetsFieldResolver } from './assetsResolvers';
+import { existingCustomerPath } from '../../../modules/new-connection/existingCustomer';
 
 // Product taxonomy per the redesign brief. Only MNP/FNP Porting and New
 // Connection map to screens that actually exist in the 213-screen catalogue
@@ -37,7 +38,10 @@ const GROUPS: ProductActionGroup[] = [
   {
     title: 'New Connection',
     actions: [
-      { label: 'New Connection', appliesWhen: 'no-service', description: 'Start a brand-new postpaid or prepaid activation for a customer with no line at Vodafone yet.', screenId: 'SCR-037' },
+      // Started from Customer Details, so the customer is treated as EXISTING: the
+      // Existing Customer flow opens with their identity pre-resolved and locked.
+      // Not gated on 'no-service' - an existing customer with lines can still take a new one.
+      { label: 'New Connection', description: 'Start a new postpaid activation for this existing customer - their identity is already verified, so the journey opens pre-filled and goes straight to eligibility.', path: (c) => existingCustomerPath(c.customerId) },
       { label: 'Add Line', appliesWhen: 'has-service', description: "Add an additional line to an existing customer's account, e.g. a family or multi-SIM plan." },
     ],
   },

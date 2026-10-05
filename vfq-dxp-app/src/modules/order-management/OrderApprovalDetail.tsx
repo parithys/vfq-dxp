@@ -23,6 +23,8 @@ const DOC_ICON = 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14
 interface Order {
   orderId: string;
   orderType: string;
+  approverRole?: string;
+  approvalReason?: string;
   status: string;
   customerName?: string;
   msisdn?: string;
@@ -73,7 +75,7 @@ interface ApprovalHistoryEntry {
 function HistoryPreview({ history }: { history: ApprovalHistoryEntry[] }) {
   if (history.length === 0) return null;
   return (
-    <div className="rounded-[var(--radius-card)] border border-border-soft divide-y divide-border-soft">
+    <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] divide-y divide-border-soft">
       <p className="px-3 py-2 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted">Task history</p>
       {history.map((entry) => (
         <div key={entry.activityNumber} className="px-3 py-2">
@@ -157,7 +159,7 @@ export function OrderApprovalDetail() {
   // AAV-01: reject/approve/return still require the matrix role even if an
   // agent reaches this page directly (e.g. by URL) rather than through the
   // queue's own "Assign to Me" gate - see OrderApprovalQueue.tsx.
-  const requiredRole = getRequiredApproverRole(order.orderType);
+  const requiredRole = order.approverRole ?? getRequiredApproverRole(order.orderType);
   const isEligibleApprover = !requiredRole || requiredRole === currentJobTitle;
 
   const logActivity = (actionTaken: string, notes: string) =>
@@ -255,7 +257,7 @@ export function OrderApprovalDetail() {
           would otherwise read as broken/empty. */}
       <p className="text-fg-2 mb-6">Submitted by: {order.createdBy ?? '-'}</p>
 
-      <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
         <Tabs
           items={[
             {
@@ -268,7 +270,7 @@ export function OrderApprovalDetail() {
               // here rather than editable.
               content:
                 order.attachments && order.attachments.length > 0 ? (
-                  <ul className="divide-y divide-border-soft rounded-[var(--radius-card)] border border-border-soft">
+                  <ul className="divide-y divide-border-soft rounded-[var(--radius-card)] border border-[var(--field-card-border)]">
                     {order.attachments.map((a) => (
                       <li key={a.label} className="flex items-center gap-3 px-4 py-3">
                         <Icon path={DOC_ICON} className="w-4 h-4 text-muted shrink-0" />
@@ -311,7 +313,7 @@ export function OrderApprovalDetail() {
                   </p>
                   {history.length === 0 && <p className="text-muted text-[length:var(--fs-body)]">No approval actions recorded yet for this order.</p>}
                   {history.length > 0 && (
-                    <div className="rounded-[var(--radius-card)] border border-border-soft divide-y divide-border-soft">
+                    <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] divide-y divide-border-soft">
                       {history.map((entry) => (
                         <div key={entry.activityNumber} className="px-4 py-3">
                           <div className="flex items-center justify-between gap-3">
@@ -346,12 +348,21 @@ export function OrderApprovalDetail() {
         />
       </div>
 
+      {order.approvalReason && (
+        <div className="mt-4 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg px-4 py-3 text-[length:var(--fs-body)] text-fg">
+          <span className="font-medium">Approval reason: </span>
+          {order.approvalReason}
+        </div>
+      )}
+
       {!isEligibleApprover && (
         <div className="mt-4 rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_92%)] px-4 py-3 text-[length:var(--fs-body)] text-[var(--warn-text)]">
           Only a {requiredRole} may approve, reject, or return this order (Agent 360 AAV-01).
         </div>
       )}
 
+      {/* Decision buttons are for approvers only; everyone else sees the notice above and no buttons. */}
+      {isEligibleApprover && (
       <div className="flex flex-wrap gap-2 mt-6">
         <Button variant="primary-rect" onClick={() => setModal('approve')} disabled={!isEligibleApprover}>
           Approve
@@ -371,6 +382,7 @@ export function OrderApprovalDetail() {
           Return
         </Button>
       </div>
+      )}
 
       <Drawer open={modal === 'approve'} onClose={() => setModal(null)} title="Approve Order">
         <div className="space-y-3">

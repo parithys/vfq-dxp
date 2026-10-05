@@ -2,6 +2,7 @@ import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
 import { computeBillingSummary, withinBillHistoryWindow, type Customer360Data } from '../../../engines/customer360Engine';
 import { MetricCard } from '../MetricCard';
+import { isHrnNationality } from '../../../engines/ruleEngine';
 import { InvoiceActions } from '../InvoiceActions';
 
 function capitalize(value: unknown): string {
@@ -22,7 +23,7 @@ function SectionCard({ title, children, note }: { title: string; children: React
   return (
     <section>
       <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg mb-2">{title}</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
         {children}
       </div>
       {note && <p className="text-[length:var(--fs-caption)] text-muted mt-1.5">{note}</p>}
@@ -46,7 +47,7 @@ export function BillingSection({ data }: { data: Customer360Data }) {
   const { creditLimit, latestBill, outstanding, formattedBillPeriod, previousPayment } = computeBillingSummary(data);
   const hasMetrics = Boolean(creditLimit) || Boolean(latestBill);
   const collectionStatus = profile?.collectionStatus ? String(profile.collectionStatus) : undefined;
-  const hrnRequired = Boolean(data.customer.hrnAdvancePaymentRequired);
+  const hrnRequired = isHrnNationality(data.customer.nationality as string | undefined);
   const billsInWindow = data.bills.filter((b) => withinBillHistoryWindow(b.billPeriod));
 
   return (
@@ -102,7 +103,7 @@ export function BillingSection({ data }: { data: Customer360Data }) {
       {profile && (
         <section>
           <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg mb-2">Billing Profile</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
             <Field label="Billing Cycle" value={profile.billingCycle ? String(profile.billingCycle) : undefined} />
             <Field label="Billing Type" value={profile.billingType ? String(profile.billingType) : undefined} />
             <Field label="Billing Address" value={profile.billingAddress ? String(profile.billingAddress) : undefined} />
@@ -112,7 +113,7 @@ export function BillingSection({ data }: { data: Customer360Data }) {
 
       <section>
         <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg mb-2">Credit Risk</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
           <Field
             label="Collection Status"
             value={

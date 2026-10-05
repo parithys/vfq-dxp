@@ -12,7 +12,7 @@ interface StarNumberTier {
 
 function RuleRow({ id, children }: { id: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-[var(--radius-card)] border border-border-soft bg-bg p-3">
+    <div className="flex items-start justify-between gap-4 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-3">
       <p className="text-fg-2 text-[length:var(--fs-body)]">{children}</p>
       <Badge variant="filled-neutral">{id}</Badge>
     </div>

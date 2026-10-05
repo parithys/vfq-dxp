@@ -10,10 +10,32 @@ export interface RuleContext {
   [key: string]: unknown;
 }
 
-export type RuleImplementation = (ctx: RuleContext) => { pass: boolean; message?: string };
+export type RuleImplementation = (ctx: RuleContext) => { pass: boolean; message?: string; hardStop?: boolean };
 
 // Priority subset per frontend-architecture.md §5 "illustrative high-value rules" -
 // all Explicit/high-confidence, directly evidenced across multiple guided journeys.
+// High-Risk Nationality (HRN) list, given by VFQ business 2026-10-02. A customer
+// is HRN exactly when their nationality is on it; every other nationality is
+// not. Stored as the demonyms the customer records use ("Pakistani") plus the
+// country names, lower-cased, so either spelling in a record resolves.
+const HRN_NATIONALITIES = new Set([
+  'pakistani', 'pakistan',
+  'bangladeshi', 'bangladesh',
+  'cambodian', 'cambodia',
+  'myanmar', 'myanmarese', 'burmese',
+  'laotian', 'lao', 'laos',
+  'kenyan', 'kenya',
+  'ugandan', 'uganda',
+  'swazi', 'emaswati', 'eswatini',
+]);
+
+export function isHrnNationality(nationality: string | undefined): boolean {
+  return nationality ? HRN_NATIONALITIES.has(nationality.trim().toLowerCase()) : false;
+}
+
+/** Absolute ceiling on an expat's postpaid lines: reaching it is a hard stop. */
+const EXPAT_MAX_POSTPAID_LINES = 5;
+
 const ruleImplementations: Record<string, RuleImplementation> = {
   // Bill Limit / Smart Limit Agent Minimum guardrail - evidenced across multiple
   // New Postpaid walkthroughs (e.g. guided-journeys-postpaid-open-ui-desktop-new-postpaid-f8227f90:
@@ -131,20 +153,34 @@ const ruleImplementations: Record<string, RuleImplementation> = {
       : { pass: true };
   },
 
-  // Maximum mobility lines cap (BR-110 general cap + BR-288's stricter,
-  // postpaid-mobile-specific override for expat QIDs). BR-111 requires any
-  // override to be an authorized-officer role flag on the account, not an
-  // in-journey bypass - so this never exposes an override control here.
+  // Postpaid active-line limit (VFQ business, 2026-10-02):
+  //  - Qatari: 5 active postpaid lines. At or over 5 the connection needs
+  //    approval; there is NO maximum above that.
+  //  - Expat: 2 active postpaid lines. At or over 2 it needs approval, up to a
+  //    maximum of 5; at 5 the connection is a HARD STOP.
+  // Reaching a limit is Approval Routing (the journey continues, the order is
+  // routed after submission) - never a Soft Stop, which is reserved for the
+  // collections scenario. BR-111: any override is an authorized-officer role
+  // flag on the account, not an in-journey bypass.
   'BR-288': (ctx) => {
     const { nationality, activePostpaidLines } = ctx as { nationality: string; activePostpaidLines: number };
-    if (nationality === 'Qatari') return { pass: true, message: 'Qatari nationals have no line cap.' };
-    const cap = 2;
-    return activePostpaidLines < cap
-      ? { pass: true, message: `${activePostpaidLines}/${cap} postpaid mobile lines used (expat cap).` }
-      : {
-          pass: false,
-          message: `Expat QID cap of ${cap} postpaid mobile lines reached - a business-policy cap tighter than the system's technical 5-line/operator limit. Overriding requires an authorized-officer role flag on the account, not an in-journey bypass.`,
-        };
+    const isQatari = nationality === 'Qatari';
+    const cap = isQatari ? 5 : 2;
+    const who = isQatari ? 'Qatari' : 'Expat';
+    if (activePostpaidLines < cap) {
+      return { pass: true, message: `${activePostpaidLines}/${cap} postpaid mobile lines used (${who.toLowerCase()} cap).` };
+    }
+    if (!isQatari && activePostpaidLines >= EXPAT_MAX_POSTPAID_LINES) {
+      return {
+        pass: false,
+        hardStop: true,
+        message: `Expat maximum of ${EXPAT_MAX_POSTPAID_LINES} postpaid mobile lines reached (${activePostpaidLines} active) - no further postpaid connection can be added.`,
+      };
+    }
+    return {
+      pass: false,
+      message: `${who} limit of ${cap} active postpaid lines reached (${activePostpaidLines} active).`,
+    };
   },
 
   // Prepaid mobile-voice connection cap by ID type - this is
@@ -264,7 +300,7 @@ const ruleImplementations: Record<string, RuleImplementation> = {
   'BR-187': (ctx) => {
     const { hrnFlag } = ctx as { hrnFlag: boolean };
     return hrnFlag
-      ? { pass: true, message: 'HRN customer - QR 100 advance payment required at checkout; routes to manager approval rather than auto-completing.' }
+      ? { pass: true, message: 'HRN customer - QR 100 advance payment required at checkout.' }
       : { pass: true };
   },
 
@@ -306,7 +342,7 @@ export function getRuleCatalogueEntry(ruleId: string) {
   return getBusinessRule(ruleId);
 }
 
-export function evaluateRule(ruleId: string, ctx: RuleContext): { pass: boolean; message?: string } {
+export function evaluateRule(ruleId: string, ctx: RuleContext): { pass: boolean; message?: string; hardStop?: boolean } {
   const impl = ruleImplementations[ruleId];
   if (!impl) {
     // Fails loudly per §5 - surfaced as a visible dev-mode warning banner, not a silent no-op.

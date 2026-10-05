@@ -4,8 +4,19 @@ import { Badge } from '../../../components/primitives/Badge';
 import { Icon } from '../../../components/primitives/Icon';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 
-const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
+const CHEVRON_UP = 'M18 15l-6-6-6 6';
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
+
+/** A hierarchy row: a button that expands its children, or a plain row when everything is shown open. */
+function Row({ as, className, onClick, children }: { as: 'div' | 'button'; className: string; onClick?: () => void; children: React.ReactNode }) {
+  return as === 'button' ? (
+    <button className={className} onClick={onClick}>
+      {children}
+    </button>
+  ) : (
+    <div className={className}>{children}</div>
+  );
+}
 
 function LevelBadge({ children }: { children: React.ReactNode }) {
   return (
@@ -22,7 +33,7 @@ function LevelBadge({ children }: { children: React.ReactNode }) {
 // Account nodes expand inline to show CAM-20's distinct service-account
 // detail plus CAM-05/06/07 barring status, so the tier a field belongs to is
 // never ambiguous.
-export function AccountHierarchySection({ data }: { data: Customer360Data }) {
+export function AccountHierarchySection({ data, expandAll = false }: { data: Customer360Data; expandAll?: boolean }) {
   const location = useLocation();
   const [expandedBillingId, setExpandedBillingId] = useState<string | null>(
     data.billingProfiles[0] ? String(data.billingProfiles[0].billingProfileId) : null
@@ -38,7 +49,7 @@ export function AccountHierarchySection({ data }: { data: Customer360Data }) {
       </h3>
 
       {/* Level 1 - Customer Account */}
-      <div className="rounded-[var(--radius-card)] border border-accent bg-surface-warm p-4">
+      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)] p-4">
         <div className="flex items-center gap-3">
           <LevelBadge>Customer Account</LevelBadge>
           <span className="font-medium text-fg">{data.customer.name}</span>
@@ -54,14 +65,15 @@ export function AccountHierarchySection({ data }: { data: Customer360Data }) {
         {billingProfileIds.map((billingProfileId) => {
           const profile = data.billingProfiles.find((bp) => bp.billingProfileId === billingProfileId);
           const serviceAccounts = data.accounts.filter((a) => a.billingProfileId === billingProfileId);
-          const isOpen = expandedBillingId === billingProfileId;
+          const isOpen = expandAll || expandedBillingId === billingProfileId;
           return (
-            <div key={String(billingProfileId)} className="rounded-[var(--radius-card)] border border-border-soft bg-bg">
-              <button
-                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-surface"
-                onClick={() => setExpandedBillingId(isOpen ? null : String(billingProfileId))}
+            <div key={String(billingProfileId)} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
+              <Row
+                as={expandAll ? 'div' : 'button'}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-left ${expandAll ? '' : 'hover:bg-surface'}`}
+                onClick={expandAll ? undefined : () => setExpandedBillingId(isOpen ? null : String(billingProfileId))}
               >
-                <Icon path={isOpen ? CHEVRON_DOWN : CHEVRON_RIGHT} className="w-4 h-4 text-muted shrink-0" />
+                {!expandAll && <Icon path={isOpen ? CHEVRON_UP : CHEVRON_DOWN} className="w-4 h-4 text-muted shrink-0" />}
                 <LevelBadge>Billing Account</LevelBadge>
                 <span className="font-medium text-fg">{String(profile?.name ?? billingProfileId)}</span>
                 <Badge variant="filled-neutral">{String(billingProfileId)}</Badge>
@@ -74,12 +86,12 @@ export function AccountHierarchySection({ data }: { data: Customer360Data }) {
                     // Search halfway through a queue-driven interaction.
                     state={location.state}
                     onClick={(e) => e.stopPropagation()}
-                    className="text-accent text-[length:var(--fs-caption)] font-medium hover:underline"
+                    className="text-link text-[length:var(--fs-caption)] font-medium hover:underline"
                   >
                     View Billing Account →
                   </Link>
                 </span>
-              </button>
+              </Row>
 
               {isOpen && (
                 <div className="px-4 pb-4 pl-10 space-y-2 border-t border-border-soft pt-3">
@@ -87,22 +99,23 @@ export function AccountHierarchySection({ data }: { data: Customer360Data }) {
                     <p className="text-muted text-[length:var(--fs-body)]">No service accounts under this billing account.</p>
                   )}
                   {serviceAccounts.map((account) => {
-                    const svcOpen = expandedServiceId === account.accountId;
+                    const svcOpen = expandAll || expandedServiceId === account.accountId;
                     const acct = account as unknown as Record<string, unknown>;
                     return (
-                      <div key={account.accountId} className="rounded-[var(--radius-card)] border border-border-soft bg-surface">
-                        <button
-                          className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-surface-warm"
-                          onClick={() => setExpandedServiceId(svcOpen ? null : account.accountId)}
+                      <div key={account.accountId} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface">
+                        <Row
+                          as={expandAll ? 'div' : 'button'}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 text-left ${expandAll ? '' : 'hover:bg-surface-warm'}`}
+                          onClick={expandAll ? undefined : () => setExpandedServiceId(svcOpen ? null : account.accountId)}
                         >
-                          <Icon path={svcOpen ? CHEVRON_DOWN : CHEVRON_RIGHT} className="w-3.5 h-3.5 text-muted shrink-0" />
+                          {!expandAll && <Icon path={svcOpen ? CHEVRON_UP : CHEVRON_DOWN} className="w-3.5 h-3.5 text-muted shrink-0" />}
                           <LevelBadge>Service Account</LevelBadge>
                           <span className="text-fg text-[length:var(--fs-body)]">{account.accountType}</span>
                           <Badge variant={account.status === 'Active' ? 'success' : 'filled-neutral'}>{account.status}</Badge>
                           {String(acct.barringStatus ?? 'Not Barred') !== 'Not Barred' && (
                             <Badge variant="warning">{String(acct.barringStatus)}</Badge>
                           )}
-                        </button>
+                        </Row>
                         {svcOpen && (
                           <div className="px-3 pb-3 pl-8 grid grid-cols-2 gap-3 text-[length:var(--fs-body)]">
                             <div>

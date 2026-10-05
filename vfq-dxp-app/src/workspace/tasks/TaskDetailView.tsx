@@ -109,7 +109,7 @@ export function TaskDetailView() {
   };
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-8">
       <div className="flex items-center gap-3 mb-1">
         <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">{task.taskName}</h1>
         <Badge variant={STATUS_VARIANT[task.taskStatus] ?? 'filled-neutral'}>{task.taskStatus}</Badge>
@@ -119,7 +119,7 @@ export function TaskDetailView() {
         {task.taskId} · {task.taskType} · Created {new Date(task.createdAt).toLocaleString()}
       </p>
 
-      <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 mb-6">
+      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-6">
         <div className="text-[length:var(--fs-caption)] text-muted mb-1">Description</div>
         <p className="text-fg text-[length:var(--fs-body)]">{task.taskDescription || 'No description on file.'}</p>
         <div className="text-[length:var(--fs-caption)] text-muted mt-4 mb-1">Assigned to</div>
@@ -140,7 +140,7 @@ export function TaskDetailView() {
       )}
 
       {isSupervisor && task.taskStatus !== 'Closed' && (
-        <div className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
+        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
           <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Assign to a team member</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)] mb-3">Supervisor-only action.</p>
           <div className="flex gap-2">

@@ -104,7 +104,7 @@ export function Autocomplete({
         }}
         className={`rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-fg bg-bg
           ${error ? 'border-[var(--field-border-error)]' : value ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'}
-          focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]`}
+          focus:outline-none focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)]`}
       />
       {open && results.length > 0 && (
         <ul
@@ -122,7 +122,7 @@ export function Autocomplete({
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => pick(option)}
                 className={`w-full text-left px-3 py-2 text-[length:var(--fs-body)] ${
-                  i === activeIndex ? 'bg-surface-warm text-[var(--deep-red)]' : 'text-fg hover:bg-surface'
+                  i === activeIndex ? 'bg-[var(--highlight-bg)] text-[var(--deep-red)]' : 'text-fg hover:bg-surface'
                 }`}
               >
                 {option}
