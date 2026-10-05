@@ -3,8 +3,9 @@ import { persist } from 'zustand/middleware';
 import { NAV_BY_KEY, type NavKey } from '../navigation/navManifest';
 
 interface SidebarState {
-  collapsed: boolean;
-  toggleCollapsed: () => void;
+  /** Desktop only: true = the side navigation stays open and the body sits beside it; false (default) = it is revealed on hover, over the content. */
+  pinned: boolean;
+  togglePinned: () => void;
   mobileOpen: boolean;
   toggleMobileOpen: () => void;
   closeMobile: () => void;
@@ -38,10 +39,10 @@ const clearPeekTimer = () => {
 export const useSidebarStore = create<SidebarState>()(
   persist(
     (set, get) => ({
-      collapsed: false,
-      toggleCollapsed: () => {
+      pinned: false,
+      togglePinned: () => {
         clearPeekTimer();
-        set({ collapsed: !get().collapsed, peeking: false });
+        set({ pinned: !get().pinned, peeking: false });
       },
       mobileOpen: false,
       toggleMobileOpen: () => set({ mobileOpen: !get().mobileOpen }),
@@ -82,10 +83,10 @@ export const useSidebarStore = create<SidebarState>()(
       // Only persist the genuine preferences - the mobile drawer's open/closed
       // state is ephemeral per-session.
       partialize: (state) => ({
-        collapsed: state.collapsed,
+        pinned: state.pinned,
         expandedNavKeys: state.expandedNavKeys,
       }),
-      version: 3,
+      version: 4,
       // A `version` MUST be paired with a `migrate`, even a trivial one:
       // zustand logs "State loaded from storage couldn't be migrated since no
       // migrate function was provided" on every version mismatch otherwise.
@@ -100,8 +101,9 @@ export const useSidebarStore = create<SidebarState>()(
       // same two groups. Resetting once is the only way to make the new default
       // actually take effect.
       migrate: (persisted) => {
+        // v4: the docked/hidden preference became pin/unpin, and unpinned (hover to reveal) is the default for everyone.
         const p = (persisted ?? {}) as Partial<SidebarState>;
-        return { ...p, expandedNavKeys: [] } as SidebarState;
+        return { ...p, pinned: false, expandedNavKeys: [] } as SidebarState;
       },
       // Older persisted state has no expandedNavKeys; without a default the
       // Sidebar would read undefined and crash on .includes(). Applies after

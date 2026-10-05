@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useSearchListNav } from '../hooks/useSearchListNav';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '../components/primitives/Icon';
@@ -12,6 +12,14 @@ import { NAV_MANIFEST, resolveActiveNavPath } from './navManifest';
 const SEARCH_ICON = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3';
 // The row the keyboard has reached while searching the menu.
 const KBD_ACTIVE = 'data-[kbd-active=true]:bg-[var(--nav-hover-bg)] data-[kbd-active=true]:text-[var(--nav-fg)] data-[kbd-active=true]:ring-2 data-[kbd-active=true]:ring-inset data-[kbd-active=true]:ring-[var(--nav-fg-muted)]';
+// Pin: filled when pinned.
+const PIN_ICON = 'M12 17v5 M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z';
+const DESKTOP_QUERY = '(min-width: 768px)';
+const subscribeDesktop = (cb: () => void) => {
+  const mq = window.matchMedia(DESKTOP_QUERY);
+  mq.addEventListener('change', cb);
+  return () => mq.removeEventListener('change', cb);
+};
 const PANEL_TOGGLE_ICON = 'M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5z M9 4v16';
 // Points down when collapsed, rotated 180deg to point up when expanded -
 // matching the reference disclosure pattern.
@@ -48,8 +56,8 @@ const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 // `mobileOpen` in sidebarStore); the desktop collapse preference does not apply to it.
 export function Sidebar() {
   const {
-    collapsed: collapsedPref,
-    toggleCollapsed,
+    pinned,
+    togglePinned,
     mobileOpen,
     closeMobile,
     peeking,
@@ -71,6 +79,24 @@ export function Sidebar() {
   );
   const navItems = resolveNavFor(activePersonaId);
   const navigate = useNavigate();
+  // Pinning is a desktop feature: below md the navigation is always an overlay drawer.
+  const isDesktop = useSyncExternalStore(subscribeDesktop, () => window.matchMedia(DESKTOP_QUERY).matches, () => true);
+  const pinnedDesktop = pinned && isDesktop;
+  // The dock beside the body takes the navigation's MEASURED width (no hardcoded offset), so the body reflows by
+  // exactly as much as the panel occupies - and by nothing while it is unpinned.
+  const navRef = useRef<HTMLElement>(null);
+  const [navWidth, setNavWidth] = useState(0);
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const measure = () => setNavWidth(el.offsetWidth);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const shownDesktop = isDesktop && (pinned || peeking);
+  const offScreen = isDesktop ? !shownDesktop : !mobileOpen;
   // Menu search: filters this menu only. A group whose own label matches keeps all its sub-items; otherwise just the
   // matching sub-items are shown, with the group forced open.
   const [query, setQuery] = useState('');
@@ -172,20 +198,26 @@ export function Sidebar() {
           aria-hidden="true"
         />
       )}
+      {/* The dock: the in-flow space the pinned navigation occupies. Its width follows the navigation's own measured
+          width and animates, so the body container shrinks and grows smoothly as the panel is pinned and unpinned. */}
+      <div
+        aria-hidden="true"
+        className="hidden md:block shrink-0 transition-[width] duration-200 ease-in-out"
+        style={{ width: pinnedDesktop ? navWidth : 0 }}
+      />
       <nav
+        ref={navRef}
+        inert={offScreen}
+        aria-label="Main navigation"
         className={`fixed inset-y-0 left-0 z-50 w-[280px] transform transition-transform duration-200 ease-in-out ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         } ${
-          // Expanded: an in-flow rail. Collapsed: gone, except while the top-bar menu button is hovered, when it
-          // floats over the page (still fixed, above the content) without taking any width.
-          !collapsedPref
-            ? 'md:static md:inset-auto md:z-auto md:translate-x-0 md:w-[280px]'
-            : peeking
-              ? 'md:translate-x-0 md:w-[280px] md:shadow-xl'
-              : 'md:hidden'
-        } shrink-0 border-r border-[var(--nav-border)] bg-[var(--nav-bg)] h-full overflow-y-auto`}
-        onMouseEnter={collapsedPref ? openPeek : undefined}
-        onMouseLeave={collapsedPref ? closePeekSoon : undefined}
+          // Desktop: always an overlay panel. Pinned or previewing it slides in; the dock above is what makes room
+          // for it when pinned.
+          shownDesktop ? 'md:translate-x-0' : 'md:-translate-x-full'
+        } ${pinned ? '' : peeking ? 'md:shadow-xl' : ''} border-r border-[var(--nav-border)] bg-[var(--nav-bg)] h-full overflow-y-auto`}
+        onMouseEnter={!pinned ? openPeek : undefined}
+        onMouseLeave={!pinned ? closePeekSoon : undefined}
       >
       {/* Mobile drawer header: the drawer ignores the desktop collapse preference. */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-[var(--nav-border)] md:hidden">
@@ -206,13 +238,19 @@ export function Sidebar() {
           <VodafoneMark className="w-7 h-7 shrink-0" />
           <span className="text-[length:var(--fs-h5)] font-bold text-[var(--nav-fg)] truncate">vodafone</span>
         </NavLink>
-        <Tooltip content="Collapse navigation" placement="bottom">
+        <Tooltip content={pinned ? 'Unpin navigation' : 'Pin navigation'} placement="bottom">
           <button
-            onClick={toggleCollapsed}
-            aria-label="Collapse navigation"
-            className="text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] shrink-0"
+            type="button"
+            onClick={togglePinned}
+            aria-pressed={pinned}
+            aria-label={pinned ? 'Unpin navigation' : 'Pin navigation'}
+            className={`shrink-0 w-8 h-8 rounded-[var(--radius-sm)] flex items-center justify-center focus-visible:shadow-[var(--focus-ring)] ${
+              pinned
+                ? 'bg-[var(--nav-active-bg)] text-[var(--nav-active-fg)]'
+                : 'text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] hover:bg-[var(--nav-hover-bg)] -rotate-45'
+            }`}
           >
-            <Icon path={PANEL_TOGGLE_ICON} className="w-4.5 h-4.5" />
+            <Icon path={PIN_ICON} className={`w-4 h-4 ${pinned ? 'fill-current' : ''}`} />
           </button>
         </Tooltip>
       </div>
