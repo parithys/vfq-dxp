@@ -9,9 +9,8 @@ import { buildAssetsFieldResolver } from './assetsResolvers';
 import { ActionButton, Donut, fmtDate, fmtDateTime, FilterSelect, GridTable, IC, IconTile, KpiTile, Panel, Pill, Progress, qar, SearchBox, StatusPill, TabPage, UnderlineTabs } from './c360Kit';
 import type { GridCol, Tone } from './c360Kit';
 import { Dv } from '../demoValues';
+import { str, num } from '../../../lib/values';
 
-const str = (v: unknown): string | undefined => (v === undefined || v === null || v === '' ? undefined : String(v));
-const num = (v: unknown): number | undefined => (v === undefined || v === null || v === '' || Number.isNaN(Number(v)) ? undefined : Number(v));
 const dash = (v: ReactNode | undefined | null): ReactNode => (v === undefined || v === null || v === '' ? '-' : v);
 
 type Row = Record<string, unknown>;

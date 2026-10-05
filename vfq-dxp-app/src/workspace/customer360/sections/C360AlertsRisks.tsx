@@ -25,6 +25,7 @@ import {
   type Tone,
 } from './c360Kit';
 import { Dv } from '../demoValues';
+import { str } from '../../../lib/values';
 
 const CLOSED_STAGE = /^(none|no dunning|current)$/i;
 const CLOSED_TICKET = new Set(['Solved', 'Completed', 'Closed', 'Cancelled']);
@@ -54,7 +55,6 @@ interface Note {
   kind: 'notification' | 'note';
 }
 
-const str = (v: unknown): string | undefined => (v === undefined || v === null || v === '' ? undefined : String(v));
 const stamp = (v: unknown): number => {
   const t = new Date(String(v ?? '')).getTime();
   return Number.isNaN(t) ? 0 : t;

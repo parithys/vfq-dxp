@@ -28,6 +28,7 @@ import {
   type Tone,
 } from './c360Kit';
 import { Dv } from '../demoValues';
+import { str } from '../../../lib/values';
 
 const TICKET_DETAIL_ROUTE = '/trouble-ticketing-complaints/ticket-homepage';
 const RESOLVED = new Set(['Solved', 'Completed', 'Closed']);
@@ -41,7 +42,6 @@ const RANGES = [
   { value: 'all', label: 'All time', days: 0 },
 ];
 
-const str = (v: unknown): string | undefined => (v === undefined || v === null || v === '' ? undefined : String(v));
 const time = (v: unknown): number => {
   const t = new Date(String(v ?? '')).getTime();
   return Number.isNaN(t) ? 0 : t;

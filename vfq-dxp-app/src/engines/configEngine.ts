@@ -69,6 +69,11 @@ async function fetchJson<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+/** Loads one file from public/config on demand (for config only a single screen needs), with the same error behaviour as the boot load. */
+export function loadConfigFile<T>(file: string): Promise<T> {
+  return fetchJson<T>(`/config/${file}`);
+}
+
 /** Weakest → strongest. Shared with personaEngine.canPerformAction. */
 const LEVEL_ORDER: PermissionLevel[] = ['View', 'Create', 'Edit', 'Approve', 'Full'];
 

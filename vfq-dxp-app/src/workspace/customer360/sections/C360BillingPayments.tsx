@@ -4,9 +4,9 @@ import { computeBillingSummary, withinBillHistoryWindow, type Customer360Data } 
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { GridTable, IC, KpiGrid, KpiTile, Panel, Pill, StatusPill, TabPage, UnderlineTabs, fmtDate, qar, type GridCol } from './c360Kit';
 import { Dv } from '../demoValues';
+import { str } from '../../../lib/values';
 
 type Rec = Record<string, unknown>;
-const str = (v: unknown): string | undefined => (v === undefined || v === null || v === '' ? undefined : String(v));
 const DASH = '-';
 const PAGE = 5;
 

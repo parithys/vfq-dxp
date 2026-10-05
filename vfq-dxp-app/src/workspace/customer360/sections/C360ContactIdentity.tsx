@@ -7,9 +7,9 @@ import { ActionButton, DetailRows, IC, IconTile, KebabButton, LinkAction, Panel,
 import type { Tone } from './c360Kit';
 import { contactInformationResolvers } from './contactInformationResolvers';
 import { Dv } from '../demoValues';
+import { str } from '../../../lib/values';
 
 type Rec = Record<string, unknown>;
-const str = (v: unknown): string | undefined => (v === undefined || v === null || v === '' ? undefined : String(v));
 const dash = (v: ReactNode | undefined | null): ReactNode => (v === undefined || v === null || v === '' ? <span className="text-muted">-</span> : v);
 
 /** Card title: tinted icon + title, with an optional count and a trailing badge. */

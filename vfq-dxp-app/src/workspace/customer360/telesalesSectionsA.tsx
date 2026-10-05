@@ -7,11 +7,11 @@ import { blacklistResolvers } from './sections/blacklistResolvers';
 import { getVisibleTopicFields } from '../../engines/customer360VisibilityEngine';
 import { Card, KV, Label, Pill, Value, asText, dateTime, num, type Ctx } from './telesalesOverview';
 import { ActionList, Avatar, Field, HeaderButton, HeaderLink, ICON, PillTabs, SectionHeader, StatStrip, Table, TableCard, pillFor, yesNo, WideBlock } from './telesalesKit';
+import { strOrEmpty as str } from '../../lib/values';
 
 // Account, Contacts and Connections & Services sections of the Telesales Overview page.
 
 type Rec = Record<string, unknown>;
-const str = (v: unknown) => (v === undefined || v === null || v === '' ? '' : String(v));
 const demoOf = (ctx: Ctx) => (ctx.data.overviewDemo[0] ?? {}) as Rec;
 const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 export const rowDate = (iso: unknown) => {

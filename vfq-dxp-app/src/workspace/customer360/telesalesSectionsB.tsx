@@ -7,11 +7,11 @@ import { buildAssetsFieldResolver } from './sections/assetsResolvers';
 import { Card, KV, Label, Pill, Ring, Value, asText, dateTime, num, type Ctx } from './telesalesOverview';
 import { ActionList, BarChart, Field, HeaderButton, ICON, PillTabs, SectionHeader, StatStrip, TableCard, pillFor, yesNo, WideBlock } from './telesalesKit';
 import { rowDate } from './telesalesSectionsA';
+import { strOrEmpty as str } from '../../lib/values';
 
 // Billing & Payments, Offers & Opportunities and Usage & Behaviour sections of the Telesales Overview page.
 
 type Rec = Record<string, unknown>;
-const str = (v: unknown) => (v === undefined || v === null || v === '' ? '' : String(v));
 const demoOf = (ctx: Ctx) => (ctx.data.overviewDemo[0] ?? {}) as Rec;
 const catalogOf = (ctx: Ctx) => (ctx.data.demoCatalog[0] ?? {}) as Rec;
 const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);

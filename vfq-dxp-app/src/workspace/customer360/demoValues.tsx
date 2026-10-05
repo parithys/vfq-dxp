@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { SHOW_DEMO_CONTENT } from '../../demoContent';
 import type { Customer360Data } from '../../engines/customer360Engine';
 import type { CustomerService } from '../../engines/customerServicesEngine';
+import { str } from '../../lib/values';
 
 /**
  * Demo values for Customer 360 fields the app has no data for. Each is derived from the selected customer's own record
@@ -27,7 +28,6 @@ const fmt = (d: Date) => `${String(d.getDate()).padStart(2, '0')} ${MONTHS[d.get
 const fmtTime = (d: Date, h = 9, m = 30) => `${fmt(d)} | ${String(h % 12 || 12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
 const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 const addMonths = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth() + n, d.getDate());
-const str = (v: unknown) => (v === undefined || v === null || v === '' ? undefined : String(v));
 const hash = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
 
 const customerId = (c: DemoCtx) => c.data.customer.customerId;

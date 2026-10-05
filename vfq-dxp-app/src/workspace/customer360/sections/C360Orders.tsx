@@ -7,9 +7,9 @@ import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { ActionButton, DetailRows, FilterSelect, GridTable, IC, KpiGrid, KpiTile, Pager, Panel, Pill, SearchBox, TabPage, UnderlineTabs, ViewPill, fmtDate, fmtDateTime, usePaging } from './c360Kit';
 import type { Tone } from './c360Kit';
 import { Dv } from '../demoValues';
+import { str } from '../../../lib/values';
 
 type Rec = Record<string, unknown>;
-const str = (v: unknown): string | undefined => (v === undefined || v === null || v === '' ? undefined : String(v));
 const dash = (v: string | undefined | null) => (v === undefined || v === null || v === '' ? '-' : v);
 
 // Same detail route the Orders workspace and the Order Approval screen use.

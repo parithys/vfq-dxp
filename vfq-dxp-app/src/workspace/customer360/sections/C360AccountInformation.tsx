@@ -8,12 +8,11 @@ import { RevealValue, useFieldAccess } from '../fieldAccess';
 import { fmtDate, fmtDateTime, IC, IconTile, KpiGrid, KpiTile, LinkAction, Panel, Pill, Progress, qar, TabPage, toneFor } from './c360Kit';
 import type { Tone } from './c360Kit';
 import { Dv } from '../demoValues';
+import { str, num } from '../../../lib/values';
 
 const TON_TERMINAL = new Set(['completed']);
 const ADJUSTMENT_TERMINAL = new Set(['Approved', 'Rejected', 'Failed']);
 
-const num = (v: unknown): number | undefined => (v === undefined || v === null || v === '' || Number.isNaN(Number(v)) ? undefined : Number(v));
-const str = (v: unknown): string | undefined => (v === undefined || v === null || v === '' ? undefined : String(v));
 
 /** A label / value row in the design's grey-label, dark-value style; a missing value reads "-". */
 function Field({ label, requirement, value, strong = true }: { label: string; /** The requirement's own name, when the display label differs from it. */ requirement?: string; value: ReactNode | undefined | null; strong?: boolean }) {

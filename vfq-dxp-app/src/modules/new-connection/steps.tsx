@@ -23,6 +23,7 @@ import { evaluateRule } from '../../engines/ruleEngine';
 import { useNotificationStore } from '../../stores/notificationStore';
 import type { EligibilityResult } from '../../components/domain/EligibilityGateStep';
 import * as mockDataEngine from '../../engines/mockDataEngine';
+import { mockDataUrl } from '../../engines/mockDataEngine';
 
 // Building blocks for the New Connection journey. Everything here is a
 // journey-level decision (who the customer is, which offer, which service);
@@ -144,7 +145,7 @@ async function validateRetiredWithGovernment(idNumber: string | undefined): Prom
   }, GOVT_VALIDATION_DELAY_MS + 8000);
   if (!idNumber) return { status: 'failed', message: 'No ID number could be read from the scan.' };
   const data = await callService('govt-retiree', async () => {
-    const res = await fetch('/mock-data/govt-retiree-registry.json');
+    const res = await fetch(mockDataUrl('govt-retiree-registry'));
     if (!res.ok) throw new ServiceError('govt-retiree', 'api');
     let body: { retiredIdNumbers?: unknown };
     try {

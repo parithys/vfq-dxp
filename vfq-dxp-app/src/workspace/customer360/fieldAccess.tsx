@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
+import { loadConfigFile } from '../../engines/configEngine';
 
 /**
  * Field-level access for Customer 360. The persona sheets in 'Customer 360.xlsx' grant each requirement to a persona as
@@ -19,9 +20,7 @@ interface AccessConfig {
 
 let loaded: Promise<AccessConfig | undefined> | undefined;
 function loadAccess(): Promise<AccessConfig | undefined> {
-  loaded ??= fetch('/config/customer360-field-access.json')
-    .then((r) => r.json() as Promise<AccessConfig>)
-    .catch(() => undefined);
+  loaded ??= loadConfigFile<AccessConfig>('customer360-field-access.json').catch(() => undefined);
   return loaded;
 }
 

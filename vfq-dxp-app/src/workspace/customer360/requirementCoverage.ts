@@ -1,4 +1,5 @@
 import { useEffect, type RefObject } from 'react';
+import { loadConfigFile } from '../../engines/configEngine';
 
 /**
  * Requirement-coverage overlay: colours pink the labels on the Customer 360 main page and the open tab that satisfy a
@@ -11,8 +12,7 @@ export const SHOW_REQUIREMENT_COVERAGE = true;
 type Coverage = Record<string, Record<string, string[]>>;
 let coverage: Promise<Coverage> | undefined;
 function loadCoverage(): Promise<Coverage> {
-  coverage ??= fetch('/config/customer360-requirement-coverage.json')
-    .then((r) => r.json() as Promise<{ personas?: Coverage }>)
+  coverage ??= loadConfigFile<{ personas?: Coverage }>('customer360-requirement-coverage.json')
     .then((j) => j.personas ?? {})
     .catch(() => ({}));
   return coverage;

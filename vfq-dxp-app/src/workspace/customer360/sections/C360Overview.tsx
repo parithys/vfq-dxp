@@ -9,9 +9,9 @@ import { IC, IconTile, KpiGrid, KpiTile, LinkAction, Panel, Pill, StatusPill, Un
 import type { Tone } from './c360Kit';
 import { RevealValue, useFieldAccess } from '../fieldAccess';
 import { Dv } from '../demoValues';
+import { strOrEmpty as str } from '../../../lib/values';
 
 type Rec = Record<string, unknown>;
-const str = (v: unknown) => (v === undefined || v === null || v === '' ? '' : String(v));
 const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 const dash = (v: ReactNode | undefined | null | '') => (v === undefined || v === null || v === '' ? '-' : v);
 

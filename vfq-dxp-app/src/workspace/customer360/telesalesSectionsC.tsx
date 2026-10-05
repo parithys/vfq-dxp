@@ -5,11 +5,11 @@ import { accountAddressResolvers } from './sections/accountAddressResolvers';
 import { Card, KV, Pill, asText, dateTime, type Ctx } from './telesalesOverview';
 import { ActionList, BarChart, Field, HeaderButton, HeaderLink, ICON, PillTabs, SectionHeader, StatStrip, Table, TableCard, TileLinks, pillFor, yesNo, WideBlock } from './telesalesKit';
 import { rowDate } from './telesalesSectionsA';
+import { strOrEmpty as str } from '../../lib/values';
 
 // Address, Leads, Orders & Tickets and Audit Trail sections of the Telesales Overview page.
 
 type Rec = Record<string, unknown>;
-const str = (v: unknown) => (v === undefined || v === null || v === '' ? '' : String(v));
 const demoOf = (ctx: Ctx) => (ctx.data.overviewDemo[0] ?? {}) as Rec;
 const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 const SELECT = 'w-full rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-3 py-2 text-[length:var(--fs-body)]';

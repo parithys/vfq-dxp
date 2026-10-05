@@ -27,6 +27,7 @@ import {
   type Tone,
 } from './c360Kit';
 import { Dv } from '../demoValues';
+import { str } from '../../../lib/values';
 
 const ORDER_DETAIL_ROUTE = '/order-management/order-approval-detail-attachments-order-details-activities-a';
 const DAY = 86_400_000;
@@ -50,7 +51,6 @@ const TYPE_STYLE: Record<ActType, { icon: string; tone: Tone }> = {
   'System Activity': { icon: IC.database, tone: 'grey' },
 };
 
-const str = (v: unknown): string | undefined => (v === undefined || v === null || v === '' ? undefined : String(v));
 const stamp = (v: unknown): number => {
   const t = new Date(String(v ?? '')).getTime();
   return Number.isNaN(t) ? 0 : t;

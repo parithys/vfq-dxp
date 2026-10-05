@@ -24,6 +24,9 @@ const SEED_FILES = [
   'uim-inventory-records', 'users-agents', 'vodafone-ids', 'volumetric-discounts', 'wfm-activities',
 ] as const;
 
+/** Where a mock-data file is served from. */
+export const mockDataUrl = (name: string): string => `/mock-data/${name}.json`;
+
 export type EntityKind = (typeof SEED_FILES)[number];
 
 type Store = Record<string, Record<string, unknown>[]>;
@@ -51,7 +54,7 @@ export async function seedMockData(): Promise<Store> {
   seeding = (async (): Promise<Store> => {
     const entries = await Promise.all(
       SEED_FILES.map(async (name) => {
-        const res = await fetch(`/mock-data/${name}.json`);
+        const res = await fetch(mockDataUrl(name));
         if (!res.ok) return [name, []] as const;
         const data = (await res.json()) as Record<string, unknown>[];
         return [name, data] as const;
