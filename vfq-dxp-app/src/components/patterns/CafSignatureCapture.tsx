@@ -14,7 +14,7 @@ import * as mockDataEngine from '../../engines/mockDataEngine';
 import type { TncLegalFacts } from './checkoutSummaryModel';
 import { buildTncBullets } from './cafTermsModel';
 import type { TncBulletTemplate } from './cafTermsModel';
-import { FullTerms } from './cafTerms';
+import { FullTerms } from './CafTerms';
 import { CHECK_ICON, CAF_TYPES, detectCafType } from './cafTypes';
 import type { CafType } from './cafTypes';
 

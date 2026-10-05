@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { idLookupStep } from '../../../components/patterns/wizardSteps';
-import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
+import { idLookupStep } from '../../../components/patterns/wizard/wizardSteps';
+import { GuidedActivationWizard } from '../../../components/patterns/wizard/GuidedActivationWizard';
 import { QidImageUpload } from '../../../components/domain/QidImageUpload';
 import type { QidImageUploadValue } from '../../../components/domain/qidImageUploadModel';
 import { SimSerialScanner } from '../../../components/domain/SimSerialScanner';

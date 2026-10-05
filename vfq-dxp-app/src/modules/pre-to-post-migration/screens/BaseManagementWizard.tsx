@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
+import { GuidedActivationWizard } from '../../../components/patterns/wizard/GuidedActivationWizard';
 import { IdLookupStep } from '../../../components/patterns/IdLookupStep';
 import type { IdLookupValue } from '../../../components/patterns/idLookupModel';
 import { ActivityCommentsStep } from '../../../components/patterns/ActivityCommentsStep';

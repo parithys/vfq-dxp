@@ -7,7 +7,7 @@ import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useCustomerContext } from '../../stores/customerContextStore';
 import { usePersonaStore } from '../../stores/personaStore';
 import { getPersona } from '../../engines/configEngine';
-import { buildTelesalesTabs } from './telesalesTabs';
+import { buildTelesalesTabs } from './telesales/TelesalesTabs';
 import { CustomerProfileHeader, type HeaderAlert } from './CustomerProfileHeader';
 import { useRequirementCoverage } from './requirementCoverage';
 import { FieldAccessProvider } from './fieldAccess';

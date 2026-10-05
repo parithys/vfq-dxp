@@ -8,7 +8,7 @@ import { callService, ServiceError, type FailureKind, type ServiceName } from '.
 import { TechnicalFailure } from '../patterns/ValidationStatus';
 import type { EligibilityResult, CustomerRecord, IdentityDocRecord } from './eligibilityTypes';
 import { buildEligibilityRows } from './eligibilityRowsModel';
-import { EligibilityChecksList } from './eligibilityRows';
+import { EligibilityChecksList } from './EligibilityRows';
 
 
 interface EligibilityGateStepProps {

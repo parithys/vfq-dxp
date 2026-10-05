@@ -1,6 +1,6 @@
-import type { WizardStep } from '../../../components/patterns/guidedWizardTypes';
+import type { WizardStep } from '../../../components/patterns/wizard/guidedWizardTypes';
 import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
-import { activityStep, contactStep, isCafValid, type CafValue } from '../../../components/patterns/wizardSteps';
+import { activityStep, contactStep, isCafValid, type CafValue } from '../../../components/patterns/wizard/wizardSteps';
 import { ZsbAddressStep } from '../../../components/patterns/ZsbAddressStep';
 import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
 import { BillingProfileStep } from '../../../components/patterns/BillingProfileStep';

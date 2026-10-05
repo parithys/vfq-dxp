@@ -1,4 +1,4 @@
-import { InstallationActivationWizard, type InstallationWizardConfig } from '../../../components/patterns/InstallationActivationWizard';
+import { InstallationActivationWizard, type InstallationWizardConfig } from '../../../components/patterns/wizard/InstallationActivationWizard';
 
 // SCR-043/045/046/048/050 (+ SCR-058 CAF preview, book-appointment/activity
 // steps) - the New Fixed Line guided wizard, the richest-evidenced journey in

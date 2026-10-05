@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { buildMnpSteps } from './mnpSteps';
 import { getAllRoutes } from '../../../engines/configEngine';
-import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
+import { GuidedActivationWizard } from '../../../components/patterns/wizard/GuidedActivationWizard';
 import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
 import type { DonorDetailsValue } from '../../../components/patterns/DonorDetailsStep';
 import { useEntityStore } from '../../../stores/entityStore';

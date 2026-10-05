@@ -26,7 +26,7 @@ import {
   fmtDate,
   fmtDateTime,
   type Tone,
-} from './c360Kit';
+} from './C360Kit';
 import { Dv } from '../demoValues';
 import { str } from '../../../lib/values';
 

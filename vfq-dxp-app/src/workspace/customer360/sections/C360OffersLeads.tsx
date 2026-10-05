@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../../components/primitives/Icon';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
-import { ActionButton, GridTable, IC, IconTile, KpiGrid, KpiTile, Panel, Pill, StatusPill, TabPage, fmtDate, qar, type GridCol, type Tone } from './c360Kit';
+import { ActionButton, GridTable, IC, IconTile, KpiGrid, KpiTile, Panel, Pill, StatusPill, TabPage, fmtDate, qar, type GridCol, type Tone } from './C360Kit';
 import { Dv } from '../demoValues';
 import { str } from '../../../lib/values';
 

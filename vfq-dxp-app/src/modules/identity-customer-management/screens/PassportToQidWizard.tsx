@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { idLookupStep } from '../../../components/patterns/wizardSteps';
+import { idLookupStep } from '../../../components/patterns/wizard/wizardSteps';
 import type { IdLookupValue } from '../../../components/patterns/idLookupModel';
-import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
+import { GuidedActivationWizard } from '../../../components/patterns/wizard/GuidedActivationWizard';
 import { Input } from '../../../components/primitives/Input';
 import { PhoneNumberInput } from '../../../components/primitives/PhoneNumberInput';
 import { QidImageUpload } from '../../../components/domain/QidImageUpload';

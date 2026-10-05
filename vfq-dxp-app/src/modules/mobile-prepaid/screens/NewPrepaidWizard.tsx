@@ -1,7 +1,7 @@
 import { buildPrepaidSteps } from './prepaidSteps';
 import { submitPrepaidOrder, type ConfirmedOrder } from './submitPrepaidOrder';
 import { useState } from 'react';
-import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
+import { GuidedActivationWizard } from '../../../components/patterns/wizard/GuidedActivationWizard';
 import { ActivationCompleteScreen } from '../../../components/patterns/ActivationCompleteScreen';
 import { useEntityStore } from '../../../stores/entityStore';
 

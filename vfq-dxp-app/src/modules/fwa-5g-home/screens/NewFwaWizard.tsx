@@ -1,4 +1,4 @@
-import { InstallationActivationWizard, type InstallationWizardConfig } from '../../../components/patterns/InstallationActivationWizard';
+import { InstallationActivationWizard, type InstallationWizardConfig } from '../../../components/patterns/wizard/InstallationActivationWizard';
 
 // SCR-077/078/079/080/082/084/085 - the New FWA guided wizard (UJ-061 "New FWA
 // Postpaid Outdoor Order," Stage K recovered detail: 33 steps across 6 parts,

@@ -1,4 +1,4 @@
-import type { WizardStep } from '../../../components/patterns/guidedWizardTypes';
+import type { WizardStep } from '../../../components/patterns/wizard/guidedWizardTypes';
 import type { IdLookupValue } from '../../../components/patterns/idLookupModel';
 import { MsisdnPicker } from '../../../components/domain/MsisdnPicker';
 import { EligibilityGateStep } from '../../../components/domain/EligibilityGateStep';
@@ -12,7 +12,7 @@ import { PrepaidCheckoutStep } from '../../../components/patterns/PrepaidCheckou
 import type { PrepaidCheckoutTotals } from '../../../components/patterns/PrepaidCheckoutStep';
 import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCapture';
 import { KeyInformationPanel } from '../../../components/patterns/KeyInformationPanel';
-import { idLookupStep, isCafValid, type CafValue } from '../../../components/patterns/wizardSteps';
+import { idLookupStep, isCafValid, type CafValue } from '../../../components/patterns/wizard/wizardSteps';
 import { WinCashPaymentStep } from '../../../components/patterns/WinCashPaymentStep';
 import type { WinCashPaymentValue } from '../../../components/patterns/WinCashPaymentStep';
 

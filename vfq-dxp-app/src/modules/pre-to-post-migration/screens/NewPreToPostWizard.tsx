@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import { GuidedActivationWizard } from '../../../components/patterns/GuidedActivationWizard';
+import { GuidedActivationWizard } from '../../../components/patterns/wizard/GuidedActivationWizard';
 import { ProductPlanStep } from '../../../components/patterns/ProductPlanStep';
 import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCapture';
 import type { IdLookupValue } from '../../../components/patterns/idLookupModel';
-import { idLookupStep, isCafValid, type CafValue } from '../../../components/patterns/wizardSteps';
+import { idLookupStep, isCafValid, type CafValue } from '../../../components/patterns/wizard/wizardSteps';
 import { ActivityCommentsStep } from '../../../components/patterns/ActivityCommentsStep';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';

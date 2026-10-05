@@ -5,8 +5,8 @@ import * as mockDataEngine from '../../../engines/mockDataEngine';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { AddressEditDrawer, type AddressRecord } from './AddressSection';
-import { ActionButton, DetailRows, FilterSelect, GridTable, IC, IconTile, KebabButton, LinkAction, Panel, StatusPill, TabPage, fmtDate } from './c360Kit';
-import type { Tone } from './c360Kit';
+import { ActionButton, DetailRows, FilterSelect, GridTable, IC, IconTile, KebabButton, LinkAction, Panel, StatusPill, TabPage, fmtDate } from './C360Kit';
+import type { Tone } from './C360Kit';
 import { Dv } from '../demoValues';
 
 const TICKET_DETAIL_ROUTE = '/trouble-ticketing-complaints/ticket-homepage';

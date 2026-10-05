@@ -5,8 +5,8 @@ import { computeBillingSummary, withinBillHistoryWindow, type Customer360Data } 
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { overdueTicketCount } from './accountInformationResolvers';
 import { RevealValue, useFieldAccess } from '../fieldAccess';
-import { fmtDate, fmtDateTime, IC, IconTile, KpiGrid, KpiTile, LinkAction, Panel, Pill, Progress, qar, TabPage, toneFor } from './c360Kit';
-import type { Tone } from './c360Kit';
+import { fmtDate, fmtDateTime, IC, IconTile, KpiGrid, KpiTile, LinkAction, Panel, Pill, Progress, qar, TabPage, toneFor } from './C360Kit';
+import type { Tone } from './C360Kit';
 import { Dv } from '../demoValues';
 import { str, num } from '../../../lib/values';
 

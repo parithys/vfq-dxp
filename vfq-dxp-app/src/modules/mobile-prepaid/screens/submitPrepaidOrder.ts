@@ -4,7 +4,7 @@ import type { IdLookupValue } from '../../../components/patterns/idLookupModel';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import type { SimTypeValue } from '../../../components/domain/SimTypeStep';
 import type { PrepaidCheckoutTotals } from '../../../components/patterns/PrepaidCheckoutStep';
-import type { CafValue } from '../../../components/patterns/wizardSteps';
+import type { CafValue } from '../../../components/patterns/wizard/wizardSteps';
 import type { useEntityStore } from '../../../stores/entityStore';
 
 interface AccountRecord {

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useJourneyCustomerLock } from './useJourneyCustomerLock';
+import { useJourneyCustomerLock } from './hooks/useJourneyCustomerLock';
 import { useCustomerContext } from '../../stores/customerContextStore';
-import { useCustomerBenefits } from './useCustomerBenefits';
-import { GuidedActivationWizard } from '../../components/patterns/GuidedActivationWizard';
+import { useCustomerBenefits } from './hooks/useCustomerBenefits';
+import { GuidedActivationWizard } from '../../components/patterns/wizard/GuidedActivationWizard';
 import { monthlyCharges, starEntitlementQar } from '../../engines/postpaidPricing';
 import { GuidedContactStep } from '../../components/patterns/GuidedContactStep';
 import { isValidAltPhone, isValidEmail, hasIdentityDetails, emailVerification, maskEmail } from '../../components/patterns/guidedContactModel';
@@ -30,17 +30,17 @@ import { CafSignatureCapture } from '../../components/patterns/CafSignatureCaptu
 import type { CafType } from '../../components/patterns/cafTypes';
 import type { AdditionalDocument } from '../../components/domain/AdditionalDocumentsUpload';
 import { ActivationCompleteScreen } from '../../components/patterns/ActivationCompleteScreen';
-import { EligibilityOutcomePanel, OutcomeActions } from './eligibilityOutcomes';
-import { OfferDecisionActions } from './journeyActions';
-import { journeyLabel } from './serviceJourneys';
-import { CustomerStatusBanner, PlanSourceBanner } from './steps';
-import { CustomerTypeStep } from './customerTypeStep';
-import { isCustomerTypeValid } from './customerTypeModel';
-import { CrossSalesStep } from './crossSalesStep';
-import { isCrossSalesValid } from './crossSalesModel';
-import type { CustomerTypeValue } from './customerTypeModel';
-import type { CrossSalesValue } from './crossSalesModel';
-import { STORE_MANAGER_ROLE, COLLECTION_TEAM_ROLE } from './customerTypeModel';
+import { EligibilityOutcomePanel, OutcomeActions } from './steps/EligibilityOutcomes';
+import { OfferDecisionActions } from './steps/JourneyActions';
+import { journeyLabel } from './steps/serviceJourneys';
+import { CustomerStatusBanner, PlanSourceBanner } from './steps/JourneyBanners';
+import { CustomerTypeStep } from './steps/CustomerTypeStep';
+import { isCustomerTypeValid } from './steps/customerTypeModel';
+import { CrossSalesStep } from './steps/CrossSalesStep';
+import { isCrossSalesValid } from './steps/crossSalesModel';
+import type { CustomerTypeValue } from './steps/customerTypeModel';
+import type { CrossSalesValue } from './steps/crossSalesModel';
+import { STORE_MANAGER_ROLE, COLLECTION_TEAM_ROLE } from './steps/customerTypeModel';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { logActivity } from '../../engines/activityEngine';
 import { useEntityStore } from '../../stores/entityStore';
@@ -57,7 +57,7 @@ import type { NewConnectionFlow, Product, ConfirmedOrder } from './newConnection
 // and Eligibility, special customer type, cross-sales offers with the standard
 // catalogue as fallback, Plan & Add-ons, then the regular fulfilment sequence
 // through to Payment. New Postpaid is fulfilled in this wizard; the other
-// service journeys continue in their own existing wizards (see steps.tsx).
+// service journeys continue in their own existing wizards (see steps/).
 export function NewConnectionWizard({ flow = 'new' }: { flow?: NewConnectionFlow }) {
   const navigate = useNavigate();
   const location = useLocation();

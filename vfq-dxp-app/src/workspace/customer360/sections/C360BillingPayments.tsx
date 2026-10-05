@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
 import { computeBillingSummary, withinBillHistoryWindow, type Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
-import { GridTable, IC, KpiGrid, KpiTile, Panel, Pill, StatusPill, TabPage, UnderlineTabs, fmtDate, qar, type GridCol } from './c360Kit';
+import { GridTable, IC, KpiGrid, KpiTile, Panel, Pill, StatusPill, TabPage, UnderlineTabs, fmtDate, qar, type GridCol } from './C360Kit';
 import { Dv } from '../demoValues';
 import { str } from '../../../lib/values';
 
