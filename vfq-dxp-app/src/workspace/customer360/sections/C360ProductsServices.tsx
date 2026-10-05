@@ -6,7 +6,7 @@ import { Icon } from '../../../components/primitives/Icon';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { buildAssetsFieldResolver } from './assetsResolvers';
-import { ActionButton, Donut, fmtDate, fmtDateTime, FilterSelect, GridTable, IC, IconTile, KpiTile, Panel, Pill, Progress, qar, SearchBox, StatusPill, TabPage, UnderlineTabs } from './C360Kit';
+import { ActionButton, Donut, fmtDate, fmtDateTime, GridTable, IC, IconTile, KpiTile, Panel, Pill, Progress, qar, SearchBox, StatusPill, TabPage, UnderlineTabs } from './C360Kit';
 import type { GridCol, Tone } from './C360Kit';
 import { ServiceActionsMenu } from '../CustomerActionsMenu';
 import { Dv } from '../demoValues';
@@ -89,9 +89,6 @@ function Field({ label, value }: { label: string; value: ReactNode | undefined |
 export function C360ProductsServices({ data, services, goToTab }: { data: Customer360Data; services: CustomerService[]; goToTab?: (key: string) => void }) {
   const startNewConnection = useStartNewConnection(data.customer.customerId);
   const [query, setQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [filterOpen, setFilterOpen] = useState(false);
   const [sort, setSort] = useState('msisdn-asc');
   const [selectedRef, setSelectedRef] = useState<string | undefined>(services[0]?.ref);
   const [subTab, setSubTab] = useState('addons');
@@ -139,21 +136,17 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
   const pct = (used: number | undefined, total: number | undefined) => (used !== undefined && total ? (used / total) * 100 : 0);
 
   const active = services.filter((s) => get(s).status === 'Active').length;
-  const statuses = Array.from(new Set(services.map((s) => get(s).status).filter((x): x is string => Boolean(x))));
-  const types = Array.from(new Set(services.map(typeLabel)));
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
     const list = services.filter((s) => {
       const i = info.get(s.ref)!;
-      if (typeFilter !== 'all' && typeLabel(s) !== typeFilter) return false;
-      if (statusFilter !== 'all' && i.status !== statusFilter) return false;
       return !q || [s.identifier, s.label, i.plan, typeLabel(s)].some((v) => v?.toLowerCase().includes(q));
     });
     const key = (s: CustomerService) => (sort.startsWith('plan') ? (info.get(s.ref)?.plan ?? s.label) : sort.startsWith('status') ? (info.get(s.ref)?.status ?? '') : s.identifier);
     const dir = sort.endsWith('desc') ? -1 : 1;
     return [...list].sort((a, b) => dir * key(a).localeCompare(key(b), undefined, { numeric: true }));
-  }, [services, info, query, typeFilter, statusFilter, sort]);
+  }, [services, info, query, sort]);
 
   const selected = services.find((s) => s.ref === selectedRef);
   const sel = selected ? get(selected) : undefined;
@@ -161,7 +154,6 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
     setSelectedRef(s.ref);
     setPanelOpen(true);
   };
-  const filterCount = (typeFilter !== 'all' ? 1 : 0) + (statusFilter !== 'all' ? 1 : 0);
 
   const columns: GridCol<CustomerService>[] = [
     { key: 'n', header: '#', render: (_s, i) => i + 1, className: 'w-10' },
@@ -376,16 +368,6 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
                 <div className="w-56 max-w-full flex">
                   <SearchBox value={query} onChange={setQuery} placeholder="Search by MSISDN, plan or service" />
                 </div>
-                <button
-                  type="button"
-                  aria-expanded={filterOpen}
-                  onClick={() => setFilterOpen((o) => !o)}
-                  className="inline-flex items-center gap-2 rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg px-3 py-2 text-[length:var(--fs-body)] text-fg hover:bg-surface"
-                >
-                  <Icon path={IC.filter} className="w-4 h-4" />
-                  Filter{filterCount > 0 ? ` (${filterCount})` : ''}
-                  <Icon path={IC.chevDown} className="w-4 h-4" />
-                </button>
                 <label className="rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg">
                   <span className="sr-only">Sort services</span>
                   <select value={sort} onChange={(e) => setSort(e.target.value)} className="bg-transparent outline-none px-3 py-2 text-[length:var(--fs-body)] text-fg cursor-pointer">
@@ -399,24 +381,6 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
               </div>
             }
           >
-            {filterOpen && (
-              <div className="flex flex-wrap gap-3 px-4 pb-3">
-                <FilterSelect label="Service Type" value={typeFilter} onChange={setTypeFilter} options={[{ value: 'all', label: 'All types' }, ...types.map((t) => ({ value: t, label: t }))]} />
-                <FilterSelect label="Status" value={statusFilter} onChange={setStatusFilter} options={[{ value: 'all', label: 'All statuses' }, ...statuses.map((t) => ({ value: t, label: t }))]} />
-                {filterCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTypeFilter('all');
-                      setStatusFilter('all');
-                    }}
-                    className="text-accent text-[length:var(--fs-body)] hover:underline"
-                  >
-                    Clear filters
-                  </button>
-                )}
-              </div>
-            )}
             <GridTable
               cols={columns}
               rows={rows}
