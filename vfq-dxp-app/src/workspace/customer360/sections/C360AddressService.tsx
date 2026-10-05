@@ -6,7 +6,7 @@ import * as mockDataEngine from '../../../engines/mockDataEngine';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { AddressEditDrawer, type AddressRecord } from './AddressSection';
-import { ActionButton, DetailRows, FilterSelect, GridTable, IC, KebabButton, LinkAction, Panel, StatusPill, TabPage, fmtDate } from './C360Kit';
+import { ActionButton, DetailRows, GridTable, IC, KebabButton, LinkAction, Panel, StatusPill, TabPage, fmtDate } from './C360Kit';
 import type { Tone } from './C360Kit';
 import { Dv } from '../demoValues';
 
@@ -66,8 +66,6 @@ export function C360AddressService({
   const [editing, setEditing] = useState<AddressRecord | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [wfm, setWfm] = useState<WfmActivity[]>([]);
-  const [serviceType, setServiceType] = useState('home');
-  const [addressChoice, setAddressChoice] = useState('primary');
 
   useEffect(() => {
     let cancelled = false;
@@ -99,7 +97,7 @@ export function C360AddressService({
 
   return (
     <TabPage icon={IC.pin} tone="blue" title="Address & Service" subtitle="View customer addresses, service availability and network information">
-      <div className="grid grid-cols-1 @6xl:grid-cols-3 gap-4 items-start">
+      <div className="grid grid-cols-1 @6xl:grid-cols-3 gap-4 items-stretch">
         <Panel
           icon={IC.home}
           title="Customer Address"
@@ -135,16 +133,19 @@ export function C360AddressService({
         <Panel
           icon={IC.pin}
           title="Map View"
+          className="@6xl:col-span-2 flex flex-col"
+          bodyClassName="flex-1 flex flex-col"
         >
           <p className="text-fg-2 text-[length:var(--fs-body)] mb-3">{primary ? addressLine(primary) : 'No address selected'}</p>
           <OsmEmbed
             title="Map of the customer's address"
+            fill
             latitude={(primary as unknown as { latitude?: number } | undefined)?.latitude}
             longitude={(primary as unknown as { longitude?: number } | undefined)?.longitude}
           />
         </Panel>
 
-        <Panel icon={IC.signalTower} title="Service Availability" action={<ActionButton onClick={undefined} disabled>Check Another Address</ActionButton>}>
+        <Panel icon={IC.signalTower} title="Service Availability" action={<ActionButton onClick={undefined} disabled>Check Another Address</ActionButton>} className="@6xl:col-span-3">
           <ul>
             {AVAILABILITY.map((a) => {
               const has = labels.filter((l) => a.match.test(l));
@@ -175,8 +176,8 @@ export function C360AddressService({
         </Panel>
       </div>
 
-      <div className="grid grid-cols-1 @4xl:grid-cols-2 @7xl:grid-cols-[1.3fr_1fr_1fr] gap-4 items-start">
-        <Panel icon={IC.pin} title={`Other Addresses (${others.length})`} action={<ActionButton disabled>Add Address</ActionButton>} flush className="@4xl:col-span-2 @7xl:col-span-1">
+      <div className="grid grid-cols-1 @4xl:grid-cols-2 gap-4 items-start">
+        <Panel icon={IC.pin} title={`Other Addresses (${others.length})`} action={<ActionButton disabled>Add Address</ActionButton>} flush>
           <div className="px-2 pb-3">
             <GridTable
               cols={[
@@ -192,26 +193,6 @@ export function C360AddressService({
               empty="No other addresses on file."
             />
           </div>
-        </Panel>
-
-        <Panel icon={IC.settings} title="RFS / Service Check" action={<ActionButton disabled>Run New Check</ActionButton>}>
-          <div className="grid grid-cols-2 gap-2 mb-3">
-            <FilterSelect
-              label="Service Type"
-              value={serviceType}
-              onChange={setServiceType}
-              options={[
-                { value: 'home', label: 'Home Internet (Fibre)' },
-                { value: 'fixed', label: 'Fixed Line' },
-                { value: 'tv', label: 'TV Services' },
-              ]}
-            />
-            <FilterSelect label="Address" value={addressChoice} onChange={setAddressChoice} options={[{ value: 'primary', label: 'Primary Address' }, ...others.map((a) => ({ value: a.id, label: addressLine(a) || a.id }))]} />
-          </div>
-          <button type="button" disabled className="w-full rounded-[var(--radius-button)] bg-[image:var(--accent-gradient)] text-accent-on py-2 text-[length:var(--fs-btn-compact)] font-medium disabled:opacity-40 disabled:cursor-not-allowed">
-            Check Availability
-          </button>
-          <p className="text-muted text-[length:var(--fs-caption)] mt-3">No RFS check service is connected to this app, so a check can't be run here.</p>
         </Panel>
 
         <Panel icon={IC.calendar} title="Installation / Service Information">

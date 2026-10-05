@@ -263,7 +263,7 @@ export function KpiGrid({ children, cols = 5 }: { children: ReactNode; cols?: 3 
 }
 
 /** A titled card (icon + title, optional right-hand action) holding rows, lists or a table. */
-export function Panel({ icon, title, action, children, className = '', flush = false }: { icon?: string; title: ReactNode; action?: ReactNode; children: ReactNode; className?: string; flush?: boolean }) {
+export function Panel({ icon, title, action, children, className = '', flush = false, bodyClassName = '' }: { icon?: string; title: ReactNode; action?: ReactNode; children: ReactNode; className?: string; flush?: boolean; bodyClassName?: string }) {
   const modeOf = useFieldAccess();
   if (typeof title === 'string' && modeOf(title) === 'hidden') return null;
   return (
@@ -276,7 +276,7 @@ export function Panel({ icon, title, action, children, className = '', flush = f
         </h3>
         {action}
       </header>
-      <div className={`panel-body empty:hidden ${flush ? '' : 'px-4 pb-4'}`}>{children}</div>
+      <div className={`panel-body empty:hidden ${flush ? '' : 'px-4 pb-4'} ${bodyClassName}`}>{children}</div>
     </section>
   );
 }

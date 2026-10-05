@@ -56,7 +56,6 @@ interface FeedRow {
 
 export function C360Overview({ data, services, goToTab }: { data: Customer360Data; services: CustomerService[]; goToTab?: (key: string) => void }) {
   const go = (key: string) => (goToTab ? () => goToTab(key) : undefined);
-  const modeOf = useFieldAccess();
   const [usageTab, setUsageTab] = useState('balance');
   const [copied, setCopied] = useState(false);
 
@@ -158,17 +157,6 @@ export function C360Overview({ data, services, goToTab }: { data: Customer360Dat
   };
 
   const isBusiness = /enterprise|ebu|business|corporate/i.test(str(data.customer.segment));
-
-  const quickLinks: { label: string; icon: string; tab: string }[] = [
-    { label: 'Account Hierarchy', icon: IC.users, tab: 'account-info' },
-    { label: 'Billing Profiles', icon: IC.file, tab: 'account-info' },
-    { label: 'Installed Assets', icon: IC.database, tab: 'products-services' },
-    { label: 'Contact Hierarchy', icon: IC.phone, tab: 'account-info' },
-    { label: 'NAS / Address', icon: IC.pin, tab: 'address-service' },
-    { label: 'Penalty View', icon: IC.shield, tab: 'products-services' },
-    { label: 'Blacklist View', icon: IC.database, tab: 'contact-identity' },
-    { label: 'Existing DOI View', icon: IC.database, tab: 'products-services' },
-  ];
 
   return (
     <div className="space-y-4">
@@ -426,29 +414,6 @@ export function C360Overview({ data, services, goToTab }: { data: Customer360Dat
           )}
         </Panel>
       </div>
-
-      {/* Quick Links */}
-      <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-4 min-w-0 has-[>div:empty]:hidden">
-        <h3 className="flex items-center gap-2.5 text-fg font-semibold text-[length:var(--fs-body-lg)] mb-3">
-          <Icon path={IC.layers} className="w-5 h-5" />
-          Quick Links
-        </h3>
-        <div className="grid grid-cols-2 @lg:grid-cols-3 gap-2">
-          {quickLinks.filter((q) => modeOf(q.label) !== 'hidden').map((q) => (
-            <button
-              key={q.label}
-              type="button"
-              disabled={!goToTab}
-              onClick={go(q.tab)}
-              className="flex items-center gap-2 rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg px-3 py-2.5 text-left text-fg-2 text-[length:var(--fs-caption)] enabled:hover:bg-surface"
-            >
-              <Icon path={q.icon} className="w-4 h-4 shrink-0 text-fg" />
-              <span className="min-w-0 flex-1 break-words">{q.label}</span>
-              <Icon path={IC.chevRight} className="w-4 h-4 shrink-0 text-fg" />
-            </button>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }
