@@ -114,7 +114,8 @@ export function C360ContactIdentity({ data, services, goToTab, onEdit }: { data:
         </>
       }
     >
-      <div className="grid grid-cols-1 @4xl:grid-cols-3 gap-4 items-start">
+      {/* Masonry: panels flow down three columns by height instead of sharing rows. */}
+      <div className="columns-1 @4xl:columns-3 gap-4 [&>*]:mb-4 [&>*]:break-inside-avoid">
         <Panel icon={undefined} title={<CardTitle icon={IC.card}>Identity Information</CardTitle>} action={idStatus ? <Pill tone={flagTone(idStatus)}>{idStatus}</Pill> : undefined}>
           <DetailRows
             rows={[
