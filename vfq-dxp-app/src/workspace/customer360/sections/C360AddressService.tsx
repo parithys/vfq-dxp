@@ -5,7 +5,7 @@ import * as mockDataEngine from '../../../engines/mockDataEngine';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { AddressEditDrawer, type AddressRecord } from './AddressSection';
-import { ActionButton, DetailRows, FilterSelect, GridTable, IC, IconTile, KebabButton, LinkAction, Panel, StatusPill, TabPage, fmtDate } from './C360Kit';
+import { ActionButton, DetailRows, FilterSelect, GridTable, IC, KebabButton, LinkAction, Panel, StatusPill, TabPage, fmtDate } from './C360Kit';
 import type { Tone } from './C360Kit';
 import { Dv } from '../demoValues';
 
@@ -36,15 +36,6 @@ const AVAILABILITY: { label: string; icon: string; tone: Tone; match: RegExp }[]
   { label: 'Home Internet', icon: IC.wifi, tone: 'green', match: /gigahome|5g|home internet|fwa/i },
   { label: 'TV Services', icon: IC.tv, tone: 'green', match: /iptv|osn|tv/i },
   { label: 'IoT / M2M', icon: IC.cpu, tone: 'green', match: /iot|m2m|smart device/i },
-];
-
-const TOOLS: { title: string; sub: string; icon: string }[] = [
-  { title: 'NAS Lookup', sub: 'View NAS details', icon: IC.database },
-  { title: 'MOI Address', sub: 'Verify address', icon: IC.building },
-  { title: 'RFS Check', sub: 'Run service check', icon: IC.wifi },
-  { title: 'Network Coverage', sub: 'Check mobile coverage', icon: IC.signalTower },
-  { title: 'Troubleshooting', sub: 'Run diagnostics', icon: IC.settings },
-  { title: 'Installation Tools', sub: 'Manage installation', icon: IC.calendar },
 ];
 
 const addressLine = (a: AddressRecord) => [a.addressLine1, a.addressLine2, a.city, a.country].filter(Boolean).join(', ');
@@ -244,33 +235,6 @@ export function C360AddressService({
           />
         </Panel>
       </div>
-
-      <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-3 w-full @7xl:w-56">
-          <Icon path={IC.settings} className="w-5 h-5 shrink-0" />
-          <div>
-            <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Network &amp; Address Tools</div>
-            <div className="text-fg-2 text-[length:var(--fs-caption)]">Quick access to network and address related tools</div>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 @2xl:grid-cols-3 @6xl:grid-cols-6 gap-3 w-full @7xl:flex-1 min-w-0">
-          {TOOLS.map((t) => (
-            <button
-              key={t.title}
-              type="button"
-              disabled
-              title="Not available in this app"
-              className="flex items-center gap-3 rounded-[var(--radius-card)] border border-border-soft bg-[var(--surface)] px-3 py-3 text-left disabled:opacity-60 disabled:cursor-not-allowed min-w-0"
-            >
-              <IconTile icon={t.icon} tone="blue" />
-              <span className="min-w-0">
-                <span className="block text-fg font-medium text-[length:var(--fs-body)] leading-tight">{t.title}</span>
-                <span className="block text-fg-2 text-[length:var(--fs-caption)] leading-tight">{t.sub}</span>
-              </span>
-            </button>
-          ))}
-        </div>
-      </section>
 
       {editing && (
         <AddressEditDrawer
