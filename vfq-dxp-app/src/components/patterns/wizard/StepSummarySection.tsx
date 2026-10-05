@@ -2,7 +2,8 @@ import { useId } from 'react';
 import type { ReactNode } from 'react';
 import { Icon } from '../../primitives/Icon';
 
-const CHEVRON = 'M6 9l6 6 6-6';
+const CHECK_CIRCLE = 'M22 11.08V12a10 10 0 1 1-5.93-9.14 M22 4L12 14.01l-3-3';
+const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
 
 /** One completed step: a collapsible block titled with the step's rail label, with an Edit action that goes back to it. */
 export function StepSummarySection({
@@ -30,8 +31,9 @@ export function StepSummarySection({
           aria-controls={bodyId}
           className="flex flex-1 min-w-0 items-center gap-2 text-left text-fg font-semibold text-[length:var(--fs-body)] rounded-[var(--radius-sm)] focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
         >
-          <Icon path={CHEVRON} className={`w-4 h-4 shrink-0 text-fg-2 transition-transform ${open ? 'rotate-180' : ''}`} />
+          <Icon path={CHECK_CIRCLE} className="w-4 h-4 shrink-0 text-success" />
           <span className="truncate">{title}</span>
+          <Icon path={CHEVRON_RIGHT} className={`w-4 h-4 shrink-0 text-fg-2 transition-transform ${open ? 'rotate-90' : ''}`} />
         </button>
         {onEdit && (
           <button
