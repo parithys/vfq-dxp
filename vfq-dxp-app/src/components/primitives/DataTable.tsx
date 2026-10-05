@@ -98,7 +98,7 @@ export function DataTable<T>({
   };
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-[var(--table-border)] bg-bg">
+    <div className="rounded-[var(--radius-card)] border border-[var(--table-border)] bg-bg overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-[length:var(--fs-body)]">
           <thead className="bg-[var(--table-header-bg)] text-fg-2">

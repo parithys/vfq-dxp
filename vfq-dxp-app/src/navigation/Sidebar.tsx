@@ -227,7 +227,7 @@ export function Sidebar() {
             {...listNav.inputProps}
             placeholder="Search menu"
             aria-label="Search menu"
-            className="min-w-0 flex-1 bg-transparent text-[length:var(--fs-body)] text-[var(--nav-fg)] placeholder:text-[var(--nav-fg-muted)] focus:outline-none [&::-webkit-search-cancel-button]:appearance-none"
+            className="min-w-0 flex-1 bg-transparent text-[length:var(--fs-body)] text-[var(--nav-fg)] placeholder:text-[var(--nav-fg-muted)] focus:outline-none focus-visible:shadow-none [&::-webkit-search-cancel-button]:appearance-none"
           />
         </label>
       </div>
