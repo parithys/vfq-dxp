@@ -1,5 +1,6 @@
 import type { PersonaApproach } from '../types/config';
 
+
 // What global search looks across, and what it says it looks across, per
 // approach. The one `groups` array drives BOTH the fetch set and the section
 // render order, so the placeholder can never promise a scope the results
@@ -29,15 +30,6 @@ const SCOPES: Record<PersonaApproach, SearchScope> = {
     placeholder: 'Search customers, tickets, orders…',
     groups: ['customers', 'tickets', 'orders'],
   },
-};
-
-export const SEARCH_GROUP_LABELS: Record<SearchGroup, string> = {
-  customers: 'Customers',
-  leads: 'Leads',
-  tickets: 'Tickets',
-  orders: 'Orders',
-  'sim-swaps': 'SIM Swaps',
-  catalog: 'Products & Campaigns',
 };
 
 export function searchScopeFor(approach: PersonaApproach | undefined): SearchScope {

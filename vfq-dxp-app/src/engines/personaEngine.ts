@@ -1,5 +1,6 @@
-import { getAllRoutes, getPersonaScreenLevel, getPersonaFeatureLevel, getPersonaFeatureGrants } from './configEngine';
+import { getPersonaScreenLevel, getPersonaFeatureLevel, getPersonaFeatureGrants } from './configEngine';
 import type { PermissionLevel, PersonaFeatureGrant, Route } from '../types/config';
+
 
 // Persona simulation per frontend-architecture.md §8 - a dev/demo "login-as"
 // affordance, NOT a security boundary.
@@ -32,14 +33,6 @@ export function screensVisibleFor(personaId: string, allScreensInModule: Route[]
   }));
 }
 
-export function visibleRoutesFor(personaId: string): Route[] {
-  return getAllRoutes().filter((r) => permissionLevelFor(personaId, r.screenId) !== null);
-}
-
-export function canAccessScreen(personaId: string, screenId: string): boolean {
-  return permissionLevelFor(personaId, screenId) !== null;
-}
-
 export function permissionLevelFor(personaId: string, screenId: string): PermissionLevel | null {
   return getPersonaScreenLevel(personaId, screenId);
 }
@@ -61,12 +54,6 @@ export function canUseFeature(personaId: string, featureKey: string): boolean {
 
 export function featureLevelFor(personaId: string, featureKey: string): PermissionLevel | null {
   return getPersonaFeatureLevel(personaId, featureKey);
-}
-
-export function canPerformFeatureAction(personaId: string, featureKey: string, minLevel: PermissionLevel): boolean {
-  const level = featureLevelFor(personaId, featureKey);
-  if (!level) return false;
-  return ACTION_LEVELS.indexOf(level) >= ACTION_LEVELS.indexOf(minLevel);
 }
 
 export function grantedFeaturesFor(personaId: string): PersonaFeatureGrant[] {

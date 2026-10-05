@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Icon } from '../../components/primitives/Icon';
 import { Card, I, Pill } from './telesalesOverview';
 
+
 // Building blocks shared by the Telesales Overview page sections (Account, Contacts, Connections,
 // Billing, Offers, Usage, Address, Leads, Orders & Tickets, Audit Trail), in the supplied design.
 
@@ -262,11 +263,6 @@ export const yesNo = (v: boolean | string | undefined | null) => {
   const yes = v === true || v === 'Yes';
   return <Pill tone={yes ? 'green' : 'red'}>{yes ? 'Yes' : 'No'}</Pill>;
 };
-
-/** Hook for a section that shows one of several things at a time. */
-export function useSelected<T extends string>(first: T) {
-  return useState<T>(first);
-}
 
 export const pillFor = (status: string) => {
   const s = status.toLowerCase();

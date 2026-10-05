@@ -13,6 +13,7 @@ import type {
   Customer360Field,
 } from '../types/config';
 
+
 interface ConfigData {
   routes: Route[];
   personas: Persona[];
@@ -181,22 +182,12 @@ export function getAllPersonas(): Persona[] {
   return requireConfig().personas;
 }
 
-export function getRoutesForModule(moduleId: string): Route[] {
-  const mod = requireConfig().moduleHierarchy.find((m) => m.moduleId === moduleId);
-  if (!mod) return [];
-  return requireConfig().routes.filter((r) => r.module === mod.module);
-}
-
 export function getPersona(personaId: string): Persona | undefined {
   return requireConfig().personas.find((p) => p.id === personaId);
 }
 
 export function getPersonaByStaffId(staffId: string): Persona | undefined {
   return requireConfig().personas.find((p) => p.staffId === staffId);
-}
-
-export function getFeatureCatalogue(): FeatureCatalogueEntry[] {
-  return requireConfig().featureCatalogue;
 }
 
 export function getFeatureEntry(key: string): FeatureCatalogueEntry | undefined {
@@ -234,21 +225,6 @@ export function getBusinessRule(ruleId: string): BusinessRule | undefined {
   return requireConfig().businessRules.find((r) => r.id === ruleId);
 }
 
-export function getValidationRulesForField(fieldLabel: string): ValidationRule[] {
-  const needle = fieldLabel.toLowerCase();
-  return requireConfig().validationRules.filter(
-    (v) => v.validationType === 'Field-Level' && String(v.name).toLowerCase().includes(needle)
-  );
-}
-
-export function getDomainEntity(entityId: string): DomainEntity | undefined {
-  return requireConfig().domainSchema.find((e) => e.id === entityId);
-}
-
-export function getDesignToken(name: string): string | undefined {
-  return requireConfig().designTokens[name];
-}
-
 export function getReqToScreens(): Record<string, string[]> {
   return requireConfig().reqToScreens;
 }
@@ -260,17 +236,8 @@ export function getJourneyIdsForScreen(screenId: string): string[] {
   return requireConfig().journeyCatalogueMap.screens[screenId] ?? [];
 }
 
-/** Same as getJourneyIdsForScreen, but for a module card. */
-export function getJourneyIdsForModule(moduleId: string): string[] {
-  return requireConfig().journeyCatalogueMap.modules[moduleId] ?? [];
-}
-
 export function getJourneyMeta(journeyId: string): { name: string; type: string } | undefined {
   return requireConfig().journeyCatalogueMap.journeys[journeyId];
-}
-
-export function isConfigLoaded(): boolean {
-  return cache !== null;
 }
 
 /** Agent 360 AAV-01 - the role required to be assigned/approve an approval

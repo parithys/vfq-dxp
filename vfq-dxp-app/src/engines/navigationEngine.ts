@@ -9,6 +9,7 @@ import {
 import { reachableCategories } from '../navigation/journeyCatalogue';
 import type { PersonaApproach } from '../types/config';
 
+
 // Approach -> ordered nav subset. This is the literal implementation of the
 // design intent "same nav manifest, filtered and reordered per persona": one
 // closed manifest (navManifest.ts), four orderings, no per-role nav lists to
@@ -112,9 +113,3 @@ export function resolveNavFor(personaId: string | undefined): NavItem[] {
 
 /** One warning per role, so an over-cap rail doesn't spam every render. */
 const warnedOverCap = new Set<string>();
-
-/** Whether this role can reach a nav destination at all - used to decide
- * between rendering a workspace and redirecting away from it. */
-export function canReachNavKey(personaId: string | undefined, key: NavKey): boolean {
-  return resolveNavFor(personaId).some((i) => i.key === key || i.children?.some((c) => c.key === key));
-}

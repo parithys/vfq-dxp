@@ -1,5 +1,6 @@
 import * as mockDataEngine from './mockDataEngine';
 
+
 export interface CustomerRecord {
   customerId: string;
   qid: string;
@@ -62,24 +63,6 @@ export interface AccountRecord {
   accountManagerEmail?: string;
   backupAccountManagerName?: string;
   escalationContact?: string;
-}
-
-/**
- * Whether the customer HOLDS an account in their own right or sits under
- * someone else's.
- *
- * Read off accounts.json's `parentAccountId`: an account with none is a
- * top-level account, one with a parent is a sub-account. A customer who holds
- * at least one top-level account is the primary holder; one whose accounts are
- * all sub-accounts is a secondary holder on another account.
- *
- * `undefined` for a customer with no accounts at all - that is not "secondary",
- * it is "not an account holder yet", which is exactly the state a new-connection
- * walk-in is in. Claiming either label there would be wrong.
- */
-export function accountHolderStatus(accounts: AccountRecord[]): 'Primary' | 'Secondary' | undefined {
-  if (accounts.length === 0) return undefined;
-  return accounts.some((a) => !a.parentAccountId) ? 'Primary' : 'Secondary';
 }
 
 export type CustomerSearchField = 'mobile' | 'qid' | 'customerNumber' | 'accountNumber' | 'name' | 'email' | 'serviceId' | 'idDocument';

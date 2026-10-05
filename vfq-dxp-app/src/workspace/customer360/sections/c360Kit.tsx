@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
 import { RevealValue, useFieldAccess } from '../fieldAccess';
 
+
 /**
  * Building blocks shared by the Customer 360 tab pages (Overview, Account Information, Products & Services,
  * Billing & Payments, Offers & Leads, Contact & Identity, Orders, Tickets & Support, Activities, Alerts & Risks).
@@ -446,28 +447,6 @@ export function Donut({ pct, value, unit, caption }: { pct: number; value: React
       </div>
       {caption && <span className="text-fg-2 text-[length:var(--fs-caption)]">{caption}</span>}
     </div>
-  );
-}
-
-/** Two-line list row used in Recent Activity / Alerts lists: tinted icon, title + sub, right-hand slot. */
-export function ListRow({ icon, tone = 'grey', title, sub, right, onClick }: { icon?: string; tone?: Tone; title: ReactNode; sub?: ReactNode; right?: ReactNode; onClick?: () => void }) {
-  const inner = (
-    <>
-      {icon && <IconTile icon={icon} tone={tone} size="sm" />}
-      <div className="min-w-0 flex-1 text-left">
-        <div className="text-fg font-medium text-[length:var(--fs-body)] truncate">{title}</div>
-        {sub && <div className="text-fg-2 text-[length:var(--fs-caption)] truncate">{sub}</div>}
-      </div>
-      {right}
-    </>
-  );
-  const cls = 'flex items-center gap-3 py-2.5 border-b border-border-soft last:border-0 w-full';
-  return onClick ? (
-    <button type="button" onClick={onClick} className={`${cls} hover:bg-surface`}>
-      {inner}
-    </button>
-  ) : (
-    <div className={cls}>{inner}</div>
   );
 }
 

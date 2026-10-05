@@ -5,31 +5,9 @@ import { Modal } from '../../components/primitives/Modal';
 import { EligibilityChecksList } from '../../components/domain/eligibilityRows';
 import { useNotificationStore } from '../../stores/notificationStore';
 import type { EligibilityResult } from '../../components/domain/eligibilityTypes';
-import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
-import { outcomeRows, OUTCOME_KEYS, useOutcomePreview } from './eligibilityOutcomesModel';
+import { outcomeRows, useOutcomePreview } from './eligibilityOutcomesModel';
 import type { OutcomeKey } from './eligibilityOutcomesModel';
 
-// Demo-only controls (they preview an outcome the real checks did not produce),
-// so they use the violet --info colour rather than the brand red - violet marks
-// "demo" content wherever it appears.
-export function EligibilityOutcomeLinks() {
-  const { open, toggle } = useOutcomePreview();
-  return (
-    <div className={`${SYNTHETIC_CLASS} flex flex-wrap items-center gap-x-3`}>
-      {OUTCOME_KEYS.map((k) => (
-        <button
-          key={k}
-          type="button"
-          aria-pressed={open === k}
-          onClick={() => toggle(k)}
-          className={`text-[length:var(--fs-caption)] underline text-[var(--info)] hover:opacity-80 focus:outline-none focus-visible:shadow-[var(--focus-ring)] rounded-[var(--radius-button)] px-1 ${open === k ? 'font-semibold' : ''}`}
-        >
-          {k}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 /** Inline, in the step body: the blockers behind the outcome picked in the footer. */
 export function EligibilityOutcomePanel() {

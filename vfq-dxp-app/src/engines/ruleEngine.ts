@@ -1,4 +1,4 @@
-import { getBusinessRule } from './configEngine';
+
 
 // Rule Engine per frontend-architecture.md §5. 346 business rules are catalogued
 // (config/business-rules.json) but most are free-text descriptions, not formal
@@ -338,10 +338,6 @@ const ruleImplementations: Record<string, RuleImplementation> = {
   }),
 };
 
-export function getRuleCatalogueEntry(ruleId: string) {
-  return getBusinessRule(ruleId);
-}
-
 export function evaluateRule(ruleId: string, ctx: RuleContext): { pass: boolean; message?: string; hardStop?: boolean } {
   const impl = ruleImplementations[ruleId];
   if (!impl) {
@@ -350,8 +346,4 @@ export function evaluateRule(ruleId: string, ctx: RuleContext): { pass: boolean;
     return { pass: true, message: `⚠ Rule ${ruleId} has no implementation yet (dev mode: allowing by default)` };
   }
   return impl(ctx);
-}
-
-export function hasImplementation(ruleId: string): boolean {
-  return ruleId in ruleImplementations;
 }

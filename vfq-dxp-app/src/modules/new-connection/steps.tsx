@@ -1,11 +1,7 @@
 import { Badge } from '../../components/primitives/Badge';
-import { CARD, CARD_SELECTABLE } from './stepStyles';
-import { SERVICE_JOURNEYS, continuesHere } from './serviceJourneys';
-import type { ServiceJourney } from './serviceJourneys';
-import { HandOff } from './HandOff';
+import { CARD } from './stepStyles';
 import { customerTypeLabel } from './customerTypeModel';
 import type { CustomerType } from './customerTypeModel';
-
 
 // Building blocks for the New Connection journey. Everything here is a
 // journey-level decision (who the customer is, which offer, which service);
@@ -20,48 +16,6 @@ export function CustomerStatusBanner(_props: { customerId: string | undefined })
 }
 
 // ---------------------------------------------------------------- Customer type
-
-export function JourneyStep({
-  value,
-  onChange,
-  onHandOff,
-}: {
-  value: ServiceJourney | undefined;
-  onChange: (v: ServiceJourney) => void;
-  onHandOff: (route: string) => void;
-}) {
-  return (
-    <div className="space-y-5">
-      <p className="text-fg-2 text-[length:var(--fs-body)]">
-        No cross-sales offer is being used, so choose the service from the standard Sales Offers catalogue.
-      </p>
-      <div role="radiogroup" aria-label="Service journey" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {SERVICE_JOURNEYS.map((j) => (
-          <div
-            key={j.key}
-            role="radio"
-            aria-checked={value === j.key}
-            tabIndex={0}
-            onClick={() => onChange(j.key)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onChange(j.key);
-              }
-            }}
-            className={`${CARD_SELECTABLE} cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${value === j.key ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]' : 'border-[var(--field-card-border)] bg-bg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'}`}
-          >
-            <span className="block text-fg font-medium text-[length:var(--fs-body)]">{j.label}</span>
-            <span className="block text-fg-2 text-[length:var(--fs-caption)]">{j.description}</span>
-          </div>
-        ))}
-      </div>
-      {value && !continuesHere(value) && <HandOff journey={value} onGo={onHandOff} />}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------- Plan source
 
 export function PlanSourceBanner({ offerName, customerType }: { offerName?: string; customerType?: CustomerType }) {
   const special = customerType && customerType !== 'none';

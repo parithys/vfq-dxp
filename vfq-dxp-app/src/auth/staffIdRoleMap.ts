@@ -1,4 +1,5 @@
-import { getAllPersonas, getPersonaByStaffId } from '../engines/configEngine';
+import { getPersonaByStaffId } from '../engines/configEngine';
+
 
 // Staff ID -> role resolution for automatic role detection at login.
 //
@@ -31,11 +32,6 @@ export function resolveRoleFromStaffId(staffId: string): StaffIdRoleEntry | unde
   const persona = getPersonaByStaffId(normalized);
   if (!persona) return undefined;
   return { personaId: persona.id, roleLabel: persona.name };
-}
-
-/** Every sign-in-able Staff ID, for the login help panel and demo material. */
-export function allStaffIds(): { staffId: string; roleLabel: string; personaId: string }[] {
-  return getAllPersonas().map((p) => ({ staffId: p.staffId, roleLabel: p.name, personaId: p.id }));
 }
 
 // Placeholder demo credential - the Agent 360 BRSD leaves the real password
