@@ -246,6 +246,12 @@ export function C360Activities({ data }: { data: Customer360Data; services: Cust
     paging.setPage(1);
   };
 
+  // A summary tile opens the list tab it counts.
+  const openTab = (k: string) => {
+    setTab(k);
+    paging.setPage(1);
+  };
+
   const typeOptions = [{ value: 'all', label: 'All' }, ...Object.keys(TYPE_STYLE).map((v) => ({ value: v, label: v }))];
   const channelOptions = [{ value: 'all', label: 'All' }, ...Array.from(new Set(all.map((a) => a.channel).filter(Boolean) as string[])).map((v) => ({ value: v, label: v }))];
 
@@ -254,11 +260,11 @@ export function C360Activities({ data }: { data: Customer360Data; services: Cust
   return (
     <TabPage icon={IC.activity} tone="blue" title="Activities" subtitle="View all customer interactions, activities, transactions and changes across channels">
       <KpiGrid>
-        <KpiTile icon={IC.file} tone="blue" label="Total Activities" value={kpi.total} caption={RANGES.find((r) => r.value === range)?.label} />
-        <KpiTile icon={IC.headset} tone="red" label="Customer Interactions" value={kpi.interactions} caption="Calls, Store, Digital" />
-        <KpiTile icon={IC.settings} tone="blue" label="Account Changes" value={kpi.changes} caption="Account & Profile" />
-        <KpiTile icon={IC.swap} tone="red" label="Transactions" value={kpi.transactions} caption="Payments, OOB" />
-        <KpiTile icon={IC.clock} tone="purple" label="Other Activities" value={kpi.other} caption="Orders, Tickets, System" />
+        <KpiTile icon={IC.file} tone="blue" label="Total Activities" value={kpi.total} caption={RANGES.find((r) => r.value === range)?.label} chevron onClick={() => openTab('all')} />
+        <KpiTile icon={IC.headset} tone="red" label="Customer Interactions" value={kpi.interactions} caption="Calls, Store, Digital" chevron onClick={() => openTab('interactions')} />
+        <KpiTile icon={IC.settings} tone="blue" label="Account Changes" value={kpi.changes} caption="Account & Profile" chevron onClick={() => openTab('changes')} />
+        <KpiTile icon={IC.swap} tone="red" label="Transactions" value={kpi.transactions} caption="Payments, OOB" chevron onClick={() => openTab('transactions')} />
+        <KpiTile icon={IC.clock} tone="purple" label="Other Activities" value={kpi.other} caption="Orders, Tickets, System" chevron onClick={() => openTab('orders')} />
       </KpiGrid>
 
       <div className="grid grid-cols-1 @6xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] gap-4 items-start">
