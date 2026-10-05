@@ -110,8 +110,8 @@ export function QueryPreviewModal({
           <div className="min-w-0 flex-1 space-y-2">
             <h2 className="text-fg font-semibold text-[length:var(--fs-h5)] break-words">{issue.name}</h2>
             <div className="flex flex-wrap gap-2">
-              {issue.category && <Pill tone="red">{issue.category}</Pill>}
               <Pill tone="blue">{serviceType}</Pill>
+              {issue.category && <Pill tone="red">{issue.category}</Pill>}
             </div>
           </div>
           <button onClick={onClose} aria-label="Close" className="text-muted hover:text-fg text-xl leading-none shrink-0">
