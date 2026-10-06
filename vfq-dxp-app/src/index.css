@@ -289,6 +289,11 @@ select:not([multiple]):not([size]):not(.appearance-none) {
   }
 }
 
+/* One height for fields that share a row (search box next to a dropdown): set once here, never per screen. */
+:root {
+  --field-height: 3rem;
+}
+
 /* "How can we help today?" band (Customer 360): the pale-blue banner gradient, light to lighter toward the right. */
 :root {
   --help-band-from: #B4D5E8;

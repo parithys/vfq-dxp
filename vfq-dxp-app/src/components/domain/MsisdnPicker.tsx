@@ -11,7 +11,7 @@ import { usePersonaStore } from '../../stores/personaStore';
 import { Checkbox } from '../primitives/Checkbox';
 import { SearchField } from '../../components/primitives/SearchField';
 import { FREE_NUMBER_PRICE_CEILING_QAR, STAR_NUMBER_ENTITLEMENT_MULTIPLIER, starNumberOverageQar } from '../../engines/postpaidPricing';
-import { TAB_LABELS, TAB_ORDER, RETAIL_SALES_PERSONA_ID, toLocalMsisdn, MAX_RESERVATIONS_PER_AGENT, PAGE_SIZE, STAR_SORT_OPTIONS, FREE_SORT_OPTIONS, PRICE_RANGES, inPriceRange, SORTERS, isValidMsisdn, STAT_ICONS } from './msisdnPickerModel';
+import { TAB_LABELS, TAB_ORDER, RETAIL_SALES_PERSONA_ID, toLocalMsisdn, MAX_RESERVATIONS_PER_AGENT, PAGE_SIZE, FREE_PAGE_SIZE, STAR_SORT_OPTIONS, FREE_SORT_OPTIONS, PRICE_RANGES, inPriceRange, SORTERS, isValidMsisdn, STAT_ICONS } from './msisdnPickerModel';
 import type { MsisdnRecord, NumberTab, SortKey } from './msisdnPickerModel';
 import { StarStat } from './StarStat';
 
@@ -51,6 +51,11 @@ interface MsisdnPickerProps {
   /** No longer read: the Reserved tab always shows its green "Reserved" pill (2026-10-04 design). Kept so existing callers still compile. */
   hideReservedBadge?: boolean;
 }
+
+// The chips abbreviate (QAR 5K); the tooltip spells the range out.
+const money0 = (v: number) => `QAR ${v.toLocaleString('en-US')}`;
+const rangeTitle = (r: { min: number; max: number }) =>
+  r.min === 0 ? `Under ${money0(r.max + 1)}` : Number.isFinite(r.max) ? `${money0(r.min)} \u2013 ${money0(r.max)}` : `Above ${money0(r.min - 1)}`;
 
 const SEARCH_MIN = 2;
 const SEARCH_MAX = 8;
@@ -253,12 +258,13 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
     // Reserved: most recently reserved first. Free and Star keep their chosen sort.
     .sort(tab === 'Reserved' ? (a, b) => String(b.reservedAt ?? '').localeCompare(String(a.reservedAt ?? '')) : SORTERS[effectiveSort]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageSize = tab === 'Free' ? FREE_PAGE_SIZE : PAGE_SIZE;
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   // Clamped rather than reset: deleting a search term can shrink the list
   // under the current page, and snapping to page 0 would lose the agent's
   // place every time they edited the box.
   const safePage = Math.min(page, pageCount - 1);
-  const paged = filtered.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
+  const paged = filtered.slice(safePage * pageSize, safePage * pageSize + pageSize);
 
   const searchNode = (
     <div className="space-y-1">
@@ -267,7 +273,7 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
         placeholder="Search by number or tier (2-8 characters)"
         value={searchInput}
         maxLength={SEARCH_MAX}
-        className="pr-24"
+        className="pr-24 h-[var(--field-height)] py-0!"
         aria-describedby="msisdn-search-hint"
         onChange={(e) => setSearchInput(e.target.value)}
         onClear={() => {
@@ -281,7 +287,7 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
           {searchInput.length}/{SEARCH_MAX}
         </span>
       </SearchField>
-      <p id="msisdn-search-hint" role="status" className="min-h-[1.25rem] text-muted text-[length:var(--fs-caption)]">
+      <p id="msisdn-search-hint" role="status" className="empty:hidden text-muted text-[length:var(--fs-caption)]">
         {trimmedInput.length > 0 && trimmedInput.length < SEARCH_MIN
           ? `Enter at least ${SEARCH_MIN} characters`
           : searchPending
@@ -301,6 +307,7 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
               aria-label="Sort numbers"
               options={STAR_SORT_OPTIONS}
               placeholder="Sort by"
+              className="h-[var(--field-height)] py-0!"
               value={sortPlaceholder ? '' : sort}
               onChange={(e) => {
                 setSortChosen((c) => ({ ...c, Star: true }));
@@ -312,6 +319,7 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
               aria-label="Sort numbers"
               options={FREE_SORT_OPTIONS}
               placeholder="Sort by"
+              className="h-[var(--field-height)] py-0!"
               value={sortPlaceholder ? '' : freeSort}
               onChange={(e) => {
                 setSortChosen((c) => ({ ...c, Free: true }));
@@ -324,6 +332,14 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
 
   return (
     <div className="space-y-3">
+      {/* BR-115 entitlement, stated once up front under the step title rather than only on each card that
+          exceeds it - the agent should know the cap before scanning individual prices. */}
+      {entitlementQar !== undefined && (
+        <p className="text-muted text-[length:var(--fs-caption)]">
+            Your selected plan entitles a Star Number up to <strong className="text-accent font-bold text-[length:var(--fs-body)]">{`QAR\u00a0${entitlementQar.toLocaleString('en-US')}`}</strong> at no extra charge.
+            Anything above that is billed the difference.
+        </p>
+      )}
       <div className="flex gap-1 border-b border-border-soft">
         {visibleTabs.map((t) => (
           <button
@@ -359,7 +375,7 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
           shown on both Free and Star still, since search narrows by number
           regardless of whether that tab also offers a price sort. */}
       {inlineToolbar ? (
-        <div className="flex items-center gap-3">
+        <div className="flex items-start gap-3">
           {tab !== 'Reserved' && <div className="flex-1 min-w-0">{searchNode}</div>}
           {showSort && <div className="shrink-0 w-56">{sortNode}</div>}
         </div>
@@ -382,31 +398,18 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
           {showSort && sortNode}
         </>
       )}
-      {/* BR-115 entitlement, stated once up front rather than only on each
-          card that exceeds it (2026-09-28) - the agent should know the cap
-          before scanning individual prices, not discover it row by row.
-          Shown on Free too, not just Star: the price-band split above means
-          Free can carry priced (300-999) numbers now, not only QR0 ones. */}
-      {tab !== 'Reserved' && entitlementQar !== undefined && (
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-muted text-[length:var(--fs-caption)]">
-            This plan entitles a Star Number up to <strong className="text-accent font-bold text-[length:var(--fs-body)]">{`QR\u00a0${entitlementQar.toLocaleString('en-US')}`}</strong> at no extra charge.
-            Anything above that is billed the difference.
-          </p>
-          {/* Star tab only; sits at the right of the info text, vertically centred with it. */}
-          {tab === 'Star' && (
-            <label className="flex shrink-0 items-center gap-2 cursor-pointer text-fg text-[length:var(--fs-body)]">
-              <Checkbox
-                checked={withinEntitlementOnly}
-                onChange={(e) => {
-                  setWithinEntitlementOnly(e.target.checked);
-                  setPage(0);
-                }}
-              />
-              Show within my entitlement
-            </label>
-          )}
-        </div>
+      {/* Star tab: "Show within my entitlement" filter, with the other Star-tab filters. */}
+      {tab === 'Star' && entitlementQar !== undefined && (
+        <label className="flex w-fit items-center gap-2 cursor-pointer text-fg text-[length:var(--fs-body)]">
+          <Checkbox
+            checked={withinEntitlementOnly}
+            onChange={(e) => {
+              setWithinEntitlementOnly(e.target.checked);
+              setPage(0);
+            }}
+          />
+          Show within my entitlement
+        </label>
       )}
       {/* Star tab: price-range filter. Several ranges can be on at once; "All" (the default) means none. Counts
           ignore the range filter itself but follow search and the entitlement filter, and a range with no
@@ -425,6 +428,7 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
                   key={r.key}
                   type="button"
                   aria-pressed={on}
+                  title={isAll ? undefined : rangeTitle(r as (typeof PRICE_RANGES)[number])}
                   disabled={disabled}
                   onClick={() => {
                     setPage(0);
@@ -500,7 +504,9 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
           // ten on a page fill two rows. Reserved carries more lines per card (who holds it, when) and keeps two.
           tab === 'Star' || (tab === 'Reserved' && paged.length > 0 && paged.every((n) => n.priceQAR >= FREE_NUMBER_PRICE_CEILING_QAR))
             ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
-            : 'grid-cols-2 md:grid-cols-3 xl:grid-cols-5'
+            : tab === 'Free'
+              ? 'grid-cols-2 md:grid-cols-3'
+              : 'grid-cols-2 md:grid-cols-3 xl:grid-cols-5'
         }`}
       >
         {paged.map((n) => {
@@ -526,15 +532,13 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
             : undefined;
           const tag = isStar ? (
             // The price of a Star number, amber to set it apart from free and charged ones.
-            <Badge variant="tag-amber">QR {n.priceQAR.toLocaleString('en-US')}</Badge>
-          ) : (
-            <Badge variant="tag-green">FREE</Badge>
-          );
+            <Badge variant="tag-amber">QAR {n.priceQAR.toLocaleString('en-US')}</Badge>
+          ) : null; // A free number carries no pill: it is simply the number.
           if (tab === 'Star' || (tab === 'Reserved' && isStar)) {
             // Star-number card (2026-10-04 design): the number and a state mark on top, then a 2x2 grid of
             // icon-tile facts - Price, Lock-in, Upfront charge (only when there is one).
-            // Non-breaking spaces keep "QR 8,750" and "24 months" together: a long value wraps between words, never inside one.
-            const money = (v: number) => `QR\u00a0${v.toLocaleString('en-US')}`;
+            // Non-breaking spaces keep "QAR 8,750" and "24 months" together: a long value wraps between words, never inside one.
+            const money = (v: number) => `QAR\u00a0${v.toLocaleString('en-US')}`;
             const facts = [
               { icon: STAT_ICONS.wallet, label: 'Price', value: money(n.priceQAR), alert: false },
               ...(lockIn !== undefined ? [{ icon: STAT_ICONS.lock, label: 'Lock-in period', value: `${lockIn}\u00a0months`, alert: false }] : []),
@@ -619,10 +623,10 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
               {isStar ? (
                 <>
                   {planMrcQar !== undefined && upfront > 0 && (
-                    <p className="font-semibold text-accent text-[length:var(--fs-caption)]">Upfront charge: QR {upfront.toLocaleString('en-US')}</p>
+                    <p className="font-semibold text-accent text-[length:var(--fs-caption)]">Upfront charge: QAR {upfront.toLocaleString('en-US')}</p>
                   )}
                   {planMrcQar !== undefined && entitlementQar !== undefined && (
-                    <p className="text-fg-2 text-[length:var(--fs-caption)]">Plan entitlement: up to QR {entitlementQar.toLocaleString('en-US')}</p>
+                    <p className="text-fg-2 text-[length:var(--fs-caption)]">Plan entitlement: up to QAR {entitlementQar.toLocaleString('en-US')}</p>
                   )}
                   {lockIn !== undefined && <p className="text-fg-2 text-[length:var(--fs-caption)]">Lock-in period: {lockIn} months</p>}
                 </>
@@ -652,8 +656,8 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
             Previous
           </Button>
           <span className="text-muted text-[length:var(--fs-caption)]">
-            Showing {filtered.length === 0 ? 0 : safePage * PAGE_SIZE + 1}-
-            {Math.min((safePage + 1) * PAGE_SIZE, filtered.length)} of {filtered.length}
+            Showing {filtered.length === 0 ? 0 : safePage * pageSize + 1}-
+            {Math.min((safePage + 1) * pageSize, filtered.length)} of {filtered.length}
           </span>
           <Button
             variant="ghost-rect"

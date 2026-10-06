@@ -75,13 +75,15 @@ export const MAX_RESERVATIONS_PER_AGENT = 2;
 
 /** How many numbers are shown at once before Next/Previous: 20, four rows of five (was 10, 2026-10-04). */
 export const PAGE_SIZE = 20;
+/** Free numbers are compact one-line cards in three columns: 20 rows of 3 per page. */
+export const FREE_PAGE_SIZE = 60;
 
 /**
  * Sort orders, offered on Free and Star, NOT Reserved.
  *
  * Both bands now have real price spread to sort by: Star is 1000 and up,
  * and Free (2026-09-28's price-band split moved the 300-900 rows that used
- * to read category='Star' in here) runs 0-999 - no longer the flat QR0 list
+ * to read category='Star' in here) runs 0-999 - no longer the flat QAR 0 list
  * it used to be, so a price sort is no longer a no-op there either. Reserved
  * stays excluded: it is a short held-numbers list an agent scans rather than
  * ranks, capped at MAX_RESERVATIONS_PER_AGENT, where a sort control would
@@ -156,10 +158,10 @@ export interface PriceRange {
   max: number;
 }
 export const PRICE_RANGES: PriceRange[] = [
-  { key: 'under-5000', label: 'Under QR 5,000', min: 0, max: 4999 },
-  { key: '5000-9999', label: 'QR 5,000 \u2013 9,999', min: 5000, max: 9999 },
-  { key: '10000-24999', label: 'QR 10,000 \u2013 24,999', min: 10000, max: 24999 },
-  { key: '25000-50000', label: 'QR 25,000 \u2013 50,000', min: 25000, max: 50000 },
-  { key: 'above-50000', label: 'Above QR 50,000', min: 50001, max: Infinity },
+  { key: 'under-5000', label: 'Under QAR 5K', min: 0, max: 4999 },
+  { key: '5000-9999', label: 'QAR 5K \u2013 9.9K', min: 5000, max: 9999 },
+  { key: '10000-24999', label: 'QAR 10K \u2013 24.9K', min: 10000, max: 24999 },
+  { key: '25000-50000', label: 'QAR 25K \u2013 50K', min: 25000, max: 50000 },
+  { key: 'above-50000', label: 'Above QAR 50K', min: 50001, max: Infinity },
 ];
 export const inPriceRange = (priceQar: number, r: PriceRange) => priceQar >= r.min && priceQar <= r.max;
