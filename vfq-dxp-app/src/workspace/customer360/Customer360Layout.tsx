@@ -11,6 +11,7 @@ import { buildTelesalesTabs } from './telesales/TelesalesTabs';
 import { CustomerActionsMenu } from './CustomerActionsMenu';
 import { CustomerProfileHeader, type HeaderAlert } from './CustomerProfileHeader';
 import { useRequirementCoverage } from './requirementCoverage';
+import { FieldTypeLegend } from './FieldTypeLegend';
 import { FieldAccessProvider } from './fieldAccess';
 import { DemoProvider } from './demoValues';
 import { canEditCustomerRecords } from '../../engines/agentPrivilegeEngine';
@@ -561,6 +562,10 @@ export function Customer360Layout() {
           }
         />
       </FieldAccessProvider>
+
+      <div className={headerOnly ? 'px-8 pt-4' : 'mt-4'}>
+        <FieldTypeLegend />
+      </div>
 
       {!telesales && !headerOnly && (
       <div className="grid grid-cols-2 gap-4 mb-4">

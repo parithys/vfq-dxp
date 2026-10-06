@@ -189,6 +189,7 @@ export function QueryPreviewModal({
               <Select
                 aria-label="Queue"
                 openUp
+                tintedPanel
                 value={chosenQueue}
                 onChange={(e) => setChosenQueue(e.target.value)}
                 placeholder="Select a queue"

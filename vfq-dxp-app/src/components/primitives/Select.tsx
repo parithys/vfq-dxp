@@ -29,6 +29,8 @@ interface SelectProps {
   searchable?: boolean;
   /** Opens the option list above the field - for a select at the bottom of a panel, where a list below would be cut off. */
   openUp?: boolean;
+  /** Gives the option list a tinted surface so it stands apart from a same-coloured panel behind it (a drawer, a modal footer). */
+  tintedPanel?: boolean;
 }
 
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
@@ -58,6 +60,7 @@ export function Select({
   'aria-label': ariaLabel,
   searchable = false,
   openUp = false,
+  tintedPanel = false,
 }: SelectProps) {
   const selectId = id ?? `select-${label?.replace(/\s+/g, '-').toLowerCase()}`;
   const helperId = `${selectId}-helper`;
@@ -130,7 +133,9 @@ export function Select({
       disabled:border-[var(--field-border-disabled)] disabled:bg-[var(--field-bg-disabled)]`;
   const panelClasses = dark
     ? 'border-white/15 bg-[var(--charcoal-panel)] divide-y divide-white/10'
-    : 'border-border-soft bg-bg divide-y divide-[var(--field-divider)]';
+    : tintedPanel
+      ? 'border-[var(--field-card-border)] bg-surface divide-y divide-[var(--field-divider)]'
+      : 'border-border-soft bg-bg divide-y divide-[var(--field-divider)]';
   const optionClasses = dark ? 'text-white' : 'text-fg-2';
 
   return (
@@ -214,7 +219,7 @@ export function Select({
                 onMouseEnter={() => setHighlighted(i)}
                 onClick={() => commit(opt.value)}
                 className={`px-4 py-3 text-[length:var(--fs-body)] cursor-pointer ${optionClasses} ${
-                  i === highlighted ? (dark ? 'bg-white/10' : 'bg-surface') : ''
+                  i === highlighted ? (dark ? 'bg-white/10' : tintedPanel ? 'bg-bg' : 'bg-surface') : ''
                 }`}
               >
                 {opt.label}

@@ -140,10 +140,12 @@ function IconRail({ items, active, onSelect }: { items: TabItem[]; active: strin
                 </button>
                 {!expanded && (
                   // Overlay label: absolutely positioned from the item's own left edge, over the page, so the layout
-                  // never shifts. Shown on hover or keyboard focus of THIS item only.
+                  // never shifts. Shown on hover or keyboard focus of THIS item only. Clickable like the icon under it:
+                  // the button stays the accessible control, so this copy is hidden from assistive tech.
                   <span
                     aria-hidden="true"
-                    className={`pointer-events-none absolute left-0 top-0 z-30 hidden lg:flex h-12 items-center gap-3 pl-[18px] pr-5 whitespace-nowrap rounded-r-[var(--radius-sm)] border border-l-0 border-[var(--field-card-border)] shadow-raised text-[length:var(--fs-body)] opacity-0 transition-opacity duration-100 group-hover:opacity-100 group-focus-within:opacity-100 ${
+                    onClick={() => onSelect(item.key)}
+                    className={`pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto cursor-pointer absolute left-0 top-0 z-30 hidden lg:flex h-12 items-center gap-3 pl-[18px] pr-5 whitespace-nowrap rounded-r-[var(--radius-sm)] border border-l-0 border-[var(--field-card-border)] shadow-raised text-[length:var(--fs-body)] opacity-0 transition-opacity duration-100 group-hover:opacity-100 group-focus-within:opacity-100 ${
                       isActive ? 'bg-accent text-accent-on font-semibold border-transparent' : 'bg-surface-warm text-fg font-medium'
                     }`}
                   >

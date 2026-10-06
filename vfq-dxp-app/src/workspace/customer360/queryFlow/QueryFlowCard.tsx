@@ -154,8 +154,9 @@ export function QueryFlowCard({
           </div>
           {note && <Banner tone="success">{note}</Banner>}
           {query.trim() && (
-            <div aria-live="polite">
-              <p className="text-fg font-semibold text-[length:var(--fs-body)] mb-2">Query Issues ({results.length})</p>
+            <div aria-live="polite" className="grid grid-cols-1 @2xl:grid-cols-2 gap-4 items-start">
+              <div>
+              <p className="text-fg font-bold text-[length:var(--fs-h5)] mb-3 flex items-center gap-2">Query Issues<span className="rounded-[var(--radius-pill)] bg-surface text-fg-2 px-2.5 py-0.5 text-[length:var(--fs-caption)] font-medium">{results.length}</span></p>
               {results.length === 0 ? (
                 <p className="text-muted text-[length:var(--fs-body)]">No Query Issues match "{query.trim()}". Try fewer or different keywords.</p>
               ) : (
@@ -164,21 +165,32 @@ export function QueryFlowCard({
                     <li key={r.id}>
                       <button
                         type="button"
-                        onClick={() => setIssue(r)}
-                        className="w-full flex flex-wrap items-center gap-3 px-4 py-2.5 text-left hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+                        onClick={() => {
+                          setIssue(r);
+                          // The issue's own service type pre-selects the Query Service Type (a selected MSISDN still overrides it).
+                          const own = (QUERY_SERVICE_TYPES as readonly string[]).includes(r.serviceType ?? '') && r.serviceType !== 'Any';
+                          setManualType(own ? (r.serviceType as string) : '');
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
                       >
-                        <span className="flex-1 min-w-48 text-fg text-[length:var(--fs-body)]"><Highlighted text={r.name} keywords={keywords} /></span>
-                        {r.serviceType && <Pill tone="blue">{serviceTypeLabel(r.serviceType)}</Pill>}
-                        <Pill tone={categoryTone(r.category)}>{r.category ?? PENDING}</Pill>
+                        <span className="flex-1 min-w-0 space-y-1.5">
+                          <span className="block text-fg text-[length:var(--fs-body)]"><Highlighted text={r.name} keywords={keywords} /></span>
+                          {/* Service type and category together on the second row. */}
+                          <span className="flex flex-wrap items-center gap-2">
+                            {r.serviceType && <Pill tone="blue">{serviceTypeLabel(r.serviceType)}</Pill>}
+                            <Pill tone={categoryTone(r.category)}>{r.category ?? PENDING}</Pill>
+                          </span>
+                        </span>
                         <Icon path={CHEVRON_RIGHT} className="w-4 h-4 text-fg shrink-0" />
                       </button>
                     </li>
                   ))}
                 </ul>
               )}
+              </div>
               {goToTab && (
-                <div className="mt-4">
-                  <p className="text-fg font-semibold text-[length:var(--fs-body)] mb-2">Sections ({sectionHits.length})</p>
+                <div>
+                  <p className="text-fg font-bold text-[length:var(--fs-h5)] mb-3 flex items-center gap-2">Sections<span className="rounded-[var(--radius-pill)] bg-surface text-fg-2 px-2.5 py-0.5 text-[length:var(--fs-caption)] font-medium">{sectionHits.length}</span></p>
                   {sectionHits.length === 0 ? (
                     <p className="text-muted text-[length:var(--fs-body)]">No sections match "{query.trim()}". Search by section title, e.g., Account Details.</p>
                   ) : (

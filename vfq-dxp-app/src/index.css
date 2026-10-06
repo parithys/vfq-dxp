@@ -4,6 +4,8 @@
 @import "./components/primitives/tooltip.css";
 
 @theme inline {
+  --color-realtime: var(--realtime);
+  --color-drilldown: var(--drilldown);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-active: var(--accent-active);
@@ -287,15 +289,25 @@ select:not([multiple]):not([size]):not(.appearance-none) {
   }
 }
 
-/* Requirement-coverage overlay (src/workspace/customer360/requirementCoverage.ts): a label that satisfies a persona's
-   requirement. An audit marker, not a design-system colour. */
+/* Customer 360 field-type colours (src/workspace/customer360/requirementCoverage.ts), classified per persona from
+   'Customer 360.xlsx': Real Time = pink, Drill Down / Select = blue. Both clear WCAG AA (4.5:1) for body text on the
+   page and card surfaces in each theme: light 5.3:1+ / 6.2:1+, dark 5.7:1+ / 6.5:1+. */
 :root {
-  --audit-pink: #FF1493;
+  --realtime: #C70075;
+  --drilldown: #1D4ED8;
 }
-.req-met {
-  color: var(--audit-pink) !important;
+:root.dark {
+  --realtime: #FF5CB0;
+  --drilldown: #6EA8FF;
 }
-/* Table header labels stay one colour; the coverage overlay marks fields, not columns. */
-thead .req-met {
+.fld-realtime {
+  color: var(--realtime) !important;
+}
+.fld-drilldown {
+  color: var(--drilldown) !important;
+}
+/* Table header labels stay one colour; the overlay marks fields, not columns. */
+thead .fld-realtime,
+thead .fld-drilldown {
   color: inherit !important;
 }

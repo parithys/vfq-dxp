@@ -40,7 +40,7 @@ export function PassportToQidWizard() {
                 <PhoneNumberInput
                   label="MSISDN"
                   value={(values.msisdn as string) ?? ''}
-                  placeholder="+974 3300 1001"
+                  placeholder="3300 1001"
                   onChange={(e) => setValue('msisdn', e.target.value)}
                 />
                 <Input
