@@ -268,5 +268,47 @@
     "status": "AVAILABLE",
     "priceQAR": 0,
     "_note": "Demo seed (2026-10-04): second number reserved for the same customer (CUST-3071), made later than +97433001001, so the picker's most-recent-reserved default can be shown."
+  },
+  {
+    "msisdn": "+97455559999",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 9500,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97444441111",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 6000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477000777",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 12000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97466007777",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 15000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97455500500",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 2800,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97433339999",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 35000,
+    "valueTier": "Platinum"
   }
 ]

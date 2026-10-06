@@ -114,6 +114,9 @@ export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
  * now. Restricted to a subset of SORT_OPTIONS rather than a second literal
  * list, so the wording can never drift from Star's.
  */
+/** Star's sort menu: price only (the Free tab keeps the number sorts). */
+export const STAR_SORT_OPTIONS = SORT_OPTIONS.filter((o) => o.value === 'price-desc' || o.value === 'price-asc');
+
 export const FREE_SORT_OPTIONS = SORT_OPTIONS.filter((o) => o.value === 'number-asc' || o.value === 'number-desc');
 
 export const SORTERS: Record<SortKey, (a: MsisdnRecord, b: MsisdnRecord) => number> = {
@@ -144,3 +147,19 @@ export const STAT_ICONS = {
   tag: 'M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z M7.5 7.5h.01',
   lock: 'M6 11h12v10H6z M8 11V8a4 4 0 0 1 8 0v3 M12 15v2',
 };
+
+/** Price ranges for the Star tab's filter (QAR). `max` is inclusive; Infinity is open-ended. */
+export interface PriceRange {
+  key: string;
+  label: string;
+  min: number;
+  max: number;
+}
+export const PRICE_RANGES: PriceRange[] = [
+  { key: 'under-5000', label: 'Under QR 5,000', min: 0, max: 4999 },
+  { key: '5000-9999', label: 'QR 5,000 \u2013 9,999', min: 5000, max: 9999 },
+  { key: '10000-24999', label: 'QR 10,000 \u2013 24,999', min: 10000, max: 24999 },
+  { key: '25000-50000', label: 'QR 25,000 \u2013 50,000', min: 25000, max: 50000 },
+  { key: 'above-50000', label: 'Above QR 50,000', min: 50001, max: Infinity },
+];
+export const inPriceRange = (priceQar: number, r: PriceRange) => priceQar >= r.min && priceQar <= r.max;

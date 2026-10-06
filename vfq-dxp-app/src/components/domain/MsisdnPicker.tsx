@@ -11,7 +11,7 @@ import { usePersonaStore } from '../../stores/personaStore';
 import { Checkbox } from '../primitives/Checkbox';
 import { SearchField } from '../../components/primitives/SearchField';
 import { FREE_NUMBER_PRICE_CEILING_QAR, STAR_NUMBER_ENTITLEMENT_MULTIPLIER, starNumberOverageQar } from '../../engines/postpaidPricing';
-import { TAB_LABELS, TAB_ORDER, RETAIL_SALES_PERSONA_ID, toLocalMsisdn, MAX_RESERVATIONS_PER_AGENT, PAGE_SIZE, SORT_OPTIONS, FREE_SORT_OPTIONS, SORTERS, isValidMsisdn, STAT_ICONS } from './msisdnPickerModel';
+import { TAB_LABELS, TAB_ORDER, RETAIL_SALES_PERSONA_ID, toLocalMsisdn, MAX_RESERVATIONS_PER_AGENT, PAGE_SIZE, STAR_SORT_OPTIONS, FREE_SORT_OPTIONS, PRICE_RANGES, inPriceRange, SORTERS, isValidMsisdn, STAT_ICONS } from './msisdnPickerModel';
 import type { MsisdnRecord, NumberTab, SortKey } from './msisdnPickerModel';
 import { StarStat } from './StarStat';
 
@@ -52,18 +52,30 @@ interface MsisdnPickerProps {
   hideReservedBadge?: boolean;
 }
 
+const SEARCH_MIN = 2;
+const SEARCH_MAX = 8;
+const SEARCH_DEBOUNCE_MS = 300;
+
 // Pattern 10: Number Selection / Reservation Step - 8-digit search box + Free/Reserved
 // toggle, matching MSISDNs shown as selectable priced tiles; selecting triggers
 // immediate reservation with a confirmation token (SCR-024/048/082/104/157/191).
+// Anything below the Star band (QAR 0 - 1,499) is free of charge whatever its catalogue price; QAR 1,500 and above is a Star Number.
+const chargeFor = (priceQar: number) => (priceQar >= FREE_NUMBER_PRICE_CEILING_QAR ? priceQar : 0);
+
 export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starEntitlementQar: starEntitlementProp, allowManualEntry = true, inlineToolbar = false }: MsisdnPickerProps) {
   const entitlementQar = starEntitlementProp ?? (planMrcQar !== undefined ? planMrcQar * STAR_NUMBER_ENTITLEMENT_MULTIPLIER : undefined);
   // Star tab filter: only numbers priced within the customer's entitlement (no extra charge).
   const [withinEntitlementOnly, setWithinEntitlementOnly] = useState(false);
+  // Star tab price-range filter: none selected = "All".
+  const [priceRanges, setPriceRanges] = useState<string[]>([]);
   const [numbers, setNumbers] = useState<MsisdnRecord[]>([]);
   const [numbersLoaded, setNumbersLoaded] = useState(false);
   const [tab, setTab] = useState<NumberTab>('Free');
   const isRetailSales = usePersonaStore((s) => s.activePersonaId) === RETAIL_SALES_PERSONA_ID;
   const [starTiers, setStarTiers] = useState<{ valueRangeMin: number; valueRangeMax: number; lockInDurationMonths: number }[]>([]);
+  // Open search (letters and numbers, 2-8 characters): `searchInput` is what is typed; `search` is the trimmed text the
+  // list is actually filtered by, applied ~300 ms after typing stops and only once it has at least 2 characters.
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('price-desc');
   const [sortChosen, setSortChosen] = useState<{ Star: boolean; Free: boolean }>({ Star: false, Free: false });
@@ -142,7 +154,7 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
       return;
     }
     setCustomError(null);
-    onSelect(normalized, existing?.priceQAR ?? 0);
+    onSelect(normalized, chargeFor(existing?.priceQAR ?? 0));
     // Collapse back to the link now that this custom entry succeeded - the
     // same reasoning that hides the form in the first place: nothing left to
     // fill in, so nothing to keep open.
@@ -192,7 +204,7 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
     if (!latest) return;
     hasDefaultedReserved.current = true;
     if (selected && myReserved.some((n) => n.msisdn === selected)) return;
-    onSelect(latest.msisdn, latest.priceQAR);
+    onSelect(latest.msisdn, chargeFor(latest.priceQAR));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [numbersLoaded, myReserved.length]);
 
@@ -206,19 +218,38 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
   // agent last chose on Star or Free.
   const effectiveSort: SortKey = tab === 'Star' ? sort : tab === 'Free' ? freeSort : 'number-asc';
 
-  const filtered = inTab
-    .filter((n) => {
-      // No search on Reserved (2026-09-28): an agent holds at most
-      // MAX_RESERVATIONS_PER_AGENT numbers, so there is nothing there worth
-      // narrowing, and the search box is hidden below - filtering against a
-      // leftover query typed on another tab would silently hide a held
-      // number with no visible control on screen to explain why.
+  const trimmedInput = searchInput.trim();
+  const wantedSearch = trimmedInput.length >= SEARCH_MIN ? trimmedInput : '';
+  const searchPending = wantedSearch !== search;
+  useEffect(() => {
+    if (!searchPending) return;
+    const t = window.setTimeout(() => {
+      setSearch(wantedSearch);
+      setPage(0);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(t);
+  }, [searchPending, wantedSearch]);
+
+  // Everything except the price range, so each range can show how many numbers it would leave.
+  // (No search on Reserved - an agent holds at most two numbers - and the box is hidden there, so a leftover query
+  // from another tab must not hide a held number.)
+  const passesOtherFilters = (n: MsisdnRecord) => {
       if (tab === 'Reserved') return true;
-      // Matches the stored E.164 OR the displayed local form, so typing the
-      // 8 digits the agent can see on screen finds the row.
+      // Matches the stored E.164 OR the displayed local form, so typing the 8 digits on screen finds the row.
       if (tab === 'Star' && withinEntitlementOnly && entitlementQar !== undefined && n.priceQAR > entitlementQar) return false;
-      return search ? n.msisdn.includes(search) || toLocalMsisdn(n.msisdn).replace(/\s/g, '').includes(search.replace(/\s/g, '')) : true;
-    })
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (
+        n.msisdn.includes(search) ||
+        toLocalMsisdn(n.msisdn).replace(/\s/g, '').includes(search.replace(/\s/g, '')) ||
+        (n.valueTier ?? '').toLowerCase().includes(q)
+      );
+  };
+  const activeRanges = PRICE_RANGES.filter((r) => priceRanges.includes(r.key));
+  const rangeCounts = Object.fromEntries(PRICE_RANGES.map((r) => [r.key, inTab.filter((n) => passesOtherFilters(n) && inPriceRange(n.priceQAR, r)).length]));
+  const filtered = inTab
+    .filter((n) => tab !== 'Star' || activeRanges.length === 0 || activeRanges.some((r) => inPriceRange(n.priceQAR, r)))
+    .filter(passesOtherFilters)
     // Reserved: most recently reserved first. Free and Star keep their chosen sort.
     .sort(tab === 'Reserved' ? (a, b) => String(b.reservedAt ?? '').localeCompare(String(a.reservedAt ?? '')) : SORTERS[effectiveSort]);
 
@@ -230,15 +261,34 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
   const paged = filtered.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
 
   const searchNode = (
-    <SearchField
-          aria-label="Search 8-digit number"
-          placeholder="Search 8-digit number"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(0);
-          }}
-        />
+    <div className="space-y-1">
+      <SearchField
+        aria-label="Search numbers"
+        placeholder="Search by number or tier (2-8 characters)"
+        value={searchInput}
+        maxLength={SEARCH_MAX}
+        className="pr-24"
+        aria-describedby="msisdn-search-hint"
+        onChange={(e) => setSearchInput(e.target.value)}
+        onClear={() => {
+          setSearchInput('');
+          setSearch('');
+          setPage(0);
+        }}
+      >
+        {/* Typed length (raw, as the field counts it) against the 8-character limit. */}
+        <span aria-hidden="true" className="absolute right-10 top-1/2 -translate-y-1/2 text-muted text-[length:var(--fs-caption)]">
+          {searchInput.length}/{SEARCH_MAX}
+        </span>
+      </SearchField>
+      <p id="msisdn-search-hint" role="status" className="min-h-[1.25rem] text-muted text-[length:var(--fs-caption)]">
+        {trimmedInput.length > 0 && trimmedInput.length < SEARCH_MIN
+          ? `Enter at least ${SEARCH_MIN} characters`
+          : searchPending
+            ? 'Searching\u2026'
+            : ''}
+      </p>
+    </div>
   );
   // inlineToolbar: the dropdown reads "Sort by" until the agent picks an order (the
   // default order still applies meanwhile), and the separate SORT caption goes.
@@ -249,7 +299,7 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
           {tab === 'Star' ? (
             <Select
               aria-label="Sort numbers"
-              options={SORT_OPTIONS}
+              options={STAR_SORT_OPTIONS}
               placeholder="Sort by"
               value={sortPlaceholder ? '' : sort}
               onChange={(e) => {
@@ -358,6 +408,74 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
           )}
         </div>
       )}
+      {/* Star tab: price-range filter. Several ranges can be on at once; "All" (the default) means none. Counts
+          ignore the range filter itself but follow search and the entitlement filter, and a range with no
+          matches is disabled. */}
+      {tab === 'Star' && (
+        <div className="space-y-2" role="group" aria-label="Price range">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-fg-2 text-[length:var(--fs-caption)]">Price range</span>
+            {[{ key: 'all', label: 'All' }, ...PRICE_RANGES].map((r) => {
+              const isAll = r.key === 'all';
+              const on = isAll ? priceRanges.length === 0 : priceRanges.includes(r.key);
+              const count = isAll ? undefined : rangeCounts[r.key];
+              const disabled = !isAll && count === 0 && !on;
+              return (
+                <button
+                  key={r.key}
+                  type="button"
+                  aria-pressed={on}
+                  disabled={disabled}
+                  onClick={() => {
+                    setPage(0);
+                    setPriceRanges((cur) => (isAll ? [] : cur.includes(r.key) ? cur.filter((k) => k !== r.key) : [...cur, r.key]));
+                  }}
+                  className={`rounded-[var(--radius-pill)] border px-3 py-1 text-[length:var(--fs-caption)] focus:outline-none focus-visible:shadow-[var(--focus-ring)] disabled:opacity-40 disabled:cursor-not-allowed ${
+                    on
+                      ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] text-[var(--field-card-selected)] font-medium'
+                      : 'border-[var(--field-card-border)] bg-bg text-fg-2 enabled:hover:bg-surface'
+                  }`}
+                >
+                  {on && !isAll ? '\u2713 ' : ''}
+                  {r.label}
+                  {count !== undefined ? ` (${count})` : ''}
+                </button>
+              );
+            })}
+          </div>
+          {(activeRanges.length > 0 || withinEntitlementOnly || search) && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-fg-2 text-[length:var(--fs-caption)]">Active filters</span>
+              {activeRanges.map((r) => (
+                <span key={r.key} className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] bg-surface px-2.5 py-0.5 text-[length:var(--fs-caption)] text-fg">
+                  {r.label}
+                  <button
+                    type="button"
+                    aria-label={`Remove filter ${r.label}`}
+                    onClick={() => setPriceRanges((cur) => cur.filter((k) => k !== r.key))}
+                    className="text-fg-2 hover:text-fg focus:outline-none focus-visible:shadow-[var(--focus-ring)] rounded-full"
+                  >
+                    <Icon path="M18 6L6 18 M6 6l12 12" className="w-3.5 h-3.5" />
+                  </button>
+                </span>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setPriceRanges([]);
+                  setWithinEntitlementOnly(false);
+                  setSearch('');
+                  setSearchInput('');
+                  setPage(0);
+                }}
+                className="text-link underline text-[length:var(--fs-caption)]"
+              >
+                Clear filters
+              </button>
+            </div>
+          )}
+        </div>
+      )}
       {/* Capped and scrollable as of 2026-09-25, when the Free inventory went
           from 2 numbers to 18. Seven rows of cards pushed Continue below the
           fold on every visit; the search box above narrows the list for an
@@ -396,25 +514,21 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
           // Reserved tab it says who holds the number, which is the one thing
           // that distinguishes those rows from each other.
           // Click anywhere on the card to select it; click again to unselect.
-          const toggle = () => (isSelected && onDeselect ? onDeselect() : onSelect(n.msisdn, n.priceQAR));
+          const toggle = () => (isSelected && onDeselect ? onDeselect() : onSelect(n.msisdn, chargeFor(n.priceQAR)));
           const isStar = n.priceQAR >= FREE_NUMBER_PRICE_CEILING_QAR;
           // Upfront charge is what is actually billed today: for a Star number
           // only the amount above the plan's entitlement (BR-115); anything
           // below the Star band is billed at its catalogue price.
           const upfront =
-            isStar && planMrcQar !== undefined ? starNumberOverageQar(planMrcQar, n.priceQAR, entitlementQar) : n.priceQAR;
+            isStar && planMrcQar !== undefined ? starNumberOverageQar(planMrcQar, n.priceQAR, entitlementQar) : chargeFor(n.priceQAR);
           const lockIn = isStar
             ? starTiers.find((t) => n.priceQAR >= t.valueRangeMin && n.priceQAR <= t.valueRangeMax)?.lockInDurationMonths
             : undefined;
           const tag = isStar ? (
             // The price of a Star number, amber to set it apart from free and charged ones.
             <Badge variant="tag-amber">QR {n.priceQAR.toLocaleString('en-US')}</Badge>
-          ) : n.priceQAR === 0 ? (
-            <Badge variant="tag-green">FREE</Badge>
           ) : (
-            // A charged number below the Star band: the charge is the tag, like FREE is for a QR 0 one,
-            // in violet so it does not read as a Star, free or reserved number.
-            <Badge variant="tag-violet">QR {upfront}</Badge>
+            <Badge variant="tag-green">FREE</Badge>
           );
           if (tab === 'Star' || (tab === 'Reserved' && isStar)) {
             // Star-number card (2026-10-04 design): the number and a state mark on top, then a 2x2 grid of
@@ -512,11 +626,7 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
                   )}
                   {lockIn !== undefined && <p className="text-fg-2 text-[length:var(--fs-caption)]">Lock-in period: {lockIn} months</p>}
                 </>
-              ) : (
-                <p className="text-fg-2 text-[length:var(--fs-caption)]">
-                  {n.priceQAR === 0 ? 'No additional charge' : `One-time charge: QR ${upfront.toLocaleString('en-US')}`}
-                </p>
-              )}
+              ) : null}
             </div>
           );
         })}
@@ -524,9 +634,11 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
           <p className="text-muted text-[length:var(--fs-body)] col-span-full">
             {tab === 'Reserved'
               ? 'You have no reserved numbers.'
-              : search
-                ? 'No available numbers match that search.'
-                : 'No available numbers in this category.'}
+              : activeRanges.length > 0 && tab === 'Star'
+                ? 'No Star Numbers match the selected price range and filters. Clear the filters to see all.'
+                : search
+                  ? `No available numbers match \u201c${search}\u201d.`
+                  : 'No available numbers in this category.'}
           </p>
         )}
       </div>
