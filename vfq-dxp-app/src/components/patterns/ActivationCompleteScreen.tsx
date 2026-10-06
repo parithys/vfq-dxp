@@ -11,6 +11,10 @@ import { useEntityStore } from '../../stores/entityStore';
 import { useAuthStore } from '../../stores/authStore';
 import { closeOrderActivities } from '../../engines/activityEngine';
 import { useCustomerContext } from '../../stores/customerContextStore';
+import { Badge } from '../primitives/Badge';
+import * as mockDataEngine from '../../engines/mockDataEngine';
+import { journeyLabel } from '../../modules/new-connection/steps/serviceJourneys';
+import type { ServiceJourney } from '../../modules/new-connection/steps/serviceJourneys';
 
 /**
  * The standard "Activation complete" page, for every activation journey.
@@ -19,7 +23,7 @@ import { useCustomerContext } from '../../stores/customerContextStore';
  * about its order and nothing else:
  *
  *   Customer | MSISDN | Plan | SIM Type | Due today | Monthly recurring | Status
- *   [View Order]  [Print]  [Close Activity]  [Create Lead]  [Continue with Fibre]
+ *   [View Order]  [Print]  [Done & Exit]  [Create Lead]  [Continue with Fibre]
  *
  * Monthly recurring is omitted for an order that has none (prepaid). An eSIM
  * order adds the QR handover panel beside the receipt. An order held for
@@ -89,6 +93,24 @@ export function ActivationCompleteScreen({
       cancelled = true;
     };
   }, [order.customerId, order.address]);
+  // Cross-sell offers still open for this customer (same rule as the Offers step), shown as follow-ups for the agent.
+  const [offers, setOffers] = useState<{ offerId: string; offerName: string; serviceJourney?: string; status: string }[]>([]);
+  useEffect(() => {
+    if (!order.customerId) return;
+    let cancelled = false;
+    void (async () => {
+      const [all, contacts] = await Promise.all([
+        mockDataEngine.list<{ offerId: string; offerName: string; contactId: string; serviceJourney?: string; status: string }>('cross-sales-offers'),
+        mockDataEngine.list<{ contactRecordId: string; customerId: string }>('customer-contacts'),
+      ]);
+      const mine = new Set(contacts.filter((c) => c.customerId === order.customerId).map((c) => c.contactRecordId));
+      const open = all.filter((o) => mine.has(o.contactId) && (o.status === 'Offered' || o.status === 'Interested') && o.serviceJourney);
+      if (!cancelled) setOffers(open);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [order.customerId]);
   const [emailStatus, setEmailStatus] = useState<'sent' | 'blocked'>(emailedOrders.has(order.orderId) ? 'sent' : 'blocked');
   // Automatically send the order details - and, for an eSIM order, the QR code / activation code -
   // to the customer's VERIFIED email address as soon as the order is submitted. An address that is
@@ -190,18 +212,40 @@ export function ActivationCompleteScreen({
             : []),
           { label: 'Status', value: order.pendingApproval ? 'Submitted for Approval' : 'Complete' },
           // The cue for the fibre actions below: whether the customer's location can be served by fibre.
-          { label: 'Customer location', value: fibre === 'rfs' ? 'RFS (Ready For Service)' : fibre === 'not-rfs' ? 'Not RFS (not ready for service)' : fibre === 'unknown' ? 'Not on file' : 'Checking...' },
+          { label: 'Customer location', value: fibre === 'rfs' ? 'RFS - Eligible for Fibre' : fibre === 'not-rfs' ? 'Not RFS (not ready for service)' : fibre === 'unknown' ? 'Not on file' : 'Checking...' },
         ]}
         actions={[
           { label: 'View Order', variant: 'primary-rect', onClick: () => navigate(`${ORDER_DETAIL_ROUTE}?id=${order.orderId}`) },
           { label: 'Print', onClick: () => window.print(), endRow: true },
-          { label: 'Close Activity', onClick: () => void closeActivity(), endRow: true },
-          // Contextual: a location that is ready for service goes on to fibre activation; any other location (not ready,
-          // or no address to check) offers capturing the fibre interest as a lead instead. Neither shows while it is read.
+          { label: 'Done & Exit', onClick: () => void closeActivity(), endRow: true },
+          // A location that is ready for service can go on to fibre activation. Create Lead (always offered once the
+          // location is read) records the fibre interest as a lead straight away and confirms it with a toast.
           ...(fibre === 'rfs' ? [{ label: 'Continue with Fibre', onClick: () => navigate(FIBRE_ACTIVATION_ROUTE) }] : []),
-          ...(fibre === 'not-rfs' || fibre === 'unknown' ? [{ label: leadId ? `Lead ${leadId} created` : 'Create Lead', onClick: () => void createLead() }] : []),
+          ...(fibre !== undefined ? [{ label: leadId ? `Lead ${leadId} created` : 'Create Lead', onClick: () => void createLead() }] : []),
         ]}
       />
+      {(fibre === 'rfs' || offers.length > 0) && (
+        <section aria-label="Eligible offers" className="max-w-xl mx-auto mt-6 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 no-print print:hidden">
+          <h2 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-3">Eligible offers for this customer</h2>
+          <ul className="divide-y divide-border-soft">
+            {fibre === 'rfs' && (
+              <li className="flex items-center justify-between gap-3 py-2">
+                <span className="text-fg text-[length:var(--fs-body)]">Fibre at the customer's location</span>
+                <Badge variant="success">RFS - Eligible for Fibre</Badge>
+              </li>
+            )}
+            {offers.map((o) => (
+              <li key={o.offerId} className="flex items-center justify-between gap-3 py-2">
+                <span className="text-fg text-[length:var(--fs-body)]">{o.offerName}</span>
+                <span className="flex items-center gap-2">
+                  <span className="text-fg-2 text-[length:var(--fs-caption)]">{journeyLabel(o.serviceJourney as ServiceJourney)}</span>
+                  <Badge variant="filled-neutral">{o.status}</Badge>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {!order.esimActivationCode &&
         (emailStatus === 'sent' ? (
           <p className="text-success text-center text-[length:var(--fs-body)] mt-4">Your order details have been sent to your email.</p>

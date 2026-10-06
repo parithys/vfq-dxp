@@ -108,10 +108,6 @@ export function SimTypeStep({ value, customerEmail, onChange }: SimTypeStepProps
               <dt className="text-fg-2">ICCID</dt>
               <dd className="text-fg font-medium">{value.simIccid ?? '-'}</dd>
             </div>
-            <div className="flex justify-between gap-3">
-              <dt className="text-fg-2">Stock Status</dt>
-              <dd className="text-fg font-medium">{value.simStockStatus ?? '-'}</dd>
-            </div>
           </dl>
         )}
       </div>

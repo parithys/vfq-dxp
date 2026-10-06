@@ -121,7 +121,7 @@ export function OrderConfirmationScreen({
 
       {/* Actions span both columns: they act on the order as a whole, so
           anchoring them under one column would imply otherwise. */}
-      <div className="no-print flex items-center justify-center gap-3 mt-8">
+      <div className="no-print print:hidden flex items-center justify-center gap-3 mt-8">
         {actions.filter((a) => !a.endRow).map((action) => (
           // secondary-rect, not ghost-rect (2026-09-28) - per Button.tsx's own
           // documented rule, ghost-rect is for the thing you press to NOT do
@@ -136,7 +136,7 @@ export function OrderConfirmationScreen({
       {/* Actions marked `endRow` (Print, Close Activity) sit on their own row below, centred under the main
           actions, in the order given. On narrow screens they stack at full width, in the same order. */}
       {actions.some((a) => a.endRow) && (
-        <div className="no-print flex flex-col gap-3 mt-4 sm:flex-row sm:justify-center [&>button]:w-full sm:[&>button]:w-auto">
+        <div className="no-print print:hidden flex flex-col gap-3 mt-4 sm:flex-row sm:justify-center [&>button]:w-full sm:[&>button]:w-auto">
           {actions.filter((a) => a.endRow).map((action) => (
             <Button key={action.label} variant={action.variant ?? 'secondary-rect'} onClick={action.onClick}>
               {action.label}

@@ -17,6 +17,8 @@ export interface WizardStep {
   heading?: string;
   /** One line of explanatory text under the heading. Optional. */
   subheading?: string;
+  /** Extra control(s) at the right of the step's title row, before Customer view (for example a Refresh button). */
+  headerAction?: (ctx: { values: Record<string, unknown>; setValue: (field: string, value: unknown) => void }) => ReactNode;
   /** Short secondary line shown under the label in the step list (e.g. "Customer identification"). Optional - omitted steps just show the label. */
   description?: string;
   render: (ctx: {

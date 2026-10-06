@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Input } from '../primitives/Input';
 import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
+import { useNotificationStore } from '../../stores/notificationStore';
 import { Icon } from '../primitives/Icon';
 import { CARD_IDLE, CARD_SELECTED, CARD_SELECTED_SURFACE, SelectedCardTexture } from '../patterns/offerCardParts';
 import { Select } from '../primitives/Select';
@@ -19,6 +20,8 @@ import { StarStat } from './StarStat';
 interface MsisdnPickerProps {
   selected?: string;
   onSelect: (msisdn: string, priceQAR: number) => void;
+  /** Changes when the agent presses Refresh: the number inventory is read again. */
+  refreshKey?: number;
   /** When given, clicking the selected number again calls this instead of reselecting (toggle). */
   onDeselect?: () => void;
   /**
@@ -67,7 +70,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 // Anything below the Star band (QAR 0 - 1,499) is free of charge whatever its catalogue price; QAR 1,500 and above is a Star Number.
 const chargeFor = (priceQar: number) => (priceQar >= FREE_NUMBER_PRICE_CEILING_QAR ? priceQar : 0);
 
-export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starEntitlementQar: starEntitlementProp, allowManualEntry = true, inlineToolbar = false }: MsisdnPickerProps) {
+export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, planMrcQar, starEntitlementQar: starEntitlementProp, allowManualEntry = true, inlineToolbar = false }: MsisdnPickerProps) {
   const entitlementQar = starEntitlementProp ?? (planMrcQar !== undefined ? planMrcQar * STAR_NUMBER_ENTITLEMENT_MULTIPLIER : undefined);
   // Star tab filter: only numbers priced within the customer's entitlement (no extra charge).
   const [withinEntitlementOnly, setWithinEntitlementOnly] = useState(false);
@@ -104,12 +107,23 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
   // effect on the unselected case, where the form is always shown inline.
 
   useEffect(() => {
-    mockDataEngine.list<MsisdnRecord>('numbers').then((n) => {
-      setNumbers(n);
-      setNumbersLoaded(true);
-    });
     mockDataEngine.list<{ valueRangeMin: number; valueRangeMax: number; lockInDurationMonths: number }>('star-number-tiers').then(setStarTiers);
   }, []);
+
+  // The inventory is read on open and again each time Refresh is pressed (every tab shows the same list, re-filtered).
+  useEffect(() => {
+    let cancelled = false;
+    mockDataEngine.list<MsisdnRecord>('numbers').then((n) => {
+      if (cancelled) return;
+      setNumbers(n);
+      setNumbersLoaded(true);
+      setPage(0);
+      if (refreshKey > 0) useNotificationStore.getState().pushToast('success', 'Number list refreshed', { key: 'msisdn-refreshed' });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshKey]);
 
   // Auto-open Reserved on load if this customer already has one, else the
   // Free default stands (2026-09-28 request). Guarded to fire only once: it
@@ -217,7 +231,8 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
   // only - see FREE_SORT_OPTIONS). Reserved still gets none: an agent holds
   // at most MAX_RESERVATIONS_PER_AGENT numbers, so there is nothing there
   // worth ranking - see the SortKey doc comment above.
-  const showSort = tab === 'Star' || tab === 'Free';
+  // Free numbers have no sort control: they are all free, so there is nothing worth ranking (listed by number).
+  const showSort = tab === 'Star';
 
   // Without a control on screen, the order must not depend on whatever the
   // agent last chose on Star or Free.
@@ -576,7 +591,7 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
                 <p className="font-bold text-[length:var(--fs-h4)] text-fg leading-tight pr-10">{toLocalMsisdn(n.msisdn)}</p>
                 <div className="relative grid grid-cols-2 gap-x-6 gap-y-4">
                   {facts.map((f) => (
-                    <StarStat key={f.label} icon={f.icon} label={f.label} value={f.value} alert={f.alert} />
+                    <StarStat key={f.label} icon={f.icon} label={f.label} value={f.value} alert={f.alert} plainValue={f.label === 'Lock-in period'} />
                   ))}
                 </div>
               </div>

@@ -204,6 +204,8 @@ export function GuidedActivationWizard({
             viewOpen={viewOpen}
             toggleCustomerView={toggleCustomerView}
             stepHeadingRef={stepHeadingRef}
+            values={draft.values}
+            setValue={setValue}
           />
           {currentStep?.render({ values: draft.values, setValue, goNext: () => void goNext(), goToStepKey, saveDraft, saveAndExit, requestAbandon })}
           {hasSummary && <StepSummaryPanel {...summaryProps} variant="accordion" />}

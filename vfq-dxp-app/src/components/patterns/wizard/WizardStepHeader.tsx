@@ -12,13 +12,20 @@ export function WizardStepHeader({
   viewOpen,
   toggleCustomerView,
   stepHeadingRef,
+  values,
+  setValue,
 }: {
   currentStep: WizardStep | undefined;
   allowCustomerView: boolean | undefined;
   viewOpen: boolean;
   toggleCustomerView: () => void;
   stepHeadingRef: RefObject<HTMLHeadingElement | null>;
+  /** For the step's own header action, when it has one. */
+  values?: Record<string, unknown>;
+  setValue?: (field: string, value: unknown) => void;
 }) {
+  const showCustomerView = allowCustomerView && !currentStep?.hideCustomerView;
+  const action = currentStep?.headerAction && values && setValue ? currentStep.headerAction({ values, setValue }) : null;
   // Title left, Customer view right and vertically centred with it; the button wraps below the title when the row is too narrow.
   return (
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mb-4">
@@ -34,15 +41,17 @@ export function WizardStepHeader({
               <p className="text-fg-2 text-[length:var(--fs-body)] mt-1">{currentStep.subheading}</p>
             )}
           </div>
-          {allowCustomerView && !currentStep?.hideCustomerView && (
+          {(showCustomerView || action) && (
             <div className="flex items-center gap-3">
+              {action}
               {/* Says which content the customer can see; the container's outline says where it ends. */}
-              {viewOpen && (
+              {showCustomerView && viewOpen && (
                 <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] bg-surface-warm px-2.5 py-0.5 text-accent text-[length:var(--fs-tag)] font-medium">
                   <Icon path={EYE_ICON} className="w-3.5 h-3.5" />
                   Visible to customer
                 </span>
               )}
+              {showCustomerView && (
               <Tooltip
                 content={viewOpen ? 'The customer can see this section. Click to stop sharing.' : 'Show this section to the customer'}
                 placement="bottom"
@@ -58,6 +67,7 @@ export function WizardStepHeader({
                   {viewOpen ? 'Showing to customer' : 'Customer view'}
                 </Button>
               </Tooltip>
+              )}
             </div>
           )}
         </div>

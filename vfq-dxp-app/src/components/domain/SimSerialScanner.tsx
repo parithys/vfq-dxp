@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
 import { Input } from '../primitives/Input';
-import { Badge } from '../primitives/Badge';
 import { Icon } from '../primitives/Icon';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 
@@ -56,7 +55,6 @@ interface SimSerialScannerProps {
 export function SimSerialScanner({ value, onChange, autoFocus, suppressValidation }: SimSerialScannerProps) {
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
-  const [inStock, setInStock] = useState(false);
   const [scanning, setScanning] = useState(false);
   // True from the moment the scan icon is pressed until the scan has filled the
   // field. Pressing the icon moves focus off the (empty) input, and that blur
@@ -66,7 +64,6 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
   const scanIntent = useRef(false);
 
   const validate = async (serial: string) => {
-    setInStock(false);
     // eSIM is the agent's current choice - this panel is not the one being
     // filled in, so it has nothing to validate or complain about yet.
     if (suppressValidation) {
@@ -98,7 +95,6 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
       return;
     }
     setError(null);
-    setInStock(true);
     onChange(serial, true, { iccid: found.iccid, stockStatus: found.stockStatus });
   };
 
@@ -179,7 +175,6 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
             hover title). */}
         {scanning && <span className="text-[length:var(--fs-caption)] text-muted">Scanning…</span>}
         {checking && !scanning && <span className="text-[length:var(--fs-caption)] text-muted">Checking stock…</span>}
-        {inStock && !checking && !scanning && <Badge variant="success">SIM available in this store's stock</Badge>}
       </div>
     </div>
   );
