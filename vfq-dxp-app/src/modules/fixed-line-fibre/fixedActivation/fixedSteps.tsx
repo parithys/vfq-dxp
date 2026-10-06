@@ -1,26 +1,15 @@
 import { cloneElement, isValidElement, type ReactElement } from 'react';
 import { cafStep } from '../../new-connection/steps/cafStep';
+import { contactStep } from '../../new-connection/steps/contactStep';
+import type { NewConnectionStepContext } from '../../new-connection/steps/stepContext';
 import { FixedPlanStepView, InstallationAddressStep, NumberDevicesStep } from './FixedStepViews';
-import { GuidedContactStep } from '../../../components/patterns/GuidedContactStep';
-import { hasIdentityDetails, isValidAltPhone, isValidEmail } from '../../../components/patterns/guidedContactModel';
-import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
-import { BillingAccountAutoResolver } from '../../../components/patterns/BillingAccountAutoResolver';
-import type { BillingAccountValue } from '../../../components/patterns/billingAccountModel';
-import { EligibilityGateStep } from '../../../components/domain/EligibilityGateStep';
-import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
 import { AppointmentBookingStep } from '../../../components/patterns/AppointmentBookingStep';
 import type { AppointmentBookingValue } from '../../../components/patterns/AppointmentBookingStep';
 import type { SummaryField } from '../../../components/patterns/wizard/stepSummary';
 import type { WizardStep } from '../../../components/patterns/wizard/guidedWizardTypes';
 import { appointmentSummary } from '../../../components/patterns/wizard/commonSummaries';
-import { idTypesFor } from '../../../data/idTypes';
-import { CustomerTypeStep } from '../../new-connection/steps/CustomerTypeStep';
-import { isCustomerTypeValid } from '../../new-connection/steps/customerTypeModel';
-import type { CustomerTypeValue } from '../../new-connection/steps/customerTypeModel';
-import { CustomerStatusBanner } from '../../new-connection/steps/JourneyBanners';
-import { EligibilityOutcomePanel, OutcomeActions } from '../../new-connection/steps/EligibilityOutcomes';
-import { addressSummary, contactSummary, planSummary } from '../../new-connection/steps/stepSummaries';
+import { addressSummary, planSummary } from '../../new-connection/steps/stepSummaries';
 import {
   serviceTypeLabel,
   type FixedInstallationValue,
@@ -32,85 +21,11 @@ type Values = Record<string, unknown>;
 const at = (v: Values, ...path: string[]): unknown => path.reduce<unknown>((o, k) => (o && typeof o === 'object' ? (o as Values)[k] : undefined), v);
 
 // ---- 1. Contact Identification -------------------------------------------------------------------------------
-// Same scan -> verify -> Fetch (MOI) -> eligibility sequence as Postpaid. The MOI-returned parameters are
-// read-only, and under-18 is a hard stop (both enforced by the shared identity step and eligibility engine).
+// New Connection's Contact step as-is (scan -> verify -> Fetch (MOI), eligibility, billing-account resolver,
+// customer type), entered as the existing-customer variant without a preset customer: whoever the ID belongs to
+// is matched by eligibility, never forced to be new. The MOI fields stay read-only and under-18 stays a hard stop.
 export function fixedContactStep(guardedContactChange: ReturnType<typeof useJourneyCustomerLock>['guardedContactChange']): WizardStep {
-  return {
-    key: 'contact',
-    label: 'Contact',
-    summary: contactSummary,
-    hideCustomerView: true,
-    render: ({ values, setValue }) => {
-      const contact = values.contact as GuidedContactValue | undefined;
-      const eligibility = values.eligibility as EligibilityResult | undefined;
-      return (
-        <>
-          <GuidedContactStep
-            allowedIdTypes={idTypesFor('new-connection')}
-            unavailableIdTypes={[]}
-            verifyThenFetch
-            value={contact ?? {}}
-            onChange={(v) => guardedContactChange(v, setValue)}
-            showIptvToggle={false}
-          />
-          <div className="mt-6 pt-6 border-t border-border-soft space-y-4">
-            <CustomerStatusBanner customerId={eligibility?.customerId} />
-            <EligibilityOutcomePanel />
-            <EligibilityGateStep
-              announcePass={false}
-              idNumber={contact?.moiResult ? contact.idNumber : undefined}
-              result={eligibility}
-              onResult={(r) => setValue('eligibility', r)}
-            />
-            {contact?.moiResult && eligibility && !eligibility.hardStop && !eligibility.softStop && (
-              <div className="space-y-4">
-                <h3 className="text-fg font-semibold text-[length:var(--fs-h5)]">Additional Discounts</h3>
-                {/* Headless: resolves (or creates) the customer's billing account for the Billing Profile step. */}
-                <BillingAccountAutoResolver
-                  customerId={eligibility.customerId}
-                  customerName={contact.moiResult.name}
-                  value={(values.billingAccount as BillingAccountValue) ?? {}}
-                  onChange={(v) => setValue('billingAccount', v)}
-                />
-                {/* Customer type (B2B2C, Retired, MADA), captured exactly as in New Connection. */}
-                <CustomerTypeStep
-                  value={(values.customerType as CustomerTypeValue) ?? {}}
-                  onChange={(v) => setValue('customerType', v)}
-                  idNumber={contact.idNumber}
-                  onReject={() => {
-                    setValue('customerType', { type: 'none', rejected: true });
-                    setValue('discountId', undefined);
-                    setValue('discountSupportingId', undefined);
-                    setValue('discountProofDocument', undefined);
-                  }}
-                  derivedCompany={
-                    contact.isB2B2C
-                      ? { companyName: contact.companyName, companyAccountId: contact.companyAccountId, companyIsNew: contact.companyIsNew }
-                      : undefined
-                  }
-                />
-              </div>
-            )}
-          </div>
-        </>
-      );
-    },
-    isValid: (values) => {
-      const c = values.contact as GuidedContactValue | undefined;
-      const e = values.eligibility as EligibilityResult | undefined;
-      const identityOk = Boolean(
-        c?.moiResult && hasIdentityDetails(c ?? {}) && isValidEmail(c?.email) && (!c?.altPhone || isValidAltPhone(c.altPhone))
-      );
-      return identityOk && Boolean(e) && !e?.hardStop && !e?.softStop && isCustomerTypeValid(values.customerType as CustomerTypeValue | undefined);
-    },
-    primaryAction: ({ values, abandon, defaultButton }) => (
-      <OutcomeActions
-        eligibility={values.eligibility as EligibilityResult | undefined}
-        defaultButton={defaultButton}
-        onAbandon={() => abandon({ hideKeepWorking: true })}
-      />
-    ),
-  };
+  return { ...contactStep({ flow: 'existing', existingCustomerId: undefined, guardedContactChange } as NewConnectionStepContext), label: 'Contact' };
 }
 
 // ---- 2. Installation Address ---------------------------------------------------------------------------------

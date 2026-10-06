@@ -74,11 +74,6 @@ export const simTypeFormSummary = (key = 'simType'): SummaryField[] => [
   { key: 'iccid', label: 'ICCID', type: 'text', optional: true, sensitive: true, value: (v) => at(v, key, 'simIccid') },
 ];
 
-export const checkoutTotalsSummary: SummaryField[] = [
-  { key: 'due', label: 'Total Payable Today', type: 'text', value: (v) => qar(at(v, 'checkoutTotals', 'dueTodayQar')) },
-  { key: 'monthly', label: 'Monthly Recurring', type: 'text', value: (v) => qar(at(v, 'checkoutTotals', 'monthlyRecurringQar')) },
-];
-
 export const cafSummary: SummaryField[] = [
   { key: 'type', label: 'CAF Type', type: 'text', value: (v) => at(v, 'caf', 'cafType') },
   { key: 'signed', label: 'Signed', type: 'toggle', value: (v) => Boolean(at(v, 'caf', 'signatureDataUrl')) },

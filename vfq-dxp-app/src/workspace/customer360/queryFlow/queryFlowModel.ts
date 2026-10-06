@@ -114,9 +114,6 @@ export function deriveQueryServiceType(issue: QueryIssue, service: CustomerServi
   return `${line} ${/request/i.test(issue.serviceType ?? '') ? 'Requests' : 'Complaints'}`;
 }
 
-/** The Trouble Ticket issue types the existing ticket form accepts; other service types leave the choice to the agent. */
-export const TICKET_ISSUE_TYPES = ['Mobile Complaints', 'Fixed/5G Complaints'];
-
 /**
  * The Details fields for a category + service type. Exact match first; then the category's "Any" column; then a
  * column of the same category on the same line (Mobile / Fixed); then the category's first column.

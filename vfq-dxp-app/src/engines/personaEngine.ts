@@ -52,10 +52,6 @@ export function canUseFeature(personaId: string, featureKey: string): boolean {
   return getPersonaFeatureLevel(personaId, featureKey) !== null;
 }
 
-export function featureLevelFor(personaId: string, featureKey: string): PermissionLevel | null {
-  return getPersonaFeatureLevel(personaId, featureKey);
-}
-
 export function grantedFeaturesFor(personaId: string): PersonaFeatureGrant[] {
   return getPersonaFeatureGrants(personaId);
 }

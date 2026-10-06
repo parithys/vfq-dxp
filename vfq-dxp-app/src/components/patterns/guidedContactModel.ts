@@ -173,21 +173,6 @@ export function isValidEmail(raw: string | undefined): boolean {
   return /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(raw.trim());
 }
 
-// Progressive DD/MM/YYYY mask - the agent types 10102000 and gets 10/10/2000
-// without touching the slash key.
-//
-// Works off the digits alone rather than appending separators to whatever the
-// field already held, so backspacing over a slash deletes the digit before it
-// instead of stalling: "10/1" backspaced becomes "10" -> re-masked to "10/",
-// and one more backspace gives "1". Extra digits past 8 are dropped, which is
-// also why the field carries maxLength.
-export function formatDobInput(raw: string): string {
-  const d = raw.replace(/\D/g, '').slice(0, 8);
-  if (d.length <= 2) return d;
-  if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`;
-  return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
-}
-
 // MOI's YYYY-MM-DD into the field's DD/MM/YYYY. Anything not in that exact
 // ISO shape is passed through untouched rather than mangled - better a value
 // the agent can see and correct than a silently rearranged one.

@@ -55,8 +55,6 @@ export function outcomeRows(key: OutcomeKey): EligibilityRow[] {
   }
 }
 
-export const OUTCOME_KEYS: OutcomeKey[] = ['Hard Stop', 'Soft Stop', 'Approval Routing', 'Advisory Only'];
-
 // The footer links and the inline panel live in different parts of the wizard
 // (footer vs step body), so the selected outcome is shared through a tiny store.
 export const useOutcomePreview = create<{ open: OutcomeKey | null; toggle: (k: OutcomeKey) => void; close: () => void }>((set) => ({
