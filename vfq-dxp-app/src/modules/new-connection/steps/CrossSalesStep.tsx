@@ -89,7 +89,7 @@ export function CrossSalesStep({
       {/* One row per service (Postpaid, Prepaid, GigaHome...), in order of first appearance. */}
       <div className="space-y-3" role="radiogroup" aria-label="Offers">
         {[null].map((all) => (
-          <ul key={String(all)} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <ul key={String(all)} className="grid gap-4 grid-cols-1 sm:grid-cols-2">
         {offers.map((o) => {
           const selected = value.decision === 'accepted' && value.offerId === o.offerId;
           const recommended = o.offerId === recommendedId;
@@ -157,7 +157,7 @@ export function CrossSalesStep({
                   ))}
                 </ul>
               </div>
-              <div className="flex items-center justify-between gap-3 pt-1">
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pt-1">
                 {/* Opens the full offer details in the side drawer; it stops
                     propagation so looking never selects the offer. */}
                 <button
@@ -174,7 +174,7 @@ export function CrossSalesStep({
                   <Icon path={CHEVRON_RIGHT} className="w-4 h-4" />
                 </button>
                 {onInterestedOffer ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 ml-auto">
                     <Button
                       variant="secondary-rect"
                       compact

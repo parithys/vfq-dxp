@@ -29,7 +29,6 @@
     "minutesAllowance": "Unlimited local",
     "speedTier": "5G Ready",
     "commitmentMonths": 3,
-    "popular": true,
     "benefits": ["Free GigaHome TV Basic Pack for 3 months", "Free International 50 Add-on for 1 month"],
     "_commitmentNote": "Corrected 2026-09-28 from an invented 12 to the evidenced BR-269 figure - this exact plan ('Red 350') is BR-269's own named example of a postpaid plan disclosing a 3-month Minimum Subscription Period."
   },
@@ -116,5 +115,78 @@
     "dataAllowanceGB": 40,
     "minutesAllowance": "Unlimited local",
     "packValidityDays": 30
+  },
+  {
+    "productId": "PROD-107",
+    "name": "Postpaid Essential",
+    "type": "Postpaid Plan",
+    "mrcQAR": 115,
+    "originalMrcQAR": 130,
+    "promoMonths": 4,
+    "dataAllowanceGB": 15,
+    "minutesAllowance": "500 local minutes",
+    "speedTier": "5G Ready",
+    "commitmentMonths": 3,
+    "offer": true,
+    "popular": true,
+    "features": [
+      "15GB full speed local data",
+      "500 local minutes",
+      "300 SMS",
+      "Up to 300 international minutes"
+    ],
+    "benefits": [
+      "Free Star Number worth QAR 1,500",
+      "Free Vodafone My Book"
+    ],
+    "_note": "Offers-tab plan (2026-10-06 design). mrcQAR is the promotional price for promoMonths months; originalMrcQAR is the price after."
+  },
+  {
+    "productId": "PROD-108",
+    "name": "Postpaid Extra",
+    "type": "Postpaid Plan",
+    "mrcQAR": 145,
+    "originalMrcQAR": 180,
+    "promoMonths": 4,
+    "dataAllowanceGB": 40,
+    "minutesAllowance": "Unlimited local minutes",
+    "speedTier": "5G Ready",
+    "commitmentMonths": 3,
+    "offer": true,
+    "features": [
+      "40GB full speed local data",
+      "Unlimited local minutes",
+      "300 SMS",
+      "Up to 300 international minutes"
+    ],
+    "benefits": [
+      "Free Star Number worth QAR 2,500",
+      "Free Vodafone My Book"
+    ],
+    "_note": "Offers-tab plan (2026-10-06 design). mrcQAR is the promotional price for promoMonths months; originalMrcQAR is the price after."
+  },
+  {
+    "productId": "PROD-109",
+    "name": "Postpaid Max",
+    "type": "Postpaid Plan",
+    "mrcQAR": 180,
+    "originalMrcQAR": 230,
+    "promoMonths": 4,
+    "dataAllowanceGB": 60,
+    "minutesAllowance": "Unlimited local minutes",
+    "speedTier": "5G Ready",
+    "commitmentMonths": 3,
+    "offer": true,
+    "features": [
+      "60GB full speed local data",
+      "Unlimited local minutes",
+      "300 SMS",
+      "Up to 300 international minutes"
+    ],
+    "benefits": [
+      "Free Star Number worth QAR 3,500",
+      "Free Vodafone My Book"
+    ],
+    "_note": "Offers-tab plan (2026-10-06 design). mrcQAR is the promotional price for promoMonths months; originalMrcQAR is the price after."
   }
 ]

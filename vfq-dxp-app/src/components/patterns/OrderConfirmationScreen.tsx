@@ -32,6 +32,8 @@ interface OrderConfirmationScreenProps {
    * postpaid order happens to need handed over.
    */
   handoverPanel?: ReactNode;
+  /** A short line directly under the heading (for example whether the order details were emailed). */
+  headerNote?: ReactNode;
 }
 
 // Dedicated post-submit confirmation experience - replaces a toast-only
@@ -46,6 +48,7 @@ export function OrderConfirmationScreen({
   activityId,
   summaryLines,
   actions,
+  headerNote,
   handoverPanel,
 }: OrderConfirmationScreenProps) {
   return (
@@ -78,6 +81,7 @@ export function OrderConfirmationScreen({
           <Icon path={CHECK} className="w-8 h-8" />
         </div>
         <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-2">{heading}</h1>
+        {headerNote && <div className="mb-2">{headerNote}</div>}
         <p className="text-fg-2 mb-8">
           Order <span className="font-medium text-fg">{orderId}</span>
           {activityId && (

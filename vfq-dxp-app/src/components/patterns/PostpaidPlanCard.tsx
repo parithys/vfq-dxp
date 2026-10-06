@@ -62,8 +62,9 @@ export function PostpaidPlanCard({ p, selectedProductId, billLimit, onSelectProd
           <span className="text-[length:var(--fs-h3)] font-bold">{p.mrcQAR}</span>
           <span className="text-fg-2 text-[length:var(--fs-caption)]"> /month</span>
         </p>
+        {p.promoMonths && <p className="text-fg-2 text-[length:var(--fs-caption)] -mt-1">for {p.promoMonths} months</p>}
         <ul className="space-y-1.5">
-          {[...planFeatureRows(p), { icon: ICON_CARD, text: `Bill limit: QR ${shownLimit}` }].map((f) => (
+          {[...planFeatureRows(p), { icon: ICON_CARD, text: `Bill limit: QAR ${shownLimit}` }].map((f) => (
             <li key={f.text} className="flex items-center gap-2 text-fg-2 text-[length:var(--fs-caption)]">
               <Icon path={f.icon} className="w-4 h-4 shrink-0 text-accent" />
               {f.text}

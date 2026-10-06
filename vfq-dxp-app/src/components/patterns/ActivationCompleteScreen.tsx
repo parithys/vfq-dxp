@@ -12,9 +12,6 @@ import { useAuthStore } from '../../stores/authStore';
 import { closeOrderActivities } from '../../engines/activityEngine';
 import { useCustomerContext } from '../../stores/customerContextStore';
 import { Badge } from '../primitives/Badge';
-import * as mockDataEngine from '../../engines/mockDataEngine';
-import { journeyLabel } from '../../modules/new-connection/steps/serviceJourneys';
-import type { ServiceJourney } from '../../modules/new-connection/steps/serviceJourneys';
 
 /**
  * The standard "Activation complete" page, for every activation journey.
@@ -93,24 +90,6 @@ export function ActivationCompleteScreen({
       cancelled = true;
     };
   }, [order.customerId, order.address]);
-  // Cross-sell offers still open for this customer (same rule as the Offers step), shown as follow-ups for the agent.
-  const [offers, setOffers] = useState<{ offerId: string; offerName: string; serviceJourney?: string; status: string }[]>([]);
-  useEffect(() => {
-    if (!order.customerId) return;
-    let cancelled = false;
-    void (async () => {
-      const [all, contacts] = await Promise.all([
-        mockDataEngine.list<{ offerId: string; offerName: string; contactId: string; serviceJourney?: string; status: string }>('cross-sales-offers'),
-        mockDataEngine.list<{ contactRecordId: string; customerId: string }>('customer-contacts'),
-      ]);
-      const mine = new Set(contacts.filter((c) => c.customerId === order.customerId).map((c) => c.contactRecordId));
-      const open = all.filter((o) => mine.has(o.contactId) && (o.status === 'Offered' || o.status === 'Interested') && o.serviceJourney);
-      if (!cancelled) setOffers(open);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [order.customerId]);
   const [emailStatus, setEmailStatus] = useState<'sent' | 'blocked'>(emailedOrders.has(order.orderId) ? 'sent' : 'blocked');
   // Automatically send the order details - and, for an eSIM order, the QR code / activation code -
   // to the customer's VERIFIED email address as soon as the order is submitted. An address that is
@@ -147,14 +126,8 @@ export function ActivationCompleteScreen({
       deliveryState: 'Sent',
       orderId: order.orderId,
     });
-    pushToastOnce();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [order.orderId]);
-  function pushToastOnce() {
-    useNotificationStore.getState().pushToast('success', `Your order details${order.esimActivationCode ? ' and eSIM details' : ''} have been sent to your email.`, {
-      key: `order-email-${order.orderId}`,
-    });
-  }
   const pushToast = useNotificationStore((s) => s.pushToast);
   // Close Activity: the journey has ended (this page only exists after submit), so the activities
   // it created are closed and the agent returns to Agent 360.
@@ -186,9 +159,9 @@ export function ActivationCompleteScreen({
   const submitter = getPersona(usePersonaStore((s) => s.activePersonaId))?.name ?? '';
   const forApproval = order.pendingApproval || APPROVAL_SUBMITTERS.has(submitter);
   const heading = forApproval
-    ? 'Order submitted for approval.'
+    ? 'Order submitted for approval'
     : RETAIL_SUBMITTERS.has(submitter)
-      ? 'Order submitted successfully.'
+      ? 'Order submitted successfully'
       : 'Activation complete';
   return (
     <div className="p-8">
@@ -196,6 +169,17 @@ export function ActivationCompleteScreen({
         heading={heading}
         orderId={order.orderId}
         activityId={order.activityId}
+        headerNote={
+          order.esimActivationCode ? undefined : emailStatus === 'sent' ? (
+            <p className="text-success text-[length:var(--fs-body)]">Your order details have been sent to your email.</p>
+          ) : (
+            <p className="text-[var(--warn-text)] text-[length:var(--fs-caption)]">
+              {order.customerEmail
+                ? 'The email address could not be verified against the customer\'s ID record, so the order details were not sent.'
+                : 'No email address is on file, so the order details were not sent.'}
+            </p>
+          )
+        }
         handoverPanel={
           order.esimActivationCode ? (
             <EsimActivationPanel activationCode={order.esimActivationCode} emailSent={emailStatus === 'sent'} />
@@ -224,38 +208,17 @@ export function ActivationCompleteScreen({
           ...(fibre !== undefined ? [{ label: leadId ? `Lead ${leadId} created` : 'Create Lead', onClick: () => void createLead() }] : []),
         ]}
       />
-      {(fibre === 'rfs' || offers.length > 0) && (
+      {fibre === 'rfs' && (
         <section aria-label="Eligible offers" className="max-w-xl mx-auto mt-6 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 no-print print:hidden">
-          <h2 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-3">Eligible offers for this customer</h2>
+          <h2 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-3">Eligible offers</h2>
           <ul className="divide-y divide-border-soft">
-            {fibre === 'rfs' && (
-              <li className="flex items-center justify-between gap-3 py-2">
-                <span className="text-fg text-[length:var(--fs-body)]">Fibre at the customer's location</span>
-                <Badge variant="success">RFS - Eligible for Fibre</Badge>
-              </li>
-            )}
-            {offers.map((o) => (
-              <li key={o.offerId} className="flex items-center justify-between gap-3 py-2">
-                <span className="text-fg text-[length:var(--fs-body)]">{o.offerName}</span>
-                <span className="flex items-center gap-2">
-                  <span className="text-fg-2 text-[length:var(--fs-caption)]">{journeyLabel(o.serviceJourney as ServiceJourney)}</span>
-                  <Badge variant="filled-neutral">{o.status}</Badge>
-                </span>
-              </li>
-            ))}
+            <li className="flex items-center justify-between gap-3 py-2">
+              <span className="text-fg text-[length:var(--fs-body)]">Fibre at the customer's location</span>
+              <Badge variant="success">RFS - Eligible for Fibre</Badge>
+            </li>
           </ul>
         </section>
       )}
-      {!order.esimActivationCode &&
-        (emailStatus === 'sent' ? (
-          <p className="text-success text-center text-[length:var(--fs-body)] mt-4">Your order details have been sent to your email.</p>
-        ) : (
-          <p className="text-[var(--warn-text)] text-center text-[length:var(--fs-caption)] mt-4">
-            {order.customerEmail
-              ? 'The email address could not be verified against the customer\'s ID record, so the order details were not sent.'
-              : 'No email address is on file, so the order details were not sent.'}
-          </p>
-        ))}
     </div>
   );
 }

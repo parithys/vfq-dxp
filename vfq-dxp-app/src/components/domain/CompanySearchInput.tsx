@@ -102,10 +102,20 @@ export function CompanySearchInput({ label, value, onChange, id, allowAddNew = t
 
   return (
     <div className="flex flex-col gap-1">
-      {label && (
-        <label htmlFor={inputId} className="text-[length:var(--fs-label)] text-fg-2">
-          {label}
-        </label>
+      {(label || (committed && selectedAccount)) && (
+        // The account the company is linked to sits at the right of the label row.
+        <div className="flex items-center justify-between gap-3">
+          {label ? (
+            <label htmlFor={inputId} className="text-[length:var(--fs-label)] text-fg-2">
+              {label}
+            </label>
+          ) : (
+            <span />
+          )}
+          {committed && selectedAccount && (
+            <span className="text-[length:var(--fs-caption)] text-success">Linked to <strong className="font-semibold">{selectedAccount.enterpriseAccountId}</strong></span>
+          )}
+        </div>
       )}
       <SearchField
         wrapperRef={containerRef}
@@ -197,12 +207,7 @@ export function CompanySearchInput({ label, value, onChange, id, allowAddNew = t
           New company - will be registered when the order is submitted.
         </span>
       )}
-      {committed && selectedAccount && (
-        <div className="flex flex-wrap items-center gap-x-3">
-          {statusNote}
-          <span className="text-[length:var(--fs-caption)] text-success">Linked to <strong className="font-semibold">{selectedAccount.enterpriseAccountId}</strong></span>
-        </div>
-      )}
+      {committed && selectedAccount && statusNote && <div className="flex flex-wrap items-center gap-x-3">{statusNote}</div>}
     </div>
   );
 }

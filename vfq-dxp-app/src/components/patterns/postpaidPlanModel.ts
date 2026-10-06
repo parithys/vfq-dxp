@@ -47,6 +47,13 @@ export interface PostpaidPlan {
    * drawer, since it is the one figure the cards have no room for. */
   commitmentMonths?: number;
   popular?: boolean;
+  /** Listed on the Offers tab (without necessarily carrying the Popular badge). */
+  offer?: boolean;
+  /** Promotional price: `mrcQAR` is charged for `promoMonths` months, then `originalMrcQAR`. */
+  originalMrcQAR?: number;
+  promoMonths?: number;
+  /** Plan facts to list on the card, in order, instead of the ones derived from the allowance fields. */
+  features?: string[];
   /** Free bundles/benefits included with the plan (2026-09-28 request) -
    * app-level demo data, no evidenced per-plan benefits field existed before
    * (see products.json's own note on these entries). */
@@ -126,8 +133,8 @@ export const PLAN_GROUPS: { key: PlanGroupKey; label: string }[] = [
   { key: 'standard', label: 'Standard BAU Catalogue' },
 ];
 
-export function planGroupOf(p: { popular?: boolean; commitmentMonths?: number }): PlanGroupKey {
-  if (p.popular) return 'specials';
+export function planGroupOf(p: { popular?: boolean; offer?: boolean; commitmentMonths?: number }): PlanGroupKey {
+  if (p.popular || p.offer) return 'specials';
   if (p.commitmentMonths) return 'for-you';
   return 'standard';
 }

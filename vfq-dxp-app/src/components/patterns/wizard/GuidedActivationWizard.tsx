@@ -208,7 +208,6 @@ export function GuidedActivationWizard({
             setValue={setValue}
           />
           {currentStep?.render({ values: draft.values, setValue, goNext: () => void goNext(), goToStepKey, saveDraft, saveAndExit, requestAbandon })}
-          {hasSummary && <StepSummaryPanel {...summaryProps} variant="accordion" />}
           <WizardFooter
             currentStep={currentStep}
             currentIndex={currentIndex}
