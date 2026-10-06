@@ -3,7 +3,7 @@ import { Input } from '../primitives/Input';
 import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
 import { Icon } from '../primitives/Icon';
-import { CARD_IDLE, CARD_SELECTED, CARD_SELECTED_SURFACE, ICON_GIFT, SelectedCardTexture } from '../patterns/offerCardParts';
+import { CARD_IDLE, CARD_SELECTED, CARD_SELECTED_SURFACE, SelectedCardTexture } from '../patterns/offerCardParts';
 import { Select } from '../primitives/Select';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useAuthStore } from '../../stores/authStore';
@@ -340,7 +340,7 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
       {tab !== 'Reserved' && entitlementQar !== undefined && (
         <div className="flex items-center justify-between gap-4">
           <p className="text-muted text-[length:var(--fs-caption)]">
-            This plan entitles a Star Number up to QR {entitlementQar} at no extra charge.
+            This plan entitles a Star Number up to <strong className="text-accent font-bold text-[length:var(--fs-body)]">{`QR\u00a0${entitlementQar.toLocaleString('en-US')}`}</strong> at no extra charge.
             Anything above that is billed the difference.
           </p>
           {/* Star tab only; sits at the right of the info text, vertically centred with it. */}
@@ -418,14 +418,11 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
           );
           if (tab === 'Star' || (tab === 'Reserved' && isStar)) {
             // Star-number card (2026-10-04 design): the number and a state mark on top, then a 2x2 grid of
-            // icon-tile facts - Price, Plan entitlement, Lock-in, Upfront charge (only when there is one).
+            // icon-tile facts - Price, Lock-in, Upfront charge (only when there is one).
             // Non-breaking spaces keep "QR 8,750" and "24 months" together: a long value wraps between words, never inside one.
             const money = (v: number) => `QR\u00a0${v.toLocaleString('en-US')}`;
             const facts = [
               { icon: STAT_ICONS.wallet, label: 'Price', value: money(n.priceQAR), alert: false },
-              ...(planMrcQar !== undefined && entitlementQar !== undefined
-                ? [{ icon: ICON_GIFT, label: 'Plan entitlement', value: `Up to ${money(entitlementQar)}`, alert: false }]
-                : []),
               ...(lockIn !== undefined ? [{ icon: STAT_ICONS.lock, label: 'Lock-in period', value: `${lockIn}\u00a0months`, alert: false }] : []),
               ...(planMrcQar !== undefined && upfront > 0
                 ? [{ icon: STAT_ICONS.tag, label: 'Upfront charge', value: money(upfront), alert: true }]
