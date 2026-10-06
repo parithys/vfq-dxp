@@ -36,7 +36,7 @@ export function PostpaidMonthlySummary({ charges, selectedDiscount, bundledItems
           Width is fixed rather than fitted to content so the right column
           does not move as the rows change - adding an add-on or a discount
           would otherwise re-align every amount above it. */}
-      <table className="w-[17rem] text-[length:var(--fs-caption)]">
+      <table className="w-[min(32rem,100%)] text-[length:var(--fs-caption)]">
         <caption className="text-fg-2 text-[length:var(--fs-caption)] font-semibold uppercase tracking-wide text-left pb-1">
           Monthly summary
         </caption>
@@ -77,7 +77,7 @@ export function PostpaidMonthlySummary({ charges, selectedDiscount, bundledItems
           "/mo" set small against the amount so the number carries the
           weight rather than the unit. text-right so the stack aligns to
           the card's edge instead of to its own longest line. */}
-      <div className="text-right">
+      <div className="text-right pt-3">
         <p className="text-fg-2 text-[length:var(--fs-caption)]">Total monthly</p>
         <p className="text-accent font-bold text-[length:var(--fs-h3)] leading-tight">
           {formatQar(charges.totalQar)}

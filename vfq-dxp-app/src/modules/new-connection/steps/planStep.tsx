@@ -1,5 +1,5 @@
 import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
-import { planSummary } from './stepSummaries';
+import { planChoiceSummary, planExtrasSummary } from './stepSummaries';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import { PostpaidPlanAddonsStep } from '../../../components/patterns/PostpaidPlanAddonsStep';
 import type { WizardStep } from '../../../components/patterns/wizard/guidedWizardTypes';
@@ -7,19 +7,47 @@ import type { CustomerTypeValue } from './customerTypeModel';
 import type { CrossSalesValue } from './crossSalesModel';
 import type { NewConnectionStepContext } from './stepContext';
 
-export function planStep({ customerBenefits, products }: NewConnectionStepContext): WizardStep {
+export function planStep(ctx: NewConnectionStepContext): WizardStep {
   return {
     key: 'plan',
-    summary: planSummary,
+    summary: planChoiceSummary,
     // An accepted offer already fixes the plan, so the agent goes straight
     // from Offers to Number Selection; Skip (no offer) runs the full path.
     skip: (values) => (values.crossSales as CrossSalesValue | undefined)?.decision === 'accepted',
-    label: 'Plan & Add-ons',
-    render: ({ values, setValue }) => {
+    label: 'Plan',
+    render: ({ values, setValue }) => renderPlanStep('plan', ctx, values, setValue),
+    isValid: (values) => Boolean(values.productId),
+    // "For pre-bundled eligible offers, skip add-on selection" - re-evaluates on every value change.
+    autoAdvanceWhen: (values) => Boolean(ctx.products.find((p) => p.productId === values.productId)?.preBundledOffer),
+  };
+}
+
+// The chosen plan's add-ons, bill limit and eligible discounts, with the monthly summary (the step after Plan).
+export function planExtrasStep(ctx: NewConnectionStepContext): WizardStep {
+  return {
+    key: 'planExtras',
+    summary: planExtrasSummary,
+    skip: (values) => (values.crossSales as CrossSalesValue | undefined)?.decision === 'accepted',
+    label: 'Add-ons',
+    render: ({ values, setValue }) => renderPlanStep('extras', ctx, values, setValue),
+    // Bill limit is the only gate; add-ons and discounts never block.
+    isValid: (values) => values.billLimitPass !== false,
+  };
+}
+
+function renderPlanStep(
+  mode: 'plan' | 'extras',
+  { customerBenefits }: NewConnectionStepContext,
+  values: Record<string, unknown>,
+  setValue: (field: string, value: unknown) => void
+) {
+  {
+    {
       const eligibility = values.eligibility as EligibilityResult | undefined;
       return (
         <>
         <PostpaidPlanAddonsStep
+          mode={mode}
           customerContext={{
             nationality: eligibility?.nationality,
             customerType: (values.customerType as CustomerTypeValue | undefined)?.type,
@@ -52,17 +80,6 @@ export function planStep({ customerBenefits, products }: NewConnectionStepContex
         />
         </>
       );
-    },
-    // Restored 2026-09-28: Bill Limit is back in this step (see the
-    // component's own note), so billLimitPass is a real flag again
-    // rather than the dead one this comment used to explain away.
-    isValid: (values) => Boolean(values.productId) && values.billLimitPass !== false,
-    // "For pre-bundled eligible offers, skip Plan/Add-on Selection
-    // and proceed to Number Selection" (2026-09-28) - re-evaluates on
-    // every value change (see GuidedActivationWizard's own note on
-    // autoAdvanceWhen), so it fires the moment such a plan is picked,
-    // not only on arrival at this step.
-    autoAdvanceWhen: (values) =>
-      Boolean(products.find((p) => p.productId === values.productId)?.preBundledOffer),
-  };
+    }
+  }
 }

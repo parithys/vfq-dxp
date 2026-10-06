@@ -1,5 +1,7 @@
 import { type CustomerBenefit } from '../../engines/customerBenefitEngine';
 import { HRN_ADVANCE_QAR } from '../../engines/postpaidPricing';
+import { Icon } from '../primitives/Icon';
+import { CHECK, planGroupOf } from './postpaidPlanModel';
 import { PlanSearchBox } from './PlanSearchBox';
 import { PlanTabStrip } from './PlanTabStrip';
 import { PlanGroupPanel } from './PlanGroupPanel';
@@ -7,11 +9,12 @@ import { PostpaidAddonsPanel } from './PostpaidAddonsPanel';
 import { PostpaidDiscountsPanel } from './PostpaidDiscountsPanel';
 import { PostpaidMonthlySummary } from './PostpaidMonthlySummary';
 import { PlanDetailsDrawer } from './PlanDetailsDrawer';
-import { IncludedInOfferCard } from './IncludedInOfferCard';
 import { usePostpaidPlanAddons } from './usePostpaidPlanAddons';
 
 
 interface PostpaidPlanAddonsStepProps {
+  /** 'plan': choose the plan only. 'extras': the chosen plan's add-ons, bill limit, discounts and monthly summary. Default 'all' (both together). */
+  mode?: 'all' | 'plan' | 'extras';
   selectedProductId: string | undefined;
   onSelectProduct: (productId: string) => void;
   /** Clicking the already-selected plan card unselects it. Omit to make a chosen plan sticky. */
@@ -58,6 +61,7 @@ interface PostpaidPlanAddonsStepProps {
 // already evidenced there (ADO-7103) rather than inventing new discount
 // types this app has no evidence for.
 export function PostpaidPlanAddonsStep({
+  mode = 'all',
   selectedProductId,
   onSelectProduct,
   onDeselectProduct,
@@ -148,6 +152,7 @@ export function PostpaidPlanAddonsStep({
             2026-09-28 is a separate, faster path on top of that same box:
             closest-match suggestions the agent can click straight into a
             selection without switching tabs at all. */}
+        {mode !== 'extras' && (
         <PlanSearchBox
           searchRef={searchRef}
           searchOpen={searchOpen}
@@ -157,9 +162,23 @@ export function PostpaidPlanAddonsStep({
           suggestions={suggestions}
           selectedProductId={selectedProductId}
           onSelectProduct={onSelectProduct}
+          onPickResult={(plan) => {
+            // A result may live on the other tab: select it, show its tab, clear the filter and bring its card into view.
+            onSelectProduct(plan.productId);
+            setActiveTab(planGroupOf(plan));
+            setPlanSearch('');
+            setSearchOpen(false);
+            window.setTimeout(() => {
+              const el = document.getElementById(`plan-card-${plan.productId}`);
+              el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              el?.classList.add('ring-4', 'ring-accent/40');
+              window.setTimeout(() => el?.classList.remove('ring-4', 'ring-accent/40'), 1800);
+            }, 80);
+          }}
         />
+        )}
 
-        {plans.length === 0 ? (
+        {mode !== 'extras' && plans.length === 0 ? (
           <p className="text-muted">No Postpaid Plan products in the mock catalogue.</p>
         ) : (
           <>
@@ -168,6 +187,8 @@ export function PostpaidPlanAddonsStep({
                 tabbed control pattern in this app looks the same everywhere
                 it appears. Count badges are plan-group tabs only: Add-ons and
                 Eligible Discounts are single choices, not a list with a size. */}
+            {mode !== 'extras' && (
+              <>
             <PlanTabStrip
               planGroupTabs={planGroupTabs}
               activeTab={activeTab}
@@ -195,11 +216,61 @@ export function PostpaidPlanAddonsStep({
             )}
 
             {/* An offer bundles its extras: shown read-only, never selectable. */}
-            {selectionSource === 'OFFER' && <IncludedInOfferCard items={bundledItems} />}
+
+              </>
+            )}
 
             {/* The selected plan's own add-ons and discounts, directly below the plans: only this plan's, optional,
                 and reset when another plan is chosen. Every other plan stays a plain card. */}
-            {selectionSource === 'PLAN' && selectedPlan && (
+            {/* The plan carried over from the previous step, for context while choosing extras. */}
+            {mode === 'extras' && selectedPlan && (
+              <section aria-label="Selected plan" className="rounded-[var(--radius-card)] border border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] p-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-fg-2 text-[length:var(--fs-caption)] uppercase tracking-wide">Selected plan</p>
+                    <h3 className="text-fg font-bold text-[length:var(--fs-h4)] leading-snug">{selectedPlan.name}</h3>
+                  </div>
+                  <p className="text-accent text-right">
+                    <span className="text-[length:var(--fs-body)] font-semibold">QAR </span>
+                    <span className="text-[length:var(--fs-h3)] font-bold">{selectedPlan.mrcQAR}</span>
+                    <span className="text-fg-2 text-[length:var(--fs-caption)]"> /month{selectedPlan.promoMonths ? ` for ${selectedPlan.promoMonths} months` : ''}</span>
+                  </p>
+                </div>
+                <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
+                  {(selectedPlan.features?.length
+                    ? selectedPlan.features
+                    : [selectedPlan.dataAllowanceGB ? `${selectedPlan.dataAllowanceGB} GB data` : 'Unlimited data', selectedPlan.minutesAllowance].filter(Boolean)
+                  ).map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-fg-2 text-[length:var(--fs-body)]">
+                      <Icon path={CHECK} className="w-4 h-4 shrink-0 text-success mt-0.5" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                {selectedPlan.benefits && selectedPlan.benefits.length > 0 && (
+                  <div className="mt-3 rounded-[var(--radius-card)] border border-[var(--field-card-selected)] bg-bg px-3 py-2.5 space-y-1">
+                    <p className="text-accent font-bold text-[length:var(--fs-caption)] uppercase tracking-wide">Included in this offer</p>
+                    <ul className="space-y-1">
+                      {selectedPlan.benefits.map((b) => (
+                        <li key={b} className="flex items-start gap-2 text-fg font-medium text-[length:var(--fs-caption)]">
+                          <Icon path={CHECK} className="w-4 h-4 shrink-0 text-accent mt-0.5" />
+                          {b}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </section>
+            )}
+            {mode === 'extras' && !selectedPlan && (
+              <p className="text-muted text-[length:var(--fs-body)]">Select a plan first - its add-ons, bill limit and discounts appear here.</p>
+            )}
+            {mode === 'extras' && selectionSource === 'OFFER' && (
+              <p className="rounded-[var(--radius-card)] border border-border-soft bg-surface px-4 py-3 text-fg-2 text-[length:var(--fs-body)]">
+                This plan is an offer: its add-ons and discounts are bundled, so there is nothing to choose here. Continue to review the monthly summary.
+              </p>
+            )}
+            {mode !== 'plan' && selectionSource === 'PLAN' && selectedPlan && (
               <section
                 aria-label={`Add-ons and discounts for ${selectedPlan.name}`}
                 className="rounded-[var(--radius-card)] border border-[var(--field-card-selected)] bg-bg p-5 space-y-6"
@@ -247,7 +318,7 @@ export function PostpaidPlanAddonsStep({
         )}
       </div>
 
-      {selectedPlan && charges && <PostpaidMonthlySummary
+      {mode !== 'plan' && selectedPlan && charges && <PostpaidMonthlySummary
           charges={charges}
           selectedDiscount={selectedDiscount}
           bundledItems={bundledItems}
@@ -262,7 +333,7 @@ export function PostpaidPlanAddonsStep({
           particular is on every seeded plan and was displayed nowhere - the
           cards show data/voice/speed only, so the contract term the customer is
           signing up to was the one figure an agent could not see. */}
-      <PlanDetailsDrawer detailPlan={detailPlan} onClose={() => setDetailPlan(null)} />
+      <PlanDetailsDrawer detailPlan={detailPlan} onClose={() => setDetailPlan(null)} selectedProductId={selectedProductId} onSelectProduct={onSelectProduct} />
     </div>
   );
 }

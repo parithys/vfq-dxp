@@ -47,12 +47,18 @@ export const crossSalesSummary: SummaryField[] = [
   { key: 'offer', label: 'Offer', type: 'text', optional: true, value: (v) => at(v, 'crossSales', 'offerName') },
 ];
 
-export const planSummary: SummaryField[] = [
+export const planChoiceSummary: SummaryField[] = [
   { key: 'plan', label: 'Plan', type: 'select', labelFrom: { kind: 'products', idField: 'productId', labelField: 'name' }, value: (v) => at(v, 'productId') },
+];
+
+export const planExtrasSummary: SummaryField[] = [
   { key: 'addons', label: 'Add-ons', type: 'multi', optional: true, labelFrom: { kind: 'products', idField: 'productId', labelField: 'name' }, value: (v) => at(v, 'addonIds') },
   { key: 'discount', label: 'Discount', type: 'select', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => at(v, 'discountId') },
   { key: 'billLimit', label: 'Bill Limit', type: 'text', optional: true, value: (v) => at(v, 'billLimit') },
 ];
+
+// The Plan and Add-ons steps together.
+export const planSummary: SummaryField[] = [...planChoiceSummary, ...planExtrasSummary];
 
 export const addressSummary: SummaryField[] = [
   { key: 'zone', label: 'Zone', type: 'text', optional: true, value: (v) => at(v, 'address', 'zone') },

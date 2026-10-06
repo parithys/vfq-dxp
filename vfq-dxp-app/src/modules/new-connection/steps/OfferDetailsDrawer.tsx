@@ -4,6 +4,7 @@ import { Button } from '../../../components/primitives/Button';
 import { Drawer } from '../../../components/primitives/Drawer';
 import { Icon } from '../../../components/primitives/Icon';
 import { useNotificationStore } from '../../../stores/notificationStore';
+import type { PolicyLink, PolicyTable } from '../../../data/planPolicy';
 
 // The "View details" drawer on a Recommended-offers card (2026-10-04 design: Recommended-offers-02).
 // Every value shown comes from the offer / its linked plans; nothing here is typed in per offer.
@@ -14,6 +15,8 @@ export interface OfferDetails {
   offerDescription: string;
   monthlyRental: number;
   campaignCode: string;
+  /** Label for the code row; a plan shows its product code here. Defaults to 'Campaign code'. */
+  codeLabel?: string;
   status: string;
   offerType?: string;
   priorityCode?: string;
@@ -21,6 +24,8 @@ export interface OfferDetails {
   channel?: string;
   promotionId?: string;
   addOnMonthly?: number;
+  /** When set, the drawer shows this policy (bullets, tables, links) in place of Offer information / Included items. */
+  policy?: { title: string; bullets: string[]; tables: PolicyTable[]; links: PolicyLink[] };
 }
 
 const ICONS = {
@@ -85,6 +90,7 @@ export function OfferDetailsDrawer({
   selected,
   onSelect,
   onClose,
+  widthClassName = 'w-[30vw] min-w-[420px]',
 }: {
   /** The offer whose details are open; null keeps the drawer closed. */
   offer: OfferDetails | null;
@@ -98,6 +104,8 @@ export function OfferDetailsDrawer({
   /** Selects this offer (a no-op to the caller if it already is). The drawer closes after. */
   onSelect: () => void;
   onClose: () => void;
+  /** Drawer width; defaults to 30% of the viewport (at least 420px). */
+  widthClassName?: string;
 }) {
   const pushToast = useNotificationStore((s) => s.pushToast);
   // Keep the last offer rendered while the drawer slides out, so its content does not vanish mid-animation.
@@ -109,9 +117,9 @@ export function OfferDetailsDrawer({
     ? [
         { icon: ICONS.service, label: 'Service', value: serviceLabel },
         { icon: ICONS.tag, label: 'Offer type', value: o.offerType },
-        { icon: ICONS.card, label: 'Monthly rental', value: `QR ${o.monthlyRental}${serviceLabel.includes('Prepaid') ? '' : '/mo'}` },
-        { icon: ICONS.card, label: 'Add-on (monthly)', value: o.addOnMonthly ? `QR ${o.addOnMonthly}/mo` : undefined },
-        { icon: ICONS.service, label: 'Campaign code', value: o.campaignCode },
+        { icon: ICONS.card, label: 'Monthly rental', value: `QAR ${o.monthlyRental}${serviceLabel.includes('Prepaid') ? '' : '/mo'}` },
+        { icon: ICONS.card, label: 'Add-on (monthly)', value: o.addOnMonthly ? `QAR ${o.addOnMonthly}/mo` : undefined },
+        { icon: ICONS.service, label: o.codeLabel ?? 'Campaign code', value: o.campaignCode },
         { icon: ICONS.megaphone, label: 'Promotion', value: o.promotionId },
         { icon: ICONS.sparkles, label: 'Treatment', value: o.treatmentCode },
         { icon: ICONS.bars, label: 'Priority', value: o.priorityCode },
@@ -155,8 +163,8 @@ export function OfferDetailsDrawer({
       title={o?.offerName ?? 'Offer details'}
       header={header}
       footer={footer}
-      widthClassName="w-[30vw] min-w-[420px]"
-      bodyClassName="px-6 pb-6 pt-2"
+      widthClassName={widthClassName}
+      bodyClassName="px-6 pb-6 pt-6"
     >
       {o && (
         <div className="space-y-6">
@@ -190,6 +198,60 @@ export function OfferDetailsDrawer({
             </div>
           )}
 
+          {o.policy ? (
+            <Section title={o.policy.title}>
+              <div className={`${PANEL} p-4 space-y-4`}>
+                <ul className="list-disc space-y-2 pl-5 text-fg text-[length:var(--fs-body)]">
+                  {o.policy.bullets.map((b) => (
+                    <li key={b}>{b}</li>
+                  ))}
+                </ul>
+                {o.policy.tables.map((t, i) => (
+                  <div key={i} className="space-y-2">
+                    {t.title && <p className="text-fg text-[length:var(--fs-body)]">{t.title}</p>}
+                    <table className="w-full border-collapse text-left text-[length:var(--fs-body)]">
+                      <thead>
+                        <tr>
+                          {t.head.map((h) => (
+                            <th key={h} className="border border-border-soft bg-accent px-3 py-2 font-bold text-accent-on">
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {t.rows.map(([k, v]) => (
+                          <tr key={k}>
+                            <th scope="row" className="border border-border-soft px-3 py-2 font-bold text-fg">
+                              {k}
+                            </th>
+                            <td className="border border-border-soft px-3 py-2 font-bold text-fg">{v}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+                <ul className="list-disc space-y-3 pl-5 text-fg text-[length:var(--fs-body)]">
+                  {o.policy.links.map((l) => (
+                    <li key={l.text}>
+                      {l.text}
+                      {l.label && (
+                        <button
+                          type="button"
+                          onClick={() => pushToast('info', 'This page is not linked in the prototype', { key: 'policy-link' })}
+                          className="mt-1 block text-left text-accent hover:underline focus:outline-none focus-visible:shadow-[var(--focus-ring)] rounded-[var(--radius-sm)]"
+                        >
+                          {l.label}
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Section>
+          ) : (
+            <>
           <Section title="Offer information">
             <dl className={`${PANEL} px-4`}>
               {rows.map((r, i) => (
@@ -231,6 +293,10 @@ export function OfferDetailsDrawer({
             </Section>
           )}
 
+            </>
+          )}
+
+          {!o.policy && (
           <Section title="Need more information?" chevronWhenOpen="down">
             <div className={`${PANEL} p-4 flex items-center gap-4`}>
               <IconDisc path={ICONS.doc} className="h-14 w-14 bg-surface text-fg-2" />
@@ -251,6 +317,7 @@ export function OfferDetailsDrawer({
               </button>
             </div>
           </Section>
+          )}
         </div>
       )}
     </Drawer>

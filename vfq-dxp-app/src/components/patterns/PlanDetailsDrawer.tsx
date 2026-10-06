@@ -1,63 +1,48 @@
-import { Drawer } from '../primitives/Drawer';
-import { Icon } from '../primitives/Icon';
-import { CHECK } from './postpaidPlanModel';
+import { OfferDetailsDrawer } from '../../modules/new-connection/steps/OfferDetailsDrawer';
+import type { OfferDetails } from '../../modules/new-connection/steps/OfferDetailsDrawer';
 import type { PostpaidPlan } from './postpaidPlanModel';
+import { ADDON_INTERNATIONAL_MINUTES, INCLUDED_INTERNATIONAL_MINUTES, POLICY_LINKS } from '../../data/planPolicy';
 
 interface PlanDetailsDrawerProps {
   detailPlan: PostpaidPlan | null;
   onClose: () => void;
+  /** With onSelectProduct: the drawer's footer button selects the plan. */
+  selectedProductId?: string;
+  onSelectProduct?: (productId: string) => void;
 }
 
-/* Plan details, on demand. A drawer rather than a modal: it is reference
-    material read while choosing, so it slides in beside the list instead
-    of covering it and forcing a dismissal to compare the next tier.
-    
-    Everything in it is real catalogue data. commitmentMonths in
-    particular is on every seeded plan and was displayed nowhere - the
-    cards show data/voice/speed only, so the contract term the customer is
-    signing up to was the one figure an agent could not see. */
-export function PlanDetailsDrawer({ detailPlan, onClose }: PlanDetailsDrawerProps) {
+/* Plan details, on demand, in the same side drawer as a Recommended offer (title, summary, the plan's free extras,
+   a facts panel, what is included and related documents). A drawer rather than a modal: it is reference material
+   read while choosing, so it slides in beside the list instead of covering it. Everything shown is catalogue data. */
+export function PlanDetailsDrawer({ detailPlan, onClose, selectedProductId, onSelectProduct }: PlanDetailsDrawerProps) {
+  const p = detailPlan;
+  const details: OfferDetails | null = p
+    ? {
+        offerName: p.name,
+        offerDescription: p.features?.length
+          ? p.features.join(' \u00b7 ')
+          : [p.dataAllowanceGB ? `${p.dataAllowanceGB} GB data` : 'Unlimited data', p.minutesAllowance].filter(Boolean).join(' \u00b7 '),
+        monthlyRental: p.mrcQAR,
+        campaignCode: p.productId,
+        codeLabel: 'Product code',
+        status: 'Available',
+        offerType: p.offer || p.popular ? 'Offer' : 'Plan',
+        policy: p.fup?.length
+          ? { title: 'Speed and Fair Usage Policy (FUP)', bullets: p.fup, tables: [INCLUDED_INTERNATIONAL_MINUTES, ADDON_INTERNATIONAL_MINUTES], links: POLICY_LINKS }
+          : undefined,
+      }
+    : null;
   return (
-  <Drawer
-    open={detailPlan !== null}
-    onClose={onClose}
-    title={detailPlan?.name ?? 'Plan details'}
-  >
-    {detailPlan && (
-      <dl className="divide-y divide-border-soft">
-        {[
-          ['Monthly charge', `QAR ${detailPlan.mrcQAR}/mo`],
-          ['Data', detailPlan.dataAllowanceGB ? `${detailPlan.dataAllowanceGB} GB` : 'Unlimited'],
-          ['Voice', detailPlan.minutesAllowance],
-          ['Speed', detailPlan.speedTier],
-          [
-            'Commitment',
-            detailPlan.commitmentMonths ? `${detailPlan.commitmentMonths} months` : 'No commitment',
-          ],
-          ['Product code', detailPlan.productId],
-        ].map(([label, value]) => (
-          <div key={label} className="flex items-baseline justify-between gap-4 py-3">
-            <dt className="text-fg-2 text-[length:var(--fs-caption)]">{label}</dt>
-            <dd className="text-fg font-medium text-right">{value}</dd>
-          </div>
-        ))}
-      </dl>
-    )}
-    {/* Benefits are a LIST, not a single label/value pair, so they sit
-        below the dl rather than inside it (2026-09-28). */}
-    {detailPlan?.benefits && detailPlan.benefits.length > 0 && (
-      <div className="pt-3">
-        <p className="text-fg-2 text-[length:var(--fs-caption)] mb-1.5">Included benefits</p>
-        <ul className="space-y-1">
-          {detailPlan.benefits.map((b) => (
-            <li key={b} className="flex items-start gap-1.5 text-[length:var(--fs-body)] text-fg">
-              <Icon path={CHECK} className="w-4 h-4 text-success shrink-0 mt-0.5" />
-              {b}
-            </li>
-          ))}
-        </ul>
-      </div>
-    )}
-  </Drawer>
+    <OfferDetailsDrawer
+      offer={details}
+      serviceLabel="Postpaid"
+      fixedService={false}
+      highlight={p?.benefits?.[0] ? { title: p.benefits[0], subtitle: `Included with ${p.name}` } : null}
+      includedNames={[...(p?.features ?? []), ...(p?.benefits ?? [])]}
+      selected={Boolean(p && selectedProductId === p.productId)}
+      onSelect={() => p && onSelectProduct?.(p.productId)}
+      onClose={onClose}
+      widthClassName="w-[50vw] min-w-[420px]"
+    />
   );
 }

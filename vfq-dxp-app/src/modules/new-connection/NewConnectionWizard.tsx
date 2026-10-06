@@ -10,7 +10,7 @@ import { submitNewConnectionOrder } from './submitNewConnectionOrder';
 import { useNewConnectionJourney } from './hooks/useNewConnectionJourney';
 import { contactStep } from './steps/contactStep';
 import { offersStep } from './steps/offersStep';
-import { planStep } from './steps/planStep';
+import { planStep, planExtrasStep } from './steps/planStep';
 import { addressStep } from './steps/addressStep';
 import { billingAccountStep } from './steps/billingAccountStep';
 import { numberStep } from './steps/numberStep';
@@ -96,6 +96,7 @@ export function NewConnectionWizard({ flow = 'new' }: { flow?: NewConnectionFlow
           contactStep(stepContext),
           offersStep(stepContext),
           planStep(stepContext),
+          planExtrasStep(stepContext),
           addressStep(),
           billingAccountStep(),
           numberStep(stepContext),

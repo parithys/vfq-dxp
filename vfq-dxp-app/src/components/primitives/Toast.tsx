@@ -74,6 +74,22 @@ function ToastBrandMark({ brand }: { brand: ToastBrand }) {
   );
 }
 
+// A plain (one-line) toast is colour-coded by what it says: green for success, red for an error, amber for a
+// warning, blue for information - a tinted surface with a coloured border and dot, and the page's own text colour
+// on top (so contrast holds in both themes). The structured card keeps its dark panel; its dot carries the kind.
+const kindSurface: Record<ToastKind, string> = {
+  success: 'border border-success bg-[color-mix(in_oklab,var(--success),var(--bg)_88%)]',
+  error: 'border border-danger bg-[color-mix(in_oklab,var(--danger),var(--bg)_90%)]',
+  warning: 'border border-warn bg-[color-mix(in_oklab,var(--warn),var(--bg)_82%)]',
+  info: 'border border-[var(--signal-blue)] bg-[color-mix(in_oklab,var(--signal-blue),var(--bg)_90%)]',
+};
+const kindDot: Record<ToastKind, string> = {
+  success: 'var(--success)',
+  error: 'var(--danger)',
+  warning: 'var(--warn)',
+  info: 'var(--signal-blue)',
+};
+
 const dotColour: Record<ToastKind, string> = {
   success: 'color-mix(in oklab, var(--success), white 30%)',
   error: 'color-mix(in oklab, var(--danger), white 30%)',
@@ -150,7 +166,7 @@ export function ToastContainer() {
 
   if (!toasts.length) return null;
   return (
-    // Bottom centre. items-center with no fixed stack width, because a
+    // Top centre, above everything else. items-center with no fixed stack width, because a
     // structured card needs room for five columns while a one-line card should
     // stay narrow - each card sets its own max-width and they centre
     // independently rather than all stretching to the widest one.
@@ -160,7 +176,7 @@ export function ToastContainer() {
     // events back.
     <div
       ref={stackRef}
-      className="fixed bottom-4 inset-x-0 z-[100] flex flex-col items-center gap-2 px-4 pointer-events-none"
+      className="fixed top-4 inset-x-0 z-[100] flex flex-col items-center gap-2 px-4 pointer-events-none"
     >
       {toasts.map((t) => {
         const structured = Boolean(t.rows?.length);
@@ -170,9 +186,7 @@ export function ToastContainer() {
             role={t.kind === 'error' ? 'alert' : 'status'}
             aria-live={t.kind === 'error' ? 'assertive' : 'polite'}
             className={`pointer-events-auto w-full overflow-hidden rounded-[var(--radius-card)] shadow-raised ${
-              !structured && t.tinted
-                ? 'border border-success bg-[color-mix(in_oklab,var(--success),var(--bg)_88%)]'
-                : 'bg-[var(--charcoal-panel)]'
+              !structured ? kindSurface[t.kind] : 'bg-[var(--charcoal-panel)]'
             } ${structured ? 'max-w-[60rem]' : 'max-w-[34rem]'}`}
           >
             {structured ? (
@@ -305,19 +319,19 @@ export function ToastContainer() {
               <div className="flex items-start gap-2.5 px-3.5 py-3">
                 <span
                   className="mt-[0.3rem] w-2 h-2 rounded-full shrink-0"
-                  style={{ backgroundColor: t.tinted ? 'var(--success)' : dotColour[t.kind] }}
+                  style={{ backgroundColor: kindDot[t.kind] }}
                   aria-hidden="true"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className={`font-medium text-[length:var(--fs-caption)] leading-snug ${t.tinted ? 'text-fg' : 'text-white'}`}>{t.message}</p>
+                  <p className="font-medium text-[length:var(--fs-caption)] leading-snug text-fg">{t.message}</p>
                   {t.detail && (
-                    <p className={`text-[length:var(--fs-caption)] leading-snug mt-0.5 ${t.tinted ? 'text-fg-2' : 'text-white/60'}`}>{t.detail}</p>
+                    <p className="text-[length:var(--fs-caption)] leading-snug mt-0.5 text-fg-2">{t.detail}</p>
                   )}
                 </div>
                 <button
                   onClick={() => dismissToast(t.id)}
                   aria-label="Dismiss notification"
-                  className={`shrink-0 ${t.tinted ? 'text-muted hover:text-fg' : 'text-white/45 hover:text-white'}`}
+                  className="shrink-0 text-muted hover:text-fg"
                 >
                   <Icon path={CLOSE_ICON} className="w-4 h-4" />
                 </button>

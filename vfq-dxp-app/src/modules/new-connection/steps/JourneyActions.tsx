@@ -4,9 +4,9 @@ import { SERVICE_JOURNEYS } from './serviceJourneys';
 import type { ServiceJourney } from './serviceJourneys';
 
 // The journeys the agent can start from the Offers step, left to right, ending with the primary action. Postpaid continues in this wizard; the
-// others leave for their own wizard. "New Home" is the fixed-line (home broadband) journey.
+// others leave for their own wizard. "New Fixed Line" is the fixed-line (home broadband) journey.
 const JOURNEY_BUTTONS: { label: string; journey: ServiceJourney }[] = [
-  { label: 'New Home', journey: 'new-fixed-line' },
+  { label: 'New Fixed Line', journey: 'new-fixed-line' },
   { label: 'New MNP', journey: 'mnp-postpaid' },
   { label: 'New Prepaid', journey: 'new-prepaid' },
   { label: 'New Postpaid', journey: 'new-postpaid' },

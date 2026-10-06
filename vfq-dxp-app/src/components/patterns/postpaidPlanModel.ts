@@ -49,11 +49,15 @@ export interface PostpaidPlan {
   popular?: boolean;
   /** Listed on the Offers tab (without necessarily carrying the Popular badge). */
   offer?: boolean;
+  /** False keeps a plan in the catalogue (existing orders, discounts, assets) but out of the plan picker. */
+  listed?: boolean;
   /** Promotional price: `mrcQAR` is charged for `promoMonths` months, then `originalMrcQAR`. */
   originalMrcQAR?: number;
   promoMonths?: number;
   /** Plan facts to list on the card, in order, instead of the ones derived from the allowance fields. */
   features?: string[];
+  /** Speed and Fair Usage Policy lines for the plan's details drawer. */
+  fup?: string[];
   /** Free bundles/benefits included with the plan (2026-09-28 request) -
    * app-level demo data, no evidenced per-plan benefits field existed before
    * (see products.json's own note on these entries). */

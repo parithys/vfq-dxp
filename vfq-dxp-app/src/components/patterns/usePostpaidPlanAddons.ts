@@ -97,7 +97,7 @@ export function usePostpaidPlanAddons({
 
   useEffect(() => {
     mockDataEngine.list<PostpaidPlan & AddonProduct>('products').then((all) => {
-      setPlans(all.filter((p) => p.type === 'Postpaid Plan').sort((a, b) => a.mrcQAR - b.mrcQAR));
+      setPlans(all.filter((p) => p.type === 'Postpaid Plan' && p.listed !== false).sort((a, b) => a.mrcQAR - b.mrcQAR));
       setAddonProducts(all.filter((p) => p.type === 'Add-on'));
     });
   }, []);
