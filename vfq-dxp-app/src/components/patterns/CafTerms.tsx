@@ -9,7 +9,21 @@ import type { TncSection } from './cafTermsModel';
  * they sign. A fixed-height panel keeps the page usable however long the terms are: the panel
  * scrolls, the page does not grow.
  */
-export function FullTerms({ termsUrl, enabled, signed, children }: { termsUrl?: string; enabled: boolean; signed?: boolean; children: ReactNode }) {
+export function FullTerms({
+  termsUrl,
+  enabled,
+  signed,
+  scrollMode = 'container',
+  children,
+}: {
+  termsUrl?: string;
+  enabled: boolean;
+  signed?: boolean;
+  /** 'container' (default): the terms scroll inside a fixed-height panel. 'page': the panel grows to its full
+   * content and the page itself scrolls, so the signature block follows the last section with no inner scrollbar. */
+  scrollMode?: 'container' | 'page';
+  children: ReactNode;
+}) {
   const [sections, setSections] = useState<TncSection[] | undefined>();
   useEffect(() => {
     mockDataEngine.list<TncSection>('tnc-full-text').then(setSections);
@@ -32,7 +46,10 @@ export function FullTerms({ termsUrl, enabled, signed, children }: { termsUrl?: 
         <span className={`${SYNTHETIC_CLASS} text-[length:var(--fs-micro)] uppercase tracking-wide`}>Sample text - replace with approved wording</span>
       </div>
       {/* tabIndex so the panel can be scrolled with the keyboard. */}
-      <div tabIndex={0} className="max-h-[34rem] overflow-y-auto px-4 py-3 space-y-4 focus:outline-none focus-visible:shadow-[var(--focus-ring)]">
+      <div
+        tabIndex={scrollMode === 'page' ? undefined : 0}
+        className={`px-4 py-3 space-y-4 ${scrollMode === 'page' ? '' : 'max-h-[34rem] overflow-y-auto focus:outline-none focus-visible:shadow-[var(--focus-ring)]'}`}
+      >
         {sections.map((s) => (
           <div key={s.sectionId}>
             <h4 className="text-fg font-medium text-[length:var(--fs-body)]">{s.title}</h4>

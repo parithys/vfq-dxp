@@ -1,0 +1,109 @@
+import { emailVerification, maskEmail } from '../../../components/patterns/guidedContactModel';
+import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
+import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
+import type { BillingAccountValue } from '../../../components/patterns/billingAccountModel';
+import type { CheckoutTotals } from '../../../components/patterns/checkoutSummaryModel';
+import type { WinCashPaymentValue } from '../../../components/patterns/WinCashPaymentStep';
+import type { AppointmentBookingValue } from '../../../components/patterns/AppointmentBookingStep';
+import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
+import * as mockDataEngine from '../../../engines/mockDataEngine';
+import { logActivity } from '../../../engines/activityEngine';
+import type { useEntityStore } from '../../../stores/entityStore';
+import type { CustomerTypeValue } from '../../new-connection/steps/customerTypeModel';
+import type { ConfirmedOrder } from '../../new-connection/newConnectionModel';
+import { FIXED_JOURNEY_LABEL, serviceTypeLabel, type FixedInstallationValue } from './fixedActivationModel';
+
+type EntityStore = ReturnType<typeof useEntityStore.getState>;
+
+/**
+ * Submits a Fixed Activation (CBU) order: writes the order and its installation appointment, records the
+ * Completed activity (plus a workflow event when the order is held for approval) and builds the order-submitted
+ * screen's content. Held for approval when eligibility routed it there, the identity was typed in by hand, or the
+ * customer is B2B2C.
+ */
+export async function submitFixedActivationOrder(
+  values: Record<string, unknown>,
+  { createRecord }: Pick<EntityStore, 'createRecord'>
+): Promise<ConfirmedOrder> {
+  const contact = values.contact as GuidedContactValue;
+  const eligibility = values.eligibility as EligibilityResult | undefined;
+  const installation = values.installation as FixedInstallationValue | undefined;
+  const address = values.address as ZsbAddressValue | undefined;
+  const appointment = values.appointment as AppointmentBookingValue;
+  const billingAccount = values.billingAccount as BillingAccountValue | undefined;
+  const payment = values.payment as WinCashPaymentValue | undefined;
+  const totals = values.checkoutTotals as CheckoutTotals | undefined;
+  const products = await mockDataEngine.list<{ productId: string; name: string; mrcQAR: number }>('products');
+  const plan = products.find((p) => p.productId === values.productId);
+
+  const manualIdEntry = Boolean(contact.manualEntry);
+  const approvalChecks = eligibility?.checks.filter((c) => c.outcome === 'approval-routing') ?? [];
+  const customerType = values.customerType as CustomerTypeValue | undefined;
+  const pendingApproval = manualIdEntry || (Boolean(contact.isB2B2C) && !customerType?.rejected) || customerType?.type === 'b2b2c' || Boolean(eligibility?.requiresHrnAdvance) || approvalChecks.length > 0;
+
+  const orderId = `ORD-${Date.now().toString().slice(-6)}`;
+  await createRecord('orders', {
+    orderId,
+    orderType: 'New Fixed Line Activation',
+    orderSubType: (contact.isB2B2C && !customerType?.rejected) || customerType?.type === 'b2b2c' ? 'B2B2C' : 'Consumer',
+    customerType: customerType?.type,
+    companyName: customerType?.type === 'b2b2c' ? customerType.company?.companyName : undefined,
+    createdAt: new Date().toISOString(),
+    status: pendingApproval ? 'Submitted for Approval' : 'Complete',
+    customerName: contact.moiResult?.name,
+    customerId: eligibility?.customerId,
+    idNumber: contact.idNumber,
+    customerEmail: contact.email,
+    serviceType: serviceTypeLabel(installation?.serviceType),
+    installationAddress: address,
+    productId: values.productId,
+    msisdn: values.msisdn,
+    devices: values.devices,
+    billingProfileId: billingAccount?.selectedProfileId,
+    newBillingProfileName: billingAccount?.newAccount?.profileName,
+    dueTodayQAR: totals?.dueTodayQar ?? 0,
+    monthlyRecurringQAR: plan?.mrcQAR ?? 0,
+    approvalReason: pendingApproval
+      ? [manualIdEntry ? 'Identity manually entered' : '', ...approvalChecks.map((c) => c.message?.split('\n')[0] ?? c.id)].filter(Boolean).join(' | ') || undefined
+      : undefined,
+    createdBy: 'AGENT-VINODHINIR',
+    sourceChannel: 'Tablet',
+  });
+  await createRecord('appointments', {
+    appointmentId: `APT-${Date.now().toString().slice(-6)}`,
+    orderId,
+    status: 'pending',
+    appointmentDate: appointment.date,
+    timeSlot: appointment.timeSlot,
+    cluster: appointment.cluster,
+    channel: 'Retail Store',
+  });
+
+  const activityCtx = { journey: FIXED_JOURNEY_LABEL, orderId, customerId: eligibility?.customerId, customerName: contact.moiResult?.name, idNumber: contact.idNumber };
+  const activityId = await logActivity({
+    ...activityCtx,
+    trigger: 'completed',
+    reason: pendingApproval
+      ? `Order ${orderId} submitted and is awaiting approval.`
+      : `Order ${orderId} submitted - installation booked for ${appointment.date} (${appointment.timeSlot})${payment?.reference ? `, WinCash ref ${payment.reference}` : ''}.`,
+  });
+  if (pendingApproval) {
+    await logActivity({ ...activityCtx, trigger: 'workflow-event', name: 'Order Routed for Approval', reason: 'Order requires approval before it can complete.' });
+  }
+
+  return {
+    orderId,
+    activityId,
+    pendingApproval,
+    customerName: contact.moiResult?.name ?? '-',
+    customerId: eligibility?.customerId,
+    address,
+    msisdn: (values.msisdn as string) ?? '-',
+    planName: plan?.name ?? '-',
+    dueTodayQar: totals?.dueTodayQar ?? 0,
+    monthlyRecurringQar: plan?.mrcQAR ?? 0,
+    customerEmail: contact.email,
+    customerEmailDisplay: contact.moiResult?.isNewCustomer && contact.email ? maskEmail(contact.email) : contact.email,
+    customerEmailVerified: emailVerification(contact.email, contact.moiResult?.email).verified,
+  };
+}

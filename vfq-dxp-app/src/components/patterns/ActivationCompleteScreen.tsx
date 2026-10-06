@@ -64,7 +64,17 @@ const RETAIL_SUBMITTERS = new Set(['Retail Sales Agent']);
 // double-invoked effects) can never send it twice.
 const emailedOrders = new Set<string>();
 
-export function ActivationCompleteScreen({ order }: { order: ActivationCompleteOrder }) {
+// `numberLabel` and `hideSimType` let a journey without a SIM (Fixed Activation) name its number and drop the SIM row;
+// both default to the Postpaid wording, so existing callers render exactly as before.
+export function ActivationCompleteScreen({
+  order,
+  numberLabel = 'MSISDN',
+  hideSimType = false,
+}: {
+  order: ActivationCompleteOrder;
+  numberLabel?: string;
+  hideSimType?: boolean;
+}) {
   const navigate = useNavigate();
   const createRecord = useEntityStore((s) => s.createRecord);
   // 'sent' | 'blocked' (address missing or not verified) - never assumed sent.
@@ -171,9 +181,9 @@ export function ActivationCompleteScreen({ order }: { order: ActivationCompleteO
         }
         summaryLines={[
           { label: 'Customer', value: order.customerName },
-          { label: 'MSISDN', value: order.msisdn },
+          { label: numberLabel, value: order.msisdn },
           { label: 'Plan', value: order.planName },
-          { label: 'SIM Type', value: order.simType ?? '-' },
+          ...(hideSimType ? [] : [{ label: 'SIM Type', value: order.simType ?? '-' }]),
           { label: 'Due today', value: `QR ${order.dueTodayQar}` },
           ...(order.monthlyRecurringQar !== undefined
             ? [{ label: 'Monthly recurring', value: `QR ${order.monthlyRecurringQar}/mo` }]

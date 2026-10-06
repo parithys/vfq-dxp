@@ -100,6 +100,8 @@ interface CafSignatureCaptureProps {
   onSave?: () => void;
   /** Show the "I have read and agree" checkbox and keep Please Sign disabled until it is ticked. */
   requireTermsAgreement?: boolean;
+  /** See FullTerms: 'page' lets the terms grow to full height so only the page scrolls. Defaults to the scrolling panel. */
+  termsScrollMode?: 'container' | 'page';
 }
 
 // Pattern 6: CAF/Contract Signature Capture - CAF Type card selector (Digital/
@@ -125,6 +127,7 @@ export function CafSignatureCapture({
   onContinue,
   onSave,
   requireTermsAgreement = false,
+  termsScrollMode,
 }: CafSignatureCaptureProps) {
   // A document type is chosen but its file is not uploaded yet: Continue waits.
   const [documentPending, setDocumentPending] = useState(false);
@@ -223,7 +226,7 @@ export function CafSignatureCapture({
           </>
         )}
 
-        <FullTerms termsUrl={termsUrl} enabled={Boolean(summaryTables && summaryTables.length > 0)} signed={signed}>
+        <FullTerms termsUrl={termsUrl} enabled={Boolean(summaryTables && summaryTables.length > 0)} signed={signed} scrollMode={termsScrollMode}>
         <div className={`${summaryTables && summaryTables.length > 0 ? 'py-4 pr-4' : 'rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4'} ${inlineSignaturePad ? 'bg-bg' : 'bg-surface'}`}>
           <div className="flex justify-between text-[length:var(--fs-caption)] text-muted mb-2">
             <span>Vodafone Customer Application Form</span>

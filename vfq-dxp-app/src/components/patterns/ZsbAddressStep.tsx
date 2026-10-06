@@ -65,6 +65,8 @@ interface ZsbAddressStepProps {
    * correction is never clobbered by the effect running again. */
   idNumber?: string;
   nationality?: string;
+  /** A journey that reports fibre readiness itself (Fixed Activation: from its RFS check) hides this built-in banner. */
+  hideFibreReadiness?: boolean;
 }
 
 interface AddressRecord {
@@ -102,7 +104,7 @@ interface AddressRecord {
 // reference/blueprint conflict-report.md (Conflict 2) and in ruleEngine's
 // BR-ZSB-MANDATORY-FOR-MOBILE, which still evaluates; it simply no longer
 // addresses the agent, who cannot action it.
-export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAddressStepProps) {
+export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFibreReadiness = false }: ZsbAddressStepProps) {
   const [fetching, setFetching] = useState(false);
   // Area suggestions. kid-address-records is the only dataset in this corpus
   // carrying Qatari area names; addresses.json has `city` (always "Doha"),
@@ -277,7 +279,7 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
           isn't a term this corpus evidences and what this reads the request
           as instead. Renders nothing until Zone/Street/Building are all
           filled in, so it never reports on a half-typed address. */}
-      <FibreReadinessBanner zone={value.zone} street={value.streetNo} building={value.buildingNo} />
+      {!hideFibreReadiness && <FibreReadinessBanner zone={value.zone} street={value.streetNo} building={value.buildingNo} />}
     </div>
   );
 }
