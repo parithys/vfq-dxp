@@ -271,6 +271,16 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                   helperText="On file with the sponsoring employer. This order routes for approval."
                 />
               )}
+              {/* The employer's business account, from the same registry match as the name. Absent when the employer has no account on file. */}
+              {value.isB2B2C && value.companyName && value.companyAccountId && (
+                <Input
+                  id="contact-company-account"
+                  label="Company Account ID"
+                  value={value.companyAccountId}
+                  readOnly
+                  onChange={() => {}}
+                />
+              )}
             </div>
           </div>
 

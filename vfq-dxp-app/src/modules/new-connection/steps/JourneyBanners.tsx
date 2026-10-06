@@ -1,7 +1,3 @@
-import { Badge } from '../../../components/primitives/Badge';
-import { CARD } from './stepStyles';
-import { customerTypeLabel } from './customerTypeModel';
-import type { CustomerType } from './customerTypeModel';
 
 // Building blocks for the New Connection journey. Everything here is a
 // journey-level decision (who the customer is, which offer, which service);
@@ -16,26 +12,6 @@ export function CustomerStatusBanner(_props: { customerId: string | undefined })
 }
 
 // ---------------------------------------------------------------- Customer type
-
-export function PlanSourceBanner({ offerName, customerType }: { offerName?: string; customerType?: CustomerType }) {
-  const special = customerType && customerType !== 'none';
-  const isSalesOffer = Boolean(offerName) || special;
-  return (
-    <div className={`${CARD} mb-5 flex items-center justify-between gap-3`}>
-      <div>
-        <p className="text-fg font-semibold text-[length:var(--fs-body)]">{isSalesOffer ? 'Sales Offers' : 'General Plan'}</p>
-        <p className="text-fg-2 text-[length:var(--fs-caption)]">
-          {offerName
-            ? `Based on the accepted cross-sales offer: ${offerName}.`
-            : special
-              ? `Offers for ${customerTypeLabel(customerType)} customers.`
-              : 'Standard catalogue plans.'}
-        </p>
-      </div>
-      <Badge variant={isSalesOffer ? 'success' : 'filled-neutral'}>{isSalesOffer ? 'Sales Offer' : 'General'}</Badge>
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------- Eligibility outcomes
 

@@ -67,7 +67,7 @@ export function WizardTitleBand({
           </div>
         </div>
         {/* The fixed customer for this journey sits under the title. */}
-        {titleAside && <div className="mt-3">{titleAside}</div>}
+        {titleAside && <div>{titleAside}</div>}
         {popupBlocked && (
           <p role="alert" className="text-[var(--warn-text)] text-[length:var(--fs-caption)] mt-3">
             The browser blocked the customer view pop-up. Allow pop-ups for this site and try again.

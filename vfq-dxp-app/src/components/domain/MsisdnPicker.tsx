@@ -380,7 +380,9 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
         className={`grid gap-4 ${
           // Free and Star numbers are compact cards (2026-10-04 designs): five across on wide screens, so the
           // ten on a page fill two rows. Reserved carries more lines per card (who holds it, when) and keeps two.
-          tab === 'Star' ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3' : 'grid-cols-2 md:grid-cols-3 xl:grid-cols-5'
+          tab === 'Star' || (tab === 'Reserved' && paged.length > 0 && paged.every((n) => n.priceQAR >= FREE_NUMBER_PRICE_CEILING_QAR))
+            ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
+            : 'grid-cols-2 md:grid-cols-3 xl:grid-cols-5'
         }`}
       >
         {paged.map((n) => {
@@ -414,20 +416,20 @@ export function MsisdnPicker({ selected, onSelect, onDeselect, planMrcQar, starE
             // in violet so it does not read as a Star, free or reserved number.
             <Badge variant="tag-violet">QR {upfront}</Badge>
           );
-          if (tab === 'Star') {
+          if (tab === 'Star' || (tab === 'Reserved' && isStar)) {
             // Star-number card (2026-10-04 design): the number and a state mark on top, then a 2x2 grid of
-            // icon-tile facts - Price, Upfront charge (only when there is one), Plan entitlement, Lock-in.
+            // icon-tile facts - Price, Plan entitlement, Lock-in, Upfront charge (only when there is one).
             // Non-breaking spaces keep "QR 8,750" and "24 months" together: a long value wraps between words, never inside one.
             const money = (v: number) => `QR\u00a0${v.toLocaleString('en-US')}`;
             const facts = [
               { icon: STAT_ICONS.wallet, label: 'Price', value: money(n.priceQAR), alert: false },
-              ...(planMrcQar !== undefined && upfront > 0
-                ? [{ icon: STAT_ICONS.tag, label: 'Upfront charge', value: money(upfront), alert: true }]
-                : []),
               ...(planMrcQar !== undefined && entitlementQar !== undefined
                 ? [{ icon: ICON_GIFT, label: 'Plan entitlement', value: `Up to ${money(entitlementQar)}`, alert: false }]
                 : []),
               ...(lockIn !== undefined ? [{ icon: STAT_ICONS.lock, label: 'Lock-in period', value: `${lockIn}\u00a0months`, alert: false }] : []),
+              ...(planMrcQar !== undefined && upfront > 0
+                ? [{ icon: STAT_ICONS.tag, label: 'Upfront charge', value: money(upfront), alert: true }]
+                : []),
             ];
             return (
               <div

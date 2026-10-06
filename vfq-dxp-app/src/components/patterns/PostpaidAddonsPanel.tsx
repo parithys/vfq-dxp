@@ -37,6 +37,7 @@ export function PostpaidAddonsPanel({
             selectedIds={addonIds}
             onChange={onAddonsChange}
             hideHeader
+            emptyMessage="No add-ons available for this plan"
             eligibilityContext={{ planId: selectedProductId, ...customerContext }}
           />
           {/* Bill Limit, re-added 2026-09-28 as an editable add-on

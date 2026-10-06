@@ -3,6 +3,11 @@ import * as mockDataEngine from './mockDataEngine';
 
 export interface CustomerRecord {
   customerId: string;
+  /** INDIVIDUAL for every customer record; a BUSINESS is an enterprise account (businessAccountEngine). */
+  accountType?: 'INDIVIDUAL';
+  /** The ENT-ACC ID of the business this user is linked to, and who pays - which decides the segment (businessSegment.ts). */
+  parentBusinessId?: string;
+  billingResponsibility?: 'COMPANY' | 'USER';
   qid: string;
   idType: 'QID' | 'Passport';
   name: string;

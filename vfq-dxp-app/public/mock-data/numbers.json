@@ -2,12 +2,8 @@
   {
     "msisdn": "+97433001001",
     "category": "Free",
-    "status": "Reserved",
-    "reservedBy": "Fatima Al-Kuwari",
-    "priceQAR": 0,
-    "_reservedByNote": "Was 'AGENT-KARTHIKK', an id matching no record in users-agents.json - the same invented placeholder NewPostpaidWizard stamps as an order's createdBy. Repointed at USR-1101 (Fatima Al-Kuwari, the demo login) so every Held-by badge names a real, resolvable person instead of one row reading an id and the rest reading names.",
-    "reservedAt": "2026-10-04T09:15:00+03:00",
-    "reservedForQid": "27801063400071"
+    "status": "AVAILABLE",
+    "priceQAR": 0
   },
   {
     "msisdn": "+97433001002",
@@ -247,27 +243,30 @@
   {
     "msisdn": "+97488887777",
     "category": "Star",
-    "status": "AVAILABLE",
+    "status": "Reserved",
     "priceQAR": 7500,
     "valueTier": "Platinum",
-    "_note": "App-level demo addition (2026-09-28) for BR-115's star-number entitlement/overage rule - every other seeded number topped out at QR 5000, which the cheapest plan's own entitlement (QR 250 x 25 = QR 6250) already covers in full, so the 'customer pays the delta' path could never actually trigger. Seeded above every plan's entitlement cap (max QR 750 x 25 = QR 18750 still leaves this one within reach for the priciest plan, while the cheaper ones now show a real overage) so the behaviour is demonstrable, not just implemented."
+    "_note": "App-level demo addition (2026-09-28) for BR-115's star-number entitlement/overage rule - every other seeded number topped out at QR 5000, which the cheapest plan's own entitlement (QR 250 x 25 = QR 6250) already covers in full, so the 'customer pays the delta' path could never actually trigger. Seeded above every plan's entitlement cap (max QR 750 x 25 = QR 18750 still leaves this one within reach for the priciest plan, while the cheaper ones now show a real overage) so the behaviour is demonstrable, not just implemented.",
+    "reservedBy": "Fatima Al-Kuwari",
+    "reservedAt": "2026-10-04T09:15:00+03:00",
+    "reservedForQid": "27801063400071"
   },
   {
     "msisdn": "+97499990000",
     "category": "Star",
-    "status": "AVAILABLE",
+    "status": "Reserved",
     "priceQAR": 20000,
     "valueTier": "Platinum",
-    "_note": "App-level demo addition (2026-09-28), alongside +97488887777 - priced above even the most expensive seeded plan's entitlement (QR 750 x 25 = QR 18750), so every plan shows SOME overage on this one, not just the cheaper ones."
+    "_note": "App-level demo addition (2026-09-28), alongside +97488887777 - priced above even the most expensive seeded plan's entitlement (QR 750 x 25 = QR 18750), so every plan shows SOME overage on this one, not just the cheaper ones.",
+    "reservedBy": "Fatima Al-Kuwari",
+    "reservedAt": "2026-10-04T14:35:00+03:00",
+    "reservedForQid": "27801063400071"
   },
   {
     "msisdn": "+97455610140",
     "category": "Free",
-    "status": "Reserved",
-    "reservedBy": "Fatima Al-Kuwari",
+    "status": "AVAILABLE",
     "priceQAR": 0,
-    "reservedAt": "2026-10-04T14:35:00+03:00",
-    "reservedForQid": "27801063400071",
     "_note": "Demo seed (2026-10-04): second number reserved for the same customer (CUST-3071), made later than +97433001001, so the picker's most-recent-reserved default can be shown."
   }
 ]

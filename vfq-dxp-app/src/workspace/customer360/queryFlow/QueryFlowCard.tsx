@@ -88,6 +88,18 @@ export function QueryFlowCard({
   const keywords = useMemo(() => queryKeywords(query), [query]);
   const sectionHits = useMemo(() => (goToTab ? searchContainers(query, hasTab ?? (() => true)) : []), [query, goToTab, hasTab]);
   const results = useMemo(() => (catalogue ? searchQueryIssues(catalogue.issues, query) : []), [catalogue, query]);
+  // Results grouped by Service Type > Category, in the order each group first appears.
+  const resultGroups = useMemo(() => {
+    const groups = new Map<string, { key: string; serviceType?: string; category?: string; issues: QueryIssue[] }>();
+    for (const r of results) {
+      const serviceType = r.serviceType ? serviceTypeLabel(r.serviceType) : undefined;
+      const key = `${serviceType ?? ''}|${r.category ?? ''}`;
+      const g = groups.get(key) ?? { key, serviceType, category: r.category, issues: [] };
+      g.issues.push(r);
+      groups.set(key, g);
+    }
+    return [...groups.values()];
+  }, [results]);
   const lines = useMemo(() => services.filter((s) => s.tab === 'mobile' || s.tab === 'fibre'), [services]);
   const service = lines.find((s) => s.ref === msisdnRef);
   const derivedType = issue ? deriveQueryServiceType(issue, service) : undefined;
@@ -129,18 +141,19 @@ export function QueryFlowCard({
   if (!catalogue) return null;
 
   return (
-    <section ref={cardRef} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 space-y-4" aria-label="How can we help today?">
+    <section ref={cardRef} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg overflow-hidden" aria-label="How can we help today?">
       {!issue ? (
         <>
+          <div className="bg-[linear-gradient(110deg,var(--help-band-from)_30%,var(--help-band-to))] p-5 space-y-4">
           <div>
             <h2 className="text-fg font-bold text-[length:var(--fs-h4)]">How can we help today?</h2>
-            <p className="text-fg-2 text-[length:var(--fs-body)] mt-1">Search for customer issues, queries or requests.</p>
+            <p className="text-fg text-[length:var(--fs-body)] mt-1">Search for customer issues, queries or requests.</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <SearchBox value={query} onChange={(v) => { setQuery(v); setNote(undefined); }} placeholder="Search for customer issues, queries or requests" />
           </div>
           <div className="flex flex-wrap items-center gap-2 text-[length:var(--fs-caption)]">
-            <span className="text-muted">Examples:</span>
+            <span className="text-fg">Examples:</span>
             {catalogue.examples.map((e) => (
               <button
                 key={e}
@@ -152,6 +165,9 @@ export function QueryFlowCard({
               </button>
             ))}
           </div>
+          </div>
+          {(note || query.trim()) && (
+          <div className="p-5 space-y-4">
           {note && <Banner tone="success">{note}</Banner>}
           {query.trim() && (
             <div aria-live="polite" className="grid grid-cols-1 @2xl:grid-cols-2 gap-4 items-start">
@@ -160,32 +176,42 @@ export function QueryFlowCard({
               {results.length === 0 ? (
                 <p className="text-muted text-[length:var(--fs-body)]">No Query Issues match "{query.trim()}". Try fewer or different keywords.</p>
               ) : (
-                <ul className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] divide-y divide-border-soft overflow-hidden">
-                  {results.map((r) => (
-                    <li key={r.id}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIssue(r);
-                          // The issue's own service type pre-selects the Query Service Type (a selected MSISDN still overrides it).
-                          const own = (QUERY_SERVICE_TYPES as readonly string[]).includes(r.serviceType ?? '') && r.serviceType !== 'Any';
-                          setManualType(own ? (r.serviceType as string) : '');
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
-                      >
-                        <span className="flex-1 min-w-0 space-y-1.5">
-                          <span className="block text-fg text-[length:var(--fs-body)]"><Highlighted text={r.name} keywords={keywords} /></span>
-                          {/* Service type and category together on the second row. */}
-                          <span className="flex flex-wrap items-center gap-2">
-                            {r.serviceType && <Pill tone="blue">{serviceTypeLabel(r.serviceType)}</Pill>}
-                            <Pill tone={categoryTone(r.category)}>{r.category ?? PENDING}</Pill>
-                          </span>
-                        </span>
-                        <Icon path={CHEVRON_RIGHT} className="w-4 h-4 text-fg shrink-0" />
-                      </button>
-                    </li>
+                <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] divide-y divide-border-soft overflow-hidden">
+                  {resultGroups.map((g) => (
+                    <div key={g.key}>
+                      {/* One header per Service Type > Category, then its issues. */}
+                      <div className="flex flex-wrap items-center gap-2 px-4 py-2 bg-surface">
+                        {g.serviceType && (
+                          <>
+                            <Pill tone="blue">{g.serviceType}</Pill>
+                            <Icon path={CHEVRON_RIGHT} className="w-3.5 h-3.5 text-fg-2 shrink-0" />
+                          </>
+                        )}
+                        <Pill tone={categoryTone(g.category)}>{g.category ?? PENDING}</Pill>
+                        <span className="text-fg-2 text-[length:var(--fs-caption)]">{g.issues.length}</span>
+                      </div>
+                      <ul className="divide-y divide-border-soft">
+                        {g.issues.map((r) => (
+                          <li key={r.id}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIssue(r);
+                                // The issue's own service type pre-selects the Query Service Type (a selected MSISDN still overrides it).
+                                const own = (QUERY_SERVICE_TYPES as readonly string[]).includes(r.serviceType ?? '') && r.serviceType !== 'Any';
+                                setManualType(own ? (r.serviceType as string) : '');
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+                            >
+                              <span className="flex-1 min-w-0 text-fg text-[length:var(--fs-body)]"><Highlighted text={r.name} keywords={keywords} /></span>
+                              <Icon path={CHEVRON_RIGHT} className="w-4 h-4 text-fg shrink-0" />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>
+                </div>
               )}
               </div>
               {goToTab && (
@@ -217,9 +243,11 @@ export function QueryFlowCard({
               )}
             </div>
           )}
+          </div>
+          )}
         </>
       ) : (
-        <>
+        <div className="p-5 space-y-4">
           <button
             type="button"
             onClick={() => reset()}
@@ -294,7 +322,7 @@ export function QueryFlowCard({
               onCreateTicket={createTicket}
             />
           )}
-        </>
+        </div>
       )}
     </section>
   );

@@ -122,7 +122,7 @@ export type PlanGroupKey = 'specials' | 'for-you' | 'standard';
 
 export const PLAN_GROUPS: { key: PlanGroupKey; label: string }[] = [
   { key: 'specials', label: 'Offers' },
-  { key: 'for-you', label: 'Other Plans' },
+  { key: 'for-you', label: 'Plans' },
   { key: 'standard', label: 'Standard BAU Catalogue' },
 ];
 

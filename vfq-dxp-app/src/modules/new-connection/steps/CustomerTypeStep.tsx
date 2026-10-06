@@ -139,7 +139,7 @@ export function CustomerTypeStep({
             )
           )}
           {type === 'retired' && value.govValidation?.status === 'passed' && (
-            <ValidationStatus variant="success" title={value.govValidation.message ?? 'Retired status validated.'} />
+            <ValidationStatus variant="success" tag="Validation Successful" title={value.govValidation.message ?? 'Retired status validated.'} />
           )}
           {type === 'retired' && value.govValidation?.status === 'failed' && (
             <ValidationStatus

@@ -5,9 +5,13 @@ import type { Discount } from './postpaidPlanModel';
 interface PostpaidMonthlySummaryProps {
   charges: MonthlyCharges;
   selectedDiscount: Discount | undefined;
+  /** What an offer bundles, listed as "Included in offer". */
+  bundledItems?: string[];
+  /** Add-ons the agent chose, listed as "Added". */
+  addedAddons?: { name: string; mrcQAR: number }[];
 }
 
-export function PostpaidMonthlySummary({ charges, selectedDiscount }: PostpaidMonthlySummaryProps) {
+export function PostpaidMonthlySummary({ charges, selectedDiscount, bundledItems = [], addedAddons = [] }: PostpaidMonthlySummaryProps) {
   return (
     // Left accent bar (2026-09-28 mockup) - the one box on this step that
     // is a running total rather than a choice to make, so it reads as a
@@ -47,12 +51,13 @@ export function PostpaidMonthlySummary({ charges, selectedDiscount }: PostpaidMo
             ...(selectedDiscount
               ? [
                   [
-                    `${selectedDiscount.name} (${Math.round(Math.abs(selectedDiscount.price) * 100)}%)`,
+                    `${selectedDiscount.name} (${Math.round(Math.abs(selectedDiscount.price) * 100)}%) · Added`,
                     `-${formatQar(charges.discountQar)}`,
                   ],
                 ]
               : []),
-            ...(charges.addonsQar > 0 ? [['Add-ons', formatQar(charges.addonsQar)]] : []),
+            ...addedAddons.map((a) => [`${a.name} · Added`, formatQar(a.mrcQAR)]),
+            ...bundledItems.map((b) => [`${b} · Included in offer`, 'Included']),
             // VAT last and always shown, even at zero: a tax line that
             // appears only sometimes reads as a surcharge the agent has
             // triggered. It is charged on the net of everything above it,

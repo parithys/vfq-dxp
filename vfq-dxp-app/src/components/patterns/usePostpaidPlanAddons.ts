@@ -10,6 +10,9 @@ interface UsePostpaidPlanAddonsArgs {
   discountId: string | undefined;
   onSelectDiscount: (discountId: string | undefined) => void;
   addonIds: string[];
+  onAddonsChange: (ids: string[]) => void;
+  /** Told which source the selected plan came from (OFFER / PLAN) and what an offer bundles, for the next step. */
+  onSelectionChange?: (sel: { source: 'OFFER' | 'PLAN' | undefined; bundled: string[] }) => void;
   discountSupportingId: string | undefined;
   onDiscountSupportingIdChange: (id: string) => void;
   customerBenefit?: 'mada' | 'b2b2c' | 'retired' | 'none';
@@ -23,6 +26,8 @@ export function usePostpaidPlanAddons({
   discountId,
   onSelectDiscount,
   addonIds,
+  onAddonsChange,
+  onSelectionChange,
   discountSupportingId,
   onDiscountSupportingIdChange,
   customerBenefit,
@@ -97,15 +102,33 @@ export function usePostpaidPlanAddons({
     });
   }, []);
 
+  // Discounts are loaded for the selected plan only; a failed load can be retried and never blocks the step.
+  const [discountsState, setDiscountsState] = useState<'loading' | 'error' | 'ready'>('ready');
+  const [discountsAttempt, setDiscountsAttempt] = useState(0);
   useEffect(() => {
     if (!selectedProductId) {
       setPlanDiscounts([]);
       return;
     }
+    let cancelled = false;
+    setDiscountsState('loading');
     mockDataEngine
       .list<Discount>('addons-discounts')
-      .then((all) => setPlanDiscounts(all.filter((d) => d.category === 'Discount' && d.planId === selectedProductId)));
-  }, [selectedProductId]);
+      .then((all) => {
+        if (cancelled) return;
+        setPlanDiscounts(all.filter((d) => d.category === 'Discount' && d.planId === selectedProductId));
+        setDiscountsState('ready');
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setPlanDiscounts([]);
+        setDiscountsState('error');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedProductId, discountsAttempt]);
+  const retryDiscounts = () => setDiscountsAttempt((n) => n + 1);
 
   const selectedPlan = plans.find((p) => p.productId === selectedProductId);
   // "Offers" is the specials group (2026-09-30 rule): every plan there is
@@ -117,6 +140,14 @@ export function usePostpaidPlanAddons({
   // membership.
   const isOffersPlan = selectedPlan ? planGroupOf(selectedPlan) === 'specials' : false;
   const preBundled = Boolean(selectedPlan?.preBundledOffer) || isOffersPlan;
+  // Where the plan was chosen from: an Offer (add-ons and discounts bundled, read-only) or a standalone Plan (optional extras).
+  const selectionSource: 'OFFER' | 'PLAN' | undefined = selectedPlan ? (preBundled ? 'OFFER' : 'PLAN') : undefined;
+  const bundledItems = useMemo(() => (selectionSource === 'OFFER' ? selectedPlan?.benefits ?? [] : []), [selectionSource, selectedPlan]);
+  const bundledKey = bundledItems.join('|');
+  useEffect(() => {
+    onSelectionChange?.({ source: selectionSource, bundled: bundledItems });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectionSource, selectedProductId, bundledKey]);
   const selectedDiscount = discounts.find((d) => d.addonDiscountId === discountId);
   // Accepted benefit -> its discount on the chosen plan, applied once (the agent
   // can still change it afterwards). Retired: ADO-7114..7117 (demo catalogue entries, see their _note).
@@ -155,10 +186,21 @@ export function usePostpaidPlanAddons({
   // discount exist", so it fires only on an actual plan change, not on
   // mount.
   const prevProductId = useRef(selectedProductId);
+  const [resetNotice, setResetNotice] = useState(false);
+  // The notice is brief: it clears itself.
+  useEffect(() => {
+    if (!resetNotice) return;
+    const t = window.setTimeout(() => setResetNotice(false), 6000);
+    return () => window.clearTimeout(t);
+  }, [resetNotice]);
   useEffect(() => {
     if (prevProductId.current !== selectedProductId) {
       prevProductId.current = selectedProductId;
+      // Selections belong to the plan they were made on: a new plan starts clean.
+      const hadSelections = Boolean(discountId) || addonIds.length > 0;
       if (discountId) onSelectDiscount(undefined);
+      if (addonIds.length > 0) onAddonsChange([]);
+      if (hadSelections) setResetNotice(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProductId]);
@@ -208,6 +250,12 @@ export function usePostpaidPlanAddons({
     suggestions,
     selectedPlan,
     preBundled,
+    selectionSource,
+    bundledItems,
+    selectedAddons,
+    resetNotice,
+    discountsState,
+    retryDiscounts,
     selectedDiscount,
     requiresSupportingId,
     handleProofDocFile,

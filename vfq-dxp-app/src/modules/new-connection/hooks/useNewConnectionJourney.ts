@@ -52,15 +52,6 @@ export function useNewConnectionJourney(flow: NewConnectionFlow) {
   });
   // Discounts follow the customer this journey is for: the route's customer, or the one the identity check resolved.
   const customerBenefits = useCustomerBenefits(flow === 'existing' ? existingCustomerId : draftCustomerId);
-  // Set when the agent records an Interested outcome: shows the "Lead Created"
-  // confirmation: Go to Leads leaves for the Leads page, Close just dismisses it.
-  const [createdLead, setCreatedLead] = useState<{ leadId: string; offerName?: string } | null>(null);
-  const goToLeads = () => {
-    useWorkflowStore.getState().clearDraft(WIZARD_ID);
-    useCustomerContext.getState().endJourney(WIZARD_ID);
-    setCreatedLead(null);
-    navigate('/leads');
-  };
   // Fetched once at the wizard level (2026-09-28) rather than inside a single
   // step, so Number Selection can resolve the selected plan's MRC for BR-115's
   // star-number entitlement without re-fetching the same catalogue
@@ -94,9 +85,6 @@ export function useNewConnectionJourney(flow: NewConnectionFlow) {
     heldByAnotherJourney,
     guardedContactChange,
     customerBenefits,
-    createdLead,
-    setCreatedLead,
-    goToLeads,
     products,
     applyCrossSales,
   };

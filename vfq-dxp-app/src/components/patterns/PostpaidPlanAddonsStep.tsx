@@ -7,6 +7,7 @@ import { PostpaidAddonsPanel } from './PostpaidAddonsPanel';
 import { PostpaidDiscountsPanel } from './PostpaidDiscountsPanel';
 import { PostpaidMonthlySummary } from './PostpaidMonthlySummary';
 import { PlanDetailsDrawer } from './PlanDetailsDrawer';
+import { IncludedInOfferCard } from './IncludedInOfferCard';
 import { usePostpaidPlanAddons } from './usePostpaidPlanAddons';
 
 
@@ -19,6 +20,8 @@ interface PostpaidPlanAddonsStepProps {
   onSelectDiscount: (discountId: string | undefined) => void;
   addonIds: string[];
   onAddonsChange: (ids: string[]) => void;
+  /** Told where the selected plan came from (OFFER / PLAN) and what an offer bundles. */
+  onSelectionChange?: (sel: { source: 'OFFER' | 'PLAN' | undefined; bundled: string[] }) => void;
   discountSupportingId: string | undefined;
   onDiscountSupportingIdChange: (id: string) => void;
   billLimit: number | undefined;
@@ -62,6 +65,7 @@ export function PostpaidPlanAddonsStep({
   onSelectDiscount,
   addonIds,
   onAddonsChange,
+  onSelectionChange,
   discountSupportingId,
   onDiscountSupportingIdChange,
   billLimit,
@@ -92,6 +96,12 @@ export function PostpaidPlanAddonsStep({
     suggestions,
     selectedPlan,
     preBundled,
+    selectionSource,
+    bundledItems,
+    selectedAddons,
+    resetNotice,
+    discountsState,
+    retryDiscounts,
     selectedDiscount,
     requiresSupportingId,
     handleProofDocFile,
@@ -101,6 +111,8 @@ export function PostpaidPlanAddonsStep({
     discountId,
     onSelectDiscount,
     addonIds,
+    onAddonsChange,
+    onSelectionChange,
     discountSupportingId,
     onDiscountSupportingIdChange,
     customerBenefit,
@@ -131,10 +143,6 @@ export function PostpaidPlanAddonsStep({
           position. Switching tabs never changes which plan/add-ons/discount
           is actually selected; it only changes which panel is showing. */}
       <div className="space-y-4">
-        <div>
-          <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">RED Plan</h3>
-          <p className="text-muted text-[length:var(--fs-caption)]">Select your plan</p>
-        </div>
         {/* Search by plan NAME or PRICE (2026-09-27), narrowing whichever
             plan-group tab is active. The type-ahead dropdown added
             2026-09-28 is a separate, faster path on top of that same box:
@@ -164,9 +172,14 @@ export function PostpaidPlanAddonsStep({
               planGroupTabs={planGroupTabs}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
-              groupPlans={groupPlans}
-              addonIds={addonIds}
             />
+
+            {/* The plan was changed: what was chosen for the previous plan is gone. */}
+            {resetNotice && (
+              <p role="status" className="rounded-[var(--radius-card)] border border-[var(--info-border)] bg-[color-mix(in_oklab,var(--info),var(--bg)_92%)] px-4 py-3 text-[length:var(--fs-body)] text-fg">
+                Add-ons and discounts were reset for the new plan.
+              </p>
+            )}
 
             {/* Plan-group panel */}
             {planGroupTabs.some((g) => g.key === activeTab) && (
@@ -181,44 +194,65 @@ export function PostpaidPlanAddonsStep({
               />
             )}
 
-            {/* Add-ons panel */}
-            {activeTab === 'addons' && (
-              <PostpaidAddonsPanel
-                preBundled={preBundled}
-                addonIds={addonIds}
-                onAddonsChange={onAddonsChange}
-                selectedProductId={selectedProductId}
-                customerContext={customerContext}
-                selectedPlan={selectedPlan}
-                billLimit={billLimit}
-                onBillLimitChange={onBillLimitChange}
-              />
-            )}
+            {/* An offer bundles its extras: shown read-only, never selectable. */}
+            {selectionSource === 'OFFER' && <IncludedInOfferCard items={bundledItems} />}
 
-            {/* Eligible Discounts panel */}
-            {activeTab === 'discounts' && (
-              <PostpaidDiscountsPanel
-                selectedProductId={selectedProductId}
-                preBundled={preBundled}
-                discountId={discountId}
-                onSelectDiscount={onSelectDiscount}
-                discounts={discounts}
-                selectedDiscount={selectedDiscount}
-                requiresSupportingId={requiresSupportingId}
-                discountSupportingId={discountSupportingId}
-                onDiscountSupportingIdChange={onDiscountSupportingIdChange}
-                discountProofDocument={discountProofDocument}
-                onDiscountProofDocumentChange={onDiscountProofDocumentChange}
-                proofDocRef={proofDocRef}
-                proofDocError={proofDocError}
-                handleProofDocFile={handleProofDocFile}
-              />
+            {/* The selected plan's own add-ons and discounts, directly below the plans: only this plan's, optional,
+                and reset when another plan is chosen. Every other plan stays a plain card. */}
+            {selectionSource === 'PLAN' && selectedPlan && (
+              <section
+                aria-label={`Add-ons and discounts for ${selectedPlan.name}`}
+                className="rounded-[var(--radius-card)] border border-[var(--field-card-selected)] bg-bg p-5 space-y-6"
+              >
+                <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Add-ons and discounts for {selectedPlan.name}</h3>
+                <div className="space-y-3">
+                  <h4 className="text-fg font-medium text-[length:var(--fs-body)]">
+                    Add-ons{addonIds.length > 0 ? ` (${addonIds.length} selected)` : ' (optional)'}
+                  </h4>
+                  <PostpaidAddonsPanel
+                    preBundled={preBundled}
+                    addonIds={addonIds}
+                    onAddonsChange={onAddonsChange}
+                    selectedProductId={selectedProductId}
+                    customerContext={customerContext}
+                    selectedPlan={selectedPlan}
+                    billLimit={billLimit}
+                    onBillLimitChange={onBillLimitChange}
+                  />
+                </div>
+                <div className="space-y-3">
+                  <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Eligible Discounts (optional)</h4>
+                  <PostpaidDiscountsPanel
+                    selectedProductId={selectedProductId}
+                    preBundled={preBundled}
+                    discountId={discountId}
+                    onSelectDiscount={onSelectDiscount}
+                    discounts={discounts}
+                    selectedDiscount={selectedDiscount}
+                    requiresSupportingId={requiresSupportingId}
+                    discountSupportingId={discountSupportingId}
+                    onDiscountSupportingIdChange={onDiscountSupportingIdChange}
+                    discountProofDocument={discountProofDocument}
+                    onDiscountProofDocumentChange={onDiscountProofDocumentChange}
+                    proofDocRef={proofDocRef}
+                    proofDocError={proofDocError}
+                    handleProofDocFile={handleProofDocFile}
+                    discountsState={discountsState}
+                    onRetryDiscounts={retryDiscounts}
+                  />
+                </div>
+              </section>
             )}
           </>
         )}
       </div>
 
-      {selectedPlan && charges && <PostpaidMonthlySummary charges={charges} selectedDiscount={selectedDiscount} />}
+      {selectedPlan && charges && <PostpaidMonthlySummary
+          charges={charges}
+          selectedDiscount={selectedDiscount}
+          bundledItems={bundledItems}
+          addedAddons={selectionSource === 'PLAN' ? selectedAddons.map((a) => ({ name: a.name, mrcQAR: a.mrcQAR })) : []}
+        />}
 
       {/* Plan details, on demand. A drawer rather than a modal: it is reference
           material read while choosing, so it slides in beside the list instead

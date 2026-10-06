@@ -1,8 +1,10 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useParams } from 'react-router-dom';
 import { Dashboard } from './modules/Dashboard';
 import { ModuleScreenList } from './modules/ModuleScreenList';
 import { ScreenRouteResolver } from './modules/ScreenRouteResolver';
 import { NotFound } from './modules/NotFound';
+import { Business360Page } from './workspace/customer360/Business360Page';
+import { isBusinessId } from './engines/businessSegment';
 import { CustomerSearchPage } from './workspace/customer-search/CustomerSearchPage';
 import { Customer360Layout } from './workspace/customer360/Customer360Layout';
 import { BillingAccountPage } from './workspace/customer360/BillingAccountPage';
@@ -66,7 +68,7 @@ export function AppRouter() {
       <Route path="/mobile/:category" element={<ProductLinePage lineKey="mobile" />} />
       <Route path="/fibre-home" element={<ProductLinePage lineKey="fibre-home" />} />
       <Route path="/fibre-home/:category" element={<ProductLinePage lineKey="fibre-home" />} />
-      <Route path="/customer/:customerId" element={<Customer360Layout />} />
+      <Route path="/customer/:customerId" element={<CustomerOrBusiness360 />} />
       <Route path="/billing-account/:billingProfileId" element={<BillingAccountPage />} />
       <Route path="/sales" element={<SalesWorkspace />} />
       <Route path="/support" element={<SupportWorkspace />} />
@@ -93,4 +95,10 @@ export function AppRouter() {
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
+}
+
+// One route for both: an enterprise account ID (ENT-ACC-...) opens Business 360, anything else the customer's profile.
+function CustomerOrBusiness360() {
+  const { customerId } = useParams<{ customerId: string }>();
+  return isBusinessId(customerId) ? <Business360Page /> : <Customer360Layout />;
 }

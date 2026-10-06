@@ -3,7 +3,6 @@ import { planSummary } from './stepSummaries';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import { PostpaidPlanAddonsStep } from '../../../components/patterns/PostpaidPlanAddonsStep';
 import type { WizardStep } from '../../../components/patterns/wizard/guidedWizardTypes';
-import { PlanSourceBanner } from './JourneyBanners';
 import type { CustomerTypeValue } from './customerTypeModel';
 import type { CrossSalesValue } from './crossSalesModel';
 import type { NewConnectionStepContext } from './stepContext';
@@ -20,10 +19,6 @@ export function planStep({ customerBenefits, products }: NewConnectionStepContex
       const eligibility = values.eligibility as EligibilityResult | undefined;
       return (
         <>
-        <PlanSourceBanner
-          offerName={(values.crossSales as CrossSalesValue | undefined)?.offerName}
-          customerType={(values.customerType as CustomerTypeValue | undefined)?.type}
-        />
         <PostpaidPlanAddonsStep
           customerContext={{
             nationality: eligibility?.nationality,
@@ -39,6 +34,11 @@ export function planStep({ customerBenefits, products }: NewConnectionStepContex
           onSelectDiscount={(id) => setValue('discountId', id)}
           addonIds={(values.addonIds as string[] | undefined) ?? []}
           onAddonsChange={(ids) => setValue('addonIds', ids)}
+          // Passed on to the later steps: where the plan came from and what an offer bundles.
+          onSelectionChange={({ source, bundled }) => {
+            setValue('selectionSource', source);
+            setValue('bundledItems', bundled);
+          }}
           discountSupportingId={values.discountSupportingId as string | undefined}
           onDiscountSupportingIdChange={(id) => setValue('discountSupportingId', id)}
           billLimit={values.billLimit as number | undefined}

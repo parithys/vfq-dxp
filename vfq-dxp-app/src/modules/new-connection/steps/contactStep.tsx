@@ -73,7 +73,7 @@ export function contactStep({ flow, existingCustomerId, guardedContactChange }: 
             as the eligibility panel so there is a single divider. */}
         {contact?.moiResult && eligibility && !eligibility.hardStop && !eligibility.softStop && (
           <div className="space-y-4">
-            <h3 className="text-fg font-semibold text-[length:var(--fs-h5)]">Additional Discounts</h3>
+            <h3 className="text-fg font-semibold text-[length:var(--fs-h5)]">Special Discounts</h3>
             {/* Headless: stands in for the skipped Billing Profile page. */}
             <BillingAccountAutoResolver
               customerId={eligibility.customerId}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { searchCustomers, toActiveCustomerSummary, type CustomerSearchResult } from '../../engines/customer360Engine';
+import { searchBusinessAccounts, type BusinessAccount } from '../../engines/businessAccountEngine';
 import { useCustomerContext } from '../../stores/customerContextStore';
 import { Badge } from '../../components/primitives/Badge';
 import { SearchField } from '../../components/primitives/SearchField';
@@ -65,6 +66,7 @@ export function CustomerSearchPage() {
   // The query the results on screen belong to - set only by pressing Enter.
   const [submitted, setSubmitted] = useState(handedOver.length >= MIN_QUERY_LENGTH ? handedOver : '');
   const [results, setResults] = useState<CustomerSearchResult[]>([]);
+  const [businesses, setBusinesses] = useState<BusinessAccount[]>([]);
   const [searching, setSearching] = useState(false);
 
   const trimmed = query.trim();
@@ -82,14 +84,16 @@ export function CustomerSearchPage() {
   useEffect(() => {
     if (!submitted) {
       setResults([]);
+      setBusinesses([]);
       setSearching(false);
       return;
     }
     let cancelled = false;
     setSearching(true);
-    searchCustomers(submitted).then((matches) => {
+    Promise.all([searchCustomers(submitted), searchBusinessAccounts(submitted)]).then(([matches, accounts]) => {
       if (cancelled) return;
       setResults(matches);
+      setBusinesses(accounts);
       setSearching(false);
     });
     return () => {
@@ -166,12 +170,32 @@ export function CustomerSearchPage() {
       {showingResults && (
         <div className="mt-4 space-y-2">
           {searching && <p className="text-muted text-[length:var(--fs-body)]">Searching…</p>}
-          {!searching && results.length === 0 && (
+          {!searching && results.length === 0 && businesses.length === 0 && (
             <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-6 text-center">
               <p className="text-fg font-medium mb-1">Customer Data Not Found</p>
               <p className="text-fg-2 text-[length:var(--fs-caption)]">No customer record matches “{submitted}”. Check the ID/number, or try searching by name or email instead.</p>
             </div>
           )}
+          {!searching &&
+            businesses.map(({ account, users }) => (
+              <button
+                key={account.enterpriseAccountId}
+                onClick={() => navigate(`/customer/${account.enterpriseAccountId}`, { state: { navKey: 'customer-search' } })}
+                className="w-full text-left rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 hover:border-[var(--field-card-hover-border)] flex items-center justify-between gap-3"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium text-fg text-[length:var(--fs-body-lg)] truncate">
+                      <Highlight text={account.name} query={submitted} words />
+                    </span>
+                    <Badge variant="outlined-red">Business</Badge>
+                  </div>
+                  <div className="text-fg-2 text-[length:var(--fs-caption)]">
+                    <Highlight text={account.enterpriseAccountId} query={submitted} /> · {users.length} linked user{users.length === 1 ? '' : 's'}
+                  </div>
+                </div>
+              </button>
+            ))}
           {!searching &&
             results.map(({ customer, matchedOn, matchedDocumentNumber }) => (
               <button

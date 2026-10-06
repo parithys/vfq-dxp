@@ -1,9 +1,9 @@
+import { useEffect, useState } from 'react';
+import * as mockDataEngine from '../../engines/mockDataEngine';
 import { GuidedActivationWizard } from '../../components/patterns/wizard/GuidedActivationWizard';
 import { ActivationCompleteScreen } from '../../components/patterns/ActivationCompleteScreen';
 import { useCustomerContext } from '../../stores/customerContextStore';
-import { Modal } from '../../components/primitives/Modal';
 import { DemoFaultPanel } from '../../components/patterns/DemoFaultPanel';
-import { Button } from '../../components/primitives/Button';
 import { POST_EXIT_DESTINATION, DRAFT_ORDERS_PATH } from './newConnectionModel';
 import type { NewConnectionFlow } from './newConnectionModel';
 import { submitNewConnectionOrder } from './submitNewConnectionOrder';
@@ -38,12 +38,21 @@ export function NewConnectionWizard({ flow = 'new' }: { flow?: NewConnectionFlow
     heldByAnotherJourney,
     guardedContactChange,
     customerBenefits,
-    createdLead,
-    setCreatedLead,
-    goToLeads,
     products,
     applyCrossSales,
   } = useNewConnectionJourney(flow);
+  // Existing Customer: the route names the customer, so their name sits under the title from the start.
+  const [routeCustomerName, setRouteCustomerName] = useState<string | undefined>();
+  useEffect(() => {
+    if (flow !== 'existing' || !existingCustomerId) return;
+    let cancelled = false;
+    void mockDataEngine.list<{ customerId: string; name: string }>('customers').then((all) => {
+      if (!cancelled) setRouteCustomerName(all.find((c) => c.customerId === existingCustomerId)?.name);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [flow, existingCustomerId]);
   const stepContext = {
     flow,
     existingCustomerId,
@@ -51,7 +60,6 @@ export function NewConnectionWizard({ flow = 'new' }: { flow?: NewConnectionFlow
     applyCrossSales,
     navigate,
     createRecord,
-    setCreatedLead,
     customerBenefits,
     products,
   };
@@ -68,12 +76,16 @@ export function NewConnectionWizard({ flow = 'new' }: { flow?: NewConnectionFlow
         belowPanel={(draftStep ?? 0) === 0 && !isMirrorWindow ? <DemoFaultPanel /> : undefined}
         wizardId={WIZARD_ID}
         allowCustomerView
-        title={flow === 'existing' ? 'New Connection - Existing Customer' : 'New Connection - New Customer'}
+        title={flow === 'existing' ? 'New Connection' : 'New Connection - New Customer'}
         draftActionLabel="Postpaid Activation"
         titleAside={
           active?.wizardId === WIZARD_ID ? (
             <span className="text-[length:var(--fs-body)] text-fg-2" title="The customer is fixed for this journey">
               <span className="font-medium text-fg">{active.customerName}</span> - QID {active.idNumber}
+            </span>
+          ) : flow === 'existing' && routeCustomerName ? (
+            <span className="text-[length:var(--fs-body)] font-medium text-fg" title="The customer is fixed for this journey">
+              {routeCustomerName}
             </span>
           ) : undefined
         }
@@ -99,26 +111,6 @@ export function NewConnectionWizard({ flow = 'new' }: { flow?: NewConnectionFlow
           useCustomerContext.getState().patchJourney(WIZARD_ID, { finalOrder: confirmed as unknown as Record<string, unknown> });
         }}
       />
-      <Modal
-        open={createdLead !== null}
-        onClose={() => setCreatedLead(null)}
-        title="Lead Created"
-        footer={
-          <>
-            <Button variant="ghost-rect" onClick={() => setCreatedLead(null)}>
-              Close
-            </Button>
-            <Button variant="primary-rect" onClick={goToLeads}>
-              Go to Leads
-            </Button>
-          </>
-        }
-      >
-        <p className="text-fg-2 text-[length:var(--fs-body)]">
-          Lead <strong className="font-bold">{createdLead?.leadId}</strong> has been created
-          {createdLead?.offerName ? ` for ${createdLead.offerName}` : ''}.
-        </p>
-      </Modal>
     </div>
   );
 }

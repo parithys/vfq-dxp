@@ -16,15 +16,30 @@ export function CrossSalesStep({
   value,
   onChange,
   onHandOff,
+  onContinue,
+  onInterestedOffer,
 }: {
   customerId: string | undefined;
   value: CrossSalesValue;
   onChange: (v: CrossSalesValue) => void;
   onHandOff: (route: string) => void;
+  /** With onInterestedOffer: each card carries its own Select Offer (take this offer and go on) and Interested (raise a lead
+   * for it) buttons in place of "Select offer". */
+  onContinue?: () => void;
+  onInterestedOffer?: (offer: Offer) => Promise<void>;
 }) {
   const [offers, setOffers] = useState<Offer[] | undefined>();
   // The offer whose comprehensive details are open in the side drawer.
   const [detailOffer, setDetailOffer] = useState<Offer | null>(null);
+  // Accept on a card selects the offer, then goes on once that selection has reached the journey's values.
+  const [advanceFor, setAdvanceFor] = useState<string | undefined>();
+  const [leadBusy, setLeadBusy] = useState<string | undefined>();
+  useEffect(() => {
+    if (advanceFor && value.decision === 'accepted' && value.offerId === advanceFor) {
+      setAdvanceFor(undefined);
+      onContinue?.();
+    }
+  }, [advanceFor, value, onContinue]);
   const [products, setProducts] = useState<Record<string, OfferProduct>>({});
   useEffect(() => {
     mockDataEngine
@@ -158,16 +173,45 @@ export function CrossSalesStep({
                   View details
                   <Icon path={CHEVRON_RIGHT} className="w-4 h-4" />
                 </button>
-                {/* Presentational: the card is the control, so the button must not take focus or
-                    fire a second toggle. */}
-                <Button
-                  variant={selected ? 'primary-rect' : 'ghost-rect'}
-                  tabIndex={-1}
-                  aria-hidden
-                  className="pointer-events-none"
-                >
-                  {selected ? 'Selected' : 'Select offer'}
-                </Button>
+                {onInterestedOffer ? (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="secondary-rect"
+                      compact
+                      disabled={leadBusy === o.offerId}
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        setLeadBusy(o.offerId);
+                        try {
+                          await onInterestedOffer(o);
+                        } finally {
+                          setLeadBusy(undefined);
+                        }
+                      }}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      Interested
+                    </Button>
+                    <Button
+                      variant="primary-rect"
+                      compact
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!selected) toggle();
+                        // A postpaid offer continues here; one that continues in another journey shows its hand-off instead.
+                        if (continuesHere(o.serviceJourney)) setAdvanceFor(o.offerId);
+                      }}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      Select Offer
+                    </Button>
+                  </div>
+                ) : (
+                  /* Presentational: the card is the control, so the button must not take focus or fire a second toggle. */
+                  <Button variant={selected ? 'primary-rect' : 'ghost-rect'} tabIndex={-1} aria-hidden className="pointer-events-none">
+                    {selected ? 'Selected' : 'Select offer'}
+                  </Button>
+                )}
               </div>
             </li>
           );

@@ -11,7 +11,8 @@ import { buildTelesalesTabs } from './telesales/TelesalesTabs';
 import { CustomerActionsMenu } from './CustomerActionsMenu';
 import { CustomerProfileHeader, type HeaderAlert } from './CustomerProfileHeader';
 import { useRequirementCoverage } from './requirementCoverage';
-import { FieldTypeLegend } from './FieldTypeLegend';
+import { LinkedBusinessCard } from './LinkedBusinessCard';
+import { segmentFor } from '../../engines/businessSegment';
 import { FieldAccessProvider } from './fieldAccess';
 import { DemoProvider } from './demoValues';
 import { canEditCustomerRecords } from '../../engines/agentPrivilegeEngine';
@@ -531,7 +532,8 @@ export function Customer360Layout() {
           blacklisted={Boolean(data.customer.blacklisted)}
           dob={data.customer.dob}
           preferredLanguage={data.customer.preferredLanguage}
-          segment={data.customer.segment}
+          // A reimbursed (CBU) user of a business is shown as B2B2C; a company-paid line leaves the employee's own profile unchanged.
+          segment={data.customer.parentBusinessId && data.customer.billingResponsibility && segmentFor(data.customer.billingResponsibility) === 'CBU' ? 'CBU · B2B2C' : data.customer.segment}
           phone={data.customer.phone}
           email={data.customer.email}
           totalConnections={services.length > 0 ? services.length : undefined}
@@ -563,8 +565,8 @@ export function Customer360Layout() {
         />
       </FieldAccessProvider>
 
-      <div className={headerOnly ? 'px-8 pt-4' : 'mt-4'}>
-        <FieldTypeLegend />
+      <div className={headerOnly ? 'px-8' : ''}>
+        <LinkedBusinessCard customerId={data.customer.customerId} />
       </div>
 
       {!telesales && !headerOnly && (

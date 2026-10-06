@@ -20,6 +20,9 @@ interface PostpaidDiscountsPanelProps {
   proofDocRef: RefObject<HTMLInputElement | null>;
   proofDocError: string | null;
   handleProofDocFile: (file: File | undefined) => void;
+  /** Where the plan's discounts are in loading; on error the agent can retry or continue without one. */
+  discountsState?: 'loading' | 'error' | 'ready';
+  onRetryDiscounts?: () => void;
 }
 
 export function PostpaidDiscountsPanel({
@@ -37,9 +40,20 @@ export function PostpaidDiscountsPanel({
   proofDocRef,
   proofDocError,
   handleProofDocFile,
+  discountsState = 'ready',
+  onRetryDiscounts,
 }: PostpaidDiscountsPanelProps) {
   return (!selectedProductId ? (
         <p className="text-muted text-[length:var(--fs-caption)]">Select a plan to see eligible discounts.</p>
+      ) : discountsState === 'loading' ? (
+        <p className="text-muted text-[length:var(--fs-caption)]">Loading discounts…</p>
+      ) : discountsState === 'error' ? (
+        <div role="alert" className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_92%)] px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[var(--warn-text)] text-[length:var(--fs-body)]">Discounts could not be loaded. You can continue without one.</p>
+          <button type="button" onClick={onRetryDiscounts} className="text-fg underline font-medium text-[length:var(--fs-body)]">
+            Retry
+          </button>
+        </div>
       ) : preBundled ? (
         // A pre-bundled plan already comes with its own offer decided
         // - either individually flagged (PostpaidPlan.preBundledOffer)
@@ -62,6 +76,11 @@ export function PostpaidDiscountsPanel({
           {/* Same card standard as the plan and add-on cards (shared idle / selected states, texture, tick).
               Single choice: "No discount" is selected whenever no discount is, and clicking a selected
               discount again clears it back to "No discount" - the same outcomes the radios gave. */}
+          {discounts.length === 0 ? (
+            <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface px-4 py-6 text-center">
+              <p className="text-fg-2 text-[length:var(--fs-body)]">No discounts available for this plan</p>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             <DiscountCard
               title="No discount"
@@ -81,8 +100,6 @@ export function PostpaidDiscountsPanel({
               />
             ))}
           </div>
-          {discounts.length === 0 && (
-            <p className="text-muted text-[length:var(--fs-caption)]">No discounts configured for this plan.</p>
           )}
           {/* MADA/B2B2C discounts need a supporting ID AND a proof
               document here (2026-09-28 direction, superseding the

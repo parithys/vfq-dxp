@@ -100,7 +100,7 @@ export function Breadcrumbs() {
             Customers
           </Link>
           <Crumb />
-          <span className="text-fg font-medium">{activeCustomerName ?? 'Customer 360'}</span>
+          <span className="text-fg font-medium">{/^ENT-ACC-/i.test(screenSlug ?? '') ? 'Business 360' : (activeCustomerName ?? 'Customer 360')}</span>
         </>
       )}
     </div>

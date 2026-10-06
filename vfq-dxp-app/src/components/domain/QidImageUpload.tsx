@@ -195,12 +195,12 @@ export function QidImageUpload({
               <div className="flex items-center gap-2">
                 {onAccept && (
                   <Button variant="primary-rect" compact onClick={onAccept} disabled={accepted || value.clear === false}>
-                    {accepted ? 'Accepted' : 'Accept'}
+                    {accepted ? 'Accepted' : 'OK'}
                   </Button>
                 )}
                 {onReject && (
                   <Button variant="ghost-rect" compact onClick={onReject}>
-                    Reject
+                    Cancel
                   </Button>
                 )}
               </div>

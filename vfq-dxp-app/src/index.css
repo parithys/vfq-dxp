@@ -289,6 +289,49 @@ select:not([multiple]):not([size]):not(.appearance-none) {
   }
 }
 
+/* "How can we help today?" band (Customer 360): the pale-blue banner gradient, light to lighter toward the right. */
+:root {
+  --help-band-from: #B4D5E8;
+  --help-band-to: #D1E8F7;
+}
+:root.dark {
+  --help-band-from: color-mix(in oklab, var(--signal-blue), var(--bg) 70%);
+  --help-band-to: color-mix(in oklab, var(--signal-blue), var(--bg) 85%);
+}
+
+/* Linked-user segment badges (Business 360 and the Linked business card). Solid tints with dark text, not colour
+   alone: each badge also carries its label. Contrast is >= 7:1 in both themes. */
+:root {
+  --segment-ebu-bg: #E3ECFF;
+  --segment-ebu-fg: #12307A;
+  --segment-cbu-bg: #FFE3F1;
+  --segment-cbu-fg: #7A0045;
+}
+:root.dark {
+  --segment-ebu-bg: #1B2A55;
+  --segment-ebu-fg: #BCD0FF;
+  --segment-cbu-bg: #4D1537;
+  --segment-cbu-fg: #FFC2E0;
+}
+.badge-segment-ebu,
+.badge-segment-cbu {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  padding: 2px 10px;
+  font-size: var(--fs-tag);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.badge-segment-ebu {
+  background: var(--segment-ebu-bg);
+  color: var(--segment-ebu-fg);
+}
+.badge-segment-cbu {
+  background: var(--segment-cbu-bg);
+  color: var(--segment-cbu-fg);
+}
+
 /* Customer 360 field-type colours (src/workspace/customer360/requirementCoverage.ts), classified per persona from
    'Customer 360.xlsx': Real Time = pink, Drill Down / Select = blue. Both clear WCAG AA (4.5:1) for body text on the
    page and card surfaces in each theme: light 5.3:1+ / 6.2:1+, dark 5.7:1+ / 6.5:1+. */

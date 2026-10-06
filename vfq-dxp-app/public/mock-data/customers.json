@@ -1,6 +1,7 @@
 [
   {
     "customerId": "CUST-1001",
+    "accountType": "INDIVIDUAL",
     "qid": "28512345678",
     "idType": "QID",
     "name": "Ahmed Abdulla Hassan Al-Sulaiti",
@@ -28,6 +29,7 @@
   },
   {
     "customerId": "CUST-1002",
+    "accountType": "INDIVIDUAL",
     "qid": "P-N1234567",
     "idType": "Passport",
     "name": "Bimal Bahadur Thapa",
@@ -53,10 +55,13 @@
     "_companyNameNote": "App-level demo addition (2026-09-26) - this field is what the Contact step now derives B2B2C from, replacing the agent-ticked 'B2B2C Order' checkbox. Only CUST-2001 carried a companyName before, and that record is the employer's own contact rather than a sponsored consumer, so no consumer resolved as B2B2C and the derived flag could never fire - which would have left FWA, MNP and Fixed Line with no way to route an order for approval. Bimal Thapa is an expat consumer on a Passport, the plausible sponsored-employee shape, and Passport is offered by exactly those three journeys. New Postpaid deliberately does NOT offer Passport, so its scan path stays an ordinary consumer sale and B2B2C does not silently start routing every postpaid order to approval.",
     "benefitEligibility": [
       "b2b2c"
-    ]
+    ],
+    "parentBusinessId": "ENT-ACC-7705",
+    "billingResponsibility": "USER"
   },
   {
     "customerId": "CUST-1003",
+    "accountType": "INDIVIDUAL",
     "qid": "27798765432",
     "idType": "QID",
     "name": "Fatima Saud Hamad Al-Kuwari",
@@ -81,6 +86,7 @@
   },
   {
     "customerId": "CUST-1004",
+    "accountType": "INDIVIDUAL",
     "qid": "29011122233",
     "idType": "QID",
     "name": "Mohammed Rashid Khalid Al-Emadi",
@@ -105,6 +111,7 @@
   },
   {
     "customerId": "CUST-2001",
+    "accountType": "INDIVIDUAL",
     "qid": "28855544433",
     "idType": "QID",
     "name": "Layla Hassan Ibrahim Al-Naimi",
@@ -120,10 +127,13 @@
     "companyName": "Acme Trading Qatar W.L.L.",
     "age": 44,
     "gender": "Female",
-    "benefitEligibility": []
+    "benefitEligibility": [],
+    "parentBusinessId": "ENT-ACC-7705",
+    "billingResponsibility": "COMPANY"
   },
   {
     "customerId": "CUST-1005",
+    "accountType": "INDIVIDUAL",
     "qid": "784202312345678",
     "idType": "GCC ID",
     "name": "Khalid Saeed Rashid Al-Mazrouei",
@@ -149,6 +159,7 @@
   },
   {
     "customerId": "CUST-1006",
+    "accountType": "INDIVIDUAL",
     "qid": "DIP-QA-004521",
     "idType": "Diplomatic ID",
     "name": "Sophie Marie Laurent",
@@ -175,6 +186,7 @@
   },
   {
     "customerId": "CUST-9001",
+    "accountType": "INDIVIDUAL",
     "qid": "P1234567",
     "idType": "QID",
     "name": "Rashid Nasser Hamad Al-Naimi",
@@ -199,6 +211,7 @@
   },
   {
     "customerId": "CUST-1007",
+    "accountType": "INDIVIDUAL",
     "qid": "DIP-QA-004977",
     "idType": "QID",
     "name": "Henrik Lars Lindqvist",
@@ -223,6 +236,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3001",
+    "accountType": "INDIVIDUAL",
     "qid": "27911063400001",
     "idType": "QID",
     "name": "Hamad Jassim Hamad Al-Thani",
@@ -249,6 +263,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3002",
+    "accountType": "INDIVIDUAL",
     "qid": "28203063400002",
     "idType": "QID",
     "name": "Maryem Rashid Hamad Jassim Al-Kuwari",
@@ -275,6 +290,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3004",
+    "accountType": "INDIVIDUAL",
     "qid": "27705063400004",
     "idType": "QID",
     "name": "Faisal Mansoor Khalid Abdullah Al-Marri",
@@ -301,6 +317,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3003",
+    "accountType": "INDIVIDUAL",
     "qid": "29005063400003",
     "idType": "QID",
     "name": "Jassim Rashid Nasser Al-Marri",
@@ -327,6 +344,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3011",
+    "accountType": "INDIVIDUAL",
     "qid": "28508035600011",
     "idType": "QID",
     "name": "Rajesh Kumar Pillai",
@@ -353,6 +371,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3012",
+    "accountType": "INDIVIDUAL",
     "qid": "29112060800012",
     "idType": "QID",
     "name": "Maria Cristina Santos Reyes",
@@ -379,6 +398,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3013",
+    "accountType": "INDIVIDUAL",
     "qid": "28409081800013",
     "idType": "QID",
     "name": "Ahmed Fathy Ibrahim El-Sayed",
@@ -405,6 +425,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3014",
+    "accountType": "INDIVIDUAL",
     "qid": "28710014400014",
     "idType": "QID",
     "name": "Sunil Chandana Kumara Perera",
@@ -431,6 +452,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3015",
+    "accountType": "INDIVIDUAL",
     "qid": "28806040000015",
     "idType": "QID",
     "name": "Hasan Mahmoud Ali Al-Khatib",
@@ -457,6 +479,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3016",
+    "accountType": "INDIVIDUAL",
     "qid": "E58321097",
     "idType": "Passport",
     "name": "Wei Ming Chen",
@@ -481,6 +504,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3017",
+    "accountType": "INDIVIDUAL",
     "qid": "28904036400017",
     "idType": "QID",
     "name": "Peter Kamau Mwangi",
@@ -505,6 +529,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3021",
+    "accountType": "INDIVIDUAL",
     "qid": "27610063400021",
     "idType": "QID",
     "name": "Salma Nasser Khalifa Al-Kuwari",
@@ -532,6 +557,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3022",
+    "accountType": "INDIVIDUAL",
     "qid": "27409063400022",
     "idType": "QID",
     "name": "Abdullah Khalid Mansoor Al-Kuwari",
@@ -558,6 +584,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3023",
+    "accountType": "INDIVIDUAL",
     "qid": "27307063400023",
     "idType": "QID",
     "name": "Hussain Ali Mubarak Al-Dosari",
@@ -584,6 +611,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3024",
+    "accountType": "INDIVIDUAL",
     "qid": "28105063400024",
     "idType": "QID",
     "name": "Nasser Mohammed Saad Al-Hajri",
@@ -607,11 +635,14 @@
     "benefitEligibility": [
       "mada",
       "b2b2c"
-    ]
+    ],
+    "parentBusinessId": "ENT-ACC-8202",
+    "billingResponsibility": "USER"
   },
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3025",
+    "accountType": "INDIVIDUAL",
     "qid": "29302035600025",
     "idType": "QID",
     "name": "Priya Suresh Nair",
@@ -634,11 +665,14 @@
     "companyName": "Gulf Logistics W.L.L.",
     "benefitEligibility": [
       "b2b2c"
-    ]
+    ],
+    "parentBusinessId": "ENT-ACC-8202",
+    "billingResponsibility": "COMPANY"
   },
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3026",
+    "accountType": "INDIVIDUAL",
     "qid": "28707058600026",
     "idType": "QID",
     "name": "Imran Ahmed Khan Qureshi",
@@ -662,11 +696,14 @@
     "hrnAdvancePaymentRequired": true,
     "benefitEligibility": [
       "b2b2c"
-    ]
+    ],
+    "parentBusinessId": "ENT-ACC-8201",
+    "billingResponsibility": "USER"
   },
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3027",
+    "accountType": "INDIVIDUAL",
     "qid": "26904063400027",
     "idType": "QID",
     "name": "Fahad Saeed Ali Al-Ansari",
@@ -694,6 +731,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3028",
+    "accountType": "INDIVIDUAL",
     "qid": "28404042200028",
     "idType": "QID",
     "name": "Karim Elias Youssef Haddad",
@@ -721,6 +759,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3029",
+    "accountType": "INDIVIDUAL",
     "qid": "29506063400029",
     "idType": "QID",
     "name": "Fatima Hassan Ali Al-Marri",
@@ -744,6 +783,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3031",
+    "accountType": "INDIVIDUAL",
     "qid": "28603063400031",
     "idType": "QID",
     "name": "Dina Abdulaziz Khalid Al-Mahmoud",
@@ -770,6 +810,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3032",
+    "accountType": "INDIVIDUAL",
     "qid": "Z4455671",
     "idType": "Passport",
     "name": "Lakshmi Venkat Iyer",
@@ -794,6 +835,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3033",
+    "accountType": "INDIVIDUAL",
     "qid": "28605058600033",
     "idType": "QID",
     "name": "Tariq Mahmood Aziz Malik",
@@ -817,11 +859,14 @@
     "hrnAdvancePaymentRequired": true,
     "benefitEligibility": [
       "b2b2c"
-    ]
+    ],
+    "parentBusinessId": "ENT-ACC-8201",
+    "billingResponsibility": "COMPANY"
   },
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3041",
+    "accountType": "INDIVIDUAL",
     "qid": "28808076000041",
     "idType": "QID",
     "name": "Omar Samer Khalil Al-Hamwi",
@@ -846,6 +891,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3042",
+    "accountType": "INDIVIDUAL",
     "qid": "29210081800042",
     "idType": "QID",
     "name": "Nadia Hany Farouk Mansour",
@@ -869,6 +915,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3043",
+    "accountType": "INDIVIDUAL",
     "qid": "28912035600043",
     "idType": "QID",
     "name": "Ravi Shankar Menon",
@@ -894,6 +941,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3044",
+    "accountType": "INDIVIDUAL",
     "qid": "30806063400044",
     "idType": "QID",
     "name": "Saeed Abdullah Nasser Al-Mohannadi",
@@ -917,6 +965,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3045",
+    "accountType": "INDIVIDUAL",
     "qid": "DIP-QA-005100",
     "idType": "Diplomatic ID",
     "name": "Eva Maria Mueller",
@@ -940,6 +989,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3046",
+    "accountType": "INDIVIDUAL",
     "qid": "28311058600046",
     "idType": "QID",
     "name": "Bilal Ahmed Raza Siddiqui",
@@ -967,6 +1017,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3051",
+    "accountType": "INDIVIDUAL",
     "qid": "28506081800051",
     "idType": "QID",
     "name": "Tamer Mahmoud Hosni Abdelaziz",
@@ -991,6 +1042,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3052",
+    "accountType": "INDIVIDUAL",
     "qid": "28707063400052",
     "idType": "QID",
     "name": "Aisha Mohammed Al-Suwaidi",
@@ -1017,6 +1069,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3053",
+    "accountType": "INDIVIDUAL",
     "qid": "28808063400053",
     "idType": "QID",
     "name": "Faisal Hamad Saud Al-Rumaihi",
@@ -1043,6 +1096,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3054",
+    "accountType": "INDIVIDUAL",
     "qid": "29108063400054",
     "idType": "QID",
     "name": "Zainab Ibrahim Khalid Al-Hashemi",
@@ -1069,6 +1123,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3061",
+    "accountType": "INDIVIDUAL",
     "qid": "BN7721045",
     "idType": "Passport",
     "name": "Mizanur Abdul Karim Rahman",
@@ -1094,6 +1149,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3062",
+    "accountType": "INDIVIDUAL",
     "qid": "29207052400062",
     "idType": "QID",
     "name": "Samuel Okello Mugisha",
@@ -1117,11 +1173,14 @@
     "companyName": "Gulf Logistics W.L.L.",
     "benefitEligibility": [
       "b2b2c"
-    ]
+    ],
+    "parentBusinessId": "ENT-ACC-8202",
+    "billingResponsibility": "USER"
   },
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3063",
+    "accountType": "INDIVIDUAL",
     "qid": "RES-9930471",
     "idType": "Other ID",
     "name": "Zahid Mehmood Butt",
@@ -1147,6 +1206,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3064",
+    "accountType": "INDIVIDUAL",
     "qid": "28809072900064",
     "idType": "QID",
     "name": "Kyaw Zin Htet",
@@ -1174,6 +1234,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3065",
+    "accountType": "INDIVIDUAL",
     "qid": "28402063400065",
     "idType": "QID",
     "name": "Abdulrahman Jassim Hamad Al-Kubaisi",
@@ -1201,6 +1262,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3066",
+    "accountType": "INDIVIDUAL",
     "qid": "28704063400066",
     "idType": "QID",
     "name": "Maha Rashid Saeed Al-Ghanim",
@@ -1228,6 +1290,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3067",
+    "accountType": "INDIVIDUAL",
     "qid": "RES-8812045",
     "idType": "Other ID",
     "name": "Mohamed Nabil Ibrahim Soliman",
@@ -1254,6 +1317,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3068",
+    "accountType": "INDIVIDUAL",
     "qid": "29506011600068",
     "idType": "QID",
     "name": "Sokha Vannak Chea",
@@ -1278,6 +1342,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3069",
+    "accountType": "INDIVIDUAL",
     "qid": "28910041800069",
     "idType": "QID",
     "name": "Khamla Somphone Vongsa",
@@ -1302,6 +1367,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3070",
+    "accountType": "INDIVIDUAL",
     "qid": "29103074800070",
     "idType": "QID",
     "name": "Sipho Themba Dlamini",
@@ -1326,6 +1392,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3071",
+    "accountType": "INDIVIDUAL",
     "qid": "27801063400071",
     "idType": "QID",
     "name": "Khalifa Abdullah Saeed Al-Mohannadi",
@@ -1352,6 +1419,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3072",
+    "accountType": "INDIVIDUAL",
     "qid": "28504042200072",
     "idType": "QID",
     "name": "Rohan Vikram Mehta",
@@ -1376,6 +1444,7 @@
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
     "customerId": "CUST-3073",
+    "accountType": "INDIVIDUAL",
     "qid": "28509034500073",
     "idType": "QID",
     "name": "Walid Nabil Hassan Al-Zoubi",
