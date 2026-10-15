@@ -91,7 +91,11 @@ async function loadPlaywright() {
   } catch {
     const p = path.join(APP, 'docs/figma-make-spec/journeys/mobile-postpaid-activation/_data/node_modules/playwright/index.mjs');
     if (fs.existsSync(p)) return await import(pathToFileURL(p).href);
-    throw new Error('playwright not found. Run: npm i -D playwright && npx playwright install chromium');
+    try {
+      return await import('playwright-core');
+    } catch {
+      throw new Error('Playwright not found. Run: npm install');
+    }
   }
 }
 
@@ -119,7 +123,7 @@ class Recorder {
   /** Save the page as it is now, unless its words were already saved in this journey. `force` skips that check. */
   async snap(label, { force = false } = {}) {
     const { page } = this;
-    await page.waitForLoadState('networkidle', { timeout: 6000 }).catch(() => {});
+    await page.waitForLoadState('domcontentloaded', { timeout: 3000 }).catch(() => {});
     await sleep(500);
     const text = await this.text();
     const key = crypto.createHash('sha1').update(text || label).digest('hex');
@@ -173,7 +177,7 @@ async function login(page) {
   await page.waitForSelector('#staff-id', { timeout: 20000 });
   await page.fill('#staff-id', STAFF);
   await page.fill('#login-password', PASSWORD);
-  await page.getByRole('button', { name: /^Sign In/ }).click();
+  await page.getByRole('button', { name: /^Sign in/i }).click();
   await page.waitForSelector('main', { timeout: 20000 });
   const dark = await page.evaluate(() => document.documentElement.classList.contains('dark'));
   if (dark) await page.getByRole('button', { name: 'Toggle theme' }).click(); // light mode only
@@ -576,8 +580,23 @@ async function runJourney(page, j) {
   // Inside a sandboxed shell (the Claude Code terminal) Chromium's helper processes are killed at start-up; the
   // single-process, no-zygote, no-GPU flags are what work there, and they are fine in a normal terminal too.
   const args = env('SAFE_FLAGS', '1') === '0' ? [] : ['--no-sandbox', '--single-process', '--no-zygote', '--disable-gpu', '--in-process-gpu', '--disable-software-rasterizer'];
-  const browser = await chromium.launch({ headless: !env('HEADED', ''), args });
+  const executablePath = env('CHROMIUM_EXECUTABLE', '');
+  const browser = await chromium.launch({ ...(executablePath ? { executablePath } : {}), headless: !env('HEADED', ''), args });
   const page = await (await browser.newContext({ viewport: { width: VW, height: VH } })).newPage();
+  const runtimeIssues = [];
+  const runtimeIssueKeys = new Set();
+  const recordRuntimeIssue = (type, text) => {
+    const issue = { type, text, url: page.url() };
+    const key = JSON.stringify(issue);
+    if (!runtimeIssueKeys.has(key)) {
+      runtimeIssueKeys.add(key);
+      runtimeIssues.push(issue);
+    }
+  };
+  page.on('console', (message) => {
+    if (message.type() === 'warning' || message.type() === 'error') recordRuntimeIssue(`console.${message.type()}`, message.text());
+  });
+  page.on('pageerror', (error) => recordRuntimeIssue('pageerror', error.message));
   page.setDefaultTimeout(8000);
   await login(page);
   fs.mkdirSync(OUT, { recursive: true });
@@ -587,6 +606,7 @@ async function runJourney(page, j) {
     rows.push({ id: j.id, title: j.title, route: j.route ?? '-', count: rec.n, screens: rec.shots.map((s) => s.file.replace(/^\d+-|\.png$/g, '')), unreachable: rec.unreachable });
   }
   fs.writeFileSync(path.join(OUT, 'summary.json'), JSON.stringify(rows, null, 2));
+  fs.writeFileSync(path.join(OUT, 'runtime-issues.json'), JSON.stringify(runtimeIssues, null, 2));
   const md = [
     '# Journey screenshots (light mode)',
     '',

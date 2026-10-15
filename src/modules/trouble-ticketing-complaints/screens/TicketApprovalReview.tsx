@@ -65,11 +65,13 @@ interface AuditRecord {
 // an appended `activities` entry), not the order version's target
 // (customer-activities) - consistent with how escalate()/resolve()/
 // closeTicket() already log every other decision in TicketDetail.tsx.
+const EMPTY_TICKETS: Ticket[] = [];
+
 export function TicketApprovalReview() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const ticketId = params.get('id');
-  const tickets = (useEntityStore((s) => s.records['trouble-tickets']) ?? []) as unknown as Ticket[];
+  const tickets = (useEntityStore((s) => s.records['trouble-tickets']) ?? EMPTY_TICKETS) as unknown as Ticket[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const updateRecord = useEntityStore((s) => s.updateRecord);
   const createRecord = useEntityStore((s) => s.createRecord);

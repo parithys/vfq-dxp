@@ -21,6 +21,7 @@ import { useTicketSlaEscalationSweep } from '../slaEscalationSweep';
 import { SearchField } from '../../../components/primitives/SearchField';
 
 const CURRENT_AGENT = 'Current Agent';
+const EMPTY_TICKETS: Ticket[] = [];
 
 interface Activity {
   type: 'Manual' | 'Auto';
@@ -67,7 +68,7 @@ interface TicketsDashboardProps {
 }
 
 export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
-  const tickets = (useEntityStore((s) => s.records['trouble-tickets']) ?? []) as unknown as Ticket[];
+  const tickets = (useEntityStore((s) => s.records['trouble-tickets']) ?? EMPTY_TICKETS) as unknown as Ticket[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const loading = useKindPending('trouble-tickets'); // true until the list has arrived, so the table never flashes "empty" first
   const loadError = useEntityStore((s) => s.errors['trouble-tickets']);

@@ -144,7 +144,7 @@ export function SessionReferenceNumbers() {
     return () => {
       cancelled = true;
     };
-  }, [activeCustomer?.customerId, showCti]);
+  }, [activeCustomer, showCti]);
 
   useEffect(() => {
     if (!showQnomy) return;

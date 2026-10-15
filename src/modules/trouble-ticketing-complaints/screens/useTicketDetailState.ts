@@ -7,12 +7,14 @@ import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { useTicketSlaEscalationSweep } from '../slaEscalationSweep';
 import type { Ticket, AuditRecord, OsbNotification } from './ticketDetailModel';
 
+const EMPTY_TICKETS: Ticket[] = [];
+
 // Store bindings, local state and data-loading effects for TicketDetail.
 // Hook order here is the original component's order - do not reorder.
 export function useTicketDetailState() {
   const [params] = useSearchParams();
   const ticketId = params.get('id');
-  const tickets = (useEntityStore((s) => s.records['trouble-tickets']) ?? []) as unknown as Ticket[];
+  const tickets = (useEntityStore((s) => s.records['trouble-tickets']) ?? EMPTY_TICKETS) as unknown as Ticket[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const updateRecord = useEntityStore((s) => s.updateRecord);
   const createRecord = useEntityStore((s) => s.createRecord);

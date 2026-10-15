@@ -52,9 +52,8 @@ export function AdditionalDocumentsUpload({ documents, onChange, labelOptions, m
   // A type picked with no file yet is an unfinished upload: the caller blocks Continue until it is uploaded.
   useEffect(() => {
     onPendingChange?.(Boolean(label.trim()));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [label]);
-  useEffect(() => () => onPendingChange?.(false), []);
+  }, [label, onPendingChange]);
+  useEffect(() => () => onPendingChange?.(false), [onPendingChange]);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const atLimit = documents.length >= maxDocuments;

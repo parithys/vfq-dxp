@@ -165,7 +165,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
     // original rule (Reserved if held, else the Free default).
     if (heldReservations > 0) setTab('Reserved');
     else if (isRetailSales) setTab('Star');
-  }, [numbersLoaded, heldReservations, isRetailSales]);
+  }, [numbersLoaded, heldReservations, isRetailSales, portalMode]);
 
   // Retail Sales sees the Reserved tab only while a reservation is held; before the
   // numbers have loaded no tab is shown, so the strip never flashes a tab that then vanishes.

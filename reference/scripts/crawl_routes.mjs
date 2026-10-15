@@ -34,7 +34,6 @@
  * NOT YET RUN: written in a session whose sandbox blocks local sockets (no browser could reach the dev server), so the
  * wizard driver in particular is a best effort - where it stalls it stops and says so in the manifest.
  */
-import { createRequire } from 'node:module';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -65,7 +64,11 @@ async function loadPlaywright() {
     // The repo already carries an install next to the mobile-postpaid capture scripts.
     const p = path.join(APP, 'docs/figma-make-spec/journeys/mobile-postpaid-activation/_data/node_modules/playwright/index.mjs');
     if (fs.existsSync(p)) return await import(pathToFileURL(p).href);
-    throw new Error('playwright not found. Run: npm i -D playwright && npx playwright install chromium');
+    try {
+      return await import('playwright-core');
+    } catch {
+      throw new Error('Playwright not found. Run: npm install');
+    }
   }
 }
 
@@ -123,11 +126,11 @@ const WIZARDS = [
 
 // ---------------------------------------------------------------------------------------------- page helpers
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const manifest = { generatedAt: new Date().toISOString(), base: BASE, themes: THEMES, shots: [], skipped: [], duplicates: [], stalled: [] };
+const manifest = { generatedAt: new Date().toISOString(), base: BASE, themes: THEMES, shots: [], skipped: [], duplicates: [], stalled: [], runtimeIssues: [] };
 const seen = new Map(); // `${theme}/${journey}` -> Map(hash -> file)
 
 async function ready(page) {
-  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+  await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {});
   await page.waitForSelector('main, h1, h2', { timeout: 15000 }).catch(() => {});
   await sleep(600);
 }
@@ -147,7 +150,7 @@ async function login(page) {
   await page.waitForSelector('#staff-id', { timeout: 15000 });
   await page.fill('#staff-id', STAFF);
   await page.fill('#login-password', PASSWORD);
-  await page.getByRole('button', { name: /^Sign In/ }).click();
+  await page.getByRole('button', { name: /^Sign in/i }).click();
   await page.waitForSelector('main', { timeout: 15000 });
 }
 
@@ -343,8 +346,22 @@ async function driveWizard(page, theme, w) {
   // works there (it is what the mobile-postpaid capture scripts' chrome-daemon.sh uses). It is also fine in a normal
   // terminal; set SAFE_FLAGS=0 to launch with Playwright's defaults instead.
   const sandboxArgs = env('SAFE_FLAGS', '1') === '0' ? [] : ['--no-sandbox', '--single-process', '--no-zygote', '--disable-gpu', '--in-process-gpu', '--disable-software-rasterizer'];
-  const browser = await chromium.launch({ headless: !env('HEADED', ''), args: sandboxArgs });
+  const executablePath = env('CHROMIUM_EXECUTABLE', '');
+  const browser = await chromium.launch({ ...(executablePath ? { executablePath } : {}), headless: !env('HEADED', ''), args: sandboxArgs });
   const page = await (await browser.newContext({ viewport: { width: VW, height: VH } })).newPage();
+  const runtimeIssueKeys = new Set();
+  const recordRuntimeIssue = (type, text) => {
+    const issue = { type, text, url: page.url() };
+    const key = JSON.stringify(issue);
+    if (!runtimeIssueKeys.has(key)) {
+      runtimeIssueKeys.add(key);
+      manifest.runtimeIssues.push(issue);
+    }
+  };
+  page.on('console', (message) => {
+    if (message.type() === 'warning' || message.type() === 'error') recordRuntimeIssue(`console.${message.type()}`, message.text());
+  });
+  page.on('pageerror', (error) => recordRuntimeIssue('pageerror', error.message));
   await login(page);
   const built = builtRoutes();
   const ws = workspacePages();
@@ -371,7 +388,7 @@ async function driveWizard(page, theme, w) {
   fs.mkdirSync(OUT, { recursive: true });
   fs.writeFileSync(path.join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2));
   await browser.close().catch(() => {}); // a sandboxed shell cannot kill the browser (EPERM); the files are already written
-  console.log(`\n${manifest.shots.length} captured, ${manifest.duplicates.length} duplicates, ${manifest.skipped.length} skipped, ${manifest.stalled.length} stalled -> ${OUT}`);
+  console.log(`\n${manifest.shots.length} captured, ${manifest.duplicates.length} duplicates, ${manifest.skipped.length} skipped, ${manifest.stalled.length} stalled, ${manifest.runtimeIssues.length} runtime issues -> ${OUT}`);
 })()
   .then(() => process.exit(0))
   .catch((e) => {

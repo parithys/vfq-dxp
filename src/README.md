@@ -63,7 +63,7 @@ utility string that recreates a component.
 | a table / tabs / pager | `DataTable`, `GridTable`; `Tabs`, `PlanTabStrip` (check these before writing a new one) |
 
 **Values come from tokens, not literals.** Radius: `--radius-sm` 8, `--radius-button` 12 (buttons, fields), `--radius-card` 16,
-`--radius-card-lg` 20, `--radius-pill`. Type sizes: `--fs-*` (including `--fs-stat`, `--fs-xs`). Colour, shadow and gradient:
+`--radius-card-lg` 20, `--radius-pill`. Type sizes use the `--fs-` token family (including `--fs-stat`, `--fs-xs`). Colour, shadow and gradient:
 `--accent`, `--accent-gradient` (+ `-hover`), `--link`, `--field-*`, `--icon-tile-*`. No hex colours and no `rounded-lg/xl/2xl` in
 components; an arbitrary value (`w-[420px]`) is for one-off sizing only, and a value used a second time becomes a token.
 

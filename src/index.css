@@ -1,3 +1,4 @@
+@import "@fontsource-variable/figtree";
 @import "tailwindcss";
 @import "./tokens.css";
 @import "./components/primitives/tooltip-tokens.css";

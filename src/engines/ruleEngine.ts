@@ -1,6 +1,7 @@
 import { isSlaStopped } from '../lib/statusTone';
 import { PREPAID_CAPPED_ID_TYPES } from '../data/idTypes';
 import { simCardCharge } from '../data/prepaidSimCharge';
+import { STAR_NUMBER_ENTITLEMENT_MULTIPLIER, starNumberOverageQar } from './postpaidPricing';
 
 
 // Rule Engine per frontend-architecture.md §5. 346 business rules are catalogued
@@ -305,6 +306,28 @@ const ruleImplementations: Record<string, RuleImplementation> = {
     const { hrnFlag } = ctx as { hrnFlag: boolean };
     const amount = hrnFlag ? 50 : 1000;
     return { pass: true, message: `Default credit limit: QAR ${amount} on a new account.` };
+  },
+
+  // Star-number entitlement by plan value (BR-115). The pricing engine owns
+  // the confirmed 25x multiplier and overage calculation; this rule adapter
+  // makes the catalogued rule evaluable without duplicating that logic.
+  'BR-115': (ctx) => {
+    const { planMrcQar, numberPriceQar } = ctx as { planMrcQar?: number; numberPriceQar?: number };
+    if (typeof planMrcQar !== 'number' || typeof numberPriceQar !== 'number') {
+      return {
+        pass: true,
+        message: `A plan entitles a Star Number worth up to ${STAR_NUMBER_ENTITLEMENT_MULTIPLIER} times its monthly charge; only any excess is billed.`,
+      };
+    }
+    const entitlementQar = planMrcQar * STAR_NUMBER_ENTITLEMENT_MULTIPLIER;
+    const overageQar = starNumberOverageQar(planMrcQar, numberPriceQar, entitlementQar);
+    return {
+      pass: true,
+      message:
+        overageQar > 0
+          ? `Star Number entitlement: QAR ${entitlementQar}; QAR ${overageQar} is due above the entitlement.`
+          : `Star Number entitlement: QAR ${entitlementQar}; no additional number charge is due.`,
+    };
   },
 
   // Unsubmitted ticket never routes to a queue (BR-068) - gates queue

@@ -20,7 +20,7 @@
      step denser than this app (body 14 vs 16, section heading 20 vs 24,
      page title 28 vs 32); adopting it was considered and declined on
      2026-09-24 to keep every screen's density and wrapping as-is. The
-     --fs-* ramp below is therefore the app's own, not the reference's. */
+     font-size ramp below is therefore the app's own, not the reference's. */
   --accent: #e60000;
   /* Primary button while disabled - the reference's "Next: Step 2
      Eligibility" and pre-selection scanner CTA. A flat tint, not the
