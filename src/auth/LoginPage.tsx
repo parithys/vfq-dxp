@@ -133,7 +133,10 @@ export function LoginPage() {
 
         <div className="my-auto py-10 space-y-8">
           <div>
-            <p className="text-accent font-semibold uppercase tracking-wide text-[length:var(--fs-caption-upper)] mb-3">Staff Portal</p>
+            <p className="text-accent font-semibold uppercase tracking-wide text-[length:var(--fs-caption-upper)] mb-3">
+              <img src="/brand/vodafone-logo-big.svg" alt="Vodafone" className="mb-6 block h-auto w-40" />
+              Staff Portal
+            </p>
             <h1 className="text-[length:var(--fs-h3)] font-bold leading-tight text-fg mb-3">Welcome back</h1>
             <p className="text-fg-2 text-[length:var(--fs-body-lg)]">Sign in to your Vodafone workspace.</p>
           </div>
