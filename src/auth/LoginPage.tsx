@@ -122,7 +122,7 @@ export function LoginPage() {
   // white panel on the right. Only the presentation differs from before - the handlers, validation, error display and
   // field ids are the same ones as above.
   return (
-    <div className="min-h-screen flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen flex flex-col bg-bg font-sans md:flex-row md:bg-transparent">
       {/* Sign-in panel - ordered after the brand panel on md:+ (DOM order, and so tab order, is unchanged). */}
       <div className="w-full md:w-[42%] lg:w-[38%] shrink-0 md:order-2 bg-bg text-fg flex flex-col px-[8%] py-8">
         <div className="flex justify-end items-center gap-2 text-[length:var(--fs-body)]" aria-label="Language">
