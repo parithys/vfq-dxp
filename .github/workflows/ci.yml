@@ -1,8 +1,7 @@
 # Runs on every push and pull request: lint, the automated suite (journeys, UI guards, token governance) and a production
 # build. The app lives in the vfq-dxp-app/ folder of the repository, so every step runs there.
 #
-# GitHub only reads workflows from the repository ROOT: if this file is still at vfq-dxp-app/.github/workflows/, move it to
-# <repo root>/.github/workflows/ci.yml (the paths below already assume that location).
+# GitHub only reads workflows from the repository ROOT, which is where this file lives.
 name: CI
 
 on:
