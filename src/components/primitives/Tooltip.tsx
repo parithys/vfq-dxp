@@ -68,7 +68,8 @@ export function Tooltip({ content, children, placement = 'right', disabled = fal
     const tooltipRect = tooltipRef.current?.getBoundingClientRect();
     const tw = tooltipRect?.width ?? 0;
     const th = tooltipRect?.height ?? 0;
-    const offset = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tooltip-offset') || '8', 10);
+    const parsedOffset = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tooltip-offset'), 10);
+    const offset = Number.isFinite(parsedOffset) ? parsedOffset : 8;
 
     const positions: Record<Placement, { top: number; left: number }> = {
       right: { top: triggerRect.top + triggerRect.height / 2 - th / 2, left: offsetRect.right + offset },
