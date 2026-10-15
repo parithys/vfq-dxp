@@ -1,1 +1,10 @@
-{}
+{
+  "description": "Effortlessly manage and deploy projects by pulling the latest files, installing dependencies, and running applications with ease for developers.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
