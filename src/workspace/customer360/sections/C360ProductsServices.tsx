@@ -283,6 +283,7 @@ export function C360ProductsServices({ data, services }: { data: Customer360Data
               rows={rows}
               rowKey={(s) => s.ref}
               selectedKey={panelOpen ? selectedRef : undefined}
+              selectionIndicatorSide="right"
               onSelect={select}
               empty={services.length === 0 ? 'No connections on file for this customer.' : 'No services match the current search or filters.'}
             />

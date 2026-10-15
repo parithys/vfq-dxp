@@ -293,6 +293,7 @@ export function GridTable<T>({
   rows,
   rowKey,
   selectedKey,
+  selectionIndicatorSide = 'left',
   onSelect,
   empty = 'Nothing on file.',
   dense = false,
@@ -301,6 +302,7 @@ export function GridTable<T>({
   rows: T[];
   rowKey: (row: T) => string;
   selectedKey?: string;
+  selectionIndicatorSide?: 'left' | 'right';
   onSelect?: (row: T) => void;
   empty?: string;
   dense?: boolean;
@@ -316,6 +318,7 @@ export function GridTable<T>({
       rows={rows}
       rowKey={rowKey}
       selectedKey={selectedKey}
+      selectionIndicatorSide={selectionIndicatorSide}
       onRowClick={onSelect}
       emptyMessage={empty}
       dense={dense}

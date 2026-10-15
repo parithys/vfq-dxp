@@ -68,6 +68,8 @@ interface DataTableProps<T> {
   dense?: boolean;
   /** Key (from rowKey) of the row to show as selected. */
   selectedKey?: string;
+  /** Side on which the selected-row accent appears. */
+  selectionIndicatorSide?: 'left' | 'right';
 }
 
 // Backs every list/grid screen (Lead lists, Order queues, Asset grids) per
@@ -84,6 +86,7 @@ export function DataTable<T>({
   variant = 'framed',
   dense = false,
   selectedKey,
+  selectionIndicatorSide = 'left',
 }: DataTableProps<T>) {
   const plain = variant === 'plain';
   const [page, setPage] = useState(0);
@@ -192,7 +195,15 @@ export function DataTable<T>({
                   tabIndex={onRowClick ? 0 : undefined}
                   aria-current={selected ? 'true' : undefined}
                   onKeyDown={onRowClick ? (event) => handleRowKeyDown(event, row) : undefined}
-                  className={`${plain ? 'border-b border-border-soft last:border-0' : 'border-t border-[var(--table-border)]'} transition-colors ${onRowClick ? 'cursor-pointer hover:bg-surface' : ''} ${selected ? 'bg-tone-accent-soft [&>td:first-child]:shadow-[inset_var(--selected-row-bar)_0_0_var(--accent)]' : ''}`}
+                  className={`${plain ? 'border-b border-border-soft last:border-0' : 'border-t border-[var(--table-border)]'} transition-colors ${onRowClick ? 'cursor-pointer hover:bg-surface' : ''} ${
+                    selected
+                      ? `bg-tone-accent-soft ${
+                          selectionIndicatorSide === 'right'
+                            ? '[&>td:last-child]:shadow-[inset_calc(-1*var(--selected-row-bar))_0_0_var(--accent)]'
+                            : '[&>td:first-child]:shadow-[inset_var(--selected-row-bar)_0_0_var(--accent)]'
+                        }`
+                      : ''
+                  }`}
                 >
                   {columns.map((col, colIndex) => {
                     const value = (row as Record<string, unknown>)[col.key] ?? '-';
