@@ -176,3 +176,16 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# --- Only the vfq-dxp-app project is kept in the repository ---
+# Everything below stays on disk but is not tracked. Anchored with a leading slash, so only the ROOT copies are ignored (the app has
+# its own CLAUDE.md, which is kept).
+/vfq-diagram-engine/
+/Outcome/
+/Journeys/
+/Sample Data/
+/Glossary.xlsx
+/CLAUDE.md
+# Oversized generated workbooks (one is over GitHub's 100 MB file limit)
+/vfq-dxp-app/reference/outputs/Customer_360_Screen_Coverage_Reference.xlsx
+/vfq-dxp-app/reference/outputs/Customer_360_Requirements_Coverage_Reference.xlsx
