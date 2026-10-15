@@ -1,0 +1,62 @@
+[
+  {
+    "_note": "Demo seed (2026-10-01). NAS (national address/identity) records for people who are NOT yet Vodafone customers - no row in customers.json (Siebel). The email on file here is what a NEW customer's Contact step shows, masked. An ID that resolves to a customers.json record is an existing customer and takes its email from there (Siebel) instead.",
+    "nasRecordId": "NAS-7001",
+    "documentType": "QID",
+    "documentNumber": "29001234567",
+    "expiryDate": "2030-06-30",
+    "name": "Noora Abdulrahman Saeed Al-Mannai",
+    "firstName": "Noora",
+    "middleName": "Abdulrahman Saeed",
+    "lastName": "Al-Mannai",
+    "dob": "1990-04-18",
+    "nationality": "Qatari",
+    "gender": "Female",
+    "email": "noora.almannai@example.qa"
+  },
+  {
+    "_note": "Customer-Inventory seed (2026-10-02)",
+    "nasRecordId": "NAS-7002",
+    "documentType": "QID",
+    "documentNumber": "29207063400101",
+    "expiryDate": "2030-07-31",
+    "name": "Yousef Khalifa Hamad Al-Khulaifi",
+    "firstName": "Yousef",
+    "middleName": "Khalifa Hamad",
+    "lastName": "Al-Khulaifi",
+    "dob": "1992-07-19",
+    "nationality": "Qatari",
+    "gender": "Male",
+    "email": "yousef.alkhulaifi@example.qa"
+  },
+  {
+    "_note": "Customer-Inventory seed (2026-10-02)",
+    "nasRecordId": "NAS-7003",
+    "documentType": "QID",
+    "documentNumber": "29108035600102",
+    "expiryDate": "2030-03-31",
+    "name": "Anil Ramesh Sharma",
+    "firstName": "Anil",
+    "middleName": "Ramesh",
+    "lastName": "Sharma",
+    "dob": "1991-08-08",
+    "nationality": "Indian",
+    "gender": "Male",
+    "email": "anil.sharma@example.qa"
+  },
+  {
+    "_note": "Customer-Inventory seed (2026-10-02)",
+    "nasRecordId": "NAS-7004",
+    "documentType": "QID",
+    "documentNumber": "28909063400103",
+    "expiryDate": "2030-09-30",
+    "name": "Mustafa Salem Ali Al-Baker",
+    "firstName": "Mustafa",
+    "middleName": "Salem Ali",
+    "lastName": "Al-Baker",
+    "dob": "1989-09-03",
+    "nationality": "Qatari",
+    "gender": "Male",
+    "email": "mustafa.albaker@example.qa"
+  }
+]

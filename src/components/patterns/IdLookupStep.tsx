@@ -1,0 +1,356 @@
+import { formatDateTime } from '../../lib/format';
+import { QidNumberField, QidTypeSelector } from '../domain/QidInput';
+import type { QidType } from '../domain/QidInput';
+import { IdScannerPanel } from './IdScannerPanel';
+import { Badge } from '../primitives/Badge';
+import { Input } from '../primitives/Input';
+import { useIdLookup } from './useIdLookup';
+import { IdLookupStatus } from './IdLookupStatus';
+import { MoiResultPanel } from './MoiResultPanel';
+import type { IdLookupValue } from './idLookupModel';
+
+
+interface IdLookupStepProps {
+  /** With showMoiDetails off, the caller places the "MOI validated" badge itself (see GuidedContactStep) instead of it appearing by the ID field. */
+  hideMoiBadge?: boolean;
+  value?: IdLookupValue;
+  onChange: (value: IdLookupValue) => void;
+  /**
+   * Render the Name/DOB/Nationality read-out inside the MOI panel. Default
+   * true, which is what the six other journeys using this step rely on.
+   *
+   * GuidedContactStep passes false: as of 2026-09-24 it renders those three
+   * as editable, prefilled fields of its own, so showing them read-only here
+   * as well would put the same data on screen twice with only one copy
+   * editable. The "MOI Validated" badge still renders either way - the fetch
+   * succeeding is a separate fact from where the data is displayed.
+   */
+  showMoiDetails?: boolean;
+  /**
+   * Which ID types this journey offers. Defaults to all four; New Postpaid
+   * narrows it to QID and Diplomatic ID. See QidTypeSelector.allowedTypes.
+   */
+  allowedIdTypes?: QidType[];
+  /** Shown greyed and unselectable, with `unavailableIdTypesHint` beneath. */
+  unavailableIdTypes?: QidType[];
+  unavailableIdTypesHint?: string;
+  /**
+   * Scan-first with AUTOMATIC document-type detection (2026-09-28 direction).
+   *
+   * OPT-IN, and off by default on purpose. Only New Postpaid passes it. The
+   * other eight journeys sharing this step offer all four ID types and never
+   * narrow them, so hiding their selector behind a spent scan budget would
+   * leave an agent who needs Passport or GCC ID unable to reach it without
+   * first failing two scans they never wanted to run.
+   *
+   * When on:
+   *   - the type selector is hidden until the fallback opens
+   *   - the scan identifies the document rather than trusting a prior choice
+   *   - the attempt budget is two rather than four
+   */
+  autoDetectIdType?: boolean;
+  /**
+   * Typed entry from the start, for a device with a keyboard (the web build of a journey that is otherwise
+   * scanner-led): the ID number field is open as soon as a type is chosen and the scanner follows it as the
+   * alternative. Off, a QID is read by the scanner and typing opens only after the scan budget is spent.
+   */
+  manualEntry?: boolean;
+  /**
+   * Scan -> verify -> Fetch (2026-09-30), OPT-IN for the same reason as
+   * autoDetectIdType. The scan populates the QID number AND expiry date as
+   * editable fields and does NOT call MOI; the agent compares them with the
+   * physical card and presses Fetch, which submits both for validation.
+   */
+  verifyThenFetch?: boolean;
+  /**
+   * Whoever this ID belongs to is handled as a genuine NEW customer (New
+   * Connection - New Customer): identity from NAS where NAS has it, the
+   * Siebel customerId/employer/phone are NOT carried, and the email is the
+   * NAS one (masked by the Contact step).
+   */
+  asNewCustomer?: boolean;
+  /**
+   * Prototype rule (journey started from Customer 360): the customer is the one
+   * the journey was opened for, whatever number the scan returned - the demo
+   * scanner returns the same QID every time. Identity is taken from this record.
+   */
+  asCustomerId?: string;
+}
+
+// Pattern 2: Customer/Contact Lookup Step (QID/Kahramaa ID Scan + MOI Validation) -
+// the ID Type selector, number field, and Fetch action stay on screen at all
+// times; the MOI result renders directly beneath them once resolved, rather
+// than replacing the input entirely. Editing the number after a result exists
+// clears that result immediately - a fetched result stays pinned to the exact
+// value it came from, never left showing stale demographic data for a field
+// the agent has since changed. Switching ID Type clears the result AND the
+// number, since a number entered under one scheme is never valid under
+// another. The returned
+// name/DOB/nationality are still read-only display per the Retail Sales
+// restriction carried over from the 66-persona model's PERSONA-001 ("cannot
+// manually enter ID details, only re-scan/search") - only the lookup ID
+// number itself is directly editable.
+export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint, autoDetectIdType = false, manualEntry = false, verifyThenFetch = false, asNewCustomer = false, asCustomerId, hideMoiBadge = false }: IdLookupStepProps) {
+  const {
+    loading,
+    notFound,
+    setNotFound,
+    expiryMismatch,
+    setExpiryMismatch,
+    numberInputRef,
+    latest,
+    idType,
+    typeChosen,
+    demoType,
+    effectiveScannable,
+    handleIdTypeChange,
+    contextIdentity,
+    contextNoDocument,
+    failure,
+    retrying,
+    duplicates,
+    expiredNotice,
+    runMoiValidation,
+    scanComplete,
+    scanAttempts,
+    fallbackUnlocked,
+    manualEntryUnlocked,
+    handleScanAttempt,
+    handleDemoScan,
+    handleKeyDown,
+  } = useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType, verifyThenFetch, asNewCustomer, asCustomerId, manualEntry });
+
+  // Built once and placed by ID type below. Only the showMoiDetails={false}
+  // shape gets a loose badge at all - the other journeys keep theirs inside
+  // the bordered panel it heads, where it introduces the identity read-out.
+  const moiBadge =
+    !showMoiDetails && !hideMoiBadge && value.moiResult ? (
+      <Badge variant="success-solid">
+        {/* verifyThenFetch: one line, the time folded into the badge. */}
+        {verifyThenFetch && value.moiResult.moiUpdateTime
+          ? `MOI validated successfully at ${formatDateTime(value.moiResult.moiUpdateTime)}`
+          : 'MOI validated successfully'}
+      </Badge>
+    ) : undefined;
+
+  // "MOI Update Time" (2026-09-28) - see MoiResult.moiUpdateTime's own note
+  // for the evidenced field name. toLocaleString() rather than a hand-rolled
+  // formatter, matching how this app already renders absolute timestamps
+  // elsewhere (TaskDetailView.tsx, BulkNotesSection.tsx).
+  const moiUpdateTimeText = value.moiResult?.moiUpdateTime
+    ? `MOI Update Time: ${formatDateTime(value.moiResult.moiUpdateTime)}`
+    : undefined;
+
+  // The scanner, shown only for a Qatar ID. The other three document
+  // types are single-sided in this corpus (a passport is scanned at its
+  // photo page, GCC/Diplomatic IDs have no evidenced reverse capture),
+  // so offering a two-face capture for them would invent a step. Reuses
+  // the same QidImageUpload the Passport-to-QID and SIM Swap journeys
+  // already gate on, rather than a second scanner with its own shape.
+  //
+  // NOTHING HERE EXPOSES THE SIMULATION. The counter ("Scan attempts:
+  // n / 4") and the "Simulate scan failure" button that used to sit
+  // under this card are both gone as of 2026-09-25. They were debug
+  // affordances: the counter published the exact budget the agent was
+  // told not to be shown, and the button described the app to itself.
+  // The budget now shows up the only way it should - as a scan that
+  // fails - and the failure message says what the agent can do about it
+  // without mentioning attempts.
+  // verifyThenFetch: the scanned number and expiry are locked - a bad read is
+  // fixed by Retake - until the SECOND rescan (third pass over the reader) has
+  // completed. From then on the agent may correct them by hand.
+  const correctionUnlocked = verifyThenFetch && scanAttempts >= 3;
+
+  const scannerBlock = effectiveScannable && (
+    <IdScannerPanel
+      value={value}
+      onChange={onChange}
+      latest={latest}
+      idType={idType}
+      verifyThenFetch={Boolean(verifyThenFetch)}
+      autoDetectIdType={Boolean(autoDetectIdType)}
+      contextNoDocument={contextNoDocument}
+      contextIdentity={contextIdentity}
+      scanComplete={scanComplete}
+      setNotFound={setNotFound}
+      setExpiryMismatch={setExpiryMismatch}
+      demoType={demoType}
+      handleScanAttempt={handleScanAttempt}
+      handleDemoScan={handleDemoScan}
+      fallbackUnlocked={fallbackUnlocked}
+    />
+  );
+
+  // FALLBACK ONLY as of 2026-09-28 for the scan-first flow. Automatic
+  // detection is the primary path there: the reader identifies the
+  // document, so asking the agent to classify it first was asking a
+  // question the scanner answers. For the eight journeys that still lead
+  // with a type selector (autoDetectIdType false), this is unconditional
+  // and unchanged - those journeys have no detector to defer to, so the
+  // selector remains the first thing the agent does, not a fallback.
+  // `manualEntryUnlocked` is latched - see fallbackUnlocked.
+  const selectorBlock = (!autoDetectIdType || manualEntryUnlocked) && (
+    <QidTypeSelector
+      idType={typeChosen ? idType : undefined}
+      onIdTypeChange={handleIdTypeChange}
+      allowedTypes={allowedIdTypes}
+      unavailableTypes={unavailableIdTypes}
+      unavailableHint={unavailableIdTypesHint}
+    />
+  );
+
+  const numberBlock = typeChosen && (!effectiveScannable || (scanComplete && Boolean(value.idNumber)) || manualEntryUnlocked) && (
+    <QidNumberField
+      idType={idType}
+      inputRef={numberInputRef}
+      value={value.idNumber ?? ''}
+      onChange={(idNumber: string) => {
+        setNotFound(false);
+        setExpiryMismatch(false);
+        onChange({ ...value, idNumber, moiResult: undefined });
+      }}
+      onFetch={runMoiValidation}
+      fetching={loading}
+      error={
+        notFound
+          ? 'No MOI record found for this ID - try again.'
+          : expiryMismatch
+            ? 'The expiry date does not match the MOI record - check the card and try again.'
+            : undefined
+      }
+      inlineField={
+        verifyThenFetch && effectiveScannable && (scanComplete || manualEntryUnlocked) ? (
+          <Input
+            label="Expiry Date"
+            value={value.scannedExpiry ?? ''}
+            placeholder="DD/MM/YYYY"
+            inputMode="numeric"
+            maxLength={10}
+            // Locked with the number until the second rescan has completed.
+            readOnly={!correctionUnlocked && !manualEntryUnlocked}
+            onChange={(e) => {
+              setExpiryMismatch(false);
+              onChange({ ...value, scannedExpiry: e.target.value, moiResult: undefined });
+            }}
+          />
+        ) : undefined
+      }
+      readOnly={effectiveScannable && scanComplete && !correctionUnlocked}
+      // Also disabled once the fetch has succeeded (moiResult set). Editing
+      // the number or expiry clears moiResult, which re-enables it.
+      fetchDisabled={Boolean(value.moiResult) || (verifyThenFetch && !value.scannedExpiry)}
+      // verifyThenFetch: the scanned values are locked, Fetch stays available.
+      showFetch={verifyThenFetch}
+      // The scanned path has no Fetch button, so it also lost the
+      // "Fetching…" label that button carried - and the MOI lookup this
+      // step fires automatically takes two mock calls at 200-600ms each.
+      // Without this line the number simply appears and the screen sits
+      // still for up to a second before the MOI badge shows up, which
+      // reads as nothing happening. The hint is the only thing left in
+      // that state that can say otherwise.
+      hint={
+        effectiveScannable && scanComplete
+          ? loading
+            ? 'Checking the MOI registry…'
+            : value.moiResult
+              ? undefined // validated: the "verify, then Fetch" prompt has been acted on
+              : verifyThenFetch
+                ? 'Read from the scanned document - verify with the original document, then select Fetch.'
+                : 'Read from the scanned document.'
+          : undefined
+      }
+      // The MOI badge, right-aligned on this field's label row - the
+      // "Qatar ID (QID) Number" line, or "Passport Number" and so on for
+      // the other types.
+      //
+      // One placement for all four ID types, which is why there is no
+      // per-type routing here any more. It briefly sat on the scanner
+      // card's "Qatar ID" header instead, but that card only exists for a
+      // QID, so the other three needed a second home and the badge had
+      // two possible parents.
+      //
+      // Safe to live inside the field: moiResult cannot outlive it.
+      // Setting it requires an idNumber, and everything that hides the
+      // field again - Retake, an ID Type switch - clears moiResult in the
+      // same update.
+      status={moiBadge}
+      statusDetail={verifyThenFetch ? undefined : moiUpdateTimeText}
+    />
+  );
+
+  return (
+    <div className="space-y-4" onKeyDown={handleKeyDown}>
+      {/* Scan-first flow (2026-09-28): the scanner leads, and the type
+          selector - now purely a fallback - follows it, since it is
+          something the scanner's own failure hands off to rather than a
+          question asked ahead of it. The eight selector-led journeys keep
+          their original order: selector first, since they have no
+          detector for the scanner to lead with. */}
+      {autoDetectIdType ? (
+        <>
+          {scannerBlock}
+          {selectorBlock}
+        </>
+      ) : manualEntry ? (
+        // Typed entry first (a keyboard device): selector, the number field, then the scanner as the alternative.
+        <>
+          {selectorBlock}
+          {numberBlock}
+          {scannerBlock}
+        </>
+      ) : (
+        <>
+          {selectorBlock}
+          {scannerBlock}
+        </>
+      )}
+
+      {/* The number field comes AFTER the scanner and only once there is a
+          number to show. Scanning is the primary path, so leading with an
+          empty, locked text box asked the agent to read past the thing they
+          cannot use to reach the thing they can.
+
+          Three states:
+          - non-QID: no scanner exists for these documents, so the field is
+            the only way in and is always editable, with Fetch.
+          - QID, scan complete AND a number extracted: shown read-only, no
+            Fetch - the scan already triggered the lookup.
+          - QID, scan budget exhausted: the manual fallback opens, editable
+            and empty, and Fetch returns with it. Nothing announces the
+            threshold - see the note above.
+
+          The `idNumber` half of the second condition matters: a completed
+          scan and an extracted number are NOT simultaneous. Reading the
+          number is its own mock call, so for up to 600ms after the capture
+          there is a scan but no digits - and rendering then put an EMPTY
+          read-only box on screen under the hint "Read from the scanned
+          document.", which is a claim about a value that had not arrived.
+          Waiting for the number means the field appears already populated.
+
+          Before any of those, for a QID, it is not rendered at all. */}
+      {(autoDetectIdType || !manualEntry) && numberBlock}
+
+      {/* ---- Validation status. Each state looks different (see ValidationStatus):
+          technical failure = amber and unresolved, business result = red, pending
+          = neutral, success = green. A technical failure never reads as "not found". */}
+      <IdLookupStatus
+        loading={loading}
+        failure={failure}
+        retrying={retrying}
+        expiredNotice={expiredNotice}
+        duplicates={duplicates}
+        hasMoiResult={Boolean(value.moiResult)}
+        runMoiValidation={runMoiValidation}
+      />
+
+      {value.moiResult && showMoiDetails && (
+        <MoiResultPanel
+          moiResult={value.moiResult}
+          idType={value.idType}
+          hideDocumentType={verifyThenFetch}
+          statusText={value.moiResult.moiUpdateTime ? `MOI validated at ${formatDateTime(value.moiResult.moiUpdateTime)}` : 'MOI validated'}
+        />
+      )}
+    </div>
+  );
+}

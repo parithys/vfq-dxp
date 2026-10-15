@@ -1,0 +1,40 @@
+{
+  "journey": {
+    "id": "mob-view-service",
+    "title": "View Mobile Service",
+    "route": "/customer-search"
+  },
+  "shots": [
+    {
+      "file": "01-customer-search.png",
+      "label": "customer search",
+      "url": "/customer-search"
+    },
+    {
+      "file": "02-search-results-cust-1001.png",
+      "label": "search results CUST-1001",
+      "url": "/customer-search"
+    },
+    {
+      "file": "03-customer-360.png",
+      "label": "customer 360",
+      "url": "/customer/CUST-1001"
+    },
+    {
+      "file": "04-customer-360-recent-usage.png",
+      "label": "customer 360 Recent Usage",
+      "url": "/customer/CUST-1001"
+    },
+    {
+      "file": "05-search-results-ent-acc-7701.png",
+      "label": "search results ENT-ACC-7701",
+      "url": "/customer-search"
+    },
+    {
+      "file": "06-business-360.png",
+      "label": "business 360",
+      "url": "/customer/ENT-ACC-7701"
+    }
+  ],
+  "unreachable": []
+}

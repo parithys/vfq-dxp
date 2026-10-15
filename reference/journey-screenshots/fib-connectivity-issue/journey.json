@@ -1,0 +1,26 @@
+{
+  "journey": {
+    "id": "fib-connectivity-issue",
+    "title": "Report Connectivity Issue",
+    "screenId": "SCR-211",
+    "route": "/trouble-ticketing-complaints/tickets-dashboard"
+  },
+  "shots": [
+    {
+      "file": "01-tickets-dashboard.png",
+      "label": "tickets dashboard",
+      "url": "/trouble-ticketing-complaints/tickets-dashboard"
+    },
+    {
+      "file": "02-create-ticket.png",
+      "label": "create ticket",
+      "url": "/customer-search"
+    },
+    {
+      "file": "03-create-ticket-filled.png",
+      "label": "create ticket filled",
+      "url": "/customer-search"
+    }
+  ],
+  "unreachable": []
+}

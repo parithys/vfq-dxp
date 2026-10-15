@@ -1,0 +1,295 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import * as mockDataEngine from '../../engines/mockDataEngine';
+import { discountsForCustomer, type CustomerBenefit } from '../../engines/customerBenefitEngine';
+import { monthlyCharges } from '../../engines/postpaidPricing';
+import { closestPlans, SUPPORTING_ID_DISCOUNT_TYPES, PROOF_DOCUMENT_MAX_BYTES, formatDocSize, PLAN_GROUPS, SPECIAL_DISCOUNT_TYPE, planGroupOf } from './postpaidPlanModel';
+import type { PostpaidPlan, Discount, AddonProduct, PlanGroupKey, TabKey } from './postpaidPlanModel';
+
+interface UsePostpaidPlanAddonsArgs {
+  selectedProductId: string | undefined;
+  discountId: string | undefined;
+  onSelectDiscount: (discountId: string | undefined) => void;
+  addonIds: string[];
+  onAddonsChange: (ids: string[]) => void;
+  /** Told which source the selected plan came from (OFFER / PLAN) and what an offer bundles, for the next step. */
+  onSelectionChange?: (sel: { source: 'OFFER' | 'PLAN' | undefined; bundled: string[] }) => void;
+  discountSupportingId: string | undefined;
+  onDiscountSupportingIdChange: (id: string) => void;
+  customerBenefit?: 'mada' | 'b2b2c' | 'retired' | 'none';
+  specialDiscountType?: 'mada' | 'b2b2c' | 'retired';
+  customerBenefits?: CustomerBenefit[];
+  discountProofDocument: { fileName: string; sizeBytes: number } | undefined;
+  onDiscountProofDocumentChange: (doc: { fileName: string; sizeBytes: number } | undefined) => void;
+}
+
+export function usePostpaidPlanAddons({
+  selectedProductId,
+  discountId,
+  onSelectDiscount,
+  addonIds,
+  onAddonsChange,
+  onSelectionChange,
+  discountSupportingId,
+  onDiscountSupportingIdChange,
+  customerBenefit,
+  specialDiscountType,
+  customerBenefits,
+  discountProofDocument,
+  onDiscountProofDocumentChange,
+}: UsePostpaidPlanAddonsArgs) {
+  const [plans, setPlans] = useState<PostpaidPlan[]>([]);
+  const [addonProducts, setAddonProducts] = useState<AddonProduct[]>([]);
+  const [planDiscounts, setPlanDiscounts] = useState<Discount[]>([]);
+  const discounts = useMemo(
+    () => discountsForCustomer(planDiscounts, customerBenefits, customerBenefit && customerBenefit !== 'none' ? customerBenefit : undefined),
+    [planDiscounts, customerBenefits, customerBenefit]
+  );
+  // The plan whose details are open, or null. Holds the plan OBJECT rather
+  // than an id, so the drawer cannot render a heading for one plan and
+  // figures for another.
+  const [detailPlan, setDetailPlan] = useState<PostpaidPlan | null>(null);
+  const [planSearch, setPlanSearch] = useState('');
+  // Type-ahead suggestions dropdown (2026-09-28), separate from the substring
+  // filter below - see CompanySearchInput.tsx for the same combobox shape
+  // (click-outside close, listbox/option roles).
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const [proofDocError, setProofDocError] = useState<string | null>(null);
+  const proofDocRef = useRef<HTMLInputElement>(null);
+  const [activeTab, setActiveTab] = useState<TabKey>('specials');
+  // Set once, the moment the catalogue first has something in it - not on
+  // every load, which would snap the agent back to the first tab if the
+  // catalogue ever refetched while they were on "Add-ons". Guards against
+  // landing on an empty "Today's Special Promotions" tab when nothing in the
+  // catalogue happens to be flagged popular.
+  const defaultTabSet = useRef(false);
+
+  // Name OR price. The price side matches the raw number anywhere in the
+  // figure, so "35" finds 350 - narrowing as the agent types rather than
+  // requiring the exact charge.
+  const visiblePlans = plans.filter((p) => {
+    const q = planSearch.trim().toLowerCase();
+    if (!q) return true;
+    return p.name.toLowerCase().includes(q) || String(p.mrcQAR).includes(q);
+  });
+  // Tabs themselves are stable while the agent types a search - built from
+  // the FULL catalogue, not the filtered one, so a query that empties the
+  // active tab's matches doesn't also make its own tab disappear out from
+  // under it. Each tab's CONTENT still reads the filtered list below.
+  // The Special Discount selected on Customer Identification adds a third tab listing only the plans that discount applies to.
+  const special = specialDiscountType ? SPECIAL_DISCOUNT_TYPE[specialDiscountType] : undefined;
+  // planDiscounts holds only the SELECTED plan's discounts, so the tab reads the whole catalogue of this discount type.
+  const [specialDiscountRows, setSpecialDiscountRows] = useState<Discount[]>([]);
+  useEffect(() => {
+    if (!special) {
+      setSpecialDiscountRows([]);
+      return;
+    }
+    let cancelled = false;
+    void mockDataEngine.list<Discount>('addons-discounts').then((all) => {
+      if (!cancelled) setSpecialDiscountRows(all.filter((d) => d.category === 'Discount' && d.addonType === special.addonType));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [special]);
+  const specialPlanIds = useMemo(() => new Set(specialDiscountRows.map((d) => d.planId)), [specialDiscountRows]);
+  const hasSpecialTab = Boolean(special) && plans.some((p) => specialPlanIds.has(p.productId));
+  const planGroupTabs = [
+    ...PLAN_GROUPS.filter((g) => plans.some((p) => planGroupOf(p) === g.key)),
+    ...(hasSpecialTab && special ? [{ key: 'special' as PlanGroupKey, label: special.label }] : []),
+  ];
+  const groupPlans = (key: PlanGroupKey) =>
+    visiblePlans.filter((p) => (key === 'special' ? specialPlanIds.has(p.productId) : planGroupOf(p) === key));
+  // The selection was withdrawn while its tab was open: fall back to Offers.
+  useEffect(() => {
+    if (activeTab === 'special' && !hasSpecialTab) setActiveTab('specials');
+  }, [activeTab, hasSpecialTab]);
+
+  useEffect(() => {
+    if (defaultTabSet.current || plans.length === 0) return;
+    defaultTabSet.current = true;
+    const firstNonEmpty = PLAN_GROUPS.find((g) => plans.some((p) => planGroupOf(p) === g.key));
+    if (firstNonEmpty) setActiveTab(firstNonEmpty.key);
+  }, [plans]);
+
+  // The search belongs to the tab being shown: its suggestions come from that tab's plans only, never the other tabs'.
+  const tabPlans = plans.filter((p) => (activeTab === 'special' ? specialPlanIds.has(p.productId) : planGroupOf(p) === activeTab));
+  const suggestions = closestPlans(planSearch, tabPlans);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    const onClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setSearchOpen(false);
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [searchOpen]);
+
+  useEffect(() => {
+    mockDataEngine.list<PostpaidPlan & AddonProduct>('products').then((all) => {
+      setPlans(all.filter((p) => p.type === 'Postpaid Plan' && p.listed !== false).sort((a, b) => a.mrcQAR - b.mrcQAR));
+      setAddonProducts(all.filter((p) => p.type === 'Add-on'));
+    });
+  }, []);
+
+  // Discounts are loaded for the selected plan only; a failed load can be retried and never blocks the step.
+  const [discountsState, setDiscountsState] = useState<'loading' | 'error' | 'ready'>('ready');
+  const [discountsAttempt, setDiscountsAttempt] = useState(0);
+  useEffect(() => {
+    if (!selectedProductId) {
+      setPlanDiscounts([]);
+      return;
+    }
+    let cancelled = false;
+    setDiscountsState('loading');
+    mockDataEngine
+      .list<Discount>('addons-discounts')
+      .then((all) => {
+        if (cancelled) return;
+        setPlanDiscounts(all.filter((d) => d.category === 'Discount' && d.planId === selectedProductId));
+        setDiscountsState('ready');
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setPlanDiscounts([]);
+        setDiscountsState('error');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedProductId, discountsAttempt]);
+  const retryDiscounts = () => setDiscountsAttempt((n) => n + 1);
+
+  const selectedPlan = plans.find((p) => p.productId === selectedProductId);
+  // "Offers" is the specials group (2026-09-30 rule): every plan there is
+  // pre-bundled, so it gets the same add-ons/discounts lockout a plan
+  // individually flagged `preBundledOffer` already got - see the two panels
+  // below. Derived from the group rather than a second per-plan flag: the
+  // business rule is "this WHOLE TAB is pre-bundled", not "some plans in it
+  // are", and planGroupOf is already the one place that decides tab
+  // membership.
+  const isOffersPlan = selectedPlan ? planGroupOf(selectedPlan) === 'specials' : false;
+  const preBundled = Boolean(selectedPlan?.preBundledOffer) || isOffersPlan;
+  // Where the plan was chosen from: an Offer (add-ons and discounts bundled, read-only) or a standalone Plan (optional extras).
+  const selectionSource: 'OFFER' | 'PLAN' | undefined = selectedPlan ? (preBundled ? 'OFFER' : 'PLAN') : undefined;
+  const bundledItems = useMemo(() => (selectionSource === 'OFFER' ? selectedPlan?.benefits ?? [] : []), [selectionSource, selectedPlan]);
+  const bundledKey = bundledItems.join('|');
+  useEffect(() => {
+    onSelectionChange?.({ source: selectionSource, bundled: bundledItems });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectionSource, selectedProductId, bundledKey]);
+  const selectedDiscount = discounts.find((d) => d.addonDiscountId === discountId);
+  // Accepted benefit -> its discount on the chosen plan, applied once (the agent
+  // can still change it afterwards). Retired: ADO-7114..7117 (demo catalogue entries, see their _note).
+  const benefitType = customerBenefit === 'mada' ? 'MADA Discount' : customerBenefit === 'b2b2c' ? 'B2B2C Discount' : customerBenefit === 'retired' ? 'Retired Discount' : undefined;
+  const benefitAppliedFor = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!benefitType || discountId || !selectedProductId || benefitAppliedFor.current === selectedProductId) return;
+    const match = discounts.find((d) => d.addonType === benefitType);
+    if (match) {
+      benefitAppliedFor.current = selectedProductId; // once per plan: choosing "No discount" afterwards sticks
+      onSelectDiscount(match.addonDiscountId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [benefitType, selectedProductId, discounts, discountId]);
+  const requiresSupportingId = selectedDiscount ? SUPPORTING_ID_DISCOUNT_TYPES.has(selectedDiscount.addonType) : false;
+
+  // Switching to a discount that doesn't need one (or to no discount at all)
+  // invalidates whatever ID and proof document were captured for a previous
+  // MADA/B2B2C pick - the same "an edit invalidates a stale link" reasoning
+  // CompanySearchInput and IdLookupStep apply to their own committed values.
+  useEffect(() => {
+    if (requiresSupportingId) return;
+    if (discountSupportingId) onDiscountSupportingIdChange('');
+    if (discountProofDocument) onDiscountProofDocumentChange(undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discountId]);
+
+  // Max ONE discount, and it is scoped to the plan it was picked against
+  // (Discount.planId) - so a plan change retires whatever discount the
+  // PREVIOUS plan had, rather than leaving a stale id in the order that no
+  // longer names a discount on the current plan at all (Checkout/the order
+  // payload read `discountId` directly, so an orphaned one would silently
+  // ride along with the new plan). The radio group already guarantees at
+  // most one discount for a GIVEN plan; this is what still guarantees it
+  // across a plan switch. Keyed on the previous product id, not just "did a
+  // discount exist", so it fires only on an actual plan change, not on
+  // mount.
+  const prevProductId = useRef(selectedProductId);
+  const [resetNotice, setResetNotice] = useState(false);
+  // The notice is brief: it clears itself.
+  useEffect(() => {
+    if (!resetNotice) return;
+    const t = window.setTimeout(() => setResetNotice(false), 6000);
+    return () => window.clearTimeout(t);
+  }, [resetNotice]);
+  useEffect(() => {
+    if (prevProductId.current !== selectedProductId) {
+      prevProductId.current = selectedProductId;
+      // Selections belong to the plan they were made on: a new plan starts clean.
+      const hadSelections = Boolean(discountId) || addonIds.length > 0;
+      if (discountId) onSelectDiscount(undefined);
+      if (addonIds.length > 0) onAddonsChange([]);
+      if (hadSelections) setResetNotice(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProductId]);
+
+  const handleProofDocFile = (file: File | undefined) => {
+    if (!file) return;
+    if (file.size > PROOF_DOCUMENT_MAX_BYTES) {
+      setProofDocError(`${file.name} is ${formatDocSize(file.size)}. The limit is 5 MB.`);
+      return;
+    }
+    setProofDocError(null);
+    onDiscountProofDocumentChange({ fileName: file.name, sizeBytes: file.size });
+    if (proofDocRef.current) proofDocRef.current.value = '';
+  };
+
+  const selectedAddons = addonProducts.filter((a) => addonIds.includes(a.productId));
+  const addonsMonthlyQar = selectedAddons.reduce((sum, a) => sum + a.mrcQAR, 0);
+  // One itemisation, shared with Checkout and with the order payload - see
+  // engines/postpaidPricing.ts for why that is a module and not three copies.
+  // No device instalment here: this step has not reached Device & DOI yet, so
+  // the figure it shows is the service subtotal, and Checkout adds the
+  // instalment once there is one.
+  const charges = selectedPlan
+    ? monthlyCharges({
+        planQar: selectedPlan.mrcQAR,
+        discountRate: selectedDiscount?.price,
+        addonsQar: addonsMonthlyQar,
+      })
+    : undefined;
+
+  return {
+    plans,
+    discounts,
+    detailPlan,
+    setDetailPlan,
+    planSearch,
+    setPlanSearch,
+    searchOpen,
+    setSearchOpen,
+    searchRef,
+    proofDocError,
+    proofDocRef,
+    activeTab,
+    setActiveTab,
+    planGroupTabs,
+    groupPlans,
+    suggestions,
+    selectedPlan,
+    preBundled,
+    selectionSource,
+    bundledItems,
+    selectedAddons,
+    resetNotice,
+    discountsState,
+    retryDiscounts,
+    selectedDiscount,
+    requiresSupportingId,
+    handleProofDocFile,
+    charges,
+  };
+}
