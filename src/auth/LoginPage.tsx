@@ -226,7 +226,7 @@ export function LoginPage() {
 
       {/* Brand panel - the Doha skyline photo (public/brand/login-bg.jpg, Hongbin on Unsplash, Unsplash License) under a
           navy scrim that is darkest where the headline and the update cards sit. */}
-      <div className="relative flex-1 px-[6%] py-8 flex flex-col text-on-dark md:order-1 overflow-hidden bg-[var(--login-bg)]">
+      <div className="relative hidden flex-1 px-[6%] py-8 flex-col text-on-dark md:order-1 md:flex overflow-hidden bg-[var(--login-bg)]">
         <img src="/brand/login-bg.jpg" alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 hidden bg-[image:var(--login-scrim)] md:block" />
         <header className="relative flex items-start justify-between gap-6">
