@@ -1,8 +1,9 @@
+import { Button } from '../../../components/primitives/Button';
 import { useMemo, useState } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
 import { computeBillingSummary, withinBillHistoryWindow, type Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
-import { GridTable, IC, KpiGrid, KpiTile, Panel, Pill, StatusPill, TabPage, UnderlineTabs, fmtDate, qar, type GridCol } from './C360Kit';
+import { GridTable, IC, IconTile, KpiGrid, KpiTile, Panel, Pill, StatusPill, TabPage, fmtDate, qar, type GridCol } from './C360Kit';
 import { Dv } from '../demoValues';
 import { str } from '../../../lib/values';
 
@@ -50,7 +51,7 @@ function Chevron() {
 /** Red link-styled action that has no destination yet - rendered inert. */
 function InertLink({ children }: { children: string }) {
   return (
-    <span aria-disabled="true" title="Not available yet" className="text-accent font-medium text-[length:var(--fs-body)] opacity-40 cursor-not-allowed whitespace-nowrap">
+    <span aria-disabled="true" title="Not available yet" className="text-link font-medium text-[length:var(--fs-body)] opacity-40 cursor-not-allowed whitespace-nowrap">
       {children} &rarr;
     </span>
   );
@@ -58,7 +59,6 @@ function InertLink({ children }: { children: string }) {
 
 export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; services: CustomerService[]; goToTab?: (key: string) => void }) {
   const [profileId, setProfileId] = useState('all');
-  const [tab, setTab] = useState('bills');
   const [showAllBills, setShowAllBills] = useState(false);
 
   const profiles = data.billingProfiles as Rec[];
@@ -98,49 +98,6 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
     { key: 'act', header: 'Actions', className: 'text-center', render: () => <Chevron /> },
   ];
 
-  const profileCols: GridCol<Rec>[] = [
-    { key: '#', header: '#', render: (_r, i) => i + 1 },
-    {
-      key: 'name',
-      header: 'Billing Profile',
-      render: (r) => (
-        <div className="min-w-0">
-          <div className="font-medium break-words">{str(r.name) ?? DASH}</div>
-          <div className="text-fg-2 text-[length:var(--fs-caption)]">{str(r.billingProfileId) ?? DASH}</div>
-        </div>
-      ),
-    },
-    { key: 'status', header: 'Status', render: (r) => (str(r.collectionStatus) ? <StatusPill status={String(r.collectionStatus)} /> : DASH) },
-    {
-      key: 'out',
-      header: 'Outstanding Amount',
-      render: (r) => {
-        const v = outstandingOf((data.bills as Rec[]).filter((b) => b.billingProfileId === r.billingProfileId));
-        return <span className={`font-semibold ${v > 0 ? 'text-accent' : ''}`}>{qar(v)}</span>;
-      },
-    },
-    {
-      key: 'due',
-      header: 'Due Date',
-      render: (r) => {
-        const pb = (data.bills as Rec[]).filter((b) => b.billingProfileId === r.billingProfileId && isBillRow(b)).sort((a, b) => String(b.billPeriod ?? '').localeCompare(String(a.billPeriod ?? '')))[0];
-        return fmtDate(pb?.dueDate) ?? DASH;
-      },
-    },
-    { key: 'cycle', header: 'Bill Cycle', render: (r) => str(r.billingCycle) ?? DASH },
-    { key: 'type', header: 'Bill Type', render: (r) => str(r.billingType) ?? DASH },
-    {
-      key: 'act',
-      header: 'Actions',
-      className: 'text-center',
-      render: (r) => (
-        <button type="button" aria-label="Filter page to this billing profile" onClick={() => setProfileId(String(r.billingProfileId))} className="text-fg hover:text-accent">
-          <Icon path={IC.chevRight} className="w-4 h-4" />
-        </button>
-      ),
-    },
-  ];
-
   const paymentCols: GridCol<Rec>[] = [
     { key: '#', header: '#', render: (_r, i) => i + 1 },
     { key: 'id', header: 'Payment ID', render: (r) => str(r.paymentId) ?? DASH },
@@ -160,29 +117,11 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
     { key: 'cur', header: 'Current Charges (QAR)', render: (r) => str(r.currentChargesQAR) ?? DASH },
   ];
 
-  const shownBills = showAllBills ? historyBills : historyBills.slice(0, PAGE);
+  // Prepaid recharge history only applies to a prepaid profile (or to the all-profiles view when the customer holds one).
+  const accountOf = (pr?: Rec) => data.accounts.find((a) => a.accountId === pr?.accountId);
+  const showsRecharge = selected ? /prepaid/i.test(String(accountOf(selected)?.accountType ?? '')) : profiles.some((pr) => /prepaid/i.test(String(accountOf(pr)?.accountType ?? '')));
 
-  const profileSelect = (
-    <label className="flex items-center gap-2 rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg px-3 py-1.5">
-      <span className="text-muted text-[length:var(--fs-caption)] whitespace-nowrap">Billing Profile</span>
-      <span className="relative">
-        <select
-          value={profileId}
-          onChange={(e) => setProfileId(e.target.value)}
-          aria-label="Billing Profile"
-          className="appearance-none bg-transparent outline-none pr-6 text-fg text-[length:var(--fs-body)] cursor-pointer max-w-56"
-        >
-          <option value="all">All Billing Profiles</option>
-          {profiles.map((p) => (
-            <option key={String(p.billingProfileId)} value={String(p.billingProfileId)}>
-              {str(p.name) ?? String(p.billingProfileId)}
-            </option>
-          ))}
-        </select>
-        <Icon path={IC.chevDown} className="w-4 h-4 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-fg-2" />
-      </span>
-    </label>
-  );
+  const shownBills = showAllBills ? historyBills : historyBills.slice(0, PAGE);
 
   return (
     <TabPage
@@ -190,14 +129,6 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
       tone="blue"
       title="Billing & Payments"
       subtitle="View billing profile, bills, payments, outstanding balance and recharge information"
-      actions={
-        <>
-          {profileSelect}
-          <button type="button" disabled aria-label="More actions" className="w-9 h-9 rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg flex items-center justify-center opacity-40 cursor-not-allowed">
-            <Icon path={IC.dots} className="w-4 h-4" />
-          </button>
-        </>
-      }
     >
       <KpiGrid>
         <KpiTile
@@ -208,9 +139,9 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
           // Pay Now is offered only when there is an amount to pay.
           caption={
             outstanding > 0 ? (
-            <button type="button" disabled className="mt-1 rounded-[var(--radius-sm)] bg-accent text-accent-on px-6 py-1 text-[length:var(--fs-btn-compact)] font-medium opacity-40 cursor-not-allowed">
+            <Button variant="primary" compact disabled>
               Pay Now
-            </button>
+            </Button>
             ) : undefined
           }
         />
@@ -231,8 +162,6 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
           label="Latest Bill"
           value={qar(latestBill?.totalAmount) ?? DASH}
           caption={latestBill ? `Bill Period: ${periodRange(latestBill.billPeriod)}` : undefined}
-          chevron
-          onClick={() => setTab('bills')}
         />
         <KpiTile
           icon={IC.card}
@@ -240,54 +169,80 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
           label="Last Payment"
           value={qar(lastPayment?.amountQar) ?? DASH}
           caption={lastPayment ? [fmtDate(lastPayment.capturedAt), str(lastPayment.captureChannel) && `via ${String(lastPayment.captureChannel)}`].filter(Boolean).join(' ') : undefined}
-          chevron
-          onClick={() => setTab('payments')}
         />
-        <KpiTile icon={IC.bars} tone="red" label="Unbilled Usage" value={qar(unbilled) ?? DASH} chevron onClick={() => setTab('unbilled')} />
+        <KpiTile icon={IC.bars} tone="red" label="Unbilled Usage" value={qar(unbilled) ?? DASH} />
       </KpiGrid>
 
-      <div className="space-y-4">
-        <div className="space-y-4 min-w-0">
-          <Panel
-            icon={IC.bars}
-            title="Billing Profile(s)"
-            flush
-            action={
-              <button type="button" disabled className="mr-4 rounded-[var(--radius-button)] bg-accent text-accent-on px-4 py-2 text-[length:var(--fs-btn-compact)] font-medium opacity-40 cursor-not-allowed">
+      <div className="grid grid-cols-1 @4xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-4 items-start">
+        {/* Left: the billing profiles; picking one scopes the whole page to it (the same master / detail shape as Products & Services). */}
+        <Panel icon={IC.bars} title={`Billing Profiles (${profiles.length})`}>
+          <ul className="space-y-2">
+            {[{ id: 'all', title: 'All billing profiles', sub: `${profiles.length} profiles`, out: summary.outstanding, status: undefined as string | undefined }, ...profiles.map((r) => ({
+              id: String(r.billingProfileId),
+              title: str(r.name) ?? DASH,
+              sub: str(r.billingProfileId) ?? DASH,
+              out: outstandingOf((data.bills as Rec[]).filter((b) => b.billingProfileId === r.billingProfileId)),
+              status: str(r.collectionStatus),
+            }))].map((row) => (
+              <li key={row.id}>
+                <button
+                  type="button"
+                  aria-pressed={profileId === row.id}
+                  onClick={() => setProfileId(row.id)}
+                  className={`w-full text-left rounded-[var(--radius-card)] border p-3 transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+                    profileId === row.id ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-[var(--field-card-border)] bg-bg hover:bg-surface'
+                  }`}
+                >
+                  <span className="block text-fg font-medium text-[length:var(--fs-body)] break-words">{row.title}</span>
+                  <span className="mt-0.5 flex items-center justify-between gap-2 text-[length:var(--fs-caption)]">
+                    <span className="text-fg-2 break-all">{row.sub}</span>
+                    <span className={`font-semibold shrink-0 ${row.out > 0 ? 'text-accent' : 'text-fg'}`}>{qar(row.out)}</span>
+                  </span>
+                  {row.status && (
+                    <span className="mt-2 block">
+                      <StatusPill status={row.status} />
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+
+        {/* Right: everything for the chosen profile. */}
+        <aside className="card p-4 space-y-4 min-w-0">
+          <div className="flex flex-wrap items-center gap-3">
+            <IconTile icon={IC.wallet} tone="red" />
+            <span className="text-fg font-bold text-[length:var(--fs-h5)] break-words min-w-0">{selected ? (str(selected.name) ?? DASH) : 'All billing profiles'}</span>
+            {selected && str(selected.collectionStatus) && <StatusPill status={String(selected.collectionStatus)} />}
+            <span className="ml-auto">
+              <Button variant="primary" compact disabled>
                 Add Payment
-              </button>
-            }
-          >
-            <GridTable cols={profileCols} rows={profiles} rowKey={(r) => String(r.billingProfileId)} selectedKey={selected ? String(selected.billingProfileId) : undefined} empty="No billing profile on file." />
-          </Panel>
+              </Button>
+            </span>
+          </div>
 
-          <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg min-w-0">
-            <div className="px-4 pt-2">
-              <UnderlineTabs active={tab} onChange={setTab} items={[{ key: 'bills', label: 'Bill History' }, { key: 'payments', label: 'Payment History' }, { key: 'unbilled', label: 'Unbilled Usage' }, { key: 'recharge', label: 'Recharge History (Prepaid)' }]} />
-            </div>
-            {tab === 'bills' && (
-              <>
-                <GridTable cols={billCols} rows={shownBills} rowKey={(r) => String(r.billId)} empty="No bills on file." />
-                {historyBills.length > PAGE && (
-                  <div className="px-4 py-3">
-                    <button type="button" onClick={() => setShowAllBills((v) => !v)} className="text-accent font-medium text-[length:var(--fs-body)] hover:underline">
-                      {showAllBills ? 'Show fewer bills' : 'View All Bills'} &rarr;
-                    </button>
+          <div className="grid grid-cols-1 @lg:grid-cols-2 gap-4 items-stretch">
+            <Panel icon={IC.settings} title="Bill Settings" action={<InertLink>Manage</InertLink>}>
+              <dl>
+                {[
+                  { label: 'Bill Email', value: str(stageProfile?.billingContactEmail) ?? DASH },
+                  { label: 'Bill Type', value: str(stageProfile?.billingType) ?? DASH },
+                  { label: 'Bill Cycle', value: str(stageProfile?.billingCycle) ?? DASH },
+                  { label: 'eBill / Paperless', value: ebill ? <Pill tone={/email|ebill|e-bill|paperless/i.test(ebill) ? 'green' : 'grey'}>{/email|ebill|e-bill|paperless/i.test(ebill) ? 'Enabled' : 'Disabled'}</Pill> : DASH },
+                ].map((r) => (
+                  <div key={r.label} className="flex items-center justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
+                    <dt className="text-fg-2">{r.label}</dt>
+                    <dd className="text-fg font-medium text-right min-w-0 break-words">{r.value}</dd>
                   </div>
-                )}
-              </>
-            )}
-            {tab === 'payments' && <GridTable cols={paymentCols} rows={payments} rowKey={(r) => String(r.paymentId)} empty="No payments on file." />}
-            {tab === 'unbilled' && <GridTable cols={unbilledCols} rows={unbilledRows} rowKey={(r) => String(r.billId)} empty="No unbilled usage on file." />}
-            {tab === 'recharge' && <p className="text-muted text-[length:var(--fs-body)] py-4 text-center">No prepaid recharge history on file.</p>}
-          </section>
-        </div>
+                ))}
+              </dl>
+            </Panel>
 
-        <div className="grid grid-cols-1 @4xl:grid-cols-2 gap-4 items-stretch">
             <Panel
               icon={IC.shield}
               title="Dunning & Barring"
-              action={goToTab ? <button type="button" onClick={() => goToTab('alerts-risks')} className="text-accent font-medium text-[length:var(--fs-body)] hover:underline whitespace-nowrap">View Details &rarr;</button> : undefined}
+              action={goToTab ? <Button variant="tertiary" compact className="whitespace-nowrap" onClick={() => goToTab('alerts-risks')}>View Details &rarr;</Button> : undefined}
             >
               <dl>
                 {[
@@ -304,23 +259,7 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
                 ))}
               </dl>
             </Panel>
-
-            <Panel icon={IC.settings} title="Bill Settings" action={<InertLink>Manage</InertLink>}>
-              <dl>
-                {[
-                  { label: 'Bill Email', value: str(stageProfile?.billingContactEmail) ?? DASH },
-                  { label: 'Bill Type', value: str(stageProfile?.billingType) ?? DASH },
-                  { label: 'Bill Cycle', value: str(stageProfile?.billingCycle) ?? DASH },
-                  { label: 'eBill / Paperless', value: ebill ? <Pill tone={/email|ebill|e-bill|paperless/i.test(ebill) ? 'green' : 'grey'}>{/email|ebill|e-bill|paperless/i.test(ebill) ? 'Enabled' : 'Disabled'}</Pill> : DASH },
-                ].map((r) => (
-                  <div key={r.label} className="flex items-center justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
-                    <dt className="text-fg-2">{r.label}</dt>
-                    <dd className="text-fg font-medium text-right min-w-0 break-words">{r.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </Panel>
-        </div>
+          </div>
 
           <Panel icon={IC.card} title="Payment Methods" action={<InertLink>Manage</InertLink>}>
             {str(stageProfile?.paymentMethod) ? (
@@ -337,6 +276,32 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
               <p className="text-muted text-[length:var(--fs-body)] py-2">No payment method on file.</p>
             )}
           </Panel>
+
+          <Panel icon={IC.file} title={`Bill History (${historyBills.length})`} flush>
+            <GridTable cols={billCols} rows={shownBills} rowKey={(r) => String(r.billId)} empty="No bills on file." />
+            {historyBills.length > PAGE && (
+              <div className="px-4 py-3">
+                <Button variant="tertiary" compact onClick={() => setShowAllBills((v) => !v)}>
+                  {showAllBills ? 'Show fewer bills' : 'View All Bills'} &rarr;
+                </Button>
+              </div>
+            )}
+          </Panel>
+
+          <Panel icon={IC.card} title={`Payment History (${payments.length})`} flush>
+            <GridTable cols={paymentCols} rows={payments} rowKey={(r) => String(r.paymentId)} empty="No payments on file." />
+          </Panel>
+
+          <Panel icon={IC.bars} title={`Unbilled Usage (${unbilledRows.length})`} flush>
+            <GridTable cols={unbilledCols} rows={unbilledRows} rowKey={(r) => String(r.billId)} empty="No unbilled usage on file." />
+          </Panel>
+
+          {showsRecharge && (
+            <Panel icon={IC.refresh} title="Recharge History (Prepaid)">
+              <p className="text-muted text-[length:var(--fs-body)] py-2 text-center">No prepaid recharge history on file.</p>
+            </Panel>
+          )}
+        </aside>
       </div>
     </TabPage>
   );

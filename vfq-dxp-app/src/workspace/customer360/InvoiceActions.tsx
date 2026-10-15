@@ -1,5 +1,5 @@
+import { IconButton } from '../../components/primitives/IconButton';
 import { Tooltip } from '../../components/primitives/Tooltip';
-import { Icon } from '../../components/primitives/Icon';
 import { usePersonaStore } from '../../stores/personaStore';
 import { canUseInvoiceActions } from '../../engines/agentPrivilegeEngine';
 import { useNotificationStore } from '../../stores/notificationStore';
@@ -44,19 +44,13 @@ export function InvoiceActions({ bill, customerName }: { bill: Record<string, un
   return (
     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
       <Tooltip content="Download invoice" placement="top">
-        <button onClick={download} aria-label="Download invoice" className="text-muted hover:text-fg p-1">
-          <Icon path={DOWNLOAD_ICON} className="w-4 h-4" />
-        </button>
+        <IconButton onClick={download} label="Download invoice" icon={DOWNLOAD_ICON} />
       </Tooltip>
       <Tooltip content="Print invoice" placement="top">
-        <button onClick={print} aria-label="Print invoice" className="text-muted hover:text-fg p-1">
-          <Icon path={PRINT_ICON} className="w-4 h-4" />
-        </button>
+        <IconButton onClick={print} label="Print invoice" icon={PRINT_ICON} />
       </Tooltip>
       <Tooltip content="Resend invoice" placement="top">
-        <button onClick={resend} aria-label="Resend invoice" className="text-muted hover:text-fg p-1">
-          <Icon path={RESEND_ICON} className="w-4 h-4" />
-        </button>
+        <IconButton onClick={resend} label="Resend invoice" icon={RESEND_ICON} />
       </Tooltip>
     </div>
   );

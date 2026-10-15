@@ -31,5 +31,17 @@
     "setByAgentId": "AGT-8803",
     "restrictionApplied": false,
     "lastUpdated": "2026-08-01"
+  },
+  {
+    "_note": "Customer-Inventory overview details (2026-10-11)",
+    "id": "CRL-4301",
+    "accountId": "ACC-5646",
+    "customerId": "CUST-3081",
+    "customerSegment": "Qatari Premium",
+    "creditLimitQar": 5000,
+    "isHrn": false,
+    "setByAgentId": "AGT-8801",
+    "restrictionApplied": false,
+    "lastUpdated": "2026-06-15"
   }
 ]

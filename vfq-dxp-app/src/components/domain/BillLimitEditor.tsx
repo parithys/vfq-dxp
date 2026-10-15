@@ -13,6 +13,8 @@ interface BillLimitEditorProps {
   product: BillLimitProduct;
   value: number | undefined;
   onChange: (value: number, pass: boolean) => void;
+  /** 'row': a title with the current limit under it and a sentence-case Edit button (the Add-ons step). Default: the compact box. */
+  layout?: 'default' | 'row';
 }
 
 // Pattern 8: Plan/Promotion Detail Modal with Limit Editing - "Edit Bill Limit"
@@ -21,7 +23,8 @@ interface BillLimitEditorProps {
 // implementation named in frontend-architecture.md §5, reused here via the
 // same BR-AGENT-MIN-THRESHOLD rule already exercised by the field-inventory's
 // evidenced Bill Limit Agent Minimum behavior.
-export function BillLimitEditor({ product, value, onChange }: BillLimitEditorProps) {
+export function BillLimitEditor({ product, value, onChange, layout = 'default' }: BillLimitEditorProps) {
+  const row = layout === 'row';
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(value ?? ''));
   // Resync while NOT editing (2026-09-28), so a caller that changes `value`
@@ -50,30 +53,37 @@ export function BillLimitEditor({ product, value, onChange }: BillLimitEditorPro
   };
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-3">
-      <div className="flex items-center justify-between">
-        <span className="text-fg">Bill Limit ({product})</span>
+    <div className={`card ${row ? 'p-4' : 'p-3'}`}>
+      <div className="flex items-center justify-between gap-3">
+        {row && !editing ? (
+          <div>
+            <p className="text-fg font-semibold">Bill Limit ({product})</p>
+            {value !== undefined && <p className="text-fg-2 text-[length:var(--fs-caption)]">Current limit · QAR {value}</p>}
+          </div>
+        ) : (
+          <span className="text-fg">Bill Limit ({product})</span>
+        )}
         {!editing && (
-          <Button variant="ghost-rect" compact onClick={() => setEditing(true)}>
-            Edit Bill Limit
+          <Button variant="secondary" compact onClick={() => setEditing(true)}>
+            {row ? 'Edit bill limit' : 'Edit Bill Limit'}
           </Button>
         )}
       </div>
       {editing ? (
         <div className="flex items-end gap-2 mt-2">
-          <Button variant="ghost-rect" compact className="h-[var(--size-btn-compact-h)]" aria-label="Decrease by 50 QR" onClick={() => step(-50)}>
+          <Button variant="secondary" compact className="h-[var(--size-btn-compact-h)]" aria-label="Decrease by 50 QR" onClick={() => step(-50)}>
             −50
           </Button>
-          <Input label={`QR (Agent Min ${agentMinimum})`} type="number" value={draft} onChange={(e) => setDraft(e.target.value)} />
-          <Button variant="ghost-rect" compact className="h-[var(--size-btn-compact-h)]" aria-label="Increase by 50 QR" onClick={() => step(50)}>
+          <Input label={`QAR (Agent Min ${agentMinimum})`} type="number" value={draft} onChange={(e) => setDraft(e.target.value)} />
+          <Button variant="secondary" compact className="h-[var(--size-btn-compact-h)]" aria-label="Increase by 50 QR" onClick={() => step(50)}>
             +50
           </Button>
-          <Button variant="primary-rect" className="h-[var(--size-btn-compact-h)]" onClick={apply}>
+          <Button variant="primary" className="h-[var(--size-btn-compact-h)]" onClick={apply}>
             Apply
           </Button>
         </div>
       ) : (
-        value !== undefined && <div className="text-fg mt-1">QR {value}</div>
+        !row && value !== undefined && <div className="text-fg mt-1">QAR {value}</div>
       )}
       {result && !result.pass && <p className="text-danger text-[length:var(--fs-caption)] mt-2">{result.message}</p>}
     </div>

@@ -1,3 +1,5 @@
+import { detectDeviceType } from '../../lib/deviceType';
+
 export type CafType = 'Digital' | 'Manual' | 'Touch Screen';
 
 export const CHECK_ICON = 'M20 6L9 17l-5-5';
@@ -26,7 +28,5 @@ export const CAF_TYPES: { type: CafType; label: string; icon: string }[] = [
  * to detect it FROM - per the 2026-09-28 direction confirming this reading.
  */
 export function detectCafType(): CafType {
-  if (typeof window === 'undefined' || typeof navigator === 'undefined') return 'Digital';
-  const touchCapable = navigator.maxTouchPoints > 0 || (window.matchMedia?.('(pointer: coarse)').matches ?? false);
-  return touchCapable ? 'Touch Screen' : 'Digital';
+  return detectDeviceType() === 'tablet' ? 'Touch Screen' : 'Digital';
 }

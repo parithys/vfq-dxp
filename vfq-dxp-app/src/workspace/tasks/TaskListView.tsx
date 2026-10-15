@@ -1,7 +1,9 @@
+import { badgeVariantFor } from '../../lib/statusTone';
 import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { DataTable } from '../../components/primitives/DataTable';
 import { Badge } from '../../components/primitives/Badge';
+import { Icon } from '../../components/primitives/Icon';
 import { ErrorBanner } from '../../components/primitives/ErrorBanner';
 import { useEntityStore } from '../../stores/entityStore';
 import { useAuthStore } from '../../stores/authStore';
@@ -16,6 +18,8 @@ interface AgentTask {
   priorityFlag: boolean;
   assignedAgentId: string | null;
   createdAt: string;
+  /** When the task last changed; falls back to createdAt for tasks that have not changed since they were made. */
+  updatedAt?: string;
   /** Set on a Draft Order task whose order is stored - see orders.json. */
   relatedOrderId?: string;
 }
@@ -25,14 +29,15 @@ interface DraftOrder {
   orderId: string;
   status: string;
   draftResumePath?: string;
+  customerId?: string;
 }
 
-const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'filled-neutral' | 'outlined-red'> = {
-  Open: 'warning',
-  Assigned: 'filled-neutral',
-  'In Progress': 'outlined-red',
-  Closed: 'success',
-};
+/** The work item's own name: the task names read "<customer> – <work>", and the customer has its own column. */
+const workOf = (t: AgentTask) => (t.taskName.includes(' – ') ? t.taskName.split(' – ').slice(1).join(' – ') : t.taskName);
+const lastUpdated = (t: AgentTask) => t.updatedAt ?? t.createdAt;
+const formatWhen = (iso: string) =>
+  new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const STAR = 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9L12 3z';
 
 const FILTER_LABELS: Record<string, string> = {
   open: 'Open Tasks',
@@ -66,9 +71,29 @@ export function TaskListView() {
     orders.filter((o) => o.status === 'Draft').map((o) => [o.orderId, o])
   );
 
+  // Where a task leads: a Draft Order RESUMES its journey; every other task opens its detail view. Falls back to task
+  // detail when the task carries no related order (TASK-70006 is a GigaHome draft with no seeded fixed-line order, and
+  // sending it into a postpaid journey would resume something it is not about). The row and its Task ID link share it.
+  const destinationOf = (t: AgentTask): { to: string; state?: { resumeOrderId: string } } => {
+    const order = t.relatedOrderId ? draftOrders[t.relatedOrderId] : undefined;
+    return order?.draftResumePath ? { to: order.draftResumePath, state: { resumeOrderId: order.orderId } } : { to: `/tasks/${t.taskId}` };
+  };
+
+  // The customer a task is about comes from its related order; tasks without one show a dash.
+  const customers = (useEntityStore((s) => s.records.customers) ?? []) as unknown as { customerId: string; name: string }[];
+  // The assignee column shows the agent's department (their team), not their name.
+  const agentDirectory = (useEntityStore((s) => s.records['users-agents']) ?? []) as unknown as { userId: string; team?: string }[];
+  const departmentOf = (t: AgentTask) => (t.assignedAgentId ? agentDirectory.find((a) => a.userId === t.assignedAgentId)?.team : undefined);
+  const customerNameOf = (t: AgentTask) => {
+    const id = t.relatedOrderId ? orders.find((o) => o.orderId === t.relatedOrderId)?.customerId : undefined;
+    return customers.find((c) => c.customerId === id)?.name;
+  };
+
   useEffect(() => {
     loadKind('tasks');
     loadKind('orders');
+    loadKind('customers');
+    loadKind('users-agents');
   }, [loadKind]);
 
   // ATV-02 - see Dashboard.tsx's tile counts for the same rule; kept
@@ -90,39 +115,57 @@ export function TaskListView() {
       <ErrorBanner message={loadError} />
       <DataTable<AgentTask>
         columns={[
-          { key: 'taskId', header: 'Task ID' },
-          { key: 'taskName', header: 'Task Name' },
-          { key: 'taskType', header: 'Type' },
           {
-            key: 'priorityFlag',
-            header: 'Priority',
-            render: (t) => (t.priorityFlag ? <Badge variant="danger">Priority</Badge> : <span>-</span>),
+            key: 'taskId',
+            header: 'Task ID',
+            // A left gutter holds the priority star, so flagged and unflagged IDs - and the header - share one left edge.
+            cellClassName: '!pl-10',
+            render: (t) => (
+              <span className="relative inline-block">
+                {/* The priority star hangs in the cell's left padding, so every Task ID - flagged or not - starts at the
+                    same x as the column header. */}
+                {t.priorityFlag && (
+                  <span title="Priority" aria-label="Priority" className="absolute -left-6 top-1/2 -translate-y-1/2 inline-flex text-[var(--priority)]">
+                    <Icon path={STAR} className="w-3.5 h-3.5 fill-current" />
+                  </span>
+                )}
+                <Link
+                  to={destinationOf(t).to}
+                  state={destinationOf(t).state}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-link font-medium hover:underline"
+                >
+                  {t.taskId}
+                </Link>
+              </span>
+            ),
           },
+          { key: 'taskName', header: 'Task Name', render: (t) => <span>{workOf(t)}</span>, sortValue: workOf },
+          {
+            key: 'customerName',
+            header: 'Customer Name',
+            // From the task's order when it has one; failing that, from the "<customer> – <work>" name (a draft started
+            // before the customer was identified reads "New Customer", which is not a customer).
+            render: (t) => {
+              const named = t.taskName.includes(' – ') ? t.taskName.split(' – ')[0] : undefined;
+              return <span>{customerNameOf(t) ?? (named && named !== 'New Customer' ? named : '-')}</span>;
+            },
+            sortValue: (t) => customerNameOf(t) ?? '',
+          },
+          { key: 'updatedAt', header: 'Last Updated', render: (t) => <span>{formatWhen(lastUpdated(t))}</span>, sortValue: lastUpdated },
           {
             key: 'taskStatus',
             header: 'Status',
-            render: (t) => <Badge variant={STATUS_VARIANT[t.taskStatus] ?? 'filled-neutral'}>{t.taskStatus}</Badge>,
+            render: (t) => <Badge variant={badgeVariantFor(t.taskStatus)}>{t.taskStatus}</Badge>,
           },
-          { key: 'assignedAgentId', header: 'Assigned To' },
+          { key: 'department', header: 'Department', render: (t) => <span>{departmentOf(t) ?? '-'}</span>, sortValue: (t) => departmentOf(t) ?? '' },
         ]}
         rows={filtered}
         rowKey={(t) => t.taskId}
-        // A Draft Order row RESUMES its journey; every other task opens its
-        // detail view. This is the only way back into an unfinished journey -
-        // the product-line cards always start a new one - so the row has to
-        // land the agent in the wizard rather than on a page describing it.
-        //
-        // Falls back to task detail when the task carries no relatedOrderId:
-        // TASK-70006 is a GigaHome draft with no seeded fixed-line order, and
-        // sending it into a postpaid journey would resume something it is not
-        // about.
+        // The whole row leads where the Task ID link does - see destinationOf.
         onRowClick={(t) => {
-          const order = t.relatedOrderId ? draftOrders[t.relatedOrderId] : undefined;
-          if (order?.draftResumePath) {
-            navigate(order.draftResumePath, { state: { resumeOrderId: order.orderId } });
-            return;
-          }
-          navigate(`/tasks/${t.taskId}`);
+          const { to, state } = destinationOf(t);
+          navigate(to, state ? { state } : undefined);
         }}
         emptyMessage="No tasks in this category."
         loading={loading}

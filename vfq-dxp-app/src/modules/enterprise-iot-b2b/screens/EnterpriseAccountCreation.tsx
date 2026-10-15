@@ -82,7 +82,7 @@ export function EnterpriseAccountCreation() {
               }}
             />
           </div>
-          <Button variant="ghost-rect" onClick={searchCr} disabled={!crNumber}>
+          <Button variant="secondary" onClick={searchCr} disabled={!crNumber}>
             Search
           </Button>
         </div>
@@ -110,7 +110,7 @@ export function EnterpriseAccountCreation() {
         />
 
         {creditLimit && (
-          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-3">
+          <div className="card p-3">
             <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg">
               <Checkbox checked={financeApproved} onChange={(e) => setFinanceApproved(e.target.checked)} />
               Business Finance has approved this credit limit
@@ -119,7 +119,7 @@ export function EnterpriseAccountCreation() {
           </div>
         )}
 
-        <Button variant="primary-rect" onClick={create} disabled={!canCreate}>
+        <Button variant="primary" onClick={create} disabled={!canCreate}>
           Create Account
         </Button>
       </div>

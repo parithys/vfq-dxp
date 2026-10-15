@@ -1,6 +1,6 @@
 import { Button } from '../../../components/primitives/Button';
 import { Checkbox } from '../../../components/primitives/Checkbox';
-import { Drawer } from '../../../components/primitives/Drawer';
+import { Drawer } from '../../../capabilities';
 import { Select } from '../../../components/primitives/Select';
 import { Textarea } from '../../../components/primitives/Textarea';
 import { RESOLUTION_CODES, ESCALATION_REASONS, CANCELLATION_REASONS, TT_HASHTAGS, RETENTION_RESOLUTION_CODES } from '../../../data/reference/ticketReferenceData';
@@ -36,8 +36,8 @@ export function TicketDrawers({ s, escalate, resolve, cancel, reopen, closeTicke
         {!escalateReason && <p className="text-[length:var(--fs-caption)] text-danger">An escalation without a selected reason is rejected (ESC-05).</p>}
       </div>
       <div className="flex justify-end gap-2 mt-6">
-        <Button variant="ghost-rect" onClick={() => setEscalateOpen(false)}>Cancel</Button>
-        <Button variant="primary-rect" onClick={escalate} disabled={!escalateReason}>Escalate</Button>
+        <Button variant="secondary" onClick={() => setEscalateOpen(false)}>Cancel</Button>
+        <Button variant="primary" onClick={escalate} disabled={!escalateReason}>Escalate</Button>
       </div>
     </Drawer>
 
@@ -61,24 +61,24 @@ export function TicketDrawers({ s, escalate, resolve, cancel, reopen, closeTicke
         </div>
       </div>
       <div className="flex justify-end gap-2 mt-6">
-        <Button variant="ghost-rect" onClick={() => setResolveOpen(false)}>Cancel</Button>
-        <Button variant="primary-rect" onClick={resolve} disabled={!resolutionCode || resolutionHashtags.length === 0}>Mark Solved</Button>
+        <Button variant="secondary" onClick={() => setResolveOpen(false)}>Cancel</Button>
+        <Button variant="primary" onClick={resolve} disabled={!resolutionCode || resolutionHashtags.length === 0}>Mark Solved</Button>
       </div>
     </Drawer>
 
     <Drawer open={cancelOpen} onClose={() => setCancelOpen(false)} title="Cancel Ticket">
-      <Select label="Cancellation Reason (mandatory, RES-11)" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Select a reason" options={CANCELLATION_REASONS.map((r) => ({ value: r, label: r }))} />
+      <Select label="Cancellation Reason (required)" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Select a reason" options={CANCELLATION_REASONS.map((r) => ({ value: r, label: r }))} />
       <div className="flex justify-end gap-2 mt-6">
-        <Button variant="ghost-rect" onClick={() => setCancelOpen(false)}>Back</Button>
-        <Button variant="primary-rect" onClick={cancel} disabled={!cancelReason} className="bg-danger enabled:hover:bg-danger enabled:active:bg-danger">Cancel Ticket</Button>
+        <Button variant="secondary" onClick={() => setCancelOpen(false)}>Back</Button>
+        <Button variant="destructive" onClick={cancel} disabled={!cancelReason}>Cancel Ticket</Button>
       </div>
     </Drawer>
 
     <Drawer open={reopenOpen} onClose={() => setReopenOpen(false)} title="Reopen Ticket">
-      <Textarea label="Reopen reason (mandatory, RES-10)" value={reopenReason} onChange={(e) => setReopenReason(e.target.value)} placeholder="Why is this ticket being reopened?" />
+      <Textarea label="Reopen Reason (required)" value={reopenReason} onChange={(e) => setReopenReason(e.target.value)} placeholder="Why is this ticket being reopened?" />
       <div className="flex justify-end gap-2 mt-6">
-        <Button variant="ghost-rect" onClick={() => setReopenOpen(false)}>Cancel</Button>
-        <Button variant="primary-rect" onClick={reopen} disabled={!reopenReason.trim()}>Reopen</Button>
+        <Button variant="secondary" onClick={() => setReopenOpen(false)}>Cancel</Button>
+        <Button variant="primary" onClick={reopen} disabled={!reopenReason.trim()}>Reopen</Button>
       </div>
     </Drawer>
 
@@ -91,8 +91,8 @@ export function TicketDrawers({ s, escalate, resolve, cancel, reopen, closeTicke
         options={RETENTION_RESOLUTION_CODES.map((r) => ({ value: r, label: r }))}
       />
       <div className="flex justify-end gap-2 mt-6">
-        <Button variant="ghost-rect" onClick={() => setRetentionCloseOpen(false)}>Cancel</Button>
-        <Button variant="primary-rect" onClick={() => closeTicket(retentionResolutionCode)} disabled={!retentionResolutionCode}>Close Ticket</Button>
+        <Button variant="secondary" onClick={() => setRetentionCloseOpen(false)}>Cancel</Button>
+        <Button variant="primary" onClick={() => closeTicket(retentionResolutionCode)} disabled={!retentionResolutionCode}>Close Ticket</Button>
       </div>
     </Drawer>
     </>

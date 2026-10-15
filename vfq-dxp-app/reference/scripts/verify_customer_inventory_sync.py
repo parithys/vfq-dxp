@@ -7,7 +7,7 @@ app can find must be on the sheet. Exits 1 and prints each difference when they 
 
     python3 reference/scripts/verify_customer_inventory_sync.py
 """
-import json, sys
+import json, re, sys
 from pathlib import Path
 import openpyxl
 
@@ -30,12 +30,62 @@ for c in load("customer-contacts"):
     # is the one carrying their first name.
     contacts.setdefault(c["customerId"], []).append(c)
 nas = {n["nasRecordId"]: n for n in load("nas-records")}
+accounts = load("accounts")
+assets = load("installed-assets")
+acct_owner = {a["accountId"]: a["customerId"] for a in accounts}
+
+
+def home_internet(cid):
+    """GigaHome fibre services Customer 360 lists for a customer: their GigaHome subscriptions plus Active
+    broadband / fibre / home installed assets on their accounts."""
+    n = sum(1 for g in load("gigahome-osntv-subscriptions") if g["customerId"] == cid)
+    for a in assets:
+        nm = a.get("productServiceName", "")
+        if acct_owner.get(a.get("accountId")) == cid and a.get("status") == "Active" and not re.search(r"prepaid|postpaid|mobile|sim|iptv|osn|\btv\b|fixed[ -]?(voice )?line|landline", nm, re.I) and re.search(r"broadband|fibre|fiber|gigahome|home", nm, re.I):
+            n += 1
+    return n
+
+
+def other_services(cid):
+    """Fixed Line + TV + IoT services Customer 360 lists for a customer (by installed-asset name, IPTV bundle or smart device)."""
+    n = 0
+    for a in assets:
+        nm = a.get("productServiceName", "")
+        if acct_owner.get(a.get("accountId")) == cid and a.get("status") in ("Active", "Suspended") and re.search(r"fixed[ -]?(voice )?line|landline|iptv|osn|\btv\b|^iot ", nm, re.I):
+            n += 1
+    n += sum(1 for b in load("iptv-stb-bundles") if acct_owner.get(b.get("accountId")) == cid and not b.get("removedByCustomer"))
+    n += sum(1 for d in load("smart-devices") if d.get("customerId") == cid)
+    return n
+
+
+def lines_shown(c):
+    """Mobile lines the app lists for a customer (customerServicesEngine.listCustomerServices): their own number
+    when they have a lineType, plus every Active mobile installed asset on one of their accounts."""
+    shown = {"Postpaid": 0, "Prepaid": 0}
+    if c.get("lineType") and c.get("phone"):
+        shown[c["lineType"]] += 1
+    for a in assets:
+        name = a.get("productServiceName", "")
+        if a.get("serviceId") == c.get("phone"):
+            continue  # the own number's plan record; the engine lists the own number from the customer, not from this asset
+        if acct_owner.get(a.get("accountId")) == c["customerId"] and a.get("status") in ("Active", "Suspended") and re.search(r"postpaid|mobile|sim|prepaid", name, re.I):
+            shown["Prepaid" if re.search("prepaid", name, re.I) else "Postpaid"] += 1
+    return shown
 
 ws = openpyxl.load_workbook(XLSX, data_only=True)["Customers"]
 header = [c.value for c in ws[1]]
 rows = [dict(zip(header, [c.value for c in r])) for r in ws.iter_rows(min_row=2) if r[0].value]
 
 problems = []
+
+# Original demo data that contradicts itself on mobile lines. Reported, not "fixed": which side is right is a product-data
+# decision (see the notes), and inferring it would invent evidence. Each entry is the customer whose Customer 360 listing
+# differs from the declared counts.
+OPEN_LINE_ITEMS = {
+    "CUST-1001": "installed assets IA-9004/IA-9005 are two Active prepaid lines on ACC-5001, but the customer declares 0 prepaid lines",
+    "CUST-1003": "installed asset IA-9002 is an Active postpaid mobile plan on ACC-5003 (the GigaHome fixed-line account), but the customer declares 0 mobile lines",
+    "CUST-2001": "installed asset IA-9003 (SIM Card - Postpaid) hangs off ACC-5004, which accounts.json assigns to this enterprise parent; no line counts are declared",
+}
 
 
 def check(cid, field, expected, actual):
@@ -67,6 +117,16 @@ for r in rows:
     check(cid, "segment", r["Segment"], c["segment"])
     check(cid, "date of birth", r["Date of birth"], c.get("dob"))
     check(cid, "mobile", r["Mobile"], c.get("phone"))
+    pp, pre = c.get("activePostpaidLines") or 0, c.get("activePrepaidLines") or 0
+    check(cid, "postpaid lines", r["Postpaid lines"] or 0, pp)
+    check(cid, "prepaid lines", r["Prepaid lines"] or 0, pre)
+    check(cid, "home internet", r["Home internet"] or 0, home_internet(cid))
+    check(cid, "other services", r["Other services"] or 0, other_services(cid))
+    check(cid, "total lines", r["Total lines"] or 0, pp + pre + home_internet(cid) + other_services(cid))
+    if cid not in OPEN_LINE_ITEMS:
+        shown = lines_shown(c)
+        check(cid, "postpaid lines listed in Customer 360", pp, shown["Postpaid"])
+        check(cid, "prepaid lines listed in Customer 360", pre, shown["Prepaid"])
     check(cid, "gender", r["Gender"], ct.get("gender"))
     check(cid, "language", r["Language"], ct.get("preferredLanguage"))
     # The lookup value must resolve to this customer through an identity document.
@@ -88,6 +148,8 @@ for cid in customers:
     if cid not in seen:
         problems.append(f"{cid}  in the app (customers.json) but missing from the workbook")
 
+for cid, why in OPEN_LINE_ITEMS.items():
+    print(f"open item  {cid}: {why}")
 print(f"{len(rows)} workbook customers, {len(customers)} app customers")
 if problems:
     print(f"\n{len(problems)} difference(s):")

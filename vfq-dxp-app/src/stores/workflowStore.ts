@@ -20,12 +20,33 @@ interface WizardDraft {
   draftOrderId?: string;
 }
 
+/** Has this draft got real progress in it? A journey starts when the ID is scanned (or a number is read), not when an ID
+ * type is merely picked: a value holding nothing but an ID type selection is not progress. */
+export function draftHasProgress(d: WizardDraft | undefined): boolean {
+  if (!d) return false;
+  if (d.currentStep > 0) return true;
+  const meaningful = (v: unknown): boolean => {
+    if (v === null || v === undefined || v === '' || v === false) return false;
+    if (Array.isArray(v)) return v.some(meaningful);
+    if (typeof v === 'object') return Object.entries(v as Record<string, unknown>).some(([k, x]) => k !== 'idType' && meaningful(x));
+    return true;
+  };
+  return Object.values(d.values).some(meaningful);
+}
+
 interface WorkflowState {
   drafts: Record<string, WizardDraft>;
   getDraft: (wizardId: string) => WizardDraft;
   setStep: (wizardId: string, step: number) => void;
   setFieldValue: (wizardId: string, field: string, value: unknown) => void;
   clearDraft: (wizardId: string) => void;
+  /**
+   * Change several values at once and, optionally, pull progress back to `progressTo`: used when a journey that holds more
+   * than one product's steps switches product. The previous product's values go (`unset`), the new one's are set, and the
+   * furthest step reached is LOWERED to the product step, so the Summary and Edit never show steps of the product the agent
+   * has just left as done. (setStep only ever raises it.)
+   */
+  patchDraft: (wizardId: string, patch: { set?: Record<string, unknown>; unset?: readonly string[]; progressTo?: number }) => void;
   /**
    * Replace a draft wholesale, from a stored Draft Order.
    *
@@ -62,6 +83,23 @@ export const useWorkflowStore = create<WorkflowState>()(
         set((state) => {
           const draft = state.drafts[wizardId] ?? emptyDraft;
           return { drafts: { ...state.drafts, [wizardId]: { ...draft, values: { ...draft.values, [field]: value } } } };
+        }),
+      patchDraft: (wizardId, { set: toSet = {}, unset = [], progressTo }) =>
+        set((state) => {
+          const draft = state.drafts[wizardId] ?? emptyDraft;
+          const values = { ...draft.values };
+          for (const key of unset) delete values[key];
+          Object.assign(values, toSet);
+          return {
+            drafts: {
+              ...state.drafts,
+              [wizardId]: {
+                ...draft,
+                values,
+                ...(progressTo === undefined ? {} : { currentStep: progressTo, maxStepReached: progressTo }),
+              },
+            },
+          };
         }),
       hydrateDraft: (wizardId, draft) =>
         set((state) => ({ drafts: { ...state.drafts, [wizardId]: draft } })),

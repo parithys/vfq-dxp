@@ -483,5 +483,203 @@
     "barringStatus": "Not Barred",
     "barringType": null,
     "barringReason": null
+  },
+  {
+    "_note": "Customer-Inventory mobile lines (2026-10-11)",
+    "accountId": "ACC-5638",
+    "customerId": "CUST-1002",
+    "accountType": "Consumer Mobile Prepaid",
+    "status": "Active",
+    "billingProfileId": "BILL-7138",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Customer-Inventory mobile lines (2026-10-11)",
+    "accountId": "ACC-5639",
+    "customerId": "CUST-1005",
+    "accountType": "Consumer Mobile Postpaid",
+    "status": "Active",
+    "billingProfileId": "BILL-7139",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Customer-Inventory mobile lines (2026-10-11)",
+    "accountId": "ACC-5640",
+    "customerId": "CUST-1005",
+    "accountType": "Consumer Mobile Prepaid",
+    "status": "Active",
+    "billingProfileId": "BILL-7140",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Customer-Inventory mobile lines (2026-10-11)",
+    "accountId": "ACC-5641",
+    "customerId": "CUST-3014",
+    "accountType": "Consumer Mobile Prepaid",
+    "status": "Active",
+    "billingProfileId": "BILL-7141",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Customer-Inventory mobile lines (2026-10-11)",
+    "accountId": "ACC-5642",
+    "customerId": "CUST-3015",
+    "accountType": "Consumer Mobile Prepaid",
+    "status": "Active",
+    "billingProfileId": "BILL-7142",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Customer-Inventory mobile lines (2026-10-11)",
+    "accountId": "ACC-5643",
+    "customerId": "CUST-3028",
+    "accountType": "Consumer Mobile Prepaid",
+    "status": "Active",
+    "billingProfileId": "BILL-7143",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Customer-Inventory mobile lines (2026-10-11)",
+    "accountId": "ACC-5644",
+    "customerId": "CUST-3054",
+    "accountType": "Consumer Mobile Prepaid",
+    "status": "Active",
+    "billingProfileId": "BILL-7144",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Customer-Inventory mobile lines (2026-10-11)",
+    "accountId": "ACC-5645",
+    "customerId": "CUST-3065",
+    "accountType": "Consumer Mobile Prepaid",
+    "status": "Active",
+    "billingProfileId": "BILL-7145",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Customer-Inventory mobile lines (2026-10-11)",
+    "accountId": "ACC-5646",
+    "customerId": "CUST-3081",
+    "accountType": "Consumer Mobile Postpaid",
+    "status": "Active",
+    "billingProfileId": "BILL-7146",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Customer-Inventory mobile lines (2026-10-11)",
+    "accountId": "ACC-5647",
+    "customerId": "CUST-3081",
+    "accountType": "Consumer Mobile Prepaid",
+    "status": "Active",
+    "billingProfileId": "BILL-7147",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Customer-Inventory mobile lines (2026-10-11)",
+    "accountId": "ACC-5648",
+    "customerId": "CUST-3082",
+    "accountType": "Consumer Mobile Postpaid",
+    "status": "Active",
+    "billingProfileId": "BILL-7148",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Customer-Inventory mobile lines (2026-10-11)",
+    "accountId": "ACC-5649",
+    "customerId": "CUST-3083",
+    "accountType": "Consumer Mobile Prepaid",
+    "status": "Active",
+    "billingProfileId": "BILL-7149",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Customer-Inventory mobile lines (2026-10-11)",
+    "accountId": "ACC-5650",
+    "customerId": "CUST-3084",
+    "accountType": "Consumer Mobile Postpaid",
+    "status": "Active",
+    "billingProfileId": "BILL-7150",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Customer-Inventory mobile lines (2026-10-11)",
+    "accountId": "ACC-5651",
+    "customerId": "CUST-3084",
+    "accountType": "Consumer Mobile Prepaid",
+    "status": "Active",
+    "billingProfileId": "BILL-7151",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Customer-Inventory home internet lines (2026-10-11)",
+    "accountId": "ACC-5652",
+    "customerId": "CUST-3081",
+    "accountType": "Consumer Fixed Line (GigaHome)",
+    "status": "Active",
+    "billingProfileId": "BILL-7152",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Customer-Inventory home internet lines (2026-10-11)",
+    "accountId": "ACC-5653",
+    "customerId": "CUST-3083",
+    "accountType": "Consumer Fixed Line (GigaHome)",
+    "status": "Active",
+    "billingProfileId": "BILL-7153",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Customer-Inventory home internet lines (2026-10-11)",
+    "accountId": "ACC-5654",
+    "customerId": "CUST-3084",
+    "accountType": "Consumer Fixed Line (GigaHome)",
+    "status": "Active",
+    "billingProfileId": "BILL-7154",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Customer-Inventory home internet lines (2026-10-11)",
+    "accountId": "ACC-5655",
+    "customerId": "CUST-3085",
+    "accountType": "Consumer Fixed Line (GigaHome)",
+    "status": "Active",
+    "billingProfileId": "BILL-7155",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
   }
 ]

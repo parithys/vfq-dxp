@@ -60,7 +60,7 @@
     "screenName": "Account Creation Screen",
     "screenType": "Screen",
     "module": "Enterprise / IoT / B2B",
-    "personaAccess": "Fulfilment Agent"
+    "personaAccess": "Fulfilment"
   },
   {
     "routeId": "RT-SCR-008",
@@ -87,7 +87,7 @@
     "screenName": "DSP Bulk Activation Templates (Target State)",
     "screenType": "Wizard",
     "module": "Enterprise / IoT / B2B",
-    "personaAccess": "Fulfilment Agent"
+    "personaAccess": "Fulfilment"
   },
   {
     "routeId": "RT-SCR-011",
@@ -150,7 +150,7 @@
     "screenName": "Siebel Order Creation Screen (MNP)",
     "screenType": "Screen",
     "module": "MNP / FNP Porting",
-    "personaAccess": "Fulfilment Agent"
+    "personaAccess": "Fulfilment"
   },
   {
     "routeId": "RT-SCR-018",
@@ -1068,7 +1068,7 @@
     "screenName": "Agent Home / App Launcher",
     "screenType": "Dashboard",
     "module": "Identity & Customer Management",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-120",
@@ -1077,7 +1077,7 @@
     "screenName": "MNP Guided Process - Choose process",
     "screenType": "Wizard",
     "module": "MNP / FNP Porting",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-121",
@@ -1095,7 +1095,7 @@
     "screenName": "MNP wizard step: Address",
     "screenType": "Wizard",
     "module": "MNP / FNP Porting",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-123",
@@ -1104,7 +1104,7 @@
     "screenName": "MNP wizard step: Billing",
     "screenType": "Wizard",
     "module": "MNP / FNP Porting",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-124",
@@ -1113,7 +1113,7 @@
     "screenName": "MNP wizard step: SIM Serial",
     "screenType": "Wizard",
     "module": "MNP / FNP Porting",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-125",
@@ -1122,7 +1122,7 @@
     "screenName": "MNP wizard step: Plan (plan selection grid)",
     "screenType": "Wizard",
     "module": "MNP / FNP Porting",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-126",
@@ -1131,7 +1131,7 @@
     "screenName": "MNP wizard step: Donor Details",
     "screenType": "Wizard",
     "module": "MNP / FNP Porting",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-127",
@@ -1140,7 +1140,7 @@
     "screenName": "MNP wizard step: Donor Attachment",
     "screenType": "Wizard",
     "module": "MNP / FNP Porting",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-128",
@@ -1149,7 +1149,7 @@
     "screenName": "Mobile Number Portability Application Form (MNP contract)",
     "screenType": "Modal",
     "module": "MNP / FNP Porting",
-    "personaAccess": "Retail Sales Agent + Customer"
+    "personaAccess": "Retail Sales + Customer"
   },
   {
     "routeId": "RT-SCR-129",
@@ -1158,7 +1158,7 @@
     "screenName": "MNP wizard step: CAF",
     "screenType": "Wizard",
     "module": "MNP / FNP Porting",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-130",
@@ -1167,7 +1167,7 @@
     "screenName": "Vodafone Customer Application Form (CAF, MNP variant)",
     "screenType": "Modal",
     "module": "MNP / FNP Porting",
-    "personaAccess": "Retail Sales Agent + Customer"
+    "personaAccess": "Retail Sales + Customer"
   },
   {
     "routeId": "RT-SCR-131",
@@ -1176,7 +1176,7 @@
     "screenName": "Siebel Sales Order screen (MNP)",
     "screenType": "Screen",
     "module": "MNP / FNP Porting",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-132",
@@ -1185,7 +1185,7 @@
     "screenName": "Order Line Items / Line Item Attributes grid (MNP)",
     "screenType": "Screen",
     "module": "MNP / FNP Porting",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-133",
@@ -1194,7 +1194,7 @@
     "screenName": "MNP wizard step: Addon & Discount",
     "screenType": "Wizard",
     "module": "MNP / FNP Porting",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-134",
@@ -1203,7 +1203,7 @@
     "screenName": "MNP wizard step: Activity (Comments)",
     "screenType": "Wizard",
     "module": "MNP / FNP Porting",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-135",
@@ -1212,7 +1212,7 @@
     "screenName": "Completion popup (MNP order confirmation)",
     "screenType": "Popup",
     "module": "MNP / FNP Porting",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-136",
@@ -1221,7 +1221,7 @@
     "screenName": "Order Entry - header/detail view (MNP)",
     "screenType": "Screen",
     "module": "MNP / FNP Porting",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-137",
@@ -1230,7 +1230,7 @@
     "screenName": "Account Summary",
     "screenType": "Screen",
     "module": "Mobile Postpaid",
-    "personaAccess": "Retail Sales Agent / Retail-CRM Agent"
+    "personaAccess": "Retail Sales / Retail-CRM Agent"
   },
   {
     "routeId": "RT-SCR-138",
@@ -1239,7 +1239,7 @@
     "screenName": "Mass Market Addons checklist modal",
     "screenType": "Modal",
     "module": "FWA / 5G Home",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-139",
@@ -1248,7 +1248,7 @@
     "screenName": "Prepaid Customer Application Form (CAF)",
     "screenType": "Modal",
     "module": "CAF, Attachments & Forms",
-    "personaAccess": "Retail Sales Agent + Customer"
+    "personaAccess": "Retail Sales + Customer"
   },
   {
     "routeId": "RT-SCR-140",
@@ -1257,7 +1257,7 @@
     "screenName": "New Lead Tablet - Create a Lead form",
     "screenType": "Wizard",
     "module": "Fixed Line / Fibre",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-141",
@@ -1266,7 +1266,7 @@
     "screenName": "Lead Details View",
     "screenType": "Screen",
     "module": "Lead Management",
-    "personaAccess": "Retail Sales Agent, Manager, Admin"
+    "personaAccess": "Retail Sales, Manager, Admin"
   },
   {
     "routeId": "RT-SCR-142",
@@ -1275,7 +1275,7 @@
     "screenName": "My Leads list",
     "screenType": "Screen",
     "module": "Lead Management",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-143",
@@ -1284,7 +1284,7 @@
     "screenName": "My Created Leads view",
     "screenType": "Screen",
     "module": "Lead Management",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-144",
@@ -1329,7 +1329,7 @@
     "screenName": "Description edit popup",
     "screenType": "Modal",
     "module": "Lead Management",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-149",
@@ -1338,7 +1338,7 @@
     "screenName": "CallBack Date/Time picker",
     "screenType": "Modal",
     "module": "Lead Management",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-150",
@@ -1347,7 +1347,7 @@
     "screenName": "Contact record - Leads sub-tab",
     "screenType": "Screen",
     "module": "Lead Management",
-    "personaAccess": "Retail Sales Agent, Manager, Admin"
+    "personaAccess": "Retail Sales, Manager, Admin"
   },
   {
     "routeId": "RT-SCR-151",
@@ -1356,7 +1356,7 @@
     "screenName": "Passport to QID Update wizard",
     "screenType": "Wizard",
     "module": "Identity & Customer Management",
-    "personaAccess": "Retail Sales Agent + Customer"
+    "personaAccess": "Retail Sales + Customer"
   },
   {
     "routeId": "RT-SCR-152",
@@ -1702,27 +1702,9 @@
   },
   {
     "routeId": "RT-SCR-190",
-    "path": "/mobile-prepaid/new-prepaid-tablet-step-1-contact-id-capture",
+    "path": "/mobile-prepaid/new-prepaid",
     "screenId": "SCR-190",
-    "screenName": "New Prepaid Tablet - Step 1 Contact (ID capture)",
-    "screenType": "Wizard",
-    "module": "Mobile Prepaid",
-    "personaAccess": ""
-  },
-  {
-    "routeId": "RT-SCR-191",
-    "path": "/mobile-prepaid/new-prepaid-tablet-step-3-number-selection",
-    "screenId": "SCR-191",
-    "screenName": "New Prepaid Tablet - Step 3 Number Selection",
-    "screenType": "Wizard",
-    "module": "Mobile Prepaid",
-    "personaAccess": ""
-  },
-  {
-    "routeId": "RT-SCR-192",
-    "path": "/mobile-prepaid/new-prepaid-tablet-step-4-sim-serial",
-    "screenId": "SCR-192",
-    "screenName": "New Prepaid Tablet - Step 4 SIM Serial",
+    "screenName": "New Prepaid Activation",
     "screenType": "Wizard",
     "module": "Mobile Prepaid",
     "personaAccess": ""
@@ -1869,7 +1851,7 @@
     "screenName": "DXP Agent Portal Wireframes (13-step onboarding wizard)",
     "screenType": "Wizard",
     "module": "Mobile Postpaid",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-209",
@@ -1878,7 +1860,7 @@
     "screenName": "Agent Desktop (Journey initiation)",
     "screenType": "Screen",
     "module": "Mobile Postpaid",
-    "personaAccess": "Retail Sales Agent"
+    "personaAccess": "Retail Sales"
   },
   {
     "routeId": "RT-SCR-210",

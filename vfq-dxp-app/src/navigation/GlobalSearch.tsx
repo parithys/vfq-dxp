@@ -6,6 +6,7 @@ import { usePersonaStore } from '../stores/personaStore';
 import { searchScopeFor, type SearchGroup } from '../engines/searchScopeEngine';
 import * as mockDataEngine from '../engines/mockDataEngine';
 import { SearchField } from '../components/primitives/SearchField';
+import { screenDisplayName } from '../lib/screenName';
 
 
 interface RecordResult {
@@ -242,14 +243,14 @@ export function GlobalSearch() {
       }}
     >
       {open && q && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-96 overflow-y-auto rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg shadow-raised">
+        <div className="absolute z-[var(--z-popover)] top-full left-0 right-0 mt-1 max-h-96 overflow-y-auto card shadow-raised">
           {!hasResults && <p className="px-4 py-6 text-center text-muted text-[length:var(--fs-body)]">No matches for &ldquo;{query}&rdquo;.</p>}
 
           {moduleMatches.length > 0 && (
             <div>
               <p className="px-4 pt-3 pb-1 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted">Modules</p>
               {moduleMatches.map((m, i) => (
-                <button
+                <button type="button"
                   key={m.moduleId}
                   id={`global-search-opt-${i}`}
                   onClick={() => go(`/${m.moduleSlug}`)}
@@ -266,14 +267,14 @@ export function GlobalSearch() {
             <div className="border-t border-border-soft">
               <p className="px-4 pt-3 pb-1 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted">Screens</p>
               {screenMatches.map((r, i) => (
-                <button
+                <button type="button"
                   key={r.routeId}
                   id={`global-search-opt-${screenBase + i}`}
                   onClick={() => go(r.path)}
                   className={`w-full flex items-center justify-between gap-2 px-4 py-2 text-left hover:bg-surface ${active === screenBase + i ? 'bg-surface' : ''}`}
                 >
-                  <span className="text-fg truncate">{r.screenName}</span>
-                  <span className="text-muted text-[length:var(--fs-caption)] shrink-0">{r.screenId}</span>
+                  <span className="text-fg truncate">{screenDisplayName(r.screenName)}</span>
+                  <span className="text-muted text-[length:var(--fs-caption)] shrink-0">{r.module}</span>
                 </button>
               ))}
             </div>
@@ -283,7 +284,7 @@ export function GlobalSearch() {
             <div className="border-t border-border-soft">
               <p className="px-4 pt-3 pb-1 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted">Records</p>
               {recordResults.map((r, i) => (
-                <button
+                <button type="button"
                   key={r.key}
                   id={`global-search-opt-${recordBase + i}`}
                   onClick={() => go(r.path)}

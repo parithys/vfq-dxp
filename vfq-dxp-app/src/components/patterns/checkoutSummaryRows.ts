@@ -66,21 +66,21 @@ export function buildCafSummaryRows({
     // (2026-09-28 "show its actual price"), it's simply not charged.
     {
       label: 'Number Value',
-      value: msisdn ? (isStarNumber ? `QR ${numberDelta} one-time` : `QR ${numberDelta} (no charge to customer)`) : '-',
+      value: msisdn ? (isStarNumber ? `QAR ${numberDelta} one-time` : `QAR ${numberDelta} (no charge to customer)`) : '-',
     },
     { label: 'Plan', value: plan.name },
-    { label: 'Plan Price', value: `QR ${plan.mrcQAR}/mo` },
+    { label: 'Plan Price', value: `QAR ${plan.mrcQAR}/mo` },
     {
       label: 'Discount',
       value: discount
-        ? `${discount.name} (${Math.round(Math.abs(discount.price) * 100)}%) - ${formatQar(charges.discountQar, 'QR')}/mo`
+        ? `${discount.name} (${Math.round(Math.abs(discount.price) * 100)}%) - ${formatQar(charges.discountQar)}/mo`
         : 'None',
     },
     {
       label: 'Discount Duration',
       value: discount ? (discount.durationMonths ? `${discount.durationMonths} months` : 'No expiry') : 'N/A',
     },
-    { label: 'Add-ons', value: addons.length ? addons.map((a) => `${a.name} (QR ${a.mrcQAR}/mo)`).join(', ') : 'None' },
+    { label: 'Add-ons', value: addons.length ? addons.map((a) => `${a.name} (QAR ${a.mrcQAR}/mo)`).join(', ') : 'None' },
     { label: 'SIM Type', value: simType?.simType ?? '-' },
     {
       label: 'SIM Number / ICCID',
@@ -109,14 +109,14 @@ export function buildCafSummaryRows({
             label: 'Star Number Charges',
             value:
               starEntitlementQar !== undefined && numberChargeQar > 0
-                ? `QR ${numberChargeQar} (QR ${numberDelta} sticker price, QR ${starEntitlementQar} entitled on this plan)`
-                : `No extra charge${starEntitlementQar !== undefined ? ` - within the QR ${starEntitlementQar} plan entitlement` : ''}`,
+                ? `QAR ${numberChargeQar} (QAR ${numberDelta} sticker price, QAR ${starEntitlementQar} entitled on this plan)`
+                : `No extra charge${starEntitlementQar !== undefined ? ` - within the QAR ${starEntitlementQar} plan entitlement` : ''}`,
           },
         ]
       : []),
     {
       label: 'Key Charges',
-      value: `QR ${dueTodayQar} today · QR ${firstBill.totalQar} first bill · QR ${monthlyRecurringQar}/mo thereafter`,
+      value: `QAR ${dueTodayQar} today · QAR ${firstBill.totalQar} first bill · QAR ${monthlyRecurringQar}/mo thereafter`,
     },
     {
       label: 'Cancellation Implications',
@@ -134,14 +134,14 @@ export function buildCafSummaryRows({
     },
     {
       label: 'Total Payable Today',
-      value: `QR ${dueTodayQar}${
+      value: `QAR ${dueTodayQar}${
         [
-          hrnAdvance > 0 ? `QR ${hrnAdvance} HRN advance` : null,
-          isStarNumber && numberChargeQar > 0 ? `QR ${numberChargeQar} Star Number charge` : null,
+          hrnAdvance > 0 ? `QAR ${hrnAdvance} HRN advance` : null,
+          isStarNumber && numberChargeQar > 0 ? `QAR ${numberChargeQar} Star Number charge` : null,
         ].filter(Boolean).length
           ? ` (includes ${[
-              hrnAdvance > 0 ? `QR ${hrnAdvance} HRN advance` : null,
-              isStarNumber && numberChargeQar > 0 ? `QR ${numberChargeQar} Star Number charge` : null,
+              hrnAdvance > 0 ? `QAR ${hrnAdvance} HRN advance` : null,
+              isStarNumber && numberChargeQar > 0 ? `QAR ${numberChargeQar} Star Number charge` : null,
             ]
               .filter(Boolean)
               .join(' + ')})`
@@ -150,8 +150,8 @@ export function buildCafSummaryRows({
     },
     {
       label: 'Prorated First Bill',
-      value: `QR ${firstBill.totalQar} (${firstBill.proratedDays} of ${firstBill.cycleDays} days this cycle, plus one month in advance)`,
+      value: `QAR ${firstBill.totalQar} (${firstBill.proratedDays} of ${firstBill.cycleDays} days this cycle)`,
     },
-    { label: 'Approximate Subsequent Bill', value: `QR ${monthlyRecurringQar}/mo` },
+    { label: 'Approximate Subsequent Bill', value: `QAR ${monthlyRecurringQar}/mo` },
   ];
 }

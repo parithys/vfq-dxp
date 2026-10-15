@@ -1,3 +1,4 @@
+import { CARD_SELECTED } from '../primitives/offerCardParts';
 import { BARCODE_DEMO_NUMBERS } from '../../data/synthetic/idScanSamples';
 import { ID_TYPES, idTypeLabel, type IdType } from '../../data/idTypes';
 import type { ReactNode, Ref } from 'react';
@@ -19,7 +20,7 @@ interface QidTypeSelectorProps {
    *
    * New Postpaid passes ['QID', 'Diplomatic ID']: a postpaid connection may
    * be sold directly only against one of those, and Passport / GCC ID route
-   * to CBM approval instead of this flow.
+   * to Back Office Fulfilment approval instead of this flow.
    */
   allowedTypes?: QidType[];
   /**
@@ -139,7 +140,7 @@ export function QidTypeSelector({
       </p>
       {/* Columns follow the count offered, so two cards fill the row rather
           than leaving two empty quarter-width gaps. */}
-      <div className={`grid grid-cols-2 gap-3 ${offered.length > 2 ? 'sm:grid-cols-4' : ''}`}>
+      <div className={`grid gap-3 ${offered.length > 2 ? 'grid-cols-[repeat(auto-fill,minmax(min(100%,9.5rem),1fr))]' : 'grid-cols-[repeat(auto-fill,minmax(min(100%,14rem),1fr))]'}`}>
         {offered.map((t) => {
           const isUnavailable = unavailable.has(t.type);
           // NOT gated on availability (2026-09-28) - `idType` is the type
@@ -159,30 +160,33 @@ export function QidTypeSelector({
               type="button"
               disabled={isUnavailable}
               aria-disabled={isUnavailable || undefined}
+              aria-pressed={selected}
               onClick={() => !isUnavailable && onIdTypeChange(t.type)}
               className={`relative flex flex-col items-center gap-2 rounded-[var(--radius-card)] border p-4 ${
                 isUnavailable
                   ? 'border-border-soft bg-bg text-muted opacity-60'
                   : selected
-                    ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)] text-[var(--field-card-selected)]'
+                    ? `${CARD_SELECTED} text-[var(--field-card-selected)]`
                     : 'border-[var(--field-card-border)] bg-bg text-fg enabled:hover:border-[var(--field-card-hover-border)] enabled:hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
               }`}
             >
               {selected && (
-                <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[var(--field-card-selected)] text-white flex items-center justify-center">
+                <span className="absolute top-2 right-2 w-4 h-4 rounded-[var(--radius-pill)] bg-[var(--field-card-selected)] text-on-dark flex items-center justify-center">
                   <Icon path={CHECK} className="w-2.5 h-2.5" />
                 </span>
               )}
               {/* White tile behind the icon when selected. Padding is always
                   present so the card does not change size between states. */}
-              <span className={`inline-flex p-2 rounded-[var(--radius-card)] ${selected && !isUnavailable ? 'bg-white' : ''}`}>
+              <span className={`inline-flex p-2 rounded-[var(--radius-card)] ${selected && !isUnavailable ? 'bg-[var(--field-card-selected)] text-on-dark' : 'bg-[var(--icon-tile-bg)] text-[var(--icon-tile-fg)]'}`}>
                 <Icon path={t.icon} className="w-6 h-6" />
               </span>
-              <span className="text-[length:var(--fs-caption)] font-medium">{t.label}</span>
-              {/* Shown only while the card is selected: these documents need approval to proceed. */}
-              {selected && (t.type === 'Passport' || t.type === 'GCC ID') && (
-                <span className="text-[length:var(--fs-micro)] -mt-1.5">Requires Approval</span>
-              )}
+              <span className="text-[length:var(--fs-caption)] font-bold">{t.label}</span>
+              {/* Shown only while a card needing approval is selected. The line is always
+                  rendered (invisible otherwise) so every card is one height in every state -
+                  otherwise the row grows and the page jumps when Passport/GCC ID is picked. */}
+              <span className={`text-[length:var(--fs-micro)] -mt-1.5 ${selected && (t.type === 'Passport' || t.type === 'GCC ID') ? '' : 'invisible'}`}>
+                Requires Approval
+              </span>
             </button>
           );
         })}
@@ -308,7 +312,7 @@ export function QidNumberField({
             from which it becomes usable without the field becoming editable
             first, so a greyed-out button would never light up in place. */}
         {(!readOnly || showFetch) && (
-          <Button variant="primary-rect" onClick={onFetch} disabled={!value || fetching || fetchDisabled}>
+          <Button variant="primary" onClick={onFetch} disabled={!value || fetching || fetchDisabled}>
             <Icon path={SEARCH_ICON} className="w-4 h-4" />
             {fetching ? 'Fetching…' : 'Fetch'}
           </Button>

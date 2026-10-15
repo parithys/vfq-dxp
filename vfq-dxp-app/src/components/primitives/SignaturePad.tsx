@@ -34,7 +34,9 @@ export function SignaturePad({ onDone, doneLabel = 'Done', onCancel }: Signature
     const ctx = canvasRef.current!.getContext('2d')!;
     const { x, y } = getPos(e);
     ctx.lineTo(x, y);
-    ctx.strokeStyle = 'var(--fg)';
+    // Canvas 2D cannot resolve var(): read the token's value. The ink does NOT follow the theme - the stroke is saved as a
+    // transparent PNG that is placed on a white form, so near-white ink in dark mode would be invisible there.
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--signature-ink').trim() || 'black';
     ctx.lineWidth = 2;
     ctx.stroke();
     setHasDrawn(true);
@@ -64,18 +66,18 @@ export function SignaturePad({ onDone, doneLabel = 'Done', onCancel }: Signature
         onPointerMove={move}
         onPointerUp={end}
         onPointerLeave={end}
-        className="border border-[var(--grey-form)] rounded-[var(--radius-card)] bg-bg touch-none w-full max-w-[480px]"
+        className="border border-[var(--grey-form)] rounded-[var(--radius-card)] bg-[var(--paper)] touch-none w-full max-w-[480px]"
       />
       <div className="flex gap-2 mt-2">
-        <Button variant="ghost-rect" onClick={clear}>
+        <Button variant="secondary" onClick={clear}>
           Clear
         </Button>
         {onCancel && (
-          <Button variant="ghost-rect" onClick={onCancel}>
+          <Button variant="secondary" onClick={onCancel}>
             Cancel
           </Button>
         )}
-        <Button variant="primary-rect" onClick={done} disabled={!hasDrawn}>
+        <Button variant="primary" onClick={done} disabled={!hasDrawn}>
           {doneLabel}
         </Button>
       </div>

@@ -1,4 +1,4 @@
-import { AddonsPicker } from '../domain/AddonsPicker';
+import { AddonsPicker } from '../../capabilities/AddonsSelection/AddonsPicker';
 import { BillLimitEditor } from '../domain/BillLimitEditor';
 import type { PostpaidPlan } from './postpaidPlanModel';
 
@@ -24,7 +24,7 @@ export function PostpaidAddonsPanel({
   onBillLimitChange,
 }: PostpaidAddonsPanelProps) {
   return (preBundled ? (
-        <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_92%)] px-4 py-3">
+        <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-tone-warn-soft px-4 py-3">
           <p className="text-fg font-semibold text-[length:var(--fs-body)]">Add-ons unavailable for this plan</p>
           <p className="text-[var(--warn-text)] text-[length:var(--fs-caption)] mt-1">
             The selected plan is pre-bundled and already includes its extras, so it does not accept add-ons.
@@ -37,6 +37,7 @@ export function PostpaidAddonsPanel({
             selectedIds={addonIds}
             onChange={onAddonsChange}
             hideHeader
+            layout="rows"
             emptyMessage="No add-ons available for this plan"
             eligibilityContext={{ planId: selectedProductId, ...customerContext }}
           />
@@ -47,7 +48,7 @@ export function PostpaidAddonsPanel({
               Discounts, since there is no MRC to default from before
               then. */}
           {selectedPlan && (
-            <BillLimitEditor product="Mobile" value={billLimit ?? selectedPlan.mrcQAR} onChange={onBillLimitChange} />
+            <BillLimitEditor product="Mobile" layout="row" value={billLimit ?? selectedPlan.mrcQAR} onChange={onBillLimitChange} />
           )}
         </div>
       ));

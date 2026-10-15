@@ -12,7 +12,7 @@ export function SummaryTables({ tables }: { tables: SummaryTable[] }) {
   return (
     // Two columns on wide screens, stacked on narrow ones. With three or more tables the first sits
     // in the left column and the rest stack in the right one (Due today, then the bill explainer).
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-start">
+    <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(max(18rem,calc((100%-1.5rem)/2)),1fr))] items-start">
       {tables.map((t, ti) => (
         <table
           key={ti}

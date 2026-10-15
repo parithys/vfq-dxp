@@ -1,32 +1,30 @@
 import { useState } from 'react';
 import { Icon } from '../components/primitives/Icon';
-import { VodafoneMark } from '../components/primitives/VodafoneMark';
 import { Tooltip } from '../components/primitives/Tooltip';
-import { PRIMARY_SURFACE } from '../components/primitives/Button';
+import { Button } from '../components/primitives/Button';
 import { useAuthStore } from '../stores/authStore';
 import { usePersonaStore } from '../stores/personaStore';
 import { pickProfileForRole } from '../engines/agentProfileEngine';
 import { useEnterToSubmit } from '../hooks/useEnterToSubmit';
 import { DEMO_LOGIN_PASSWORD, resolveRoleFromStaffId } from './staffIdRoleMap';
 import { ForgotPasswordFlow } from './ForgotPasswordFlow';
-import { LOGIN_METRICS } from '../data/synthetic/loginMetrics';
+import { LoginAnnouncements } from './LoginAnnouncements';
 
 const ICONS = {
-  shield: 'M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z M9.5 12l1.8 1.8L15 10',
-  star: 'M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5z',
-  users: 'M8 12a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M2.5 20c.6-3.4 3-5.5 5.5-5.5s4.9 2.1 5.5 5.5 M16.5 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M15.5 13.2c2.2.5 3.9 2.3 4.3 4.8',
-  clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3.2 2',
-  checkCircle: 'M21 11.5a9 9 0 1 1-5.3-8.2 M21 4.5l-9 9-3-3',
-  gift: 'M4 10h16v10H4z M4 10V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3 M12 10V5 M12 5c0-1.2-1-2.5-2.5-2.5S7 3.8 7 5c0 1.2 1.1 2 2.5 2H12z M12 5c0-1.2 1-2.5 2.5-2.5S17 3.8 17 5c0 1.2-1.1 2-2.5 2H12z',
-  trendUp: 'M4 16l6-6 4 4 6-8 M14 6h6v6',
-  minus: 'M5 12h14',
   arrowRight: 'M5 12h14 M13 6l6 6-6 6',
   eye: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
   eyeOff: 'M3 3l18 18 M10.6 10.6a3 3 0 0 0 4.2 4.2 M9.9 5.1A10.8 10.8 0 0 1 12 5c6 0 10 7 10 7a17.6 17.6 0 0 1-3.1 3.9 M6.2 6.2A17.7 17.7 0 0 0 2 12s4 7 10 7c1.4 0 2.7-.3 3.8-.8',
   helpCircle: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M9.2 9a2.8 2.8 0 1 1 3.9 2.6c-.9.4-1.4 1-1.4 2 M12 17h.01',
+  lock: 'M5 11h14v10H5z M8 11V7a4 4 0 0 1 8 0v4',
 };
 
 
+
+// The Vodafone logo: the supplied artwork (public/brand/vodafone-logo-big.svg) - the red speech-mark with the wordmark.
+// It scales with its container, so it keeps its proportions at every width.
+function VodafoneLogo() {
+  return <img src="/brand/vodafone-logo-big.svg" alt="Vodafone" className="block w-[28%] min-w-32 max-w-48 h-auto" />;
+}
 
 // New auth gate - not evidenced in the source corpus (no SCR- id); implements
 // the split-panel login mock supplied directly by the user. The "Sign in with
@@ -73,7 +71,6 @@ export function LoginPage() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
 
-  const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   const handleSignIn = async () => {
     if (signingIn) return;
@@ -104,7 +101,7 @@ export function LoginPage() {
     //
     // <BrowserRouter> is mounted by App only once isAuthenticated flips, so it
     // reads window.location at that moment - whatever URL the browser happened
-    // to be left on. Signing out at /mobile/sim-device and back in therefore
+    // to be left on. Signing out at /mobile/service-management and back in therefore
     // dropped you straight back there, skipping the landing page entirely, and
     // could drop a role onto a destination its approach doesn't even include.
     //
@@ -121,53 +118,45 @@ export function LoginPage() {
 
   const handleFormKeyDown = useEnterToSubmit(!signingIn, handleSignIn);
 
+  // Layout follows the staff-portal design: the brand story on the left (about 60% of the width), the sign-in form on a
+  // white panel on the right. Only the presentation differs from before - the handlers, validation, error display and
+  // field ids are the same ones as above.
   return (
     <div className="min-h-screen flex flex-col md:flex-row font-sans">
-      {/* Sign-in panel - ordered after the brand panel on md:+ to match the
-          reference layout (dark brand story left, focused form right); DOM
-          order (and therefore tab order) is untouched, only visual order. */}
-      <div className="w-full md:w-[420px] shrink-0 md:order-2 bg-charcoal-panel text-white flex flex-col justify-between px-10 py-10">
-        <div className="flex items-center gap-2">
-          <VodafoneMark />
-          <span className="text-[length:var(--fs-h5)] font-bold">Vodafone</span>
+      {/* Sign-in panel - ordered after the brand panel on md:+ (DOM order, and so tab order, is unchanged). */}
+      <div className="w-full md:w-[42%] lg:w-[38%] shrink-0 md:order-2 bg-bg text-fg flex flex-col px-[8%] py-8">
+        <div className="flex justify-end items-center gap-2 text-[length:var(--fs-body)]" aria-label="Language">
+          <span className="text-accent font-medium" aria-current="true">English</span>
+          <span className="text-muted" aria-hidden="true">|</span>
+          <span className="text-muted" lang="ar" aria-disabled="true" title="Arabic is not available yet">العربية</span>
         </div>
 
-        <div className="space-y-8">
+        <div className="my-auto py-10 space-y-8">
           <div>
-            <h1 className="text-[length:var(--fs-h3)] font-extrabold mb-2">Welcome back</h1>
-            <p className="text-white/60 text-[length:var(--fs-body)]">
-              Authorised staff access only. All activity is monitored and logged.
-            </p>
+            <p className="text-accent font-semibold uppercase tracking-wide text-[length:var(--fs-caption-upper)] mb-3">Staff Portal</p>
+            <h1 className="text-[length:var(--fs-h3)] font-bold leading-tight text-fg mb-3">Welcome back</h1>
+            <p className="text-fg-2 text-[length:var(--fs-body-lg)]">Sign in to your Vodafone workspace.</p>
           </div>
 
-          <div className="space-y-5" onKeyDown={handleFormKeyDown}>
+          <div className="space-y-6" onKeyDown={handleFormKeyDown}>
             {loginError && (
-              <div role="alert" className="rounded-[var(--radius-sm)] border border-danger/50 bg-danger/10 px-3 py-2.5 text-[length:var(--fs-caption)] text-white">
+              <div role="alert" className="rounded-[var(--radius-sm)] border border-[var(--danger-border)] bg-tone-danger-soft px-3 py-2.5 text-[length:var(--fs-caption)] text-danger">
                 {loginError}
               </div>
             )}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="staff-id" className="text-[length:var(--fs-caption)] text-white/70">Staff ID</label>
+            <div className="flex flex-col gap-2">
+              <label htmlFor="staff-id" className="text-[length:var(--fs-body)] font-medium text-fg">Staff ID</label>
               <input
                 id="staff-id"
                 value={staffId}
                 onChange={(e) => setStaffId(e.target.value)}
                 placeholder="e.g. VFQ-12345"
-                className="rounded-[var(--radius-sm)] border border-white/15 bg-white/5 px-3 py-2.5 text-white placeholder:text-white/35 focus:outline-none focus-visible:border-accent"
+                className="w-full rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-4 py-3.5 text-fg text-[length:var(--fs-body)] placeholder:text-muted hover:border-[var(--field-hover-border)] focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]"
               />
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <label htmlFor="login-password" className="text-[length:var(--fs-caption)] text-white/70">Password</label>
-                <button
-                  type="button"
-                  onClick={() => setForgotPasswordOpen(true)}
-                  className="text-[length:var(--fs-caption)] text-white/70 underline underline-offset-2 hover:text-white"
-                >
-                  Forgot password?
-                </button>
-              </div>
+            <div className="flex flex-col gap-2">
+              <label htmlFor="login-password" className="text-[length:var(--fs-body)] font-medium text-fg">Password</label>
               <div className="relative">
                 <input
                   id="login-password"
@@ -175,114 +164,85 @@ export function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full rounded-[var(--radius-sm)] border border-white/15 bg-white/5 px-3 py-2.5 pr-10 text-white placeholder:text-white/35 focus:outline-none focus-visible:border-accent"
+                  className="w-full rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-4 py-3.5 pr-12 text-fg text-[length:var(--fs-body)] placeholder:text-muted hover:border-[var(--field-hover-border)] focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]"
                 />
                 <Tooltip content={showPassword ? 'Hide password' : 'Show password'} placement="top">
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-fg-2 hover:text-fg"
                   >
-                    <Icon path={showPassword ? ICONS.eyeOff : ICONS.eye} className="w-4.5 h-4.5" />
+                    <Icon path={showPassword ? ICONS.eyeOff : ICONS.eye} className="w-5 h-5" />
                   </button>
                 </Tooltip>
               </div>
+              <button
+                type="button"
+                onClick={() => setForgotPasswordOpen(true)}
+                className="self-end text-[length:var(--fs-body)] text-link underline underline-offset-4 hover:opacity-80"
+              >
+                Forgot password?
+              </button>
             </div>
 
-            <button
-              onClick={handleSignIn}
-              disabled={signingIn}
-              className={`w-full flex items-center justify-center gap-2 rounded-[var(--radius-btn)] border ${PRIMARY_SURFACE} enabled:hover:bg-[image:var(--accent-gradient-hover)] enabled:active:scale-[0.99] disabled:opacity-60 font-medium py-3 transition-[color,border-color,transform]`}
-            >
-              {signingIn ? 'Signing in…' : 'Sign In'}
-              {!signingIn && <Icon path={ICONS.arrowRight} className="w-4 h-4" />}
-            </button>
+            <Button variant="primary" onClick={handleSignIn} disabled={signingIn} className="w-full !py-4 text-[length:var(--fs-body-lg)]">
+              {signingIn ? 'Signing in…' : 'Sign in'}
+              {!signingIn && <Icon path={ICONS.arrowRight} className="w-5 h-5" />}
+            </Button>
+
+            <div className="flex items-start gap-3 text-fg-2 text-[length:var(--fs-body)]">
+              <Icon path={ICONS.lock} className="w-5 h-5 shrink-0 mt-0.5" />
+              <p>
+                Authorised staff access only.
+                <span className="block">All activity is monitored and logged.</span>
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="relative flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-[length:var(--fs-body)] text-fg-2">
           <div className="relative">
+            <span>Need help? </span>
             <button
+              type="button"
               onClick={() => setHelpOpen((v) => !v)}
-              className="flex items-center gap-1.5 text-[length:var(--fs-caption)] text-white/60 hover:text-white"
+              className="text-link underline underline-offset-4 hover:opacity-80"
             >
-              <Icon path={ICONS.helpCircle} className="w-4 h-4" />
-              Help &amp; support
+              Contact IT support
             </button>
             {helpOpen && (
-              <div className="absolute bottom-full left-0 mb-2 w-64 rounded-[var(--radius-card)] border border-white/15 bg-charcoal-panel shadow-raised z-50 p-4">
-                <p className="text-white font-medium mb-1">Help &amp; support</p>
-                <p className="text-white/70 text-[length:var(--fs-body)]">
+              <div className="absolute bottom-full left-0 mb-2 w-64 rounded-[var(--radius-card)] border border-on-dark-line-2 bg-charcoal-panel shadow-raised z-[var(--z-popover)] p-4 text-on-dark">
+                <p className="text-on-dark font-medium mb-1">Help &amp; support</p>
+                <p className="text-on-dark-2 text-[length:var(--fs-body)]">
                   Contact the IT Service Desk at <span className="text-link">servicedesk@vodafone.qa</span> or extension 4100 for platform issues.
                 </p>
               </div>
             )}
           </div>
-          <p className="text-[length:var(--fs-caption)] text-white/35">
-            Vodafone Qatar W.L.L. · Authorised use only · VFQ-DXP v3.4.1
-          </p>
+          <span className="text-[length:var(--fs-caption)] text-muted">VFQ-DXP v3.4.1</span>
         </div>
       </div>
 
-      {/* Brand/metrics panel - background (public/brand/login-bg.jpg) is a
-          real photo of the Doha, Qatar skyline at night (West Bay towers incl.
-          Aspire Tower/Doha Tower), by Hongbin (@hbsun2013) on Unsplash
-          (unsplash.com/photos/a-city-skyline-at-night-5jvAmqV4W-c), used under
-          the Unsplash License. A light scrim keeps the photo itself visible;
-          the KPI cards below get their own backdrop-blur glass treatment
-          (rather than a heavy opaque fill) so they read as sitting in the
-          scene instead of pasted flat on top of it, while still staying
-          legible against whatever's directly behind them. */}
-      <div className="relative flex-1 px-8 md:px-16 py-10 flex flex-col justify-between text-white md:order-1 overflow-hidden bg-[var(--login-bg)]">
+      {/* Brand panel - the Doha skyline photo (public/brand/login-bg.jpg, Hongbin on Unsplash, Unsplash License) under a
+          navy scrim that is darkest where the headline and the update cards sit. */}
+      <div className="relative flex-1 px-[6%] py-8 flex flex-col text-on-dark md:order-1 overflow-hidden bg-[var(--login-bg)]">
         <img src="/brand/login-bg.jpg" alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-[image:var(--login-scrim)]" />
-        <div className="relative">
-          <div className="flex flex-wrap items-center gap-3 mb-4">
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent inline-block shrink-0" />
-              <span className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-white/80">
-                Today&rsquo;s store performance · {today}
-              </span>
-            </div>
-            <span className="hidden sm:flex items-center gap-1.5 rounded-[var(--radius-pill)] bg-white/10 px-3 py-1 text-[length:var(--fs-caption)] text-white/80 shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-success inline-block" />
-              Live store data
-            </span>
-          </div>
-          <h2 className="text-[length:var(--fs-h1)] font-black leading-[1.02] mb-3">Operational overview</h2>
-          <p className="text-white/85 text-[length:var(--fs-lead)] max-w-xl">
-            Real-time store and operations metrics. Review your team&rsquo;s performance before entering the portal.
-          </p>
+        <header className="relative flex items-start justify-between gap-6">
+          <VodafoneLogo />
+        </header>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
-            {LOGIN_METRICS.map((m) => (
-              <div key={m.label} className="rounded-[var(--radius-card)] border border-white/15 bg-white/10 backdrop-blur-md shadow-[var(--shadow-login-card)] p-5">
-                <div className="flex items-center justify-between mb-6">
-                  <span className="w-9 h-9 rounded-[10px] bg-white/10 flex items-center justify-center">
-                    <Icon path={ICONS[m.icon]} className="w-4.5 h-4.5" />
-                  </span>
-                  <span
-                    className={`flex items-center gap-1 rounded-[var(--radius-pill)] px-2 py-0.5 text-[length:var(--fs-caption)] font-medium ${
-                      m.trend === 'up' ? 'bg-success/15 text-success' : 'bg-white/10 text-white/70'
-                    }`}
-                  >
-                    <Icon path={m.trend === 'up' ? ICONS.trendUp : ICONS.minus} className="w-3 h-3" />
-                    {m.trend === 'up' ? 'Up' : 'Stable'}
-                  </span>
-                </div>
-                <div className="text-[length:var(--fs-h3)] font-extrabold mb-1">{m.value}</div>
-                <div className="font-semibold text-[length:var(--fs-body)]">{m.label}</div>
-                <div className="text-white/70 text-[length:var(--fs-caption)]">{m.sub}</div>
-              </div>
-            ))}
-          </div>
+        <div className="relative mt-[12%] max-w-[85%]">
+          <h2 className="text-[length:var(--fs-h2)] font-bold leading-[1.15] text-on-dark">Together, we move Qatar forward.</h2>
+          <p className="mt-3 text-[length:var(--fs-lead)] font-normal text-on-dark">Your people. Your updates. Your day.</p>
         </div>
 
-        <div className="relative pt-6 mt-6 border-t border-white/20 flex items-center justify-between text-white/60 text-[length:var(--fs-caption)]">
-          <span>Metrics refresh every 5 minutes · Last updated just now</span>
-          <span className="text-white/40">VFQ-DXP v3.4.1</span>
+        <div className="relative mt-[6%] mb-auto">
+          <LoginAnnouncements />
         </div>
+
+        <p className="relative pt-8 text-on-dark-2 text-[length:var(--fs-caption)]">Vodafone Qatar W.L.L.</p>
       </div>
 
       <ForgotPasswordFlow open={forgotPasswordOpen} onClose={() => setForgotPasswordOpen(false)} initialStaffId={staffId} />

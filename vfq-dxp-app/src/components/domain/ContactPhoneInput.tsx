@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Icon } from '../primitives/Icon';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { formatQatarPhoneForDisplay } from '../primitives/PhoneNumberInput';
+import { useSearchListNav } from '../../hooks/useSearchListNav';
 
 interface ContactRecord {
   contactRecordId: string;
@@ -53,9 +54,11 @@ export function ContactPhoneInput({
   className = '',
   id,
 }: ContactPhoneInputProps) {
-  const inputId = id ?? `contact-phone-${label?.replace(/\s+/g, '-').toLowerCase()}`;
+  const autoId = useId();
+  const inputId = id ?? `contact-phone-${autoId}`;
   const helperId = `${inputId}-helper`;
-  const describedBy = helperText && !error ? helperId : undefined;
+  const errorId = `${inputId}-error`;
+  const describedBy = error ? errorId : helperText ? helperId : undefined;
   const [focused, setFocused] = useState(false);
   const [open, setOpen] = useState(false);
   const [contacts, setContacts] = useState<ContactRecord[]>([]);
@@ -78,6 +81,28 @@ export function ContactPhoneInput({
   const pick = (c: ContactRecord) => {
     if (c.cellNumber) onChange(c.cellNumber);
     setOpen(false);
+  };
+
+  // Keyboard: ArrowDown opens the saved-contacts list, Arrow keys move through it, Enter picks, Escape closes.
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listboxId = `${inputId}-listbox`;
+  const optionPrefix = `${inputId}-opt`;
+  const nav = useSearchListNav({
+    idPrefix: optionPrefix,
+    count: contacts.length,
+    enabled: open,
+    resetKey: `${open}|${contacts.length}`,
+    inputRef,
+    onSelect: (i) => pick(contacts[i]),
+    onEscape: () => setOpen(false),
+  });
+  const onInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (customerId && !open && e.key === 'ArrowDown' && contacts.length > 0 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      setOpen(true);
+      return;
+    }
+    nav.inputProps.onKeyDown(e);
   };
 
   const isFilled = value.trim().length > 0;
@@ -106,7 +131,13 @@ export function ContactPhoneInput({
           <span className="text-[length:var(--fs-body)] text-fg-2 shrink-0">+974</span>
           <span className="w-px h-5 bg-[var(--field-border-disabled)] shrink-0" />
           <input
+            ref={inputRef}
             id={inputId}
+            onKeyDown={onInputKeyDown}
+            {...(customerId
+              ? { role: 'combobox' as const, 'aria-expanded': open, 'aria-controls': open ? listboxId : undefined, 'aria-autocomplete': 'none' as const, 'aria-activedescendant': nav.inputProps['aria-activedescendant'] }
+              : {})}
+            aria-invalid={error ? true : undefined}
             disabled={disabled}
             value={focused ? value : formatQatarPhoneForDisplay(value)}
             onChange={(e) => onChange(e.target.value)}
@@ -121,7 +152,9 @@ export function ContactPhoneInput({
               type="button"
               disabled={disabled}
               aria-label="Choose a saved contact"
+              aria-haspopup="listbox"
               aria-expanded={open}
+              aria-controls={open ? listboxId : undefined}
               onClick={() => setOpen((v) => !v)}
               className={`shrink-0 p-1 ${disabled ? 'text-muted' : isFilled ? 'text-[var(--field-icon-active)]' : 'text-[var(--field-icon)]'}`}
             >
@@ -132,17 +165,21 @@ export function ContactPhoneInput({
 
         {open && (
           <ul
+            id={listboxId}
             role="listbox"
-            className="absolute z-50 top-full left-0 right-0 max-h-80 overflow-y-auto rounded-[var(--field-radius)] border border-border-soft bg-bg shadow-raised py-1 divide-y divide-[var(--field-divider)]"
+            aria-label="Saved contacts"
+            className="absolute z-[var(--z-popover)] top-full left-0 right-0 max-h-80 overflow-y-auto rounded-[var(--field-radius)] border border-border-soft bg-bg shadow-raised py-1 divide-y divide-[var(--field-divider)]"
           >
-            {contacts.map((c) => (
+            {contacts.map((c, i) => (
               <li
                 key={c.contactRecordId}
+                id={`${optionPrefix}-${i}`}
                 role="option"
+                aria-selected={nav.active === i}
                 onClick={() => pick(c)}
-                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-surface"
+                className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-surface ${nav.active === i ? 'bg-surface ring-2 ring-inset ring-[var(--focus-outline)]' : ''}`}
               >
-                <span className="w-8 h-8 rounded-full bg-accent text-white text-[length:var(--fs-caption)] font-semibold flex items-center justify-center shrink-0">
+                <span className="w-8 h-8 rounded-[var(--radius-pill)] bg-accent text-on-dark text-[length:var(--fs-caption)] font-semibold flex items-center justify-center shrink-0">
                   {initials(c.firstName, c.lastName)}
                 </span>
                 <span className="min-w-0">
@@ -160,7 +197,11 @@ export function ContactPhoneInput({
           {helperText}
         </span>
       )}
-      {error && <span className="text-[length:var(--fs-caption)] text-[var(--field-border-error)]">{error}</span>}
+      {error && (
+        <span id={errorId} role="alert" className="text-[length:var(--fs-caption)] text-[var(--field-border-error)]">
+          {error}
+        </span>
+      )}
     </div>
   );
 }

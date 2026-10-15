@@ -1,3 +1,6 @@
+import { Tooltip } from './Tooltip';
+import { PanelIcon } from './PanelIcon';
+import { SegmentedTabs } from './SegmentedTabs';
 import { useState } from 'react';
 import { Icon } from './Icon';
 import type { ReactNode } from 'react';
@@ -23,6 +26,7 @@ export function Tabs({
   rail = false,
   activeKey,
   onChange,
+  toolbar,
 }: {
   items: TabItem[];
   defaultKey?: string;
@@ -34,6 +38,8 @@ export function Tabs({
    * Omit both for the original self-managed behavior. */
   activeKey?: string;
   onChange?: (key: string) => void;
+  /** Horizontal only: controls that sit on the tab row, pushed to its right edge (a search box, filters). */
+  toolbar?: ReactNode;
 }) {
   const [uncontrolledActive, setUncontrolledActive] = useState(defaultKey ?? items[0]?.key);
   const active = activeKey ?? uncontrolledActive;
@@ -51,10 +57,10 @@ export function Tabs({
 
   if (orientation === 'vertical') {
     return (
-      <div className="flex gap-6 items-start">
-        <div className="w-56 shrink-0 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg overflow-hidden">
+      <div className="flex flex-col md:flex-row gap-6 items-start">
+        <div className="w-full md:w-56 shrink-0 card overflow-hidden">
           {items.map((item) => (
-            <button
+            <button type="button"
               key={item.key}
               onClick={() => setActive(item.key)}
               className={`block w-full text-left px-4 py-2.5 text-[length:var(--fs-body)] border-l-2 transition-colors
@@ -71,27 +77,21 @@ export function Tabs({
 
   return (
     <div>
-      {/* Scrolls sideways rather than wrapping when there are more tabs than the width allows. */}
-      <div className="flex gap-1 border-b border-border-soft overflow-x-auto">
-        {items.map((item) => (
-          <button
-            key={item.key}
-            onClick={() => setActive(item.key)}
-            className={`px-4 py-2 text-[length:var(--fs-body)] border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0
-              ${active === item.key ? 'border-accent text-accent font-medium' : 'border-transparent text-fg-2 hover:text-fg'}`}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
+      {toolbar ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <SegmentedTabs items={items} active={active} onChange={setActive} />
+          <div className="flex min-w-0 flex-1 basis-[30%] items-center justify-end gap-3">{toolbar}</div>
+        </div>
+      ) : (
+        <SegmentedTabs items={items} active={active} onChange={setActive} />
+      )}
       <div className="pt-4">{activeItem?.content}</div>
     </div>
   );
 }
 
 const FALLBACK_ICON = 'M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01';
-export const PANEL_ICON = 'M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5z M9 4v16';
-export const RAIL_KEY = 'vfq-rail-expanded';
+const RAIL_KEY = 'vfq-rail-expanded';
 
 /**
  * Vertical icon rail, flush against the left / top / bottom of its area (the page supplies no padding around it).
@@ -100,28 +100,39 @@ export const RAIL_KEY = 'vfq-rail-expanded';
  * that choice is remembered.
  */
 function IconRail({ items, active, onSelect }: { items: TabItem[]; active: string | undefined; onSelect: (key: string) => void }) {
-  const [expanded, setExpanded] = useState(() => localStorage.getItem(RAIL_KEY) !== '0');
-  const toggle = () =>
-    setExpanded((v) => {
-      localStorage.setItem(RAIL_KEY, v ? '0' : '1');
-      return !v;
-    });
+  const [expanded, setExpanded] = useState(() => {
+    try {
+      return localStorage.getItem(RAIL_KEY) !== '0';
+    } catch {
+      return true; // storage blocked (e.g. private mode): default to expanded
+    }
+  });
+  const toggle = () => {
+    const next = !expanded;
+    setExpanded(next);
+    try {
+      localStorage.setItem(RAIL_KEY, next ? '1' : '0');
+    } catch {
+      /* the preference just is not remembered */
+    }
+  };
   const row = 'h-12 flex items-center';
   return (
     <nav
       aria-label="Customer sections"
       className={`shrink-0 self-stretch bg-bg ${expanded ? 'lg:w-64' : 'lg:w-16'}`}
     >
-      <div className="lg:sticky lg:top-0 lg:z-30">
-        <button
-          type="button"
-          onClick={toggle}
-          aria-label={expanded ? 'Collapse sections' : 'Expand sections'}
-          title={expanded ? 'Collapse sections' : 'Expand sections'}
-          className={`${row} w-full border-b border-border-soft text-fg-2 hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${expanded ? 'justify-end px-5' : 'justify-center'}`}
-        >
-          <Icon path={PANEL_ICON} className="w-5 h-5" />
-        </button>
+      <div className="lg:sticky lg:top-0 lg:z-[var(--z-raised)]">
+        <Tooltip content={expanded ? 'Collapse sections' : 'Expand sections'} placement="right">
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={expanded ? 'Collapse sections' : 'Expand sections'}
+            className={`${row} w-full border-b border-border-soft text-fg-2 hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${expanded ? 'justify-end px-5' : 'justify-center'}`}
+          >
+            <PanelIcon expanded={expanded} className="w-5 h-5" />
+          </button>
+        </Tooltip>
         <ol className="flex lg:block overflow-x-auto lg:overflow-visible">
           {items.map((item) => {
             const isActive = active === item.key;
@@ -132,8 +143,8 @@ function IconRail({ items, active, onSelect }: { items: TabItem[]; active: strin
                   onClick={() => onSelect(item.key)}
                   aria-label={item.label}
                   className={`${row} w-12 lg:w-full border-l-2 transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
-                    isActive ? 'bg-accent text-accent-on border-l-transparent' : 'border-l-transparent text-fg-2 hover:bg-surface-warm hover:text-accent'
-                  } ${expanded ? 'lg:px-5 lg:gap-3' : 'justify-center'}`}
+                    isActive ? 'bg-accent bg-[image:var(--accent-gradient)] text-accent-on border-l-transparent' : 'border-l-transparent text-fg-2 hover:bg-surface-warm hover:text-accent'
+                  } ${expanded ? 'lg:pl-[21px] lg:pr-5 lg:gap-3' : 'justify-center'}`}
                 >
                   <Icon path={item.icon ?? FALLBACK_ICON} className="w-5 h-5 shrink-0" />
                   {expanded && <span className={`hidden lg:inline min-w-0 truncate text-[length:var(--fs-body)] ${isActive ? 'font-semibold' : 'font-medium text-fg'}`}>{item.label}</span>}
@@ -145,8 +156,8 @@ function IconRail({ items, active, onSelect }: { items: TabItem[]; active: strin
                   <span
                     aria-hidden="true"
                     onClick={() => onSelect(item.key)}
-                    className={`pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto cursor-pointer absolute left-0 top-0 z-30 hidden lg:flex h-12 items-center gap-3 pl-[18px] pr-5 whitespace-nowrap rounded-r-[var(--radius-sm)] border border-l-0 border-[var(--field-card-border)] shadow-raised text-[length:var(--fs-body)] opacity-0 transition-opacity duration-100 group-hover:opacity-100 group-focus-within:opacity-100 ${
-                      isActive ? 'bg-accent text-accent-on font-semibold border-transparent' : 'bg-surface-warm text-fg font-medium'
+                    className={`pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto cursor-pointer absolute left-0 top-0 z-[var(--z-raised)] hidden lg:flex h-12 items-center gap-3 pl-[23px] pr-5 whitespace-nowrap rounded-r-[var(--radius-sm)] border border-l-0 border-[var(--field-card-border)] shadow-raised text-[length:var(--fs-body)] overflow-hidden max-w-16 opacity-0 transition-[max-width,opacity] duration-[var(--motion-slow)] ease-in-out motion-reduce:transition-none group-hover:max-w-64 group-hover:opacity-100 group-focus-within:max-w-64 group-focus-within:opacity-100 ${
+                      isActive ? 'bg-accent bg-[image:var(--accent-gradient)] text-accent-on font-semibold border-transparent' : 'bg-surface-warm text-fg font-medium'
                     }`}
                   >
                     <Icon path={item.icon ?? FALLBACK_ICON} className={`w-5 h-5 shrink-0 ${isActive ? '' : 'text-accent'}`} />

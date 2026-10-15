@@ -22,18 +22,17 @@
 
 export type NavKey =
   | 'dashboard'
+  | 'new-connections'
   | 'mobile'
-  | 'mobile.new-connections'
-  | 'mobile.existing-service'
-  | 'mobile.number-services'
-  | 'mobile.sim-device'
-  | 'mobile.support'
+  | 'mobile.plans-numbers'
+  | 'mobile.service-management'
+  | 'mobile.customer-account'
+  | 'mobile.support-requests'
   | 'fibre-home'
-  | 'fibre-home.new-connections'
-  | 'fibre-home.existing-service'
-  | 'fibre-home.relocation'
-  | 'fibre-home.equipment'
-  | 'fibre-home.support'
+  | 'fibre-home.plans-installation'
+  | 'fibre-home.service-management'
+  | 'fibre-home.customer-account'
+  | 'fibre-home.support-requests'
   | 'customer-search'
   | 'sales'
   | 'operations'
@@ -95,10 +94,12 @@ const ICONS = {
   fibreHome: 'M5 12.5a9 9 0 0 1 14 0 M8 16a5 5 0 0 1 8 0 M12 19.5h.01',
   newConnection: 'M12 5v14 M5 12h14',
   existingService: 'M21 12a9 9 0 0 1-9 9 9 9 0 0 1-8.5-6 M3 12a9 9 0 0 1 9-9 9 9 0 0 1 8.5 6 M21 3v6h-6 M3 21v-6h6',
+  plans: 'M4 6h16 M4 12h16 M4 18h10 M18 16v4 M16 18h4',
   numberServices: 'M9 3L7 21 M17 3l-2 18 M3.5 8.5h17 M3 15.5h17',
   simDevice: 'M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M9 9h6v6H9z',
   relocation: 'M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11z M12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',
   equipment: 'M14.7 6.3a4 4 0 0 1 5 5L21 12l-9 9-3-3 9-9z M7 17l-3 3',
+  customerOwnership: 'M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1 M9.5 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M17 11l2 2 4-4',
   lifebuoy: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M5.6 5.6l3.2 3.2 M15.2 15.2l3.2 3.2 M18.4 5.6l-3.2 3.2 M8.8 15.2l-3.2 3.2',
   search: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3',
   sales: 'M4 16l6-6 4 4 6-8 M14 6h6v6',
@@ -113,6 +114,9 @@ const ICONS = {
 
 export const NAV_MANIFEST: readonly NavItem[] = [
   { key: 'dashboard', label: 'Dashboard', to: '/', end: true, icon: ICONS.dashboard, implemented: true },
+  // New Connections is common to every product, so it is one destination (a hub of cards, each naming its product) rather than a
+  // section inside each line. Mobile Services and Fibre & Home Services keep the rest of their journeys.
+  { key: 'new-connections', label: 'New Connections', to: '/new-connections', icon: ICONS.newConnection, implemented: true },
   // Mobile and Fibre & Home are the two primary product lines. They replaced a
   // single "Products" parent whose children were just the two line names - that
   // extra level added a click without adding information. Each line now owns its
@@ -120,30 +124,28 @@ export const NAV_MANIFEST: readonly NavItem[] = [
   // (ProductLinePage) rather than a placeholder.
   {
     key: 'mobile',
-    label: 'Mobile',
+    label: 'Mobile Services',
     to: '/mobile',
     icon: ICONS.mobile,
     implemented: true,
     children: [
-      { key: 'mobile.new-connections', label: 'New Connections', to: '/mobile/new-connections', icon: ICONS.newConnection, implemented: true },
-      { key: 'mobile.existing-service', label: 'Existing Service', to: '/mobile/existing-service', icon: ICONS.existingService, implemented: true },
-      { key: 'mobile.number-services', label: 'Number Services', to: '/mobile/number-services', icon: ICONS.numberServices, implemented: true },
-      { key: 'mobile.sim-device', label: 'SIM & Device', to: '/mobile/sim-device', icon: ICONS.simDevice, implemented: true },
-      { key: 'mobile.support', label: 'Support', to: '/mobile/support', icon: ICONS.lifebuoy, implemented: true },
+      { key: 'mobile.plans-numbers', label: 'Plans & Numbers', to: '/mobile/plans-numbers', icon: ICONS.plans, implemented: true },
+      { key: 'mobile.service-management', label: 'Service Management', to: '/mobile/service-management', icon: ICONS.existingService, implemented: true },
+      { key: 'mobile.customer-account', label: 'Customer & Account', to: '/mobile/customer-account', icon: ICONS.customerOwnership, implemented: true },
+      { key: 'mobile.support-requests', label: 'Support & Requests', to: '/mobile/support-requests', icon: ICONS.lifebuoy, implemented: true },
     ],
   },
   {
     key: 'fibre-home',
-    label: 'Fibre & Home',
+    label: 'Fibre & Home Services',
     to: '/fibre-home',
     icon: ICONS.fibreHome,
     implemented: true,
     children: [
-      { key: 'fibre-home.new-connections', label: 'New Connections', to: '/fibre-home/new-connections', icon: ICONS.newConnection, implemented: true },
-      { key: 'fibre-home.existing-service', label: 'Existing Service', to: '/fibre-home/existing-service', icon: ICONS.existingService, implemented: true },
-      { key: 'fibre-home.relocation', label: 'Relocation', to: '/fibre-home/relocation', icon: ICONS.relocation, implemented: true },
-      { key: 'fibre-home.equipment', label: 'Equipment', to: '/fibre-home/equipment', icon: ICONS.equipment, implemented: true },
-      { key: 'fibre-home.support', label: 'Support', to: '/fibre-home/support', icon: ICONS.lifebuoy, implemented: true },
+      { key: 'fibre-home.plans-installation', label: 'Plans & Installation', to: '/fibre-home/plans-installation', icon: ICONS.plans, implemented: true },
+      { key: 'fibre-home.service-management', label: 'Service Management', to: '/fibre-home/service-management', icon: ICONS.existingService, implemented: true },
+      { key: 'fibre-home.customer-account', label: 'Customer & Account', to: '/fibre-home/customer-account', icon: ICONS.customerOwnership, implemented: true },
+      { key: 'fibre-home.support-requests', label: 'Support & Requests', to: '/fibre-home/support-requests', icon: ICONS.lifebuoy, implemented: true },
     ],
   },
   { key: 'customer-search', label: 'Customer Search', to: '/customer-search', icon: ICONS.search, implemented: true },
@@ -197,11 +199,11 @@ export const NAV_BY_KEY: ReadonlyMap<NavKey, NavItem> = new Map(
 /** Closed-set guard (INV-1). Growing the rail must be a deliberate edit here.
  * 20 = 10 top-level destinations (including the 2 product lines) + the 10
  * product-line journey categories. */
-export const NAV_MANIFEST_SIZE = 20;
+export const NAV_MANIFEST_SIZE = 19;
 /** Top-level cap per role (INV-2). 10 is the maximum reachable by
- * construction: the widest approach ordering is Hybrid at 9, plus
- * Administration for the three roles that hold its feature grant. */
-export const NAV_MAX_TOP_LEVEL = 10;
+ * construction: the widest approach ordering is Hybrid at 10, plus
+ * Administration for the roles that hold its feature grant. */
+export const NAV_MAX_TOP_LEVEL = 11;
 
 if (import.meta.env.DEV && NAV_BY_KEY.size !== NAV_MANIFEST_SIZE) {
   throw new Error(

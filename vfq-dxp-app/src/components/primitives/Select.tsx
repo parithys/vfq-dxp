@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
 import { Icon } from './Icon';
 
@@ -62,13 +62,20 @@ export function Select({
   openUp = false,
   tintedPanel = false,
 }: SelectProps) {
-  const selectId = id ?? `select-${label?.replace(/\s+/g, '-').toLowerCase()}`;
+  const autoId = useId();
+  const selectId = id ?? `select-${autoId}`;
   const helperId = `${selectId}-helper`;
-  const describedBy = helperText && !error ? helperId : undefined;
+  const errorId = `${selectId}-error`;
+  const listboxId = `${selectId}-listbox`;
+  const labelId = `${selectId}-label`;
+  const optionId = (i: number) => `${selectId}-opt-${i}`;
+  const describedBy = error ? errorId : helperText ? helperId : undefined;
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
   const [query, setQuery] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const typeAhead = useRef({ text: '', at: 0 });
 
   const selected = options.find((o) => o.value === value);
   // Options shown in the open panel: filtered by the search box when searchable.
@@ -83,46 +90,102 @@ export function Select({
     return () => document.removeEventListener('mousedown', onClickOutside);
   }, [open]);
 
-  const commit = (optionValue: string) => {
-    if (optionValue === undefined) return;
-    onChange?.({ target: { value: optionValue } } as ChangeEvent<HTMLSelectElement>);
+  // Keep the highlighted option in view when the list is longer than its box.
+  useEffect(() => {
+    if (open) document.getElementById(optionId(highlighted))?.scrollIntoView({ block: 'nearest' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, highlighted]);
+
+  const close = (returnFocus: boolean) => {
     setOpen(false);
     setQuery('');
+    if (returnFocus) triggerRef.current?.focus();
+  };
+
+  const commit = (optionValue: string | undefined) => {
+    if (optionValue === undefined) return;
+    onChange?.({ target: { value: optionValue } } as ChangeEvent<HTMLSelectElement>);
+    close(true);
+  };
+
+  const openList = () => {
+    setHighlighted(Math.max(0, options.findIndex((o) => o.value === value)));
+    setQuery('');
+    setOpen(true);
+  };
+
+  // Keys shared by the trigger (plain select) and the search box (searchable select): focus never leaves the control that has it;
+  // the highlighted option is named through aria-activedescendant.
+  const navigate = (e: KeyboardEvent<HTMLElement>): boolean => {
+    const last = shown.length - 1;
+    switch (e.key) {
+      case 'ArrowDown':
+        setHighlighted((i) => Math.min(last, i + 1));
+        break;
+      case 'ArrowUp':
+        setHighlighted((i) => Math.max(0, i - 1));
+        break;
+      case 'Home':
+        if (searchable) return false; // the caret moves inside the search box
+        setHighlighted(0);
+        break;
+      case 'End':
+        if (searchable) return false;
+        setHighlighted(Math.max(0, last));
+        break;
+      case 'PageDown':
+        setHighlighted((i) => Math.min(last, i + 8));
+        break;
+      case 'PageUp':
+        setHighlighted((i) => Math.max(0, i - 8));
+        break;
+      case 'Enter':
+        commit(shown[highlighted]?.value);
+        break;
+      case 'Escape':
+        // Closes the list only - not the dialog the field sits in (Modal/Drawer listen for Escape on the document).
+        e.stopPropagation();
+        close(true);
+        break;
+      case 'Tab':
+        close(false);
+        return false; // let focus move on
+      default:
+        return false;
+    }
+    e.preventDefault();
+    return true;
   };
 
   const onTriggerKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
     if (disabled) return;
-    if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      if (!open) {
-        setHighlighted(Math.max(0, options.findIndex((o) => o.value === value)));
-        setQuery('');
-        setOpen(true);
-      } else if (e.key === 'Enter') {
-        commit(shown[highlighted]?.value);
+    if (!open) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openList();
       }
-    } else if (e.key === 'Escape') {
-      setOpen(false);
+      return;
     }
-  };
-
-  const onListKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setHighlighted((i) => Math.min(shown.length - 1, i + 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setHighlighted((i) => Math.max(0, i - 1));
-    } else if (e.key === 'Enter') {
+    if (e.key === ' ') {
       e.preventDefault();
       commit(shown[highlighted]?.value);
-    } else if (e.key === 'Escape' || e.key === 'Tab') {
-      setOpen(false);
+      return;
+    }
+    if (navigate(e)) return;
+    // Type-ahead on a plain select: printable keys jump to the next option starting with what was typed.
+    if (!searchable && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const now = Date.now();
+      const ta = typeAhead.current;
+      ta.text = now - ta.at > 700 ? e.key.toLowerCase() : ta.text + e.key.toLowerCase();
+      ta.at = now;
+      const from = ta.text.length === 1 ? highlighted + 1 : highlighted;
+      const hit = [...shown.slice(from), ...shown.slice(0, from)].findIndex((o) => o.label.toLowerCase().startsWith(ta.text));
+      if (hit >= 0) setHighlighted((from + hit) % shown.length);
     }
   };
 
   const triggerClasses = dark
-    ? 'border-white/15 bg-white/5 text-white focus-visible:border-accent'
+    ? 'border-on-dark-line-2 bg-on-dark-fill-1 text-on-dark focus-visible:border-accent'
     : `${
         error
           ? 'border-[var(--field-border-error)]'
@@ -132,16 +195,16 @@ export function Select({
       } bg-bg text-[var(--color-field-text-filled)] focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)]
       disabled:border-[var(--field-border-disabled)] disabled:bg-[var(--field-bg-disabled)]`;
   const panelClasses = dark
-    ? 'border-white/15 bg-[var(--charcoal-panel)] divide-y divide-white/10'
+    ? 'border-on-dark-line-2 bg-[var(--charcoal-panel)] divide-y divide-on-dark-line-1'
     : tintedPanel
       ? 'border-[var(--field-card-border)] bg-surface divide-y divide-[var(--field-divider)]'
       : 'border-border-soft bg-bg divide-y divide-[var(--field-divider)]';
-  const optionClasses = dark ? 'text-white' : 'text-fg-2';
+  const optionClasses = dark ? 'text-on-dark' : 'text-fg-2';
 
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label htmlFor={selectId} className={`text-[length:var(--fs-label)] ${dark ? 'text-white/70' : disabled ? 'text-[var(--field-label-disabled)]' : 'text-fg-2'}`}>
+        <label id={labelId} htmlFor={selectId} className={`text-[length:var(--fs-label)] ${dark ? 'text-on-dark-2' : disabled ? 'text-[var(--field-label-disabled)]' : 'text-fg-2'}`}>
           {label}
           {/* Same treatment as Input's required marker - aria-hidden, with the
               state carried by aria-required on the combobox below. */}
@@ -158,32 +221,37 @@ export function Select({
           id={selectId}
           disabled={disabled}
           role="combobox"
+          ref={triggerRef}
           aria-haspopup="listbox"
           aria-expanded={open}
+          aria-controls={open ? listboxId : undefined}
+          aria-activedescendant={open && !searchable && shown.length > 0 ? optionId(highlighted) : undefined}
           aria-required={required || undefined}
+          aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           aria-label={ariaLabel}
-          onClick={() => !disabled && setOpen((v) => !v)}
+          onClick={() => !disabled && (open ? close(false) : openList())}
           onKeyDown={onTriggerKeyDown}
-          className={`w-full flex items-center justify-between gap-2 rounded-[var(--field-radius)] border pl-3 pr-3 py-2 text-[length:var(--fs-body)] text-left
+          className={`w-full flex items-center justify-between gap-2 rounded-[var(--field-radius)] ${openUp ? 'focus-visible:rounded-t-none' : 'focus-visible:rounded-b-none'} ${open ? (openUp ? 'rounded-t-none' : 'rounded-b-none') : ''} border pl-3 pr-3 py-2 text-[length:var(--fs-body)] text-left
             disabled:cursor-not-allowed
             focus:outline-none
             ${triggerClasses}
             ${className}`}
         >
-          <span className={`truncate ${disabled ? 'text-[var(--field-label-disabled)]' : !selected ? (dark ? 'text-white/35' : 'text-muted') : ''}`}>
+          <span className={`truncate ${disabled ? 'text-[var(--field-label-disabled)]' : !selected ? (dark ? 'text-on-dark-4' : 'text-muted') : ''}`}>
             {selected ? selected.label : (placeholder ?? '')}
           </span>
           <Icon
             path={CHEVRON_DOWN}
             className={`w-4 h-4 shrink-0 ${
-              dark ? 'text-white/50' : disabled ? 'text-muted' : selected ? 'text-[var(--field-icon-active)]' : 'text-muted'
+              dark ? 'text-on-dark-3' : disabled ? 'text-muted' : selected ? 'text-[var(--field-icon-active)]' : 'text-muted'
             }`}
           />
         </button>
 
+        {/* Square on the edge that meets the field, rounded on the far edge, so the panel reads as attached to it (the open or focused trigger squares off its matching edge, and the shared border is drawn once). */}
         {open && (
-          <div className={`absolute z-50 ${openUp ? 'bottom-full mb-1' : 'top-full'} left-0 right-0 rounded-[var(--field-radius)] border shadow-raised overflow-hidden ${panelClasses}`}>
+          <div className={`absolute z-[var(--z-popover)] ${openUp ? 'bottom-full rounded-t-[var(--field-radius)] rounded-b-none border-b-0' : 'top-full rounded-b-[var(--field-radius)] rounded-t-none border-t-0'} left-0 right-0 border shadow-raised overflow-hidden ${panelClasses}`}>
           {searchable && (
             <div className="p-2 border-b border-border-soft">
               <input
@@ -194,7 +262,14 @@ export function Select({
                   setQuery(e.target.value);
                   setHighlighted(0);
                 }}
-                onKeyDown={onListKeyDown as unknown as (e: KeyboardEvent<HTMLInputElement>) => void}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === 'Escape' || e.key === 'Tab' || e.key.startsWith('Arrow') || e.key.startsWith('Page')) navigate(e);
+                }}
+                role="combobox"
+                aria-expanded
+                aria-controls={listboxId}
+                aria-autocomplete="list"
+                aria-activedescendant={shown.length > 0 ? optionId(highlighted) : undefined}
                 placeholder="Search…"
                 aria-label="Search options"
                 className="w-full rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-3 py-2 text-[length:var(--fs-body)] text-[var(--color-field-text-filled)] focus:outline-none focus-visible:border-[var(--field-focus-border)]"
@@ -202,30 +277,32 @@ export function Select({
             </div>
           )}
           <ul
+            id={listboxId}
             role="listbox"
-            tabIndex={-1}
-            onKeyDown={onListKeyDown}
-            ref={(el) => {
-              if (!searchable) el?.focus();
-            }}
+            {...(label ? { 'aria-labelledby': labelId } : { 'aria-label': ariaLabel ?? 'Options' })}
             className="max-h-64 overflow-y-auto py-1"
           >
-            {shown.length === 0 && <li className="px-4 py-3 text-muted text-[length:var(--fs-body)]">No matches</li>}
             {shown.map((opt, i) => (
               <li
                 key={opt.value}
+                id={optionId(i)}
                 role="option"
                 aria-selected={opt.value === value}
                 onMouseEnter={() => setHighlighted(i)}
                 onClick={() => commit(opt.value)}
                 className={`px-4 py-3 text-[length:var(--fs-body)] cursor-pointer ${optionClasses} ${
-                  i === highlighted ? (dark ? 'bg-white/10' : tintedPanel ? 'bg-bg' : 'bg-surface') : ''
+                  i === highlighted ? `${dark ? 'bg-on-dark-fill-2' : tintedPanel ? 'bg-bg' : 'bg-surface'} ring-2 ring-inset ring-[var(--focus-outline)]` : ''
                 }`}
               >
                 {opt.label}
               </li>
             ))}
           </ul>
+          {shown.length === 0 && (
+            <p role="status" className="px-4 py-3 text-muted text-[length:var(--fs-body)]">
+              No matches
+            </p>
+          )}
           </div>
         )}
       </div>
@@ -234,7 +311,11 @@ export function Select({
           {helperText}
         </span>
       )}
-      {error && <span className="text-[length:var(--fs-caption)] text-[var(--field-border-error)]">{error}</span>}
+      {error && (
+        <span id={errorId} role="alert" className="text-[length:var(--fs-caption)] text-[var(--field-border-error)]">
+          {error}
+        </span>
+      )}
     </div>
   );
 }

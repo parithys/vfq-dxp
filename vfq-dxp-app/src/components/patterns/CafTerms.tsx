@@ -4,43 +4,45 @@ import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
 import type { TncSection } from './cafTermsModel';
 
 /**
- * The complete Terms & Conditions, in their own bordered, scrollable panel directly above the
- * signature block, so the customer can read all of it before signing and it stays in view while
- * they sign. A fixed-height panel keeps the page usable however long the terms are: the panel
- * scrolls, the page does not grow.
+ * The complete Terms & Conditions, in their own bordered panel directly above the signature block, so the
+ * customer can read all of it before signing. By default the panel grows to its full content and the page
+ * scrolls; `scrollMode="container"` keeps it at a fixed height with its own scrollbar.
  */
 export function FullTerms({
-  termsUrl,
   enabled,
   signed,
-  scrollMode = 'container',
+  scrollMode = 'page',
+  journey = 'postpaid',
   children,
 }: {
+  /** Accepted for callers that still pass it; the panel no longer links out. */
   termsUrl?: string;
   enabled: boolean;
   signed?: boolean;
-  /** 'container' (default): the terms scroll inside a fixed-height panel. 'page': the panel grows to its full
-   * content and the page itself scrolls, so the signature block follows the last section with no inner scrollbar. */
+  /** 'page' (default): the panel grows to its full content and the page itself scrolls, so the signature block
+   * follows the last section with no inner scrollbar. 'container': the terms scroll inside a fixed-height panel. */
   scrollMode?: 'container' | 'page';
+  /** Which journey's terms to show: a section scoped to the other journey is left out. Postpaid by default. */
+  journey?: 'postpaid' | 'prepaid';
   children: ReactNode;
 }) {
   const [sections, setSections] = useState<TncSection[] | undefined>();
   useEffect(() => {
-    mockDataEngine.list<TncSection>('tnc-full-text').then(setSections);
-  }, []);
+    mockDataEngine.list<TncSection>('tnc-full-text').then((all) => setSections(all.filter((s) => !s.journey || s.journey === journey)));
+  }, [journey]);
   // Without the terms (not the customer-facing page, or none loaded) the form stands alone.
   if (!enabled || !sections || sections.length === 0) return <>{children}</>;
   // Once signed there is nothing left to read: show just the signed form (applicant, signed
   // badge and signature) not the whole scrolling document or its link.
   if (signed) {
     return (
-      <section aria-label="Signed application form" className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
+      <section aria-label="Signed application form" className="card ">
         <div className="px-4 py-3">{children}</div>
       </section>
     );
   }
   return (
-    <section aria-label="Full Terms and Conditions" className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
+    <section aria-label="Full Terms and Conditions" className="card ">
       <div className="flex items-center justify-between gap-3 border-b border-border-soft px-4 py-3">
         <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Terms &amp; Conditions</h3>
         <span className={`${SYNTHETIC_CLASS} text-[length:var(--fs-micro)] uppercase tracking-wide`}>Sample text - replace with approved wording</span>
@@ -60,13 +62,6 @@ export function FullTerms({
             scroll area, so the customer has to scroll through every section to reach it. */}
         <div className="border-t border-border-soft mt-2 pt-2">{children}</div>
       </div>
-      {termsUrl && (
-        <div className="border-t border-border-soft px-4 py-2">
-          <a href={termsUrl} target="_blank" rel="noreferrer" className="text-link underline text-[length:var(--fs-caption)]">
-            Open the full Terms &amp; Conditions on vodafone.qa
-          </a>
-        </div>
-      )}
     </section>
   );
 }

@@ -25,14 +25,14 @@ export function CreditCheckPanel({ collectionStatus, acknowledged, onAcknowledge
 
   if (result.pass) {
     return (
-      <div className="rounded-[var(--radius-card)] border border-success bg-[color-mix(in_oklab,var(--success),var(--bg)_88%)] p-3 text-[length:var(--fs-caption)] text-fg">
+      <div className="rounded-[var(--radius-card)] border border-success bg-tone-success p-3 text-[length:var(--fs-caption)] text-fg">
         <Badge variant="success">Credit check</Badge> <span className="ml-2">{result.message}</span>
       </div>
     );
   }
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_92%)] p-3 space-y-2">
+    <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-tone-warn-soft p-3 space-y-2">
       <div className="flex items-center gap-2">
         <Badge variant="warning">Unresolved policy conflict</Badge>
       </div>

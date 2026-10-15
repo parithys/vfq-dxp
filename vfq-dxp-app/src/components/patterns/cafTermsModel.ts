@@ -4,6 +4,8 @@ export interface TncSection {
   sectionId: string;
   title: string;
   body: string;
+  /** Set when the section applies to one journey only; absent means every journey. */
+  journey?: 'postpaid' | 'prepaid';
 }
 
 export interface TncBulletTemplate {

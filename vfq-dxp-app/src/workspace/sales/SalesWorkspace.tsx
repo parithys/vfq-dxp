@@ -50,13 +50,13 @@ export function SalesWorkspace() {
   return (
     <div>
       <div className="px-8 pt-8">
-        <h2 className="text-[length:var(--fs-h5)] font-semibold text-fg mb-1">Start a new customer acquisition</h2>
+        <h2 className="text-[length:var(--fs-h5)] font-bold text-fg mb-1">Start a new customer acquisition</h2>
         <p className="text-fg-2 text-[length:var(--fs-body)] mb-4">Select an acquisition type to begin a new journey.</p>
         <div className="flex flex-wrap gap-2 mb-2">
           {ACQUISITION_ACTIONS.map((action, index) => (
             <Button
               key={action.label}
-              variant={index === 0 ? 'primary-rect' : 'ghost-rect'}
+              variant={index === 0 ? 'primary' : 'secondary'}
               compact
               className={index === 0 ? '' : '!bg-bg'}
               onClick={() => startAcquisition(action.screenId)}

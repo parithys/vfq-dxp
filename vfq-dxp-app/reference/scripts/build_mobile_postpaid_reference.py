@@ -1,4 +1,4 @@
-"""Generate VFQ_DXP_Validation_Integration.xlsx.
+"""Generate Validation_Integration.xlsx.
 
 Regenerate with: python3 reference/scripts/build_mobile_postpaid_reference.py
 (run from anywhere - paths resolve relative to this script's location.)
@@ -33,7 +33,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
-OUT = Path(__file__).resolve().parents[1] / "outputs" / "VFQ_DXP_Validation_Integration.xlsx"
+OUT = Path(__file__).resolve().parents[1] / "outputs" / "Validation_Integration.xlsx"
 
 VF_RED = "E60000"
 HDR_BG = "313131"
@@ -98,7 +98,7 @@ def start_here(wb):
          "re-pointed on 2026-10-05 after the refactor (files split, moved and renamed) - but the prose was NOT re-reviewed, "
          "so rows marked below may describe behaviour that has since changed."),
         ("Generated or curated",
-         "CURATED, not parsed. Unlike VFQ_DXP_Persona_Feature_Applicability_Matrix_Reference.xlsx, this workbook "
+         "CURATED, not parsed. Unlike Persona_Feature_Applicability_Matrix_Reference.xlsx, this workbook "
          "does not re-derive itself from source. It is a transcription of a code review, so it goes stale the "
          "moment the journey changes. Re-review before trusting it after any edit to the journey."),
         ("Regenerate",
@@ -536,13 +536,13 @@ DATA_ACCESS = [
 ]
 
 ROLES = [
-    ("ROLE-01", "Retail Sales Agent", "VFQ12341", "Create",
+    ("ROLE-01", "Retail Sales", "VFQ12341", "Create",
      "Restriction recorded in personas.json:29: 'Smart Limit / Bill Limit editable only down to the Agent "
      "Minimum Value'. NOT enforced per-role in code - BillLimitEditor applies the same floor to everyone."),
-    ("ROLE-02", "Telesales Agent", "VFQ12342", "Create", ""),
-    ("ROLE-04", "Tablet / Field Sales Agent", "VFQ12344", "Create", ""),
-    ("ROLE-05", "Mass Market Agent", "VFQ12345", "Create", ""),
-    ("ROLE-12", "Premium Agent", "VFQ12352", "Create", ""),
+    ("ROLE-02", "Telesales", "VFQ12342", "Create", ""),
+    ("ROLE-04", "Field Sales", "VFQ12344", "Create", ""),
+    ("ROLE-05", "Mass Market", "VFQ12345", "Create", ""),
+    ("ROLE-12", "Premium", "VFQ12352", "Create", ""),
     ("Other 21 roles", "Not granted", "-", "-",
      "Blank means deliberately not granted, per the project's exhaustive grant model. Manager/Approver, "
      "Fulfilment, MNP, Billing and View Only roles cannot see this journey."),
@@ -751,6 +751,10 @@ def main():
           highlight=lambda r: GAP_BG if r[1] == "High" else None)
 
     wb.save(OUT)
+
+    from format_xlsx import format_file  # house format: header row, borders, Tenorite 14, no gridlines
+
+    format_file(OUT)
 
     # Guard: the project forbids the em dash, including in generated artefacts.
     bad = [

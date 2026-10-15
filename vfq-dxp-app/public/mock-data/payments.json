@@ -46,5 +46,18 @@
     "amountQar": 2500,
     "status": "Authorized",
     "capturedAt": "2026-08-20T14:25:00+03:00"
+  },
+  {
+    "_note": "Customer-Inventory overview details (2026-10-11)",
+    "paymentId": "PAY-8301",
+    "orderId": null,
+    "customerId": "CUST-3081",
+    "paymentMethod": "Credit Card",
+    "captureChannel": "MyVodafone App",
+    "receiptNumber": "RCPT-330301",
+    "chargeType": "Monthly Bill",
+    "amountQar": 1180.0,
+    "status": "Authorized",
+    "capturedAt": "2026-08-12T10:15:00+03:00"
   }
 ]

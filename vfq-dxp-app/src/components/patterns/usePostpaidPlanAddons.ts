@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { discountsForCustomer, type CustomerBenefit } from '../../engines/customerBenefitEngine';
 import { monthlyCharges } from '../../engines/postpaidPricing';
-import { closestPlans, SUPPORTING_ID_DISCOUNT_TYPES, PROOF_DOCUMENT_MAX_BYTES, formatDocSize, PLAN_GROUPS, planGroupOf } from './postpaidPlanModel';
+import { closestPlans, SUPPORTING_ID_DISCOUNT_TYPES, PROOF_DOCUMENT_MAX_BYTES, formatDocSize, PLAN_GROUPS, SPECIAL_DISCOUNT_TYPE, planGroupOf } from './postpaidPlanModel';
 import type { PostpaidPlan, Discount, AddonProduct, PlanGroupKey, TabKey } from './postpaidPlanModel';
 
 interface UsePostpaidPlanAddonsArgs {
@@ -16,6 +16,7 @@ interface UsePostpaidPlanAddonsArgs {
   discountSupportingId: string | undefined;
   onDiscountSupportingIdChange: (id: string) => void;
   customerBenefit?: 'mada' | 'b2b2c' | 'retired' | 'none';
+  specialDiscountType?: 'mada' | 'b2b2c' | 'retired';
   customerBenefits?: CustomerBenefit[];
   discountProofDocument: { fileName: string; sizeBytes: number } | undefined;
   onDiscountProofDocumentChange: (doc: { fileName: string; sizeBytes: number } | undefined) => void;
@@ -31,6 +32,7 @@ export function usePostpaidPlanAddons({
   discountSupportingId,
   onDiscountSupportingIdChange,
   customerBenefit,
+  specialDiscountType,
   customerBenefits,
   discountProofDocument,
   onDiscountProofDocumentChange,
@@ -74,8 +76,35 @@ export function usePostpaidPlanAddons({
   // the FULL catalogue, not the filtered one, so a query that empties the
   // active tab's matches doesn't also make its own tab disappear out from
   // under it. Each tab's CONTENT still reads the filtered list below.
-  const planGroupTabs = PLAN_GROUPS.filter((g) => plans.some((p) => planGroupOf(p) === g.key));
-  const groupPlans = (key: PlanGroupKey) => visiblePlans.filter((p) => planGroupOf(p) === key);
+  // The Special Discount selected on Customer Identification adds a third tab listing only the plans that discount applies to.
+  const special = specialDiscountType ? SPECIAL_DISCOUNT_TYPE[specialDiscountType] : undefined;
+  // planDiscounts holds only the SELECTED plan's discounts, so the tab reads the whole catalogue of this discount type.
+  const [specialDiscountRows, setSpecialDiscountRows] = useState<Discount[]>([]);
+  useEffect(() => {
+    if (!special) {
+      setSpecialDiscountRows([]);
+      return;
+    }
+    let cancelled = false;
+    void mockDataEngine.list<Discount>('addons-discounts').then((all) => {
+      if (!cancelled) setSpecialDiscountRows(all.filter((d) => d.category === 'Discount' && d.addonType === special.addonType));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [special]);
+  const specialPlanIds = useMemo(() => new Set(specialDiscountRows.map((d) => d.planId)), [specialDiscountRows]);
+  const hasSpecialTab = Boolean(special) && plans.some((p) => specialPlanIds.has(p.productId));
+  const planGroupTabs = [
+    ...PLAN_GROUPS.filter((g) => plans.some((p) => planGroupOf(p) === g.key)),
+    ...(hasSpecialTab && special ? [{ key: 'special' as PlanGroupKey, label: special.label }] : []),
+  ];
+  const groupPlans = (key: PlanGroupKey) =>
+    visiblePlans.filter((p) => (key === 'special' ? specialPlanIds.has(p.productId) : planGroupOf(p) === key));
+  // The selection was withdrawn while its tab was open: fall back to Offers.
+  useEffect(() => {
+    if (activeTab === 'special' && !hasSpecialTab) setActiveTab('specials');
+  }, [activeTab, hasSpecialTab]);
 
   useEffect(() => {
     if (defaultTabSet.current || plans.length === 0) return;
@@ -84,7 +113,9 @@ export function usePostpaidPlanAddons({
     if (firstNonEmpty) setActiveTab(firstNonEmpty.key);
   }, [plans]);
 
-  const suggestions = closestPlans(planSearch, plans);
+  // The search belongs to the tab being shown: its suggestions come from that tab's plans only, never the other tabs'.
+  const tabPlans = plans.filter((p) => (activeTab === 'special' ? specialPlanIds.has(p.productId) : planGroupOf(p) === activeTab));
+  const suggestions = closestPlans(planSearch, tabPlans);
 
   useEffect(() => {
     if (!searchOpen) return;

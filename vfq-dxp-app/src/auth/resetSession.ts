@@ -1,6 +1,6 @@
 /**
  * Ends the browser session's application state. Called on every sign-out
- * (manual, or the session-timeout path that calls signOut).
+ * (manual; the app has no idle timeout).
  *
  * Two kinds of state outlive a sign-out inside one page load, and both must go:
  *   1. Persisted stores - every zustand `persist` store writes under a `vfq-`
@@ -12,6 +12,10 @@
  *      reservations created during the session) and every zustand store's
  *      current value. Neither is reachable key by key, so the page is reloaded:
  *      the next login boots from the defaults in the code and the seed files.
+ *
+ * One thing outlives sign-out ON PURPOSE: the session journal of records created or changed this session (orders, drafts ...,
+ * mockDataEngine's `dxp-session-records` key - not a "vfq-" key, so it is not cleared here). It lets an order created as one
+ * role be approved after signing in as another. It ends with the browser tab.
  *
  * `location.replace('/')` rather than a reload: the user lands on the login
  * screen at the root and the signed-out URL is not kept in history.

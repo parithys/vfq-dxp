@@ -4,8 +4,6 @@
 @import "./components/primitives/tooltip.css";
 
 @theme inline {
-  --color-realtime: var(--realtime);
-  --color-drilldown: var(--drilldown);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-active: var(--accent-active);
@@ -34,8 +32,52 @@
   --color-charcoal-panel: var(--charcoal-panel);
   --color-light-neutral: var(--light-neutral);
   --color-grey-disabled: var(--grey-disabled);
+  --color-on-dark: var(--on-dark);
+  --color-on-dark-2: var(--on-dark-2);
+  --color-on-dark-3: var(--on-dark-3);
+  --color-on-dark-4: var(--on-dark-4);
+  --color-on-dark-fill-1: var(--on-dark-fill-1);
+  --color-on-dark-fill-2: var(--on-dark-fill-2);
+  --color-on-dark-fill-3: var(--on-dark-fill-3);
+  --color-on-dark-line-1: var(--on-dark-line-1);
+  --color-on-dark-line-2: var(--on-dark-line-2);
+  --color-on-dark-line-3: var(--on-dark-line-3);
+  --color-on-dark-danger-fill: var(--on-dark-danger-fill);
+  --color-on-dark-danger-line: var(--on-dark-danger-line);
+  --color-scrim: var(--scrim);
+  --color-paper: var(--paper);
+  --color-header-glass: var(--header-glass);
+  --color-surface-half: var(--surface-half);
+  --color-accent-border: var(--accent-border);
+  --color-tone-success: var(--tone-success-bg);
+  --color-tone-success-soft: var(--tone-success-bg-soft);
+  --color-tone-danger: var(--tone-danger-bg);
+  --color-tone-danger-soft: var(--tone-danger-bg-soft);
+  --color-tone-warn: var(--tone-warn-bg);
+  --color-tone-warn-soft: var(--tone-warn-bg-soft);
+  --color-tone-info: var(--tone-info-bg);
+  --color-tone-info-soft: var(--tone-info-bg-soft);
+  --color-tone-accent: var(--tone-accent-bg);
+  --color-tone-accent-soft: var(--tone-accent-bg-soft);
+  --color-tone-blue: var(--tone-blue-bg);
+  --color-tone-blue-soft: var(--tone-blue-bg-soft);
+  --color-tone-blue-hover: var(--tone-blue-bg-hover);
+  --color-tone-blue-border: var(--tone-blue-border);
+  --color-tone-success-border: var(--tone-success-border);
+  --color-tone-approval: var(--tone-approval-bg);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-solid: var(--danger-solid);
+  --color-danger-solid-hover: var(--danger-solid-hover);
+  --color-success-solid: var(--success-solid);
 
   --font-sans: var(--font-body);
+  --spacing: var(--space-unit);
+  --font-weight-light: var(--fw-light);
+  --font-weight-normal: var(--fw-regular);
+  --font-weight-medium: var(--fw-medium);
+  --font-weight-semibold: var(--fw-semibold);
+  --font-weight-bold: var(--fw-bold);
+  --font-weight-extrabold: var(--fw-extrabold);
 
   --radius-btn: var(--radius-button);
   --radius-card: var(--radius-card);
@@ -48,118 +90,6 @@
   --shadow-brand: var(--shadow-brand);
 }
 
-/* Dark theme - overrides the structural surface/text/border tokens only;
-   brand/status colors (accent, success, warn, danger) stay constant across
-   themes. Toggled via themeStore adding/removing `.dark` on <html>. */
-:root.dark {
-  /* Header and body follow the side navigation's scheme: every structural colour below is derived from the --nav-*
-     tokens (set further down) so the three regions stay one palette. Cards and the header sit one step above the
-     page, mixed from --nav-bg toward --nav-fg rather than a separate hex. */
-  --bg: color-mix(in oklab, var(--nav-bg), var(--nav-fg) 5%);
-  --surface: var(--nav-bg);
-  --surface-warm: color-mix(in oklab, var(--nav-bg), var(--accent) 12%);
-  /* --page-bg/--table-header-bg have no separate dark-mode design of their
-     own yet - fall back to --surface's existing dark value so they don't
-     resolve to nothing (transparent) when the theme toggles. */
-  --page-bg: var(--nav-bg);
-  --table-header-bg: var(--nav-bg);
-  --fg: var(--nav-fg);
-  --fg-2: color-mix(in oklab, var(--nav-fg), var(--nav-fg-muted) 40%);
-  --muted: var(--nav-fg-muted);
-  --border: color-mix(in oklab, var(--nav-bg), var(--nav-fg) 22%);
-  --border-soft: var(--nav-border);
-  /* Tokens introduced by the 2026-09-24 light-mode reference. That asset is
-     light-only, so each maps to an existing dark value rather than a new
-     shade: the pale fills it specifies (#fafafa, #fff8e1, #ffb3b3) would
-     all be near-white panels on a dark surface. Pill BORDERS keep their
-     light values on purpose - they sit on --bg, read fine against it in
-     both themes, and are the only thing distinguishing the four statuses
-     once the fill is transparent. */
-  --surface-subtle: color-mix(in oklab, var(--nav-bg), var(--nav-fg) 3%);
-  --muted-2: var(--muted);
-  /* The nav rail stays charcoal in dark mode - the reference is a
-     light-mode asset, and inverting it to white here would be inventing a
-     dark design rather than applying one. These reproduce the exact
-     white/X utilities the rail carried before it was tokenised, so dark
-     mode renders unchanged. The one exception is --nav-active-bg: red on
-     charcoal was too low-contrast for the active row, which is why the
-     rail marked it with a left border instead, so dark keeps the subtle
-     fill and the border does the work. */
-  /* Side navigation dark scheme (Collapsible Sidebar / Dark.svg): #0F172A rail, #A3A7AC idle icons and labels,
-     #F8FAFC on the active item, the active pill a #BBB7FF tint at 25%, and #E2E8F0 at 10% for dividers and borders. */
-  --nav-bg: #0f172a;
-  --nav-border: rgba(226,232,240,.1);
-  --nav-fg: #f8fafc;
-  --nav-fg-muted: #a3a7ac;
-  --nav-section: #a3a7ac;
-  --nav-hover-bg: rgba(187,183,255,.12);
-  --nav-active-bg: rgba(187,183,255,.25);
-  --nav-active-fg: #f8fafc;
-  --nav-group-bg: rgba(187,183,255,.12);
-  --accent-disabled: color-mix(in oklab, var(--accent), var(--bg) 55%);
-  --warn-bg: color-mix(in oklab, var(--warn), var(--bg) 82%);
-  --search-bg: var(--nav-hover-bg);
-  /* No separate dark-mode design of its own yet - light-mode #e0e0e0 is
-     --border's own light value, so reuse --border's dark value rather than
-     introducing a new dark shade. */
-  --table-border: var(--border);
-  --light-neutral: var(--border-soft);
-  --grey-form: #6b6e72;
-  --black-80: rgba(0,0,0,.6);
-
-  /* Field chrome (see tokens.css) has no dark-mode design of its own yet -
-     reuse the existing dark structural/status tokens so dark mode keeps
-     today's appearance unchanged by the light-mode field reference. */
-  --field-border: var(--border);
-  --field-border-disabled: var(--border-soft);
-  --field-bg-disabled: var(--border-soft);
-  --field-border-error: var(--danger);
-  --field-border-filled: var(--fg);
-  --field-divider: var(--border-soft);
-  --color-field-border-focus: var(--fg);
-  --color-field-text-filled: var(--fg);
-  --field-hover-border: var(--fg);
-  --field-focus-border: var(--fg);
-  --field-focus-bg: var(--surface);
-  --field-focus-ring: inset 0 0 0 1px var(--fg);
-  --field-icon: var(--muted);
-  --field-icon-active: var(--fg);
-  --field-label: var(--fg-2);
-  --field-label-disabled: var(--muted);
-  --field-selected: var(--accent);
-  /* Choice cards split off from --field-selected in light mode (2026-09-24);
-     dark mode was already red for both, so these keep it that way. The fill
-     stays --surface-warm (#241a1a here) rather than the light mode's
-     near-white #fef9f9, which would be a white card on a dark surface. */
-  --field-card-selected: #ff4d4d;
-  --accent-secondary: #ff4d4d;
-  --link: #ff6b6b;
-  --highlight-bg: var(--surface-warm);
-  --field-card-selected-bg: var(--highlight-bg);
-  --field-card-hover-bg: var(--surface-warm);
-  --field-card-hover-border: #ff9a9a;
-  --field-card-border: var(--border);
-  /* Checkboxes were already red here before the light-mode change, since dark
-     mode never adopted the #c09696 accent - this keeps that, and the white
-     tick reads on --accent in both themes. */
-  --field-checkbox-selected: var(--accent);
-  --field-radio-selected: var(--accent);
-  --shadow-selected-ring: inset 0 0 0 1px var(--field-card-selected);
-
-  /* Status colors and elevation/shadow tokens were tuned against the light
-     surfaces above and read as too saturated/low-contrast on the dark ones -
-     brightened slightly for legibility; elevation shadows reduced in opacity
-     since a dark backdrop needs less shadow to read as "raised". */
-  --danger: #f0554a;
-  --success: #3ecb6e;
-  --warn: #ffc94d;
-  --warn-text: #ffc94d;
-  --elev-raised: 0 1px 2px rgba(0,0,0,.3), 0 24px 60px -24px rgba(0,0,0,.55);
-  --elev-ring: 0 0 0 1px var(--border);
-  --focus-ring: 0 0 0 4px rgba(255,92,92,.3);
-  /* No coloured CTA glow anywhere in the app. */
-  --shadow-brand: none;
-}
 
 /* Cursor affordance baseline (UI cursor remediation). Tailwind v4 removed the
    v3 preflight rule that gave buttons `cursor: pointer` - every button in this
@@ -204,7 +134,7 @@ body {
   font-family: var(--font-body);
   font-size: var(--fs-body);
   color: var(--fg);
-  background: var(--surface);
+  background: var(--page-bg);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -220,15 +150,18 @@ body {
    regardless of specificity, which happened to go unnoticed only because
    every override used to resolve to the same red. */
 @layer base {
+  /* A real outline, not a box-shadow: outlines survive forced-colours (Windows High Contrast) and are not clipped by
+     overflow. 2px at 4.7:1 (light) / --fg (dark) clears the 3:1 non-text contrast requirement (SC 1.4.11). */
   :focus-visible {
-    outline: none;
-    box-shadow: var(--focus-ring);
+    outline: 2px solid var(--focus-outline);
+    outline-offset: 2px;
   }
   /* No focus box around text-entry controls (2026-10-05): the field's own border / fill change already marks focus,
      and a second ring inside it read as a stray rectangle. Buttons, links and tabs keep their keyboard ring. */
   input:focus-visible,
   textarea:focus-visible,
   select:focus-visible {
+    outline: none;
     box-shadow: none;
   }
 }
@@ -238,7 +171,7 @@ body {
    Tailwind's appearance-none and are left alone.) Unlayered on purpose, so it wins over a field's own px-* utility. */
 select:not([multiple]):not([size]):not(.appearance-none) {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23757575' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-image: var(--icon-chevron-down);
   background-repeat: no-repeat;
   background-position: right 0.875rem center;
   background-size: 1rem 1rem;
@@ -251,12 +184,10 @@ select:not([multiple]):not([size]):not(.appearance-none) {
   color: inherit;
 }
 
-/* Demo-only content (see src/data/synthetic/syntheticMarker.ts): violet, and hidden everywhere at
-   once when SHOW_DEMO_CONTENT is false. `!important` so it wins over the
-   element's own colour utilities. */
+/* Demo-only content (see src/data/synthetic/syntheticMarker.ts): drawn in the surrounding text colour (no longer
+   violet, 2026-10-08), and hidden everywhere at once when SHOW_DEMO_CONTENT is false. The class stays as the marker
+   the hide switch targets. */
 .demo-only {
-  color: var(--info) !important;
-  fill: var(--info) !important;
 }
 .hide-demo .demo-only {
   display: none !important;
@@ -285,47 +216,19 @@ select:not([multiple]):not([size]):not(.appearance-none) {
     overflow: visible !important;
   }
   body {
-    background: #fff;
+    background: var(--paper);
   }
 }
 
-/* One height for fields that share a row (search box next to a dropdown): set once here, never per screen. */
-:root {
-  --field-height: 3rem;
-}
-
-/* "How can we help today?" band (Customer 360): the pale-blue banner gradient, light to lighter toward the right. */
-:root {
-  --help-band-from: #B4D5E8;
-  --help-band-to: #D1E8F7;
-}
-:root.dark {
-  --help-band-from: color-mix(in oklab, var(--signal-blue), var(--bg) 70%);
-  --help-band-to: color-mix(in oklab, var(--signal-blue), var(--bg) 85%);
-}
-
-/* Linked-user segment badges (Business 360 and the Linked business card). Solid tints with dark text, not colour
-   alone: each badge also carries its label. Contrast is >= 7:1 in both themes. */
-:root {
-  --segment-ebu-bg: #E3ECFF;
-  --segment-ebu-fg: #12307A;
-  --segment-cbu-bg: #FFE3F1;
-  --segment-cbu-fg: #7A0045;
-}
-:root.dark {
-  --segment-ebu-bg: #1B2A55;
-  --segment-ebu-fg: #BCD0FF;
-  --segment-cbu-bg: #4D1537;
-  --segment-cbu-fg: #FFC2E0;
-}
+/* Linked-user segment badges (Business 360 and the Linked business card): colours are the --segment-* tokens. */
 .badge-segment-ebu,
 .badge-segment-cbu {
   display: inline-flex;
   align-items: center;
   border-radius: var(--radius-pill);
-  padding: 2px 10px;
+  padding: calc(var(--space-unit) * 0.5) calc(var(--space-unit) * 2.5);
   font-size: var(--fs-tag);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   white-space: nowrap;
 }
 .badge-segment-ebu {
@@ -337,25 +240,100 @@ select:not([multiple]):not([size]):not(.appearance-none) {
   color: var(--segment-cbu-fg);
 }
 
-/* Customer 360 field-type colours (src/workspace/customer360/requirementCoverage.ts), classified per persona from
-   'Customer 360.xlsx': Real Time = pink, Drill Down / Select = blue. Both clear WCAG AA (4.5:1) for body text on the
-   page and card surfaces in each theme: light 5.3:1+ / 6.2:1+, dark 5.7:1+ / 6.5:1+. */
-:root {
-  --realtime: #C70075;
-  --drilldown: #1D4ED8;
+/* Breadcrumb "Back" chip (navigation/Breadcrumbs): the page-tint fill (--icon-tile-bg) with the standard grey border,
+   bold label and --radius-button corners; goes white on hover. Not the Button `secondary` variant, which is white at rest. */
+.breadcrumb-back {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: calc(var(--space-unit) * 1);
+  margin-left: calc(var(--space-unit) * -1);
+  padding: calc(var(--space-unit) * 1) calc(var(--space-unit) * 2.5) calc(var(--space-unit) * 1) calc(var(--space-unit) * 2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-button);
+  background: var(--icon-tile-bg);
+  color: var(--fg);
+  font-weight: var(--fw-bold);
+  transition: color var(--motion-fast), background-color var(--motion-fast), border-color var(--motion-fast);
 }
-:root.dark {
-  --realtime: #FF5CB0;
-  --drilldown: #6EA8FF;
+.breadcrumb-back:hover {
+  background: var(--bg);
 }
-.fld-realtime {
-  color: var(--realtime) !important;
+
+/* Secondary button surface (Button variant "secondary", and the link-styled buttons beside it): colour only - the page-tint
+   fill (--icon-tile-bg), the standard grey border and a bold label; white on hover. Geometry (padding, radius, size) stays
+   with the Button / call site. Same look as .breadcrumb-back above, kept as its own class so the two can be restyled
+   independently. In @layer components so a call site's own utility (e.g. a custom bg) still overrides it. */
+@layer components {
+  /* The card shell, defined once: radius, 1px card border and the page-card fill. Spacing and any one-off colour stay on the
+     element (utilities outrank this layer). .card-surface swaps the fill for the quieter --surface. */
+  .card {
+    border-radius: var(--radius-card);
+    border: 1px solid var(--field-card-border);
+    background-color: var(--bg);
+  }
+  .card-surface {
+    background-color: var(--surface);
+  }
+  /* The fill follows what the button sits on: the page tint on a white surface (card, dialog, header band), white on the
+     grey page itself - a page-tint button there would disappear into the background. The surface sets the pair below. */
+  #main-content {
+    --btn-secondary-fill: var(--bg);
+    --btn-secondary-hover: var(--icon-tile-bg);
+  }
+  .card,
+  header,
+  [role='dialog'] {
+    --btn-secondary-fill: var(--icon-tile-bg);
+    --btn-secondary-hover: var(--bg);
+  }
+  .btn-secondary {
+    border-color: var(--border);
+    background: var(--btn-secondary-fill);
+    color: var(--fg);
+    /* !important: Button's base `font-medium` utility would otherwise win over this layered class. */
+    font-weight: var(--fw-bold) !important;
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--btn-secondary-hover);
+  }
 }
-.fld-drilldown {
-  color: var(--drilldown) !important;
+
+
+/* Focused text fields everywhere: the focus border and the focus fill (--field-focus-bg), including plain inputs, selects
+   and textareas that are not built on the Input / Select primitives. Unlayered so it wins over a field's own bg utility;
+   fields that sit on a dark surface or are deliberately see-through (bg-transparent, bg-white/..) are left alone. */
+input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']):not(.bg-transparent):not([class*='bg-on-dark']):focus-visible,
+textarea:not(.bg-transparent):not([class*='bg-on-dark']):focus-visible,
+select:not(.bg-transparent):not([class*='bg-on-dark']):focus-visible {
+  background-color: var(--field-focus-bg);
+  border-color: var(--field-focus-border);
 }
-/* Table header labels stay one colour; the overlay marks fields, not columns. */
-thead .fld-realtime,
-thead .fld-drilldown {
-  color: inherit !important;
+
+/* Red text must clear 4.5:1 on the tinted page background: the fill red (#e60000) is 4.4:1 there, so text uses --accent-text.
+   Fills, borders and gradients keep --accent. */
+.text-accent {
+  color: var(--accent-text);
+}
+
+/* Reduced motion: collapse every animation and transition app-wide (Spinner, drawers, sidebar, carousel, smooth scroll).
+   State is still shown - it just changes instantly. The tooltip pack has its own matching rule. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Forced-colours: utilities that remove the outline and paint a box-shadow ring (focus:outline-none + shadow) show nothing in
+   Windows High Contrast, because box-shadow is not drawn. Restore a system-coloured outline for every focused element. */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid Highlight !important;
+    outline-offset: 2px;
+  }
 }

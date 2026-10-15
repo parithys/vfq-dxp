@@ -1,4 +1,6 @@
+import { isSlaStopped } from '../lib/statusTone';
 import { PREPAID_CAPPED_ID_TYPES } from '../data/idTypes';
+import { simCardCharge } from '../data/prepaidSimCharge';
 
 
 // Rule Engine per frontend-architecture.md §5. 346 business rules are catalogued
@@ -50,7 +52,7 @@ const ruleImplementations: Record<string, RuleImplementation> = {
       ? { pass: true }
       : {
           pass: false,
-          message: `Entries above the Agent Minimum value (QR ${agentMinimum}) allow the journey to proceed - QR ${limitAmount} is below it.`,
+          message: `Entries above the Agent Minimum value (QAR ${agentMinimum}) allow the journey to proceed - QAR ${limitAmount} is below it.`,
         };
   },
 
@@ -126,7 +128,7 @@ const ruleImplementations: Record<string, RuleImplementation> = {
     const fee = remainingLockInMonths * 80;
     return {
       pass: false,
-      message: `Disconnecting before 12-month lock-in completes: remainder of the 3-month minimum service period (${remainingOfMinimum} mo) plus QR 80 x ${remainingLockInMonths} remaining months = QR ${fee} lock-in charge.`,
+      message: `Disconnecting before 12-month lock-in completes: remainder of the 3-month minimum service period (${remainingOfMinimum} mo) plus QAR 80 x ${remainingLockInMonths} remaining months = QAR ${fee} lock-in charge.`,
     };
   },
 
@@ -240,30 +242,16 @@ const ruleImplementations: Record<string, RuleImplementation> = {
   // amount is less than the below mentioned limit then System would collect
   // the SIM Card charges - QID: Recharge 10 QR, PASSPORT: Recharge 40 QR."
   // Marked Agreed in the source (unlike BR-003, no Open-status caveat here).
-  // The BRSD never names the SIM card charge AMOUNT itself anywhere (no
-  // P-parameter covers it) - this rule only decides whether a charge
-  // applies; the actual QAR figure is a placeholder set at the call site
-  // (NewPrepaidWizard.tsx), clearly flagged there as pending VFQ
-  // confirmation rather than sourced from the BRSD. Open Items OI-01/OI-03
+  // The thresholds and the charge amounts now live in data/prepaidSimCharge.ts: the V0.1 BRSD names the charge
+  // amounts (QID 10, Passport 40); the recharge limit they apply below is a placeholder pending VFQ. Open Items OI-01/OI-03
   // (both Closed) separately note that in practice prepaid is expected to
   // always be sold bundled with a plan from DXP, so this charge is expected
   // to rarely apply - implemented regardless since BR-013 remains a
   // Must-priority row in the requirements register.
   'BR-348': (ctx) => {
     const { idType, rechargeAmountQar } = ctx as { idType?: string; rechargeAmountQar: number };
-    const threshold = idType === 'Passport' ? 40 : idType === 'QID' ? 10 : undefined;
-    if (threshold === undefined) {
-      return {
-        pass: true,
-        message: `A recharge threshold is defined only for QID/Passport - no SIM card charge applies for ID type "${idType ?? 'unknown'}".`,
-      };
-    }
-    return rechargeAmountQar >= threshold
-      ? { pass: true, message: `Recharge of QR ${rechargeAmountQar} meets the ${idType} threshold of QR ${threshold} - no SIM card charge.` }
-      : {
-          pass: false,
-          message: `Recharge of QR ${rechargeAmountQar} is below the ${idType} threshold of QR ${threshold} - a SIM card charge applies.`,
-        };
+    const { applies, message } = simCardCharge(idType, rechargeAmountQar);
+    return { pass: !applies, message };
   },
 
   // Trouble Ticket SLA breach -> RAG + auto-escalation - the Trouble Ticket
@@ -282,7 +270,7 @@ const ruleImplementations: Record<string, RuleImplementation> = {
     if (!slaDueAt) return { pass: true, message: 'No SLA target set on this ticket.' };
     const now = Date.now();
     const due = new Date(slaDueAt).getTime();
-    const terminal = status === 'Closed' || status === 'Cancelled';
+    const terminal = isSlaStopped(status);
     if (terminal) return { pass: true, message: 'Ticket is in a terminal status - SLA clock stopped.' };
     if (now >= due) {
       return { pass: false, message: 'SLA target breached - RAG Red (P-18). Ticket auto-escalates.' };
@@ -295,13 +283,13 @@ const ruleImplementations: Record<string, RuleImplementation> = {
   },
 
   // HRN (High-Risk Nationality) advance payment (BR-187/BR-194/BR-252, all
-  // independently evidenced at QR 100): amount is driven by nationality/sales
+  // independently evidenced at QAR 100): amount is driven by nationality/sales
   // channel, explicitly NOT by plan value (BR-112) - so this never reads plan
   // context, only the HRN flag itself.
   'BR-187': (ctx) => {
     const { hrnFlag } = ctx as { hrnFlag: boolean };
     return hrnFlag
-      ? { pass: true, message: 'HRN customer - QR 100 advance payment required at checkout.' }
+      ? { pass: true, message: 'HRN customer - QAR 100 advance payment required at checkout.' }
       : { pass: true };
   },
 
@@ -316,7 +304,7 @@ const ruleImplementations: Record<string, RuleImplementation> = {
   'BR-076': (ctx) => {
     const { hrnFlag } = ctx as { hrnFlag: boolean };
     const amount = hrnFlag ? 50 : 1000;
-    return { pass: true, message: `Default credit limit: QR ${amount} on a new account.` };
+    return { pass: true, message: `Default credit limit: QAR ${amount} on a new account.` };
   },
 
   // Unsubmitted ticket never routes to a queue (BR-068) - gates queue

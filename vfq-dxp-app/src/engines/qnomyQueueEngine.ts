@@ -53,8 +53,9 @@ export const JOURNEY_PURPOSE_LABELS: Record<string, string> = {
 // quirk. The caller looks the path up via getAllRoutes().
 //
 // ONLY J011 IS MAPPED, deliberately. Its label is literally the title of a
-// built, registered journey ('mob-new-postpaid' -> SCR-037 in
-// journeyCatalogue.ts), so the destination is evidenced rather than chosen.
+// built, registered journey (SCR-037, the postpaid wizard; no longer listed as
+// its own card in journeyCatalogue.ts), so the destination is evidenced rather
+// than chosen.
 // J020 "Care & Complaint" and J030 "Billing & Payment" name QUEUES, not
 // journeys - there is no one screen either obviously means, and picking one
 // would send an agent somewhere plausible but wrong. A purpose with no entry

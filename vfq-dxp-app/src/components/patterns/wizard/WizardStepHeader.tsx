@@ -26,23 +26,15 @@ export function WizardStepHeader({
 }) {
   const showCustomerView = allowCustomerView && !currentStep?.hideCustomerView;
   const action = currentStep?.headerAction && values && setValue ? currentStep.headerAction({ values, setValue }) : null;
-  // Title left, Customer view right and vertically centred with it; the button wraps below the title when the row is too narrow.
+  // Title left; Customer view floats at the right (see below) and the title row leaves room for it.
   return (
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mb-4">
-          <div>
-            <h2
-              ref={stepHeadingRef}
-              tabIndex={-1}
-              className="text-[length:var(--fs-h4)] font-bold text-fg focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
-            >
-              {currentStep?.heading ?? currentStep?.label}
-            </h2>
-            {currentStep?.subheading && (
-              <p className="text-fg-2 text-[length:var(--fs-body)] mt-1">{currentStep.subheading}</p>
-            )}
-          </div>
-          {(showCustomerView || action) && (
-            <div className="flex items-center gap-3">
+    <>
+      {/* Floats: a zero-height sticky strip at the top of the step panel, so Customer view (and the step's own header action)
+          stay in reach however far the agent scrolls. It sits at the title row when the panel is at the top, inset from the top by the same 24px as from the right
+          (items-start: the button hangs from the strip instead of being centred on its zero height). */}
+      {(showCustomerView || action) && (
+        <div className="pointer-events-none sticky top-6 z-[var(--z-raised)] flex h-0 items-start justify-end">
+          <div className="pointer-events-auto flex items-center gap-3">
               {action}
               {/* Says which content the customer can see; the container's outline says where it ends. */}
               {showCustomerView && viewOpen && (
@@ -56,11 +48,17 @@ export function WizardStepHeader({
                 content={viewOpen ? 'The customer can see this section. Click to stop sharing.' : 'Show this section to the customer'}
                 placement="bottom"
               >
-                <Button variant={viewOpen ? 'primary-rect' : 'secondary-rect'} compact onClick={toggleCustomerView} aria-pressed={viewOpen}>
+                <Button
+                  variant={viewOpen ? 'primary' : 'secondary'}
+                  compact
+                  onClick={toggleCustomerView}
+                  aria-pressed={viewOpen}
+                  className={viewOpen ? '' : '!border-transparent !shadow-none !bg-[var(--customer-view-bg)] !text-[var(--customer-view-fg)] enabled:hover:!bg-[var(--customer-view-bg-hover)]'}
+                >
                   {viewOpen && (
                     <span aria-hidden="true" className="relative flex h-2 w-2">
-                      <span className="absolute inline-flex h-full w-full rounded-full bg-white opacity-75 motion-safe:animate-ping" />
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+                      <span className="absolute inline-flex h-full w-full rounded-[var(--radius-pill)] bg-accent-on opacity-75 motion-safe:animate-ping" />
+                      <span className="relative inline-flex h-2 w-2 rounded-[var(--radius-pill)] bg-accent-on" />
                     </span>
                   )}
                   <Icon path={EYE_ICON} className="w-4 h-4" />
@@ -69,7 +67,25 @@ export function WizardStepHeader({
               </Tooltip>
               )}
             </div>
-          )}
         </div>
+      )}
+        <div className={`flex min-h-[39px] flex-wrap items-center justify-between gap-x-4 gap-y-2 mb-4 ${showCustomerView || action ? 'sm:pr-48' : ''}`}>
+          <div>
+            {currentStep?.eyebrow && (
+              <p className="text-[var(--tint-teal-fg)] text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide mb-1">{currentStep.eyebrow}</p>
+            )}
+            <h2
+              ref={stepHeadingRef}
+              tabIndex={-1}
+              className="text-[length:var(--fs-h4)] font-bold text-fg focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+            >
+              {currentStep?.heading ?? currentStep?.label}
+            </h2>
+            {currentStep?.subheading && (
+              <p className="text-fg-2 text-[length:var(--fs-body)] mt-1">{currentStep.subheading}</p>
+            )}
+          </div>
+        </div>
+    </>
   );
 }

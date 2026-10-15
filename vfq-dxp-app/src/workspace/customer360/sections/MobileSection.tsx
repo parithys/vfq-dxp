@@ -4,7 +4,7 @@ import { ServiceList } from '../ServiceList';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import { buildAssetsFieldResolver } from './assetsResolvers';
-import { existingCustomerPath } from '../../../modules/new-connection/existingCustomer';
+import { existingCustomerPath } from '../../../navigation/journeyPaths';
 
 // Product taxonomy per the redesign brief. Only MNP/FNP Porting and New
 // Connection map to screens that actually exist in the 213-screen catalogue

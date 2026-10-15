@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Tooltip } from './Tooltip';
+import { CloseButton } from './CloseButton';
+import { useDialogBehaviour } from './useDialogBehaviour';
 
 interface DrawerProps {
   open: boolean;
@@ -10,8 +11,6 @@ interface DrawerProps {
   footer?: ReactNode;
   /** Replaces the default title bar entirely (the caller then supplies its own close control). `title` is still the dialog's accessible name. */
   header?: ReactNode;
-  /** Replaces the default width (40vw, min 320px). */
-  widthClassName?: string;
   /** Replaces the default body padding. */
   bodyClassName?: string;
 }
@@ -19,15 +18,14 @@ interface DrawerProps {
 // Side drawer for everything that isn't a short confirmation message (see
 // Modal.tsx, which is reserved for those) - forms, signature capture, and
 // multi-step flows read as more seamless sliding in from the edge than
-// interrupting the whole screen with a centered dialog. Width is 40% of the
-// viewport (with a floor so it doesn't get unusably narrow on small
-// screens) rather than a fixed size tier, so every drawer gets the same
-// extra breathing room for content.
+// interrupting the whole screen with a centered dialog. Width is always 50% of
+// the viewport (with a floor so it doesn't get unusably narrow on small
+// screens) - not configurable, so every drawer looks the same.
 // Matches the transition-duration below (--motion-base) so unmount is
 // deferred exactly as long as the slide-out animation takes to finish.
 const EXIT_DURATION_MS = 220;
 
-export function Drawer({ open, onClose, title, children, footer, header, widthClassName = 'w-[40vw] min-w-[320px]', bodyClassName = 'px-6 py-6' }: DrawerProps) {
+export function Drawer({ open, onClose, title, children, footer, header, bodyClassName = 'px-6 py-6' }: DrawerProps) {
   // Mirrors Sidebar.tsx's mobile-drawer technique: mount first, then flip the
   // transform on the next tick so the slide-in transition actually plays
   // instead of the panel just appearing already in place. `mounted` stays
@@ -47,14 +45,9 @@ export function Drawer({ open, onClose, title, children, footer, header, widthCl
     return () => clearTimeout(timeout);
   }, [open]);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [open, onClose]);
+  // Escape (top-most layer only), focus moved in / trapped / restored - see useDialogBehaviour.
+  const panelRef = useRef<HTMLDivElement>(null);
+  useDialogBehaviour(open && mounted, onClose, panelRef);
 
   if (!mounted) return null;
   return (
@@ -62,9 +55,10 @@ export function Drawer({ open, onClose, title, children, footer, header, widthCl
     // close button or Escape do (see the keydown handler above). Prevents
     // losing in-progress form input from an accidental click outside the
     // panel.
-    <div className="fixed inset-0 z-50 bg-[var(--black-80)]">
+    <div className="fixed inset-0 z-[var(--z-overlay)] bg-[var(--black-80)]">
       <div
-        className={`fixed right-0 inset-y-0 z-50 ${widthClassName} max-w-full flex flex-col bg-bg border-l border-border-soft shadow-raised transform transition-transform duration-[var(--motion-base)] ease-[var(--ease-standard)] ${
+        ref={panelRef}
+        className={`fixed right-0 inset-y-0 z-[var(--z-overlay)] w-[50vw] min-w-[420px] max-w-full flex flex-col bg-bg border-l border-border-soft shadow-raised transform transition-transform duration-[var(--motion-base)] ease-[var(--ease-standard)] ${
           entered ? 'translate-x-0' : 'translate-x-full'
         }`}
         role="dialog"
@@ -73,12 +67,8 @@ export function Drawer({ open, onClose, title, children, footer, header, widthCl
       >
         {header ?? (
           <div className="flex items-center justify-between px-6 py-4 border-b border-border-soft shrink-0">
-            <h2 className="text-[length:var(--fs-h5)] font-medium text-fg">{title}</h2>
-            <Tooltip content="Close" placement="left">
-              <button onClick={onClose} aria-label="Close" className="text-muted hover:text-fg text-xl leading-none">
-                ×
-              </button>
-            </Tooltip>
+            <h2 className="text-[length:var(--fs-h5)] font-bold text-fg">{title}</h2>
+            <CloseButton onClick={onClose} className="-mr-2" />
           </div>
         )}
         <div className={`flex-1 overflow-y-auto bg-[var(--surface)] ${bodyClassName}`}>{children}</div>

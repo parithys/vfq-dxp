@@ -33,7 +33,7 @@ export function HeaderContextChips() {
   const showCatalogSync = approach === 'Product-First';
   // Only a role whose dashboard figures are actually region-scoped gets the
   // chip - the same `agent-oversight` test the dashboard uses. Keying it on
-  // approach alone showed "REGION Doha Central" to a Retail Sales Agent whose
+  // approach alone showed "REGION Doha Central" to a Retail Sales whose
   // metrics were national, so the chip claimed a scope nothing applied.
   const showRegion = approach === 'Hybrid' && (persona?.capabilities.includes('agent-oversight') ?? false);
 
@@ -72,7 +72,7 @@ export function HeaderContextChips() {
           {/* Publishing a catalogue change isn't built, so this is a link to
               where that work lives rather than a button that appears to act. */}
           <Tooltip content="Catalogue publishing isn't built yet - opens the change queue" placement="bottom">
-            <Button variant="primary-rect" compact onClick={() => { window.location.href = '/mobile'; }}>
+            <Button variant="primary" compact onClick={() => { window.location.href = '/mobile'; }}>
               Publish
             </Button>
           </Tooltip>
@@ -86,7 +86,7 @@ export function HeaderContextChips() {
               <span className="text-fg font-semibold text-[length:var(--fs-body)]">{regionLabel}</span>
             </div>
           </Tooltip>
-          <Button variant="primary-rect" compact onClick={cycleRegion}>
+          <Button variant="primary" compact onClick={cycleRegion}>
             Switch
           </Button>
         </>

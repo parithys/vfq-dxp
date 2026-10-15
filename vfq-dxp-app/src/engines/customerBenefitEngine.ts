@@ -48,3 +48,18 @@ export function discountsForCustomer<T extends { addonType: string }>(discounts:
   if (accepted && KNOWN.has(accepted)) allowed.add(BENEFIT_DISCOUNT_TYPE[accepted as CustomerBenefit]);
   return discounts.filter((d) => !DISCOUNT_TYPES.has(d.addonType) || allowed.has(d.addonType));
 }
+
+/**
+ * The segment label an agent sees on a customer: Consumer, or Consumer · B2B2C / Retired / MADA when the customer holds
+ * that benefit (an employer-reimbursed line first, then Retired, then MADA), or Business for a business account.
+ * `reimbursed` is whether the customer's line is paid by their employer and reimbursed to them (billing responsibility USER).
+ */
+export function segmentLabelFor(c: BenefitSource & { reimbursed?: boolean; business?: boolean }): string {
+  if (c.business) return 'Business';
+  if (c.reimbursed) return 'Consumer · B2B2C';
+  const own = benefitsFor(c);
+  if (own.includes('b2b2c')) return 'Consumer · B2B2C';
+  if (own.includes('retired')) return 'Consumer · Retired';
+  if (own.includes('mada')) return 'Consumer · MADA';
+  return 'Consumer';
+}

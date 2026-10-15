@@ -1,6 +1,6 @@
 ## Role master workbook — MUST be updated with every new feature or role
 
-`reference/outputs/VFQ_DXP_Persona_Feature_Applicability_Matrix_Reference.xlsx` is the
+`reference/outputs/Persona_Feature_Applicability_Matrix_Reference.xlsx` is the
 **single source of truth** for the 26 operational roles: Staff IDs, the demo
 password, persona groups, business units, approach classification, capability
 (action) gates, which implemented feature each role may reach, and which
@@ -46,7 +46,7 @@ Rules the script enforces — do not work around them:
   feature key or permission level; a catalogue entry references a screen absent
   from `routes.json`; a Staff ID or role id is duplicated; a role binds an
   identity absent from `users-agents.json`; or the navigation source no longer
-  parses to the expected shape (4 approaches, 20 manifest entries, 5 categories
+  parses to the expected shape (4 approaches, 19 manifest entries, 4 categories
   per product line).
 - It **also aborts on app wiring that is broken rather than merely
   undocumented**, because a generated workbook would otherwise report broken
@@ -62,12 +62,12 @@ Rules the script enforces — do not work around them:
 
 Superseded persona records (historical, **not** authoritative):
 `reference/docs/VFQ_DXP_Personas_Reference.xlsx` → "Personas" (the 66-persona
-model), and `reference/outputs/VFQ_DXP_Test_Data_Reference.xlsx` → "Login
+model), and `reference/outputs/Test_Data_Reference.xlsx` → "Login
 Credentials" / "Persona (Original)" / "Persona by Approach". The 66-persona
 model, its RBAC evidence and the two columns unique to that workbook are
 archived under `reference/blueprint/legacy/`.
 
-⚠️ Those three sheets in `VFQ_DXP_Test_Data_Reference.xlsx` — "Persona
+⚠️ Those three sheets in `Test_Data_Reference.xlsx` — "Persona
 (Original)", "Persona by Approach" and "ID Lookup (MOI Fetch)" — are **not
 produced by `scripts/build_test_data_reference.py`**. The workbook on disk has
 19 sheets; a regeneration writes 16 and silently drops those three. So despite
@@ -134,3 +134,50 @@ Whenever you add or change customers (`public/mock-data/customers.json`,
 2. Regenerate the workbook: `python3 reference/scripts/build_customer_inventory.py`
 3. Check they agree: `python3 reference/scripts/verify_customer_inventory_sync.py`
    (exits 1 and lists each difference; must print "In sync.")
+
+## Capability Library - change a shared capability once
+
+Every reusable capability (Customer Identification, Number Selection, Plan Selection, Payment, ...) has ONE implementation
+under `src/capabilities/<Name>/`, listed in `src/capabilities/registry.json`. Journeys import from the barrel
+(`src/capabilities/index.ts`), never a capability's parts. To change one, edit it there (or run the `update-capability`
+skill) so every journey picks it up; then run `python3 reference/scripts/build_reusable_capabilities_inventory.py`,
+which regenerates `consumers.generated.json` and the inventory workbook and must report 0 bypass imports. See
+`src/capabilities/README.md`.
+
+## Build-time settings
+
+`.env.example` documents the build flags. `VITE_SHOW_DEMO=false` hides demo-only UI (scanner simulators, specimen cards)
+for a production build; it is shown by default.
+
+## Tests
+
+`npm test` runs the automated suite (`tests/*.test.mjs`, 39 tests, about 5 seconds, no extra dependencies - the npm registry
+is not reachable from the build sandbox, so it uses `node:test`, Vite's own SSR loader and `react-dom/server`).
+`tests/harness.mjs` loads the app's TypeScript through Vite with `fetch` and storage stubbed to read `public/`.
+
+- `journeys.test.mjs`: sign-in, role navigation, customer search and Customer 360, identity validation, eligibility (age,
+  blacklist, ID expiry), postpaid pricing and first bill, business rules, queue logic, RBAC grants, and the route catalogue.
+- `ui.test.mjs`: Button / tabs / pager / field accessibility markup, and source guards (every `<img>` has alt, every raw
+  `<button>` declares a `type` - checked with a brace-aware JSX walk, no red text links, no Tailwind radius utilities in
+  components, no `console.log`, and no literal colours, `white/NN`, `color-mix()`, `z-N` or `duration-N` in `.ts`/`.tsx`
+  outside `src/data/synthetic/`).
+- `tokens.test.mjs`: design-token governance read from the CSS itself (`tests/tokenModel.mjs`) - every `var(--x)` is defined,
+  no dead tokens, every raw-colour token has a dark value or an entry (with a reason) in `CONSTANT_ACROSS_THEMES`.
+  `node tests/tokenModel.mjs` prints the dead / no-dark / undefined lists.
+
+CI (`.github/workflows/ci.yml`, which must sit at the repository root to run) runs lint, `npm test` and `npm run build`.
+
+- `architecture.test.mjs`: computed from the source's own import graph - no import cycles, and layers only import downward
+  (primitives and domain never import capabilities, patterns, modules or workspace; components and capabilities never import modules
+  or workspace; `lib/` imports nothing else in the app). Put shared pieces in the lower layer rather than reaching up.
+- `journeyCatalogue.test.mjs`: `validateJourneyCatalogue()` - every journey's feature key, screen and path exists, and an
+  `available` journey leads to a built screen or a served path. `screenName.test.mjs`: `screenDisplayName()` strips project-phase
+  and vendor remarks from catalogue names; every surface that names a screen uses it.
+
+Async actions use `src/hooks/useSubmit.ts` (`useSubmit` / `useSubmitGuard`: one at a time, failure becomes a toast, never stuck on
+"Saving..."). Detail screens use `EntityMissing` + `useKindPending` so "loading", "failed" and "not found" are never confused. Filled
+status colours that carry a white label use `--success-solid` / `--danger-solid`, not `--success` / `--danger`. Control heights come
+from `--control-h-sm/md/lg`. The New Connection wizard lives at `/mobile/start-connection` (`/mobile/new-connections` is the category page).
+
+Add a test here when you change a rule the journeys depend on. Browser end-to-end tests are not set up (they need Playwright,
+which the sandbox cannot install).

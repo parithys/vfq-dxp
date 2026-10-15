@@ -49,9 +49,9 @@ export function RoleAccessSection() {
             placeholder="Search roles, groups, Staff IDs…"
             wrapperClassName="mb-3"
           />
-          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg max-h-[60vh] overflow-y-auto divide-y divide-border-soft">
+          <div className="card max-h-[60vh] overflow-y-auto divide-y divide-border-soft">
             {filtered.map((persona) => (
-              <button
+              <button type="button"
                 key={persona.id}
                 onClick={() => setSelectedId(persona.id)}
                 className={`w-full text-left px-4 py-3 hover:bg-surface ${selectedId === persona.id ? 'bg-[var(--highlight-bg)]' : ''}`}
@@ -69,9 +69,9 @@ export function RoleAccessSection() {
         <div className="flex-1 min-w-0">
           {selected && (
             <>
-              <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-4">
+              <div className="card p-5 mb-4">
                 <div className="flex items-start justify-between gap-4 mb-1">
-                  <h2 className="text-[length:var(--fs-h5)] font-medium text-fg">{selected.name}</h2>
+                  <h2 className="text-[length:var(--fs-h5)] font-bold text-fg">{selected.name}</h2>
                   <Badge variant={APPROACH_VARIANT[selected.approach] ?? 'filled-neutral'}>{selected.approach}</Badge>
                 </div>
                 <p className="text-fg-2 text-[length:var(--fs-caption)] mb-3">
@@ -97,8 +97,8 @@ export function RoleAccessSection() {
                 )}
               </div>
 
-              <h3 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-2">Granted features ({grants.length})</h3>
-              <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg divide-y divide-border-soft">
+              <h3 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-2">Granted features ({grants.length})</h3>
+              <div className="card divide-y divide-border-soft">
                 {grants.length === 0 && (
                   <p className="px-4 py-6 text-center text-muted">No features granted to this role.</p>
                 )}
@@ -131,8 +131,8 @@ export function RoleAccessSection() {
               </div>
 
               {legacyRbac.length > 0 && (
-                <div className="mt-4 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
-                  <button
+                <div className="mt-4 card ">
+                  <button type="button"
                     onClick={() => setEvidenceOpen((v) => !v)}
                     className="w-full text-left px-4 py-3 flex items-center justify-between gap-3 hover:bg-surface"
                   >

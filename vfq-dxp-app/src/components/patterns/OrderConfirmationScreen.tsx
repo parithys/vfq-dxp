@@ -12,7 +12,7 @@ export interface ConfirmationSummaryLine {
 export interface ConfirmationAction {
   label: string;
   onClick: () => void;
-  variant?: 'primary-rect' | 'secondary-rect';
+  variant?: 'primary' | 'secondary';
   /** Put this action on a second row below the others, right-aligned (the last such action is right-most). */
   endRow?: boolean;
 }
@@ -77,10 +77,10 @@ export function OrderConfirmationScreen({
           Still spans BOTH columns below it - it announces the outcome, which
           belongs to the whole screen rather than to the left-hand receipt. */}
       <div className="flex flex-col items-center text-center">
-        <div className="w-16 h-16 rounded-full bg-success text-white flex items-center justify-center mb-6">
+        <div className="w-16 h-16 rounded-[var(--radius-pill)] bg-success-solid text-on-dark flex items-center justify-center mb-6">
           <Icon path={CHECK} className="w-8 h-8" />
         </div>
-        <h1 className="text-[length:var(--fs-h3)] font-medium text-fg mb-2">{heading}</h1>
+        <h1 className="text-[length:var(--fs-h3)] font-bold text-fg mb-2">{heading}</h1>
         {headerNote && <div className="mb-2">{headerNote}</div>}
         <p className="text-fg-2 mb-8">
           Order <span className="font-medium text-fg">{orderId}</span>
@@ -107,7 +107,7 @@ export function OrderConfirmationScreen({
         }`}
       >
         {/* Column 1 - the receipt. */}
-        <dl className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
+        <dl className="card p-5">
           {summaryLines.map((line) => (
             <div key={line.label} className="flex justify-between gap-4 py-2 border-b border-border-soft last:border-0">
               <dt className="text-fg-2">{line.label}</dt>
@@ -132,7 +132,7 @@ export function OrderConfirmationScreen({
           // the action (Cancel/Back), while every action here (Start Another
           // Activation, Back to Dashboard, ...) is a real next step the agent
           // can take, just not the page's primary one (View Order).
-          <Button key={action.label} variant={action.variant ?? 'secondary-rect'} onClick={action.onClick}>
+          <Button key={action.label} variant={action.variant ?? 'secondary'} onClick={action.onClick}>
             {action.label}
           </Button>
         ))}
@@ -142,7 +142,7 @@ export function OrderConfirmationScreen({
       {actions.some((a) => a.endRow) && (
         <div className="no-print print:hidden flex flex-col gap-3 mt-4 sm:flex-row sm:justify-center [&>button]:w-full sm:[&>button]:w-auto">
           {actions.filter((a) => a.endRow).map((action) => (
-            <Button key={action.label} variant={action.variant ?? 'secondary-rect'} onClick={action.onClick}>
+            <Button key={action.label} variant={action.variant ?? 'secondary'} onClick={action.onClick}>
               {action.label}
             </Button>
           ))}

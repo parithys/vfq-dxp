@@ -1,5 +1,6 @@
+import { formatDateTime } from '../../lib/format';
 import { useEffect } from 'react';
-import { useEntityStore } from '../../stores/entityStore';
+import { useEntityStore, useKindPending } from '../../stores/entityStore';
 import { ErrorBanner } from '../../components/primitives/ErrorBanner';
 
 interface BulkNote {
@@ -18,7 +19,7 @@ interface BulkNote {
 export function BulkNotesSection({ accountIds }: { accountIds: string[] }) {
   const notes = (useEntityStore((s) => s.records['bulk-notes']) ?? []) as unknown as BulkNote[];
   const loadKind = useEntityStore((s) => s.loadKind);
-  const loading = useEntityStore((s) => s.loading['bulk-notes']);
+  const loading = useKindPending('bulk-notes'); // true until the list has arrived, so the table never flashes "empty" first
   const loadError = useEntityStore((s) => s.errors['bulk-notes']);
 
   useEffect(() => {
@@ -40,10 +41,10 @@ export function BulkNotesSection({ accountIds }: { accountIds: string[] }) {
       {!loading && applicable.length > 0 && (
         <div className="space-y-2">
           {applicable.map((note) => (
-            <div key={note.noteId} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">
+            <div key={note.noteId} className="card p-4">
               <p className="text-fg font-medium text-[length:var(--fs-body)]">{note.content}</p>
               <p className="text-muted text-[length:var(--fs-caption-upper)] uppercase tracking-wide mt-1.5">
-                Posted {new Date(note.postedAt).toLocaleString()} · applies to {note.accountIds.length} account
+                Posted {formatDateTime(note.postedAt)} · applies to {note.accountIds.length} account
                 {note.accountIds.length === 1 ? '' : 's'}
               </p>
             </div>

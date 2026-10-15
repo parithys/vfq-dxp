@@ -9,7 +9,7 @@
     "appDigitalAdoptionPct": 87,
     "appVersion": "5.3.0",
     "appUserSince": "2019-02-26",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-1002",
@@ -21,7 +21,7 @@
     "appDigitalAdoptionPct": 74,
     "appVersion": "5.3.4",
     "appUserSince": "2021-04-20",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-1003",
@@ -33,7 +33,7 @@
     "appDigitalAdoptionPct": 83,
     "appVersion": "5.2.1",
     "appUserSince": "2021-02-10",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-1004",
@@ -45,7 +45,7 @@
     "appDigitalAdoptionPct": 95,
     "appVersion": "5.3.0",
     "appUserSince": "2023-04-03",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-2001",
@@ -57,7 +57,7 @@
     "appDigitalAdoptionPct": 78,
     "appVersion": "5.3.4",
     "appUserSince": "2024-12-08",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-1005",
@@ -69,7 +69,7 @@
     "appDigitalAdoptionPct": 47,
     "appVersion": "5.3.0",
     "appUserSince": "2022-02-18",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-1006",
@@ -81,7 +81,7 @@
     "appDigitalAdoptionPct": 26,
     "appVersion": "5.3.4",
     "appUserSince": "2020-08-04",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-9001",
@@ -93,7 +93,7 @@
     "appDigitalAdoptionPct": 87,
     "appVersion": "5.3.0",
     "appUserSince": "2024-11-01",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-1007",
@@ -105,7 +105,7 @@
     "appDigitalAdoptionPct": 25,
     "appVersion": "5.2.1",
     "appUserSince": "2024-02-08",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3001",
@@ -117,7 +117,7 @@
     "appDigitalAdoptionPct": 89,
     "appVersion": "5.2.1",
     "appUserSince": "2021-03-09",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3002",
@@ -129,7 +129,7 @@
     "appDigitalAdoptionPct": 58,
     "appVersion": "5.2.1",
     "appUserSince": "2022-08-12",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3004",
@@ -141,7 +141,7 @@
     "appDigitalAdoptionPct": 47,
     "appVersion": "5.2.1",
     "appUserSince": "2024-02-02",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3003",
@@ -153,7 +153,7 @@
     "appDigitalAdoptionPct": 75,
     "appVersion": "5.3.4",
     "appUserSince": "2021-02-13",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3011",
@@ -165,7 +165,7 @@
     "appDigitalAdoptionPct": 89,
     "appVersion": "5.3.0",
     "appUserSince": "2020-06-04",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3012",
@@ -177,7 +177,7 @@
     "appDigitalAdoptionPct": 50,
     "appVersion": "5.3.0",
     "appUserSince": "2022-11-15",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3013",
@@ -189,7 +189,7 @@
     "appDigitalAdoptionPct": 46,
     "appVersion": "5.3.4",
     "appUserSince": "2023-12-20",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3014",
@@ -201,7 +201,7 @@
     "appDigitalAdoptionPct": 30,
     "appVersion": "5.3.0",
     "appUserSince": "2024-10-04",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3015",
@@ -213,7 +213,7 @@
     "appDigitalAdoptionPct": 95,
     "appVersion": "5.3.0",
     "appUserSince": "2021-05-12",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3016",
@@ -225,7 +225,7 @@
     "appDigitalAdoptionPct": 27,
     "appVersion": "5.3.0",
     "appUserSince": "2021-04-12",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3017",
@@ -237,7 +237,7 @@
     "appDigitalAdoptionPct": 87,
     "appVersion": "5.3.0",
     "appUserSince": "2022-01-28",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3021",
@@ -249,7 +249,7 @@
     "appDigitalAdoptionPct": 60,
     "appVersion": "5.3.0",
     "appUserSince": "2022-11-25",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3022",
@@ -261,7 +261,7 @@
     "appDigitalAdoptionPct": 48,
     "appVersion": "5.3.0",
     "appUserSince": "2024-06-22",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3023",
@@ -273,7 +273,7 @@
     "appDigitalAdoptionPct": 83,
     "appVersion": "5.3.0",
     "appUserSince": "2024-03-27",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3024",
@@ -285,7 +285,7 @@
     "appDigitalAdoptionPct": 67,
     "appVersion": "5.3.4",
     "appUserSince": "2019-02-23",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3025",
@@ -297,7 +297,7 @@
     "appDigitalAdoptionPct": 54,
     "appVersion": "5.2.1",
     "appUserSince": "2019-12-15",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3026",
@@ -309,7 +309,7 @@
     "appDigitalAdoptionPct": 28,
     "appVersion": "5.2.1",
     "appUserSince": "2021-11-23",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3027",
@@ -321,7 +321,7 @@
     "appDigitalAdoptionPct": 54,
     "appVersion": "5.3.4",
     "appUserSince": "2023-03-03",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3028",
@@ -333,7 +333,7 @@
     "appDigitalAdoptionPct": 93,
     "appVersion": "5.2.1",
     "appUserSince": "2023-06-17",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3029",
@@ -345,7 +345,7 @@
     "appDigitalAdoptionPct": 34,
     "appVersion": "5.2.1",
     "appUserSince": "2021-07-18",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3031",
@@ -357,7 +357,7 @@
     "appDigitalAdoptionPct": 38,
     "appVersion": "5.3.0",
     "appUserSince": "2019-10-21",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3032",
@@ -369,7 +369,7 @@
     "appDigitalAdoptionPct": 88,
     "appVersion": "5.3.0",
     "appUserSince": "2022-05-21",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3033",
@@ -381,7 +381,7 @@
     "appDigitalAdoptionPct": 36,
     "appVersion": "5.3.4",
     "appUserSince": "2023-03-28",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3041",
@@ -393,7 +393,7 @@
     "appDigitalAdoptionPct": 47,
     "appVersion": "5.2.1",
     "appUserSince": "2020-03-08",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3042",
@@ -405,7 +405,7 @@
     "appDigitalAdoptionPct": 68,
     "appVersion": "5.2.1",
     "appUserSince": "2019-08-17",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3043",
@@ -417,7 +417,7 @@
     "appDigitalAdoptionPct": 64,
     "appVersion": "5.3.4",
     "appUserSince": "2019-08-15",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3044",
@@ -429,7 +429,7 @@
     "appDigitalAdoptionPct": 85,
     "appVersion": "5.3.0",
     "appUserSince": "2021-05-18",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3045",
@@ -441,7 +441,7 @@
     "appDigitalAdoptionPct": 43,
     "appVersion": "5.2.1",
     "appUserSince": "2023-06-25",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3046",
@@ -453,7 +453,7 @@
     "appDigitalAdoptionPct": 45,
     "appVersion": "5.2.1",
     "appUserSince": "2024-06-27",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3051",
@@ -465,7 +465,7 @@
     "appDigitalAdoptionPct": 91,
     "appVersion": "5.2.1",
     "appUserSince": "2022-02-25",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3052",
@@ -477,7 +477,7 @@
     "appDigitalAdoptionPct": 37,
     "appVersion": "5.2.1",
     "appUserSince": "2021-02-24",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3053",
@@ -489,7 +489,7 @@
     "appDigitalAdoptionPct": 46,
     "appVersion": "5.2.1",
     "appUserSince": "2022-08-07",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3054",
@@ -501,7 +501,7 @@
     "appDigitalAdoptionPct": 73,
     "appVersion": "5.2.1",
     "appUserSince": "2022-08-06",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3061",
@@ -513,7 +513,7 @@
     "appDigitalAdoptionPct": 76,
     "appVersion": "5.3.4",
     "appUserSince": "2021-11-07",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3062",
@@ -525,7 +525,7 @@
     "appDigitalAdoptionPct": 59,
     "appVersion": "5.2.1",
     "appUserSince": "2023-10-27",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3063",
@@ -537,7 +537,7 @@
     "appDigitalAdoptionPct": 84,
     "appVersion": "5.3.0",
     "appUserSince": "2023-12-15",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3064",
@@ -549,7 +549,7 @@
     "appDigitalAdoptionPct": 83,
     "appVersion": "5.3.4",
     "appUserSince": "2021-11-11",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3065",
@@ -561,7 +561,7 @@
     "appDigitalAdoptionPct": 24,
     "appVersion": "5.3.0",
     "appUserSince": "2023-12-16",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3066",
@@ -573,7 +573,7 @@
     "appDigitalAdoptionPct": 45,
     "appVersion": "5.3.4",
     "appUserSince": "2022-01-17",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3067",
@@ -585,7 +585,7 @@
     "appDigitalAdoptionPct": 70,
     "appVersion": "5.2.1",
     "appUserSince": "2023-04-27",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3068",
@@ -597,7 +597,7 @@
     "appDigitalAdoptionPct": 54,
     "appVersion": "5.3.0",
     "appUserSince": "2020-11-18",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3069",
@@ -609,7 +609,7 @@
     "appDigitalAdoptionPct": 32,
     "appVersion": "5.2.1",
     "appUserSince": "2022-06-28",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   },
   {
     "customerId": "CUST-3070",
@@ -621,6 +621,6 @@
     "appDigitalAdoptionPct": 88,
     "appVersion": "5.2.1",
     "appUserSince": "2023-06-12",
-    "_note": "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+    "_note": "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
   }
 ]

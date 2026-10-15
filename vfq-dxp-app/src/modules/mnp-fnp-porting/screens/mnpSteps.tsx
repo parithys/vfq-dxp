@@ -1,108 +1,37 @@
 import type { WizardStep } from '../../../components/patterns/wizard/guidedWizardTypes';
 import * as sums from '../../../components/patterns/wizard/commonSummaries';
 import { attachSummaries } from '../../../components/patterns/wizard/stepSummary';
-import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
-import { activityStep, contactStep, isCafValid, type CafValue } from '../../../components/patterns/wizard/wizardSteps';
-import { ZsbAddressStep } from '../../../components/patterns/ZsbAddressStep';
-import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
-import { BillingProfileStep } from '../../../components/patterns/BillingProfileStep';
-import type { BillingProfileValue } from '../../../components/patterns/BillingProfileStep';
-import { SimSerialScanner } from '../../../components/domain/SimSerialScanner';
-import { ProductPlanStep } from '../../../components/patterns/ProductPlanStep';
-import { PrepaidPlanStep } from '../../../components/patterns/PrepaidPlanStep';
-import { BillLimitEditor } from '../../../components/domain/BillLimitEditor';
-import { DonorDetailsStep } from '../../../components/patterns/DonorDetailsStep';
-import type { DonorDetailsValue } from '../../../components/patterns/DonorDetailsStep';
-import { DonorAttachmentStep } from '../../../components/patterns/DonorAttachmentStep';
-import type { DonorAttachmentValue } from '../../../components/patterns/DonorAttachmentStep';
-import { KeyInformationPanel } from '../../../components/patterns/KeyInformationPanel';
-import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCapture';
+import { activityStep, billingAccountStep, cafSignatureStep, paymentStep, planSelectionStep, serviceAddressStep, simSerialStep } from '../../../capabilities';
+import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
+import type { BillingAccountValue } from '../../../components/patterns/billingAccountModel';
+import { MnpCheckout } from './MnpCheckout';
+import { gatePasses, mnpValidationGate } from './mnpValidationGate';
+import { contactOf, isPrepaidMnp, mnpFormInputOf } from './mnpFormInput';
 
-// The MNP port-in steps. Postpaid: Contact -> Address -> Billing -> SIM Serial -> Plan (Bill Limit) -> Donor
-// Details -> Donor Attachment -> CAF -> Activity. Prepaid drops Billing, swaps the plan step for the prepaid
-// pack + discount, and adds the BR-233 balance-forfeiture declaration to the CAF step (see NewMnpWizard.tsx
-// for the evidence behind each).
-export function buildMnpSteps(isPrepaid: boolean): WizardStep[] {
+export { mnpFormInputOf };
+import { DonorDetailsStep, donorDetailsValid } from '../../../components/patterns/DonorDetailsStep';
+import type { DonorDetailsValue } from '../../../components/patterns/DonorDetailsStep';
+import { DonorAttachmentStep, mnpFormSigned } from '../../../components/patterns/DonorAttachmentStep';
+import type { DonorAttachmentValue } from '../../../components/patterns/DonorAttachmentStep';
+
+// The MNP port-in steps, after Customer Identification and Product Selection (the first two steps of New Connection, which
+// MNP shares with the other products; the Postpaid/Prepaid choice is made on the product step and kept as `mnpType`).
+//   Postpaid: Address -> Billing Profile -> SIM Serial -> Plan (Bill Limit) -> Donor Details -> Checkout -> MNP Form -> CAF -> Payment -> Activity.
+//   Prepaid:  Address -> SIM Serial -> Plan (prepaid pack + discount) -> Donor Details -> Checkout -> MNP Form -> CAF -> Payment -> Activity,
+// with no billing account (a prepaid line carries no credit limit or bill cycle, BR-002/BR-005) and the BR-233
+// balance-forfeiture declaration on the CAF. NewMnpWizard.tsx keeps the evidence behind each.
+export function mnpSteps(): WizardStep[] {
+  const postpaidOnly = (step: WizardStep): WizardStep => ({ ...step, skip: isPrepaidMnp });
+  const prepaidOnly = (step: WizardStep): WizardStep => ({ ...step, skip: (values) => !isPrepaidMnp(values) });
   return attachSummaries([
-    contactStep({ hideIptvToggle: true }),
-    {
-      key: 'address',
-      label: 'Address',
-      render: ({ values, setValue }) => {
-        const contact = values.contact as GuidedContactValue | undefined;
-        return (
-          <ZsbAddressStep
-            value={(values.address as ZsbAddressValue) ?? {}}
-            onChange={(v) => setValue('address', v)}
-            idNumber={contact?.idNumber}
-            nationality={contact?.moiResult?.nationality}
-          />
-        );
-      },
-      isValid: () => true,
-    },
-    ...(isPrepaid
-      ? []
-      : [
-          {
-            key: 'billing',
-            label: 'Billing',
-            render: ({ values, setValue }: Parameters<WizardStep['render']>[0]) => (
-              <BillingProfileStep
-                value={(values.billing as BillingProfileValue) ?? {}}
-                onChange={(v) => setValue('billing', v)}
-              />
-            ),
-            isValid: () => true,
-          },
-        ]),
-    {
-      key: 'sim',
-      label: 'SIM Serial',
-      render: ({ values, setValue }) => (
-        <SimSerialScanner
-          value={(values.simSerial as string) ?? ''}
-          onChange={(v, valid) => {
-            setValue('simSerial', v);
-            setValue('simValid', valid);
-          }}
-        />
-      ),
-      isValid: (values) => values.simValid === true,
-    },
-    {
-      key: 'plan',
-      label: 'Plan',
-      render: ({ values, setValue }) =>
-        isPrepaid ? (
-          <PrepaidPlanStep
-            selectedProductId={values.productId as string | undefined}
-            onSelectProduct={(id) => setValue('productId', id)}
-            discountId={values.discountId as string | undefined}
-            onSelectDiscount={(id) => setValue('discountId', id)}
-          />
-        ) : (
-          <div className="space-y-4">
-            <ProductPlanStep
-              planType="Postpaid Plan"
-              selectedProductId={values.productId as string | undefined}
-              onSelect={(id) => setValue('productId', id)}
-            />
-            {Boolean(values.productId) && (
-              <BillLimitEditor
-                product="Mobile"
-                value={values.billLimit as number | undefined}
-                onChange={(amount, pass) => {
-                  setValue('billLimit', amount);
-                  setValue('billLimitPass', pass);
-                }}
-              />
-            )}
-          </div>
-        ),
-      isValid: (values) =>
-        isPrepaid ? Boolean(values.productId) : Boolean(values.productId) && values.billLimitPass !== false,
-    },
+    serviceAddressStep({
+      mode: 'structured',
+      identity: (values) => ({ idNumber: contactOf(values)?.idNumber, nationality: contactOf(values)?.moiResult?.nationality }),
+    }),
+    postpaidOnly(billingAccountStep()),
+    simSerialStep(),
+    { ...postpaidOnly(planSelectionStep({ kind: 'catalogue', planType: 'Postpaid Plan', billLimit: true })), summary: sums.planDetailSummary },
+    { ...prepaidOnly(planSelectionStep({ kind: 'prepaid' })), summary: [...sums.planSummary(), { key: 'discount', label: 'Discount', type: 'select', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.discountId }] },
     {
       key: 'donor-details',
       label: 'Donor Details',
@@ -112,68 +41,77 @@ export function buildMnpSteps(isPrepaid: boolean): WizardStep[] {
           onChange={(v) => setValue('donorDetails', v)}
         />
       ),
-      isValid: (values) => {
-        const d = values.donorDetails as DonorDetailsValue | undefined;
-        return Boolean(d?.portInNumber && d?.donorId);
+      isValid: (values) => donorDetailsValid(values.donorDetails as DonorDetailsValue | undefined),
+    },
+    {
+      // BRSD #8 Cart check-out: the validation gate (BR-MNP-009) and what is due today (BR-MNP-011). Continue stays off until every
+      // mandatory customer, billing, SIM, MNP and product validation is done.
+      key: 'checkout',
+      label: 'Checkout',
+      summary: [{ key: 'due', label: 'Total Payable Today', type: 'text', value: (v) => {
+        const due = (v.checkoutTotals as { dueTodayQar?: number } | undefined)?.dueTodayQar;
+        return typeof due === 'number' ? `QAR ${due.toLocaleString('en-GB')}` : undefined;
+      } }],
+      render: ({ values, setValue, goToStepKey }) => {
+        const billing = values.billingAccount as BillingAccountValue | undefined;
+        const donor = values.donorDetails as DonorDetailsValue | undefined;
+        const fixStep: Record<string, string> = { customer: 'contact', eligibility: 'product', billing: 'billingAccount', plan: 'plan', sim: 'sim', mnp: 'donor-details' };
+        return (
+          <MnpCheckout
+            customerName={contactOf(values)?.moiResult?.name}
+            portInNumber={donor?.portInNumber}
+            donorOperator={donor?.donorOperator}
+            productId={values.productId as string | undefined}
+            simSerial={values.simSerial as string | undefined}
+            mnpType={isPrepaidMnp(values) ? 'prepaid' : 'postpaid'}
+            billingLabel={billing?.selectedProfileId ? `Existing account ending ...${billing.selectedProfileId.slice(-4)}` : billing?.newAccount?.profileName}
+            requiresHrnAdvance={Boolean((values.eligibility as EligibilityResult | undefined)?.requiresHrnAdvance)}
+            gate={mnpValidationGate(values, 'checkout')}
+            onTotalsComputed={(totals) => setValue('checkoutTotals', totals)}
+            onFix={(id) => goToStepKey(fixStep[id] ?? 'contact')}
+          />
+        );
       },
+      isValid: (values) => gatePasses(mnpValidationGate(values, 'checkout')),
     },
     {
       key: 'donor-attachment',
-      label: 'Donor Attachment',
+      label: 'MNP Form',
       render: ({ values, setValue }) => (
         <DonorAttachmentStep
           value={(values.donorAttachment as DonorAttachmentValue) ?? {}}
           onChange={(v) => setValue('donorAttachment', v)}
+          form={mnpFormInputOf(values)}
         />
       ),
-      isValid: (values) => {
-        const d = values.donorAttachment as DonorAttachmentValue | undefined;
-        return Boolean(d?.mnpFormType && d?.signatureDataUrl);
-      },
+      // Signed, and signed on the data the journey holds now (a later change to it regenerates the form and clears the signature).
+      isValid: (values) => mnpFormSigned(values.donorAttachment as DonorAttachmentValue | undefined, mnpFormInputOf(values)),
     },
-    {
-      key: 'caf',
-      label: 'CAF & Signature',
-      render: ({ values, setValue }) => {
-        const contact = values.contact as GuidedContactValue | undefined;
-        const caf = (values.caf as CafValue) ?? {};
-        if (!isPrepaid) {
-          return <CafSignatureCapture value={caf} onChange={(v) => setValue('caf', v)} customerName={contact?.moiResult?.name} />;
-        }
-        return (
-          <div className="space-y-6">
-            {/* BR-233: prepaid MNP declaration - unused balance is forfeited on
-                switching, shown before signature the same way NewPrepaidWizard
-                surfaces its own Key Information panel at this stage. */}
-            <KeyInformationPanel
-              items={[
-                'Any unused prepaid balance must be used before the number is switched - remaining balance is forfeited once porting completes.',
-                "Porting is a request, not an instant switch - the donor operator's response determines the final port date.",
-              ]}
-            />
-            <CafSignatureCapture
-              value={caf}
-              onChange={(v) => setValue('caf', v)}
-              customerName={contact?.moiResult?.name}
-              idLabel={contact?.idType ?? 'ID Number'}
-              idValue={contact?.idNumber}
-            />
-          </div>
-        );
-      },
-      isValid: (values) => isCafValid(values.caf as CafValue | undefined),
-    },
+    cafSignatureStep({
+      customerName: (values) => contactOf(values)?.moiResult?.name,
+      // Prepaid port-in only: BR-233 - unused balance is forfeited on switching, shown before signature, and the
+      // CAF reads back the ID it was identified with.
+      keyInformation: (values) =>
+        isPrepaidMnp(values)
+          ? [
+              'Any unused prepaid balance must be used before the number is switched - remaining balance is forfeited once porting completes.',
+              "Porting is a request, not an instant switch - the donor operator's response determines the final port date.",
+            ]
+          : undefined,
+      idDocument: (values) => (isPrepaidMnp(values) ? { label: contactOf(values)?.idType ?? 'ID Number', value: contactOf(values)?.idNumber } : undefined),
+    }),
+    // BR-MNP-011: the port-in charges, deposit and advance payment are collected before submission; with nothing due, a zero-value receipt.
+    paymentStep({ zeroValueReceipt: true }),
     activityStep(),
   ], {
     address: sums.addressFormSummary(),
-    billing: sums.billingProfileSummary,
     sim: [
       { key: 'serial', label: 'SIM Serial Number', type: 'text', sensitive: true, value: (v) => v.simSerial },
       { key: 'valid', label: 'Validated', type: 'toggle', value: (v) => Boolean(v.simValid) },
     ],
-    plan: sums.planDetailSummary,
     'donor-details': sums.donorSummary,
     'donor-attachment': sums.donorAttachmentSummary,
     caf: sums.cafSummary,
+    payment: sums.paymentSummary,
   });
 }

@@ -322,7 +322,7 @@ export function SessionReferenceNumbers() {
       // A queue walk-in arrives through the New Connections journey, so that
       // is what the rail should show rather than Customer Search - the agent
       // did not search for this customer, the queue handed them over.
-      navigate(`/customer/${matched.customerId}`, { state: { navKey: 'mobile.new-connections' } });
+      navigate(`/customer/${matched.customerId}`, { state: { navKey: 'new-connections' } });
       return;
     }
     // Navigating away matters as much as clearing the store above.
@@ -383,7 +383,7 @@ export function SessionReferenceNumbers() {
           {/* A walk-in with no record is a normal outcome, not an error - the
               agent needs to see it, keep the number, and start an activation. */}
           {!activeCustomer && <Badge variant="warning">New customer</Badge>}
-          <Button variant="primary-rect" compact disabled={finishing || abandoning} onClick={handleFinish}>
+          <Button variant="primary" compact disabled={finishing || abandoning} onClick={handleFinish}>
             {finishing ? 'Finishing…' : 'Finish'}
           </Button>
           {/* Secondary style (`ghost-rect`) - the same variant the completed
@@ -391,7 +391,7 @@ export function SessionReferenceNumbers() {
               two outcomes are not competing primaries. Both buttons disable
               during either action: they write to the same ticket, and the
               release is not idempotent. */}
-          <Button variant="ghost-rect" compact disabled={finishing || abandoning} onClick={handleAbandon}>
+          <Button variant="secondary" compact disabled={finishing || abandoning} onClick={handleAbandon}>
             {abandoning ? 'Abandoning…' : 'Abandoned'}
           </Button>
         </>
@@ -412,7 +412,7 @@ export function SessionReferenceNumbers() {
             </div>
           </Tooltip>
           <Button
-            variant="primary-rect"
+            variant="primary"
             compact
             disabled={callingNext || waitingCount === 0}
             onClick={handleNextCustomer}
@@ -465,7 +465,7 @@ export function SessionReferenceNumbers() {
               </span>
             </div>
           </Tooltip>
-          <Button variant="ghost-rect" compact disabled={callingNext} onClick={handleNextCustomer}>
+          <Button variant="secondary" compact disabled={callingNext} onClick={handleNextCustomer}>
             <Icon path={REFRESH_ICON_PATH} className="w-4 h-4" />
             {callingNext ? 'Calling…' : 'Next Customer'}
           </Button>

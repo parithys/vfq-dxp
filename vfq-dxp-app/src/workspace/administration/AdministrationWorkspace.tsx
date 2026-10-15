@@ -2,6 +2,7 @@ import { Tabs, type TabItem } from '../../components/primitives/Tabs';
 import { RoleAccessSection } from './RoleAccessSection';
 import { BellNotificationsSection } from './BellNotificationsSection';
 import { BulkNotesConfigSection } from './BulkNotesConfigSection';
+import { CapabilityLibrarySection } from './CapabilityLibrarySection';
 import { PageHeader } from '../../components/patterns/PageHeader';
 
 // The home for backoffice/config-oriented capabilities: the role/access
@@ -12,6 +13,7 @@ const TABS: TabItem[] = [
   { key: 'roles', label: 'Roles & Access', content: <RoleAccessSection /> },
   { key: 'bell', label: 'Bell Notifications', content: <BellNotificationsSection /> },
   { key: 'bulk-notes', label: 'Bulk Notes', content: <BulkNotesConfigSection /> },
+  { key: 'capabilities', label: 'Capability Library', content: <CapabilityLibrarySection /> },
 ];
 
 export function AdministrationWorkspace() {

@@ -1,19 +1,18 @@
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useSearchListNav } from '../hooks/useSearchListNav';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '../components/primitives/Icon';
-import { VodafoneMark } from '../components/primitives/VodafoneMark';
-import { Tooltip } from '../components/primitives/Tooltip';
 import { useSidebarStore } from '../stores/sidebarStore';
 import { usePersonaStore } from '../stores/personaStore';
 import { resolveNavFor } from '../engines/navigationEngine';
+import { NavCollapseButton } from './NavLogoToggle';
+import { VodafoneMark } from '../components/primitives/VodafoneMark';
+import { VodafoneWordmark } from '../components/primitives/VodafoneWordmark';
 import { NAV_MANIFEST, resolveActiveNavPath } from './navManifest';
 
 const SEARCH_ICON = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3';
 // The row the keyboard has reached while searching the menu.
 const KBD_ACTIVE = 'data-[kbd-active=true]:bg-[var(--nav-hover-bg)] data-[kbd-active=true]:text-[var(--nav-fg)] data-[kbd-active=true]:ring-2 data-[kbd-active=true]:ring-inset data-[kbd-active=true]:ring-[var(--nav-fg-muted)]';
-// Pin: filled when pinned.
-const PIN_ICON = 'M12 17v5 M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z';
 const DESKTOP_QUERY = '(min-width: 768px)';
 const subscribeDesktop = (cb: () => void) => {
   const mq = window.matchMedia(DESKTOP_QUERY);
@@ -54,6 +53,14 @@ const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 //
 // Below `md:`, the sidebar instead renders as an off-canvas drawer (see
 // `mobileOpen` in sidebarStore); the desktop collapse preference does not apply to it.
+/** Of the journeys that open the same page, the one the rail highlights: the one that was opened, else the first. */
+function isActiveJourney(journeys: { id: string; to?: string }[], journey: { id: string; to?: string }, opened: string | undefined): boolean {
+  const sharing = journeys.filter((x) => x.to === journey.to);
+  if (sharing.length < 2) return true;
+  const openedHere = sharing.find((x) => x.id === opened);
+  return (openedHere ?? sharing[0]).id === journey.id;
+}
+
 export function Sidebar() {
   const {
     pinned,
@@ -167,7 +174,7 @@ export function Sidebar() {
 
   // Reveal the group that owns the route when you arrive from OUTSIDE the rail
   // - a breadcrumb, a dashboard quick action, a reload on a deep link. Landing
-  // on /mobile/sim-device with Mobile shut would hide where you are.
+  // on /mobile/service-management with Mobile shut would hide where you are.
   //
   // Resolved against the STATIC manifest, not the role-filtered `navItems`.
   // navItems comes from resolveNavFor, which returns [] until loadConfig()
@@ -200,7 +207,7 @@ export function Sidebar() {
           and is only present in the DOM/visible when the drawer is open. */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+          className="fixed inset-0 z-[var(--z-scrim)] bg-scrim md:hidden"
           onClick={closeMobile}
           aria-hidden="true"
         />
@@ -209,19 +216,19 @@ export function Sidebar() {
           width and animates, so the body container shrinks and grows smoothly as the panel is pinned and unpinned. */}
       <div
         aria-hidden="true"
-        className={`hidden md:block shrink-0 ${animateDock ? 'transition-[width] duration-200 ease-in-out' : ''}`}
+        className={`hidden md:block shrink-0 ${animateDock ? 'transition-[width] duration-[var(--motion-slow)] ease-[var(--ease-standard)] motion-reduce:transition-none' : ''}`}
         style={{ width: pinnedDesktop ? navWidth : 0 }}
       />
       <nav
         ref={navRef}
         inert={offScreen}
         aria-label="Main navigation"
-        className={`fixed inset-y-0 left-0 z-50 w-[280px] transform transition-transform duration-200 ease-in-out ${
+        className={`fixed inset-y-0 left-0 z-[var(--z-overlay)] w-[280px] transform transition-[transform,translate,opacity,box-shadow] duration-[var(--motion-slow)] ease-[var(--ease-standard)] motion-reduce:transition-none ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         } ${
           // Desktop: always an overlay panel. Pinned or previewing it slides in; the dock above is what makes room
           // for it when pinned.
-          shownDesktop ? 'md:translate-x-0' : 'md:-translate-x-full'
+          shownDesktop ? 'md:translate-x-0 md:opacity-100' : 'md:-translate-x-full md:opacity-0'
         } ${pinned ? '' : peeking ? 'md:shadow-xl' : ''} border-r border-[var(--nav-border)] bg-[var(--nav-bg)] h-full overflow-y-auto`}
         onMouseEnter={!pinned ? openPeek : undefined}
         onMouseLeave={!pinned ? closePeekSoon : undefined}
@@ -230,9 +237,9 @@ export function Sidebar() {
       <div className="flex items-center justify-between h-16 px-4 border-b border-[var(--nav-border)] md:hidden">
         <NavLink to="/" className="flex items-center gap-2 min-w-0">
           <VodafoneMark className="w-7 h-7 shrink-0" />
-          <span className="text-[length:var(--fs-h5)] font-bold text-[var(--nav-fg)] truncate">vodafone</span>
+          <VodafoneWordmark className="h-[18px] w-auto" />
         </NavLink>
-        <button
+        <button type="button"
           onClick={closeMobile}
           aria-label="Close navigation"
           className="text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] shrink-0"
@@ -241,25 +248,12 @@ export function Sidebar() {
         </button>
       </div>
       <div className="hidden md:flex items-center justify-between h-16 px-4 border-b border-[var(--nav-border)]">
-        <NavLink to="/" className="flex items-center gap-2 min-w-0">
+        <NavLink to="/" className="flex items-center gap-2 min-w-0" aria-label="Vodafone - home">
           <VodafoneMark className="w-7 h-7 shrink-0" />
-          <span className="text-[length:var(--fs-h5)] font-bold text-[var(--nav-fg)] truncate">vodafone</span>
+          <VodafoneWordmark className="h-[18px] w-auto" />
         </NavLink>
-        <Tooltip content={pinned ? 'Unpin navigation' : 'Pin navigation'} placement="bottom">
-          <button
-            type="button"
-            onClick={togglePinned}
-            aria-pressed={pinned}
-            aria-label={pinned ? 'Unpin navigation' : 'Pin navigation'}
-            className={`shrink-0 w-8 h-8 rounded-[var(--radius-sm)] flex items-center justify-center focus-visible:shadow-[var(--focus-ring)] ${
-              pinned
-                ? 'bg-[var(--nav-active-bg)] text-[var(--nav-active-fg)]'
-                : 'text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] hover:bg-[var(--nav-hover-bg)] -rotate-45'
-            }`}
-          >
-            <Icon path={PIN_ICON} className={`w-4 h-4 ${pinned ? 'fill-current' : ''}`} />
-          </button>
-        </Tooltip>
+        {/* Expanded: the collapse icon sits on the right. (Collapsed, the logo in the top bar expands it.) */}
+        <NavCollapseButton onToggle={togglePinned} />
       </div>
       <div className="px-2 pt-3 pb-1">
         <label className="flex items-center gap-2 h-10 px-3 rounded-[var(--radius-sm)] border border-[var(--nav-border)] text-[var(--nav-fg-muted)] focus-within:border-[var(--nav-fg-muted)] focus-within:text-[var(--nav-fg)]">
@@ -286,7 +280,7 @@ export function Sidebar() {
             const expanded = Boolean(q) || expandedNavKeys.includes(item.key);
             // A leaf parent is `end`-matched per the manifest. Parents WITH
             // children no longer link at all, so NavLink's old prefix-matching
-            // problem (both /fibre-home and /fibre-home/relocation lighting up
+            // problem (both /fibre-home and /fibre-home/plans-installation lighting up
             // as red pills) can't arise.
             const parentEnd = item.end ?? hasChildren;
             const exactlyActive = item.to === activeNavPath;
@@ -294,18 +288,18 @@ export function Sidebar() {
             // click opens or closes its sub-menu and nothing else. Only a
             // sub-menu item navigates.
             //
-            // So it renders as a <button>, not a link. That is the whole fix
+            // So it renders as a <button type="button">, not a link. That is the whole fix
             // rather than an `e.preventDefault()` on a NavLink: an <a href>
             // advertises a destination the keyboard, the screen reader and
             // cmd-click all believe, and it is what put `aria-current="page"`
             // and a real `href="/fibre-home"` on a control that must not
-            // navigate. A <button aria-expanded> states what it actually does.
+            // navigate. A <button type="button" aria-expanded> states what it actually does.
             //
             // The whole row stays one hit target - icon, label and chevron
             // alike. The chevron used to be a separate 14px button, which left
             // dead space between it and the label.
             const rowClass = `flex-1 min-w-0 flex items-center gap-2.5 h-11 mx-2 rounded-[var(--radius-sm)] text-[length:var(--fs-body)] px-4 font-bold `;
-            const activeClass = 'bg-[var(--nav-active-bg)] text-[var(--nav-active-fg)]';
+            const activeClass = 'bg-[var(--nav-active-bg)] bg-[image:var(--nav-active-image)] text-[var(--nav-active-fg)]';
             // Open group holding the active child: a quiet tint, so the group
             // reads as "you are in here" without competing with the child's
             // own accent marker.
@@ -392,7 +386,7 @@ export function Sidebar() {
                             className={() =>
                               `${KBD_ACTIVE} flex-1 min-w-0 flex items-center gap-2.5 h-9 -ml-px pl-4 pr-3 border-l-2 text-[length:var(--fs-caption)] ${
                                 child.to === activeNavPath
-                                  ? 'border-accent bg-[var(--nav-active-bg)] text-[var(--nav-active-fg)] font-medium'
+                                  ? 'border-accent bg-[var(--nav-active-bg)] bg-[image:var(--nav-active-image)] text-[var(--nav-active-fg)] font-medium'
                                   : 'border-transparent text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] hover:border-[var(--nav-section)]'
                               }`
                             }
@@ -418,13 +412,32 @@ export function Sidebar() {
                           <ul className="ml-[22px] border-l border-[var(--nav-border)]">
                             {child.journeys!.map((j) => (
                               <li key={j.id}>
-                                <NavLink
-                                  to={j.to ?? child.to}
-                                  {...optProps(`journey:${child.key}:${j.id}`)}
-                                  className={`${KBD_ACTIVE} flex items-center h-8 pl-5 pr-3 text-[length:var(--fs-caption)] text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] hover:bg-[var(--nav-hover-bg)] rounded-[var(--radius-sm)]`}
-                                >
-                                  <span className="truncate">{j.label}</span>
-                                </NavLink>
+                                {(() => {
+                                  // A Link rather than a NavLink: NavLink marks every link to the current page active (aria-current included), and
+                                  // several journeys can share one page. Only the one that was opened is.
+                                  const target = j.to ?? child.to;
+                                  const path = target.split('?')[0];
+                                  const onPage = location.pathname === path || location.pathname.startsWith(`${path}/`);
+                                  const active = onPage && Boolean(j.to) && isActiveJourney(child.journeys!, j, (location.state as { navJourney?: string } | null)?.navJourney);
+                                  return (
+                                    <Link
+                                      to={target}
+                                      // Which journey was opened travels with the navigation (New Number Selection, Number Reservation and
+                                      // Special / Gold Number all open the Number Management Portal).
+                                      state={{ navJourney: j.id }}
+                                      aria-current={active ? 'page' : undefined}
+                                      {...optProps(`journey:${child.key}:${j.id}`)}
+                                      className={`${KBD_ACTIVE} flex items-center h-8 pl-5 pr-3 text-[length:var(--fs-caption)] rounded-none ${
+                                        // A planned journey has no page of its own (it links to its category), so it is never the active row.
+                                        active
+                                          ? 'bg-[var(--nav-active-bg)] bg-[image:var(--nav-active-image)] text-[var(--nav-active-fg)] font-medium'
+                                          : 'text-[var(--nav-fg-muted)] hover:text-[var(--nav-fg)] hover:bg-[var(--nav-hover-bg)]'
+                                      }`}
+                                    >
+                                      <span className="truncate">{j.label}</span>
+                                    </Link>
+                                  );
+                                })()}
                               </li>
                             ))}
                           </ul>

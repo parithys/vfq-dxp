@@ -4,10 +4,10 @@ import { canUseFeature } from '../../engines/personaEngine';
 import { getAllRoutes, getPersona } from '../../engines/configEngine';
 import { resolveJourneyTarget } from '../../navigation/journeyTarget';
 import { Icon } from '../../components/primitives/Icon';
-import { SECONDARY_SURFACE, PRIMARY_SURFACE } from '../../components/primitives/Button';
+import { SECONDARY_BUTTON_SURFACE, PRIMARY_SURFACE } from '../../components/primitives/Button';
 import { NotYetBuiltPanel } from '../NotYetBuiltPanel';
 import { JourneyCard } from './JourneyCard';
-import { launchJourney, readLaunch, type LaunchContext } from '../../workspace/customer360/customerActions';
+import { launchJourney, readLaunch, type LaunchContext } from '../../navigation/customerLaunch';
 import {
   PRODUCT_LINE_BY_KEY,
   reachableCategories,
@@ -16,6 +16,7 @@ import {
   type ProductLine,
 } from '../../navigation/journeyCatalogue';
 import { PageHeader } from '../../components/patterns/PageHeader';
+import { NotFound } from '../NotFound';
 
 // A product line's journey catalogue, filtered to the active role.
 //
@@ -37,12 +38,12 @@ function CategorySection({ category, personaId, launch }: { category: JourneyCat
 
   return (
     <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] overflow-hidden mb-6">
-      <header className="flex items-start gap-3 px-5 py-4 bg-surface border-b border-border-soft">
-        <span className="shrink-0 w-9 h-9 rounded-[var(--radius-sm)] bg-[color-mix(in_oklab,var(--accent)_10%,transparent)] flex items-center justify-center">
+      <header className="flex items-start gap-3 px-5 py-4 bg-bg border-b border-border-soft rounded-t-[var(--radius-card)]">
+        <span className="shrink-0 w-9 h-9 rounded-[var(--radius-sm)] bg-tone-accent flex items-center justify-center">
           <Icon path={category.icon} className="w-4.5 h-4.5 text-accent" />
         </span>
         <div className="min-w-0">
-          <h2 className="font-medium text-fg text-[length:var(--fs-body-lg)]">{category.heading}</h2>
+          <h2 className="font-bold text-fg text-[length:var(--fs-body-lg)]">{category.heading}</h2>
           <p className="text-fg-2 text-[length:var(--fs-body)]">{category.description}</p>
         </div>
       </header>
@@ -90,6 +91,8 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
     );
   }
 
+  // /mobile/<anything> is a category URL: one the line does not have is a 404, not the line page under a wrong address.
+  if (categoryParam && !line.categories.some((c) => c.key === categoryParam)) return <NotFound />;
   const active = categoryParam ? reachable.find((c) => c.key === categoryParam) : undefined;
   const shown = active ? [active] : reachable;
 
@@ -100,7 +103,7 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
       </>} />
 
       {launch && (
-        <p className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface px-4 py-3 text-fg-2 text-[length:var(--fs-body)]">
+        <p className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 card card-surface px-4 py-3 text-fg-2 text-[length:var(--fs-body)]">
           <span>
             Acting for <span className="text-fg font-medium">{launch.customerName ?? launch.customerId}</span>
             {launch.serviceLabel && (
@@ -111,7 +114,7 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
             )}
             .
           </span>
-          <Link to={`/customer/${launch.customerId}`} className="text-accent font-medium hover:underline">
+          <Link to={`/customer/${launch.customerId}`} className="text-link font-medium hover:underline">
             Back to Customer 360
           </Link>
         </p>
@@ -126,7 +129,7 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
           plainly that an item detail is planned rather than silently showing
           the whole line as if it had honoured the link. */}
       {searchParams.get('id') && (
-        <p className="mb-6 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface px-4 py-3 text-fg-2 text-[length:var(--fs-caption)]">
+        <p className="mb-6 card card-surface px-4 py-3 text-fg-2 text-[length:var(--fs-caption)]">
           A detail view for <code>{searchParams.get('id')}</code> is planned here. Showing the {line.label} journey
           catalogue in the meantime.
         </p>
@@ -141,16 +144,15 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
           The one thing worth keeping local: BOTH states carry a 1px border, so
           the row never shifts by 2px as selection moves between them.
 
-          The chip label is --deep-red, not the secondary asset's #E60000.
-          Measured: #e60000 on the #fff0f0 hover fill is 4.35:1, which misses
-          SC 1.4.3's 4.5:1 at --fs-caption (14px); #7a1f1c is 9.30:1 there and
-          10.29:1 on the white resting fill, and still unmistakably red. */}
+          The chip label follows the secondary button surface (SECONDARY_BUTTON_SURFACE), which keeps it above 4.5:1
+          on the hover fill at --fs-caption. */}
+      {line.categories.length > 1 && (
       <div className="flex flex-wrap items-center gap-2 mb-6">
         <Link
           to={line.to}
           state={launch ? { launch } : undefined}
           className={`rounded-[var(--radius-button)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${
-            active ? `${SECONDARY_SURFACE} hover:bg-surface-warm` : `${PRIMARY_SURFACE} hover:bg-[image:var(--accent-gradient-hover)]`
+            active ? SECONDARY_BUTTON_SURFACE : `${PRIMARY_SURFACE} hover:bg-[image:var(--accent-gradient-hover)]`
           }`}
         >
           All
@@ -163,13 +165,14 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
             className={`rounded-[var(--radius-button)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${
               active?.key === c.key
                 ? `${PRIMARY_SURFACE} hover:bg-[image:var(--accent-gradient-hover)]`
-                : `${SECONDARY_SURFACE} hover:bg-surface-warm`
+                : SECONDARY_BUTTON_SURFACE
             }`}
           >
             {c.label}
           </Link>
         ))}
       </div>
+      )}
 
       {shown.map((c) => (
         <CategorySection key={c.key} category={c} personaId={activePersonaId} launch={launch} />

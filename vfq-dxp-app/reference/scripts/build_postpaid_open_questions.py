@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build VFQ_DXP_Postpaid_Activation_Open_Questions_Reference.xlsx.
+"""Build Postpaid_Activation_Open_Questions_Reference.xlsx.
 
 Generated, never hand-edited - same rule as the persona/feature matrix.
 Opening the workbook in Excel and saving will silently rewrite it.
@@ -38,7 +38,7 @@ from openpyxl.utils import get_column_letter
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / 'docs' / 'VFQ_DXP_Postpaid_Activation_Open_Questions_Reference.md'
-OUT = ROOT / 'outputs' / 'VFQ_DXP_Postpaid_Activation_Open_Questions_Reference.xlsx'
+OUT = ROOT / 'outputs' / 'Postpaid_Activation_Open_Questions_Reference.xlsx'
 
 
 def die(msg):
@@ -353,6 +353,10 @@ qs.cell(row=LAST + 2, column=1).alignment = WRAP
 qs.merge_cells(start_row=LAST + 2, start_column=1, end_row=LAST + 4, end_column=10)
 
 wb.save(OUT)
+
+from format_xlsx import format_file  # house format: header row, borders, Tenorite 14, no gridlines
+
+format_file(OUT)
 
 # ------------------------------------------------- verify the count formulas
 # A recalc pass would normally prove these evaluate. Without LibreOffice here,

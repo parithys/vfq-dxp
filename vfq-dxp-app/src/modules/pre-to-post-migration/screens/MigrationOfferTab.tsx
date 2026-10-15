@@ -1,3 +1,4 @@
+import { badgeVariantFor } from '../../../lib/statusTone';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../../components/primitives/Badge';
@@ -19,13 +20,6 @@ interface CrossSalesOffer {
   serviceIdentifier: string;
   journeyType?: string;
 }
-
-const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'filled-neutral'> = {
-  Offered: 'warning',
-  Interested: 'filled-neutral',
-  Accepted: 'success',
-  Rejected: 'danger',
-};
 
 // SCR-179: Migration Offer tab (Complex Asset List Applet) - UJ-087 Autobase:
 // "Migration Offers grid (system pre-populated, 1 of 1)... Accept / Interested
@@ -64,24 +58,24 @@ export function MigrationOfferTab() {
         {migrationOffers.map((o) => {
           const status = dispositioned[o.offerId] ?? o.status;
           return (
-            <div key={o.offerId} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">
+            <div key={o.offerId} className="card p-4">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-fg font-medium">{o.offerName}</span>
-                <Badge variant={STATUS_VARIANT[status] ?? 'filled-neutral'}>{status}</Badge>
+                <Badge variant={badgeVariantFor(status)}>{status}</Badge>
               </div>
               <p className="text-fg-2 text-[length:var(--fs-body)] mb-2">{o.offerDescription}</p>
               <dl className="grid grid-cols-3 gap-2 text-[length:var(--fs-caption)] text-muted mb-3">
                 <div>Campaign: {o.campaignCode}</div>
                 <div>Promotion: {o.promotionId}</div>
                 <div>MSISDN: {o.serviceIdentifier}</div>
-                <div>Monthly Rental: QR {o.monthlyRental}</div>
-                <div>Add-on Monthly: QR {o.addOnMonthly ?? 0}</div>
+                <div>Monthly Rental: QAR {o.monthlyRental}</div>
+                <div>Add-on Monthly: QAR {o.addOnMonthly ?? 0}</div>
               </dl>
               {status === 'Offered' && (
                 <div className="flex gap-2">
-                  <Button variant="primary-rect" compact onClick={() => disposition(o, 'Accepted')}>Accept</Button>
-                  <Button variant="ghost-rect" compact onClick={() => disposition(o, 'Interested')}>Interested</Button>
-                  <Button variant="ghost-rect" compact className="!text-danger !border-danger" onClick={() => disposition(o, 'Rejected')}>Reject</Button>
+                  <Button variant="primary" compact onClick={() => disposition(o, 'Accepted')}>Accept</Button>
+                  <Button variant="secondary" compact onClick={() => disposition(o, 'Interested')}>Interested</Button>
+                  <Button variant="secondary" compact className="!text-danger !border-danger" onClick={() => disposition(o, 'Rejected')}>Reject</Button>
                 </div>
               )}
             </div>

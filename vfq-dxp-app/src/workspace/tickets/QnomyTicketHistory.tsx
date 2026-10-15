@@ -1,3 +1,4 @@
+import { badgeVariantFor } from '../../lib/statusTone';
 import { useEffect, useMemo, useState } from 'react';
 import { useEntityStore } from '../../stores/entityStore';
 import { useAuthStore } from '../../stores/authStore';
@@ -71,11 +72,6 @@ const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 // has anything to give them - the store fallback is here rather than at each
 // call site because both `tickets` and `customers` need the exact same fix.
 const EMPTY: never[] = [];
-
-const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'filled-neutral'> = {
-  Completed: 'success',
-  Abandoned: 'warning',
-};
 
 // The Qnomy Ticket History page - what the "Customers Served" counter in the
 // top bar links to (PersonaSwitcher.tsx). That pill answered "how many", with
@@ -166,7 +162,7 @@ export function QnomyTicketHistory() {
     {
       key: 'status',
       header: 'Ticket Status',
-      render: (t) => <Badge variant={STATUS_VARIANT[t.status] ?? 'filled-neutral'}>{t.status}</Badge>,
+      render: (t) => <Badge variant={badgeVariantFor(t.status)}>{t.status}</Badge>,
     },
   ];
 

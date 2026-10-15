@@ -1,4 +1,4 @@
-"""Generate VFQ_DXP_Persona_Feature_Applicability_Matrix_Reference.xlsx.
+"""Generate Persona_Feature_Applicability_Matrix_Reference.xlsx.
 
 Regenerate with: python3 reference/scripts/build_persona_feature_matrix.py
 (run from anywhere — paths resolve relative to this script's location.)
@@ -49,7 +49,7 @@ CONF = os.path.join(APP_ROOT, 'public', 'config')
 DATA = os.path.join(APP_ROOT, 'public', 'mock-data')
 SRC = os.path.join(APP_ROOT, 'src')
 OUT = os.path.join(
-    APP_ROOT, 'reference', 'outputs', 'VFQ_DXP_Persona_Feature_Applicability_Matrix_Reference.xlsx'
+    APP_ROOT, 'reference', 'outputs', 'Persona_Feature_Applicability_Matrix_Reference.xlsx'
 )
 
 TICK = '✓'
@@ -261,7 +261,7 @@ def verify_app_integrity():
     #    through to /:moduleSlug and renders "Module not found."
     routes = set(re.findall(r'<Route path="([^"]+)"', rtr))
     # A dynamic route only counts as coverage if it has at least one LITERAL
-    # segment that matches — e.g. /mobile/:category covers /mobile/sim-device.
+    # segment that matches — e.g. /mobile/:category covers /mobile/service-management.
     # The module catch-all /:moduleSlug has none, so it must never count:
     # being "covered" by it is exactly the broken case this guard exists for.
     # /products and /customers previously fell through to it and rendered the
@@ -348,13 +348,14 @@ def parse_navigation():
     problems = []
     if set(approach_nav) != {'Customer-First', 'Product-First', 'Hybrid', 'None'}:
         problems.append(f'APPROACH_NAV keys parsed as {sorted(approach_nav)}')
-    if len(items) != 20:
-        problems.append(f'navManifest parsed {len(items)} items, expected 20')
+    if len(items) != 19:
+        problems.append(f'navManifest parsed {len(items)} items, expected 19')
     if not gated:
         problems.append('no requiresFeature found in navManifest')
     for lk, cats in lines.items():
-        if len(cats) != 5:
-            problems.append(f'{lk} parsed {len(cats)} categories, expected 5')
+        expected = 4  # Mobile Services and Fibre & Home Services each have the same four journey categories (New Connections is its own hub)
+        if len(cats) != expected:
+            problems.append(f'{lk} parsed {len(cats)} categories, expected {expected}')
     if problems:
         raise SystemExit(
             'Could not parse navigation out of source — refusing to emit a Navigation sheet '
@@ -504,8 +505,8 @@ for i, (label, width) in enumerate(META, start=1):
 def col_label(p):
     """Header label for a role column: "Channel Manager: VFQ12348".
 
-    A trailing parenthetical is dropped — "MNP Agent (Mobile Number Portability
-    Agent)" becomes "MNP Agent". Two names carry that expansion and, rotated
+    A trailing parenthetical is dropped — "MNP (Mobile Number Portability
+    Agent)" becomes "MNP". Two names carry that expansion and, rotated
     90 degrees, they alone forced the header row 40% taller than the other 24
     needed. The expansion is not lost: Roles & Credentials prints the full name
     verbatim, and the abbreviation is in the glossary. Derived from the name
@@ -856,7 +857,7 @@ r += 1
 
 section('Scope')
 kv('Roles', f'{len(PERSONAS)}. Rows 1–25 are the VFQ operational role table as supplied; ROLE-26 '
-            '(Complaints Agent) was added to own ticket resolution, since the table has no '
+            '(Complaints) was added to own ticket resolution, since the table has no '
             'Complaints Team successor and widening resolution to every care agent would have '
             'discarded the documented raise-vs-resolve separation (BR-067 / RBAC-132).')
 kv('Features', f'{len(rows)} catalogued ({sum(1 for x in rows if x["built"])} built, '
@@ -866,7 +867,7 @@ kv('Screens', f'{len(BUILT)} of {len(ROUTES)} catalogued screens are registered 
               'omitted.')
 kv('Superseded sources', 'These now-duplicate persona records should be treated as historical, not '
                          'authoritative: VFQ_DXP_Personas_Reference.xlsx "Personas" (the 66-persona '
-                         'model), VFQ_DXP_Test_Data_Reference.xlsx "Login Credentials" (7 old Staff '
+                         'model), Test_Data_Reference.xlsx "Login Credentials" (7 old Staff '
                          'IDs with role labels that have since changed meaning), and the same '
                          'workbook\'s "Persona" and "Persona by Approach" sheets. The 66-persona '
                          'model and its RBAC evidence are archived under '
@@ -903,6 +904,10 @@ ls.cell(row=r, column=1, value='Generated from commit').font = BOLD
 ls.cell(row=r, column=2, value=f'{sha}')
 
 wb.save(OUT)
+
+from format_xlsx import format_file  # house format: header row, borders, Tenorite 14, no gridlines
+
+format_file(OUT)
 
 print(f'Wrote {OUT}')
 print(f'  roles: {len(PERSONAS)}  staff ids {PERSONAS[0]["staffId"]}–{PERSONAS[-1]["staffId"]}')

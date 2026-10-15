@@ -1,6 +1,7 @@
 import { SearchField } from '../components/primitives/SearchField';
 import { PageHeader } from '../components/patterns/PageHeader';
 import { useState } from 'react';
+import { NotFound } from './NotFound';
 import { useParams, Link } from 'react-router-dom';
 import { getAllModules, getAllRoutes, getJourneyIdsForScreen, getJourneyMeta } from '../engines/configEngine';
 import { MODULE_DESCRIPTIONS } from '../engines/moduleDescriptions';
@@ -9,9 +10,10 @@ import { screensVisibleFor } from '../engines/personaEngine';
 import { groupRoutesByFeature } from '../engines/screenGrouping';
 import { Badge } from '../components/primitives/Badge';
 import { Icon } from '../components/primitives/Icon';
-import { PRIMARY_SURFACE } from '../components/primitives/Button';
+import { Button } from '../components/primitives/Button';
 import { getScreenComponent } from './screenRegistry';
 import type { Route } from '../types/config';
+import { screenDisplayName } from '../lib/screenName';
 
 const ICONS = {
   chevronLeft: 'M15 18l-6-6 6-6',
@@ -63,7 +65,7 @@ export function ModuleScreenList() {
   const [filter, setFilter] = useState<Filter>('all');
 
   if (!module) {
-    return <div className="p-8 text-fg-2">Module not found.</div>;
+    return <NotFound />;
   }
 
   const enrichedByScreenId = new Map<string, Enriched>(
@@ -102,10 +104,10 @@ export function ModuleScreenList() {
       <Link
         key={route.routeId}
         to={route.path}
-        className="group rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)] transition-all"
+        className="group card p-5 hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)] transition-all"
       >
         <div className="flex items-start justify-between gap-2 mb-2">
-          <div className="font-medium text-fg text-[length:var(--fs-body-lg)]">{route.screenName}</div>
+          <div className="font-medium text-fg text-[length:var(--fs-body-lg)]">{screenDisplayName(route.screenName)}</div>
           <Icon path={ICONS.openArrow} className="w-4 h-4 text-muted shrink-0 mt-1 group-hover:text-accent transition-colors" />
         </div>
         <div className="text-accent text-[length:var(--fs-micro)] font-semibold uppercase tracking-wide mb-3">
@@ -142,19 +144,19 @@ export function ModuleScreenList() {
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">
+        <div className="card p-4">
           <div className="text-[length:var(--fs-h4)] font-bold text-accent">{catalogued}</div>
           <div className="text-[length:var(--fs-caption)] text-muted">Catalogued screens</div>
         </div>
-        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">
+        <div className="card p-4">
           <div className="text-[length:var(--fs-h4)] font-bold text-success">{built}</div>
           <div className="text-[length:var(--fs-caption)] text-muted">Built</div>
         </div>
-        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">
+        <div className="card p-4">
           <div className="text-[length:var(--fs-h4)] font-bold text-fg-2">{notBuilt}</div>
           <div className="text-[length:var(--fs-caption)] text-muted">Not built</div>
         </div>
-        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">
+        <div className="card p-4">
           <div className="text-[length:var(--fs-h4)] font-bold text-accent">{grantedToRole}</div>
           <div className="text-[length:var(--fs-caption)] text-muted">Granted to this role</div>
         </div>
@@ -171,15 +173,15 @@ export function ModuleScreenList() {
         />
         <div className="flex flex-wrap gap-2">
           {FILTERS.map((f) => (
-            <button
+            <Button
               key={f.key}
+              variant={filter === f.key ? 'primary' : 'secondary'}
+              size="sm"
+              aria-pressed={filter === f.key}
               onClick={() => setFilter(f.key)}
-              className={`rounded-[var(--radius-button)] border px-3 py-1.5 text-[length:var(--fs-caption)] ${
-                filter === f.key ? `${PRIMARY_SURFACE} enabled:hover:bg-[image:var(--accent-gradient-hover)]` : 'border-border-soft text-fg-2 hover:bg-surface'
-              }`}
             >
               {f.label}
-            </button>
+            </Button>
           ))}
         </div>
         <span className="sm:ml-auto text-[length:var(--fs-caption)] text-muted">{visibleCount} screens</span>
@@ -190,7 +192,7 @@ export function ModuleScreenList() {
         if (cards.length === 0) return null;
         return (
           <div key={`${subModule}::${feature}`} className="mb-6">
-            <h2 className="text-[length:var(--fs-h5)] font-medium text-fg-2 mb-1">{subModule}</h2>
+            <h2 className="text-[length:var(--fs-h5)] font-bold text-fg-2 mb-1">{subModule}</h2>
             <p className="mb-3 text-[length:var(--fs-caption)] text-muted">{feature}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{cards}</div>
           </div>
@@ -202,7 +204,7 @@ export function ModuleScreenList() {
         if (cards.length === 0) return null;
         return (
           <div className="mb-6">
-            <h2 className="text-[length:var(--fs-h5)] font-medium text-fg-2 mb-1">Other Screens</h2>
+            <h2 className="text-[length:var(--fs-h5)] font-bold text-fg-2 mb-1">Other Screens</h2>
             <p className="mb-3 text-[length:var(--fs-caption)] text-muted">
               Not evidenced or heuristically matched to a sub-module/feature above.
             </p>

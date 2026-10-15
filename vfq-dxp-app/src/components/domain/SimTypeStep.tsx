@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
 import { SimSerialScanner } from './SimSerialScanner';
+import type { DeviceType } from '../../lib/deviceType';
 
 export type SimType = 'Physical' | 'eSIM';
 
@@ -13,6 +14,11 @@ export interface SimTypeValue {
    * Stock Status after validation) - see SimSerialScanner's onChange. */
   simIccid?: string;
   simStockStatus?: string;
+  /** What the scanned serial is in stock as: 'Physical', or 'Printed eSIM' (a stocked card carrying an eSIM profile). */
+  simKind?: string;
+  /** A Pre-Paired SIM: the MSISDN comes from the SIM, so Number Selection was bypassed. */
+  prePaired?: boolean;
+  prePairedMsisdn?: string;
   esimIssued?: boolean;
   esimActivationCode?: string;
 }
@@ -21,6 +27,14 @@ interface SimTypeStepProps {
   value: SimTypeValue;
   customerEmail: string | undefined;
   onChange: (value: SimTypeValue) => void;
+  /** Passed to the serial field: scan-led on a tablet, type-led on the web. Omitted, the field is unchanged. */
+  device?: DeviceType;
+  /**
+   * The agent chose a Pre-Paired SIM on the Number step (Mobile Prepaid BRSD MPRA_001_NUM_02 / SIM_02): this step
+   * scans it from the Pre-Paired inventory and shows the SIM and the MSISDN already on it, read-only. eSIM is not
+   * offered, since a Pre-Paired SIM is a card.
+   */
+  prePaired?: boolean;
 }
 
 // Mock GSMA SGP.22-style activation string (LPA:1$smdp-address$matching-id) -
@@ -50,8 +64,56 @@ function generateActivationCode(): string {
 // kept deliberately lightweight (no fabricated eSIM provisioning API), and
 // still does NOT auto-advance: selecting eSIM is a choice to review, not a
 // validation result to act on immediately.
-export function SimTypeStep({ value, customerEmail, onChange }: SimTypeStepProps) {
+export function SimTypeStep({ value, customerEmail, onChange, device, prePaired }: SimTypeStepProps) {
   const [issuing, setIssuing] = useState(false);
+
+  if (prePaired) {
+    return (
+      <div className="max-w-xl space-y-3">
+        <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Pre-Paired SIM</h4>
+        <SimSerialScanner
+          value={value.simSerial ?? ''}
+          device={device}
+          inventory="pre-paired"
+          label="Pre-Paired SIM Serial Number"
+          onChange={(serial, valid, details) =>
+            onChange({
+              ...value,
+              simType: 'Physical',
+              simSerial: serial,
+              simValid: valid,
+              simIccid: details?.iccid,
+              simStockStatus: details?.stockStatus,
+              simKind: details?.simKind,
+              prePaired: true,
+              prePairedMsisdn: valid ? details?.msisdn : undefined,
+            })
+          }
+        />
+        {value.prePaired && value.simValid && (
+          <dl className="rounded-[var(--radius-card)] border border-success bg-tone-success p-3 space-y-1 text-[length:var(--fs-caption)]">
+            <div className="flex justify-between gap-3">
+              <dt className="text-fg-2">SIM Type</dt>
+              <dd className="text-fg font-medium">Pre-Paired SIM</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-fg-2">SIM Serial Number</dt>
+              <dd className="text-fg font-medium">{value.simSerial}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-fg-2">ICCID</dt>
+              <dd className="text-fg font-medium">{value.simIccid ?? '-'}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-fg-2">Mobile Number</dt>
+              {/* Read-only: the number is the one already on the SIM and cannot be edited here. */}
+              <dd className="text-fg font-medium">{value.prePairedMsisdn ?? '-'}</dd>
+            </div>
+          </dl>
+        )}
+      </div>
+    );
+  }
 
   const generateEsim = async () => {
     setIssuing(true);
@@ -61,13 +123,13 @@ export function SimTypeStep({ value, customerEmail, onChange }: SimTypeStepProps
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(max(15rem,calc((100%-1.5rem)/2)),1fr))] gap-6">
       {/* Physical SIM - the default-focused, primary path. */}
       <div className="space-y-3">
         <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Physical SIM</h4>
         <SimSerialScanner
           value={value.simSerial ?? ''}
-          autoFocus
+          device={device}
           // eSIM is a valid alternative to a Physical serial, not an
           // additional requirement on top of it (2026-09-28 "Require either
           // eSIM selection or SIM Serial Number") - this panel's own blur
@@ -83,6 +145,7 @@ export function SimTypeStep({ value, customerEmail, onChange }: SimTypeStepProps
               simValid: valid,
               simIccid: details?.iccid,
               simStockStatus: details?.stockStatus,
+              simKind: details?.simKind,
             })
           }
         />
@@ -95,10 +158,10 @@ export function SimTypeStep({ value, customerEmail, onChange }: SimTypeStepProps
             forward - the same "flash then advance" shape Eligibility's own
             auto-advance already has. */}
         {value.simType === 'Physical' && value.simValid && (
-          <dl className="rounded-[var(--radius-card)] border border-success bg-[color-mix(in_oklab,var(--success),var(--bg)_88%)] p-3 space-y-1 text-[length:var(--fs-caption)]">
+          <dl className="rounded-[var(--radius-card)] border border-success bg-tone-success p-3 space-y-1 text-[length:var(--fs-caption)]">
             <div className="flex justify-between gap-3">
               <dt className="text-fg-2">SIM Type</dt>
-              <dd className="text-fg font-medium">Physical</dd>
+              <dd className="text-fg font-medium">{value.simKind ?? 'Physical'}</dd>
             </div>
             <div className="flex justify-between gap-3">
               <dt className="text-fg-2">SIM Serial Number</dt>
@@ -138,7 +201,7 @@ export function SimTypeStep({ value, customerEmail, onChange }: SimTypeStepProps
           </>
         ) : (
           <>
-            <Button variant="primary-rect" onClick={generateEsim} disabled={issuing}>
+            <Button variant="primary" onClick={generateEsim} disabled={issuing}>
               {issuing ? 'Selecting eSIM…' : 'Select eSIM'}
             </Button>
             {/* Stated up front (2026-09-28 request), not only after

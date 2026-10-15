@@ -1,5 +1,8 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { SegmentedTabs } from '../../../components/primitives/SegmentedTabs';
+import { GridTable, toneFor } from '../sections/C360Kit';
+import { Button } from '../../../components/primitives/Button';
 import { Icon } from '../../../components/primitives/Icon';
 import { Card, I, Pill } from './TelesalesOverview';
 
@@ -50,28 +53,22 @@ export function WideBlock({ className = '', children }: { className?: string; ch
 }
 
 /** A section's marker on the page: it shows no heading, only hands its actions to the top toolbar. */
-export function SectionHeader({ actions }: { icon?: string; title?: string; description?: string; actions?: ReactNode }) {
+export function SectionHeader({ actions }: { actions?: ReactNode }) {
   const el = useContext(SlotsContext).toolbar;
   return el && actions ? createPortal(<>{actions}</>, el) : null;
 }
 
 export function HeaderButton({ children, primary, onClick }: { children: ReactNode; primary?: boolean; onClick?: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`inline-flex items-center gap-2 rounded-[var(--radius-button)] px-4 py-2 font-medium text-[length:var(--fs-btn-compact)] transition-colors ${
-        primary ? 'bg-accent text-accent-on hover:opacity-90' : 'bg-bg text-fg border border-border hover:bg-surface'
-      }`}
-    >
+    <Button variant={primary ? 'primary' : 'secondary'} compact onClick={onClick}>
       {children}
-    </button>
+    </Button>
   );
 }
 
 export function HeaderLink({ children, onClick }: { children: ReactNode; onClick?: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="order-first text-fg underline text-[length:var(--fs-body)] font-medium hover:text-accent">
+    <button type="button" onClick={onClick} className="order-first text-link underline text-[length:var(--fs-body)] font-medium">
       {children}
     </button>
   );
@@ -103,34 +100,15 @@ export interface Col<T> {
   className?: string;
 }
 
-/** Header row on a tinted band with uppercase captions, then bordered rows. */
+/** Telesales' simple table: the same GridTable every Customer 360 section uses (one table style), keyed by column header. */
 export function Table<T>({ cols, rows, empty = 'Nothing on file.' }: { cols: Col<T>[]; rows: T[]; empty?: string }) {
-  if (rows.length === 0) return <p className="px-5 py-4 text-muted text-[length:var(--fs-body)]">{empty}</p>;
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left text-[length:var(--fs-body)]">
-        <thead>
-          <tr className="bg-surface">
-            {cols.map((c) => (
-              <th key={c.header} className="px-5 py-3 text-muted font-semibold uppercase tracking-wide text-[length:var(--fs-caption-upper)] whitespace-nowrap">
-                {c.header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-[var(--field-card-border)]">
-          {rows.map((r, i) => (
-            <tr key={i} className="hover:bg-surface/50">
-              {cols.map((c) => (
-                <td key={c.header} className={`px-5 py-3 align-middle text-fg ${c.className ?? ''}`}>
-                  {c.render(r, i)}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <GridTable<T>
+      cols={cols.map((c) => ({ key: c.header, header: c.header, className: c.className, render: (r, i) => c.render(r, i) }))}
+      rows={rows}
+      rowKey={(r) => String(rows.indexOf(r))}
+      empty={empty}
+    />
   );
 }
 
@@ -187,20 +165,7 @@ export function TileLinks({ items, columns = 5 }: { items: { key: string; title:
 }
 
 export function PillTabs({ items, active, onChange }: { items: { key: string; label: string }[]; active: string; onChange: (k: string) => void }) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      {items.map((t) => (
-        <button
-          key={t.key}
-          type="button"
-          onClick={() => onChange(t.key)}
-          className={`rounded-[var(--radius-button)] px-4 py-1.5 text-[length:var(--fs-body)] border ${active === t.key ? 'bg-accent text-accent-on border-accent font-medium' : 'bg-bg text-fg-2 border-border hover:bg-surface'}`}
-        >
-          {t.label}
-        </button>
-      ))}
-    </div>
-  );
+  return <SegmentedTabs items={items} active={active} onChange={onChange} />;
 }
 
 export function Avatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' }) {
@@ -264,11 +229,8 @@ export const yesNo = (v: boolean | string | undefined | null) => {
   return <Pill tone={yes ? 'green' : 'red'}>{yes ? 'Yes' : 'No'}</Pill>;
 };
 
+// One status-to-colour map for Customer 360 and Telesales alike: toneFor in C360Kit.
 export const pillFor = (status: string) => {
-  const s = status.toLowerCase();
-  if (/(complet|paid|success|eligible|purchas|active|current|converted|resolved|clear|verified|yes|available|delivered)/.test(s)) return 'green' as const;
-  if (/(progress|popular)/.test(s)) return 'blue' as const;
-  if (/(cancel|expired|overdue|unpaid|suspend|fail|high)/.test(s)) return 'red' as const;
-  if (/(open|medium|target|pending|stage|low)/.test(s)) return 'amber' as const;
-  return 'neutral' as const;
+  const t = toneFor(status);
+  return (t === 'grey' || t === 'purple' ? 'neutral' : t) as 'neutral' | 'green' | 'blue' | 'red' | 'amber';
 };

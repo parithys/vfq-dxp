@@ -1,3 +1,4 @@
+import { badgeVariantFor } from '../../lib/statusTone';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEntityStore } from '../../stores/entityStore';
@@ -15,13 +16,6 @@ const SCOPE_TITLES: Record<LeadScope, string> = {
   team: "Manage Leads - My Team's Leads",
   all: 'All Leads Across Org',
   contact: 'Contact Record - Leads Sub-Tab',
-};
-
-const statusVariant = (status: string) => {
-  if (status === 'Rejected') return 'danger' as const;
-  if (status === 'Lead Converted') return 'success' as const;
-  if (status === 'In Progress') return 'outlined-red' as const;
-  return 'filled-neutral' as const;
 };
 
 // Pattern 14: Lead List + Owner/Status Management - a family of scoped list
@@ -60,7 +54,7 @@ export function LeadListView({ scope }: { scope: LeadScope }) {
           {
             key: 'status',
             header: 'Status',
-            render: (row) => <Badge variant={statusVariant(row.status)}>{row.status}</Badge>,
+            render: (row) => <Badge variant={badgeVariantFor(row.status)}>{row.status}</Badge>,
           },
           { key: 'ownerId', header: 'Owner' },
           { key: 'callbackDate', header: 'Callback Date' },

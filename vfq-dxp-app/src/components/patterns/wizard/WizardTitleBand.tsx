@@ -33,7 +33,7 @@ export function WizardTitleBand({
                   aside and come back to. */}
               {onSaveExit && (
                 <Button
-                  variant="secondary-rect"
+                  variant="secondary"
                   compact
                   onClick={onRequestSaveExit}
                 >
@@ -47,7 +47,7 @@ export function WizardTitleBand({
                   onward (2026-09-28) - see that prop's own note. */}
               {onAbandon && !abandonHidden && (
                 <Button
-                  variant="ghost-rect"
+                  variant="secondary"
                   compact
                   onClick={onRequestAbandon}
                 >
@@ -59,10 +59,10 @@ export function WizardTitleBand({
 
   // Title area: carries the page's own padding and a bottom border, so the step rail below it can sit flush against the left edge.
   return (
-      <div className="px-8 pt-8 pb-6 bg-bg border-b border-[var(--field-card-border)]">
-        <div className="flex items-start justify-between gap-4">
-          <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">{title}</h1>
-          <div className="flex items-center gap-3">
+      <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-6 bg-bg border-b border-[var(--field-card-border)]">
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+          <h1 className="text-[length:var(--fs-h4)] font-bold text-fg">{title}</h1>
+          <div className="flex flex-wrap items-center gap-3">
             {exitLinks}
           </div>
         </div>

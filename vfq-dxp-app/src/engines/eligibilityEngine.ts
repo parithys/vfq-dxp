@@ -1,4 +1,5 @@
 import { EXCEPTION_ROUTED_ID_TYPES } from '../data/idTypes';
+import { PORT_IN_DUES_THRESHOLD_QAR } from '../data/portInRules';
 /**
  * The customer fields these checks read - a structural shape rather than an
  * import of the full CustomerRecord, so both that type and the narrower local
@@ -73,10 +74,30 @@ export interface EligibilityContext {
    * second place risks the two disagreeing.
    */
   activeLinesDetail: string;
+  /**
+   * Which journey is checking. Defaults to postpaid. Prepaid differs in three places, each from the Mobile Prepaid
+   * BRSD: all four prepaid ID types (QID, Diplomatic, GCC, Passport) are permitted outright (MPRA_001_KYC_01); a
+   * collections block does not restrict prepaid; and the line-limit wording names prepaid, not postpaid.
+   */
+  journeyType?: 'postpaid' | 'prepaid';
+  /**
+   * 'common' returns only the checks that read the same for every product - ID validity, age, security and unclassified
+   * blacklist, deals - so Customer Identification, which happens before the agent has chosen a product, can report them.
+   * 'product' (default) is the full set, judged for `journeyType`: the ID-type routing, collections block and line cap
+   * differ by product and are only meaningful once one is chosen.
+   */
+  scope?: 'common' | 'product';
+  /** An MNP port-in: adds the outstanding-dues threshold check (BR-MNP-024), which no other product has. */
+  portIn?: boolean;
+  /** The port-in dues threshold in QAR; defaults to the configured one (none is defined yet, see data/portInRules). */
+  portInDuesThresholdQar?: number;
 }
 
+/** The checks that do not depend on the product (see EligibilityContext.scope). */
+export const COMMON_CHECK_IDS: ReadonlySet<string> = new Set(['id-validity', 'age', 'blacklist-security', 'blacklist-unclassified', 'deals']);
+
 /**
- * ID types that divert to the CBM / exception-approval workflow rather than
+ * ID types that divert to the Back Office Fulfilment / exception-approval workflow rather than
  * being sold directly.
  *
  * SPECIFIED 2026-09-25, replacing an assumption. This previously listed
@@ -84,7 +105,7 @@ export interface EligibilityContext {
  * flagged in this comment as needing confirmation. The actual rule is the
  * near-inverse: a postpaid connection may be sold directly only against a
  * valid QID or Diplomatic ID; Passport, GCC ID and other exception
- * identification must go through CBM approval.
+ * identification must go through Back Office Fulfilment approval.
  *
  * Kept as a check rather than removed now that the postpaid ID Type selector
  * only offers QID and Diplomatic ID: the other journeys share this engine and
@@ -121,7 +142,8 @@ function formatDate(iso: string): string {
 // `asOf` is injected rather than read from the clock inside, so expiry and age
 // are testable and so the whole result is a pure function of its inputs.
 export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): EligibilityCheck[] {
-  const { customer, doc, deals, outstandingQar, lineCapReached, lineCapHardStop, activeLinesDetail } = ctx;
+  const { customer, doc, deals, outstandingQar, lineCapReached, lineCapHardStop, activeLinesDetail, journeyType = 'postpaid' } = ctx;
+  const prepaid = journeyType === 'prepaid';
   const checks: EligibilityCheck[] = [];
 
   // 1. ID validity / expiry.
@@ -174,16 +196,15 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
 
   // 3. ID-type exception routing. Not a failure - a diversion.
   const presentedIdType = doc?.documentType ?? customer.idType ?? '';
-  const routed = EXCEPTION_ROUTED_ID_TYPES.has(presentedIdType);
+  // Prepaid permits QID, Diplomatic ID, GCC ID and Passport (KYC_01), so only an ID outside that set diverts.
+  const routed = prepaid ? presentedIdType === 'Other ID' : EXCEPTION_ROUTED_ID_TYPES.has(presentedIdType);
   checks.push({
     id: 'id-type-routing',
-    // A passport holder cannot be sold postpaid directly (CBM approval), and the row says so
-    // in those words. GCC ID / Other ID keep the plain check name.
-    label: routed && presentedIdType === 'Passport' ? 'Postpaid connection for passport holder' : 'ID Type',
+    label: routed ? 'ID Type Approval Required' : 'ID Type',
     passed: !routed,
     outcome: routed ? 'approval-routing' : 'pass',
     message: routed
-      ? 'This ID type cannot be sold directly. Routing to CBM approval workflow.'
+      ? 'The selected ID type requires Back Office Fulfilment approval. The order will be routed to the Back Office Fulfilment Agent for approval.'
       : 'Accepted ID type - eligible to proceed',
   });
 
@@ -201,10 +222,13 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
   checks.push({
     id: 'blacklist-collections',
     label: 'Collections Check',
-    passed: !collectionsBlocked,
-    outcome: collectionsBlocked ? 'soft-stop' : 'pass',
+    passed: !collectionsBlocked || prepaid,
+    // A collections block stops postpaid only; prepaid is what such a customer is still offered.
+    outcome: collectionsBlocked && !prepaid ? 'soft-stop' : 'pass',
     message: collectionsBlocked
-      ? `This account has an outstanding balance of QR ${outstandingQar}. Postpaid cannot be issued. Prepaid is available on this QID.`
+      ? prepaid
+        ? `This account has an outstanding balance of QAR ${outstandingQar}. This does not restrict a prepaid connection.`
+        : `This account has an outstanding balance of QAR ${outstandingQar}. Postpaid cannot be issued. Prepaid is available on this QID.`
       : 'No collections block on this account',
   });
 
@@ -268,12 +292,34 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
     outcome: lineCapHardStop ? 'hard-stop' : lineCapReached ? 'approval-routing' : 'pass',
     message: lineCapHardStop
       ? activeLinesDetail
+      : lineCapReached && prepaid
+        ? `Prepaid Line Limit Reached\n${activeLinesDetail} The journey can continue, but the order will be routed for approval upon submission.`
       : lineCapReached
-        ? `${activeLinesDetail}\nApproval Routing: the journey continues, and the order goes to the Collection Team for approval once submitted.`
+        ? `Postpaid Line Limit Reached\nThe maximum limit of ${activeLinesDetail.match(/limit of (\d+)/)?.[1] ?? 'the permitted number of'} active postpaid lines has been reached. The journey can continue, but the order will be routed to the Collection Team for approval upon submission.`
         : activeLinesDetail,
   });
 
-  return checks;
+  // 8. MNP only: outstanding dues against the Collections Policy threshold (BR-MNP-024). The threshold is not defined (the rule is Open
+  // in the BRSD), so with none configured the check never restricts; it states the amount it did not act on rather than passing silently.
+  if (ctx.portIn && ctx.scope !== 'common') {
+    const threshold = ctx.portInDuesThresholdQar ?? PORT_IN_DUES_THRESHOLD_QAR;
+    const exceeded = threshold !== undefined && outstandingQar > threshold;
+    checks.push({
+      id: 'port-in-dues',
+      label: 'Outstanding Dues Check',
+      passed: !exceeded,
+      outcome: exceeded ? 'hard-stop' : 'pass',
+      message: exceeded
+        ? `This account has outstanding dues of QAR ${outstandingQar}, above the QAR ${threshold} threshold for a port-in. The port-in cannot proceed until the dues are settled.`
+        : threshold === undefined
+          ? outstandingQar > 0
+            ? `Outstanding dues of QAR ${outstandingQar}. The port-in dues threshold is not defined yet, so it does not restrict this request.`
+            : 'No outstanding dues'
+          : `Outstanding dues are within the QAR ${threshold} port-in threshold`,
+    });
+  }
+
+  return ctx.scope === 'common' ? checks.filter((c) => COMMON_CHECK_IDS.has(c.id)) : checks;
 }
 
 /** Any hard stop means the journey halts on the Eligibility step. */

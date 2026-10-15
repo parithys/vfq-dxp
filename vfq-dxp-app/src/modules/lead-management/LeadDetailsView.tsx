@@ -1,15 +1,17 @@
+import { EntityMissing } from '../../components/patterns/EntityMissing';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useEntityStore } from '../../stores/entityStore';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { Badge } from '../../components/primitives/Badge';
 import { Button } from '../../components/primitives/Button';
-import { Drawer } from '../../components/primitives/Drawer';
+import { Drawer } from '../../capabilities';
 import { Select } from '../../components/primitives/Select';
 import { Textarea } from '../../components/primitives/Textarea';
 import { Input } from '../../components/primitives/Input';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import type { Lead } from './types';
+import { useSubmitGuard } from '../../hooks/useSubmit';
 
 interface RejectReason {
   reasonCode: string;
@@ -28,10 +30,13 @@ interface Agent {
 export function LeadDetailsView() {
   const [params] = useSearchParams();
   const leadId = params.get('id');
-  const leads = (useEntityStore((s) => s.records.leads) ?? []) as unknown as Lead[];
+  const leadRecords = useEntityStore((s) => s.records.leads);
+  const leadsLoading = useEntityStore((s) => s.loading.leads);
+  const leads = (leadRecords ?? []) as unknown as Lead[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const updateRecord = useEntityStore((s) => s.updateRecord);
   const pushToast = useNotificationStore((s) => s.pushToast);
+  const { guard } = useSubmitGuard();
 
   const [reasons, setReasons] = useState<RejectReason[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -48,55 +53,60 @@ export function LeadDetailsView() {
     mockDataEngine.list<Agent>('users-agents').then(setAgents);
   }, [loadKind]);
 
-  const lead = leads.find((l) => l.leadId === leadId) ?? leads[0];
+  // Never fall back to another lead: acting on the wrong one (reject, reassign) is worse than an error.
+  const lead = leadId ? leads.find((l) => l.leadId === leadId) : undefined;
 
   if (!lead) {
-    return <div className="p-8 text-fg-2">No lead selected - go back to a lead list and pick a row.</div>;
+    return <EntityMissing what="lead" loading={leadRecords === undefined || Boolean(leadsLoading)} backTo="/leads" backLabel="Back to leads" />;
   }
 
   const filteredAgents = agents.filter((a) => a.lastName.toLowerCase().includes(ownerFilter.toLowerCase()));
 
-  const submitReject = async () => {
-    await updateRecord('leads', 'leadId', lead.leadId, {
-      status: 'Rejected',
-      rejectReasonCode: rejectCode,
-      rejectComment,
+  const submitReject = () =>
+    guard(async () => {
+      await updateRecord('leads', 'leadId', lead.leadId, {
+        status: 'Rejected',
+        rejectReasonCode: rejectCode,
+        rejectComment,
+      });
+      pushToast('warning', `Lead ${lead.leadId} rejected: ${reasons.find((r) => r.reasonCode === rejectCode)?.reasonLabel ?? rejectCode}`);
+      setModal(null);
     });
-    pushToast('warning', `Lead ${lead.leadId} rejected: ${reasons.find((r) => r.reasonCode === rejectCode)?.reasonLabel ?? rejectCode}`);
-    setModal(null);
-  };
 
-  const submitReassign = async (agent: Agent) => {
-    await updateRecord('leads', 'leadId', lead.leadId, { ownerId: agent.userId });
-    pushToast('success', `Lead ${lead.leadId} reassigned to ${agent.firstName} ${agent.lastName}`);
-    setModal(null);
-  };
+  const submitReassign = (agent: Agent) =>
+    guard(async () => {
+      await updateRecord('leads', 'leadId', lead.leadId, { ownerId: agent.userId });
+      pushToast('success', `Lead ${lead.leadId} reassigned to ${agent.firstName} ${agent.lastName}`);
+      setModal(null);
+    });
 
-  const submitDescription = async () => {
-    await updateRecord('leads', 'leadId', lead.leadId, { description: descriptionDraft });
-    pushToast('success', 'Description updated.');
-    setModal(null);
-  };
+  const submitDescription = () =>
+    guard(async () => {
+      await updateRecord('leads', 'leadId', lead.leadId, { description: descriptionDraft });
+      pushToast('success', 'Description updated.');
+      setModal(null);
+    });
 
-  const submitCallback = async () => {
-    await updateRecord('leads', 'leadId', lead.leadId, { callbackDate: callbackDraft, status: 'In Progress', subStatus: 'Call Back' });
-    pushToast('success', `Callback set for ${callbackDraft} - Lead Status auto-transitioned to In Progress / Call Back.`);
-    setModal(null);
-  };
+  const submitCallback = () =>
+    guard(async () => {
+      await updateRecord('leads', 'leadId', lead.leadId, { callbackDate: callbackDraft, status: 'In Progress', subStatus: 'Call Back' });
+      pushToast('success', `Callback set for ${callbackDraft} - Lead Status auto-transitioned to In Progress / Call Back.`);
+      setModal(null);
+    });
 
   return (
     <div className="p-8 w-full">
       <div className="flex flex-col lg:flex-row items-start gap-6">
         <div className="flex-1 min-w-0 space-y-6">
-          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
+          <div className="card p-5">
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-[length:var(--fs-h3)] font-medium text-fg">Lead {lead.leadId}</h1>
+              <h1 className="text-[length:var(--fs-h4)] font-bold text-fg">Lead {lead.leadId}</h1>
               <Badge variant={lead.status === 'Rejected' ? 'danger' : 'outlined-red'}>{lead.status}</Badge>
             </div>
             <p className="text-fg-2">{lead.serviceNeeded} - owned by {lead.ownerId}</p>
           </div>
 
-          <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)] rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
+          <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)] card p-5">
             <div>
               <dt className="text-[length:var(--fs-caption)] text-muted">Sub Status</dt>
               <dd className="text-fg">{lead.subStatus ?? '-'}</dd>
@@ -121,28 +131,28 @@ export function LeadDetailsView() {
         </div>
 
         <div className="w-full lg:w-72 shrink-0 space-y-6">
-          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
-            <h2 className="text-[length:var(--fs-body-lg)] text-fg font-medium mb-3">Actions</h2>
+          <div className="card p-5">
+            <h2 className="text-[length:var(--fs-body-lg)] text-fg font-bold mb-3">Actions</h2>
             <div className="flex flex-col gap-2">
               <Button
-                variant="primary-rect"
+                variant="primary"
                 className="w-full justify-center"
                 onClick={() => { setDescriptionDraft(lead.description ?? ''); setModal('description'); }}
               >
                 Edit Description
               </Button>
               <Button
-                variant="ghost-rect"
+                variant="secondary"
                 className="w-full justify-center"
                 onClick={() => { setCallbackDraft(lead.callbackDate ?? ''); setModal('callback'); }}
               >
                 Set Callback
               </Button>
-              <Button variant="ghost-rect" className="w-full justify-center" onClick={() => setModal('reassign')}>
+              <Button variant="secondary" className="w-full justify-center" onClick={() => setModal('reassign')}>
                 Reassign Owner
               </Button>
               <Button
-                variant="ghost-rect"
+                variant="secondary"
                 className="w-full justify-center !text-danger !border-danger"
                 onClick={() => setModal('reject')}
               >
@@ -151,8 +161,8 @@ export function LeadDetailsView() {
             </div>
           </div>
 
-          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
-            <h2 className="text-[length:var(--fs-body-lg)] text-fg font-medium mb-3">Overview</h2>
+          <div className="card p-5">
+            <h2 className="text-[length:var(--fs-body-lg)] text-fg font-bold mb-3">Overview</h2>
             <div className="space-y-3 text-[length:var(--fs-body)]">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-muted">Status</span>
@@ -203,8 +213,8 @@ export function LeadDetailsView() {
           <Textarea label="Reject Comment" value={rejectComment} onChange={(e) => setRejectComment(e.target.value)} />
         </div>
         <div className="flex justify-end gap-2 mt-6">
-          <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>
-          <Button variant="primary-rect" onClick={submitReject} disabled={!rejectCode}>Confirm rejection</Button>
+          <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
+          <Button variant="primary" onClick={submitReject} disabled={!rejectCode}>Confirm rejection</Button>
         </div>
       </Drawer>
 
@@ -212,7 +222,7 @@ export function LeadDetailsView() {
         <Input aria-label="Filter by Last Name" placeholder="Filter by Last Name" value={ownerFilter} onChange={(e) => setOwnerFilter(e.target.value)} />
         <div className="mt-3 divide-y divide-border-soft max-h-64 overflow-y-auto">
           {filteredAgents.map((a) => (
-            <button
+            <button type="button"
               key={a.userId}
               onClick={() => submitReassign(a)}
               className="w-full text-left px-2 py-2 hover:bg-surface flex justify-between"
@@ -231,8 +241,8 @@ export function LeadDetailsView() {
         title="Description"
         footer={
           <>
-            <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>
-            <Button variant="primary-rect" onClick={submitDescription}>Save description</Button>
+            <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
+            <Button variant="primary" onClick={submitDescription}>Save description</Button>
           </>
         }
       >
@@ -245,8 +255,8 @@ export function LeadDetailsView() {
         title="CallBack Date/Time"
         footer={
           <>
-            <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>
-            <Button variant="primary-rect" onClick={submitCallback} disabled={!callbackDraft}>Done</Button>
+            <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
+            <Button variant="primary" onClick={submitCallback} disabled={!callbackDraft}>Done</Button>
           </>
         }
       >

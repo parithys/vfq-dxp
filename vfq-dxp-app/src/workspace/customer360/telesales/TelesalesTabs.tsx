@@ -35,7 +35,7 @@ import { AuditTrailSection } from '../sections/AuditTrailSection';
 import { CommunicationsSection } from '../sections/MiscSections';
 import { DevicePenaltyPolicy, StarNumberPenaltyPolicy } from '../sections/penaltyViewResolvers';
 
-// The Telesales Agent (CBU) Customer 360: ten task-shaped tabs (Overview ... Activation & Changes); the
+// The Telesales (CBU) Customer 360: ten task-shaped tabs (Overview ... Activation & Changes); the
 // former deep-dive areas are rows inside the tab they belong to.
 // It composes the SAME field-level sections the standard layout uses (TopicFieldsSection over
 // customer360-fields.json), so what a department may see - and whether each field is real-time or
@@ -46,9 +46,9 @@ const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 const CHEVRON_UP = 'M18 15l-6-6-6 6';
 
 const RECENT_MILESTONES =
-  'Recent Milestones or Interactions (including all recent purschages add-on, Plan change, activation, change done to MSISDN, account, ticket or activity)';
+  'Recent Milestones or Interactions (including all recent purchases add-on, Plan change, activation, change done to MSISDN, account, ticket or activity)';
 const RECENT_USAGES = '10 Recent Usages (Data, Calls, Text, OOB)';
-const AUDIT = 'Audit Trail (Orders,Contact, Account, Activity,TT)';
+const AUDIT = 'Audit Trail (Orders, Contact, Account, Activity, TT)';
 
 export interface TelesalesContext {
   personaId: string | undefined;
@@ -128,7 +128,7 @@ export function buildTelesalesTabs(ctx: TelesalesContext): TabItem[] {
     { title: 'Billing summary', display: 'kpi', fields: ['Latest Bill', 'Outstanding Balance', 'Unbilled Usage', 'Due Date', 'Last Payment & Channel'] },
   ];
   // 5. Recent activities
-  const recent: FieldGroup[] = [{ title: 'Recent activity', display: 'list', fields: [RECENT_MILESTONES, 'Actiivity (last 5)', 'Last 5 Orders'] }];
+  const recent: FieldGroup[] = [{ title: 'Recent activity', display: 'list', fields: [RECENT_MILESTONES, 'Activity (last 5)', 'Last 5 Orders'] }];
   // 7. Contact & address
   const reach: FieldGroup[] = [
     { title: 'Contact information', display: 'list', fields: ['First Name & Last Name (Full Name)', 'Email', 'Notification MSISDN', 'Preferred Language'] },
@@ -188,7 +188,7 @@ export function buildTelesalesTabs(ctx: TelesalesContext): TabItem[] {
     const list = deep.filter((r) => r.group === group);
     if (list.length === 0) return null;
     return (
-      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg divide-y divide-border-soft">
+      <div className="card divide-y divide-border-soft">
         {list.map((r) => (
           <DeepDiveRow key={r.title} title={r.title}>
             {r.node}

@@ -2,8 +2,7 @@ import { useRef } from 'react';
 import type { RefObject } from 'react';
 import { useSearchListNav } from '../../hooks/useSearchListNav';
 import type { PostpaidPlan } from './postpaidPlanModel';
-import { PLAN_GROUPS, planGroupOf } from './postpaidPlanModel';
-import { SearchField } from '../../components/primitives/SearchField';
+import { SearchField } from '../primitives/SearchField';
 
 interface PlanSearchBoxProps {
   searchRef: RefObject<HTMLDivElement | null>;
@@ -14,7 +13,9 @@ interface PlanSearchBoxProps {
   suggestions: PostpaidPlan[];
   selectedProductId: string | undefined;
   onSelectProduct: (productId: string) => void;
-  /** Picking a result: the step switches to the plan's tab, selects it and scrolls to its card. Defaults to plain selection. */
+  /** The tab the search is scoped to; shown in the placeholder. */
+  scopeLabel?: string;
+  /** Picking a result: the step selects it and scrolls to its card. Defaults to plain selection. */
   onPickResult?: (plan: PostpaidPlan) => void;
 }
 
@@ -27,6 +28,7 @@ export function PlanSearchBox({
   suggestions,
   selectedProductId,
   onSelectProduct,
+  scopeLabel,
   onPickResult,
 }: PlanSearchBoxProps) {
   const pick = (p: PostpaidPlan) => {
@@ -55,12 +57,12 @@ export function PlanSearchBox({
       <SearchField
         ref={inputRef}
         {...nav.inputProps}
-        aria-label="Search plans by name or price"
+        aria-label={`Search ${scopeLabel ?? 'plans'} by name or price`}
         role="combobox"
         aria-expanded={searchOpen}
         aria-controls="plan-search-listbox"
         autoComplete="off"
-        placeholder="Search plans by name or price"
+        placeholder={`Search ${scopeLabel ?? 'plans'} by name or price`}
         value={planSearch}
         onChange={(e) => {
           setPlanSearch(e.target.value);
@@ -73,7 +75,7 @@ export function PlanSearchBox({
           id="plan-search-listbox"
           role="listbox"
           aria-label="Plan suggestions"
-          className="absolute z-50 top-full left-0 right-0 mt-1 max-h-72 overflow-y-auto rounded-[var(--field-radius)] border border-border-soft bg-bg shadow-raised py-1 divide-y divide-[var(--field-divider)]"
+          className="absolute z-[var(--z-popover)] top-full left-0 right-0 mt-1 max-h-72 overflow-y-auto rounded-[var(--field-radius)] border border-border-soft bg-bg shadow-raised py-1 divide-y divide-[var(--field-divider)]"
         >
           {suggestions.map((p, i) => (
             <li
@@ -86,9 +88,6 @@ export function PlanSearchBox({
             >
               <span className="flex min-w-0 items-center gap-2">
                 <span className="text-fg text-[length:var(--fs-body)] truncate">{p.name}</span>
-                <span className="shrink-0 rounded-[var(--radius-pill)] bg-surface text-fg-2 px-2 py-0.5 text-[length:var(--fs-tag)] font-medium">
-                  {PLAN_GROUPS.find((g) => g.key === planGroupOf(p))?.label}
-                </span>
               </span>
               <span className="text-muted text-[length:var(--fs-caption)] shrink-0">QAR {p.mrcQAR}/mo</span>
             </li>

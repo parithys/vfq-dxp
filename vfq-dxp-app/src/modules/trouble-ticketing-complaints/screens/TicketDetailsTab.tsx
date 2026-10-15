@@ -1,3 +1,4 @@
+import { formatDateTime } from '../../../lib/format';
 import { Input } from '../../../components/primitives/Input';
 import type { EntityKind } from '../../../engines/mockDataEngine';
 import type { Ticket } from './ticketDetailModel';
@@ -14,7 +15,7 @@ export function TicketDetailsTab({ ticket, updateRecord }: Props) {
       <div><dt className="text-[length:var(--fs-caption)] text-muted">Priority</dt><dd className="text-fg">{ticket.priority}</dd></div>
       <div><dt className="text-[length:var(--fs-caption)] text-muted">Resolution Code</dt><dd className="text-fg">{ticket.resolutionCode ?? '-'}</dd></div>
       <div><dt className="text-[length:var(--fs-caption)] text-muted">Hashtags</dt><dd className="text-fg">{(ticket.hashtags ?? []).join(', ') || '-'}</dd></div>
-      <div><dt className="text-[length:var(--fs-caption)] text-muted">SLA Target</dt><dd className="text-fg">{ticket.slaTargetHours ? `${ticket.slaTargetHours}h, due ${ticket.slaDueAt ? new Date(ticket.slaDueAt).toLocaleString() : '-'}` : '-'}</dd></div>
+      <div><dt className="text-[length:var(--fs-caption)] text-muted">SLA Target</dt><dd className="text-fg">{ticket.slaTargetHours ? `${ticket.slaTargetHours}h, due ${ticket.slaDueAt ? formatDateTime(ticket.slaDueAt) : '-'}` : '-'}</dd></div>
       <div><dt className="text-[length:var(--fs-caption)] text-muted">Reopen count</dt><dd className="text-fg">{ticket.reopenCount ?? 0}</dd></div>
       {ticket.category === 'Disconnection' && (
         <div><dt className="text-[length:var(--fs-caption)] text-muted">Resolution Code (retention)</dt><dd className="text-fg">{ticket.retentionResolutionCode ?? '-'}</dd></div>
@@ -34,7 +35,7 @@ export function TicketDetailsTab({ ticket, updateRecord }: Props) {
           <dt className="text-[length:var(--fs-caption)] text-muted mb-1">Escalation History</dt>
           <ul className="list-disc list-inside text-fg text-[length:var(--fs-caption)]">
             {(ticket.escalations ?? []).map((e, i) => (
-              <li key={i}>{e.reason} - {new Date(e.escalatedAt).toLocaleString()} by {e.escalatedBy}</li>
+              <li key={i}>{e.reason} - {formatDateTime(e.escalatedAt)} by {e.escalatedBy}</li>
             ))}
           </ul>
         </div>

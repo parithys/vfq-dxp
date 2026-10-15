@@ -1,3 +1,4 @@
+import { Button } from '../../components/primitives/Button';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Badge, type BadgeVariant } from '../../components/primitives/Badge';
@@ -25,6 +26,10 @@ export interface CustomerProfileHeaderProps {
   idType: string;
   /** Tags beside the name (VIP, Postpaid ...). */
   tags?: { label: string; variant: BadgeVariant }[];
+  /** Anything else that belongs beside the name (the segment tag of a reimbursed line). */
+  nameBadge?: ReactNode;
+  /** Shown under the contact facts (the linked business). */
+  belowFacts?: ReactNode;
   blacklisted: boolean;
   dob?: string;
   preferredLanguage?: string;
@@ -113,21 +118,15 @@ export function CustomerProfileHeader(p: CustomerProfileHeaderProps) {
     return () => io.disconnect();
   }, [p.pinIdentity]);
   const revealButton = p.maskId && (
-    <button
-      type="button"
-      onClick={() => (revealed ? setRevealed(false) : p.onRequestReveal ? p.onRequestReveal(() => setRevealed(true)) : setRevealed(true))}
-      aria-label={revealed ? `Hide ${idLabel} number` : `Show ${idLabel} number`}
-      aria-pressed={revealed}
-      className="inline-flex items-center gap-1 rounded-[var(--radius-button)] px-1 text-accent text-[length:var(--fs-caption)] font-medium hover:underline focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
-    >
+    <Button variant="tertiary" compact onClick={() => (revealed ? setRevealed(false) : p.onRequestReveal ? p.onRequestReveal(() => setRevealed(true)) : setRevealed(true))} aria-label={revealed ? `Hide ${idLabel} number` : `Show ${idLabel} number`} aria-pressed={revealed}>
       <Icon path={revealed ? EYE_OFF_ICON : EYE_ICON} className="w-4 h-4" />
       {revealed ? 'Hide' : 'Show'}
-    </button>
+    </Button>
   );
   return (
     <>
     {p.pinIdentity && (
-      <div className="sticky top-0 z-20 h-0" aria-hidden={!offscreen}>
+      <div className="sticky top-0 z-[var(--z-sticky-raised)] h-0" aria-hidden={!offscreen}>
         {offscreen && (
           <div className="absolute inset-x-0 -mx-8 flex flex-wrap items-center gap-x-6 gap-y-1 border-b border-[var(--field-card-border)] bg-bg px-8 py-2 shadow-raised text-[length:var(--fs-body)]">
             <span className="font-bold text-fg">{p.name}</span>
@@ -146,11 +145,11 @@ export function CustomerProfileHeader(p: CustomerProfileHeaderProps) {
     )}
     <section
       ref={sectionRef}
-      className={p.flush ? 'border-b border-[var(--field-card-border)] bg-bg p-5' : 'rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-4'}
+      className={p.flush ? 'border-b bg-bg p-5' : 'card border-[var(--field-card-border)] bg-bg p-5 mb-4'}
     >
       <div className="flex flex-wrap lg:flex-nowrap items-stretch gap-6">
         <div className="flex items-start gap-4 min-w-0 flex-1">
-          <div className="w-16 h-16 rounded-full bg-accent text-accent-on flex items-center justify-center text-[length:var(--fs-h4)] font-bold shrink-0" aria-hidden>
+          <div className="w-16 h-16 rounded-[var(--radius-card-lg)] bg-[var(--brand-plum)] text-on-dark shadow-[var(--shadow-icon-tile)] flex items-center justify-center text-[length:var(--fs-h4)] font-bold shrink-0" aria-hidden>
             {initials(p.name)}
           </div>
           <div className="min-w-0 flex-1 space-y-1.5">
@@ -161,6 +160,7 @@ export function CustomerProfileHeader(p: CustomerProfileHeaderProps) {
                   {t.label}
                 </Badge>
               ))}
+              {p.nameBadge}
               {p.actions && <div className="ml-auto flex items-center gap-2">{p.actions}</div>}
             </div>
             <div className="flex flex-wrap items-center gap-2 text-fg text-[length:var(--fs-body)]">
@@ -168,7 +168,7 @@ export function CustomerProfileHeader(p: CustomerProfileHeaderProps) {
                 {idLabel}: <span className="font-medium">{idShown}</span>
               </span>
               {revealButton}
-              <Badge variant={p.blacklisted ? 'danger' : 'tag-green'}>{p.blacklisted ? 'Blacklisted' : 'Whitelisted'}</Badge>
+              {p.blacklisted && <Badge variant="danger">Blacklisted</Badge>}
             </div>
             <div className="flex flex-wrap items-center gap-y-3 pt-2">
               {p.phone && <Fact icon={PHONE_ICON} value={p.phone} caption="Primary MSISDN" />}
@@ -187,7 +187,7 @@ export function CustomerProfileHeader(p: CustomerProfileHeaderProps) {
 
         <aside
           aria-label="Alerts and attention"
-          className="rounded-[var(--radius-card)] border border-[var(--danger-border)] bg-[color-mix(in_oklab,var(--danger),var(--bg)_95%)] p-4 w-full lg:w-56 shrink-0 self-start"
+          className="rounded-[var(--radius-card)] border border-[var(--danger-border)] bg-tone-danger-soft p-4 w-full lg:w-56 shrink-0 self-start"
         >
           <div className="flex items-center justify-between mb-3">
             <span className="inline-flex items-center gap-2 font-semibold text-fg text-[length:var(--fs-body)]">
@@ -195,7 +195,7 @@ export function CustomerProfileHeader(p: CustomerProfileHeaderProps) {
               Alerts &amp; Attention
             </span>
             {p.alerts.length > 0 && (
-              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-danger text-white text-[length:var(--fs-micro)] font-semibold">
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-[var(--radius-pill)] bg-danger-solid text-on-dark text-[length:var(--fs-micro)] font-semibold">
                 {p.alerts.length}
               </span>
             )}
@@ -206,19 +206,21 @@ export function CustomerProfileHeader(p: CustomerProfileHeaderProps) {
             <ul className="space-y-2">
               {p.alerts.map((a) => (
                 <li key={a.label} className="flex items-center gap-2 text-fg text-[length:var(--fs-body)]">
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${a.tone === 'danger' ? 'bg-danger' : 'bg-[var(--warn)]'}`} />
+                  <span className={`w-2 h-2 rounded-[var(--radius-pill)] shrink-0 ${a.tone === 'danger' ? 'bg-danger' : 'bg-[var(--warn)]'}`} />
                   {a.label}
                 </li>
               ))}
             </ul>
           )}
           {p.onViewAlerts && (
-            <button type="button" onClick={p.onViewAlerts} className="mt-3 text-accent font-medium text-[length:var(--fs-body)] hover:underline">
+            <Button variant="tertiary" type="button" onClick={p.onViewAlerts} className="mt-3">
               View all alerts &rarr;
-            </button>
+            </Button>
           )}
         </aside>
       </div>
+      {/* Spans the whole header, under the identity, figures and alerts columns. */}
+      {p.belowFacts}
     </section>
     </>
   );

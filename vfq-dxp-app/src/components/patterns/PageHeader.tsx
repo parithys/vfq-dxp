@@ -23,13 +23,13 @@ export function PageHeader({
   bleed?: boolean;
 }) {
   return (
-    <header className={`${bleed ? '-mx-8 -mt-8 mb-6' : 'mb-6'} p-5 bg-bg border-b border-[var(--field-card-border)]`}>
+    <header className={`${bleed ? '-mx-8 -mt-8 mb-6' : 'mb-5'} px-5 py-3 bg-bg border-b border-[var(--field-card-border)]`}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <h1 className="text-[length:var(--fs-h4)] font-bold text-fg break-words min-w-0">{title}</h1>
         {badges}
         {actions && <div className="ml-auto flex items-center gap-2">{actions}</div>}
       </div>
-      {description && <div className="text-fg-2 text-[length:var(--fs-body)] mt-1">{description}</div>}
+      {description && <div className="text-fg-2 text-[length:var(--fs-body)]">{description}</div>}
     </header>
   );
 }

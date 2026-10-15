@@ -27,12 +27,12 @@ const WARNING = 'M12 3.5l9.5 16.5h-19L12 3.5z M12 10v4.5 M12 17.2v.1';
 
 const STYLE: Record<ValidationVariant, { shell: string; icon: string; tag: string }> = {
   success: {
-    shell: 'border-[var(--success-border)] bg-[color-mix(in_oklab,var(--success),var(--bg)_92%)]',
+    shell: 'border-[var(--success-border)] bg-tone-success-soft',
     icon: 'text-success',
     tag: 'Validated',
   },
   'business-failure': {
-    shell: 'border-[var(--danger-border)] bg-[color-mix(in_oklab,var(--danger),var(--bg)_94%)]',
+    shell: 'border-[var(--danger-border)] bg-tone-danger-soft',
     icon: 'text-danger',
     tag: 'Not validated',
   },
@@ -137,7 +137,7 @@ export function TechnicalFailure({
       actions={
         <>
           {!exhausted && onRetry && (
-            <Button variant="primary-rect" compact onClick={onRetry}>
+            <Button variant="primary" compact onClick={onRetry}>
               {kind === 'expired' ? 'Validate again' : `Retry (${attempts} of ${MAX_RETRIES} used)`}
             </Button>
           )}

@@ -21,6 +21,8 @@ interface MoiResult {
   /** No customer record exists for this ID (details came from NAS). */
   isNewCustomer?: boolean;
   gender?: string;
+  /** When the registry last confirmed the record (ISO); mirrors IdLookupStep's MoiResult. */
+  moiUpdateTime?: string;
   /** Sponsoring employer, when on file. What isB2B2C is derived from. */
   companyName?: string;
   /** That employer's enterprise-accounts row, when it has one. */

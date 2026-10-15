@@ -1,3 +1,5 @@
+import { SearchField } from '../../../components/primitives/SearchField';
+import { FilterSelect } from '../sections/C360Kit';
 import { useState } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
 import { Card, KV, Pill, dateTime, type Ctx } from './TelesalesOverview';
@@ -28,9 +30,9 @@ export function LeadsSection({ ctx }: { ctx: Ctx }) {
   return (
     <>
       <SectionHeader
-        icon={ICON.search}
-        title="Leads"
-        description="View and manage all leads associated with this customer. Capture new opportunities and track their progress from enquiry to conversion."
+       
+       
+       
         actions={
           <>
             <HeaderLink onClick={() => ctx.goToTab('ts-leads')}>All Leads ›</HeaderLink>
@@ -50,17 +52,9 @@ export function LeadsSection({ ctx }: { ctx: Ctx }) {
         <div className="space-y-4">
           <Card title={`Leads List (${leads.length})`} icon={ICON.search}>
             <div className="px-4 py-3 flex gap-2 border-b border-[var(--field-card-border)]">
-              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by lead type, MSISDN, status or comments..." aria-label="Search leads" className="flex-1 min-w-0 rounded-[var(--field-radius)] border border-[var(--field-border)] bg-surface px-3 py-2 text-[length:var(--fs-caption)]" />
-              <select value={type} onChange={(e) => setType(e.target.value)} aria-label="Lead type" className="rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-2 text-[length:var(--fs-caption)]">
-                {types.map((t) => (
-                  <option key={t}>{t}</option>
-                ))}
-              </select>
-              <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Lead status" className="rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-2 text-[length:var(--fs-caption)]">
-                {statuses.map((t) => (
-                  <option key={t}>{t}</option>
-                ))}
-              </select>
+              <SearchField value={query} onChange={(e) => setQuery(e.target.value)} onClear={() => setQuery('')} placeholder="Search by lead type, MSISDN, status or comments..." aria-label="Search leads" wrapperClassName="flex-1 min-w-48" />
+              <FilterSelect label="Lead type" value={type} options={types.map((x) => ({ value: x, label: x }))} onChange={(v) => setType(v)} />
+              <FilterSelect label="Lead status" value={status} options={statuses.map((x) => ({ value: x, label: x }))} onChange={(v) => setStatus(v)} />
             </div>
             <Table
               rows={shown}

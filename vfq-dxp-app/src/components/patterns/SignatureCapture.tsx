@@ -21,7 +21,7 @@ export function SignatureCapture({
   const [open, setOpen] = useState(false);
   return (
     <div className="mt-3">
-      <Button variant="primary-rect" onClick={() => setOpen(true)} disabled={open || disabled}>
+      <Button variant="primary" onClick={() => setOpen(true)} disabled={open || disabled}>
         {label}
       </Button>
       {open && (

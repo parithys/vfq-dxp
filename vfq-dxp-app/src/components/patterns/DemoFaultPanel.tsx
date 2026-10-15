@@ -25,8 +25,9 @@ export function DemoFaultPanel() {
   const { faults, arm, clear } = useServiceFaults();
   const [service, setService] = useState<ServiceName | ''>('');
   const [kind, setKind] = useState<FaultKind | ''>('');
-  if (!SHOW_DEMO_FAULT_PANEL) return null;
   const [times, setTimes] = useState(0);
+  // After every hook: an early return above a hook changes the hook order between renders.
+  if (!SHOW_DEMO_FAULT_PANEL) return null;
   const armed = Object.entries(faults).filter(([, f]) => f && f.remaining > 0);
   const select = 'rounded-[var(--radius-button)] border border-border bg-bg px-2 py-1 text-[length:var(--fs-caption)]';
   return (
@@ -57,10 +58,10 @@ export function DemoFaultPanel() {
             </option>
           ))}
         </select>
-        <Button variant="primary-rect" compact disabled={!service || !kind || !times} onClick={() => service && kind && times > 0 && arm(service, kind, times)}>
+        <Button variant="primary" compact disabled={!service || !kind || !times} onClick={() => service && kind && times > 0 && arm(service, kind, times)}>
           Apply
         </Button>
-        <Button variant="secondary-rect" compact
+        <Button variant="secondary" compact
           onClick={() => {
             clear();
             setService('');

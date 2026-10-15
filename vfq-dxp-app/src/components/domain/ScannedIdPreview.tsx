@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { SPECIMENS, type Specimen } from '../../data/synthetic/idScanSamples';
 import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
+import { SPECIMEN_PALETTE as P } from '../../data/synthetic/idSpecimenPalette';
 
 export interface SpecimenIdentity {
   name: string;
@@ -79,8 +80,8 @@ const BARCODE_RECTS = (() => {
   return rects;
 })();
 
-const LABEL_FILL = '#8a8a8a';
-const VALUE_FILL = '#2a2a2a';
+const LABEL_FILL = P.c8a8a8a;
+const VALUE_FILL = P.c2a2a2a;
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 
 // The captured document, as shown back to the agent after a scan.
@@ -130,22 +131,22 @@ interface Theme {
 // stars; Diplomatic ID is navy and gold with a seal; B2B2C is a blue employee
 // card; Retired an amber pension card; MADA a dark green payment card with a chip.
 const THEMES: Record<IdVariant, Theme> = {
-  qid: { bg: '#fafafa', accent: '#8D1B3D', mrz: true },
-  passport: { bg: '#f6f1e3', accent: '#1f3a5f', headerText: 'PASSPORT', headerFill: '#ffffff', second: '#c9b27c', mrz: true },
-  gcc: { bg: '#f1f8f6', accent: '#0f766e', headerText: 'GCC NATIONAL ID', headerFill: '#ffffff', second: '#ffffff', mrz: true },
-  diplomatic: { bg: '#faf6ea', accent: '#1b2a49', headerText: 'DIPLOMATIC IDENTITY', headerFill: '#e3c470', second: '#b8912f', mrz: true },
+  qid: { bg: P.cf5f7f9, accent: P.c8d1b3d, mrz: true },
+  passport: { bg: P.cf6f1e3, accent: P.c1f3a5f, headerText: 'PASSPORT', headerFill: P.cffffff, second: P.cc9b27c, mrz: true },
+  gcc: { bg: P.cf1f8f6, accent: P.c0f766e, headerText: 'GCC NATIONAL ID', headerFill: P.cffffff, second: P.cffffff, mrz: true },
+  diplomatic: { bg: P.cfaf6ea, accent: P.c1b2a49, headerText: 'DIPLOMATIC IDENTITY', headerFill: P.ce3c470, second: P.cb8912f, mrz: true },
   b2b2c: {
-    bg: '#f2f7ff', accent: '#2563eb', headerText: 'EMPLOYEE ID  -  PARTNER COMPANY', headerFill: '#ffffff', second: '#bfd3fb',
+    bg: P.cf2f7ff, accent: P.c2563eb, headerText: 'EMPLOYEE ID  -  PARTNER COMPANY', headerFill: P.cffffff, second: P.cbfd3fb,
     rows: [['Employer', 'Acme Trading W.L.L.'], ['Staff No.', 'E-20418'], ['Department', 'Operations']],
     back: [{ label: 'Issued by', value: 'Human Resources' }, { label: 'Use', value: 'Proof of employment' }],
   },
   retired: {
-    bg: '#fff8ee', accent: '#b45309', headerText: 'RETIRED PERSON CARD', headerFill: '#ffffff', second: '#f3c98b',
+    bg: P.cfff8ee, accent: P.cb45309, headerText: 'RETIRED PERSON CARD', headerFill: P.cffffff, second: P.cf3c98b,
     rows: [['Status', 'Retired'], ['Retired since', '01/04/2021'], ['Pension no.', 'GRA-5520817']],
     back: [{ label: 'Authority', value: 'General Retirement Authority' }, { label: 'Scheme', value: 'Retirement benefit' }],
   },
   mada: {
-    bg: '#14532d', accent: '#0b3b1f', headerText: 'MADA', headerFill: '#ffffff', second: '#d9b44a', dark: true,
+    bg: P.c14532d, accent: P.c0b3b1f, headerText: 'MADA', headerFill: P.cffffff, second: P.cd9b44a, dark: true,
     rows: [['Card no.', '5078  ****  ****  1234'], ['Valid thru', '11/29'], ['Scheme', 'MADA debit']],
     back: [{ label: 'Customer service', value: '800 0000' }, { label: 'Issuer', value: 'Qatar bank (specimen)' }],
   },
@@ -164,10 +165,10 @@ export function ScannedIdPreview({ side, src, documentType = 'QID', clear = true
       // capture to fit would defeat the entire point of showing it back for
       // the agent to judge.
       //
-      // bg-white rather than a token because it is backing a photograph, not
+      // bg-paper (stays white in both themes) rather than --bg because it is backing a photograph, not
       // continuing the page - a --bg-coloured frame would band visibly against
       // the image in dark mode.
-      <span className="block w-full overflow-hidden rounded-[var(--radius-button)] border border-border-soft aspect-[1.585] bg-white">
+      <span className="block w-full overflow-hidden rounded-[var(--radius-button)] border border-border-soft aspect-[1.585] bg-paper">
         <img
           src={src}
           onError={() => setImageFailed(true)}
@@ -201,8 +202,8 @@ export function ScannedIdPreview({ side, src, documentType = 'QID', clear = true
         mrz: [`ID QAT${identity.idNo}`.padEnd(30, '<'), `${yymmdd(identity.dob)}0M${yymmdd(identity.expiry)}1QAT`.padEnd(30, '<')],
       }
     : baseSpecimen;
-  const labelFill = theme.dark ? '#cfe8d8' : LABEL_FILL;
-  const valueFill = theme.dark ? '#ffffff' : VALUE_FILL;
+  const labelFill = theme.dark ? P.ccfe8d8 : LABEL_FILL;
+  const valueFill = theme.dark ? P.cffffff : VALUE_FILL;
   const passportFace = variant === 'passport' && side === 'front';
   const label = variant === 'b2b2c' ? 'B2B2C office ID' : variant === 'retired' ? 'Retired office ID' : variant === 'mada' ? 'MADA card' : documentType;
 
@@ -217,19 +218,19 @@ export function ScannedIdPreview({ side, src, documentType = 'QID', clear = true
         aria-label={clear ? 'Simulated capture of the passport back side' : 'Blurred capture of the passport back side - unreadable, retake the scan'}
         className={`w-full rounded-[var(--radius-button)] border border-border-soft ${clear ? '' : 'blur-[1.5px] saturate-50'}`}
       >
-        <rect width="160" height="220" fill="#eef3f8" />
-        <rect x="0" y="0" width="160" height="22" fill="#1f3a5f" />
-        <text x="10" y="14" fontSize="5.4" fontWeight="700" letterSpacing="0.6" fill="#ffffff">OBSERVATIONS &amp; ENDORSEMENTS</text>
+        <rect width="160" height="220" fill={P.ceef3f8} />
+        <rect x="0" y="0" width="160" height="22" fill={P.c1f3a5f} />
+        <text x="10" y="14" fontSize="5.4" fontWeight="700" letterSpacing="0.6" fill={P.cffffff}>OBSERVATIONS &amp; ENDORSEMENTS</text>
         {[0, 1, 2, 3, 4, 5, 6, 7].map((n) => (
-          <line key={n} x1="10" y1={42 + n * 10} x2="150" y2={42 + n * 10} stroke="#c5d2e0" strokeWidth="0.5" />
+          <line key={n} x1="10" y1={42 + n * 10} x2="150" y2={42 + n * 10} stroke={P.cc5d2e0} strokeWidth="0.5" />
         ))}
         {rows.map((row, i) => (
           <text key={row.label} x="10" y={134 + i * 14} fontSize="5">
-            <tspan fill="#6b7b8f">{row.label}: </tspan>
-            <tspan fill="#1b2430" fontWeight="600">{row.value}</tspan>
+            <tspan fill={P.c6b7b8f}>{row.label}: </tspan>
+            <tspan fill={P.c1b2430} fontWeight="600">{row.value}</tspan>
           </text>
         ))}
-        <text className={SYNTHETIC_CLASS} x="10" y="208" fontSize="4" fill="#9aa7b6" fontStyle="italic">SPECIMEN - sample data for demo purposes only</text>
+        <text className={SYNTHETIC_CLASS} x="10" y="208" fontSize="4" fill={P.c9aa7b6} fontStyle="italic">SPECIMEN - sample data for demo purposes only</text>
       </svg>
     );
   }
@@ -238,7 +239,6 @@ export function ScannedIdPreview({ side, src, documentType = 'QID', clear = true
     const surname = (parts.length > 1 ? parts[parts.length - 1] : parts[0]).toUpperCase();
     const given = (parts.length > 1 ? parts.slice(0, -1) : []).join(' ').toUpperCase();
     const country = specimen.mrz[0].slice(2, 5);
-    const lorem = ['Lorem ipsum dolor sit amet, consectetur adipiscing elit semper', 'in augue urna vel diam. Vestibulum sed eros ut ligula'];
     return (
       <svg
         viewBox="0 0 160 220"
@@ -246,29 +246,30 @@ export function ScannedIdPreview({ side, src, documentType = 'QID', clear = true
         aria-label={clear ? `Simulated capture of the passport data page` : `Blurred capture of the passport data page - unreadable, retake the scan`}
         className={`w-full rounded-[var(--radius-button)] border border-border-soft ${clear ? '' : 'blur-[1.5px] saturate-50'}`}
       >
-        <rect width="160" height="220" fill="#eef3f8" />
+        <rect width="160" height="220" fill={P.ceef3f8} />
         {/* Inside page */}
-        <rect x="0" y="0" width="160" height="92" fill="#eaf0f6" />
-        <line x1="80" y1="8" x2="80" y2="86" stroke="#cfd9e4" strokeWidth="0.6" />
+        <rect x="0" y="0" width="160" height="92" fill={P.ceaf0f6} />
+        <line x1="80" y1="8" x2="80" y2="86" stroke={P.ccfd9e4} strokeWidth="0.6" />
         {[0, 1, 2, 3, 4, 5].map((n) => (
-          <rect key={`l${n}`} x="10" y={12 + n * 5} width={n === 5 ? 40 : 62} height="1.6" rx="0.8" fill="#9fb0c3" />
+          <rect key={`l${n}`} x="10" y={12 + n * 5} width={n === 5 ? 40 : 62} height="1.6" rx="0.8" fill={P.c9fb0c3} />
         ))}
         {[0, 1, 2, 3, 4, 5].map((n) => (
-          <rect key={`r${n}`} x="90" y={12 + n * 5} width={n === 5 ? 34 : 60} height="1.6" rx="0.8" fill="#9fb0c3" />
+          <rect key={`r${n}`} x="90" y={12 + n * 5} width={n === 5 ? 34 : 60} height="1.6" rx="0.8" fill={P.c9fb0c3} />
         ))}
-        <text x="10" y="50" fontSize="3.4" fill="#7b8ba0">{lorem[0]}</text>
-        <text x="10" y="55" fontSize="3.4" fill="#7b8ba0">{lorem[1]}</text>
-        <text x="96" y="64" fontSize="4.2" fill="#d33" fontWeight="600">HA №000001</text>
+        {/* Two lines of passport body text drawn as bars - no readable filler text on a specimen. */}
+        <rect x="10" y="47" width="68" height="1.6" rx="0.8" fill={P.c9fb0c3} />
+        <rect x="10" y="52" width="52" height="1.6" rx="0.8" fill={P.c9fb0c3} />
+        <text x="96" y="64" fontSize="4.2" fill={P.cd33} fontWeight="600">HA №000001</text>
         {/* Data page */}
-        <rect x="0" y="92" width="160" height="128" fill="#f7fafc" />
-        <line x1="0" y1="92" x2="160" y2="92" stroke="#c5d2e0" strokeWidth="0.6" />
-        <circle cx="14" cy="104" r="3" fill="none" stroke="#d33" strokeWidth="0.9" />
-        <text x="21" y="105.5" fontSize="5.4" fontWeight="700" fill="#1f3a5f">PASSPORT</text>
+        <rect x="0" y="92" width="160" height="128" fill={P.cf7fafc} />
+        <line x1="0" y1="92" x2="160" y2="92" stroke={P.cc5d2e0} strokeWidth="0.6" />
+        <circle cx="14" cy="104" r="3" fill="none" stroke={P.cd33} strokeWidth="0.9" />
+        <text x="21" y="105.5" fontSize="5.4" fontWeight="700" fill={P.c1f3a5f}>PASSPORT</text>
         {/* Photo */}
-        <rect x="8" y="112" width="42" height="52" rx="2" fill="#dfe6ee" />
-        <circle cx="29" cy="132" r="11" fill="#6b4f3b" />
-        <circle cx="29" cy="136" r="8.5" fill="#d9a77c" />
-        <path d="M10 164c2-14 36-14 38 0z" fill="#3a5ba0" />
+        <rect x="8" y="112" width="42" height="52" rx="2" fill={P.cdfe6ee} />
+        <circle cx="29" cy="132" r="11" fill={P.c6b4f3b} />
+        <circle cx="29" cy="136" r="8.5" fill={P.cd9a77c} />
+        <path d="M10 164c2-14 36-14 38 0z" fill={P.c3a5ba0} />
         {/* Details */}
         {[
           ['Type', 'P', 58, 112],
@@ -281,15 +282,15 @@ export function ScannedIdPreview({ side, src, documentType = 'QID', clear = true
           ['Date of expiry', specimen.expiry, 100, 160],
         ].map(([lab, val, x, y]) => (
           <g key={String(lab)}>
-            <text x={x as number} y={y as number} fontSize="3.2" fill="#6b7b8f">{lab}</text>
-            <text x={x as number} y={(y as number) + 5.2} fontSize="5" fill="#1b2430" fontWeight="600" fontFamily={lab === 'Passport No.' ? MONO : undefined}>{val}</text>
+            <text x={x as number} y={y as number} fontSize="3.2" fill={P.c6b7b8f}>{lab}</text>
+            <text x={x as number} y={(y as number) + 5.2} fontSize="5" fill={P.c1b2430} fontWeight="600" fontFamily={lab === 'Passport No.' ? MONO : undefined}>{val}</text>
           </g>
         ))}
-        <text x="8" y="172" fontSize="3.2" fill="#6b7b8f">Sex</text>
-        <text x="8" y="177" fontSize="5" fill="#1b2430" fontWeight="600">M</text>
-        <text className={SYNTHETIC_CLASS} x="8" y="186" fontSize="4" fill="#9aa7b6" fontStyle="italic">SPECIMEN - sample data for demo purposes only</text>
-        <text x="6" y="205" fontSize="4.6" fontFamily={MONO} fill="#2b3644" letterSpacing="0.15">{specimen.mrz[0]}</text>
-        <text x="6" y="213" fontSize="4.6" fontFamily={MONO} fill="#2b3644" letterSpacing="0.15">{specimen.mrz[1]}</text>
+        <text x="8" y="172" fontSize="3.2" fill={P.c6b7b8f}>Sex</text>
+        <text x="8" y="177" fontSize="5" fill={P.c1b2430} fontWeight="600">M</text>
+        <text className={SYNTHETIC_CLASS} x="8" y="186" fontSize="4" fill={P.c9aa7b6} fontStyle="italic">SPECIMEN - sample data for demo purposes only</text>
+        <text x="6" y="205" fontSize="4.6" fontFamily={MONO} fill={P.c2b3644} letterSpacing="0.15">{specimen.mrz[0]}</text>
+        <text x="6" y="213" fontSize="4.6" fontFamily={MONO} fill={P.c2b3644} letterSpacing="0.15">{specimen.mrz[1]}</text>
       </svg>
     );
   }
@@ -311,7 +312,7 @@ export function ScannedIdPreview({ side, src, documentType = 'QID', clear = true
       <rect width="214" height="135" fill={theme.bg} />
 
       {/* Identity marks: the Qatar ID's maroon hoist band, or a full-width header on every other layout. */}
-      {isQid && (side === 'front' ? <rect width="10" height="135" fill={theme.accent} /> : <rect x="0" y="18" width="214" height="22" fill="#313131" />)}
+      {isQid && (side === 'front' ? <rect width="10" height="135" fill={theme.accent} /> : <rect x="0" y="18" width="214" height="22" fill={P.c313131} />)}
       {!isQid && side === 'front' && (
         <>
           <rect width="214" height="17" fill={theme.accent} />
@@ -319,7 +320,7 @@ export function ScannedIdPreview({ side, src, documentType = 'QID', clear = true
             {theme.headerText}
           </text>
           {variant === 'gcc' &&
-            [0, 1, 2, 3, 4, 5].map((n) => <circle key={n} cx={170 + n * 7} cy="8.5" r="2" fill="#ffffff" />)}
+            [0, 1, 2, 3, 4, 5].map((n) => <circle key={n} cx={170 + n * 7} cy="8.5" r="2" fill={P.cffffff} />)}
           {variant === 'diplomatic' && (
             <>
               <circle cx="196" cy="8.5" r="6" fill={theme.second} />
@@ -346,7 +347,7 @@ export function ScannedIdPreview({ side, src, documentType = 'QID', clear = true
           )}
         </>
       )}
-      {!isQid && side === 'back' && <rect x="0" y="18" width="214" height="22" fill={variant === 'mada' ? '#0b0b0b' : theme.accent} />}
+      {!isQid && side === 'back' && <rect x="0" y="18" width="214" height="22" fill={variant === 'mada' ? P.c0b0b0b : theme.accent} />}
 
       {side === 'front' && (
         <>
@@ -354,14 +355,14 @@ export function ScannedIdPreview({ side, src, documentType = 'QID', clear = true
             // Payment card: gold chip in place of a portrait.
             <>
               <rect x="22" y="30" width="30" height="23" rx="4" fill={theme.second} />
-              <path d="M22 41.5h30M37 30v23" stroke="#a8862b" strokeWidth="1" />
+              <path d="M22 41.5h30M37 30v23" stroke={P.ca8862b} strokeWidth="1" />
             </>
           ) : (
             <>
               {/* Portrait block - round for the passport page, square-cornered elsewhere. */}
-              <rect x="24" y="26" width="46" height={passportFace ? 50 : 58} rx={passportFace ? 8 : 3} fill="#e0e0e0" />
-              <circle cx="47" cy="46" r="11" fill="#c9c9c9" />
-              <path d={passportFace ? 'M30 76c3-13 31-13 34 0z' : 'M30 84c3-13 31-13 34 0z'} fill="#c9c9c9" />
+              <rect x="24" y="26" width="46" height={passportFace ? 50 : 58} rx={passportFace ? 8 : 3} fill={P.ce0e0e0} />
+              <circle cx="47" cy="46" r="11" fill={P.cc9c9c9} />
+              <path d={passportFace ? 'M30 76c3-13 31-13 34 0z' : 'M30 84c3-13 31-13 34 0z'} fill={P.cc9c9c9} />
             </>
           )}
           <text x={variant === 'mada' ? 62 : 82} y="35" fontSize="7" fill={valueFill} fontWeight="600">
@@ -410,15 +411,15 @@ export function ScannedIdPreview({ side, src, documentType = 'QID', clear = true
           </text>
           {/* Never lets the specimen pass as a real capture, however legible
               the text above reads. */}
-          <text className={SYNTHETIC_CLASS} x="24" y={passportFace ? 98 : scenario ? 120 : 114} fontSize="5.5" fill="#b5b5b5" fontStyle="italic">
+          <text className={SYNTHETIC_CLASS} x="24" y={passportFace ? 98 : scenario ? 120 : 114} fontSize="5.5" fill={P.cb5b5b5} fontStyle="italic">
             SPECIMEN - sample data for demo purposes only
           </text>
           {passportFace && (
             <>
-              <text x="12" y="116" fontSize="6.5" fontFamily={MONO} fill="#4a4a4a" letterSpacing="0.3">
+              <text x="12" y="116" fontSize="6.5" fontFamily={MONO} fill={P.c4a4a4a} letterSpacing="0.3">
                 {specimen.mrz[0]}
               </text>
-              <text x="12" y="126" fontSize="6.5" fontFamily={MONO} fill="#4a4a4a" letterSpacing="0.3">
+              <text x="12" y="126" fontSize="6.5" fontFamily={MONO} fill={P.c4a4a4a} letterSpacing="0.3">
                 {specimen.mrz[1]}
               </text>
             </>
@@ -437,17 +438,17 @@ export function ScannedIdPreview({ side, src, documentType = 'QID', clear = true
           {variant === 'mada' && (
             // Signature panel, as on a payment card.
             <>
-              <rect x="18" y="84" width="120" height="16" rx="2" fill="#f4f4f4" />
-              <text x="22" y="95" fontSize="5.5" fill="#777" fontStyle="italic">
+              <rect x="18" y="84" width="120" height="16" rx="2" fill={P.cf4f4f4} />
+              <text x="22" y="95" fontSize="5.5" fill={P.c777} fontStyle="italic">
                 Authorised signature
               </text>
             </>
           )}
           {showBarcode && (
             <g transform={`translate(${BARCODE_X} ${BARCODE_Y})`}>
-              <rect x="-3" y="-3" width={BARCODE_W + 6} height="38" rx="1" fill="#ffffff" />
+              <rect x="-3" y="-3" width={BARCODE_W + 6} height="38" rx="1" fill={P.cffffff} />
               {BARCODE_RECTS.map((bar) => (
-                <rect key={bar.x} x={bar.x} y="0" width={bar.w} height="26" fill="#313131" />
+                <rect key={bar.x} x={bar.x} y="0" width={bar.w} height="26" fill={P.c313131} />
               ))}
               <text x={BARCODE_W / 2} y="34" fontSize="5" textAnchor="middle" fontFamily={MONO} fill={LABEL_FILL}>
                 {specimen.idNo}
@@ -457,10 +458,10 @@ export function ScannedIdPreview({ side, src, documentType = 'QID', clear = true
           {/* MRZ-shaped filler on the document types that carry one - the passport's lives on its face instead. */}
           {theme.mrz && (
             <>
-              <text x="18" y="100" fontSize="7" fontFamily={MONO} fill="#4a4a4a" letterSpacing="0.3">
+              <text x="18" y="100" fontSize="7" fontFamily={MONO} fill={P.c4a4a4a} letterSpacing="0.3">
                 {specimen.mrz[0]}
               </text>
-              <text x="18" y="112" fontSize="7" fontFamily={MONO} fill="#4a4a4a" letterSpacing="0.3">
+              <text x="18" y="112" fontSize="7" fontFamily={MONO} fill={P.c4a4a4a} letterSpacing="0.3">
                 {specimen.mrz[1]}
               </text>
             </>

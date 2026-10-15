@@ -3,9 +3,11 @@ import { getAllModules, getAllRoutes } from '../engines/configEngine';
 import { useCustomerContext } from '../stores/customerContextStore';
 import { Icon } from '../components/primitives/Icon';
 import { NAV_MANIFEST, navItemByPath } from './navManifest';
+import { screenDisplayName } from '../lib/screenName';
+import { journeyPlaceOf } from './journeyLocation';
 
 const CHEVRON_RIGHT = 'M9 18l6-6-6-6';
-const ARROW_LEFT = 'M19 12H5 M12 19l-7-7 7-7';
+const CHEVRON_LEFT = 'M15 18l-6-6 6-6';
 
 function Crumb() {
   return <Icon path={CHEVRON_RIGHT} className="w-3 h-3 text-muted shrink-0" />;
@@ -34,13 +36,19 @@ export function Breadcrumbs() {
     ? NAV_MANIFEST.find((i) => i.children?.some((c) => c.key === navItem.key))
     : undefined;
 
+  // A page a journey opens (the Number Management Portal, a wizard, Port-In Status): the trail follows the menu it was opened from - line,
+  // then the tab (category) it sits under - instead of the old module catalogue, so it always matches the tab structure of Mobile Services,
+  // Fibre & Home Services and New Connections.
+  const place = navItem ? undefined : journeyPlaceOf(location.pathname, (location.state as { navJourney?: string } | null)?.navJourney);
+  const sameLabel = place ? place.line.label === place.category.label : false;
+
   return (
     // --nav-border (#e0e0e0), matching the topbar's divider directly above
     // rather than the softer --border-soft this carried. The two are stacked
     // rules in the same column, so an #eeeeee line under an #e0e0e0 one read
     // as a mistake. Same token, not the same literal, so they stay matched in
     // dark mode where --border-soft and --nav-border diverge.
-    <div className="flex items-center gap-1.5 px-6 py-2.5 text-[length:var(--fs-caption)] text-muted border-b border-[var(--nav-border)] bg-bg">
+    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 px-6 py-2.5 text-[length:var(--fs-caption)] text-muted border-b border-[var(--nav-border)] bg-bg">
       {/* Single global back affordance - this bar is the one persistent
        * element mounted above every routed page (App.tsx), so placing it
        * here guarantees it's always in the same spot, rather than the
@@ -57,9 +65,9 @@ export function Breadcrumbs() {
         type="button"
         onClick={() => navigate(-1)}
         aria-label="Go back"
-        className="flex items-center gap-1 -ml-1 pl-2 pr-2.5 py-1 rounded-[var(--radius-button)] border border-transparent bg-charcoal-panel text-white hover:bg-[color-mix(in_oklab,var(--charcoal-panel),white_14%)] transition-colors shrink-0"
+        className="breadcrumb-back"
       >
-        <Icon path={ARROW_LEFT} className="w-3.5 h-3.5" />
+        <Icon path={CHEVRON_LEFT} className="w-3.5 h-3.5" />
         Back
       </button>
       <Link to="/" className="ml-1 text-muted hover:text-fg transition-colors">
@@ -79,7 +87,25 @@ export function Breadcrumbs() {
           <span className="text-fg font-medium">{navItem.label}</span>
         </>
       )}
-      {module && !isCustomer360 && !navItem && (
+      {place && (
+        <>
+          <Crumb />
+          <Link to={place.line.to} className="text-muted hover:text-fg transition-colors">
+            {place.line.label}
+          </Link>
+          {!sameLabel && (
+            <>
+              <Crumb />
+              <Link to={`${place.line.to}/${place.category.key}`} className="text-muted hover:text-fg transition-colors">
+                {place.category.label}
+              </Link>
+            </>
+          )}
+          <Crumb />
+          <span className="text-fg font-medium">{place.journey.title}</span>
+        </>
+      )}
+      {module && !isCustomer360 && !navItem && !place && (
         <>
           <Crumb />
           <Link to={`/${module.moduleSlug}`} className="text-muted hover:text-fg transition-colors">
@@ -87,10 +113,10 @@ export function Breadcrumbs() {
           </Link>
         </>
       )}
-      {route && (
+      {route && !place && (
         <>
           <Crumb />
-          <span className="text-fg font-medium">{route.screenName}</span>
+          <span className="text-fg font-medium">{screenDisplayName(route.screenName)}</span>
         </>
       )}
       {isCustomer360 && (

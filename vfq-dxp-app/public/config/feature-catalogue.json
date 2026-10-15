@@ -123,11 +123,11 @@
     ]
   },
   {
-    "key": "prepaid.new-prepaid-tablet-wizard",
-    "name": "New Prepaid (Tablet) wizard",
+    "key": "prepaid.new-prepaid-wizard",
+    "name": "New Prepaid Activation wizard",
     "area": "Mobile Prepaid",
     "surface": "module",
-    "screenIds": ["SCR-190", "SCR-191", "SCR-192"]
+    "screenIds": ["SCR-190"]
   },
   {
     "key": "mnp.process-choice",
@@ -145,6 +145,13 @@
       "SCR-121", "SCR-122", "SCR-123", "SCR-124", "SCR-125", "SCR-126",
       "SCR-127", "SCR-129", "SCR-132", "SCR-133", "SCR-134"
     ]
+  },
+  {
+    "key": "mnp.port-in-status",
+    "name": "MNP Port-In status tracking",
+    "area": "MNP / FNP Porting",
+    "surface": "module",
+    "screenIds": ["SCR-136"]
   },
   {
     "key": "leads.list-views",

@@ -16,9 +16,10 @@ export type BadgeVariant =
   | 'tag-violet'
   | 'tag-red';
 
-interface BadgeProps {
+import type { ComponentPropsWithRef } from 'react';
+
+interface BadgeProps extends ComponentPropsWithRef<'span'> {
   variant?: BadgeVariant;
-  children: React.ReactNode;
 }
 
 // Status pills follow the 2026-09-24 reference: outlined rather than filled -
@@ -55,7 +56,7 @@ const variantClasses: Record<BadgeVariant, string> = {
   // Its own --badge-success-solid token: --success is tuned as a TEXT and
   // border colour on a light surface, and is too light to carry white text
   // at this size.
-  'success-solid': 'bg-[var(--badge-success-solid)] text-white border border-transparent',
+  'success-solid': 'bg-[var(--badge-success-solid)] text-on-dark border border-transparent',
   warning: 'bg-bg border border-[var(--warn-border)] text-[var(--warn-text)]',
   danger: 'bg-bg border border-[var(--danger-border)] text-danger',
   info: 'bg-bg border border-[var(--info-border)] text-[var(--info)]',
@@ -65,15 +66,17 @@ const variantClasses: Record<BadgeVariant, string> = {
   // report a status, so they sit quieter than the outlined status pills above.
   'tag-blue': 'bg-[var(--tag-blue-bg)] text-[var(--tag-blue-fg)] border border-transparent',
   'tag-amber': 'bg-[var(--tag-amber-bg)] text-[var(--warn-text)] border border-transparent',
-  'tag-green': 'bg-[color-mix(in_oklab,var(--success),var(--bg)_88%)] text-success border border-transparent',
-  'tag-violet': 'bg-[color-mix(in_oklab,var(--info),var(--bg)_90%)] text-[var(--info)] border border-transparent',
-  'tag-red': 'bg-[color-mix(in_oklab,var(--accent),var(--bg)_90%)] text-accent border border-transparent',
+  'tag-green': 'bg-tone-success text-success border border-transparent',
+  'tag-violet': 'bg-tone-info text-[var(--info)] border border-transparent',
+  'tag-red': 'bg-tone-accent text-accent border border-transparent',
 };
 
-export function Badge({ variant = 'filled-neutral', children }: BadgeProps) {
+// Takes the span's own props and ref, so a Tooltip can wrap it (hover, focus and aria-describedby land on the pill).
+export function Badge({ variant = 'filled-neutral', children, className = '', ...rest }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] px-2.5 py-0.5 text-[length:var(--fs-tag)] font-medium whitespace-nowrap shrink-0 ${variantClasses[variant]}`}
+      {...rest}
+      className={`inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] px-2.5 py-0.5 text-[length:var(--fs-tag)] font-medium whitespace-nowrap shrink-0 ${variantClasses[variant]} ${className}`}
     >
       {children}
     </span>

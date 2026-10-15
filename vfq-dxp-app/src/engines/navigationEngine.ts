@@ -28,12 +28,13 @@ import type { PersonaApproach } from '../types/config';
 // boundary rather than IA.
 const APPROACH_NAV: Record<PersonaApproach, NavKey[]> = {
   'Customer-First': ['dashboard', 'customer-search', 'sales', 'support', 'orders'],
-  'Product-First': ['dashboard', 'mobile', 'fibre-home', 'operations', 'leads'],
+  'Product-First': ['dashboard', 'new-connections', 'mobile', 'fibre-home', 'operations', 'leads'],
   Hybrid: [
     'dashboard',
+    'customer-search',
+    'new-connections',
     'mobile',
     'fibre-home',
-    'customer-search',
     'sales',
     'operations',
     'leads',

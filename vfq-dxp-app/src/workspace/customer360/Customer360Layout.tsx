@@ -1,3 +1,4 @@
+import { isClosedTicket } from '../../lib/statusTone';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
@@ -11,7 +12,8 @@ import { buildTelesalesTabs } from './telesales/TelesalesTabs';
 import { CustomerActionsMenu } from './CustomerActionsMenu';
 import { CustomerProfileHeader, type HeaderAlert } from './CustomerProfileHeader';
 import { useRequirementCoverage } from './requirementCoverage';
-import { LinkedBusinessCard } from './LinkedBusinessCard';
+import { segmentLabelFor } from '../../engines/customerBenefitEngine';
+import { LinkedBusinessCard, LinkedBusinessLine } from './LinkedBusinessCard';
 import { segmentFor } from '../../engines/businessSegment';
 import { FieldAccessProvider } from './fieldAccess';
 import { DemoProvider } from './demoValues';
@@ -51,6 +53,7 @@ import { AuditTrailSection } from './sections/AuditTrailSection';
 import { AddressSection } from './sections/AddressSection';
 import { ContactSection } from './sections/ContactSection';
 import { DevicePenaltyPolicy, StarNumberPenaltyPolicy } from './sections/penaltyViewResolvers';
+import { EntityMissing } from '../../components/patterns/EntityMissing';
 
 // Deep links from elsewhere in the app (queue notification, toasts, the
 // Linked Services panel) only ever name one of these three ServiceTab
@@ -66,7 +69,6 @@ function toAssetsSubView(tab: string | undefined): AssetsSubView {
 // (which already set the active-customer bridge) or a direct URL/bookmark -
 // re-sets the bridge here too so a direct link still pre-fills downstream
 // wizards correctly.
-const CLOSED_TICKET_STATUSES = new Set(['Solved', 'Completed', 'Closed', 'Cancelled']);
 
 // Icons for the Retail icon rail, by tab key.
 const RAIL_ICONS: Record<string, string> = {
@@ -140,6 +142,8 @@ export function Customer360Layout() {
   // folded into getCustomer360 so that aggregation keeps its existing shape -
   // these four feed the service inventory only.
   const [serviceSources, setServiceSources] = useState<ServiceSources | undefined>(undefined);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -149,10 +153,15 @@ export function Customer360Layout() {
       mockDataEngine.list<Record<string, unknown>>('gigahome-osntv-subscriptions'),
       mockDataEngine.list<Record<string, unknown>>('iptv-stb-bundles'),
       mockDataEngine.list<Record<string, unknown>>('smart-devices'),
-    ]).then(([accounts, installedAssets, gigahome, iptvBundles, smartDevices]) => {
-      if (cancelled) return;
-      setServiceSources({ accounts, installedAssets, gigahome, iptvBundles, smartDevices });
-    });
+    ])
+      .then(([accounts, installedAssets, gigahome, iptvBundles, smartDevices]) => {
+        if (cancelled) return;
+        setServiceSources({ accounts, installedAssets, gigahome, iptvBundles, smartDevices });
+      })
+      .catch((err) => {
+        // The page still works without the service inventory; say so in the console rather than leave a rejection unhandled.
+        console.error('[Customer360] service sources failed to load:', err);
+      });
     return () => {
       cancelled = true;
     };
@@ -161,11 +170,24 @@ export function Customer360Layout() {
   useEffect(() => {
     if (!customerId) return;
     setData(null);
-    getCustomer360(customerId).then((result) => {
-      setData(result ?? undefined);
-      if (result) setActiveCustomer(toActiveCustomerSummary(result.customer));
-    });
-  }, [customerId, setActiveCustomer]);
+    setLoadFailed(false);
+    // Cancelled when the customer changes (or the screen unmounts) so a slow earlier response cannot overwrite the
+    // customer now on screen; a failed load shows the not-found state rather than "Loading" forever.
+    let cancelled = false;
+    getCustomer360(customerId)
+      .then((result) => {
+        if (cancelled) return;
+        setData(result ?? undefined);
+        if (result) setActiveCustomer(toActiveCustomerSummary(result.customer));
+      })
+      .catch((err) => {
+        console.error('[Customer360] load failed:', err);
+        if (!cancelled) setLoadFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [customerId, setActiveCustomer, reloadKey]);
 
   const { requireVerification, gate: verificationGate } = useVerificationGate(
     customerId ?? '',
@@ -175,8 +197,11 @@ export function Customer360Layout() {
   const coverageRoot = useRef<HTMLDivElement>(null);
   useRequirementCoverage(coverageRoot, activePersonaId, activeTab || 'overview', Boolean(data));
 
+  if (loadFailed) {
+    return <EntityMissing what="customer" loading={false} error onRetry={() => setReloadKey((k) => k + 1)} backTo="/customer-search" backLabel="Back to Customer Search" />;
+  }
   if (data === null) {
-    return <div className="p-8 text-fg-2">Loading customer…</div>;
+    return <div className="p-8 text-fg-2" role="status">Loading customer…</div>;
   }
   if (data === undefined) {
     return (
@@ -189,7 +214,7 @@ export function Customer360Layout() {
 
   const customer = toActiveCustomerSummary(data.customer);
   const { outstanding, latestBill } = computeBillingSummary(data);
-  const openTicketCount = data.tickets.filter((t) => !CLOSED_TICKET_STATUSES.has(String(t.status))).length;
+  const openTicketCount = data.tickets.filter((t) => !isClosedTicket(t.status)).length;
   const accountStatus = data.customer.blacklisted
     ? 'Blocked'
     : data.accounts.some((a) => a.status === 'Active')
@@ -230,7 +255,7 @@ export function Customer360Layout() {
   // frequently glanced but narrow in scope, then the situational/compliance
   // topics that are only opened when directly relevant, with EBU last since
   // it touches only 2 of 11 departments and is real-time for none of them.
-  // Persona-specific layout (personas.json `customer360Layout`): the Telesales Agent gets task-shaped
+  // Persona-specific layout (personas.json `customer360Layout`): the Telesales gets task-shaped
   // tabs over the same field sections; every other persona keeps the standard tabs below.
   const telesales = getPersona(activePersonaId)?.customer360Layout === 'telesales';
   const headerOnly = getPersona(activePersonaId)?.customer360Layout === 'header-only';
@@ -424,7 +449,7 @@ export function Customer360Layout() {
                 personaId={activePersonaId}
                 topic="Audit Trail"
                 richFields={{
-                  'Audit Trail (Orders,Contact, Account, Activity,TT)': (
+                  'Audit Trail (Orders, Contact, Account, Activity, TT)': (
                     <AuditTrailSection data={data} onTicketCreated={addTicket} onInteractionLogged={onInteractionLogged} />
                   ),
                 }}
@@ -523,9 +548,9 @@ export function Customer360Layout() {
               }
             : {})}
           name={data.customer.name}
+          belowFacts={<LinkedBusinessLine customerId={data.customer.customerId} />}
           tags={[
             ...(/vip|premium/i.test(data.customer.segment) ? [{ label: 'VIP', variant: 'tag-amber' as const }] : []),
-            ...(/postpaid/i.test(String(data.accounts[0]?.accountType ?? '')) ? [{ label: 'Postpaid', variant: 'tag-red' as const }] : []),
           ]}
           qid={data.customer.qid}
           idType={data.customer.idType}
@@ -533,7 +558,11 @@ export function Customer360Layout() {
           dob={data.customer.dob}
           preferredLanguage={data.customer.preferredLanguage}
           // A reimbursed (CBU) user of a business is shown as B2B2C; a company-paid line leaves the employee's own profile unchanged.
-          segment={data.customer.parentBusinessId && data.customer.billingResponsibility && segmentFor(data.customer.billingResponsibility) === 'CBU' ? 'CBU · B2B2C' : data.customer.segment}
+          segment={segmentLabelFor({
+            ...data.customer,
+            reimbursed: Boolean(data.customer.parentBusinessId && data.customer.billingResponsibility && segmentFor(data.customer.billingResponsibility) === 'CBU'),
+            business: /enterprise|business/i.test(String(data.customer.segment)),
+          })}
           phone={data.customer.phone}
           email={data.customer.email}
           totalConnections={services.length > 0 ? services.length : undefined}
@@ -550,12 +579,12 @@ export function Customer360Layout() {
                 onSupport={tabs.some((t) => t.key === 'tickets-support') ? () => setActiveTab('tickets-support') : undefined}
               />
               {headerOnly ? null : canEdit ? (
-                <Button variant="primary-rect" compact onClick={() => requireVerification(() => setDemoDrawerOpen(true))}>
+                <Button variant="primary" compact onClick={() => requireVerification(() => setDemoDrawerOpen(true))}>
                   Edit profile
                 </Button>
               ) : (
                 <Tooltip content="Not authorised to edit customer records" placement="bottom">
-                  <Button variant="primary-rect" compact className="opacity-40 cursor-not-allowed" onClick={(e) => e.preventDefault()}>
+                  <Button variant="primary" compact className="opacity-40 cursor-not-allowed" onClick={(e) => e.preventDefault()}>
                     Edit profile
                   </Button>
                 </Tooltip>
@@ -596,7 +625,7 @@ export function Customer360Layout() {
         // (2026-09-29 decision): a department granted no real-time or
         // drill-down access to any of the 13 topics (e.g. EBU Operations)
         // sees this rather than a crash or a blank/broken tab strip.
-        <p className={`text-fg-2 text-[length:var(--fs-body)] rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-6 ${headerOnly ? 'm-8' : ''}`}>
+        <p className={`text-fg-2 text-[length:var(--fs-body)] card p-6 ${headerOnly ? 'm-8' : ''}`}>
           No Customer 360 sections are visible for your role.
         </p>
       ) : (

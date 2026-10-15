@@ -14,7 +14,9 @@ export type ServiceTab = 'mobile' | 'fibre' | 'assets';
  *     in any dataset here. There is no field to read.
  *   - 'Fixed Line' - accounts.json has "Consumer Fixed Line (GigaHome)", but
  *     that is the fibre account, not a separate fixed-voice service; counting
- *     it would double-count the GigaHome subscription hanging off it.
+ *     it would double-count the GigaHome subscription hanging off it. (Since
+ *     2026-10-11 an installed asset NAMED as a fixed voice line / landline does
+ *     count here - the name is the signal, the account type still is not.)
  *
  * Both are left in this list so the order is stable if the data arrives later
  * - a category with no services simply never renders.
@@ -91,6 +93,7 @@ function classifyProductName(name: string): { tab: ServiceTab; category: Service
   if (/prepaid/i.test(name)) return { tab: 'mobile', category: 'Prepaid' };
   if (/postpaid|mobile|sim/i.test(name)) return { tab: 'mobile', category: 'Postpaid' };
   if (/iptv|osn|\btv\b/i.test(name)) return { tab: 'fibre', category: 'TV / Entertainment' };
+  if (/fixed[ -]?(voice )?line|landline/i.test(name)) return { tab: 'fibre', category: 'Fixed Line' };
   if (/broadband|fibre|fiber|gigahome|home/i.test(name)) return { tab: 'fibre', category: 'GigaHome Fibre' };
   return { tab: 'assets', category: 'Smart Devices' };
 }
@@ -146,7 +149,9 @@ export function listCustomerServices(customer: CustomerRecord, sources: ServiceS
     if (!asset.accountId || !myAccountIds.has(asset.accountId)) continue;
     // The only source here with a real status vocabulary, so it is the only
     // one that can be filtered on "Active" honestly.
-    if (asset.status !== 'Active') continue;
+    if (asset.status !== 'Active' && asset.status !== 'Suspended') continue;
+    // The customer's own number is already listed above from the customer record; its installed asset only carries the plan.
+    if (asset.serviceId && asset.serviceId === customer.phone) continue;
     const name = asset.productServiceName ?? 'Installed service';
     const { tab, category } = classifyProductName(name);
     services.push({

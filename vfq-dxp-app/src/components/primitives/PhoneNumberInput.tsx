@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
 import { Input } from './Input';
 import { Icon } from './Icon';
@@ -89,6 +89,10 @@ export function PhoneNumberInput({
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const baseId = useId();
+  const listboxId = `${baseId}-countries`;
+  const optionId = (i: number) => `${baseId}-country-${i}`;
   const country = countryByIso(iso);
 
   // Re-seed when a value arrives after mount (MOI prefill, draft rehydrate),
@@ -127,11 +131,18 @@ export function PhoneNumberInput({
     onChange(e);
   };
 
+  // Keep the highlighted country in view in the long list.
+  useEffect(() => {
+    if (open) document.getElementById(optionId(highlighted))?.scrollIntoView({ block: 'nearest' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, highlighted]);
+
   const pickCountry = (nextIso: string) => {
     const next = countryByIso(nextIso);
     userPickedCountry.current = true;
     setIso(nextIso);
     setOpen(false);
+    triggerRef.current?.focus();
     // Synthesised so the parent's onChange signature is unchanged; every call
     // site only ever reads e.target.value.
     onChange({
@@ -139,33 +150,59 @@ export function PhoneNumberInput({
     } as ChangeEvent<HTMLInputElement>);
   };
 
+  // Focus stays on the trigger; the highlighted country is named through aria-activedescendant.
   const onTriggerKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      if (!open) {
+    const last = COUNTRY_DIAL_CODES.length - 1;
+    if (!open) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
         setHighlighted(Math.max(0, COUNTRY_DIAL_CODES.findIndex((c) => c.iso === iso)));
         setOpen(true);
-      } else {
-        pickCountry(COUNTRY_DIAL_CODES[highlighted]?.iso ?? iso);
       }
-    } else if (e.key === 'Escape') {
-      setOpen(false);
+      return;
     }
-  };
-
-  const onListKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setHighlighted((i) => Math.min(COUNTRY_DIAL_CODES.length - 1, i + 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setHighlighted((i) => Math.max(0, i - 1));
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      pickCountry(COUNTRY_DIAL_CODES[highlighted]?.iso ?? iso);
-    } else if (e.key === 'Escape' || e.key === 'Tab') {
-      setOpen(false);
+    switch (e.key) {
+      case 'ArrowDown':
+        setHighlighted((i) => Math.min(last, i + 1));
+        break;
+      case 'ArrowUp':
+        setHighlighted((i) => Math.max(0, i - 1));
+        break;
+      case 'Home':
+        setHighlighted(0);
+        break;
+      case 'End':
+        setHighlighted(last);
+        break;
+      case 'PageDown':
+        setHighlighted((i) => Math.min(last, i + 8));
+        break;
+      case 'PageUp':
+        setHighlighted((i) => Math.max(0, i - 8));
+        break;
+      case 'Enter':
+      case ' ':
+        pickCountry(COUNTRY_DIAL_CODES[highlighted]?.iso ?? iso);
+        break;
+      case 'Escape':
+        // Closes the list only - not the dialog the field sits in (Modal/Drawer listen for Escape on the document).
+        e.stopPropagation();
+        setOpen(false);
+        break;
+      case 'Tab':
+        setOpen(false);
+        return;
+      default: {
+        // Type-ahead by country name.
+        if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return;
+        const ch = e.key.toLowerCase();
+        const from = highlighted + 1;
+        const hit = [...COUNTRY_DIAL_CODES.slice(from), ...COUNTRY_DIAL_CODES.slice(0, from)].findIndex((c) => c.name.toLowerCase().startsWith(ch));
+        if (hit >= 0) setHighlighted((from + hit) % COUNTRY_DIAL_CODES.length);
+        return;
+      }
     }
+    e.preventDefault();
   };
 
   return (
@@ -193,8 +230,11 @@ export function PhoneNumberInput({
             <button
               type="button"
               role="combobox"
+              ref={triggerRef}
               aria-haspopup="listbox"
               aria-expanded={open}
+              aria-controls={open ? listboxId : undefined}
+              aria-activedescendant={open ? optionId(highlighted) : undefined}
               aria-label={`Country calling code, currently ${country.name} ${country.dial}`}
               onClick={() => setOpen((v) => !v)}
               onKeyDown={onTriggerKeyDown}
@@ -206,27 +246,27 @@ export function PhoneNumberInput({
             </button>
             {open && (
               <ul
+                id={listboxId}
                 role="listbox"
-                tabIndex={-1}
-                onKeyDown={onListKeyDown}
-                ref={(el) => el?.focus()}
+                aria-label="Country calling code"
                 // Anchored to the field wrapper rather than the dial-code
                 // button, so the panel is exactly as wide as the input it
                 // belongs to instead of a fixed w-64. Inset by -1px each side
                 // because left-0/right-0 resolve to the wrapper's padding box,
                 // which excludes its 1px border - without this the panel is
                 // 2px narrower than the field and the edges do not line up.
-                className="absolute z-50 top-full -left-px -right-px mt-2 max-h-64 overflow-y-auto rounded-[var(--field-radius)] border border-border-soft bg-bg shadow-raised py-1"
+                className="absolute z-[var(--z-popover)] top-full -left-px -right-px mt-2 max-h-64 overflow-y-auto rounded-[var(--field-radius)] border border-border-soft bg-bg shadow-raised py-1"
               >
                 {COUNTRY_DIAL_CODES.map((c, i) => (
                   <li
                     key={c.iso}
+                    id={optionId(i)}
                     role="option"
                     aria-selected={c.iso === iso}
                     onMouseEnter={() => setHighlighted(i)}
                     onClick={() => pickCountry(c.iso)}
                     className={`flex items-center justify-between gap-3 px-3 py-2 text-[length:var(--fs-caption)] cursor-pointer text-fg-2 ${
-                      i === highlighted ? 'bg-surface' : ''
+                      i === highlighted ? 'bg-surface ring-2 ring-inset ring-[var(--focus-outline)]' : ''
                     }`}
                   >
                     <span className="flex items-center gap-2 min-w-0">

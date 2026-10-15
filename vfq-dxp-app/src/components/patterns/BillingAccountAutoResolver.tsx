@@ -19,11 +19,14 @@ import type { AccountRecord, BillingProfileRecord, ContactRecord, CustomerRecord
 export function BillingAccountAutoResolver({
   customerId,
   customerName,
+  profileSuffix = 'Postpaid',
   value,
   onChange,
 }: {
   customerId: string | undefined;
   customerName?: string;
+  /** What the new profile is for, appended to the customer's name in its name ("... - Postpaid"). */
+  profileSuffix?: string;
   value: BillingAccountValue;
   onChange: (value: BillingAccountValue) => void;
 }) {
@@ -59,7 +62,7 @@ export function BillingAccountAutoResolver({
           useSameAddress: true,
           preferredInvoiceRecipient: 'Primary Contact',
           billCycleDay: computeBillCycleDay(segment, new Date()),
-          profileName: `${customerName ?? 'New customer'} - Postpaid`,
+          profileName: `${customerName ?? 'New customer'} - ${profileSuffix}`,
           billMedia: 'Email',
           billingSchedule: 'Immediate',
         },

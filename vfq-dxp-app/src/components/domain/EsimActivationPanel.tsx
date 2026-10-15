@@ -17,10 +17,10 @@ interface EsimActivationPanelProps {
 export function EsimActivationPanel({ activationCode, emailSent }: EsimActivationPanelProps) {
   return (
     <div className="space-y-4">
-      <div className="flex flex-col items-start gap-4 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-4 sm:flex-row sm:items-center">
-        {/* bg-white, not --bg: a QR has to stay dark-on-light to scan, so this
+      <div className="flex flex-col items-start gap-4 card card-surface p-4 sm:flex-row sm:items-center">
+        {/* bg-paper, not --bg: a QR has to stay dark-on-light to scan, so this
             one surface does not follow the theme. */}
-        <div className="rounded-[var(--radius-card)] bg-white p-2 shrink-0">
+        <div className="rounded-[var(--radius-card)] bg-paper p-2 shrink-0">
           <QRCodeSVG value={activationCode} size={160} />
         </div>
         <div className="space-y-1.5 min-w-0">

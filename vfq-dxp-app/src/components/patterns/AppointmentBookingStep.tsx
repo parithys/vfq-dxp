@@ -56,6 +56,8 @@ export function AppointmentBookingStep({ value, onChange }: AppointmentBookingSt
           {CLUSTERS.map((c) => (
             <button
               key={c}
+              type="button"
+              aria-pressed={value.cluster === c}
               onClick={() => onChange({ ...value, cluster: c })}
               className={`px-3 py-1.5 rounded-[var(--radius-pill)] border text-[length:var(--fs-body)] ${
                 value.cluster === c ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)] text-[var(--field-card-selected)]' : 'border-border-soft bg-bg text-fg'
@@ -68,8 +70,9 @@ export function AppointmentBookingStep({ value, onChange }: AppointmentBookingSt
       </div>
 
       <div>
-        <div className="text-[length:var(--fs-label)] text-fg-2 mb-1">Date</div>
+        <label htmlFor="appointment-date" className="block text-[length:var(--fs-label)] text-fg-2 mb-1">Date</label>
         <input
+          id="appointment-date"
           type="date"
           value={value.date ?? ''}
           onChange={(e) => onChange({ ...value, date: e.target.value })}
@@ -90,6 +93,8 @@ export function AppointmentBookingStep({ value, onChange }: AppointmentBookingSt
               return (
                 <button
                   key={slot}
+                  type="button"
+                  aria-pressed={selected}
                   disabled={full}
                   onClick={() => onChange({ ...value, timeSlot: slot })}
                   className={`px-3 py-1.5 rounded-[var(--radius-pill)] border text-[length:var(--fs-body)] disabled:opacity-40 disabled:cursor-not-allowed

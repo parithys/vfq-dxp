@@ -1,12 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import * as sums from '../../../components/patterns/wizard/commonSummaries';
 import { attachSummaries } from '../../../components/patterns/wizard/stepSummary';
-import { GuidedActivationWizard } from '../../../components/patterns/wizard/GuidedActivationWizard';
-import { ProductPlanStep } from '../../../components/patterns/ProductPlanStep';
-import { CafSignatureCapture } from '../../../components/patterns/CafSignatureCapture';
+import { GuidedActivationWizard } from '../../../capabilities';
 import type { IdLookupValue } from '../../../components/patterns/idLookupModel';
-import { idLookupStep, isCafValid, type CafValue } from '../../../components/patterns/wizard/wizardSteps';
-import { ActivityCommentsStep } from '../../../components/patterns/ActivityCommentsStep';
+import { activityStep, cafSignatureStep, idLookupStep, planSelectionStep } from '../../../capabilities';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 
@@ -29,38 +26,10 @@ export function NewPreToPostWizard() {
         wizardId={WIZARD_ID}
         title="Prepaid to Postpaid Conversion"
         steps={attachSummaries([
-          idLookupStep({ key: 'contact', label: 'Contact', field: 'qid' }),
-          {
-            key: 'plan',
-            label: 'Plan',
-            render: ({ values, setValue }) => (
-              <ProductPlanStep
-                planType="Postpaid Plan"
-                selectedProductId={values.productId as string | undefined}
-                onSelect={(id) => setValue('productId', id)}
-              />
-            ),
-            isValid: (values) => Boolean(values.productId),
-          },
-          {
-            key: 'caf',
-            label: 'CAF',
-            render: ({ values, setValue }) => (
-              <CafSignatureCapture
-                value={(values.caf as CafValue) ?? {}}
-                onChange={(v) => setValue('caf', v)}
-                customerName={(values.qid as IdLookupValue | undefined)?.moiResult?.name}
-              />
-            ),
-            isValid: (values) => isCafValid(values.caf as CafValue | undefined),
-          },
-          {
-            key: 'activity',
-            label: 'Activity',
-            render: ({ values, setValue }) => (
-              <ActivityCommentsStep value={(values.comments as string) ?? ''} onChange={(v) => setValue('comments', v)} />
-            ),
-          },
+          idLookupStep({ key: 'contact', field: 'qid' }),
+          planSelectionStep({ kind: 'catalogue', planType: 'Postpaid Plan' }),
+          cafSignatureStep({ customerName: (values) => (values.qid as IdLookupValue | undefined)?.moiResult?.name }),
+          activityStep({ required: false }),
         ], {
           contact: sums.identitySummary('qid'),
           plan: sums.planSummary(),

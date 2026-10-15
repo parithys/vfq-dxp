@@ -33,6 +33,13 @@ export interface EligibilityResult {
    * on every return, which is the worst kind of bug to notice.
    */
   nationality?: string;
+  /** The customer's segment (Consumer, Premium, ...) when the record has one; prepaid plans are filtered by it (MPRA_001_QPC_02). */
+  segment?: string;
+  /** The scope and journey the checks were judged for - see EligibilityContext.scope. A result is only reused for the same pair. */
+  scope?: 'common' | 'product';
+  journeyType?: 'postpaid' | 'prepaid';
+  /** Judged for an MNP port-in (adds the outstanding-dues check); a result is only reused for the same kind of request. */
+  portIn?: boolean;
   /**
    * The ID number these checks were run against. Lets a re-entry to this step
    * tell a still-valid cached result from a stale one: change the ID on the
@@ -51,6 +58,7 @@ export interface CustomerRecord {
   blacklistReason?: string;
   blacklistCategory?: 'collections' | 'security';
   hrnAdvancePaymentRequired?: boolean;
+  segment?: string;
   activePostpaidLines?: number;
   activePrepaidLines?: number;
 }

@@ -1,5 +1,5 @@
 import { Icon } from '../primitives/Icon';
-import { CARD_IDLE, CARD_SELECTED, CARD_SELECTED_SURFACE, SelectedCardTexture } from './offerCardParts';
+import { CARD_IDLE, CARD_SELECTED, SelectedCardTexture } from '../primitives/offerCardParts';
 
 /** One choice in the Eligible Discounts tab, on the shared selectable-card standard. */
 export function DiscountCard({ title, description, value, selected, onToggle }: { title: string; description?: string; value: string; selected: boolean; onToggle: () => void }) {
@@ -16,12 +16,12 @@ export function DiscountCard({ title, description, value, selected, onToggle }: 
         }
       }}
       className={`relative isolate flex flex-col gap-3 rounded-[var(--radius-card)] border p-5 cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
-        selected ? `${CARD_SELECTED} ${CARD_SELECTED_SURFACE}` : CARD_IDLE
+        selected ? CARD_SELECTED : CARD_IDLE
       }`}
     >
       {selected && <SelectedCardTexture />}
       {selected && (
-        <span aria-hidden="true" className="absolute -right-2 -top-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-accent text-white ring-2 ring-bg">
+        <span aria-hidden="true" className="absolute -right-2 -top-2 inline-flex h-6 w-6 items-center justify-center rounded-[var(--radius-pill)] bg-accent text-on-dark ring-2 ring-bg">
           <Icon path="M20 6L9 17l-5-5" className="w-3.5 h-3.5" strokeWidth={3} />
         </span>
       )}

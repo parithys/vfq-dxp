@@ -1,3 +1,4 @@
+import { Button } from '../../../components/primitives/Button';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../../components/primitives/Icon';
@@ -28,18 +29,18 @@ const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behav
 
 function InertView() {
   return (
-    <button type="button" disabled className="rounded-[var(--radius-sm)] px-2.5 py-0.5 text-[length:var(--fs-caption)] font-medium text-accent bg-[color-mix(in_oklab,var(--accent),var(--bg)_92%)] opacity-40 cursor-not-allowed">
+    <Button variant="secondary" compact disabled>
       View
-    </button>
+    </Button>
   );
 }
 
 function SectionLink({ children, onClick }: { children: string; onClick?: () => void }) {
   if (!onClick) return null;
   return (
-    <button type="button" onClick={onClick} className="text-accent font-medium text-[length:var(--fs-body)] hover:underline whitespace-nowrap">
+    <Button variant="tertiary" type="button" onClick={onClick} className="whitespace-nowrap">
       {children} &rarr;
-    </button>
+    </Button>
   );
 }
 
@@ -111,7 +112,7 @@ export function C360OffersLeads({ data }: { data: Customer360Data; services: Cus
     { key: 'type', header: 'Offer Type', render: (r) => r.type ?? DASH },
     { key: 'elig', header: 'Eligibility', render: (r) => (r.eligibility ? <StatusPill status={r.eligibility} /> : DASH) },
     { key: 'valid', header: 'Validity', render: (r) => fmtDate(r.validity) ?? <Dv k="offerValidity" /> },
-    { key: 'act', header: 'Actions', render: (r) => <button type="button" onClick={() => setOpenOffer(openOffer === r.key ? undefined : r.key)} className="rounded-[var(--radius-sm)] px-2.5 py-0.5 text-[length:var(--fs-caption)] font-medium text-accent bg-[color-mix(in_oklab,var(--accent),var(--bg)_92%)] hover:bg-[color-mix(in_oklab,var(--accent),var(--bg)_85%)]">{openOffer === r.key ? 'Hide' : 'View'}</button> },
+    { key: 'act', header: 'Actions', render: (r) => <Button variant="secondary" compact onClick={() => setOpenOffer(openOffer === r.key ? undefined : r.key)}>{openOffer === r.key ? 'Hide' : 'View'}</Button> },
   ];
 
   const leadCols: GridCol<Rec>[] = [
@@ -144,9 +145,6 @@ export function C360OffersLeads({ data }: { data: Customer360Data; services: Cus
           <ActionButton primary icon={IC.plus} onClick={() => navigate('/sales')}>
             Create Lead
           </ActionButton>
-          <button type="button" disabled aria-label="More actions" className="w-9 h-9 rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg flex items-center justify-center opacity-40 cursor-not-allowed">
-            <Icon path={IC.dots} className="w-4 h-4" />
-          </button>
         </>
       }
     >
@@ -214,9 +212,9 @@ export function C360OffersLeads({ data }: { data: Customer360Data; services: Cus
                 </div>
                 {showNbo && nbo.extra && <p className="text-fg-2 text-[length:var(--fs-caption)] break-words">{nbo.extra}</p>}
                 <div className="grid grid-cols-2 gap-3">
-                  <button type="button" onClick={() => setShowNbo((v) => !v)} className="rounded-[var(--radius-button)] border border-accent text-accent px-4 py-2 text-[length:var(--fs-btn-compact)] font-medium hover:bg-surface">
+                  <Button variant="secondary" compact onClick={() => setShowNbo((v) => !v)}>
                     {showNbo ? 'Hide Details' : 'View Details'}
-                  </button>
+                  </Button>
                   <ActionButton primary disabled>
                     Add to Basket
                   </ActionButton>

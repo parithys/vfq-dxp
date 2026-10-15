@@ -38,7 +38,7 @@ export function WizardFooter({
                 currentIndex > 0 alone would still show it on Payment even
                 though the rail behind it is frozen. */}
             {currentIndex > 0 && !isLocked && (
-              <Button variant="ghost-rect" onClick={goBack}>
+              <Button variant="secondary" onClick={goBack}>
                 <Icon path={CHEVRON_LEFT} className="w-4 h-4" />
                 Back
               </Button>
@@ -47,7 +47,7 @@ export function WizardFooter({
           </div>
           {(() => {
             const defaultButton = (
-              <Button variant="primary-rect" onClick={goNext} disabled={!canProceed || submitting}>
+              <Button variant="primary" onClick={goNext} disabled={!canProceed || submitting}>
                 {submitting ? 'Submitting…' : currentIndex === stepCount - 1 ? 'Save & Finish' : 'Continue'}
                 {!submitting && <Icon path={CHEVRON_RIGHT} className="w-4 h-4" />}
               </Button>

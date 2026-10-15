@@ -8,7 +8,7 @@
 >
 > | Looking for | Go to |
 > |---|---|
-> | The current roles | `reference/VFQ_DXP_Persona_Feature_Applicability_Matrix_Reference.xlsx` (the SSOT) |
+> | The current roles | `reference/Persona_Feature_Applicability_Matrix_Reference.xlsx` (the SSOT) |
 > | 66 → 26 mapping | that workbook → **Legacy Crosswalk**. 17 personas below have no operational counterpart and are archive-only |
 > | The archived records | `reference/blueprint/legacy/personas-66-evidence.json`, plus `personas-66-descriptions.json` for the two columns that existed only in `VFQ_DXP_Personas_Reference.xlsx` |
 >

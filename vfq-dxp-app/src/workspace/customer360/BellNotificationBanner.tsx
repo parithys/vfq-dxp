@@ -72,7 +72,7 @@ export function BellNotificationBanner({ customerId }: { customerId: string }) {
       {active.map((n) => (
         <div
           key={n.notificationId}
-          className="flex items-start gap-3 rounded-[var(--radius-card)] border border-[color-mix(in_oklab,var(--warn)_35%,transparent)] bg-[color-mix(in_oklab,var(--warn)_12%,transparent)] px-4 py-3"
+          className="flex items-start gap-3 rounded-[var(--radius-card)] border border-[var(--warn-border)] bg-tone-warn px-4 py-3"
         >
           <Icon path={BELL_ICON} className="w-4.5 h-4.5 text-[var(--warn-text)] shrink-0 mt-0.5" />
           <div>

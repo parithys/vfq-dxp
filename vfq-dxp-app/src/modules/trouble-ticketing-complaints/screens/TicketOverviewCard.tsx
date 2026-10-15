@@ -1,5 +1,6 @@
+import { badgeVariantFor } from '../../../lib/statusTone';
+import { formatDateTime } from '../../../lib/format';
 import { Badge } from '../../../components/primitives/Badge';
-import { STATUS_VARIANT } from '../../../data/reference/ticketReferenceData';
 import type { Ticket } from './ticketDetailModel';
 
 interface Props {
@@ -8,12 +9,12 @@ interface Props {
 
 export function TicketOverviewCard({ ticket }: Props) {
   return (
-    <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
-      <h2 className="text-[length:var(--fs-body-lg)] text-fg font-medium mb-3">Overview</h2>
+    <div className="card p-5">
+      <h2 className="text-[length:var(--fs-body-lg)] text-fg font-bold mb-3">Overview</h2>
       <div className="space-y-3 text-[length:var(--fs-body)]">
         <div className="flex items-center justify-between gap-2">
           <span className="text-muted">Status</span>
-          <Badge variant={STATUS_VARIANT[ticket.status] ?? 'filled-neutral'}>{ticket.status}</Badge>
+          <Badge variant={badgeVariantFor(ticket.status)}>{ticket.status}</Badge>
         </div>
         <div className="flex items-center justify-between gap-2">
           <span className="text-muted">Ticket #</span>
@@ -42,7 +43,7 @@ export function TicketOverviewCard({ ticket }: Props) {
         {ticket.createdAt && (
           <div className="flex items-center justify-between gap-2">
             <span className="text-muted">Created</span>
-            <span className="text-fg">{new Date(ticket.createdAt).toLocaleString()}</span>
+            <span className="text-fg">{formatDateTime(ticket.createdAt)}</span>
           </div>
         )}
       </div>

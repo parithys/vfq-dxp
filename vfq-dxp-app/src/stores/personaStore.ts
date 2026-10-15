@@ -6,7 +6,7 @@ interface PersonaState {
   setActivePersona: (id: string) => void;
 }
 
-/** ROLE-01 (Retail Sales Agent) - the broadest frontline grant set, so the
+/** ROLE-01 (Retail Sales) - the broadest frontline grant set, so the
  * most usable starting demo view. */
 export const DEFAULT_PERSONA_ID = 'ROLE-01';
 

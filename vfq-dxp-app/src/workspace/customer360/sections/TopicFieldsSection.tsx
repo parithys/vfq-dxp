@@ -4,6 +4,15 @@ import { getVisibleTopicFields } from '../../../engines/customer360VisibilityEng
 import type { Customer360Field } from '../../../types/config';
 import { customer360Layouts, type FieldGroup } from './customer360Layouts';
 
+/** The requirement text behind a field is the lookup key; what the agent reads is its name without the long
+ * explanatory remark in brackets (kept when the bracket is a short qualifier such as "(Y/N)"). */
+export function fieldLabel(details: string): string {
+  const open = details.indexOf(' (');
+  if (open < 0) return details;
+  const tail = details.slice(open);
+  return tail.length > 32 || /\b(should|including|based on|It )\b/i.test(tail) ? details.slice(0, open) : details;
+}
+
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 const CHEVRON_UP = 'M18 15l-6-6-6 6';
 
@@ -159,7 +168,7 @@ function GroupBlock({
             ))}
           </div>
         ) : (
-          <div className={plain ? 'divide-y divide-[var(--field-card-border)]' : 'rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg divide-y divide-[var(--field-card-border)]'}>
+          <div className={plain ? 'divide-y divide-[var(--field-card-border)]' : 'card divide-y divide-[var(--field-card-border)]'}>
             {live.map((m) => (
               <Row key={m.key} item={m} expanded={expandAll || open.has(m.key)} onToggle={expandAll ? undefined : () => toggle(m.key)} />
             ))}
@@ -168,14 +177,14 @@ function GroupBlock({
 
       {empty.length > 0 && (
         <p className={`text-muted text-[length:var(--fs-caption)] ${plain ? 'px-4 py-3 border-t border-[var(--field-card-border)]' : 'mt-2'}`}>
-          No data on file: {empty.map((m) => m.field.details).join(' · ')}
+          No data on file: {empty.map((m) => fieldLabel(m.field.details)).join(' · ')}
         </p>
       )}
 
       {drill.length > 0 && (
         <div className="mt-3">
           <p className="text-muted text-[length:var(--fs-caption)] mb-1">More detail</p>
-          <div className="rounded-[var(--radius-card)] border border-dashed border-[var(--field-card-border)] bg-bg divide-y divide-[var(--field-card-border)]">
+          <div className="card border-dashed divide-y divide-[var(--field-card-border)]">
             {drill.map((m) => (
               <DrillRow key={m.key} item={m} expanded={expandAll || open.has(m.key)} onToggle={expandAll ? undefined : () => toggle(m.key)} />
             ))}
@@ -198,19 +207,19 @@ function Tile({ item, expanded, onToggle }: { item: Item; expanded: boolean; onT
   const body = (
     <>
       <div className="flex items-start justify-between gap-2">
-        <div className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted">{item.field.details}</div>
+        <div className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted">{fieldLabel(item.field.details)}</div>
         {item.rich !== undefined && onToggle && <Chevron expanded={expanded} />}
       </div>
       <div className="text-fg font-medium text-[length:var(--fs-body-lg)] mt-1 break-words">{summaryOf(item)}</div>
     </>
   );
-  const shell = 'rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 text-left w-full';
+  const shell = 'card p-4 text-left w-full';
   if (item.rich === undefined) return <div className={shell}>{body}</div>;
   if (!onToggle) {
     return (
       <>
         <div className={`${shell} sm:col-span-2 lg:col-span-3`}>{body}</div>
-        <div className="sm:col-span-2 lg:col-span-3 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">{item.rich}</div>
+        <div className="sm:col-span-2 lg:col-span-3 card p-4">{item.rich}</div>
       </>
     );
   }
@@ -220,11 +229,11 @@ function Tile({ item, expanded, onToggle }: { item: Item; expanded: boolean; onT
         type="button"
         aria-expanded={expanded}
         onClick={onToggle}
-        className={`${shell} hover:border-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)] transition-colors ${expanded ? 'sm:col-span-2 lg:col-span-3' : ''}`}
+        className={`${shell} hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)] transition-colors ${expanded ? 'sm:col-span-2 lg:col-span-3' : ''}`}
       >
         {body}
       </button>
-      {expanded && <div className="sm:col-span-2 lg:col-span-3 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">{item.rich}</div>}
+      {expanded && <div className="sm:col-span-2 lg:col-span-3 card p-4">{item.rich}</div>}
     </>
   );
 }
@@ -234,7 +243,7 @@ function Row({ item, expanded, onToggle }: { item: Item; expanded: boolean; onTo
   const content = (
     <div className="flex items-start justify-between gap-4 w-full">
       <div className="min-w-0">
-        <div className="text-fg-2 text-[length:var(--fs-caption)]">{item.field.details}</div>
+        <div className="text-fg-2 text-[length:var(--fs-caption)]">{fieldLabel(item.field.details)}</div>
         <div className="text-fg text-[length:var(--fs-body)] mt-0.5 break-words">{summaryOf(item)}</div>
       </div>
       {item.rich !== undefined && onToggle && <Chevron expanded={expanded} />}
@@ -265,7 +274,7 @@ function DrillRow({ item, expanded, onToggle }: { item: Item; expanded: boolean;
   if (!onToggle) {
     return (
       <div className="px-4 py-3">
-        <div className="text-fg text-[length:var(--fs-body)]">{item.field.details}</div>
+        <div className="text-fg text-[length:var(--fs-body)]">{fieldLabel(item.field.details)}</div>
         <div className="text-fg-2 text-[length:var(--fs-body)] mt-1">{detail}</div>
       </div>
     );
@@ -273,7 +282,7 @@ function DrillRow({ item, expanded, onToggle }: { item: Item; expanded: boolean;
   return (
     <div>
       <button type="button" aria-expanded={expanded} onClick={onToggle} className="w-full flex items-center justify-between gap-4 px-4 py-2.5 text-left hover:bg-surface">
-        <span className="text-fg text-[length:var(--fs-body)]">{item.field.details}</span>
+        <span className="text-fg text-[length:var(--fs-body)]">{fieldLabel(item.field.details)}</span>
         <Chevron expanded={expanded} />
       </button>
       {expanded && <div className="px-4 pb-4 text-fg-2 text-[length:var(--fs-body)]">{detail}</div>}

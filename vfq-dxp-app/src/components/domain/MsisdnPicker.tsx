@@ -1,18 +1,20 @@
+import { formatQar } from '../../lib/format';
+import { SegmentedTabs } from '../primitives/SegmentedTabs';
 import { useEffect, useRef, useState } from 'react';
 import { Input } from '../primitives/Input';
 import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { Icon } from '../primitives/Icon';
-import { CARD_IDLE, CARD_SELECTED, CARD_SELECTED_SURFACE, SelectedCardTexture } from '../patterns/offerCardParts';
+import { CARD_IDLE, CARD_SELECTED, SelectedCardTexture } from '../primitives/offerCardParts';
 import { Select } from '../primitives/Select';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useAuthStore } from '../../stores/authStore';
 import { usePersonaStore } from '../../stores/personaStore';
 import { Checkbox } from '../primitives/Checkbox';
-import { SearchField } from '../../components/primitives/SearchField';
+import { SearchField } from '../primitives/SearchField';
 import { FREE_NUMBER_PRICE_CEILING_QAR, STAR_NUMBER_ENTITLEMENT_MULTIPLIER, starNumberOverageQar } from '../../engines/postpaidPricing';
-import { TAB_LABELS, TAB_ORDER, RETAIL_SALES_PERSONA_ID, toLocalMsisdn, MAX_RESERVATIONS_PER_AGENT, PAGE_SIZE, FREE_PAGE_SIZE, STAR_SORT_OPTIONS, FREE_SORT_OPTIONS, PRICE_RANGES, inPriceRange, SORTERS, isValidMsisdn, STAT_ICONS } from './msisdnPickerModel';
+import { TAB_LABELS, TAB_ORDER, PORTAL_TAB_ORDER, RETAIL_SALES_PERSONA_ID, toLocalMsisdn, MAX_RESERVATIONS_PER_AGENT, PAGE_SIZE, FREE_PAGE_SIZE, STAR_SORT_OPTIONS, FREE_SORT_OPTIONS, PRICE_RANGES, inPriceRange, SORTERS, isValidMsisdn, STAT_ICONS } from './msisdnPickerModel';
 import type { MsisdnRecord, NumberTab, SortKey } from './msisdnPickerModel';
 import { StarStat } from './StarStat';
 
@@ -51,12 +53,22 @@ interface MsisdnPickerProps {
   allowManualEntry?: boolean;
   /** Search box and Sort control share one row (search grows, sort sits at the right). */
   inlineToolbar?: boolean;
+  /**
+   * The Number Management Portal (New Number Selection). Tabs read Star, Free, Reserved, and the Reserved tab lists only the numbers
+   * reserved in this session: no number the agent already held is displayed, and none is chosen for the agent on open. Journeys leave
+   * this off and keep their own tab order and held-number behaviour.
+   */
+  portalMode?: boolean;
+  /** Portal only: the numbers reserved in this portal session (after a customer was identified), which its Reserved tab lists. */
+  reservedHere?: string[];
+  /** Portal only: puts an Unreserve button on each card of the Reserved tab; called with the number to release. */
+  onUnreserve?: (msisdn: string) => void;
   /** No longer read: the Reserved tab always shows its green "Reserved" pill (2026-10-04 design). Kept so existing callers still compile. */
   hideReservedBadge?: boolean;
 }
 
 // The chips abbreviate (QAR 5K); the tooltip spells the range out.
-const money0 = (v: number) => `QAR ${v.toLocaleString('en-US')}`;
+const money0 = (v: number) => formatQar(v);
 const rangeTitle = (r: { min: number; max: number }) =>
   r.min === 0 ? `Under ${money0(r.max + 1)}` : Number.isFinite(r.max) ? `${money0(r.min)} \u2013 ${money0(r.max)}` : `Above ${money0(r.min - 1)}`;
 
@@ -70,7 +82,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 // Anything below the Star band (QAR 0 - 1,499) is free of charge whatever its catalogue price; QAR 1,500 and above is a Star Number.
 const chargeFor = (priceQar: number) => (priceQar >= FREE_NUMBER_PRICE_CEILING_QAR ? priceQar : 0);
 
-export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, planMrcQar, starEntitlementQar: starEntitlementProp, allowManualEntry = true, inlineToolbar = false }: MsisdnPickerProps) {
+export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, planMrcQar, starEntitlementQar: starEntitlementProp, allowManualEntry = true, inlineToolbar = false, portalMode = false, reservedHere = [], onUnreserve }: MsisdnPickerProps) {
   const entitlementQar = starEntitlementProp ?? (planMrcQar !== undefined ? planMrcQar * STAR_NUMBER_ENTITLEMENT_MULTIPLIER : undefined);
   // Star tab filter: only numbers priced within the customer's entitlement (no extra charge).
   const [withinEntitlementOnly, setWithinEntitlementOnly] = useState(false);
@@ -78,7 +90,19 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
   const [priceRanges, setPriceRanges] = useState<string[]>([]);
   const [numbers, setNumbers] = useState<MsisdnRecord[]>([]);
   const [numbersLoaded, setNumbersLoaded] = useState(false);
-  const [tab, setTab] = useState<NumberTab>('Free');
+  const [tab, setTab] = useState<NumberTab>(portalMode ? 'Star' : 'Free');
+  // Portal: the selection belongs to the tab it was made on, so switching tabs clears it. Otherwise a number chosen on one tab would keep
+  // the portal's Reserve Number button enabled while no card on the tab in view is selected.
+  const previousTab = useRef(tab);
+  useEffect(() => {
+    if (previousTab.current === tab) return;
+    previousTab.current = tab;
+    if (portalMode && selected) onDeselect?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+
+  // Choosing a number only selects it; in the portal it is reserved once a customer has been identified (see NumberManagementPortal).
+  const choose = onSelect;
   const isRetailSales = usePersonaStore((s) => s.activePersonaId) === RETAIL_SALES_PERSONA_ID;
   const [starTiers, setStarTiers] = useState<{ valueRangeMin: number; valueRangeMax: number; lockInDurationMonths: number }[]>([]);
   // Open search (letters and numbers, 2-8 characters): `searchInput` is what is typed; `search` is the trimmed text the
@@ -98,7 +122,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
   // numbers.json records a reservation against the agent's DISPLAY NAME
   // ("Fatima Al-Kuwari"), which is the identity resolved from
   // users-agents.json at sign-in - NOT persona.name, which is the role label
-  // ("Retail Sales Agent") and matches no reservedBy value.
+  // ("Retail Sales") and matches no reservedBy value.
   const agentName = useAuthStore((s) => s.profile?.name) ?? '';
   const [customMsisdn, setCustomMsisdn] = useState('');
   const [customError, setCustomError] = useState<string | null>(null);
@@ -134,7 +158,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
   const hasAutoSelectedTab = useRef(false);
   const heldReservations = numbers.filter((n) => n.status === 'Reserved' && n.reservedBy === agentName).length;
   useEffect(() => {
-    if (hasAutoSelectedTab.current || !numbersLoaded) return;
+    if (hasAutoSelectedTab.current || !numbersLoaded || portalMode) return;
     hasAutoSelectedTab.current = true;
     // Retail Sales: Reserved when the customer's reservations exist, otherwise Star -
     // never leaving the agent to switch tabs by hand. Everyone else keeps the
@@ -145,15 +169,17 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
 
   // Retail Sales sees the Reserved tab only while a reservation is held; before the
   // numbers have loaded no tab is shown, so the strip never flashes a tab that then vanishes.
-  const visibleTabs = isRetailSales
+  const visibleTabs = portalMode
+    ? PORTAL_TAB_ORDER
+    : isRetailSales
     ? numbersLoaded
       ? TAB_ORDER.filter((t) => t !== 'Reserved' || heldReservations > 0)
       : []
     : TAB_ORDER;
   // The last reservation was released while the Reserved tab was open: move to Star.
   useEffect(() => {
-    if (isRetailSales && numbersLoaded && heldReservations === 0 && tab === 'Reserved') setTab('Star');
-  }, [isRetailSales, numbersLoaded, heldReservations, tab]);
+    if (!portalMode && isRetailSales && numbersLoaded && heldReservations === 0 && tab === 'Reserved') setTab('Star');
+  }, [portalMode, isRetailSales, numbersLoaded, heldReservations, tab]);
 
   const reserveCustom = () => {
     if (atReservationCap) {
@@ -173,7 +199,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
       return;
     }
     setCustomError(null);
-    onSelect(normalized, chargeFor(existing?.priceQAR ?? 0));
+    choose(normalized, chargeFor(existing?.priceQAR ?? 0));
     // Collapse back to the link now that this custom entry succeeded - the
     // same reasoning that hides the form in the first place: nothing left to
     // fill in, so nothing to keep open.
@@ -195,7 +221,9 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
   // used to list all five reservations in the dataset, including four held by
   // other agents that this one cannot use - a list where most rows were
   // unusable and nothing on screen said why.
-  const myReserved = numbers.filter((n) => n.status === 'Reserved' && n.reservedBy === agentName);
+  const heldByAgent = numbers.filter((n) => n.status === 'Reserved' && n.reservedBy === agentName);
+  // The portal's Reserved tab lists what was reserved in this session, not the holds the agent already had.
+  const myReserved = portalMode ? numbers.filter((n) => reservedHere.includes(n.msisdn)) : heldByAgent;
   const inTab =
     tab === 'Reserved'
       ? myReserved
@@ -209,7 +237,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
   // that CREATES a hold (manual reservation); picking one of their own
   // existing holds off this tab is not a new reservation and stays allowed
   // however many they have.
-  const atReservationCap = myReserved.length >= MAX_RESERVATIONS_PER_AGENT;
+  const atReservationCap = heldByAgent.length >= MAX_RESERVATIONS_PER_AGENT;
 
   // When reserved numbers are held, the most recently reserved one is chosen for the agent as the
   // picker opens (on the Reserved tab, which is where it opens). Once, on load. The one exception is a
@@ -218,7 +246,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
   // Free pick left in the draft) is replaced: the agent can still choose any number afterwards.
   const hasDefaultedReserved = useRef(false);
   useEffect(() => {
-    if (hasDefaultedReserved.current || !numbersLoaded) return;
+    if (hasDefaultedReserved.current || !numbersLoaded || portalMode) return;
     const latest = [...myReserved].sort((a, b) => String(b.reservedAt ?? '').localeCompare(String(a.reservedAt ?? '')))[0];
     if (!latest) return;
     hasDefaultedReserved.current = true;
@@ -355,24 +383,15 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
             Anything above that is billed the difference.
         </p>
       )}
-      <div className="flex gap-1 border-b border-border-soft">
-        {visibleTabs.map((t) => (
-          <button
-            key={t}
-            onClick={() => {
-              setTab(t);
-              // Back to the first page: a tab switch is a new list, and
-              // landing on page 3 of it would look like missing inventory.
-              setPage(0);
-            }}
-            className={`px-3 py-1.5 text-[length:var(--fs-body)] border-b-2 -mb-px ${
-              tab === t ? 'border-accent text-accent font-medium' : 'border-transparent text-fg-2'
-            }`}
-          >
-            {TAB_LABELS[t]}
-          </button>
-        ))}
-      </div>
+      <SegmentedTabs
+        items={visibleTabs.map((t) => ({ key: t, label: TAB_LABELS[t] }))}
+        active={tab}
+        onChange={(t) => {
+          setTab(t);
+          // Back to the first page: a tab switch is a new list, and landing on page 3 of it would look like missing inventory.
+          setPage(0);
+        }}
+      />
       {/* States the cap up front rather than only on the error that hitting it
           produces - an agent planning a second reservation should be able to
           see they are at the limit before they try. */}
@@ -410,7 +429,8 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
           something having failed to load. */}
       {/* Tier chips (Platinum / Gold / Silver) and the TIER filter were removed
           on 2026-09-27 per the annotated walkthrough. */}
-          {showSort && sortNode}
+          {/* On the Star tab the sort shares the price-range row below (the portal layout); elsewhere it keeps its own row. */}
+          {showSort && tab !== 'Star' && sortNode}
         </>
       )}
       {/* Star tab: "Show within my entitlement" filter, with the other Star-tab filters. */}
@@ -426,7 +446,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
           Show within my entitlement
         </label>
       )}
-      {/* Star tab: price-range filter. Several ranges can be on at once; "All" (the default) means none. Counts
+      {/* Star tab: price-range filter. One range at a time (picking another replaces it; picking the active one again, or All, clears it); "All" (the default) means none. Counts
           ignore the range filter itself but follow search and the entitlement filter, and a range with no
           matches is disabled. */}
       {tab === 'Star' && (
@@ -447,7 +467,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
                   disabled={disabled}
                   onClick={() => {
                     setPage(0);
-                    setPriceRanges((cur) => (isAll ? [] : cur.includes(r.key) ? cur.filter((k) => k !== r.key) : [...cur, r.key]));
+                    setPriceRanges((cur) => (isAll || cur.includes(r.key) ? [] : [r.key]));
                   }}
                   className={`rounded-[var(--radius-pill)] border px-3 py-1 text-[length:var(--fs-caption)] focus:outline-none focus-visible:shadow-[var(--focus-ring)] disabled:opacity-40 disabled:cursor-not-allowed ${
                     on
@@ -461,6 +481,8 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
                 </button>
               );
             })}
+            {/* Sort sits at the right end of the same row as the price range (the journeys' inline toolbar puts it beside the search instead). */}
+            {!inlineToolbar && showSort && <div className="ml-auto">{sortNode}</div>}
           </div>
           {(activeRanges.length > 0 || withinEntitlementOnly || search) && (
             <div className="flex flex-wrap items-center gap-2">
@@ -472,25 +494,15 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
                     type="button"
                     aria-label={`Remove filter ${r.label}`}
                     onClick={() => setPriceRanges((cur) => cur.filter((k) => k !== r.key))}
-                    className="text-fg-2 hover:text-fg focus:outline-none focus-visible:shadow-[var(--focus-ring)] rounded-full"
+                    className="text-fg-2 hover:text-fg focus:outline-none focus-visible:shadow-[var(--focus-ring)] rounded-[var(--radius-pill)]"
                   >
                     <Icon path="M18 6L6 18 M6 6l12 12" className="w-3.5 h-3.5" />
                   </button>
                 </span>
               ))}
-              <button
-                type="button"
-                onClick={() => {
-                  setPriceRanges([]);
-                  setWithinEntitlementOnly(false);
-                  setSearch('');
-                  setSearchInput('');
-                  setPage(0);
-                }}
-                className="text-link underline text-[length:var(--fs-caption)]"
-              >
+              <Button variant="tertiary" compact onClick={() => { setPriceRanges([]); setWithinEntitlementOnly(false); setSearch(''); setSearchInput(''); setPage(0); }}>
                 Clear filters
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -515,13 +527,17 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
           for an agent who already knows the number they want. */}
       <div
         className={`grid gap-4 ${
-          // Free and Star numbers are compact cards (2026-10-04 designs): five across on wide screens, so the
-          // ten on a page fill two rows. Reserved carries more lines per card (who holds it, when) and keeps two.
-          tab === 'Star' || (tab === 'Reserved' && paged.length > 0 && paged.every((n) => n.priceQAR >= FREE_NUMBER_PRICE_CEILING_QAR))
-            ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
+          // Free and Star numbers are compact cards (2026-10-04 designs). Star cards are at least 19rem wide so the price and the
+          // lock-in period fit side by side without clipping (they were 15.5rem and cut "QAR 35,000" short). Reserved carries more lines per card (who holds it, when) and keeps two.
+          // Columns follow the width of the panel the picker sits in (auto-fill), not the window: the wizard's step card is
+          // 746px narrower than the window, so a viewport breakpoint squeezed the cards at 1024.
+          // The wide template applies whenever ANY card on the page is a Star card: a Reserved list mixing Free and Star numbers used to take the
+          // narrow one, which squeezed its Star cards until the number, price and lock-in overflowed.
+          tab === 'Star' || (tab === 'Reserved' && paged.some((n) => n.priceQAR >= FREE_NUMBER_PRICE_CEILING_QAR))
+            ? 'grid-cols-[repeat(auto-fill,minmax(min(100%,19rem),1fr))]'
             : tab === 'Free'
-              ? 'grid-cols-2 md:grid-cols-3'
-              : 'grid-cols-2 md:grid-cols-3 xl:grid-cols-5'
+              ? 'grid-cols-[repeat(auto-fill,minmax(min(100%,11rem),1fr))]'
+              : 'grid-cols-[repeat(auto-fill,minmax(min(100%,9.5rem),1fr))]'
         }`}
       >
         {paged.map((n) => {
@@ -535,8 +551,24 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
           // Reserved tab it says who holds the number, which is the one thing
           // that distinguishes those rows from each other.
           // Click anywhere on the card to select it; click again to unselect.
-          const toggle = () => (isSelected && onDeselect ? onDeselect() : onSelect(n.msisdn, chargeFor(n.priceQAR)));
+          const toggle = () => (isSelected && onDeselect ? onDeselect() : choose(n.msisdn, chargeFor(n.priceQAR)));
           const isStar = n.priceQAR >= FREE_NUMBER_PRICE_CEILING_QAR;
+          // Portal Reserved tab: release the number. stopPropagation keeps the click from selecting the card.
+          const unreserve =
+            portalMode && tab === 'Reserved' && onUnreserve ? (
+              <div className="relative">
+                <Button
+                  variant="secondary"
+                  compact
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUnreserve(n.msisdn);
+                  }}
+                >
+                  Unreserve
+                </Button>
+              </div>
+            ) : null;
           // Upfront charge is what is actually billed today: for a Star number
           // only the amount above the plan's entitlement (BR-115); anything
           // below the Star band is billed at its catalogue price.
@@ -547,13 +579,13 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
             : undefined;
           const tag = isStar ? (
             // The price of a Star number, amber to set it apart from free and charged ones.
-            <Badge variant="tag-amber">QAR {n.priceQAR.toLocaleString('en-US')}</Badge>
+            <Badge variant="tag-amber">{formatQar(n.priceQAR)}</Badge>
           ) : null; // A free number carries no pill: it is simply the number.
           if (tab === 'Star' || (tab === 'Reserved' && isStar)) {
             // Star-number card (2026-10-04 design): the number and a state mark on top, then a 2x2 grid of
             // icon-tile facts - Price, Lock-in, Upfront charge (only when there is one).
             // Non-breaking spaces keep "QAR 8,750" and "24 months" together: a long value wraps between words, never inside one.
-            const money = (v: number) => `QAR\u00a0${v.toLocaleString('en-US')}`;
+            const money = (v: number) => formatQar(v, { nbsp: true });
             const facts = [
               { icon: STAT_ICONS.wallet, label: 'Price', value: money(n.priceQAR), alert: false },
               ...(lockIn !== undefined ? [{ icon: STAT_ICONS.lock, label: 'Lock-in period', value: `${lockIn}\u00a0months`, alert: false }] : []),
@@ -575,25 +607,27 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
                   }
                 }}
                 className={`relative isolate overflow-hidden flex flex-col gap-3 rounded-[var(--radius-card)] border px-6 py-5 cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
-                  isSelected ? `${CARD_SELECTED} ${CARD_SELECTED_SURFACE}` : CARD_IDLE
+                  isSelected ? CARD_SELECTED : CARD_IDLE
                 }`}
               >
                 {isSelected && <SelectedCardTexture />}
                 {/* The state mark: a ring when free to pick, a red tick when selected (also exposed as aria-pressed). */}
                 <span
                   aria-hidden="true"
-                  className={`absolute right-5 top-5 inline-flex h-7 w-7 items-center justify-center rounded-full border ${
-                    isSelected ? 'border-accent bg-accent text-white' : 'border-[var(--field-border)] bg-bg'
+                  className={`absolute right-5 top-5 inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-pill)] border ${
+                    isSelected ? 'border-accent bg-accent text-on-dark' : 'border-[var(--field-border)] bg-bg'
                   }`}
                 >
                   {isSelected && <Icon path="M20 6L9 17l-5-5" className="w-4 h-4" strokeWidth={3} />}
                 </span>
                 <p className="font-bold text-[length:var(--fs-h4)] text-fg leading-tight pr-10">{toLocalMsisdn(n.msisdn)}</p>
-                <div className="relative grid grid-cols-2 gap-x-6 gap-y-4">
+                {/* The facts sit side by side while the card has room for two and stack when it does not (a narrow panel, a phone), never overflow. */}
+                <div className="relative grid grid-cols-[repeat(auto-fit,minmax(7.5rem,1fr))] gap-x-6 gap-y-4">
                   {facts.map((f) => (
                     <StarStat key={f.label} icon={f.icon} label={f.label} value={f.value} alert={f.alert} plainValue={f.label === 'Lock-in period'} />
                   ))}
                 </div>
+                {unreserve}
               </div>
             );
           }
@@ -613,7 +647,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
                 }
               }}
               className={`relative isolate flex flex-col gap-1.5 rounded-[var(--radius-card)] border px-4 py-3 cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
-                isSelected ? `${CARD_SELECTED} ${CARD_SELECTED_SURFACE}` : CARD_IDLE
+                isSelected ? CARD_SELECTED : CARD_IDLE
               }`}
             >
               {isSelected && <SelectedCardTexture />}
@@ -621,7 +655,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
                   badge. Nothing marks an unselected card. The state is exposed to assistive tech through
                   aria-pressed on the card. */}
               {isSelected && (
-                <span aria-hidden="true" className="absolute -right-2 -top-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-accent text-white ring-2 ring-bg">
+                <span aria-hidden="true" className="absolute -right-2 -top-2 inline-flex h-5 w-5 items-center justify-center rounded-[var(--radius-pill)] bg-accent text-on-dark ring-2 ring-bg">
                   <Icon path="M20 6L9 17l-5-5" className="w-3 h-3" strokeWidth={3} />
                 </span>
               )}
@@ -638,21 +672,24 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
               {isStar ? (
                 <>
                   {planMrcQar !== undefined && upfront > 0 && (
-                    <p className="font-semibold text-accent text-[length:var(--fs-caption)]">Upfront charge: QAR {upfront.toLocaleString('en-US')}</p>
+                    <p className="font-semibold text-accent text-[length:var(--fs-caption)]">Upfront charge: {formatQar(upfront)}</p>
                   )}
                   {planMrcQar !== undefined && entitlementQar !== undefined && (
-                    <p className="text-fg-2 text-[length:var(--fs-caption)]">Plan entitlement: up to QAR {entitlementQar.toLocaleString('en-US')}</p>
+                    <p className="text-fg-2 text-[length:var(--fs-caption)]">Plan entitlement: up to {formatQar(entitlementQar)}</p>
                   )}
                   {lockIn !== undefined && <p className="text-fg-2 text-[length:var(--fs-caption)]">Lock-in period: {lockIn} months</p>}
                 </>
               ) : null}
+              {unreserve}
             </div>
           );
         })}
         {filtered.length === 0 && (
           <p className="text-muted text-[length:var(--fs-body)] col-span-full">
             {tab === 'Reserved'
-              ? 'You have no reserved numbers.'
+              ? portalMode
+                ? 'No numbers reserved yet. Numbers you reserve here appear in this tab.'
+                : 'You have no reserved numbers.'
               : activeRanges.length > 0 && tab === 'Star'
                 ? 'No Star Numbers match the selected price range and filters. Clear the filters to see all.'
                 : search
@@ -667,7 +704,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
           single page so a one-page list carries no dead controls. */}
       {pageCount > 1 && (
         <div className="flex items-center justify-between gap-4">
-          <Button variant="ghost-rect" compact disabled={safePage === 0} onClick={() => setPage((n) => n - 1)}>
+          <Button variant="secondary" compact disabled={safePage === 0} onClick={() => setPage((n) => n - 1)}>
             Previous
           </Button>
           <span className="text-muted text-[length:var(--fs-caption)]">
@@ -675,7 +712,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
             {Math.min((safePage + 1) * pageSize, filtered.length)} of {filtered.length}
           </span>
           <Button
-            variant="ghost-rect"
+            variant="secondary"
             compact
             disabled={safePage >= pageCount - 1}
             onClick={() => setPage((n) => n + 1)}
@@ -694,7 +731,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
           "This section is not required") via allowManualEntry - see that
           prop's own note. */}
       {allowManualEntry && !selected && (
-        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-4 space-y-2">
+        <div className="card card-surface p-4 space-y-2">
           <h4 className="text-fg font-semibold">Manual MSISDN Entry</h4>
           <Input
             label="Custom MSISDN"
@@ -707,7 +744,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
             error={customError ?? undefined}
             helperText="Enter a full international format MSISDN"
           />
-          <Button variant="primary-rect" className="w-full" disabled={!isValidMsisdn(customMsisdn)} onClick={reserveCustom}>
+          <Button variant="primary" className="w-full" disabled={!isValidMsisdn(customMsisdn)} onClick={reserveCustom}>
             Reserve Custom Number
           </Button>
         </div>

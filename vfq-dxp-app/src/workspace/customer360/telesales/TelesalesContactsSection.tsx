@@ -1,3 +1,5 @@
+import { SearchField } from '../../../components/primitives/SearchField';
+import { FilterSelect } from '../sections/C360Kit';
 import { useState } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
 import { contactInformationResolvers } from '../sections/contactInformationResolvers';
@@ -50,9 +52,9 @@ export function ContactsSection({ ctx }: { ctx: Ctx }) {
   return (
     <>
       <SectionHeader
-        icon={ICON.user}
-        title="Contacts"
-        description="View and manage all contacts associated with this customer. Access authorised persons, roles and communication preferences."
+       
+       
+       
         actions={<HeaderButton primary>+ Add Contact ›</HeaderButton>}
       />
       <StatStrip
@@ -69,18 +71,8 @@ export function ContactsSection({ ctx }: { ctx: Ctx }) {
         <div className="contents">
           <Card title={`Contacts List (${total})`} icon={ICON.user}>
             <div className="px-4 py-3 flex gap-2 border-b border-[var(--field-card-border)]">
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search contacts by name, role or email..."
-                aria-label="Search contacts"
-                className="flex-1 min-w-0 rounded-[var(--field-radius)] border border-[var(--field-border)] bg-surface px-3 py-2 text-[length:var(--fs-caption)]"
-              />
-              <select value={role} onChange={(e) => setRole(e.target.value)} aria-label="Filter by role" className="rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-2 text-[length:var(--fs-caption)]">
-                {['All Roles', 'Customer (Self)', 'Authorised Person', 'Notification Contact', 'Family Member'].map((r) => (
-                  <option key={r}>{r}</option>
-                ))}
-              </select>
+              <SearchField value={query} onChange={(e) => setQuery(e.target.value)} onClear={() => setQuery('')} placeholder="Search contacts by name, role or email..." aria-label="Search contacts" wrapperClassName="flex-1 min-w-48" />
+              <FilterSelect label="Filter by role" value={role} options={['All Roles', 'Customer (Self)', 'Authorised Person', 'Notification Contact', 'Family Member'].map((x) => ({ value: x, label: x }))} onChange={(v) => setRole(v)} />
             </div>
             {shown.map((r) => (
               <button key={r.key} type="button" onClick={() => setSelected(r.key)} className={`w-full flex items-start gap-3 px-4 py-3 text-left border-b border-[var(--field-card-border)] last:border-0 hover:bg-surface ${cur?.key === r.key ? 'bg-surface' : ''}`}>

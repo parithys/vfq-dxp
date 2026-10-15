@@ -29,10 +29,9 @@ const STATUS: Record<JourneyStatus, {
   planned: {
     label: 'Planned',
     variant: 'filled-neutral',
-    // Dashed = nothing to click. The border itself carries the affordance,
-    // so a planned card never looks interactive.
+    // Dashed border and a greyed surface = nothing to click, so a planned card never looks interactive.
     border: 'border-dashed border-[var(--field-card-border)]',
-    cta: 'Not yet open',
+    cta: '',
   },
 };
 
@@ -44,34 +43,33 @@ export function JourneyCard({ journey, index, to, state }: { journey: Journey; i
     <>
       <div className="flex items-start justify-between gap-2 mb-3">
         <Badge variant={s.variant}>{s.label}</Badge>
-        <span className="text-[length:var(--fs-caption)] text-muted tabular-nums shrink-0">
-          {String(index + 1).padStart(2, '0')}
+        <span className="flex items-center gap-2 text-[length:var(--fs-caption)] text-muted shrink-0">
+          {journey.product && <span>{journey.product}</span>}
+          <span className="tabular-nums">{String(index + 1).padStart(2, '0')}</span>
         </span>
       </div>
       <div
         className={`font-medium text-[length:var(--fs-body-lg)] mb-1 ${
-          journey.status === 'planned' ? 'text-fg-2' : 'text-fg'
+          journey.status === 'planned' ? 'text-muted' : 'text-fg'
         }`}
       >
         {journey.title}
       </div>
-      <p className="text-fg-2 text-[length:var(--fs-body)] mb-3">{journey.description}</p>
+      <p className={`text-[length:var(--fs-body)] ${journey.status === 'planned' ? 'text-muted' : 'text-fg-2 mb-3'}`}>{journey.description}</p>
       {interactive ? (
         <span
           className={`inline-flex items-center gap-1.5 font-medium text-[length:var(--fs-body)] ${
-            journey.status === 'available' ? 'text-accent' : 'text-[var(--warn-text)]'
+            journey.status === 'available' ? 'text-link' : 'text-[var(--warn-text)]'
           }`}
         >
           {s.cta}
           {journey.status === 'available' && <Icon path={ARROW_RIGHT} className="w-4 h-4" />}
         </span>
-      ) : (
-        <span className="text-muted text-[length:var(--fs-body)]">{s.cta}</span>
-      )}
+      ) : null}
     </>
   );
 
-  const shell = `rounded-[var(--radius-card)] border bg-bg p-5 transition-all ${s.border}`;
+  const shell = `rounded-[var(--radius-card)] border p-5 transition-all ${journey.status === 'planned' ? 'bg-light-neutral' : 'bg-bg'} ${s.border}`;
 
   if (!interactive) return <div className={shell}>{body}</div>;
   return (
@@ -87,7 +85,7 @@ export function JourneyCard({ journey, index, to, state }: { journey: Journey; i
     // still works. The draft persists deliberately, and a mid-journey reload
     // or a step click in the rail must not wipe it - only an explicit start
     // does.
-    <Link to={to!} state={state ?? { startFresh: true }} className={`group block ${shell}`}>
+    <Link to={to!} state={{ ...(state ?? { startFresh: true }), navJourney: journey.id }} className={`group block ${shell}`}>
       {body}
     </Link>
   );

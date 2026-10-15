@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { NAV_BY_KEY, type NavKey } from '../navigation/navManifest';
 
 interface SidebarState {
-  /** Desktop only: true = the side navigation stays open and the body sits beside it; false (default) = it is revealed on hover, over the content. */
+  /** Desktop only: true (default) = the side navigation stays open and the body sits beside it; false = it is revealed on hover, over the content. */
   pinned: boolean;
   togglePinned: () => void;
   mobileOpen: boolean;
@@ -39,7 +39,9 @@ const clearPeekTimer = () => {
 export const useSidebarStore = create<SidebarState>()(
   persist(
     (set, get) => ({
-      pinned: false,
+      // Pinned and open by default for every persona: sign-out clears this store (resetApplicationState), so each
+      // login starts here. An agent may unpin during a session; that choice lasts until they sign out.
+      pinned: true,
       togglePinned: () => {
         clearPeekTimer();
         set({ pinned: !get().pinned, peeking: false });
@@ -86,7 +88,7 @@ export const useSidebarStore = create<SidebarState>()(
         pinned: state.pinned,
         expandedNavKeys: state.expandedNavKeys,
       }),
-      version: 4,
+      version: 5,
       // A `version` MUST be paired with a `migrate`, even a trivial one:
       // zustand logs "State loaded from storage couldn't be migrated since no
       // migrate function was provided" on every version mismatch otherwise.
@@ -101,9 +103,10 @@ export const useSidebarStore = create<SidebarState>()(
       // same two groups. Resetting once is the only way to make the new default
       // actually take effect.
       migrate: (persisted) => {
-        // v4: the docked/hidden preference became pin/unpin, and unpinned (hover to reveal) is the default for everyone.
+        // v5: pinned (docked open) is the default for everyone. Anyone holding an older unpinned default is moved to it
+        // once; a pin choice made from here on is respected for the rest of the session.
         const p = (persisted ?? {}) as Partial<SidebarState>;
-        return { ...p, pinned: false, expandedNavKeys: [] } as SidebarState;
+        return { ...p, pinned: true, expandedNavKeys: [] } as SidebarState;
       },
       // Older persisted state has no expandedNavKeys; without a default the
       // Sidebar would read undefined and crash on .includes(). Applies after

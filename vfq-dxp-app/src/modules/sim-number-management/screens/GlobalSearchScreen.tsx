@@ -32,14 +32,14 @@ export function GlobalSearchScreen() {
       <PageHeader title={<>Global Search</>} description={<>Search for a customer by MSISDN.</>} />
       <div className="flex gap-2" onKeyDown={handleKeyDown}>
         <Input aria-label="Enter MSISDN" placeholder="Enter MSISDN" value={msisdn} onChange={(e) => { setMsisdn(e.target.value); setSearched(false); }} />
-        <Button variant="primary-rect" onClick={() => setSearched(true)} disabled={!msisdn}>
+        <Button variant="primary" onClick={() => setSearched(true)} disabled={!msisdn}>
           Go
         </Button>
       </div>
       {searched && msisdn && (
-        <div className="mt-6 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">
+        <div className="mt-6 card p-4">
           <p className="text-fg font-medium mb-3">{msisdn}</p>
-          <Button variant="primary-rect" onClick={() => setSwapping(true)}>
+          <Button variant="primary" onClick={() => setSwapping(true)}>
             SIM Swap
           </Button>
         </div>

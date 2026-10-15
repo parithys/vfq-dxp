@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
-import { Drawer } from '../../../components/primitives/Drawer';
+import { Drawer } from '../../../capabilities';
 import { Input } from '../../../components/primitives/Input';
 import { Select } from '../../../components/primitives/Select';
 import { useEntityStore } from '../../../stores/entityStore';
@@ -11,6 +11,7 @@ import { canEditCustomerRecords } from '../../../engines/agentPrivilegeEngine';
 import { useProfileChangeTicket } from '../../../engines/profileChangeTicket';
 import { useVerificationGate } from '../../../components/patterns/VerificationGate';
 import type { Customer360Data } from '../../../engines/customer360Engine';
+import { useSubmit } from '../../../hooks/useSubmit';
 
 export interface AddressRecord {
   id: string;
@@ -119,7 +120,6 @@ export function AddressEditDrawer({
   const [country, setCountry] = useState(address.country);
   const [poBox, setPoBox] = useState(address.poBox ?? '');
   const [kahramaaId, setKahramaaId] = useState(address.kahramaaId ?? '');
-  const [saving, setSaving] = useState(false);
 
   // Dynamic filtering (CAM-19): street options narrow to the selected zone,
   // building options narrow to the selected zone+street.
@@ -143,8 +143,7 @@ export function AddressEditDrawer({
     setBuildingNo(ZONE_CATALOGUE[zone]?.buildingsByStreet[nextStreet]?.[0] ?? '');
   };
 
-  const save = async () => {
-    setSaving(true);
+  const { run: save, pending: saving } = useSubmit(async () => {
     const patch = { addressLine1, addressLine2, zone, streetNo, buildingNo, city, country, poBox, kahramaaId };
     const changed = (Object.keys(patch) as (keyof typeof patch)[]).filter((k) => patch[k] !== (address as unknown as Record<string, unknown>)[k]);
     await updateRecord('addresses', 'id', address.id, patch);
@@ -152,10 +151,9 @@ export function AddressEditDrawer({
       const { record } = await createChangeTicket(customerId, 'Address', changed);
       onTicketCreated(record);
     }
-    setSaving(false);
     onSaved(patch);
     onClose();
-  };
+  }, 'Could not save the address. Please try again.');
 
   return (
     <Drawer
@@ -165,10 +163,10 @@ export function AddressEditDrawer({
       footer={
         !readOnly ? (
           <>
-            <Button variant="ghost-rect" onClick={onClose}>
+            <Button variant="secondary" onClick={onClose}>
               Cancel
             </Button>
-            <Button variant="primary-rect" disabled={saving || !addressLine1.trim()} onClick={save}>
+            <Button variant="primary" disabled={saving || !addressLine1.trim()} onClick={save}>
               {saving ? 'Saving…' : 'Save Changes'}
             </Button>
           </>

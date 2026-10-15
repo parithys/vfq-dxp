@@ -1,3 +1,4 @@
+import { Button } from '../../../components/primitives/Button';
 import { useState } from 'react';
 import type { FormattedSummaryValue } from './stepSummary';
 
@@ -11,14 +12,9 @@ export function SummaryFieldRow({ label, value }: { label: string; value: Format
         {value.fullList ? (
           <>
             {expanded ? value.fullList.join(', ') : value.text}{' '}
-            <button
-              type="button"
-              onClick={() => setExpanded((e) => !e)}
-              aria-expanded={expanded}
-              className="text-accent font-medium text-[length:var(--fs-caption)] hover:underline focus:outline-none focus-visible:shadow-[var(--focus-ring)] rounded-[var(--radius-sm)]"
-            >
+            <Button variant="tertiary" compact onClick={() => setExpanded((e) => !e)} aria-expanded={expanded}>
               {expanded ? 'Show less' : 'Show all'}
-            </button>
+            </Button>
           </>
         ) : (
           value.text

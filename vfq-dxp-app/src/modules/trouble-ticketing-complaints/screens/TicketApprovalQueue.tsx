@@ -4,7 +4,7 @@ import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
 import { ErrorBanner } from '../../../components/primitives/ErrorBanner';
-import { useEntityStore } from '../../../stores/entityStore';
+import { useEntityStore, useKindPending } from '../../../stores/entityStore';
 import { useAuthStore } from '../../../stores/authStore';
 import { isVisibleToAgent } from '../../../engines/agentTaskEngine';
 import { TICKET_APPROVAL_ELIGIBLE_JOB_TITLES } from '../../../data/reference/ticketReferenceData';
@@ -37,7 +37,7 @@ export function TicketApprovalQueue({ padded = true }: TicketApprovalQueueProps)
   const loadKind = useEntityStore((s) => s.loadKind);
   const updateRecord = useEntityStore((s) => s.updateRecord);
   const loadError = useEntityStore((s) => s.errors['trouble-tickets']);
-  const loading = useEntityStore((s) => s.loading['trouble-tickets']);
+  const loading = useKindPending('trouble-tickets'); // true until the list has arrived, so the table never flashes "empty" first
   const navigate = useNavigate();
   const currentAgentId = useAuthStore((s) => s.profile?.userId);
   const currentJobTitle = useAuthStore((s) => s.profile?.jobTitle);
@@ -75,7 +75,7 @@ export function TicketApprovalQueue({ padded = true }: TicketApprovalQueueProps)
             header: '',
             render: (r) =>
               isEligible() ? (
-                <Button variant="ghost-rect" compact onClick={() => assignToMe(r)}>
+                <Button variant="secondary" compact onClick={() => assignToMe(r)}>
                   {r.assignedApproverId === currentAgentId ? 'Open' : 'Assign to Me'}
                 </Button>
               ) : (

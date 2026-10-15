@@ -1,3 +1,6 @@
+import { currentAgentId } from '../../../stores/authStore';
+import { badgeVariantFor, isSlaStopped } from '../../../lib/statusTone';
+import { SegmentedTabs } from '../../../components/primitives/SegmentedTabs';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PageHeader } from '../../../components/patterns/PageHeader';
 import { useEffect, useMemo, useState } from 'react';
@@ -7,13 +10,13 @@ import { Button } from '../../../components/primitives/Button';
 import { Select } from '../../../components/primitives/Select';
 import { Checkbox } from '../../../components/primitives/Checkbox';
 import { ErrorBanner } from '../../../components/primitives/ErrorBanner';
-import { useEntityStore } from '../../../stores/entityStore';
+import { useEntityStore, useKindPending } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import { evaluateRule } from '../../../engines/ruleEngine';
 import { downloadCsv } from '../../../engines/csvExport';
-import { TicketCreationModal } from './TicketCreationModal';
-import type { NewTicketValue } from './TicketCreationModal';
-import { STATUS_VARIANT, TICKET_STATUSES, buildNewTicketRecord } from '../../../data/reference/ticketReferenceData';
+import { TicketCreationModal } from '../../../components/patterns/TicketCreationModal';
+import type { NewTicketValue } from '../../../components/patterns/TicketCreationModal';
+import { TICKET_STATUSES, buildNewTicketRecord } from '../../../data/reference/ticketReferenceData';
 import { useTicketSlaEscalationSweep } from '../slaEscalationSweep';
 import { SearchField } from '../../../components/primitives/SearchField';
 
@@ -44,7 +47,7 @@ interface Ticket {
 
 function ragVariant(ticket: Ticket): 'success' | 'warning' | 'danger' | 'filled-neutral' {
   const rule = evaluateRule('BR-349', { slaDueAt: ticket.slaDueAt, status: ticket.status });
-  if (!ticket.slaDueAt || ticket.status === 'Closed' || ticket.status === 'Cancelled') return 'filled-neutral';
+  if (!ticket.slaDueAt || isSlaStopped(ticket.status)) return 'filled-neutral';
   if (!rule.pass) return 'danger';
   return rule.message?.includes('Amber') ? 'warning' : 'success';
 }
@@ -66,7 +69,7 @@ interface TicketsDashboardProps {
 export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
   const tickets = (useEntityStore((s) => s.records['trouble-tickets']) ?? []) as unknown as Ticket[];
   const loadKind = useEntityStore((s) => s.loadKind);
-  const loading = useEntityStore((s) => s.loading['trouble-tickets']);
+  const loading = useKindPending('trouble-tickets'); // true until the list has arrived, so the table never flashes "empty" first
   const loadError = useEntityStore((s) => s.errors['trouble-tickets']);
   const createRecord = useEntityStore((s) => s.createRecord);
   const updateRecord = useEntityStore((s) => s.updateRecord);
@@ -141,7 +144,7 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
   // bulk stays consistent rather than introducing a new, unevidenced one.
   const bulkAssign = async () => {
     const targets = filtered.filter((t) => selectedIds.has(t.ticketId));
-    const terminal = (t: Ticket) => t.status === 'Closed' || t.status === 'Cancelled';
+    const terminal = (t: Ticket) => isSlaStopped(t.status);
     const eligible = targets.filter((t) => !t.assignedTo && !terminal(t));
     await Promise.all(
       eligible.map((t) =>
@@ -178,7 +181,7 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
 
   const createTicket = async (value: NewTicketValue) => {
     const ticketId = `TT-${Date.now().toString().slice(-6)}`;
-    await createRecord('trouble-tickets', buildNewTicketRecord({ ticketId, ...value, createdBy: 'AGENT-VINODHINIR' }));
+    await createRecord('trouble-tickets', buildNewTicketRecord({ ticketId, ...value, createdBy: currentAgentId() }));
     pushToast('success', `Ticket ${ticketId} submitted to ${value.queue}.`);
     setModalOpen(false);
   };
@@ -205,7 +208,7 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
         title="Tickets Dashboard"
         description="Trouble tickets and complaints across all queues."
         actions={
-          <Button variant="primary-rect" onClick={() => navigate('/customer-search', { state: { newTicket: true } })}>
+          <Button variant="primary" onClick={() => navigate('/customer-search', { state: { newTicket: true } })}>
             New Ticket
           </Button>
         }
@@ -213,7 +216,7 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         {TICKET_STATUSES.map((status) => (
-          <div key={status} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">
+          <div key={status} className="card p-4">
             <div className="text-[length:var(--fs-caption)] text-muted">{status}</div>
             <div className="text-[length:var(--fs-h3)] text-fg font-medium">{counts[status] ?? 0}</div>
           </div>
@@ -221,25 +224,15 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
       </div>
 
       <div className="flex flex-wrap items-end gap-3 mb-4">
-        <div className="flex gap-1 border-b border-border-soft">
-          {(
-            [
-              ['all', 'All Tickets'],
-              ['mine', 'My Tickets'],
-              ['escalated', 'Escalated to Me'],
-            ] as const
-          ).map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setView(key)}
-              className={`px-3 py-1.5 text-[length:var(--fs-body)] border-b-2 -mb-px ${
-                view === key ? 'border-accent text-accent font-medium' : 'border-transparent text-fg-2'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <SegmentedTabs
+          items={[
+            { key: 'all', label: 'All Tickets' },
+            { key: 'mine', label: 'My Tickets' },
+            { key: 'escalated', label: 'Escalated to Me' },
+          ]}
+          active={view}
+          onChange={setView}
+        />
         <div className="ml-auto flex flex-wrap items-end gap-2">
           <SearchField
             aria-label="Search ticket #, customer, category, issue"
@@ -251,6 +244,7 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
           />
           <div className="w-40">
             <Select
+              aria-label="Filter by status"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               placeholder="Status"
@@ -258,29 +252,31 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
             />
           </div>
           <Select
+            aria-label="Filter by priority"
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
             placeholder="Priority"
             options={['1-ASAP', '2-High', '3-Medium', '4-Low'].map((p) => ({ value: p, label: p }))}
           />
           <Select
+            aria-label="Filter by queue"
             value={queueFilter}
             onChange={(e) => setQueueFilter(e.target.value)}
             placeholder="Queue"
             options={['FL Agents', 'Complaints Team'].map((q) => ({ value: q, label: q }))}
           />
-          <Button variant="ghost-rect" onClick={exportList} disabled={filtered.length === 0}>
+          <Button variant="secondary" onClick={exportList} disabled={filtered.length === 0}>
             Export (CSV)
           </Button>
         </div>
       </div>
 
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 mb-3 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-3">
+        <div className="flex items-center gap-3 mb-3 card p-3">
           <span className="text-[length:var(--fs-body)] text-fg">{selectedIds.size} selected</span>
-          <Button variant="ghost-rect" compact onClick={bulkAssign}>Bulk Assign to me</Button>
-          <Button variant="ghost-rect" compact onClick={bulkClose}>Bulk Close</Button>
-          <Button variant="ghost-rect" compact className="ml-auto" onClick={() => setSelectedIds(new Set())}>Clear selection</Button>
+          <Button variant="secondary" compact onClick={bulkAssign}>Bulk Assign to me</Button>
+          <Button variant="secondary" compact onClick={bulkClose}>Bulk Close</Button>
+          <Button variant="secondary" compact className="ml-auto" onClick={() => setSelectedIds(new Set())}>Clear selection</Button>
         </div>
       )}
 
@@ -291,6 +287,7 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
             key: 'select',
             header: '',
             sortable: false,
+            cellClassName: '!pr-0 w-10',
             render: (r) => (
               <Checkbox
                 aria-label={`Select ticket ${r.ticketId}`}
@@ -303,6 +300,7 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
           {
             key: 'ticketId',
             header: 'Ticket #',
+            cellClassName: '!pl-1', // sits right after the checkbox column
             linkTo: (r) => `/trouble-ticketing-complaints/ticket-detail-screen-public-notes-bell-icon-notifications?id=${r.ticketId}`,
           },
           { key: 'customerId', header: 'Customer', linkTo: (r) => (r.customerId ? `/customer/${r.customerId}` : undefined) },
@@ -310,7 +308,7 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
           { key: 'queue', header: 'Queue' },
           { key: 'priority', header: 'Priority' },
           { key: 'assignedTo', header: 'Assigned To', render: (r) => r.assignedTo ?? '-' },
-          { key: 'status', header: 'Status', render: (r) => <Badge variant={STATUS_VARIANT[r.status] ?? 'filled-neutral'}>{r.status}</Badge> },
+          { key: 'status', header: 'Status', render: (r) => <Badge variant={badgeVariantFor(r.status)}>{r.status}</Badge> },
           {
             key: 'rag',
             header: 'SLA',

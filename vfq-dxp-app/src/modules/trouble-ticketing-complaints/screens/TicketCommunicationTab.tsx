@@ -30,7 +30,7 @@ interface SmsTemplate {
 // confirmed the two taxonomies don't line up (this sheet's real categories
 // are e.g. "Fixed_QA"/"Requests"/"Account Management", not "Mobile
 // Complaints"/"Disconnection" etc.), so no join is invented here.
-export function TicketCommunicationTab({ ticketId, onSend }: { ticketId: string; onSend: (smsText: string) => Promise<void> }) {
+export function TicketCommunicationTab({ ticketId, onSend }: { ticketId: string; onSend: (smsText: string) => Promise<unknown> }) {
   const [templates, setTemplates] = useState<SmsTemplate[]>([]);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<SmsTemplate | null>(null);
@@ -86,9 +86,11 @@ export function TicketCommunicationTab({ ticketId, onSend }: { ticketId: string;
           {matches.map((t) => (
             <button
               key={t.templateId}
+              type="button"
+              aria-pressed={selected?.templateId === t.templateId}
               onClick={() => setSelected(t)}
               className={`w-full text-left rounded-[var(--radius-card)] border p-2 text-[length:var(--fs-body)] ${
-                selected?.templateId === t.templateId ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]' : 'border-border-soft bg-bg'
+                selected?.templateId === t.templateId ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]' : 'border-[var(--field-card-border)] bg-bg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
               }`}
             >
               <div className="text-fg">{t.keyword}</div>
@@ -100,7 +102,7 @@ export function TicketCommunicationTab({ ticketId, onSend }: { ticketId: string;
           ))}
         </div>
       </div>
-      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-3">
+      <div className="card p-3">
         {!selected && <p className="text-fg-2 text-[length:var(--fs-body)]">Select a template to preview.</p>}
         {selected && (
           <div className="space-y-2">
@@ -109,7 +111,7 @@ export function TicketCommunicationTab({ ticketId, onSend }: { ticketId: string;
               {resolveBody(selected.bodyEn) ?? <span className="italic text-muted">No English body populated in the source workbook for this template.</span>}
             </p>
             {selected.bodyAr && <p className="text-fg-2 text-[length:var(--fs-body)] text-right" dir="rtl">{resolveBody(selected.bodyAr)}</p>}
-            <Button variant="primary-rect" onClick={send} disabled={sending || !selected.bodyEn}>
+            <Button variant="primary" onClick={send} disabled={sending || !selected.bodyEn}>
               {sending ? 'Sending…' : 'Send'}
             </Button>
           </div>

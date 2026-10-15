@@ -1,16 +1,20 @@
-import { emailVerification, maskEmail } from '../../../components/patterns/guidedContactModel';
-import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
+import { currentAgentId } from '../../../stores/authStore';
+import { emailVerification, maskEmail, persistBillingAccount } from '../../../capabilities';
+import type { GuidedContactValue } from '../../../capabilities';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
-import type { BillingAccountValue } from '../../../components/patterns/billingAccountModel';
+import type { BillingAccountValue } from '../../../capabilities';
 import type { CheckoutTotals } from '../../../components/patterns/checkoutSummaryModel';
 import type { WinCashPaymentValue } from '../../../components/patterns/WinCashPaymentStep';
 import type { AppointmentBookingValue } from '../../../components/patterns/AppointmentBookingStep';
 import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
-import { logActivity } from '../../../engines/activityEngine';
+import { logActivity, newActivityId } from '../../../engines/activityEngine';
+import type { ActivityInput } from '../../../engines/activityEngine';
 import type { useEntityStore } from '../../../stores/entityStore';
-import type { CustomerTypeValue } from '../../new-connection/steps/customerTypeModel';
-import type { ConfirmedOrder } from '../../new-connection/newConnectionModel';
+import type { CustomerTypeValue } from '../../../capabilities';
+import type { ConfirmedOrder } from '../../../capabilities';
+import { homeProductLabel } from '../../new-connection/products';
+import type { HomeProduct } from '../../new-connection/products';
 import { FIXED_JOURNEY_LABEL, serviceTypeLabel, type FixedInstallationValue } from './fixedActivationModel';
 
 type EntityStore = ReturnType<typeof useEntityStore.getState>;
@@ -41,6 +45,18 @@ export async function submitFixedActivationOrder(
   const customerType = values.customerType as CustomerTypeValue | undefined;
   const pendingApproval = manualIdEntry || (Boolean(contact.isB2B2C) && !customerType?.rejected) || customerType?.type === 'b2b2c' || Boolean(eligibility?.requiresHrnAdvance) || approvalChecks.length > 0;
 
+  // A customer with no billing account gets the one the journey built, created and set as their default.
+  const billingProfileId = await persistBillingAccount(billingAccount, {
+    createRecord,
+    kind: 'Consumer Fixed Line (GigaHome)',
+    customerId: eligibility?.customerId,
+    idNumber: contact.idNumber,
+    contactName: contact.moiResult?.name,
+    contactEmail: contact.email,
+    contactPhone: contact.moiResult?.phone,
+    addressLine: [address?.zone && `Zone ${address.zone}`, address?.streetNo && `Street ${address.streetNo}`, address?.buildingNo && `Building ${address.buildingNo}`].filter(Boolean).join(', ') || undefined,
+  });
+
   const orderId = `ORD-${Date.now().toString().slice(-6)}`;
   await createRecord('orders', {
     orderId,
@@ -54,19 +70,21 @@ export async function submitFixedActivationOrder(
     customerId: eligibility?.customerId,
     idNumber: contact.idNumber,
     customerEmail: contact.email,
+    // Which home product was sold (Fibre, Fixed-Line, FWA, 5G Home); the service type below is what the installation uses.
+    homeProduct: homeProductLabel(values.homeProduct as HomeProduct | undefined),
     serviceType: serviceTypeLabel(installation?.serviceType),
     installationAddress: address,
     productId: values.productId,
     msisdn: values.msisdn,
     devices: values.devices,
-    billingProfileId: billingAccount?.selectedProfileId,
+    billingProfileId,
     newBillingProfileName: billingAccount?.newAccount?.profileName,
     dueTodayQAR: totals?.dueTodayQar ?? 0,
     monthlyRecurringQAR: plan?.mrcQAR ?? 0,
     approvalReason: pendingApproval
       ? [manualIdEntry ? 'Identity manually entered' : '', ...approvalChecks.map((c) => c.message?.split('\n')[0] ?? c.id)].filter(Boolean).join(' | ') || undefined
       : undefined,
-    createdBy: 'AGENT-VINODHINIR',
+    createdBy: currentAgentId(),
     sourceChannel: 'Tablet',
   });
   await createRecord('appointments', {
@@ -80,13 +98,16 @@ export async function submitFixedActivationOrder(
   });
 
   const activityCtx = { journey: FIXED_JOURNEY_LABEL, orderId, customerId: eligibility?.customerId, customerName: contact.moiResult?.name, idNumber: contact.idNumber };
-  const activityId = await logActivity({
+  // The Completed activity is automatic and carries no comments; it is recorded when the agent hits Done & Exit.
+  const activityId = newActivityId();
+  const completionActivity: ActivityInput = {
     ...activityCtx,
+    activityNumber: activityId,
     trigger: 'completed',
     reason: pendingApproval
       ? `Order ${orderId} submitted and is awaiting approval.`
       : `Order ${orderId} submitted - installation booked for ${appointment.date} (${appointment.timeSlot})${payment?.reference ? `, WinCash ref ${payment.reference}` : ''}.`,
-  });
+  };
   if (pendingApproval) {
     await logActivity({ ...activityCtx, trigger: 'workflow-event', name: 'Order Routed for Approval', reason: 'Order requires approval before it can complete.' });
   }
@@ -94,6 +115,7 @@ export async function submitFixedActivationOrder(
   return {
     orderId,
     activityId,
+    completionActivity,
     pendingApproval,
     customerName: contact.moiResult?.name ?? '-',
     customerId: eligibility?.customerId,
@@ -105,5 +127,6 @@ export async function submitFixedActivationOrder(
     customerEmail: contact.email,
     customerEmailDisplay: contact.moiResult?.isNewCustomer && contact.email ? maskEmail(contact.email) : contact.email,
     customerEmailVerified: emailVerification(contact.email, contact.moiResult?.email).verified,
+    service: 'fixed',
   };
 }

@@ -47,7 +47,7 @@ export function Checkbox({ className = '', ...rest }: CheckboxProps) {
       <svg
         viewBox="0 0 18 18"
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 w-[var(--size-choice-box)] h-[var(--size-choice-box)] text-white opacity-0 peer-checked:opacity-100"
+        className="pointer-events-none absolute inset-0 w-[var(--size-choice-box)] h-[var(--size-choice-box)] text-on-dark opacity-0 peer-checked:opacity-100"
       >
         <path
           d="M4.5 9.25l3 3 6-6.5"

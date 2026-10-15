@@ -255,7 +255,7 @@
   {
     "id": "RBAC-024",
     "personaId": "PERSONA-004",
-    "personaName": "Fulfilment Agent / Fulfilment Team",
+    "personaName": "Fulfilment / Fulfilment Team",
     "screenId": "SCR-017",
     "screenName": "Siebel Order Creation Screen (MNP)",
     "permissionLevel": "Create",
@@ -266,7 +266,7 @@
   {
     "id": "RBAC-025",
     "personaId": "PERSONA-004",
-    "personaName": "Fulfilment Agent / Fulfilment Team",
+    "personaName": "Fulfilment / Fulfilment Team",
     "screenId": "SCR-007",
     "screenName": "Account Creation Screen",
     "permissionLevel": "Create",
@@ -277,7 +277,7 @@
   {
     "id": "RBAC-026",
     "personaId": "PERSONA-004",
-    "personaName": "Fulfilment Agent / Fulfilment Team",
+    "personaName": "Fulfilment / Fulfilment Team",
     "screenId": "SCR-010",
     "screenName": "DSP Bulk Activation Templates (Target State)",
     "permissionLevel": "Create",
@@ -288,7 +288,7 @@
   {
     "id": "RBAC-027",
     "personaId": "PERSONA-005",
-    "personaName": "Back Office Fulfilment Agent (Siebel Responsibility)",
+    "personaName": "Back Office Fulfilment (Siebel Responsibility)",
     "screenId": "SCR-053",
     "screenName": "Siebel Web Call Center Home page (tile grid)",
     "permissionLevel": "View",
@@ -299,7 +299,7 @@
   {
     "id": "RBAC-028",
     "personaId": "PERSONA-005",
-    "personaName": "Back Office Fulfilment Agent (Siebel Responsibility)",
+    "personaName": "Back Office Fulfilment (Siebel Responsibility)",
     "screenId": "SCR-043",
     "screenName": "New Fixed Line wizard - Contact step",
     "permissionLevel": "Create",
@@ -310,7 +310,7 @@
   {
     "id": "RBAC-029",
     "personaId": "PERSONA-005",
-    "personaName": "Back Office Fulfilment Agent (Siebel Responsibility)",
+    "personaName": "Back Office Fulfilment (Siebel Responsibility)",
     "screenId": "SCR-051",
     "screenName": "Account Orders view (Account 360)",
     "permissionLevel": "View",
@@ -321,7 +321,7 @@
   {
     "id": "RBAC-030",
     "personaId": "PERSONA-005",
-    "personaName": "Back Office Fulfilment Agent (Siebel Responsibility)",
+    "personaName": "Back Office Fulfilment (Siebel Responsibility)",
     "screenId": "SCR-052",
     "screenName": "Sales Order detail - header and Line Items tab",
     "permissionLevel": "Edit",
@@ -541,7 +541,7 @@
   {
     "id": "RBAC-050",
     "personaId": "PERSONA-022",
-    "personaName": "Retention Agent / Retention Team",
+    "personaName": "Retention / Retention Team",
     "screenId": "SCR-023",
     "screenName": "Orders page",
     "permissionLevel": "Approve",
@@ -552,7 +552,7 @@
   {
     "id": "RBAC-051",
     "personaId": "PERSONA-022",
-    "personaName": "Retention Agent / Retention Team",
+    "personaName": "Retention / Retention Team",
     "screenId": "SCR-210",
     "screenName": "Ticket Homepage",
     "permissionLevel": "Approve",

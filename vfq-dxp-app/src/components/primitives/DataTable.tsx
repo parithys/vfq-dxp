@@ -1,6 +1,6 @@
+import { Pager } from './Pager';
 import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from './Button';
 import { Icon } from './Icon';
 
 const SORT_ASC_ICON = 'M6 15l6-6 6 6';
@@ -10,7 +10,16 @@ const SORT_NEUTRAL_ICON = 'M7 10l5-5 5 5 M7 14l5 5 5-5';
 export interface Column<T> {
   key: string;
   header: string;
-  render?: (row: T) => ReactNode;
+  /** Extra classes on this column's header and body cells (e.g. a wider left padding for a leading marker). */
+  cellClassName?: string;
+  /** Cell content. `index` is the row's position in the current page. */
+  render?: (row: T, index: number) => ReactNode;
+  /** Numeric column: right-aligned in the header and every row, values never wrap, tabular figures. */
+  numeric?: boolean;
+  /** The identifier column: its values are semibold. */
+  strong?: boolean;
+  /** Visually hide the header text (kept for screen readers) - for an actions column. */
+  hideHeader?: boolean;
   /** Renders this column's value as a real link to a specific destination,
    * independent of any other column's link or the row's own onRowClick - use
    * this instead of onRowClick when different columns in the same row point
@@ -39,18 +48,32 @@ function compareValues(a: unknown, b: unknown): number {
 }
 
 interface DataTableProps<T> {
+  /** Honour the columns' own percentage widths (set through `cellClassName`, e.g. `w-[30%]`) instead of sizing to the content. */
+  fixedLayout?: boolean;
   columns: Column<T>[];
   rows: T[];
   rowKey: (row: T) => string;
   onRowClick?: (row: T) => void;
   emptyMessage?: string;
   loading?: boolean;
+  /** Rows per page; `Infinity` shows every row (no pager). */
   pageSize?: number;
+  /**
+   * `framed` (default): a bordered card with a sortable, paged table.
+   * `plain`: sits inside a card that already frames it - no outer border, a header that stays in view while the rows scroll
+   * (max 70vh), and - when there are no rows - just the empty message with no header.
+   */
+  variant?: 'framed' | 'plain';
+  /** Tighter rows (py-2 instead of py-3.5). */
+  dense?: boolean;
+  /** Key (from rowKey) of the row to show as selected. */
+  selectedKey?: string;
 }
 
 // Backs every list/grid screen (Lead lists, Order queues, Asset grids) per
 // component-catalogue.md §1 - Assumed shape (no design-system analog).
 export function DataTable<T>({
+  fixedLayout = false,
   columns,
   rows,
   rowKey,
@@ -58,7 +81,11 @@ export function DataTable<T>({
   emptyMessage = 'No records.',
   loading,
   pageSize = 50,
+  variant = 'framed',
+  dense = false,
+  selectedKey,
 }: DataTableProps<T>) {
+  const plain = variant === 'plain';
   const [page, setPage] = useState(0);
   const [sort, setSort] = useState<{ key: string; direction: SortDirection } | null>(null);
 
@@ -85,10 +112,13 @@ export function DataTable<T>({
 
   const pageCount = Math.max(1, Math.ceil(sortedRows.length / pageSize));
   const currentPage = Math.min(page, pageCount - 1);
-  const pagedRows = sortedRows.slice(currentPage * pageSize, currentPage * pageSize + pageSize);
+  // pageSize may be Infinity (show everything): 0 * Infinity is NaN, so take the whole list explicitly.
+  const pagedRows = Number.isFinite(pageSize) ? sortedRows.slice(currentPage * pageSize, currentPage * pageSize + pageSize) : sortedRows;
   const showPager = sortedRows.length > pageSize;
 
   const handleRowKeyDown = (event: KeyboardEvent<HTMLTableRowElement>, row: T) => {
+    // Keys pressed inside a button or link in the row belong to that control, not to the row.
+    if (event.target !== event.currentTarget) return;
     if (event.key === 'Enter') {
       onRowClick?.(row);
     } else if (event.key === ' ') {
@@ -97,11 +127,15 @@ export function DataTable<T>({
     }
   };
 
+  if (plain && !loading && rows.length === 0) {
+    return <p className="text-muted text-[length:var(--fs-body)] py-4 text-center">{emptyMessage}</p>;
+  }
+
   return (
-    <div className="rounded-[var(--radius-card)] border border-[var(--table-border)] bg-bg overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-[length:var(--fs-body)]">
-          <thead className="bg-[var(--table-header-bg)] text-fg-2">
+    <div className={plain ? '' : 'rounded-[var(--radius-card)] border border-[var(--table-border)] bg-bg overflow-hidden'}>
+      <div className={plain ? 'overflow-auto max-h-[70vh]' : 'overflow-x-auto'}>
+        <table className={`w-full text-left text-[length:var(--fs-body)] ${fixedLayout ? 'table-fixed' : ''}`}>
+          <thead className={`${plain ? 'sticky top-0 z-[var(--z-sticky)] ' : ''}bg-[var(--table-header-bg)] text-fg-2`}>
             <tr>
               {columns.map((col) => {
                 const sortable = isSortable(col);
@@ -110,13 +144,13 @@ export function DataTable<T>({
                   <th
                     key={col.key}
                     aria-sort={active ? (sort.direction === 'asc' ? 'ascending' : 'descending') : sortable ? 'none' : undefined}
-                    className="px-4 py-3 font-semibold text-[length:var(--fs-caption-upper)]"
+                    className={`px-4 py-3 font-semibold text-[length:var(--fs-caption-upper)] ${plain ? 'whitespace-nowrap border-b border-[var(--border)]' : ''} ${col.numeric ? 'text-right' : ''} ${col.cellClassName ?? ''}`}
                   >
                     {sortable ? (
                       <button
                         type="button"
                         onClick={() => toggleSort(col)}
-                        className="inline-flex items-center gap-1.5 hover:text-fg"
+                        className={`inline-flex items-center gap-1.5 hover:text-fg ${col.numeric ? 'flex-row-reverse' : ''}`}
                       >
                         {col.header}
                         <Icon
@@ -125,7 +159,7 @@ export function DataTable<T>({
                         />
                       </button>
                     ) : (
-                      col.header
+                      <span className={col.hideHeader ? 'sr-only' : undefined}>{col.header}</span>
                     )}
                   </th>
                 );
@@ -148,14 +182,17 @@ export function DataTable<T>({
               </tr>
             )}
             {!loading &&
-              pagedRows.map((row) => (
+              pagedRows.map((row, rowIndex) => {
+                const key = rowKey(row);
+                const selected = selectedKey !== undefined && selectedKey === key;
+                return (
                 <tr
-                  key={rowKey(row)}
+                  key={key}
                   onClick={() => onRowClick?.(row)}
                   tabIndex={onRowClick ? 0 : undefined}
-                  role={onRowClick ? 'button' : undefined}
+                  aria-current={selected ? 'true' : undefined}
                   onKeyDown={onRowClick ? (event) => handleRowKeyDown(event, row) : undefined}
-                  className={`border-t border-[var(--table-border)] transition-colors ${onRowClick ? 'cursor-pointer hover:bg-surface' : ''}`}
+                  className={`${plain ? 'border-b border-border-soft last:border-0' : 'border-t border-[var(--table-border)]'} transition-colors ${onRowClick ? 'cursor-pointer hover:bg-surface' : ''} ${selected ? 'bg-tone-accent-soft [&>td:first-child]:shadow-[inset_var(--selected-row-bar)_0_0_var(--accent)]' : ''}`}
                 >
                   {columns.map((col, colIndex) => {
                     const value = (row as Record<string, unknown>)[col.key] ?? '-';
@@ -167,9 +204,14 @@ export function DataTable<T>({
                     const hasAnyColumnLink = columns.some((c) => c.linkTo);
                     const isLinkCol = colIndex === 0 && Boolean(onRowClick) && !hasAnyColumnLink;
                     return (
-                      <td key={col.key} className="px-4 py-3.5 text-fg">
+                      <td
+                        key={col.key}
+                        className={`px-4 ${dense ? 'py-2' : 'py-3.5'} text-fg ${plain ? 'align-middle' : ''} ${col.numeric ? 'text-right whitespace-nowrap tabular-nums' : ''} ${col.strong ? 'font-semibold' : ''} ${col.cellClassName ?? ''}`}
+                      >
                         {col.render ? (
-                          col.render(row)
+                          col.render(row, rowIndex)
+                        ) : plain && !linkHref ? (
+                          String(value)
                         ) : linkHref ? (
                           <Link
                             to={linkHref}
@@ -191,31 +233,17 @@ export function DataTable<T>({
                     );
                   })}
                 </tr>
-              ))}
+                );
+              })}
           </tbody>
         </table>
       </div>
       {!loading && showPager && (
-        <div className="flex items-center justify-between border-t border-[var(--table-border)] px-4 py-2">
-          <Button
-            variant="ghost-rect"
-            compact
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            disabled={currentPage === 0}
-          >
-            Previous
-          </Button>
+        <div className="flex items-center justify-between gap-3 border-t border-[var(--table-border)] px-4 py-2">
           <span className="text-[length:var(--fs-caption)] text-fg-2">
             Page {currentPage + 1} of {pageCount}
           </span>
-          <Button
-            variant="ghost-rect"
-            compact
-            onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
-            disabled={currentPage >= pageCount - 1}
-          >
-            Next
-          </Button>
+          <Pager page={currentPage + 1} pages={pageCount} onPage={(p) => setPage(p - 1)} />
         </div>
       )}
     </div>

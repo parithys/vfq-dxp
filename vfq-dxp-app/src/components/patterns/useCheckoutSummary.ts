@@ -58,7 +58,7 @@ export function useCheckoutSummary({
   const addons = products.filter((p) => addonIds.includes(p.productId));
   const discount = discounts.find((d) => d.addonDiscountId === discountId);
   // The number's own sticker price - kept separate from what is actually
-  // CHARGED (numberChargeQar below), so "Star value QR 5000 one-time" can
+  // CHARGED (numberChargeQar below), so "Star value QAR 5000 one-time" can
   // still be read back in full even when BR-115's entitlement covers most or
   // all of it.
   const numberDelta = numberPriceQar ?? 0;

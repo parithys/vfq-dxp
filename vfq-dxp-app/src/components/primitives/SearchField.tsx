@@ -34,7 +34,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(functi
         ref={ref}
         type="text"
         value={value}
-        className={`w-full rounded-[var(--field-radius)] border bg-bg pl-10 pr-10 py-3 text-[var(--color-field-text-filled)] text-[length:var(--fs-body-lg)] placeholder:text-muted hover:border-[var(--field-hover-border)] focus:outline-none focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)] ${filled ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'} ${className}`}
+        className={`w-full rounded-[var(--field-radius)] border bg-bg pl-10 pr-10 py-2 min-h-[var(--control-h-md)] text-[var(--color-field-text-filled)] text-[length:var(--fs-body)] placeholder:text-muted hover:border-[var(--field-hover-border)] focus:outline-none focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)] ${filled ? 'border-[var(--field-border-filled)]' : 'border-[var(--field-border)]'} ${className}`}
         {...rest}
       />
       {onClear && filled && (

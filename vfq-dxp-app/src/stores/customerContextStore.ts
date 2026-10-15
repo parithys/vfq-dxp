@@ -47,6 +47,8 @@ export interface JourneyContext {
   /** Known once customerId is: the customer's segment (Consumer, Enterprise ...). */
   segment?: string;
   startedAt: string;
+  /** The task reference of this journey, shown wherever the journey is named so it can be quoted; a saved draft keeps it. */
+  taskId?: string;
   /** Set once the order is submitted: the Activity Final page can then be shown again until it is closed. */
   finalOrder?: Record<string, unknown>;
 }
@@ -71,19 +73,35 @@ interface CustomerContextState {
 const VIEWED_KEY = 'vfq-active-customer-store';
 const JOURNEY_KEY = 'vfq-journey-customer';
 
+// Corrupt stored JSON, or storage that is full or blocked, must not break startup: unreadable state is dropped
+// (so it cannot fail again on every load) and a failed write is ignored - the in-memory state still works.
 const splitStorage: StateStorage = {
   getItem: () => {
-    const viewed = localStorage.getItem(VIEWED_KEY);
-    const journey = sessionStorage.getItem(JOURNEY_KEY);
-    if (viewed === null && journey === null) return null;
-    const v = viewed ? (JSON.parse(viewed) as { state?: Record<string, unknown>; version?: number }) : {};
-    const j = journey ? (JSON.parse(journey) as { state?: { active?: unknown } }) : {};
-    return JSON.stringify({ state: { ...v.state, journey: j.state?.active ?? null }, version: v.version ?? 0 });
+    try {
+      const viewed = localStorage.getItem(VIEWED_KEY);
+      const journey = sessionStorage.getItem(JOURNEY_KEY);
+      if (viewed === null && journey === null) return null;
+      const v = viewed ? (JSON.parse(viewed) as { state?: Record<string, unknown>; version?: number }) : {};
+      const j = journey ? (JSON.parse(journey) as { state?: { active?: unknown } }) : {};
+      return JSON.stringify({ state: { ...v.state, journey: j.state?.active ?? null }, version: v.version ?? 0 });
+    } catch {
+      try {
+        localStorage.removeItem(VIEWED_KEY);
+        sessionStorage.removeItem(JOURNEY_KEY);
+      } catch {
+        /* storage unavailable */
+      }
+      return null;
+    }
   },
   setItem: (_name, value) => {
-    const { state, version } = JSON.parse(value) as { state: { customer: unknown; recentCustomerIds: unknown; journey: unknown }; version: number };
-    localStorage.setItem(VIEWED_KEY, JSON.stringify({ state: { customer: state.customer, recentCustomerIds: state.recentCustomerIds }, version }));
-    sessionStorage.setItem(JOURNEY_KEY, JSON.stringify({ state: { active: state.journey }, version }));
+    try {
+      const { state, version } = JSON.parse(value) as { state: { customer: unknown; recentCustomerIds: unknown; journey: unknown }; version: number };
+      localStorage.setItem(VIEWED_KEY, JSON.stringify({ state: { customer: state.customer, recentCustomerIds: state.recentCustomerIds }, version }));
+      sessionStorage.setItem(JOURNEY_KEY, JSON.stringify({ state: { active: state.journey }, version }));
+    } catch {
+      /* storage full or blocked */
+    }
   },
   removeItem: () => {
     localStorage.removeItem(VIEWED_KEY);

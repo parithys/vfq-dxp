@@ -19,7 +19,7 @@ export function CustomerMirrorPanel({
 }) {
   return (
     <div
-      className={`w-full rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-6 ${interactive ? '' : '[&_button]:pointer-events-none [&_input]:pointer-events-none [&_select]:pointer-events-none [&_textarea]:pointer-events-none [&_a]:pointer-events-none select-none'}`}
+      className={`w-full card p-6 ${interactive ? '' : '[&_button]:pointer-events-none [&_input]:pointer-events-none [&_select]:pointer-events-none [&_textarea]:pointer-events-none [&_a]:pointer-events-none select-none'}`}
     >
       <div className="mb-4">
         <h2 className="text-[length:var(--fs-h4)] font-bold text-fg">{step?.heading ?? step?.label}</h2>

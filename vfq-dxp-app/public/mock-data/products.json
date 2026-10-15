@@ -9,7 +9,10 @@
     "minutesAllowance": "Unlimited local",
     "speedTier": "5G Ready",
     "commitmentMonths": 3,
-    "benefits": ["Free 10GB roaming data", "Free caller tune"],
+    "benefits": [
+      "Free 10GB roaming data",
+      "Free caller tune"
+    ],
     "preBundledOffer": true,
     "_benefitsNote": "App-level demo addition (2026-09-28) for the 'display each plan's free bundles and benefits' request - no evidenced per-plan benefits/bundles field exists in the corpus (products.json previously carried only data/voice/speed/commitment). preBundledOffer is the SAME kind of addition for 'pre-bundled eligible offers skip Plan/Add-on Selection' - marked on this one plan only, as a representative demo rather than assuming every 'Offers for this QID' plan qualifies.",
     "_commitmentNote": "Corrected 2026-09-28 from an invented 12 to the evidenced BR-120 figure ('Postpaid plans carry a minimum subscription period (lock-in) of 3 months')."
@@ -31,7 +34,10 @@
     "minutesAllowance": "Unlimited local",
     "speedTier": "5G Ready",
     "commitmentMonths": 3,
-    "benefits": ["Free GigaHome TV Basic Pack for 3 months", "Free International 50 Add-on for 1 month"],
+    "benefits": [
+      "Free GigaHome TV Basic Pack for 3 months",
+      "Free International 50 Add-on for 1 month"
+    ],
     "_commitmentNote": "Corrected 2026-09-28 from an invented 12 to the evidenced BR-269 figure - this exact plan ('Red 350') is BR-269's own named example of a postpaid plan disclosing a 3-month Minimum Subscription Period."
   },
   {
@@ -44,7 +50,10 @@
     "minutesAllowance": "Unlimited local",
     "speedTier": "5G Ready",
     "commitmentMonths": 3,
-    "benefits": ["Free GigaHome TV Basic Pack for 6 months", "Free 20GB roaming data"],
+    "benefits": [
+      "Free GigaHome TV Basic Pack for 6 months",
+      "Free 20GB roaming data"
+    ],
     "_commitmentNote": "Corrected 2026-09-28 from an invented 12 to the evidenced BR-120 figure ('Postpaid plans carry a minimum subscription period (lock-in) of 3 months')."
   },
   {
@@ -57,7 +66,11 @@
     "minutesAllowance": "Unlimited local",
     "speedTier": "5G Priority",
     "commitmentMonths": 3,
-    "benefits": ["Free GigaHome TV Premium Pack", "Free international roaming pack", "Priority customer support"],
+    "benefits": [
+      "Free GigaHome TV Premium Pack",
+      "Free international roaming pack",
+      "Priority customer support"
+    ],
     "_commitmentNote": "Corrected 2026-09-28 from an invented 24 to the evidenced BR-120 figure ('Postpaid plans carry a minimum subscription period (lock-in) of 3 months') - BR-120 states this as a blanket rule for postpaid plans generally, with no evidenced exception for a premium/VIP tier's own plan commitment (BR-289's 2-year figure is the STAR NUMBER's lock-in on a VIP plan, not the plan's own)."
   },
   {
@@ -133,7 +146,11 @@
     "commitmentMonths": 3,
     "offer": true,
     "popular": true,
-    "fup": ["First 15 GB is at full 5G speed and then unlimited data at the speed of 128 Kbps.", "QR 15 Discount on plan fee will be applicable for first 4 months", "This promo is valid starting from 2 August 2026 till 3 November 2026."],
+    "fup": [
+      "First 15 GB is at full 5G speed and then unlimited data at the speed of 128 Kbps.",
+      "QR 15 Discount on plan fee will be applicable for first 4 months",
+      "This promo is valid starting from 2 August 2026 till 3 November 2026."
+    ],
     "features": [
       "15GB full speed local data",
       "500 local minutes",
@@ -158,7 +175,12 @@
     "speedTier": "5G Ready",
     "commitmentMonths": 3,
     "offer": true,
-    "fup": ["First 40 GB at full 5G speed and then unlimited data at the speed of 512 Kbps", "QR 35 Discount on plan fee will be applicable for first 4 month", "Local mins FUP: 10000 / monthly", "This promo is valid starting from 2 August 2026 till 3 November 2026."],
+    "fup": [
+      "First 40 GB at full 5G speed and then unlimited data at the speed of 512 Kbps",
+      "QR 35 Discount on plan fee will be applicable for first 4 month",
+      "Local mins FUP: 10000 / monthly",
+      "This promo is valid starting from 2 August 2026 till 3 November 2026."
+    ],
     "features": [
       "40GB full speed local data",
       "Unlimited local minutes",
@@ -183,7 +205,12 @@
     "speedTier": "5G Ready",
     "commitmentMonths": 3,
     "offer": true,
-    "fup": ["First 60 GB at full 5G speed and then unlimited data at the speed of 1Mbps", "QR 50 Discount on plan fee will be applicable for first 4 months", "Local mins FUP: 10000 / monthly", "This promo is valid starting from 2 August 2026 till 3 November 2026."],
+    "fup": [
+      "First 60 GB at full 5G speed and then unlimited data at the speed of 1Mbps",
+      "QR 50 Discount on plan fee will be applicable for first 4 months",
+      "Local mins FUP: 10000 / monthly",
+      "This promo is valid starting from 2 August 2026 till 3 November 2026."
+    ],
     "features": [
       "60GB full speed local data",
       "Unlimited local minutes",
@@ -594,5 +621,18 @@
       "300 international minutes"
     ],
     "_note": "Plans-tab plan (2026-10-06). Only the name was supplied: price, data and minutes follow the Max tier and international minutes follow the nationality table - demo values, need VFQ Business confirmation."
+  },
+  {
+    "productId": "PROD-304",
+    "name": "Prepaid Premium 150",
+    "type": "Prepaid Plan",
+    "starterPackChargeQAR": 150,
+    "dataAllowanceGB": 80,
+    "minutesAllowance": "Unlimited local",
+    "packValidityDays": 30,
+    "eligibleSegments": [
+      "Premium"
+    ],
+    "_note": "Mobile Prepaid BRSD MPRA_001_QPC_02 demo seed (2026-10-13): a segment-restricted prepaid pack, so the plan filter by customer segment has something to filter. The BRSD requires the filter but names no segment rules, so this row and its eligibleSegments are app-level placeholders pending the VFQ prepaid catalogue; a pack with no eligibleSegments is offered to every segment."
   }
 ]

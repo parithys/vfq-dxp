@@ -23,5 +23,18 @@
   {
     "scenarioKey": "no-lockin",
     "template": "This order carries no minimum commitment period."
+  },
+  {
+    "scenarioKey": "prepaid-no-lockin",
+    "template": "No plan lock-in period applies to prepaid packs.",
+    "_note": "Mobile Prepaid BRSD MPRA_001_CAF_02 (Key Information). Wording carried over from the statements the prepaid CAF step already showed; business-maintained like the others."
+  },
+  {
+    "scenarioKey": "prepaid-no-doi",
+    "template": "No Device on Installment applies - this is a SIM/number activation only."
+  },
+  {
+    "scenarioKey": "prepaid-validity",
+    "template": "Pack validity and balance terms apply per the selected pack."
   }
 ]

@@ -1,3 +1,5 @@
+import { Button } from '../../../components/primitives/Button';
+import { SegmentedTabs } from '../../../components/primitives/SegmentedTabs';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
@@ -154,9 +156,6 @@ export function C360AccountInformation({
         ]
   ) as { label: string; value: string | undefined; red?: boolean }[];
 
-  const toggleCls = (on: boolean) =>
-    `px-4 py-1.5 rounded-[var(--radius-button)] text-[length:var(--fs-body)] font-medium transition-colors ${on ? 'bg-accent text-accent-on' : 'bg-surface text-fg-2 hover:text-fg'}`;
-
   const empty = (text: string) => <p className="text-muted text-[length:var(--fs-body)] py-3">{text}</p>;
 
   return (
@@ -217,9 +216,9 @@ export function C360AccountInformation({
             title="Account Details"
             action={
               onEdit && (
-                <button type="button" onClick={onEdit} className="rounded-[var(--radius-sm)] px-3 py-1 text-[length:var(--fs-body)] font-medium text-[var(--signal-blue)] bg-[color-mix(in_oklab,var(--signal-blue),var(--bg)_90%)] hover:bg-[color-mix(in_oklab,var(--signal-blue),var(--bg)_82%)]">
+                <Button variant="secondary" compact onClick={onEdit}>
                   Edit
-                </button>
+                </Button>
               )
             }
           >
@@ -269,7 +268,7 @@ export function C360AccountInformation({
               <ul>
                 {counts.map((r) => (
                   <li key={r.label} className="flex items-center gap-3 py-1.5 border-b border-border-soft last:border-0">
-                    <span className={`flex items-center gap-3 flex-1 min-w-0 rounded-[var(--radius-button)] px-2 py-1.5 bg-[color-mix(in_oklab,var(--surface),var(--bg)_50%)]`}>
+                    <span className={`flex items-center gap-3 flex-1 min-w-0 rounded-[var(--radius-button)] px-2 py-1.5 bg-surface-half`}>
                       <IconTile icon={r.icon} tone={r.tone} size="sm" />
                       <span className="text-fg text-[length:var(--fs-body)] flex-1 min-w-0 truncate">{r.label}</span>
                     </span>
@@ -302,7 +301,7 @@ export function C360AccountInformation({
                       <div className="text-fg font-medium text-[length:var(--fs-body)] break-words">{n.name}</div>
                       <div className="text-fg-2 text-[length:var(--fs-caption)] break-words">Account No: {n.id}</div>
                     </div>
-                    <span className="rounded-full bg-surface text-fg min-w-8 text-center px-2 py-0.5 text-[length:var(--fs-caption)]">{n.count}</span>
+                    <span className="rounded-[var(--radius-pill)] bg-surface text-fg min-w-8 text-center px-2 py-0.5 text-[length:var(--fs-caption)]">{n.count}</span>
                   </li>
                 ))}
               </ul>
@@ -328,14 +327,12 @@ export function C360AccountInformation({
             icon={IC.bars}
             title="Financial Summary"
             action={
-              <div className="flex gap-1" role="group" aria-label="Revenue basis">
-                <button type="button" aria-pressed={mode === 'postpaid'} onClick={() => setMode('postpaid')} className={toggleCls(mode === 'postpaid')}>
-                  Postpaid
-                </button>
-                <button type="button" aria-pressed={mode === 'prepaid'} onClick={() => setMode('prepaid')} className={toggleCls(mode === 'prepaid')}>
-                  Prepaid
-                </button>
-              </div>
+              <SegmentedTabs
+                label="Revenue basis"
+                items={[{ key: 'postpaid', label: 'Postpaid' }, { key: 'prepaid', label: 'Prepaid' }]}
+                active={mode}
+                onChange={setMode}
+              />
             }
           >
             <dl>

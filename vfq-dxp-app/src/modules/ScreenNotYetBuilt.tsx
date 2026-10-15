@@ -1,6 +1,7 @@
 import { useLocation } from 'react-router-dom';
 import { getAllRoutes } from '../engines/configEngine';
 import { NotYetBuiltPanel } from './NotYetBuiltPanel';
+import { screenDisplayName } from '../lib/screenName';
 
 // Honest placeholder per CLAUDE.md's evidence model - never silently invent a
 // screen's behavior. Shows exactly what IS evidenced about this screen
@@ -18,12 +19,10 @@ export function ScreenNotYetBuilt() {
 
   return (
     <NotYetBuiltPanel
-      title={route?.screenName ?? 'Unknown screen'}
+      title={route ? screenDisplayName(route.screenName) : 'Unknown screen'}
       body={
         <>
-          This screen is routed and evidenced in the blueprint but not yet built. Build sequencing per{' '}
-          <code className="text-[length:var(--fs-caption)]">ai-coding-agent-implementation-guide.md</code> §5
-          prioritizes Fully Defined modules (Lead Management, Mobile Prepaid) first.
+          This screen is not available yet.
         </>
       }
       details={[
@@ -31,11 +30,6 @@ export function ScreenNotYetBuilt() {
         { term: 'Type', value: route?.screenType },
         { term: 'Module', value: route?.module },
       ]}
-      footnote={
-        <>
-          See <code>blueprint/screens.md</code> (search for {route?.screenId}) for full field/source detail.
-        </>
-      }
     />
   );
 }

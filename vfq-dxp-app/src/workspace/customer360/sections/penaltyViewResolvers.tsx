@@ -12,7 +12,7 @@ interface StarNumberTier {
 
 function RuleRow({ id, children }: { id: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-3">
+    <div className="flex items-start justify-between gap-4 card p-3">
       <p className="text-fg-2 text-[length:var(--fs-body)]">{children}</p>
       <Badge variant="filled-neutral">{id}</Badge>
     </div>
@@ -45,11 +45,11 @@ export function DevicePenaltyPolicy() {
         pay an 800 QAR CPE charge if the device isn't returned.
       </RuleRow>
       <RuleRow id="BR-001">
-        Fibre: 12-month lock-in. Early disconnection - remainder of the 3-month minimum service period + QR80 x
+        Fibre: 12-month lock-in. Early disconnection - remainder of the 3-month minimum service period + QAR 80 x
         remaining months (of the 12). No fee once the 12 months complete.
       </RuleRow>
       <RuleRow id="BR-002">
-        OSNtv: remainder of 12 months x QR30 (Lite) or QR60 (Premium) - additive with the Fibre/Plan penalty. Try &
+        OSNtv: remainder of 12 months x QAR 30 (Lite) or QAR 60 (Premium) - additive with the Fibre/Plan penalty. Try &
         Buy: waived within the first 30 days if the OSN box is returned in good condition, else QAR 165.
       </RuleRow>
       <RuleRow id="BR-095">

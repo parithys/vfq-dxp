@@ -68,21 +68,13 @@
 export const TICKET_STATUSES = ['Not Solved', 'Assigned', 'Escalate', 'Pending Approval', 'Solved', 'Completed', 'Closed', 'Cancelled'] as const;
 export type TicketStatus = (typeof TICKET_STATUSES)[number];
 
-export const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'filled-neutral' | 'accent'> = {
-  'Not Solved': 'warning',
-  Assigned: 'filled-neutral',
-  Escalate: 'accent',
-  'Pending Approval': 'accent',
-  Solved: 'success',
-  Completed: 'success',
-  Closed: 'success',
-  Cancelled: 'danger',
-};
-
 // P-03 (Priority LOV, Confirmed) - 1-ASAP/2-High/3-Medium/4-Low, not a plain
 // Low/Medium/High scale.
 /** Queues a ticket can be routed to when no routing rule picks one. */
 export const TICKET_QUEUES = ['FL Agents', 'Complaints Team'] as const;
+
+/** Where a ticket goes when no routing rule names a team: tickets are auto-assigned, never picked by the agent. */
+export const DEFAULT_QUEUE: (typeof TICKET_QUEUES)[number] = 'Complaints Team';
 
 export const PRIORITY_OPTIONS = ['1-ASAP', '2-High', '3-Medium', '4-Low'] as const;
 

@@ -1,3 +1,5 @@
+import { IconButton } from '../primitives/IconButton';
+import { formatBytes as formatSize } from '../../lib/format';
 import { useEffect, useRef, useState } from 'react';
 import { Input } from '../primitives/Input';
 import { Select } from '../primitives/Select';
@@ -35,11 +37,6 @@ const ACCEPTED = '.pdf,.jpg,.jpeg,.png';
 
 const TRASH = 'M3 6h18 M8 6V4h8v2 M19 6l-1 14H6L5 6 M10 11v6 M14 11v6';
 const DOC = 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6';
-
-function formatSize(bytes: number): string {
-  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-}
 
 // Post-signature supporting documents (2026-09-28 request) - separate from
 // CafDocumentUpload's "Signed documents", which is the proof of the CAF
@@ -80,16 +77,16 @@ export function AdditionalDocumentsUpload({ documents, onChange, labelOptions, m
   };
 
   return (
-    <div className={`rounded-[var(--radius-card)] border border-[var(--field-card-border)] ${whiteBackground ? 'bg-bg' : 'bg-surface'} p-4 space-y-3`}>
+    <div className={`card ${whiteBackground ? '' : 'bg-surface'} p-4 space-y-3`}>
       <div>
-        <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Additional documents</h4>
+        <h4 className="text-fg font-bold text-[length:var(--fs-body)]">Additional documents</h4>
         <p className="text-muted text-[length:var(--fs-caption)]">
           Optional - label and attach anything else this order needs. No signature required. Up to {maxDocuments} files, 5 MB each.
         </p>
       </div>
 
       {documents.length > 0 && (
-        <ul className="divide-y divide-border-soft rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
+        <ul className="divide-y divide-border-soft card ">
           {documents.map((doc) => (
             <li key={doc.id} className="flex items-center gap-3 px-3 py-2">
               <Icon path={DOC} className="w-4 h-4 text-muted shrink-0" />
@@ -99,15 +96,7 @@ export function AdditionalDocumentsUpload({ documents, onChange, labelOptions, m
                   {doc.label} · {formatSize(doc.sizeBytes)}
                 </span>
               </span>
-              <button
-                type="button"
-                onClick={() => onChange(documents.filter((d) => d.id !== doc.id))}
-                aria-label={`Remove ${doc.fileName}`}
-                className="shrink-0 p-1.5 rounded-[var(--radius-button)] text-muted hover:text-danger
-                  focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
-              >
-                <Icon path={TRASH} className="w-4 h-4" />
-              </button>
+              <IconButton tone="danger" icon={TRASH} label={`Remove ${doc.fileName}`} onClick={() => onChange(documents.filter((d) => d.id !== doc.id))} />
             </li>
           ))}
         </ul>
@@ -149,7 +138,7 @@ export function AdditionalDocumentsUpload({ documents, onChange, labelOptions, m
           </div>
           <input ref={fileRef} type="file" accept={ACCEPTED} className="sr-only" onChange={(e) => handleFile(e.target.files?.[0])} />
           <Button
-            variant="ghost-rect"
+            variant="secondary"
             onClick={() => fileRef.current?.click()}
             disabled={!label.trim()}
             title={!label.trim() ? (labelOptions ? 'Select a document type first' : 'Enter a label first') : undefined}

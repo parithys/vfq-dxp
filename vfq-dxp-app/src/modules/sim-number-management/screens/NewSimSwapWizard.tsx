@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import * as sums from '../../../components/patterns/wizard/commonSummaries';
 import { attachSummaries } from '../../../components/patterns/wizard/stepSummary';
-import { idLookupStep } from '../../../components/patterns/wizard/wizardSteps';
-import { GuidedActivationWizard } from '../../../components/patterns/wizard/GuidedActivationWizard';
-import { QidImageUpload } from '../../../components/domain/QidImageUpload';
-import type { QidImageUploadValue } from '../../../components/domain/qidImageUploadModel';
-import { SimSerialScanner } from '../../../components/domain/SimSerialScanner';
+import { activityStep, idLookupStep } from '../../../capabilities';
+import { GuidedActivationWizard } from '../../../capabilities';
+import { QidImageUpload, type QidImageUploadValue } from '../../../capabilities';
+import { SimSerial } from '../../../capabilities';
 import { SimSwapFormStep } from '../../../components/patterns/SimSwapFormStep';
 import type { SimSwapFormValue } from '../../../components/patterns/SimSwapFormStep';
-import { ActivityCommentsStep } from '../../../components/patterns/ActivityCommentsStep';
 import { Select } from '../../../components/primitives/Select';
 import { Button } from '../../../components/primitives/Button';
 import { Badge } from '../../../components/primitives/Badge';
@@ -44,7 +42,7 @@ export function NewSimSwapWizard({ msisdn, onDone }: NewSimSwapWizardProps) {
         wizardId={`sim-swap-${msisdn}`}
         title="SIM Swap Request"
         steps={attachSummaries([
-          idLookupStep({ key: 'contact-verification', label: 'Verify Contact', field: 'qid' }),
+          idLookupStep({ key: 'contact-verification', field: 'qid' }),
           {
             key: 'documents',
             label: 'QID & Bank Statement',
@@ -54,12 +52,12 @@ export function NewSimSwapWizard({ msisdn, onDone }: NewSimSwapWizardProps) {
                   value={(values.qidImages as QidImageUploadValue) ?? {}}
                   onChange={(v) => setValue('qidImages', v)}
                 />
-                <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 flex items-center justify-between">
+                <div className="card p-4 flex items-center justify-between">
                   <span className="text-fg-2 text-[length:var(--fs-body)]">Bank Statement</span>
                   {bankStatementAttached ? (
                     <Badge variant="success">Attached</Badge>
                   ) : (
-                    <Button variant="ghost-rect" compact onClick={() => setBankStatementAttached(true)}>
+                    <Button variant="secondary" compact onClick={() => setBankStatementAttached(true)}>
                       Attach
                     </Button>
                   )}
@@ -79,7 +77,7 @@ export function NewSimSwapWizard({ msisdn, onDone }: NewSimSwapWizardProps) {
               const charge = reason ? evaluateRule('BR-056', { reason }) : null;
               return (
                 <div className="space-y-4">
-                  <SimSerialScanner
+                  <SimSerial
                     value={(values.newSimSerial as string) ?? ''}
                     onChange={(v, valid) => {
                       setValue('newSimSerial', v);
@@ -107,13 +105,7 @@ export function NewSimSwapWizard({ msisdn, onDone }: NewSimSwapWizardProps) {
             ),
             isValid: (values) => Boolean((values.simSwapForm as SimSwapFormValue | undefined)?.signatureDataUrl),
           },
-          {
-            key: 'comments',
-            label: 'Comments',
-            render: ({ values, setValue }) => (
-              <ActivityCommentsStep value={(values.comments as string) ?? ''} onChange={(v) => setValue('comments', v)} />
-            ),
-          },
+          activityStep({ required: false }),
         ], {
           'contact-verification': sums.identitySummary('qid'),
           documents: sums.idImagesSummary('qidImages'),

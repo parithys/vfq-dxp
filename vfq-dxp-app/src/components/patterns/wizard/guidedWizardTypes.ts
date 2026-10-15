@@ -15,6 +15,8 @@ export interface WizardStep {
   icon?: string;
   /** Heading shown above the step content, when it should differ from the rail label. */
   heading?: string;
+  /** Small uppercase label above the heading (for example "Configure service"). Optional. */
+  eyebrow?: string;
   /** One line of explanatory text under the heading. Optional. */
   subheading?: string;
   /** Extra control(s) at the right of the step's title row, before Customer view (for example a Refresh button). */
@@ -175,4 +177,9 @@ export interface GuidedActivationWizardProps {
    * onAbandon's own optionality.
    */
   onSaveExit?: () => void;
+  /**
+   * Leaves out the wizard's own title band (the title, Abandon Order and Save & Exit), for a journey embedded in a page that supplies its
+   * own header and its own way out. Off by default: every other journey keeps the band.
+   */
+  hideTitleBand?: boolean;
 }

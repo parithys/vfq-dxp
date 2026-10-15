@@ -1,0 +1,21 @@
+{
+  "journey": {
+    "id": "mob-customer-validation",
+    "title": "Customer Validation",
+    "screenId": "SCR-151",
+    "route": "/identity-customer-management/passport-to-qid-update-wizard"
+  },
+  "shots": [
+    {
+      "file": "01-start.png",
+      "label": "start",
+      "url": "/identity-customer-management/passport-to-qid-update-wizard"
+    }
+  ],
+  "unreachable": [
+    {
+      "step": "MSISDN & Passport",
+      "reason": "the forward button stayed disabled after the automatic fill"
+    }
+  ]
+}

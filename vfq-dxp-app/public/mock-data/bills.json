@@ -99,5 +99,39 @@
     "dueDate": "2026-09-14",
     "isTaxInvoice": true,
     "note": "Overdue balance seeded so the Collections Check soft-stop is reachable for this collections-blacklisted customer."
+  },
+  {
+    "_note": "Customer-Inventory overview details (2026-10-11)",
+    "billId": "BILL-9301",
+    "type": "bill",
+    "accountId": "ACC-5646",
+    "billingProfileId": "BILL-7146",
+    "customerId": "CUST-3081",
+    "billPeriod": "2026-07",
+    "mrc": 2700,
+    "vas": 0,
+    "vat": 0,
+    "totalAmount": 1180.0,
+    "status": "billed",
+    "isTaxInvoice": true,
+    "currentChargesQAR": 0,
+    "dueDate": "2026-08-14"
+  },
+  {
+    "_note": "Customer-Inventory overview details (2026-10-11)",
+    "billId": "BILL-9302",
+    "type": "bill",
+    "accountId": "ACC-5646",
+    "billingProfileId": "BILL-7146",
+    "customerId": "CUST-3081",
+    "billPeriod": "2026-08",
+    "mrc": 2700,
+    "vas": 0,
+    "vat": 0,
+    "totalAmount": 1260.0,
+    "status": "billed",
+    "isTaxInvoice": true,
+    "currentChargesQAR": 312.5,
+    "dueDate": "2026-09-18"
   }
 ]

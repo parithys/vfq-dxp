@@ -1,11 +1,13 @@
+import { currentAgentId } from '../../../stores/authStore';
+import { badgeVariantFor } from '../../../lib/statusTone';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
 import { useEntityStore } from '../../../stores/entityStore';
-import { TicketCreationModal, type NewTicketValue } from '../../../modules/trouble-ticketing-complaints/screens/TicketCreationModal';
-import { STATUS_VARIANT, buildNewTicketRecord } from '../../../data/reference/ticketReferenceData';
+import { TicketCreationModal, type NewTicketValue } from '../../../components/patterns/TicketCreationModal';
+import { buildNewTicketRecord } from '../../../data/reference/ticketReferenceData';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 
 // Create Ticket and Track Ticket are the two real Support actions available
@@ -31,7 +33,7 @@ export function TicketsSection({
 
   const createTicket = async (value: NewTicketValue) => {
     const ticketId = `TT-${Date.now().toString().slice(-6)}`;
-    const record = buildNewTicketRecord({ ticketId, ...value, createdBy: 'AGENT-VINODHINIR' });
+    const record = buildNewTicketRecord({ ticketId, ...value, createdBy: currentAgentId() });
     await createRecord('trouble-tickets', record);
     onTicketCreated(record);
     setModalOpen(false);
@@ -41,7 +43,7 @@ export function TicketsSection({
     <div>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg">Tickets</h3>
-        <Button variant="primary-rect" compact onClick={() => setModalOpen(true)}>
+        <Button variant="primary" compact onClick={() => setModalOpen(true)}>
           Create Ticket
         </Button>
       </div>
@@ -58,7 +60,7 @@ export function TicketsSection({
           {
             key: 'status',
             header: 'Status',
-            render: (r) => <Badge variant={STATUS_VARIANT[String(r.status)] ?? 'filled-neutral'}>{String(r.status)}</Badge>,
+            render: (r) => <Badge variant={badgeVariantFor(String(r.status))}>{String(r.status)}</Badge>,
           },
         ]}
       />

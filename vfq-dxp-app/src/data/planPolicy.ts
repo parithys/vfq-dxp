@@ -19,8 +19,8 @@ export const INCLUDED_INTERNATIONAL_MINUTES: PolicyTable = {
 };
 
 export const ADDON_INTERNATIONAL_MINUTES: PolicyTable = {
-  title: 'International Minutes with QR10 will be as follows,',
-  head: ['QR 10 Add On', 'International Minutes'],
+  title: 'International Minutes with QAR 10 will be as follows,',
+  head: ['QAR 10 Add On', 'International Minutes'],
   rows: [
     ['India', '200'],
     ['Philippines', '25'],

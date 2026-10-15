@@ -1,3 +1,4 @@
+import { isClosedTicket } from '../../../lib/statusTone';
 import { useEffect, useMemo, useState } from 'react';
 import { computeBillingSummary, type Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
@@ -25,7 +26,6 @@ import { Dv } from '../demoValues';
 import { str } from '../../../lib/values';
 
 const CLOSED_STAGE = /^(none|no dunning|current)$/i;
-const CLOSED_TICKET = new Set(['Solved', 'Completed', 'Closed', 'Cancelled']);
 const PAGE_SIZE = 10;
 
 type Severity = 'High' | 'Medium' | 'Low';
@@ -97,11 +97,11 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
     }
     for (const t of data.tickets) {
       const due = stamp(t.slaDueAt);
-      if (!CLOSED_TICKET.has(String(t.status)) && due > 0 && due < now) {
+      if (!isClosedTicket(t.status) && due > 0 && due < now) {
         add({ id: `sla-${String(t.ticketId)}`, type: 'Pending Out of SLA Ticket', description: `${String(t.ticketId)} (${str(t.actualIssue) ?? str(t.category) ?? 'ticket'}) pending beyond SLA`, severity: 'Medium', at: due, tab: 'tickets-support' });
       }
       const esc = ((t.escalations as { escalatedAt?: string; reason?: string }[] | undefined) ?? []).at(-1);
-      if (esc && !CLOSED_TICKET.has(String(t.status))) {
+      if (esc && !isClosedTicket(t.status)) {
         add({ id: `esc-${String(t.ticketId)}`, type: 'Ticket Escalated', description: `${String(t.ticketId)} escalated${esc.reason ? ` - ${esc.reason}` : ''}`, severity: 'High', at: stamp(esc.escalatedAt) || undefined, tab: 'tickets-support' });
       }
     }
@@ -173,7 +173,7 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
   return (
     <TabPage icon={IC.alert} tone="red" title="Alerts & Risks" subtitle="View customer alerts, risks, notifications and important indicators">
       <div className="space-y-4">
-        <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 space-y-4 min-w-0">
+        <section className="card p-4 space-y-4 min-w-0">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">All Alerts &amp; Risks ({alerts.length})</h3>
             <div className="flex flex-wrap items-stretch gap-3">

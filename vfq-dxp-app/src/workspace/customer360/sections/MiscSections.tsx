@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
-import { Drawer } from '../../../components/primitives/Drawer';
+import { Drawer } from '../../../capabilities';
 import { Select } from '../../../components/primitives/Select';
 import { Input } from '../../../components/primitives/Input';
 import { Textarea } from '../../../components/primitives/Textarea';
@@ -76,7 +76,7 @@ export function InteractionsSection({
     <div>
       <div className="flex items-center justify-between mb-3">
         <SectionTitle>Interactions</SectionTitle>
-        <Button variant="primary-rect" compact onClick={() => setLogOpen(true)}>
+        <Button variant="primary" compact onClick={() => setLogOpen(true)}>
           Log Interaction
         </Button>
       </div>
@@ -103,8 +103,8 @@ export function InteractionsSection({
         title="Log Interaction"
         footer={
           <>
-            <Button variant="ghost-rect" onClick={() => setLogOpen(false)}>Cancel</Button>
-            <Button variant="primary-rect" disabled={saving || !topic.trim()} onClick={logInteraction}>
+            <Button variant="secondary" onClick={() => setLogOpen(false)}>Cancel</Button>
+            <Button variant="primary" disabled={saving || !topic.trim()} onClick={logInteraction}>
               {saving ? 'Logging…' : 'Log Interaction'}
             </Button>
           </>
@@ -208,7 +208,7 @@ export function RecentActivitiesSection({ data }: { data: Customer360Data }) {
       <SectionTitle>Recent Activities</SectionTitle>
       <ul className="space-y-2">
         {entries.map((entry, i) => (
-          <li key={i} className="flex gap-3 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-3">
+          <li key={i} className="flex gap-3 card p-3">
             <span className="text-muted text-[length:var(--fs-caption)] shrink-0 w-40">{entry.at}</span>
             <span className="text-fg text-[length:var(--fs-body)]">{entry.label}</span>
           </li>

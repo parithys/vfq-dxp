@@ -5,15 +5,12 @@ import type { CheckoutSummaryDerived } from './useCheckoutSummary';
 
 interface DetailedTablesArgs extends CheckoutSummaryDerived {
   customerName: string | undefined;
-  altPhone: string | undefined;
-  billingMethod: string | undefined;
   msisdn: string | undefined;
   billLimit: number | undefined;
   simType: SimTypeValue | undefined;
 }
 
-// The 'detailed' layout's three-table read-back (summary, Due today,
-// Approximate Bill Explainer) plus the CAF step's own customer-facing tables.
+// The 'detailed' layout's read-back: the Order Summary and the Approximate Bill Explainer.
 export function buildDetailedTables({
   plan,
   addons,
@@ -29,12 +26,10 @@ export function buildDetailedTables({
   monthlyRecurringQar,
   firstBill,
   customerName,
-  altPhone,
-  billingMethod,
   msisdn,
   billLimit,
   simType,
-}: DetailedTablesArgs): { tables: SummaryTable[]; cafTables: SummaryTable[] } {
+}: DetailedTablesArgs): SummaryTable[] {
   const ratio = firstBill.cycleDays ? firstBill.proratedDays / firstBill.cycleDays : 0;
   // Both partial lines are VAT-inclusive, like every other quoted figure, and
   // add up to the prorated part of the first bill.
@@ -46,73 +41,27 @@ export function buildDetailedTables({
   // entitlement discount is shown against it.
   const discountValueQar = isStarNumber && starEntitlementQar !== undefined ? Math.min(numberDelta, starEntitlementQar) : 0;
   const lockInValueQar = isStarNumber ? discountValueQar : 0;
-  const q = (n: number) => formatQar(n, 'QAR');
-  const numberRows: { label?: string; value: string }[] = msisdn
-    ? [
-        { label: 'Number', value: `${msisdn} (${isStarNumber ? 'Star' : 'Free'})` },
-        { value: `Number Value ${q(numberDelta)}` },
-        { value: `Discount Value: ${q(discountValueQar)}` },
-        { value: `Lock-in Value: ${q(lockInValueQar)}` },
-        {
-          value: isStarNumber
-            ? starTier
-              ? `lock-in: ${starTier.lockInDurationMonths}-months`
-              : 'lock-in: not yet banded - confirm before signature'
-            : 'lock-in: none',
-        },
-      ]
-    : [{ label: 'Number', value: '-' }];
-  const summaryRows: { label?: string; value: string }[] = [
-    { label: 'Customer Name', value: customerName ?? '-' },
-    { label: 'Alternate phone #', value: altPhone || '-' },
-    { label: 'Plan', value: plan?.name ?? '-' },
-    {
-      label: 'Add-ons',
-      value: addons.length ? addons.map((a) => `${a.name} (QR ${a.mrcQAR}/mo)`).join(', ') : 'None',
-    },
-    ...numberRows,
-    ...(creditLimitQar !== undefined
-      ? [
-          { label: 'Credit limit', value: `QR ${creditLimitQar}` },
-          { label: 'Bill limit', value: billLimit !== undefined ? `QR ${billLimit}` : `Up to QR ${creditLimitQar}` },
-        ]
-      : []),
-    ...(billingMethod ? [{ label: 'Billing', value: billingMethod }] : []),
-    { label: `VAT (${Math.round(VAT_RATE * 100)}%)`, value: `${formatQar(charges.vatQar, 'QR')}/mo` },
-  ];
-  const dueRows: { label: string; value: string }[] = [
-    ...(isStarNumber || numberChargeQar > 0
-      ? [{ label: isStarNumber ? 'Star Number charge:' : 'Number charge:', value: `Due value ${q(numberChargeQar)}` }]
-      : []),
-    ...(hrnAdvance > 0 ? [{ label: 'HRN Fee', value: q(hrnAdvance) }] : []),
-  ];
-  if (dueRows.length === 0) dueRows.push({ label: 'Due value', value: q(0) });
+  const q = (n: number) => formatQar(n);
   const billRows: { label: string; value: string; detail?: string }[] = [
-    { label: 'Plan value', value: q(charges.planQar) },
+    { label: 'Plan Rental', value: q(charges.planQar) },
     {
-      label: 'Discount Value',
+      label: 'Discounts',
       value: discount
         ? `${q(charges.discountQar)}${discount.durationMonths ? ` for first ${discount.durationMonths} months` : ' (no expiry)'}`
         : 'None',
     },
-    { label: 'Partial Plan Charge', value: q(partialPlanQar) },
-    { label: 'Partial Add-on Charge', value: q(partialAddonQar) },
+    { label: 'Pro rated charges', value: q(partialPlanQar) },
+    { label: 'Pro-rated Add-On charges', value: q(partialAddonQar) },
     { label: 'Monthly Bill Cycle', value: '1st of every-month' },
-    {
-      label: 'Approximate first bill amount',
-      value: q(firstBill.totalQar),
-      detail: 'Partial charges plus one month in advance',
-    },
+    { label: 'Approximate first bill amount', value: q(firstBill.totalQar) },
     { label: 'Approximate second bill amount', value: q(monthlyRecurringQar) },
+    // VAT is part of how the bill is built up, so it sits in the explainer (it was a line of the order summary).
+    { label: `VAT (${Math.round(VAT_RATE * 100)}%)`, value: `${formatQar(charges.vatQar)}/mo` },
   ];
+  // Order Summary and Approximate Bill Explainer, each fact once: the number's value, discount and lock-ins, the plan and
+  // its lock-in, the add-ons, SIM type and limits; and the bill build-up ending in Total Payable Today (so there is no
+  // separate "Due today" box restating the number charge).
   const tables: SummaryTable[] = [
-    { boldLabels: true, rows: summaryRows },
-    { title: 'Due today', rows: dueRows },
-    { title: 'Approximate Bill Explainer', rows: billRows },
-  ];
-  // The customer-facing read-back for the CAF step: its own row set (no
-  // alternate phone, plan/number lock-ins spelled out, Total Payable Today).
-  const cafTables: SummaryTable[] = [
     {
       title: 'Order Summary',
       rows: [
@@ -125,16 +74,15 @@ export function buildDetailedTables({
           ? [{ label: 'Star Number Lock-in', value: starTier ? `${starTier.lockInDurationMonths} months` : 'Not yet banded - confirm before signature' }]
           : []),
         { label: 'Plan', value: plan?.name ?? '-' },
-        { label: 'Plan Lock-in', value: plan?.commitmentMonths ? `${plan.commitmentMonths} months` : 'No lock-in' },
-        { label: 'Add-ons', value: addons.length ? addons.map((a) => `${a.name} (QR ${a.mrcQAR}/mo)`).join(', ') : 'None' },
+        { label: 'Lock-in Period', value: plan?.commitmentMonths ? `${plan.commitmentMonths} months` : 'No lock-in' },
+        { label: 'Add-ons', value: addons.length ? addons.map((a) => `${a.name} (QAR ${a.mrcQAR}/mo)`).join(', ') : 'None' },
         { label: 'SIM Type', value: simType?.simType ?? '-' },
         ...(creditLimitQar !== undefined
           ? [
-              { label: 'Credit limit', value: `QR ${creditLimitQar}`, boldLabel: true },
-              { label: 'Bill limit', value: billLimit !== undefined ? `QR ${billLimit}` : `Up to QR ${creditLimitQar}`, boldLabel: true },
+              { label: 'Credit limit', value: `QAR ${creditLimitQar}`, boldLabel: true },
+              { label: 'Bill limit', value: billLimit !== undefined ? `QAR ${billLimit}` : `Up to QAR ${creditLimitQar}`, boldLabel: true },
             ]
           : []),
-        { label: `VAT (${Math.round(VAT_RATE * 100)}%)`, value: `${formatQar(charges.vatQar, 'QR')}/mo`, boldLabel: true },
       ],
     },
     {
@@ -148,5 +96,5 @@ export function buildDetailedTables({
       ],
     },
   ];
-  return { tables, cafTables };
+  return tables;
 }

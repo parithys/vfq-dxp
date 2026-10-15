@@ -1,9 +1,7 @@
-import { useEffect } from 'react';
 import type { EligibilityResult } from '../domain/eligibilityTypes';
 import type { SimTypeValue } from '../domain/SimTypeStep';
 import type { CheckoutTotals, TncLegalFacts } from './checkoutSummaryModel';
 import { SummaryTables } from './CheckoutSummaryTables';
-import type { SummaryTable } from './CheckoutSummaryTables';
 import { CheckoutDefaultLayout } from './CheckoutDefaultLayout';
 import { buildDetailedTables } from './checkoutDetailedTables';
 import { useCheckoutSummary } from './useCheckoutSummary';
@@ -66,12 +64,10 @@ interface CheckoutSummaryStepProps {
    */
   onEdit: () => void;
   /**
-   * 'detailed' renders the three-table read-back (summary, Due today, Approximate
+   * 'detailed' renders the two-table read-back (Order Summary, Approximate
    * Bill Explainer) used by New Connection. Default keeps the original layout.
    */
   layout?: 'default' | 'detailed';
-  /** detailed layout only: the same tables, for the CAF step to read back. */
-  onTablesComputed?: (tables: SummaryTable[]) => void;
   /** See TncLegalFacts - powers the CAF step's dynamic bullet summary. */
   onLegalFactsComputed?: (facts: TncLegalFacts) => void;
 }
@@ -98,7 +94,6 @@ export function CheckoutSummaryStep({
   onEdit,
   onLegalFactsComputed,
   layout = 'default',
-  onTablesComputed,
 }: CheckoutSummaryStepProps) {
   const derived = useCheckoutSummary({
     customerName,
@@ -115,23 +110,13 @@ export function CheckoutSummaryStep({
   });
 
   if (layout === 'detailed') {
-    const { tables, cafTables } = buildDetailedTables({
+    const tables = buildDetailedTables({
       ...derived,
       customerName,
-      altPhone,
-      billingMethod,
       msisdn,
       billLimit,
       simType,
     });
-    // Published from an effect (hooks cannot sit below the early returns, so
-    // this one is keyed on the serialised content instead).
-    const tablesKey = JSON.stringify(cafTables);
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useEffect(() => {
-      onTablesComputed?.(cafTables);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tablesKey]);
     return (
       <div className="space-y-6">
         <p className="text-fg-2 text-[length:var(--fs-caption)]">Review with the customer before generating the CAF.</p>

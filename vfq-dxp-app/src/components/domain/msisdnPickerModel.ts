@@ -52,7 +52,12 @@ export const TAB_LABELS: Record<NumberTab, string> = {
 // Reserved, Star, Free (VFQ business, 2026-10-02) - reversing the 2026-09-28 Free, Star, Reserved order.
 export const TAB_ORDER: NumberTab[] = ['Reserved', 'Star', 'Free'];
 
-/** The Retail Sales Agent persona (personas.json ROLE-01): Reserved opens first when numbers are held, and is hidden - Star opens instead - when none are. */
+/**
+ * The Number Management Portal's own tab order: Star, Free, Reserved. Only the portal uses it; every journey keeps TAB_ORDER above.
+ */
+export const PORTAL_TAB_ORDER: NumberTab[] = ['Star', 'Free', 'Reserved'];
+
+/** The Retail Sales persona (personas.json ROLE-01): Reserved opens first when numbers are held, and is hidden - Star opens instead - when none are. */
 export const RETAIL_SALES_PERSONA_ID = 'ROLE-01';
 
 /**

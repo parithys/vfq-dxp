@@ -1,8 +1,11 @@
+import { isClosedTicket } from '../../../lib/statusTone';
+import { currentAgentId } from '../../../stores/authStore';
+import { Button } from '../../../components/primitives/Button';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../../components/primitives/Icon';
 import { useEntityStore } from '../../../stores/entityStore';
-import { TicketCreationModal, type NewTicketValue } from '../../../modules/trouble-ticketing-complaints/screens/TicketCreationModal';
+import { TicketCreationModal, type NewTicketValue } from '../../../components/patterns/TicketCreationModal';
 import { buildNewTicketRecord } from '../../../data/reference/ticketReferenceData';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
@@ -11,7 +14,9 @@ import {
   FilterSelect,
   GridTable,
   IC,
-  KebabButton,
+  IconTile,
+  KpiGrid,
+  KpiTile,
   LinkAction,
   Pill,
   Panel,
@@ -19,8 +24,6 @@ import {
   SearchBox,
   StatusPill,
   TabPage,
-  UnderlineTabs,
-  ViewPill,
   fmtDate,
   fmtDateTime,
   type Tone,
@@ -30,7 +33,6 @@ import { str } from '../../../lib/values';
 
 const TICKET_DETAIL_ROUTE = '/trouble-ticketing-complaints/ticket-homepage';
 const RESOLVED = new Set(['Solved', 'Completed', 'Closed']);
-const CLOSED = new Set(['Solved', 'Completed', 'Closed', 'Cancelled']);
 const DAY = 86_400_000;
 
 const RANGES = [
@@ -144,7 +146,7 @@ export function C360TicketsSupport({
       data.tickets
         .map((t) => {
           const status = String(t.status ?? '-');
-          const closed = CLOSED.has(status);
+          const closed = isClosedTicket(status);
           const due = time(t.slaDueAt);
           return {
             id: String(t.ticketId),
@@ -195,7 +197,7 @@ export function C360TicketsSupport({
 
   const createTicket = async (value: NewTicketValue) => {
     const ticketId = `TT-${Date.now().toString().slice(-6)}`;
-    const record = buildNewTicketRecord({ ticketId, ...value, createdBy: 'AGENT-VINODHINIR' });
+    const record = buildNewTicketRecord({ ticketId, ...value, createdBy: currentAgentId() });
     await createRecord('trouble-tickets', record);
     onTicketCreated?.(record);
     setModalOpen(false);
@@ -238,140 +240,138 @@ export function C360TicketsSupport({
           <ActionButton primary icon={IC.plus} onClick={startNewTicket ?? (() => setModalOpen(true))}>
             Create Ticket
           </ActionButton>
-          <KebabButton />
         </>
       }
     >
-      <div className="grid grid-cols-1 @6xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] gap-4 items-start">
-        <div className="space-y-4 min-w-0">
-          <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 space-y-4 min-w-0">
-            <UnderlineTabs
-              active={tab}
-              onChange={setTab}
-              items={[
-                { key: 'all', label: `All Tickets (${tabCount.all})` },
-                { key: 'open', label: `Open (${tabCount.open})` },
-                { key: 'resolved', label: `Resolved (${tabCount.resolved})` },
-                { key: 'overdue', label: `Overdue (${tabCount.overdue})` },
-                { key: 'pending', label: `Pending Customer Action (${tabCount.pending})` },
-              ]}
-            />
-            <div className="flex flex-wrap items-stretch gap-3">
-              <SearchBox value={query} onChange={setQuery} placeholder="Search by Ticket ID, issue or service type" />
-              <FilterSelect label="Ticket Type" value={typeFilter} options={typeOptions} onChange={setTypeFilter} />
-              <FilterSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
-              <FilterSelect label="Date Range" value={range} options={RANGES.map((r) => ({ value: r.value, label: r.label }))} onChange={setRange} />
-            </div>
-            <GridTable
-              rows={rows}
-              rowKey={(t) => t.id}
-              selectedKey={selected?.id}
-              onSelect={(t) => setPickedId(t.id)}
-              empty="No tickets match the current filters."
-              cols={[
-                { key: 'n', header: '#', render: (_t, i) => i + 1 },
-                { key: 'id', header: 'Ticket ID', className: 'whitespace-nowrap' },
-                { key: 'type', header: 'Ticket Type', className: 'min-w-28' },
-                { key: 'issue', header: 'Actual Issue', className: 'min-w-36 break-words' },
-                { key: 'service', header: 'Service / MSISDN', render: () => <Dv k="ticketService" /> },
-                { key: 'status', header: 'Status', render: (t) => <StatusPill status={t.status} /> },
-                { key: 'priority', header: 'Priority', render: (t) => (t.priority === '-' ? '-' : <Pill tone={priorityTone(t.priority)}>{priorityLabel(t.priority)}</Pill>) },
-                { key: 'createdAt', header: 'Created On', className: 'whitespace-nowrap', render: (t) => fmtDate(new Date(t.createdAt).toISOString()) ?? '-' },
-                { key: 'createdBy', header: 'Created By', className: 'break-words', render: (t) => t.createdBy ?? '-' },
-                {
-                  key: 'actions',
-                  header: 'Actions',
-                  render: (t) => (
-                    <span className="flex items-center gap-3">
-                      <ViewPill onClick={() => setPickedId(t.id)} />
-                      <Icon path={IC.chevRight} className="w-4 h-4 text-fg" />
-                    </span>
-                  ),
-                },
-              ]}
-            />
-          </section>
+      {/* Counts double as filters: click one to list only those tickets (click the same one again for all). */}
+      <KpiGrid>
+        {(
+          [
+            { key: 'all', label: 'All Tickets', icon: IC.headset, tone: 'blue' },
+            { key: 'open', label: 'Open', icon: IC.tag, tone: 'amber' },
+            { key: 'resolved', label: 'Resolved', icon: IC.shieldCheck, tone: 'green' },
+            { key: 'overdue', label: 'Overdue', icon: IC.alert, tone: 'red' },
+            { key: 'pending', label: 'Pending Customer Action', icon: IC.clock, tone: 'purple' },
+          ] as { key: keyof typeof tabCount; label: string; icon: string; tone: Tone }[]
+        ).map((k) => (
+          <KpiTile key={k.key} icon={k.icon} tone={k.tone} label={k.label} value={tabCount[k.key]} caption={tab === k.key && k.key !== 'all' ? 'Filtered - click to clear' : undefined} onClick={() => setTab(tab === k.key ? 'all' : k.key)} />
+        ))}
+      </KpiGrid>
 
-          <div className="grid grid-cols-1 @4xl:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] gap-4">
-            <Panel
-              icon={IC.refresh}
-              title="Recent Ticket Activity"
-              action={selected ? <LinkAction onClick={() => openFull(selected.id)}>View All</LinkAction> : undefined}
-            >
-              <GridTable
-                dense
-                rows={activity}
-                rowKey={(a) => a.key}
-                empty="No activity recorded for this ticket."
-                cols={[
-                  { key: 'at', header: 'Date & Time', className: 'whitespace-nowrap', render: (a) => fmtStamp(a.at)?.replace('  |  ', ' ') ?? '-' },
-                  { key: 'activity', header: 'Activity', className: 'font-semibold' },
-                  { key: 'user', header: 'User', className: 'break-words' },
-                  { key: 'details', header: 'Details', className: 'min-w-40 break-words' },
-                ]}
-              />
-            </Panel>
+      {/* Search and filters sit above both columns; they narrow the list on the left. */}
+      <div className="flex flex-wrap items-stretch gap-3">
+        <SearchBox value={query} onChange={setQuery} placeholder="Search by Ticket ID, issue or service type" />
+        <FilterSelect label="Ticket Type" value={typeFilter} options={typeOptions} onChange={setTypeFilter} />
+        <FilterSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
+        <FilterSelect label="Date Range" value={range} options={RANGES.map((r) => ({ value: r.value, label: r.label }))} onChange={setRange} />
+      </div>
 
-            <Panel icon={IC.link} title="Related Information">
-              <ul>
-                {related.map((r) => (
-                  <li key={r.label} className="border-b border-border-soft last:border-0">
-                    <button type="button" onClick={r.onClick} disabled={!r.onClick} className="w-full flex items-center gap-3 py-2.5 text-[length:var(--fs-body)] text-left enabled:hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed">
-                      <Icon path={r.icon} className="w-4 h-4 text-fg-2 shrink-0" />
-                      <span className="flex-1 text-fg-2">{r.label}</span>
-                      <span className="text-fg font-medium">{r.count}</span>
-                      <Icon path={IC.chevRight} className="w-4 h-4 text-fg shrink-0" />
+      <div className="grid grid-cols-1 @4xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-4 items-start">
+        {/* Left: the tickets. */}
+        <Panel icon={IC.headset} title={`All Tickets (${rows.length})`}>
+          <div className="space-y-3">
+            {rows.length === 0 ? (
+              <p className="text-muted text-[length:var(--fs-body)] py-4 text-center">No tickets match the current filters.</p>
+            ) : (
+              <ul className="space-y-2">
+                {rows.map((t) => (
+                  <li key={t.id}>
+                    <button
+                      type="button"
+                      aria-pressed={selected?.id === t.id}
+                      onClick={() => setPickedId(t.id)}
+                      className={`w-full text-left rounded-[var(--radius-card)] border p-3 transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+                        selected?.id === t.id ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-[var(--field-card-border)] bg-bg hover:bg-surface'
+                      }`}
+                    >
+                      <span className="flex items-center justify-between gap-2">
+                        <span className="text-fg font-semibold text-[length:var(--fs-body)]">{t.id}</span>
+                        <span className="text-fg-2 text-[length:var(--fs-caption)] whitespace-nowrap">{fmtDate(new Date(t.createdAt).toISOString()) ?? '-'}</span>
+                      </span>
+                      <span className="block text-fg-2 text-[length:var(--fs-caption)] break-words">
+                        {t.type} · {t.issue}
+                      </span>
+                      <span className="mt-2 flex flex-wrap items-center gap-1.5">
+                        <StatusPill status={t.status} />
+                        {t.priority !== '-' && <Pill tone={priorityTone(t.priority)}>{priorityLabel(t.priority)}</Pill>}
+                        {t.overdue && <Pill tone="red">Overdue</Pill>}
+                      </span>
                     </button>
                   </li>
                 ))}
               </ul>
-            </Panel>
+            )}
           </div>
-        </div>
-
-        <Panel icon={IC.file} title="Ticket Details" action={selected ? <StatusPill status={selected.status} /> : undefined}>
-          {selected ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="w-12 h-12 rounded-[var(--radius-button)] flex items-center justify-center shrink-0 bg-surface text-[var(--signal-blue)]">
-                  <Icon path={IC.tag} className="w-6 h-6" />
-                </span>
-                <div className="min-w-0">
-                  <div className="text-fg font-bold text-[length:var(--fs-body-lg)]">{selected.id}</div>
-                  <div className="text-fg-2 text-[length:var(--fs-caption)] break-words">{[selected.issue, fmtDate(new Date(selected.createdAt).toISOString()), selected.createdBy].filter(Boolean).join('  |  ')}</div>
-                </div>
-              </div>
-              <DetailRows
-                rows={[
-                  { label: 'Ticket Type', value: selected.type, strong: false },
-                  { label: 'Sub Type', value: selected.subType ?? '-', strong: false },
-                  { label: 'Actual Issue', value: selected.issue, strong: false },
-                  { label: 'Service / MSISDN', value: <Dv k="ticketService" />, strong: false },
-                  { label: 'Status', value: <StatusPill status={selected.status} />, strong: false },
-                  { label: 'Priority', value: selected.priority === '-' ? '-' : <Pill tone={priorityTone(selected.priority)}>{priorityLabel(selected.priority)}</Pill>, strong: false },
-                  { label: 'Created On', value: created.date ? `${created.date}${created.time ? `  |  ${created.time}` : ''}` : '-', strong: false },
-                  { label: 'Created By', value: selected.createdBy ?? '-', strong: false },
-                  { label: 'Assigned To', value: selected.assignedTo ?? <Dv k="ticketAssignedTo" row={{ queue: selected.raw.queue }} />, strong: false },
-                  { label: 'SLA', value: selected.slaHours !== undefined ? `Response within ${selected.slaHours} hours` : '-', strong: false },
-                  { label: 'Last Updated', value: fmtStamp(lastUpdated(selected.raw)) ?? '-', strong: false },
-                  { label: 'Notes', value: noteText(((selected.raw.publicNotes as unknown[] | undefined) ?? []).at(-1)) ?? <Dv k="ticketNotes" row={{ issue: selected.issue }} />, strong: false },
-                ]}
-              />
-              <div className="grid grid-cols-1 @lg:grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => openFull(selected.id)}
-                  className="rounded-[var(--radius-button)] border border-accent px-4 py-2 text-[length:var(--fs-btn-compact)] font-medium text-accent hover:bg-[color-mix(in_oklab,var(--accent),var(--bg)_94%)]"
-                >
-                  View Full Ticket &rarr;
-                </button>
-                <ActionButton disabled>Add Note</ActionButton>
-              </div>
-            </div>
-          ) : (
-            <p className="text-muted text-[length:var(--fs-body)] py-4 text-center">Select a ticket to see its details.</p>
-          )}
         </Panel>
+
+        {/* Right: the selected ticket - its details, activity and related records. */}
+        <aside className="card p-4 space-y-4 min-w-0">
+          {selected ? (
+            <>
+              <div className="flex flex-wrap items-center gap-3">
+                <IconTile icon={IC.tag} tone="blue" />
+                <span className="text-fg font-bold text-[length:var(--fs-h5)] min-w-0 break-words">{selected.id}</span>
+                <StatusPill status={selected.status} />
+                <span className="ml-auto flex items-center gap-2">
+                  <Button variant="secondary" compact type="button" onClick={() => openFull(selected.id)}>
+                    View Full Ticket &rarr;
+                  </Button>
+                  <ActionButton disabled>Add Note</ActionButton>
+                </span>
+              </div>
+
+              <Panel icon={IC.file} title="Ticket Details" className="bg-surface-half">
+                <DetailRows
+                  rows={[
+                    { label: 'Ticket Type', value: selected.type, strong: false },
+                    { label: 'Sub Type', value: selected.subType ?? '-', strong: false },
+                    { label: 'Actual Issue', value: selected.issue, strong: false },
+                    { label: 'Service / MSISDN', value: <Dv k="ticketService" />, strong: false },
+                    { label: 'Priority', value: selected.priority === '-' ? '-' : <Pill tone={priorityTone(selected.priority)}>{priorityLabel(selected.priority)}</Pill>, strong: false },
+                    { label: 'Created On', value: created.date ? `${created.date}${created.time ? `  |  ${created.time}` : ''}` : '-', strong: false },
+                    { label: 'Created By', value: selected.createdBy ?? '-', strong: false },
+                    { label: 'Assigned To', value: selected.assignedTo ?? <Dv k="ticketAssignedTo" row={{ queue: selected.raw.queue }} />, strong: false },
+                    { label: 'SLA', value: selected.slaHours !== undefined ? `Response within ${selected.slaHours} hours` : '-', strong: false },
+                    { label: 'Last Updated', value: fmtStamp(lastUpdated(selected.raw)) ?? '-', strong: false },
+                    { label: 'Notes', value: noteText(((selected.raw.publicNotes as unknown[] | undefined) ?? []).at(-1)) ?? <Dv k="ticketNotes" row={{ issue: selected.issue }} />, strong: false },
+                  ]}
+                />
+              </Panel>
+
+              <Panel icon={IC.refresh} title="Recent Ticket Activity" action={<LinkAction onClick={() => openFull(selected.id)}>View All</LinkAction>}>
+                <GridTable
+                  dense
+                  rows={activity}
+                  rowKey={(a) => a.key}
+                  empty="No activity recorded for this ticket."
+                  cols={[
+                    { key: 'at', header: 'Date & Time', className: 'whitespace-nowrap', render: (a) => fmtStamp(a.at)?.replace('  |  ', ' ') ?? '-' },
+                    { key: 'activity', header: 'Activity', className: 'font-semibold' },
+                    { key: 'user', header: 'User', className: 'break-words' },
+                    { key: 'details', header: 'Details', className: 'min-w-40 break-words' },
+                  ]}
+                />
+              </Panel>
+
+              <Panel icon={IC.link} title="Related Information">
+                <ul>
+                  {related.map((r) => (
+                    <li key={r.label} className="border-b border-border-soft last:border-0">
+                      <button type="button" onClick={r.onClick} disabled={!r.onClick} className="w-full flex items-center gap-3 py-2.5 text-[length:var(--fs-body)] text-left enabled:hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed">
+                        <Icon path={r.icon} className="w-4 h-4 text-fg-2 shrink-0" />
+                        <span className="flex-1 text-fg-2">{r.label}</span>
+                        <span className="text-fg font-medium">{r.count}</span>
+                        <Icon path={IC.chevRight} className="w-4 h-4 text-fg shrink-0" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </Panel>
+            </>
+          ) : (
+            <p className="text-muted text-[length:var(--fs-body)] py-6 text-center">{tickets.length === 0 ? 'No tickets on file for this customer.' : 'Select a ticket to see its details.'}</p>
+          )}
+        </aside>
       </div>
 
       <TicketCreationModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={createTicket} initialCustomerId={data.customer.customerId} />

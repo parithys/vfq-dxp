@@ -1,13 +1,12 @@
 import { ID_TYPES } from '../../../data/idTypes';
 import type { SummaryField } from './stepSummary';
+// The nested-value reader and QAR formatter every step summary shares (one definition, in the capability summary kit).
+import { at, qar, type Values } from '../../../capabilities/summaryKit';
 
 // Summary field sets shared by the journeys. Each builder takes the draft-values key the journey stores the step's
 // value under, so the same set serves journeys that name it differently.
 
-type Values = Record<string, unknown>;
-const at = (values: Values, ...path: string[]): unknown => path.reduce<unknown>((o, k) => (o && typeof o === 'object' ? (o as Values)[k] : undefined), values);
 const idTypeLabels = Object.fromEntries(ID_TYPES.map((t) => [t.type, t.label]));
-const qar = (n: unknown) => (typeof n === 'number' ? `QAR ${n.toLocaleString('en-GB')}` : undefined);
 const PRODUCT = { kind: 'products', idField: 'productId', labelField: 'name' } as const;
 
 /** The ID-lookup result (ID type and number, and the identity the MOI lookup returned). */
@@ -71,7 +70,6 @@ export const numberSummary = (priceKey?: string): SummaryField[] => [
 export const simTypeFormSummary = (key = 'simType'): SummaryField[] => [
   { key: 'simType', label: 'SIM Type', type: 'text', value: (v) => at(v, key, 'simType') },
   { key: 'serial', label: 'SIM Serial Number', type: 'text', optional: true, sensitive: true, value: (v) => at(v, key, 'simSerial') },
-  { key: 'iccid', label: 'ICCID', type: 'text', optional: true, sensitive: true, value: (v) => at(v, key, 'simIccid') },
 ];
 
 export const cafSummary: SummaryField[] = [
@@ -91,11 +89,16 @@ export const donorSummary: SummaryField[] = [
   { key: 'port', label: 'Port-in Number', type: 'text', value: (v) => at(v, 'donorDetails', 'portInNumber') },
   { key: 'donorId', label: 'Donor ID', type: 'text', sensitive: true, value: (v) => at(v, 'donorDetails', 'donorId') },
   { key: 'donorIdType', label: 'Donor ID Type', type: 'text', value: (v) => at(v, 'donorDetails', 'donorIdType') },
+  { key: 'donorCustomerType', label: 'Donor Customer Type', type: 'text', value: (v) => at(v, 'donorDetails', 'donorCustomerType') },
+  { key: 'donorOperator', label: 'Donor Operator', type: 'text', value: (v) => at(v, 'donorDetails', 'donorOperator') },
+  { key: 'donorSubscriptionType', label: 'Donor Subscription Type', type: 'text', value: (v) => at(v, 'donorDetails', 'donorSubscriptionType') },
+  { key: 'scheduledPortInDate', label: 'Scheduled Port-In Date', type: 'text', optional: true, value: (v) => at(v, 'donorDetails', 'scheduledPortInDate') },
 ];
 
 export const donorAttachmentSummary: SummaryField[] = [
+  { key: 'formNumber', label: 'MNP Form Number', type: 'text', value: (v) => at(v, 'donorAttachment', 'formNumber') },
   { key: 'form', label: 'Form Type', type: 'text', value: (v) => at(v, 'donorAttachment', 'mnpFormType') },
-  { key: 'signed', label: 'Signed', type: 'toggle', value: (v) => Boolean(at(v, 'donorAttachment', 'signatureDataUrl')) },
+  { key: 'signed', label: 'Signed', type: 'toggle', value: (v) => Boolean(at(v, 'donorAttachment', 'signed')) },
 ];
 
 export const billingProfileSummary: SummaryField[] = [

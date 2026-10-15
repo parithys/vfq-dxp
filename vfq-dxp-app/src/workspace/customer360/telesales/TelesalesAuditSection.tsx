@@ -1,3 +1,6 @@
+import { SearchField } from '../../../components/primitives/SearchField';
+import { FilterSelect } from '../sections/C360Kit';
+import { Button } from '../../../components/primitives/Button';
 import { useMemo, useState } from 'react';
 import { downloadCsv } from '../../../engines/csvExport';
 import { Icon } from '../../../components/primitives/Icon';
@@ -50,12 +53,12 @@ export function AuditSection({ ctx }: { ctx: Ctx }) {
   return (
     <>
       <SectionHeader
-        icon={ICON.refresh}
-        title="Audit Trail"
-        description="View all changes, activities and events related to this customer across orders, contacts, account, activities and trouble tickets."
+       
+       
+       
         actions={
           <>
-            <span className="inline-flex items-center gap-2 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg px-4 py-2 text-fg font-semibold text-[length:var(--fs-body)]">
+            <span className="inline-flex items-center gap-2 card px-4 py-2 text-fg font-semibold text-[length:var(--fs-body)]">
               <Icon path={ICON.card} className="w-4 h-4" />
               {first ? dateTime(first.at).d : '-'} – {rows[0] ? dateTime(rows[0].at).d : '-'}
             </span>
@@ -67,17 +70,11 @@ export function AuditSection({ ctx }: { ctx: Ctx }) {
       />
       <SectionHeader actions={
 <div className="basis-full order-last flex gap-2 flex-wrap">
-            <input value={query} onChange={(e) => { setQuery(e.target.value); setPage(0); }} placeholder="Search by keyword, reference number or details..." aria-label="Search audit trail" className="flex-1 min-w-48 rounded-[var(--field-radius)] border border-[var(--field-border)] bg-surface px-3 py-2 text-[length:var(--fs-caption)]" />
-            <select value={module} onChange={(e) => { setModule(e.target.value); setPage(0); }} aria-label="Module" className="rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-2 text-[length:var(--fs-caption)]">
-              {['All Modules', ...uniq('module')].map((v) => <option key={v}>{v}</option>)}
-            </select>
-            <select value={action} onChange={(e) => { setAction(e.target.value); setPage(0); }} aria-label="Action" className="rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-2 text-[length:var(--fs-caption)]">
-              {['All Actions', ...uniq('action')].map((v) => <option key={v}>{v}</option>)}
-            </select>
-            <select value={user} onChange={(e) => { setUser(e.target.value); setPage(0); }} aria-label="User" className="rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-2 text-[length:var(--fs-caption)]">
-              {['All Users', ...uniq('by')].map((v) => <option key={v}>{v}</option>)}
-            </select>
-            <button type="button" onClick={reset} className="text-accent font-semibold text-[length:var(--fs-body)]">⟳ Reset</button>
+            <SearchField value={query} onChange={(e) => { setQuery(e.target.value); setPage(0); }} onClear={() => { setQuery(''); setPage(0); }} placeholder="Search by keyword, reference number or details..." aria-label="Search audit trail" wrapperClassName="flex-1 min-w-48" />
+            <FilterSelect label="Module" value={module} options={['All Modules', ...uniq('module')].map((x) => ({ value: x, label: x }))} onChange={(v) => { setModule(v); setPage(0); }} />
+            <FilterSelect label="Action" value={action} options={['All Actions', ...uniq('action')].map((x) => ({ value: x, label: x }))} onChange={(v) => { setAction(v); setPage(0); }} />
+            <FilterSelect label="User" value={user} options={['All Users', ...uniq('by')].map((x) => ({ value: x, label: x }))} onChange={(v) => { setUser(v); setPage(0); }} />
+            <Button variant="tertiary" type="button" onClick={reset}>⟳ Reset</Button>
           </div>
       } />
       <StatStrip
@@ -128,7 +125,7 @@ export function AuditSection({ ctx }: { ctx: Ctx }) {
               {summary.map(([label, n]) => (
                 <div key={label} className="flex items-center gap-3">
                   <span className="w-28 text-fg-2 text-[length:var(--fs-body)]">{label}</span>
-                  <span className="flex-1 h-2 rounded-full bg-surface overflow-hidden">
+                  <span className="flex-1 h-2 rounded-[var(--radius-pill)] bg-surface overflow-hidden">
                     <span className="block h-full bg-accent" style={{ width: `${(n / maxSum) * 100}%` }} />
                   </span>
                   <span className="w-6 text-right font-bold text-fg">{n}</span>
@@ -139,7 +136,7 @@ export function AuditSection({ ctx }: { ctx: Ctx }) {
           <Card title="Quick Filters" icon={ICON.search}>
             <div className="px-5 py-4 flex gap-2">
               {[7, 30, 90].map((d) => (
-                <button key={d} type="button" onClick={() => { setDays(d); setPage(0); }} className={`flex-1 rounded-[var(--radius-button)] px-2 py-2 text-[length:var(--fs-caption)] border ${days === d ? 'bg-accent text-accent-on border-accent font-semibold' : 'bg-bg text-fg-2 border-border'}`}>
+                <button key={d} type="button" onClick={() => { setDays(d); setPage(0); }} className={`flex-1 rounded-[var(--radius-button)] px-2 py-2 text-[length:var(--fs-caption)] border ${days === d ? 'bg-[image:var(--accent-gradient)] text-accent-on hover:bg-[image:var(--accent-gradient-hover)] border-transparent font-semibold' : 'bg-bg text-fg-2 border-border'}`}>
                   Last {d} days
                 </button>
               ))}

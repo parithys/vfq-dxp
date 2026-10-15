@@ -1,10 +1,11 @@
+import { CUSTOMER_IDENTIFICATION_LABEL } from '../../../data/stepLabels';
 import { useNavigate } from 'react-router-dom';
 import * as sums from '../../../components/patterns/wizard/commonSummaries';
 import { attachSummaries } from '../../../components/patterns/wizard/stepSummary';
-import { GuidedActivationWizard } from '../../../components/patterns/wizard/GuidedActivationWizard';
-import { IdLookupStep } from '../../../components/patterns/IdLookupStep';
+import { GuidedActivationWizard } from '../../../capabilities';
+import { CustomerIdentification } from '../../../capabilities';
+import { activityStep } from '../../../capabilities';
 import type { IdLookupValue } from '../../../components/patterns/idLookupModel';
-import { ActivityCommentsStep } from '../../../components/patterns/ActivityCommentsStep';
 import { BillLimitEditor } from '../../../components/domain/BillLimitEditor';
 import { Input } from '../../../components/primitives/Input';
 import { Select } from '../../../components/primitives/Select';
@@ -52,10 +53,10 @@ export function BaseManagementWizard() {
         steps={attachSummaries([
           {
             key: 'contact',
-            label: 'Contact',
+            label: CUSTOMER_IDENTIFICATION_LABEL,
             render: ({ values, setValue }) => (
               <div className="space-y-4">
-                <IdLookupStep value={(values.qid as IdLookupValue) ?? {}} onChange={(v) => setValue('qid', v)} />
+                <CustomerIdentification value={(values.qid as IdLookupValue) ?? {}} onChange={(v) => setValue('qid', v)} />
                 <div className="grid grid-cols-2 gap-4">
                   <Input label="Email" value={(values.email as string) ?? ''} onChange={(e) => setValue('email', e.target.value)} />
                   <Select
@@ -75,11 +76,11 @@ export function BaseManagementWizard() {
             label: 'Offer Summary',
             render: ({ values, setValue }) => (
               <div className="space-y-4">
-                <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4 bg-surface">
+                <div className="card p-4 card-surface">
                   <p className="text-fg font-medium">{offer.offerName}</p>
                   <p className="text-fg-2 text-[length:var(--fs-body)] mt-1">{offer.offerDescription}</p>
                   <p className="text-fg text-[length:var(--fs-body)] mt-2">
-                    Monthly Rental: QR {offer.monthlyRental} + Add-on QR {offer.addOnMonthly ?? 0}
+                    Monthly Rental: QAR {offer.monthlyRental} + Add-on QAR {offer.addOnMonthly ?? 0}
                   </p>
                 </div>
                 <BillLimitEditor
@@ -87,29 +88,15 @@ export function BaseManagementWizard() {
                   value={values.billLimit as number | undefined}
                   onChange={(v, pass) => { setValue('billLimit', v); setValue('billLimitValid', pass); }}
                 />
-                <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-3">
+                <div className="card p-3">
                   <span className="text-fg">Credit Limit</span>
-                  <div className="text-fg mt-1">QR 1000</div>
+                  <div className="text-fg mt-1">QAR 1000</div>
                 </div>
               </div>
             ),
             isValid: (values) => Boolean(values.billLimit && values.billLimitValid),
           },
-          {
-            key: 'activity',
-            label: 'Activity',
-            render: ({ values, setValue }) => (
-              <div className="space-y-4">
-                <Select
-                  label="Channel"
-                  value={(values.channel as string) ?? 'Appointment'}
-                  onChange={(e) => setValue('channel', e.target.value)}
-                  options={['Appointment', 'Walk-in', 'Call Center'].map((c) => ({ value: c, label: c }))}
-                />
-                <ActivityCommentsStep value={(values.comments as string) ?? ''} onChange={(v) => setValue('comments', v)} />
-              </div>
-            ),
-          },
+          activityStep({ required: false, channels: ['Appointment', 'Walk-in', 'Call Center'] }),
         ], {
           contact: [
             ...sums.identitySummary('qid'),

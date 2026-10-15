@@ -1,3 +1,5 @@
+import { isClosedTicket } from '../../../lib/statusTone';
+import { Button } from '../../../components/primitives/Button';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../../components/primitives/Icon';
@@ -6,12 +8,11 @@ import * as mockDataEngine from '../../../engines/mockDataEngine';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { AddressEditDrawer, type AddressRecord } from './AddressSection';
-import { ActionButton, DetailRows, GridTable, IC, KebabButton, LinkAction, Panel, StatusPill, TabPage, fmtDate } from './C360Kit';
+import { ActionButton, DetailRows, GridTable, IC, LinkAction, Panel, StatusPill, TabPage, fmtDate } from './C360Kit';
 import type { Tone } from './C360Kit';
 import { Dv } from '../demoValues';
 
 const TICKET_DETAIL_ROUTE = '/trouble-ticketing-complaints/ticket-homepage';
-const CLOSED_TICKET = /^(solved|completed|closed|cancelled)$/i;
 
 interface Appointment {
   appointmentId: string;
@@ -90,7 +91,7 @@ export function C360AddressService({
   const nextAppointment = appointments
     .filter((a) => a.orderId && orderIds.has(a.orderId) && !/(complete|cancel)/i.test(String(a.status)))
     .sort((a, b) => String(a.appointmentDate).localeCompare(String(b.appointmentDate)))[0];
-  const latestOpenTicket = [...data.tickets].filter((t) => !CLOSED_TICKET.test(String(t.status))).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0];
+  const latestOpenTicket = [...data.tickets].filter((t) => !isClosedTicket(t.status)).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0];
   const installedServices = services.filter((s) => s.tab !== 'mobile').map((s) => s.label);
 
   const edit = primary && canEdit ? () => requireVerification(() => setEditing(primary)) : undefined;
@@ -103,9 +104,9 @@ export function C360AddressService({
           title="Customer Address"
           action={
             edit && (
-              <button type="button" onClick={edit} className="rounded-[var(--radius-sm)] px-3 py-1 text-[length:var(--fs-caption)] font-medium text-[var(--signal-blue)] bg-[color-mix(in_oklab,var(--signal-blue),var(--bg)_90%)]">
+              <Button variant="secondary" compact onClick={edit}>
                 Edit Address
-              </button>
+              </Button>
             )
           }
         >
@@ -156,7 +157,7 @@ export function C360AddressService({
                   <span className="flex-1 text-fg-2">{a.label}</span>
                   {has.length > 0 ? (
                     <>
-                      <span className="w-5 h-5 rounded-full bg-success text-white flex items-center justify-center shrink-0">
+                      <span className="w-5 h-5 rounded-[var(--radius-pill)] bg-success-solid text-on-dark flex items-center justify-center shrink-0">
                         <Icon path={IC.check} className="w-3 h-3" />
                       </span>
                       <span className="w-36 min-w-0">
@@ -211,7 +212,6 @@ export function C360AddressService({
                 { key: 'address', header: 'Address', render: (a) => addressLine(a) || '-' },
                 { key: 'source', header: 'Source', render: () => <Dv k="addressSource" /> },
                 { key: 'status', header: 'Status', render: (a) => <StatusPill status={a.activeFlag === false ? 'Inactive' : 'Active'} /> },
-                { key: 'actions', header: 'Actions', render: () => <KebabButton /> },
               ]}
               rows={others}
               rowKey={(a) => a.id}

@@ -53,7 +53,7 @@ export function IdLookupStatus({ loading, failure, retrying, expiredNotice, dupl
                   <span className="block text-fg font-medium truncate">{d.name}</span>
                   <span className="block text-muted text-[length:var(--fs-caption)]">{d.customerId} - born {isoToDmy(d.dob)}</span>
                 </span>
-                <Button variant="ghost-rect" compact onClick={() => void runMoiValidation({ forceCustomerId: d.customerId })}>
+                <Button variant="secondary" compact onClick={() => void runMoiValidation({ forceCustomerId: d.customerId })}>
                   Use this record
                 </Button>
               </li>

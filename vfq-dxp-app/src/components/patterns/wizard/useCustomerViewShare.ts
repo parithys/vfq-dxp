@@ -53,7 +53,7 @@ export function useCustomerViewShare(sharedStepKey: string | undefined) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sharedStepKey]);
   // Leaving the journey closes the customer view with it - and so does anything that ends the page:
-  // closing the tab, a reload, signing out or a session timeout (both reload, see resetApplicationState).
+  // closing the tab, a reload, or signing out (which reloads, see resetApplicationState).
   useEffect(() => {
     const closeCustomerWindow = () => popupRef.current?.close();
     window.addEventListener('pagehide', closeCustomerWindow);

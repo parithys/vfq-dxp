@@ -159,9 +159,7 @@ export function monthlyCharges(input: MonthlyChargeInput): MonthlyCharges {
  * of the catalogue is whole, so a blanket 2dp would print "QAR 750.00" on
  * every plan to accommodate one row.
  */
-export function formatQar(amount: number, currency: 'QAR' | 'QR' = 'QAR'): string {
-  return `${currency} ${Number.isInteger(amount) ? amount : amount.toFixed(2)}`;
-}
+export { formatQar } from '../lib/format';
 
 /**
  * The FIRST invoice, distinct from the recurring monthly charge that starts
@@ -172,8 +170,10 @@ export function formatQar(amount: number, currency: 'QAR' | 'QR' = 'QAR'): strin
  * Pre-to-Post desktop walkthrough) all carry the same disclaimer: "your first
  * month's charges will be prorated, plus the full charge of your plan for the
  * following month." That sentence is the evidence for the SHAPE of a first
- * bill - a prorated part-month plus one full month charged in advance - and it
- * is followed exactly here.
+ * bill - a prorated part-month plus one full month charged in advance. As of
+ * 2026-10-07 the quoted first bill is the prorated part-month ONLY (an explicit
+ * request: the first bill must be lower than the second, full-month one), so
+ * the advance month is no longer added to `totalQar`.
  *
  * What it does not supply is a billing-cycle day for a BRAND NEW connection.
  * billing-profiles.json shows every value from 1 to 12 across four existing
@@ -198,7 +198,7 @@ export interface FirstBillCharges {
   proratedDays: number;
   /** Days in the calendar month activation falls in - what proratedDays is a fraction of. */
   cycleDays: number;
-  /** proratedQar + one full recurring charge, billed in advance for month two. */
+  /** The first bill: the prorated part-month only, so it is always below the second (full-month) bill. */
   totalQar: number;
 }
 
@@ -210,6 +210,6 @@ export function firstBillCharges(recurring: MonthlyCharges, asOf: Date): FirstBi
     proratedQar,
     proratedDays,
     cycleDays,
-    totalQar: round2(proratedQar + recurring.totalQar),
+    totalQar: proratedQar,
   };
 }

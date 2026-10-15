@@ -58,9 +58,9 @@ export function WfmSerialNumberCheck() {
     return (
       <div className="p-8">
         <PageHeader title={<>WFM Installation - Serial Number Check</>} description={<>Orders awaiting Dual-Play serial number check and service activation.</>} />
-        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg divide-y divide-border-soft">
+        <div className="card divide-y divide-border-soft">
           {pending.map((o) => (
-            <button
+            <button type="button"
               key={o.orderId}
               onClick={() => setSelectedOrderId(o.orderId)}
               className="w-full text-left px-4 py-3 hover:bg-surface flex justify-between items-center"
@@ -85,10 +85,10 @@ export function WfmSerialNumberCheck() {
       </>} />
       <DualPlaySerialCheckStep value={serials} onChange={(patch) => setSerials((prev) => ({ ...prev, ...patch }))} />
       <div className="flex gap-2 mt-6">
-        <Button variant="ghost-rect" onClick={() => setSelectedOrderId(null)}>
+        <Button variant="secondary" onClick={() => setSelectedOrderId(null)}>
           Back to list
         </Button>
-        <Button variant="primary-rect" onClick={submit} disabled={!allValid}>
+        <Button variant="primary" onClick={submit} disabled={!allValid}>
           Submit - Trigger Service Activation
         </Button>
       </div>

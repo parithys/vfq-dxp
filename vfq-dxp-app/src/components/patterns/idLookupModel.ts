@@ -126,3 +126,26 @@ export const isoToDmy = (iso: string) => {
   const [y, m, d] = iso.split('-');
   return y && m && d ? `${d}/${m}/${y}` : iso;
 };
+
+/**
+ * Which identity documents the reader can resolve a scan to.
+ *  - The customer's own documents (journey opened from Customer 360): the one of the type the agent selected, never a
+ *    different one - a customer who also holds a QID must not have it substituted for the Passport that was chosen.
+ *    With no selection (scan-first flow) their QID is preferred where they hold one.
+ *  - Otherwise every document of a detectable type.
+ */
+export function selectScanCandidates<D extends { documentType: string }>({
+  docs,
+  ownDocs,
+  chosenType,
+  detectable,
+}: {
+  docs: D[];
+  ownDocs: D[] | undefined;
+  chosenType: string | undefined;
+  detectable: readonly string[];
+}): D[] {
+  if (!ownDocs) return docs.filter((d) => detectable.includes(d.documentType));
+  if (chosenType) return ownDocs.filter((d) => d.documentType === chosenType);
+  return [...ownDocs].sort((a, b) => Number(b.documentType === 'QID') - Number(a.documentType === 'QID'));
+}

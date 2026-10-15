@@ -3,7 +3,9 @@
     "msisdn": "+97433001001",
     "category": "Free",
     "status": "AVAILABLE",
-    "priceQAR": 0
+    "priceQAR": 0,
+    "reservedAt": "2026-10-04T09:15:00+03:00",
+    "reservedForQid": "27801063400071"
   },
   {
     "msisdn": "+97433001002",

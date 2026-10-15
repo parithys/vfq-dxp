@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
-import { Drawer } from '../../../components/primitives/Drawer';
+import { Drawer } from '../../../capabilities';
 import { Input } from '../../../components/primitives/Input';
 import { Select } from '../../../components/primitives/Select';
 import { ContactPhoneInput } from '../../../components/domain/ContactPhoneInput';
@@ -13,6 +13,7 @@ import { canEditCustomerRecords } from '../../../engines/agentPrivilegeEngine';
 import { useProfileChangeTicket } from '../../../engines/profileChangeTicket';
 import { useVerificationGate } from '../../../components/patterns/VerificationGate';
 import type { Customer360Data } from '../../../engines/customer360Engine';
+import { useSubmit } from '../../../hooks/useSubmit';
 
 interface ContactRecord {
   contactRecordId: string;
@@ -130,10 +131,8 @@ function ContactEditDrawer({
   const [cellNumber, setCellNumber] = useState(contact.cellNumber ?? '');
   const [workPhone, setWorkPhone] = useState(contact.workPhone ?? '');
   const [employerEmail, setEmployerEmail] = useState(contact.employerEmail ?? '');
-  const [saving, setSaving] = useState(false);
 
-  const save = async () => {
-    setSaving(true);
+  const { run: save, pending: saving } = useSubmit(async () => {
     const patch = { firstName, middleName, lastName, nationality, dob, gender, preferredLanguage, cellNumber, workPhone, employerEmail };
     const changed = (Object.keys(patch) as (keyof typeof patch)[]).filter((k) => patch[k] !== (contact as unknown as Record<string, unknown>)[k]);
     await updateRecord('customer-contacts', 'contactRecordId', contact.contactRecordId, patch);
@@ -141,10 +140,9 @@ function ContactEditDrawer({
       const { record } = await createChangeTicket(customerId, 'Contact', changed);
       onTicketCreated(record);
     }
-    setSaving(false);
     onSaved(patch);
     onClose();
-  };
+  }, 'Could not save the contact details. Please try again.');
 
   return (
     <Drawer
@@ -154,10 +152,10 @@ function ContactEditDrawer({
       footer={
         !readOnly ? (
           <>
-            <Button variant="ghost-rect" onClick={onClose}>
+            <Button variant="secondary" onClick={onClose}>
               Cancel
             </Button>
-            <Button variant="primary-rect" disabled={saving} onClick={save}>
+            <Button variant="primary" disabled={saving} onClick={save}>
               {saving ? 'Saving…' : 'Save Changes'}
             </Button>
           </>

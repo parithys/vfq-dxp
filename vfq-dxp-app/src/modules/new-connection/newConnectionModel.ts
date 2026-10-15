@@ -1,3 +1,7 @@
+import { POST_EXIT_DESTINATION, DRAFT_ORDERS_PATH } from '../../capabilities';
+import type { JourneyFlow } from '../../capabilities';
+
+export { POST_EXIT_DESTINATION, DRAFT_ORDERS_PATH };
 // Two flows, chosen by where the journey was started (2026-10-02):
 //  - 'new'      Agent 360 (Dashboard) or Mobile Connections: the customer is
 //               ALWAYS treated as NEW. Full scan -> NAS lookup; even an ID that
@@ -6,21 +10,19 @@
 //               Customer Identification step opens pre-resolved with the ID
 //               locked (read-only); eligibility still runs.
 // Separate wizard ids keep their drafts from overwriting each other.
-export type NewConnectionFlow = 'new' | 'existing';
+export type NewConnectionFlow = JourneyFlow;
 
 export const WIZARD_ID_BY_FLOW: Record<NewConnectionFlow, string> = { new: 'new-connection', existing: 'new-connection-existing' };
 
-// Placeholder pending business confirmation (2026-09-28: "Do not assume
-// Agent 360 as the destination, as this has not been finalised. Keep the
-// post-exit destination configurable until confirmed"). A single named
-// constant rather than a config-engine entry: the value itself is explicitly
-// unconfirmed, so a whole schema/file for it would be structure built for a
-// requirement that does not exist yet. Change this one line - used by both
-// Save & Exit and Abandon - once the real destination is decided.
-export const POST_EXIT_DESTINATION = '/';
+/**
+ * Which journey the wizard is: 'connection' (New Connection: Postpaid, Prepaid, Fixed Line, MNP) or 'home' (New Home
+ * Connection: Fibre, Fixed-Line, FWA, 5G Home). Both are one continuous journey - Customer Identification, Product Selection,
+ * then the product's steps - and each keeps its own draft and customer lock.
+ */
+export type ConnectionJourney = 'connection' | 'home';
 
-// Save & Exit lands on the agent's Draft Orders list.
-export const DRAFT_ORDERS_PATH = '/tasks?filter=draft-orders';
+/** The home journey's draft ids sit beside the connection journey's, so one never overwrites the other. */
+export const HOME_WIZARD_ID_BY_FLOW: Record<NewConnectionFlow, string> = { new: 'new-home-connection', existing: 'new-home-connection-existing' };
 
 export interface Product {
   productId: string;
@@ -32,29 +34,4 @@ export interface Product {
   preBundledOffer?: boolean;
 }
 
-export interface ConfirmedOrder {
-  orderId: string;
-  activityId?: string;
-  pendingApproval: boolean;
-  customerName: string;
-  customerId?: string;
-  address?: { zone?: string; streetNo?: string; buildingNo?: string; aptFlatUnit?: string };
-  msisdn: string;
-  planName: string;
-  dueTodayQar: number;
-  monthlyRecurringQar: number;
-  simType?: string;
-  /** Set only for eSIM orders - drives the QR handover panel below. */
-  esimActivationCode?: string;
-  /**
-   * The account's own contact email, whatever it is - no longer gated on
-   * verification (2026-09-28: "populate it only from existing account
-   * contact emails," shown even when unverified so the agent can see why
-   * sending is blocked). See customerEmailVerified for the gate itself.
-   */
-  customerEmail?: string;
-  /** The address as Customer Identification shows it (masked for a new customer). */
-  customerEmailDisplay?: string;
-  /** Same definition as GuidedContactStep's own emailVerification tick. */
-  customerEmailVerified: boolean;
-}
+export type { ConfirmedOrder } from '../../capabilities';

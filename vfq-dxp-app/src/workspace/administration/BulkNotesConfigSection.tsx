@@ -1,3 +1,5 @@
+import { currentAgentId } from '../../stores/authStore';
+import { formatDate } from '../../lib/format';
 import { useEffect, useRef, useState } from 'react';
 import { useEntityStore } from '../../stores/entityStore';
 import { useNotificationStore } from '../../stores/notificationStore';
@@ -67,7 +69,7 @@ export function BulkNotesConfigSection() {
         content: content.trim(),
         accountIds,
         postedAt: new Date().toISOString(),
-        createdBy: 'current-agent',
+        createdBy: currentAgentId(),
       });
       pushToast('success', `Bulk note posted to ${accountIds.length} account(s).`);
       setTemplateId('');
@@ -82,8 +84,8 @@ export function BulkNotesConfigSection() {
   return (
     <div>
       {canConfigure ? (
-        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-6">
-          <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Configure a bulk note</h2>
+        <div className="card p-5 mb-6">
+          <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Configure a bulk note</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
             Applies to every account ID listed - agents will see this note when viewing any of those customers.
           </p>
@@ -107,14 +109,14 @@ export function BulkNotesConfigSection() {
             />
           </div>
           <div className="pt-4">
-            <Button variant="primary-rect" onClick={publish} disabled={!content.trim() || !accountIdsInput.trim() || submitting}>
+            <Button variant="primary" onClick={publish} disabled={!content.trim() || !accountIdsInput.trim() || submitting}>
               Post note
             </Button>
           </div>
         </div>
       ) : (
-        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-6">
-          <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Configure a bulk note</h2>
+        <div className="card p-5 mb-6">
+          <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Configure a bulk note</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)]">
             Restricted to Backoffice and privileged staff roles (Agent 360 BNT-04). This persona does not have
             configuration access.
@@ -122,14 +124,14 @@ export function BulkNotesConfigSection() {
         </div>
       )}
 
-      <h3 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-2">All bulk notes</h3>
-      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg divide-y divide-border-soft">
+      <h3 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-2">All bulk notes</h3>
+      <div className="card divide-y divide-border-soft">
         {notes.length === 0 && <p className="px-4 py-6 text-center text-muted">No bulk notes posted yet.</p>}
         {notes.map((note) => (
           <div key={note.noteId} className="px-4 py-3">
             <p className="text-fg text-[length:var(--fs-body)]">{note.content}</p>
             <p className="text-muted text-[length:var(--fs-caption)] mt-0.5">
-              {note.accountIds.join(', ')} · posted {new Date(note.postedAt).toLocaleDateString()}
+              {note.accountIds.join(', ')} · posted {formatDate(note.postedAt)}
             </p>
           </div>
         ))}

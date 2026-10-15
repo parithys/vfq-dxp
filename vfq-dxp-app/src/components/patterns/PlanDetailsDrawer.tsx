@@ -1,5 +1,5 @@
-import { OfferDetailsDrawer } from '../../modules/new-connection/steps/OfferDetailsDrawer';
-import type { OfferDetails } from '../../modules/new-connection/steps/OfferDetailsDrawer';
+import { OfferDetailsDrawer } from '../../capabilities/CrossSellOffers/OfferDetailsDrawer';
+import type { OfferDetails } from '../../capabilities/CrossSellOffers/OfferDetailsDrawer';
 import type { PostpaidPlan } from './postpaidPlanModel';
 import { ADDON_INTERNATIONAL_MINUTES, INCLUDED_INTERNATIONAL_MINUTES, POLICY_LINKS } from '../../data/planPolicy';
 
@@ -42,7 +42,6 @@ export function PlanDetailsDrawer({ detailPlan, onClose, selectedProductId, onSe
       selected={Boolean(p && selectedProductId === p.productId)}
       onSelect={() => p && onSelectProduct?.(p.productId)}
       onClose={onClose}
-      widthClassName="w-[50vw] min-w-[420px]"
     />
   );
 }

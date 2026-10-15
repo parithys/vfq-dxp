@@ -1,12 +1,20 @@
 import { useRef, useState } from 'react';
 import { Input } from '../primitives/Input';
 import { Icon } from '../primitives/Icon';
+import { Button } from '../primitives/Button';
+import type { DeviceType } from '../../lib/deviceType';
 import * as mockDataEngine from '../../engines/mockDataEngine';
+import { SIM_RESERVED } from '../../data/portInRules';
 
 interface SimRecord {
   simSerial: string;
   iccid: string;
   stockStatus: string;
+  /** 'Physical' or 'Printed eSIM' (a card stocked in store that carries an eSIM profile). */
+  type?: string;
+  /** A Pre-Paired SIM already carries its MSISDN (Mobile Prepaid BRSD MPRA_001_SIM_02). */
+  prePaired?: boolean;
+  msisdn?: string;
 }
 
 /** A row of bars of varying width, standing in for a 1D barcode symbol at the
@@ -23,7 +31,7 @@ interface SimSerialScannerProps {
    * Stock Status") - undefined on every other call, including a failed
    * validation, since there is nothing confirmed to report then.
    */
-  onChange: (value: string, valid: boolean, details?: { iccid: string; stockStatus: string }) => void;
+  onChange: (value: string, valid: boolean, details?: { iccid: string; stockStatus: string; simKind?: string; msisdn?: string }) => void;
   /** Set by SimTypeStep only (2026-09-28 "Default focus to the Physical SIM
    * Serial Number scan field") - other callers of this same component keep
    * their existing behaviour, since this defaults to false/unset. */
@@ -39,6 +47,21 @@ interface SimSerialScannerProps {
    * validating normally.
    */
   suppressValidation?: boolean;
+  /**
+   * The device the journey is running on. Only the journeys that adapt to the device pass it; the rest are unchanged.
+   *   tablet  scan-led: a full-width "Scan SIM barcode" button under the field, a larger scan icon, and no autofocus so
+   *           the on-screen keyboard does not cover the screen before the agent has chosen to type.
+   *   web     type-led: the field takes focus on arrival; the scan icon stays as the alternative.
+   */
+  device?: DeviceType;
+  /**
+   * Which stock the serial is read from. 'standard' (default): ordinary SIMs - a Pre-Paired SIM is refused, since
+   * selling it would fix the customer's number without the agent choosing it. 'pre-paired': only Pre-Paired SIMs,
+   * and the validated details carry the MSISDN already on the SIM.
+   */
+  inventory?: 'standard' | 'pre-paired';
+  /** The field label; "SIM Serial Number" unless the journey names the SIM kind. */
+  label?: string;
 }
 
 // Pattern 11: SIM/Device Serial Capture with Real-Time Inventory Validation -
@@ -52,7 +75,9 @@ interface SimSerialScannerProps {
 // stock readout - the step used to say nothing at all when a serial was good,
 // so "available in this store's stock" was indistinguishable from "not checked
 // yet".
-export function SimSerialScanner({ value, onChange, autoFocus, suppressValidation }: SimSerialScannerProps) {
+export function SimSerialScanner({ value, onChange, autoFocus, suppressValidation, device, inventory = 'standard', label = 'SIM Serial Number' }: SimSerialScannerProps) {
+  const prePairedStock = inventory === 'pre-paired';
+  const touch = device === 'tablet';
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -81,11 +106,16 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
     const sims = await mockDataEngine.list<SimRecord>('sims');
     const found = sims.find((s) => s.simSerial === serial);
     setChecking(false);
+    if (found && Boolean(found.prePaired) !== prePairedStock) {
+      setError(prePairedStock ? 'This is not a Pre-Paired SIM.' : 'This is a Pre-Paired SIM - choose "Use a Pre-Paired SIM" on the Number step.');
+      onChange(serial, false);
+      return;
+    }
     if (!found) {
       // Phrased as store stock rather than "inventory": the agent is standing
       // at one counter and can only issue what is in front of them, so the
       // actionable fact is that THIS store does not hold it.
-      setError("SIM not found in this store's stock.");
+      setError(prePairedStock ? "Pre-Paired SIM not found in this store's stock." : "SIM not found in this store's stock.");
       onChange(serial, false);
       return;
     }
@@ -94,8 +124,14 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
       onChange(serial, false);
       return;
     }
+    // Held for a port-in awaiting NPAS (MNP BR-MNP-008/025): not available to another order until it is released.
+    if (found.stockStatus === SIM_RESERVED) {
+      setError('This SIM is reserved for another order.');
+      onChange(serial, false);
+      return;
+    }
     setError(null);
-    onChange(serial, true, { iccid: found.iccid, stockStatus: found.stockStatus });
+    onChange(serial, true, { iccid: found.iccid, stockStatus: found.stockStatus, simKind: found.type, msisdn: found.msisdn });
   };
 
   // Simulated barcode read. Picks a serial that is genuinely available in
@@ -109,10 +145,10 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
     const sims = await mockDataEngine.list<SimRecord>('sims');
     await new Promise((r) => setTimeout(r, 600));
     setScanning(false);
-    const available = sims.find((s) => s.stockStatus !== 'Issued');
+    const available = sims.find((s) => s.stockStatus !== 'Issued' && s.stockStatus !== SIM_RESERVED && Boolean(s.prePaired) === prePairedStock);
     if (!available) {
       scanIntent.current = false;
-      setError("SIM not found in this store's stock.");
+      setError(prePairedStock ? "Pre-Paired SIM not found in this store's stock." : "SIM not found in this store's stock.");
       onChange('', false);
       return;
     }
@@ -130,7 +166,7 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
           wired to. scanSim's simulated-scan logic is unchanged; only where
           the trigger sits has moved. */}
       <Input
-        label="SIM Serial Number"
+        label={label}
         // Not required while eSIM is the agent's chosen alternative
         // (2026-09-28 asterisk sweep) - same condition as the error
         // suppression above, so the label never asserts a requirement this
@@ -138,7 +174,7 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
         // suppressValidation (every other journey sharing this component)
         // get `required` unconditionally, unchanged from before.
         required={!suppressValidation}
-        placeholder="Enter the SIM serial number, or use the barcode scanner"
+        placeholder={touch ? "Scan the SIM barcode, or enter the serial number" : "Enter the SIM serial number, or use the barcode scanner"}
         value={value}
         onChange={(e) => onChange(e.target.value, false)}
         onBlur={(e) => {
@@ -146,7 +182,7 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
           void validate(e.target.value);
         }}
         error={suppressValidation ? undefined : (error ?? undefined)}
-        autoFocus={autoFocus}
+        autoFocus={autoFocus ?? device === 'web'}
         trailingAddon={
           <button
             type="button"
@@ -160,14 +196,28 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
             disabled={scanning || checking}
             aria-label="Scan SIM barcode"
             title={scanning ? 'Scanning…' : 'Scan SIM barcode'}
-            className="p-1.5 -mr-1.5 rounded-[var(--radius-button)] text-muted
+            className={`${touch ? 'p-3 -mr-3' : 'p-1.5 -mr-1.5'} rounded-[var(--radius-button)] text-muted
               hover:text-accent disabled:opacity-50 disabled:hover:text-muted
-              focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+              focus:outline-none focus-visible:shadow-[var(--focus-ring)]`}
           >
             <Icon path={BARCODE_ICON} className="w-4 h-4" />
           </button>
         }
       />
+      {touch && (
+        <Button
+          variant="secondary"
+          size="lg"
+          className="mt-3 w-full"
+          onPointerDown={() => {
+            scanIntent.current = true;
+          }}
+          onClick={scanSim}
+          disabled={scanning || checking}
+        >
+          {scanning ? 'Scanning…' : 'Scan SIM barcode'}
+        </Button>
+      )}
       <div className="mt-2 flex items-center gap-3">
         {/* "Scanning…" used to be the button's own label; now that the
             trigger is an icon, this line is what carries that same visible

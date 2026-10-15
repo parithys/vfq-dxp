@@ -1,9 +1,10 @@
+import { Button } from '../../../components/primitives/Button';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
-import { ActionButton, DetailRows, IC, IconTile, KebabButton, LinkAction, Panel, Pill, TabPage, fmtDate } from './C360Kit';
+import { ActionButton, DetailRows, IC, IconTile, LinkAction, Panel, Pill, TabPage, fmtDate } from './C360Kit';
 import type { Tone } from './C360Kit';
 import { contactInformationResolvers } from './contactInformationResolvers';
 import { Dv } from '../demoValues';
@@ -110,7 +111,6 @@ export function C360ContactIdentity({ data, services, goToTab, onEdit }: { data:
               Edit Contact
             </ActionButton>
           )}
-          <KebabButton />
         </>
       }
     >
@@ -161,9 +161,9 @@ export function C360ContactIdentity({ data, services, goToTab, onEdit }: { data:
                   <span className="inline-flex items-center gap-4">
                     {authorised.length}
                     {authorised.length > 0 && (
-                      <button type="button" onClick={() => setShowAuthorised((s) => !s)} aria-expanded={showAuthorised} className="text-accent font-medium hover:underline">
+                      <Button variant="tertiary" compact onClick={() => setShowAuthorised((s) => !s)} aria-expanded={showAuthorised}>
                         {showAuthorised ? 'Hide' : 'View'}
-                      </button>
+                      </Button>
                     )}
                   </span>
                 ),
@@ -198,8 +198,8 @@ export function C360ContactIdentity({ data, services, goToTab, onEdit }: { data:
               {visibleContacts.map((c) => (
                 <li key={c.key} className="flex items-center gap-3 py-2.5 border-b border-border-soft last:border-0 min-w-0">
                   <span
-                    className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 font-semibold text-[length:var(--fs-body)] ${
-                      c.primary ? 'bg-accent text-accent-on' : 'bg-[color-mix(in_oklab,var(--accent),var(--bg)_85%)] text-accent'
+                    className={`w-11 h-11 rounded-[var(--radius-pill)] flex items-center justify-center shrink-0 font-semibold text-[length:var(--fs-body)] ${
+                      c.primary ? 'bg-accent text-accent-on' : 'bg-tone-accent text-accent'
                     }`}
                   >
                     {initials(c.name)}

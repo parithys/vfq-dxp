@@ -1,3 +1,4 @@
+import { CARD_SELECTED, CARD_IDLE } from '../primitives/offerCardParts';
 import { useEffect, useState } from 'react';
 import { CreditCheckPanel } from '../domain/CreditCheckPanel';
 import { evaluateRule } from '../../engines/ruleEngine';
@@ -72,16 +73,17 @@ export function ProductPlanStep({
       <p className="text-fg-2 text-[length:var(--fs-caption)]">Please Select a Plan.</p>
       <div className="grid grid-cols-1 gap-3">
         {products.map((p) => (
-          <button
+          <button type="button"
             key={p.productId}
+            aria-pressed={selectedProductId === p.productId}
             onClick={() => onSelect(p.productId)}
             className={`text-left rounded-[var(--radius-card)] border p-4 ${
-              selectedProductId === p.productId ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]' : 'border-[var(--field-card-border)] bg-bg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
+              selectedProductId === p.productId ? CARD_SELECTED : CARD_IDLE
             }`}
           >
             <div className="flex justify-between">
               <span className="text-fg font-medium">{p.name}</span>
-              <span className="text-fg">QR {p.mrcQAR}/mo</span>
+              <span className="text-fg">QAR {p.mrcQAR}/mo</span>
             </div>
             <div className="text-[length:var(--fs-caption)] text-muted mt-1">
               {p.speedTierMbps && `${p.speedTierMbps}Mbps · `}
@@ -91,12 +93,12 @@ export function ProductPlanStep({
             </div>
             {(p.disconnectionFeeSchedule || p.disconnectionFeeQAR) && (
               <div className="text-[length:var(--fs-caption)] text-muted">
-                Early disconnection fee: {p.disconnectionFeeSchedule ?? `QR ${p.disconnectionFeeQAR}`}
+                Early disconnection fee: {p.disconnectionFeeSchedule ?? `QAR ${p.disconnectionFeeQAR}`}
               </div>
             )}
           </button>
         ))}
-        {products.length === 0 && <p className="text-muted">No {planType} products in the mock catalogue.</p>}
+        {products.length === 0 && <p className="text-muted">No {planType} products are available right now.</p>}
       </div>
 
       {showCreditCheck && selectedProductId && billingProfile && (

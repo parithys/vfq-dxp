@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '../primitives/Button';
+import { Icon } from '../primitives/Icon';
 import { Spinner } from '../primitives/Spinner';
 import { ScannedIdPreview } from './ScannedIdPreview';
 import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
@@ -7,6 +8,9 @@ import { SCAN_DURATION_MS } from './qidImageUploadModel';
 import type { QidImageUploadProps } from './qidImageUploadModel';
 import { PassportScanSections } from './PassportScanSections';
 
+
+// The four corner brackets of a scan frame.
+const SCAN_CORNERS = 'M4 8V5a1 1 0 0 1 1-1h3 M16 4h3a1 1 0 0 1 1 1v3 M20 16v3a1 1 0 0 1-1 1h-3 M8 20H5a1 1 0 0 1-1-1v-3';
 
 export function QidImageUpload({
   value,
@@ -121,7 +125,7 @@ export function QidImageUpload({
   }
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 flex flex-col gap-3">
+    <div className="card p-4 flex flex-col gap-3">
       {/* Scanning FIRST, so a retake shows the reader working rather than the
           insert prompt. A retake clears the capture to start its pass, which
           without this branch would drop the card straight back to "Insert card
@@ -183,7 +187,7 @@ export function QidImageUpload({
               out instead, since "(2)" read aloud is just a number. */}
           <div className={onAccept || onReject ? 'flex items-center justify-between gap-3' : ''}>
             <Button
-              variant="ghost-rect"
+              variant="secondary"
               compact
               className={onAccept || onReject ? '' : 'w-full'}
               onClick={runScan}
@@ -194,12 +198,12 @@ export function QidImageUpload({
             {(onAccept || onReject) && (
               <div className="flex items-center gap-2">
                 {onAccept && (
-                  <Button variant="primary-rect" compact onClick={onAccept} disabled={accepted || value.clear === false}>
+                  <Button variant="primary" compact onClick={onAccept} disabled={accepted || value.clear === false}>
                     {accepted ? 'Accepted' : 'OK'}
                   </Button>
                 )}
                 {onReject && (
-                  <Button variant="ghost-rect" compact onClick={onReject}>
+                  <Button variant="secondary" compact onClick={onReject}>
                     Cancel
                   </Button>
                 )}
@@ -208,15 +212,49 @@ export function QidImageUpload({
           </div>
         </>
       ) : (
-        <div className="min-h-[var(--size-dropzone-min-h)] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
-          <span className="text-fg-2 text-[length:var(--fs-caption)] uppercase tracking-[0.14em] text-center">
-            {canScan ? "Scan customer's identity document" : 'Card could not be read'}
-          </span>
-          {canScan && (
-            <Button variant="primary-rect" compact onClick={runScan}>
-              Initiate scan
-            </Button>
-          )}
+        <div className="flex flex-col gap-4">
+          {/* Scanner header: what this is, and whether the reader is ready. */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <Icon path={SCAN_CORNERS} className="w-6 h-6 text-accent shrink-0" />
+              <span className="text-fg font-bold uppercase tracking-wide text-[length:var(--fs-body)] truncate">Duplex Scanner</span>
+            </div>
+            <span className="flex items-center gap-2 text-fg-2 text-[length:var(--fs-caption)] shrink-0">
+              <span className={`w-2.5 h-2.5 rounded-[var(--radius-pill)] ${canScan ? 'bg-success' : 'bg-danger'}`} aria-hidden="true" />
+              {canScan ? 'Scanner Connected' : 'Scanner unavailable'}
+            </span>
+          </div>
+          {/* The scanning surface: a dashed bed holding the card guide, the instruction and the action. */}
+          <div className="rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center gap-5 text-center">
+            <div className="relative w-full max-w-[22rem] aspect-[85.6/54] rounded-[var(--radius-card)] border border-border-soft bg-bg shadow-[var(--shadow-dash-card)] flex items-center justify-center text-muted text-[length:var(--fs-micro)] uppercase tracking-wide">
+              {/* Guide rails at the card's four corners. */}
+              <span aria-hidden="true" className="absolute left-2 top-2 w-4 h-4 border-l-2 border-t-2 border-accent" />
+              <span aria-hidden="true" className="absolute right-2 top-2 w-4 h-4 border-r-2 border-t-2 border-accent" />
+              <span aria-hidden="true" className="absolute left-2 bottom-2 w-4 h-4 border-l-2 border-b-2 border-accent" />
+              <span aria-hidden="true" className="absolute right-2 bottom-2 w-4 h-4 border-r-2 border-b-2 border-accent" />
+              <span className="absolute left-6 top-4">{documentType === 'QID' ? 'State of Qatar QID' : documentType}</span>
+              <span className="absolute right-6 top-4">Chip · NFC</span>
+              <Icon path={SCAN_CORNERS} className="w-12 h-12 text-border" />
+              <span className="absolute left-6 bottom-4">ID-1 format (85.6 × 54mm)</span>
+              <span className="absolute right-6 bottom-4">MRZ zone</span>
+            </div>
+            <div className="space-y-1.5 max-w-xl">
+              <h4 className="text-fg font-bold text-[length:var(--fs-h5)]">
+                {canScan ? 'Place the document on the scanner surface' : 'Card could not be read'}
+              </h4>
+              {canScan && (
+                <p className="text-fg-2 text-[length:var(--fs-body)]">
+                  Ensure the card is aligned inside the guide rails. The duplex scanner will automatically scan both front and back sides and extract the details for verification to MOI.
+                </p>
+              )}
+            </div>
+            {canScan && (
+              <Button variant="primary" onClick={runScan}>
+                <Icon path={SCAN_CORNERS} className="w-4 h-4" />
+                Initiate scan
+              </Button>
+            )}
+          </div>
           {/* DEMO ONLY - labelled on screen, because an unlabelled row of
               document types under the scanner is indistinguishable from the ID
               Type selector this flow deliberately removed, and an agent would
@@ -236,7 +274,7 @@ export function QidImageUpload({
                       onDemoScan(t.value);
                       runScan();
                     }}
-                    className="text-[length:var(--fs-caption)] underline
+                    className="text-[length:var(--fs-caption)] text-link underline
                       hover:opacity-80 focus:outline-none
                       focus-visible:shadow-[var(--focus-ring)] rounded-[var(--radius-button)] px-0.5"
                   >

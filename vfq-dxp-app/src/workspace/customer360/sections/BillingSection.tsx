@@ -23,7 +23,7 @@ function SectionCard({ title, children, note }: { title: string; children: React
   return (
     <section>
       <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg mb-2">{title}</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 card p-5">
         {children}
       </div>
       {note && <p className="text-[length:var(--fs-caption)] text-muted mt-1.5">{note}</p>}
@@ -32,7 +32,7 @@ function SectionCard({ title, children, note }: { title: string; children: React
 }
 
 const DR_NOTE =
-  'Field shape assumed - BRSD v3.1 Annex_01 does not define this Data Ref; pending VFQ Business confirmation.';
+  'Layout provisional - to be confirmed with VFQ Business.';
 
 // No billing screens exist anywhere in the 213-screen catalogue today (the
 // "Billing & Adjustments" module was never given a src/modules folder) - so
@@ -59,7 +59,7 @@ export function BillingSection({ data }: { data: Customer360Data }) {
               label="Credit limit"
               value={`${String(creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR ?? '-')} QAR`}
               subtext={
-                Boolean(creditLimit.restrictionApplied)
+                creditLimit.restrictionApplied
                   ? 'Restriction applied'
                   : String(account?.accountType ?? String(creditLimit.customerSegment ?? '-'))
               }
@@ -103,7 +103,7 @@ export function BillingSection({ data }: { data: Customer360Data }) {
       {profile && (
         <section>
           <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg mb-2">Billing Profile</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 card p-5">
             <Field label="Billing Cycle" value={profile.billingCycle ? String(profile.billingCycle) : undefined} />
             <Field label="Billing Type" value={profile.billingType ? String(profile.billingType) : undefined} />
             <Field label="Billing Address" value={profile.billingAddress ? String(profile.billingAddress) : undefined} />
@@ -113,7 +113,7 @@ export function BillingSection({ data }: { data: Customer360Data }) {
 
       <section>
         <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg mb-2">Credit Risk</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 card p-5">
           <Field
             label="Collection Status"
             value={

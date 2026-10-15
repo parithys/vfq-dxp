@@ -1,13 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import * as sums from '../../../components/patterns/wizard/commonSummaries';
 import { attachSummaries } from '../../../components/patterns/wizard/stepSummary';
-import { idLookupStep } from '../../../components/patterns/wizard/wizardSteps';
+import { idLookupStep } from '../../../capabilities';
 import type { IdLookupValue } from '../../../components/patterns/idLookupModel';
-import { GuidedActivationWizard } from '../../../components/patterns/wizard/GuidedActivationWizard';
+import { GuidedActivationWizard } from '../../../capabilities';
 import { Input } from '../../../components/primitives/Input';
 import { PhoneNumberInput } from '../../../components/primitives/PhoneNumberInput';
-import { QidImageUpload } from '../../../components/domain/QidImageUpload';
-import type { QidImageUploadValue } from '../../../components/domain/qidImageUploadModel';
+import { QidImageUpload, type QidImageUploadValue } from '../../../capabilities';
 import { SignatureCapture } from '../../../components/patterns/SignatureCapture';
 import { Badge } from '../../../components/primitives/Badge';
 import { useState } from 'react';
@@ -53,7 +52,7 @@ export function PassportToQidWizard() {
             ),
             isValid: (values) => Boolean(values.msisdn && values.passportNumber),
           },
-          idLookupStep({ key: 'qid-entry', label: 'QID Number', field: 'qid' }),
+          idLookupStep({ key: 'qid-entry', field: 'qid' }),
           {
             key: 'qid-images',
             label: 'QID Front & Back',
@@ -73,7 +72,7 @@ export function PassportToQidWizard() {
             label: 'Identification Number Change Form',
             render: ({ values }) => (
               <div className="space-y-4">
-                <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4 bg-surface">
+                <div className="card p-4 card-surface">
                   <p className="text-fg font-medium">Identification Number Change Form</p>
                   <p className="text-fg-2 text-[length:var(--fs-caption)] mt-1">
                     Customer: {(values.qid as IdLookupValue | undefined)?.moiResult?.name ?? '-'} - updating identification
@@ -83,7 +82,7 @@ export function PassportToQidWizard() {
                   {signatureDataUrl ? (
                     <div className="mt-3 flex items-center gap-3">
                       <Badge variant="success">Signed</Badge>
-                      <img src={signatureDataUrl} alt="Signature" className="h-10 border border-border-soft rounded" />
+                      <img src={signatureDataUrl} alt="Signature" className="h-10 border border-border-soft rounded-[var(--radius-sm)]" />
                     </div>
                   ) : (
                     <SignatureCapture onSave={(dataUrl) => setSignatureDataUrl(dataUrl)} />

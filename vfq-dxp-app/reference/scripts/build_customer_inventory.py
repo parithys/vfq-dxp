@@ -57,7 +57,7 @@ SEED = {
         jk=["workspace.customer-search", "postpaid.new-postpaid-wizard"]),
     "CUST-1002": dict(cat="3 Discounts & eligibility", scen="Nepalese expat on a Passport, sponsored by Acme Trading (B2B2C employee). NOT HRN (Nepal is not on the VFQ list - was HRN before 2026-10-02). 1 postpaid + 1 prepaid; partially barred (overdue); promise-to-pay active.",
         disc="B2B2C (employer Acme Trading Qatar W.L.L., CONT-3001, plan Postpaid Extra Promotion)", mnp="MNP-11002 port-in submitted to NPASS; port-out POUT-17002 auto-rejected (name mismatch, code 4)",
-        journeys="New Connection (B2B2C route); MNP; Customer 360 barring view", expected="Passport -> exception-routed to CBM approval (ID Type check). No HRN advance (non-HRN; credit limit 1,000). Prepaid cap 2 (has 1: pass-at-edge). B2B2C order -> Submitted for Approval, Proof of Employment mandatory (BR-169/263).",
+        journeys="New Connection (B2B2C route); MNP; Customer 360 barring view", expected="Passport -> exception-routed to Back Office Fulfilment approval (ID Type check). No HRN advance (non-HRN; credit limit 1,000). Prepaid cap 2 (has 1: pass-at-edge). B2B2C order -> Submitted for Approval, Proof of Employment mandatory (BR-169/263).",
         jk=["workspace.customer-search", "mnp.port-in-wizard"]),
     "CUST-1003": dict(cat="5 Existing - no mobile line", scen="Qatari with a GigaHome fixed-line account only (0 mobile lines). Existing customer, two draft orders, FNP port-in in progress.",
         disc="Loyalty (existing customer)", mnp="FNP-12001 (Ooredoo donor validation); POUT-17003 FNP conditional accept",
@@ -72,7 +72,7 @@ SEED = {
         expected="Other ID is exception-routed. Penalty PEN-8102 blocksNewConnection=true -> Deals Check hard-stop on new connections.",
         jk=["workspace.customer-search", "workspace.customer360-view"]),
     "CUST-1005": dict(cat="2 Expat postpaid (GCC)", scen="Emirati (GCC ID), 2 postpaid + 2 prepaid lines.",
-        disc="None", mnp="-", journeys="New Postpaid; New Prepaid", expected="GCC ID is exception-routed (CBM approval). Postpaid: non-Qatari with 2 lines -> BR-288 cap reached -> approval task. Prepaid: GCC cap 2, has 2 -> blocked (BR-347).",
+        disc="None", mnp="-", journeys="New Postpaid; New Prepaid", expected="GCC ID is exception-routed (Back Office Fulfilment approval) on postpaid; prepaid permits GCC ID outright (BRSD KYC_01). Postpaid: non-Qatari with 2 lines -> BR-288 cap reached -> approval task. Prepaid: GCC cap 2, has 2 -> line limit reached, order routed for approval (BR-347).",
         jk=["workspace.customer-search", "postpaid.new-postpaid-wizard"]),
     "CUST-1006": dict(cat="6 Eligibility gates", scen="French diplomat, Diplomatic ID EXPIRED 2025-08-31, security-blacklisted.",
         disc="None", mnp="-", journeys="Any new connection", expected="ID Validity hard-stop (expired) AND Security Check hard-stop. No agent override.",
@@ -81,7 +81,7 @@ SEED = {
         disc="None", mnp="-", journeys="Any new connection", expected="Age Check = HARD STOP for an under-18 applicant (2026-10-02): the connection cannot proceed.",
         jk=["workspace.customer-search", "postpaid.new-postpaid-wizard"]),
     "CUST-1007": dict(cat="6 Eligibility gates", scen="Swedish resident whose customers.json idType is QID but whose only document is a valid Diplomatic ID (to 2030-04-30).",
-        disc="None", mnp="-", journeys="New Postpaid", expected="Document type governs: Diplomatic ID is exception-routed to CBM approval.",
+        disc="None", mnp="-", journeys="New Postpaid", expected="Document type governs: Diplomatic ID is exception-routed to Back Office Fulfilment approval.",
         jk=["workspace.customer-search", "postpaid.new-postpaid-wizard"]),
 }
 SEED_NAS = {
@@ -153,6 +153,11 @@ NAMES = {
     "CUST-3071": ("Khalifa", "Abdullah Saeed", "Al-Mohannadi"),
     "CUST-3072": ("Rohan", "Vikram", "Mehta"),
     "CUST-3073": ("Walid", "Nabil Hassan", "Al-Zoubi"),
+    "CUST-3081": ("Khalifa", "Hamad Saeed", "Al-Naimi"),
+    "CUST-3082": ("Noora", "Jassim Ali", "Al-Mannai"),
+    "CUST-3083": ("Abdulla", "Nasser Rashid", "Al-Sada"),
+    "CUST-3084": ("Aisha", "Mohammed Khalid", "Al-Kuwari"),
+    "CUST-3085": ("Rashid", "Saud Abdulla", "Al-Hajri"),
     "CUST-3065": ("Abdulrahman", "Jassim Hamad", "Al-Kubaisi"),
     "CUST-3066": ("Maha", "Rashid Saeed", "Al-Ghanim"),
     "CUST-3067": ("Mohamed", "Nabil Ibrahim", "Soliman"),
@@ -183,13 +188,13 @@ def full(t):
 # PROPOSED customers. Synthetic IDs/phones, checked below for collisions.
 # --------------------------------------------------------------------------
 def P(cid, name, nat, grp, idt, idn, exp, dob, sex, seg, lang, pp, pre, cat, scen, disc, mnp, journeys, expected, *,
-      bl="", hrn=False, emp="", status="Customer (Siebel)", jk=None, req="", extra="", sub=""):
+      bl="", hrn=False, emp="", status="Customer (Siebel)", jk=None, req="", extra="", sub="", hi=0):
     return dict(cid=cid, name=name, nat=nat, grp=grp, idt=idt, idn=idn, exp=exp, dob=dob, sex=sex, seg=seg, lang=lang, pp=pp, pre=pre,
                 cat=cat, scen=scen, disc=disc, mnp=mnp, journeys=journeys, expected=expected, bl=bl, hrn=hrn, emp=emp, status=status,
-                jk=jk or ["workspace.customer-search", "postpaid.new-postpaid-wizard"], req=req, extra=extra, sub=sub)
+                jk=jk or ["workspace.customer-search", "postpaid.new-postpaid-wizard"], req=req, extra=extra, sub=sub, hi=hi)
 
 PP = ["workspace.customer-search", "postpaid.new-postpaid-wizard"]
-PRE = ["workspace.customer-search", "prepaid.new-prepaid-tablet-wizard"]
+PRE = ["workspace.customer-search", "prepaid.new-prepaid-wizard"]
 MNP = ["workspace.customer-search", "mnp.port-in-wizard"]
 C360 = ["workspace.customer-search", "workspace.customer360-view"]
 
@@ -222,7 +227,7 @@ PROPOSED = [
       "Expat cap of 2 reached (BR-288) -> Active Lines = approval-routing: 'An approval task has been raised'. Order proceeds once approved. No in-journey override (BR-111).", jk=PP, req="Expat 2 lines"),
     P("CUST-3013", "Ahmed Fathy", "Egyptian", "Expat (QID)", "QID", "28409081800013", "2029-06-30", "1984-09-09", "Male", "Consumer", "Arabic", 3, 0, "2 Expat postpaid",
       "Expat QID holder with 3 active postpaid lines; the 3rd was granted through workflow approval (approval-granted order on file).", "Loyalty (existing)", "-", "New Postpaid (4th line); Order Approval Queue",
-      "Cap exceeded (3 >= 2) -> approval-routing again; credit-control warning shown. Approver role per approval-matrix: Back Office Fulfilment Agent.", jk=PP, req="Expat 3 lines + approval"),
+      "Cap exceeded (3 >= 2) -> approval-routing again; credit-control warning shown. Approver role per approval-matrix: Back Office Fulfilment.", jk=PP, req="Expat 3 lines + approval"),
     P("CUST-3014", "Sunil Perera", "Sri Lankan", "Expat (QID)", "QID", "28710014400014", "2030-05-31", "1987-10-11", "Male", "Consumer", "English", 2, 3, "2 Expat postpaid",
       "Expat QID with 2 postpaid + 3 prepaid = 5 combined mobile lines (system technical cap).", "Loyalty (existing)", "-", "New Prepaid; New Postpaid",
       "Prepaid: BR-347 QID cap 5 combined reached -> blocked. Postpaid: BR-288 cap reached -> approval.", jk=PRE, req="Expat combined 5-line cap"),
@@ -231,7 +236,7 @@ PROPOSED = [
       "Both caps pass: 2/5 combined; 1/2 postpaid.", jk=PRE, req="Expat mixed lines"),
     P("CUST-3016", "Chen Wei", "Chinese", "Expat (Passport)", "Passport", "E58321097", "2031-02-28", "1993-12-30", "Male", "Consumer", "English", 0, 2, "2 Expat postpaid",
       "Expat Passport holder (no QID), 2 prepaid lines = Passport prepaid cap.", "None", "-", "New Prepaid (blocked); New Connection",
-      "Passport is not offered for New Postpaid; Prepaid cap 2 reached -> blocked (BR-347); BR-108 limits Passport-only expats to prepaid.", jk=PRE, req="Expat passport at prepaid cap"),
+      "Passport is not offered for New Postpaid; Prepaid cap 2 reached -> line limit reached, order routed for approval (BR-347); BR-108 limits Passport-only expats to prepaid.", jk=PRE, req="Expat passport at prepaid cap"),
     P("CUST-3017", "Ali Reza", "Iranian", "Expat (QID)", "QID", "28904036400017", "2029-10-31", "1989-04-03", "Male", "Consumer (HRN)", "English", 0, 0, "2 Expat postpaid",
       "High-risk-nationality expat on a valid QID, no lines yet - HRN advance and QAR 50 credit limit apply.", "None", "-", "New Postpaid",
       "HRN: 'Customer needs to pay advance payment of QR 100' (BR-187/VAL-360); credit limit 50 (BR-076); order sub-type HRN.", hrn=True, jk=PP, req="HRN customer"),
@@ -294,7 +299,7 @@ PROPOSED = [
     P("CUST-3044", "Saeed Al-Mohannadi", "Qatari", "Qatari", "QID", "30806063400044", "2031-03-31", "2008-06-01", "Male", "Consumer", "Arabic", 0, 0, "6 Eligibility gates",
       "Qatari aged 18 (turned 18 on 2026-06-01) - age boundary.", "None", "-", "New Postpaid", "Age Check passes at 18 ('Customer's age is 18 years'); under 18 is a hard stop.", jk=PP, req="Age boundary"),
     P("CUST-3045", "Eva Muller", "German", "Diplomatic", "Diplomatic ID", "DIP-QA-005100", "2030-12-31", "1980-03-18", "Female", "Consumer", "English", 0, 0, "6 Eligibility gates",
-      "German diplomat, valid Diplomatic ID, clean record.", "None", "-", "New Postpaid", "Diplomatic ID is exception-routed -> CBM approval workflow; no other block.", jk=PP, req="Diplomatic ID (valid)"),
+      "German diplomat, valid Diplomatic ID, clean record.", "None", "-", "New Postpaid", "Diplomatic ID is exception-routed -> Back Office Fulfilment approval workflow; no other block.", jk=PP, req="Diplomatic ID (valid)"),
     P("CUST-3046", "Bilal Siddiqui", "Pakistani", "Expat (QID)", "QID", "28311058600046", "2030-02-28", "1983-11-11", "Male", "Consumer", "English", 1, 0, "6 Eligibility gates",
       "Expat with a collections blacklist (dues) - postpaid blocked, prepaid available.", "None", "-", "New Postpaid (soft-stop); New Prepaid", "Collections Check soft-stop (same shape as CUST-1004 for an expat).", bl="collections", jk=PP, req="Collections blacklist (expat)"),
     # ---- 7. Existing-service journeys
@@ -308,11 +313,11 @@ PROPOSED = [
       "Qatari with a GigaHome 5G FWA outdoor line plus 1 postpaid line (cross-sell target).", "Loyalty (existing)", "-", "FWA; Fixed Line; Customer 360", "Existing multi-product customer; FWA appointment booking and serial-number check apply.",
       jk=["workspace.customer-search", "fwa.new-fwa-wizard"], req="FWA / multi-product"),
     P("CUST-3054", "Zainab Al-Hashemi", "Qatari", "Qatari", "QID", "29108063400054", "2030-11-30", "1991-08-14", "Female", "Premium", "English", 3, 1, "7 Existing-service journeys",
-      "Premium-segment Qatari with multi-SIM / iWatch lines; high-value retention target.", "Loyalty (existing)", "-", "Retention; Customer 360; Multi-SIM", "Premium Agent / Retention Agent journeys; multi-SIM sequence numbers and monthly fees apply.", jk=C360, req="Premium / retention"),
+      "Premium-segment Qatari with multi-SIM / iWatch lines; high-value retention target.", "Loyalty (existing)", "-", "Retention; Customer 360; Multi-SIM", "Premium / Retention journeys; multi-SIM sequence numbers and monthly fees apply.", jk=C360, req="Premium / retention"),
     # ---- 8. Risk class (HRN) and ID-class additions
     P("CUST-3061", "Mizanur Rahman", "Bangladeshi", "Expat (Passport)", "Passport", "BN7721045", "2031-04-30", "1990-03-08", "Male", "Consumer (HRN)", "English", 0, 2, "8 HRN & ID classes",
       "HRN expat on a Passport with 2 prepaid lines = Passport prepaid cap.", "None", "-", "New Prepaid (blocked); New Connection",
-      "Prepaid cap 2 reached (BR-347) -> blocked; Passport is exception-routed to CBM approval; HRN QAR 100 advance and credit limit 50 would also apply. Passport is not offered for New Postpaid.",
+      "Prepaid cap 2 reached (BR-347) -> line limit reached, order routed for approval; Passport is permitted on prepaid (KYC_01) so there is no ID-type routing there. HRN: on prepaid the flag is only stored (no QAR 100 advance, no message, no approval - CAM_03/CAM_04); on postpaid the QAR 100 advance and credit limit 50 apply. Passport is not offered for New Postpaid.",
       hrn=True, jk=PRE, req="HRN passport at prepaid cap", extra="Nationality chosen for realism - the app reads only the HRN flag, not a nationality list."),
     P("CUST-3062", "Dipak Rai", "Nepalese", "Expat (QID)", "QID", "29207052400062", "2030-09-30", "1992-07-04", "Male", "Consumer (HRN)", "English", 1, 0, "8 HRN & ID classes",
       "HRN expat sponsored by Gulf Logistics W.L.L. (HRN + B2B2C), 1 postpaid line.", "B2B2C (-10% on Red 500)", "-", "New Postpaid; FWA; Fixed Line",
@@ -320,7 +325,7 @@ PROPOSED = [
       hrn=True, emp="Gulf Logistics W.L.L.", jk=PP, req="HRN + B2B2C"),
     P("CUST-3063", "Waleed Al-Qahtani", "Saudi", "GCC", "GCC ID", "784199012345632", "2030-01-31", "1990-09-21", "Male", "Consumer (HRN)", "Arabic", 0, 1, "8 HRN & ID classes",
       "EDGE CASE: GCC ID holder carrying the HRN flag, to prove the app reads the flag independent of ID type. Unlikely in production (GCC ID holders are GCC citizens).", "None", "-", "New Prepaid; New Connection",
-      "GCC ID exception-routed; HRN advance QAR 100 still required; prepaid cap 2 (1/2 used).", hrn=True, jk=PRE, req="HRN on GCC ID"),
+      "GCC ID exception-routed on postpaid (permitted on prepaid); HRN advance QAR 100 on postpaid only (prepaid stores the flag, no advance); prepaid cap 2 (1/2 used).", hrn=True, jk=PRE, req="HRN on GCC ID"),
     P("CUST-3064", "Osman Idris", "Sudanese", "Expat (QID)", "QID", "28809072900064", "2029-11-30", "1988-09-12", "Male", "Consumer (HRN)", "Arabic", 2, 0, "8 HRN & ID classes",
       "HRN expat QID with 2 postpaid lines (AT the expat cap).", "Loyalty (existing)", "-", "New Postpaid (3rd line)",
       "Two independent gates: expat cap of 2 -> approval task, AND HRN QAR 100 advance. Both must clear.", hrn=True, jk=PP, req="HRN at expat line cap"),
@@ -332,7 +337,7 @@ PROPOSED = [
       "Qatari: prepaid cap not applied (BR-347), so an 8th prepaid line passes. DATA ONLY for the Sawfa Plus label (Q9).", jk=PRE, req="Sawfa Plus", sub="Sawfa Plus"),
     P("CUST-3067", "Mohamed Nabil", "Egyptian", "Expat (Other ID)", "Other ID", "RES-8812045", "2030-03-31", "1986-12-20", "Male", "Consumer", "Arabic", 1, 0, "8 HRN & ID classes",
       "Expat holding a resident-permit style 'Other ID' (no QID), 1 postpaid line.", "Loyalty (existing)", "-", "Customer 360; New Postpaid",
-      "Other ID is exception-routed to CBM approval. NOTE: the ID-type selector does not offer 'Other ID', so find this customer by Mobile/name in Customer Search, not by ID scan.",
+      "Other ID is exception-routed to Back Office Fulfilment approval. NOTE: the ID-type selector does not offer 'Other ID', so find this customer by Mobile/name in Customer Search, not by ID scan.",
       jk=PP, req="Other ID", extra="Look up via Customer Search (mobile/name); the ID selector has no Other ID option."),
 ]
 
@@ -366,6 +371,22 @@ PROPOSED += [
       "Expat flagged on the collections blacklist but owing QAR 0 (no unpaid bill on file) - the flag alone is not a block.", "None", "-", "New Postpaid",
       "Collections Check PASSES ('No collections block on this account'): a collections block needs an outstanding balance above QAR 0 (VFQ business, 2026-10-02). Contrast CUST-3046, same flag with an unpaid bill -> soft-stop.",
       bl="collections", jk=PP, req="Collections flag, zero balance"),
+    # ---- 10. High line counts (no-cap / approval-only paths). Home internet has no cap in any source (see Open Questions).
+    P("CUST-3081", "Khalifa Al-Naimi", "Qatari", "Qatari", "QID", "27807063400081", "2031-01-31", "1978-07-14", "Male", "Premium", "Arabic", 12, 15, "10 High line counts",
+      "Qatari family account holder with 12 postpaid + 15 prepaid mobile lines and 4 GigaHome fibre lines (31 lines in total).", "Loyalty (existing)", "-", "Customer 360; New Postpaid; New Prepaid",
+      "Postpaid is past the Qatari limit of 5, so a further postpaid line routes for approval with no maximum (BR-288); prepaid has no cap (BR-347). Home internet has no rule.", jk=C360, req="High line counts (12 / 15 / 4)", hi=4),
+    P("CUST-3082", "Noora Al-Mannai", "Qatari", "Qatari", "QID", "28509063400082", "2030-09-30", "1985-09-03", "Female", "Consumer", "Arabic", 20, 0, "10 High line counts",
+      "Qatari with 20 postpaid lines and nothing else - postpaid far beyond the limit of 5.", "Loyalty (existing)", "-", "Customer 360; New Postpaid",
+      "Postpaid 20/5: approval routing, never a hard stop for a Qatari (BR-288). The 2+ postpaid credit-control warning applies.", jk=PP, req="Postpaid far above the Qatari limit", hi=0),
+    P("CUST-3083", "Abdulla Al-Sada", "Qatari", "Qatari", "QID", "29203063400083", "2030-12-31", "1992-03-21", "Male", "Consumer", "English", 0, 25, "10 High line counts",
+      "Qatari with 25 prepaid lines and 2 GigaHome fibre lines.", "Prepaid Welcome (-10%)", "-", "Customer 360; New Prepaid",
+      "No prepaid cap for a Qatari (BR-347): a 26th prepaid line passes.", jk=PRE, req="Prepaid with no cap", hi=2),
+    P("CUST-3084", "Aisha Al-Kuwari", "Qatari", "Qatari", "QID", "28911063400084", "2030-06-30", "1989-11-09", "Female", "Premium", "Arabic", 6, 10, "10 High line counts",
+      "Qatari with 6 postpaid, 10 prepaid and 8 GigaHome fibre lines - home internet the largest group.", "Loyalty (existing)", "-", "Customer 360; Fixed Line; FWA",
+      "Home internet has no cap in any source, so an 9th fibre line is not blocked by a rule.", jk=["workspace.customer-search", "fwa.new-fwa-wizard"], req="Many home internet lines", hi=8),
+    P("CUST-3085", "Rashid Al-Hajri", "Qatari", "Qatari", "QID", "27604063400085", "2030-04-30", "1976-04-17", "Male", "Consumer", "Arabic", 0, 0, "10 High line counts",
+      "Qatari with 6 GigaHome fibre lines and no mobile line at all (home-internet-only).", "Loyalty (existing)", "-", "Customer 360; Fixed Line",
+      "No mobile line on file, so Active Lines is 0 while Home internet is 6; nothing caps fibre lines.", jk=C360, req="Home internet only", hi=6),
 ]
 
 # Scenario rewrites forced by the nationality rule (the nationalities originally
@@ -376,7 +397,7 @@ OVERRIDES = {
     "CUST-3064": dict(nat="Myanmar", scen="HRN expat (Myanmar) QID with 2 postpaid lines (AT the expat cap)."),
     "CUST-3063": dict(nat="Pakistani", grp="Expat (Other ID)", idt="Other ID", idn="RES-9930471",
                       scen="HRN expat (Pakistani) holding an 'Other ID' (resident permit) with 1 prepaid line - HRN together with an exception-routed ID type.",
-                      journeys="New Prepaid; Customer Search", expected="Other ID exception-routed to CBM approval; HRN QAR 100 advance still required; prepaid cap not an expat-QID cap. Find by mobile/name - the ID selector has no Other ID option.",
+                      journeys="New Prepaid; Customer Search", expected="Other ID exception-routed to Back Office Fulfilment approval (also on prepaid: it is not one of the four permitted prepaid ID types); HRN is only stored on prepaid (no QAR 100 advance); prepaid cap not an expat-QID cap. Find by mobile/name - the ID selector has no Other ID option.",
                       req="HRN on Other ID", extra="Look up via Customer Search (mobile/name); the ID selector has no Other ID option."),
 }
 for _p in PROPOSED:
@@ -550,6 +571,295 @@ def apply_names(rd, wr):
         wr(fname, data)
 
 
+LINES_TAG = "Customer-Inventory mobile lines (2026-10-11)"
+HOME_TAG = "Customer-Inventory home internet lines (2026-10-11)"
+LINE_PLANS = {"Postpaid": ("Postpaid Mobile Plan - Red 150", "PROD-200", 150), "Prepaid": ("Prepaid Red 25", "PROD-301", 25)}
+
+
+def seed_mobile_lines(rd, wr):
+    """Gives every customer the mobile lines their activePostpaidLines / activePrepaidLines claim.
+
+    The app lists a customer's lines from the primary number (customer.lineType + phone) plus the Active installed
+    assets on the customer's accounts, so a count of 3 postpaid + 1 prepaid with only the primary line on file showed
+    as 1 connection. This adds the missing ones: one installed asset per extra line (serviceId = its MSISDN), on an
+    account of the matching type (created, with a billing profile, when the customer has none). Idempotent: the line
+    ids and numbers are derived from the customer id, and a customer that already has enough lines is skipped.
+    """
+    custs, accts, bps, assets = rd("customers"), rd("accounts"), rd("billing-profiles"), rd("installed-assets")
+    by_cust = {}
+    for a in accts:
+        by_cust.setdefault(a["customerId"], []).append(a)
+    acct_owner = {a["accountId"]: a["customerId"] for a in accts}
+    n_acc = max(int(a["accountId"][4:]) for a in accts) + 1
+    n_bill = max(int(b["billingProfileId"][5:]) for b in bps) + 1
+    n_ia = max(int(a["installedAssetId"][3:]) for a in assets) + 1
+    used = {c.get("phone") for c in custs} | {a["serviceId"] for a in assets}
+    next_msisdn = 55520001
+    new_accts, new_bps, new_assets, touched = [], [], [], []
+    for c in custs:
+        cid = c["customerId"]
+        want = {"Postpaid": c.get("activePostpaidLines") or 0, "Prepaid": c.get("activePrepaidLines") or 0}
+        if not any(want.values()) or not c.get("lineType"):
+            continue
+        want[c["lineType"]] -= 1  # the primary line is the customer's own number
+        have = {"Postpaid": 0, "Prepaid": 0}
+        for a in assets:
+            if a["serviceId"] == c.get("phone"):
+                continue  # the primary line's own plan record (seed_primary_line_plans) is not an extra line
+            if acct_owner.get(a["accountId"]) == cid and a["status"] in ("Active", "Suspended") and re.search(r"mobile|sim|prepaid|postpaid", a["productServiceName"], re.I):
+                have["Prepaid" if re.search("prepaid", a["productServiceName"], re.I) else "Postpaid"] += 1
+        for kind in ("Postpaid", "Prepaid"):
+            for _ in range(max(0, want[kind] - have[kind])):
+                mine = [a for a in by_cust.get(cid, []) if kind in a["accountType"] and "Mobile" in a["accountType"]]
+                if not mine:
+                    aid, bid = f"ACC-{n_acc}", f"BILL-{n_bill}"
+                    n_acc += 1; n_bill += 1
+                    src = next((b for b in bps if b["accountId"] in {a["accountId"] for a in by_cust.get(cid, [])}), bps[0])
+                    acct = {"_note": LINES_TAG, "accountId": aid, "customerId": cid, "accountType": f"Consumer Mobile {kind}", "status": "Active",
+                            "billingProfileId": bid, "barringStatus": "Not Barred", "barringType": None, "barringReason": None}
+                    bp = {k: v for k, v in src.items() if not k.startswith("_")}
+                    bp.update({"_note": LINES_TAG, "billingProfileId": bid, "accountId": aid, "name": f"{c['name']} - {kind}"})
+                    new_accts.append(acct); new_bps.append(bp)
+                    by_cust.setdefault(cid, []).append(acct); acct_owner[aid] = cid
+                    mine = [acct]
+                while f"+974{next_msisdn}" in used:
+                    next_msisdn += 1
+                msisdn = f"+974{next_msisdn}"; used.add(msisdn)
+                name, prod, price = LINE_PLANS[kind]
+                new_assets.append({"_note": LINES_TAG, "installedAssetId": f"IA-{n_ia}", "accountId": mine[0]["accountId"],
+                                   "billingProfileId": mine[0]["billingProfileId"], "productServiceName": name, "serviceId": msisdn, "status": "Active",
+                                   "effectiveFrom": "2026-06-01", "effectiveTo": None, "serviceAccount": f"SA-{n_ia}", "price": price,
+                                   "billingProfile": mine[0]["billingProfileId"], "promotion": prod, "orderDate": "2026-05-28",
+                                   "orderNumber": f"ORD-{n_ia}", "orderType": "New Connection"})
+                assets.append(new_assets[-1]); n_ia += 1; touched.append(cid)
+    if new_assets:
+        wr("accounts", accts + new_accts); wr("billing-profiles", bps + new_bps); wr("installed-assets", assets)
+    print(f"mobile lines: +{len(new_assets)} lines on {len(set(touched))} customers, +{len(new_accts)} accounts")
+
+
+PRIMARY_PLANS = {"Postpaid": ["PROD-107", "PROD-108", "PROD-109", "PROD-111", "PROD-112"], "Prepaid": ["PROD-301", "PROD-302", "PROD-303"]}
+PRIMARY_TAG = "Customer-Inventory primary-line plans (2026-10-11)"
+
+
+def seed_primary_line_plans(rd, wr):
+    """Gives each customer's own number (customer.phone) a real plan: an Active installed asset whose serviceId is the
+    number, so Customer 360 shows a catalogue plan name (products.json) instead of the generic 'Postpaid mobile line'.
+    The plan is chosen from the catalogue by customer order - test data, not evidence of what the customer holds.
+    customerServicesEngine skips this asset when listing lines (the own number is already listed from the customer)."""
+    custs, accts, bps, assets, prods = rd("customers"), rd("accounts"), rd("billing-profiles"), rd("installed-assets"), {p["productId"]: p for p in rd("products")}
+    n_ia = max(int(a["installedAssetId"][3:]) for a in assets) + 1
+    have = {a["serviceId"] for a in assets}
+    new, k = [], {"Postpaid": 0, "Prepaid": 0}
+    for c in custs:
+        kind = c.get("lineType")
+        if not kind or not c.get("phone"):
+            continue
+        i = k[kind]; k[kind] += 1
+        if c["phone"] in have:
+            continue
+        mine = [a for a in accts if a["customerId"] == c["customerId"]]
+        acct = next((a for a in mine if kind in a["accountType"] and "Mobile" in a["accountType"]), mine[0] if mine else None)
+        if not acct:
+            continue
+        pr = prods[PRIMARY_PLANS[kind][i % len(PRIMARY_PLANS[kind])]]
+        new.append({"_note": PRIMARY_TAG, "installedAssetId": f"IA-{n_ia}", "accountId": acct["accountId"], "billingProfileId": acct["billingProfileId"],
+                    "productServiceName": pr["name"], "serviceId": c["phone"], "status": "Active", "effectiveFrom": "2026-06-01", "effectiveTo": None,
+                    "serviceAccount": f"SA-{n_ia}", "price": pr.get("mrcQAR", 0), "billingProfile": acct["billingProfileId"], "promotion": pr["productId"],
+                    "orderDate": "2026-05-28", "orderNumber": f"ORD-{n_ia}", "orderType": "New Connection"})
+        n_ia += 1
+    if new:
+        wr("installed-assets", assets + new)
+    print(f"primary-line plans: +{len(new)}")
+
+
+def backfill_postpaid_activation(rd, wr):
+    """Postpaid lines the generator created carry postpaidActivationDate (= effectiveFrom), like the original demo postpaid assets."""
+    assets = rd("installed-assets")
+    n = 0
+    for a in assets:
+        if str(a.get("_note", "")).startswith("Customer-Inventory") and re.search("postpaid", a["productServiceName"], re.I) and not a.get("postpaidActivationDate"):
+            a["postpaidActivationDate"] = a["effectiveFrom"]; n += 1
+    if n:
+        wr("installed-assets", assets)
+    print(f"postpaid activation dates: +{n}")
+
+
+LEADS_TAG = "Customer-Inventory leads (2026-10-11)"
+# (customer, lead id, service needed, status, created via, comments). Customer 360 joins a lead to a customer by mobile number, so the
+# number is read from customers.json rather than written here.
+LEADS = [
+    ("CUST-3081", "LEAD-20401", "Home", "New", "Tele-sales call", "Wants a fifth fibre line for a second residence; coverage check requested."),
+    ("CUST-3081", "LEAD-20402", "Mobile", "Contacted", "Tablet Lead Creation", "Asked to review 12 postpaid lines for a family plan; sent plan comparison."),
+    ("CUST-3081", "LEAD-20403", "Device", "Qualified", "Tele-sales call", "Handset instalment plan for two family members."),
+    ("CUST-3082", "LEAD-20404", "Mobile", "Callback Scheduled", "Tele-sales call", "Considering moving 20 postpaid lines to one plan; call back Sunday."),
+    ("CUST-3083", "LEAD-20405", "Home", "New", "New Lead Mobile", "Interested in GigaHome fibre for the two existing fibre addresses."),
+    ("CUST-3084", "LEAD-20406", "Home", "Contacted", "Tele-sales call", "Fibre speed upgrade across 8 home lines; waiting on a quote."),
+    ("CUST-3085", "LEAD-20407", "Mobile", "New", "Tablet Lead Creation", "Home-internet-only customer asking about a first mobile line."),
+    ("CUST-3054", "LEAD-20408", "Device", "Qualified", "Tele-sales call", "Retention call: wants a handset upgrade on the postpaid line."),
+]
+
+
+def seed_leads(rd, wr):
+    """Active (non-closed) leads for a few customers, so the Customer 360 Active Leads panel has something to show."""
+    phone = {c["customerId"]: c.get("phone") for c in rd("customers")}
+    leads = rd("leads")
+    have = {l["leadId"] for l in leads}
+    new = [{"leadId": lid, "serviceNeeded": svc, "status": st, "ownerId": "AGENT-VINODHINIR", "createdVia": via, "mobileNumber": phone[cid], "comments": cm, "_note": LEADS_TAG}
+           for cid, lid, svc, st, via, cm in LEADS if lid not in have and phone.get(cid)]
+    if new:
+        wr("leads", leads + new)
+    print(f"leads: +{len(new)}")
+
+
+OVERVIEW_TAG = "Customer-Inventory overview details (2026-10-11)"
+OVERVIEW_CID = "CUST-3081"
+
+
+def seed_overview_details(rd, wr):
+    """Fills every Customer 360 Overview panel for CUST-3081 (the 12 postpaid / 15 prepaid / 4 home-internet customer): a suspended
+    line, a credit limit, two bills (one unpaid) and the payment that settled the first, open tickets (one past its SLA) and recent
+    activity. Idempotent by record id. Everything is test data, not evidence of what a real account holds."""
+    cid = OVERVIEW_CID
+    accts = [a for a in rd("accounts") if a["customerId"] == cid]
+    post = next((a for a in accts if "Postpaid" in a["accountType"]), None)
+    if not post:
+        return
+    done = {}
+
+    def add(name, key, recs):
+        data = rd(name)
+        have = {r.get(key) for r in data}
+        new = [r for r in recs if r[key] not in have]
+        if new:
+            wr(name, data + new)
+        done[name] = len(new)
+
+    bp = post["billingProfileId"]
+    add("bills", "billId", [
+        {"_note": OVERVIEW_TAG, "billId": "BILL-9301", "type": "bill", "accountId": post["accountId"], "billingProfileId": bp, "customerId": cid, "billPeriod": "2026-07",
+         "mrc": 2700, "vas": 0, "vat": 0, "totalAmount": 1180.0, "status": "billed", "isTaxInvoice": True, "currentChargesQAR": 0, "dueDate": "2026-08-14"},
+        {"_note": OVERVIEW_TAG, "billId": "BILL-9302", "type": "bill", "accountId": post["accountId"], "billingProfileId": bp, "customerId": cid, "billPeriod": "2026-08",
+         "mrc": 2700, "vas": 0, "vat": 0, "totalAmount": 1260.0, "status": "billed", "isTaxInvoice": True, "currentChargesQAR": 312.5, "dueDate": "2026-09-18"},
+    ])
+    add("payments", "paymentId", [
+        {"_note": OVERVIEW_TAG, "paymentId": "PAY-8301", "orderId": None, "customerId": cid, "paymentMethod": "Credit Card", "captureChannel": "MyVodafone App",
+         "receiptNumber": "RCPT-330301", "chargeType": "Monthly Bill", "amountQar": 1180.0, "status": "Authorized", "capturedAt": "2026-08-12T10:15:00+03:00"},
+    ])
+    add("credit-limits", "id", [
+        {"_note": OVERVIEW_TAG, "id": "CRL-4301", "accountId": post["accountId"], "customerId": cid, "customerSegment": "Qatari Premium", "creditLimitQar": 5000,
+         "isHrn": False, "setByAgentId": "AGT-8801", "restrictionApplied": False, "lastUpdated": "2026-06-15"},
+    ])
+    tpl = {k: v for k, v in rd("trouble-tickets")[0].items() if not k.startswith("_")}
+    def ticket(tid, status, cat, area, issue, prio, created, due, queue):
+        t = dict(tpl)
+        t.update({"_note": OVERVIEW_TAG, "ticketId": tid, "customerId": cid, "status": status, "category": cat, "area": area, "actualIssue": issue, "priority": prio,
+                  "createdAt": created, "slaDueAt": due, "queue": queue, "hashtags": [], "assignedTo": None, "assignedAt": None, "escalations": [], "activities": [], "attachments": [], "publicNotes": []})
+        return t
+    add("trouble-tickets", "ticketId", [
+        ticket("TT-40301", "Not Solved", "Mobile Complaints", "Data", "Slow data on one of the postpaid lines", "2-High", "2026-09-09T09:00:00+03:00", "2026-09-10T09:00:00+03:00", "FL Agents"),
+        ticket("TT-40302", "Assigned", "Billing", "Bill Query", "Customer disputes the August roaming charge", "3-Medium", "2026-09-12T11:30:00+03:00", "2026-09-17T11:30:00+03:00", "Complaints Team"),
+    ])
+    acts = rd("customer-activities")
+    tplA = {k: v for k, v in acts[0].items() if not k.startswith("_")}
+    def act(n, date, journey, topic, sub, comments):
+        a = dict(tplA)
+        a.update({"_note": OVERVIEW_TAG, "activityNumber": n, "accountId": post["accountId"], "orderId": None, "transactionDate": date, "journey": journey, "topic": topic,
+                  "subTopic": sub, "comments": comments, "msisdn": next((c["phone"] for c in rd("customers") if c["customerId"] == cid), None), "customerType": "Postpaid", "customerSegment": "Premium", "status": "Solved"})
+        return a
+    add("customer-activities", "activityNumber", [
+        act("ACT-93001", "2026-09-10", "Billing Enquiry", "Billing", "Bill Explanation", "Explained the August invoice across the 12 postpaid lines."),
+        act("ACT-93002", "2026-09-03", "Plan Review", "Plan Change", "Family Plan", "Reviewed plan options for the postpaid lines; customer to decide."),
+        act("ACT-93003", "2026-08-20", "SIM Support", "SIM", "SIM Replacement", "Replaced a damaged SIM on a prepaid line."),
+    ])
+    # One prepaid line is suspended (still a held line, but not Active).
+    assets = rd("installed-assets")
+    owner = {a["accountId"]: a["customerId"] for a in rd("accounts")}
+    pre = [a for a in assets if owner.get(a["accountId"]) == cid and re.search("prepaid", a["productServiceName"], re.I)]
+    changed = 0
+    if pre and pre[-1]["status"] != "Suspended":
+        pre[-1]["status"] = "Suspended"; changed = 1
+        wr("installed-assets", assets)
+    # Fixed Line, TV and IoT services on the customer's home (GigaHome) account, plus a few smart devices.
+    home = next((a for a in accts if "Fixed Line" in a["accountType"]), None)
+    if home:
+        n_ia = max(int(a["installedAssetId"][3:]) for a in rd("installed-assets")) + 1
+        have = {a["serviceId"] for a in rd("installed-assets")}
+        # (serviceId, product / service name, plan code): Customer 360 sorts a service into Fixed Line / TV / IoT by its NAME,
+        # and lists its plan add-ons by the plan code, so each kind gets its own plan code (and its own add-on below).
+        lines = [("+97444083101", "Fixed Voice Line - Home", "PROD-FXL", 60), ("+97444083102", "Fixed Voice Line - Home", "PROD-FXL", 60),
+                 ("OSNTV-3081-1", "OSNtv Premium", "PROD-OSN", 90), ("OSNTV-3081-2", "OSNtv Premium", "PROD-OSN", 90),
+                 ("IOT-3081-1", "IoT Smart Plug", "PROD-IOT", 25), ("IOT-3081-2", "IoT Indoor Tracker", "PROD-IOT", 25), ("IOT-3081-3", "IoT Smart Plug", "PROD-IOT", 25)]
+        extra = []
+        for sid, nm, promo, price in lines:
+            if sid in have:
+                continue
+            extra.append({"_note": OVERVIEW_TAG, "installedAssetId": f"IA-{n_ia}", "accountId": home["accountId"], "billingProfileId": home["billingProfileId"], "productServiceName": nm,
+                          "serviceId": sid, "status": "Active", "effectiveFrom": "2026-06-01", "effectiveTo": None, "serviceAccount": f"SA-{n_ia}", "price": price,
+                          "billingProfile": home["billingProfileId"], "promotion": promo, "orderDate": "2026-05-28", "orderNumber": f"ORD-{n_ia}", "orderType": "New Connection"})
+            n_ia += 1
+        all_assets = rd("installed-assets") + extra
+        for a_ in all_assets:  # keep the plan code in step with the list above (an earlier run used PROD-201 for the fixed lines)
+            for sid, _nm, promo, _price in lines:
+                if a_["serviceId"] == sid and a_["promotion"] != promo:
+                    a_["promotion"] = promo
+        wr("installed-assets", all_assets)
+    # Plan-level paid add-ons for the plans this customer's lines are on (Customer 360 lists a line's add-ons by its plan).
+    ADD = {"PROD-107": ("Roaming Pass 5GB", "Roaming Add-on", 40), "PROD-108": ("Extra 100GB Data Booster", "Data Add-on", 30), "PROD-109": ("Multi SIM", "Multi SIM Add-on", 25),
+           "PROD-111": ("International 100 Add-on", "International Add-on", 90), "PROD-112": ("Caller Tune Plus", "Value Added Service", 10), "PROD-200": ("Extra 100GB Data Booster", "Data Add-on", 30),
+           "PROD-301": ("Roaming Pass 5GB", "Roaming Add-on", 40), "PROD-201": ("Extra Giga Wi-Fi Hub", "Wi-Fi Add-on", 10),
+           "PROD-FXL": ("Voice Mail Plus", "Value Added Service", 10), "PROD-OSN": ("OSNtv Sports Pack", "IPTV Add-on", 40), "PROD-IOT": ("IoT Data Pack 1GB", "Data Add-on", 15)}
+    add("addons-discounts", "addonDiscountId", [
+        {"_note": OVERVIEW_TAG, "addonDiscountId": f"ADO-73{i:02d}", "addonType": ty, "name": nm, "description": f"{nm} on this plan", "price": pr, "category": "Paid Add-on",
+         "durationMonths": None, "planId": pid, "isLockedReadOnly": False}
+        for i, (pid, (nm, ty, pr)) in enumerate(ADD.items(), 1)])
+    add("commitment-penalties", "penaltyId", [
+        {"_note": OVERVIEW_TAG, "penaltyId": "PEN-8301", "accountId": post["accountId"], "customerId": cid, "actionType": "disconnection", "calculatedValue": 480, "currency": "QAR",
+         "valueStoredPersistently": False, "calculationSource": "lock-in: QR 80 x 6 remaining months", "orderId": None, "quoteRequiresOrder": True, "calculatedAt": "2026-09-10T10:15:00+03:00",
+         "status": "Pending", "blocksNewConnection": False},
+        {"_note": OVERVIEW_TAG, "penaltyId": "PEN-8302", "accountId": post["accountId"], "customerId": cid, "actionType": "plan downgrade", "calculatedValue": 150, "currency": "QAR",
+         "valueStoredPersistently": False, "calculationSource": "guided journey - plan change", "orderId": None, "quoteRequiresOrder": True, "calculatedAt": "2026-08-22T14:00:00+03:00",
+         "status": "Applied", "blocksNewConnection": False},
+    ])
+    print(f"overview details: {done} suspended line +{changed}")
+
+
+def seed_home_internet(rd, wr):
+    """Gives each PROPOSED customer the GigaHome fibre lines their `hi` count claims: one Active installed asset per line on a
+    'Consumer Fixed Line (GigaHome)' account (created with a billing profile when missing). Idempotent by line id."""
+    custs, accts, bps, assets = rd("customers"), rd("accounts"), rd("billing-profiles"), rd("installed-assets")
+    have_c = {c["customerId"] for c in custs}
+    n_acc = max(int(a["accountId"][4:]) for a in accts) + 1
+    n_bill = max(int(b["billingProfileId"][5:]) for b in bps) + 1
+    n_ia = max(int(a["installedAssetId"][3:]) for a in assets) + 1
+    done = {a["serviceId"] for a in assets}
+    new_a, new_b, new_i = [], [], []
+    for p in PROPOSED:
+        if not p["hi"] or p["cid"] not in have_c:
+            continue
+        acct = next((a for a in accts + new_a if a["customerId"] == p["cid"] and "Fixed Line" in a["accountType"]), None)
+        if not acct:
+            aid, bid = f"ACC-{n_acc}", f"BILL-{n_bill}"
+            n_acc += 1; n_bill += 1
+            src = next((b for b in bps if b["accountId"] in {a["accountId"] for a in accts if a["customerId"] == p["cid"]}), bps[0])
+            acct = {"_note": HOME_TAG, "accountId": aid, "customerId": p["cid"], "accountType": "Consumer Fixed Line (GigaHome)", "status": "Active",
+                    "billingProfileId": bid, "barringStatus": "Not Barred", "barringType": None, "barringReason": None}
+            bp = {k: v for k, v in src.items() if not k.startswith("_")}
+            bp.update({"_note": HOME_TAG, "billingProfileId": bid, "accountId": aid, "name": f"{p['name']} - Home"})
+            new_a.append(acct); new_b.append(bp)
+        for k in range(1, p["hi"] + 1):
+            sid = f"GHSVC-{p['cid'][5:]}-{k}"
+            if sid in done:
+                continue
+            new_i.append({"_note": HOME_TAG, "installedAssetId": f"IA-{n_ia}", "accountId": acct["accountId"], "billingProfileId": acct["billingProfileId"],
+                          "productServiceName": "GigaHome Fiber 1Gbps", "serviceId": sid, "status": "Active", "effectiveFrom": "2026-06-01", "effectiveTo": None,
+                          "serviceAccount": f"SA-{n_ia}", "price": 290, "billingProfile": acct["billingProfileId"], "promotion": "PROD-201",
+                          "orderDate": "2026-05-28", "orderNumber": f"ORD-{n_ia}", "orderType": "New Connection"})
+            n_ia += 1
+    if new_i:
+        wr("accounts", accts + new_a); wr("billing-profiles", bps + new_b); wr("installed-assets", assets + new_i)
+    print(f"home internet: +{len(new_i)} lines, +{len(new_a)} accounts")
+
+
 def seed():
     def rd(n): return json.loads((MOCK / f"{n}.json").read_text())
     def wr(n, d): (MOCK / f"{n}.json").write_text(json.dumps(d, indent=2, ensure_ascii=False) + "\n")
@@ -706,6 +1016,12 @@ def seed():
     apply_names(rd, wr)
     apply_hrn(rd, wr)
     apply_benefits(rd, wr)
+    seed_mobile_lines(rd, wr)
+    seed_home_internet(rd, wr)
+    seed_primary_line_plans(rd, wr)
+    backfill_postpaid_activation(rd, wr)
+    seed_leads(rd, wr)
+    seed_overview_details(rd, wr)
     print("seeded:", {k: v for k, v in added.items() if v}, "| retiree registry now", len(reg["retiredIdNumbers"]))
 
 
@@ -718,7 +1034,7 @@ if "--seed" in sys.argv:
 # Assemble rows
 # --------------------------------------------------------------------------
 HDR = ["Test ID", "Customer / NAS ID", "Status in app", "Category", "Full name", "First name", "Middle name(s)", "Last name", "Nationality", "Nationality group", "ID type", "ID number (use for lookup)",
-       "ID expiry", "Date of birth", "Age", "Gender", "Segment", "Language", "Mobile", "Postpaid lines", "Prepaid lines", "Total mobile lines",
+       "ID expiry", "Date of birth", "Age", "Gender", "Segment", "Language", "Mobile", "Total lines", "Postpaid lines", "Prepaid lines", "Home internet", "Other services",
        "Blacklist", "Risk class", "Employer (B2B2C)", "Discount eligibility", "MNP / porting", "Scenario", "Journeys to run", "Expected outcome", "Roles that can run the primary journey", "Seed notes / evidence"]
 rows = []
 roles_feat = {r["staffId"]: {f["key"] for f in r["features"]} for r in personas}
@@ -774,6 +1090,41 @@ for i, p in enumerate(PROPOSED):
                  "Not a customer" if new else p["seg"], p["lang"], "" if new else ph, "" if new else p["pp"], "" if new else p["pre"], 0 if new else p["pp"] + p["pre"],
                  p["bl"] or "No", "HRN" if p["hrn"] else "Standard", p["emp"], p["disc"], p["mnp"], p["scen"], p["journeys"], p["expected"], roles_for(p["jk"]),
                  ("Synthetic record. " + p["extra"]).strip()])
+
+
+# Home internet = the customer's GigaHome fibre services, counted the way Customer 360 lists them
+# (customerServicesEngine.listCustomerServices, category 'GigaHome Fibre'): their GigaHome subscriptions plus Active
+# installed assets on their accounts whose product name is broadband / fibre / GigaHome / home (not TV, not mobile).
+_acct_owner = {a["accountId"]: a["customerId"] for a in load("accounts")}
+_home = {}
+for g in load("gigahome-osntv-subscriptions"):
+    _home[g["customerId"]] = _home.get(g["customerId"], 0) + 1
+for a in load("installed-assets"):
+    nm = a.get("productServiceName", "")
+    if a.get("status") == "Active" and not re.search(r"prepaid|postpaid|mobile|sim|iptv|osn|\btv\b|fixed[ -]?(voice )?line|landline", nm, re.I) and re.search(r"broadband|fibre|fiber|gigahome|home", nm, re.I):
+        o = _acct_owner.get(a["accountId"])
+        _home[o] = _home.get(o, 0) + 1
+# Row layout from the builders above is [... Mobile, Postpaid, Prepaid, Total mobile]; re-shape to
+# [... Mobile, Total lines, Postpaid, Prepaid, Home internet]. Total lines = postpaid + prepaid + home internet.
+# Other services = Fixed Line + TV + IoT, counted as Customer 360 lists them (see customerServicesEngine.listCustomerServices).
+_other = {}
+for a in load("installed-assets"):
+    nm = a.get("productServiceName", "")
+    if a.get("status") in ("Active", "Suspended") and re.search(r"fixed[ -]?(voice )?line|landline|iptv|osn|\btv\b|^iot ", nm, re.I):
+        _other[_acct_owner.get(a["accountId"])] = _other.get(_acct_owner.get(a["accountId"]), 0) + 1
+for b in load("iptv-stb-bundles"):
+    if not b.get("removedByCustomer"):
+        _other[_acct_owner.get(b["accountId"])] = _other.get(_acct_owner.get(b["accountId"]), 0) + 1
+for d in load("smart-devices"):
+    _other[d["customerId"]] = _other.get(d["customerId"], 0) + 1
+_i = HDR.index("Mobile")
+for r in rows:
+    pp, pre = r[_i + 1], r[_i + 2]
+    hi = _home.get(r[1], 0)
+    ot = _other.get(r[1], 0)
+    r[_i + 1:_i + 4] = [(pp or 0) + (pre or 0) + hi + ot, pp, pre]
+    r.insert(_i + 4, hi)
+    r.insert(_i + 5, ot)
 
 # collision check (only meaningful before --seed has written the records)
 blob = "".join(f.read_text() for f in MOCK.glob("*.json"))
@@ -862,7 +1213,7 @@ for row in ws.iter_rows():
 # Customers
 W = {"Test ID": 9, "Customer / NAS ID": 13, "Status in app": 16, "Category": 22, "Full name": 34, "First name": 13, "Middle name(s)": 24, "Last name": 14, "Nationality": 12, "Nationality group": 14, "ID type": 14,
      "ID number (use for lookup)": 24, "ID expiry": 12, "Date of birth": 12, "Age": 6, "Gender": 8, "Segment": 14, "Language": 10, "Mobile": 14,
-     "Postpaid lines": 9, "Prepaid lines": 9, "Total mobile lines": 9, "Blacklist": 11, "Risk class": 11, "Employer (B2B2C)": 20, "Discount eligibility": 34, "MNP / porting": 30,
+     "Total lines": 9, "Postpaid lines": 9, "Prepaid lines": 9, "Home internet": 9, "Other services": 10, "Blacklist": 11, "Risk class": 11, "Employer (B2B2C)": 20, "Discount eligibility": 34, "MNP / porting": 30,
      "Scenario": 50, "Journeys to run": 32, "Expected outcome": 60, "Roles that can run the primary journey": 34, "Seed notes / evidence": 40}
 ws = sheet(wb, "Customers", HDR, rows, W)
 for row in ws.iter_rows(min_row=2):
@@ -1005,7 +1356,7 @@ for _cid, _c in customers.items():
     elif _a == 18:
         _hit("Age Check", "Pass", _cid, "Age 18 - boundary, passes")
     if (_d.get("documentType") or _c.get("idType")) in EXC_IDS:
-        _hit("ID Type", "Approval routing", _cid, f"{_d.get('documentType') or _c.get('idType')} is exception-routed to CBM approval")
+        _hit("ID Type", "Approval routing", _cid, f"{_d.get('documentType') or _c.get('idType')} is exception-routed to Back Office Fulfilment approval")
     if _c.get("blacklisted"):
         _cat = _c.get("blacklistCategory")
         if _cat == "collections":
@@ -1081,7 +1432,7 @@ sheet(wb, "Roles & Login", ["Staff ID", "Role", "Persona group", "Business unit"
 
 # Journey access
 JK = [("workspace.customer-search", "Customer Search"), ("workspace.customer360-view", "Customer 360"), ("postpaid.new-postpaid-wizard", "New Postpaid"),
-      ("prepaid.new-prepaid-tablet-wizard", "New Prepaid"), ("mnp.process-choice", "MNP process choice"), ("mnp.port-in-wizard", "MNP / FNP port-in"),
+      ("prepaid.new-prepaid-wizard", "New Prepaid"), ("mnp.process-choice", "MNP process choice"), ("mnp.port-in-wizard", "MNP / FNP port-in"),
       ("numbers.sim-swap-queue", "SIM swap queue"), ("migration.pre-to-post-wizard", "Pre-to-post migration"), ("fwa.new-fwa-wizard", "New FWA"),
       ("fixedline.new-fixed-line-wizard", "New Fixed Line"), ("orders.approval-queue", "Order approval queue"), ("orders.my-sales-orders", "My sales orders")]
 ja = []
@@ -1089,7 +1440,7 @@ for r in personas:
     lv = {f["key"]: f["level"] for f in r["features"]}
     ja.append([r["staffId"], r["name"]] + [lv.get(k, "") for k, _ in JK])
 ws = sheet(wb, "Journey Access by Role", ["Staff ID", "Role"] + [l for _, l in JK], ja, {"Staff ID": 11, "Role": 36})
-ws.cell(len(ja) + 3, 1, "Source: public/config/personas.json feature grants. A level means the role is GRANTED the feature - whether the screen is built is tracked in VFQ_DXP_Persona_Feature_Applicability_Matrix_Reference.xlsx. Blank = deliberately not granted.")
+ws.cell(len(ja) + 3, 1, "Source: public/config/personas.json feature grants. A level means the role is GRANTED the feature - whether the screen is built is tracked in Persona_Feature_Applicability_Matrix_Reference.xlsx. Blank = deliberately not granted.")
 
 # Open questions
 oq = [
@@ -1108,4 +1459,6 @@ sheet(wb, "Open Questions", ["#", "Topic", "Finding", "Needs", "Affected custome
 
 OUT.parent.mkdir(parents=True, exist_ok=True)
 wb.save(OUT)
+from format_xlsx import format_file  # house format: header row, borders, Tenorite 14, no gridlines
+format_file(OUT)
 print(f"wrote {OUT} - {len(rows)} customers ({n_seed} original, {n_prop} added)")

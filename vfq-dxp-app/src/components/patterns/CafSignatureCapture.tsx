@@ -1,5 +1,3 @@
-import { SummaryTables } from './CheckoutSummaryTables';
-import type { SummaryTable } from './CheckoutSummaryTables';
 import { useEffect, useState } from 'react';
 import { Icon } from '../primitives/Icon';
 import { Button } from '../primitives/Button';
@@ -46,15 +44,22 @@ interface CafSignatureCaptureProps {
    */
   orderSummary?: { label: string; value: string }[];
   /**
-   * Tables to read back instead of the orderSummary rows (New Connection): the
-   * grey Key Information panel keeps its heading, bullets and terms link, and
-   * these render beneath it in the same table style as Checkout.
+   * New Connection layout: no Key Information panel and no order read-back here (Checkout shows the order); the page is
+   * the full Terms & Conditions followed by the application form and signature.
    */
-  summaryTables?: SummaryTable[];
+  fullTerms?: boolean;
   /** Open the signature pad inline, under the Please Sign button, instead of in a drawer. */
   inlineSignaturePad?: boolean;
   /** Post-signature document labels as a list of values instead of free text. */
   documentLabelOptions?: string[];
+  /**
+   * Which journey's application form this is (postpaid by default). Prepaid carries its own form title and its own
+   * Terms & Conditions (Mobile Prepaid BRSD MPRA_001_CAF_02 / CAF_03); the signature, agreement and documents
+   * behaviour is the same capability for both.
+   */
+  journey?: 'postpaid' | 'prepaid';
+  /** Extra rows on the application form (the prepaid form's mobile numbers and SIM serials, for example), as label/value. */
+  formDetails?: { label: string; value: string }[];
   /** Cap on post-signature documents (default 10). */
   maxAdditionalDocuments?: number;
   /** Link target for "the complete terms", shown beneath the summary. */
@@ -117,10 +122,12 @@ export function CafSignatureCapture({
   idLabel,
   idValue,
   orderSummary,
-  summaryTables,
+  fullTerms = false,
   inlineSignaturePad = false,
   documentLabelOptions,
   maxAdditionalDocuments,
+  journey = 'postpaid',
+  formDetails,
   termsUrl,
   autoDetectDeviceType,
   legalFacts,
@@ -155,9 +162,7 @@ export function CafSignatureCapture({
     // check, not the agent, is what chose it.
     const showsInAppSignature = value.cafType === 'Digital' || value.cafType === 'Touch Screen';
     const signed = showsInAppSignature && Boolean(value.signatureDataUrl);
-    // With the tables read-back each sentence is its own bullet.
-    const built = buildTncBullets(legalFacts, bulletTemplates);
-    const bullets = summaryTables?.length ? built.flatMap((b) => b.split(/(?<=[.!?])\s+/).filter(Boolean)) : built;
+    const bullets = buildTncBullets(legalFacts, bulletTemplates);
 
     return (
       <div className="space-y-4">
@@ -180,7 +185,7 @@ export function CafSignatureCapture({
             (orderSummary) stays alongside rather than being replaced: what
             was bought and what terms bind the customer are complementary
             facts, not the same one restated. */}
-        {!signed && (bullets.length > 0 || (orderSummary && orderSummary.length > 0) || (summaryTables && summaryTables.length > 0)) && (
+        {!signed && !fullTerms && (bullets.length > 0 || (orderSummary && orderSummary.length > 0)) && (
           <>
           {/* Key Information is the part the customer must not skip, so it is a tinted panel with 4px
               brand-accent left and right edges and an uppercase heading (2026-10-04). Existing tokens only: --surface-warm
@@ -199,7 +204,7 @@ export function CafSignatureCapture({
                 ))}
               </ul>
             )}
-            {!summaryTables && orderSummary && orderSummary.length > 0 && (
+            {orderSummary && orderSummary.length > 0 && (
               <dl className={bullets.length > 0 ? 'pt-2 border-t border-border-soft' : undefined}>
                 {orderSummary.map((row) => (
                   <div key={row.label} className="flex justify-between gap-4 py-1.5 border-b border-border-soft last:border-0">
@@ -212,7 +217,7 @@ export function CafSignatureCapture({
             {/* Fallback, not the primary route (2026-09-28 request): the
                 bullets above are the concise answer for the common cases;
                 this is for anything they do not cover. */}
-            {termsUrl && !summaryTables && (
+            {termsUrl && (
               <p className="text-[length:var(--fs-caption)] text-muted">
                 For anything not covered above,{' '}
                 <a href={termsUrl} target="_blank" rel="noreferrer" className="text-link underline">
@@ -222,16 +227,25 @@ export function CafSignatureCapture({
               </p>
             )}
           </div>
-          {summaryTables && summaryTables.length > 0 && <SummaryTables tables={summaryTables} />}
           </>
         )}
 
-        <FullTerms termsUrl={termsUrl} enabled={Boolean(summaryTables && summaryTables.length > 0)} signed={signed} scrollMode={termsScrollMode}>
-        <div className={`${summaryTables && summaryTables.length > 0 ? 'py-4 pr-4' : 'rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4'} ${inlineSignaturePad ? 'bg-bg' : 'bg-surface'}`}>
+        <FullTerms termsUrl={termsUrl} enabled={fullTerms} signed={signed} scrollMode={termsScrollMode} journey={journey}>
+        <div className={`${fullTerms ? 'py-4 pr-4' : 'card p-4'} ${inlineSignaturePad ? '' : 'bg-surface'}`}>
           <div className="flex justify-between text-[length:var(--fs-caption)] text-muted mb-2">
-            <span>Vodafone Customer Application Form</span>
-            <span dir="rtl">نموذج طلب عميل فودافون</span>
+            <span>{journey === 'prepaid' ? 'Vodafone Prepaid Customer Application Form' : 'Vodafone Customer Application Form'}</span>
+            <span dir="rtl">{journey === 'prepaid' ? 'نموذج طلب فودافون مسبق الدفع' : 'نموذج طلب عميل فودافون'}</span>
           </div>
+          {formDetails && formDetails.length > 0 && (
+            <dl className="mb-2">
+              {formDetails.map((row) => (
+                <div key={row.label} className="flex justify-between gap-4 py-1 border-b border-border-soft last:border-0 text-[length:var(--fs-caption)]">
+                  <dt className="text-fg-2">{row.label}</dt>
+                  <dd className="text-fg text-right">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
           <p className="text-fg text-[length:var(--fs-body)]">
             Applicant: <span className="font-medium">{customerName ?? '-'}</span>
           </p>
@@ -247,7 +261,7 @@ export function CafSignatureCapture({
           {signed ? (
             <div className="mt-3 flex items-center gap-3">
               <Badge variant="success">Signed</Badge>
-              <img src={value.signatureDataUrl} alt="Signature" className="h-10 border border-border-soft rounded" />
+              <img src={value.signatureDataUrl} alt="Signature" className="h-10 border border-border-soft rounded-[var(--radius-sm)]" />
             </div>
           ) : (
             <>
@@ -311,13 +325,13 @@ export function CafSignatureCapture({
             <div />
             <div className="flex items-center gap-3">
               {onSave && (
-                <Button variant="secondary-rect" onClick={onSave}>
+                <Button variant="secondary" onClick={onSave}>
                   Save
                 </Button>
               )}
               {signed && onContinue && (
                 <Button
-                  variant="primary-rect"
+                  variant="primary"
                   onClick={onContinue}
                   disabled={documentPending}
                   title={documentPending ? 'Upload the selected document first' : undefined}
@@ -331,7 +345,7 @@ export function CafSignatureCapture({
           signed && onContinue && (
             <div className={`agent-only ${inlineSignaturePad ? 'flex justify-end' : ''}`}>
               <Button
-                variant="primary-rect"
+                variant="primary"
                 className={inlineSignaturePad ? undefined : 'w-full'}
                 onClick={onContinue}
                 disabled={documentPending}
@@ -353,20 +367,21 @@ export function CafSignatureCapture({
     <div className="space-y-4">
       <div>
         <p className="text-[length:var(--fs-label)] text-fg-2 mb-2">CAF Type</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,11rem),1fr))] gap-3">
           {CAF_TYPES.map((t) => {
             const selected = t.type === value.cafType;
             return (
               <button
                 key={t.type}
                 type="button"
+                aria-pressed={selected}
                 onClick={() => onChange({ ...value, cafType: t.type })}
                 className={`relative flex flex-col items-center gap-2 rounded-[var(--radius-card)] border p-4 ${
                   selected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)] text-[var(--field-card-selected)]' : 'border-[var(--field-card-border)] bg-bg text-fg enabled:hover:border-[var(--field-card-hover-border)] enabled:hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
                 }`}
               >
                 {selected && (
-                  <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[var(--field-card-selected)] text-white flex items-center justify-center">
+                  <span className="absolute top-2 right-2 w-4 h-4 rounded-[var(--radius-pill)] bg-[var(--field-card-selected)] text-on-dark flex items-center justify-center">
                     <Icon path={CHECK_ICON} className="w-2.5 h-2.5" />
                   </span>
                 )}
@@ -379,7 +394,7 @@ export function CafSignatureCapture({
       </div>
 
       {value.cafType === 'Digital' && (
-        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4 bg-surface">
+        <div className="card p-4 card-surface">
           <div className="flex justify-between text-[length:var(--fs-caption)] text-muted mb-2">
             <span>Vodafone Customer Application Form</span>
             <span dir="rtl">نموذج طلب عميل فودافون</span>
@@ -399,7 +414,7 @@ export function CafSignatureCapture({
           {value.signatureDataUrl ? (
             <div className="mt-3 flex items-center gap-3">
               <Badge variant="success">Signed</Badge>
-              <img src={value.signatureDataUrl} alt="Signature" className="h-10 border border-border-soft rounded" />
+              <img src={value.signatureDataUrl} alt="Signature" className="h-10 border border-border-soft rounded-[var(--radius-sm)]" />
             </div>
           ) : (
             <SignatureCapture onSave={(dataUrl) => onChange({ ...value, signatureDataUrl: dataUrl })} />
@@ -424,7 +439,7 @@ export function CafSignatureCapture({
           the form commits them to, and it is the last thing on screen before
           they sign. */}
       {orderSummary && orderSummary.length > 0 && (
-        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-4 space-y-2">
+        <div className="card card-surface p-4 space-y-2">
           <h4 className="text-fg font-medium text-[length:var(--fs-body)]">What the customer is agreeing to</h4>
           <dl className="text-[length:var(--fs-caption)]">
             {orderSummary.map((row) => (

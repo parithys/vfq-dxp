@@ -19,7 +19,7 @@ import { getPersonaByStaffId } from '../engines/configEngine';
 //
 // Archived: reference/blueprint/legacy/staff-id-role-map-v1.ts.txt. Note that
 // VFQ12342–VFQ12347 CHANGED MEANING in this cut-over - e.g. VFQ12343 was
-// "Back Office / Fulfilment" and is now "Direct Sales Agent" - so any older
+// "Back Office / Fulfilment" and is now "Direct Sales" - so any older
 // demo script or screenshot referring to them is stale.
 export interface StaffIdRoleEntry {
   personaId: string;

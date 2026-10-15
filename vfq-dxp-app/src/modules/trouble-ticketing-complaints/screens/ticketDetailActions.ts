@@ -13,11 +13,13 @@ interface TicketActionsInput {
   openActivities: Activity[];
   terminal: boolean;
   withinReopenWindow: boolean;
+  /** From useSubmitGuard(): one action at a time, a failure becomes a toast, never a silent no-op or an unhandled rejection. */
+  guard: (action: () => Promise<unknown> | unknown) => Promise<boolean>;
 }
 
 // Action handlers for TicketDetail (plain closures, not hooks - called after
 // the "no ticket" early return, exactly as they were declared inline).
-export function createTicketActions({ ticket, s, notes, activities, attachments, openActivities, terminal, withinReopenWindow }: TicketActionsInput) {
+export function createTicketActions({ ticket, s, notes, activities, attachments, openActivities, terminal, withinReopenWindow, guard }: TicketActionsInput) {
   const {
     updateRecord, createRecord, pushToast,
     noteText, setNoteText, activityText, setActivityText,
@@ -239,7 +241,7 @@ export function createTicketActions({ ticket, s, notes, activities, attachments,
   const attach = async (file: File) => {
     if (terminal) return; // ATT-03
     if (attachments.length >= MAX_ATTACHMENTS) {
-      pushToast('error', `Maximum ${MAX_ATTACHMENTS} attachments per ticket (P-15 placeholder).`);
+      pushToast('error', `Maximum ${MAX_ATTACHMENTS} attachments per ticket.`);
       return;
     }
     const next = [...attachments, { name: file.name, size: file.size, uploadedAt: new Date().toISOString() }];
@@ -247,20 +249,22 @@ export function createTicketActions({ ticket, s, notes, activities, attachments,
     await audit('Attachment', file.name);
   };
 
+  const guarded = <A extends unknown[]>(fn: (...args: A) => Promise<unknown>) => (...args: A) => guard(() => fn(...args));
+
   return {
-    notify,
-    addNote,
-    addManualActivity,
-    closeActivity,
-    assignToMe,
-    reassignQueueSubmit,
-    escalate,
-    resolve,
-    complete,
-    closeTicket,
-    cancel,
-    sendToApproval,
-    reopen,
-    attach,
+    notify: guarded(notify),
+    addNote: guarded(addNote),
+    addManualActivity: guarded(addManualActivity),
+    closeActivity: guarded(closeActivity),
+    assignToMe: guarded(assignToMe),
+    reassignQueueSubmit: guarded(reassignQueueSubmit),
+    escalate: guarded(escalate),
+    resolve: guarded(resolve),
+    complete: guarded(complete),
+    closeTicket: guarded(closeTicket),
+    cancel: guarded(cancel),
+    sendToApproval: guarded(sendToApproval),
+    reopen: guarded(reopen),
+    attach: guarded(attach),
   };
 }

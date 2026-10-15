@@ -1,10 +1,11 @@
+import { Button } from '../../../components/primitives/Button';
 import { Icon } from '../../../components/primitives/Icon';
 import { accountAddressResolvers } from '../sections/accountAddressResolvers';
 import { Card, KV, Pill, asText, dateTime, type Ctx } from './TelesalesOverview';
 import { ActionList, Field, HeaderButton, ICON, SectionHeader, TableCard, yesNo, WideBlock } from './TelesalesKit';
 import { rowDate, demoOf, arr, type Rec } from './shared';
 import { strOrEmpty as str } from '../../../lib/values';
-import { SELECT, FIELD_LABEL } from './listShared';
+import { Input } from '../../../components/primitives/Input';
 
 // ============================================================================ Address
 export function AddressSection({ ctx }: { ctx: Ctx }) {
@@ -21,16 +22,16 @@ export function AddressSection({ ctx }: { ctx: Ctx }) {
   return (
     <>
       <SectionHeader
-        icon={ICON.globe}
-        title="Address"
-        description="View and manage the customer's registered address, National Address System (NAS) details and serviceability information."
+       
+       
+       
         actions={<HeaderButton primary>⟳ Update Address</HeaderButton>}
       />
       <div className="contents">
         <Card title="National Address (NAS)" icon={ICON.globe}>
           <div className="flex items-center gap-3 px-5 py-3 border-b border-[var(--field-card-border)]">
             <Pill tone="green">Verified</Pill>
-            <button type="button" className="text-accent font-semibold text-[length:var(--fs-body)]">View in Map →</button>
+            <Button variant="tertiary" type="button">View in Map →</Button>
           </div>
           <KV label="Zone">{zone}</KV>
           <KV label="Street">{street}</KV>
@@ -45,19 +46,14 @@ export function AddressSection({ ctx }: { ctx: Ctx }) {
               ['Building', building],
               ['RFS Flag', rfs || '-'],
             ].map(([label, value]) => (
-              <label key={label} className="block">
-                <span className={FIELD_LABEL}>{label}</span>
-                <select className={SELECT} defaultValue={value} aria-label={label}>
-                  <option>{value}</option>
-                </select>
-              </label>
+              <Input key={label} label={label} value={value} readOnly />
             ))}
           </div>
         </Card>
         <Card title="Location Map" icon={ICON.globe}>
           <div className="p-5">
             <div className="relative h-44 rounded-[var(--radius-card)] bg-gradient-to-br from-[var(--telesales-map-from)] to-[var(--telesales-map-to)] overflow-hidden">
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-accent text-accent-on flex items-center justify-center">
+              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-[var(--radius-pill)] bg-accent text-accent-on flex items-center justify-center">
                 <Icon path={ICON.globe} className="w-5 h-5" />
               </span>
               <div className="absolute right-3 bottom-3 rounded-[var(--radius-button)] bg-bg px-3 py-2 text-[length:var(--fs-caption)]">
@@ -66,7 +62,7 @@ export function AddressSection({ ctx }: { ctx: Ctx }) {
                 <div className="text-fg-2">{building}</div>
               </div>
             </div>
-            <button type="button" className="text-accent font-semibold text-[length:var(--fs-body)] mt-3">View in Google Maps →</button>
+            <Button variant="tertiary" type="button" className="mt-3">View in Google Maps →</Button>
           </div>
         </Card>
       </div>
@@ -88,21 +84,10 @@ export function AddressSection({ ctx }: { ctx: Ctx }) {
               ['Address Type', str(type.addressType)],
               ['Usage Type', str(type.usageType)],
             ].map(([label, value]) => (
-              <label key={label} className="block">
-                <span className={FIELD_LABEL}>{label}</span>
-                <select className={SELECT} defaultValue={value} aria-label={label}>
-                  <option>{value}</option>
-                </select>
-              </label>
+              <Input key={label} label={label} value={value} readOnly />
             ))}
-            <label className="block">
-              <span className={FIELD_LABEL}>Valid From</span>
-              <input readOnly value={type.validFrom ? dateTime(type.validFrom).d : '-'} className={`${SELECT} bg-surface`} aria-label="Valid From" />
-            </label>
-            <label className="block">
-              <span className={FIELD_LABEL}>Valid To</span>
-              <input readOnly value={type.validTo ? dateTime(type.validTo).d : '-'} className={`${SELECT} bg-surface`} aria-label="Valid To" />
-            </label>
+            <Input label="Valid From" value={type.validFrom ? dateTime(type.validFrom).d : '-'} readOnly />
+            <Input label="Valid To" value={type.validTo ? dateTime(type.validTo).d : '-'} readOnly />
           </div>
           <KV label="Is Mailing Address">{yesNo(type.isMailing as boolean)}</KV>
           <KV label="Is Billing Address">{yesNo(type.isBilling as boolean)}</KV>
@@ -137,7 +122,7 @@ export function AddressSection({ ctx }: { ctx: Ctx }) {
             { header: 'Status', render: (r) => <Pill tone={str(r.status) === 'Current' ? 'green' : 'neutral'}>{str(r.status)}</Pill> },
             { header: 'Updated By', render: (r) => str(r.by) },
             { header: 'Updated On', render: (r) => rowDate(r.on) },
-            { header: 'Action', render: () => <span className="text-accent font-semibold">View</span> },
+            { header: 'Action', render: () => <span className="text-link font-semibold">View</span> },
           ]}
         />
       </WideBlock>

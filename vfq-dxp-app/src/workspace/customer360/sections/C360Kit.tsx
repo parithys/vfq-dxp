@@ -1,6 +1,13 @@
+import { DataTable, type Column } from '../../../components/primitives/DataTable';
+import { toneFor, type Tone } from '../../../lib/statusTone';
+import { formatDate, formatQarLoose, formatTime } from '../../../lib/format';
 import { useEffect, useId, useRef, useState } from 'react';
 import { containerId } from '../queryFlow/containerIndex';
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
+import { SegmentedTabs } from '../../../components/primitives/SegmentedTabs';
+import { SearchField } from '../../../components/primitives/SearchField';
+import { Badge } from '../../../components/primitives/Badge';
+import { Button } from '../../../components/primitives/Button';
 import { Icon } from '../../../components/primitives/Icon';
 import { RevealValue, useFieldAccess } from '../fieldAccess';
 
@@ -47,7 +54,6 @@ export const IC = {
   external: 'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6 M15 3h6v6 M10 14L21 3',
   plus: 'M12 5v14 M5 12h14',
   edit: 'M12 20h9 M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z',
-  dots: 'M12 5h.01 M12 12h.01 M12 19h.01',
   chevRight: 'M9 18l6-6-6-6',
   chevLeft: 'M15 18l-6-6 6-6',
   chevDown: 'M6 9l6 6 6-6',
@@ -77,39 +83,23 @@ export const IC = {
   trend: 'M23 6l-9.5 9.5-5-5L1 18 M17 6h6v6',
 } as const;
 
-export type Tone = 'red' | 'green' | 'amber' | 'blue' | 'purple' | 'grey';
-
 /** Tinted fill + foreground per tone, from design tokens. */
 export const TONE: Record<Tone, { bg: string; fg: string; border: string }> = {
-  red: { bg: 'bg-[color-mix(in_oklab,var(--accent),var(--bg)_90%)]', fg: 'text-accent', border: 'border-[var(--danger-border)]' },
-  green: { bg: 'bg-[color-mix(in_oklab,var(--success),var(--bg)_88%)]', fg: 'text-success', border: 'border-[var(--success-border)]' },
+  red: { bg: 'bg-tone-accent', fg: 'text-accent', border: 'border-[var(--danger-border)]' },
+  green: { bg: 'bg-tone-success', fg: 'text-success', border: 'border-[var(--success-border)]' },
   amber: { bg: 'bg-[var(--warn-bg)]', fg: 'text-[var(--warn-text)]', border: 'border-[var(--warn-border)]' },
-  blue: { bg: 'bg-[color-mix(in_oklab,var(--signal-blue),var(--bg)_88%)]', fg: 'text-[var(--signal-blue)]', border: 'border-[color-mix(in_oklab,var(--signal-blue),var(--bg)_70%)]' },
-  purple: { bg: 'bg-[color-mix(in_oklab,var(--info),var(--bg)_90%)]', fg: 'text-[var(--info)]', border: 'border-[var(--info-border)]' },
+  blue: { bg: 'bg-tone-blue', fg: 'text-[var(--signal-blue)]', border: 'border-tone-blue-border' },
+  purple: { bg: 'bg-tone-info', fg: 'text-[var(--info)]', border: 'border-[var(--info-border)]' },
   grey: { bg: 'bg-[var(--surface)]', fg: 'text-fg-2', border: 'border-[var(--field-card-border)]' },
 };
 
-/** Status text -> tone, for the pills used across tables (Active, Suspended, Open, Resolved, High ...). */
-export function toneFor(status: string): Tone {
-  const s = status.toLowerCase();
-  if (/^(active|completed|complete|resolved|paid|eligible|yes|enabled|verified|whitelisted|clear|allowed|closed - won|default|solved|closed|available|done)$/.test(s)) return 'green';
-  if (/(suspend|cancel|reject|overdue|unpaid|critical|high|lost|failed|not eligible|blocked|blacklisted|breach)/.test(s)) return 'red';
-  if (/(progress|pending|medium|at risk|warning|expir|stage|draft|submitted|escalate)/.test(s)) return 'amber';
-  if (/(open|low|new|info|assigned)/.test(s)) return 'blue';
-  return 'grey';
-}
+export { toneFor, type Tone } from '../../../lib/statusTone';
 
+const TONE_BADGE = { red: 'tag-red', green: 'tag-green', amber: 'tag-amber', blue: 'tag-blue', purple: 'tag-violet', grey: 'filled-neutral' } as const;
+
+/** Status / tag chip: the shared Badge, with this kit's tone names mapped onto its variants. */
 export function Pill({ tone = 'grey', children, solid = false }: { tone?: Tone; children: ReactNode; solid?: boolean }) {
-  const t = TONE[tone];
-  return (
-    <span
-      className={`inline-flex items-center justify-center rounded-[var(--radius-sm)] px-2.5 py-0.5 text-[length:var(--fs-caption)] font-medium whitespace-nowrap ${
-        solid ? 'bg-accent text-accent-on' : `${t.bg} ${t.fg}`
-      }`}
-    >
-      {children}
-    </span>
-  );
+  return <Badge variant={solid ? 'accent' : TONE_BADGE[tone]}>{children}</Badge>;
 }
 
 /** Pill whose tone follows its own text. */
@@ -131,46 +121,27 @@ export function IconTile({ icon, tone = 'blue', size = 'md' }: { icon: string; t
 export function LinkAction({ children, onClick }: { children: ReactNode; onClick?: () => void }) {
   if (!onClick) return null;
   return (
-    <button type="button" onClick={onClick} className="text-accent font-medium text-[length:var(--fs-body)] hover:underline whitespace-nowrap">
+    <Button variant="tertiary" type="button" onClick={onClick} className="whitespace-nowrap">
       {children} &rarr;
-    </button>
+    </Button>
   );
 }
 
 /** The red "View" pill used in table action columns. */
 export function ViewPill({ onClick }: { onClick?: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="rounded-[var(--radius-sm)] px-2.5 py-0.5 text-[length:var(--fs-caption)] font-medium text-accent bg-[color-mix(in_oklab,var(--accent),var(--bg)_92%)] hover:bg-[color-mix(in_oklab,var(--accent),var(--bg)_85%)]"
-    >
+    <Button variant="secondary" compact onClick={onClick}>
       View
-    </button>
+    </Button>
   );
 }
 
 export function ActionButton({ children, icon, onClick, primary = false, disabled = false }: { children: ReactNode; icon?: string; onClick?: () => void; primary?: boolean; disabled?: boolean }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-[var(--radius-button)] px-4 py-2 text-[length:var(--fs-btn-compact)] font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-        primary ? 'bg-[image:var(--accent-gradient)] text-accent-on enabled:hover:bg-[image:var(--accent-gradient-hover)]' : 'border border-[var(--field-card-border)] bg-bg text-fg enabled:hover:bg-surface'
-      }`}
-    >
+    <Button variant={primary ? 'primary' : 'secondary'} compact onClick={onClick} disabled={disabled}>
       {icon && <Icon path={icon} className="w-4 h-4" />}
       {children}
-    </button>
-  );
-}
-
-export function KebabButton({ onClick }: { onClick?: () => void }) {
-  return (
-    <button type="button" onClick={onClick} aria-label="More actions" className="w-9 h-9 rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg flex items-center justify-center hover:bg-surface">
-      <Icon path={IC.dots} className="w-4 h-4" />
-    </button>
+    </Button>
   );
 }
 
@@ -180,13 +151,13 @@ export function KebabButton({ onClick }: { onClick?: () => void }) {
  */
 export function TabPage({ icon, tone = 'blue', title, subtitle, actions, children }: { icon?: string; tone?: Tone; title?: string; subtitle?: string; actions?: ReactNode; children: ReactNode }) {
   return (
-    <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 space-y-4">
+    <div className="card p-5 space-y-4">
       {(title || actions) && (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-4 min-w-0">
             {icon && <IconTile icon={icon} tone={tone} size="lg" />}
             <div className="min-w-0">
-              {title && <h2 className="text-fg font-bold text-[length:var(--fs-h4)] leading-tight">{title}</h2>}
+              {title && <h2 className="text-fg font-bold text-[length:var(--fs-h5)] leading-tight">{title}</h2>}
               {subtitle && <p className="text-fg-2 text-[length:var(--fs-body)]">{subtitle}</p>}
             </div>
           </div>
@@ -238,7 +209,7 @@ export function KpiTile({
               onLink();
             }}
             onKeyDown={(e) => e.key === 'Enter' && onLink()}
-            className="inline-block mt-1 text-accent font-medium text-[length:var(--fs-body)] hover:underline cursor-pointer"
+            className="inline-block mt-1 text-link font-medium text-[length:var(--fs-body)] hover:underline cursor-pointer"
           >
             {link} &rarr;
           </span>
@@ -247,7 +218,7 @@ export function KpiTile({
       {chevron && <Icon path={IC.chevRight} className="w-5 h-5 text-fg shrink-0" />}
     </>
   );
-  const cls = 'rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 flex items-center gap-4 min-w-0';
+  const cls = 'card p-4 flex items-center gap-4 min-w-0';
   return onClick ? (
     <button type="button" onClick={onClick} className={`${cls} w-full hover:bg-surface`}>
       {body}
@@ -269,9 +240,9 @@ export function Panel({ icon, title, action, children, className = '', flush = f
   if (typeof title === 'string' && modeOf(title) === 'hidden') return null;
   return (
     // A panel whose rows were all withheld by field access (empty body) is not drawn.
-    <section data-container-id={id ?? (typeof title === 'string' ? containerId(title) : undefined)} className={`rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg min-w-0 has-[>.panel-body:empty]:hidden ${className}`}>
-      <header className="flex items-center justify-between gap-3 px-4 pt-4 pb-3">
-        <h3 className="flex items-center gap-2.5 text-fg font-semibold text-[length:var(--fs-body-lg)] min-w-0">
+    <section data-container-id={id ?? (typeof title === 'string' ? containerId(title) : undefined)} className={`card min-w-0 has-[>.panel-body:empty]:hidden ${className}`}>
+      <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 pt-4 pb-3">
+        <h3 className="flex items-center gap-2.5 text-fg font-semibold text-[length:var(--fs-body-lg)] min-w-[10rem]">
           {icon && <Icon path={icon} className="w-5 h-5 shrink-0" />}
           <span className="min-w-0 break-words">{title}</span>
         </h3>
@@ -312,7 +283,11 @@ export interface GridCol<T> {
   strong?: boolean;
 }
 
-/** Plain data grid in the design's style: light header row, row dividers, optional selectable rows. */
+/**
+ * Customer 360's data grid: the shared DataTable in its `plain` variant (no outer frame - the Panel around it is the card;
+ * header stays in view past ~70vh; no sorting, no paging) plus the one thing only Customer 360 has: columns whose header
+ * the agent's field-access mode hides are dropped.
+ */
 export function GridTable<T>({
   cols,
   rows,
@@ -331,94 +306,40 @@ export function GridTable<T>({
   dense?: boolean;
 }) {
   const modeOf = useFieldAccess();
-  cols = cols.filter((c) => modeOf(c.header) !== 'hidden');
-  if (rows.length === 0) return <p className="text-muted text-[length:var(--fs-body)] py-4 text-center">{empty}</p>;
+  const columns: Column<T>[] = cols
+    .filter((c) => modeOf(c.header) !== 'hidden')
+    .map(({ className, ...c }) => ({ ...c, cellClassName: className, sortable: false }));
   return (
-    // Scrolls inside itself past ~70vh so the header can stay in view (sticky) on a long table.
-    <div className="overflow-auto max-h-[70vh]">
-      <table className="w-full text-left text-[length:var(--fs-body)]">
-        <thead className="sticky top-0 z-10">
-          <tr className="bg-[var(--table-header-bg)] text-fg-2">
-            {cols.map((c) => (
-              <th key={c.key} className={`px-3 py-2.5 text-[length:var(--fs-caption)] font-semibold whitespace-nowrap border-b border-[var(--border)] ${c.numeric ? 'text-right' : ''} ${c.className ?? ''}`}>
-                {c.header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r, i) => {
-            const k = rowKey(r);
-            const selected = selectedKey !== undefined && selectedKey === k;
-            return (
-              <tr
-                key={k}
-                onClick={onSelect ? () => onSelect(r) : undefined}
-                className={`border-b border-border-soft last:border-0 ${onSelect ? 'cursor-pointer hover:bg-surface' : ''} ${selected ? 'bg-[color-mix(in_oklab,var(--accent),var(--bg)_95%)] outline outline-1 -outline-offset-1 outline-[var(--danger-border)]' : ''}`}
-              >
-                {cols.map((c) => (
-                  <td key={c.key} className={`px-3 ${dense ? 'py-2' : 'py-3'} align-middle text-fg ${c.numeric ? 'text-right whitespace-nowrap tabular-nums' : ''} ${c.strong ? 'font-semibold' : ''} ${c.className ?? ''}`}>
-                    {c.render ? c.render(r, i) : String((r as Record<string, unknown>)[c.key] ?? '-')}
-                  </td>
-                ))}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      variant="plain"
+      columns={columns}
+      rows={rows}
+      rowKey={rowKey}
+      selectedKey={selectedKey}
+      onRowClick={onSelect}
+      emptyMessage={empty}
+      dense={dense}
+      pageSize={Infinity}
+    />
   );
 }
 
 /** Underline sub-tabs (All Orders (12) / In Progress (3) ...). */
 export function UnderlineTabs({ items, active, onChange }: { items: { key: string; label: string }[]; active: string; onChange: (key: string) => void }) {
-  return (
-    <div role="tablist" className="flex gap-1 border-b border-border-soft overflow-x-auto">
-      {items.map((i) => (
-        <button
-          key={i.key}
-          type="button"
-          role="tab"
-          aria-selected={active === i.key}
-          onClick={() => onChange(i.key)}
-          className={`px-4 py-2 text-[length:var(--fs-body)] border-b-2 -mb-px whitespace-nowrap shrink-0 transition-colors ${
-            active === i.key ? 'border-accent text-accent font-semibold' : 'border-transparent text-fg-2 hover:text-fg'
-          }`}
-        >
-          {i.label}
-        </button>
-      ))}
-    </div>
-  );
+  return <SegmentedTabs items={items} active={active} onChange={onChange} />;
 }
 
+/** Customer 360's search box: the shared SearchField with the kit's layout (grows to fill the filter row). */
 export function SearchBox({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
-  const inputRef = useRef<HTMLInputElement>(null);
   return (
-    <label className="flex items-center gap-2 rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg px-3 py-2 flex-1 min-w-48">
-      <Icon path={IC.search} className="w-4 h-4 text-muted shrink-0" />
-      <input
-        ref={inputRef}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        aria-label={placeholder}
-        className="bg-transparent outline-none flex-1 min-w-0 text-[length:var(--fs-body)] text-fg placeholder:text-muted"
-      />
-      {value && (
-        <button
-          type="button"
-          onClick={() => {
-            onChange('');
-            inputRef.current?.focus();
-          }}
-          aria-label="Clear search"
-          className="shrink-0 text-muted hover:text-fg rounded-[var(--radius-sm)] focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
-        >
-          <Icon path={IC.x} className="w-4 h-4" />
-        </button>
-      )}
-    </label>
+    <SearchField
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onClear={() => onChange('')}
+      placeholder={placeholder}
+      aria-label={placeholder}
+      wrapperClassName="flex-1 min-w-48"
+    />
   );
 }
 
@@ -427,7 +348,16 @@ export function SearchBox({ value, onChange, placeholder }: { value: string; onC
  * <select>: the browser draws a native popup over the field with the chosen option aligned to it, which is where the
  * misplaced options came from. This one always opens directly under the field.
  */
-export function FilterSelect({ label, value, options, onChange }: { label: string; value: string; options: { value: string; label: string }[]; onChange: (v: string) => void }) {
+export function FilterSelect({ label, value, options, onChange, hideLabel = false, captioned = false }: {
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+  /** Value only, no caption and no prefix (the name stays available to screen readers) - for a select whose options already say what they are. */
+  hideLabel?: boolean;
+  /** The older two-line look: a small caption above the value. Use for a picker, not a filter. */
+  captioned?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const ref = useRef<HTMLDivElement>(null);
@@ -444,13 +374,23 @@ export function FilterSelect({ label, value, options, onChange }: { label: strin
     return () => document.removeEventListener('mousedown', onDown);
   }, [open]);
 
+  useEffect(() => {
+    if (open && active >= 0) document.getElementById(`${id}-opt-${active}`)?.scrollIntoView({ block: 'nearest' });
+  }, [open, active, id]);
+
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const choose = (i: number) => {
     onChange(options[i].value);
     setOpen(false);
+    triggerRef.current?.focus();
   };
   const onKeyDown = (e: ReactKeyboardEvent) => {
+    const last = options.length - 1;
     if (e.key === 'Escape' && open) {
       e.stopPropagation();
+      setOpen(false);
+      triggerRef.current?.focus();
+    } else if (e.key === 'Tab' && open) {
       setOpen(false);
     } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
@@ -458,11 +398,18 @@ export function FilterSelect({ label, value, options, onChange }: { label: strin
         setActive(selectedIndex);
         setOpen(true);
       } else {
-        setActive((i) => (e.key === 'ArrowDown' ? Math.min(options.length - 1, i + 1) : Math.max(0, i - 1)));
+        setActive((i) => (e.key === 'ArrowDown' ? Math.min(last, i + 1) : Math.max(0, i - 1)));
       }
+    } else if (open && (e.key === 'Home' || e.key === 'End')) {
+      e.preventDefault();
+      setActive(e.key === 'Home' ? 0 : last);
     } else if ((e.key === 'Enter' || e.key === ' ') && open && active >= 0) {
       e.preventDefault();
       choose(active);
+    } else if (open && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const from = active + 1;
+      const hit = [...options.slice(from), ...options.slice(0, from)].findIndex((o) => o.label.toLowerCase().startsWith(e.key.toLowerCase()));
+      if (hit >= 0) setActive((from + hit) % options.length);
     }
   };
 
@@ -470,18 +417,37 @@ export function FilterSelect({ label, value, options, onChange }: { label: strin
     <div ref={ref} className="relative min-w-36" onKeyDown={onKeyDown}>
       <button
         type="button"
+        ref={triggerRef}
         role="combobox"
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-controls={`${id}-list`}
+        aria-controls={open ? `${id}-list` : undefined}
+        aria-activedescendant={open && active >= 0 ? `${id}-opt-${active}` : undefined}
         onClick={() => {
           setActive(selectedIndex);
           setOpen((o) => !o);
         }}
-        className="w-full text-left rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg px-3 pt-1 pb-1.5 pr-10 focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+        className={`w-full text-left rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg px-3 pr-10 focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+          captioned ? 'pt-1 pb-1.5' : 'py-2 min-h-[var(--control-h-md)] flex items-center'
+        }`}
       >
-        <span className="block text-muted text-[length:var(--fs-caption)] leading-tight">{label}</span>
-        <span className="block truncate text-fg text-[length:var(--fs-body)]">{selected?.label}</span>
+        {captioned ? (
+          <>
+            <span className="block text-muted text-[length:var(--fs-caption)] leading-tight">{label}</span>
+            <span className="block truncate text-fg text-[length:var(--fs-body)]">{selected?.label}</span>
+          </>
+        ) : hideLabel ? (
+          <>
+            <span className="sr-only">{label}</span>
+            <span className="block truncate text-fg text-[length:var(--fs-body)]">{selected?.label}</span>
+          </>
+        ) : (
+          // "Severity: All" - the caption becomes a prefix on the value; an "All Modules" / "All Status" option reads as plain "All".
+          <span className="block truncate text-fg text-[length:var(--fs-body)]">
+            <span className="text-muted">{label}: </span>
+            {/^all\b/i.test(selected?.label ?? '') && /^all( \w+)?$/i.test(selected?.label ?? '') ? 'All' : selected?.label}
+          </span>
+        )}
         <Icon path={IC.chevDown} className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-fg-2" />
       </button>
       {open && (
@@ -489,17 +455,18 @@ export function FilterSelect({ label, value, options, onChange }: { label: strin
           id={`${id}-list`}
           role="listbox"
           aria-label={label}
-          className="absolute left-0 top-full z-30 mt-1 min-w-full max-h-64 overflow-y-auto rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg py-1 shadow-raised"
+          className="absolute left-0 top-full z-[var(--z-raised)] mt-1 min-w-full max-h-64 overflow-y-auto rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg py-1 shadow-raised"
         >
           {options.map((o, i) => (
             <li
               key={o.value}
+              id={`${id}-opt-${i}`}
               role="option"
               aria-selected={o.value === value}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => choose(i)}
               onMouseEnter={() => setActive(i)}
-              className={`cursor-pointer whitespace-nowrap px-3 py-2 text-[length:var(--fs-body)] text-fg ${i === active ? 'bg-surface' : ''} ${o.value === value ? 'font-medium text-accent' : ''}`}
+              className={`cursor-pointer whitespace-nowrap px-3 py-2 text-[length:var(--fs-body)] text-fg ${i === active ? 'bg-surface ring-2 ring-inset ring-[var(--focus-outline)]' : ''} ${o.value === value ? 'font-medium text-accent' : ''}`}
             >
               {o.label}
             </li>
@@ -514,8 +481,8 @@ export function Progress({ pct, tone = 'red' }: { pct: number; tone?: Tone }) {
   const clamped = Math.max(0, Math.min(100, pct));
   const bar = tone === 'green' ? 'bg-success' : tone === 'amber' ? 'bg-[var(--warn)]' : tone === 'blue' ? 'bg-[var(--signal-blue)]' : 'bg-accent';
   return (
-    <div className="h-1.5 rounded-full bg-border-soft overflow-hidden" role="progressbar" aria-valuenow={clamped} aria-valuemin={0} aria-valuemax={100}>
-      <div className={`h-full rounded-full ${bar}`} style={{ width: `${clamped}%` }} />
+    <div className="h-1.5 rounded-[var(--radius-pill)] bg-border-soft overflow-hidden" role="progressbar" aria-valuenow={clamped} aria-valuemin={0} aria-valuemax={100}>
+      <div className={`h-full rounded-[var(--radius-pill)] ${bar}`} style={{ width: `${clamped}%` }} />
     </div>
   );
 }
@@ -544,42 +511,13 @@ export function usePaging<T>(rows: T[], pageSize: number) {
   return { page: safe, pages, setPage, slice: rows.slice((safe - 1) * pageSize, safe * pageSize), total: rows.length };
 }
 
-export function Pager({ page, pages, onPage }: { page: number; pages: number; onPage: (p: number) => void }) {
-  return (
-    <div className="flex items-center gap-1">
-      <button type="button" aria-label="Previous page" disabled={page <= 1} onClick={() => onPage(page - 1)} className="w-8 h-8 flex items-center justify-center text-fg-2 disabled:opacity-40">
-        <Icon path={IC.chevLeft} className="w-4 h-4" />
-      </button>
-      {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-        <button
-          key={p}
-          type="button"
-          onClick={() => onPage(p)}
-          aria-current={p === page}
-          className={`w-8 h-8 rounded-[var(--radius-sm)] text-[length:var(--fs-body)] ${p === page ? 'border border-[var(--field-card-border)] text-fg font-medium' : 'text-fg-2 hover:bg-surface'}`}
-        >
-          {p}
-        </button>
-      ))}
-      <button type="button" aria-label="Next page" disabled={page >= pages} onClick={() => onPage(page + 1)} className="w-8 h-8 flex items-center justify-center text-fg-2 disabled:opacity-40">
-        <Icon path={IC.chevRight} className="w-4 h-4" />
-      </button>
-    </div>
-  );
-}
+export { Pager } from '../../../components/primitives/Pager';
 
-export const fmtDate = (v: unknown): string | undefined => {
-  if (v === undefined || v === null || v === '') return undefined;
-  const d = new Date(String(v));
-  return Number.isNaN(d.getTime()) ? String(v) : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-};
+export const fmtDate = (v: unknown): string | undefined => (v === undefined || v === null || v === '' ? undefined : formatDate(v));
 
 export const fmtDateTime = (v: unknown): { date?: string; time?: string } => {
   if (v === undefined || v === null || v === '') return {};
-  const d = new Date(String(v));
-  if (Number.isNaN(d.getTime())) return { date: String(v) };
-  const hasTime = /T\d/.test(String(v));
-  return { date: fmtDate(v), time: hasTime ? d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : undefined };
+  return { date: formatDate(v), time: /T\d/.test(String(v)) ? formatTime(v) : undefined };
 };
 
-export const qar = (n: unknown): string | undefined => (n === undefined || n === null || n === '' ? undefined : `QAR ${typeof n === 'number' ? n.toLocaleString('en-US') : String(n)}`);
+export const qar = formatQarLoose;

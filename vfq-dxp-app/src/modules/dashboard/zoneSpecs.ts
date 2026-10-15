@@ -1,6 +1,10 @@
 import { ZONE_ICONS as I, type ZoneSpec } from './DashboardZone';
 import type { ProductZoneVariant } from './dashboardLayout';
 import type { ZoneMetrics } from './useZoneMetrics';
+import { TILE_PILLS } from './heroFigures';
+
+/** Sentence-case a metric label ("Open Tasks" -> "Open tasks") for the softer landing-page tiles. */
+const soft = (s: string) => s.charAt(0) + s.slice(1).toLowerCase();
 
 // Zone content, kept out of the renderer so the two zones are data and the
 // component is layout. `compact` trims the tile/card set for a half-width
@@ -33,8 +37,11 @@ export function customerOpsSpec(
     : m.taskTiles;
 
   const allCards: ZoneSpec['cards'] = [
-    { label: 'Open tickets', sub: 'across all queues', value: m.openTickets, icon: I.ticket, loadingKind: 'trouble-tickets' },
-    { label: 'Orders pending approval', sub: 'awaiting a manager', value: m.ordersPendingApproval, icon: I.checkCircle, loadingKind: 'orders' },
+    { label: 'Open tickets', sub: 'Across all queues', value: m.openTickets, icon: I.headset, loadingKind: 'trouble-tickets' },
+    // A role that can decide orders sees how many are waiting on it; everyone else keeps the shared total.
+    m.ordersAwaitingMyDecision !== undefined
+      ? { label: 'Orders awaiting your decision', sub: 'routed to your role', value: m.ordersAwaitingMyDecision, icon: I.clipboard, loadingKind: 'orders' }
+      : { label: opts.compact ? 'Orders pending' : 'Orders pending approval', sub: opts.compact ? 'Awaiting manager approval' : 'awaiting a manager', value: m.ordersPendingApproval, icon: I.clipboard, loadingKind: 'orders' },
     { label: 'Total leads', sub: 'created this session', value: m.totalLeads, icon: I.users, loadingKind: 'leads' },
     { label: 'SIM swaps pending', sub: 'awaiting approval', value: m.simSwapsPending, icon: I.simCard, loadingKind: 'sim-swap-orders' },
     {
@@ -51,19 +58,19 @@ export function customerOpsSpec(
   ];
 
   return {
-    heading: opts.framing === 'one-of-two' ? 'Customer Operations' : 'My Tasks',
+    heading: opts.framing === 'one-of-two' ? 'Customer operations' : 'My Tasks',
+    subheading: opts.framing === 'one-of-two' ? 'Your daily service workload' : undefined,
     headingIcon: I.users2,
-    tiles: tiles.map((t) => ({ ...t, to: `/tasks?filter=${t.key}`, loadingKind: 'tasks' })),
+    tiles: tiles.map((t) => ({ ...t, label: soft(t.label), pill: TILE_PILLS[t.key], to: `/tasks?filter=${t.key}`, loadingKind: 'tasks' })),
     cards: opts.compact ? allCards.slice(0, 2) : allCards,
     actions: opts.compact
       ? [
-          { label: 'New Connection', path: '/mobile/new-connection' },
-          { label: 'New Postpaid Connection', path: '/mobile/new-connection' },
+          { label: 'New Connection', path: '/mobile/start-connection' },
           { label: 'Create Ticket', path: '/support' },
         ]
       : [
-          { label: 'New Connection', path: '/mobile/new-connection' },
-          { label: 'New Postpaid Connection', path: '/mobile/new-connection' },
+          { label: 'New Connection', path: '/mobile/start-connection' },
+          { label: 'New Postpaid Connection', path: '/mobile/start-connection' },
           { label: 'New Fixed Line', screenId: 'SCR-043' },
           { label: 'Start a Lead', path: '/sales' },
           { label: 'Create Ticket', path: '/support' },
@@ -100,7 +107,7 @@ export function productWorkSpec(
       headingIcon: I.chart,
       tiles: [
         { key: 'wfm', label: 'Open Activities', count: m.wfmActivitiesOpen, to: '/tasks', loadingKind: 'wfm-activities' },
-        { key: 'appointments', label: 'Appointments', count: m.appointmentsBooked, to: '/fibre-home/relocation', loadingKind: 'appointments' },
+        { key: 'appointments', label: 'Appointments', count: m.appointmentsBooked, to: '/fibre-home/plans-installation', loadingKind: 'appointments' },
         { key: 'assigned', label: 'Assigned Tasks', count: m.taskTiles[0]?.count ?? 0, to: '/tasks?filter=open', loadingKind: 'tasks' },
       ],
       cards: [
@@ -122,7 +129,7 @@ export function productWorkSpec(
         { key: 'queue', label: 'Orders In Flight', count: m.fulfilmentQueue, to: '/orders', loadingKind: 'orders' },
         { key: 'approval', label: 'Awaiting Approval', count: m.ordersPendingApproval, to: '/orders', loadingKind: 'orders' },
         { key: 'verification', label: 'Verification Backlog', count: m.verificationBacklog, to: '/orders', loadingKind: 'order-approvals' },
-        { key: 'simswap', label: 'SIM Swaps Pending', count: m.simSwapsPending, to: '/mobile/sim-device', loadingKind: 'sim-swap-orders' },
+        { key: 'simswap', label: 'SIM Swaps Pending', count: m.simSwapsPending, to: '/mobile/service-management', loadingKind: 'sim-swap-orders' },
         { key: 'bulk', label: 'Bulk Jobs Processed', count: m.bulkJobsProcessed, to: '/orders', loadingKind: 'bulk-activation-orders' },
       ],
       cards: [
@@ -148,30 +155,32 @@ export function productWorkSpec(
   ];
 
   const allCards: ZoneSpec['cards'] = [
-    { label: 'Mobile attach rate', sub: period, value: perf ? `${perf.mobileAttachRatePct}%` : '-', icon: I.mobile, loadingKind: 'channel-performance' },
+    { label: 'Mobile attach rate', sub: opts.regional ? period : 'Current quarter', value: perf ? `${perf.mobileAttachRatePct}%` : '-', icon: I.mobile, loadingKind: 'channel-performance' },
     { label: 'Fibre & Home take-up', sub: period, value: perf ? `${perf.fibreHomeTakeUpPct}%` : '-', icon: I.wifi, loadingKind: 'channel-performance' },
     { label: 'Lead → activation', sub: 'last 30 days', value: perf ? `${perf.leadToActivationPct}%` : '-', icon: I.users, loadingKind: 'channel-performance' },
     { label: 'Top-performing plan', sub: perf?.topPerformingPlan ?? '-', value: perf ? `+${perf.topPerformingPlanDeltaPct}%` : '-', icon: I.tag, loadingKind: 'channel-performance' },
     {
       label: 'Channel mix',
-      sub: 'Retail vs Direct vs Tele',
+      sub: 'Retail · Direct · Tele',
       value: perf ? `${perf.channelMixRetailPct}/${perf.channelMixDirectPct}/${perf.channelMixTelePct}` : '-',
-      icon: I.chart,
+      icon: I.trending,
       loadingKind: 'channel-performance',
     },
     { label: 'Price exceptions', sub: 'awaiting finance sign-off', value: m.priceExceptions, icon: I.alert, loadingKind: 'price-exceptions' },
   ];
 
   return {
-    heading: opts.framing === 'one-of-two' ? 'Product & Channel Performance' : 'My Portfolio',
+    heading: opts.framing === 'one-of-two' ? 'Product performance' : 'My Portfolio',
+    subheading: opts.framing === 'one-of-two' ? 'Commercial health at a glance' : undefined,
+    cardTone: 'pink',
     headingIcon: I.tag,
-    tiles: opts.compact ? allTiles.filter((t) => ['approvals', 'campaigns', 'exceptions'].includes(t.key)) : allTiles,
+    tiles: (opts.compact ? allTiles.filter((t) => ['approvals', 'campaigns', 'exceptions'].includes(t.key)) : allTiles).map((t) => ({ ...t, label: soft(t.label), pill: TILE_PILLS[t.key] })),
     cards: opts.compact ? [allCards[0], allCards[4]] : allCards,
     actions: opts.compact
       ? [{ label: 'Review Exceptions', path: '/mobile' }, { label: 'Start a Campaign', path: '/mobile' }]
       : [
-          { label: 'Launch New Plan', path: '/mobile/new-connections' },
-          { label: 'Update Bundle Pricing', path: '/fibre-home/existing-service' },
+          { label: 'Launch New Plan', path: '/new-connections' },
+          { label: 'Update Bundle Pricing', path: '/fibre-home/plans-installation' },
           { label: 'Start a Campaign', path: '/mobile' },
           { label: 'Review Exceptions', path: '/mobile' },
         ],

@@ -31,7 +31,6 @@ interface ConfigData {
   validationRules: ValidationRule[];
   domainSchema: DomainEntity[];
   moduleHierarchy: ModuleHierarchyEntry[];
-  designTokens: Record<string, string>;
   /** REQ-id -> evidenced screen ids, mechanically extracted from
    * traceability-matrix.md's "Screens:" lines. Only 70 of 295 requirements
    * cite a screen - see screenGrouping.ts for how this partial evidence is
@@ -112,7 +111,7 @@ export async function loadConfig(): Promise<ConfigData> {
   if (cache) return cache;
   if (loading) return loading;
   loading = (async () => {
-    const [routes, personas, featureCatalogue, businessRules, validationRules, domainSchema, moduleHierarchy, designTokens, reqToScreens] =
+    const [routes, personas, featureCatalogue, businessRules, validationRules, domainSchema, moduleHierarchy, reqToScreens] =
       await Promise.all([
         fetchJson<Route[]>('/config/routes.json'),
         fetchJson<Persona[]>('/config/personas.json'),
@@ -123,7 +122,6 @@ export async function loadConfig(): Promise<ConfigData> {
         fetchJson<ValidationRule[]>('/config/validation-rules.json'),
         fetchJson<DomainEntity[]>('/config/domain-schema.json'),
         fetchJson<ModuleHierarchyEntry[]>('/config/module-hierarchy.json'),
-        fetchJson<Record<string, string>>('/config/design-tokens.json'),
         fetchJson<Record<string, string[]>>('/config/req-to-screens.json'),
       ]);
     // Fetched separately, with a silent fallback to "no mappings" - this file
@@ -155,7 +153,7 @@ export async function loadConfig(): Promise<ConfigData> {
     const { personaFeatureLevel, personaScreenLevel } = indexGrants(personas, featureCatalogue);
     cache = {
       routes, personas, featureCatalogue, personaFeatureLevel, personaScreenLevel, rbac,
-      businessRules, validationRules, domainSchema, moduleHierarchy, designTokens,
+      businessRules, validationRules, domainSchema, moduleHierarchy,
       reqToScreens, journeyCatalogueMap, approvalMatrix, customer360Fields, customer360DepartmentMapping,
     };
     return cache;
@@ -219,10 +217,6 @@ export function getLegacyRbacForRole(personaId: string): RbacEntry[] {
   if (!persona || persona.legacyPersonaIds.length === 0) return [];
   const legacy = new Set(persona.legacyPersonaIds);
   return requireConfig().rbac.filter((r) => legacy.has(r.personaId));
-}
-
-export function getBusinessRule(ruleId: string): BusinessRule | undefined {
-  return requireConfig().businessRules.find((r) => r.id === ruleId);
 }
 
 export function getReqToScreens(): Record<string, string[]> {

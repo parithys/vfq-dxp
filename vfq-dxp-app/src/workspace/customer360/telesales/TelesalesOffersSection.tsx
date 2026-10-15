@@ -42,9 +42,9 @@ export function OffersSection({ ctx }: { ctx: Ctx }) {
   return (
     <>
       <SectionHeader
-        icon={ICON.star}
-        title="Offers & Opportunities"
-        description="Personalised offers, eligible discounts and cross-sell opportunities based on customer profile and eligibility."
+       
+       
+       
         actions={
           <>
             <HeaderButton>⟳ Check Latest Offers</HeaderButton>
@@ -69,7 +69,7 @@ export function OffersSection({ ctx }: { ctx: Ctx }) {
           <div className="px-5 pb-5 grid grid-cols-2 gap-4">
             {cards.map((o, i) => (
               <div key={o.name} className={`rounded-[var(--radius-card)] border p-4 ${i === 0 ? 'border-accent border-2' : 'border-[var(--field-card-border)]'}`}>
-                <span className={`inline-block rounded-[var(--radius-button)] px-2 py-0.5 text-[length:var(--fs-caption)] font-bold text-white ${i === 0 ? 'bg-accent' : 'bg-[var(--telesales-blue)]'}`}>{o.badge}</span>
+                <span className={`inline-block rounded-[var(--radius-button)] px-2 py-0.5 text-[length:var(--fs-caption)] font-bold text-on-dark ${i === 0 ? 'bg-accent' : 'bg-[var(--telesales-blue)]'}`}>{o.badge}</span>
                 <div className="text-fg font-bold text-[length:var(--fs-h4)] mt-8">{o.name}</div>
                 <div className="text-fg-2 text-[length:var(--fs-body)] mb-2">{o.tagline}</div>
                 <ul className="text-fg-2 text-[length:var(--fs-body)] space-y-1 mb-3">
@@ -109,7 +109,7 @@ export function OffersSection({ ctx }: { ctx: Ctx }) {
             { header: 'Offer', render: (x) => <b>{str(x.offer)}</b> },
             { header: 'Benefit', render: (x) => str(x.benefit) },
             { header: 'Eligibility', render: (x) => <Pill tone="green">{str(x.eligibility)}</Pill> },
-            { header: 'Action', render: () => <span className="text-accent font-semibold">View Offer</span> },
+            { header: 'Action', render: () => <span className="text-link font-semibold">View Offer</span> },
           ]}
         />
         <TableCard
@@ -122,7 +122,7 @@ export function OffersSection({ ctx }: { ctx: Ctx }) {
             { header: 'Type', render: (x) => str(x.type) },
             { header: 'Valid Till', render: (x) => dateTime(x.validTill).d },
             { header: 'Status', render: (x) => <Pill tone="green">{str(x.status)}</Pill> },
-            { header: 'Action', render: () => <span className="text-accent font-semibold">View</span> },
+            { header: 'Action', render: () => <span className="text-link font-semibold">View</span> },
           ]}
         />
         <TableCard

@@ -5,8 +5,7 @@ import { Drawer } from '../primitives/Drawer';
 import { Input } from '../primitives/Input';
 import { Button } from '../primitives/Button';
 import { ErrorBanner } from '../primitives/ErrorBanner';
-import { QidImageUpload } from '../domain/QidImageUpload';
-import { type QidImageUploadValue } from '../domain/qidImageUploadModel';
+import { QidImageUpload, type QidImageUploadValue } from '../../capabilities/CustomerIdentification';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
 
 interface VerificationGateProps {
@@ -59,10 +58,10 @@ export function VerificationGate({ customerId, customerName, open, onClose, onVe
       title="Verify Customer Identity"
       footer={
         <>
-          <Button variant="ghost-rect" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary-rect" disabled={!idNumber.trim() || !scanComplete || checking} onClick={runVerification}>
+          <Button variant="primary" disabled={!idNumber.trim() || !scanComplete || checking} onClick={runVerification}>
             {checking ? 'Verifying…' : 'Verify & Continue'}
           </Button>
         </>

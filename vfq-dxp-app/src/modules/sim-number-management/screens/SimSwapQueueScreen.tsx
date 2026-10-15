@@ -1,16 +1,20 @@
+import { EntityMissing } from '../../../components/patterns/EntityMissing';
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
 import { ErrorBanner } from '../../../components/primitives/ErrorBanner';
-import { Drawer } from '../../../components/primitives/Drawer';
+import { Drawer } from '../../../capabilities';
 import { Select } from '../../../components/primitives/Select';
 import { Textarea } from '../../../components/primitives/Textarea';
-import { useEntityStore } from '../../../stores/entityStore';
+import { useEntityStore, useKindPending } from '../../../stores/entityStore';
+import { useSubmitGuard } from '../../../hooks/useSubmit';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { PageHeader } from '../../../components/patterns/PageHeader';
+import { usePersonaStore } from '../../../stores/personaStore';
+import { approvalBlockMessage, simSwapDecisionAuthority } from '../../../engines/approvalAuthority';
 
 interface SimSwapOrder {
   simSwapOrderId: string;
@@ -37,10 +41,12 @@ export function SimSwapQueueScreen() {
   const orderId = params.get('id');
   const orders = (useEntityStore((s) => s.records['sim-swap-orders']) ?? []) as unknown as SimSwapOrder[];
   const loadKind = useEntityStore((s) => s.loadKind);
-  const loading = useEntityStore((s) => s.loading['sim-swap-orders']);
+  const loading = useKindPending('sim-swap-orders'); // true until the list has arrived, so the table never flashes "empty" first
   const loadError = useEntityStore((s) => s.errors['sim-swap-orders']);
   const updateRecord = useEntityStore((s) => s.updateRecord);
+  const { guard } = useSubmitGuard();
   const pushToast = useNotificationStore((s) => s.pushToast);
+  const activePersonaId = usePersonaStore((s) => s.activePersonaId);
 
   const [reasons, setReasons] = useState<RejectReason[]>([]);
   const [modal, setModal] = useState<'approve' | 'reject' | null>(null);
@@ -55,6 +61,7 @@ export function SimSwapQueueScreen() {
 
   if (!orderId) {
     const pending = orders.filter((o) => o.status === 'Submitted for Approval');
+    const canWorkQueue = simSwapDecisionAuthority({ personaId: activePersonaId, status: 'Submitted for Approval' }).mayDecide;
     return (
       <div className="p-8">
         <PageHeader title={<>SIM Swap Queue</>} description={<>Order tasks tab - tasks awaiting SIM Swap approval.</>} />
@@ -69,8 +76,8 @@ export function SimSwapQueueScreen() {
               key: 'action',
               header: '',
               render: (r) => (
-                <Button variant="ghost-rect" compact onClick={() => navigate(`/sim-number-management/sim-swap-queue-order-tasks-tab?id=${r.simSwapOrderId}`)}>
-                  Assign to Me
+                <Button variant="secondary" compact onClick={() => navigate(`/sim-number-management/sim-swap-queue-order-tasks-tab?id=${r.simSwapOrderId}`)}>
+                  {canWorkQueue ? 'Assign to Me' : 'View'}
                 </Button>
               ),
             },
@@ -86,28 +93,33 @@ export function SimSwapQueueScreen() {
 
   const order = orders.find((o) => o.simSwapOrderId === orderId);
   if (!order) {
-    return <div className="p-8 text-fg-2">No SIM Swap order selected - go back to the queue and Assign to Me first.</div>;
+    return <EntityMissing what="SIM swap order" loading={Boolean(loading)} backTo="/sim-number-management/sim-swap-queue-order-tasks-tab" backLabel="Back to the SIM swap queue" />;
   }
 
-  const approve = async () => {
-    await updateRecord('sim-swap-orders', 'simSwapOrderId', order.simSwapOrderId, {
-      status: 'Approved/Completed',
-      approveComment,
-    });
-    pushToast('success', `SIM Swap ${order.simSwapOrderId} approved - order completed.`);
-    navigate('/sim-number-management/sim-swap-queue-order-tasks-tab');
-  };
+  const authority = simSwapDecisionAuthority({ personaId: activePersonaId, status: order.status });
+  const blockMessage = approvalBlockMessage('SIM swap', authority);
 
-  const reject = async () => {
-    const reasonLabel = reasons.find((r) => r.reasonCode === rejectReason)?.reasonLabel ?? rejectReason;
-    await updateRecord('sim-swap-orders', 'simSwapOrderId', order.simSwapOrderId, {
-      status: 'Cancelled',
-      rejectReasonCode: rejectReason,
-      rejectComment,
+  const approve = () =>
+    guard(async () => {
+      await updateRecord('sim-swap-orders', 'simSwapOrderId', order.simSwapOrderId, {
+        status: 'Approved/Completed',
+        approveComment,
+      });
+      pushToast('success', `SIM Swap ${order.simSwapOrderId} approved - order completed.`);
+      navigate('/sim-number-management/sim-swap-queue-order-tasks-tab');
     });
-    pushToast('warning', `SIM Swap ${order.simSwapOrderId} dropped as cancelled - ${reasonLabel}.`);
-    navigate('/sim-number-management/sim-swap-queue-order-tasks-tab');
-  };
+
+  const reject = () =>
+    guard(async () => {
+      const reasonLabel = reasons.find((r) => r.reasonCode === rejectReason)?.reasonLabel ?? rejectReason;
+      await updateRecord('sim-swap-orders', 'simSwapOrderId', order.simSwapOrderId, {
+        status: 'Cancelled',
+        rejectReasonCode: rejectReason,
+        rejectComment,
+      });
+      pushToast('warning', `SIM Swap ${order.simSwapOrderId} dropped as cancelled - ${reasonLabel}.`);
+      navigate('/sim-number-management/sim-swap-queue-order-tasks-tab');
+    });
 
   return (
     <div className="p-8 w-full">
@@ -117,7 +129,7 @@ export function SimSwapQueueScreen() {
         description={<>MSISDN: {order.msisdn}</>}
       />
 
-      <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)] rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 mb-6">
+      <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)] card p-4 mb-6">
         <div>
           <dt className="text-[length:var(--fs-caption)] text-muted">New SIM Serial</dt>
           <dd className="text-fg">{order.newSimSerialNumber ?? '-'}</dd>
@@ -136,20 +148,26 @@ export function SimSwapQueueScreen() {
         </div>
       </dl>
 
-      <div className="flex flex-wrap gap-2">
-        <Button variant="primary-rect" onClick={() => setModal('approve')}>
-          Approve
-        </Button>
-        <Button variant="ghost-rect" className="!text-danger !border-danger" onClick={() => setModal('reject')}>
-          Reject
-        </Button>
-      </div>
+      {blockMessage && (
+        <div className="mb-4 rounded-[var(--radius-card)] border border-[var(--warn)] bg-tone-warn-soft px-4 py-3 text-[length:var(--fs-body)] text-[var(--warn-text)]">{blockMessage}</div>
+      )}
+      {/* Decision buttons only while the swap is awaiting a decision and only for the roles that work this queue. */}
+      {authority.mayDecide && (
+        <div className="flex flex-wrap gap-2">
+          <Button variant="primary" onClick={() => setModal('approve')}>
+            Approve
+          </Button>
+          <Button variant="secondary" className="!text-danger !border-danger" onClick={() => setModal('reject')}>
+            Reject
+          </Button>
+        </div>
+      )}
 
       <Drawer open={modal === 'approve'} onClose={() => setModal(null)} title="Approve SIM Swap">
         <Textarea label="Comments" value={approveComment} onChange={(e) => setApproveComment(e.target.value)} />
         <div className="flex justify-end gap-2 mt-6">
-          <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>
-          <Button variant="primary-rect" onClick={approve}>Approve SIM swap</Button>
+          <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
+          <Button variant="primary" onClick={approve}>Approve SIM swap</Button>
         </div>
       </Drawer>
 
@@ -165,8 +183,8 @@ export function SimSwapQueueScreen() {
           <Textarea label="Comments" value={rejectComment} onChange={(e) => setRejectComment(e.target.value)} />
         </div>
         <div className="flex justify-end gap-2 mt-6">
-          <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>
-          <Button variant="primary-rect" onClick={reject} disabled={!rejectReason}>Drop Order</Button>
+          <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
+          <Button variant="destructive" onClick={reject} disabled={!rejectReason}>Drop Order</Button>
         </div>
       </Drawer>
     </div>

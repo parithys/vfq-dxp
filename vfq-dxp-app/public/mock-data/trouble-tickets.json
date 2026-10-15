@@ -5,7 +5,10 @@
     "status": "Not Solved",
     "category": "Mobile Complaints",
     "area": "Data",
-    "hashtags": ["#SlowData", "#Postpaid"],
+    "hashtags": [
+      "#SlowData",
+      "#Postpaid"
+    ],
     "actualIssue": "Slow Data Performance",
     "queue": "FL Agents",
     "priority": "3-Medium",
@@ -33,7 +36,10 @@
     "status": "Closed",
     "category": "Fixed/5G Complaints",
     "area": "IPTV",
-    "hashtags": ["#IPTV", "#Fibre"],
+    "hashtags": [
+      "#IPTV",
+      "#Fibre"
+    ],
     "actualIssue": "IPTV Channel Issue",
     "queue": "Complaints Team",
     "priority": "4-Low",
@@ -47,7 +53,13 @@
     "l3Reference": null,
     "escalations": [],
     "activities": [
-      { "type": "Auto", "description": "Ticket assigned to Current Agent.", "createdAt": "2026-09-05T09:10:00+03:00", "createdBy": "System", "open": false }
+      {
+        "type": "Auto",
+        "description": "Ticket assigned to Current Agent.",
+        "createdAt": "2026-09-05T09:10:00+03:00",
+        "createdBy": "System",
+        "open": false
+      }
     ],
     "attachments": [],
     "reopenCount": 0,
@@ -63,7 +75,9 @@
     "status": "Escalate",
     "category": "Mobile Complaints",
     "area": "Billing",
-    "hashtags": ["#Postpaid"],
+    "hashtags": [
+      "#Postpaid"
+    ],
     "actualIssue": "Incorrect Charges",
     "queue": "Complaints Team",
     "priority": "2-High",
@@ -76,11 +90,27 @@
     "resolutionCode": null,
     "l3Reference": null,
     "escalations": [
-      { "reason": "SLA Breach Imminent", "escalatedAt": "2026-09-07T09:05:00+03:00", "escalatedBy": "System (SLA auto-escalation)" }
+      {
+        "reason": "SLA Breach Imminent",
+        "escalatedAt": "2026-09-07T09:05:00+03:00",
+        "escalatedBy": "System (SLA auto-escalation)"
+      }
     ],
     "activities": [
-      { "type": "Auto", "description": "Ticket assigned to Current Agent.", "createdAt": "2026-09-05T09:05:00+03:00", "createdBy": "System", "open": false },
-      { "type": "Auto", "description": "SLA breach notification issued (BR-015/ESC-04).", "createdAt": "2026-09-07T09:05:00+03:00", "createdBy": "System", "open": false }
+      {
+        "type": "Auto",
+        "description": "Ticket assigned to Current Agent.",
+        "createdAt": "2026-09-05T09:05:00+03:00",
+        "createdBy": "System",
+        "open": false
+      },
+      {
+        "type": "Auto",
+        "description": "SLA breach notification issued (BR-015/ESC-04).",
+        "createdAt": "2026-09-07T09:05:00+03:00",
+        "createdBy": "System",
+        "open": false
+      }
     ],
     "attachments": [],
     "reopenCount": 0,
@@ -96,7 +126,9 @@
     "status": "Closed",
     "category": "Human Error Complaints",
     "area": "Agent Error",
-    "hashtags": ["#AgentError"],
+    "hashtags": [
+      "#AgentError"
+    ],
     "actualIssue": "Wrong plan activated by agent",
     "queue": "Complaints Team",
     "priority": "3-Medium",
@@ -124,7 +156,9 @@
     "status": "Assigned",
     "category": "SOC",
     "area": "Provisioning",
-    "hashtags": ["#Provisioning"],
+    "hashtags": [
+      "#Provisioning"
+    ],
     "actualIssue": "Enterprise line provisioning delay",
     "queue": "Complaints Team",
     "priority": "1-ASAP",
@@ -138,7 +172,13 @@
     "l3Reference": null,
     "escalations": [],
     "activities": [
-      { "type": "Auto", "description": "Ticket assigned to Current Agent.", "createdAt": "2026-09-10T14:15:00+03:00", "createdBy": "System", "open": false }
+      {
+        "type": "Auto",
+        "description": "Ticket assigned to Current Agent.",
+        "createdAt": "2026-09-10T14:15:00+03:00",
+        "createdBy": "System",
+        "open": false
+      }
     ],
     "attachments": [],
     "reopenCount": 0,
@@ -147,5 +187,61 @@
     "excludedFromReporting": false,
     "publicNotes": [],
     "_note": "Enterprise customer (CUST-2001, segment 'Enterprise (EBU)') - demonstrates CRE-16 priority derivation locking to 1-ASAP rather than the agent picking freely."
+  },
+  {
+    "ticketId": "TT-40301",
+    "customerId": "CUST-3081",
+    "status": "Not Solved",
+    "category": "Mobile Complaints",
+    "area": "Data",
+    "hashtags": [],
+    "actualIssue": "Slow data on one of the postpaid lines",
+    "queue": "FL Agents",
+    "priority": "2-High",
+    "createdAt": "2026-09-09T09:00:00+03:00",
+    "createdBy": "AGENT-VINODHINIR",
+    "assignedTo": null,
+    "assignedAt": null,
+    "slaTargetHours": 24,
+    "slaDueAt": "2026-09-10T09:00:00+03:00",
+    "resolutionCode": null,
+    "l3Reference": null,
+    "escalations": [],
+    "activities": [],
+    "attachments": [],
+    "reopenCount": 0,
+    "closedAt": null,
+    "cancelReason": null,
+    "excludedFromReporting": false,
+    "publicNotes": [],
+    "_note": "Customer-Inventory overview details (2026-10-11)"
+  },
+  {
+    "ticketId": "TT-40302",
+    "customerId": "CUST-3081",
+    "status": "Assigned",
+    "category": "Billing",
+    "area": "Bill Query",
+    "hashtags": [],
+    "actualIssue": "Customer disputes the August roaming charge",
+    "queue": "Complaints Team",
+    "priority": "3-Medium",
+    "createdAt": "2026-09-12T11:30:00+03:00",
+    "createdBy": "AGENT-VINODHINIR",
+    "assignedTo": null,
+    "assignedAt": null,
+    "slaTargetHours": 24,
+    "slaDueAt": "2026-09-17T11:30:00+03:00",
+    "resolutionCode": null,
+    "l3Reference": null,
+    "escalations": [],
+    "activities": [],
+    "attachments": [],
+    "reopenCount": 0,
+    "closedAt": null,
+    "cancelReason": null,
+    "excludedFromReporting": false,
+    "publicNotes": [],
+    "_note": "Customer-Inventory overview details (2026-10-11)"
   }
 ]

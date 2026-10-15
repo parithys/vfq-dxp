@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Input } from '../primitives/Input';
 import { Select } from '../primitives/Select';
+import { Textarea } from '../primitives/Textarea';
 import { FibreReadinessBanner } from '../domain/FibreReadinessBanner';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 
@@ -104,6 +105,9 @@ interface AddressRecord {
 // reference/blueprint conflict-report.md (Conflict 2) and in ruleEngine's
 // BR-ZSB-MANDATORY-FOR-MOBILE, which still evaluates; it simply no longer
 // addresses the agent, who cannot action it.
+const CARD = 'card p-4 space-y-4';
+const CARD_TITLE = 'text-fg text-[length:var(--fs-h5)] font-semibold';
+
 export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFibreReadiness = false }: ZsbAddressStepProps) {
   const [fetching, setFetching] = useState(false);
   // Area suggestions. kid-address-records is the only dataset in this corpus
@@ -180,45 +184,44 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFib
           per the annotated walkthrough. The fields remain prefilled from MOI
           and editable exactly as before - only the caption is gone, so
           `fetchedFromMoi` still drives the prefill, just nothing on screen. */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Layout per the 2026-10-10 "Qatar Address" reference: three cards - the blue-plate
+          address, optional location detail, and service identifiers.
+          The value shape is unchanged; only labels, grouping and helper copy moved. The marks on
+          Zone/Street/Building are visual: this step is still Mandatory: No (FLD-523-526) and does
+          not gate Continue (see serviceAddressStep.isValid). */}
+      <section className={CARD}>
+        <div className="grid grid-cols-3 gap-4">
           <Input
-            label="Zone"
-            placeholder="e.g. Zone 38"
+            label="Zone Number"
+            required
+            placeholder="e.g. 66"
             value={value.zone ?? ''}
             onChange={(e) => onChange({ ...value, zone: e.target.value })}
           />
           <Input
-            label="Street"
-            placeholder="e.g. Al Corniche Street"
+            label="Street Number"
+            required
+            placeholder="e.g. 840"
             value={value.streetNo ?? ''}
             onChange={(e) => onChange({ ...value, streetNo: e.target.value })}
           />
           <Input
-            label="Building"
-            placeholder="e.g. Tower A"
+            label="Building Number"
+            required
+            placeholder="e.g. 24"
             value={value.buildingNo ?? ''}
             onChange={(e) => onChange({ ...value, buildingNo: e.target.value })}
           />
-          {/* Floor, added 2026-09-28 between Building and Unit/Apartment -
-              the natural order an agent reads a premises out in (building,
-              then floor, then unit). No evidenced source prefills it; free
-              text like the rest of this step. */}
-          <Input
-            label="Floor"
-            placeholder="e.g. 4th Floor"
-            value={value.floor ?? ''}
-            onChange={(e) => onChange({ ...value, floor: e.target.value })}
-          />
-          <Input
-            label="Unit / Apartment"
-            placeholder="e.g. Apt 4B"
-            value={value.aptFlatUnit ?? ''}
-            onChange={(e) => onChange({ ...value, aptFlatUnit: e.target.value })}
-          />
-          {/* Area/City paired with Unit/Apartment (2026-09-28 swap - was
-              paired with Kahramaa ID below, and Vodafone ID sat here). */}
+        </div>
+      </section>
+
+      <section className={CARD}>
+        <h3 className={CARD_TITLE}>
+          Additional Details <span className="font-normal">(Optional)</span>
+        </h3>
+        <div className="grid grid-cols-3 gap-4">
           <Select
-            label="Area/City"
+            label="Area / District"
             placeholder="Select an area"
             searchable
             // A dropdown with search. A value already on the address that is not in the list
@@ -227,17 +230,45 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFib
             value={value.area ?? ''}
             onChange={(e) => onChange({ ...value, area: e.target.value })}
           />
-          {/* Kahramaa ID paired with Vodafone ID (2026-09-28 swap - order
-              reversed again; was Vodafone ID then Kahramaa ID). Explicitly
-              labelled optional. Every field on this step is Mandatory: No
-              per FLD-523-526, but KID is the one an agent would reasonably
-              expect to be required - it IS required in the fibre journeys,
-              where it identifies a serviceable premises. A postpaid mobile
-              line needs no premises, so saying so here saves the agent
-              hunting for a value they do not need. */}
           <Input
-            label="Kahramaa ID"
+            label="Flat / Apartment / Unit Number"
+            placeholder="e.g. 4B, 1402"
+            value={value.aptFlatUnit ?? ''}
+            onChange={(e) => onChange({ ...value, aptFlatUnit: e.target.value })}
+          />
+          <Input
+            label="Floor"
+            placeholder="e.g. 4"
+            value={value.floor ?? ''}
+            onChange={(e) => onChange({ ...value, floor: e.target.value })}
+          />
+        </div>
+        {/* Free-text catch-all (addressLine) - see ZsbAddressValue's note on why it sits
+            alongside the granular fields rather than instead of them. */}
+        <Textarea
+          label="Directions / Landmark (Optional)"
+          rows={2}
+          placeholder="e.g. Near City Center Mall, opposite Al Rayyan Park"
+          helperText="Add any landmarks, directions or additional notes to help us locate you"
+          value={value.addressLine ?? ''}
+          onChange={(e) => onChange({ ...value, addressLine: e.target.value })}
+        />
+      </section>
+
+      <section className={CARD}>
+        <div>
+          <h3 className={CARD_TITLE}>
+            Service Information <span className="font-normal">(If required)</span>
+          </h3>
+          <p className="text-fg-2 text-[length:var(--fs-body)]">These details are used for service activation.</p>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          {/* Optional for a postpaid mobile line, which needs no serviceable premises - unlike the
+              fibre journeys, where the KID is what makes an address installable. */}
+          <Input
+            label="Kahramaa Meter ID (Optional)"
             placeholder="e.g. KID-00123456"
+            helperText="Electricity or water meter account number (if available)"
             value={value.kidLocationId ?? ''}
             onChange={(e) => {
               const kid = e.target.value;
@@ -253,27 +284,16 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFib
               });
             }}
           />
-          {/* Vodafone ID paired with Kahramaa ID. Both are location
-              identifiers, sharing this row per the original 2026-09-28
-              "same row" direction that still applies. */}
+          {/* Vodafone ID follows from the Kahramaa ID (vfidFor), so the pair stays on one row, after the Kahramaa Meter ID it derives from. */}
           <Input
-            label="Vodafone ID"
+            label="Vodafone Premise ID (Optional)"
             placeholder="e.g. WKR-0231-A"
             value={value.vodafoneId ?? ''}
             onChange={(e) => onChange({ ...value, vodafoneId: e.target.value })}
           />
-          <div className="col-span-2">
-            {/* Free-text catch-all, added 2026-09-28 - see ZsbAddressValue's
-                own note on why this exists alongside the granular fields
-                rather than instead of them. */}
-            <Input
-              label="Address Line"
-              placeholder="e.g. Near City Center Mall, opposite Al Rayyan park"
-              value={value.addressLine ?? ''}
-              onChange={(e) => onChange({ ...value, addressLine: e.target.value })}
-            />
-          </div>
-      </div>
+        </div>
+      </section>
+
       {/* Read-only, checked against the ZSB (Zone/Street/Building) the agent
           just typed above - see FibreReadinessBanner's own note on why "NAS"
           isn't a term this corpus evidences and what this reads the request

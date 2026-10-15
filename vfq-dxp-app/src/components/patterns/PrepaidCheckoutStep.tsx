@@ -1,121 +1,121 @@
 import { useEffect, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
-import { evaluateRule } from '../../engines/ruleEngine';
-import type { SimTypeValue } from '../domain/SimTypeStep';
-
-interface Product {
-  productId: string;
-  name: string;
-  starterPackChargeQAR: number;
-}
-
-interface Discount {
-  addonDiscountId: string;
-  name: string;
-  price: number;
-  planId: string;
-}
+import { Button } from '../primitives/Button';
+import { Badge } from '../primitives/Badge';
+import { cartTotals, priceLine } from './prepaidCartModel';
+import type { PrepaidCheckoutTotals, PrepaidLine, PricingExtra, PricingProduct } from './prepaidCartModel';
 
 interface SimRecord {
   simSerial: string;
   iccid: string;
 }
 
-export interface PrepaidCheckoutTotals {
-  starterPackChargeQar: number;
-  simCardChargeQar: number;
-  numberPriceQar: number;
-  totalDueQar: number;
-}
-
-// The BRSD doesn't name a SIM card charge amount anywhere (no P-parameter
-// covers it) - BR-348/BR-013 only decides whether a charge applies. QAR 15
-// is a placeholder pending VFQ confirmation, not sourced from the BRSD.
-const SIM_CARD_CHARGE_QAR = 15;
-
 interface PrepaidCheckoutStepProps {
   customerName: string | undefined;
   idType: string | undefined;
-  planProductId: string | undefined;
-  discountId: string | undefined;
-  msisdn: string | undefined;
-  numberPriceQar: number | undefined;
-  simType: SimTypeValue | undefined;
+  /** Every subscription on the order (the cart, plus the one just finished). */
+  lines: PrepaidLine[];
   onTotalsComputed: (totals: PrepaidCheckoutTotals) => void;
+  /** Returns the agent to the Subscriptions step to change or add a subscription. */
+  onEdit?: () => void;
 }
 
-// MPRA_001_CVC_01–03 (Cart Validation & Check-Out, Starter pack & recharge
-// charge collection, Payment summary display) - a prepaid-specific
-// checkout/payment-summary screen. Deliberately not a reuse of
-// CheckoutSummaryStep: that component is wired to postpaid-only concepts
-// (Device on Installment, HRN advance payment) that don't apply here per
-// BR-002/BR-005/CAM_04, and prepaid needs a charge CheckoutSummaryStep has
-// no concept of at all (the BR-013/BR-348 SIM card charge).
-export function PrepaidCheckoutStep({
-  customerName,
-  idType,
-  planProductId,
-  discountId,
-  msisdn,
-  numberPriceQar,
-  simType,
-  onTotalsComputed,
-}: PrepaidCheckoutStepProps) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [discounts, setDiscounts] = useState<Discount[]>([]);
+const qar = (n: number) => `QAR ${n.toLocaleString('en-GB')}`;
+
+// MPRA_001_CVC_01-03 (cart validation, starter pack and recharge charge collection, payment summary): the read-back of
+// the whole cart before the customer signs and pays - each subscription's pack, add-ons, number and SIM, the starter
+// pack and any SIM card charge, and the total payable today that the Payment step collects. A prepaid line has no credit
+// limit, billing account or monthly charge, so none is shown (CAM_02, ECC_03, BAM_01).
+export function PrepaidCheckoutStep({ customerName, idType, lines, onTotalsComputed, onEdit }: PrepaidCheckoutStepProps) {
+  const [products, setProducts] = useState<PricingProduct[]>([]);
+  const [extras, setExtras] = useState<PricingExtra[]>([]);
   const [sims, setSims] = useState<SimRecord[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    mockDataEngine.list<Product>('products').then(setProducts);
-    mockDataEngine.list<Discount>('addons-discounts').then(setDiscounts);
-    mockDataEngine.list<SimRecord>('sims').then(setSims);
+    Promise.all([
+      mockDataEngine.list<PricingProduct>('products'),
+      mockDataEngine.list<PricingExtra>('addons-discounts'),
+      mockDataEngine.list<SimRecord>('sims'),
+    ]).then(([p, e, s]) => {
+      setProducts(p);
+      setExtras(e);
+      setSims(s);
+      setLoaded(true);
+    });
   }, []);
 
-  const plan = products.find((p) => p.productId === planProductId);
-  const discount = discounts.find((d) => d.addonDiscountId === discountId);
-  const starterPackChargeQar = plan ? Math.round(plan.starterPackChargeQAR * (1 + (discount?.price ?? 0))) : 0;
-  const simCardRule = evaluateRule('BR-348', { idType, rechargeAmountQar: starterPackChargeQar });
-  const simCardChargeQar = simCardRule.pass ? 0 : SIM_CARD_CHARGE_QAR;
-  const numberDelta = numberPriceQar ?? 0;
-  const totalDueQar = starterPackChargeQar + simCardChargeQar + numberDelta;
-  // DF-16 (SIM data group) requires ICCID alongside SIM Type/Serial - resolved
-  // from the same sims.json record SimSerialScanner already validated against.
-  // eSIM has no backing inventory record to resolve an ICCID from (see
-  // SimTypeStep - no fabricated eSIM provisioning API), so it reads "Not
-  // applicable" rather than a fabricated value.
-  const resolvedIccid = simType?.simType === 'Physical' ? sims.find((s) => s.simSerial === simType.simSerial)?.iccid : undefined;
+  const totals = cartTotals(lines, idType, products, extras);
 
   useEffect(() => {
-    onTotalsComputed({ starterPackChargeQar, simCardChargeQar, numberPriceQar: numberDelta, totalDueQar });
+    if (loaded) onTotalsComputed(totals);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [starterPackChargeQar, simCardChargeQar, numberDelta, totalDueQar]);
+  }, [loaded, totals.totalDueQar, totals.simCardChargeQar, totals.addonsChargeQar, totals.starterPackChargeQar, totals.numberPriceQar, totals.lineCount]);
 
   const Row = ({ label, value }: { label: string; value: string }) => (
-    <div className="flex justify-between py-2 border-b border-border-soft last:border-0">
+    <div className="flex justify-between gap-4 py-2 border-b border-border-soft last:border-0">
       <dt className="text-fg-2">{label}</dt>
-      <dd className="text-fg">{value}</dd>
+      <dd className="text-fg text-right">{value}</dd>
     </div>
   );
 
+  if (!loaded) return <p className="text-muted text-[length:var(--fs-body)]">Preparing the payment summary…</p>;
+  if (lines.length === 0) return <p className="text-danger text-[length:var(--fs-body)]">There is no subscription on this order yet. Go back and complete the pack, number and SIM.</p>;
+
   return (
     <div className="space-y-4">
-      <dl className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-4">
+      <dl className="card card-surface p-4">
         <Row label="Customer" value={customerName ?? '-'} />
-        <Row label="Pack" value={plan ? `${plan.name} - QR ${starterPackChargeQar}` : 'SIM only, no pack selected'} />
-        <Row label="Number" value={msisdn ? `${msisdn}${numberDelta > 0 ? ` (premium, QR ${numberDelta} one-time)` : ''}` : '-'} />
-        <Row label="SIM Type" value={simType?.simType ?? '-'} />
-        <Row label="ICCID" value={simType?.simType === 'eSIM' ? 'Not applicable (eSIM)' : (resolvedIccid ?? '-')} />
-        <Row label="SIM Card Charge" value={simCardChargeQar > 0 ? `QR ${simCardChargeQar}` : 'Waived'} />
+        <Row label="Subscriptions" value={String(lines.length)} />
       </dl>
 
-      <p className="text-[length:var(--fs-caption)] text-muted">{simCardRule.message}</p>
+      {lines.map((line, i) => {
+        const plan = products.find((p) => p.productId === line.productId);
+        const charges = priceLine(line, idType, products, extras);
+        const discount = extras.find((e) => e.addonDiscountId === line.discountId);
+        const addons = line.addonIds.map((id) => extras.find((e) => e.addonDiscountId === id)).filter((e): e is PricingExtra => Boolean(e));
+        const iccid = line.simType.simType === 'Physical' ? sims.find((s) => s.simSerial === line.simType.simSerial)?.iccid : undefined;
+        return (
+          <section key={`${line.msisdn}-${i}`} aria-label={`Subscription ${i + 1}`} className="card card-surface p-4 space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Subscription {i + 1}</h3>
+              {line.prePaired && <Badge variant="accent">Pre-Paired SIM</Badge>}
+            </div>
+            <dl>
+              <Row label="Pack" value={plan ? `${plan.name} - ${qar(charges.starterPackQar)}` : 'SIM only, no pack selected'} />
+              {discount && <Row label="Discount" value={`${discount.name} (${Math.round(Math.abs(discount.price) * 100)}% off the starter pack)`} />}
+              {addons.map((a) => (
+                <Row key={a.addonDiscountId} label="Add-on" value={`${a.name} - ${qar(a.price)}`} />
+              ))}
+              <Row label="Number" value={`${line.msisdn}${charges.numberQar > 0 ? ` (premium, ${qar(charges.numberQar)} one-time)` : ''}`} />
+              <Row
+                label="SIM Type"
+                value={line.prePaired ? 'Pre-Paired SIM' : line.simType.simType === 'eSIM' ? 'eSIM' : (line.simType.simKind ?? line.simType.simType ?? '-')}
+              />
+              <Row label="ICCID" value={line.simType.simType === 'eSIM' ? 'Not applicable (eSIM)' : (iccid ?? line.simType.simIccid ?? '-')} />
+              <Row label="SIM Card Charge" value={charges.simCardChargeQar > 0 ? qar(charges.simCardChargeQar) : 'Waived'} />
+              <Row label="Due for this subscription" value={qar(charges.totalQar)} />
+            </dl>
+            <p className="text-[length:var(--fs-caption)] text-muted">{charges.simCardMessage}</p>
+          </section>
+        );
+      })}
 
-      <div className="rounded-[var(--radius-card)] border border-accent/40 bg-surface-warm p-4">
+      <div className="rounded-[var(--radius-card)] border border-accent-border bg-surface-warm p-4">
         <div className="flex justify-between text-fg font-semibold">
-          <span>Total due today</span>
-          <span>QR {totalDueQar}</span>
+          <span>Total payable today</span>
+          <span>{qar(totals.totalDueQar)}</span>
         </div>
+        <p className="mt-1 text-[length:var(--fs-caption)] text-fg-2">Includes the starter pack and any initial recharge, add-ons, premium numbers and SIM card charges. Nothing is billed later.</p>
       </div>
+
+      {onEdit && (
+        <div>
+          <Button variant="secondary" compact onClick={onEdit}>
+            Edit subscriptions
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

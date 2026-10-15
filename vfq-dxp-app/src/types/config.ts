@@ -31,7 +31,7 @@ export type PermissionLevel = 'View' | 'Create' | 'Edit' | 'Approve' | 'Full';
  * duplicates a feature key.
  *
  * Not every navigable destination has a key, and deliberately so: the
- * product-line pages (/mobile, /fibre-home and their 10 journey categories)
+ * product-line pages (/mobile, /fibre-home and their 8 journey categories (and the /new-connections hub))
  * inherit their gating from the journey grants inside them, and /leads renders
  * content already covered by `leads.list-views`. Giving them keys as well would
  * create a second, competing gate for the same surface. The Navigation sheet of

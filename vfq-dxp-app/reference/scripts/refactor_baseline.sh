@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Refactor safety net, part 1 (static): typecheck, lint totals, production build, bundle size, and the
 # set of registered screens. Run from vfq-dxp-app/ before and after each refactor phase and diff the output:
-#   bash reference/scripts/refactor_baseline.sh > $TMPDIR/after.txt; diff reference/outputs/VFQ_DXP_Refactor_Baseline.txt $TMPDIR/after.txt
+#   bash reference/scripts/refactor_baseline.sh > $TMPDIR/after.txt; diff reference/outputs/Refactor_Baseline.txt $TMPDIR/after.txt
 # Uses only tools already in the project (tsc, oxlint, vite). Part 2 (rendered UI) is
 # reference/scripts/refactor_ui_capture.js, run in the browser via the preview tool.
 set -u

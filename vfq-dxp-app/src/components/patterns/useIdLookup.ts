@@ -4,7 +4,7 @@ import { callService, ServiceError, takeDuplicateFault, VALIDATION_TTL_MS, type 
 import type { QidType } from '../domain/QidInput';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
-import { MAX_SCAN_ATTEMPTS, LEGACY_MAX_SCAN_ATTEMPTS, SCANNABLE_ID_TYPES, misread, isoToDmy } from './idLookupModel';
+import { MAX_SCAN_ATTEMPTS, LEGACY_MAX_SCAN_ATTEMPTS, SCANNABLE_ID_TYPES, misread, isoToDmy, selectScanCandidates } from './idLookupModel';
 import type { DuplicateCandidate, IdLookupValue } from './idLookupModel';
 
 export interface IdLookupFailure {
@@ -21,11 +21,12 @@ interface UseIdLookupOptions {
   verifyThenFetch: boolean;
   asNewCustomer: boolean;
   asCustomerId?: string;
+  manualEntry?: boolean;
 }
 
 // State, effects and async lookups behind IdLookupStep. Everything here was the
 // body of the component, moved verbatim; the JSX stays in IdLookupStep.
-export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType, verifyThenFetch, asNewCustomer, asCustomerId }: UseIdLookupOptions) {
+export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType, verifyThenFetch, asNewCustomer, asCustomerId, manualEntry = false }: UseIdLookupOptions) {
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [expiryMismatch, setExpiryMismatch] = useState(false);
@@ -64,6 +65,13 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
    * demonstrating the app, not of the order.
    */
   const [demoType, setDemoType] = useState<QidType | null>(null);
+  /**
+   * The ID type the agent selected, when the journey leads with a type selector (not the scan-first flow, where the reader
+   * names the document). That selection is the type of the document in the reader and stays so through scanning, reading,
+   * validation, retake and retry: nothing the reader returns may overwrite it - only the agent choosing another type
+   * (handleIdTypeChange) or the journey being reset does.
+   */
+  const chosenType: QidType | undefined = !autoDetectIdType && !demoType ? idType : undefined;
   const scannable = typeChosen && SCANNABLE_ID_TYPES.has(idType);
   // Everything that asks "is there a reader on this screen" must accept a demo
   // scan too, or the capture disappears the moment a non-scannable type wins.
@@ -425,7 +433,8 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
   // Two for the scan-first flow, four for the journeys that still lead with a
   // type selector - see autoDetectIdType.
   const maxScanAttempts = autoDetectIdType ? MAX_SCAN_ATTEMPTS : LEGACY_MAX_SCAN_ATTEMPTS;
-  const manualEntryUnlocked = !effectiveScannable || fallbackUnlocked;
+  // manualEntry: a keyboard device types the number straight away; the scanner stays available beside it.
+  const manualEntryUnlocked = !effectiveScannable || fallbackUnlocked || manualEntry;
 
   /**
    * DEMO ONLY. Says which card was "inserted", then lets the normal scan run:
@@ -494,9 +503,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     const ownDocs = asCustomerId
       ? docs.filter((d) => (d as { customerId?: string }).customerId === asCustomerId)
       : undefined;
-    const candidates = ownDocs
-      ? [...ownDocs].sort((a, b) => Number(b.documentType === 'QID') - Number(a.documentType === 'QID'))
-      : docs.filter((d) => detectable.includes(d.documentType as QidType));
+    const candidates = selectScanCandidates({ docs, ownDocs, chosenType, detectable });
     // Prefers an UNEXPIRED document rather than simply the first match.
     //
     // Not cosmetic: two Diplomatic IDs are seeded and the first in file order
@@ -532,8 +539,11 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
       // threshold below), it is "nothing was even attempted yet" - the agent
       // has to Retake, which arrives clear and re-runs this effect.
       if (value.qidScans?.clear === false && !verifyThenFetch) return;
+      const typeAtStart = chosenType;
       void readDocumentFromScan().then((scanned) => {
         const now = latest.current;
+        // The agent switched type while the read was in flight: that read belongs to the document they walked away from.
+        if (typeAtStart && (now.idType ?? 'QID') !== typeAtStart) return;
         // The scan this number was read off must still be the one on screen,
         // and nothing must have supplied a number meanwhile.
         const stillComplete = Boolean(now.qidScans?.frontScanned && now.qidScans?.backScanned);
@@ -553,7 +563,8 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
         const blurred = verifyThenFetch && now.qidScans?.clear === false;
         onChange({
           ...now,
-          idType: scanned.documentType,
+          // The selected type stands; only the scan-first flow takes the type from the document.
+          idType: typeAtStart ?? scanned.documentType,
           idNumber: blurred ? misread(scanned.documentNumber) : scanned.documentNumber,
           scannedExpiry: verifyThenFetch && scanned.expiryDate ? isoToDmy(scanned.expiryDate) : undefined,
         });

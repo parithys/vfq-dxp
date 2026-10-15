@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Drawer } from '../../components/primitives/Drawer';
+import { Drawer } from '../../capabilities';
 import { Input } from '../../components/primitives/Input';
 import { Select } from '../../components/primitives/Select';
 import { Button } from '../../components/primitives/Button';
 import { useEntityStore } from '../../stores/entityStore';
 import { useProfileChangeTicket } from '../../engines/profileChangeTicket';
 import type { CustomerRecord } from '../../engines/customer360Engine';
+import { useSubmit } from '../../hooks/useSubmit';
 
 interface DemographicEditDrawerProps {
   open: boolean;
@@ -38,10 +39,8 @@ export function DemographicEditDrawer({ open, onClose, customer, onSaved, onTick
   const [gender, setGender] = useState(customer.gender ?? 'Not Specified');
   const [nationality, setNationality] = useState(customer.nationality);
   const [preferredLanguage, setPreferredLanguage] = useState(customer.preferredLanguage ?? 'English');
-  const [saving, setSaving] = useState(false);
 
-  const save = async () => {
-    setSaving(true);
+  const { run: save, pending: saving } = useSubmit(async () => {
     const changed: string[] = [];
     if (name !== customer.name) changed.push('Customer Name');
     if (Number(age) !== customer.age) changed.push('Age');
@@ -61,10 +60,9 @@ export function DemographicEditDrawer({ open, onClose, customer, onSaved, onTick
       const { record } = await createChangeTicket(customer.customerId, 'Demographic', changed);
       onTicketCreated(record);
     }
-    setSaving(false);
     onSaved(patch);
     onClose();
-  };
+  }, 'Could not save the customer details. Please try again.');
 
   return (
     <Drawer
@@ -73,10 +71,10 @@ export function DemographicEditDrawer({ open, onClose, customer, onSaved, onTick
       title="Edit Demographic Details"
       footer={
         <>
-          <Button variant="ghost-rect" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary-rect" disabled={saving || !name.trim()} onClick={save}>
+          <Button variant="primary" disabled={saving || !name.trim()} onClick={save}>
             {saving ? 'Saving…' : 'Save Changes'}
           </Button>
         </>
@@ -95,7 +93,7 @@ export function DemographicEditDrawer({ open, onClose, customer, onSaved, onTick
         />
         <div className="pt-2 border-t border-border-soft">
           <p className="text-[length:var(--fs-caption)] text-muted">
-            KYC Status and Account Status are system-derived and not editable here (DF-DEMO-001-007).
+            KYC Status and Account Status are system-derived and not editable here.
           </p>
         </div>
       </div>

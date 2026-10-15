@@ -1,0 +1,41 @@
+{
+  "journey": {
+    "id": "mob-new-prepaid",
+    "title": "New Prepaid Connection",
+    "screenId": "SCR-190",
+    "route": "/mobile-prepaid/new-prepaid-tablet-step-1-contact-id-capture"
+  },
+  "shots": [
+    {
+      "file": "01-start.png",
+      "label": "start",
+      "url": "/mobile-prepaid/new-prepaid-tablet-step-1-contact-id-capture"
+    },
+    {
+      "file": "02-document-scanned.png",
+      "label": "document scanned",
+      "url": "/mobile-prepaid/new-prepaid-tablet-step-1-contact-id-capture"
+    },
+    {
+      "file": "03-eligibility.png",
+      "label": "Eligibility",
+      "url": "/mobile-prepaid/new-prepaid-tablet-step-1-contact-id-capture"
+    },
+    {
+      "file": "04-address.png",
+      "label": "Address",
+      "url": "/mobile-prepaid/new-prepaid-tablet-step-1-contact-id-capture"
+    },
+    {
+      "file": "05-plan.png",
+      "label": "Plan",
+      "url": "/mobile-prepaid/new-prepaid-tablet-step-1-contact-id-capture"
+    }
+  ],
+  "unreachable": [
+    {
+      "step": "Plan",
+      "reason": "the forward button stayed disabled after the automatic fill"
+    }
+  ]
+}

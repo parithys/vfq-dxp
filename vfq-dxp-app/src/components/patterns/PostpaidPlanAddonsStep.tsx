@@ -1,7 +1,7 @@
 import { type CustomerBenefit } from '../../engines/customerBenefitEngine';
 import { HRN_ADVANCE_QAR } from '../../engines/postpaidPricing';
 import { Icon } from '../primitives/Icon';
-import { CHECK, planGroupOf } from './postpaidPlanModel';
+import { CHECK } from './postpaidPlanModel';
 import { PlanSearchBox } from './PlanSearchBox';
 import { PlanTabStrip } from './PlanTabStrip';
 import { PlanGroupPanel } from './PlanGroupPanel';
@@ -38,6 +38,8 @@ interface PostpaidPlanAddonsStepProps {
   requiresHrnAdvance: boolean;
   /** Benefit the agent accepted on Customer Identification (office ID confirmed): the plan's matching discount is applied automatically. */
   customerBenefit?: 'mada' | 'b2b2c' | 'retired' | 'none';
+  /** The Special Discount chosen on Customer Identification (accepted or not): names the contextual third tab. */
+  specialDiscountType?: 'mada' | 'b2b2c' | 'retired';
   /** Benefits the customer's record lists (see customerBenefitEngine). Only discounts they unlock are offered; undefined = customer not known, nothing is filtered. */
   customerBenefits?: CustomerBenefit[];
   /** Who the customer is, for deciding which add-ons they are eligible for. */
@@ -76,6 +78,7 @@ export function PostpaidPlanAddonsStep({
   onBillLimitChange,
   requiresHrnAdvance,
   customerBenefit,
+  specialDiscountType,
   customerBenefits,
   customerContext,
   discountProofDocument,
@@ -120,6 +123,7 @@ export function PostpaidPlanAddonsStep({
     discountSupportingId,
     onDiscountSupportingIdChange,
     customerBenefit,
+    specialDiscountType,
     customerBenefits,
     discountProofDocument,
     onDiscountProofDocumentChange,
@@ -134,7 +138,7 @@ export function PostpaidPlanAddonsStep({
           here, so "configurable" means changing that one line, not hunting
           for every place QAR 100 appears. */}
       {requiresHrnAdvance && (
-        <div className="rounded-[var(--radius-card)] border border-accent/40 bg-surface-warm p-4">
+        <div className="rounded-[var(--radius-card)] border border-accent-border bg-surface-warm p-4">
           <p className="text-fg font-medium">Please collect QAR {HRN_ADVANCE_QAR} from the customer.</p>
         </div>
       )}
@@ -147,39 +151,8 @@ export function PostpaidPlanAddonsStep({
           position. Switching tabs never changes which plan/add-ons/discount
           is actually selected; it only changes which panel is showing. */}
       <div className="space-y-4">
-        {/* Search by plan NAME or PRICE (2026-09-27), narrowing whichever
-            plan-group tab is active. The type-ahead dropdown added
-            2026-09-28 is a separate, faster path on top of that same box:
-            closest-match suggestions the agent can click straight into a
-            selection without switching tabs at all. */}
-        {mode !== 'extras' && (
-        <PlanSearchBox
-          searchRef={searchRef}
-          searchOpen={searchOpen}
-          setSearchOpen={setSearchOpen}
-          planSearch={planSearch}
-          setPlanSearch={setPlanSearch}
-          suggestions={suggestions}
-          selectedProductId={selectedProductId}
-          onSelectProduct={onSelectProduct}
-          onPickResult={(plan) => {
-            // A result may live on the other tab: select it, show its tab, clear the filter and bring its card into view.
-            onSelectProduct(plan.productId);
-            setActiveTab(planGroupOf(plan));
-            setPlanSearch('');
-            setSearchOpen(false);
-            window.setTimeout(() => {
-              const el = document.getElementById(`plan-card-${plan.productId}`);
-              el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              el?.classList.add('ring-4', 'ring-accent/40');
-              window.setTimeout(() => el?.classList.remove('ring-4', 'ring-accent/40'), 1800);
-            }, 80);
-          }}
-        />
-        )}
-
         {mode !== 'extras' && plans.length === 0 ? (
-          <p className="text-muted">No Postpaid Plan products in the mock catalogue.</p>
+          <p className="text-muted">No Postpaid Plan products are available right now.</p>
         ) : (
           <>
             {/* Tab strip - same active-tab treatment (red text + underline)
@@ -195,9 +168,36 @@ export function PostpaidPlanAddonsStep({
               setActiveTab={setActiveTab}
             />
 
+            {/* Search by plan NAME or PRICE (2026-09-27), under the tabs and scoped to whichever plan-group tab is
+                active: it narrows that tab's cards, and the type-ahead dropdown added 2026-09-28 suggests that tab's
+                plans only (closest match, one click to select). */}
+            <PlanSearchBox
+                searchRef={searchRef}
+                searchOpen={searchOpen}
+                setSearchOpen={setSearchOpen}
+                planSearch={planSearch}
+                setPlanSearch={setPlanSearch}
+                suggestions={suggestions}
+                selectedProductId={selectedProductId}
+                onSelectProduct={onSelectProduct}
+                scopeLabel={planGroupTabs.find((g) => g.key === activeTab)?.label}
+                onPickResult={(plan) => {
+                  // A result is always on the tab being shown: select it, clear the filter and bring its card into view.
+                  onSelectProduct(plan.productId);
+                  setPlanSearch('');
+                  setSearchOpen(false);
+                  window.setTimeout(() => {
+                    const el = document.getElementById(`plan-card-${plan.productId}`);
+                    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    el?.classList.add('ring-4', 'ring-accent-border');
+                    window.setTimeout(() => el?.classList.remove('ring-4', 'ring-accent-border'), 1800);
+                  }, 80);
+                }}
+              />
+
             {/* The plan was changed: what was chosen for the previous plan is gone. */}
             {resetNotice && (
-              <p role="status" className="rounded-[var(--radius-card)] border border-[var(--info-border)] bg-[color-mix(in_oklab,var(--info),var(--bg)_92%)] px-4 py-3 text-[length:var(--fs-body)] text-fg">
+              <p role="status" className="rounded-[var(--radius-card)] border border-[var(--info-border)] bg-tone-info-soft px-4 py-3 text-[length:var(--fs-body)] text-fg">
                 Add-ons and discounts were reset for the new plan.
               </p>
             )}
@@ -224,31 +224,38 @@ export function PostpaidPlanAddonsStep({
                 and reset when another plan is chosen. Every other plan stays a plain card. */}
             {/* The plan carried over from the previous step, for context while choosing extras. */}
             {mode === 'extras' && selectedPlan && (
-              <section aria-label="Selected plan" className="rounded-[var(--radius-card)] border border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] p-5">
+              <section aria-label="Selected plan" className="rounded-[var(--radius-card-lg)] border border-[var(--field-card-selected)] bg-[linear-gradient(135deg,var(--surface-warm),var(--bg)_90%)] p-5 space-y-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="text-fg-2 text-[length:var(--fs-caption)] uppercase tracking-wide">Selected plan</p>
+                  <div className="min-w-0 space-y-2">
+                    <span className="inline-flex rounded-[var(--radius-pill)] bg-[var(--tint-pink-bg)] px-2.5 py-0.5 text-[var(--tint-pink-fg)] text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide">
+                      Selected plan
+                    </span>
                     <h3 className="text-fg font-bold text-[length:var(--fs-h4)] leading-snug">{selectedPlan.name}</h3>
                   </div>
-                  <p className="text-accent text-right">
-                    <span className="text-[length:var(--fs-body)] font-semibold">QAR </span>
-                    <span className="text-[length:var(--fs-h3)] font-bold">{selectedPlan.mrcQAR}</span>
-                    <span className="text-fg-2 text-[length:var(--fs-caption)]"> /month{selectedPlan.promoMonths ? ` for ${selectedPlan.promoMonths} months` : ''}</span>
-                  </p>
+                  <div className="card px-4 py-2.5 text-right shadow-[var(--shadow-icon-tile)]">
+                    <p className="text-muted text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide">Monthly plan</p>
+                    <p className="text-fg">
+                      <span className="text-[length:var(--fs-body)]">QAR </span>
+                      <span className="text-[length:var(--fs-h3)] font-bold">{selectedPlan.mrcQAR}</span>
+                      <span className="text-fg-2 text-[length:var(--fs-caption)]"> /month{selectedPlan.promoMonths ? ` for ${selectedPlan.promoMonths} months` : ''}</span>
+                    </p>
+                  </div>
                 </div>
-                <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {(selectedPlan.features?.length
                     ? selectedPlan.features
                     : [selectedPlan.dataAllowanceGB ? `${selectedPlan.dataAllowanceGB} GB data` : 'Unlimited data', selectedPlan.minutesAllowance].filter(Boolean)
                   ).map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-fg-2 text-[length:var(--fs-body)]">
-                      <Icon path={CHECK} className="w-4 h-4 shrink-0 text-success mt-0.5" />
+                    <li key={f} className="flex items-center gap-3 card px-4 py-3 text-fg text-[length:var(--fs-body)] shadow-[var(--shadow-icon-tile)]">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[var(--radius-pill)] bg-[var(--tint-green-bg)] text-[var(--tint-green-fg)]">
+                        <Icon path={CHECK} className="w-3.5 h-3.5" />
+                      </span>
                       {f}
                     </li>
                   ))}
                 </ul>
                 {selectedPlan.benefits && selectedPlan.benefits.length > 0 && (
-                  <div className="mt-3 rounded-[var(--radius-card)] border border-[var(--field-card-selected)] bg-bg px-3 py-2.5 space-y-1">
+                  <div className="rounded-[var(--radius-card)] border border-[var(--field-card-selected)] bg-bg px-3 py-2.5 space-y-1">
                     <p className="text-accent font-bold text-[length:var(--fs-caption)] uppercase tracking-wide">Included in this offer</p>
                     <ul className="space-y-1">
                       {selectedPlan.benefits.map((b) => (
@@ -273,26 +280,27 @@ export function PostpaidPlanAddonsStep({
             {mode !== 'plan' && selectionSource === 'PLAN' && selectedPlan && (
               <section
                 aria-label={`Add-ons and discounts for ${selectedPlan.name}`}
-                className="rounded-[var(--radius-card)] border border-[var(--field-card-selected)] bg-bg p-5 space-y-6"
+                className="rounded-[var(--radius-card-lg)] border border-[var(--field-card-border)] bg-bg p-5 space-y-5"
               >
-                <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Add-ons and discounts for {selectedPlan.name}</h3>
+                <header>
+                  <p className="text-muted text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide">Optional services</p>
+                  <h3 className="text-fg font-bold text-[length:var(--fs-h5)]">Add-ons and discounts</h3>
+                  <p className="text-fg-2 text-[length:var(--fs-caption)]">Select any additional services required for this connection.</p>
+                </header>
+                <PostpaidAddonsPanel
+                  preBundled={preBundled}
+                  addonIds={addonIds}
+                  onAddonsChange={onAddonsChange}
+                  selectedProductId={selectedProductId}
+                  customerContext={customerContext}
+                  selectedPlan={selectedPlan}
+                  billLimit={billLimit}
+                  onBillLimitChange={onBillLimitChange}
+                />
                 <div className="space-y-3">
-                  <h4 className="text-fg font-medium text-[length:var(--fs-body)]">
-                    Add-ons{addonIds.length > 0 ? ` (${addonIds.length} selected)` : ' (optional)'}
+                  <h4 className="text-fg font-semibold text-[length:var(--fs-body)]">
+                    Eligible discounts <span className="text-muted font-normal">(optional)</span>
                   </h4>
-                  <PostpaidAddonsPanel
-                    preBundled={preBundled}
-                    addonIds={addonIds}
-                    onAddonsChange={onAddonsChange}
-                    selectedProductId={selectedProductId}
-                    customerContext={customerContext}
-                    selectedPlan={selectedPlan}
-                    billLimit={billLimit}
-                    onBillLimitChange={onBillLimitChange}
-                  />
-                </div>
-                <div className="space-y-3">
-                  <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Eligible Discounts (optional)</h4>
                   <PostpaidDiscountsPanel
                     selectedProductId={selectedProductId}
                     preBundled={preBundled}

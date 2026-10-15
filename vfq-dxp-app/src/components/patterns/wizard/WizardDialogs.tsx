@@ -29,12 +29,12 @@ export function AbandonDialog({
       footer={
         <>
           {!noKeep && (
-            <Button variant="ghost-rect" onClick={onClose}>
+            <Button variant="secondary" onClick={onClose}>
               Keep working
             </Button>
           )}
           <Button
-            variant="primary-rect"
+            variant="primary"
             // The step-initiated variant (hard stop) only dismisses the modal.
             onClick={() => (noKeep ? onClose() : onConfirm())}
             disabled={!noKeep && !comments.trim()}
@@ -84,10 +84,10 @@ export function SaveExitDialog({
       title="Save & Exit"
       footer={
         <>
-          <Button variant="ghost-rect" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             Keep working
           </Button>
-          <Button variant="primary-rect" onClick={onConfirm}>
+          <Button variant="primary" onClick={onConfirm}>
             Save & Exit
           </Button>
         </>
@@ -103,6 +103,48 @@ export function SaveExitDialog({
           helperText="Recorded on the activity that is created automatically."
         />
       </div>
+    </Modal>
+  );
+}
+
+/**
+ * Shown when the agent tries to leave a journey that has progress (a link, the menu, Back). Navigation is held until they
+ * choose: Save & Exit keeps the work as a draft order, Abandon Journey discards it. Closing the dialog (X, Escape or the
+ * backdrop) stays on the journey.
+ */
+export function LeaveJourneyDialog({
+  open,
+  busy,
+  onSave,
+  onAbandon,
+  onStay,
+}: {
+  open: boolean;
+  busy: boolean;
+  onSave: () => void;
+  onAbandon: () => void;
+  onStay: () => void;
+}) {
+  return (
+    <Modal
+      open={open}
+      onClose={onStay}
+      title="Leave this journey?"
+      footer={
+        <>
+          <Button variant="secondary" onClick={onAbandon} disabled={busy}>
+            Abandon Journey
+          </Button>
+          <Button variant="primary" onClick={onSave} disabled={busy}>
+            {busy ? 'Working…' : 'Save & Exit'}
+          </Button>
+        </>
+      }
+    >
+      <p className="text-fg-2 text-[length:var(--fs-body)]">
+        This journey is not finished. Save &amp; Exit keeps what you have entered as a draft order you can resume from Draft Orders.
+        Abandon Journey discards it.
+      </p>
     </Modal>
   );
 }

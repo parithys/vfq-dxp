@@ -1,15 +1,89 @@
 [
   {
     "_note": "SAMPLE TEXT, NOT APPROVED LEGAL WORDING (2026-10-02). The source corpus holds no full Terms & Conditions text, only the live link https://www.vodafone.qa/en/terms-and-conditions. These sections exist so the CAF page can show a scrollable full-terms panel; replace each `body` with the approved text. Sections render in file order.",
-    "sectionId": "TNC-1", "title": "1. Definitions", "body": "In these terms, \"Vodafone\" means Vodafone Qatar Q.P.S.C., \"the Customer\" means the person named in the application form, and \"the Service\" means the mobile postpaid service and any add-ons selected in the order."
+    "sectionId": "TNC-1",
+    "title": "1. Definitions",
+    "body": "In these terms, \"Vodafone\" means Vodafone Qatar Q.P.S.C., \"the Customer\" means the person named in the application form, and \"the Service\" means the mobile postpaid service and any add-ons selected in the order.",
+    "journey": "postpaid"
   },
-  { "sectionId": "TNC-2", "title": "2. The Service", "body": "Vodafone provides the Service to the Customer from the activation date shown in the order. Coverage, speeds and availability may vary by location and are not guaranteed. Vodafone may change, suspend or withdraw features of the Service by giving the Customer reasonable notice." },
-  { "sectionId": "TNC-3", "title": "3. Minimum commitment and early termination", "body": "The selected plan carries a minimum commitment period, shown in the order summary. If the Customer ends the Service before the commitment period finishes, charges for the remainder of the commitment may apply, together with any outstanding amounts and any benefit that was conditional on the commitment." },
-  { "sectionId": "TNC-4", "title": "4. Charges and billing", "body": "The Customer agrees to pay the monthly recurring charge, usage outside the plan allowance, one-time charges and applicable taxes. Bills are issued on the bill cycle shown in the order. The first bill may include a partial charge for the period from activation to the first bill date, and one month in advance." },
-  { "sectionId": "TNC-5", "title": "5. Payment, credit limit and bill limit", "body": "The Customer must pay each bill by its due date. Vodafone sets a credit limit and may apply a bill limit; use above the limit may be restricted until payment is received. Late payment may lead to suspension and collection action." },
-  { "sectionId": "TNC-6", "title": "6. Number selection", "body": "A number chosen from the Star or reserved ranges may carry a one-time charge above the entitlement of the plan and may carry its own minimum period. Numbers remain the property of the regulator and are not transferable except as the regulator's rules allow." },
-  { "sectionId": "TNC-7", "title": "7. SIM and eSIM", "body": "The SIM or eSIM remains the property of Vodafone. The Customer must keep it secure and report loss or theft immediately. An eSIM activation code can be installed on one device and must not be shared." },
-  { "sectionId": "TNC-8", "title": "8. Customer information and privacy", "body": "Vodafone collects and uses the Customer's information to provide the Service, verify identity, bill, and meet legal obligations, and shares it only as the law allows. The Customer confirms the information supplied is accurate and agrees to keep it up to date." },
-  { "sectionId": "TNC-9", "title": "9. Acceptable use", "body": "The Service must be used lawfully and must not be used to harass others, send unsolicited bulk messages or interfere with the network. Vodafone may suspend the Service where use breaches these terms or the law." },
-  { "sectionId": "TNC-10", "title": "10. Changes, complaints and governing law", "body": "Vodafone may update these terms with notice to the Customer. Complaints can be raised through any Vodafone channel and, if unresolved, with the regulator. These terms are governed by the laws of the State of Qatar." }
+  {
+    "sectionId": "TNC-P1",
+    "journey": "prepaid",
+    "title": "1. Definitions",
+    "body": "In these terms, \"Vodafone\" means Vodafone Qatar Q.P.S.C., \"the Customer\" means the person named in the application form, \"the Service\" means the mobile prepaid service, \"Starter Pack\" means the initial prepaid pack selected in the order, \"Recharge\" means a prepaid top-up value, and \"Welcome Balance\" means any bonus balance or promotional entitlement linked to the Starter Pack.",
+    "_note": "SAMPLE TEXT, NOT APPROVED LEGAL WORDING (2026-10-13). Prepaid-scoped sections for the Mobile Prepaid CAF (BRSD MPRA_001_CAF_02/03). Themes follow the blank Consumer Prepaid CAF V2 (knowledge doc consumer-prepaid-caf-v2-110525-editable): prepaid balance is not refunded on cancellation; registration needs age 18+ and a valid QID, GCC ID, Passport or Diplomatic ID. Glossary terms (Starter Pack, Recharge, Welcome Balance) are from the BRSD glossary. Replace each body with the approved text."
+  },
+  {
+    "sectionId": "TNC-2",
+    "title": "2. The Service",
+    "body": "Vodafone provides the Service to the Customer from the activation date shown in the order. Coverage, speeds and availability may vary by location and are not guaranteed. Vodafone may change, suspend or withdraw features of the Service by giving the Customer reasonable notice."
+  },
+  {
+    "sectionId": "TNC-3",
+    "title": "3. Minimum commitment and early termination",
+    "body": "The selected plan carries a minimum commitment period, shown in the order summary. If the Customer ends the Service before the commitment period finishes, charges for the remainder of the commitment may apply, together with any outstanding amounts and any benefit that was conditional on the commitment.",
+    "journey": "postpaid"
+  },
+  {
+    "sectionId": "TNC-P3",
+    "journey": "prepaid",
+    "title": "3. Pack validity and balance",
+    "body": "The Starter Pack and its benefits are valid for the period shown in the order summary. Prepaid balance is used before it is topped up again and any balance or benefit that remains when the Service ends is not refunded. The Customer must recharge to keep the Service active."
+  },
+  {
+    "sectionId": "TNC-4",
+    "title": "4. Charges and billing",
+    "body": "The Customer agrees to pay the monthly recurring charge, usage outside the plan allowance, one-time charges and applicable taxes. Bills are issued on the bill cycle shown in the order. The first bill may include a partial charge for the period from activation to the first bill date, and one month in advance.",
+    "journey": "postpaid"
+  },
+  {
+    "sectionId": "TNC-P4",
+    "journey": "prepaid",
+    "title": "4. Charges",
+    "body": "The Customer pays the Starter Pack, any add-ons, any one-time charge for a premium number and, where it applies, a SIM card charge, at the time of activation. There is no monthly bill, credit limit or bill limit on a prepaid connection."
+  },
+  {
+    "sectionId": "TNC-5",
+    "title": "5. Payment, credit limit and bill limit",
+    "body": "The Customer must pay each bill by its due date. Vodafone sets a credit limit and may apply a bill limit; use above the limit may be restricted until payment is received. Late payment may lead to suspension and collection action.",
+    "journey": "postpaid"
+  },
+  {
+    "sectionId": "TNC-P5",
+    "journey": "prepaid",
+    "title": "5. Registration and identification",
+    "body": "A prepaid connection may be registered only by a person aged 18 or over who presents a valid Qatar ID, GCC ID, Diplomatic ID or Passport. The Customer confirms the identification supplied is genuine and agrees to keep their details up to date."
+  },
+  {
+    "sectionId": "TNC-6",
+    "title": "6. Number selection",
+    "body": "A number chosen from the Star or reserved ranges may carry a one-time charge above the entitlement of the plan and may carry its own minimum period. Numbers remain the property of the regulator and are not transferable except as the regulator's rules allow.",
+    "journey": "postpaid"
+  },
+  {
+    "sectionId": "TNC-P6",
+    "journey": "prepaid",
+    "title": "6. Number selection",
+    "body": "A number chosen from the Star or reserved ranges may carry a one-time charge. A Pre-Paired SIM already carries its number, which cannot be changed at activation. Numbers remain the property of the regulator and are not transferable except as the regulator's rules allow."
+  },
+  {
+    "sectionId": "TNC-7",
+    "title": "7. SIM and eSIM",
+    "body": "The SIM or eSIM remains the property of Vodafone. The Customer must keep it secure and report loss or theft immediately. An eSIM activation code can be installed on one device and must not be shared."
+  },
+  {
+    "sectionId": "TNC-8",
+    "title": "8. Customer information and privacy",
+    "body": "Vodafone collects and uses the Customer's information to provide the Service, verify identity, bill, and meet legal obligations, and shares it only as the law allows. The Customer confirms the information supplied is accurate and agrees to keep it up to date."
+  },
+  {
+    "sectionId": "TNC-9",
+    "title": "9. Acceptable use",
+    "body": "The Service must be used lawfully and must not be used to harass others, send unsolicited bulk messages or interfere with the network. Vodafone may suspend the Service where use breaches these terms or the law."
+  },
+  {
+    "sectionId": "TNC-10",
+    "title": "10. Changes, complaints and governing law",
+    "body": "Vodafone may update these terms with notice to the Customer. Complaints can be raised through any Vodafone channel and, if unresolved, with the regulator. These terms are governed by the laws of the State of Qatar."
+  }
 ]

@@ -1,3 +1,4 @@
+import { formatBytes as formatSize } from '../../lib/format';
 import { useRef, useState } from 'react';
 import { Button } from '../primitives/Button';
 
@@ -8,9 +9,6 @@ export interface UploadedDocument {
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const ACCEPT = '.pdf,.jpg,.jpeg,.png';
-
-const formatSize = (bytes: number) =>
-  bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 
 /**
  * "Upload Document": the digital alternative to scanning a supporting document for the
@@ -40,28 +38,24 @@ export function SupportingDocumentUpload({
   };
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 flex flex-col gap-3">
+    <div className="relative card p-4 flex flex-col gap-3">
       <input ref={input} type="file" accept={ACCEPT} className="sr-only" aria-label="Upload supporting document" onChange={(e) => pick(e.target.files?.[0])} />
       {value ? (
         <>
-          <div className="flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface px-3 py-2">
+          <div className="flex items-center justify-between gap-3 card card-surface px-3 py-2">
             <span className="min-w-0 text-[length:var(--fs-body)] text-fg truncate">
               {value.fileName}
               <span className="text-muted"> · {formatSize(value.sizeBytes)}</span>
             </span>
-            <button
-              type="button"
-              onClick={() => onChange(undefined)}
-              className="shrink-0 text-[length:var(--fs-caption)] text-muted hover:text-danger underline"
-            >
+            <Button variant="tertiary" compact className="shrink-0" onClick={() => onChange(undefined)}>
               Remove
-            </button>
+            </Button>
           </div>
         </>
       ) : (
         <div className="min-h-[var(--size-dropzone-min-h)] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center justify-center gap-3">
           <span className="text-fg-2 text-[length:var(--fs-caption)] uppercase tracking-[0.14em] text-center">Upload the supporting document</span>
-          <Button variant="primary-rect" compact onClick={() => input.current?.click()}>
+          <Button variant="primary" compact onClick={() => input.current?.click()}>
             Browse…
           </Button>
           <span className="text-muted text-[length:var(--fs-caption)]">PDF, JPG or PNG, up to 5 MB</span>

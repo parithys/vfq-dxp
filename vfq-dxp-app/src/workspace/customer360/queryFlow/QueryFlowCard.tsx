@@ -1,3 +1,4 @@
+import { currentAgentId } from '../../../stores/authStore';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../../../components/primitives/Button';
 import { Icon } from '../../../components/primitives/Icon';
@@ -38,7 +39,7 @@ function Highlighted({ text, keywords }: { text: string; keywords: string[] }) {
 }
 
 function Banner({ tone, children }: { tone: 'info' | 'success' | 'warn'; children: React.ReactNode }) {
-  const bg = tone === 'info' ? 'bg-[color-mix(in_oklab,var(--signal-blue),var(--bg)_90%)] text-[var(--signal-blue)]' : tone === 'success' ? 'bg-[color-mix(in_oklab,var(--success),var(--bg)_90%)] text-success' : 'bg-[var(--warn-bg)] text-[var(--warn-text)]';
+  const bg = tone === 'info' ? 'bg-tone-blue-soft text-[var(--signal-blue)]' : tone === 'success' ? 'bg-tone-success text-success' : 'bg-[var(--warn-bg)] text-[var(--warn-text)]';
   return <p className={`rounded-[var(--radius-card)] px-4 py-3 text-[length:var(--fs-body)] ${bg}`}>{children}</p>;
 }
 
@@ -131,7 +132,7 @@ export function QueryFlowCard({
       priority: derivePriorityFromSegment(data.customer.segment),
       slaTargetHours: slaTargetHours(data.customer.nationality),
       severity: issue.severity,
-      createdBy: 'AGENT-VINODHINIR',
+      createdBy: currentAgentId(),
     });
     await createRecord('trouble-tickets', record);
     onTicketCreated?.(record);
@@ -141,25 +142,25 @@ export function QueryFlowCard({
   if (!catalogue) return null;
 
   return (
-    <section ref={cardRef} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg overflow-hidden" aria-label="How can we help today?">
+    <section ref={cardRef} className="card overflow-hidden" aria-label="How can we help today?">
       {!issue ? (
         <>
-          <div className="bg-[linear-gradient(110deg,var(--help-band-from)_30%,var(--help-band-to))] p-5 space-y-4">
+          <div className="bg-[image:var(--dash-hero-gradient)] p-5 space-y-4">
           <div>
-            <h2 className="text-fg font-bold text-[length:var(--fs-h4)]">How can we help today?</h2>
-            <p className="text-fg text-[length:var(--fs-body)] mt-1">Search for customer issues, queries or requests.</p>
+            <h2 className="text-on-dark font-bold text-[length:var(--fs-h4)]">How can we help today?</h2>
+            <p className="text-on-dark-2 text-[length:var(--fs-body)] mt-1">Search for customer issues, queries or requests.</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <SearchBox value={query} onChange={(v) => { setQuery(v); setNote(undefined); }} placeholder="Search for customer issues, queries or requests" />
           </div>
           <div className="flex flex-wrap items-center gap-2 text-[length:var(--fs-caption)]">
-            <span className="text-fg">Examples:</span>
+            <span className="text-on-dark-2">Examples:</span>
             {catalogue.examples.map((e) => (
               <button
                 key={e}
                 type="button"
                 onClick={() => { setQuery(e); setNote(undefined); }}
-                className="rounded-[var(--radius-pill)] border border-[var(--field-card-border)] bg-bg px-3 py-1 text-fg-2 hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
+                className="rounded-[var(--radius-pill)] border border-transparent bg-on-dark-fill-2 px-3 py-1 text-on-dark hover:bg-on-dark-fill-3 focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
               >
                 {e}
               </button>
@@ -248,17 +249,13 @@ export function QueryFlowCard({
         </>
       ) : (
         <div className="p-5 space-y-4">
-          <button
-            type="button"
-            onClick={() => reset()}
-            className="inline-flex items-center gap-1.5 text-accent font-medium text-[length:var(--fs-body)] hover:underline focus:outline-none focus-visible:shadow-[var(--focus-ring)] rounded-[var(--radius-sm)]"
-          >
+          <Button variant="tertiary" compact onClick={() => reset()}>
             <Icon path={BACK_ICON} className="w-4 h-4" />
             Back to Search
-          </button>
+          </Button>
 
           <div className="grid grid-cols-1 @4xl:grid-cols-2 gap-4 items-stretch">
-          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4 space-y-3">
+          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-[var(--icon-tile-bg)] p-4 space-y-3">
             <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Selected Query Issue</h3>
             <div className="flex items-center gap-3">
               <IconTile icon={IC.phone} tone="red" />
@@ -272,10 +269,10 @@ export function QueryFlowCard({
               <dt className="text-fg-2">Query Service Type</dt>
               <dd>{serviceType ? <Pill tone="blue">{serviceTypeLabel(serviceType)}</Pill> : <span className="text-muted">Not selected</span>}</dd>
             </dl>
-            {issue.category ? <Banner tone="success">Query Category is auto-derived based on predefined mapping.</Banner> : <Banner tone="warn">No Query Category is mapped for this issue yet.</Banner>}
+            {!issue.category && <Banner tone="warn">No Query Category is mapped for this issue yet.</Banner>}
           </div>
 
-          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4 space-y-3">
+          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-[var(--icon-tile-bg)] p-4 space-y-3">
             <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Service Line</h3>
             <Select
               label="Selected MSISDN"
@@ -296,7 +293,7 @@ export function QueryFlowCard({
               </>
             )}
             <div className="flex justify-end">
-              <Button variant="primary-rect" disabled={!serviceType} onClick={() => setPreviewOpen(true)}>
+              <Button variant="primary" disabled={!serviceType} onClick={() => setPreviewOpen(true)}>
                 Preview Details
               </Button>
             </div>

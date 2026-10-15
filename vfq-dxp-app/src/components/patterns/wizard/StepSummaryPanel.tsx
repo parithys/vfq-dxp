@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
-import { fmtDate } from '../../../workspace/customer360/sections/C360Kit';
+import { formatDate } from '../../../lib/format';
 import { StepSummarySection } from './StepSummarySection';
 import { SummaryFieldRow } from './SummaryFieldRow';
 import { formatSummaryValue } from './stepSummary';
@@ -74,6 +74,7 @@ export function StepSummaryPanel({
 
   const heading = `Summary`;
   const count = `${completed.length} of ${totalSteps} steps completed`;
+  const percent = totalSteps > 0 ? Math.min(100, Math.round((completed.length / totalSteps) * 100)) : 0;
 
   const returnButton = returnTo ? (
     <div className="px-4 py-3 border-b border-border-soft">
@@ -105,7 +106,7 @@ export function StepSummaryPanel({
               <SummaryFieldRow
                 key={f.key}
                 label={f.label}
-                value={formatSummaryValue(f, f.value(values), f.labelFrom ? labels[sourceKey(f.labelFrom)] : undefined, fmtDate)}
+                value={formatSummaryValue(f, f.value(values), f.labelFrom ? labels[sourceKey(f.labelFrom)] : undefined, (v) => (v === undefined || v === null || v === '' ? undefined : formatDate(v)))}
               />
             ))}
         </StepSummarySection>
@@ -120,7 +121,7 @@ export function StepSummaryPanel({
 
   if (variant === 'accordion') {
     return (
-      <aside aria-label="Summary of completed steps" className="lg:hidden mt-6 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
+      <aside aria-label="Summary of completed steps" className="lg:hidden mt-6 card ">
         <button
           type="button"
           onClick={() => setAccordionOpen((o) => !o)}
@@ -139,15 +140,34 @@ export function StepSummaryPanel({
   return (
     <aside
       aria-label="Summary of completed steps"
-      className="hidden lg:block w-80 shrink-0 self-start sticky top-0 max-h-screen overflow-y-auto my-8 mr-8 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg"
+      className="hidden lg:flex lg:flex-col w-80 shrink-0 self-start sticky top-0 max-h-[calc(100vh-11rem)] overflow-hidden my-8 mr-8 card "
     >
-      <header className="sticky top-0 z-10 bg-bg border-b border-border-soft px-4 py-3">
-        <h2 className="text-fg font-bold text-[length:var(--fs-h5)]">{heading}</h2>
-        <p className="text-fg-2 text-[length:var(--fs-caption)]">{count}</p>
+      {/* The header stays put; only the sections below it scroll. */}
+      <header className="shrink-0 border-b border-border-soft bg-[var(--icon-tile-bg)] px-4 py-4">
+        <div className="flex items-center gap-3">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-card)] bg-bg text-[var(--brand-plum)] shadow-[var(--shadow-icon-tile)]" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+              <path d="M9 4h6v3H9z M7 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-1 M9 12h6 M9 16h4" />
+            </svg>
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-fg font-bold text-[length:var(--fs-h5)]">{heading}</h2>
+            <p className="text-fg-2 text-[length:var(--fs-caption)]">{count}</p>
+          </div>
+          <span className="shrink-0 rounded-[var(--radius-pill)] bg-bg px-3 py-1 text-[var(--brand-plum)] font-bold text-[length:var(--fs-caption)] shadow-[var(--shadow-icon-tile)]">{percent}%</span>
+        </div>
+        <div className="mt-4 flex items-center gap-3">
+          <div className="h-2 flex-1 overflow-hidden rounded-[var(--radius-pill)] bg-bg" role="progressbar" aria-label="Steps completed" aria-valuemin={0} aria-valuemax={totalSteps} aria-valuenow={completed.length}>
+            <div className="h-full rounded-[var(--radius-pill)] bg-[var(--brand-plum)] transition-[width] duration-[var(--motion-slow)]" style={{ width: `${percent}%` }} />
+          </div>
+          <span className="shrink-0 text-muted font-bold uppercase tracking-wide text-[length:var(--fs-micro)]">Progress</span>
+        </div>
       </header>
-      {live}
-      {returnButton}
-      {body}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {live}
+        {returnButton}
+        {body}
+      </div>
     </aside>
   );
 }

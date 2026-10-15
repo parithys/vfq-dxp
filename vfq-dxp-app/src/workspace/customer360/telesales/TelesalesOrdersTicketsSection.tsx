@@ -1,3 +1,6 @@
+import { isClosedTicket } from '../../../lib/statusTone';
+import { FilterSelect } from '../sections/C360Kit';
+import { SearchField } from '../../../components/primitives/SearchField';
 import { useState } from 'react';
 import { Card, Pill, dateTime, type Ctx } from './TelesalesOverview';
 import { ActionList, BarChart, HeaderButton, ICON, PillTabs, SectionHeader, StatStrip, Table, TableCard, TileLinks, pillFor, WideBlock } from './TelesalesKit';
@@ -19,7 +22,6 @@ export function OrdersTicketsSection({ ctx }: { ctx: Ctx }) {
   const [ts, setTs] = useState('All Statuses');
   const [tp, setTp] = useState(0);
   const [chart, setChart] = useState('orders');
-  const opt = (list: string[]) => list.map((v) => <option key={v}>{v}</option>);
   const oTypes = ['All Order Types', ...Array.from(new Set(orders.map((o) => str(o.orderType)).filter(Boolean)))];
   const oStats = ['All Statuses', ...Array.from(new Set(orders.map((o) => str(o.status)).filter(Boolean)))];
   const tCats = ['All Categories', ...Array.from(new Set(tickets.map((t) => str(t.category)).filter(Boolean)))];
@@ -27,7 +29,7 @@ export function OrdersTicketsSection({ ctx }: { ctx: Ctx }) {
   const fo = orders.filter((o) => (ot === 'All Order Types' || str(o.orderType) === ot) && (os === 'All Statuses' || str(o.status) === os) && `${str(o.orderId)} ${str(o.orderType)} ${str(o.status)}`.toLowerCase().includes(oq.toLowerCase()));
   const ft = tickets.filter((t) => (tc === 'All Categories' || str(t.category) === tc) && (ts === 'All Statuses' || str(t.status) === ts) && `${str(t.ticketId)} ${str(t.category)} ${str(t.status)}`.toLowerCase().includes(tq.toLowerCase()));
   const cnt = (list: Rec[], re: RegExp) => list.filter((x) => re.test(str(x.status))).length;
-  const overdue = tickets.filter((t) => t.slaDueAt && new Date(str(t.slaDueAt)) < new Date() && !/solved|closed|complete|cancel/i.test(str(t.status))).length;
+  const overdue = tickets.filter((t) => t.slaDueAt && new Date(str(t.slaDueAt)) < new Date() && !isClosedTicket(t.status)).length;
   const months = Array.from({ length: 6 }, (_, i) => {
     const d = new Date();
     d.setMonth(d.getMonth() - (5 - i));
@@ -45,7 +47,7 @@ export function OrdersTicketsSection({ ctx }: { ctx: Ctx }) {
   const pageOf = <T,>(list: T[], p: number) => list.slice(p * PAGE, p * PAGE + PAGE);
   return (
     <>
-      <SectionHeader icon={ICON.card} title="Orders & Tickets" description="View and manage all orders and trouble tickets for this customer. Track status, view details and take quick actions." />
+      <SectionHeader />
       <StatStrip
         items={[
           { value: orders.length, label: 'Total Orders' },
@@ -61,9 +63,9 @@ export function OrdersTicketsSection({ ctx }: { ctx: Ctx }) {
       <WideBlock className="">
       <Card title={`Orders ({orders.length})`} icon={ICON.card} link="View All Orders" onLink={() => ctx.goToTab('ts-history')}>
         <div className="px-4 py-3 flex gap-2 border-b border-[var(--field-card-border)]">
-          <input value={oq} onChange={(e) => { setOq(e.target.value); setOp(0); }} placeholder="Search by order number, product or status..." aria-label="Search orders" className="flex-1 min-w-0 rounded-[var(--field-radius)] border border-[var(--field-border)] bg-surface px-3 py-2 text-[length:var(--fs-caption)]" />
-          <select value={ot} onChange={(e) => { setOt(e.target.value); setOp(0); }} aria-label="Order type" className="rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-2 text-[length:var(--fs-caption)]">{opt(oTypes)}</select>
-          <select value={os} onChange={(e) => { setOs(e.target.value); setOp(0); }} aria-label="Order status" className="rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-2 text-[length:var(--fs-caption)]">{opt(oStats)}</select>
+          <SearchField value={oq} onChange={(e) => { setOq(e.target.value); setOp(0); }} onClear={() => { setOq(''); setOp(0); }} placeholder="Search by order number, product or status..." aria-label="Search orders" wrapperClassName="flex-1 min-w-48" />
+          <FilterSelect label="Order type" value={ot} options={oTypes.map((x) => ({ value: x, label: x }))} onChange={(v) => { setOt(v); setOp(0); }} />
+          <FilterSelect label="Order status" value={os} options={oStats.map((x) => ({ value: x, label: x }))} onChange={(v) => { setOs(v); setOp(0); }} />
           <HeaderButton primary>+ New Order</HeaderButton>
         </div>
         <Table
@@ -85,9 +87,9 @@ export function OrdersTicketsSection({ ctx }: { ctx: Ctx }) {
       <WideBlock className="">
         <Card title={`Trouble Tickets (${tickets.length})`} icon={ICON.help} link="View All Tickets" onLink={() => ctx.goToTab('ts-history')}>
           <div className="px-4 py-3 flex gap-2 border-b border-[var(--field-card-border)]">
-            <input value={tq} onChange={(e) => { setTq(e.target.value); setTp(0); }} placeholder="Search by ticket number, issue or status..." aria-label="Search tickets" className="flex-1 min-w-0 rounded-[var(--field-radius)] border border-[var(--field-border)] bg-surface px-3 py-2 text-[length:var(--fs-caption)]" />
-            <select value={tc} onChange={(e) => { setTc(e.target.value); setTp(0); }} aria-label="Ticket category" className="rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-2 text-[length:var(--fs-caption)]">{opt(tCats)}</select>
-            <select value={ts} onChange={(e) => { setTs(e.target.value); setTp(0); }} aria-label="Ticket status" className="rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-2 text-[length:var(--fs-caption)]">{opt(tStats)}</select>
+            <SearchField value={tq} onChange={(e) => { setTq(e.target.value); setTp(0); }} onClear={() => { setTq(''); setTp(0); }} placeholder="Search by ticket number, issue or status..." aria-label="Search tickets" wrapperClassName="flex-1 min-w-48" />
+            <FilterSelect label="Ticket category" value={tc} options={tCats.map((x) => ({ value: x, label: x }))} onChange={(v) => { setTc(v); setTp(0); }} />
+            <FilterSelect label="Ticket status" value={ts} options={tStats.map((x) => ({ value: x, label: x }))} onChange={(v) => { setTs(v); setTp(0); }} />
             <HeaderButton primary>+ Create Ticket</HeaderButton>
           </div>
           <Table

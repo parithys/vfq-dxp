@@ -1,3 +1,4 @@
+import { Button } from '../../../components/primitives/Button';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../../components/primitives/Icon';
@@ -7,7 +8,6 @@ import {
   ActionButton,
   DetailRows,
   FilterSelect,
-  GridTable,
   IC,
   IconTile,
   KpiGrid,
@@ -18,8 +18,6 @@ import {
   SearchBox,
   StatusPill,
   TabPage,
-  UnderlineTabs,
-  ViewPill,
   fmtDate,
   fmtDateTime,
   qar,
@@ -199,7 +197,7 @@ export function C360Activities({ data }: { data: Customer360Data; services: Cust
   const [typeFilter, setTypeFilter] = useState('all');
   const [channelFilter, setChannelFilter] = useState('all');
   const [range, setRange] = useState('6m');
-  const [pageSize, setPageSize] = useState(10);
+  const pageSize = 10;
   const [pickedId, setPickedId] = useState<string>();
 
   const all = useMemo(() => buildActivities(data), [data]);
@@ -248,7 +246,7 @@ export function C360Activities({ data }: { data: Customer360Data; services: Cust
 
   // A summary tile opens the list tab it counts.
   const openTab = (k: string) => {
-    setTab(k);
+    setTab(tab === k ? 'all' : k);
     paging.setPage(1);
   };
 
@@ -267,122 +265,85 @@ export function C360Activities({ data }: { data: Customer360Data; services: Cust
         <KpiTile icon={IC.clock} tone="purple" label="Other Activities" value={kpi.other} caption="Orders, Tickets, System" chevron onClick={() => openTab('orders')} />
       </KpiGrid>
 
-      <div className="grid grid-cols-1 @6xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] gap-4 items-start">
-        <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 space-y-4 min-w-0">
-          <UnderlineTabs
-            active={tab}
-            onChange={(k) => {
-              setTab(k);
-              paging.setPage(1);
-            }}
-            items={TABS.map((t) => ({ key: t.key, label: t.label }))}
-          />
-          <div className="flex flex-wrap items-stretch gap-3">
-            <SearchBox value={query} onChange={reset(setQuery)} placeholder="Search by activity ID, description or user" />
-            <FilterSelect label="Activity Type" value={typeFilter} options={typeOptions} onChange={reset(setTypeFilter)} />
-            <FilterSelect label="Date Range" value={range} options={RANGES.map((r) => ({ value: r.value, label: r.label }))} onChange={reset(setRange)} />
-            <FilterSelect label="Channel" value={channelFilter} options={channelOptions} onChange={reset(setChannelFilter)} />
-          </div>
-          <GridTable
-            rows={paging.slice}
-            rowKey={(a) => a.id}
-            selectedKey={selected?.id}
-            onSelect={(a) => setPickedId(a.id)}
-            empty="No activities match the current filters."
-            cols={[
-              { key: 'n', header: '#', render: (_a, i) => firstShown + i },
-              {
-                key: 'at',
-                header: 'Date & Time',
-                className: 'whitespace-nowrap',
-                render: (a) => {
-                  if (!a.at) return <Dv k="activityDateTime" row={{ id: a.id, type: a.type }} />;
-                  const d = fmtDateTime(new Date(a.at).toISOString());
+      {/* Search and filters sit above both columns; they narrow the list on the left. */}
+      <div className="flex flex-wrap items-stretch gap-3">
+        <SearchBox value={query} onChange={reset(setQuery)} placeholder="Search by activity ID, description or user" />
+        <FilterSelect label="Activity Type" value={typeFilter} options={typeOptions} onChange={reset(setTypeFilter)} />
+        <FilterSelect label="Date Range" value={range} options={RANGES.map((r) => ({ value: r.value, label: r.label }))} onChange={reset(setRange)} />
+        <FilterSelect label="Channel" value={channelFilter} options={channelOptions} onChange={reset(setChannelFilter)} />
+      </div>
+
+      <div className="grid grid-cols-1 @4xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-4 items-start">
+        {/* Left: the activities. The summary tiles above filter this list. */}
+        <Panel icon={IC.activity} title={`All Activities (${paging.total})`}>
+          <div className="space-y-3">
+            {tab !== 'all' && (
+              <button type="button" onClick={() => openTab('all')} className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--field-card-border)] bg-surface px-2.5 py-0.5 text-[length:var(--fs-caption)] text-fg focus:outline-none focus-visible:shadow-[var(--focus-ring)]">
+                {TABS.find((t) => t.key === tab)?.label}
+                <Icon path={IC.x} className="w-3 h-3" />
+              </button>
+            )}
+            {paging.slice.length === 0 ? (
+              <p className="text-muted text-[length:var(--fs-body)] py-4 text-center">No activities match the current filters.</p>
+            ) : (
+              <ul className="space-y-2">
+                {paging.slice.map((a) => {
+                  const d = a.at ? fmtDateTime(new Date(a.at).toISOString()) : undefined;
                   return (
-                    <div className="leading-tight">
-                      <div>{d.date}</div>
-                      {!a.dateOnly && d.time && <div className="text-fg-2 text-[length:var(--fs-caption)]">{d.time}</div>}
-                    </div>
+                    <li key={a.id}>
+                      <button
+                        type="button"
+                        aria-pressed={selected?.id === a.id}
+                        onClick={() => setPickedId(a.id)}
+                        className={`w-full flex items-start gap-3 text-left rounded-[var(--radius-card)] border p-3 transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+                          selected?.id === a.id ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)]' : 'border-[var(--field-card-border)] bg-bg hover:bg-surface'
+                        }`}
+                      >
+                        <IconTile icon={TYPE_STYLE[a.type].icon} tone={TYPE_STYLE[a.type].tone} size="sm" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-fg font-medium text-[length:var(--fs-body)] break-words">{a.description}</span>
+                          <span className="block text-fg-2 text-[length:var(--fs-caption)]">
+                            {a.type}
+                            {d ? ` · ${d.date}${!a.dateOnly && d.time ? ` ${d.time}` : ''}` : ''}
+                            {a.channel ? ` · ${a.channel}` : ''}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
                   );
-                },
-              },
-              {
-                key: 'type',
-                header: 'Activity Type',
-                render: (a) => (
-                  <span className="flex items-center gap-2.5">
-                    <IconTile icon={TYPE_STYLE[a.type].icon} tone={TYPE_STYLE[a.type].tone} size="sm" />
-                    <span>{a.type}</span>
-                  </span>
-                ),
-              },
-              { key: 'description', header: 'Description', className: 'min-w-44 break-words' },
-              { key: 'user', header: 'User ID', className: 'break-words', render: (a) => a.user ?? <Dv k="activityUser" row={{ type: a.type }} /> },
-              { key: 'channel', header: 'Channel', render: (a) => a.channel ?? <Dv k="activityChannel" row={{ type: a.type }} /> },
-              { key: 'location', header: 'Location', render: (a) => a.location ?? <Dv k="activityLocation" row={{ type: a.type }} /> },
-              {
-                key: 'actions',
-                header: 'Actions',
-                render: (a) => (
-                  <span className="flex items-center gap-3">
-                    <ViewPill onClick={() => setPickedId(a.id)} />
-                    <Icon path={IC.chevRight} className="w-4 h-4 text-fg" />
-                  </span>
-                ),
-              },
-            ]}
-          />
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <span className="text-fg-2 text-[length:var(--fs-body)]">
-              Showing {firstShown}&ndash;{lastShown} of {paging.total} activities
-            </span>
-            <div className="flex items-center gap-3">
+                })}
+              </ul>
+            )}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-fg-2 text-[length:var(--fs-caption)]">
+                {firstShown}&ndash;{lastShown} of {paging.total}
+              </span>
               <Pager page={paging.page} pages={paging.pages} onPage={paging.setPage} />
-              <label className="relative rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg">
-                <select
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    paging.setPage(1);
-                  }}
-                  aria-label="Rows per page"
-                  className="bg-transparent outline-none appearance-none pl-3 pr-8 py-1.5 text-fg text-[length:var(--fs-body)] cursor-pointer"
-                >
-                  {[10, 25, 50].map((n) => (
-                    <option key={n} value={n}>
-                      {n} per page
-                    </option>
-                  ))}
-                </select>
-                <Icon path={IC.chevDown} className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-fg-2" />
-              </label>
             </div>
           </div>
-        </section>
+        </Panel>
 
-        <div className="space-y-4 min-w-0">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <ActionButton icon={IC.download} disabled>
-              Export
-            </ActionButton>
-            <span className="inline-flex items-center gap-2 rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg px-3 py-2 text-fg text-[length:var(--fs-body)]">
-              <Icon path={IC.calendar} className="w-4 h-4" />
-              {rangeText(days, now)}
-            </span>
-          </div>
-          <Panel icon={IC.clipboard} title="Activity Details">
-            {selected ? (
-              <div className="space-y-4">
-                <div className="flex items-start gap-3 min-w-0">
-                  <IconTile icon={TYPE_STYLE[selected.type].icon} tone={TYPE_STYLE[selected.type].tone} size="lg" />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="text-fg font-bold text-[length:var(--fs-body-lg)] break-words min-w-0">{selected.description}</div>
-                      <Pill tone={TYPE_STYLE[selected.type].tone}>{selected.type.replace(' Activity', '')}</Pill>
-                    </div>
-                    <div className="text-fg-2 text-[length:var(--fs-caption)]">{when.date ? `${when.date}${!selected.dateOnly && when.time ? `  |  ${when.time}` : ''}` : '-'}</div>
-                  </div>
-                </div>
+        {/* Right: the selected activity. */}
+        <aside className="card p-4 space-y-4 min-w-0">
+          {selected ? (
+            <>
+              <div className="flex flex-wrap items-center gap-3">
+                <IconTile icon={TYPE_STYLE[selected.type].icon} tone={TYPE_STYLE[selected.type].tone} />
+                <span className="text-fg font-bold text-[length:var(--fs-h5)] break-words min-w-0">{selected.description}</span>
+                <Pill tone={TYPE_STYLE[selected.type].tone}>{selected.type.replace(' Activity', '')}</Pill>
+                <span className="ml-auto flex items-center gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg px-3 py-1.5 text-fg text-[length:var(--fs-caption)]">
+                    <Icon path={IC.calendar} className="w-4 h-4" />
+                    {rangeText(days, now)}
+                  </span>
+                  <ActionButton icon={IC.download} disabled>
+                    Export
+                  </ActionButton>
+                </span>
+              </div>
+              <p className="text-fg-2 text-[length:var(--fs-caption)] -mt-2">{when.date ? `${when.date}${!selected.dateOnly && when.time ? `  |  ${when.time}` : ''}` : '-'}</p>
+
+              <Panel icon={IC.clipboard} title="Activity Details" className="bg-surface-half">
                 <DetailRows
                   rows={[
                     { label: 'Activity ID', value: selected.id.replace(/^(ORD|TT)-ACT-/, ''), strong: false },
@@ -399,20 +360,16 @@ export function C360Activities({ data }: { data: Customer360Data; services: Cust
                     { label: 'Remarks', value: selected.remarks ?? <Dv k="activityRemarks" row={{ type: selected.type }} />, strong: false },
                   ]}
                 />
-                <button
-                  type="button"
-                  disabled={!selected.orderId}
-                  onClick={() => selected.orderId && navigate(`${ORDER_DETAIL_ROUTE}?id=${selected.orderId}`)}
-                  className="w-full rounded-[var(--radius-button)] border border-accent px-4 py-2 text-[length:var(--fs-btn-compact)] font-medium text-accent enabled:hover:bg-[color-mix(in_oklab,var(--accent),var(--bg)_94%)] disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  View Related Order &rarr;
-                </button>
-              </div>
-            ) : (
-              <p className="text-muted text-[length:var(--fs-body)] py-4 text-center">Select an activity to see its details.</p>
-            )}
-          </Panel>
-        </div>
+              </Panel>
+
+              <Button variant="secondary" compact type="button" disabled={!selected.orderId} onClick={() => selected.orderId && navigate(`${ORDER_DETAIL_ROUTE}?id=${selected.orderId}`)}>
+                View Related Order &rarr;
+              </Button>
+            </>
+          ) : (
+            <p className="text-muted text-[length:var(--fs-body)] py-6 text-center">Select an activity to see its details.</p>
+          )}
+        </aside>
       </div>
     </TabPage>
   );

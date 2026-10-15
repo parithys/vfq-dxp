@@ -3,10 +3,11 @@ import { useAuthStore } from '../stores/authStore';
 
 // One place that writes the activity a customer journey leaves behind, so an agent never has to
 // log it by hand. Every activity gets a generated unique ID; its name and reason come from the
-// journey and the event that triggered it. Only Abandoned and Save & Exit carry agent comments;
-// an Abandoned comment is mandatory (blank or whitespace-only is rejected), Save & Exit's is optional.
+// journey and the event that triggered it. Only Abandoned, Save & Exit and Manual activities carry agent comments;
+// an Abandoned or Manual comment is mandatory (blank or whitespace-only is rejected), Save & Exit's is optional.
+// The Completed activity is the automatic one (no comments); a Manual activity is always an additional record.
 
-export type ActivityTrigger = 'completed' | 'abandoned' | 'saved-exit' | 'workflow-event' | 'hard-stop';
+export type ActivityTrigger = 'completed' | 'abandoned' | 'saved-exit' | 'workflow-event' | 'hard-stop' | 'manual';
 
 const OUTCOME: Record<ActivityTrigger, { verb: string; status: string; outcome: string }> = {
   completed: { verb: 'Completed', status: 'Solved', outcome: 'Order Created' },
@@ -14,6 +15,7 @@ const OUTCOME: Record<ActivityTrigger, { verb: string; status: string; outcome: 
   'saved-exit': { verb: 'Saved & Exited', status: 'Open', outcome: 'Save & Exit' },
   'workflow-event': { verb: 'Workflow Approval', status: 'Open', outcome: 'Workflow Approval' },
   'hard-stop': { verb: 'Hard Stop', status: 'Closed', outcome: 'Hard Stop' },
+  manual: { verb: 'Manual Activity', status: 'Open', outcome: 'Manual Activity' },
 };
 
 export interface ActivityInput {
@@ -24,13 +26,15 @@ export interface ActivityInput {
   name?: string;
   /** What caused it: the issue, outcome or trigger. Generated from the trigger when omitted. */
   reason?: string;
-  /** Agent-entered, optional. Stored only for Abandoned and Save & Exit. */
+  /** Agent-entered. Stored only for Abandoned, Save & Exit and Manual (required for Abandoned and Manual). */
   comments?: string;
   orderId?: string;
   customerId?: string;
   customerName?: string;
   idNumber?: string;
   stepLabel?: string;
+  /** A number reserved earlier (the activity shown on the confirmation page); generated when omitted. */
+  activityNumber?: string;
 }
 
 /** ACT-<time><random>: unique per activity, never typed by the agent. */
@@ -43,6 +47,9 @@ export function buildActivity(input: ActivityInput): Record<string, unknown> {
   if (input.trigger === 'abandoned' && !input.comments?.trim()) {
     throw new Error('A comment is required before an abandoned journey can be saved.');
   }
+  if (input.trigger === 'manual' && !input.comments?.trim()) {
+    throw new Error('A comment is required before a manual activity can be saved.');
+  }
   const name = input.name ?? `${input.journey} - ${verb}`;
   const reason =
     input.reason ??
@@ -54,11 +61,13 @@ export function buildActivity(input: ActivityInput): Record<string, unknown> {
           ? `Agent saved ${input.journey}${input.stepLabel ? ` at the ${input.stepLabel} step` : ''} to finish later.`
           : input.trigger === 'hard-stop'
             ? `${input.journey} ended at a hard stop; the customer is not eligible.`
-            : `${input.journey} routed for approval.`);
-  const comments = input.trigger === 'abandoned' || input.trigger === 'saved-exit' ? input.comments?.trim() : '';
+            : input.trigger === 'manual'
+              ? `Activity created manually by the agent${input.orderId ? ` for order ${input.orderId}` : ''}.`
+              : `${input.journey} routed for approval.`);
+  const comments = input.trigger === 'abandoned' || input.trigger === 'saved-exit' || input.trigger === 'manual' ? input.comments?.trim() : '';
   const profile = useAuthStore.getState().profile;
   return {
-    activityNumber: newActivityId(),
+    activityNumber: input.activityNumber ?? newActivityId(),
     activityName: name,
     activityReason: reason,
     trigger: input.trigger,

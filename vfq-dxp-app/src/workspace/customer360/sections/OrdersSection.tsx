@@ -1,13 +1,8 @@
+import { badgeVariantFor } from '../../../lib/statusTone';
 import { useNavigate } from 'react-router-dom';
 import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
 import type { Customer360Data } from '../../../engines/customer360Engine';
-
-const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'filled-neutral'> = {
-  Complete: 'success',
-  Cancelled: 'danger',
-  'Submitted for Approval': 'warning',
-};
 
 // Same underlying `orders` records the cross-customer Orders workspace
 // shows, filtered to this customer by customer360Engine - not a separate
@@ -28,7 +23,7 @@ export function OrdersSection({ data }: { data: Customer360Data }) {
         {
           key: 'status',
           header: 'Status',
-          render: (r) => <Badge variant={STATUS_VARIANT[String(r.status)] ?? 'filled-neutral'}>{String(r.status)}</Badge>,
+          render: (r) => <Badge variant={badgeVariantFor(String(r.status))}>{String(r.status)}</Badge>,
         },
       ]}
     />

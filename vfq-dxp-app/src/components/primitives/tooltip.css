@@ -21,7 +21,7 @@
   font-family: var(--tooltip-font-family);
   max-width: var(--tooltip-max-width);
   box-shadow: var(--tooltip-shadow);
-  pointer-events: none;
+  pointer-events: auto; /* hoverable: the pointer can move onto it without it vanishing (WCAG 1.4.13) */
   white-space: nowrap;
 
   opacity: 0;

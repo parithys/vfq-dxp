@@ -1,5 +1,8 @@
+import { SearchField } from '../../../components/primitives/SearchField';
+import { FilterSelect } from '../sections/C360Kit';
 import { useState } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
+import { ConnectionTypeTag } from '../../../components/primitives/ConnectionTypeTag';
 import { buildAssetsFieldResolver } from '../sections/assetsResolvers';
 import { blacklistResolvers } from '../sections/blacklistResolvers';
 import { getVisibleTopicFields } from '../../../engines/customer360VisibilityEngine';
@@ -38,7 +41,7 @@ export function ConnectionsSection({ ctx }: { ctx: Ctx }) {
   const bar = (label: string, left: number, total: number, unit: string) => (
     <div key={label} className="flex items-center gap-3 px-5 py-2.5">
       <span className="w-12 text-fg-2 text-[length:var(--fs-caption)]">{label}</span>
-      <span className="flex-1 h-2 rounded-full bg-surface overflow-hidden">
+      <span className="flex-1 h-2 rounded-[var(--radius-pill)] bg-surface overflow-hidden">
         <span className="block h-full bg-accent" style={{ width: `${total ? Math.min(100, (left / total) * 100) : 0}%` }} />
       </span>
       <span className="text-fg font-semibold text-[length:var(--fs-caption)] whitespace-nowrap">
@@ -54,14 +57,11 @@ export function ConnectionsSection({ ctx }: { ctx: Ctx }) {
   return (
     <>
       <SectionHeader
-        icon={ICON.bars}
-        title="Connections & Services"
-        description="View and manage all mobile, fixed line, TV and GigaHome connections associated with this customer."
+       
+       
+       
         actions={
           <>
-            <select aria-label="View by" className="rounded-[var(--radius-button)] border border-border bg-bg px-3 py-2 text-[length:var(--fs-body)]">
-              <option>View by Service Type</option>
-            </select>
             <HeaderButton primary>+ New Connection</HeaderButton>
           </>
         }
@@ -77,17 +77,9 @@ export function ConnectionsSection({ ctx }: { ctx: Ctx }) {
       <WideBlock className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-4 items-start">
         <Card title="" icon={ICON.bars}>
           <div className="px-4 py-3 flex gap-2 border-b border-[var(--field-card-border)]">
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by MSISDN, service number or plan name..." aria-label="Search connections" className="flex-1 min-w-0 rounded-[var(--field-radius)] border border-[var(--field-border)] bg-surface px-3 py-2 text-[length:var(--fs-caption)]" />
-            <select value={type} onChange={(e) => setType(e.target.value)} aria-label="Service type" className="rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-2 text-[length:var(--fs-caption)]">
-              {SERVICE_FILTERS.map((f) => (
-                <option key={f}>{f}</option>
-              ))}
-            </select>
-            <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Status" className="rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-2 text-[length:var(--fs-caption)]">
-              {['All Status', 'Active', 'Suspended'].map((f) => (
-                <option key={f}>{f}</option>
-              ))}
-            </select>
+            <SearchField value={query} onChange={(e) => setQuery(e.target.value)} onClear={() => setQuery('')} placeholder="Search by MSISDN, service number or plan name..." aria-label="Search connections" wrapperClassName="flex-1 min-w-48" />
+            <FilterSelect label="Service type" value={type} options={SERVICE_FILTERS.map((x) => ({ value: x, label: x }))} onChange={(v) => setType(v)} />
+            <FilterSelect label="Status" value={status} options={['All Status', 'Active', 'Suspended'].map((x) => ({ value: x, label: x }))} onChange={(v) => setStatus(v)} />
           </div>
           {shown.map((s) => {
             const rr = buildAssetsFieldResolver(s, data);
@@ -98,6 +90,7 @@ export function ConnectionsSection({ ctx }: { ctx: Ctx }) {
                     <Icon path={ICON.phone} className="w-4 h-4 shrink-0" />
                     <span className="text-fg font-bold text-[length:var(--fs-body-lg)] truncate">{s.identifier}</span>
                     <Pill tone={pillFor(s.status ?? 'Active') === 'red' ? 'red' : 'green'}>{s.status ?? 'Active'}</Pill>
+                    <ConnectionTypeTag category={s.category} />
                   </span>
                   <Icon path={ICON.chevron} className="w-4 h-4 text-muted shrink-0" />
                 </div>
@@ -134,7 +127,10 @@ export function ConnectionsSection({ ctx }: { ctx: Ctx }) {
                     {group(cur.category)} | {cur.category} | {cur.label}
                   </div>
                 </div>
-                <Pill tone="green">{cur.status ?? 'Active'}</Pill>
+                <span className="inline-flex items-center gap-2">
+                  <ConnectionTypeTag category={cur.category} />
+                  <Pill tone="green">{cur.status ?? 'Active'}</Pill>
+                </span>
               </div>
               <div className="px-5 pb-3">
                 <PillTabs
@@ -156,7 +152,7 @@ export function ConnectionsSection({ ctx }: { ctx: Ctx }) {
                     <div className="border-r border-[var(--field-card-border)]">
                       <div className="flex items-center justify-between px-5 py-3">
                         <span className="text-fg font-semibold">Service Details</span>
-                        <span className="text-accent font-semibold text-[length:var(--fs-caption)]">Edit</span>
+                        <span className="text-link font-semibold text-[length:var(--fs-caption)]">Edit</span>
                       </div>
                       <KV label="MSISDN">{cur.identifier}</KV>
                       <KV label="Service Type">{group(cur.category)}</KV>
@@ -174,7 +170,7 @@ export function ConnectionsSection({ ctx }: { ctx: Ctx }) {
                     <div>
                       <div className="flex items-center justify-between px-5 py-3">
                         <span className="text-fg font-semibold">Financials</span>
-                        <button type="button" onClick={() => ctx.goToTab('ts-billing')} className="text-accent font-semibold text-[length:var(--fs-caption)]">
+                        <button type="button" onClick={() => ctx.goToTab('ts-billing')} className="text-link font-semibold text-[length:var(--fs-caption)]">
                           View Usage
                         </button>
                       </div>

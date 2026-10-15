@@ -4,7 +4,7 @@ import type { Customer360Field } from '../types/config';
 export type FieldVisibility = 'real-time' | 'drill-down' | 'hidden';
 
 /**
- * Fulfilment Agent (VFQ12354) and Back Office Fulfilment Agent (VFQ12355) -
+ * Fulfilment (VFQ12354) and Back Office Fulfilment (VFQ12355) -
  * the two personas the Mapping sheet names but "Customer 360 List - FINAL"
  * has no department column for at all (2026-09-28 direction, confirmed
  * rather than inferred a department match that doesn't exist in the source).

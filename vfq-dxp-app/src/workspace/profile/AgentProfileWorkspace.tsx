@@ -182,7 +182,7 @@ export function AgentProfileWorkspace() {
     <div className="p-8 w-full">
       <PageHeader title={<>Agent Profile</>} description={<>View your details and manage your password and MFA settings.</>} />
 
-      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-6">
+      <div className="card p-5 mb-6">
         <div className="grid grid-cols-2 gap-4">
           <Field label="Name" value={profile?.name ?? ''} />
           <Field label="Staff ID" value={staffId} />
@@ -193,8 +193,8 @@ export function AgentProfileWorkspace() {
 
       {canEditProfile ? (
         <>
-          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
-            <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Change password</h2>
+          <div className="card p-5">
+            <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Change password</h2>
             <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
               Requires your current password and a verification code. (Demo code: {DEMO_VERIFICATION_CODE} - pending VFQ Security's
               real Authcode/OTP method.)
@@ -208,7 +208,7 @@ export function AgentProfileWorkspace() {
               {saved && <Badge variant="success">Password updated</Badge>}
               <div className="pt-1">
                 <Button
-                  variant="primary-rect"
+                  variant="primary"
                   onClick={submitPasswordChange}
                   disabled={!currentPassword || !newPassword || !confirmPassword || !verificationCode}
                 >
@@ -218,16 +218,16 @@ export function AgentProfileWorkspace() {
             </div>
           </div>
 
-          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mt-6">
+          <div className="card p-5 mt-6">
             <div className="flex items-center justify-between mb-1">
-              <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg">Multi-factor authentication</h2>
+              <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg">Multi-factor authentication</h2>
               <Badge variant={profile?.mfaEnabled ? 'success' : 'filled-neutral'}>{profile?.mfaEnabled ? 'Enabled' : 'Disabled'}</Badge>
             </div>
             {profile?.mfaEnabled && (
               <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">Method: {profile.mfaMethod}</p>
             )}
             {!mfaEditing && (
-              <Button variant="ghost-rect" onClick={toggleMfa}>
+              <Button variant="secondary" onClick={toggleMfa}>
                 {profile?.mfaEnabled ? 'Disable MFA' : 'Enable MFA'}
               </Button>
             )}
@@ -245,10 +245,10 @@ export function AgentProfileWorkspace() {
                 <Input id="mfa-verification-code" label="Verification code" value={mfaCode} onChange={(e) => setMfaCode(e.target.value)} />
                 {mfaError && <p className="text-danger text-[length:var(--fs-caption)]">{mfaError}</p>}
                 <div className="flex gap-2 pt-1">
-                  <Button variant="ghost-rect" onClick={() => { setMfaEditing(false); setMfaCode(''); setMfaError(null); }}>
+                  <Button variant="secondary" onClick={() => { setMfaEditing(false); setMfaCode(''); setMfaError(null); }}>
                     Cancel
                   </Button>
-                  <Button variant="primary-rect" onClick={submitMfaEnable} disabled={!mfaCode}>
+                  <Button variant="primary" onClick={submitMfaEnable} disabled={!mfaCode}>
                     Save MFA settings
                   </Button>
                 </div>
@@ -257,8 +257,8 @@ export function AgentProfileWorkspace() {
           </div>
         </>
       ) : (
-        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
-          <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Change password &amp; MFA</h2>
+        <div className="card p-5">
+          <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Change password &amp; MFA</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)]">
             Profile editing (password, MFA) is available to internal Vodafone agent roles. This persona is an external or
             system-type contact (Agent 360 APM-01/05/08) and does not have edit access here.
@@ -266,10 +266,10 @@ export function AgentProfileWorkspace() {
         </div>
       )}
 
-      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mt-6">
-        <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Language</h2>
+      <div className="card p-5 mt-6">
+        <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Language</h2>
         <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
-          Choose your preferred language. (English/Arabic - completeness pending VFQ confirmation, D-03.)
+          Choose your preferred language.
         </p>
         <Select
           label="Language"
@@ -282,11 +282,10 @@ export function AgentProfileWorkspace() {
         />
       </div>
 
-      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mt-6">
-        <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Export your data</h2>
+      <div className="card p-5 mt-6">
+        <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Export your data</h2>
         <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
-          Download a CSV of every visible record for an entity type. (Entity list: Orders, Tickets - pending VFQ's confirmation
-          of the complete list, OI-AGN-07. Which of these you can export depends on your role's access rights, Agent 360 AEX-01.)
+          Download a CSV of every visible record for an entity type. Which of these you can export depends on your role's access rights.
         </p>
         {eligibleEntities.length === 0 ? (
           <p className="text-muted text-[length:var(--fs-body)]">No exportable entities are available for your current role.</p>
@@ -300,7 +299,7 @@ export function AgentProfileWorkspace() {
                 options={eligibleEntities.map(({ value, label }) => ({ value, label }))}
               />
             </div>
-            <Button variant="primary-rect" onClick={exportEntities} disabled={exportRecords.length === 0}>
+            <Button variant="primary" onClick={exportEntities} disabled={exportRecords.length === 0}>
               Export {exportRecords.length} record{exportRecords.length === 1 ? '' : 's'}
             </Button>
           </div>

@@ -7,11 +7,11 @@ import { type EligibilityCheck, type EligibilityOutcome } from '../../engines/el
 // the seven checks are a single report, and eight separate cards with gaps
 // between them read as eight unrelated results.
 export const ROW_TONE: Record<RowTone, string> = {
-  pass: 'bg-[color-mix(in_oklab,var(--success),var(--bg)_94%)]',
-  'hard-stop': 'bg-[color-mix(in_oklab,var(--danger),var(--bg)_94%)]',
-  'soft-stop': 'bg-[color-mix(in_oklab,var(--warn),var(--bg)_94%)]',
+  pass: 'bg-tone-success-soft',
+  'hard-stop': 'bg-tone-danger-soft',
+  'soft-stop': 'bg-tone-warn-soft',
   // Orange wash (distinct from the soft-stop amber): a diversion for approval, not a stop.
-  'approval-routing': 'bg-[color-mix(in_oklab,var(--approval-routing),var(--bg)_88%)]',
+  'approval-routing': 'bg-tone-approval',
   advisory: 'bg-surface',
 };
 
@@ -61,7 +61,9 @@ export function buildEligibilityRows(
   hrnFlag: boolean,
   nationality: string | undefined,
   journeyType: 'postpaid' | 'prepaid' = 'postpaid',
-  existingCustomer = false
+  existingCustomer = false,
+  /** False at Customer Identification (before a product is chosen): the HRN advance is a postpaid matter, so no HRN row yet. */
+  includeHrn = true
 ): EligibilityRow[] {
   const hrn = evaluateRule('BR-187', { hrnFlag });
   return [
@@ -77,7 +79,7 @@ export function buildEligibilityRows(
     // The upfront requirement is reported as exactly that - an advance payment -
     // and never as the customer's risk classification. The "Non-HRN new account"
     // pass row belongs to NEW accounts only.
-    ...(journeyType !== 'prepaid' && (hrnFlag || !existingCustomer)
+    ...(includeHrn && journeyType !== 'prepaid' && (hrnFlag || !existingCustomer)
       ? [
           {
             id: 'hrn',

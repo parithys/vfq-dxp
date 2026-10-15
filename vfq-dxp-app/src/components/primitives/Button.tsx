@@ -7,7 +7,16 @@ import type { ButtonHTMLAttributes } from 'react';
 // `secondary-rect` is a SIXTH variant with no §7 counterpart, added 2026-09-27.
 // See SECONDARY_SURFACE below for what it is and when to reach for it instead
 // of `ghost-rect`.
-export type ButtonVariant = 'primary-rect' | 'primary-pill' | 'ghost-rect' | 'glass-pill' | 'content-ghost-pill' | 'secondary-rect';
+// The canonical variants are the first four. The legacy names after them stay valid (they alias to the same
+// treatments) so older call sites keep compiling, but new code uses primary | secondary | tertiary | destructive.
+//   primary      the red gradient call to action
+//   secondary    white, grey border, bold - the default for every other button (Back, Cancel, View ...)
+//   tertiary     a text link that performs an action: teal, bold, no box
+//   destructive  irreversible / dangerous confirmations (cancel, reject, delete)
+export type ButtonVariant =
+  | 'primary' | 'secondary' | 'tertiary' | 'destructive'
+  | 'primary-rect' | 'primary-pill' | 'ghost-rect' | 'glass-pill' | 'content-ghost-pill' | 'secondary-rect';
+export type ButtonSize = 'sm' | 'md' | 'lg';
 
 // The warm/secondary surface: colour only, no geometry. Exported because this
 // treatment predates the variant and had spread to three call sites that
@@ -49,6 +58,14 @@ export type ButtonVariant = 'primary-rect' | 'primary-pill' | 'ghost-rect' | 'gl
 export const SECONDARY_SURFACE =
   'border-[var(--accent-secondary)] bg-bg text-[var(--accent-secondary)]';
 
+// The secondary BUTTON look: the page-tint fill with the standard grey border, bold and flat - no shadow - going white
+// on hover (same look as the breadcrumb Back chip; since 2026-10-10, was white at rest). Defined once as the semantic
+// class `.btn-secondary` in index.css (colour only), and shared by the Button variants below and the link-styled
+// buttons that sit beside them (ProductLinePage's category chips, WorkspaceNotYetBuilt's links). The breadcrumb Back
+// chip has its own `.breadcrumb-back`, so the two can be restyled independently. SECONDARY_SURFACE above is the
+// OUTLINED look and stays for selectable cards and anything else that needs a visible edge.
+export const SECONDARY_BUTTON_SURFACE = 'btn-secondary';
+
 // The primary fill, standardised 2026-09-27: --accent-gradient, white label,
 // no visible border. Exported for the same reason as SECONDARY_SURFACE - the
 // selected state of every chip/toggle group uses this exact treatment and none
@@ -64,16 +81,21 @@ export const SECONDARY_SURFACE =
 // 0-width (invisible) either way. Keeping the 1px preserves the box-model
 // parity documented below: at 0px a filled button is 2px shorter than
 // ghost-rect and the two stop sitting level side by side.
+//
+// No glow or shadow on any button, at rest or on hover (2026-10-08).
+// It lives here so every primary - Button, chips, the login button - glows identically.
 export const PRIMARY_SURFACE =
-  'border-transparent bg-[image:var(--accent-gradient)] text-accent-on';
+  'border-transparent bg-[image:var(--accent-gradient)] text-accent-on !font-bold';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
+  /** sm = compact, md = default, lg = prominent (login, hero actions). `compact` is the older spelling of size="sm". */
+  size?: ButtonSize;
   compact?: boolean;
 }
 
 const base =
-  'inline-flex items-center justify-center gap-2 font-medium tracking-[var(--tracking-btn)] transition-[color,background-color,border-color,transform] duration-150 disabled:opacity-40 disabled:cursor-not-allowed';
+  'inline-flex items-center justify-center gap-2 font-medium tracking-[var(--tracking-btn)] transition-[color,background-color,border-color,box-shadow,transform] duration-[var(--motion-fast)] disabled:opacity-40 disabled:cursor-not-allowed';
 
 // Hover/active use the `enabled:` variant so disabled buttons never shift
 // color on hover - the visual affordance must match the cursor (not-allowed)
@@ -127,19 +149,36 @@ const variantClasses: Record<ButtonVariant, string> = {
   // had no fill to fade - an enabled Cancel/Back/Close read as inactive.
   // White-at-rest / --surface-on-hover mirrors secondary-rect's own
   // resting/hover pair below.
-  'ghost-rect': 'bg-bg text-fg border border-border enabled:hover:bg-surface rounded-[var(--radius-button)] px-4 py-2',
+  // Same look as secondary-rect (white, grey border, bold, flat) so Back/Cancel and the actions beside them match.
+  'ghost-rect': `${SECONDARY_BUTTON_SURFACE} border rounded-[var(--radius-button)] px-4 py-2`,
   'glass-pill': 'bg-[var(--white-glass-10)] backdrop-blur text-fg border border-transparent rounded-[var(--radius-button)] px-5 py-2',
   // Same fix as ghost-rect above - was bg-transparent AND border-transparent,
   // i.e. no visible chrome at all until hover.
-  'content-ghost-pill': `${SECONDARY_SURFACE} font-semibold border enabled:hover:bg-surface-warm rounded-[var(--radius-button)] px-4 py-1.5`,
+  'content-ghost-pill': `${SECONDARY_BUTTON_SURFACE} border rounded-[var(--radius-button)] px-4 py-1.5`,
   // Same px-4 py-2 box as primary-rect, so the two sit level side by side.
-  'secondary-rect': `${SECONDARY_SURFACE} font-semibold border enabled:hover:bg-surface-warm transition-colors rounded-[var(--radius-button)] px-4 py-2`,
+  'secondary-rect': `${SECONDARY_BUTTON_SURFACE} border rounded-[var(--radius-button)] px-4 py-2`,
+  primary: '',
+  secondary: '',
+  // A text link that acts like a button: no box, so no padding or border.
+  tertiary: 'text-link font-bold hover:underline underline-offset-2 rounded-[var(--radius-sm)] focus-visible:shadow-[var(--focus-ring)] focus:outline-none',
+  // Solid danger red (no gradient, so it never reads as the primary call to action).
+  destructive: 'border border-transparent bg-danger-solid text-on-dark !font-bold enabled:hover:bg-danger-solid-hover enabled:active:scale-[0.99] disabled:opacity-100 disabled:bg-tone-danger rounded-[var(--radius-button)] px-4 py-2',
+};
+variantClasses.primary = variantClasses['primary-rect'];
+variantClasses.secondary = variantClasses['secondary-rect'];
+
+const sizeText: Record<ButtonSize, string> = {
+  sm: 'text-[length:var(--fs-btn-compact)] min-h-[var(--control-h-sm)]',
+  md: 'text-[length:var(--fs-btn)] min-h-[var(--control-h-md)]',
+  lg: 'text-[length:var(--fs-body-lg)] !px-6 !py-3 min-h-[var(--control-h-lg)]',
 };
 
-export function Button({ variant = 'primary-rect', compact, className = '', children, ...rest }: ButtonProps) {
+export function Button({ variant = 'primary', size, compact, className = '', children, ...rest }: ButtonProps) {
+  const resolved: ButtonSize = size ?? (compact ? 'sm' : 'md');
   return (
     <button
-      className={`${base} ${variantClasses[variant]} ${compact ? 'text-[length:var(--fs-btn-compact)]' : 'text-[length:var(--fs-btn)]'} ${className}`}
+      type="button"
+      className={`${base} ${variantClasses[variant]} ${variant === 'tertiary' ? 'text-[length:var(--fs-body)]' : sizeText[resolved]} ${className}`}
       {...rest}
     >
       {children}

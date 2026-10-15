@@ -18,7 +18,7 @@ export function SegmentBadge({ segment }: { segment: LinkedUserSegment }) {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4">
+    <div className="card p-4">
       <p className="text-fg-2 text-[length:var(--fs-caption)]">{label}</p>
       <p className="text-fg font-bold text-[length:var(--fs-h3)]">{value}</p>
     </div>
@@ -67,7 +67,7 @@ export function Business360Page() {
     return (
       <div className="p-8" role="alert">
         <p className="text-fg font-medium">The business account could not be loaded.</p>
-        <Button variant="ghost-rect" compact className="mt-3" onClick={() => navigate(0)}>
+        <Button variant="secondary" compact className="mt-3" onClick={() => navigate(0)}>
           Try again
         </Button>
       </div>
@@ -115,7 +115,7 @@ export function Business360Page() {
         }
         badges={<Badge variant="outlined-red">Business</Badge>}
         actions={
-          <Button variant="ghost-rect" compact onClick={() => navigate('/customer-search')}>
+          <Button variant="secondary" compact onClick={() => navigate('/customer-search')}>
             Back to search
           </Button>
         }
@@ -127,11 +127,8 @@ export function Business360Page() {
         <Stat label="CBU · B2B2C" value={cbu} />
       </div>
 
-      <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-6">
+      <section className="card p-6">
         <h2 className="text-fg font-semibold text-[length:var(--fs-h5)] mb-1">Linked users</h2>
-        <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
-          The segment follows who is billed: the company pays for EBU users; CBU users are billed themselves and receive the company's B2B2C benefits.
-        </p>
         {all.length === 0 ? (
           <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-6 text-center">
             <p className="text-fg font-medium mb-1">No linked users yet</p>

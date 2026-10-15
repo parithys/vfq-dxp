@@ -1,0 +1,16 @@
+{
+  "journey": {
+    "id": "fib-fwa-5g-service",
+    "title": "FWA / 5G Service",
+    "screenId": "SCR-093",
+    "route": "/fwa-5g-home/serial-number-check-screen-dual-play"
+  },
+  "shots": [
+    {
+      "file": "01-serial-number-check.png",
+      "label": "serial number check",
+      "url": "/fwa-5g-home/serial-number-check-screen-dual-play"
+    }
+  ],
+  "unreachable": []
+}

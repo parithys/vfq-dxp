@@ -1,7 +1,8 @@
-import { FixedActivationWizard } from '../fixedActivation/FixedActivationWizard';
+import { NewConnectionWizard } from '../../new-connection/NewConnectionWizard';
 
-// SCR-043 - New Fixed Line Activation. Now the Fixed Activation Journey (CBU): see fixedActivation/. The legacy
-// config-driven wizard (InstallationActivationWizard) stays in place for FWA, which still uses it.
+// SCR-043 - New Home Connection (Fibre, Fixed-Line, FWA, 5G Home). One continuous journey: Customer Identification once, then
+// Product Selection, then the home steps (fixedActivation/fixedSteps.tsx, fixedLineSteps) in the same wizard - the same draft and
+// customer context throughout, never an exit or a restart.
 export function NewFixedLineWizard() {
-  return <FixedActivationWizard />;
+  return <NewConnectionWizard flow="new" journey="home" />;
 }

@@ -1,4 +1,5 @@
 import type { Persona, PersonaApproach } from '../../types/config';
+import { greeting } from './heroFigures';
 
 // The dashboard is ONE route rendering one or two zones. Approach - the
 // persona's own configured value, resolved automatically at login - decides
@@ -54,21 +55,21 @@ export function layoutFor(approach: PersonaApproach, firstName: string): Dashboa
       return {
         zones: [{ id: 'product-work', size: 'full' }],
         readOnly: false,
-        heading: `Welcome back, ${firstName}!`,
+        heading: `${greeting()}, ${firstName}.`,
       };
 
     case 'Hybrid':
       return {
         zones: [{ id: 'customer-ops', size: 'half' }, { id: 'product-work', size: 'half' }],
         readOnly: false,
-        heading: `Welcome back, ${firstName}!`,
+        heading: `${greeting()}, ${firstName}.`,
       };
 
     case 'None':
       return {
         zones: [{ id: 'customer-ops', size: 'full' }],
         readOnly: true,
-        heading: `Welcome back, ${firstName}!`,
+        heading: `${greeting()}, ${firstName}.`,
         subtitle: 'Read-only view. You can review records and approve or reject orders.',
       };
 
@@ -77,7 +78,7 @@ export function layoutFor(approach: PersonaApproach, firstName: string): Dashboa
       return {
         zones: [{ id: 'customer-ops', size: 'full' }],
         readOnly: false,
-        heading: `Welcome back, ${firstName}!`,
+        heading: `${greeting()}, ${firstName}.`,
       };
   }
 }

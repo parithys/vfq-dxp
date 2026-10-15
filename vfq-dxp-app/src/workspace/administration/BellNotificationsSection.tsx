@@ -1,3 +1,5 @@
+import { currentAgentId } from '../../stores/authStore';
+import { formatDate } from '../../lib/format';
 import { useEffect, useRef, useState } from 'react';
 import { useEntityStore } from '../../stores/entityStore';
 import { useNotificationStore } from '../../stores/notificationStore';
@@ -86,7 +88,7 @@ export function BellNotificationsSection() {
         status,
         publishedAt: status === 'Published' ? new Date().toISOString() : null,
         expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
-        createdBy: 'current-agent',
+        createdBy: currentAgentId(),
       });
       pushToast('success', status === 'Published' ? 'Notification published.' : 'Notification saved as draft.');
       reset();
@@ -105,8 +107,8 @@ export function BellNotificationsSection() {
   return (
     <div>
       {canConfigure ? (
-        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-6">
-          <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Configure a notification</h2>
+        <div className="card p-5 mb-6">
+          <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Configure a notification</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
             Notifications appear as a banner on the customer's Customer 360 screen until they expire - agents cannot dismiss them
             manually (BIN-06).
@@ -137,11 +139,11 @@ export function BellNotificationsSection() {
             </div>
           </div>
           <div className="flex gap-2 mt-4">
-            <Button variant="ghost-rect" onClick={() => save('Draft')} disabled={!customerId.trim() || !message.trim() || submitting}>
+            <Button variant="secondary" onClick={() => save('Draft')} disabled={!customerId.trim() || !message.trim() || submitting}>
               Save as draft
             </Button>
             <Button
-              variant="primary-rect"
+              variant="primary"
               onClick={() => save('Published')}
               disabled={!customerId.trim() || !message.trim() || !expiresAt || submitting}
             >
@@ -150,8 +152,8 @@ export function BellNotificationsSection() {
           </div>
         </div>
       ) : (
-        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-6">
-          <h2 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-1">Configure a notification</h2>
+        <div className="card p-5 mb-6">
+          <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Configure a notification</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)]">
             Restricted to Backoffice and privileged staff roles (Agent 360 BIN-01). This persona does not have
             configuration access.
@@ -159,8 +161,8 @@ export function BellNotificationsSection() {
         </div>
       )}
 
-      <h3 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-2">All notifications</h3>
-      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg divide-y divide-border-soft">
+      <h3 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-2">All notifications</h3>
+      <div className="card divide-y divide-border-soft">
         {notifications.length === 0 && <p className="px-4 py-6 text-center text-muted">No notifications configured yet.</p>}
         {notifications.map((n) => (
           <div key={n.notificationId} className="px-4 py-3 flex items-start justify-between gap-4">
@@ -169,7 +171,7 @@ export function BellNotificationsSection() {
                 {n.customerId} - <span className="text-fg-2">{n.message}</span>
               </div>
               {n.expiresAt && (
-                <div className="text-muted text-[length:var(--fs-caption)] mt-0.5">Expires {new Date(n.expiresAt).toLocaleDateString()}</div>
+                <div className="text-muted text-[length:var(--fs-caption)] mt-0.5">Expires {formatDate(n.expiresAt)}</div>
               )}
             </div>
             <Badge variant={displayStatus(n) === 'Published' ? 'success' : displayStatus(n) === 'Expired' ? 'filled-neutral' : 'warning'}>

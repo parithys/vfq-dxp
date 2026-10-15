@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Icon } from './Icon';
 import * as mockDataEngine from '../../engines/mockDataEngine';
+import { useSearchListNav } from '../../hooks/useSearchListNav';
 
 export interface AddressRecord {
   id: string;
@@ -37,9 +38,11 @@ function subtitle(a: AddressRecord): string {
 // ZsbAddressStep/AddressSelectionStep already use) rather than a fabricated
 // landmark/POI list, since no such dataset exists in this project's corpus.
 export function LocationInput({ label, error, helperText, placeholder, onSelect, disabled, className = '', id }: LocationInputProps) {
-  const inputId = id ?? `location-${label?.replace(/\s+/g, '-').toLowerCase()}`;
+  const autoId = useId();
+  const inputId = id ?? `location-${autoId}`;
   const helperId = `${inputId}-helper`;
-  const describedBy = helperText && !error ? helperId : undefined;
+  const errorId = `${inputId}-error`;
+  const describedBy = error ? errorId : helperText ? helperId : undefined;
   const [addresses, setAddresses] = useState<AddressRecord[]>([]);
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
@@ -69,6 +72,20 @@ export function LocationInput({ label, error, helperText, placeholder, onSelect,
     setOpen(false);
   };
 
+  // Keyboard: Arrow keys move through the addresses, Enter picks the highlighted one, Escape closes the list (text stays).
+  const inputRef = useRef<HTMLInputElement>(null);
+  const optionPrefix = `${inputId}-opt`;
+  const nav = useSearchListNav({
+    idPrefix: optionPrefix,
+    count: results.length,
+    enabled: open && Boolean(q),
+    resetKey: `${q}|${results.length}`,
+    inputRef,
+    onSelect: (i) => pick(results[i]),
+    onEscape: () => setOpen(false),
+  });
+  const listboxId = `${inputId}-listbox`;
+
   const isFilled = query.trim().length > 0;
   const borderClass = error
     ? 'border-[var(--field-border-error)]'
@@ -88,7 +105,14 @@ export function LocationInput({ label, error, helperText, placeholder, onSelect,
           <Icon path={SEARCH_ICON} className="w-4 h-4" />
         </span>
         <input
+          ref={inputRef}
+          {...nav.inputProps}
           id={inputId}
+          role="combobox"
+          aria-expanded={open && Boolean(q)}
+          aria-controls={open && q ? listboxId : undefined}
+          aria-autocomplete="list"
+          aria-invalid={error ? true : undefined}
           disabled={disabled}
           value={query}
           onChange={(e) => {
@@ -108,15 +132,19 @@ export function LocationInput({ label, error, helperText, placeholder, onSelect,
 
         {open && q && (
           <ul
+            id={listboxId}
             role="listbox"
-            className="absolute z-50 top-full left-0 right-0 max-h-80 overflow-y-auto rounded-[var(--field-radius)] border border-border-soft bg-bg shadow-raised py-1 divide-y divide-[var(--field-divider)]"
+            aria-label={label ? `${label} suggestions` : 'Address suggestions'}
+            className="absolute z-[var(--z-popover)] top-full left-0 right-0 max-h-80 overflow-y-auto rounded-[var(--field-radius)] border border-border-soft bg-bg shadow-raised py-1 divide-y divide-[var(--field-divider)]"
           >
-            {results.map((a) => (
+            {results.map((a, i) => (
               <li
                 key={a.id}
+                id={`${optionPrefix}-${i}`}
                 role="option"
+                aria-selected={nav.active === i}
                 onClick={() => pick(a)}
-                className="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-surface"
+                className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-surface ${nav.active === i ? 'bg-surface ring-2 ring-inset ring-[var(--focus-outline)]' : ''}`}
               >
                 <span className="mt-0.5 text-[var(--field-pin)] shrink-0">
                   <Icon path={PIN_ICON} className="w-5 h-5" />
@@ -136,7 +164,11 @@ export function LocationInput({ label, error, helperText, placeholder, onSelect,
           {helperText}
         </span>
       )}
-      {error && <span className="text-[length:var(--fs-caption)] text-[var(--field-border-error)]">{error}</span>}
+      {error && (
+        <span id={errorId} role="alert" className="text-[length:var(--fs-caption)] text-[var(--field-border-error)]">
+          {error}
+        </span>
+      )}
     </div>
   );
 }

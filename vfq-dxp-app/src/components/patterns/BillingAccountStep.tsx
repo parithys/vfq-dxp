@@ -1,14 +1,23 @@
+import { CARD_SELECTED, CARD_IDLE } from '../primitives/offerCardParts';
 import { useEffect, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { Badge } from '../primitives/Badge';
 import { Button } from '../primitives/Button';
 import { Checkbox } from '../primitives/Checkbox';
+import { Icon } from '../primitives/Icon';
 import { Input } from '../primitives/Input';
 import { Select } from '../primitives/Select';
 import { computeBillCycleDay, ordinal, tokenizeCard, INVOICE_RECIPIENTS } from './billingAccountModel';
 import type { AccountRecord, BillingProfileRecord, ContactRecord, CustomerRecord, NewBillingAccountValue, BillingAccountValue } from './billingAccountModel';
 import { BillingProfileSetupDrawer } from './BillingProfileSetupDrawer';
 
+
+const CHEVRON_DOWN = 'M6 9l6 6 6-6';
+const CHEVRON_UP = 'M18 15l-6-6-6 6';
+// Ruled form sections inside the Create New card: a bold heading, space below it, a divider between sections.
+const SECTION = 'space-y-3';
+const SECTION_RULE = 'border-t border-border-soft mt-6 pt-6';
+const SECTION_TITLE = 'text-fg font-semibold text-[length:var(--fs-body-lg)]';
 
 interface BillingAccountStepProps {
   customerId: string | undefined;
@@ -113,11 +122,12 @@ export function BillingAccountStep({
                 <button
                   key={p.billingProfileId}
                   type="button"
+                  aria-pressed={selected}
                   onClick={() => onChange({ selectedProfileId: p.billingProfileId, creatingNew: false })}
                   className={`text-left rounded-[var(--radius-card)] border p-4 ${
                     selected
-                      ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]'
-                      : 'border-[var(--field-card-border)] bg-bg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
+                      ? CARD_SELECTED
+                      : CARD_IDLE
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
@@ -145,19 +155,31 @@ export function BillingAccountStep({
         </p>
       ) : (
         <div className="border border-[var(--field-card-border)] rounded-[var(--radius-card)]">
+          {/* Layout per the 2026-10-10 "Create New Billing Account" reference: a titled header with a one-line
+              brief, a divider, then the form in ruled sections. The header is still the expand/collapse toggle
+              (the old [+]/[-] prefix became a chevron, kept at the left so the floating Customer view button never covers it). */}
           <button
             type="button"
             onClick={() => onChange({ ...value, creatingNew: !value.creatingNew, selectedProfileId: undefined })}
-            className="w-full flex items-center justify-between px-4 py-3 text-fg font-medium"
+            aria-expanded={Boolean(value.creatingNew)}
+            className={`w-full flex items-center gap-3 px-6 py-4 text-left ${
+              value.creatingNew ? 'border-b border-border-soft' : ''
+            }`}
           >
-            <span>{value.creatingNew ? '[-]' : '[+]'} Create New Billing Account</span>
+            <Icon path={value.creatingNew ? CHEVRON_UP : CHEVRON_DOWN} className="w-5 h-5 shrink-0 text-muted" />
+            <span className="flex-1">
+              <span className="block text-fg font-semibold text-[length:var(--fs-h5)]">Create New Billing Account</span>
+              <span className="block text-fg-2 text-[length:var(--fs-body)]">
+                Provide the following details to set up your billing account.
+              </span>
+            </span>
           </button>
 
           {value.creatingNew && (
-            <div className="px-4 pb-4 space-y-6 border-t border-border-soft pt-4">
+            <div className="px-6 pb-6">
               {/* Contact */}
-              <div className="space-y-3">
-                <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Contact</h4>
+              <div className={`${SECTION} pt-6`}>
+                <h4 className={SECTION_TITLE}>Contact</h4>
                 <Select
                   label="Primary Contact"
                   required
@@ -179,7 +201,7 @@ export function BillingAccountStep({
                       })
                     }
                   />
-                  Secondary Contact
+                  Add a secondary contact
                 </label>
                 {newAccount.hasSecondaryContact && (
                   <Input
@@ -193,8 +215,8 @@ export function BillingAccountStep({
               </div>
 
               {/* Billing Address */}
-              <div className="space-y-3">
-                <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Billing Address</h4>
+              <div className={`${SECTION} ${SECTION_RULE}`}>
+                <h4 className={SECTION_TITLE}>Billing Address</h4>
                 <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg cursor-pointer">
                   <Checkbox
                     checked={newAccount.useSameAddress ?? true}
@@ -229,8 +251,8 @@ export function BillingAccountStep({
               </div>
 
               {/* Payment */}
-              <div className="space-y-3">
-                <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Payment</h4>
+              <div className={`${SECTION} ${SECTION_RULE}`}>
+                <h4 className={SECTION_TITLE}>Payment</h4>
                 <Select
                   label="Preferred Invoice Recipient"
                   required
@@ -285,21 +307,21 @@ export function BillingAccountStep({
                 )}
                 <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg-2 cursor-not-allowed">
                   <Checkbox checked disabled />
-                  Primary Payment Profile
-                  <span className="text-muted text-[length:var(--fs-caption)]">(the only profile being created here)</span>
+                  Set as primary payment profile
+                  <span className="text-muted text-[length:var(--fs-caption)]">(only profile being created here)</span>
                 </label>
               </div>
 
               {/* Billing Profile Setup */}
-              <div className="space-y-2">
+              <div className={`space-y-2 ${SECTION_RULE}`}>
                 <div className="flex items-center justify-between">
-                  <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Billing Profile Setup</h4>
-                  <Button variant="ghost-rect" compact onClick={() => setSetupOpen(true)}>
-                    + Add
+                  <h4 className={SECTION_TITLE}>Billing Profile Setup</h4>
+                  <Button variant="secondary" compact onClick={() => setSetupOpen(true)}>
+                    + Add Profile
                   </Button>
                 </div>
                 {newAccount.profileName ? (
-                  <dl className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-3 text-[length:var(--fs-caption)]">
+                  <dl className="card card-surface p-3 text-[length:var(--fs-caption)]">
                     <div className="flex justify-between gap-3 py-1">
                       <dt className="text-fg-2">Billing Profile Name</dt>
                       <dd className="text-fg font-medium">{newAccount.profileName}</dd>
@@ -314,7 +336,7 @@ export function BillingAccountStep({
                     </div>
                   </dl>
                 ) : (
-                  <p className="text-muted text-[length:var(--fs-caption)]">Not yet configured - required before this account can be finalised.</p>
+                  <p className="text-muted text-[length:var(--fs-caption)]">Not yet configured – required before this account can be finalised.</p>
                 )}
               </div>
             </div>

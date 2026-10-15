@@ -1,15 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import * as sums from './commonSummaries';
 import { attachSummaries } from './stepSummary';
-import { GuidedActivationWizard } from './GuidedActivationWizard';
-import { activityStep, contactStep, isCafValid, type CafValue } from './wizardSteps';
-import { MsisdnPicker } from '../../domain/MsisdnPicker';
-import { CafSignatureCapture } from '../CafSignatureCapture';
-import { AppointmentBookingStep } from '../AppointmentBookingStep';
-import type { AppointmentBookingValue } from '../AppointmentBookingStep';
+import { GuidedActivationWizard } from '../../../capabilities/GuidedActivationWizard/GuidedActivationWizard';
+import { activityStep, appointmentBookingStep, cafSignatureStep, contactStep, numberSelectionStep, planSelectionStep, serviceAddressStep } from '../../../capabilities';
 import type { GuidedContactValue } from '../guidedContactModel';
-import { AddressSelectionStep } from '../AddressSelectionStep';
-import { ProductPlanStep } from '../ProductPlanStep';
+import type { AppointmentBookingValue } from '../AppointmentBookingStep';
 import type { CafType } from '../cafTypes';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
@@ -61,87 +56,20 @@ export function InstallationActivationWizard({ config }: { config: InstallationW
         title={config.title}
         steps={attachSummaries([
           contactStep({ hideIptvToggle: config.hideIptvToggle }),
-          {
-            key: 'address',
-            label: 'Address',
-            render: ({ values, setValue }) => (
-              <AddressSelectionStep
-                value={values.addressId as string | undefined}
-                onChange={(id) => setValue('addressId', id)}
-                {...(config.addressUsesIdentity
-                  ? {
-                      idNumber: (values.contact as GuidedContactValue | undefined)?.idNumber,
-                      onClear: () => setValue('addressId', undefined),
-                    }
-                  : {})}
-              />
-            ),
-            isValid: (values) => Boolean(values.addressId),
-          },
-          {
-            key: 'plan',
-            label: 'Plan',
-            render: ({ values, setValue }) => (
-              <ProductPlanStep
-                planType={config.planType}
-                selectedProductId={values.productId as string | undefined}
-                onSelect={(id) => setValue('productId', id)}
-                {...(config.creditCheck
-                  ? {
-                      showCreditCheck: true,
-                      creditCheckAcknowledged: values.creditCheckAcknowledged === true,
-                      onAcknowledgeCreditCheck: (v: boolean) => setValue('creditCheckAcknowledged', v),
-                      onCreditCheckResult: (pass: boolean) => setValue('creditCheckPass', pass),
-                    }
-                  : {})}
-              />
-            ),
-            isValid: (values) =>
-              Boolean(values.productId) && (!config.creditCheck || values.creditCheckPass === true || values.creditCheckAcknowledged === true),
-          },
-          {
-            key: 'number',
-            label: 'Number Selection',
-            render: ({ values, setValue }) => (
-              <MsisdnPicker
-                selected={values.msisdn as string | undefined}
-                onSelect={(msisdn) => setValue('msisdn', msisdn)}
-                inlineToolbar
-                hideReservedBadge
-                onDeselect={() => setValue('msisdn', undefined)}
-              />
-            ),
-            isValid: (values) => Boolean(values.msisdn),
-          },
-          {
-            key: 'appointment',
-            label: 'Book Appointment',
-            render: ({ values, setValue }) => (
-              <AppointmentBookingStep
-                value={(values.appointment as AppointmentBookingValue) ?? {}}
-                onChange={(v) => setValue('appointment', v)}
-              />
-            ),
-            isValid: (values) => {
-              const a = values.appointment as AppointmentBookingValue | undefined;
-              return Boolean(a?.cluster && a?.date && a?.timeSlot);
-            },
-          },
-          {
-            key: 'caf',
-            label: 'CAF & Signature',
-            render: ({ values, setValue }) => (
-              <CafSignatureCapture
-                value={(values.caf as CafValue) ?? {}}
-                onChange={(v) => setValue('caf', v)}
-                customerName={(values.contact as GuidedContactValue | undefined)?.moiResult?.name}
-                // The CAF type follows the device in use (touch-capable -> Touch Screen,
-                // otherwise Digital) instead of the agent picking one; both sign in-app.
-                autoDetectDeviceType={config.autoDetectCafDevice ? true : undefined}
-              />
-            ),
-            isValid: (values) => isCafValid(values.caf as CafValue | undefined, config.cafNeedsSignature),
-          },
+          serviceAddressStep({
+            mode: 'saved',
+            identity: config.addressUsesIdentity ? (values) => ({ idNumber: (values.contact as GuidedContactValue | undefined)?.idNumber }) : undefined,
+          }),
+          planSelectionStep({ kind: 'catalogue', planType: config.planType, creditCheck: config.creditCheck }),
+          numberSelectionStep(),
+          appointmentBookingStep(),
+          cafSignatureStep({
+            customerName: (values) => (values.contact as GuidedContactValue | undefined)?.moiResult?.name,
+            // The CAF type follows the device in use (touch-capable -> Touch Screen, otherwise Digital) instead of
+            // the agent picking one; both sign in-app.
+            autoDetectDevice: config.autoDetectCafDevice,
+            needsSignature: config.cafNeedsSignature,
+          }),
           activityStep(),
         ], {
           contact: sums.contactFormSummary(),

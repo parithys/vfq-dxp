@@ -149,14 +149,11 @@ export function C360Orders({ data }: { data: Customer360Data; services: Customer
           <ActionButton primary icon={IC.plus} onClick={startNewConnection}>
             New Order
           </ActionButton>
-          <button type="button" disabled aria-label="More actions" className="w-9 h-9 rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg flex items-center justify-center opacity-40 cursor-not-allowed">
-            <Icon path={IC.dots} className="w-4 h-4" />
-          </button>
         </>
       }
     >
       <div className="grid grid-cols-1 @6xl:grid-cols-[minmax(0,1fr)_22rem] gap-4 items-start">
-        <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg min-w-0">
+        <section className="card min-w-0">
           <div className="px-4 pt-2">
             <UnderlineTabs
               active={tab}
@@ -204,7 +201,6 @@ export function C360Orders({ data }: { data: Customer360Data; services: Customer
                 render: (r) => (
                   <span className="inline-flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
                     {r.kind === 'order' ? <ViewPill onClick={() => navigate(`${ORDER_DETAIL_ROUTE}?id=${r.id}`)} /> : <span className="text-muted">-</span>}
-                    <Icon path={IC.chevRight} className="w-4 h-4 text-fg" />
                   </span>
                 ),
               },
@@ -225,7 +221,7 @@ export function C360Orders({ data }: { data: Customer360Data; services: Customer
           {selected ? (
             <div className="space-y-3">
               <div className="flex items-center gap-3 min-w-0">
-                <span className="w-12 h-12 rounded-[var(--radius-button)] flex items-center justify-center shrink-0 bg-[color-mix(in_oklab,var(--accent),var(--bg)_90%)] text-accent">
+                <span className="w-12 h-12 rounded-[var(--radius-button)] flex items-center justify-center shrink-0 bg-tone-accent text-accent">
                   <Icon path={IC.file} className="w-6 h-6" />
                 </span>
                 <div className="min-w-0">
@@ -249,7 +245,7 @@ export function C360Orders({ data }: { data: Customer360Data; services: Customer
               />
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <ActionButton disabled={selected.kind !== 'order'} onClick={() => navigate(`${ORDER_DETAIL_ROUTE}?id=${selected.id}`)}>
-                  <span className="text-accent">View Order Details &rarr;</span>
+                  <span className="text-link">View Order Details &rarr;</span>
                 </ActionButton>
                 <ActionButton disabled>Track Progress</ActionButton>
               </div>

@@ -1,27 +1,38 @@
-import { Routes, Route, useParams } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { Spinner } from './components/primitives/Spinner';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Dashboard } from './modules/Dashboard';
 import { ModuleScreenList } from './modules/ModuleScreenList';
 import { ScreenRouteResolver } from './modules/ScreenRouteResolver';
 import { NotFound } from './modules/NotFound';
-import { Business360Page } from './workspace/customer360/Business360Page';
-import { isBusinessId } from './engines/businessSegment';
-import { CustomerSearchPage } from './workspace/customer-search/CustomerSearchPage';
-import { Customer360Layout } from './workspace/customer360/Customer360Layout';
-import { BillingAccountPage } from './workspace/customer360/BillingAccountPage';
-import { SalesWorkspace } from './workspace/sales/SalesWorkspace';
-import { SupportWorkspace } from './workspace/support/SupportWorkspace';
-import { OrdersWorkspace } from './workspace/orders/OrdersWorkspace';
-import { AdministrationWorkspace } from './workspace/administration/AdministrationWorkspace';
-import { AgentProfileWorkspace } from './workspace/profile/AgentProfileWorkspace';
-import { TaskListView } from './workspace/tasks/TaskListView';
-import { TaskDetailView } from './workspace/tasks/TaskDetailView';
-import { QnomyTicketHistory } from './workspace/tickets/QnomyTicketHistory';
-import { WorkspaceNotYetBuilt } from './modules/WorkspaceNotYetBuilt';
-import { LeadListView } from './modules/lead-management/LeadListView';
 import { NewConnectionWizard } from './modules/new-connection/NewConnectionWizard';
-import { ProductLinePage } from './modules/product-lines/ProductLinePage';
-import { TicketApprovalQueue } from './modules/trouble-ticketing-complaints/screens/TicketApprovalQueue';
-import { TicketApprovalReview } from './modules/trouble-ticketing-complaints/screens/TicketApprovalReview';
+import { LeadListView } from './modules/lead-management/LeadListView';
+import { isBusinessId } from './engines/businessSegment';
+import { WorkspaceNotYetBuilt } from './modules/WorkspaceNotYetBuilt';
+
+const LEGACY_PREPAID_PATHS = [
+  '/mobile-prepaid/new-prepaid-tablet-step-1-contact-id-capture',
+  '/mobile-prepaid/new-prepaid-tablet-step-3-number-selection',
+  '/mobile-prepaid/new-prepaid-tablet-step-4-sim-serial',
+];
+
+// Route-level code splitting: the workspaces and journeys load on first visit rather than in the initial bundle.
+// (Dashboard, the not-found screens and the screen registry stay eager - they are needed on first paint or by every route.)
+const Business360Page = lazy(() => import('./workspace/customer360/Business360Page').then((m) => ({ default: m.Business360Page })));
+const CustomerSearchPage = lazy(() => import('./workspace/customer-search/CustomerSearchPage').then((m) => ({ default: m.CustomerSearchPage })));
+const Customer360Layout = lazy(() => import('./workspace/customer360/Customer360Layout').then((m) => ({ default: m.Customer360Layout })));
+const BillingAccountPage = lazy(() => import('./workspace/customer360/BillingAccountPage').then((m) => ({ default: m.BillingAccountPage })));
+const SalesWorkspace = lazy(() => import('./workspace/sales/SalesWorkspace').then((m) => ({ default: m.SalesWorkspace })));
+const SupportWorkspace = lazy(() => import('./workspace/support/SupportWorkspace').then((m) => ({ default: m.SupportWorkspace })));
+const OrdersWorkspace = lazy(() => import('./workspace/orders/OrdersWorkspace').then((m) => ({ default: m.OrdersWorkspace })));
+const AdministrationWorkspace = lazy(() => import('./workspace/administration/AdministrationWorkspace').then((m) => ({ default: m.AdministrationWorkspace })));
+const AgentProfileWorkspace = lazy(() => import('./workspace/profile/AgentProfileWorkspace').then((m) => ({ default: m.AgentProfileWorkspace })));
+const TaskListView = lazy(() => import('./workspace/tasks/TaskListView').then((m) => ({ default: m.TaskListView })));
+const TaskDetailView = lazy(() => import('./workspace/tasks/TaskDetailView').then((m) => ({ default: m.TaskDetailView })));
+const QnomyTicketHistory = lazy(() => import('./workspace/tickets/QnomyTicketHistory').then((m) => ({ default: m.QnomyTicketHistory })));
+const ProductLinePage = lazy(() => import('./modules/product-lines/ProductLinePage').then((m) => ({ default: m.ProductLinePage })));
+const TicketApprovalQueue = lazy(() => import('./modules/trouble-ticketing-complaints/screens/TicketApprovalQueue').then((m) => ({ default: m.TicketApprovalQueue })));
+const TicketApprovalReview = lazy(() => import('./modules/trouble-ticketing-complaints/screens/TicketApprovalReview').then((m) => ({ default: m.TicketApprovalReview })));
 
 // Side-effect imports: each module's screens/index.ts calls registerScreen()
 // so router.tsx doesn't need to know which screens are implemented.
@@ -46,6 +57,7 @@ import './modules/pre-to-post-migration/screens';
 // here doesn't matter.
 export function AppRouter() {
   return (
+    <Suspense fallback={<div className="p-8"><Spinner size={24} label="Loading" /></div>}>
     <Routes>
       <Route path="/" element={<Dashboard />} />
       {/* Customer -> Product -> Action redesign: new customer-centric routes,
@@ -62,10 +74,12 @@ export function AppRouter() {
       {/* Product lines: the line root stacks every category the role can
           reach, a category route shows just that section. Same component -
           they are the same content at different scope. */}
+      <Route path="/new-connections" element={<ProductLinePage lineKey="new-connections" />} />
       <Route path="/mobile" element={<ProductLinePage lineKey="mobile" />} />
-      <Route path="/mobile/new-connection" element={<NewConnectionWizard flow="new" />} />
-      <Route path="/mobile/new-connection/existing/:customerId" element={<NewConnectionWizard flow="existing" />} />
+      <Route path="/mobile/start-connection" element={<NewConnectionWizard flow="new" />} />
+      <Route path="/mobile/start-connection/existing/:customerId" element={<NewConnectionWizard flow="existing" />} />
       <Route path="/mobile/:category" element={<ProductLinePage lineKey="mobile" />} />
+      <Route path="/fibre-home/start-connection/existing/:customerId" element={<NewConnectionWizard flow="existing" journey="home" />} />
       <Route path="/fibre-home" element={<ProductLinePage lineKey="fibre-home" />} />
       <Route path="/fibre-home/:category" element={<ProductLinePage lineKey="fibre-home" />} />
       <Route path="/customer/:customerId" element={<CustomerOrBusiness360 />} />
@@ -90,10 +104,15 @@ export function AppRouter() {
       {/* Legacy: the 213-screen catalogue, kept mounted for direct-link
           access and internal QA (ModuleScreenList's Built/Not-built view) -
           no longer linked from the primary sidebar. */}
+      {/* New Prepaid was catalogued as three "Tablet" step screens; it is one journey for web and tablet now. */}
+      {LEGACY_PREPAID_PATHS.map((path) => (
+        <Route key={path} path={path} element={<Navigate to="/mobile-prepaid/new-prepaid" replace />} />
+      ))}
       <Route path="/:moduleSlug" element={<ModuleScreenList />} />
       <Route path="/:moduleSlug/:screenSlug" element={<ScreenRouteResolver />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </Suspense>
   );
 }
 

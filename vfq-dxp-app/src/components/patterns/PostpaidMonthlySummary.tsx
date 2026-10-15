@@ -17,7 +17,8 @@ export function PostpaidMonthlySummary({ charges, selectedDiscount, bundledItems
     // is a running total rather than a choice to make, so it reads as a
     // callout the same way Checkout's own "Due today" panel does, not as
     // a fourth option card.
-    <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] border-l-4 border-l-accent bg-bg p-4 flex items-start justify-between flex-wrap gap-4">
+    // Dark panel (2026-10-09 reference): fixed navy with white text in both themes.
+    <div className="rounded-[var(--radius-card-lg)] bg-[var(--summary-bg)] text-[var(--summary-fg)] p-6 flex items-start justify-between flex-wrap gap-4">
       {/* Left: an itemised breakdown under a label, per the 2026-09-26
           asset. Was one run-on caption line - "Live Cart Total · Base plan
           QAR 500/mo · Loyalty Discount (-15%) · Add-ons QAR 50/mo" - where
@@ -37,10 +38,10 @@ export function PostpaidMonthlySummary({ charges, selectedDiscount, bundledItems
           does not move as the rows change - adding an add-on or a discount
           would otherwise re-align every amount above it. */}
       <table className="w-[min(32rem,100%)] text-[length:var(--fs-caption)]">
-        <caption className="text-fg-2 text-[length:var(--fs-caption)] font-semibold uppercase tracking-wide text-left pb-1">
+        <caption className="opacity-70 text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide text-left pb-2">
           Monthly summary
         </caption>
-        <tbody className="divide-y divide-border-soft">
+        <tbody className="divide-y divide-[var(--divider-on-dark)]">
           {[
             ['Plan', formatQar(charges.planQar)],
             // The RATE moves into the label and the AMOUNT into the value,
@@ -65,10 +66,10 @@ export function PostpaidMonthlySummary({ charges, selectedDiscount, bundledItems
             [`VAT (${Math.round(VAT_RATE * 100)}%)`, formatQar(charges.vatQar)],
           ].map(([label, value]) => (
             <tr key={label}>
-              <th scope="row" className="text-fg-2 font-normal text-left py-1.5 pr-4">
+              <th scope="row" className="opacity-80 font-normal text-left py-1.5 pr-4">
                 {label}
               </th>
-              <td className="text-fg font-medium text-right py-1.5">{value}</td>
+              <td className="font-semibold text-right py-1.5">{value}</td>
             </tr>
           ))}
         </tbody>
@@ -78,8 +79,8 @@ export function PostpaidMonthlySummary({ charges, selectedDiscount, bundledItems
           weight rather than the unit. text-right so the stack aligns to
           the card's edge instead of to its own longest line. */}
       <div className="text-right pt-3">
-        <p className="text-fg-2 text-[length:var(--fs-caption)]">Total monthly</p>
-        <p className="text-accent font-bold text-[length:var(--fs-h3)] leading-tight">
+        <p className="opacity-80 text-[length:var(--fs-caption)]">Total monthly</p>
+        <p className="font-bold text-[length:var(--fs-h3)] leading-tight">
           {formatQar(charges.totalQar)}
           <span className="text-[length:var(--fs-caption)] font-bold">/mo</span>
         </p>

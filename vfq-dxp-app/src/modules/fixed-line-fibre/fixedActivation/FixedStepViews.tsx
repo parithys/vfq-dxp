@@ -5,9 +5,10 @@ import { Button } from '../../../components/primitives/Button';
 import { CreditCheckPanel } from '../../../components/domain/CreditCheckPanel';
 import { evaluateRule } from '../../../engines/ruleEngine';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
-import { CARD_IDLE, CARD_SELECTED, ICON_CARD, ICON_SPEED, ICON_TV, OfferArtwork, POSTPAID_PILL } from '../../../components/patterns/offerCardParts';
+import { CARD_IDLE, CARD_SELECTED, ICON_CARD, ICON_SPEED, ICON_TV } from '../../../capabilities';
 import { Icon } from '../../../components/primitives/Icon';
-import { ZsbAddressStep } from '../../../components/patterns/ZsbAddressStep';
+import { ConnectionTypeTag } from '../../../components/primitives/ConnectionTypeTag';
+import { ServiceAddress } from '../../../capabilities';
 import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
 import { resolveFibreServiceability } from '../../../engines/fibreServiceability';
 import { FIXED_SERVICE_TYPES, allocateFixedLineNumber, devicesFor, type FixedDevice, type FixedInstallationValue, type FixedServiceType } from './fixedActivationModel';
@@ -30,6 +31,16 @@ export function InstallationAddressStep({ values, setValue }: { values: Values; 
   const complete = Boolean(address.zone && address.streetNo && address.buildingNo);
   const [checking, setChecking] = useState(false);
 
+  // Service types by product (business rule): Fibre, Fixed-Line and 5G Home have none to choose; only FWA offers FWA Indoor and
+  // FWA Outdoor. Fibre still runs on the Fiber service underneath (set here, not asked) so its fibre-readiness check applies.
+  const homeProduct = values.homeProduct as string | undefined;
+  const wireless = homeProduct === 'fwa';
+  const serviceTypes = FIXED_SERVICE_TYPES.filter((t) => t.value !== 'fiber');
+  useEffect(() => {
+    if (homeProduct === 'fibre' && installation.serviceType !== 'fiber') setValue('installation', { serviceType: 'fiber', rfs: undefined });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [homeProduct, installation.serviceType]);
+
   // RFS is read from the service-point records for the address as entered; nothing is assumed when it is unmatched.
   useEffect(() => {
     if (installation.serviceType !== 'fiber' || !complete) return;
@@ -49,11 +60,12 @@ export function InstallationAddressStep({ values, setValue }: { values: Values; 
   const rfs = installation.rfs;
   return (
     <div className="space-y-6">
+      {wireless && (
       <div>
         <p className="text-[length:var(--fs-label)] text-fg-2 mb-2">Service Type</p>
         {/* Same card selector as the ID Type cards on Contact. */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3" role="radiogroup" aria-label="Service type">
-          {FIXED_SERVICE_TYPES.map((t) => {
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,11rem),1fr))] gap-3" role="radiogroup" aria-label="Service type">
+          {serviceTypes.map((t) => {
             const selected = installation.serviceType === t.value;
             return (
               <button
@@ -64,16 +76,16 @@ export function InstallationAddressStep({ values, setValue }: { values: Values; 
                 onClick={() => setValue('installation', { serviceType: t.value as FixedServiceType, rfs: undefined })}
                 className={`relative flex flex-col items-center gap-2 rounded-[var(--radius-card)] border p-4 ${
                   selected
-                    ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)] text-[var(--field-card-selected)]'
+                    ? `${CARD_SELECTED} text-[var(--field-card-selected)]`
                     : 'border-[var(--field-card-border)] bg-bg text-fg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
                 }`}
               >
                 {selected && (
-                  <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[var(--field-card-selected)] text-white flex items-center justify-center">
+                  <span className="absolute top-2 right-2 w-4 h-4 rounded-[var(--radius-pill)] bg-[var(--field-card-selected)] text-on-dark flex items-center justify-center">
                     <Icon path={CHECK} className="w-2.5 h-2.5" />
                   </span>
                 )}
-                <span className={`inline-flex p-2 rounded-[var(--radius-card)] ${selected ? 'bg-white' : ''}`}>
+                <span className={`inline-flex p-2 rounded-[var(--radius-card)] ${selected ? 'bg-[var(--field-card-selected)] text-on-dark' : 'bg-[var(--icon-tile-bg)] text-[var(--icon-tile-fg)]'}`}>
                   <Icon path={SERVICE_ICON[t.value]} className="w-6 h-6" />
                 </span>
                 <span className="text-[length:var(--fs-caption)] font-medium">{t.label}</span>
@@ -82,19 +94,10 @@ export function InstallationAddressStep({ values, setValue }: { values: Values; 
           })}
         </div>
       </div>
-      <ZsbAddressStep
-        value={address}
-        onChange={(v) => {
-          setValue('address', v);
-          if (installation.rfs) setValue('installation', { ...installation, rfs: undefined });
-        }}
-        idNumber={contact?.idNumber}
-        nationality={(values.eligibility as EligibilityResult | undefined)?.nationality}
-        hideFibreReadiness
-      />
+      )}
       {installation.serviceType === 'fiber' && complete && !checking && rfs === 'rfs' && (
-        // Fibre Readiness is the RFS verdict: shown only when the location is RFS.
-        <div className="flex items-center gap-3 rounded-[var(--radius-card)] border px-4 py-3 border-success bg-[color-mix(in_oklab,var(--success),var(--bg)_88%)]">
+        // Fibre Readiness is the RFS verdict: shown only when the location is RFS, above the address it is about.
+        <div className="flex items-center gap-3 rounded-[var(--radius-card)] border px-4 py-3 border-success bg-tone-success">
           <Icon path="M5 12.5a10 10 0 0 1 14 0 M8 15.5a6 6 0 0 1 8 0 M12 19h.01" className="w-5 h-5 shrink-0 text-success" />
           <div className="min-w-0 flex-1">
             <p className="text-fg font-semibold text-[length:var(--fs-body)]">Fibre Readiness</p>
@@ -106,10 +109,21 @@ export function InstallationAddressStep({ values, setValue }: { values: Values; 
       {installation.serviceType === 'fiber' && complete && !checking && rfs && rfs !== 'rfs' && (
         <p role="status" className="text-[length:var(--fs-caption)] text-[var(--warn-text)]">
           {rfs === 'not-rfs'
-            ? 'This location is not RFS, so fibre cannot be installed here. Choose FWA or enter another address.'
+            ? 'This location is not RFS, so fibre cannot be installed here. Choose another connection (such as FWA) or enter another address.'
             : 'No service point matches this address - check the zone, street and building.'}
         </p>
       )}
+      <ServiceAddress
+        mode="structured"
+        value={address}
+        onChange={(v) => {
+          setValue('address', v);
+          if (installation.rfs) setValue('installation', { ...installation, rfs: undefined });
+        }}
+        idNumber={contact?.idNumber}
+        nationality={(values.eligibility as EligibilityResult | undefined)?.nationality}
+        hideFibreReadiness
+      />
     </div>
   );
 }
@@ -133,7 +147,7 @@ export function NumberDevicesStep({ values, setValue }: { values: Values; setVal
       </section>
       <section>
         <h3 className="text-fg font-semibold text-[length:var(--fs-h5)] mb-2">Devices</h3>
-        <ul className="divide-y divide-border-soft border border-border-soft rounded-lg">
+        <ul className="divide-y divide-border-soft border border-[var(--field-card-border)] rounded-[var(--radius-card)]">
           {(devices ?? []).map((d) => (
             <li key={d.serial} className="flex justify-between p-3 text-[length:var(--fs-body)]">
               <span className="text-fg">{d.name}</span>
@@ -179,7 +193,7 @@ export function FixedPlanStepView({ values, setValue }: { values: Values; setVal
   return (
     <div className="space-y-4">
       <p className="text-fg-2 text-[length:var(--fs-caption)]">Please Select a Plan.</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(max(15rem,calc((100%-2rem)/3)),1fr))] gap-4">
         {plans.map((p) => {
           const selected = selectedId === p.productId;
           const toggle = () => setValue('productId', selected ? undefined : p.productId);
@@ -189,7 +203,7 @@ export function FixedPlanStepView({ values, setValue }: { values: Values; setVal
             ...(p.iptvIncluded ? [{ icon: ICON_TV, text: 'IPTV included' }] : []),
             ...(p.lockInMonths ? [{ icon: ICON_CARD, text: `${p.lockInMonths}-month lock-in` }] : []),
             ...(p.disconnectionFeeSchedule || p.disconnectionFeeQAR
-              ? [{ icon: ICON_CARD, text: `Early disconnection fee: ${p.disconnectionFeeSchedule ?? `QR ${p.disconnectionFeeQAR}`}` }]
+              ? [{ icon: ICON_CARD, text: `Early disconnection fee: ${p.disconnectionFeeSchedule ?? `QAR ${p.disconnectionFeeQAR}`}` }]
               : []),
           ];
           return (
@@ -208,11 +222,10 @@ export function FixedPlanStepView({ values, setValue }: { values: Values; setVal
               className={`relative flex flex-col gap-3 rounded-[var(--radius-card)] border p-5 cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${selected ? CARD_SELECTED : CARD_IDLE}`}
             >
               <div className="flex items-center justify-end gap-3">
-                <span className={`rounded-[var(--radius-pill)] px-2.5 py-0.5 text-[length:var(--fs-tag)] font-medium ${POSTPAID_PILL}`}>Fixed</span>
+                <ConnectionTypeTag category="GigaHome Fibre" />
               </div>
-              <OfferArtwork />
               <div className="flex-1 space-y-2">
-                <p className="text-fg font-bold text-[length:var(--fs-h5)] leading-snug pr-20">{p.name}</p>
+                <p className="text-fg font-bold text-[length:var(--fs-h5)] leading-snug">{p.name}</p>
                 <p className="text-accent pt-1">
                   <span className="text-[length:var(--fs-body)] font-semibold">QAR </span>
                   <span className="text-[length:var(--fs-h3)] font-bold">{p.mrcQAR}</span>
@@ -228,14 +241,14 @@ export function FixedPlanStepView({ values, setValue }: { values: Values; setVal
                 </ul>
               </div>
               <div className="flex items-center justify-end gap-3 pt-1">
-                <Button variant={selected ? 'primary-rect' : 'ghost-rect'} tabIndex={-1} aria-hidden className="pointer-events-none">
+                <Button variant={selected ? 'primary' : 'secondary'} tabIndex={-1} aria-hidden className="pointer-events-none">
                   {selected ? 'Selected' : 'Select plan'}
                 </Button>
               </div>
             </div>
           );
         })}
-        {plans.length === 0 && <p className="text-muted">No Fixed Line Plan products in the mock catalogue.</p>}
+        {plans.length === 0 && <p className="text-muted">No Fixed Line Plan products are available right now.</p>}
       </div>
       {selectedId && collectionStatus && (
         <CreditCheckPanel

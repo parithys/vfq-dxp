@@ -1,11 +1,19 @@
 import { useState } from 'react';
 import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
+import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
 
 export interface WinCashPaymentValue {
   paid?: boolean;
+  /** How the amount was taken: through WinCash, or as physical cash the agent received directly from the customer. */
+  method?: 'WinCash' | 'Cash' | 'Zero value';
+  /** The receipt: the WinCash reference, or the zero-value receipt number when nothing was due. */
   reference?: string;
+  /** Nothing was due, so no payment was taken and a zero-value receipt was issued (MNP BR-MNP-011). */
+  zeroValue?: boolean;
   declined?: boolean;
+  /** WinCash reported a technical error (not a decline): nothing was taken, and the agent can retry. */
+  errored?: boolean;
   /** Agent has left DXP for the external WinCash terminal - the cash drawer
    * cannot be reached from inside DXP (2026-09-28 request). */
   handoffStarted?: boolean;
@@ -21,6 +29,17 @@ interface WinCashPaymentStepProps {
   amountDueQAR: number;
   value: WinCashPaymentValue;
   onChange: (value: WinCashPaymentValue) => void;
+  /**
+   * Offers "Proceed without WinCash" beside "Continue in WinCash": the agent took physical cash from the customer
+   * directly, so no WinCash confirmation is waited for. The step records the payment as received in cash (and the
+   * caller moves on); omit it where taking cash this way is not offered.
+   */
+  onProceedWithout?: () => void;
+  /**
+   * When nothing is due, issue a zero-value receipt instead of handing off to WinCash for QAR 0 (MNP BR-MNP-011: "If no amount is due,
+   * the system shall generate a zero-value receipt"). Off by default: the other journeys keep their existing behaviour.
+   */
+  zeroValueReceipt?: boolean;
 }
 
 // Gate 3 of the reference activation flow - WinCash/POS + inventory sync,
@@ -49,19 +68,47 @@ interface WinCashPaymentStepProps {
 // NewPostpaidWizard's `hideAbandonFrom="payment"`, matching the explicit
 // "keep Cancel available after CAF signing and until payment starts" - i.e.
 // no further than here, once WinCash may already hold the transaction.
-export function WinCashPaymentStep({ amountDueQAR, value, onChange }: WinCashPaymentStepProps) {
+export function WinCashPaymentStep({ amountDueQAR, value, onChange, onProceedWithout, zeroValueReceipt }: WinCashPaymentStepProps) {
   const [processing, setProcessing] = useState(false);
 
+  if (zeroValueReceipt && amountDueQAR === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="card p-4 card-surface">
+          <div className="flex justify-between text-fg">
+            <span>Amount Due</span>
+            <span className="font-medium">QAR 0</span>
+          </div>
+          <p className="text-fg-2 text-[length:var(--fs-caption)] mt-1">Nothing is due today, so no payment is taken. A zero-value receipt is issued.</p>
+        </div>
+        {value.paid && value.zeroValue ? (
+          <div className="flex items-center gap-2">
+            <Badge variant="success">Zero-value receipt issued</Badge>
+            <span className="text-[length:var(--fs-caption)] text-muted">Receipt: {value.reference}</span>
+          </div>
+        ) : (
+          <Button variant="primary" onClick={() => onChange({ paid: true, method: 'Zero value', zeroValue: true, reference: `RCPT-0-${Date.now().toString().slice(-8)}` })}>
+            Generate zero-value receipt
+          </Button>
+        )}
+      </div>
+    );
+  }
+
   const beginHandoff = () => {
-    onChange({ ...value, handoffStarted: true, declined: false, sessionExpired: false });
+    onChange({ ...value, handoffStarted: true, declined: false, errored: false, sessionExpired: false });
   };
 
-  const returnFromWinCash = async (outcome: 'success' | 'decline') => {
+  const returnFromWinCash = async (outcome: 'success' | 'decline' | 'error') => {
     setProcessing(true);
     await new Promise((r) => setTimeout(r, 500));
     setProcessing(false);
     if (outcome === 'decline') {
-      onChange({ paid: false, declined: true, handoffStarted: false, sessionExpired: false });
+      onChange({ paid: false, declined: true, errored: false, handoffStarted: false, sessionExpired: false });
+      return;
+    }
+    if (outcome === 'error') {
+      onChange({ paid: false, declined: false, errored: true, handoffStarted: false, sessionExpired: false });
       return;
     }
     onChange({
@@ -70,6 +117,7 @@ export function WinCashPaymentStep({ amountDueQAR, value, onChange }: WinCashPay
       handoffStarted: false,
       sessionExpired: false,
       reference: `WC-${Date.now().toString().slice(-8)}`,
+      method: 'WinCash',
     });
   };
 
@@ -97,10 +145,10 @@ export function WinCashPaymentStep({ amountDueQAR, value, onChange }: WinCashPay
 
   return (
     <div className="space-y-4">
-      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4 bg-surface">
+      <div className="card p-4 card-surface">
         <div className="flex justify-between text-fg">
           <span>Amount Due (WinCash)</span>
-          <span className="font-medium">QR {amountDueQAR}</span>
+          <span className="font-medium">QAR {amountDueQAR}</span>
         </div>
       </div>
 
@@ -110,49 +158,52 @@ export function WinCashPaymentStep({ amountDueQAR, value, onChange }: WinCashPay
           <span className="text-[length:var(--fs-caption)] text-muted">Reference: {value.reference}</span>
         </div>
       ) : value.sessionExpired ? (
-        <div className="rounded-[var(--radius-card)] border border-danger/30 bg-[color-mix(in_oklab,var(--danger),var(--bg)_92%)] p-4 space-y-3">
+        <div className="rounded-[var(--radius-card)] border border-[var(--danger-border)] bg-tone-danger-soft p-4 space-y-3">
           <Badge variant="danger">Session expired</Badge>
           <p className="text-[length:var(--fs-caption)] text-fg">
             Your DXP session timed out while you were completing this payment in WinCash. If the payment
             actually went through there, confirm it below to record it and continue - otherwise, try again.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Button variant="primary-rect" onClick={() => resumeAfterSessionExpiry(true)}>
+            <Button variant="primary" onClick={() => resumeAfterSessionExpiry(true)}>
               Payment completed in WinCash - resume
             </Button>
-            <Button variant="ghost-rect" onClick={() => resumeAfterSessionExpiry(false)}>
+            <Button variant="secondary" onClick={() => resumeAfterSessionExpiry(false)}>
               It didn't complete - try again
             </Button>
           </div>
         </div>
       ) : value.handoffStarted ? (
-        <div className="rounded-[var(--radius-card)] border border-accent/40 bg-surface-warm p-4 space-y-3">
+        <div className="rounded-[var(--radius-card)] border border-accent-border bg-surface-warm p-4 space-y-3">
           <Badge variant="filled-neutral">Continue in WinCash</Badge>
           <p className="text-[length:var(--fs-caption)] text-fg">
             DXP cannot access the cash drawer directly - complete this payment on the WinCash terminal, then
             come back here.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Button variant="primary-rect" onClick={() => void returnFromWinCash('success')} disabled={processing}>
+            <Button variant="primary" onClick={() => void returnFromWinCash('success')} disabled={processing}>
               {processing ? 'Returning to DXP…' : 'Payment completed in WinCash'}
             </Button>
-            <Button variant="ghost-rect" onClick={() => void returnFromWinCash('decline')} disabled={processing}>
+            <Button variant="secondary" onClick={() => void returnFromWinCash('decline')} disabled={processing}>
               Payment declined in WinCash
+            </Button>
+            <Button variant="secondary" onClick={() => void returnFromWinCash('error')} disabled={processing}>
+              Error occurred, Retry in WinCash
             </Button>
           </div>
           <button
             type="button"
             onClick={simulateSessionExpiry}
             disabled={processing}
-            className="text-[length:var(--fs-caption)] text-muted hover:text-danger transition-colors"
+            className={`text-[length:var(--fs-caption)] text-muted hover:text-danger transition-colors ${SYNTHETIC_CLASS}`}
           >
-            Simulate session expiry (test)
+            Simulate session expiry (demo)
           </button>
         </div>
       ) : (
         <div className="space-y-3">
           {value.declined && (
-            <div className="rounded-[var(--radius-card)] border border-danger/30 bg-[color-mix(in_oklab,var(--danger),var(--bg)_92%)] p-3 space-y-1">
+            <div className="rounded-[var(--radius-card)] border border-[var(--danger-border)] bg-tone-danger-soft p-3 space-y-1">
               <div className="flex items-center gap-2">
                 <Badge variant="danger">Payment declined</Badge>
               </div>
@@ -161,9 +212,26 @@ export function WinCashPaymentStep({ amountDueQAR, value, onChange }: WinCashPay
               </p>
             </div>
           )}
-          <Button variant="primary-rect" onClick={beginHandoff}>
-            {value.declined ? 'Retry in WinCash' : 'Continue in WinCash'}
-          </Button>
+          {value.errored && (
+            <div className="rounded-[var(--radius-card)] border border-[var(--danger-border)] bg-tone-danger-soft p-3 space-y-1">
+              <div className="flex items-center gap-2">
+                <Badge variant="danger">WinCash error</Badge>
+              </div>
+              <p className="text-[length:var(--fs-caption)] text-fg">
+                WinCash reported an error and no payment was taken. Retry the same amount in WinCash.
+              </p>
+            </div>
+          )}
+          <div className="flex flex-wrap gap-3">
+            <Button variant="primary" onClick={beginHandoff}>
+              {value.declined || value.errored ? 'Retry in WinCash' : 'Continue in WinCash'}
+            </Button>
+            {onProceedWithout && (
+              <Button variant="secondary" onClick={onProceedWithout}>
+                Proceed without WinCash
+              </Button>
+            )}
+          </div>
         </div>
       )}
     </div>

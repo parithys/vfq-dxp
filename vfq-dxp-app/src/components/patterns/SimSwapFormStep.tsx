@@ -18,7 +18,7 @@ export function SimSwapFormStep({ value, onChange }: SimSwapFormStepProps) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4 bg-surface">
+      <div className="card p-4 card-surface">
         <p className="text-fg text-[length:var(--fs-body)] font-medium">SIM Swap Request Form</p>
         <p className="text-fg-2 text-[length:var(--fs-caption)] mt-1">
           By signing below, the subscriber authorizes the SIM Swap request on this account.
@@ -26,7 +26,7 @@ export function SimSwapFormStep({ value, onChange }: SimSwapFormStepProps) {
         {value.signatureDataUrl ? (
           <div className="mt-3 flex items-center gap-3">
             <Badge variant="success">Signed</Badge>
-            <img src={value.signatureDataUrl} alt="Signature" className="h-10 border border-border-soft rounded" />
+            <img src={value.signatureDataUrl} alt="Signature" className="h-10 border border-border-soft rounded-[var(--radius-sm)]" />
           </div>
         ) : (
           <SignatureCapture onSave={(dataUrl) => onChange({ ...value, signatureDataUrl: dataUrl })} />

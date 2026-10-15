@@ -45,8 +45,10 @@ export const ID_TYPE_PRESETS = {
   all: ['QID', 'Passport', 'GCC ID', 'Diplomatic ID'],
   /** New Connection: all four are offered; Passport / GCC ID route to approval in eligibility. */
   'new-connection': ['QID', 'Passport', 'GCC ID', 'Diplomatic ID'],
-  /** The donor operator's ID on a port-in (MNP / FNP): Diplomatic ID is not a donor ID type. */
-  donor: ['QID', 'Passport', 'GCC ID'],
+  /** Mobile Prepaid Activation (BRSD MPRA_001_KYC_01): QID, Diplomatic ID, GCC ID and Passport are all permitted outright. */
+  prepaid: ['QID', 'Diplomatic ID', 'GCC ID', 'Passport'],
+  /** The donor operator's ID on a port-in (MNP BRSD V1.1, DF-MNP-011): QID, Passport, GCC ID, Diplomatic ID. */
+  donor: ['QID', 'Passport', 'GCC ID', 'Diplomatic ID'],
 } as const satisfies Record<string, readonly IdType[]>;
 
 export type IdTypePreset = keyof typeof ID_TYPE_PRESETS;

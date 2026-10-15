@@ -1,3 +1,4 @@
+import { CARD_SELECTED, CARD_IDLE } from '../primitives/offerCardParts';
 import { useEffect, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { LocationInput, type AddressRecord } from '../primitives/LocationInput';
@@ -160,8 +161,8 @@ export function AddressSelectionStep({ value, onChange, idNumber, onClear }: Add
                   onClick={() => (isSel && onClear ? onClear() : onChange(a.id))}
                   className={`text-left rounded-[var(--radius-card)] border p-3 transition-colors ${
                     isSel
-                      ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)]'
-                      : 'border-[var(--field-card-border)] bg-bg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
+                      ? CARD_SELECTED
+                      : CARD_IDLE
                   }`}
                 >
                   <div className="text-fg">{line(a)}</div>
@@ -188,14 +189,14 @@ export function AddressSelectionStep({ value, onChange, idNumber, onClear }: Add
 
       <div className="flex items-center gap-3">
         {idNumber && !adding && (
-          <Button variant="secondary-rect" compact onClick={() => setAdding(true)}>
+          <Button variant="secondary" compact onClick={() => setAdding(true)}>
             Add new address
           </Button>
         )}
       </div>
 
       {adding && (
-        <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 space-y-3">
+        <div className="card p-4 space-y-3">
           <p className="text-fg font-semibold text-[length:var(--fs-body)]">New address</p>
           <div className="grid grid-cols-2 gap-4">
             <Input label="Zone" placeholder="e.g. Zone 38" value={draft.zone} onChange={(e) => setDraft({ ...draft, zone: e.target.value })} />
@@ -216,10 +217,10 @@ export function AddressSelectionStep({ value, onChange, idNumber, onClear }: Add
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="ghost-rect" compact onClick={() => setAdding(false)}>
+            <Button variant="secondary" compact onClick={() => setAdding(false)}>
               Cancel
             </Button>
-            <Button variant="primary-rect" compact disabled={!draftValid} onClick={() => void saveNew()}>
+            <Button variant="primary" compact disabled={!draftValid} onClick={() => void saveNew()}>
               Save address
             </Button>
           </div>

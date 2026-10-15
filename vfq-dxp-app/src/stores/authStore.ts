@@ -42,7 +42,7 @@ export const useAuthStore = create<AuthState>()(
       staffId: '',
       profile: null,
       signIn: (staffId, profile) => set({ isAuthenticated: true, staffId, profile }),
-      // Signing out (or a session timeout, which signs out) ends the session: every persisted
+      // Signing out ends the session (there is no idle timeout in this prototype): every persisted
       // store is cleared and the page reloads, so the next login starts from the code's defaults
       // (see resetApplicationState).
       signOut: () => {
@@ -71,3 +71,21 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+/** The signed-in agent's user id, for stamping the records they create (never a hard-coded demo agent). */
+export const currentAgentId = (): string => useAuthStore.getState().profile?.userId ?? 'unknown-agent';
+
+// Signing out in one tab clears the persisted session; every other tab of the app learns of it here and returns to the
+// login screen instead of carrying on as an agent who is no longer signed in.
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('storage', (e) => {
+    if (e.key !== 'vfq-auth-store' || !useAuthStore.getState().isAuthenticated) return;
+    let stillSignedIn = false;
+    try {
+      stillSignedIn = Boolean(e.newValue && JSON.parse(e.newValue)?.state?.isAuthenticated);
+    } catch {
+      /* an unreadable value is treated as signed out */
+    }
+    if (!stillSignedIn) window.location.replace('/');
+  });
+}

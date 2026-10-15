@@ -1,9 +1,10 @@
+import { Button } from '../../../components/primitives/Button';
 import { computeBillingSummary } from '../../../engines/customer360Engine';
 import { Icon } from '../../../components/primitives/Icon';
 import { accountInformationResolvers } from '../sections/accountInformationResolvers';
 import { contactInformationResolvers } from '../sections/contactInformationResolvers';
 import { Card, KV, Label, Pill, Ring, Value, dateTime, num, type Ctx } from './TelesalesOverview';
-import { ActionList, BarChart, HeaderButton, ICON, SectionHeader, pillFor, yesNo } from './TelesalesKit';
+import { ActionList, BarChart, HeaderButton, ICON, SectionHeader, Table, pillFor, yesNo } from './TelesalesKit';
 import { rowDate, demoOf, arr, type Rec } from './shared';
 import { strOrEmpty as str } from '../../../lib/values';
 import { qar, monthLabel } from './billingShared';
@@ -42,7 +43,7 @@ export function BillingSection({ ctx }: { ctx: Ctx }) {
   );
   return (
     <>
-      <SectionHeader icon={ICON.card} title="Billing & Payments" description="View billing summary, current bill, payment history and dunning information for this customer." />
+      <SectionHeader />
       <div className="contents">
         <Card title="Billing Summary" icon={ICON.card} link="View Full Details" onLink={() => ctx.goToTab('ts-billing')}>
           <div className="p-5 grid grid-cols-2 gap-3">
@@ -80,10 +81,10 @@ export function BillingSection({ ctx }: { ctx: Ctx }) {
           <div className="px-5 pb-5 space-y-3">
             <HeaderButton primary>Make a Payment</HeaderButton>
             <div>
-              <button type="button" className="text-accent font-semibold text-[length:var(--fs-body)] inline-flex items-center gap-2">
+              <Button variant="tertiary" type="button" className="inline-flex items-center gap-2">
                 <Icon path={ICON.download} className="w-4 h-4" />
                 Download PDF
-              </button>
+              </Button>
             </div>
           </div>
         </Card>
@@ -105,81 +106,40 @@ export function BillingSection({ ctx }: { ctx: Ctx }) {
       <div className="contents">
         <Card title="Billing History" icon={ICON.refresh} link="View All Bills" onLink={() => ctx.goToTab('ts-billing')}>
           {bills.length > 0 && <BarChart data={bills.slice(-6).map((b) => ({ label: monthLabel(str(b.billPeriod)).replace(' ', ' '), value: Number(b.totalAmount ?? 0) }))} />}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-[length:var(--fs-body)]">
-              <thead>
-                <tr className="bg-surface">
-                  {['Bill Period', 'Bill Number', 'Bill Amount', 'Status', 'Action'].map((h) => (
-                    <th key={h} className="px-5 py-3 text-muted font-semibold uppercase tracking-wide text-[length:var(--fs-caption-upper)]">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--field-card-border)]">
-                {[...bills].reverse().slice(0, 5).map((b) => (
-                  <tr key={str(b.billId)}>
-                    <td className="px-5 py-3">{monthLabel(str(b.billPeriod))}</td>
-                    <td className="px-5 py-3">{str(b.billId)}</td>
-                    <td className="px-5 py-3 font-bold">{qar(Number(b.totalAmount ?? 0))}</td>
-                    <td className="px-5 py-3">
-                      <Pill tone={str(b.status) === 'billed' ? 'red' : pillFor(str(b.status))}>{str(b.status) === 'billed' ? 'Unpaid' : str(b.status).replace(/^./, (c) => c.toUpperCase())}</Pill>
-                    </td>
-                    <td className="px-5 py-3 text-accent font-semibold">View</td>
-                  </tr>
-                ))}
-                {bills.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="px-5 py-4 text-muted">
-                      No bills on file.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            cols={[
+              { header: 'Bill Period', render: (b: Rec) => monthLabel(str(b.billPeriod)) },
+              { header: 'Bill Number', render: (b: Rec) => str(b.billId) },
+              { header: 'Bill Amount', className: 'font-bold', render: (b: Rec) => qar(Number(b.totalAmount ?? 0)) },
+              {
+                header: 'Status',
+                render: (b: Rec) => <Pill tone={str(b.status) === 'billed' ? 'red' : pillFor(str(b.status))}>{str(b.status) === 'billed' ? 'Unpaid' : str(b.status).replace(/^./, (c) => c.toUpperCase())}</Pill>,
+              },
+              { header: 'Action', className: 'text-link font-semibold', render: () => 'View' },
+            ]}
+            rows={[...bills].reverse().slice(0, 5)}
+            empty="No bills on file."
+          />
         </Card>
 
         <Card title="Payment History" icon={ICON.card} link="View All Payments" onLink={() => ctx.goToTab('ts-billing')}>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-[length:var(--fs-body)]">
-              <thead>
-                <tr className="bg-surface">
-                  {['Date & Time', 'Amount', 'Channel', 'Status', 'Ref. No.'].map((h) => (
-                    <th key={h} className="px-5 py-3 text-muted font-semibold uppercase tracking-wide text-[length:var(--fs-caption-upper)]">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--field-card-border)]">
-                {payments.map((p) => (
-                  <tr key={str(p.paymentId)}>
-                    <td className="px-5 py-3">{rowDate(p.capturedAt)}</td>
-                    <td className="px-5 py-3 font-bold">{qar(Number(p.amountQar ?? 0))}</td>
-                    <td className="px-5 py-3">{str(p.paymentMethod ?? p.captureChannel)}</td>
-                    <td className="px-5 py-3">
-                      <Pill tone={pillFor(str(p.status ?? 'Successful'))}>{str(p.status ?? 'Successful')}</Pill>
-                    </td>
-                    <td className="px-5 py-3">{str(p.receiptNumber ?? p.paymentId)}</td>
-                  </tr>
-                ))}
-                {payments.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="px-5 py-4 text-muted">
-                      No payments on file.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            cols={[
+              { header: 'Date & Time', render: (p: Rec) => rowDate(p.capturedAt) },
+              { header: 'Amount', className: 'font-bold', render: (p: Rec) => qar(Number(p.amountQar ?? 0)) },
+              { header: 'Channel', render: (p: Rec) => str(p.paymentMethod ?? p.captureChannel) },
+              { header: 'Status', render: (p: Rec) => <Pill tone={pillFor(str(p.status ?? 'Successful'))}>{str(p.status ?? 'Successful')}</Pill> },
+              { header: 'Ref. No.', render: (p: Rec) => str(p.receiptNumber ?? p.paymentId) },
+            ]}
+            rows={payments}
+            empty="No payments on file."
+          />
           <div className="flex items-center justify-between px-5 py-3 border-t border-[var(--field-card-border)]">
             <span className="inline-flex items-center gap-2 text-fg font-semibold">
               <Icon path={ICON.bars} className="w-4 h-4" />
               Unbilled Usage
             </span>
-            <button type="button" onClick={() => ctx.goToTab('ts-products')} className="text-accent font-semibold text-[length:var(--fs-body)]">
+            <button type="button" onClick={() => ctx.goToTab('ts-products')} className="text-link font-semibold text-[length:var(--fs-body)]">
               View Usage Details →
             </button>
           </div>

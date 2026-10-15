@@ -8,7 +8,7 @@ from openpyxl.utils import get_column_letter
 
 # !! WARNING — THIS SCRIPT NO LONGER PRODUCES THE FULL WORKBOOK !!
 #
-# VFQ_DXP_Test_Data_Reference.xlsx now contains three sheets that this script
+# Test_Data_Reference.xlsx now contains three sheets that this script
 # does NOT create, because they were added directly in Excel:
 #     "Persona", "Persona by Approach", "ID Lookup (MOI Fetch)"
 # Running this script rebuilds the workbook from scratch and WOULD DELETE THEM.
@@ -464,8 +464,8 @@ write_table(ws, row,
 # Sheet: Prepaid Activation Eligibility
 # ---------------------------------------------------------------------------
 ws = wb.create_sheet('Prepaid Activation Eligibility')
-note = ('New Prepaid Activation wizard (SCR-190/191/192) now has 9 steps: Contact -> Eligibility -> Address & Contact '
-        'Details -> Plan & Discount -> Number Selection -> SIM Type -> Checkout -> CAF & Key Information -> Payment '
+note = ('New Prepaid Activation wizard (SCR-190) has 10 steps, in the shape of New Connection: Customer Identification (identity, '
+        'contact and eligibility) -> Address -> Offers -> Plan -> Number (or a Pre-Paired SIM) -> SIM -> Subscriptions (Add another subscription?) -> Checkout -> CAF & Signature -> Payment '
         '(originally just Contact -> Number -> SIM Serial, with no gate before reservation, no plan/CAF/checkout at all, '
         'and no payment before the order was marked Complete — see the "Prepaid Full Journey" sheet for the other 6 '
         'steps and full onSubmit mechanics). Eligibility reuses the same EligibilityGateStep component New Postpaid '
@@ -524,7 +524,7 @@ journey_rows = [
     ('Plan tiers', 'PROD-300 SIM only (QAR 0), PROD-301 Prepaid Red 25, PROD-302 Prepaid Red 50 (POPULAR), PROD-303 Prepaid Red 100 — each with a starter pack charge, data/voice allowance and pack validity instead of postpaid\'s monthly recurring charge.'),
     ('Discounts', 'ADO-7109/7110/7111 "Prepaid Welcome Discount" (-10%), one per Red tier — MPRA_001_QPC_04\'s "Special discount."'),
     ('SIM card charge (BR-348/BR-013)', 'Threshold QAR 10 for QID, QAR 40 for Passport, compared against the selected pack\'s starter pack charge. Below threshold: a QAR 15 placeholder charge applies (the BRSD names the threshold but never the charge amount itself — flagged in ruleEngine.ts). Try Prepaid Red 25 (QAR 25) with a Passport contact: 25 < 40, so the charge applies.'),
-    ('HRN approval routing test', 'CUST-1002 (Passport, HRN) — any prepaid order for this customer routes to "Submitted for Approval" and appears in Orders > Approval Queue requiring the "Back Office Fulfilment Agent" role, instead of completing automatically.'),
+    ('HRN approval routing test', 'CUST-1002 (Passport, HRN) — any prepaid order for this customer routes to "Submitted for Approval" and appears in Orders > Approval Queue requiring the "Back Office Fulfilment" role, instead of completing automatically.'),
     ('SIM depletion test', 'Complete one order with a Physical SIM and a specific serial (e.g. the always-available 8974412345678901234), then start a second order and enter the same serial at the SIM Type step — it now correctly shows "This SIM is already assigned."'),
     ('Fulfilment status progression test', 'Complete a non-HRN order and immediately check Customer 360 > Orders — status briefly reads the intermediate state before settling on "Complete" a moment later (the ~900ms simulated NET_02-06 fulfilment delay).'),
     ('Notification test', 'After any completed or approval-routed order, open Customer 360 > Notifications for that customer — a new row appears sourced from osb-notifications.json, not just a toast.'),
@@ -550,6 +550,8 @@ write_table(ws, row, ['Where it is used', 'Value to enter', 'Notes'], code_rows,
 for name in wb.sheetnames:
     wb[name].sheet_view.showGridLines = False
 
-out_path = os.path.join(APP_ROOT, 'reference', 'outputs', 'VFQ_DXP_Test_Data_Reference.xlsx')
+out_path = os.path.join(APP_ROOT, 'reference', 'outputs', 'Test_Data_Reference.xlsx')
 wb.save(out_path)
+from format_xlsx import format_file  # house format: header row, borders, Tenorite 14, no gridlines
+format_file(out_path)
 print('Saved:', out_path)

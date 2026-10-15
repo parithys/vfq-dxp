@@ -58,7 +58,7 @@ export function IdScannerPanel({
         {value.idNumber && !verifyThenFetch ? `Document detected: ${idType === 'QID' ? 'Qatar ID' : idType}` : 'Scan identity document'}
       </p>
       {contextNoDocument ? (
-        <div role="status" className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface p-6 text-center space-y-1">
+        <div role="status" className="card card-surface p-6 text-center space-y-1">
           <p className="text-fg font-semibold">No identity document on file for {contextNoDocument}</p>
           <p className="text-fg-2 text-[length:var(--fs-caption)]">There is no card to read for this customer. Enter the ID number manually.</p>
         </div>

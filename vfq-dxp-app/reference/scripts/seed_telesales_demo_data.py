@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Seeds DEMO data for the Telesales Agent (CBU) Customer 360 sections that had nothing behind them.
+"""Seeds DEMO data for the Telesales (CBU) Customer 360 sections that had nothing behind them.
 
 Idempotent: safe to re-run. Every added record carries a `_note` saying it is a demo seed, and the
 UI shows it with the demo-only styling where it surfaces. Nothing here is evidence from the BRSDs.
@@ -23,7 +23,7 @@ from datetime import date
 from pathlib import Path
 
 MOCK = Path(__file__).resolve().parents[2] / "public" / "mock-data"
-NOTE = "Demo seed (2026-10-03) for the Telesales Agent Customer 360 - not sourced from a BRSD."
+NOTE = "Demo seed (2026-10-03) for the Telesales Customer 360 - not sourced from a BRSD."
 
 
 def load(n):
@@ -173,11 +173,11 @@ for c in customers:
         "commPrefs": {"emailForBilling": True, "marketing": bool(h & 1), "sms": True, "emailNotifications": True},
         "contactMeta": {"tenure": f"{2 + h % 9} years", "employer": ["Qatar Airways", "Ooredoo", "QatarEnergy", "Hamad Medical", "Self-employed"][h % 5], "creditScore": ["Good", "Excellent", "Fair"][(h >> 2) % 3]},
         "contactActivities": [
-            {"at": ts(28, 16, 12), "activity": "Updated email address", "by": "Telesales Agent"},
-            {"at": ts(21, 9, 40), "activity": "Added authorised person", "by": "Telesales Agent"},
+            {"at": ts(28, 16, 12), "activity": "Updated email address", "by": "Telesales"},
+            {"at": ts(21, 9, 40), "activity": "Added authorised person", "by": "Telesales"},
             {"at": ts(12, 14, 15), "activity": "Changed notification number", "by": "System"},
             {"at": ts(5, 11, 30), "activity": "Updated communication preferences", "by": "System"},
-            {"at": ts(1, 11, 20), "activity": "Updated communication preferences", "by": "Telesales Agent"},
+            {"at": ts(1, 11, 20), "activity": "Updated communication preferences", "by": "Telesales"},
         ],
         "recharges": [
             {"at": ts(25, 10, 0), "amountQar": 50, "type": "Voucher", "channel": "MyVodafone App"},
@@ -195,15 +195,15 @@ for c in customers:
         "serviceability": {"Mobile Coverage": "Available", "Fixed Line": "Available", "Fibre (Home)": "Available", "TV Service": "Available", "5G Coverage": "Available", "Remarks": "Serviceable for all products"},
         "addressType": {"addressType": "Residential", "usageType": "Primary", "validFrom": "2020-01-12", "validTo": None, "isMailing": True, "isBilling": True},
         "addressHistory": [
-            {"type": "Residential", "zone": "Zone 56", "street": "Al Waab Street", "building": "Building 12", "rfs": True, "from": "2020-01-12", "to": None, "status": "Current", "by": "Telesales Agent", "on": "2020-01-12T10:24:00+03:00"},
+            {"type": "Residential", "zone": "Zone 56", "street": "Al Waab Street", "building": "Building 12", "rfs": True, "from": "2020-01-12", "to": None, "status": "Current", "by": "Telesales", "on": "2020-01-12T10:24:00+03:00"},
             {"type": "Residential", "zone": "Zone 55", "street": "Al Sadd Street", "building": "Building 08", "rfs": True, "from": "2018-06-10", "to": "2020-01-11", "status": "Previous", "by": "System", "on": "2018-06-10T09:15:00+03:00"},
             {"type": "Office", "zone": "Zone 61", "street": "West Bay", "building": "Tower 2", "rfs": False, "from": "2016-02-05", "to": "2018-06-09", "status": "Previous", "by": "Retail Agent", "on": "2016-02-05T16:20:00+03:00"},
         ],
         "leadActivities": [
-            {"at": ts(30, 10, 24), "activity": "Lead created", "by": "Telesales Agent"},
-            {"at": ts(28, 16, 30), "activity": "Status updated to In Progress", "by": "Telesales Agent"},
+            {"at": ts(30, 10, 24), "activity": "Lead created", "by": "Telesales"},
+            {"at": ts(28, 16, 30), "activity": "Status updated to In Progress", "by": "Telesales"},
             {"at": ts(25, 11, 15), "activity": "Converted to Order", "by": "System"},
-            {"at": ts(16, 14, 20), "activity": "Follow-up scheduled", "by": "Telesales Agent"},
+            {"at": ts(16, 14, 20), "activity": "Follow-up scheduled", "by": "Telesales"},
             {"at": ts(10, 9, 45), "activity": "Lead created", "by": "Retail Agent"},
         ],
         "offerHistory": [
@@ -214,16 +214,16 @@ for c in customers:
             {"at": "2026-07-01", "offer": "RED Plus", "status": "Purchased", "channel": "Telesales"},
         ],
         "auditRows": [
-            {"at": ts(30, 10, 24), "module": "Order", "action": "Created", "field": "Order Number", "old": None, "new": "ORD-987654", "by": "Telesales Agent", "channel": "Telesales", "ref": "ORD-987654"},
+            {"at": ts(30, 10, 24), "module": "Order", "action": "Created", "field": "Order Number", "old": None, "new": "ORD-987654", "by": "Telesales", "channel": "Telesales", "ref": "ORD-987654"},
             {"at": ts(29, 9, 12), "module": "Account", "action": "Updated", "field": "Credit Limit", "old": "QAR 3,000", "new": "QAR 5,000", "by": "System", "channel": "System", "ref": "ACC-123456"},
-            {"at": ts(28, 14, 30), "module": "Contact", "action": "Updated", "field": "Email", "old": "old.email@...", "new": email, "by": "Telesales Agent", "channel": "Telesales", "ref": "CON-567890"},
+            {"at": ts(28, 14, 30), "module": "Contact", "action": "Updated", "field": "Email", "old": "old.email@...", "new": email, "by": "Telesales", "channel": "Telesales", "ref": "CON-567890"},
             {"at": ts(28, 16, 15), "module": "Trouble Ticket", "action": "Status Changed", "field": "Status", "old": "Open", "new": "Resolved", "by": "Back Office", "channel": "System", "ref": "TT-123456"},
             {"at": ts(25, 11, 3), "module": "Account", "action": "Updated", "field": "Dunning Stage", "old": "Stage 3", "new": "Stage 2", "by": "System", "channel": "System", "ref": "ACC-123456"},
-            {"at": ts(21, 9, 40), "module": "Order", "action": "Status Changed", "field": "Order Status", "old": "In Progress", "new": "Completed", "by": "Telesales Agent", "channel": "App", "ref": "ORD-987653"},
-            {"at": ts(18, 14, 15), "module": "Contact", "action": "Added", "field": "Authorised Person", "old": None, "new": "Fatima Al-Sulaiti", "by": "Telesales Agent", "channel": "Telesales", "ref": "CON-567889"},
-            {"at": ts(15, 10, 20), "module": "Activity", "action": "Added", "field": "Activity Note", "old": None, "new": "Customer requested roaming pack", "by": "Telesales Agent", "channel": "Telesales", "ref": "ACT-445566"},
+            {"at": ts(21, 9, 40), "module": "Order", "action": "Status Changed", "field": "Order Status", "old": "In Progress", "new": "Completed", "by": "Telesales", "channel": "App", "ref": "ORD-987653"},
+            {"at": ts(18, 14, 15), "module": "Contact", "action": "Added", "field": "Authorised Person", "old": None, "new": "Fatima Al-Sulaiti", "by": "Telesales", "channel": "Telesales", "ref": "CON-567889"},
+            {"at": ts(15, 10, 20), "module": "Activity", "action": "Added", "field": "Activity Note", "old": None, "new": "Customer requested roaming pack", "by": "Telesales", "channel": "Telesales", "ref": "ACT-445566"},
             {"at": ts(12, 15, 18), "module": "Trouble Ticket", "action": "Priority Changed", "field": "Priority", "old": "Low", "new": "High", "by": "Customer Care", "channel": "Call Center", "ref": "TT-123455"},
-            {"at": ts(10, 11, 5), "module": "Order", "action": "Cancelled", "field": "Order Number", "old": None, "new": "ORD-987652", "by": "Telesales Agent", "channel": "Telesales", "ref": "ORD-987652"},
+            {"at": ts(10, 11, 5), "module": "Order", "action": "Cancelled", "field": "Order Number", "old": None, "new": "ORD-987652", "by": "Telesales", "channel": "Telesales", "ref": "ORD-987652"},
         ],
         "_note": NOTE,
     })

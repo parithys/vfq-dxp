@@ -1,3 +1,4 @@
+import { formatBytes } from '../../../lib/format';
 import type { EntityKind } from '../../../engines/mockDataEngine';
 
 // Step summaries: each wizard step may declare which of the draft's values are worth echoing back once the step is
@@ -47,7 +48,6 @@ export const maskAllButLast4 = (s: string): string => (s.length <= 4 ? s : `${'â
 
 const isEmpty = (v: unknown) => v === undefined || v === null || (typeof v === 'string' && v.trim() === '') || (Array.isArray(v) && v.length === 0);
 
-const fileSize = (bytes: number) => (bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : bytes >= 1024 ? `${Math.round(bytes / 1024)} KB` : `${bytes} B`);
 
 /** Display text for one field's raw value. `labels` carries the resolved labels for `labelFrom` fields (id -> label). */
 export function formatSummaryValue(
@@ -79,7 +79,7 @@ export function formatSummaryValue(
     case 'file': {
       const f = raw as { name?: string; size?: number } | string;
       if (typeof f === 'string') return { text: f, empty: false };
-      return { text: f.name ? `${f.name}${typeof f.size === 'number' ? ` (${fileSize(f.size)})` : ''}` : NOT_PROVIDED, empty: !f.name };
+      return { text: f.name ? `${f.name}${typeof f.size === 'number' ? ` (${formatBytes(f.size)})` : ''}` : NOT_PROVIDED, empty: !f.name };
     }
     default:
       return { text: mask(String(raw).trim()), empty: false };

@@ -15,10 +15,10 @@ export interface FieldGroup {
   component?: string;
 }
 
-const BILLING_EMAIL = 'Billing Email ID (It should show all the email Ids which are marked for Billing Receipent)';
+const BILLING_EMAIL = 'Billing Email ID (It should show all the email Ids which are marked for Billing Recipient)';
 const SERVICE_CONNECTIONS = 'Service Type Number of Connections (Total Per Account + Total Per Plan Type)';
 const RECENT_MILESTONES =
-  'Recent Milestones or Interactions (including all recent purschages add-on, Plan change, activation, change done to MSISDN, account, ticket or activity)';
+  'Recent Milestones or Interactions (including all recent purchases add-on, Plan change, activation, change done to MSISDN, account, ticket or activity)';
 const USAGE = 'Usage Behaviour (High Data, High Roaming, High Local Call, High International Calls)';
 const BALANCE = 'Current Balance (Data,Voice, Text, Primary Balance)';
 const MSISDN_STATUS = 'MSISDN Status (Active, Suspended, Barred)';
@@ -28,7 +28,7 @@ export const customer360Layouts: Record<string, FieldGroup[]> = {
     { title: 'Account health', display: 'kpi', fields: ['Segment', 'Primary MSISDN', SERVICE_CONNECTIONS, 'Credit Limit', 'Current Dunning Stage', 'Overdue TT', 'OG/IC Barring Dates', 'About to OG/IC Bar (Y/N)', 'Special Management'] },
     { title: 'Account management', display: 'list', fields: ['AM name', 'AM mobile', 'AM Email', 'Manager Email', 'Availability/escalation contact', BILLING_EMAIL] },
     { title: 'Pending requests', display: 'kpi', fields: ['Pending TON requests', 'Pending Adjustments', 'Pending Sim swap'] },
-    { title: 'Activity', display: 'list', fields: [RECENT_MILESTONES, 'Actiivity (last 5)', 'Last 5 Orders', 'All Orders', 'All Trouble Tickets'] },
+    { title: 'Activity', display: 'list', fields: [RECENT_MILESTONES, 'Activity (last 5)', 'Last 5 Orders', 'All Orders', 'All Trouble Tickets'] },
     { title: 'Structure & products', display: 'list', fields: ['Account Hierarchy', 'Contact Hierarchy', 'All Billing Profiles', 'Installed Assets', 'NAS/Address'] },
   ],
   Assets: [

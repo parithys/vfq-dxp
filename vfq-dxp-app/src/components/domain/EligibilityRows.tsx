@@ -1,3 +1,4 @@
+import { Button } from '../../components/primitives/Button';
 import { useState } from 'react';
 import { Drawer } from '../primitives/Drawer';
 import { Icon } from '../primitives/Icon';
@@ -72,15 +73,9 @@ export function EligibilityChecksLink({
   const rows = buildEligibilityRows(eligibility.checks, eligibility.requiresHrnAdvance, eligibility.nationality, journeyType, eligibility.isExistingCustomer);
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="text-[length:var(--fs-caption)] text-link underline
-          hover:text-accent-hover focus:outline-none focus-visible:shadow-[var(--focus-ring)]
-          rounded-[var(--radius-button)] px-1"
-      >
+      <Button variant="tertiary" compact onClick={() => setOpen(true)}>
         {label}
-      </button>
+      </Button>
       <Drawer open={open} onClose={() => setOpen(false)} title={label === 'View eligibility checks' ? 'Eligibility Checks' : label}>
         <EligibilityChecksList rows={rows} />
         <EligibilityOutcomeLegend />

@@ -51,7 +51,7 @@ export function BillingProfileSetupDrawer({
           options={BILLING_SCHEDULE_OPTIONS}
         />
         <Button
-          variant="primary-rect"
+          variant="primary"
           disabled={!profileName.trim()}
           onClick={() => {
             onSave({ profileName: profileName.trim(), billMedia, billingSchedule });

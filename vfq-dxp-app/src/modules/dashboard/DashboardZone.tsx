@@ -5,6 +5,14 @@ import { Icon } from '../../components/primitives/Icon';
 import { Badge } from '../../components/primitives/Badge';
 import { Button } from '../../components/primitives/Button';
 import type { ZoneSize } from './dashboardLayout';
+import type { PillTone } from './heroFigures';
+
+const PILL_TONES: Record<PillTone, string> = {
+  neutral: 'bg-[var(--icon-tile-bg)] text-[var(--icon-tile-fg)]',
+  amber: 'bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)]',
+  pink: 'bg-[var(--tint-pink-bg)] text-[var(--tint-pink-fg)]',
+  green: 'bg-[var(--tint-green-bg)] text-[var(--tint-green-fg)]',
+};
 
 const ICONS = {
   ticket: 'M4 9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1.5a1.5 1.5 0 0 0 0 3V15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1.5a1.5 1.5 0 0 0 0-3V9z',
@@ -18,6 +26,9 @@ const ICONS = {
   chart: 'M4 20V10 M10 20V4 M16 20v-7 M22 20H2',
   tag: 'M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-7.2-7.2a2 2 0 0 1-.6-1.4V4a1 1 0 0 1 1-1h8a2 2 0 0 1 1.4.6l7.4 7.4a2 2 0 0 1 0 2.8z M7.5 7.5h.01',
   alert: 'M12 3l9.5 17H2.5z M12 9v5 M12 17h.01',
+  headset: 'M4 14v-2a8 8 0 0 1 16 0v2 M4 14h3v5H5a1 1 0 0 1-1-1z M20 14h-3v5h2a1 1 0 0 0 1-1z',
+  clipboard: 'M9 4h6v3H9z M7 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-1 M9 12h6 M9 16h4',
+  trending: 'M3 17l6-6 4 4 8-8 M15 7h6v6',
   users2: 'M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1 M9.5 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
 };
 
@@ -28,6 +39,8 @@ export interface ZoneTile {
   /** Absent for a read-only zone, so the tile renders inert. */
   to?: string;
   loadingKind?: string;
+  /** Small status pill above the figure. */
+  pill?: { text: string; tone: PillTone };
 }
 
 export interface ZoneCard {
@@ -46,6 +59,10 @@ export interface ZoneAction {
 
 export interface ZoneSpec {
   heading: string;
+  /** Line under the heading (landing-page zones). */
+  subheading?: string;
+  /** Icon-tile tint for the cards ('pink' for the product zone). */
+  cardTone?: 'pink';
   headingIcon: string;
   tiles: ZoneTile[];
   cards: ZoneCard[];
@@ -71,12 +88,15 @@ export function DashboardZone({
   readOnly,
   loading,
   errors,
+  leadsPage = false,
 }: {
   spec: ZoneSpec;
   size: ZoneSize;
   readOnly: boolean;
   loading: Record<string, boolean>;
   errors: Record<string, string | undefined>;
+  /** The page's first zone: its first quick action is the one primary (red) button on the page. */
+  leadsPage?: boolean;
 }) {
   const navigate = useNavigate();
   const clearActiveCustomer = useCustomerContext((s) => s.clearActiveCustomer);
@@ -85,7 +105,7 @@ export function DashboardZone({
   // legible - you can see what you de-emphasised rather than it vanishing.
   if (size === 'collapsed') {
     return (
-      <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg px-5 py-4">
+      <section className="rounded-[var(--radius-card-lg)] border border-[var(--field-card-border)] bg-bg px-5 py-4">
         <div className="flex items-center gap-2.5 text-fg-2">
           <Icon path={spec.headingIcon} className="w-4.5 h-4.5 text-accent shrink-0" />
           <span className="font-medium text-[length:var(--fs-body)]">{spec.heading}</span>
@@ -122,29 +142,38 @@ export function DashboardZone({
 
   return (
     <section className="min-w-0">
-      <h2 className="flex items-center gap-2.5 text-[length:var(--fs-body-lg)] font-medium text-fg mb-3">
-        <Icon path={spec.headingIcon} className="w-4.5 h-4.5 text-accent shrink-0" />
-        {spec.heading}
-      </h2>
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="min-w-0">
+          <h2 className="text-[length:var(--fs-body-lg)] font-bold tracking-tight text-fg">{spec.heading}</h2>
+          {spec.subheading && <p className="text-fg-2 text-[length:var(--fs-caption)] mt-0.5">{spec.subheading}</p>}
+        </div>
+      </div>
 
       {spec.tiles.length > 0 && (
-        <div className={`grid gap-4 mb-6 ${gridCols(size, 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5', 'grid-cols-3')}`}>
+        <div className={`grid gap-4 mb-6 ${gridCols(size, 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-5', 'grid-cols-1 sm:grid-cols-3')}`}>
           {spec.tiles.map((tile) => {
             const body = (
               <>
-                <div className="text-[length:var(--fs-h3)] font-extrabold text-fg">
+                {tile.pill ? (
+                  <span title="Demo value - not yet connected to a live feed" className={`inline-block whitespace-nowrap rounded-[var(--radius-sm)] px-2.5 py-1 text-[length:var(--fs-2xs)] font-bold uppercase tracking-wide ${PILL_TONES[tile.pill.tone]}`}>
+                    {tile.pill.text}
+                  </span>
+                ) : (
+                  <span className="block h-6" aria-hidden="true" />
+                )}
+                <div className="text-[length:var(--fs-stat)] leading-none font-extrabold text-fg mt-5">
                   {value(tile.count, tile.loadingKind)}
                 </div>
-                <div className="text-fg-2 text-[length:var(--fs-caption)] mt-1">{tile.label}</div>
+                <div className="text-fg-2 text-[length:var(--fs-caption)] mt-2">{tile.label}</div>
               </>
             );
-            const shell = 'rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4';
+            const shell = 'rounded-[var(--radius-card-lg)] border border-[var(--field-card-border)] bg-bg p-5';
             if (readOnly || !tile.to) return <div key={tile.key} className={shell}>{body}</div>;
             return (
               <Link
                 key={tile.key}
                 to={tile.to}
-                className={`${shell} hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)] hover:-translate-y-0.5 transition-all`}
+                className={`${shell} hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]`}
               >
                 {body}
               </Link>
@@ -157,17 +186,17 @@ export function DashboardZone({
         <div className={`grid gap-4 mb-6 ${gridCols(size, 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3', 'grid-cols-1 sm:grid-cols-2')}`}>
           {spec.cards.map((card) => (
             // Fixed height so every card is the same size whatever its title length, with the figure pinned to the bottom.
-            <div key={card.label} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 h-[11.5rem] flex flex-col">
+            <div key={card.label} className="rounded-[var(--radius-card-lg)] border border-[var(--field-card-border)] bg-bg p-5 min-h-[11.5rem] flex flex-col">
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div className="min-w-0">
-                  <div className="font-medium text-fg text-[length:var(--fs-body)]">{card.label}</div>
-                  <div className="text-muted text-[length:var(--fs-caption)]">{card.sub}</div>
+                  <div className="font-bold text-fg text-[length:var(--fs-caption)] line-clamp-2">{card.label}</div>
+                  <div className="text-muted text-[length:var(--fs-xs)] line-clamp-2">{card.sub}</div>
                 </div>
-                <span className="w-9 h-9 rounded-full bg-surface-warm text-accent flex items-center justify-center shrink-0">
+                <span className={`w-10 h-10 rounded-[var(--radius-card)] ${spec.cardTone === 'pink' ? 'bg-surface-warm text-accent' : 'bg-[var(--icon-tile-bg)] text-[var(--icon-tile-fg)]'} flex items-center justify-center shrink-0`}>
                   <Icon path={card.icon} className="w-4.5 h-4.5" />
                 </span>
               </div>
-              <div className="mt-auto text-[length:var(--fs-h3)] font-extrabold text-fg">
+              <div className="mt-auto text-[length:var(--fs-stat)] leading-none font-extrabold text-fg">
                 {value(card.value, card.loadingKind)}
               </div>
             </div>
@@ -179,24 +208,30 @@ export function DashboardZone({
           rendered disabled - a row of dead buttons is worse than their absence. */}
       {!readOnly && spec.actions.length > 0 && (
         <>
-          <h3 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-3">Quick actions</h3>
-          <div className="flex flex-wrap gap-2 mb-6">
-            {spec.actions.map((action) => (
+          <div className="flex flex-wrap gap-3 mb-6">
+            {spec.actions.map((action, i) => (
               // The palette's soft pink fill (2026-09-27), standardised across
               // every secondary/clickable button in the app - see
               // ProductLinePage.tsx's category chips, the first place this
               // treatment landed. This was an outlined, unfilled button before,
               // the one shape in this family that had never picked up the fill.
-              // It is the only one of the four that is a real <button> on a
+              // It is the only one of the four that is a real <button type="button"> on a
               // button-shaped box, so it is the one that became the variant.
-              <Button
-                key={action.label}
-                variant="secondary-rect"
-                compact
-                onClick={() => launch(action)}
-              >
-                {action.label}
-              </Button>
+              // The first action leads in brand red; the rest are quiet white buttons with a soft shadow.
+              leadsPage && i === 0 ? (
+                <Button
+                  key={action.label}
+                  variant="primary"
+                  onClick={() => launch(action)}
+                  className="!px-5 !py-2.5 !text-[length:var(--fs-caption)]"
+                >
+                  {action.label}
+                </Button>
+              ) : (
+                <Button key={action.label} variant="secondary" onClick={() => launch(action)} className="!px-5 !py-2.5 !text-[length:var(--fs-caption)]">
+                  {action.label}
+                </Button>
+              )
             ))}
           </div>
         </>
@@ -204,7 +239,7 @@ export function DashboardZone({
 
       {spec.listTitle && (
         <>
-          <h3 className="text-[length:var(--fs-body-lg)] font-medium text-fg mb-3">{spec.listTitle}</h3>
+          <h3 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-3">{spec.listTitle}</h3>
           {(spec.listItems ?? []).length === 0 && (
             <p className="text-muted text-[length:var(--fs-body)]">{spec.listEmpty}</p>
           )}
@@ -224,13 +259,13 @@ export function DashboardZone({
                 </>
               );
               const shell =
-                'flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg px-4 py-3';
+                'flex items-center justify-between gap-3 rounded-[var(--radius-card-lg)] border border-[var(--field-card-border)] bg-bg px-4 py-3';
               if (readOnly || !item.to) return <div key={item.id} className={shell}>{body}</div>;
               return (
                 <Link
                   key={item.id}
                   to={item.to}
-                  className={`${shell} hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)] hover:-translate-y-0.5 transition-all`}
+                  className={`${shell} hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]`}
                 >
                   {body}
                 </Link>

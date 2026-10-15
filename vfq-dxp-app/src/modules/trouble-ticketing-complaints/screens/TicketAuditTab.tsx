@@ -1,3 +1,4 @@
+import { formatDateTime } from '../../../lib/format';
 import type { AuditRecord } from './ticketDetailModel';
 
 interface Props {
@@ -12,7 +13,7 @@ export function TicketAuditTab({ canSeeAudit, auditRecords }: Props) {
       {auditRecords.map((a) => (
         <div key={a.auditId} className="text-[length:var(--fs-caption)] border-b border-border-soft pb-1 last:border-0">
           <span className="text-fg">{a.fieldModified} → {a.newValue}</span>
-          <span className="block text-muted">{a.employeeUser} · {new Date(a.timestamp).toLocaleString()}</span>
+          <span className="block text-muted">{a.employeeUser} · {formatDateTime(a.timestamp)}</span>
         </div>
       ))}
     </div>

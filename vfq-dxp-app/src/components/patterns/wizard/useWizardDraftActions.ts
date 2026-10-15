@@ -7,6 +7,7 @@ import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { logActivity } from '../../../engines/activityEngine';
 import { useCustomerContext } from '../../../stores/customerContextStore';
 import type { WizardStep } from './guidedWizardTypes';
+import { newTaskId } from '../../../lib/taskId';
 
 /** The customer a draft is for, from whatever the Contact step has captured by now. */
 function draftCustomerName(values: Record<string, unknown>): string {
@@ -82,7 +83,22 @@ export function useWizardDraftActions({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hardStopShown]);
 
-  const abandonOrder = async () => {
+  // These four end the journey. A second call while one is running (a double click) would write the activity twice or
+  // delete the order under the first, so it is dropped.
+  const inFlight = useRef(false);
+  const once =
+    <A extends unknown[], R>(fn: (...args: A) => Promise<R>) =>
+    async (...args: A): Promise<R | undefined> => {
+      if (inFlight.current) return undefined;
+      inFlight.current = true;
+      try {
+        return await fn(...args);
+      } finally {
+        inFlight.current = false;
+      }
+    };
+
+  const abandonOrder = once(async () => {
     if (!activityComments.trim()) return;
     await recordActivity('abandoned', draftOrderId, activityComments);
     useCustomerContext.getState().endJourney(wizardId);
@@ -91,7 +107,7 @@ export function useWizardDraftActions({
     clearDraft(wizardId);
     setAbandonOpen(false);
     onAbandon?.();
-  };
+  });
 
   // Explicitly distinct from abandonOrder (2026-09-28 "keep this distinct
   // from saving a draft"): this KEEPS the draft order row rather than
@@ -112,6 +128,9 @@ export function useWizardDraftActions({
         draftStepKey: activeKey,
         draftValues: values,
       });
+      // The Draft Orders list shows when the draft last changed.
+      const task = (await mockDataEngine.list<{ taskId: string; relatedOrderId?: string }>('tasks')).find((t) => t.relatedOrderId === draftOrderId);
+      if (task) await mockDataEngine.update('tasks', task.taskId, { updatedAt: new Date().toISOString() });
     } else {
       const newOrderId = `ORD-${Date.now().toString().slice(-6)}`;
       await mockDataEngine.create('orders', {
@@ -127,8 +146,9 @@ export function useWizardDraftActions({
       // 'Draft Order' linked to the order - the list is built from tasks, and
       // its row click resumes the journey via the order's draftResumePath).
       await mockDataEngine.create('tasks', {
-        taskId: `TASK-${Date.now().toString().slice(-6)}`,
-        taskName: `${draftCustomerName(values)} – ${draftActionLabel ?? title}`,
+        // The journey's own reference, so the Task ID the agent was shown while working is the one on the saved draft.
+        taskId: (useCustomerContext.getState().journey?.wizardId === wizardId && useCustomerContext.getState().journey?.taskId) || newTaskId(),
+        taskName: `${useCustomerContext.getState().journey?.customerName ?? draftCustomerName(values)} – ${draftActionLabel ?? title}`,
         taskDescription: 'Draft order saved but not submitted.',
         taskType: 'Draft Order',
         taskStatus: 'Open',
@@ -142,25 +162,36 @@ export function useWizardDraftActions({
     return draftOrderId;
   };
 
-  const saveAndExit = async (comments?: string) => {
+  // `stay` saves without sending the agent anywhere: the caller is already on its way somewhere else (the leave-journey
+  // prompt lets the blocked navigation go ahead afterwards).
+  const saveAndExit = once(async (comments?: string, { stay = false }: { stay?: boolean } = {}) => {
     const id = await persistDraft();
     if (!id) return;
     await recordActivity('saved-exit', id, comments);
     useCustomerContext.getState().endJourney(wizardId);
     clearDraft(wizardId);
-    onSaveExit?.();
-  };
+    if (!stay) onSaveExit?.();
+  });
+
+  // Abandon from the leave-journey prompt: the same discard as Abandon Order (activity recorded, held customer released,
+  // draft order deleted, draft cleared), with the comment filled in because the agent was only asked to choose.
+  const abandonOnLeave = once(async () => {
+    await recordActivity('abandoned', draftOrderId, 'Journey abandoned when the agent left it.');
+    useCustomerContext.getState().endJourney(wizardId);
+    if (draftOrderId) await mockDataEngine.remove('orders', draftOrderId);
+    clearDraft(wizardId);
+  });
 
   // Save: writes the draft order, confirms with a toast and clears the in-memory draft (the saved
   // order now holds it). The caller decides where to go next.
-  const saveDraft = async () => {
+  const saveDraft = once(async () => {
     const id = await persistDraft();
     if (!id) return;
     await recordActivity('saved-exit', id);
     useCustomerContext.getState().endJourney(wizardId);
     clearDraft(wizardId);
     useNotificationStore.getState().pushToast('success', 'Draft saved', { key: `draft-saved-${wizardId}`, detail: 'This order can be resumed from Draft Orders.' });
-  };
+  });
 
   const requestAbandon = () => {
     setAbandonNoKeep(false);
@@ -180,5 +211,6 @@ export function useWizardDraftActions({
     saveAndExit,
     saveDraft,
     requestAbandon,
+    abandonOnLeave,
   };
 }

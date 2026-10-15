@@ -1,6 +1,6 @@
 import * as mockDataEngine from '../engines/mockDataEngine';
 import { getAllRoutes } from '../engines/configEngine';
-import { existingCustomerPath } from '../modules/new-connection/existingCustomer';
+import { existingCustomerPath } from './journeyPaths';
 import { mobileMatches, purposeOfVisit, JOURNEY_LAUNCH_SCREENS } from '../engines/qnomyQueueEngine';
 import { type AccountRecord, type CustomerRecord } from '../engines/customer360Engine';
 import { groupServicesByCategory, listCustomerServices, type ServiceSources } from '../engines/customerServicesEngine';
@@ -99,12 +99,11 @@ export function factsForKioskNumber(
   // plus a smart plug).
   //
   // The count shown is the length of this list, so the figure and the
-  // breakdown can never disagree. That does mean it no longer echoes the two
-  // count fields on the customer record:
-  // CUST-1005 carries 4 lines by count but has no account and therefore no
-  // enumerable service records, so only the one line his own number
-  // identifies is listed. Counting 4 while showing 1 would be worse - the
-  // three others have no number to link to and cannot be opened.
+  // breakdown can never disagree. The mobile part of it matches the two count
+  // fields on the customer record: every line they declare has an installed
+  // asset on an account of the matching type (build_customer_inventory.py
+  // --seed, seed_mobile_lines), and verify_customer_inventory_sync.py checks
+  // it. (Before 2026-10-11 CUST-1005 carried 4 lines by count but listed 1.)
   const services = listCustomerServices(matched, sources);
   // GROUPED BY CATEGORY as of 2026-09-25, not one row per service. Four
   // identifiers under a count told the agent what the services ARE called,

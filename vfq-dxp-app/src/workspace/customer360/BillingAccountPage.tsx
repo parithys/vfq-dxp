@@ -8,12 +8,14 @@ import { canEditCustomerRecords } from '../../engines/agentPrivilegeEngine';
 import { useVerificationGate } from '../../components/patterns/VerificationGate';
 import { Badge } from '../../components/primitives/Badge';
 import { Button } from '../../components/primitives/Button';
-import { Drawer } from '../../components/primitives/Drawer';
+import { Drawer } from '../../capabilities';
 import { Input } from '../../components/primitives/Input';
 import { Select } from '../../components/primitives/Select';
 import { Icon } from '../../components/primitives/Icon';
 import { Tooltip } from '../../components/primitives/Tooltip';
 import { PageHeader } from '../../components/patterns/PageHeader';
+import { useSubmitGuard } from '../../hooks/useSubmit';
+import { EntityMissing } from '../../components/patterns/EntityMissing';
 
 const BACK_ICON = 'M15 18l-6-6 6-6';
 
@@ -44,14 +46,14 @@ function EditButton({ canEdit, onClick }: { canEdit: boolean; onClick: () => voi
   if (!canEdit) {
     return (
       <Tooltip content="Not authorised to edit billing records" placement="top">
-        <Button variant="ghost-rect" compact className="opacity-40 cursor-not-allowed" onClick={(e) => e.preventDefault()}>
+        <Button variant="secondary" compact className="opacity-40 cursor-not-allowed" onClick={(e) => e.preventDefault()}>
           Edit
         </Button>
       </Tooltip>
     );
   }
   return (
-    <Button variant="ghost-rect" compact onClick={onClick}>
+    <Button variant="secondary" compact onClick={onClick}>
       Edit
     </Button>
   );
@@ -76,10 +78,13 @@ export function BillingAccountPage() {
   const navigate = useNavigate();
   const updateRecord = useEntityStore((s) => s.updateRecord);
   const pushToast = useNotificationStore((s) => s.pushToast);
+  const { guard } = useSubmitGuard();
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
   const canEdit = canEditCustomerRecords(activePersonaId);
 
   const [profile, setProfile] = useState<BillingProfile | null | undefined>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [customerId, setCustomerId] = useState<string>('');
   const [customerName, setCustomerName] = useState<string>('this customer');
   const [editField, setEditField] = useState<'contact' | 'address' | 'language' | 'payment' | null>(null);
@@ -88,6 +93,7 @@ export function BillingAccountPage() {
 
   useEffect(() => {
     if (!billingProfileId) return;
+    setLoadFailed(false);
     (async () => {
       const profiles = await mockDataEngine.list<BillingProfile>('billing-profiles');
       const found = profiles.find((p) => p.billingProfileId === billingProfileId);
@@ -102,10 +108,16 @@ export function BillingAccountPage() {
           if (customer) setCustomerName(customer.name);
         }
       }
-    })();
-  }, [billingProfileId]);
+    })().catch((err) => {
+      console.error('[BillingAccountPage] load failed:', err);
+      setLoadFailed(true);
+    });
+  }, [billingProfileId, reloadKey]);
 
-  if (profile === null) return <div className="p-8 text-fg-2">Loading billing account…</div>;
+  if (loadFailed) {
+    return <EntityMissing what="billing account" loading={false} error onRetry={() => setReloadKey((k) => k + 1)} backTo="/customer-search" backLabel="Back to Customer Search" />;
+  }
+  if (profile === null) return <div className="p-8 text-fg-2" role="status">Loading billing account…</div>;
   if (profile === undefined) {
     return (
       <div className="p-8">
@@ -128,12 +140,13 @@ export function BillingAccountPage() {
   // account). BR-04's ticket-on-change applies to demographic/contact/
   // address changes specifically, not billing-profile edits, so this saves
   // directly with a confirmation toast rather than a ticket.
-  const save = async (patch: Partial<BillingProfile>, kind: string) => {
+  const save = (patch: Partial<BillingProfile>, kind: string) =>
+    guard(async () => {
     await updateRecord('billing-profiles', 'billingProfileId', profile.billingProfileId, patch);
     pushToast('success', `${kind} updated for billing account ${profile.billingProfileId}.`);
     setProfile((prev) => (prev ? { ...prev, ...patch } : prev));
     setEditField(null);
-  };
+    });
 
   return (
     <div className="p-8 w-full">
@@ -148,7 +161,7 @@ export function BillingAccountPage() {
         </>}
       />
 
-      <button
+      <button type="button"
         onClick={() => navigate(customerId ? `/customer/${customerId}` : -1 as unknown as string)}
         className="flex items-center gap-1.5 text-fg-2 hover:text-fg text-[length:var(--fs-caption)] mb-4"
       >
@@ -157,7 +170,7 @@ export function BillingAccountPage() {
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
+        <section className="card p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg">
               Billing Profile
@@ -171,7 +184,7 @@ export function BillingAccountPage() {
           </div>
         </section>
 
-        <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
+        <section className="card p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg">
               Billing Contact
@@ -185,7 +198,7 @@ export function BillingAccountPage() {
           </div>
         </section>
 
-        <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
+        <section className="card p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg">
               Billing Address
@@ -195,7 +208,7 @@ export function BillingAccountPage() {
           <Field label="Address" value={profile.billingAddress} />
         </section>
 
-        <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
+        <section className="card p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg">
               Billing Language
@@ -205,7 +218,7 @@ export function BillingAccountPage() {
           <Field label="Language" value={profile.billingLanguage} />
         </section>
 
-        <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
+        <section className="card p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg">
               Payment Mode
@@ -248,8 +261,8 @@ function ContactEditDrawer({ profile, onClose, onSave }: { profile: BillingProfi
       title="Edit Billing Contact"
       footer={
         <>
-          <Button variant="ghost-rect" onClick={onClose}>Cancel</Button>
-          <Button variant="primary-rect" onClick={() => onSave({ billingContactName: name, billingContactPhone: phone, billingContactEmail: email })}>
+          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="primary" onClick={() => onSave({ billingContactName: name, billingContactPhone: phone, billingContactEmail: email })}>
             Save Changes
           </Button>
         </>
@@ -273,8 +286,8 @@ function AddressEditDrawer({ profile, onClose, onSave }: { profile: BillingProfi
       title="Edit Billing Address"
       footer={
         <>
-          <Button variant="ghost-rect" onClick={onClose}>Cancel</Button>
-          <Button variant="primary-rect" disabled={!address.trim()} onClick={() => onSave({ billingAddress: address })}>
+          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="primary" disabled={!address.trim()} onClick={() => onSave({ billingAddress: address })}>
             Save Changes
           </Button>
         </>
@@ -294,8 +307,8 @@ function LanguageEditDrawer({ profile, onClose, onSave }: { profile: BillingProf
       title="Edit Billing Language"
       footer={
         <>
-          <Button variant="ghost-rect" onClick={onClose}>Cancel</Button>
-          <Button variant="primary-rect" onClick={() => onSave({ billingLanguage: language })}>Save Changes</Button>
+          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="primary" onClick={() => onSave({ billingLanguage: language })}>Save Changes</Button>
         </>
       }
     >
@@ -321,9 +334,9 @@ function PaymentEditDrawer({ profile, onClose, onSave }: { profile: BillingProfi
       title="Edit Payment Mode"
       footer={
         <>
-          <Button variant="ghost-rect" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" onClick={onClose}>Cancel</Button>
           <Button
-            variant="primary-rect"
+            variant="primary"
             onClick={() => onSave({ paymentMethod, autoPayStatus: paymentMethod === 'AutoPay' ? 'Enrolled' : 'Not Enrolled' })}
           >
             Save Changes

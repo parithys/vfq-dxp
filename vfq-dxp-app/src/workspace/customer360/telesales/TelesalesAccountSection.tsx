@@ -1,3 +1,4 @@
+import { Button } from '../../../components/primitives/Button';
 import { useState } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
 import { accountInformationResolvers } from '../sections/accountInformationResolvers';
@@ -28,9 +29,9 @@ export function AccountSection({ ctx }: { ctx: Ctx }) {
   return (
     <>
       <SectionHeader
-        icon={ICON.card}
-        title="Account"
-        description="View and manage account information, key contacts, related actions and recent milestones for this customer."
+       
+       
+       
         actions={
           <>
             <HeaderLink onClick={() => ctx.goToTab('ts-products')}>View Account Hierarchy →</HeaderLink>
@@ -90,9 +91,9 @@ export function AccountSection({ ctx }: { ctx: Ctx }) {
               ))}
             </ul>
             {emails.length > 2 && (
-              <button type="button" className="text-accent font-semibold text-[length:var(--fs-body)] mt-1" onClick={() => setAllEmails((v) => !v)}>
+              <Button variant="tertiary" type="button" className="mt-1" onClick={() => setAllEmails((v) => !v)}>
                 {allEmails ? 'Show less' : `+${emails.length - 2} more`}
-              </button>
+              </Button>
             )}
           </div>
         </Card>
@@ -151,7 +152,7 @@ export function AccountSection({ ctx }: { ctx: Ctx }) {
                     <div>{t.d}</div>
                     <div>{t.t}</div>
                   </div>
-                  <span className={`w-8 h-8 rounded-full ${toneColor[e.tone]} flex items-center justify-center text-white shrink-0`}>
+                  <span className={`w-8 h-8 rounded-[var(--radius-pill)] ${toneColor[e.tone]} flex items-center justify-center text-on-dark shrink-0`}>
                     <Icon path={ICON.refresh} className="w-3.5 h-3.5" />
                   </span>
                   <div className="min-w-0">

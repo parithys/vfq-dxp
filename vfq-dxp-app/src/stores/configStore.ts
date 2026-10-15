@@ -50,6 +50,7 @@ export const useConfigStore = create<ConfigStoreState>((set) => ({
       dropStaleSession();
       set({ ready: true, error: null });
     } catch (err) {
+      console.error('[configStore] boot failed:', err);
       set({ ready: false, error: err instanceof Error ? err.message : String(err) });
     }
   },

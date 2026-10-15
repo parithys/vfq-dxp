@@ -1,21 +1,17 @@
-import { cloneElement, isValidElement, type ReactElement } from 'react';
-import { cafStep } from '../../new-connection/steps/cafStep';
-import { contactStep } from '../../new-connection/steps/contactStep';
-import type { NewConnectionStepContext } from '../../new-connection/steps/stepContext';
+import { CUSTOMER_IDENTIFICATION_LABEL } from '../../../data/stepLabels';
+import { addressSummary, billingAccountStep, cafSignatureStep, checkoutSummaryStep, customerQualificationStep, paymentStep, planSummary } from '../../../capabilities';
 import { FixedPlanStepView, InstallationAddressStep, NumberDevicesStep } from './FixedStepViews';
 import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
-import { AppointmentBookingStep } from '../../../components/patterns/AppointmentBookingStep';
-import type { AppointmentBookingValue } from '../../../components/patterns/AppointmentBookingStep';
+import { appointmentBookingStep } from '../../../capabilities';
 import type { SummaryField } from '../../../components/patterns/wizard/stepSummary';
 import type { WizardStep } from '../../../components/patterns/wizard/guidedWizardTypes';
 import { appointmentSummary } from '../../../components/patterns/wizard/commonSummaries';
-import { addressSummary, planSummary } from '../../new-connection/steps/stepSummaries';
 import {
   serviceTypeLabel,
   type FixedInstallationValue,
   type FixedDevice,
 } from './fixedActivationModel';
-import type { useJourneyCustomerLock } from '../../new-connection/hooks/useJourneyCustomerLock';
+import type { useJourneyCustomerLock } from '../../../capabilities';
 
 type Values = Record<string, unknown>;
 const at = (v: Values, ...path: string[]): unknown => path.reduce<unknown>((o, k) => (o && typeof o === 'object' ? (o as Values)[k] : undefined), v);
@@ -25,12 +21,12 @@ const at = (v: Values, ...path: string[]): unknown => path.reduce<unknown>((o, k
 // customer type), entered as the existing-customer variant without a preset customer: whoever the ID belongs to
 // is matched by eligibility, never forced to be new. The MOI fields stay read-only and under-18 stays a hard stop.
 export function fixedContactStep(guardedContactChange: ReturnType<typeof useJourneyCustomerLock>['guardedContactChange']): WizardStep {
-  return { ...contactStep({ flow: 'existing', existingCustomerId: undefined, guardedContactChange } as NewConnectionStepContext), label: 'Contact' };
+  return { ...customerQualificationStep({ flow: 'existing', existingCustomerId: undefined, guardedContactChange }), label: CUSTOMER_IDENTIFICATION_LABEL };
 }
 
 // ---- 2. Installation Address ---------------------------------------------------------------------------------
 export const fixedInstallationSummary: SummaryField[] = [
-  { key: 'serviceType', label: 'Service Type', type: 'text', value: (v) => serviceTypeLabel(at(v, 'installation', 'serviceType')) },
+  { key: 'serviceType', label: 'Service Type', type: 'text', optional: true, value: (v) => serviceTypeLabel(at(v, 'installation', 'serviceType')) },
   ...addressSummary,
 ];
 
@@ -43,7 +39,10 @@ export function fixedAddressStep(): WizardStep {
     isValid: (values) => {
       const a = values.address as ZsbAddressValue | undefined;
       const i = values.installation as FixedInstallationValue | undefined;
-      if (!i?.serviceType || !a?.zone || !a.streetNo || !a.buildingNo) return false;
+      if (!a?.zone || !a.streetNo || !a.buildingNo) return false;
+      // Fixed-Line and 5G Home have no service type; Fibre sets Fiber itself and FWA asks for Indoor or Outdoor.
+      if (values.homeProduct === 'fixed-line' || values.homeProduct === '5g-home') return true;
+      if (!i?.serviceType) return false;
       return i.serviceType !== 'fiber' || i.rfs === 'rfs';
     },
   };
@@ -77,31 +76,23 @@ export function fixedNumberStep(): WizardStep {
 
 // ---- 5. Appointment ------------------------------------------------------------------------------------------
 export function fixedAppointmentStep(): WizardStep {
-  return {
-    key: 'appointment',
-    label: 'Appointment',
-    summary: appointmentSummary,
-    render: ({ values, setValue }) => (
-      <AppointmentBookingStep value={(values.appointment as AppointmentBookingValue) ?? {}} onChange={(v) => setValue('appointment', v)} />
-    ),
-    isValid: (values) => {
-      const a = values.appointment as AppointmentBookingValue | undefined;
-      return Boolean(a?.cluster && a?.date && a?.timeSlot);
-    },
-  };
+  return { ...appointmentBookingStep(), summary: appointmentSummary };
 }
 
 // ---- CAF & Signature -----------------------------------------------------------------------------------------
 // New Connection's CAF step, unchanged for the agent; in the customer-view pop-up the Terms & Conditions grow to
 // full height so the page scrolls (no inner scrollbar) and the signature block follows the last section.
 export function fixedCafStep(): WizardStep {
-  const base = cafStep();
-  return {
-    ...base,
-    render: (ctx) => {
-      const el = base.render(ctx);
-      const isMirror = new URLSearchParams(window.location.search).get('mirror') === '1';
-      return isMirror && isValidElement(el) ? cloneElement(el as ReactElement<{ termsScrollMode?: string }>, { termsScrollMode: 'page' }) : el;
-    },
-  };
+  const isMirror = new URLSearchParams(typeof window === 'undefined' ? '' : (window.location?.search ?? '')).get('mirror') === '1';
+  return cafSignatureStep({ variant: 'full', termsScrollMode: isMirror ? 'page' : undefined });
+}
+
+/**
+ * The Fixed Line steps after Customer Identification and Product Selection (the first two steps of New Connection, which
+ * Fixed Line shares with the other products): Installation Address, Billing Profile (resolved for the agent), Plan, Number and
+ * Devices, Checkout, CAF, Payment (which moves on once paid) and the installation Appointment, which submits. Covers fibre and
+ * both 5G Home (FWA) service types.
+ */
+export function fixedLineSteps(): WizardStep[] {
+  return [fixedAddressStep(), billingAccountStep(), fixedPlanStep(), fixedNumberStep(), checkoutSummaryStep(), fixedCafStep(), paymentStep({ submitOnPaid: true }), fixedAppointmentStep()];
 }

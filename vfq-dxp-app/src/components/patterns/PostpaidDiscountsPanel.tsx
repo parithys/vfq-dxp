@@ -48,11 +48,11 @@ export function PostpaidDiscountsPanel({
       ) : discountsState === 'loading' ? (
         <p className="text-muted text-[length:var(--fs-caption)]">Loading discounts…</p>
       ) : discountsState === 'error' ? (
-        <div role="alert" className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_92%)] px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div role="alert" className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-tone-warn-soft px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           <p className="text-[var(--warn-text)] text-[length:var(--fs-body)]">Discounts could not be loaded. You can continue without one.</p>
-          <button type="button" onClick={onRetryDiscounts} className="text-fg underline font-medium text-[length:var(--fs-body)]">
+          <Button variant="tertiary" compact onClick={onRetryDiscounts}>
             Retry
-          </button>
+          </Button>
         </div>
       ) : preBundled ? (
         // A pre-bundled plan already comes with its own offer decided
@@ -64,7 +64,7 @@ export function PostpaidDiscountsPanel({
         // flag stays on this step normally, it just has nothing to
         // choose on this panel. Either way this explains why, rather
         // than showing a "No discount" picker with nothing behind it.
-        <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_92%)] px-4 py-3">
+        <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-tone-warn-soft px-4 py-3">
           <p className="text-fg font-semibold text-[length:var(--fs-body)]">Discounts unavailable for this plan</p>
           <p className="text-[var(--warn-text)] text-[length:var(--fs-caption)] mt-1">
             The selected plan is pre-bundled and already includes its offer, so it does not accept extra
@@ -81,7 +81,7 @@ export function PostpaidDiscountsPanel({
               <p className="text-fg-2 text-[length:var(--fs-body)]">No discounts available for this plan</p>
             </div>
           ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(max(15rem,calc((100%-2rem)/3)),1fr))] gap-4">
             <DiscountCard
               title="No discount"
               description="Continue without a discount"
@@ -124,18 +124,14 @@ export function PostpaidDiscountsPanel({
               <div>
                 <p className="text-[length:var(--fs-label)] text-fg-2 mb-1">Proof document</p>
                 {discountProofDocument ? (
-                  <div className="flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg px-3 py-2">
+                  <div className="flex items-center justify-between gap-3 card px-3 py-2">
                     <span className="min-w-0 text-[length:var(--fs-body)] text-fg truncate">
                       {discountProofDocument.fileName}
                       <span className="text-muted"> · {formatDocSize(discountProofDocument.sizeBytes)}</span>
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => onDiscountProofDocumentChange(undefined)}
-                      className="shrink-0 text-[length:var(--fs-caption)] text-muted hover:text-danger underline"
-                    >
+                    <Button variant="tertiary" compact className="shrink-0" onClick={() => onDiscountProofDocumentChange(undefined)}>
                       Remove
-                    </button>
+                    </Button>
                   </div>
                 ) : (
                   <>
@@ -146,7 +142,7 @@ export function PostpaidDiscountsPanel({
                       className="sr-only"
                       onChange={(e) => handleProofDocFile(e.target.files?.[0])}
                     />
-                    <Button variant="ghost-rect" onClick={() => proofDocRef.current?.click()}>
+                    <Button variant="secondary" onClick={() => proofDocRef.current?.click()}>
                       Browse…
                     </Button>
                   </>

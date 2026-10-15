@@ -2,7 +2,7 @@
   {
     "id": "ROLE-01",
     "staffId": "VFQ12341",
-    "name": "Retail Sales Agent",
+    "name": "Retail Sales",
     "group": "Sales & Acquisition",
     "businessUnitLabel": "CBU",
     "businessUnits": [
@@ -78,7 +78,7 @@
         "restrictions": "Smart Limit / Bill Limit editable only down to the Agent Minimum Value"
       },
       {
-        "key": "prepaid.new-prepaid-tablet-wizard",
+        "key": "prepaid.new-prepaid-wizard",
         "level": "Create"
       },
       {
@@ -88,6 +88,10 @@
       {
         "key": "mnp.port-in-wizard",
         "level": "Create"
+      },
+      {
+        "key": "mnp.port-in-status",
+        "level": "Edit"
       },
       {
         "key": "numbers.management-portal",
@@ -149,7 +153,7 @@
   {
     "id": "ROLE-02",
     "staffId": "VFQ12342",
-    "name": "Telesales Agent",
+    "name": "Telesales",
     "group": "Sales & Acquisition",
     "businessUnitLabel": "CBU",
     "businessUnits": [
@@ -208,7 +212,7 @@
         "level": "Create"
       },
       {
-        "key": "prepaid.new-prepaid-tablet-wizard",
+        "key": "prepaid.new-prepaid-wizard",
         "level": "Create"
       },
       {
@@ -218,6 +222,10 @@
       {
         "key": "mnp.port-in-wizard",
         "level": "Create"
+      },
+      {
+        "key": "mnp.port-in-status",
+        "level": "Edit"
       },
       {
         "key": "leads.list-views",
@@ -260,7 +268,7 @@
   {
     "id": "ROLE-03",
     "staffId": "VFQ12343",
-    "name": "Direct Sales Agent",
+    "name": "Direct Sales",
     "group": "Sales & Acquisition",
     "businessUnitLabel": "EBU",
     "businessUnits": [
@@ -356,7 +364,7 @@
   {
     "id": "ROLE-04",
     "staffId": "VFQ12344",
-    "name": "Tablet / Field Sales Agent",
+    "name": "Field Sales",
     "group": "Sales & Acquisition",
     "businessUnitLabel": "-",
     "businessUnits": [
@@ -402,7 +410,7 @@
         "level": "Edit"
       },
       {
-        "key": "prepaid.new-prepaid-tablet-wizard",
+        "key": "prepaid.new-prepaid-wizard",
         "level": "Create"
       },
       {
@@ -443,7 +451,7 @@
   {
     "id": "ROLE-05",
     "staffId": "VFQ12345",
-    "name": "Mass Market Agent",
+    "name": "Mass Market",
     "group": "Sales & Acquisition",
     "businessUnitLabel": "CBU",
     "businessUnits": [
@@ -501,7 +509,7 @@
         "level": "Create"
       },
       {
-        "key": "prepaid.new-prepaid-tablet-wizard",
+        "key": "prepaid.new-prepaid-wizard",
         "level": "Create"
       },
       {
@@ -519,6 +527,10 @@
       {
         "key": "mnp.port-in-wizard",
         "level": "Create"
+      },
+      {
+        "key": "mnp.port-in-status",
+        "level": "Edit"
       },
       {
         "key": "numbers.management-portal",
@@ -897,7 +909,7 @@
   {
     "id": "ROLE-10",
     "staffId": "VFQ12350",
-    "name": "Customer Care Agent",
+    "name": "Customer Care",
     "group": "Customer Service & Retention",
     "businessUnitLabel": "CBU",
     "businessUnits": [
@@ -955,7 +967,7 @@
       {
         "key": "tickets.detail-view",
         "level": "Edit",
-        "restrictions": "Cannot set Resolution Code - resolution is owned by the Complaints Agent role"
+        "restrictions": "Cannot set Resolution Code - resolution is owned by the Complaints role"
       },
       {
         "key": "tickets.field-templates",
@@ -997,7 +1009,7 @@
   {
     "id": "ROLE-11",
     "staffId": "VFQ12351",
-    "name": "Business Care Agent",
+    "name": "Business Care",
     "group": "Customer Service & Retention",
     "businessUnitLabel": "EBU",
     "businessUnits": [
@@ -1055,7 +1067,7 @@
       {
         "key": "tickets.detail-view",
         "level": "Edit",
-        "restrictions": "Cannot set Resolution Code - resolution is owned by the Complaints Agent role"
+        "restrictions": "Cannot set Resolution Code - resolution is owned by the Complaints role"
       },
       {
         "key": "tickets.field-templates",
@@ -1086,7 +1098,7 @@
   {
     "id": "ROLE-12",
     "staffId": "VFQ12352",
-    "name": "Premium Agent",
+    "name": "Premium",
     "group": "Customer Service & Retention",
     "businessUnitLabel": "CBU",
     "businessUnits": [
@@ -1144,7 +1156,7 @@
       {
         "key": "tickets.detail-view",
         "level": "Edit",
-        "restrictions": "Cannot set Resolution Code - resolution is owned by the Complaints Agent role"
+        "restrictions": "Cannot set Resolution Code - resolution is owned by the Complaints role"
       },
       {
         "key": "numbers.sim-swap-queue",
@@ -1183,7 +1195,7 @@
   {
     "id": "ROLE-13",
     "staffId": "VFQ12353",
-    "name": "Retention Agent",
+    "name": "Retention",
     "group": "Customer Service & Retention",
     "businessUnitLabel": "CBU",
     "businessUnits": [
@@ -1260,7 +1272,7 @@
       {
         "key": "tickets.detail-view",
         "level": "Edit",
-        "restrictions": "Cannot set Resolution Code - resolution is owned by the Complaints Agent role"
+        "restrictions": "Cannot set Resolution Code - resolution is owned by the Complaints role"
       },
       {
         "key": "orders.my-sales-orders",
@@ -1281,7 +1293,7 @@
   {
     "id": "ROLE-14",
     "staffId": "VFQ12354",
-    "name": "Fulfilment Agent",
+    "name": "Fulfilment",
     "group": "Order Fulfilment & Back Office",
     "businessUnitLabel": "CBU + EBU",
     "businessUnits": [
@@ -1373,7 +1385,7 @@
   {
     "id": "ROLE-15",
     "staffId": "VFQ12355",
-    "name": "Back Office Fulfilment Agent",
+    "name": "Back Office Fulfilment",
     "group": "Order Fulfilment & Back Office",
     "businessUnitLabel": "CBU + EBU",
     "businessUnits": [
@@ -1425,7 +1437,11 @@
       },
       {
         "key": "orders.approval-queue",
-        "level": "View"
+        "level": "Approve"
+      },
+      {
+        "key": "orders.approval-detail",
+        "level": "Approve"
       },
       {
         "key": "orders.all-sales-orders",
@@ -1474,7 +1490,7 @@
   {
     "id": "ROLE-16",
     "staffId": "VFQ12356",
-    "name": "CDM Agent (Customer Data Management Agent)",
+    "name": "CDM",
     "group": "Order Fulfilment & Back Office",
     "businessUnitLabel": "CBU + EBU",
     "businessUnits": [
@@ -1543,7 +1559,7 @@
   {
     "id": "ROLE-17",
     "staffId": "VFQ12357",
-    "name": "MNP Agent (Mobile Number Portability Agent)",
+    "name": "MNP",
     "group": "Order Fulfilment & Back Office",
     "businessUnitLabel": "Primarily CBU",
     "businessUnits": [
@@ -1597,6 +1613,10 @@
         "level": "Full"
       },
       {
+        "key": "mnp.port-in-status",
+        "level": "Edit"
+      },
+      {
         "key": "orders.my-sales-orders",
         "level": "Edit"
       },
@@ -1629,7 +1649,7 @@
   {
     "id": "ROLE-18",
     "staffId": "VFQ12358",
-    "name": "Billing Agent",
+    "name": "Billing",
     "group": "Billing, Credit & Collections",
     "businessUnitLabel": "CBU + EBU",
     "businessUnits": [
@@ -1705,7 +1725,7 @@
   {
     "id": "ROLE-19",
     "staffId": "VFQ12359",
-    "name": "Credit Control Agent",
+    "name": "Credit Control",
     "group": "Billing, Credit & Collections",
     "businessUnitLabel": "CBU + EBU",
     "businessUnits": [
@@ -1764,6 +1784,14 @@
       {
         "key": "orders.my-sales-orders",
         "level": "View"
+      },
+      {
+        "key": "orders.approval-queue",
+        "level": "Approve"
+      },
+      {
+        "key": "orders.approval-detail",
+        "level": "Approve"
       },
       {
         "key": "search.global-search-screen",
@@ -2317,12 +2345,12 @@
       },
       {
         "key": "orders.approval-queue",
-        "level": "Approve",
+        "level": "View",
         "restrictions": "Approve/reject is the only mutating action granted to this otherwise read-only role, per the role table's \"approve or reject\" wording"
       },
       {
         "key": "orders.approval-detail",
-        "level": "Approve",
+        "level": "View",
         "restrictions": "Approve/reject is the only mutating action granted to this otherwise read-only role, per the role table's \"approve or reject\" wording"
       },
       {
@@ -2348,7 +2376,7 @@
   {
     "id": "ROLE-26",
     "staffId": "VFQ12366",
-    "name": "Complaints Agent",
+    "name": "Complaints",
     "group": "Customer Service & Retention",
     "businessUnitLabel": "CBU",
     "businessUnits": [

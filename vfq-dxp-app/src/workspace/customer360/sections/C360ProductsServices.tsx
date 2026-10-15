@@ -6,10 +6,12 @@ import { Icon } from '../../../components/primitives/Icon';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { buildAssetsFieldResolver } from './assetsResolvers';
-import { ActionButton, UsageBar, fmtDate, fmtDateTime, GridTable, IC, IconTile, KpiTile, Panel, Pill, Progress, qar, SearchBox, StatusPill, TabPage, UnderlineTabs } from './C360Kit';
+import { ActionButton, FilterSelect, fmtDate, fmtDateTime, GridTable, IC, IconTile, KpiTile, Panel, Pill, qar, SearchBox, StatusPill, TabPage } from './C360Kit';
 import type { GridCol, Tone } from './C360Kit';
 import { ServiceActionsMenu } from '../CustomerActionsMenu';
 import { Dv } from '../demoValues';
+import { ConnectionTypeTag } from '../../../components/primitives/ConnectionTypeTag';
+import { connectionTag } from '../../../lib/connectionType';
 import { str, num } from '../../../lib/values';
 
 const dash = (v: ReactNode | undefined | null): ReactNode => (v === undefined || v === null || v === '' ? '-' : v);
@@ -44,21 +46,6 @@ const TYPE_TILES: { label: string; icon: string; tone: Tone }[] = [
 
 const normStatus = (v: string | undefined): string | undefined => (v === undefined ? undefined : /^active/i.test(v) ? 'Active' : v);
 
-const SORTS = [
-  { value: 'msisdn-asc', label: 'Sort by: MSISDN (Asc)' },
-  { value: 'msisdn-desc', label: 'Sort by: MSISDN (Desc)' },
-  { value: 'plan-asc', label: 'Sort by: Plan (Asc)' },
-  { value: 'status-asc', label: 'Sort by: Status (Asc)' },
-];
-
-const SUB_TABS = [
-  { key: 'addons', label: 'Add-ons & Offers' },
-  { key: 'usage', label: 'Usage History' },
-  { key: 'penalties', label: 'Lock-in & Penalties' },
-  { key: 'assets', label: 'Installed Assets' },
-  { key: 'related', label: 'Related Orders & Tickets' },
-];
-
 function Field({ label, value }: { label: string; value: ReactNode | undefined | null }) {
   const mode = useFieldAccess()(label);
   if (mode === 'hidden') return null;
@@ -71,24 +58,21 @@ function Field({ label, value }: { label: string; value: ReactNode | undefined |
 }
 
 /**
- * Customer 360 "Products & Services" tab: KPI strip, searchable / sortable service table, the selected service's
+ * Customer 360 "Products & Services" tab: KPI strip, searchable service table, the selected service's
  * detail panel and the per-service sub-tabs. Everything is bound to Customer360Data; a missing value shows "-".
  */
-export function C360ProductsServices({ data, services, goToTab }: { data: Customer360Data; services: CustomerService[]; goToTab?: (key: string) => void }) {
+export function C360ProductsServices({ data, services }: { data: Customer360Data; services: CustomerService[]; goToTab?: (key: string) => void }) {
   const startNewConnection = useStartNewConnection(data.customer.customerId);
   const [query, setQuery] = useState('');
-  const [sort, setSort] = useState('msisdn-asc');
+  // Set by clicking a Service Types tile; the list shows only that type until the tile is clicked again.
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
   const [selectedRef, setSelectedRef] = useState<string | undefined>(services[0]?.ref);
-  const [subTab, setSubTab] = useState('addons');
   const [panelOpen, setPanelOpen] = useState(true);
 
   const account = data.accounts[0];
   const creditLimit = data.creditLimits[0];
   const billLimit = qar(num(creditLimit?.creditLimitQar ?? creditLimit?.creditLimitQAR));
-  const usage = data.serviceUsage[0];
   const balance = data.inPlatformBalances[0];
-  const extras = data.overviewExtras[0];
-  const digital = data.digitalEngagement[0];
   const barringStatus = (account as unknown as { barringStatus?: string; barringType?: string } | undefined)?.barringStatus;
   const barringType = (account as unknown as { barringType?: string } | undefined)?.barringType;
 
@@ -114,27 +98,18 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
   const get = (s: CustomerService) => info.get(s.ref)!;
   const isMobile = (s: CustomerService) => s.tab === 'mobile';
 
-  // Data / voice / text consumption is held per account, so it is attached to the customer's primary line only.
-  const dataUsed = num(usage?.currentDataUsageGB);
-  const dataTotal = dataUsed !== undefined && num(usage?.availableDataBalanceGB) !== undefined ? dataUsed + Number(usage?.availableDataBalanceGB) : undefined;
-  const voiceUsed = num(usage?.currentVoiceUsageMinutes);
-  const voiceTotal = num(extras?.voiceAllowanceMin);
-  const smsTotal = num(extras?.smsAllowance);
-  const smsUsed = smsTotal !== undefined && num(extras?.smsRemaining) !== undefined ? smsTotal - Number(extras?.smsRemaining) : undefined;
-  const pct = (used: number | undefined, total: number | undefined) => (used !== undefined && total ? (used / total) * 100 : 0);
-
   const active = services.filter((s) => get(s).status === 'Active').length;
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
     const list = services.filter((s) => {
       const i = info.get(s.ref)!;
+      if (typeFilter && typeLabel(s) !== typeFilter) return false;
       return !q || [s.identifier, s.label, i.plan, typeLabel(s)].some((v) => v?.toLowerCase().includes(q));
     });
-    const key = (s: CustomerService) => (sort.startsWith('plan') ? (info.get(s.ref)?.plan ?? s.label) : sort.startsWith('status') ? (info.get(s.ref)?.status ?? '') : s.identifier);
-    const dir = sort.endsWith('desc') ? -1 : 1;
-    return [...list].sort((a, b) => dir * key(a).localeCompare(key(b), undefined, { numeric: true }));
-  }, [services, info, query, sort]);
+    // The customer's own (primary) number always leads; the rest follow in number order.
+    return [...list].sort((a, b) => Number(Boolean(info.get(b.ref)?.primary)) - Number(Boolean(info.get(a.ref)?.primary)) || a.identifier.localeCompare(b.identifier, undefined, { numeric: true }));
+  }, [services, info, query, typeFilter]);
 
   const selected = services.find((s) => s.ref === selectedRef);
   const sel = selected ? get(selected) : undefined;
@@ -142,9 +117,11 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
     setSelectedRef(s.ref);
     setPanelOpen(true);
   };
+  // The per-service figures shown in the selected-service panel (they used to be columns of the All Services table).
+  const balanceCell = (s: CustomerService) =>
+    get(s).primary && isMobile(s) ? (qar(num(balance?.mainBalanceQAR)) ?? '-') : <Dv k="serviceBalance" row={{ category: s.category }} />;
 
   const columns: GridCol<CustomerService>[] = [
-    { key: 'n', header: '#', render: (_s, i) => i + 1, className: 'w-10' },
     {
       key: 'msisdn',
       header: 'MSISDN / Service ID',
@@ -152,168 +129,80 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
       render: (s) => (
         <div className="min-w-0">
           <div className="font-semibold break-words">{s.identifier}</div>
-          {get(s).primary && <Pill tone="blue">Primary</Pill>}
-        </div>
-      ),
-    },
-    { key: 'type', header: 'Service Type', render: (s) => typeLabel(s) },
-    { key: 'plan', header: 'Plan / Product', render: (s) => <span className="break-words">{dash(get(s).plan ?? s.label)}</span> },
-    { key: 'status', header: 'Status', render: (s) => (get(s).status ? <StatusPill status={get(s).status as string} /> : '-') },
-    {
-      key: 'balance',
-      header: 'Current Balance',
-      numeric: true,
-      render: (s) =>
-        get(s).primary && isMobile(s) && dataUsed !== undefined && dataTotal ? (
-          <div className="min-w-28">
-            <div className="text-[length:var(--fs-caption)] whitespace-nowrap">
-              {dataUsed} GB <span className="text-fg-2">/ {Number(dataTotal.toFixed(1))} GB</span>
-            </div>
-            <Progress pct={pct(dataUsed, dataTotal)} />
+          <div className="flex flex-wrap items-center gap-1.5">
+            <ConnectionTypeTag category={s.category} />
+            {get(s).primary && <Pill tone="blue">Primary</Pill>}
           </div>
-        ) : (
-          <Dv k="serviceBalance" row={{ category: s.category }} />
-        ),
-    },
-    { key: 'limit', header: 'Bill Limit', numeric: true, render: (s) => (isMobile(s) ? dash(billLimit) : <Dv k="serviceBillLimit" row={{ category: s.category }} />) },
-    { key: 'addons', header: 'Add-ons', numeric: true, render: (s) => (get(s).asset ? get(s).addons.length : <Dv k="serviceAddons" />) },
-    {
-      key: 'actions',
-      header: 'Actions',
-      render: (s) => (
-        <span className="inline-flex items-center gap-1">
-          <ServiceActionsMenu
-            customerId={data.customer.customerId}
-            customerName={data.customer.name}
-            service={s}
-            onSupport={goToTab ? () => goToTab('tickets-support') : undefined}
-          />
-          <button type="button" aria-label={`View ${s.identifier}`} onClick={() => select(s)} className="text-fg">
-            <Icon path={IC.chevRight} className="w-4 h-4" />
-          </button>
-        </span>
+        </div>
       ),
     },
   ];
 
   // Sub-tab bodies
-  const addonRows = sel?.addons ?? [];
-  const cdrs = [...data.callDetailRecords].sort((a, b) => String(b.callDate ?? '').localeCompare(String(a.callDate ?? ''))).slice(0, 10);
   const relatedOrders = selected ? data.orders.filter((o) => o.msisdn === selected.ref || (sel?.asset && o.orderId === sel.asset.orderNumber)) : [];
   const dateCell = (v: unknown) => dash(fmtDate(v));
 
-  const subBody = (() => {
-    switch (subTab) {
-      case 'addons':
-        return (
-          <div className="space-y-3">
-            <h4 className="flex items-center gap-2 text-fg font-semibold text-[length:var(--fs-body)]">
-              <Icon path={IC.clock} className="w-4 h-4" />
-              Active Add-ons ({sel?.status === 'Active' ? addonRows.length : 0})
-            </h4>
-            <GridTable
-              rows={addonRows as Row[]}
-              rowKey={(r) => String(r.addonDiscountId)}
-              empty="No add-ons on file for this service."
-              cols={[
-                { key: 'name', header: 'Add-on Name', render: (r) => dash(str(r.name)) },
-                { key: 'type', header: 'Type', render: (r) => dash(str(r.addonType)) },
-                { key: 'status', header: 'Status', render: () => (sel?.status ? <StatusPill status={sel.status} /> : '-') },
-                { key: 'start', header: 'Start Date', render: () => dateCell(sel?.asset?.effectiveFrom) },
-                { key: 'end', header: 'Expiry Date', render: () => dateCell(sel?.asset?.effectiveTo) },
-                { key: 'price', header: 'Price', render: (r) => dash(qar(num(r.price))) },
-              ]}
-            />
-          </div>
-        );
-      case 'usage':
-        return (
-          <GridTable
-            rows={selected && isMobile(selected) ? (cdrs as Row[]) : []}
-            rowKey={(r) => String(r.cdrId)}
-            empty={selected && !isMobile(selected) ? 'Usage history is recorded for mobile lines only.' : 'No usage on file for this customer.'}
-            cols={[
-              { key: 'date', header: 'Date', render: (r) => dateCell(r.callDate) },
-              { key: 'type', header: 'Type', render: (r) => dash(str(r.callType)) },
-              { key: 'dest', header: 'Destination', render: (r) => dash(str(r.destination)) },
-              { key: 'dur', header: 'Duration (s)', render: (r) => dash(str(r.durationSeconds)) },
-              { key: 'charge', header: 'Charge', render: (r) => dash(qar(num(r.chargeQAR))) },
-            ]}
-          />
-        );
-      case 'penalties':
-        return (
-          <GridTable
-            rows={data.penalties as Row[]}
-            rowKey={(r) => String(r.penaltyId)}
-            empty="No lock-in or penalty records for this customer."
-            cols={[
-              { key: 'type', header: 'Action', render: (r) => <span className="capitalize">{dash(str(r.actionType))}</span> },
-              { key: 'amt', header: 'Amount', render: (r) => dash(num(r.calculatedValue) !== undefined ? `${String(r.currency ?? 'QAR')} ${String(r.calculatedValue)}` : undefined) },
-              { key: 'status', header: 'Status', render: (r) => (str(r.status) ? <StatusPill status={String(r.status)} /> : '-') },
-              { key: 'at', header: 'Calculated', render: (r) => dash(fmtDateTime(r.calculatedAt).date) },
-              { key: 'src', header: 'Source', render: (r) => dash(str(r.calculationSource)) },
-            ]}
-          />
-        );
-      case 'assets':
-        return (
-          <GridTable
-            rows={data.installedAssets as Row[]}
-            rowKey={(r) => String(r.installedAssetId)}
-            selectedKey={sel?.asset ? String(sel.asset.installedAssetId) : undefined}
-            empty="No installed assets for this customer."
-            cols={[
-              { key: 'p', header: 'Product / Service', render: (r) => dash(str(r.productServiceName)) },
-              { key: 'id', header: 'Service ID', render: (r) => dash(str(r.serviceId)) },
-              { key: 'st', header: 'Status', render: (r) => (str(r.status) ? <StatusPill status={String(r.status)} /> : '-') },
-              { key: 'from', header: 'Effective From', render: (r) => dateCell(r.effectiveFrom) },
-              { key: 'price', header: 'Price', render: (r) => dash(qar(num(r.price))) },
-            ]}
-          />
-        );
-      default:
-        return (
-          <div className="space-y-4">
-            <div>
-              <h4 className="text-fg font-semibold text-[length:var(--fs-body)] mb-2">Orders ({relatedOrders.length})</h4>
-              <GridTable
-                rows={relatedOrders as Row[]}
-                rowKey={(r) => String(r.orderId)}
-                empty="No orders linked to this service."
-                cols={[
-                  { key: 'id', header: 'Order', render: (r) => dash(str(r.orderId)) },
-                  { key: 'type', header: 'Type', render: (r) => dash(str(r.orderType)) },
-                  { key: 'st', header: 'Status', render: (r) => (str(r.status) ? <StatusPill status={String(r.status)} /> : '-') },
-                  { key: 'at', header: 'Created', render: (r) => dateCell(r.createdAt) },
-                  { key: 'tot', header: 'Total', render: (r) => dash(qar(num(r.totalQAR))) },
-                ]}
-              />
-            </div>
-            <div>
-              <h4 className="text-fg font-semibold text-[length:var(--fs-body)] mb-2">Customer tickets ({data.tickets.length})</h4>
-              <GridTable
-                rows={data.tickets as Row[]}
-                rowKey={(r) => String(r.ticketId)}
-                empty="No tickets for this customer."
-                cols={[
-                  { key: 'id', header: 'Ticket', render: (r) => dash(str(r.ticketId)) },
-                  { key: 'cat', header: 'Category', render: (r) => dash(str(r.category)) },
-                  { key: 'st', header: 'Status', render: (r) => (str(r.status) ? <StatusPill status={String(r.status)} /> : '-') },
-                  { key: 'pr', header: 'Priority', render: (r) => dash(str(r.priority)) },
-                  { key: 'at', header: 'Created', render: (r) => dateCell(r.createdAt) },
-                ]}
-              />
-            </div>
-          </div>
-        );
-    }
-  })();
+  const penaltiesTable = (
+    <GridTable
+      rows={data.penalties as Row[]}
+      rowKey={(r) => String(r.penaltyId)}
+      empty="No lock-in or penalty records for this customer."
+      cols={[
+        { key: 'type', header: 'Action', render: (r) => <span className="capitalize">{dash(str(r.actionType))}</span> },
+        { key: 'amt', header: 'Amount', render: (r) => dash(num(r.calculatedValue) !== undefined ? `${String(r.currency ?? 'QAR')} ${String(r.calculatedValue)}` : undefined) },
+        { key: 'status', header: 'Status', render: (r) => (str(r.status) ? <StatusPill status={String(r.status)} /> : '-') },
+        { key: 'at', header: 'Calculated', render: (r) => dash(fmtDateTime(r.calculatedAt).date) },
+        { key: 'src', header: 'Source', render: (r) => dash(str(r.calculationSource)) },
+      ]}
+    />
+  );
+
+  const relatedOrdersTable = (
+    <GridTable
+      rows={relatedOrders as Row[]}
+      rowKey={(r) => String(r.orderId)}
+      empty="No orders linked to this service."
+      cols={[
+        { key: 'id', header: 'Order', render: (r) => dash(str(r.orderId)) },
+        { key: 'type', header: 'Type', render: (r) => dash(str(r.orderType)) },
+        { key: 'st', header: 'Status', render: (r) => (str(r.status) ? <StatusPill status={String(r.status)} /> : '-') },
+        { key: 'at', header: 'Created', render: (r) => dateCell(r.createdAt) },
+        { key: 'tot', header: 'Total', render: (r) => dash(qar(num(r.totalQAR))) },
+      ]}
+    />
+  );
+  const ticketsTable = (
+    <GridTable
+      rows={data.tickets as Row[]}
+      rowKey={(r) => String(r.ticketId)}
+      empty="No tickets for this customer."
+      cols={[
+        { key: 'id', header: 'Ticket', render: (r) => dash(str(r.ticketId)) },
+        { key: 'cat', header: 'Category', render: (r) => dash(str(r.category)) },
+        { key: 'st', header: 'Status', render: (r) => (str(r.status) ? <StatusPill status={String(r.status)} /> : '-') },
+        { key: 'pr', header: 'Priority', render: (r) => dash(str(r.priority)) },
+        { key: 'at', header: 'Created', render: (r) => dateCell(r.createdAt) },
+      ]}
+    />
+  );
 
   const planType = selected && isMobile(selected) ? selected.category : undefined;
   const mobileSel = selected ? isMobile(selected) : false;
-  const sMobilePrimary = mobileSel && sel?.primary;
-  const discount = sel?.discounts[0];
+  const isPostpaidLine = selected?.category === 'Postpaid';
+  const isPrepaidLine = selected?.category === 'Prepaid';
+  // A discount the customer already holds is locked (read-only). Discounts with isLockedReadOnly false are only what the plan offers, so they are not shown as pending.
+  const activeDiscount = sel?.discounts.find((d) => d.isLockedReadOnly !== false);
+  const discountText = (d: Row) => `${String(d.name)}${num(d.durationMonths) !== undefined ? ` (${String(d.durationMonths)} months)` : ''}`;
+  const discountExpiry = (d: Row | undefined) => {
+    const from = sel?.asset?.effectiveFrom ? new Date(String(sel.asset.effectiveFrom)) : undefined;
+    const months = d ? num(d.durationMonths) : undefined;
+    if (!from || Number.isNaN(from.getTime()) || months === undefined) return undefined;
+    from.setMonth(from.getMonth() + months);
+    return fmtDate(from.toISOString().slice(0, 10));
+  };
+  const digital = data.digitalEngagement[0];
+  // Only the customer's own number carries the device instalment (it is held per account, not per line).
+  const instalments = isPostpaidLine && sel?.primary ? data.deviceInstallments : [];
 
   return (
     <TabPage
@@ -331,43 +220,61 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
       <div className="grid grid-cols-1 @lg:grid-cols-2 @4xl:grid-cols-[repeat(2,minmax(0,1fr))_minmax(0,3.2fr)] gap-3">
         <KpiTile icon={IC.box} tone="blue" label="Total Connections" value={services.length} />
         <KpiTile icon={IC.shieldCheck} tone="green" label="Active Services" value={active} />
-        <section className="@lg:col-span-2 @4xl:col-span-1 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 min-w-0">
+        <section className="@lg:col-span-2 @4xl:col-span-1 card p-4 min-w-0">
           <h3 className="text-fg font-semibold text-[length:var(--fs-body)] mb-2">Service Types</h3>
           <ul className="grid grid-cols-2 @lg:grid-cols-5 gap-3">
-            {TYPE_TILES.map((t) => (
-              <li key={t.label} className="flex items-center gap-2 min-w-0">
-                <IconTile icon={t.icon} tone={t.tone} size="sm" />
-                <div className="min-w-0">
-                  <div className="text-fg-2 text-[length:var(--fs-caption)] truncate">{t.label}</div>
-                  <div className="text-fg font-bold text-[length:var(--fs-body-lg)] leading-tight">{services.filter((s) => typeLabel(s) === t.label).length}</div>
-                </div>
-              </li>
-            ))}
+            {TYPE_TILES.map((t) => {
+              const count = services.filter((s) => typeLabel(s) === t.label).length;
+              const on = typeFilter === t.label;
+              return (
+                <li key={t.label} className="min-w-0">
+                  <button
+                    type="button"
+                    aria-pressed={on}
+                    disabled={count === 0}
+                    onClick={() => setTypeFilter(on ? null : t.label)}
+                    title={on ? `Showing ${t.label} only - click to show all` : `Show ${t.label} services only`}
+                    className={`flex w-full items-center gap-2 min-w-0 rounded-[var(--radius-button)] p-1.5 -m-1.5 text-left transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] disabled:cursor-default ${
+                      on ? 'bg-[var(--field-card-selected-bg)] ring-1 ring-inset ring-[var(--field-card-selected)]' : count > 0 ? 'hover:bg-surface' : ''
+                    }`}
+                  >
+                    <IconTile icon={t.icon} tone={t.tone} size="sm" />
+                    <div className="min-w-0">
+                      <div className="text-fg-2 text-[length:var(--fs-caption)] truncate">{t.label}</div>
+                      <div className="text-fg font-bold text-[length:var(--fs-body-lg)] leading-tight">{count}</div>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </section>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 items-start">
+      <div className={`grid grid-cols-1 gap-4 items-start ${panelOpen ? '@4xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]' : ''}`}>
         <div className="space-y-4 min-w-0">
           <Panel
             icon={IC.bars}
             title={`All Services (${services.length})`}
-            flush
             action={
               <div className="flex flex-wrap items-center justify-end gap-2 min-w-0">
                 <div className="w-56 max-w-full flex">
                   <SearchBox value={query} onChange={setQuery} placeholder="Search by MSISDN, plan or service" />
                 </div>
-                <label className="rounded-[var(--radius-button)] border border-[var(--field-card-border)] bg-bg">
-                  <span className="sr-only">Sort services</span>
-                  <select value={sort} onChange={(e) => setSort(e.target.value)} className="bg-transparent outline-none px-3 py-2 text-[length:var(--fs-body)] text-fg cursor-pointer">
-                    {SORTS.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <div className="w-44 max-w-full">
+                  <FilterSelect
+                    label="Service Type"
+                    value={typeFilter ?? ''}
+                    onChange={(v) => setTypeFilter(v || null)}
+                    options={[
+                      { value: '', label: `All (${services.length})` },
+                      ...TYPE_TILES.filter((t) => services.some((s) => typeLabel(s) === t.label)).map((t) => ({
+                        value: t.label,
+                        label: `${t.label} (${services.filter((s) => typeLabel(s) === t.label).length})`,
+                      })),
+                    ]}
+                  />
+                </div>
               </div>
             }
           >
@@ -380,16 +287,10 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
               empty={services.length === 0 ? 'No connections on file for this customer.' : 'No services match the current search or filters.'}
             />
           </Panel>
-
-          <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 space-y-4 min-w-0">
-            <UnderlineTabs items={SUB_TABS} active={subTab} onChange={setSubTab} />
-            {!selected && services.length > 0 && <p className="text-muted text-[length:var(--fs-body)]">Select a service to see its details.</p>}
-            {(selected || services.length === 0) && subBody}
-          </section>
         </div>
 
         {panelOpen && (
-          <aside className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 space-y-4 min-w-0">
+        <aside className="@container card p-4 space-y-4 min-w-0">
             {!selected || !sel ? (
               <p className="text-muted text-[length:var(--fs-body)] py-6 text-center">{services.length === 0 ? 'No services to show.' : 'Select a service to see its details.'}</p>
             ) : (
@@ -404,53 +305,59 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
                       Primary MSISDN
                     </span>
                   )}
-                  <button type="button" aria-label="Close details" onClick={() => setPanelOpen(false)} className="ml-auto text-fg-2 hover:text-fg">
-                    <Icon path={IC.x} className="w-5 h-5" />
-                  </button>
+                  <span className="ml-auto inline-flex items-center gap-3">
+                    <ServiceActionsMenu
+                      customerId={data.customer.customerId}
+                      customerName={data.customer.name}
+                      service={selected}
+                      facts={{
+                        kind: mobileSel ? 'mobile' : 'home',
+                        category: selected.category,
+                        status: sel.status,
+                        blacklisted: Boolean(data.customer.blacklisted),
+                        barred: mobileSel && Boolean(barringStatus) && barringStatus !== 'Not Barred',
+                        hasDeviceInstalment: data.deviceInstallments.some((d) => /approved/i.test(String(d.status ?? ''))),
+                      }}
+                    />
+                    <button type="button" aria-label="Close details" onClick={() => setPanelOpen(false)} className="text-fg-2 hover:text-fg">
+                      <Icon path={IC.x} className="w-5 h-5" />
+                    </button>
+                  </span>
                 </div>
 
-                <Panel icon={IC.box} title="Plan & Usage" className="bg-[color-mix(in_oklab,var(--surface),var(--bg)_50%)]">
-                  <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,6fr)_minmax(0,4fr)] items-center gap-6">
+                <Panel icon={IC.box} title="Plan Details" className="bg-surface-half">
+                  <div className="grid grid-cols-1">
                     <dl className="min-w-0">
+                      <Field label="Service Type" value={mobileSel ? `Mobile · ${selected.category}` : connectionTag(selected.category).label} />
                       <Field label="Plan Name" value={sel.plan ?? selected.label} />
                       <Field label="Plan Type" value={planType} />
-                      <Field label="Activation Date" value={fmtDate(sel.asset?.effectiveFrom) ?? <Dv k="activationDate" />} />
-                      <Field label="Contract End Date" value={fmtDate(sel.asset?.effectiveTo) ?? <Dv k="contractEnd" row={{ from: sel.asset?.effectiveFrom }} />} />
+                      <Field label="Price" value={qar(num(sel.asset?.price))} />
+                      <Field label="Current Balance" value={balanceCell(selected)} />
+                      {/* Dates run oldest to newest: the customer joined, the number went live, the plan started, the contract ends. */}
                       <Field label="Customer Since" value={<Dv k="customerSince" />} />
+                      {isPostpaidLine && <Field label="Postpaid Activation Date" value={fmtDate(sel.asset?.postpaidActivationDate)} />}
+                      <Field label={isPostpaidLine ? 'Plan Activation Date' : 'Activation Date'} value={fmtDate(sel.asset?.effectiveFrom) ?? <Dv k="activationDate" />} />
+                      <Field label="Contract End Date" value={fmtDate(sel.asset?.effectiveTo) ?? <Dv k="contractEnd" row={{ from: sel.asset?.effectiveFrom }} />} />
                     </dl>
-                    {mobileSel && (
-                      <div className="min-w-0 space-y-4">
-                        <UsageBar label="Data" pct={sMobilePrimary ? pct(dataUsed, dataTotal) : 0} value={sMobilePrimary && dataUsed !== undefined ? `${dataUsed} GB` : '-'} unit={sMobilePrimary && dataTotal ? `of ${Number(dataTotal.toFixed(1))} GB` : undefined} />
-                        <UsageBar label="Voice" pct={sMobilePrimary ? pct(voiceUsed, voiceTotal) : 0} value={sMobilePrimary && voiceUsed !== undefined ? voiceUsed : '-'} unit={sMobilePrimary && voiceTotal ? `of ${voiceTotal} Mins` : undefined} />
-                        <UsageBar label="Text" pct={sMobilePrimary ? pct(smsUsed, smsTotal) : 0} value={sMobilePrimary && smsUsed !== undefined ? smsUsed : '-'} unit={sMobilePrimary && smsTotal ? `of ${smsTotal} SMS` : undefined} />
-                        <div className="flex items-baseline justify-between gap-3 text-[length:var(--fs-body)]">
-                          <span className="text-fg-2">Primary Balance</span>
-                          <span className="font-bold text-accent">{sMobilePrimary ? (qar(num(balance?.mainBalanceQAR)) ?? '-') : '-'}</span>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </Panel>
 
-                <div className="grid grid-cols-1 @lg:grid-cols-2 @6xl:grid-cols-1 @7xl:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 @lg:grid-cols-2 @4xl:grid-cols-3 gap-4">
                   <Panel icon={IC.settings} title="Service Details">
                     <dl>
-                      <Field label="Service Status" value={sel.status ? <StatusPill status={sel.status} /> : undefined} />
-                      <Field label="Barrings" value={mobileSel ? (barringType ?? (barringStatus === 'Not Barred' ? 'None' : barringStatus)) : undefined} />
-                      <Field label="Bill Limit" value={mobileSel ? billLimit : undefined} />
-                      <Field label="Discount" value={discount ? `${String(discount.name)}${num(discount.durationMonths) !== undefined ? ` (${String(discount.durationMonths)} months)` : ''}` : <Dv k="discount" />} />
-                      <Field label="SIM Serial Number" value={sel.simSerial ?? <Dv k="simSerial" />} />
+                      {mobileSel && <Field label="SIM Serial Number" value={sel.simSerial ?? <Dv k="simSerial" />} />}
+                      {mobileSel && <Field label="Barrings" value={barringType ?? (barringStatus === 'Not Barred' ? 'None' : barringStatus)} />}
+                      {isPostpaidLine && <Field label="Bill Limit" value={billLimit} />}
+                      {isPrepaidLine && <Field label="Last Recharge Amount" value={qar(num(digital?.lastRechargeAmountQar))} />}
+                      {isPrepaidLine && <Field label="Last Recharge Type" value={str(digital?.lastRechargeType)} />}
+                      <Field label="Active Discount" value={activeDiscount ? discountText(activeDiscount) : <Dv k="discount" />} />
+                      {activeDiscount && <Field label="Discount Expiry Date" value={discountExpiry(activeDiscount)} />}
+                      {mobileSel && <Field label="Registered Email" value={str(data.customer.email)} />}
                     </dl>
                   </Panel>
-                  <div className="space-y-4 min-w-0">
                     <Panel
                       icon={IC.gift}
                       title={`Add-ons (${sel.addons.length})`}
-                      action={
-                        <button type="button" onClick={() => setSubTab('addons')} className="text-accent font-medium text-[length:var(--fs-body)] hover:underline whitespace-nowrap">
-                          View All &rarr;
-                        </button>
-                      }
                     >
                       {sel.addons.length === 0 ? (
                         <p className="text-muted text-[length:var(--fs-body)]">No add-ons on file.</p>
@@ -458,25 +365,48 @@ export function C360ProductsServices({ data, services, goToTab }: { data: Custom
                         <ul>
                           {sel.addons.map((a) => (
                             <li key={String(a.addonDiscountId)} className="flex items-center justify-between gap-2 py-1.5 text-[length:var(--fs-body)]">
-                              <span className="text-fg min-w-0 break-words">{String(a.name)}</span>
+                              <span className="min-w-0">
+                                <span className="block text-fg break-words">{String(a.name)}</span>
+                                {str(a.description) && <span className="block text-fg-2 text-[length:var(--fs-caption)] break-words">{String(a.description)}</span>}
+                              </span>
                               {sel.status && <StatusPill status={sel.status} />}
                             </li>
                           ))}
                         </ul>
                       )}
                     </Panel>
-                    <Panel icon={IC.mobile} title="Device & App">
-                      <dl>
-                        <Field label="App User" value={digital ? (digital.appActiveUser ? 'Yes' : 'No') : undefined} />
-                        <Field label="Last Login" value={digital?.appLastLoginAt ? [fmtDateTime(digital.appLastLoginAt).date, fmtDateTime(digital.appLastLoginAt).time].filter(Boolean).join(' - ') : undefined} />
-                        <Field label="App Version" value={[str(digital?.appVersion), str(extras?.phoneVersion)].filter(Boolean).join(' | ') || undefined} />
-                      </dl>
-                    </Panel>
-                  </div>
                 </div>
+
+                {instalments.length > 0 && (
+                  <Panel icon={IC.cart} title={`Device Instalment (${instalments.length})`}>
+                    <GridTable
+                      rows={instalments as Row[]}
+                      rowKey={(r) => String(r.id)}
+                      cols={[
+                        { key: 'dev', header: 'Handset', render: (r) => dash(str(r.deviceName)) },
+                        { key: 'price', header: 'Price', render: (r) => dash(qar(num(r.devicePriceQar))) },
+                        { key: 'mon', header: 'Monthly', render: (r) => dash(qar(num(r.monthlyInstallmentQar))) },
+                        { key: 'ten', header: 'Tenure', render: (r) => dash(num(r.installmentMonths) !== undefined ? `${String(r.installmentMonths)} months` : undefined) },
+                        { key: 'st', header: 'Status', render: (r) => (str(r.status) ? <StatusPill status={String(r.status)} /> : '-') },
+                      ]}
+                    />
+                  </Panel>
+                )}
+
+                <Panel icon={IC.alert} title={`Lock-in & Penalties (${data.penalties.length})`}>
+                  {penaltiesTable}
+                </Panel>
+
+                <Panel icon={IC.cart} title={`Related Orders (${relatedOrders.length})`}>
+                  {relatedOrdersTable}
+                </Panel>
+
+                <Panel icon={IC.tag} title={`Customer Tickets (${data.tickets.length})`}>
+                  {ticketsTable}
+                </Panel>
               </>
             )}
-          </aside>
+        </aside>
         )}
       </div>
     </TabPage>

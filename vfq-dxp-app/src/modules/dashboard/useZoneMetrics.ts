@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { useEntityStore } from '../../stores/entityStore';
 import { useAuthStore } from '../../stores/authStore';
 import { isVisibleToAgent } from '../../engines/agentTaskEngine';
+import { usePersonaStore } from '../../stores/personaStore';
+import { holdsApproveGrant, ordersAwaitingDecisionBy } from '../../engines/approvalAuthority';
 import type { EntityKind } from '../../engines/mockDataEngine';
 
 // Every kind either zone can need, loaded on mount regardless of which zones
@@ -47,6 +49,8 @@ export interface ZoneMetrics {
   taskTiles: { key: string; label: string; count: number }[];
   openTickets: number;
   ordersPendingApproval: number;
+  /** Orders waiting on the signed-in role specifically; undefined when the role has no approval rights (the card stays the shared total). */
+  ordersAwaitingMyDecision: number | undefined;
   totalLeads: number;
   simSwapsPending: number;
   customersOnFile: number;
@@ -79,6 +83,8 @@ export function useZoneMetrics(scopeId: string): ZoneMetrics {
   const loading = useEntityStore((s) => s.loading);
   const errors = useEntityStore((s) => s.errors);
   const currentAgentId = useAuthStore((s) => s.profile?.userId);
+  const currentJobTitle = useAuthStore((s) => s.profile?.jobTitle);
+  const personaId = usePersonaStore((s) => s.activePersonaId);
 
   useEffect(() => {
     KINDS.forEach((k) => loadKind(k));
@@ -110,6 +116,9 @@ export function useZoneMetrics(scopeId: string): ZoneMetrics {
     ],
     openTickets: get<Ticket>('trouble-tickets').filter((t) => t.status === 'Open' || t.status === 'Reopened').length,
     ordersPendingApproval: get<Order>('orders').filter((o) => o.status === 'Submitted for Approval').length,
+    ordersAwaitingMyDecision: holdsApproveGrant(personaId, 'SCR-061')
+      ? ordersAwaitingDecisionBy(get<{ orderId: string; orderType: string; status: string; approverRole?: string; assignedApproverId?: string | null }>('orders'), { personaId, jobTitle: currentJobTitle, userId: currentAgentId }).length
+      : undefined,
     totalLeads: get('leads').length,
     simSwapsPending: get<SimSwapOrder>('sim-swap-orders').filter((s) => s.status === 'Submitted for Approval').length,
     customersOnFile: get('customers').length,

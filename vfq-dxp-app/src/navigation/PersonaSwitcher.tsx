@@ -1,12 +1,19 @@
+import { sortByBusinessUnit } from './personaOrder';
+import { formatTime } from '../lib/format';
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useWorkflowInbox } from './useWorkflowInbox';
 import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
 import { useNotificationStore } from '../stores/notificationStore';
 import { getAllPersonas } from '../engines/configEngine';
 import { pickProfileForRole } from '../engines/agentProfileEngine';
+import { NavLogoToggle } from './NavLogoToggle';
 import { Icon } from '../components/primitives/Icon';
 import { Select } from '../components/primitives/Select';
+import { Modal } from '../components/primitives/Modal';
+import { Button } from '../components/primitives/Button';
+import { draftHasProgress, useWorkflowStore } from '../stores/workflowStore';
 import { Tooltip } from '../components/primitives/Tooltip';
 import { TooltipGroup } from '../components/primitives/TooltipContext';
 import { useSidebarStore } from '../stores/sidebarStore';
@@ -53,14 +60,24 @@ export function PersonaSwitcher() {
   const toggleMobileOpen = useSidebarStore((s) => s.toggleMobileOpen);
   const sidebarPinned = useSidebarStore((s) => s.pinned);
   const toggleSidebarPinned = useSidebarStore((s) => s.togglePinned);
-  const openSidebarPeek = useSidebarStore((s) => s.openPeek);
-  const closeSidebarPeekSoon = useSidebarStore((s) => s.closePeekSoon);
   const customersServed = useQnomyQueueStore((s) => s.customersServed);
   const personas = getAllPersonas();
+  // A journey with progress in it is lost on sign-out (the page reloads)
+  // (and the new role may not be able to continue it) so both ask first; closing or reloading the tab warns too.
+  const hasUnsavedJourney = useWorkflowStore((s) => Object.values(s.drafts).some(draftHasProgress));
+  const [pendingLeave, setPendingLeave] = useState<null | { kind: 'signOut' } | { kind: 'role'; personaId: string }>(null);
+  useEffect(() => {
+    if (!hasUnsavedJourney) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [hasUnsavedJourney]);
   // Same gate the Qnomy ticket control uses, so the counter appears exactly
   // for the roles that can actually finish a walk-in.
   const showQnomy = canSeeQnomyTicketNumber(activePersonaId);
-  const unreadCount = history.filter((h) => !h.read).length;
+  const inbox = useWorkflowInbox();
+  const navigate = useNavigate();
+  const unreadCount = history.filter((h) => !h.read).length + inbox.unseen;
 
   const [open, setOpen] = useState<'notifications' | 'help' | 'profile' | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -75,7 +92,10 @@ export function PersonaSwitcher() {
 
   const toggle = (panel: 'notifications' | 'help' | 'profile') => {
     setOpen((prev) => (prev === panel ? null : panel));
-    if (panel === 'notifications') markAllRead();
+    if (panel === 'notifications') {
+      markAllRead();
+      inbox.markSeen();
+    }
   };
 
   const initials = profile ? `${profile.name.split(' ')[0][0]}${profile.name.split(' ').slice(-1)[0][0]}` : '??';
@@ -84,10 +104,25 @@ export function PersonaSwitcher() {
   // RBAC-driving personaId - otherwise the profile chip keeps showing the
   // login-time agent even after picking a different role, which is what
   // made this look like it required a sign-out/sign-in to take effect.
-  const handleRoleSwitch = async (personaId: string) => {
+  const switchRole = async (personaId: string) => {
     setActivePersona(personaId);
     const newProfile = await pickProfileForRole(personaId);
     setProfile(newProfile);
+  };
+  const handleRoleSwitch = (personaId: string) => {
+    if (personaId === activePersonaId) return;
+    if (hasUnsavedJourney) setPendingLeave({ kind: 'role', personaId });
+    else void switchRole(personaId);
+  };
+  const requestSignOut = () => {
+    if (hasUnsavedJourney) setPendingLeave({ kind: 'signOut' });
+    else signOut();
+  };
+  const confirmLeave = () => {
+    const p = pendingLeave;
+    setPendingLeave(null);
+    if (p?.kind === 'signOut') signOut();
+    else if (p?.kind === 'role') void switchRole(p.personaId);
   };
 
   return (
@@ -98,8 +133,8 @@ export function PersonaSwitcher() {
     // stepped where they met. Sharing the token rather than copying the value
     // keeps them joined in dark mode too, where the two resolve differently
     // (#3a3d42 vs rgba(255,255,255,.1)).
-    <div className="relative z-[35] grid grid-cols-[auto_minmax(0,28rem)_minmax(0,1fr)_auto] items-center gap-3 h-16 px-4 border-b border-[var(--nav-border)] bg-[color-mix(in_oklab,var(--bg)_85%,transparent)] backdrop-blur">
-      <button
+    <div className="relative z-[var(--z-header)] grid grid-cols-[auto_minmax(0,1fr)_auto] md:grid-cols-[auto_minmax(8rem,28rem)_minmax(max-content,1fr)_auto] items-center gap-3 h-16 px-4 border-b border-[var(--nav-border)] bg-header-glass backdrop-blur">
+      <button type="button"
         onClick={toggleMobileOpen}
         aria-label="Open navigation"
         className="md:hidden col-start-1 w-9 h-9 -ml-1 rounded-[var(--radius-pill)] flex items-center justify-center text-fg-2 hover:bg-surface shrink-0"
@@ -108,30 +143,23 @@ export function PersonaSwitcher() {
       </button>
       {/* Desktop: the side navigation is hidden until pinned. Hovering this previews it over the page; clicking pins it open. */}
       {!sidebarPinned && (
-        <button
-          onClick={toggleSidebarPinned}
-          onMouseEnter={openSidebarPeek}
-          onMouseLeave={closeSidebarPeekSoon}
-          onFocus={openSidebarPeek}
-          aria-label="Open side navigation"
-          title="Hover to preview, click to pin the side navigation open"
-          className="hidden md:flex col-start-1 w-9 h-9 -ml-1 rounded-[var(--radius-pill)] items-center justify-center text-fg-2 hover:bg-surface shrink-0"
-        >
-          <Icon path={ICONS.menu} className="w-5 h-5" />
-        </button>
+        <div className="hidden md:flex col-start-1 -ml-1 shrink-0">
+          {/* Collapsed: the brand logo, which becomes the expand icon on hover (see NavLogoToggle). Only a click expands the navigation. */}
+          <NavLogoToggle expanded={false} onToggle={toggleSidebarPinned} />
+        </div>
       )}
       <div className="col-start-2 w-full">
         <GlobalSearch />
       </div>
       {/* One flex strip so the session reference numbers and the
           approach-driven context chips sit side by side rather than stacking. */}
-      <div className="col-start-3 justify-self-center flex items-center gap-3">
+      <div className="hidden md:flex col-start-3 justify-self-center items-center gap-3">
         <SessionReferenceNumbers />
         <HeaderContextChips />
       </div>
 
       <TooltipGroup>
-      <div ref={containerRef} className="col-start-4 justify-self-end ml-auto flex items-center gap-2">
+      <div ref={containerRef} className="col-start-3 md:col-start-4 justify-self-end ml-auto flex items-center gap-2">
         {/* Customers served this session. The COUNT alone is on screen and
             "Customers Served" is the tooltip, per direction - the topbar is
             already dense, and a bare figure beside the icon row reads as a
@@ -179,7 +207,7 @@ export function PersonaSwitcher() {
         )}
 
         <Tooltip content={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} placement="bottom">
-          <button
+          <button type="button"
             onClick={toggleTheme}
             aria-label="Toggle theme"
             className="w-10 h-10 rounded-[var(--radius-pill)] border border-border-soft flex items-center justify-center text-fg-2 hover:bg-surface"
@@ -190,7 +218,7 @@ export function PersonaSwitcher() {
 
         <div className="relative">
           <Tooltip content="Notifications" placement="bottom">
-            <button
+            <button type="button"
               onClick={() => toggle('notifications')}
               aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
               aria-haspopup="true"
@@ -198,13 +226,32 @@ export function PersonaSwitcher() {
               className="relative w-10 h-10 rounded-[var(--radius-pill)] border border-border-soft flex items-center justify-center text-fg-2 hover:bg-surface"
             >
               <Icon path={ICONS.bell} className="w-4.5 h-4.5" />
-              {unreadCount > 0 && <span aria-hidden="true" className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent" />}
+              {unreadCount > 0 && <span aria-hidden="true" className="absolute top-1.5 right-1.5 w-2 h-2 rounded-[var(--radius-pill)] bg-accent" />}
             </button>
           </Tooltip>
           {open === 'notifications' && (
-            <div className="absolute right-0 mt-2 w-80 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg shadow-raised z-50 max-h-96 overflow-y-auto">
+            <div className="absolute right-0 mt-2 w-80 card shadow-raised z-[var(--z-popover)] max-h-96 overflow-y-auto">
               <p className="px-4 py-3 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted border-b border-border-soft">Notifications</p>
-              {history.length === 0 && <p className="px-4 py-6 text-fg-2 text-[length:var(--fs-body)]">No notifications yet.</p>}
+              {inbox.items.length > 0 && (
+                <div className="border-b border-border-soft">
+                  <p className="px-4 pt-3 pb-1 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted">Workflow updates</p>
+                  {inbox.items.map((i) => (
+                    <button
+                      key={i.id}
+                      type="button"
+                      onClick={() => {
+                        setOpen(null);
+                        navigate(i.to);
+                      }}
+                      className="block w-full px-4 py-2.5 text-left hover:bg-surface focus:outline-none focus-visible:bg-surface"
+                    >
+                      <span className="block text-fg font-medium text-[length:var(--fs-body)]">{i.title}</span>
+                      <span className="block text-fg-2 text-[length:var(--fs-caption)] break-words">{i.detail}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {history.length === 0 && inbox.items.length === 0 && <p className="px-4 py-6 text-fg-2 text-[length:var(--fs-body)]">No notifications yet.</p>}
               {history.map((h) => (
                 <div key={h.id} className="px-4 py-3 border-b border-border-soft last:border-0">
                   {/* The reference is rendered here too, not just in the
@@ -224,7 +271,7 @@ export function PersonaSwitcher() {
                   {/* History shares the toast model, so a toast that split its
                       subject onto a detail line would otherwise lose it here. */}
                   {h.detail && <p className="text-fg-2 text-[length:var(--fs-caption)]">{h.detail}</p>}
-                  <p className="text-[length:var(--fs-caption)] text-muted mt-0.5">{new Date(h.at).toLocaleTimeString()}</p>
+                  <p className="text-[length:var(--fs-caption)] text-muted mt-0.5">{formatTime(h.at)}</p>
                 </div>
               ))}
             </div>
@@ -233,7 +280,7 @@ export function PersonaSwitcher() {
 
         <div className="relative">
           <Tooltip content="Help & support" placement="bottom">
-            <button
+            <button type="button"
               onClick={() => toggle('help')}
               aria-label="Help & support"
               aria-haspopup="true"
@@ -244,7 +291,7 @@ export function PersonaSwitcher() {
             </button>
           </Tooltip>
           {open === 'help' && (
-            <div className="absolute right-0 mt-2 w-72 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg shadow-raised z-50 p-4">
+            <div className="absolute right-0 mt-2 w-72 card shadow-raised z-[var(--z-popover)] p-4">
               <p className="text-fg font-medium mb-1">Help &amp; support</p>
               <p className="text-fg-2 text-[length:var(--fs-body)]">
                 Contact the IT Service Desk at <span className="text-link">servicedesk@vodafone.qa</span> or extension 4100 for platform issues.
@@ -254,24 +301,24 @@ export function PersonaSwitcher() {
         </div>
 
         <div className="relative">
-          <button
+          <button type="button"
             onClick={() => toggle('profile')}
             aria-label="User profile menu"
             aria-haspopup="menu"
             aria-expanded={open === 'profile'}
             className="flex items-center gap-2 rounded-[var(--radius-pill)] pl-1.5 pr-3 py-1.5 hover:bg-surface"
           >
-            <span className="w-7 h-7 rounded-full bg-accent text-white text-[length:var(--fs-caption)] font-semibold flex items-center justify-center">
+            <span className="w-7 h-7 rounded-[var(--radius-pill)] bg-accent text-on-dark text-[length:var(--fs-caption)] font-semibold flex items-center justify-center">
               {initials}
             </span>
-            <span className="text-left">
+            <span className="hidden md:block text-left">
               <span className="block text-fg text-[length:var(--fs-caption)] font-medium leading-tight">{profile?.name ?? staffId}</span>
               <span className="block text-muted text-[length:var(--fs-micro)] leading-tight">{profile?.team ?? '-'}</span>
             </span>
             <Icon path={ICONS.chevronDown} className="w-3.5 h-3.5 text-muted" />
           </button>
           {open === 'profile' && (
-            <div className="absolute right-0 mt-2 w-72 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg shadow-raised z-50">
+            <div className="absolute right-0 mt-2 w-72 card shadow-raised z-[var(--z-popover)]">
               <div className="px-4 py-3">
                 <p className="text-fg font-medium">{profile?.name ?? staffId}</p>
                 <p className="text-muted text-[length:var(--fs-caption)]">
@@ -288,13 +335,14 @@ export function PersonaSwitcher() {
               <div className="px-4 py-3 border-t border-border-soft">
                 <label className="text-[length:var(--fs-caption)] text-muted mb-1 block">Switch role</label>
                 <Select
+                  aria-label="Switch role"
                   value={activePersonaId}
                   onChange={(e) => handleRoleSwitch(e.target.value)}
-                  options={personas.map((p) => ({ value: p.id, label: `${p.name} · ${p.businessUnitLabel}` }))}
+                  options={sortByBusinessUnit(personas).map((p) => ({ value: p.id, label: `${p.name} · ${p.businessUnitLabel}` }))}
                 />
               </div>
-              <button
-                onClick={signOut}
+              <button type="button"
+                onClick={requestSignOut}
                 className="w-full flex items-center gap-2 px-4 py-3 border-t border-border-soft text-danger hover:bg-surface text-left"
               >
                 <Icon path={ICONS.signOut} className="w-4 h-4" />
@@ -305,6 +353,27 @@ export function PersonaSwitcher() {
         </div>
       </div>
       </TooltipGroup>
+      <Modal
+        open={pendingLeave !== null}
+        onClose={() => setPendingLeave(null)}
+        title={pendingLeave?.kind === 'signOut' ? 'Sign out and lose your journey?' : 'Switch role with a journey in progress?'}
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setPendingLeave(null)}>
+              Stay
+            </Button>
+            <Button variant="primary" onClick={confirmLeave}>
+              {pendingLeave?.kind === 'signOut' ? 'Sign out anyway' : 'Switch anyway'}
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-fg-2 text-[length:var(--fs-body)]">
+          {pendingLeave?.kind === 'signOut'
+            ? 'A journey is in progress and has not been saved. Signing out discards it - use Save & Exit in the journey to keep it as a draft.'
+            : 'A journey is in progress. The new role may not be able to continue it - use Save & Exit in the journey first to keep it as a draft.'}
+        </p>
+      </Modal>
     </div>
   );
 }

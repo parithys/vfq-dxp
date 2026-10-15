@@ -1,8 +1,11 @@
+import { useKindPending } from '../../../stores/entityStore';
+import { EntityMissing } from '../../../components/patterns/EntityMissing';
+import { formatDateTime } from '../../../lib/format';
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/primitives/Button';
 import { Badge } from '../../../components/primitives/Badge';
-import { Drawer } from '../../../components/primitives/Drawer';
+import { Drawer } from '../../../capabilities';
 import { Select } from '../../../components/primitives/Select';
 import { Textarea } from '../../../components/primitives/Textarea';
 import { useEntityStore } from '../../../stores/entityStore';
@@ -95,9 +98,10 @@ export function TicketApprovalReview() {
     });
   }, [ticketId, tickets]);
 
+  const ticketsPending = useKindPending('trouble-tickets');
   const ticket = tickets.find((t) => t.ticketId === ticketId);
   if (!ticket) {
-    return <div className="p-8 text-fg-2">No ticket selected - go back to the Approval Queue and Assign to Me first.</div>;
+    return <EntityMissing what="ticket" loading={ticketsPending} backTo="/trouble-ticketing-complaints/approval-queue" backLabel="Back to the approval queue" />;
   }
 
   // Mirrors OrderApprovalDetail's own access-denied guard - an unassigned
@@ -216,7 +220,7 @@ export function TicketApprovalReview() {
       </>}
       />
 
-      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5 mb-4">
+      <div className="card p-5 mb-4">
         <p className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted mb-2">Decision history</p>
         {auditRecords.length === 0 && <p className="text-fg-2 text-[length:var(--fs-body)]">No approval actions recorded yet for this ticket.</p>}
         {auditRecords.length > 0 && (
@@ -224,7 +228,7 @@ export function TicketApprovalReview() {
             {auditRecords.map((a) => (
               <div key={a.auditId} className="py-2 text-[length:var(--fs-caption)]">
                 <span className="text-fg font-medium">{a.fieldModified} → {a.newValue}</span>
-                <span className="block text-muted">{a.employeeUser} · {new Date(a.timestamp).toLocaleString()}</span>
+                <span className="block text-muted">{a.employeeUser} · {formatDateTime(a.timestamp)}</span>
               </div>
             ))}
           </div>
@@ -232,26 +236,27 @@ export function TicketApprovalReview() {
       </div>
 
       {!isEligibleApprover && !decided && (
-        <div className="mb-4 rounded-[var(--radius-card)] border border-[var(--warn)] bg-[color-mix(in_oklab,var(--warn),var(--bg)_92%)] px-4 py-3 text-[length:var(--fs-body)] text-[var(--warn-text)]">
+        <div className="mb-4 rounded-[var(--radius-card)] border border-[var(--warn)] bg-tone-warn-soft px-4 py-3 text-[length:var(--fs-body)] text-[var(--warn-text)]">
           Only {TICKET_APPROVAL_ELIGIBLE_JOB_TITLES.join(' or ')} may approve, reject, or return this ticket.
         </div>
       )}
 
       {decided ? (
         <p className="text-fg-2 text-[length:var(--fs-body)]">This ticket already has a decision recorded - see Decision history above.</p>
-      ) : (
+      ) : isEligibleApprover ? (
+        // Decision buttons are for the authorised approvers only; everyone else sees the notice above and no buttons.
         <div className="flex flex-wrap gap-2">
-          <Button variant="primary-rect" onClick={() => setModal('approve')} disabled={!isEligibleApprover}>Approve</Button>
-          <Button variant="ghost-rect" className="!text-danger !border-danger" onClick={() => setModal('reject')} disabled={!isEligibleApprover}>Reject</Button>
-          <Button variant="ghost-rect" onClick={() => setModal('return')} disabled={!isEligibleApprover}>Return</Button>
+          <Button variant="primary" onClick={() => setModal('approve')}>Approve</Button>
+          <Button variant="secondary" className="!text-danger !border-danger" onClick={() => setModal('reject')}>Reject</Button>
+          <Button variant="secondary" onClick={() => setModal('return')}>Return</Button>
         </div>
-      )}
+      ) : null}
 
       <Drawer open={modal === 'approve'} onClose={() => setModal(null)} title="Approve Ticket">
         <Textarea label="Notes (optional)" value={approveNotes} onChange={(e) => setApproveNotes(e.target.value)} />
         <div className="flex justify-end gap-2 mt-6">
-          <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>
-          <Button variant="primary-rect" onClick={approve} disabled={submitting}>Submit approval</Button>
+          <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
+          <Button variant="primary" onClick={approve} disabled={submitting}>Submit approval</Button>
         </div>
       </Drawer>
 
@@ -261,8 +266,8 @@ export function TicketApprovalReview() {
           <Textarea label="Notes (required)" value={rejectNotes} onChange={(e) => setRejectNotes(e.target.value)} />
         </div>
         <div className="flex justify-end gap-2 mt-6">
-          <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>
-          <Button variant="primary-rect" onClick={reject} disabled={!rejectReason || !rejectNotes.trim() || submitting}>Reject Ticket</Button>
+          <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
+          <Button variant="primary" onClick={reject} disabled={!rejectReason || !rejectNotes.trim() || submitting}>Reject Ticket</Button>
         </div>
       </Drawer>
 
@@ -273,8 +278,8 @@ export function TicketApprovalReview() {
           <Textarea label="Notes (required)" value={returnNotes} onChange={(e) => setReturnNotes(e.target.value)} />
         </div>
         <div className="flex justify-end gap-2 mt-6">
-          <Button variant="ghost-rect" onClick={() => setModal(null)}>Cancel</Button>
-          <Button variant="primary-rect" onClick={returnTicket} disabled={!returnReason || !returnNotes.trim() || submitting}>Return Ticket</Button>
+          <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
+          <Button variant="primary" onClick={returnTicket} disabled={!returnReason || !returnNotes.trim() || submitting}>Return Ticket</Button>
         </div>
       </Drawer>
     </div>

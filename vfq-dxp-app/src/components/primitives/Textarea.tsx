@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { TextareaHTMLAttributes } from 'react';
 
 interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -7,9 +8,11 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 }
 
 export function Textarea({ label, error, helperText, className = '', id, 'aria-describedby': ariaDescribedby, ...rest }: TextareaProps) {
-  const textareaId = id ?? `textarea-${label?.replace(/\s+/g, '-').toLowerCase()}`;
+  const autoId = useId();
+  const textareaId = id ?? `textarea-${autoId}`;
   const helperId = `${textareaId}-helper`;
-  const describedBy = [ariaDescribedby, helperText && !error ? helperId : undefined].filter(Boolean).join(' ') || undefined;
+  const errorId = `${textareaId}-error`;
+  const describedBy = [ariaDescribedby, error ? errorId : helperText ? helperId : undefined].filter(Boolean).join(' ') || undefined;
   const isFilled = rest.value !== undefined && rest.value !== null && rest.value !== '';
   const borderClass = error
     ? 'border-[var(--field-border-error)]'
@@ -27,6 +30,7 @@ export function Textarea({ label, error, helperText, className = '', id, 'aria-d
         id={textareaId}
         rows={4}
         aria-describedby={describedBy}
+        aria-invalid={error ? true : undefined}
         className={`rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-[var(--color-field-text-filled)] bg-bg
           ${borderClass}
           focus:outline-none focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)]
@@ -39,7 +43,11 @@ export function Textarea({ label, error, helperText, className = '', id, 'aria-d
           {helperText}
         </span>
       )}
-      {error && <span className="text-[length:var(--fs-caption)] text-[var(--field-border-error)]">{error}</span>}
+      {error && (
+        <span id={errorId} role="alert" className="text-[length:var(--fs-caption)] text-[var(--field-border-error)]">
+          {error}
+        </span>
+      )}
     </div>
   );
 }

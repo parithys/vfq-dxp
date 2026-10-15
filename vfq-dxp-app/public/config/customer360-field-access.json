@@ -58,7 +58,7 @@
    ],
    "recent milestones or interactions": [
     "Recent Milestones or Interactions",
-    "Actiivity (last 5)"
+    "Activity (last 5)"
    ],
    "outstanding amount": [
     "Outstanding Balance"
@@ -169,7 +169,7 @@
    ],
    "recent activity": [
     "Recent Milestones or Interactions",
-    "Actiivity (last 5)"
+    "Activity (last 5)"
    ],
    "latest bill": [
     "Latest Bill"
@@ -411,7 +411,7 @@
   },
   "activities": {
    "activities": [
-    "Audit Trail (Orders,Contact, Account, Activity,TT)"
+    "Audit Trail (Orders, Contact, Account, Activity, TT)"
    ]
   },
   "offers-leads": {
@@ -464,7 +464,7 @@
    "Credit Limit": "real-time",
    "Overdue TT": "real-time",
    "Pending TON requests": "real-time",
-   "Actiivity (last 5)": "real-time",
+   "Activity (last 5)": "real-time",
    "Last 5 Orders": "real-time",
    "Special Management": "real-time",
    "NAS/Address": "real-time",
@@ -526,7 +526,7 @@
    "Installed Assets": "drill-down",
    "Contact Hierarchy": "drill-down",
    "Bell Icon/Bulk Notes": "drill-down",
-   "Audit Trail (Orders,Contact, Account, Activity,TT)": "drill-down",
+   "Audit Trail (Orders, Contact, Account, Activity, TT)": "drill-down",
    "Plan and Add-ons Benefits": "drill-down",
    "Repeat Call Flag (Y/N)": "drill-down",
    "Bill Limit": "drill-down",
@@ -606,7 +606,7 @@
    "Installed Assets": "real-time",
    "Contact Hierarchy": "real-time",
    "Bell Icon/Bulk Notes": "real-time",
-   "Audit Trail (Orders,Contact, Account, Activity,TT)": "real-time",
+   "Audit Trail (Orders, Contact, Account, Activity, TT)": "real-time",
    "MSISDN Status (Active, Suspended, Barred)": "real-time",
    "Pending Discounts": "real-time",
    "Existing Discounts Expiry Date": "real-time",
@@ -681,7 +681,7 @@
    "ID Type": "real-time",
    "Sim serial": "real-time",
    "Star number value": "real-time",
-   "Actiivity (last 5)": "real-time",
+   "Activity (last 5)": "real-time",
    "Last 5 Orders": "real-time",
    "Autobase elegibility flag": "real-time",
    "Sales enhansment offers": "real-time",
@@ -749,7 +749,7 @@
    "Installed Assets": "drill-down",
    "Contact Hierarchy": "drill-down",
    "Bell Icon/Bulk Notes": "real-time",
-   "Audit Trail (Orders,Contact, Account, Activity,TT)": "drill-down",
+   "Audit Trail (Orders, Contact, Account, Activity, TT)": "drill-down",
    "MSISDN Status (Active, Suspended, Barred)": "real-time",
    "Pending Discounts": "real-time",
    "Existing Discounts Expiry Date": "real-time",
@@ -824,7 +824,7 @@
    "ID Type": "real-time",
    "Sim serial": "real-time",
    "Star number value": "real-time",
-   "Actiivity (last 5)": "real-time",
+   "Activity (last 5)": "real-time",
    "Last 5 Orders": "real-time",
    "Autobase elegibility flag": "real-time",
    "Sales enhansment offers": "drill-down",
@@ -868,7 +868,7 @@
    "Installed Assets": "drill-down",
    "Contact Hierarchy": "drill-down",
    "Bell Icon/Bulk Notes": "real-time",
-   "Audit Trail (Orders,Contact, Account, Activity,TT)": "drill-down",
+   "Audit Trail (Orders, Contact, Account, Activity, TT)": "drill-down",
    "MSISDN Status (Active, Suspended, Barred)": "real-time",
    "Pending Discounts": "real-time",
    "Existing Discounts Expiry Date": "real-time",
@@ -943,7 +943,7 @@
    "ID Type": "real-time",
    "Sim serial": "real-time",
    "Star number value": "real-time",
-   "Actiivity (last 5)": "real-time",
+   "Activity (last 5)": "real-time",
    "Last 5 Orders": "real-time",
    "Autobase elegibility flag": "real-time",
    "Sales enhansment offers": "drill-down",
@@ -986,7 +986,7 @@
    "Installed Assets": "drill-down",
    "Contact Hierarchy": "drill-down",
    "Bell Icon/Bulk Notes": "real-time",
-   "Audit Trail (Orders,Contact, Account, Activity,TT)": "drill-down",
+   "Audit Trail (Orders, Contact, Account, Activity, TT)": "drill-down",
    "MSISDN Status (Active, Suspended, Barred)": "real-time",
    "Pending Discounts": "real-time",
    "Existing Discounts Expiry Date": "real-time",
@@ -1061,7 +1061,7 @@
    "ID Type": "real-time",
    "Sim serial": "real-time",
    "Star number value": "real-time",
-   "Actiivity (last 5)": "real-time",
+   "Activity (last 5)": "real-time",
    "Last 5 Orders": "real-time",
    "Autobase elegibility flag": "real-time",
    "Sales enhansment offers": "drill-down",
@@ -1104,7 +1104,7 @@
    "Installed Assets": "drill-down",
    "Contact Hierarchy": "drill-down",
    "Bell Icon/Bulk Notes": "real-time",
-   "Audit Trail (Orders,Contact, Account, Activity,TT)": "drill-down",
+   "Audit Trail (Orders, Contact, Account, Activity, TT)": "drill-down",
    "MSISDN Status (Active, Suspended, Barred)": "real-time",
    "Pending Discounts": "real-time",
    "Existing Discounts Expiry Date": "real-time",
@@ -1179,7 +1179,7 @@
    "ID Type": "real-time",
    "Sim serial": "real-time",
    "Star number value": "real-time",
-   "Actiivity (last 5)": "real-time",
+   "Activity (last 5)": "real-time",
    "Last 5 Orders": "real-time",
    "Autobase elegibility flag": "real-time",
    "Sales enhansment offers": "drill-down",
@@ -1222,7 +1222,7 @@
    "Installed Assets": "drill-down",
    "Contact Hierarchy": "drill-down",
    "Bell Icon/Bulk Notes": "real-time",
-   "Audit Trail (Orders,Contact, Account, Activity,TT)": "drill-down",
+   "Audit Trail (Orders, Contact, Account, Activity, TT)": "drill-down",
    "MSISDN Status (Active, Suspended, Barred)": "real-time",
    "Pending Discounts": "real-time",
    "Existing Discounts Expiry Date": "real-time",
@@ -1297,7 +1297,7 @@
    "ID Type": "real-time",
    "Sim serial": "real-time",
    "Star number value": "real-time",
-   "Actiivity (last 5)": "real-time",
+   "Activity (last 5)": "real-time",
    "Last 5 Orders": "real-time",
    "Autobase elegibility flag": "real-time",
    "Sales enhansment offers": "drill-down",

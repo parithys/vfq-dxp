@@ -1,5 +1,5 @@
 import type { InputHTMLAttributes, MouseEvent, ReactNode } from 'react';
-import { forwardRef } from 'react';
+import { forwardRef, useId } from 'react';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -37,7 +37,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   { label, error, helperText, leadingAddon, trailingAddon, className = '', id, 'aria-describedby': ariaDescribedby, ...rest },
   ref
 ) {
-  const inputId = id ?? `input-${label?.replace(/\s+/g, '-').toLowerCase()}`;
+  const autoId = useId();
+  const inputId = id ?? `input-${autoId}`;
   const helperId = `${inputId}-helper`;
   const errorId = `${inputId}-error`;
   // The error message is pointed at too, not just the helper. It replaces the
@@ -118,7 +119,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           // bg set here, not via Tailwind's disabled: pseudo-class - that only
           // matches the element it is written on, and `disabled` sits on the
           // <input> inside this wrapper, not on this div.
-          className={`relative flex items-center rounded-[var(--field-radius)] border
+          className={`relative flex items-center min-h-[var(--control-h-md)] rounded-[var(--field-radius)] border
             ${rest.disabled ? 'bg-[var(--field-bg-disabled)]' : 'bg-bg'}
             ${/* `enabled:` matches form controls only, so on this wrapper <div> the
                  hover border never fired - use plain hover (and none when disabled). */ ''}
@@ -128,7 +129,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         >
           {leadingAddon && (
             <>
-              <span className="flex items-center gap-2 pl-3 pr-2 text-[length:var(--fs-body)] text-fg-2 shrink-0 select-none">
+              <span className="flex items-center gap-2 self-stretch rounded-l-[calc(var(--field-radius)-1px)] bg-[var(--surface)] pl-3 pr-2 text-[length:var(--fs-body)] text-fg-2 shrink-0 select-none">
                 {leadingAddon}
               </span>
               <span className="self-stretch my-2 w-px bg-[var(--field-border)] shrink-0" aria-hidden="true" />
@@ -176,7 +177,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         </span>
       )}
       {error && (
-        <span id={errorId} className="text-[length:var(--fs-caption)] text-[var(--field-border-error)]">
+        <span id={errorId} role="alert" className="text-[length:var(--fs-caption)] text-[var(--field-border-error)]">
           {error}
         </span>
       )}

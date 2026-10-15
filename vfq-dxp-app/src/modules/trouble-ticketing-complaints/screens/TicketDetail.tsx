@@ -1,3 +1,5 @@
+import { useKindPending } from '../../../stores/entityStore';
+import { EntityMissing } from '../../../components/patterns/EntityMissing';
 import { Tabs } from '../../../components/primitives/Tabs';
 import { evaluateRule } from '../../../engines/ruleEngine';
 import { canResolveTicket, canReassignTicketQueue, canSeeTicketAuditTrail } from '../../../engines/agentPrivilegeEngine';
@@ -5,6 +7,7 @@ import { REOPEN_WINDOW_DAYS } from '../../../data/reference/ticketReferenceData'
 import { TicketCommunicationTab } from './TicketCommunicationTab';
 import { useTicketDetailState } from './useTicketDetailState';
 import { createTicketActions } from './ticketDetailActions';
+import { useSubmitGuard } from '../../../hooks/useSubmit';
 import { TicketHeaderCard } from './TicketHeaderCard';
 import { TicketNotesCard } from './TicketNotesCard';
 import { TicketDetailsTab } from './TicketDetailsTab';
@@ -27,8 +30,10 @@ import { TicketDrawers } from './TicketDrawers';
 export function TicketDetail() {
   const s = useTicketDetailState();
   const { ticket, updateRecord, activePersonaId, noteText, setNoteText, activityText, setActivityText, auditRecords, surveyNotifications } = s;
+  const { guard } = useSubmitGuard();
+  const ticketsPending = useKindPending('trouble-tickets');
   if (!ticket) {
-    return <div className="p-8 text-fg-2">No ticket selected - go back to the Tickets Dashboard.</div>;
+    return <EntityMissing what="ticket" loading={ticketsPending} backTo="/trouble-ticketing-complaints/tickets-dashboard" backLabel="Back to tickets" />;
   }
 
   // BR-067 (config): "an audit trail exists on tickets... but is role-
@@ -41,7 +46,7 @@ export function TicketDetail() {
   const canSeeAudit = canSeeTicketAuditTrail(activePersonaId);
   // RBAC-132/144: Resolution Code is a "Filled By Complaints Team"-designated
   // field that agents raising the ticket cannot fill. The 25-row role table
-  // had no Complaints Team successor, so a dedicated Complaints Agent role
+  // had no Complaints Team successor, so a dedicated Complaints role
   // (ROLE-26) owns resolution alongside Supervisor/Manager - keeping the
   // raise-vs-resolve separation rather than widening it to every care agent.
   const canResolve = canResolveTicket(activePersonaId);
@@ -67,7 +72,7 @@ export function TicketDetail() {
   const {
     notify, addNote, addManualActivity, closeActivity, assignToMe, reassignQueueSubmit,
     escalate, resolve, complete, closeTicket, cancel, sendToApproval, reopen, attach,
-  } = createTicketActions({ ticket, s, notes, activities, attachments, openActivities, terminal, withinReopenWindow });
+  } = createTicketActions({ ticket, s, notes, activities, attachments, openActivities, terminal, withinReopenWindow, guard });
 
   return (
     <div className="p-8 w-full">
@@ -77,7 +82,7 @@ export function TicketDetail() {
 
           <TicketNotesCard notes={notes} noteText={noteText} setNoteText={setNoteText} addNote={addNote} />
 
-          <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-5">
+          <div className="card p-5">
             <Tabs
               items={[
                 { key: 'details', label: 'Details', content: <TicketDetailsTab ticket={ticket} updateRecord={updateRecord} /> },

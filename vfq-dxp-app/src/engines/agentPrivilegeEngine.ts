@@ -76,7 +76,7 @@ export function canSeeCtiReferenceNumber(personaId: string | undefined): boolean
 }
 
 /** RBAC-132/144: sets the Resolution Code and closes a complaint. Owned by the
- * Complaints Agent role plus Supervisor/Manager - raising a ticket and
+ * Complaints role plus Supervisor/Manager - raising a ticket and
  * resolving it stay separate, which is what the 66-persona model encoded by
  * withholding resolution from frontline agents (PERSONA-059 vs 001/066). */
 export function canResolveTicket(personaId: string | undefined): boolean {

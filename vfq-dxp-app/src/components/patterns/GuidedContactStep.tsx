@@ -1,7 +1,8 @@
+import { formatDateTime } from '../../lib/format';
 import { IdLookupStep } from './IdLookupStep';
 import { idTypeLabel } from '../domain/QidInput';
 import type { QidType } from '../domain/QidInput';
-import { Radio } from '../primitives/Radio';
+import { IdentityDetailsCard, identityFacts } from '../../capabilities/CustomerIdentification/IdentityDetailsCard';
 import { Input } from '../primitives/Input';
 import { PhoneNumberInput } from '../primitives/PhoneNumberInput';
 import { Select } from '../primitives/Select';
@@ -25,6 +26,8 @@ interface GuidedContactStepProps {
   unavailableIdTypesHint?: string;
   /** Scan-first with automatic type detection - see IdLookupStep. */
   autoDetectIdType?: boolean;
+  /** Typed ID entry from the start (a keyboard device) - see IdLookupStep. */
+  manualEntry?: boolean;
   /** Scan -> verify -> Fetch, with mobile number shown - see IdLookupStep. */
   verifyThenFetch?: boolean;
   /** Handle whoever the scanned ID belongs to as a genuine new customer (New Connection - New Customer). */
@@ -61,7 +64,7 @@ function VerifiedBadge({ label }: { label: string }) {
       <path
         d="M7.5 12.5l3 3 6-6.5"
         fill="none"
-        className="stroke-white"
+        className="stroke-accent-on"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -94,7 +97,7 @@ function VerifiedBadge({ label }: { label: string }) {
 // agent always performs (or at least sees) an explicit Fetch rather than
 // silently trusting cached active-customer state. The number field shows
 // a format-example placeholder instead (see QidInput.tsx).
-export function GuidedContactStep({ value, onChange, showIptvToggle = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint, autoDetectIdType, verifyThenFetch, asNewCustomer, asCustomerId }: GuidedContactStepProps) {
+export function GuidedContactStep({ value, onChange, showIptvToggle = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint, autoDetectIdType, manualEntry, verifyThenFetch, asNewCustomer, asCustomerId }: GuidedContactStepProps) {
   return (
     <div className="space-y-4">
       <IdLookupStep
@@ -102,10 +105,12 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
         // The identity read-out is suppressed here because this step renders
         // those three as editable fields below - see the prop's own note.
         showMoiDetails={false}
+        hideMoiBadge
         allowedIdTypes={allowedIdTypes}
         unavailableIdTypes={unavailableIdTypes}
         unavailableIdTypesHint={unavailableIdTypesHint}
         autoDetectIdType={autoDetectIdType}
+        manualEntry={manualEntry}
         verifyThenFetch={verifyThenFetch}
         asNewCustomer={asNewCustomer}
         asCustomerId={asCustomerId}
@@ -132,7 +137,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
       />
 
       {value.moiResult && (
-        <div className="space-y-6 pt-2 border-t border-border-soft">
+        <div className="space-y-6 pt-6 border-t border-border-soft">
           {/* Two labelled groups (2026-09-30 regroup) - the registry-owned
               identity facts together, the two agent-editable contact fields
               (plus the notification/service preferences that ride with them)
@@ -140,149 +145,22 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
               BillingAccountStep's "Existing Billing Accounts" - the
               established in-step sub-heading in this same design system,
               reused rather than inventing a new one. */}
-          <div>
-            <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-3">Identity Details</h3>
-            {/* Three columns as of 2026-09-28 (was two, per the 2026-09-25
-                direction below). Field order falls into clean rows:
-
-                  First Name    | Middle Name    | Last Name      read-only
-                  Date of Birth | Expiry Date    | Nationality    read-only
-                  Document Type | Gender         |                read-only
-
-                The five identity fields are READ-ONLY. This re-reverses the
-                2026-09-24 decision that made them agent-editable and restores
-                the supplied asset's "State MOI Registry Records (Read Only)"
-                rule. They stay `required` and still gate Continue, but the
-                only thing that can fill them is the registry.
-
-                That is exactly why MoiResult now carries `gender` (see
-                identityFromMoi). A mandatory field that is read-only AND has
-                no registry source can never be satisfied, and Continue would
-                be dead for every customer. */}
-            <div className="grid grid-cols-3 gap-4">
-              <Input label="First Name" required readOnly value={value.firstName ?? ''} onChange={() => {}} />
-              {/* Middle Name(s) added 2026-09-27, relabelled with the "(s)"
-                  2026-09-28 - identityFromMoi combines the 2nd-4th name tokens
-                  here, so the label says plural rather than implying one name
-                  where up to three may sit. Not `required`: MOI returns a
-                  single name string and plenty of records are two tokens, so
-                  a mandatory middle name would block Continue for every
-                  customer who has none on file - the one failure mode the
-                  read-only identity fields were already shown to cause. */}
-              <Input label="Middle Name(s)" readOnly value={value.middleName ?? ''} onChange={() => {}} />
-              <Input label="Last Name" required readOnly value={value.lastName ?? ''} onChange={() => {}} />
-              {/* The DD/MM/YYYY hint is the field's PLACEHOLDER, not a caption
-                  beneath it (2026-09-27). As a caption it sat under a field
-                  that is already populated from MOI, describing a format the
-                  agent cannot type into anyway; inside the box it does the
-                  one job a format hint has - telling you what to write when
-                  there is nothing there yet. */}
-              <Input
-                label="Date of Birth"
-                required
-                readOnly
-                placeholder="DD/MM/YYYY"
-                value={value.dob ?? ''}
-                onChange={() => {}}
-              />
-              {/* ID Expiry - evidenced alongside Nationality/DOB/Name in this
-                  file's own header comment as a field that "auto-populate[s]
-                  from the ID scan", but nothing rendered it until 2026-09-28.
-                  Same masked DD/MM/YYYY shape as Date of Birth, and the same
-                  read-only registry-sourced treatment as every other identity
-                  field on this row - see identityFromMoi. Follows Date of
-                  Birth (2026-09-30 order), ahead of Nationality. */}
-              <Input
-                label="Expiry Date"
-                required
-                readOnly
-                placeholder="DD/MM/YYYY"
-                value={value.idExpiryDate ?? ''}
-                onChange={() => {}}
-              />
-              <Input label="Nationality" required readOnly value={value.nationality ?? ''} onChange={() => {}} />
-              {/* Document Type - which of the four ID Type cards resolved
-                  this record (2026-09-30). Read-only for the same reason
-                  every other field on this row is: it is what the scanner
-                  identified, not something the agent chooses here - the ID
-                  Type selector further up is the only place that changes it,
-                  and doing so clears this whole panel and starts over. */}
-              {/* verifyThenFetch: the agent already chose the type, so it is not repeated. */}
-              {!verifyThenFetch && (
-                <Input
-                  label="Document Type"
-                  readOnly
-                  value={value.idType ? idTypeLabel(value.idType) : ''}
-                  onChange={() => {}}
-                />
-              )}
-              {/* Kept as a fieldset/legend radio group rather than swapped for
-                  a read-only text box, so the control's shape does not change
-                  with its editability - the radios are simply disabled. */}
-              <fieldset className="flex flex-col gap-1">
-                <legend className="text-[length:var(--fs-label)] text-fg-2">
-                  Gender
-                  <span className="text-[var(--field-border-error)]" aria-hidden="true">
-                    {' *'}
-                  </span>
-                </legend>
-                <div className="flex items-center gap-6 py-2">
-                  {['Male', 'Female'].map((g) => (
-                    <label key={g} className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg-2">
-                      <Radio
-                        name="contact-gender"
-                        value={g}
-                        checked={value.gender === g}
-                        // Radios have no readOnly, so this one genuinely needs
-                        // disabled - there is no other way to make a radio
-                        // uncheckable. The label colour is left at --fg-2
-                        // rather than the disabled grey so the answer stays
-                        // legible, and Radio dims its own centre dot to
-                        // --field-label-disabled so a disabled-but-checked
-                        // answer still reads as chosen.
-                        disabled
-                      />
-                      {g}
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-              {/* The employer, read-only, and only for a customer who has
-                  one. Where the "B2B2C Order" checkbox and its company
-                  typeahead used to be.
-
-                  Read-only because the agent no longer decides this - the
-                  registry does. It sits with the other registry-sourced
-                  identity fields and is styled like them, so its provenance
-                  reads the same way theirs does. An agent who believes it is
-                  wrong has the same recourse as for a wrong name: the record
-                  is corrected upstream, not typed over here.
-
-                  Absent, not empty, for an unsponsored customer. A blank
-                  "Employer" box on every ordinary consumer sale would imply a
-                  field someone forgot to fill in. */}
-              {value.isB2B2C && value.companyName && (
-                <Input
-                  id="contact-employer"
-                  label="Employer (B2B2C)"
-                  value={value.companyName}
-                  readOnly
-                  onChange={() => {}}
-                  helperText="On file with the sponsoring employer. This order routes for approval."
-                />
-              )}
-              {/* The employer's business account, from the same registry match as the name. Absent when the employer has no account on file. */}
-              {value.isB2B2C && value.companyName && value.companyAccountId && (
-                <Input
-                  id="contact-company-account"
-                  label="Company Account ID"
-                  value={value.companyAccountId}
-                  readOnly
-                  onChange={() => {}}
-                />
-              )}
-            </div>
-          </div>
+          {/* Identity Details: registry-owned, so read-only CONTENT (label + value), not disabled inputs. Every fact
+              that was a field before is still here; the first name, last name, date of birth, expiry, nationality
+              and gender still gate Continue through the form's own required rules, which read the same values.
+              Document Type is omitted under verifyThenFetch (the agent already chose it); the employer rows
+              appear only for a sponsored (B2B2C) customer. */}
+          <IdentityDetailsCard
+            status={
+              verifyThenFetch && value.moiResult.moiUpdateTime
+                ? `MOI validated at ${formatDateTime(value.moiResult.moiUpdateTime)}`
+                : 'MOI validated'
+            }
+            facts={identityFacts(
+              { ...value, idTypeLabel: value.idType ? idTypeLabel(value.idType) : '', companyName: value.isB2B2C ? value.companyName : undefined },
+              { showDocumentType: !verifyThenFetch }
+            )}
+          />
 
           <div>
             <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-3">Contact &amp; Notification</h3>

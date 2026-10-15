@@ -1,3 +1,4 @@
+import { currentAgentId } from '../stores/authStore';
 import { useEntityStore } from '../stores/entityStore';
 import { useNotificationStore } from '../stores/notificationStore';
 import { buildNewTicketRecord } from '../data/reference/ticketReferenceData';
@@ -23,7 +24,7 @@ export function useProfileChangeTicket() {
   const createRecord = useEntityStore((s) => s.createRecord);
   const pushToast = useNotificationStore((s) => s.pushToast);
 
-  return async (customerId: string, kind: ProfileChangeKind, changedFields: string[], createdBy = 'AGENT-VINODHINIR') => {
+  return async (customerId: string, kind: ProfileChangeKind, changedFields: string[], createdBy = currentAgentId()) => {
     const ticketId = `TT-${Date.now().toString().slice(-6)}`;
     const record = buildNewTicketRecord({
       ticketId,

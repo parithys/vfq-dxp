@@ -10,7 +10,7 @@ Outputs
   public/config/customer360-field-access.json   per persona -> {requirement: real-time|drill-down} (absent = hidden) plus the
                                                  page -> on-screen label -> requirements map the app uses to enforce it
   public/config/customer360-requirement-coverage.json   per persona -> {page: [labels]} the app colours pink
-  reference/outputs/VFQ_DXP_Customer_360_Requirements_Coverage_Reference.xlsx   copy of the workbook, F rows green
+  reference/outputs/Customer_360_Requirements_Coverage_Reference.xlsx   copy of the workbook, F rows green
 Run:  python3 reference/scripts/audit_customer360_requirements.py [path/to/Customer 360.xlsx]
 Pages: header (main page) and the tab keys overview, account-info, products-services, billing, offers-leads,
 contact-identity, orders, tickets-support, activities, alerts-risks, address-service.
@@ -21,12 +21,12 @@ import openpyxl
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC = sys.argv[1] if len(sys.argv) > 1 else os.path.expanduser("~/Desktop/Customer 360.xlsx")
-OUT_XLSX = os.path.join(ROOT, "reference/outputs/VFQ_DXP_Customer_360_Requirements_Coverage_Reference.xlsx")
+OUT_XLSX = os.path.join(ROOT, "reference/outputs/Customer_360_Requirements_Coverage_Reference.xlsx")
 OUT_JSON = os.path.join(ROOT, "public/config/customer360-requirement-coverage.json")
 OUT_ACCESS = os.path.join(ROOT, "public/config/customer360-field-access.json")
 PERSONAS = {  # sheet -> persona id (personas.json)
-    "Retail Sales Agent": "ROLE-01", "Telesales Agent": "ROLE-02", "Direct Sales Agent": "ROLE-03", "Customer Care Agent": "ROLE-10",
-    "Business Care Agent": "ROLE-11", "Premium Agent": "ROLE-12", "Credit Control Agent": "ROLE-19", "Complaints Agent": "ROLE-26"}
+    "Retail Sales": "ROLE-01", "Telesales": "ROLE-02", "Direct Sales": "ROLE-03", "Customer Care": "ROLE-10",
+    "Business Care": "ROLE-11", "Premium": "ROLE-12", "Credit Control": "ROLE-19", "Complaints": "ROLE-26"}
 GREEN = "FF92D050"
 
 H, OV, AI, PS, BP, OL, CI, OR, TS, AC, AR, AD = ("header", "overview", "account-info", "products-services", "billing", "offers-leads",
@@ -67,7 +67,7 @@ REQ = {
  "Installed Assets": (F, [(AI, "Installed Assets"), (PS, "Installed Assets"), (OV, "Installed Assets")], ""),
  "Contact Hierarchy": (F, [(AI, "Contact Hierarchy"), (CI, "Contact Hierarchy"), (OV, "Contact Hierarchy")], ""),
  "Bell Icon/Bulk Notes": (F, [(AR, "Notifications / Notes"), (OV, "Alerts & Risks")], "Bulk notes shown under Notifications / Notes"),
- "Audit Trail (Orders,Contact, Account, Activity,TT)": (F, [(AC, "Activities")], "Orders, tickets, account changes and interactions in one list"),
+ "Audit Trail (Orders, Contact, Account, Activity, TT)": (F, [(AC, "Activities")], "Orders, tickets, account changes and interactions in one list"),
  "MSISDN Status (Active, Suspended, Barred)": (F, [(PS, "Service Status")], ""),
  "Pending Discounts": (P, [], "Only a 'Discount' row on the selected service; pending discounts are not listed"),
  "Existing Discounts Expiry Date": (P, [], "'Discount' row can show its expiry; no separate expiry date field"),
@@ -142,7 +142,7 @@ REQ = {
  "ID Type": (F, [(CI, "ID Type")], ""),
  "Sim serial": (F, [(PS, "SIM Serial Number")], "Demo value (violet) where no SIM serial is on file"),
  "Star number value": (M, [], "Not on screen"),
- "Actiivity (last 5)": (F, [(AI, "Recent Milestones or Interactions"), (OV, "Recent Activity")], ""),
+ "Activity (last 5)": (F, [(AI, "Recent Milestones or Interactions"), (OV, "Recent Activity")], ""),
  "Last 5 Orders": (F, [(OR, "All Orders")], "Orders tab lists all orders"),
  "Autobase elegibility flag": (F, [(OL, "AutoBase Eligibility")], ""),
  "Sales enhansment offers": (F, [(CI, "Sales Enhancement Offers Flag")], ""),
@@ -181,7 +181,7 @@ def key(detail):
     raise KeyError(d)
 
 def access_of(sheet, r):
-    return "Real Time" if sheet == "Telesales Agent" else (norm(r[5]) if len(r) > 5 and r[5] else "")
+    return "Real Time" if sheet == "Telesales" else (norm(r[5]) if len(r) > 5 and r[5] else "")
 
 def access_cell(v):
     return "drill-down" if v == "Drill Down or Select" else "real-time"
@@ -217,7 +217,7 @@ def main():
             if not detail:
                 continue
             access = norm(r[5]) if len(r) > 5 and r[5] else ""
-            if sheet != "Telesales Agent" and access not in ("Real Time", "Drill Down or Select"):
+            if sheet != "Telesales" and access not in ("Real Time", "Drill Down or Select"):
                 continue
             rk = key(detail)
             mode = access_cell(access_of(sheet, r))
@@ -293,6 +293,8 @@ def patch_workbook(results):
             if info.filename == "xl/styles.xml": data = styles.encode("utf8")
             elif info.filename in patched: data = patched[info.filename].encode("utf8")
             zout.writestr(info, data, compress_type=zipfile.ZIP_DEFLATED)
+    from format_xlsx import format_file  # house format: header row, borders, Tenorite 14, no gridlines
+    format_file(OUT_XLSX)
 
 if __name__ == "__main__":
     main()

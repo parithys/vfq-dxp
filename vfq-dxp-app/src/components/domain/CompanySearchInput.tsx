@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Icon } from '../primitives/Icon';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { SearchField } from '../primitives/SearchField';
+import { useSearchListNav } from '../../hooks/useSearchListNav';
 
 interface EnterpriseAccount {
   enterpriseAccountId: string;
@@ -28,6 +29,8 @@ interface CompanySearchInputProps {
   id?: string;
   /** Offer "Add new company" for text no registry row matches. Default true. */
   allowAddNew?: boolean;
+  /** Marks the field mandatory: a red asterisk after the label and aria-required on the input. */
+  required?: boolean;
   /** Shown in the same row as the "Linked to …" line once a company is picked. */
   statusNote?: ReactNode;
 }
@@ -53,7 +56,7 @@ const PLUS_ICON = 'M12 5v14 M5 12h14';
 // and leave `companyAccountId` pointing at Al Waab - the same stale-link class
 // of bug that switching ID Type without clearing the number produced in
 // IdLookupStep.
-export function CompanySearchInput({ label, value, onChange, id, allowAddNew = true, statusNote }: CompanySearchInputProps) {
+export function CompanySearchInput({ label, value, onChange, id, allowAddNew = true, statusNote, required }: CompanySearchInputProps) {
   const inputId = id ?? 'company-search';
   const [accounts, setAccounts] = useState<EnterpriseAccount[]>([]);
   const [query, setQuery] = useState(value.companyName ?? '');
@@ -96,6 +99,22 @@ export function CompanySearchInput({ label, value, onChange, id, allowAddNew = t
     onChange({ companyName: query.trim(), companyAccountId: undefined, companyIsNew: true });
   };
 
+  // Keyboard: Arrow keys walk the registry rows and then "Add new company"; Enter picks the highlighted row; Escape closes
+  // the list but keeps the text. Same hook (and same markup contract) as PlanSearchBox and GlobalSearch.
+  const showAddNew = allowAddNew && !exactMatch;
+  const inputRef = useRef<HTMLInputElement>(null);
+  const optionPrefix = `${inputId}-opt`;
+  const nav = useSearchListNav({
+    idPrefix: optionPrefix,
+    count: results.length + (showAddNew ? 1 : 0),
+    enabled: open && Boolean(q),
+    resetKey: `${q}|${results.length}`,
+    inputRef,
+    onSelect: (i) => (i < results.length ? pickExisting(results[i]) : addNew()),
+    onEscape: () => setOpen(false),
+  });
+  const activeRow = 'bg-surface ring-2 ring-inset ring-[var(--focus-outline)]';
+
   const selectedAccount = value.companyAccountId
     ? accounts.find((a) => a.enterpriseAccountId === value.companyAccountId)
     : undefined;
@@ -108,6 +127,11 @@ export function CompanySearchInput({ label, value, onChange, id, allowAddNew = t
           {label ? (
             <label htmlFor={inputId} className="text-[length:var(--fs-label)] text-fg-2">
               {label}
+              {required && (
+                <span className="text-[var(--field-border-error)]" aria-hidden="true">
+                  {' *'}
+                </span>
+              )}
             </label>
           ) : (
             <span />
@@ -119,11 +143,15 @@ export function CompanySearchInput({ label, value, onChange, id, allowAddNew = t
       )}
       <SearchField
         wrapperRef={containerRef}
+        ref={inputRef}
+        {...nav.inputProps}
         id={inputId}
         value={query}
         role="combobox"
-        aria-expanded={open}
-        aria-controls={`${inputId}-listbox`}
+        aria-required={required || undefined}
+        aria-expanded={open && Boolean(q)}
+        aria-controls={open && q ? `${inputId}-listbox` : undefined}
+        aria-autocomplete="list"
         autoComplete="off"
         placeholder="Search by company name or CR number"
         onChange={(e) => {
@@ -138,15 +166,16 @@ export function CompanySearchInput({ label, value, onChange, id, allowAddNew = t
           <ul
             id={`${inputId}-listbox`}
             role="listbox"
-            className="absolute z-50 top-full left-0 right-0 max-h-80 overflow-y-auto rounded-[var(--field-radius)] border border-border-soft bg-bg shadow-raised py-1 divide-y divide-[var(--field-divider)]"
+            className="absolute z-[var(--z-popover)] top-full left-0 right-0 max-h-80 overflow-y-auto rounded-[var(--field-radius)] border border-border-soft bg-bg shadow-raised py-1 divide-y divide-[var(--field-divider)]"
           >
-            {results.map((a) => (
+            {results.map((a, i) => (
               <li
                 key={a.enterpriseAccountId}
+                id={`${optionPrefix}-${i}`}
                 role="option"
                 aria-selected={a.enterpriseAccountId === value.companyAccountId}
                 onClick={() => pickExisting(a)}
-                className="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-surface"
+                className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-surface ${nav.active === i ? activeRow : ''}`}
               >
                 <span className="mt-0.5 text-[var(--field-icon)] shrink-0">
                   <Icon path={BUILDING_ICON} className="w-5 h-5" />
@@ -175,12 +204,13 @@ export function CompanySearchInput({ label, value, onChange, id, allowAddNew = t
             {!allowAddNew && results.length === 0 && (
               <li className="px-4 py-3 text-[length:var(--fs-caption)] text-muted">No matching company.</li>
             )}
-            {allowAddNew && !exactMatch && (
+            {showAddNew && (
               <li
+                id={`${optionPrefix}-${results.length}`}
                 role="option"
                 aria-selected={false}
                 onClick={addNew}
-                className="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-surface"
+                className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-surface ${nav.active === results.length ? activeRow : ''}`}
               >
                 <span className="mt-0.5 text-accent shrink-0">
                   <Icon path={PLUS_ICON} className="w-5 h-5" />

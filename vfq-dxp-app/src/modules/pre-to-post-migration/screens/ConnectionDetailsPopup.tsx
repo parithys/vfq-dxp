@@ -25,7 +25,7 @@ export function ConnectionDetailsPopup() {
   return (
     <div className="p-8 max-w-md">
       <PageHeader title="Connection Details" />
-      <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 mt-4 space-y-2">
+      <div className="card p-4 mt-4 space-y-2">
         <p className="text-fg">Total Number of Prepaid Connections: {prepaidCount}</p>
         <p className="text-fg">Total Number of Postpaid Connections: {postpaidCount}</p>
       </div>

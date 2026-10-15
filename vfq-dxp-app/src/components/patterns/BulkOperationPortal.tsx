@@ -108,7 +108,7 @@ export function BulkOperationPortal({ rows, onChange, onSubmitRow }: BulkOperati
       key: 'remove',
       header: '',
       render: (r) => (
-        <button onClick={() => removeRow(r.rowId)} aria-label="Remove row" className="text-muted hover:text-danger">
+        <button type="button" onClick={() => removeRow(r.rowId)} aria-label="Remove row" className="text-muted hover:text-danger">
           ×
         </button>
       ),
@@ -119,14 +119,14 @@ export function BulkOperationPortal({ rows, onChange, onSubmitRow }: BulkOperati
     <div className="space-y-4">
       <DataTable columns={columns} rows={rows} rowKey={(r) => r.rowId} emptyMessage="No rows in the template - Add Row to start." />
       <div className="flex gap-2">
-        <Button variant="ghost-rect" onClick={addRow}>
+        <Button variant="secondary" onClick={addRow}>
           Add Row
         </Button>
-        <Button variant="primary-rect" onClick={() => submitBatch(rows.filter((r) => r.status !== 'Success'))} disabled={submitting || rows.length === 0}>
+        <Button variant="primary" onClick={() => submitBatch(rows.filter((r) => r.status !== 'Success'))} disabled={submitting || rows.length === 0}>
           {submitting ? 'Processing…' : 'Submit Batch'}
         </Button>
         {failedRows.length > 0 && (
-          <Button variant="ghost-rect" onClick={() => submitBatch(failedRows)} disabled={submitting}>
+          <Button variant="secondary" onClick={() => submitBatch(failedRows)} disabled={submitting}>
             Re-upload Failed Rows ({failedRows.length})
           </Button>
         )}

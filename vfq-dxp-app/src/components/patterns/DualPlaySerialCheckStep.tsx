@@ -1,5 +1,5 @@
 import { CpeSerialScanner } from '../domain/CpeSerialScanner';
-import { SimSerialScanner } from '../domain/SimSerialScanner';
+import { SimSerial } from '../../capabilities/SimType/SimSerial';
 
 export interface DualPlaySerialValue {
   cpeIndoor?: string;
@@ -47,7 +47,7 @@ export function DualPlaySerialCheckStep({ value, onChange }: DualPlaySerialCheck
         value={value.cpeOutdoor ?? ''}
         onChange={(v, valid) => onChange({ cpeOutdoor: v, cpeOutdoorValid: valid })}
       />
-      <SimSerialScanner
+      <SimSerial
         value={value.simCard ?? ''}
         onChange={(v, valid) => onChange({ simCard: v, simCardValid: valid })}
       />

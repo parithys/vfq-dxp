@@ -1,3 +1,4 @@
+import { Button } from '../../../components/primitives/Button';
 import type { ReactNode } from 'react';
 import { getVisibleTopicFields } from '../../../engines/customer360VisibilityEngine';
 import { Badge } from '../../../components/primitives/Badge';
@@ -77,10 +78,10 @@ export const can = (ctx: Ctx, topic: string, details: string) =>
   getVisibleTopicFields(ctx.personaId, topic).some(({ field }) => field.details === details);
 export const anyOf = (ctx: Ctx, topic: string, list: string[]) => list.some((d) => can(ctx, topic, d));
 
-const PILL: Record<string, 'tag-green' | 'tag-amber' | 'tag-blue' | 'danger' | 'accent' | 'filled-neutral'> = {
+const PILL: Record<string, 'tag-green' | 'tag-amber' | 'tag-blue' | 'tag-red' | 'accent' | 'filled-neutral'> = {
   green: 'tag-green',
   amber: 'tag-amber',
-  red: 'danger',
+  red: 'tag-red',
   solid: 'accent',
   neutral: 'filled-neutral',
   blue: 'tag-blue',
@@ -92,16 +93,16 @@ export function Pill({ tone, children }: { tone: keyof typeof PILL; children: Re
 
 export function Card({ title, icon, link, onLink, children, className = '' }: { title: string; icon: string; link?: string; onLink?: () => void; children: ReactNode; className?: string }) {
   return (
-    <section data-mcard className={`rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg overflow-hidden self-start w-full min-w-0 ${className}`}>
+    <section data-mcard className={`card overflow-hidden self-start w-full min-w-0 ${className}`}>
       <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-[var(--field-card-border)]">
         <h3 className="inline-flex items-center gap-2.5 text-fg font-semibold text-[length:var(--fs-body-lg)]">
           <Icon path={icon} className="w-5 h-5" />
           {title}
         </h3>
         {link && onLink && (
-          <button type="button" onClick={onLink} className="text-accent font-medium text-[length:var(--fs-body)] hover:underline whitespace-nowrap">
+          <Button variant="tertiary" type="button" onClick={onLink} className="whitespace-nowrap">
             {link} &rarr;
-          </button>
+          </Button>
         )}
       </div>
       {children}
@@ -117,7 +118,7 @@ export const Value = ({ children, big }: { children: ReactNode; big?: boolean })
 /** Label on the left, value on the right - the Contact / Address / Lead / Usage row. */
 export function KV({ label, children, striped }: { label: string; children: ReactNode; striped?: boolean }) {
   return (
-    <div className={`flex items-center justify-between gap-4 px-5 py-3.5 border-b border-[var(--field-card-border)] last:border-0 ${striped ? 'bg-surface/40' : ''}`}>
+    <div className={`flex items-center justify-between gap-4 px-5 py-3.5 border-b border-[var(--field-card-border)] last:border-0 ${striped ? 'bg-surface-half' : ''}`}>
       <span className="text-fg-2 text-[length:var(--fs-body)]">{label}</span>
       <span className="text-fg text-[length:var(--fs-body)] font-medium text-right break-words">{children}</span>
     </div>
@@ -151,8 +152,8 @@ export function Ring({ value, unit, sub, fraction, label, wide }: { value: strin
         </span>
       </div>
       {!wide && fraction !== undefined && (
-        <div className="h-1.5 rounded-full bg-border-soft overflow-hidden" role="progressbar" aria-valuenow={Math.round(f * 100)} aria-valuemin={0} aria-valuemax={100}>
-          <div className="h-full rounded-full bg-accent" style={{ width: `${f * 100}%` }} />
+        <div className="h-1.5 rounded-[var(--radius-pill)] bg-border-soft overflow-hidden" role="progressbar" aria-valuenow={Math.round(f * 100)} aria-valuemin={0} aria-valuemax={100}>
+          <div className="h-full rounded-[var(--radius-pill)] bg-accent" style={{ width: `${f * 100}%` }} />
         </div>
       )}
     </div>
@@ -213,7 +214,7 @@ export function AdditionalInformation({ ctx }: { ctx: Ctx }) {
     // data-mcard: MasonryGrid sizes only marked cards. Without it this card got a single 4px grid row and its
     // links were clipped away (overflow-hidden), leaving an empty strip above the next card. It spans every
     // column and sits last on the Overview (see telesalesTabs).
-    <section data-mcard className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg overflow-hidden self-start w-full min-w-0 [grid-column:1/-1]">
+    <section data-mcard className="card overflow-hidden self-start w-full min-w-0 [grid-column:1/-1]">
       <div className="px-5 py-4 border-b border-[var(--field-card-border)]">
         <h3 className="inline-flex items-center gap-2.5 text-fg font-semibold text-[length:var(--fs-body-lg)]">
           <Icon path={I.grid} className="w-5 h-5" />
@@ -222,7 +223,7 @@ export function AdditionalInformation({ ctx }: { ctx: Ctx }) {
       </div>
       {/* Folder-style tabs: the selected tab joins the panel below it (white, red label, raised); the rest sit
           on the grey band. */}
-      <div role="tablist" aria-label="Additional information" className="flex flex-wrap items-end gap-1 bg-surface px-3 pt-3 border-b border-[var(--field-card-border)]">
+      <div role="tablist" aria-label="Additional information" className="mx-5 mt-4 inline-flex max-w-full gap-1 overflow-x-auto rounded-[var(--radius-card)] bg-[var(--icon-tile-bg)] p-1">
         {items.map((i, index) => {
           const selected = current?.key === i.key;
           return (
@@ -236,10 +237,8 @@ export function AdditionalInformation({ ctx }: { ctx: Ctx }) {
               tabIndex={selected ? 0 : -1}
               onClick={() => setOpen(i.key)}
               onKeyDown={(e) => onTabKeyDown(e, index)}
-              className={`-mb-px rounded-t-[var(--radius-button)] border border-b-0 px-4 py-2.5 text-[length:var(--fs-body)] whitespace-nowrap focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
-                selected
-                  ? 'border-[var(--field-card-border)] bg-bg text-accent font-medium'
-                  : 'border-transparent text-fg-2 hover:text-fg hover:bg-[var(--field-card-hover-bg)]'
+              className={`flex shrink-0 items-center rounded-[var(--radius-button)] px-5 py-2 text-[length:var(--fs-body)] whitespace-nowrap transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+                selected ? 'bg-bg text-fg font-bold shadow-[var(--shadow-dash-card)]' : 'text-[var(--icon-tile-fg)] font-medium hover:text-fg'
               }`}
             >
               {i.label}

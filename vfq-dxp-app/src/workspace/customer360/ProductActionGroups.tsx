@@ -1,10 +1,10 @@
+import { Button } from '../../components/primitives/Button';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllRoutes } from '../../engines/configEngine';
 import { useCustomerContext, type ActiveCustomerSummary } from '../../stores/customerContextStore';
 import { Icon } from '../../components/primitives/Icon';
 import { Tooltip } from '../../components/primitives/Tooltip';
-import { SECONDARY_SURFACE } from '../../components/primitives/Button';
 
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 const CHEVRON_UP = 'M18 15l-6-6-6 6';
@@ -130,21 +130,16 @@ export function ProductActionGroups({
               ? `Showing all ${totalActions} services.`
               : `Showing ${applicableActions} services for this customer's connection.`}
           </p>
-          <button
-            type="button"
-            onClick={() => setShowAll((prev) => !prev)}
-            aria-pressed={showAll}
-            className="text-link text-[length:var(--fs-caption)] font-medium underline underline-offset-2 shrink-0"
-          >
+          <Button variant="tertiary" compact className="shrink-0" onClick={() => setShowAll((prev) => !prev)} aria-pressed={showAll}>
             {showAll ? 'Show applicable only' : `Show all (${hiddenCount} more)`}
-          </button>
+          </Button>
         </div>
       )}
       {visibleGroups.map((group) => {
         const isOpen = openTitles.has(group.title);
         return (
-          <div key={group.title} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg overflow-hidden">
-            <button
+          <div key={group.title} className="card overflow-hidden">
+            <button type="button"
               onClick={() => toggleGroup(group.title)}
               aria-expanded={isOpen}
               className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-surface"
@@ -178,10 +173,10 @@ export function ProductActionGroups({
                     // takes the deep-red - a card that turned entirely one
                     // colour would lose the label/description hierarchy this
                     // already had.
-                    <button
+                    <button type="button"
                       key={action.label}
                       onClick={() => launch(action)}
-                      className={`flex flex-col gap-2 rounded-[var(--radius-card)] border p-4 text-left ${SECONDARY_SURFACE} enabled:hover:bg-surface-warm transition-colors`}
+                      className={`flex flex-col gap-2 card p-4 text-left text-fg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)] transition-colors`}
                     >
                       <span className="text-[length:var(--fs-btn-compact)] font-medium uppercase tracking-wide">{action.label}</span>
                       <p className="text-[length:var(--fs-caption)] text-fg-2 leading-snug">{action.description}</p>

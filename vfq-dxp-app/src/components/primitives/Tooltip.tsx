@@ -2,6 +2,11 @@ import { useState, useRef, useEffect, useCallback, useId, cloneElement, isValidE
 import type { ReactElement, ReactNode, RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { useTooltipGroup } from './TooltipContext';
+import { Badge } from './Badge';
+
+// A tooltip on something a keyboard can't reach is information only a mouse can read: plain text elements and badges
+// become focusable when they carry one (a control, link or anything already given a tabIndex is left alone).
+const NON_INTERACTIVE_TAGS = new Set(['span', 'div', 'p', 'strong', 'em', 'small', 'li', 'dd', 'dt', 'td', 'th', 'svg']);
 
 type Placement = 'top' | 'right' | 'bottom' | 'left';
 
@@ -165,6 +170,7 @@ export function Tooltip({ content, children, placement = 'right', disabled = fal
   if (disabled) return children;
 
   const childProps = children.props as Record<string, unknown>;
+  const needsFocus = (typeof children.type === 'string' ? NON_INTERACTIVE_TAGS.has(children.type) : children.type === Badge) && childProps.tabIndex === undefined;
   const trigger = cloneElement(children as ReactElement<Record<string, unknown>>, {
     ref: (node: HTMLElement) => {
       triggerRef.current = node;
@@ -189,6 +195,7 @@ export function Tooltip({ content, children, placement = 'right', disabled = fal
       handleHide();
     },
     'aria-describedby': visible ? id : undefined,
+    ...(needsFocus ? { tabIndex: 0 } : {}),
   });
 
   return (
@@ -203,6 +210,8 @@ export function Tooltip({ content, children, placement = 'right', disabled = fal
             data-placement={resolvedPlacement}
             data-state={coords ? 'visible' : 'positioning'}
             className={`tooltip-surface${wraps ? ' tooltip-surface--wrap' : ''}`}
+            onMouseEnter={clearTimers}
+            onMouseLeave={handleHide}
             style={coords ? { top: coords.top, left: coords.left } : { top: -9999, left: -9999 }}
           >
             <span className="tooltip-surface__label">{content}</span>

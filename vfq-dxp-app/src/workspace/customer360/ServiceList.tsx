@@ -66,7 +66,18 @@ export function ServiceList({ services, selectedRef, emptyMessage, personaId, re
             <div
               role={expandable ? 'button' : undefined}
               tabIndex={expandable ? 0 : undefined}
+              aria-expanded={expandable ? isOpen : undefined}
               onClick={expandable ? () => setExpandedRef(isOpen ? undefined : service.ref) : undefined}
+              onKeyDown={
+                expandable
+                  ? (e) => {
+                      if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                        e.preventDefault();
+                        setExpandedRef(isOpen ? undefined : service.ref);
+                      }
+                    }
+                  : undefined
+              }
               className={`flex items-center justify-between gap-3 p-3 ${expandable ? 'cursor-pointer' : ''}`}
             >
               <span className="flex items-center gap-2 min-w-0">

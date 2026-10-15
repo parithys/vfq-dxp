@@ -118,7 +118,7 @@
     "handledByUserId": "USR-1101",
     "releasedAt": "2026-09-27T09:05:00+03:00",
     "taskType": null,
-    "_seedNote": "App-level demo addition (2026-09-27) for the Qnomy Ticket History page. Dates are fixed relative to 2026-09-27 (the day this was seeded), same convention as every other dated fixture in this corpus - the 'today' examples (QTK-7007/8/9) will read as ordinary Last-30-Days rows once the real calendar moves past that date, which is expected and not a bug. QTK-7013 is deliberately handled by a DIFFERENT agent (USR-1205, Mass Market Agent) and QTK-7014 is deliberately outside the 30-day window (2026-08-13, 45 days back) - both exist so the page's filtering has something real to prove against, not just a wall of matching rows."
+    "_seedNote": "App-level demo addition (2026-09-27) for the Qnomy Ticket History page. Dates are fixed relative to 2026-09-27 (the day this was seeded), same convention as every other dated fixture in this corpus - the 'today' examples (QTK-7007/8/9) will read as ordinary Last-30-Days rows once the real calendar moves past that date, which is expected and not a bug. QTK-7013 is deliberately handled by a DIFFERENT agent (USR-1205, Mass Market) and QTK-7014 is deliberately outside the 30-day window (2026-08-13, 45 days back) - both exist so the page's filtering has something real to prove against, not just a wall of matching rows."
   },
   {
     "qTicketId": "QTK-7008",

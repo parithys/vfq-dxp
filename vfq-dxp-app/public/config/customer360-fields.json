@@ -399,7 +399,7 @@
     "sourceId": 10,
     "topic": "Account Information",
     "component": "Account",
-    "details": "Billing Email ID (It should show all the email Ids which are marked for Billing Receipent)",
+    "details": "Billing Email ID (It should show all the email Ids which are marked for Billing Recipient)",
     "departments": {
       "Call Center - Onshore": "real-time",
       "Telesales & Retention": "real-time",
@@ -417,7 +417,7 @@
     "sourceId": 15,
     "topic": "Account Information",
     "component": "Account",
-    "details": "Recent Milestones or Interactions (including all recent purschages add-on, Plan change, activation, change done to MSISDN, account, ticket or activity)",
+    "details": "Recent Milestones or Interactions (including all recent purchases add-on, Plan change, activation, change done to MSISDN, account, ticket or activity)",
     "departments": {
       "Call Center - Onshore": "real-time",
       "Telesales & Retention": "real-time",
@@ -595,7 +595,7 @@
     "sourceId": 34,
     "topic": "Audit Trail",
     "component": "Account/Contact/Asset",
-    "details": "Audit Trail (Orders,Contact, Account, Activity,TT)",
+    "details": "Audit Trail (Orders, Contact, Account, Activity, TT)",
     "departments": {
       "Call Center - Onshore": "drill-down",
       "Telesales & Retention": "drill-down",
@@ -703,7 +703,7 @@
     "sourceId": null,
     "topic": "Account Information",
     "component": null,
-    "details": "Actiivity (last 5)",
+    "details": "Activity (last 5)",
     "departments": {
       "Call Center - Onshore": "real-time",
       "Telesales & Retention": "real-time",
@@ -739,7 +739,7 @@
     "sourceId": null,
     "topic": "Account Information",
     "component": null,
-    "details": "Actiivity (last 5)",
+    "details": "Activity (last 5)",
     "departments": {
       "Call Center - Onshore": "real-time",
       "Telesales & Retention": "real-time",

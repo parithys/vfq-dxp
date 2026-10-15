@@ -1,12 +1,14 @@
+import { isClosedTicket } from '../../../lib/statusTone';
 import { useState } from 'react';
 import { QueryFlowCard } from '../queryFlow/QueryFlowCard';
 import type { ReactNode } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
 import { computeBillingSummary, type Customer360Data } from '../../../engines/customer360Engine';
-import type { CustomerService } from '../../../engines/customerServicesEngine';
+import { groupServicesByCategory, type CustomerService } from '../../../engines/customerServicesEngine';
+import { connectionTag } from '../../../lib/connectionType';
 import { overdueTicketCount } from './accountInformationResolvers';
 import { leadResolvers } from './leadResolvers';
-import { IC, IconTile, KpiGrid, KpiTile, LinkAction, Panel, Pill, StatusPill, UnderlineTabs, UsageBar, fmtDate, fmtDateTime, qar, toneFor } from './C360Kit';
+import { IC, IconTile, KpiGrid, KpiTile, LinkAction, Panel, Pill, StatusPill, fmtDate, fmtDateTime, qar, toneFor } from './C360Kit';
 import type { Tone } from './C360Kit';
 import { RevealValue, useFieldAccess } from '../fieldAccess';
 import { Dv } from '../demoValues';
@@ -16,7 +18,6 @@ type Rec = Record<string, unknown>;
 const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 const dash = (v: ReactNode | undefined | null | '') => (v === undefined || v === null || v === '' ? '-' : v);
 
-const CLOSED_TICKET = /^(solved|completed|closed|cancelled)$/i;
 const isSuspended = (s: CustomerService) => /suspend/i.test(s.status ?? '');
 // A service with no status of its own is read as active, the same convention the Telesales overview uses.
 const isActive = (s: CustomerService) => !s.status || /^active$/i.test(s.status);
@@ -55,24 +56,29 @@ interface FeedRow {
   icon: string;
 }
 
+const TYPE_ICON: Record<CustomerService['category'], string> = {
+  Postpaid: IC.mobile,
+  Prepaid: IC.mobile,
+  'GigaHome Fibre': IC.wifi,
+  'GigaHome 5G': IC.wifi,
+  'TV / Entertainment': IC.tv,
+  'Fixed Line': IC.bars,
+  'Smart Devices': IC.cpu,
+};
+
 export function C360Overview({ data, services, goToTab, onTicketCreated, queryFocus, hasTab }: { data: Customer360Data; services: CustomerService[]; goToTab?: (key: string) => void; onTicketCreated?: (ticket: Record<string, unknown>) => void; queryFocus?: number; hasTab?: (key: string) => boolean }) {
   const go = (key: string) => (goToTab ? () => goToTab(key) : undefined);
-  const [usageTab, setUsageTab] = useState('balance');
   const [copied, setCopied] = useState(false);
 
   const account = data.accounts[0];
   const { outstanding, latestBill, previousPayment } = computeBillingSummary(data);
   const billingProfile = data.billingProfiles[0];
   const extras = data.overviewExtras[0];
-  const demo = (data.overviewDemo[0] ?? {}) as Rec;
   const catalog = (data.demoCatalog[0] ?? {}) as Rec;
-  const engagement = data.digitalEngagement[0];
-  const balance = data.inPlatformBalances[0];
-  const usage = data.serviceUsage[0];
   const creditLimit = data.creditLimits[0];
 
   // ---- KPIs
-  const openTickets = data.tickets.filter((t) => !CLOSED_TICKET.test(str(t.status))).length;
+  const openTickets = data.tickets.filter((t) => !isClosedTicket(t.status)).length;
 
   // ---- Offers: real cross-sell offers first; the shared demo catalogue where the customer has none.
   const topCross = [...data.crossSalesOffers].sort((a, b) => str(a.priorityCode).localeCompare(str(b.priorityCode)))[0];
@@ -113,20 +119,6 @@ export function C360Overview({ data, services, goToTab, onTicketCreated, queryFo
     .filter((e) => e.at)
     .sort((a, b) => str(b.at).localeCompare(str(a.at)))
     .slice(0, 5);
-
-  // ---- Usage & Behaviour
-  const recharges = arr<{ at: string; amountQar: number; type: string }>(demo.recharges);
-  const lastRecharge = engagement?.lastRechargeAmountQar != null ? { amount: engagement.lastRechargeAmountQar, type: engagement.lastRechargeType } : recharges[0] ? { amount: recharges[0].amountQar, type: recharges[0].type } : undefined;
-  const dataTotal = usage ? Number(usage.currentDataUsageGB) + Number(usage.availableDataBalanceGB) : 0;
-  const dataLeft = balance?.dataBalanceGB != null ? Number(balance.dataBalanceGB) : usage ? Number(usage.availableDataBalanceGB) : undefined;
-  const voiceTotal = extras?.voiceAllowanceMin != null ? Number(extras.voiceAllowanceMin) : undefined;
-  const voiceLeft = balance?.voiceBalanceMinutes != null ? Number(balance.voiceBalanceMinutes) : voiceTotal !== undefined && usage ? Math.max(0, voiceTotal - Number(usage.currentVoiceUsageMinutes ?? 0)) : undefined;
-  const smsTotal = extras?.smsAllowance != null ? Number(extras.smsAllowance) : undefined;
-  const smsLeft = balance?.smsBalanceCount != null ? Number(balance.smsBalanceCount) : extras?.smsRemaining != null ? Number(extras.smsRemaining) : undefined;
-  const pct = (left: number | undefined, total: number | undefined) => (left !== undefined && total ? (left / total) * 100 : 0);
-  const trend = arr<Record<string, unknown>>(demo.usageTrend).slice(-5).reverse();
-  const login = engagement?.appLastLoginAt ? fmtDateTime(engagement.appLastLoginAt) : undefined;
-  const appVersion = [str(engagement?.appVersion), str(extras?.phoneVersion)].filter(Boolean).join(' | ');
 
   // ---- Alerts & Risks: only what the data supports.
   const dunning = str(billingProfile?.collectionStage);
@@ -187,7 +179,7 @@ export function C360Overview({ data, services, goToTab, onTicketCreated, queryFo
             </Row>
             <Row label="Account Name">
               {goToTab ? (
-                <button type="button" onClick={() => goToTab('account-info')} className="inline-flex items-center gap-1 text-right hover:underline">
+                <button type="button" onClick={() => goToTab('account-info')} className="inline-flex items-center gap-1 text-right text-link hover:underline">
                   {dash(data.customer.name)}
                   <Icon path={IC.chevRight} className="w-3.5 h-3.5 shrink-0" />
                 </button>
@@ -203,33 +195,33 @@ export function C360Overview({ data, services, goToTab, onTicketCreated, queryFo
           </div>
         </Panel>
 
-        {/* Connections & Services */}
-        <Panel icon={IC.layers} title="Connections & Services" action={<LinkAction onClick={go('products-services')}>View All</LinkAction>}>
+        {/* Service Types: how many of each kind of connection the customer holds */}
+        <Panel icon={IC.layers} title="Service Types" action={<LinkAction onClick={go('products-services')}>View Details</LinkAction>}>
           {services.length === 0 ? (
             <Empty>No connections on file.</Empty>
           ) : (
-            <>
-              <ul>
-                {services.slice(0, 4).map((s) => {
-                  const suspended = isSuspended(s);
-                  return (
-                    <li key={s.ref} className="border-b border-border-soft last:border-0">
-                      <button type="button" onClick={go('products-services')} disabled={!goToTab} className="flex items-center gap-3 py-2.5 w-full text-left enabled:hover:bg-surface">
-                        <IconTile icon={IC.mobile} tone={suspended ? 'red' : 'blue'} />
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-fg font-semibold text-[length:var(--fs-body)] break-words">{s.identifier}</span>
-                          <span className="block text-fg-2 text-[length:var(--fs-caption)] break-words">
-                            {s.category} | {s.label}
-                          </span>
+            <ul>
+              {groupServicesByCategory(services).map(({ category, count }) => {
+                const tag = connectionTag(category);
+                const suspended = services.filter((s) => s.category === category && isSuspended(s)).length;
+                return (
+                  <li key={category} className="border-b border-border-soft last:border-0">
+                    <button type="button" onClick={go('products-services')} disabled={!goToTab} className="flex items-center gap-3 py-2.5 w-full text-left enabled:hover:bg-surface">
+                      <IconTile icon={TYPE_ICON[category]} tone={tag.tone} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-fg font-semibold text-[length:var(--fs-body)] break-words">{tag.label}</span>
+                        <span className="block text-fg-2 text-[length:var(--fs-caption)]">
+                          {count} {count === 1 ? 'service' : 'services'}
+                          {suspended > 0 ? ` · ${suspended} suspended` : ''}
                         </span>
-                        <StatusPill status={s.status ?? 'Active'} />
-                        <Chevron />
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </>
+                      </span>
+                      <span className="text-fg font-bold text-[length:var(--fs-body-lg)]">{count}</span>
+                      <Chevron />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </Panel>
 
@@ -317,68 +309,19 @@ export function C360Overview({ data, services, goToTab, onTicketCreated, queryFo
           )}
         </Panel>
 
-        {/* Usage & Behaviour */}
-        <Panel icon={IC.bars} title="Usage & Behaviour" action={<LinkAction onClick={go('products-services')}>View Details</LinkAction>}>
-          <UnderlineTabs
-            items={[
-              { key: 'balance', label: 'Current Balance' },
-              { key: 'recent', label: 'Recent Usage' },
-            ]}
-            active={usageTab}
-            onChange={setUsageTab}
-          />
-          {usageTab === 'balance' ? (
-            <>
-              <div className="space-y-4 pt-4 pb-3">
-                <UsageBar label="Data" pct={pct(dataLeft, dataTotal)} value={dataLeft !== undefined ? `${dataLeft} GB` : '-'} unit={dataTotal ? `of ${dataTotal} GB` : undefined} />
-                <UsageBar label="Voice" pct={pct(voiceLeft, voiceTotal)} value={voiceLeft ?? '-'} unit={voiceTotal ? `of ${voiceTotal} Mins` : undefined} />
-                <UsageBar label="Text" pct={pct(smsLeft, smsTotal)} value={smsLeft ?? '-'} unit={smsTotal ? `of ${smsTotal} SMS` : undefined} />
-                <div className="flex items-baseline justify-between gap-3 text-[length:var(--fs-body)]">
-                  <span className="text-fg-2">Primary Balance</span>
-                  <span className="font-bold text-accent">{balance?.mainBalanceQAR != null ? qar(balance.mainBalanceQAR) : '-'}</span>
-                </div>
-              </div>
-              <div className="divide-y divide-border-soft">
-                <Row label="Last Recharge Amount">{dash(lastRecharge ? qar(lastRecharge.amount) : undefined)}</Row>
-                <Row label="Last Recharge Type">{dash(str(lastRecharge?.type))}</Row>
-                <Row label="App Last Login">{login ? `${login.date}${login.time ? ` | ${login.time}` : ''}` : '-'}</Row>
-                <Row label="Digital Adoption">{engagement?.appDigitalAdoptionPct != null ? `${str(engagement.appDigitalAdoptionPct)}%` : '-'}</Row>
-                <Row label="App Version">{dash(appVersion)}</Row>
-              </div>
-            </>
-          ) : trend.length > 0 ? (
-            <div className="overflow-x-auto pt-2">
-              <table className="w-full text-left text-[length:var(--fs-body)]">
-                <thead>
-                  <tr className="text-fg-2">
-                    {['Month', 'Data (GB)', 'Voice (Min)', 'SMS'].map((h) => (
-                      <th key={h} className="py-2 pr-3 font-medium whitespace-nowrap">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {trend.map((m) => (
-                    <tr key={str(m.month)} className="border-t border-border-soft">
-                      <td className="py-2 pr-3 text-fg">{str(m.month)}</td>
-                      <td className="py-2 pr-3 text-fg">{Number(m.dataRegular ?? 0) + Number(m.dataOut ?? 0)}</td>
-                      <td className="py-2 pr-3 text-fg">{Number(m.voiceRegular ?? 0) + Number(m.voiceOut ?? 0)}</td>
-                      <td className="py-2 pr-3 text-fg">{Number(m.smsRegular ?? 0) + Number(m.smsOut ?? 0)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : usage ? (
-            <div className="divide-y divide-border-soft pt-2">
-              <Row label={`Period ${str(usage.period)}`}>{''}</Row>
-              <Row label="Data Used">{str(usage.currentDataUsageGB)} GB</Row>
-              <Row label="Voice Used">{str(usage.currentVoiceUsageMinutes)} Mins</Row>
-              <Row label="Current Spend">{dash(qar(usage.currentSpendQAR))}</Row>
+        {/* Lead Information */}
+        <Panel icon={IC.clipboard} title="Lead Information" action={<LinkAction onClick={go('offers-leads')}>View Details</LinkAction>}>
+          {lead ? (
+            <div className="divide-y divide-border-soft">
+              <Row label="Lead Type">{dash(lr('Lead Type'))}</Row>
+              <Row label="MSISDN">{dash(lr('MSISDN'))}</Row>
+              <Row label="Created By">{dash(lr('Created By'))}</Row>
+              <Row label="Lead Status">{lr('Lead Status') ? <StatusPill status={lr('Lead Status')} /> : '-'}</Row>
+              <Row label="Comments">{dash(lr('Comments'))}</Row>
+              <Row label="Created On"><Dv k="leadCreatedOn" /></Row>
             </div>
           ) : (
-            <Empty>No recent usage on file.</Empty>
+            <Empty>No lead on file for this customer.</Empty>
           )}
         </Panel>
 
@@ -396,22 +339,6 @@ export function C360Overview({ data, services, goToTab, onTicketCreated, queryFo
               </li>
             ))}
           </ul>
-        </Panel>
-
-        {/* Lead Information */}
-        <Panel icon={IC.clipboard} title="Lead Information" action={<LinkAction onClick={go('offers-leads')}>View Details</LinkAction>}>
-          {lead ? (
-            <div className="divide-y divide-border-soft">
-              <Row label="Lead Type">{dash(lr('Lead Type'))}</Row>
-              <Row label="MSISDN">{dash(lr('MSISDN'))}</Row>
-              <Row label="Created By">{dash(lr('Created By'))}</Row>
-              <Row label="Lead Status">{lr('Lead Status') ? <StatusPill status={lr('Lead Status')} /> : '-'}</Row>
-              <Row label="Comments">{dash(lr('Comments'))}</Row>
-              <Row label="Created On"><Dv k="leadCreatedOn" /></Row>
-            </div>
-          ) : (
-            <Empty>No lead on file for this customer.</Empty>
-          )}
         </Panel>
       </div>
     </div>

@@ -3,8 +3,6 @@
 
 export const FIXED_WIZARD_ID = 'fixed-activation-cbu';
 export const FIXED_JOURNEY_LABEL = 'Fixed Activation (CBU)';
-export const FIXED_POST_EXIT = '/';
-export const FIXED_DRAFT_ORDERS_PATH = '/tasks?filter=draft-orders';
 
 export type FixedServiceType = 'fiber' | 'fwa-indoor' | 'fwa-outdoor';
 

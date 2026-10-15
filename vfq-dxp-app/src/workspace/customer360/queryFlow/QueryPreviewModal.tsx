@@ -1,6 +1,7 @@
+import { CloseButton } from '../../../components/primitives/CloseButton';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { Drawer } from '../../../components/primitives/Drawer';
+import { Drawer } from '../../../capabilities';
 import { Icon } from '../../../components/primitives/Icon';
 import { Button } from '../../../components/primitives/Button';
 import type { Customer360Data } from '../../../engines/customer360Engine';
@@ -8,8 +9,7 @@ import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { IC, IconTile, Pill, StatusPill, fmtDate, qar } from '../sections/C360Kit';
 import { previewFieldsFor, serviceTypeLabel } from './queryFlowModel';
 import type { QueryIssue, QueryIssueCatalogue, TicketRouting } from './queryFlowModel';
-import { TICKET_QUEUES } from '../../../data/reference/ticketReferenceData';
-import { Select } from '../../../components/primitives/Select';
+import { DEFAULT_QUEUE } from '../../../data/reference/ticketReferenceData';
 
 type Rec = Record<string, unknown>;
 const NOT_ON_FILE = 'Not on file';
@@ -26,7 +26,7 @@ function SectionCard({ icon, title, open = true, onToggle, children }: { icon: s
     </>
   );
   return (
-    <section className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
+    <section className="card ">
       {onToggle ? (
         <button type="button" onClick={onToggle} aria-expanded={open} className="w-full flex items-center gap-2.5 px-4 py-3 rounded-[var(--radius-card)] focus:outline-none focus-visible:shadow-[var(--focus-ring)]">
           {head}
@@ -151,10 +151,9 @@ export function QueryPreviewModal({
   ];
   const grouped = [...GROUPS.map((g) => ({ title: g.title, rows: rows.filter((r) => g.match.test(r.label)) })), { title: 'Other Details', rows: rows.filter((r) => !GROUPS.some((g) => g.match.test(r.label))) }].filter((g) => g.rows.length > 0);
   const [detailsOpen, setDetailsOpen] = useState(true);
-  // The routing rule picks the queue where it has one; otherwise the agent chooses it here.
-  const [chosenQueue, setChosenQueue] = useState('');
   const [creating, setCreating] = useState(false);
-  const queue = routing?.queue ?? chosenQueue;
+  // The routing rule picks the team where it has one; every other issue goes to the general complaints team.
+  const queue = routing?.queue ?? DEFAULT_QUEUE;
   // Auto-stamped ticket description: the query and every detail the preview shows that has a value.
   const description = [...summary, ...rows.filter((r) => r.value !== undefined).map((r) => ({ label: r.label, value: r.value as string }))].map((r) => `${r.label}: ${r.value}`).join('\n');
   const recentTickets = openTickets.slice(0, 3);
@@ -164,7 +163,6 @@ export function QueryPreviewModal({
       open={open}
       onClose={onClose}
       title="Preview Details"
-      widthClassName="w-[48vw] min-w-[560px]"
       header={
         <div className="flex items-start gap-3 px-6 py-4 border-b border-border-soft shrink-0">
           <IconTile icon={IC.phone} tone="red" />
@@ -175,34 +173,19 @@ export function QueryPreviewModal({
               {issue.category && <Pill tone={/network/i.test(issue.category) ? 'red' : 'purple'}>{issue.category}</Pill>}
             </div>
           </div>
-          <button onClick={onClose} aria-label="Close" className="text-muted hover:text-fg text-xl leading-none shrink-0">
-            ×
-          </button>
+          <CloseButton onClick={onClose} />
         </div>
       }
       footer={
         <div className="flex w-full flex-wrap items-center justify-end gap-3">
-          {routing?.queue ? (
-            <span className="mr-auto text-fg-2 text-[length:var(--fs-caption)]">{routing.queue}: {routing.basis}</span>
-          ) : (
-            <div className="mr-auto min-w-44">
-              <Select
-                aria-label="Queue"
-                openUp
-                tintedPanel
-                value={chosenQueue}
-                onChange={(e) => setChosenQueue(e.target.value)}
-                placeholder="Select a queue"
-                options={TICKET_QUEUES.map((q) => ({ value: q, label: q }))}
-              />
-            </div>
-          )}
-          <Button variant="ghost-rect" onClick={onCloseInteraction}>
+          {/* The ticket is auto-assigned to the responsible team, so there is nothing for the agent to choose. */}
+          {routing?.queue && <span className="mr-auto text-fg-2 text-[length:var(--fs-caption)]">{routing.queue}: {routing.basis}</span>}
+          <Button variant="secondary" onClick={onCloseInteraction}>
             Close Interaction
           </Button>
           <Button
-            variant="primary-rect"
-            disabled={!queue || creating}
+            variant="primary"
+            disabled={creating}
             onClick={async () => {
               setCreating(true);
               await onCreateTicket(queue, description);

@@ -10,7 +10,7 @@ const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 /** A hierarchy row: a button that expands its children, or a plain row when everything is shown open. */
 function Row({ as, className, onClick, children }: { as: 'div' | 'button'; className: string; onClick?: () => void; children: React.ReactNode }) {
   return as === 'button' ? (
-    <button className={className} onClick={onClick}>
+    <button type="button" className={className} onClick={onClick}>
       {children}
     </button>
   ) : (
@@ -67,7 +67,7 @@ export function AccountHierarchySection({ data, expandAll = false }: { data: Cus
           const serviceAccounts = data.accounts.filter((a) => a.billingProfileId === billingProfileId);
           const isOpen = expandAll || expandedBillingId === billingProfileId;
           return (
-            <div key={String(billingProfileId)} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
+            <div key={String(billingProfileId)} className="card ">
               <Row
                 as={expandAll ? 'div' : 'button'}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-left ${expandAll ? '' : 'hover:bg-surface'}`}
@@ -102,7 +102,7 @@ export function AccountHierarchySection({ data, expandAll = false }: { data: Cus
                     const svcOpen = expandAll || expandedServiceId === account.accountId;
                     const acct = account as unknown as Record<string, unknown>;
                     return (
-                      <div key={account.accountId} className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-surface">
+                      <div key={account.accountId} className="card card-surface">
                         <Row
                           as={expandAll ? 'div' : 'button'}
                           className={`w-full flex items-center gap-3 px-3 py-2.5 text-left ${expandAll ? '' : 'hover:bg-surface-warm'}`}

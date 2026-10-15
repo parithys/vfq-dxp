@@ -1,3 +1,4 @@
+import { formatDateTime } from '../../../lib/format';
 import type { Ticket } from './ticketDetailModel';
 
 interface Props {
@@ -13,7 +14,7 @@ export function TicketAttachmentsTab({ attachments, terminal, attach }: Props) {
         {attachments.map((a, i) => (
           <div key={i} className="flex items-center justify-between text-[length:var(--fs-body)] border-b border-border-soft pb-1 last:border-0">
             <span className="text-fg">{a.name} ({Math.round(a.size / 1024)} KB)</span>
-            <span className="text-[length:var(--fs-caption)] text-muted">{new Date(a.uploadedAt).toLocaleString()}</span>
+            <span className="text-[length:var(--fs-caption)] text-muted">{formatDateTime(a.uploadedAt)}</span>
           </div>
         ))}
         {terminal ? (

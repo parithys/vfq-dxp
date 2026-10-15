@@ -104,10 +104,7 @@ export const PROOF_DOCUMENT_MAX_BYTES = 5 * 1024 * 1024;
 
 export const PROOF_DOCUMENT_ACCEPT = '.pdf,.jpg,.jpeg,.png';
 
-export function formatDocSize(bytes: number): string {
-  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-}
+export { formatBytes as formatDocSize } from '../../lib/format';
 
 /**
  * The three offer groups, renamed 2026-09-28 to "Today's Special Promotions",
@@ -129,13 +126,20 @@ export function formatDocSize(bytes: number): string {
  * by guesswork. If the business later supplies a real per-QID offer feed,
  * this is the one function to change.
  */
-export type PlanGroupKey = 'specials' | 'for-you' | 'standard';
+/** 'special' is the contextual Special Discount tab (MADA / Retired / B2B2C): not a catalogue group, it lists the plans that carry the customer's accepted discount. */
+export type PlanGroupKey = 'specials' | 'for-you' | 'standard' | 'special';
 
 export const PLAN_GROUPS: { key: PlanGroupKey; label: string }[] = [
   { key: 'specials', label: 'Offers' },
   { key: 'for-you', label: 'Plans' },
   { key: 'standard', label: 'Standard BAU Catalogue' },
 ];
+
+export const SPECIAL_DISCOUNT_TYPE: Record<'mada' | 'b2b2c' | 'retired', { addonType: string; label: string }> = {
+  mada: { addonType: 'MADA Discount', label: 'MADA' },
+  b2b2c: { addonType: 'B2B2C Discount', label: 'B2B2C' },
+  retired: { addonType: 'Retired Discount', label: 'Retired' },
+};
 
 export function planGroupOf(p: { popular?: boolean; offer?: boolean; commitmentMonths?: number }): PlanGroupKey {
   if (p.popular || p.offer) return 'specials';

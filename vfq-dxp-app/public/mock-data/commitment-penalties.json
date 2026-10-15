@@ -62,5 +62,37 @@
     "calculatedAt": "2026-09-30T10:15:00+03:00",
     "status": "Pending",
     "blocksNewConnection": false
+  },
+  {
+    "_note": "Customer-Inventory overview details (2026-10-11)",
+    "penaltyId": "PEN-8301",
+    "accountId": "ACC-5646",
+    "customerId": "CUST-3081",
+    "actionType": "disconnection",
+    "calculatedValue": 480,
+    "currency": "QAR",
+    "valueStoredPersistently": false,
+    "calculationSource": "lock-in: QR 80 x 6 remaining months",
+    "orderId": null,
+    "quoteRequiresOrder": true,
+    "calculatedAt": "2026-09-10T10:15:00+03:00",
+    "status": "Pending",
+    "blocksNewConnection": false
+  },
+  {
+    "_note": "Customer-Inventory overview details (2026-10-11)",
+    "penaltyId": "PEN-8302",
+    "accountId": "ACC-5646",
+    "customerId": "CUST-3081",
+    "actionType": "plan downgrade",
+    "calculatedValue": 150,
+    "currency": "QAR",
+    "valueStoredPersistently": false,
+    "calculationSource": "guided journey - plan change",
+    "orderId": null,
+    "quoteRequiresOrder": true,
+    "calculatedAt": "2026-08-22T14:00:00+03:00",
+    "status": "Applied",
+    "blocksNewConnection": false
   }
 ]

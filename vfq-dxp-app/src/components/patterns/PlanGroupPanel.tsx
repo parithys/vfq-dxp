@@ -25,7 +25,7 @@ export function PlanGroupPanel({
       {groupPlans(activeTab as PlanGroupKey).length === 0 ? (
         <p className="text-muted text-[length:var(--fs-body)]">No plans match that search.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(max(15rem,calc((100%-2rem)/3)),1fr))] gap-4">
         {groupPlans(activeTab as PlanGroupKey).map((p) => (
           <PostpaidPlanCard
             key={p.productId}

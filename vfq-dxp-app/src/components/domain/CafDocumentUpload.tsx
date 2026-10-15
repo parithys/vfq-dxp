@@ -1,3 +1,5 @@
+import { IconButton } from '../primitives/IconButton';
+import { formatBytes as formatSize } from '../../lib/format';
 import { useRef, useState } from 'react';
 import { ID_TYPES } from '../../data/idTypes';
 import { Button } from '../primitives/Button';
@@ -41,11 +43,6 @@ const ACCEPTED = '.pdf,.jpg,.jpeg,.png';
 const TRASH = 'M3 6h18 M8 6V4h8v2 M19 6l-1 14H6L5 6 M10 11v6 M14 11v6';
 const DOC = 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6';
 
-function formatSize(bytes: number): string {
-  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-}
-
 // Upload of the signed CAF and its supporting documents. Type is chosen FIRST,
 // then the file: a file with no type is an unfiled attachment, and asking for
 // the type afterwards means the agent can walk away having uploaded something
@@ -83,7 +80,7 @@ export function CafDocumentUpload({ documents, onChange }: CafDocumentUploadProp
   };
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 space-y-3">
+    <div className="card p-4 space-y-3">
       <div>
         <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Signed documents</h4>
         <p className="text-muted text-[length:var(--fs-caption)]">
@@ -92,7 +89,7 @@ export function CafDocumentUpload({ documents, onChange }: CafDocumentUploadProp
       </div>
 
       {documents.length > 0 && (
-        <ul className="divide-y divide-border-soft rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
+        <ul className="divide-y divide-border-soft card ">
           {documents.map((doc) => (
             <li key={doc.id} className="flex items-center gap-3 px-3 py-2">
               <Icon path={DOC} className="w-4 h-4 text-muted shrink-0" />
@@ -102,15 +99,7 @@ export function CafDocumentUpload({ documents, onChange }: CafDocumentUploadProp
                   {doc.docType} · {formatSize(doc.sizeBytes)}
                 </span>
               </span>
-              <button
-                type="button"
-                onClick={() => onChange(documents.filter((d) => d.id !== doc.id))}
-                aria-label={`Remove ${doc.fileName}`}
-                className="shrink-0 p-1.5 rounded-[var(--radius-button)] text-muted hover:text-danger
-                  focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
-              >
-                <Icon path={TRASH} className="w-4 h-4" />
-              </button>
+              <IconButton tone="danger" icon={TRASH} label={`Remove ${doc.fileName}`} onClick={() => onChange(documents.filter((d) => d.id !== doc.id))} />
             </li>
           ))}
         </ul>
@@ -147,7 +136,7 @@ export function CafDocumentUpload({ documents, onChange }: CafDocumentUploadProp
             onChange={(e) => handleFile(e.target.files?.[0])}
           />
           <Button
-            variant="ghost-rect"
+            variant="secondary"
             onClick={() => fileRef.current?.click()}
             disabled={!docType}
             title={!docType ? 'Choose a document type first' : undefined}

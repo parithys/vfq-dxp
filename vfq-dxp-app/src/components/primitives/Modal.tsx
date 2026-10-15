@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useRef } from 'react';
 import type { ReactNode } from 'react';
-import { Tooltip } from './Tooltip';
+import { CloseButton } from './CloseButton';
+import { useDialogBehaviour } from './useDialogBehaviour';
 
 interface ModalProps {
   open: boolean;
@@ -23,23 +24,19 @@ export function Modal({ open, onClose, title, children, footer, widthClassName =
   // convenience (a full-screen div is intentionally not made focusable/
   // keyboard-actionable - that would be a false affordance in the other
   // direction). Escape is the real accessible path to close without using
-  // the dialog's own controls.
-  useEffect(() => {
-    if (!open) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [open, onClose]);
+  // the dialog's own controls. The same hook moves focus into the dialog,
+  // keeps Tab inside it and hands focus back to the opener on close.
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogBehaviour(open, onClose, dialogRef);
 
   if (!open) return null;
   return (
     // cursor-default (not pointer): clicking the backdrop dismisses the
     // modal, but per UI cursor remediation guidance a full-screen dismiss
     // surface should not read as "clickable" the way a button does.
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--black-80)] cursor-default" onClick={onClose}>
+    <div className="fixed inset-0 z-[var(--z-overlay)] flex items-center justify-center bg-[var(--black-80)] cursor-default" onClick={onClose}>
       <div
+        ref={dialogRef}
         className={`w-full ${widthClassName} max-h-[90vh] overflow-y-auto rounded-[var(--radius-card)] bg-bg shadow-raised p-6`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
@@ -47,12 +44,8 @@ export function Modal({ open, onClose, title, children, footer, widthClassName =
         aria-label={title}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[length:var(--fs-h5)] font-medium text-fg">{title}</h2>
-          <Tooltip content="Close" placement="left">
-            <button onClick={onClose} aria-label="Close" className="text-muted hover:text-fg text-xl leading-none">
-              ×
-            </button>
-          </Tooltip>
+          <h2 className="text-[length:var(--fs-h5)] font-bold text-fg">{title}</h2>
+          <CloseButton onClick={onClose} className="-mr-2" />
         </div>
         <div>{children}</div>
         {footer && <div className="flex justify-end gap-2 mt-6">{footer}</div>}

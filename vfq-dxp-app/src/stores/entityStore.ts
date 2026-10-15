@@ -14,6 +14,9 @@ interface EntityState {
 // The "database" - IndexedDB-backed in a full build (frontend-architecture.md §4);
 // this in-memory-per-session version keeps the demo dependency-light while
 // preserving the same engine boundary (components never call mockDataEngine directly).
+/** True until a kind has been loaded (never loaded, or loading now) - what a detail screen needs to tell "loading" from "not found". */
+export const useKindPending = (kind: EntityKind) => useEntityStore((s) => Boolean(s.loading[kind]) || (s.records[kind] === undefined && !s.errors[kind]));
+
 export const useEntityStore = create<EntityState>((set, get) => ({
   records: {},
   loading: {},
@@ -33,16 +36,16 @@ export const useEntityStore = create<EntityState>((set, get) => ({
       console.error(`[entityStore] loadKind(${kind}) failed:`, err);
       set((state) => ({
         loading: { ...state.loading, [kind]: false },
-        errors: { ...state.errors, [kind]: `Failed to load ${kind}: ${err instanceof Error ? err.message : 'unknown error'}` },
+        errors: { ...state.errors, [kind]: 'We could not load this list just now. Please try again.' },
       }));
     }
   },
 
   createRecord: async (kind, record) => {
     const created = await mockDataEngine.create(kind, record);
-    set((state) => ({
-      records: { ...state.records, [kind]: [...(state.records[kind] ?? []), created] },
-    }));
+    // Only extend a list that has been loaded. Creating into an unloaded kind must not cache just [created] (loadKind
+    // would then skip the seed rows); the next loadKind reads the engine, which already holds the new record.
+    set((state) => (state.records[kind] ? { records: { ...state.records, [kind]: [...(state.records[kind] ?? []), created] } } : state));
   },
 
   updateRecord: async (kind, idField, id, patch) => {

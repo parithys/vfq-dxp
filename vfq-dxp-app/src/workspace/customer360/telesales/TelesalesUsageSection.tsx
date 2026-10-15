@@ -1,3 +1,4 @@
+import { FilterSelect } from '../sections/C360Kit';
 import { useState } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
 import { buildAssetsFieldResolver } from '../sections/assetsResolvers';
@@ -44,19 +45,13 @@ export function UsageSection({ ctx }: { ctx: Ctx }) {
   return (
     <>
       <SectionHeader
-        icon={ICON.bars}
-        title="Usage & Behaviour"
-        description="View usage patterns, recharge history, digital engagement and behaviour insights across all connections."
+       
+       
+       
         actions={
-          <label className="inline-flex items-center gap-3 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg px-4 py-2 text-[length:var(--fs-body)]">
+          <label className="inline-flex items-center gap-3 card px-4 py-2 text-[length:var(--fs-body)]">
             Select Connection
-            <select value={pickedRef} onChange={(e) => setPickedRef(e.target.value)} aria-label="Select connection" className="bg-transparent font-medium">
-              {services.map((s) => (
-                <option key={s.ref} value={s.ref}>
-                  {s.identifier} ({s.label})
-                </option>
-              ))}
-            </select>
+            <FilterSelect captioned label="Select connection" value={pickedRef} options={services.map((s) => ({ value: s.ref, label: `${s.identifier} (${s.label})` }))} onChange={setPickedRef} />
             <Pill tone="green">{cur?.status ?? 'Active'}</Pill>
           </label>
         }
@@ -89,11 +84,11 @@ export function UsageSection({ ctx }: { ctx: Ctx }) {
           <BarChart data={chart} unit={unit} height={170} />
           <div className="px-5 pb-4 flex gap-5 text-fg-2 text-[length:var(--fs-caption)]">
             <span>
-              <span className="inline-block w-2 h-2 rounded-full bg-accent mr-1" />
+              <span className="inline-block w-2 h-2 rounded-[var(--radius-pill)] bg-accent mr-1" />
               Regular Usage
             </span>
             <span>
-              <span className="inline-block w-2 h-2 rounded-full bg-[var(--telesales-chart-slate)] mr-1" />
+              <span className="inline-block w-2 h-2 rounded-[var(--radius-pill)] bg-[var(--telesales-chart-slate)] mr-1" />
               Out of Bundle
             </span>
           </div>
@@ -168,7 +163,7 @@ export function UsageSection({ ctx }: { ctx: Ctx }) {
         <Card title="Plan & Add-on Usage" icon={ICON.card} link="View Plan Details">
           <Field label="Plan Name">{str(res('Plan Name')) || cur?.label || '-'}</Field>
           <Field label="Active Add-ons">
-            {addons.length} <span className="text-accent font-semibold">View All</span>
+            {addons.length} <span className="text-link font-semibold">View All</span>
           </Field>
           <Field label="Active Discounts">{discounts.length ? str(discounts[0].name) : '-'}</Field>
           <Field label="Pending Discounts">{discounts.length}</Field>

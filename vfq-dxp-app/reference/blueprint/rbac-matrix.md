@@ -9,7 +9,7 @@
 >
 > | Looking for | Go to |
 > |---|---|
-> | Who can do what **today** | `reference/VFQ_DXP_Persona_Feature_Applicability_Matrix_Reference.xlsx` (the SSOT) |
+> | Who can do what **today** | `reference/Persona_Feature_Applicability_Matrix_Reference.xlsx` (the SSOT) |
 > | Staff IDs / password / approach | that workbook → **Roles & Credentials** |
 > | 66 → 26 mapping | that workbook → **Legacy Crosswalk**, or `legacyPersonaIds` on each role in `personas.json` |
 > | The archived 66-persona records | `reference/blueprint/legacy/` |

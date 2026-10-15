@@ -1,3 +1,4 @@
+import { isClosedTicket } from '../../../lib/statusTone';
 import type { ReactNode } from 'react';
 import { DataTable } from '../../../components/primitives/DataTable';
 import type { Customer360Data } from '../../../engines/customer360Engine';
@@ -19,7 +20,6 @@ type Resolver = (ctx: AccountInfoContext) => ReactNode | undefined;
 // live clock-driven billing/SLA cycle, so "overdue" is computed against
 // that same frozen date rather than the real Date.now().
 const SESSION_TODAY = new Date(2026, 8, 14); // 2026-09-14
-const CLOSED_TICKET_STATUSES = new Set(['Solved', 'Completed', 'Closed', 'Cancelled']);
 const TON_TERMINAL_STATUSES = new Set(['completed']);
 const ADJUSTMENT_TERMINAL_STATUSES = new Set(['Approved', 'Rejected', 'Failed']);
 
@@ -30,7 +30,7 @@ function last(n: number, rows: Record<string, unknown>[], dateKey: string) {
 /** Open tickets already past their SLA due date - shared by the Overdue TT field and the profile header. */
 export function overdueTicketCount(data: Customer360Data): number {
   return data.tickets.filter(
-    (t) => !CLOSED_TICKET_STATUSES.has(String(t.status)) && t.slaDueAt && new Date(String(t.slaDueAt)) < SESSION_TODAY
+    (t) => !isClosedTicket(t.status) && t.slaDueAt && new Date(String(t.slaDueAt)) < SESSION_TODAY
   ).length;
 }
 
@@ -53,7 +53,7 @@ export const accountInformationResolvers: Record<string, Resolver> = {
     for (const s of services) byCategory.set(s.category, (byCategory.get(s.category) ?? 0) + 1);
     return `${services.length} total - ${Array.from(byCategory.entries()).map(([c, n]) => `${c}: ${n}`).join(', ')}`;
   },
-  'Billing Email ID (It should show all the email Ids which are marked for Billing Receipent)': ({ data }) =>
+  'Billing Email ID (It should show all the email Ids which are marked for Billing Recipient)': ({ data }) =>
     data.billingProfiles[0]?.billingContactEmail as string | undefined,
   'Current Dunning Stage': ({ data }) => data.billingProfiles[0]?.collectionStage as string | undefined,
   'Overdue TT': ({ data }) => {
@@ -72,7 +72,7 @@ export const accountInformationResolvers: Record<string, Resolver> = {
   'Pending TON requests': ({ data }) => `${data.tonCases.filter((t) => !TON_TERMINAL_STATUSES.has(String(t.status))).length} pending`,
   'Pending Adjustments': ({ data }) => `${data.adjustments.filter((a) => !ADJUSTMENT_TERMINAL_STATUSES.has(String(a.status))).length} pending`,
   'Pending Sim swap': ({ data }) => `${data.simSwapOrders.filter((s) => String(s.status).includes('Pending')).length} pending`,
-  'Actiivity (last 5)': ({ data }) => (data.activities.length > 0 ? `${Math.min(5, data.activities.length)} most recent` : undefined),
+  'Activity (last 5)': ({ data }) => (data.activities.length > 0 ? `${Math.min(5, data.activities.length)} most recent` : undefined),
   'Credit Limit': ({ data }) => {
     const cl = data.creditLimits[0];
     if (!cl) return undefined;
@@ -104,7 +104,7 @@ export function accountInformationRichFields({
       <DataTable
         rows={data.contacts}
         rowKey={(r) => String(r.contactRecordId)}
-        emptyMessage="No contacts on file for this customer. (No hierarchy relationship data exists in this corpus - contacts are flat records, not a tree.)"
+        emptyMessage="No contacts on file for this customer."
         columns={[
           { key: 'firstName', header: 'First Name' },
           { key: 'middleName', header: 'Middle Name' },
@@ -113,7 +113,7 @@ export function accountInformationRichFields({
         ]}
       />
     ),
-    'Recent Milestones or Interactions (including all recent purschages add-on, Plan change, activation, change done to MSISDN, account, ticket or activity)':
+    'Recent Milestones or Interactions (including all recent purchases add-on, Plan change, activation, change done to MSISDN, account, ticket or activity)':
       (
         <DataTable
           rows={last(5, data.activities, 'transactionDate')}
@@ -185,7 +185,7 @@ export function accountInformationRichFields({
         ]}
       />
     ),
-    'Actiivity (last 5)': (
+    'Activity (last 5)': (
       <DataTable
         rows={last(5, data.activities, 'transactionDate')}
         rowKey={(r) => String(r.activityNumber)}
