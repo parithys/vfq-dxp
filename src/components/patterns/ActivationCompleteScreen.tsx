@@ -231,6 +231,19 @@ export function ActivationCompleteScreen({
             <EsimActivationPanel activationCode={order.esimActivationCode} emailSent={emailStatus === 'sent'} />
           ) : undefined
         }
+        footerContent={
+          fibre === 'rfs' ? (
+            <section aria-label="Eligible offers" className="no-print print:hidden">
+              <h2 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-3">Eligible offers</h2>
+              <ul className="divide-y divide-border-soft">
+                <li className="flex flex-wrap items-center gap-3 py-2">
+                  <span className="text-fg text-[length:var(--fs-body)]">Fibre at the customer's location</span>
+                  <Badge variant="success">RFS - Eligible for Fibre</Badge>
+                </li>
+              </ul>
+            </section>
+          ) : undefined
+        }
         summaryLines={[
           { label: 'Customer', value: order.customerName },
           { label: numberLabel, value: order.msisdn },
@@ -285,17 +298,6 @@ export function ActivationCompleteScreen({
           />
         </div>
       </Modal>
-      {fibre === 'rfs' && (
-        <section aria-label="Eligible offers" className="max-w-xl mx-auto mt-6 card p-5 no-print print:hidden">
-          <h2 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-3">Eligible offers</h2>
-          <ul className="divide-y divide-border-soft">
-            <li className="flex items-center justify-between gap-3 py-2">
-              <span className="text-fg text-[length:var(--fs-body)]">Fibre at the customer's location</span>
-              <Badge variant="success">RFS - Eligible for Fibre</Badge>
-            </li>
-          </ul>
-        </section>
-      )}
     </div>
   );
 }

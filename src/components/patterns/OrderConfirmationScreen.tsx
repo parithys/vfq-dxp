@@ -35,6 +35,8 @@ interface OrderConfirmationScreenProps {
   handoverPanel?: ReactNode;
   /** A short line directly under the heading (for example whether the order details were emailed). */
   headerNote?: ReactNode;
+  /** Optional content shown below the confirmation actions, inside the confirmation container. */
+  footerContent?: ReactNode;
 }
 
 // Dedicated post-submit confirmation experience - replaces a toast-only
@@ -51,6 +53,7 @@ export function OrderConfirmationScreen({
   actions,
   headerNote,
   handoverPanel,
+  footerContent,
 }: OrderConfirmationScreenProps) {
   return (
     <div className="max-w-6xl mx-auto card p-6 sm:p-8">
@@ -102,6 +105,7 @@ export function OrderConfirmationScreen({
           </Button>
         ))}
       </div>
+      {footerContent && <div className="mt-6">{footerContent}</div>}
     </div>
   );
 }
