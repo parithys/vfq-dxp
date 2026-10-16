@@ -130,7 +130,7 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
       title="Billing & Payments"
       subtitle="View billing profile, bills, payments, outstanding balance and recharge information"
     >
-      <KpiGrid>
+      <KpiGrid grouped>
         <KpiTile
           icon={IC.alert}
           tone="red"

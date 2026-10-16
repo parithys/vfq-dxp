@@ -229,9 +229,12 @@ export function KpiTile({
 }
 
 /** Responsive grid for a KPI strip. */
-export function KpiGrid({ children, cols = 5 }: { children: ReactNode; cols?: 3 | 4 | 5 | 6 }) {
+export function KpiGrid({ children, cols = 5, grouped = false }: { children: ReactNode; cols?: 3 | 4 | 5 | 6; grouped?: boolean }) {
   const c = cols === 3 ? '' : cols === 6 ? '@6xl:grid-cols-6' : cols === 4 ? '@6xl:grid-cols-4' : '@6xl:grid-cols-5';
-  return <div className={`grid grid-cols-1 @lg:grid-cols-2 @4xl:grid-cols-3 ${c} gap-3`}>{children}</div>;
+  const surface = grouped
+    ? 'card gap-px overflow-hidden !bg-border-soft [&>.card]:!rounded-none [&>.card]:!border-0 [&>.card]:!bg-bg'
+    : 'gap-3';
+  return <div className={`grid grid-cols-1 @lg:grid-cols-2 @4xl:grid-cols-3 ${c} ${surface}`}>{children}</div>;
 }
 
 /** A titled card (icon + title, optional right-hand action) holding rows, lists or a table. */
