@@ -241,15 +241,13 @@ export function PostpaidPlanAddonsStep({
                     </p>
                   </div>
                 </div>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <ul className="space-y-2.5">
                   {(selectedPlan.features?.length
                     ? selectedPlan.features
                     : [selectedPlan.dataAllowanceGB ? `${selectedPlan.dataAllowanceGB} GB data` : 'Unlimited data', selectedPlan.minutesAllowance].filter(Boolean)
                   ).map((f) => (
-                    <li key={f} className="flex items-center gap-3 card px-4 py-3 text-fg text-[length:var(--fs-body)] shadow-[var(--shadow-icon-tile)]">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[var(--radius-pill)] bg-[var(--tint-green-bg)] text-[var(--tint-green-fg)]">
-                        <Icon path={CHECK} className="w-3.5 h-3.5" />
-                      </span>
+                    <li key={f} className="flex items-start gap-2 text-fg text-[length:var(--fs-body)]">
+                      <Icon path={CHECK} className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
                       {f}
                     </li>
                   ))}
