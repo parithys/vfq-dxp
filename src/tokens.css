@@ -229,11 +229,10 @@
      reads as a second, brighter border rather than a halo. Dark mode keeps
      its own value via the index.css override. */
   --shadow-selected-ring: inset 0 0 0 1px var(--field-card-selected);
-  /* Figtree is loaded via Google Fonts (index.html) - unlike the previous
-     Space Grotesk/DM Sans targets, this one is real, not aspirational. Same
-     system-font fallback chain stays in place for the pre-load flash and for
-     any environment where the CDN request fails. */
-  --font-body: "Figtree","Segoe UI Variable","Segoe UI",-apple-system,sans-serif;
+  /* @fontsource-variable/figtree declares the bundled 300-900 variable face
+     as "Figtree Variable". Arial is the deterministic fallback if it cannot
+     load; avoid local Segoe aliases, which can resolve to an unintended face. */
+  --font-body: "Figtree Variable", Arial, sans-serif;
   --fs-body: 16px;
   --fs-body-lg: 18px;
   --fs-btn: 14.4px;

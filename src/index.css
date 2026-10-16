@@ -134,6 +134,7 @@
 body {
   margin: 0;
   font-family: var(--font-body);
+  font-weight: var(--fw-regular);
   font-size: var(--fs-body);
   color: var(--fg);
   background: var(--page-bg);
