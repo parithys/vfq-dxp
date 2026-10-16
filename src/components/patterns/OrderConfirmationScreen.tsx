@@ -53,7 +53,7 @@ export function OrderConfirmationScreen({
   handoverPanel,
 }: OrderConfirmationScreenProps) {
   return (
-    <div className="max-w-6xl mx-auto py-8">
+    <div className="max-w-6xl mx-auto card p-6 sm:p-8">
       <div>
         <h1 className="text-[length:var(--fs-h4)] font-bold text-fg mb-6">{heading}</h1>
         <div className="w-14 h-14 rounded-[var(--radius-pill)] bg-tone-success-soft text-success flex items-center justify-center mb-6">
