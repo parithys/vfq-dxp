@@ -164,7 +164,7 @@ export function C360AccountInformation({
       title="Account Information"
       subtitle="View account details, relationships, financial summary and key indicators"
     >
-      <KpiGrid>
+      <KpiGrid whiteBackground>
         <KpiTile icon={IC.file} tone="green" label="Account Status" value={account?.status ? <Pill tone={toneFor(account.status)}>{account.status}</Pill> : '-'} />
         <KpiTile
           icon={IC.users}

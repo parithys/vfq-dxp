@@ -229,10 +229,10 @@ export function KpiTile({
 }
 
 /** Responsive grid for a KPI strip. */
-export function KpiGrid({ children, cols = 5 }: { children: ReactNode; cols?: 3 | 4 | 5 | 6 }) {
+export function KpiGrid({ children, cols = 5, whiteBackground = false }: { children: ReactNode; cols?: 3 | 4 | 5 | 6; whiteBackground?: boolean }) {
   const c = cols === 3 ? '' : cols === 6 ? '@6xl:grid-cols-6' : cols === 4 ? '@6xl:grid-cols-4' : '@6xl:grid-cols-5';
   return (
-    <div className={`card grid grid-cols-1 @lg:grid-cols-2 @4xl:grid-cols-3 ${c} gap-px overflow-hidden !bg-border-soft [&>.card]:!rounded-none [&>.card]:!border-0 [&>.card]:!bg-bg`}>
+    <div className={`card grid grid-cols-1 @lg:grid-cols-2 @4xl:grid-cols-3 ${c} gap-px overflow-hidden ${whiteBackground ? '!bg-bg' : '!bg-border-soft'} [&>.card]:!rounded-none [&>.card]:!border-0 [&>.card]:!bg-bg`}>
       {children}
     </div>
   );
