@@ -140,7 +140,7 @@ export function StepSummaryPanel({
   return (
     <aside
       aria-label="Summary of completed steps"
-      className="hidden lg:flex lg:flex-col w-80 shrink-0 self-start sticky top-0 max-h-[calc(100vh-11rem)] overflow-hidden my-8 mr-8 card "
+      className="hidden lg:flex lg:flex-col w-80 shrink-0 self-start sticky top-0 max-h-[calc(100vh-11rem)] overflow-hidden my-8 mr-8 card bg-charcoal-panel text-on-dark border-on-dark-line-2 [&_header]:!bg-on-dark-fill-1 [&_.text-fg]:!text-on-dark [&_.text-fg-2]:!text-on-dark-2 [&_.text-muted]:!text-on-dark-3 [&_.border-border-soft]:!border-on-dark-line-1"
     >
       {/* The header stays put; only the sections below it scroll. */}
       <header className="shrink-0 border-b border-border-soft bg-[var(--icon-tile-bg)] px-4 py-4">
