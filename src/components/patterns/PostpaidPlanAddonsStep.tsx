@@ -253,9 +253,9 @@ export function PostpaidPlanAddonsStep({
                   ))}
                 </ul>
                 {selectedPlan.benefits && selectedPlan.benefits.length > 0 && (
-                  <div className="rounded-[var(--radius-card)] border border-[var(--field-card-selected)] bg-bg px-3 py-2.5 space-y-1">
-                    <p className="text-accent font-bold text-[length:var(--fs-caption)] uppercase tracking-wide">Included in this offer</p>
-                    <ul className="space-y-1">
+                  <div className="space-y-2">
+                    <p className="text-fg font-bold text-[length:var(--fs-caption)] uppercase tracking-wide">Included in this offer</p>
+                    <ul className="space-y-2">
                       {selectedPlan.benefits.map((b) => (
                         <li key={b} className="flex items-start gap-2 text-fg font-medium text-[length:var(--fs-caption)]">
                           <Icon path={CHECK} className="w-4 h-4 shrink-0 text-accent mt-0.5" />
