@@ -59,7 +59,7 @@ export function WizardTitleBand({
 
   // Title area: carries the page's own padding and a bottom border, so the step rail below it can sit flush against the left edge.
   return (
-      <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-6 bg-bg border-b border-[var(--field-card-border)]">
+      <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-6 bg-charcoal-panel text-on-dark border-b border-on-dark-line-2 [&_.text-fg]:!text-on-dark [&_.text-fg-2]:!text-on-dark-2 [&_.btn-secondary]:!border-on-dark-line-3 [&_.btn-secondary]:!bg-transparent [&_.btn-secondary]:!text-on-dark [&_.btn-secondary:hover]:!bg-on-dark-fill-2">
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
           <h1 className="text-[length:var(--fs-h4)] font-bold text-fg">{title}</h1>
           <div className="flex flex-wrap items-center gap-3">
