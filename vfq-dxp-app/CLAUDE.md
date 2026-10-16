@@ -151,7 +151,7 @@ for a production build; it is shown by default.
 
 ## Tests
 
-`npm test` runs the automated suite (`tests/*.test.mjs`, 39 tests, about 5 seconds, no extra dependencies - the npm registry
+`npm test` runs the automated suite (`tests/*.test.mjs`, 151 tests, about 15 seconds, no extra dependencies - the npm registry
 is not reachable from the build sandbox, so it uses `node:test`, Vite's own SSR loader and `react-dom/server`).
 `tests/harness.mjs` loads the app's TypeScript through Vite with `fetch` and storage stubbed to read `public/`.
 
