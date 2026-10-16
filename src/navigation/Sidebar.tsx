@@ -283,7 +283,12 @@ export function Sidebar() {
             // problem (both /fibre-home and /fibre-home/plans-installation lighting up
             // as red pills) can't arise.
             const parentEnd = item.end ?? hasChildren;
-            const exactlyActive = item.to === activeNavPath;
+            const exactlyActive = item.to === activeNavPath || (
+              item.key === 'new-connections'
+              && ['/mobile/start-connection', '/fibre-home/start-connection'].some(
+                (path) => location.pathname === path || location.pathname.startsWith(`${path}/`)
+              )
+            );
             // A parent with children is a DISCLOSURE, not a destination: one
             // click opens or closes its sub-menu and nothing else. Only a
             // sub-menu item navigates.
