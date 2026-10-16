@@ -14,7 +14,7 @@ import { usePersonaStore } from '../../stores/personaStore';
 import { Checkbox } from '../primitives/Checkbox';
 import { SearchField } from '../primitives/SearchField';
 import { FREE_NUMBER_PRICE_CEILING_QAR, STAR_NUMBER_ENTITLEMENT_MULTIPLIER, starNumberOverageQar } from '../../engines/postpaidPricing';
-import { TAB_LABELS, TAB_ORDER, PORTAL_TAB_ORDER, RETAIL_SALES_PERSONA_ID, toLocalMsisdn, MAX_RESERVATIONS_PER_AGENT, PAGE_SIZE, FREE_PAGE_SIZE, STAR_SORT_OPTIONS, FREE_SORT_OPTIONS, PRICE_RANGES, inPriceRange, SORTERS, isValidMsisdn, STAT_ICONS } from './msisdnPickerModel';
+import { TAB_LABELS, TAB_ORDER, PORTAL_TAB_ORDER, RETAIL_SALES_PERSONA_ID, toLocalMsisdn, MAX_RESERVATIONS_PER_AGENT, PAGE_SIZE, FREE_PAGE_SIZE, STAR_SORT_OPTIONS, FREE_SORT_OPTIONS, PRICE_RANGES, inPriceRange, SORTERS, isValidMsisdn } from './msisdnPickerModel';
 import type { MsisdnRecord, NumberTab, SortKey } from './msisdnPickerModel';
 import { StarStat } from './StarStat';
 
@@ -582,15 +582,15 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
             <Badge variant="tag-amber">{formatQar(n.priceQAR)}</Badge>
           ) : null; // A free number carries no pill: it is simply the number.
           if (tab === 'Star' || (tab === 'Reserved' && isStar)) {
-            // Star-number card (2026-10-04 design): the number and a state mark on top, then a 2x2 grid of
-            // icon-tile facts - Price, Lock-in, Upfront charge (only when there is one).
+            // Star-number card: the number and a state mark on top, then a responsive grid of
+            // Price, Lock-in and Upfront charge facts (the last only when there is one).
             // Non-breaking spaces keep "QAR 8,750" and "24 months" together: a long value wraps between words, never inside one.
             const money = (v: number) => formatQar(v, { nbsp: true });
             const facts = [
-              { icon: STAT_ICONS.wallet, label: 'Price', value: money(n.priceQAR), alert: false },
-              ...(lockIn !== undefined ? [{ icon: STAT_ICONS.lock, label: 'Lock-in period', value: `${lockIn}\u00a0months`, alert: false }] : []),
+              { label: 'Price', value: money(n.priceQAR), alert: false },
+              ...(lockIn !== undefined ? [{ label: 'Lock-in period', value: `${lockIn}\u00a0months`, alert: false }] : []),
               ...(planMrcQar !== undefined && upfront > 0
-                ? [{ icon: STAT_ICONS.tag, label: 'Upfront charge', value: money(upfront), alert: true }]
+                ? [{ label: 'Upfront charge', value: money(upfront), alert: true }]
                 : []),
             ];
             return (
@@ -624,7 +624,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
                 {/* The facts sit side by side while the card has room for two and stack when it does not (a narrow panel, a phone), never overflow. */}
                 <div className="relative grid grid-cols-[repeat(auto-fit,minmax(7.5rem,1fr))] gap-x-6 gap-y-4">
                   {facts.map((f) => (
-                    <StarStat key={f.label} icon={f.icon} label={f.label} value={f.value} alert={f.alert} plainValue={f.label === 'Lock-in period'} />
+                    <StarStat key={f.label} label={f.label} value={f.value} alert={f.alert} plainValue={f.label === 'Lock-in period'} />
                   ))}
                 </div>
                 {unreserve}
