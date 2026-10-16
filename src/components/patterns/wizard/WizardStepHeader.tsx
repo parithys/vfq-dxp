@@ -53,7 +53,7 @@ export function WizardStepHeader({
                   compact
                   onClick={toggleCustomerView}
                   aria-pressed={viewOpen}
-                  className={viewOpen ? '' : '!border-transparent !shadow-none !bg-[var(--customer-view-bg)] !text-[var(--customer-view-fg)] enabled:hover:!bg-[var(--customer-view-bg-hover)]'}
+                  className={`hidden lg:inline-flex ${viewOpen ? '' : '!border-transparent !shadow-none !bg-[var(--customer-view-bg)] !text-[var(--customer-view-fg)] enabled:hover:!bg-[var(--customer-view-bg-hover)]'}`}
                 >
                   {viewOpen && (
                     <span aria-hidden="true" className="relative flex h-2 w-2">
