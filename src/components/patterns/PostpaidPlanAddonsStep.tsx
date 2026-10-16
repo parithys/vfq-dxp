@@ -1,6 +1,7 @@
 import { type CustomerBenefit } from '../../engines/customerBenefitEngine';
 import { HRN_ADVANCE_QAR } from '../../engines/postpaidPricing';
 import { Icon } from '../primitives/Icon';
+import { ICON_CALL, ICON_CARD, ICON_DATA } from '../primitives/offerCardParts';
 import { CHECK } from './postpaidPlanModel';
 import { PlanSearchBox } from './PlanSearchBox';
 import { PlanTabStrip } from './PlanTabStrip';
@@ -245,9 +246,9 @@ export function PostpaidPlanAddonsStep({
                   {(selectedPlan.features?.length
                     ? selectedPlan.features
                     : [selectedPlan.dataAllowanceGB ? `${selectedPlan.dataAllowanceGB} GB data` : 'Unlimited data', selectedPlan.minutesAllowance].filter(Boolean)
-                  ).map((f) => (
+                  ).map((f, i) => (
                     <li key={f} className="flex items-start gap-2 text-fg text-[length:var(--fs-body)]">
-                      <Icon path={CHECK} className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                      <Icon path={i === 0 ? ICON_DATA : /minute|call/i.test(f) ? ICON_CALL : ICON_CARD} className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
                       {f}
                     </li>
                   ))}
