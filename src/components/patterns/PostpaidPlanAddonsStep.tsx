@@ -242,30 +242,32 @@ export function PostpaidPlanAddonsStep({
                     </p>
                   </div>
                 </div>
-                <ul className="space-y-2.5">
-                  {(selectedPlan.features?.length
-                    ? selectedPlan.features
-                    : [selectedPlan.dataAllowanceGB ? `${selectedPlan.dataAllowanceGB} GB data` : 'Unlimited data', selectedPlan.minutesAllowance].filter(Boolean)
-                  ).map((f, i) => (
-                    <li key={f} className="flex items-start gap-2 text-fg text-[length:var(--fs-body)]">
-                      <Icon path={i === 0 ? ICON_DATA : /minute|call/i.test(f) ? ICON_CALL : ICON_CARD} className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                {selectedPlan.benefits && selectedPlan.benefits.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-fg font-bold text-[length:var(--fs-caption)] uppercase tracking-wide">Included in this offer</p>
-                    <ul className="space-y-2">
-                      {selectedPlan.benefits.map((b) => (
-                        <li key={b} className="flex items-start gap-2 text-fg font-medium text-[length:var(--fs-caption)]">
-                          <Icon path={CHECK} className="w-4 h-4 shrink-0 text-accent mt-0.5" />
-                          {b}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <ul className="space-y-2.5">
+                    {(selectedPlan.features?.length
+                      ? selectedPlan.features
+                      : [selectedPlan.dataAllowanceGB ? `${selectedPlan.dataAllowanceGB} GB data` : 'Unlimited data', selectedPlan.minutesAllowance].filter(Boolean)
+                    ).map((f, i) => (
+                      <li key={f} className="flex items-start gap-2 text-fg text-[length:var(--fs-body)]">
+                        <Icon path={i === 0 ? ICON_DATA : /minute|call/i.test(f) ? ICON_CALL : ICON_CARD} className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  {selectedPlan.benefits && selectedPlan.benefits.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-fg font-bold text-[length:var(--fs-caption)] uppercase tracking-wide">Included in this offer</p>
+                      <ul className="space-y-2">
+                        {selectedPlan.benefits.map((b) => (
+                          <li key={b} className="flex items-start gap-2 text-fg font-medium text-[length:var(--fs-caption)]">
+                            <Icon path={CHECK} className="w-4 h-4 shrink-0 text-accent mt-0.5" />
+                            {b}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </section>
             )}
             {mode === 'extras' && !selectedPlan && (
