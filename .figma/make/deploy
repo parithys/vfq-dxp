@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd vfq-dxp-app
+npm run build
+
+[[ -d "dist" ]] || {
+  echo "Expected build output at vfq-dxp-app/dist" >&2
+  exit 1
+}
+
+figma make deploy --build-dir "dist"
