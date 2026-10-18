@@ -1,32 +1,26 @@
-# React + TypeScript + Vite
+# vfq-dxp
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A working prototype of the Vodafone Qatar (VFQ) Digital Experience Platform for retail and contact-centre agents: guided sales and service journeys, Customer 360 and the work queues around them. It runs in the browser against synthetic data, with no backend.
 
-Currently, two official plugins are available:
+The application is in [`vfq-dxp-app/`](vfq-dxp-app/). See its [README](vfq-dxp-app/README.md) for what is in it, how it is organised and how to sign in.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Quick start
 
-## React Compiler
+Needs Node.js 22 or later.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+cd vfq-dxp-app
+npm install
+npm run dev        # http://localhost:5173
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+```bash
+npm test           # automated suite
+npm run build      # type-check and production build
+```
+
+GitHub Actions runs lint, the tests and the build on every push and pull request.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

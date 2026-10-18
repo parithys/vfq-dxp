@@ -1,0 +1,30 @@
+# Runs on every push and pull request: lint, the automated suite (journeys, UI guards, token governance) and a production
+# build. The app lives in the vfq-dxp-app/ folder of the repository, so every step runs there.
+#
+# GitHub only reads workflows from the repository ROOT, which is where this file lives.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: vfq-dxp-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: vfq-dxp-app/package-lock.json
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Tests (journeys, UI guards, design tokens)
+        run: npm test
+      - name: Build (type-check + bundle)
+        run: npm run build
