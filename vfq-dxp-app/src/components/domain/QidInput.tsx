@@ -65,6 +65,8 @@ interface QidNumberFieldProps {
    * the complete field including its own label.
    */
   inlineField?: ReactNode;
+  /** The acted-for customer's own ID number: the demo barcode button pushes this instead of the fixed specimen number. */
+  barcodeNumber?: string;
   /** Show Fetch even though the number is read-only. */
   showFetch?: boolean;
   /**
@@ -212,6 +214,7 @@ export function QidNumberField({
   hint,
   fetchDisabled = false,
   inlineField,
+  barcodeNumber,
   showFetch = false,
   status,
   statusDetail,
@@ -292,7 +295,7 @@ export function QidNumberField({
                 fixed number for whichever ID type is currently selected. */}
             <button
               type="button"
-              onClick={() => onChange(BARCODE_DEMO_NUMBERS[idType])}
+              onClick={() => onChange(barcodeNumber ?? BARCODE_DEMO_NUMBERS[idType])}
               aria-label={`Simulate scanning the ${current.numberLabel.replace(/ Number$/, '')} barcode`}
               title="Scan barcode"
               className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-[var(--radius-button)] text-muted

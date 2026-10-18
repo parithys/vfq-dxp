@@ -10,6 +10,7 @@ import { TechnicalFailure } from '../../components/patterns/ValidationStatus';
 import type { EligibilityResult, CustomerRecord, IdentityDocRecord } from '../../components/domain/eligibilityTypes';
 import { buildEligibilityRows } from '../../components/domain/eligibilityRowsModel';
 import { EligibilityChecksList } from '../../components/domain/EligibilityRows';
+import { useActedForCustomer } from '../../components/patterns/useActedForCustomer';
 
 
 interface EligibilityGateStepProps {
@@ -92,8 +93,9 @@ export function EligibilityGateStep({
   onSwitchToPrepaid,
   announcePass = true,
   asNewCustomer = false,
-  asCustomerId,
+  asCustomerId: explicitCustomerId,
 }: EligibilityGateStepProps) {
+  const asCustomerId = useActedForCustomer(explicitCustomerId, asNewCustomer);
   // A cached result for THIS identity. Computed during render rather than in
   // an effect so the first paint on re-entry already shows the rows.
   const cached =

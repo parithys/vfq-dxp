@@ -3,6 +3,7 @@ import type { SpecimenIdentity } from '../domain/ScannedIdPreview';
 import { callService, ServiceError, takeDuplicateFault, VALIDATION_TTL_MS, type FailureKind, type ServiceName } from '../../engines/serviceCall';
 import type { QidType } from '../domain/QidInput';
 import * as mockDataEngine from '../../engines/mockDataEngine';
+import { useActedForCustomer } from './useActedForCustomer';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
 import { MAX_SCAN_ATTEMPTS, LEGACY_MAX_SCAN_ATTEMPTS, SCANNABLE_ID_TYPES, misread, isoToDmy, selectScanCandidates } from './idLookupModel';
 import type { DuplicateCandidate, IdLookupValue } from './idLookupModel';
@@ -26,7 +27,8 @@ interface UseIdLookupOptions {
 
 // State, effects and async lookups behind IdLookupStep. Everything here was the
 // body of the component, moved verbatim; the JSX stays in IdLookupStep.
-export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType, verifyThenFetch, asNewCustomer, asCustomerId, manualEntry = false }: UseIdLookupOptions) {
+export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType, verifyThenFetch, asNewCustomer, asCustomerId: explicitCustomerId, manualEntry = false }: UseIdLookupOptions) {
+  const asCustomerId = useActedForCustomer(explicitCustomerId, asNewCustomer);
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [expiryMismatch, setExpiryMismatch] = useState(false);
@@ -120,8 +122,11 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
   const [contextIdentity, setContextIdentity] = useState<SpecimenIdentity | undefined>();
   /** Set (to the customer's name, or the id) when the journey's customer has no identity document on file: nothing to draw in the reader. */
   const [contextNoDocument, setContextNoDocument] = useState<string | undefined>();
+  /** The ID types the journey's customer DOES hold, when none of the chosen type is on file (so the panel can say what to pick instead). */
+  const [contextHeldTypes, setContextHeldTypes] = useState<string[]>([]);
   useEffect(() => {
     setContextNoDocument(undefined);
+    setContextHeldTypes([]);
     if (!asCustomerId) {
       setContextIdentity(undefined);
       return;
@@ -133,8 +138,15 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     ]).then(([customers, docs]) => {
       const c = customers.find((x) => x.customerId === asCustomerId);
       const own = docs.filter((d) => d.customerId === asCustomerId);
-      const d = own.find((x) => x.documentType === 'QID') ?? own[0];
+      // The card drawn is the one of the type the agent chose; a customer who does not hold that type has no card to read for it.
+      const d = own.find((x) => x.documentType === idType);
       if (cancelled) return;
+      if (c && !d && own.length > 0) {
+        setContextIdentity(undefined);
+        setContextNoDocument(c.name);
+        setContextHeldTypes([...new Set(own.map((x) => x.documentType))]);
+        return;
+      }
       if (!c || !d) {
         // Never fall back to another customer's specimen card: say there is no document.
         setContextIdentity(undefined);
@@ -146,7 +158,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     return () => {
       cancelled = true;
     };
-  }, [asCustomerId]);
+  }, [asCustomerId, idType]);
 
   // ---- Failure handling ------------------------------------------------------
   // A lookup that cannot complete is UNRESOLVED: it never becomes "not found",
@@ -597,6 +609,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     handleIdTypeChange,
     contextIdentity,
     contextNoDocument,
+    contextHeldTypes,
     failure,
     retrying,
     duplicates,

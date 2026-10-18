@@ -72,7 +72,7 @@ export function OrderApprovalQueue({ padded = true, query = '', filters }: Order
   // order stays visible to everyone in the shared queue (so the right
   // approver can find it), but only an agent whose role matches the
   // category's required role can actually claim it.
-  const isEligible = (order: Order) => mayClaimOrder({ personaId: activePersonaId, jobTitle: currentJobTitle, orderType: order.orderType, approverRole: order.approverRole });
+  const isEligible = (order: Order) => mayClaimOrder({ personaId: activePersonaId, jobTitle: currentJobTitle, orderType: order.orderType, approverRole: order.approverRole, createdBy: (order as { createdBy?: string }).createdBy, userId: currentAgentId });
 
   const pending = orders
     .filter((o) => o.status === 'Submitted for Approval')

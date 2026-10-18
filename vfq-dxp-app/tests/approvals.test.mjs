@@ -154,3 +154,36 @@ test('approvals: an order routed for its ID type is decided by the Back Office F
   const other = personas.find((p) => grant(p, 'orders.approval-detail') === 'Approve' && jobOf(p) !== 'Back Office Fulfilment');
   assert.equal(auth.orderApprovalAuthority({ personaId: other.id, jobTitle: jobOf(other), ...idTypeOrder }).blockedBy, 'wrong-role');
 });
+
+// ---- every order type the app writes has an approver role; nobody decides their own order ------------------------------------------
+test('every order type a journey writes has an approval-matrix entry, so no held order is open to any Approve holder', () => {
+  const SRC = path.join(ROOT, 'src/modules');
+  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : /submit[A-Za-z]*\.ts$/.test(e.name) ? [path.join(d, e.name)] : []));
+  const written = new Set();
+  for (const f of walk(SRC)) {
+    const text = fs.readFileSync(f, 'utf8');
+    for (const m of text.matchAll(/orderType:\s*([^,\n]+),/g)) for (const lit of m[1].replace(/\w+\s*===\s*'[^']*'/g, '').matchAll(/'([^']+)'/g)) written.add(lit[1]); // the values, not the conditions of a ternary
+  }
+  assert.ok(written.size >= 6, `found the order types the submit functions write (${[...written].join(', ')})`);
+  const missing = [...written].filter((t) => !matrix.some((m) => m.category === t));
+  assert.deepEqual(missing, []);
+});
+
+test('the line-change and Prepaid MNP order types are routed to the roles chosen for them', () => {
+  const role = (c) => matrix.find((m) => m.category === c)?.requiredRole;
+  assert.deepEqual(['Plan Change', 'Prepaid Pack Change', 'Add-On', 'MNP Prepaid Port-In'].map(role), ['Back Office Fulfilment', 'Back Office Fulfilment', 'Back Office Fulfilment', 'Sales Manager']);
+});
+
+test('an approver cannot decide an order they created, but can decide the same order created by someone else', () => {
+  const approver = personas.find((p) => p.features.some((f) => f.key === 'orders.approval-detail' && ['Approve', 'Full'].includes(f.level)) && jobOf(p) === 'Back Office Fulfilment')
+    ?? personas.find((p) => grant(p, 'orders.approval-detail') === 'Approve' || grant(p, 'orders.approval-detail') === 'Full');
+  const base = { personaId: approver.id, jobTitle: jobOf(approver), status: 'Submitted for Approval', orderType: 'Plan Change' };
+  const mine = auth.orderApprovalAuthority({ ...base, createdBy: 'USR-1', userId: 'USR-1' });
+  assert.equal(mine.mayDecide, false);
+  assert.equal(mine.blockedBy, 'own-order');
+  assert.match(auth.approvalBlockMessage('order', mine), /created this order/);
+  assert.equal(auth.orderApprovalAuthority({ ...base, createdBy: 'USR-2', userId: 'USR-1' }).blockedBy === 'own-order', false);
+  assert.equal(auth.orderApprovalAuthority({ ...base, userId: 'USR-1' }).blockedBy === 'own-order', false, 'an order with no recorded creator (seeded) is not blocked');
+  // The same rule keeps it out of the approver's queue.
+  assert.deepEqual(auth.ordersAwaitingDecisionBy([{ orderId: 'O1', orderType: 'Plan Change', status: 'Submitted for Approval', createdBy: 'USR-1' }], { personaId: approver.id, jobTitle: jobOf(approver), userId: 'USR-1' }), []);
+});

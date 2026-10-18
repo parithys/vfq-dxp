@@ -4,9 +4,13 @@ import { useWorkflowStore } from '../../../stores/workflowStore';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import type { DraftOrderRecord, WizardStep } from './guidedWizardTypes';
 
+/** Draft value naming the customer a journey was opened for. */
+export const LAUNCH_CUSTOMER_KEY = 'launchCustomerId';
+
 export function useJourneyStartResume(wizardId: string, steps: WizardStep[]) {
   const clearDraft = useWorkflowStore((s) => s.clearDraft);
   const hydrateDraft = useWorkflowStore((s) => s.hydrateDraft);
+  const patchDraft = useWorkflowStore((s) => s.patchDraft);
   // STARTING a journey discards whatever draft was left behind; RESUMING one
   // does not. A journey card navigates with state.startFresh (see
   // JourneyCard), which is the only thing that triggers this - so a
@@ -69,6 +73,10 @@ export function useJourneyStartResume(wizardId: string, steps: WizardStep[]) {
     }
 
     clearDraft(wizardId);
+    // Opened for a customer (Customer 360 / Customer Search "Acting for ..."): the draft remembers who, because the router state is
+    // consumed below. Capabilities that identify the customer (scan, eligibility) read it from the draft, so every journey gets it.
+    const launchCustomerId = (location.state as { launch?: { customerId?: string } } | null)?.launch?.customerId;
+    if (launchCustomerId) patchDraft(wizardId, { set: { [LAUNCH_CUSTOMER_KEY]: launchCustomerId } });
     consume();
   }, [
     location.key,
@@ -77,6 +85,7 @@ export function useJourneyStartResume(wizardId: string, steps: WizardStep[]) {
     location.search,
     clearDraft,
     hydrateDraft,
+    patchDraft,
     navigate,
     steps,
     wizardId,

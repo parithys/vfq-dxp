@@ -623,7 +623,7 @@ export function OrderApprovalDetail() {
   // AAV-01: approve / reject / return need (a) the Approve grant, (b) the role the order was routed to (or the approval
   // matrix names), and (c) an order that is still awaiting a decision - see engines/approvalAuthority.ts. Reaching this
   // page directly by URL changes none of that.
-  const authority = orderApprovalAuthority({ personaId: activePersonaId, jobTitle: currentJobTitle, status: order.status, orderType: order.orderType, approverRole: order.approverRole });
+  const authority = orderApprovalAuthority({ personaId: activePersonaId, jobTitle: currentJobTitle, status: order.status, orderType: order.orderType, approverRole: order.approverRole, createdBy: order.createdBy, userId: currentAgentId });
   const isEligibleApprover = authority.mayDecide;
 
   const logActivity = (actionTaken: string, notes: string) =>
