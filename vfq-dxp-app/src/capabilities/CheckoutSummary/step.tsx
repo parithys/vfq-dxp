@@ -124,6 +124,8 @@ export function prepaidCheckoutStep(opts: {
   editStepKey?: string;
   editLabel?: string;
   totals?: (totals: PrepaidCheckoutTotals) => unknown;
+  /** The order changes a line the customer already has (a pack change, an add-on): no SIM rows or SIM card charge; `excludePack` for an add-on on the current pack. */
+  existingLine?: { existingSim?: boolean; excludePack?: boolean };
 }): WizardStep {
   const linesOf = opts.lines ?? allLines;
   return {
@@ -142,6 +144,7 @@ export function prepaidCheckoutStep(opts: {
           details={opts.details?.(values)}
           fees={opts.fees}
           editLabel={opts.editLabel}
+          existingLine={opts.existingLine}
           onTotalsComputed={(totals) => setValue('checkoutTotals', opts.totals ? opts.totals(totals) : totals)}
           onEdit={() => goToStepKey(opts.editStepKey ?? 'cart')}
         />

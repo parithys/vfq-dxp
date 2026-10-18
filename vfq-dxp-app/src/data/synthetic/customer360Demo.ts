@@ -6,6 +6,8 @@
 import type { Customer360Data } from '../../engines/customer360Engine';
 import type { CustomerService } from '../../engines/customerServicesEngine';
 import { str } from '../../lib/values';
+import { outstandingBalance } from '../../engines/billingBalance';
+import { isBusinessSegment } from '../../engines/businessSegment';
 
 export interface DemoCtx {
   data: Customer360Data;
@@ -22,8 +24,14 @@ const addMonths = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth()
 const hash = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
 
 const customerId = (c: DemoCtx) => c.data.customer.customerId;
-const isBusiness = (c: DemoCtx) => /enterprise|ebu|business|corporate/i.test(c.data.customer.segment);
-const lineType = (c: DemoCtx) => (c.data.accounts[0]?.accountType && /prepaid/i.test(String(c.data.accounts[0].accountType)) ? 'Prepaid' : 'Postpaid');
+const isBusiness = (c: DemoCtx) => isBusinessSegment(c.data.customer.segment);
+// The customer's own line type, as the record states it; else the account's type. Unknown stays unknown (it was read as Postpaid).
+const lineType = (c: DemoCtx): 'Prepaid' | 'Postpaid' | undefined => {
+  const stated = c.data.customer.lineType;
+  if (stated === 'Prepaid' || stated === 'Postpaid') return stated;
+  const accountType = String(c.data.accounts[0]?.accountType ?? '');
+  return /prepaid/i.test(accountType) ? 'Prepaid' : /postpaid/i.test(accountType) ? 'Postpaid' : undefined;
+};
 const meta = (c: DemoCtx) => (c.data.overviewDemo[0]?.contactMeta ?? {}) as { tenure?: string; creditScore?: string | number };
 const city = (c: DemoCtx) => str(c.data.addresses[0]?.city) ?? 'Doha';
 const benefits = (c: DemoCtx) => c.data.customer.benefitEligibility ?? [];
@@ -44,11 +52,7 @@ const dueDate = (c: DemoCtx) => {
   const d = str(latestBill(c)?.dueDate);
   return d ? new Date(d) : addDays(TODAY, 14);
 };
-const outstanding = (c: DemoCtx) => {
-  const billed = c.data.bills.filter((b) => b.status === 'billed' || b.status === 'overdue').reduce((s, b) => s + Number(b.totalAmount ?? 0), 0);
-  const paid = c.data.payments.reduce((s, p) => s + Number(p.amountQar ?? 0), 0);
-  return Math.max(0, billed - paid);
-};
+const outstanding = (c: DemoCtx) => outstandingBalance(c.data.bills, c.data.payments);
 
 /** The customer's single discount (one per order): Retired, MADA, B2B2C, else Loyalty. */
 const discountName = (c: DemoCtx) =>
@@ -72,8 +76,8 @@ export interface DemoRow {
 export const DEMO = {
   customerSince: (c: DemoCtx) => `${fmt(customerSince(c))} (${tenureText(c)})`,
   customerType: (c: DemoCtx) => (isBusiness(c) ? 'Business' : 'Individual'),
-  topRechargeType: (c: DemoCtx) => str(c.data.digitalEngagement[0]?.lastRechargeType) ?? (lineType(c) === 'Prepaid' ? 'Voucher' : 'Not applicable (postpaid)'),
-  primaryBalance: (c: DemoCtx) => (lineType(c) === 'Postpaid' ? 'QAR 0' : `QAR ${10 + (hash(customerId(c)) % 40)}.50`),
+  topRechargeType: (c: DemoCtx) => str(c.data.digitalEngagement[0]?.lastRechargeType) ?? (lineType(c) === 'Prepaid' ? 'Voucher' : lineType(c) === 'Postpaid' ? 'Not applicable (postpaid)' : 'Not on file'),
+  primaryBalance: (c: DemoCtx) => (lineType(c) === 'Postpaid' ? 'QAR 0' : lineType(c) === 'Prepaid' ? `QAR ${10 + (hash(customerId(c)) % 40)}.50` : 'Not on file'),
   leadClosedOn: () => fmt(addDays(TODAY, -1)),
   leadCreatedOn: (c: DemoCtx) => fmt(addDays(TODAY, -(3 + (hash(customerId(c)) % 10)))),
   activityLocation: (c: DemoCtx, r?: DemoRow) => (r?.type === 'System' || r?.type === 'System Activity' ? 'System' : str(c.data.addresses[0]?.city) ?? 'Doha'),

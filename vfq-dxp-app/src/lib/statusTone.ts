@@ -40,3 +40,24 @@ export const badgeVariantFor = (status: string | undefined | null): StatusBadgeV
 const CLOSED_TICKET = new Set(['Solved', 'Completed', 'Closed', 'Cancelled']);
 export const isClosedTicket = (status: unknown): boolean => CLOSED_TICKET.has(String(status ?? ''));
 export const isSlaStopped = (status: unknown): boolean => status === 'Closed' || status === 'Cancelled';
+
+/**
+ * Order lifecycle, defined once: where an order is in its life, from its status string.
+ *  - 'cancelled': Cancelled, Rejected (incl. "Rejected - Correction"), Dropped.
+ *  - 'completed': Complete / Completed, Approved/Completed, Migrated to Prepaid.
+ *  - 'progress': everything else - Draft, Open, Pending, Submitted for Approval.
+ * Customer 360's order lists and the dashboard's fulfilment queue use this, not their own string tests.
+ */
+export type OrderBucket = 'progress' | 'completed' | 'cancelled';
+export function orderBucket(status: unknown): OrderBucket {
+  const s = String(status ?? '');
+  if (/cancel|reject|dropped/i.test(s)) return 'cancelled';
+  if (/^(complete|completed|approved\/completed|migrated to prepaid)$/i.test(s)) return 'completed';
+  return 'progress';
+}
+
+/**
+ * Transfer of Ownership: a case is pending while it is 'created' - not yet completed and not yet ended by migrating the line to prepaid (both
+ * are outcomes, as the order lifecycle above reads them). Customer 360's Account Information and Orders tabs use this one reading.
+ */
+export const isTonPending = (status: unknown): boolean => /^created$/i.test(String(status ?? ''));

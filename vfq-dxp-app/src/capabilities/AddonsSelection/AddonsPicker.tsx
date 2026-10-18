@@ -34,6 +34,11 @@ interface AddonsPickerProps {
   emptyMessage?: string;
   /** 'rows': one full-width row per add-on (icon, name and description, Optional/Added tag, price). Default: a grid of cards. */
   layout?: 'cards' | 'rows';
+  /**
+   * Where the add-ons come from: 'catalogue' (default) the postpaid add-on products, offered by plan eligibility; 'prepaid' the add-ons
+   * the prepaid pack carries (addons-discounts for `eligibilityContext.planId`), priced as a one-off charge.
+   */
+  source?: 'catalogue' | 'prepaid';
 }
 
 // "Plan & Add-ons" (reference flow step 5) - optional, non-gating multi-select
@@ -43,7 +48,7 @@ const CHEVRON = 'M9 18l6-6-6-6';
 
 const PHONE_ICON = 'M7 2h10a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z M11 18h2';
 
-export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityContext, emptyMessage, layout = 'cards' }: AddonsPickerProps) {
+export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityContext, emptyMessage, layout = 'cards', source = 'catalogue' }: AddonsPickerProps) {
   const [allAddons, setAllAddons] = useState<AddonProduct[]>([]);
   const [status, setStatus] = useState<'loading' | 'error' | 'ready'>('loading');
   const [attempt, setAttempt] = useState(0);
@@ -60,18 +65,27 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityCon
 
   useEffect(() => {
     let cancelled = false;
-    mockDataEngine
-      .list<AddonProduct>('products')
-      .then((all) => {
+    const load: Promise<AddonProduct[]> =
+      source === 'prepaid'
+        ? mockDataEngine
+            .list<{ addonDiscountId: string; name: string; addonType: string; price: number; category: string; description?: string; planId?: string }>('addons-discounts')
+            .then((all) =>
+              all
+                .filter((d) => d.category === 'Paid Add-on' && d.planId === eligibilityContext?.planId)
+                .map((d) => ({ productId: d.addonDiscountId, name: d.name, type: d.addonType, mrcQAR: d.price, description: d.description }))
+            )
+        : mockDataEngine.list<AddonProduct>('products').then((all) => all.filter((p) => p.type === 'Add-on'));
+    load
+      .then((list) => {
         if (cancelled) return;
-        setAllAddons(all.filter((p) => p.type === 'Add-on'));
+        setAllAddons(list);
         setStatus('ready');
       })
       .catch(() => !cancelled && setStatus('error'));
     return () => {
       cancelled = true;
     };
-  }, [attempt]);
+  }, [attempt, source, eligibilityContext?.planId]);
 
   // A selection that stopped being eligible (the plan or customer type changed) is dropped.
   const eligibleIds = addons.map((a) => a.productId).join(',');
@@ -162,7 +176,7 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityCon
                   <p className="text-fg">
                     <span className="text-[length:var(--fs-caption)]">QAR </span>
                     <span className="text-[length:var(--fs-h4)] font-bold">{a.mrcQAR}</span>
-                    <span className="text-fg-2 text-[length:var(--fs-caption)]"> /mo</span>
+                    <span className="text-fg-2 text-[length:var(--fs-caption)]">{source === 'prepaid' ? ' one-off' : ' /mo'}</span>
                   </p>
                 </div>
               </div>
@@ -196,7 +210,7 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityCon
               <p className="text-accent mt-auto">
                 <span className="text-[length:var(--fs-body)] font-semibold">QAR </span>
                 <span className="text-[length:var(--fs-h3)] font-bold">{a.mrcQAR}</span>
-                <span className="text-fg-2 text-[length:var(--fs-caption)]"> /mo</span>
+                <span className="text-fg-2 text-[length:var(--fs-caption)]">{source === 'prepaid' ? ' one-off' : ' /mo'}</span>
               </p>
             </div>
           );

@@ -1,4 +1,6 @@
 import { isClosedTicket } from '../../lib/statusTone';
+import { isSimSwapAwaitingDecision } from '../../engines/approvalAuthority';
+import { isBusinessSegment } from '../../engines/businessSegment';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
@@ -522,7 +524,7 @@ export function Customer360Layout() {
 
   // Alerts & Attention card: customer-level indicators an agent must see first.
   const dunning = data.billingProfiles[0]?.collectionStage as string | undefined;
-  const pendingSimSwap = data.simSwapOrders.some((o) => /pending/i.test(String(o.status)));
+  const pendingSimSwap = data.simSwapOrders.some((o) => isSimSwapAwaitingDecision(o.status));
   const headerAlerts: HeaderAlert[] = [
     ...(data.customer.blacklisted ? [{ label: 'Blacklisted', tone: 'danger' as const }] : []),
     ...(outstanding > 0 ? [{ label: 'Outstanding balance', tone: 'danger' as const }] : []),
@@ -561,7 +563,7 @@ export function Customer360Layout() {
           segment={segmentLabelFor({
             ...data.customer,
             reimbursed: Boolean(data.customer.parentBusinessId && data.customer.billingResponsibility && segmentFor(data.customer.billingResponsibility) === 'CBU'),
-            business: /enterprise|business/i.test(String(data.customer.segment)),
+            business: isBusinessSegment(data.customer.segment),
           })}
           phone={data.customer.phone}
           email={data.customer.email}

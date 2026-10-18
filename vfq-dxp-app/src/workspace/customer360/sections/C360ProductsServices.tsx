@@ -4,6 +4,7 @@ import { useStartNewConnection } from '../useStartNewConnection';
 import { RevealValue, useFieldAccess } from '../fieldAccess';
 import { Icon } from '../../../components/primitives/Icon';
 import type { Customer360Data } from '../../../engines/customer360Engine';
+import { isActiveService } from '../../../engines/customerServicesEngine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { buildAssetsFieldResolver } from './assetsResolvers';
 import { ActionButton, FilterSelect, fmtDate, fmtDateTime, GridTable, IC, IconTile, KpiTile, Panel, Pill, qar, SearchBox, StatusPill, TabPage } from './C360Kit';
@@ -81,7 +82,8 @@ export function C360ProductsServices({ data, services }: { data: Customer360Data
     for (const s of services) {
       const r = buildAssetsFieldResolver(s, data);
       const asset = data.installedAssets.find((ia) => ia.serviceId === s.ref || ia.installedAssetId === s.ref);
-      const matched = asset ? data.addonsDiscounts.filter((ad) => ad.planId === asset.promotion) : [];
+      const planId = asset ? data.assetPlanIds[String(asset.installedAssetId)] : undefined;
+      const matched = planId ? data.addonsDiscounts.filter((ad) => ad.planId === planId) : [];
       out.set(s.ref, {
         asset,
         status: normStatus(str(s.tab === 'mobile' ? r('MSISDN Status (Active, Suspended, Barred)') : (asset?.status ?? s.status))),
@@ -98,7 +100,7 @@ export function C360ProductsServices({ data, services }: { data: Customer360Data
   const get = (s: CustomerService) => info.get(s.ref)!;
   const isMobile = (s: CustomerService) => s.tab === 'mobile';
 
-  const active = services.filter((s) => get(s).status === 'Active').length;
+  const active = services.filter(isActiveService).length;
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();

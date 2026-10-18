@@ -140,6 +140,18 @@
       {
         "key": "workspace.qnomy-ticket-history",
         "level": "View"
+      },
+      {
+        "key": "mobile.change-postpaid-plan",
+        "level": "Create"
+      },
+      {
+        "key": "mobile.change-prepaid-pack",
+        "level": "Create"
+      },
+      {
+        "key": "mobile.add-addon",
+        "level": "Create"
       }
     ],
     "legacyPersonaIds": [
@@ -258,6 +270,18 @@
       {
         "key": "search.global-search-screen",
         "level": "View"
+      },
+      {
+        "key": "mobile.change-postpaid-plan",
+        "level": "Create"
+      },
+      {
+        "key": "mobile.change-prepaid-pack",
+        "level": "Create"
+      },
+      {
+        "key": "mobile.add-addon",
+        "level": "Create"
       }
     ],
     "legacyPersonaIds": [
@@ -440,6 +464,18 @@
       {
         "key": "identity.passport-to-qid",
         "level": "Create"
+      },
+      {
+        "key": "mobile.change-postpaid-plan",
+        "level": "Create"
+      },
+      {
+        "key": "mobile.change-prepaid-pack",
+        "level": "Create"
+      },
+      {
+        "key": "mobile.add-addon",
+        "level": "Create"
       }
     ],
     "legacyPersonaIds": [
@@ -567,6 +603,18 @@
       {
         "key": "workspace.qnomy-ticket-history",
         "level": "View"
+      },
+      {
+        "key": "mobile.change-postpaid-plan",
+        "level": "Create"
+      },
+      {
+        "key": "mobile.change-prepaid-pack",
+        "level": "Create"
+      },
+      {
+        "key": "mobile.add-addon",
+        "level": "Create"
       }
     ],
     "legacyPersonaIds": [
@@ -1185,6 +1233,14 @@
       {
         "key": "workspace.qnomy-ticket-history",
         "level": "View"
+      },
+      {
+        "key": "mobile.change-postpaid-plan",
+        "level": "Create"
+      },
+      {
+        "key": "mobile.add-addon",
+        "level": "Create"
       }
     ],
     "legacyPersonaIds": [

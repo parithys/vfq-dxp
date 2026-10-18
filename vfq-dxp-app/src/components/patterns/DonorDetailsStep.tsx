@@ -4,7 +4,7 @@ import { Select } from '../primitives/Select';
 import { idTypesFor, idTypeLabel } from '../../data/idTypes';
 import {
   DONOR_CUSTOMER_TYPES,
-  DONOR_OPERATORS,
+  DONOR_OPERATOR,
   DONOR_SUBSCRIPTION_TYPES,
   normalizePortInNumber,
   portInNumberError,
@@ -47,7 +47,7 @@ const optionsOf = (list: readonly string[]) => list.map((v) => ({ value: v, labe
 const IN_FLIGHT = new Set(['Pending NPAS Approval', 'Submitted', 'Pending Payment', 'NPAS Approved']);
 
 // SCR-126 / MNP BRSD V1.1 (MNP_PI_001_QPC_03, DF-MNP-009..015): the Port-In number and the donor customer ID, ID type, customer
-// type, operator and subscription type are all captured by the agent from the customer. The number is checked before submission:
+// type and subscription type are captured by the agent from the customer; the operator (Ooredoo, the only one) is set. The number is checked before submission:
 // Qatar mobile format, not already on Vodafone's own inventory, no other request for it awaiting NPAS. Whether it is an active,
 // portable subscription at the donor is NPAS's to say (OI-MNP-003, open); a "no" arrives as a rejection reason, not as a check here.
 export function DonorDetailsStep({ value, onChange }: DonorDetailsStepProps) {
@@ -73,8 +73,12 @@ export function DonorDetailsStep({ value, onChange }: DonorDetailsStepProps) {
   const blocked = !formatOnly && numberError ? numberError : undefined;
 
   // The check that needs the stores is kept on the value, so the step's Continue gate (a pure function of the values) can read it.
+  // The donor operator (Ooredoo is the only one) is set here, not asked for.
   useEffect(() => {
-    if ((value.portInNumberBlocked ?? undefined) !== blocked) onChange({ ...value, portInNumberBlocked: blocked });
+    const patch: DonorDetailsValue = {};
+    if ((value.portInNumberBlocked ?? undefined) !== blocked) patch.portInNumberBlocked = blocked;
+    if (value.donorOperator !== DONOR_OPERATOR) patch.donorOperator = DONOR_OPERATOR;
+    if (Object.keys(patch).length > 0) onChange({ ...value, ...patch });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blocked]);
 
@@ -110,14 +114,6 @@ export function DonorDetailsStep({ value, onChange }: DonorDetailsStepProps) {
           value={value.donorCustomerType ?? ''}
           onChange={(e) => onChange({ ...value, donorCustomerType: e.target.value })}
           options={optionsOf(DONOR_CUSTOMER_TYPES)}
-        />
-        <Select
-          label="Donor Operator"
-          required
-          placeholder="Select operator"
-          value={value.donorOperator ?? ''}
-          onChange={(e) => onChange({ ...value, donorOperator: e.target.value })}
-          options={optionsOf(DONOR_OPERATORS)}
         />
         <Select
           label="Donor Subscription Type"

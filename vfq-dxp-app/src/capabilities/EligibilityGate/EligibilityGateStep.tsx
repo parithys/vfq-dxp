@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '../../components/primitives/Button';
-import { evaluateRule, isHrnNationality } from '../../engines/ruleEngine';
+import { defaultCreditLimitQar, evaluateRule, isHrnNationality } from '../../engines/ruleEngine';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { evaluateEligibilityChecks, hasHardStop, type EligibilityCheck } from '../../engines/eligibilityEngine';
 import * as mockDataEngine from '../../engines/mockDataEngine';
+import { outstandingBalance } from '../../engines/billingBalance';
 import { callService, ServiceError, type FailureKind, type ServiceName } from '../../engines/serviceCall';
 import { TechnicalFailure } from '../../components/patterns/ValidationStatus';
 import type { EligibilityResult, CustomerRecord, IdentityDocRecord } from '../../components/domain/eligibilityTypes';
@@ -194,22 +195,26 @@ export function EligibilityGateStep({
       // affordability, so dropping it from the result would silently change
       // that step's behaviour rather than just hide a row.
       const creditLimit = evaluateRule('BR-076', { hrnFlag });
-      const creditLimitAmount = hrnFlag ? 50 : 1000;
+      const creditLimitAmount = defaultCreditLimitQar(hrnFlag);
 
       // The seven matrix checks. Deals and the outstanding balance are the
       // only extra reads: the line cap comes from the rule already evaluated
       // above, so the cap logic stays in one place rather than being restated
       // inside the eligibility engine.
-      const [deals, bills] = await callService('eligibility', () =>
+      const [deals, bills, payments] = await callService('eligibility', () =>
         Promise.all([
           mockDataEngine.list<{ customerId?: string; status?: string; blocksNewConnection?: boolean }>('commitment-penalties'),
-          mockDataEngine.list<{ customerId?: string; totalAmount?: number; status?: string }>('bills'),
+          mockDataEngine.list<{ customerId?: string; type?: string; totalAmount?: number; status?: string }>('bills'),
+          mockDataEngine.list<{ customerId?: string; chargeType?: string; amountQar?: number; status?: string }>('payments'),
         ])
       );
       if (cancelled) return;
-      const outstandingQar = bills
-        .filter((b) => b.customerId === match.customerId && b.status !== 'Paid')
-        .reduce((sum, b) => sum + (Number(b.totalAmount) || 0), 0);
+      // What the customer owes, as Customer 360 shows it (billingBalance.ts): issued, unsettled invoices less collected bill payments. Not every bill
+      // that is not 'Paid' - no bill has that status, so that counted hot bills and simulations as debt.
+      const outstandingQar = outstandingBalance(
+        bills.filter((b) => b.customerId === match.customerId),
+        payments.filter((p) => p.customerId === match.customerId)
+      );
 
       const resolvedChecks = evaluateEligibilityChecks(
         {

@@ -24,7 +24,8 @@ export function ActivationComplete({ order, service = 'mobile', showActivityId =
     <ActivationCompleteScreen
       order={showActivityId ? order : { ...order, activityId: undefined }}
       numberLabel={service === 'fixed' ? 'Fixed Line Number' : undefined}
-      hideSimType={service === 'fixed'}
+      // A journey with no SIM of its own (Fixed Activation; a change to an existing line) has no SIM row to show.
+      hideSimType={service === 'fixed' || order.simType === undefined}
     />
   );
 }

@@ -19,6 +19,7 @@ interface CrossSalesOffer {
   addOnMonthly?: number;
   serviceIdentifier: string;
   journeyType?: string;
+  serviceJourney?: string;
 }
 
 // SCR-179: Migration Offer tab (Complex Asset List Applet) - UJ-087 Autobase:
@@ -37,7 +38,9 @@ export function MigrationOfferTab() {
     loadKind('cross-sales-offers');
   }, [loadKind]);
 
-  const migrationOffers = offers.filter((o) => o.journeyType === 'PreToPost');
+  // The offers for the Prepaid to Postpaid journey: by the journey the offer carries (the same key the cross-sell Offers step groups by). The older
+  // journeyType tag is on one record only, so it is read as well and nothing already shown is lost.
+  const migrationOffers = offers.filter((o) => o.serviceJourney === 'pre-to-post' || o.journeyType === 'PreToPost');
 
   const disposition = async (offer: CrossSalesOffer, status: string) => {
     await updateRecord('cross-sales-offers', 'offerId', offer.offerId, { status });

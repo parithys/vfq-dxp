@@ -33,13 +33,17 @@ interface PrepaidPlanStepProps {
   onDeselectProduct?: () => void;
   discountId: string | undefined;
   onSelectDiscount: (discountId: string | undefined) => void;
+  /** A pack not offered: the line's current pack, when the journey changes it. */
+  hiddenProductId?: string;
+  /** Only packs that carry a bundle: the SIM-only option (no data, no validity) is not offered, as when changing the pack of a line that already has its SIM. */
+  packsOnly?: boolean;
 }
 
 // MPRA_001_QPC_01-03 (prepaid plan/add-on selection, special discount) - the prepaid counterpart of
 // PostpaidPlanAddonsStep. Packs are filtered by the customer's segment (QPC_02), the agent may add the pack's
 // optional add-ons, and may pick a prepaid-specific discount for the chosen pack (QPC_03). No Bill Limit here:
 // BR-002/BR-005 exclude credit limit and bill cycle from Prepaid Activation.
-export function PrepaidPlanStep({ mode = 'plan', selectedProductId, onSelectProduct, onDeselectProduct, discountId, onSelectDiscount, segment, addonIds = [], onSelectAddons }: PrepaidPlanStepProps) {
+export function PrepaidPlanStep({ mode = 'plan', hiddenProductId, packsOnly, selectedProductId, onSelectProduct, onDeselectProduct, discountId, onSelectDiscount, segment, addonIds = [], onSelectAddons }: PrepaidPlanStepProps) {
   const [plans, setPlans] = useState<PrepaidPlan[]>([]);
   const [detailPack, setDetailPack] = useState<PrepaidPlan | null>(null);
   const [discounts, setDiscounts] = useState<Discount[]>([]);
@@ -50,11 +54,11 @@ export function PrepaidPlanStep({ mode = 'plan', selectedProductId, onSelectProd
     mockDataEngine.list<PrepaidPlan>('products').then((all) => {
       setPlans(
         all
-          .filter((p) => p.type === 'Prepaid Plan' && (!p.eligibleSegments || p.eligibleSegments.includes(customerSegment)))
+          .filter((p) => p.type === 'Prepaid Plan' && p.productId !== hiddenProductId && (!packsOnly || (p.dataAllowanceGB != null || p.packValidityDays != null)) && (!p.eligibleSegments || p.eligibleSegments.includes(customerSegment)))
           .sort((a, b) => a.starterPackChargeQAR - b.starterPackChargeQAR)
       );
     });
-  }, [customerSegment]);
+  }, [customerSegment, hiddenProductId, packsOnly]);
 
   useEffect(() => {
     if (!selectedProductId) {

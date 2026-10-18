@@ -26,3 +26,5 @@ export const ACTIVITY_LABEL = 'Activity';
 export const SIM_TYPE_LABEL = 'SIM Type';
 /** Scan and validate the SIM's serial number. */
 export const SIM_SERIAL_LABEL = 'SIM Serial';
+/** Choose which of the identified customer's existing lines the order changes. */
+export const LINE_SELECTION_LABEL = 'Select Line';

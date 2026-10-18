@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { isFixedLineOffer } from '../../../capabilities';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 
 type Resolver = (data: Customer360Data) => ReactNode | undefined;
@@ -22,7 +23,7 @@ export const contactAssetsResolvers: Record<string, Resolver> = {
   },
   'DOI Eligibility': (data) => data.deviceInstallments[0]?.eligibilityListMembership as string | undefined,
   'Fixed Line Offer': (data) => {
-    const fixed = data.crossSalesOffers.find((o) => String(o.offerType).toLowerCase().includes('fixed') || String(o.offerType).toLowerCase().includes('cross sell'));
+    const fixed = data.crossSalesOffers.find(isFixedLineOffer);
     return fixed ? String(fixed.offerName) : undefined;
   },
 };

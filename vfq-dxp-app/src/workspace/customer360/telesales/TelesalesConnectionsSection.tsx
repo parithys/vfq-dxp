@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
 import { ConnectionTypeTag } from '../../../components/primitives/ConnectionTypeTag';
 import { buildAssetsFieldResolver } from '../sections/assetsResolvers';
+import { isActiveService } from '../../../engines/customerServicesEngine';
 import { blacklistResolvers } from '../sections/blacklistResolvers';
 import { getVisibleTopicFields } from '../../../engines/customer360VisibilityEngine';
 import { Card, KV, Pill, dateTime, type Ctx } from './TelesalesOverview';
@@ -23,7 +24,7 @@ export function ConnectionsSection({ ctx }: { ctx: Ctx }) {
   const [picked, setPicked] = useState(services[0]?.ref);
   const [tab, setTab] = useState('overview');
   const group = (cat: string) => (cat === 'Prepaid' || cat === 'Postpaid' ? 'Mobile' : cat === 'TV / Entertainment' ? 'TV' : cat.startsWith('GigaHome') ? 'GigaHome' : cat);
-  const shown = services.filter((s) => (type === 'All Services' || group(s.category) === type) && (status === 'All Status' || (s.status ?? 'Active') === status) && `${s.identifier} ${s.label} ${s.category}`.toLowerCase().includes(query.toLowerCase()));
+  const shown = services.filter((s) => (type === 'All Services' || group(s.category) === type) && (status === 'All Status' || (status === 'Active' ? isActiveService(s) : (s.status ?? '') === status)) && `${s.identifier} ${s.label} ${s.category}`.toLowerCase().includes(query.toLowerCase()));
   const cur = services.find((s) => s.ref === picked) ?? services[0];
   const res = buildAssetsFieldResolver(cur, data);
   const addons = data.addonsDiscounts.filter((a) => a.category !== 'Discount');

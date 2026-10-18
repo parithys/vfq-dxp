@@ -14,7 +14,7 @@ import { useNotificationStore } from '../../../stores/notificationStore';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { PageHeader } from '../../../components/patterns/PageHeader';
 import { usePersonaStore } from '../../../stores/personaStore';
-import { approvalBlockMessage, simSwapDecisionAuthority } from '../../../engines/approvalAuthority';
+import { ORDER_AWAITING_DECISION, approvalBlockMessage, isSimSwapAwaitingDecision, simSwapDecisionAuthority } from '../../../engines/approvalAuthority';
 
 interface SimSwapOrder {
   simSwapOrderId: string;
@@ -60,8 +60,8 @@ export function SimSwapQueueScreen() {
   }, [loadKind]);
 
   if (!orderId) {
-    const pending = orders.filter((o) => o.status === 'Submitted for Approval');
-    const canWorkQueue = simSwapDecisionAuthority({ personaId: activePersonaId, status: 'Submitted for Approval' }).mayDecide;
+    const pending = orders.filter((o) => isSimSwapAwaitingDecision(o.status));
+    const canWorkQueue = simSwapDecisionAuthority({ personaId: activePersonaId, status: ORDER_AWAITING_DECISION }).mayDecide;
     return (
       <div className="p-8">
         <PageHeader title={<>SIM Swap Queue</>} description={<>Order tasks tab - tasks awaiting SIM Swap approval.</>} />

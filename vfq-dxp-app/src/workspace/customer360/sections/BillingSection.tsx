@@ -188,8 +188,8 @@ export function BillingSection({ data }: { data: Customer360Data }) {
             <SectionCard title="IN Platform Balance" note={DR_NOTE}>
               <Field label="Main Balance" value={balance ? `${String(balance.mainBalanceQAR)} QAR` : undefined} />
               <Field label="Data Balance" value={balance?.dataBalanceGB != null ? `${String(balance.dataBalanceGB)} GB` : undefined} />
-              <Field label="Voice Balance" value={balance?.voiceBalanceMinutes != null ? `${String(balance.voiceBalanceMinutes)} min` : 'Not applicable (postpaid)'} />
-              <Field label="SMS Balance" value={balance?.smsBalanceCount != null ? String(balance.smsBalanceCount) : 'Not applicable (postpaid)'} />
+              <Field label="Voice Balance" value={balance?.voiceBalanceMinutes != null ? `${String(balance.voiceBalanceMinutes)} min` : undefined} />
+              <Field label="SMS Balance" value={balance?.smsBalanceCount != null ? String(balance.smsBalanceCount) : undefined} />
             </SectionCard>
 
             <section>

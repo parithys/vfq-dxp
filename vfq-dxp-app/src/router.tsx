@@ -27,6 +27,9 @@ const SupportWorkspace = lazy(() => import('./workspace/support/SupportWorkspace
 const OrdersWorkspace = lazy(() => import('./workspace/orders/OrdersWorkspace').then((m) => ({ default: m.OrdersWorkspace })));
 const AdministrationWorkspace = lazy(() => import('./workspace/administration/AdministrationWorkspace').then((m) => ({ default: m.AdministrationWorkspace })));
 const AgentProfileWorkspace = lazy(() => import('./workspace/profile/AgentProfileWorkspace').then((m) => ({ default: m.AgentProfileWorkspace })));
+const ChangePostpaidPlanWizard = lazy(() => import('./modules/mobile-service-changes/wizards').then((m) => ({ default: m.ChangePostpaidPlanWizard })));
+const ChangePrepaidPackWizard = lazy(() => import('./modules/mobile-service-changes/wizards').then((m) => ({ default: m.ChangePrepaidPackWizard })));
+const AddAddonWizard = lazy(() => import('./modules/mobile-service-changes/wizards').then((m) => ({ default: m.AddAddonWizard })));
 const TaskListView = lazy(() => import('./workspace/tasks/TaskListView').then((m) => ({ default: m.TaskListView })));
 const TaskDetailView = lazy(() => import('./workspace/tasks/TaskDetailView').then((m) => ({ default: m.TaskDetailView })));
 const QnomyTicketHistory = lazy(() => import('./workspace/tickets/QnomyTicketHistory').then((m) => ({ default: m.QnomyTicketHistory })));
@@ -78,6 +81,10 @@ export function AppRouter() {
       <Route path="/mobile" element={<ProductLinePage lineKey="mobile" />} />
       <Route path="/mobile/start-connection" element={<NewConnectionWizard flow="new" />} />
       <Route path="/mobile/start-connection/existing/:customerId" element={<NewConnectionWizard flow="existing" />} />
+      {/* Plans & Numbers journeys on an existing line (journeys of the Mobile Services line; the menu leads here). */}
+      <Route path="/mobile/change-postpaid-plan" element={<ChangePostpaidPlanWizard />} />
+      <Route path="/mobile/change-prepaid-pack" element={<ChangePrepaidPackWizard />} />
+      <Route path="/mobile/add-addon" element={<AddAddonWizard />} />
       <Route path="/mobile/:category" element={<ProductLinePage lineKey="mobile" />} />
       <Route path="/fibre-home/start-connection/existing/:customerId" element={<NewConnectionWizard flow="existing" journey="home" />} />
       <Route path="/fibre-home" element={<ProductLinePage lineKey="fibre-home" />} />

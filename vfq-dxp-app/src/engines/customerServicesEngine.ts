@@ -29,6 +29,9 @@ export const SERVICE_CATEGORY_ORDER = [
   'TV / Entertainment',
   'Fixed Line',
   'Smart Devices',
+  // A service whose name matches none of the above. It stays visible under its own heading rather than being counted as a service type it
+  // was never shown to be.
+  'Other',
 ] as const;
 
 export type ServiceCategory = (typeof SERVICE_CATEGORY_ORDER)[number];
@@ -85,18 +88,67 @@ export interface ServiceSources {
   smartDevices: SmartDevice[];
 }
 
-// Which tab and category an installed asset belongs under, from its product
-// name. The dataset has no service-type field, so the name is the only signal
-// - matched on rather than guessed at, and anything unrecognised lands in
-// Products & Assets rather than being forced into Mobile or Fibre.
-function classifyProductName(name: string): { tab: ServiceTab; category: ServiceCategory } {
-  if (/prepaid/i.test(name)) return { tab: 'mobile', category: 'Prepaid' };
-  if (/postpaid|mobile|sim/i.test(name)) return { tab: 'mobile', category: 'Postpaid' };
-  if (/iptv|osn|\btv\b/i.test(name)) return { tab: 'fibre', category: 'TV / Entertainment' };
-  if (/fixed[ -]?(voice )?line|landline/i.test(name)) return { tab: 'fibre', category: 'Fixed Line' };
-  if (/broadband|fibre|fiber|gigahome|home/i.test(name)) return { tab: 'fibre', category: 'GigaHome Fibre' };
-  return { tab: 'assets', category: 'Smart Devices' };
+/**
+ * THE definition of what kind of service an installed asset is, from its product / service name. Customer 360, the line-change journeys,
+ * Connection Details and every other screen that has to say "is this a postpaid line, a prepaid line, a fibre service" use this one
+ * function; nothing else interprets the name, the promotion code or the plan catalogue for that purpose (the promotion code on an
+ * installed-asset record does not say what the service is: 60 postpaid mobile lines carry the code of an FWA plan).
+ *
+ * The dataset has no service-type field, so the name is the only signal - matched on, not guessed at. A name that matches nothing is
+ * 'Other' (tab 'assets'), not forced into Mobile or Fibre.
+ */
+export function classifyProductName(name: string | undefined): { tab: ServiceTab; category: ServiceCategory } {
+  const n = name ?? '';
+  // Prepaid and Postpaid are what the NAME says. "SIM" or "mobile" alone does not say which, so a name with neither word is not filed as
+  // postpaid (it was: "SIM Card", "Mobile ..." became Postpaid) - it is Other until someone decides what it is.
+  if (/prepaid/i.test(n)) return { tab: 'mobile', category: 'Prepaid' };
+  if (/postpaid/i.test(n)) return { tab: 'mobile', category: 'Postpaid' };
+  if (/\biot\b|\bm2m\b/i.test(n)) return { tab: 'assets', category: 'Smart Devices' };
+  if (/iptv|\bosn|\btv\b/i.test(n)) return { tab: 'fibre', category: 'TV / Entertainment' };
+  if (/fixed[ -]?(voice )?line|landline/i.test(n)) return { tab: 'fibre', category: 'Fixed Line' };
+  if (/broadband|fibre|fiber|gigahome|\bhome\b/i.test(n)) return { tab: 'fibre', category: 'GigaHome Fibre' };
+  if (/\bsmart\b|tracker|\bplug\b|\bdevice/i.test(n)) return { tab: 'assets', category: 'Smart Devices' };
+  return { tab: 'assets', category: 'Other' };
 }
+
+/** 'postpaid' / 'prepaid' for a mobile line, undefined for every other kind of service (fibre, TV, fixed line, devices, unclassified). */
+export function mobileLineTypeOfName(name: string | undefined): 'postpaid' | 'prepaid' | undefined {
+  const { category } = classifyProductName(name);
+  return category === 'Postpaid' ? 'postpaid' : category === 'Prepaid' ? 'prepaid' : undefined;
+}
+
+/**
+ * Which catalogue product types a service category can legitimately carry as its plan. An installed asset's `promotion` code is only a plan
+ * when its product is of such a type: 60 postpaid mobile lines carry the code of an FWA 5G Home plan, a broadband service carries a postpaid
+ * plan's, and neither is that service's plan. Categories with no entry (TV, devices, other) have no plan in the catalogue to find.
+ */
+const PLAN_TYPES_OF_CATEGORY: Partial<Record<ServiceCategory, readonly string[]>> = {
+  Prepaid: ['Prepaid Plan'],
+  Postpaid: ['Postpaid Plan'],
+  'GigaHome Fibre': ['Fixed Line Plan', 'FWA 5G Home Plan'],
+  'GigaHome 5G': ['FWA 5G Home Plan'],
+  'Fixed Line': ['Fixed Line Plan'],
+};
+
+/**
+ * THE catalogue plan an installed asset is on, or undefined when it cannot be established: the product of that name, else the product its
+ * promotion code names - in both cases only if that product's type fits the kind of service the asset is (classifyProductName). A code
+ * that contradicts the service is not taken as its plan, and the asset's plan stays unknown rather than guessed.
+ */
+export function planOfAsset<P extends { productId: string; name: string; type: string }>(
+  asset: { productServiceName?: string; promotion?: string },
+  products: readonly P[]
+): P | undefined {
+  const allowed = PLAN_TYPES_OF_CATEGORY[classifyProductName(asset.productServiceName).category];
+  if (!allowed) return undefined;
+  return (
+    products.find((p) => p.name === asset.productServiceName && allowed.includes(p.type)) ??
+    products.find((p) => p.productId === asset.promotion && allowed.includes(p.type))
+  );
+}
+
+/** The installed-asset statuses that are a service the customer holds: the only ones Customer 360 lists, and so the only ones a journey offers. */
+export const LIVE_SERVICE_STATUSES: readonly string[] = ['Active', 'Suspended'];
 
 // Every active Vodafone service a customer holds, across the datasets that
 // carry one - not just their mobile lines.
@@ -149,7 +201,7 @@ export function listCustomerServices(customer: CustomerRecord, sources: ServiceS
     if (!asset.accountId || !myAccountIds.has(asset.accountId)) continue;
     // The only source here with a real status vocabulary, so it is the only
     // one that can be filtered on "Active" honestly.
-    if (asset.status !== 'Active' && asset.status !== 'Suspended') continue;
+    if (!LIVE_SERVICE_STATUSES.includes(asset.status ?? '')) continue;
     // The customer's own number is already listed above from the customer record; its installed asset only carries the plan.
     if (asset.serviceId && asset.serviceId === customer.phone) continue;
     const name = asset.productServiceName ?? 'Installed service';
@@ -239,3 +291,11 @@ export function groupServicesByCategory(services: CustomerService[]): ServiceCat
     return [{ category, count: inCategory.length, tab: inCategory[0].tab }];
   });
 }
+
+/**
+ * Whether a listed service is one the customer is using now, defined once (Overview, Products & Services and Telesales Connections each had
+ * their own reading). A source with no status vocabulary (an IPTV bundle, a smart device) lists only services the customer holds, so no
+ * status means in use; otherwise the status must be Active - 'active subscription' too, not a Try & Buy trial, a Home Move / TON in
+ * progress or a Suspended service.
+ */
+export const isActiveService = (s: { status?: string }): boolean => !s.status || /^active/i.test(s.status);

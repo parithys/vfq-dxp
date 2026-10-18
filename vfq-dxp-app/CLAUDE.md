@@ -144,6 +144,31 @@ skill) so every journey picks it up; then run `python3 reference/scripts/build_r
 which regenerates `consumers.generated.json` and the inventory workbook and must report 0 bypass imports. See
 `src/capabilities/README.md`.
 
+## Data & business-rule guardrails - read before classifying, filtering or deriving anything
+
+The recurring defect here is code that invents its own reading of a record (a field that merely correlates in the sample data) and silently
+drops or mislabels the rest. Example: a journey took the promotion code on an installed asset to say what the line is, then matched names
+against the plan catalogue, and offered 1 of a customer's 20 postpaid lines. Rules:
+
+1. Search for an existing definition before writing one. What kind of service/line something is: `classifyProductName` /
+   `mobileLineTypeOfName` / `LIVE_SERVICE_STATUSES` in `src/engines/customerServicesEngine.ts` (the one Customer 360 uses). Reuse the
+   engine, capability or model that already answers the question; do not add a second regex, `===` on a name/code, or `.find` by name.
+2. Never infer a domain meaning from a field that correlates with it. Promotion/product codes, plan names and labels are not service
+   types. Check the data model and an existing definition first; if there is no evidence, the value is unknown.
+3. Unknown stays unknown: no `unknown -> postpaid / eligible / approved / active` defaults. Use an explicit state (`Other`,
+   `undefined`) and keep the record visible.
+4. Never validate a rule against records that rule selected. Validate it over the whole dataset (`public/mock-data`) against an
+   expectation written independently of the code (a table of what each distinct value IS), and check BOTH false positives and false
+   negatives.
+5. Cover many-record and mixed cases, not one convenient customer (CUST-1001 is clean): zero lines, one, 20+, postpaid + prepaid,
+   mobile + fibre/FWA, contradictory fields, null/unknown values. Add conservation checks (`offered + excluded = original`).
+6. Do not fit a fix to a record (`CUST-xxxx`, one plan, one code). Fix the mechanism.
+7. A shared definition changed means every consumer is re-verified (search the imports) before the change counts as done.
+8. Do not call a rule correct until `npx tsc -b`, `npm run lint`, `npm test` and `npm run build` have actually run and passed.
+
+`tests/classification.test.mjs` is the pattern (independent expected table, whole-population invariants), and `tests/assumptions.test.mjs`
+guards against new ad-hoc classification of service names outside the engine.
+
 ## Build-time settings
 
 `.env.example` documents the build flags. `VITE_SHOW_DEMO=false` hides demo-only UI (scanner simulators, specimen cards)

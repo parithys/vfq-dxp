@@ -13,6 +13,11 @@ import { getRequiredApproverRole } from './configEngine';
 
 /** An order sits in this status from submission until an approver decides it. */
 export const ORDER_AWAITING_DECISION = 'Submitted for Approval';
+/**
+ * A SIM swap request waiting for a decision: what the wizard writes (ORDER_AWAITING_DECISION) and what the seeded records call it
+ * ('Pending Approval'). The queue, the dashboard counter and Customer 360 all use this, not a string of their own.
+ */
+export const isSimSwapAwaitingDecision = (status: unknown): boolean => status === ORDER_AWAITING_DECISION || status === 'Pending Approval';
 
 export type ApprovalBlock = 'not-awaiting' | 'no-grant' | 'wrong-role';
 
@@ -49,7 +54,7 @@ export const mayClaimOrder = (args: { personaId: string; jobTitle?: string; orde
 
 /** The SIM swap queue is worked by the fulfilment roles (Edit and above on it); sales roles only raise the requests. */
 export function simSwapDecisionAuthority(args: { personaId: string; status: string }): ApprovalAuthority {
-  if (args.status !== ORDER_AWAITING_DECISION) return { mayDecide: false, blockedBy: 'not-awaiting' };
+  if (!isSimSwapAwaitingDecision(args.status)) return { mayDecide: false, blockedBy: 'not-awaiting' };
   if (!canPerformAction(args.personaId, 'SCR-196', 'Edit')) return { mayDecide: false, blockedBy: 'no-grant' };
   return { mayDecide: true };
 }

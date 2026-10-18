@@ -1,10 +1,13 @@
 import { isClosedTicket } from '../../../lib/statusTone';
+import { isSimSwapAwaitingDecision } from '../../../engines/approvalAuthority';
+import { isFixedLineOffer } from '../../../capabilities';
+import { isBusinessSegment } from '../../../engines/businessSegment';
 import { useState } from 'react';
 import { QueryFlowCard } from '../queryFlow/QueryFlowCard';
 import type { ReactNode } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
 import { computeBillingSummary, type Customer360Data } from '../../../engines/customer360Engine';
-import { groupServicesByCategory, type CustomerService } from '../../../engines/customerServicesEngine';
+import { groupServicesByCategory, isActiveService, type CustomerService } from '../../../engines/customerServicesEngine';
 import { connectionTag } from '../../../lib/connectionType';
 import { overdueTicketCount } from './accountInformationResolvers';
 import { leadResolvers } from './leadResolvers';
@@ -20,7 +23,7 @@ const dash = (v: ReactNode | undefined | null | '') => (v === undefined || v ===
 
 const isSuspended = (s: CustomerService) => /suspend/i.test(s.status ?? '');
 // A service with no status of its own is read as active, the same convention the Telesales overview uses.
-const isActive = (s: CustomerService) => !s.status || /^active$/i.test(s.status);
+const isActive = isActiveService;
 
 /** A label / value row; the value cell wraps and aligns right. */
 function Row({ label, children, top }: { label: string; children: ReactNode; top?: boolean }) {
@@ -64,6 +67,7 @@ const TYPE_ICON: Record<CustomerService['category'], string> = {
   'TV / Entertainment': IC.tv,
   'Fixed Line': IC.bars,
   'Smart Devices': IC.cpu,
+  Other: IC.cpu,
 };
 
 export function C360Overview({ data, services, goToTab, onTicketCreated, queryFocus, hasTab }: { data: Customer360Data; services: CustomerService[]; goToTab?: (key: string) => void; onTicketCreated?: (ticket: Record<string, unknown>) => void; queryFocus?: number; hasTab?: (key: string) => boolean }) {
@@ -85,7 +89,7 @@ export function C360Overview({ data, services, goToTab, onTicketCreated, queryFo
   const nextBest = topCross ? { name: str(topCross.offerName), badge: 'Recommended' } : arr<{ name: string; badge?: string }>(catalog.nextBestOffers)[0];
   const doi = data.deviceInstallments[0];
   const crossSell = arr<{ service: string; offer: string; eligibility?: string }>(catalog.crossSell);
-  const fixedLine = data.crossSalesOffers.find((o) => /fixed|cross sell/i.test(str(o.offerType)));
+  const fixedLine = data.crossSalesOffers.find(isFixedLineOffer);
   const fixedOffer = fixedLine ? str(fixedLine.offerName) : crossSell.find((c) => c.service === 'Fixed Line')?.offer;
   const additionalLine = crossSell.find((c) => c.service === 'Additional Line');
   const happy = arr<{ name: string; status?: string }>(catalog.additionalOpportunities).find((o) => /happy/i.test(o.name));
@@ -124,7 +128,7 @@ export function C360Overview({ data, services, goToTab, onTicketCreated, queryFo
   const dunning = str(billingProfile?.collectionStage);
   const dunningActive = Boolean(dunning) && !/^(none|no dunning|current)$/i.test(dunning);
   const overdueTickets = overdueTicketCount(data);
-  const pendingSwaps = data.simSwapOrders.filter((s) => /pending/i.test(str(s.status))).length;
+  const pendingSwaps = data.simSwapOrders.filter((s) => isSimSwapAwaitingDecision(s.status)).length;
   const alerts: { icon: string; tone: Tone; title: string; sub: string; level: string }[] = [
     ...(outstanding > 0 || dunningActive
       ? [{ icon: IC.alert, tone: 'red' as Tone, title: dunningActive ? `BP in Collection - ${dunning}` : 'Outstanding Balance', sub: outstanding > 0 ? `QAR ${outstanding} overdue` : 'Account in dunning', level: 'High' }]
@@ -149,7 +153,7 @@ export function C360Overview({ data, services, goToTab, onTicketCreated, queryFo
     });
   };
 
-  const isBusiness = /enterprise|ebu|business|corporate/i.test(str(data.customer.segment));
+  const isBusiness = isBusinessSegment(data.customer.segment);
 
   return (
     <div className="space-y-4">

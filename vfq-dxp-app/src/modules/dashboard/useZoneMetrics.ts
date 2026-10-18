@@ -3,7 +3,8 @@ import { useEntityStore } from '../../stores/entityStore';
 import { useAuthStore } from '../../stores/authStore';
 import { isVisibleToAgent } from '../../engines/agentTaskEngine';
 import { usePersonaStore } from '../../stores/personaStore';
-import { holdsApproveGrant, ordersAwaitingDecisionBy } from '../../engines/approvalAuthority';
+import { holdsApproveGrant, isSimSwapAwaitingDecision, ordersAwaitingDecisionBy } from '../../engines/approvalAuthority';
+import { isClosedTicket, orderBucket } from '../../lib/statusTone';
 import type { EntityKind } from '../../engines/mockDataEngine';
 
 // Every kind either zone can need, loaded on mount regardless of which zones
@@ -114,13 +115,13 @@ export function useZoneMetrics(scopeId: string): ZoneMetrics {
       { key: 'priority', label: 'Priority Tasks', count: openTasks.filter((t) => t.priorityFlag).length },
       { key: 'draft-orders', label: 'Draft Orders', count: openTasks.filter((t) => t.taskType === 'Draft Order').length },
     ],
-    openTickets: get<Ticket>('trouble-tickets').filter((t) => t.status === 'Open' || t.status === 'Reopened').length,
+    openTickets: get<Ticket>('trouble-tickets').filter((t) => !isClosedTicket(t.status)).length,
     ordersPendingApproval: get<Order>('orders').filter((o) => o.status === 'Submitted for Approval').length,
     ordersAwaitingMyDecision: holdsApproveGrant(personaId, 'SCR-061')
       ? ordersAwaitingDecisionBy(get<{ orderId: string; orderType: string; status: string; approverRole?: string; assignedApproverId?: string | null }>('orders'), { personaId, jobTitle: currentJobTitle, userId: currentAgentId }).length
       : undefined,
     totalLeads: get('leads').length,
-    simSwapsPending: get<SimSwapOrder>('sim-swap-orders').filter((s) => s.status === 'Submitted for Approval').length,
+    simSwapsPending: get<SimSwapOrder>('sim-swap-orders').filter((s) => isSimSwapAwaitingDecision(s.status)).length,
     customersOnFile: get('customers').length,
     bulkJobsProcessed: get<BulkJob>('bulk-activation-orders')
       .filter((j) => j.overallStatus === 'Processed' || j.overallStatus === 'Completed').length,
@@ -132,7 +133,7 @@ export function useZoneMetrics(scopeId: string): ZoneMetrics {
     bundlesInReview: catalog.filter((c) => c.itemType === 'Bundle' && c.status === 'In review').length,
     changesQueued: get<ChangeRequest>('catalog-change-requests').filter((c) => c.status === 'Queued').length,
 
-    fulfilmentQueue: get<Order>('orders').filter((o) => o.status !== 'Completed' && o.status !== 'Cancelled').length,
+    fulfilmentQueue: get<Order>('orders').filter((o) => orderBucket(o.status) === 'progress').length,
     verificationBacklog: orderApprovals.filter((a) => (a.approvalStatus ?? a.status) === 'Pending').length,
     wfmActivitiesOpen: wfm.filter((a) => (a.status ?? a.activityStatus) !== 'Completed').length,
     appointmentsBooked: get<Appointment>('appointments').length,

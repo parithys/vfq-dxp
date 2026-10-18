@@ -1,3 +1,4 @@
+import { isBusinessSegment } from '../../engines/businessSegment';
 import { CARD_SELECTED, CARD_IDLE } from '../primitives/offerCardParts';
 import { useEffect, useRef, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
@@ -115,7 +116,7 @@ export function BillingAccountStep({
   // prepaid); enterprises can have more" (business-rules.json) - this
   // journey only ever creates a postpaid profile, so a Consumer who already
   // holds two of ANY type has nowhere left for a new one to go.
-  const atConsumerCap = customerSegment !== 'Enterprise' && profiles.length >= 2;
+  const atConsumerCap = !isBusinessSegment(customerSegment) && profiles.length >= 2;
 
   const validateCard = () => {
     const result = tokenizeCard(cardNumber);

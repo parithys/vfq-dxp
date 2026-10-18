@@ -37,9 +37,14 @@ export interface QualificationContext {
    * ones are judged when the product is chosen, and nothing here is prepaid- or postpaid-only.
    */
   productAgnostic?: boolean;
+  /**
+   * The journey acts on a customer the business already has (Change Postpaid Plan, Change Prepaid Pack, Add Add-On, Prepaid to Postpaid): whoever
+   * the scanned ID belongs to is looked up as the existing customer, not handled as a new one. The default (a New Customer journey) handles them as new.
+   */
+  knownCustomer?: boolean;
 }
 
-export function customerQualificationStep({ flow, existingCustomerId, guardedContactChange, journeyType = 'postpaid', manualEntry, productAgnostic = false }: QualificationContext): WizardStep {
+export function customerQualificationStep({ flow, existingCustomerId, guardedContactChange, journeyType = 'postpaid', manualEntry, productAgnostic = false, knownCustomer = false }: QualificationContext): WizardStep {
   const prepaid = journeyType === 'prepaid';
   return {
     key: 'contact',
@@ -62,7 +67,7 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
         <CustomerIdentification
           collectContact
           // New Customer journey: whoever the scanned ID belongs to is handled as a genuine new customer.
-          asNewCustomer={flow === 'new'}
+          asNewCustomer={flow === 'new' && !knownCustomer}
           // Customer 360 entry: the customer is the one the journey was opened for.
           asCustomerId={flow === 'existing' ? existingCustomerId : undefined}
           // All four ID types are offered (2026-10-04). Passport, GCC ID and Diplomatic ID are exception
@@ -81,7 +86,7 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
           <CustomerStatusBanner customerId={eligibility?.customerId} />
           <EligibilityOutcomePanel />
           <EligibilityGateStep
-            asNewCustomer={flow === 'new'}
+            asNewCustomer={flow === 'new' && !knownCustomer}
             asCustomerId={flow === 'existing' ? existingCustomerId : undefined}
             announcePass={false}
             journeyType={journeyType}

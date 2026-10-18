@@ -1,6 +1,7 @@
 import { Button } from '../../../components/primitives/Button';
 import { useMemo, useState } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
+import { unpaidInvoiceTotal } from '../../../engines/billingBalance';
 import { computeBillingSummary, withinBillHistoryWindow, type Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { GridTable, IC, IconTile, KpiGrid, KpiTile, Panel, Pill, StatusPill, TabPage, fmtDate, qar, type GridCol } from './C360Kit';
@@ -73,7 +74,8 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
   );
   const billed = bills.filter((b) => withinBillHistoryWindow(b.billPeriod) && isBillRow(b));
   const latestBill = selected ? billed[0] : summary.latestBill;
-  const outstandingOf = (list: Rec[]) => list.filter((b) => b.status === 'billed').reduce((s, b) => s + Number(b.totalAmount ?? 0), 0);
+  // A profile's own invoices (payments are not recorded per profile, so none is netted against it).
+  const outstandingOf = (list: Rec[]) => unpaidInvoiceTotal(list);
   const outstanding = selected ? outstandingOf(bills) : summary.outstanding;
   const lastPayment = summary.previousPayment;
   const unbilled = latestBill?.currentChargesQAR;

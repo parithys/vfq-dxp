@@ -1,4 +1,5 @@
 import { evaluateRule } from '../../engines/ruleEngine';
+import { HRN_ADVANCE_QAR } from '../../engines/postpaidPricing';
 import { type EligibilityCheck, type EligibilityOutcome } from '../../engines/eligibilityEngine';
 
 // Row treatment per outcome, for the divided-list layout adopted 2026-09-25.
@@ -86,7 +87,7 @@ export function buildEligibilityRows(
             title: hrnFlag ? 'Upfront payment required' : 'Non-HRN new account',
             detail: hrnFlag
               ? hrn.message
-                  ? 'An advance payment of QAR 100 is required at checkout.'
+                  ? `An advance payment of QAR ${HRN_ADVANCE_QAR} is required at checkout.`
                   : 'An advance payment is required at checkout.'
               : nationality
                 ? `${nationality} Citizen - not a high-risk nationality`

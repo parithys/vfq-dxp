@@ -1,4 +1,4 @@
-import { isClosedTicket } from '../../../lib/statusTone';
+import { isClosedTicket, isTonPending } from '../../../lib/statusTone';
 import type { ReactNode } from 'react';
 import { DataTable } from '../../../components/primitives/DataTable';
 import type { Customer360Data } from '../../../engines/customer360Engine';
@@ -20,7 +20,6 @@ type Resolver = (ctx: AccountInfoContext) => ReactNode | undefined;
 // live clock-driven billing/SLA cycle, so "overdue" is computed against
 // that same frozen date rather than the real Date.now().
 const SESSION_TODAY = new Date(2026, 8, 14); // 2026-09-14
-const TON_TERMINAL_STATUSES = new Set(['completed']);
 const ADJUSTMENT_TERMINAL_STATUSES = new Set(['Approved', 'Rejected', 'Failed']);
 
 function last(n: number, rows: Record<string, unknown>[], dateKey: string) {
@@ -69,7 +68,7 @@ export const accountInformationResolvers: Record<string, Resolver> = {
   'All Billing Profiles': ({ data }) => (data.billingProfiles.length > 0 ? `${data.billingProfiles.length} profile${data.billingProfiles.length === 1 ? '' : 's'}` : undefined),
   'Installed Assets': ({ data }) => (data.installedAssets.length > 0 ? `${data.installedAssets.length} asset${data.installedAssets.length === 1 ? '' : 's'}` : undefined),
   'Contact Hierarchy': ({ data }) => (data.contacts.length > 0 ? `${data.contacts.length} contact${data.contacts.length === 1 ? '' : 's'}` : undefined),
-  'Pending TON requests': ({ data }) => `${data.tonCases.filter((t) => !TON_TERMINAL_STATUSES.has(String(t.status))).length} pending`,
+  'Pending TON requests': ({ data }) => `${data.tonCases.filter((t) => isTonPending(t.status)).length} pending`,
   'Pending Adjustments': ({ data }) => `${data.adjustments.filter((a) => !ADJUSTMENT_TERMINAL_STATUSES.has(String(a.status))).length} pending`,
   'Pending Sim swap': ({ data }) => `${data.simSwapOrders.filter((s) => String(s.status).includes('Pending')).length} pending`,
   'Activity (last 5)': ({ data }) => (data.activities.length > 0 ? `${Math.min(5, data.activities.length)} most recent` : undefined),
@@ -96,7 +95,7 @@ export function accountInformationRichFields({
 }): Record<string, ReactNode> {
   const pendingAdjustments = data.adjustments.filter((a) => !ADJUSTMENT_TERMINAL_STATUSES.has(String(a.status)));
   const pendingSimSwaps = data.simSwapOrders.filter((s) => String(s.status).includes('Pending'));
-  const pendingTon = data.tonCases.filter((t) => !TON_TERMINAL_STATUSES.has(String(t.status)));
+  const pendingTon = data.tonCases.filter((t) => isTonPending(t.status));
 
   return {
     'Account Hierarchy': <AccountHierarchySection data={data} expandAll={expandAll} />,

@@ -66,9 +66,12 @@ export const DONOR_CUSTOMER_TYPES = ['Individual', 'Business'] as const;
 export const DONOR_SUBSCRIPTION_TYPES = ['Prepaid', 'Postpaid'] as const;
 /**
  * DF-MNP-013 lists "Ooredoo, Vodafone, Other Licensed Operators". Vodafone is left out of what the agent can choose: BR-MNP-001
- * is a port-in "from another licensed operator", so Vodafone cannot be the donor of a port into Vodafone.
+ * is a port-in "from another licensed operator", so Vodafone cannot be the donor of a port into Vodafone. "Other Licensed Operator"
+ * is not offered either (direction 2026-10-18), so Ooredoo is the one donor operator.
  */
-export const DONOR_OPERATORS = ['Ooredoo', 'Other Licensed Operator'] as const;
+export const DONOR_OPERATORS = ['Ooredoo'] as const;
+/** The one donor operator, so the journey sets it rather than asking for it. */
+export const DONOR_OPERATOR = DONOR_OPERATORS[0];
 
 // ---------------------------------------------------------------- porting window (BR-MNP-027, OI-MNP-012..014)
 

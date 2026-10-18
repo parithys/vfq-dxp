@@ -34,6 +34,7 @@ export function NewConnectionWizard({
   journey = 'connection',
   initialProduct,
   initialValues,
+  title,
 }: {
   flow?: NewConnectionFlow;
   /** 'home' is New Home Connection (Fibre, Fixed-Line, FWA, 5G Home); the default is New Connection. */
@@ -41,6 +42,8 @@ export function NewConnectionWizard({
   initialProduct?: ConnectionProduct;
   /** Values the entry point already knows for that product (an FWA link starts Fixed Line with the FWA service type). */
   initialValues?: Record<string, unknown>;
+  /** The journey's name when an entry point has its own (MNP Port-In, New Prepaid Activation); New Connection is the default. */
+  title?: string;
 }) {
   const {
     navigate,
@@ -113,7 +116,7 @@ export function NewConnectionWizard({
         belowPanel={(draftStep ?? 0) === 0 && !isMirrorWindow ? <DemoFaultPanel /> : undefined}
         wizardId={WIZARD_ID}
         allowCustomerView={device === 'web'} // a second customer-facing window has no use on a tablet or phone
-        title={journey === 'home' ? 'New Home Connection' : 'New Connection'}
+        title={title ?? (journey === 'home' ? 'New Home Connection' : 'New Connection')}
         draftActionLabel={
           product === 'fixed-line' && homeProduct
             ? `${homeProductLabel(homeProduct)} Activation`.replace('New ', '')

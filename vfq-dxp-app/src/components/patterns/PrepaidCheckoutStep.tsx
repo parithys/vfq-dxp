@@ -3,7 +3,7 @@ import * as mockDataEngine from '../../engines/mockDataEngine';
 import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
 import { cartTotals, priceLine } from './prepaidCartModel';
-import type { PrepaidCheckoutTotals, PrepaidLine, PricingExtra, PricingProduct } from './prepaidCartModel';
+import type { PriceOptions, PrepaidCheckoutTotals, PrepaidLine, PricingExtra, PricingProduct } from './prepaidCartModel';
 
 interface SimRecord {
   simSerial: string;
@@ -27,6 +27,11 @@ interface PrepaidCheckoutStepProps {
    * charge and deposit, and the BRSD gives none). The pack is then listed without a price and the total is the sum of the fees.
    */
   fees?: { label: string; amountQar: number }[];
+  /**
+   * The order changes a line the customer already has (a pack change, an add-on): the SIM is theirs, so no SIM rows and no SIM card
+   * charge; with `excludePack` the pack is the line's current one and not being bought (an add-on), so no starter pack charge.
+   */
+  existingLine?: PriceOptions;
 }
 
 const qar = (n: number) => `QAR ${n.toLocaleString('en-GB')}`;
@@ -35,7 +40,7 @@ const qar = (n: number) => `QAR ${n.toLocaleString('en-GB')}`;
 // the whole cart before the customer signs and pays - each subscription's pack, add-ons, number and SIM, the starter
 // pack and any SIM card charge, and the total payable today that the Payment step collects. A prepaid line has no credit
 // limit, billing account or monthly charge, so none is shown (CAM_02, ECC_03, BAM_01).
-export function PrepaidCheckoutStep({ customerName, idType, lines, onTotalsComputed, onEdit, editLabel = 'Edit subscriptions', details, fees }: PrepaidCheckoutStepProps) {
+export function PrepaidCheckoutStep({ customerName, idType, lines, onTotalsComputed, onEdit, editLabel = 'Edit subscriptions', details, fees, existingLine }: PrepaidCheckoutStepProps) {
   const [products, setProducts] = useState<PricingProduct[]>([]);
   const [extras, setExtras] = useState<PricingExtra[]>([]);
   const [sims, setSims] = useState<SimRecord[]>([]);
@@ -54,7 +59,7 @@ export function PrepaidCheckoutStep({ customerName, idType, lines, onTotalsCompu
     });
   }, []);
 
-  const cart = cartTotals(lines, idType, products, extras);
+  const cart = cartTotals(lines, idType, products, extras, existingLine);
   const feesQar = (fees ?? []).reduce((sum, f) => sum + f.amountQar, 0);
   const totals: PrepaidCheckoutTotals = fees
     ? { starterPackChargeQar: 0, addonsChargeQar: 0, simCardChargeQar: 0, numberPriceQar: 0, totalDueQar: feesQar, lineCount: lines.length }
@@ -79,7 +84,7 @@ export function PrepaidCheckoutStep({ customerName, idType, lines, onTotalsCompu
     <div className="space-y-4">
       <dl className="card card-surface p-4">
         <Row label="Customer" value={customerName ?? '-'} />
-        {!fees && <Row label="Subscriptions" value={String(lines.length)} />}
+        {!fees && !existingLine && <Row label="Subscriptions" value={String(lines.length)} />}
         {details?.map((d) => (
           <Row key={d.label} label={d.label} value={d.value} />
         ))}
@@ -87,32 +92,36 @@ export function PrepaidCheckoutStep({ customerName, idType, lines, onTotalsCompu
 
       {lines.map((line, i) => {
         const plan = products.find((p) => p.productId === line.productId);
-        const charges = priceLine(line, idType, products, extras);
+        const charges = priceLine(line, idType, products, extras, existingLine);
         const discount = extras.find((e) => e.addonDiscountId === line.discountId);
         const addons = line.addonIds.map((id) => extras.find((e) => e.addonDiscountId === id)).filter((e): e is PricingExtra => Boolean(e));
         const iccid = line.simType.simType === 'Physical' ? sims.find((s) => s.simSerial === line.simType.simSerial)?.iccid : undefined;
         return (
           <section key={`${line.msisdn}-${i}`} aria-label={`Subscription ${i + 1}`} className="card card-surface p-4 space-y-2">
             <div className="flex items-center justify-between gap-3">
-              <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{fees ? 'Order' : `Subscription ${i + 1}`}</h3>
+              <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{fees || existingLine ? 'Order' : `Subscription ${i + 1}`}</h3>
               {line.prePaired && <Badge variant="accent">Pre-Paired SIM</Badge>}
             </div>
             <dl>
-              <Row label="Pack" value={plan ? (fees ? plan.name : `${plan.name} - ${qar(charges.starterPackQar)}`) : 'SIM only, no pack selected'} />
+              <Row label="Pack" value={plan ? (fees ? plan.name : existingLine?.excludePack ? `${plan.name} (current pack)` : `${plan.name} - ${qar(charges.starterPackQar)}`) : 'SIM only, no pack selected'} />
               {discount && <Row label="Discount" value={`${discount.name} (${Math.round(Math.abs(discount.price) * 100)}% off the starter pack)`} />}
               {addons.map((a) => (
                 <Row key={a.addonDiscountId} label="Add-on" value={`${a.name} - ${qar(a.price)}`} />
               ))}
-              <Row label="Number" value={`${line.msisdn}${charges.numberQar > 0 ? ` (premium, ${qar(charges.numberQar)} one-time)` : ''}`} />
-              <Row
-                label="SIM Type"
-                value={line.prePaired ? 'Pre-Paired SIM' : line.simType.simType === 'eSIM' ? 'eSIM' : (line.simType.simKind ?? line.simType.simType ?? '-')}
-              />
-              <Row label="ICCID" value={line.simType.simType === 'eSIM' ? 'Not applicable (eSIM)' : (iccid ?? line.simType.simIccid ?? '-')} />
-              {!fees && <Row label="SIM Card Charge" value={charges.simCardChargeQar > 0 ? qar(charges.simCardChargeQar) : 'Waived'} />}
+              <Row label={existingLine ? 'Line' : 'Number'} value={`${line.msisdn}${charges.numberQar > 0 ? ` (premium, ${qar(charges.numberQar)} one-time)` : ''}`} />
+              {!existingLine && (
+                <>
+                  <Row
+                    label="SIM Type"
+                    value={line.prePaired ? 'Pre-Paired SIM' : line.simType.simType === 'eSIM' ? 'eSIM' : (line.simType.simKind ?? line.simType.simType ?? '-')}
+                  />
+                  <Row label="ICCID" value={line.simType.simType === 'eSIM' ? 'Not applicable (eSIM)' : (iccid ?? line.simType.simIccid ?? '-')} />
+                </>
+              )}
+              {!fees && !existingLine && <Row label="SIM Card Charge" value={charges.simCardChargeQar > 0 ? qar(charges.simCardChargeQar) : 'Waived'} />}
               {!fees && <Row label="Due for this subscription" value={qar(charges.totalQar)} />}
             </dl>
-            {!fees && <p className="text-[length:var(--fs-caption)] text-muted">{charges.simCardMessage}</p>}
+            {!fees && !existingLine && <p className="text-[length:var(--fs-caption)] text-muted">{charges.simCardMessage}</p>}
           </section>
         );
       })}

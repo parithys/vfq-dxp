@@ -6,6 +6,8 @@ import { Icon } from '../../../components/primitives/Icon';
 import { Button } from '../../../components/primitives/Button';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
+import { outstandingBalance } from '../../../engines/billingBalance';
+import { isClosedTicket, orderBucket } from '../../../lib/statusTone';
 import { IC, IconTile, Pill, StatusPill, fmtDate, qar } from '../sections/C360Kit';
 import { previewFieldsFor, serviceTypeLabel } from './queryFlowModel';
 import type { QueryIssue, QueryIssueCatalogue, TicketRouting } from './queryFlowModel';
@@ -14,7 +16,6 @@ import { DEFAULT_QUEUE } from '../../../data/reference/ticketReferenceData';
 type Rec = Record<string, unknown>;
 const NOT_ON_FILE = 'Not on file';
 const text = (v: unknown): string | undefined => (v === undefined || v === null || v === '' ? undefined : String(v));
-const CLOSED = /closed|cancel|solved|complete|reject/i;
 
 /** A contained section: icon + title header, optionally collapsible. */
 function SectionCard({ icon, title, open = true, onToggle, children }: { icon: string; title: string; open?: boolean; onToggle?: () => void; children: ReactNode }) {
@@ -88,8 +89,8 @@ export function QueryPreviewModal({
   const engagement = data.digitalEngagement[0] as Rec | undefined;
   const contact = data.contacts[0] as Rec | undefined;
 
-  const openTickets = data.tickets.filter((t) => !CLOSED.test(String(t.status ?? '')));
-  const openOrders = data.orders.filter((o) => !CLOSED.test(String(o.status ?? '')));
+  const openTickets = data.tickets.filter((t) => !isClosedTicket(t.status));
+  const openOrders = data.orders.filter((o) => orderBucket(o.status) === 'progress');
   const latestOrder = [...data.orders].sort((a, b) => String(b.createdAt ?? '').localeCompare(String(a.createdAt ?? '')))[0] as Rec | undefined;
   const latestPayment = [...data.payments].sort((a, b) => String(b.capturedAt ?? '').localeCompare(String(a.capturedAt ?? '')))[0] as Rec | undefined;
   const barring = account?.barringType ?? (account?.barringStatus === 'Not Barred' ? 'No' : text(account?.barringStatus));
@@ -102,7 +103,7 @@ export function QueryPreviewModal({
   const limit = (v: unknown) => (v != null ? qar(Number(v)) : undefined);
   const date = (v: unknown) => (v ? fmtDate(v) : undefined);
   const yn = (b: boolean) => (b ? 'Yes' : 'No');
-  const outstanding = data.bills.reduce((sum, b) => sum + (Number(b.outstandingAmountQar ?? b.outstandingQar ?? 0) || 0), 0);
+  const outstanding = outstandingBalance(data.bills, data.payments);
 
   // One resolver per Details field named in the categorization workbook. A field with no source in the customer's
   // records resolves to nothing and shows "Not on file" - nothing is invented.
@@ -130,7 +131,8 @@ export function QueryPreviewModal({
     'Preferred Language': () => text(contact?.preferredLanguage),
     Nationality: () => text(contact?.nationality ?? data.customer.nationality),
     'QID Number': () => (contact?.idType === 'QID' ? text(contact.idNumber) : undefined),
-    'Total Number of Connections Prepaid + Postpaid': () => String(services.length),
+    // Prepaid + postpaid connections only: not the fibre, TV or device services in the same list.
+    'Total Number of Connections Prepaid + Postpaid': () => String(services.filter((s) => s.category === 'Prepaid' || s.category === 'Postpaid').length),
     'Total Outstanding Amount': () => (outstanding > 0 ? qar(outstanding) : data.bills.length ? 'QAR 0' : undefined),
     'Reason for Blacklist': () => (data.customer.blacklisted ? text(data.customer.blacklistReason) : undefined),
     'Previous Mobile Tickets (Last 3 Months)': () => String(data.tickets.filter((t) => /mobile/i.test(String(t.category ?? ''))).length),

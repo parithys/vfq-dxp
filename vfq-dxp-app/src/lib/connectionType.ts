@@ -21,6 +21,7 @@ export const CONNECTION_TAG: Record<string, ConnectionTag> = {
   'TV / Entertainment': { label: 'TV', variant: 'filled-neutral', tone: 'grey' },
   'Fixed Line': { label: 'Fixed Line', variant: 'filled-neutral', tone: 'grey' },
   'Smart Devices': { label: 'Smart Device', variant: 'filled-neutral', tone: 'grey' },
+  Other: { label: 'Other service', variant: 'filled-neutral', tone: 'grey' },
 };
 
 /** The tag for a service category; an unknown category is shown neutral under its own name rather than hidden. */

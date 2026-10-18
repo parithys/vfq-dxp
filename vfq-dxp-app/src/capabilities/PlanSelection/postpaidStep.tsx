@@ -16,6 +16,8 @@ export interface PostpaidPlanContext {
   customerBenefits: CustomerBenefit[] | undefined;
   /** Leave the Plan and Add-ons steps out of the journey (an accepted offer already fixes the plan). */
   skipWhen?: (values: Record<string, unknown>) => boolean;
+  /** A plan not offered (the line's current plan, when the journey changes it). */
+  hiddenProductId?: (values: Record<string, unknown>) => string | undefined;
 }
 
 export function postpaidPlanStep(ctx: PostpaidPlanContext): WizardStep {
@@ -47,7 +49,7 @@ export function postpaidExtrasStep(ctx: PostpaidPlanContext): WizardStep {
 
 function renderPlanStep(
   mode: 'plan' | 'extras',
-  { customerBenefits }: PostpaidPlanContext,
+  { customerBenefits, hiddenProductId }: PostpaidPlanContext,
   values: Record<string, unknown>,
   setValue: (field: string, value: unknown) => void
 ) {
@@ -89,6 +91,7 @@ function renderPlanStep(
           requiresHrnAdvance={Boolean(eligibility?.requiresHrnAdvance)}
           discountProofDocument={values.discountProofDocument as { fileName: string; sizeBytes: number } | undefined}
           onDiscountProofDocumentChange={(doc) => setValue('discountProofDocument', doc)}
+          hiddenProductId={hiddenProductId?.(values)}
         />
         </>
       );

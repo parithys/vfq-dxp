@@ -3,10 +3,10 @@ import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { newActivityId } from '../../../engines/activityEngine';
 import type { ActivityInput } from '../../../engines/activityEngine';
 import { emailVerification, maskEmail, persistBillingAccount } from '../../../capabilities';
-import type { BillingAccountValue, ConfirmedOrder, GuidedContactValue } from '../../../capabilities';
+import type { BillingAccountValue, ConfirmedOrder, CustomerLine, GuidedContactValue } from '../../../capabilities';
 import type { CustomerTypeValue } from '../../../capabilities/CustomerType/customerTypeModel';
 import { monthlyCharges, HRN_ADVANCE_QAR } from '../../../engines/postpaidPricing';
-import { SUPPORTING_ID_DISCOUNT_TYPES } from '../../../components/patterns/postpaidPlanModel';
+import { routesToApproval } from '../../new-connection/approvalRouting';
 import type { CheckoutTotals } from '../../../components/patterns/checkoutSummaryModel';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import type { useEntityStore } from '../../../stores/entityStore';
@@ -21,14 +21,15 @@ type EntityStore = ReturnType<typeof useEntityStore.getState>;
  */
 export async function submitPreToPostOrder(
   values: Record<string, unknown>,
-  { createRecord }: Pick<EntityStore, 'createRecord'>
+  { createRecord, updateRecord }: Pick<EntityStore, 'createRecord' | 'updateRecord'>
 ): Promise<ConfirmedOrder> {
   const contact = values.contact as GuidedContactValue;
   const eligibility = values.eligibility as EligibilityResult | undefined;
   const customerType = values.customerType as CustomerTypeValue | undefined;
   const addonIds = (values.addonIds as string[] | undefined) ?? [];
   const dueTodayQar = (values.checkoutTotals as CheckoutTotals | undefined)?.dueTodayQar ?? 0;
-  const msisdn = String(values.msisdn ?? '');
+  const line = values.line as CustomerLine;
+  const msisdn = line.identifier;
 
   const products = await mockDataEngine.list<{ productId: string; name: string; mrcQAR: number }>('products');
   const plan = products.find((p) => p.productId === values.productId);
@@ -40,13 +41,7 @@ export async function submitPreToPostOrder(
     addonsQar: products.filter((p) => addonIds.includes(p.productId)).reduce((sum, a) => sum + a.mrcQAR, 0),
   }).totalQar;
 
-  const pendingApproval =
-    Boolean(contact.manualEntry) ||
-    (Boolean(contact.isB2B2C) && !customerType?.rejected) ||
-    customerType?.type === 'b2b2c' ||
-    Boolean(eligibility?.requiresHrnAdvance) ||
-    Boolean(eligibility?.checks.some((c) => c.outcome === 'approval-routing')) ||
-    SUPPORTING_ID_DISCOUNT_TYPES.has(discount?.addonType ?? '');
+  const pendingApproval = routesToApproval({ contact, eligibility, customerType, discountType: discount?.addonType });
 
   const billingProfileId = await persistBillingAccount(values.billingAccount as BillingAccountValue | undefined, {
     createRecord,
@@ -71,6 +66,8 @@ export async function submitPreToPostOrder(
     idNumber: contact.idNumber,
     customerEmail: contact.email,
     msisdn,
+    installedAssetId: line.installedAssetId,
+    previousProductId: line.productId,
     productId: values.productId,
     discountId: values.discountId,
     addonIds,
@@ -81,6 +78,11 @@ export async function submitPreToPostOrder(
     createdBy: currentAgentId(),
     sourceChannel: 'Desktop',
   });
+
+  // The line is postpaid once the order completes (it is a postpaid line by its service name from then on); a held order leaves it prepaid.
+  if (!pendingApproval && plan) {
+    await updateRecord('installed-assets', 'installedAssetId', line.installedAssetId, { productServiceName: plan.name, promotion: plan.productId, price: plan.mrcQAR });
+  }
 
   const activityId = newActivityId();
   const completionActivity: ActivityInput = {
