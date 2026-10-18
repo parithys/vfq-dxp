@@ -32,10 +32,10 @@ test('before a product is chosen only Customer Identification and Product Select
 
 test('every product continues the same wizard: identification, product selection, then that product\'s own steps', () => {
   assert.deepEqual(activeKeys({ product: 'postpaid' }), ['contact', 'product', 'address', 'billingAccount', 'plan', 'planExtras', 'number', 'simType', 'checkout', 'caf', 'payment']);
-  assert.deepEqual(activeKeys({ product: 'prepaid' }), ['contact', 'product', 'address', 'plan', 'number', 'simType', 'cart', 'checkout', 'caf', 'payment']);
+  assert.deepEqual(activeKeys({ product: 'prepaid' }), ['contact', 'product', 'address', 'plan', 'planExtras', 'number', 'simType', 'cart', 'checkout', 'caf', 'payment']);
   assert.deepEqual(activeKeys({ product: 'fixed-line' }), ['contact', 'product', 'address', 'billingAccount', 'plan', 'number', 'checkout', 'caf', 'payment', 'appointment']);
-  assert.deepEqual(activeKeys({ product: 'mnp', mnpType: 'postpaid' }), ['contact', 'product', 'address', 'billingAccount', 'sim', 'plan', 'donor-details', 'checkout', 'donor-attachment', 'caf', 'payment', 'activity']);
-  assert.deepEqual(activeKeys({ product: 'mnp', mnpType: 'prepaid' }), ['contact', 'product', 'address', 'sim', 'plan', 'donor-details', 'checkout', 'donor-attachment', 'caf', 'payment', 'activity']);
+  assert.deepEqual(activeKeys({ product: 'mnp', mnpType: 'postpaid' }), ['contact', 'product', 'address', 'billingAccount', 'sim', 'plan', 'planExtras', 'donor-details', 'checkout', 'donor-attachment', 'caf', 'payment']);
+  assert.deepEqual(activeKeys({ product: 'mnp', mnpType: 'prepaid' }), ['contact', 'product', 'address', 'sim', 'plan', 'planExtras', 'donor-details', 'checkout', 'donor-attachment', 'caf', 'payment']);
 });
 
 test('no two active steps share a key, for any product', () => {

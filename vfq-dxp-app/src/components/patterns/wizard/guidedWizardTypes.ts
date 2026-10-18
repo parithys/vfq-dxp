@@ -182,4 +182,9 @@ export interface GuidedActivationWizardProps {
    * own header and its own way out. Off by default: every other journey keeps the band.
    */
   hideTitleBand?: boolean;
+  /**
+   * Whether leaving a journey that has progress asks first (default true). Off for a wizard shown on its own page-less surface, such
+   * as the Capability Library's sample, which keeps nothing worth saving.
+   */
+  confirmLeave?: boolean;
 }

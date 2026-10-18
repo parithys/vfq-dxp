@@ -10,7 +10,7 @@ export type BillingAccountKind = 'Consumer Mobile Postpaid' | 'Consumer Fixed Li
  *
  * An existing account the agent (or the auto-resolver) selected is reused as it is. When the customer has none, the
  * journey has built a NEW one (`creatingNew`); this writes it - an `accounts` row and its `billing-profiles` row,
- * flagged `isDefault` - so it exists for Customer 360 and the next order, instead of only being named on the order.
+ * flagged `isDefault` unless the agent unticked "primary payment profile" - so it exists for Customer 360 and the next order, instead of only being named on the order.
  * Returns undefined when there is neither, which the order records as no billing profile.
  *
  * A customer who has no record yet (a new customer known only to NAS) gets the rows keyed by their ID number; the
@@ -50,10 +50,11 @@ export async function persistBillingAccount(
     billingProfileId,
     accountId,
     name: fresh.profileName ?? `${ctx.contactName ?? 'Customer'} - ${ctx.kind === 'Consumer Mobile Postpaid' ? 'Postpaid' : 'Fixed Line'}`,
-    isDefault: true,
+    // The first profile a customer has is their primary payment profile; the agent can untick it when they already have one.
+    isDefault: fresh.primaryPaymentProfile ?? true,
     billingCycle: fresh.billCycleDay ? `Monthly - Day ${fresh.billCycleDay}` : 'Monthly',
     billCycleLabel: fresh.billCycleDay ? ordinal(fresh.billCycleDay) : undefined,
-    billingType: 'Arrears',
+    billingType: fresh.billingMode ?? 'Arrears',
     billingAddress: ctx.addressLine,
     billMedium: fresh.billMedia ?? 'Email',
     billingSchedule: fresh.billingSchedule,

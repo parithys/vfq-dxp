@@ -1,0 +1,117 @@
+import { currentAgentId } from '../../../stores/authStore';
+import * as mockDataEngine from '../../../engines/mockDataEngine';
+import { newActivityId } from '../../../engines/activityEngine';
+import type { ActivityInput } from '../../../engines/activityEngine';
+import { emailVerification, maskEmail, persistBillingAccount } from '../../../capabilities';
+import type { BillingAccountValue, ConfirmedOrder, GuidedContactValue } from '../../../capabilities';
+import type { CustomerTypeValue } from '../../../capabilities/CustomerType/customerTypeModel';
+import { monthlyCharges, HRN_ADVANCE_QAR } from '../../../engines/postpaidPricing';
+import { SUPPORTING_ID_DISCOUNT_TYPES } from '../../../components/patterns/postpaidPlanModel';
+import type { CheckoutTotals } from '../../../components/patterns/checkoutSummaryModel';
+import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
+import type { useEntityStore } from '../../../stores/entityStore';
+
+type EntityStore = ReturnType<typeof useEntityStore.getState>;
+
+/**
+ * Submits a Prepaid to Postpaid conversion (UJ-086): the Plan Change / Pre2Post order and its confirmation. Priced as
+ * New Mobile Postpaid is (plan, add-ons, discount, VAT). A conversion that needs a second look - HRN advance, an eligibility
+ * approval route, a B2B2C customer, a MADA / B2B2C discount, a manually entered identity - waits for the manager; otherwise
+ * it completes.
+ */
+export async function submitPreToPostOrder(
+  values: Record<string, unknown>,
+  { createRecord }: Pick<EntityStore, 'createRecord'>
+): Promise<ConfirmedOrder> {
+  const contact = values.contact as GuidedContactValue;
+  const eligibility = values.eligibility as EligibilityResult | undefined;
+  const customerType = values.customerType as CustomerTypeValue | undefined;
+  const addonIds = (values.addonIds as string[] | undefined) ?? [];
+  const dueTodayQar = (values.checkoutTotals as CheckoutTotals | undefined)?.dueTodayQar ?? 0;
+  const msisdn = String(values.msisdn ?? '');
+
+  const products = await mockDataEngine.list<{ productId: string; name: string; mrcQAR: number }>('products');
+  const plan = products.find((p) => p.productId === values.productId);
+  const discounts = await mockDataEngine.list<{ addonDiscountId: string; price?: number; addonType?: string }>('addons-discounts');
+  const discount = discounts.find((d) => d.addonDiscountId === values.discountId);
+  const monthlyRecurringQar = monthlyCharges({
+    planQar: plan?.mrcQAR ?? 0,
+    discountRate: discount?.price,
+    addonsQar: products.filter((p) => addonIds.includes(p.productId)).reduce((sum, a) => sum + a.mrcQAR, 0),
+  }).totalQar;
+
+  const pendingApproval =
+    Boolean(contact.manualEntry) ||
+    (Boolean(contact.isB2B2C) && !customerType?.rejected) ||
+    customerType?.type === 'b2b2c' ||
+    Boolean(eligibility?.requiresHrnAdvance) ||
+    Boolean(eligibility?.checks.some((c) => c.outcome === 'approval-routing')) ||
+    SUPPORTING_ID_DISCOUNT_TYPES.has(discount?.addonType ?? '');
+
+  const billingProfileId = await persistBillingAccount(values.billingAccount as BillingAccountValue | undefined, {
+    createRecord,
+    kind: 'Consumer Mobile Postpaid',
+    customerId: eligibility?.customerId,
+    idNumber: contact.idNumber,
+    contactName: contact.moiResult?.name,
+    contactEmail: contact.email,
+    contactPhone: contact.moiResult?.phone,
+    creditLimitQar: eligibility?.defaultCreditLimitQar,
+  });
+
+  const orderId = `ORD-${Date.now().toString().slice(-6)}`;
+  await createRecord('orders', {
+    orderId,
+    orderType: 'Plan Change',
+    orderSubType: 'Pre2Post',
+    status: pendingApproval ? 'Submitted for Approval' : 'Complete',
+    createdAt: new Date().toISOString(),
+    customerName: contact.moiResult?.name,
+    customerId: eligibility?.customerId,
+    idNumber: contact.idNumber,
+    customerEmail: contact.email,
+    msisdn,
+    productId: values.productId,
+    discountId: values.discountId,
+    addonIds,
+    billLimitQAR: values.billLimit,
+    billingProfileId,
+    monthlyRecurringQar,
+    totalQAR: dueTodayQar,
+    createdBy: currentAgentId(),
+    sourceChannel: 'Desktop',
+  });
+
+  const activityId = newActivityId();
+  const completionActivity: ActivityInput = {
+    journey: 'Pre-to-Post Conversion',
+    orderId,
+    customerId: eligibility?.customerId,
+    customerName: contact.moiResult?.name,
+    idNumber: contact.idNumber,
+    activityNumber: activityId,
+    trigger: 'completed',
+    reason: pendingApproval
+      ? `Order ${orderId} submitted for manager approval - converting ${msisdn} to ${plan?.name ?? 'a postpaid plan'}${eligibility?.requiresHrnAdvance ? ` (QAR ${HRN_ADVANCE_QAR} advance payment applies)` : ''}.`
+      : `Order ${orderId} complete - ${msisdn} converted to ${plan?.name ?? 'a postpaid plan'}.`,
+  };
+
+  return {
+    orderId,
+    activityId,
+    completionActivity,
+    pendingApproval,
+    customerName: contact.moiResult?.name ?? '-',
+    customerId: eligibility?.customerId,
+    msisdn: msisdn || '-',
+    planName: plan?.name ?? '-',
+    dueTodayQar,
+    monthlyRecurringQar,
+    heading: pendingApproval ? 'Conversion submitted for approval' : 'Conversion complete',
+    statusLabel: pendingApproval ? 'Submitted for Approval' : 'Complete',
+    customerEmail: contact.email,
+    customerEmailDisplay: contact.moiResult?.isNewCustomer && contact.email ? maskEmail(contact.email) : contact.email,
+    customerEmailVerified: emailVerification(contact.email, contact.moiResult?.email).verified,
+    service: 'mobile',
+  };
+}

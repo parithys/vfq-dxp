@@ -28,10 +28,14 @@
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
         "modules/new-connection",
+        "modules/pre-to-post-migration",
         "modules/sim-number-management",
         "workspace/administration"
       ],
-      "bypass": []
+      "bypass": [
+        "modules/sim-number-management/screens/NumberManagementPortal.tsx  ->  components/domain/msisdnPickerModel.ts",
+        "modules/sim-number-management/screens/ReserveNumberWizard.tsx  ->  components/domain/msisdnPickerModel.ts"
+      ]
     },
     "billing-account": {
       "areas": [
@@ -41,6 +45,7 @@
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
         "modules/new-connection",
+        "modules/pre-to-post-migration",
         "workspace/administration"
       ],
       "bypass": []
@@ -53,6 +58,7 @@
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
         "modules/new-connection",
+        "modules/pre-to-post-migration",
         "workspace/administration"
       ],
       "bypass": []
@@ -104,6 +110,7 @@
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
         "modules/new-connection",
+        "modules/pre-to-post-migration",
         "workspace/administration"
       ],
       "bypass": []
@@ -122,12 +129,6 @@
     },
     "activity-comments": {
       "areas": [
-        "modules/fixed-line-fibre",
-        "modules/fwa-5g-home",
-        "modules/mnp-fnp-porting",
-        "modules/mobile-postpaid",
-        "modules/mobile-prepaid",
-        "modules/new-connection",
         "modules/pre-to-post-migration",
         "modules/sim-number-management",
         "workspace/administration"
@@ -141,16 +142,22 @@
         "modules/mnp-fnp-porting",
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
-        "modules/new-connection"
+        "modules/new-connection",
+        "modules/pre-to-post-migration",
+        "workspace/administration"
       ],
       "bypass": []
     },
     "selectable-card-styling": {
-      "areas": [],
+      "areas": [
+        "workspace/administration"
+      ],
       "bypass": []
     },
     "side-drawer": {
-      "areas": [],
+      "areas": [
+        "workspace/administration"
+      ],
       "bypass": []
     },
     "toasts": {
@@ -187,7 +194,8 @@
         "modules/mobile-prepaid",
         "modules/new-connection",
         "modules/pre-to-post-migration",
-        "modules/sim-number-management"
+        "modules/sim-number-management",
+        "workspace/administration"
       ],
       "bypass": []
     },
@@ -198,7 +206,9 @@
         "modules/mnp-fnp-porting",
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
-        "modules/new-connection"
+        "modules/new-connection",
+        "modules/pre-to-post-migration",
+        "workspace/administration"
       ],
       "bypass": []
     },
@@ -215,33 +225,6 @@
       ],
       "bypass": []
     },
-    "journey-customer-lock": {
-      "areas": [
-        "modules/dashboard",
-        "modules/fixed-line-fibre",
-        "modules/fwa-5g-home",
-        "modules/identity-customer-management",
-        "modules/mnp-fnp-porting",
-        "modules/mobile-postpaid",
-        "modules/mobile-prepaid",
-        "modules/new-connection",
-        "modules/order-management",
-        "modules/pre-to-post-migration",
-        "modules/sim-number-management",
-        "modules/trouble-ticketing-complaints",
-        "navigation",
-        "workspace/administration",
-        "workspace/customer-search",
-        "workspace/customer360",
-        "workspace/orders",
-        "workspace/profile",
-        "workspace/sales",
-        "workspace/support",
-        "workspace/tasks",
-        "workspace/tickets"
-      ],
-      "bypass": []
-    },
     "customer-qualification": {
       "areas": [
         "modules/fixed-line-fibre",
@@ -249,7 +232,9 @@
         "modules/mnp-fnp-porting",
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
-        "modules/new-connection"
+        "modules/new-connection",
+        "modules/pre-to-post-migration",
+        "workspace/administration"
       ],
       "bypass": []
     },
@@ -261,6 +246,7 @@
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
         "modules/new-connection",
+        "modules/pre-to-post-migration",
         "workspace/administration"
       ],
       "bypass": []
@@ -286,6 +272,7 @@
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
         "modules/new-connection",
+        "modules/pre-to-post-migration",
         "modules/sim-number-management",
         "workspace/administration"
       ],

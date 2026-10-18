@@ -44,11 +44,6 @@ export const addressFormSummary = (key = 'address'): SummaryField[] => [
   { key: 'line', label: 'Address Line', type: 'text', optional: true, value: (v) => at(v, key, 'addressLine') },
 ];
 
-/** An address picked from the customer's account (stored as its id). */
-export const addressPickSummary = (key = 'addressId'): SummaryField[] => [
-  { key: 'address', label: 'Installation Address', type: 'select', labelFrom: { kind: 'addresses', idField: 'id', labelField: 'addressLine1' }, value: (v) => at(v, key) },
-];
-
 export const planSummary = (productKey = 'productId'): SummaryField[] => [
   { key: 'plan', label: 'Plan', type: 'select', labelFrom: PRODUCT, value: (v) => at(v, productKey) },
 ];
@@ -83,6 +78,8 @@ export const appointmentSummary: SummaryField[] = [
   { key: 'cluster', label: 'Cluster', type: 'text', optional: true, value: (v) => at(v, 'appointment', 'cluster') },
   { key: 'date', label: 'Date', type: 'date', optional: true, value: (v) => at(v, 'appointment', 'date') },
   { key: 'slot', label: 'Time Slot', type: 'text', optional: true, value: (v) => at(v, 'appointment', 'timeSlot') },
+  { key: 'requested', label: 'Requested Date & Time', type: 'text', optional: true, value: (v) => (at(v, 'appointment', 'requestSpecific') ? [at(v, 'appointment', 'requestedDate'), at(v, 'appointment', 'requestedTime')].filter(Boolean).join(' ') || undefined : undefined) },
+  { key: 'notes', label: 'Appointment Notes', type: 'text', optional: true, value: (v) => at(v, 'appointment', 'comments') },
 ];
 
 export const donorSummary: SummaryField[] = [
@@ -99,12 +96,6 @@ export const donorAttachmentSummary: SummaryField[] = [
   { key: 'formNumber', label: 'MNP Form Number', type: 'text', value: (v) => at(v, 'donorAttachment', 'formNumber') },
   { key: 'form', label: 'Form Type', type: 'text', value: (v) => at(v, 'donorAttachment', 'mnpFormType') },
   { key: 'signed', label: 'Signed', type: 'toggle', value: (v) => Boolean(at(v, 'donorAttachment', 'signed')) },
-];
-
-export const billingProfileSummary: SummaryField[] = [
-  { key: 'language', label: 'Language', type: 'text', optional: true, value: (v) => at(v, 'billing', 'language') },
-  { key: 'payment', label: 'Payment Method', type: 'text', optional: true, value: (v) => at(v, 'billing', 'paymentMethod') },
-  { key: 'media', label: 'Bill Media', type: 'text', optional: true, value: (v) => at(v, 'billing', 'billMedia') },
 ];
 
 export const idImagesSummary = (key = 'qidImages'): SummaryField[] => [

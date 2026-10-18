@@ -1,22 +1,13 @@
-import { CARD_SELECTED, CARD_IDLE } from '../primitives/offerCardParts';
+import { CARD_SELECTED, CARD_IDLE, SelectedCardTexture } from '../primitives/offerCardParts';
 import { useEffect, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
-import { Badge } from '../primitives/Badge';
-import { Radio } from '../primitives/Radio';
+import { PrepaidPlanCard } from './PrepaidPlanCard';
+import { PrepaidPackDetailsDrawer } from './PrepaidPackDetailsDrawer';
+import type { PrepaidPlan } from './prepaidPlanModel';
 import { Checkbox } from '../primitives/Checkbox';
+import { Icon } from '../primitives/Icon';
 
-interface PrepaidPlan {
-  productId: string;
-  name: string;
-  type: string;
-  starterPackChargeQAR: number;
-  dataAllowanceGB: number | null;
-  minutesAllowance: string;
-  packValidityDays: number | null;
-  popular?: boolean;
-  /** When present, the pack is offered only to these customer segments (MPRA_001_QPC_02); absent = every segment. */
-  eligibleSegments?: string[];
-}
+const CHECK = 'M20 6L9 17l-5-5';
 
 interface Discount {
   addonDiscountId: string;
@@ -28,6 +19,9 @@ interface Discount {
 }
 
 interface PrepaidPlanStepProps {
+  /** 'plan' (default): the packs to choose from. 'extras': the chosen pack, its eligible discounts and optional add-ons, and the
+   * starter pack charge - the step after the pack, like the postpaid Add-ons step. */
+  mode?: 'plan' | 'extras';
   /** The customer's segment, from eligibility. Packs restricted to other segments are not offered. A new customer with none on record is treated as Consumer. */
   segment?: string;
   /** The add-ons chosen for this pack (optional) and the change handler. Omitted, the add-ons section is not shown. */
@@ -35,6 +29,8 @@ interface PrepaidPlanStepProps {
   onSelectAddons?: (ids: string[]) => void;
   selectedProductId: string | undefined;
   onSelectProduct: (productId: string) => void;
+  /** Clicking the selected card again unselects it. Omitted, the selection can only be changed, not cleared. */
+  onDeselectProduct?: () => void;
   discountId: string | undefined;
   onSelectDiscount: (discountId: string | undefined) => void;
 }
@@ -43,8 +39,9 @@ interface PrepaidPlanStepProps {
 // PostpaidPlanAddonsStep. Packs are filtered by the customer's segment (QPC_02), the agent may add the pack's
 // optional add-ons, and may pick a prepaid-specific discount for the chosen pack (QPC_03). No Bill Limit here:
 // BR-002/BR-005 exclude credit limit and bill cycle from Prepaid Activation.
-export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId, onSelectDiscount, segment, addonIds = [], onSelectAddons }: PrepaidPlanStepProps) {
+export function PrepaidPlanStep({ mode = 'plan', selectedProductId, onSelectProduct, onDeselectProduct, discountId, onSelectDiscount, segment, addonIds = [], onSelectAddons }: PrepaidPlanStepProps) {
   const [plans, setPlans] = useState<PrepaidPlan[]>([]);
+  const [detailPack, setDetailPack] = useState<PrepaidPlan | null>(null);
   const [discounts, setDiscounts] = useState<Discount[]>([]);
   const [addons, setAddons] = useState<Discount[]>([]);
   const customerSegment = segment ?? 'Consumer';
@@ -76,160 +73,189 @@ export function PrepaidPlanStep({ selectedProductId, onSelectProduct, discountId
   const chosenAddons = addons.filter((a) => addonIds.includes(a.addonDiscountId));
   const netStarterPack = selectedPlan ? Math.round(selectedPlan.starterPackChargeQAR * (1 + (selectedDiscount?.price ?? 0))) : undefined;
 
+  const packGrid = (
+    <div className="space-y-3">
+      {plans.length > 0 && (
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4">
+          {plans.map((p) => (
+            <PrepaidPlanCard
+              key={p.productId}
+              p={p}
+              selectedProductId={selectedProductId}
+              onSelectProduct={onSelectProduct}
+              onDeselectProduct={onDeselectProduct}
+              setDetailPack={setDetailPack}
+            />
+          ))}
+        </div>
+      )}
+      {plans.length === 0 && <p className="text-muted">No Prepaid Plan products are available right now.</p>}
+    </div>
+  );
+
+  if (mode === 'plan') {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Prepaid Pack</h3>
+          <p className="text-muted text-[length:var(--fs-caption)]">Select a starter pack. For a SIM without a bundle, choose New Prepaid Standard SIM.</p>
+        </div>
+        {packGrid}
+        <PrepaidPackDetailsDrawer pack={detailPack} onClose={() => setDetailPack(null)} selectedProductId={selectedProductId} onSelectProduct={onSelectProduct} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Header row + content row, adopted as a subgrid by both columns so the
-          pack cards and the discount cards start at the same y despite the left
-          heading carrying a second line and the right not - same reasoning as
-          PostpaidPlanAddonsStep, which has the identical pairing. */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] lg:grid-rows-[auto_auto] gap-6">
-        <div className="grid gap-4 lg:row-span-2 lg:grid-rows-subgrid">
-          <div>
-            <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Prepaid Pack</h3>
-            <p className="text-muted text-[length:var(--fs-caption)]">Select a starter pack. For a SIM without a bundle, choose New Prepaid Standard SIM.</p>
-          </div>
-          <div className="space-y-3">
-            {plans.map((p) => {
-              const selected = selectedProductId === p.productId;
-              return (
-                <label
-                  key={p.productId}
-                  className={`flex items-start gap-3 rounded-[var(--radius-card)] border p-4 cursor-pointer ${
-                    selected ? CARD_SELECTED : CARD_IDLE
-                  }`}
-                >
-                  <Radio
-                    name="prepaid-plan"
-                    className="mt-1"
-                    checked={selected}
-                    onChange={() => onSelectProduct(p.productId)}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="flex items-center gap-2 min-w-0">
-                        <span className="text-fg font-medium truncate">{p.name}</span>
-                        {p.popular && <Badge variant="accent">POPULAR</Badge>}
-                      </span>
-                      <span className="text-fg font-semibold shrink-0">QAR {p.starterPackChargeQAR}</span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4 mt-2">
-                      <div>
-                        <div className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Data</div>
-                        <div className="text-fg text-[length:var(--fs-caption)]">
-                          {p.dataAllowanceGB ? `${p.dataAllowanceGB} GB` : '-'}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Voice</div>
-                        <div className="text-fg text-[length:var(--fs-caption)]">{p.minutesAllowance}</div>
-                      </div>
-                      <div>
-                        <div className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Validity</div>
-                        <div className="text-fg text-[length:var(--fs-caption)]">
-                          {p.packValidityDays ? `${p.packValidityDays} days` : '-'}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </label>
-              );
-            })}
-            {plans.length === 0 && <p className="text-muted">No Prepaid Plan products are available right now.</p>}
-          </div>
-        </div>
-
-        <div className="grid gap-4 lg:row-span-2 lg:grid-rows-subgrid">
-          <div>
-            <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Eligible Discounts</h3>
-          </div>
-          {!selectedProductId ? (
-            <p className="text-muted text-[length:var(--fs-caption)]">Select a pack to see eligible discounts.</p>
-          ) : (
-            <div className="space-y-2">
-              <label
-                className={`flex items-center justify-between gap-2 rounded-[var(--radius-card)] border p-3 cursor-pointer ${
-                  !discountId ? CARD_SELECTED : CARD_IDLE
-                }`}
-              >
-                <span className="flex items-center gap-3">
-                  <Radio name="prepaid-discount" checked={!discountId} onChange={() => onSelectDiscount(undefined)} />
-                  <span>
-                    <span className="text-fg">No discount</span>
-                    <span className="block text-[length:var(--fs-caption)] text-muted">Continue without a discount</span>
-                  </span>
+      {/* The step's own heading ("Add-ons") is already shown by the wizard above; only the description is added here. */}
+      {/* Pulled up under the wizard's heading (its 16px gap is too loose for a one-line description) and closer to the pack below. */}
+      <p className="text-fg-2 text-[length:var(--fs-body)] -mt-3 mb-4">Personalise the pack with optional services and discounts.</p>
+      {!selectedPlan ? (
+        <p className="text-muted text-[length:var(--fs-body)]">Select a pack first - its discounts and add-ons appear here.</p>
+      ) : (
+        <>
+          <section aria-label="Selected pack" className="space-y-4">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="min-w-0 space-y-2">
+                <h3 className="text-fg font-bold text-[length:var(--fs-h4)] leading-snug">{selectedPlan.name}</h3>
+                <span className="inline-flex rounded-[var(--radius-pill)] bg-[var(--tint-pink-bg)] px-2.5 py-0.5 text-[var(--tint-pink-fg)] text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide">
+                  Selected pack
                 </span>
-                <span className="text-muted">-</span>
-              </label>
-              {discounts.map((d) => (
-                <label
-                  key={d.addonDiscountId}
-                  className={`flex items-center justify-between gap-2 rounded-[var(--radius-card)] border p-3 cursor-pointer ${
-                    discountId === d.addonDiscountId ? CARD_SELECTED : CARD_IDLE
-                  }`}
-                >
-                  <span className="flex items-center gap-3">
-                    <Radio
-                      name="prepaid-discount"
-                      checked={discountId === d.addonDiscountId}
-                      onChange={() => onSelectDiscount(d.addonDiscountId)}
-                    />
-                    <span>
-                      <span className="text-fg">{d.name}</span>
-                      <span className="block text-[length:var(--fs-caption)] text-muted">{d.description}</span>
+              </div>
+              <div className="card px-4 py-2.5 text-right shadow-[var(--shadow-icon-tile)]">
+                <p className="text-muted text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide">Starter pack</p>
+                <p className="text-fg">
+                  <span className="text-[length:var(--fs-body)]">QAR </span>
+                  <span className="text-[length:var(--fs-h3)] font-bold">{selectedPlan.starterPackChargeQAR}</span>
+                </p>
+              </div>
+            </div>
+            {/* Benefits and the optional add-ons share one row. */}
+            <div className={`grid gap-x-8 gap-y-5 ${onSelectAddons && addons.length > 0 ? 'sm:grid-cols-2' : ''}`}>
+              <div>
+                <p className="text-accent font-bold text-[length:var(--fs-caption)] uppercase tracking-wide mb-2.5">Benefits</p>
+                <ul className="space-y-2">
+                  {[
+                    selectedPlan.dataAllowanceGB ? `${selectedPlan.dataAllowanceGB} GB data` : 'No data bundle',
+                    selectedPlan.minutesAllowance,
+                    selectedPlan.packValidityDays ? `Valid for ${selectedPlan.packValidityDays} days` : 'No validity period',
+                  ].map((f) => (
+                    <li key={f} className="flex items-start gap-2.5 text-fg text-[length:var(--fs-body)]">
+                      <Icon path={CHECK} className="w-4 h-4 shrink-0 text-accent mt-1" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              {onSelectAddons && addons.length > 0 && (
+            <section aria-labelledby="prepaid-addons" className="space-y-2">
+              <h3 id="prepaid-addons" className="text-fg font-semibold text-[length:var(--fs-body-lg)]">
+                Add-ons <span className="text-muted font-normal text-[length:var(--fs-caption)]">(optional)</span>
+              </h3>
+              {addons.map((a) => {
+                const checked = addonIds.includes(a.addonDiscountId);
+                return (
+                  <label
+                    key={a.addonDiscountId}
+                    className={`flex items-center justify-between gap-3 rounded-[var(--radius-card)] border p-3 cursor-pointer ${checked ? CARD_SELECTED : CARD_IDLE}`}
+                  >
+                    <span className="flex items-center gap-3">
+                      <Checkbox
+                        checked={checked}
+                        onChange={(e) =>
+                          onSelectAddons(e.target.checked ? [...addonIds, a.addonDiscountId] : addonIds.filter((id) => id !== a.addonDiscountId))
+                        }
+                      />
+                      <span>
+                        <span className="text-fg">{a.name}</span>
+                        <span className="block text-[length:var(--fs-caption)] text-muted">{a.description}</span>
+                      </span>
                     </span>
-                  </span>
-                  <span className="text-success font-medium shrink-0">{Math.round(d.price * 100)}%</span>
-                </label>
-              ))}
-              {discounts.length === 0 && (
-                <p className="text-muted text-[length:var(--fs-caption)]">No discounts configured for this pack.</p>
+                    <span className="text-fg font-medium shrink-0">QAR {a.price}</span>
+                  </label>
+                );
+              })}
+            </section>
               )}
             </div>
-          )}
-        </div>
-      </div>
+          </section>
 
-      {selectedPlan && onSelectAddons && addons.length > 0 && (
-        <section aria-labelledby="prepaid-addons" className="space-y-2">
-          <h3 id="prepaid-addons" className="text-fg font-semibold text-[length:var(--fs-body-lg)]">
-            Add-ons <span className="text-muted font-normal text-[length:var(--fs-caption)]">(optional)</span>
-          </h3>
-          {addons.map((a) => {
-            const checked = addonIds.includes(a.addonDiscountId);
-            return (
-              <label
-                key={a.addonDiscountId}
-                className={`flex items-center justify-between gap-3 rounded-[var(--radius-card)] border p-3 cursor-pointer ${checked ? CARD_SELECTED : CARD_IDLE}`}
-              >
-                <span className="flex items-center gap-3">
-                  <Checkbox
-                    checked={checked}
-                    onChange={(e) =>
-                      onSelectAddons(e.target.checked ? [...addonIds, a.addonDiscountId] : addonIds.filter((id) => id !== a.addonDiscountId))
-                    }
-                  />
-                  <span>
-                    <span className="text-fg">{a.name}</span>
-                    <span className="block text-[length:var(--fs-caption)] text-muted">{a.description}</span>
-                  </span>
-                </span>
-                <span className="text-fg font-medium shrink-0">QAR {a.price}</span>
-              </label>
-            );
-          })}
-        </section>
+          <section aria-label="Eligible discounts" className="space-y-3 border-t border-[var(--field-card-border)] pt-6">
+            <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Eligible Discounts</h3>
+            {/* One choice, shown as selectable cards with a tick mark (like the number cards), not radio buttons. */}
+            <div role="radiogroup" aria-label="Eligible discounts" className="grid gap-3 sm:grid-cols-2">
+              {[
+                { id: undefined as string | undefined, title: 'No discount', detail: 'Continue without a discount', value: <span className="text-muted">-</span> },
+                ...discounts.map((d) => ({
+                  id: d.addonDiscountId as string | undefined,
+                  title: d.name,
+                  detail: d.description,
+                  value: <span className="text-success font-medium">{Math.round(d.price * 100)}%</span>,
+                })),
+              ].map((o) => {
+                const on = (discountId ?? undefined) === o.id;
+                return (
+                  <button
+                    key={o.id ?? 'none'}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    onClick={() => onSelectDiscount(o.id)}
+                    className={`relative isolate overflow-hidden flex flex-col gap-1 rounded-[var(--radius-card)] border px-5 py-4 pr-14 text-left cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+                      on ? CARD_SELECTED : CARD_IDLE
+                    }`}
+                  >
+                    {on && <SelectedCardTexture />}
+                    {/* The state mark: a ring when free to pick, a red tick when chosen. */}
+                    <span
+                      aria-hidden="true"
+                      className={`absolute right-4 top-4 inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-pill)] border ${
+                        on ? 'border-accent bg-accent text-on-dark' : 'border-[var(--field-border)] bg-bg'
+                      }`}
+                    >
+                      {on && <Icon path={CHECK} className="w-4 h-4" strokeWidth={3} />}
+                    </span>
+                    <span className="flex items-baseline gap-2">
+                      <span className="text-fg font-semibold text-[length:var(--fs-body)]">{o.title}</span>
+                      {o.value}
+                    </span>
+                    <span className="text-[length:var(--fs-caption)] text-muted">{o.detail}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {discounts.length === 0 && <p className="text-muted text-[length:var(--fs-caption)]">No discounts configured for this pack.</p>}
+          </section>
+        </>
       )}
 
       {selectedPlan && (
-        <div className="card p-4 flex items-center justify-between flex-wrap gap-3">
-          <div className="text-fg-2 text-[length:var(--fs-caption)]">
-            {selectedPlan.name}
-            {selectedDiscount && <span> · {selectedDiscount.name} ({Math.round(selectedDiscount.price * 100)}%)</span>}
-            {chosenAddons.length > 0 && <span> · {chosenAddons.map((a) => a.name).join(', ')} (QAR {chosenAddons.reduce((t, a) => t + a.price, 0)})</span>}
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-fg-2 text-[length:var(--fs-caption)]">Starter Pack Charge</span>
-            <span className="text-accent font-bold text-[length:var(--fs-h4)]">QAR {netStarterPack}</span>
+        // The running total, as the postpaid Monthly summary: a dark panel (fixed navy, white text in both themes) with the
+        // charges listed at the left and the total at the right. Number and SIM charges join it at checkout.
+        <div className="rounded-[var(--radius-card-lg)] bg-[var(--summary-bg)] text-[var(--summary-fg)] p-6 flex items-start justify-between flex-wrap gap-4">
+          <table className="w-[min(32rem,100%)] text-[length:var(--fs-caption)]">
+            <caption className="opacity-70 text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide text-left pb-2">Pack summary</caption>
+            <tbody className="divide-y divide-[var(--divider-on-dark)]">
+              {[
+                [selectedPlan.name, `QAR ${selectedPlan.starterPackChargeQAR}`],
+                ...(selectedDiscount
+                  ? [[`${selectedDiscount.name} (${Math.round(Math.abs(selectedDiscount.price) * 100)}%) · Added`, `-QAR ${selectedPlan.starterPackChargeQAR - (netStarterPack ?? 0)}`]]
+                  : []),
+                ...chosenAddons.map((a) => [`${a.name} · Added`, `QAR ${a.price}`]),
+              ].map(([label, value]) => (
+                <tr key={label}>
+                  <th scope="row" className="opacity-80 font-normal text-left py-1.5 pr-4">
+                    {label}
+                  </th>
+                  <td className="font-semibold text-right py-1.5">{value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="text-right pt-3">
+            <p className="opacity-80 text-[length:var(--fs-caption)]">Pack total</p>
+            <p className="font-bold text-[length:var(--fs-h3)] leading-tight">QAR {(netStarterPack ?? 0) + chosenAddons.reduce((t, a) => t + a.price, 0)}</p>
           </div>
         </div>
       )}

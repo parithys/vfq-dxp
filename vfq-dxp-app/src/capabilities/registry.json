@@ -6,7 +6,6 @@
     "home": "capabilities/CustomerIdentification",
     "entry": "CustomerIdentification",
     "stepBuilders": [
-      "contactStep",
       "idLookupStep"
     ],
     "stepLabel": "CUSTOMER_IDENTIFICATION_LABEL",
@@ -54,14 +53,12 @@
     "home": "capabilities/BillingAccount",
     "entry": "BillingAccount",
     "stepBuilders": [
-      "billingAccountStep",
-      "billingSettingsStep"
+      "billingAccountStep"
     ],
     "stepLabel": "BILLING_PROFILE_LABEL",
-    "summary": "Set up what an order bills to: pick or create a billing account, or just the order's billing settings.",
+    "summary": "Set up what an order bills to: one layout everywhere - the customer's existing billing accounts, or Create New Billing Account (contact, billing address, payment, card on file, primary payment profile, billing profile setup).",
     "parts": [
       "components/patterns/BillingAccountStep.tsx",
-      "components/patterns/BillingProfileStep.tsx",
       "components/patterns/BillingProfileSetupDrawer.tsx",
       "components/patterns/BillingAccountAutoResolver.tsx",
       "components/patterns/billingAccountModel.ts"
@@ -79,10 +76,9 @@
       "serviceAddressStep"
     ],
     "stepLabel": "SERVICE_ADDRESS_LABEL",
-    "summary": "The address a service is activated at: structured ZSB entry with Qatari-ID prefill, or pick from saved addresses.",
+    "summary": "The address a service is activated at: one layout everywhere: Service Information (Kahramaa Meter ID / Vodafone Premise ID with Search), then Zone / Street / Building, then Additional Details, with Qatari-ID prefill.",
     "parts": [
-      "components/patterns/ZsbAddressStep.tsx",
-      "components/patterns/AddressSelectionStep.tsx"
+      "components/patterns/ZsbAddressStep.tsx"
     ],
     "previewable": true,
     "publicApi": []
@@ -95,15 +91,17 @@
     "entry": "PlanSelection",
     "stepBuilders": [
       "planSelectionStep",
+      "prepaidExtrasStep",
       "postpaidPlanStep",
-      "postpaidExtrasStep"
+      "postpaidExtrasStep",
+      "fixedPlanSelectionStep"
     ],
     "stepLabel": "PLAN_SELECTION_LABEL",
-    "summary": "Choose the plan: postpaid with add-ons, prepaid packs, or a catalogue plan with optional credit check.",
+    "summary": "Choose the plan: postpaid plan cards then Add-ons (discounts, bill limit), prepaid packs then Add-ons, or the fixed-line / fibre plan cards with the credit check.",
     "parts": [
       "components/patterns/PostpaidPlanAddonsStep.tsx",
       "components/patterns/PrepaidPlanStep.tsx",
-      "components/patterns/ProductPlanStep.tsx",
+      "components/patterns/FixedPlanStep.tsx",
       "components/patterns/PostpaidPlanCard.tsx",
       "components/patterns/PlanGroupPanel.tsx"
     ],
@@ -120,7 +118,7 @@
       "cafSignatureStep"
     ],
     "stepLabel": "CAF_SIGNATURE_LABEL",
-    "summary": "The Customer Agreement Form: terms, CAF type, signature and supporting documents; standard and full variants, postpaid and prepaid forms.",
+    "summary": "The Customer Agreement Form: terms, CAF type, signature and supporting documents. Standard variant (name, key information, signature) and full variant (the customer reads back the Checkout Summary order, agrees the terms and signs; the journey locks once signed); postpaid and prepaid forms.",
     "parts": [
       "components/patterns/CafSignatureCapture.tsx",
       "components/patterns/KeyInformationPanel.tsx",
@@ -141,7 +139,7 @@
       "prepaidCheckoutStep"
     ],
     "stepLabel": "CHECKOUT_LABEL",
-    "summary": "The order read-back before signing and payment; publishes the totals the CAF and Payment reuse. Includes the prepaid cart (Add another subscription) and prepaid checkout.",
+    "summary": "The order read-back before signing and payment (plan, add-ons, discount, number, billing, monthly and one-off totals); publishes the totals and read-back rows the CAF and Payment reuse. An optional panel above it (the port-in validation gate). Includes the prepaid cart (Add another subscription) and the prepaid checkout, which a prepaid port-in also uses with its own lines, details and fees.",
     "parts": [
       "components/patterns/CheckoutSummaryStep.tsx",
       "components/patterns/CheckoutSummaryTables.tsx",
@@ -154,7 +152,7 @@
       "components/patterns/PrepaidCartStep.tsx",
       "components/patterns/prepaidCartModel.ts"
     ],
-    "previewable": false,
+    "previewable": true,
     "publicApi": []
   },
   {
@@ -184,9 +182,10 @@
       "appointmentBookingStep"
     ],
     "stepLabel": "APPOINTMENT_LABEL",
-    "summary": "Book the installation visit: cluster, date and time slot.",
+    "summary": "Book the installation visit: SLA cluster, the date strip (next working days from the earliest, with each day's open slots), the day's time slots and technicians free, the customer's request for a specific date and time (a later date makes the order future-dated), appointment notes and the documents the technician collects (defaulted from the persona).",
     "parts": [
-      "components/patterns/AppointmentBookingStep.tsx"
+      "components/patterns/AppointmentBookingStep.tsx",
+      "components/patterns/appointmentModel.ts"
     ],
     "previewable": true,
     "publicApi": []
@@ -221,7 +220,7 @@
       "components/patterns/ActivationCompleteScreen.tsx",
       "components/patterns/OrderConfirmationScreen.tsx"
     ],
-    "previewable": false,
+    "previewable": true,
     "publicApi": []
   },
   {
@@ -234,7 +233,7 @@
     "stepLabel": null,
     "summary": "One selected / idle / highlighted surface for plans, offers, numbers, add-ons, discounts and ID/customer type.",
     "parts": [],
-    "previewable": false,
+    "previewable": true,
     "publicApi": []
   },
   {
@@ -245,9 +244,9 @@
     "entry": "Drawer",
     "stepBuilders": [],
     "stepLabel": null,
-    "summary": "Fixed 50%-width drawer for forms, details and multi-step flows.",
+    "summary": "Fixed 50%-width drawer for forms, details and multi-step flows: the title as a small uppercase label beside the close control, the body on the page tint, and a footer whose buttons share its width equally.",
     "parts": [],
-    "previewable": false,
+    "previewable": true,
     "publicApi": []
   },
   {
@@ -260,7 +259,7 @@
     "stepLabel": null,
     "summary": "One-line toasts below the header; structured cards at the bottom.",
     "parts": [],
-    "previewable": false,
+    "previewable": true,
     "publicApi": [
       "stores/notificationStore.ts"
     ]
@@ -275,7 +274,7 @@
     "stepLabel": null,
     "summary": "The step shell every activation / migration / port-in journey runs in.",
     "parts": [],
-    "previewable": false,
+    "previewable": true,
     "publicApi": []
   },
   {
@@ -288,7 +287,7 @@
     "stepLabel": null,
     "summary": "Hard-stop / soft-stop / pass eligibility check shown after identification, with the outcome panel, checks report and footer actions.",
     "parts": [],
-    "previewable": false,
+    "previewable": true,
     "publicApi": []
   },
   {
@@ -301,23 +300,8 @@
     "stepLabel": null,
     "summary": "Add-on cards with included-benefit handling.",
     "parts": [],
-    "previewable": false,
+    "previewable": true,
     "publicApi": []
-  },
-  {
-    "id": "journey-customer-lock",
-    "name": "Journey customer lock",
-    "status": "consolidated",
-    "home": "capabilities/JourneyCustomerLock",
-    "entry": "useJourneyCustomerLock",
-    "stepBuilders": [],
-    "stepLabel": null,
-    "summary": "The state every guided journey keeps: the customer lock, draft, confirmed order, header badge (name, QID, customer ID) and exit destinations.",
-    "parts": [],
-    "previewable": false,
-    "publicApi": [
-      "stores/customerContextStore.ts"
-    ]
   },
   {
     "id": "customer-qualification",
@@ -332,7 +316,7 @@
     "summary": "Identify the customer, run eligibility, then offer the special-discount types - the whole \"Customer Identification\" step of an activation, with its outcomes and footer actions.",
     "parts": [],
     "publicApi": [],
-    "previewable": false
+    "previewable": true
   },
   {
     "id": "customer-type",
@@ -348,7 +332,7 @@
       "components/domain/SupportingDocumentUpload.tsx"
     ],
     "publicApi": [],
-    "previewable": false
+    "previewable": true
   },
   {
     "id": "cross-sell-offers",
@@ -363,7 +347,7 @@
     "summary": "Recommended offers for the identified customer: offer cards, details drawer, interested (lead) and select actions, and hand-off to the other journeys.",
     "parts": [],
     "publicApi": [],
-    "previewable": false
+    "previewable": true
   },
   {
     "id": "sim-type",
@@ -372,7 +356,8 @@
     "home": "capabilities/SimType",
     "entry": "SimType",
     "stepBuilders": [
-      "simTypeStep"
+      "simTypeStep",
+      "simSerialStep"
     ],
     "stepLabel": "SIM_TYPE_LABEL",
     "summary": "Choose and validate the SIM: Physical (scan or enter the serial) or eSIM (issued, handed over after payment).",

@@ -13,6 +13,7 @@ export const billingAccountSummary: SummaryField[] = [
   { key: 'profileName', label: 'New Profile Name', type: 'text', value: (v) => at(v, 'billingAccount', 'newAccount', 'profileName'), when: (v) => Boolean(at(v, 'billingAccount', 'creatingNew')) },
   { key: 'billMedia', label: 'Bill Medium', type: 'text', optional: true, value: (v) => at(v, 'billingAccount', 'newAccount', 'billMedia'), when: (v) => Boolean(at(v, 'billingAccount', 'creatingNew')) },
   { key: 'schedule', label: 'Billing Schedule', type: 'text', optional: true, value: (v) => at(v, 'billingAccount', 'newAccount', 'billingSchedule'), when: (v) => Boolean(at(v, 'billingAccount', 'creatingNew')) },
+  { key: 'billingMode', label: 'Billing Mode', type: 'text', optional: true, value: (v) => at(v, 'billingAccount', 'newAccount', 'billingMode'), when: (v) => Boolean(at(v, 'billingAccount', 'creatingNew')) },
   { key: 'cycleDay', label: 'Bill Cycle Day', type: 'text', optional: true, value: (v) => at(v, 'billingAccount', 'newAccount', 'billCycleDay'), when: (v) => Boolean(at(v, 'billingAccount', 'creatingNew')) },
   { key: 'card', label: 'Card', type: 'text', optional: true, sensitive: true, value: (v) => at(v, 'billingAccount', 'newAccount', 'cardLast4'), when: (v) => Boolean(at(v, 'billingAccount', 'creatingNew')) },
 ];

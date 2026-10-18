@@ -237,7 +237,7 @@ export function AdditionalInformation({ ctx }: { ctx: Ctx }) {
               tabIndex={selected ? 0 : -1}
               onClick={() => setOpen(i.key)}
               onKeyDown={(e) => onTabKeyDown(e, index)}
-              className={`flex shrink-0 items-center border-b-[length:var(--tab-line-w)] px-4 py-3 text-[length:var(--fs-body)] whitespace-nowrap transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+              className={`flex shrink-0 items-center border-b-[length:var(--tab-active-w)] px-4 py-3 text-[length:var(--fs-body)] whitespace-nowrap transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
                 selected ? 'border-accent text-accent font-bold' : 'border-transparent text-fg hover:text-accent'
               }`}
             >

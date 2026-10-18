@@ -43,6 +43,17 @@ function Detail({ cap }: { cap: CapabilityDef }) {
         <p className="text-fg-2 text-[length:var(--fs-body)]">{cap.summary}</p>
       </div>
 
+      <section aria-label="Live preview" className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 space-y-3">
+        <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Live preview</h4>
+        {preview ? (
+          <div className="rounded-[var(--radius-card)] bg-[var(--surface)] p-4">{preview()}</div>
+        ) : (
+          <p className="text-muted text-[length:var(--fs-body)]">
+            This capability needs a live order or a surrounding journey to render, so it has no standalone preview. Open a journey that uses it.
+          </p>
+        )}
+      </section>
+
       <section aria-label="Where it lives" className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 space-y-3">
         <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Where it lives</h4>
         <dl className="grid grid-cols-[10rem_1fr] gap-y-2 text-[length:var(--fs-body)]">
@@ -94,17 +105,6 @@ function Detail({ cap }: { cap: CapabilityDef }) {
           Generated from the import graph - regenerate with reference/scripts/build_reusable_capabilities_inventory.py.
         </p>
       </section>
-
-      <section aria-label="Live preview" className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 space-y-3">
-        <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Live preview</h4>
-        {preview ? (
-          <div className="rounded-[var(--radius-card)] bg-[var(--surface)] p-4">{preview()}</div>
-        ) : (
-          <p className="text-muted text-[length:var(--fs-body)]">
-            This capability needs a live order or a surrounding journey to render, so it has no standalone preview. Open a journey that uses it.
-          </p>
-        )}
-      </section>
     </div>
   );
 }
@@ -127,7 +127,7 @@ export function CapabilityLibrarySection() {
         <ul className="space-y-1">
           {shown.map((c) => (
             <li key={c.id}>
-              <Button variant={c.id === selected?.id ? 'secondary' : 'secondary'} compact onClick={() => setSelectedId(c.id)}>
+              <Button variant={c.id === selected?.id ? 'primary' : 'secondary'} compact aria-pressed={c.id === selected?.id} onClick={() => setSelectedId(c.id)}>
                 {c.name}
               </Button>
             </li>

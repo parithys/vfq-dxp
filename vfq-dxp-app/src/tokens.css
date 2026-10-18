@@ -110,7 +110,7 @@
      control across the app kept the same white --bg an enabled one uses and
      read as identical to it apart from a slightly paler border, which several
      screens surfaced as ad-hoc bg-bg divs standing in for a disabled input
-     (DeviceInstallmentStep's Upfront payment, BillingProfileStep's Payment
+     (DeviceInstallmentStep's Upfront payment, the old billing settings' Payment
      Type). Deliberately NOT --surface (#f5f7f9), which readOnly fields
      already use: disabled and readOnly are documented elsewhere in this file
      as different states - readOnly is real data the agent reads back,
@@ -503,9 +503,10 @@
      Spacing, font weight, stacking and motion. Tailwind's own utilities are bound to these in index.css
      (@theme: --spacing, --font-weight-*), so p-4 / gap-3 / font-semibold read the tokens with no call-site edits. */
   --space-unit: 0.25rem;                      /* one spacing step: p-1 = 4px, p-4 = 16px */
-  /* Tab strip line: the thickness of BOTH the full-width rule under the tabs and the selected tab's underline (TabStrip) -
-     one value, so they can never differ. */
-  --tab-line-w: 2px;
+  /* Tab strip lines (TabStrip): the full-width rule under the tabs, and - thicker - the selected tab's underline that sits
+     on it. Two tokens so the selected tab can stand out while the rule stays as it is. */
+  --tab-line-w: 1px;
+  --tab-active-w: 3px;
   /* ...and its colour: the standard card/field border, so the rule matches every card edge on the page. */
   --tab-line-color: var(--field-card-border);
   --fw-light: 300;

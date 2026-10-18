@@ -36,6 +36,7 @@ export function GuidedActivationWizard({
   hideAbandonFrom,
   onSaveExit,
   hideTitleBand = false,
+  confirmLeave = true,
 }: GuidedActivationWizardProps) {
   const draft = useWorkflowStore((s) => s.getDraft(wizardId));
   const setFieldValue = useWorkflowStore((s) => s.setFieldValue);
@@ -99,7 +100,7 @@ export function GuidedActivationWizard({
   // before they navigate, so they pass straight through. The customer-view pop-up never blocks.
   const [leaveBusy, setLeaveBusy] = useState(false);
   const blocker = useBlocker(({ currentLocation, nextLocation }) => {
-    if (isMirror || currentLocation.pathname === nextLocation.pathname) return false;
+    if (!confirmLeave || isMirror || currentLocation.pathname === nextLocation.pathname) return false;
     return draftHasProgress(useWorkflowStore.getState().drafts[wizardId]);
   });
   const leaveModal = (

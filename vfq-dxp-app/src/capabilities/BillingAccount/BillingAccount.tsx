@@ -1,40 +1,16 @@
 import { BillingAccountStep } from '../../components/patterns/BillingAccountStep';
-import type { BillingAccountValue } from '../../components/patterns/billingAccountModel';
-import { BillingProfileStep } from '../../components/patterns/BillingProfileStep';
-import type { BillingProfileValue } from '../../components/patterns/BillingProfileStep';
+import type { ComponentProps } from 'react';
 
 /**
- * BILLING ACCOUNT - the one application-wide capability for setting up what an order bills to.
+ * BILLING ACCOUNT - the one application-wide capability for setting up what an order bills to, with ONE layout everywhere:
+ * the customer's existing billing accounts, then "Create New Billing Account" (contact, billing address, payment -
+ * invoice recipient, bill cycle, billing mode, card on file, primary payment profile - and the profile's name / media /
+ * schedule). New Connection, Fixed Line / Fibre / FWA, postpaid port-in and Pre-to-Post.
  *
- * Journeys mount THIS component and say which kind of billing set-up their context needs; none of them picks
- * between the parts itself.
- *
- *   mode 'account'   pick one of the customer's existing billing accounts, or create one (contact, address,
- *                    card on file, bill cycle, the profile's name / media / schedule). New Connection, Fixed Line.
- *   mode 'settings'  just the billing settings of the order - language, payment method, bill media. Port-in (MNP).
+ * Journeys mount THIS component (usually through billingAccountStep); none of them mounts BillingAccountStep itself.
  */
-export type BillingAccountProps =
-  | {
-      mode: 'account';
-      customerId: string | undefined;
-      /** The journey's own address, offered as "use the same address" instead of asking the agent to retype it. */
-      defaultAddressLine: string | undefined;
-      value: BillingAccountValue;
-      onChange: (value: BillingAccountValue) => void;
-      /** The email captured at Customer Identification (masked for a new customer): shown instead of a second lookup. */
-      customerEmail?: string;
-    }
-  | {
-      mode: 'settings';
-      value: BillingProfileValue;
-      onChange: (value: BillingProfileValue) => void;
-    };
+export type BillingAccountProps = ComponentProps<typeof BillingAccountStep>;
 
 export function BillingAccount(props: BillingAccountProps) {
-  if (props.mode === 'account') {
-    const { mode: _mode, ...rest } = props;
-    return <BillingAccountStep {...rest} />;
-  }
-  const { mode: _mode, ...rest } = props;
-  return <BillingProfileStep {...rest} />;
+  return <BillingAccountStep {...props} />;
 }

@@ -119,7 +119,7 @@ test('the form numbers are unique', () => {
 
 test('the MNP steps keep their order, with the MNP Form step gated on a signature that is current', () => {
   const all = steps.mnpSteps();
-  assert.deepEqual(all.map((s) => s.key), ['address', 'billingAccount', 'sim', 'plan', 'plan', 'donor-details', 'checkout', 'donor-attachment', 'caf', 'payment', 'activity']);
+  assert.deepEqual(all.map((s) => s.key), ['address', 'billingAccount', 'sim', 'plan', 'planExtras', 'plan', 'planExtras', 'donor-details', 'checkout', 'checkout', 'donor-attachment', 'caf', 'caf', 'payment']);
   const formStep = all.find((s) => s.key === 'donor-attachment');
   assert.equal(formStep.label, 'MNP Form');
   const values = { product: 'mnp', mnpType: 'postpaid', contact: { idNumber: '2845', idType: 'QID', moiResult: { name: 'Test' } }, productId: 'PROD-104', simSerial: 'S1', donorDetails: donorOk };
@@ -255,7 +255,32 @@ test('the checkout step is gated on the validations, and the payment step takes 
   const payment = all.find((s) => s.key === 'payment');
   assert.equal(payment.isValid(journey({ payment: undefined })), false);
   assert.equal(payment.isValid(journey()), true);
-  assert.deepEqual(all.map((s) => s.key).slice(-5), ['checkout', 'donor-attachment', 'caf', 'payment', 'activity']);
+  assert.deepEqual(all.map((s) => s.key).slice(-6), ['checkout', 'checkout', 'donor-attachment', 'caf', 'caf', 'payment']);
+});
+
+test('postpaid port-in uses the shared Plan, Add-ons, Checkout Summary and full CAF steps; prepaid keeps its own pack, checkout and CAF', () => {
+  const all = steps.mnpSteps();
+  const active = (values) => all.filter((s) => !s.skip?.(values)).map((s) => s.key);
+  assert.deepEqual(active({ mnpType: 'postpaid' }), ['address', 'billingAccount', 'sim', 'plan', 'planExtras', 'donor-details', 'checkout', 'donor-attachment', 'caf', 'payment']);
+  assert.deepEqual(active({ mnpType: 'prepaid' }), ['address', 'sim', 'plan', 'planExtras', 'donor-details', 'checkout', 'donor-attachment', 'caf', 'payment']);
+  const [postpaidCaf, prepaidCaf] = all.filter((s) => s.key === 'caf');
+  assert.equal(typeof postpaidCaf.locksAfter, 'function', 'the full CAF locks the journey once signed');
+  assert.equal(prepaidCaf.locksAfter, undefined);
+  const [postpaidCheckout] = all.filter((s) => s.key === 'checkout');
+  assert.equal(postpaidCheckout.label, 'Checkout');
+  assert.equal(all.find((s) => s.key === 'planExtras').label, 'Add-ons');
+});
+
+test('the prepaid port-in checkout is the shared prepaid checkout, gated on the validations and storing what is due as dueTodayQar', () => {
+  const [, prepaidCheckout] = steps.mnpSteps().filter((s) => s.key === 'checkout');
+  assert.equal(prepaidCheckout.label, 'Checkout');
+  const values = journey({ mnpType: 'prepaid' });
+  assert.equal(prepaidCheckout.isValid(values), true);
+  assert.equal(prepaidCheckout.isValid({ ...values, simValid: false }), false);
+  assert.equal(prepaidCheckout.isValid({ ...values, productId: undefined }), false);
+  // The Payment step and the order read the amount as dueTodayQar; the step summary reads it back.
+  const shown = prepaidCheckout.summary.find((f) => f.key === 'due').value({ checkoutTotals: { dueTodayQar: 0, monthlyRecurringQar: 0, hrnAdvanceQar: 0 } });
+  assert.equal(shown, 'QAR 0');
 });
 
 // ---- SIM reservation (BR-MNP-008 / 025) ---------------------------------------------------------------------------------------

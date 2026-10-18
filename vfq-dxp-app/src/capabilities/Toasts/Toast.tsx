@@ -325,7 +325,7 @@ export function ToastContainer() {
                   aria-hidden="true"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-[length:var(--fs-caption)] leading-snug text-fg">{t.message}</p>
+                  <p className="font-bold text-[length:var(--fs-caption)] leading-snug text-fg">{t.message}</p>
                   {t.detail && (
                     <p className="text-[length:var(--fs-caption)] leading-snug mt-0.5 text-fg-2">{t.detail}</p>
                   )}

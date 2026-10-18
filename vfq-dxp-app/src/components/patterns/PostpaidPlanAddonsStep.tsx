@@ -1,6 +1,7 @@
 import { type CustomerBenefit } from '../../engines/customerBenefitEngine';
 import { HRN_ADVANCE_QAR } from '../../engines/postpaidPricing';
 import { Icon } from '../primitives/Icon';
+import { BillLimitEditor } from '../domain/BillLimitEditor';
 import { CHECK } from './postpaidPlanModel';
 import { PlanSearchBox } from './PlanSearchBox';
 import { PlanTabStrip } from './PlanTabStrip';
@@ -227,10 +228,10 @@ export function PostpaidPlanAddonsStep({
               <section aria-label="Selected plan" className="space-y-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0 space-y-2">
+                    <h3 className="text-fg font-bold text-[length:var(--fs-h4)] leading-snug">{selectedPlan.name}</h3>
                     <span className="inline-flex rounded-[var(--radius-pill)] bg-[var(--tint-pink-bg)] px-2.5 py-0.5 text-[var(--tint-pink-fg)] text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide">
                       Selected plan
                     </span>
-                    <h3 className="text-fg font-bold text-[length:var(--fs-h4)] leading-snug">{selectedPlan.name}</h3>
                   </div>
                   <div className="card px-4 py-2.5 text-right shadow-[var(--shadow-icon-tile)]">
                     <p className="text-muted text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide">Monthly plan</p>
@@ -241,35 +242,65 @@ export function PostpaidPlanAddonsStep({
                     </p>
                   </div>
                 </div>
-                {/* Plain bullet lists, no boxes: the plan's benefits and what the offer includes, side by side in one row. */}
+                {/* Plain bullet lists, no boxes: the plan's benefits (and what the offer includes) on the left, the optional add-ons
+                    and bill limit on the right, in one row. */}
                 {(() => {
                   const benefits = (selectedPlan.features?.length
                     ? selectedPlan.features
                     : [selectedPlan.dataAllowanceGB ? `${selectedPlan.dataAllowanceGB} GB data` : 'Unlimited data', selectedPlan.minutesAllowance].filter(Boolean)
                   ) as string[];
                   const included = selectedPlan.benefits ?? [];
-                  const columns: { title: string; items: string[] }[] = [
+                  const lists: { title: string; items: string[] }[] = [
                     { title: 'Benefits', items: benefits },
                     ...(included.length > 0 ? [{ title: 'Included in this offer', items: included }] : []),
                   ];
+                  const showAddons = selectionSource === 'PLAN';
                   return (
-                    <div className={`grid grid-cols-1 gap-x-8 gap-y-5 ${columns.length > 1 ? 'sm:grid-cols-2' : ''}`}>
-                      {columns.map((c) => (
-                        <div key={c.title} className="space-y-2.5">
-                          <p className="text-accent font-bold text-[length:var(--fs-caption)] uppercase tracking-wide">{c.title}</p>
-                          <ul className="space-y-2">
-                            {c.items.map((f) => (
-                              <li key={f} className="flex items-start gap-2.5 text-fg text-[length:var(--fs-body)]">
-                                <Icon path={CHECK} className="w-4 h-4 shrink-0 text-accent mt-1" />
-                                {f}
-                              </li>
-                            ))}
-                          </ul>
+                    <div className={`grid grid-cols-1 gap-x-8 gap-y-5 ${showAddons ? 'lg:grid-cols-2' : ''}`}>
+                      {/* Benefits and Included in this offer sit side by side, in one row. */}
+                      <div className={`grid grid-cols-1 gap-x-8 gap-y-5 content-start ${lists.length > 1 ? 'sm:grid-cols-2' : ''}`}>
+                        {lists.map((c) => (
+                          <div key={c.title} className="space-y-2.5">
+                            <p className="text-accent font-bold text-[length:var(--fs-caption)] uppercase tracking-wide">{c.title}</p>
+                            <ul className="space-y-2">
+                              {c.items.map((f) => (
+                                <li key={f} className="flex items-start gap-2.5 text-fg text-[length:var(--fs-body)]">
+                                  <Icon path={CHECK} className="w-4 h-4 shrink-0 text-accent mt-1" />
+                                  {f}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                      {showAddons && (
+                        <div className="space-y-3 min-w-0">
+                          <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">
+                            Add-ons <span className="text-muted font-normal text-[length:var(--fs-caption)]">(optional)</span>
+                          </h4>
+                          <PostpaidAddonsPanel
+                            preBundled={preBundled}
+                            addonIds={addonIds}
+                            onAddonsChange={onAddonsChange}
+                            selectedProductId={selectedProductId}
+                            customerContext={customerContext}
+                            selectedPlan={selectedPlan}
+                            billLimit={billLimit}
+                            onBillLimitChange={onBillLimitChange}
+                            hideBillLimit
+                          />
                         </div>
-                      ))}
+                      )}
                     </div>
                   );
                 })()}
+                {/* The bill limit, full width below the row, under a separator and without a box: it is a spending control for the
+                    whole plan, not one of the add-ons. */}
+                {selectionSource === 'PLAN' && !preBundled && (
+                  <div className="border-t border-[var(--field-card-border)] pt-6">
+                    <BillLimitEditor product="Mobile" layout="row" bare value={billLimit ?? selectedPlan.mrcQAR} onChange={onBillLimitChange} />
+                  </div>
+                )}
               </section>
             )}
             {mode === 'extras' && !selectedPlan && (
@@ -282,27 +313,12 @@ export function PostpaidPlanAddonsStep({
             )}
             {mode !== 'plan' && selectionSource === 'PLAN' && selectedPlan && (
               <section
-                aria-label={`Add-ons and discounts for ${selectedPlan.name}`}
-                className="rounded-[var(--radius-card-lg)] border border-[var(--field-card-border)] bg-bg p-5 space-y-5"
+                aria-label={`Eligible discounts for ${selectedPlan.name}`}
+                className="border-t border-[var(--field-card-border)] pt-6"
               >
-                <header>
-                  <p className="text-muted text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide">Optional services</p>
-                  <h3 className="text-fg font-bold text-[length:var(--fs-h5)]">Add-ons and discounts</h3>
-                  <p className="text-fg-2 text-[length:var(--fs-caption)]">Select any additional services required for this connection.</p>
-                </header>
-                <PostpaidAddonsPanel
-                  preBundled={preBundled}
-                  addonIds={addonIds}
-                  onAddonsChange={onAddonsChange}
-                  selectedProductId={selectedProductId}
-                  customerContext={customerContext}
-                  selectedPlan={selectedPlan}
-                  billLimit={billLimit}
-                  onBillLimitChange={onBillLimitChange}
-                />
                 <div className="space-y-3">
-                  <h4 className="text-fg font-semibold text-[length:var(--fs-body)]">
-                    Eligible discounts <span className="text-muted font-normal">(optional)</span>
+                  <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">
+                    Eligible Discounts <span className="text-muted font-normal text-[length:var(--fs-caption)]">(optional)</span>
                   </h4>
                   <PostpaidDiscountsPanel
                     selectedProductId={selectedProductId}

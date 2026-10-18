@@ -1,10 +1,12 @@
 import type { WizardStep } from '../../../components/patterns/wizard/guidedWizardTypes';
 import * as sums from '../../../components/patterns/wizard/commonSummaries';
 import { attachSummaries } from '../../../components/patterns/wizard/stepSummary';
-import { activityStep, billingAccountStep, cafSignatureStep, paymentStep, planSelectionStep, serviceAddressStep, simSerialStep } from '../../../capabilities';
+import { billingAccountStep, cafSignatureStep, checkoutSummaryStep, paymentStep, prepaidCheckoutStep, planSelectionStep, postpaidExtrasStep, postpaidPlanStep, prepaidExtrasStep, serviceAddressStep, simSerialStep } from '../../../capabilities';
+import type { PostpaidStepContext } from '../../new-connection/postpaidSteps';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
-import type { BillingAccountValue } from '../../../components/patterns/billingAccountModel';
-import { MnpCheckout } from './MnpCheckout';
+import { normalizePortInNumber, PORT_IN_DEPOSIT_QAR, PORT_IN_FEE_QAR } from '../../../data/portInRules';
+import type { PrepaidLine } from '../../../components/patterns/prepaidCartModel';
+import { MnpValidationGate } from './MnpGatePanel';
 import { gatePasses, mnpValidationGate } from './mnpValidationGate';
 import { contactOf, isPrepaidMnp, mnpFormInputOf } from './mnpFormInput';
 
@@ -16,22 +18,53 @@ import type { DonorAttachmentValue } from '../../../components/patterns/DonorAtt
 
 // The MNP port-in steps, after Customer Identification and Product Selection (the first two steps of New Connection, which
 // MNP shares with the other products; the Postpaid/Prepaid choice is made on the product step and kept as `mnpType`).
-//   Postpaid: Address -> Billing Profile -> SIM Serial -> Plan (Bill Limit) -> Donor Details -> Checkout -> MNP Form -> CAF -> Payment -> Activity.
+//   Postpaid: Address -> Billing Profile -> SIM Serial -> Plan -> Add-ons (Bill Limit, discounts) -> Donor Details -> Checkout -> MNP Form -> CAF -> Payment -> Activity.
 //   Prepaid:  Address -> SIM Serial -> Plan (prepaid pack + discount) -> Donor Details -> Checkout -> MNP Form -> CAF -> Payment -> Activity,
 // with no billing account (a prepaid line carries no credit limit or bill cycle, BR-002/BR-005) and the BR-233
 // balance-forfeiture declaration on the CAF. NewMnpWizard.tsx keeps the evidence behind each.
-export function mnpSteps(): WizardStep[] {
+/** A prepaid port-in is one subscription: its pack, the number being ported in, and the Vodafone SIM it is activated on. */
+const portInLines = (values: Record<string, unknown>): PrepaidLine[] => {
+  const productId = values.productId as string | undefined;
+  const donor = values.donorDetails as DonorDetailsValue | undefined;
+  if (!productId) return [];
+  return [
+    {
+      productId,
+      discountId: values.discountId as string | undefined,
+      addonIds: (values.addonIds as string[] | undefined) ?? [],
+      prePaired: false,
+      msisdn: normalizePortInNumber(donor?.portInNumber ?? '') ?? donor?.portInNumber ?? '',
+      numberPriceQAR: 0,
+      simType: { simType: 'Physical', simSerial: values.simSerial as string | undefined, simValid: Boolean(values.simValid) },
+    },
+  ];
+};
+
+const FIX_STEP: Record<string, string> = { customer: 'contact', eligibility: 'product', billing: 'billingAccount', plan: 'plan', sim: 'sim', mnp: 'donor-details' };
+
+export function mnpSteps({ products = [], customerBenefits }: Partial<Pick<PostpaidStepContext, 'products' | 'customerBenefits'>> = {}): WizardStep[] {
+  const planContext = { products, customerBenefits };
   const postpaidOnly = (step: WizardStep): WizardStep => ({ ...step, skip: isPrepaidMnp });
   const prepaidOnly = (step: WizardStep): WizardStep => ({ ...step, skip: (values) => !isPrepaidMnp(values) });
   return attachSummaries([
     serviceAddressStep({
       mode: 'structured',
+      autoPass: true,
       identity: (values) => ({ idNumber: contactOf(values)?.idNumber, nationality: contactOf(values)?.moiResult?.nationality }),
     }),
     postpaidOnly(billingAccountStep()),
     simSerialStep(),
-    { ...postpaidOnly(planSelectionStep({ kind: 'catalogue', planType: 'Postpaid Plan', billLimit: true })), summary: sums.planDetailSummary },
-    { ...prepaidOnly(planSelectionStep({ kind: 'prepaid' })), summary: [...sums.planSummary(), { key: 'discount', label: 'Discount', type: 'select', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.discountId }] },
+    // The same Plan and Add-ons steps as New Mobile Postpaid: plan cards, add-ons, eligible discounts, bill limit.
+    postpaidOnly(postpaidPlanStep(planContext)),
+    postpaidOnly(postpaidExtrasStep(planContext)),
+    { ...prepaidOnly(planSelectionStep({ kind: 'prepaid', segment: (values) => (values.eligibility as EligibilityResult | undefined)?.segment })), summary: sums.planSummary() },
+    {
+      ...prepaidOnly(prepaidExtrasStep({ segment: (values) => (values.eligibility as EligibilityResult | undefined)?.segment })),
+      summary: [
+        { key: 'discount', label: 'Discount', type: 'select', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.discountId },
+        { key: 'addons', label: 'Add-ons', type: 'multi', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.addonIds },
+      ],
+    },
     {
       key: 'donor-details',
       label: 'Donor Details',
@@ -43,37 +76,44 @@ export function mnpSteps(): WizardStep[] {
       ),
       isValid: (values) => donorDetailsValid(values.donorDetails as DonorDetailsValue | undefined),
     },
+    // BRSD #8 Cart check-out: the validation gate (BR-MNP-009) and what is due today (BR-MNP-011). Continue stays off until every
+    // mandatory customer, billing, SIM, MNP and product validation is done. Postpaid is the shared Checkout Summary capability (the
+    // port-in number is its number), with the gate above it; prepaid reads back its single pack.
     {
-      // BRSD #8 Cart check-out: the validation gate (BR-MNP-009) and what is due today (BR-MNP-011). Continue stays off until every
-      // mandatory customer, billing, SIM, MNP and product validation is done.
-      key: 'checkout',
-      label: 'Checkout',
-      summary: [{ key: 'due', label: 'Total Payable Today', type: 'text', value: (v) => {
-        const due = (v.checkoutTotals as { dueTodayQar?: number } | undefined)?.dueTodayQar;
-        return typeof due === 'number' ? `QAR ${due.toLocaleString('en-GB')}` : undefined;
-      } }],
-      render: ({ values, setValue, goToStepKey }) => {
-        const billing = values.billingAccount as BillingAccountValue | undefined;
-        const donor = values.donorDetails as DonorDetailsValue | undefined;
-        const fixStep: Record<string, string> = { customer: 'contact', eligibility: 'product', billing: 'billingAccount', plan: 'plan', sim: 'sim', mnp: 'donor-details' };
-        return (
-          <MnpCheckout
-            customerName={contactOf(values)?.moiResult?.name}
-            portInNumber={donor?.portInNumber}
-            donorOperator={donor?.donorOperator}
-            productId={values.productId as string | undefined}
-            simSerial={values.simSerial as string | undefined}
-            mnpType={isPrepaidMnp(values) ? 'prepaid' : 'postpaid'}
-            billingLabel={billing?.selectedProfileId ? `Existing account ending ...${billing.selectedProfileId.slice(-4)}` : billing?.newAccount?.profileName}
-            requiresHrnAdvance={Boolean((values.eligibility as EligibilityResult | undefined)?.requiresHrnAdvance)}
-            gate={mnpValidationGate(values, 'checkout')}
-            onTotalsComputed={(totals) => setValue('checkoutTotals', totals)}
-            onFix={(id) => goToStepKey(fixStep[id] ?? 'contact')}
-          />
-        );
-      },
-      isValid: (values) => gatePasses(mnpValidationGate(values, 'checkout')),
+      ...postpaidOnly(
+        checkoutSummaryStep({
+          msisdn: (values) => normalizePortInNumber((values.donorDetails as DonorDetailsValue | undefined)?.portInNumber ?? '') ?? undefined,
+          before: ({ values, goToStepKey }) => <MnpValidationGate gate={mnpValidationGate(values, 'checkout')} onFix={(id) => goToStepKey(FIX_STEP[id] ?? 'contact')} />,
+          isValid: (values) => gatePasses(mnpValidationGate(values, 'checkout')),
+        })
+      ),
     },
+    // Prepaid: the shared prepaid checkout with the port-in's own inputs - its one line (the pack, the port-in number, the SIM), the
+    // port-in number and donor operator, the port-in charge and deposit as the only amount due (BR-MNP-011), the gate above it.
+    prepaidOnly(
+      prepaidCheckoutStep({
+        idType: (values) => contactOf(values)?.idType,
+        customerName: (values) => contactOf(values)?.moiResult?.name,
+        lines: portInLines,
+        details: (values) => {
+          const donor = values.donorDetails as DonorDetailsValue | undefined;
+          return [
+            { label: 'Port-in number', value: normalizePortInNumber(donor?.portInNumber ?? '') ?? donor?.portInNumber ?? '-' },
+            { label: 'Donor operator', value: donor?.donorOperator ?? '-' },
+          ];
+        },
+        fees: [
+          { label: 'Port-in charge', amountQar: PORT_IN_FEE_QAR },
+          { label: 'Deposit', amountQar: PORT_IN_DEPOSIT_QAR },
+        ],
+        before: ({ values, goToStepKey }) => <MnpValidationGate gate={mnpValidationGate(values, 'checkout')} onFix={(id) => goToStepKey(FIX_STEP[id] ?? 'contact')} />,
+        isValid: (values) => gatePasses(mnpValidationGate(values, 'checkout')),
+        editStepKey: 'plan',
+        editLabel: 'Edit pack',
+        // The port-in's Payment step and order read what is due today as `dueTodayQar`.
+        totals: (t) => ({ dueTodayQar: t.totalDueQar, monthlyRecurringQar: 0, hrnAdvanceQar: 0 }),
+      })
+    ),
     {
       key: 'donor-attachment',
       label: 'MNP Form',
@@ -87,22 +127,32 @@ export function mnpSteps(): WizardStep[] {
       // Signed, and signed on the data the journey holds now (a later change to it regenerates the form and clears the signature).
       isValid: (values) => mnpFormSigned(values.donorAttachment as DonorAttachmentValue | undefined, mnpFormInputOf(values)),
     },
-    cafSignatureStep({
-      customerName: (values) => contactOf(values)?.moiResult?.name,
-      // Prepaid port-in only: BR-233 - unused balance is forfeited on switching, shown before signature, and the
-      // CAF reads back the ID it was identified with.
-      keyInformation: (values) =>
-        isPrepaidMnp(values)
-          ? [
-              'Any unused prepaid balance must be used before the number is switched - remaining balance is forfeited once porting completes.',
-              "Porting is a request, not an instant switch - the donor operator's response determines the final port date.",
-            ]
-          : undefined,
-      idDocument: (values) => (isPrepaidMnp(values) ? { label: contactOf(values)?.idType ?? 'ID Number', value: contactOf(values)?.idNumber } : undefined),
-    }),
+    // Postpaid: the full CAF, as New Mobile Postpaid - the customer reads back the order the Checkout Summary computed and signs on
+    // the device's pad (Digital on the web, Touch Screen on a tablet, which is also what the validation gate requires).
+    postpaidOnly(cafSignatureStep({ variant: 'full', customerName: (values) => contactOf(values)?.moiResult?.name })),
+    prepaidOnly(
+      cafSignatureStep({
+        customerName: (values) => contactOf(values)?.moiResult?.name,
+        // Prepaid port-in only: BR-233 - unused balance is forfeited on switching, shown before signature, and the
+        // CAF reads back the ID it was identified with.
+        keyInformation: (values) =>
+          isPrepaidMnp(values)
+            ? [
+                'Any unused prepaid balance must be used before the number is switched - remaining balance is forfeited once porting completes.',
+                "Porting is a request, not an instant switch - the donor operator's response determines the final port date.",
+              ]
+            : undefined,
+        idDocument: (values) => (isPrepaidMnp(values) ? { label: contactOf(values)?.idType ?? 'ID Number', value: contactOf(values)?.idNumber } : undefined),
+        // As the New Connection journeys: the CAF type follows the device (Digital on the web, Touch Screen on a tablet) and both are
+        // signed on screen - which is also what the validation gate requires, so the step can no longer pass while the gate fails.
+        autoDetectDevice: true,
+        needsSignature: (type) => type === 'Digital' || type === 'Touch Screen',
+      })
+    ),
     // BR-MNP-011: the port-in charges, deposit and advance payment are collected before submission; with nothing due, a zero-value receipt.
-    paymentStep({ zeroValueReceipt: true }),
-    activityStep(),
+    // As the New Connection journeys: Payment is the last step and submits the order the moment it is confirmed; the agent's
+    // activity note is the confirmation page's Create Activity.
+    paymentStep({ zeroValueReceipt: true, submitOnPaid: true }),
   ], {
     address: sums.addressFormSummary(),
     sim: [
