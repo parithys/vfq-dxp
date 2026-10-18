@@ -48,6 +48,7 @@ export function billingAccountStep(): WizardStep {
           defaultAddressLine={defaultAddressLine}
           value={(values.billingAccount as BillingAccountValue) ?? {}}
           onChange={(v) => setValue('billingAccount', v)}
+          customerName={(values.contact as GuidedContactValue | undefined)?.moiResult?.name}
           customerEmail={(() => {
             const c = values.contact as GuidedContactValue | undefined;
             return c?.moiResult?.isNewCustomer && c.email ? maskEmail(c.email) : c?.email;

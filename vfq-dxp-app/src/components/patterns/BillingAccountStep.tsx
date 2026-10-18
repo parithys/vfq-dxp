@@ -1,5 +1,5 @@
 import { CARD_SELECTED, CARD_IDLE } from '../primitives/offerCardParts';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { Badge } from '../primitives/Badge';
 import { Button } from '../primitives/Button';
@@ -8,7 +8,7 @@ import { Icon } from '../primitives/Icon';
 import { Input } from '../primitives/Input';
 import { Select } from '../primitives/Select';
 import { useAreaOptions } from '../../hooks/useAreaOptions';
-import { BILLING_MODES, BILL_CYCLE_DAYS, DEFAULT_BILLING_MODE, computeBillCycleDay, ordinal, tokenizeCard, INVOICE_RECIPIENTS } from './billingAccountModel';
+import { BILLING_MODES, BILL_CYCLE_DAYS, CARD_NUMBER_LENGTH, DEFAULT_BILLING_MODE, cardDigits, computeBillCycleDay, formatCardNumber, ordinal, tokenizeCard, INVOICE_RECIPIENTS } from './billingAccountModel';
 import type { AccountRecord, BillingProfileRecord, ContactRecord, CustomerRecord, NewBillingAccountValue, BillingAccountValue } from './billingAccountModel';
 import { BillingProfileSetupDrawer } from './BillingProfileSetupDrawer';
 
@@ -33,6 +33,8 @@ interface BillingAccountStepProps {
    * address stored on each billing profile, never a second lookup.
    */
   customerEmail?: string;
+  /** The identified customer's name: the primary contact to offer when no contact records are on file (a new customer). */
+  customerName?: string;
 }
 
 // "Billing Profile" (2026-09-28 request) - Step 3 of New Postpaid Activation,
@@ -47,6 +49,8 @@ interface BillingData {
   contacts: ContactRecord[];
   segment: string | undefined;
 }
+// The primary-contact value for the identified customer when there are no contact records to pick from.
+const NEW_CUSTOMER_CONTACT = 'CUSTOMER';
 const billingDataCache = new Map<string, BillingData>();
 
 export function BillingAccountStep({
@@ -55,6 +59,7 @@ export function BillingAccountStep({
   value,
   onChange,
   customerEmail,
+  customerName,
 }: BillingAccountStepProps) {
   const areaOptions = useAreaOptions();
   const cached = customerId ? billingDataCache.get(customerId) : undefined;
@@ -63,7 +68,9 @@ export function BillingAccountStep({
   const [customerSegment, setCustomerSegment] = useState<string | undefined>(cached?.segment);
   const [loaded, setLoaded] = useState(Boolean(cached));
   const [setupOpen, setSetupOpen] = useState(false);
+  // The card number is held as digits only; it is shown in groups of four (formatCardNumber).
   const [cardNumber, setCardNumber] = useState('');
+  const cardInputRef = useRef<HTMLInputElement>(null);
   const [cardError, setCardError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -113,7 +120,7 @@ export function BillingAccountStep({
   const validateCard = () => {
     const result = tokenizeCard(cardNumber);
     if (!result) {
-      setCardError('Enter a valid card number.');
+      setCardError(`Enter a ${CARD_NUMBER_LENGTH}-digit card number.`);
       setNewAccount({ cardLast4: undefined, cardToken: undefined });
       return;
     }
@@ -179,7 +186,15 @@ export function BillingAccountStep({
               (the old [+]/[-] prefix became a chevron, kept at the left so the floating Customer view button never covers it). */}
           <button
             type="button"
-            onClick={() => onChange({ ...value, creatingNew: !value.creatingNew, selectedProfileId: undefined })}
+            onClick={() =>
+              onChange({
+                ...value,
+                creatingNew: !value.creatingNew,
+                selectedProfileId: undefined,
+                // Opening the form fixes the primary-payment default: ticked only when the customer has no other profile.
+                newAccount: { ...value.newAccount, primaryPaymentProfile: value.newAccount?.primaryPaymentProfile ?? profiles.length === 0 },
+              })
+            }
             aria-expanded={Boolean(value.creatingNew)}
             className={`w-full flex items-center gap-3 px-6 py-4 text-left ${
               value.creatingNew ? 'border-b border-border-soft' : ''
@@ -207,10 +222,16 @@ export function BillingAccountStep({
                     value={newAccount.primaryContactId ?? ''}
                     onChange={(e) => setNewAccount({ primaryContactId: e.target.value })}
                     placeholder="Select contact"
-                    options={contacts.map((c) => ({
-                      value: c.contactRecordId,
-                      label: [c.firstName, c.middleName, c.lastName].filter(Boolean).join(' '),
-                    }))}
+                    // A customer with contact records picks one; a new customer has none yet, so the person identified in this
+                    // journey is the contact (otherwise the list is empty and the step cannot be completed).
+                    options={
+                      contacts.length > 0 || !customerName
+                        ? contacts.map((c) => ({
+                            value: c.contactRecordId,
+                            label: [c.firstName, c.middleName, c.lastName].filter(Boolean).join(' '),
+                          }))
+                        : [{ value: NEW_CUSTOMER_CONTACT, label: `${customerName} (the customer)` }]
+                    }
                   />
                   {newAccount.hasSecondaryContact && (
                     <Input
@@ -330,10 +351,39 @@ export function BillingAccountStep({
                 <Input
                   label="Card Number"
                   required
+                  ref={cardInputRef}
+                  inputMode="numeric"
+                  autoComplete="cc-number"
                   placeholder="•••• •••• •••• ••••"
-                  value={cardNumber}
+                  value={formatCardNumber(cardNumber)}
                   onChange={(e) => {
-                    setCardNumber(e.target.value);
+                    const el = e.target;
+                    // Keep the caret next to the same digit after the spaces are re-inserted.
+                    const digitsBeforeCaret = cardDigits(el.value.slice(0, el.selectionStart ?? el.value.length)).length;
+                    const digits = cardDigits(el.value);
+                    setCardNumber(digits);
+                    setCardError(null);
+                    setNewAccount({ cardLast4: undefined, cardToken: undefined });
+                    requestAnimationFrame(() => {
+                      const shown = formatCardNumber(digits);
+                      let pos = 0;
+                      for (let seen = 0; pos < shown.length && seen < digitsBeforeCaret; pos++) if (shown[pos] !== ' ') seen++;
+                      cardInputRef.current?.setSelectionRange(pos, pos);
+                    });
+                  }}
+                  // Copying or cutting gives the digits only, never the display spaces.
+                  onCopy={(e) => {
+                    const el = e.currentTarget;
+                    e.clipboardData.setData('text/plain', cardDigits(el.value.slice(el.selectionStart ?? 0, el.selectionEnd ?? 0)));
+                    e.preventDefault();
+                  }}
+                  onCut={(e) => {
+                    const el = e.currentTarget;
+                    const start = el.selectionStart ?? 0;
+                    const end = el.selectionEnd ?? 0;
+                    e.clipboardData.setData('text/plain', cardDigits(el.value.slice(start, end)));
+                    e.preventDefault();
+                    setCardNumber(cardDigits(el.value.slice(0, start) + el.value.slice(end)));
                     setCardError(null);
                     setNewAccount({ cardLast4: undefined, cardToken: undefined });
                   }}
@@ -346,10 +396,13 @@ export function BillingAccountStep({
                     Card ending {newAccount.cardLast4} tokenized - {newAccount.cardToken}
                   </p>
                 )}
-                <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg cursor-not-allowed">
-                  <Checkbox checked disabled />
+                <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg cursor-pointer">
+                  <Checkbox
+                    checked={newAccount.primaryPaymentProfile ?? profiles.length === 0}
+                    onChange={(e) => setNewAccount({ primaryPaymentProfile: e.target.checked })}
+                  />
                   Set as primary payment profile
-                  <span className="text-muted text-[length:var(--fs-caption)]">(only profile being created here)</span>
+                  {profiles.length === 0 && <span className="text-muted text-[length:var(--fs-caption)]">(the customer's first billing profile)</span>}
                 </label>
               </div>
 

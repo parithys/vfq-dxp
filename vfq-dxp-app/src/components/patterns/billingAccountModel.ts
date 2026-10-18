@@ -45,6 +45,9 @@ export interface NewBillingAccountValue {
   billCycleDay?: number;
   /** How the profile is billed: the billing-profiles records carry 'Arrears' (every profile but one) or 'Hybrid (PIA + Arrears)'. */
   billingMode?: string;
+  /** Whether this profile is the customer's primary payment profile. Defaults to true when the customer has no other billing
+   * profile; saved as the profile's `isDefault`. */
+  primaryPaymentProfile?: boolean;
   /** Only the last 4 digits and a generated token ever persist here - see
    * tokenizeCard()'s own note on why the full number is never stored. */
   cardLast4?: string;
@@ -115,9 +118,16 @@ export const BILL_CYCLE_DAYS = [1, 15];
  * kept verbatim in the token prefix and the field's own helper text as a
  * demo label, not a real integration.
  */
+/** A card number is exactly this many digits. */
+export const CARD_NUMBER_LENGTH = 16;
+/** A card number is typed and stored as digits only, at most CARD_NUMBER_LENGTH of them. */
+export const cardDigits = (text: string) => text.replace(/\D/g, '').slice(0, CARD_NUMBER_LENGTH);
+/** The digits shown in groups of four ("4111 1111 1111 1111"). Display only - the value held and validated has no spaces. */
+export const formatCardNumber = (digits: string) => digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+
 export function tokenizeCard(cardNumber: string): { last4: string; token: string } | null {
   const digits = cardNumber.replace(/\D/g, '');
-  if (digits.length < 12) return null;
+  if (digits.length !== CARD_NUMBER_LENGTH) return null;
   const last4 = digits.slice(-4);
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let suffix = '';

@@ -23,6 +23,9 @@ export type BillingAccountProps =
       onChange: (value: BillingAccountValue) => void;
       /** The email captured at Customer Identification (masked for a new customer): shown instead of a second lookup. */
       customerEmail?: string;
+      /** The name captured at Customer Identification: offered as the primary contact when the customer has no contact records yet
+       * (a new customer). */
+      customerName?: string;
     }
   | {
       mode: 'settings';
