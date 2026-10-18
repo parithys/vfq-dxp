@@ -1,4 +1,5 @@
 import { isClosedTicket } from '../../../lib/statusTone';
+import { isSimSwapAwaitingDecision } from '../../../engines/approvalAuthority';
 import { useEffect, useMemo, useState } from 'react';
 import { computeBillingSummary, type Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
@@ -92,7 +93,7 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
     if (dunning && dunningActive) {
       add({ id: 'dunning', type: 'Dunning Stage', description: `Currently at ${dunning}`, severity: 'High', tab: 'billing' });
     }
-    for (const s of data.simSwapOrders.filter((x) => /pending/i.test(String(x.status)))) {
+    for (const s of data.simSwapOrders.filter((x) => isSimSwapAwaitingDecision(x.status))) {
       add({ id: `sim-${String(s.simSwapOrderId)}`, type: 'Pending SIM Swap', description: `SIM swap request ${String(s.simSwapOrderId)} awaiting completion`, severity: 'High', icon: IC.flag, tone: 'purple', tab: 'products-services' });
     }
     for (const t of data.tickets) {

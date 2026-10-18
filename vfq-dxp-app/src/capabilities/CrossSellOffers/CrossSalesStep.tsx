@@ -5,7 +5,7 @@ import { OfferDetailsDrawer } from './OfferDetailsDrawer';
 import type { OfferProduct } from '../../components/primitives/offerCardParts';
 import { CARD_HIGHLIGHT, CARD_IDLE, CARD_SELECTED, STAR_ICON } from '../../components/primitives/offerCardParts';
 import * as mockDataEngine from '../../engines/mockDataEngine';
-import { JOURNEY_PILL, journeyLabel, continuesHere, offerTypeOf, hasDestination, offerTypesFor } from './serviceJourneys';
+import { JOURNEY_PILL, journeyLabel, continuesHere, offerTypeOf, hasDestination, offerTypesFor, isHomeJourney, isPrepaidJourney } from './serviceJourneys';
 import type { OfferJourneys } from './serviceJourneys';
 import { HandOff } from './HandOff';
 import { offerFeatures, offerHighlight } from './crossSalesModel';
@@ -265,7 +265,8 @@ export function CrossSalesStep({
       <OfferDetailsDrawer
         offer={detailOffer}
         serviceLabel={journeyLabel(detailOffer?.serviceJourney) ?? '-'}
-        fixedService={detailOffer?.serviceJourney === 'new-fixed-line' || detailOffer?.serviceJourney === 'new-fwa'}
+        prepaid={isPrepaidJourney(detailOffer?.serviceJourney)}
+        fixedService={isHomeJourney(detailOffer?.serviceJourney)}
         highlight={detailOffer ? offerHighlight(detailOffer, products) : null}
         includedNames={(detailOffer?.linkedProductIds ?? []).map((id) => productNames[id] ?? id)}
         selected={Boolean(detailOffer && value.decision === 'accepted' && value.offerId === detailOffer.offerId)}

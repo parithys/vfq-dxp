@@ -23,7 +23,8 @@ export function buildAssetsFieldResolver(service: CustomerService | undefined, d
     ? data.installedAssets.find((ia) => ia.serviceId === service.ref || ia.installedAssetId === service.ref)
     : undefined;
   const order = service ? data.orders.find((o) => o.msisdn === service.ref) : undefined;
-  const addon = asset ? data.addonsDiscounts.find((ad) => ad.planId === asset.promotion) : undefined;
+  const planId = asset ? data.assetPlanIds[String(asset.installedAssetId)] : undefined;
+  const addon = planId ? data.addonsDiscounts.find((ad) => ad.planId === planId) : undefined;
   const balance = data.inPlatformBalances[0];
   const usage = data.serviceUsage[0];
   const doi = data.deviceInstallments[0];

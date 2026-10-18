@@ -16,9 +16,8 @@ export const SERVICE_JOURNEYS: { key: ServiceJourney; label: string; description
   { key: 'new-fixed-line', label: 'New Fixed Line', description: 'Activate a new fixed line service', route: '/fixed-line-fibre/new-fixed-line-wizard-contact-step' },
   { key: 'new-fwa', label: 'New FWA', description: 'Activate a new Fixed Wireless Access service', route: '/fwa-5g-home/new-fwa-tile-home-screen' },
   { key: 'pre-to-post', label: 'Prepaid to Postpaid', description: 'Migrate a prepaid line onto a postpaid plan', route: '/pre-to-post-migration/postpaid-contact-wizard-step-pre-to-post' },
-  // No postpaid plan-change wizard is built yet; this is the catalogue's closest screen (SCR-172, Promotion Upgrades picker),
-  // which the router shows as "not yet built" until it is registered. Point it at the real wizard when there is one.
-  { key: 'post-to-post', label: 'Postpaid to Postpaid Upgrade', description: 'Move a postpaid line to a plan with a higher monthly fee', route: '/mobile-postpaid/promotion-upgrades-picker-modal' },
+  // The Change Postpaid Plan journey (Plans & Numbers): pick the line, then the new plan.
+  { key: 'post-to-post', label: 'Postpaid to Postpaid Upgrade', description: 'Move a postpaid line to a plan with a higher monthly fee', route: '/mobile/change-postpaid-plan' },
 ];
 
 /** Offer-card service pill colours, one per service so the type reads at a glance. Self-contained
@@ -59,6 +58,12 @@ const OFFER_TYPE_OF_JOURNEY: Partial<Record<ServiceJourney, OfferTypeKey>> = {
   'post-to-post': 'post-to-post-upgrade',
 };
 
+/** Journeys that sell a prepaid pack, priced once - every other journey sells a postpaid plan or a home service with a monthly rental ('Prepaid to Postpaid' sells a postpaid plan). */
+export const isPrepaidJourney = (k: ServiceJourney | undefined): boolean => k === 'new-prepaid' || k === 'mnp-prepaid';
+
+/** The home journeys (fixed line, FWA): the offer cards give them the house artwork. */
+export const isHomeJourney = (k: ServiceJourney | undefined): boolean => offerTypeOf(k) === 'new-home';
+
 export const offerTypeOf = (journey: ServiceJourney | undefined) => (journey ? OFFER_TYPE_OF_JOURNEY[journey] : undefined);
 
 export const journeyLabel = (k: ServiceJourney | undefined) => SERVICE_JOURNEYS.find((j) => j.key === k)?.label;
@@ -77,3 +82,6 @@ export const hasDestination = (k: ServiceJourney | undefined, here: OfferJourney
 
 /** The Offers-step sections shown for a journey: New Prepaid's own section only appears where prepaid is one of its journeys. */
 export const offerTypesFor = (here: OfferJourneys = 'new-postpaid') => OFFER_TYPES.filter((t) => t.key !== 'new-prepaid' || includes(here, 'new-prepaid'));
+
+/** An offer for the New Fixed Line journey. By the journey the offer carries - not by 'Cross Sell' in its type, which 130 of the 139 offers share. */
+export const isFixedLineOffer = (offer: { serviceJourney?: unknown }): boolean => offer.serviceJourney === 'new-fixed-line';

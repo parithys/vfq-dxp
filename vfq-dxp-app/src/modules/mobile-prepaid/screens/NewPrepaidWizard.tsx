@@ -6,5 +6,5 @@ import { NewConnectionWizard } from '../../new-connection/NewConnectionWizard';
 // requirement-to-implementation map (MPRA_001_*) and the open items are in
 // reference/outputs/VFQ_DXP_Mobile_Prepaid_Requirements_Coverage_Reference.md.
 export function NewPrepaidWizard() {
-  return <NewConnectionWizard flow="new" initialProduct="prepaid" />;
+  return <NewConnectionWizard flow="new" title="New Prepaid Activation" initialProduct="prepaid" />;
 }

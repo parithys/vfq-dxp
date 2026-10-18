@@ -2,14 +2,16 @@ import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
 import type { GateCheck } from './mnpValidationGate';
 
-/** BR-MNP-009's validation gate: every mandatory validation with its result, and a way back to fix a failed one. */
+/** BR-MNP-009's validation gate: every mandatory validation with its result, and a way back to fix a failed one. Shown only when one fails. */
 export function MnpValidationGate({ gate, onFix }: { gate: GateCheck[]; onFix: (checkId: string) => void }) {
   const failed = gate.filter((c) => !c.ok);
+  // Shown only while something fails: with every validation passed there is nothing for the agent to act on.
+  if (failed.length === 0) return null;
   return (
     <section className="card p-4 card-surface" aria-label="Validation gate">
       <div className="flex items-center justify-between mb-2">
         <h3 className="font-bold text-fg text-[length:var(--fs-body)]">Validations</h3>
-        <Badge variant={failed.length === 0 ? 'success' : 'danger'}>{failed.length === 0 ? 'All validations passed' : `${failed.length} to fix`}</Badge>
+        <Badge variant="danger">{failed.length} to fix</Badge>
       </div>
       <ul className="divide-y divide-border-soft">
         {gate.map((c) => (

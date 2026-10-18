@@ -8,7 +8,7 @@ globalThis.window.removeEventListener ??= () => {};
 
 // MNP Port-In against VFQ_Mobile_MNP_PORTIN_PORTOUT_V1.1: the status model, NPAS approval / rejection, the Confirmed Port-In Date
 // window, the donor fields, the Port-In number check and the MNP Form.
-let rules, engine, donor, attach, steps, gateMod, elig, mnp;
+let rules, engine, donor, attach, steps, gateMod, gatePanel, elig, mnp, React, server;
 before(async () => {
   await boot();
   rules = await load('/src/data/portInRules.ts');
@@ -17,6 +17,9 @@ before(async () => {
   attach = await load('/src/components/patterns/DonorAttachmentStep.tsx');
   steps = await load('/src/modules/mnp-fnp-porting/screens/mnpSteps.tsx');
   gateMod = await load('/src/modules/mnp-fnp-porting/screens/mnpValidationGate.ts');
+  gatePanel = await load('/src/modules/mnp-fnp-porting/screens/MnpGatePanel.tsx');
+  React = (await import('react')).default;
+  server = await import('react-dom/server');
   elig = await load('/src/engines/eligibilityEngine.ts');
   mnp = await load('/src/modules/mnp-fnp-porting/screens/submitMnpOrder.ts');
 });
@@ -85,9 +88,10 @@ test('donor details need the number, ID, ID type, customer type, operator and su
   assert.equal(donor.donorDetailsValid(undefined), false);
 });
 
-test('the donor operator is another operator: Vodafone is not offered, and Diplomatic ID is a donor ID type (DF-MNP-011)', () => {
+test('the donor operator is Ooredoo: Vodafone and Other Licensed Operator are not offered, and Diplomatic ID is a donor ID type (DF-MNP-011)', () => {
   assert.ok(!rules.DONOR_OPERATORS.includes('Vodafone'));
-  assert.deepEqual([...rules.DONOR_OPERATORS], ['Ooredoo', 'Other Licensed Operator']);
+  assert.deepEqual([...rules.DONOR_OPERATORS], ['Ooredoo']);
+  assert.equal(rules.DONOR_OPERATOR, 'Ooredoo', 'the only donor operator is set by the journey, not chosen');
 });
 
 // ---- MNP Form (SEQ_018 / 019) ----------------------------------------------------------------------------------------------
@@ -281,6 +285,14 @@ test('the prepaid port-in checkout is the shared prepaid checkout, gated on the 
   // The Payment step and the order read the amount as dueTodayQar; the step summary reads it back.
   const shown = prepaidCheckout.summary.find((f) => f.key === 'due').value({ checkoutTotals: { dueTodayQar: 0, monthlyRecurringQar: 0, hrnAdvanceQar: 0 } });
   assert.equal(shown, 'QAR 0');
+});
+
+test('the validation gate panel is shown only while a validation fails', () => {
+  const html = (gate) => server.renderToStaticMarkup(React.createElement(gatePanel.MnpValidationGate, { gate, onFix: () => {} }));
+  assert.equal(html(gateMod.mnpValidationGate(journey(), 'checkout')), '', 'every validation passed: nothing is shown');
+  const failing = html(gateMod.mnpValidationGate(journey({ simValid: false }), 'checkout'));
+  assert.match(failing, /Validations/);
+  assert.match(failing, /1 to fix/);
 });
 
 // ---- SIM reservation (BR-MNP-008 / 025) ---------------------------------------------------------------------------------------

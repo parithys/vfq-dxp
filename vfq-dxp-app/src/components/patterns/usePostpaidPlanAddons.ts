@@ -20,6 +20,8 @@ interface UsePostpaidPlanAddonsArgs {
   customerBenefits?: CustomerBenefit[];
   discountProofDocument: { fileName: string; sizeBytes: number } | undefined;
   onDiscountProofDocumentChange: (doc: { fileName: string; sizeBytes: number } | undefined) => void;
+  /** A plan left out of the choices: the line's current plan, when the journey is changing it. */
+  hiddenProductId?: string;
 }
 
 export function usePostpaidPlanAddons({
@@ -36,6 +38,7 @@ export function usePostpaidPlanAddons({
   customerBenefits,
   discountProofDocument,
   onDiscountProofDocumentChange,
+  hiddenProductId,
 }: UsePostpaidPlanAddonsArgs) {
   const [plans, setPlans] = useState<PostpaidPlan[]>([]);
   const [addonProducts, setAddonProducts] = useState<AddonProduct[]>([]);
@@ -128,10 +131,10 @@ export function usePostpaidPlanAddons({
 
   useEffect(() => {
     mockDataEngine.list<PostpaidPlan & AddonProduct>('products').then((all) => {
-      setPlans(all.filter((p) => p.type === 'Postpaid Plan' && p.listed !== false).sort((a, b) => a.mrcQAR - b.mrcQAR));
+      setPlans(all.filter((p) => p.type === 'Postpaid Plan' && p.listed !== false && p.productId !== hiddenProductId).sort((a, b) => a.mrcQAR - b.mrcQAR));
       setAddonProducts(all.filter((p) => p.type === 'Add-on'));
     });
-  }, []);
+  }, [hiddenProductId]);
 
   // Discounts are loaded for the selected plan only; a failed load can be retried and never blocks the step.
   const [discountsState, setDiscountsState] = useState<'loading' | 'error' | 'ready'>('ready');

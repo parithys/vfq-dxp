@@ -9,6 +9,7 @@
         "modules/mnp-fnp-porting",
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
+        "modules/mobile-service-changes",
         "modules/new-connection",
         "modules/order-management",
         "modules/pre-to-post-migration",
@@ -44,6 +45,7 @@
         "modules/mnp-fnp-porting",
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
+        "modules/mobile-service-changes",
         "modules/new-connection",
         "modules/pre-to-post-migration",
         "workspace/administration"
@@ -70,6 +72,7 @@
         "modules/mnp-fnp-porting",
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
+        "modules/mobile-service-changes",
         "modules/new-connection",
         "modules/pre-to-post-migration",
         "workspace/administration"
@@ -83,6 +86,7 @@
         "modules/mnp-fnp-porting",
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
+        "modules/mobile-service-changes",
         "modules/new-connection",
         "modules/pre-to-post-migration",
         "workspace/administration"
@@ -96,6 +100,7 @@
         "modules/mnp-fnp-porting",
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
+        "modules/mobile-service-changes",
         "modules/new-connection",
         "modules/pre-to-post-migration",
         "workspace/administration"
@@ -109,6 +114,7 @@
         "modules/mnp-fnp-porting",
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
+        "modules/mobile-service-changes",
         "modules/new-connection",
         "modules/pre-to-post-migration",
         "workspace/administration"
@@ -142,6 +148,7 @@
         "modules/mnp-fnp-porting",
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
+        "modules/mobile-service-changes",
         "modules/new-connection",
         "modules/pre-to-post-migration",
         "workspace/administration"
@@ -170,6 +177,7 @@
         "modules/mnp-fnp-porting",
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
+        "modules/mobile-service-changes",
         "modules/new-connection",
         "modules/order-management",
         "modules/pre-to-post-migration",
@@ -192,6 +200,7 @@
         "modules/mnp-fnp-porting",
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
+        "modules/mobile-service-changes",
         "modules/new-connection",
         "modules/pre-to-post-migration",
         "modules/sim-number-management",
@@ -206,6 +215,7 @@
         "modules/mnp-fnp-porting",
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
+        "modules/mobile-service-changes",
         "modules/new-connection",
         "modules/pre-to-post-migration",
         "workspace/administration"
@@ -219,6 +229,7 @@
         "modules/mnp-fnp-porting",
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
+        "modules/mobile-service-changes",
         "modules/new-connection",
         "modules/pre-to-post-migration",
         "workspace/administration"
@@ -232,7 +243,16 @@
         "modules/mnp-fnp-porting",
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
+        "modules/mobile-service-changes",
         "modules/new-connection",
+        "modules/pre-to-post-migration",
+        "workspace/administration"
+      ],
+      "bypass": []
+    },
+    "line-selection": {
+      "areas": [
+        "modules/mobile-service-changes",
         "modules/pre-to-post-migration",
         "workspace/administration"
       ],
@@ -245,6 +265,7 @@
         "modules/mnp-fnp-porting",
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
+        "modules/mobile-service-changes",
         "modules/new-connection",
         "modules/pre-to-post-migration",
         "workspace/administration"
@@ -258,9 +279,11 @@
         "modules/mnp-fnp-porting",
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
+        "modules/mobile-service-changes",
         "modules/new-connection",
         "modules/pre-to-post-migration",
-        "workspace/administration"
+        "workspace/administration",
+        "workspace/customer360"
       ],
       "bypass": []
     },
@@ -271,6 +294,7 @@
         "modules/mnp-fnp-porting",
         "modules/mobile-postpaid",
         "modules/mobile-prepaid",
+        "modules/mobile-service-changes",
         "modules/new-connection",
         "modules/pre-to-post-migration",
         "modules/sim-number-management",

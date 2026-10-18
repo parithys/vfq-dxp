@@ -103,13 +103,21 @@ export interface LineCharges {
   simCardMessage: string;
 }
 
+/** What a line costs when it is an existing line (a pack change, an add-on) rather than a new SIM. */
+export interface PriceOptions {
+  /** The SIM is already the customer's: no SIM card charge. */
+  existingSim?: boolean;
+  /** The pack is not being bought (an add-on on the current pack): no starter pack charge. */
+  excludePack?: boolean;
+}
+
 /** What one subscription costs today: starter pack (net of discount), add-ons, premium number, SIM card charge. */
-export function priceLine(line: PrepaidLine, idType: string | undefined, products: PricingProduct[], extras: PricingExtra[]): LineCharges {
+export function priceLine(line: PrepaidLine, idType: string | undefined, products: PricingProduct[], extras: PricingExtra[], opts: PriceOptions = {}): LineCharges {
   const plan = products.find((p) => p.productId === line.productId);
   const discount = extras.find((e) => e.addonDiscountId === line.discountId);
-  const starterPackQar = plan ? Math.round((plan.starterPackChargeQAR ?? 0) * (1 + (discount?.price ?? 0))) : 0;
+  const starterPackQar = plan && !opts.excludePack ? Math.round((plan.starterPackChargeQAR ?? 0) * (1 + (discount?.price ?? 0))) : 0;
   const addonsQar = line.addonIds.reduce((sum, id) => sum + (extras.find((e) => e.addonDiscountId === id)?.price ?? 0), 0);
-  const sim = simCardCharge(idType, starterPackQar);
+  const sim = opts.existingSim ? { chargeQar: 0, message: 'The SIM is already the customer\'s, so there is no SIM card charge.' } : simCardCharge(idType, starterPackQar);
   const numberQar = line.numberPriceQAR;
   return {
     starterPackQar,
@@ -131,8 +139,8 @@ export interface PrepaidCheckoutTotals {
   lineCount: number;
 }
 
-export function cartTotals(lines: PrepaidLine[], idType: string | undefined, products: PricingProduct[], extras: PricingExtra[]): PrepaidCheckoutTotals {
-  const priced = lines.map((l) => priceLine(l, idType, products, extras));
+export function cartTotals(lines: PrepaidLine[], idType: string | undefined, products: PricingProduct[], extras: PricingExtra[], opts: PriceOptions = {}): PrepaidCheckoutTotals {
+  const priced = lines.map((l) => priceLine(l, idType, products, extras, opts));
   const sum = (pick: (c: LineCharges) => number) => priced.reduce((t, c) => t + pick(c), 0);
   return {
     starterPackChargeQar: sum((c) => c.starterPackQar),

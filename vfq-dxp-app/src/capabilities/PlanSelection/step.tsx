@@ -8,7 +8,14 @@ import { planSummary } from './summary';
  * drops the previous pack's discount and add-ons. Postpaid has its own builders (postpaidPlanStep / postpaidExtrasStep,
  * which read the offer, eligibility and customer type); fixed-line has fixedPlanSelectionStep.
  */
-export function planSelectionStep(opts: { kind: 'prepaid'; segment?: (values: Record<string, unknown>) => string | undefined }): WizardStep {
+export function planSelectionStep(opts: {
+  kind: 'prepaid';
+  segment?: (values: Record<string, unknown>) => string | undefined;
+  /** A pack not offered (the line's current pack, when the journey changes it). */
+  hiddenProductId?: (values: Record<string, unknown>) => string | undefined;
+  /** Offer only packs that carry a bundle, not the SIM-only option (changing the pack of a line that already has its SIM). */
+  packsOnly?: boolean;
+}): WizardStep {
   return {
     key: 'plan',
     label: PLAN_SELECTION_LABEL,
@@ -33,6 +40,8 @@ export function planSelectionStep(opts: { kind: 'prepaid'; segment?: (values: Re
         discountId={values.discountId as string | undefined}
         onSelectDiscount={(id) => setValue('discountId', id)}
         segment={opts.segment?.(values)}
+        hiddenProductId={opts.hiddenProductId?.(values)}
+        packsOnly={opts.packsOnly}
       />
     ),
     isValid: (values) => Boolean(values.productId),

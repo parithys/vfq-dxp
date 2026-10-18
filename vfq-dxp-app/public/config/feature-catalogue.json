@@ -362,5 +362,26 @@
     "area": "Platform Governance & Architecture",
     "surface": "module",
     "screenIds": ["SCR-016", "SCR-065"]
+  },
+  {
+    "key": "mobile.change-postpaid-plan",
+    "name": "Change Postpaid Plan journey",
+    "area": "Mobile Postpaid",
+    "surface": "workspace",
+    "screenIds": []
+  },
+  {
+    "key": "mobile.change-prepaid-pack",
+    "name": "Change Prepaid Pack journey",
+    "area": "Mobile Prepaid",
+    "surface": "workspace",
+    "screenIds": []
+  },
+  {
+    "key": "mobile.add-addon",
+    "name": "Add Add-On journey",
+    "area": "Mobile Postpaid",
+    "surface": "workspace",
+    "screenIds": []
   }
 ]

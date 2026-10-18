@@ -164,10 +164,10 @@ export async function list<T = Record<string, unknown>>(kind: EntityKind): Promi
   return latency([...(requireStore()[kind] ?? [])] as T[]);
 }
 
-export async function get<T = Record<string, unknown>>(kind: EntityKind, id: string): Promise<T | undefined> {
+export async function get<T = Record<string, unknown>>(kind: EntityKind, id: string, idField?: string): Promise<T | undefined> {
   if (!store) await seedMockData();
   const records = requireStore()[kind] ?? [];
-  const field = idFieldFor(records);
+  const field = idField ?? idFieldFor(records);
   return latency(records.find((r) => r[field] === id) as T | undefined);
 }
 
@@ -182,10 +182,13 @@ export async function create<T extends Record<string, unknown>>(kind: EntityKind
 export async function update<T extends Record<string, unknown>>(
   kind: EntityKind,
   id: string,
-  patch: Partial<T>
+  patch: Partial<T>,
+  idField?: string
 ): Promise<T | undefined> {
   const records = requireStore()[kind] ?? [];
-  const field = idFieldFor(records);
+  // The caller's own id field when it names one. Guessing (the first key ending in "Id") is only the fallback: in several kinds that key is
+  // a foreign key (accountId, contactId), so an update by the record's real id found nothing and was silently lost.
+  const field = idField ?? idFieldFor(records);
   const idx = records.findIndex((r) => r[field] === id);
   if (idx === -1) return latency(undefined);
   records[idx] = { ...records[idx], ...patch };
@@ -206,9 +209,9 @@ export async function update<T extends Record<string, unknown>>(
  * Returns whether anything was removed, so a caller can tell a real deletion
  * from a no-op on an id that had already gone.
  */
-export async function remove(kind: EntityKind, id: string): Promise<boolean> {
+export async function remove(kind: EntityKind, id: string, idField?: string): Promise<boolean> {
   const records = requireStore()[kind] ?? [];
-  const field = idFieldFor(records);
+  const field = idField ?? idFieldFor(records);
   const idx = records.findIndex((r) => r[field] === id);
   if (idx === -1) return latency(false);
   records.splice(idx, 1);

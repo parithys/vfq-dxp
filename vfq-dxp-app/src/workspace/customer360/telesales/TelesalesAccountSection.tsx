@@ -1,3 +1,4 @@
+import { isBusinessSegment } from '../../../engines/businessSegment';
 import { Button } from '../../../components/primitives/Button';
 import { useState } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
@@ -18,7 +19,7 @@ export function AccountSection({ ctx }: { ctx: Ctx }) {
   const emails = arr<string>(demo.billingEmails).length ? arr<string>(demo.billingEmails) : [str(data.billingProfiles[0]?.billingContactEmail)].filter(Boolean);
   const [allEmails, setAllEmails] = useState(false);
   const keyContacts = arr<{ role: string; name: string | null; mobile: string | null; email: string | null }>(demo.keyContacts);
-  const isBusinessSegment = /enterprise|ebu|business|corporate/i.test(str(data.customer.segment));
+  const isBusinessSeg = isBusinessSegment(data.customer.segment);
   const entries = activityEntries(ctx).slice(0, 5);
   const orders = [...data.orders].sort((a, b) => str(b.createdAt).localeCompare(str(a.createdAt))).slice(0, 5);
   const pend: [string, string][] = [
@@ -100,7 +101,7 @@ export function AccountSection({ ctx }: { ctx: Ctx }) {
 
         {/* Key Contacts (account manager, escalation) belong to business accounts. The seeded list is the same
             three roles for every customer, so it is shown only for the Enterprise (EBU) segment. */}
-        {isBusinessSegment && (
+        {isBusinessSeg && (
           <Card title="Key Contacts" icon={ICON.user} link="View All" onLink={() => ctx.goToTab('ts-contact')}>
             {keyContacts.length === 0 && <p className="px-5 py-4 text-muted text-[length:var(--fs-body)]">No key contacts on file.</p>}
             {keyContacts.map((k) => (

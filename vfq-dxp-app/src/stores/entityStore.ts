@@ -49,7 +49,7 @@ export const useEntityStore = create<EntityState>((set, get) => ({
   },
 
   updateRecord: async (kind, idField, id, patch) => {
-    await mockDataEngine.update(kind, id, patch);
+    await mockDataEngine.update(kind, id, patch, idField);
     set((state) => ({
       records: {
         ...state.records,

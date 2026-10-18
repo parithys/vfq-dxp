@@ -97,7 +97,7 @@
       "fixedPlanSelectionStep"
     ],
     "stepLabel": "PLAN_SELECTION_LABEL",
-    "summary": "Choose the plan: postpaid plan cards then Add-ons (discounts, bill limit), prepaid packs then Add-ons, or the fixed-line / fibre plan cards with the credit check.",
+    "summary": "Choose the plan: postpaid plan cards then Add-ons (discounts, bill limit), prepaid packs then Add-ons, or the fixed-line / fibre plan cards with the credit check. The line's current plan or pack can be left out of the choices when a journey changes it.",
     "parts": [
       "components/patterns/PostpaidPlanAddonsStep.tsx",
       "components/patterns/PrepaidPlanStep.tsx",
@@ -296,9 +296,11 @@
     "status": "consolidated",
     "home": "capabilities/AddonsSelection",
     "entry": "AddonsPicker",
-    "stepBuilders": [],
+    "stepBuilders": [
+      "addonsSelectionStep"
+    ],
     "stepLabel": null,
-    "summary": "Add-on cards with included-benefit handling.",
+    "summary": "Add-on rows for a plan or prepaid pack, with included-benefit handling; on its own (Add Add-On) as a step that needs at least one add-on.",
     "parts": [],
     "previewable": true,
     "publicApi": []
@@ -317,6 +319,24 @@
     "parts": [],
     "publicApi": [],
     "previewable": true
+  },
+  {
+    "id": "line-selection",
+    "name": "Line Selection",
+    "status": "consolidated",
+    "home": "capabilities/LineSelection",
+    "entry": "LineSelection",
+    "stepBuilders": [
+      "lineSelectionStep"
+    ],
+    "stepLabel": "LINE_SELECTION_LABEL",
+    "summary": "Choose which of the identified customer's existing mobile lines an order changes (Change Postpaid Plan, Change Prepaid Pack, Add Add-On): postpaid and / or prepaid lines with their current plan and price; a line that is not active, is barred or whose billing profile is in collections is shown with its reason and cannot be chosen.",
+    "parts": [
+      "components/patterns/LineSelectionStep.tsx",
+      "components/patterns/lineSelectionModel.ts"
+    ],
+    "previewable": true,
+    "publicApi": []
   },
   {
     "id": "customer-type",

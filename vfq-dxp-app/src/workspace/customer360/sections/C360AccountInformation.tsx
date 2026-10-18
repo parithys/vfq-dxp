@@ -9,10 +9,10 @@ import { overdueTicketCount } from './accountInformationResolvers';
 import { RevealValue, useFieldAccess } from '../fieldAccess';
 import { fmtDate, fmtDateTime, IC, IconTile, KpiGrid, KpiTile, LinkAction, Panel, Pill, Progress, qar, TabPage, toneFor } from './C360Kit';
 import type { Tone } from './C360Kit';
+import { isTonPending } from '../../../lib/statusTone';
 import { Dv } from '../demoValues';
 import { str, num } from '../../../lib/values';
 
-const TON_TERMINAL = new Set(['completed']);
 const ADJUSTMENT_TERMINAL = new Set(['Approved', 'Rejected', 'Failed']);
 
 
@@ -96,7 +96,7 @@ export function C360AccountInformation({
   const prepaidN = services.filter((s) => s.category === 'Prepaid').length;
   const postpaidN = services.filter((s) => s.category === 'Postpaid').length;
 
-  const pendingTon = data.tonCases.filter((t) => !TON_TERMINAL.has(String(t.status))).length;
+  const pendingTon = data.tonCases.filter((t) => isTonPending(t.status)).length;
   const pendingAdj = data.adjustments.filter((a) => !ADJUSTMENT_TERMINAL.has(String(a.status))).length;
   const pendingSwap = data.simSwapOrders.filter((s) => String(s.status).includes('Pending')).length;
   const overdue = overdueTicketCount(data);

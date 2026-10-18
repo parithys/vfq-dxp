@@ -24,3 +24,11 @@ export const BILLING_LABEL: Record<BillingResponsibility, string> = {
 export const hasB2b2cBenefit = (billing: BillingResponsibility) => segmentFor(billing) === 'CBU';
 
 export const isBusinessId = (id: string | undefined) => /^ENT-ACC-/i.test(id ?? '');
+
+/**
+ * Whether a customer record's `segment` is a business one. The values in the data are Consumer, Consumer (HRN), Premium and Enterprise (EBU);
+ * this is the one reading of it (Customer 360, Telesales, the demo values, queue lookups, billing profile limits and ticket priority each had
+ * their own pattern, one of them comparing against the literal 'Enterprise', which no record carries). A linked user's EBU / CBU split is
+ * a different question: that is `segmentFor`, by billing responsibility.
+ */
+export const isBusinessSegment = (segment: string | undefined | null): boolean => /enterprise|business|b2b|ebu|corporate/i.test(segment ?? '');

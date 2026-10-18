@@ -6,7 +6,7 @@ import { Icon } from '../../../components/primitives/Icon';
 import { OsmEmbed } from '../../../components/domain/OsmEmbed';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import type { Customer360Data } from '../../../engines/customer360Engine';
-import type { CustomerService } from '../../../engines/customerServicesEngine';
+import type { CustomerService, ServiceCategory } from '../../../engines/customerServicesEngine';
 import { AddressEditDrawer, type AddressRecord } from './AddressSection';
 import { ActionButton, DetailRows, GridTable, IC, LinkAction, Panel, StatusPill, TabPage, fmtDate } from './C360Kit';
 import type { Tone } from './C360Kit';
@@ -32,12 +32,14 @@ interface WfmActivity {
   serviceDetails?: string;
 }
 
-const AVAILABILITY: { label: string; icon: string; tone: Tone; match: RegExp }[] = [
-  { label: 'Mobile Network', icon: IC.mobile, tone: 'green', match: /mobile|postpaid|prepaid/i },
-  { label: 'Fixed Line (Fibre)', icon: IC.phone, tone: 'green', match: /fibre|fiber|fixed|broadband/i },
-  { label: 'Home Internet', icon: IC.wifi, tone: 'green', match: /gigahome|5g|home internet|fwa/i },
-  { label: 'TV Services', icon: IC.tv, tone: 'green', match: /iptv|osn|tv/i },
-  { label: 'IoT / M2M', icon: IC.cpu, tone: 'green', match: /iot|m2m|smart device/i },
+// Which of the customer's services put a kind of network in service: by the service category Customer 360 classifies each service into
+// (customerServicesEngine), not by matching words in its name and label.
+const AVAILABILITY: { label: string; icon: string; tone: Tone; categories: ServiceCategory[] }[] = [
+  { label: 'Mobile Network', icon: IC.mobile, tone: 'green', categories: ['Prepaid', 'Postpaid'] },
+  { label: 'Fixed Line (Fibre)', icon: IC.phone, tone: 'green', categories: ['GigaHome Fibre', 'Fixed Line'] },
+  { label: 'Home Internet', icon: IC.wifi, tone: 'green', categories: ['GigaHome Fibre', 'GigaHome 5G'] },
+  { label: 'TV Services', icon: IC.tv, tone: 'green', categories: ['TV / Entertainment'] },
+  { label: 'IoT / M2M', icon: IC.cpu, tone: 'green', categories: ['Smart Devices'] },
 ];
 
 const addressLine = (a: AddressRecord) => [a.addressLine1, a.addressLine2, a.city, a.country].filter(Boolean).join(', ');
@@ -82,7 +84,6 @@ export function C360AddressService({
 
   const primary = addresses.find((a) => a.primaryStatus === 'Primary') ?? addresses[0];
   const others = addresses.filter((a) => a !== primary);
-  const labels = services.map((s) => `${s.category} ${s.label}`);
 
   const orderIds = new Set(data.orders.map((o) => String(o.orderId)));
   const customerName = data.customer.name.toLowerCase();
@@ -151,7 +152,7 @@ export function C360AddressService({
         <Panel icon={IC.signalTower} title="Service Availability" action={<ActionButton onClick={undefined} disabled>Check Another Address</ActionButton>}>
           <ul>
             {AVAILABILITY.map((a) => {
-              const has = labels.filter((l) => a.match.test(l));
+              const has = services.filter((s) => a.categories.includes(s.category));
               return (
                 <li key={a.label} className="flex items-center gap-3 py-2.5 border-b border-border-soft text-[length:var(--fs-body)]">
                   <span className="flex-1 text-fg-2">{a.label}</span>

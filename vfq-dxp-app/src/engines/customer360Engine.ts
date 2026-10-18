@@ -1,4 +1,6 @@
 import * as mockDataEngine from './mockDataEngine';
+import { outstandingBalance, unpaidInvoiceTotal } from './billingBalance';
+import { planOfAsset } from './customerServicesEngine';
 
 
 export interface CustomerRecord {
@@ -169,10 +171,12 @@ export interface Customer360Data {
    * accountId - also feeds "Contact/Assets Information". */
   deviceInstallments: Record<string, unknown>[];
   /** Add-on/discount catalogue entries (addons-discounts.json), joined by
-   * planId against this customer's own installedAssets[].promotion values -
+   * planId against the catalogue plans this customer's own installed assets are on (assetPlanIds) -
    * Assets' Pending Discounts/Active Add-on/Active Discount/Discount Expiry
    * fields. Verified real overlap (PROD-100/200/201 appear in both files),
    * unlike leads/crossSalesOffers above. */
+  /** The catalogue plan of each of the customer's installed assets (by installedAssetId), undefined where it cannot be established. */
+  assetPlanIds: Record<string, string | undefined>;
   addonsDiscounts: Record<string, unknown>[];
   /** Authorized third parties on an account (authorised-contacts.json),
    * joined by accountId - Contact Information's "Authorized person(s)/
@@ -235,6 +239,7 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     overviewExtras,
     overviewDemo,
     demoCatalog,
+    products,
   ] = await Promise.all([
     mockDataEngine.list<CustomerRecord>('customers'),
     mockDataEngine.list<AccountRecord>('accounts'),
@@ -270,6 +275,7 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     mockDataEngine.list<Record<string, unknown>>('customer-overview-extras'),
     mockDataEngine.list<Record<string, unknown>>('customer-overview-demo'),
     mockDataEngine.list<Record<string, unknown>>('telesales-demo-catalog'),
+    mockDataEngine.list<{ productId: string; name: string; type: string }>('products'),
   ]);
 
   const customer = customers.find((c) => c.customerId === customerId);
@@ -285,7 +291,12 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
   const contactIds = new Set(customerContacts.map((c) => c.contactRecordId));
   const recordIds = new Set([...accountIds, ...contactIds]);
   const customerInstalledAssets = installedAssets.filter((ia) => accountIds.has(ia.accountId as string));
-  const promotionIds = new Set(customerInstalledAssets.map((ia) => ia.promotion).filter(Boolean));
+  // The catalogue plan each asset is on (customerServicesEngine.planOfAsset): the promotion code alone is not trusted to name it.
+  const assetPlanIds: Record<string, string | undefined> = {};
+  for (const ia of customerInstalledAssets) {
+    assetPlanIds[String(ia.installedAssetId)] = planOfAsset({ productServiceName: ia.productServiceName as string | undefined, promotion: ia.promotion as string | undefined }, products)?.productId;
+  }
+  const promotionIds = new Set(Object.values(assetPlanIds).filter(Boolean));
 
   return {
     customer,
@@ -315,6 +326,7 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     leads: leads.filter((l) => l.mobileNumber && l.mobileNumber === customer.phone),
     crossSalesOffers: crossSalesOffers.filter((o) => contactIds.has(o.contactId as string)),
     deviceInstallments: deviceInstallments.filter((d) => accountIds.has(d.accountId as string)),
+    assetPlanIds,
     addonsDiscounts: addonsDiscounts.filter((ad) => promotionIds.has(ad.planId as string)),
     authorisedContacts: authorisedContacts.filter((ac) => accountIds.has(ac.accountId as string)),
     tonCases: tonCases.filter((t) => {
@@ -376,11 +388,11 @@ export function computeBillingSummary(data: Customer360Data): BillingSummary {
     String(a.capturedAt ?? '').localeCompare(String(b.capturedAt ?? '')),
   ).at(-1);
 
-  const billedTotal = billsInWindow
-    .filter((b) => b.status === 'billed')
-    .reduce((sum, b) => sum + Number(b.totalAmount ?? 0), 0);
+  const billedTotal = unpaidInvoiceTotal(data.bills);
   const paidTotal = data.payments.reduce((sum, p) => sum + Number(p.amountQar ?? 0), 0);
-  const outstanding = Math.max(0, billedTotal - paidTotal);
+  // What the customer owes is the one shared definition (billingBalance.ts): issued, unsettled invoices less collected bill payments - not every
+  // payment, and not only the invoices inside the history window (a debt does not age out).
+  const outstanding = outstandingBalance(data.bills, data.payments);
 
   return {
     previousPayment,

@@ -1,4 +1,5 @@
 import { isSlaStopped } from '../lib/statusTone';
+import { HRN_ADVANCE_QAR } from './postpaidPricing';
 import { PREPAID_CAPPED_ID_TYPES } from '../data/idTypes';
 import { simCardCharge } from '../data/prepaidSimCharge';
 
@@ -31,6 +32,9 @@ const HRN_NATIONALITIES = new Set([
   'ugandan', 'uganda',
   'swazi', 'emaswati', 'eswatini',
 ]);
+
+/** BR-076: the default credit limit on a new account - QAR 50 for a High Risk Nationality customer, QAR 1000 otherwise. The one place the two figures are written. */
+export const defaultCreditLimitQar = (hrnFlag: boolean): number => (hrnFlag ? 50 : 1000);
 
 export function isHrnNationality(nationality: string | undefined): boolean {
   return nationality ? HRN_NATIONALITIES.has(nationality.trim().toLowerCase()) : false;
@@ -289,7 +293,7 @@ const ruleImplementations: Record<string, RuleImplementation> = {
   'BR-187': (ctx) => {
     const { hrnFlag } = ctx as { hrnFlag: boolean };
     return hrnFlag
-      ? { pass: true, message: 'HRN customer - QAR 100 advance payment required at checkout.' }
+      ? { pass: true, message: `HRN customer - QAR ${HRN_ADVANCE_QAR} advance payment required at checkout.` }
       : { pass: true };
   },
 
@@ -303,7 +307,7 @@ const ruleImplementations: Record<string, RuleImplementation> = {
   // sentence is shorter.
   'BR-076': (ctx) => {
     const { hrnFlag } = ctx as { hrnFlag: boolean };
-    const amount = hrnFlag ? 50 : 1000;
+    const amount = defaultCreditLimitQar(hrnFlag);
     return { pass: true, message: `Default credit limit: QAR ${amount} on a new account.` };
   },
 

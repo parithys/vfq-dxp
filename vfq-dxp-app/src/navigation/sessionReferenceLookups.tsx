@@ -1,4 +1,5 @@
 import * as mockDataEngine from '../engines/mockDataEngine';
+import { isBusinessSegment } from '../engines/businessSegment';
 import { getAllRoutes } from '../engines/configEngine';
 import { existingCustomerPath } from './journeyPaths';
 import { mobileMatches, purposeOfVisit, JOURNEY_LAUNCH_SCREENS } from '../engines/qnomyQueueEngine';
@@ -181,7 +182,7 @@ export function loadServiceSources(): Promise<ServiceSources> {
 // silently filed as the commoner of the two.
 function segmentOf(customer: CustomerRecord): string | undefined {
   const segment = customer.segment ?? '';
-  if (/enterprise|business|b2b|ebu/i.test(segment)) return 'Business';
+  if (isBusinessSegment(segment)) return 'Business';
   if (/consumer/i.test(segment)) return 'Consumer';
   return undefined;
 }

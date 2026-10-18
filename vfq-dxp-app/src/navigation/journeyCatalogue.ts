@@ -106,9 +106,9 @@ export const PRODUCT_LINES: readonly ProductLine[] = [
         description: 'Change plans and packs, add add-ons, and select, port, reserve, or change mobile numbers.',
         icon: CAT_ICONS.plans,
         journeys: [
-          { id: 'mob-change-postpaid-plan', title: 'Change Postpaid Plan', description: 'Move a customer to a different postpaid plan', status: 'planned' },
-          { id: 'mob-change-prepaid-pack', title: 'Change Prepaid Pack', description: 'Change a prepaid bundle or top-up', status: 'planned' },
-          { id: 'mob-add-addon', title: 'Add Add-On', description: 'Add a roaming, data, or IDD add-on', status: 'planned' },
+          { id: 'mob-change-postpaid-plan', title: 'Change Postpaid Plan', description: 'Move a customer to a different postpaid plan', status: 'available', featureKey: 'mobile.change-postpaid-plan', path: '/mobile/change-postpaid-plan' },
+          { id: 'mob-change-prepaid-pack', title: 'Change Prepaid Pack', description: 'Change a prepaid bundle or top-up', status: 'available', featureKey: 'mobile.change-prepaid-pack', path: '/mobile/change-prepaid-pack' },
+          { id: 'mob-add-addon', title: 'Add Add-On', description: 'Add a roaming, data, or IDD add-on', status: 'available', featureKey: 'mobile.add-addon', path: '/mobile/add-addon' },
           { id: 'mob-number-selection', title: 'New Number Selection', description: 'Reserve and assign a preferred number', status: 'partly', featureKey: 'numbers.management-portal', screenId: 'SCR-024' },
           { id: 'mob-mnp-portin', title: 'MNP Port-In', description: 'Port a number from another Qatari operator', status: 'available', featureKey: 'mnp.process-choice', screenId: 'SCR-120' },
           { id: 'mob-fnp-change', title: 'FNP Number Change', description: 'Change to a number within Vodafone Qatar', status: 'available', featureKey: 'mnp.port-in-wizard', screenId: 'SCR-121' },

@@ -8,6 +8,7 @@ import { ActionButton, DetailRows, FilterSelect, GridTable, IC, Pager, Panel, Pi
 import type { Tone } from './C360Kit';
 import { Dv } from '../demoValues';
 import { str } from '../../../lib/values';
+import { isTonPending, orderBucket } from '../../../lib/statusTone';
 
 type Rec = Record<string, unknown>;
 const dash = (v: string | undefined | null) => (v === undefined || v === null || v === '' ? '-' : v);
@@ -34,11 +35,7 @@ interface OrderRow {
   fulfilment?: string;
 }
 
-function bucketOf(status: string): Bucket {
-  if (/cancel|reject|dropped/i.test(status)) return 'cancelled';
-  if (/^(complete|completed|approved\/completed|migrated to prepaid)$/i.test(status)) return 'completed';
-  return 'progress';
-}
+const bucketOf = (status: string): Bucket => orderBucket(status);
 
 const label = (status: string) => (/^complete$/i.test(status) ? 'Completed' : status.charAt(0).toUpperCase() + status.slice(1));
 const toneOf = (b: Bucket): Tone => (b === 'completed' ? 'green' : b === 'cancelled' ? 'red' : 'amber');
@@ -94,7 +91,7 @@ export function C360Orders({ data }: { data: Customer360Data; services: Customer
 
   const pendingActions: OrderRow[] = useMemo(() => {
     const ton = (data.tonCases as Rec[])
-      .filter((t) => /^created$/i.test(String(t.status)))
+      .filter((t) => isTonPending(t.status))
       .map((t) => ({ id: String(t.id), kind: 'ton' as const, type: str(t.type) ? `Transfer of Ownership (${str(t.type)})` : 'Transfer of Ownership', product: undefined, msisdn: undefined, status: String(t.status), statusLabel: 'Pending', bucket: 'progress' as const, pending: true }));
     const swap = (data.simSwapOrders as Rec[])
       .filter((s) => /pending/i.test(String(s.status)))

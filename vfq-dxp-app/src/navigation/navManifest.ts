@@ -256,6 +256,9 @@ export function resolveActiveNavPath(pathname: string, fromNavKey?: NavKey | str
   // New Connections destination leads to, so that is what stays lit while the agent works through it.
   if (/^\/[^/]+\/start-connection(\/|$)/.test(pathname)) return '/new-connections';
 
+  // The line-change journeys of Plans & Numbers keep that menu entry lit while the agent works through them.
+  if (/^\/mobile\/(change-postpaid-plan|change-prepaid-pack|add-addon)(\/|$)/.test(pathname)) return '/mobile/plans-numbers';
+
   // Tasks have no nav destination of their own and are only ever reached from
   // the dashboard's Open Activities zone, so that is what stays lit. They are
   // deliberately NOT mapped to Operations: that item is a planned placeholder

@@ -50,6 +50,8 @@ interface PostpaidPlanAddonsStepProps {
    * paperwork upload. Undefined until one is attached. */
   discountProofDocument: { fileName: string; sizeBytes: number } | undefined;
   onDiscountProofDocumentChange: (doc: { fileName: string; sizeBytes: number } | undefined) => void;
+  /** A plan not offered: the line's current plan, when the journey changes it. */
+  hiddenProductId?: string;
 }
 
 // "RED Plan" & "Eligible Discounts" - Mobile Postpaid's Plan & Add-ons step
@@ -84,6 +86,7 @@ export function PostpaidPlanAddonsStep({
   customerContext,
   discountProofDocument,
   onDiscountProofDocumentChange,
+  hiddenProductId,
 }: PostpaidPlanAddonsStepProps) {
   const {
     plans,
@@ -128,6 +131,7 @@ export function PostpaidPlanAddonsStep({
     customerBenefits,
     discountProofDocument,
     onDiscountProofDocumentChange,
+    hiddenProductId,
   });
 
   return (

@@ -48,6 +48,12 @@ export const planSummary = (productKey = 'productId'): SummaryField[] => [
   { key: 'plan', label: 'Plan', type: 'select', labelFrom: PRODUCT, value: (v) => at(v, productKey) },
 ];
 
+/** A prepaid pack's chosen discount and add-ons (the Add-ons step after the pack). */
+export const prepaidExtrasSummary: SummaryField[] = [
+  { key: 'discount', label: 'Discount', type: 'select', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.discountId },
+  { key: 'addons', label: 'Add-ons', type: 'multi', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.addonIds },
+];
+
 /** Postpaid plan with its add-ons, discount and bill limit. */
 export const planDetailSummary: SummaryField[] = [
   ...planSummary(),

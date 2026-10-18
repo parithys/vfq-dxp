@@ -84,6 +84,7 @@ function IconDisc({ path, className = '' }: { path: string; className?: string }
 export function OfferDetailsDrawer({
   offer,
   serviceLabel,
+  prepaid = false,
   fixedService,
   highlight,
   includedNames,
@@ -94,6 +95,8 @@ export function OfferDetailsDrawer({
   /** The offer whose details are open; null keeps the drawer closed. */
   offer: OfferDetails | null;
   serviceLabel: string;
+  /** The offer sells a prepaid pack, priced once; otherwise its rental is monthly. */
+  prepaid?: boolean;
   /** True for the home services (fixed line, FWA): they get the house artwork, the rest the handset. */
   fixedService: boolean;
   /** One line of what the linked plan includes, read from its product record; null hides the banner. */
@@ -115,7 +118,7 @@ export function OfferDetailsDrawer({
     ? [
         { icon: ICONS.service, label: 'Service', value: serviceLabel },
         { icon: ICONS.tag, label: 'Offer type', value: o.offerType },
-        { icon: ICONS.card, label: 'Monthly rental', value: `QAR ${o.monthlyRental}${serviceLabel.includes('Prepaid') ? '' : '/mo'}` },
+        { icon: ICONS.card, label: 'Monthly rental', value: `QAR ${o.monthlyRental}${prepaid ? '' : '/mo'}` },
         { icon: ICONS.card, label: 'Add-on (monthly)', value: o.addOnMonthly ? `QAR ${o.addOnMonthly}/mo` : undefined },
         { icon: ICONS.service, label: o.codeLabel ?? 'Campaign code', value: o.campaignCode },
         { icon: ICONS.megaphone, label: 'Promotion', value: o.promotionId },

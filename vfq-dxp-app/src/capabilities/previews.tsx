@@ -5,7 +5,7 @@ import { ActivationComplete } from './ActivationComplete';
 import { AddonsPicker } from './AddonsSelection';
 import { CrossSalesStep } from './CrossSellOffers';
 import { CustomerTypeStep } from './CustomerType';
-import { EligibilityGateStep } from './EligibilityGate';
+import { EligibilityGateStep, OutcomeActions } from './EligibilityGate';
 import { CARD_HIGHLIGHT, CARD_IDLE, CARD_SELECTED } from './SelectableCard';
 import { Drawer } from './SideDrawer';
 import { useNotificationStore } from '../stores/notificationStore';
@@ -19,6 +19,8 @@ import { SegmentedTabs } from '../components/primitives/SegmentedTabs';
 import { AppointmentBooking } from './AppointmentBooking';
 import { BillingAccount } from './BillingAccount';
 import { CafSignature } from './CafSignature';
+import { LineSelection } from './LineSelection';
+import type { CustomerLine } from './LineSelection';
 import { CheckoutSummary, PrepaidCheckout } from './CheckoutSummary';
 import { CustomerIdentification } from './CustomerIdentification';
 import { NumberSelection } from './NumberSelection';
@@ -216,10 +218,32 @@ function CrossSell() {
   const [v, setV] = useState<Parameters<typeof CrossSalesStep>[0]['value']>({});
   return <CrossSalesStep customerId="CUST-1001" value={v} onChange={setV} onHandOff={() => {}} journey="new-postpaid" />;
 }
-function Eligibility() {
+// Each scenario is a test customer whose result is that outcome. The gate, the outcome the footer carries (Continue, Request
+// Approval, Continue Prepaid / Proceed to Payment, Abandon Order) are the ones New Connection uses.
+const ELIGIBILITY_SCENARIOS = [
+  { key: 'clear', label: 'Clear', idNumber: '28456701234' },
+  { key: 'approval', label: 'Approval routing', idNumber: 'P0998812' },
+  { key: 'soft', label: 'Soft stop', idNumber: '29011122233' },
+  { key: 'hard', label: 'Hard stop', idNumber: 'DIP-QA-004521' },
+];
+function EligibilityScenario({ idNumber }: { idNumber: string }) {
   const [r, setR] = useState<Parameters<typeof EligibilityGateStep>[0]['result']>(undefined);
-  // 29011122233 is the test customer on the blacklist, so the gate shows a blocking check; a clean customer passes silently.
-  return <EligibilityGateStep idNumber="29011122233" result={r} onResult={setR} />;
+  return (
+    <div className="space-y-4">
+      <EligibilityGateStep idNumber={idNumber} result={r} onResult={setR} announcePass={false} scope="product" />
+      <div className="flex items-center justify-end gap-3 border-t border-border-soft pt-4">
+        <OutcomeActions eligibility={r} onAbandon={() => {}} defaultButton={<Button variant="primary">Continue</Button>} />
+      </div>
+    </div>
+  );
+}
+function Eligibility() {
+  return (
+    <Variants
+      items={ELIGIBILITY_SCENARIOS.map((x) => ({ key: x.key, label: x.label }))}
+      render={(k) => <EligibilityScenario idNumber={ELIGIBILITY_SCENARIOS.find((x) => x.key === k)!.idNumber} />}
+    />
+  );
 }
 function Cards() {
   const [on, setOn] = useState<'a' | 'b' | 'c'>('a');
@@ -361,6 +385,20 @@ function Qualification() {
     />
   );
 }
+// CUST-1001 holds postpaid and prepaid lines; the switcher is the lineType a journey passes.
+function Lines() {
+  const [line, setLine] = useState<CustomerLine | undefined>();
+  return (
+    <Variants
+      items={[
+        { key: 'all', label: 'All mobile lines' },
+        { key: 'postpaid', label: 'Postpaid lines' },
+        { key: 'prepaid', label: 'Prepaid lines' },
+      ]}
+      render={(k) => <LineSelection customerId="CUST-1001" lineType={k === 'all' ? undefined : k} value={line} onChange={setLine} />}
+    />
+  );
+}
 function Complete() {
   return (
     <ActivationComplete
@@ -392,4 +430,5 @@ export const CAPABILITY_PREVIEWS: Record<string, () => ReactNode> = {
   'activation-complete': () => <Complete />,
   'guided-activation-wizard': () => <Wizard />,
   'customer-qualification': () => <Qualification />,
+  'line-selection': () => <Lines />,
 };
