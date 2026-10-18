@@ -9,6 +9,46 @@ import tailwindcss from '@tailwindcss/vite'
 const port = process.env.PORT ? Number(process.env.PORT) : 5173
 const publicBase = '/vfq-dxp-app/'
 const publicBaseWithoutSlash = publicBase.replace(/\/$/, '')
+const previewViteClient = `
+const hotData = new Map()
+
+export class ErrorOverlay extends HTMLElement {}
+
+export function createHotContext(ownerPath) {
+  if (!hotData.has(ownerPath)) hotData.set(ownerPath, {})
+  return {
+    data: hotData.get(ownerPath),
+    accept() {},
+    acceptExports() {},
+    decline() {},
+    dispose() {},
+    invalidate() {},
+    on() {},
+    off() {},
+    prune() {},
+    send() { return Promise.resolve() },
+  }
+}
+
+export function updateStyle(id, content) {
+  let style = document.querySelector(\`style[data-vite-dev-id="\${id}"]\`)
+  if (!style) {
+    style = document.createElement('style')
+    style.setAttribute('data-vite-dev-id', id)
+    document.head.appendChild(style)
+  }
+  style.textContent = content
+}
+
+export function removeStyle(id) {
+  document.querySelector(\`style[data-vite-dev-id="\${id}"]\`)?.remove()
+}
+
+export function injectQuery(url, query) {
+  const [path, hash = ''] = url.split('#', 2)
+  return \`\${path}\${path.includes('?') ? '&' : '?'}\${query}\${hash ? \`#\${hash}\` : ''}\`
+}
+`
 
 function basePathCompatibility(figmaPreview: boolean): Plugin {
   return {
@@ -16,6 +56,13 @@ function basePathCompatibility(figmaPreview: boolean): Plugin {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const [pathname, query] = (req.url ?? '').split('?', 2)
+        if (figmaPreview && pathname === '/@vite/client') {
+          res.statusCode = 200
+          res.setHeader('Content-Type', 'text/javascript')
+          res.setHeader('Cache-Control', 'no-store')
+          res.end(previewViteClient)
+          return
+        }
         if (figmaPreview && (pathname === publicBaseWithoutSlash || pathname.startsWith(publicBase))) {
           const previewPath = pathname.slice(publicBaseWithoutSlash.length) || '/'
           res.statusCode = 302
@@ -49,13 +96,10 @@ export default defineConfig(({ command }) => {
     server: {
       port,
       strictPort: true,
-      hmr: figmaPreview
-        ? {
-            protocol: 'wss',
-            clientPort: 443,
-            path: '/',
-          }
-        : undefined,
+      // Make's public proxy duplicates WebSocket Upgrade response headers.
+      // Disable its unusable socket; the preview client shim above preserves
+      // the runtime exports needed by transformed modules.
+      hmr: figmaPreview ? false : undefined,
     },
   }
 })
