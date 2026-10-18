@@ -74,11 +74,11 @@ function Fact({ icon, value, caption }: { icon: string; value: string; caption: 
   const mode = useFieldAccess()(caption);
   if (mode === 'hidden') return null;
   return (
-    <div className="flex items-center gap-3 min-w-0 px-3 first:pl-0 border-l border-border-soft first:border-l-0">
-      <Icon path={icon} className="w-5 h-5 text-fg-2 shrink-0" />
+    <div className="flex items-center gap-3 min-w-0 px-3 first:pl-0 border-l border-on-dark-line-2 first:border-l-0">
+      <Icon path={icon} className="w-5 h-5 text-on-dark-2 shrink-0" />
       <div className="min-w-0">
-        <div className="text-fg font-medium text-[length:var(--fs-body)] break-words">{mode === 'drill-down' ? <RevealValue>{value}</RevealValue> : value}</div>
-        <div className="text-muted text-[length:var(--fs-caption)]">{caption}</div>
+        <div className="text-on-dark font-medium text-[length:var(--fs-body)] break-words">{mode === 'drill-down' ? <RevealValue>{value}</RevealValue> : value}</div>
+        <div className="text-on-dark-2 text-[length:var(--fs-caption)]">{caption}</div>
       </div>
     </div>
   );
@@ -88,9 +88,9 @@ function Stat({ label, value }: { label: string; value: ReactNode }) {
   const mode = useFieldAccess()(label);
   if (mode === 'hidden') return null;
   return (
-    <div className="py-2.5 first:pt-0 last:pb-0 border-b border-border-soft last:border-0">
-      <div className="text-[length:var(--fs-micro)] uppercase tracking-wide text-muted font-semibold whitespace-nowrap">{label}</div>
-      <div className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{mode === 'drill-down' ? <RevealValue>{value}</RevealValue> : value}</div>
+    <div className="py-2.5 first:pt-0 last:pb-0 border-b border-on-dark-line-2 last:border-0">
+      <div className="text-[length:var(--fs-micro)] uppercase tracking-wide text-on-dark-2 font-semibold whitespace-nowrap">{label}</div>
+      <div className="text-on-dark font-semibold text-[length:var(--fs-body-lg)]">{mode === 'drill-down' ? <RevealValue>{value}</RevealValue> : value}</div>
     </div>
   );
 }
@@ -118,7 +118,7 @@ export function CustomerProfileHeader(p: CustomerProfileHeaderProps) {
     return () => io.disconnect();
   }, [p.pinIdentity]);
   const revealButton = p.maskId && (
-    <Button variant="tertiary" compact onClick={() => (revealed ? setRevealed(false) : p.onRequestReveal ? p.onRequestReveal(() => setRevealed(true)) : setRevealed(true))} aria-label={revealed ? `Hide ${idLabel} number` : `Show ${idLabel} number`} aria-pressed={revealed}>
+    <Button variant="tertiary" compact className="!text-on-dark" onClick={() => (revealed ? setRevealed(false) : p.onRequestReveal ? p.onRequestReveal(() => setRevealed(true)) : setRevealed(true))} aria-label={revealed ? `Hide ${idLabel} number` : `Show ${idLabel} number`} aria-pressed={revealed}>
       <Icon path={revealed ? EYE_OFF_ICON : EYE_ICON} className="w-4 h-4" />
       {revealed ? 'Hide' : 'Show'}
     </Button>
@@ -145,7 +145,7 @@ export function CustomerProfileHeader(p: CustomerProfileHeaderProps) {
     )}
     <section
       ref={sectionRef}
-      className={p.flush ? 'border-b bg-bg p-5' : 'card border-[var(--field-card-border)] bg-bg p-5 mb-4'}
+      className={p.flush ? 'border-b bg-charcoal-panel text-on-dark p-5' : 'card border-[var(--field-card-border)] bg-charcoal-panel text-on-dark p-5 mb-4'}
     >
       <div className="flex flex-wrap lg:flex-nowrap items-stretch gap-6">
         <div className="flex items-start gap-4 min-w-0 flex-1">
@@ -154,7 +154,7 @@ export function CustomerProfileHeader(p: CustomerProfileHeaderProps) {
           </div>
           <div className="min-w-0 flex-1 space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-[length:var(--fs-h4)] font-bold text-fg break-words min-w-0">{p.name}</h1>
+              <h1 className="text-[length:var(--fs-h4)] font-bold text-on-dark break-words min-w-0">{p.name}</h1>
               {p.tags?.map((t) => (
                 <Badge key={t.label} variant={t.variant}>
                   {t.label}
@@ -163,7 +163,7 @@ export function CustomerProfileHeader(p: CustomerProfileHeaderProps) {
               {p.nameBadge}
               {p.actions && <div className="ml-auto flex items-center gap-2">{p.actions}</div>}
             </div>
-            <div className="flex flex-wrap items-center gap-2 text-fg text-[length:var(--fs-body)]">
+            <div className="flex flex-wrap items-center gap-2 text-on-dark text-[length:var(--fs-body)]">
               <span>
                 {idLabel}: <span className="font-medium">{idShown}</span>
               </span>
@@ -179,7 +179,7 @@ export function CustomerProfileHeader(p: CustomerProfileHeaderProps) {
           </div>
         </div>
 
-        <div className="lg:border-l lg:border-border-soft lg:pl-6 lg:w-52 min-w-40 shrink-0 flex flex-col justify-center">
+        <div className="lg:border-l lg:border-on-dark-line-2 lg:pl-6 lg:w-52 min-w-40 shrink-0 flex flex-col justify-center">
           <Stat label="Segment" value={p.segment} />
           {p.totalConnections !== undefined && <Stat label="Total connections" value={p.totalConnections} />}
           {p.creditLimit && <Stat label="Credit limit" value={p.creditLimit} />}
@@ -187,10 +187,10 @@ export function CustomerProfileHeader(p: CustomerProfileHeaderProps) {
 
         <aside
           aria-label="Alerts and attention"
-          className="rounded-[var(--radius-card)] border border-[var(--danger-border)] bg-tone-danger-soft p-4 w-full lg:w-56 shrink-0 self-start"
+          className="rounded-[var(--radius-card)] border border-[var(--on-dark-danger-line)] bg-[var(--on-dark-danger-fill)] p-4 w-full lg:w-56 shrink-0 self-start"
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="inline-flex items-center gap-2 font-semibold text-fg text-[length:var(--fs-body)]">
+            <span className="inline-flex items-center gap-2 font-semibold text-on-dark text-[length:var(--fs-body)]">
               <Icon path={CIRCLE_ICON} className="w-4 h-4 text-danger" />
               Alerts &amp; Attention
             </span>
@@ -201,11 +201,11 @@ export function CustomerProfileHeader(p: CustomerProfileHeaderProps) {
             )}
           </div>
           {p.alerts.length === 0 ? (
-            <p className="text-fg-2 text-[length:var(--fs-body)]">No alerts.</p>
+            <p className="text-on-dark-2 text-[length:var(--fs-body)]">No alerts.</p>
           ) : (
             <ul className="space-y-2">
               {p.alerts.map((a) => (
-                <li key={a.label} className="flex items-center gap-2 text-fg text-[length:var(--fs-body)]">
+                <li key={a.label} className="flex items-center gap-2 text-on-dark text-[length:var(--fs-body)]">
                   <span className={`w-2 h-2 rounded-[var(--radius-pill)] shrink-0 ${a.tone === 'danger' ? 'bg-danger' : 'bg-[var(--warn)]'}`} />
                   {a.label}
                 </li>
@@ -213,7 +213,7 @@ export function CustomerProfileHeader(p: CustomerProfileHeaderProps) {
             </ul>
           )}
           {p.onViewAlerts && (
-            <Button variant="tertiary" type="button" onClick={p.onViewAlerts} className="mt-3">
+            <Button variant="tertiary" type="button" onClick={p.onViewAlerts} className="mt-3 !text-on-dark">
               View all alerts &rarr;
             </Button>
           )}

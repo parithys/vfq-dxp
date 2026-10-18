@@ -241,32 +241,35 @@ export function PostpaidPlanAddonsStep({
                     </p>
                   </div>
                 </div>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {(selectedPlan.features?.length
+                {/* Plain bullet lists, no boxes: the plan's benefits and what the offer includes, side by side in one row. */}
+                {(() => {
+                  const benefits = (selectedPlan.features?.length
                     ? selectedPlan.features
                     : [selectedPlan.dataAllowanceGB ? `${selectedPlan.dataAllowanceGB} GB data` : 'Unlimited data', selectedPlan.minutesAllowance].filter(Boolean)
-                  ).map((f) => (
-                    <li key={f} className="flex items-center gap-3 card px-4 py-3 text-fg text-[length:var(--fs-body)] shadow-[var(--shadow-icon-tile)]">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[var(--radius-pill)] bg-[var(--tint-green-bg)] text-[var(--tint-green-fg)]">
-                        <Icon path={CHECK} className="w-3.5 h-3.5" />
-                      </span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                {selectedPlan.benefits && selectedPlan.benefits.length > 0 && (
-                  <div className="rounded-[var(--radius-card)] border border-[var(--field-card-selected)] bg-bg px-3 py-2.5 space-y-1">
-                    <p className="text-accent font-bold text-[length:var(--fs-caption)] uppercase tracking-wide">Included in this offer</p>
-                    <ul className="space-y-1">
-                      {selectedPlan.benefits.map((b) => (
-                        <li key={b} className="flex items-start gap-2 text-fg font-medium text-[length:var(--fs-caption)]">
-                          <Icon path={CHECK} className="w-4 h-4 shrink-0 text-accent mt-0.5" />
-                          {b}
-                        </li>
+                  ) as string[];
+                  const included = selectedPlan.benefits ?? [];
+                  const columns: { title: string; items: string[] }[] = [
+                    { title: 'Benefits', items: benefits },
+                    ...(included.length > 0 ? [{ title: 'Included in this offer', items: included }] : []),
+                  ];
+                  return (
+                    <div className={`grid grid-cols-1 gap-x-8 gap-y-5 ${columns.length > 1 ? 'sm:grid-cols-2' : ''}`}>
+                      {columns.map((c) => (
+                        <div key={c.title} className="space-y-2.5">
+                          <p className="text-accent font-bold text-[length:var(--fs-caption)] uppercase tracking-wide">{c.title}</p>
+                          <ul className="space-y-2">
+                            {c.items.map((f) => (
+                              <li key={f} className="flex items-start gap-2.5 text-fg text-[length:var(--fs-body)]">
+                                <Icon path={CHECK} className="w-4 h-4 shrink-0 text-accent mt-1" />
+                                {f}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       ))}
-                    </ul>
-                  </div>
-                )}
+                    </div>
+                  );
+                })()}
               </section>
             )}
             {mode === 'extras' && !selectedPlan && (

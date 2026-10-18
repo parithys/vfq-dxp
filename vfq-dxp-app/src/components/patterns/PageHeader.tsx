@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 /**
- * The page header every screen uses (same band as the Customer 360 header): full-bleed white, bottom border only,
+ * The page header every screen uses (same band as the Customer 360 header): full-bleed charcoal (white text), bottom border only,
  * 20px padding, bold title with an optional description under it. Badges sit beside the title and actions at the
  * right.
  *
@@ -23,13 +23,13 @@ export function PageHeader({
   bleed?: boolean;
 }) {
   return (
-    <header className={`${bleed ? '-mx-8 -mt-8 mb-6' : 'mb-5'} px-5 py-3 bg-bg border-b border-[var(--field-card-border)]`}>
+    <header className={`${bleed ? '-mx-8 -mt-8 mb-6' : 'mb-5'} px-5 py-3 bg-charcoal-panel text-on-dark border-b border-[var(--field-card-border)]`}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <h1 className="text-[length:var(--fs-h4)] font-bold text-fg break-words min-w-0">{title}</h1>
+        <h1 className="text-[length:var(--fs-h4)] font-bold text-on-dark break-words min-w-0">{title}</h1>
         {badges}
         {actions && <div className="ml-auto flex items-center gap-2">{actions}</div>}
       </div>
-      {description && <div className="text-fg-2 text-[length:var(--fs-body)]">{description}</div>}
+      {description && <div className="text-on-dark-2 text-[length:var(--fs-body)]">{description}</div>}
     </header>
   );
 }

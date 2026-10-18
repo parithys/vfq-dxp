@@ -22,7 +22,7 @@ export function Textarea({ label, error, helperText, className = '', id, 'aria-d
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label htmlFor={textareaId} className={`text-[length:var(--fs-label)] ${rest.disabled ? 'text-[var(--field-label-disabled)]' : 'text-fg-2'}`}>
+        <label htmlFor={textareaId} className={`text-[length:var(--fs-label)] ${rest.disabled ? 'text-[var(--field-label-disabled)]' : 'text-fg'}`}>
           {label}
         </label>
       )}

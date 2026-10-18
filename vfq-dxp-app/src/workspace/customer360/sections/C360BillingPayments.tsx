@@ -232,7 +232,7 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
                   { label: 'eBill / Paperless', value: ebill ? <Pill tone={/email|ebill|e-bill|paperless/i.test(ebill) ? 'green' : 'grey'}>{/email|ebill|e-bill|paperless/i.test(ebill) ? 'Enabled' : 'Disabled'}</Pill> : DASH },
                 ].map((r) => (
                   <div key={r.label} className="flex items-center justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
-                    <dt className="text-fg-2">{r.label}</dt>
+                    <dt className="text-fg">{r.label}</dt>
                     <dd className="text-fg font-medium text-right min-w-0 break-words">{r.value}</dd>
                   </div>
                 ))}
@@ -253,7 +253,7 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
                   { label: 'Eligible for PTP', value: ptpEligible ? <Pill tone={ptpEligible === 'Yes' ? 'green' : 'grey'}>{ptpEligible}</Pill> : DASH },
                 ].map((r) => (
                   <div key={r.label} className="flex items-center justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
-                    <dt className="text-fg-2">{r.label}</dt>
+                    <dt className="text-fg">{r.label}</dt>
                     <dd className="text-fg font-medium text-right min-w-0 break-words">{r.value}</dd>
                   </div>
                 ))}

@@ -59,7 +59,7 @@ function AddressDetails({ address }: { address: AccountAddress }) {
     <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[length:var(--fs-caption)]">
       {detailRows(address).map(([k, v]) => (
         <div key={k} className="flex gap-2">
-          <dt className="text-muted shrink-0">{k}:</dt>
+          <dt className="text-fg shrink-0">{k}:</dt>
           <dd className="text-fg-2 min-w-0 break-words">{v}</dd>
         </div>
       ))}

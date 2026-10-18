@@ -262,11 +262,11 @@ export function QueryFlowCard({
               <span className="text-fg font-bold text-[length:var(--fs-h5)]">{issue.name}</span>
             </div>
             <dl className="grid grid-cols-1 sm:grid-cols-[12rem_1fr] gap-x-4 gap-y-2 items-center text-[length:var(--fs-body)]">
-              <dt className="text-fg-2">Query Category</dt>
+              <dt className="text-fg">Query Category</dt>
               <dd><Pill tone={categoryTone(issue.category)}>{issue.category ?? PENDING}</Pill></dd>
-              <dt className="text-fg-2">Query Issue</dt>
+              <dt className="text-fg">Query Issue</dt>
               <dd className="text-fg">{issue.name}</dd>
-              <dt className="text-fg-2">Query Service Type</dt>
+              <dt className="text-fg">Query Service Type</dt>
               <dd>{serviceType ? <Pill tone="blue">{serviceTypeLabel(serviceType)}</Pill> : <span className="text-muted">Not selected</span>}</dd>
             </dl>
             {!issue.category && <Banner tone="warn">No Query Category is mapped for this issue yet.</Banner>}

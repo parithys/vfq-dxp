@@ -193,7 +193,7 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
   if (!hasValue(value)) return null;
   return (
     <div className="min-w-0">
-      <dt className="text-[length:var(--fs-caption)] text-muted">{label}</dt>
+      <dt className="text-[length:var(--fs-caption)] text-fg">{label}</dt>
       <dd className="text-fg break-words">{value}</dd>
     </div>
   );
@@ -264,11 +264,11 @@ function ApprovalSummary({
 
       <dl className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 text-[length:var(--fs-body)]">
         <div>
-          <dt className="text-[length:var(--fs-caption)] text-muted">Approver role</dt>
+          <dt className="text-[length:var(--fs-caption)] text-fg">Approver role</dt>
           <dd className="text-fg">{requiredRole ?? '-'}</dd>
         </div>
         <div>
-          <dt className="text-[length:var(--fs-caption)] text-muted">{decided ? 'Order status' : 'If approved'}</dt>
+          <dt className="text-[length:var(--fs-caption)] text-fg">{decided ? 'Order status' : 'If approved'}</dt>
           <dd className="text-fg">{decided ? order.status : `Moves to ${order.nextStatusOnApproval ?? 'Complete'}`}</dd>
         </div>
       </dl>

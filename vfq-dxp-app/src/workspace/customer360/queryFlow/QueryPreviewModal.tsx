@@ -43,7 +43,7 @@ function SectionCard({ icon, title, open = true, onToggle, children }: { icon: s
 function FieldRow({ label, value, strong = false, muted = false }: { label: string; value: string; strong?: boolean; muted?: boolean }) {
   return (
     <div className="flex items-start justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
-      <dt className="text-fg-2">{label}</dt>
+      <dt className="text-fg">{label}</dt>
       <dd className={`min-w-0 break-words text-right ${muted ? 'text-muted' : strong ? 'text-fg font-semibold' : 'text-fg'}`}>{value}</dd>
     </div>
   );

@@ -254,7 +254,7 @@ export function OfferDetailsDrawer({
                 <div key={r.label} className="flex items-center gap-4">
                   <IconDisc path={r.icon} className="h-10 w-10 bg-surface text-fg-2" />
                   <div className={`flex flex-1 items-center justify-between gap-4 py-4 ${i > 0 ? 'border-t border-border-soft' : ''}`}>
-                    <dt className="text-fg-2 text-[length:var(--fs-body)]">{r.label}</dt>
+                    <dt className="text-fg text-[length:var(--fs-body)]">{r.label}</dt>
                     <dd className="text-right">
                       {r.pill ? (
                         <span className="rounded-[var(--radius-pill)] bg-tone-success text-success px-3 py-1 text-[length:var(--fs-caption)] font-medium">{r.value}</span>

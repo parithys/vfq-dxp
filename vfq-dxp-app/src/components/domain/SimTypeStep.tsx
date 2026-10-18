@@ -93,19 +93,19 @@ export function SimTypeStep({ value, customerEmail, onChange, device, prePaired 
         {value.prePaired && value.simValid && (
           <dl className="rounded-[var(--radius-card)] border border-success bg-tone-success p-3 space-y-1 text-[length:var(--fs-caption)]">
             <div className="flex justify-between gap-3">
-              <dt className="text-fg-2">SIM Type</dt>
+              <dt className="text-fg">SIM Type</dt>
               <dd className="text-fg font-medium">Pre-Paired SIM</dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt className="text-fg-2">SIM Serial Number</dt>
+              <dt className="text-fg">SIM Serial Number</dt>
               <dd className="text-fg font-medium">{value.simSerial}</dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt className="text-fg-2">ICCID</dt>
+              <dt className="text-fg">ICCID</dt>
               <dd className="text-fg font-medium">{value.simIccid ?? '-'}</dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt className="text-fg-2">Mobile Number</dt>
+              <dt className="text-fg">Mobile Number</dt>
               {/* Read-only: the number is the one already on the SIM and cannot be edited here. */}
               <dd className="text-fg font-medium">{value.prePairedMsisdn ?? '-'}</dd>
             </div>
@@ -160,15 +160,15 @@ export function SimTypeStep({ value, customerEmail, onChange, device, prePaired 
         {value.simType === 'Physical' && value.simValid && (
           <dl className="rounded-[var(--radius-card)] border border-success bg-tone-success p-3 space-y-1 text-[length:var(--fs-caption)]">
             <div className="flex justify-between gap-3">
-              <dt className="text-fg-2">SIM Type</dt>
+              <dt className="text-fg">SIM Type</dt>
               <dd className="text-fg font-medium">{value.simKind ?? 'Physical'}</dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt className="text-fg-2">SIM Serial Number</dt>
+              <dt className="text-fg">SIM Serial Number</dt>
               <dd className="text-fg font-medium">{value.simSerial}</dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt className="text-fg-2">ICCID</dt>
+              <dt className="text-fg">ICCID</dt>
               <dd className="text-fg font-medium">{value.simIccid ?? '-'}</dd>
             </div>
           </dl>

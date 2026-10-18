@@ -131,19 +131,19 @@ export function SimSwapQueueScreen() {
 
       <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)] card p-4 mb-6">
         <div>
-          <dt className="text-[length:var(--fs-caption)] text-muted">New SIM Serial</dt>
+          <dt className="text-[length:var(--fs-caption)] text-fg">New SIM Serial</dt>
           <dd className="text-fg">{order.newSimSerialNumber ?? '-'}</dd>
         </div>
         <div>
-          <dt className="text-[length:var(--fs-caption)] text-muted">Reason</dt>
+          <dt className="text-[length:var(--fs-caption)] text-fg">Reason</dt>
           <dd className="text-fg">{order.simSwapReason ?? '-'}</dd>
         </div>
         <div>
-          <dt className="text-[length:var(--fs-caption)] text-muted">Charge</dt>
+          <dt className="text-[length:var(--fs-caption)] text-fg">Charge</dt>
           <dd className="text-fg">{order.chargeStatus ?? '-'}</dd>
         </div>
         <div>
-          <dt className="text-[length:var(--fs-caption)] text-muted">Comments</dt>
+          <dt className="text-[length:var(--fs-caption)] text-fg">Comments</dt>
           <dd className="text-fg">{order.comments ?? '-'}</dd>
         </div>
       </dl>

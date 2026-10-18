@@ -13,7 +13,7 @@ interface CheckoutDefaultLayoutProps extends CheckoutSummaryDerived {
 
 const Row = ({ label, value, detail }: { label: string; value: string; detail?: string }) => (
   <div className="flex justify-between gap-4 py-2 border-b border-border-soft last:border-0">
-    <dt className="text-fg-2">{label}</dt>
+    <dt className="text-fg">{label}</dt>
     <dd className="text-fg text-right">
       {value}
       {detail && <span className="block text-[length:var(--fs-caption)] text-muted">{detail}</span>}

@@ -70,7 +70,7 @@ export function AppointmentBookingStep({ value, onChange }: AppointmentBookingSt
       </div>
 
       <div>
-        <label htmlFor="appointment-date" className="block text-[length:var(--fs-label)] text-fg-2 mb-1">Date</label>
+        <label htmlFor="appointment-date" className="block text-[length:var(--fs-label)] text-fg mb-1">Date</label>
         <input
           id="appointment-date"
           type="date"

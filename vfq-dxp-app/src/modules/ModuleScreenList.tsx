@@ -134,7 +134,7 @@ export function ModuleScreenList() {
         actions={
           <Link
             to="/"
-            className="shrink-0 flex items-center gap-1 rounded-[var(--radius-button)] border border-border-soft px-3 py-1.5 text-[length:var(--fs-caption)] text-fg-2 hover:bg-surface hover:text-fg"
+            className="shrink-0 flex items-center gap-1 rounded-[var(--radius-button)] border border-on-dark-line-3 px-3 py-1.5 text-[length:var(--fs-caption)] text-on-dark-2 hover:bg-on-dark-fill-2 hover:text-on-dark"
           >
             <Icon path={ICONS.chevronLeft} className="w-3.5 h-3.5" />
             All modules

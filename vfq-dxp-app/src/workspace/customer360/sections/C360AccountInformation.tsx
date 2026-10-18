@@ -23,7 +23,7 @@ function Field({ label, requirement, value, strong = true }: { label: string; /*
   const empty = value === undefined || value === null || value === '';
   return (
     <div className="flex items-center justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
-      <dt className="text-fg-2 shrink-0" data-req={requirement}>{label}</dt>
+      <dt className="text-fg shrink-0" data-req={requirement}>{label}</dt>
       <dd className={`text-fg min-w-0 break-words text-right ${strong ? 'font-medium' : ''}`}>{empty ? '-' : mode === 'drill-down' ? <RevealValue>{value}</RevealValue> : value}</dd>
     </div>
   );
@@ -338,7 +338,7 @@ export function C360AccountInformation({
             <dl>
               {financial.map((r) => (
                 <div key={r.label} className="flex items-center justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
-                  <dt className="text-fg-2">{r.label}</dt>
+                  <dt className="text-fg">{r.label}</dt>
                   <dd className={`font-medium text-right ${r.red && r.value ? 'text-accent' : 'text-fg'}`}>{r.value ?? '-'}</dd>
                 </div>
               ))}

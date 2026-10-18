@@ -7,7 +7,7 @@ export function SummaryFieldRow({ label, value }: { label: string; value: Format
   const [expanded, setExpanded] = useState(false);
   return (
     <div className="flex flex-col gap-0.5 py-2 border-b border-border-soft last:border-0">
-      <dt className="text-fg-2 text-[length:var(--fs-caption)]">{label}</dt>
+      <dt className="text-fg text-[length:var(--fs-caption)]">{label}</dt>
       <dd className={`min-w-0 break-words text-[length:var(--fs-body)] ${value.empty ? 'text-muted' : 'text-fg font-medium'}`}>
         {value.fullList ? (
           <>

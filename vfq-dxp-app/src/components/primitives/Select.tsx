@@ -204,7 +204,7 @@ export function Select({
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label id={labelId} htmlFor={selectId} className={`text-[length:var(--fs-label)] ${dark ? 'text-on-dark-2' : disabled ? 'text-[var(--field-label-disabled)]' : 'text-fg-2'}`}>
+        <label id={labelId} htmlFor={selectId} className={`text-[length:var(--fs-label)] ${dark ? 'text-on-dark-2' : disabled ? 'text-[var(--field-label-disabled)]' : 'text-fg'}`}>
           {label}
           {/* Same treatment as Input's required marker - aria-hidden, with the
               state carried by aria-required on the combobox below. */}

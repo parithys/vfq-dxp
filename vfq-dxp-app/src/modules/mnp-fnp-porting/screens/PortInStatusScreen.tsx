@@ -75,7 +75,7 @@ export function PortInStatusScreen() {
       <PageHeader
         title={<>Port-In Status</>}
         description={<>Where each MNP port-in request stands with NPAS, and what happens next.</>}
-        actions={open ? <Link to={PORT_IN_STATUS_PATH} className="text-link font-medium hover:underline text-[length:var(--fs-body)]">All port-in requests</Link> : undefined}
+        actions={open ? <Link to={PORT_IN_STATUS_PATH} className="text-on-dark font-medium hover:underline text-[length:var(--fs-body)]">All port-in requests</Link> : undefined}
       />
       <ErrorBanner message={loadError} />
       {open ? (

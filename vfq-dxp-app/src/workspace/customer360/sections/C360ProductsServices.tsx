@@ -51,7 +51,7 @@ function Field({ label, value }: { label: string; value: ReactNode | undefined |
   if (mode === 'hidden') return null;
   return (
     <div className="flex items-center justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
-      <dt className="text-fg-2 shrink-0">{label}</dt>
+      <dt className="text-fg shrink-0">{label}</dt>
       <dd className="text-fg font-medium min-w-0 break-words text-right">{mode === 'drill-down' ? <RevealValue>{dash(value)}</RevealValue> : dash(value)}</dd>
     </div>
   );
@@ -217,10 +217,12 @@ export function C360ProductsServices({ data, services }: { data: Customer360Data
         </>
       }
     >
-      <div className="grid grid-cols-1 @lg:grid-cols-2 @4xl:grid-cols-[repeat(2,minmax(0,1fr))_minmax(0,3.2fr)] gap-3">
+      {/* One card; its cells are divided by thin lines (same construction as KpiGrid). */}
+      <div className="card overflow-hidden">
+      <div className="grid grid-cols-1 @lg:grid-cols-2 @4xl:grid-cols-[repeat(2,minmax(0,1fr))_minmax(0,3.2fr)] -mr-px -mb-px">
         <KpiTile icon={IC.box} tone="blue" label="Total Connections" value={services.length} />
         <KpiTile icon={IC.shieldCheck} tone="green" label="Active Services" value={active} />
-        <section className="@lg:col-span-2 @4xl:col-span-1 card p-4 min-w-0">
+        <section className="@lg:col-span-2 @4xl:col-span-1 p-4 min-w-0 border-r border-b border-border-soft">
           <h3 className="text-fg font-semibold text-[length:var(--fs-body)] mb-2">Service Types</h3>
           <ul className="grid grid-cols-2 @lg:grid-cols-5 gap-3">
             {TYPE_TILES.map((t) => {
@@ -249,6 +251,7 @@ export function C360ProductsServices({ data, services }: { data: Customer360Data
             })}
           </ul>
         </section>
+      </div>
       </div>
 
       <div className={`grid grid-cols-1 gap-4 items-start ${panelOpen ? '@4xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]' : ''}`}>

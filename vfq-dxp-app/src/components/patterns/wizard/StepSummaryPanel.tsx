@@ -143,7 +143,7 @@ export function StepSummaryPanel({
       className="hidden lg:flex lg:flex-col w-80 shrink-0 self-start sticky top-0 max-h-[calc(100vh-11rem)] overflow-hidden my-8 mr-8 card "
     >
       {/* The header stays put; only the sections below it scroll. */}
-      <header className="shrink-0 border-b border-border-soft bg-[var(--icon-tile-bg)] px-4 py-4">
+      <header className="shrink-0 border-b border-on-dark-line-2 bg-charcoal-panel px-4 py-4">
         <div className="flex items-center gap-3">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-card)] bg-bg text-[var(--brand-plum)] shadow-[var(--shadow-icon-tile)]" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -151,8 +151,8 @@ export function StepSummaryPanel({
             </svg>
           </span>
           <div className="min-w-0 flex-1">
-            <h2 className="text-fg font-bold text-[length:var(--fs-h5)]">{heading}</h2>
-            <p className="text-fg-2 text-[length:var(--fs-caption)]">{count}</p>
+            <h2 className="text-on-dark font-bold text-[length:var(--fs-h5)]">{heading}</h2>
+            <p className="text-on-dark-2 text-[length:var(--fs-caption)]">{count}</p>
           </div>
           <span className="shrink-0 rounded-[var(--radius-pill)] bg-bg px-3 py-1 text-[var(--brand-plum)] font-bold text-[length:var(--fs-caption)] shadow-[var(--shadow-icon-tile)]">{percent}%</span>
         </div>
@@ -160,7 +160,7 @@ export function StepSummaryPanel({
           <div className="h-2 flex-1 overflow-hidden rounded-[var(--radius-pill)] bg-bg" role="progressbar" aria-label="Steps completed" aria-valuemin={0} aria-valuemax={totalSteps} aria-valuenow={completed.length}>
             <div className="h-full rounded-[var(--radius-pill)] bg-[var(--brand-plum)] transition-[width] duration-[var(--motion-slow)]" style={{ width: `${percent}%` }} />
           </div>
-          <span className="shrink-0 text-muted font-bold uppercase tracking-wide text-[length:var(--fs-micro)]">Progress</span>
+          <span className="shrink-0 text-on-dark-2 font-bold uppercase tracking-wide text-[length:var(--fs-micro)]">Progress</span>
         </div>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto">

@@ -218,7 +218,8 @@ export function KpiTile({
       {chevron && <Icon path={IC.chevRight} className="w-5 h-5 text-fg shrink-0" />}
     </>
   );
-  const cls = 'card p-4 flex items-center gap-4 min-w-0';
+  // A cell of the KPI card (see KpiGrid): its right and bottom edges are the dividers between cells.
+  const cls = 'p-4 flex items-center gap-4 min-w-0 border-r border-b border-border-soft';
   return onClick ? (
     <button type="button" onClick={onClick} className={`${cls} w-full hover:bg-surface`}>
       {body}
@@ -228,10 +229,18 @@ export function KpiTile({
   );
 }
 
-/** Responsive grid for a KPI strip. */
+/**
+ * A KPI strip: ONE card holding every KPI as a cell, divided by thin lines, in a grid that follows the card's width.
+ * Each cell draws its own right and bottom edge; the grid is pulled 1px out the right and bottom so the edge cells' lines
+ * fall outside the card (and are clipped) instead of doubling its border.
+ */
 export function KpiGrid({ children, cols = 5 }: { children: ReactNode; cols?: 3 | 4 | 5 | 6 }) {
   const c = cols === 3 ? '' : cols === 6 ? '@6xl:grid-cols-6' : cols === 4 ? '@6xl:grid-cols-4' : '@6xl:grid-cols-5';
-  return <div className={`grid grid-cols-1 @lg:grid-cols-2 @4xl:grid-cols-3 ${c} gap-3`}>{children}</div>;
+  return (
+    <div className="card overflow-hidden">
+      <div className={`grid grid-cols-1 @lg:grid-cols-2 @4xl:grid-cols-3 ${c} -mr-px -mb-px`}>{children}</div>
+    </div>
+  );
 }
 
 /** A titled card (icon + title, optional right-hand action) holding rows, lists or a table. */
@@ -262,7 +271,7 @@ export function DetailRows({ rows, align = 'right' }: { rows: { label: string; v
     <dl>
       {shown.map((r) => (
         <div key={r.label} className="flex items-center justify-between gap-4 py-2 border-b border-border-soft last:border-0 text-[length:var(--fs-body)]">
-          <dt className="text-fg-2">{r.label}</dt>
+          <dt className="text-fg">{r.label}</dt>
           <dd className={`text-fg min-w-0 break-words ${r.strong === false ? '' : 'font-medium'} ${align === 'right' ? 'text-right' : ''}`}>
             {modeOf(r.label) === 'drill-down' ? <RevealValue>{r.value}</RevealValue> : r.value}
           </dd>

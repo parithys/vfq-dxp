@@ -35,7 +35,7 @@ function FactRow({ facts }: { facts: Fact[] }) {
         <div key={f.label} className={`flex items-center gap-3 min-w-0 py-2 @lg:py-0 ${i === 0 ? '@lg:pr-4' : '@lg:px-4'}`}>
           <Tile icon={f.icon} />
           <div className="min-w-0">
-            <dt className="text-muted text-[length:var(--fs-caption)] leading-tight">{f.label}</dt>
+            <dt className="text-fg text-[length:var(--fs-caption)] leading-tight">{f.label}</dt>
             <dd className="text-fg font-semibold text-[length:var(--fs-body)] leading-snug break-words">{f.value || '-'}</dd>
           </div>
         </div>

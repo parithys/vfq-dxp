@@ -337,7 +337,7 @@ export function PersonaSwitcher() {
                 Edit profile
               </Link>
               <div className="px-4 py-3 border-t border-border-soft">
-                <label className="text-[length:var(--fs-caption)] text-muted mb-1 block">Switch role</label>
+                <label className="text-[length:var(--fs-caption)] text-fg mb-1 block">Switch role</label>
                 <Select
                   aria-label="Switch role"
                   value={activePersonaId}

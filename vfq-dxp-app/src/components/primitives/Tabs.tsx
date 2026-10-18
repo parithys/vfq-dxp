@@ -98,6 +98,11 @@ const RAIL_KEY = 'vfq-rail-expanded';
  * Collapsed it shows icons only; hovering an item - or focusing it - reveals ITS label over the
  * content without moving anything. The toggle at the top pins the rail open so every label is shown in place;
  * that choice is remembered.
+ *
+ * Touch: there is no hover, and a tap focuses the item, which used to leave the overlay label stuck open over the page
+ * (covering what is under it), so the overlay is not drawn on a coarse pointer - the tap goes straight to the item. Below lg
+ * the rail is a horizontal strip of 48px icons (the active one also shows its label); at lg and up the pinned (expanded)
+ * rail shows every label in place.
  */
 function IconRail({ items, active, onSelect }: { items: TabItem[]; active: string | undefined; onSelect: (key: string) => void }) {
   const [expanded, setExpanded] = useState(() => {
@@ -128,7 +133,7 @@ function IconRail({ items, active, onSelect }: { items: TabItem[]; active: strin
             type="button"
             onClick={toggle}
             aria-label={expanded ? 'Collapse sections' : 'Expand sections'}
-            className={`${row} w-full border-b border-border-soft text-fg-2 hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${expanded ? 'justify-end px-5' : 'justify-center'}`}
+            className={`${row} hidden lg:flex w-full border-b border-border-soft text-fg-2 hover:bg-surface focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${expanded ? 'justify-end px-5' : 'justify-center'}`}
           >
             <PanelIcon expanded={expanded} className="w-5 h-5" />
           </button>
@@ -142,11 +147,12 @@ function IconRail({ items, active, onSelect }: { items: TabItem[]; active: strin
                   type="button"
                   onClick={() => onSelect(item.key)}
                   aria-label={item.label}
-                  className={`${row} w-12 lg:w-full border-l-2 transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+                  className={`${row} ${isActive && !expanded ? 'max-lg:w-auto max-lg:gap-2 max-lg:px-3' : 'w-12'} lg:w-full border-l-2 transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
                     isActive ? 'bg-accent bg-[image:var(--accent-gradient)] text-accent-on border-l-transparent' : 'border-l-transparent text-fg-2 hover:bg-surface-warm hover:text-accent'
                   } ${expanded ? 'lg:pl-[21px] lg:pr-5 lg:gap-3' : 'justify-center'}`}
                 >
                   <Icon path={item.icon ?? FALLBACK_ICON} className="w-5 h-5 shrink-0" />
+                  {isActive && !expanded && <span className="lg:hidden whitespace-nowrap text-[length:var(--fs-body)] font-semibold">{item.label}</span>}
                   {expanded && <span className={`hidden lg:inline min-w-0 truncate text-[length:var(--fs-body)] ${isActive ? 'font-semibold' : 'font-medium text-fg'}`}>{item.label}</span>}
                 </button>
                 {!expanded && (
@@ -156,7 +162,7 @@ function IconRail({ items, active, onSelect }: { items: TabItem[]; active: strin
                   <span
                     aria-hidden="true"
                     onClick={() => onSelect(item.key)}
-                    className={`pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto cursor-pointer absolute left-0 top-0 z-[var(--z-raised)] hidden lg:flex h-12 items-center gap-3 pl-[23px] pr-5 whitespace-nowrap rounded-r-[var(--radius-sm)] border border-l-0 border-[var(--field-card-border)] shadow-raised text-[length:var(--fs-body)] overflow-hidden max-w-16 opacity-0 transition-[max-width,opacity] duration-[var(--motion-slow)] ease-in-out motion-reduce:transition-none group-hover:max-w-64 group-hover:opacity-100 group-focus-within:max-w-64 group-focus-within:opacity-100 ${
+                    className={`pointer-coarse:hidden! pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto cursor-pointer absolute left-0 top-0 z-[var(--z-raised)] hidden lg:flex h-12 items-center gap-3 pl-[23px] pr-5 whitespace-nowrap rounded-r-[var(--radius-sm)] border border-l-0 border-[var(--field-card-border)] shadow-raised text-[length:var(--fs-body)] overflow-hidden max-w-16 opacity-0 transition-[max-width,opacity] duration-[var(--motion-slow)] ease-in-out motion-reduce:transition-none group-hover:max-w-64 group-hover:opacity-100 group-focus-within:max-w-64 group-focus-within:opacity-100 ${
                       isActive ? 'bg-accent bg-[image:var(--accent-gradient)] text-accent-on font-semibold border-transparent' : 'bg-surface-warm text-fg font-medium'
                     }`}
                   >

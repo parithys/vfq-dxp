@@ -96,7 +96,7 @@ export function LocationInput({ label, error, helperText, placeholder, onSelect,
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label htmlFor={inputId} className={`text-[length:var(--fs-label)] ${disabled ? 'text-[var(--field-label-disabled)]' : 'text-fg-2'}`}>
+        <label htmlFor={inputId} className={`text-[length:var(--fs-label)] ${disabled ? 'text-[var(--field-label-disabled)]' : 'text-fg'}`}>
           {label}
         </label>
       )}

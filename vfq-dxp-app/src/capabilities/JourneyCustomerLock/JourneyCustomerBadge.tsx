@@ -18,15 +18,15 @@ export function JourneyCustomerBadge({
   const active = useCustomerContext((s) => s.journey);
   if (active?.wizardId === wizardId) {
     return (
-      <span className="text-[length:var(--fs-body)] text-fg-2" title="The customer is fixed for this journey">
-        <span className="font-medium text-fg">{active.customerName}</span> - QID {active.idNumber}
+      <span className="text-[length:var(--fs-body)] text-on-dark-2" title="The customer is fixed for this journey">
+        <span className="font-medium text-on-dark">{active.customerName}</span> - QID {active.idNumber}
         {active.customerId ? ` - ${active.customerId}` : ''}
       </span>
     );
   }
   if (routeCustomer?.name) {
     return (
-      <span className="text-[length:var(--fs-body)] font-medium text-fg" title="The customer is fixed for this journey">
+      <span className="text-[length:var(--fs-body)] font-medium text-on-dark" title="The customer is fixed for this journey">
         {routeCustomer.name}
         {routeCustomer.customerId ? ` - ${routeCustomer.customerId}` : ''}
       </span>

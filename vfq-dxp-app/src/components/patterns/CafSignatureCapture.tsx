@@ -208,7 +208,7 @@ export function CafSignatureCapture({
               <dl className={bullets.length > 0 ? 'pt-2 border-t border-border-soft' : undefined}>
                 {orderSummary.map((row) => (
                   <div key={row.label} className="flex justify-between gap-4 py-1.5 border-b border-border-soft last:border-0">
-                    <dt className="text-fg-2 text-[length:var(--fs-caption)]">{row.label}</dt>
+                    <dt className="text-fg text-[length:var(--fs-caption)]">{row.label}</dt>
                     <dd className="text-fg text-[length:var(--fs-caption)] text-right">{row.value}</dd>
                   </div>
                 ))}
@@ -240,7 +240,7 @@ export function CafSignatureCapture({
             <dl className="mb-2">
               {formDetails.map((row) => (
                 <div key={row.label} className="flex justify-between gap-4 py-1 border-b border-border-soft last:border-0 text-[length:var(--fs-caption)]">
-                  <dt className="text-fg-2">{row.label}</dt>
+                  <dt className="text-fg">{row.label}</dt>
                   <dd className="text-fg text-right">{row.value}</dd>
                 </div>
               ))}
@@ -444,7 +444,7 @@ export function CafSignatureCapture({
           <dl className="text-[length:var(--fs-caption)]">
             {orderSummary.map((row) => (
               <div key={row.label} className="flex justify-between gap-4 py-1.5 border-b border-border-soft last:border-0">
-                <dt className="text-fg-2">{row.label}</dt>
+                <dt className="text-fg">{row.label}</dt>
                 <dd className="text-fg text-right">{row.value}</dd>
               </div>
             ))}

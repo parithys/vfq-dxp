@@ -248,13 +248,13 @@ export function ActivationCompleteScreen({
         actions={[
           { label: 'View Order', variant: 'primary', onClick: () => navigate(`${ORDER_DETAIL_ROUTE}?id=${order.orderId}`) },
           ...(order.trackAction ? [{ label: order.trackAction.label, onClick: () => navigate(order.trackAction!.to) }] : []),
-          { label: 'Print', onClick: () => window.print(), endRow: true },
-          { label: 'Create Activity', onClick: () => setActivityOpen(true), endRow: true },
-          { label: 'Done & Exit', onClick: () => void closeActivity(), endRow: true },
           // A location that is ready for service can go on to fibre activation. Create Lead (always offered once the
           // location is read) records the fibre interest as a lead straight away and confirms it with a toast.
           ...(fibre === 'rfs' ? [{ label: 'Continue with Fibre', onClick: () => navigate(FIBRE_ACTIVATION_ROUTE) }] : []),
           ...(fibre !== undefined ? [{ label: leadId ? `Lead ${leadId} created` : 'Create Lead', onClick: () => void createLead() }] : []),
+          { label: 'Print', onClick: () => window.print() },
+          { label: 'Create Activity', onClick: () => setActivityOpen(true) },
+          { label: 'Done & Exit', onClick: () => void closeActivity() },
         ]}
       />
       <Modal
@@ -285,17 +285,26 @@ export function ActivationCompleteScreen({
           />
         </div>
       </Modal>
-      {fibre === 'rfs' && (
-        <section aria-label="Eligible offers" className="max-w-xl mx-auto mt-6 card p-5 no-print print:hidden">
-          <h2 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-3">Eligible offers</h2>
+      {/* Always shown: the fibre offer when the location is ready for service, otherwise why there is none. */}
+      <section aria-label="Eligible offers" className="max-w-6xl mx-auto mt-6 card p-5 no-print print:hidden">
+        <h2 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-3">Eligible offers</h2>
+        {fibre === 'rfs' ? (
           <ul className="divide-y divide-border-soft">
             <li className="flex items-center justify-between gap-3 py-2">
               <span className="text-fg text-[length:var(--fs-body)]">Fibre at the customer's location</span>
               <Badge variant="success">RFS - Eligible for Fibre</Badge>
             </li>
           </ul>
-        </section>
-      )}
+        ) : (
+          <p className="text-fg-2 text-[length:var(--fs-body)]">
+            {fibre === undefined
+              ? 'Checking the customer\'s location...'
+              : fibre === 'not-rfs'
+                ? 'No eligible offers: the customer\'s location is not ready for fibre service.'
+                : 'No eligible offers: there is no location on file to check for fibre.'}
+          </p>
+        )}
+      </section>
     </div>
   );
 }

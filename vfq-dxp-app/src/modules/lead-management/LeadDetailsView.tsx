@@ -108,23 +108,23 @@ export function LeadDetailsView() {
 
           <dl className="grid grid-cols-2 gap-4 text-[length:var(--fs-body)] card p-5">
             <div>
-              <dt className="text-[length:var(--fs-caption)] text-muted">Sub Status</dt>
+              <dt className="text-[length:var(--fs-caption)] text-fg">Sub Status</dt>
               <dd className="text-fg">{lead.subStatus ?? '-'}</dd>
             </div>
             <div>
-              <dt className="text-[length:var(--fs-caption)] text-muted">Callback Date</dt>
+              <dt className="text-[length:var(--fs-caption)] text-fg">Callback Date</dt>
               <dd className="text-fg">{lead.callbackDate ?? '-'}</dd>
             </div>
             <div>
-              <dt className="text-[length:var(--fs-caption)] text-muted">Fixed Pre-Sales</dt>
+              <dt className="text-[length:var(--fs-caption)] text-fg">Fixed Pre-Sales</dt>
               <dd className="text-fg">{lead.fixedPreSalesRequested ? 'Yes' : 'No'}</dd>
             </div>
             <div>
-              <dt className="text-[length:var(--fs-caption)] text-muted">Created Via</dt>
+              <dt className="text-[length:var(--fs-caption)] text-fg">Created Via</dt>
               <dd className="text-fg">{lead.createdVia}</dd>
             </div>
             <div className="col-span-2">
-              <dt className="text-[length:var(--fs-caption)] text-muted">Description</dt>
+              <dt className="text-[length:var(--fs-caption)] text-fg">Description</dt>
               <dd className="text-fg">{lead.description ?? '-'}</dd>
             </div>
           </dl>

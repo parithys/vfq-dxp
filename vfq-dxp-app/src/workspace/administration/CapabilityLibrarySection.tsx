@@ -46,19 +46,19 @@ function Detail({ cap }: { cap: CapabilityDef }) {
       <section aria-label="Where it lives" className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 space-y-3">
         <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Where it lives</h4>
         <dl className="grid grid-cols-[10rem_1fr] gap-y-2 text-[length:var(--fs-body)]">
-          <dt className="text-muted">Entry point</dt>
+          <dt className="text-fg">Entry point</dt>
           <dd className="text-fg font-medium">{cap.entry}</dd>
-          <dt className="text-muted">Home</dt>
+          <dt className="text-fg">Home</dt>
           <dd><code className="text-[length:var(--fs-caption)]">src/{cap.home}</code></dd>
           {cap.stepBuilders.length > 0 && (
             <>
-              <dt className="text-muted">Step builders</dt>
+              <dt className="text-fg">Step builders</dt>
               <dd className="text-fg">{cap.stepBuilders.join(', ')}</dd>
             </>
           )}
           {cap.stepLabel && (
             <>
-              <dt className="text-muted">Step name</dt>
+              <dt className="text-fg">Step name</dt>
               <dd><code className="text-[length:var(--fs-caption)]">{cap.stepLabel}</code> in data/stepLabels.ts</dd>
             </>
           )}

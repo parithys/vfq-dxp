@@ -48,7 +48,7 @@ export function Breadcrumbs() {
     // rules in the same column, so an #eeeeee line under an #e0e0e0 one read
     // as a mistake. Same token, not the same literal, so they stay matched in
     // dark mode where --border-soft and --nav-border diverge.
-    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 px-6 py-2.5 text-[length:var(--fs-caption)] text-muted border-b border-[var(--nav-border)] bg-bg">
+    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 px-6 py-2.5 text-[length:var(--fs-caption)] text-fg border-b border-[var(--nav-border)] bg-bg">
       {/* Single global back affordance - this bar is the one persistent
        * element mounted above every routed page (App.tsx), so placing it
        * here guarantees it's always in the same spot, rather than the
@@ -70,7 +70,7 @@ export function Breadcrumbs() {
         <Icon path={CHEVRON_LEFT} className="w-3.5 h-3.5" />
         Back
       </button>
-      <Link to="/" className="ml-1 text-muted hover:text-fg transition-colors">
+      <Link to="/" className="ml-1 text-fg hover:underline underline-offset-4 transition-colors">
         Dashboard
       </Link>
       {navItem && (
@@ -78,7 +78,7 @@ export function Breadcrumbs() {
           {navParent && (
             <>
               <Crumb />
-              <Link to={navParent.to} className="text-muted hover:text-fg transition-colors">
+              <Link to={navParent.to} className="text-fg hover:underline underline-offset-4 transition-colors">
                 {navParent.label}
               </Link>
             </>
@@ -90,13 +90,13 @@ export function Breadcrumbs() {
       {place && (
         <>
           <Crumb />
-          <Link to={place.line.to} className="text-muted hover:text-fg transition-colors">
+          <Link to={place.line.to} className="text-fg hover:underline underline-offset-4 transition-colors">
             {place.line.label}
           </Link>
           {!sameLabel && (
             <>
               <Crumb />
-              <Link to={`${place.line.to}/${place.category.key}`} className="text-muted hover:text-fg transition-colors">
+              <Link to={`${place.line.to}/${place.category.key}`} className="text-fg hover:underline underline-offset-4 transition-colors">
                 {place.category.label}
               </Link>
             </>
@@ -108,7 +108,7 @@ export function Breadcrumbs() {
       {module && !isCustomer360 && !navItem && !place && (
         <>
           <Crumb />
-          <Link to={`/${module.moduleSlug}`} className="text-muted hover:text-fg transition-colors">
+          <Link to={`/${module.moduleSlug}`} className="text-fg hover:underline underline-offset-4 transition-colors">
             {module.module}
           </Link>
         </>
@@ -122,7 +122,7 @@ export function Breadcrumbs() {
       {isCustomer360 && (
         <>
           <Crumb />
-          <Link to="/customer-search" className="text-muted hover:text-fg transition-colors">
+          <Link to="/customer-search" className="text-fg hover:underline underline-offset-4 transition-colors">
             Customers
           </Link>
           <Crumb />

@@ -277,7 +277,7 @@ export function BillingAccountStep({
                       computeBillCycleDay's own note on why no seeded customer
                       can currently reach this branch. */}
                   {customerSegment === 'VIP' && (
-                    <label className="flex items-center gap-2 text-[length:var(--fs-caption)] text-fg-2 cursor-pointer mt-1">
+                    <label className="flex items-center gap-2 text-[length:var(--fs-caption)] text-fg cursor-pointer mt-1">
                       <Checkbox
                         checked={newAccount.billCycleOverride ?? false}
                         onChange={(e) => setNewAccount({ billCycleOverride: e.target.checked })}
@@ -305,7 +305,7 @@ export function BillingAccountStep({
                     Card ending {newAccount.cardLast4} tokenized - {newAccount.cardToken}
                   </p>
                 )}
-                <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg-2 cursor-not-allowed">
+                <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg cursor-not-allowed">
                   <Checkbox checked disabled />
                   Set as primary payment profile
                   <span className="text-muted text-[length:var(--fs-caption)]">(only profile being created here)</span>
@@ -323,15 +323,15 @@ export function BillingAccountStep({
                 {newAccount.profileName ? (
                   <dl className="card card-surface p-3 text-[length:var(--fs-caption)]">
                     <div className="flex justify-between gap-3 py-1">
-                      <dt className="text-fg-2">Billing Profile Name</dt>
+                      <dt className="text-fg">Billing Profile Name</dt>
                       <dd className="text-fg font-medium">{newAccount.profileName}</dd>
                     </div>
                     <div className="flex justify-between gap-3 py-1">
-                      <dt className="text-fg-2">Bill Media</dt>
+                      <dt className="text-fg">Bill Media</dt>
                       <dd className="text-fg font-medium">{newAccount.billMedia}</dd>
                     </div>
                     <div className="flex justify-between gap-3 py-1">
-                      <dt className="text-fg-2">Billing Schedule</dt>
+                      <dt className="text-fg">Billing Schedule</dt>
                       <dd className="text-fg font-medium">{newAccount.billingSchedule}</dd>
                     </div>
                   </dl>

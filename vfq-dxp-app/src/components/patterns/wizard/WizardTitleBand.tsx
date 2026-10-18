@@ -57,11 +57,12 @@ export function WizardTitleBand({
     </>
   );
 
+  // The secondary buttons here take the light page-tint fill (white on hover), like the buttons inside a card or header.
   // Title area: carries the page's own padding and a bottom border, so the step rail below it can sit flush against the left edge.
   return (
-      <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-6 bg-bg border-b border-[var(--field-card-border)]">
+      <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-6 bg-charcoal-panel text-on-dark [--btn-secondary-fill:var(--icon-tile-bg)] [--btn-secondary-hover:var(--bg)] border-b border-[var(--field-card-border)]">
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
-          <h1 className="text-[length:var(--fs-h4)] font-bold text-fg">{title}</h1>
+          <h1 className="text-[length:var(--fs-h4)] font-bold text-on-dark">{title}</h1>
           <div className="flex flex-wrap items-center gap-3">
             {exitLinks}
           </div>
@@ -69,7 +70,7 @@ export function WizardTitleBand({
         {/* The fixed customer for this journey sits under the title. */}
         {titleAside && <div>{titleAside}</div>}
         {popupBlocked && (
-          <p role="alert" className="text-[var(--warn-text)] text-[length:var(--fs-caption)] mt-3">
+          <p role="alert" className="text-on-dark text-[length:var(--fs-caption)] mt-3">
             The browser blocked the customer view pop-up. Allow pop-ups for this site and try again.
           </p>
         )}

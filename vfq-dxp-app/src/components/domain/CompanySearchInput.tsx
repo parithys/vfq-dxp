@@ -125,7 +125,7 @@ export function CompanySearchInput({ label, value, onChange, id, allowAddNew = t
         // The account the company is linked to sits at the right of the label row.
         <div className="flex items-center justify-between gap-3">
           {label ? (
-            <label htmlFor={inputId} className="text-[length:var(--fs-label)] text-fg-2">
+            <label htmlFor={inputId} className="text-[length:var(--fs-label)] text-fg">
               {label}
               {required && (
                 <span className="text-[var(--field-border-error)]" aria-hidden="true">

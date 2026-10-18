@@ -228,7 +228,7 @@ export function QidNumberField({
           resolves. */}
       <div className={`flex items-center gap-3 min-h-7 mb-1 ${inlineField ? 'justify-start' : 'justify-between'}`}>
         {inlineField ? null : (
-          <label htmlFor="qid-number-input" className="block text-[length:var(--fs-label)] text-fg-2">
+          <label htmlFor="qid-number-input" className="block text-[length:var(--fs-label)] text-fg">
             {current.numberLabel}
           </label>
         )}
@@ -255,7 +255,7 @@ export function QidNumberField({
             state keeps its original markup untouched. */}
         <div className={inlineField ? 'flex-1 min-w-0 flex flex-col gap-1' : 'contents'}>
           {inlineField && (
-            <label htmlFor="qid-number-input" className="block text-[length:var(--fs-label)] text-fg-2">
+            <label htmlFor="qid-number-input" className="block text-[length:var(--fs-label)] text-fg">
               {current.numberLabel}
             </label>
           )}
