@@ -1,5 +1,6 @@
 import * as mockDataEngine from './mockDataEngine';
 import { useAuthStore } from '../stores/authStore';
+import { useEntityStore } from '../stores/entityStore';
 
 // One place that writes the activity a customer journey leaves behind, so an agent never has to
 // log it by hand. Every activity gets a generated unique ID; its name and reason come from the
@@ -101,8 +102,9 @@ export async function closeOrderActivities(orderId: string): Promise<number> {
   let closed = 0;
   for (const a of all) {
     if (a.orderId !== orderId || a.status === 'Closed') continue;
-    // The shared record is edited in place: the engine's id-field guess does not suit this collection.
-    Object.assign(a, { status: 'Closed', closedAt: new Date().toISOString(), closedBy });
+    // Through the entity store, by the collection's own key: it writes the engine (so the change is journaled and survives a reload) and the cached list
+    // the inbox and task views read. Editing the shared record in place did neither reliably.
+    await useEntityStore.getState().updateRecord('customer-activities', 'activityNumber', String(a.activityNumber), { status: 'Closed', closedAt: new Date().toISOString(), closedBy });
     closed += 1;
   }
   return closed;

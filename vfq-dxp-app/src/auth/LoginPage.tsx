@@ -98,8 +98,17 @@ export function LoginPage() {
       return;
     }
 
+    // The profile first, then the persona: a failed lookup must not leave a role written with no identity behind it.
+    let profile;
+    try {
+      profile = await pickProfileForRole(resolvedRole.personaId);
+    } catch (e) {
+      console.error('Sign-in failed', e);
+      setLoginError('This Staff ID has no agent identity configured.');
+      setSigningIn(false);
+      return;
+    }
     setActivePersona(resolvedRole.personaId);
-    const profile = await pickProfileForRole(resolvedRole.personaId);
 
     // Land every sign-in on the Dashboard.
     //

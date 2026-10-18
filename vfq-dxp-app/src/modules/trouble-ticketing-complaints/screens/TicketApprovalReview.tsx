@@ -137,7 +137,7 @@ export function TicketApprovalReview() {
   ];
 
   const approve = async () => {
-    if (submittingRef.current) return;
+    if (!isEligibleApprover || decided || submittingRef.current) return;
     submittingRef.current = true;
     setSubmitting(true);
     try {
@@ -158,7 +158,7 @@ export function TicketApprovalReview() {
   };
 
   const reject = async () => {
-    if (submittingRef.current) return;
+    if (!isEligibleApprover || decided || submittingRef.current) return;
     submittingRef.current = true;
     setSubmitting(true);
     try {
@@ -186,7 +186,7 @@ export function TicketApprovalReview() {
   // including not clearing assignedApproverId, so it stays with this same
   // approver rather than resetting to the open pool.
   const returnTicket = async () => {
-    if (submittingRef.current) return;
+    if (!isEligibleApprover || decided || submittingRef.current) return;
     submittingRef.current = true;
     setSubmitting(true);
     try {

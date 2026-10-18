@@ -38,6 +38,8 @@ interface ConfigData {
   reqToScreens: Record<string, string[]>;
   journeyCatalogueMap: JourneyCatalogueMap;
   approvalMatrix: ApprovalMatrixEntry[];
+  /** Optional config files that failed to load, by file name: the app boots without them, but a consumer that would silently change behaviour must check. */
+  degraded: string[];
   /** Customer 360 redesign (2026-09-28) - see Customer360Field's own note. */
   customer360Fields: Customer360Field[];
   /** Staff ID -> one of customer360Fields' department keys, or null for a
@@ -134,27 +136,34 @@ export async function loadConfig(): Promise<ConfigData> {
     // approval assignment eligibility); a missing/broken copy should fall
     // back to "no matrix configured" (open to any approver) rather than
     // failing app boot.
-    const approvalMatrix = await fetchJson<ApprovalMatrixEntry[]>('/config/approval-matrix.json').catch(() => []);
+    const degraded: string[] = [];
+    // A load that fails is logged and recorded, and is not the same as a matrix without an entry for a category (that stays "unrestricted").
+    const optional = <T,>(file: string, fallback: T) => (e: unknown): T => {
+      console.error(`Config file ${file} could not be loaded; continuing without it.`, e);
+      degraded.push(file);
+      return fallback;
+    };
+    const approvalMatrix = await fetchJson<ApprovalMatrixEntry[]>('/config/approval-matrix.json').catch(optional<ApprovalMatrixEntry[]>('approval-matrix.json', []));
     // Archived 66-persona RBAC evidence, retired from the access path on
     // 2026-09-24. Resilient load for the same reason as the two above: it is
     // now purely additive (the role/access viewer's evidence panel), so a
     // missing copy must not fail boot.
-    const rbac = await fetchJson<RbacEntry[]>('/config/rbac-legacy-66.json').catch(() => []);
+    const rbac = await fetchJson<RbacEntry[]>('/config/rbac-legacy-66.json').catch(optional<RbacEntry[]>('rbac-legacy-66.json', []));
     // Customer 360 field/visibility registry (2026-09-28) - same resilience
     // stance as the three above: additive to an already-working workspace
     // page, so a missing/broken copy degrades to "show nothing extra" rather
     // than failing boot.
-    const customer360Fields = await fetchJson<Customer360Field[]>('/config/customer360-fields.json').catch(() => []);
+    const customer360Fields = await fetchJson<Customer360Field[]>('/config/customer360-fields.json').catch(optional<Customer360Field[]>('customer360-fields.json', []));
     const customer360DepartmentMapping = await fetchJson<{ staffIdToDepartment: Record<string, string | null> }>(
       '/config/customer360-department-mapping.json'
     )
       .then((d) => d.staffIdToDepartment)
-      .catch(() => ({}));
+      .catch(optional<Record<string, string | null>>('customer360-department-mapping.json', {}));
     const { personaFeatureLevel, personaScreenLevel } = indexGrants(personas, featureCatalogue);
     cache = {
       routes, personas, featureCatalogue, personaFeatureLevel, personaScreenLevel, rbac,
       businessRules, validationRules, domainSchema, moduleHierarchy,
-      reqToScreens, journeyCatalogueMap, approvalMatrix, customer360Fields, customer360DepartmentMapping,
+      reqToScreens, journeyCatalogueMap, approvalMatrix, customer360Fields, customer360DepartmentMapping, degraded,
     };
     return cache;
   })();
@@ -233,6 +242,9 @@ export function getJourneyIdsForScreen(screenId: string): string[] {
 export function getJourneyMeta(journeyId: string): { name: string; type: string } | undefined {
   return requireConfig().journeyCatalogueMap.journeys[journeyId];
 }
+
+/** Whether the approval matrix loaded. When it did not, approvals must not be treated as open to any approver (see approvalAuthority). */
+export const isApprovalMatrixAvailable = (): boolean => !requireConfig().degraded.includes('approval-matrix.json');
 
 /** Agent 360 AAV-01 - the role required to be assigned/approve an approval
  * task of this category, or undefined if the category has no matrix entry

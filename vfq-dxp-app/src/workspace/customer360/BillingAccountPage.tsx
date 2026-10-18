@@ -176,7 +176,7 @@ export function BillingAccountPage() {
               Billing Profile
             </h3>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Billing Cycle" value={profile.billingCycle} />
             <Field label="Billing Type" value={profile.billingType} />
             <Field label="Bill Medium" value={profile.billMedium} />

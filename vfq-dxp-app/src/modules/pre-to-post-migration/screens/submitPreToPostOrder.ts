@@ -6,8 +6,10 @@ import { emailVerification, maskEmail, persistBillingAccount } from '../../../ca
 import type { BillingAccountValue, ConfirmedOrder, CustomerLine, GuidedContactValue } from '../../../capabilities';
 import type { CustomerTypeValue } from '../../../capabilities/CustomerType/customerTypeModel';
 import { monthlyCharges, HRN_ADVANCE_QAR } from '../../../engines/postpaidPricing';
+import { applyLineChange } from '../../mobile-service-changes/applyServiceChange';
 import { routesToApproval } from '../../new-connection/approvalRouting';
 import type { CheckoutTotals } from '../../../components/patterns/checkoutSummaryModel';
+import { assertEligibilityChecked } from '../../../engines/eligibilityGuard';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import type { useEntityStore } from '../../../stores/entityStore';
 
@@ -29,6 +31,13 @@ export async function submitPreToPostOrder(
   const addonIds = (values.addonIds as string[] | undefined) ?? [];
   const dueTodayQar = (values.checkoutTotals as CheckoutTotals | undefined)?.dueTodayQar ?? 0;
   const line = values.line as CustomerLine;
+  assertEligibilityChecked(values);
+  // The order is for the customer identified now and the line chosen for them: not whoever was identified before a later change, and not a draft resumed
+  // without its eligibility result (it is never carried over, so the customer must be re-identified).
+  const checkedCustomer = (values.eligibility as EligibilityResult | undefined)?.customerId;
+  if (!line || !checkedCustomer || line.customerId !== checkedCustomer) {
+    throw new Error('The customer\'s eligibility has not been checked for this line. Return to Customer Identification, then choose the line again.');
+  }
   const msisdn = line.identifier;
 
   const products = await mockDataEngine.list<{ productId: string; name: string; mrcQAR: number }>('products');
@@ -80,9 +89,7 @@ export async function submitPreToPostOrder(
   });
 
   // The line is postpaid once the order completes (it is a postpaid line by its service name from then on); a held order leaves it prepaid.
-  if (!pendingApproval && plan) {
-    await updateRecord('installed-assets', 'installedAssetId', line.installedAssetId, { productServiceName: plan.name, promotion: plan.productId, price: plan.mrcQAR });
-  }
+  if (!pendingApproval && plan) await applyLineChange({ installedAssetId: line.installedAssetId, productId: plan.productId }, updateRecord);
 
   const activityId = newActivityId();
   const completionActivity: ActivityInput = {

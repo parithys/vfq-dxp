@@ -9,6 +9,7 @@ import { NewConnectionWizard } from './modules/new-connection/NewConnectionWizar
 import { LeadListView } from './modules/lead-management/LeadListView';
 import { isBusinessId } from './engines/businessSegment';
 import { WorkspaceNotYetBuilt } from './modules/WorkspaceNotYetBuilt';
+import { RequireFeature } from './navigation/RequireFeature';
 
 const LEGACY_PREPAID_PATHS = [
   '/mobile-prepaid/new-prepaid-tablet-step-1-contact-id-capture',
@@ -100,7 +101,7 @@ export function AppRouter() {
       <Route path="/trouble-ticketing-complaints/approval-queue" element={<TicketApprovalQueue />} />
       <Route path="/trouble-ticketing-complaints/approval-review" element={<TicketApprovalReview />} />
       <Route path="/orders" element={<OrdersWorkspace />} />
-      <Route path="/administration" element={<AdministrationWorkspace />} />
+      <Route path="/administration" element={<RequireFeature featureKey="workspace.admin-role-access-viewer"><AdministrationWorkspace /></RequireFeature>} />
       <Route path="/profile" element={<AgentProfileWorkspace />} />
       <Route path="/tasks" element={<TaskListView />} />
       <Route path="/tasks/:taskId" element={<TaskDetailView />} />
@@ -126,5 +127,6 @@ export function AppRouter() {
 // One route for both: an enterprise account ID (ENT-ACC-...) opens Business 360, anything else the customer's profile.
 function CustomerOrBusiness360() {
   const { customerId } = useParams<{ customerId: string }>();
-  return isBusinessId(customerId) ? <Business360Page /> : <Customer360Layout />;
+  // Keyed by the customer: opening another customer starts that page's local state (tab, selected service, open drawer) afresh instead of carrying the last one's over.
+  return isBusinessId(customerId) ? <Business360Page key={customerId} /> : <Customer360Layout key={customerId} />;
 }

@@ -59,6 +59,7 @@ export function PersonaSwitcher() {
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
   const history = useNotificationStore((s) => s.history);
   const markAllRead = useNotificationStore((s) => s.markAllRead);
+  const pushToast = useNotificationStore((s) => s.pushToast);
   const toggleMobileOpen = useSidebarStore((s) => s.toggleMobileOpen);
   const sidebarPinned = useSidebarStore((s) => s.pinned);
   // The queue indicator and Next Customer are a web-layout feature: not shown on a tablet or phone (narrow window or touch).
@@ -108,10 +109,21 @@ export function PersonaSwitcher() {
   // RBAC-driving personaId - otherwise the profile chip keeps showing the
   // login-time agent even after picking a different role, which is what
   // made this look like it required a sign-out/sign-in to take effect.
+  // The profile is resolved FIRST and the persona and profile are then set together: setting the persona first left the new role with the
+  // previous agent's identity for the (random 200-600 ms) lookup, and for ever if it failed. A later switch wins over an earlier one still in flight.
+  const latestSwitch = useRef(0);
   const switchRole = async (personaId: string) => {
-    setActivePersona(personaId);
-    const newProfile = await pickProfileForRole(personaId);
-    setProfile(newProfile);
+    const mine = ++latestSwitch.current;
+    try {
+      const newProfile = await pickProfileForRole(personaId);
+      if (mine !== latestSwitch.current) return;
+      setActivePersona(personaId);
+      setProfile(newProfile);
+    } catch (e) {
+      if (mine !== latestSwitch.current) return;
+      console.error('Role switch failed', e);
+      pushToast('error', 'Could not switch role.', { detail: 'The role has no agent identity configured. You are still signed in as before.' });
+    }
   };
   const handleRoleSwitch = (personaId: string) => {
     if (personaId === activePersonaId) return;

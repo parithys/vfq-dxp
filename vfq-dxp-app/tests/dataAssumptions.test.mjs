@@ -158,3 +158,21 @@ test('every updateRecord(kind, idField, ...) in the source names a real key of t
   }
   assert.deepEqual(bad, []);
 });
+
+// ---- the entity store -----------------------------------------------------------------------------------------------------------
+test('the entity store keeps its cached list and the engine in step: an update of a missing id changes neither, a remove drops it from both', async () => {
+  const { useEntityStore } = await load('/src/stores/entityStore.ts');
+  const store = useEntityStore.getState();
+  await store.loadKind('addresses');
+  await store.createRecord('addresses', { id: 'ADDR-GATE', contactId: 'CONT-X', zone: '1' });
+  const cached = () => useEntityStore.getState().records.addresses.find((r) => r.id === 'ADDR-GATE');
+  assert.equal(cached().zone, '1');
+  await store.updateRecord('addresses', 'id', 'ADDR-NOPE', { zone: '999' });
+  assert.equal(useEntityStore.getState().records.addresses.some((r) => r.zone === '999'), false, 'no record has that id: the cache must not show a change');
+  await store.updateRecord('addresses', 'id', 'ADDR-GATE', { zone: '2' });
+  assert.equal(cached().zone, '2');
+  assert.equal((await db.get('addresses', 'ADDR-GATE', 'id')).zone, '2', 'and the engine agrees');
+  await store.removeRecord('addresses', 'id', 'ADDR-GATE');
+  assert.equal(cached(), undefined);
+  assert.equal(await db.get('addresses', 'ADDR-GATE', 'id'), undefined);
+});
