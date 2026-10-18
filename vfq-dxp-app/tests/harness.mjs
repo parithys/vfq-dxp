@@ -3,6 +3,7 @@
 // node:test and the DOM-free render checks use react-dom/server.
 import { createServer } from 'vite';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -20,9 +21,14 @@ globalThis.localStorage = mem;
 globalThis.sessionStorage = { ...mem };
 globalThis.window = globalThis.window ?? globalThis;
 
+// node --test runs each file in its own process, and each starts its own Vite server. Sharing node_modules/.vite, they race to
+// pre-bundle React into it and stall on a cold cache (e.g. right after `npm ci`), so each process gets a private cache dir.
+const cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vfq-vite-'));
+process.on('exit', () => fs.rmSync(cacheDir, { recursive: true, force: true }));
+
 let server;
 export async function load(modulePath) {
-  server ??= await createServer({ root: ROOT, logLevel: 'silent', appType: 'custom', server: { middlewareMode: true, hmr: false, watch: null }, optimizeDeps: { noDiscovery: true } });
+  server ??= await createServer({ root: ROOT, cacheDir, logLevel: 'silent', appType: 'custom', server: { middlewareMode: true, hmr: false, watch: null }, optimizeDeps: { noDiscovery: true } });
   return server.ssrLoadModule(modulePath);
 }
 export async function close() {
