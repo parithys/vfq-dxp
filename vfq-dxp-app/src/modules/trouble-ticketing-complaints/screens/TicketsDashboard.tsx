@@ -1,6 +1,6 @@
 import { currentAgentId } from '../../../stores/authStore';
 import { badgeVariantFor, isSlaStopped } from '../../../lib/statusTone';
-import { SegmentedTabs } from '../../../components/primitives/SegmentedTabs';
+import { TabStrip } from '../../../components/primitives/TabStrip';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PageHeader } from '../../../components/patterns/PageHeader';
 import { useEffect, useMemo, useState } from 'react';
@@ -223,16 +223,18 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
         ))}
       </div>
 
+      <TabStrip
+        label="Ticket views"
+        items={[
+          { key: 'all', label: 'All Tickets' },
+          { key: 'mine', label: 'My Tickets' },
+          { key: 'escalated', label: 'Escalated to Me' },
+        ]}
+        active={view}
+        onChange={setView}
+        className="mb-4"
+      />
       <div className="flex flex-wrap items-end gap-3 mb-4">
-        <SegmentedTabs
-          items={[
-            { key: 'all', label: 'All Tickets' },
-            { key: 'mine', label: 'My Tickets' },
-            { key: 'escalated', label: 'Escalated to Me' },
-          ]}
-          active={view}
-          onChange={setView}
-        />
         <div className="ml-auto flex flex-wrap items-end gap-2">
           <SearchField
             aria-label="Search ticket #, customer, category, issue"

@@ -22,6 +22,16 @@ test('Button: variants render the design-system classes, sizes and disabled stat
   assert.doesNotMatch(primary, /shadow-\[/); // no glow on any button
 });
 
+test('TabStrip: tablist semantics, one tab in the tab order, accent underline and count badge on the selected tab', async () => {
+  const { TabStrip } = await load('/src/components/primitives/TabStrip.tsx');
+  const out = html(h(TabStrip, { items: [{ key: 'a', label: 'Open Tasks', count: 4 }, { key: 'b', label: 'Drafts', count: 3 }], active: 'a', onChange() {} }));
+  assert.match(out, /role="tablist"/);
+  assert.equal((out.match(/role="tab"/g) ?? []).length, 2);
+  assert.equal((out.match(/tabindex="0"/g) ?? []).length, 1);
+  assert.match(out, /aria-selected="true"[^>]*class="[^"]*border-accent[^"]*text-accent[^"]*font-bold/);
+  assert.match(out, />4</);
+});
+
 test('SegmentedTabs: tablist semantics, one tab in the tab order, selected tab is raised', async () => {
   const { SegmentedTabs } = await load('/src/components/primitives/SegmentedTabs.tsx');
   const out = html(h(SegmentedTabs, { items: [{ key: 'a', label: 'Offers' }, { key: 'b', label: 'Plans' }], active: 'a', onChange() {} }));

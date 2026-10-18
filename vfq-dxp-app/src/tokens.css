@@ -503,6 +503,11 @@
      Spacing, font weight, stacking and motion. Tailwind's own utilities are bound to these in index.css
      (@theme: --spacing, --font-weight-*), so p-4 / gap-3 / font-semibold read the tokens with no call-site edits. */
   --space-unit: 0.25rem;                      /* one spacing step: p-1 = 4px, p-4 = 16px */
+  /* Tab strip line: the thickness of BOTH the full-width rule under the tabs and the selected tab's underline (TabStrip) -
+     one value, so they can never differ. */
+  --tab-line-w: 2px;
+  /* ...and its colour: the standard card/field border, so the rule matches every card edge on the page. */
+  --tab-line-color: var(--field-card-border);
   --fw-light: 300;
   --fw-regular: 400;
   --fw-medium: 500;

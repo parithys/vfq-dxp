@@ -5,7 +5,7 @@ import { formatDateTime } from '../../lib/format';
 import { badgeVariantFor } from '../../lib/statusTone';
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { SegmentedTabs } from '../../components/primitives/SegmentedTabs';
+import { TabStrip } from '../../components/primitives/TabStrip';
 import { Button } from '../../components/primitives/Button';
 import { Badge } from '../../components/primitives/Badge';
 import { Icon } from '../../components/primitives/Icon';
@@ -780,8 +780,8 @@ export function OrderApprovalDetail() {
 
       {/* Tab strip in its own white bar; each tab's content is a set of cards (or one card) on the page background, per
           the 2026-10-10 reference. */}
-      <div className="rounded-[var(--radius-card)] bg-bg p-2">
-        <SegmentedTabs items={tabItems.map(({ key, label }) => ({ key, label }))} active={activeTab.key} onChange={setTab} label="Order sections" />
+      <div className="rounded-[var(--radius-card)] bg-bg px-4">
+        <TabStrip items={tabItems.map(({ key, label }) => ({ key, label }))} active={activeTab.key} onChange={setTab} label="Order sections" />
       </div>
       <div className="mt-4">
         {activeTab.content}

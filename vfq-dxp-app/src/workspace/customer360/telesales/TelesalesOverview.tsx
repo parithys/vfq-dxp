@@ -221,9 +221,9 @@ export function AdditionalInformation({ ctx }: { ctx: Ctx }) {
           Additional Information
         </h3>
       </div>
-      {/* Folder-style tabs: the selected tab joins the panel below it (white, red label, raised); the rest sit
-          on the grey band. */}
-      <div role="tablist" aria-label="Additional information" className="mx-5 mt-4 inline-flex max-w-full gap-1 overflow-x-auto rounded-[var(--radius-card)] bg-[var(--icon-tile-bg)] p-1">
+      {/* The horizontal tab strip (same look as TabStrip): accent underline on the selected tab. It keeps its own markup
+          because each tab names its panel (aria-controls) and handles its own arrow keys. */}
+      <div role="tablist" aria-label="Additional information" className="mx-5 mt-4 flex max-w-full overflow-x-auto shadow-[inset_0_calc(var(--tab-line-w)*-1)_0_0_var(--tab-line-color)]">
         {items.map((i, index) => {
           const selected = current?.key === i.key;
           return (
@@ -237,8 +237,8 @@ export function AdditionalInformation({ ctx }: { ctx: Ctx }) {
               tabIndex={selected ? 0 : -1}
               onClick={() => setOpen(i.key)}
               onKeyDown={(e) => onTabKeyDown(e, index)}
-              className={`flex shrink-0 items-center rounded-[var(--radius-button)] px-5 py-2 text-[length:var(--fs-body)] whitespace-nowrap transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
-                selected ? 'bg-bg text-fg font-bold shadow-[var(--shadow-dash-card)]' : 'text-[var(--icon-tile-fg)] font-medium hover:text-fg'
+              className={`flex shrink-0 items-center border-b-[length:var(--tab-line-w)] px-4 py-3 text-[length:var(--fs-body)] whitespace-nowrap transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+                selected ? 'border-accent text-accent font-bold' : 'border-transparent text-fg hover:text-accent'
               }`}
             >
               {i.label}

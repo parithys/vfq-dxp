@@ -7,7 +7,8 @@ import { buildAssetsFieldResolver } from '../sections/assetsResolvers';
 import { blacklistResolvers } from '../sections/blacklistResolvers';
 import { getVisibleTopicFields } from '../../../engines/customer360VisibilityEngine';
 import { Card, KV, Pill, dateTime, type Ctx } from './TelesalesOverview';
-import { ActionList, HeaderButton, ICON, PillTabs, SectionHeader, StatStrip, Table, TableCard, pillFor, yesNo, WideBlock } from './TelesalesKit';
+import { TabStrip } from '../../../components/primitives/TabStrip';
+import { ActionList, HeaderButton, ICON, SectionHeader, StatStrip, Table, TableCard, pillFor, yesNo, WideBlock } from './TelesalesKit';
 import { strOrEmpty as str } from '../../../lib/values';
 import { arr, rowDate, activityEntries } from './shared';
 
@@ -133,7 +134,7 @@ export function ConnectionsSection({ ctx }: { ctx: Ctx }) {
                 </span>
               </div>
               <div className="px-5 pb-3">
-                <PillTabs
+                <TabStrip
                   active={tab}
                   onChange={setTab}
                   items={[

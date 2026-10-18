@@ -7,8 +7,7 @@ import { DataTable } from '../../components/primitives/DataTable';
 import type { Column } from '../../components/primitives/DataTable';
 import { Badge } from '../../components/primitives/Badge';
 import { ErrorBanner } from '../../components/primitives/ErrorBanner';
-import { Tabs } from '../../components/primitives/Tabs';
-import type { TabItem } from '../../components/primitives/Tabs';
+import { SegmentedTabs } from '../../components/primitives/SegmentedTabs';
 import { PageHeader } from '../../components/patterns/PageHeader';
 
 interface QTicketHistoryRecord {
@@ -176,17 +175,10 @@ export function QnomyTicketHistory() {
     />
   );
 
-  const tabs: TabItem[] = [
-    {
-      key: 'today',
-      label: `Today's Tickets (${todayRows.length})`,
-      content: table(todayRows, "No tickets handled today yet."),
-    },
-    {
-      key: '30days',
-      label: `Last 30 Days (${last30Rows.length})`,
-      content: table(last30Rows, 'No tickets handled in the last 30 days.'),
-    },
+  // Today / Last 30 Days narrows the same ticket list, so it is a filter: the pill switcher, not the tab strip.
+  const views = [
+    { key: 'today' as const, label: `Today's Tickets (${todayRows.length})` },
+    { key: '30days' as const, label: `Last 30 Days (${last30Rows.length})` },
   ];
 
   return (
@@ -196,7 +188,10 @@ export function QnomyTicketHistory() {
         fuller record.
       </>} />
       <ErrorBanner message={loadError} />
-      <Tabs items={tabs} activeKey={view} onChange={(key) => setView(key as 'today' | '30days')} />
+      <SegmentedTabs items={views} active={view} onChange={setView} label="Ticket period" />
+      <div className="pt-4">
+        {view === 'today' ? table(todayRows, 'No tickets handled today yet.') : table(last30Rows, 'No tickets handled in the last 30 days.')}
+      </div>
     </div>
   );
 }

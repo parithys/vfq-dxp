@@ -6,8 +6,9 @@ export interface SegmentedTabItem<K extends string = string> {
 }
 
 /**
- * The one tab-strip look in the app: a pale blue-grey track holding pill tabs, the selected one white and raised with a
- * bold label. Every tab strip (Tabs, plan tabs, Customer 360 and Telesales strips, filter tabs) renders through this.
+ * The pill tab switcher: a pale blue-grey track holding pill tabs, the selected one white and raised with a bold label.
+ * Use it for FILTER tabs only - tabs that narrow or re-slice the same data (a status, a time range, a chart series).
+ * Tabs that navigate between sections or switch content use TabStrip (the horizontal underline strip) instead.
  *
  * Keyboard: arrows / Home / End move between tabs and select them, and only the selected tab is in the Tab order
  * (the WAI-ARIA tabs pattern). The strip scrolls sideways instead of wrapping.

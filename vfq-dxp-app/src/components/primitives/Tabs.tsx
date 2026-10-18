@@ -1,6 +1,6 @@
 import { Tooltip } from './Tooltip';
 import { PanelIcon } from './PanelIcon';
-import { SegmentedTabs } from './SegmentedTabs';
+import { TabStrip } from './TabStrip';
 import { useState } from 'react';
 import { Icon } from './Icon';
 import type { ReactNode } from 'react';
@@ -14,7 +14,7 @@ export interface TabItem {
 }
 
 // Backs Customer 360 / Account 360 (Pattern 3) per component-catalogue.md §1.
-// `orientation` defaults to the original horizontal underline tab-bar (every
+// `orientation` defaults to the horizontal tab strip (TabStrip, the underline look - every
 // existing consumer keeps that look unchanged) - 'vertical' renders the same
 // tokens/states (border-accent/text-accent active, border-transparent/text-fg-2
 // idle) as a left-hand nav list instead, for consumers with many tabs where a
@@ -79,11 +79,11 @@ export function Tabs({
     <div>
       {toolbar ? (
         <div className="flex flex-wrap items-center gap-3">
-          <SegmentedTabs items={items} active={active} onChange={setActive} />
+          <TabStrip items={items} active={active} onChange={setActive} className="flex-1 min-w-0" />
           <div className="flex min-w-0 flex-1 basis-[30%] items-center justify-end gap-3">{toolbar}</div>
         </div>
       ) : (
-        <SegmentedTabs items={items} active={active} onChange={setActive} />
+        <TabStrip items={items} active={active} onChange={setActive} />
       )}
       <div className="pt-4">{activeItem?.content}</div>
     </div>
