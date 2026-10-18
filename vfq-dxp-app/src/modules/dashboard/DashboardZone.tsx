@@ -78,6 +78,21 @@ export const ZONE_ICONS = ICONS;
 
 /** Grid density follows the zone's size, so the same zone definition serves a
  * full-width Customer-First dashboard and a half-width Hybrid column. */
+// Static class names (Tailwind reads them at build time). On a wide screen N items (up to six) share one row.
+const XL_COLS: Record<number, string> = { 1: 'xl:grid-cols-1', 2: 'xl:grid-cols-2', 3: 'xl:grid-cols-3', 4: 'xl:grid-cols-4', 5: 'xl:grid-cols-5', 6: 'xl:grid-cols-6' };
+
+/**
+ * How many columns item `i` of `n` takes, so that every row - including the last, partly filled one - spans the full width.
+ * The grid is 2 columns on a phone, 6 from `sm` (items take 2 of 6, i.e. three across) and, on a wide screen, one column
+ * per item. A last row left with one item gives it the whole row; with two items they split it in half.
+ */
+function itemSpan(i: number, n: number, size: ZoneSize) {
+  const rest = n % 3;
+  const sm = rest === 1 && i === n - 1 ? 'sm:col-span-6' : rest === 2 && i >= n - 2 ? 'sm:col-span-3' : 'sm:col-span-2';
+  const phone = size !== 'half' && n % 2 === 1 && i === n - 1 ? 'col-span-2' : '';
+  return `${phone} ${sm} ${size !== 'half' && n <= 6 ? 'xl:col-span-1' : ''}`;
+}
+
 function gridCols(size: ZoneSize, full: string, half: string) {
   return size === 'half' ? half : full;
 }
@@ -149,9 +164,11 @@ export function DashboardZone({
         </div>
       </div>
 
-      {spec.tiles.length > 0 && (
-        <div className={`grid gap-4 mb-6 ${gridCols(size, 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-5', 'grid-cols-1 sm:grid-cols-3')}`}>
-          {spec.tiles.map((tile) => {
+      {/* The zone's tiles and figure cards share ONE grid, so they sit side by side in a single row on a wide screen (up to five
+          across) and every card is as wide as its content needs, instead of two rows of very wide, mostly empty cards. */}
+      {spec.tiles.length + spec.cards.length > 0 && (
+        <div className={`grid gap-4 mb-6 ${gridCols(size, `grid-cols-2 sm:grid-cols-6 ${spec.tiles.length + spec.cards.length <= 6 ? XL_COLS[spec.tiles.length + spec.cards.length] : ''}`, 'grid-cols-1 sm:grid-cols-6')}`}>
+          {spec.tiles.map((tile, ti) => {
             const body = (
               <>
                 {tile.pill ? (
@@ -167,7 +184,7 @@ export function DashboardZone({
                 <div className="text-fg-2 text-[length:var(--fs-caption)] mt-2">{tile.label}</div>
               </>
             );
-            const shell = 'rounded-[var(--radius-card-lg)] border border-[var(--field-card-border)] bg-bg p-5';
+            const shell = `rounded-[var(--radius-card-lg)] border border-[var(--field-card-border)] bg-bg p-5 ${itemSpan(ti, spec.tiles.length + spec.cards.length, size)}`;
             if (readOnly || !tile.to) return <div key={tile.key} className={shell}>{body}</div>;
             return (
               <Link
@@ -179,14 +196,9 @@ export function DashboardZone({
               </Link>
             );
           })}
-        </div>
-      )}
-
-      {spec.cards.length > 0 && (
-        <div className={`grid gap-4 mb-6 ${gridCols(size, 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3', 'grid-cols-1 sm:grid-cols-2')}`}>
-          {spec.cards.map((card) => (
-            // Fixed height so every card is the same size whatever its title length, with the figure pinned to the bottom.
-            <div key={card.label} className="rounded-[var(--radius-card-lg)] border border-[var(--field-card-border)] bg-bg p-5 min-h-[11.5rem] flex flex-col">
+          {spec.cards.map((card, ci) => (
+            // As tall as its row (the grid stretches it), so every card in the row matches, with the figure pinned to the bottom.
+            <div key={card.label} className={`rounded-[var(--radius-card-lg)] border border-[var(--field-card-border)] bg-bg p-5 flex flex-col ${itemSpan(spec.tiles.length + ci, spec.tiles.length + spec.cards.length, size)}`}>
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div className="min-w-0">
                   <div className="font-bold text-fg text-[length:var(--fs-caption)] line-clamp-2">{card.label}</div>

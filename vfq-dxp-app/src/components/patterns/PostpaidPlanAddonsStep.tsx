@@ -224,7 +224,7 @@ export function PostpaidPlanAddonsStep({
                 and reset when another plan is chosen. Every other plan stays a plain card. */}
             {/* The plan carried over from the previous step, for context while choosing extras. */}
             {mode === 'extras' && selectedPlan && (
-              <section aria-label="Selected plan" className="rounded-[var(--radius-card-lg)] border border-[var(--field-card-selected)] bg-[linear-gradient(135deg,var(--surface-warm),var(--bg)_90%)] p-5 space-y-4">
+              <section aria-label="Selected plan" className="space-y-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0 space-y-2">
                     <span className="inline-flex rounded-[var(--radius-pill)] bg-[var(--tint-pink-bg)] px-2.5 py-0.5 text-[var(--tint-pink-fg)] text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide">

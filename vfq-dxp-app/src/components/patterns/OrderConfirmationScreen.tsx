@@ -72,8 +72,8 @@ export function OrderConfirmationScreen({
       </div>
 
       {/* Two columns only when there is a handover panel to put in the second one: with none (a physical SIM has no QR)
-          the receipt stands alone at a readable width rather than beside an empty column. */}
-      <div className={`grid grid-cols-1 gap-8 mt-8 ${handoverPanel ? 'lg:grid-cols-2' : 'max-w-xl items-start'}`}>
+          the receipt stands alone, centred, at a readable width rather than beside an empty column. */}
+      <div className={`grid grid-cols-1 gap-8 mt-8 ${handoverPanel ? 'lg:grid-cols-2' : 'max-w-xl mx-auto items-start'}`}>
         <dl className="card p-5">
           {summaryLines.map((line) => (
             <div key={line.label} className="flex justify-between gap-4 py-2 border-b border-border-soft last:border-0">

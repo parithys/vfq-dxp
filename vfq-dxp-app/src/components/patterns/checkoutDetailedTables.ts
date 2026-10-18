@@ -10,7 +10,8 @@ interface DetailedTablesArgs extends CheckoutSummaryDerived {
   simType: SimTypeValue | undefined;
 }
 
-// The 'detailed' layout's read-back: the Order Summary and the Approximate Bill Explainer.
+// The 'detailed' layout's read-back: the Order Summary, the Upfront Charges (what is paid at the counter today) and the
+// Approximate Bill Explainer.
 export function buildDetailedTables({
   plan,
   addons,
@@ -21,6 +22,7 @@ export function buildDetailedTables({
   starTier,
   starEntitlementQar,
   numberChargeQar,
+  dueTodayQar,
   creditLimitQar,
   charges,
   monthlyRecurringQar,
@@ -86,14 +88,17 @@ export function buildDetailedTables({
       ],
     },
     {
-      title: 'Approximate Bill Explainer',
+      // What the customer pays at the counter today; the Total Payable Today line that used to end the explainer lives here.
+      title: 'Upfront Charges',
       rows: [
-        ...billRows,
-        {
-          label: 'Total Payable Today',
-          value: `Due value ${q(numberChargeQar)}${hrnAdvance > 0 ? `, Upfront Charges: ${q(hrnAdvance)}` : ''}`,
-        },
+        { label: 'Number Charge After Discount', value: q(numberChargeQar) },
+        { label: 'HRN Advance', value: q(hrnAdvance) },
+        { label: 'Total Payable Today', value: q(dueTodayQar), boldLabel: true, boldValue: true },
       ],
+    },
+    {
+      title: 'Approximate Bill Explainer',
+      rows: billRows,
     },
   ];
   return tables;

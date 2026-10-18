@@ -1,12 +1,10 @@
-import { useState } from 'react';
-import { Button } from '../primitives/Button';
 import { SignaturePad } from '../primitives/SignaturePad';
 
 /**
- * The standard "Please Sign" control, for every journey that captures a
- * signature: a Please Sign button, and - once pressed - the signing canvas
- * opening right below it with Clear and Save. No side drawer. Save hands the
- * signature (a PNG data URL) to `onSave` and closes it.
+ * The standard signature control, for every journey that captures a signature: a static "Please Sign" label and the
+ * signing canvas always on screen below it, with Clear and Save. The pad is disabled until a precondition (e.g. agreeing
+ * to the terms) is met, and goes back to disabled - discarding anything drawn - if that is withdrawn. Save hands the
+ * signature (a PNG data URL) to `onSave`.
  */
 export function SignatureCapture({
   onSave,
@@ -15,26 +13,14 @@ export function SignatureCapture({
 }: {
   onSave: (dataUrl: string) => void;
   label?: string;
-  /** Keeps the Please Sign button off until a precondition (e.g. agreeing to the terms) is met. */
+  /** Keeps the pad disabled until a precondition (e.g. agreeing to the terms) is met. */
   disabled?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
   return (
     <div className="mt-3">
-      <Button variant="primary" onClick={() => setOpen(true)} disabled={open || disabled}>
-        {label}
-      </Button>
-      {open && (
-        <div className="mt-3">
-          <SignaturePad
-            doneLabel="Save"
-            onDone={(dataUrl) => {
-              onSave(dataUrl);
-              setOpen(false);
-            }}
-          />
-        </div>
-      )}
+      <p className={`mb-2 font-bold text-[length:var(--fs-body)] ${disabled ? 'text-fg-2' : 'text-fg'}`}>{label}</p>
+      {/* key: switching between disabled and enabled remounts the pad, which discards anything drawn. */}
+      <SignaturePad key={String(disabled)} doneLabel="Save" disabled={disabled} onDone={onSave} />
     </div>
   );
 }

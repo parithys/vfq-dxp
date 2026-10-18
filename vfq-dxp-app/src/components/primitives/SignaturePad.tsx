@@ -7,11 +7,13 @@ interface SignaturePadProps {
   doneLabel?: string;
   /** When given, a Cancel button is shown beside Clear and Save. */
   onCancel?: () => void;
+  /** Greyed out and not drawable. To discard a drawing when disabling, remount the pad (give it a new `key`). */
+  disabled?: boolean;
 }
 
 // Backs the "Please Sign" pad modal per Pattern 6 (CAF/Contract Signature
 // Capture) - drawn signature, Clear/Done buttons (SCR-058, SCR-084, etc.).
-export function SignaturePad({ onDone, doneLabel = 'Done', onCancel }: SignaturePadProps) {
+export function SignaturePad({ onDone, doneLabel = 'Done', onCancel, disabled = false }: SignaturePadProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
   const [hasDrawn, setHasDrawn] = useState(false);
@@ -22,6 +24,7 @@ export function SignaturePad({ onDone, doneLabel = 'Done', onCancel }: Signature
   };
 
   const start = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (disabled) return;
     drawing.current = true;
     const ctx = canvasRef.current!.getContext('2d')!;
     const { x, y } = getPos(e);
@@ -30,7 +33,7 @@ export function SignaturePad({ onDone, doneLabel = 'Done', onCancel }: Signature
   };
 
   const move = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!drawing.current) return;
+    if (disabled || !drawing.current) return;
     const ctx = canvasRef.current!.getContext('2d')!;
     const { x, y } = getPos(e);
     ctx.lineTo(x, y);
@@ -66,10 +69,11 @@ export function SignaturePad({ onDone, doneLabel = 'Done', onCancel }: Signature
         onPointerMove={move}
         onPointerUp={end}
         onPointerLeave={end}
-        className="border border-[var(--grey-form)] rounded-[var(--radius-card)] bg-[var(--paper)] touch-none w-full max-w-[480px]"
+        aria-disabled={disabled || undefined}
+        className={`border border-[var(--grey-form)] rounded-[var(--radius-card)] bg-[var(--paper)] touch-none w-full max-w-[480px] ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-crosshair'}`}
       />
       <div className="flex gap-2 mt-2">
-        <Button variant="secondary" onClick={clear}>
+        <Button variant="secondary" onClick={clear} disabled={disabled}>
           Clear
         </Button>
         {onCancel && (
@@ -77,7 +81,7 @@ export function SignaturePad({ onDone, doneLabel = 'Done', onCancel }: Signature
             Cancel
           </Button>
         )}
-        <Button variant="primary" onClick={done} disabled={!hasDrawn}>
+        <Button variant="primary" onClick={done} disabled={disabled || !hasDrawn}>
           {doneLabel}
         </Button>
       </div>

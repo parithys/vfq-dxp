@@ -5,8 +5,8 @@
 export const CARD_SELECTED = 'border-[var(--field-card-selected)] bg-[linear-gradient(135deg,var(--surface-warm),var(--bg)_90%)] shadow-[var(--shadow-selected-ring)]';
 export const CARD_IDLE =
   'border-[var(--field-card-border)] bg-bg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]';
-/** A card the app singles out (the Recommended offer, a Popular plan): red border, soft pink wash. */
-export const CARD_HIGHLIGHT = 'border-[var(--field-card-selected)] bg-[linear-gradient(135deg,var(--surface-warm),var(--bg)_90%)] hover:shadow-[var(--shadow-selected-ring)]';
+/** A card the app singles out (the Recommended offer, a Popular plan): blue border, flat soft blue wash (red is kept for the selected card). */
+export const CARD_HIGHLIGHT = 'border-[var(--signal-blue)] bg-[var(--tone-blue-bg-soft)] hover:shadow-[inset_0_0_0_1px_var(--signal-blue)]';
 
 /** The faint concentric circles at the bottom-right of a selected card, behind its content (the card needs `isolate`). Clipped to the card's own rounded corners. */
 export function SelectedCardTexture() {

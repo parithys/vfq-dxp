@@ -235,10 +235,10 @@ export function PersonaSwitcher() {
           </Tooltip>
           {open === 'notifications' && (
             <div className="absolute right-0 mt-2 w-80 card shadow-raised z-[var(--z-popover)] max-h-96 overflow-y-auto">
-              <p className="px-4 py-3 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted border-b border-border-soft">Notifications</p>
+              <p className="px-4 py-3 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-fg border-b border-border-soft">Notifications</p>
               {inbox.items.length > 0 && (
                 <div className="border-b border-border-soft">
-                  <p className="px-4 pt-3 pb-1 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted">Workflow updates</p>
+                  <p className="px-4 pt-3 pb-1 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-fg">Workflow updates</p>
                   {inbox.items.map((i) => (
                     <button
                       key={i.id}

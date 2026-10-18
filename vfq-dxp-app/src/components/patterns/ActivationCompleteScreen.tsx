@@ -286,7 +286,7 @@ export function ActivationCompleteScreen({
         </div>
       </Modal>
       {/* Always shown: the fibre offer when the location is ready for service, otherwise why there is none. */}
-      <section aria-label="Eligible offers" className="max-w-6xl mx-auto mt-6 card p-5 no-print print:hidden">
+      <section aria-label="Eligible offers" className="w-full max-w-xl mx-auto mt-6 card p-5 text-center no-print print:hidden">
         <h2 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-3">Eligible offers</h2>
         {fibre === 'rfs' ? (
           <ul className="divide-y divide-border-soft">

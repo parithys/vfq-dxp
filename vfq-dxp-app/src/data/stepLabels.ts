@@ -10,7 +10,7 @@ export const BILLING_PROFILE_LABEL = 'Billing Profile';
 /** The address a service is activated at. */
 export const SERVICE_ADDRESS_LABEL = 'Address';
 /** Choose the plan the order is for. */
-export const PLAN_SELECTION_LABEL = 'Plan';
+export const PLAN_SELECTION_LABEL = 'Offers & Plans';
 /** The Customer Agreement Form and the customer's signature. */
 export const CAF_SIGNATURE_LABEL = 'CAF & Signature';
 /** The order read-back before signing and payment. */

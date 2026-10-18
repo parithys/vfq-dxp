@@ -217,7 +217,7 @@ export function QidImageUpload({
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
               <Icon path={SCAN_CORNERS} className="w-6 h-6 text-accent shrink-0" />
-              <span className="text-fg font-bold uppercase tracking-wide text-[length:var(--fs-body)] truncate">Duplex Scanner</span>
+              <span className="text-fg font-bold uppercase tracking-wide text-[length:var(--fs-body)] truncate">ID card optical scanner surface</span>
             </div>
             <span className="flex items-center gap-2 text-fg-2 text-[length:var(--fs-caption)] shrink-0">
               <span className={`w-2.5 h-2.5 rounded-[var(--radius-pill)] ${canScan ? 'bg-success' : 'bg-danger'}`} aria-hidden="true" />
@@ -232,11 +232,7 @@ export function QidImageUpload({
               <span aria-hidden="true" className="absolute right-2 top-2 w-4 h-4 border-r-2 border-t-2 border-accent" />
               <span aria-hidden="true" className="absolute left-2 bottom-2 w-4 h-4 border-l-2 border-b-2 border-accent" />
               <span aria-hidden="true" className="absolute right-2 bottom-2 w-4 h-4 border-r-2 border-b-2 border-accent" />
-              <span className="absolute left-6 top-4">{documentType === 'QID' ? 'State of Qatar QID' : documentType}</span>
-              <span className="absolute right-6 top-4">Chip · NFC</span>
               <Icon path={SCAN_CORNERS} className="w-12 h-12 text-border" />
-              <span className="absolute left-6 bottom-4">ID-1 format (85.6 × 54mm)</span>
-              <span className="absolute right-6 bottom-4">MRZ zone</span>
             </div>
             <div className="space-y-1.5 max-w-xl">
               <h4 className="text-fg font-bold text-[length:var(--fs-h5)]">
