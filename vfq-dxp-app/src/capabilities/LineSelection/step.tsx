@@ -38,7 +38,9 @@ export function lineSelectionStep(opts: {
     ),
     isValid: (values) => {
       const line = values.line as CustomerLine | undefined;
-      return Boolean(line) && !lineIneligibility(line!, { requirePlan: opts.requirePlan });
+      // The line has to belong to the customer identified NOW: changing the customer after choosing a line leaves the old line in the draft.
+      const customerId = (values.eligibility as EligibilityResult | undefined)?.customerId;
+      return Boolean(line) && line!.customerId === customerId && !lineIneligibility(line!, { requirePlan: opts.requirePlan });
     },
   };
 }

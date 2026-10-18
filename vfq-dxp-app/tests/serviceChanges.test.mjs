@@ -7,7 +7,7 @@ globalThis.window.removeEventListener ??= () => {};
 
 // Change Postpaid Plan, Change Prepaid Pack and Add Add-On: the lines of a customer, the steps each journey runs, the pricing of an
 // existing line, and what a submitted order does.
-let lines, steps, submit, cart, approval, addons;
+let lines, steps, submit, cart, approval, addons, apply, eng;
 before(async () => {
   await boot();
   lines = await load('/src/components/patterns/lineSelectionModel.ts');
@@ -16,6 +16,8 @@ before(async () => {
   cart = await load('/src/components/patterns/prepaidCartModel.ts');
   approval = await load('/src/modules/new-connection/approvalRouting.ts');
   addons = await load('/src/capabilities/AddonsSelection/step.tsx');
+  apply = await load('/src/modules/mobile-service-changes/applyServiceChange.ts');
+  eng = await load('/src/engines/customerServicesEngine.ts');
 });
 after(close);
 
@@ -148,4 +150,23 @@ test('a prepaid pack change collects the pack; an add-on records the add-ons and
   assert.deepEqual([order.orderType, order.orderSubType, order.addonIds], ['Add-On', 'Postpaid Add-On', ['PROD-101']]);
   assert.equal(a.updated.length, 0, 'an add-on does not change the line\'s plan');
   assert.match(added.planName, /International 50/);
+});
+
+test('an approved plan or pack change moves the line, by the same function a completed one uses; an add-on or an unknown plan changes nothing', async () => {
+  assert.deepEqual(apply.lineChangeOf({ orderType: 'Plan Change', installedAssetId: 'IA-1', productId: 'PROD-104' }), { installedAssetId: 'IA-1', productId: 'PROD-104' });
+  assert.deepEqual(apply.lineChangeOf({ orderType: 'Prepaid Pack Change', installedAssetId: 'IA-2', productId: 'PROD-303' }), { installedAssetId: 'IA-2', productId: 'PROD-303' });
+  for (const o of [{ orderType: 'Add-On', installedAssetId: 'IA-1', productId: 'PROD-104' }, { orderType: 'Plan Change', productId: 'PROD-104' }, { orderType: 'Plan Change', installedAssetId: 'IA-1' }, { orderType: 'New Postpaid Activation', installedAssetId: 'IA-1', productId: 'P' }, {}]) {
+    assert.equal(apply.lineChangeOf(o), undefined, JSON.stringify(o));
+  }
+  const updates = [];
+  const update = async (kind, idField, id, patch) => void updates.push({ kind, idField, id, patch });
+  assert.equal(await apply.applyLineChange({ installedAssetId: 'IA-9154', productId: 'PROD-104' }, update), true);
+  const post = updates[0].patch;
+  assert.equal(eng.mobileLineTypeOfName(post.productServiceName), 'postpaid', 'the renamed line is still a postpaid line');
+  assert.deepEqual([updates[0].kind, updates[0].idField, post.promotion, post.price], ['installed-assets', 'installedAssetId', 'PROD-104', 350]);
+  assert.equal(await apply.applyLineChange({ installedAssetId: 'IA-9004', productId: 'PROD-303' }, update), true);
+  assert.equal(eng.mobileLineTypeOfName(updates[1].patch.productServiceName), 'prepaid');
+  assert.equal(updates[1].patch.price, 100, 'a prepaid pack is priced at its starter charge, not a rental');
+  assert.equal(await apply.applyLineChange({ installedAssetId: 'IA-1', productId: 'PROD-NOPE' }, update), false);
+  assert.equal(updates.length, 2, 'an unknown plan writes nothing');
 });

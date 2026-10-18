@@ -84,9 +84,11 @@ export function useWorkflowInbox() {
     return out.sort((a, b) => b.at - a.at).slice(0, 12);
   }, [orders, activities, personaId, jobTitle, userId]);
 
-  const unseen = items.filter((i) => !seen.has(i.id)).length;
+  // Seen per signed-in agent: after a role switch the next agent has not seen what the previous one opened.
+  const seenKey = (id: string) => `${userId ?? ''}|${id}`;
+  const unseen = items.filter((i) => !seen.has(seenKey(i.id))).length;
   const markSeen = () => {
-    const next = new Set([...seen, ...items.map((i) => i.id)]);
+    const next = new Set([...seen, ...items.map((i) => seenKey(i.id))]);
     setSeen(next);
     try {
       sessionStorage.setItem(SEEN_KEY, JSON.stringify([...next]));

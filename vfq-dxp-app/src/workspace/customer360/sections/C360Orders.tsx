@@ -4,8 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../../components/primitives/Icon';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
-import { ActionButton, DetailRows, FilterSelect, GridTable, IC, Pager, Panel, Pill, SearchBox, TabPage, UnderlineTabs, ViewPill, fmtDate, fmtDateTime, usePaging } from './C360Kit';
+import { ActionButton, DetailRows, FilterSelect, GridTable, IC, Pager, Panel, Pill, SearchBox, TabPage, ViewPill, fmtDate, fmtDateTime, usePaging } from './C360Kit';
 import type { Tone } from './C360Kit';
+import { SegmentedTabs } from '../../../components/primitives/SegmentedTabs';
 import { Dv } from '../demoValues';
 import { str } from '../../../lib/values';
 import { isTonPending, orderBucket } from '../../../lib/statusTone';
@@ -152,7 +153,9 @@ export function C360Orders({ data }: { data: Customer360Data; services: Customer
       <div className="grid grid-cols-1 @6xl:grid-cols-[minmax(0,1fr)_22rem] gap-4 items-start">
         <section className="card min-w-0">
           <div className="px-4 pt-2">
-            <UnderlineTabs
+            {/* The tabs narrow the one list below them by status - a filter, so the pill switcher; underline tabs are for moving between sections. */}
+            <SegmentedTabs
+              label="Orders by status"
               active={tab}
               onChange={(k) => goTab(k as TabKey)}
               items={[

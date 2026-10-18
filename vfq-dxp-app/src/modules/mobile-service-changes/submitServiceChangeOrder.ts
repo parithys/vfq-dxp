@@ -7,8 +7,10 @@ import { emailVerification, maskEmail } from '../../capabilities';
 import type { ConfirmedOrder, CustomerLine, GuidedContactValue, PrepaidCheckoutTotals } from '../../capabilities';
 import type { CustomerTypeValue } from '../../capabilities/CustomerType/customerTypeModel';
 import type { CheckoutTotals } from '../../components/patterns/checkoutSummaryModel';
+import { assertEligibilityChecked } from '../../engines/eligibilityGuard';
 import type { EligibilityResult } from '../../components/domain/eligibilityTypes';
 import type { useEntityStore } from '../../stores/entityStore';
+import { applyLineChange } from './applyServiceChange';
 import { routesToApproval } from '../new-connection/approvalRouting';
 
 type EntityStore = ReturnType<typeof useEntityStore.getState>;
@@ -48,6 +50,13 @@ export async function submitServiceChangeOrder(
   const line = values.line as CustomerLine;
   const contact = values.contact as GuidedContactValue;
   const eligibility = values.eligibility as EligibilityResult | undefined;
+  assertEligibilityChecked(values);
+  // The order is for the customer identified now and the line chosen for them: not whoever was identified before a later change, and not a draft resumed
+  // without its eligibility result (it is never carried over, so the customer must be re-identified).
+  const checkedCustomer = (values.eligibility as EligibilityResult | undefined)?.customerId;
+  if (!line || !checkedCustomer || line.customerId !== checkedCustomer) {
+    throw new Error('The customer\'s eligibility has not been checked for this line. Return to Customer Identification, then choose the line again.');
+  }
   const customerType = values.customerType as CustomerTypeValue | undefined;
   const addonIds = (values.addonIds as string[] | undefined) ?? [];
   const prepaid = line.lineType === 'prepaid';
@@ -95,14 +104,8 @@ export async function submitServiceChangeOrder(
     createdBy: currentAgentId(),
     sourceChannel: 'Desktop',
   });
-  // The line moves to the new plan or pack once the order completes; a held order leaves it as it is.
-  if (changesPlan && !pendingApproval && newPlan) {
-    await updateRecord('installed-assets', 'installedAssetId', line.installedAssetId, {
-      productServiceName: newPlan.name,
-      promotion: newPlan.productId,
-      price: prepaid ? (newPlan.starterPackChargeQAR ?? 0) : (newPlan.mrcQAR ?? 0),
-    });
-  }
+  // The line moves to the new plan or pack once the order completes. A held order leaves it as it is; the approver's approval applies it (applyApprovedLineChange).
+  if (changesPlan && !pendingApproval && newPlan) await applyLineChange({ installedAssetId: line.installedAssetId, productId: newPlan.productId }, updateRecord);
 
   const label = JOURNEY_LABEL[kind];
   const activityId = newActivityId();

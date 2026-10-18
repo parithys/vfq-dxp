@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useWorkflowStore } from '../../../stores/workflowStore';
+import { useNotificationStore } from '../../../stores/notificationStore';
 import type { WizardStep } from './guidedWizardTypes';
+import { forwardJumpAllowed } from './wizardNavigation';
 
 export function useWizardStepNavigation({
   wizardId,
@@ -21,6 +23,7 @@ export function useWizardStepNavigation({
 }) {
   const setStep = useWorkflowStore((s) => s.setStep);
   const clearDraft = useWorkflowStore((s) => s.clearDraft);
+  const pushToast = useNotificationStore((s) => s.pushToast);
   // Guards against duplicate order submission: onSubmit is async (mock CRUD +
   // navigation) but goNext used to fire-and-forget it without disabling the
   // button, so a second click landing before the first submission's own
@@ -80,6 +83,10 @@ export function useWizardStepNavigation({
     try {
       await onSubmit(values);
       clearDraft(wizardId);
+    } catch (e) {
+      // A failed submit (a validation gate, a SIM taken since it was scanned) is told to the agent; the draft is kept so they can fix it and try again.
+      console.error('Submit failed', e);
+      pushToast('error', 'The order could not be submitted.', { detail: e instanceof Error ? e.message : undefined });
     } finally {
       submittingRef.current = false;
       setSubmitting(false);
@@ -97,7 +104,9 @@ export function useWizardStepNavigation({
   // Steps beyond maxReached stay unreachable so forward validation gating
   // is still enforced.
   const goToStep = (index: number) => {
-    if (index !== currentIndex && index <= maxReached) setStep(wizardId, index);
+    if (index === currentIndex || index > maxReached) return;
+    if (!forwardJumpAllowed(activeSteps, currentIndex, index, values)) return;
+    setStep(wizardId, index);
   };
 
   const goToStepKey = (key: string) => {

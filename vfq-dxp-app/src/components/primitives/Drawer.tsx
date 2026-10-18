@@ -59,7 +59,7 @@ export function Drawer({ open, onClose, title, children, footer, header, bodyCla
     <div className="fixed inset-0 z-[var(--z-overlay)] bg-[var(--black-80)]">
       <div
         ref={panelRef}
-        className={`fixed right-0 inset-y-0 z-[var(--z-overlay)] w-[50vw] min-w-[420px] max-w-full flex flex-col bg-bg border-l border-border-soft shadow-raised transform transition-transform duration-[var(--motion-base)] ease-[var(--ease-standard)] ${
+        className={`fixed right-0 inset-y-0 z-[var(--z-overlay)] w-[50vw] min-w-[min(420px,100vw)] max-w-full flex flex-col bg-bg border-l border-border-soft shadow-raised transform transition-transform duration-[var(--motion-base)] ease-[var(--ease-standard)] ${
           entered ? 'translate-x-0' : 'translate-x-full'
         }`}
         role="dialog"

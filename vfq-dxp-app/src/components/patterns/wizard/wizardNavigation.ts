@@ -26,3 +26,14 @@ export function deriveWizardNav(
   const abandonHidden = hideAbandonFromIndex !== -1 && currentIndex >= hideAbandonFromIndex;
   return { activeSteps, currentIndex, maxReached, currentStep, canProceed, isCustomerFacing, isLocked, abandonHidden };
 }
+
+/**
+ * Whether the agent may jump FORWARD from `from` to `to` (a rail click, a summary Edit, "Return to <furthest step>"): every active step from the one
+ * they are on up to the target must pass its own `isValid`. Going back is never blocked, and Continue keeps its own rules (a step that offers its own
+ * forward action, such as Proceed to Approval, is unaffected). Without this a hard stop reached by editing an earlier step - a new ID that fails
+ * eligibility - could be walked past by jumping straight back to the furthest step.
+ */
+export function forwardJumpAllowed(activeSteps: WizardStep[], from: number, to: number, values: Record<string, unknown>): boolean {
+  if (to <= from) return true;
+  return activeSteps.slice(from, to).every((s) => (s.isValid ? s.isValid(values) : true));
+}

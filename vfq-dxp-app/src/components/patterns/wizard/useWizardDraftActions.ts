@@ -4,10 +4,15 @@ import { useWorkflowStore } from '../../../stores/workflowStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import { useAuthStore } from '../../../stores/authStore';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
+import { useEntityStore } from '../../../stores/entityStore';
 import { logActivity } from '../../../engines/activityEngine';
 import { useCustomerContext } from '../../../stores/customerContextStore';
 import type { WizardStep } from './guidedWizardTypes';
 import { newTaskId } from '../../../lib/taskId';
+
+// Draft orders and their tasks are written through the entity store, so the lists the dashboard, task list and inbox have cached see them (writing the
+// engine directly left those lists stale until a reload).
+const entity = () => useEntityStore.getState();
 
 /** The customer a draft is for, from whatever the Contact step has captured by now. */
 function draftCustomerName(values: Record<string, unknown>): string {
@@ -103,7 +108,7 @@ export function useWizardDraftActions({
     await recordActivity('abandoned', draftOrderId, activityComments);
     useCustomerContext.getState().endJourney(wizardId);
     setActivityComments('');
-    if (draftOrderId) await mockDataEngine.remove('orders', draftOrderId);
+    if (draftOrderId) await entity().removeRecord('orders', 'orderId', draftOrderId);
     clearDraft(wizardId);
     setAbandonOpen(false);
     onAbandon?.();
@@ -124,16 +129,16 @@ export function useWizardDraftActions({
     const activeKey = activeSteps[currentIndex]?.key;
     if (!activeKey) return undefined;
     if (draftOrderId) {
-      await mockDataEngine.update('orders', draftOrderId, {
+      await entity().updateRecord('orders', 'orderId', draftOrderId, {
         draftStepKey: activeKey,
         draftValues: values,
       });
       // The Draft Orders list shows when the draft last changed.
       const task = (await mockDataEngine.list<{ taskId: string; relatedOrderId?: string }>('tasks')).find((t) => t.relatedOrderId === draftOrderId);
-      if (task) await mockDataEngine.update('tasks', task.taskId, { updatedAt: new Date().toISOString() });
+      if (task) await entity().updateRecord('tasks', 'taskId', task.taskId, { updatedAt: new Date().toISOString() });
     } else {
       const newOrderId = `ORD-${Date.now().toString().slice(-6)}`;
-      await mockDataEngine.create('orders', {
+      await entity().createRecord('orders', {
         orderId: newOrderId,
         orderType: title,
         status: 'Draft',
@@ -145,7 +150,7 @@ export function useWizardDraftActions({
       // A saved draft shows up in the agent's Draft Orders list (a task of type
       // 'Draft Order' linked to the order - the list is built from tasks, and
       // its row click resumes the journey via the order's draftResumePath).
-      await mockDataEngine.create('tasks', {
+      await entity().createRecord('tasks', {
         // The journey's own reference, so the Task ID the agent was shown while working is the one on the saved draft.
         taskId: (useCustomerContext.getState().journey?.wizardId === wizardId && useCustomerContext.getState().journey?.taskId) || newTaskId(),
         taskName: `${useCustomerContext.getState().journey?.customerName ?? draftCustomerName(values)} – ${draftActionLabel ?? title}`,
@@ -178,7 +183,7 @@ export function useWizardDraftActions({
   const abandonOnLeave = once(async () => {
     await recordActivity('abandoned', draftOrderId, 'Journey abandoned when the agent left it.');
     useCustomerContext.getState().endJourney(wizardId);
-    if (draftOrderId) await mockDataEngine.remove('orders', draftOrderId);
+    if (draftOrderId) await entity().removeRecord('orders', 'orderId', draftOrderId);
     clearDraft(wizardId);
   });
 

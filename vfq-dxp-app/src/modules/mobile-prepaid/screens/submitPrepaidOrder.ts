@@ -4,6 +4,7 @@ import { logActivity, newActivityId } from '../../../engines/activityEngine';
 import type { ActivityInput } from '../../../engines/activityEngine';
 import { allLines, cartTotals, emailVerification, maskEmail, priceLine, STORE_MANAGER_ROLE } from '../../../capabilities';
 import type { GuidedContactValue, CrossSalesValue, ConfirmedOrder, PrepaidLine, PricingExtra, PricingProduct } from '../../../capabilities';
+import { assertEligibilityChecked } from '../../../engines/eligibilityGuard';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import type { WinCashPaymentValue } from '../../../components/patterns/WinCashPaymentStep';
 import type { CafType } from '../../../components/patterns/cafTypes';
@@ -43,6 +44,7 @@ export async function submitPrepaidOrder(
   device: DeviceType
 ): Promise<ConfirmedOrder> {
   const contact = values.contact as GuidedContactValue | undefined;
+  assertEligibilityChecked(values);
   const eligibility = values.eligibility as EligibilityResult | undefined;
   const crossSales = values.crossSales as CrossSalesValue | undefined;
   const lines = allLines(values);

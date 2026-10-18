@@ -29,6 +29,8 @@ interface UserAgentRecord {
 export async function pickProfileForRole(personaId: string): Promise<AgentProfile> {
   const agents = await mockDataEngine.list<UserAgentRecord>('users-agents');
   const persona = getPersona(personaId);
-  const match = agents.find((a) => a.userId === persona?.identityUserId) ?? agents[0];
+  const match = agents.find((a) => a.userId === persona?.identityUserId);
+  // A role with no agent identity is an error, not a reason to sign the user in as whoever is first in the directory.
+  if (!match) throw new Error(`No agent identity is configured for role ${personaId}.`);
   return { userId: match.userId, name: `${match.firstName} ${match.lastName}`, jobTitle: match.jobTitle, team: match.team };
 }

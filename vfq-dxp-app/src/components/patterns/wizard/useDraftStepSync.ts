@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import * as mockDataEngine from '../../../engines/mockDataEngine';
+import { useEntityStore } from '../../../stores/entityStore';
 import type { WizardStep } from './guidedWizardTypes';
 
 export function useDraftStepSync(
@@ -20,7 +20,7 @@ export function useDraftStepSync(
     savedStepRef.current = draft.currentStep;
     const activeKey = steps.filter((st) => !st.skip?.(draft.values))[draft.currentStep]?.key;
     if (!activeKey) return;
-    void mockDataEngine.update('orders', draftOrderId, {
+    void useEntityStore.getState().updateRecord('orders', 'orderId', draftOrderId, {
       draftStepKey: activeKey,
       draftValues: draft.values,
     });

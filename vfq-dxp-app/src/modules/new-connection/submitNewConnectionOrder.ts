@@ -4,6 +4,7 @@ import { emailVerification, maskEmail, persistBillingAccount } from '../../capab
 import type { GuidedContactValue } from '../../capabilities';
 import type { BillingAccountValue } from '../../capabilities';
 import { SUPPORTING_ID_DISCOUNT_TYPES } from '../../components/patterns/postpaidPlanModel';
+import { assertEligibilityChecked } from '../../engines/eligibilityGuard';
 import type { EligibilityResult } from '../../components/domain/eligibilityTypes';
 import type { SimTypeValue } from '../../components/domain/SimTypeStep';
 import type { CheckoutTotals } from '../../components/patterns/checkoutSummaryModel';
@@ -32,6 +33,7 @@ export async function submitNewConnectionOrder(
   { flow, createRecord }: { flow: NewConnectionFlow } & Pick<EntityStore, 'createRecord'>
 ): Promise<ConfirmedOrder> {
       const contact = values.contact as GuidedContactValue;
+      assertEligibilityChecked(values);
       const eligibility = values.eligibility as EligibilityResult | undefined;
       const simType = values.simType as SimTypeValue | undefined;
       const addonIds = (values.addonIds as string[] | undefined) ?? [];

@@ -214,7 +214,7 @@ function PortInDetail({ record }: { record: PortInRecord }) {
             <Button variant="primary" disabled={pending} onClick={() => void apply(approvePortIn(record), 'NPAS approved the port-in request.')}>
               NPAS approves
             </Button>
-            <div className="w-96">
+            <div className="w-full max-w-sm">
               <Select
                 label="Donor rejection reason"
                 placeholder="Select a reason"

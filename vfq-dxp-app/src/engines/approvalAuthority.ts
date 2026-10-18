@@ -1,5 +1,5 @@
 import { canPerformAction } from './personaEngine';
-import { getRequiredApproverRole } from './configEngine';
+import { getRequiredApproverRole, isApprovalMatrixAvailable } from './configEngine';
 
 // Who may decide an approval, and when - one rule for every approval screen, so the Approve / Reject buttons appear for
 // exactly the people authorised to use them and only while there is something to decide.
@@ -19,7 +19,7 @@ export const ORDER_AWAITING_DECISION = 'Submitted for Approval';
  */
 export const isSimSwapAwaitingDecision = (status: unknown): boolean => status === ORDER_AWAITING_DECISION || status === 'Pending Approval';
 
-export type ApprovalBlock = 'not-awaiting' | 'no-grant' | 'wrong-role';
+export type ApprovalBlock = 'not-awaiting' | 'no-grant' | 'wrong-role' | 'matrix-unavailable';
 
 export interface ApprovalAuthority {
   /** The Approve / Reject / Return actions are offered. */
@@ -45,6 +45,8 @@ export function orderApprovalAuthority(args: {
   if (args.status !== ORDER_AWAITING_DECISION) return { mayDecide: false, blockedBy: 'not-awaiting', requiredRole };
   if (!holdsApproveGrant(args.personaId, 'SCR-061')) return { mayDecide: false, blockedBy: 'no-grant', requiredRole };
   if (requiredRole && requiredRole !== args.jobTitle) return { mayDecide: false, blockedBy: 'wrong-role', requiredRole };
+  // No role on the order and no matrix to consult: the approval rules did not load, which is not the same as a category with no restriction.
+  if (!requiredRole && !args.approverRole && !isApprovalMatrixAvailable()) return { mayDecide: false, blockedBy: 'matrix-unavailable' };
   return { mayDecide: true, requiredRole };
 }
 
@@ -62,6 +64,7 @@ export function simSwapDecisionAuthority(args: { personaId: string; status: stri
 /** A line telling the reader why there are no decision buttons (undefined when there is nothing to explain). */
 export function approvalBlockMessage(subject: 'order' | 'ticket' | 'SIM swap', a: ApprovalAuthority): string | undefined {
   if (a.mayDecide || !a.blockedBy || a.blockedBy === 'not-awaiting') return undefined;
+  if (a.blockedBy === 'matrix-unavailable') return `The approval rules could not be loaded, so this ${subject} cannot be decided right now. Reload the page.`;
   if (a.blockedBy === 'wrong-role') return `Only the ${a.requiredRole} role may approve, reject, or return this ${subject}.`;
   return `You have view access to this ${subject}; approving or rejecting it needs the Approve permission, which your role does not hold.`;
 }

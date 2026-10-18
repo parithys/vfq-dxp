@@ -20,6 +20,7 @@ import { isVisibleToAgent } from '../../engines/agentTaskEngine';
 import { Checkbox } from '../../components/primitives/Checkbox';
 import { PageHeader } from '../../components/patterns/PageHeader';
 import { formatQar } from '../../engines/postpaidPricing';
+import { applyLineChange, lineChangeOf } from '../mobile-service-changes/applyServiceChange';
 import { usePersonaStore } from '../../stores/personaStore';
 import { mayResubmitOrder, ORDER_AWAITING_DECISION, orderApprovalAuthority } from '../../engines/approvalAuthority';
 import { evaluateRule } from '../../engines/ruleEngine';
@@ -635,12 +636,16 @@ export function OrderApprovalDetail() {
     });
 
   const approve = async () => {
-    if (submittingRef.current) return;
+    // The buttons are only offered to an eligible approver; the handler checks the same authority so it cannot be reached another way.
+    if (!authority.mayDecide || submittingRef.current) return;
     submittingRef.current = true;
     setSubmitting(true);
     try {
       const nextStatus = order.nextStatusOnApproval ?? 'Complete';
       await updateRecord('orders', 'orderId', order.orderId, { status: nextStatus, approvalStatus: 'Approved' });
+      // A held plan or pack change takes effect on approval: the line moves to the plan the order records (the same step that runs at submit when nothing is held).
+      const lineChange = nextStatus === 'Complete' ? lineChangeOf(order as unknown as Record<string, unknown>) : undefined;
+      if (lineChange) await applyLineChange(lineChange, updateRecord);
       await logActivity('Approved', approveComment);
       pushToast(
         'success',
@@ -660,7 +665,7 @@ export function OrderApprovalDetail() {
   };
 
   const reject = async (drop: boolean) => {
-    if (submittingRef.current) return;
+    if (!authority.mayDecide || submittingRef.current) return;
     submittingRef.current = true;
     setSubmitting(true);
     try {
@@ -685,7 +690,7 @@ export function OrderApprovalDetail() {
   // status model) rather than terminating it, and per BR-06 requires a
   // reason + notes exactly like Reject does.
   const returnOrder = async () => {
-    if (submittingRef.current) return;
+    if (!authority.mayDecide || submittingRef.current) return;
     submittingRef.current = true;
     setSubmitting(true);
     try {

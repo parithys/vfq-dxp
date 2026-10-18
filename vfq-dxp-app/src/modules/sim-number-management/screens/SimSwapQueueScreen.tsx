@@ -99,8 +99,10 @@ export function SimSwapQueueScreen() {
   const authority = simSwapDecisionAuthority({ personaId: activePersonaId, status: order.status });
   const blockMessage = approvalBlockMessage('SIM swap', authority);
 
+  // The buttons are only offered when the SIM swap may be decided; the handlers check the same authority.
   const approve = () =>
     guard(async () => {
+      if (!authority.mayDecide) return;
       await updateRecord('sim-swap-orders', 'simSwapOrderId', order.simSwapOrderId, {
         status: 'Approved/Completed',
         approveComment,
@@ -111,6 +113,7 @@ export function SimSwapQueueScreen() {
 
   const reject = () =>
     guard(async () => {
+      if (!authority.mayDecide) return;
       const reasonLabel = reasons.find((r) => r.reasonCode === rejectReason)?.reasonLabel ?? rejectReason;
       await updateRecord('sim-swap-orders', 'simSwapOrderId', order.simSwapOrderId, {
         status: 'Cancelled',

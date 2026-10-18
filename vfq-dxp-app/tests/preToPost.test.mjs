@@ -37,7 +37,7 @@ test('a conversion is priced like a postpaid order and completes, or waits for t
   const base = {
     contact: { idNumber: '28450000001', idType: 'QID', moiResult: { name: 'Test Customer' } },
     eligibility: { customerId: 'CUST-1001', checks: [] },
-    line: { installedAssetId: 'IA-9004', identifier: 'SVC-30012', productId: 'PROD-301', productName: 'Prepaid Red 25', lineType: 'prepaid' },
+    line: { customerId: 'CUST-1001', installedAssetId: 'IA-9004', identifier: 'SVC-30012', productId: 'PROD-301', productName: 'Prepaid Red 25', lineType: 'prepaid' },
     productId: 'PROD-104',
     checkoutTotals: { dueTodayQar: 0, monthlyRecurringQar: 0, hrnAdvanceQar: 0 },
     billingAccount: { selectedProfileId: 'BILL-7001' },

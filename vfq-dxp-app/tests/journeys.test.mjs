@@ -200,4 +200,8 @@ test('activities: the automatic and a manual activity are separate records, and 
   assert.equal(mine.find((a) => a.activityNumber === autoId).comments, undefined);
   assert.equal(mine.find((a) => a.activityNumber === manualId).comments, 'Extra note');
   assert.equal(await act.closeOrderActivities('ORD-T2'), 2);
+  // The close is a real update: the engine (so a reload and the journal see it) reports both as Closed, and closing again finds nothing open.
+  const after = (await db.list('customer-activities')).filter((a) => a.orderId === 'ORD-T2');
+  assert.deepEqual(after.map((a) => a.status), ['Closed', 'Closed']);
+  assert.equal(await act.closeOrderActivities('ORD-T2'), 0);
 });

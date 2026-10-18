@@ -9,6 +9,8 @@ interface EntityState {
   loadKind: (kind: EntityKind) => Promise<void>;
   createRecord: (kind: EntityKind, record: Record<string, unknown>) => Promise<void>;
   updateRecord: (kind: EntityKind, idField: string, id: string, patch: Record<string, unknown>) => Promise<void>;
+  /** Deletes a record from the engine and from the cached list. */
+  removeRecord: (kind: EntityKind, idField: string, id: string) => Promise<void>;
 }
 
 // The "database" - IndexedDB-backed in a full build (frontend-architecture.md §4);
@@ -49,12 +51,19 @@ export const useEntityStore = create<EntityState>((set, get) => ({
   },
 
   updateRecord: async (kind, idField, id, patch) => {
-    await mockDataEngine.update(kind, id, patch, idField);
+    const updated = await mockDataEngine.update(kind, id, patch, idField);
+    // Nothing was updated (no record has that id): the cache must not claim a change the engine did not make.
+    if (updated === undefined) return;
     set((state) => ({
       records: {
         ...state.records,
         [kind]: (state.records[kind] ?? []).map((r) => (r[idField] === id ? { ...r, ...patch } : r)),
       },
     }));
+  },
+
+  removeRecord: async (kind, idField, id) => {
+    await mockDataEngine.remove(kind, id, idField);
+    set((state) => (state.records[kind] ? { records: { ...state.records, [kind]: state.records[kind]!.filter((r) => r[idField] !== id) } } : state));
   },
 }));

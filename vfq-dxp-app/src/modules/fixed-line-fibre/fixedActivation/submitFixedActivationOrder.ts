@@ -1,6 +1,7 @@
 import { currentAgentId } from '../../../stores/authStore';
 import { emailVerification, maskEmail, persistBillingAccount } from '../../../capabilities';
 import type { GuidedContactValue } from '../../../capabilities';
+import { assertEligibilityChecked } from '../../../engines/eligibilityGuard';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import type { BillingAccountValue } from '../../../capabilities';
 import type { CheckoutTotals } from '../../../components/patterns/checkoutSummaryModel';
@@ -31,6 +32,7 @@ export async function submitFixedActivationOrder(
   { createRecord }: Pick<EntityStore, 'createRecord'>
 ): Promise<ConfirmedOrder> {
   const contact = values.contact as GuidedContactValue;
+  assertEligibilityChecked(values);
   const eligibility = values.eligibility as EligibilityResult | undefined;
   const installation = values.installation as FixedInstallationValue | undefined;
   const address = values.address as ZsbAddressValue | undefined;
