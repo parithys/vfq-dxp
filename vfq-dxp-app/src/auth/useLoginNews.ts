@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { appPath } from '../lib/basePath';
 
 // The sign-in screen's "Latest Updates": the newest items of the Vodafone Qatar news page
 // (https://www.vodafone.qa/en/investor-relations/news), read from public/news/news.json. That file and its banner
@@ -25,7 +26,7 @@ export function useLoginNews(): NewsItem[] {
   const [items, setItems] = useState<NewsItem[]>([]);
   useEffect(() => {
     let cancelled = false;
-    fetch('/news/news.json')
+    fetch(appPath('/news/news.json'))
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((d: { items?: unknown[] }) => {
         if (!cancelled) setItems((d.items ?? []).filter(isItem));

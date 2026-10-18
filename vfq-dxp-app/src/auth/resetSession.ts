@@ -1,3 +1,5 @@
+import { appPath } from '../lib/basePath';
+
 /**
  * Ends the browser session's application state. Called on every sign-out
  * (manual; the app has no idle timeout).
@@ -17,8 +19,8 @@
  * mockDataEngine's `dxp-session-records` key - not a "vfq-" key, so it is not cleared here). It lets an order created as one
  * role be approved after signing in as another. It ends with the browser tab.
  *
- * `location.replace('/')` rather than a reload: the user lands on the login
- * screen at the root and the signed-out URL is not kept in history.
+ * Replacing with the app base rather than reloading keeps the signed-out URL
+ * out of history and works when the app is mounted below the hostname root.
  */
 const APP_KEY_PREFIX = 'vfq-';
 
@@ -34,5 +36,5 @@ function clearAppKeys(storage: Storage): void {
 export function resetApplicationState(): void {
   clearAppKeys(localStorage);
   clearAppKeys(sessionStorage);
-  window.location.replace('/');
+  window.location.replace(appPath('/'));
 }

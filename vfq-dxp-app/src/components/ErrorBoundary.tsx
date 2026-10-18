@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Button } from './primitives/Button';
+import { appPath } from '../lib/basePath';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -54,7 +55,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               Reload page
             </Button>
           </div>
-          <a href="/" className="mt-3 text-link underline focus:outline-none focus-visible:shadow-[var(--focus-ring)] rounded-[var(--radius-button)]">
+          <a href={appPath('/')} className="mt-3 text-link underline focus:outline-none focus-visible:shadow-[var(--focus-ring)] rounded-[var(--radius-button)]">
             Back to home
           </a>
         </div>

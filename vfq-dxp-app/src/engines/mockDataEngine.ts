@@ -1,5 +1,6 @@
 // Simulates a backend entirely in the browser (frontend-architecture.md §7).
 // Each mock-data/*.json file is keyed by its own filename (e.g. "leads" -> leads.json).
+import { appPath } from '../lib/basePath';
 
 const SEED_FILES = [
   'accounts', 'account-level-products', 'addons-discounts', 'addresses', 'adjustments',
@@ -25,7 +26,7 @@ const SEED_FILES = [
 ] as const;
 
 /** Where a mock-data file is served from. */
-export const mockDataUrl = (name: string): string => `/mock-data/${name}.json`;
+export const mockDataUrl = (name: string): string => appPath(`/mock-data/${name}.json`);
 
 export type EntityKind = (typeof SEED_FILES)[number];
 
@@ -229,4 +230,3 @@ export function transition(
   }
   return { ok: true };
 }
-

@@ -12,6 +12,7 @@ import { ToastContainer } from './capabilities';
 import { LoginPage } from './auth/LoginPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { MAIN_ID, useRouteAnnouncer } from './navigation/useRouteAnnouncer';
+import { ROUTER_BASENAME } from './lib/basePath';
 
 export default function App() {
   const ready = useConfigStore((s) => s.ready);
@@ -67,7 +68,10 @@ export default function App() {
 // is what lets a guided journey stop navigation and ask what to do with its progress (useBlocker). It is created when the
 // signed-in app mounts, not at page load, so it reads the URL LoginPage has already reset to "/".
 function AuthenticatedApp() {
-  const router = useMemo(() => createBrowserRouter([{ path: '*', element: <Shell /> }]), []);
+  const router = useMemo(
+    () => createBrowserRouter([{ path: '*', element: <Shell /> }], { basename: ROUTER_BASENAME }),
+    []
+  );
   return <RouterProvider router={router} />;
 }
 

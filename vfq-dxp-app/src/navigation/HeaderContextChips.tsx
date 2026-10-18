@@ -5,6 +5,7 @@ import { useRegionStore, REGIONS } from '../stores/regionStore';
 import * as mockDataEngine from '../engines/mockDataEngine';
 import { Tooltip } from '../components/primitives/Tooltip';
 import { Button } from '../components/primitives/Button';
+import { appPath } from '../lib/basePath';
 
 interface ChannelPerfRecord {
   scopeId: string;
@@ -72,7 +73,7 @@ export function HeaderContextChips() {
           {/* Publishing a catalogue change isn't built, so this is a link to
               where that work lives rather than a button that appears to act. */}
           <Tooltip content="Catalogue publishing isn't built yet - opens the change queue" placement="bottom">
-            <Button variant="primary" compact onClick={() => { window.location.href = '/mobile'; }}>
+            <Button variant="primary" compact onClick={() => { window.location.href = appPath('/mobile'); }}>
               Publish
             </Button>
           </Tooltip>

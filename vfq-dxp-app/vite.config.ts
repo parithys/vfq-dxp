@@ -10,6 +10,7 @@ const port = process.env.PORT ? Number(process.env.PORT) : 5173
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/vfq-dxp-app/',
   plugins: [react(), tailwindcss()],
   cacheDir: `node_modules/.vite-${port}`,
   server: { port, strictPort: true },
