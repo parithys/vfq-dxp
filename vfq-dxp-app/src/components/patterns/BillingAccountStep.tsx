@@ -138,79 +138,71 @@ export function BillingAccountStep({
     <div className="space-y-6">
       <div>
         <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-1">Existing Billing Accounts</h3>
-        {profiles.length === 0 ? (
-          <p className="text-muted text-[length:var(--fs-body)]">No billing accounts on file for this customer yet.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {profiles.map((p, i) => {
-              const selected = value.selectedProfileId === p.billingProfileId;
-              return (
-                <button
-                  key={p.billingProfileId}
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => onChange({ selectedProfileId: p.billingProfileId, creatingNew: false })}
-                  className={`text-left rounded-[var(--radius-card)] border p-4 ${
-                    selected
-                      ? CARD_SELECTED
-                      : CARD_IDLE
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-fg font-medium">Account ending …{p.billingProfileId.slice(-4)}</span>
-                    {i === 0 && <Badge variant="filled-neutral">Default</Badge>}
-                  </div>
-                  <p className="text-fg-2 text-[length:var(--fs-caption)]">Primary contact: {p.billingContactName}</p>
-                  <p className="text-muted text-[length:var(--fs-caption)]">
-                    {p.billingAddress} · {customerEmail ?? p.billingContactEmail}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
+        {profiles.length === 0 && <p className="text-muted text-[length:var(--fs-body)]">No billing accounts on file for this customer yet.</p>}
+        {/* The customer's accounts and "Create New Billing Account" sit in one row; the new-account form opens below it. */}
+        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${profiles.length === 0 ? 'mt-3' : ''}`}>
+          {profiles.map((p, i) => {
+            const selected = value.selectedProfileId === p.billingProfileId;
+            return (
+              <button
+                key={p.billingProfileId}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => onChange({ selectedProfileId: p.billingProfileId, creatingNew: false })}
+                className={`text-left rounded-[var(--radius-card)] border p-4 ${
+                  selected
+                    ? CARD_SELECTED
+                    : CARD_IDLE
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-fg font-medium">Account ending …{p.billingProfileId.slice(-4)}</span>
+                  {i === 0 && <Badge variant="filled-neutral">Default</Badge>}
+                </div>
+                <p className="text-fg-2 text-[length:var(--fs-caption)]">Primary contact: {p.billingContactName}</p>
+                <p className="text-muted text-[length:var(--fs-caption)]">
+                  {p.billingAddress} · {customerEmail ?? p.billingContactEmail}
+                </p>
+              </button>
+            );
+          })}
+          {/* "A consumer can have at most two billing profiles" - once a Consumer already holds two, there is nowhere for a new one to go,
+              so the option to create one is withheld rather than offered and then rejected at submission. */}
+          {!atConsumerCap && (
+            <button
+              type="button"
+              onClick={() =>
+                onChange({
+                  ...value,
+                  creatingNew: !value.creatingNew,
+                  selectedProfileId: undefined,
+                  // Opening the form fixes the primary-payment default: ticked only when the customer has no other profile.
+                  newAccount: { ...value.newAccount, primaryPaymentProfile: value.newAccount?.primaryPaymentProfile ?? profiles.length === 0 },
+                })
+              }
+              aria-expanded={Boolean(value.creatingNew)}
+              className={`flex items-center gap-3 rounded-[var(--radius-card)] border p-4 text-left ${value.creatingNew ? CARD_SELECTED : CARD_IDLE}`}
+            >
+              <Icon path={value.creatingNew ? CHEVRON_UP : CHEVRON_DOWN} className="w-5 h-5 shrink-0 text-muted" />
+              <span className="flex-1">
+                <span className="block text-fg font-semibold text-[length:var(--fs-h5)]">Create New Billing Account</span>
+                <span className="block text-fg-2 text-[length:var(--fs-body)]">
+                  Provide the following details to set up your billing account.
+                </span>
+              </span>
+            </button>
+          )}
+        </div>
+        {atConsumerCap && (
+          <p className="text-muted text-[length:var(--fs-caption)] mt-3">
+            This customer already holds the maximum of two billing profiles for a Consumer account - select one above.
+          </p>
         )}
       </div>
 
-      {/* "A consumer can have at most two billing profiles" - once a Consumer
-          already holds two, there is nowhere for a new one to go, so the
-          option to create one is withheld rather than offered and then
-          rejected at submission. */}
-      {atConsumerCap ? (
-        <p className="text-muted text-[length:var(--fs-caption)]">
-          This customer already holds the maximum of two billing profiles for a Consumer account - select one above.
-        </p>
-      ) : (
+      {value.creatingNew && !atConsumerCap && (
         <div className="border border-[var(--field-card-border)] rounded-[var(--radius-card)]">
-          {/* Layout per the 2026-10-10 "Create New Billing Account" reference: a titled header with a one-line
-              brief, a divider, then the form in ruled sections. The header is still the expand/collapse toggle
-              (the old [+]/[-] prefix became a chevron, kept at the left so the floating Customer view button never covers it). */}
-          <button
-            type="button"
-            onClick={() =>
-              onChange({
-                ...value,
-                creatingNew: !value.creatingNew,
-                selectedProfileId: undefined,
-                // Opening the form fixes the primary-payment default: ticked only when the customer has no other profile.
-                newAccount: { ...value.newAccount, primaryPaymentProfile: value.newAccount?.primaryPaymentProfile ?? profiles.length === 0 },
-              })
-            }
-            aria-expanded={Boolean(value.creatingNew)}
-            className={`w-full flex items-center gap-3 px-6 py-4 text-left ${
-              value.creatingNew ? 'border-b border-border-soft' : ''
-            }`}
-          >
-            <Icon path={value.creatingNew ? CHEVRON_UP : CHEVRON_DOWN} className="w-5 h-5 shrink-0 text-muted" />
-            <span className="flex-1">
-              <span className="block text-fg font-semibold text-[length:var(--fs-h5)]">Create New Billing Account</span>
-              <span className="block text-fg-2 text-[length:var(--fs-body)]">
-                Provide the following details to set up your billing account.
-              </span>
-            </span>
-          </button>
-
-          {value.creatingNew && (
-            <div className="px-6 pb-6">
+          <div className="px-6 pb-6">
               {/* Contact */}
               <div className={`${SECTION} pt-6`}>
                 <h4 className={SECTION_TITLE}>Contact</h4>
@@ -434,7 +426,6 @@ export function BillingAccountStep({
                 )}
               </div>
             </div>
-          )}
         </div>
       )}
 

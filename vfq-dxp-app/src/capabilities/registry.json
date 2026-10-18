@@ -53,14 +53,12 @@
     "home": "capabilities/BillingAccount",
     "entry": "BillingAccount",
     "stepBuilders": [
-      "billingAccountStep",
-      "billingSettingsStep"
+      "billingAccountStep"
     ],
     "stepLabel": "BILLING_PROFILE_LABEL",
-    "summary": "Set up what an order bills to: pick or create a billing account, or just the order's billing settings.",
+    "summary": "Set up what an order bills to: one layout everywhere - the customer's existing billing accounts, or Create New Billing Account (contact, billing address, payment, card on file, primary payment profile, billing profile setup).",
     "parts": [
       "components/patterns/BillingAccountStep.tsx",
-      "components/patterns/BillingProfileStep.tsx",
       "components/patterns/BillingProfileSetupDrawer.tsx",
       "components/patterns/BillingAccountAutoResolver.tsx",
       "components/patterns/billingAccountModel.ts"
@@ -184,9 +182,10 @@
       "appointmentBookingStep"
     ],
     "stepLabel": "APPOINTMENT_LABEL",
-    "summary": "Book the installation visit: cluster, date and time slot.",
+    "summary": "Book the installation visit: SLA cluster, the date strip (next working days from the earliest, with each day's open slots), the day's time slots and technicians free, the customer's request for a specific date and time (a later date makes the order future-dated), appointment notes and the documents the technician collects (defaulted from the persona).",
     "parts": [
-      "components/patterns/AppointmentBookingStep.tsx"
+      "components/patterns/AppointmentBookingStep.tsx",
+      "components/patterns/appointmentModel.ts"
     ],
     "previewable": true,
     "publicApi": []
@@ -245,7 +244,7 @@
     "entry": "Drawer",
     "stepBuilders": [],
     "stepLabel": null,
-    "summary": "Fixed 50%-width drawer for forms, details and multi-step flows.",
+    "summary": "Fixed 50%-width drawer for forms, details and multi-step flows: the title as a small uppercase label beside the close control, the body on the page tint, and a footer whose buttons share its width equally.",
     "parts": [],
     "previewable": true,
     "publicApi": []
@@ -275,7 +274,7 @@
     "stepLabel": null,
     "summary": "The step shell every activation / migration / port-in journey runs in.",
     "parts": [],
-    "previewable": false,
+    "previewable": true,
     "publicApi": []
   },
   {
@@ -305,21 +304,6 @@
     "publicApi": []
   },
   {
-    "id": "journey-customer-lock",
-    "name": "Journey customer lock",
-    "status": "consolidated",
-    "home": "capabilities/JourneyCustomerLock",
-    "entry": "useJourneyCustomerLock",
-    "stepBuilders": [],
-    "stepLabel": null,
-    "summary": "The state every guided journey keeps: the customer lock, draft, confirmed order, header badge (name, QID, customer ID) and exit destinations.",
-    "parts": [],
-    "previewable": false,
-    "publicApi": [
-      "stores/customerContextStore.ts"
-    ]
-  },
-  {
     "id": "customer-qualification",
     "name": "Customer Qualification",
     "status": "consolidated",
@@ -332,7 +316,7 @@
     "summary": "Identify the customer, run eligibility, then offer the special-discount types - the whole \"Customer Identification\" step of an activation, with its outcomes and footer actions.",
     "parts": [],
     "publicApi": [],
-    "previewable": false
+    "previewable": true
   },
   {
     "id": "customer-type",

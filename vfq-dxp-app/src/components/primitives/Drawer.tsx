@@ -20,7 +20,8 @@ interface DrawerProps {
 // multi-step flows read as more seamless sliding in from the edge than
 // interrupting the whole screen with a centered dialog. Width is always 50% of
 // the viewport (with a floor so it doesn't get unusably narrow on small
-// screens) - not configurable, so every drawer looks the same.
+// screens) - not configurable, so every drawer looks the same: the title as a small uppercase label beside the close control,
+// the body on the page tint, and a footer whose buttons share its width equally.
 // Matches the transition-duration below (--motion-base) so unmount is
 // deferred exactly as long as the slide-out animation takes to finish.
 const EXIT_DURATION_MS = 220;
@@ -66,13 +67,14 @@ export function Drawer({ open, onClose, title, children, footer, header, bodyCla
         aria-label={title}
       >
         {header ?? (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border-soft shrink-0">
-            <h2 className="text-[length:var(--fs-h5)] font-bold text-fg">{title}</h2>
-            <CloseButton onClick={onClose} className="-mr-2" />
+          <div className="flex items-center justify-between px-6 pt-5 pb-3 shrink-0">
+            <h2 className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">{title}</h2>
+            <CloseButton onClick={onClose} />
           </div>
         )}
         <div className={`flex-1 overflow-y-auto bg-[var(--surface)] ${bodyClassName}`}>{children}</div>
-        {footer && <div className="flex justify-end gap-2 px-6 py-4 border-t border-border-soft shrink-0">{footer}</div>}
+        {/* The footer's buttons share its width equally (Close beside the primary action). */}
+        {footer && <div className="grid grid-flow-col auto-cols-fr gap-4 px-6 py-4 border-t border-border-soft shrink-0">{footer}</div>}
       </div>
     </div>
   );

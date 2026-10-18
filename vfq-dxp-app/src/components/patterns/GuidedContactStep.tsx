@@ -228,7 +228,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                   GuidedContactValue since this step's interface was written,
                   but nothing rendered it until 2026-09-28. Defaults to
                   English, matching every other Language control in the app
-                  (BillingProfileStep, Base Management's Contact step).
+                  (Base Management's Contact step).
 
                   Options expanded 2026-09-28 from English/Arabic to also
                   offer Hindi, Malayalam and Filipino, matching Qatar's expat

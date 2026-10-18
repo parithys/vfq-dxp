@@ -5,7 +5,8 @@ import type { EligibilityResult } from '../../../components/domain/eligibilityTy
 import type { BillingAccountValue } from '../../../capabilities';
 import type { CheckoutTotals } from '../../../components/patterns/checkoutSummaryModel';
 import type { WinCashPaymentValue } from '../../../components/patterns/WinCashPaymentStep';
-import type { AppointmentBookingValue } from '../../../components/patterns/AppointmentBookingStep';
+import { isFutureDated } from '../../../capabilities';
+import type { AppointmentBookingValue } from '../../../capabilities';
 import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { logActivity, newActivityId } from '../../../engines/activityEngine';
@@ -95,6 +96,11 @@ export async function submitFixedActivationOrder(
     timeSlot: appointment.timeSlot,
     cluster: appointment.cluster,
     channel: 'Retail Store',
+    notes: appointment.comments,
+    // What the technician collects at the visit, and the customer's own request for a specific date and time (a later date than the
+    // earliest makes the order future-dated).
+    documentsToCollect: appointment.documents ?? [],
+    ...(appointment.requestSpecific ? { requestedDate: appointment.requestedDate, requestedTime: appointment.requestedTime, futureDated: isFutureDated(appointment) } : {}),
   });
 
   const activityCtx = { journey: FIXED_JOURNEY_LABEL, orderId, customerId: eligibility?.customerId, customerName: contact.moiResult?.name, idNumber: contact.idNumber };

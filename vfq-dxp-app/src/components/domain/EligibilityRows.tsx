@@ -14,8 +14,8 @@ export function EligibilityChecksList({ rows }: { rows: EligibilityRow[] }) {
   return (
     <ul className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] overflow-hidden divide-y divide-border-soft">
       {rows.map((row) => (
-        <li key={row.id} className={`flex items-start gap-3 px-4 py-3 ${ROW_TONE[row.tone]}`}>
-          <Icon path={ROW_ICON[row.tone]} className={`w-5 h-5 shrink-0 mt-0.5 ${ICON_TONE[row.tone]}`} />
+        <li key={row.id} className={`flex items-center gap-3 px-4 py-3 ${ROW_TONE[row.tone]}`}>
+          <Icon path={ROW_ICON[row.tone]} className={`w-5 h-5 shrink-0 ${ICON_TONE[row.tone]}`} />
           <div className="min-w-0 flex-1">
             <p className="text-fg font-semibold text-[length:var(--fs-body)]">{row.title}</p>
             {/* The RESULT, not a static description of what the check does -

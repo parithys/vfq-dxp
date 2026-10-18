@@ -15,7 +15,6 @@ export function numberSelectionStep(
     priceField?: string;
     plan?: (values: Record<string, unknown>) => { mrcQar?: number; starEntitlementQar?: number } | undefined;
     refresh?: boolean;
-    allowManualEntry?: boolean;
     /** Offer "Use a Pre-Paired SIM" (Mobile Prepaid): the choice is kept under `prePaired`, and the number then comes from the SIM. */
     prePairedOption?: boolean;
  } = {}
@@ -44,7 +43,6 @@ export function numberSelectionStep(
         value={values.msisdn as string | undefined}
         refreshKey={opts.refresh ? (values.numberRefresh as number | undefined) : undefined}
         plan={opts.plan?.(values)}
-        allowManualEntry={opts.allowManualEntry}
         prePaired={
           opts.prePairedOption
             ? {

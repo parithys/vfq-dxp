@@ -257,7 +257,8 @@ export function PostpaidPlanAddonsStep({
                   const showAddons = selectionSource === 'PLAN';
                   return (
                     <div className={`grid grid-cols-1 gap-x-8 gap-y-5 ${showAddons ? 'lg:grid-cols-2' : ''}`}>
-                      <div className="space-y-5">
+                      {/* Benefits and Included in this offer sit side by side, in one row. */}
+                      <div className={`grid grid-cols-1 gap-x-8 gap-y-5 content-start ${lists.length > 1 ? 'sm:grid-cols-2' : ''}`}>
                         {lists.map((c) => (
                           <div key={c.title} className="space-y-2.5">
                             <p className="text-accent font-bold text-[length:var(--fs-caption)] uppercase tracking-wide">{c.title}</p>

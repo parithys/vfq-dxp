@@ -1,7 +1,6 @@
 import { formatQar } from '../../lib/format';
 import { SegmentedTabs } from '../primitives/SegmentedTabs';
 import { useEffect, useRef, useState } from 'react';
-import { Input } from '../primitives/Input';
 import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
 import { useNotificationStore } from '../../stores/notificationStore';
@@ -14,7 +13,7 @@ import { usePersonaStore } from '../../stores/personaStore';
 import { Checkbox } from '../primitives/Checkbox';
 import { SearchField } from '../primitives/SearchField';
 import { FREE_NUMBER_PRICE_CEILING_QAR, STAR_NUMBER_ENTITLEMENT_MULTIPLIER, starNumberOverageQar } from '../../engines/postpaidPricing';
-import { TAB_LABELS, TAB_ORDER, PORTAL_TAB_ORDER, RETAIL_SALES_PERSONA_ID, toLocalMsisdn, MAX_RESERVATIONS_PER_AGENT, PAGE_SIZE, FREE_PAGE_SIZE, STAR_SORT_OPTIONS, FREE_SORT_OPTIONS, PRICE_RANGES, inPriceRange, SORTERS, isValidMsisdn, STAT_ICONS } from './msisdnPickerModel';
+import { TAB_LABELS, TAB_ORDER, PORTAL_TAB_ORDER, RETAIL_SALES_PERSONA_ID, toLocalMsisdn, MAX_RESERVATIONS_PER_AGENT, PAGE_SIZE, FREE_PAGE_SIZE, STAR_SORT_OPTIONS, FREE_SORT_OPTIONS, PRICE_RANGES, inPriceRange, SORTERS, STAT_ICONS } from './msisdnPickerModel';
 import type { MsisdnRecord, NumberTab, SortKey } from './msisdnPickerModel';
 import { StarStat } from './StarStat';
 
@@ -42,15 +41,6 @@ interface MsisdnPickerProps {
    * When omitted it is derived from planMrcQar, as before.
    */
   starEntitlementQar?: number;
-  /**
-   * Set to false by New Postpaid Activation only (2026-09-28 "This section is
-   * not required") - the other four journeys sharing this component (FWA,
-   * Fixed Line Fibre, SIM & Number Management, Prepaid) keep the Manual
-   * MSISDN Entry form exactly as before, since nothing was said about them.
-   * Defaults to true so every existing call site is unaffected by omitting
-   * this prop.
-   */
-  allowManualEntry?: boolean;
   /** Search box and Sort control share one row (search grows, sort sits at the right). */
   inlineToolbar?: boolean;
   /**
@@ -82,7 +72,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 // Anything below the Star band (QAR 0 - 1,499) is free of charge whatever its catalogue price; QAR 1,500 and above is a Star Number.
 const chargeFor = (priceQar: number) => (priceQar >= FREE_NUMBER_PRICE_CEILING_QAR ? priceQar : 0);
 
-export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, planMrcQar, starEntitlementQar: starEntitlementProp, allowManualEntry = true, inlineToolbar = false, portalMode = false, reservedHere = [], onUnreserve }: MsisdnPickerProps) {
+export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, planMrcQar, starEntitlementQar: starEntitlementProp, inlineToolbar = false, portalMode = false, reservedHere = [], onUnreserve }: MsisdnPickerProps) {
   const entitlementQar = starEntitlementProp ?? (planMrcQar !== undefined ? planMrcQar * STAR_NUMBER_ENTITLEMENT_MULTIPLIER : undefined);
   // Star tab filter: only numbers priced within the customer's entitlement (no extra charge).
   const [withinEntitlementOnly, setWithinEntitlementOnly] = useState(false);
@@ -124,8 +114,6 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
   // users-agents.json at sign-in - NOT persona.name, which is the role label
   // ("Retail Sales") and matches no reservedBy value.
   const agentName = useAuthStore((s) => s.profile?.name) ?? '';
-  const [customMsisdn, setCustomMsisdn] = useState('');
-  const [customError, setCustomError] = useState<string | null>(null);
   // Whether the manual-entry FORM is open. Only consulted once a number is
   // already selected - see the render below - so this starts false with no
   // effect on the unselected case, where the form is always shown inline.
@@ -153,7 +141,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
   // Free default stands (2026-09-28 request). Guarded to fire only once: it
   // runs the first time `numbers` arrives from the mock data engine and must
   // not re-fire on every later change to that list - reserving a NEW number
-  // later in this same session (reserveCustom below) must not yank the agent
+  // later in this same session (choose below) must not yank the agent
   // back to a tab they have since navigated away from.
   const hasAutoSelectedTab = useRef(false);
   const heldReservations = numbers.filter((n) => n.status === 'Reserved' && n.reservedBy === agentName).length;
@@ -181,30 +169,6 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
     if (!portalMode && isRetailSales && numbersLoaded && heldReservations === 0 && tab === 'Reserved') setTab('Star');
   }, [portalMode, isRetailSales, numbersLoaded, heldReservations, tab]);
 
-  const reserveCustom = () => {
-    if (atReservationCap) {
-      setCustomError(
-        `You already hold ${MAX_RESERVATIONS_PER_AGENT} reserved numbers. Release one before reserving another.`
-      );
-      return;
-    }
-    if (!isValidMsisdn(customMsisdn)) {
-      setCustomError('Enter a full international format MSISDN (e.g. +974 3300 1234).');
-      return;
-    }
-    const normalized = customMsisdn.replace(/[\s-]/g, '');
-    const existing = numbers.find((n) => n.msisdn === normalized);
-    if (existing && existing.status !== 'AVAILABLE') {
-      setCustomError(`${normalized} is already ${existing.status.toLowerCase()} - choose a different number.`);
-      return;
-    }
-    setCustomError(null);
-    choose(normalized, chargeFor(existing?.priceQAR ?? 0));
-    // Collapse back to the link now that this custom entry succeeded - the
-    // same reasoning that hides the form in the first place: nothing left to
-    // fill in, so nothing to keep open.
-  };
-
   // Category (Free vs Star/premium) and status (AVAILABLE/Reserved/BLOCKED)
   // are independent axes: the tab filters on CATEGORY, the availability check
   // on STATUS.
@@ -214,7 +178,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
   // rows the agent could not act on - and with 18 free numbers now seeded,
   // dead cards push the selectable ones further from the top.
   //
-  // They are NOT forgotten: reserveCustom below still rejects a Reserved or
+  // They are NOT forgotten: choose below still rejects a Reserved or
   // BLOCKED number typed into Manual MSISDN Entry by name, so the inventory
   // is still enforced where an agent could otherwise ask for one.
   // The Reserved tab is THIS AGENT'S holds, not everyone's (2026-09-28). It
@@ -232,12 +196,6 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
             n.status === 'AVAILABLE'
               && (tab === 'Free' ? n.priceQAR < FREE_NUMBER_PRICE_CEILING_QAR : n.priceQAR >= FREE_NUMBER_PRICE_CEILING_QAR)
         );
-
-  // An agent may hold at most two numbers at a time. Enforced on the action
-  // that CREATES a hold (manual reservation); picking one of their own
-  // existing holds off this tab is not a new reservation and stays allowed
-  // however many they have.
-  const atReservationCap = heldByAgent.length >= MAX_RESERVATIONS_PER_AGENT;
 
   // When reserved numbers are held, the most recently reserved one is chosen for the agent as the
   // picker opens (on the Reserved tab, which is where it opens). Once, on load. The one exception is a
@@ -718,34 +676,6 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
             onClick={() => setPage((n) => n + 1)}
           >
             Next
-          </Button>
-        </div>
-      )}
-
-      {/* Manual MSISDN entry. The "Enter a different MSISDN manually" link
-          that used to collapse this once a number was picked was removed on
-          2026-09-27 per the walkthrough. The form itself stays, but only
-          BEFORE a selection exists: with a number already chosen there is
-          nothing for it to do, and it read as a second required step sitting
-          under the confirmation. Omitted entirely for Postpaid (2026-09-28
-          "This section is not required") via allowManualEntry - see that
-          prop's own note. */}
-      {allowManualEntry && !selected && (
-        <div className="card card-surface p-4 space-y-2">
-          <h4 className="text-fg font-semibold">Manual MSISDN Entry</h4>
-          <Input
-            label="Custom MSISDN"
-            placeholder="+974 XXXX XXXX"
-            value={customMsisdn}
-            onChange={(e) => {
-              setCustomMsisdn(e.target.value);
-              setCustomError(null);
-            }}
-            error={customError ?? undefined}
-            helperText="Enter a full international format MSISDN"
-          />
-          <Button variant="primary" className="w-full" disabled={!isValidMsisdn(customMsisdn)} onClick={reserveCustom}>
-            Reserve Custom Number
           </Button>
         </div>
       )}

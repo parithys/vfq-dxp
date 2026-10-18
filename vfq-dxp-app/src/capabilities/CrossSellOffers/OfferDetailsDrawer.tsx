@@ -1,4 +1,3 @@
-import { CloseButton } from '../../components/primitives/CloseButton';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Button } from '../../components/primitives/Button';
@@ -127,21 +126,14 @@ export function OfferDetailsDrawer({
       ].filter((r) => r.value)
     : [];
 
-  const header = (
-    <div className="flex items-center justify-between px-6 pt-5 pb-3 shrink-0">
-      <span className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Offer details</span>
-      <CloseButton onClick={onClose} />
-    </div>
-  );
-
+  // The shared Drawer lays the two buttons out equally.
   const footer = (
-    <div className="grid w-full grid-cols-2 gap-4">
-      <Button variant="secondary" onClick={onClose} className="w-full justify-center">
+    <>
+      <Button variant="secondary" onClick={onClose}>
         Close
       </Button>
       <Button
         variant="primary"
-        className="w-full justify-center"
         onClick={() => {
           if (!selected) onSelect();
           onClose();
@@ -150,15 +142,14 @@ export function OfferDetailsDrawer({
         {selected ? 'Selected' : 'Select this offer'}
         {!selected && <Icon path={ICONS.right} className="w-4 h-4" />}
       </Button>
-    </div>
+    </>
   );
 
   return (
     <Drawer
       open={offer !== null}
       onClose={onClose}
-      title={o?.offerName ?? 'Offer details'}
-      header={header}
+      title="Offer details"
       footer={footer}
       bodyClassName="px-6 pb-6 pt-6"
     >

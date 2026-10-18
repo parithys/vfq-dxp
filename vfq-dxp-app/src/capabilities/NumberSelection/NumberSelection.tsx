@@ -25,8 +25,6 @@ export interface NumberSelectionProps {
   plan?: { mrcQar?: number; starEntitlementQar?: number };
   /** Changes when the agent presses Refresh: the number inventory is read again. */
   refreshKey?: number;
-  /** Show the Manual MSISDN Entry form (default true; New Postpaid turns it off). */
-  allowManualEntry?: boolean;
   /** Offer "Use a Pre-Paired SIM" beside picking a number. `checked` hides the picker; the number then comes from the SIM. */
   prePaired?: { checked: boolean; onChange: (checked: boolean) => void };
   /** Portal only: the numbers reserved in this portal session, listed on its Reserved tab. */
@@ -35,7 +33,7 @@ export interface NumberSelectionProps {
   onUnreserve?: (msisdn: string) => void;
 }
 
-export function NumberSelection({ value, onChange, variant = 'journey', plan, refreshKey, allowManualEntry, prePaired, reservedHere, onUnreserve }: NumberSelectionProps) {
+export function NumberSelection({ value, onChange, variant = 'journey', plan, refreshKey, prePaired, reservedHere, onUnreserve }: NumberSelectionProps) {
   const inJourney = variant === 'journey';
   const picker = (
     <MsisdnPicker
@@ -47,8 +45,6 @@ export function NumberSelection({ value, onChange, variant = 'journey', plan, re
       refreshKey={refreshKey}
       planMrcQar={plan?.mrcQar}
       starEntitlementQar={plan?.starEntitlementQar}
-      // The portal has no Manual MSISDN Entry: a number is chosen from the inventory.
-      allowManualEntry={inJourney ? allowManualEntry : false}
       inlineToolbar={inJourney}
       hideReservedBadge={inJourney}
       // The portal alone has its own tab order (Star, Free, Reserved) and shows no number that was already held.

@@ -4,7 +4,6 @@ import { maskEmail } from '../../components/patterns/guidedContactModel';
 import type { EligibilityResult } from '../../components/domain/eligibilityTypes';
 import type { ZsbAddressValue } from '../../components/patterns/ZsbAddressStep';
 import { BillingAccount } from './BillingAccount';
-import type { BillingProfileValue } from '../../components/patterns/BillingProfileStep';
 import { BILLING_PROFILE_LABEL } from '../../data/stepLabels';
 import { isBillingAccountValid } from '../../components/patterns/billingAccountModel';
 import type { BillingAccountValue } from '../../components/patterns/billingAccountModel';
@@ -13,8 +12,7 @@ import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTy
 // "Billing Profile" (2026-09-28 request) - Step 3, immediately
 // after Communication Address. NOT a revival of the old Billing
 // step removed 2026-09-25 (Language/Payment Type/Payment Method/
-// Bill Media, SCR-156) - that component (BillingProfileStep.tsx)
-// still exists and is still used by NewMnpWizard, untouched. This
+// Bill Media, SCR-156) - that component is gone. This
 // is a different, much larger step: pick one of the customer's
 // existing billing accounts, or create one (contact, address,
 // card-on-file tokenization, bill cycle, and the profile's own
@@ -43,7 +41,6 @@ export function billingAccountStep(): WizardStep {
           .join(', ') || undefined;
       return (
         <BillingAccount
-          mode="account"
           customerId={eligibility?.customerId}
           defaultAddressLine={defaultAddressLine}
           value={(values.billingAccount as BillingAccountValue) ?? {}}
@@ -57,20 +54,5 @@ export function billingAccountStep(): WizardStep {
       );
     },
     isValid: (values) => isBillingAccountValid((values.billingAccount as BillingAccountValue) ?? {}),
-  };
-}
-
-/**
- * Billing settings for the order (language, payment method, bill media), stored under `billing`. Always complete:
- * every field has a default.
- */
-export function billingSettingsStep(): WizardStep {
-  return {
-    key: 'billing',
-    label: BILLING_PROFILE_LABEL,
-    render: ({ values, setValue }) => (
-      <BillingAccount mode="settings" value={(values.billing as BillingProfileValue) ?? {}} onChange={(v) => setValue('billing', v)} />
-    ),
-    isValid: () => true,
   };
 }

@@ -110,7 +110,7 @@
      control across the app kept the same white --bg an enabled one uses and
      read as identical to it apart from a slightly paler border, which several
      screens surfaced as ad-hoc bg-bg divs standing in for a disabled input
-     (DeviceInstallmentStep's Upfront payment, BillingProfileStep's Payment
+     (DeviceInstallmentStep's Upfront payment, the old billing settings' Payment
      Type). Deliberately NOT --surface (#f5f7f9), which readOnly fields
      already use: disabled and readOnly are documented elsewhere in this file
      as different states - readOnly is real data the agent reads back,

@@ -10,10 +10,10 @@ import { PageHeader } from '../../components/patterns/PageHeader';
 // Notes (BNT) configuration screens - both genuinely new capabilities, not
 // placeholders, added alongside the original viewer rather than replacing it.
 const TABS: TabItem[] = [
-  { key: 'roles', label: 'Roles & Access', content: <RoleAccessSection /> },
+  { key: 'capabilities', label: 'Capability Library', content: <CapabilityLibrarySection /> },
   { key: 'bell', label: 'Bell Notifications', content: <BellNotificationsSection /> },
   { key: 'bulk-notes', label: 'Bulk Notes', content: <BulkNotesConfigSection /> },
-  { key: 'capabilities', label: 'Capability Library', content: <CapabilityLibrarySection /> },
+  { key: 'roles', label: 'Roles & Access', content: <RoleAccessSection /> },
 ];
 
 export function AdministrationWorkspace() {

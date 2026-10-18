@@ -43,8 +43,6 @@ export function postpaidSteps({ products, customerBenefits, device }: PostpaidSt
       priceField: 'numberPriceQAR',
       // Refresh sits at the right of the title row and reloads the number inventory on every tab.
       refresh: true,
-      // "This section is not required" (2026-09-28) - Postpaid only; the other journeys keep Manual MSISDN Entry.
-      allowManualEntry: false,
       plan: (values) => {
         const plan = products.find((p) => p.productId === values.productId);
         return plan ? { mrcQar: plan.mrcQAR, starEntitlementQar: starEntitlementQar(plan) } : undefined;
