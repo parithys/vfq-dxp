@@ -1,0 +1,19 @@
+// "Customer view" is offered on the same screens in every journey: one policy, keyed by the shared step keys.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { load, close } from './harness.mjs';
+
+test('Customer view is offered on Recommended Offers, Offers & Plans, Add-ons, Checkout and CAF & Signature only', async () => {
+  const { hasCustomerView } = await load('/src/components/patterns/wizard/customerViewPolicy.ts');
+  for (const key of ['crossSales', 'plan', 'addons', 'planExtras', 'checkout', 'caf']) assert.equal(hasCustomerView(key), true, key);
+  for (const key of ['contact', 'product', 'line', 'number', 'sim', 'simType', 'address', 'billingAccount', 'payment', 'cart', 'subscriptions', 'appointment', 'activity', undefined]) {
+    assert.equal(hasCustomerView(key), false, String(key));
+  }
+});
+
+test('no step decides Customer view for itself', async () => {
+  const { execSync } = await import('node:child_process');
+  assert.equal(execSync('grep -rn hideCustomerView src || true').toString().trim(), '');
+});
+
+test.after(close);

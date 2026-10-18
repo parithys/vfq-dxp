@@ -82,7 +82,7 @@ export function buildDetailedTables({
         ...(creditLimitQar !== undefined
           ? [
               { label: 'Credit limit', value: `QAR ${creditLimitQar}`, boldLabel: true },
-              { label: 'Bill limit', value: billLimit !== undefined ? `QAR ${billLimit}` : `Up to QAR ${creditLimitQar}`, boldLabel: true },
+              { label: 'Bill limit', value: billLimit !== undefined || plan?.mrcQAR !== undefined ? `QAR ${billLimit ?? plan?.mrcQAR}` : `Up to QAR ${creditLimitQar}`, boldLabel: true },
             ]
           : []),
       ],

@@ -10,6 +10,7 @@ import { TechnicalFailure } from '../../components/patterns/ValidationStatus';
 import type { EligibilityResult, CustomerRecord, IdentityDocRecord } from '../../components/domain/eligibilityTypes';
 import { buildEligibilityRows } from '../../components/domain/eligibilityRowsModel';
 import { EligibilityChecksList } from '../../components/domain/EligibilityRows';
+import { useActedForCustomer } from '../../components/patterns/useActedForCustomer';
 
 
 interface EligibilityGateStepProps {
@@ -41,6 +42,8 @@ interface EligibilityGateStepProps {
   asNewCustomer?: boolean;
   /** Journey started from Customer 360: check this customer (and their own ID document), whatever ID the scan returned. */
   asCustomerId?: string;
+  /** The journey adds no line (a plan change), so the active-line limit does not apply: it neither shows nor routes the order for approval. */
+  skipLineLimit?: boolean;
   /**
    * Pattern 3 (Alternative Product), rendered as a "Switch to Prepaid" button
    * when a collections block soft-stops the order (2026-09-28). Only makes
@@ -92,8 +95,10 @@ export function EligibilityGateStep({
   onSwitchToPrepaid,
   announcePass = true,
   asNewCustomer = false,
-  asCustomerId,
+  asCustomerId: explicitCustomerId,
+  skipLineLimit = false,
 }: EligibilityGateStepProps) {
+  const asCustomerId = useActedForCustomer(explicitCustomerId, asNewCustomer);
   // A cached result for THIS identity. Computed during render rather than in
   // an effect so the first paint on re-entry already shows the rows.
   const cached =
@@ -135,9 +140,9 @@ export function EligibilityGateStep({
     (async () => {
      try {
       const docs = await callService('moi', () => mockDataEngine.list<IdentityDocRecord>('identity-documents'));
-      let doc: IdentityDocRecord | undefined = asCustomerId
-        ? (docs.find((d) => d.customerId === asCustomerId) ?? docs.find((d) => d.documentNumber === idNumber))
-        : docs.find((d) => d.documentNumber === idNumber);
+      // The presented ID decides who is checked; the selected customer is only a fallback for an ID with no document record.
+      let doc: IdentityDocRecord | undefined =
+        docs.find((d) => d.documentNumber === idNumber) ?? (asCustomerId ? docs.find((d) => d.customerId === asCustomerId) : undefined);
       // Known to NAS but with no customer record = a NEW customer. Nothing on
       // file to block them: no blacklist, no lines, no deals, no balance.
       let nasCustomer: CustomerRecord | undefined;
@@ -169,7 +174,9 @@ export function EligibilityGateStep({
       if (!match.nationality || (!nasCustomer && !match.dob)) throw new ServiceError('customer-lookup', 'partial');
       const blacklist = evaluateRule('BR-113', { blacklisted: match.blacklisted, blacklistReason: match.blacklistReason });
       const lineCap =
-        journeyType === 'prepaid'
+        skipLineLimit
+          ? { pass: true, hardStop: false, message: undefined as string | undefined }
+          : journeyType === 'prepaid'
           ? evaluateRule('BR-347', {
               idType: match.idType,
               nationality: match.nationality,

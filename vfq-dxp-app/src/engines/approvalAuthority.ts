@@ -19,7 +19,7 @@ export const ORDER_AWAITING_DECISION = 'Submitted for Approval';
  */
 export const isSimSwapAwaitingDecision = (status: unknown): boolean => status === ORDER_AWAITING_DECISION || status === 'Pending Approval';
 
-export type ApprovalBlock = 'not-awaiting' | 'no-grant' | 'wrong-role' | 'matrix-unavailable';
+export type ApprovalBlock = 'not-awaiting' | 'no-grant' | 'wrong-role' | 'matrix-unavailable' | 'own-order';
 
 export interface ApprovalAuthority {
   /** The Approve / Reject / Return actions are offered. */
@@ -40,10 +40,14 @@ export function orderApprovalAuthority(args: {
   orderType: string;
   /** The role the order itself was routed to (line-cap and manual-ID orders carry one); wins over the matrix. */
   approverRole?: string;
+  /** Who created the order and who is deciding: nobody decides an order they created themselves (maker-checker). */
+  createdBy?: string;
+  userId?: string;
 }): ApprovalAuthority {
   const requiredRole = args.approverRole ?? getRequiredApproverRole(args.orderType);
   if (args.status !== ORDER_AWAITING_DECISION) return { mayDecide: false, blockedBy: 'not-awaiting', requiredRole };
   if (!holdsApproveGrant(args.personaId, 'SCR-061')) return { mayDecide: false, blockedBy: 'no-grant', requiredRole };
+  if (args.createdBy && args.userId && args.createdBy === args.userId) return { mayDecide: false, blockedBy: 'own-order', requiredRole };
   if (requiredRole && requiredRole !== args.jobTitle) return { mayDecide: false, blockedBy: 'wrong-role', requiredRole };
   // No role on the order and no matrix to consult: the approval rules did not load, which is not the same as a category with no restriction.
   if (!requiredRole && !args.approverRole && !isApprovalMatrixAvailable()) return { mayDecide: false, blockedBy: 'matrix-unavailable' };
@@ -51,7 +55,7 @@ export function orderApprovalAuthority(args: {
 }
 
 /** Whether a persona + job title may CLAIM / open an order from the queue (the same two checks, ignoring status). */
-export const mayClaimOrder = (args: { personaId: string; jobTitle?: string; orderType: string; approverRole?: string }): boolean =>
+export const mayClaimOrder = (args: { personaId: string; jobTitle?: string; orderType: string; approverRole?: string; createdBy?: string; userId?: string }): boolean =>
   orderApprovalAuthority({ ...args, status: ORDER_AWAITING_DECISION }).mayDecide;
 
 /** The SIM swap queue is worked by the fulfilment roles (Edit and above on it); sales roles only raise the requests. */
@@ -65,6 +69,7 @@ export function simSwapDecisionAuthority(args: { personaId: string; status: stri
 export function approvalBlockMessage(subject: 'order' | 'ticket' | 'SIM swap', a: ApprovalAuthority): string | undefined {
   if (a.mayDecide || !a.blockedBy || a.blockedBy === 'not-awaiting') return undefined;
   if (a.blockedBy === 'matrix-unavailable') return `The approval rules could not be loaded, so this ${subject} cannot be decided right now. Reload the page.`;
+  if (a.blockedBy === 'own-order') return `You created this ${subject}, so someone else has to decide it.`;
   if (a.blockedBy === 'wrong-role') return `Only the ${a.requiredRole} role may approve, reject, or return this ${subject}.`;
   return `You have view access to this ${subject}; approving or rejecting it needs the Approve permission, which your role does not hold.`;
 }
@@ -90,7 +95,7 @@ export function ordersAwaitingDecisionBy<T extends OrderLike>(orders: T[], who: 
     (o) =>
       o.status === ORDER_AWAITING_DECISION &&
       (!o.assignedApproverId || o.assignedApproverId === who.userId) &&
-      mayClaimOrder({ personaId: who.personaId, jobTitle: who.jobTitle, orderType: o.orderType, approverRole: o.approverRole })
+      mayClaimOrder({ personaId: who.personaId, jobTitle: who.jobTitle, orderType: o.orderType, approverRole: o.approverRole, createdBy: o.createdBy, userId: who.userId })
   );
 }
 

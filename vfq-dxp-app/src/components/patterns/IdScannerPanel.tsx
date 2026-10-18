@@ -18,6 +18,7 @@ export function IdScannerPanel({
   verifyThenFetch,
   autoDetectIdType,
   contextNoDocument,
+  contextHeldTypes,
   contextIdentity,
   scanComplete,
   setNotFound,
@@ -34,6 +35,7 @@ export function IdScannerPanel({
   verifyThenFetch: boolean;
   autoDetectIdType: boolean;
   contextNoDocument: string | undefined;
+  contextHeldTypes: string[];
   contextIdentity: SpecimenIdentity | undefined;
   scanComplete: boolean;
   setNotFound: (v: boolean) => void;
@@ -59,8 +61,14 @@ export function IdScannerPanel({
       </p>
       {contextNoDocument ? (
         <div role="status" className="card card-surface p-6 text-center space-y-1">
-          <p className="text-fg font-semibold">No identity document on file for {contextNoDocument}</p>
-          <p className="text-fg-2 text-[length:var(--fs-caption)]">There is no card to read for this customer. Enter the ID number manually.</p>
+          <p className="text-fg font-semibold">
+            {contextHeldTypes.length > 0 ? `No ${idTypeLabel(idType)} on file for ${contextNoDocument}` : `No identity document on file for ${contextNoDocument}`}
+          </p>
+          <p className="text-fg-2 text-[length:var(--fs-caption)]">
+            {contextHeldTypes.length > 0
+              ? `They hold: ${contextHeldTypes.map((t) => idTypeLabel(t as QidType)).join(', ')}. Choose that ID type, or enter the number manually.`
+              : 'There is no card to read for this customer. Enter the ID number manually.'}
+          </p>
         </div>
       ) : (
       <QidImageUpload

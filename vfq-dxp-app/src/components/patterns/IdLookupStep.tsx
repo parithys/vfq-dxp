@@ -106,6 +106,8 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
     handleIdTypeChange,
     contextIdentity,
     contextNoDocument,
+    ownerMismatch,
+    contextHeldTypes,
     failure,
     retrying,
     duplicates,
@@ -170,6 +172,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
       verifyThenFetch={Boolean(verifyThenFetch)}
       autoDetectIdType={Boolean(autoDetectIdType)}
       contextNoDocument={contextNoDocument}
+      contextHeldTypes={contextHeldTypes}
       contextIdentity={contextIdentity}
       scanComplete={scanComplete}
       setNotFound={setNotFound}
@@ -203,6 +206,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
     <QidNumberField
       idType={idType}
       inputRef={numberInputRef}
+      barcodeNumber={idType === 'QID' ? contextIdentity?.idNo : undefined}
       value={value.idNumber ?? ''}
       onChange={(idNumber: string) => {
         setNotFound(false);
@@ -216,7 +220,9 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
           ? 'No MOI record found for this ID - try again.'
           : expiryMismatch
             ? 'The expiry date does not match the MOI record - check the card and try again.'
-            : undefined
+            : ownerMismatch
+              ? `This ID belongs to another customer. This journey is for ${ownerMismatch}.`
+              : undefined
       }
       inlineField={
         verifyThenFetch && effectiveScannable && (scanComplete || manualEntryUnlocked) ? (

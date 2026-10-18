@@ -25,7 +25,6 @@ export function numberSelectionStep(
     summary: numberSummary(opts.priceField),
     ...(opts.refresh
       ? {
-          hideCustomerView: true,
           headerAction: ({ values, setValue }) => (
             <Button
               variant="secondary"

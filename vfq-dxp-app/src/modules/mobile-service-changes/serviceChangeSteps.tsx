@@ -83,7 +83,8 @@ const prepaidDue = (values: Values) => (values.checkoutTotals as PrepaidCheckout
 export function changePostpaidPlanSteps(ctx: ServiceChangeContext): WizardStep[] {
   const planContext = { products: ctx.products, customerBenefits: ctx.customerBenefits, hiddenProductId: (values: Values) => lineOf(values)?.productId };
   return [
-    customerQualificationStep({ ...ctx, productAgnostic: true, knownCustomer: true }),
+    // A plan change adds no line, so the postpaid line limit does not apply.
+    customerQualificationStep({ ...ctx, productAgnostic: true, knownCustomer: true, skipLineLimit: true }),
     lineSelectionStep({ lineType: 'postpaid', onSelect: selectLineForPlanChange }),
     postpaidPlanStep(planContext),
     postpaidExtrasStep(planContext),
@@ -131,7 +132,8 @@ export function addAddonSteps(ctx: ServiceChangeContext): WizardStep[] {
   const onlyPrepaid = (step: WizardStep): WizardStep => ({ ...step, skip: (values) => !prepaid(values) });
   return attachSummaries(
     [
-      customerQualificationStep({ ...ctx, productAgnostic: true, knownCustomer: true }),
+      // An add-on adds no line, so the postpaid line limit does not apply.
+      customerQualificationStep({ ...ctx, productAgnostic: true, knownCustomer: true, skipLineLimit: true }),
       lineSelectionStep({ requirePlan: true, onSelect: selectLineForAddon }),
       addonsSelectionStep({ planId: (values) => lineOf(values)?.productId, source: (values) => (prepaid(values) ? 'prepaid' : 'catalogue') }),
       onlyPostpaid(checkoutSummaryStep({ msisdn: (values) => lineOf(values)?.identifier, editStepKey: () => 'addons' })),

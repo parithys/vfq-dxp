@@ -141,12 +141,12 @@ export function CheckoutDefaultLayout({
         {creditLimitQar !== undefined && <Row label="Credit limit" value={`QAR ${creditLimitQar}`} />}
         {/* Bill limit (2026-09-28): the agent's own figure from Plan &
             Add-ons' BillLimitEditor once they have set one, falling back to
-            stating the credit-limit cap when they have not - never a made-up
+            the plan's own figure (what Plan & Add-ons shows by default), then the credit-limit cap - never a made-up
             number, and never silently absent. */}
         {creditLimitQar !== undefined && (
           <Row
             label="Bill limit"
-            value={billLimit !== undefined ? `QAR ${billLimit}` : `Up to QAR ${creditLimitQar}`}
+            value={billLimit !== undefined || plan?.mrcQAR !== undefined ? `QAR ${billLimit ?? plan?.mrcQAR}` : `Up to QAR ${creditLimitQar}`}
             detail={`Capped at the QAR ${creditLimitQar} credit limit`}
           />
         )}

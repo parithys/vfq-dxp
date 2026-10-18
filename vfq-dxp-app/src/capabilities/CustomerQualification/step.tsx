@@ -9,6 +9,7 @@ import type { BillingAccountValue } from '../../components/patterns/billingAccou
 import { EligibilityGateStep } from '../EligibilityGate/EligibilityGateStep';
 import type { EligibilityResult } from '../../components/domain/eligibilityTypes';
 import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTypes';
+import { LAUNCH_CUSTOMER_KEY } from '../../components/patterns/wizard/useJourneyStartResume';
 import { CustomerStatusBanner } from './JourneyBanners';
 import { EligibilityOutcomePanel, OutcomeActions } from '../EligibilityGate/EligibilityOutcomes';
 import { CustomerTypeStep } from '../CustomerType/CustomerTypeStep';
@@ -42,15 +43,21 @@ export interface QualificationContext {
    * the scanned ID belongs to is looked up as the existing customer, not handled as a new one. The default (a New Customer journey) handles them as new.
    */
   knownCustomer?: boolean;
+  /**
+   * With `knownCustomer`: the customer the agent is acting for (opened from Customer 360 or Customer Search). The scan reads THAT customer's own document and eligibility is
+   * judged for them - a scan never returns someone else. Absent, the agent identifies whoever is in front of them.
+   */
+  knownCustomerId?: string;
+  /** The journey adds no line (a plan change): the active-line limit is not checked. */
+  skipLineLimit?: boolean;
 }
 
-export function customerQualificationStep({ flow, existingCustomerId, guardedContactChange, journeyType = 'postpaid', manualEntry, productAgnostic = false, knownCustomer = false }: QualificationContext): WizardStep {
+export function customerQualificationStep({ flow, existingCustomerId, guardedContactChange, journeyType = 'postpaid', manualEntry, productAgnostic = false, knownCustomer = false, knownCustomerId, skipLineLimit = false }: QualificationContext): WizardStep {
   const prepaid = journeyType === 'prepaid';
   return {
     key: 'contact',
     summary: prepaid ? contactSummary.filter((f) => f.key !== 'customerType') : contactSummary,
     label: CUSTOMER_IDENTIFICATION_LABEL,
-    hideCustomerView: true,
     // 2026-09-28: the separate 'eligibility' step is GONE - no more
     // rail entry, no more skip()/autoAdvanceWhen() dance to hide it on
     // a clean run. Eligibility now lives permanently as a stacked
@@ -60,6 +67,8 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
     // Passing checks render nothing at all (EligibilityGateStep
     // returns null); only what needs the agent's attention appears.
     render: ({ values, setValue }) => {
+      // The customer the journey was opened for (kept in the draft by the wizard), unless the shell names one.
+      const actedForId = knownCustomer ? (knownCustomerId ?? (values[LAUNCH_CUSTOMER_KEY] as string | undefined)) : undefined;
       const contact = values.contact as GuidedContactValue | undefined;
       const eligibility = values.eligibility as EligibilityResult | undefined;
       return (
@@ -69,7 +78,7 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
           // New Customer journey: whoever the scanned ID belongs to is handled as a genuine new customer.
           asNewCustomer={flow === 'new' && !knownCustomer}
           // Customer 360 entry: the customer is the one the journey was opened for.
-          asCustomerId={flow === 'existing' ? existingCustomerId : undefined}
+          asCustomerId={flow === 'existing' ? existingCustomerId : actedForId}
           // All four ID types are offered (2026-10-04). Passport, GCC ID and Diplomatic ID are exception
           // identification: the eligibility engine routes them to approval rather than blocking them here.
           allowedIdTypes={idTypesFor(prepaid ? 'prepaid' : 'new-connection')}
@@ -87,8 +96,9 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
           <EligibilityOutcomePanel />
           <EligibilityGateStep
             asNewCustomer={flow === 'new' && !knownCustomer}
-            asCustomerId={flow === 'existing' ? existingCustomerId : undefined}
+            asCustomerId={flow === 'existing' ? existingCustomerId : actedForId}
             announcePass={false}
+            skipLineLimit={skipLineLimit}
             journeyType={journeyType}
             // The customer's full set of checks, as the single-product journeys always showed them at Customer Identification: ID type
             // approval, the active-line limit, collections and the rest. (Prepaid and MNP judge a few of them differently once the product
