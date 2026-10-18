@@ -16,6 +16,11 @@ const figmaHmrHost = figmaPublicUrl
 export default defineConfig({
   base: '/vfq-dxp-app/',
   plugins: [react(), tailwindcss()],
+  resolve: {
+    // Lazy route chunks and the eagerly loaded shell must share one React
+    // module identity, including after Vite rebuilds its dependency cache.
+    dedupe: ['react', 'react-dom'],
+  },
   cacheDir: `node_modules/.vite-${port}`,
   server: {
     port,

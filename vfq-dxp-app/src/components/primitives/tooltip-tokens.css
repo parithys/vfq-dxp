@@ -20,7 +20,7 @@
   --tooltip-line-height: 1.4;
   --tooltip-font-family: var(--font-body);
 
-  --tooltip-offset: calc(var(--space-unit) * 2);
+  --tooltip-offset: 8px;
   --tooltip-max-width: 240px;
 
   /* Half-height of the pointer triangle, so it protrudes this far from the
