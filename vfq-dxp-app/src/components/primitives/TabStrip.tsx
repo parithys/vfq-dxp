@@ -9,7 +9,7 @@ export interface TabStripItem<K extends string = string> {
 
 /**
  * The horizontal tab strip - the app's original underline tab bar: labels in a row on a thin rule, the selected one in the
- * accent colour and bold with an accent underline, the others charcoal and regular. The rule and the underline share one thickness, --tab-line-w; the rule is an inset shadow on the strip (not a border), so
+ * accent colour and bold with an accent underline, the others charcoal and regular. The rule is --tab-line-w and the selected underline --tab-active-w (thicker); the rule is an inset shadow on the strip (not a border), so
  * the scroll container does not clip the selected underline that sits on it. Colours are design-system
  * tokens only (accent, fg, and --tab-line-color for the rule, which is --field-card-border). Use it for
  * NAVIGATION and CONTENT tabs - tabs that switch the section or view shown below. Tabs that only FILTER the same data use
@@ -61,7 +61,7 @@ export function TabStrip<K extends string>({
             aria-selected={selected}
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(key)}
-            className={`flex shrink-0 items-center gap-2 border-b-[length:var(--tab-line-w)] px-4 py-3 text-[length:var(--fs-body)] whitespace-nowrap transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+            className={`flex shrink-0 items-center gap-2 border-b-[length:var(--tab-active-w)] px-4 py-3 text-[length:var(--fs-body)] whitespace-nowrap transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
               selected ? 'border-accent text-accent font-bold' : 'border-transparent text-fg hover:text-accent'
             }`}
           >
