@@ -83,7 +83,8 @@ const prepaidDue = (values: Values) => (values.checkoutTotals as PrepaidCheckout
 export function changePostpaidPlanSteps(ctx: ServiceChangeContext): WizardStep[] {
   const planContext = { products: ctx.products, customerBenefits: ctx.customerBenefits, hiddenProductId: (values: Values) => lineOf(values)?.productId };
   return [
-    customerQualificationStep({ ...ctx, productAgnostic: true, knownCustomer: true }),
+    // A plan change adds no line, so the postpaid line limit does not apply.
+    customerQualificationStep({ ...ctx, productAgnostic: true, knownCustomer: true, skipLineLimit: true }),
     lineSelectionStep({ lineType: 'postpaid', onSelect: selectLineForPlanChange }),
     postpaidPlanStep(planContext),
     postpaidExtrasStep(planContext),

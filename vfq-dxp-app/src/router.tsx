@@ -82,10 +82,10 @@ export function AppRouter() {
       <Route path="/mobile" element={<ProductLinePage lineKey="mobile" />} />
       <Route path="/mobile/start-connection" element={<NewConnectionWizard flow="new" />} />
       <Route path="/mobile/start-connection/existing/:customerId" element={<NewConnectionWizard flow="existing" />} />
-      {/* Plans & Numbers journeys on an existing line (journeys of the Mobile Services line; the menu leads here). */}
-      <Route path="/mobile/change-postpaid-plan" element={<ChangePostpaidPlanWizard />} />
-      <Route path="/mobile/change-prepaid-pack" element={<ChangePrepaidPackWizard />} />
-      <Route path="/mobile/add-addon" element={<AddAddonWizard />} />
+      {/* Plans & Numbers journeys on an existing line (journeys of the Mobile Services line; the menu leads here). Guarded by their grant: a typed or bookmarked URL is refused like the menu. */}
+      <Route path="/mobile/change-postpaid-plan" element={<RequireFeature featureKey="mobile.change-postpaid-plan"><ChangePostpaidPlanWizard /></RequireFeature>} />
+      <Route path="/mobile/change-prepaid-pack" element={<RequireFeature featureKey="mobile.change-prepaid-pack"><ChangePrepaidPackWizard /></RequireFeature>} />
+      <Route path="/mobile/add-addon" element={<RequireFeature featureKey="mobile.add-addon"><AddAddonWizard /></RequireFeature>} />
       <Route path="/mobile/:category" element={<ProductLinePage lineKey="mobile" />} />
       <Route path="/fibre-home/start-connection/existing/:customerId" element={<NewConnectionWizard flow="existing" journey="home" />} />
       <Route path="/fibre-home" element={<ProductLinePage lineKey="fibre-home" />} />

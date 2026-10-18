@@ -48,9 +48,11 @@ export interface QualificationContext {
    * judged for them - a scan never returns someone else. Absent, the agent identifies whoever is in front of them.
    */
   knownCustomerId?: string;
+  /** The journey adds no line (a plan change): the active-line limit is not checked. */
+  skipLineLimit?: boolean;
 }
 
-export function customerQualificationStep({ flow, existingCustomerId, guardedContactChange, journeyType = 'postpaid', manualEntry, productAgnostic = false, knownCustomer = false, knownCustomerId }: QualificationContext): WizardStep {
+export function customerQualificationStep({ flow, existingCustomerId, guardedContactChange, journeyType = 'postpaid', manualEntry, productAgnostic = false, knownCustomer = false, knownCustomerId, skipLineLimit = false }: QualificationContext): WizardStep {
   const prepaid = journeyType === 'prepaid';
   return {
     key: 'contact',
@@ -97,6 +99,7 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
             asNewCustomer={flow === 'new' && !knownCustomer}
             asCustomerId={flow === 'existing' ? existingCustomerId : actedForId}
             announcePass={false}
+            skipLineLimit={skipLineLimit}
             journeyType={journeyType}
             // The customer's full set of checks, as the single-product journeys always showed them at Customer Identification: ID type
             // approval, the active-line limit, collections and the rest. (Prepaid and MNP judge a few of them differently once the product

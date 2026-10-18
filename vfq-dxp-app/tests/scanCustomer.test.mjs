@@ -34,4 +34,46 @@ test('scan and eligibility resolve the customer through the shared acted-for hoo
   }
 });
 
+
+
+test('Change Postpaid Plan skips the postpaid line limit; the other journeys keep it', async () => {
+  const src = fs.readFileSync('src/modules/mobile-service-changes/serviceChangeSteps.tsx', 'utf8');
+  const plan = src.slice(src.indexOf('export function changePostpaidPlanSteps'), src.indexOf('export function changePrepaidPackSteps'));
+  assert.match(plan, /skipLineLimit: true/);
+  assert.equal((src.match(/skipLineLimit/g) ?? []).length, 1);
+  assert.match(fs.readFileSync('src/capabilities/EligibilityGate/EligibilityGateStep.tsx', 'utf8'), /skipLineLimit\s*\? \{ pass: true/);
+});
+test('the line-change routes are guarded by their feature grants', () => {
+  const router = fs.readFileSync('src/router.tsx', 'utf8');
+  for (const [path, key] of [['change-postpaid-plan', 'mobile.change-postpaid-plan'], ['change-prepaid-pack', 'mobile.change-prepaid-pack'], ['add-addon', 'mobile.add-addon']]) {
+    assert.match(router, new RegExp(`path="/mobile/${path}" element=\\{<RequireFeature featureKey="${key.replace('.', '\\.')}">`), path);
+  }
+});
+
+test('a consumer billing profile carries its own customer\'s contact, not another customer\'s', () => {
+  const read = (f) => JSON.parse(fs.readFileSync(`public/mock-data/${f}.json`, 'utf8'));
+  const customers = new Map(read('customers').map((c) => [c.customerId, c]));
+  const owner = new Map(read('accounts').map((a) => [a.billingProfileId, a.customerId]));
+  const bad = read('billing-profiles').filter((b) => {
+    const c = customers.get(owner.get(b.billingProfileId));
+    return c && c.segment !== 'Enterprise (EBU)' && c.email && b.billingContactEmail !== c.email;
+  });
+  assert.deepEqual(bad.map((b) => b.billingProfileId), []);
+});
+
+test('checkout shows the plan\'s own bill limit when the agent set none, as Plan & Add-ons does', () => {
+  for (const f of ['src/components/patterns/checkoutDetailedTables.ts', 'src/components/patterns/CheckoutDefaultLayout.tsx']) {
+    assert.match(fs.readFileSync(f, 'utf8'), /billLimit \?\? plan\?\.mrcQAR/, f);
+  }
+});
+
+
+test('the presented ID decides who is identified; the selected customer only steers the scanner', () => {
+  const lookup = fs.readFileSync('src/components/patterns/useIdLookup.ts', 'utf8');
+  assert.match(lookup, /\(boundHoldsIt \? explicitCustomerId : match\.customerId\)/);
+  assert.doesNotMatch(lookup, /opts\.forceCustomerId \?\? asCustomerId/);
+  assert.match(lookup, /setOwnerMismatch\(/);
+  const elig = fs.readFileSync('src/capabilities/EligibilityGate/EligibilityGateStep.tsx', 'utf8');
+  assert.match(elig, /docs\.find\(\(d\) => d\.documentNumber === idNumber\) \?\? \(asCustomerId/);
+});
 test.after(close);

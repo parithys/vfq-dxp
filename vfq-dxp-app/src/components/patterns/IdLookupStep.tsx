@@ -106,6 +106,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
     handleIdTypeChange,
     contextIdentity,
     contextNoDocument,
+    ownerMismatch,
     contextHeldTypes,
     failure,
     retrying,
@@ -219,7 +220,9 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
           ? 'No MOI record found for this ID - try again.'
           : expiryMismatch
             ? 'The expiry date does not match the MOI record - check the card and try again.'
-            : undefined
+            : ownerMismatch
+              ? `This ID belongs to another customer. This journey is for ${ownerMismatch}.`
+              : undefined
       }
       inlineField={
         verifyThenFetch && effectiveScannable && (scanComplete || manualEntryUnlocked) ? (

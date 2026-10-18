@@ -28,7 +28,11 @@ interface UseIdLookupOptions {
 // State, effects and async lookups behind IdLookupStep. Everything here was the
 // body of the component, moved verbatim; the JSX stays in IdLookupStep.
 export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType, verifyThenFetch, asNewCustomer, asCustomerId: explicitCustomerId, manualEntry = false }: UseIdLookupOptions) {
+  // The customer the SCANNER defaults to (the one the journey was opened for, else the one selected). It only decides whose card the reader
+  // draws: who the presented ID belongs to is always decided by the ID itself (MOI), never by the context.
   const asCustomerId = useActedForCustomer(explicitCustomerId, asNewCustomer);
+  /** The ID the agent presented belongs to someone other than the customer this journey is bound to (that customer's name). */
+  const [ownerMismatch, setOwnerMismatch] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [expiryMismatch, setExpiryMismatch] = useState(false);
@@ -212,6 +216,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     setLoading(true);
     setNotFound(false);
     setExpiryMismatch(false);
+    setOwnerMismatch(undefined);
     setDuplicates(null);
     setExpiredNotice(false);
     setRetrying(Boolean(opts.retry));
@@ -259,7 +264,9 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
       // More than one record for this ID: never pick one silently. (The Customer
       // 360 journey is already fixed to its customer, and an explicit choice from
       // the agent resolves it.)
-      if (!asCustomerId && !opts.forceCustomerId) {
+      // The bound customer holding this very document settles which record it is.
+      const boundHoldsIt = Boolean(explicitCustomerId && !asNewCustomer && docMatches.some((d) => d.customerId === explicitCustomerId));
+      if (!opts.forceCustomerId && !boundHoldsIt) {
         const ids = [...new Set(docMatches.map((d) => d.customerId).filter(Boolean))];
         if (takeDuplicateFault('customer-lookup') && ids.length === 1) {
           const other = customers.find((c) => c.customerId !== ids[0]);
@@ -276,7 +283,13 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
         }
       }
 
-      const wantedId = opts.forceCustomerId ?? asCustomerId ?? match.customerId;
+      const wantedId = opts.forceCustomerId ?? (boundHoldsIt ? explicitCustomerId : match.customerId);
+      // A journey bound to a customer (opened from their Customer 360) cannot continue with someone else's document.
+      if (explicitCustomerId && !asNewCustomer && !opts.forceCustomerId && !boundHoldsIt && match.customerId) {
+        const bound = customers.find((c) => c.customerId === explicitCustomerId);
+        setOwnerMismatch(bound?.name ?? explicitCustomerId);
+        return;
+      }
       const customer = wantedId ? customers.find((c) => c.customerId === wantedId) : undefined;
       // The record this ID points at is missing from the lookup: that is a
       // lookup failure, NOT evidence that the person is new.
@@ -609,6 +622,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     handleIdTypeChange,
     contextIdentity,
     contextNoDocument,
+    ownerMismatch,
     contextHeldTypes,
     failure,
     retrying,
