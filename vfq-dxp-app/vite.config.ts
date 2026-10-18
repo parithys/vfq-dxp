@@ -7,11 +7,25 @@ import tailwindcss from '@tailwindcss/vite'
 // layout and behaviour adapt to the real viewport and device. Each port gets its own dependency cache (cacheDir) so servers
 // started together don't race to pre-bundle into one shared folder, and a fixed port (strictPort) so a view never moves.
 const port = process.env.PORT ? Number(process.env.PORT) : 5173
+const figmaPublicUrl = process.env.FIGMA_PUBLIC_URL
+const figmaHmrHost = figmaPublicUrl
+  ? new URL(figmaPublicUrl.includes('://') ? figmaPublicUrl : `https://${figmaPublicUrl}`).hostname
+  : undefined
 
 // https://vite.dev/config/
 export default defineConfig({
   base: '/vfq-dxp-app/',
   plugins: [react(), tailwindcss()],
   cacheDir: `node_modules/.vite-${port}`,
-  server: { port, strictPort: true },
+  server: {
+    port,
+    strictPort: true,
+    hmr: process.env.FIGMA
+      ? {
+          protocol: 'wss',
+          clientPort: 443,
+          ...(figmaHmrHost ? { host: figmaHmrHost } : {}),
+        }
+      : undefined,
+  },
 })
