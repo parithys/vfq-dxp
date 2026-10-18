@@ -32,7 +32,6 @@ export function productStep(ctx: ProductStepContext): WizardStep {
       label: 'Product Selection',
       heading: 'Product Selection',
       subheading: 'Choose the product the customer wants; the journey continues from here.',
-      hideCustomerView: true,
       summary: productSummary,
       render: ({ values, setValue, goNext }) => <ProductSelection values={values} setValue={setValue} goNext={goNext} ctx={ctx} />,
       isValid: (values) => Boolean(values.product) && productEligibilityClear(values),

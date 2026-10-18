@@ -58,7 +58,6 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
     key: 'contact',
     summary: prepaid ? contactSummary.filter((f) => f.key !== 'customerType') : contactSummary,
     label: CUSTOMER_IDENTIFICATION_LABEL,
-    hideCustomerView: true,
     // 2026-09-28: the separate 'eligibility' step is GONE - no more
     // rail entry, no more skip()/autoAdvanceWhen() dance to hide it on
     // a clean run. Eligibility now lives permanently as a stacked

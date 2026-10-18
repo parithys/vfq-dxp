@@ -3,6 +3,7 @@ import { Button } from '../../primitives/Button';
 import { Icon } from '../../primitives/Icon';
 import { Tooltip } from '../../primitives/Tooltip';
 import type { WizardStep } from './guidedWizardTypes';
+import { hasCustomerView } from './customerViewPolicy';
 
 const EYE_ICON = 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z';
 
@@ -24,7 +25,7 @@ export function WizardStepHeader({
   values?: Record<string, unknown>;
   setValue?: (field: string, value: unknown) => void;
 }) {
-  const showCustomerView = allowCustomerView && !currentStep?.hideCustomerView;
+  const showCustomerView = allowCustomerView && hasCustomerView(currentStep?.key);
   const action = currentStep?.headerAction && values && setValue ? currentStep.headerAction({ values, setValue }) : null;
   // Title left; Customer view floats at the right (see below) and the title row leaves room for it.
   return (

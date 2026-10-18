@@ -132,7 +132,8 @@ export function addAddonSteps(ctx: ServiceChangeContext): WizardStep[] {
   const onlyPrepaid = (step: WizardStep): WizardStep => ({ ...step, skip: (values) => !prepaid(values) });
   return attachSummaries(
     [
-      customerQualificationStep({ ...ctx, productAgnostic: true, knownCustomer: true }),
+      // An add-on adds no line, so the postpaid line limit does not apply.
+      customerQualificationStep({ ...ctx, productAgnostic: true, knownCustomer: true, skipLineLimit: true }),
       lineSelectionStep({ requirePlan: true, onSelect: selectLineForAddon }),
       addonsSelectionStep({ planId: (values) => lineOf(values)?.productId, source: (values) => (prepaid(values) ? 'prepaid' : 'catalogue') }),
       onlyPostpaid(checkoutSummaryStep({ msisdn: (values) => lineOf(values)?.identifier, editStepKey: () => 'addons' })),

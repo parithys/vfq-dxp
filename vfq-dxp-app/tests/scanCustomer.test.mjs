@@ -36,11 +36,12 @@ test('scan and eligibility resolve the customer through the shared acted-for hoo
 
 
 
-test('Change Postpaid Plan skips the postpaid line limit; the other journeys keep it', async () => {
+test('Change Postpaid Plan and Add Add-On skip the postpaid line limit; the other journeys keep it', async () => {
   const src = fs.readFileSync('src/modules/mobile-service-changes/serviceChangeSteps.tsx', 'utf8');
   const plan = src.slice(src.indexOf('export function changePostpaidPlanSteps'), src.indexOf('export function changePrepaidPackSteps'));
   assert.match(plan, /skipLineLimit: true/);
-  assert.equal((src.match(/skipLineLimit/g) ?? []).length, 1);
+  assert.match(src.slice(src.indexOf('export function addAddonSteps')), /skipLineLimit: true/);
+  assert.equal((src.match(/skipLineLimit: true/g) ?? []).length, 2);
   assert.match(fs.readFileSync('src/capabilities/EligibilityGate/EligibilityGateStep.tsx', 'utf8'), /skipLineLimit\s*\? \{ pass: true/);
 });
 test('the line-change routes are guarded by their feature grants', () => {
