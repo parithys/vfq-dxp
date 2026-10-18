@@ -14,11 +14,14 @@ import {
 } from '../../capabilities';
 import { starEntitlementQar } from '../../engines/postpaidPricing';
 import type { Product } from './newConnectionModel';
+import type { DeviceType } from '../../lib/deviceType';
 
 /** What the postpaid steps need from the journey: the plan catalogue and the customer's benefits. */
 export interface PostpaidStepContext {
   products: Product[];
   customerBenefits: CustomerBenefit[] | undefined;
+  /** The device in use: makes the SIM serial scan-led on a tablet and type-led on the web (as the prepaid journey does). */
+  device?: DeviceType;
 }
 
 // An accepted offer already fixes the plan, so the agent goes straight from the product step to Number Selection; with no
@@ -29,7 +32,7 @@ const offerAccepted = (values: Record<string, unknown>) => (values.crossSales as
  * The New Postpaid steps, after Customer Identification and Product Selection: Address, Billing Profile (resolved for the
  * agent), Plan and Add-ons, Number, SIM, Checkout, the full CAF and Payment, which submits.
  */
-export function postpaidSteps({ products, customerBenefits }: PostpaidStepContext): WizardStep[] {
+export function postpaidSteps({ products, customerBenefits, device }: PostpaidStepContext): WizardStep[] {
   const planContext = { products, customerBenefits, skipWhen: offerAccepted };
   return [
     serviceAddressStep({ mode: 'structured', autoPass: true }),
@@ -47,7 +50,7 @@ export function postpaidSteps({ products, customerBenefits }: PostpaidStepContex
         return plan ? { mrcQar: plan.mrcQAR, starEntitlementQar: starEntitlementQar(plan) } : undefined;
       },
     }),
-    simTypeStep(),
+    simTypeStep({ device }),
     checkoutSummaryStep({
       // An accepted offer fixes the plan, so the Plan & Add-ons step is skipped and 'plan' is not a reachable
       // key - jump to Number Selection (the first step still editable) instead of doing nothing.

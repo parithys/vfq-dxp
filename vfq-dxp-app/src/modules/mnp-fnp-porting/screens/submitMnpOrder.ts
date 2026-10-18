@@ -10,6 +10,7 @@ import { buildPortInRecord } from '../../../engines/portInEngine';
 import { normalizePortInNumber } from '../../../data/portInRules';
 import { PORT_IN_STATUS_PATH } from './portInStatusPath';
 import { SIM_RESERVED } from '../../../data/portInRules';
+import { SUPPORTING_ID_DISCOUNT_TYPES } from '../../../components/patterns/postpaidPlanModel';
 import { gatePasses, mnpValidationGate } from './mnpValidationGate';
 import type { CheckoutTotals } from '../../../components/patterns/checkoutSummaryModel';
 import type { WinCashPaymentValue } from '../../../components/patterns/WinCashPaymentStep';
@@ -62,6 +63,10 @@ export async function submitMnpOrder(
   await updateRecord('sims', 'simSerial', sim.simSerial, { stockStatus: SIM_RESERVED, reservedForOrderId: orderId });
   // B2B2C orders route to manager approval (the generalized UJ-081/UJ-082 pattern); prepaid port-in has no B2B2C concept.
   const isB2B2C = !isPrepaid && Boolean(contact.isB2B2C);
+  // As New Mobile Postpaid: a MADA / B2B2C discount needs its supporting document verified, so the order waits for the manager first.
+  const discounts = await mockDataEngine.list<{ addonDiscountId: string; addonType?: string }>('addons-discounts');
+  const discountNeedsApproval = !isPrepaid && SUPPORTING_ID_DISCOUNT_TYPES.has(discounts.find((d) => d.addonDiscountId === values.discountId)?.addonType ?? '');
+  const needsApproval = isB2B2C || discountNeedsApproval;
 
   const billingProfileId = isPrepaid
     ? undefined
@@ -82,7 +87,7 @@ export async function submitMnpOrder(
     orderType: isPrepaid ? 'MNP Prepaid Port-In' : 'MNP Postpaid Port-In',
     orderSubType: isB2B2C ? 'B2B2C' : 'Port-In',
     // The order shows its Port-In status: Pending NPAS Approval until NPAS answers (Annex_02). B2B2C waits for the manager first.
-    status: isB2B2C ? 'Submitted for Approval' : 'Pending NPAS Approval',
+    status: needsApproval ? 'Submitted for Approval' : 'Pending NPAS Approval',
     createdAt: new Date().toISOString(),
     customerName: contact.moiResult?.name,
     customerId: eligibility?.customerId,
@@ -90,7 +95,7 @@ export async function submitMnpOrder(
     customerEmail: contact.email,
     productId: values.productId,
     msisdn: portInNumber,
-    ...(isPrepaid ? { discountId: values.discountId } : { billLimitQAR: values.billLimit, billingProfileId }),
+    ...(isPrepaid ? { discountId: values.discountId } : { billLimitQAR: values.billLimit, billingProfileId, discountId: values.discountId, addonIds: (values.addonIds as string[] | undefined) ?? [], monthlyRecurringQar: (values.checkoutTotals as CheckoutTotals | undefined)?.monthlyRecurringQar }),
     simSerial: values.simSerial,
     totalQAR: dueTodayQar,
     createdBy: currentAgentId(),
@@ -126,7 +131,7 @@ export async function submitMnpOrder(
     draftSnapshot,
   });
   // A B2B2C request is sent to NPAS only once the manager approves it; until then it is Submitted, not awaiting NPAS.
-  const record = isB2B2C
+  const record = needsApproval
     ? {
         ...request,
         orderStatus: 'Submitted' as const,
@@ -148,7 +153,7 @@ export async function submitMnpOrder(
     ...activityCtx,
     activityNumber: activityId,
     trigger: 'completed',
-    reason: isB2B2C
+    reason: needsApproval
       ? `Order ${orderId} submitted for manager approval - porting ${portInNumber} from ${donorDetails.donorOperator ?? 'the donor operator'}.`
       : `Order ${orderId} submitted - porting ${portInNumber} from ${donorDetails.donorOperator ?? 'the donor operator'} (Status: Pending NPAS Approval).`,
   };
@@ -157,15 +162,15 @@ export async function submitMnpOrder(
     orderId,
     activityId,
     completionActivity,
-    pendingApproval: isB2B2C,
+    pendingApproval: needsApproval,
     customerName: contact.moiResult?.name ?? '-',
     customerId: eligibility?.customerId,
     msisdn: portInNumber || '-',
     planName: plan?.name ?? '-',
     simType: values.simSerial ? 'Physical' : undefined,
     dueTodayQar,
-    heading: isB2B2C ? 'Port-in order submitted for approval' : 'Port-in request submitted',
-    statusLabel: isB2B2C ? 'Submitted for Approval' : 'Pending NPAS Approval',
+    heading: needsApproval ? 'Port-in order submitted for approval' : 'Port-in request submitted',
+    statusLabel: needsApproval ? 'Submitted for Approval' : 'Pending NPAS Approval',
     extraLines: [
       ...(record.npasReference ? [{ label: 'NPAS reference', value: record.npasReference }] : []),
       ...(payment?.reference ? [{ label: payment.zeroValue ? 'Zero-value receipt' : 'Receipt', value: payment.reference }] : []),

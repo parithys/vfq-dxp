@@ -22,6 +22,16 @@ test('Button: variants render the design-system classes, sizes and disabled stat
   assert.doesNotMatch(primary, /shadow-\[/); // no glow on any button
 });
 
+test('ChoiceCards: one radiogroup of icon cards - the chosen one is checked, ticked and highlighted; no native radio inputs', async () => {
+  const { ChoiceCards } = await load('/src/components/primitives/ChoiceCards.tsx');
+  const out = html(h(ChoiceCards, { legend: 'Port the number onto', items: [{ key: 'postpaid', label: 'Postpaid Plan', icon: 'M0 0' }, { key: 'prepaid', label: 'Prepaid Plan', icon: 'M0 0' }], value: 'prepaid', onChange() {} }));
+  assert.match(out, /role="radiogroup"/);
+  assert.equal((out.match(/role="radio"/g) ?? []).length, 2);
+  assert.equal((out.match(/aria-checked="true"/g) ?? []).length, 1);
+  assert.match(out, /aria-checked="true"[^>]*>.*Prepaid Plan/);
+  assert.ok(!/type="radio"/.test(out));
+});
+
 test('TabStrip: tablist semantics, one tab in the tab order, accent underline and count badge on the selected tab', async () => {
   const { TabStrip } = await load('/src/components/primitives/TabStrip.tsx');
   const out = html(h(TabStrip, { items: [{ key: 'a', label: 'Open Tasks', count: 4 }, { key: 'b', label: 'Drafts', count: 3 }], active: 'a', onChange() {} }));
@@ -123,11 +133,12 @@ test('guard: every hand-written <button> declares a type (so it never submits a 
 
 // Data tables go through DataTable (sorting, paging, sticky header, keyboard rows, one look). These three are not data
 // lists, so they stay hand-written semantic tables: a promo-policy legal table with row headers, the Checkout / CAF
-// two-column key-value read-back, and the dark "Monthly summary" receipt.
+// two-column key-value read-back, and the dark "Monthly summary" / "Pack summary" receipts.
 const NON_DATA_TABLES = [
   'capabilities/CrossSellOffers/OfferDetailsDrawer.tsx',
   'components/patterns/CheckoutSummaryTables.tsx',
   'components/patterns/PostpaidMonthlySummary.tsx',
+  'components/patterns/PrepaidPlanStep.tsx',
 ];
 test('guard: data tables use DataTable - a raw <table> is only for the allow-listed key-value / legal tables', () => {
   const bad = files

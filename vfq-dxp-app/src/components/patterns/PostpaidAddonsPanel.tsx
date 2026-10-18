@@ -11,6 +11,8 @@ interface PostpaidAddonsPanelProps {
   selectedPlan: PostpaidPlan | undefined;
   billLimit: number | undefined;
   onBillLimitChange: (value: number, pass: boolean) => void;
+  /** The bill limit is shown by the caller (full width, apart from the add-ons) instead of under the add-ons. */
+  hideBillLimit?: boolean;
 }
 
 export function PostpaidAddonsPanel({
@@ -22,6 +24,7 @@ export function PostpaidAddonsPanel({
   selectedPlan,
   billLimit,
   onBillLimitChange,
+  hideBillLimit = false,
 }: PostpaidAddonsPanelProps) {
   return (preBundled ? (
         <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-tone-warn-soft px-4 py-3">
@@ -47,7 +50,7 @@ export function PostpaidAddonsPanel({
               from. Hidden until a plan is chosen, same as Eligible
               Discounts, since there is no MRC to default from before
               then. */}
-          {selectedPlan && (
+          {selectedPlan && !hideBillLimit && (
             <BillLimitEditor product="Mobile" layout="row" value={billLimit ?? selectedPlan.mrcQAR} onChange={onBillLimitChange} />
           )}
         </div>

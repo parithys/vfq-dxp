@@ -1,6 +1,6 @@
-import { CUSTOMER_IDENTIFICATION_LABEL } from '../../../data/stepLabels';
-import { addressSummary, billingAccountStep, cafSignatureStep, checkoutSummaryStep, customerQualificationStep, paymentStep, planSummary } from '../../../capabilities';
-import { FixedPlanStepView, InstallationAddressStep, NumberDevicesStep } from './FixedStepViews';
+import { SERVICE_ADDRESS_LABEL } from '../../../data/stepLabels';
+import { addressSummary, billingAccountStep, cafSignatureStep, checkoutSummaryStep, fixedPlanSelectionStep, paymentStep } from '../../../capabilities';
+import { InstallationAddressStep, NumberDevicesStep } from './FixedStepViews';
 import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
 import { appointmentBookingStep } from '../../../capabilities';
 import type { SummaryField } from '../../../components/patterns/wizard/stepSummary';
@@ -11,18 +11,9 @@ import {
   type FixedInstallationValue,
   type FixedDevice,
 } from './fixedActivationModel';
-import type { useJourneyCustomerLock } from '../../../capabilities';
 
 type Values = Record<string, unknown>;
 const at = (v: Values, ...path: string[]): unknown => path.reduce<unknown>((o, k) => (o && typeof o === 'object' ? (o as Values)[k] : undefined), v);
-
-// ---- 1. Contact Identification -------------------------------------------------------------------------------
-// New Connection's Contact step as-is (scan -> verify -> Fetch (MOI), eligibility, billing-account resolver,
-// customer type), entered as the existing-customer variant without a preset customer: whoever the ID belongs to
-// is matched by eligibility, never forced to be new. The MOI fields stay read-only and under-18 stays a hard stop.
-export function fixedContactStep(guardedContactChange: ReturnType<typeof useJourneyCustomerLock>['guardedContactChange']): WizardStep {
-  return { ...customerQualificationStep({ flow: 'existing', existingCustomerId: undefined, guardedContactChange }), label: CUSTOMER_IDENTIFICATION_LABEL };
-}
 
 // ---- 2. Installation Address ---------------------------------------------------------------------------------
 export const fixedInstallationSummary: SummaryField[] = [
@@ -33,12 +24,14 @@ export const fixedInstallationSummary: SummaryField[] = [
 export function fixedAddressStep(): WizardStep {
   return {
     key: 'address',
-    label: 'Installation Address',
+    label: SERVICE_ADDRESS_LABEL,
     summary: fixedInstallationSummary,
     render: ({ values, setValue }) => <InstallationAddressStep values={values} setValue={setValue} />,
     isValid: (values) => {
       const a = values.address as ZsbAddressValue | undefined;
       const i = values.installation as FixedInstallationValue | undefined;
+      // Unlike the mobile journeys (Mandatory: No), zone, street and building ARE mandatory here: ZSB is required for fixed / fibre /
+      // FWA 5G services (business rule BR-174; workshop Day 7), because the address is where the service is installed.
       if (!a?.zone || !a.streetNo || !a.buildingNo) return false;
       // Fixed-Line and 5G Home have no service type; Fibre sets Fiber itself and FWA asks for Indoor or Outdoor.
       if (values.homeProduct === 'fixed-line' || values.homeProduct === '5g-home') return true;
@@ -49,15 +42,7 @@ export function fixedAddressStep(): WizardStep {
 }
 
 // ---- 3. Plan -------------------------------------------------------------------------------------------------
-export function fixedPlanStep(): WizardStep {
-  return {
-    key: 'plan',
-    label: 'Plan & Add-ons',
-    summary: planSummary,
-    render: ({ values, setValue }) => <FixedPlanStepView values={values} setValue={setValue} />,
-    isValid: (values) => Boolean(values.productId) && (values.creditCheckPass === true || values.creditCheckAcknowledged === true),
-  };
-}
+export const fixedPlanStep = fixedPlanSelectionStep;
 
 // ---- 4. Number & Devices -------------------------------------------------------------------------------------
 // The fixed line number is allocated by the system; the devices follow from the service type and plan.

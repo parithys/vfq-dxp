@@ -624,7 +624,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
                 {/* The facts sit side by side while the card has room for two and stack when it does not (a narrow panel, a phone), never overflow. */}
                 <div className="relative grid grid-cols-[repeat(auto-fit,minmax(7.5rem,1fr))] gap-x-6 gap-y-4">
                   {facts.map((f) => (
-                    <StarStat key={f.label} icon={f.icon} label={f.label} value={f.value} alert={f.alert} plainValue={f.label === 'Lock-in period'} />
+                    <StarStat key={f.label} label={f.label} value={f.value} alert={f.alert} plainValue={f.label === 'Lock-in period'} />
                   ))}
                 </div>
                 {unreserve}

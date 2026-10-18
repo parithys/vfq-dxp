@@ -6,7 +6,6 @@
     "home": "capabilities/CustomerIdentification",
     "entry": "CustomerIdentification",
     "stepBuilders": [
-      "contactStep",
       "idLookupStep"
     ],
     "stepLabel": "CUSTOMER_IDENTIFICATION_LABEL",
@@ -79,10 +78,9 @@
       "serviceAddressStep"
     ],
     "stepLabel": "SERVICE_ADDRESS_LABEL",
-    "summary": "The address a service is activated at: structured ZSB entry with Qatari-ID prefill, or pick from saved addresses.",
+    "summary": "The address a service is activated at: one layout everywhere: Service Information (Kahramaa Meter ID / Vodafone Premise ID with Search), then Zone / Street / Building, then Additional Details, with Qatari-ID prefill.",
     "parts": [
-      "components/patterns/ZsbAddressStep.tsx",
-      "components/patterns/AddressSelectionStep.tsx"
+      "components/patterns/ZsbAddressStep.tsx"
     ],
     "previewable": true,
     "publicApi": []
@@ -95,15 +93,17 @@
     "entry": "PlanSelection",
     "stepBuilders": [
       "planSelectionStep",
+      "prepaidExtrasStep",
       "postpaidPlanStep",
-      "postpaidExtrasStep"
+      "postpaidExtrasStep",
+      "fixedPlanSelectionStep"
     ],
     "stepLabel": "PLAN_SELECTION_LABEL",
-    "summary": "Choose the plan: postpaid with add-ons, prepaid packs, or a catalogue plan with optional credit check.",
+    "summary": "Choose the plan: postpaid plan cards then Add-ons (discounts, bill limit), prepaid packs then Add-ons, or the fixed-line / fibre plan cards with the credit check.",
     "parts": [
       "components/patterns/PostpaidPlanAddonsStep.tsx",
       "components/patterns/PrepaidPlanStep.tsx",
-      "components/patterns/ProductPlanStep.tsx",
+      "components/patterns/FixedPlanStep.tsx",
       "components/patterns/PostpaidPlanCard.tsx",
       "components/patterns/PlanGroupPanel.tsx"
     ],
@@ -120,7 +120,7 @@
       "cafSignatureStep"
     ],
     "stepLabel": "CAF_SIGNATURE_LABEL",
-    "summary": "The Customer Agreement Form: terms, CAF type, signature and supporting documents; standard and full variants, postpaid and prepaid forms.",
+    "summary": "The Customer Agreement Form: terms, CAF type, signature and supporting documents. Standard variant (name, key information, signature) and full variant (the customer reads back the Checkout Summary order, agrees the terms and signs; the journey locks once signed); postpaid and prepaid forms.",
     "parts": [
       "components/patterns/CafSignatureCapture.tsx",
       "components/patterns/KeyInformationPanel.tsx",
@@ -141,7 +141,7 @@
       "prepaidCheckoutStep"
     ],
     "stepLabel": "CHECKOUT_LABEL",
-    "summary": "The order read-back before signing and payment; publishes the totals the CAF and Payment reuse. Includes the prepaid cart (Add another subscription) and prepaid checkout.",
+    "summary": "The order read-back before signing and payment (plan, add-ons, discount, number, billing, monthly and one-off totals); publishes the totals and read-back rows the CAF and Payment reuse. An optional panel above it (the port-in validation gate). Includes the prepaid cart (Add another subscription) and prepaid checkout.",
     "parts": [
       "components/patterns/CheckoutSummaryStep.tsx",
       "components/patterns/CheckoutSummaryTables.tsx",
@@ -154,7 +154,7 @@
       "components/patterns/PrepaidCartStep.tsx",
       "components/patterns/prepaidCartModel.ts"
     ],
-    "previewable": false,
+    "previewable": true,
     "publicApi": []
   },
   {
@@ -221,7 +221,7 @@
       "components/patterns/ActivationCompleteScreen.tsx",
       "components/patterns/OrderConfirmationScreen.tsx"
     ],
-    "previewable": false,
+    "previewable": true,
     "publicApi": []
   },
   {
@@ -234,7 +234,7 @@
     "stepLabel": null,
     "summary": "One selected / idle / highlighted surface for plans, offers, numbers, add-ons, discounts and ID/customer type.",
     "parts": [],
-    "previewable": false,
+    "previewable": true,
     "publicApi": []
   },
   {
@@ -247,7 +247,7 @@
     "stepLabel": null,
     "summary": "Fixed 50%-width drawer for forms, details and multi-step flows.",
     "parts": [],
-    "previewable": false,
+    "previewable": true,
     "publicApi": []
   },
   {
@@ -260,7 +260,7 @@
     "stepLabel": null,
     "summary": "One-line toasts below the header; structured cards at the bottom.",
     "parts": [],
-    "previewable": false,
+    "previewable": true,
     "publicApi": [
       "stores/notificationStore.ts"
     ]
@@ -288,7 +288,7 @@
     "stepLabel": null,
     "summary": "Hard-stop / soft-stop / pass eligibility check shown after identification, with the outcome panel, checks report and footer actions.",
     "parts": [],
-    "previewable": false,
+    "previewable": true,
     "publicApi": []
   },
   {
@@ -301,7 +301,7 @@
     "stepLabel": null,
     "summary": "Add-on cards with included-benefit handling.",
     "parts": [],
-    "previewable": false,
+    "previewable": true,
     "publicApi": []
   },
   {
@@ -348,7 +348,7 @@
       "components/domain/SupportingDocumentUpload.tsx"
     ],
     "publicApi": [],
-    "previewable": false
+    "previewable": true
   },
   {
     "id": "cross-sell-offers",
@@ -363,7 +363,7 @@
     "summary": "Recommended offers for the identified customer: offer cards, details drawer, interested (lead) and select actions, and hand-off to the other journeys.",
     "parts": [],
     "publicApi": [],
-    "previewable": false
+    "previewable": true
   },
   {
     "id": "sim-type",
@@ -372,7 +372,8 @@
     "home": "capabilities/SimType",
     "entry": "SimType",
     "stepBuilders": [
-      "simTypeStep"
+      "simTypeStep",
+      "simSerialStep"
     ],
     "stepLabel": "SIM_TYPE_LABEL",
     "summary": "Choose and validate the SIM: Physical (scan or enter the serial) or eSIM (issued, handed over after payment).",

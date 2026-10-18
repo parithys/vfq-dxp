@@ -6,12 +6,16 @@ import { useAuthStore } from '../../../stores/authStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import type { EntityKind } from '../../../engines/mockDataEngine';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
+import { ChoiceCards } from '../../../components/primitives/ChoiceCards';
 import { Radio } from '../../../components/primitives/Radio';
 import { Icon } from '../../../components/primitives/Icon';
 import { clearAndQuiet, selectProduct } from './productChoice';
 import { HOME_PRODUCTS, IN_JOURNEY_OFFERS, PRODUCTS, PRODUCT_OF_OFFER_JOURNEY, eligibilityJourney, hasBillingAccount, homeProductOfOffer, mnpTypeOfOffer } from '../products';
 import type { HomeProduct, MnpType, ConnectionProduct } from '../products';
 import type { ConnectionJourney } from '../newConnectionModel';
+
+const ICON_PHONE = 'M8 2h8a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z M11 18h2';
+const ICON_TICKET = 'M3 6h18v12H3z M3 10h18 M6 15h4';
 
 /** What the product step needs from the journey. */
 export interface ProductStepContext {
@@ -183,26 +187,23 @@ export function ProductSelection({
           </>
         )}
         {product === 'mnp' && !homeJourney && (
-          <fieldset className="flex flex-wrap items-center gap-6 pt-1">
-            <legend className="text-fg-2 text-[length:var(--fs-label)] mb-1">Port the number onto</legend>
-            {(['postpaid', 'prepaid'] as MnpType[]).map((t) => (
-              <label key={t} className="flex items-center gap-2 cursor-pointer">
-                <Radio name="mnp-type" checked={mnpType === t} onChange={() => chooseProduct('mnp', t)} />
-                <span className="text-fg capitalize">{t} plan</span>
-              </label>
-            ))}
-          </fieldset>
+          <ChoiceCards<MnpType>
+            legend="Port the number onto"
+            items={[
+              { key: 'postpaid', label: 'Postpaid Plan', icon: ICON_PHONE },
+              { key: 'prepaid', label: 'Prepaid Plan', icon: ICON_TICKET },
+            ]}
+            value={mnpType}
+            onChange={(t) => chooseProduct('mnp', t)}
+          />
         )}
         {product === 'fixed-line' && !homeJourney && (
-          <fieldset className="flex flex-wrap items-center gap-6 pt-1">
-            <legend className="text-fg-2 text-[length:var(--fs-label)] mb-1">Connection type</legend>
-            {HOME_PRODUCTS.map((h) => (
-              <label key={h.key} className="flex items-center gap-2 cursor-pointer">
-                <Radio name="home-product" checked={homeProduct === h.key} onChange={() => chooseProduct('fixed-line', undefined, h.key)} />
-                <span className="text-fg">{h.label.replace('New ', '').replace(' Connection', '')}</span>
-              </label>
-            ))}
-          </fieldset>
+          <ChoiceCards<HomeProduct>
+            legend="Connection type"
+            items={HOME_PRODUCTS.map((h) => ({ key: h.key, label: h.label.replace('New ', '').replace(' Connection', ''), icon: HOME_PRODUCT_ICON[h.key] }))}
+            value={homeProduct}
+            onChange={(k) => chooseProduct('fixed-line', undefined, k)}
+          />
         )}
       </section>
 

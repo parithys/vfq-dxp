@@ -1,13 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
-import { Button } from '../../../components/primitives/Button';
-import { CreditCheckPanel } from '../../../components/domain/CreditCheckPanel';
-import { evaluateRule } from '../../../engines/ruleEngine';
-import * as mockDataEngine from '../../../engines/mockDataEngine';
-import { CARD_IDLE, CARD_SELECTED, ICON_CARD, ICON_SPEED, ICON_TV } from '../../../capabilities';
+import { CARD_SELECTED } from '../../../capabilities';
 import { Icon } from '../../../components/primitives/Icon';
-import { ConnectionTypeTag } from '../../../components/primitives/ConnectionTypeTag';
 import { ServiceAddress } from '../../../capabilities';
 import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
 import { resolveFibreServiceability } from '../../../engines/fibreServiceability';
@@ -118,13 +113,15 @@ export function InstallationAddressStep({ values, setValue }: { values: Values; 
         value={address}
         onChange={(v) => {
           setValue('address', v);
-          if (installation.rfs) setValue('installation', { ...installation, rfs: undefined });
+          // The fibre-readiness result belongs to the zone / street / building / unit it was read for: clear it only when one of
+          // those changes (the check above then runs again). Editing the floor, area, directions or the Kahramaa / Vodafone IDs
+          // must not clear it, or nothing would read it again and Continue would stay disabled.
+          const same = (['zone', 'streetNo', 'buildingNo', 'aptFlatUnit'] as const).every((k) => (v[k] ?? '') === (address[k] ?? ''));
+          if (installation.rfs && !same) setValue('installation', { ...installation, rfs: undefined });
         }}
         idNumber={contact?.idNumber}
         nationality={(values.eligibility as EligibilityResult | undefined)?.nationality}
         hideFibreReadiness
-        // FWA: the Kahramaa / Vodafone IDs sit right under the FWA Indoor / FWA Outdoor choice, above the address.
-        serviceInformationFirst={wireless}
       />
     </div>
   );
@@ -162,103 +159,3 @@ export function NumberDevicesStep({ values, setValue }: { values: Values; setVal
   );
 }
 
-interface FixedPlan {
-  productId: string;
-  name: string;
-  type: string;
-  mrcQAR: number;
-  speedTierMbps?: number;
-  fupGB?: number;
-  iptvIncluded?: boolean;
-  lockInMonths?: number;
-  disconnectionFeeSchedule?: string;
-  disconnectionFeeQAR?: number;
-}
-
-// Plan & Add-ons: the same card as the Postpaid plan selection (name, price per month, feature rows, Select plan),
-// over the fixed-line plans, with the fibre credit check once a plan is chosen.
-export function FixedPlanStepView({ values, setValue }: { values: Values; setValue: (f: string, v: unknown) => void }) {
-  const [plans, setPlans] = useState<FixedPlan[]>([]);
-  const [collectionStatus, setCollectionStatus] = useState<string | undefined>();
-  const selectedId = values.productId as string | undefined;
-  useEffect(() => {
-    void mockDataEngine.list<FixedPlan>('products').then((all) => setPlans(all.filter((p) => p.type === 'Fixed Line Plan').sort((a, b) => a.mrcQAR - b.mrcQAR)));
-    void mockDataEngine.list<{ collectionStatus: string }>('billing-profiles').then((all) => setCollectionStatus(all[0]?.collectionStatus));
-  }, []);
-  useEffect(() => {
-    if (selectedId && collectionStatus) {
-      setValue('creditCheckPass', evaluateRule('BR-FIBRE-OUTSTANDING-THRESHOLD', { collectionStatus }).pass);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId, collectionStatus]);
-
-  return (
-    <div className="space-y-4">
-      <p className="text-fg-2 text-[length:var(--fs-caption)]">Please Select a Plan.</p>
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(max(15rem,calc((100%-2rem)/3)),1fr))] gap-4">
-        {plans.map((p) => {
-          const selected = selectedId === p.productId;
-          const toggle = () => setValue('productId', selected ? undefined : p.productId);
-          const rows = [
-            ...(p.speedTierMbps ? [{ icon: ICON_SPEED, text: `${p.speedTierMbps} Mbps fibre` }] : []),
-            ...(p.fupGB ? [{ icon: ICON_SPEED, text: `${p.fupGB} GB FUP` }] : []),
-            ...(p.iptvIncluded ? [{ icon: ICON_TV, text: 'IPTV included' }] : []),
-            ...(p.lockInMonths ? [{ icon: ICON_CARD, text: `${p.lockInMonths}-month lock-in` }] : []),
-            ...(p.disconnectionFeeSchedule || p.disconnectionFeeQAR
-              ? [{ icon: ICON_CARD, text: `Early disconnection fee: ${p.disconnectionFeeSchedule ?? `QAR ${p.disconnectionFeeQAR}`}` }]
-              : []),
-          ];
-          return (
-            <div
-              key={p.productId}
-              role="button"
-              tabIndex={0}
-              aria-pressed={selected}
-              onClick={toggle}
-              onKeyDown={(e) => {
-                if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
-                  e.preventDefault();
-                  toggle();
-                }
-              }}
-              className={`relative flex flex-col gap-3 rounded-[var(--radius-card)] border p-5 cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${selected ? CARD_SELECTED : CARD_IDLE}`}
-            >
-              <div className="flex items-center justify-end gap-3">
-                <ConnectionTypeTag category="GigaHome Fibre" />
-              </div>
-              <div className="flex-1 space-y-2">
-                <p className="text-fg font-bold text-[length:var(--fs-h5)] leading-snug">{p.name}</p>
-                <p className="text-accent pt-1">
-                  <span className="text-[length:var(--fs-body)] font-semibold">QAR </span>
-                  <span className="text-[length:var(--fs-h3)] font-bold">{p.mrcQAR}</span>
-                  <span className="text-fg-2 text-[length:var(--fs-caption)]"> /month</span>
-                </p>
-                <ul className="space-y-1.5">
-                  {rows.map((f) => (
-                    <li key={f.text} className="flex items-center gap-2 text-fg-2 text-[length:var(--fs-caption)]">
-                      <Icon path={f.icon} className="w-4 h-4 shrink-0 text-accent" />
-                      {f.text}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="flex items-center justify-end gap-3 pt-1">
-                <Button variant={selected ? 'primary' : 'secondary'} tabIndex={-1} aria-hidden className="pointer-events-none">
-                  {selected ? 'Selected' : 'Select plan'}
-                </Button>
-              </div>
-            </div>
-          );
-        })}
-        {plans.length === 0 && <p className="text-muted">No Fixed Line Plan products are available right now.</p>}
-      </div>
-      {selectedId && collectionStatus && (
-        <CreditCheckPanel
-          collectionStatus={collectionStatus}
-          acknowledged={values.creditCheckAcknowledged === true}
-          onAcknowledge={(v) => setValue('creditCheckAcknowledged', v)}
-        />
-      )}
-    </div>
-  );
-}

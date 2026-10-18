@@ -34,6 +34,6 @@ export function buildConnectionSteps(ctx: ConnectionStepContext): WizardStep[] {
     ...forProduct('postpaid', postpaidSteps(ctx)),
     ...forProduct('prepaid', prepaidSteps(ctx)),
     ...forProduct('fixed-line', fixedLineSteps()),
-    ...forProduct('mnp', mnpSteps()),
+    ...forProduct('mnp', mnpSteps(ctx)),
   ];
 }

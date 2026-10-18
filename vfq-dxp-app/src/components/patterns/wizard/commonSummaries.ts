@@ -44,11 +44,6 @@ export const addressFormSummary = (key = 'address'): SummaryField[] => [
   { key: 'line', label: 'Address Line', type: 'text', optional: true, value: (v) => at(v, key, 'addressLine') },
 ];
 
-/** An address picked from the customer's account (stored as its id). */
-export const addressPickSummary = (key = 'addressId'): SummaryField[] => [
-  { key: 'address', label: 'Installation Address', type: 'select', labelFrom: { kind: 'addresses', idField: 'id', labelField: 'addressLine1' }, value: (v) => at(v, key) },
-];
-
 export const planSummary = (productKey = 'productId'): SummaryField[] => [
   { key: 'plan', label: 'Plan', type: 'select', labelFrom: PRODUCT, value: (v) => at(v, productKey) },
 ];

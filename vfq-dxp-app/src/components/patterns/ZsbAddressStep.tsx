@@ -72,9 +72,6 @@ interface ZsbAddressStepProps {
   nationality?: string;
   /** A journey that reports fibre readiness itself (Fixed Activation: from its RFS check) hides this built-in banner. */
   hideFibreReadiness?: boolean;
-  /** Show the Service Information card (Kahramaa Meter ID / Vodafone Premise ID) first, instead of last - for a journey that
-   * places it right under its own service-type choice. */
-  serviceInformationFirst?: boolean;
 }
 
 interface AddressRecord {
@@ -92,7 +89,7 @@ interface AddressRecord {
 // SCR-155/SCR-122 (MNP Postpaid Address, FLD-523–526): Zone/Street No./Building
 // No./Apt-Flat-Unit, all evidenced Mandatory: No, with "Save Address"/"Skip
 // Address"/"Go back"/"Cancel" buttons - a mobile-channel address step, distinct
-// from Fixed Line/FWA's AddressSelectionStep (which picks an existing
+// from the saved-address picker this step replaced (which picked an existing
 // serviceable Address record).
 //
 // The Save Address / Skip Address pair was removed on 2026-09-26, along with
@@ -116,7 +113,7 @@ const CARD = 'card p-4 space-y-4';
 const SEARCH_ICON = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3';
 const CARD_TITLE = 'text-fg text-[length:var(--fs-h5)] font-semibold';
 
-export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFibreReadiness = false, serviceInformationFirst = false }: ZsbAddressStepProps) {
+export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFibreReadiness = false }: ZsbAddressStepProps) {
   const [fetching, setFetching] = useState(false);
   // Area / District suggestions (see useAreaOptions).
   const areaOptions = useAreaOptions();
@@ -187,8 +184,8 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFib
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idNumber, nationality]);
 
-  // The service identifiers card: last in the form by default; first when the journey puts it right under its own
-  // service-type choice (FWA Indoor / Outdoor).
+  // The service identifiers card (Kahramaa Meter ID / Vodafone Premise ID, each with Search): always the first card of the
+  // form, above the address - the one layout every journey's address step uses.
   const serviceInformation = (
     <section className={CARD}>
       <div>
@@ -279,7 +276,7 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFib
 
   return (
     <div className="space-y-4">
-      {serviceInformationFirst && serviceInformation}
+      {serviceInformation}
       {fetching && <p className="text-muted text-[length:var(--fs-body)]">Checking for an address on file…</p>}
       {/* The provenance line ("Retrieved from the customer's Qatar ID. Edit any
           field if the customer confirms a change.") was removed on 2026-09-27
@@ -357,7 +354,6 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFib
         />
       </section>
 
-      {!serviceInformationFirst && serviceInformation}
 
       {/* Read-only, checked against the ZSB (Zone/Street/Building) the agent
           just typed above - see FibreReadinessBanner's own note on why "NAS"

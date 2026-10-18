@@ -15,6 +15,8 @@ interface BillLimitEditorProps {
   onChange: (value: number, pass: boolean) => void;
   /** 'row': a title with the current limit under it and a sentence-case Edit button (the Add-ons step). Default: the compact box. */
   layout?: 'default' | 'row';
+  /** No box around it (no border, fill or padding): it sits directly on the page, e.g. under a separator line. */
+  bare?: boolean;
 }
 
 // Pattern 8: Plan/Promotion Detail Modal with Limit Editing - "Edit Bill Limit"
@@ -23,7 +25,7 @@ interface BillLimitEditorProps {
 // implementation named in frontend-architecture.md §5, reused here via the
 // same BR-AGENT-MIN-THRESHOLD rule already exercised by the field-inventory's
 // evidenced Bill Limit Agent Minimum behavior.
-export function BillLimitEditor({ product, value, onChange, layout = 'default' }: BillLimitEditorProps) {
+export function BillLimitEditor({ product, value, onChange, layout = 'default', bare = false }: BillLimitEditorProps) {
   const row = layout === 'row';
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(value ?? ''));
@@ -53,7 +55,7 @@ export function BillLimitEditor({ product, value, onChange, layout = 'default' }
   };
 
   return (
-    <div className={`card ${row ? 'p-4' : 'p-3'}`}>
+    <div className={bare ? '' : `card ${row ? 'p-4' : 'p-3'}`}>
       <div className="flex items-center justify-between gap-3">
         {row && !editing ? (
           <div>

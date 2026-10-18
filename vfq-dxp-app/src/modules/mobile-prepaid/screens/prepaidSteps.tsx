@@ -8,6 +8,7 @@ import {
   numberSelectionStep,
   paymentStep,
   planSelectionStep,
+  prepaidExtrasStep,
   prepaidCartStep,
   prepaidCheckoutStep,
   serviceAddressStep,
@@ -51,6 +52,10 @@ export function prepaidSteps({ device }: { device: DeviceType }): WizardStep[] {
         ...planSelectionStep({ kind: 'prepaid', segment: (values) => (values.eligibility as EligibilityResult | undefined)?.segment }),
         skip: offerAccepted,
       },
+      {
+        ...prepaidExtrasStep({ segment: (values) => (values.eligibility as EligibilityResult | undefined)?.segment }),
+        skip: offerAccepted,
+      },
       numberSelectionStep({ priceField: 'priceQAR', prePairedOption: true }),
       simTypeStep({
         customerEmail: (values) => contactOf(values)?.moiResult?.email,
@@ -81,8 +86,8 @@ export function prepaidSteps({ device }: { device: DeviceType }): WizardStep[] {
       paymentStep({ submitOnPaid: true, amountDue: (values) => (values.checkoutTotals as PrepaidCheckoutTotals | undefined)?.totalDueQar ?? 0 }),
     ],
     {
-      plan: [
-        ...sums.planSummary(),
+      plan: sums.planSummary(),
+      planExtras: [
         { key: 'discount', label: 'Discount', type: 'select', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.discountId },
         { key: 'addons', label: 'Add-ons', type: 'multi', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.addonIds },
       ],

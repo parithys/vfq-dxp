@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { CHECKOUT_LABEL, SUBSCRIPTIONS_LABEL } from '../../data/stepLabels';
 import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTypes';
 import { CheckoutSummary, PrepaidCheckout } from './CheckoutSummary';
@@ -17,7 +18,17 @@ import type { GuidedContactValue } from '../../components/patterns/guidedContact
  * (checkoutTotals, cafSummary, legalFacts) for the CAF & Signature step. `editStepKey` says which step
  * the summary's Edit action returns to (the plan step, unless an accepted offer skipped it).
  */
-export function checkoutSummaryStep(opts: { editStepKey?: (values: Record<string, unknown>) => string } = {}): WizardStep {
+export function checkoutSummaryStep(
+  opts: {
+    editStepKey?: (values: Record<string, unknown>) => string;
+    /** The number the order is for, when it is not `msisdn` (an MNP port-in's donor number). */
+    msisdn?: (values: Record<string, unknown>) => string | undefined;
+    /** Content above the read-back (a port-in's validation gate). */
+    before?: (ctx: { values: Record<string, unknown>; goToStepKey: (key: string) => void }) => ReactNode;
+    /** A further condition on continuing (the gate holds); the read-back itself never blocks. */
+    isValid?: (values: Record<string, unknown>) => boolean;
+  } = {}
+): WizardStep {
   return {
     key: 'checkout',
     label: CHECKOUT_LABEL,
@@ -30,7 +41,7 @@ export function checkoutSummaryStep(opts: { editStepKey?: (values: Record<string
         : billingAccount?.newAccount?.profileName
           ? `${billingAccount.newAccount.profileName} (${billingAccount.newAccount.billMedia ?? 'Email'})`
           : undefined;
-      return (
+      const summary = (
         <CheckoutSummary
           layout="detailed"
           customerName={
@@ -41,7 +52,7 @@ export function checkoutSummaryStep(opts: { editStepKey?: (values: Record<string
           productId={values.productId as string | undefined}
           discountId={values.discountId as string | undefined}
           addonIds={(values.addonIds as string[] | undefined) ?? []}
-          msisdn={values.msisdn as string | undefined}
+          msisdn={opts.msisdn ? opts.msisdn(values) : (values.msisdn as string | undefined)}
           numberPriceQar={values.numberPriceQAR as number | undefined}
           eligibility={values.eligibility as EligibilityResult | undefined}
           billLimit={values.billLimit as number | undefined}
@@ -52,8 +63,15 @@ export function checkoutSummaryStep(opts: { editStepKey?: (values: Record<string
           onEdit={() => goToStepKey(opts.editStepKey?.(values) ?? 'plan')}
         />
       );
- },
-    isValid: () => true,
+      if (!opts.before) return summary;
+      return (
+        <div className="space-y-6">
+          {opts.before({ values, goToStepKey })}
+          {summary}
+        </div>
+      );
+    },
+    isValid: (values) => opts.isValid?.(values) ?? true,
  };
 }
 
