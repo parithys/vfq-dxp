@@ -1,12 +1,12 @@
 import type { WizardStep } from '../../../components/patterns/wizard/guidedWizardTypes';
 import * as sums from '../../../components/patterns/wizard/commonSummaries';
 import { attachSummaries } from '../../../components/patterns/wizard/stepSummary';
-import { billingAccountStep, cafSignatureStep, checkoutSummaryStep, paymentStep, planSelectionStep, postpaidExtrasStep, postpaidPlanStep, prepaidExtrasStep, serviceAddressStep, simSerialStep } from '../../../capabilities';
+import { billingAccountStep, cafSignatureStep, checkoutSummaryStep, paymentStep, prepaidCheckoutStep, planSelectionStep, postpaidExtrasStep, postpaidPlanStep, prepaidExtrasStep, serviceAddressStep, simSerialStep } from '../../../capabilities';
 import type { PostpaidStepContext } from '../../new-connection/postpaidSteps';
-import { CHECKOUT_LABEL } from '../../../data/stepLabels';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
-import { normalizePortInNumber } from '../../../data/portInRules';
-import { MnpCheckout, MnpValidationGate } from './MnpCheckout';
+import { normalizePortInNumber, PORT_IN_DEPOSIT_QAR, PORT_IN_FEE_QAR } from '../../../data/portInRules';
+import type { PrepaidLine } from '../../../components/patterns/prepaidCartModel';
+import { MnpValidationGate } from './MnpGatePanel';
 import { gatePasses, mnpValidationGate } from './mnpValidationGate';
 import { contactOf, isPrepaidMnp, mnpFormInputOf } from './mnpFormInput';
 
@@ -22,6 +22,24 @@ import type { DonorAttachmentValue } from '../../../components/patterns/DonorAtt
 //   Prepaid:  Address -> SIM Serial -> Plan (prepaid pack + discount) -> Donor Details -> Checkout -> MNP Form -> CAF -> Payment -> Activity,
 // with no billing account (a prepaid line carries no credit limit or bill cycle, BR-002/BR-005) and the BR-233
 // balance-forfeiture declaration on the CAF. NewMnpWizard.tsx keeps the evidence behind each.
+/** A prepaid port-in is one subscription: its pack, the number being ported in, and the Vodafone SIM it is activated on. */
+const portInLines = (values: Record<string, unknown>): PrepaidLine[] => {
+  const productId = values.productId as string | undefined;
+  const donor = values.donorDetails as DonorDetailsValue | undefined;
+  if (!productId) return [];
+  return [
+    {
+      productId,
+      discountId: values.discountId as string | undefined,
+      addonIds: (values.addonIds as string[] | undefined) ?? [],
+      prePaired: false,
+      msisdn: normalizePortInNumber(donor?.portInNumber ?? '') ?? donor?.portInNumber ?? '',
+      numberPriceQAR: 0,
+      simType: { simType: 'Physical', simSerial: values.simSerial as string | undefined, simValid: Boolean(values.simValid) },
+    },
+  ];
+};
+
 const FIX_STEP: Record<string, string> = { customer: 'contact', eligibility: 'product', billing: 'billingAccount', plan: 'plan', sim: 'sim', mnp: 'donor-details' };
 
 export function mnpSteps({ products = [], customerBenefits }: Partial<Pick<PostpaidStepContext, 'products' | 'customerBenefits'>> = {}): WizardStep[] {
@@ -70,32 +88,32 @@ export function mnpSteps({ products = [], customerBenefits }: Partial<Pick<Postp
         })
       ),
     },
-    {
-      ...prepaidOnly({
-        key: 'checkout',
-        label: CHECKOUT_LABEL,
-        summary: [{ key: 'due', label: 'Total Payable Today', type: 'text', value: (v) => {
-          const due = (v.checkoutTotals as { dueTodayQar?: number } | undefined)?.dueTodayQar;
-          return typeof due === 'number' ? `QAR ${due.toLocaleString('en-GB')}` : undefined;
-        } }],
-        render: ({ values, setValue, goToStepKey }) => {
+    // Prepaid: the shared prepaid checkout with the port-in's own inputs - its one line (the pack, the port-in number, the SIM), the
+    // port-in number and donor operator, the port-in charge and deposit as the only amount due (BR-MNP-011), the gate above it.
+    prepaidOnly(
+      prepaidCheckoutStep({
+        idType: (values) => contactOf(values)?.idType,
+        customerName: (values) => contactOf(values)?.moiResult?.name,
+        lines: portInLines,
+        details: (values) => {
           const donor = values.donorDetails as DonorDetailsValue | undefined;
-          return (
-            <MnpCheckout
-              customerName={contactOf(values)?.moiResult?.name}
-              portInNumber={donor?.portInNumber}
-              donorOperator={donor?.donorOperator}
-              productId={values.productId as string | undefined}
-              simSerial={values.simSerial as string | undefined}
-              gate={mnpValidationGate(values, 'checkout')}
-              onTotalsComputed={(totals) => setValue('checkoutTotals', totals)}
-              onFix={(id) => goToStepKey(FIX_STEP[id] ?? 'contact')}
-            />
-          );
+          return [
+            { label: 'Port-in number', value: normalizePortInNumber(donor?.portInNumber ?? '') ?? donor?.portInNumber ?? '-' },
+            { label: 'Donor operator', value: donor?.donorOperator ?? '-' },
+          ];
         },
+        fees: [
+          { label: 'Port-in charge', amountQar: PORT_IN_FEE_QAR },
+          { label: 'Deposit', amountQar: PORT_IN_DEPOSIT_QAR },
+        ],
+        before: ({ values, goToStepKey }) => <MnpValidationGate gate={mnpValidationGate(values, 'checkout')} onFix={(id) => goToStepKey(FIX_STEP[id] ?? 'contact')} />,
         isValid: (values) => gatePasses(mnpValidationGate(values, 'checkout')),
-      }),
-    },
+        editStepKey: 'plan',
+        editLabel: 'Edit pack',
+        // The port-in's Payment step and order read what is due today as `dueTodayQar`.
+        totals: (t) => ({ dueTodayQar: t.totalDueQar, monthlyRecurringQar: 0, hrnAdvanceQar: 0 }),
+      })
+    ),
     {
       key: 'donor-attachment',
       label: 'MNP Form',

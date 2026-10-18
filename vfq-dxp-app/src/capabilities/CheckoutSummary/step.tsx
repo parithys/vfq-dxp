@@ -4,6 +4,7 @@ import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTy
 import { CheckoutSummary, PrepaidCheckout } from './CheckoutSummary';
 import { PrepaidCartBody } from './PrepaidCartBody';
 import { allLines, isCartValid } from '../../components/patterns/prepaidCartModel';
+import type { PrepaidCheckoutTotals, PrepaidLine } from '../../components/patterns/prepaidCartModel';
 import type { SummaryField } from '../../components/patterns/wizard/stepSummary';
 import { at } from '../summaryKit';
 import { checkoutSummary } from './summary';
@@ -107,24 +108,52 @@ export function prepaidCartStep(): WizardStep {
 /**
  * Prepaid checkout: the read-back of the whole cart. `idType` is the customer's ID type, which decides the SIM card
  * charge. Stores `checkoutTotals` (totalDueQar is what the Payment step collects).
+ *
+ * A prepaid port-in uses the same step with its own inputs: `lines` (its one subscription), `details` (the port-in number and
+ * donor operator), `fees` (the port-in charges: the amount due is those alone, not the pack), `before` (the validation gate above
+ * the read-back), `isValid`, `editStepKey` and `totals` (how what it computed is stored, as the port-in's Payment step reads it).
  */
-export function prepaidCheckoutStep(opts: { idType: (values: Record<string, unknown>) => string | undefined; customerName: (values: Record<string, unknown>) => string | undefined }): WizardStep {
+export function prepaidCheckoutStep(opts: {
+  idType: (values: Record<string, unknown>) => string | undefined;
+  customerName: (values: Record<string, unknown>) => string | undefined;
+  lines?: (values: Record<string, unknown>) => PrepaidLine[];
+  details?: (values: Record<string, unknown>) => { label: string; value: string }[];
+  fees?: { label: string; amountQar: number }[];
+  before?: (ctx: { values: Record<string, unknown>; goToStepKey: (key: string) => void }) => ReactNode;
+  isValid?: (values: Record<string, unknown>) => boolean;
+  editStepKey?: string;
+  editLabel?: string;
+  totals?: (totals: PrepaidCheckoutTotals) => unknown;
+}): WizardStep {
+  const linesOf = opts.lines ?? allLines;
   return {
     key: 'checkout',
     label: CHECKOUT_LABEL,
     summary: [{ key: 'due', label: 'Total Payable Today', type: 'text', value: (v) => {
-      const due = at(v, 'checkoutTotals', 'totalDueQar');
+      const due = at(v, 'checkoutTotals', 'totalDueQar') ?? at(v, 'checkoutTotals', 'dueTodayQar');
       return typeof due === 'number' ? `QAR ${due.toLocaleString('en-GB')}` : undefined;
     } }],
-    render: ({ values, setValue, goToStepKey }) => (
-      <PrepaidCheckout
-        customerName={opts.customerName(values)}
-        idType={opts.idType(values)}
-        lines={allLines(values)}
-        onTotalsComputed={(totals) => setValue('checkoutTotals', totals)}
-        onEdit={() => goToStepKey('cart')}
-      />
-    ),
-    isValid: (values) => isCartValid(values),
+    render: ({ values, setValue, goToStepKey }) => {
+      const checkout = (
+        <PrepaidCheckout
+          customerName={opts.customerName(values)}
+          idType={opts.idType(values)}
+          lines={linesOf(values)}
+          details={opts.details?.(values)}
+          fees={opts.fees}
+          editLabel={opts.editLabel}
+          onTotalsComputed={(totals) => setValue('checkoutTotals', opts.totals ? opts.totals(totals) : totals)}
+          onEdit={() => goToStepKey(opts.editStepKey ?? 'cart')}
+        />
+      );
+      if (!opts.before) return checkout;
+      return (
+        <div className="space-y-6">
+          {opts.before({ values, goToStepKey })}
+          {checkout}
+        </div>
+      );
+    },
+    isValid: (values) => opts.isValid?.(values) ?? isCartValid(values),
   };
 }

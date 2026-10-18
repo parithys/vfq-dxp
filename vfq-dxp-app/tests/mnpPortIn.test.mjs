@@ -271,6 +271,18 @@ test('postpaid port-in uses the shared Plan, Add-ons, Checkout Summary and full 
   assert.equal(all.find((s) => s.key === 'planExtras').label, 'Add-ons');
 });
 
+test('the prepaid port-in checkout is the shared prepaid checkout, gated on the validations and storing what is due as dueTodayQar', () => {
+  const [, prepaidCheckout] = steps.mnpSteps().filter((s) => s.key === 'checkout');
+  assert.equal(prepaidCheckout.label, 'Checkout');
+  const values = journey({ mnpType: 'prepaid' });
+  assert.equal(prepaidCheckout.isValid(values), true);
+  assert.equal(prepaidCheckout.isValid({ ...values, simValid: false }), false);
+  assert.equal(prepaidCheckout.isValid({ ...values, productId: undefined }), false);
+  // The Payment step and the order read the amount as dueTodayQar; the step summary reads it back.
+  const shown = prepaidCheckout.summary.find((f) => f.key === 'due').value({ checkoutTotals: { dueTodayQar: 0, monthlyRecurringQar: 0, hrnAdvanceQar: 0 } });
+  assert.equal(shown, 'QAR 0');
+});
+
 // ---- SIM reservation (BR-MNP-008 / 025) ---------------------------------------------------------------------------------------
 test('submitting reserves the SIM against the order, and refuses an incomplete journey or a SIM that is no longer available', async () => {
   const created = [];

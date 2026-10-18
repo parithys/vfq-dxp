@@ -141,7 +141,7 @@
       "prepaidCheckoutStep"
     ],
     "stepLabel": "CHECKOUT_LABEL",
-    "summary": "The order read-back before signing and payment (plan, add-ons, discount, number, billing, monthly and one-off totals); publishes the totals and read-back rows the CAF and Payment reuse. An optional panel above it (the port-in validation gate). Includes the prepaid cart (Add another subscription) and prepaid checkout.",
+    "summary": "The order read-back before signing and payment (plan, add-ons, discount, number, billing, monthly and one-off totals); publishes the totals and read-back rows the CAF and Payment reuse. An optional panel above it (the port-in validation gate). Includes the prepaid cart (Add another subscription) and the prepaid checkout, which a prepaid port-in also uses with its own lines, details and fees.",
     "parts": [
       "components/patterns/CheckoutSummaryStep.tsx",
       "components/patterns/CheckoutSummaryTables.tsx",

@@ -18,6 +18,15 @@ interface PrepaidCheckoutStepProps {
   onTotalsComputed: (totals: PrepaidCheckoutTotals) => void;
   /** Returns the agent to the Subscriptions step to change or add a subscription. */
   onEdit?: () => void;
+  /** Label of the edit button (default "Edit subscriptions"). */
+  editLabel?: string;
+  /** Further facts about the order, under the customer (a port-in's number and donor operator). */
+  details?: { label: string; value: string }[];
+  /**
+   * The order collects only these fees today, not the pack, add-ons and SIM card charge (a port-in: BR-MNP-011 lists the port-in
+   * charge and deposit, and the BRSD gives none). The pack is then listed without a price and the total is the sum of the fees.
+   */
+  fees?: { label: string; amountQar: number }[];
 }
 
 const qar = (n: number) => `QAR ${n.toLocaleString('en-GB')}`;
@@ -26,7 +35,7 @@ const qar = (n: number) => `QAR ${n.toLocaleString('en-GB')}`;
 // the whole cart before the customer signs and pays - each subscription's pack, add-ons, number and SIM, the starter
 // pack and any SIM card charge, and the total payable today that the Payment step collects. A prepaid line has no credit
 // limit, billing account or monthly charge, so none is shown (CAM_02, ECC_03, BAM_01).
-export function PrepaidCheckoutStep({ customerName, idType, lines, onTotalsComputed, onEdit }: PrepaidCheckoutStepProps) {
+export function PrepaidCheckoutStep({ customerName, idType, lines, onTotalsComputed, onEdit, editLabel = 'Edit subscriptions', details, fees }: PrepaidCheckoutStepProps) {
   const [products, setProducts] = useState<PricingProduct[]>([]);
   const [extras, setExtras] = useState<PricingExtra[]>([]);
   const [sims, setSims] = useState<SimRecord[]>([]);
@@ -45,7 +54,11 @@ export function PrepaidCheckoutStep({ customerName, idType, lines, onTotalsCompu
     });
   }, []);
 
-  const totals = cartTotals(lines, idType, products, extras);
+  const cart = cartTotals(lines, idType, products, extras);
+  const feesQar = (fees ?? []).reduce((sum, f) => sum + f.amountQar, 0);
+  const totals: PrepaidCheckoutTotals = fees
+    ? { starterPackChargeQar: 0, addonsChargeQar: 0, simCardChargeQar: 0, numberPriceQar: 0, totalDueQar: feesQar, lineCount: lines.length }
+    : cart;
 
   useEffect(() => {
     if (loaded) onTotalsComputed(totals);
@@ -66,7 +79,10 @@ export function PrepaidCheckoutStep({ customerName, idType, lines, onTotalsCompu
     <div className="space-y-4">
       <dl className="card card-surface p-4">
         <Row label="Customer" value={customerName ?? '-'} />
-        <Row label="Subscriptions" value={String(lines.length)} />
+        {!fees && <Row label="Subscriptions" value={String(lines.length)} />}
+        {details?.map((d) => (
+          <Row key={d.label} label={d.label} value={d.value} />
+        ))}
       </dl>
 
       {lines.map((line, i) => {
@@ -78,11 +94,11 @@ export function PrepaidCheckoutStep({ customerName, idType, lines, onTotalsCompu
         return (
           <section key={`${line.msisdn}-${i}`} aria-label={`Subscription ${i + 1}`} className="card card-surface p-4 space-y-2">
             <div className="flex items-center justify-between gap-3">
-              <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Subscription {i + 1}</h3>
+              <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{fees ? 'Order' : `Subscription ${i + 1}`}</h3>
               {line.prePaired && <Badge variant="accent">Pre-Paired SIM</Badge>}
             </div>
             <dl>
-              <Row label="Pack" value={plan ? `${plan.name} - ${qar(charges.starterPackQar)}` : 'SIM only, no pack selected'} />
+              <Row label="Pack" value={plan ? (fees ? plan.name : `${plan.name} - ${qar(charges.starterPackQar)}`) : 'SIM only, no pack selected'} />
               {discount && <Row label="Discount" value={`${discount.name} (${Math.round(Math.abs(discount.price) * 100)}% off the starter pack)`} />}
               {addons.map((a) => (
                 <Row key={a.addonDiscountId} label="Add-on" value={`${a.name} - ${qar(a.price)}`} />
@@ -93,26 +109,38 @@ export function PrepaidCheckoutStep({ customerName, idType, lines, onTotalsCompu
                 value={line.prePaired ? 'Pre-Paired SIM' : line.simType.simType === 'eSIM' ? 'eSIM' : (line.simType.simKind ?? line.simType.simType ?? '-')}
               />
               <Row label="ICCID" value={line.simType.simType === 'eSIM' ? 'Not applicable (eSIM)' : (iccid ?? line.simType.simIccid ?? '-')} />
-              <Row label="SIM Card Charge" value={charges.simCardChargeQar > 0 ? qar(charges.simCardChargeQar) : 'Waived'} />
-              <Row label="Due for this subscription" value={qar(charges.totalQar)} />
+              {!fees && <Row label="SIM Card Charge" value={charges.simCardChargeQar > 0 ? qar(charges.simCardChargeQar) : 'Waived'} />}
+              {!fees && <Row label="Due for this subscription" value={qar(charges.totalQar)} />}
             </dl>
-            <p className="text-[length:var(--fs-caption)] text-muted">{charges.simCardMessage}</p>
+            {!fees && <p className="text-[length:var(--fs-caption)] text-muted">{charges.simCardMessage}</p>}
           </section>
         );
       })}
 
       <div className="rounded-[var(--radius-card)] border border-accent-border bg-surface-warm p-4">
+        {fees?.map((f) => (
+          <div key={f.label} className="flex justify-between text-fg text-[length:var(--fs-body)] mb-1">
+            <span>{f.label}</span>
+            <span>{qar(f.amountQar)}</span>
+          </div>
+        ))}
         <div className="flex justify-between text-fg font-semibold">
           <span>Total payable today</span>
           <span>{qar(totals.totalDueQar)}</span>
         </div>
-        <p className="mt-1 text-[length:var(--fs-caption)] text-fg-2">Includes the starter pack and any initial recharge, add-ons, premium numbers and SIM card charges. Nothing is billed later.</p>
+        <p className="mt-1 text-[length:var(--fs-caption)] text-fg-2">
+          {fees
+            ? totals.totalDueQar === 0
+              ? 'Nothing is due, so a zero-value receipt is issued at payment.'
+              : 'The port-in charges and deposit due today.'
+            : 'Includes the starter pack and any initial recharge, add-ons, premium numbers and SIM card charges. Nothing is billed later.'}
+        </p>
       </div>
 
       {onEdit && (
         <div>
           <Button variant="secondary" compact onClick={onEdit}>
-            Edit subscriptions
+            {editLabel}
           </Button>
         </div>
       )}
