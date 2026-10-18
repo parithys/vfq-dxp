@@ -82,10 +82,11 @@ function basePathCompatibility(figmaPreview: boolean): Plugin {
 // https://vite.dev/config/
 export default defineConfig(({ command }) => {
   const figmaPreview = command === 'serve' && process.env.FIGMA_MAKE_PREVIEW === '1'
+  const figmaDeploy = command === 'build' && process.env.FIGMA_MAKE_DEPLOY === '1'
   return {
-    // Figma preview routes from root. Builds and normal local development keep
-    // the published subpath contract.
-    base: figmaPreview ? '/' : publicBase,
+    // Figma hosts both previews and published sites at the domain root.
+    // Other builds retain the enterprise subpath contract.
+    base: figmaPreview || figmaDeploy ? '/' : publicBase,
     plugins: [basePathCompatibility(figmaPreview), react(), tailwindcss()],
     resolve: {
       // Lazy route chunks and the eagerly loaded shell must share one React
