@@ -2,10 +2,14 @@ import { useState } from 'react';
 import { Icon } from '../components/primitives/Icon';
 import { Tooltip } from '../components/primitives/Tooltip';
 import { Button } from '../components/primitives/Button';
+import { VodafoneMark } from '../components/primitives/VodafoneMark';
+import { VodafoneWordmark } from '../components/primitives/VodafoneWordmark';
 import { useAuthStore } from '../stores/authStore';
 import { usePersonaStore } from '../stores/personaStore';
 import { pickProfileForRole } from '../engines/agentProfileEngine';
 import { useEnterToSubmit } from '../hooks/useEnterToSubmit';
+import { useMinWidth } from '../hooks/useMinWidth';
+import { detectDeviceType } from '../lib/deviceType';
 import { DEMO_LOGIN_PASSWORD, resolveRoleFromStaffId } from './staffIdRoleMap';
 import { ForgotPasswordFlow } from './ForgotPasswordFlow';
 import { LoginAnnouncements } from './LoginAnnouncements';
@@ -117,22 +121,23 @@ export function LoginPage() {
   };
 
   const handleFormKeyDown = useEnterToSubmit(!signingIn, handleSignIn);
+  // The brand story is for the web layout only: a phone or tablet - by window width (below lg) or by touch hardware, which
+  // keeps a landscape tablet out too - shows just the sign-in form.
+  const showBrandPanel = useMinWidth(1024) && detectDeviceType() === 'web';
 
   // Layout follows the staff-portal design: the brand story on the left (about 60% of the width), the sign-in form on a
   // white panel on the right. Only the presentation differs from before - the handlers, validation, error display and
   // field ids are the same ones as above.
   return (
     <div className="min-h-screen flex flex-col md:flex-row font-sans">
-      {/* Sign-in panel - ordered after the brand panel on md:+ (DOM order, and so tab order, is unchanged). */}
-      <div className="w-full md:w-[42%] lg:w-[38%] shrink-0 md:order-2 bg-bg text-fg flex flex-col px-[8%] py-8">
-        <div className="flex justify-end items-center gap-2 text-[length:var(--fs-body)]" aria-label="Language">
-          <span className="text-accent font-medium" aria-current="true">English</span>
-          <span className="text-muted" aria-hidden="true">|</span>
-          <span className="text-muted" lang="ar" aria-disabled="true" title="Arabic is not available yet">العربية</span>
-        </div>
-
+      {/* Sign-in panel - ordered after the brand panel on md:+ (DOM order, and so tab order, is unchanged); takes the full width when the brand panel is not shown (phone, tablet). */}
+      <div className={`w-full shrink-0 md:order-2 bg-bg text-fg flex flex-col px-[8%] py-8 ${showBrandPanel ? 'md:w-[42%] lg:w-[38%]' : ''}`}>
         <div className="my-auto py-10 space-y-8">
           <div>
+            <div className="flex items-center gap-3 mb-6">
+              <VodafoneMark className="w-10 h-10 shrink-0" />
+              <VodafoneWordmark className="h-6 w-auto" />
+            </div>
             <p className="text-accent font-semibold uppercase tracking-wide text-[length:var(--fs-caption-upper)] mb-3">Staff Portal</p>
             <h1 className="text-[length:var(--fs-h3)] font-bold leading-tight text-fg mb-3">Welcome back</h1>
             <p className="text-fg-2 text-[length:var(--fs-body-lg)]">Sign in to your Vodafone workspace.</p>
@@ -225,25 +230,27 @@ export function LoginPage() {
       </div>
 
       {/* Brand panel - the Doha skyline photo (public/brand/login-bg.jpg, Hongbin on Unsplash, Unsplash License) under a
-          navy scrim that is darkest where the headline and the update cards sit. */}
-      <div className="relative flex-1 px-[6%] py-8 flex flex-col text-on-dark md:order-1 overflow-hidden bg-[var(--login-bg)]">
-        <img src="/brand/login-bg.jpg" alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-[image:var(--login-scrim)]" />
-        <header className="relative flex items-start justify-between gap-6">
-          <VodafoneLogo />
-        </header>
+          navy scrim that is darkest where the headline and the update cards sit. Not rendered on a phone or tablet. */}
+      {showBrandPanel && (
+        <div className="relative flex-1 px-[6%] py-8 flex flex-col text-on-dark md:order-1 overflow-hidden bg-[var(--login-bg)]">
+          <img src="/brand/login-bg.jpg" alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-[image:var(--login-scrim)]" />
+          <header className="relative flex items-start justify-between gap-6">
+            <VodafoneLogo />
+          </header>
 
-        <div className="relative mt-[12%] max-w-[85%]">
-          <h2 className="text-[length:var(--fs-h2)] font-bold leading-[1.15] text-on-dark">Together, we move Qatar forward.</h2>
-          <p className="mt-3 text-[length:var(--fs-lead)] font-normal text-on-dark">Your people. Your updates. Your day.</p>
+          <div className="relative mt-[12%] max-w-[85%]">
+            <h2 className="text-[length:var(--fs-h2)] font-bold leading-[1.15] text-on-dark">Together, we move Qatar forward.</h2>
+            <p className="mt-3 text-[length:var(--fs-lead)] font-normal text-on-dark">Your people. Your updates. Your day.</p>
+          </div>
+
+          <div className="relative mt-[6%] mb-auto">
+            <LoginAnnouncements />
+          </div>
+
+          <p className="relative pt-8 text-on-dark-2 text-[length:var(--fs-caption)]">Vodafone Qatar W.L.L.</p>
         </div>
-
-        <div className="relative mt-[6%] mb-auto">
-          <LoginAnnouncements />
-        </div>
-
-        <p className="relative pt-8 text-on-dark-2 text-[length:var(--fs-caption)]">Vodafone Qatar W.L.L.</p>
-      </div>
+      )}
 
       <ForgotPasswordFlow open={forgotPasswordOpen} onClose={() => setForgotPasswordOpen(false)} initialStaffId={staffId} />
     </div>

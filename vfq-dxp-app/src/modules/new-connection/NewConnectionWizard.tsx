@@ -112,7 +112,7 @@ export function NewConnectionWizard({
       <GuidedActivationWizard
         belowPanel={(draftStep ?? 0) === 0 && !isMirrorWindow ? <DemoFaultPanel /> : undefined}
         wizardId={WIZARD_ID}
-        allowCustomerView
+        allowCustomerView={device === 'web'} // a second customer-facing window has no use on a tablet or phone
         title={journey === 'home' ? 'New Home Connection' : 'New Connection'}
         draftActionLabel={
           product === 'fixed-line' && homeProduct

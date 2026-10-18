@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useSearchListNav } from '../hooks/useSearchListNav';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '../components/primitives/Icon';
@@ -88,27 +88,7 @@ export function Sidebar() {
   const navigate = useNavigate();
   // Pinning is a desktop feature: below md the navigation is always an overlay drawer.
   const isDesktop = useSyncExternalStore(subscribeDesktop, () => window.matchMedia(DESKTOP_QUERY).matches, () => true);
-  const pinnedDesktop = pinned && isDesktop;
-  // The dock beside the body takes the navigation's MEASURED width (no hardcoded offset), so the body reflows by
-  // exactly as much as the panel occupies - and by nothing while it is unpinned.
-  const navRef = useRef<HTMLElement>(null);
-  const [navWidth, setNavWidth] = useState(0);
-  // Animate width changes only once the first paint is done, so a reload while pinned shows the docked layout at
-  // once rather than sliding the body over from full width.
-  const [animateDock, setAnimateDock] = useState(false);
-  useEffect(() => {
-    const id = requestAnimationFrame(() => setAnimateDock(true));
-    return () => cancelAnimationFrame(id);
-  }, []);
-  useLayoutEffect(() => {
-    const el = navRef.current;
-    if (!el) return;
-    const measure = () => setNavWidth(el.offsetWidth);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+  // From tablet up the navigation always floats over the page (the page keeps its full width); it never docks beside it.
   const shownDesktop = isDesktop && (pinned || peeking);
   const offScreen = isDesktop ? !shownDesktop : !mobileOpen;
   // Menu search: filters this menu only. A group whose own label matches keeps all its sub-items; otherwise just the
@@ -169,6 +149,8 @@ export function Sidebar() {
   useEffect(() => {
     closeMobile();
     closePeek();
+    // The floating navigation also closes on arrival, so it doesn't stay over the new screen.
+    if (isDesktop && pinned) togglePinned();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
@@ -212,15 +194,7 @@ export function Sidebar() {
           aria-hidden="true"
         />
       )}
-      {/* The dock: the in-flow space the pinned navigation occupies. Its width follows the navigation's own measured
-          width and animates, so the body container shrinks and grows smoothly as the panel is pinned and unpinned. */}
-      <div
-        aria-hidden="true"
-        className={`hidden md:block shrink-0 ${animateDock ? 'transition-[width] duration-[var(--motion-slow)] ease-[var(--ease-standard)] motion-reduce:transition-none' : ''}`}
-        style={{ width: pinnedDesktop ? navWidth : 0 }}
-      />
       <nav
-        ref={navRef}
         inert={offScreen}
         aria-label="Main navigation"
         className={`fixed inset-y-0 left-0 z-[var(--z-overlay)] w-[280px] transform transition-[transform,translate,opacity,box-shadow] duration-[var(--motion-slow)] ease-[var(--ease-standard)] motion-reduce:transition-none ${
@@ -229,7 +203,7 @@ export function Sidebar() {
           // Desktop: always an overlay panel. Pinned or previewing it slides in; the dock above is what makes room
           // for it when pinned.
           shownDesktop ? 'md:translate-x-0 md:opacity-100' : 'md:-translate-x-full md:opacity-0'
-        } ${pinned ? '' : peeking ? 'md:shadow-xl' : ''} border-r border-[var(--nav-border)] bg-[var(--nav-bg)] h-full overflow-y-auto`}
+        } ${shownDesktop ? 'md:shadow-xl' : ''} border-r border-[var(--nav-border)] bg-[var(--nav-bg)] h-full overflow-y-auto`}
         onMouseEnter={!pinned ? openPeek : undefined}
         onMouseLeave={!pinned ? closePeekSoon : undefined}
       >

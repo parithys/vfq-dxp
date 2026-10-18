@@ -1,38 +1,46 @@
 import { useEffect, useState } from 'react';
 import { Icon } from '../components/primitives/Icon';
-import { Drawer } from '../components/primitives/Drawer';
-import { LOGIN_ANNOUNCEMENTS } from '../data/synthetic/loginAnnouncements';
-import type { LoginAnnouncement } from '../data/synthetic/loginAnnouncements';
+import { formatNewsDate, useLoginNews } from './useLoginNews';
+import type { NewsItem } from './useLoginNews';
 
-// The sign-in screen's "Company Updates & Announcements" panel: a carousel over the announcements that shows two at a
-// time (never more) on a glass card over the skyline photo. The arrows and the dots (one per announcement) move it a
-// card at a time and wrap round; it also advances by itself, and pauses while the pointer is on it.
+// The sign-in screen's "Company Updates & Announcements" panel: a carousel over the latest news from the Vodafone Qatar
+// news page (see useLoginNews) that shows two at a time (never more) on a glass card over the skyline photo. The arrows
+// and the dots (one per item) move it a card at a time and wrap round; it also advances by itself, and pauses while the
+// pointer is on it. With no news available the panel is simply not drawn - there is no placeholder content.
 
 const CHEV_LEFT = 'M15 18l-6-6 6-6';
 const CHEV_RIGHT = 'M9 18l6-6-6-6';
 const AUTO_MS = 7000;
 
-function Card({ a, onRead }: { a: LoginAnnouncement; onRead: (a: LoginAnnouncement) => void }) {
-  // The whole card opens the article (there is no separate "Read more" link in the design).
+function Card({ a }: { a: NewsItem }) {
+  // The whole card is the link (there is no separate "Read more" link in the design).
   return (
-    <button
-      type="button"
-      onClick={() => onRead(a)}
-      aria-label={`Read more: ${a.title}`}
+    <a
+      href={a.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`Read more: ${a.title} (opens in a new tab)`}
       className="group block w-full h-full text-left rounded-[var(--radius-card)] bg-bg text-fg overflow-hidden shadow-[var(--shadow-login-card)] focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
     >
-      <img src={a.image} alt={a.alt} className="block w-full aspect-[16/9] object-cover" />
+      <img src={a.image} alt="" className="block w-full aspect-[5/3] object-cover" />
       <span className="block px-[6%] pt-4 pb-5 space-y-1.5">
-        <span className="block font-bold text-[length:var(--fs-body-lg)] leading-snug group-hover:underline">{a.title}</span>
-        <span className="block text-fg-2 text-[length:var(--fs-body)] leading-snug">{a.description}</span>
-        <span className="block pt-2 text-muted text-[length:var(--fs-caption)]">{a.date}</span>
+        <span className="font-bold text-[length:var(--fs-body-lg)] leading-snug line-clamp-2 group-hover:underline">{a.title}</span>
+        <span className="text-fg-2 text-[length:var(--fs-body)] leading-snug line-clamp-3">{a.summary}</span>
+        <span className="block pt-2 text-muted text-[length:var(--fs-caption)]">{formatNewsDate(a.date)}</span>
       </span>
-    </button>
+    </a>
   );
 }
 
 export function LoginAnnouncements() {
-  const n = LOGIN_ANNOUNCEMENTS.length;
+  const items = useLoginNews();
+  return items.length > 0 ? <NewsCarousel items={items} /> : null;
+}
+
+function NewsCarousel({ items }: { items: NewsItem[] }) {
+  const n = items.length;
+  // Two cards show at a time, so with two or fewer there is nothing to slide to.
+  const slides = n > 2;
   // `pos` is the position of the track, 0..n. The track holds the cards followed by a copy of the first two, so moving
   // past the last card slides on to those copies and then snaps back to 0 without animating - the carousel wraps round
   // as one continuous slide instead of rewinding.
@@ -41,7 +49,6 @@ export function LoginAnnouncements() {
   const index = pos % n;
   const [paused, setPaused] = useState(false); // pointer or keyboard focus is on the panel
   const [stopped, setStopped] = useState(() => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches); // the user's own Pause / reduced-motion
-  const [reading, setReading] = useState<LoginAnnouncement | null>(null);
   const next = () => {
     setAnimate(true);
     setPos((p) => p + 1);
@@ -62,13 +69,13 @@ export function LoginAnnouncements() {
     setPos(i);
   };
   useEffect(() => {
-    if (paused || stopped || reading) return;
+    if (!slides || paused || stopped) return;
     const t = setInterval(() => {
       setAnimate(true);
       setPos((p) => p + 1);
     }, AUTO_MS);
     return () => clearInterval(t);
-  }, [paused, stopped, reading]);
+  }, [slides, paused, stopped]);
   // After sliding onto the copies at the end, snap back to the real start.
   const onSlideEnd = (e: React.TransitionEvent<HTMLDivElement>) => {
     // Only the track's own slide counts - a card's hover transition bubbles up here too.
@@ -78,9 +85,8 @@ export function LoginAnnouncements() {
       setPos(pos - n);
     }
   };
-  const track = [...LOGIN_ANNOUNCEMENTS, ...LOGIN_ANNOUNCEMENTS.slice(0, 2)];
+  const track = slides ? [...items, ...items.slice(0, 2)] : items;
   return (
-    <>
     <section
       aria-label="Company Updates & Announcements"
       aria-roledescription="carousel"
@@ -93,6 +99,7 @@ export function LoginAnnouncements() {
     >
       <div className="flex items-center justify-between gap-4 mb-4">
         <h3 className="text-on-dark font-semibold uppercase tracking-wide text-[length:var(--fs-caption-upper)]">Latest Updates</h3>
+        {slides && (
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -119,6 +126,7 @@ export function LoginAnnouncements() {
             <Icon path={CHEV_RIGHT} className="w-5 h-5" />
           </button>
         </div>
+        )}
       </div>
       {/* Two cards show at a time; the track slides one card per step. Reduced-motion users get no slide. */}
       <div className="overflow-hidden" aria-live={stopped || paused ? 'polite' : 'off'}>
@@ -129,13 +137,14 @@ export function LoginAnnouncements() {
         >
           {track.map((a, i) => (
             <div key={`${a.id}-${i}`} className="shrink-0 basis-[calc(50%-0.5rem)] min-w-0" aria-hidden={i < pos || i > pos + 1} inert={i < pos || i > pos + 1}>
-              <Card a={a} onRead={setReading} />
+              <Card a={a} />
             </div>
           ))}
         </div>
       </div>
+      {slides && (
       <div className="flex items-center justify-center gap-3 mt-6" role="group" aria-label="Choose announcement">
-        {LOGIN_ANNOUNCEMENTS.map((a, i) => (
+        {items.map((a, i) => (
           <button
             key={a.id}
             type="button"
@@ -146,17 +155,7 @@ export function LoginAnnouncements() {
           />
         ))}
       </div>
-    </section>
-    <Drawer open={reading !== null} onClose={() => setReading(null)} title={reading?.title ?? 'Announcement'}>
-      {reading && (
-        <article className="space-y-4">
-          <img src={reading.image} alt={reading.alt} className="block w-full rounded-[var(--radius-card)] object-cover" />
-          <div className="text-muted text-[length:var(--fs-caption)]">{reading.date}</div>
-          <h3 className="text-fg font-bold text-[length:var(--fs-h4)] leading-tight">{reading.title}</h3>
-          <p className="text-fg-2 text-[length:var(--fs-body-lg)] leading-relaxed">{reading.description}</p>
-        </article>
       )}
-    </Drawer>
-    </>
+    </section>
   );
 }

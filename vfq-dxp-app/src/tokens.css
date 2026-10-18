@@ -230,10 +230,13 @@
      its own value via the index.css override. */
   --shadow-selected-ring: inset 0 0 0 1px var(--field-card-selected);
   /* Figtree is loaded via Google Fonts (index.html) - unlike the previous
-     Space Grotesk/DM Sans targets, this one is real, not aspirational. Same
-     system-font fallback chain stays in place for the pre-load flash and for
-     any environment where the CDN request fails. */
-  --font-body: "Figtree","Segoe UI Variable","Segoe UI",-apple-system,sans-serif;
+     Space Grotesk/DM Sans targets, this one is real, not aspirational. The
+     request is the variable font (wght 300..900), so 400 body text and 700
+     headings are real weights. The fallback is Arial, sans-serif for the
+     pre-load flash and for any environment where the CDN request fails: it is
+     a family with proper regular/bold faces, unlike the Segoe UI names, which
+     macOS Chrome could resolve to a local "Segoe UI Black". */
+  --font-body: "Figtree",Arial,sans-serif;
   --fs-body: 16px;
   --fs-body-lg: 18px;
   --fs-btn: 14.4px;

@@ -252,6 +252,10 @@ export function resolveActiveNavPath(pathname: string, fromNavKey?: NavKey | str
     return from ?? '/customer-search';
   }
 
+  // The New Connection wizard (/mobile/start-connection, /fibre-home/start-connection/existing/:id, ...) is the journey the
+  // New Connections destination leads to, so that is what stays lit while the agent works through it.
+  if (/^\/[^/]+\/start-connection(\/|$)/.test(pathname)) return '/new-connections';
+
   // Tasks have no nav destination of their own and are only ever reached from
   // the dashboard's Open Activities zone, so that is what stays lit. They are
   // deliberately NOT mapped to Operations: that item is a planned placeholder

@@ -23,6 +23,8 @@ import { canSeeQnomyTicketNumber } from '../engines/agentPrivilegeEngine';
 import { GlobalSearch } from './GlobalSearch';
 import { SessionReferenceNumbers } from './SessionReferenceNumbers';
 import { HeaderContextChips } from './HeaderContextChips';
+import { useMinWidth } from '../hooks/useMinWidth';
+import { detectDeviceType } from '../lib/deviceType';
 
 const ICONS = {
   moon: 'M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z',
@@ -59,6 +61,8 @@ export function PersonaSwitcher() {
   const markAllRead = useNotificationStore((s) => s.markAllRead);
   const toggleMobileOpen = useSidebarStore((s) => s.toggleMobileOpen);
   const sidebarPinned = useSidebarStore((s) => s.pinned);
+  // The queue indicator and Next Customer are a web-layout feature: not shown on a tablet or phone (narrow window or touch).
+  const showQueue = useMinWidth(1024) && detectDeviceType() === 'web';
   const toggleSidebarPinned = useSidebarStore((s) => s.togglePinned);
   const customersServed = useQnomyQueueStore((s) => s.customersServed);
   const personas = getAllPersonas();
@@ -154,7 +158,7 @@ export function PersonaSwitcher() {
       {/* One flex strip so the session reference numbers and the
           approach-driven context chips sit side by side rather than stacking. */}
       <div className="hidden md:flex col-start-3 justify-self-center items-center gap-3">
-        <SessionReferenceNumbers />
+        {showQueue && <SessionReferenceNumbers />}
         <HeaderContextChips />
       </div>
 
