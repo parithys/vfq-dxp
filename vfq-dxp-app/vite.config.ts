@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -11,11 +11,32 @@ const figmaPublicUrl = process.env.FIGMA_PUBLIC_URL
 const figmaHmrHost = figmaPublicUrl
   ? new URL(figmaPublicUrl.includes('://') ? figmaPublicUrl : `https://${figmaPublicUrl}`).hostname
   : undefined
+const appBase = '/vfq-dxp-app/'
+const appBaseWithoutSlash = appBase.replace(/\/$/, '')
+
+// Vite's built-in base guard returns a 404 help page for the mount point
+// without its trailing slash. Figma's public proxy canonicalizes the slash
+// form back to the no-slash form, so an HTTP redirect would loop. Rewrite the
+// request internally and let the browser keep either URL.
+const basePathRewrite: Plugin = {
+  name: 'base-path-rewrite',
+  configureServer(server) {
+    server.middlewares.use((req, _res, next) => {
+      const [pathname, query] = (req.url ?? '').split('?', 2)
+      if (pathname !== appBaseWithoutSlash) {
+        next()
+        return
+      }
+      req.url = `${appBase}${query ? `?${query}` : ''}`
+      next()
+    })
+  },
+}
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/vfq-dxp-app/',
-  plugins: [react(), tailwindcss()],
+  base: appBase,
+  plugins: [basePathRewrite, react(), tailwindcss()],
   resolve: {
     // Lazy route chunks and the eagerly loaded shell must share one React
     // module identity, including after Vite rebuilds its dependency cache.
