@@ -22,6 +22,8 @@ export type ServiceAddressProps =
       nationality?: string;
       /** A journey that reports fibre readiness itself hides the built-in banner. */
       hideFibreReadiness?: boolean;
+      /** Show the Service Information card (Kahramaa Meter ID / Vodafone Premise ID) first, right under the journey's own service-type choice. */
+      serviceInformationFirst?: boolean;
     }
   | {
       mode: 'saved';

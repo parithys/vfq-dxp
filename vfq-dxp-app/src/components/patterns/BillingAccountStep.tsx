@@ -7,7 +7,8 @@ import { Checkbox } from '../primitives/Checkbox';
 import { Icon } from '../primitives/Icon';
 import { Input } from '../primitives/Input';
 import { Select } from '../primitives/Select';
-import { computeBillCycleDay, ordinal, tokenizeCard, INVOICE_RECIPIENTS } from './billingAccountModel';
+import { useAreaOptions } from '../../hooks/useAreaOptions';
+import { BILLING_MODES, BILL_CYCLE_DAYS, DEFAULT_BILLING_MODE, computeBillCycleDay, ordinal, tokenizeCard, INVOICE_RECIPIENTS } from './billingAccountModel';
 import type { AccountRecord, BillingProfileRecord, ContactRecord, CustomerRecord, NewBillingAccountValue, BillingAccountValue } from './billingAccountModel';
 import { BillingProfileSetupDrawer } from './BillingProfileSetupDrawer';
 
@@ -39,6 +40,15 @@ interface BillingAccountStepProps {
 // one of the customer's existing billing accounts (business-rules.json's
 // "Consumer Billing Profile Cap" - at most two for a Consumer, unlimited for
 // Enterprise - gates whether "Create New" is offered at all), or create one.
+// What this step loaded for a customer, kept for the session: coming back to the step (Edit in the summary, or Back) shows
+// it at once instead of waiting through the data loads again. It is still refreshed in the background every time.
+interface BillingData {
+  profiles: (BillingProfileRecord & { accountType: string })[];
+  contacts: ContactRecord[];
+  segment: string | undefined;
+}
+const billingDataCache = new Map<string, BillingData>();
+
 export function BillingAccountStep({
   customerId,
   defaultAddressLine,
@@ -46,10 +56,12 @@ export function BillingAccountStep({
   onChange,
   customerEmail,
 }: BillingAccountStepProps) {
-  const [profiles, setProfiles] = useState<(BillingProfileRecord & { accountType: string })[]>([]);
-  const [contacts, setContacts] = useState<ContactRecord[]>([]);
-  const [customerSegment, setCustomerSegment] = useState<string | undefined>(undefined);
-  const [loaded, setLoaded] = useState(false);
+  const areaOptions = useAreaOptions();
+  const cached = customerId ? billingDataCache.get(customerId) : undefined;
+  const [profiles, setProfiles] = useState<(BillingProfileRecord & { accountType: string })[]>(cached?.profiles ?? []);
+  const [contacts, setContacts] = useState<ContactRecord[]>(cached?.contacts ?? []);
+  const [customerSegment, setCustomerSegment] = useState<string | undefined>(cached?.segment);
+  const [loaded, setLoaded] = useState(Boolean(cached));
   const [setupOpen, setSetupOpen] = useState(false);
   const [cardNumber, setCardNumber] = useState('');
   const [cardError, setCardError] = useState<string | null>(null);
@@ -70,9 +82,15 @@ export function BillingAccountStep({
           return p ? { ...p, accountType: a.accountType } : undefined;
         })
         .filter((p): p is BillingProfileRecord & { accountType: string } => Boolean(p));
-      setProfiles(ownProfiles);
-      setContacts(allContacts.filter((c) => c.customerId === customerId));
-      setCustomerSegment(allCustomers.find((c) => c.customerId === customerId)?.segment);
+      const data: BillingData = {
+        profiles: ownProfiles,
+        contacts: allContacts.filter((c) => c.customerId === customerId),
+        segment: allCustomers.find((c) => c.customerId === customerId)?.segment,
+      };
+      billingDataCache.set(customerId, data);
+      setProfiles(data.profiles);
+      setContacts(data.contacts);
+      setCustomerSegment(data.segment);
       setLoaded(true);
     })();
   }, [customerId]);
@@ -82,10 +100,9 @@ export function BillingAccountStep({
     onChange({ ...value, newAccount: { ...newAccount, ...patch } });
 
   const asOf = new Date();
-  const billCycleDay =
-    customerSegment === 'VIP' && newAccount.billCycleOverride && newAccount.billCycleDay
-      ? newAccount.billCycleDay
-      : computeBillCycleDay(customerSegment, asOf);
+  // The default day for this customer; the agent can pick another (newAccount.billCycleDay).
+  const defaultBillCycleDay = computeBillCycleDay(customerSegment, asOf);
+  const billCycleDay = newAccount.billCycleDay ?? defaultBillCycleDay;
 
   // "A consumer can have at most two billing profiles (one postpaid, one
   // prepaid); enterprises can have more" (business-rules.json) - this
@@ -104,7 +121,9 @@ export function BillingAccountStep({
     setNewAccount({ cardLast4: result.last4, cardToken: result.token });
   };
 
-  if (!loaded) {
+  // No customer yet (a new customer, or a journey that has not resolved one): there are no accounts to load, so the step
+  // opens on its create form instead of waiting forever.
+  if (customerId && !loaded) {
     return <p className="text-muted text-[length:var(--fs-body)]">Loading billing accounts…</p>;
   }
 
@@ -180,17 +199,29 @@ export function BillingAccountStep({
               {/* Contact */}
               <div className={`${SECTION} pt-6`}>
                 <h4 className={SECTION_TITLE}>Contact</h4>
-                <Select
-                  label="Primary Contact"
-                  required
-                  value={newAccount.primaryContactId ?? ''}
-                  onChange={(e) => setNewAccount({ primaryContactId: e.target.value })}
-                  placeholder="Select contact"
-                  options={contacts.map((c) => ({
-                    value: c.contactRecordId,
-                    label: [c.firstName, c.middleName, c.lastName].filter(Boolean).join(' '),
-                  }))}
-                />
+                {/* Primary and secondary contact share one row once a secondary contact is added. */}
+                <div className={`grid gap-3 ${newAccount.hasSecondaryContact ? 'sm:grid-cols-2' : ''}`}>
+                  <Select
+                    label="Primary Contact"
+                    required
+                    value={newAccount.primaryContactId ?? ''}
+                    onChange={(e) => setNewAccount({ primaryContactId: e.target.value })}
+                    placeholder="Select contact"
+                    options={contacts.map((c) => ({
+                      value: c.contactRecordId,
+                      label: [c.firstName, c.middleName, c.lastName].filter(Boolean).join(' '),
+                    }))}
+                  />
+                  {newAccount.hasSecondaryContact && (
+                    <Input
+                      label="Secondary Contact Name"
+                      required
+                      placeholder="Full name"
+                      value={newAccount.secondaryContactName ?? ''}
+                      onChange={(e) => setNewAccount({ secondaryContactName: e.target.value })}
+                    />
+                  )}
+                </div>
                 <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg cursor-pointer">
                   <Checkbox
                     checked={newAccount.hasSecondaryContact ?? false}
@@ -203,15 +234,6 @@ export function BillingAccountStep({
                   />
                   Add a secondary contact
                 </label>
-                {newAccount.hasSecondaryContact && (
-                  <Input
-                    label="Secondary Contact Name"
-                    required
-                    placeholder="Full name"
-                    value={newAccount.secondaryContactName ?? ''}
-                    onChange={(e) => setNewAccount({ secondaryContactName: e.target.value })}
-                  />
-                )}
               </div>
 
               {/* Billing Address */}
@@ -227,25 +249,45 @@ export function BillingAccountStep({
                 {newAccount.useSameAddress ?? true ? (
                   <p className="text-muted text-[length:var(--fs-caption)]">{defaultAddressLine || 'No communication address on file yet.'}</p>
                 ) : (
-                  <div className="grid grid-cols-3 gap-3">
-                    <Input
-                      label="Street"
-                      required
-                      value={newAccount.newStreet ?? ''}
-                      onChange={(e) => setNewAccount({ newStreet: e.target.value })}
-                    />
-                    <Input
-                      label="Area"
-                      required
-                      value={newAccount.newArea ?? ''}
-                      onChange={(e) => setNewAccount({ newArea: e.target.value })}
-                    />
-                    <Input
-                      label="Building"
-                      required
-                      value={newAccount.newBuilding ?? ''}
-                      onChange={(e) => setNewAccount({ newBuilding: e.target.value })}
-                    />
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        label="Street"
+                        required
+                        value={newAccount.newStreet ?? ''}
+                        onChange={(e) => setNewAccount({ newStreet: e.target.value })}
+                      />
+                      <Input
+                        label="Building"
+                        required
+                        value={newAccount.newBuilding ?? ''}
+                        onChange={(e) => setNewAccount({ newBuilding: e.target.value })}
+                      />
+                    </div>
+                    {/* The same three fields as the Additional Details of the service address. */}
+                    <div className="grid grid-cols-3 gap-3">
+                      <Select
+                        label="Area / District"
+                        required
+                        placeholder="Select an area"
+                        searchable
+                        options={[...new Set([...(newAccount.newArea ? [newAccount.newArea] : []), ...areaOptions])].map((a) => ({ value: a, label: a }))}
+                        value={newAccount.newArea ?? ''}
+                        onChange={(e) => setNewAccount({ newArea: e.target.value })}
+                      />
+                      <Input
+                        label="Flat / Apartment / Unit Number"
+                        placeholder="e.g. 4B, 1402"
+                        value={newAccount.newUnit ?? ''}
+                        onChange={(e) => setNewAccount({ newUnit: e.target.value })}
+                      />
+                      <Input
+                        label="Floor"
+                        placeholder="e.g. 4"
+                        value={newAccount.newFloor ?? ''}
+                        onChange={(e) => setNewAccount({ newFloor: e.target.value })}
+                      />
+                    </div>
                   </div>
                 )}
               </div>
@@ -265,26 +307,25 @@ export function BillingAccountStep({
                       : INVOICE_RECIPIENTS.filter((r) => r.value === 'Primary Contact')
                   }
                 />
-                <div>
-                  <p className="text-[length:var(--fs-label)] text-fg-2 mb-1">
-                    Bill Cycle
-                    <span className="text-muted"> (DEMO ONLY)</span>
-                  </p>
-                  <p className="text-fg text-[length:var(--fs-body)]">
-                    {ordinal(billCycleDay)} of the Month{customerSegment === 'VIP' ? ' (VIP default)' : ' (Default)'}
-                  </p>
-                  {/* Manual override only reachable for a VIP segment - see
-                      computeBillCycleDay's own note on why no seeded customer
-                      can currently reach this branch. */}
-                  {customerSegment === 'VIP' && (
-                    <label className="flex items-center gap-2 text-[length:var(--fs-caption)] text-fg cursor-pointer mt-1">
-                      <Checkbox
-                        checked={newAccount.billCycleOverride ?? false}
-                        onChange={(e) => setNewAccount({ billCycleOverride: e.target.checked })}
-                      />
-                      Requires VIP segment details - use a different date
-                    </label>
-                  )}
+                {/* Bill cycle and billing mode on one row: the day the cycle starts (default by rule, editable) and how it bills. */}
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <Select
+                    label="Bill cycle"
+                    required
+                    value={String(billCycleDay)}
+                    onChange={(e) => setNewAccount({ billCycleDay: Number(e.target.value) })}
+                    helperText="Next cycle by default rule; VIP = 7th"
+                    options={[...new Set([...BILL_CYCLE_DAYS, defaultBillCycleDay, billCycleDay])].sort((a, b) => a - b).map((d) => ({
+                      value: String(d),
+                      label: `${ordinal(d)} of every month${d === defaultBillCycleDay ? (customerSegment === 'VIP' ? ' (VIP default)' : ' (Default)') : ''}`,
+                    }))}
+                  />
+                  <Select
+                    label="Billing mode"
+                    value={newAccount.billingMode ?? DEFAULT_BILLING_MODE}
+                    onChange={(e) => setNewAccount({ billingMode: e.target.value })}
+                    options={BILLING_MODES}
+                  />
                 </div>
                 <Input
                   label="Card Number"

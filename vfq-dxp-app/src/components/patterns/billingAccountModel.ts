@@ -37,12 +37,14 @@ export interface NewBillingAccountValue {
   newStreet?: string;
   newArea?: string;
   newBuilding?: string;
+  newUnit?: string;
+  newFloor?: string;
   preferredInvoiceRecipient?: string;
-  /** Auto-computed from computeBillCycleDay(); only overridable for a VIP
-   * segment - see that function's own note on the evidenced vs. assumed
-   * halves of this rule. */
+  /** The day of the month the bill cycle starts on. Defaults to computeBillCycleDay() (see that function's note on the
+   * evidenced vs. assumed halves of the rule) and is editable by the agent. */
   billCycleDay?: number;
-  billCycleOverride?: boolean;
+  /** How the profile is billed: the billing-profiles records carry 'Arrears' (every profile but one) or 'Hybrid (PIA + Arrears)'. */
+  billingMode?: string;
   /** Only the last 4 digits and a generated token ever persist here - see
    * tokenizeCard()'s own note on why the full number is never stored. */
   cardLast4?: string;
@@ -85,12 +87,22 @@ export function computeBillCycleDay(segment: string | undefined, asOf: Date): nu
   return Math.abs(day - 1) <= Math.abs(day - 15) ? 1 : 15;
 }
 
+/** 1 -> "1st", 2 -> "2nd", 3 -> "3rd", 11 -> "11th", 22 -> "22nd". */
 export function ordinal(day: number): string {
-  if (day === 1) return '1st';
-  if (day === 15) return '15th';
-  if (day === 7) return '7th';
-  return `${day}th`;
+  const teen = day % 100 >= 11 && day % 100 <= 13;
+  const suffix = teen ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[day % 10] ?? 'th';
+  return `${day}${suffix}`;
 }
+
+/** Billing modes, as the billing-profiles records name them; arrears is the default. */
+export const BILLING_MODES = [
+  { value: 'Arrears', label: 'In arrears' },
+  { value: 'Hybrid (PIA + Arrears)', label: 'Hybrid (PIA + Arrears)' },
+];
+export const DEFAULT_BILLING_MODE = 'Arrears';
+
+/** The days a postpaid bill cycle can start on by rule: the 1st or the 15th (a VIP customer's 7th is added where it is the default). */
+export const BILL_CYCLE_DAYS = [1, 15];
 
 /**
  * "Validation of payment details ... is required for successful processing,

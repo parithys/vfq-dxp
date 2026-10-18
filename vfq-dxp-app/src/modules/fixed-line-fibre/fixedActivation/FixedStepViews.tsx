@@ -123,6 +123,8 @@ export function InstallationAddressStep({ values, setValue }: { values: Values; 
         idNumber={contact?.idNumber}
         nationality={(values.eligibility as EligibilityResult | undefined)?.nationality}
         hideFibreReadiness
+        // FWA: the Kahramaa / Vodafone IDs sit right under the FWA Indoor / FWA Outdoor choice, above the address.
+        serviceInformationFirst={wireless}
       />
     </div>
   );

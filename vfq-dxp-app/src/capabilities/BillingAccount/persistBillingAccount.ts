@@ -53,7 +53,7 @@ export async function persistBillingAccount(
     isDefault: true,
     billingCycle: fresh.billCycleDay ? `Monthly - Day ${fresh.billCycleDay}` : 'Monthly',
     billCycleLabel: fresh.billCycleDay ? ordinal(fresh.billCycleDay) : undefined,
-    billingType: 'Arrears',
+    billingType: fresh.billingMode ?? 'Arrears',
     billingAddress: ctx.addressLine,
     billMedium: fresh.billMedia ?? 'Email',
     billingSchedule: fresh.billingSchedule,
