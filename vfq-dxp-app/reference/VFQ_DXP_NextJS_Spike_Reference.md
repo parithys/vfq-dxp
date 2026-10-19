@@ -93,7 +93,7 @@ Not tested: roles other than these two, and the approval queues' role-specific b
 
 **Touch ("tablet") branch tested live under Next and under Vite (identical results)**, with touch emulation on (`maxTouchPoints` 5, coarse pointer; the emulation also forces a 375 px viewport, so this tests the device logic, not tablet-width layout together with touch): the journey wizard root reports `data-device="tablet"`; the CAF type is set automatically to **Touch Screen** with the signature pad shown and no picker; **Customer view** is not offered (web only); the scan control is "Initiate scan". On a pointer device the CAF type is Digital (unit test `tests/signatureMode.test.mjs`; the live web run in Next was not repeated).
 
-Not tested live under Next: the MNP Form type (`MNP-Digital` / `MNP-Touch Screen`) and the tablet SIM scan button (the MNP journey was not run; the form type is covered by the unit test only), and a real tablet. Because the device is read on first use, a page that loads on a touch device and is later resized keeps its first reading (same on `main`).
+**MNP Port-In run live under Next** (a legacy-catch-all route, served by `app/[...slug]`): from Customer 360 (CUST-3083) -> Actions -> Plans & Numbers -> MNP Port-In. Web (non-touch): the QID scan drew CUST-3083's own card, Billing Profile resolved itself (existing BILL-7149 selected), SIM Serial advanced by itself on a validated scan and stored ICCID / stock status / kind, Customer view appeared on Offers & Plans and Checkout and not on Donor Details, the Port-in Number is the +974 phone field (stored `+97466000666`), and the MNP Form step has no selector and shows `MNP-Digital` with a signature pad. Touch emulation: `data-device="tablet"` and the MNP Form shows `MNP-Touch Screen`, again with no selector. Not tested: signing the form, CAF & Signature and Payment of the MNP journey (the signature pad does not accept synthetic input), and a real tablet. Because the device is read on first use, a page that loads on a touch device and is later resized keeps its first reading (same on `main`).
 
 ## 11-13. Deployment, static export, server runtime
 
@@ -104,16 +104,17 @@ Not tested live under Next: the MNP Form type (`MNP-Digital` / `MNP-Touch Screen
 
 ## 14. Issues discovered during the migration
 
-1. `location.state` has no equivalent in the App Router. Bridged per URL in `sessionStorage`. Differs from react-router in one case: Back to an entry whose launch state was never consumed re-delivers it (journeys consume it immediately, so not observed).
-2. `useBlocker` (leave-journey prompt) works for in-app navigation (Link, `navigate`, `setSearchParams`): verified, the dialog appears and "stay" keeps the page and entry list unchanged. **Browser Back/Forward and reload cannot be intercepted by the App Router**: verified, Back leaves the journey with no prompt (draft, journey lock and step were preserved and Forward restored step 2). This is a regression versus `main`, where Back is blocked.
-3. A static export prerenders client components, so any module-level `window` / storage access would fail the build; avoided by loading the app with `ssr: false`.
-4. Next removes `import.meta.env` (Vite-only): `buildEnv.ts`.
-5. Next rewrote `tsconfig.next.json` to `strict: false` on first build, which hid nothing but produced 5 type errors on strictness differences; set explicitly to `strict: true`.
-6. Turbopack's PostCSS step needs a local port; it fails inside the Claude sandbox (EPERM). Builds were run in the user's terminal.
-7. `npm install` needed `NODE_OPTIONS=--use-system-ca` on this machine (as the repo's other scripts do).
-8. Tailwind (Next's PostCSS path) warns about one invalid generated class `text-[length:var(--fs-*)]` (a literal in source text). Harmless; not seen in the Vite build.
-9. Next warns that it ignored a `package-lock.json` outside the repo (`turbopack.root` would silence it).
-10. `next dev` was not run; only `next build` + static serving.
+1. Opening a legacy journey by client navigation reloads the page (see section 18).
+2. `location.state` has no equivalent in the App Router. Bridged per URL in `sessionStorage`. Differs from react-router in one case: Back to an entry whose launch state was never consumed re-delivers it (journeys consume it immediately, so not observed).
+3. `useBlocker` (leave-journey prompt) works for in-app navigation (Link, `navigate`, `setSearchParams`): verified, the dialog appears and "stay" keeps the page and entry list unchanged. **Browser Back/Forward and reload cannot be intercepted by the App Router**: verified, Back leaves the journey with no prompt (draft, journey lock and step were preserved and Forward restored step 2). This is a regression versus `main`, where Back is blocked.
+4. A static export prerenders client components, so any module-level `window` / storage access would fail the build; avoided by loading the app with `ssr: false`.
+5. Next removes `import.meta.env` (Vite-only): `buildEnv.ts`.
+6. Next rewrote `tsconfig.next.json` to `strict: false` on first build, which hid nothing but produced 5 type errors on strictness differences; set explicitly to `strict: true`.
+7. Turbopack's PostCSS step needs a local port; it fails inside the Claude sandbox (EPERM). Builds were run in the user's terminal.
+8. `npm install` needed `NODE_OPTIONS=--use-system-ca` on this machine (as the repo's other scripts do).
+9. Tailwind (Next's PostCSS path) warns about one invalid generated class `text-[length:var(--fs-*)]` (a literal in source text). Harmless; not seen in the Vite build.
+10. Next warns that it ignored a `package-lock.json` outside the repo (`turbopack.root` would silence it).
+11. `next dev` was not run; only `next build` + static serving.
 
 ## 15. Existing defects discovered
 
@@ -139,7 +140,8 @@ As listed in section 2, on the branch `spike/nextjs` only.
 - Static export needs enumerated dynamic params and a host rewrite to a specific document (13); unknown customers are only reachable through the fallback.
 - +28 % JS and a larger output for no functional gain in a front-end prototype.
 - The compat layer (about 250 lines) becomes permanent infrastructure to maintain against both react-router and Next API changes.
-- Untested under Next: the MNP journey (MNP Form type, tablet SIM scan), roles other than ROLE-01 / ROLE-03, the Customer view pop-up window, a real tablet, `next dev`.
+- Untested under Next: signing and paying in the MNP journey, roles other than ROLE-01 / ROLE-03, the Customer view pop-up window, a real tablet, `next dev`.
+- Client navigation to a route that has no Next route file (for example the MNP journey from the Plans & Numbers card) is a full page load, not an in-app transition: the exported site has no RSC payload for it, so the Next router falls back to a hard navigation, which the host rewrite then serves with the catch-all document. Launch state (sessionStorage) and the stores survive it, so the customer and the journey are intact (verified), but the page reloads and in-memory UI state is lost. Each journey migrated to a Next route file removes this.
 
 ## 19. Recommendation
 
