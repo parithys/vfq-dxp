@@ -3,9 +3,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { load, close } from './harness.mjs';
 
-test('Customer view is offered on Recommended Offers, Offers & Plans, Add-ons, Checkout and CAF & Signature only', async () => {
+test('Customer view is offered on Recommended Offers, Offers & Plans, Add-ons, Checkout, CAF & Signature and Order Submitted only', async () => {
   const { hasCustomerView } = await load('/src/components/patterns/wizard/customerViewPolicy.ts');
-  for (const key of ['crossSales', 'plan', 'addons', 'planExtras', 'checkout', 'caf']) assert.equal(hasCustomerView(key), true, key);
+  for (const key of ['crossSales', 'plan', 'addons', 'planExtras', 'checkout', 'caf', 'order-submitted']) assert.equal(hasCustomerView(key), true, key);
   for (const key of ['contact', 'product', 'line', 'number', 'sim', 'simType', 'address', 'billingAccount', 'payment', 'cart', 'subscriptions', 'appointment', 'activity', undefined]) {
     assert.equal(hasCustomerView(key), false, String(key));
   }
