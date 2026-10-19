@@ -9,6 +9,7 @@ import type { BillingAccountValue } from '../../components/patterns/billingAccou
 import { EligibilityGateStep } from '../EligibilityGate/EligibilityGateStep';
 import type { EligibilityResult } from '../../components/domain/eligibilityTypes';
 import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTypes';
+import type { RequestKind } from '../../domain/eligibility';
 import { LAUNCH_CUSTOMER_KEY } from '../../components/patterns/wizard/useJourneyStartResume';
 import { CustomerStatusBanner } from './JourneyBanners';
 import { EligibilityOutcomePanel, OutcomeActions } from '../EligibilityGate/EligibilityOutcomes';
@@ -50,9 +51,11 @@ export interface QualificationContext {
   knownCustomerId?: string;
   /** The journey adds no line (a plan change): the active-line limit is not checked. */
   skipLineLimit?: boolean;
+  /** PREPAID_TO_POSTPAID_MIGRATION for a conversion (the mobile total is unchanged); NEW_ACTIVATION otherwise. */
+  requestKind?: RequestKind;
 }
 
-export function customerQualificationStep({ flow, existingCustomerId, guardedContactChange, journeyType = 'postpaid', manualEntry, productAgnostic = false, knownCustomer = false, knownCustomerId, skipLineLimit = false }: QualificationContext): WizardStep {
+export function customerQualificationStep({ flow, existingCustomerId, guardedContactChange, journeyType = 'postpaid', manualEntry, productAgnostic = false, knownCustomer = false, knownCustomerId, skipLineLimit = false, requestKind }: QualificationContext): WizardStep {
   const prepaid = journeyType === 'prepaid';
   return {
     key: 'contact',
@@ -103,6 +106,7 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
             asCustomerId={flow === 'existing' ? existingCustomerId : actedForId}
             announcePass={false}
             skipLineLimit={skipLineLimit}
+            requestKind={requestKind}
             journeyType={journeyType}
             // The customer's full set of checks, as the single-product journeys always showed them at Customer Identification: ID type
             // approval, the active-line limit, collections and the rest. (Prepaid and MNP judge a few of them differently once the product

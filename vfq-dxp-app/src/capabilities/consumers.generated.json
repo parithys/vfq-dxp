@@ -91,7 +91,9 @@
         "modules/pre-to-post-migration",
         "workspace/administration"
       ],
-      "bypass": []
+      "bypass": [
+        "components/patterns/DonorAttachmentStep.tsx  ->  components/patterns/cafTypes.ts"
+      ]
     },
     "checkout-summary": {
       "areas": [

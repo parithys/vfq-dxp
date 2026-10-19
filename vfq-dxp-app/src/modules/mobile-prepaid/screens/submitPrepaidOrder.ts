@@ -2,7 +2,8 @@ import { currentAgentId } from '../../../stores/authStore';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { logActivity, newActivityId } from '../../../engines/activityEngine';
 import type { ActivityInput } from '../../../engines/activityEngine';
-import { allLines, cartTotals, emailVerification, maskEmail, priceLine, STORE_MANAGER_ROLE } from '../../../capabilities';
+import { allLines, cartTotals, emailVerification, maskEmail, priceLine, COLLECTION_TEAM_ROLE, STORE_MANAGER_ROLE } from '../../../capabilities';
+import { approvalMessages, decisionRecord, needsCreditControl } from '../../../engines/connectionEligibility';
 import type { GuidedContactValue, CrossSalesValue, ConfirmedOrder, PrepaidLine, PricingExtra, PricingProduct } from '../../../capabilities';
 import { assertEligibilityChecked } from '../../../engines/eligibilityGuard';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
@@ -92,9 +93,12 @@ export async function submitPrepaidOrder(
   const manualIdEntry = Boolean(contact?.manualEntry);
   const routedChecks = eligibility?.checks.filter((c) => c.outcome === 'approval-routing') ?? [];
   const activeLinesCheck = routedChecks.find((c) => c.id === 'active-lines');
+  // The rule engine's decision, when it covered this customer: Credit Control approval routes the order to Credit Control (otherwise the older line-limit rule).
+  const lineDecision = eligibility?.connectionDecision;
+  const creditControl = lineDecision ? needsCreditControl(lineDecision) : false;
   const pendingApproval = manualIdEntry || routedChecks.length > 0;
   const approvalReason = [
-    activeLinesCheck ? `Active prepaid line limit reached - ${activeLinesCheck.message.split('\n')[1] ?? activeLinesCheck.message}` : '',
+    activeLinesCheck ? (lineDecision ? `Line approval required - ${approvalMessages(lineDecision)}` : `Active prepaid line limit reached - ${activeLinesCheck.message.split('\n')[1] ?? activeLinesCheck.message}`) : '',
     manualIdEntry ? 'Identity manually entered - Store Manager approval required' : '',
     routedChecks.some((c) => c.id === 'id-type-routing') ? 'ID type cannot be sold directly - routed to Back Office Fulfilment approval workflow' : '',
     routedChecks.some((c) => c.id === 'id-validity') ? 'ID expiry date not on file - routed for approval' : '',
@@ -129,10 +133,11 @@ export async function submitPrepaidOrder(
     orderId,
     customerEmail: contact?.email,
     orderType: 'New Prepaid Activation',
+    ...decisionRecord(lineDecision),
     createdAt: now(),
     orderSubType: 'Consumer',
     status: pendingApproval ? 'Submitted for Approval' : 'Open',
-    ...(pendingApproval ? { manualIdEntry: manualIdEntry || undefined, approvalReason, approverRole: manualIdEntry ? STORE_MANAGER_ROLE : undefined } : {}),
+    ...(pendingApproval ? { manualIdEntry: manualIdEntry || undefined, approvalReason, approverRole: creditControl ? COLLECTION_TEAM_ROLE : manualIdEntry ? STORE_MANAGER_ROLE : undefined } : {}),
     customerName: contact?.moiResult?.name,
     customerId,
     accountId,

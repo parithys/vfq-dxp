@@ -1,4 +1,5 @@
 import { EXCEPTION_ROUTED_ID_TYPES } from '../data/idTypes';
+import type { EligibilityDecision } from '../domain/eligibility';
 import { PORT_IN_DUES_THRESHOLD_QAR } from '../data/portInRules';
 /**
  * The customer fields these checks read - a structural shape rather than an
@@ -64,6 +65,8 @@ export interface EligibilityContext {
   lineCapReached: boolean;
   /** The line-cap rule says no further line can be added at all (expat at the 5-line maximum). */
   lineCapHardStop?: boolean;
+  /** The Connection Eligibility & Approval Rule Engine's decision. When present it IS the Active Lines check; the line-cap fields above are then not read. */
+  lineDecision?: EligibilityDecision;
   /**
    * The line-cap rule's OWN message (BR-288/BR-347 in ruleEngine.ts), which
    * already states the customer's actual active-connections count against
@@ -278,6 +281,24 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
   // 7. Active lines. A diversion, not a stop - the order proceeds once the
   // approval task is granted, so this deliberately does NOT hard-stop even
   // though the underlying cap rule reports `pass: false`.
+  const decision = ctx.lineDecision;
+  if (decision) {
+    const c = decision.countsBefore;
+    const held = `Customer holds ${c.mobileTotal} mobile lines (${c.prepaid} prepaid, ${c.postpaid} postpaid) and ${c.fixedFwa} Fixed/FWA lines.`;
+    checks.push({
+      id: 'active-lines',
+      label: 'Active Lines',
+      passed: decision.outcome === 'ALLOW',
+      // A block is a hard stop (no approval overrides it); the engine's approvals are Approval Routing: the journey continues and the order is held.
+      outcome: decision.outcome === 'BLOCK' ? 'hard-stop' : decision.outcome === 'ALLOW_WITH_APPROVAL' ? 'approval-routing' : 'pass',
+      message:
+        decision.outcome === 'BLOCK'
+          ? (decision.block?.message ?? held)
+          : decision.outcome === 'ALLOW_WITH_APPROVAL'
+            ? `Approval Required\n${decision.approvals.map((a) => a.message).join(' ')} The journey can continue, but the order will be routed for approval upon submission.`
+            : held,
+    });
+  } else {
   checks.push({
     id: 'active-lines',
     // 2026-09-28: reports the customer's ACTUAL active-connections count
@@ -298,6 +319,7 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
         ? `Postpaid Line Limit Reached\nThe maximum limit of ${activeLinesDetail.match(/limit of (\d+)/)?.[1] ?? 'the permitted number of'} active postpaid lines has been reached. The journey can continue, but the order will be routed to the Collection Team for approval upon submission.`
         : activeLinesDetail,
   });
+  }
 
   // 8. MNP only: outstanding dues against the Collections Policy threshold (BR-MNP-024). The threshold is not defined (the rule is Open
   // in the BRSD), so with none configured the check never restricts; it states the amount it did not act on rather than passing silently.

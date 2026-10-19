@@ -3,6 +3,8 @@ import * as sums from '../../../components/patterns/wizard/commonSummaries';
 import { attachSummaries } from '../../../components/patterns/wizard/stepSummary';
 import { billingAccountStep, cafSignatureStep, checkoutSummaryStep, paymentStep, prepaidCheckoutStep, planSelectionStep, postpaidExtrasStep, postpaidPlanStep, prepaidExtrasStep, serviceAddressStep, simSerialStep } from '../../../capabilities';
 import type { PostpaidStepContext } from '../../new-connection/postpaidSteps';
+import { mnpPlanTypeStep } from '../../new-connection/steps/MnpPlanTypeStep';
+import type { ProductStepContext } from '../../new-connection/steps/ProductSelection';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import { normalizePortInNumber, PORT_IN_DEPOSIT_QAR, PORT_IN_FEE_QAR } from '../../../data/portInRules';
 import type { PrepaidLine } from '../../../components/patterns/prepaidCartModel';
@@ -49,11 +51,14 @@ const portInLines = (values: Record<string, unknown>): PrepaidLine[] => {
 
 const FIX_STEP: Record<string, string> = { customer: 'contact', eligibility: 'product', billing: 'billingAccount', plan: 'plan', sim: 'sim', mnp: 'donor-details' };
 
-export function mnpSteps({ products = [], customerBenefits }: Partial<Pick<PostpaidStepContext, 'products' | 'customerBenefits'>> = {}): WizardStep[] {
+export function mnpSteps(ctx: ProductStepContext & Partial<Pick<PostpaidStepContext, 'products' | 'customerBenefits'>> = {} as ProductStepContext): WizardStep[] {
+  const { products = [], customerBenefits } = ctx;
   const planContext = { products, customerBenefits };
   const postpaidOnly = (step: WizardStep): WizardStep => ({ ...step, skip: isPrepaidMnp });
   const prepaidOnly = (step: WizardStep): WizardStep => ({ ...step, skip: (values) => !isPrepaidMnp(values) });
   return attachSummaries([
+    // Opens the flow: what the number is ported onto (see MnpPlanTypeStep).
+    mnpPlanTypeStep(ctx),
     serviceAddressStep({
       mode: 'structured',
       autoPass: true,
@@ -64,7 +69,7 @@ export function mnpSteps({ products = [], customerBenefits }: Partial<Pick<Postp
     // The same Plan and Add-ons steps as New Mobile Postpaid: plan cards, add-ons, eligible discounts, bill limit.
     postpaidOnly(postpaidPlanStep(planContext)),
     postpaidOnly(postpaidExtrasStep(planContext)),
-    { ...prepaidOnly(planSelectionStep({ kind: 'prepaid', segment: (values) => (values.eligibility as EligibilityResult | undefined)?.segment })), summary: sums.planSummary() },
+    { ...prepaidOnly(planSelectionStep({ kind: 'prepaid', label: 'Prepaid Packs', segment: (values) => (values.eligibility as EligibilityResult | undefined)?.segment })), summary: sums.planSummary() },
     {
       ...prepaidOnly(prepaidExtrasStep({ segment: (values) => (values.eligibility as EligibilityResult | undefined)?.segment })),
       summary: [

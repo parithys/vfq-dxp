@@ -2,7 +2,8 @@ import { currentAgentId } from '../../../stores/authStore';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { logActivity, newActivityId } from '../../../engines/activityEngine';
 import type { ActivityInput } from '../../../engines/activityEngine';
-import { emailVerification, maskEmail, persistBillingAccount } from '../../../capabilities';
+import { COLLECTION_TEAM_ROLE, emailVerification, maskEmail, persistBillingAccount } from '../../../capabilities';
+import { approvalMessages, decisionRecord, needsCreditControl } from '../../../engines/connectionEligibility';
 import type { BillingAccountValue, ConfirmedOrder, GuidedContactValue } from '../../../capabilities';
 import type { DonorDetailsValue } from '../../../components/patterns/DonorDetailsStep';
 import type { DonorAttachmentValue } from '../../../components/patterns/DonorAttachmentStep';
@@ -66,7 +67,9 @@ export async function submitMnpOrder(
   // As New Mobile Postpaid: a MADA / B2B2C discount needs its supporting document verified, so the order waits for the manager first.
   const discounts = await mockDataEngine.list<{ addonDiscountId: string; addonType?: string }>('addons-discounts');
   const discountNeedsApproval = !isPrepaid && SUPPORTING_ID_DISCOUNT_TYPES.has(discounts.find((d) => d.addonDiscountId === values.discountId)?.addonType ?? '');
-  const needsApproval = isB2B2C || discountNeedsApproval;
+  // The rule engine's decision, when it covered this customer: any approval it asks for holds the order; Credit Control approval routes it to Credit Control.
+  const lineDecision = eligibility?.connectionDecision;
+  const needsApproval = isB2B2C || discountNeedsApproval || lineDecision?.outcome === 'ALLOW_WITH_APPROVAL';
 
   const billingProfileId = isPrepaid
     ? undefined
@@ -86,6 +89,8 @@ export async function submitMnpOrder(
     orderId,
     orderType: isPrepaid ? 'MNP Prepaid Port-In' : 'MNP Postpaid Port-In',
     orderSubType: isB2B2C ? 'B2B2C' : 'Port-In',
+    ...decisionRecord(lineDecision),
+    ...(needsApproval && lineDecision?.outcome === 'ALLOW_WITH_APPROVAL' ? { approvalReason: `Line approval required - ${approvalMessages(lineDecision)}`, ...(needsCreditControl(lineDecision) ? { approverRole: COLLECTION_TEAM_ROLE } : {}) } : {}),
     // The order shows its Port-In status: Pending NPAS Approval until NPAS answers (Annex_02). B2B2C waits for the manager first.
     status: needsApproval ? 'Submitted for Approval' : 'Pending NPAS Approval',
     createdAt: new Date().toISOString(),

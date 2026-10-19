@@ -1,4 +1,4 @@
-import { CARD_IDLE, CARD_SELECTED, CrossSalesStep, EligibilityGateStep, journeyLabel } from '../../../capabilities';
+import { CARD_IDLE, CARD_SELECTED, CrossSalesStep, journeyLabel } from '../../../capabilities';
 import type { CrossSalesValue, GuidedContactValue, Offer } from '../../../capabilities';
 import { useEffect } from 'react';
 import type { NavigateFunction } from 'react-router-dom';
@@ -10,13 +10,11 @@ import { ChoiceCards } from '../../../components/primitives/ChoiceCards';
 import { Radio } from '../../../components/primitives/Radio';
 import { Icon } from '../../../components/primitives/Icon';
 import { clearAndQuiet, selectProduct } from './productChoice';
-import { LAUNCH_CUSTOMER_KEY } from '../../../components/patterns/wizard/useJourneyStartResume';
-import { HOME_PRODUCTS, IN_JOURNEY_OFFERS, PRODUCTS, PRODUCT_OF_OFFER_JOURNEY, eligibilityJourney, homeProductOfOffer, mnpTypeOfOffer } from '../products';
+import { ProductEligibility } from './ProductEligibility';
+import { HOME_PRODUCTS, IN_JOURNEY_OFFERS, PRODUCTS, PRODUCT_OF_OFFER_JOURNEY, homeProductOfOffer, mnpTypeOfOffer } from '../products';
 import type { HomeProduct, MnpType, ConnectionProduct } from '../products';
 import type { ConnectionJourney } from '../newConnectionModel';
 
-const ICON_PHONE = 'M8 2h8a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z M11 18h2';
-const ICON_TICKET = 'M3 6h18v12H3z M3 10h18 M6 15h4';
 
 /** What the product step needs from the journey. */
 export interface ProductStepContext {
@@ -178,17 +176,6 @@ export function ProductSelection({
           )}
           </>
         )}
-        {product === 'mnp' && !homeJourney && (
-          <ChoiceCards<MnpType>
-            legend="Port the number onto"
-            items={[
-              { key: 'postpaid', label: 'Postpaid Plan', icon: ICON_PHONE },
-              { key: 'prepaid', label: 'Prepaid Plan', icon: ICON_TICKET },
-            ]}
-            value={mnpType}
-            onChange={(t) => chooseProduct('mnp', t)}
-          />
-        )}
         {product === 'fixed-line' && !homeJourney && (
           <ChoiceCards<HomeProduct>
             legend="Connection type"
@@ -200,23 +187,13 @@ export function ProductSelection({
       </section>
 
       {/* What depends on the product: its eligibility rules, judged for the product chosen. Silent on a clean pass. */}
-      {product && contact?.moiResult && (
-        <EligibilityGateStep
-          asNewCustomer={ctx.flow === 'new' && !values[LAUNCH_CUSTOMER_KEY]}
-          asCustomerId={ctx.flow === 'existing' ? ctx.existingCustomerId : (values[LAUNCH_CUSTOMER_KEY] as string | undefined)}
-          announcePass={false}
-          idNumber={contact.idNumber}
-          journeyType={eligibilityJourney(values)}
-          scope="product"
-          portIn={product === 'mnp'}
-          // The customer's checks were shown at Customer Identification. Here only what this product changes: everything for Prepaid (it judges
-          // ID type and line limit by its own rules), otherwise just what blocks the product and the port-in dues.
-          showRow={eligibilityJourney(values) === 'prepaid' ? undefined : (row) => row.tone === 'hard-stop' || row.tone === 'soft-stop' || row.id === 'port-in-dues'}
-          result={eligibility}
-          onResult={(r) => setValue('eligibility', r)}
-          onSwitchToPrepaid={product === 'prepaid' ? undefined : () => chooseProduct('prepaid')}
-        />
-      )}
+      <ProductEligibility
+        values={values}
+        setValue={setValue}
+        flow={ctx.flow}
+        existingCustomerId={ctx.existingCustomerId}
+        onSwitchToPrepaid={product === 'prepaid' ? undefined : () => chooseProduct('prepaid')}
+      />
     </div>
   );
 }

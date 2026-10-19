@@ -1,5 +1,6 @@
 import { currentAgentId } from '../../../stores/authStore';
-import { emailVerification, maskEmail, persistBillingAccount } from '../../../capabilities';
+import { COLLECTION_TEAM_ROLE, emailVerification, maskEmail, persistBillingAccount } from '../../../capabilities';
+import { decisionRecord, needsCreditControl } from '../../../engines/connectionEligibility';
 import type { GuidedContactValue } from '../../../capabilities';
 import { assertEligibilityChecked } from '../../../engines/eligibilityGuard';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
@@ -84,6 +85,8 @@ export async function submitFixedActivationOrder(
     newBillingProfileName: billingAccount?.newAccount?.profileName,
     dueTodayQAR: totals?.dueTodayQar ?? 0,
     monthlyRecurringQAR: plan?.mrcQAR ?? 0,
+    ...decisionRecord(eligibility?.connectionDecision),
+    ...(needsCreditControl(eligibility?.connectionDecision) ? { approverRole: COLLECTION_TEAM_ROLE } : {}),
     approvalReason: pendingApproval
       ? [manualIdEntry ? 'Identity manually entered' : '', ...approvalChecks.map((c) => c.message?.split('\n')[0] ?? c.id)].filter(Boolean).join(' | ') || undefined
       : undefined,

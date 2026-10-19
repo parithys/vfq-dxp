@@ -15,10 +15,12 @@ export function planSelectionStep(opts: {
   hiddenProductId?: (values: Record<string, unknown>) => string | undefined;
   /** Offer only packs that carry a bundle, not the SIM-only option (changing the pack of a line that already has its SIM). */
   packsOnly?: boolean;
+  /** The step's own name where "Offers & Plans" does not fit the journey (port-in onto prepaid: "Prepaid Packs"). It then also stands as the title over the packs. */
+  label?: string;
 }): WizardStep {
   return {
     key: 'plan',
-    label: PLAN_SELECTION_LABEL,
+    label: opts.label ?? PLAN_SELECTION_LABEL,
     render: ({ values, setValue }) => (
       <PlanSelection
         kind="prepaid"
@@ -42,6 +44,7 @@ export function planSelectionStep(opts: {
         segment={opts.segment?.(values)}
         hiddenProductId={opts.hiddenProductId?.(values)}
         packsOnly={opts.packsOnly}
+        showTitle={opts.label === undefined}
       />
     ),
     isValid: (values) => Boolean(values.productId),

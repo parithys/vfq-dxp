@@ -37,11 +37,26 @@ export function selectProduct(
   return true;
 }
 
-/** Whether eligibility has been judged for the product now chosen (and its kind, for Fixed Line and MNP), and nothing stops the order. */
+/** Whether eligibility has been judged for the product now chosen (and its kind, for Fixed Line), and nothing stops the order. */
 export function productEligibilityClear(values: Record<string, unknown>): boolean {
   const e = values.eligibility as EligibilityResult | undefined;
-  const needsKind = (values.product === 'fixed-line' && !values.homeProduct) || (values.product === 'mnp' && !values.mnpType);
+  // Fixed Line needs its connection type here; MNP's plan type is asked on the step after (it is judged there, for the type chosen).
+  const needsKind = values.product === 'fixed-line' && !values.homeProduct;
   return !needsKind && Boolean(e) && e!.scope === 'product' && e!.journeyType === eligibilityJourney(values) && !e!.hardStop && !e!.softStop;
+}
+
+/** The plan type of a New MNP journey (Postpaid / Prepaid). Changing it drops what the other type chose, as changing product does, and returns progress to the plan-type step. */
+export const MNP_TYPE_STEP_INDEX = PRODUCT_STEP_INDEX + 1;
+export function selectMnpType(
+  ctx: ProductStepContext,
+  values: Record<string, unknown>,
+  setValue: (field: string, value: unknown) => void,
+  type: MnpType
+): boolean {
+  void setValue;
+  if (values.mnpType === type) return false;
+  useWorkflowStore.getState().patchDraft(ctx.wizardId, { set: { mnpType: type }, unset: PRODUCT_OWNED_KEYS, progressTo: MNP_TYPE_STEP_INDEX });
+  return true;
 }
 
 /** Eligibility is clear AND nothing routes the order for approval: the cases that need no look from the agent before moving on. */

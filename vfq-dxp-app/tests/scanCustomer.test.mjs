@@ -82,8 +82,8 @@ test('a journey opened for a customer is never a New Customer journey, whatever 
   const step = fs.readFileSync('src/capabilities/CustomerQualification/step.tsx', 'utf8');
   assert.match(step, /const asNewCustomer = flow === 'new' && !knownCustomer && !launchedFor;/);
   assert.match(step, /const actedForId = knownCustomer \? \(knownCustomerId \?\? launchedFor\) : launchedFor;/);
-  const product = fs.readFileSync('src/modules/new-connection/steps/ProductSelection.tsx', 'utf8');
-  assert.match(product, /asNewCustomer=\{ctx\.flow === 'new' && !values\[LAUNCH_CUSTOMER_KEY\]\}/);
+  const product = fs.readFileSync('src/modules/new-connection/steps/ProductEligibility.tsx', 'utf8');
+  assert.match(product, /asNewCustomer=\{flow === 'new' && !values\[LAUNCH_CUSTOMER_KEY\]\}/);
 });
 
 test.after(close);

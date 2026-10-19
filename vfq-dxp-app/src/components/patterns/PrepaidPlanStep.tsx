@@ -37,13 +37,15 @@ interface PrepaidPlanStepProps {
   hiddenProductId?: string;
   /** Only packs that carry a bundle: the SIM-only option (no data, no validity) is not offered, as when changing the pack of a line that already has its SIM. */
   packsOnly?: boolean;
+  /** The "Prepaid Packs" title above the grid. Off when the step itself is already titled for the packs (it would only repeat the step heading). */
+  showTitle?: boolean;
 }
 
 // MPRA_001_QPC_01-03 (prepaid plan/add-on selection, special discount) - the prepaid counterpart of
 // PostpaidPlanAddonsStep. Packs are filtered by the customer's segment (QPC_02), the agent may add the pack's
 // optional add-ons, and may pick a prepaid-specific discount for the chosen pack (QPC_03). No Bill Limit here:
 // BR-002/BR-005 exclude credit limit and bill cycle from Prepaid Activation.
-export function PrepaidPlanStep({ mode = 'plan', hiddenProductId, packsOnly, selectedProductId, onSelectProduct, onDeselectProduct, discountId, onSelectDiscount, segment, addonIds = [], onSelectAddons }: PrepaidPlanStepProps) {
+export function PrepaidPlanStep({ mode = 'plan', hiddenProductId, packsOnly, showTitle = true, selectedProductId, onSelectProduct, onDeselectProduct, discountId, onSelectDiscount, segment, addonIds = [], onSelectAddons }: PrepaidPlanStepProps) {
   const [plans, setPlans] = useState<PrepaidPlan[]>([]);
   const [detailPack, setDetailPack] = useState<PrepaidPlan | null>(null);
   const [discounts, setDiscounts] = useState<Discount[]>([]);
@@ -101,7 +103,7 @@ export function PrepaidPlanStep({ mode = 'plan', hiddenProductId, packsOnly, sel
     return (
       <div className="space-y-6">
         <div>
-          <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Prepaid Pack</h3>
+          {showTitle && <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Prepaid Packs</h3>}
           <p className="text-muted text-[length:var(--fs-caption)]">Select a starter pack. For a SIM without a bundle, choose New Prepaid Standard SIM.</p>
         </div>
         {packGrid}

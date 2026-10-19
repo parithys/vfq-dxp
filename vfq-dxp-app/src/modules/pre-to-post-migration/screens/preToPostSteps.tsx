@@ -23,7 +23,7 @@ export function preToPostSteps(
 ): WizardStep[] {
   const planContext = { products: ctx.products, customerBenefits: ctx.customerBenefits };
   return [
-    customerQualificationStep({ ...ctx, knownCustomer: true }),
+    customerQualificationStep({ ...ctx, knownCustomer: true, requestKind: 'PREPAID_TO_POSTPAID_MIGRATION' }),
     // The customer's own prepaid lines, as the line-change journeys offer them - not a typed number nobody checked belongs to them. Checkout and the CAF read
     // the line's identifier as the order's number (`msisdn`).
     lineSelectionStep({

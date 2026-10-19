@@ -5,6 +5,8 @@ import { useNotificationStore } from '../../stores/notificationStore';
 import { evaluateEligibilityChecks, hasHardStop, type EligibilityCheck } from '../../engines/eligibilityEngine';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { outstandingBalance } from '../../engines/billingBalance';
+import { evaluateConnection } from '../../engines/connectionEligibility';
+import type { ConnectionType, RequestKind } from '../../domain/eligibility';
 import { callService, ServiceError, type FailureKind, type ServiceName } from '../../engines/serviceCall';
 import { TechnicalFailure } from '../../components/patterns/ValidationStatus';
 import type { EligibilityResult, CustomerRecord, IdentityDocRecord } from '../../components/domain/eligibilityTypes';
@@ -44,6 +46,13 @@ interface EligibilityGateStepProps {
   asCustomerId?: string;
   /** The journey adds no line (a plan change), so the active-line limit does not apply: it neither shows nor routes the order for approval. */
   skipLineLimit?: boolean;
+  /**
+   * The connection being sold, for the line-count rules (Connection Eligibility & Approval Rule Engine). Defaults to the mobile line the
+   * journey type names; a Fixed/FWA product says so.
+   */
+  connectionType?: ConnectionType;
+  /** NEW_ACTIVATION (default) or PREPAID_TO_POSTPAID_MIGRATION. */
+  requestKind?: RequestKind;
   /**
    * Pattern 3 (Alternative Product), rendered as a "Switch to Prepaid" button
    * when a collections block soft-stops the order (2026-09-28). Only makes
@@ -97,12 +106,15 @@ export function EligibilityGateStep({
   asNewCustomer = false,
   asCustomerId: explicitCustomerId,
   skipLineLimit = false,
+  connectionType,
+  requestKind = 'NEW_ACTIVATION',
 }: EligibilityGateStepProps) {
   const asCustomerId = useActedForCustomer(explicitCustomerId, asNewCustomer);
+  const requestedType: ConnectionType = connectionType ?? (journeyType === 'prepaid' ? 'MOBILE_PREPAID' : 'MOBILE_POSTPAID');
   // A cached result for THIS identity. Computed during render rather than in
   // an effect so the first paint on re-entry already shows the rows.
   const cached =
-    result && idNumber && result.idNumber === idNumber && (result.scope ?? 'product') === scope && (result.journeyType ?? 'postpaid') === journeyType && Boolean(result.portIn) === portIn
+    result && idNumber && result.idNumber === idNumber && (result.scope ?? 'product') === scope && (result.journeyType ?? 'postpaid') === journeyType && Boolean(result.portIn) === portIn && (result.connectionType ?? (journeyType === 'prepaid' ? 'MOBILE_PREPAID' : 'MOBILE_POSTPAID')) === requestedType && (result.requestKind ?? 'NEW_ACTIVATION') === requestKind
       ? result
       : undefined;
 
@@ -173,6 +185,22 @@ export function EligibilityGateStep({
       // A record without the details the checks need cannot be judged either way.
       if (!match.nationality || (!nasCustomer && !match.dob)) throw new ServiceError('customer-lookup', 'partial');
       const blacklist = evaluateRule('BR-113', { blacklisted: match.blacklisted, blacklistReason: match.blacklistReason });
+      // The line-count rules: the engine's decision where it covers this customer and connection (QID and Passport; a journey that adds a
+      // line, judged at product scope), otherwise the older line-cap rules below.
+      const decision =
+        skipLineLimit || scope !== 'product'
+          ? null
+          : await callService('eligibility', () =>
+              evaluateConnection({
+                customerId: nasCustomer ? undefined : match.customerId,
+                nationality: match.nationality,
+                idType: doc.documentType ?? match.idType,
+                dob: match.dob,
+                requestedType,
+                requestKind,
+              })
+            );
+      if (cancelled) return;
       const lineCap =
         skipLineLimit
           ? { pass: true, hardStop: false, message: undefined as string | undefined }
@@ -229,7 +257,8 @@ export function EligibilityGateStep({
           doc,
           deals,
           outstandingQar,
-          lineCapReached: !lineCap.pass,
+          lineCapReached: decision ? decision.outcome !== 'ALLOW' : !lineCap.pass,
+          lineDecision: decision ?? undefined,
           lineCapHardStop: Boolean(lineCap.hardStop),
           // The line-cap rule's own message already has the count - see the
           // note on EligibilityContext.activeLinesDetail.
@@ -274,7 +303,10 @@ export function EligibilityGateStep({
         checks: resolvedChecks,
         blacklisted: !blacklist.pass,
         blacklistReason: match.blacklistReason,
-        lineCapExceeded: !lineCap.pass,
+        lineCapExceeded: decision ? decision.outcome !== 'ALLOW' : !lineCap.pass,
+        connectionType: requestedType,
+        requestKind,
+        connectionDecision: decision ?? undefined,
         requiresHrnAdvance: hrnFlag,
         isExistingCustomer,
         nationality: match.nationality,
