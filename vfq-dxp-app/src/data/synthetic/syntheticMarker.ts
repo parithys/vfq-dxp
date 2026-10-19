@@ -1,3 +1,4 @@
+import { SHOW_DEMO_FLAG } from '../../lib/buildEnv';
 // The one place that says "this is synthetic". Anything the app shows that is NOT customer data -
 // demo values derived to fill a field the records have no data for, labelled simulators, sample ID
 // cards, "Fetched from Siebel" notes - is marked with this, so it can be switched off everywhere by one flag
@@ -11,7 +12,7 @@
 
 // On unless a build sets VITE_SHOW_DEMO=false (see .env.example) - the demo scanner simulators and sample cards
 // stay for the prototype, and a production build can switch them off without a code change.
-export const SHOW_DEMO_CONTENT = import.meta.env.VITE_SHOW_DEMO !== 'false';
+export const SHOW_DEMO_CONTENT = SHOW_DEMO_FLAG !== 'false';
 
 export function applyDemoContentSetting() {
   document.documentElement.classList.toggle('hide-demo', !SHOW_DEMO_CONTENT);

@@ -88,6 +88,8 @@ export default defineConfig(({ command }) => {
     // Other builds retain the enterprise subpath contract.
     base: figmaPreview || figmaDeploy ? '/' : publicBase,
     plugins: [basePathCompatibility(figmaPreview), react(), tailwindcss()],
+    // Tailwind runs through its Vite plugin; ignore postcss.config.mjs (that file is for the Next.js spike only).
+    css: { postcss: { plugins: [] } },
     resolve: {
       // Lazy route chunks and the eagerly loaded shell must share one React
       // module identity, including after Vite rebuilds its dependency cache.

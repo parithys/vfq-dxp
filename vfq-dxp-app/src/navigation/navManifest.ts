@@ -1,3 +1,4 @@
+import { IS_DEV } from '../lib/buildEnv';
 // THE nav manifest: one closed set of primary destinations, from which each
 // role gets a filtered and reordered subset (see engines/navigationEngine.ts).
 //
@@ -205,7 +206,7 @@ export const NAV_MANIFEST_SIZE = 19;
  * Administration for the roles that hold its feature grant. */
 export const NAV_MAX_TOP_LEVEL = 11;
 
-if (import.meta.env.DEV && NAV_BY_KEY.size !== NAV_MANIFEST_SIZE) {
+if (IS_DEV && NAV_BY_KEY.size !== NAV_MANIFEST_SIZE) {
   throw new Error(
     `navManifest: expected ${NAV_MANIFEST_SIZE} entries, found ${NAV_BY_KEY.size}. `
     + 'The manifest is a closed set (INV-1) - if you genuinely need another primary destination, '
