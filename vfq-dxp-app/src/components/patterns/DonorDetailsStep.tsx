@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { Input } from '../primitives/Input';
 import { Select } from '../primitives/Select';
+import { PhoneNumberInput } from '../primitives/PhoneNumberInput';
 import { idTypesFor, idTypeLabel } from '../../data/idTypes';
 import {
   DONOR_CUSTOMER_TYPES,
@@ -88,12 +89,14 @@ export function DonorDetailsStep({ value, onChange }: DonorDetailsStepProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Input
+        {/* The standard mobile number field: Qatar (+974) fixed, 8 national digits. It stores +974XXXXXXXX, which normalizePortInNumber reads. */}
+        <PhoneNumberInput
           label="Port-in Number"
           required
-          inputMode="numeric"
+          fixedIso="QA"
+          maxNationalDigits={8}
           value={number}
-          placeholder="97466000666"
+          placeholder="6600 0666"
           error={number ? numberError : undefined}
           helperText={normalised && !numberError ? `Ported as ${normalised}. This is the number on the order; it cannot be changed in the journey.` : 'The number the customer is bringing to Vodafone.'}
           onChange={(e) => onChange({ ...value, portInNumber: e.target.value })}

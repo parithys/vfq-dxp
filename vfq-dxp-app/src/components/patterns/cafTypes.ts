@@ -30,3 +30,10 @@ export const CAF_TYPES: { type: CafType; label: string; icon: string }[] = [
 export function detectCafType(): CafType {
   return detectDeviceType() === 'tablet' ? 'Touch Screen' : 'Digital';
 }
+
+/**
+ * The signature mode of the device in use - Digital on the web, Touch Screen on a tablet - for every document signed on screen (the CAF,
+ * the MNP Form). Nobody chooses it: it is read from the device, here and nowhere else.
+ */
+export type SignatureMode = Exclude<CafType, 'Manual'>;
+export const detectSignatureMode = (): SignatureMode => (detectCafType() === 'Touch Screen' ? 'Touch Screen' : 'Digital');

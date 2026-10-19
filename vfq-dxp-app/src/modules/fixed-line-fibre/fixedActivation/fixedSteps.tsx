@@ -79,5 +79,5 @@ export function fixedCafStep(): WizardStep {
  * both 5G Home (FWA) service types.
  */
 export function fixedLineSteps(): WizardStep[] {
-  return [fixedAddressStep(), billingAccountStep(), fixedPlanStep(), fixedNumberStep(), checkoutSummaryStep(), fixedCafStep(), paymentStep({ submitOnPaid: true }), fixedAppointmentStep()];
+  return [fixedAddressStep(), billingAccountStep({ profileSuffix: 'Fixed Line' }), fixedPlanStep(), fixedNumberStep(), checkoutSummaryStep(), fixedCafStep(), paymentStep({ submitOnPaid: true }), fixedAppointmentStep()];
 }

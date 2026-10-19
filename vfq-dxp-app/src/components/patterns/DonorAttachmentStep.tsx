@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Select } from '../primitives/Select';
+import { detectSignatureMode } from './cafTypes';
 import { SignatureCapture } from './SignatureCapture';
 import { Badge } from '../primitives/Badge';
 import { normalizePortInNumber, newMnpFormNumber } from '../../data/portInRules';
@@ -88,10 +88,12 @@ export function DonorAttachmentStep({ value, onChange, form }: DonorAttachmentSt
   const key = mnpFormSnapshotKey(form);
   const ready = missing.length === 0;
 
+  // The form's signature mode is the device's (Digital on the web, Touch Screen on a tablet); it is never chosen.
+  const mnpFormType: MnpFormType = `MNP-${detectSignatureMode()}`;
   useEffect(() => {
     if (!ready || value.snapshotKey === key) return;
     onChange({
-      mnpFormType: value.mnpFormType,
+      mnpFormType,
       formNumber: value.formNumber ?? newMnpFormNumber(),
       generatedAt: new Date().toISOString(),
       snapshotKey: key,
@@ -99,6 +101,11 @@ export function DonorAttachmentStep({ value, onChange, form }: DonorAttachmentSt
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, key, value.snapshotKey]);
+  // A draft saved on another device (or before this was automatic) follows the device it is now on.
+  useEffect(() => {
+    if (ready && value.snapshotKey === key && value.mnpFormType !== mnpFormType) onChange({ ...value, mnpFormType });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, key, value.snapshotKey, value.mnpFormType]);
 
   if (!ready) {
     return (
@@ -146,18 +153,7 @@ export function DonorAttachmentStep({ value, onChange, form }: DonorAttachmentSt
         </p>
       </div>
 
-      <Select
-        label="MNP Form"
-        value={value.mnpFormType ?? ''}
-        onChange={(e) => onChange({ ...value, mnpFormType: e.target.value as MnpFormType })}
-        placeholder="Select MNP form type"
-        options={[
-          { value: 'MNP-Digital', label: 'MNP-Digital' },
-          { value: 'MNP-Touch Screen', label: 'MNP-Touch Screen' },
-        ]}
-      />
-
-      {value.mnpFormType && current && (
+      {current && (
         <div className="card p-4 card-surface">
           {signed ? (
             <div className="flex items-center gap-3">

@@ -101,8 +101,8 @@ export function changePostpaidPlanSteps(ctx: ServiceChangeContext): WizardStep[]
 export function changePrepaidPackSteps(ctx: ServiceChangeContext): WizardStep[] {
   return attachSummaries(
     [
-      // Common checks only (productAgnostic): changing the pack of a line the customer has adds no line, so the new-line cap does not apply.
-      customerQualificationStep({ ...ctx, journeyType: 'prepaid', productAgnostic: true, knownCustomer: true }),
+      // Changing the pack of a line the customer has adds no line, so the line limit does not apply.
+      customerQualificationStep({ ...ctx, journeyType: 'prepaid', productAgnostic: true, knownCustomer: true, skipLineLimit: true }),
       lineSelectionStep({ lineType: 'prepaid', onSelect: (_line, setValue) => resetChoices(setValue) }),
       planSelectionStep({ kind: 'prepaid', segment: segmentOf, hiddenProductId: (values) => lineOf(values)?.productId, packsOnly: true }),
       prepaidExtrasStep({ segment: segmentOf }),

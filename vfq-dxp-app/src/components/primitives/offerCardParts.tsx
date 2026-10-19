@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 // Pieces shared by the two card grids that present a plan: the Recommended-offers cards (new-connection
 // steps) and the Plan & Add-ons plan cards (PostpaidPlanAddonsStep). One definition, so the two stay alike.
 
@@ -7,6 +9,20 @@ export const CARD_IDLE =
   'border-[var(--field-card-border)] bg-bg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]';
 /** A card the app singles out (the Recommended offer, a Popular plan): blue border, flat soft blue wash (red is kept for the selected card). */
 export const CARD_HIGHLIGHT = 'border-[var(--signal-blue)] bg-[var(--tone-blue-bg-soft)] hover:shadow-[inset_0_0_0_1px_var(--signal-blue)]';
+
+/**
+ * The price figure of the plan or pack the agent has chosen ("Monthly plan QAR 145", "Starter pack QAR 50"), on the selected-card highlight
+ * (CARD_SELECTED), not on a white card: the same look as the selected plan card it came from. One definition for every step that restates the
+ * chosen plan or pack.
+ */
+export function SelectedPlanFigure({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className={`card px-4 py-2.5 text-right ${CARD_SELECTED}`}>
+      <p className="text-muted text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide">{label}</p>
+      <p className="text-fg">{children}</p>
+    </div>
+  );
+}
 
 /** The faint concentric circles at the bottom-right of a selected card, behind its content (the card needs `isolate`). Clipped to the card's own rounded corners. */
 export function SelectedCardTexture() {

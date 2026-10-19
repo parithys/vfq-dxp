@@ -21,6 +21,12 @@ export interface WizardStep {
   subheading?: string;
   /** Extra control(s) at the right of the step's title row, before Customer view (for example a Refresh button). */
   headerAction?: (ctx: { values: Record<string, unknown>; setValue: (field: string, value: unknown) => void }) => ReactNode;
+  /**
+   * Invisible work this step needs done, mounted for every step the journey currently has - whether it is the one on screen, one the agent
+   * has not reached yet, or one passed over by autoPass (which never renders). For a step that fills in its own value on the agent's
+   * behalf (the Billing Profile step selects or creates the account). Must render nothing visible.
+   */
+  headless?: (ctx: { values: Record<string, unknown>; setValue: (field: string, value: unknown) => void }) => ReactNode;
   /** Short secondary line shown under the label in the step list (e.g. "Customer identification"). Optional - omitted steps just show the label. */
   description?: string;
   render: (ctx: {

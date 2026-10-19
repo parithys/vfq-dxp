@@ -12,9 +12,9 @@ export type CafValue = { cafType?: CafType; signatureDataUrl?: string };
 
 /**
  * Whether the CAF step may continue: a type is chosen and, for the types that are signed on this device,
- * the signature is captured. By default only the Digital CAF is signed here.
+ * the signature is captured. By default the CAF types signed on the device (Digital on the web, Touch Screen on a tablet) need it.
  */
-export function isCafValid(caf: CafValue | undefined, needsSignature: (type: CafType) => boolean = (type) => type === 'Digital'): boolean {
+export function isCafValid(caf: CafValue | undefined, needsSignature: (type: CafType) => boolean = (type) => type === 'Digital' || type === 'Touch Screen'): boolean {
   if (!caf?.cafType) return false;
   return !needsSignature(caf.cafType) || Boolean(caf.signatureDataUrl);
 }

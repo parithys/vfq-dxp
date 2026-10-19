@@ -4,6 +4,7 @@ import { maskEmail } from '../../components/patterns/guidedContactModel';
 import type { EligibilityResult } from '../../components/domain/eligibilityTypes';
 import type { ZsbAddressValue } from '../../components/patterns/ZsbAddressStep';
 import { BillingAccount } from './BillingAccount';
+import { BillingAccountAutoResolver } from '../../components/patterns/BillingAccountAutoResolver';
 import { BILLING_PROFILE_LABEL } from '../../data/stepLabels';
 import { isBillingAccountValid } from '../../components/patterns/billingAccountModel';
 import type { BillingAccountValue } from '../../components/patterns/billingAccountModel';
@@ -21,16 +22,27 @@ import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTy
 // app-level demo assumption (the "Gatan" gateway name and the
 // "VIP" segment/7th-of-month default have no evidence anywhere in
 // this corpus).
-export function billingAccountStep(): WizardStep {
+export function billingAccountStep(opts: { /** What the new profile is for, in its name ("... - Postpaid"). */ profileSuffix?: string } = {}): WizardStep {
   return {
     key: 'billingAccount',
     summary: billingAccountSummary,
-    // 2026-10-01: passed over on the way forward. An existing billing
-    // account is selected automatically, or one is created when there
-    // is none, by BillingAccountAutoResolver (mounted on the Customer
-    // Type step). The step stays in the rail so the agent can go back
-    // and change either.
+    // Passed over on the way forward. An existing billing account is selected automatically, or one is created when there is none
+    // (never reported as a problem): BillingAccountAutoResolver, mounted by the wizard for this step wherever the journey enters it
+    // (a journey that skips Product Selection included). The step stays in the rail so the agent can go back and change either.
     autoPass: () => true,
+    headless: ({ values, setValue }) => {
+      const contact = values.contact as GuidedContactValue | undefined;
+      if (!contact?.moiResult) return null;
+      return (
+        <BillingAccountAutoResolver
+          customerId={(values.eligibility as EligibilityResult | undefined)?.customerId}
+          customerName={contact.moiResult.name}
+          profileSuffix={opts.profileSuffix}
+          value={(values.billingAccount as BillingAccountValue) ?? {}}
+          onChange={(v) => setValue('billingAccount', v)}
+        />
+      );
+    },
     label: BILLING_PROFILE_LABEL,
     render: ({ values, setValue }) => {
       const eligibility = values.eligibility as EligibilityResult | undefined;

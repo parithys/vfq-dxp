@@ -1,4 +1,4 @@
-import { CARD_SELECTED, CARD_IDLE, SelectedCardTexture } from '../primitives/offerCardParts';
+import { CARD_SELECTED, CARD_IDLE, SelectedCardTexture, SelectedPlanFigure } from '../primitives/offerCardParts';
 import { useEffect, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { PrepaidPlanCard } from './PrepaidPlanCard';
@@ -127,13 +127,10 @@ export function PrepaidPlanStep({ mode = 'plan', hiddenProductId, packsOnly, sel
                   Selected pack
                 </span>
               </div>
-              <div className="card px-4 py-2.5 text-right shadow-[var(--shadow-icon-tile)]">
-                <p className="text-muted text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide">Starter pack</p>
-                <p className="text-fg">
-                  <span className="text-[length:var(--fs-body)]">QAR </span>
-                  <span className="text-[length:var(--fs-h3)] font-bold">{selectedPlan.starterPackChargeQAR}</span>
-                </p>
-              </div>
+              <SelectedPlanFigure label="Starter pack">
+                <span className="text-[length:var(--fs-body)]">QAR </span>
+                <span className="text-[length:var(--fs-h3)] font-bold">{selectedPlan.starterPackChargeQAR}</span>
+              </SelectedPlanFigure>
             </div>
             {/* Benefits and the optional add-ons share one row. */}
             <div className={`grid gap-x-8 gap-y-5 ${onSelectAddons && addons.length > 0 ? 'sm:grid-cols-2' : ''}`}>
