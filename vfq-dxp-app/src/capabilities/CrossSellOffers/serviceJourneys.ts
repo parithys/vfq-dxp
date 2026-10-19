@@ -20,19 +20,7 @@ export const SERVICE_JOURNEYS: { key: ServiceJourney; label: string; description
   { key: 'post-to-post', label: 'Postpaid to Postpaid Upgrade', description: 'Move a postpaid line to a plan with a higher monthly fee', route: '/mobile/change-postpaid-plan' },
 ];
 
-/** Offer-card service pill colours, one per service so the type reads at a glance. Self-contained
- * tint + dark text pairs (each text/background >= 4.5:1), so they hold in the dark theme too. Red is
- * left out: it already marks the Recommended flag and the selected card. */
-export const JOURNEY_PILL: Record<ServiceJourney, string> = {
-  'new-postpaid': 'bg-[var(--tint-blue-bg)] text-[var(--tint-blue-fg)]',
-  'new-prepaid': 'bg-[var(--tint-green-bg)] text-[var(--tint-green-fg)]',
-  'mnp-postpaid': 'bg-[var(--tint-teal-bg)] text-[var(--tint-teal-fg)]',
-  'mnp-prepaid': 'bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)]',
-  'new-fixed-line': 'bg-[var(--tint-pink-bg)] text-[var(--tint-pink-fg)]',
-  'new-fwa': 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)]',
-  'pre-to-post': 'bg-[var(--tint-green-bg)] text-[var(--tint-green-fg)]',
-  'post-to-post': 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)]',
-};
+// The offer-card service tag colours live in lib/serviceTypeTag (ServiceTypeTag), shared with every other surface that tags a service type.
 
 /** The five types the Offers step groups its cards under, in display order. */
 export type OfferTypeKey = 'new-prepaid' | 'new-postpaid' | 'new-mnp' | 'new-home' | 'pre-to-post-upgrade' | 'post-to-post-upgrade';

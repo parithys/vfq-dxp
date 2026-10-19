@@ -35,7 +35,14 @@ const portInLines = (values: Record<string, unknown>): PrepaidLine[] => {
       prePaired: false,
       msisdn: normalizePortInNumber(donor?.portInNumber ?? '') ?? donor?.portInNumber ?? '',
       numberPriceQAR: 0,
-      simType: { simType: 'Physical', simSerial: values.simSerial as string | undefined, simValid: Boolean(values.simValid) },
+      simType: {
+        simType: 'Physical',
+        simSerial: values.simSerial as string | undefined,
+        simValid: Boolean(values.simValid),
+        simIccid: (values.simDetails as { iccid?: string } | undefined)?.iccid,
+        simStockStatus: (values.simDetails as { stockStatus?: string } | undefined)?.stockStatus,
+        simKind: (values.simDetails as { simKind?: string } | undefined)?.simKind,
+      },
     },
   ];
 };

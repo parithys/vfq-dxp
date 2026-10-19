@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Badge } from '../primitives/Badge';
+import { ServiceTypeTag } from '../primitives/ServiceTypeTag';
 import { CARD_IDLE, CARD_SELECTED } from '../primitives/offerCardParts';
 import { loadCustomerLines, lineIneligibility } from './lineSelectionModel';
 import type { CustomerLine, LineType } from './lineSelectionModel';
@@ -62,7 +62,7 @@ export function LineSelectionStep({ customerId, lineType, value, onChange, requi
           >
             <div className="flex items-center gap-2 mb-1">
               <span className="text-fg font-semibold">{line.identifier}</span>
-              <Badge>{line.lineType === 'postpaid' ? 'Postpaid' : 'Prepaid'}</Badge>
+              <ServiceTypeTag type={line.lineType} />
             </div>
             <p className="text-fg text-[length:var(--fs-body)]">{line.productName}</p>
             <p className="text-fg-2 text-[length:var(--fs-caption)]">

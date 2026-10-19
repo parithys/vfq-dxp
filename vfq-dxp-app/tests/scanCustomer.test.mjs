@@ -36,12 +36,13 @@ test('scan and eligibility resolve the customer through the shared acted-for hoo
 
 
 
-test('Change Postpaid Plan and Add Add-On skip the postpaid line limit; the other journeys keep it', async () => {
+test('Change Postpaid Plan, Change Prepaid Pack and Add Add-On skip the line limit; the other journeys keep it', async () => {
   const src = fs.readFileSync('src/modules/mobile-service-changes/serviceChangeSteps.tsx', 'utf8');
   const plan = src.slice(src.indexOf('export function changePostpaidPlanSteps'), src.indexOf('export function changePrepaidPackSteps'));
   assert.match(plan, /skipLineLimit: true/);
   assert.match(src.slice(src.indexOf('export function addAddonSteps')), /skipLineLimit: true/);
-  assert.equal((src.match(/skipLineLimit: true/g) ?? []).length, 2);
+  assert.match(src.slice(src.indexOf('export function changePrepaidPackSteps'), src.indexOf('export function addAddonSteps')), /skipLineLimit: true/);
+  assert.equal((src.match(/skipLineLimit: true/g) ?? []).length, 3);
   assert.match(fs.readFileSync('src/capabilities/EligibilityGate/EligibilityGateStep.tsx', 'utf8'), /skipLineLimit\s*\? \{ pass: true/);
 });
 test('the line-change routes are guarded by their feature grants', () => {
@@ -77,4 +78,12 @@ test('the presented ID decides who is identified; the selected customer only ste
   const elig = fs.readFileSync('src/capabilities/EligibilityGate/EligibilityGateStep.tsx', 'utf8');
   assert.match(elig, /docs\.find\(\(d\) => d\.documentNumber === idNumber\) \?\? \(asCustomerId/);
 });
+test('a journey opened for a customer is never a New Customer journey, whatever its flow', () => {
+  const step = fs.readFileSync('src/capabilities/CustomerQualification/step.tsx', 'utf8');
+  assert.match(step, /const asNewCustomer = flow === 'new' && !knownCustomer && !launchedFor;/);
+  assert.match(step, /const actedForId = knownCustomer \? \(knownCustomerId \?\? launchedFor\) : launchedFor;/);
+  const product = fs.readFileSync('src/modules/new-connection/steps/ProductSelection.tsx', 'utf8');
+  assert.match(product, /asNewCustomer=\{ctx\.flow === 'new' && !values\[LAUNCH_CUSTOMER_KEY\]\}/);
+});
+
 test.after(close);

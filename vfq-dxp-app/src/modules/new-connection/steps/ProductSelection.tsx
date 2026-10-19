@@ -1,5 +1,5 @@
-import { CARD_IDLE, CARD_SELECTED, CrossSalesStep, EligibilityGateStep, BillingAccountAutoResolver, journeyLabel } from '../../../capabilities';
-import type { BillingAccountValue, CrossSalesValue, GuidedContactValue, Offer } from '../../../capabilities';
+import { CARD_IDLE, CARD_SELECTED, CrossSalesStep, EligibilityGateStep, journeyLabel } from '../../../capabilities';
+import type { CrossSalesValue, GuidedContactValue, Offer } from '../../../capabilities';
 import { useEffect } from 'react';
 import type { NavigateFunction } from 'react-router-dom';
 import { useAuthStore } from '../../../stores/authStore';
@@ -10,7 +10,8 @@ import { ChoiceCards } from '../../../components/primitives/ChoiceCards';
 import { Radio } from '../../../components/primitives/Radio';
 import { Icon } from '../../../components/primitives/Icon';
 import { clearAndQuiet, selectProduct } from './productChoice';
-import { HOME_PRODUCTS, IN_JOURNEY_OFFERS, PRODUCTS, PRODUCT_OF_OFFER_JOURNEY, eligibilityJourney, hasBillingAccount, homeProductOfOffer, mnpTypeOfOffer } from '../products';
+import { LAUNCH_CUSTOMER_KEY } from '../../../components/patterns/wizard/useJourneyStartResume';
+import { HOME_PRODUCTS, IN_JOURNEY_OFFERS, PRODUCTS, PRODUCT_OF_OFFER_JOURNEY, eligibilityJourney, homeProductOfOffer, mnpTypeOfOffer } from '../products';
 import type { HomeProduct, MnpType, ConnectionProduct } from '../products';
 import type { ConnectionJourney } from '../newConnectionModel';
 
@@ -94,16 +95,7 @@ export function ProductSelection({
 
   return (
     <div className="space-y-8">
-      {/* Headless: the billing account the product needs, an existing one or a new default one (never for prepaid). */}
-      {product && hasBillingAccount(values) && contact?.moiResult && (
-        <BillingAccountAutoResolver
-          customerId={eligibility?.customerId}
-          customerName={contact.moiResult.name}
-          profileSuffix={product === 'fixed-line' ? 'Fixed Line' : 'Postpaid'}
-          value={(values.billingAccount as BillingAccountValue) ?? {}}
-          onChange={(v) => setValue('billingAccount', v)}
-        />
-      )}
+      {/* The billing account the product needs is selected or created by its Billing Profile step (billingAccountStep.headless). */}
 
       {/* Recommended offers belong to New Connection; New Home Connection goes straight to the home products. */}
       {!homeJourney && (
@@ -210,8 +202,8 @@ export function ProductSelection({
       {/* What depends on the product: its eligibility rules, judged for the product chosen. Silent on a clean pass. */}
       {product && contact?.moiResult && (
         <EligibilityGateStep
-          asNewCustomer={ctx.flow === 'new'}
-          asCustomerId={ctx.flow === 'existing' ? ctx.existingCustomerId : undefined}
+          asNewCustomer={ctx.flow === 'new' && !values[LAUNCH_CUSTOMER_KEY]}
+          asCustomerId={ctx.flow === 'existing' ? ctx.existingCustomerId : (values[LAUNCH_CUSTOMER_KEY] as string | undefined)}
           announcePass={false}
           idNumber={contact.idNumber}
           journeyType={eligibilityJourney(values)}

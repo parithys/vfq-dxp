@@ -13,11 +13,12 @@ before(async () => {
 });
 after(close);
 
-test('connection tags: Postpaid violet, Prepaid green, Home Internet amber, the rest neutral', () => {
-  assert.deepEqual(['Postpaid', 'Prepaid', 'GigaHome Fibre'].map((c) => lib.connectionTag(c).variant), ['tag-violet', 'tag-green', 'tag-amber']);
+test('connection tags: Postpaid, Prepaid and Fixed Line use the shared service-type tags, Home Internet amber, the rest neutral', () => {
+  assert.deepEqual(['Postpaid', 'Prepaid', 'Fixed Line'].map((c) => lib.connectionTag(c).serviceTag), ['postpaid', 'prepaid', 'fixed-line']);
+  assert.equal(lib.connectionTag('GigaHome Fibre').variant, 'tag-amber');
   assert.equal(lib.connectionTag('GigaHome Fibre').label, 'Home Internet');
   assert.equal(lib.connectionTag('GigaHome 5G').variant, 'tag-amber');
-  for (const c of ['TV / Entertainment', 'Fixed Line', 'Smart Devices', 'Something New']) assert.equal(lib.connectionTag(c).variant, 'filled-neutral');
+  for (const c of ['TV / Entertainment', 'Smart Devices', 'Something New']) assert.equal(lib.connectionTag(c).variant, 'filled-neutral');
 });
 
 test('connection tags: an unknown category keeps its own name', () => {

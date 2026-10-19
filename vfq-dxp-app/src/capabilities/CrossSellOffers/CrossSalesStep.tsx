@@ -5,7 +5,8 @@ import { OfferDetailsDrawer } from './OfferDetailsDrawer';
 import type { OfferProduct } from '../../components/primitives/offerCardParts';
 import { CARD_HIGHLIGHT, CARD_IDLE, CARD_SELECTED, STAR_ICON } from '../../components/primitives/offerCardParts';
 import * as mockDataEngine from '../../engines/mockDataEngine';
-import { JOURNEY_PILL, journeyLabel, continuesHere, offerTypeOf, hasDestination, offerTypesFor, isHomeJourney, isPrepaidJourney } from './serviceJourneys';
+import { ServiceTypeTag } from '../../components/primitives/ServiceTypeTag';
+import { journeyLabel, continuesHere, offerTypeOf, hasDestination, offerTypesFor, isHomeJourney, isPrepaidJourney } from './serviceJourneys';
 import type { OfferJourneys } from './serviceJourneys';
 import { HandOff } from './HandOff';
 import { offerFeatures, offerHighlight } from './crossSalesModel';
@@ -162,13 +163,7 @@ export function CrossSalesStep({
                   </span>
                 )}
                 {/* Every card carries its journey tag, pinned right. */}
-                <span
-                  className={`ml-auto min-w-0 truncate rounded-[var(--radius-pill)] px-2 py-0.5 text-[length:var(--fs-tag)] font-medium ${
-                    o.serviceJourney ? JOURNEY_PILL[o.serviceJourney] : 'bg-surface text-fg-2'
-                  }`}
-                >
-                  {journeyLabel(o.serviceJourney)}
-                </span>
+                {o.serviceJourney && <ServiceTypeTag type={o.serviceJourney} className="ml-auto min-w-0 truncate" />}
               </div>
               <div className="flex-1 space-y-2">
                 <p className="text-fg font-bold text-[length:var(--fs-h5)] leading-snug">{o.offerName}</p>

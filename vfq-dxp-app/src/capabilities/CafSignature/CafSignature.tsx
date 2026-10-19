@@ -99,7 +99,8 @@ export function CafSignature(props: CafSignatureProps) {
         customerName={customerName}
         idLabel={idLabel}
         idValue={idValue}
-        autoDetectDeviceType={props.autoDetectDeviceType ? true : undefined}
+        // Always: the CAF type is the device's (Digital on the web, Touch Screen on a tablet), never picked by hand.
+        autoDetectDeviceType
       />
     );
   if (!keyInformation?.length) return capture;

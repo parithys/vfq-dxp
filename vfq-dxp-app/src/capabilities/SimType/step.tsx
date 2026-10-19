@@ -63,8 +63,9 @@ export function simTypeStep(
 }
 
 /**
- * SIM serial only, stored under `simSerial` with its validity under `simValid` - for journeys that put a new SIM in
- * a number without choosing a type (port-in).
+ * SIM serial only, stored under `simSerial` with its validity under `simValid` and the ICCID / stock status / kind read from inventory
+ * under `simDetails` - for journeys that put a new SIM in a number without choosing a type (port-in). Once the serial is scanned or
+ * entered and validates, the journey moves on by itself: nothing is left for the agent to confirm.
  */
 export function simSerialStep(): WizardStep {
   return {
@@ -73,12 +74,15 @@ export function simSerialStep(): WizardStep {
     render: ({ values, setValue }) => (
       <SimSerial
         value={(values.simSerial as string) ?? ''}
-        onChange={(v, valid) => {
+        onChange={(v, valid, details) => {
           setValue('simSerial', v);
           setValue('simValid', valid);
+          // Only a validated serial has details; an edit or a failed check clears the previous SIM's.
+          setValue('simDetails', valid && details ? details : undefined);
         }}
       />
     ),
     isValid: (values) => values.simValid === true,
+    autoAdvanceWhen: (values) => values.simValid === true && Boolean(values.simSerial),
   };
 }

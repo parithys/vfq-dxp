@@ -94,7 +94,7 @@ export function NewConnectionWizard({
   if (heldByAnotherJourney && !isMirrorWindow) return null; // redirecting to the journey that holds the customer
 
   if (confirmedOrder) {
-    return <ActivationComplete order={confirmedOrder} service={confirmedOrder.service} showActivityId={!isMirrorWindow} />;
+    return <ActivationComplete order={confirmedOrder} service={confirmedOrder.service} showActivityId={!isMirrorWindow} allowCustomerView={device === 'web'} />;
   }
 
   const confirm = async (values: Record<string, unknown>): Promise<ConfirmedOrder> => {

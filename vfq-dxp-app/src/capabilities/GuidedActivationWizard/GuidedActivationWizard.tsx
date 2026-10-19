@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { useBlocker, useLocation } from 'react-router-dom';
 import { draftHasProgress, useWorkflowStore } from '../../stores/workflowStore';
 import { AbandonDialog, LeaveJourneyDialog, SaveExitDialog } from '../../components/patterns/wizard/WizardDialogs';
@@ -285,6 +285,9 @@ export function GuidedActivationWizard({
 
         {hasSummary && <StepSummaryPanel {...summaryProps} />}
       </div>
+
+      {/* Each step's invisible work, whether or not the step is on screen (see WizardStep.headless). */}
+      {activeSteps.map((s) => (s.headless ? <Fragment key={s.key}>{s.headless({ values: draft.values, setValue })}</Fragment> : null))}
 
       {/* Confirmed, not immediate: this discards every field the agent has
           entered and, once a draft order exists, deletes that row. Modal

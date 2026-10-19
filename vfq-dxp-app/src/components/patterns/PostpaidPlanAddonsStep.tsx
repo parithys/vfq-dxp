@@ -1,6 +1,7 @@
 import { type CustomerBenefit } from '../../engines/customerBenefitEngine';
 import { HRN_ADVANCE_QAR } from '../../engines/postpaidPricing';
 import { Icon } from '../primitives/Icon';
+import { SelectedPlanFigure } from '../primitives/offerCardParts';
 import { BillLimitEditor } from '../domain/BillLimitEditor';
 import { CHECK } from './postpaidPlanModel';
 import { PlanSearchBox } from './PlanSearchBox';
@@ -237,14 +238,11 @@ export function PostpaidPlanAddonsStep({
                       Selected plan
                     </span>
                   </div>
-                  <div className="card px-4 py-2.5 text-right shadow-[var(--shadow-icon-tile)]">
-                    <p className="text-muted text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide">Monthly plan</p>
-                    <p className="text-fg">
-                      <span className="text-[length:var(--fs-body)]">QAR </span>
-                      <span className="text-[length:var(--fs-h3)] font-bold">{selectedPlan.mrcQAR}</span>
-                      <span className="text-fg-2 text-[length:var(--fs-caption)]"> /month{selectedPlan.promoMonths ? ` for ${selectedPlan.promoMonths} months` : ''}</span>
-                    </p>
-                  </div>
+                  <SelectedPlanFigure label="Monthly plan">
+                    <span className="text-[length:var(--fs-body)]">QAR </span>
+                    <span className="text-[length:var(--fs-h3)] font-bold">{selectedPlan.mrcQAR}</span>
+                    <span className="text-fg-2 text-[length:var(--fs-caption)]"> /month{selectedPlan.promoMonths ? ` for ${selectedPlan.promoMonths} months` : ''}</span>
+                  </SelectedPlanFigure>
                 </div>
                 {/* Plain bullet lists, no boxes: the plan's benefits (and what the offer includes) on the left, the optional add-ons
                     and bill limit on the right, in one row. */}

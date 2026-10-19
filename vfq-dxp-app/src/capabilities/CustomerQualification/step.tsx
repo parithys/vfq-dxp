@@ -68,7 +68,11 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
     // returns null); only what needs the agent's attention appears.
     render: ({ values, setValue }) => {
       // The customer the journey was opened for (kept in the draft by the wizard), unless the shell names one.
-      const actedForId = knownCustomer ? (knownCustomerId ?? (values[LAUNCH_CUSTOMER_KEY] as string | undefined)) : undefined;
+      // A journey opened FOR a customer (from their Customer 360, e.g. MNP Port-In) is bound to them whatever its flow: it is never a
+      // New Customer journey, and a scanned ID is read and checked against them. Only a journey nobody opened it for is a walk-in.
+      const launchedFor = values[LAUNCH_CUSTOMER_KEY] as string | undefined;
+      const actedForId = knownCustomer ? (knownCustomerId ?? launchedFor) : launchedFor;
+      const asNewCustomer = flow === 'new' && !knownCustomer && !launchedFor;
       const contact = values.contact as GuidedContactValue | undefined;
       const eligibility = values.eligibility as EligibilityResult | undefined;
       return (
@@ -76,7 +80,7 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
         <CustomerIdentification
           collectContact
           // New Customer journey: whoever the scanned ID belongs to is handled as a genuine new customer.
-          asNewCustomer={flow === 'new' && !knownCustomer}
+          asNewCustomer={asNewCustomer}
           // Customer 360 entry: the customer is the one the journey was opened for.
           asCustomerId={flow === 'existing' ? existingCustomerId : actedForId}
           // All four ID types are offered (2026-10-04). Passport, GCC ID and Diplomatic ID are exception
@@ -95,7 +99,7 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
           <CustomerStatusBanner customerId={eligibility?.customerId} />
           <EligibilityOutcomePanel />
           <EligibilityGateStep
-            asNewCustomer={flow === 'new' && !knownCustomer}
+            asNewCustomer={asNewCustomer}
             asCustomerId={flow === 'existing' ? existingCustomerId : actedForId}
             announcePass={false}
             skipLineLimit={skipLineLimit}

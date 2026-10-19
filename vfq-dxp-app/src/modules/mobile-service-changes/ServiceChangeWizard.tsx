@@ -44,7 +44,7 @@ export function ServiceChangeWizard({
   }, []);
 
   if (heldByAnotherJourney && !isMirrorWindow) return null; // redirecting to the journey that holds the customer
-  if (confirmedOrder) return <ActivationComplete order={confirmedOrder} service={confirmedOrder.service} showActivityId={!isMirrorWindow} />;
+  if (confirmedOrder) return <ActivationComplete order={confirmedOrder} service={confirmedOrder.service} showActivityId={!isMirrorWindow} allowCustomerView={device === 'web'} />;
 
   return (
     <div className="min-h-full flex flex-col" data-device={device}>
