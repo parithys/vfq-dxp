@@ -103,12 +103,12 @@ export function CrossSalesStep({
   const accepted = offers.find((o) => o.offerId === value.offerId && value.decision === 'accepted');
   // One offer carries the Recommended flag: the best (lowest) priority code, first listed on a tie.
   const recommendedId = [...offers].sort((x, y) => (x.priorityCode ?? 'P9').localeCompare(y.priorityCode ?? 'P9'))[0]?.offerId;
-  // One section per offer type, always all of them, each laid out in three columns (empty cells stay empty).
+  // One section per offer type that has offers for this customer (a type with none is not shown), each laid out in three columns.
   // Within a section the Recommended card comes first, then the rest from the lowest monthly fee to the highest.
   const sections = offerTypes.map((type) => ({
     type,
     items: offers.filter((o) => offerTypeOf(o.serviceJourney) === type.key).sort((a, b) => Number(b.offerId === recommendedId) - Number(a.offerId === recommendedId) || a.monthlyRental - b.monthlyRental),
-  }));
+  })).filter(({ items }) => items.length > 0);
   return (
     <div className="space-y-4">
       <div className="space-y-8" role="radiogroup" aria-label="Offers">
@@ -117,11 +117,6 @@ export function CrossSalesStep({
             <h3 id={`offer-type-${type.key}`} className="text-fg font-bold text-[length:var(--fs-h5)]">
               {type.label}
             </h3>
-            {items.length === 0 && (
-              <p className="rounded-[var(--radius-card)] border border-dashed border-[var(--border-soft)] px-5 py-4 text-muted text-[length:var(--fs-caption)]">
-                {type.empty}
-              </p>
-            )}
             {items.length > 0 && (
           <ul className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(max(15rem,calc((100%-2rem)/3)),1fr))]">
         {items.map((o) => {

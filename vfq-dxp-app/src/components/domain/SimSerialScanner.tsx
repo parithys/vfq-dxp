@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Input } from '../primitives/Input';
 import { Icon } from '../primitives/Icon';
 import { Button } from '../primitives/Button';
@@ -31,7 +31,7 @@ interface SimSerialScannerProps {
    * Stock Status") - undefined on every other call, including a failed
    * validation, since there is nothing confirmed to report then.
    */
-  onChange: (value: string, valid: boolean, details?: { iccid: string; stockStatus: string; simKind?: string; msisdn?: string }) => void;
+  onChange: (value: string, valid: boolean, details?: SimDetails) => void;
   /** Set by SimTypeStep only (2026-09-28 "Default focus to the Physical SIM
    * Serial Number scan field") - other callers of this same component keep
    * their existing behaviour, since this defaults to false/unset. */
@@ -64,6 +64,25 @@ interface SimSerialScannerProps {
   label?: string;
 }
 
+export type SimDetails = { iccid: string; stockStatus: string; simKind?: string; msisdn?: string };
+
+/** Judges a serial against store stock: what is wrong with it, or the details of the SIM it is. The one definition both the field and the read-back use. */
+export async function checkSimSerial(serial: string, inventory: 'standard' | 'pre-paired' = 'standard'): Promise<{ error: string; details?: undefined } | { error?: undefined; details: SimDetails }> {
+  const prePairedStock = inventory === 'pre-paired';
+  const sims = await mockDataEngine.list<SimRecord>('sims');
+  const found = sims.find((s) => s.simSerial === serial);
+  if (found && Boolean(found.prePaired) !== prePairedStock) {
+    return { error: prePairedStock ? 'This is not a Pre-Paired SIM.' : 'This is a Pre-Paired SIM - choose "Use a Pre-Paired SIM" on the Number step.' };
+  }
+  // Phrased as store stock rather than "inventory": the agent is standing at one counter and can only issue what is in front of them,
+  // so the actionable fact is that THIS store does not hold it.
+  if (!found) return { error: prePairedStock ? "Pre-Paired SIM not found in this store's stock." : "SIM not found in this store's stock." };
+  if (found.stockStatus === 'Issued') return { error: 'This SIM is already assigned.' };
+  // Held for a port-in awaiting NPAS (MNP BR-MNP-008/025): not available to another order until it is released.
+  if (found.stockStatus === SIM_RESERVED) return { error: 'This SIM is reserved for another order.' };
+  return { details: { iccid: found.iccid, stockStatus: found.stockStatus, simKind: found.type, msisdn: found.msisdn } };
+}
+
 // Pattern 11: SIM/Device Serial Capture with Real-Time Inventory Validation -
 // barcode-scan input validated against UIM/inventory in real time; blocks
 // Continue with an inline error if blank/not-found/already-assigned
@@ -81,6 +100,19 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   const [scanning, setScanning] = useState(false);
+  // The validated SIM, read back under the field. Kept here, in the one implementation every journey mounts, so none has to show it.
+  const [shown, setShown] = useState<{ serial: string; details: SimDetails } | undefined>();
+  // Re-reads a serial the journey already holds (Back to the step): the field does not re-validate on arrival.
+  useEffect(() => {
+    if (!value || suppressValidation || shown?.serial === value) return;
+    let live = true;
+    void checkSimSerial(value, inventory).then((r) => {
+      if (live && r.details) setShown({ serial: value, details: r.details });
+    });
+    return () => {
+      live = false;
+    };
+  }, [value, inventory, suppressValidation, shown?.serial]);
   // True from the moment the scan icon is pressed until the scan has filled the
   // field. Pressing the icon moves focus off the (empty) input, and that blur
   // would otherwise validate the blank value and flash "SIM Serial is required."
@@ -103,35 +135,16 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
       return;
     }
     setChecking(true);
-    const sims = await mockDataEngine.list<SimRecord>('sims');
-    const found = sims.find((s) => s.simSerial === serial);
+    const outcome = await checkSimSerial(serial, inventory);
     setChecking(false);
-    if (found && Boolean(found.prePaired) !== prePairedStock) {
-      setError(prePairedStock ? 'This is not a Pre-Paired SIM.' : 'This is a Pre-Paired SIM - choose "Use a Pre-Paired SIM" on the Number step.');
-      onChange(serial, false);
-      return;
-    }
-    if (!found) {
-      // Phrased as store stock rather than "inventory": the agent is standing
-      // at one counter and can only issue what is in front of them, so the
-      // actionable fact is that THIS store does not hold it.
-      setError(prePairedStock ? "Pre-Paired SIM not found in this store's stock." : "SIM not found in this store's stock.");
-      onChange(serial, false);
-      return;
-    }
-    if (found.stockStatus === 'Issued') {
-      setError('This SIM is already assigned.');
-      onChange(serial, false);
-      return;
-    }
-    // Held for a port-in awaiting NPAS (MNP BR-MNP-008/025): not available to another order until it is released.
-    if (found.stockStatus === SIM_RESERVED) {
-      setError('This SIM is reserved for another order.');
+    if (!outcome.details) {
+      setError(outcome.error);
       onChange(serial, false);
       return;
     }
     setError(null);
-    onChange(serial, true, { iccid: found.iccid, stockStatus: found.stockStatus, simKind: found.type, msisdn: found.msisdn });
+    setShown({ serial, details: outcome.details });
+    onChange(serial, true, outcome.details);
   };
 
   // Simulated barcode read. Picks a serial that is genuinely available in
@@ -226,6 +239,22 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
         {scanning && <span className="text-[length:var(--fs-caption)] text-muted">Scanning…</span>}
         {checking && !scanning && <span className="text-[length:var(--fs-caption)] text-muted">Checking stock…</span>}
       </div>
+      {!suppressValidation && shown && shown.serial === value && !error && (
+        <dl className="mt-2 rounded-[var(--radius-card)] border border-success bg-tone-success p-3 space-y-1 text-[length:var(--fs-caption)]">
+          <div className="flex justify-between gap-3">
+            <dt className="text-fg">SIM Type</dt>
+            <dd className="text-fg font-medium">{shown.details.simKind ?? 'Physical'}</dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt className="text-fg">SIM Serial Number</dt>
+            <dd className="text-fg font-medium">{shown.serial}</dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt className="text-fg">ICCID</dt>
+            <dd className="text-fg font-medium">{shown.details.iccid}</dd>
+          </div>
+        </dl>
+      )}
     </div>
   );
 }

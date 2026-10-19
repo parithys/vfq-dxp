@@ -24,5 +24,5 @@ export function NewMnpWizard() {
   const raw = params.get('type');
   const type = raw === 'postpaid' || raw === 'prepaid' ? raw : undefined;
   // Without a type the product step stays on screen so the agent chooses the plan type being ported onto.
-  return <NewConnectionWizard flow="new" title="MNP Port-In" initialProduct="mnp" initialValues={type ? { mnpType: type } : { mnpType: 'postpaid', productPreselected: false }} />;
+  return <NewConnectionWizard flow="new" title="MNP Port-In" initialProduct="mnp" initialValues={type ? { mnpType: type } : { mnpType: 'postpaid', mnpTypeUnchosen: true, productPreselected: false }} />;
 }

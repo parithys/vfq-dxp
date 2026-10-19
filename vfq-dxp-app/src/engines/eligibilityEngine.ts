@@ -38,6 +38,8 @@ export interface EligibilityCheck {
   passed: boolean;
   outcome: EligibilityOutcome;
   message: string;
+  /** The approval rules behind an approval-routing outcome (e.g. PB-01), so a screen can tell an ID-type approval from a line-count one. */
+  approvalRuleIds?: string[];
 }
 
 export interface IdentityDocForEligibility {
@@ -291,6 +293,7 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
       passed: decision.outcome === 'ALLOW',
       // A block is a hard stop (no approval overrides it); the engine's approvals are Approval Routing: the journey continues and the order is held.
       outcome: decision.outcome === 'BLOCK' ? 'hard-stop' : decision.outcome === 'ALLOW_WITH_APPROVAL' ? 'approval-routing' : 'pass',
+      approvalRuleIds: decision.approvals.map((a) => a.ruleId),
       message:
         decision.outcome === 'BLOCK'
           ? (decision.block?.message ?? held)

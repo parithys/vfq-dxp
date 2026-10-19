@@ -149,30 +149,7 @@ export function SimTypeStep({ value, customerEmail, onChange, device, prePaired 
             })
           }
         />
-        {/* "After validation, display SIM Type, SIM Serial Number, ICCID,
-            and Stock Status" (2026-09-28) - SimSerialScanner's own inline
-            "available in stock" badge stays (other journeys sharing that
-            component rely on it as their only confirmation); this is the
-            fuller read-back specific to this step, and briefly visible
-            before autoAdvanceWhen (NewPostpaidWizard) carries the wizard
-            forward - the same "flash then advance" shape Eligibility's own
-            auto-advance already has. */}
-        {value.simType === 'Physical' && value.simValid && (
-          <dl className="rounded-[var(--radius-card)] border border-success bg-tone-success p-3 space-y-1 text-[length:var(--fs-caption)]">
-            <div className="flex justify-between gap-3">
-              <dt className="text-fg">SIM Type</dt>
-              <dd className="text-fg font-medium">{value.simKind ?? 'Physical'}</dd>
-            </div>
-            <div className="flex justify-between gap-3">
-              <dt className="text-fg">SIM Serial Number</dt>
-              <dd className="text-fg font-medium">{value.simSerial}</dd>
-            </div>
-            <div className="flex justify-between gap-3">
-              <dt className="text-fg">ICCID</dt>
-              <dd className="text-fg font-medium">{value.simIccid ?? '-'}</dd>
-            </div>
-          </dl>
-        )}
+        {/* The validated serial's read-back (SIM Type, SIM Serial Number, ICCID) is the SIM Serial capability's own: SimSerialScanner. */}
       </div>
 
       {/* eSIM - the explicit alternative, not a second tab behind a click. */}

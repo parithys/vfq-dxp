@@ -48,6 +48,7 @@ export interface EligibilityRow {
   title: string;
   detail: string;
   tone: RowTone;
+  approvalRuleIds?: string[];
 }
 
 /**
@@ -73,7 +74,7 @@ export function buildEligibilityRows(
       // postpaid lines reached (5 active).") is the title, and any following line is the detail.
       if (check.id === 'active-lines') {
         const [first, ...rest] = check.message.split('\n');
-        return { id: check.id, title: first, detail: rest.join('\n'), tone: check.outcome as RowTone };
+        return { id: check.id, title: first, detail: rest.join('\n'), tone: check.outcome as RowTone, approvalRuleIds: check.approvalRuleIds };
       }
       return { id: check.id, title: check.label, detail: check.message, tone: check.outcome as RowTone };
     }),

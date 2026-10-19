@@ -83,7 +83,7 @@ interface EligibilityGateStepProps {
    * Narrows which of the rows that did not pass are shown (the checks are judged in full either way). A journey that already showed
    * the customer's checks at Customer Identification uses this at Product Selection to show only what the product adds or blocks.
    */
-  showRow?: (row: { id: string; tone: string }) => boolean;
+  showRow?: (row: { id: string; tone: string; approvalRuleIds?: string[] }) => boolean;
 }
 
 // Gate 2 of the reference activation flow: blacklist + connection-limit +
@@ -92,6 +92,15 @@ interface EligibilityGateStepProps {
 // identity-documents -> customers chain IdLookupStep uses, since MOI results
 // don't carry a customerId forward. BR-113/BR-288/BR-187/BR-076 - see
 // ruleEngine.ts for the evidenced business-rules.json citations.
+type Subject = {
+  doc: IdentityDocRecord;
+  nasCustomer: CustomerRecord | undefined;
+  match: CustomerRecord;
+  deals: { customerId?: string; status?: string; blocksNewConnection?: boolean }[];
+  bills: { customerId?: string; type?: string; totalAmount?: number; status?: string }[];
+  payments: { customerId?: string; chargeType?: string; amountQar?: number; status?: string }[];
+};
+
 export function EligibilityGateStep({
   idNumber,
   onResult,
@@ -138,6 +147,9 @@ export function EligibilityGateStep({
   const [retrying, setRetrying] = useState(false);
   const [retryNonce, setRetryNonce] = useState(0);
   const attemptsRef = useRef<{ id: string; n: number }>({ id: '', n: 0 });
+  // The records read for an identity, and the connection decisions made on them, kept while this step is mounted (see the effect).
+  const loadedRef = useRef<{ key: string; data: Subject } | undefined>(undefined);
+  const decisionsRef = useRef(new Map<string, NonNullable<EligibilityResult['connectionDecision']>>());
 
   useEffect(() => {
     // The one-time guarantee. Nothing is re-read and onResult is not called
@@ -151,46 +163,65 @@ export function EligibilityGateStep({
     let cancelled = false;
     (async () => {
      try {
-      const docs = await callService('moi', () => mockDataEngine.list<IdentityDocRecord>('identity-documents'));
-      // The presented ID decides who is checked; the selected customer is only a fallback for an ID with no document record.
-      let doc: IdentityDocRecord | undefined =
-        docs.find((d) => d.documentNumber === idNumber) ?? (asCustomerId ? docs.find((d) => d.customerId === asCustomerId) : undefined);
-      // Known to NAS but with no customer record = a NEW customer. Nothing on
-      // file to block them: no blacklist, no lines, no deals, no balance.
-      let nasCustomer: CustomerRecord | undefined;
-      if (!doc) {
-        const nas = (
-          await callService('nas', () =>
-            mockDataEngine.list<{ documentNumber: string; documentType?: string; expiryDate?: string; nationality: string; dob?: string }>('nas-records')
-          )
-        ).find((r) => r.documentNumber === idNumber);
-        if (nas) {
-          doc = { documentNumber: nas.documentNumber, customerId: '', documentType: nas.documentType, expiryDate: nas.expiryDate };
-          nasCustomer = { customerId: '', idType: nas.documentType, dob: nas.dob, nationality: nas.nationality, blacklisted: false };
+      // What is read about the identity does not depend on the product, so it is read once and kept: switching the plan type re-judges
+      // the rules over the same records instead of fetching them all again. The independent reads run together, not one after another.
+      const subjectKey = `${idNumber}|${asCustomerId ?? ''}`;
+      let loaded = loadedRef.current?.key === subjectKey ? loadedRef.current.data : undefined;
+      if (!loaded) {
+        const [docs, customers, [deals, bills, payments]] = await Promise.all([
+          callService('moi', () => mockDataEngine.list<IdentityDocRecord>('identity-documents')),
+          callService('customer-lookup', () => mockDataEngine.list<CustomerRecord>('customers')),
+          callService('eligibility', () =>
+            Promise.all([
+              mockDataEngine.list<{ customerId?: string; status?: string; blocksNewConnection?: boolean }>('commitment-penalties'),
+              mockDataEngine.list<{ customerId?: string; type?: string; totalAmount?: number; status?: string }>('bills'),
+              mockDataEngine.list<{ customerId?: string; chargeType?: string; amountQar?: number; status?: string }>('payments'),
+            ])
+          ),
+        ]);
+        // The presented ID decides who is checked; the selected customer is only a fallback for an ID with no document record.
+        let foundDoc: IdentityDocRecord | undefined =
+          docs.find((d) => d.documentNumber === idNumber) ?? (asCustomerId ? docs.find((d) => d.customerId === asCustomerId) : undefined);
+        // Known to NAS but with no customer record = a NEW customer. Nothing on
+        // file to block them: no blacklist, no lines, no deals, no balance.
+        let nasCustomerFound: CustomerRecord | undefined;
+        if (!foundDoc) {
+          const nas = (
+            await callService('nas', () =>
+              mockDataEngine.list<{ documentNumber: string; documentType?: string; expiryDate?: string; nationality: string; dob?: string }>('nas-records')
+            )
+          ).find((r) => r.documentNumber === idNumber);
+          if (nas) {
+            foundDoc = { documentNumber: nas.documentNumber, customerId: '', documentType: nas.documentType, expiryDate: nas.expiryDate };
+            nasCustomerFound = { customerId: '', idType: nas.documentType, dob: nas.dob, nationality: nas.nationality, blacklisted: false };
+          }
         }
-      }
-      if (!doc) {
-        if (!cancelled) {
-          setResolved(null);
-          onResult(undefined);
+        if (!foundDoc) {
+          if (!cancelled) {
+            setResolved(null);
+            onResult(undefined);
+          }
+          return;
         }
-        return;
+        const matched = nasCustomerFound ?? customers.find((c) => c.customerId === foundDoc.customerId) ?? null;
+        if (cancelled) return;
+        // The identity points at a customer record the lookup cannot return: a lookup
+        // failure to retry, not "no customer" and not "new".
+        if (!matched) throw new ServiceError('customer-lookup', 'partial');
+        // A record without the details the checks need cannot be judged either way.
+        if (!matched.nationality || (!nasCustomerFound && !matched.dob)) throw new ServiceError('customer-lookup', 'partial');
+        loaded = { doc: foundDoc, nasCustomer: nasCustomerFound, match: matched, deals, bills, payments };
+        loadedRef.current = { key: subjectKey, data: loaded };
       }
-      const customers = await callService('customer-lookup', () => mockDataEngine.list<CustomerRecord>('customers'));
-      const match = nasCustomer ?? customers.find((c) => c.customerId === doc.customerId) ?? null;
-      if (cancelled) return;
-      // The identity points at a customer record the lookup cannot return: a lookup
-      // failure to retry, not "no customer" and not "new".
-      if (!match) throw new ServiceError('customer-lookup', 'partial');
-      // A record without the details the checks need cannot be judged either way.
-      if (!match.nationality || (!nasCustomer && !match.dob)) throw new ServiceError('customer-lookup', 'partial');
+      const { doc, nasCustomer, match, deals, bills, payments } = loaded;
       const blacklist = evaluateRule('BR-113', { blacklisted: match.blacklisted, blacklistReason: match.blacklistReason });
       // The line-count rules: the engine's decision where it covers this customer and connection (QID and Passport; a journey that adds a
       // line, judged at product scope), otherwise the older line-cap rules below.
       const decision =
         skipLineLimit || scope !== 'product'
           ? null
-          : await callService('eligibility', () =>
+          : (decisionsRef.current.get(`${subjectKey}|${requestedType}|${requestKind}`) ??
+            (await callService('eligibility', () =>
               evaluateConnection({
                 customerId: nasCustomer ? undefined : match.customerId,
                 nationality: match.nationality,
@@ -199,7 +230,8 @@ export function EligibilityGateStep({
                 requestedType,
                 requestKind,
               })
-            );
+            )));
+      if (decision) decisionsRef.current.set(`${subjectKey}|${requestedType}|${requestKind}`, decision);
       if (cancelled) return;
       const lineCap =
         skipLineLimit
@@ -236,13 +268,6 @@ export function EligibilityGateStep({
       // only extra reads: the line cap comes from the rule already evaluated
       // above, so the cap logic stays in one place rather than being restated
       // inside the eligibility engine.
-      const [deals, bills, payments] = await callService('eligibility', () =>
-        Promise.all([
-          mockDataEngine.list<{ customerId?: string; status?: string; blocksNewConnection?: boolean }>('commitment-penalties'),
-          mockDataEngine.list<{ customerId?: string; type?: string; totalAmount?: number; status?: string }>('bills'),
-          mockDataEngine.list<{ customerId?: string; chargeType?: string; amountQar?: number; status?: string }>('payments'),
-        ])
-      );
       if (cancelled) return;
       // What the customer owes, as Customer 360 shows it (billingBalance.ts): issued, unsettled invoices less collected bill payments. Not every bill
       // that is not 'Paid' - no bill has that status, so that counted hot bills and simulations as debt.
