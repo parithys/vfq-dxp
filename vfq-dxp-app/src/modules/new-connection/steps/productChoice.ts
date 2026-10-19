@@ -54,8 +54,8 @@ export function selectMnpType(
   type: MnpType
 ): boolean {
   void setValue;
-  if (values.mnpType === type) return false;
-  useWorkflowStore.getState().patchDraft(ctx.wizardId, { set: { mnpType: type }, unset: PRODUCT_OWNED_KEYS, progressTo: MNP_TYPE_STEP_INDEX });
+  if (values.mnpType === type && values.mnpTypeUnchosen !== true) return false;
+  useWorkflowStore.getState().patchDraft(ctx.wizardId, { set: { mnpType: type, mnpTypeUnchosen: false }, unset: PRODUCT_OWNED_KEYS, progressTo: MNP_TYPE_STEP_INDEX });
   return true;
 }
 

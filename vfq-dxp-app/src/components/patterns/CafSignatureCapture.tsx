@@ -60,6 +60,8 @@ interface CafSignatureCaptureProps {
   journey?: 'postpaid' | 'prepaid';
   /** Extra rows on the application form (the prepaid form's mobile numbers and SIM serials, for example), as label/value. */
   formDetails?: { label: string; value: string }[];
+  /** Draw the Additional documents card on a white background (default: the grey surface). */
+  documentsOnWhite?: boolean;
   /** Cap on post-signature documents (default 10). */
   maxAdditionalDocuments?: number;
   /** Link target for "the complete terms", shown beneath the summary. */
@@ -126,6 +128,7 @@ export function CafSignatureCapture({
   inlineSignaturePad = false,
   documentLabelOptions,
   maxAdditionalDocuments,
+  documentsOnWhite = false,
   journey = 'postpaid',
   formDetails,
   termsUrl,
@@ -306,7 +309,7 @@ export function CafSignatureCapture({
               documents={value.additionalDocuments ?? []}
               onChange={(documents) => onChange({ ...value, additionalDocuments: documents })}
               labelOptions={documentLabelOptions}
-              whiteBackground={inlineSignaturePad}
+              whiteBackground={documentsOnWhite}
               maxDocuments={maxAdditionalDocuments}
               onPendingChange={setDocumentPending}
             />

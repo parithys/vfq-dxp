@@ -54,7 +54,15 @@ export type CafSignatureProps =
       formDetails?: Capture['formDetails'];
     });
 
-const FULL_DOCUMENT_LABELS = ['Employer Letter', 'Utility Bill', 'Proof of Address', 'Office ID Card', 'Other'];
+/**
+ * Additional documents, as Mobile Postpaid Activation has them: the one definition every journey that mounts this capability uses
+ * (label chosen from this list, up to five files, on the white card). Change it here, not in a journey.
+ */
+const ADDITIONAL_DOCUMENTS: Pick<Capture, 'documentLabelOptions' | 'maxAdditionalDocuments' | 'documentsOnWhite'> = {
+  documentLabelOptions: ['Employer Letter', 'Utility Bill', 'Proof of Address', 'Office ID Card', 'Other'],
+  maxAdditionalDocuments: 5,
+  documentsOnWhite: true,
+};
 
 export function CafSignature(props: CafSignatureProps) {
   const { value, onChange, customerName, idLabel, idValue, keyInformationScenario } = props;
@@ -86,8 +94,7 @@ export function CafSignature(props: CafSignatureProps) {
         journey={props.journey}
         formDetails={props.formDetails}
         inlineSignaturePad
-        maxAdditionalDocuments={5}
-        documentLabelOptions={FULL_DOCUMENT_LABELS}
+        {...ADDITIONAL_DOCUMENTS}
         termsUrl="https://www.vodafone.qa/en/terms-and-conditions"
         autoDetectDeviceType
         requireTermsAgreement
@@ -101,6 +108,7 @@ export function CafSignature(props: CafSignatureProps) {
         idValue={idValue}
         // Always: the CAF type is the device's (Digital on the web, Touch Screen on a tablet), never picked by hand.
         autoDetectDeviceType
+        {...ADDITIONAL_DOCUMENTS}
       />
     );
   if (!keyInformation?.length) return capture;

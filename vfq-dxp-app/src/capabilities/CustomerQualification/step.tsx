@@ -106,6 +106,10 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
             asCustomerId={flow === 'existing' ? existingCustomerId : actedForId}
             announcePass={false}
             skipLineLimit={skipLineLimit}
+            // MNP does not know its connection type until Plan Type: the approvals that depend on it (the ID type's, the line-count and
+            // passport BAU ones - a prepaid line needs none of the ID-type approval) are announced there, for the plan type chosen.
+            // A stop is still shown here, because it blocks Continue.
+            showRow={values.product === 'mnp' ? (row) => !((row.id === 'active-lines' || row.id === 'id-type-routing') && row.tone === 'approval-routing') : undefined}
             requestKind={requestKind}
             journeyType={journeyType}
             // The customer's full set of checks, as the single-product journeys always showed them at Customer Identification: ID type

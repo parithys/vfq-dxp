@@ -8,6 +8,7 @@ import { resolveNavFor } from '../engines/navigationEngine';
 import { NavCollapseButton } from './NavLogoToggle';
 import { VodafoneMark } from '../components/primitives/VodafoneMark';
 import { VodafoneWordmark } from '../components/primitives/VodafoneWordmark';
+import { detectDeviceType } from '../lib/deviceType';
 import { NAV_MANIFEST, resolveActiveNavPath } from './navManifest';
 
 const SEARCH_ICON = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3';
@@ -88,7 +89,9 @@ export function Sidebar() {
   const navigate = useNavigate();
   // Pinning is a desktop feature: below md the navigation is always an overlay drawer.
   const isDesktop = useSyncExternalStore(subscribeDesktop, () => window.matchMedia(DESKTOP_QUERY).matches, () => true);
-  // From tablet up the navigation always floats over the page (the page keeps its full width); it never docks beside it.
+  // Web (pointer devices) docks the pinned navigation beside the page, which narrows to make room; unpinned it is still revealed over
+  // the page on hover. Tablet / touch keeps the floating overlay, so the page keeps its full width there.
+  const docked = isDesktop && pinned && detectDeviceType() === 'web';
   const shownDesktop = isDesktop && (pinned || peeking);
   const offScreen = isDesktop ? !shownDesktop : !mobileOpen;
   // Menu search: filters this menu only. A group whose own label matches keeps all its sub-items; otherwise just the
@@ -197,13 +200,13 @@ export function Sidebar() {
       <nav
         inert={offScreen}
         aria-label="Main navigation"
-        className={`fixed inset-y-0 left-0 z-[var(--z-overlay)] w-[280px] transform transition-[transform,translate,opacity,box-shadow] duration-[var(--motion-slow)] ease-[var(--ease-standard)] motion-reduce:transition-none ${
+        className={`${docked ? 'md:static md:shrink-0' : ''} fixed inset-y-0 left-0 z-[var(--z-overlay)] w-[280px] transform transition-[transform,translate,opacity,box-shadow] duration-[var(--motion-slow)] ease-[var(--ease-standard)] motion-reduce:transition-none ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         } ${
-          // Desktop: always an overlay panel. Pinned or previewing it slides in; the dock above is what makes room
-          // for it when pinned.
+          // Desktop: pinned or previewing it slides in. Docked (web, pinned) it is a flex sibling of the page and takes its own width;
+          // otherwise it is an overlay.
           shownDesktop ? 'md:translate-x-0 md:opacity-100' : 'md:-translate-x-full md:opacity-0'
-        } ${shownDesktop ? 'md:shadow-xl' : ''} border-r border-[var(--nav-border)] bg-[var(--nav-bg)] h-full overflow-y-auto`}
+        } ${shownDesktop && !docked ? 'md:shadow-xl' : ''} border-r border-[var(--nav-border)] bg-[var(--nav-bg)] h-full overflow-y-auto`}
         onMouseEnter={!pinned ? openPeek : undefined}
         onMouseLeave={!pinned ? closePeekSoon : undefined}
       >

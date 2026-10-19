@@ -9,6 +9,9 @@ import type { ConnectionType } from '../../../domain/eligibility';
 const connectionOf = (values: Record<string, unknown>): ConnectionType =>
   values.product === 'fixed-line' ? 'FIXED_FWA' : eligibilityJourney(values) === 'prepaid' ? 'MOBILE_PREPAID' : 'MOBILE_POSTPAID';
 
+/** Passport BAU/Credit Control approvals (PB-*) come from the ID type, so they are announced at Customer Identification, not repeated here. */
+const isPassportOnly = (ruleIds: string[] | undefined) => !!ruleIds?.length && ruleIds.every((id) => id.startsWith('PB-'));
+
 /**
  * What depends on the product: its eligibility rules, judged for the product chosen (and, for MNP, the plan type it ports onto).
  * Silent on a clean pass. Shared by Product Selection and the MNP plan-type step, so both judge it the same way.
@@ -19,6 +22,7 @@ export function ProductEligibility({
   flow,
   existingCustomerId,
   onSwitchToPrepaid,
+  deferredApprovals = false,
 }: {
   values: Record<string, unknown>;
   setValue: (field: string, value: unknown) => void;
@@ -26,6 +30,8 @@ export function ProductEligibility({
   existingCustomerId: string | undefined;
   /** Offered when the product is not already prepaid; switches the order to prepaid. */
   onSwitchToPrepaid?: () => void;
+  /** MNP learns the connection type only here, so Customer Identification could not announce the approvals that depend on it (the ID type's and the passport's): show them. */
+  deferredApprovals?: boolean;
 }) {
   const product = values.product as string | undefined;
   const contact = values.contact as GuidedContactValue | undefined;
@@ -43,7 +49,7 @@ export function ProductEligibility({
       portIn={product === 'mnp'}
       // The customer's checks were shown at Customer Identification. Here only what this product changes: everything for Prepaid (it judges
       // ID type and line limit by its own rules), otherwise just what blocks the product, the port-in dues and the approval the line count asks for.
-      showRow={eligibilityJourney(values) === 'prepaid' ? undefined : (row) => row.tone === 'hard-stop' || row.tone === 'soft-stop' || row.id === 'port-in-dues' || (row.id === 'active-lines' && row.tone === 'approval-routing')}
+      showRow={eligibilityJourney(values) === 'prepaid' ? undefined : (row) => row.tone === 'hard-stop' || row.tone === 'soft-stop' || row.id === 'port-in-dues' || (row.id === 'active-lines' && row.tone === 'approval-routing' && (deferredApprovals || !isPassportOnly(row.approvalRuleIds))) || (deferredApprovals && row.id === 'id-type-routing' && row.tone === 'approval-routing')}
       result={eligibility}
       onResult={(r) => setValue('eligibility', r)}
       onSwitchToPrepaid={onSwitchToPrepaid}

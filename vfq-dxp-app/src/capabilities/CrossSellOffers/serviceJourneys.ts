@@ -25,13 +25,13 @@ export const SERVICE_JOURNEYS: { key: ServiceJourney; label: string; description
 /** The five types the Offers step groups its cards under, in display order. */
 export type OfferTypeKey = 'new-prepaid' | 'new-postpaid' | 'new-mnp' | 'new-home' | 'pre-to-post-upgrade' | 'post-to-post-upgrade';
 
-export const OFFER_TYPES: { key: OfferTypeKey; label: string; empty: string }[] = [
-  { key: 'new-prepaid', label: 'New Prepaid', empty: 'No New Prepaid offers for this customer.' },
-  { key: 'new-postpaid', label: 'New Postpaid', empty: 'No New Postpaid offers for this customer.' },
-  { key: 'new-mnp', label: 'New MNP', empty: 'No New MNP offers for this customer.' },
-  { key: 'new-home', label: 'New Home', empty: 'No New Home offers for this customer.' },
-  { key: 'pre-to-post-upgrade', label: 'Prepaid to Postpaid Upgrade', empty: 'No Prepaid to Postpaid Upgrade offers for this customer.' },
-  { key: 'post-to-post-upgrade', label: 'Postpaid to Postpaid Upgrade', empty: 'No Postpaid to Postpaid Upgrade offers for this customer.' },
+export const OFFER_TYPES: { key: OfferTypeKey; label: string }[] = [
+  { key: 'new-prepaid', label: 'New Prepaid' },
+  { key: 'new-postpaid', label: 'New Postpaid' },
+  { key: 'new-mnp', label: 'New MNP' },
+  { key: 'new-home', label: 'New Home' },
+  { key: 'pre-to-post-upgrade', label: 'Prepaid to Postpaid Upgrade' },
+  { key: 'post-to-post-upgrade', label: 'Postpaid to Postpaid Upgrade' },
 ];
 
 /** Which type an offer's journey belongs to. New Prepaid is its own type, listed only on the New Prepaid journey's Offers step. */

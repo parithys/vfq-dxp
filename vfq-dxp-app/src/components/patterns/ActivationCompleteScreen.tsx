@@ -287,7 +287,7 @@ export function ActivationCompleteScreen({
       </Modal>
       {/* Always shown: the fibre offer when the location is ready for service, otherwise why there is none. */}
       <section aria-label="Eligible offers" className="w-full max-w-xl mx-auto mt-6 card p-5 text-center no-print print:hidden">
-        <h2 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-3">Eligible offers</h2>
+        <h2 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-3">{fibre === 'rfs' || fibre === undefined ? 'Eligible offers' : 'No eligible offers'}</h2>
         {fibre === 'rfs' ? (
           <ul className="divide-y divide-border-soft">
             <li className="flex items-center justify-between gap-3 py-2">
@@ -300,8 +300,8 @@ export function ActivationCompleteScreen({
             {fibre === undefined
               ? 'Checking the customer\'s location...'
               : fibre === 'not-rfs'
-                ? 'No eligible offers: the customer\'s location is not ready for fibre service.'
-                : 'No eligible offers: there is no location on file to check for fibre.'}
+                ? 'The customer\'s location is not ready for fibre service.'
+                : 'There is no location on file to check for fibre.'}
           </p>
         )}
       </section>

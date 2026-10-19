@@ -23,7 +23,10 @@ export function mnpPlanTypeStep(ctx: ProductStepContext): WizardStep {
     label: 'Plan Type',
     heading: 'Plan Type',
     summary: [{ key: 'mnpType', label: 'Plan Type', type: 'text', value: (v: Record<string, unknown>) => planTypeLabel(v.mnpType) }],
-    render: ({ values, setValue }) => (
+    render: ({ values, setValue }) => {
+      // From New MNP with no plan type named, `mnpType` is only a placeholder: nothing is judged, and no card shown chosen, until the agent picks one.
+      const chosen = values.mnpTypeUnchosen !== true;
+      return (
       <div className="space-y-6">
         <ChoiceCards<MnpType>
           legend="Port the number onto"
@@ -31,18 +34,22 @@ export function mnpPlanTypeStep(ctx: ProductStepContext): WizardStep {
             { key: 'postpaid', label: 'Postpaid Plan', icon: ICON_PHONE },
             { key: 'prepaid', label: 'Prepaid Plan', icon: ICON_TICKET },
           ]}
-          value={values.mnpType as MnpType | undefined}
+          value={chosen ? (values.mnpType as MnpType | undefined) : undefined}
           onChange={(t) => selectMnpType(ctx, values, setValue, t)}
         />
-        <ProductEligibility
-          values={values}
-          setValue={setValue}
-          flow={ctx.flow}
-          existingCustomerId={ctx.existingCustomerId}
-          onSwitchToPrepaid={() => selectMnpType(ctx, values, setValue, 'prepaid')}
-        />
+        {chosen && (
+          <ProductEligibility
+            values={values}
+            setValue={setValue}
+            flow={ctx.flow}
+            existingCustomerId={ctx.existingCustomerId}
+            deferredApprovals
+            onSwitchToPrepaid={() => selectMnpType(ctx, values, setValue, 'prepaid')}
+          />
+        )}
       </div>
-    ),
-    isValid: (values) => Boolean(values.mnpType) && productEligibilityClear(values),
+      );
+    },
+    isValid: (values) => values.mnpTypeUnchosen !== true && Boolean(values.mnpType) && productEligibilityClear(values),
   };
 }
