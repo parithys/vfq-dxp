@@ -32,3 +32,9 @@ dist-ssr
 # capture tooling (docs/**/_data) - large, machine-specific, reproducible
 # via `npx playwright install chromium`.
 .playwright-browsers
+
+# Next.js spike
+.next
+out
+next-env.d.ts
+*.next.log

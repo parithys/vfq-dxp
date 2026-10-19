@@ -1,13 +1,13 @@
 import { lazy, Suspense } from 'react';
 import { Spinner } from './components/primitives/Spinner';
-import { Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Dashboard } from './modules/Dashboard';
 import { ModuleScreenList } from './modules/ModuleScreenList';
 import { ScreenRouteResolver } from './modules/ScreenRouteResolver';
 import { NotFound } from './modules/NotFound';
 import { NewConnectionWizard } from './modules/new-connection/NewConnectionWizard';
 import { LeadListView } from './modules/lead-management/LeadListView';
-import { isBusinessId } from './engines/businessSegment';
+import { CustomerOrBusiness360 } from './workspace/customer360/CustomerOrBusiness360';
 import { WorkspaceNotYetBuilt } from './modules/WorkspaceNotYetBuilt';
 import { RequireFeature } from './navigation/RequireFeature';
 
@@ -19,9 +19,7 @@ const LEGACY_PREPAID_PATHS = [
 
 // Route-level code splitting: the workspaces and journeys load on first visit rather than in the initial bundle.
 // (Dashboard, the not-found screens and the screen registry stay eager - they are needed on first paint or by every route.)
-const Business360Page = lazy(() => import('./workspace/customer360/Business360Page').then((m) => ({ default: m.Business360Page })));
 const CustomerSearchPage = lazy(() => import('./workspace/customer-search/CustomerSearchPage').then((m) => ({ default: m.CustomerSearchPage })));
-const Customer360Layout = lazy(() => import('./workspace/customer360/Customer360Layout').then((m) => ({ default: m.Customer360Layout })));
 const BillingAccountPage = lazy(() => import('./workspace/customer360/BillingAccountPage').then((m) => ({ default: m.BillingAccountPage })));
 const SalesWorkspace = lazy(() => import('./workspace/sales/SalesWorkspace').then((m) => ({ default: m.SalesWorkspace })));
 const SupportWorkspace = lazy(() => import('./workspace/support/SupportWorkspace').then((m) => ({ default: m.SupportWorkspace })));
@@ -38,20 +36,7 @@ const ProductLinePage = lazy(() => import('./modules/product-lines/ProductLinePa
 const TicketApprovalQueue = lazy(() => import('./modules/trouble-ticketing-complaints/screens/TicketApprovalQueue').then((m) => ({ default: m.TicketApprovalQueue })));
 const TicketApprovalReview = lazy(() => import('./modules/trouble-ticketing-complaints/screens/TicketApprovalReview').then((m) => ({ default: m.TicketApprovalReview })));
 
-// Side-effect imports: each module's screens/index.ts calls registerScreen()
-// so router.tsx doesn't need to know which screens are implemented.
-import './modules/lead-management/screens';
-import './modules/mobile-prepaid/screens';
-import './modules/fixed-line-fibre/screens';
-import './modules/fwa-5g-home/screens';
-import './modules/mobile-postpaid/screens';
-import './modules/enterprise-iot-b2b/screens';
-import './modules/order-management/screens';
-import './modules/mnp-fnp-porting/screens';
-import './modules/identity-customer-management/screens';
-import './modules/sim-number-management/screens';
-import './modules/trouble-ticketing-complaints/screens';
-import './modules/pre-to-post-migration/screens';
+import './modules/registerAllScreens';
 
 // Generated from config/routes.json's module list (16) + config/routes.json's
 // 213 individual screen paths, per folder-structure.md's "Route generation" note.
@@ -122,11 +107,4 @@ export function AppRouter() {
     </Routes>
     </Suspense>
   );
-}
-
-// One route for both: an enterprise account ID (ENT-ACC-...) opens Business 360, anything else the customer's profile.
-function CustomerOrBusiness360() {
-  const { customerId } = useParams<{ customerId: string }>();
-  // Keyed by the customer: opening another customer starts that page's local state (tab, selected service, open drawer) afresh instead of carrying the last one's over.
-  return isBusinessId(customerId) ? <Business360Page key={customerId} /> : <Customer360Layout key={customerId} />;
 }
