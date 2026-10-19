@@ -2,7 +2,8 @@ import { currentAgentId } from '../../../stores/authStore';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { newActivityId } from '../../../engines/activityEngine';
 import type { ActivityInput } from '../../../engines/activityEngine';
-import { emailVerification, maskEmail, persistBillingAccount } from '../../../capabilities';
+import { COLLECTION_TEAM_ROLE, emailVerification, maskEmail, persistBillingAccount } from '../../../capabilities';
+import { decisionRecord, needsCreditControl } from '../../../engines/connectionEligibility';
 import type { BillingAccountValue, ConfirmedOrder, CustomerLine, GuidedContactValue } from '../../../capabilities';
 import type { CustomerTypeValue } from '../../../capabilities/CustomerType/customerTypeModel';
 import { monthlyCharges, HRN_ADVANCE_QAR } from '../../../engines/postpaidPricing';
@@ -68,6 +69,8 @@ export async function submitPreToPostOrder(
     orderId,
     orderType: 'Plan Change',
     orderSubType: 'Pre2Post',
+    ...decisionRecord(eligibility?.connectionDecision),
+    ...(pendingApproval && needsCreditControl(eligibility?.connectionDecision) ? { approverRole: COLLECTION_TEAM_ROLE } : {}),
     status: pendingApproval ? 'Submitted for Approval' : 'Complete',
     createdAt: new Date().toISOString(),
     customerName: contact.moiResult?.name,

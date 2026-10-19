@@ -3,6 +3,11 @@ import type { GuidedContactValue } from '../../../capabilities';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import { LAUNCH_CUSTOMER_KEY } from '../../../components/patterns/wizard/useJourneyStartResume';
 import { eligibilityJourney } from '../products';
+import type { ConnectionType } from '../../../domain/eligibility';
+
+/** The line the product adds, for the line-count rules: Fixed Line is Fixed/FWA; MNP is the mobile line of the plan type it ports onto. */
+const connectionOf = (values: Record<string, unknown>): ConnectionType =>
+  values.product === 'fixed-line' ? 'FIXED_FWA' : eligibilityJourney(values) === 'prepaid' ? 'MOBILE_PREPAID' : 'MOBILE_POSTPAID';
 
 /**
  * What depends on the product: its eligibility rules, judged for the product chosen (and, for MNP, the plan type it ports onto).
@@ -33,6 +38,7 @@ export function ProductEligibility({
       announcePass={false}
       idNumber={contact.idNumber}
       journeyType={eligibilityJourney(values)}
+      connectionType={connectionOf(values)}
       scope="product"
       portIn={product === 'mnp'}
       // The customer's checks were shown at Customer Identification. Here only what this product changes: everything for Prepaid (it judges

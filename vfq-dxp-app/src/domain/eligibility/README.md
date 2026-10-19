@@ -9,7 +9,7 @@ import { evaluateEligibility, evaluateCart, ruleConfigV1 } from '.../domain/elig
 const decision = evaluateEligibility(request, ruleConfigV1, () => new Date());
 ```
 
-**Status: not wired into the journeys.** The existing in-app checks (`src/engines/eligibilityEngine.ts`, rules BR-288 / BR-347 in `public/config/business-rules.json`) are unchanged, and this module changes no behaviour until something calls it. Two of the existing rules disagree with this rule set - see *Differences from the rules in the app today*.
+**Status: wired into the journeys** (see *How the application uses it*). It replaces BR-288 and BR-347 for the Active Lines check wherever it covers the customer.
 
 ## Files
 
@@ -95,14 +95,25 @@ A guard test (`tests/eligibilityRules.test.mjs`) fails if a number other than 0 
 
 `INPUT_INVALID`, `PROFILE_UNRESOLVED`, `ELIG_MOBILE_TOTAL_CAP_REACHED`, `ELIG_POSTPAID_CAP_REACHED`, `ELIG_PREPAID_CAP_REACHED`, `ELIG_FIXED_FWA_CAP_REACHED`, `APPR_CC_POSTPAID_THRESHOLD`, `APPR_CC_FIXED_FWA_THRESHOLD`, `APPR_BAU_PASSPORT_POSTPAID`, `APPR_CC_PASSPORT_POSTPAID_THRESHOLD`, `APPR_EXCEPTION_UNDER_18`. Codes are stable; messages are agent-facing and carry the counts.
 
-## Differences from the rules in the app today
+## How the application uses it
 
-| In the app (`business-rules.json`) | In this rule set |
+`src/engines/connectionEligibility.ts` is the application's side: it reads the customer's lines, the orders in flight and the identity from the app's data, asks this engine, and decides no threshold.
+
+- **Lines:** the customer's installed services, classified by `classifyProductName` (the one definition Customer 360 uses), with their status; barred accounts count as BARRED. A status the app does not know is left out, not assumed live.
+- **Pending orders:** orders of the customer in `Submitted for Approval` that add a line (activation or port-in); plan, pack and add-on changes add none. Orders that completed in this session do not appear in the installed services, so they are not counted.
+- **Identity:** the document presented. QID and Passport are evaluated. GCC ID, Diplomatic ID and other documents are **not evaluated**: the journey keeps the older line-cap check (BR-288 / BR-347) for them, as does a customer whose date of birth is unknown.
+- **Nationality:** the app holds a name ("Qatari", "Indian"); the Qatari is passed as `QA` and any other nationality as `ZZ`, the engine only distinguishing the two.
+- **Where it runs:** the Eligibility Gate (`scope: 'product'`) - Customer Identification in the journeys that judge a product there, and Product Selection / the MNP plan-type step once the product is chosen (Fixed Line is Fixed/FWA; MNP is the mobile line of its plan type). A conversion (Pre-to-Post) is a `PREPAID_TO_POSTPAID_MIGRATION`. Change Postpaid Plan, Change Prepaid Pack and Add Add-On add no line and skip it.
+- **Result:** the decision becomes the Active Lines check (BLOCK = hard stop; approvals = approval routing; ALLOW = pass with the counts) and is kept on the eligibility result as `connectionDecision`.
+- **Orders:** a held order keeps the decision (`lineEligibility`: rule set version, approvals with their reason codes, counts) for the approver. A `CREDIT_CONTROL` approval routes the order to the Credit Control role; `BAU` and `EXCEPTION_UNDER_18` keep the order's usual approver. MNP orders are now held for any approval the engine asks for.
+
+## Differences from the rules that were in the app
+
+| Before (`business-rules.json`) | Now |
 |---|---|
-| BR-288: an expatriate QID holder is capped at **two** postpaid lines (confidence high; the system "technically permits five"). | PP-01/02: the 3rd to 5th postpaid line is **allowed with Credit Control approval**. |
-| BR-347: a passport or GCC ID holder may have **2** prepaid connections; a Qatari has no restriction; an expatriate with a QID may hold 5 mobile in total. | PR-01: an expatriate may hold up to 5 prepaid, no approval, whatever the ID; there is no GCC ID type in the contracts (`IdType` is `QID` or `PASSPORT`). |
-
-Nothing reconciles these automatically. Decide which source is authoritative before wiring the engine into a journey.
+| BR-288: an expatriate QID holder is capped at **two** postpaid lines. | PP-01/02: the 3rd to 5th postpaid line is allowed with Credit Control approval. |
+| BR-347: a passport or GCC ID holder may have **2** prepaid connections. | PR-01: an expatriate may hold up to 5 prepaid with no approval, whatever the ID. (GCC ID is not evaluated here: it keeps BR-347.) |
+| Line counts from the stored counters on the customer record (three customers' counters disagree with their installed services). | Line counts from the installed services and the held orders. |
 
 ## Assumptions beyond the specification
 

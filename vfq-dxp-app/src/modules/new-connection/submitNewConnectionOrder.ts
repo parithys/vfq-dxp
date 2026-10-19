@@ -20,6 +20,7 @@ import type { ActivityInput } from '../../engines/activityEngine';
 import type { useEntityStore } from '../../stores/entityStore';
 import type { NewConnectionFlow, ConfirmedOrder } from './newConnectionModel';
 import { idScanAttachments } from './idScanAttachments';
+import { approvalMessages, decisionRecord, needsCreditControl } from '../../engines/connectionEligibility';
 
 type EntityStore = ReturnType<typeof useEntityStore.getState>;
 
@@ -82,6 +83,10 @@ export async function submitNewConnectionOrder(
       const manualIdEntry = Boolean(contact.manualEntry);
       const activeLinesCheck = eligibility?.checks.find((c) => c.id === 'active-lines');
       const lineLimitApproval = activeLinesCheck?.outcome === 'approval-routing';
+      // The rule engine's decision, when it covered this customer: Credit Control approval routes the order to Credit Control, the other approvals
+      // keep the order's usual approver. Without it (an ID type the engine has no rules for) the older line-limit routing stands.
+      const lineDecision = eligibility?.connectionDecision;
+      const creditControl = lineDecision ? needsCreditControl(lineDecision) : lineLimitApproval;
       const idTypeRouting = eligibility?.checks.some((c) => c.id === 'id-type-routing' && c.outcome === 'approval-routing') ?? false;
       const pendingApproval =
         manualIdEntry ||
@@ -152,6 +157,7 @@ export async function submitNewConnectionOrder(
         // The email captured on Customer Identification, carried unchanged.
         customerEmail: contact.email,
         orderType: 'New Postpaid Activation',
+        ...decisionRecord(eligibility?.connectionDecision),
         createdAt: new Date().toISOString(),
         orderSubType: (contact.isB2B2C && !customerType?.rejected) || customerType?.type === 'b2b2c' ? 'B2B2C' : eligibility?.requiresHrnAdvance ? 'HRN' : 'Consumer',
         status: pendingApproval ? 'Submitted for Approval' : 'Complete',
@@ -161,7 +167,7 @@ export async function submitNewConnectionOrder(
               // Every trigger that routed the order is named, so the approver sees all the reasons (2026-10-10:
               // HRN, B2B2C, MADA / B2B2C discount and a missing ID expiry were routed but carried no reason).
               approvalReason: [
-                lineLimitApproval ? `Active postpaid line limit reached - ${activeLinesCheck?.message?.split('\nApproval Routing')[0]}` : '',
+                lineLimitApproval ? (lineDecision ? `Line approval required - ${approvalMessages(lineDecision)}` : `Active postpaid line limit reached - ${activeLinesCheck?.message?.split('\nApproval Routing')[0]}`) : '',
                 manualIdEntry ? 'Identity manually entered - Store Manager approval required' : '',
                 idTypeRouting ? 'ID type cannot be sold directly - routed to Back Office Fulfilment approval workflow' : '',
                 eligibility?.checks.some((c) => c.id === 'id-validity' && c.outcome === 'approval-routing') ? 'ID expiry date not on file - routed for approval' : '',
@@ -171,7 +177,7 @@ export async function submitNewConnectionOrder(
               ].filter(Boolean).join(' | '),
               // Line-limit cases go to the Collection Team, a manual-entry order to the Store Manager, and an order
               // routed only for its ID type to the Back Office Fulfilment Agent.
-              approverRole: lineLimitApproval ? COLLECTION_TEAM_ROLE : manualIdEntry ? STORE_MANAGER_ROLE : idTypeRouting ? ID_TYPE_APPROVER_ROLE : undefined,
+              approverRole: creditControl ? COLLECTION_TEAM_ROLE : manualIdEntry ? STORE_MANAGER_ROLE : idTypeRouting ? ID_TYPE_APPROVER_ROLE : undefined,
             }
           : {}),
         customerName: contact.moiResult?.name,
@@ -227,7 +233,7 @@ export async function submitNewConnectionOrder(
           name: 'Order Routed for Approval',
           reason:
             [
-              lineLimitApproval ? 'Active postpaid line limit reached' : '',
+              lineLimitApproval ? (lineDecision ? 'Line approval required' : 'Active postpaid line limit reached') : '',
               manualIdEntry ? 'Identity entered manually' : '',
               idTypeRouting ? 'ID type routed to Back Office Fulfilment approval' : '',
               eligibility?.requiresHrnAdvance ? 'Upfront payment required' : '',

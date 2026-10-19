@@ -58,6 +58,8 @@ interface Order {
   orderType: string;
   approverRole?: string;
   approvalReason?: string;
+  /** The connection eligibility engine's decision, kept on the order when it covered the customer (see engines/connectionEligibility.decisionRecord). */
+  lineEligibility?: { ruleSetVersion: string; approvals: { type: string; message: string }[]; countsBefore: { prepaid: number; postpaid: number; mobileTotal: number; fixedFwa: number } };
   approvalStatus?: string;
   manualIdEntry?: boolean;
   rejectReasonCode?: string;
@@ -443,8 +445,11 @@ function OrderDetailsPanel({ order, lastUpdatedMs }: { order: Order; lastUpdated
   const agent = order.createdBy ? agents.find((a) => a.userId === order.createdBy || a.alias === order.createdBy) : undefined;
   const createdByName = order.createdBy ? (agent ? `${agent.firstName} ${agent.lastName}` : order.createdBy) : undefined;
   // Why a line-limit order needs approval, in the rule's own words (BR-288), from the customer's current line counts.
+  const lineApproval = order.lineEligibility
+    ? `${order.lineEligibility.approvals.map((a) => a.message).join(' ')} (rule set ${order.lineEligibility.ruleSetVersion})`
+    : undefined;
   const lineLimit =
-    customer?.nationality && customer.activePostpaidLines !== undefined
+    !order.lineEligibility && customer?.nationality && customer.activePostpaidLines !== undefined
       ? evaluateRule('BR-288', { nationality: customer.nationality, activePostpaidLines: customer.activePostpaidLines }).message
       : undefined;
 
@@ -490,7 +495,7 @@ function OrderDetailsPanel({ order, lastUpdatedMs }: { order: Order; lastUpdated
         <DetailSection title="Customer standing">
           <DetailRow label="Active postpaid lines" value={customer?.activePostpaidLines} />
           <DetailRow label="Active prepaid lines" value={customer?.activePrepaidLines} />
-          <DetailRow label="Postpaid line limit" value={lineLimit} />
+          {lineApproval ? <DetailRow label="Line approval" value={lineApproval} /> : <DetailRow label="Postpaid line limit" value={lineLimit} />}
         </DetailSection>
 
       </div>

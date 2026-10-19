@@ -1,4 +1,5 @@
 import { type EligibilityCheck } from '../../engines/eligibilityEngine';
+import type { ConnectionType, EligibilityDecision, RequestKind } from '../../domain/eligibility';
 
 export interface EligibilityResult {
   /**
@@ -40,6 +41,15 @@ export interface EligibilityResult {
   journeyType?: 'postpaid' | 'prepaid';
   /** Judged for an MNP port-in (adds the outstanding-dues check); a result is only reused for the same kind of request. */
   portIn?: boolean;
+  /** The connection and request kind the line-count rules were judged for; a result is only reused for the same pair. */
+  connectionType?: ConnectionType;
+  requestKind?: RequestKind;
+  /**
+   * The Connection Eligibility & Approval Rule Engine's decision for this customer and connection (line counts against the limits, the approvals
+   * the order needs). Absent for an ID type the engine has no rules for, or when the journey adds no line; the Active Lines check then reads
+   * the older line-cap rules.
+   */
+  connectionDecision?: EligibilityDecision;
   /**
    * The ID number these checks were run against. Lets a re-entry to this step
    * tell a still-valid cached result from a stale one: change the ID on the
