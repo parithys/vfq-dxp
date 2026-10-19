@@ -42,8 +42,8 @@ export function ProductEligibility({
       scope="product"
       portIn={product === 'mnp'}
       // The customer's checks were shown at Customer Identification. Here only what this product changes: everything for Prepaid (it judges
-      // ID type and line limit by its own rules), otherwise just what blocks the product and the port-in dues.
-      showRow={eligibilityJourney(values) === 'prepaid' ? undefined : (row) => row.tone === 'hard-stop' || row.tone === 'soft-stop' || row.id === 'port-in-dues'}
+      // ID type and line limit by its own rules), otherwise just what blocks the product, the port-in dues and the approval the line count asks for.
+      showRow={eligibilityJourney(values) === 'prepaid' ? undefined : (row) => row.tone === 'hard-stop' || row.tone === 'soft-stop' || row.id === 'port-in-dues' || (row.id === 'active-lines' && row.tone === 'approval-routing')}
       result={eligibility}
       onResult={(r) => setValue('eligibility', r)}
       onSwitchToPrepaid={onSwitchToPrepaid}
