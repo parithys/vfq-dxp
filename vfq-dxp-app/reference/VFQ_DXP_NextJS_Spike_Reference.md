@@ -79,11 +79,21 @@ Unchanged and consumed by the Next pages through the existing screens: Customer 
 
 ## 9. Persona / role strategy
 
-`personaStore` and `personaEngine` are unchanged; `RequireFeature` and the navigation engine read them as before. **Not exercised live**: switching roles through the profile menu was blocked by the tool permission classifier in this session. It is covered only by the existing automated tests (276 pass, they run on the Vite loader, not on Next) and by the fact that the store/engines are the same code. Treat as unverified under Next.
+`personaStore` and `personaEngine` are unchanged; `RequireFeature` and the navigation engine read them as before. **Tested live under Next and under Vite (identical results)**, mid-journey (Change Postpaid Plan, step 2, CUST-3011, a line selected), through the profile menu:
+
+1. Retail Sales (ROLE-01) -> Direct Sales (ROLE-03, no grant for the journey): the app's own "Switch role with a journey in progress?" dialog appears; on "Switch anyway" the page shows "No access", the sidebar drops from 14 to 7 entries, `activePersonaId` is ROLE-03.
+2. State retained while the role cannot use the journey: active customer CUST-3011, journey lock CUST-3011, draft step 2 (all unchanged).
+3. ROLE-03 -> Retail Sales (same dialog): the journey is back at "Step 2 of 7: Select Line", header "Rajesh Kumar Pillai - QID 28508035600011 - CUST-3011", sidebar 14 entries.
+
+Not tested: roles other than these two, and the approval queues' role-specific buttons under Next (covered only by the existing tests on the Vite loader).
 
 ## 10. Desktop / tablet strategy
 
-`detectDeviceType()` (hardware: touch points / coarse pointer) and every capability that uses it are unchanged. Layout at a 768 px viewport matched (sidebar collapses, summary accordion, no horizontal overflow). The device was "web" in both builds because the emulated viewport has no touch hardware: the touch branch (Touch Screen signature, tablet SIM scan) was not exercised in Next.
+`detectDeviceType()` (touch points / coarse pointer, read once on first use) and every capability that uses it are unchanged. Layout at 768 px matched the Vite app (sidebar collapses, summary accordion, no horizontal overflow).
+
+**Touch ("tablet") branch tested live under Next and under Vite (identical results)**, with touch emulation on (`maxTouchPoints` 5, coarse pointer; the emulation also forces a 375 px viewport, so this tests the device logic, not tablet-width layout together with touch): the journey wizard root reports `data-device="tablet"`; the CAF type is set automatically to **Touch Screen** with the signature pad shown and no picker; **Customer view** is not offered (web only); the scan control is "Initiate scan". On a pointer device the CAF type is Digital (unit test `tests/signatureMode.test.mjs`; the live web run in Next was not repeated).
+
+Not tested live under Next: the MNP Form type (`MNP-Digital` / `MNP-Touch Screen`) and the tablet SIM scan button (the MNP journey was not run; the form type is covered by the unit test only), and a real tablet. Because the device is read on first use, a page that loads on a touch device and is later resized keeps its first reading (same on `main`).
 
 ## 11-13. Deployment, static export, server runtime
 
@@ -119,7 +129,8 @@ As listed in section 2, on the branch `spike/nextjs` only.
 - `main` build intact on the branch: `npx tsc -b` clean, `npm test` 276/276, `npm run build` OK, architecture test (no cycles, layers) passes with the new `src/next/`.
 - Next: `next build` OK (178 pages); strict TypeScript OK.
 - Side-by-side DOM comparison, Vite (5173) vs Next static export (4002), same data and path, 10 stages: Dashboard, Customer Search, search results, Customer 360 (CUST-3011), Plans & Numbers, journey step 1, scanned card, identified, Select Line, Offers & Plans. Element count, set of CSS classes (hash) and normalised text (hash) were **identical at all 10 stages**.
-- Not compared: later journey steps (Add-ons, Checkout, CAF & Signature, Payment), other journeys, dark theme, persona switching, touch/tablet hardware branch, Customer view pop-up window, `next dev`.
+- Persona switching and the touch branch: tested separately, identical under Vite and Next (sections 9 and 10).
+- Not compared: Payment and the confirmation page, other journeys, dark theme, Customer view pop-up window, `next dev`.
 
 ## 18. Remaining risks
 
@@ -128,10 +139,10 @@ As listed in section 2, on the branch `spike/nextjs` only.
 - Static export needs enumerated dynamic params and a host rewrite to a specific document (13); unknown customers are only reachable through the fallback.
 - +28 % JS and a larger output for no functional gain in a front-end prototype.
 - The compat layer (about 250 lines) becomes permanent infrastructure to maintain against both react-router and Next API changes.
-- Untested under Next: persona switching, the tablet touch branch, Customer view pop-up, `next dev`.
+- Untested under Next: the MNP journey (MNP Form type, tablet SIM scan), roles other than ROLE-01 / ROLE-03, the Customer view pop-up window, a real tablet, `next dev`.
 
 ## 19. Recommendation
 
 **Continue with the existing architecture.** The spike shows Next.js can host the DXP as a static SPA with identical rendered output and intact customer context, and that adoption can be incremental (native Next routes beside the existing router). But it demonstrated no benefit for a front-end prototype that uses no server feature, it costs a permanent router compatibility layer, it removes the browser-Back leave prompt, larger output, and it needs a deployment change. Do not migrate fully on the strength of this spike.
 
-If Next.js is a mandated organisation standard, **adopt it incrementally** using this pattern (keep the compat layer, migrate route files journey by journey, change the host rewrite to the catch-all document), after deciding how to handle the Back/Forward prompt and re-running the untested checks above.
+If Next.js is a mandated organisation standard, **adopt it incrementally** using this pattern (keep the compat layer, migrate route files journey by journey, change the host rewrite to the catch-all document), after deciding how to handle the Back/Forward prompt and re-running the untested checks above. The persona and touch checks that were the open question are now done and show no difference from `main`.
