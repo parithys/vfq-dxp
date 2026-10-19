@@ -11,6 +11,8 @@ const port = process.env.PORT ? Number(process.env.PORT) : 5173
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // Tailwind runs through its Vite plugin; ignore postcss.config.mjs (that file is for the Next.js spike only).
+  css: { postcss: { plugins: [] } },
   cacheDir: `node_modules/.vite-${port}`,
   server: { port, strictPort: true },
 })

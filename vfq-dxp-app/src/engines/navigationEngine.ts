@@ -1,3 +1,4 @@
+import { IS_DEV } from '../lib/buildEnv';
 import { getPersona } from './configEngine';
 import { canUseFeature } from './personaEngine';
 import {
@@ -116,7 +117,7 @@ export function resolveNavFor(personaId: string | undefined): NavItem[] {
   // here took out the entire navigation rail with no visible message the first
   // time a Hybrid role also held the Administration grant (9 + 1 = 10).
   // Breaking navigation is strictly worse than the sprawl it guards against.
-  if (import.meta.env.DEV && resolved.length > NAV_MAX_TOP_LEVEL && !warnedOverCap.has(personaId ?? '')) {
+  if (IS_DEV && resolved.length > NAV_MAX_TOP_LEVEL && !warnedOverCap.has(personaId ?? '')) {
     warnedOverCap.add(personaId ?? '');
     console.error(
       `navigationEngine: ${personaId} resolves to ${resolved.length} top-level nav items, over the `

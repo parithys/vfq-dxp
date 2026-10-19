@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import type { ReactNode } from 'react';
 import { createBrowserRouter, RouterProvider, useLocation } from 'react-router-dom';
 import { Button } from './components/primitives/Button';
 import { useConfigStore } from './stores/configStore';
@@ -13,7 +14,19 @@ import { LoginPage } from './auth/LoginPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { MAIN_ID, useRouteAnnouncer } from './navigation/useRouteAnnouncer';
 
+// The application, front to back, in three parts so a host other than the Vite entry (the Next.js spike) can reuse every piece:
+// AppBootstrap (boot, theme, language, error and login gates), Shell (sidebar, header, announcer, toasts around the page) and the
+// router that fills the Shell. The Vite app wires them below; nothing about their behaviour depends on the host.
 export default function App() {
+  return (
+    <AppBootstrap>
+      <AuthenticatedApp />
+    </AppBootstrap>
+  );
+}
+
+/** Boots the configuration, applies the theme and language, and shows the error or login screen until a signed-in session exists. */
+export function AppBootstrap({ children }: { children: ReactNode }) {
   const ready = useConfigStore((s) => s.ready);
   const error = useConfigStore((s) => s.error);
   const boot = useConfigStore((s) => s.boot);
@@ -60,18 +73,19 @@ export default function App() {
     return <LoginPage />;
   }
 
-  return <AuthenticatedApp />;
+  return <>{children}</>;
 }
 
 // The signed-in app, on a DATA router (one catch-all route; AppRouter's own <Routes> still do the routing) because that
 // is what lets a guided journey stop navigation and ask what to do with its progress (useBlocker). It is created when the
 // signed-in app mounts, not at page load, so it reads the URL LoginPage has already reset to "/".
 function AuthenticatedApp() {
-  const router = useMemo(() => createBrowserRouter([{ path: '*', element: <Shell /> }]), []);
+  const router = useMemo(() => createBrowserRouter([{ path: '*', element: <Shell><AppRouter /></Shell> }]), []);
   return <RouterProvider router={router} />;
 }
 
-function Shell() {
+/** The signed-in frame: skip link, sidebar, top bar, breadcrumbs and toasts around `children` (the routed page). */
+export function Shell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const routeAnnouncement = useRouteAnnouncer(pathname);
   return (
@@ -104,7 +118,7 @@ function Shell() {
               card, inflating the scrollable height. */}
           <main id={MAIN_ID} tabIndex={-1} className="relative flex-1 overflow-y-auto bg-[var(--page-bg)] focus:outline-none">
             <ErrorBoundary resetKey={pathname}>
-              <AppRouter />
+              {children}
             </ErrorBoundary>
           </main>
         </div>
