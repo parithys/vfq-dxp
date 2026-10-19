@@ -115,7 +115,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
     runMoiValidation,
     scanComplete,
     scanAttempts,
-    fallbackUnlocked,
+    scanBudgetSpent,
     manualEntryUnlocked,
     handleScanAttempt,
     handleDemoScan,
@@ -180,7 +180,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
       demoType={demoType}
       handleScanAttempt={handleScanAttempt}
       handleDemoScan={handleDemoScan}
-      fallbackUnlocked={fallbackUnlocked}
+      scanBudgetSpent={scanBudgetSpent}
     />
   );
 

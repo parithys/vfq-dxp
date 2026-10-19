@@ -7,6 +7,7 @@ import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
 import { SCAN_DURATION_MS } from './qidImageUploadModel';
 import type { QidImageUploadProps } from './qidImageUploadModel';
 import { PassportScanSections } from './PassportScanSections';
+import { ScanFailureNotice } from './ScanFailureNotice';
 
 
 // The four corner brackets of a scan frame.
@@ -213,16 +214,12 @@ export function QidImageUpload({
         </>
       ) : (
         <div className="flex flex-col gap-4">
-          {/* Scanner header: what this is, and whether the reader is ready. */}
+          {/* Scanner header: what this is. Whether the reader is available is not shown: the agent only learns of a failure after the permitted attempts. */}
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
               <Icon path={SCAN_CORNERS} className="w-6 h-6 text-accent shrink-0" />
               <span className="text-fg font-bold uppercase tracking-wide text-[length:var(--fs-body)] truncate">ID card optical scanner surface</span>
             </div>
-            <span className="flex items-center gap-2 text-fg-2 text-[length:var(--fs-caption)] shrink-0">
-              <span className={`w-2.5 h-2.5 rounded-[var(--radius-pill)] ${canScan ? 'bg-success' : 'bg-danger'}`} aria-hidden="true" />
-              {canScan ? 'Scanner Connected' : 'Scanner unavailable'}
-            </span>
           </div>
           {/* The scanning surface: a dashed bed holding the card guide, the instruction and the action. */}
           <div className="rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center gap-5 text-center">
@@ -285,11 +282,7 @@ export function QidImageUpload({
               the card changes when a scan fails. */}
           {error && (
             Array.isArray(error) ? (
-              <ul role="alert" className="text-danger text-[length:var(--fs-caption)] text-left max-w-[var(--size-field-message-max-w)] list-disc pl-5 space-y-1">
-                {error.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
+              <ScanFailureNotice lines={error} />
             ) : (
               <p role="alert" className="text-danger text-[length:var(--fs-caption)] text-center max-w-[var(--size-field-message-max-w)]">
                 {error}

@@ -69,7 +69,7 @@ export function mnpSteps(ctx: ProductStepContext & Partial<Pick<PostpaidStepCont
     // The same Plan and Add-ons steps as New Mobile Postpaid: plan cards, add-ons, eligible discounts, bill limit.
     postpaidOnly(postpaidPlanStep(planContext)),
     postpaidOnly(postpaidExtrasStep(planContext)),
-    { ...prepaidOnly(planSelectionStep({ kind: 'prepaid', segment: (values) => (values.eligibility as EligibilityResult | undefined)?.segment })), summary: sums.planSummary() },
+    { ...prepaidOnly(planSelectionStep({ kind: 'prepaid', label: 'Prepaid Packs', segment: (values) => (values.eligibility as EligibilityResult | undefined)?.segment })), summary: sums.planSummary() },
     {
       ...prepaidOnly(prepaidExtrasStep({ segment: (values) => (values.eligibility as EligibilityResult | undefined)?.segment })),
       summary: [

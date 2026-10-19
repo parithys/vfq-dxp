@@ -451,6 +451,12 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
    * once the budget is spent and stays open for the rest of the sitting.
    */
   const [fallbackUnlocked, setFallbackUnlocked] = useState(false);
+  /**
+   * LATCHED: the scan attempts really were used up. Only this makes the reader read "unavailable" and shows "We could not read the
+   * document after the permitted attempts" - manual entry can open for other reasons (the customer has no document to read) without
+   * any attempt having been made.
+   */
+  const [scanBudgetSpent, setScanBudgetSpent] = useState(false);
   // No document to read for this customer: the reader cannot help, so manual entry is available straight away.
   useEffect(() => {
     if (contextNoDocument) setFallbackUnlocked(true);
@@ -490,6 +496,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     //     and no attempts remain
     if (attempt > maxScanAttempts) {
       setFallbackUnlocked(true);
+      setScanBudgetSpent(true);
       return false;
     }
     return true;
@@ -575,7 +582,10 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
         if (!scanned) {
           // The reader captured something it could not identify. That is an
           // unsuccessful attempt; once none remain, hand over to manual entry.
-          if (scanAttempts >= maxScanAttempts) setFallbackUnlocked(true);
+          if (scanAttempts >= maxScanAttempts) {
+            setFallbackUnlocked(true);
+            setScanBudgetSpent(true);
+          }
           return;
         }
         if (!stillComplete || now.idNumber) return;
@@ -632,6 +642,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     scanComplete,
     scanAttempts,
     fallbackUnlocked,
+    scanBudgetSpent,
     manualEntryUnlocked,
     handleScanAttempt,
     handleDemoScan,

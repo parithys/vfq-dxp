@@ -3,6 +3,7 @@ import { Button } from '../primitives/Button';
 import { Icon } from '../primitives/Icon';
 import { Spinner } from '../primitives/Spinner';
 import { ScannedIdPreview } from './ScannedIdPreview';
+import { ScanFailureNotice } from './ScanFailureNotice';
 import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
 import { SCAN_DURATION_MS } from './qidImageUploadModel';
 import type { QidImageUploadProps } from './qidImageUploadModel';
@@ -60,7 +61,7 @@ export function PassportScanSections({ value, onChange, onScan, error, canScan =
 
   const section = (side: 'front' | 'back') => {
     const done = Boolean(side === 'front' ? value.frontScanned : value.backScanned);
-    const title = side === 'front' ? 'Front side' : 'Back side';
+    const title = side === 'front' ? 'Front Side' : 'Back Side';
     const n = retakes[side];
     const zone = 'rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-6 flex flex-col items-center justify-center gap-4 text-center min-h-[var(--size-dropzone-min-h)]';
     return (
@@ -102,7 +103,7 @@ export function PassportScanSections({ value, onChange, onScan, error, canScan =
               <span aria-hidden="true" className="absolute right-2 bottom-2 w-4 h-4 border-r-2 border-b-2 border-accent" />
               <span className="absolute left-6 top-4">Passport</span>
               <Icon path={SCAN_CORNERS} className="w-10 h-10 text-border" />
-              <span className="absolute left-6 bottom-4">{side === 'front' ? 'MRZ zone' : title}</span>
+              <span className="absolute left-6 bottom-4">{title}</span>
             </div>
             <div className="space-y-1">
               <h4 className="text-fg font-bold text-[length:var(--fs-body)]">
@@ -127,16 +128,12 @@ export function PassportScanSections({ value, onChange, onScan, error, canScan =
 
   return (
     <div className="card p-4 flex flex-col gap-4">
-      {/* Scanner header: what this is, and whether the reader is ready. */}
+      {/* Scanner header: what this is. Whether the reader is available is not shown: the agent only learns of a failure after the permitted attempts. */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
           <Icon path={SCAN_CORNERS} className="w-6 h-6 text-accent shrink-0" />
           <span className="text-fg font-bold uppercase tracking-wide text-[length:var(--fs-body)] truncate">Flatbed Scanner</span>
         </div>
-        <span className="flex items-center gap-2 text-fg-2 text-[length:var(--fs-caption)] shrink-0">
-          <span className={`w-2.5 h-2.5 rounded-[var(--radius-pill)] ${canScan ? 'bg-success' : 'bg-danger'}`} aria-hidden="true" />
-          {canScan ? 'Scanner Connected' : 'Scanner unavailable'}
-        </span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {section('front')}
@@ -164,11 +161,7 @@ export function PassportScanSections({ value, onChange, onScan, error, canScan =
       )}
       {showError &&
         (Array.isArray(error) ? (
-          <ul role="alert" className="text-danger text-[length:var(--fs-caption)] text-left max-w-[var(--size-field-message-max-w)] list-disc pl-5 space-y-1 mx-auto">
-            {error.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
+          <ScanFailureNotice lines={error} />
         ) : (
           <p role="alert" className="text-danger text-[length:var(--fs-caption)] text-center max-w-[var(--size-field-message-max-w)] mx-auto">
             {error}

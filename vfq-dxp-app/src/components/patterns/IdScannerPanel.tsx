@@ -26,7 +26,7 @@ export function IdScannerPanel({
   demoType,
   handleScanAttempt,
   handleDemoScan,
-  fallbackUnlocked,
+  scanBudgetSpent,
 }: {
   value: IdLookupValue;
   onChange: (v: IdLookupValue) => void;
@@ -43,7 +43,8 @@ export function IdScannerPanel({
   demoType: QidType | null;
   handleScanAttempt: () => boolean;
   handleDemoScan: (type: QidType) => void;
-  fallbackUnlocked: boolean;
+  /** The scan attempts are used up (not merely that manual entry is open). */
+  scanBudgetSpent: boolean;
 }) {
   return (
     <div className="space-y-2">
@@ -135,13 +136,13 @@ export function IdScannerPanel({
         // Switching ID type resets the budget (handleIdTypeChange), which
         // is the one way back to scanning - a different document deserves
         // its own attempts.
-        canScan={!fallbackUnlocked}
+        canScan={!scanBudgetSpent}
         // Wording per the 2026-09-27 walkthrough. It names the barcode as
         // well as manual entry because both are real fallbacks at the
         // counter, and says "after the permitted attempts" so the agent
         // knows the reader is out of tries rather than merely unlucky.
         error={
-          fallbackUnlocked
+          scanBudgetSpent
             ? [
                 'We could not read the document after the permitted attempts.',
                 'Select the ID type and enter the number manually to continue.',

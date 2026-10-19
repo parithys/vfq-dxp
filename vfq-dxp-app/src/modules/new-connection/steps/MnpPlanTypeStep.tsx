@@ -19,9 +19,10 @@ const planTypeLabel = (t: unknown) => (t === 'prepaid' ? 'Prepaid Plan' : t === 
 export function mnpPlanTypeStep(ctx: ProductStepContext): WizardStep {
   return {
     key: 'mnpType',
-    label: 'Port the number onto',
-    heading: 'Port the number onto',
-    summary: [{ key: 'mnpType', label: 'Port the number onto', type: 'text', value: (v: Record<string, unknown>) => planTypeLabel(v.mnpType) }],
+    // The step is named for what it records (the MNP Form calls it "Plan type"); the question the agent answers is the cards' legend.
+    label: 'Plan Type',
+    heading: 'Plan Type',
+    summary: [{ key: 'mnpType', label: 'Plan Type', type: 'text', value: (v: Record<string, unknown>) => planTypeLabel(v.mnpType) }],
     render: ({ values, setValue }) => (
       <div className="space-y-6">
         <ChoiceCards<MnpType>

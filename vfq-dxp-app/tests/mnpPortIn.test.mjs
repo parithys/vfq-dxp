@@ -353,7 +353,8 @@ test('"Port the number onto" is the first MNP step, not part of Product Selectio
   const { productEligibilityClear, selectMnpType } = await load('/src/modules/new-connection/steps/productChoice.ts');
   const step = mnpPlanTypeStep({ wizardId: 'w', flow: 'new', existingCustomerId: undefined });
   assert.equal(step.key, 'mnpType');
-  assert.equal(step.label, 'Port the number onto');
+  assert.equal(step.label, 'Plan Type');
+  assert.notEqual(step.heading, 'Port the number onto', 'the heading must not repeat the cards\' legend');
   // the New MNP button and a New MNP offer both leave product 'mnp'; only the offer names the type. Neither is asked on the product page.
   const clearFor = (mnpType) => ({ product: 'mnp', mnpType, eligibility: { scope: 'product', journeyType: mnpType === 'prepaid' ? 'prepaid' : 'postpaid', hardStop: false, softStop: false, checks: [] } });
   assert.equal(productEligibilityClear(clearFor(undefined)), true, 'Product Selection no longer waits for the plan type');
@@ -364,4 +365,15 @@ test('"Port the number onto" is the first MNP step, not part of Product Selectio
   assert.equal(typeof selectMnpType, 'function');
   const productSrc = (await import('node:fs')).readFileSync('src/modules/new-connection/steps/ProductSelection.tsx', 'utf8');
   assert.doesNotMatch(productSrc, /Port the number onto/);
+});
+
+test('in MNP Port-In the prepaid pack step is "Prepaid Packs" (no repeated title over the grid); the postpaid plan step and other journeys keep "Offers & Plans"', () => {
+  const all = steps.mnpSteps();
+  const plans = all.filter((s) => s.key === 'plan');
+  assert.equal(plans.length, 2);
+  const [postpaidPlan, prepaidPlan] = plans;
+  assert.equal(postpaidPlan.label, 'Offers & Plans');
+  assert.equal(prepaidPlan.label, 'Prepaid Packs');
+  assert.equal(prepaidPlan.skip({ mnpType: 'postpaid' }), true);
+  assert.equal(postpaidPlan.skip({ mnpType: 'postpaid' }), false);
 });
