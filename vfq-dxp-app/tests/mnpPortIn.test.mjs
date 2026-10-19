@@ -123,7 +123,7 @@ test('the form numbers are unique', () => {
 
 test('the MNP steps keep their order, with the MNP Form step gated on a signature that is current', () => {
   const all = steps.mnpSteps();
-  assert.deepEqual(all.map((s) => s.key), ['address', 'billingAccount', 'sim', 'plan', 'planExtras', 'plan', 'planExtras', 'donor-details', 'checkout', 'checkout', 'donor-attachment', 'caf', 'caf', 'payment']);
+  assert.deepEqual(all.map((s) => s.key), ['mnpType', 'address', 'billingAccount', 'sim', 'plan', 'planExtras', 'plan', 'planExtras', 'donor-details', 'checkout', 'checkout', 'donor-attachment', 'caf', 'caf', 'payment']);
   const formStep = all.find((s) => s.key === 'donor-attachment');
   assert.equal(formStep.label, 'MNP Form');
   const values = { product: 'mnp', mnpType: 'postpaid', contact: { idNumber: '2845', idType: 'QID', moiResult: { name: 'Test' } }, productId: 'PROD-104', simSerial: 'S1', donorDetails: donorOk };
@@ -265,8 +265,8 @@ test('the checkout step is gated on the validations, and the payment step takes 
 test('postpaid port-in uses the shared Plan, Add-ons, Checkout Summary and full CAF steps; prepaid keeps its own pack, checkout and CAF', () => {
   const all = steps.mnpSteps();
   const active = (values) => all.filter((s) => !s.skip?.(values)).map((s) => s.key);
-  assert.deepEqual(active({ mnpType: 'postpaid' }), ['address', 'billingAccount', 'sim', 'plan', 'planExtras', 'donor-details', 'checkout', 'donor-attachment', 'caf', 'payment']);
-  assert.deepEqual(active({ mnpType: 'prepaid' }), ['address', 'sim', 'plan', 'planExtras', 'donor-details', 'checkout', 'donor-attachment', 'caf', 'payment']);
+  assert.deepEqual(active({ mnpType: 'postpaid' }), ['mnpType', 'address', 'billingAccount', 'sim', 'plan', 'planExtras', 'donor-details', 'checkout', 'donor-attachment', 'caf', 'payment']);
+  assert.deepEqual(active({ mnpType: 'prepaid' }), ['mnpType', 'address', 'sim', 'plan', 'planExtras', 'donor-details', 'checkout', 'donor-attachment', 'caf', 'payment']);
   const [postpaidCaf, prepaidCaf] = all.filter((s) => s.key === 'caf');
   assert.equal(typeof postpaidCaf.locksAfter, 'function', 'the full CAF locks the journey once signed');
   assert.equal(prepaidCaf.locksAfter, undefined);
@@ -346,4 +346,22 @@ test('once a threshold is set, dues above it stop the port-in', () => {
 
 test('no charge, deposit or fee is assumed: only the postpaid HRN advance can make a port-in payable', () => {
   assert.deepEqual([rules.PORT_IN_FEE_QAR, rules.PORT_IN_DEPOSIT_QAR], [0, 0]);
+});
+
+test('"Port the number onto" is the first MNP step, not part of Product Selection; both entry points reach it the same way', async () => {
+  const { mnpPlanTypeStep } = await load('/src/modules/new-connection/steps/MnpPlanTypeStep.tsx');
+  const { productEligibilityClear, selectMnpType } = await load('/src/modules/new-connection/steps/productChoice.ts');
+  const step = mnpPlanTypeStep({ wizardId: 'w', flow: 'new', existingCustomerId: undefined });
+  assert.equal(step.key, 'mnpType');
+  assert.equal(step.label, 'Port the number onto');
+  // the New MNP button and a New MNP offer both leave product 'mnp'; only the offer names the type. Neither is asked on the product page.
+  const clearFor = (mnpType) => ({ product: 'mnp', mnpType, eligibility: { scope: 'product', journeyType: mnpType === 'prepaid' ? 'prepaid' : 'postpaid', hardStop: false, softStop: false, checks: [] } });
+  assert.equal(productEligibilityClear(clearFor(undefined)), true, 'Product Selection no longer waits for the plan type');
+  assert.equal(step.isValid(clearFor(undefined)), false, 'the step needs a type chosen');
+  assert.equal(step.isValid(clearFor('postpaid')), true);
+  assert.equal(step.isValid(clearFor('prepaid')), true);
+  assert.equal(step.isValid({ ...clearFor('prepaid'), eligibility: { ...clearFor('postpaid').eligibility } }), false, 'eligibility must be judged for the type chosen');
+  assert.equal(typeof selectMnpType, 'function');
+  const productSrc = (await import('node:fs')).readFileSync('src/modules/new-connection/steps/ProductSelection.tsx', 'utf8');
+  assert.doesNotMatch(productSrc, /Port the number onto/);
 });
