@@ -8,7 +8,6 @@ import { TechnicalFailure, ValidationStatus } from '../../components/patterns/Va
 import { CompanySearchInput } from '../../components/domain/CompanySearchInput';
 import type { CompanySelection } from '../../components/domain/CompanySearchInput';
 import { QidImageUpload } from '../../components/domain/QidImageUpload';
-import { SupportingDocumentUpload } from '../../components/domain/SupportingDocumentUpload';
 import { CARD, CARD_SELECTABLE } from '../stepStyles';
 import { validateRetiredWithGovernment, TYPE_OPTIONS, isCompanySupported } from './customerTypeModel';
 import type { CustomerType, CustomerTypeValue } from './customerTypeModel';
@@ -42,7 +41,7 @@ export function CustomerTypeStep({
   // Retired: the moment the office ID scan completes, send the extracted ID
   // number to the government system. Re-runs after a retake because changing
   // the scan clears the previous result (see the officeId onChange below).
-  const officeScanned = Boolean(((value.officeId?.frontScanned && value.officeId?.backScanned) || value.evidenceUpload) && value.officeAccepted);
+  const officeScanned = Boolean(value.officeId?.frontScanned && value.officeId?.backScanned && value.officeAccepted);
   // The in-flight check is invalidated only when the thing it validates changes
   // (type, or the scan/acceptance), NOT when its own 'checking' state lands - an
   // effect cleanup keyed on govValidation cancelled the result it had just asked
@@ -111,8 +110,7 @@ export function CustomerTypeStep({
 
       {type && type !== 'none' && (type !== 'b2b2c' || isCompanySupported(value.company)) && (
         <div className="space-y-5">
-          {/* Scan and Upload sit side by side - two equal options for the same evidence. */}
-          <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(max(15rem,calc((100%-1rem)/2)),1fr))] items-stretch">
+          {/* One card for the office ID: scanned, or uploaded from the same card's own "Upload document". */}
           <div className="flex flex-col gap-2 min-w-0">
           <p className="text-fg font-semibold text-[length:var(--fs-body)]">Scan Document{type === 'b2b2c' ? ' (optional)' : ''}</p>
           <div className={EQUAL_CARD}>
@@ -120,27 +118,13 @@ export function CustomerTypeStep({
             documentType="Office ID"
             variant={type === 'b2b2c' || type === 'retired' || type === 'mada' ? type : undefined}
             value={value.officeId ?? {}}
-            // Scanning replaces any uploaded document: the evidence is one or the other.
-            onChange={(officeId) => onChange({ ...value, officeId, evidenceUpload: undefined, officeAccepted: false, govValidation: undefined, govAttempts: 0 })}
+            onChange={(officeId) => onChange({ ...value, officeId, officeAccepted: false, govValidation: undefined, govAttempts: 0 })}
             accepted={value.officeAccepted}
             onAccept={() => onChange({ ...value, officeAccepted: true })}
             // Reject declines the benefit and returns to a Standard customer, so no
             // B2B2C/Retired/MADA benefit is carried without its office ID.
             onReject={() => (onReject ? onReject() : onChange({ type: 'none', rejected: true }))}
           />
-          </div>
-          </div>
-          <div className="flex flex-col gap-2 min-w-0">
-            <p className="text-fg font-semibold text-[length:var(--fs-body)]">Upload Document{type === 'b2b2c' ? ' (optional)' : ''}</p>
-            <div className={EQUAL_CARD}>
-            <SupportingDocumentUpload
-              value={value.evidenceUpload}
-              // Uploading replaces any scan (the evidence is one or the other) and needs no
-              // separate Accept: the uploaded document counts as soon as it is there, and
-              // Remove takes it back.
-              onChange={(doc) => onChange({ ...value, evidenceUpload: doc, officeId: undefined, officeAccepted: Boolean(doc), govValidation: undefined, govAttempts: 0 })}
-            />
-            </div>
           </div>
           </div>
           {type === 'retired' && value.govValidation?.status === 'checking' && (

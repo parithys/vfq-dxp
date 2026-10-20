@@ -11,6 +11,7 @@ import type { OfferJourneys } from './serviceJourneys';
 import { HandOff } from './HandOff';
 import { offerFeatures, offerHighlight } from './crossSalesModel';
 import type { CrossSalesValue, Offer } from './crossSalesModel';
+import { OFFERS_PER_TYPE, SAMPLE_OFFERS } from '../../data/synthetic/sampleOffers';
 
 export function CrossSalesStep({
   customerId,
@@ -20,6 +21,7 @@ export function CrossSalesStep({
   onContinue,
   onInterestedOffer,
   journey = 'new-postpaid',
+  showAllOfferTypes = false,
 }: {
   customerId: string | undefined;
   value: CrossSalesValue;
@@ -31,6 +33,11 @@ export function CrossSalesStep({
   onInterestedOffer?: (offer: Offer) => Promise<void>;
   /** The journey (or journeys) this step belongs to: their offers continue here, every other journey's hand off. */
   journey?: OfferJourneys;
+  /**
+   * Shows every offer type, none hidden, each topped up with illustrative sample offers to three cards whether or not the customer has real ones
+   * (existing customers). Sample offers can be looked at but not selected. Off: only the types the customer has offers for.
+   */
+  showAllOfferTypes?: boolean;
 }) {
   const offerTypes = offerTypesFor(journey);
   const [offers, setOffers] = useState<Offer[] | undefined>();
@@ -86,7 +93,7 @@ export function CrossSalesStep({
   }, [offers]);
 
   if (!offers) return <p className="text-muted text-[length:var(--fs-body)]">Checking for cross-sales offers…</p>;
-  if (offers.length === 0) {
+  if (offers.length === 0 && !showAllOfferTypes) {
     return (
       <div className="flex items-center gap-5 rounded-[var(--radius-card-lg)] border border-[var(--border-soft)] bg-[linear-gradient(135deg,var(--bg),var(--surface-subtle))] p-5">
         <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[var(--radius-card)] bg-bg text-[var(--tint-teal-fg)] shadow-[var(--shadow-icon-tile)]">
@@ -105,10 +112,13 @@ export function CrossSalesStep({
   const recommendedId = [...offers].sort((x, y) => (x.priorityCode ?? 'P9').localeCompare(y.priorityCode ?? 'P9'))[0]?.offerId;
   // One section per offer type that has offers for this customer (a type with none is not shown), each laid out in three columns.
   // Within a section the Recommended card comes first, then the rest from the lowest monthly fee to the highest.
-  const sections = offerTypes.map((type) => ({
-    type,
-    items: offers.filter((o) => offerTypeOf(o.serviceJourney) === type.key).sort((a, b) => Number(b.offerId === recommendedId) - Number(a.offerId === recommendedId) || a.monthlyRental - b.monthlyRental),
-  })).filter(({ items }) => items.length > 0);
+  const sections = offerTypes
+    .map((type) => {
+      const real = offers.filter((o) => offerTypeOf(o.serviceJourney) === type.key).sort((a, b) => Number(b.offerId === recommendedId) - Number(a.offerId === recommendedId) || a.monthlyRental - b.monthlyRental);
+      // Every type shown, topped up to three cards with samples (after the real ones).
+      return { type, items: showAllOfferTypes ? [...real, ...SAMPLE_OFFERS[type.key].slice(0, Math.max(0, OFFERS_PER_TYPE - real.length))] : real };
+    })
+    .filter(({ items }) => items.length > 0);
   return (
     <div className="space-y-4">
       <div className="space-y-8" role="radiogroup" aria-label="Offers">
@@ -127,7 +137,9 @@ export function CrossSalesStep({
           // The whole card is the control: click (or Enter/Space) selects it,
           // and clicking the selected one again clears it.
           const toggle = () =>
-            onChange(
+            o.sample
+              ? undefined
+              : onChange(
               selected
                 ? {}
                 : { decision: 'accepted', offerId: o.offerId, offerName: o.offerName, journey: o.serviceJourney, linkedProductIds: o.linkedProductIds }
@@ -137,6 +149,7 @@ export function CrossSalesStep({
               key={o.offerId}
               role="radio"
               aria-checked={selected}
+              aria-disabled={o.sample || undefined}
               tabIndex={0}
               onClick={toggle}
               onKeyDown={(e) => {
@@ -145,7 +158,7 @@ export function CrossSalesStep({
                   toggle();
                 }
               }}
-              className={`relative rounded-[var(--radius-card)] border p-5 flex flex-col gap-3 cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+              className={`relative rounded-[var(--radius-card)] border p-5 flex flex-col gap-3 ${o.sample ? 'cursor-default' : 'cursor-pointer'} transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
                 selected ? CARD_SELECTED : recommended ? CARD_HIGHLIGHT : CARD_IDLE
               }`}
             >
@@ -158,6 +171,7 @@ export function CrossSalesStep({
                   </span>
                 )}
                 {/* Every card carries its journey tag, pinned right. */}
+                {o.sample && <span className="shrink-0 rounded-[var(--radius-pill)] border border-border-soft px-2 py-0.5 text-muted text-[length:var(--fs-tag)]">Sample</span>}
                 {o.serviceJourney && <ServiceTypeTag type={o.serviceJourney} className="ml-auto min-w-0 truncate" />}
               </div>
               <div className="flex-1 space-y-2">
@@ -198,7 +212,8 @@ export function CrossSalesStep({
                     <Button
                       variant="secondary"
                       compact
-                      disabled={leadBusy === o.offerId}
+                      disabled={leadBusy === o.offerId || o.sample}
+                      title={o.sample ? 'A sample offer - not available to select' : undefined}
                       onClick={async (e) => {
                         e.stopPropagation();
                         setLeadBusy(o.offerId);
@@ -215,8 +230,8 @@ export function CrossSalesStep({
                     <Button
                       variant="primary"
                       compact
-                      disabled={!hasDestination(o.serviceJourney, journey)}
-                      title={hasDestination(o.serviceJourney, journey) ? undefined : 'The upgrade journey is not available yet'}
+                      disabled={o.sample || !hasDestination(o.serviceJourney, journey)}
+                      title={o.sample ? 'A sample offer - not available to select' : hasDestination(o.serviceJourney, journey) ? undefined : 'The upgrade journey is not available yet'}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (!selected) toggle();
@@ -262,6 +277,7 @@ export function CrossSalesStep({
         selected={Boolean(detailOffer && value.decision === 'accepted' && value.offerId === detailOffer.offerId)}
         onSelect={() =>
           detailOffer &&
+          !detailOffer.sample &&
           onChange({
             decision: 'accepted',
             offerId: detailOffer.offerId,

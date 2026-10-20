@@ -14,7 +14,6 @@ export interface CustomerTypeValue {
   /** The agent has reviewed and accepted the supporting document (scanned or uploaded). Cleared by any retake or new upload. */
   officeAccepted?: boolean;
   /** The supporting document was uploaded instead of scanned (file name and size only). */
-  evidenceUpload?: { fileName: string; sizeBytes: number };
   /** The agent rejected the benefit: the customer continues as Standard, and an employer on the MOI record no longer makes the order B2B2C. */
   rejected?: boolean;
   /** Retired: result of sending the extracted ID number to the government
@@ -86,7 +85,7 @@ export function isCustomerTypeValid(v: CustomerTypeValue | undefined): boolean {
   if (!v?.type) return false;
   if (v.type === 'none') return true;
   // Evidence is a scanned OR an uploaded supporting document, and the agent must have accepted it.
-  const scanned = Boolean(((v.officeId?.frontScanned && v.officeId?.backScanned) || v.evidenceUpload) && v.officeAccepted);
+  const scanned = Boolean(v.officeId?.frontScanned && v.officeId?.backScanned && v.officeAccepted);
   // B2B2C: the company is the only requirement; the ID number and the ID scan/upload are optional.
   if (v.type === 'b2b2c') return isCompanySupported(v.company);
   if (v.type === 'retired') return scanned && v.govValidation?.status === 'passed';

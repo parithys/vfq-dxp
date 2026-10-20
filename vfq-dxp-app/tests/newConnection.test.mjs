@@ -202,10 +202,10 @@ test('MNP: B2B2C postpaid goes for manager approval; prepaid has no billing acco
 const homeKeys = (values) => conn.buildConnectionSteps({ ...ctx, journey: 'home' }).filter((s) => !s.skip?.(values)).map((s) => s.key);
 
 test('New Home Connection: Identification, Product Selection, then the home steps - and nothing of the mobile products', () => {
-  assert.deepEqual(homeKeys({}), ['contact', 'product']);
-  assert.deepEqual(homeKeys({ product: 'fixed-line', homeProduct: 'fibre' }), ['contact', 'product', 'address', 'billingAccount', 'plan', 'number', 'checkout', 'caf', 'payment', 'appointment']);
+  assert.deepEqual(homeKeys({}), ['contact', 'productSelection']);
+  assert.deepEqual(homeKeys({ product: 'fixed-line', homeProduct: 'fibre' }), ['contact', 'productSelection', 'address', 'billingAccount', 'plan', 'number', 'checkout', 'caf', 'payment', 'appointment']);
   assert.ok(!homeKeys({ product: 'postpaid' }).includes('simType'), 'a mobile product is not part of the home journey');
-  assert.deepEqual(homeKeys({ product: 'postpaid' }), ['contact', 'product']);
+  assert.deepEqual(homeKeys({ product: 'postpaid' }), ['contact', 'productSelection']);
 });
 
 test('the four home products are Fibre, Fixed-Line, FWA and 5G Home, with no service type assumed for any', () => {
@@ -236,5 +236,22 @@ test('Product Selection\'s position follows the steps before it: after Address a
   // The index points at the product step in the journey the steps really produce.
   for (const values of [{ product: 'postpaid' }, { product: 'prepaid' }, { product: 'mnp', mnpType: 'prepaid' }]) {
     assert.equal(activeKeys(values)[pc.productStepIndex('connection', values)], 'product', JSON.stringify(values));
+  }
+});
+
+test('Recommended Offers for an existing customer: every offer type has three sample offers to fill it, and a sample is never selectable data', async () => {
+  const { SAMPLE_OFFERS, OFFERS_PER_TYPE } = await load('/src/data/synthetic/sampleOffers.ts');
+  const sj = await load('/src/capabilities/CrossSellOffers/serviceJourneys.ts');
+  assert.equal(OFFERS_PER_TYPE, 3);
+  assert.deepEqual(Object.keys(SAMPLE_OFFERS).sort(), sj.OFFER_TYPES.map((t) => t.key).sort(), 'no offer type is left out');
+  for (const type of sj.OFFER_TYPES) {
+    const offers = SAMPLE_OFFERS[type.key];
+    assert.equal(offers.length, 3, type.key);
+    assert.equal(new Set(offers.map((o) => o.offerId)).size, 3, `${type.key}: unique ids`);
+    for (const o of offers) {
+      assert.equal(sj.offerTypeOf(o.serviceJourney), type.key, `${o.offerId} belongs to its own type`);
+      assert.equal(o.sample, true);
+      assert.deepEqual(o.linkedProductIds, [], 'a sample links to no plan');
+    }
   }
 });

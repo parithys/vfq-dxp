@@ -28,7 +28,8 @@ const productSummary = [
 export function productStep(ctx: ProductStepContext): WizardStep {
   if (ctx.journey === 'home') {
     return {
-      key: 'product',
+      // Not `product`: that key is New Connection's Recommended Offers page, the one with Customer view (customerViewPolicy.ts).
+      key: 'productSelection',
       label: 'Product Selection',
       heading: 'Product Selection',
       subheading: 'Choose the product the customer wants; the journey continues from here.',

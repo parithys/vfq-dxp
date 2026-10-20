@@ -1,4 +1,5 @@
 import { currentAgentId } from '../../../stores/authStore';
+import { idScanAttachments } from '../../new-connection/idScanAttachments';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { logActivity, newActivityId } from '../../../engines/activityEngine';
 import type { ActivityInput } from '../../../engines/activityEngine';
@@ -98,6 +99,8 @@ export async function submitMnpOrder(
     customerId: eligibility?.customerId,
     idNumber: contact.idNumber,
     customerEmail: contact.email,
+    // The identity document captured at Customer Identification, as scanned or uploaded.
+    attachments: idScanAttachments(contact.idType, contact.qidScans),
     productId: values.productId,
     msisdn: portInNumber,
     ...(isPrepaid ? { discountId: values.discountId } : { billLimitQAR: values.billLimit, billingProfileId, discountId: values.discountId, addonIds: (values.addonIds as string[] | undefined) ?? [], monthlyRecurringQar: (values.checkoutTotals as CheckoutTotals | undefined)?.monthlyRecurringQar }),

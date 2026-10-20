@@ -102,6 +102,8 @@ export function ProductSelection({
           onChange={onOfferChange}
           onHandOff={(route) => ctx.navigate(route)}
           journey={IN_JOURNEY_OFFERS}
+          // An existing customer sees every offer type, topped up with sample offers; a new customer sees only what they have.
+          showAllOfferTypes={eligibility?.isExistingCustomer === true}
           onInterestedOffer={async (offer: Offer) => {
             const leadId = `LEAD-${Date.now().toString().slice(-6)}`;
             await ctx.createRecord('leads', {

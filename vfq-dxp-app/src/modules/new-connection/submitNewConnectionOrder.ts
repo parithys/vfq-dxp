@@ -108,19 +108,11 @@ export async function submitNewConnectionOrder(
       const discountProofDocument = values.discountProofDocument as { fileName: string } | undefined;
       const attachments = [
         ...idScanAttachments(contact.idType, contact.qidScans),
-        ...(customerType?.evidenceUpload
-          ? [
-              {
-                label: 'Supporting document',
-                detail: `Uploaded for ${customerType.type === 'b2b2c' ? 'B2B2C' : customerType.type === 'retired' ? 'Retired' : 'MADA'}: ${customerType.evidenceUpload.fileName}`,
-              },
-            ]
-          : []),
         ...(customerType?.officeId?.frontScanned && customerType.officeId.backScanned
           ? [
               {
                 label: 'Office ID card',
-                detail: `Scanned for ${customerType.type === 'b2b2c' ? 'B2B2C' : customerType.type === 'retired' ? 'Retired' : 'MADA'}`,
+                detail: `${customerType.officeId.source === 'upload' ? 'Uploaded' : 'Scanned'} for ${customerType.type === 'b2b2c' ? 'B2B2C' : customerType.type === 'retired' ? 'Retired' : 'MADA'}`,
               },
             ]
           : []),

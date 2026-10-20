@@ -1,4 +1,5 @@
 import { currentAgentId } from '../../../stores/authStore';
+import { idScanAttachments } from '../../new-connection/idScanAttachments';
 import { COLLECTION_TEAM_ROLE, emailVerification, maskEmail, persistBillingAccount } from '../../../capabilities';
 import { decisionRecord, needsCreditControl } from '../../../engines/connectionEligibility';
 import type { GuidedContactValue } from '../../../capabilities';
@@ -74,6 +75,8 @@ export async function submitFixedActivationOrder(
     customerId: eligibility?.customerId,
     idNumber: contact.idNumber,
     customerEmail: contact.email,
+    // The identity document captured at Customer Identification, as scanned or uploaded.
+    attachments: idScanAttachments(contact.idType, contact.qidScans),
     // Which home product was sold (Fibre, Fixed-Line, FWA, 5G Home); the service type below is what the installation uses.
     homeProduct: homeProductLabel(values.homeProduct as HomeProduct | undefined),
     serviceType: serviceTypeLabel(installation?.serviceType),

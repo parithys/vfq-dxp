@@ -34,7 +34,8 @@ import { SimType } from './SimType';
 
 function Identification() {
   const [v, setV] = useState({});
-  return <CustomerIdentification value={v} onChange={setV} />;
+  // As the journeys use it: the first scan comes back unclear, and Retake gives the clear capture.
+  return <CustomerIdentification value={v} onChange={setV} verifyThenFetch />;
 }
 function Number() {
   const [n, setN] = useState<string | undefined>();

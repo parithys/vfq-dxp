@@ -1,4 +1,5 @@
 import { currentAgentId } from '../../../stores/authStore';
+import { idScanAttachments } from '../../new-connection/idScanAttachments';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { newActivityId } from '../../../engines/activityEngine';
 import type { ActivityInput } from '../../../engines/activityEngine';
@@ -77,6 +78,8 @@ export async function submitPreToPostOrder(
     customerId: eligibility?.customerId,
     idNumber: contact.idNumber,
     customerEmail: contact.email,
+    // The identity document captured at Customer Identification, as scanned or uploaded.
+    attachments: idScanAttachments(contact.idType, contact.qidScans),
     msisdn,
     installedAssetId: line.installedAssetId,
     previousProductId: line.productId,

@@ -4,6 +4,8 @@ import { Icon } from '../primitives/Icon';
 import { Spinner } from '../primitives/Spinner';
 import { ScannedIdPreview } from './ScannedIdPreview';
 import { ScanFailureNotice } from './ScanFailureNotice';
+import { IdFileUpload } from './IdFileUpload';
+import { applyIdUpload } from './idUploadModel';
 import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
 import { SCAN_DURATION_MS } from './qidImageUploadModel';
 import type { QidImageUploadProps } from './qidImageUploadModel';
@@ -26,6 +28,8 @@ export function PassportScanSections({ value, onChange, onScan, error, canScan =
   latest.current = value;
   const charged = useRef(false);
   const anyScanned = Boolean(value.frontScanned || value.backScanned);
+  // A scan from the reader exists: the header's scan button then reads "Retake scan" (an upload alone leaves it "Initiate scan").
+  const anyReaderScan = anyScanned && value.source !== 'upload';
   useEffect(() => () => clearTimeout(timer.current), []);
   // A fresh document (both sides cleared from outside) starts a new pass.
   useEffect(() => {
@@ -117,6 +121,15 @@ export function PassportScanSections({ value, onChange, onScan, error, canScan =
                 Scan {side} side
               </Button>
             )}
+            {/* Upload this side in place of the reader (no reader pass, so no attempt is charged). */}
+            <IdFileUpload
+              side={side}
+              label={`Upload ${side} side`}
+              onUpload={(r) => {
+                setBlurred((b) => ({ ...b, [side]: false }));
+                onChange(applyIdUpload(latest.current, r));
+              }}
+            />
           </>
         )}
       </div>
@@ -129,11 +142,29 @@ export function PassportScanSections({ value, onChange, onScan, error, canScan =
   return (
     <div className="card p-4 flex flex-col gap-4">
       {/* Scanner header: what this is. Whether the reader is available is not shown: the agent only learns of a failure after the permitted attempts. */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <div className="flex items-center gap-3 min-w-0">
           <Icon path={SCAN_CORNERS} className="w-6 h-6 text-accent shrink-0" />
           <span className="text-fg font-bold uppercase tracking-wide text-[length:var(--fs-body)] truncate">Flatbed Scanner</span>
         </div>
+        {/* The whole document in one go: two files, or one (both sides in a single image or PDF, or one side). */}
+        {/* The two ways in, always available, in this order: the reader (the next side still to scan; the front again when both are in), then upload. */}
+        <IdFileUpload
+          align="end"
+          disabled={scanning !== null}
+          leading={
+            canScan ? (
+              <Button variant="primary" compact className="shrink-0" disabled={scanning !== null} onClick={() => scanSide(!value.frontScanned ? 'front' : !value.backScanned ? 'back' : 'front')}>
+                <Icon path={SCAN_CORNERS} className="w-4 h-4" />
+                {anyReaderScan ? `Retake scan${retakes.front + retakes.back > 0 ? ` (${retakes.front + retakes.back})` : ''}` : 'Initiate scan'}
+              </Button>
+            ) : undefined
+          }
+          onUpload={(r) => {
+            setBlurred({ front: false, back: false });
+            onChange(applyIdUpload(latest.current, r));
+          }}
+        />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {section('front')}
