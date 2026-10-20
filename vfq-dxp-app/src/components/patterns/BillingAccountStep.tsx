@@ -118,6 +118,31 @@ export function BillingAccountStep({
   // holds two of ANY type has nowhere left for a new one to go.
   const atConsumerCap = !isBusinessSegment(customerSegment) && profiles.length >= 2;
 
+  const editing = Boolean(value.editingProfileId);
+  const editedProfile = profiles.find((p) => p.billingProfileId === value.editingProfileId);
+
+  // Edit: opens the form with the account on file pre-filled - its contact, address, cycle, mode and name - for the agent to change.
+  const startEdit = (p: BillingProfileRecord) => {
+    const match = contacts.find((c) => [c.firstName, c.middleName, c.lastName].filter(Boolean).join(' ') === p.billingContactName);
+    const day = /Day (\d+)/.exec(p.billingCycle ?? '')?.[1];
+    const contactId = match?.contactRecordId ?? (contacts.length === 0 && customerName ? NEW_CUSTOMER_CONTACT : contacts[0]?.contactRecordId);
+    onChange({
+      selectedProfileId: p.billingProfileId,
+      creatingNew: false,
+      editingProfileId: p.billingProfileId,
+      newAccount: {
+        primaryContactId: contactId,
+        primaryContactName: p.billingContactName,
+        preferredInvoiceRecipient: 'Primary Contact',
+        editAddressLine: p.billingAddress ?? '',
+        billCycleDay: day ? Number(day) : undefined,
+        billingMode: (p as { billingType?: string }).billingType,
+        profileName: p.name,
+        billMedia: p.billMedium,
+      },
+    });
+  };
+
   const validateCard = () => {
     const result = tokenizeCard(cardNumber);
     if (!result) {
@@ -145,26 +170,34 @@ export function BillingAccountStep({
           {profiles.map((p, i) => {
             const selected = value.selectedProfileId === p.billingProfileId;
             return (
-              <button
-                key={p.billingProfileId}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => onChange({ selectedProfileId: p.billingProfileId, creatingNew: false })}
-                className={`text-left rounded-[var(--radius-card)] border p-4 ${
-                  selected
-                    ? CARD_SELECTED
-                    : CARD_IDLE
-                }`}
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-fg font-medium">Account ending …{p.billingProfileId.slice(-4)}</span>
-                  {i === 0 && <Badge variant="filled-neutral">Default</Badge>}
-                </div>
-                <p className="text-fg-2 text-[length:var(--fs-caption)]">Primary contact: {p.billingContactName}</p>
-                <p className="text-muted text-[length:var(--fs-caption)]">
-                  {p.billingAddress} · {customerEmail ?? p.billingContactEmail}
-                </p>
-              </button>
+              <div key={p.billingProfileId} className={`rounded-[var(--radius-card)] border p-4 ${selected ? CARD_SELECTED : CARD_IDLE}`}>
+                <button
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => onChange({ selectedProfileId: p.billingProfileId, creatingNew: false })}
+                  className="block w-full text-left"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-fg font-medium">Account ending …{p.billingProfileId.slice(-4)}</span>
+                    {i === 0 && <Badge variant="filled-neutral">Default</Badge>}
+                  </div>
+                  <p className="text-fg-2 text-[length:var(--fs-caption)]">Primary contact: {p.billingContactName}</p>
+                  <p className="text-muted text-[length:var(--fs-caption)]">
+                    {(selected && value.editingProfileId === p.billingProfileId ? value.newAccount?.editAddressLine : undefined) ?? (p.billingAddress || 'No billing address on file')} · {customerEmail ?? p.billingContactEmail}
+                  </p>
+                </button>
+                {/* Edit opens the form below with this account's details pre-filled. */}
+                <Button
+                  variant="tertiary"
+                  compact
+                  className="mt-2"
+                  aria-expanded={value.editingProfileId === p.billingProfileId}
+                  aria-label={`Edit the billing account ending ${p.billingProfileId.slice(-4)}`}
+                  onClick={() => startEdit(p)}
+                >
+                  Edit
+                </Button>
+              </div>
             );
           })}
           {/* "A consumer can have at most two billing profiles" - once a Consumer already holds two, there is nowhere for a new one to go,
@@ -177,6 +210,7 @@ export function BillingAccountStep({
                   ...value,
                   creatingNew: !value.creatingNew,
                   selectedProfileId: undefined,
+                  editingProfileId: undefined,
                   // Opening the form fixes the primary-payment default: ticked only when the customer has no other profile.
                   newAccount: { ...value.newAccount, primaryPaymentProfile: value.newAccount?.primaryPaymentProfile ?? profiles.length === 0 },
                 })
@@ -201,9 +235,10 @@ export function BillingAccountStep({
         )}
       </div>
 
-      {value.creatingNew && !atConsumerCap && (
+      {((value.creatingNew && !atConsumerCap) || editing) && (
         <div className="border border-[var(--field-card-border)] rounded-[var(--radius-card)]">
           <div className="px-6 pb-6">
+              {editing && <p className="pt-6 text-fg font-semibold text-[length:var(--fs-body-lg)]">Edit billing account ending …{editedProfile?.billingProfileId.slice(-4)}</p>}
               {/* Contact */}
               <div className={`${SECTION} pt-6`}>
                 <h4 className={SECTION_TITLE}>Contact</h4>
@@ -213,7 +248,10 @@ export function BillingAccountStep({
                     label="Primary Contact"
                     required
                     value={newAccount.primaryContactId ?? ''}
-                    onChange={(e) => setNewAccount({ primaryContactId: e.target.value })}
+                    onChange={(e) => {
+                      const c = contacts.find((x) => x.contactRecordId === e.target.value);
+                      setNewAccount({ primaryContactId: e.target.value, ...(editing ? { primaryContactName: c ? [c.firstName, c.middleName, c.lastName].filter(Boolean).join(' ') : customerName } : {}) });
+                    }}
                     placeholder="Select contact"
                     // A customer with contact records picks one; a new customer has none yet, so the person identified in this
                     // journey is the contact (otherwise the list is empty and the step cannot be completed).
@@ -253,6 +291,15 @@ export function BillingAccountStep({
               {/* Billing Address */}
               <div className={`${SECTION} ${SECTION_RULE}`}>
                 <h4 className={SECTION_TITLE}>Billing Address</h4>
+                {editing ? (
+                  <Input
+                    label="Billing Address"
+                    value={newAccount.editAddressLine ?? ''}
+                    placeholder="Enter the billing address"
+                    onChange={(e) => setNewAccount({ editAddressLine: e.target.value })}
+                  />
+                ) : (
+                <>
                 <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg cursor-pointer">
                   <Checkbox
                     checked={newAccount.useSameAddress ?? true}
@@ -304,6 +351,8 @@ export function BillingAccountStep({
                     </div>
                   </div>
                 )}
+                </>
+                )}
               </div>
 
               {/* Payment */}
@@ -341,6 +390,8 @@ export function BillingAccountStep({
                     options={BILLING_MODES}
                   />
                 </div>
+                {!editing && (
+                <>
                 <Input
                   label="Card Number"
                   required
@@ -397,9 +448,12 @@ export function BillingAccountStep({
                   Set as primary payment profile
                   {profiles.length === 0 && <span className="text-muted text-[length:var(--fs-caption)]">(the customer's first billing profile)</span>}
                 </label>
+                </>
+                )}
               </div>
 
               {/* Billing Profile Setup */}
+              {!editing && (
               <div className={`space-y-2 ${SECTION_RULE}`}>
                 <div className="flex items-center justify-between">
                   <h4 className={SECTION_TITLE}>Billing Profile Setup</h4>
@@ -426,6 +480,7 @@ export function BillingAccountStep({
                   <p className="text-muted text-[length:var(--fs-caption)]">Not yet configured – required before this account can be finalised.</p>
                 )}
               </div>
+              )}
             </div>
         </div>
       )}

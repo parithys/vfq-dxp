@@ -20,6 +20,10 @@ interface MoiResult {
   emailSource?: 'Siebel' | 'NAS' | 'Billing Profile';
   /** No customer record exists for this ID (details came from NAS). */
   isNewCustomer?: boolean;
+  /** The agent created this customer (no registry knows the ID); the identity was typed. */
+  createdByAgent?: boolean;
+  /** A new customer's National Address from the NAS: hidden, stored with the order, never shown or edited (see idLookupModel.NationalAddress). */
+  nationalAddress?: import('./idLookupModel').NationalAddress;
   gender?: string;
   /** When the registry last confirmed the record (ISO); mirrors IdLookupStep's MoiResult. */
   moiUpdateTime?: string;
@@ -80,6 +84,8 @@ export interface GuidedContactValue {
   nationality?: string;
   email?: string;
   altPhone?: string;
+  /** How the customer is addressed (Mr, Ms ...): captured by the agent at Contact, optional, and kept on the contact. */
+  salutation?: string;
   language?: string;
   getIptv?: 'Yes' | 'No';
   /**
@@ -286,6 +292,8 @@ export function identityFromMoi(moi: MoiResult | undefined) {
       nationality: undefined,
       email: undefined,
       gender: undefined,
+      // Another person: how the last one was addressed does not carry over.
+      salutation: undefined,
       // Cleared with the rest. An employer link belongs to the resolved
       // customer, so losing the customer has to lose the link - otherwise
       // re-typing an ID would leave the previous person's employer attached,

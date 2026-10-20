@@ -99,6 +99,13 @@ export function IdScannerPanel({
             onChange({ ...value, qidScans, idNumber: '', scannedExpiry: undefined, moiResult: undefined });
             return;
           }
+          // An upload that replaces a scan (or the other way round) starts the number and expiry afresh: they are typed for an upload.
+          if (scanComplete && stillComplete && (qidScans.source === 'upload') !== (value.qidScans?.source === 'upload')) {
+            setNotFound(false);
+            setExpiryMismatch(false);
+            onChange({ ...latest.current, qidScans, idNumber: '', scannedExpiry: undefined, moiResult: undefined });
+            return;
+          }
           // latest, not the closure: a retake's completion fires ~900ms after it
           // started, through the onChange captured THEN - spreading that stale
           // `value` restored the number the retake had just cleared.

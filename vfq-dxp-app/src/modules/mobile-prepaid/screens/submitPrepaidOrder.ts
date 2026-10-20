@@ -132,6 +132,9 @@ export async function submitPrepaidOrder(
   await createRecord('orders', {
     orderId,
     customerEmail: contact?.email,
+    customerSalutation: contact?.salutation,
+    // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
+    nationalAddress: contact?.moiResult?.nationalAddress,
     orderType: 'New Prepaid Activation',
     ...decisionRecord(lineDecision),
     createdAt: now(),
@@ -282,7 +285,7 @@ export async function submitPrepaidOrder(
     // The first eSIM subscription's activation code, for the QR handover panel.
     esimActivationCode: eSimLine?.simType.esimActivationCode,
     customerEmail: contact?.email,
-    customerEmailDisplay: contact?.moiResult?.isNewCustomer && contact.email ? maskEmail(contact.email) : contact?.email,
+    customerEmailDisplay: contact?.moiResult?.isNewCustomer && !contact?.moiResult?.createdByAgent && contact.email ? maskEmail(contact.email) : contact?.email,
     customerEmailVerified: emailVerification(contact?.email, contact?.moiResult?.email).verified,
     service: 'mobile',
   };

@@ -31,4 +31,4 @@ export const isBusinessId = (id: string | undefined) => /^ENT-ACC-/i.test(id ?? 
  * their own pattern, one of them comparing against the literal 'Enterprise', which no record carries). A linked user's EBU / CBU split is
  * a different question: that is `segmentFor`, by billing responsibility.
  */
-export const isBusinessSegment = (segment: string | undefined | null): boolean => /enterprise|business|b2b|ebu|corporate/i.test(segment ?? '');
+export const isBusinessSegment = (segment: string | undefined | null): boolean => /enterprise|business|b2b|ebu|corporate|government/i.test(segment ?? '');

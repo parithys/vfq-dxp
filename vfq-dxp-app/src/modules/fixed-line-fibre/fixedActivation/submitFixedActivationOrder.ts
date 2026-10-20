@@ -31,7 +31,7 @@ type EntityStore = ReturnType<typeof useEntityStore.getState>;
  */
 export async function submitFixedActivationOrder(
   values: Record<string, unknown>,
-  { createRecord }: Pick<EntityStore, 'createRecord'>
+  { createRecord, updateRecord }: Pick<EntityStore, 'createRecord'> & Partial<Pick<EntityStore, 'updateRecord'>>
 ): Promise<ConfirmedOrder> {
   const contact = values.contact as GuidedContactValue;
   assertEligibilityChecked(values);
@@ -53,6 +53,7 @@ export async function submitFixedActivationOrder(
   // A customer with no billing account gets the one the journey built, created and set as their default.
   const billingProfileId = await persistBillingAccount(billingAccount, {
     createRecord,
+    updateRecord,
     kind: 'Consumer Fixed Line (GigaHome)',
     customerId: eligibility?.customerId,
     idNumber: contact.idNumber,
@@ -75,6 +76,9 @@ export async function submitFixedActivationOrder(
     customerId: eligibility?.customerId,
     idNumber: contact.idNumber,
     customerEmail: contact.email,
+    customerSalutation: contact.salutation,
+    // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
+    nationalAddress: contact.moiResult?.nationalAddress,
     // The identity document captured at Customer Identification, as scanned or uploaded.
     attachments: idScanAttachments(contact.idType, contact.qidScans),
     // Which home product was sold (Fibre, Fixed-Line, FWA, 5G Home); the service type below is what the installation uses.
@@ -139,7 +143,7 @@ export async function submitFixedActivationOrder(
     dueTodayQar: totals?.dueTodayQar ?? 0,
     monthlyRecurringQar: plan?.mrcQAR ?? 0,
     customerEmail: contact.email,
-    customerEmailDisplay: contact.moiResult?.isNewCustomer && contact.email ? maskEmail(contact.email) : contact.email,
+    customerEmailDisplay: contact.moiResult?.isNewCustomer && !contact.moiResult?.createdByAgent && contact.email ? maskEmail(contact.email) : contact.email,
     customerEmailVerified: emailVerification(contact.email, contact.moiResult?.email).verified,
     service: 'fixed',
   };

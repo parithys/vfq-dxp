@@ -1,3 +1,4 @@
+import { vipTagOf } from '../../data/customerSegments';
 import { isClosedTicket } from '../../lib/statusTone';
 import { isSimSwapAwaitingDecision } from '../../engines/approvalAuthority';
 import { isBusinessSegment } from '../../engines/businessSegment';
@@ -29,6 +30,9 @@ import { Tabs, type TabItem } from '../../components/primitives/Tabs';
 import { MetricCard } from './MetricCard';
 import { BellNotificationBanner } from './BellNotificationBanner';
 import { DemographicEditDrawer } from './DemographicEditDrawer';
+import { AccountEditDrawer } from './AccountEditDrawer';
+import { PrimaryContactDrawer } from './PrimaryContactDrawer';
+import { primaryContactOf } from './primaryContactModel';
 import { AssetsSection, type AssetsSubView } from './sections/AssetsSection';
 import { C360AddressService } from './sections/C360AddressService';
 import { C360AccountInformation } from './sections/C360AccountInformation';
@@ -93,6 +97,8 @@ export function Customer360Layout() {
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
   const [data, setData] = useState<Customer360Data | undefined | null>(null);
   const [demoDrawerOpen, setDemoDrawerOpen] = useState(false);
+  const [accountDrawerOpen, setAccountDrawerOpen] = useState(false);
+  const [primaryContactOpen, setPrimaryContactOpen] = useState(false);
 
   // Deep link from a service link elsewhere in the app - currently the queue
   // notification's Active lines breakdown. `tab` picks the tab, `serviceRef`
@@ -476,6 +482,9 @@ export function Customer360Layout() {
     setQueryFocus((n) => n + 1);
   };
   const editContact = canEdit ? () => requireVerification(() => setDemoDrawerOpen(true)) : undefined;
+  // Account Details: the customer is verified first (the side drawer), then only Credit Limit, Account Status and Segment can be changed.
+  const changePrimaryContact = canEdit ? () => requireVerification(() => setPrimaryContactOpen(true)) : undefined;
+  const editAccount = canEdit ? () => requireVerification(() => setAccountDrawerOpen(true)) : undefined;
   const retailTab = (key: string, label: string, topics: string[], content: ReactNode): TabItem[] =>
     topics.some((t) => isTopicVisible(activePersonaId, t))
       ? [{ key, label, icon: RAIL_ICONS[key], content: <FieldAccessProvider personaId={activePersonaId} page={key}>{content}</FieldAccessProvider> }]
@@ -484,7 +493,7 @@ export function Customer360Layout() {
   const tabs: TabItem[] = headerOnly
     ? [
         ...retailTab('overview', 'Overview', ['Account Information'], <C360Overview {...tabProps} onTicketCreated={addTicket} queryFocus={queryFocus} hasTab={(key) => tabs.some((t) => t.key === key)} />),
-        ...retailTab('account-info', 'Account Information', ['Account Information'], <C360AccountInformation {...tabProps} onEdit={editContact} />),
+        ...retailTab('account-info', 'Account Information', ['Account Information'], <C360AccountInformation {...tabProps} onEdit={editAccount} onChangePrimaryContact={changePrimaryContact} />),
         ...retailTab('products-services', 'Products & Services', ['Assets'], <C360ProductsServices {...tabProps} />),
         ...retailTab('billing', 'Billing & Payments', ['Billing & Payments'], <C360BillingPayments {...tabProps} />),
         ...retailTab('offers-leads', 'Offers & Leads', ['Contact/Assets Information', 'Account/Contact Lead'], <C360OffersLeads {...tabProps} />),
@@ -552,7 +561,7 @@ export function Customer360Layout() {
           name={data.customer.name}
           belowFacts={<LinkedBusinessLine customerId={data.customer.customerId} />}
           tags={[
-            ...(/vip|premium/i.test(data.customer.segment) ? [{ label: 'VIP', variant: 'tag-amber' as const }] : []),
+            ...(vipTagOf(data.customer.segment) ? [{ label: vipTagOf(data.customer.segment) as string, variant: 'tag-amber' as const }] : []),
           ]}
           qid={data.customer.qid}
           idType={data.customer.idType}
@@ -652,6 +661,42 @@ export function Customer360Layout() {
         onClose={() => setDemoDrawerOpen(false)}
         customer={data.customer}
         onSaved={(patch) => setData((prev) => (prev ? { ...prev, customer: { ...prev.customer, ...patch } } : prev))}
+        onTicketCreated={addTicket}
+      />
+      <PrimaryContactDrawer
+        key={`pc-${data.customer.customerId}-${primaryContactOpen}`}
+        open={primaryContactOpen}
+        onClose={() => setPrimaryContactOpen(false)}
+        customerId={data.customer.customerId}
+        billingProfileId={data.billingProfiles[0]?.billingProfileId as string | undefined}
+        contacts={data.contacts as unknown as { contactRecordId: string; firstName?: string; middleName?: string; lastName?: string }[]}
+        currentId={primaryContactOf(data.contacts, data.billingProfiles[0]?.primaryContactId)?.contactRecordId as string | undefined}
+        onSaved={(c) =>
+          setData((prev) =>
+            prev ? { ...prev, billingProfiles: prev.billingProfiles.map((bp, i) => (i === 0 ? { ...bp, primaryContactId: c.contactRecordId, billingContactName: [c.firstName, c.middleName, c.lastName].filter(Boolean).join(' ') } : bp)) } : prev
+          )
+        }
+        onTicketCreated={addTicket}
+      />
+      <AccountEditDrawer
+        key={`${data.customer.customerId}-${accountDrawerOpen}`}
+        open={accountDrawerOpen}
+        onClose={() => setAccountDrawerOpen(false)}
+        customer={data.customer}
+        account={data.accounts[0]}
+        creditLimit={data.creditLimits[0] as { id?: string; creditLimitQar?: number } | undefined}
+        onSaved={(p) =>
+          setData((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  customer: p.segment ? { ...prev.customer, segment: p.segment } : prev.customer,
+                  accounts: p.accountStatus ? prev.accounts.map((a, i) => (i === 0 ? { ...a, status: p.accountStatus ?? a.status } : a)) : prev.accounts,
+                  creditLimits: p.creditLimitQar !== undefined ? (prev.creditLimits.length ? prev.creditLimits.map((c, i) => (i === 0 ? { ...c, creditLimitQar: p.creditLimitQar } : c)) : [{ creditLimitQar: p.creditLimitQar }]) : prev.creditLimits,
+                }
+              : prev
+          )
+        }
         onTicketCreated={addTicket}
       />
       </DemoProvider>

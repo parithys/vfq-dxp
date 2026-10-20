@@ -76,6 +76,7 @@ export async function submitMnpOrder(
     ? undefined
     : await persistBillingAccount(values.billingAccount as BillingAccountValue | undefined, {
         createRecord,
+        updateRecord,
         kind: 'Consumer Mobile Postpaid',
         customerId: eligibility?.customerId,
         idNumber: contact.idNumber,
@@ -99,6 +100,9 @@ export async function submitMnpOrder(
     customerId: eligibility?.customerId,
     idNumber: contact.idNumber,
     customerEmail: contact.email,
+    customerSalutation: contact.salutation,
+    // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
+    nationalAddress: contact.moiResult?.nationalAddress,
     // The identity document captured at Customer Identification, as scanned or uploaded.
     attachments: idScanAttachments(contact.idType, contact.qidScans),
     productId: values.productId,
@@ -187,7 +191,7 @@ export async function submitMnpOrder(
     ],
     trackAction: { label: 'Track Port-In Status', to: `${PORT_IN_STATUS_PATH}?id=${requestId}` },
     customerEmail: contact.email,
-    customerEmailDisplay: contact.moiResult?.isNewCustomer && contact.email ? maskEmail(contact.email) : contact.email,
+    customerEmailDisplay: contact.moiResult?.isNewCustomer && !contact.moiResult?.createdByAgent && contact.email ? maskEmail(contact.email) : contact.email,
     customerEmailVerified: emailVerification(contact.email, contact.moiResult?.email).verified,
     service: 'mobile',
   };

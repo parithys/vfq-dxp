@@ -28,19 +28,7 @@
  */
 export const VAT_RATE = 0.05;
 
-/**
- * HRN (High Risk Nationality) upfront advance, in QAR - BR-112 ("HRN customers
- * pay an upfront advance whose amount is driven by nationality and sales
- * channel; explicitly confirmed to NOT be driven by plan value"). Centralised
- * here as of 2026-09-28: this was a bare `100` duplicated independently in
- * CheckoutSummaryStep.tsx and NewPostpaidWizard.tsx, which is exactly the
- * "same arithmetic written more than once" problem this module exists to
- * prevent for the rest of the pricing surface - and BR-112 itself only
- * narrates the rule, it does not define the figure as a named, changeable
- * value anywhere. One constant now; changing the amount means changing this
- * line, not finding every place `100` appears in an HRN context.
- */
-export const HRN_ADVANCE_QAR = 100;
+// The HRN advance payment (BR-112: driven by nationality and sales channel) is configured in hrnConfiguration.ts - hrnAdvanceQar().
 
 /**
  * Free/Star price boundary, exclusive on the Free side (raised 2026-09-30 from

@@ -1,3 +1,4 @@
+import { defaultCreditLimitForSegment } from '../../../engines/hrnConfiguration';
 import { isClosedTicket } from '../../../lib/statusTone';
 import { isSimSwapAwaitingDecision } from '../../../engines/approvalAuthority';
 import { isFixedLineOffer } from '../../../capabilities';
@@ -191,9 +192,12 @@ export function C360Overview({ data, services, goToTab, onTicketCreated, queryFo
                 dash(data.customer.name)
               )}
             </Row>
+            <Row label="Account Type">{dash(account?.accountType)}</Row>
             <Row label="Customer Type">{isBusiness ? 'Business' : 'Individual'}</Row>
+            {/* Category: the customer scheme the record carries (Sawfa, Sawfa Plus); "-" for a customer on none. */}
+            <Row label="Category">{dash((data.customer as { customerSubType?: string }).customerSubType)}</Row>
             <Row label="Segment">{dash(data.customer.segment)}</Row>
-            <Row label="Credit Limit">{dash(creditLimit ? qar(creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR) : undefined)}</Row>
+            <Row label="Credit Limit">{dash(qar(creditLimit ? (creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR) : defaultCreditLimitForSegment(data.customer.segment)))}</Row>
             <Row label="Account Status">{account?.status ? <StatusPill status={account.status} /> : '-'}</Row>
             <Row label="Customer Since"><Dv k="customerSince" /></Row>
           </div>

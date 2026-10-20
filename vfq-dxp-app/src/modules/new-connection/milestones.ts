@@ -31,6 +31,11 @@ export const POSTPAID_MILESTONES: readonly MilestoneDef[] = [
     label: 'Customer verified',
     title: 'Customer verified',
     message: 'Customer identified and eligibility confirmed.',
+    // MOI validated the ID but no customer record exists: a new Vodafone customer, not an identified one.
+    wording: (values) =>
+      (values.eligibility as EligibilityResult | undefined)?.isExistingCustomer === false
+        ? { title: 'New Customer', message: 'MOI validated; no existing customer record found.' }
+        : { title: 'Customer verified', message: 'Customer identified and eligibility confirmed.' },
     // ID captured and MOI-verified, and the eligibility checks passed (a hard or soft stop - blacklist, collections, expired ID - blocks it).
     evidence: ({ values }) => {
       const contact = at<GuidedContactValue>(values, 'contact');

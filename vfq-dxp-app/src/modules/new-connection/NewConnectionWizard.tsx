@@ -108,11 +108,11 @@ export function NewConnectionWizard({
       case 'prepaid':
         return submitPrepaidOrder(values, { createRecord, updateRecord }, device);
       case 'fixed-line':
-        return submitFixedActivationOrder(values, { createRecord });
+        return submitFixedActivationOrder(values, { createRecord, updateRecord });
       case 'mnp':
         return submitMnpOrder(values, { createRecord, updateRecord });
       default:
-        return submitNewConnectionOrder(values, { flow, createRecord });
+        return submitNewConnectionOrder(values, { flow, createRecord, updateRecord });
     }
   };
 

@@ -1,5 +1,5 @@
 import type { EntityKind } from '../../engines/mockDataEngine';
-import { ordinal } from '../../components/patterns/billingAccountModel';
+import { ordinal, profilePatchFromEdit } from '../../components/patterns/billingAccountModel';
 import type { BillingAccountValue } from '../../components/patterns/billingAccountModel';
 
 /** What the customer's billing account is for: decides the account's type. */
@@ -20,6 +20,8 @@ export async function persistBillingAccount(
   billing: BillingAccountValue | undefined,
   ctx: {
     createRecord: (kind: EntityKind, record: Record<string, unknown>) => Promise<void>;
+    /** Saves an edited billing address onto the selected account's profile. Without it an edit stays on the order's draft only. */
+    updateRecord?: (kind: EntityKind, idField: string, id: string, patch: Record<string, unknown>) => Promise<void>;
     kind: BillingAccountKind;
     customerId?: string;
     idNumber?: string;
@@ -32,7 +34,14 @@ export async function persistBillingAccount(
     creditLimitQar?: number;
   }
 ): Promise<string | undefined> {
-  if (billing?.selectedProfileId) return billing.selectedProfileId;
+  if (billing?.selectedProfileId) {
+    // The agent edited the selected account: what they changed is saved on that account's profile.
+    if (billing.editingProfileId === billing.selectedProfileId && billing.newAccount && ctx.updateRecord) {
+      const patch = profilePatchFromEdit(billing.newAccount);
+      if (Object.keys(patch).length) await ctx.updateRecord('billing-profiles', 'billingProfileId', billing.selectedProfileId, patch);
+    }
+    return billing.selectedProfileId;
+  }
   const fresh = billing?.creatingNew ? billing.newAccount : undefined;
   if (!fresh) return undefined;
   const stamp = Date.now().toString().slice(-6);

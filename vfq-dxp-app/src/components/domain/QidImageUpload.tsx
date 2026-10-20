@@ -80,7 +80,8 @@ export function QidImageUpload({
     // describe a document the agent has just decided to read again - leaving
     // them up beside a spinner would have the card claiming a validated
     // identity while the reader was busy disagreeing with it.
-    if (isRetake) {
+    // A scan after any complete capture - a previous scan, or an upload - starts from nothing.
+    if (scanned) {
       onChange({
         ...value,
         frontScanned: false,

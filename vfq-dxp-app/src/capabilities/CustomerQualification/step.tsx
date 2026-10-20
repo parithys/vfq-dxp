@@ -86,6 +86,8 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
           asNewCustomer={asNewCustomer}
           // Customer 360 entry: the customer is the one the journey was opened for.
           asCustomerId={flow === 'existing' ? existingCustomerId : actedForId}
+          // A journey that acts on a known customer never creates one; the others offer it when no registry knows the ID.
+          allowNewCustomer={!knownCustomer}
           // All four ID types are offered (2026-10-04). Passport, GCC ID and Diplomatic ID are exception
           // identification: the eligibility engine routes them to approval rather than blocking them here.
           allowedIdTypes={idTypesFor(prepaid ? 'prepaid' : 'new-connection')}
@@ -105,6 +107,12 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
             asNewCustomer={asNewCustomer}
             asCustomerId={flow === 'existing' ? existingCustomerId : actedForId}
             announcePass={false}
+            // A customer created here (no registry knows the ID) is judged on what the agent entered.
+            newIdentity={
+              contact?.moiResult?.createdByAgent && contact.idType
+                ? { idNumber: contact.idNumber ?? '', idType: contact.idType, nationality: contact.moiResult.nationality, dob: contact.moiResult.dob, expiryDate: contact.moiResult.expiryDate }
+                : undefined
+            }
             skipLineLimit={skipLineLimit}
             // MNP does not know its connection type until Plan Type: the approvals that depend on it (the ID type's, the line-count and
             // passport BAU ones - a prepaid line needs none of the ID-type approval) are announced there, for the plan type chosen.

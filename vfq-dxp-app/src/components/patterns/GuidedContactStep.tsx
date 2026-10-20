@@ -1,3 +1,4 @@
+import { SALUTATIONS } from '../../data/salutations';
 import { formatDateTime } from '../../lib/format';
 import { IdLookupStep } from './IdLookupStep';
 import { idTypeLabel } from '../domain/QidInput';
@@ -28,6 +29,8 @@ interface GuidedContactStepProps {
   autoDetectIdType?: boolean;
   /** Typed ID entry from the start (a keyboard device) - see IdLookupStep. */
   manualEntry?: boolean;
+  /** Offer to create a new customer when no registry knows the ID (see IdLookupStep). */
+  allowNewCustomer?: boolean;
   /** Scan -> verify -> Fetch, with mobile number shown - see IdLookupStep. */
   verifyThenFetch?: boolean;
   /** Handle whoever the scanned ID belongs to as a genuine new customer (New Connection - New Customer). */
@@ -97,7 +100,7 @@ function VerifiedBadge({ label }: { label: string }) {
 // agent always performs (or at least sees) an explicit Fetch rather than
 // silently trusting cached active-customer state. The number field shows
 // a format-example placeholder instead (see QidInput.tsx).
-export function GuidedContactStep({ value, onChange, showIptvToggle = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint, autoDetectIdType, manualEntry, verifyThenFetch, asNewCustomer, asCustomerId }: GuidedContactStepProps) {
+export function GuidedContactStep({ value, onChange, showIptvToggle = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint, autoDetectIdType, manualEntry, verifyThenFetch, asNewCustomer, asCustomerId, allowNewCustomer }: GuidedContactStepProps) {
   return (
     <div className="space-y-4">
       <IdLookupStep
@@ -111,6 +114,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
         unavailableIdTypesHint={unavailableIdTypesHint}
         autoDetectIdType={autoDetectIdType}
         manualEntry={manualEntry}
+        allowNewCustomer={allowNewCustomer}
         verifyThenFetch={verifyThenFetch}
         asNewCustomer={asNewCustomer}
         asCustomerId={asCustomerId}
@@ -168,6 +172,16 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                 phone) share a row with the one preference field evidenced
                 alongside them - see isValidEmail's header note: "Email/Alt
                 Phone/Language ... are agent-entered". */}
+            {/* The customer's salutation: the agent records how they are addressed. Optional. */}
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <Select
+                label="Salutation"
+                placeholder="Select salutation"
+                value={value.salutation ?? ''}
+                onChange={(e) => onChange({ ...value, salutation: e.target.value || undefined })}
+                options={SALUTATIONS.map((s) => ({ value: s, label: s }))}
+              />
+            </div>
             <div className="grid grid-cols-3 gap-4">
               {/* Verification state rides INSIDE the field as a tick on its
                   right edge (2026-09-27), replacing the badge that sat
@@ -183,8 +197,8 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                 // (read-only - the stored value stays the real address). Existing
                 // customer: the address from Siebel is shown as available and
                 // stays editable.
-                value={value.moiResult?.isNewCustomer && value.email ? maskEmail(value.email) : (value.email ?? '')}
-                readOnly={Boolean(value.moiResult?.isNewCustomer && value.email)}
+                value={value.moiResult?.isNewCustomer && !value.moiResult?.createdByAgent && value.email ? maskEmail(value.email) : (value.email ?? '')}
+                readOnly={Boolean(value.moiResult?.isNewCustomer && !value.moiResult?.createdByAgent && value.email)}
                 placeholder="customer@example.qa"
                 error={value.email && !isValidEmail(value.email) ? 'Please enter a valid email address.' : undefined}
                 helperText={

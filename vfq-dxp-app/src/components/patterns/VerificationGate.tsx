@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react';
-import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useCustomerVerificationStore } from '../../stores/customerVerificationStore';
 import { Drawer } from '../primitives/Drawer';
-import { Input } from '../primitives/Input';
 import { Button } from '../primitives/Button';
-import { ErrorBanner } from '../primitives/ErrorBanner';
-import { QidImageUpload, type QidImageUploadValue } from '../../capabilities/CustomerIdentification';
+import { CustomerIdentification } from '../../capabilities/CustomerIdentification';
+import { EligibilityGateStep } from '../../capabilities/EligibilityGate/EligibilityGateStep';
+import type { IdLookupValue } from './idLookupModel';
+import type { EligibilityResult } from '../domain/eligibilityTypes';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
 
 interface VerificationGateProps {
@@ -17,39 +17,33 @@ interface VerificationGateProps {
 }
 
 // CUS-001-KYC-02/03 / BR-01: re-confirms the identified customer's identity
-// before any demographic/contact/address/billing maintenance proceeds - both
-// by scanning the ID (front/back, same QidImageUpload pattern as the
-// Passport-to-QID wizard) and matching the ID number against that specific
-// customer's identity-documents record, not a generic MOI lookup. Once
+// before any demographic/contact/address/billing maintenance proceeds, with
+// the Customer Identification capability the activation journeys use (scan or
+// upload, verify, Fetch from MOI - bound to THIS customer) and the eligibility
+// checks on the identified customer. Once
 // verified, useCustomerVerificationStore never un-verifies - matches
 // Annex_02's Unverified -> Verified, no transition out of Verified.
 export function VerificationGate({ customerId, customerName, open, onClose, onVerified }: VerificationGateProps) {
   const verifyCustomer = useCustomerVerificationStore((s) => s.verifyCustomer);
-  const [idNumber, setIdNumber] = useState('');
-  const [scan, setScan] = useState<QidImageUploadValue>({});
-  const [checking, setChecking] = useState(false);
-  const [error, setError] = useState<string | undefined>();
+  // The same Customer Identification capability the activation journeys use, bound to THIS customer: the scan reads their own document, the
+  // number and expiry are verified against it, and Fetch resolves them from MOI. The eligibility checks then run on the identified customer.
+  const [value, setValue] = useState<IdLookupValue>({});
+  const [eligibility, setEligibility] = useState<EligibilityResult | undefined>();
 
-  const scanComplete = Boolean(scan.frontScanned && scan.backScanned);
+  const identified = value.moiResult?.customerId === customerId;
+  // A hard stop (blacklist, expired ID, under 18 ...) blocks the maintenance action; a stop that only concerns a new sale (collections) or an approval does not.
+  const eligible = Boolean(eligibility) && !eligibility!.hardStop;
+  const canVerify = identified && eligible;
 
-  const runVerification = async () => {
-    if (!idNumber.trim() || !scanComplete) return;
-    setChecking(true);
-    setError(undefined);
-    const docs = await mockDataEngine.list<{ customerId: string; documentNumber: string }>('identity-documents');
-    const match = docs.find((d) => d.customerId === customerId && d.documentNumber === idNumber.trim());
-    setChecking(false);
-    if (!match) {
-      setError('This ID number does not match any document on file for this customer. Try again.');
-      return;
-    }
+  const runVerification = () => {
+    if (!canVerify) return;
     verifyCustomer(customerId);
-    setIdNumber('');
-    setScan({});
+    setValue({});
+    setEligibility(undefined);
     onVerified();
   };
 
-  const handleKeyDown = useEnterToSubmit(Boolean(idNumber.trim()) && scanComplete && !checking, runVerification);
+  const handleKeyDown = useEnterToSubmit(canVerify, runVerification);
 
   return (
     <Drawer
@@ -61,8 +55,8 @@ export function VerificationGate({ customerId, customerName, open, onClose, onVe
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary" disabled={!idNumber.trim() || !scanComplete || checking} onClick={runVerification}>
-            {checking ? 'Verifying…' : 'Verify & Continue'}
+          <Button variant="primary" disabled={!canVerify} onClick={runVerification}>
+            Verify &amp; Continue
           </Button>
         </>
       }
@@ -72,17 +66,27 @@ export function VerificationGate({ customerId, customerName, open, onClose, onVe
           {customerName}'s identity must be verified before any demographic, contact, address, or billing
           maintenance action can proceed.
         </p>
-        <QidImageUpload value={scan} onChange={setScan} />
-        <Input
-          label="ID Number on file"
-          placeholder="Enter QID / Passport / GCC ID / Diplomatic ID number"
-          value={idNumber}
-          onChange={(e) => {
-            setIdNumber(e.target.value);
-            setError(undefined);
+        <CustomerIdentification
+          value={value}
+          onChange={(v) => {
+            setValue(v);
+            // Another ID or a retake discards what was checked for the last one.
+            if (!v.moiResult) setEligibility(undefined);
           }}
+          asCustomerId={customerId}
+          allowNewCustomer={false}
         />
-        <ErrorBanner message={error} />
+        {identified && (
+          <EligibilityGateStep
+            asCustomerId={customerId}
+            idNumber={value.idNumber}
+            // Maintenance adds no line: the line limit is not judged.
+            skipLineLimit
+            announcePass={false}
+            result={eligibility}
+            onResult={setEligibility}
+          />
+        )}
       </div>
     </Drawer>
   );

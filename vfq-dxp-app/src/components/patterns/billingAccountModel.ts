@@ -45,6 +45,10 @@ export interface NewBillingAccountValue {
   billCycleDay?: number;
   /** How the profile is billed: the billing-profiles records carry 'Arrears' (every profile but one) or 'Hybrid (PIA + Arrears)'. */
   billingMode?: string;
+  /** Editing an existing account: its billing address as one line (the profile on file holds one line, not street / building / area). */
+  editAddressLine?: string;
+  /** Editing an existing account: the name of the contact picked as primary, written to the profile's contact. */
+  primaryContactName?: string;
   /** Whether this profile is the customer's primary payment profile. Defaults to true when the customer has no other billing
    * profile; saved as the profile's `isDefault`. */
   primaryPaymentProfile?: boolean;
@@ -62,6 +66,8 @@ export interface BillingAccountValue {
    * exclusive with `creatingNew`. */
   selectedProfileId?: string;
   creatingNew?: boolean;
+  /** The existing account being edited: its details are in `newAccount`, pre-filled from the profile on file, and are saved back onto that profile. */
+  editingProfileId?: string;
   newAccount?: NewBillingAccountValue;
   /** Set by BillingAccountAutoResolver: the customer this value was resolved
    * for ('new' when there is no customer record yet). */
@@ -153,6 +159,20 @@ export const BILLING_SCHEDULE_OPTIONS = [
 
 /** Same gate the wizard's own isValid reads - kept alongside the component so
  * the two cannot drift apart. */
+/** The profile fields an edited account writes back: contact, address, bill cycle, mode and name - only what the agent can see and change in the form. */
+export function profilePatchFromEdit(a: NewBillingAccountValue): Record<string, unknown> {
+  const line = a.editAddressLine?.trim();
+  const primaryContactName = a.primaryContactName?.trim();
+  return {
+    ...(primaryContactName ? { billingContactName: primaryContactName } : {}),
+    ...(line ? { billingAddress: line } : {}),
+    ...(a.billCycleDay ? { billingCycle: `Monthly - Day ${a.billCycleDay}` } : {}),
+    ...(a.billingMode ? { billingType: a.billingMode } : {}),
+    ...(a.profileName?.trim() ? { name: a.profileName.trim() } : {}),
+    ...(a.billMedia ? { billMedium: a.billMedia } : {}),
+  };
+}
+
 export function isBillingAccountValid(value: BillingAccountValue): boolean {
   if (value.selectedProfileId) return true;
   if (!value.creatingNew) return false;

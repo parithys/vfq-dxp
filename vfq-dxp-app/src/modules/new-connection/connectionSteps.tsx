@@ -44,7 +44,12 @@ export function buildConnectionSteps(ctx: ConnectionStepContext): WizardStep[] {
     serviceAddressStep({
       mode: 'structured',
       autoPass: true,
-      identity: (values) => ({ idNumber: (values.contact as GuidedContactValue | undefined)?.idNumber, nationality: (values.contact as GuidedContactValue | undefined)?.moiResult?.nationality }),
+      // The address is captured through this step. A registry address is never used to fill it for a NEW customer (the NAS's National Address is kept
+      // apart, unchanged, and not shown); only an existing Qatari customer's registered address is offered as an editable head start.
+      identity: (values) => {
+        const contact = values.contact as GuidedContactValue | undefined;
+        return contact?.moiResult?.isNewCustomer ? undefined : { idNumber: contact?.idNumber, nationality: contact?.moiResult?.nationality };
+      },
     }),
     billingStep,
     productStep(ctx),

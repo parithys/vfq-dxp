@@ -27,7 +27,7 @@ export function simTypeStep(
 ): WizardStep {
   const fromContact = (values: Record<string, unknown>) => {
     const contact = values.contact as GuidedContactValue | undefined;
-    return contact?.moiResult?.isNewCustomer && contact.email ? maskEmail(contact.email) : contact?.email;
+    return contact?.moiResult?.isNewCustomer && !contact?.moiResult?.createdByAgent && contact.email ? maskEmail(contact.email) : contact?.email;
   };
   return {
     key: 'simType',

@@ -36,6 +36,8 @@ export interface MilestoneDef {
   noToast?: boolean;
   /** The journey step this milestone belongs to: its row in the step summary is marked with a flag once the milestone is reached. */
   stepKey?: string;
+  /** Wording that depends on the journey's data (e.g. a new customer vs an existing one), in place of `title` / `message`. */
+  wording?: (values: Record<string, unknown>) => { title: string; message: string };
   /** DERIVED milestones only: what shows the milestone achieved (null = not). Absent = event-driven. */
   evidence?: (ctx: MilestoneContext) => string | null;
 }

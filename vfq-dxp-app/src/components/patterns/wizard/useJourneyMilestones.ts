@@ -13,8 +13,9 @@ export function logMilestone(journeyId: string, event: Pick<MilestoneEvent, 'typ
 }
 
 /** The toast for a milestone just reached: success, closes itself, and a keyed push so it is never shown twice at once. */
-export function announceMilestone(def: MilestoneDef, message = def.message): void {
-  useNotificationStore.getState().pushToast('success', def.title, { detail: message, key: `milestone:${def.id}`, autoDismissMs: MILESTONE_TOAST_MS });
+export function announceMilestone(def: MilestoneDef, message?: string, values?: Record<string, unknown>): void {
+  const text = values && def.wording ? def.wording(values) : { title: def.title, message: def.message };
+  useNotificationStore.getState().pushToast('success', text.title, { detail: message ?? text.message, key: `milestone:${def.id}`, autoDismissMs: MILESTONE_TOAST_MS });
 }
 
 /**
@@ -67,7 +68,7 @@ export function useJourneyMilestones({
     pending.current = routed.pending;
     for (const id of routed.announce) {
       const def = config.defs.find((d) => d.id === id);
-      if (def && !def.noToast) announceMilestone(def);
+      if (def && !def.noToast) announceMilestone(def, undefined, values);
     }
     // Re-evaluated whenever the draft's values or the position change.
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -20,6 +20,7 @@ import { isVisibleToAgent } from '../../engines/agentTaskEngine';
 import { Checkbox } from '../../components/primitives/Checkbox';
 import { PageHeader } from '../../components/patterns/PageHeader';
 import { formatQar } from '../../engines/postpaidPricing';
+import { applyCreditLimitChange, creditLimitChangeOf } from '../../workspace/customer360/creditLimitChange';
 import { applyLineChange, lineChangeOf } from '../mobile-service-changes/applyServiceChange';
 import { usePersonaStore } from '../../stores/personaStore';
 import { mayResubmitOrder, ORDER_AWAITING_DECISION, orderApprovalAuthority } from '../../engines/approvalAuthority';
@@ -651,6 +652,9 @@ export function OrderApprovalDetail() {
       // A held plan or pack change takes effect on approval: the line moves to the plan the order records (the same step that runs at submit when nothing is held).
       const lineChange = nextStatus === 'Complete' ? lineChangeOf(order as unknown as Record<string, unknown>) : undefined;
       if (lineChange) await applyLineChange(lineChange, updateRecord);
+      // An approved credit limit change takes effect: the customer's limit becomes the one requested.
+      const limitChange = nextStatus === 'Complete' ? creditLimitChangeOf(order as unknown as Record<string, unknown>) : undefined;
+      if (limitChange) await applyCreditLimitChange(limitChange, { list: (k) => mockDataEngine.list(k) as never, updateRecord: updateRecord as never, createRecord: createRecord as never });
       await logActivity('Approved', approveComment);
       pushToast(
         'success',

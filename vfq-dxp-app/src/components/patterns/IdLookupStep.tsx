@@ -7,7 +7,10 @@ import { Input } from '../primitives/Input';
 import { useIdLookup } from './useIdLookup';
 import { IdLookupStatus } from './IdLookupStatus';
 import { MoiResultPanel } from './MoiResultPanel';
+import { NewCustomerForm } from './NewCustomerForm';
+import { idTypeLabel } from '../../data/idTypes';
 import type { IdLookupValue } from './idLookupModel';
+import { formatDmyOnBlur } from './idLookupModel';
 
 
 interface IdLookupStepProps {
@@ -55,6 +58,8 @@ interface IdLookupStepProps {
    * alternative. Off, a QID is read by the scanner and typing opens only after the scan budget is spent.
    */
   manualEntry?: boolean;
+  /** Offer to create a new customer when no registry knows the ID (QID, Passport, Diplomatic ID). Default true; a journey bound to a customer never offers it. */
+  allowNewCustomer?: boolean;
   /**
    * Scan -> verify -> Fetch (2026-09-30), OPT-IN for the same reason as
    * autoDetectIdType. The scan populates the QID number AND expiry date as
@@ -90,7 +95,7 @@ interface IdLookupStepProps {
 // restriction carried over from the 66-persona model's PERSONA-001 ("cannot
 // manually enter ID details, only re-scan/search") - only the lookup ID
 // number itself is directly editable.
-export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint, autoDetectIdType = false, manualEntry = false, verifyThenFetch = false, asNewCustomer = false, asCustomerId, hideMoiBadge = false }: IdLookupStepProps) {
+export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint, autoDetectIdType = false, manualEntry = false, allowNewCustomer = true, verifyThenFetch = false, asNewCustomer = false, asCustomerId, hideMoiBadge = false }: IdLookupStepProps) {
   const {
     loading,
     notFound,
@@ -114,13 +119,15 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
     expiredNotice,
     runMoiValidation,
     scanComplete,
-    scanAttempts,
     scanBudgetSpent,
     manualEntryUnlocked,
+    captureMode,
+    canCreateCustomer,
+    createNewCustomer,
     handleScanAttempt,
     handleDemoScan,
     handleKeyDown,
-  } = useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType, verifyThenFetch, asNewCustomer, asCustomerId, manualEntry });
+  } = useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType, verifyThenFetch, asNewCustomer, asCustomerId, manualEntry, allowNewCustomer });
 
   // Built once and placed by ID type below. Only the showMoiDetails={false}
   // shape gets a loose badge at all - the other journeys keep theirs inside
@@ -158,10 +165,9 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
   // The budget now shows up the only way it should - as a scan that
   // fails - and the failure message says what the agent can do about it
   // without mentioning attempts.
-  // verifyThenFetch: the scanned number and expiry are locked - a bad read is
-  // fixed by Retake - until the SECOND rescan (third pass over the reader) has
-  // completed. From then on the agent may correct them by hand.
-  const correctionUnlocked = verifyThenFetch && scanAttempts >= 3;
+  // verifyThenFetch: what the agent may change depends on how the capture came in - see CaptureMode.
+  const numberLocked = captureMode === 'ocr-blurred' || captureMode === 'ocr-clear' || captureMode === 'barcode';
+  const expiryLocked = captureMode === 'ocr-blurred' || captureMode === 'ocr-clear';
 
   const scannerBlock = effectiveScannable && (
     <IdScannerPanel
@@ -202,7 +208,9 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
     />
   );
 
-  const numberBlock = typeChosen && (!effectiveScannable || (scanComplete && Boolean(value.idNumber)) || manualEntryUnlocked) && (
+  // An upload and the typed-entry pass show the fields empty, for the agent to fill: no number is read for them.
+  const typedCapture = captureMode === 'upload' || captureMode === 'manual';
+  const numberBlock = typeChosen && (!effectiveScannable || (scanComplete && Boolean(value.idNumber)) || manualEntryUnlocked || typedCapture) && (
     <QidNumberField
       idType={idType}
       inputRef={numberInputRef}
@@ -232,8 +240,13 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
             placeholder="DD/MM/YYYY"
             inputMode="numeric"
             maxLength={10}
-            // Locked with the number until the second rescan has completed.
-            readOnly={!correctionUnlocked && !manualEntryUnlocked}
+            // Locked while the reader supplied it (the OCR passes); typed for an upload, the barcode pass and after.
+            readOnly={expiryLocked}
+            // Leaving the field tidies the date to DD/MM/YYYY (30112029 -> 30/11/2029).
+            onBlur={(e) => {
+              const tidy = formatDmyOnBlur(e.target.value);
+              if (tidy !== e.target.value) onChange({ ...value, scannedExpiry: tidy, moiResult: undefined });
+            }}
             onChange={(e) => {
               setExpiryMismatch(false);
               onChange({ ...value, scannedExpiry: e.target.value, moiResult: undefined });
@@ -241,7 +254,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
           />
         ) : undefined
       }
-      readOnly={effectiveScannable && scanComplete && !correctionUnlocked}
+      readOnly={verifyThenFetch ? numberLocked : effectiveScannable && scanComplete}
       // Also disabled once the fetch has succeeded (moiResult set). Editing
       // the number or expiry clears moiResult, which re-enables it.
       fetchDisabled={Boolean(value.moiResult) || (verifyThenFetch && !value.scannedExpiry)}
@@ -260,9 +273,13 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
             ? 'Checking the MOI registry…'
             : value.moiResult
               ? undefined // validated: the "verify, then Fetch" prompt has been acted on
-              : verifyThenFetch
-                ? 'Read from the scanned document - verify with the original document, then select Fetch.'
-                : 'Read from the scanned document.'
+              : captureMode === 'upload' || captureMode === 'manual'
+                ? 'Enter the ID number and expiry date from the document, then select Fetch.'
+                : captureMode === 'barcode'
+                  ? 'ID number read from the barcode. Enter the expiry date from the document, then select Fetch.'
+                  : verifyThenFetch
+                    ? 'Read from the scanned document - verify with the original document, then select Fetch.'
+                    : 'Read from the scanned document.'
           : undefined
       }
       // The MOI badge, right-aligned on this field's label row - the
@@ -335,6 +352,11 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
 
           Before any of those, for a QID, it is not rendered at all. */}
       {(autoDetectIdType || !manualEntry) && numberBlock}
+
+      {/* No registry knows this ID Type + number: the agent can create the customer from what the document shows. */}
+      {canCreateCustomer && (
+        <NewCustomerForm idTypeLabel={idTypeLabel(idType)} idNumber={value.idNumber ?? ''} expiry={value.scannedExpiry} onCreate={createNewCustomer} />
+      )}
 
       {/* ---- Validation status. Each state looks different (see ValidationStatus):
           technical failure = amber and unresolved, business result = red, pending

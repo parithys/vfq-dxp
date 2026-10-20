@@ -252,3 +252,17 @@ test('amending a completed stage re-reaches its milestone; only looking at it ch
   assert.deepEqual(ids(other.events, 'invalidated'), ['identified', 'billing']);
   assert.equal(upTo(carted).state.identified.evidence, '29001234567');
 });
+
+test('Customer verified reads "New Customer" when MOI validated the ID but no customer record exists', async () => {
+  const { useNotificationStore } = await load('/src/stores/notificationStore.ts');
+  const { announceMilestone } = await load('/src/components/patterns/wizard/useJourneyMilestones.ts');
+  const first = defs[0];
+  const toastFor = (isExistingCustomer) => {
+    useNotificationStore.setState({ toasts: [], history: [] });
+    announceMilestone(first, undefined, { eligibility: { ...clean, isExistingCustomer } });
+    return useNotificationStore.getState().toasts[0];
+  };
+  assert.deepEqual([toastFor(false).message, toastFor(false).detail], ['New Customer', 'MOI validated; no existing customer record found.']);
+  assert.deepEqual([toastFor(true).message, toastFor(true).detail], ['Customer verified', 'Customer identified and eligibility confirmed.']);
+  assert.equal(toastFor(undefined).message, 'Customer verified', 'unknown is not assumed to be new');
+});

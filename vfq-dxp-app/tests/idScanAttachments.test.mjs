@@ -152,3 +152,71 @@ test('every journey that identifies the customer records the ID document it capt
     assert.match(src, /idScanAttachments\(contact\??\.idType, contact\??\.qidScans\)/, `${f} records the ID document`);
   }
 });
+
+test('Customer Identification: what the agent may change follows how the capture came in', async () => {
+  const m = await load('/src/components/patterns/idLookupModel.ts');
+  assert.equal(m.captureModeOf(true, 0), 'upload');
+  assert.equal(m.captureModeOf(true, 3), 'upload', 'an upload is an upload whatever the reader did before');
+  assert.deepEqual([1, 2, 3, 4, 5, 9].map((n) => m.captureModeOf(false, n)), ['ocr-blurred', 'ocr-clear', 'barcode', 'manual', 'manual', 'manual']);
+  // The demo's wrong read changes the expiry, and keeps it a date the field accepts.
+  const wrong = m.misreadDate('30/11/2029');
+  assert.notEqual(wrong, '30/11/2029');
+  assert.match(wrong, /^30\/11\/20\d\d$/);
+});
+
+test('the expiry date is tidied to DD/MM/YYYY when the agent leaves the field', async () => {
+  const { formatDmyOnBlur } = await load('/src/components/patterns/idLookupModel.ts');
+  assert.equal(formatDmyOnBlur('30112029'), '30/11/2029');
+  assert.equal(formatDmyOnBlur('30-11-2029'), '30/11/2029');
+  assert.equal(formatDmyOnBlur('30.11.2029'), '30/11/2029');
+  assert.equal(formatDmyOnBlur('3.1.2029'), '03/01/2029');
+  assert.equal(formatDmyOnBlur(' 30112029 '), '30/11/2029');
+  assert.equal(formatDmyOnBlur('30/11/2029'), '30/11/2029', 'already right: unchanged');
+  for (const odd of ['', '3011', '301120299', '30/11/29', 'abc']) assert.equal(formatDmyOnBlur(odd), odd, `${odd} is left as typed`);
+});
+
+test('creating a customer no registry knows: the entry is validated, and builds a typed MOI identity marked as created by the agent', async () => {
+  const m = await load('/src/components/patterns/idLookupModel.ts');
+  const { NATIONALITIES } = await load('/src/data/nationalities.ts');
+  const hrn = await load('/src/engines/hrnConfiguration.ts');
+  const ok = { nationality: 'Indian', firstName: ' Anil ', middleName: 'Kumar', lastName: 'Sharma', dob: '14/03/1988', gender: 'Male', expiry: '30/11/2029' };
+  const r = m.buildNewCustomerIdentity(ok, NATIONALITIES, new Date('2026-10-20T00:00:00Z'));
+  assert.equal(r.errors, undefined);
+  assert.deepEqual([r.moi.name, r.moi.dob, r.moi.expiryDate, r.moi.nationality, r.moi.isNewCustomer, r.moi.createdByAgent], ['Anil Kumar Sharma', '1988-03-14', '2029-11-30', 'Indian', true, true]);
+  const patch = m.buildNewCustomerPatch(r.moi);
+  assert.deepEqual([patch.manualEntry, patch.scannedExpiry, patch.moiResult.createdByAgent], [true, '30/11/2029', true], 'the identity counts as manually entered (manager approval)');
+  // A middle name is optional; everything else is required.
+  assert.equal(m.buildNewCustomerIdentity({ ...ok, middleName: '' }, NATIONALITIES).moi.name, 'Anil Sharma');
+  for (const [field, bad] of [['nationality', ''], ['nationality', 'Atlantean'], ['firstName', ' '], ['lastName', ''], ['dob', '31/02/1988'], ['dob', '14-03-1988'], ['gender', ''], ['expiry', '']]) {
+    assert.ok(m.buildNewCustomerIdentity({ ...ok, [field]: bad }, NATIONALITIES).errors?.[field], `${field}=${JSON.stringify(bad)} is refused`);
+  }
+  assert.match(m.buildNewCustomerIdentity({ ...ok, dob: '01/01/2030' }, NATIONALITIES, new Date('2026-10-20T00:00:00Z')).errors.dob, /future/);
+  // Only QID, Passport and Diplomatic ID can be created; GCC ID cannot.
+  assert.deepEqual([...m.NEW_CUSTOMER_ID_TYPES], ['QID', 'Passport', 'Diplomatic ID']);
+  // Every HRN nationality can be chosen, so the HRN rules can apply to a created customer.
+  for (const n of ['Pakistani', 'Bangladeshi', 'Cambodian', 'Myanmar', 'Laotian', 'Kenyan', 'Ugandan', 'Swazi']) {
+    assert.ok(NATIONALITIES.includes(n), n);
+    assert.equal(hrn.isHrn(n), true, n);
+  }
+  assert.equal(m.dmyToIso('29/02/2028'), '2028-02-29');
+  assert.equal(m.dmyToIso('29/02/2027'), undefined);
+});
+
+test('a new customer\'s National Address from the NAS is carried with the identity, kept out of the address flow, and stored with the order unchanged', async () => {
+  const fsm = await import('node:fs');
+  const nas = JSON.parse(fsm.readFileSync('public/mock-data/nas-records.json', 'utf8'));
+  assert.ok(nas.every((r) => r.nationalAddress && r.nationalAddress.zone && r.nationalAddress.streetNo && r.nationalAddress.buildingNo), 'each NAS record holds a National Address');
+  const read = (f) => fsm.readFileSync(f, 'utf8');
+  // Read from the NAS record for a new customer, carried on the identity.
+  assert.match(read('src/components/patterns/useIdLookup.ts'), /nationalAddress: nasRecord\?\.nationalAddress/);
+  // Stored with every order that identifies a customer, as returned.
+  for (const f of ['src/modules/new-connection/submitNewConnectionOrder.ts', 'src/modules/mobile-prepaid/screens/submitPrepaidOrder.ts', 'src/modules/mnp-fnp-porting/screens/submitMnpOrder.ts', 'src/modules/fixed-line-fibre/fixedActivation/submitFixedActivationOrder.ts', 'src/modules/pre-to-post-migration/screens/submitPreToPostOrder.ts']) {
+    assert.match(read(f), /nationalAddress: contact\??\.moiResult\?\.nationalAddress/, f);
+  }
+  // Never shown and never used to fill the address: only the lookup, the model and the order records mention it.
+  const walk = (d) => fsm.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(`${d}/${e.name}`) : [`${d}/${e.name}`]));
+  const allowed = /idLookupModel|guidedContactModel|useIdLookup|submit\w*Order/;
+  for (const f of walk('src').filter((x) => /\.(ts|tsx)$/.test(x) && !allowed.test(x))) assert.doesNotMatch(read(f), /nationalAddress/, `${f} must not read the National Address`);
+  // The Address step is not pre-filled from a registry for a new customer.
+  assert.match(read('src/modules/new-connection/connectionSteps.tsx'), /isNewCustomer \? undefined/);
+});

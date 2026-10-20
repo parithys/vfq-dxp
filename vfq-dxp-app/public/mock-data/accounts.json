@@ -681,5 +681,137 @@
     "barringStatus": "Not Barred",
     "barringType": null,
     "barringReason": null
+  },
+  {
+    "_note": "Seeded 2026-10-20: this customer held no account, so an existing customer had no billing profile to select. A billing account only - it carries no service line, so no line count or service type changes.",
+    "accountId": "ACC-5656",
+    "customerId": "CUST-1004",
+    "accountType": "Consumer Billing Account",
+    "status": "Active",
+    "billingProfileId": "BILL-7156",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Seeded 2026-10-20: this customer held no account, so an existing customer had no billing profile to select. A billing account only - it carries no service line, so no line count or service type changes.",
+    "accountId": "ACC-5657",
+    "customerId": "CUST-9001",
+    "accountType": "Consumer Billing Account",
+    "status": "Active",
+    "billingProfileId": "BILL-7157",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Seeded 2026-10-20: this customer held no account, so an existing customer had no billing profile to select. A billing account only - it carries no service line, so no line count or service type changes.",
+    "accountId": "ACC-5658",
+    "customerId": "CUST-1007",
+    "accountType": "Consumer Billing Account",
+    "status": "Active",
+    "billingProfileId": "BILL-7158",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Seeded 2026-10-20: this customer held no account, so an existing customer had no billing profile to select. A billing account only - it carries no service line, so no line count or service type changes.",
+    "accountId": "ACC-5659",
+    "customerId": "CUST-3017",
+    "accountType": "Consumer Billing Account",
+    "status": "Active",
+    "billingProfileId": "BILL-7159",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Seeded 2026-10-20: this customer held no account, so an existing customer had no billing profile to select. A billing account only - it carries no service line, so no line count or service type changes.",
+    "accountId": "ACC-5660",
+    "customerId": "CUST-3029",
+    "accountType": "Consumer Billing Account",
+    "status": "Active",
+    "billingProfileId": "BILL-7160",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Seeded 2026-10-20: this customer held no account, so an existing customer had no billing profile to select. A billing account only - it carries no service line, so no line count or service type changes.",
+    "accountId": "ACC-5661",
+    "customerId": "CUST-3042",
+    "accountType": "Consumer Billing Account",
+    "status": "Active",
+    "billingProfileId": "BILL-7161",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Seeded 2026-10-20: this customer held no account, so an existing customer had no billing profile to select. A billing account only - it carries no service line, so no line count or service type changes.",
+    "accountId": "ACC-5662",
+    "customerId": "CUST-3043",
+    "accountType": "Consumer Billing Account",
+    "status": "Active",
+    "billingProfileId": "BILL-7162",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Seeded 2026-10-20: this customer held no account, so an existing customer had no billing profile to select. A billing account only - it carries no service line, so no line count or service type changes.",
+    "accountId": "ACC-5663",
+    "customerId": "CUST-3044",
+    "accountType": "Consumer Billing Account",
+    "status": "Active",
+    "billingProfileId": "BILL-7163",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Seeded 2026-10-20: this customer held no account, so an existing customer had no billing profile to select. A billing account only - it carries no service line, so no line count or service type changes.",
+    "accountId": "ACC-5664",
+    "customerId": "CUST-3045",
+    "accountType": "Consumer Billing Account",
+    "status": "Active",
+    "billingProfileId": "BILL-7164",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Seeded 2026-10-20: this customer held no account, so an existing customer had no billing profile to select. A billing account only - it carries no service line, so no line count or service type changes.",
+    "accountId": "ACC-5665",
+    "customerId": "CUST-3068",
+    "accountType": "Consumer Billing Account",
+    "status": "Active",
+    "billingProfileId": "BILL-7165",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Seeded 2026-10-20: this customer held no account, so an existing customer had no billing profile to select. A billing account only - it carries no service line, so no line count or service type changes.",
+    "accountId": "ACC-5666",
+    "customerId": "CUST-3069",
+    "accountType": "Consumer Billing Account",
+    "status": "Active",
+    "billingProfileId": "BILL-7166",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
+  },
+  {
+    "_note": "Seeded 2026-10-20: this customer held no account, so an existing customer had no billing profile to select. A billing account only - it carries no service line, so no line count or service type changes.",
+    "accountId": "ACC-5667",
+    "customerId": "CUST-3070",
+    "accountType": "Consumer Billing Account",
+    "status": "Active",
+    "billingProfileId": "BILL-7167",
+    "barringStatus": "Not Barred",
+    "barringType": null,
+    "barringReason": null
   }
 ]
