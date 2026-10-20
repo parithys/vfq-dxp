@@ -386,8 +386,8 @@ export function PersonaSwitcher() {
       >
         <p className="text-fg-2 text-[length:var(--fs-body)]">
           {pendingLeave?.kind === 'signOut'
-            ? 'A journey is in progress and has not been saved. Signing out discards it - use Save & Exit in the journey to keep it as a draft.'
-            : 'A journey is in progress. The new role may not be able to continue it - use Save & Exit in the journey first to keep it as a draft.'}
+            ? 'A journey is in progress and has not been saved. Signing out discards it - use Save as Draft in the journey to keep it as a draft.'
+            : 'A journey is in progress. The new role may not be able to continue it - use Save as Draft in the journey first to keep it as a draft.'}
         </p>
       </Modal>
     </div>

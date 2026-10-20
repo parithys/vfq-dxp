@@ -26,16 +26,16 @@ const ctx = { device: 'web', wizardId: 'new-connection', flow: 'new', existingCu
 const activeKeys = (values) => conn.buildConnectionSteps(ctx).filter((s) => !s.skip?.(values)).map((s) => s.key);
 
 // ---- one wizard, four products ----------------------------------------------------------------------------------------
-test('before a product is chosen only Customer Identification and Product Selection are in the journey', () => {
-  assert.deepEqual(activeKeys({}), ['contact', 'product']);
+test('before a product is chosen the journey is Customer Identification, Address, Billing Profile and Product Selection', () => {
+  assert.deepEqual(activeKeys({}), ['contact', 'address', 'billingAccount', 'product']);
 });
 
-test('every product continues the same wizard: identification, product selection, then that product\'s own steps', () => {
-  assert.deepEqual(activeKeys({ product: 'postpaid' }), ['contact', 'product', 'address', 'billingAccount', 'plan', 'planExtras', 'number', 'simType', 'checkout', 'caf', 'payment']);
-  assert.deepEqual(activeKeys({ product: 'prepaid' }), ['contact', 'product', 'address', 'plan', 'planExtras', 'number', 'simType', 'cart', 'checkout', 'caf', 'payment']);
-  assert.deepEqual(activeKeys({ product: 'fixed-line' }), ['contact', 'product', 'address', 'billingAccount', 'plan', 'number', 'checkout', 'caf', 'payment', 'appointment']);
-  assert.deepEqual(activeKeys({ product: 'mnp', mnpType: 'postpaid' }), ['contact', 'product', 'mnpType', 'address', 'billingAccount', 'sim', 'plan', 'planExtras', 'donor-details', 'checkout', 'donor-attachment', 'caf', 'payment']);
-  assert.deepEqual(activeKeys({ product: 'mnp', mnpType: 'prepaid' }), ['contact', 'product', 'mnpType', 'address', 'sim', 'plan', 'planExtras', 'donor-details', 'checkout', 'donor-attachment', 'caf', 'payment']);
+test('every product continues the same wizard: identification, address, billing profile (where the product has one), product selection, then that product\'s own steps', () => {
+  assert.deepEqual(activeKeys({ product: 'postpaid' }), ['contact', 'address', 'billingAccount', 'product', 'plan', 'planExtras', 'number', 'simType', 'checkout', 'caf', 'payment']);
+  assert.deepEqual(activeKeys({ product: 'prepaid' }), ['contact', 'address', 'product', 'plan', 'planExtras', 'number', 'simType', 'cart', 'checkout', 'caf', 'payment']);
+  assert.deepEqual(activeKeys({ product: 'fixed-line' }), ['contact', 'address', 'billingAccount', 'product', 'homeKind', 'installation', 'plan', 'number', 'checkout', 'caf', 'payment', 'appointment']);
+  assert.deepEqual(activeKeys({ product: 'mnp', mnpType: 'postpaid' }), ['contact', 'address', 'billingAccount', 'product', 'mnpType', 'sim', 'plan', 'planExtras', 'donor-details', 'checkout', 'donor-attachment', 'caf', 'payment']);
+  assert.deepEqual(activeKeys({ product: 'mnp', mnpType: 'prepaid' }), ['contact', 'address', 'product', 'mnpType', 'sim', 'plan', 'planExtras', 'donor-details', 'checkout', 'donor-attachment', 'caf', 'payment']);
 });
 
 test('no two active steps share a key, for any product', () => {
@@ -63,7 +63,8 @@ test('eligibility is judged by the product chosen; billing exists only where the
 
 test('switching product drops what the old product chose but keeps identity, eligibility and customer type', () => {
   for (const kept of ['contact', 'eligibility', 'customerType', 'crossSales', 'product']) assert.ok(!products.PRODUCT_OWNED_KEYS.includes(kept), kept);
-  for (const dropped of ['msisdn', 'simType', 'productId', 'cart', 'caf', 'payment', 'billingAccount', 'installation']) assert.ok(products.PRODUCT_OWNED_KEYS.includes(dropped), dropped);
+  for (const kept of ['address', 'addressId', 'billingAccount']) assert.ok(!products.PRODUCT_OWNED_KEYS.includes(kept), `${kept} is collected before the product, so it stays`);
+  for (const dropped of ['msisdn', 'simType', 'productId', 'cart', 'caf', 'payment', 'installation']) assert.ok(products.PRODUCT_OWNED_KEYS.includes(dropped), dropped);
 });
 
 test('patchDraft changes values together and pulls progress back to the product step', () => {
@@ -214,11 +215,26 @@ test('the four home products are Fibre, Fixed-Line, FWA and 5G Home, with no ser
   assert.equal(products.homeProductOfOffer('new-fixed-line'), undefined, 'an offer for a fixed line does not say which home product');
 });
 
-test('Product Selection waits for a home product when Fixed Line is the flow, and switching product drops it', () => {
+test('Fixed Line\'s connection type is asked on its own step, not on Recommended Offers; New Home Connection still picks it on Product Selection', () => {
   const e = { scope: 'product', journeyType: 'postpaid', hardStop: false, softStop: false, checks: [] };
   const step = pstep.productStep(ctx);
-  assert.equal(step.isValid({ product: 'fixed-line', eligibility: e }), false, 'no home product chosen yet');
-  assert.equal(step.isValid({ product: 'fixed-line', homeProduct: '5g-home', eligibility: e }), true);
+  assert.equal(step.isValid({ product: 'fixed-line', eligibility: e }), true, 'Recommended Offers does not wait for the connection type');
   assert.equal(step.isValid({ product: 'postpaid', eligibility: { ...e, journeyType: 'postpaid' } }), true);
+  const home = pstep.productStep({ ...ctx, journey: 'home' });
+  assert.equal(home.isValid({ product: 'fixed-line', eligibility: e }), false, 'New Home Connection: no home product chosen yet');
+  assert.equal(home.isValid({ product: 'fixed-line', homeProduct: '5g-home', eligibility: e }), true);
   assert.ok(products.PRODUCT_OWNED_KEYS.includes('homeProduct'));
+});
+
+test('Product Selection\'s position follows the steps before it: after Address and Billing, or just Address when the product has no billing profile', async () => {
+  const pc = await load('/src/modules/new-connection/steps/productChoice.ts');
+  assert.equal(pc.productStepIndex('connection', { product: 'postpaid' }), 3);
+  assert.equal(pc.productStepIndex('connection', { product: 'prepaid' }), 2);
+  assert.equal(pc.productStepIndex('connection', { product: 'mnp', mnpType: 'prepaid' }), 2);
+  assert.equal(pc.productStepIndex('connection', { product: 'mnp', mnpType: 'postpaid' }), 3);
+  assert.equal(pc.productStepIndex('home', { product: 'fixed-line' }), 1, 'New Home Connection has neither step');
+  // The index points at the product step in the journey the steps really produce.
+  for (const values of [{ product: 'postpaid' }, { product: 'prepaid' }, { product: 'mnp', mnpType: 'prepaid' }]) {
+    assert.equal(activeKeys(values)[pc.productStepIndex('connection', values)], 'product', JSON.stringify(values));
+  }
 });

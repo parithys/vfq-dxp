@@ -14,6 +14,7 @@ import { useCustomerViewShare } from '../../components/patterns/wizard/useCustom
 import { useMirrorChannel } from '../../components/patterns/wizard/useMirrorChannel';
 import { useStepFocus } from '../../components/patterns/wizard/useStepFocus';
 import { useWizardStepNavigation } from '../../components/patterns/wizard/useWizardStepNavigation';
+import { useJourneyMilestones } from '../../components/patterns/wizard/useJourneyMilestones';
 import { useWizardDraftActions } from '../../components/patterns/wizard/useWizardDraftActions';
 import { deriveWizardNav } from '../../components/patterns/wizard/wizardNavigation';
 import type { GuidedActivationWizardProps } from '../../components/patterns/wizard/guidedWizardTypes';
@@ -37,6 +38,7 @@ export function GuidedActivationWizard({
   onSaveExit,
   hideTitleBand = false,
   confirmLeave = true,
+  milestones,
 }: GuidedActivationWizardProps) {
   const draft = useWorkflowStore((s) => s.getDraft(wizardId));
   const setFieldValue = useWorkflowStore((s) => s.setFieldValue);
@@ -57,6 +59,16 @@ export function GuidedActivationWizard({
   const { stepHeadingRef, stepPanelRef } = useStepFocus(currentIndex);
 
   const setValue = (field: string, value: unknown) => setFieldValue(wizardId, field, value);
+
+  const { state: milestoneState, held: milestoneHeld } = useJourneyMilestones({
+    journeyId: draftOrderId ? `${wizardId}/${draftOrderId}` : wizardId,
+    config: milestones,
+    values: draft.values,
+    setValue,
+    activeSteps,
+    currentIndex,
+    disabled: isMirror,
+  });
 
   const { submitting, goNext, goBack, goToStep, goToStepKey } = useWizardStepNavigation({
     wizardId,
@@ -95,8 +107,8 @@ export function GuidedActivationWizard({
     onSaveExit,
   });
 
-  // Leaving a journey that has progress asks first (Save & Exit / Abandon Journey) instead of navigating at once. Any
-  // route change counts - a menu link, Back, a link in the page. Finishing, Save & Exit and Abandon Order clear the draft
+  // Leaving a journey that has progress asks first (Save as Draft / Abandon Journey) instead of navigating at once. Any
+  // route change counts - a menu link, Back, a link in the page. Finishing, Save as Draft and Abandon Order clear the draft
   // before they navigate, so they pass straight through. The customer-view pop-up never blocks.
   const [leaveBusy, setLeaveBusy] = useState(false);
   const blocker = useBlocker(({ currentLocation, nextLocation }) => {
@@ -139,7 +151,7 @@ export function GuidedActivationWizard({
     />
   );
 
-  // Save & Exit: confirms with an optional comment, then saves the draft and records the activity.
+  // Save as Draft: confirms with an optional comment, then saves the draft and records the activity.
   const exitModal = (
     <SaveExitDialog
       open={exitOpen}
@@ -155,7 +167,7 @@ export function GuidedActivationWizard({
 
   // Customer-facing: ONLY this step's own render() output, full stop. No
   // rail (which names every other step and product discussed), no Abandon/
-  // Save & Exit, no wizard Back/Continue footer - the step's own content is
+  // Save as Draft, no wizard Back/Continue footer - the step's own content is
   // responsible for whatever action it needs (e.g. CafSignatureCapture's own
   // "Please Sign"), because nothing here should invite the customer to
   // interact with wizard chrome meant for the agent.
@@ -180,7 +192,13 @@ export function GuidedActivationWizard({
   const completedSummarySteps = activeSteps
     .map((step, index) => ({ step, index }))
     .filter(({ step, index }) => index < maxReached && index !== currentIndex && Boolean(step.summary?.length));
+  // The steps whose milestone is reached (and not held back): the summary flags their rows.
+  const milestoneSteps: ReadonlySet<string> | undefined =
+    milestones && !isMirror && milestones.applies(draft.values)
+      ? new Set(milestones.defs.filter((d) => d.stepKey && milestoneState[d.id] && !milestoneHeld.has(d.id)).map((d) => d.stepKey as string))
+      : undefined;
   const summaryProps = {
+    milestoneSteps,
     completed: completedSummarySteps,
     totalSteps: activeSteps.length,
     values: draft.values,
@@ -220,6 +238,7 @@ export function GuidedActivationWizard({
         titleAside={titleAside}
         popupBlocked={popupBlocked}
         onSaveExit={onSaveExit}
+        saveHidden={currentStep?.canSaveDraft ? !currentStep.canSaveDraft(draft.values) : false}
         onAbandon={onAbandon}
         abandonHidden={abandonHidden}
         onRequestSaveExit={() => {

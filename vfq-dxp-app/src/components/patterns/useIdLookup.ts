@@ -236,7 +236,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
           ? undefined
           : (
               await callService('nas', () =>
-                mockDataEngine.list<{ documentNumber: string; expiryDate?: string; name: string; firstName?: string; middleName?: string; lastName?: string; dob: string; nationality: string; gender?: string; email?: string }>(
+                mockDataEngine.list<{ documentNumber: string; expiryDate?: string; name: string; firstName?: string; middleName?: string; lastName?: string; dob: string; nationality: string; gender?: string; email?: string; occupation?: string }>(
                   'nas-records'
                 )
               )
@@ -255,7 +255,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
         return;
       }
       const customers = await callService('customer-lookup', () =>
-        mockDataEngine.list<{ customerId: string; name: string; firstName?: string; middleName?: string; lastName?: string; dob: string; nationality: string; email?: string; gender?: string; companyName?: string; phone?: string; preferredLanguage?: string }>(
+        mockDataEngine.list<{ customerId: string; name: string; firstName?: string; middleName?: string; lastName?: string; dob: string; nationality: string; email?: string; gender?: string; companyName?: string; occupation?: string; phone?: string; preferredLanguage?: string }>(
           'customers'
         )
       );
@@ -319,6 +319,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
             emailSource: 'NAS',
             isNewCustomer: true,
             gender: src.gender,
+            occupation: src.occupation,
             expiryDate: match.expiryDate,
             moiUpdateTime: new Date().toISOString(),
           },
@@ -376,6 +377,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
             preferredLanguage: customer.preferredLanguage,
             companyName: customer.companyName,
             companyAccountId,
+            occupation: customer.occupation,
             expiryDate: match.expiryDate,
             moiUpdateTime: new Date().toISOString(),
           },

@@ -31,6 +31,9 @@ export function BillingAccountAutoResolver({
   onChange: (value: BillingAccountValue) => void;
 }) {
   const key = customerId ?? 'new';
+  // Whether a profile is chosen or being created. Dropping it (switching product or MNP plan type clears the billing account) resolves
+  // again; an agent's own change keeps it set, so is never overwritten.
+  const hasSelection = Boolean(value.selectedProfileId || value.creatingNew);
   useEffect(() => {
     if (value.autoResolvedFor === key) return;
     let cancelled = false;
@@ -72,6 +75,6 @@ export function BillingAccountAutoResolver({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [key, hasSelection]);
   return null;
 }

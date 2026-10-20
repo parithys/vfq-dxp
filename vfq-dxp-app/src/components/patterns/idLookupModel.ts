@@ -55,6 +55,8 @@ export interface MoiResult {
    * account sponsors the line.
    */
   companyAccountId?: string;
+  /** The occupation on the registry record, when it holds one. */
+  occupation?: string;
   /**
    * The scanned document's own expiry date (ISO), not a customer-record field -
    * it comes off the `identity-documents` match, not `customers`. This is the

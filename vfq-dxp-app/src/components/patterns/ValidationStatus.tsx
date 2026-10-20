@@ -149,7 +149,7 @@ export function TechnicalFailure({
       {exhausted && (
         <p className="mt-1">
           This did not succeed after {MAX_RETRIES} attempts, so retrying is paused to avoid repeated failures.{' '}
-          {exhaustedHint ?? 'Use Save & Exit to resume later, or contact support and quote the reference below.'}
+          {exhaustedHint ?? 'Use Save as Draft to resume later, or contact support and quote the reference below.'}
         </p>
       )}
     </ValidationStatus>

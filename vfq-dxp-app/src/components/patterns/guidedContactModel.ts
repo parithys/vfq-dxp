@@ -27,6 +27,8 @@ interface MoiResult {
   companyName?: string;
   /** That employer's enterprise-accounts row, when it has one. */
   companyAccountId?: string;
+  /** The occupation on the registry record, when it holds one. */
+  occupation?: string;
   /** The scanned document's own expiry date (ISO), off the identity-documents
    * match rather than the customer record. */
   expiryDate?: string;
@@ -106,6 +108,8 @@ export interface GuidedContactValue {
    * linked employer is distinguishable from one that still has to be created.
    * The two were indistinguishable while this was a free-text box. */
   companyAccountId?: string;
+  /** The occupation read from the registry record (shown on Identity Details when present). */
+  occupation?: string;
   /** Set when the agent chose "Add new company" instead. */
   companyIsNew?: boolean;
 }
@@ -290,6 +294,7 @@ export function identityFromMoi(moi: MoiResult | undefined) {
       companyName: undefined,
       companyAccountId: undefined,
       companyIsNew: undefined,
+      occupation: undefined,
     };
   const parts = moi.name.trim().split(/\s+/);
   const employer = moi.companyName?.trim();
@@ -301,6 +306,7 @@ export function identityFromMoi(moi: MoiResult | undefined) {
     isB2B2C: employer ? true : undefined,
     companyName: employer || undefined,
     companyAccountId: employer ? moi.companyAccountId : undefined,
+    occupation: moi.occupation?.trim() || undefined,
     // Nothing can create a company from this step any more - the only control
     // that could is gone - so a derived employer is never a new one.
     companyIsNew: undefined,

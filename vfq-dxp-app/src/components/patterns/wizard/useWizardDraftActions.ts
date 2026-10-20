@@ -22,7 +22,7 @@ function draftCustomerName(values: Record<string, unknown>): string {
   return c?.moiResult?.name || [c?.firstName, c?.lastName].filter(Boolean).join(' ') || 'New Customer';
 }
 
-/** Abandon / Save & Exit / Save draft: dialog state, the draft order row and the activity record. */
+/** Abandon / Save as Draft / Save draft: dialog state, the draft order row and the activity record. */
 export function useWizardDraftActions({
   wizardId,
   title,
@@ -50,7 +50,7 @@ export function useWizardDraftActions({
   const location = useLocation();
   const [abandonOpen, setAbandonOpen] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
-  // Agent note for the Abandoned (required) / Save & Exit (optional) activity.
+  // Agent note for the Abandoned (required) / Save as Draft (optional) activity.
   const [activityComments, setActivityComments] = useState('');
   // A step's own Abandon action (e.g. a hard stop) may confirm without offering to keep working.
   const [abandonNoKeep, setAbandonNoKeep] = useState(false);

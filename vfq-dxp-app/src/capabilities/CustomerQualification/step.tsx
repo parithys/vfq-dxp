@@ -178,6 +178,11 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
     // (HRN with no other issue) is NOT excluded: it never sets
     // hardStop/softStop and contributes no 'approval-routing' check,
     // so Continue stays available exactly as a clean pass would.
+    // Saved as a draft only once MOI has validated the customer and nothing hard-stops the order.
+    canSaveDraft: (values) => {
+      const e = values.eligibility as EligibilityResult | undefined;
+      return Boolean((values.contact as GuidedContactValue | undefined)?.moiResult) && Boolean(e) && !e!.hardStop;
+    },
     isValid: (values) => {
       const c = values.contact as GuidedContactValue | undefined;
       const e = values.eligibility as EligibilityResult | undefined;

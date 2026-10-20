@@ -63,7 +63,7 @@ export function AbandonDialog({
   );
 }
 
-/** Save & Exit confirmation, with an optional comment recorded on the activity. */
+/** Save as Draft confirmation, with an optional comment recorded on the activity. */
 export function SaveExitDialog({
   open,
   comments,
@@ -81,14 +81,14 @@ export function SaveExitDialog({
     <Modal
       open={open}
       onClose={onClose}
-      title="Save & Exit"
+      title="Save as Draft"
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
             Keep working
           </Button>
           <Button variant="primary" onClick={onConfirm}>
-            Save & Exit
+            Save as Draft
           </Button>
         </>
       }
@@ -109,7 +109,7 @@ export function SaveExitDialog({
 
 /**
  * Shown when the agent tries to leave a journey that has progress (a link, the menu, Back). Navigation is held until they
- * choose: Save & Exit keeps the work as a draft order, Abandon Journey discards it. Closing the dialog (X, Escape or the
+ * choose: Save as Draft keeps the work as a draft order, Abandon Journey discards it. Closing the dialog (X, Escape or the
  * backdrop) stays on the journey.
  */
 export function LeaveJourneyDialog({
@@ -136,13 +136,13 @@ export function LeaveJourneyDialog({
             Abandon Journey
           </Button>
           <Button variant="primary" onClick={onSave} disabled={busy}>
-            {busy ? 'Working…' : 'Save & Exit'}
+            {busy ? 'Working…' : 'Save as Draft'}
           </Button>
         </>
       }
     >
       <p className="text-fg-2 text-[length:var(--fs-body)]">
-        This journey is not finished. Save &amp; Exit keeps what you have entered as a draft order you can resume from Draft Orders.
+        This journey is not finished. Save as Draft keeps what you have entered as a draft order you can resume from Draft Orders.
         Abandon Journey discards it.
       </p>
     </Modal>

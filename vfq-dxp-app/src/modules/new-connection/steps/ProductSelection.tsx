@@ -6,7 +6,6 @@ import { useAuthStore } from '../../../stores/authStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import type { EntityKind } from '../../../engines/mockDataEngine';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
-import { ChoiceCards } from '../../../components/primitives/ChoiceCards';
 import { Radio } from '../../../components/primitives/Radio';
 import { Icon } from '../../../components/primitives/Icon';
 import { clearAndQuiet, selectProduct } from './productChoice';
@@ -31,7 +30,7 @@ export interface ProductStepContext {
 
 // The icon tile of each home product card (the same card as the Installation Address service types).
 const CHECK = 'M20 6L9 17l-5-5';
-const HOME_PRODUCT_ICON: Record<HomeProduct, string> = {
+export const HOME_PRODUCT_ICON: Record<HomeProduct, string> = {
   // Optical fibre: a cut cable inside a ring, its strands fanning out to nodes (drawn thin: see strokeWidth below).
   fibre:
     'M5.2 19.4A10.4 10.4 0 1 1 14.4 22.2M7.4 20l1.7-3.8 2.5 1.2 2.9-1.6 1.1 4.4M11.2 15.4Q8.8 13.4 8.4 9.6M11.7 15.2Q10.6 11.4 11 7.9M12.4 15.3Q13 11 14.5 8.2M13 15.7Q15.2 14 16.5 11M13.4 16.6Q16.2 16.5 17.1 14.3M7.3 8.5a1.1 1.1 0 1 0 2.2 0a1.1 1.1 0 1 0 -2.2 0M9.9 6.8a1.1 1.1 0 1 0 2.2 0a1.1 1.1 0 1 0 -2.2 0M13.8 7.2a1.1 1.1 0 1 0 2.2 0a1.1 1.1 0 1 0 -2.2 0M15.8 9.9a1.1 1.1 0 1 0 2.2 0a1.1 1.1 0 1 0 -2.2 0M16.4 13.2a1.1 1.1 0 1 0 2.2 0a1.1 1.1 0 1 0 -2.2 0',
@@ -73,7 +72,7 @@ export function ProductSelection({
   const buttons = variant === 'buttons';
   // A product chosen by a footer button (or named by the entry point) moves on by itself once its eligibility is judged and
   // quiet. The flag is cleared as it fires, so coming Back to this page later never skips it again.
-  const advance = values.productPreselected === true && Boolean(product) && clearAndQuiet(values);
+  const advance = values.productPreselected === true && Boolean(product) && clearAndQuiet(values, { requireHomeKind: homeJourney });
   useEffect(() => {
     if (!advance || new URLSearchParams(window.location.search).get('mirror') === '1') return;
     setValue('productPreselected', false);
@@ -175,14 +174,6 @@ export function ProductSelection({
             </div>
           )}
           </>
-        )}
-        {product === 'fixed-line' && !homeJourney && (
-          <ChoiceCards<HomeProduct>
-            legend="Connection type"
-            items={HOME_PRODUCTS.map((h) => ({ key: h.key, label: h.label.replace('New ', '').replace(' Connection', ''), icon: HOME_PRODUCT_ICON[h.key] }))}
-            value={homeProduct}
-            onChange={(k) => chooseProduct('fixed-line', undefined, k)}
-          />
         )}
       </section>
 

@@ -384,7 +384,7 @@ export function EligibilityGateStep({
           setRetrying(true);
           setRetryNonce((n) => n + 1);
         }}
-        exhaustedHint="Eligibility has not been checked, so this order cannot continue. Use Save & Exit to resume later."
+        exhaustedHint="Eligibility has not been checked, so this order cannot continue. Use Save as Draft to resume later."
       />
     );
   }

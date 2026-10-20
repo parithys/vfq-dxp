@@ -4,8 +4,8 @@ import { useEntityStore } from '../stores/entityStore';
 
 // One place that writes the activity a customer journey leaves behind, so an agent never has to
 // log it by hand. Every activity gets a generated unique ID; its name and reason come from the
-// journey and the event that triggered it. Only Abandoned, Save & Exit and Manual activities carry agent comments;
-// an Abandoned or Manual comment is mandatory (blank or whitespace-only is rejected), Save & Exit's is optional.
+// journey and the event that triggered it. Only Abandoned, Save as Draft and Manual activities carry agent comments;
+// an Abandoned or Manual comment is mandatory (blank or whitespace-only is rejected), Save as Draft's is optional.
 // The Completed activity is the automatic one (no comments); a Manual activity is always an additional record.
 
 export type ActivityTrigger = 'completed' | 'abandoned' | 'saved-exit' | 'workflow-event' | 'hard-stop' | 'manual';
@@ -13,7 +13,7 @@ export type ActivityTrigger = 'completed' | 'abandoned' | 'saved-exit' | 'workfl
 const OUTCOME: Record<ActivityTrigger, { verb: string; status: string; outcome: string }> = {
   completed: { verb: 'Completed', status: 'Solved', outcome: 'Order Created' },
   abandoned: { verb: 'Abandoned', status: 'Abandoned', outcome: 'Abandoned' },
-  'saved-exit': { verb: 'Saved & Exited', status: 'Open', outcome: 'Save & Exit' },
+  'saved-exit': { verb: 'Saved & Exited', status: 'Open', outcome: 'Save as Draft' },
   'workflow-event': { verb: 'Workflow Approval', status: 'Open', outcome: 'Workflow Approval' },
   'hard-stop': { verb: 'Hard Stop', status: 'Closed', outcome: 'Hard Stop' },
   manual: { verb: 'Manual Activity', status: 'Open', outcome: 'Manual Activity' },
@@ -27,7 +27,7 @@ export interface ActivityInput {
   name?: string;
   /** What caused it: the issue, outcome or trigger. Generated from the trigger when omitted. */
   reason?: string;
-  /** Agent-entered. Stored only for Abandoned, Save & Exit and Manual (required for Abandoned and Manual). */
+  /** Agent-entered. Stored only for Abandoned, Save as Draft and Manual (required for Abandoned and Manual). */
   comments?: string;
   orderId?: string;
   customerId?: string;

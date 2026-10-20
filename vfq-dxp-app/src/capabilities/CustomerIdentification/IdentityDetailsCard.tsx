@@ -90,13 +90,13 @@ export interface IdentityFields {
   gender?: string;
   idTypeLabel?: string;
   companyName?: string;
-  companyAccountId?: string;
+  occupation?: string;
 }
 
 /**
  * One list of facts for every journey, so the card reads the same everywhere. The content follows the context:
- * the document type is left out where the agent already chose it (`showDocumentType` false), and the employer
- * rows appear only for a sponsored (B2B2C) customer.
+ * the document type is left out where the agent already chose it (`showDocumentType` false), and the Sponsor
+ * and Occupation rows appear only for a sponsored (B2B2C) customer (Occupation blank when the registry record holds none).
  */
 export function identityFacts(f: IdentityFields, opts: { showDocumentType?: boolean } = {}): Fact[] {
   const { showDocumentType = true } = opts;
@@ -109,7 +109,7 @@ export function identityFacts(f: IdentityFields, opts: { showDocumentType?: bool
     { icon: 'globe', label: 'Nationality', value: f.nationality ?? '' },
     { icon: 'gender', label: 'Gender', value: f.gender ?? '' },
     ...(showDocumentType ? [{ icon: 'idCard' as const, label: 'Document Type', value: f.idTypeLabel ?? '' }] : []),
-    ...(f.companyName ? [{ icon: 'building' as const, label: 'Employer (B2B2C)', value: f.companyName }] : []),
-    ...(f.companyName && f.companyAccountId ? [{ icon: 'building' as const, label: 'Company Account ID', value: f.companyAccountId }] : []),
+    ...(f.companyName ? [{ icon: 'building' as const, label: 'Sponsor', value: f.companyName }] : []),
+    ...(f.companyName ? [{ icon: 'idCard' as const, label: 'Occupation', value: f.occupation ?? '' }] : []),
   ];
 }

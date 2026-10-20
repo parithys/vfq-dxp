@@ -788,11 +788,8 @@ export function OrderApprovalDetail() {
       </>}
       />
 
-      {/* Tab strip in its own white bar; each tab's content is a set of cards (or one card) on the page background, per
-          the 2026-10-10 reference. */}
-      <div className="rounded-[var(--radius-card)] bg-bg px-4">
-        <TabStrip items={tabItems.map(({ key, label }) => ({ key, label }))} active={activeTab.key} onChange={setTab} label="Order sections" />
-      </div>
+      {/* Tab strip straight on the page background (no bar of its own); each tab's content is a set of cards (or one card) on it. */}
+      <TabStrip items={tabItems.map(({ key, label }) => ({ key, label }))} active={activeTab.key} onChange={setTab} label="Order sections" />
       <div className="mt-4">
         {activeTab.content}
       </div>

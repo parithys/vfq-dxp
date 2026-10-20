@@ -63,19 +63,22 @@ export function eligibilityJourney(values: Record<string, unknown>): 'postpaid' 
 }
 
 /** Whether the product keeps a billing account (a prepaid line has none; MNP onto a prepaid plan has none either). */
+/** Whether New Connection's shared Billing Profile step (before Recommended Offers) applies: until a product is chosen, and for a product that has one. */
+export const billingStepActive = (values: Record<string, unknown>): boolean => values.product === undefined || hasBillingAccount(values);
+
 export const hasBillingAccount = (values: Record<string, unknown>): boolean =>
   values.product === 'postpaid' || values.product === 'fixed-line' || (values.product === 'mnp' && values.mnpType !== 'prepaid');
 
 /**
  * What a product's steps leave in the draft. Switching product drops all of it, so nothing chosen for the product the agent
- * has left (a plan, number, SIM, a signed CAF, a payment) reaches the next one. Identity, eligibility, customer type and the
- * offers decision belong to Customer Identification and the product step, so they stay.
+ * has left (a plan, number, SIM, a signed CAF, a payment) reaches the next one. Identity, eligibility, customer type, the address, the
+ * billing profile and the offers decision are collected before or at the product step, so they stay.
  */
 export const PRODUCT_OWNED_KEYS = [
   'productId', 'discountId', 'addonIds', 'selectionSource', 'bundledItems',
   'msisdn', 'numberPriceQAR', 'priceQAR', 'numberRefresh', 'prePaired',
   'simType', 'simSerial', 'simValid', 'cart',
-  'address', 'addressId', 'billingAccount', 'billing', 'billLimit', 'billLimitPass',
+  'billLimit', 'billLimitPass',
   'creditCheckPass', 'creditCheckAcknowledged',
   'installation', 'devices', 'appointment',
   'donorDetails', 'donorAttachment', 'comments',

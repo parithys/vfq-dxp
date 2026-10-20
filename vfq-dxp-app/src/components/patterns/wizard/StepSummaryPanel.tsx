@@ -50,6 +50,7 @@ export function StepSummaryPanel({
   values,
   onEdit,
   returnTo,
+  milestoneSteps,
   variant = 'aside',
 }: {
   /** Completed steps that declare a summary, in step order. */
@@ -61,6 +62,8 @@ export function StepSummaryPanel({
   onEdit?: (index: number) => void;
   /** Shown after going back to edit: jumps to the furthest step reached. */
   returnTo?: { label: string; onReturn: () => void };
+  /** Keys of the steps that reached a journey milestone: their rows show a flag in place of the tick. */
+  milestoneSteps?: ReadonlySet<string>;
   /** 'aside': the fixed side panel. 'accordion': the collapsible block shown above the action buttons on small screens. */
   variant?: 'aside' | 'accordion';
 }) {
@@ -99,6 +102,7 @@ export function StepSummaryPanel({
           open={isOpen(step.key)}
           onToggle={() => setOpenOverride((o) => ({ ...o, [step.key]: !isOpen(step.key) }))}
           onEdit={onEdit ? () => onEdit(index) : undefined}
+          milestone={milestoneSteps?.has(step.key)}
         >
           {(step.summary ?? [])
             .filter((f) => f.when?.(values) !== false)

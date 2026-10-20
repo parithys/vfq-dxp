@@ -11,8 +11,8 @@ export type JourneyFlow = 'new' | 'existing';
 
 // Placeholder pending business confirmation (2026-09-28: "Do not assume Agent 360 as the destination, as this has not
 // been finalised. Keep the post-exit destination configurable until confirmed"). One named constant for every
-// journey's Save & Exit and Abandon - change this one line once the real destination is decided.
+// journey's Save as Draft and Abandon - change this one line once the real destination is decided.
 export const POST_EXIT_DESTINATION = '/';
 
-// Save & Exit lands on the agent's Draft Orders list.
+// Save as Draft lands on the agent's Draft Orders list.
 export const DRAFT_ORDERS_PATH = '/tasks?filter=draft-orders';

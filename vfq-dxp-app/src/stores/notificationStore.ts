@@ -111,6 +111,8 @@ export interface ToastOptions {
    * became "create another message".
    */
   key?: string;
+  /** Closes the toast by itself after this many milliseconds. Absent: it stays until the agent dismisses it. */
+  autoDismissMs?: number;
   /** Quieter second line under the headline. Ignored when `rows` is set. */
   detail?: string;
   /**
@@ -177,7 +179,9 @@ const HISTORY_LIMIT = 30;
 // don't survive reload. `history` backs the notification bell in the top bar,
 // keeping every toast this session ever pushed (capped) even after its
 // dismissible copy in `toasts` is closed.
-export const useNotificationStore = create<NotificationState>((set) => ({
+const dismissTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+export const useNotificationStore = create<NotificationState>((set, get) => ({
   toasts: [],
   history: [],
   pushToast: (kind, message, options) =>
@@ -201,6 +205,17 @@ export const useNotificationStore = create<NotificationState>((set) => ({
       const toasts = existing
         ? state.toasts.map((t) => (t.key === key ? entry : t))
         : [...state.toasts, entry];
+      if (options?.autoDismissMs) {
+        const pending = dismissTimers.get(id);
+        if (pending) clearTimeout(pending);
+        dismissTimers.set(
+          id,
+          setTimeout(() => {
+            dismissTimers.delete(id);
+            get().dismissToast(id);
+          }, options.autoDismissMs)
+        );
+      }
       const historyEntry = { ...entry, at: Date.now(), read: false };
       const history = key
         ? [historyEntry, ...state.history.filter((h) => h.key !== key)].slice(0, HISTORY_LIMIT)

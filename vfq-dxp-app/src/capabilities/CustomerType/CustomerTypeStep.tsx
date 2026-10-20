@@ -178,7 +178,7 @@ export function CustomerTypeStep({
               onRetry={() => onChange({ ...value, govValidation: undefined })}
               exhaustedHint={
                 <>
-                  Retired status could not be verified, so the discount cannot be applied. Use <strong>Reject</strong> to continue as a Standard customer, or Save &amp; Exit to resume later.
+                  Retired status could not be verified, so the discount cannot be applied. Use <strong>Reject</strong> to continue as a Standard customer, or Save as Draft to resume later.
                 </>
               }
               extraActions={
