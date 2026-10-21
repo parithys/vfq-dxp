@@ -6,9 +6,11 @@ import { cafSummary } from './summary';
 import type { TncLegalFacts } from '../../components/patterns/checkoutSummaryModel';
 import type { GuidedContactValue } from '../../components/patterns/guidedContactModel';
 import type { CafType } from '../../components/patterns/cafTypes';
+import type { ActualUserValue } from '../ActualUser/actualUserModel';
+import { actualUserIdentity, supplementaryRows } from '../ActualUser/actualUserModel';
 
 /** The captured CAF: its type and, once signed on this device, the signature. */
-export type CafValue = { cafType?: CafType; signatureDataUrl?: string };
+export type CafValue = { cafType?: CafType; signatureDataUrl?: string; supplementaryAgreed?: boolean; secondaryAgreed?: boolean; secondarySignatureDataUrl?: string };
 
 /**
  * Whether the CAF step may continue: a type is chosen and, for the types that are signed on this device,
@@ -27,7 +29,10 @@ export function isCafValid(caf: CafValue | undefined, needsSignature: (type: Caf
 const cafSigned = (values: Record<string, unknown>) => {
   const c = values.caf as CafValue | undefined;
   const signedHere = c?.cafType === 'Digital' || c?.cafType === 'Touch Screen';
-  return Boolean(c?.cafType) && (!signedHere || Boolean(c?.signatureDataUrl));
+  // A line with an actual user: the primary customer's one signature also covers the Supplementary Form (so that consent is needed), and the
+  // secondary contact signs the Supplementary Form on their own.
+  const needsSupplementary = Boolean(actualUserIdentity(values.actualUser as ActualUserValue | undefined));
+  return Boolean(c?.cafType) && (!signedHere || (Boolean(c?.signatureDataUrl) && (!needsSupplementary || (Boolean(c?.supplementaryAgreed) && Boolean(c?.secondarySignatureDataUrl)))));
 };
 
 /**
@@ -78,6 +83,7 @@ export function cafSignatureStep(
           idValue={opts.idDocument?.(values)?.value}
           journey={opts.journey}
           formDetails={opts.formDetails?.(values)}
+          supplementaryForm={actualUserIdentity(values.actualUser as ActualUserValue | undefined) ? { rows: supplementaryRows(values.actualUser as ActualUserValue), actualUserName: actualUserIdentity(values.actualUser as ActualUserValue)?.moiResult?.name } : undefined}
           // Built from the totals CHECKOUT computed plus the plan/number facts already on `values`, so the figures
           // the customer signs against are the same objects the previous step displayed - not a second calculation.
           orderSummary={values.cafSummary as { label: string; value: string }[] | undefined}

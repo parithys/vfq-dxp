@@ -34,6 +34,10 @@ interface CommonProps {
   verifyThenFetch?: boolean;
   /** Handle whoever the scanned ID belongs to as a genuine new customer. */
   asNewCustomer?: boolean;
+  /** Identify someone other than the customer on screen (e.g. the actual user of a line): nothing is bound to the context customer. */
+  unbound?: boolean;
+  /** Demo reader: present this customer's own document and card, without binding the lookup to them. */
+  scanAsCustomerId?: string;
   /** Journey opened for a known customer (Customer 360): the customer is this one, whatever ID the scan returned. */
   asCustomerId?: string;
 }

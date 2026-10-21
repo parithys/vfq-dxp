@@ -11,6 +11,7 @@ import {
   postpaidPlanStep,
   serviceAddressStep,
   simTypeStep,
+  actualUserStep,
 } from '../../capabilities';
 import { starEntitlementQar } from '../../engines/postpaidPricing';
 import type { Product } from './newConnectionModel';
@@ -49,6 +50,8 @@ export function postpaidSteps({ products, customerBenefits, device }: PostpaidSt
       },
     }),
     simTypeStep({ device }),
+    // After the SIM, before the summary and the CAF: who will use the line (when it is not the owner) is named on the Supplementary Form.
+    actualUserStep(),
     checkoutSummaryStep({
       // An accepted offer fixes the plan, so the Plan & Add-ons step is skipped and 'plan' is not a reachable
       // key - jump to Number Selection (the first step still editable) instead of doing nothing.

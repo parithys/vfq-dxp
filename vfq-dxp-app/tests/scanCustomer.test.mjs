@@ -29,9 +29,9 @@ test('scan and eligibility resolve the customer through the shared acted-for hoo
   const hook = read('src/components/patterns/useActedForCustomer.ts');
   assert.match(hook, /if \(asNewCustomer\) return undefined;/);
   assert.match(hook, /explicitCustomerId \?\? contextCustomerId/);
-  for (const f of ['src/components/patterns/useIdLookup.ts', 'src/capabilities/EligibilityGate/EligibilityGateStep.tsx']) {
-    assert.match(read(f), /useActedForCustomer\(explicitCustomerId, asNewCustomer\)/, f);
-  }
+  assert.match(read('src/capabilities/EligibilityGate/EligibilityGateStep.tsx'), /useActedForCustomer\(explicitCustomerId, asNewCustomer\)/);
+  // The lookup also takes `unbound` (identifying someone other than the customer on screen, e.g. an actual user): then no context customer applies.
+  assert.match(read('src/components/patterns/useIdLookup.ts'), /useActedForCustomer\(explicitCustomerId, asNewCustomer \|\| unbound\)/);
 });
 
 

@@ -158,6 +158,7 @@ NAMES = {
     "CUST-3083": ("Abdulla", "Nasser Rashid", "Al-Sada"),
     "CUST-3084": ("Aisha", "Mohammed Khalid", "Al-Kuwari"),
     "CUST-3085": ("Rashid", "Saud Abdulla", "Al-Hajri"),
+    "CUST-3090": ("Maryam", "Ahmed Abdulla", "Al-Sulaiti"),
     "CUST-3065": ("Abdulrahman", "Jassim Hamad", "Al-Kubaisi"),
     "CUST-3066": ("Maha", "Rashid Saeed", "Al-Ghanim"),
     "CUST-3067": ("Mohamed", "Nabil Ibrahim", "Soliman"),
@@ -389,6 +390,11 @@ PROPOSED += [
     P("CUST-3085", "Rashid Al-Hajri", "Qatari", "Qatari", "QID", "27604063400085", "2030-04-30", "1976-04-17", "Male", "Consumer", "Arabic", 0, 0, "10 High line counts",
       "Qatari with 6 GigaHome fibre lines and no mobile line at all (home-internet-only).", "Loyalty (existing)", "-", "Customer 360; Fixed Line",
       "No mobile line on file, so Active Lines is 0 while Home internet is 6; nothing caps fibre lines.", jk=C360, req="Home internet only", hi=6),
+    # ---- 6. Eligibility gates: the actual user (secondary contact) of a postpaid line
+    P("CUST-3090", "Maryam Al-Sulaiti", "Qatari", "Qatari", "QID", "31403153400090", "2030-03-31", "2014-03-15", "Female", "Consumer", "Arabic", 0, 0, "6 Eligibility gates",
+      "Qatari aged 12 (under 18), no lines: a family member who can be added as the ACTUAL USER of a parent's postpaid line.", "None", "-", "New Postpaid (Actual User step)",
+      "Under 18, so the Actual User step accepts her; the age rule is the only check (Number of Connections, HRN and the Collections / Grey List / Security blacklists are not run for an actual user). Anyone 18 or older is refused there.",
+      jk=PP, req="Actual user (minor)"),
 ]
 
 # Scenario rewrites forced by the nationality rule (the nationalities originally

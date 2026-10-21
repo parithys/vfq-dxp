@@ -35,6 +35,10 @@ interface GuidedContactStepProps {
   verifyThenFetch?: boolean;
   /** Handle whoever the scanned ID belongs to as a genuine new customer (New Connection - New Customer). */
   asNewCustomer?: boolean;
+  /** Identify someone other than the customer on screen (see useIdLookup). */
+  unbound?: boolean;
+  /** Demo reader: present this customer's own document and card (see useIdLookup). */
+  scanAsCustomerId?: string;
   /** Journey started from Customer 360: the customer is this one, whatever ID the scan returned. */
   asCustomerId?: string;
 }
@@ -100,7 +104,7 @@ function VerifiedBadge({ label }: { label: string }) {
 // agent always performs (or at least sees) an explicit Fetch rather than
 // silently trusting cached active-customer state. The number field shows
 // a format-example placeholder instead (see QidInput.tsx).
-export function GuidedContactStep({ value, onChange, showIptvToggle = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint, autoDetectIdType, manualEntry, verifyThenFetch, asNewCustomer, asCustomerId, allowNewCustomer }: GuidedContactStepProps) {
+export function GuidedContactStep({ value, onChange, showIptvToggle = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint, autoDetectIdType, manualEntry, verifyThenFetch, asNewCustomer, asCustomerId, unbound, scanAsCustomerId, allowNewCustomer }: GuidedContactStepProps) {
   return (
     <div className="space-y-4">
       <IdLookupStep
@@ -118,6 +122,8 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
         verifyThenFetch={verifyThenFetch}
         asNewCustomer={asNewCustomer}
         asCustomerId={asCustomerId}
+        unbound={unbound}
+        scanAsCustomerId={scanAsCustomerId}
         // Every MOI-derived field is re-seeded from the result whenever it
         // changes, and cleared with it when the ID is edited/re-typed. A new
         // ID is a new person, so carrying over the previous one's name or

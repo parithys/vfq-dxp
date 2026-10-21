@@ -23,6 +23,11 @@ interface CafSignatureCaptureProps {
     signatureDataUrl?: string;
     /** The customer has ticked "I have read and agree to the full Terms and Conditions." */
     termsAccepted?: boolean;
+    /** With a Supplementary Form: the primary customer has read it and agrees (the one signature then covers both forms). */
+    supplementaryAgreed?: boolean;
+    /** With a Supplementary Form: the secondary contact has read it and agrees, and signs it on its own (the Supplementary Form only). */
+    secondaryAgreed?: boolean;
+    secondarySignatureDataUrl?: string;
     documents?: CafDocument[];
     /** Post-signature supporting documents - see AdditionalDocumentsUpload. */
     additionalDocuments?: AdditionalDocument[];
@@ -60,6 +65,11 @@ interface CafSignatureCaptureProps {
   journey?: 'postpaid' | 'prepaid';
   /** Extra rows on the application form (the prepaid form's mobile numbers and SIM serials, for example), as label/value. */
   formDetails?: { label: string; value: string }[];
+  /**
+   * The Supplementary Form, when the line has an actual user other than the applicant: its rows (the actual user's details). The ONE signature
+   * below then signs both forms - the CAF by the applicant and the Supplementary Form by the applicant and the actual user - and says so.
+   */
+  supplementaryForm?: { rows: { label: string; value: string }[]; /** The secondary contact, who signs the Supplementary Form on their own. */ actualUserName?: string };
   /** Draw the Additional documents card on a white background (default: the grey surface). */
   documentsOnWhite?: boolean;
   /** Cap on post-signature documents (default 10). */
@@ -131,6 +141,7 @@ export function CafSignatureCapture({
   documentsOnWhite = false,
   journey = 'postpaid',
   formDetails,
+  supplementaryForm,
   termsUrl,
   autoDetectDeviceType,
   legalFacts,
@@ -165,6 +176,9 @@ export function CafSignatureCapture({
     // check, not the agent, is what chose it.
     const showsInAppSignature = value.cafType === 'Digital' || value.cafType === 'Touch Screen';
     const signed = showsInAppSignature && Boolean(value.signatureDataUrl);
+    // With a Supplementary Form the secondary contact signs it too: the step is done only when both have signed.
+    const secondarySigned = Boolean(value.secondarySignatureDataUrl);
+    const allSigned = signed && (!supplementaryForm || secondarySigned);
     const bullets = buildTncBullets(legalFacts, bulletTemplates);
 
     return (
@@ -261,9 +275,33 @@ export function CafSignatureCapture({
             By signing below, the applicant accepts the General Terms and Conditions of Vodafone Qatar.
           </p>
 
+          {supplementaryForm && (
+            <div id="supplementary-form-primary" className="mt-3 rounded-[var(--radius-card)] border border-border-soft p-3 space-y-2" aria-label="Supplementary Form">
+              <div className="flex items-center justify-between text-[length:var(--fs-caption)] text-muted">
+                <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Vodafone Supplementary Form</h3>
+                <span dir="rtl">النموذج التكميلي</span>
+              </div>
+              <dl>
+                <div className="flex justify-between gap-4 py-1 border-b border-border-soft text-[length:var(--fs-caption)]">
+                  <dt className="text-fg">Primary customer</dt>
+                  <dd className="text-fg text-right">{customerName ?? '-'}</dd>
+                </div>
+                {supplementaryForm.rows.map((row) => (
+                  <div key={row.label} className="flex justify-between gap-4 py-1 border-b border-border-soft last:border-0 text-[length:var(--fs-caption)]">
+                    <dt className="text-fg">{row.label}</dt>
+                    <dd className="text-fg text-right">{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="text-fg-2 text-[length:var(--fs-caption)]">
+                The primary customer's one signature below signs both forms: the Customer Application Form and this Supplementary Form.
+              </p>
+            </div>
+          )}
+
           {signed ? (
             <div className="mt-3 flex items-center gap-3">
-              <Badge variant="success">Signed</Badge>
+              <Badge variant="success">{supplementaryForm ? 'Signed: CAF and Supplementary Form' : 'Signed'}</Badge>
               <img src={value.signatureDataUrl} alt="Signature" className="h-10 border border-border-soft rounded-[var(--radius-sm)]" />
             </div>
           ) : (
@@ -287,14 +325,66 @@ export function CafSignatureCapture({
                   </span>
                 </label>
               )}
+              {supplementaryForm && (
+                <label className="mt-3 flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={Boolean(value.supplementaryAgreed)} onChange={(e) => onChange({ ...value, supplementaryAgreed: e.target.checked })} />
+                  <span className="text-fg text-[length:var(--fs-body)]">I have read and agree to the{' '}
+                    <button type="button" className="text-link underline" onClick={() => document.getElementById('supplementary-form-primary')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>
+                      Supplementary Form
+                    </button>
+                    .</span>
+                </label>
+              )}
               <SignatureCapture
-                disabled={requireTermsAgreement && !value.termsAccepted}
+                disabled={(requireTermsAgreement && !value.termsAccepted) || (Boolean(supplementaryForm) && !value.supplementaryAgreed)}
                 onSave={(dataUrl) => onChange({ ...value, signatureDataUrl: dataUrl })}
               />
             </>
           )}
         </div>
         </FullTerms>
+
+        {/* The secondary contact signs the Supplementary Form ONLY, on its own: the form shown separately, its own consent and its own pad,
+            enabled once that consent is ticked. Shown after the primary customer has signed. */}
+        {signed && supplementaryForm && (
+          <section id="supplementary-form-secondary" aria-label="Supplementary Form - secondary contact" className="card p-4 space-y-3">
+            <div className="flex items-center justify-between text-[length:var(--fs-caption)] text-muted">
+              <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Vodafone Supplementary Form: secondary contact</h3>
+              <span dir="rtl">النموذج التكميلي</span>
+            </div>
+            <dl>
+              <div className="flex justify-between gap-4 py-1 border-b border-border-soft text-[length:var(--fs-caption)]">
+                <dt className="text-fg">Primary customer</dt>
+                <dd className="text-fg text-right">{customerName ?? '-'}</dd>
+              </div>
+              {supplementaryForm.rows.map((row) => (
+                <div key={row.label} className="flex justify-between gap-4 py-1 border-b border-border-soft last:border-0 text-[length:var(--fs-caption)]">
+                  <dt className="text-fg">{row.label}</dt>
+                  <dd className="text-fg text-right">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+            {secondarySigned ? (
+              <div className="flex items-center gap-3">
+                <Badge variant="success">Signed by {supplementaryForm.actualUserName ?? 'the secondary contact'}</Badge>
+                <img src={value.secondarySignatureDataUrl} alt="Secondary contact signature" className="h-10 border border-border-soft rounded-[var(--radius-sm)]" />
+              </div>
+            ) : (
+              <>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={Boolean(value.secondaryAgreed)} onChange={(e) => onChange({ ...value, secondaryAgreed: e.target.checked })} />
+                  <span className="text-fg text-[length:var(--fs-body)]">I have read and agree to the{' '}
+                    <button type="button" className="text-link underline" onClick={() => document.getElementById('supplementary-form-secondary')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>
+                      Supplementary Form
+                    </button>
+                    .</span>
+                </label>
+                <p className="text-fg text-[length:var(--fs-body)] font-semibold">Secondary contact: please sign</p>
+                <SignatureCapture disabled={!value.secondaryAgreed} onSave={(dataUrl) => onChange({ ...value, secondarySignatureDataUrl: dataUrl })} />
+              </>
+            )}
+          </section>
+        )}
 
         {/* Post-signature, agent view: the signed CAF preview above stays on
             screen (2026-09-28 "preview of the signed CAF"), and whatever
@@ -332,7 +422,7 @@ export function CafSignatureCapture({
                   Save
                 </Button>
               )}
-              {signed && onContinue && (
+              {allSigned && onContinue && (
                 <Button
                   variant="primary"
                   onClick={onContinue}
@@ -345,7 +435,7 @@ export function CafSignatureCapture({
             </div>
           </div>
         ) : (
-          signed && onContinue && (
+          allSigned && onContinue && (
             <div className={`agent-only ${inlineSignaturePad ? 'flex justify-end' : ''}`}>
               <Button
                 variant="primary"

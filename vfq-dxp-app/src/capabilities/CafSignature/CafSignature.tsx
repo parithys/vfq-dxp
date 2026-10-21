@@ -52,6 +52,8 @@ export type CafSignatureProps =
       journey?: Capture['journey'];
       /** Extra rows on the application form (label/value). */
       formDetails?: Capture['formDetails'];
+      /** The Supplementary Form of an actual user: one signature signs it together with the CAF. */
+      supplementaryForm?: Capture['supplementaryForm'];
     });
 
 /**
@@ -93,6 +95,7 @@ export function CafSignature(props: CafSignatureProps) {
         termsScrollMode={props.termsScrollMode}
         journey={props.journey}
         formDetails={props.formDetails}
+        supplementaryForm={props.supplementaryForm}
         inlineSignaturePad
         {...ADDITIONAL_DOCUMENTS}
         termsUrl="https://www.vodafone.qa/en/terms-and-conditions"

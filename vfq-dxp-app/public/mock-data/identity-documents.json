@@ -923,5 +923,20 @@
     "docStatus": "Active",
     "uploadDateTime": "2026-09-30T10:00:00+03:00",
     "serviceReference": "CUST-3085"
+  },
+  {
+    "_note": "Customer-Inventory seed (2026-10-02)",
+    "identityDocumentId": "IDD-5652",
+    "customerId": "CUST-3090",
+    "documentType": "QID",
+    "documentNumber": "31403153400090",
+    "expiryDate": "2030-03-31",
+    "validationPath": "MOI Validation",
+    "status": "Validated",
+    "scanCompleted": true,
+    "scannedAt": "2026-09-30T10:00:00+03:00",
+    "docStatus": "Active",
+    "uploadDateTime": "2026-09-30T10:00:00+03:00",
+    "serviceReference": "CUST-3090"
   }
 ]

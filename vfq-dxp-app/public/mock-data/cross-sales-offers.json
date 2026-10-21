@@ -3050,5 +3050,49 @@
     ],
     "contactId": "CTC-4001",
     "serviceJourney": "new-prepaid"
+  },
+  {
+    "_note": "Customer-Inventory seed (2026-10-02)",
+    "offerId": "OFR-CUST-3090-1",
+    "offerType": "Cross Sell",
+    "offerName": "Postpaid Red 500 Welcome Offer",
+    "monthlyRental": 500,
+    "offerDescription": "Open a new Postpaid Red 500 line with the welcome bundle",
+    "campaignCode": "CMP-NEW-0930",
+    "priorityCode": "P1",
+    "serviceIdentifier": "+97455513055",
+    "status": "Offered",
+    "treatmentCode": "TRT-01",
+    "channel": "Guided Journey",
+    "promotionId": "PROMO-9015",
+    "price": 500,
+    "addOnMonthly": 0,
+    "linkedProductIds": [
+      "PROD-105"
+    ],
+    "contactId": "CTC-CUST-3090",
+    "serviceJourney": "new-postpaid"
+  },
+  {
+    "_note": "Customer-Inventory seed (2026-10-02)",
+    "offerId": "OFR-CUST-3090-2",
+    "offerType": "Cross Sell",
+    "offerName": "Postpaid Red 350 Switch-On Offer",
+    "monthlyRental": 350,
+    "offerDescription": "Open a new Postpaid Red 350 line with a free first-month add-on",
+    "campaignCode": "CMP-NEW-0930",
+    "priorityCode": "P2",
+    "serviceIdentifier": "+97455513055",
+    "status": "Offered",
+    "treatmentCode": "TRT-02",
+    "channel": "Guided Journey",
+    "promotionId": "PROMO-9025",
+    "price": 350,
+    "addOnMonthly": 0,
+    "linkedProductIds": [
+      "PROD-104"
+    ],
+    "contactId": "CTC-CUST-3090",
+    "serviceJourney": "new-postpaid"
   }
 ]

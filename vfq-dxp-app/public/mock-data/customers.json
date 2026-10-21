@@ -1603,5 +1603,28 @@
     "benefitEligibility": [
       "loyalty"
     ]
+  },
+  {
+    "_note": "Customer-Inventory seed (2026-10-02)",
+    "customerId": "CUST-3090",
+    "qid": "31403153400090",
+    "idType": "QID",
+    "name": "Maryam Ahmed Abdulla Al-Sulaiti",
+    "firstName": "Maryam",
+    "middleName": "Ahmed Abdulla",
+    "lastName": "Al-Sulaiti",
+    "dob": "2014-03-15",
+    "nationality": "Qatari",
+    "segment": "Consumer",
+    "email": "maryam.ahmed.abdulla.alsulaiti@example.qa",
+    "phone": "+97455513055",
+    "preferredLanguage": "Arabic",
+    "blacklisted": false,
+    "moiValidationStatus": "Verified",
+    "activePostpaidLines": 0,
+    "activePrepaidLines": 0,
+    "age": 12,
+    "gender": "Female",
+    "benefitEligibility": []
   }
 ]

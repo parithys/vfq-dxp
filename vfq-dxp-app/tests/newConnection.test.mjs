@@ -31,7 +31,7 @@ test('before a product is chosen the journey is Customer Identification, Address
 });
 
 test('every product continues the same wizard: identification, address, billing profile (where the product has one), product selection, then that product\'s own steps', () => {
-  assert.deepEqual(activeKeys({ product: 'postpaid' }), ['contact', 'address', 'billingAccount', 'product', 'plan', 'planExtras', 'number', 'simType', 'checkout', 'caf', 'payment']);
+  assert.deepEqual(activeKeys({ product: 'postpaid' }), ['contact', 'address', 'billingAccount', 'product', 'plan', 'planExtras', 'number', 'simType', 'actualUser', 'checkout', 'caf', 'payment']);
   assert.deepEqual(activeKeys({ product: 'prepaid' }), ['contact', 'address', 'product', 'plan', 'planExtras', 'number', 'simType', 'cart', 'checkout', 'caf', 'payment']);
   assert.deepEqual(activeKeys({ product: 'fixed-line' }), ['contact', 'address', 'billingAccount', 'product', 'homeKind', 'installation', 'plan', 'number', 'checkout', 'caf', 'payment', 'appointment']);
   assert.deepEqual(activeKeys({ product: 'mnp', mnpType: 'postpaid' }), ['contact', 'address', 'billingAccount', 'product', 'mnpType', 'sim', 'plan', 'planExtras', 'donor-details', 'checkout', 'donor-attachment', 'caf', 'payment']);
