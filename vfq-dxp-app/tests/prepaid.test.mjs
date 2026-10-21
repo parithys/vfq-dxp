@@ -240,3 +240,8 @@ test('CAF: the full variant needs the signature on a tablet (Touch Screen) as we
     assert.equal(step.customerFacing(signed), true);
   }
 });
+
+test('Offers step lists the offer types in the agreed order', async () => {
+  const m = await load('/src/capabilities/CrossSellOffers/serviceJourneys.ts');
+  assert.deepEqual(m.OFFER_TYPES.map((t) => t.label), ['New Postpaid', 'New Home', 'New MNP', 'New Prepaid', 'Prepaid to Postpaid Upgrade', 'Postpaid to Postpaid Upgrade']);
+});

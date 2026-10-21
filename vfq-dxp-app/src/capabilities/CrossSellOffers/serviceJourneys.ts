@@ -22,14 +22,14 @@ export const SERVICE_JOURNEYS: { key: ServiceJourney; label: string; description
 
 // The offer-card service tag colours live in lib/serviceTypeTag (ServiceTypeTag), shared with every other surface that tags a service type.
 
-/** The five types the Offers step groups its cards under, in display order. */
+/** The types the Offers step groups its cards under, in display order. */
 export type OfferTypeKey = 'new-prepaid' | 'new-postpaid' | 'new-mnp' | 'new-home' | 'pre-to-post-upgrade' | 'post-to-post-upgrade';
 
 export const OFFER_TYPES: { key: OfferTypeKey; label: string }[] = [
-  { key: 'new-prepaid', label: 'New Prepaid' },
   { key: 'new-postpaid', label: 'New Postpaid' },
-  { key: 'new-mnp', label: 'New MNP' },
   { key: 'new-home', label: 'New Home' },
+  { key: 'new-mnp', label: 'New MNP' },
+  { key: 'new-prepaid', label: 'New Prepaid' },
   { key: 'pre-to-post-upgrade', label: 'Prepaid to Postpaid Upgrade' },
   { key: 'post-to-post-upgrade', label: 'Postpaid to Postpaid Upgrade' },
 ];
