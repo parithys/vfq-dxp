@@ -8,6 +8,15 @@ import { VodafoneMark } from '../../components/primitives/VodafoneMark';
 
 const CLOSE_ICON = 'M18 6L6 18 M6 6l12 12';
 
+// The icon that says what a plain toast is, in the kind's colour: a ticked circle for success, a triangle for a warning, an "i" circle for information
+// and an octagon for an error (24px grid paths, drawn with the same 2px stroke as the rest of the icon set).
+const KIND_ICON: Record<ToastKind, string> = {
+  success: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M8 12.5l2.7 2.7L16 9.5',
+  warning: 'M10.3 3.9L2.4 17.5A2 2 0 0 0 4.1 20.5h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z M12 9.5v4 M12 17h.01',
+  info: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 11v5 M12 7.5h.01',
+  error: 'M8.3 3h7.4L21 8.3v7.4L15.7 21H8.3L3 15.7V8.3z M12 8v5 M12 16.5h.01',
+};
+
 // Value colour per row tone, lifted toward white because the surface is dark
 // in BOTH themes: the base tokens are tuned for light backgrounds, and the
 // brightened dark-mode values only apply under .dark, which does not help a
@@ -318,12 +327,10 @@ export function ToastContainer() {
                 </div>
               </>
             ) : (
-              <div className="flex items-start gap-2.5 px-3.5 py-3">
-                <span
-                  className="mt-[0.3rem] w-2 h-2 rounded-[var(--radius-pill)] shrink-0"
-                  style={{ backgroundColor: kindDot[t.kind] }}
-                  aria-hidden="true"
-                />
+              <div className="flex items-center gap-2.5 px-3.5 py-3">
+                <span className="shrink-0" style={{ color: kindDot[t.kind] }} aria-hidden="true">
+                  <Icon path={KIND_ICON[t.kind]} className="w-5 h-5" />
+                </span>
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-[length:var(--fs-caption)] leading-snug text-fg">{t.message}</p>
                   {t.detail && (
