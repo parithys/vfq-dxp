@@ -71,6 +71,8 @@ export interface QidImageUploadProps {
    * pressing it. The same reason Retake is absent before the first capture.
    */
   canScan?: boolean;
+  /** Offer both "Initiate scan" and "Upload document" on every device. Default: the device decides (web scans, tablet uploads). */
+  bothCaptureActions?: boolean;
   /**
    * Which document is in the reader. Defaults to 'QID', which is what the
    * three journeys other than IdLookupStep capture.

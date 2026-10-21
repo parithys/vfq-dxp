@@ -116,6 +116,7 @@ export function CustomerTypeStep({
           <div className={EQUAL_CARD}>
           <QidImageUpload
             documentType="Office ID"
+            bothCaptureActions
             variant={type === 'b2b2c' || type === 'retired' || type === 'mada' ? type : undefined}
             value={value.officeId ?? {}}
             onChange={(officeId) => onChange({ ...value, officeId, officeAccepted: false, govValidation: undefined, govAttempts: 0 })}

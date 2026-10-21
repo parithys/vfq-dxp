@@ -110,3 +110,34 @@ test('customer segments: Consumer and Enterprise groups, no Premium, VIP tags an
   const customers = JSON.parse((await import('node:fs')).readFileSync('public/mock-data/customers.json', 'utf8'));
   assert.ok(customers.every((c) => c.segment !== 'Premium'), 'no customer carries Premium');
 });
+
+test('Personal Email ID is mandatory and Work Email ID optional, for every journey that uses the Contact step', async () => {
+  const fsm = await import('node:fs');
+  const read = (f) => fsm.readFileSync(f, 'utf8');
+  const step = read('src/components/patterns/GuidedContactStep.tsx');
+  assert.match(step, /label="Personal Email ID"\s+type="email"\s+required/);
+  assert.match(step, /label="Work Email ID"\s+type="email"\s+placeholder/);
+  assert.doesNotMatch(step.slice(step.indexOf('label="Work Email ID"'), step.indexOf('label="Work Email ID"') + 200), /required/);
+  const q = read('src/capabilities/CustomerQualification/step.tsx');
+  assert.match(q, /isValidEmail\(c\?\.email\) && \(!c\?\.workEmail \|\| isValidEmail\(c\.workEmail\)\)/, 'personal email gates Continue; a work email is checked only when given');
+  for (const f of ['new-connection/submitNewConnectionOrder', 'mobile-prepaid/screens/submitPrepaidOrder', 'mnp-fnp-porting/screens/submitMnpOrder', 'fixed-line-fibre/fixedActivation/submitFixedActivationOrder', 'pre-to-post-migration/screens/submitPreToPostOrder']) {
+    assert.match(read(`src/modules/${f}.ts`), /customerWorkEmail: contact\??\.workEmail/, f);
+  }
+});
+
+test('a salutation the agent enters is saved to the customer profile; none entered writes nothing; it is shown in Customer 360', async () => {
+  const { saveCustomerSalutation } = await load('/src/modules/new-connection/saveCustomerSalutation.ts');
+  const calls = [];
+  const update = async (...a) => void calls.push(a);
+  assert.equal(await saveCustomerSalutation('CUST-1', ' Dr ', update), true);
+  assert.deepEqual(calls, [['customers', 'customerId', 'CUST-1', { salutation: 'Dr' }]]);
+  calls.length = 0;
+  for (const [id, sal] of [['CUST-1', undefined], ['CUST-1', '  '], [undefined, 'Mr']]) assert.equal(await saveCustomerSalutation(id, sal, update), false);
+  assert.equal(await saveCustomerSalutation('CUST-1', 'Mr', undefined), false);
+  assert.deepEqual(calls, []);
+  const fsm = await import('node:fs');
+  for (const f of ['new-connection/submitNewConnectionOrder', 'mobile-prepaid/screens/submitPrepaidOrder', 'mnp-fnp-porting/screens/submitMnpOrder', 'fixed-line-fibre/fixedActivation/submitFixedActivationOrder', 'pre-to-post-migration/screens/submitPreToPostOrder']) {
+    assert.match(fsm.readFileSync(`src/modules/${f}.ts`, 'utf8'), /saveCustomerSalutation\(eligibility\?\.customerId, contact\??\.salutation, updateRecord\)/, f);
+  }
+  assert.match(fsm.readFileSync('src/workspace/customer360/sections/C360ContactIdentity.tsx', 'utf8'), /label: 'Salutation'/);
+});

@@ -119,6 +119,7 @@ export function C360ContactIdentity({ data, services, goToTab, onEdit }: { data:
         <Panel id="c360-identity-information" icon={undefined} title={<CardTitle icon={IC.card}>Identity Information</CardTitle>} action={idStatus ? <Pill tone={flagTone(idStatus)}>{idStatus}</Pill> : undefined}>
           <DetailRows
             rows={[
+              { label: 'Salutation', value: dash((customer as { salutation?: string }).salutation) },
               { label: 'Full Name', value: dash(f('First Name & Last Name (Full Name)')) },
               { label: 'ID Type', value: dash(f('ID Type')) },
               { label: 'ID Number', value: dash(str(contact?.idNumber) ?? customer.qid) },

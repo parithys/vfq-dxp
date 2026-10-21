@@ -86,6 +86,8 @@ export interface GuidedContactValue {
   altPhone?: string;
   /** How the customer is addressed (Mr, Ms ...): captured by the agent at Contact, optional, and kept on the contact. */
   salutation?: string;
+  /** The customer's work email: optional for everyone, kept on the contact next to the (mandatory) personal email. */
+  workEmail?: string;
   language?: string;
   getIptv?: 'Yes' | 'No';
   /**
@@ -294,6 +296,7 @@ export function identityFromMoi(moi: MoiResult | undefined) {
       gender: undefined,
       // Another person: how the last one was addressed does not carry over.
       salutation: undefined,
+      workEmail: undefined,
       // Cleared with the rest. An employer link belongs to the resolved
       // customer, so losing the customer has to lose the link - otherwise
       // re-typing an ID would leave the previous person's employer attached,

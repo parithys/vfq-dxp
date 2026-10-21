@@ -3,6 +3,8 @@
 
 /** Select an ID type, scan the document, validate with MOI, show the validated Identity Details. */
 export const CUSTOMER_IDENTIFICATION_LABEL = 'Customer Identification';
+/** The same step for the special-discounts journeys. */
+export const SPECIAL_DISCOUNTS_IDENTIFICATION_LABEL = 'Special Discounts Identification';
 /** Choose a number (free or star), reserve it. */
 export const NUMBER_SELECTION_LABEL = 'Number Selection';
 /** Pick, create or configure the billing profile the order bills to. */

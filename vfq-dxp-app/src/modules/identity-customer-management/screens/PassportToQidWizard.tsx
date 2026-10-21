@@ -58,6 +58,7 @@ export function PassportToQidWizard() {
             label: 'QID Front & Back',
             render: ({ values, setValue }) => (
               <QidImageUpload
+                bothCaptureActions
                 value={(values.qidImages as QidImageUploadValue) ?? {}}
                 onChange={(v) => setValue('qidImages', v)}
               />

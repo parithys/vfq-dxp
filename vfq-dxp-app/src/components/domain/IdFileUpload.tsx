@@ -2,7 +2,8 @@ import { useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Button } from '../primitives/Button';
 import { Icon } from '../primitives/Icon';
-import { ID_UPLOAD_ACCEPT, idFileProblem, readIdFile } from './idUploadModel';
+import { detectDeviceType } from '../../lib/deviceType';
+import { ID_UPLOAD_ACCEPT, idCaptureOptions, idFileProblem, readIdFile } from './idUploadModel';
 import type { IdUploadResult, IdUploadSides, UploadedIdFile } from './idUploadModel';
 
 const UPLOAD_ICON = 'M12 16V4 M7 9l5-5 5 5 M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3';
@@ -29,6 +30,8 @@ export function IdFileUpload({
   disabled,
   align = 'center',
   leading,
+  scanner = leading !== undefined,
+  bothActions = false,
   onUpload,
 }: {
   label?: string;
@@ -38,8 +41,13 @@ export function IdFileUpload({
   align?: 'center' | 'end';
   /** Shown immediately before the button, in the same row, so the two always stay together (e.g. Initiate scan). */
   leading?: ReactNode;
+  /** The reader is offered at this step (defaults to whether `leading` is given). Web shows the reader, tablet shows upload; upload stays when there is no reader. */
+  scanner?: boolean;
+  /** Offer the reader and upload on every device, whatever the device type. */
+  bothActions?: boolean;
   onUpload: (result: IdUploadResult) => void;
 }) {
+  const { scan, upload } = idCaptureOptions(detectDeviceType(), scanner, bothActions);
   const input = useRef<HTMLInputElement>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -78,13 +86,15 @@ export function IdFileUpload({
     <div className={`flex flex-col gap-1.5 ${align === 'end' ? 'items-end text-right shrink-0' : 'items-center'}`}>
       <input ref={input} type="file" accept={ID_UPLOAD_ACCEPT} multiple={!side} className="sr-only" tabIndex={-1} aria-hidden onChange={(e) => void take(e.target.files)} />
       <div className="flex flex-nowrap items-start gap-3">
-        {leading}
-        <Button variant="secondary" compact className="shrink-0" disabled={disabled || busy} onClick={() => input.current?.click()}>
-          <Icon path={UPLOAD_ICON} className="w-4 h-4" />
-          {busy ? 'Reading…' : label}
-        </Button>
+        {scan && leading}
+        {upload && (
+          <Button variant="secondary" compact className="shrink-0" disabled={disabled || busy} onClick={() => input.current?.click()}>
+            <Icon path={UPLOAD_ICON} className="w-4 h-4" />
+            {busy ? 'Reading…' : label}
+          </Button>
+        )}
       </div>
-      {!side && !pending && (
+      {upload && !side && !pending && (
         <span className="text-muted text-[length:var(--fs-caption)]">PDF, JPG or PNG, up to 5 MB each.</span>
       )}
       {pending && (

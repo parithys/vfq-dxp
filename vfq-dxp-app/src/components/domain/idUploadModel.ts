@@ -125,3 +125,13 @@ export function removeIdUpload<T extends UploadValue>(value: T, side: 'front' | 
     : { ...value, backScanned: false, backImage: undefined, backFile: undefined };
   return next.frontScanned || next.backScanned ? { ...next, sidesSet: undefined } : { ...value, ...cleared };
 }
+
+/**
+ * Which capture actions an ID step offers, by device: a web/desktop agent uses the reader ("Initiate scan") and a tablet agent uploads
+ * the document ("Upload document"); `both` (a step that always needs both) offers each on every device. When the reader is not available (it failed, or the step has none) upload stays on any device, so
+ * the agent is never left without a way in.
+ */
+export function idCaptureOptions(device: 'web' | 'tablet', readerAvailable: boolean, both = false): { scan: boolean; upload: boolean } {
+  if (both) return { scan: readerAvailable, upload: true };
+  return { scan: readerAvailable && device === 'web', upload: device === 'tablet' || !readerAvailable };
+}

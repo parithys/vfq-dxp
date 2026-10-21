@@ -195,3 +195,42 @@ test('guard: no console.log or debugger left in the app', () => {
   const bad = files.filter((f) => /\bconsole\.log\(|\bdebugger\b/.test(read(f)));
   assert.deepEqual(bad.map((f) => path.relative(SRC, f)), []);
 });
+
+// Dates are dd/mm/yyyy everywhere: only lib/format.ts may format a date, so no screen can show another style.
+test('no source formats dates outside lib/format.ts', async () => {
+  const { readdirSync, readFileSync, statSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const walk = (d) => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
+  const bad = walk('src')
+    .filter((f) => /\.tsx?$/.test(f) && !f.endsWith('lib/format.ts') && !f.includes('data/synthetic'))
+    .filter((f) => /toLocaleDateString\(|Intl\.DateTimeFormat|dateStyle:|month: '(short|long)'/.test(readFileSync(f, 'utf8').replace(/weekday: 'long'/g, '')))
+    .filter((f) => !/Dashboard|TelesalesOrdersTicketsSection|appointmentModel/.test(f));
+  assert.deepEqual(bad, []);
+});
+
+// ID capture by device: web uses the reader, tablet uploads; with no reader, upload stays on any device.
+test('idCaptureOptions: reader on web, upload on tablet, upload when there is no reader', async () => {
+  const { idCaptureOptions } = await load('/src/components/domain/idUploadModel.ts');
+  assert.deepEqual(idCaptureOptions('web', true), { scan: true, upload: false });
+  assert.deepEqual(idCaptureOptions('tablet', true), { scan: false, upload: true });
+  assert.deepEqual(idCaptureOptions('web', false), { scan: false, upload: true });
+  assert.deepEqual(idCaptureOptions('tablet', false), { scan: false, upload: true });
+});
+
+// Special Discounts Identification is an independent copy of the Mobile Postpaid Special Discounts section: it imports none of the shared
+// identification / customer-type parts or the device rule, and always offers both capture actions.
+test('Special Discounts Identification is decoupled from Customer Identification', async () => {
+  const dir = 'src/capabilities/SpecialDiscountsIdentification';
+  const shared = /from '(?:\.\.\/)+(?:components\/(?:patterns|domain)\/(?:IdFileUpload|PassportScanSections|QidImageUpload|QidInput|ScannedIdPreview|idUploadModel|qidImageUploadModel|GuidedContactStep|IdLookupStep|useIdLookup|CompanySearchInput)|capabilities\/(?:CustomerIdentification|CustomerType))'|lib\/deviceType/;
+  for (const f of fs.readdirSync(dir).filter((n) => /\.tsx?$/.test(n))) assert.ok(!shared.test(fs.readFileSync(path.join(dir, f), 'utf8')), `${f} reaches into a shared part or the device rule`);
+  const { idCaptureOptions } = await load('/src/capabilities/SpecialDiscountsIdentification/idUploadModel.ts');
+  assert.deepEqual(idCaptureOptions(true), { scan: true, upload: true });
+  assert.deepEqual(idCaptureOptions(false), { scan: false, upload: true });
+  const m = await load('/src/capabilities/SpecialDiscountsIdentification/specialDiscountsModel.ts');
+  assert.deepEqual(m.TYPE_OPTIONS.map((o) => o.label), ['Standard customer', 'Consumer B2B2C', 'Retiree', 'MADA']);
+});
+
+test('idCaptureOptions: a step that needs both offers both on any device', async () => {
+  const { idCaptureOptions } = await load('/src/components/domain/idUploadModel.ts');
+  for (const d of ['web', 'tablet']) assert.deepEqual(idCaptureOptions(d, true, true), { scan: true, upload: true });
+});

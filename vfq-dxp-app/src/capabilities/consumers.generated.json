@@ -18,8 +18,25 @@
         "workspace/customer360"
       ],
       "bypass": [
+        "components/patterns/NewCustomerForm.tsx  ->  components/patterns/idLookupModel.ts",
         "modules/order-management/AttachmentPreview.tsx  ->  components/domain/ScannedIdPreview.tsx"
       ]
+    },
+    "special-discounts-identification": {
+      "areas": [
+        "modules/fixed-line-fibre",
+        "modules/fwa-5g-home",
+        "modules/identity-customer-management",
+        "modules/mnp-fnp-porting",
+        "modules/mobile-postpaid",
+        "modules/mobile-prepaid",
+        "modules/mobile-service-changes",
+        "modules/new-connection",
+        "modules/pre-to-post-migration",
+        "modules/sim-number-management",
+        "workspace/administration"
+      ],
+      "bypass": []
     },
     "number-selection": {
       "areas": [
@@ -220,7 +237,8 @@
         "modules/mobile-service-changes",
         "modules/new-connection",
         "modules/pre-to-post-migration",
-        "workspace/administration"
+        "workspace/administration",
+        "workspace/customer360"
       ],
       "bypass": []
     },
@@ -270,7 +288,8 @@
         "modules/mobile-service-changes",
         "modules/new-connection",
         "modules/pre-to-post-migration",
-        "workspace/administration"
+        "workspace/administration",
+        "workspace/customer360"
       ],
       "bypass": []
     },

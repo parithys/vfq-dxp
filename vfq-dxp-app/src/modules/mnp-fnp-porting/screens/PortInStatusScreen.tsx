@@ -18,6 +18,7 @@ import { useCustomerContext } from '../../../stores/customerContextStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import { WIZARD_ID_BY_FLOW } from '../../new-connection/newConnectionModel';
 import { PORT_IN_STATUS_PATH } from './portInStatusPath';
+import { formatDateTime } from '../../../lib/format';
 
 const KIND = 'mnp-portin-orders';
 
@@ -36,7 +37,7 @@ function statusText(r: PortInRecord): string {
   return r.orderStatus;
 }
 
-const when = (iso?: string) => (iso ? new Date(iso).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '-');
+const when = (iso?: string) => (iso ? formatDateTime(iso) : '-');
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

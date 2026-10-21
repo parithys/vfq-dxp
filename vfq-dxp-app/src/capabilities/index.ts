@@ -1,6 +1,7 @@
 // The Capability Library: every reusable capability, one folder each. Journeys import from here, never from a
 // capability's parts. See capabilities/README.md.
 export * from './CustomerIdentification';
+export * from './SpecialDiscountsIdentification';
 export * from './NumberSelection';
 export * from './BillingAccount';
 export * from './ServiceAddress';

@@ -152,8 +152,8 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
           {/* Identity Details: registry-owned, so read-only CONTENT (label + value), not disabled inputs. Every fact
               that was a field before is still here; the first name, last name, date of birth, expiry, nationality
               and gender still gate Continue through the form's own required rules, which read the same values.
-              Document Type is omitted under verifyThenFetch (the agent already chose it); the employer rows
-              appear only for a sponsored (B2B2C) customer. */}
+              Document Type is omitted under verifyThenFetch (the agent already chose it); the Sponsor and
+              Occupation rows are shown for every customer. */}
           <IdentityDetailsCard
             status={
               verifyThenFetch && value.moiResult.moiUpdateTime
@@ -161,7 +161,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                 : 'MOI validated'
             }
             facts={identityFacts(
-              { ...value, idTypeLabel: value.idType ? idTypeLabel(value.idType) : '', companyName: value.isB2B2C ? value.companyName : undefined },
+              { ...value, idTypeLabel: value.idType ? idTypeLabel(value.idType) : '', companyName: value.companyName },
               { showDocumentType: !verifyThenFetch }
             )}
           />
@@ -172,7 +172,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                 phone) share a row with the one preference field evidenced
                 alongside them - see isValidEmail's header note: "Email/Alt
                 Phone/Language ... are agent-entered". */}
-            {/* The customer's salutation: the agent records how they are addressed. Optional. */}
+            {/* Salutation (optional, saved to the customer profile) and the language the customer prefers, side by side. */}
             <div className="grid grid-cols-3 gap-4 mb-4">
               <Select
                 label="Salutation"
@@ -180,63 +180,6 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                 value={value.salutation ?? ''}
                 onChange={(e) => onChange({ ...value, salutation: e.target.value || undefined })}
                 options={SALUTATIONS.map((s) => ({ value: s, label: s }))}
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              {/* Verification state rides INSIDE the field as a tick on its
-                  right edge (2026-09-27), replacing the badge that sat
-                  underneath. The badge was as wide as the input and read as a
-                  second control; the status belongs to the value, so it now
-                  sits with it. Only the VERIFIED state gets a mark - see
-                  emailVerification. */}
-              <Input
-                label="Email Address"
-                type="email"
-                required
-                // New customer: the address comes from NAS and is shown masked
-                // (read-only - the stored value stays the real address). Existing
-                // customer: the address from Siebel is shown as available and
-                // stays editable.
-                value={value.moiResult?.isNewCustomer && !value.moiResult?.createdByAgent && value.email ? maskEmail(value.email) : (value.email ?? '')}
-                readOnly={Boolean(value.moiResult?.isNewCustomer && !value.moiResult?.createdByAgent && value.email)}
-                placeholder="customer@example.qa"
-                error={value.email && !isValidEmail(value.email) ? 'Please enter a valid email address.' : undefined}
-                helperText={
-                  emailVerification(value.email, value.moiResult?.email).hint ??
-                  (value.moiResult?.emailSource && value.email ? <span className={SYNTHETIC_CLASS}>{`Fetched from ${value.moiResult.emailSource}`}</span> : undefined)
-                }
-                trailingAddon={
-                  !verifyThenFetch && emailVerification(value.email, value.moiResult?.email).verified ? (
-                    <VerifiedBadge label="Email address verified" />
-                  ) : undefined
-                }
-                onChange={(e) => onChange({ ...value, email: e.target.value })}
-              />
-              <PhoneNumberInput
-                label="Alternate phone #"
-                // Optional in verifyThenFetch (New Connection); still validated when entered.
-                required={!verifyThenFetch}
-                // Optional in verifyThenFetch, so it must not pull the cursor on arrival.
-                noAutoFocus={verifyThenFetch}
-                // Dial code pinned to Qatar: the rule names one country, so a
-                // picker offering 200 others would present a choice in which
-                // every alternative fails validation.
-                fixedIso="QA"
-                // Qatar numbers are 8 digits after the dial code. Without this
-                // the cap is E.164's 15-minus-dial-code, i.e. 12, so the field
-                // happily took "777777777777" and only the validator
-                // underneath objected. The 9th keystroke now simply does not
-                // land.
-                maxNationalDigits={8}
-                helperText="Service notifications will be sent to this Qatar mobile number."
-                value={value.altPhone ?? ''}
-                placeholder="5566 7766"
-                error={
-                  value.altPhone && !isValidAltPhone(value.altPhone)
-                    ? 'Enter a valid Qatar mobile number.'
-                    : undefined
-                }
-                onChange={(e) => onChange({ ...value, altPhone: e.target.value })}
               />
               {/* Evidenced agent-entered field - `language` has held a slot on
                   GuidedContactValue since this step's interface was written,
@@ -263,6 +206,72 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                   { value: 'Malayalam', label: 'Malayalam' },
                   { value: 'Filipino', label: 'Filipino' },
                 ]}
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              {/* Verification state rides INSIDE the field as a tick on its
+                  right edge (2026-09-27), replacing the badge that sat
+                  underneath. The badge was as wide as the input and read as a
+                  second control; the status belongs to the value, so it now
+                  sits with it. Only the VERIFIED state gets a mark - see
+                  emailVerification. */}
+              <Input
+                label="Personal Email ID"
+                type="email"
+                required
+                // New customer: the address comes from NAS and is shown masked
+                // (read-only - the stored value stays the real address). Existing
+                // customer: the address from Siebel is shown as available and
+                // stays editable.
+                value={value.moiResult?.isNewCustomer && !value.moiResult?.createdByAgent && value.email ? maskEmail(value.email) : (value.email ?? '')}
+                readOnly={Boolean(value.moiResult?.isNewCustomer && !value.moiResult?.createdByAgent && value.email)}
+                placeholder="customer@example.qa"
+                error={value.email && !isValidEmail(value.email) ? 'Please enter a valid email address.' : undefined}
+                helperText={
+                  emailVerification(value.email, value.moiResult?.email).hint ??
+                  (value.moiResult?.emailSource && value.email ? <span className={SYNTHETIC_CLASS}>{`Fetched from ${value.moiResult.emailSource}`}</span> : undefined)
+                }
+                trailingAddon={
+                  !verifyThenFetch && emailVerification(value.email, value.moiResult?.email).verified ? (
+                    <VerifiedBadge label="Email address verified" />
+                  ) : undefined
+                }
+                onChange={(e) => onChange({ ...value, email: e.target.value })}
+              />
+              {/* Work Email ID: optional for every customer (existing, new, B2B2C); validated when entered. */}
+              <Input
+                label="Work Email ID"
+                type="email"
+                placeholder="name@company.qa"
+                value={value.workEmail ?? ''}
+                error={value.workEmail && !isValidEmail(value.workEmail) ? 'Please enter a valid email address.' : undefined}
+                onChange={(e) => onChange({ ...value, workEmail: e.target.value || undefined })}
+              />
+              <PhoneNumberInput
+                label="Alternate phone #"
+                // Optional in verifyThenFetch (New Connection); still validated when entered.
+                required={!verifyThenFetch}
+                // Optional in verifyThenFetch, so it must not pull the cursor on arrival.
+                noAutoFocus={verifyThenFetch}
+                // Dial code pinned to Qatar: the rule names one country, so a
+                // picker offering 200 others would present a choice in which
+                // every alternative fails validation.
+                fixedIso="QA"
+                // Qatar numbers are 8 digits after the dial code. Without this
+                // the cap is E.164's 15-minus-dial-code, i.e. 12, so the field
+                // happily took "777777777777" and only the validator
+                // underneath objected. The 9th keystroke now simply does not
+                // land.
+                maxNationalDigits={8}
+                helperText="Service notifications will be sent to this Qatar mobile number."
+                value={value.altPhone ?? ''}
+                placeholder="5566 7766"
+                error={
+                  value.altPhone && !isValidAltPhone(value.altPhone)
+                    ? 'Enter a valid Qatar mobile number.'
+                    : undefined
+                }
+                onChange={(e) => onChange({ ...value, altPhone: e.target.value })}
               />
               {/* Fixed Line evidences a "Get IPTV?" field at Contact; FWA's
                   evidenced set does not, hence the prop. Restored here after a

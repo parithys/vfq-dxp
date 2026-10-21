@@ -23,6 +23,7 @@ export function QidImageUpload({
   onScan,
   error,
   canScan = true,
+  bothCaptureActions = false,
   documentType = 'QID',
   demoTypes,
   onDemoScan,
@@ -134,6 +135,7 @@ export function QidImageUpload({
         onScan={onScan}
         error={error}
         canScan={canScan}
+        bothCaptureActions={bothCaptureActions}
         demoTypes={demoTypes}
         onDemoScan={onDemoScan}
         blurFirstScan={blurFirstScan}
@@ -156,6 +158,7 @@ export function QidImageUpload({
                 completed scan (no reader pass, so no attempt is charged). */}
             <IdFileUpload
               align="end"
+              bothActions={bothCaptureActions}
               disabled={scanning}
               leading={
                 canScan ? (

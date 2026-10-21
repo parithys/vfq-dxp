@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { Badge, type BadgeVariant } from '../../components/primitives/Badge';
 import { Icon } from '../../components/primitives/Icon';
 import { RevealValue, useFieldAccess } from './fieldAccess';
+import { formatDate } from '../../lib/format';
 
 const PHONE_ICON = 'M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z';
 const MAIL_ICON = 'M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M22 6l-10 7L2 6';
@@ -66,7 +67,7 @@ const initials = (name: string) =>
 function formatDob(dob?: string) {
   if (!dob) return undefined;
   const d = new Date(dob);
-  return Number.isNaN(d.getTime()) ? dob : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return Number.isNaN(d.getTime()) ? dob : formatDate(d);
 }
 
 /** One identity fact: icon, value over a caption. Facts sit in a row separated by thin vertical rules. */

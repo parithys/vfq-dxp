@@ -1,6 +1,7 @@
 import * as mockDataEngine from './mockDataEngine';
 import { outstandingBalance, unpaidInvoiceTotal } from './billingBalance';
 import { planOfAsset } from './customerServicesEngine';
+import { formatMonthYear } from '../lib/format';
 
 
 export interface CustomerRecord {
@@ -345,7 +346,7 @@ function formatBillPeriod(period: unknown): string {
   const match = /^(\d{4})-(\d{2})$/.exec(String(period ?? ''));
   if (!match) return String(period ?? '-');
   const date = new Date(Number(match[1]), Number(match[2]) - 1, 1);
-  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  return formatMonthYear(date);
 }
 
 export interface BillingSummary {

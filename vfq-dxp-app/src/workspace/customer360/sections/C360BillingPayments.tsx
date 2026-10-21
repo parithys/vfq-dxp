@@ -7,6 +7,7 @@ import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { GridTable, IC, IconTile, KpiGrid, KpiTile, Panel, Pill, StatusPill, TabPage, fmtDate, qar, type GridCol } from './C360Kit';
 import { Dv } from '../demoValues';
 import { str } from '../../../lib/values';
+import { formatDate } from '../../../lib/format';
 
 type Rec = Record<string, unknown>;
 const DASH = '-';
@@ -20,7 +21,7 @@ function periodRange(period: unknown): string {
   const mo = Number(m[2]);
   const first = new Date(y, mo - 1, 1);
   const last = new Date(y, mo, 0);
-  const f = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  const f = (d: Date) => formatDate(d);
   return `${f(first)} – ${f(last)}`;
 }
 

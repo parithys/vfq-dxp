@@ -1,4 +1,5 @@
 import { currentAgentId } from '../../../stores/authStore';
+import { saveCustomerSalutation } from '../../new-connection/saveCustomerSalutation';
 import { idScanAttachments } from '../../new-connection/idScanAttachments';
 import { COLLECTION_TEAM_ROLE, emailVerification, maskEmail, persistBillingAccount } from '../../../capabilities';
 import { decisionRecord, needsCreditControl } from '../../../engines/connectionEligibility';
@@ -64,6 +65,8 @@ export async function submitFixedActivationOrder(
   });
 
   const orderId = `ORD-${Date.now().toString().slice(-6)}`;
+  // The salutation the agent entered is saved to the customer's profile (shown in Customer 360).
+  await saveCustomerSalutation(eligibility?.customerId, contact.salutation, updateRecord);
   await createRecord('orders', {
     orderId,
     orderType: 'New Fixed Line Activation',
@@ -77,6 +80,7 @@ export async function submitFixedActivationOrder(
     idNumber: contact.idNumber,
     customerEmail: contact.email,
     customerSalutation: contact.salutation,
+    customerWorkEmail: contact.workEmail,
     // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
     nationalAddress: contact.moiResult?.nationalAddress,
     // The identity document captured at Customer Identification, as scanned or uploaded.

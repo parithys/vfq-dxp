@@ -1,4 +1,5 @@
 import { currentAgentId } from '../../stores/authStore';
+import { saveCustomerSalutation } from './saveCustomerSalutation';
 import { hrnAdvanceQar } from '../../engines/hrnConfiguration';
 import { usePersonaStore } from '../../stores/personaStore';
 import { monthlyCharges } from '../../engines/postpaidPricing';
@@ -147,11 +148,14 @@ export async function submitNewConnectionOrder(
       });
 
       const orderId = `ORD-${Date.now().toString().slice(-6)}`;
+      // The salutation the agent entered is saved to the customer's profile (shown in Customer 360).
+      await saveCustomerSalutation(eligibility?.customerId, contact.salutation, updateRecord);
       await createRecord('orders', {
         orderId,
         // The email captured on Customer Identification, carried unchanged.
         customerEmail: contact.email,
         customerSalutation: contact.salutation,
+        customerWorkEmail: contact.workEmail,
         // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
         nationalAddress: contact.moiResult?.nationalAddress,
         orderType: 'New Postpaid Activation',
