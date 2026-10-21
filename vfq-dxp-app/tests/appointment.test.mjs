@@ -26,8 +26,8 @@ test('the earliest date is the lead time from today, moved on to a working day',
 
 test('the date strip is seven working days from the earliest, skipping Friday and Saturday', () => {
   assert.deepEqual(m.workingDaysFrom('2026-10-18'), ['2026-10-18', '2026-10-19', '2026-10-20', '2026-10-21', '2026-10-22', '2026-10-25', '2026-10-26']);
-  assert.equal(m.dateShort('2026-10-18'), 'Sun 18 Oct');
-  assert.equal(m.dateLong('2026-10-18'), 'Sunday 18 Oct 2026');
+  assert.equal(m.dateShort('2026-10-18'), 'Sun 18/10/2026');
+  assert.equal(m.dateLong('2026-10-18'), 'Sunday 18/10/2026');
   assert.equal(m.monthYear('2026-10-18'), 'October 2026');
   assert.equal(m.slotLabel('10:00-12:00'), '10:00 - 12:00');
 });
@@ -44,7 +44,7 @@ test('a slot is full at capacity; the day counts its bookable slots and the tech
 
 test('a requested date must be between the earliest date and 30 days ahead, on a working day; the time within 08:00-18:00', () => {
   assert.equal(m.requestedDateError('2026-10-25', TODAY), undefined);
-  assert.match(m.requestedDateError('2026-10-16', TODAY), /earliest date is Sun 18 Oct/);
+  assert.match(m.requestedDateError('2026-10-16', TODAY), /earliest date is Sun 18\/10\/2026/);
   assert.match(m.requestedDateError('2026-11-20', TODAY), /at most 30 days/);
   assert.match(m.requestedDateError('2026-10-30', TODAY), /working day/, 'a Friday');
   assert.equal(m.requestedTimeError('09:30'), undefined);

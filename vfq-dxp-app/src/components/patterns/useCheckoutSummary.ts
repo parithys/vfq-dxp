@@ -1,6 +1,8 @@
+import { hrnAdvanceQar } from '../../engines/hrnConfiguration';
+import { usePersonaStore } from '../../stores/personaStore';
 import { useEffect, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
-import { monthlyCharges, firstBillCharges, HRN_ADVANCE_QAR, FREE_NUMBER_PRICE_CEILING_QAR, starNumberOverageQar, starEntitlementQar as planStarEntitlementQar } from '../../engines/postpaidPricing';
+import { monthlyCharges, firstBillCharges, FREE_NUMBER_PRICE_CEILING_QAR, starNumberOverageQar, starEntitlementQar as planStarEntitlementQar } from '../../engines/postpaidPricing';
 import type { EligibilityResult } from '../domain/eligibilityTypes';
 import type { SimTypeValue } from '../domain/SimTypeStep';
 import type { Product, StarNumberTier, CheckoutTotals, TncLegalFacts } from './checkoutSummaryModel';
@@ -62,7 +64,9 @@ export function useCheckoutSummary({
   // still be read back in full even when BR-115's entitlement covers most or
   // all of it.
   const numberDelta = numberPriceQar ?? 0;
-  const hrnAdvance = eligibility?.requiresHrnAdvance ? HRN_ADVANCE_QAR : 0;
+  // By the customer's HRN category and the agent's persona (hrnConfiguration.ts).
+  const personaId = usePersonaStore((s) => s.activePersonaId);
+  const hrnAdvance = eligibility?.requiresHrnAdvance ? hrnAdvanceQar({ nationality: eligibility.nationality, personaId }) : 0;
   // A number priced at or above FREE_NUMBER_PRICE_CEILING_QAR is a Star
   // number; anything below it is "free to the customer" (2026-09-28
   // direction), regardless of its exact catalogue price - the picker already

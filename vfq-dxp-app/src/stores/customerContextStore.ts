@@ -12,7 +12,7 @@ import { persist, createJSONStorage, type StateStorage } from 'zustand/middlewar
 //                                  are identified until the journey is explicitly ended. Nothing else may
 //                                  replace it while it is held:
 //                                    - Close Activity on the Activity Final page
-//                                    - Save & Exit
+//                                    - Save as Draft
 //                                    - Abandon Order
 //                                    - the session ending (sign-out; it lives in sessionStorage, so
 //                                      closing the tab too)

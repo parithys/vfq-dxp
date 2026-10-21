@@ -267,6 +267,19 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
             placeholder="Queue"
             options={['FL Agents', 'Complaints Team'].map((q) => ({ value: q, label: q }))}
           />
+          {(search || statusFilter || priorityFilter || queueFilter) && (
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setSearch('');
+                setStatusFilter('');
+                setPriorityFilter('');
+                setQueueFilter('');
+              }}
+            >
+              Reset filters
+            </Button>
+          )}
           <Button variant="secondary" onClick={exportList} disabled={filtered.length === 0}>
             Export (CSV)
           </Button>

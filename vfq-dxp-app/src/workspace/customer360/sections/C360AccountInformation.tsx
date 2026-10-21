@@ -1,3 +1,5 @@
+import { defaultCreditLimitForSegment } from '../../../engines/hrnConfiguration';
+import { canChangePrimaryContact, contactName, primaryContactOf } from '../primaryContactModel';
 import { Button } from '../../../components/primitives/Button';
 import { SegmentedTabs } from '../../../components/primitives/SegmentedTabs';
 import { useState } from 'react';
@@ -62,11 +64,14 @@ export function C360AccountInformation({
   services,
   goToTab,
   onEdit,
+  onChangePrimaryContact,
 }: {
   data: Customer360Data;
   services: CustomerService[];
   goToTab?: (key: string) => void;
   onEdit?: () => void;
+  /** Opens the Primary Contact change (after verification); offered only when the account has more than one contact. */
+  onChangePrimaryContact?: () => void;
 }) {
   const go = (key: string) => (goToTab ? () => goToTab(key) : undefined);
   const defaultMode = data.customer.lineType === 'Prepaid' ? 'prepaid' : 'postpaid';
@@ -75,7 +80,8 @@ export function C360AccountInformation({
   const account = data.accounts[0];
   const profile = data.billingProfiles[0];
   const summary = computeBillingSummary(data);
-  const creditLimit = num(summary.creditLimit?.creditLimitQar ?? summary.creditLimit?.creditLimitQAR);
+  // The limit on file, else the default for the customer's segment.
+  const creditLimit = num(summary.creditLimit?.creditLimitQar ?? summary.creditLimit?.creditLimitQAR) ?? defaultCreditLimitForSegment(data.customer.segment);
   const outstanding = data.bills.length > 0 || data.payments.length > 0 ? summary.outstanding : undefined;
   const utilisation = creditLimit && outstanding !== undefined ? Math.round((outstanding / creditLimit) * 100) : undefined;
   const latestTotal = num(summary.latestBill?.totalAmount);
@@ -108,7 +114,9 @@ export function C360AccountInformation({
     return { id, name: str(bp?.name) ?? id, count: data.accounts.filter((a) => a.billingProfileId === id).length };
   });
 
-  const primaryContactId = data.contacts.find((c) => c.idNumber && c.idNumber === data.customer.qid)?.contactRecordId;
+  // The Primary Contact: the one chosen on the billing profile, else the first contact.
+  const primary = primaryContactOf(data.contacts, data.billingProfiles[0]?.primaryContactId);
+  const primaryContactId = primary?.contactRecordId;
   const contactRows = [
     ...data.contacts.map((c) => ({
       key: String(c.contactRecordId),
@@ -251,8 +259,19 @@ export function C360AccountInformation({
             {overdue > 0 && <p className="text-[var(--warn-text)] text-[length:var(--fs-caption)] pt-2">{overdue} trouble ticket{overdue === 1 ? '' : 's'} past SLA.</p>}
           </Panel>
 
-          <Panel icon={IC.mail} title="Billing Contact">
+          <Panel
+            icon={IC.mail}
+            title="Billing Contact"
+            action={
+              onChangePrimaryContact && canChangePrimaryContact(data.contacts.length) && (
+                <Button variant="secondary" compact onClick={onChangePrimaryContact}>
+                  Edit
+                </Button>
+              )
+            }
+          >
             <dl>
+              <Field label="Primary Contact" value={primary ? contactName(primary) : undefined} />
               <Field label="Billing Email ID" value={str(profile?.billingContactEmail)} />
               <Field label="Bill Type" value={str(profile?.billingType)} />
               <Field label="Bill Cycle" value={str(profile?.billingCycle)} />

@@ -32,7 +32,7 @@ export function IdLookupStatus({ loading, failure, retrying, expiredNotice, dupl
           attempts={failure?.attempts ?? 0}
           retrying={retrying}
           onRetry={() => void runMoiValidation({ retry: true })}
-          exhaustedHint="Retake the scan to read the document again, or use Save & Exit to resume later."
+          exhaustedHint="Retake the scan to read the document again, or use Save as Draft to resume later."
         />
       )}
       {expiredNotice && !hasMoiResult && (

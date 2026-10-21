@@ -52,6 +52,7 @@
     "age": 36,
     "gender": "Male",
     "companyName": "Acme Trading Qatar W.L.L.",
+    "occupation": "Sales Coordinator",
     "_companyNameNote": "App-level demo addition (2026-09-26) - this field is what the Contact step now derives B2B2C from, replacing the agent-ticked 'B2B2C Order' checkbox. Only CUST-2001 carried a companyName before, and that record is the employer's own contact rather than a sponsored consumer, so no consumer resolved as B2B2C and the derived flag could never fire - which would have left FWA, MNP and Fixed Line with no way to route an order for approval. Bimal Thapa is an expat consumer on a Passport, the plausible sponsored-employee shape, and Passport is offered by exactly those three journeys. New Postpaid deliberately does NOT offer Passport, so its scan path stays an ordinary consumer sale and B2B2C does not silently start routing every postpaid order to approval.",
     "benefitEligibility": [
       "b2b2c"
@@ -125,6 +126,7 @@
     "phone": "+97455512005",
     "preferredLanguage": "English",
     "companyName": "Acme Trading Qatar W.L.L.",
+    "occupation": "Sales Coordinator",
     "age": 44,
     "gender": "Female",
     "benefitEligibility": [],
@@ -632,6 +634,7 @@
     "gender": "Male",
     "lineType": "Postpaid",
     "companyName": "Gulf Logistics W.L.L.",
+    "occupation": "Logistics Coordinator",
     "benefitEligibility": [
       "mada",
       "b2b2c"
@@ -663,6 +666,7 @@
     "gender": "Female",
     "lineType": "Postpaid",
     "companyName": "Gulf Logistics W.L.L.",
+    "occupation": "Logistics Coordinator",
     "benefitEligibility": [
       "b2b2c"
     ],
@@ -693,6 +697,7 @@
     "gender": "Male",
     "lineType": "Postpaid",
     "companyName": "Doha Contracting Co.",
+    "occupation": "Site Supervisor",
     "hrnAdvancePaymentRequired": true,
     "benefitEligibility": [
       "b2b2c"
@@ -856,6 +861,7 @@
     "gender": "Male",
     "lineType": "Postpaid",
     "companyName": "Doha Contracting Co.",
+    "occupation": "Site Supervisor",
     "hrnAdvancePaymentRequired": true,
     "benefitEligibility": [
       "b2b2c"
@@ -1105,7 +1111,7 @@
     "lastName": "Al-Hashemi",
     "dob": "1991-08-14",
     "nationality": "Qatari",
-    "segment": "Premium",
+    "segment": "Consumer",
     "email": "zainab.ibrahim.khalid.alhashemi@example.qa",
     "phone": "+97455513036",
     "preferredLanguage": "English",
@@ -1171,6 +1177,7 @@
     "lineType": "Postpaid",
     "hrnAdvancePaymentRequired": true,
     "companyName": "Gulf Logistics W.L.L.",
+    "occupation": "Logistics Coordinator",
     "benefitEligibility": [
       "b2b2c"
     ],
@@ -1479,7 +1486,7 @@
     "lastName": "Al-Naimi",
     "dob": "1978-07-14",
     "nationality": "Qatari",
-    "segment": "Premium",
+    "segment": "Consumer",
     "email": "khalifa.hamad.saeed.alnaimi@example.qa",
     "phone": "+97455513050",
     "preferredLanguage": "Arabic",
@@ -1557,7 +1564,7 @@
     "lastName": "Al-Kuwari",
     "dob": "1989-11-09",
     "nationality": "Qatari",
-    "segment": "Premium",
+    "segment": "Consumer",
     "email": "aisha.mohammed.khalid.alkuwari@example.qa",
     "phone": "+97455513053",
     "preferredLanguage": "Arabic",

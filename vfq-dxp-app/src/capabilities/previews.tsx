@@ -23,6 +23,7 @@ import { LineSelection } from './LineSelection';
 import type { CustomerLine } from './LineSelection';
 import { CheckoutSummary, PrepaidCheckout } from './CheckoutSummary';
 import { CustomerIdentification } from './CustomerIdentification';
+import { SpecialDiscountsIdentification } from './SpecialDiscountsIdentification';
 import { NumberSelection } from './NumberSelection';
 import { Payment } from './Payment';
 import { PlanSelection } from './PlanSelection';
@@ -34,7 +35,12 @@ import { SimType } from './SimType';
 
 function Identification() {
   const [v, setV] = useState({});
-  return <CustomerIdentification value={v} onChange={setV} />;
+  // As the journeys use it: the first scan comes back unclear, and Retake gives the clear capture.
+  return <CustomerIdentification value={v} onChange={setV} verifyThenFetch />;
+}
+function SpecialDiscountsId() {
+  const [v, setV] = useState({});
+  return <SpecialDiscountsIdentification value={v} onChange={setV} idNumber="28456701234" />;
 }
 function Number() {
   const [n, setN] = useState<string | undefined>();
@@ -410,6 +416,7 @@ function Complete() {
 
 export const CAPABILITY_PREVIEWS: Record<string, () => ReactNode> = {
   'customer-identification': () => <Identification />,
+  'special-discounts-identification': () => <SpecialDiscountsId />,
   'number-selection': () => <Number />,
   'billing-account': () => <Billing />,
   'service-address': () => <Address />,

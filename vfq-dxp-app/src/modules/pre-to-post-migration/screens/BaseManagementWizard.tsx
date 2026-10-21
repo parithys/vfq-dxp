@@ -56,7 +56,7 @@ export function BaseManagementWizard() {
             label: CUSTOMER_IDENTIFICATION_LABEL,
             render: ({ values, setValue }) => (
               <div className="space-y-4">
-                <CustomerIdentification value={(values.qid as IdLookupValue) ?? {}} onChange={(v) => setValue('qid', v)} />
+                <CustomerIdentification value={(values.qid as IdLookupValue) ?? {}} onChange={(v) => setValue('qid', v)} allowNewCustomer={false} />
                 <div className="grid grid-cols-2 gap-4">
                   <Input label="Email" value={(values.email as string) ?? ''} onChange={(e) => setValue('email', e.target.value)} />
                   <Select

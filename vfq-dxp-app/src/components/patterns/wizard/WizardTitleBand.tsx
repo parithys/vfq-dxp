@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react';
 import { Button } from '../../primitives/Button';
 
-/** Title row (title + Save & Exit / Abandon Order), the fixed customer, and the pop-up-blocked notice. */
+/** Title row (title + Save as Draft / Abandon Order), the fixed customer, and the pop-up-blocked notice. */
 export function WizardTitleBand({
   title,
   titleAside,
   popupBlocked,
   onSaveExit,
+  saveHidden = false,
   onAbandon,
   abandonHidden,
   onRequestSaveExit,
@@ -16,32 +17,34 @@ export function WizardTitleBand({
   titleAside?: ReactNode;
   popupBlocked: boolean;
   onSaveExit: (() => void) | undefined;
+  /** The current step does not offer Save as Draft (see WizardStep.canSaveDraft). */
+  saveHidden?: boolean;
   onAbandon: (() => void) | undefined;
   abandonHidden: boolean;
   onRequestSaveExit: () => void;
   onRequestAbandon: () => void;
 }) {
-  // Save & Exit and Abandon Order sit in the page's title row, at the right.
+  // Save as Draft and Abandon Order sit in the page's title row, at the right.
   const exitLinks = (
     <>
-              {/* "Save & Exit" (2026-09-28) - distinct from Abandon: this
+              {/* "Save as Draft" (2026-09-28) - distinct from Abandon: this
                   keeps the draft for later resumption rather than deleting
                   it. No confirmation modal, unlike Abandon - it is not
                   destructive, so it should not carry the same weight. Stays
                   available even once locked: a signed-but-unpaid order is
                   exactly the kind of thing an agent needs to be able to set
                   aside and come back to. */}
-              {onSaveExit && (
+              {onSaveExit && !saveHidden && (
                 <Button
                   variant="secondary"
                   compact
                   onClick={onRequestSaveExit}
                 >
-                  Save & Exit
+                  Save as Draft
                 </Button>
               )}
               {/* "Abandon Order" - removed 2026-09-26, restored 2026-09-27 on
-                  direction. A ghost (tertiary) button as of 2026-10-04, with Save & Exit as
+                  direction. A ghost (tertiary) button as of 2026-10-04, with Save as Draft as
                   the secondary button; neither is primary, so neither competes with Continue. Confirmed before it fires, because it discards
                   everything the agent has entered. Hidden from hideAbandonFrom
                   onward (2026-09-28) - see that prop's own note. */}

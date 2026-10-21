@@ -1,5 +1,8 @@
 import { currentAgentId } from '../../stores/authStore';
-import { monthlyCharges, HRN_ADVANCE_QAR } from '../../engines/postpaidPricing';
+import { saveCustomerSalutation } from './saveCustomerSalutation';
+import { hrnAdvanceQar } from '../../engines/hrnConfiguration';
+import { usePersonaStore } from '../../stores/personaStore';
+import { monthlyCharges } from '../../engines/postpaidPricing';
 import { emailVerification, maskEmail, persistBillingAccount } from '../../capabilities';
 import type { GuidedContactValue } from '../../capabilities';
 import type { BillingAccountValue } from '../../capabilities';
@@ -31,7 +34,7 @@ type EntityStore = ReturnType<typeof useEntityStore.getState>;
  */
 export async function submitNewConnectionOrder(
   values: Record<string, unknown>,
-  { flow, createRecord }: { flow: NewConnectionFlow } & Pick<EntityStore, 'createRecord'>
+  { flow, createRecord, updateRecord }: { flow: NewConnectionFlow } & Pick<EntityStore, 'createRecord'> & Partial<Pick<EntityStore, 'updateRecord'>>
 ): Promise<ConfirmedOrder> {
       const contact = values.contact as GuidedContactValue;
       assertEligibilityChecked(values);
@@ -108,19 +111,11 @@ export async function submitNewConnectionOrder(
       const discountProofDocument = values.discountProofDocument as { fileName: string } | undefined;
       const attachments = [
         ...idScanAttachments(contact.idType, contact.qidScans),
-        ...(customerType?.evidenceUpload
-          ? [
-              {
-                label: 'Supporting document',
-                detail: `Uploaded for ${customerType.type === 'b2b2c' ? 'B2B2C' : customerType.type === 'retired' ? 'Retired' : 'MADA'}: ${customerType.evidenceUpload.fileName}`,
-              },
-            ]
-          : []),
         ...(customerType?.officeId?.frontScanned && customerType.officeId.backScanned
           ? [
               {
                 label: 'Office ID card',
-                detail: `Scanned for ${customerType.type === 'b2b2c' ? 'B2B2C' : customerType.type === 'retired' ? 'Retired' : 'MADA'}`,
+                detail: `${customerType.officeId.source === 'upload' ? 'Uploaded' : 'Scanned'} for ${customerType.type === 'b2b2c' ? 'B2B2C' : customerType.type === 'retired' ? 'Retired' : 'MADA'}`,
               },
             ]
           : []),
@@ -141,6 +136,7 @@ export async function submitNewConnectionOrder(
       const address = values.address as ConfirmedOrder['address'];
       const billingProfileId = await persistBillingAccount(billingAccount, {
         createRecord,
+        updateRecord,
         kind: 'Consumer Mobile Postpaid',
         customerId: eligibility?.customerId,
         idNumber: contact.idNumber,
@@ -152,10 +148,16 @@ export async function submitNewConnectionOrder(
       });
 
       const orderId = `ORD-${Date.now().toString().slice(-6)}`;
+      // The salutation the agent entered is saved to the customer's profile (shown in Customer 360).
+      await saveCustomerSalutation(eligibility?.customerId, contact.salutation, updateRecord);
       await createRecord('orders', {
         orderId,
         // The email captured on Customer Identification, carried unchanged.
         customerEmail: contact.email,
+        customerSalutation: contact.salutation,
+        customerWorkEmail: contact.workEmail,
+        // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
+        nationalAddress: contact.moiResult?.nationalAddress,
         orderType: 'New Postpaid Activation',
         ...decisionRecord(eligibility?.connectionDecision),
         createdAt: new Date().toISOString(),
@@ -171,7 +173,7 @@ export async function submitNewConnectionOrder(
                 manualIdEntry ? 'Identity manually entered - Store Manager approval required' : '',
                 idTypeRouting ? 'ID type cannot be sold directly - routed to Back Office Fulfilment approval workflow' : '',
                 eligibility?.checks.some((c) => c.id === 'id-validity' && c.outcome === 'approval-routing') ? 'ID expiry date not on file - routed for approval' : '',
-                eligibility?.requiresHrnAdvance ? `HRN customer - QAR ${HRN_ADVANCE_QAR} advance payment applies` : '',
+                eligibility?.requiresHrnAdvance ? `HRN customer - QAR ${hrnAdvanceQar({ nationality: eligibility?.nationality, personaId: usePersonaStore.getState().activePersonaId })} advance payment applies` : '',
                 (Boolean(contact.isB2B2C) && !customerType?.rejected) || customerType?.type === 'b2b2c' ? 'B2B2C employee - Proof of Employment to be verified' : '',
                 discount && SUPPORTING_ID_DISCOUNT_TYPES.has(discount.addonType ?? '') ? `${discount.addonType} - supporting document to be verified` : '',
               ].filter(Boolean).join(' | '),
@@ -272,7 +274,7 @@ export async function submitNewConnectionOrder(
         // Shown exactly as on Customer Identification: masked for a new customer (NAS email),
         // the Billing Profile / customer address for an existing one. The message itself is
         // addressed to the real address.
-        customerEmailDisplay: contact.moiResult?.isNewCustomer && contact.email ? maskEmail(contact.email) : contact.email,
+        customerEmailDisplay: contact.moiResult?.isNewCustomer && !contact.moiResult?.createdByAgent && contact.email ? maskEmail(contact.email) : contact.email,
         customerEmailVerified: emailVerified,
       };
 

@@ -10,6 +10,15 @@ export interface QidImageUploadValue {
    */
   frontImage?: string;
   backImage?: string;
+  /** How the document came in: absent / 'scan' for the reader, 'upload' for files uploaded in its place. */
+  source?: 'scan' | 'upload';
+  /** Upload only: one file shows both sides (a single image or PDF), so it stands for the front and the back. */
+  combined?: boolean;
+  /** Upload only: the name of the file each side came from, for the attachment and the card. */
+  frontFile?: string;
+  backFile?: string;
+  /** Upload only: the front/back assignment of a pair is settled (by the file names, or by the agent's swap). */
+  sidesSet?: boolean;
   /**
    * Whether the completed scan is sharp enough to read. Set by this
    * component, not the caller: true unless `blurFirstScan` is on AND this
@@ -62,6 +71,8 @@ export interface QidImageUploadProps {
    * pressing it. The same reason Retake is absent before the first capture.
    */
   canScan?: boolean;
+  /** Offer both "Initiate scan" and "Upload document" on every device. Default: the device decides (web scans, tablet uploads). */
+  bothCaptureActions?: boolean;
   /**
    * Which document is in the reader. Defaults to 'QID', which is what the
    * three journeys other than IdLookupStep capture.

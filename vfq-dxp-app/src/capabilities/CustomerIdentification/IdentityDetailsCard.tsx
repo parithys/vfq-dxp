@@ -90,13 +90,13 @@ export interface IdentityFields {
   gender?: string;
   idTypeLabel?: string;
   companyName?: string;
-  companyAccountId?: string;
+  occupation?: string;
 }
 
 /**
  * One list of facts for every journey, so the card reads the same everywhere. The content follows the context:
- * the document type is left out where the agent already chose it (`showDocumentType` false), and the employer
- * rows appear only for a sponsored (B2B2C) customer.
+ * the document type is left out where the agent already chose it (`showDocumentType` false), and Sponsor and
+ * Occupation are always shown (blank when the record holds none).
  */
 export function identityFacts(f: IdentityFields, opts: { showDocumentType?: boolean } = {}): Fact[] {
   const { showDocumentType = true } = opts;
@@ -105,11 +105,12 @@ export function identityFacts(f: IdentityFields, opts: { showDocumentType?: bool
     { icon: 'users', label: 'Middle Name(s)', value: f.middleName ?? '' },
     { icon: 'user', label: 'Last Name', value: f.lastName ?? '' },
     { icon: 'calendar', label: 'Date of Birth', value: f.dob ?? '' },
-    { icon: 'calendar', label: 'Expiry Date', value: f.idExpiryDate ?? '' },
+    { icon: 'calendar', label: 'ID Expiry Date', value: f.idExpiryDate ?? '' },
     { icon: 'globe', label: 'Nationality', value: f.nationality ?? '' },
     { icon: 'gender', label: 'Gender', value: f.gender ?? '' },
     ...(showDocumentType ? [{ icon: 'idCard' as const, label: 'Document Type', value: f.idTypeLabel ?? '' }] : []),
-    ...(f.companyName ? [{ icon: 'building' as const, label: 'Employer (B2B2C)', value: f.companyName }] : []),
-    ...(f.companyName && f.companyAccountId ? [{ icon: 'building' as const, label: 'Company Account ID', value: f.companyAccountId }] : []),
+    // Sponsor and Occupation are shown for every customer - new or existing, whatever the segment - and read blank when the record holds none.
+    { icon: 'building' as const, label: 'Sponsor', value: f.companyName ?? '' },
+    { icon: 'idCard' as const, label: 'Occupation', value: f.occupation ?? '' },
   ];
 }

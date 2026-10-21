@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '../../components/primitives/Button';
-import { defaultCreditLimitQar, evaluateRule, isHrnNationality } from '../../engines/ruleEngine';
+import { evaluateRule } from '../../engines/ruleEngine';
+import { defaultCreditLimit, isHrn } from '../../engines/hrnConfiguration';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { evaluateEligibilityChecks, hasHardStop, type EligibilityCheck } from '../../engines/eligibilityEngine';
 import * as mockDataEngine from '../../engines/mockDataEngine';
@@ -84,6 +85,11 @@ interface EligibilityGateStepProps {
    * the customer's checks at Customer Identification uses this at Product Selection to show only what the product adds or blocks.
    */
   showRow?: (row: { id: string; tone: string; approvalRuleIds?: string[] }) => boolean;
+  /**
+   * A customer the agent CREATED at Customer Identification (no registry knows the ID): the identity they entered, which stands in for the
+   * registry record the checks would otherwise read. Only used when no registry record matches the ID.
+   */
+  newIdentity?: { idNumber: string; idType: string; nationality: string; dob: string; expiryDate?: string };
 }
 
 // Gate 2 of the reference activation flow: blacklist + connection-limit +
@@ -117,6 +123,7 @@ export function EligibilityGateStep({
   skipLineLimit = false,
   connectionType,
   requestKind = 'NEW_ACTIVATION',
+  newIdentity,
 }: EligibilityGateStepProps) {
   const asCustomerId = useActedForCustomer(explicitCustomerId, asNewCustomer);
   const requestedType: ConnectionType = connectionType ?? (journeyType === 'prepaid' ? 'MOBILE_PREPAID' : 'MOBILE_POSTPAID');
@@ -165,7 +172,7 @@ export function EligibilityGateStep({
      try {
       // What is read about the identity does not depend on the product, so it is read once and kept: switching the plan type re-judges
       // the rules over the same records instead of fetching them all again. The independent reads run together, not one after another.
-      const subjectKey = `${idNumber}|${asCustomerId ?? ''}`;
+      const subjectKey = `${idNumber}|${asCustomerId ?? ''}|${newIdentity?.nationality ?? ''}|${newIdentity?.dob ?? ''}`;
       let loaded = loadedRef.current?.key === subjectKey ? loadedRef.current.data : undefined;
       if (!loaded) {
         const [docs, customers, [deals, bills, payments]] = await Promise.all([
@@ -195,6 +202,12 @@ export function EligibilityGateStep({
             foundDoc = { documentNumber: nas.documentNumber, customerId: '', documentType: nas.documentType, expiryDate: nas.expiryDate };
             nasCustomerFound = { customerId: '', idType: nas.documentType, dob: nas.dob, nationality: nas.nationality, blacklisted: false };
           }
+        }
+        // No registry knows the ID but the agent created the customer: the identity they entered stands in for the record - a new customer, with nothing
+        // on file to block them (no blacklist, lines, deals or balance), judged on their nationality, date of birth and the ID's expiry.
+        if (!foundDoc && newIdentity && newIdentity.idNumber === idNumber) {
+          foundDoc = { documentNumber: idNumber, customerId: '', documentType: newIdentity.idType, expiryDate: newIdentity.expiryDate };
+          nasCustomerFound = { customerId: '', idType: newIdentity.idType, dob: newIdentity.dob, nationality: newIdentity.nationality, blacklisted: false };
         }
         if (!foundDoc) {
           if (!cancelled) {
@@ -254,7 +267,7 @@ export function EligibilityGateStep({
       // "Non-HRN new account" row (that check is for new accounts), and neither
       // is ever told they are HRN - see buildEligibilityRows.
       const isExistingCustomer = !nasCustomer && !asNewCustomer;
-      const hrnFlag = isHrnNationality(match.nationality);
+      const hrnFlag = isHrn(match.nationality);
       evaluateRule('BR-187', { hrnFlag });
       // Still computed though the Credit limit ROW was removed from this step
       // on 2026-09-25: the amount is not display-only. DeviceInstallmentStep
@@ -262,7 +275,7 @@ export function EligibilityGateStep({
       // affordability, so dropping it from the result would silently change
       // that step's behaviour rather than just hide a row.
       const creditLimit = evaluateRule('BR-076', { hrnFlag });
-      const creditLimitAmount = defaultCreditLimitQar(hrnFlag);
+      const creditLimitAmount = defaultCreditLimit({ nationality: match.nationality });
 
       // The seven matrix checks. Deals and the outstanding balance are the
       // only extra reads: the line cap comes from the rule already evaluated
@@ -364,7 +377,7 @@ export function EligibilityGateStep({
     // this effect every time onResult fires - an infinite update loop caught
     // live via the ErrorBoundary ("Maximum update depth exceeded").
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idNumber, journeyType, scope, portIn, cached, retryNonce]);
+  }, [idNumber, journeyType, scope, portIn, cached, retryNonce, newIdentity?.nationality, newIdentity?.dob, newIdentity?.expiryDate]);
 
   // Nothing to show before an identity is resolved - this panel lives
   // permanently inside the Contact step now (2026-09-28, no more separate
@@ -384,7 +397,7 @@ export function EligibilityGateStep({
           setRetrying(true);
           setRetryNonce((n) => n + 1);
         }}
-        exhaustedHint="Eligibility has not been checked, so this order cannot continue. Use Save & Exit to resume later."
+        exhaustedHint="Eligibility has not been checked, so this order cannot continue. Use Save as Draft to resume later."
       />
     );
   }

@@ -1,3 +1,4 @@
+import type { JourneyMilestones } from '../../../engines/milestoneEngine';
 import type { ReactNode } from 'react';
 import type { SummaryField } from './stepSummary';
 
@@ -56,7 +57,7 @@ export interface WizardStep {
     goToStepKey: (key: string) => void;
     /** Save the draft order and show a confirmation toast; the caller then navigates away. */
     saveDraft: () => Promise<void>;
-    /** Save the draft order and leave the journey (what the header's Save & Exit does). */
+    /** Save the draft order and leave the journey (what the header's Save as Draft does). */
     saveAndExit: (comments?: string) => Promise<void>;
     /** Opens the "Abandon this order?" confirmation (what the header's Abandon Order does). */
     requestAbandon: () => void;
@@ -84,13 +85,18 @@ export interface WizardStep {
    * the CAF (2026-09-28 request: "the first and only step where the
    * customer-facing view is presented"). While true for the CURRENT step,
    * the wizard renders ONLY that step's own content - no rail, no other
-   * step's label, no Abandon/Save & Exit, no Back/Continue footer - so
+   * step's label, no Abandon/Save as Draft, no Back/Continue footer - so
    * nothing about the rest of the journey is visible on a screen handed to a
    * customer. Re-evaluated every render, not a static flag: the SAME 'caf'
    * step is customer-facing while awaiting a signature and agent-facing
    * again the moment one exists, without a step transition in between.
    */
   customerFacing?: (values: Record<string, unknown>) => boolean;
+  /**
+   * Whether "Save as Draft" is offered while this step is current. Absent: always offered. Customer Identification offers it only once
+   * the customer is validated and nothing stops the order, so a half-identified or blocked customer is not saved as a draft.
+   */
+  canSaveDraft?: (values: Record<string, unknown>) => boolean;
   /**
    * Return true once this step's own condition makes the journey
    * irreversible from here - e.g. the CAF has been signed (2026-09-28: "once
@@ -171,18 +177,18 @@ export interface GuidedActivationWizardProps {
   hideAbandonFrom?: string;
   /**
    * Where to go after saving the journey as a resumable draft (2026-09-28
-   * "Save & Exit"), distinct from onAbandon - that one deletes the draft
+   * "Save as Draft"), distinct from onAbandon - that one deletes the draft
    * order row and the in-memory draft; this one writes/creates the Draft
    * order row (reusing `title` as orderType and the current route as
    * draftResumePath, so no per-wizard shape needs threading through), THEN
    * clears the in-memory session draft (so starting a fresh journey of this
    * same wizardId later does not resume this one by accident) before calling
-   * back. Providing this is what puts "Save & Exit" on the header, mirroring
+   * back. Providing this is what puts "Save as Draft" on the header, mirroring
    * onAbandon's own optionality.
    */
   onSaveExit?: () => void;
   /**
-   * Leaves out the wizard's own title band (the title, Abandon Order and Save & Exit), for a journey embedded in a page that supplies its
+   * Leaves out the wizard's own title band (the title, Abandon Order and Save as Draft), for a journey embedded in a page that supplies its
    * own header and its own way out. Off by default: every other journey keeps the band.
    */
   hideTitleBand?: boolean;
@@ -191,4 +197,6 @@ export interface GuidedActivationWizardProps {
    * as the Capability Library's sample, which keeps nothing worth saving.
    */
   confirmLeave?: boolean;
+  /** The journey's milestones: a toast and a progress indicator each time one is reached (see useJourneyMilestones). Absent: none. */
+  milestones?: JourneyMilestones;
 }

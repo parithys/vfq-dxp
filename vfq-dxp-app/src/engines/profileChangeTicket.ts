@@ -3,12 +3,13 @@ import { useEntityStore } from '../stores/entityStore';
 import { useNotificationStore } from '../stores/notificationStore';
 import { buildNewTicketRecord } from '../data/reference/ticketReferenceData';
 
-export type ProfileChangeKind = 'Demographic' | 'Contact' | 'Address';
+export type ProfileChangeKind = 'Demographic' | 'Contact' | 'Address' | 'Account';
 
 const AREA_BY_KIND: Record<ProfileChangeKind, string> = {
   Demographic: 'Profile Update',
   Contact: 'Profile Update',
   Address: 'Profile Update',
+  Account: 'Profile Update',
 };
 
 /** CUS-001-CAM-10/15/18, BR-04: fires exactly once per save call - callers

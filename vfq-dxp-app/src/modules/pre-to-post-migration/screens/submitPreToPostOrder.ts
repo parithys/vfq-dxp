@@ -1,4 +1,8 @@
 import { currentAgentId } from '../../../stores/authStore';
+import { saveCustomerSalutation } from '../../new-connection/saveCustomerSalutation';
+import { hrnAdvanceQar } from '../../../engines/hrnConfiguration';
+import { usePersonaStore } from '../../../stores/personaStore';
+import { idScanAttachments } from '../../new-connection/idScanAttachments';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { newActivityId } from '../../../engines/activityEngine';
 import type { ActivityInput } from '../../../engines/activityEngine';
@@ -6,7 +10,7 @@ import { COLLECTION_TEAM_ROLE, emailVerification, maskEmail, persistBillingAccou
 import { decisionRecord, needsCreditControl } from '../../../engines/connectionEligibility';
 import type { BillingAccountValue, ConfirmedOrder, CustomerLine, GuidedContactValue } from '../../../capabilities';
 import type { CustomerTypeValue } from '../../../capabilities/CustomerType/customerTypeModel';
-import { monthlyCharges, HRN_ADVANCE_QAR } from '../../../engines/postpaidPricing';
+import { monthlyCharges } from '../../../engines/postpaidPricing';
 import { applyLineChange } from '../../mobile-service-changes/applyServiceChange';
 import { routesToApproval } from '../../new-connection/approvalRouting';
 import type { CheckoutTotals } from '../../../components/patterns/checkoutSummaryModel';
@@ -55,6 +59,7 @@ export async function submitPreToPostOrder(
 
   const billingProfileId = await persistBillingAccount(values.billingAccount as BillingAccountValue | undefined, {
     createRecord,
+    updateRecord,
     kind: 'Consumer Mobile Postpaid',
     customerId: eligibility?.customerId,
     idNumber: contact.idNumber,
@@ -65,6 +70,8 @@ export async function submitPreToPostOrder(
   });
 
   const orderId = `ORD-${Date.now().toString().slice(-6)}`;
+  // The salutation the agent entered is saved to the customer's profile (shown in Customer 360).
+  await saveCustomerSalutation(eligibility?.customerId, contact.salutation, updateRecord);
   await createRecord('orders', {
     orderId,
     orderType: 'Plan Change',
@@ -77,6 +84,12 @@ export async function submitPreToPostOrder(
     customerId: eligibility?.customerId,
     idNumber: contact.idNumber,
     customerEmail: contact.email,
+    customerSalutation: contact.salutation,
+    customerWorkEmail: contact.workEmail,
+    // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
+    nationalAddress: contact.moiResult?.nationalAddress,
+    // The identity document captured at Customer Identification, as scanned or uploaded.
+    attachments: idScanAttachments(contact.idType, contact.qidScans),
     msisdn,
     installedAssetId: line.installedAssetId,
     previousProductId: line.productId,
@@ -104,7 +117,7 @@ export async function submitPreToPostOrder(
     activityNumber: activityId,
     trigger: 'completed',
     reason: pendingApproval
-      ? `Order ${orderId} submitted for manager approval - converting ${msisdn} to ${plan?.name ?? 'a postpaid plan'}${eligibility?.requiresHrnAdvance ? ` (QAR ${HRN_ADVANCE_QAR} advance payment applies)` : ''}.`
+      ? `Order ${orderId} submitted for manager approval - converting ${msisdn} to ${plan?.name ?? 'a postpaid plan'}${eligibility?.requiresHrnAdvance ? ` (QAR ${hrnAdvanceQar({ nationality: eligibility?.nationality, personaId: usePersonaStore.getState().activePersonaId })} advance payment applies)` : ''}.`
       : `Order ${orderId} complete - ${msisdn} converted to ${plan?.name ?? 'a postpaid plan'}.`,
   };
 
@@ -122,7 +135,7 @@ export async function submitPreToPostOrder(
     heading: pendingApproval ? 'Conversion submitted for approval' : 'Conversion complete',
     statusLabel: pendingApproval ? 'Submitted for Approval' : 'Complete',
     customerEmail: contact.email,
-    customerEmailDisplay: contact.moiResult?.isNewCustomer && contact.email ? maskEmail(contact.email) : contact.email,
+    customerEmailDisplay: contact.moiResult?.isNewCustomer && !contact.moiResult?.createdByAgent && contact.email ? maskEmail(contact.email) : contact.email,
     customerEmailVerified: emailVerification(contact.email, contact.moiResult?.email).verified,
     service: 'mobile',
   };

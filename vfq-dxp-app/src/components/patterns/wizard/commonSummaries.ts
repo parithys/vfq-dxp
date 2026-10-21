@@ -105,8 +105,8 @@ export const donorAttachmentSummary: SummaryField[] = [
 ];
 
 export const idImagesSummary = (key = 'qidImages'): SummaryField[] => [
-  { key: 'front', label: 'Front scanned', type: 'toggle', value: (v) => Boolean(at(v, key, 'frontScanned')) },
-  { key: 'back', label: 'Back scanned', type: 'toggle', value: (v) => Boolean(at(v, key, 'backScanned')) },
+  { key: 'front', label: 'Front captured', type: 'toggle', value: (v) => Boolean(at(v, key, 'frontScanned')) },
+  { key: 'back', label: 'Back captured', type: 'toggle', value: (v) => Boolean(at(v, key, 'backScanned')) },
 ];
 
 export const paymentSummary: SummaryField[] = [

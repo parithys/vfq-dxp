@@ -87,14 +87,16 @@ const parts = (date: string) => {
   const d = new Date(`${date}T00:00:00Z`);
   return { weekday: WEEKDAYS[d.getUTCDay()], day: d.getUTCDate(), month: MONTHS[d.getUTCMonth()], year: d.getUTCFullYear() };
 };
+/** '2026-10-18' -> '18/10/2026'. */
+const isoToDmy = (date: string) => date.slice(0, 10).split('-').reverse().join('/');
 export const weekdayShort = (date: string) => parts(date).weekday.slice(0, 3);
 export const dayOfMonth = (date: string) => parts(date).day;
 /** 'October 2026' */
 export const monthYear = (date: string) => `${parts(date).month} ${parts(date).year}`;
 /** 'Sun 18 Oct' */
-export const dateShort = (date: string) => `${weekdayShort(date)} ${parts(date).day} ${parts(date).month.slice(0, 3)}`;
+export const dateShort = (date: string) => `${weekdayShort(date)} ${isoToDmy(date)}`;
 /** 'Sunday 18 Oct 2026' */
-export const dateLong = (date: string) => `${parts(date).weekday} ${parts(date).day} ${parts(date).month.slice(0, 3)} ${parts(date).year}`;
+export const dateLong = (date: string) => `${parts(date).weekday} ${isoToDmy(date)}`;
 
 /** '10:00-12:00' shown as '10:00 - 12:00'. */
 export const slotLabel = (slot: string) => slot.replace('-', ' - ');

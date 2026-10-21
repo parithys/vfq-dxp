@@ -1,4 +1,4 @@
-import { formatQar } from '../../lib/format';
+import { formatDateTime, formatQar } from '../../lib/format';
 import { SegmentedTabs } from '../primitives/SegmentedTabs';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '../primitives/Button';
@@ -624,7 +624,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
               </div>
               {tab === 'Reserved' && n.reservedAt && (
                 <p className="text-fg-2 text-[length:var(--fs-caption)]">
-                  Reserved {new Date(n.reservedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  Reserved {formatDateTime(n.reservedAt)}
                 </p>
               )}
               {isStar ? (

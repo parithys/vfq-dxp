@@ -5,7 +5,8 @@ import type { QidType } from '../domain/QidInput';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useActedForCustomer } from './useActedForCustomer';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
-import { MAX_SCAN_ATTEMPTS, LEGACY_MAX_SCAN_ATTEMPTS, SCANNABLE_ID_TYPES, misread, isoToDmy, selectScanCandidates } from './idLookupModel';
+import type { NationalAddress, NewCustomerMoi } from './idLookupModel';
+import { MAX_SCAN_ATTEMPTS, LEGACY_MAX_SCAN_ATTEMPTS, SCANNABLE_ID_TYPES, captureModeOf, NEW_CUSTOMER_ID_TYPES, buildNewCustomerPatch, misread, misreadDate, isoToDmy, selectScanCandidates } from './idLookupModel';
 import type { DuplicateCandidate, IdLookupValue } from './idLookupModel';
 
 export interface IdLookupFailure {
@@ -23,11 +24,13 @@ interface UseIdLookupOptions {
   asNewCustomer: boolean;
   asCustomerId?: string;
   manualEntry?: boolean;
+  /** Offer to create a new customer when no registry knows the ID (QID, Passport, Diplomatic ID). Default true; off for a journey bound to a customer. */
+  allowNewCustomer?: boolean;
 }
 
 // State, effects and async lookups behind IdLookupStep. Everything here was the
 // body of the component, moved verbatim; the JSX stays in IdLookupStep.
-export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType, verifyThenFetch, asNewCustomer, asCustomerId: explicitCustomerId, manualEntry = false }: UseIdLookupOptions) {
+export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType, verifyThenFetch, asNewCustomer, asCustomerId: explicitCustomerId, manualEntry = false, allowNewCustomer = true }: UseIdLookupOptions) {
   // The customer the SCANNER defaults to (the one the journey was opened for, else the one selected). It only decides whose card the reader
   // draws: who the presented ID belongs to is always decided by the ID itself (MOI), never by the context.
   const asCustomerId = useActedForCustomer(explicitCustomerId, asNewCustomer);
@@ -236,7 +239,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
           ? undefined
           : (
               await callService('nas', () =>
-                mockDataEngine.list<{ documentNumber: string; expiryDate?: string; name: string; firstName?: string; middleName?: string; lastName?: string; dob: string; nationality: string; gender?: string; email?: string }>(
+                mockDataEngine.list<{ documentNumber: string; expiryDate?: string; name: string; firstName?: string; middleName?: string; lastName?: string; dob: string; nationality: string; gender?: string; email?: string; occupation?: string; nationalAddress?: NationalAddress }>(
                   'nas-records'
                 )
               )
@@ -255,7 +258,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
         return;
       }
       const customers = await callService('customer-lookup', () =>
-        mockDataEngine.list<{ customerId: string; name: string; firstName?: string; middleName?: string; lastName?: string; dob: string; nationality: string; email?: string; gender?: string; companyName?: string; phone?: string; preferredLanguage?: string }>(
+        mockDataEngine.list<{ customerId: string; name: string; firstName?: string; middleName?: string; lastName?: string; dob: string; nationality: string; email?: string; gender?: string; companyName?: string; occupation?: string; phone?: string; preferredLanguage?: string }>(
           'customers'
         )
       );
@@ -319,6 +322,9 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
             emailSource: 'NAS',
             isNewCustomer: true,
             gender: src.gender,
+            occupation: src.occupation,
+            // The NAS's own address for this person: kept apart from the address the journey captures, and never shown.
+            nationalAddress: nasRecord?.nationalAddress,
             expiryDate: match.expiryDate,
             moiUpdateTime: new Date().toISOString(),
           },
@@ -376,6 +382,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
             preferredLanguage: customer.preferredLanguage,
             companyName: customer.companyName,
             companyAccountId,
+            occupation: customer.occupation,
             expiryDate: match.expiryDate,
             moiUpdateTime: new Date().toISOString(),
           },
@@ -463,7 +470,10 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
   }, [contextNoDocument]);
   // Two for the scan-first flow, four for the journeys that still lead with a
   // type selector - see autoDetectIdType.
-  const maxScanAttempts = autoDetectIdType ? MAX_SCAN_ATTEMPTS : LEGACY_MAX_SCAN_ATTEMPTS;
+  // verifyThenFetch has no budget: each further pass is a retake, and from the third the agent types the fields (see CaptureMode).
+  const maxScanAttempts = verifyThenFetch ? Number.POSITIVE_INFINITY : autoDetectIdType ? MAX_SCAN_ATTEMPTS : LEGACY_MAX_SCAN_ATTEMPTS;
+  // How this capture's number and expiry came in - and so what the agent may change (see CaptureMode).
+  const captureMode = verifyThenFetch && scanComplete ? captureModeOf(value.qidScans?.source === 'upload', scanAttempts) : undefined;
   // manualEntry: a keyboard device types the number straight away; the scanner stays available beside it.
   const manualEntryUnlocked = !effectiveScannable || fallbackUnlocked || manualEntry;
 
@@ -553,6 +563,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     return { documentType: found.documentType as QidType, documentNumber: found.documentNumber, expiryDate: found.expiryDate };
   };
 
+
   useEffect(() => {
     if (!effectiveScannable || !scanComplete) {
       // Reset so re-scanning after a type switch or a cleared scan fetches again.
@@ -572,6 +583,8 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
       // has to Retake, which arrives clear and re-runs this effect.
       if (value.qidScans?.clear === false && !verifyThenFetch) return;
       const typeAtStart = chosenType;
+      // Uploaded, or past the barcode pass: nothing is read - the agent types the number and expiry from the document.
+      if (captureMode === 'upload' || captureMode === 'manual') return;
       void readDocumentFromScan().then((scanned) => {
         const now = latest.current;
         // The agent switched type while the read was in flight: that read belongs to the document they walked away from.
@@ -601,7 +614,13 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
           // The selected type stands; only the scan-first flow takes the type from the document.
           idType: typeAtStart ?? scanned.documentType,
           idNumber: blurred ? misread(scanned.documentNumber) : scanned.documentNumber,
-          scannedExpiry: verifyThenFetch && scanned.expiryDate ? isoToDmy(scanned.expiryDate) : undefined,
+          // The first pass reads both wrongly (blurred); a clear read gets both right; the barcode gives the number only.
+          scannedExpiry:
+            verifyThenFetch && captureMode !== 'barcode' && scanned.expiryDate
+              ? blurred
+                ? misreadDate(isoToDmy(scanned.expiryDate))
+                : isoToDmy(scanned.expiryDate)
+              : undefined,
         });
       });
       return;
@@ -614,6 +633,13 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     void runMoiValidation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idType, effectiveScannable, scanComplete, value.idNumber, value.moiResult, loading, value.qidScans?.clear]);
+
+  // No registry knows this ID: for the ID types a customer can be created for, and a journey that is not bound to a customer, the agent may create one.
+  const canCreateCustomer = notFound && allowNewCustomer && !explicitCustomerId && NEW_CUSTOMER_ID_TYPES.includes(idType);
+  const createNewCustomer = (moi: NewCustomerMoi) => {
+    setNotFound(false);
+    onChange({ ...latest.current, ...buildNewCustomerPatch(moi) });
+  };
 
   const handleKeyDown = useEnterToSubmit(Boolean(value.idNumber) && !loading, runMoiValidation);
 
@@ -634,6 +660,9 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     contextNoDocument,
     ownerMismatch,
     contextHeldTypes,
+    captureMode,
+    canCreateCustomer,
+    createNewCustomer,
     failure,
     retrying,
     duplicates,

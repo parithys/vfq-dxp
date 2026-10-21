@@ -1,5 +1,5 @@
 import { isSlaStopped } from '../lib/statusTone';
-import { HRN_ADVANCE_QAR } from './postpaidPricing';
+import { defaultCreditLimit, hrnAdvanceQar, isHrn } from './hrnConfiguration';
 import { PREPAID_CAPPED_ID_TYPES } from '../data/idTypes';
 import { simCardCharge } from '../data/prepaidSimCharge';
 
@@ -18,27 +18,11 @@ export type RuleImplementation = (ctx: RuleContext) => { pass: boolean; message?
 
 // Priority subset per frontend-architecture.md §5 "illustrative high-value rules" -
 // all Explicit/high-confidence, directly evidenced across multiple guided journeys.
-// High-Risk Nationality (HRN) list, given by VFQ business 2026-10-02. A customer
-// is HRN exactly when their nationality is on it; every other nationality is
-// not. Stored as the demonyms the customer records use ("Pakistani") plus the
-// country names, lower-cased, so either spelling in a record resolves.
-const HRN_NATIONALITIES = new Set([
-  'pakistani', 'pakistan',
-  'bangladeshi', 'bangladesh',
-  'cambodian', 'cambodia',
-  'myanmar', 'myanmarese', 'burmese',
-  'laotian', 'lao', 'laos',
-  'kenyan', 'kenya',
-  'ugandan', 'uganda',
-  'swazi', 'emaswati', 'eswatini',
-]);
+// High-Risk Nationality: which nationalities, the advance payment and the credit limit are configured in hrnConfiguration.ts.
+/** BR-076: the default credit limit on a new account - the HRN category's for a High Risk Nationality customer, the standard one otherwise. */
+export const defaultCreditLimitQar = (hrnFlag: boolean): number => defaultCreditLimit({ hrn: hrnFlag });
 
-/** BR-076: the default credit limit on a new account - QAR 50 for a High Risk Nationality customer, QAR 1000 otherwise. The one place the two figures are written. */
-export const defaultCreditLimitQar = (hrnFlag: boolean): number => (hrnFlag ? 50 : 1000);
-
-export function isHrnNationality(nationality: string | undefined): boolean {
-  return nationality ? HRN_NATIONALITIES.has(nationality.trim().toLowerCase()) : false;
-}
+export const isHrnNationality = (nationality: string | undefined): boolean => isHrn(nationality);
 
 /** Absolute ceiling on an expat's postpaid lines: reaching it is a hard stop. */
 const EXPAT_MAX_POSTPAID_LINES = 5;
@@ -293,7 +277,7 @@ const ruleImplementations: Record<string, RuleImplementation> = {
   'BR-187': (ctx) => {
     const { hrnFlag } = ctx as { hrnFlag: boolean };
     return hrnFlag
-      ? { pass: true, message: `HRN customer - QAR ${HRN_ADVANCE_QAR} advance payment required at checkout.` }
+      ? { pass: true, message: `HRN customer - QAR ${hrnAdvanceQar()} advance payment required at checkout.` }
       : { pass: true };
   },
 

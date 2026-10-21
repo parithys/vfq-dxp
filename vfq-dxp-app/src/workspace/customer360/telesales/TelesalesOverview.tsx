@@ -10,6 +10,7 @@ import { blacklistResolvers } from '../sections/blacklistResolvers';
 import { DevicePenaltyPolicy, StarNumberPenaltyPolicy } from '../sections/penaltyViewResolvers';
 import { buildAssetsFieldResolver } from '../sections/assetsResolvers';
 import type { TelesalesContext } from './TelesalesTabs';
+import { formatDate } from '../../../lib/format';
 
 // Shared pieces of the Telesales Overview page (card shell, rows, pills, masonry grid) and its Additional
 // Information strip. The page's sections live in the Telesales*Section.tsx files in this folder.
@@ -132,7 +133,7 @@ export const num = (v: ReactNode | undefined) => {
 };
 export const dateTime = (iso: unknown) => {
   const d = new Date(String(iso ?? ''));
-  return Number.isNaN(d.getTime()) ? { d: String(iso ?? ''), t: '' } : { d: d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }), t: d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) };
+  return Number.isNaN(d.getTime()) ? { d: String(iso ?? ''), t: '' } : { d: formatDate(d), t: d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) };
 };
 
 // ---------------------------------------------------------------- Usage & Behaviour

@@ -4,6 +4,11 @@ import { idTypeLabel, type IdType } from '../../data/idTypes';
 export interface IdScanState {
   frontScanned?: boolean;
   backScanned?: boolean;
+  /** 'upload' when the files were uploaded in place of the reader. */
+  source?: 'scan' | 'upload';
+  /** Upload: the file each side came from. */
+  frontFile?: string;
+  backFile?: string;
 }
 
 /**
@@ -13,8 +18,9 @@ export interface IdScanState {
  */
 export function idScanAttachments(idType: IdType | undefined, scans: IdScanState | undefined): { label: string; detail: string }[] {
   const name = idTypeLabel(idType ?? 'QID');
+  const detail = (file: string | undefined) => (scans?.source === 'upload' ? `Uploaded during Contact${file ? `: ${file}` : ''}` : 'Scanned during Contact');
   return [
-    ...(scans?.frontScanned ? [{ label: `${name} - Front`, detail: 'Scanned during Contact' }] : []),
-    ...(scans?.backScanned ? [{ label: `${name} - Back`, detail: 'Scanned during Contact' }] : []),
+    ...(scans?.frontScanned ? [{ label: `${name} - Front`, detail: detail(scans.frontFile) }] : []),
+    ...(scans?.backScanned ? [{ label: `${name} - Back`, detail: detail(scans.backFile) }] : []),
   ];
 }

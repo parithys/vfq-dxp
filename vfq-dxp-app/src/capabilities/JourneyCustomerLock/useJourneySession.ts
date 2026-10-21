@@ -12,7 +12,7 @@ import type { JourneyFlow } from './journeyModel';
  * The state every guided activation journey keeps for its own run: the navigator, the record writer, the confirmed
  * order (which comes back if the page is reloaded after submit but before Close Activity), whether this is the
  * customer-view pop-up, the draft's current step, and the customer lock - the journey is bound to the customer once
- * they are identified until it ends (Close Activity, Save & Exit, Abandon Order, session end).
+ * they are identified until it ends (Close Activity, Save as Draft, Abandon Order, session end).
  *
  * A journey passes its own `wizardId` so its draft and customer hold never mix with another journey's.
  */

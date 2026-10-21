@@ -1,4 +1,6 @@
 import { currentAgentId } from '../../../stores/authStore';
+import { saveCustomerSalutation } from '../../new-connection/saveCustomerSalutation';
+import { idScanAttachments } from '../../new-connection/idScanAttachments';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { logActivity, newActivityId } from '../../../engines/activityEngine';
 import type { ActivityInput } from '../../../engines/activityEngine';
@@ -18,6 +20,7 @@ import type { WinCashPaymentValue } from '../../../components/patterns/WinCashPa
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
 import type { useEntityStore } from '../../../stores/entityStore';
+import { formatDateTime } from '../../../lib/format';
 
 type EntityStore = ReturnType<typeof useEntityStore.getState>;
 
@@ -75,6 +78,7 @@ export async function submitMnpOrder(
     ? undefined
     : await persistBillingAccount(values.billingAccount as BillingAccountValue | undefined, {
         createRecord,
+        updateRecord,
         kind: 'Consumer Mobile Postpaid',
         customerId: eligibility?.customerId,
         idNumber: contact.idNumber,
@@ -85,6 +89,8 @@ export async function submitMnpOrder(
         creditLimitQar: eligibility?.defaultCreditLimitQar,
       });
 
+  // The salutation the agent entered is saved to the customer's profile (shown in Customer 360).
+  await saveCustomerSalutation(eligibility?.customerId, contact.salutation, updateRecord);
   await createRecord('orders', {
     orderId,
     orderType: isPrepaid ? 'MNP Prepaid Port-In' : 'MNP Postpaid Port-In',
@@ -98,6 +104,12 @@ export async function submitMnpOrder(
     customerId: eligibility?.customerId,
     idNumber: contact.idNumber,
     customerEmail: contact.email,
+    customerSalutation: contact.salutation,
+    customerWorkEmail: contact.workEmail,
+    // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
+    nationalAddress: contact.moiResult?.nationalAddress,
+    // The identity document captured at Customer Identification, as scanned or uploaded.
+    attachments: idScanAttachments(contact.idType, contact.qidScans),
     productId: values.productId,
     msisdn: portInNumber,
     ...(isPrepaid ? { discountId: values.discountId } : { billLimitQAR: values.billLimit, billingProfileId, discountId: values.discountId, addonIds: (values.addonIds as string[] | undefined) ?? [], monthlyRecurringQar: (values.checkoutTotals as CheckoutTotals | undefined)?.monthlyRecurringQar }),
@@ -180,11 +192,11 @@ export async function submitMnpOrder(
       ...(record.npasReference ? [{ label: 'NPAS reference', value: record.npasReference }] : []),
       ...(payment?.reference ? [{ label: payment.zeroValue ? 'Zero-value receipt' : 'Receipt', value: payment.reference }] : []),
       ...(attachment?.formNumber ? [{ label: 'MNP Form', value: `${attachment.formNumber} (signed)` }] : []),
-      ...(record.npasDeadline ? [{ label: 'NPAS response due', value: new Date(record.npasDeadline).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) }] : []),
+      ...(record.npasDeadline ? [{ label: 'NPAS response due', value: formatDateTime(record.npasDeadline) }] : []),
     ],
     trackAction: { label: 'Track Port-In Status', to: `${PORT_IN_STATUS_PATH}?id=${requestId}` },
     customerEmail: contact.email,
-    customerEmailDisplay: contact.moiResult?.isNewCustomer && contact.email ? maskEmail(contact.email) : contact.email,
+    customerEmailDisplay: contact.moiResult?.isNewCustomer && !contact.moiResult?.createdByAgent && contact.email ? maskEmail(contact.email) : contact.email,
     customerEmailVerified: emailVerification(contact.email, contact.moiResult?.email).verified,
     service: 'mobile',
   };

@@ -1,6 +1,6 @@
 [
   {
-    "_note": "Demo seed (2026-10-01). NAS (national address/identity) records for people who are NOT yet Vodafone customers - no row in customers.json (Siebel). The email on file here is what a NEW customer's Contact step shows, masked. An ID that resolves to a customers.json record is an existing customer and takes its email from there (Siebel) instead.",
+    "_note": "Demo seed (2026-10-01). NAS (national address/identity) records for people who are NOT yet Vodafone customers - no row in customers.json (Siebel). The email on file here is what a NEW customer's Contact step shows, masked. An ID that resolves to a customers.json record is an existing customer and takes its email from there (Siebel) instead. nationalAddress (2026-10-20, demo seed): the National Address the NAS holds for each person; it is stored with the order and never shown to the agent or used to fill the Address step.",
     "nasRecordId": "NAS-7001",
     "documentType": "QID",
     "documentNumber": "29001234567",
@@ -12,7 +12,14 @@
     "dob": "1990-04-18",
     "nationality": "Qatari",
     "gender": "Female",
-    "email": "noora.almannai@example.qa"
+    "email": "noora.almannai@example.qa",
+    "nationalAddress": {
+      "zone": "69",
+      "streetNo": "310",
+      "buildingNo": "12",
+      "area": "Al Waab",
+      "city": "Doha"
+    }
   },
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
@@ -27,7 +34,14 @@
     "dob": "1992-07-19",
     "nationality": "Qatari",
     "gender": "Male",
-    "email": "yousef.alkhulaifi@example.qa"
+    "email": "yousef.alkhulaifi@example.qa",
+    "nationalAddress": {
+      "zone": "55",
+      "streetNo": "820",
+      "buildingNo": "7",
+      "area": "Al Sadd",
+      "city": "Doha"
+    }
   },
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
@@ -42,7 +56,14 @@
     "dob": "1991-08-08",
     "nationality": "Indian",
     "gender": "Male",
-    "email": "anil.sharma@example.qa"
+    "email": "anil.sharma@example.qa",
+    "nationalAddress": {
+      "zone": "63",
+      "streetNo": "275",
+      "buildingNo": "31",
+      "area": "Al Mansoura",
+      "city": "Doha"
+    }
   },
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
@@ -57,6 +78,13 @@
     "dob": "1989-09-03",
     "nationality": "Qatari",
     "gender": "Male",
-    "email": "mustafa.albaker@example.qa"
+    "email": "mustafa.albaker@example.qa",
+    "nationalAddress": {
+      "zone": "45",
+      "streetNo": "110",
+      "buildingNo": "22",
+      "area": "Al Rayyan",
+      "city": "Al Rayyan"
+    }
   }
 ]

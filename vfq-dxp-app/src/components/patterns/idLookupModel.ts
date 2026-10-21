@@ -8,6 +8,18 @@ export interface DuplicateCandidate {
   dob: string;
 }
 
+/**
+ * The address the NAS (national address register) holds for a person. A record of the register, kept as it was returned: it is stored with the
+ * order, NEVER shown to the agent, and never used to fill or overwrite the Address step - the customer's address is captured through the address flow.
+ */
+export interface NationalAddress {
+  zone?: string;
+  streetNo?: string;
+  buildingNo?: string;
+  area?: string;
+  city?: string;
+}
+
 export interface MoiResult {
   /** Mobile number and notification language on the customer record - shown by
    * the verify-then-fetch flow only. */
@@ -27,6 +39,10 @@ export interface MoiResult {
   emailSource?: 'Siebel' | 'NAS' | 'Billing Profile';
   /** No customer record exists for this ID - details come from NAS, not Siebel. */
   isNewCustomer?: boolean;
+  /** The agent created this customer: no registry knows the ID, so the identity was typed (see buildNewCustomerIdentity). */
+  createdByAgent?: boolean;
+  /** A NEW customer's National Address, as the NAS returned it. Hidden: carried with the identity, stored with the order, never displayed or edited. */
+  nationalAddress?: NationalAddress;
   // Added 2026-09-24 so Gender can be registry-sourced. It has to be: the
   // identity fields are non-editable, and a mandatory field with no source
   // and no way to type into it would block Continue forever. customers.json
@@ -55,6 +71,8 @@ export interface MoiResult {
    * account sponsors the line.
    */
   companyAccountId?: string;
+  /** The occupation on the registry record, when it holds one. */
+  occupation?: string;
   /**
    * The scanned document's own expiry date (ISO), not a customer-record field -
    * it comes off the `identity-documents` match, not `customers`. This is the
@@ -148,4 +166,117 @@ export function selectScanCandidates<D extends { documentType: string }>({
   if (!ownDocs) return docs.filter((d) => detectable.includes(d.documentType));
   if (chosenType) return ownDocs.filter((d) => d.documentType === chosenType);
   return [...ownDocs].sort((a, b) => Number(b.documentType === 'QID') - Number(a.documentType === 'QID'));
+}
+
+/**
+ * How the ID number and expiry came in at Customer Identification, which decides what the agent may change:
+ *   'upload'       a file was uploaded: nothing is read; the agent types the number and the expiry, then Fetch.
+ *   'ocr-blurred'  the first reader pass: a blurred capture, number and expiry "extracted" (with errors, for the demo); both locked.
+ *   'ocr-clear'    Retake 1: a clear capture, number and expiry extracted correctly; both locked.
+ *   'barcode'      Retake 2: the barcode gives the number (locked); the expiry is typed and stays editable.
+ *   'manual'       Retake 3 and after: the barcode is not used; both fields are typed and editable.
+ */
+export type CaptureMode = 'upload' | 'ocr-blurred' | 'ocr-clear' | 'barcode' | 'manual';
+
+/** The capture mode for a completed capture: an upload, or the number of passes over the reader so far. */
+export function captureModeOf(uploaded: boolean, readerPasses: number): CaptureMode {
+  if (uploaded) return 'upload';
+  if (readerPasses <= 1) return 'ocr-blurred';
+  if (readerPasses === 2) return 'ocr-clear';
+  if (readerPasses === 3) return 'barcode';
+  return 'manual';
+}
+
+/** A DD/MM/YYYY date as a blurred read would get it wrong: the last digit of the year is off. */
+export function misreadDate(dmy: string): string {
+  return dmy.replace(/(\d)$/, (d) => String((Number(d) + 3) % 10));
+}
+
+/**
+ * A typed date tidied to DD/MM/YYYY when the agent leaves the field: eight digits ("30112029") get their separators, and a date written with
+ * other separators or without leading zeros ("30-11-2029", "3.1.2029") is put in the same form. Anything else is left exactly as typed.
+ */
+export function formatDmyOnBlur(text: string): string {
+  const t = text.trim();
+  const digits = /^\d{8}$/.exec(t);
+  if (digits) return `${t.slice(0, 2)}/${t.slice(2, 4)}/${t.slice(4)}`;
+  const parts = /^(\d{1,2})[\s./-](\d{1,2})[\s./-](\d{4})$/.exec(t);
+  return parts ? `${parts[1].padStart(2, '0')}/${parts[2].padStart(2, '0')}/${parts[3]}` : text;
+}
+
+/** What the agent enters to create a customer no registry knows. */
+export interface NewCustomerInput {
+  nationality: string;
+  firstName: string;
+  middleName: string;
+  lastName: string;
+  /** DD/MM/YYYY. */
+  dob: string;
+  gender: string;
+  /** DD/MM/YYYY: the ID's own expiry. */
+  expiry: string;
+}
+
+/** DD/MM/YYYY -> ISO, or undefined when it is not a real calendar date. */
+export function dmyToIso(dmy: string): string | undefined {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dmy.trim());
+  if (!m) return undefined;
+  const [d, mo, y] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const dt = new Date(Date.UTC(y, mo - 1, d));
+  return dt.getUTCFullYear() === y && dt.getUTCMonth() === mo - 1 && dt.getUTCDate() === d ? `${m[3]}-${m[2]}-${m[1]}` : undefined;
+}
+
+export type NewCustomerErrors = Partial<Record<keyof NewCustomerInput, string>>;
+
+/**
+ * The MOI-shaped identity for a customer the agent creates, or what is wrong with the entry. Nothing is assumed: every field but the middle
+ * name is required, the dates must be real, the birth date cannot be in the future, and the nationality must be one the app knows.
+ */
+export function buildNewCustomerIdentity(
+  input: NewCustomerInput,
+  nationalities: readonly string[],
+  now: Date = new Date()
+): { errors: NewCustomerErrors } | { errors?: undefined; moi: NewCustomerMoi } {
+  const errors: NewCustomerErrors = {};
+  const first = input.firstName.trim();
+  const middle = input.middleName.trim();
+  const last = input.lastName.trim();
+  if (!nationalities.includes(input.nationality)) errors.nationality = 'Choose the nationality.';
+  if (!first) errors.firstName = 'Enter the first name.';
+  if (!last) errors.lastName = 'Enter the last name.';
+  const dob = dmyToIso(input.dob);
+  if (!dob) errors.dob = 'Enter a valid date of birth as DD/MM/YYYY.';
+  else if (new Date(`${dob}T00:00:00Z`).getTime() > now.getTime()) errors.dob = 'The date of birth cannot be in the future.';
+  if (!input.gender) errors.gender = 'Choose the gender.';
+  const expiry = dmyToIso(input.expiry);
+  if (!expiry) errors.expiry = 'Enter a valid expiry date as DD/MM/YYYY.';
+  if (Object.keys(errors).length || !dob || !expiry) return { errors };
+  return {
+    moi: {
+      name: [first, middle, last].filter(Boolean).join(' '),
+      firstName: first,
+      middleName: middle,
+      lastName: last,
+      dob,
+      nationality: input.nationality,
+      gender: input.gender,
+      expiryDate: expiry,
+      isNewCustomer: true,
+      createdByAgent: true,
+      moiUpdateTime: now.toISOString(),
+    },
+  };
+}
+
+/** The ID types a customer can be created for when no registry knows the document. */
+export const NEW_CUSTOMER_ID_TYPES: readonly string[] = ['QID', 'Passport', 'Diplomatic ID'];
+
+/**
+ * What the value gains when the agent creates a customer: the typed identity as the MOI result, the expiry as the entered one, and the
+ * identity marked as manually entered (so the order is routed for manager approval, as for any identity the reader did not read).
+ */
+export type NewCustomerMoi = Pick<MoiResult, 'name' | 'firstName' | 'middleName' | 'lastName' | 'dob' | 'nationality' | 'gender' | 'expiryDate' | 'isNewCustomer' | 'createdByAgent' | 'moiUpdateTime'>;
+
+export function buildNewCustomerPatch(moi: NewCustomerMoi): { moiResult: MoiResult; manualEntry: true; scannedExpiry?: string } {
+  return { moiResult: moi as MoiResult, manualEntry: true, scannedExpiry: moi.expiryDate ? isoToDmy(moi.expiryDate) : undefined };
 }

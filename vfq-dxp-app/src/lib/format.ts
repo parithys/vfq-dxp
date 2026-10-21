@@ -27,11 +27,11 @@ const toDate = (v: unknown): Date | undefined => {
   return Number.isNaN(d.getTime()) ? undefined : d;
 };
 
-/** "12 Mar 2025". Unparseable text is returned as-is; empty is ''. */
+/** "12/03/2025" (dd/mm/yyyy, the only date format the app shows). Unparseable text is returned as-is; empty is ''. */
 export function formatDate(v: unknown): string {
   const d = toDate(v);
   if (!d) return isEmpty(v) ? '' : String(v);
-  return d.toLocaleDateString(LOCALE, { day: '2-digit', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString(LOCALE, { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 /** "14:32" (24-hour). */
@@ -41,18 +41,18 @@ export function formatTime(v: unknown): string {
   return d.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' });
 }
 
-/** "12 Mar 2025, 14:32". */
+/** "12/03/2025, 14:32". */
 export function formatDateTime(v: unknown): string {
   const d = toDate(v);
   if (!d) return isEmpty(v) ? '' : String(v);
   return `${formatDate(d)}, ${formatTime(d)}`;
 }
 
-/** "Mar 2025". */
+/** "03/2025" (mm/yyyy: a month with no day). */
 export function formatMonthYear(v: unknown): string {
   const d = toDate(v);
   if (!d) return isEmpty(v) ? '' : String(v);
-  return d.toLocaleDateString(LOCALE, { month: 'short', year: 'numeric' });
+  return d.toLocaleDateString(LOCALE, { month: '2-digit', year: 'numeric' });
 }
 
 /** "1.2 MB", "340 KB", "812 B". */

@@ -8,10 +8,14 @@ import { SCAN_DURATION_MS } from './qidImageUploadModel';
 import type { QidImageUploadProps } from './qidImageUploadModel';
 import { PassportScanSections } from './PassportScanSections';
 import { ScanFailureNotice } from './ScanFailureNotice';
+import { IdFileUpload } from './IdFileUpload';
+import { applyIdUpload, missingUploadSide, removeIdUpload, swapUploadedSides, uploadedSidesInverted } from './idUploadModel';
 
 
 // The four corner brackets of a scan frame.
 const SCAN_CORNERS = 'M4 8V5a1 1 0 0 1 1-1h3 M16 4h3a1 1 0 0 1 1 1v3 M20 16v3a1 1 0 0 1-1 1h-3 M8 20H5a1 1 0 0 1-1-1v-3';
+
+const TRASH = 'M3 6h18 M8 6V4h8v2 M19 6l-1 14H6L5 6 M10 11v6 M14 11v6';
 
 export function QidImageUpload({
   value,
@@ -19,6 +23,7 @@ export function QidImageUpload({
   onScan,
   error,
   canScan = true,
+  bothCaptureActions = false,
   documentType = 'QID',
   demoTypes,
   onDemoScan,
@@ -31,6 +36,14 @@ export function QidImageUpload({
   identity,
 }: QidImageUploadProps) {
   const scanned = Boolean(value.frontScanned && value.backScanned);
+  // An upload with only one side in so far.
+  const missing = missingUploadSide(value);
+  // A pair whose file names say the sides are the wrong way round (e.g. uploaded before names were read) is put right, once.
+  const inverted = uploadedSidesInverted(value);
+  useEffect(() => {
+    if (inverted) onChange(swapUploadedSides(value));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inverted]);
 
   // Which pass is running, or null when the reader is idle. One state rather
   // than a boolean plus a separate "was this a retake" flag, because a retake
@@ -60,20 +73,27 @@ export function QidImageUpload({
 
     // Whether this pass is a retake has to be read BEFORE the value is
     // cleared, since clearing is what makes `scanned` false.
-    const isRetake = scanned;
+    // A retake is a second pass over the reader: an upload standing in for the capture is not a pass, so the first scan after one is a first pass.
+    const isRetake = scanned && value.source !== 'upload';
 
     // A retake discards the previous read immediately rather than at the end
     // of the pass. The old capture, and whatever the consumer derived from it,
     // describe a document the agent has just decided to read again - leaving
     // them up beside a spinner would have the card claiming a validated
     // identity while the reader was busy disagreeing with it.
-    if (isRetake) {
+    // A scan after any complete capture - a previous scan, or an upload - starts from nothing.
+    if (scanned) {
       onChange({
         ...value,
         frontScanned: false,
         backScanned: false,
         frontImage: undefined,
         backImage: undefined,
+        source: undefined,
+        combined: undefined,
+        frontFile: undefined,
+        backFile: undefined,
+        sidesSet: undefined,
         clear: undefined,
       });
     }
@@ -103,7 +123,7 @@ export function QidImageUpload({
       // card, the demo has made its point, and a card that stays unreadable
       // forever would just look broken rather than illustrative.
       const clear = !blurFirstScan || isRetake;
-      onChange({ ...value, frontScanned: true, backScanned: true, clear });
+      onChange({ ...value, frontScanned: true, backScanned: true, frontImage: undefined, backImage: undefined, frontFile: undefined, backFile: undefined, combined: undefined, sidesSet: undefined, source: 'scan', clear });
     }, SCAN_DURATION_MS);
   };
 
@@ -115,6 +135,7 @@ export function QidImageUpload({
         onScan={onScan}
         error={error}
         canScan={canScan}
+        bothCaptureActions={bothCaptureActions}
         demoTypes={demoTypes}
         onDemoScan={onDemoScan}
         blurFirstScan={blurFirstScan}
@@ -127,6 +148,36 @@ export function QidImageUpload({
 
   return (
     <div className="card p-4 flex flex-col gap-3">
+          {/* Scanner header: what this is. Whether the reader is available is not shown: the agent only learns of a failure after the permitted attempts. */}
+          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+            <div className="flex items-center gap-3 min-w-0">
+              <Icon path={SCAN_CORNERS} className="w-6 h-6 text-accent shrink-0" />
+              <span className="text-fg font-bold uppercase tracking-wide text-[length:var(--fs-body)] truncate">ID card optical scanner surface</span>
+            </div>
+            {/* The two ways in, always available whatever has been done so far, in this order: the reader, then upload. An upload stands as a
+                completed scan (no reader pass, so no attempt is charged). */}
+            <IdFileUpload
+              align="end"
+              bothActions={bothCaptureActions}
+              disabled={scanning}
+              leading={
+                canScan ? (
+                  <Button
+                    variant="primary"
+                    compact
+                    className="shrink-0"
+                    disabled={scanning}
+                    onClick={runScan}
+                    aria-label={scanned && value.source !== 'upload' && retakes > 0 ? `Retake scan, ${retakes} so far` : undefined}
+                  >
+                    <Icon path={SCAN_CORNERS} className="w-4 h-4" />
+                    {scanned && value.source !== 'upload' ? `Retake scan${retakes > 0 ? ` (${retakes})` : ''}` : 'Initiate scan'}
+                  </Button>
+                ) : undefined
+              }
+              onUpload={(r) => onChange(applyIdUpload(value, r))}
+            />
+          </div>
       {/* Scanning FIRST, so a retake shows the reader working rather than the
           insert prompt. A retake clears the capture to start its pass, which
           without this branch would drop the card straight back to "Insert card
@@ -147,6 +198,18 @@ export function QidImageUpload({
               capture is usable - the previews are deliberately similar
               (same document, same crop) and the maroon band alone is a thin
               cue to hang that on. */}
+          {value.combined ? (
+            <figure className="flex flex-col items-center gap-2 max-w-md mx-auto">
+              <ScannedIdPreview side="front" documentType={documentType} variant={variant} identity={identity} src={value.frontImage} clear fullPage />
+              <figcaption className="text-fg-2 text-[length:var(--fs-caption)]">{documentType} front and back ({value.frontFile ?? 'one file'})</figcaption>
+              {value.source === 'upload' && (
+                <Button variant="tertiary" compact aria-label={`Remove the uploaded ${documentType} file`} onClick={() => onChange(removeIdUpload(value, 'all'))}>
+                  <Icon path={TRASH} className="w-4 h-4" />
+                  Remove file
+                </Button>
+              )}
+            </figure>
+          ) : (
           <div className={documentType === 'Passport' ? 'grid grid-cols-1 gap-4 max-w-xs mx-auto' : 'grid grid-cols-2 gap-4'}>
             {(documentType === 'Passport' ? (['front'] as const) : (['front', 'back'] as const)).map((side) => (
               <figure key={side} className="flex flex-col items-center gap-2">
@@ -159,11 +222,25 @@ export function QidImageUpload({
                   clear={value.clear ?? true}
                 />
                 <figcaption className="text-fg-2 text-[length:var(--fs-caption)] capitalize">
-                  {documentType === 'Passport' ? 'Passport data page' : `${documentType === 'QID' ? 'QID' : documentType} ${side}`}
+                  {documentType === 'Passport' ? 'Passport data page' : `${documentType === 'QID' ? 'QID' : documentType} ${side}${value.source === 'upload' && (side === 'front' ? value.frontFile : value.backFile) ? ` (${side === 'front' ? value.frontFile : value.backFile})` : ''}`}
                 </figcaption>
+                {value.source === 'upload' && (
+                  <Button variant="tertiary" compact aria-label={`Remove the uploaded ${documentType} ${side} file`} onClick={() => onChange(removeIdUpload(value, side))}>
+                    <Icon path={TRASH} className="w-4 h-4" />
+                    Remove
+                  </Button>
+                )}
               </figure>
             ))}
           </div>
+          )}
+          {value.source === 'upload' && !value.combined && value.frontFile && value.backFile && (
+            <div className="flex justify-center">
+              <Button variant="tertiary" compact onClick={() => onChange(swapUploadedSides(value))}>
+                Swap front and back
+              </Button>
+            </div>
+          )}
           {/* "Document detected: X" moved out of this card and up to the
               heading IdLookupStep renders above it (2026-09-28), so it is not
               duplicated here. "Simulated capture" removed the same round -
@@ -180,47 +257,59 @@ export function QidImageUpload({
               Image unclear - the reader could not read this capture. Retake the scan for a clear image.
             </p>
           )}
-          {/* The count is of retakes DONE, so it appears only once there has
-              been one - a fresh capture's button reads "Retake scan", not
-              "Retake scan (0)". Parenthesised rather than spelled out because
-              it sits inside a control label, where "Retake scan, 2 so far"
-              would be a sentence on a button. The screen-reader name spells it
-              out instead, since "(2)" read aloud is just a number. */}
-          <div className={onAccept || onReject ? 'flex items-center justify-between gap-3' : ''}>
-            <Button
-              variant="secondary"
-              compact
-              className={onAccept || onReject ? '' : 'w-full'}
-              onClick={runScan}
-              aria-label={retakes > 0 ? `Retake scan, ${retakes} so far` : undefined}
-            >
-              Retake scan{retakes > 0 && ` (${retakes})`}
-            </Button>
-            {(onAccept || onReject) && (
-              <div className="flex items-center gap-2">
-                {onAccept && (
-                  <Button variant="primary" compact onClick={onAccept} disabled={accepted || value.clear === false}>
-                    {accepted ? 'Accepted' : 'OK'}
-                  </Button>
-                )}
-                {onReject && (
-                  <Button variant="secondary" compact onClick={onReject}>
-                    Cancel
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
+          {/* Retaking is the header button (its label becomes "Retake scan (n)" once a scan exists); this row is only the Accept / Reject a consumer asks for. */}
+          {(onAccept || onReject) && (
+            <div className="flex items-center justify-end gap-2">
+              {onAccept && (
+                <Button variant="primary" compact onClick={onAccept} disabled={accepted || value.clear === false}>
+                  {accepted ? 'Accepted' : 'OK'}
+                </Button>
+              )}
+              {onReject && (
+                <Button variant="secondary" compact onClick={onReject}>
+                  Cancel
+                </Button>
+              )}
+            </div>
+          )}
         </>
       ) : (
         <div className="flex flex-col gap-4">
-          {/* Scanner header: what this is. Whether the reader is available is not shown: the agent only learns of a failure after the permitted attempts. */}
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <Icon path={SCAN_CORNERS} className="w-6 h-6 text-accent shrink-0" />
-              <span className="text-fg font-bold uppercase tracking-wide text-[length:var(--fs-body)] truncate">ID card optical scanner surface</span>
+          {/* One side uploaded so far: the document's two sides side by side - the uploaded one as it is, the other asked for, in place of the
+              scanner's placeholder. Uploading it replaces the ask with the real document. */}
+          {missing && (
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-4">
+                {(['front', 'back'] as const).map((side) => {
+                  const have = side !== missing;
+                  const file = side === 'front' ? value.frontFile : value.backFile;
+                  return (
+                    <figure key={side} className="flex flex-col items-center gap-2">
+                      {have ? (
+                        <ScannedIdPreview side={side} documentType={documentType} variant={variant} identity={identity} src={side === 'front' ? value.frontImage : value.backImage} clear />
+                      ) : (
+                        <div className="w-full aspect-[1.585] rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] flex flex-col items-center justify-center gap-3 p-4 text-center">
+                          <span className="text-fg font-medium text-[length:var(--fs-body)]">{documentType} {side} side needed</span>
+                          <IdFileUpload side={side} label={`Upload ${side} side`} onUpload={(r) => onChange(applyIdUpload(value, r))} />
+                        </div>
+                      )}
+                      <figcaption className="text-fg-2 text-[length:var(--fs-caption)] capitalize">
+                        {have ? `${documentType} ${side}${file ? ` (${file})` : ''}` : `${documentType} ${side}`}
+                      </figcaption>
+                      {have && (
+                        <Button variant="tertiary" compact aria-label={`Remove the uploaded ${documentType} ${side} file`} onClick={() => onChange(removeIdUpload(value, side))}>
+                          <Icon path={TRASH} className="w-4 h-4" />
+                          Remove
+                        </Button>
+                      )}
+                    </figure>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
+          {!missing && (
+            <>
           {/* The scanning surface: a dashed bed holding the card guide, the instruction and the action. */}
           <div className="rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-8 flex flex-col items-center gap-5 text-center">
             <div className="relative w-full max-w-[22rem] aspect-[85.6/54] rounded-[var(--radius-card)] border border-border-soft bg-bg shadow-[var(--shadow-dash-card)] flex items-center justify-center text-muted text-[length:var(--fs-micro)] uppercase tracking-wide">
@@ -237,16 +326,10 @@ export function QidImageUpload({
               </h4>
               {canScan && (
                 <p className="text-fg-2 text-[length:var(--fs-body)]">
-                  Ensure the card is aligned inside the guide rails. The duplex scanner will automatically scan both front and back sides and extract the details for verification to MOI.
+                  The scanner will automatically scan both front and back sides and extract the details for verification to MOI.
                 </p>
               )}
             </div>
-            {canScan && (
-              <Button variant="primary" onClick={runScan}>
-                <Icon path={SCAN_CORNERS} className="w-4 h-4" />
-                Initiate scan
-              </Button>
-            )}
           </div>
           {/* DEMO ONLY - labelled on screen, because an unlabelled row of
               document types under the scanner is indistinguishable from the ID
@@ -288,6 +371,8 @@ export function QidImageUpload({
                 {error}
               </p>
             )
+          )}
+            </>
           )}
         </div>
       )}

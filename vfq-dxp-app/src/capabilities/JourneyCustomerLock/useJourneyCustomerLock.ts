@@ -9,7 +9,7 @@ import type { JourneyFlow } from './journeyModel';
 
 /**
  * Binds this journey to the customer once they are identified, and enforces that nothing else can replace
- * them until the journey ends (Close Activity, Save & Exit, Abandon Order, session end). Another
+ * them until the journey ends (Close Activity, Save as Draft, Abandon Order, session end). Another
  * customer's journey in progress redirects an entry point back to it; a stale hold left by an earlier
  * journey for the same entry is released. Also records the held customer's segment once it is known.
  */
@@ -57,7 +57,7 @@ export function useJourneyCustomerLock({
       // A different customer's journey is in progress: this entry point cannot take over.
       useNotificationStore.getState().pushToast('warning', `A journey for ${active?.customerName} is in progress`, {
         key: 'customer-context-locked',
-        detail: `${active?.taskId ? `Task ID: ${active.taskId}. ` : ''}Close Activity, Save & Exit or Abandon Order to start another customer.`,
+        detail: `${active?.taskId ? `Task ID: ${active.taskId}. ` : ''}Close Activity, Save as Draft or Abandon Order to start another customer.`,
       });
       navigate(launchedFromCustomer360 ? `/customer/${existingCustomerId}` : active!.path, { replace: true });
       return;
@@ -111,7 +111,7 @@ export function useJourneyCustomerLock({
       } else if (changesIdentity) {
         useNotificationStore.getState().pushToast('warning', `This journey is for ${held.customerName}`, {
           key: 'customer-context-locked',
-          detail: 'The customer cannot be changed mid-journey. Save & Exit or Abandon Order to start again.',
+          detail: 'The customer cannot be changed mid-journey. Save as Draft or Abandon Order to start again.',
         });
         return;
       }

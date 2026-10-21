@@ -1,5 +1,6 @@
 import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTypes';
-import { customerQualificationStep } from '../../capabilities';
+import { billingAccountStep, customerQualificationStep, serviceAddressStep } from '../../capabilities';
+import type { GuidedContactValue } from '../../components/patterns/guidedContactModel';
 import type { QualificationContext } from '../../capabilities';
 import type { DeviceType } from '../../lib/deviceType';
 import { mnpSteps } from '../mnp-fnp-porting/screens/mnpSteps';
@@ -7,8 +8,12 @@ import { fixedLineSteps } from '../fixed-line-fibre/fixedActivation/fixedSteps';
 import { prepaidSteps } from '../mobile-prepaid/screens/prepaidSteps';
 import { postpaidSteps } from './postpaidSteps';
 import type { PostpaidStepContext } from './postpaidSteps';
-import { forProduct } from './products';
+import { billingStepActive, forProduct } from './products';
+
+/** Step keys New Connection collects once, before Recommended Offers. */
+const SHARED_KEYS = ['address', 'billingAccount'];
 import { productStep } from './steps/productStep';
+import { homeKindStep } from './steps/HomeKindStep';
 import type { ProductStepContext } from './steps/ProductSelection';
 
 /** Everything the steps of a New Connection journey need from it (`journey`: New Connection or New Home Connection). */
@@ -27,13 +32,30 @@ export function buildConnectionSteps(ctx: ConnectionStepContext): WizardStep[] {
   if (ctx.journey === 'home') {
     return [customerQualificationStep({ ...ctx, productAgnostic: true }), productStep(ctx), ...forProduct('fixed-line', fixedLineSteps())];
   }
+  // The Address and the Billing Profile are collected once, after Customer Identification and BEFORE Recommended Offers, for every product:
+  // each product's own list drops its copy (a product that has no billing profile skips the shared one, see billingStep below).
+  const shared = (steps: WizardStep[]) => steps.filter((s) => !SHARED_KEYS.includes(s.key));
+  // Fixed Line keeps its Installation Address: it needs the connection type chosen after this point, and has its own mandatory fields.
+  const installation = fixedLineSteps().filter((s) => s.key !== 'billingAccount').map((s) => (s.key === 'address' ? { ...s, key: 'installation' } : s));
+  const billingStep: WizardStep = { ...billingAccountStep(), skip: (values) => !billingStepActive(values) };
   return [
     // Identification is the same for every product: scan, MOI, the eligibility checks common to all, special discounts.
     customerQualificationStep({ ...ctx, productAgnostic: true }),
+    serviceAddressStep({
+      mode: 'structured',
+      autoPass: true,
+      // The address is captured through this step. A registry address is never used to fill it for a NEW customer (the NAS's National Address is kept
+      // apart, unchanged, and not shown); only an existing Qatari customer's registered address is offered as an editable head start.
+      identity: (values) => {
+        const contact = values.contact as GuidedContactValue | undefined;
+        return contact?.moiResult?.isNewCustomer ? undefined : { idNumber: contact?.idNumber, nationality: contact?.moiResult?.nationality };
+      },
+    }),
+    billingStep,
     productStep(ctx),
-    ...forProduct('postpaid', postpaidSteps(ctx)),
-    ...forProduct('prepaid', prepaidSteps(ctx)),
-    ...forProduct('fixed-line', fixedLineSteps()),
-    ...forProduct('mnp', mnpSteps(ctx)),
+    ...forProduct('postpaid', shared(postpaidSteps(ctx))),
+    ...forProduct('prepaid', shared(prepaidSteps(ctx))),
+    ...forProduct('fixed-line', [homeKindStep(ctx), ...installation]),
+    ...forProduct('mnp', shared(mnpSteps(ctx))),
   ];
 }

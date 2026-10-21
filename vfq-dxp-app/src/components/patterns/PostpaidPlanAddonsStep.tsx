@@ -1,5 +1,6 @@
 import { type CustomerBenefit } from '../../engines/customerBenefitEngine';
-import { HRN_ADVANCE_QAR } from '../../engines/postpaidPricing';
+import { hrnAdvanceQar } from '../../engines/hrnConfiguration';
+import { usePersonaStore } from '../../stores/personaStore';
 import { Icon } from '../primitives/Icon';
 import { SelectedPlanFigure } from '../primitives/offerCardParts';
 import { BillLimitEditor } from '../domain/BillLimitEditor';
@@ -38,6 +39,8 @@ interface PostpaidPlanAddonsStepProps {
    * (2026-09-28 request: "show 'Please collect QAR [configurable amount]
    * from the customer.'"). */
   requiresHrnAdvance: boolean;
+  /** The customer's nationality: the HRN category, with the persona, decides the advance. */
+  nationality?: string;
   /** Benefit the agent accepted on Customer Identification (office ID confirmed): the plan's matching discount is applied automatically. */
   customerBenefit?: 'mada' | 'b2b2c' | 'retired' | 'none';
   /** The Special Discount chosen on Customer Identification (accepted or not): names the contextual third tab. */
@@ -81,6 +84,7 @@ export function PostpaidPlanAddonsStep({
   billLimit,
   onBillLimitChange,
   requiresHrnAdvance,
+  nationality,
   customerBenefit,
   specialDiscountType,
   customerBenefits,
@@ -89,6 +93,7 @@ export function PostpaidPlanAddonsStep({
   onDiscountProofDocumentChange,
   hiddenProductId,
 }: PostpaidPlanAddonsStepProps) {
+  const personaId = usePersonaStore((s) => s.activePersonaId);
   const {
     plans,
     discounts,
@@ -145,7 +150,7 @@ export function PostpaidPlanAddonsStep({
           for every place QAR 100 appears. */}
       {requiresHrnAdvance && (
         <div className="rounded-[var(--radius-card)] border border-accent-border bg-surface-warm p-4">
-          <p className="text-fg font-medium">Please collect QAR {HRN_ADVANCE_QAR} from the customer.</p>
+          <p className="text-fg font-medium">Please collect QAR {hrnAdvanceQar({ nationality, personaId })} from the customer.</p>
         </div>
       )}
       {/* Tabbed (2026-09-28 mockup, replacing the stacked layout the

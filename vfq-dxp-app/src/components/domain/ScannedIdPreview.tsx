@@ -24,6 +24,8 @@ interface ScannedIdPreviewProps {
   side: 'front' | 'back';
   /** A real captured image, when one exists. Falls back to the drawn card. */
   src?: string;
+  /** An uploaded PDF showing both sides on one page: drawn as a whole portrait page rather than a card. */
+  fullPage?: boolean;
   /**
    * Which document this depicts. Drives the alt text, the specimen fields
    * drawn on the card, and, on a Qatar ID back, the barcode that card
@@ -155,8 +157,23 @@ const THEMES: Record<IdVariant, Theme> = {
 const variantOf = (documentType: string): IdVariant =>
   documentType === 'Passport' ? 'passport' : documentType === 'GCC ID' ? 'gcc' : documentType === 'Diplomatic ID' ? 'diplomatic' : 'qid';
 
-export function ScannedIdPreview({ side, src, documentType = 'QID', clear = true, variant: variantProp, identity }: ScannedIdPreviewProps) {
+const isPdfDataUrl = (src: string) => src.startsWith('data:application/pdf');
+
+export function ScannedIdPreview({ side, src, documentType = 'QID', clear = true, variant: variantProp, identity, fullPage = false }: ScannedIdPreviewProps) {
   const [imageFailed, setImageFailed] = useState(false);
+
+  // An uploaded PDF: drawn by the browser's own PDF viewer (no library needed), page fitted to the width, without its toolbar.
+  if (src && isPdfDataUrl(src)) {
+    return (
+      // The whole page, with no scrollbar: the frame has the page's own proportions (a full page when `fullPage`, else a card's) and the viewer is
+      // told to fit the page to it.
+      <span className={`block w-full overflow-hidden rounded-[var(--radius-button)] border border-border-soft bg-paper ${fullPage ? 'aspect-[1/1.414]' : 'aspect-[1.585]'}`}>
+        <object data={`${src}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`} type="application/pdf" aria-label={`Uploaded ${documentType} document (PDF)`} className="block w-full h-full">
+          <span className="block p-4 text-fg-2 text-[length:var(--fs-caption)]">This browser cannot show the PDF here. The file is uploaded all the same.</span>
+        </object>
+      </span>
+    );
+  }
 
   if (src && !imageFailed) {
     return (

@@ -18,6 +18,7 @@ import type { CrossSalesValue, PrepaidCheckoutTotals } from '../../../capabiliti
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import type { DeviceType } from '../../../lib/deviceType';
 import * as sums from '../../../components/patterns/wizard/commonSummaries';
+import { formatDate } from '../../../lib/format';
 
 const contactOf = (values: Record<string, unknown>) => values.contact as GuidedContactValue | undefined;
 const nameOf = (values: Record<string, unknown>) => contactOf(values)?.moiResult?.name;
@@ -75,7 +76,7 @@ export function prepaidSteps({ device }: { device: DeviceType }): WizardStep[] {
         formDetails: (values) => {
           const lines = allLines(values);
           return [
-            { label: 'Application date', value: new Date().toLocaleDateString('en-GB') },
+            { label: 'Application date', value: formatDate(new Date()) },
             { label: lines.length > 1 ? 'Mobile numbers' : 'Mobile number', value: lines.map((l) => l.msisdn).join(', ') || '-' },
             { label: lines.length > 1 ? 'SIM serials' : 'SIM serial', value: lines.map((l) => l.simType.simSerial ?? 'eSIM').join(', ') || '-' },
           ];

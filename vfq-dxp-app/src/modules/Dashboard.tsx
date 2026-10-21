@@ -17,6 +17,7 @@ import { useQnomyQueueStore } from '../stores/qnomyQueueStore';
 import { waitingCountFor } from '../engines/qnomyQueueEngine';
 import { canSeeQnomyTicketNumber } from '../engines/agentPrivilegeEngine';
 import type { QTicketRecord } from '../navigation/sessionReferenceLookups';
+import { formatDate } from '../lib/format';
 
 
 interface CustomerRecord {
@@ -117,7 +118,7 @@ export function Dashboard() {
     .filter(Boolean)
     .join(' ');
 
-  const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  const today = `${new Date().toLocaleDateString('en-GB', { weekday: 'long' })}, ${formatDate(new Date())}`;
   const priority = m.taskTiles.find((t) => t.key === 'priority')?.count ?? 0;
   const facts = [
     layout.zones.some((z) => z.id === 'customer-ops') ? `${countWord(priority)} priority ${priority === 1 ? 'task' : 'tasks'}` : null,

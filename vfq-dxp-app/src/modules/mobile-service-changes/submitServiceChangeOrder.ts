@@ -139,7 +139,7 @@ export async function submitServiceChangeOrder(
       ...(addons.length > 0 ? [{ label: 'Add-ons', value: addons.map((a) => a.name).join(', ') }] : []),
     ],
     customerEmail: contact.email,
-    customerEmailDisplay: contact.moiResult?.isNewCustomer && contact.email ? maskEmail(contact.email) : contact.email,
+    customerEmailDisplay: contact.moiResult?.isNewCustomer && !contact.moiResult?.createdByAgent && contact.email ? maskEmail(contact.email) : contact.email,
     customerEmailVerified: emailVerification(contact.email, contact.moiResult?.email).verified,
     service: 'mobile',
   };

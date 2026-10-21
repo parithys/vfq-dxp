@@ -1,3 +1,6 @@
+import { POSTPAID_MILESTONES, SUBMITTED_FOR_APPROVAL_MESSAGE, postpaidMilestonesApply } from './milestones';
+import { reachMilestoneOnEvent } from '../../components/patterns/wizard/useJourneyMilestones';
+import type { JourneyMilestones } from '../../engines/milestoneEngine';
 import { useEffect, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useCustomerContext } from '../../stores/customerContextStore';
@@ -29,6 +32,9 @@ import type { ConfirmedOrder } from '../../capabilities';
 // with that product's steps: the draft, the customer lock and the title never change, and nothing exits or restarts.
 // `initialProduct` is for an entry point that already names the product (a Prepaid or Fixed Line link): Identification still
 // comes first, then the product step passes itself over (Back returns to it).
+// Mobile Postpaid Activation's milestones (see milestones.ts); they apply while the product is Postpaid or not yet chosen.
+const POSTPAID_MILESTONE_CONFIG: JourneyMilestones = { defs: POSTPAID_MILESTONES, applies: postpaidMilestonesApply };
+
 export function NewConnectionWizard({
   flow = 'new',
   journey = 'connection',
@@ -102,11 +108,11 @@ export function NewConnectionWizard({
       case 'prepaid':
         return submitPrepaidOrder(values, { createRecord, updateRecord }, device);
       case 'fixed-line':
-        return submitFixedActivationOrder(values, { createRecord });
+        return submitFixedActivationOrder(values, { createRecord, updateRecord });
       case 'mnp':
         return submitMnpOrder(values, { createRecord, updateRecord });
       default:
-        return submitNewConnectionOrder(values, { flow, createRecord });
+        return submitNewConnectionOrder(values, { flow, createRecord, updateRecord });
     }
   };
 
@@ -148,8 +154,13 @@ export function NewConnectionWizard({
           customerBenefits,
           device,
         })}
+        milestones={journey === 'home' ? undefined : POSTPAID_MILESTONE_CONFIG}
         onSubmit={async (values) => {
           const confirmed = await confirm(values);
+          // Milestone 5: the order is in. Held for approval is "submitted", never "approved".
+          if (values.product === 'postpaid') {
+            reachMilestoneOnEvent(WIZARD_ID, POSTPAID_MILESTONE_CONFIG, values, 'submitted', confirmed.pendingApproval ? SUBMITTED_FOR_APPROVAL_MESSAGE : undefined);
+          }
           setConfirmedOrder(confirmed);
           // Kept with the customer context so the Activity Final page returns until Close Activity.
           useCustomerContext.getState().patchJourney(WIZARD_ID, { finalOrder: confirmed as unknown as Record<string, unknown> });

@@ -49,6 +49,7 @@ export function NewSimSwapWizard({ msisdn, onDone }: NewSimSwapWizardProps) {
             render: ({ values, setValue }) => (
               <div className="space-y-4">
                 <QidImageUpload
+                  bothCaptureActions
                   value={(values.qidImages as QidImageUploadValue) ?? {}}
                   onChange={(v) => setValue('qidImages', v)}
                 />

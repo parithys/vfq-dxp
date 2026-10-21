@@ -60,7 +60,7 @@ export function billingAccountStep(opts: { /** What the new profile is for, in i
           customerName={(values.contact as GuidedContactValue | undefined)?.moiResult?.name}
           customerEmail={(() => {
             const c = values.contact as GuidedContactValue | undefined;
-            return c?.moiResult?.isNewCustomer && c.email ? maskEmail(c.email) : c?.email;
+            return c?.moiResult?.isNewCustomer && !c?.moiResult?.createdByAgent && c.email ? maskEmail(c.email) : c?.email;
           })()}
         />
       );

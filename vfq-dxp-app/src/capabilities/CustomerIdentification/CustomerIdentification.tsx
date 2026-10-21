@@ -28,6 +28,8 @@ interface CommonProps {
   autoDetectIdType?: boolean;
   /** Typed entry from the start (a keyboard device); the scanner follows as the alternative. */
   manualEntry?: boolean;
+  /** Offer to create a new customer when no registry knows the ID (QID, Passport, Diplomatic ID). Default true; off for a journey that acts on a known customer. */
+  allowNewCustomer?: boolean;
   /** Scan, then the agent verifies number and expiry against the document, then Fetch (MOI). */
   verifyThenFetch?: boolean;
   /** Handle whoever the scanned ID belongs to as a genuine new customer. */
@@ -51,10 +53,12 @@ export type CustomerIdentificationProps =
     });
 
 export function CustomerIdentification(props: CustomerIdentificationProps) {
+  // The capability's one behaviour: the agent verifies the number and expiry against the document, then Fetch (MOI). Every journey gets it
+  // unless it says otherwise.
   if (props.collectContact) {
-    const { collectContact: _collectContact, ...rest } = props;
-    return <GuidedContactStep {...rest} />;
+    const { collectContact: _collectContact, verifyThenFetch = true, ...rest } = props;
+    return <GuidedContactStep {...rest} verifyThenFetch={verifyThenFetch} />;
   }
-  const { collectContact: _collectContact, ...rest } = props;
-  return <IdLookupStep {...rest} />;
+  const { collectContact: _collectContact, verifyThenFetch = true, ...rest } = props;
+  return <IdLookupStep {...rest} verifyThenFetch={verifyThenFetch} />;
 }

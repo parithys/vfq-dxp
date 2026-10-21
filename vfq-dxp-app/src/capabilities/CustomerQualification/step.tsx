@@ -13,9 +13,8 @@ import type { RequestKind } from '../../domain/eligibility';
 import { LAUNCH_CUSTOMER_KEY } from '../../components/patterns/wizard/useJourneyStartResume';
 import { CustomerStatusBanner } from './JourneyBanners';
 import { EligibilityOutcomePanel, OutcomeActions } from '../EligibilityGate/EligibilityOutcomes';
-import { CustomerTypeStep } from '../CustomerType/CustomerTypeStep';
-import { isCustomerTypeValid } from '../CustomerType/customerTypeModel';
-import type { CustomerTypeValue } from '../CustomerType/customerTypeModel';
+import { SpecialDiscountsIdentification, isSpecialDiscountsValid } from '../SpecialDiscountsIdentification';
+import type { SpecialDiscountsValue } from '../SpecialDiscountsIdentification';
 import type { JourneyFlow } from '../JourneyCustomerLock/journeyModel';
 import type { useJourneyCustomerLock } from '../JourneyCustomerLock/useJourneyCustomerLock';
 
@@ -86,6 +85,8 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
           asNewCustomer={asNewCustomer}
           // Customer 360 entry: the customer is the one the journey was opened for.
           asCustomerId={flow === 'existing' ? existingCustomerId : actedForId}
+          // A journey that acts on a known customer never creates one; the others offer it when no registry knows the ID.
+          allowNewCustomer={!knownCustomer}
           // All four ID types are offered (2026-10-04). Passport, GCC ID and Diplomatic ID are exception
           // identification: the eligibility engine routes them to approval rather than blocking them here.
           allowedIdTypes={idTypesFor(prepaid ? 'prepaid' : 'new-connection')}
@@ -105,6 +106,12 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
             asNewCustomer={asNewCustomer}
             asCustomerId={flow === 'existing' ? existingCustomerId : actedForId}
             announcePass={false}
+            // A customer created here (no registry knows the ID) is judged on what the agent entered.
+            newIdentity={
+              contact?.moiResult?.createdByAgent && contact.idType
+                ? { idNumber: contact.idNumber ?? '', idType: contact.idType, nationality: contact.moiResult.nationality, dob: contact.moiResult.dob, expiryDate: contact.moiResult.expiryDate }
+                : undefined
+            }
             skipLineLimit={skipLineLimit}
             // MNP does not know its connection type until Plan Type: the approvals that depend on it (the ID type's, the line-count and
             // passport BAU ones - a prepaid line needs none of the ID-type approval) are announced there, for the plan type chosen.
@@ -132,7 +139,6 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
             as the eligibility panel so there is a single divider. */}
         {!prepaid && contact?.moiResult && eligibility && !eligibility.hardStop && (productAgnostic || !eligibility.softStop) && (
           <div className="space-y-4">
-            <h3 className="text-fg font-semibold text-[length:var(--fs-h5)]">Special Discounts</h3>
             {/* Headless: stands in for the skipped Billing Profile page. */}
             {/* Product-agnostic identification leaves the billing account to the product stage (not every product has one). */}
             {!productAgnostic && (
@@ -143,8 +149,8 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
                 onChange={(v) => setValue('billingAccount', v)}
               />
             )}
-            <CustomerTypeStep
-              value={(values.customerType as CustomerTypeValue) ?? {}}
+            <SpecialDiscountsIdentification
+              value={(values.customerType as SpecialDiscountsValue) ?? {}}
               onChange={(v) => setValue('customerType', v)}
               idNumber={contact.idNumber}
               onReject={() => {
@@ -178,11 +184,16 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
     // (HRN with no other issue) is NOT excluded: it never sets
     // hardStop/softStop and contributes no 'approval-routing' check,
     // so Continue stays available exactly as a clean pass would.
+    // Saved as a draft only once MOI has validated the customer and nothing hard-stops the order.
+    canSaveDraft: (values) => {
+      const e = values.eligibility as EligibilityResult | undefined;
+      return Boolean((values.contact as GuidedContactValue | undefined)?.moiResult) && Boolean(e) && !e!.hardStop;
+    },
     isValid: (values) => {
       const c = values.contact as GuidedContactValue | undefined;
       const e = values.eligibility as EligibilityResult | undefined;
       const identityOk = Boolean(
-        c?.moiResult && hasIdentityDetails(c ?? {}) && isValidEmail(c?.email) && (!c?.altPhone || isValidAltPhone(c.altPhone))
+        c?.moiResult && hasIdentityDetails(c ?? {}) && isValidEmail(c?.email) && (!c?.workEmail || isValidEmail(c.workEmail)) && (!c?.altPhone || isValidAltPhone(c.altPhone))
       );
       if (!identityOk || !e) return false;
       // A soft stop (a postpaid collections block) belongs to the product chosen later, not to identification.
@@ -190,7 +201,7 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
       // An approval-routing outcome no longer blocks Continue: the journey
       // goes on and the order is held for approval when it is SUBMITTED
       // (see pendingApproval at submit).
-      return prepaid || isCustomerTypeValid(values.customerType as CustomerTypeValue | undefined);
+      return prepaid || isSpecialDiscountsValid(values.customerType as SpecialDiscountsValue | undefined);
     },
     // "Add a text link on the left side. On click, open a popup
     // showing all eligibility checks performed and their results"

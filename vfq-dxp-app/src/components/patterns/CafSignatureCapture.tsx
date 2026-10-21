@@ -21,7 +21,7 @@ interface CafSignatureCaptureProps {
   value: {
     cafType?: CafType;
     signatureDataUrl?: string;
-    /** The customer has ticked "I have read and agree to the Terms and Conditions." */
+    /** The customer has ticked "I have read and agree to the full Terms and Conditions." */
     termsAccepted?: boolean;
     documents?: CafDocument[];
     /** Post-signature supporting documents - see AdditionalDocumentsUpload. */
@@ -275,7 +275,7 @@ export function CafSignatureCapture({
                     onChange={(e) => onChange({ ...value, termsAccepted: e.target.checked })}
                   />
                   <span className="text-fg text-[length:var(--fs-body)]">
-                    I have read and agree to the{' '}
+                    I have read and agree to the full{' '}
                     {termsUrl ? (
                       <a href={termsUrl} target="_blank" rel="noreferrer" className="text-link underline">
                         Terms and Conditions

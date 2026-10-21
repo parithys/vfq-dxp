@@ -2,7 +2,7 @@ import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
 import { computeBillingSummary, withinBillHistoryWindow, type Customer360Data } from '../../../engines/customer360Engine';
 import { MetricCard } from '../MetricCard';
-import { isHrnNationality } from '../../../engines/ruleEngine';
+import { isHrn as isHrnNationality } from '../../../engines/hrnConfiguration';
 import { InvoiceActions } from '../InvoiceActions';
 
 function capitalize(value: unknown): string {
