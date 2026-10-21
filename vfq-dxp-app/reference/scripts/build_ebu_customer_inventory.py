@@ -24,7 +24,7 @@ from openpyxl.utils import get_column_letter
 APP = Path(__file__).resolve().parents[2]
 MOCK = APP / "public" / "mock-data"
 OUT = APP / "reference" / "outputs" / "EBU-Customer-Inventory.xlsx"
-CONSUMER_INVENTORY = APP / "reference" / "outputs" / "Customer-Inventory.xlsx"
+CONSUMER_INVENTORY = APP / "reference" / "outputs" / "02 Customer-Inventory.xlsx"
 AS_OF = date(2026, 10, 7)
 RED = "E60000"
 SEED_TAG = "Customer-Inventory seed (2026-10-02)"

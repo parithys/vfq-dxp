@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Checks that reference/outputs/Customer-Inventory.xlsx and the app's mock data agree.
+"""Checks that reference/outputs/02 Customer-Inventory.xlsx and the app's mock data agree.
 
 The workbook is the test-data contract: every customer on its 'Customers' sheet must be
 findable in the running app (public/mock-data) with the same details, and every customer the
@@ -13,7 +13,7 @@ import openpyxl
 
 APP = Path(__file__).resolve().parents[2]
 MOCK = APP / "public/mock-data"
-XLSX = APP / "reference/outputs/Customer-Inventory.xlsx"
+XLSX = APP / "reference/outputs/02 Customer-Inventory.xlsx"
 
 
 def load(n):
@@ -88,7 +88,13 @@ OPEN_LINE_ITEMS = {
 }
 
 
+def iso(v):
+    """The workbook shows dates as dd/mm/yyyy; the app's data is ISO."""
+    return re.sub(r"\b(\d{2})/(\d{2})/(\d{4})\b", r"\3-\2-\1", v) if isinstance(v, str) else v
+
+
 def check(cid, field, expected, actual):
+    expected = iso(expected)
     if str(expected if expected is not None else "").strip() != str(actual if actual is not None else "").strip():
         problems.append(f"{cid}  {field}: workbook={expected!r}  app={actual!r}")
 
