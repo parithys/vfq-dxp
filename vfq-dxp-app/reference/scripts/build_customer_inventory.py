@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate reference/outputs/Customer-Inventory.xlsx - the test-customer inventory.
+"""Generate reference/outputs/02 Customer-Inventory.xlsx - the test-customer inventory.
 
 Two kinds of row. "In app - original" rows are PARSED from public/mock-data
 (customers.json, identity-documents.json, nas-records.json, ...). "In app -
@@ -22,7 +22,7 @@ from openpyxl.utils import get_column_letter
 
 APP = Path(__file__).resolve().parents[2]
 MOCK = APP / "public" / "mock-data"
-OUT = APP / "reference" / "outputs" / "Customer-Inventory.xlsx"
+OUT = APP / "reference" / "outputs" / "02 Customer-Inventory.xlsx"
 AS_OF = date(2026, 10, 2)
 SEED_TAG = "Customer-Inventory seed (2026-10-02)"
 ORIG, ADDED = "In app - original", "In app - added 2026-10-02"
@@ -312,8 +312,8 @@ PROPOSED = [
     P("CUST-3053", "Faisal Al-Rumaihi", "Qatari", "Qatari", "QID", "28808063400053", "2030-03-31", "1988-08-19", "Male", "Consumer", "Arabic", 1, 0, "7 Existing-service journeys",
       "Qatari with a GigaHome 5G FWA outdoor line plus 1 postpaid line (cross-sell target).", "Loyalty (existing)", "-", "FWA; Fixed Line; Customer 360", "Existing multi-product customer; FWA appointment booking and serial-number check apply.",
       jk=["workspace.customer-search", "fwa.new-fwa-wizard"], req="FWA / multi-product"),
-    P("CUST-3054", "Zainab Al-Hashemi", "Qatari", "Qatari", "QID", "29108063400054", "2030-11-30", "1991-08-14", "Female", "Premium", "English", 3, 1, "7 Existing-service journeys",
-      "Premium-segment Qatari with multi-SIM / iWatch lines; high-value retention target.", "Loyalty (existing)", "-", "Retention; Customer 360; Multi-SIM", "Premium / Retention journeys; multi-SIM sequence numbers and monthly fees apply.", jk=C360, req="Premium / retention"),
+    P("CUST-3054", "Zainab Al-Hashemi", "Qatari", "Qatari", "QID", "29108063400054", "2030-11-30", "1991-08-14", "Female", "Consumer", "English", 3, 1, "7 Existing-service journeys",
+      "High-value Qatari with multi-SIM / iWatch lines; high-value retention target.", "Loyalty (existing)", "-", "Retention; Customer 360; Multi-SIM", "Premium / Retention journeys; multi-SIM sequence numbers and monthly fees apply.", jk=C360, req="Premium / retention"),
     # ---- 8. Risk class (HRN) and ID-class additions
     P("CUST-3061", "Mizanur Rahman", "Bangladeshi", "Expat (Passport)", "Passport", "BN7721045", "2031-04-30", "1990-03-08", "Male", "Consumer (HRN)", "English", 0, 2, "8 HRN & ID classes",
       "HRN expat on a Passport with 2 prepaid lines = Passport prepaid cap.", "None", "-", "New Prepaid (blocked); New Connection",
@@ -343,8 +343,10 @@ PROPOSED = [
 
 # HRN is DERIVED from nationality (VFQ list, 2026-10-02). The set is parsed from
 # the app's own rule so the workbook cannot disagree with the code.
-_hrn_src = (APP / "src/engines/ruleEngine.ts").read_text()
-HRN_SET = set(re.findall(r"'([a-z]+)'", _hrn_src[_hrn_src.index("const HRN_NATIONALITIES"):_hrn_src.index("export function isHrnNationality")]))
+_hrn_src = (APP / "src/engines/hrnConfiguration.ts").read_text()
+_hrn_map = _hrn_src[_hrn_src.index("export const NATIONALITY_HRN_CATEGORIES"):]
+_hrn_map = _hrn_map[:_hrn_map.index("\n};")]
+HRN_SET = set(re.findall(r"([a-z]+): \[", _hrn_map))
 
 
 def is_hrn(nationality):
@@ -372,7 +374,7 @@ PROPOSED += [
       "Collections Check PASSES ('No collections block on this account'): a collections block needs an outstanding balance above QAR 0 (VFQ business, 2026-10-02). Contrast CUST-3046, same flag with an unpaid bill -> soft-stop.",
       bl="collections", jk=PP, req="Collections flag, zero balance"),
     # ---- 10. High line counts (no-cap / approval-only paths). Home internet has no cap in any source (see Open Questions).
-    P("CUST-3081", "Khalifa Al-Naimi", "Qatari", "Qatari", "QID", "27807063400081", "2031-01-31", "1978-07-14", "Male", "Premium", "Arabic", 12, 15, "10 High line counts",
+    P("CUST-3081", "Khalifa Al-Naimi", "Qatari", "Qatari", "QID", "27807063400081", "2031-01-31", "1978-07-14", "Male", "Consumer", "Arabic", 12, 15, "10 High line counts",
       "Qatari family account holder with 12 postpaid + 15 prepaid mobile lines and 4 GigaHome fibre lines (31 lines in total).", "Loyalty (existing)", "-", "Customer 360; New Postpaid; New Prepaid",
       "Postpaid is past the Qatari limit of 5, so a further postpaid line routes for approval with no maximum (BR-288); prepaid has no cap (BR-347). Home internet has no rule.", jk=C360, req="High line counts (12 / 15 / 4)", hi=4),
     P("CUST-3082", "Noora Al-Mannai", "Qatari", "Qatari", "QID", "28509063400082", "2030-09-30", "1985-09-03", "Female", "Consumer", "Arabic", 20, 0, "10 High line counts",
@@ -381,7 +383,7 @@ PROPOSED += [
     P("CUST-3083", "Abdulla Al-Sada", "Qatari", "Qatari", "QID", "29203063400083", "2030-12-31", "1992-03-21", "Male", "Consumer", "English", 0, 25, "10 High line counts",
       "Qatari with 25 prepaid lines and 2 GigaHome fibre lines.", "Prepaid Welcome (-10%)", "-", "Customer 360; New Prepaid",
       "No prepaid cap for a Qatari (BR-347): a 26th prepaid line passes.", jk=PRE, req="Prepaid with no cap", hi=2),
-    P("CUST-3084", "Aisha Al-Kuwari", "Qatari", "Qatari", "QID", "28911063400084", "2030-06-30", "1989-11-09", "Female", "Premium", "Arabic", 6, 10, "10 High line counts",
+    P("CUST-3084", "Aisha Al-Kuwari", "Qatari", "Qatari", "QID", "28911063400084", "2030-06-30", "1989-11-09", "Female", "Consumer", "Arabic", 6, 10, "10 High line counts",
       "Qatari with 6 postpaid, 10 prepaid and 8 GigaHome fibre lines - home internet the largest group.", "Loyalty (existing)", "-", "Customer 360; Fixed Line; FWA",
       "Home internet has no cap in any source, so an 9th fibre line is not blocked by a rule.", jk=["workspace.customer-search", "fwa.new-fwa-wizard"], req="Many home internet lines", hi=8),
     P("CUST-3085", "Rashid Al-Hajri", "Qatari", "Qatari", "QID", "27604063400085", "2030-04-30", "1976-04-17", "Male", "Consumer", "Arabic", 0, 0, "10 High line counts",
@@ -1153,12 +1155,21 @@ FILL_SEEDED = PatternFill("solid", fgColor="E8F5E9")
 FILL_PROP = PatternFill("solid", fgColor="FFF8E1")
 
 
+ISO_DATE = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
+
+
+def dmy(v):
+    """Every date the workbook shows is dd/mm/yyyy (the app's one date format). The mock-data files keep ISO, so the 'Seeded Records'
+    sheet - which quotes values to type into those files - is left as is."""
+    return ISO_DATE.sub(r"\3/\2/\1", v) if isinstance(v, str) else v
+
+
 def sheet(wb, title, header, data, widths=None, first=False, wrap_cols=()):
     ws = wb.active if first else wb.create_sheet()
     ws.title = title
     ws.append(header)
     for r in data:
-        ws.append(r)
+        ws.append(r if title == "Seeded Records" else [dmy(x) for x in r])
     for c in ws[1]:
         c.font, c.fill, c.border = hfont, hfill, border
         c.alignment = Alignment(wrap_text=True, vertical="center")
@@ -1201,7 +1212,7 @@ readme = [
 ]
 ws = wb.active; ws.title = "README"
 for r in readme:
-    ws.append(r)
+    ws.append([dmy(x) for x in r])
 ws.column_dimensions["A"].width = 150
 ws["A1"].font = Font(bold=True, size=16, color=RED)
 for r in (7, 13, 16):
