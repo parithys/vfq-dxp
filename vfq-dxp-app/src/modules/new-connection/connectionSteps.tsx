@@ -37,7 +37,7 @@ export function buildConnectionSteps(ctx: ConnectionStepContext): WizardStep[] {
   const shared = (steps: WizardStep[]) => steps.filter((s) => !SHARED_KEYS.includes(s.key));
   // Fixed Line keeps its Installation Address: it needs the connection type chosen after this point, and has its own mandatory fields.
   const installation = fixedLineSteps().filter((s) => s.key !== 'billingAccount').map((s) => (s.key === 'address' ? { ...s, key: 'installation' } : s));
-  const billingStep: WizardStep = { ...billingAccountStep(), skip: (values) => !billingStepActive(values) };
+  const billingStep: WizardStep = { ...billingAccountStep({ journey: (values) => (values.product === 'fixed-line' ? 'fixed-line' : 'postpaid') }), skip: (values) => !billingStepActive(values) };
   return [
     // Identification is the same for every product: scan, MOI, the eligibility checks common to all, special discounts.
     customerQualificationStep({ ...ctx, productAgnostic: true }),

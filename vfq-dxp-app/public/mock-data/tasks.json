@@ -101,5 +101,17 @@
     "assignedAgentId": "USR-1101",
     "createdAt": "2026-09-05T12:00:00+03:00",
     "relatedOrderId": "ORD-90021"
+  },
+  {
+    "_note": "Demo seed (2026-10-22) - belongs to a protected-segment customer (Safwa / Safwa+ / Royal): shown only to a role holding that segment's grant; every other role sees these lists without it.",
+    "taskId": "TASK-70101",
+    "taskName": "Hessa Jassim Al-Thani – Follow up on activation",
+    "taskDescription": "Follow up with the customer on the pending activation.",
+    "taskType": "General",
+    "taskStatus": "Open",
+    "priorityFlag": false,
+    "assignedAgentId": null,
+    "createdAt": "2026-10-20T11:00:00+03:00",
+    "relatedOrderId": "ORD-93101"
   }
 ]

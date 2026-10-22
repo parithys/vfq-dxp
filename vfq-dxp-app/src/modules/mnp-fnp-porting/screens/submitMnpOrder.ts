@@ -1,4 +1,6 @@
 import { currentAgentId } from '../../../stores/authStore';
+import { accountTypeForJourney } from '../../../engines/creditLimit';
+import { saveLinkedIdDocument } from '../../new-connection/saveLinkedIdDocument';
 import { contactIdentityOrderFields } from '../../new-connection/contactIdentityOrderFields';
 import { saveCustomerSalutation } from '../../new-connection/saveCustomerSalutation';
 import { idScanAttachments } from '../../new-connection/idScanAttachments';
@@ -80,7 +82,7 @@ export async function submitMnpOrder(
     : await persistBillingAccount(values.billingAccount as BillingAccountValue | undefined, {
         createRecord,
         updateRecord,
-        kind: 'Consumer Mobile Postpaid',
+        kind: accountTypeForJourney('postpaid'),
         customerId: eligibility?.customerId,
         idNumber: contact.idNumber,
         contactName: contact.moiResult?.name,
@@ -88,10 +90,14 @@ export async function submitMnpOrder(
         contactPhone: contact.moiResult?.phone,
         addressLine: [address?.zone && `Zone ${address.zone}`, address?.streetNo && `Street ${address.streetNo}`, address?.buildingNo && `Building ${address.buildingNo}`].filter(Boolean).join(', ') || undefined,
         creditLimitQar: eligibility?.defaultCreditLimitQar,
+        nationality: eligibility?.nationality,
+        agentId: currentAgentId() ?? undefined,
       });
 
   // The salutation the agent entered is saved to the customer's profile (shown in Customer 360).
   await saveCustomerSalutation(eligibility?.customerId, contact.salutation, updateRecord);
+  // A QID linked to an existing customer through their Passport is added to that customer's documents (no duplicate customer).
+  await saveLinkedIdDocument(contact.moiResult?.linkedIdUpdate, createRecord);
   await createRecord('orders', {
     orderId,
     orderType: isPrepaid ? 'MNP Prepaid Port-In' : 'MNP Postpaid Port-In',

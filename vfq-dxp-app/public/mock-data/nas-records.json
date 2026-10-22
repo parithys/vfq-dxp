@@ -48,6 +48,7 @@
     "nasRecordId": "NAS-7003",
     "documentType": "QID",
     "documentNumber": "29108035600102",
+    "linkedPassportNumber": "S7712345",
     "expiryDate": "2030-03-31",
     "name": "Anil Ramesh Sharma",
     "firstName": "Anil",
@@ -85,6 +86,29 @@
       "buildingNo": "22",
       "area": "Al Rayyan",
       "city": "Al Rayyan"
+    }
+  },
+  {
+    "_note": "Demo seed (2026-10-22) - QID to Passport mapping: this QID is the SAME PERSON as CUST-1002 (Passport P0998812), who is already a customer. Customer Identification links to that customer and adds this QID to their record instead of creating a duplicate.",
+    "nasRecordId": "NAS-7005",
+    "documentType": "QID",
+    "documentNumber": "29007223400104",
+    "linkedPassportNumber": "P0998812",
+    "expiryDate": "2031-02-28",
+    "name": "Bimal Bahadur Thapa",
+    "firstName": "Bimal",
+    "middleName": "Bahadur",
+    "lastName": "Thapa",
+    "dob": "1990-07-22",
+    "nationality": "Nepalese",
+    "gender": "Male",
+    "email": "bimal.thapa@example.qa",
+    "nationalAddress": {
+      "zone": "56",
+      "streetNo": "215",
+      "buildingNo": "7",
+      "area": "Al Sadd",
+      "city": "Doha"
     }
   }
 ]

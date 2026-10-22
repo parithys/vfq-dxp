@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '../primitives/Button';
 import { Icon } from '../primitives/Icon';
 import { Spinner } from '../primitives/Spinner';
-import { ScannedIdPreview } from './ScannedIdPreview';
+import { ScannedIdPreview, capturedFromCard } from './ScannedIdPreview';
 import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
 import { SCAN_DURATION_MS } from './qidImageUploadModel';
 import type { QidImageUploadProps } from './qidImageUploadModel';
@@ -94,6 +94,7 @@ export function QidImageUpload({
         frontFile: undefined,
         backFile: undefined,
         sidesSet: undefined,
+        captured: undefined,
         clear: undefined,
       });
     }
@@ -123,7 +124,7 @@ export function QidImageUpload({
       // card, the demo has made its point, and a card that stays unreadable
       // forever would just look broken rather than illustrative.
       const clear = !blurFirstScan || isRetake;
-      onChange({ ...value, frontScanned: true, backScanned: true, frontImage: undefined, backImage: undefined, frontFile: undefined, backFile: undefined, combined: undefined, sidesSet: undefined, source: 'scan', clear });
+      onChange({ ...value, frontScanned: true, backScanned: true, frontImage: undefined, backImage: undefined, frontFile: undefined, backFile: undefined, combined: undefined, sidesSet: undefined, source: 'scan', captured: capturedFromCard(documentType, identity), clear });
     }, SCAN_DURATION_MS);
   };
 

@@ -36,7 +36,9 @@ export function AuditTrailSection({
             { key: 'recordType', header: 'Record' },
             { key: 'recordId', header: 'Record ID' },
             { key: 'fieldModified', header: 'Field' },
+            { key: 'oldValue', header: 'Old Value', render: (r) => <span>{r.oldValue ? String(r.oldValue) : '-'}</span> },
             { key: 'newValue', header: 'New Value' },
+            { key: 'changeBasis', header: 'How', render: (r) => <span>{r.changeBasis ? String(r.changeBasis) : '-'}</span> },
             { key: 'employeeUser', header: 'Changed By' },
           ]}
         />

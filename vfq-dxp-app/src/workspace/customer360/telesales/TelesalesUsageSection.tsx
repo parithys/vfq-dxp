@@ -1,4 +1,5 @@
 import { FilterSelect } from '../sections/C360Kit';
+import { overallCreditLimitOf } from '../creditLimitView';
 import { useState } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
 import { buildAssetsFieldResolver } from '../sections/assetsResolvers';
@@ -34,7 +35,7 @@ export function UsageSection({ ctx }: { ctx: Ctx }) {
   const addons = data.addonsDiscounts.filter((a) => a.category !== 'Discount');
   const discounts = data.addonsDiscounts.filter((a) => a.category === 'Discount');
   const creditLimit = data.creditLimits[0];
-  const billLimit = res('Bill Limit') ?? (creditLimit ? `QAR ${str(creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR)}` : '-');
+  const billLimit = res('Bill Limit') ?? (creditLimit ? `QAR ${overallCreditLimitOf(data) ?? str(creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR)}` : '-');
   const used = (left: number, total: number) => (total ? `${Math.round(((total - left) / total) * 100)}% Used` : '');
   const chart = trend.map((t) => ({
     label: t.month,

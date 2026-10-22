@@ -1,5 +1,6 @@
 import { getPersona } from './configEngine';
 import type { PersonaCapability } from '../types/config';
+import { restrictedSegmentOf } from '../data/customerSegments';
 
 // Role-matrix gating for the Agent 360 / Customer 360 BRSD clauses
 // (APM-01/05/08, BIN-01, BIN-04, BNT-04, BR-01/02/03, BR-067, ATV-03).
@@ -35,6 +36,24 @@ import type { PersonaCapability } from '../types/config';
 function has(personaId: string | undefined, capability: PersonaCapability): boolean {
   if (!personaId) return false;
   return getPersona(personaId)?.capabilities.includes(capability) ?? false;
+}
+
+/**
+ * Whether the signed-in role may see a customer of this segment. Not protected -> yes. Protected (Safwa, Safwa+, Royal) -> only a role holding THAT
+ * segment's grant. No role -> no. Call it on the loaded record BEFORE rendering anything about the customer.
+ */
+export function canViewCustomerSegment(personaId: string | undefined, segment: string | undefined): boolean {
+  // One literal `has(...)` per segment (the role-matrix script reads the gating from these); RESTRICTED_SEGMENT_CAPABILITY is the same table.
+  switch (restrictedSegmentOf(segment)) {
+    case undefined:
+      return true;
+    case 'Safwa':
+      return has(personaId, 'view-safwa-customers');
+    case 'Safwa+':
+      return has(personaId, 'view-safwa-plus-customers');
+    case 'Royal':
+      return has(personaId, 'view-royal-customers');
+  }
 }
 
 /** APM-01/05/08, BR-01/BR-02: a genuine internal VFQ agent who may view and

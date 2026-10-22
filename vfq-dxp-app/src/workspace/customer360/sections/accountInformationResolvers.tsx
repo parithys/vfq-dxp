@@ -1,4 +1,5 @@
 import { isClosedTicket, isTonPending } from '../../../lib/statusTone';
+import { overallCreditLimitOf } from '../creditLimitView';
 import type { ReactNode } from 'react';
 import { DataTable } from '../../../components/primitives/DataTable';
 import type { Customer360Data } from '../../../engines/customer360Engine';
@@ -75,7 +76,7 @@ export const accountInformationResolvers: Record<string, Resolver> = {
   'Credit Limit': ({ data }) => {
     const cl = data.creditLimits[0];
     if (!cl) return undefined;
-    return `${String(cl.creditLimitQar ?? cl.creditLimitQAR ?? '-')} QAR`;
+    return `${String(overallCreditLimitOf(data) ?? cl.creditLimitQar ?? cl.creditLimitQAR ?? '-')} QAR`;
   },
 };
 

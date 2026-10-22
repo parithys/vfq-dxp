@@ -1,4 +1,6 @@
 import { badgeVariantFor } from '../../lib/statusTone';
+import { useRestrictedCustomers } from '../../hooks/useRestrictedCustomers';
+import { RestrictedRowsNotice } from '../../components/patterns/RestrictedRowsNotice';
 import { useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { DataTable } from '../../components/primitives/DataTable';
@@ -23,6 +25,7 @@ interface AgentTask {
   updatedAt?: string;
   /** Set on a Draft Order task whose order is stored - see orders.json. */
   relatedOrderId?: string;
+  customerId?: string;
 }
 
 /** The fields a Draft Order row needs to resume into its journey. */
@@ -101,18 +104,26 @@ export function TaskListView() {
   const openTasks = tasks
     .filter((t) => t.taskStatus !== 'Closed')
     .filter((t) => isVisibleToAgent(t.assignedAgentId, currentAgentId));
-  const filtered = {
+  const unfiltered = {
     open: openTasks.filter((t) => t.taskStatus === 'Open'),
     'in-progress': openTasks.filter((t) => t.taskStatus === 'In Progress'),
     payments: openTasks.filter((t) => t.taskType === 'Payment'),
     priority: openTasks.filter((t) => t.priorityFlag),
     'draft-orders': openTasks.filter((t) => t.taskType === 'Draft Order'),
   }[filter] ?? openTasks;
+  // A task about a customer in a protected segment this role may not see is left out (and counted): by the customer of its related order, or
+  // a customer named in the task's own name. Nothing is listed until the customers are known.
+  const guard = useRestrictedCustomers();
+  const { visible: filtered, hiddenCount } = guard.exclude(unfiltered, (t) => {
+    const customerId = t.customerId ?? (t.relatedOrderId ? orders.find((o) => o.orderId === t.relatedOrderId)?.customerId : undefined);
+    return guard.isRestricted(customerId) || guard.mentionsRestricted(t.taskName);
+  });
 
   return (
     <div className="p-8">
       <PageHeader title={<>{FILTER_LABELS[filter] ?? 'My Tasks'}</>} description={<>{filtered.length} task(s).</>} />
       <ErrorBanner message={loadError} />
+      <RestrictedRowsNotice count={hiddenCount} />
       <DataTable<AgentTask>
         columns={[
           {
@@ -168,7 +179,7 @@ export function TaskListView() {
           navigate(to, state ? { state } : undefined);
         }}
         emptyMessage="No tasks in this category."
-        loading={loading}
+        loading={loading || !guard.ready}
       />
     </div>
   );

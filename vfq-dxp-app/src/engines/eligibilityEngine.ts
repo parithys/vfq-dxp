@@ -120,6 +120,18 @@ export const COMMON_CHECK_IDS: ReadonlySet<string> = new Set(['id-validity', 'ag
 
 export const MINIMUM_AGE = 18;
 
+/**
+ * An ID is expired when its expiry date is TODAY or earlier (the rule: expiry on or before the current date). Compared as calendar days in
+ * the agent's local date, so the answer never depends on the time of day or on a date parsed as UTC midnight. An expiry that cannot be read as
+ * a date is treated as expired: unknown is not valid.
+ */
+export function isIdExpired(expiry: string, asOf: Date): boolean {
+  const iso = /^(\d{4}-\d{2}-\d{2})/.exec(expiry.trim())?.[1];
+  const day = iso ?? (Number.isNaN(new Date(expiry).getTime()) ? undefined : localDay(new Date(expiry)));
+  return day === undefined || day <= localDay(asOf);
+}
+const localDay = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 /** Whole years between a date of birth and `asOf`. */
 export function ageOn(dob: string | undefined, asOf: Date): number | undefined {
   if (!dob) return undefined;
@@ -154,7 +166,7 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
   // 1. ID validity / expiry.
   const expiry = doc?.expiryDate;
   if (expiry) {
-    const expired = new Date(expiry).getTime() < asOf.getTime();
+    const expired = isIdExpired(expiry, asOf);
     checks.push({
       id: 'id-validity',
       label: 'ID Validity',
@@ -205,11 +217,13 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
   const routed = prepaid ? presentedIdType === 'Other ID' : EXCEPTION_ROUTED_ID_TYPES.has(presentedIdType);
   checks.push({
     id: 'id-type-routing',
-    label: routed ? 'ID Type Approval Required' : 'ID Type',
+    // One result for the ID type's approval (2026-10-22): Credit Control. The passport BAU approval the line rules also derive is the same
+    // requirement, so the Active Lines check below does not repeat it.
+    label: routed ? 'Credit Control Approval Required' : 'ID Type',
     passed: !routed,
     outcome: routed ? 'approval-routing' : 'pass',
     message: routed
-      ? 'The selected ID type requires Back Office Fulfilment approval. The order will be routed to the Back Office Fulfilment Agent for approval.'
+      ? 'The selected ID type requires Credit Control approval. You may continue with the journey; the order will be automatically routed to Credit Control for approval upon submission.'
       : 'Accepted ID type - eligible to proceed',
   });
 
@@ -284,21 +298,25 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
   // approval task is granted, so this deliberately does NOT hard-stop even
   // though the underlying cap rule reports `pass: false`.
   const decision = ctx.lineDecision;
+  // When the ID type itself is routed (above), the passport BAU approval is that same requirement: it is reported once, as the ID type's
+  // Credit Control result, not again here. A line-ordinal Credit Control approval or any other rule's approval still shows.
+  const lineApprovals = decision ? (routed ? decision.approvals.filter((a) => a.ruleId !== 'PB-01') : decision.approvals) : [];
+  const lineApprovalOnly = decision?.outcome === 'ALLOW_WITH_APPROVAL' && lineApprovals.length === 0;
   if (decision) {
     const c = decision.countsBefore;
     const held = `Customer holds ${c.mobileTotal} mobile lines (${c.prepaid} prepaid, ${c.postpaid} postpaid) and ${c.fixedFwa} Fixed/FWA lines.`;
     checks.push({
       id: 'active-lines',
       label: 'Active Lines',
-      passed: decision.outcome === 'ALLOW',
+      passed: decision.outcome === 'ALLOW' || lineApprovalOnly,
       // A block is a hard stop (no approval overrides it); the engine's approvals are Approval Routing: the journey continues and the order is held.
-      outcome: decision.outcome === 'BLOCK' ? 'hard-stop' : decision.outcome === 'ALLOW_WITH_APPROVAL' ? 'approval-routing' : 'pass',
-      approvalRuleIds: decision.approvals.map((a) => a.ruleId),
+      outcome: decision.outcome === 'BLOCK' ? 'hard-stop' : decision.outcome === 'ALLOW_WITH_APPROVAL' && !lineApprovalOnly ? 'approval-routing' : 'pass',
+      approvalRuleIds: lineApprovals.map((a) => a.ruleId),
       message:
         decision.outcome === 'BLOCK'
           ? (decision.block?.message ?? held)
-          : decision.outcome === 'ALLOW_WITH_APPROVAL'
-            ? `Approval Required\n${decision.approvals.map((a) => a.message).join(' ')} The journey can continue, but the order will be routed for approval upon submission.`
+          : decision.outcome === 'ALLOW_WITH_APPROVAL' && !lineApprovalOnly
+            ? `Approval Required\n${lineApprovals.map((a) => a.message).join(' ')} The journey can continue, but the order will be routed for approval upon submission.`
             : held,
     });
   } else {

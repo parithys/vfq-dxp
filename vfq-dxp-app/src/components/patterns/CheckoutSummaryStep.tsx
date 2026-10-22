@@ -31,6 +31,8 @@ interface CheckoutSummaryStepProps {
   msisdn: string | undefined;
   numberPriceQar: number | undefined;
   eligibility: EligibilityResult | undefined;
+  /** The credit limit in force for the order's new account (the agent's choice, else the default). */
+  creditLimitQar?: number;
   /**
    * The agent-set value from Plan & Add-ons' BillLimitEditor (2026-09-28
    * re-integration) - undefined when the agent never touched it, in which
@@ -87,6 +89,7 @@ export function CheckoutSummaryStep({
   msisdn,
   numberPriceQar,
   eligibility,
+  creditLimitQar,
   billLimit,
   simType,
   onTotalsComputed,
@@ -103,6 +106,7 @@ export function CheckoutSummaryStep({
     msisdn,
     numberPriceQar,
     eligibility,
+    creditLimitQar,
     simType,
     onTotalsComputed,
     onSummaryComputed,

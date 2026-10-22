@@ -22,7 +22,7 @@ export function IdScannerPanel({
   contextIdentity,
   scanComplete,
   setNotFound,
-  setExpiryMismatch,
+  clearReconciliation,
   demoType,
   handleScanAttempt,
   handleDemoScan,
@@ -39,7 +39,7 @@ export function IdScannerPanel({
   contextIdentity: SpecimenIdentity | undefined;
   scanComplete: boolean;
   setNotFound: (v: boolean) => void;
-  setExpiryMismatch: (v: boolean) => void;
+  clearReconciliation: () => void;
   demoType: QidType | null;
   handleScanAttempt: () => boolean;
   handleDemoScan: (type: QidType) => void;
@@ -95,14 +95,14 @@ export function IdScannerPanel({
           const stillComplete = Boolean(qidScans.frontScanned && qidScans.backScanned);
           if (scanComplete && !stillComplete) {
             setNotFound(false);
-            setExpiryMismatch(false);
+            clearReconciliation();
             onChange({ ...value, qidScans, idNumber: '', scannedExpiry: undefined, moiResult: undefined });
             return;
           }
           // An upload that replaces a scan (or the other way round) starts the number and expiry afresh: they are typed for an upload.
           if (scanComplete && stillComplete && (qidScans.source === 'upload') !== (value.qidScans?.source === 'upload')) {
             setNotFound(false);
-            setExpiryMismatch(false);
+            clearReconciliation();
             onChange({ ...latest.current, qidScans, idNumber: '', scannedExpiry: undefined, moiResult: undefined });
             return;
           }

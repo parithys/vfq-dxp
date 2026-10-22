@@ -20,7 +20,7 @@ export function AuditSection({ ctx }: { ctx: Ctx }) {
   const [days, setDays] = useState(90);
   const [page, setPage] = useState(0);
   const rows = useMemo(() => {
-    const real = data.auditTrail.map((a) => ({ at: str(a.timestamp), module: str(a.recordType) || 'Account', action: 'Updated', field: str(a.fieldModified), old: '', new: str(a.newValue), by: str(a.employeeUser), channel: '-', ref: str(a.recordId) }));
+    const real = data.auditTrail.map((a) => ({ at: str(a.timestamp), module: str(a.recordType) || 'Account', action: 'Updated', field: str(a.fieldModified), old: str(a.oldValue), new: str(a.newValue), by: str(a.employeeUser), channel: '-', ref: str(a.recordId) }));
     const demoRows = arr<{ at: string; module: string; action: string; field: string; old: string | null; new: string; by: string; channel: string; ref: string }>(demo.auditRows).map((r) => ({ ...r, old: r.old ?? '' }));
     return [...real, ...demoRows].sort((a, b) => b.at.localeCompare(a.at));
   }, [data.auditTrail, demo.auditRows]);

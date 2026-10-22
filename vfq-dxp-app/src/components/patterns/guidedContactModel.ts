@@ -20,6 +20,8 @@ interface MoiResult {
   emailSource?: 'Siebel' | 'NAS' | 'Billing Profile';
   /** No customer record exists for this ID (details came from NAS). */
   isNewCustomer?: boolean;
+  /** See idLookupModel.MoiResult.linkedIdUpdate. */
+  linkedIdUpdate?: import('./idLinkModel').LinkedIdUpdate;
   /** The agent created this customer (no registry knows the ID); the identity was typed. */
   createdByAgent?: boolean;
   /** A new customer's National Address from the NAS: hidden, stored with the order, never shown or edited (see idLookupModel.NationalAddress). */
@@ -46,6 +48,8 @@ export interface GuidedContactValue {
   qidScans?: QidImageUploadValue;
   /** verifyThenFetch: the scanned expiry the agent verifies before Fetch (DD/MM/YYYY). */
   scannedExpiry?: string;
+  /** The attribute-level result of comparing the captured ID with MOI (see idReconciliation). */
+  idReconciliation?: import('./idReconciliation').AttributeMatch[];
   /** verifyThenFetch: the mobile number on the customer record (read-only). */
   mobileNumber?: string;
   /**

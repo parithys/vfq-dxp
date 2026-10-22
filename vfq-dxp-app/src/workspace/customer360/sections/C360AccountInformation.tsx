@@ -1,4 +1,6 @@
 import { defaultCreditLimitForSegment } from '../../../engines/hrnConfiguration';
+import { creditSegmentOf, customerCategoryOf } from '../../../engines/creditLimit';
+import { creditBreakdownOf } from '../creditLimitView';
 import { canChangePrimaryContact, contactName, primaryContactOf } from '../primaryContactModel';
 import { Button } from '../../../components/primitives/Button';
 import { SegmentedTabs } from '../../../components/primitives/SegmentedTabs';
@@ -81,7 +83,8 @@ export function C360AccountInformation({
   const profile = data.billingProfiles[0];
   const summary = computeBillingSummary(data);
   // The limit on file, else the default for the customer's segment.
-  const creditLimit = num(summary.creditLimit?.creditLimitQar ?? summary.creditLimit?.creditLimitQAR) ?? defaultCreditLimitForSegment(data.customer.segment);
+  const limits = creditBreakdownOf(data);
+  const creditLimit = limits.overall ?? defaultCreditLimitForSegment(data.customer.segment);
   const outstanding = data.bills.length > 0 || data.payments.length > 0 ? summary.outstanding : undefined;
   const utilisation = creditLimit && outstanding !== undefined ? Math.round((outstanding / creditLimit) * 100) : undefined;
   const latestTotal = num(summary.latestBill?.totalAmount);
@@ -248,7 +251,13 @@ export function C360AccountInformation({
               />
               <Field label="Customer Type" value={<Dv k="customerType" />} />
               <Field label="Segment" value={data.customer.segment} />
+              <Field label="Customer Segment (Qatari / Expat)" value={creditSegmentOf(data.customer.nationality as string | undefined)} />
+              <Field label="Customer Category (HRN / Non-HRN)" value={customerCategoryOf(data.customer.nationality as string | undefined)} />
               <Field label="Credit Limit" value={qar(creditLimit)} />
+              <Field label="Overall" value={qar(limits.overall)} />
+              <Field label="Default" value={qar(limits.default)} />
+              <Field label="Credit Control Team" value={limits.creditControl === null ? '-' : qar(limits.creditControl)} />
+              <Field label="Credit Limit increased due to Deposit" value={limits.depositIncrease ? qar(limits.depositIncrease) : '-'} />
               <Field label="Primary MSISDN" value={data.customer.phone} />
               <Field label="Account Manager Name" requirement="AM name" value={account?.accountManagerName} />
               <Field label="Account Manager Mobile" requirement="AM mobile" value={account?.accountManagerMobile} />

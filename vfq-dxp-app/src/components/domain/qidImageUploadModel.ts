@@ -19,6 +19,8 @@ export interface QidImageUploadValue {
   backFile?: string;
   /** Upload only: the front/back assignment of a pair is settled (by the file names, or by the agent's swap). */
   sidesSet?: boolean;
+  /** A scan only: the identity printed on the card as the reader captured it (an upload reads nothing). Dates are DD/MM/YYYY. */
+  captured?: { name?: string; dob?: string; nationality?: string };
   /**
    * Whether the completed scan is sharp enough to read. Set by this
    * component, not the caller: true unless `blurFirstScan` is on AND this

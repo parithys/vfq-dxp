@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { overallCreditLimitOf } from '../creditLimitView';
 import type { ReactNode } from 'react';
 import { useStartNewConnection } from '../useStartNewConnection';
 import { RevealValue, useFieldAccess } from '../fieldAccess';
@@ -72,7 +73,7 @@ export function C360ProductsServices({ data, services }: { data: Customer360Data
 
   const account = data.accounts[0];
   const creditLimit = data.creditLimits[0];
-  const billLimit = qar(num(creditLimit?.creditLimitQar ?? creditLimit?.creditLimitQAR));
+  const billLimit = qar(overallCreditLimitOf(data) ?? num(creditLimit?.creditLimitQar ?? creditLimit?.creditLimitQAR));
   const balance = data.inPlatformBalances[0];
   const barringStatus = (account as unknown as { barringStatus?: string; barringType?: string } | undefined)?.barringStatus;
   const barringType = (account as unknown as { barringType?: string } | undefined)?.barringType;

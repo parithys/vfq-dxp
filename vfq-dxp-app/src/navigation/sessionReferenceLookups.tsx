@@ -56,6 +56,8 @@ export interface KioskCustomerFacts {
    * dependency on the wording that would break the moment it changed.
    */
   serviceCount: number;
+  /** The number belongs to a customer in a protected segment this role may not see: nothing about them is carried (see factsForKioskNumber). */
+  restricted?: true;
 }
 
 // The Active lines row. The COUNT lives in the label - "Active lines (4)" -
@@ -83,9 +85,12 @@ function activeLinesRow(facts: KioskCustomerFacts | undefined): ToastRow {
 export function factsForKioskNumber(
   mobile: string | null,
   customers: CustomerRecord[],
-  sources: ServiceSources
+  sources: ServiceSources,
+  /** Whether the signed-in role may see a customer of this segment; a protected customer's facts are replaced by a bare `restricted` marker. */
+  canView: (segment: string | undefined) => boolean = () => true
 ): KioskCustomerFacts {
   const matched = mobile ? customers.find((c) => mobileMatches(mobile, c.phone)) : undefined;
+  if (matched && !canView(matched.segment)) return { brand: { operator: 'other' }, links: [], serviceCount: 0, restricted: true };
   if (!matched) {
     // Not "None": a competitor's customer does not hold zero Vodafone
     // services, the question does not apply to them. Zero is a different
@@ -237,6 +242,13 @@ function ticketToastRows(
   mobile: string | null,
   facts: KioskCustomerFacts | undefined
 ): ToastRow[] {
+  // A protected-segment customer this role may not see: the notification names no one, shows no number or services, and launches nothing.
+  if (facts?.restricted) {
+    return [
+      { label: 'Customer name', value: 'Restricted customer' },
+      { label: 'Access', value: 'Access restricted for your role' },
+    ];
+  }
   const launchTarget = launchTargetFor(ticket.journeyCode, customerId);
   return [
     // "Ticket number" is no longer a row (2026-09-25): the id moved into the

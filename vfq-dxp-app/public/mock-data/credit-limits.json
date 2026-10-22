@@ -8,7 +8,11 @@
     "isHrn": false,
     "setByAgentId": "AGT-8801",
     "restrictionApplied": false,
-    "lastUpdated": "2026-06-15"
+    "lastUpdated": "2026-06-15",
+    "defaultCreditLimitQar": 4000,
+    "selectedCreditLimitQar": 1000,
+    "creditControlLimitQar": null,
+    "_note": "2026-10-22 credit-limit breakdown: Qatari: default 4000; the 1000 on file is below it, so an agent chose it. The 500 deposit on ACC-5001 (deposit-bundles.json DEP-3001) adds to the overall limit."
   },
   {
     "id": "CRL-4002",
@@ -19,7 +23,10 @@
     "isHrn": false,
     "setByAgentId": "AGT-8802",
     "restrictionApplied": false,
-    "lastUpdated": "2026-07-02"
+    "lastUpdated": "2026-07-02",
+    "defaultCreditLimitQar": 1000,
+    "selectedCreditLimitQar": null,
+    "creditControlLimitQar": null
   },
   {
     "id": "CRL-4003",
@@ -30,10 +37,14 @@
     "isHrn": false,
     "setByAgentId": "AGT-8803",
     "restrictionApplied": false,
-    "lastUpdated": "2026-08-01"
+    "lastUpdated": "2026-08-01",
+    "defaultCreditLimitQar": 4000,
+    "selectedCreditLimitQar": null,
+    "creditControlLimitQar": 5000,
+    "_note": "2026-10-22 credit-limit breakdown: 5000 is above a Qatari's 4000 default, so an agent could not have chosen it: it is the Credit Control Team's limit."
   },
   {
-    "_note": "Customer-Inventory overview details (2026-10-11)",
+    "_note": "Customer-Inventory overview details (2026-10-11) | 2026-10-22 credit-limit breakdown: 5000 is above a Qatari's 4000 default, so an agent could not have chosen it: it is the Credit Control Team's limit.",
     "id": "CRL-4301",
     "accountId": "ACC-5646",
     "customerId": "CUST-3081",
@@ -42,6 +53,9 @@
     "isHrn": false,
     "setByAgentId": "AGT-8801",
     "restrictionApplied": false,
-    "lastUpdated": "2026-06-15"
+    "lastUpdated": "2026-06-15",
+    "defaultCreditLimitQar": 4000,
+    "selectedCreditLimitQar": null,
+    "creditControlLimitQar": 5000
   }
 ]

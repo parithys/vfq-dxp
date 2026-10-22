@@ -108,7 +108,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
   return (
     <div className="space-y-4">
       <IdLookupStep
-        value={{ idType: value.idType, idNumber: value.idNumber, moiResult: value.moiResult, qidScans: value.qidScans, scannedExpiry: value.scannedExpiry }}
+        value={{ idType: value.idType, idNumber: value.idNumber, moiResult: value.moiResult, qidScans: value.qidScans, scannedExpiry: value.scannedExpiry, idReconciliation: value.idReconciliation }}
         // The identity read-out is suppressed here because this step renders
         // those three as editable fields below - see the prop's own note.
         showMoiDetails={false}

@@ -39,6 +39,8 @@ export interface MoiResult {
   emailSource?: 'Siebel' | 'NAS' | 'Billing Profile';
   /** No customer record exists for this ID - details come from NAS, not Siebel. */
   isNewCustomer?: boolean;
+  /** Set when a QID known only to the registry resolved to an EXISTING customer (through the Passport linked to it): the order adds the QID to that customer's record. */
+  linkedIdUpdate?: import('./idLinkModel').LinkedIdUpdate;
   /** The agent created this customer: no registry knows the ID, so the identity was typed (see buildNewCustomerIdentity). */
   createdByAgent?: boolean;
   /** A NEW customer's National Address, as the NAS returned it. Hidden: carried with the identity, stored with the order, never displayed or edited. */
@@ -126,6 +128,8 @@ export type IdLookupValue = {
   qidScans?: QidImageUploadValue;
   /** verifyThenFetch only: the expiry read off the scan (DD/MM/YYYY), editable so the agent can correct it after comparing with the card. */
   scannedExpiry?: string;
+  /** verifyThenFetch only: the attribute-level result of comparing what was captured with what MOI returned (kept with the identity evidence). */
+  idReconciliation?: import('./idReconciliation').AttributeMatch[];
   /** The number was typed after the scan budget ran out, not read from a scan: the order needs Store Manager approval. */
   manualEntry?: boolean;
 };

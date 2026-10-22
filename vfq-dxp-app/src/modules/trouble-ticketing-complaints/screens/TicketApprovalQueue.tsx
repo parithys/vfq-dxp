@@ -1,4 +1,6 @@
 import { useEffect } from 'react';
+import { useRestrictedCustomers } from '../../../hooks/useRestrictedCustomers';
+import { RestrictedRowsNotice } from '../../../components/patterns/RestrictedRowsNotice';
 import { useNavigate } from 'react-router-dom';
 import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
@@ -34,6 +36,7 @@ interface TicketApprovalQueueProps {
 
 export function TicketApprovalQueue({ padded = true }: TicketApprovalQueueProps) {
   const tickets = (useEntityStore((s) => s.records['trouble-tickets']) ?? []) as unknown as Ticket[];
+  const guard = useRestrictedCustomers();
   const loadKind = useEntityStore((s) => s.loadKind);
   const updateRecord = useEntityStore((s) => s.updateRecord);
   const loadError = useEntityStore((s) => s.errors['trouble-tickets']);
@@ -46,9 +49,12 @@ export function TicketApprovalQueue({ padded = true }: TicketApprovalQueueProps)
     loadKind('trouble-tickets');
   }, [loadKind]);
 
-  const pending = tickets
-    .filter((t) => t.status === 'Pending Approval')
-    .filter((t) => isVisibleToAgent(t.assignedApproverId, currentAgentId));
+  // Tickets of a protected-segment customer this role may not see are left out of the queue (and counted), never drawn; nothing is listed until
+  // customers are known. Counted among the tickets that WOULD be in this queue, so the notice matches the list.
+  const { visible: pending, hiddenCount } = guard.filter(
+    tickets.filter((t) => t.status === 'Pending Approval').filter((t) => isVisibleToAgent(t.assignedApproverId, currentAgentId)),
+    (t) => t.customerId
+  );
 
   const isEligible = () => TICKET_APPROVAL_ELIGIBLE_JOB_TITLES.includes(currentJobTitle ?? '');
 
@@ -63,6 +69,7 @@ export function TicketApprovalQueue({ padded = true }: TicketApprovalQueueProps)
     <div className={padded ? 'p-8' : ''}>
       <PageHeader title={<>Ticket Approval Queue</>} description={<>Trouble tickets awaiting an approval decision.</>} bleed={padded} />
       <ErrorBanner message={loadError} />
+      <RestrictedRowsNotice count={hiddenCount} />
       <DataTable<Ticket>
         columns={[
           { key: 'ticketId', header: 'Ticket #' },
@@ -88,7 +95,7 @@ export function TicketApprovalQueue({ padded = true }: TicketApprovalQueueProps)
         rows={pending}
         rowKey={(r) => r.ticketId}
         emptyMessage="No tickets awaiting approval."
-        loading={loading}
+        loading={loading || !guard.ready}
       />
     </div>
   );

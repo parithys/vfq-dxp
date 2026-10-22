@@ -1480,5 +1480,54 @@
     "planSource": "General Plan",
     "demoTitle": "Loyalty discount",
     "demoDetail": "Customer is eligible for a Loyalty discount on the Red Unlimited plan."
+  },
+  {
+    "orderId": "ORD-93101",
+    "orderType": "New Postpaid Activation",
+    "createdAt": "2026-10-20T10:00:00+03:00",
+    "customerEmail": "hessa.althani@example.qa",
+    "orderSubType": "Consumer",
+    "status": "Submitted for Approval",
+    "customerName": "Hessa Jassim Al-Thani",
+    "idNumber": "27801013400101",
+    "customerId": "CUST-3101",
+    "productId": "PROD-108",
+    "productIds": [
+      "PROD-108"
+    ],
+    "addonIds": [],
+    "msisdn": "+97455613056",
+    "numberPriceQAR": 0,
+    "simType": "Physical",
+    "simSerial": "8974270100000000001",
+    "dueTodayQAR": 0,
+    "monthlyRecurringQAR": 152.25,
+    "totalQAR": 152.25,
+    "mrcTotalQAR": 152.25,
+    "nrcTotalQAR": 25,
+    "approvalStatus": "Pending Approval",
+    "createdBy": "USR-1101",
+    "sourceChannel": "Retail Store",
+    "attachments": [
+      {
+        "label": "Passport - Front",
+        "detail": "Scanned during Contact"
+      },
+      {
+        "label": "Passport - Back",
+        "detail": "Scanned during Contact"
+      },
+      {
+        "label": "Signed CAF",
+        "detail": "Digital signature"
+      }
+    ],
+    "customerType": "none",
+    "planSource": "General Plan",
+    "approvalReason": "ID type cannot be sold directly - routed to Back Office Fulfilment approval workflow",
+    "demoTitle": "Passport ID",
+    "demoDetail": "Passport orders cannot be activated directly. The order requires Back Office Fulfilment approval.",
+    "_note": "Demo seed (2026-10-22) - belongs to a protected-segment customer (Safwa / Safwa+ / Royal): shown only to a role holding that segment's grant; every other role sees these lists without it.",
+    "assignedApproverId": null
   }
 ]

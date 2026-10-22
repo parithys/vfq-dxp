@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { canViewCustomerSegment } from '../engines/agentPrivilegeEngine';
 import { useNavigate } from 'react-router-dom';
 import { getPersona } from '../engines/configEngine';
 import { usePersonaStore } from '../stores/personaStore';
@@ -95,9 +96,12 @@ export function Dashboard() {
     }
     mockDataEngine.list<CustomerRecord>('customers').then((all) => {
       const byId = new Map(all.map((c) => [c.customerId, c]));
-      setRecentCustomers(recentCustomerIds.map((id) => byId.get(id)).filter((c): c is CustomerRecord => Boolean(c)));
+      // A customer in a protected segment this role may not see is not listed (the role may have changed since they were opened).
+      setRecentCustomers(
+        recentCustomerIds.map((id) => byId.get(id)).filter((c): c is CustomerRecord => c !== undefined && canViewCustomerSegment(activePersonaId, c.segment))
+      );
     });
-  }, [recentCustomerIds]);
+  }, [recentCustomerIds, activePersonaId]);
 
   // A Hybrid role always has two zones (dashboardLayout.ts no longer offers a
   // way to collapse to one), so this is just "does this approach have one

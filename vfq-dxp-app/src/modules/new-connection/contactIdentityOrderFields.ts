@@ -6,8 +6,16 @@ import type { GuidedContactValue } from '../../capabilities';
  * the keys are separate from `companyName`, which is the B2B2C company a customer type selects. Shared by every journey's order, so they
  * record the same two fields the same way.
  */
-export function contactIdentityOrderFields(contact: Pick<GuidedContactValue, 'companyName' | 'occupation'> | undefined): { customerSponsor?: string; customerOccupation?: string } {
+export function contactIdentityOrderFields(
+  contact: Pick<GuidedContactValue, 'companyName' | 'occupation' | 'moiResult'> | undefined
+): { customerSponsor?: string; customerOccupation?: string; idLink?: { customerId: string; via: string; passportNumber?: string; qid: string } } {
   const sponsor = contact?.companyName?.trim();
   const occupation = contact?.occupation?.trim();
-  return { ...(sponsor ? { customerSponsor: sponsor } : {}), ...(occupation ? { customerOccupation: occupation } : {}) };
+  const link = contact?.moiResult?.linkedIdUpdate;
+  return {
+    ...(sponsor ? { customerSponsor: sponsor } : {}),
+    ...(occupation ? { customerOccupation: occupation } : {}),
+    // The QID was linked to an existing customer (through their Passport) rather than creating a new one.
+    ...(link ? { idLink: { customerId: link.customerId, via: link.via, passportNumber: link.passportNumber, qid: link.documentNumber } } : {}),
+  };
 }

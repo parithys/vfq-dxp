@@ -205,3 +205,35 @@ test('activities: the automatic and a manual activity are separate records, and 
   assert.deepEqual(after.map((a) => a.status), ['Closed', 'Closed']);
   assert.equal(await act.closeOrderActivities('ORD-T2'), 0);
 });
+
+// ---- ID expiry: an ID whose expiry date is today or earlier is expired and stops the connection -------------------------------------
+test('eligibility: an ID expiring on or before today is expired (hard stop); one expiring tomorrow is valid, whatever the time of day', async () => {
+  const e = await load('/src/engines/eligibilityEngine.ts');
+  const base = { deals: [], outstandingQar: 0, lineCapReached: false, activeLinesDetail: '0/5 postpaid mobile lines used.' };
+  const customer = { customerId: 'C1', idType: 'QID', dob: '1990-01-01', blacklisted: false };
+  const check = (expiryDate, asOf) => e.evaluateEligibilityChecks({ ...base, customer, doc: { expiryDate } }, asOf).find((c) => c.id === 'id-validity');
+  const day = (h, m) => new Date(2026, 9, 22, h, m); // 22 Oct 2026, local time
+  for (const [h, m] of [[0, 0], [0, 30], [12, 0], [23, 59]]) {
+    assert.equal(check('2026-10-22', day(h, m)).outcome, 'hard-stop', `expiring today, checked at ${h}:${m}`);
+    assert.equal(check('2026-10-21', day(h, m)).outcome, 'hard-stop', 'expired yesterday');
+    assert.equal(check('2026-10-23', day(h, m)).outcome, 'pass', `expiring tomorrow, checked at ${h}:${m}`);
+  }
+  assert.equal(check('2020-01-01', day(9, 0)).outcome, 'hard-stop');
+  assert.equal(e.isIdExpired('not a date', day(9, 0)), true, 'unreadable is not valid');
+  assert.equal(e.hasHardStop(e.evaluateEligibilityChecks({ ...base, customer, doc: { expiryDate: '2026-10-22' } }, day(9, 0))), true, 'it blocks progression');
+});
+
+test('every ID on file: the expiry rule agrees with an independent day count, and the expired ones are blocked', async () => {
+  const e = await load('/src/engines/eligibilityEngine.ts');
+  const docs = JSON.parse((await import('node:fs')).readFileSync('public/mock-data/identity-documents.json', 'utf8'));
+  const asOf = new Date(2026, 9, 22, 9, 0);
+  const todayMs = Date.UTC(2026, 9, 22);
+  let expired = 0;
+  for (const d of docs.filter((x) => x.expiryDate)) {
+    const [y, m, dd] = d.expiryDate.split('-').map(Number);
+    const shouldBlock = Date.UTC(y, m - 1, dd) <= todayMs;
+    assert.equal(e.isIdExpired(d.expiryDate, asOf), shouldBlock, `${d.documentNumber} ${d.expiryDate}`);
+    if (shouldBlock) expired++;
+  }
+  assert.ok(expired >= 1, 'the seed holds an expired ID to demonstrate the stop (CUST-1006)');
+});

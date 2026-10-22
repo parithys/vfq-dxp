@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react';
+import { useCustomerCreditBreakdown } from './useCreditLimitBreakdown';
+import { RestrictedCustomerNotice } from '../../components/patterns/RestrictedCustomerNotice';
+import { canViewCustomerSegment } from '../../engines/agentPrivilegeEngine';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useEntityStore } from '../../stores/entityStore';
@@ -87,6 +90,9 @@ export function BillingAccountPage() {
   const [reloadKey, setReloadKey] = useState(0);
   const [customerId, setCustomerId] = useState<string>('');
   const [customerName, setCustomerName] = useState<string>('this customer');
+  // The account belongs to a protected-segment customer this role may not see: nothing of the account is kept or drawn, only the restriction.
+  const [blocked, setBlocked] = useState(false);
+  const limits = useCustomerCreditBreakdown(customerId || undefined);
   const [editField, setEditField] = useState<'contact' | 'address' | 'language' | 'payment' | null>(null);
 
   const { requireVerification, gate } = useVerificationGate(customerId, customerName);
@@ -94,26 +100,42 @@ export function BillingAccountPage() {
   useEffect(() => {
     if (!billingProfileId) return;
     setLoadFailed(false);
+    setBlocked(false);
+    setProfile(null);
     (async () => {
       const profiles = await mockDataEngine.list<BillingProfile>('billing-profiles');
       const found = profiles.find((p) => p.billingProfileId === billingProfileId);
-      setProfile(found ?? undefined);
-      if (found) {
-        const accounts = await mockDataEngine.list<{ accountId: string; customerId: string }>('accounts');
-        const account = accounts.find((a) => a.accountId === found.accountId);
-        if (account) {
-          setCustomerId(account.customerId);
-          const customers = await mockDataEngine.list<{ customerId: string; name: string }>('customers');
-          const customer = customers.find((c) => c.customerId === account.customerId);
-          if (customer) setCustomerName(customer.name);
-        }
+      if (!found) {
+        setProfile(undefined);
+        return;
       }
+      const accounts = await mockDataEngine.list<{ accountId: string; customerId: string }>('accounts');
+      const account = accounts.find((a) => a.accountId === found.accountId);
+      if (account) {
+        const customers = await mockDataEngine.list<{ customerId: string; name: string; segment?: string }>('customers');
+        const customer = customers.find((c) => c.customerId === account.customerId);
+        // Authorisation BEFORE the account is kept: a protected customer's account never reaches the page.
+        if (customer && !canViewCustomerSegment(activePersonaId, customer.segment)) {
+          setBlocked(true);
+          return;
+        }
+        setCustomerId(account.customerId);
+        if (customer) setCustomerName(customer.name);
+      }
+      setProfile(found);
     })().catch((err) => {
       console.error('[BillingAccountPage] load failed:', err);
       setLoadFailed(true);
     });
-  }, [billingProfileId, reloadKey]);
+  }, [billingProfileId, reloadKey, activePersonaId]);
 
+  if (blocked) {
+    return (
+      <div className="p-8 max-w-2xl">
+        <RestrictedCustomerNotice backTo="/customer-search" backLabel="Back to Customer Search" />
+      </div>
+    );
+  }
   if (loadFailed) {
     return <EntityMissing what="billing account" loading={false} error onRetry={() => setReloadKey((k) => k + 1)} backTo="/customer-search" backLabel="Back to Customer Search" />;
   }
@@ -180,7 +202,11 @@ export function BillingAccountPage() {
             <Field label="Billing Cycle" value={profile.billingCycle} />
             <Field label="Billing Type" value={profile.billingType} />
             <Field label="Bill Medium" value={profile.billMedium} />
-            <Field label="Credit Limit" value={`${profile.creditLimitQAR} QAR`} />
+            <Field label="Credit Limit" value={`${limits?.overall ?? profile.creditLimitQAR} QAR`} />
+            <Field label="Overall" value={limits?.overall !== undefined ? `${limits.overall} QAR` : undefined} />
+            <Field label="Default" value={limits ? `${limits.default} QAR` : undefined} />
+            <Field label="Credit Control Team" value={limits ? (limits.creditControl === null ? '-' : `${limits.creditControl} QAR`) : undefined} />
+            <Field label="Credit Limit increased due to Deposit" value={limits ? (limits.depositIncrease ? `${limits.depositIncrease} QAR` : '-') : undefined} />
           </div>
         </section>
 

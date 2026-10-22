@@ -68,7 +68,7 @@ test('the Primary Contact is the first contact by default, can be chosen on the 
   assert.equal(contactName(b), 'Sara K Al-Sulaiti');
 });
 
-test('the default credit limit follows the customer segment, and a credit limit change is a request that Credit Control approves', async () => {
+test('the segment-based default is unchanged for the old helper; a Credit Control approval sets the Credit Control limit and is audited', async () => {
   const hrn = await load('/src/engines/hrnConfiguration.ts');
   assert.equal(hrn.defaultCreditLimitForSegment('Consumer (HRN)'), 50, 'an HRN segment: the HRN category\'s limit');
   for (const s of ['Consumer', 'Safwa', 'Safwa+', 'Royal', 'Large Business', undefined]) assert.equal(hrn.defaultCreditLimitForSegment(s), 1000, String(s));
@@ -81,17 +81,20 @@ test('the default credit limit follows the customer segment, and a credit limit 
   const calls = [];
   const deps = (rows) => ({ list: async () => rows, updateRecord: async (...a) => void calls.push(['update', ...a]), createRecord: async (...a) => void calls.push(['create', ...a]) });
   await applyCreditLimitChange({ customerId: 'CUST-1', creditLimitQar: 1500 }, deps([{ id: 'CRL-1', customerId: 'CUST-1' }]), '2026-10-20');
-  assert.deepEqual(calls, [['update', 'credit-limits', 'id', 'CRL-1', { creditLimitQar: 1500, lastUpdated: '2026-10-20' }]]);
+  assert.deepEqual(calls[0], ['update', 'credit-limits', 'id', 'CRL-1', { creditLimitQar: 1500, creditControlLimitQar: 1500, lastUpdated: '2026-10-20' }]);
+  assert.equal(calls[1][0], 'create');
+  assert.equal(calls[1][1], 'audit-trail', 'the approval is written to the audit trail');
   calls.length = 0;
   await applyCreditLimitChange({ customerId: 'CUST-2', creditLimitQar: 800, accountId: 'ACC-2' }, deps([]), '2026-10-20');
   assert.equal(calls[0][0], 'create');
-  assert.deepEqual([calls[0][2].customerId, calls[0][2].creditLimitQar, calls[0][2].accountId], ['CUST-2', 800, 'ACC-2']);
+  assert.deepEqual([calls[0][2].customerId, calls[0][2].creditLimitQar, calls[0][2].accountId, calls[0][2].creditControlLimitQar], ['CUST-2', 800, 'ACC-2', 800]);
   const fsm = await import('node:fs');
   const drawer = fsm.readFileSync('src/workspace/customer360/AccountEditDrawer.tsx', 'utf8');
-  assert.match(drawer, /status: 'Submitted for Approval'/);
+  assert.match(drawer, /status: 'Submitted for Approval'/, 'a limit outside the options is a REQUEST that Credit Control approves');
   assert.match(drawer, /approverRole: COLLECTION_TEAM_ROLE/);
+  assert.match(drawer, /applyAgentCreditLimitChange\(/);
   assert.doesNotMatch(drawer, /updateRecord\('credit-limits'/, 'the drawer never writes the limit itself');
-  assert.match(fsm.readFileSync('src/modules/order-management/OrderApprovalDetail.tsx', 'utf8'), /applyCreditLimitChange\(limitChange/);
+  assert.match(fsm.readFileSync('src/modules/order-management/OrderApprovalDetail.tsx', 'utf8'), /applyCreditLimitChange\(\{ \.\.\.limitChange/);
 });
 
 test('customer segments: Consumer and Enterprise groups, no Premium, VIP tags and business recognition follow the list', async () => {

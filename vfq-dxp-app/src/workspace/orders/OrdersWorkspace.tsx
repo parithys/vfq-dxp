@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useRestrictedCustomers } from '../../hooks/useRestrictedCustomers';
 import { Tabs } from '../../components/primitives/Tabs';
 import { SearchField } from '../../components/primitives/SearchField';
 import { MySalesOrders } from '../../modules/order-management/MySalesOrders';
@@ -31,7 +32,10 @@ export function OrdersWorkspace() {
   const typeOptions = [{ value: 'all', label: 'All' }, ...[...new Set(orders.map((o) => o.orderType))].sort().map((v) => ({ value: v, label: v }))];
   const statusOptions = [{ value: 'all', label: 'All' }, ...[...new Set(orders.map((o) => o.status))].sort().map((v) => ({ value: v, label: v }))];
   const filters = { orderType, status };
-  const mine = holdsApproveGrant(personaId, 'SCR-061') ? ordersAwaitingDecisionBy(orders, { personaId, jobTitle, userId }).length : 0;
+  // The tab count follows the list under it: orders of a protected-segment customer this role may not see are not counted.
+  const guard = useRestrictedCustomers();
+  const visibleOrders = guard.filter(orders, (o) => (o as { customerId?: string }).customerId).visible;
+  const mine = holdsApproveGrant(personaId, 'SCR-061') ? ordersAwaitingDecisionBy(visibleOrders, { personaId, jobTitle, userId }).length : 0;
   return (
     <div className="p-8">
       <PageHeader title={<>Orders</>} />

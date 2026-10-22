@@ -1162,7 +1162,10 @@
       "agent-self-service",
       "edit-customer-records",
       "view-bell-notifications",
-      "ticket-audit-trail"
+      "ticket-audit-trail",
+      "view-safwa-customers",
+      "view-safwa-plus-customers",
+      "view-royal-customers"
     ],
     "features": [
       {

@@ -1,3 +1,5 @@
+import { creditLimitOptions } from '../../engines/creditLimit';
+
 export interface AccountRecord {
   accountId: string;
   customerId: string;
@@ -30,6 +32,8 @@ export interface CustomerRecord {
 }
 
 export interface NewBillingAccountValue {
+  /** A new account's credit limit, chosen by the agent from the options for the customer's segment (blank: the default applies). */
+  creditLimitQar?: number;
   primaryContactId?: string;
   hasSecondaryContact?: boolean;
   secondaryContactName?: string;
@@ -186,4 +190,16 @@ export function isBillingAccountValid(value: BillingAccountValue): boolean {
   if (!a.cardToken) return false;
   if (!a.profileName?.trim()) return false;
   return true;
+}
+
+/**
+ * The credit limit this order's NEW account carries: the agent's choice when it is one of the options for the customer (HRN has none), else the default
+ * the rules give. What checkout, the order and the account record all show, so they cannot differ.
+ */
+export function effectiveCreditLimitQar(
+  eligibility: { defaultCreditLimitQar?: number; nationality?: string } | undefined,
+  billing: { creatingNew?: boolean; selectedProfileId?: string; newAccount?: { creditLimitQar?: number } } | undefined
+): number | undefined {
+  const chosen = billing?.creatingNew && !billing.selectedProfileId ? billing.newAccount?.creditLimitQar : undefined;
+  return chosen !== undefined && creditLimitOptions(eligibility?.nationality).includes(chosen) ? chosen : eligibility?.defaultCreditLimitQar;
 }

@@ -1,7 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import * as sums from '../../../components/patterns/wizard/commonSummaries';
 import { attachSummaries } from '../../../components/patterns/wizard/stepSummary';
-import { idLookupStep } from '../../../capabilities';
+import { CustomerIdentification } from '../../../capabilities';
+import { CUSTOMER_IDENTIFICATION_LABEL } from '../../../data/stepLabels';
+import { PassportOwnerCheck } from './PassportOwnerCheck';
+import { passportToQidWrites, qidProblem, type PassportCheck } from '../passportToQidModel';
+import { qidDocumentRecord } from '../../../components/patterns/idLinkModel';
 import type { IdLookupValue } from '../../../components/patterns/idLookupModel';
 import { GuidedActivationWizard } from '../../../capabilities';
 import { Input } from '../../../components/primitives/Input';
@@ -11,6 +15,7 @@ import { SignatureCapture } from '../../../components/patterns/SignatureCapture'
 import { Badge } from '../../../components/primitives/Badge';
 import { useState } from 'react';
 import { useEntityStore } from '../../../stores/entityStore';
+import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { useNotificationStore } from '../../../stores/notificationStore';
 
 const WIZARD_ID = 'passport-to-qid';
@@ -22,6 +27,7 @@ const WIZARD_ID = 'passport-to-qid';
 export function PassportToQidWizard() {
   const navigate = useNavigate();
   const createRecord = useEntityStore((s) => s.createRecord);
+  const updateRecord = useEntityStore((s) => s.updateRecord);
   const pushToast = useNotificationStore((s) => s.pushToast);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | undefined>();
 
@@ -48,11 +54,41 @@ export function PassportToQidWizard() {
                   placeholder="P1234567"
                   onChange={(e) => setValue('passportNumber', e.target.value)}
                 />
+                <PassportOwnerCheck
+                  msisdn={(values.msisdn as string) ?? ''}
+                  passportNumber={(values.passportNumber as string) ?? ''}
+                  result={values.passportOwner as PassportCheck | undefined}
+                  onResult={(r) => setValue('passportOwner', r)}
+                />
               </div>
             ),
-            isValid: (values) => Boolean(values.msisdn && values.passportNumber),
+            // The line's owner must hold this Passport: checked against the records, not just typed in.
+            isValid: (values) => Boolean(values.msisdn && values.passportNumber && (values.passportOwner as PassportCheck | undefined)?.ok),
           },
-          idLookupStep({ key: 'qid-entry', field: 'qid' }),
+          {
+            key: 'qid-entry',
+            label: CUSTOMER_IDENTIFICATION_LABEL,
+            render: ({ values, setValue }) => {
+              const owner = (values.passportOwner as PassportCheck | undefined);
+              const problem = owner?.ok ? qidProblem(owner.owner, (values.qid as IdLookupValue | undefined)?.moiResult) : undefined;
+              return (
+                <div className="space-y-3">
+                  {/* This journey updates an EXISTING customer: it never creates one, and a QID that belongs to someone else is refused. */}
+                  <CustomerIdentification value={(values.qid as IdLookupValue) ?? {}} onChange={(v) => setValue('qid', v)} allowNewCustomer={false} />
+                  {problem && (
+                    <p role="alert" className="text-danger text-[length:var(--fs-caption)]">
+                      {problem}
+                    </p>
+                  )}
+                </div>
+              );
+            },
+            isValid: (values) => {
+              const owner = values.passportOwner as PassportCheck | undefined;
+              const moi = (values.qid as IdLookupValue | undefined)?.moiResult;
+              return Boolean(moi && owner?.ok && !qidProblem(owner.owner, moi));
+            },
+          },
           {
             key: 'qid-images',
             label: 'QID Front & Back',
@@ -103,9 +139,20 @@ export function PassportToQidWizard() {
         })}
         onSubmit={async (values) => {
           const qid = values.qid as IdLookupValue;
+          const owner = (values.passportOwner as PassportCheck | undefined);
+          if (!owner?.ok || !qid.idNumber) return;
           const updateId = `PQU-${Date.now().toString().slice(-6)}`;
+          // The customer is updated, not just a log written: the QID joins their documents (once), the Passport is retired, their ID details follow.
+          const writes = passportToQidWrites(owner.owner, { number: qid.idNumber, expiryDate: qid.moiResult?.expiryDate });
+          const held = await mockDataEngine.list<{ customerId: string; documentNumber: string }>('identity-documents');
+          if (!held.some((d) => d.customerId === owner.owner.customerId && d.documentNumber === qid.idNumber)) {
+            await createRecord('identity-documents', qidDocumentRecord(writes.qidDocument));
+          }
+          if (writes.retirePassport) await updateRecord('identity-documents', 'identityDocumentId', writes.retirePassport.id, writes.retirePassport.patch);
+          await updateRecord('customers', 'customerId', owner.owner.customerId, writes.customerPatch);
           await createRecord('passport-to-qid-updates', {
             updateId,
+            customerId: owner.owner.customerId,
             msisdn: values.msisdn,
             passportNumber: values.passportNumber,
             qidNumber: qid.idNumber,

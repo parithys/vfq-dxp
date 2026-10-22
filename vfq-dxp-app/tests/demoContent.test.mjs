@@ -20,6 +20,12 @@ test('demo content: a line-limit order names the limit and the approving team', 
   assert.equal(r.detail, 'Customer has reached the allowed postpaid line limit. The order requires Credit Control approval.');
 });
 
+test('demo content: an order routed for its ID type is named as Credit Control', () => {
+  const r = describe({ approvalReason: 'ID type requires Credit Control approval - routed to Credit Control', approverRole: 'Credit Control' });
+  assert.equal(r.title, 'ID type routed to Credit Control');
+  assert.match(r.detail, /requires Credit Control approval\.$/);
+});
+
 test('demo content: an ID-type order is routed to Back Office Fulfilment', () => {
   const r = describe({ approvalReason: 'ID type cannot be sold directly - routed to Back Office Fulfilment approval workflow', approverRole: 'Back Office Fulfilment' });
   assert.equal(r.title, 'ID type routed to Back Office Fulfilment Agent');

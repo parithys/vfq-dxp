@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { useEntityStore } from '../../stores/entityStore';
 import { Button } from '../../components/primitives/Button';
 import { evaluateRule } from '../../engines/ruleEngine';
 import { defaultCreditLimit, isHrn } from '../../engines/hrnConfiguration';
+import { creditRiskPatch, creditSegmentOf, customerCategoryOf, hrnFeeApplies, resolveCreditRisk, type BigDataCreditRisk, type CreditRiskSource } from '../../engines/creditLimit';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { evaluateEligibilityChecks, hasHardStop, type EligibilityCheck } from '../../engines/eligibilityEngine';
 import * as mockDataEngine from '../../engines/mockDataEngine';
@@ -90,6 +92,8 @@ interface EligibilityGateStepProps {
    * registry record the checks would otherwise read. Only used when no registry record matches the ID.
    */
   newIdentity?: { idNumber: string; idType: string; nationality: string; dob: string; expiryDate?: string };
+  /** A QID that Customer Identification linked to an EXISTING customer (through their Passport): the QID is not on file yet, so it stands in for the customer's own document. */
+  linkedIdDocument?: { customerId: string; documentNumber: string; documentType: string; expiryDate?: string };
 }
 
 // Gate 2 of the reference activation flow: blacklist + connection-limit +
@@ -106,6 +110,9 @@ type Subject = {
   bills: { customerId?: string; type?: string; totalAmount?: number; status?: string }[];
   payments: { customerId?: string; chargeType?: string; amountQar?: number; status?: string }[];
 };
+
+// Big Data updates already written to a customer's record this session (one write per update, however often the checks are re-judged).
+const appliedRiskUpdates = new Set<string>();
 
 export function EligibilityGateStep({
   idNumber,
@@ -124,6 +131,7 @@ export function EligibilityGateStep({
   connectionType,
   requestKind = 'NEW_ACTIVATION',
   newIdentity,
+  linkedIdDocument,
 }: EligibilityGateStepProps) {
   const asCustomerId = useActedForCustomer(explicitCustomerId, asNewCustomer);
   const requestedType: ConnectionType = connectionType ?? (journeyType === 'prepaid' ? 'MOBILE_PREPAID' : 'MOBILE_POSTPAID');
@@ -172,7 +180,7 @@ export function EligibilityGateStep({
      try {
       // What is read about the identity does not depend on the product, so it is read once and kept: switching the plan type re-judges
       // the rules over the same records instead of fetching them all again. The independent reads run together, not one after another.
-      const subjectKey = `${idNumber}|${asCustomerId ?? ''}|${newIdentity?.nationality ?? ''}|${newIdentity?.dob ?? ''}`;
+      const subjectKey = `${idNumber}|${asCustomerId ?? ''}|${newIdentity?.nationality ?? ''}|${newIdentity?.dob ?? ''}|${linkedIdDocument?.customerId ?? ''}`;
       let loaded = loadedRef.current?.key === subjectKey ? loadedRef.current.data : undefined;
       if (!loaded) {
         const [docs, customers, [deals, bills, payments]] = await Promise.all([
@@ -188,7 +196,9 @@ export function EligibilityGateStep({
         ]);
         // The presented ID decides who is checked; the selected customer is only a fallback for an ID with no document record.
         let foundDoc: IdentityDocRecord | undefined =
-          docs.find((d) => d.documentNumber === idNumber) ?? (asCustomerId ? docs.find((d) => d.customerId === asCustomerId) : undefined);
+          docs.find((d) => d.documentNumber === idNumber) ??
+          (linkedIdDocument && linkedIdDocument.documentNumber === idNumber ? { ...linkedIdDocument } : undefined) ??
+          (asCustomerId ? docs.find((d) => d.customerId === asCustomerId) : undefined);
         // Known to NAS but with no customer record = a NEW customer. Nothing on
         // file to block them: no blacklist, no lines, no deals, no balance.
         let nasCustomerFound: CustomerRecord | undefined;
@@ -267,14 +277,26 @@ export function EligibilityGateStep({
       // "Non-HRN new account" row (that check is for new accounts), and neither
       // is ever told they are HRN - see buildEligibilityRows.
       const isExistingCustomer = !nasCustomer && !asNewCustomer;
-      const hrnFlag = isHrn(match.nationality);
+      // The HRN CATEGORY follows the nationality; the HRN FEE (advance) is NOT marked when the customer's Credit Risk Exemption is Low or No. The
+      // credit risk in force is Big Data's input for the customer, else what their record carries.
+      const bigData = await mockDataEngine.list<BigDataCreditRisk>('big-data-credit-risk');
+      const risk = resolveCreditRisk(match as CreditRiskSource & { customerId?: string }, bigData);
+      // Big Data's input updates the customer's Credit Risk as soon as they are identified (not only when Customer 360 is opened): written to their record
+      // when it differs, once. A person with no customer record (a new customer) has none to update.
+      const riskPatch = creditRiskPatch(match as CreditRiskSource & { customerId?: string }, bigData);
+      if (riskPatch && match.customerId && !appliedRiskUpdates.has(`${match.customerId}|${riskPatch.creditRiskUpdatedAt}`)) {
+        appliedRiskUpdates.add(`${match.customerId}|${riskPatch.creditRiskUpdatedAt}`);
+        void useEntityStore.getState().updateRecord('customers', 'customerId', match.customerId, riskPatch as Record<string, unknown>);
+      }
+      const hrnCategory = isHrn(match.nationality);
+      const hrnFlag = hrnCategory && hrnFeeApplies(risk.creditRiskExemption);
       evaluateRule('BR-187', { hrnFlag });
       // Still computed though the Credit limit ROW was removed from this step
       // on 2026-09-25: the amount is not display-only. DeviceInstallmentStep
       // reads defaultCreditLimitQar off this result to judge instalment
       // affordability, so dropping it from the result would silently change
       // that step's behaviour rather than just hide a row.
-      const creditLimit = evaluateRule('BR-076', { hrnFlag });
+      const creditLimit = evaluateRule('BR-076', { hrnFlag: hrnCategory, nationality: match.nationality });
       const creditLimitAmount = defaultCreditLimit({ nationality: match.nationality });
 
       // The seven matrix checks. Deals and the outstanding balance are the
@@ -353,6 +375,10 @@ export function EligibilityGateStep({
         journeyType,
         portIn,
         defaultCreditLimitQar: creditLimitAmount,
+        customerCategory: customerCategoryOf(match.nationality),
+        creditSegment: creditSegmentOf(match.nationality),
+        creditRisk: risk.creditRisk,
+        creditRiskExemption: risk.creditRiskExemption,
         // The checks above ran on the real record whoever the journey treats the person as;
         // a New Customer journey just does not carry that customer's id forward.
         customerId: nasCustomer || asNewCustomer ? undefined : match.customerId,
@@ -377,7 +403,7 @@ export function EligibilityGateStep({
     // this effect every time onResult fires - an infinite update loop caught
     // live via the ErrorBoundary ("Maximum update depth exceeded").
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idNumber, journeyType, scope, portIn, cached, retryNonce, newIdentity?.nationality, newIdentity?.dob, newIdentity?.expiryDate]);
+  }, [idNumber, journeyType, scope, portIn, cached, retryNonce, newIdentity?.nationality, newIdentity?.dob, newIdentity?.expiryDate, linkedIdDocument?.customerId]);
 
   // Nothing to show before an identity is resolved - this panel lives
   // permanently inside the Contact step now (2026-09-28, no more separate

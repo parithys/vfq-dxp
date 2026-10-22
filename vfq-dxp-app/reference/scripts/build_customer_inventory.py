@@ -159,6 +159,9 @@ NAMES = {
     "CUST-3084": ("Aisha", "Mohammed Khalid", "Al-Kuwari"),
     "CUST-3085": ("Rashid", "Saud Abdulla", "Al-Hajri"),
     "CUST-3090": ("Maryam", "Ahmed Abdulla", "Al-Sulaiti"),
+    "CUST-3101": ("Hessa", "Jassim", "Al-Thani"),
+    "CUST-3102": ("Abdulaziz", "Khalid", "Al-Sulaiti"),
+    "CUST-3103": ("Sheikha", "Nasser", "Al-Naimi"),
     "CUST-3065": ("Abdulrahman", "Jassim Hamad", "Al-Kubaisi"),
     "CUST-3066": ("Maha", "Rashid Saeed", "Al-Ghanim"),
     "CUST-3067": ("Mohamed", "Nabil Ibrahim", "Soliman"),
@@ -395,6 +398,16 @@ PROPOSED += [
       "Qatari aged 12 (under 18), no lines: a family member who can be added as the ACTUAL USER of a parent's postpaid line.", "None", "-", "New Postpaid (Actual User step)",
       "Under 18, so the Actual User step accepts her; the age rule is the only check (Number of Connections, HRN and the Collections / Grey List / Security blacklists are not run for an actual user). Anyone 18 or older is refused there.",
       jk=PP, req="Actual user (minor)"),
+    # ---- 11. Restricted segments (Safwa, Safwa+, Royal): visible only to a role holding that segment's own grant
+    P("CUST-3101", "Hessa Al-Thani", "Qatari", "Qatari", "QID", "27801013400101", "2031-03-31", "1978-01-10", "Female", "Safwa", "Arabic", 0, 0, "11 Restricted segments",
+      "Qatari in the Safwa segment (VIP tag). A protected customer: only a role granted Safwa may see them.", "None", "-", "Customer Search; Customer 360; Customer Identification in any journey",
+      "Premium (granted Safwa) sees the customer and continues; every other role is blocked with the access-restriction message and sees no name, ID, phone or segment.", jk=C360, req="Restricted segment: Safwa"),
+    P("CUST-3102", "Abdulaziz Al-Sulaiti", "Qatari", "Qatari", "QID", "27505023400102", "2031-03-31", "1975-05-02", "Male", "Safwa+", "Arabic", 0, 0, "11 Restricted segments",
+      "Qatari in the Safwa+ segment (VVIP tag). A protected customer, with its own grant independent of Safwa and Royal.", "None", "-", "Customer Search; Customer 360; Customer Identification in any journey",
+      "Premium (granted Safwa+) sees the customer and continues; every other role is blocked with the access-restriction message and sees no customer information.", jk=C360, req="Restricted segment: Safwa+"),
+    P("CUST-3103", "Sheikha Al-Naimi", "Qatari", "Qatari", "QID", "28203033400103", "2031-03-31", "1982-03-03", "Female", "Royal", "Arabic", 0, 0, "11 Restricted segments",
+      "Qatari in the Royal segment. A protected customer, with its own grant independent of Safwa and Safwa+.", "None", "-", "Customer Search; Customer 360; Customer Identification in any journey",
+      "Premium (granted Royal) sees the customer and continues; every other role is blocked with the access-restriction message and sees no customer information.", jk=C360, req="Restricted segment: Royal"),
 ]
 
 # Scenario rewrites forced by the nationality rule (the nationalities originally
@@ -1083,8 +1096,12 @@ for cid, c in customers.items():
                  (c.get("activePostpaidLines", 0) + c.get("activePrepaidLines", 0)) if "activePostpaidLines" in c else "",
                  bl or ("(blacklisted)" if c.get("blacklisted") else "No"), "HRN" if is_hrn(c.get("nationality")) else "Standard", c.get("companyName", ""),
                  a["disc"], a["mnp"], a["scen"], a["journeys"], a["expected"], roles_for(a["jk"]), " ".join(note)])
+_passports_on_file = {d["documentNumber"] for d in docs if d["documentType"] == "Passport"}
 for n in nas:
     if n["nasRecordId"] in PROP_IDS:
+        continue
+    # A QID whose linked Passport is already a customer's is that customer (CUST-1002 for NAS-7005), not a second person: no row of its own.
+    if n.get("linkedPassportNumber") in _passports_on_file:
         continue
     a = SEED_NAS[n["nasRecordId"]]
     rows.append(["", n["nasRecordId"], ORIG + " (NAS only)", a["cat"], n["name"], n.get("firstName", ""), n.get("middleName", ""), n.get("lastName", ""), n["nationality"], "Qatari" if n["nationality"] == "Qatari" else "Expat", n["documentType"],

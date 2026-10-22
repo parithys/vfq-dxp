@@ -8,6 +8,9 @@ import { useIdLookup } from './useIdLookup';
 import { IdLookupStatus } from './IdLookupStatus';
 import { MoiResultPanel } from './MoiResultPanel';
 import { NewCustomerForm } from './NewCustomerForm';
+import { IdReconciliationPanel } from './IdReconciliationPanel';
+import { RestrictedCustomerNotice } from './RestrictedCustomerNotice';
+import { mismatchMessage } from './idReconciliation';
 import { idTypeLabel } from '../../data/idTypes';
 import type { IdLookupValue } from './idLookupModel';
 import { formatDmyOnBlur } from './idLookupModel';
@@ -104,8 +107,10 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
     loading,
     notFound,
     setNotFound,
-    expiryMismatch,
-    setExpiryMismatch,
+    accessRestricted,
+    linkProblem,
+    reconciliation,
+    clearReconciliation,
     numberInputRef,
     latest,
     idType,
@@ -186,7 +191,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
       contextIdentity={contextIdentity}
       scanComplete={scanComplete}
       setNotFound={setNotFound}
-      setExpiryMismatch={setExpiryMismatch}
+      clearReconciliation={clearReconciliation}
       demoType={demoType}
       handleScanAttempt={handleScanAttempt}
       handleDemoScan={handleDemoScan}
@@ -222,16 +227,18 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
       value={value.idNumber ?? ''}
       onChange={(idNumber: string) => {
         setNotFound(false);
-        setExpiryMismatch(false);
+        clearReconciliation();
         onChange({ ...value, idNumber, moiResult: undefined });
       }}
       onFetch={runMoiValidation}
       fetching={loading}
       error={
-        notFound
+        linkProblem
+          ? linkProblem
+          : notFound
           ? 'No MOI record found for this ID - try again.'
-          : expiryMismatch
-            ? 'The expiry date does not match the MOI record - check the card and try again.'
+          : reconciliation
+            ? mismatchMessage(reconciliation)
             : ownerMismatch
               ? `This ID belongs to another customer. This journey is for ${ownerMismatch}.`
               : undefined
@@ -252,7 +259,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
               if (tidy !== e.target.value) onChange({ ...value, scannedExpiry: tidy, moiResult: undefined });
             }}
             onChange={(e) => {
-              setExpiryMismatch(false);
+              clearReconciliation();
               onChange({ ...value, scannedExpiry: e.target.value, moiResult: undefined });
             }}
           />
@@ -361,6 +368,13 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
       {canCreateCustomer && (
         <NewCustomerForm idTypeLabel={idTypeLabel(idType)} idNumber={value.idNumber ?? ''} expiry={value.scannedExpiry} onCreate={createNewCustomer} />
       )}
+
+      {/* A protected-segment customer this role may not see: the access restriction is all that is shown (it blocks Continue: nothing is identified). */}
+      {accessRestricted && <RestrictedCustomerNotice compact />}
+
+      {/* ID reconciliation: shown only when a captured attribute does not match MOI (the identity is held back). A clean match shows nothing; the
+          per-attribute result is still kept on the value and the order. */}
+      {verifyThenFetch && reconciliation && <IdReconciliationPanel result={reconciliation} />}
 
       {/* ---- Validation status. Each state looks different (see ValidationStatus):
           technical failure = amber and unresolved, business result = red, pending

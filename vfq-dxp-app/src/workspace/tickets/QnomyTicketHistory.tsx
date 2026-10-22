@@ -1,4 +1,6 @@
 import { badgeVariantFor } from '../../lib/statusTone';
+import { useRestrictedCustomers } from '../../hooks/useRestrictedCustomers';
+import { RestrictedRowsNotice } from '../../components/patterns/RestrictedRowsNotice';
 import { useEffect, useMemo, useState } from 'react';
 import { useEntityStore } from '../../stores/entityStore';
 import { useAuthStore } from '../../stores/authStore';
@@ -115,7 +117,7 @@ export function QnomyTicketHistory() {
   // the only reason a number resolves to nobody is that it was never a
   // Vodafone number - the same fallback the assignment toast uses for the
   // identical case (SessionReferenceNumbers' ticketToastRows).
-  const myHistory = useMemo<DisplayRow[]>(
+  const mine = useMemo<DisplayRow[]>(
     () =>
       tickets
         .filter((t) => t.handledByUserId === staffUserId && t.releasedAt)
@@ -126,6 +128,10 @@ export function QnomyTicketHistory() {
         }),
     [tickets, customers, staffUserId]
   );
+  // A ticket whose customer is in a protected segment this role may not see is left out (and counted), never drawn: nothing is shown until the
+  // customers are known.
+  const guard = useRestrictedCustomers();
+  const { visible: myHistory, hiddenCount } = useMemo(() => guard.filter(mine, (t) => t.customerLinkId), [guard, mine]);
 
   const now = useMemo(() => new Date(), []);
   const todayRows = useMemo(
@@ -171,7 +177,7 @@ export function QnomyTicketHistory() {
       rows={rows}
       rowKey={(t) => t.qTicketId}
       emptyMessage={emptyMessage}
-      loading={loading}
+      loading={loading || !guard.ready}
     />
   );
 
@@ -188,6 +194,7 @@ export function QnomyTicketHistory() {
         fuller record.
       </>} />
       <ErrorBanner message={loadError} />
+      <RestrictedRowsNotice count={hiddenCount} />
       <SegmentedTabs items={views} active={view} onChange={setView} label="Ticket period" />
       <div className="pt-4">
         {view === 'today' ? table(todayRows, 'No tickets handled today yet.') : table(last30Rows, 'No tickets handled in the last 30 days.')}

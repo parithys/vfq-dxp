@@ -103,7 +103,9 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
           <CustomerStatusBanner customerId={eligibility?.customerId} />
           <EligibilityOutcomePanel />
           <EligibilityGateStep
-            asNewCustomer={asNewCustomer}
+            // Linked to an existing customer through their Passport: judged as that customer, on the QID presented.
+            asNewCustomer={asNewCustomer && !contact?.moiResult?.linkedIdUpdate}
+            linkedIdDocument={contact?.moiResult?.linkedIdUpdate}
             asCustomerId={flow === 'existing' ? existingCustomerId : actedForId}
             announcePass={false}
             // A customer created here (no registry knows the ID) is judged on what the agent entered.

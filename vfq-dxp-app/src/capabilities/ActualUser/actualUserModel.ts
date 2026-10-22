@@ -1,6 +1,6 @@
 import type { GuidedContactValue } from '../../components/patterns/guidedContactModel';
 import { isValidEmail, isValidAltPhone } from '../../components/patterns/guidedContactModel';
-import { ageOn, MINIMUM_AGE } from '../../engines/eligibilityEngine';
+import { ageOn, isIdExpired, MINIMUM_AGE } from '../../engines/eligibilityEngine';
 
 /**
  * ACTUAL USER - who will really use the line when it is not the customer who owns it (a parent buys, the daughter uses the SIM).
@@ -114,7 +114,7 @@ export function pickDemoReaderCustomer(
     const age = ageOn(c.dob, asOf);
     if (age === undefined || age < MINIMUM_AGE) return false;
     return docs.some(
-      (d) => d.customerId === c.customerId && d.documentType === 'QID' && /^\d{11,14}$/.test(d.documentNumber) && (!d.expiryDate || new Date(d.expiryDate) >= asOf)
+      (d) => d.customerId === c.customerId && d.documentType === 'QID' && /^\d{11,14}$/.test(d.documentNumber) && (!d.expiryDate || !isIdExpired(d.expiryDate, asOf))
     );
   })?.customerId;
 }

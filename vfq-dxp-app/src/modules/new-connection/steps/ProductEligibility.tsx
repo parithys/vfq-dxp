@@ -39,7 +39,9 @@ export function ProductEligibility({
   if (!product || !contact?.moiResult) return null;
   return (
     <EligibilityGateStep
-      asNewCustomer={flow === 'new' && !values[LAUNCH_CUSTOMER_KEY]}
+      // A QID linked to an existing customer (through their Passport) is judged as that customer, on the QID presented.
+      asNewCustomer={flow === 'new' && !values[LAUNCH_CUSTOMER_KEY] && !contact.moiResult?.linkedIdUpdate}
+      linkedIdDocument={contact.moiResult?.linkedIdUpdate}
       asCustomerId={flow === 'existing' ? existingCustomerId : (values[LAUNCH_CUSTOMER_KEY] as string | undefined)}
       announcePass={false}
       idNumber={contact.idNumber}

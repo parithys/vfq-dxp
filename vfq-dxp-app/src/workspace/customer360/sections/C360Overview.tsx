@@ -1,4 +1,6 @@
 import { defaultCreditLimitForSegment } from '../../../engines/hrnConfiguration';
+import { creditSegmentOf, customerCategoryOf } from '../../../engines/creditLimit';
+import { creditBreakdownOf } from '../creditLimitView';
 import { isClosedTicket } from '../../../lib/statusTone';
 import { isSimSwapAwaitingDecision } from '../../../engines/approvalAuthority';
 import { isFixedLineOffer } from '../../../capabilities';
@@ -80,7 +82,7 @@ export function C360Overview({ data, services, goToTab, onTicketCreated, queryFo
   const billingProfile = data.billingProfiles[0];
   const extras = data.overviewExtras[0];
   const catalog = (data.demoCatalog[0] ?? {}) as Rec;
-  const creditLimit = data.creditLimits[0];
+  const limits = creditBreakdownOf(data);
 
   // ---- KPIs
   const openTickets = data.tickets.filter((t) => !isClosedTicket(t.status)).length;
@@ -197,7 +199,14 @@ export function C360Overview({ data, services, goToTab, onTicketCreated, queryFo
             {/* Category: the customer scheme the record carries (Sawfa, Sawfa Plus); "-" for a customer on none. */}
             <Row label="Category">{dash((data.customer as { customerSubType?: string }).customerSubType)}</Row>
             <Row label="Segment">{dash(data.customer.segment)}</Row>
-            <Row label="Credit Limit">{dash(qar(creditLimit ? (creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR) : defaultCreditLimitForSegment(data.customer.segment)))}</Row>
+            {/* Derived from the nationality, centrally (engines/creditLimit): Qatari or Expat, and HRN or Non-HRN. */}
+            <Row label="Customer Segment (Qatari / Expat)">{dash(creditSegmentOf(data.customer.nationality as string | undefined))}</Row>
+            <Row label="Customer Category (HRN / Non-HRN)">{customerCategoryOf(data.customer.nationality as string | undefined)}</Row>
+            <Row label="Credit Limit">{dash(qar(limits.overall ?? defaultCreditLimitForSegment(data.customer.segment)))}</Row>
+            <Row label="Overall">{dash(qar(limits.overall ?? defaultCreditLimitForSegment(data.customer.segment)))}</Row>
+            <Row label="Default">{dash(qar(limits.default))}</Row>
+            <Row label="Credit Control Team">{limits.creditControl === null ? '-' : dash(qar(limits.creditControl))}</Row>
+            <Row label="Credit Limit increased due to Deposit">{limits.depositIncrease ? dash(qar(limits.depositIncrease)) : '-'}</Row>
             <Row label="Account Status">{account?.status ? <StatusPill status={account.status} /> : '-'}</Row>
             <Row label="Customer Since"><Dv k="customerSince" /></Row>
           </div>

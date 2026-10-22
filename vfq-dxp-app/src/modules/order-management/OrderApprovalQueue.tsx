@@ -1,4 +1,6 @@
 import { demoContentColumn, matchesOrderFilters, orderMatchesQuery, type OrderFilters } from './demoContentColumn';
+import { useRestrictedCustomers } from '../../hooks/useRestrictedCustomers';
+import { RestrictedRowsNotice } from '../../components/patterns/RestrictedRowsNotice';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DataTable } from '../../components/primitives/DataTable';
@@ -55,6 +57,7 @@ interface OrderApprovalQueueProps {
 
 export function OrderApprovalQueue({ padded = true, query = '', filters }: OrderApprovalQueueProps) {
   const orders = (useEntityStore((s) => s.records.orders) ?? []) as unknown as Order[];
+  const guard = useRestrictedCustomers();
   const loadKind = useEntityStore((s) => s.loadKind);
   const updateRecord = useEntityStore((s) => s.updateRecord);
   const loadError = useEntityStore((s) => s.errors.orders);
@@ -74,12 +77,17 @@ export function OrderApprovalQueue({ padded = true, query = '', filters }: Order
   // category's required role can actually claim it.
   const isEligible = (order: Order) => mayClaimOrder({ personaId: activePersonaId, jobTitle: currentJobTitle, orderType: order.orderType, approverRole: order.approverRole, createdBy: (order as { createdBy?: string }).createdBy, userId: currentAgentId });
 
-  const pending = orders
-    .filter((o) => o.status === 'Submitted for Approval')
-    .filter((o) => isVisibleToAgent(o.assignedApproverId, currentAgentId))
-    .filter((o) => orderMatchesQuery(o, query) && matchesOrderFilters(o, filters))
-    // Orders this viewer can decide come first; the rest stay visible (with who they need) below them.
-    .sort((a, b) => Number(isEligible(b)) - Number(isEligible(a)));
+  // Orders of a protected-segment customer this role may not see are left out of the queue (and counted), never drawn; nothing is listed until
+  // customers are known. Counted among the orders that WOULD be in this queue, so the notice matches the list.
+  const { visible, hiddenCount } = guard.filter(
+    orders
+      .filter((o) => o.status === 'Submitted for Approval')
+      .filter((o) => isVisibleToAgent(o.assignedApproverId, currentAgentId))
+      .filter((o) => orderMatchesQuery(o, query) && matchesOrderFilters(o, filters)),
+    (o) => o.customerId
+  );
+  // Orders this viewer can decide come first; the rest stay visible (with who they need) below them.
+  const pending = [...visible].sort((a, b) => Number(isEligible(b)) - Number(isEligible(a)));
 
   const assignToMe = (order: Order) => {
     if (order.assignedApproverId !== currentAgentId) {
@@ -91,6 +99,7 @@ export function OrderApprovalQueue({ padded = true, query = '', filters }: Order
   return (
     <div className={padded ? 'p-8' : ''}>
       <ErrorBanner message={loadError} />
+      <RestrictedRowsNotice count={hiddenCount} />
       <DataTable<Order>
         fixedLayout
         columns={[
@@ -119,7 +128,7 @@ export function OrderApprovalQueue({ padded = true, query = '', filters }: Order
         rows={pending}
         rowKey={(r) => r.orderId}
         emptyMessage={query.trim() || (filters && (filters.orderType !== 'all' || filters.status !== 'all')) ? 'No orders awaiting approval match your search or filters.' : 'No orders awaiting approval.'}
-        loading={loading}
+        loading={loading || !guard.ready}
       />
     </div>
   );

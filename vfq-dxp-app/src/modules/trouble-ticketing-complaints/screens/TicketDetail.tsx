@@ -1,4 +1,6 @@
 import { useKindPending } from '../../../stores/entityStore';
+import { useRestrictedCustomers } from '../../../hooks/useRestrictedCustomers';
+import { RestrictedCustomerNotice } from '../../../components/patterns/RestrictedCustomerNotice';
 import { EntityMissing } from '../../../components/patterns/EntityMissing';
 import { Tabs } from '../../../components/primitives/Tabs';
 import { evaluateRule } from '../../../engines/ruleEngine';
@@ -32,8 +34,19 @@ export function TicketDetail() {
   const { ticket, updateRecord, activePersonaId, noteText, setNoteText, activityText, setActivityText, auditRecords, surveyNotifications } = s;
   const { guard } = useSubmitGuard();
   const ticketsPending = useKindPending('trouble-tickets');
+  const restricted = useRestrictedCustomers();
   if (!ticket) {
     return <EntityMissing what="ticket" loading={ticketsPending} backTo="/trouble-ticketing-complaints/tickets-dashboard" backLabel="Back to tickets" />;
+  }
+  // The customer is in a protected segment this role may not see: the record is not drawn at all - only the restriction (and nothing until the
+  // customers are known).
+  if (!restricted.ready) return <div className="p-8 text-fg-2" role="status">Loading…</div>;
+  if (restricted.isRestricted(ticket.customerId)) {
+    return (
+      <div className="p-8 max-w-2xl">
+        <RestrictedCustomerNotice backTo="/trouble-ticketing-complaints/tickets-dashboard" backLabel="Back to tickets" />
+      </div>
+    );
   }
 
   // BR-067 (config): "an audit trail exists on tickets... but is role-

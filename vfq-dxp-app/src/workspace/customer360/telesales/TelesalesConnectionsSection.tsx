@@ -1,4 +1,5 @@
 import { SearchField } from '../../../components/primitives/SearchField';
+import { overallCreditLimitOf } from '../creditLimitView';
 import { FilterSelect } from '../sections/C360Kit';
 import { useState } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
@@ -30,7 +31,7 @@ export function ConnectionsSection({ ctx }: { ctx: Ctx }) {
   const addons = data.addonsDiscounts.filter((a) => a.category !== 'Discount');
   const discounts = data.addonsDiscounts.filter((a) => a.category === 'Discount');
   const creditLimit = data.creditLimits[0];
-  const billLimit = res('Bill Limit') ?? (creditLimit ? `QAR ${str(creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR)}` : '-');
+  const billLimit = res('Bill Limit') ?? (creditLimit ? `QAR ${overallCreditLimitOf(data) ?? str(creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR)}` : '-');
   const bal = data.inPlatformBalances[0];
   const use = data.serviceUsage[0];
   const ex = data.overviewExtras[0];

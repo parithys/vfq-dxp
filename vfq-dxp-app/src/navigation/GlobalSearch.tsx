@@ -3,6 +3,7 @@ import { useSearchListNav } from '../hooks/useSearchListNav';
 import { useNavigate } from 'react-router-dom';
 import { getAllModules, getAllRoutes, getPersona } from '../engines/configEngine';
 import { usePersonaStore } from '../stores/personaStore';
+import { canViewCustomerSegment } from '../engines/agentPrivilegeEngine';
 import { searchScopeFor, type SearchGroup } from '../engines/searchScopeEngine';
 import * as mockDataEngine from '../engines/mockDataEngine';
 import { SearchField } from '../components/primitives/SearchField';
@@ -83,13 +84,12 @@ export function GlobalSearch() {
               || (c.msisdn ?? '').includes(q)
             )
             .slice(0, 3)
-            .map((c) => ({
-              key: `customer-${c.customerId}`,
-              kind: 'Customer',
-              label: c.name,
-              sub: `${c.customerId} · ${c.segment}`,
-              path: `/customer/${c.customerId}`,
-            })),
+            .map((c) =>
+              // A protected segment the signed-in role may not see: the hit says so and carries no name, ID or segment.
+              canViewCustomerSegment(usePersonaStore.getState().activePersonaId, c.segment)
+                ? { key: `customer-${c.customerId}`, kind: 'Customer', label: c.name, sub: `${c.customerId} · ${c.segment}`, path: `/customer/${c.customerId}` }
+                : { key: `customer-${c.customerId}`, kind: 'Customer', label: 'Restricted customer', sub: 'Access restricted for your role', path: `/customer/${c.customerId}` }
+            ),
         leads: async () =>
           (await mockDataEngine.list<LeadRecord>('leads'))
             .filter((l) => l.leadId.toLowerCase().includes(q) || l.serviceNeeded.toLowerCase().includes(q))

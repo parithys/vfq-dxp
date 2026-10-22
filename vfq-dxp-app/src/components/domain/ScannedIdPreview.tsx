@@ -20,6 +20,12 @@ const yymmdd = (dmy: string) => {
 
 export type IdVariant = 'qid' | 'passport' | 'gcc' | 'diplomatic' | 'b2b2c' | 'retired' | 'mada';
 
+/** The identity printed on the card the reader is shown: the customer's own when the journey is bound to one, else the document type's specimen. */
+export function capturedFromCard(documentType: string | undefined, identity?: SpecimenIdentity): { name: string; dob: string; nationality: string } {
+  const s = identity ?? SPECIMENS[documentType ?? 'QID'] ?? SPECIMENS.QID;
+  return { name: s.name, dob: s.dob, nationality: s.nationality };
+}
+
 interface ScannedIdPreviewProps {
   side: 'front' | 'back';
   /** A real captured image, when one exists. Falls back to the drawn card. */
