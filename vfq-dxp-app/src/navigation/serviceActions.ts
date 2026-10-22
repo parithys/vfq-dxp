@@ -42,12 +42,8 @@ const RULES: Record<string, (f: ServiceFacts) => boolean> = {
   'mob-suspend': (f) => active(f) && !f.barred,
   'mob-resume': (f) => suspended(f),
   'mob-terminate': (f) => !terminated(f),
-  // Mobile - Number Services (acts on this number)
-  'mob-fnp-change': (f) => active(f) && !f.barred,
-  'mob-gold-number': (f) => active(f) && !f.barred,
   // Mobile - SIM & Device
-  'mob-sim-replacement': (f) => active(f) || suspended(f),
-  'mob-sim-swap': (f) => active(f) || suspended(f),
+  'mob-sim-replacement': (f) => active(f) || suspended(f), // replacement and swap are one journey (one screen, SCR-196)
   'mob-phys-to-esim': (f) => active(f) && !f.barred,
   'mob-esim-to-phys': () => false,
   'mob-device-upgrade': (f) => f.category === 'Postpaid' && active(f) && f.hasDeviceInstalment,
@@ -56,6 +52,7 @@ const RULES: Record<string, (f: ServiceFacts) => boolean> = {
   // Fibre & Home - Existing Service
   'fib-view-service': () => true,
   'fib-fwa-5g-service': (f) => f.category === 'GigaHome 5G',
+  'fib-fnp-change': (f) => active(f) && !f.barred, // FNP is fibre-to-fibre only; not offered on a mobile line
   'fib-change-plan': (f) => active(f) && clear(f),
   'fib-upgrade': (f) => active(f) && clear(f),
   'fib-suspend': (f) => active(f) && !f.barred,
