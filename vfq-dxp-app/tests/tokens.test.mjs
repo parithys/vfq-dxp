@@ -16,6 +16,7 @@ const CONSTANT_ACROSS_THEMES = {
   '--brand-ooredoo': 'partner brand colour',
   '--brand-vodafone': 'brand speech-mark red',
   '--brand-qatar': 'Qatar flag maroon',
+  '--summary-milestone': 'Step Summary progress fill and milestone disc; same orange in both themes',
   '--charcoal-panel': 'dark panel used in both themes (login help, dark selects)',
   '--divider-on-dark': 'hairline on a dark surface',
   '--field-calendar-range': 'teal range highlight on the dark toast and calendar',

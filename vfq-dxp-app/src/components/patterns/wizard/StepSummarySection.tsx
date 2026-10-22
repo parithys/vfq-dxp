@@ -35,10 +35,10 @@ export function StepSummarySection({
           aria-controls={bodyId}
           className="flex flex-1 min-w-0 items-center gap-2 text-left text-fg font-semibold text-[length:var(--fs-body)] rounded-[var(--radius-sm)] focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
         >
-          {/* Completed: a solid green disc with a white tick - or a white flag, when the step reached a journey milestone. */}
+          {/* Completed: a solid green disc with a white tick - or a white flag on an orange disc, when the step reached a journey milestone. */}
           <svg viewBox="0 0 24 24" aria-hidden="true" className="w-5 h-5 shrink-0">
-            {/* A milestone step's disc is plum, not the completed green, so it stands apart from the other steps. */}
-            <circle cx="12" cy="12" r="12" className={milestone ? 'text-[var(--brand-plum)]' : 'text-success'} fill="currentColor" />
+            {/* A milestone step's disc is orange, not the completed green, so it stands apart from the other steps. */}
+            <circle cx="12" cy="12" r="12" className={milestone ? 'text-[var(--summary-milestone)]' : 'text-success'} fill="currentColor" />
             {milestone ? (
               <path d={FLAG} transform="translate(6.2 6.2) scale(0.6)" fill="none" stroke="white" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
             ) : (

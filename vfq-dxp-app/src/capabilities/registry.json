@@ -414,5 +414,20 @@
     ],
     "publicApi": [],
     "previewable": true
+  },
+  {
+    "id": "actual-user",
+    "name": "Actual User",
+    "status": "consolidated",
+    "home": "capabilities/ActualUser",
+    "entry": "ActualUser",
+    "stepBuilders": [
+      "actualUserStep"
+    ],
+    "stepLabel": "ACTUAL_USER_LABEL",
+    "summary": "Who will use the line when it is not the customer who owns it: the agent adds an actual user, who is identified like the primary customer (ID type, scan or upload, MOI, email, phone). The actual user is named on the Supplementary Form, which the one CAF signature also signs; an existing customer's changed email is written back to their record.",
+    "parts": [],
+    "previewable": true,
+    "publicApi": []
   }
 ]

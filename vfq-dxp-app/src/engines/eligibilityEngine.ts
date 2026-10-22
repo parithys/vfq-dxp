@@ -118,7 +118,7 @@ export const COMMON_CHECK_IDS: ReadonlySet<string> = new Set(['id-validity', 'ag
  * Passport on record through them.
  */
 
-const MINIMUM_AGE = 18;
+export const MINIMUM_AGE = 18;
 
 /** Whole years between a date of birth and `asOf`. */
 export function ageOn(dob: string | undefined, asOf: Date): number | undefined {

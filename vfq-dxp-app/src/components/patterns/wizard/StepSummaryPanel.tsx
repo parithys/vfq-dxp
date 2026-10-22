@@ -161,8 +161,8 @@ export function StepSummaryPanel({
           <span className="shrink-0 rounded-[var(--radius-pill)] bg-bg px-3 py-1 text-[var(--brand-plum)] font-bold text-[length:var(--fs-caption)] shadow-[var(--shadow-icon-tile)]">{percent}%</span>
         </div>
         <div className="mt-4 flex items-center gap-3">
-          <div className="h-2 flex-1 overflow-hidden rounded-[var(--radius-pill)] bg-bg" role="progressbar" aria-label="Steps completed" aria-valuemin={0} aria-valuemax={totalSteps} aria-valuenow={completed.length}>
-            <div className="h-full rounded-[var(--radius-pill)] bg-[var(--brand-plum)] transition-[width] duration-[var(--motion-slow)]" style={{ width: `${percent}%` }} />
+          <div className="h-2 flex-1 overflow-hidden rounded-[var(--radius-pill)] bg-[var(--on-dark-fill-3)]" role="progressbar" aria-label="Steps completed" aria-valuemin={0} aria-valuemax={totalSteps} aria-valuenow={completed.length}>
+            <div className="h-full rounded-[var(--radius-pill)] bg-[var(--summary-milestone)] transition-[width] duration-[var(--motion-slow)]" style={{ width: `${percent}%` }} />
           </div>
           <span className="shrink-0 text-on-dark-2 font-bold uppercase tracking-wide text-[length:var(--fs-micro)]">Progress</span>
         </div>

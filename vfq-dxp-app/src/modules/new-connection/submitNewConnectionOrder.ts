@@ -1,5 +1,7 @@
 import { currentAgentId } from '../../stores/authStore';
 import { saveCustomerSalutation } from './saveCustomerSalutation';
+import { actualUserOrderFields, saveActualUserContact } from '../../capabilities/ActualUser';
+import type { ActualUserValue } from '../../capabilities/ActualUser';
 import { hrnAdvanceQar } from '../../engines/hrnConfiguration';
 import { usePersonaStore } from '../../stores/personaStore';
 import { monthlyCharges } from '../../engines/postpaidPricing';
@@ -150,8 +152,11 @@ export async function submitNewConnectionOrder(
       const orderId = `ORD-${Date.now().toString().slice(-6)}`;
       // The salutation the agent entered is saved to the customer's profile (shown in Customer 360).
       await saveCustomerSalutation(eligibility?.customerId, contact.salutation, updateRecord);
+      // An actual user who is already a customer keeps the contact details confirmed here on their own record.
+      await saveActualUserContact(values.actualUser as ActualUserValue | undefined, updateRecord);
       await createRecord('orders', {
         orderId,
+        ...actualUserOrderFields(values.actualUser as ActualUserValue | undefined),
         // The email captured on Customer Identification, carried unchanged.
         customerEmail: contact.email,
         customerSalutation: contact.salutation,

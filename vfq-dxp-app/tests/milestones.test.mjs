@@ -173,7 +173,7 @@ test('the step summary marks a milestone step with a flag in place of the tick, 
   assert.doesNotMatch(plain, /milestone reached/);
   assert.doesNotMatch(flagged, /M7\.5 12\.5l3 3 6-6\.5/, 'no tick on a milestone step');
   assert.match(flagged, /M4 15s1-1 4-1/, 'the flag');
-  assert.match(flagged, /text-\[var\(--brand-plum\)\]/, 'a distinct colour');
+  assert.match(flagged, /text-\[var\(--summary-milestone\)\]/, 'a distinct colour');
   assert.match(plain, /text-success/);
   assert.doesNotMatch(flagged, /class="text-success"/);
   assert.match(flagged, /\(milestone reached\)/);

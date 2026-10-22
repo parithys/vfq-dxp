@@ -23,4 +23,5 @@ export * from './CustomerType';
 export * from './CrossSellOffers';
 export * from './CustomerQualification';
 export * from './SimType';
+export * from './ActualUser';
 export * from './LineSelection';

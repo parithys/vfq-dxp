@@ -1096,5 +1096,23 @@
     "cellNumber": "+97455513054",
     "workPhone": null,
     "employerEmail": null
+  },
+  {
+    "_note": "Customer-Inventory seed (2026-10-02)",
+    "contactRecordId": "CTC-CUST-3090",
+    "customerId": "CUST-3090",
+    "firstName": "Maryam",
+    "middleName": "Ahmed Abdulla",
+    "lastName": "Al-Sulaiti",
+    "idType": "QID",
+    "idNumber": "31403153400090",
+    "idExpirationDate": "2030-03-31",
+    "nationality": "Qatari",
+    "dob": "2014-03-15",
+    "gender": "Female",
+    "preferredLanguage": "Arabic",
+    "cellNumber": "+97455513055",
+    "workPhone": null,
+    "employerEmail": null
   }
 ]

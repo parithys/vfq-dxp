@@ -23,6 +23,10 @@ interface UseIdLookupOptions {
   verifyThenFetch: boolean;
   asNewCustomer: boolean;
   asCustomerId?: string;
+  /** Not the customer on screen: identify someone else (e.g. the actual user of a line). Nobody is bound, so the scanner draws no customer's card by default. */
+  unbound?: boolean;
+  /** The simulated reader presents THIS customer's own document and card (the demo has no hardware); it binds nothing. For an `unbound` lookup. */
+  scanAsCustomerId?: string;
   manualEntry?: boolean;
   /** Offer to create a new customer when no registry knows the ID (QID, Passport, Diplomatic ID). Default true; off for a journey bound to a customer. */
   allowNewCustomer?: boolean;
@@ -30,10 +34,10 @@ interface UseIdLookupOptions {
 
 // State, effects and async lookups behind IdLookupStep. Everything here was the
 // body of the component, moved verbatim; the JSX stays in IdLookupStep.
-export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType, verifyThenFetch, asNewCustomer, asCustomerId: explicitCustomerId, manualEntry = false, allowNewCustomer = true }: UseIdLookupOptions) {
+export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType, verifyThenFetch, asNewCustomer, asCustomerId: explicitCustomerId, unbound = false, scanAsCustomerId, manualEntry = false, allowNewCustomer = true }: UseIdLookupOptions) {
   // The customer the SCANNER defaults to (the one the journey was opened for, else the one selected). It only decides whose card the reader
   // draws: who the presented ID belongs to is always decided by the ID itself (MOI), never by the context.
-  const asCustomerId = useActedForCustomer(explicitCustomerId, asNewCustomer);
+  const asCustomerId = useActedForCustomer(explicitCustomerId, asNewCustomer || unbound);
   /** The ID the agent presented belongs to someone other than the customer this journey is bound to (that customer's name). */
   const [ownerMismatch, setOwnerMismatch] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
@@ -131,10 +135,11 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
   const [contextNoDocument, setContextNoDocument] = useState<string | undefined>();
   /** The ID types the journey's customer DOES hold, when none of the chosen type is on file (so the panel can say what to pick instead). */
   const [contextHeldTypes, setContextHeldTypes] = useState<string[]>([]);
+  const cardCustomerId = scanAsCustomerId ?? asCustomerId;
   useEffect(() => {
     setContextNoDocument(undefined);
     setContextHeldTypes([]);
-    if (!asCustomerId) {
+    if (!cardCustomerId) {
       setContextIdentity(undefined);
       return;
     }
@@ -143,8 +148,8 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
       mockDataEngine.list<{ customerId: string; name: string; nationality: string; dob: string }>('customers'),
       mockDataEngine.list<{ customerId: string; documentType: string; documentNumber: string; expiryDate?: string }>('identity-documents'),
     ]).then(([customers, docs]) => {
-      const c = customers.find((x) => x.customerId === asCustomerId);
-      const own = docs.filter((d) => d.customerId === asCustomerId);
+      const c = customers.find((x) => x.customerId === cardCustomerId);
+      const own = docs.filter((d) => d.customerId === cardCustomerId);
       // The card drawn is the one of the type the agent chose; a customer who does not hold that type has no card to read for it.
       const d = own.find((x) => x.documentType === idType);
       if (cancelled) return;
@@ -157,7 +162,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
       if (!c || !d) {
         // Never fall back to another customer's specimen card: say there is no document.
         setContextIdentity(undefined);
-        setContextNoDocument(c?.name ?? asCustomerId);
+        setContextNoDocument(c?.name ?? cardCustomerId);
         return;
       }
       setContextIdentity({ name: c.name, idNo: d.documentNumber, nationality: c.nationality, dob: isoToDmy(c.dob), expiry: d.expiryDate ? isoToDmy(d.expiryDate) : '' });
@@ -165,7 +170,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     return () => {
       cancelled = true;
     };
-  }, [asCustomerId, idType]);
+  }, [cardCustomerId, idType]);
 
   // ---- Failure handling ------------------------------------------------------
   // A lookup that cannot complete is UNRESOLVED: it never becomes "not found",
@@ -542,8 +547,8 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
         : [idType];
     // Journey started from Customer 360: the reader returns THAT customer's own
     // document, never another customer's. (Their QID where they hold one.)
-    const ownDocs = asCustomerId
-      ? docs.filter((d) => (d as { customerId?: string }).customerId === asCustomerId)
+    const ownDocs = cardCustomerId
+      ? docs.filter((d) => (d as { customerId?: string }).customerId === cardCustomerId)
       : undefined;
     const candidates = selectScanCandidates({ docs, ownDocs, chosenType, detectable });
     // Prefers an UNEXPIRED document rather than simply the first match.

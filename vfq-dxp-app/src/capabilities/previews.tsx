@@ -24,6 +24,7 @@ import type { CustomerLine } from './LineSelection';
 import { CheckoutSummary, PrepaidCheckout } from './CheckoutSummary';
 import { CustomerIdentification } from './CustomerIdentification';
 import { SpecialDiscountsIdentification } from './SpecialDiscountsIdentification';
+import { ActualUser } from './ActualUser';
 import { NumberSelection } from './NumberSelection';
 import { Payment } from './Payment';
 import { PlanSelection } from './PlanSelection';
@@ -41,6 +42,10 @@ function Identification() {
 function SpecialDiscountsId() {
   const [v, setV] = useState({});
   return <SpecialDiscountsIdentification value={v} onChange={setV} idNumber="28456701234" />;
+}
+function ActualUserPreview() {
+  const [v, setV] = useState({});
+  return <ActualUser value={v} onChange={setV} primaryIdNumber="28456701234" primaryCustomerId="CUST-1001" />;
 }
 function Number() {
   const [n, setN] = useState<string | undefined>();
@@ -174,7 +179,7 @@ function Checkout() {
             productId="PROD-104"
             discountId={undefined}
             addonIds={[]}
-            msisdn="+97499990000"
+            msisdn="+97459990000"
             numberPriceQar={20000}
             eligibility={SAMPLE_ELIGIBILITY}
             billLimit={1000}
@@ -417,6 +422,7 @@ function Complete() {
 export const CAPABILITY_PREVIEWS: Record<string, () => ReactNode> = {
   'customer-identification': () => <Identification />,
   'special-discounts-identification': () => <SpecialDiscountsId />,
+  'actual-user': () => <ActualUserPreview />,
   'number-selection': () => <Number />,
   'billing-account': () => <Billing />,
   'service-address': () => <Address />,

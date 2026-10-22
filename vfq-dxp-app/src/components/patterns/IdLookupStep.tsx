@@ -74,6 +74,10 @@ interface IdLookupStepProps {
    * NAS one (masked by the Contact step).
    */
   asNewCustomer?: boolean;
+  /** Identify someone other than the customer on screen (see useIdLookup). */
+  unbound?: boolean;
+  /** Demo reader: present this customer's own document and card (see useIdLookup). */
+  scanAsCustomerId?: string;
   /**
    * Prototype rule (journey started from Customer 360): the customer is the one
    * the journey was opened for, whatever number the scan returned - the demo
@@ -95,7 +99,7 @@ interface IdLookupStepProps {
 // restriction carried over from the 66-persona model's PERSONA-001 ("cannot
 // manually enter ID details, only re-scan/search") - only the lookup ID
 // number itself is directly editable.
-export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint, autoDetectIdType = false, manualEntry = false, allowNewCustomer = true, verifyThenFetch = false, asNewCustomer = false, asCustomerId, hideMoiBadge = false }: IdLookupStepProps) {
+export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint, autoDetectIdType = false, manualEntry = false, allowNewCustomer = true, verifyThenFetch = false, asNewCustomer = false, asCustomerId, unbound = false, scanAsCustomerId, hideMoiBadge = false }: IdLookupStepProps) {
   const {
     loading,
     notFound,
@@ -127,7 +131,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
     handleScanAttempt,
     handleDemoScan,
     handleKeyDown,
-  } = useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType, verifyThenFetch, asNewCustomer, asCustomerId, manualEntry, allowNewCustomer });
+  } = useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType, verifyThenFetch, asNewCustomer, asCustomerId, unbound, scanAsCustomerId, manualEntry, allowNewCustomer });
 
   // Built once and placed by ID type below. Only the showMoiDetails={false}
   // shape gets a loose badge at all - the other journeys keep theirs inside
