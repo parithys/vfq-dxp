@@ -98,6 +98,8 @@ interface Order {
   holdReason?: string | null;
   fulfillmentStatus?: string | null;
   customerEmail?: string;
+  customerSponsor?: string;
+  customerOccupation?: string;
   idNumber?: string;
   customerType?: string;
   companyName?: string;
@@ -485,6 +487,8 @@ function OrderDetailsPanel({ order, lastUpdatedMs }: { order: Order; lastUpdated
           <DetailRow label="ID number" value={order.idNumber} />
           <DetailRow label="Customer type" value={order.customerType ? (CUSTOMER_TYPE_LABEL[order.customerType] ?? order.customerType) : undefined} />
           <DetailRow label="Company" value={order.companyName} />
+          <DetailRow label="Sponsor" value={order.customerSponsor} />
+          <DetailRow label="Occupation" value={order.customerOccupation} />
           <DetailRow label="Nationality" value={customer?.nationality} />
           <DetailRow label="Segment" value={customer?.segment} />
           <DetailRow

@@ -1,4 +1,5 @@
 import { currentAgentId } from '../../../stores/authStore';
+import { contactIdentityOrderFields } from '../../new-connection/contactIdentityOrderFields';
 import { saveCustomerSalutation } from '../../new-connection/saveCustomerSalutation';
 import { hrnAdvanceQar } from '../../../engines/hrnConfiguration';
 import { usePersonaStore } from '../../../stores/personaStore';
@@ -85,6 +86,7 @@ export async function submitPreToPostOrder(
     idNumber: contact.idNumber,
     customerEmail: contact.email,
     customerSalutation: contact.salutation,
+    ...contactIdentityOrderFields(contact),
     customerWorkEmail: contact.workEmail,
     // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
     nationalAddress: contact.moiResult?.nationalAddress,

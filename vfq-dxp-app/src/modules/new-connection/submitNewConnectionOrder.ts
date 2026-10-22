@@ -1,4 +1,5 @@
 import { currentAgentId } from '../../stores/authStore';
+import { contactIdentityOrderFields } from './contactIdentityOrderFields';
 import { saveCustomerSalutation } from './saveCustomerSalutation';
 import { actualUserOrderFields, saveActualUserContact } from '../../capabilities/ActualUser';
 import type { ActualUserValue } from '../../capabilities/ActualUser';
@@ -160,6 +161,7 @@ export async function submitNewConnectionOrder(
         // The email captured on Customer Identification, carried unchanged.
         customerEmail: contact.email,
         customerSalutation: contact.salutation,
+        ...contactIdentityOrderFields(contact),
         customerWorkEmail: contact.workEmail,
         // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
         nationalAddress: contact.moiResult?.nationalAddress,

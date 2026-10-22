@@ -1,4 +1,5 @@
 import { currentAgentId } from '../../../stores/authStore';
+import { contactIdentityOrderFields } from '../../new-connection/contactIdentityOrderFields';
 import { saveCustomerSalutation } from '../../new-connection/saveCustomerSalutation';
 import { idScanAttachments } from '../../new-connection/idScanAttachments';
 import { COLLECTION_TEAM_ROLE, emailVerification, maskEmail, persistBillingAccount } from '../../../capabilities';
@@ -80,6 +81,7 @@ export async function submitFixedActivationOrder(
     idNumber: contact.idNumber,
     customerEmail: contact.email,
     customerSalutation: contact.salutation,
+    ...contactIdentityOrderFields(contact),
     customerWorkEmail: contact.workEmail,
     // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
     nationalAddress: contact.moiResult?.nationalAddress,
