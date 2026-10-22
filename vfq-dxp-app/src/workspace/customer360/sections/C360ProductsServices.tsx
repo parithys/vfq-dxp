@@ -7,7 +7,7 @@ import type { Customer360Data } from '../../../engines/customer360Engine';
 import { isActiveService } from '../../../engines/customerServicesEngine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { buildAssetsFieldResolver } from './assetsResolvers';
-import { ActionButton, FilterSelect, fmtDate, fmtDateTime, GridTable, IC, IconTile, KpiTile, Panel, Pill, qar, SearchBox, StatusPill, TabPage } from './C360Kit';
+import { ActionButton, FilterSelect, fmtDate, fmtDateTime, GridTable, IC, IconTile, KpiTile, Panel, PrimaryTag, qar, SearchBox, StatusPill, TabPage } from './C360Kit';
 import type { GridCol, Tone } from './C360Kit';
 import { ServiceActionsMenu } from '../CustomerActionsMenu';
 import { Dv } from '../demoValues';
@@ -133,7 +133,7 @@ export function C360ProductsServices({ data, services }: { data: Customer360Data
           <div className="font-semibold break-words">{s.identifier}</div>
           <div className="flex flex-wrap items-center gap-1.5">
             <ConnectionTypeTag category={s.category} />
-            {get(s).primary && <Pill tone="blue">Primary</Pill>}
+            {get(s).primary && <PrimaryTag />}
           </div>
         </div>
       ),

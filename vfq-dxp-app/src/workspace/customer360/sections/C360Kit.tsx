@@ -102,6 +102,11 @@ export function Pill({ tone = 'grey', children, solid = false }: { tone?: Tone; 
   return <Badge variant={solid ? 'accent' : TONE_BADGE[tone]}>{children}</Badge>;
 }
 
+/** The "Primary" marker (primary contact, primary line): one look everywhere, distinct from the tinted tags. */
+export function PrimaryTag() {
+  return <Badge variant="tag-primary">Primary</Badge>;
+}
+
 /** Pill whose tone follows its own text. */
 export function StatusPill({ status }: { status: string }) {
   return <Pill tone={toneFor(status)}>{status}</Pill>;

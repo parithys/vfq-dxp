@@ -408,6 +408,7 @@
   --tint-indigo-bg: #e6e9f5; --tint-indigo-fg: #3a4486;
   /* Badge 'tag-blue' (number-card category tag). */
   --tag-blue-bg: #e6f0fd;    --tag-blue-fg: #2f6fcc;
+  --tag-primary-bg: #5e2750; --tag-primary-fg: #ffffff; /* Badge 'tag-primary': the Primary marker, solid plum + white in both themes */
   --tag-amber-bg: #fff3d9;   /* 'tag-amber' fill; its label is --warn-text */
   /* Info banner (e.g. MSISDN picker notice). */
   --info-banner-bg: #eaf4fd; --info-banner-border: #b9d8f5;

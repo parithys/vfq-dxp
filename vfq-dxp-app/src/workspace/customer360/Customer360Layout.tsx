@@ -561,6 +561,7 @@ export function Customer360Layout() {
           name={data.customer.name}
           belowFacts={<LinkedBusinessLine customerId={data.customer.customerId} />}
           tags={[
+            ...(data.customer.name ? [{ label: 'Primary', variant: 'tag-primary' as const }] : []),
             ...(vipTagOf(data.customer.segment) ? [{ label: vipTagOf(data.customer.segment) as string, variant: 'tag-amber' as const }] : []),
           ]}
           qid={data.customer.qid}

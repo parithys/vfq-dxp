@@ -153,7 +153,7 @@ export async function submitNewConnectionOrder(
       // The salutation the agent entered is saved to the customer's profile (shown in Customer 360).
       await saveCustomerSalutation(eligibility?.customerId, contact.salutation, updateRecord);
       // An actual user who is already a customer keeps the contact details confirmed here on their own record.
-      await saveActualUserContact(values.actualUser as ActualUserValue | undefined, updateRecord);
+      await saveActualUserContact(values.actualUser as ActualUserValue | undefined, updateRecord, () => mockDataEngine.list<{ contactRecordId: string; customerId: string }>('customer-contacts'));
       await createRecord('orders', {
         orderId,
         ...actualUserOrderFields(values.actualUser as ActualUserValue | undefined),
