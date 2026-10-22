@@ -108,6 +108,13 @@ export function isQatarMobileLocalNumber(local: string): boolean {
   return QATAR_MOBILE_LOCAL_PATTERN.test(local);
 }
 
+/** Qatar fixed-line/landline numbers: 8 digits leading with 4. The complement of the mobile rule above. */
+export const QATAR_LANDLINE_LOCAL_PATTERN = /^4\d{7}$/;
+
+export function isQatarLandlineLocalNumber(local: string): boolean {
+  return QATAR_LANDLINE_LOCAL_PATTERN.test(local);
+}
+
 export function countryByIso(iso: string): CountryDialCode {
   return COUNTRY_DIAL_CODES.find((c) => c.iso === iso) ?? COUNTRY_DIAL_CODES[0];
 }

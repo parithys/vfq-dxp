@@ -358,6 +358,7 @@
   --shadow-dash-card-hover: 0 2px 4px rgba(20,30,50,0.06), 0 14px 30px -10px rgba(20,30,50,0.24);
   /* "Customer view" toggle (idle): pale teal-grey fill, teal label. */
   --brand-plum: #5e2750; /* brand aubergine */
+  --summary-milestone: #eb9700; /* Step Summary: progress fill and milestone discs (brand orange in both themes; the flag on it is white) */
   --accent-text: #d40000; /* accent used AS TEXT: 5.0:1 on the page background (the fill red #e60000 is 4.4:1 there) */
   --priority: #eb9700; /* the priority star on tasks (brand orange) */
   --shadow-icon-tile: 0 4px 14px -4px rgba(20,30,50,0.18);

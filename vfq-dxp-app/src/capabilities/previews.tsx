@@ -179,7 +179,7 @@ function Checkout() {
             productId="PROD-104"
             discountId={undefined}
             addonIds={[]}
-            msisdn="+97499990000"
+            msisdn="+97459990000"
             numberPriceQar={20000}
             eligibility={SAMPLE_ELIGIBILITY}
             billLimit={1000}
