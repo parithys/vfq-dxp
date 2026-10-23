@@ -54,6 +54,8 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
   // The ID resolved to a customer in a protected segment (Safwa, Safwa+, Royal) the signed-in role may not see: nothing about them is kept or shown.
   const [accessRestricted, setAccessRestricted] = useState(false);
   const numberInputRef = useRef<HTMLInputElement>(null);
+  // The customer the reader would present is protected from this role: the simulated scan reads nothing (it would put their QID in the number field).
+  const cardRestrictedRef = useRef(false);
   // The current value, readable from an async continuation that was started
   // under an older one.
   //
@@ -149,16 +151,26 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
   useEffect(() => {
     setContextNoDocument(undefined);
     setContextHeldTypes([]);
+    cardRestrictedRef.current = false;
     if (!cardCustomerId) {
       setContextIdentity(undefined);
       return;
     }
     let cancelled = false;
     void Promise.all([
-      mockDataEngine.list<{ customerId: string; name: string; nationality: string; dob: string }>('customers'),
+      mockDataEngine.list<{ customerId: string; name: string; nationality: string; dob: string; segment?: string }>('customers'),
       mockDataEngine.list<{ customerId: string; documentType: string; documentNumber: string; expiryDate?: string }>('identity-documents'),
     ]).then(([customers, docs]) => {
       const c = customers.find((x) => x.customerId === cardCustomerId);
+      if (cancelled) return;
+      // The reader would draw THIS customer's own card (name, QID, nationality, date of birth): a protected one this role may not see is never drawn - only the restriction.
+      cardRestrictedRef.current = Boolean(c && !canViewCustomerSegment(usePersonaStore.getState().activePersonaId, c.segment));
+      if (cardRestrictedRef.current) {
+        setContextIdentity(undefined);
+        setContextNoDocument(undefined);
+        setAccessRestricted(true);
+        return;
+      }
       const own = docs.filter((d) => d.customerId === cardCustomerId);
       // The card drawn is the one of the type the agent chose; a customer who does not hold that type has no card to read for it.
       const d = own.find((x) => x.documentType === idType);
@@ -325,6 +337,11 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
       // A journey bound to a customer (opened from their Customer 360) cannot continue with someone else's document.
       if (explicitCustomerId && !asNewCustomer && !opts.forceCustomerId && !boundHoldsIt && match.customerId) {
         const bound = customers.find((c) => c.customerId === explicitCustomerId);
+        // The customer the journey is bound to is itself protected from this role: the mismatch message would NAME them, so only the restriction is given.
+        if (bound && !canViewCustomerSegment(usePersonaStore.getState().activePersonaId, bound.segment)) {
+          setAccessRestricted(true);
+          return;
+        }
         setOwnerMismatch(bound?.name ?? explicitCustomerId);
         return;
       }
@@ -346,7 +363,12 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
         if (found.kind === 'linked') {
           // A journey bound to a customer cannot continue with someone else's QID.
           if (explicitCustomerId && found.customerId !== explicitCustomerId) {
-            setOwnerMismatch(customers.find((c) => c.customerId === explicitCustomerId)?.name ?? explicitCustomerId);
+            const bound = customers.find((c) => c.customerId === explicitCustomerId);
+            if (bound && !canViewCustomerSegment(usePersonaStore.getState().activePersonaId, bound.segment)) {
+              setAccessRestricted(true);
+              return;
+            }
+            setOwnerMismatch(bound?.name ?? explicitCustomerId);
             return;
           }
           linked = { customerId: found.customerId, documentType: 'QID', documentNumber: requested, expiryDate: match.expiryDate, via: found.via, passportNumber: found.passportNumber };
@@ -581,6 +603,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
   // resolves to the same customer. A real integration would return whatever
   // card is physically in the reader.
   const readDocumentFromScan = async (): Promise<{ documentType: QidType; documentNumber: string; expiryDate?: string } | undefined> => {
+    if (cardRestrictedRef.current) return undefined;
     const docs = await mockDataEngine.list<{ documentType: string; documentNumber: string; expiryDate?: string }>(
       'identity-documents'
     );

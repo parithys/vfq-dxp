@@ -1,4 +1,6 @@
 import { useKindPending } from '../../stores/entityStore';
+import { useRestrictedCustomers } from '../../hooks/useRestrictedCustomers';
+import { RestrictedCustomerNotice } from '../../components/patterns/RestrictedCustomerNotice';
 import { EntityMissing } from '../../components/patterns/EntityMissing';
 import { badgeVariantFor } from '../../lib/statusTone';
 import { formatDateTime } from '../../lib/format';
@@ -45,6 +47,8 @@ interface AgentTask {
   priorityFlag: boolean;
   assignedAgentId: string | null;
   createdAt: string;
+  /** The order a Draft Order task is about, from which its customer is known. */
+  relatedOrderId?: string;
 }
 
 // Agent 360 ATV-04/06 (detail view + status transitions) and ATV-03/BR-05
@@ -60,6 +64,9 @@ export function TaskDetailView() {
   const tasks = (useEntityStore((s) => s.records.tasks) ?? []) as unknown as AgentTask[];
   const loadKind = useEntityStore((s) => s.loadKind);
   const updateRecord = useEntityStore((s) => s.updateRecord);
+  const orders = (useEntityStore((s) => s.records.orders) ?? []) as unknown as { orderId: string; customerId?: string }[];
+  const ordersPending = useKindPending('orders');
+  const restricted = useRestrictedCustomers();
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
   const isSupervisor = canAssignTasks(activePersonaId);
   const pushToast = useNotificationStore((s) => s.pushToast);
@@ -70,6 +77,7 @@ export function TaskDetailView() {
 
   useEffect(() => {
     loadKind('tasks');
+    loadKind('orders');
   }, [loadKind]);
 
   // Real userIds, not free text - an assignment has to produce an ID that
@@ -95,6 +103,17 @@ export function TaskDetailView() {
   const task = tasks.find((t) => t.taskId === taskId);
   if (!task) {
     return <EntityMissing what="task" loading={tasksPending} backTo="/tasks" backLabel="Back to my tasks" />;
+  }
+  // A task about a protected-segment customer this role may not see (by the customer of its related order, or a customer named in the task's own
+  // name) is not drawn at all - only the restriction, and nothing until the orders and customers are known.
+  if (!restricted.ready || (task.relatedOrderId && ordersPending)) return <div className="p-8 text-fg-2" role="status">Loading…</div>;
+  const taskCustomerId = task.relatedOrderId ? orders.find((o) => o.orderId === task.relatedOrderId)?.customerId : undefined;
+  if (restricted.isRestricted(taskCustomerId) || restricted.mentionsRestricted(task.taskName)) {
+    return (
+      <div className="p-8 max-w-2xl">
+        <RestrictedCustomerNotice backTo="/tasks" backLabel="Back to my tasks" />
+      </div>
+    );
   }
 
   const applyStatusTransition = async (toState: string, patch: Record<string, unknown>): Promise<boolean> => {

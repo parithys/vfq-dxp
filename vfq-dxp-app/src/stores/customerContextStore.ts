@@ -58,6 +58,8 @@ interface CustomerContextState {
   recentCustomerIds: string[];
   setActiveCustomer: (customer: ActiveCustomerSummary) => void;
   clearActiveCustomer: () => void;
+  /** Forgets these customers everywhere in the context: the active one, the recent list, and a journey held for one of them. */
+  forgetCustomers: (customerIds: ReadonlySet<string>) => void;
 
   journey: JourneyContext | null;
   /** Starts the journey context. A no-op while one is already held - the customer can never be switched. */
@@ -120,6 +122,15 @@ export const useCustomerContext = create<CustomerContextState>()(
           recentCustomerIds: [customer.customerId, ...state.recentCustomerIds.filter((id) => id !== customer.customerId)].slice(0, 8),
         })),
       clearActiveCustomer: () => set({ customer: null }),
+      forgetCustomers: (ids) => {
+        if (ids.size === 0) return;
+        const s = get();
+        const next: Partial<CustomerContextState> = {};
+        if (s.customer && ids.has(s.customer.customerId)) next.customer = null;
+        if (s.recentCustomerIds.some((id) => ids.has(id))) next.recentCustomerIds = s.recentCustomerIds.filter((id) => !ids.has(id));
+        if (s.journey?.customerId && ids.has(s.journey.customerId)) next.journey = null;
+        if (Object.keys(next).length) set(next);
+      },
 
       journey: null,
       beginJourney: (c) => {

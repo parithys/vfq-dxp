@@ -1,4 +1,5 @@
 import { sortByBusinessUnit } from './personaOrder';
+import { purgeProtectedDataForRole } from '../engines/roleSwitchPurge';
 import { formatTime } from '../lib/format';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -102,6 +103,12 @@ export function PersonaSwitcher() {
       inbox.markSeen();
     }
   };
+
+  // Whatever the app kept about a protected-segment customer this role may not see (active customer, journey hold and draft, notifications that name
+  // them) is dropped when the role changes - and on load, for a role that cannot see what a previous one left behind.
+  useEffect(() => {
+    void purgeProtectedDataForRole(activePersonaId);
+  }, [activePersonaId]);
 
   const initials = profile ? `${profile.name.split(' ')[0][0]}${profile.name.split(' ').slice(-1)[0][0]}` : '??';
 
