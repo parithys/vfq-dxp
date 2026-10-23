@@ -518,7 +518,7 @@ def refresh_seeded(rd, wr):
         p = by.get(d["customerId"])
         if p and SEED_TAG in str(d.get("_note", "")):
             d["documentType"], d["documentNumber"] = p["idt"], p["idn"]
-            d["validationPath"] = "MOI Validation" if p["idt"] == "QID" else "Capture/Validate Details"
+            d["validationPath"] = "MOI Validation" if p["idt"] in ("QID", "Diplomatic ID") else "Capture/Validate Details"
             d.pop("issuingCountry", None)
             if p["idt"] == "Passport":
                 d["issuingCountry"] = p["nat"]
@@ -925,7 +925,7 @@ def seed():
         d = {"_note": SEED_TAG, "identityDocumentId": f"IDD-{n_doc}", "customerId": p["cid"], "documentType": p["idt"], "documentNumber": p["idn"]}
         if p["exp"]:
             d["expiryDate"] = p["exp"]
-        d.update({"validationPath": "MOI Validation" if p["idt"] == "QID" else "Capture/Validate Details", "status": "Validated", "scanCompleted": True,
+        d.update({"validationPath": "MOI Validation" if p["idt"] in ("QID", "Diplomatic ID") else "Capture/Validate Details", "status": "Validated", "scanCompleted": True,
                   "scannedAt": "2026-09-30T10:00:00+03:00", "docStatus": "Active", "uploadDateTime": "2026-09-30T10:00:00+03:00", "serviceReference": p["cid"]})
         if p["idt"] == "Passport":
             d["issuingCountry"] = p["nat"]

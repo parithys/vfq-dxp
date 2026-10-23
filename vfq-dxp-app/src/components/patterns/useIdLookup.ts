@@ -12,6 +12,8 @@ import { isIdExpired } from '../../engines/eligibilityEngine';
 import { canViewCustomerSegment } from '../../engines/agentPrivilegeEngine';
 import { usePersonaStore } from '../../stores/personaStore';
 import { resolveExistingCustomer, duplicateCustomerMessage, type LinkedIdUpdate } from './idLinkModel';
+import { moiIdDetailsPatch, MOI_UPDATE_BASIS } from './moiIdRefresh';
+import { useEntityStore } from '../../stores/entityStore';
 import { reconcileIdentity, reconciliationPasses, type AttributeMatch } from './idReconciliation';
 
 export interface IdLookupFailure {
@@ -295,12 +297,13 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
           : undefined;
         if (result && !reconciliationPasses(result)) {
           setReconciliation(result);
-          return;
+          return false;
         }
         onChange({ ...latest.current, manualEntry: fallbackUnlocked && !scanComplete, moiResult, idReconciliation: result });
+        return true;
       };
       const customers = await callService('customer-lookup', () =>
-        mockDataEngine.list<{ customerId: string; segment?: string; name: string; firstName?: string; middleName?: string; lastName?: string; dob: string; nationality: string; email?: string; gender?: string; companyName?: string; occupation?: string; phone?: string; preferredLanguage?: string }>(
+        mockDataEngine.list<{ customerId: string; idType?: string; qid?: string; segment?: string; name: string; firstName?: string; middleName?: string; lastName?: string; dob: string; nationality: string; email?: string; gender?: string; companyName?: string; occupation?: string; phone?: string; preferredLanguage?: string }>(
           'customers'
         )
       );
@@ -448,7 +451,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
         // document's demographics to another's number.
         if (stale()) return;
         attemptsRef.current = { number: requested, n: 0 };
-        settle({
+        const accepted = settle({
             customerId: customer.customerId,
             name: customer.name,
             firstName: customer.firstName,
@@ -468,6 +471,14 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
             expiryDate: match.expiryDate,
             moiUpdateTime: new Date().toISOString(),
         });
+        // MOI's latest answer updates the customer's ID details (ID Type, ID Number) - each change goes to the audit trail with the old value. The
+        // identification itself does not depend on it, so a failed write does not undo an identity MOI confirmed.
+        if (accepted && docMatch && !linked) {
+          const patch = moiIdDetailsPatch(customer, docMatch, identityDocs);
+          if (patch) {
+            await useEntityStore.getState().updateRecord('customers', 'customerId', customer.customerId, patch, { how: MOI_UPDATE_BASIS, by: 'MOI' }).catch(() => undefined);
+          }
+        }
       }
     } catch (err) {
       if (stale()) return; // interrupted by a newer request: not this one's to report

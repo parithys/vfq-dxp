@@ -148,8 +148,8 @@ export function PassportToQidWizard() {
           if (!held.some((d) => d.customerId === owner.owner.customerId && d.documentNumber === qid.idNumber)) {
             await createRecord('identity-documents', qidDocumentRecord(writes.qidDocument));
           }
-          if (writes.retirePassport) await updateRecord('identity-documents', 'identityDocumentId', writes.retirePassport.id, writes.retirePassport.patch);
-          await updateRecord('customers', 'customerId', owner.owner.customerId, writes.customerPatch);
+          if (writes.retirePassport) await updateRecord('identity-documents', 'identityDocumentId', writes.retirePassport.id, writes.retirePassport.patch, { how: 'Passport to QID update' });
+          await updateRecord('customers', 'customerId', owner.owner.customerId, writes.customerPatch, { how: 'Passport to QID update' });
           await createRecord('passport-to-qid-updates', {
             updateId,
             customerId: owner.owner.customerId,

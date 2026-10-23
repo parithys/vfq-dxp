@@ -286,7 +286,7 @@ export function EligibilityGateStep({
       const riskPatch = creditRiskPatch(match as CreditRiskSource & { customerId?: string }, bigData);
       if (riskPatch && match.customerId && !appliedRiskUpdates.has(`${match.customerId}|${riskPatch.creditRiskUpdatedAt}`)) {
         appliedRiskUpdates.add(`${match.customerId}|${riskPatch.creditRiskUpdatedAt}`);
-        void useEntityStore.getState().updateRecord('customers', 'customerId', match.customerId, riskPatch as Record<string, unknown>);
+        void useEntityStore.getState().updateRecord('customers', 'customerId', match.customerId, riskPatch as Record<string, unknown>, { how: 'Big Data credit risk update', by: 'Big Data' });
       }
       const hrnCategory = isHrn(match.nationality);
       const hrnFlag = hrnCategory && hrnFeeApplies(risk.creditRiskExemption);

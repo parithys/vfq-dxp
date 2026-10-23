@@ -206,7 +206,7 @@ export function Customer360Layout() {
           const patch = creditRiskPatch(result.customer as CreditRiskSource & { customerId?: string }, await mockDataEngine.list<BigDataCreditRisk>('big-data-credit-risk'));
           if (cancelled) return;
           if (patch) {
-            void useEntityStore.getState().updateRecord('customers', 'customerId', customerId, patch as Record<string, unknown>);
+            void useEntityStore.getState().updateRecord('customers', 'customerId', customerId, patch as Record<string, unknown>, { how: 'Big Data credit risk update', by: 'Big Data' });
             result = { ...result, customer: { ...result.customer, ...patch } };
           }
         }
