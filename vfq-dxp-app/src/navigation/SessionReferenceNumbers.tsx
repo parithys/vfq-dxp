@@ -7,6 +7,7 @@ import { useNotificationStore } from '../stores/notificationStore';
 import { useCustomerContext } from '../stores/customerContextStore';
 import { useQnomyQueueStore } from '../stores/qnomyQueueStore';
 import { useAuthStore } from '../stores/authStore';
+import { ensureWalkInWaiting } from '../engines/qnomyWalkIns';
 import { nextTicketFor, waitingCountFor, queueLabelsForRole, mobileMatches } from '../engines/qnomyQueueEngine';
 import { usePersonaStore } from '../stores/personaStore';
 import { canSeeQnomyTicketNumber, canSeeCtiReferenceNumber } from '../engines/agentPrivilegeEngine';
@@ -150,7 +151,8 @@ export function SessionReferenceNumbers() {
   useEffect(() => {
     if (!showQnomy) return;
     let cancelled = false;
-    mockDataEngine.list<QTicketRecord>('qtickets').then((qTickets) => {
+    // The queue is never empty: a kiosk walk-in is issued when the role's queue has been worked down.
+    ensureWalkInWaiting(activePersonaId).then(() => mockDataEngine.list<QTicketRecord>('qtickets')).then((qTickets) => {
       if (cancelled) return;
       setWaitingCount(waitingCountFor(activePersonaId, qTickets));
     });

@@ -5,11 +5,14 @@ import type { EntityKind } from './mockDataEngine';
  * actually changed becomes one audit row (what changed, old value, new value, who, and how it came about) - so no journey or screen has to
  * remember to log, and none can change the customer's information without leaving a trace.
  */
-const AUDITED: Partial<Record<EntityKind, { recordType: string; recordIdField: string }>> = {
+const AUDITED: Partial<Record<EntityKind, { recordType: string; recordIdField: string; labels?: Record<string, string> }>> = {
   customers: { recordType: 'Customer', recordIdField: 'customerId' },
   'customer-contacts': { recordType: 'Contact', recordIdField: 'contactRecordId' },
   // Addresses and identity documents hang off the customer; their rows are filed under the customer so Customer 360 shows them.
   addresses: { recordType: 'Address', recordIdField: 'customerId' },
+  // The customer's accounts and billing profiles: filed under the account, which is how Customer 360 joins the trail.
+  accounts: { recordType: 'Account', recordIdField: 'accountId', labels: { status: 'Account Status', hrnFlag: 'HRN Flag' } },
+  'billing-profiles': { recordType: 'Billing Profile', recordIdField: 'accountId', labels: { name: 'Billing Account Name', primaryContactId: 'Primary Contact' } },
   'identity-documents': { recordType: 'ID Document', recordIdField: 'customerId' },
 };
 
@@ -65,7 +68,7 @@ export function customerChangeAuditRows(i: CustomerChangeInput): Record<string, 
       recordType: spec.recordType,
       recordId,
       employeeUser: i.by,
-      fieldModified: humanise(f),
+      fieldModified: spec.labels?.[f] ?? humanise(f),
       oldValue: show(i.before[f]),
       newValue: show(i.patch[f]),
       changeBasis: i.how,

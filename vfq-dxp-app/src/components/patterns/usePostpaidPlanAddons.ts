@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { discountsForCustomer, type CustomerBenefit } from '../../engines/customerBenefitEngine';
 import { monthlyCharges } from '../../engines/postpaidPricing';
-import { closestPlans, SUPPORTING_ID_DISCOUNT_TYPES, PLAN_GROUPS, SPECIAL_DISCOUNT_TYPE, discountsForSpecialType, SPECIAL_OFFERS_TAB_LABEL, planGroupOf } from './postpaidPlanModel';
+import { closestPlans, PLAN_GROUPS, SPECIAL_DISCOUNT_TYPE, discountsForSpecialType, SPECIAL_OFFERS_TAB_LABEL, planGroupOf } from './postpaidPlanModel';
 import type { PostpaidPlan, Discount, AddonProduct, PlanGroupKey, TabKey } from './postpaidPlanModel';
 
 interface UsePostpaidPlanAddonsArgs {
@@ -13,8 +13,6 @@ interface UsePostpaidPlanAddonsArgs {
   onAddonsChange: (ids: string[]) => void;
   /** Told which source the selected plan came from (OFFER / PLAN) and what an offer bundles, for the next step. */
   onSelectionChange?: (sel: { source: 'OFFER' | 'PLAN' | undefined; bundled: string[] }) => void;
-  discountSupportingId: string | undefined;
-  onDiscountSupportingIdChange: (id: string) => void;
   customerBenefit?: 'mada' | 'b2b2c' | 'retired' | 'none';
   specialDiscountType?: 'mada' | 'b2b2c' | 'retired';
   customerBenefits?: CustomerBenefit[];
@@ -29,8 +27,6 @@ export function usePostpaidPlanAddons({
   addonIds,
   onAddonsChange,
   onSelectionChange,
-  discountSupportingId,
-  onDiscountSupportingIdChange,
   customerBenefit,
   specialDiscountType,
   customerBenefits,
@@ -191,17 +187,6 @@ export function usePostpaidPlanAddons({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [benefitType, selectedProductId, discounts, discountId]);
-  const requiresSupportingId = selectedDiscount ? SUPPORTING_ID_DISCOUNT_TYPES.has(selectedDiscount.addonType) : false;
-
-  // Switching to a discount that doesn't need one (or to no discount at all)
-  // invalidates whatever supporting ID was captured for a previous
-  // MADA/B2B2C pick - the same "an edit invalidates a stale link" reasoning
-  // CompanySearchInput and IdLookupStep apply to their own committed values.
-  useEffect(() => {
-    if (requiresSupportingId) return;
-    if (discountSupportingId) onDiscountSupportingIdChange('');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [discountId]);
 
   // Max ONE discount, and it is scoped to the plan it was picked against
   // (Discount.planId) - so a plan change retires whatever discount the
@@ -272,7 +257,6 @@ export function usePostpaidPlanAddons({
     discountsState,
     retryDiscounts,
     selectedDiscount,
-    requiresSupportingId,
     charges,
   };
 }

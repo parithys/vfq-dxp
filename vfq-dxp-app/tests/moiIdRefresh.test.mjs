@@ -83,3 +83,12 @@ test('the entity store writes the audit rows on every update of a customer, cont
   assert.equal(rows.at(-1).fieldModified, 'ID Document Added');
   assert.equal(rows.at(-1).newValue, 'QID 29999999999');
 });
+
+test('account-status and billing-profile edits are audited and filed under the account, where Customer 360 reads them', async () => {
+  const s = a.customerChangeAuditRows({ kind: 'accounts', before: { accountId: 'ACC-1', status: 'Active' }, patch: { status: 'Suspended' }, by: 'x', how: 'y' });
+  assert.deepEqual([s[0].recordType, s[0].recordId, s[0].fieldModified, s[0].oldValue, s[0].newValue], ['Account', 'ACC-1', 'Account Status', 'Active', 'Suspended']);
+  const b = a.customerChangeAuditRows({ kind: 'billing-profiles', before: { billingProfileId: 'BP-1', accountId: 'ACC-1', billingContactEmail: 'a@x.qa', billMedium: 'Email' }, patch: { billingContactEmail: 'b@x.qa', billMedium: 'Email' }, by: 'x', how: 'y' });
+  assert.deepEqual(b.map((r) => [r.recordType, r.recordId, r.fieldModified, r.oldValue, r.newValue]), [['Billing Profile', 'ACC-1', 'Billing Contact Email', 'a@x.qa', 'b@x.qa']]);
+  // Every seeded profile carries the account id the trail is filed under.
+  for (const p of rd('billing-profiles')) assert.ok(p.accountId, p.billingProfileId);
+});

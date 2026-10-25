@@ -10,9 +10,6 @@ interface PostpaidDiscountsPanelProps {
   onSelectDiscount: (discountId: string | undefined) => void;
   discounts: Discount[];
   selectedDiscount: Discount | undefined;
-  requiresSupportingId: boolean;
-  discountSupportingId: string | undefined;
-  onDiscountSupportingIdChange: (id: string) => void;
   /** Where the plan's discounts are in loading; on error the agent can retry or continue without one. */
   discountsState?: 'loading' | 'error' | 'ready';
   onRetryDiscounts?: () => void;
@@ -25,9 +22,6 @@ export function PostpaidDiscountsPanel({
   onSelectDiscount,
   discounts,
   selectedDiscount,
-  requiresSupportingId,
-  discountSupportingId,
-  onDiscountSupportingIdChange,
   discountsState = 'ready',
   onRetryDiscounts,
 }: PostpaidDiscountsPanelProps) {
@@ -88,24 +82,6 @@ export function PostpaidDiscountsPanel({
               />
             ))}
           </div>
-          )}
-          {/* MADA/B2B2C discounts need a supporting ID, required before the order can be finalised (no proof document is
-              collected here); NewPostpaidWizard routes the order to pending approval regardless. */}
-          {requiresSupportingId && (
-            <div className="space-y-2">
-              <Input
-                label="Supporting ID"
-                required
-                placeholder={
-                  selectedDiscount?.addonType === 'MADA Discount'
-                    ? 'MADA card / reference number'
-                    : 'Sponsor / employer reference ID'
-                }
-                value={discountSupportingId ?? ''}
-                onChange={(e) => onDiscountSupportingIdChange(e.target.value)}
-                helperText="Required before this order can be finalised."
-              />
-            </div>
           )}
         </div>
       ));

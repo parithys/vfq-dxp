@@ -14,5 +14,5 @@ export default defineConfig({
   // Tailwind runs through its Vite plugin; ignore postcss.config.mjs (that file is for the Next.js spike only).
   css: { postcss: { plugins: [] } },
   cacheDir: `node_modules/.vite-${port}`,
-  server: { port, strictPort: true },
+  server: { port, strictPort: true, allowedHosts: ['.devtunnels.ms'] },
 })

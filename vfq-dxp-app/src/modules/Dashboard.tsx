@@ -15,6 +15,7 @@ import { customerOpsSpec, productWorkSpec } from './dashboard/zoneSpecs';
 import { layoutFor, productZoneVariantFor } from './dashboard/dashboardLayout';
 import { AVERAGE_WAIT_TIME_DEMO, countWord } from './dashboard/heroFigures';
 import { useQnomyQueueStore } from '../stores/qnomyQueueStore';
+import { ensureWalkInWaiting } from '../engines/qnomyWalkIns';
 import { waitingCountFor } from '../engines/qnomyQueueEngine';
 import { canSeeQnomyTicketNumber } from '../engines/agentPrivilegeEngine';
 import type { QTicketRecord } from '../navigation/sessionReferenceLookups';
@@ -69,7 +70,7 @@ export function Dashboard() {
       return;
     }
     let cancelled = false;
-    mockDataEngine.list<QTicketRecord>('qtickets').then((q) => {
+    ensureWalkInWaiting(activePersonaId).then(() => mockDataEngine.list<QTicketRecord>('qtickets')).then((q) => {
       if (!cancelled) setWaiting(waitingCountFor(activePersonaId, q));
     });
     return () => {

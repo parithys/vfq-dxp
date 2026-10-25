@@ -160,7 +160,6 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
                 // cleared (company, office ID scan, acceptance) back to Standard, no discount carried.
                 setValue('customerType', { type: 'none', rejected: true });
                 setValue('discountId', undefined);
-                setValue('discountSupportingId', undefined);
               }}
               derivedCompany={
                 contact.isB2B2C

@@ -81,8 +81,6 @@ function renderPlanStep(
             setValue('selectionSource', source);
             setValue('bundledItems', bundled);
           }}
-          discountSupportingId={values.discountSupportingId as string | undefined}
-          onDiscountSupportingIdChange={(id) => setValue('discountSupportingId', id)}
           billLimit={values.billLimit as number | undefined}
           onBillLimitChange={(amount, pass) => {
             setValue('billLimit', amount);

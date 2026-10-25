@@ -28,8 +28,6 @@ interface PostpaidPlanAddonsStepProps {
   onAddonsChange: (ids: string[]) => void;
   /** Told where the selected plan came from (OFFER / PLAN) and what an offer bundles. */
   onSelectionChange?: (sel: { source: 'OFFER' | 'PLAN' | undefined; bundled: string[] }) => void;
-  discountSupportingId: string | undefined;
-  onDiscountSupportingIdChange: (id: string) => void;
   billLimit: number | undefined;
   onBillLimitChange: (value: number, pass: boolean) => void;
   /** Agent 360... no - Agent 360 doesn't apply here; this is BR-076's
@@ -74,8 +72,6 @@ export function PostpaidPlanAddonsStep({
   addonIds,
   onAddonsChange,
   onSelectionChange,
-  discountSupportingId,
-  onDiscountSupportingIdChange,
   billLimit,
   onBillLimitChange,
   requiresHrnAdvance,
@@ -111,7 +107,6 @@ export function PostpaidPlanAddonsStep({
     discountsState,
     retryDiscounts,
     selectedDiscount,
-    requiresSupportingId,
     charges,
   } = usePostpaidPlanAddons({
     selectedProductId,
@@ -120,8 +115,6 @@ export function PostpaidPlanAddonsStep({
     addonIds,
     onAddonsChange,
     onSelectionChange,
-    discountSupportingId,
-    onDiscountSupportingIdChange,
     customerBenefit,
     specialDiscountType,
     customerBenefits,
@@ -322,9 +315,6 @@ export function PostpaidPlanAddonsStep({
                     onSelectDiscount={onSelectDiscount}
                     discounts={discounts}
                     selectedDiscount={selectedDiscount}
-                    requiresSupportingId={requiresSupportingId}
-                    discountSupportingId={discountSupportingId}
-                    onDiscountSupportingIdChange={onDiscountSupportingIdChange}
                     discountsState={discountsState}
                     onRetryDiscounts={retryDiscounts}
                   />
