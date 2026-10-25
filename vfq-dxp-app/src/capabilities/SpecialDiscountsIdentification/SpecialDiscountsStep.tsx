@@ -1,30 +1,24 @@
 import { CARD_SELECTED, CARD_IDLE } from '../../components/primitives/offerCardParts';
-import { useEffect, useRef } from 'react';
-import { Button } from '../../components/primitives/Button';
+import { useEffect } from 'react';
 import { Input } from '../../components/primitives/Input';
 import { Icon } from '../../components/primitives/Icon';
-import { ServiceError, MAX_RETRIES } from '../../engines/serviceCall';
-import { TechnicalFailure, ValidationStatus } from '../../components/patterns/ValidationStatus';
 import { CompanySearchInput } from './CompanySearchInput';
 import type { CompanySelection } from './CompanySearchInput';
 import { QidImageUpload } from './QidImageUpload';
 import { CARD, CARD_SELECTABLE } from '../stepStyles';
-import { validateRetiredWithGovernment, TYPE_OPTIONS, isCompanySupported } from './specialDiscountsModel';
+import { TYPE_OPTIONS, isCompanySupported } from './specialDiscountsModel';
 import type { SpecialDiscountType, SpecialDiscountsValue } from './specialDiscountsModel';
 
 export function SpecialDiscountsStep({
   value,
   onChange,
   derivedCompany,
-  idNumber,
   onReject,
 }: {
   value: SpecialDiscountsValue;
   onChange: (v: SpecialDiscountsValue) => void;
   /** Employer already on the MOI record, offered as the B2B2C starting point. */
   derivedCompany?: CompanySelection;
-  /** The ID number read from the scan - what a Retired check sends to the government system. */
-  idNumber?: string;
   /** Reject: decline the benefit, classify as Standard and continue the journey. */
   onReject?: () => void;
 }) {
@@ -37,40 +31,6 @@ export function SpecialDiscountsStep({
   }, []);
 
   const type = value.type;
-
-  // Retired: the moment the office ID scan completes, send the extracted ID
-  // number to the government system. Re-runs after a retake because changing
-  // the scan clears the previous result (see the officeId onChange below).
-  const officeScanned = Boolean(value.officeId?.frontScanned && value.officeId?.backScanned && value.officeAccepted);
-  // The in-flight check is invalidated only when the thing it validates changes
-  // (type, or the scan/acceptance), NOT when its own 'checking' state lands - an
-  // effect cleanup keyed on govValidation cancelled the result it had just asked
-  // for, leaving "Validating…" on screen forever.
-  const checkId = useRef(0);
-  const latestValue = useRef(value);
-  latestValue.current = value;
-  useEffect(() => () => void (checkId.current += 1), [type, officeScanned]);
-  useEffect(() => {
-    if (type !== 'retired' || !officeScanned || value.govValidation) return;
-    const id = ++checkId.current;
-    onChange({ ...latestValue.current, govValidation: { status: 'checking' } });
-    validateRetiredWithGovernment(idNumber)
-      .then((r) => {
-        if (checkId.current !== id) return; // superseded or interrupted: not this check's result
-        onChange({ ...latestValue.current, govValidation: r, govAttempts: 0 });
-      })
-      .catch((err) => {
-        if (checkId.current !== id) return;
-        // The system gave no usable answer: UNRESOLVED, never "not a retiree".
-        const kind = err instanceof ServiceError ? err.kind : 'unexpected';
-        onChange({
-          ...latestValue.current,
-          govValidation: { status: 'error', kind },
-          govAttempts: (latestValue.current.govAttempts ?? 0) + 1,
-        });
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type, officeScanned, value.govValidation === undefined]);
 
   return (
     <div className="space-y-5">
@@ -117,7 +77,7 @@ export function SpecialDiscountsStep({
             documentType="Office ID"
             variant={type === 'b2b2c' || type === 'retired' || type === 'mada' ? type : undefined}
             value={value.officeId ?? {}}
-            onChange={(officeId) => onChange({ ...value, officeId, officeAccepted: false, govValidation: undefined, govAttempts: 0 })}
+            onChange={(officeId) => onChange({ ...value, officeId, officeAccepted: false })}
             accepted={value.officeAccepted}
             onAccept={() => onChange({ ...value, officeAccepted: true })}
             // Reject declines the benefit and returns to a Standard customer, so no
@@ -126,53 +86,6 @@ export function SpecialDiscountsStep({
           />
           </div>
           </div>
-          {type === 'retired' && value.govValidation?.status === 'checking' && (
-            (value.govAttempts ?? 0) > 0 ? (
-              <TechnicalFailure service="govt-retiree" kind="unexpected" attempts={value.govAttempts ?? 0} retrying />
-            ) : (
-              <ValidationStatus variant="pending" title="Validating the ID number with the government system…">
-                The retired status is not confirmed until this completes.
-              </ValidationStatus>
-            )
-          )}
-          {type === 'retired' && value.govValidation?.status === 'passed' && (
-            <ValidationStatus variant="success" tag="Validation Successful" title={value.govValidation.message ?? 'Retired status validated.'} />
-          )}
-          {type === 'retired' && value.govValidation?.status === 'failed' && (
-            <ValidationStatus
-              variant="business-failure"
-              title="Retired Status Not Validated"
-              actions={
-                <Button variant="secondary" compact onClick={() => onChange({ type: 'none' })}>
-                  Continue as standard customer
-                </Button>
-              }
-            >
-              {value.govValidation.message} The customer can continue as a standard customer.
-            </ValidationStatus>
-          )}
-          {type === 'retired' && value.govValidation?.status === 'error' && (
-            <TechnicalFailure
-              service="govt-retiree"
-              kind={value.govValidation.kind ?? 'unexpected'}
-              attempts={value.govAttempts ?? 1}
-              // Retry re-asks the same question for the same scan; the stale-check guard
-              // keeps an older answer from landing on top of it.
-              onRetry={() => onChange({ ...value, govValidation: undefined })}
-              exhaustedHint={
-                <>
-                  Retired status could not be verified, so the discount cannot be applied. Use <strong>Reject</strong> to continue as a Standard customer, or Save as Draft to resume later.
-                </>
-              }
-              extraActions={
-                (value.govAttempts ?? 1) >= MAX_RETRIES ? (
-                  <Button variant="secondary" compact onClick={() => onChange({ type: 'none', rejected: true })}>
-                    Continue as standard customer
-                  </Button>
-                ) : undefined
-              }
-            />
-          )}
         </div>
       )}
     </div>

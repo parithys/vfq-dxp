@@ -42,7 +42,7 @@ function Identification() {
 }
 function SpecialDiscountsId() {
   const [v, setV] = useState({});
-  return <SpecialDiscountsIdentification value={v} onChange={setV} idNumber="28456701234" />;
+  return <SpecialDiscountsIdentification value={v} onChange={setV} />;
 }
 function ActualUserPreview() {
   const [v, setV] = useState({});
@@ -217,7 +217,7 @@ function Addons() {
 }
 function CustomerType() {
   const [v, setV] = useState<Parameters<typeof CustomerTypeStep>[0]['value']>({});
-  return <CustomerTypeStep value={v} onChange={setV} idNumber="28456701234" />;
+  return <CustomerTypeStep value={v} onChange={setV} />;
 }
 function CrossSell() {
   const [v, setV] = useState<Parameters<typeof CrossSalesStep>[0]['value']>({});

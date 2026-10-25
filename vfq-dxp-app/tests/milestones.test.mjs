@@ -14,6 +14,9 @@ after(close);
 const h = React.createElement;
 
 const eng = await load('/src/engines/milestoneEngine.ts');
+// Milestone toasts are not displayed by default (the code is kept). The tests of WHEN and WHAT a toast announces switch them on for this file.
+const jm = await load('/src/components/patterns/wizard/useJourneyMilestones.ts');
+jm.setMilestoneToastsVisible(true);
 const cfg = await load('/src/modules/new-connection/milestones.ts');
 const defs = cfg.POSTPAID_MILESTONES;
 
@@ -265,4 +268,23 @@ test('Customer verified reads "New Customer" when MOI validated the ID but no cu
   assert.deepEqual([toastFor(false).message, toastFor(false).detail], ['New Customer', 'MOI validated; no existing customer record found.']);
   assert.deepEqual([toastFor(true).message, toastFor(true).detail], ['Customer Verified', 'Customer identified and eligibility confirmed.']);
   assert.equal(toastFor(undefined).message, 'Customer Verified', 'unknown is not assumed to be new');
+});
+
+
+test('milestone toasts are not displayed by default: reached and recorded, but nothing is pushed; switching them on shows them again', async () => {
+  const { useNotificationStore } = await load('/src/stores/notificationStore.ts');
+  assert.equal(jm.MILESTONE_TOASTS_VISIBLE_DEFAULT, false);
+  const def = { id: 'custom-test', title: 'Customer Verified', message: 'Customer identified and eligibility confirmed.' };
+  useNotificationStore.setState({ toasts: [], history: [] });
+  jm.setMilestoneToastsVisible(false);
+  try {
+    jm.announceMilestone(def);
+    assert.equal(useNotificationStore.getState().toasts.length, 0);
+    assert.equal(useNotificationStore.getState().history.length, 0, 'not in the bell either');
+    jm.setMilestoneToastsVisible(true);
+    jm.announceMilestone(def);
+    assert.equal(useNotificationStore.getState().toasts.length, 1, 'the toast code still works when switched on');
+  } finally {
+    jm.setMilestoneToastsVisible(true);
+  }
 });
